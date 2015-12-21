@@ -1,112 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:41008 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751272AbbLQW5h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 17:57:37 -0500
-Subject: Re: [PATCH] ath10k: add modparam 'hw_csum' to make HW checksum
- configurable
-To: Peter Oh <poh@qca.qualcomm.com>, Peter Oh <poh@codeaurora.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-References: <1450290051-15593-1-git-send-email-poh@qca.qualcomm.com>
- <5671AD10.70004@openwrt.org> <5671C99A.703@codeaurora.org>
- <5671CAF5.6010606@openwrt.org> <5671CDBD.5060006@codeaurora.org>
- <5671CF63.9040308@openwrt.org> <5671D56F.8030903@codeaurora.org>
- <5671DDA1.5030709@openwrt.org> <5671F8B7.2060801@codeaurora.org>
- <5671FADD.6010009@openwrt.org> <567330CE.3080808@qca.qualcomm.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <56733DBC.8060400@openwrt.org> (sfid-20151217_235757_875593_FCA1306D)
-Date: Thu, 17 Dec 2015 23:57:00 +0100
+Received: from eusmtp01.atmel.com ([212.144.249.243]:11099 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750761AbbLUFPD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 00:15:03 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 00/46] Rebase and resend
+Date: Mon, 21 Dec 2015 14:18:04 +0900
+Message-ID: <1450675130-17866-1-git-send-email-glen.lee@atmel.com> (sfid-20151221_061508_268033_0D873D78)
 MIME-Version: 1.0
-In-Reply-To: <567330CE.3080808@qca.qualcomm.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-12-17 23:01, Peter Oh wrote:
-> 
-> On 12/16/2015 03:59 PM, Felix Fietkau wrote:
->> On 2015-12-17 00:50, Peter Oh wrote:
->>> On 12/16/2015 01:54 PM, Felix Fietkau wrote:
->>>> On 2015-12-16 22:19, Peter Oh wrote:
->>>>> On 12/16/2015 12:53 PM, Felix Fietkau wrote:
->>>>>> On 2015-12-16 21:46, Peter Oh wrote:
->>>>>>> On 12/16/2015 12:35 PM, Felix Fietkau wrote:
->>>>>>>> On 2015-12-16 21:29, Peter Oh wrote:
->>>>>>>>> On 12/16/2015 10:27 AM, Felix Fietkau wrote:
->>>>>>>>>> On 2015-12-16 19:20, Peter Oh wrote:
->>>>>>>>>>> Some hardwares such as QCA988X and QCA99X0 doesn't have
->>>>>>>>>>> capability of checksum offload when frame formats are not
->>>>>>>>>>> suitable for it such as Mesh frame.
->>>>>>>>>>> Hence add a module parameter, hw_csum, to make checksum offload
->>>>>>>>>>> configurable during module registration time.
->>>>>>>>>>>
->>>>>>>>>>> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
->>>>>>>>>> How about instead of inventing yet another crappy module parameter, you
->>>>>>>>>> call skb_checksum_help() in the driver in cases where the hardware is
->>>>>>>>>> unable to offload the checksum calculation.
->>>>>>>>>>
->>>>>>>>>> That way the user has to worry about less driver specific hackery ;)
->>>>>>>>> That will be good option for hardware not supporting HW checksum, but I
->>>>>>>>> mind that using the function will add more workload per every packet on
->>>>>>>>> critical data path when HW supports checksum resulting in throughput down.
->>>>>>>> I didn't mean calling it for every single frame in the data path.
->>>>>>>> What I'm suggesting is calling it selectively only for mesh frames, or
->>>>>>>> any other frames that the hardware cannot offload, and leaving the rest
->>>>>>>> for the hardware to process.
->>>>>>>>
->>>>>>>> There should be no performance difference between disabling checksum
->>>>>>>> offload and calling skb_checksum_help from the driver.
->>>>>>> To call it selectively for Mesh frame or interface, we need to add it on
->>>>>>> mac80211 layer such as ieee80211_build_hdr() since driver layer does not
->>>>>>> care the interface type in data path.
->>>>>> No need to change mac80211 - it only touches the headers, and
->>>>>> skb_checksum_help does not care about that. The skb has enough
->>>>>> information for it to find the right range to calculate the checksum and
->>>>>> the place to store it.
->>>>> If mentioned to use the function to mesh frame only without touching
->>>>> mac80211, then how do you suggest it to apply it only to mesh frame
->>>>> without interfere other data frames?
->>>>> Can you share your example?
->>>> It's trivial - in ath10k_tx you do this:
->>>>
->>>> if (vif->type == NL80211_IFTYPE_MESH_POINT &&
->>>>       skb->ip_summed == CHECKSUM_PARTIAL)
->>>> 	skb_checksum_help(skb);
->>> Thank you Felix for the quick response.
->>> I agree on your user experience opinion,
->>> but what do you think when ath10k has a new chip supporting HW checksum
->>> for Mesh?
->> Then you simply update the checks. What's the big deal?
-> keep adding condition to such data path is not a good option.
-> I also considered again about user experiences and reached to that this 
-> patch won't disturb user experience since the products will ship with 
-> proper module settings. for instance the parameter will be turned on if 
-> product support it other wise will be turned off as they shipped, so 
-> that users don't need to touch it.
-I think the point you were missing is the one that there is no such
-thing as a proper setting for this module parameter, since it doesn't
-really depend much on the hardware or the product, but on the wifi mode
-that you are using.
+As requested, I rebased all of my pending patches on staging-testing branch
+and resend what is not applied.
 
-> In addition, for enterprise customers, they do care even a very small 
-> performance drop or enhancement especially when they are running BMT 
-> among vendors.
-> So we need to avoid adding extra codes in data path in my opinion.
-The regular data tx path already checks ar->dev_flags to decide whether
-to use raw mode or not. This means that this part of the data structure
-is already cached. The vif type is also cached, since it's accessed in
-the same part of the function.
-Because of that, the impact of adding an extra check even for a hardware
-capability will be so low, that I'm pretty sure you will not be able to
-measure it. And even if it were measurable, it's probably quite easy to
-find a few places to optimize
+Glen Lee (42):
+  staging: wilc1000: remove define COMPLEMENT_BOOT
+  staging: wilc1000: remove wilc memory allocation config
+  staging: wilc1000: rename index to tcp_pending_ack_idx
+  staging: wilc1000: use kernel define byte order macros
+  staging: wilc1000: wilc_wlan.c: remove hif_func of wilc_wlan_dev_t
+  staging: wilc1000: remove io_type of wilc_wlan_dev_t
+  staging: wilc1000: remove unused varialbe tx_buffer_offset
+  staging: wilc1000: move all of wilc_wlan_dev_t to struct wilc
+  staging: wilc1000: sdio/spi: use device print api instead of custom
+    one
+  staging: wilc1000: remove wilc_debug_func of hif_init
+  staging: wilc1000: remove unused functions
+  staging: wilc1000: linux_wlan_sdio.c: fix checkpatch warning line over
+    80
+  staging: wilc1000: linux_wlan_sdio.c: remove braces
+  staging: wilc1000: wilc_sdio_cmd53: return linux error value
+  staging: wilc1000: wilc_sdio_cmd52: return linux error value
+  staging: wilc1000: linux_wlan_spi.c: remove braces for single
+    statement
+  staging: wilc1000: linux_wlan_spi.c: add a blank
+  staging: wilc1000: linux_wlan_spi.c: fix NULL comparison style
+  staging: wilc1000: linux_wlan_spi.c: return linux error value
+  staging: wilc1000: linux_sdio_probe: use return value
+  staging: wilc1000: linux_wlan_sdio.c: move all the codes to
+    wilc_sdio.c
+  staging: wilc1000: remove unused files
+  staging: wilc1000: rename spi function names
+  staging: wilc1000: remove unneeded function
+  staging: wilc1000: linux_wlan_spi.c: move all the codes to wilc_spi.c
+  staging: wilc1000: remove unused files
+  staging: wilc1000: remove unneeded extern variable
+  staging: wilc1000: move perInterface_wlan_t to wilc_vif
+  staging: wilc1000: change vif to pointer to refence real private data
+  staging: wilc1000: remove duplicate netdev
+  staging: wilc1000: pass vif to hostIFthread
+  staging: wilc1000: remove argument hif_drv
+  staging: wilc1000: take vif instead of drv in hostIFthread
+  staging: wilc1000: pass struct wilc
+  staging: wilc1000: use vif index to communicate with wilc device
+  staging: wilc1000: wilc_set_wfi_drv_handler: pass vif index
+  staging: wilc1000: change join_req_drv type and it's name
+  staging: wilc1000: remove used functions
+  staging: wilc1000: remove drv of struct host_if_msg
+  staging: wilc1000: remove wilc of struct host_if_drv
+  staging: wilc1000: set hif_drv before it is used
+  staging: wilc1000: bug fix on memory free
 
-I find the tradeoff you are making very odd: For users that don't know
-about the module parameter (depending on the default value) it either
-just randomly doesn't work in mesh or always runs with degraded
-performance. All this to save adding a check that will be completely
-irrelevant for performance, since it won't result in any extra cache
-stalls (which are the typical bottleneck in the data path).
+Leo Kim (4):
+  staging: wilc1000: replace explicit NULL comparisons with !
+  staging: wilc1000: fixes potential null dereference 'wid.val'
+  staging: wilc1000: wilc_init(): fixes inconsistent returns
+  staging: wilc1000: wilc_deinit(): fixes inconsistent returns
 
-- Felix
+ drivers/staging/wilc1000/Kconfig                  |  22 -
+ drivers/staging/wilc1000/Makefile                 |  14 +-
+ drivers/staging/wilc1000/coreconfigurator.h       |  11 +-
+ drivers/staging/wilc1000/host_interface.c         | 803 +++++++++++-----------
+ drivers/staging/wilc1000/host_interface.h         | 144 ++--
+ drivers/staging/wilc1000/linux_wlan.c             | 342 ++++-----
+ drivers/staging/wilc1000/linux_wlan_common.h      |   2 -
+ drivers/staging/wilc1000/linux_wlan_sdio.c        | 170 -----
+ drivers/staging/wilc1000/linux_wlan_sdio.h        |   8 -
+ drivers/staging/wilc1000/linux_wlan_spi.c         | 191 -----
+ drivers/staging/wilc1000/linux_wlan_spi.h         |  11 -
+ drivers/staging/wilc1000/wilc_sdio.c              | 464 ++++++++-----
+ drivers/staging/wilc1000/wilc_spi.c               | 417 +++++++----
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 480 +++++++------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  47 +-
+ drivers/staging/wilc1000/wilc_wlan.c              | 571 +++++++--------
+ drivers/staging/wilc1000/wilc_wlan.h              |  17 +-
+ drivers/staging/wilc1000/wilc_wlan_cfg.c          |  25 +-
+ drivers/staging/wilc1000/wilc_wlan_cfg.h          |   4 +-
+ 19 files changed, 1771 insertions(+), 1972 deletions(-)
+ delete mode 100644 drivers/staging/wilc1000/linux_wlan_sdio.c
+ delete mode 100644 drivers/staging/wilc1000/linux_wlan_sdio.h
+ delete mode 100644 drivers/staging/wilc1000/linux_wlan_spi.c
+ delete mode 100644 drivers/staging/wilc1000/linux_wlan_spi.h
+
+-- 
+1.9.1
+
