@@ -1,65 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:40244 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965077AbbLHPm7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2015 10:42:59 -0500
-Message-ID: <1449589374.4154.11.camel@sipsolutions.net> (sfid-20151208_164305_654009_DD85946D)
-Subject: Re: [PATCH 6/9] mac80211: handle width changes from opmode
- notification IE in beacon
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Eyal Shapira <eyal@wizery.com>,
-	Eyal Shapira <eyalx.shapira@intel.com>
-Date: Tue, 08 Dec 2015 16:42:54 +0100
-In-Reply-To: <CABPxzYK=RdZo0WB7Tt4PO19n23+9rgAypj=OEDZE8GJ6cV_gXw@mail.gmail.com> (sfid-20151208_163915_733456_BB9785B1)
-References: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1449583479-26658-7-git-send-email-emmanuel.grumbach@intel.com>
-	 <CABPxzYK=RdZo0WB7Tt4PO19n23+9rgAypj=OEDZE8GJ6cV_gXw@mail.gmail.com>
-	 (sfid-20151208_163915_733456_BB9785B1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:36018 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751233AbbLURxb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 12:53:31 -0500
+Received: by mail-qg0-f49.google.com with SMTP id c96so92340687qgd.3
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2015 09:53:30 -0800 (PST)
+Subject: Re: [PATCH] enable setting MAC address for r8723au
+To: Dan Lenski <dlenski@gmail.com>, linux-wireless@vger.kernel.org
+References: <1450664916-25205-1-git-send-email-dlenski@gmail.com>
+ <1450664916-25205-2-git-send-email-dlenski@gmail.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <56783C98.1080700@lwfinger.net> (sfid-20151221_185334_892312_81F3953F)
+Date: Mon, 21 Dec 2015 11:53:28 -0600
+MIME-Version: 1.0
+In-Reply-To: <1450664916-25205-2-git-send-email-dlenski@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-12-08 at 21:08 +0530, Krishna Chaitanya wrote:
-> 
-> >  void ieee80211_vht_handle_opmode(struct ieee80211_sub_if_data
-> > *sdata,
-> >                                  struct sta_info *sta, u8 opmode,
-> > -                                enum ieee80211_band band, bool
-> > nss_only)
-> > +                                enum ieee80211_band band)
-> >  {
-> >         struct ieee80211_local *local = sdata->local;
-> >         struct ieee80211_supported_band *sband = local->hw.wiphy-
-> > >bands[band];
-> > 
-> > -       u32 changed = __ieee80211_vht_handle_opmode(sdata, sta,
-> > opmode,
-> > -                                                   band,
-> > nss_only);
-> > +       u32 changed = __ieee80211_vht_handle_opmode(sdata, sta,
-> > opmode, band);
-> > 
-> >         if (changed > 0)
-> >                 rate_control_rate_update(local, sband, sta,
-> > changed);
-> 
-> Not related to current change.
-> 
-> I was looking at this code a while ago and found that
-> rate_control_rate_update
-> doesn't update the rates from rx_nss, rather it updates from HT/VHT
-> capabilities.
-> 
-> So how does the NSS update from OP MODE IE work?
-> 
+On 12/20/2015 08:28 PM, Dan Lenski wrote:
+> Signed-off-by: Dan Lenski <dlenski@gmail.com>
 
-Huh? You just quoted the code that does this?
+The commit message should be in this patch rather than in the non-patch previous 
+mail. If this patch were to be accepted, all that explanation would be lost!
 
-If the rate control algorithm doesn't look at sta->sta.rx_nss then
-that's their bug.
+Rather than issuing a warning when the MAC is changed after the interface has 
+been brought up, have you considered changing the value of rtw_adapter->bup to 
+zero whenever the connection goes down? Would that help with the confusion in 
+the user-space tools?
 
-johannes
+NACK.
+
+
+Larry
+
+> ---
+>   drivers/staging/rtl8723au/os_dep/os_intfs.c | 7 +++++--
+>   1 file changed, 5 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/staging/rtl8723au/os_dep/os_intfs.c b/drivers/staging/rtl8723au/os_dep/os_intfs.c
+> index b8848c2..228e19f 100644
+> --- a/drivers/staging/rtl8723au/os_dep/os_intfs.c
+> +++ b/drivers/staging/rtl8723au/os_dep/os_intfs.c
+> @@ -240,8 +240,11 @@ static int rtw_net_set_mac_address(struct net_device *pnetdev, void *p)
+>   	struct rtw_adapter *padapter = netdev_priv(pnetdev);
+>   	struct sockaddr *addr = p;
+>
+> -	if (!padapter->bup)
+> -		ether_addr_copy(padapter->eeprompriv.mac_addr, addr->sa_data);
+> +	if (padapter->bup)
+> +		DBG_8723A_LEVEL(_drv_warning_, "Trying to set MAC address while bup =%d\n", padapter->bup);
+> +	ether_addr_copy(padapter->eeprompriv.mac_addr, addr->sa_data);
+> +	ether_addr_copy(pnetdev->dev_addr, addr->sa_data);
+> +
+>   	return 0;
+>   }
+>
+>
+
