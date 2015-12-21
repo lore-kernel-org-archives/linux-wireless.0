@@ -1,56 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:38848 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751645AbbLMSML (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Dec 2015 13:12:11 -0500
-Received: by wmpp66 with SMTP id p66so33943818wmp.1
-        for <linux-wireless@vger.kernel.org>; Sun, 13 Dec 2015 10:12:10 -0800 (PST)
-From: Ola Olsson <ola1olsson@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ola Olsson <ola1olsson@gmail.com>,
-	Ola Olsson <ola.olsson@sonymobile.com>
-Subject: [PATCH] nl80211: Potential memory leaks in reg.c
-Date: Sun, 13 Dec 2015 19:12:03 +0100
-Message-Id: <1450030323-6637-1-git-send-email-ola1olsson@gmail.com> (sfid-20151213_191215_763471_5664AA1C)
+Received: from mga03.intel.com ([134.134.136.65]:46048 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751806AbbLUUvX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 15:51:23 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 17/45] iwlwifi: avoid d0i3 commands when no/init ucode is loaded
+Date: Mon, 21 Dec 2015 22:50:18 +0200
+Message-Id: <1450731046-2796-17-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_215144_524774_D4BB33FD)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The first leak occurs when entering the default case
-in the switch for the initiator in set_regdom.
-The second leaks a platform_device struct if the
-platform registration in regulatory_init succeeds but
-the sub sequent regulatory hint fails due to no memory.
+From: Eliad Peller <eliad@wizery.com>
 
-Signed-off-by: Ola Olsson <ola.olsson@sonymobile.com>
+d0i3 commands are not supported in the init image, so take
+a reference to ensure we don't enter d0i3 during init image,
+and additional checks to prevent d0i3 commands when no
+fw image is loaded.
+
+Add a few WARN_ON_ONCE to the d0i3 enter/exit commands
+to ensure we send d0i3 commands only when the normal
+ucode is loaded.
+
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- net/wireless/reg.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c | 1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     | 1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c     | 8 ++++++++
+ 3 files changed, 10 insertions(+)
 
-diff --git a/net/wireless/reg.c b/net/wireless/reg.c
-index 2e8d6f3..06d050d 100644
---- a/net/wireless/reg.c
-+++ b/net/wireless/reg.c
-@@ -3029,6 +3029,7 @@ int set_regdom(const struct ieee80211_regdomain *rd,
- 		break;
- 	default:
- 		WARN(1, "invalid initiator %d\n", lr->initiator);
-+		kfree(rd);
- 		return -EINVAL;
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 7e2a814..9ce7587 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -1316,6 +1316,7 @@ static ssize_t iwl_dbgfs_d0i3_refs_read(struct file *file,
+ 	PRINT_MVM_REF(IWL_MVM_REF_EXIT_WORK);
+ 	PRINT_MVM_REF(IWL_MVM_REF_PROTECT_CSA);
+ 	PRINT_MVM_REF(IWL_MVM_REF_FW_DBG_COLLECT);
++	PRINT_MVM_REF(IWL_MVM_REF_INIT_UCODE);
  
-@@ -3221,8 +3222,10 @@ int __init regulatory_init(void)
- 	/* We always try to get an update for the static regdomain */
- 	err = regulatory_hint_core(cfg80211_world_regdom->alpha2);
- 	if (err) {
--		if (err == -ENOMEM)
-+		if (err == -ENOMEM) {
-+			platform_device_unregister(reg_pdev);
- 			return err;
-+		}
- 		/*
- 		 * N.B. kobject_uevent_env() can fail mainly for when we're out
- 		 * memory which is handled and propagated appropriately above
+ 	return simple_read_from_buffer(user_buf, count, ppos, buf, pos);
+ }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 612799a..3f0db29 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -294,6 +294,7 @@ enum iwl_mvm_ref_type {
+ 	IWL_MVM_REF_EXIT_WORK,
+ 	IWL_MVM_REF_PROTECT_CSA,
+ 	IWL_MVM_REF_FW_DBG_COLLECT,
++	IWL_MVM_REF_INIT_UCODE,
+ 
+ 	/* update debugfs.c when changing this */
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 958984c..31c16a1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -603,9 +603,11 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 			goto out_free;
+ 
+ 		mutex_lock(&mvm->mutex);
++		iwl_mvm_ref(mvm, IWL_MVM_REF_INIT_UCODE);
+ 		err = iwl_run_init_mvm_ucode(mvm, true);
+ 		if (!err || !iwlmvm_mod_params.init_dbg)
+ 			iwl_trans_stop_device(trans);
++		iwl_mvm_unref(mvm, IWL_MVM_REF_INIT_UCODE);
+ 		mutex_unlock(&mvm->mutex);
+ 		/* returns 0 if successful, 1 if success but in rfkill */
+ 		if (err < 0 && !iwlmvm_mod_params.init_dbg) {
+@@ -1213,6 +1215,9 @@ int iwl_mvm_enter_d0i3(struct iwl_op_mode *op_mode)
+ 
+ 	IWL_DEBUG_RPM(mvm, "MVM entering D0i3\n");
+ 
++	if (WARN_ON_ONCE(mvm->cur_ucode != IWL_UCODE_REGULAR))
++		return -EINVAL;
++
+ 	set_bit(IWL_MVM_STATUS_IN_D0I3, &mvm->status);
+ 
+ 	/*
+@@ -1420,6 +1425,9 @@ int _iwl_mvm_exit_d0i3(struct iwl_mvm *mvm)
+ 
+ 	IWL_DEBUG_RPM(mvm, "MVM exiting D0i3\n");
+ 
++	if (WARN_ON_ONCE(mvm->cur_ucode != IWL_UCODE_REGULAR))
++		return -EINVAL;
++
+ 	mutex_lock(&mvm->d0i3_suspend_mutex);
+ 	if (test_bit(D0I3_DEFER_WAKEUP, &mvm->d0i3_suspend_flags)) {
+ 		IWL_DEBUG_RPM(mvm, "Deferring d0i3 exit until resume\n");
 -- 
-1.7.9.5
+2.5.0
 
