@@ -1,62 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:37845 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750905AbbLYJyv (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:11843 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751439AbbLUFTS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Dec 2015 04:54:51 -0500
-Received: by mail-wm0-f54.google.com with SMTP id p187so202761186wmp.0
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Dec 2015 01:54:50 -0800 (PST)
-Subject: Re: [BISECTED] brcmfmac issue since 4.3.0-rc3
-To: Carlo Caione <carlo@caione.org>, meuleman@broadcom.com
-References: <CAOQ7t2bEs2UhxfWUCs7TBwidw2JKCKLmeUzcYjng4f5p4Wr-Mw@mail.gmail.com>
-Cc: arend@broadcom.com, kvalo@codeaurora.org,
-	linux-wireless@vger.kernel.org
-From: Arend van Spriel <aspriel@gmail.com>
-Message-ID: <567D1268.70709@gmail.com> (sfid-20151225_105530_066648_69646280)
-Date: Fri, 25 Dec 2015 10:54:48 +0100
+	Mon, 21 Dec 2015 00:19:18 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 42/46] staging: wilc1000: remove used functions
+Date: Mon, 21 Dec 2015 14:18:46 +0900
+Message-ID: <1450675130-17866-43-git-send-email-glen.lee@atmel.com> (sfid-20151221_061924_698937_4AD463E0)
+In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <CAOQ7t2bEs2UhxfWUCs7TBwidw2JKCKLmeUzcYjng4f5p4Wr-Mw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch remove unused functions add_handler_in_list and
+remove_handler_in_list, and it's related global variable wfidrv_list and codes.
+label fail_timer_2 and it's codes are removed since label is not used anymore.
 
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 44 -------------------------------
+ 1 file changed, 44 deletions(-)
 
-On 24-12-15 18:23, Carlo Caione wrote:
-> Hi Hante,
-> I'm having an issue with my BCM43340 SDIO WiFi card on the Asus X205TA
-> laptop and the latest firmware taken from the linux-firmware git repo
-> with the correct nvram file in place. I bisected the issue back to
-> commit 2b76acd "brcmfmac: Rework p2p attach, use single method for p2p
-> dev creation." (bad commit).
-> 
-> The problem is not always reproducible. I'd say it happens once every
-> ten reboots. What I see is that the kernel panics at boot immediately
-> after I see:
-> 
-> brcmfmac: brcmf_sdio_drivestrengthinit: No SDIO Drive strength init
-> done for chip 43340 rev 2 pmurev 20
-> brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
-> brcmfmac: brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -52
-> brcmfmac: brcmf_bus_start: failed: -52
-> brcmfmac: brcmf_sdio_firmware_callback: dongle is not responding
-> brcmfmac: brcmf_sdio_dpc: failed backplane access over SDIO, halting operation
-> brcmfmac: brcmf_sdio_dpc: failed backplane access over SDIO, halting operation
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index e9a206c..46e009e 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -226,7 +226,6 @@ struct join_bss_param {
+ 	u8 start_time[4];
+ };
+ 
+-static struct host_if_drv *wfidrv_list[NUM_CONCURRENT_IFC + 1];
+ struct host_if_drv *terminated_handle;
+ bool wilc_optaining_ip;
+ static u8 P2P_LISTEN_STATE;
+@@ -266,34 +265,6 @@ static struct wilc_vif *join_req_vif;
+ 
+ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo);
+ 
+-static int add_handler_in_list(struct host_if_drv *handler)
+-{
+-	int i;
+-
+-	for (i = 1; i < ARRAY_SIZE(wfidrv_list); i++) {
+-		if (!wfidrv_list[i]) {
+-			wfidrv_list[i] = handler;
+-			return 0;
+-		}
+-	}
+-
+-	return -ENOBUFS;
+-}
+-
+-static int remove_handler_in_list(struct host_if_drv *handler)
+-{
+-	int i;
+-
+-	for (i = 1; i < ARRAY_SIZE(wfidrv_list); i++) {
+-		if (wfidrv_list[i] == handler) {
+-			wfidrv_list[i] = NULL;
+-			return 0;
+-		}
+-	}
+-
+-	return -EINVAL;
+-}
+-
+ /* The u8IfIdx starts from 0 to NUM_CONCURRENT_IFC -1, but 0 index used as
+  * special purpose in wilc device, so we add 1 to the index to starts from 1.
+  * As a result, the returned index will be 1 to NUM_CONCURRENT_IFC.
+@@ -3852,7 +3823,6 @@ s32 wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ {
+ 	s32 result = 0;
+ 	struct host_if_drv *hif_drv;
+-	int err;
+ 	struct wilc_vif *vif;
+ 	struct wilc *wilc;
+ 
+@@ -3872,11 +3842,6 @@ s32 wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 	}
+ 	hif_drv->wilc = wilc;
+ 	*hif_drv_handler = hif_drv;
+-	err = add_handler_in_list(hif_drv);
+-	if (err) {
+-		result = -EFAULT;
+-		goto _fail_timer_2;
+-	}
+ 
+ 	wilc_optaining_ip = false;
+ 
+@@ -3946,10 +3911,6 @@ s32 wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 
+ 	return result;
+ 
+-_fail_timer_2:
+-	del_timer_sync(&hif_drv->connect_timer);
+-	del_timer_sync(&hif_drv->scan_timer);
+-	kthread_stop(hif_thread_handler);
+ _fail_mq_:
+ 	wilc_mq_destroy(&hif_msg_q);
+ _fail_:
+@@ -3961,7 +3922,6 @@ s32 wilc_deinit(struct wilc_vif *vif)
+ 	s32 result = 0;
+ 	struct host_if_msg msg;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+-	int ret;
+ 
+ 	if (!hif_drv)	{
+ 		PRINT_ER("hif_drv = NULL\n");
+@@ -4016,10 +3976,6 @@ s32 wilc_deinit(struct wilc_vif *vif)
+ 		wilc_mq_destroy(&hif_msg_q);
+ 	}
+ 
+-	ret = remove_handler_in_list(hif_drv);
+-	if (ret)
+-		result = -ENOENT;
+-
+ 	kfree(hif_drv);
+ 
+ 	clients_count--;
+-- 
+1.9.1
 
-Hi Carlo,
-
-This smells like a firmware crash. Upon the brcmf_bus_start failure we
-bail out on the probe. I suspect in the error path there is an issue
-introduced (or exposed) by the mentioned patch. Did not look further
-into it as the family is giving me the angry look during the holidays ;-)
-
-Regards,
-Arend
-
-> With a messy trace similar to
-> https://gist.github.com/carlocaione/06d17124a2589f3d4108
-> 
-> Any idea what's going on?
-> 
-> Thanks
-> 
