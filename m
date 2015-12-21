@@ -1,65 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:36687 "EHLO
-	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752005AbbLUXFO (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:11446 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751194AbbLUFQr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 18:05:14 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH] rtlwifi: rtl_pci: Fix kernel panic
-Date: Mon, 21 Dec 2015 17:05:08 -0600
-Message-Id: <1450739108-24121-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20151222_000521_518910_0B5DE288)
+	Mon, 21 Dec 2015 00:16:47 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 17/46] staging: wilc1000: linux_wlan_spi.c: add a blank
+Date: Mon, 21 Dec 2015 14:18:21 +0900
+Message-ID: <1450675130-17866-18-git-send-email-glen.lee@atmel.com> (sfid-20151221_063100_870596_C41313F0)
+In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In commit 38506ecefab9 (rtlwifi: rtl_pci: Start modification for new
-drivers), a bug was introduced that causes a NULL pointer dereference.
-As this bug only affects the infrequently used RTL8192EE and only under
-low-memory conditions, it has taken a long time for the bug to show up.
+This patch fixes checkpatch warning: missing a blank like after declarations.
 
-The bug was reported on the linix-wireless mailing list and also at
-https://bugs.launchpad.net/ubuntu/+source/ubuntu-release-upgrader/ as
-bug #1527603 (kernel crashes due to rtl8192ee driver on ubuntu 15.10).
-
-Fixes: 38506ecefab9
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/pci.c | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+ drivers/staging/wilc1000/linux_wlan_spi.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
-index f46c9d7..7f471bf 100644
---- a/drivers/net/wireless/realtek/rtlwifi/pci.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
-@@ -801,7 +801,9 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 								      hw_queue);
- 			if (rx_remained_cnt == 0)
- 				return;
--
-+			buffer_desc = &rtlpci->rx_ring[rxring_idx].buffer_desc[
-+				rtlpci->rx_ring[rxring_idx].idx];
-+			pdesc = (struct rtl_rx_desc *)skb->data;
- 		} else {	/* rx descriptor */
- 			pdesc = &rtlpci->rx_ring[rxring_idx].desc[
- 				rtlpci->rx_ring[rxring_idx].idx];
-@@ -824,13 +826,6 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
- 		new_skb = dev_alloc_skb(rtlpci->rxbuffersize);
- 		if (unlikely(!new_skb))
- 			goto no_new;
--		if (rtlpriv->use_new_trx_flow) {
--			buffer_desc =
--			  &rtlpci->rx_ring[rxring_idx].buffer_desc
--				[rtlpci->rx_ring[rxring_idx].idx];
--			/*means rx wifi info*/
--			pdesc = (struct rtl_rx_desc *)skb->data;
--		}
- 		memset(&rx_status , 0 , sizeof(rx_status));
- 		rtlpriv->cfg->ops->query_rx_desc(hw, &stats,
- 						 &rx_status, (u8 *)pdesc, skb);
+diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
+index 6fcf7b3..190243a 100644
+--- a/drivers/staging/wilc1000/linux_wlan_spi.c
++++ b/drivers/staging/wilc1000/linux_wlan_spi.c
+@@ -79,6 +79,7 @@ int wilc_spi_write(struct wilc *wilc, u8 *b, u32 len)
+ 			.delay_usecs = 0,
+ 		};
+ 		char *r_buffer = kzalloc(len, GFP_KERNEL);
++
+ 		if (!r_buffer)
+ 			return -ENOMEM;
+ 
+@@ -127,6 +128,7 @@ int wilc_spi_read(struct wilc *wilc, u8 *rb, u32 rlen)
+ 
+ 		};
+ 		char *t_buffer = kzalloc(rlen, GFP_KERNEL);
++
+ 		if (!t_buffer)
+ 			return -ENOMEM;
+ 
 -- 
-2.1.4
+1.9.1
 
