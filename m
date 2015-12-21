@@ -1,59 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:36050 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933696AbbLOUph (ORCPT
+Received: from mail-qg0-f43.google.com ([209.85.192.43]:35889 "EHLO
+	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751304AbbLUVxp convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2015 15:45:37 -0500
-Received: by mail-wm0-f53.google.com with SMTP id n186so182583070wmn.1
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2015 12:45:36 -0800 (PST)
+	Mon, 21 Dec 2015 16:53:45 -0500
 MIME-Version: 1.0
-In-Reply-To: <20151215.153626.1500179484827859040.davem@davemloft.net>
-References: <CACT4Y+bjSFyXZi1PKTUsT9PhAYvCGiGjRkOBRbUON0Pw7rJxGg@mail.gmail.com>
- <20151215.153626.1500179484827859040.davem@davemloft.net>
-From: Dmitry Vyukov <dvyukov@google.com>
-Date: Tue, 15 Dec 2015 21:45:16 +0100
-Message-ID: <CACT4Y+ZnZ2EcZwc6T5LZ1YR2zC8+6aFT_JFYb_LeegnB6tmESw@mail.gmail.com> (sfid-20151215_214540_992172_BFD33C4B)
-Subject: Re: Information leak in llcp_sock_bind/llcp_raw_sock_bind
-To: syzkaller <syzkaller@googlegroups.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Eric Dumazet <edumazet@google.com>,
-	Kostya Serebryany <kcc@google.com>,
-	Alexander Potapenko <glider@google.com>,
-	Sasha Levin <sasha.levin@oracle.com>
+In-Reply-To: <CAFqt6zaALx895c0BVrMpLdtfgYLz=-mmqaurtD28Nm1Ut2g1Dw@mail.gmail.com>
+References: <1448948470-31111-1-git-send-email-motobud@gmail.com>
+	<CAFqt6zaALx895c0BVrMpLdtfgYLz=-mmqaurtD28Nm1Ut2g1Dw@mail.gmail.com>
+Date: Mon, 21 Dec 2015 15:53:44 -0600
+Message-ID: <CAP+RiCBK_iEOu27GzqqgG9Pn_MDP1m8JCnSqkGbPMAT7=P9V7g@mail.gmail.com> (sfid-20151221_225405_615044_05963353)
+Subject: Re: [PATCH] ath6kl: Use vmalloc to allocate ar->fw for api1 method
+From: Brent Taylor <motobud@gmail.com>
+To: Souptick Joarder <jrdr.linux@gmail.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	ath6kl@lists.infradead.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 15, 2015 at 9:36 PM, David Miller <davem@davemloft.net> wrote:
-> From: Dmitry Vyukov <dvyukov@google.com>
-> Date: Tue, 15 Dec 2015 21:00:20 +0100
+On Mon, Dec 21, 2015 at 1:23 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
+> Hi Brent,
 >
->> The problem is that llcp_sock_bind/llcp_raw_sock_bind do not check
->> sockaddr_len passed in, so they copy stack garbage from stack into the
->> socket and then return it in getsockname.
->> This can defeat ASLR, leak crypto keys, etc.
+> On Tue, Dec 1, 2015 at 11:11 AM, Brent Taylor <motobud@gmail.com> wrote:
+>> Since commit 8437754c83351d6213c1a47ff029c1126d6042a7, ar->fw is expected to be pointing to memory allocated by vmalloc.  If the api1 method (via ath6kl_fetch_fw_api1) is used to allocate memory for ar->fw, then kmemdup is used.  This patch checks if the firmware being loaded is the 'fw' image, then use vmalloc, otherwise use kmalloc.
+>>
+>> Signed-off-by: Brent Taylor <motobud@gmail.com>
+>> ---
+>>  drivers/net/wireless/ath/ath6kl/init.c | 7 ++++++-
+>>  1 file changed, 6 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath6kl/init.c b/drivers/net/wireless/ath/ath6kl/init.c
+>> index 6ae0734..4f2b124d 100644
+>> --- a/drivers/net/wireless/ath/ath6kl/init.c
+>> +++ b/drivers/net/wireless/ath/ath6kl/init.c
+>> @@ -673,10 +673,15 @@ static int ath6kl_get_fw(struct ath6kl *ar, const char *filename,
+>>                 return ret;
+>>
+>>         *fw_len = fw_entry->size;
+>> -       *fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
+>> +   if (&ar->fw == fw)
+>> +               *fw = vmalloc(fw_entry->size);
+>> +   else
+>> +               *fw = kmalloc(fw_entry->size, GFP_KERNEL);
 >
-> That's actually the first thing these functions do.
->
-> They completely clear out the on-stack llcp_addr, then they copy only
-> as much as the user gave them, being careful not to use more than
-> sizeof(llcp_addr).
->
->         memset(&llcp_addr, 0, sizeof(llcp_addr));
->         len = min_t(unsigned int, sizeof(llcp_addr), alen);
->         memcpy(&llcp_addr, addr, len);
->
-> I don't see what the problem is, you'll need to be more specific.
+>           Why vmalloc and kmalloc both are required? can't use either
+> vmalloc or kmalloc?
 
-You are right. Sorry.
+My original problem was that kmemdup (which uses kmalloc) could not
+allocate enough memory
+to hold the firmware that is placed into "ar->fw".  In the function
+ath6kl_core_cleanup (in core.c),
+the "ar->fw" pointer is the only one that uses vfree which was changed in commit
+8437754c83351d6213c1a47ff029c1126d6042a7.
 
-There still seems to be a minor leak here:
-
-  if (!addr || addr->sa_family != AF_NFC)
-      return -EINVAL;
-
-addr->sa_family can be uninit.
+I was trying to change as little as possible and I wasn't sure if
+there was a reason that any of the
+other firmware items needed to be allocated with kmalloc or if they
+could be changed to use vmalloc.
