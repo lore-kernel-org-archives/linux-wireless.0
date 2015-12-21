@@ -1,84 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:37297 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932099AbbLRInm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2015 03:43:42 -0500
-Received: by mail-wm0-f53.google.com with SMTP id p187so54495851wmp.0
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2015 00:43:42 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <56728A91.7010503@openwrt.org>
-References: <1450344029-5296-1-git-send-email-janusz.dziedzic@tieto.com>
-	<56728A91.7010503@openwrt.org>
-Date: Fri, 18 Dec 2015 09:43:41 +0100
-Message-ID: <CALhHN=ouW-DShR1xwy12z08sQz+VKQM+DUVrebFCwi4GWN11pw@mail.gmail.com> (sfid-20151218_094346_516528_37F84608)
-Subject: Re: [RFC/RFT 1/2] mac80211: Add NEED_ALIGNED4_SKBS hw flag
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([134.134.136.65]:2928 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751636AbbLUUvO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 15:51:14 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 12/45] iwlwifi: trans: support a callback for ASYNC commands
+Date: Mon, 21 Dec 2015 22:50:13 +0200
+Message-Id: <1450731046-2796-12-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_215128_390724_6BE7FDDF)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 December 2015 at 11:12, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2015-12-17 10:20, Janusz Dziedzic wrote:
->> HW/driver should set NEED_ALIGNED4_SKBS flag in case require
->> aligned skbs to four-byte boundaries.
->>
->> Before we have to do memmove() in the driver before
->> pass this to HW and memmove() back in tx completion.
->> This patch allow to save CPU and skip such memmoves.
->> For each skb we called memmove(ieee80211_hdrsize()) twice.
->>
->> Currently this was tested with ath9k, both hw/sw crypt for
->> tkip/ccmp.
->> For sure more tests required.
->>
->> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
->> ---
->>  include/net/mac80211.h |  4 ++++
->>  net/mac80211/debugfs.c |  1 +
->>  net/mac80211/tkip.c    | 15 ++++++++++++---
->>  net/mac80211/tx.c      | 21 +++++++++++++++++++--
->>  net/mac80211/wep.c     |  6 ++++++
->>  net/mac80211/wpa.c     | 35 +++++++++++++++++++++++++++--------
->>  6 files changed, 69 insertions(+), 13 deletions(-)
->>
->> diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
->> index 0ae2077..26b2663 100644
->> --- a/net/mac80211/tkip.c
->> +++ b/net/mac80211/tkip.c
->> @@ -204,9 +204,18 @@ void ieee80211_get_tkip_p2k(struct ieee80211_key_conf *keyconf,
->>       const u8 *tk = &key->conf.key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
->>       struct tkip_ctx *ctx = &key->u.tkip.tx;
->>       struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
->> -     const u8 *data = (u8 *)hdr + ieee80211_hdrlen(hdr->frame_control);
->> -     u32 iv32 = get_unaligned_le32(&data[4]);
->> -     u16 iv16 = data[2] | (data[0] << 8);
->> +     unsigned int hdrlen;
->> +     const u8 *data;
->> +     u32 iv32;
->> +     u16 iv16;
->> +
->> +     hdrlen = ieee80211_hdrlen(hdr->frame_control);
->> +     if (ieee80211_hw_check(&key->local->hw, NEEDS_ALIGNED4_SKBS))
->> +             hdrlen += hdrlen & 3;
-> I think this check is duplicated way too often, maybe you should
-> implement a wrapper for ieee80211_hdrlen and convert all relevant call
-> sites. Makes it easier to spot places where this was forgotten.
->
-Or other option is to add this to ieee80211_tx_data - while this param
-we pass to most of encrypt funtions ...
->From other side I see ieee80211_tx_data skbs list could be used -
-seems only for fragmentation?
+This allows the op_mode to request from the transport to
+call a callback when an ASYNC commands is completed by
+the firmware. The same callback will be called for all the
+commands. Pass the command whose response triggers the
+callback as a parameter to the callback itself.
 
-@Johannes - will be safe add "real" hdrlen to ieee80211_tx_data?
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h | 11 +++++++++++
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h   |  7 +++++++
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c     |  7 +++----
+ 3 files changed, 21 insertions(+), 4 deletions(-)
 
-Other option I see is ieee80211_tx_info or like Felix suggest new
-hdrlen() function.
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h b/drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h
+index 2a58d68..ffff31c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-op-mode.h
+@@ -123,6 +123,8 @@ struct iwl_cfg;
+  *	received on the RSS queue(s). The queue parameter indicates which of the
+  *	RSS queues received this frame; it will always be non-zero.
+  *	This method must not sleep.
++ * @async_cb: called when an ASYNC command with CMD_WANT_ASYNC_CALLBACK set
++ *	completes. Must be atomic.
+  * @queue_full: notifies that a HW queue is full.
+  *	Must be atomic and called with BH disabled.
+  * @queue_not_full: notifies that a HW queue is not full any more.
+@@ -155,6 +157,8 @@ struct iwl_op_mode_ops {
+ 		   struct iwl_rx_cmd_buffer *rxb);
+ 	void (*rx_rss)(struct iwl_op_mode *op_mode, struct napi_struct *napi,
+ 		       struct iwl_rx_cmd_buffer *rxb, unsigned int queue);
++	void (*async_cb)(struct iwl_op_mode *op_mode,
++			 const struct iwl_device_cmd *cmd);
+ 	void (*queue_full)(struct iwl_op_mode *op_mode, int queue);
+ 	void (*queue_not_full)(struct iwl_op_mode *op_mode, int queue);
+ 	bool (*hw_rf_kill)(struct iwl_op_mode *op_mode, bool state);
+@@ -203,6 +207,13 @@ static inline void iwl_op_mode_rx_rss(struct iwl_op_mode *op_mode,
+ 	op_mode->ops->rx_rss(op_mode, napi, rxb, queue);
+ }
+ 
++static inline void iwl_op_mode_async_cb(struct iwl_op_mode *op_mode,
++					const struct iwl_device_cmd *cmd)
++{
++	if (op_mode->ops->async_cb)
++		op_mode->ops->async_cb(op_mode, cmd);
++}
++
+ static inline void iwl_op_mode_queue_full(struct iwl_op_mode *op_mode,
+ 					  int queue)
+ {
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 0cd69cd..77ae7fa 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -248,6 +248,8 @@ static inline u32 iwl_rx_packet_payload_len(const struct iwl_rx_packet *pkt)
+  * @CMD_MAKE_TRANS_IDLE: The command response should mark the trans as idle.
+  * @CMD_WAKE_UP_TRANS: The command response should wake up the trans
+  *	(i.e. mark it as non-idle).
++ * @CMD_WANT_ASYNC_CALLBACK: the op_mode's async callback function must be
++ *	called after this command completes. Valid only with CMD_ASYNC.
+  * @CMD_TB_BITMAP_POS: Position of the first bit for the TB bitmap. We need to
+  *	check that we leave enough room for the TBs bitmap which needs 20 bits.
+  */
+@@ -259,6 +261,7 @@ enum CMD_MODE {
+ 	CMD_SEND_IN_IDLE	= BIT(4),
+ 	CMD_MAKE_TRANS_IDLE	= BIT(5),
+ 	CMD_WAKE_UP_TRANS	= BIT(6),
++	CMD_WANT_ASYNC_CALLBACK	= BIT(7),
+ 
+ 	CMD_TB_BITMAP_POS	= 11,
+ };
+@@ -903,6 +906,10 @@ static inline int iwl_trans_send_cmd(struct iwl_trans *trans,
+ 		return -EIO;
+ 	}
+ 
++	if (WARN_ON((cmd->flags & CMD_WANT_ASYNC_CALLBACK) &&
++		    !(cmd->flags & CMD_ASYNC)))
++		return -EINVAL;
++
+ 	if (!(cmd->flags & CMD_ASYNC))
+ 		lock_map_acquire_read(&trans->sync_cmd_lockdep_map);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 95ba920..fe8241f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -1593,10 +1593,6 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+ /*
+  * iwl_pcie_hcmd_complete - Pull unused buffers off the queue and reclaim them
+  * @rxb: Rx buffer to reclaim
+- *
+- * If an Rx buffer has an async callback associated with it the callback
+- * will be executed.  The attached skb (if present) will only be freed
+- * if the callback returns 1
+  */
+ void iwl_pcie_hcmd_complete(struct iwl_trans *trans,
+ 			    struct iwl_rx_cmd_buffer *rxb)
+@@ -1640,6 +1636,9 @@ void iwl_pcie_hcmd_complete(struct iwl_trans *trans,
+ 		meta->source->_rx_page_order = trans_pcie->rx_page_order;
+ 	}
+ 
++	if (meta->flags & CMD_WANT_ASYNC_CALLBACK)
++		iwl_op_mode_async_cb(trans->op_mode, cmd);
++
+ 	iwl_pcie_cmdq_reclaim(trans, txq_id, index);
+ 
+ 	if (!(meta->flags & CMD_ASYNC)) {
+-- 
+2.5.0
 
-BR
-Janusz
-
-> - Felix
