@@ -1,42 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58002 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751084AbbLCPJz convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:35793 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752070AbbLVAtp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2015 10:09:55 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: wlan0: set_features() failed (-1); wanted 0x0000000000004008, left 0x0000000000004808
-References: <87bna8f1si.fsf@kamboji.qca.qualcomm.com>
-	<CALhHN=pXxEvY4wZcaQ8EL9jNgCy-sC97RwiO7PgaNVfKEO1FGw@mail.gmail.com>
-	<1449133427.2181.5.camel@sipsolutions.net>
-Date: Thu, 03 Dec 2015 17:09:48 +0200
-In-Reply-To: <1449133427.2181.5.camel@sipsolutions.net> (Johannes Berg's
-	message of "Thu, 03 Dec 2015 10:03:47 +0100")
-Message-ID: <87poynefgj.fsf@kamboji.qca.qualcomm.com> (sfid-20151203_160958_994272_D75ADDF7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Mon, 21 Dec 2015 19:49:45 -0500
+Received: by mail-pa0-f43.google.com with SMTP id jx14so79603385pad.2
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2015 16:49:44 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 10/13] staging: wilc1000: fix return type of wilc_get_mac_address
+Date: Tue, 22 Dec 2015 09:49:06 +0900
+Message-Id: <1450745349-16811-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20151222_014947_828998_8A71CDF0)
+In-Reply-To: <1450745349-16811-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1450745349-16811-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
+This patch changes return type of wilc_get_mac_address from s32 to int.
+The result variable gets return value from wilc_mq_send that has return
+type of int. It should be changed return type of this function as well
+as data type of result variable.
 
-> On Thu, 2015-12-03 at 09:03 +0100, Janusz Dziedzic wrote:
->> 
->> Missing:
->> net: fix feature changes on devices without ndo_set_features ?
->> 
->
-> According to the *code* that's there, but maybe Kalle hasn't recompiled
-> it to the latest tree quite right?
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Actually I was too hasty when reading the logs and missed that I haven't
-seen these warnings since November 30th or so. I guess during after the
-patch above trickled down to wireless-testing and fixed the issue.
-
-So everything is good, sorry for the noise.
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 485318f..affd1e6 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3325,9 +3325,9 @@ int wilc_set_pmkid_info(struct wilc_vif *vif,
+ 	return result;
+ }
+ 
+-s32 wilc_get_mac_address(struct wilc_vif *vif, u8 *pu8MacAddress)
++int wilc_get_mac_address(struct wilc_vif *vif, u8 *pu8MacAddress)
+ {
+-	s32 result = 0;
++	int result = 0;
+ 	struct host_if_msg msg;
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 675a4e1..6be4b14 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -323,7 +323,7 @@ int wilc_add_rx_gtk(struct wilc_vif *vif, const u8 *rx_gtk, u8 gtk_key_len,
+ 		    u8 cipher_mode);
+ int wilc_set_pmkid_info(struct wilc_vif *vif,
+ 			struct host_if_pmkid_attr *pmkid);
+-s32 wilc_get_mac_address(struct wilc_vif *vif, u8 *pu8MacAddress);
++int wilc_get_mac_address(struct wilc_vif *vif, u8 *pu8MacAddress);
+ s32 wilc_set_mac_address(struct wilc_vif *vif, u8 *pu8MacAddress);
+ int wilc_wait_msg_queue_idle(void);
+ s32 wilc_set_join_req(struct wilc_vif *vif, u8 *pu8bssid, const u8 *pu8ssid,
 -- 
-Kalle Valo
+2.6.4
+
