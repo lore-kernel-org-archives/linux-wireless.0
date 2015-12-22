@@ -1,62 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:51490 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932180AbbLBNDp (ORCPT
+Received: from mail-io0-f172.google.com ([209.85.223.172]:35697 "EHLO
+	mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753302AbbLVHwx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2015 08:03:45 -0500
-Message-ID: <565EEC2C.7030501@broadcom.com> (sfid-20151202_140404_707278_E530CA92)
-Date: Wed, 2 Dec 2015 14:03:40 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 22 Dec 2015 02:52:53 -0500
 MIME-Version: 1.0
-To: Colin King <colin.king@canonical.com>,
-	<kernel-tram@lists.ubuntu.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
+In-Reply-To: <20151222072951.GA31496@osadl.at>
+References: <1450716464-20759-1-git-send-email-hofrat@osadl.org>
+ <CAGRGNgU+CA-jLAX=_qV27tfbyQ2cyjYo2NZOq3_7fFLc-VsCew@mail.gmail.com> <20151222072951.GA31496@osadl.at>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 22 Dec 2015 18:52:33 +1100
+Message-ID: <CAGRGNgUsmx-nHEwykpFP5YbXVwrpNE1tRFs0hTuUea5Xvy1k-Q@mail.gmail.com> (sfid-20151222_085316_744393_C57D28A5)
+Subject: Re: [PATCH] wlcore: consolidate kmalloc + memset 0 into kzalloc
+To: Nicholas Mc Guire <der.herr@hofr.at>
+Cc: Nicholas Mc Guire <hofrat@osadl.org>,
 	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	<linux-wireless@vger.kernel.org>,
-	<brcm80211-dev-list@broadcom.com>, <netdev@vger.kernel.org>
-CC: <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] brcmfmac: only lock and unlock fws if fws is not null
-References: <1449056710-9776-1-git-send-email-colin.king@canonical.com>
-In-Reply-To: <1449056710-9776-1-git-send-email-colin.king@canonical.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+	Eliad Peller <eliad@wizery.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Arik Nemtsov <arik@wizery.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Luciano Coelho <luca@coelho.fi>,
+	Eyal Reizer <eyalreizer@gmail.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/02/2015 12:45 PM, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
->
-> There is a null ptr check for fws to set bcmc_credit_check, however,
-> there a lock and unlock on fws should only performed if fwts is
-> also not null to also avoid a potential null pointer deference.
+Hi Nicholas,
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->   drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c | 7 ++++---
->   1 file changed, 4 insertions(+), 3 deletions(-)
+On Tue, Dec 22, 2015 at 6:29 PM, Nicholas Mc Guire <der.herr@hofr.at> wrote:
+> On Tue, Dec 22, 2015 at 09:56:10AM +1100, Julian Calaby wrote:
+>> Hi,
+>>
+>> On Tue, Dec 22, 2015 at 3:47 AM, Nicholas Mc Guire <hofrat@osadl.org> wrote:
+>> > This is an API consolidation only. The use of kmalloc + memset to 0
+>> > is equivalent to kzalloc.
+>> >
+>> > Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+>> > ---
+>> >
+>> > Found by coccinelle script (relaxed version of
+>> > scripts/coccinelle/api/alloc/kzalloc-simple.cocci)
+>> >
+>> > Patch was compile tested with: x86_64_defconfig +
+>> > CONFIG_WL12XX=m (implies CONFIG_WLCORE=m)
+>> >
+>> > Patch is against linux-next (localversion-next is -next-20151221)
+>> >
+>> >  drivers/net/wireless/ti/wlcore/main.c | 3 +--
+>> >  1 file changed, 1 insertion(+), 2 deletions(-)
+>> >
+>> > diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+>> > index ec7f6af..dfc49bf 100644
+>> > --- a/drivers/net/wireless/ti/wlcore/main.c
+>> > +++ b/drivers/net/wireless/ti/wlcore/main.c
+>> > @@ -838,7 +838,7 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
+>> >
+>> >         wl1271_info("Reading FW panic log");
+>> >
+>> > -       block = kmalloc(wl->fw_mem_block_size, GFP_KERNEL);
+>> > +       block = kzalloc(wl->fw_mem_block_size, GFP_KERNEL);
+>> >         if (!block)
+>> >                 return;
+>> >
+>> > @@ -885,7 +885,6 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
+>> >                         goto out;
+>> >                 }
+>> > -               memset(block, 0, wl->fw_mem_block_size);
+>>
+>> I don't think you can't remove this line. It appears that the loop
+>> this is part of resets block to be all zero, reads a chunk of data in,
+>> then operates on it. I'm guessing that the code after the following
+>> line expects that there isn't any data left over from previous runs
+>> through the loop.
+>>
+> the rational for this being ok is thta the copy operation into block is:
+>                 ret = wlcore_read_hwaddr(wl, addr, block,
+>                                         wl->fw_mem_block_size, false);
 >
-> diff --git a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-> index 086cac3..092f33f 100644
-> --- a/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-> +++ b/drivers/net/wireless/brcm80211/brcmfmac/fwsignal.c
-> @@ -1609,10 +1609,11 @@ static int brcmf_fws_notify_bcmc_credit_support(struct brcmf_if *ifp,
->   {
->   	struct brcmf_fws_info *fws = ifp->drvr->fws;
+> this will end up in the .read methods where block should be completely
+> overwritten (length == full block size), so within the loop if successful
+> this should be correct - if not successful it would "goto out" witout
+> using the content of block.
 >
-> -	brcmf_fws_lock(fws);
-> -	if (fws)
-> +	if (fws) {
-> +		brcmf_fws_lock(fws);
->   		fws->bcmc_credit_check = true;
-> -	brcmf_fws_unlock(fws);
-> +		brcmf_fws_unlock(fws);
-> +	}
->   	return 0;
->   }
->
->
+> Am I overlooking something here ?
 
+It's quite possible I am. I didn't look at the implementation of
+wlcore_read_hwaddr() so I'm only guessing that it could do partial
+reads.
+
+That said, if it does overwrite the entire buffer each time, then
+there's no need to use kzalloc() to allocate the buffer in the first
+place.
+
+Either way, it needs a review from someone more familiar with the code.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
