@@ -1,54 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:45601 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751644AbbLDOOv (ORCPT
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:34850 "EHLO
+	mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751681AbbLVAtc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Dec 2015 09:14:51 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tB4E9PW2029045
-	for <linux-wireless@vger.kernel.org>; Fri, 4 Dec 2015 06:14:50 -0800
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1yk5tpa13p-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 04 Dec 2015 06:14:50 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 6/6] mwifiex: correction in region code to country mapping
-Date: Fri, 4 Dec 2015 06:13:07 -0800
-Message-ID: <1449238387-27396-6-git-send-email-akarwar@marvell.com> (sfid-20151204_151455_004550_414E071E)
-In-Reply-To: <1449238387-27396-1-git-send-email-akarwar@marvell.com>
-References: <1449238387-27396-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 21 Dec 2015 19:49:32 -0500
+Received: by mail-pf0-f178.google.com with SMTP id 78so23899974pfw.2
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2015 16:49:32 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 06/13] staging: wilc1000: remove wilc_set_start_scan_req declaration
+Date: Tue, 22 Dec 2015 09:49:02 +0900
+Message-Id: <1450745349-16811-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20151222_014935_455172_3D7E1232)
+In-Reply-To: <1450745349-16811-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1450745349-16811-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-EU is not a valid country in db.txt file. Hence regulatory_hint
-returns failure if EEPROM provides region code as 0x30. Let's
-use FR for 0x30.
+This patch deletes wilc_set_start_scan_req declaration. It is not find
+wilc_set_start_scan_req definition in this driver.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cfp.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfp.c b/drivers/net/wireless/marvell/mwifiex/cfp.c
-index dd3adc5..beb564f 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfp.c
-@@ -168,7 +168,7 @@ struct region_code_mapping {
- static struct region_code_mapping region_code_mapping_t[] = {
- 	{ 0x10, "US " }, /* US FCC */
- 	{ 0x20, "CA " }, /* IC Canada */
--	{ 0x30, "EU " }, /* ETSI */
-+	{ 0x30, "FR " }, /* France */
- 	{ 0x31, "ES " }, /* Spain */
- 	{ 0x32, "FR " }, /* France */
- 	{ 0x40, "JP " }, /* Japan */
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index a21ca37..1e3f389 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -326,7 +326,6 @@ s32 wilc_set_pmkid_info(struct wilc_vif *vif,
+ s32 wilc_get_mac_address(struct wilc_vif *vif, u8 *pu8MacAddress);
+ s32 wilc_set_mac_address(struct wilc_vif *vif, u8 *pu8MacAddress);
+ int wilc_wait_msg_queue_idle(void);
+-s32 wilc_set_start_scan_req(struct host_if_drv *hWFIDrv, u8 scanSource);
+ s32 wilc_set_join_req(struct wilc_vif *vif, u8 *pu8bssid, const u8 *pu8ssid,
+ 		      size_t ssidLen, const u8 *pu8IEs, size_t IEsLen,
+ 		      wilc_connect_result pfConnectResult, void *pvUserArg,
 -- 
-1.8.1.4
+2.6.4
 
