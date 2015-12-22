@@ -1,66 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:20161 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754141AbbLIKWz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2015 05:22:55 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 00/13] brcmfmac: IBSS fix and cleanup
-Date: Wed, 9 Dec 2015 11:22:39 +0100
-Message-ID: <1449656572-16158-1-git-send-email-arend@broadcom.com> (sfid-20151209_112307_790257_99EA49E9)
+Received: from hauke-m.de ([5.39.93.123]:52881 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752294AbbLVMJL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Dec 2015 07:09:11 -0500
+Subject: Re: [PATCH v3] bcma: switch GPIO portions to use GPIOLIB_IRQCHIP
+To: Linus Walleij <linus.walleij@linaro.org>
+References: <1439504505-20314-1-git-send-email-hauke@hauke-m.de>
+ <CACna6rzqGrfduyMPJkq29AJ2SFs8ngPgQau3rCWRtbZ3-nxfVA@mail.gmail.com>
+ <567449F4.9010400@hauke-m.de>
+ <CACRpkdY2mHou_Qx5Jn0Y6m-8FwgCjKKpioH=ADS=ARAdWgAtNQ@mail.gmail.com>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Message-ID: <56793D61.7090305@hauke-m.de> (sfid-20151222_130916_279947_7A098F83)
+Date: Tue, 22 Dec 2015 13:09:05 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CACRpkdY2mHou_Qx5Jn0Y6m-8FwgCjKKpioH=ADS=ARAdWgAtNQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series provides following:
-* fix IBSS which got broken over time.
-* new USB id for bcm43242 dongle.
-* arp offload configuration through inet notifier.
+On 12/22/2015 10:01 AM, Linus Walleij wrote:
+> On Fri, Dec 18, 2015 at 7:01 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>> On 12/18/2015 07:27 AM, Rafał Miłecki wrote:
+>>> I'm afraid it wasn't tested on BCM47XX (MIPS) :(
+>>
+>> Yes, you are probably right.
+>>
+>>> On 14 August 2015 at 00:21, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>>> @@ -218,9 +187,8 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
+>>>>         chip->set               = bcma_gpio_set_value;
+>>>>         chip->direction_input   = bcma_gpio_direction_input;
+>>>>         chip->direction_output  = bcma_gpio_direction_output;
+>>>> -#if IS_BUILTIN(CONFIG_BCM47XX) || IS_BUILTIN(CONFIG_ARCH_BCM_5301X)
+>>>> -       chip->to_irq            = bcma_gpio_to_irq;
+>>>> -#endif
+>>>> +       chip->owner             = THIS_MODULE;
+>>>> +       chip->dev               = bcma_bus_get_host_dev(bus);
+>>>
+>>> This assigns &bus->host_pdev->dev which is NULL.
+>>
+>> hmm, how do we fix this, as long as bcma does not have a device on mips
+>> this is a problem. Should we create a new device for mips?
+> 
+> Yes I think MIPS should just create a host device. That
+> makes things simple and nice. Is it complex to do so?
+> 
+> Yours,
+> Linus Walleij
+> 
+Currently the documentation says this for the parent member on struct
+gpio_chip:
 
-The series is intended for 4.5 kernel and applies to master branch
-of the wireless-drivers-next repository.
+ * @parent: optional parent device providing the GPIOs
 
-Arend van Spriel (2):
-  brcmfmac: no interface combination check for single interface
-  brcmfmac: add 43242 device id for LG dongle
+I assume the optional is wrong here.
 
-Franky Lin (1):
-  brcmfmac: add arp offload ip address table configuration support
-
-Hante Meuleman (9):
-  brcmfmac: Simplify scan timing configuration.
-  brcmfmac: Use local storage for ssid iovar.
-  brcmfmac: Remove some redundant cfg80211 data.
-  brcmfmac: Cleanup pmksa cache handling code.
-  brcmfmac: Make TDLS a detectable feature.
-  brcmfmac: Add support for PCIE 4350 revision 5 device.
-  brcmfmac: Fix IBSS setup.
-  brcmfmac: Change error print in debug print.
-  brcmfmac: Move scheduled scan related interface layer structs.
-
-Kosuke Tatsukawa (1):
-  brcmfmac: fix waitqueue_active without memory barrier in brcmfmac
-    driver
-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 233 ++++++++++-----------
- .../broadcom/brcm80211/brcmfmac/cfg80211.h         | 111 +---------
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 108 ++++++++++
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   2 +
- .../wireless/broadcom/brcm80211/brcmfmac/feature.c |   1 +
- .../wireless/broadcom/brcm80211/brcmfmac/feature.h |   4 +-
- .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 105 ++++++++++
- .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  |   3 +-
- .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |   8 +-
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |   6 +-
- .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |   4 +-
- .../broadcom/brcm80211/include/brcm_hw_ids.h       |   2 +
- .../broadcom/brcm80211/include/brcmu_wifi.h        |  23 --
- 13 files changed, 342 insertions(+), 268 deletions(-)
-
--- 
-1.9.1
-
+Hauke
