@@ -1,35 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:54875 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752541AbbLSAo3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2015 19:44:29 -0500
-Date: Fri, 18 Dec 2015 14:43:43 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Glen Lee <glen.lee@atmel.com>
-Cc: devel@driverdev.osuosl.org, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
-	adel.noureldin@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
-	adham.abozaeid@atmel.com
-Subject: Re: [PATCH 1/3] staging: wilc1000: move perInterface_wlan_t to
- wilc_vif
-Message-ID: <20151218224343.GA9053@kroah.com> (sfid-20151219_014432_196256_949E4D67)
-References: <1448607033-25354-1-git-send-email-glen.lee@atmel.com>
- <1448607033-25354-2-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1448607033-25354-2-git-send-email-glen.lee@atmel.com>
+Received: from m50-138.163.com ([123.125.50.138]:40919 "EHLO m50-138.163.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752497AbbLVQTT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Dec 2015 11:19:19 -0500
+From: Geliang Tang <geliangtang@163.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] NFC: trf7970a: use to_spi_device
+Date: Wed, 23 Dec 2015 00:18:42 +0800
+Message-Id: <8847f1817f2c8d91a93b65d87648a4e024b24190.1450800897.git.geliangtang@163.com> (sfid-20151222_171935_843156_FBB98FDE)
+In-Reply-To: <a196696aefe502e775a025cdb662c39cbdabf412.1450800897.git.geliangtang@163.com>
+References: <a196696aefe502e775a025cdb662c39cbdabf412.1450800897.git.geliangtang@163.com>
+In-Reply-To: <a196696aefe502e775a025cdb662c39cbdabf412.1450800897.git.geliangtang@163.com>
+References: <a196696aefe502e775a025cdb662c39cbdabf412.1450800897.git.geliangtang@163.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Nov 27, 2015 at 03:50:31PM +0900, Glen Lee wrote:
-> perInterface_wlan_t and wilc_vif are all about interface control informations.
-> We will combine those two structures and maintain as one network interface
-> control information.
-> Move all the members of perInterface_wlan_t to wilc_vif and remove the
-> structure. Rename perInterace_wlan_t to wilc_vif and rename variable name nic
-> to vif which is proper name for it.
-> 
-> Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Use to_spi_device() instead of open-coding it.
 
-Series did not apply :(
+Signed-off-by: Geliang Tang <geliangtang@163.com>
+---
+ drivers/nfc/trf7970a.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
+index f857feb..10842b7 100644
+--- a/drivers/nfc/trf7970a.c
++++ b/drivers/nfc/trf7970a.c
+@@ -2139,7 +2139,7 @@ static int trf7970a_remove(struct spi_device *spi)
+ #ifdef CONFIG_PM_SLEEP
+ static int trf7970a_suspend(struct device *dev)
+ {
+-	struct spi_device *spi = container_of(dev, struct spi_device, dev);
++	struct spi_device *spi = to_spi_device(dev);
+ 	struct trf7970a *trf = spi_get_drvdata(spi);
+ 
+ 	dev_dbg(dev, "Suspend\n");
+@@ -2155,7 +2155,7 @@ static int trf7970a_suspend(struct device *dev)
+ 
+ static int trf7970a_resume(struct device *dev)
+ {
+-	struct spi_device *spi = container_of(dev, struct spi_device, dev);
++	struct spi_device *spi = to_spi_device(dev);
+ 	struct trf7970a *trf = spi_get_drvdata(spi);
+ 	int ret;
+ 
+@@ -2174,7 +2174,7 @@ static int trf7970a_resume(struct device *dev)
+ #ifdef CONFIG_PM
+ static int trf7970a_pm_runtime_suspend(struct device *dev)
+ {
+-	struct spi_device *spi = container_of(dev, struct spi_device, dev);
++	struct spi_device *spi = to_spi_device(dev);
+ 	struct trf7970a *trf = spi_get_drvdata(spi);
+ 	int ret;
+ 
+@@ -2191,7 +2191,7 @@ static int trf7970a_pm_runtime_suspend(struct device *dev)
+ 
+ static int trf7970a_pm_runtime_resume(struct device *dev)
+ {
+-	struct spi_device *spi = container_of(dev, struct spi_device, dev);
++	struct spi_device *spi = to_spi_device(dev);
+ 	struct trf7970a *trf = spi_get_drvdata(spi);
+ 	int ret;
+ 
+-- 
+2.5.0
+
+
