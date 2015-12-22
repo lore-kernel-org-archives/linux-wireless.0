@@ -1,67 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:23006 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965030AbbLHOGe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2015 09:06:34 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 4/9] mac80211: pass aggregation window size to lower level
-Date: Tue,  8 Dec 2015 16:04:34 +0200
-Message-Id: <1449583479-26658-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151208_150652_323430_3BD284C8)
-In-Reply-To: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:34162 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750772AbbLVMzx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Dec 2015 07:55:53 -0500
+Received: by mail-ob0-f171.google.com with SMTP id iw8so143390918obc.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Dec 2015 04:55:52 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <56793D61.7090305@hauke-m.de>
+References: <1439504505-20314-1-git-send-email-hauke@hauke-m.de>
+	<CACna6rzqGrfduyMPJkq29AJ2SFs8ngPgQau3rCWRtbZ3-nxfVA@mail.gmail.com>
+	<567449F4.9010400@hauke-m.de>
+	<CACRpkdY2mHou_Qx5Jn0Y6m-8FwgCjKKpioH=ADS=ARAdWgAtNQ@mail.gmail.com>
+	<56793D61.7090305@hauke-m.de>
+Date: Tue, 22 Dec 2015 13:55:52 +0100
+Message-ID: <CACRpkdZBPRVS=L6sQ2mSMQrY+5qe0LDexrwF+V4K=d7d1OwMOQ@mail.gmail.com> (sfid-20151222_135556_934942_57AE48D3)
+Subject: Re: [PATCH v3] bcma: switch GPIO portions to use GPIOLIB_IRQCHIP
+From: Linus Walleij <linus.walleij@linaro.org>
+To: Hauke Mehrtens <hauke@hauke-m.de>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+On Tue, Dec 22, 2015 at 1:09 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+> On 12/22/2015 10:01 AM, Linus Walleij wrote:
+>> On Fri, Dec 18, 2015 at 7:01 PM, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>> On 12/18/2015 07:27 AM, Rafał Miłecki wrote:
+>>>> I'm afraid it wasn't tested on BCM47XX (MIPS) :(
+>>>
+>>> Yes, you are probably right.
+>>>
+>>>> On 14 August 2015 at 00:21, Hauke Mehrtens <hauke@hauke-m.de> wrote:
+>>>>> @@ -218,9 +187,8 @@ int bcma_gpio_init(struct bcma_drv_cc *cc)
+>>>>>         chip->set               = bcma_gpio_set_value;
+>>>>>         chip->direction_input   = bcma_gpio_direction_input;
+>>>>>         chip->direction_output  = bcma_gpio_direction_output;
+>>>>> -#if IS_BUILTIN(CONFIG_BCM47XX) || IS_BUILTIN(CONFIG_ARCH_BCM_5301X)
+>>>>> -       chip->to_irq            = bcma_gpio_to_irq;
+>>>>> -#endif
+>>>>> +       chip->owner             = THIS_MODULE;
+>>>>> +       chip->dev               = bcma_bus_get_host_dev(bus);
+>>>>
+>>>> This assigns &bus->host_pdev->dev which is NULL.
+>>>
+>>> hmm, how do we fix this, as long as bcma does not have a device on mips
+>>> this is a problem. Should we create a new device for mips?
+>>
+>> Yes I think MIPS should just create a host device. That
+>> makes things simple and nice. Is it complex to do so?
+>>
+>> Yours,
+>> Linus Walleij
+>>
+> Currently the documentation says this for the parent member on struct
+> gpio_chip:
+>
+>  * @parent: optional parent device providing the GPIOs
+>
+> I assume the optional is wrong here.
 
-Currently mac80211 does not inform the driver of the window
-size when starting a rx aggregation session.
-Following patches will enable managing the reorder buffer in
-the driver or hardware, and the window size is needed.
+For just gpiochip it is optional. But if you read on:
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- include/net/mac80211.h | 8 +++++---
- net/mac80211/agg-rx.c  | 2 +-
- 2 files changed, 6 insertions(+), 4 deletions(-)
+GPIO drivers providing IRQs
+---------------------------
+(...)
+To use the helpers please keep the following in mind:
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index f4cbad4..dca010a 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -3061,9 +3061,11 @@ enum ieee80211_reconfig_type {
-  * 	ieee80211_ampdu_mlme_action. Starting sequence number (@ssn)
-  * 	is the first frame we expect to perform the action on. Notice
-  * 	that TX/RX_STOP can pass NULL for this parameter.
-- *	The @buf_size parameter is only valid when the action is set to
-- *	%IEEE80211_AMPDU_TX_OPERATIONAL and indicates the peer's reorder
-- *	buffer size (number of subframes) for this session -- the driver
-+ *	The @buf_size parameter is valid only when the action is set to
-+ *	%IEEE80211_AMPDU_RX_START or %IEEE80211_AMPDU_TX_OPERATIONAL and
-+ *	indicates the reorder buffer size (number of subframes) for this
-+ *	session.
-+ *	When the action is set to %IEEE80211_AMPDU_TX_OPERATIONAL the driver
-  *	may neither send aggregates containing more subframes than this
-  *	nor send aggregates in a way that lost frames would exceed the
-  *	buffer size. If just limiting the aggregate size, this would be
-diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
-index 10ad4ac..7867273 100644
---- a/net/mac80211/agg-rx.c
-+++ b/net/mac80211/agg-rx.c
-@@ -323,7 +323,7 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
- 		__skb_queue_head_init(&tid_agg_rx->reorder_buf[i]);
- 
- 	ret = drv_ampdu_action(local, sta->sdata, IEEE80211_AMPDU_RX_START,
--			       &sta->sta, tid, &start_seq_num, 0, false);
-+			       &sta->sta, tid, &start_seq_num, buf_size, false);
- 	ht_dbg(sta->sdata, "Rx A-MPDU request on %pM tid %d result %d\n",
- 	       sta->sta.addr, tid, ret);
- 	if (ret) {
--- 
-2.5.0
+- Make sure to assign all relevant members of the struct gpio_chip so that
+  the irqchip can initialize. E.g. .dev and .can_sleep shall be set up
+  properly.
+(...)
 
+Well it's complex. But when adding the gpio character device I
+am working with, I will introduce a struct device to the gpio_chip
+(or similar sibling gpio_device) which we can then refer, so that
+this actually will no longer be a requirement.
+
+Yours,
+Linus Walleij
