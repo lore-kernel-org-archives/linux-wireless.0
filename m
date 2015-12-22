@@ -1,79 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f54.google.com ([209.85.215.54]:34520 "EHLO
-	mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754334AbbLBVXO (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:22846 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752864AbbLVJMb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2015 16:23:14 -0500
-Received: by lffu14 with SMTP id u14so68033373lff.1
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2015 13:23:13 -0800 (PST)
+	Tue, 22 Dec 2015 04:12:31 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Souptick Joarder <jrdr.linux@gmail.com>
+CC: Brent Taylor <motobud@gmail.com>, <netdev@vger.kernel.org>,
+	<ath6kl@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] ath6kl: Use vmalloc to allocate ar->fw for api1 method
+References: <1448948470-31111-1-git-send-email-motobud@gmail.com>
+	<CAFqt6zaALx895c0BVrMpLdtfgYLz=-mmqaurtD28Nm1Ut2g1Dw@mail.gmail.com>
+	<CAP+RiCBK_iEOu27GzqqgG9Pn_MDP1m8JCnSqkGbPMAT7=P9V7g@mail.gmail.com>
+	<CAFqt6zZfmue6XVVno2Ho8UfEwz1Z3YxFzbcZ9ZMOn5Fe_zJLmQ@mail.gmail.com>
+Date: Tue, 22 Dec 2015 11:12:16 +0200
+In-Reply-To: <CAFqt6zZfmue6XVVno2Ho8UfEwz1Z3YxFzbcZ9ZMOn5Fe_zJLmQ@mail.gmail.com>
+	(Souptick Joarder's message of "Tue, 22 Dec 2015 14:35:20 +0530")
+Message-ID: <87poxy7spb.fsf@kamboji.qca.qualcomm.com> (sfid-20151222_101344_001420_D5392111)
 MIME-Version: 1.0
-In-Reply-To: <CALCETrWP=cv_3Q6BheFm=edFfSJ6Vs5NdeMtRJrBBk6bFQuoTQ@mail.gmail.com>
-References: <CALCETrWP=cv_3Q6BheFm=edFfSJ6Vs5NdeMtRJrBBk6bFQuoTQ@mail.gmail.com>
-Date: Wed, 2 Dec 2015 23:23:13 +0200
-Message-ID: <CANUX_P3=R+14jNctCsXHbE-dzCEUrb1SRGy9NDwY-b_1WNCYiA@mail.gmail.com> (sfid-20151202_222404_525428_C9384DEA)
-Subject: Re: Invalid SPLX
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Andy Lutomirski <luto@kernel.org>
-Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Arik Nemtsov <arik@wizery.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Souptick Joarder <jrdr.linux@gmail.com> writes:
 
+> Hi Brent,
+>
+> On Tue, Dec 22, 2015 at 3:23 AM, Brent Taylor <motobud@gmail.com> wrote:
+>> On Mon, Dec 21, 2015 at 1:23 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
+>>> Hi Brent,
+>>>
+>>> On Tue, Dec 1, 2015 at 11:11 AM, Brent Taylor <motobud@gmail.com> wrote:
+>>>
+>>>> --- a/drivers/net/wireless/ath/ath6kl/init.c
+>>>> +++ b/drivers/net/wireless/ath/ath6kl/init.c
+>>>> @@ -673,10 +673,15 @@ static int ath6kl_get_fw(struct ath6kl *ar, const char *filename,
+>>>>                 return ret;
+>>>>
+>>>>         *fw_len = fw_entry->size;
+>>>> -       *fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
+>>>> +   if (&ar->fw == fw)
+>>>> +               *fw = vmalloc(fw_entry->size);
+>>>> +   else
+>>>> +               *fw = kmalloc(fw_entry->size, GFP_KERNEL)
+>>>
+>>>           Why vmalloc and kmalloc both are required? can't use either
+>>> vmalloc or kmalloc?
+>>
+>> My original problem was that kmemdup (which uses kmalloc) could not
+>> allocate enough memory
+>
+> If kmemdump ( which uses kmalloc) could not allocate memory then
+> using kmalloc again can lead to same problem.
+> I guess it will be correct to use
+>             *fw = vmalloc(fw_entry->size);
+> Correct me if i am wrong.
 
-On Wed, Dec 2, 2015 at 10:35 PM, Andy Lutomirski <luto@kernel.org> wrote:
-> Hi-
->
-> My laptop has SPLC implemented like this:
->
->         Name (SPLX, Package (0x04)
->         {
->             Zero,
->             Package (0x03)
->             {
->                 0x80000000,
->                 0x80000000,
->                 0x80000000
->             },
->
->             Package (0x03)
->             {
->                 0x80000000,
->                 0x80000000,
->                 0x80000000
->             },
->
->             Package (0x03)
->             {
->                 0x80000000,
->                 0x80000000,
->                 0x80000000
->             }
->         })
->         Method (SPLC, 0, Serialized)
->         {
->             Index (DerefOf (Index (SPLX, One)), Zero) = DOM1 /* \DOM1 */
->             Index (DerefOf (Index (SPLX, One)), One) = LIM1 /* \LIM1 */
->             Index (DerefOf (Index (SPLX, One)), 0x02) = TIM1 /* \TIM1 */
->             Index (DerefOf (Index (SPLX, 0x02)), Zero) = DOM2 /* \DOM2 */
->             Index (DerefOf (Index (SPLX, 0x02)), One) = LIM2 /* \LIM2 */
->             Index (DerefOf (Index (SPLX, 0x02)), 0x02) = TIM2 /* \TIM2 */
->             Index (DerefOf (Index (SPLX, 0x03)), Zero) = DOM3 /* \DOM3 */
->             Index (DerefOf (Index (SPLX, 0x03)), One) = LIM3 /* \LIM3 */
->             Index (DerefOf (Index (SPLX, 0x03)), 0x02) = TIM3 /* \TIM3 */
->             Return (SPLX) /* \_SB_.PCI0.RP14.PXSX.SPLX */
->         }
->
-> splx_get_power_limit rejects this because it has more than one entry.
-> I don't see a spec for SPLC, but I'd guess that splx_get_power_limit
-> should iterate all the entries to find one that indicates wifi.
->
-> Also, should this be in common code instead of just in iwleifi?
->
+That sounds best. But remember take into account DMA requirements, IIRC
+you cannot DMA from vmalloc memory on all platforms.
 
-TBH, I don't know much about that. I'll ask internally and get back to
-you. I am badly overloaded, so feel free to ping me in a few days if
-you haven't heard from me.
+-- 
+Kalle Valo
