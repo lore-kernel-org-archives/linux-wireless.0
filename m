@@ -1,61 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:53947 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751998AbbLUUwZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 15:52:25 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 33/45] iwlwifi: mvm: small update in the firmware API
-Date: Mon, 21 Dec 2015 22:50:34 +0200
-Message-Id: <1450731046-2796-33-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_220101_495443_2FB4473F)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+Received: from mx07-00178001.pphosted.com ([62.209.51.94]:53975 "EHLO
+	mx07-00178001.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751935AbbLVJyY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Dec 2015 04:54:24 -0500
+From: Shikha Singh <shikha.singh@st.com>
+To: <sameo@linux.intel.com>, <aloisio.almeida@openbossa.org>,
+	<lauro.venancio@openbossa.org>, <linux-wireless@vger.kernel.org>,
+	<linux-nfc@lists.01.org>
+CC: <raunaque.quaiser@st.com>, <manoj.kumar@st.com>,
+	<sylvain.fidelis@st.com>, <patrick.sohn@st.com>,
+	<shikha.singh@st.com>, <MMS_MMY_Applications_SW@list.st.com>
+Subject: [[linux-nfc] PATCH v1.0 0/1] ST95HF:Fix build err
+Date: Tue, 22 Dec 2015 04:53:36 -0500
+Message-ID: <1450778017-12124-1-git-send-email-shikha.singh@st.com> (sfid-20151222_105431_197682_10B26EFB)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Small change in firmware API, no functional change.
+Modification in st95hf/core.c to resolve build error.
+Patch contains only delta in core.c to fix build error
+assuming original series of ST95HF driver is already 
+applied on NFC-next master branch. 
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+Shikha Singh (1):
+  driver: nfc: st95hf: Fix of build error
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
-index af7f9dd..75c79e1 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
-@@ -79,6 +79,11 @@
- #define IWL_RX_INFO_ENERGY_ANT_B_POS 8
- #define IWL_RX_INFO_ENERGY_ANT_C_POS 16
- 
-+enum iwl_mac_context_info {
-+	MAC_CONTEXT_INFO_NONE,
-+	MAC_CONTEXT_INFO_GSCAN,
-+};
-+
- /**
-  * struct iwl_rx_phy_info - phy info
-  * (REPLY_RX_PHY_CMD = 0xc0)
-@@ -97,6 +102,8 @@
-  * @frame_time: frame's time on the air, based on byte count and frame rate
-  *	calculation
-  * @mac_active_msk: what MACs were active when the frame was received
-+ * @mac_context_info: additional info on the context in which the frame was
-+ *	received as defined in &enum iwl_mac_context_info
-  *
-  * Before each Rx, the device sends this data. It contains PHY information
-  * about the reception of the packet.
-@@ -114,7 +121,8 @@ struct iwl_rx_phy_info {
- 	__le32 non_cfg_phy[IWL_RX_INFO_PHY_CNT];
- 	__le32 rate_n_flags;
- 	__le32 byte_count;
--	__le16 mac_active_msk;
-+	u8 mac_active_msk;
-+	u8 mac_context_info;
- 	__le16 frame_time;
- } __packed;
- 
+ drivers/nfc/st95hf/core.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
 -- 
-2.5.0
+1.8.2.1
 
