@@ -1,75 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52181 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753276AbbLBUf3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Dec 2015 15:35:29 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 7E22120524
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Dec 2015 20:35:28 +0000 (UTC)
-Received: from mail-oi0-f49.google.com (mail-oi0-f49.google.com [209.85.218.49])
-	(using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by mail.kernel.org (Postfix) with ESMTPSA id CACAC2051D
-	for <linux-wireless@vger.kernel.org>; Wed,  2 Dec 2015 20:35:27 +0000 (UTC)
-Received: by oies6 with SMTP id s6so33273271oie.1
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Dec 2015 12:35:27 -0800 (PST)
-MIME-Version: 1.0
-From: Andy Lutomirski <luto@kernel.org>
-Date: Wed, 2 Dec 2015 12:35:07 -0800
-Message-ID: <CALCETrWP=cv_3Q6BheFm=edFfSJ6Vs5NdeMtRJrBBk6bFQuoTQ@mail.gmail.com> (sfid-20151202_213536_551578_ED371454)
-Subject: Invalid SPLX
-To: Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Emmanuel Grumbach <egrumbach@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:36045 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752004AbbLVAtm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Dec 2015 19:49:42 -0500
+Received: by mail-pa0-f54.google.com with SMTP id q3so87133286pav.3
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2015 16:49:41 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 09/13] staging: wilc1000: rename pu8PmkidInfoArray in wilc_set_pmkid_info
+Date: Tue, 22 Dec 2015 09:49:05 +0900
+Message-Id: <1450745349-16811-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20151222_014945_426473_B7E4BE95)
+In-Reply-To: <1450745349-16811-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1450745349-16811-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi-
+This patch changes pu8PmkidInfoArray to pmkid to avoid camelcase.
 
-My laptop has SPLC implemented like this:
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-        Name (SPLX, Package (0x04)
-        {
-            Zero,
-            Package (0x03)
-            {
-                0x80000000,
-                0x80000000,
-                0x80000000
-            },
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 3ad4b0e..485318f 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3292,7 +3292,7 @@ int wilc_add_rx_gtk(struct wilc_vif *vif, const u8 *rx_gtk, u8 gtk_key_len,
+ }
+ 
+ int wilc_set_pmkid_info(struct wilc_vif *vif,
+-			struct host_if_pmkid_attr *pu8PmkidInfoArray)
++			struct host_if_pmkid_attr *pmkid)
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+@@ -3311,11 +3311,11 @@ int wilc_set_pmkid_info(struct wilc_vif *vif,
+ 	msg.body.key_info.action = ADDKEY;
+ 	msg.vif = vif;
+ 
+-	for (i = 0; i < pu8PmkidInfoArray->numpmkid; i++) {
++	for (i = 0; i < pmkid->numpmkid; i++) {
+ 		memcpy(msg.body.key_info.attr.pmkid.pmkidlist[i].bssid,
+-		       &pu8PmkidInfoArray->pmkidlist[i].bssid, ETH_ALEN);
++		       &pmkid->pmkidlist[i].bssid, ETH_ALEN);
+ 		memcpy(msg.body.key_info.attr.pmkid.pmkidlist[i].pmkid,
+-		       &pu8PmkidInfoArray->pmkidlist[i].pmkid, PMKID_LEN);
++		       &pmkid->pmkidlist[i].pmkid, PMKID_LEN);
+ 	}
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 3dfdc04..675a4e1 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -322,7 +322,7 @@ int wilc_add_rx_gtk(struct wilc_vif *vif, const u8 *rx_gtk, u8 gtk_key_len,
+ 		    const u8 *rx_mic, const u8 *tx_mic, u8 mode,
+ 		    u8 cipher_mode);
+ int wilc_set_pmkid_info(struct wilc_vif *vif,
+-			struct host_if_pmkid_attr *pu8PmkidInfoArray);
++			struct host_if_pmkid_attr *pmkid);
+ s32 wilc_get_mac_address(struct wilc_vif *vif, u8 *pu8MacAddress);
+ s32 wilc_set_mac_address(struct wilc_vif *vif, u8 *pu8MacAddress);
+ int wilc_wait_msg_queue_idle(void);
+-- 
+2.6.4
 
-            Package (0x03)
-            {
-                0x80000000,
-                0x80000000,
-                0x80000000
-            },
-
-            Package (0x03)
-            {
-                0x80000000,
-                0x80000000,
-                0x80000000
-            }
-        })
-        Method (SPLC, 0, Serialized)
-        {
-            Index (DerefOf (Index (SPLX, One)), Zero) = DOM1 /* \DOM1 */
-            Index (DerefOf (Index (SPLX, One)), One) = LIM1 /* \LIM1 */
-            Index (DerefOf (Index (SPLX, One)), 0x02) = TIM1 /* \TIM1 */
-            Index (DerefOf (Index (SPLX, 0x02)), Zero) = DOM2 /* \DOM2 */
-            Index (DerefOf (Index (SPLX, 0x02)), One) = LIM2 /* \LIM2 */
-            Index (DerefOf (Index (SPLX, 0x02)), 0x02) = TIM2 /* \TIM2 */
-            Index (DerefOf (Index (SPLX, 0x03)), Zero) = DOM3 /* \DOM3 */
-            Index (DerefOf (Index (SPLX, 0x03)), One) = LIM3 /* \LIM3 */
-            Index (DerefOf (Index (SPLX, 0x03)), 0x02) = TIM3 /* \TIM3 */
-            Return (SPLX) /* \_SB_.PCI0.RP14.PXSX.SPLX */
-        }
-
-splx_get_power_limit rejects this because it has more than one entry.
-I don't see a spec for SPLC, but I'd guess that splx_get_power_limit
-should iterate all the entries to find one that indicates wifi.
-
-Also, should this be in common code instead of just in iwleifi?
-
---Andy
