@@ -1,70 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:53947 "EHLO mga03.intel.com"
+Received: from mail.osadl.at ([92.243.35.153]:49389 "EHLO mail.osadl.at"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751387AbbLUUwP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 15:52:15 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 27/45] iwlwifi: clear ieee80211_tx_info->driver_data in the op_mode
-Date: Mon, 21 Dec 2015 22:50:28 +0200
-Message-Id: <1450731046-2796-27-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_220058_969091_7FFA3138)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+	id S1752985AbbLVHhY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Dec 2015 02:37:24 -0500
+Date: Tue, 22 Dec 2015 07:29:51 +0000
+From: Nicholas Mc Guire <der.herr@hofr.at>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Nicholas Mc Guire <hofrat@osadl.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Eliad Peller <eliad@wizery.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Arik Nemtsov <arik@wizery.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Luciano Coelho <luca@coelho.fi>,
+	Eyal Reizer <eyalreizer@gmail.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] wlcore: consolidate kmalloc + memset 0 into kzalloc
+Message-ID: <20151222072951.GA31496@osadl.at> (sfid-20151222_083734_525469_76773698)
+References: <1450716464-20759-1-git-send-email-hofrat@osadl.org>
+ <CAGRGNgU+CA-jLAX=_qV27tfbyQ2cyjYo2NZOq3_7fFLc-VsCew@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGRGNgU+CA-jLAX=_qV27tfbyQ2cyjYo2NZOq3_7fFLc-VsCew@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The transport will need to use the info->driver_data
-pointers. Since the op_mode has this memory hot in cache,
-clear it there.
+On Tue, Dec 22, 2015 at 09:56:10AM +1100, Julian Calaby wrote:
+> Hi,
+> 
+> On Tue, Dec 22, 2015 at 3:47 AM, Nicholas Mc Guire <hofrat@osadl.org> wrote:
+> > This is an API consolidation only. The use of kmalloc + memset to 0
+> > is equivalent to kzalloc.
+> >
+> > Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+> > ---
+> >
+> > Found by coccinelle script (relaxed version of
+> > scripts/coccinelle/api/alloc/kzalloc-simple.cocci)
+> >
+> > Patch was compile tested with: x86_64_defconfig +
+> > CONFIG_WL12XX=m (implies CONFIG_WLCORE=m)
+> >
+> > Patch is against linux-next (localversion-next is -next-20151221)
+> >
+> >  drivers/net/wireless/ti/wlcore/main.c | 3 +--
+> >  1 file changed, 1 insertion(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+> > index ec7f6af..dfc49bf 100644
+> > --- a/drivers/net/wireless/ti/wlcore/main.c
+> > +++ b/drivers/net/wireless/ti/wlcore/main.c
+> > @@ -838,7 +838,7 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
+> >
+> >         wl1271_info("Reading FW panic log");
+> >
+> > -       block = kmalloc(wl->fw_mem_block_size, GFP_KERNEL);
+> > +       block = kzalloc(wl->fw_mem_block_size, GFP_KERNEL);
+> >         if (!block)
+> >                 return;
+> >
+> > @@ -885,7 +885,6 @@ static void wl12xx_read_fwlog_panic(struct wl1271 *wl)
+> >                         goto out;
+> >                 }
+> > -               memset(block, 0, wl->fw_mem_block_size);
+> 
+> I don't think you can't remove this line. It appears that the loop
+> this is part of resets block to be all zero, reads a chunk of data in,
+> then operates on it. I'm guessing that the code after the following
+> line expects that there isn't any data left over from previous runs
+> through the loop.
+>
+the rational for this being ok is thta the copy operation into block is: 
+                ret = wlcore_read_hwaddr(wl, addr, block,
+                                        wl->fw_mem_block_size, false);
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/dvm/tx.c    | 1 +
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 3 ++-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c    | 2 +-
- 3 files changed, 4 insertions(+), 2 deletions(-)
+this will end up in the .read methods where block should be completely 
+overwritten (length == full block size), so within the loop if successful
+this should be correct - if not successful it would "goto out" witout 
+using the content of block.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/tx.c b/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
-index cf0ad5f..59e2001 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/tx.c
-@@ -383,6 +383,7 @@ int iwlagn_tx_skb(struct iwl_priv *priv,
- 	iwlagn_tx_cmd_build_rate(priv, tx_cmd, info, sta, fc);
- 
- 	memset(&info->status, 0, sizeof(info->status));
-+	memset(info->driver_data, 0, sizeof(info->driver_data));
- 
- 	info->driver_data[0] = ctx;
- 	info->driver_data[1] = dev_cmd;
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 6534537..a2683ef 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -552,7 +552,8 @@ struct iwl_trans_txq_scd_cfg {
-  *	If RFkill is asserted in the middle of a SYNC host command, it must
-  *	return -ERFKILL straight away.
-  *	May sleep only if CMD_ASYNC is not set
-- * @tx: send an skb
-+ * @tx: send an skb. The transport relies on the op_mode to zero the
-+ *	the ieee80211_tx_info->driver_data.
-  *	Must be atomic
-  * @reclaim: free packet until ssn. Returns a list of freed packets.
-  *	Must be atomic
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 04e921f..8bf48a7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -346,8 +346,8 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
- 	iwl_mvm_set_tx_cmd_rate(mvm, tx_cmd, info, sta, hdr->frame_control);
- 
- 	memset(&info->status, 0, sizeof(info->status));
-+	memset(info->driver_data, 0, sizeof(info->driver_data));
- 
--	info->driver_data[0] = NULL;
- 	info->driver_data[1] = dev_cmd;
- 
- 	return dev_cmd;
--- 
-2.5.0
+Am I overlooking something here ?
 
+thx!
+hofrat
