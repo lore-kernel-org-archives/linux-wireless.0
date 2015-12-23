@@ -1,90 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:34091 "EHLO
-	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751496AbbLKNVn (ORCPT
+Received: from [82.165.8.211] ([82.165.8.211]:48403 "EHLO mail.holtmann.org"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752803AbbLWP3T convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2015 08:21:43 -0500
-Received: by pfcc203 with SMTP id c203so4350204pfc.1
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Dec 2015 05:21:43 -0800 (PST)
-Subject: Re: [PATCH] wcn36xx: handle rx skb allocation failure to avoid system
- crash
-To: linux-wireless@vger.kernel.org, wcn36xx@lists.infradead.org,
-	me@bobcopeland.com, k.eugene.e@gmail.com,
-	bjorn.andersson@sonymobile.com
-References: <1449034051-12536-1-git-send-email-fengwei.yin@linaro.org>
-Cc: lking@qti.qualcomm.com
-From: "fengwei.yin" <fengwei.yin@linaro.org>
-Message-ID: <566ACC1C.1070304@linaro.org> (sfid-20151211_142202_198985_705A5A25)
-Date: Fri, 11 Dec 2015 21:14:04 +0800
-MIME-Version: 1.0
-In-Reply-To: <1449034051-12536-1-git-send-email-fengwei.yin@linaro.org>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Wed, 23 Dec 2015 10:29:19 -0500
+Content-Type: text/plain; charset=us-ascii
+Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
+Subject: Re: [PATCH] net: rfkill-gpio: more ACPI IDs for BCM Blutooth modules
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1450876021-806-1-git-send-email-heikki.krogerus@linux.intel.com>
+Date: Wed, 23 Dec 2015 16:28:59 +0100
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Message-Id: <54628FDE-9BC7-4155-BE2F-C4A6D2A2189E@holtmann.org> (sfid-20151223_162941_313011_6CBF40FF)
+References: <1450876021-806-1-git-send-email-heikki.krogerus@linux.intel.com>
+To: Heikki Krogerus <heikki.krogerus@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Heikki,
 
-On 2015/12/2 13:27, Fengwei Yin wrote:
-> Lawrence reported that git clone could make system crash on a
-> Qualcomm ARM soc based device (DragonBoard, 1G memory without
-> swap) running 64bit Debian.
->
-> It's turned out the crash is related with rx skb allocation
-> failure. git could consume more than 600MB anonymous memory.
-> And system is in extremely memory shortage case.
->
-> But driver didn't handle the rx allocation failure case. This patch
-> doesn't submit skb to upper layer if rx skb allocation fails.
-> Instead, it reuse the old skb for rx DMA again. It's more like
-> drop the packets if system is in memory shortage case.
->
-> With this change, git clone is OOMed instead of system crash.
->
-> Reported-by: King, Lawrence <lking@qti.qualcomm.com>
-> Signed-off-by: Fengwei Yin <fengwei.yin@linaro.org>
+> These are used with BCM43241 Wi-Fi/Bluetooth Combo Device.
+> 
+> Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
 > ---
->   drivers/net/wireless/ath/wcn36xx/dxe.c | 14 ++++++++++----
->   1 file changed, 10 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-> index f8dfa05..8887c0f 100644
-> --- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-> +++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-> @@ -474,11 +474,20 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
->   	struct wcn36xx_dxe_desc *dxe = ctl->desc;
->   	dma_addr_t  dma_addr;
->   	struct sk_buff *skb;
-> +	int ret = 0;
->
->   	while (!(dxe->ctrl & WCN36XX_DXE_CTRL_VALID_MASK)) {
->   		skb = ctl->skb;
->   		dma_addr = dxe->dst_addr_l;
-> -		wcn36xx_dxe_fill_skb(wcn->dev, ctl);
-> +		ret = wcn36xx_dxe_fill_skb(wcn->dev, ctl);
-> +		if (0 == ret) {
-> +			/* new skb allocation ok. Use the new one and queue
-> +			 * the old one to network system.
-> +			 */
-> +			dma_unmap_single(wcn->dev, dma_addr, WCN36XX_PKT_SIZE,
-> +					DMA_FROM_DEVICE);
-> +			wcn36xx_rx_skb(wcn, skb);
-> +		}
->
->   		switch (ch->ch_type) {
->   		case WCN36XX_DXE_CH_RX_L:
-> @@ -495,9 +504,6 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
->   			wcn36xx_warn("Unknown channel\n");
->   		}
->
-> -		dma_unmap_single(wcn->dev, dma_addr, WCN36XX_PKT_SIZE,
-> -				 DMA_FROM_DEVICE);
-> -		wcn36xx_rx_skb(wcn, skb);
->   		ctl = ctl->next;
->   		dxe = ctl->desc;
->   	}
->
+> net/rfkill/rfkill-gpio.c | 3 +++
+> 1 file changed, 3 insertions(+)
+> 
+> diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
+> index 9312722..ba6d61d 100644
+> --- a/net/rfkill/rfkill-gpio.c
+> +++ b/net/rfkill/rfkill-gpio.c
+> @@ -164,9 +164,12 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
+> #ifdef CONFIG_ACPI
+> static const struct acpi_device_id rfkill_acpi_match[] = {
+> 	{ "BCM2E1A", RFKILL_TYPE_BLUETOOTH },
+> +	{ "BCM2E3A", RFKILL_TYPE_BLUETOOTH },
+> 	{ "BCM2E3D", RFKILL_TYPE_BLUETOOTH },
+> +	{ "BCM2E3F", RFKILL_TYPE_BLUETOOTH },
+> 	{ "BCM2E40", RFKILL_TYPE_BLUETOOTH },
+> 	{ "BCM2E64", RFKILL_TYPE_BLUETOOTH },
+> +	{ "BCM2E7B", RFKILL_TYPE_BLUETOOTH },
+> 	{ "BCM4752", RFKILL_TYPE_GPS },
+> 	{ "LNV4752", RFKILL_TYPE_GPS },
+> 	{ },
 
-Ping.... I am sure this is a fix according to the test I did.
+I am actually not convinced that these should be added here. We are driving the Broadcom chips via drivers/bluetooth/hci_bcm.c and I pretty sure that these devices should be added there. We moved a few of the existing ones already over, but I have the feeling that in the end all should be moved.
 
 Regards
-Yin, Fengwei
+
+Marcel
 
