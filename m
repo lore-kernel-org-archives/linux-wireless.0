@@ -1,43 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39102 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751205AbbL3PHa (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:50235 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753042AbbLWC32 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 10:07:30 -0500
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 22 Dec 2015 21:29:28 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH] staging: wilc1000: remove wilc_sdio_init
+Date: Wed, 23 Dec 2015 11:33:23 +0900
+Message-ID: <1450838003-24379-1-git-send-email-glen.lee@atmel.com> (sfid-20151223_032946_933700_7040D7D2)
 MIME-Version: 1.0
-Subject: Re: [1/8] rtlwifi: rtl8723be: Fix module parameter initialization
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Message-Id: <20151230150729.E4CC66026F@smtp.codeaurora.org> (sfid-20151230_160734_793969_7FB87800)
-Date: Wed, 30 Dec 2015 15:07:29 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+wilc_sdio_init return always 1. It is needless, so just remove it and it's
+related codes also.
 
-> This driver has a number of errors in the module initialization. These
-> include the following:
-> 
-> Parameter msi_support is stored in two places - one is removed.
-> Paramters sw_crypto and disable_watchdog were never stored in the final
-> locations, nor were they initialized properly.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 12 ------------
+ 1 file changed, 12 deletions(-)
 
-Thanks, 8 patches applied to wireless-drivers-next.git:
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index e961b50..caad876 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -185,11 +185,6 @@ static void wilc_sdio_disable_interrupt(struct wilc *dev)
+ 	dev_info(&func->dev, "wilc_sdio_disable_interrupt OUT\n");
+ }
+ 
+-static int wilc_sdio_init(void)
+-{
+-	return 1;
+-}
+-
+ /********************************************
+  *
+  *      Function 0
+@@ -611,13 +606,6 @@ static int sdio_init(struct wilc *wilc)
+ 
+ 	g_sdio.irq_gpio = (wilc->dev_irq_num);
+ 
+-	if (!wilc_sdio_init()) {
+-		dev_err(&func->dev, "Failed io init bus...\n");
+-		return 0;
+-	} else {
+-		return 0;
+-	}
+-
+ 	/**
+ 	 *      function 0 csa enable
+ 	 **/
+-- 
+1.9.1
 
-7079604ddb83 rtlwifi: rtl8723be: Fix module parameter initialization
-793b09994211 rtlwifi: rtl8723ae: Fix initialization of module parameters
-78bae1de422a rtlwifi: rtl8821ae: Fix errors in parameter initialization
-06f34572c611 rtlwifi: rtl8188ee: Fix module parameter initialization
-d4d60b4caaa5 rtlwifi: rtl8192de: Fix incorrect module parameter descriptions
-7503efbd82c1 rtlwifi: rtl8192se: Fix module parameter initialization
-b24f19f16b9e rtlwifi: rtl8192ce: Fix handling of module parameters
-b68d0ae7e586 rtlwifi: rtl8192cu: Add missing parameter setup
-
-Kalle Valo
