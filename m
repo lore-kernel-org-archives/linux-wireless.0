@@ -1,52 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f49.google.com ([209.85.192.49]:36711 "EHLO
-	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964968AbbLQN05 (ORCPT
+Received: from devils.ext.ti.com ([198.47.26.153]:47187 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933900AbbLWKJw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 08:26:57 -0500
-Received: by mail-qg0-f49.google.com with SMTP id c96so7113431qgd.3
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Dec 2015 05:26:57 -0800 (PST)
-Date: Thu, 17 Dec 2015 08:26:55 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: "Adam R. Welle" <arwelle@cert.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: question on "mac80211_hwsim: support any address in userspace"
-Message-ID: <20151217132655.GA969@localhost> (sfid-20151217_142705_081205_EC4F2B9F)
-References: <5670DA9A.4010102@candelatech.com>
- <1450257464.3159.1.camel@sipsolutions.net>
- <56716386.4070107@candelatech.com>
- <1450272308.8247.11.camel@sipsolutions.net>
- <567168AF.4060804@candelatech.com>
- <1450273362.8247.15.camel@sipsolutions.net>
- <2DE9F46DD36D2A458CD6347950113F2535C1ED@marathon>
- <5671E23A.1070502@candelatech.com>
+	Wed, 23 Dec 2015 05:09:52 -0500
+Subject: Re: [PATCH 1/3] wlcore/wl12xx: spi: fix NULL pointer dereference
+ (Oops)
+To: Uri Mashiach <uri.mashiach@compulab.co.il>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Tony Lindgren <tony@atomide.com>
+References: <1450859744-9948-1-git-send-email-uri.mashiach@compulab.co.il>
+ <1450859744-9948-2-git-send-email-uri.mashiach@compulab.co.il>
+CC: Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, <bcousson@baylibre.com>,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Eliad Peller <eliad@wizery.com>, <devicetree@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+From: Grygorii Strashko <grygorii.strashko@ti.com>
+Message-ID: <567A7287.3010205@ti.com> (sfid-20151223_110959_798127_0111E0DB)
+Date: Wed, 23 Dec 2015 12:08:07 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5671E23A.1070502@candelatech.com>
+In-Reply-To: <1450859744-9948-2-git-send-email-uri.mashiach@compulab.co.il>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 16, 2015 at 02:14:18PM -0800, Ben Greear wrote:
-> On 12/16/2015 09:30 AM, Adam R. Welle wrote:
-> >
-> >>Well, it was always rather awkward since it was the *second* address :)
-> >
-> >Could somebody provide background information on why the decision was
-> >made to use a second address for the netlink frames instead of the same
-> >address as was used for the non-netlink frames?
+On 12/23/2015 10:35 AM, Uri Mashiach wrote:
+> The power function uses a consumer regulator access to update the WiFi
+> enable GPIO value.
 > 
-> I would be fine with always using the first address instead of the second,
-> in case that helps someone.
+> Fix the below Oops when trying to modprobe wlcore_spi.
+> The oops occurs because the wl1271_power_{off,on}()
+> function doesn't check the power() function pointer.
+> 
+> [   23.401447] Unable to handle kernel NULL pointer dereference at
+> virtual address 00000000
+> [   23.409954] pgd = c0004000
+> [   23.412922] [00000000] *pgd=00000000
+> [   23.416693] Internal error: Oops: 80000007 [#1] SMP ARM
+> [   23.422168] Modules linked in: wl12xx wlcore mac80211 cfg80211
+> musb_dsps musb_hdrc usbcore usb_common snd_soc_simple_card evdev joydev
+> omap_rng wlcore_spi snd_soc_tlv320aic23_i2c rng_core snd_soc_tlv320aic23
+> c_can_platform c_can can_dev snd_soc_davinci_mcasp snd_soc_edma
+> snd_soc_omap omap_wdt musb_am335x cpufreq_dt thermal_sys hwmon
+> [   23.453253] CPU: 0 PID: 36 Comm: kworker/0:2 Not tainted
+> 4.2.0-00002-g951efee-dirty #233
+> [   23.461720] Hardware name: Generic AM33XX (Flattened Device Tree)
+> [   23.468123] Workqueue: events request_firmware_work_func
+> [   23.473690] task: de32efc0 ti: de4ee000 task.ti: de4ee000
+> [   23.479341] PC is at 0x0
+> [   23.482112] LR is at wl12xx_set_power_on+0x28/0x124 [wlcore]
 
-It doesn't really, that would break old wmediumd.
-
-> We could also set the address at creation time easily enough.  Then it
-> could still be unique across many machines if you managed it.
-
-We already have a way to change mac addresses; adding a new API to change
-the default address seems pointless to me.
+Why can't you just add proper check in wl1271_power_on/wl1271_power_off() instead?
 
 -- 
-Bob Copeland %% http://bobcopeland.com/
+regards,
+-grygorii
