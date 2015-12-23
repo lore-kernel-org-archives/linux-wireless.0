@@ -1,127 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:2928 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751636AbbLUUvR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 15:51:17 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 14/45] iwlwifi: uninline iwl_trans_send_cmd
-Date: Mon, 21 Dec 2015 22:50:15 +0200
-Message-Id: <1450731046-2796-14-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_215128_983921_9150CC38)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:33715 "EHLO
+	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750947AbbLWPFI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Dec 2015 10:05:08 -0500
+Received: by mail-wm0-f45.google.com with SMTP id p187so148285084wmp.0
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 07:05:07 -0800 (PST)
+Subject: Re: MediaTek WiFi hardware support in upstream kernel
+To: =?UTF-8?Q?Jakub_Kici=c5=84ski?= <moorray3@wp.pl>
+References: <544DB5A8.7090405@openmailbox.org>
+ <20141027152026.GB19976@tuxdriver.com> <544E8CB4.3000607@rempel-privat.de>
+ <20141028134608.GA26283@tuxdriver.com> <544FA303.5060303@broadcom.com>
+ <544FA627.3000004@rempel-privat.de> <5450BEB2.60208@openwrt.org>
+ <5461F937.9060004@rempel-privat.de> <5463CB6C.3030204@openwrt.org>
+ <5463D28F.9080106@lwfinger.net> <20150206182915.7467bac7@north>
+ <54EF261E.4040109@gmail.com> <20150226154028.380b96f2@north>
+ <55592C54.6010204@gmail.com> <555CBEFC.50902@gmail.com>
+ <20150520191428.42e9a3ec@north> <555DDFB7.9060705@gmail.com>
+ <558F0B68.6030007@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Oleksij Rempel <linux@rempel-privat.de>, kubakici@wp.pl,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Etna <etna@openmailbox.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
+	Hua Shao <hua.shao@mediatek.com>,
+	Jay Hung <jay.hung@mediatek.com>
+From: poma <pomidorabelisima@gmail.com>
+Message-ID: <567AB81E.20302@gmail.com> (sfid-20151223_160513_821755_281D0D6D)
+Date: Wed, 23 Dec 2015 16:05:02 +0100
+MIME-Version: 1.0
+In-Reply-To: <558F0B68.6030007@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This function got too big to be inlined. Uninline it.
+On 27.06.2015 22:45, poma wrote:
+> 
+> mt7601u landed in 'linux-next'
+> https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/log/drivers/net/wireless/mediatek/mt7601u
+> 
+> the v4.2 kernel is predicted for Sunday, 2015-08-23
+> http://phb-crystal-ball.org
+> 
+> For the firmware(mt7601u.bin) as part of the essential functionality of the device
+> it would be good to land in 'linux-firmware' *even* before the actual kernel release v4.2
+> http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/tree
+> 
+> 
+> tempus fugit
+> 
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-trans.c | 33 +++++++++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 34 ++------------------------
- 2 files changed, 35 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-index ccd317b..c3fafbc 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.c
-@@ -61,6 +61,7 @@
-  *
-  *****************************************************************************/
- #include <linux/kernel.h>
-+#include "iwl-drv.h"
- #include "iwl-trans.h"
- 
- struct iwl_trans *iwl_trans_alloc(unsigned int priv_size,
-@@ -112,3 +113,35 @@ void iwl_trans_free(struct iwl_trans *trans)
- 	kmem_cache_destroy(trans->dev_cmd_pool);
- 	kfree(trans);
- }
-+
-+int iwl_trans_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
-+{
-+	int ret;
-+
-+	if (unlikely(!(cmd->flags & CMD_SEND_IN_RFKILL) &&
-+		     test_bit(STATUS_RFKILL, &trans->status)))
-+		return -ERFKILL;
-+
-+	if (unlikely(test_bit(STATUS_FW_ERROR, &trans->status)))
-+		return -EIO;
-+
-+	if (unlikely(trans->state != IWL_TRANS_FW_ALIVE)) {
-+		IWL_ERR(trans, "%s bad state = %d\n", __func__, trans->state);
-+		return -EIO;
-+	}
-+
-+	if (WARN_ON((cmd->flags & CMD_WANT_ASYNC_CALLBACK) &&
-+		    !(cmd->flags & CMD_ASYNC)))
-+		return -EINVAL;
-+
-+	if (!(cmd->flags & CMD_ASYNC))
-+		lock_map_acquire_read(&trans->sync_cmd_lockdep_map);
-+
-+	ret = trans->ops->send_cmd(trans, cmd);
-+
-+	if (!(cmd->flags & CMD_ASYNC))
-+		lock_map_release(&trans->sync_cmd_lockdep_map);
-+
-+	return ret;
-+}
-+IWL_EXPORT_SYMBOL(iwl_trans_send_cmd);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 77ae7fa..b825d94 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -889,38 +889,6 @@ iwl_trans_dump_data(struct iwl_trans *trans,
- 	return trans->ops->dump_data(trans, trigger);
- }
- 
--static inline int iwl_trans_send_cmd(struct iwl_trans *trans,
--				     struct iwl_host_cmd *cmd)
--{
--	int ret;
--
--	if (unlikely(!(cmd->flags & CMD_SEND_IN_RFKILL) &&
--		     test_bit(STATUS_RFKILL, &trans->status)))
--		return -ERFKILL;
--
--	if (unlikely(test_bit(STATUS_FW_ERROR, &trans->status)))
--		return -EIO;
--
--	if (unlikely(trans->state != IWL_TRANS_FW_ALIVE)) {
--		IWL_ERR(trans, "%s bad state = %d\n", __func__, trans->state);
--		return -EIO;
--	}
--
--	if (WARN_ON((cmd->flags & CMD_WANT_ASYNC_CALLBACK) &&
--		    !(cmd->flags & CMD_ASYNC)))
--		return -EINVAL;
--
--	if (!(cmd->flags & CMD_ASYNC))
--		lock_map_acquire_read(&trans->sync_cmd_lockdep_map);
--
--	ret = trans->ops->send_cmd(trans, cmd);
--
--	if (!(cmd->flags & CMD_ASYNC))
--		lock_map_release(&trans->sync_cmd_lockdep_map);
--
--	return ret;
--}
--
- static inline struct iwl_device_cmd *
- iwl_trans_alloc_tx_cmd(struct iwl_trans *trans)
- {
-@@ -933,6 +901,8 @@ iwl_trans_alloc_tx_cmd(struct iwl_trans *trans)
- 			(dev_cmd_ptr + trans->dev_cmd_headroom);
- }
- 
-+int iwl_trans_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd);
-+
- static inline void iwl_trans_free_tx_cmd(struct iwl_trans *trans,
- 					 struct iwl_device_cmd *dev_cmd)
- {
--- 
-2.5.0
+Add firmware for mt7601u. version 34.
+http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/commit/?id=9df5430
+
+Thanks Hua Shao for the firmware,
+and of course,
+thanks Jakub Kiciński for the driver.
+
+Oh yeah!
+
 
