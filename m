@@ -1,45 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56171 "EHLO sipsolutions.net"
+Received: from bear.ext.ti.com ([192.94.94.41]:54983 "EHLO bear.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932348AbbLNNax (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 08:30:53 -0500
-Message-ID: <1450099851.3871.19.camel@sipsolutions.net> (sfid-20151214_143057_194535_10599F21)
-Subject: Re: SUPPORTS_CLONED_SKBS question
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless@vger.kernel.org, Felix Fietkau <nbd@openwrt.org>,
-	Ido Yariv <ido@wizery.com>
-Date: Mon, 14 Dec 2015 14:30:51 +0100
-In-Reply-To: <CALhHN=prjjYLWEa6XSZSOwWTW+3eggPKQ3P1eNCt1fhKUwwvMQ@mail.gmail.com> (sfid-20151214_135825_770699_738420CE)
-References: <CALhHN=prjjYLWEa6XSZSOwWTW+3eggPKQ3P1eNCt1fhKUwwvMQ@mail.gmail.com>
-	 (sfid-20151214_135825_770699_738420CE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S934095AbbLWK1x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Dec 2015 05:27:53 -0500
+Subject: Re: [PATCH 2/3] wlcore/wl12xx: spi: add device tree support
+To: Uri Mashiach <uri.mashiach@compulab.co.il>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Tony Lindgren <tony@atomide.com>
+References: <1450859744-9948-1-git-send-email-uri.mashiach@compulab.co.il>
+ <1450859744-9948-3-git-send-email-uri.mashiach@compulab.co.il>
+CC: Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, <bcousson@baylibre.com>,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Eliad Peller <eliad@wizery.com>, <devicetree@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+From: Grygorii Strashko <grygorii.strashko@ti.com>
+Message-ID: <567A76B5.70605@ti.com> (sfid-20151223_112805_037006_75E46CC4)
+Date: Wed, 23 Dec 2015 12:25:57 +0200
+MIME-Version: 1.0
+In-Reply-To: <1450859744-9948-3-git-send-email-uri.mashiach@compulab.co.il>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+Ido.
+On 12/23/2015 10:35 AM, Uri Mashiach wrote:
+> Add DT support for the wl1271 SPI WiFi.
+> 
+> Add documentation file for the wl1271 SPI WiFi.
+> 
+> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+> Acked-by: Igor Grinberg <grinberg@compulab.co.il>
+> ---
+>   .../bindings/net/wireless/ti,wlcore,spi.txt        | 35 +++++++++++
+>   drivers/net/wireless/ti/wlcore/spi.c               | 67 +++++++++++++++++++---
+>   2 files changed, 95 insertions(+), 7 deletions(-)
+>   create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
+> 
+> diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt b/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
+> new file mode 100644
+> index 0000000..a3e7eb7
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
+> @@ -0,0 +1,35 @@
+> +* Texas Instruments wl1271 wireless lan controller
+> +
+> +The wl1271 chip can be connected via SPI or via SDIO. This
+> +document describes the binding for the SPI connected chip.
+> +
+> +Required properties:
+> +- compatible :          Should be "ti,wl1271"
+> +- reg :                 Chip select address of device
+> +- spi-max-frequency :   Maximum SPI clocking speed of device in Hz
+> +- ref-clock-frequency : Reference clock frequency
+> +- interrupts :          Should contain interrupt line and trigger type
 
-On Mon, 2015-12-14 at 13:58 +0100, Janusz Dziedzic wrote:
+It's good to describe here number of IRQ lines your device have and IRQ types (edge/level) 
 
-> Base of SUPPORTS_CLONED_SKBS description, we can set this flag
-> in case driver will not touch payload or tailroom.
-> What exactly does it mean?
+> +- interrupt-parent :    Should be the phandle for the interrupt controller
+interrupt-parent is not required (also interrupts-extended can be used)
 
-Well, you must not modify the data in a way that would make the clone
-invalid. That means you can't write to any of the data, essentially.
+> +                        that services interrupts for this device
+> +- vwlan-supply :        Point the node of the regulator that controls the wl1271 chip WLAN_EN pin
 
-> What in case of headroom, while ath9k already move 80211 header - add
-> padding
-> after header (skb_push(hdrlen & 3) + memmove) and remove this padding
-> in tx_completion.
+Pls, use gpio if this is required just to toggle WLAN_EN pin.
 
-I think that should be OK since you don't touch the payload data or the
-tailroom.
+[ti,] power-gpio or en-gpio
 
-> What in case of FCS?
 
-What about it? Hopefully that's added by hardware and has no effect on
-the skb?!
+> +
+> +Optional properties:
+> +- clock-xtal :          boolean, clock is generated from XTAL
+> +
+> +- Please consult Documentation/devicetree/bindings/spi/spi-bus.txt
+> +  for optional SPI connection related properties,just
+> +
+> +Examples:
+> +
+> +&spi1 {
+> +	wl1271@1 {
+> +		compatible = "ti,wl1271";
+> +
+> +		reg = <1>;
+> +		spi-max-frequency = <48000000>;
+> +		clock-xtal;
+> +		interrupt-parent = <&gpio3>;
+> +		interrupts = <8 IRQ_TYPE_LEVEL_HIGH>;
+> +		wifi-supply = <&wifi_fixed>;
+> +	};
+> +};
+> diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
+> index d3a4bcb..7281f5a 100644
+> --- a/drivers/net/wireless/ti/wlcore/spi.c
+> +++ b/drivers/net/wireless/ti/wlcore/spi.c
+> @@ -30,6 +30,7 @@
+>   #include <linux/spi/spi.h>
+>   #include <linux/wl12xx.h>
+>   #include <linux/platform_device.h>
+> +#include <linux/of_irq.h>
+>   #include <linux/regulator/consumer.h>
+>   
+>   #include "wlcore.h"
+> @@ -357,6 +358,54 @@ static struct wl1271_if_operations spi_ops = {
+>   	.set_block_size = NULL,
+>   };
+>   
+> +#ifdef CONFIG_OF
+> +static const struct of_device_id wlcore_spi_of_match_table[] = {
+> +	{ .compatible = "ti,wl1271" },
+> +	{ }
+> +};
+> +
+> +/**
+> + * wlcore_probe_of - DT node parsing.
+> + * @spi: SPI slave device parameters.
+> + * @res: resource parameters.
+> + * @glue: wl12xx SPI bus to slave device glue parameters.
+> + * @pdev_data: wlcore device parameters
+> + */
+> +static int wlcore_probe_of(struct spi_device *spi, struct resource *res,
+> +			   struct wl12xx_spi_glue *glue,
+> +			   struct wlcore_platdev_data *pdev_data)
+> +{
+> +	struct device_node *dt_node = spi->dev.of_node;
+> +	int ret;
+> +
+> +	ret = of_irq_to_resource(dt_node, 0, &res[0]);
+> +	if (spi->irq != ret) {
+> +		dev_err(glue->dev, "can't get interrupt resource\n");
+> +		return -EINVAL;
+> +	}
 
-johannes
+SPI core will parse IRQ for you (see below)
+
+> +
+> +	if (of_find_property(dt_node, "clock-xtal", NULL))
+> +		pdev_data->ref_clock_xtal = true;
+> +
+> +	ret = of_property_read_u32(dt_node, "ref-clock-frequency",
+> +				   &pdev_data->ref_clock_freq);
+> +	if (IS_ERR_VALUE(ret)) {
+> +		dev_err(glue->dev,
+> +			"can't get reference clock frequency (%d)\n", ret);
+> +		return ret;
+> +	}
+> +
+> +	return 0;
+> +}
+> +#else /* CONFIG_OF */
+> +static int wlcore_probe_of(struct spi_device *spi, struct resource *res,
+> +			   struct wl12xx_spi_glue *glue,
+> +			   struct wlcore_platdev_data *pdev_data)
+> +{
+> +	return -ENODATA;
+> +}
+> +#endif /* CONFIG_OF */
+> +
+>   static int wl1271_probe(struct spi_device *spi)
+>   {
+>   	struct wl12xx_spi_glue *glue;
+> @@ -365,8 +414,7 @@ static int wl1271_probe(struct spi_device *spi)
+>   	int ret;
+>   
+>   	memset(&pdev_data, 0x00, sizeof(pdev_data));
+> -
+> -	/* TODO: add DT parsing when needed */
+> +	memset(res, 0x00, sizeof(res));
+>   
+>   	pdev_data.if_ops = &spi_ops;
+>   
+> @@ -390,6 +438,13 @@ static int wl1271_probe(struct spi_device *spi)
+>   		return PTR_ERR(glue->reg);
+>   	}
+>   
+> +	ret = wlcore_probe_of(spi, &res[0], glue, &pdev_data);
+> +	if (IS_ERR_VALUE(ret)) {
+> +		dev_err(glue->dev,
+> +			"can't get device tree parameters (%d)\n", ret);
+> +		return ret;
+
+So, wl1271_probe will fail always if CONFIG_OF=n. Right?
+
+
+> +	}
+> +
+>   	ret = spi_setup(spi);
+>   	if (ret < 0) {
+>   		dev_err(glue->dev, "spi_setup failed\n");
+> @@ -404,10 +459,6 @@ static int wl1271_probe(struct spi_device *spi)
+>   
+>   	glue->core->dev.parent = &spi->dev;
+>   
+> -	memset(res, 0x00, sizeof(res));
+> -
+> -	res[0].start = spi->irq;
+> -	res[0].flags = IORESOURCE_IRQ;
+>   	res[0].name = "irq";
+
+Above code might be left unchaenged.
+
+
+>   
+>   	ret = platform_device_add_resources(glue->core, res, ARRAY_SIZE(res));
+> @@ -445,10 +496,12 @@ static int wl1271_remove(struct spi_device *spi)
+>   	return 0;
+>   }
+>   
+> -
+>   static struct spi_driver wl1271_spi_driver = {
+>   	.driver = {
+>   		.name		= "wl1271_spi",
+> +#ifdef CONFIG_OF
+> +		.of_match_table = of_match_ptr(wlcore_spi_of_match_table),
+> +#endif /* CONFIG_OF */
+
+These ifdefs are not needed - see of_match_ptr() definition
+
+>   	},
+>   
+>   	.probe		= wl1271_probe,
+> 
+
+
+-- 
+regards,
+-grygorii
