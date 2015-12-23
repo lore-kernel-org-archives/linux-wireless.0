@@ -1,51 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:37371 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932310AbbLNMxE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 07:53:04 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>
-Subject: RE: [PATCH 00/14] mwifiex fixes
-Date: Mon, 14 Dec 2015 12:53:00 +0000
-Message-ID: <8f476c5a99e34417a060c1b20078bd38@SC-EXCH04.marvell.com> (sfid-20151214_135310_399408_A634D612)
-References: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
-	 (sfid-20151214_131706_754762_207FCAEE)
- <1450095756.3871.15.camel@sipsolutions.net>
-In-Reply-To: <1450095756.3871.15.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from softlayer.compulab.co.il ([50.23.254.55]:37402 "EHLO
+	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755436AbbLWIfx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Dec 2015 03:35:53 -0500
+From: Uri Mashiach <uri.mashiach@compulab.co.il>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Tony Lindgren <tony@atomide.com>
+Cc: Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	Uri Mashiach <uri.mashiach@compulab.co.il>
+Subject: [PATCH 3/3] wlcore/wl12xx: spi: add wifi support to cm-t335
+Date: Wed, 23 Dec 2015 10:35:44 +0200
+Message-Id: <1450859744-9948-4-git-send-email-uri.mashiach@compulab.co.il> (sfid-20151223_093607_607211_E2560F33)
+In-Reply-To: <1450859744-9948-1-git-send-email-uri.mashiach@compulab.co.il>
+References: <1450859744-9948-1-git-send-email-uri.mashiach@compulab.co.il>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBGcm9tOiBKb2hhbm5lcyBCZXJnIFttYWlsdG86am9oYW5uZXNAc2lwc29sdXRpb25zLm5ldF0N
-Cj4gU2VudDogTW9uZGF5LCBEZWNlbWJlciAxNCwgMjAxNSA1OjUzIFBNDQo+IFRvOiBBbWl0a3Vt
-YXIgS2Fyd2FyOyBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmcNCj4gQ2M6IENhdGh5IEx1
-bzsgTmlzaGFudCBTYXJtdWthZGFtDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMDAvMTRdIG13aWZp
-ZXggZml4ZXMNCj4gDQo+IE9uIE1vbiwgMjAxNS0xMi0xNCBhdCAwNDoxNSAtMDgwMCwgQW1pdGt1
-bWFyIEthcndhciB3cm90ZToNCj4gPiBUaGVzZSBwYXRjaGVzIGluY2x1ZGUgZmV3IGZpeGVzIGZv
-ciBtd2lmaWV4IGFuZCBhZGQgYSBkZWJ1Z2ZzIGZpbGUgZm9yDQo+ID4gY2hpcCByZXNldC4NCj4g
-Pg0KPiANCj4gQSBsb3Qgb2YgdGhlc2UgImZpeGVzIiBsb29rIGxpa2UgbmV3IGZpcm13YXJlIGZl
-YXR1cmVzIHRvIG1lIChlLmcuDQo+IGludGVyZmFjZSBsaW1pdHMsIHNtczQgY2lwaGVyLCBwYXR0
-ZXJuIGxlbmd0aCkuDQoNClRoZXNlIGZlYXR1cmVzIGFyZSBzdXBwb3J0ZWQgZXZlbiB3aXRoIG9s
-ZGVyIGZpcm13YXJlcy4gSXTigJlzIGp1c3QgdGhhdCB0aGV5IGFyZSBhZHZlcnRpc2VkIG5vdyB0
-byBtZWV0IHNwZWNpZmljIHJlcXVpcmVtZW50cyBmcm9tIGN1c3RvbWVyLg0KDQpzbXM0IGNpcGhl
-ciAtIFdBUEkgaXMgc3VwcG9ydGVkIGluIGZpcm13YXJlIGZvciBsb25nIHRpbWUuDQppbnRlcmZh
-Y2UgbGltaXRzIC0gSW50ZXJmYWNlIGxpbWl0IGhhcyBiZWVuIGNoYW5nZWQsIGJ1dCB0b3RhbCBu
-dW1iZXIgb2YgbWF4aW11bSBpbnRlcmZhY2VzIGFyZSBzYW1lLiBDaGFuZ2UgaXMgY29tcGF0aWJs
-ZSB3aXRoIG9sZGVyIGZpcm13YXJlLg0KcGF0dGVybiBsZW5ndGggLSBVc2VyIHByb3ZpZGVkIHBh
-dHRlcm4gbGVuZ3RoICh3aWxkY2FyZCBieXRlcyArIGFjdHVhbCBieXRlcykgaGFzIGJlZW4gaW5j
-cmVhc2VkIHRvIGFjY29tbW9kYXRlIG1vcmUgd2lsZGNhcmQgYnl0ZXMuIE5vIGNoYW5nZSBpbiBh
-Y3R1YWwgcGFja2V0IGxlbmd0aCBzdXBwb3J0ZWQgYnkgZmlybXdhcmUuDQoNCj4gDQo+IEZpcnN0
-IG9mIGFsbCAtIGlzIHRoYXQgcmVhbGx5IGFwcHJvcHJpYXRlIGFzICJmaXhlcyIsIHdoYXQgdHJl
-ZSBhcmUgeW91DQo+IHRhcmdldGluZz8NCg0KTW9zdCBvZiB0aGUgcGF0Y2hlcyBpbiB0aGlzIHNl
-cmllcyBhcmUgZml4ZXMuIEhlbmNlIEkgdXNlZCB3b3JkICdmaXhlcycuIEkgYW0gdGFyZ2V0aW5n
-IHRoZW0gZm9yIHdpcmVsZXNzLWRyaXZlcnMtbmV4dCB0cmVlIG9ubHkuDQoNCj4gDQo+IEFuZCBz
-ZWNvbmRseSwgaG93IGFyZSB5b3UgbWFraW5nIHN1cmUgdGhlIHVzZXIgd29uJ3QgaGF2ZSBhbiBv
-bGRlcg0KPiBmaXJtd2FyZSB2ZXJzaW9uIHdoZXJlIHRoaXMgd2lsbCBwcmVzdW1hYmx5IGNhdXNl
-IGNyYXNoZXM/DQo+IA0KDQpUaGlzIHBhdGNoIHNlcmllcyBkb2VzbuKAmXQgaW5jbHVkZSBhbnkg
-bmV3IGZlYXR1cmUgd2hpY2ggYXJlbid0IHN1cHBvcnRlZCBieSBvbGRlciBmaXJtd2FyZS4NCg0K
-UmVnYXJkcywNCkFtaXRrdW1hcg0K
+Device tree modifications:
+- Pinmux for SPI0 and WiFi GPIOs.
+- SPI0 node with wlcore as a child node.
+
+Cc: Tony Lindgren <tony@atomide.com>
+Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+Acked-by: Igor Grinberg <grinberg@complab.co.il>
+---
+Prerequisites:
+This patch applies on Tony's omap-for-v4.5/dt branch.
+
+ arch/arm/boot/dts/am335x-cm-t335.dts | 58 +++++++++++++++++++++++++++++++++++-
+ 1 file changed, 57 insertions(+), 1 deletion(-)
+
+diff --git a/arch/arm/boot/dts/am335x-cm-t335.dts b/arch/arm/boot/dts/am335x-cm-t335.dts
+index 42e9b66..41242a5 100644
+--- a/arch/arm/boot/dts/am335x-cm-t335.dts
++++ b/arch/arm/boot/dts/am335x-cm-t335.dts
+@@ -11,6 +11,7 @@
+ /dts-v1/;
+ 
+ #include "am33xx.dtsi"
++#include <dt-bindings/interrupt-controller/irq.h>
+ 
+ / {
+ 	model = "CompuLab CM-T335";
+@@ -40,6 +41,15 @@
+ 		regulator-max-microvolt = <3300000>;
+ 	};
+ 
++	/* Regulator for WiFi */
++	vwlan_fixed: fixedregulator@2 {
++		compatible = "regulator-fixed";
++		regulator-name = "vwlan_fixed";
++		gpio = <&gpio0 20 GPIO_ACTIVE_HIGH>; /* gpio0_20 */
++		enable-active-high;
++		regulator-boot-off;
++	};
++
+ 	backlight {
+ 		compatible = "pwm-backlight";
+ 		pwms = <&ecap0 0 50000 0>;
+@@ -50,7 +60,10 @@
+ 
+ &am33xx_pinmux {
+ 	pinctrl-names = "default";
+-	pinctrl-0 = <&bluetooth_pins>;
++	pinctrl-0 = <
++		  &bluetooth_pins
++		  &wifi_pins
++	>;
+ 
+ 	i2c0_pins: pinmux_i2c0_pins {
+ 		pinctrl-single,pins = <
+@@ -223,6 +236,21 @@
+ 		>;
+ 	};
+ 
++	spi0_pins: pinmux_spi0_pins {
++		pinctrl-single,pins = <
++			/* spi0_sclk.spi0_sclk */
++			AM33XX_IOPAD(0x950, PIN_INPUT | MUX_MODE0)
++			/* spi0_d0.spi0_d0 */
++			AM33XX_IOPAD(0x954, PIN_OUTPUT_PULLUP | MUX_MODE0)
++			/* spi0_d1.spi0_d1 */
++			AM33XX_IOPAD(0x958, PIN_INPUT | MUX_MODE0)
++			/* spi0_cs0.spi0_cs0 */
++			AM33XX_IOPAD(0x95C, PIN_OUTPUT | MUX_MODE0)
++			/* spi0_cs1.spi0_cs1 */
++			AM33XX_IOPAD(0x960, PIN_OUTPUT | MUX_MODE0)
++		>;
++	};
++
+ 	/* wl1271 bluetooth */
+ 	bluetooth_pins: pinmux_bluetooth_pins {
+ 		pinctrl-single,pins = <
+@@ -230,6 +258,16 @@
+ 			AM33XX_IOPAD(0x9b0, PIN_OUTPUT_PULLUP | MUX_MODE7)
+ 		>;
+ 	};
++
++	/* wl1271 WiFi */
++	wifi_pins: pinmux_wifi_pins {
++		pinctrl-single,pins = <
++			/* EMU1.gpio3_8 - WiFi IRQ */
++			AM33XX_IOPAD(0x9e8, PIN_INPUT_PULLUP | MUX_MODE7)
++			/* XDMA_EVENT_INTR1.gpio0_20 - WiFi enable */
++			AM33XX_IOPAD(0x9b4, PIN_OUTPUT | MUX_MODE7)
++		>;
++	};
+ };
+ 
+ &uart0 {
+@@ -394,3 +432,21 @@ status = "okay";
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&mmc1_pins>;
+ };
++
++&spi0 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&spi0_pins>;
++	ti,pindir-d0-out-d1-in = <1>;
++	/* WLS1271 WiFi */
++	wlcore: wlcore@1 {
++		compatible = "ti,wl1271";
++		reg = <1>;
++		spi-max-frequency = <48000000>;
++		clock-xtal;
++		ref-clock-frequency = <38400000>;
++		interrupt-parent = <&gpio3>;
++		interrupts = <8 IRQ_TYPE_LEVEL_HIGH>;
++		vwlan-supply = <&vwlan_fixed>;
++	};
++};
+-- 
+2.5.0
+
