@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:39928 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751838AbbLNEA0 convert rfc822-to-8bit (ORCPT
+Received: from smtprelay0017.hostedemail.com ([216.40.44.17]:35889 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752326AbbLWEIi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 13 Dec 2015 23:00:26 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"Luis R. Rodriguez" <mcgrof@do-not-panic.com>,
-	linuxwifi <linuxwifi@intel.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: iwlwifi - L1 Enabled - LTR Enabled loop
-Date: Mon, 14 Dec 2015 04:00:20 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E919DE2@hasmsx107.ger.corp.intel.com> (sfid-20151214_050030_063057_C757F64A)
-References: <CAB=NE6U5sh4cneaB5CGC7fSM_fKG_tBtmZ6sAo9Jswm1RBzd-g@mail.gmail.com>
- <CAB=NE6VFo96M-ieCYPeDKncGJm+G1-_4gqKNDFen+K49-pLD4Q@mail.gmail.com>
- <1449876779.2324.16.camel@sipsolutions.net> <566DF964.7050904@broadcom.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Tue, 22 Dec 2015 23:08:38 -0500
+Message-ID: <1450843714.3537.8.camel@perches.com> (sfid-20151223_050909_461525_0D6E15FB)
+Subject: Re: [PATCH 44/45] iwlwifi: fix printf specifier
+From: Joe Perches <joe@perches.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 22 Dec 2015 20:08:34 -0800
+In-Reply-To: <1450731046-2796-44-git-send-email-emmanuel.grumbach@intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+	 <1450731046-2796-44-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Mon, 2015-12-21 at 22:50 +0200, Emmanuel Grumbach wrote:
+> Smatch warned about a bad specifier being used. Fix that.
 
+I see nothing here other than a signed/unsigned
+issue that shouldn't need fixing.  The conversion
+from hex to decimal may not be useful.
 
-On 12/14/2015 01:04 AM, Arend van Spriel wrote:
-> On 12/12/2015 12:32 AM, Johannes Berg wrote:
->> On Fri, 2015-12-11 at 15:17 -0800, Luis R. Rodriguez wrote:
->>> I just tried a base config from opensuse, then localmodconfig, then
->>> 'make xenconfig' (which I need) and that worked. I can't debug
->>> further but I think this config might help debug this further:
->>>
->>> http://drvbp1.linux-foundation.org/~mcgrof/tmp/config-iwl-fail.txt
->>>
->>> So -- my new config works, but I have no idea what fixed it, a config
->>> option obviously. Not sure what though.
->>>
->> Can you post the good one too?
-> I had the same issue occasionally when coming out of suspend. Running 
-> 4.1 vanilla kernel with 3160 device. The issue also occurred more often 
-> with particular ucode version. Running iwlwifi-3160-10.ucode now and 
-> have not seen the issue pop up since.
-
-This is really weird. I don't see how that could be firmware related.
-BTW, -10.ucode is fairly old :) we have -16.ucode out there.
->
-> Gr. AvS
->
->
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
+>  drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
+> index b395854..c15f5be 100644
+> --- a/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
+> +++ b/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.c
+> @@ -454,11 +454,11 @@ static void iwl_eeprom_enhanced_txpower(struct device *dev,
+>  				 TXP_CHECK_AND_PRINT(COMMON_TYPE),
+>  				 txp->flags);
+>  		IWL_DEBUG_EEPROM(dev,
+> -				 "\t\t chain_A: 0x%02x chain_B: 0X%02x chain_C: 0X%02x\n",
+> +				 "\t\t chain_A: %d chain_B: %d chain_C: %d\n",
+>  				 txp->chain_a_max, txp->chain_b_max,
+>  				 txp->chain_c_max);
+>  		IWL_DEBUG_EEPROM(dev,
+> -				 "\t\t MIMO2: 0x%02x MIMO3: 0x%02x High 20_on_40: 0x%02x Low 20_on_40: 0x%02x\n",
+> +				 "\t\t MIMO2: %d MIMO3: %d High 20_on_40: 0x%02x Low 20_on_40: 0x%02x\n",
+>  				 txp->mimo2_max, txp->mimo3_max,
+>  				 ((txp->delta_20_in_40 & 0xf0) >> 4),
+>  				 (txp->delta_20_in_40 & 0x0f));
 
