@@ -1,65 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:36172 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933265AbbLXHxl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2015 02:53:41 -0500
-Received: by mail-pa0-f42.google.com with SMTP id q3so124623343pav.3
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:53:40 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 18/21] staging: wilc1000: fix return type of wilc_get_rssi
-Date: Thu, 24 Dec 2015 16:52:36 +0900
-Message-Id: <1450943559-20937-18-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_092248_768597_4FEDE5AA)
-In-Reply-To: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:58562 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751479AbbLWJhA convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Dec 2015 04:37:00 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: "linux-firmware@kernel.org" <linux-firmware@kernel.org>
+CC: Frank Huang <frankh@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Cathy Luo <cluo@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: pull-request mwifiex-firmware 2015-12-23
+Date: Wed, 23 Dec 2015 09:36:58 +0000
+Message-ID: <2b4ceab04f0e4bcf9b5b94a0d259b9d3@SC-EXCH04.marvell.com> (sfid-20151223_103709_092288_85B07100)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of wilc_get_rssi from s32 to int.
-The result variable gets return value from wilc_mq_send that has return
-type of int. It should be changed return type of this function as well
-as data type of result variable.
+The following changes since commit 7f02df82736a85606cd9f33cb709545d9fc5326e:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+  linux-firmware: update Marvell 8897-B0 firmware images to p112 (2015-01-27 16:02:53 +0530)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 724b4bd..c059e6d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3628,9 +3628,9 @@ s32 wilc_get_inactive_time(struct wilc_vif *vif, const u8 *mac,
- 	return result;
- }
- 
--s32 wilc_get_rssi(struct wilc_vif *vif, s8 *ps8Rssi)
-+int wilc_get_rssi(struct wilc_vif *vif, s8 *ps8Rssi)
- {
--	s32 result = 0;
-+	int result = 0;
- 	struct host_if_msg msg;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
- 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 7ac85f2..51ec72c 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -334,7 +334,7 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
- int wilc_flush_join_req(struct wilc_vif *vif);
- int wilc_disconnect(struct wilc_vif *vif, u16 reason_code);
- int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel);
--s32 wilc_get_rssi(struct wilc_vif *vif, s8 *ps8Rssi);
-+int wilc_get_rssi(struct wilc_vif *vif, s8 *ps8Rssi);
- s32 wilc_scan(struct wilc_vif *vif, u8 u8ScanSource, u8 u8ScanType,
- 	      u8 *pu8ChnlFreqList, u8 u8ChnlListLen, const u8 *pu8IEs,
- 	      size_t IEsLen, wilc_scan_result ScanResult, void *pvUserArg,
--- 
-2.6.4
+are available in the git repository at:
 
+  git://git.marvell.com/mwifiex-firmware.git master
+
+for you to fetch changes up to e92f8b3f65443764297b947b1843955d9a65dde7:
+
+  linux-firmware: update Marvell USB8797-B0 firmware image (2015-11-02 06:25:05 -0500)
+
+----------------------------------------------------------------
+Amitkumar Karwar (3):
+      linux-firmware: update Marvell 8897-B0 firmware images to 7.p18
+      linux-firmware: update Marvell 8897-B0 firmware images to 7.p53
+      linux-firmware: update Marvell USB8797-B0 firmware image
+
+Avinash Patil (1):
+      linux-firmware: add Marvell SD/USB8801 B0 firmware images
+
+ WHENCE                   |  12 +++++++++---
+ mrvl/pcie8897_uapsta.bin | Bin 759128 -> 803884 bytes
+ mrvl/sd8801_uapsta.bin   | Bin 0 -> 258680 bytes
+ mrvl/sd8897_uapsta.bin   | Bin 734612 -> 780760 bytes
+ mrvl/usb8797_uapsta.bin  | Bin 551720 -> 553456 bytes
+ mrvl/usb8801_uapsta.bin  | Bin 0 -> 255948 bytes
+ 6 files changed, 9 insertions(+), 3 deletions(-)
+ create mode 100755 mrvl/sd8801_uapsta.bin
+ create mode 100755 mrvl/usb8801_uapsta.bin
