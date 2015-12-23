@@ -1,39 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33503 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752763AbbLKO0f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2015 09:26:35 -0500
-Message-ID: <1449843990.2324.11.camel@sipsolutions.net> (sfid-20151211_152654_723985_07574D4A)
-Subject: Re: [PATCH] wireless: change cfg80211 regulatory domain info as
- debug messages
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dave Young <dyoung@redhat.com>
-Cc: Stefan Lippers-Hollmann <s.l-h@gmx.de>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, davem@davemloft.net
-Date: Fri, 11 Dec 2015 15:26:30 +0100
-In-Reply-To: <20151123013740.GA27383@dhcp-128-32.nay.redhat.com>
-References: <20151115073105.GA18846@dhcp-128-65.nay.redhat.com>
-	 <20151115192547.3fd1b3cc@mir> <1448020533.3141.27.camel@sipsolutions.net>
-	 <20151123013740.GA27383@dhcp-128-32.nay.redhat.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from softlayer.compulab.co.il ([50.23.254.55]:55749 "EHLO
+	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964849AbbLWOLZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Dec 2015 09:11:25 -0500
+Subject: Re: [PATCH 1/3] wlcore/wl12xx: spi: fix NULL pointer dereference
+ (Oops)
+To: Grygorii Strashko <grygorii.strashko@ti.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Tony Lindgren <tony@atomide.com>
+References: <1450859744-9948-1-git-send-email-uri.mashiach@compulab.co.il>
+ <1450859744-9948-2-git-send-email-uri.mashiach@compulab.co.il>
+ <567A7287.3010205@ti.com>
+Cc: Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: Uri Mashiach <uri.mashiach@compulab.co.il>
+Message-ID: <567AAB89.4010101@compulab.co.il> (sfid-20151223_151135_767017_71BCDD38)
+Date: Wed, 23 Dec 2015 16:11:21 +0200
+MIME-Version: 1.0
+In-Reply-To: <567A7287.3010205@ti.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-11-23 at 09:37 +0800, Dave Young wrote:
+Hi Grygorii,
 
-> Seems there're a lot of other wireless messages. Should we refactor 
-> them as well? I still did not get chance to see where is the code.
-> (My wireless driver being used is iwlwifi)
+On 12/23/2015 12:08 PM, Grygorii Strashko wrote:
+> On 12/23/2015 10:35 AM, Uri Mashiach wrote:
+>> The power function uses a consumer regulator access to update the WiFi
+>> enable GPIO value.
+>>
+>> Fix the below Oops when trying to modprobe wlcore_spi.
+>> The oops occurs because the wl1271_power_{off,on}()
+>> function doesn't check the power() function pointer.
+>>
+>> [   23.401447] Unable to handle kernel NULL pointer dereference at
+>> virtual address 00000000
+>> [   23.409954] pgd = c0004000
+>> [   23.412922] [00000000] *pgd=00000000
+>> [   23.416693] Internal error: Oops: 80000007 [#1] SMP ARM
+>> [   23.422168] Modules linked in: wl12xx wlcore mac80211 cfg80211
+>> musb_dsps musb_hdrc usbcore usb_common snd_soc_simple_card evdev joydev
+>> omap_rng wlcore_spi snd_soc_tlv320aic23_i2c rng_core snd_soc_tlv320aic23
+>> c_can_platform c_can can_dev snd_soc_davinci_mcasp snd_soc_edma
+>> snd_soc_omap omap_wdt musb_am335x cpufreq_dt thermal_sys hwmon
+>> [   23.453253] CPU: 0 PID: 36 Comm: kworker/0:2 Not tainted
+>> 4.2.0-00002-g951efee-dirty #233
+>> [   23.461720] Hardware name: Generic AM33XX (Flattened Device Tree)
+>> [   23.468123] Workqueue: events request_firmware_work_func
+>> [   23.473690] task: de32efc0 ti: de4ee000 task.ti: de4ee000
+>> [   23.479341] PC is at 0x0
+>> [   23.482112] LR is at wl12xx_set_power_on+0x28/0x124 [wlcore]
+>
+> Why can't you just add proper check in wl1271_power_on/wl1271_power_off() instead?
+>
 
-Most are probably from net/mac80211/.
+Will be done in v2.
 
-> # dmesg|grep "Limiting TX power"|wc
->    4128   49600  360052
-> 
-
-I fixed this one recently, due to a bug it was printed all the time
-instead of just once when taking effect.
-
-johannes
+Thanks,
+Uri
