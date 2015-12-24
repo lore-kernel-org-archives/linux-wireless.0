@@ -1,95 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay.parallels.com ([195.214.232.42]:44577 "EHLO
-	relay.parallels.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760615AbbLCPuY (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:37622 "EHLO
+	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753147AbbLXWiF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2015 10:50:24 -0500
-From: Andrey Ryabinin <aryabinin@virtuozzo.com>
-To: <linux-kernel@vger.kernel.org>
-CC: Andrey Ryabinin <aryabinin@virtuozzo.com>,
-	<linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Sasha Levin <sasha.levin@oracle.com>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Michal Marek <mmarek@suse.cz>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Yury Gribov <y.gribov@samsung.com>,
-	Dmitry Vyukov <dvyukov@google.com>,
-	Konstantin Khlebnikov <koct9i@gmail.com>,
-	Kostya Serebryany <kcc@google.com>, <x86@kernel.org>,
-	<linux-doc@vger.kernel.org>, <linux-kbuild@vger.kernel.org>
-Subject: [PATCH v4 2/3] mac80211: Prevent build failure with CONFIG_UBSAN=y
-Date: Thu, 3 Dec 2015 18:50:06 +0300
-Message-ID: <1449157807-20298-3-git-send-email-aryabinin@virtuozzo.com> (sfid-20151203_165130_074978_DFE80813)
-In-Reply-To: <1449157807-20298-1-git-send-email-aryabinin@virtuozzo.com>
-References: <1449157807-20298-1-git-send-email-aryabinin@virtuozzo.com>
+	Thu, 24 Dec 2015 17:38:05 -0500
+Received: by mail-wm0-f44.google.com with SMTP id p187so193615372wmp.0
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Dec 2015 14:38:05 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <wrfjpoxxxvjq.fsf@redhat.com>
+References: <1450664916-25205-1-git-send-email-dlenski@gmail.com>
+ <1450664916-25205-2-git-send-email-dlenski@gmail.com> <56783C98.1080700@lwfinger.net>
+ <CAOw_LSF6cPVCxqOS1eQ+iqESZGRdG46048M15r5s0huVJVHwjg@mail.gmail.com> <wrfjpoxxxvjq.fsf@redhat.com>
+From: Daniel Lenski <dlenski@gmail.com>
+Date: Thu, 24 Dec 2015 14:37:24 -0800
+Message-ID: <CAOw_LSHr-gcrOCrGe8+K6=ndQx21O_HzrxLXJDXnZV5EBJeeyQ@mail.gmail.com> (sfid-20151224_233810_074796_95DC7AF0)
+Subject: Re: [PATCH] enable setting MAC address for r8723au
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With upcoming CONFIG_UBSAN the following BUILD_BUG_ON in
-net/mac80211/debugfs.c starts to trigger:
-	BUILD_BUG_ON(hw_flag_names[NUM_IEEE80211_HW_FLAGS] != (void *)0x1);
+On Wed, Dec 23, 2015 at 3:18 AM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+> Daniel Lenski <dlenski@gmail.com> writes:
+>> On Mon, Dec 21, 2015 at 9:53 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>>> On 12/20/2015 08:28 PM, Dan Lenski wrote:
+>>>>
+>>>> Signed-off-by: Dan Lenski <dlenski@gmail.com>
+>>>
+>>>
+>>> The commit message should be in this patch rather than in the non-patch
+>>> previous mail. If this patch were to be accepted, all that explanation would
+>>> be lost!
+>>>
+>>> Rather than issuing a warning when the MAC is changed after the interface
+>>> has been brought up, have you considered changing the value of
+>>> rtw_adapter->bup to zero whenever the connection goes down? Would that help
+>>> with the confusion in the user-space tools?
+>>
+>> No. rtw_adapter isn't visible to userspace at all. NetworkManager, for
+>> instance, seems to get confused when *any* up interface changes its
+>> MAC address.
+>>
+>> bup should *not* be reset to zero when the device is closed.
+>> netdev_open23a() checks or bup==0 and calls rtl8723au_hal_init() to do
+>> hw initialization and firmware download if so. This is unnecessary
+>> after subsequent re-opening, which is why netdev_close() doesn't set
+>> bup=0.
+>>
+>>> NACK.
+>>
+>> I'll resubmit with the commit message fixed and the warning removed.
+>>
+>
+> In addition, do *not* overwrite the eeprompriv.mac_addr - that struct is
+> a clean copy of the eeprom's data and should not be modified.
+>
+> Please changed the dev entry and make sure they driver updates from
+> there instead.
 
-It seems, that compiler instrumentation causes some code deoptimizations.
-Because of that GCC is not being able to resolve condition in BUILD_BUG_ON()
-at compile time.
+I left that part alone (overwriting the eeprompriv.mac_addr) because
+the existing code relies on it containing the correct *current* MAC
+address in numerous places. But, fair enough.
 
-We could make size of hw_flag_names array unspecified and replace the
-condition in BUILD_BUG_ON() with following:
-	ARRAY_SIZE(hw_flag_names) != NUM_IEEE80211_HW_FLAGS
+This will require a much more complex patch, because there are
+numerous functions which assume that eeprompriv.mac_addr is the
+current address. (And some of these functions only receive the struct
+rtw_adapter as an argument, rather than the complete netdev.)
 
-That will have the same effect as before (adding new flag without updating
-array will trigger build failure) except it doesn't fail with CONFIG_UBSAN.
-As a bonus this patch slightly decreases size of hw_flag_names array.
+> Second, please CC me directly as the driver maintainer.
+>
+> For longer term, please try out rtl8xxxu, hopefully we can
+> rm -rf drivers/staging/rtl8723au soon.
 
-Signed-off-by: Andrey Ryabinin <aryabinin@virtuozzo.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>
----
- net/mac80211/debugfs.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+Woah, I didn't know that driver existed. I will take a look.
 
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index abbdff0..3e24d0d 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -91,7 +91,7 @@ static const struct file_operations reset_ops = {
- };
- #endif
- 
--static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS + 1] = {
-+static const char *hw_flag_names[] = {
- #define FLAG(F)	[IEEE80211_HW_##F] = #F
- 	FLAG(HAS_RATE_CONTROL),
- 	FLAG(RX_INCLUDES_FCS),
-@@ -126,9 +126,6 @@ static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS + 1] = {
- 	FLAG(SUPPORTS_AMSDU_IN_AMPDU),
- 	FLAG(BEACON_TX_STATUS),
- 	FLAG(NEEDS_UNIQUE_STA_ADDR),
--
--	/* keep last for the build bug below */
--	(void *)0x1
- #undef FLAG
- };
- 
-@@ -148,7 +145,7 @@ static ssize_t hwflags_read(struct file *file, char __user *user_buf,
- 	/* fail compilation if somebody adds or removes
- 	 * a flag without updating the name array above
- 	 */
--	BUILD_BUG_ON(hw_flag_names[NUM_IEEE80211_HW_FLAGS] != (void *)0x1);
-+	BUILD_BUG_ON(ARRAY_SIZE(hw_flag_names) != NUM_IEEE80211_HW_FLAGS);
- 
- 	for (i = 0; i < NUM_IEEE80211_HW_FLAGS; i++) {
- 		if (test_bit(i, local->hw.flags))
--- 
-2.4.10
-
+Thanks,
+Dan
