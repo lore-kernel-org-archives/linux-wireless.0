@@ -1,41 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47498 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751956AbbLRNFH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2015 08:05:07 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi 2015-12-16
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E91F275@hasmsx107.ger.corp.intel.com>
-Date: Fri, 18 Dec 2015 15:04:58 +0200
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E91F275@hasmsx107.ger.corp.intel.com>
-	(Emmanuel Grumbach's message of "Wed, 16 Dec 2015 08:15:09 +0000")
-Message-ID: <87vb7vaow5.fsf@kamboji.qca.qualcomm.com> (sfid-20151218_140512_612135_460DC891)
+Received: from bear.ext.ti.com ([192.94.94.41]:56889 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751770AbbLXQev (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Dec 2015 11:34:51 -0500
+Subject: Re: [PATCH v2 1/3] wlcore/wl12xx: spi: add power operation function
+To: Uri Mashiach <uri.mashiach@compulab.co.il>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Tony Lindgren <tony@atomide.com>
+References: <1450971335-15961-1-git-send-email-uri.mashiach@compulab.co.il>
+ <1450971335-15961-2-git-send-email-uri.mashiach@compulab.co.il>
+CC: Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, <bcousson@baylibre.com>,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Eliad Peller <eliad@wizery.com>, <devicetree@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+From: Grygorii Strashko <grygorii.strashko@ti.com>
+Message-ID: <567C1E3B.3020404@ti.com> (sfid-20151224_173456_473293_E7795DF0)
+Date: Thu, 24 Dec 2015 18:32:59 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1450971335-15961-2-git-send-email-uri.mashiach@compulab.co.il>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+On 12/24/2015 05:35 PM, Uri Mashiach wrote:
+> The power function uses a consumer regulator access to update the WiFi
+> enable GPIO value.
+>
+> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+> ---
+> v1 -> v2: oops fix was removed to a separate fix.
+>
+>   drivers/net/wireless/ti/wlcore/spi.c | 37 ++++++++++++++++++++++++++++++++++++
+>   1 file changed, 37 insertions(+)
+>
+> diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
+>
 
-> This is a pull request with small fixes for 4.4.
-> Note that due to the large number of files being renamed, you need to
-> set merge.renameLimit to a big number to merge wl-drv into wl-drv-next
-> but you probably noticed that already :)
->
-> The following changes since commit 9513c5e18a0dc55a1fc9c890715098ba2315830b:
->
->   iwlwifi: mvm: Avoid dereferencing sta if it was already flushed
-> (2015-11-15 21:18:01 +0200)
->
-> are available in the git repository at:
->
->  
-> https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2015-12-16
+[...]
 
-Pulled, thanks.
+> +
+>   static struct wl1271_if_operations spi_ops = {
+>   	.read		= wl12xx_spi_raw_read,
+>   	.write		= wl12xx_spi_raw_write,
+>   	.reset		= wl12xx_spi_reset,
+>   	.init		= wl12xx_spi_init,
+> +	.power		= wl12xx_spi_set_power,
+>   	.set_block_size = NULL,
+>   };
+>
+> @@ -353,6 +384,12 @@ static int wl1271_probe(struct spi_device *spi)
+>   	 * comes from the board-peripherals file */
+>   	spi->bits_per_word = 32;
+>
+> +	glue->reg = devm_regulator_get(&spi->dev, "vwlan");
+> +	if (IS_ERR(glue->reg)) {
+
+It will be more correct to handle -EPROBE_DEFER here also. Like:
+  		if (PTR_ERR(glue->reg) == -EPROBE_DEFER)
+			return PTR_ERR(glue->reg);
+
+> +		dev_err(glue->dev, "can't get regulator\n");
+> +		return PTR_ERR(glue->reg);
+> +	}
+> +
+>   	ret = spi_setup(spi);
+>   	if (ret < 0) {
+>   		dev_err(glue->dev, "spi_setup failed\n");
+>
+
 
 -- 
-Kalle Valo
+regards,
+-grygorii
