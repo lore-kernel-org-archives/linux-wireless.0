@@ -1,72 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:63173 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751866AbbLDOOo (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:35774 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754804AbbLXHw4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Dec 2015 09:14:44 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tB4E9PW0029045
-	for <linux-wireless@vger.kernel.org>; Fri, 4 Dec 2015 06:14:44 -0800
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1yk5tpa137-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 04 Dec 2015 06:14:43 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 4/6] mwifiex: don't follow AP if country code received from EEPROM
-Date: Fri, 4 Dec 2015 06:13:05 -0800
-Message-ID: <1449238387-27396-4-git-send-email-akarwar@marvell.com> (sfid-20151204_151451_925281_0BA1D5DB)
-In-Reply-To: <1449238387-27396-1-git-send-email-akarwar@marvell.com>
-References: <1449238387-27396-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 24 Dec 2015 02:52:56 -0500
+Received: by mail-pa0-f45.google.com with SMTP id jx14so118480327pad.2
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:52:56 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 03/21] staging: wilc1000: rename pu8bssid in wilc_set_join_req
+Date: Thu, 24 Dec 2015 16:52:21 +0900
+Message-Id: <1450943559-20937-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_085327_266805_4CECE441)
+In-Reply-To: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If device has already received country information from
-EEPROM, we won't parse AP's country IE and download it to
-firmware. We will also set regulatory flags to disable beacon
-hints and ignore country IE.
+This patch renames pu8bssid to bssid to remove pu8 prefix.
+There is no need to add this prefix in order to show data type of this
+variable.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c  | 4 ++++
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 3 ++-
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 9b570e1..65dd85d 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3802,6 +3802,10 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 	wiphy->cipher_suites = mwifiex_cipher_suites;
- 	wiphy->n_cipher_suites = ARRAY_SIZE(mwifiex_cipher_suites);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index b24697b..bb4b612 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3365,7 +3365,7 @@ int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr)
+ 	return result;
+ }
  
-+	if (adapter->region_code)
-+		wiphy->regulatory_flags |= REGULATORY_DISABLE_BEACON_HINTS |
-+					   REGULATORY_COUNTRY_IE_IGNORE;
-+
- 	ether_addr_copy(wiphy->perm_addr, adapter->perm_addr);
- 	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
- 	wiphy->flags |= WIPHY_FLAG_HAVE_AP_SME |
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-index a6c8a4f..78cb1d7 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -272,7 +272,8 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
- 	priv->scan_block = false;
+-int wilc_set_join_req(struct wilc_vif *vif, u8 *pu8bssid, const u8 *pu8ssid,
++int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *pu8ssid,
+ 		      size_t ssidLen, const u8 *pu8IEs, size_t IEsLen,
+ 		      wilc_connect_result pfConnectResult, void *pvUserArg,
+ 		      u8 u8security, enum AUTHTYPE tenuAuth_type,
+@@ -3397,9 +3397,9 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *pu8bssid, const u8 *pu8ssid,
+ 	msg.body.con_info.params = pJoinParams;
+ 	msg.vif = vif;
  
- 	if (bss) {
--		mwifiex_process_country_ie(priv, bss);
-+		if (adapter->region_code == 0x00)
-+			mwifiex_process_country_ie(priv, bss);
+-	if (pu8bssid) {
++	if (bssid) {
+ 		msg.body.con_info.bssid = kmalloc(6, GFP_KERNEL);
+-		memcpy(msg.body.con_info.bssid, pu8bssid, 6);
++		memcpy(msg.body.con_info.bssid, bssid, 6);
+ 	}
  
- 		/* Allocate and fill new bss descriptor */
- 		bss_desc = kzalloc(sizeof(struct mwifiex_bssdescriptor),
+ 	if (pu8ssid) {
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index eaf3a10..0e40c8f 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -326,7 +326,7 @@ int wilc_set_pmkid_info(struct wilc_vif *vif,
+ int wilc_get_mac_address(struct wilc_vif *vif, u8 *mac_addr);
+ int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr);
+ int wilc_wait_msg_queue_idle(void);
+-int wilc_set_join_req(struct wilc_vif *vif, u8 *pu8bssid, const u8 *pu8ssid,
++int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *pu8ssid,
+ 		      size_t ssidLen, const u8 *pu8IEs, size_t IEsLen,
+ 		      wilc_connect_result pfConnectResult, void *pvUserArg,
+ 		      u8 u8security, enum AUTHTYPE tenuAuth_type,
 -- 
-1.8.1.4
+2.6.4
 
