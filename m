@@ -1,108 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f181.google.com ([209.85.223.181]:33305 "EHLO
-	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752975AbbLXDHu convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:34070 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754727AbbLXHwu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2015 22:07:50 -0500
-Received: by mail-io0-f181.google.com with SMTP id 186so235587219iow.0
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 19:07:50 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <567B6140.1090907@atmel.com>
-References: <1450838003-24379-1-git-send-email-glen.lee@atmel.com>
- <CAGRGNgWrFdRYXg+912stL9fcYE2ZqbEzNoOiHnyjYvX+5BHR=A@mail.gmail.com> <567B6140.1090907@atmel.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 24 Dec 2015 14:07:30 +1100
-Message-ID: <CAGRGNgUv66UgjxA=Yoxy-+9FRpcVOixxc2pPRkWYQxe0ye5J=w@mail.gmail.com> (sfid-20151224_040753_866002_64062379)
-Subject: Re: [PATCH] staging: wilc1000: remove wilc_sdio_init
-To: glen lee <glen.lee@atmel.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tony Cho <tony.cho@atmel.com>, leo.kim@atmel.com,
-	Austin Shin <austin.shin@atmel.com>, adel.noureldin@atmel.com,
-	adham.abozaeid@atmel.com, Nicolas.FERRE@atmel.com
-Content-Type: text/plain; charset=UTF-8
+	Thu, 24 Dec 2015 02:52:50 -0500
+Received: by mail-pa0-f44.google.com with SMTP id uo6so40377602pac.1
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:52:50 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 01/21] staging: wilc1000: fix return type of wilc_flush_join_req
+Date: Thu, 24 Dec 2015 16:52:19 +0900
+Message-Id: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_085325_114232_A12DD261)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Glen,
+This patch changes return type of wilc_flush_join_req from s32 to int.
+The result variable gets return value from wilc_mq_send that has return
+type of int. It should be changed return type of this function as well
+as data type of result variable.
 
-On Thu, Dec 24, 2015 at 2:06 PM, glen lee <glen.lee@atmel.com> wrote:
->
->
-> On 2015년 12월 24일 11:39, Julian Calaby wrote:
->>
->> Hi Glen,
->>
->> On Wed, Dec 23, 2015 at 1:33 PM, Glen Lee <glen.lee@atmel.com> wrote:
->>>
->>> wilc_sdio_init return always 1. It is needless, so just remove it and
->>> it's
->>> related codes also.
->>>
->>> Signed-off-by: Glen Lee <glen.lee@atmel.com>
->>> ---
->>>   drivers/staging/wilc1000/wilc_sdio.c | 12 ------------
->>>   1 file changed, 12 deletions(-)
->>>
->>> diff --git a/drivers/staging/wilc1000/wilc_sdio.c
->>> b/drivers/staging/wilc1000/wilc_sdio.c
->>> index e961b50..caad876 100644
->>> --- a/drivers/staging/wilc1000/wilc_sdio.c
->>> +++ b/drivers/staging/wilc1000/wilc_sdio.c
->>> @@ -185,11 +185,6 @@ static void wilc_sdio_disable_interrupt(struct wilc
->>> *dev)
->>>          dev_info(&func->dev, "wilc_sdio_disable_interrupt OUT\n");
->>>   }
->>>
->>> -static int wilc_sdio_init(void)
->>> -{
->>> -       return 1;
->>> -}
->>> -
->>>   /********************************************
->>>    *
->>>    *      Function 0
->>> @@ -611,13 +606,6 @@ static int sdio_init(struct wilc *wilc)
->>>
->>>          g_sdio.irq_gpio = (wilc->dev_irq_num);
->>>
->>> -       if (!wilc_sdio_init()) {
->>> -               dev_err(&func->dev, "Failed io init bus...\n");
->>> -               return 0;
->>> -       } else {
->>> -               return 0;
->>> -       }
->>> -
->>
->> This isn't equivalent code as both arms of the if statement eventually
->> call return 0.
->
->
-> Hi julian,
->
-> Yes, you are correct.
-> Actually, The original code was like this before It is patched wrongly.
-> -       if (!wilc_sdio_init()) {
-> -               dev_err(&func->dev, "Failed io init bus...\n");
-> -               return 0;
-> -       }
-> I could fix this first and then remove wilc_sdio_init().
-> But I thought that this can be fixed by removing wilc_sdio_init which also
-> fixes always return 0 error.
->
-> Do you think I should fix "always return 0 error" first and then remove
-> wilc_sdio_init()?
-> Or update change log about the error which cause this?
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-It should be two patches, my instinct is to do one which fixes it
-always returning zero, then another that removes the empty function.
-Fixing bugs then cleaning up seems more logical to me.
-
-Thanks,
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 78d26ee..78d58e0 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3432,9 +3432,9 @@ s32 wilc_set_join_req(struct wilc_vif *vif, u8 *pu8bssid, const u8 *pu8ssid,
+ 	return result;
+ }
+ 
+-s32 wilc_flush_join_req(struct wilc_vif *vif)
++int wilc_flush_join_req(struct wilc_vif *vif)
+ {
+-	s32 result = 0;
++	int result = 0;
+ 	struct host_if_msg msg;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 13d253c..af85824 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -331,7 +331,7 @@ s32 wilc_set_join_req(struct wilc_vif *vif, u8 *pu8bssid, const u8 *pu8ssid,
+ 		      wilc_connect_result pfConnectResult, void *pvUserArg,
+ 		      u8 u8security, enum AUTHTYPE tenuAuth_type,
+ 		      u8 u8channel, void *pJoinParams);
+-s32 wilc_flush_join_req(struct wilc_vif *vif);
++int wilc_flush_join_req(struct wilc_vif *vif);
+ s32 wilc_disconnect(struct wilc_vif *vif, u16 u16ReasonCode);
+ int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel);
+ s32 wilc_get_rssi(struct wilc_vif *vif, s8 *ps8Rssi);
 -- 
-Julian Calaby
+2.6.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
