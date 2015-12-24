@@ -1,107 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.us.es ([193.147.175.20]:36629 "EHLO mail.us.es"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751416AbbLATkM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 14:40:12 -0500
-Received: from antivirus1-rhel7.int (unknown [192.168.2.11])
-	by mail.us.es (Postfix) with ESMTP id 951E912925F
-	for <linux-wireless@vger.kernel.org>; Tue,  1 Dec 2015 20:40:08 +0100 (CET)
-Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
-	by antivirus1-rhel7.int (Postfix) with ESMTP id 88487DA808
-	for <linux-wireless@vger.kernel.org>; Tue,  1 Dec 2015 20:40:08 +0100 (CET)
-Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
-	by antivirus1-rhel7.int (Postfix) with ESMTP id F159BDA801
-	for <linux-wireless@vger.kernel.org>; Tue,  1 Dec 2015 20:40:05 +0100 (CET)
-Date: Tue, 1 Dec 2015 20:40:04 +0100
-From: Pablo Neira Ayuso <pablo@netfilter.org>
-To: netfilter-devel@vger.kernel.org, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Cc: lwn@lwn.net, info@netdevconf.org
-Subject: [ANNOUNCE] NetDev 1.1 updates (Seville, Spain February 10-12)
-Message-ID: <20151201194004.GA5774@salvia> (sfid-20151201_204024_400989_2622D14F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:34590 "EHLO
+	mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933209AbbLXHxf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Dec 2015 02:53:35 -0500
+Received: by mail-pf0-f177.google.com with SMTP id e65so12509874pfe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:53:35 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 16/21] staging: wilc1000: rename u16ReasonCode in wilc_disconnect
+Date: Thu, 24 Dec 2015 16:52:34 +0900
+Message-Id: <1450943559-20937-16-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_092248_213075_6752DF95)
+In-Reply-To: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi!
+This patch renames u16ReasonCode to reason_code to avoid camelcase.
 
-We would like to share with you some interesting updates regarding
-netdev 1.1, the community-driven Linux networking conference held
-back-to-back with netconf in Sevilla, Spain, February 10-12, 2016.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-First off, we're extending our session proposal submission deadline to
-Dec 20th.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 5ddf78d..6e5bccc 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3461,7 +3461,7 @@ int wilc_flush_join_req(struct wilc_vif *vif)
+ 	return result;
+ }
+ 
+-int wilc_disconnect(struct wilc_vif *vif, u16 u16ReasonCode)
++int wilc_disconnect(struct wilc_vif *vif, u16 reason_code)
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index e8c556a..fa5d292 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -332,7 +332,7 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 		      u8 security, enum AUTHTYPE auth_type,
+ 		      u8 channel, void *join_params);
+ int wilc_flush_join_req(struct wilc_vif *vif);
+-int wilc_disconnect(struct wilc_vif *vif, u16 u16ReasonCode);
++int wilc_disconnect(struct wilc_vif *vif, u16 reason_code);
+ int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel);
+ s32 wilc_get_rssi(struct wilc_vif *vif, s8 *ps8Rssi);
+ s32 wilc_scan(struct wilc_vif *vif, u8 u8ScanSource, u8 u8ScanType,
+-- 
+2.6.4
 
-Moreover, we already got a good bunch of interesting accepted talks,
-tutorials and workshops, they are:
-
-= Tutorials =
-
-* In-tree support for 100G switch, no more SDK (Elad Raz, Jiri Pirko)
-
-* Using SR-IOV on OpenStack (Alexander Duyck)
-
-* Ipset - a tool for faster, more efficient firewalling with iptables
-  (Jozsef Kadlecsik)
-
-* Using the VRF Implementation in Linux (David Ahern)
-
-* LibOS as a regression test framework for Linux networking (Hajime Tazaki)
-
-= Talks =
-
-* An adventure of analysis and optimisation of the Linux networking
-  stack (Marco Varlese, Kim-marie Jones)
-
-* Networking in your pocket: how the Linux networking stack is made to
-  work on Android devices (Lorenzo Colitti, Erik Kline)
-
-* "Kernel-level GTP (Generic Tunneling Protocol) implementation
-  (Harald Welte & Andreas Schultz)
-
-* State and Future of generic 6LoWPAN branch (Alexander Aring)
-
-* Securing traffic tunnelled over L3 (Sowmini Varadhan)
-
-= Workshops =
-
-We'll be hosting the Linux Wireless Workshop, this meeting provides
-the forum to discuss wireless (mostly 802.11) related topics.
-
-And even more yet to come... We'll keep you posted.
-
-Registration is open at: https://www.netdevconf.org/1.1/registration.html
-
-                          ____________________
-                         / Don't              \
-                         | procrastinate, buy |
-                         \ your ticket now!   /
-                          --------------------
-                            \
-                             \
-                              .--.
-                             |o_o |
-                             |:_/ |
-                            //   \ \
-                           (|     | )
-                          /'\_   _/`\
-                          \___)=(___/
-
-For more info, visit:
-* netdev 1.1: https://www.netdevconf.org/1.1/
-* netconf 2016: http://vger.kernel.org/netconf2016.html
-
-We would also like to thank those that already confirmed sponsorship:
-Cumulus Networks, Facebook, VmWare, Google, Mellanox, Mojatatu
-Networks, OISF/Suricata and Zen Load Balancer. Thank you a lot!
-
-We're still looking for sponsors, in case you can help us, please
-reach us at: sponsor@netdevconf.org
-
-If you yearn for the old community tech driven conferences where you
-mingle with fellow geeks (only these would be Linux networking geeks)
-then this would be it. There will be no marketing flashy openings.
-There will just be a pure feed of Linux networking.
-
-See you at netdev 1.1 in Seville, Spain!
