@@ -1,61 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0247.hostedemail.com ([216.40.44.247]:39631 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750998AbbL1R4z (ORCPT
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:34934 "EHLO
+	mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933231AbbLXHxb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Dec 2015 12:56:55 -0500
-Message-ID: <1451325412.3219.12.camel@perches.com> (sfid-20151228_185731_316866_E8359B51)
-Subject: Re: [PATCH] /drivers/net/wireless/ath/ath9k remove unnecessary ?:
- operator
-From: Joe Perches <joe@perches.com>
-To: Ivan Safonov <insafonov@gmail.com>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Date: Mon, 28 Dec 2015 09:56:52 -0800
-In-Reply-To: <20151228134852.GA10572@alpha.sfu-kras.ru>
-References: <20151228134852.GA10572@alpha.sfu-kras.ru>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Thu, 24 Dec 2015 02:53:31 -0500
+Received: by mail-pf0-f180.google.com with SMTP id 78so62820950pfw.2
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:53:31 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 15/21] staging: wilc1000: fix return type of wilc_disconnect
+Date: Thu, 24 Dec 2015 16:52:33 +0900
+Message-Id: <1450943559-20937-15-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_092250_084013_BCD12DDA)
+In-Reply-To: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2015-12-28 at 20:48 +0700, Ivan Safonov wrote:
-> ((thermometer < 0) ? 0 : (thermometer == X)) and (thermometer == X) are equal for X >= 0.
+This patch changes return type of wilc_disconnect from s32 to int.
+The result variable gets return value from wilc_disconnect that has
+return type of int. It should be changed return type of this function as
+well as data type of result variable.
 
-X is not guaranteed to be >= 0 here
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-> Signed-off-by: Ivan Safonov <insafonov@gmail.com>
-> ---
->  drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-[]
-> @@ -4097,16 +4097,16 @@ static void ar9003_hw_thermometer_apply(struct ath_hw *ah)
->  		REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
->  			      AR_PHY_65NM_CH0_RXTX4_THERM_ON_OVR, therm_on);
->  
-> -	therm_on = (thermometer < 0) ? 0 : (thermometer == 0);
-> +	therm_on = thermometer == 0;
-
-This code is not equivalent.
-
-Check what happens when thermometer is -1.
-
->  	REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_RXTX4,
->  		      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
->  	if (pCap->chip_chainmask & BIT(1)) {
-> -		therm_on = (thermometer < 0) ? 0 : (thermometer == 1);
-> +		therm_on = thermometer == 1;
->  		REG_RMW_FIELD(ah, AR_PHY_65NM_CH1_RXTX4,
->  			      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
->  	}
->  	if (pCap->chip_chainmask & BIT(2)) {
-> -		therm_on = (thermometer < 0) ? 0 : (thermometer == 2);
-> +		therm_on = thermometer == 2;
->  		REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
->  			      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
->  	}
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6518942..5ddf78d 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3461,9 +3461,9 @@ int wilc_flush_join_req(struct wilc_vif *vif)
+ 	return result;
+ }
+ 
+-s32 wilc_disconnect(struct wilc_vif *vif, u16 u16ReasonCode)
++int wilc_disconnect(struct wilc_vif *vif, u16 u16ReasonCode)
+ {
+-	s32 result = 0;
++	int result = 0;
+ 	struct host_if_msg msg;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 698d1b6..e8c556a 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -332,7 +332,7 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 		      u8 security, enum AUTHTYPE auth_type,
+ 		      u8 channel, void *join_params);
+ int wilc_flush_join_req(struct wilc_vif *vif);
+-s32 wilc_disconnect(struct wilc_vif *vif, u16 u16ReasonCode);
++int wilc_disconnect(struct wilc_vif *vif, u16 u16ReasonCode);
+ int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel);
+ s32 wilc_get_rssi(struct wilc_vif *vif, s8 *ps8Rssi);
+ s32 wilc_scan(struct wilc_vif *vif, u8 u8ScanSource, u8 u8ScanType,
+-- 
+2.6.4
 
