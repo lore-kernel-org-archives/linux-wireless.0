@@ -1,97 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:46546 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933088AbbLPSVG (ORCPT
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:35116 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933209AbbLXHxq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2015 13:21:06 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath10k: add modparam 'hw_csum' to make HW checksum configurable
-Date: Wed, 16 Dec 2015 10:20:51 -0800
-Message-ID: <1450290051-15593-1-git-send-email-poh@qca.qualcomm.com> (sfid-20151216_192111_339055_173ED6D8)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 24 Dec 2015 02:53:46 -0500
+Received: by mail-pa0-f53.google.com with SMTP id jx14so118490681pad.2
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:53:46 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 20/21] staging: wilc1000: fix return type of wilc_get_statistics
+Date: Thu, 24 Dec 2015 16:52:38 +0900
+Message-Id: <1450943559-20937-20-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_092247_188267_269F88DC)
+In-Reply-To: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some hardwares such as QCA988X and QCA99X0 doesn't have
-capability of checksum offload when frame formats are not
-suitable for it such as Mesh frame.
-Hence add a module parameter, hw_csum, to make checksum offload
-configurable during module registration time.
+This patch changes return type of wilc_get_statistics from s32 to int.
+The result variable gets return value from wilc_mq_send that has return
+type of int. It should be changed return type of this function as well
+as data type of result variable.
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c | 6 ++++++
- drivers/net/wireless/ath/ath10k/core.h | 3 +++
- drivers/net/wireless/ath/ath10k/mac.c  | 3 ++-
- 3 files changed, 11 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index fca702c..fcfccd8 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -35,18 +35,21 @@ static unsigned int ath10k_cryptmode_param;
- static bool uart_print;
- static bool skip_otp;
- static bool rawmode;
-+static bool hw_csum = true;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index e1e123b..732ea96 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3656,9 +3656,9 @@ int wilc_get_rssi(struct wilc_vif *vif, s8 *rssi_level)
+ 	return result;
+ }
  
- module_param_named(debug_mask, ath10k_debug_mask, uint, 0644);
- module_param_named(cryptmode, ath10k_cryptmode_param, uint, 0644);
- module_param(uart_print, bool, 0644);
- module_param(skip_otp, bool, 0644);
- module_param(rawmode, bool, 0644);
-+module_param(hw_csum, bool, 0644);
+-s32 wilc_get_statistics(struct wilc_vif *vif, struct rf_info *pstrStatistics)
++int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *pstrStatistics)
+ {
+-	s32 result = 0;
++	int result = 0;
+ 	struct host_if_msg msg;
  
- MODULE_PARM_DESC(debug_mask, "Debugging mask");
- MODULE_PARM_DESC(uart_print, "Uart target debugging");
- MODULE_PARM_DESC(skip_otp, "Skip otp failure for calibration in testmode");
- MODULE_PARM_DESC(cryptmode, "Crypto mode: 0-hardware, 1-software");
- MODULE_PARM_DESC(rawmode, "Use raw 802.11 frame datapath");
-+MODULE_PARM_DESC(hw_csum, "Enable HW checksum offload (default: on)");
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 4506e0b..c64dc13d 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -365,7 +365,7 @@ s32 wilc_listen_state_expired(struct wilc_vif *vif, u32 u32SessionID);
+ s32 wilc_frame_register(struct wilc_vif *vif, u16 u16FrameType, bool bReg);
+ int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index);
+ int wilc_set_operation_mode(struct wilc_vif *vif, u32 mode);
+-s32 wilc_get_statistics(struct wilc_vif *vif, struct rf_info *pstrStatistics);
++int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *pstrStatistics);
+ void wilc_resolve_disconnect_aberration(struct wilc_vif *vif);
+ int wilc_get_vif_idx(struct wilc_vif *vif);
  
- static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 	{
-@@ -1405,6 +1408,9 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 		ar->htt.max_num_amsdu = 1;
- 	}
- 
-+	if (!hw_csum)
-+		set_bit(ATH10K_FLAG_HW_CSUM_DISABLED, &ar->dev_flags);
-+
- 	/* Backwards compatibility for firmwares without
- 	 * ATH10K_FW_IE_WMI_OP_VERSION.
- 	 */
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 3c8a510..1972439 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -535,6 +535,9 @@ enum ath10k_dev_flags {
- 
- 	/* Bluetooth coexistance enabled */
- 	ATH10K_FLAG_BTCOEX,
-+
-+	/* Do not use checksum offload */
-+	ATH10K_FLAG_HW_CSUM_DISABLED,
- };
- 
- enum ath10k_cal_mode {
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index a4c5c1d..f87f521 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -7332,7 +7332,8 @@ int ath10k_mac_register(struct ath10k *ar)
- 		goto err_free;
- 	}
- 
--	if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags))
-+	if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags) &&
-+	    !test_bit(ATH10K_FLAG_HW_CSUM_DISABLED, &ar->dev_flags))
- 		ar->hw->netdev_features = NETIF_F_HW_CSUM;
- 
- 	if (config_enabled(CONFIG_ATH10K_DFS_CERTIFIED)) {
 -- 
-1.9.1
+2.6.4
 
