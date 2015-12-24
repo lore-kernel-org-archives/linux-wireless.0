@@ -1,67 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:27940 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751433AbbL1IvQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Dec 2015 03:51:16 -0500
-Date: Mon, 28 Dec 2015 10:49:05 +0200
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Frederic Danis <frederic.danis@linux.intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] net: rfkill-gpio: more ACPI IDs for BCM Blutooth modules
-Message-ID: <20151228084905.GA13559@kuha.fi.intel.com> (sfid-20151228_095120_460821_1A827C1B)
-References: <1450876021-806-1-git-send-email-heikki.krogerus@linux.intel.com>
- <54628FDE-9BC7-4155-BE2F-C4A6D2A2189E@holtmann.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <54628FDE-9BC7-4155-BE2F-C4A6D2A2189E@holtmann.org>
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:34507 "EHLO
+	mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933211AbbLXHxX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Dec 2015 02:53:23 -0500
+Received: by mail-pf0-f182.google.com with SMTP id e65so12507480pfe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:53:22 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 12/21] staging: wilc1000: rename u8channel in wilc_set_join_req
+Date: Thu, 24 Dec 2015 16:52:30 +0900
+Message-Id: <1450943559-20937-12-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_085339_914740_DB10C466)
+In-Reply-To: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 23, 2015 at 04:28:59PM +0100, Marcel Holtmann wrote:
-> Hi Heikki,
-> 
-> > These are used with BCM43241 Wi-Fi/Bluetooth Combo Device.
-> > 
-> > Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-> > ---
-> > net/rfkill/rfkill-gpio.c | 3 +++
-> > 1 file changed, 3 insertions(+)
-> > 
-> > diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-> > index 9312722..ba6d61d 100644
-> > --- a/net/rfkill/rfkill-gpio.c
-> > +++ b/net/rfkill/rfkill-gpio.c
-> > @@ -164,9 +164,12 @@ static int rfkill_gpio_remove(struct platform_device *pdev)
-> > #ifdef CONFIG_ACPI
-> > static const struct acpi_device_id rfkill_acpi_match[] = {
-> > 	{ "BCM2E1A", RFKILL_TYPE_BLUETOOTH },
-> > +	{ "BCM2E3A", RFKILL_TYPE_BLUETOOTH },
-> > 	{ "BCM2E3D", RFKILL_TYPE_BLUETOOTH },
-> > +	{ "BCM2E3F", RFKILL_TYPE_BLUETOOTH },
-> > 	{ "BCM2E40", RFKILL_TYPE_BLUETOOTH },
-> > 	{ "BCM2E64", RFKILL_TYPE_BLUETOOTH },
-> > +	{ "BCM2E7B", RFKILL_TYPE_BLUETOOTH },
-> > 	{ "BCM4752", RFKILL_TYPE_GPS },
-> > 	{ "LNV4752", RFKILL_TYPE_GPS },
-> > 	{ },
-> 
-> I am actually not convinced that these should be added here. We are driving
-> the Broadcom chips via drivers/bluetooth/hci_bcm.c and I pretty sure that
-> these devices should be added there. We moved a few of the existing ones
-> already over, but I have the feeling that in the end all should be moved.
+This patch renames u8channel to channel to remove u8 prefix.
+There is no need to add prefix in order to show data type of this
+variable.
 
-I totally agree! That is so much better! Frederic did tell me about
-adding ACPI support to that driver, but I forgot. Sorry about that.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-So Johannes, forget about this patch. I'll create a patch where I'll
-propose these ID's to that driver instead. I can also prepare patch
-where we move the other BCM2Exx ACPI IDs to
-drivers/bluetooth/hci_bcm.c at the same time if you like.
-
-
-Thanks,
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d3c595e..66abfa7 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3369,7 +3369,7 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 		      size_t ssid_len, const u8 *ies, size_t ies_len,
+ 		      wilc_connect_result connect_result, void *user_arg,
+ 		      u8 security, enum AUTHTYPE auth_type,
+-		      u8 u8channel, void *pJoinParams)
++		      u8 channel, void *pJoinParams)
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+@@ -3391,7 +3391,7 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 
+ 	msg.body.con_info.security = security;
+ 	msg.body.con_info.auth_type = auth_type;
+-	msg.body.con_info.ch = u8channel;
++	msg.body.con_info.ch = channel;
+ 	msg.body.con_info.result = connect_result;
+ 	msg.body.con_info.arg = user_arg;
+ 	msg.body.con_info.params = pJoinParams;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 3d5fea7..b12c04f 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -330,7 +330,7 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 		      size_t ssid_len, const u8 *ies, size_t ies_len,
+ 		      wilc_connect_result connect_result, void *user_arg,
+ 		      u8 security, enum AUTHTYPE auth_type,
+-		      u8 u8channel, void *pJoinParams);
++		      u8 channel, void *pJoinParams);
+ int wilc_flush_join_req(struct wilc_vif *vif);
+ s32 wilc_disconnect(struct wilc_vif *vif, u16 u16ReasonCode);
+ int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel);
 -- 
-heikki
+2.6.4
+
