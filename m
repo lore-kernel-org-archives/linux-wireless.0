@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:35029 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751765AbbL0Q45 (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:34728 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932991AbbLXG7m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 27 Dec 2015 11:56:57 -0500
-Date: Sun, 27 Dec 2015 23:58:53 +0700
-From: Ivan Safonov <insafonov@gmail.com>
-To: Johnny Kim <johnny.kim@atmel.com>
-Cc: Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 1/2] staging: wilc1000: min_t macro instead of ternary
- condition operator used
-Message-ID: <20151227165853.GA22264@alpha.sfu-kras.ru> (sfid-20151227_175754_165620_57376462)
+	Thu, 24 Dec 2015 01:59:42 -0500
+Date: Thu, 24 Dec 2015 09:59:34 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: glen lee <glen.lee@atmel.com>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	Austin Shin <austin.shin@atmel.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
+	Tony Cho <tony.cho@atmel.com>, leo.kim@atmel.com,
+	adham.abozaeid@atmel.com
+Subject: Re: [PATCH] staging: wilc1000: remove wilc_sdio_init
+Message-ID: <20151224065934.GA5284@mwanda> (sfid-20151224_075945_877049_69465181)
+References: <1450838003-24379-1-git-send-email-glen.lee@atmel.com>
+ <CAGRGNgWrFdRYXg+912stL9fcYE2ZqbEzNoOiHnyjYvX+5BHR=A@mail.gmail.com>
+ <567B6140.1090907@atmel.com>
+ <CAGRGNgUv66UgjxA=Yoxy-+9FRpcVOixxc2pPRkWYQxe0ye5J=w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGRGNgUv66UgjxA=Yoxy-+9FRpcVOixxc2pPRkWYQxe0ye5J=w@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-min_t macro bit shorter then ?: operator.
+I kind of feel like we have started to err on the side of breaking
+things up into too many patches.  Linus has said the same thing...
+This patch is not hard to review, except that the title was bad.
 
-Signed-off-by: Ivan Safonov <insafonov@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Originally it was sent as:
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 8c77520..5a770bb 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4570,7 +4570,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 				pNewJoinBssParam->rsn_grp_policy = pu8IEs[rsnIndex];
- 				rsnIndex++;
- 				jumpOffset = pu8IEs[rsnIndex] * 4;
--				pcipherCount = (pu8IEs[rsnIndex] > 3) ? 3 : pu8IEs[rsnIndex];
-+				pcipherCount = min_t(u8, pu8IEs[rsnIndex], 3);
- 				rsnIndex += 2;
- 
- 				for (i = pcipherTotalCount, j = 0; i < pcipherCount + pcipherTotalCount && i < 3; i++, j++)
-@@ -4581,7 +4581,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
- 
- 				jumpOffset = pu8IEs[rsnIndex] * 4;
- 
--				authCount = (pu8IEs[rsnIndex] > 3) ? 3 : pu8IEs[rsnIndex];
-+				authCount = min_t(u8, pu8IEs[rsnIndex], 3);
- 				rsnIndex += 2;
- 
- 				for (i = authTotalCount, j = 0; i < authTotalCount + authCount; i++, j++)
--- 
-2.4.10
+[PATCH] staging: wilc1000: fix bug in sdio/spi
+
+which is the correct title, but the Fixes tag was in the wrong format so
+Greg rejected it.  Now the Fixes tag is missing entirely which is
+useless and it is disguised as a cleanup.  Cleanup patches should not
+change run time and fixes should be marked clearly.
+
+regards,
+dan carpenter
 
