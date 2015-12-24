@@ -1,136 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f51.google.com ([209.85.215.51]:35239 "EHLO
-	mail-lf0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753689AbbL2U6c (ORCPT
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:34446 "EHLO
+	mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933206AbbLXHxO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Dec 2015 15:58:32 -0500
-Received: by mail-lf0-f51.google.com with SMTP id c192so41423909lfe.2
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Dec 2015 12:58:31 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1450100394-17414-5-git-send-email-arend@broadcom.com>
-References: <1450100394-17414-1-git-send-email-arend@broadcom.com> <1450100394-17414-5-git-send-email-arend@broadcom.com>
-From: Mathy Vanhoef <vanhoefm@gmail.com>
-Date: Tue, 29 Dec 2015 21:58:10 +0100
-Message-ID: <CAFXAJYwpk+-U-9pN2tnOmK05gixJZWYGi9_w+r9uktH2PqvEUQ@mail.gmail.com> (sfid-20151229_215835_395563_FA1EC5D5)
-Subject: Re: [PATCH 4/7] brcmfmac: obtain feature info using 'cap' firmware command
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 24 Dec 2015 02:53:14 -0500
+Received: by mail-pf0-f171.google.com with SMTP id e65so12505824pfe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:53:14 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 09/21] staging: wilc1000: rename pvUserArg in wilc_set_join_req
+Date: Thu, 24 Dec 2015 16:52:27 +0900
+Message-Id: <1450943559-20937-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_092249_191947_FBD0D345)
+In-Reply-To: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 14, 2015 at 2:39 PM, Arend van Spriel <arend@broadcom.com> wrote:
-> Several features in the driver directly map to a firmware feature
-> listed in response of the 'cap' firmware command. For those features
-> this response will be examined instead of attempting individual
-> firmware commands.
->
-> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> ---
->  .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 51 +++++++++++++---------
->  1 file changed, 30 insertions(+), 21 deletions(-)
->
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-> index d9d1ca4..08b7200 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
-> @@ -40,6 +40,17 @@ static const char *brcmf_feat_names[] = {
->  };
->  #undef BRCMF_FEAT_DEF
->
-> +struct brcmf_feat_fwcap {
-> +       enum brcmf_feat_id feature;
-> +       const char * const fwcap_id;
-> +};
-> +
-> +static const struct brcmf_feat_fwcap brcmf_fwcap_map[] = {
-> +       { BRCMF_FEAT_MBSS, "mbss" },
-> +       { BRCMF_FEAT_MCHAN, "mchan" },
-> +       { BRCMF_FEAT_P2P, "p2p" },
-> +};
-> +
->  #ifdef DEBUG
->  /*
->   * expand quirk list to array of quirk strings.
-> @@ -104,25 +115,22 @@ static void brcmf_feat_iovar_int_get(struct brcmf_if *ifp,
->         }
->  }
->
-> -/**
-> - * brcmf_feat_iovar_int_set() - determine feature through iovar set.
-> - *
-> - * @ifp: interface to query.
-> - * @id: feature id.
-> - * @name: iovar name.
-> - */
-> -static void brcmf_feat_iovar_int_set(struct brcmf_if *ifp,
-> -                                    enum brcmf_feat_id id, char *name, u32 val)
-> +static void brcmf_feat_firmware_capabilities(struct brcmf_if *ifp)
->  {
-> -       int err;
-> -
-> -       err = brcmf_fil_iovar_int_set(ifp, name, val);
-> -       if (err == 0) {
-> -               brcmf_dbg(INFO, "enabling feature: %s\n", brcmf_feat_names[id]);
-> -               ifp->drvr->feat_flags |= BIT(id);
-> -       } else {
-> -               brcmf_dbg(TRACE, "%s feature check failed: %d\n",
-> -                         brcmf_feat_names[id], err);
-> +       char caps[256];
-> +       enum brcmf_feat_id id;
-> +       int i;
-> +
-> +       brcmf_fil_iovar_data_get(ifp, "cap", caps, sizeof(caps));
-> +       brcmf_dbg(INFO, "[ %s]\n", caps);
-> +
-> +       for (i = 0; i < ARRAY_SIZE(brcmf_fwcap_map); i++) {
-> +               if (strnstr(caps, brcmf_fwcap_map[i].fwcap_id, sizeof(caps))) {
-> +                       id = brcmf_fwcap_map[i].feature;
-> +                       brcmf_dbg(INFO, "enabling feature: %s\n",
-> +                                 brcmf_feat_names[id]);
-> +                       ifp->drvr->feat_flags |= BIT(id);
-> +               }
->         }
->  }
->
-> @@ -130,13 +138,14 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
->  {
->         struct brcmf_if *ifp = brcmf_get_ifp(drvr, 0);
->
-> -       brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_MCHAN, "mchan");
-> +       brcmf_feat_firmware_capabilities(ifp);
-> +
->         brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_PNO, "pfn");
->         if (drvr->bus_if->wowl_supported)
->                 brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
-> +       /* MBSS does not work for 43362 */
->         if (drvr->bus_if->chip != BRCM_CC_43362_CHIP_ID)
-> -               brcmf_feat_iovar_int_set(ifp, BRCMF_FEAT_MBSS, "mbss", 0);
-> -       brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_P2P, "p2p");
-> +               ifp->drvr->feat_flags &= BIT(BRCMF_FEAT_MBSS);
+This patch renames pvUserArg to user_arg to avoid camelcase.
 
-Missing ~ before the BIT() declaration? If the if-test fails, all bits are
-cleared except BRCMF_FEAT_MBSS. I think the if-test also needs to be updated
-to an equals `==` instead of the old inequality. So one would get:
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-/* clear MBSS feature for the 43362 (does not work) */
-if (drvr->bus_if->chip == BRCM_CC_43362_CHIP_ID)
-    ifp->drvr->feat_flags &= ~BIT(BRCMF_FEAT_MBSS);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d691c95..1190359 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3367,7 +3367,7 @@ int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr)
+ 
+ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 		      size_t ssid_len, const u8 *ies, size_t ies_len,
+-		      wilc_connect_result connect_result, void *pvUserArg,
++		      wilc_connect_result connect_result, void *user_arg,
+ 		      u8 u8security, enum AUTHTYPE tenuAuth_type,
+ 		      u8 u8channel, void *pJoinParams)
+ {
+@@ -3393,7 +3393,7 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 	msg.body.con_info.auth_type = tenuAuth_type;
+ 	msg.body.con_info.ch = u8channel;
+ 	msg.body.con_info.result = connect_result;
+-	msg.body.con_info.arg = pvUserArg;
++	msg.body.con_info.arg = user_arg;
+ 	msg.body.con_info.params = pJoinParams;
+ 	msg.vif = vif;
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index b426132..9e66d5e 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -328,7 +328,7 @@ int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr);
+ int wilc_wait_msg_queue_idle(void);
+ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 		      size_t ssid_len, const u8 *ies, size_t ies_len,
+-		      wilc_connect_result connect_result, void *pvUserArg,
++		      wilc_connect_result connect_result, void *user_arg,
+ 		      u8 u8security, enum AUTHTYPE tenuAuth_type,
+ 		      u8 u8channel, void *pJoinParams);
+ int wilc_flush_join_req(struct wilc_vif *vif);
+-- 
+2.6.4
 
-Also, happy holidays!
-Mathy
-
->         brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_RSDB, "rsdb_mode");
->         brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_TDLS, "tdls_enable");
->
-> --
-> 1.9.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
