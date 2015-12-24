@@ -1,61 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f49.google.com ([209.85.192.49]:36018 "EHLO
-	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751233AbbLURxb (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:33127 "EHLO
+	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751770AbbLXRXX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 12:53:31 -0500
-Received: by mail-qg0-f49.google.com with SMTP id c96so92340687qgd.3
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2015 09:53:30 -0800 (PST)
-Subject: Re: [PATCH] enable setting MAC address for r8723au
-To: Dan Lenski <dlenski@gmail.com>, linux-wireless@vger.kernel.org
-References: <1450664916-25205-1-git-send-email-dlenski@gmail.com>
- <1450664916-25205-2-git-send-email-dlenski@gmail.com>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <56783C98.1080700@lwfinger.net> (sfid-20151221_185334_892312_81F3953F)
-Date: Mon, 21 Dec 2015 11:53:28 -0600
+	Thu, 24 Dec 2015 12:23:23 -0500
+Received: by mail-wm0-f41.google.com with SMTP id p187so183669509wmp.0
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Dec 2015 09:23:22 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1450664916-25205-2-git-send-email-dlenski@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Date: Thu, 24 Dec 2015 18:23:22 +0100
+Message-ID: <CAOQ7t2bEs2UhxfWUCs7TBwidw2JKCKLmeUzcYjng4f5p4Wr-Mw@mail.gmail.com> (sfid-20151224_182327_543450_47CC9CE3)
+Subject: [BISECTED] brcmfmac issue since 4.3.0-rc3
+From: Carlo Caione <carlo@caione.org>
+To: meuleman@broadcom.com
+Cc: arend@broadcom.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 12/20/2015 08:28 PM, Dan Lenski wrote:
-> Signed-off-by: Dan Lenski <dlenski@gmail.com>
+Hi Hante,
+I'm having an issue with my BCM43340 SDIO WiFi card on the Asus X205TA
+laptop and the latest firmware taken from the linux-firmware git repo
+with the correct nvram file in place. I bisected the issue back to
+commit 2b76acd "brcmfmac: Rework p2p attach, use single method for p2p
+dev creation." (bad commit).
 
-The commit message should be in this patch rather than in the non-patch previous 
-mail. If this patch were to be accepted, all that explanation would be lost!
+The problem is not always reproducible. I'd say it happens once every
+ten reboots. What I see is that the kernel panics at boot immediately
+after I see:
 
-Rather than issuing a warning when the MAC is changed after the interface has 
-been brought up, have you considered changing the value of rtw_adapter->bup to 
-zero whenever the connection goes down? Would that help with the confusion in 
-the user-space tools?
+brcmfmac: brcmf_sdio_drivestrengthinit: No SDIO Drive strength init
+done for chip 43340 rev 2 pmurev 20
+brcmfmac: brcmf_sdio_bus_rxctl: resumed on timeout
+brcmfmac: brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -52
+brcmfmac: brcmf_bus_start: failed: -52
+brcmfmac: brcmf_sdio_firmware_callback: dongle is not responding
+brcmfmac: brcmf_sdio_dpc: failed backplane access over SDIO, halting operation
+brcmfmac: brcmf_sdio_dpc: failed backplane access over SDIO, halting operation
 
-NACK.
+With a messy trace similar to
+https://gist.github.com/carlocaione/06d17124a2589f3d4108
 
+Any idea what's going on?
 
-Larry
+Thanks
 
-> ---
->   drivers/staging/rtl8723au/os_dep/os_intfs.c | 7 +++++--
->   1 file changed, 5 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/staging/rtl8723au/os_dep/os_intfs.c b/drivers/staging/rtl8723au/os_dep/os_intfs.c
-> index b8848c2..228e19f 100644
-> --- a/drivers/staging/rtl8723au/os_dep/os_intfs.c
-> +++ b/drivers/staging/rtl8723au/os_dep/os_intfs.c
-> @@ -240,8 +240,11 @@ static int rtw_net_set_mac_address(struct net_device *pnetdev, void *p)
->   	struct rtw_adapter *padapter = netdev_priv(pnetdev);
->   	struct sockaddr *addr = p;
->
-> -	if (!padapter->bup)
-> -		ether_addr_copy(padapter->eeprompriv.mac_addr, addr->sa_data);
-> +	if (padapter->bup)
-> +		DBG_8723A_LEVEL(_drv_warning_, "Trying to set MAC address while bup =%d\n", padapter->bup);
-> +	ether_addr_copy(padapter->eeprompriv.mac_addr, addr->sa_data);
-> +	ether_addr_copy(pnetdev->dev_addr, addr->sa_data);
-> +
->   	return 0;
->   }
->
->
-
+-- 
+Carlo Caione
