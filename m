@@ -1,86 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f52.google.com ([209.85.215.52]:33219 "EHLO
-	mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751063AbbLQRlc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 12:41:32 -0500
-Received: by mail-lf0-f52.google.com with SMTP id p203so57464399lfa.0
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Dec 2015 09:41:31 -0800 (PST)
+Received: from softlayer.compulab.co.il ([50.23.254.55]:35305 "EHLO
+	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753389AbbLXRYV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Dec 2015 12:24:21 -0500
+Subject: Re: [PATCH v2 2/3] wlcore/wl12xx: spi: add device tree support
+To: Grygorii Strashko <grygorii.strashko@ti.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Tony Lindgren <tony@atomide.com>
+References: <1450971335-15961-1-git-send-email-uri.mashiach@compulab.co.il>
+ <1450971335-15961-3-git-send-email-uri.mashiach@compulab.co.il>
+ <567C1E19.1090500@ti.com>
+Cc: Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: Uri Mashiach <uri.mashiach@compulab.co.il>
+Message-ID: <567C2A41.1030207@compulab.co.il> (sfid-20151224_182425_910857_1E3D7214)
+Date: Thu, 24 Dec 2015 19:24:17 +0200
 MIME-Version: 1.0
-In-Reply-To: <20151217155633.GC6910@tuxdriver.com>
-References: <20151216173223.GF4073@localhost>
-	<20151217155633.GC6910@tuxdriver.com>
-Date: Thu, 17 Dec 2015 19:41:30 +0200
-Message-ID: <CANUX_P2Q7QrmKD5HXdxHB3NrPr9zdh+G9Ac8QiaxoyCP0DQapg@mail.gmail.com> (sfid-20151217_184136_347894_39152BA4)
-Subject: Re: [ANNOUNCE] New location for wireless-testing tree
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Bob Copeland <me@bobcopeland.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	=?UTF-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <567C1E19.1090500@ti.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Dec 17, 2015 at 5:56 PM, John W. Linville
-<linville@tuxdriver.com> wrote:
-> On Wed, Dec 16, 2015 at 12:32:23PM -0500, Bob Copeland wrote:
->> As reported previously[1], John Linville will be moving on from maintenance
->> of the wireless-testing[2] tree at the end of the year.  A huge thank you to
->> John for doing all this work for so many years!
+Hi Grygorii,
+
+On 12/24/2015 06:32 PM, Grygorii Strashko wrote:
+> On 12/24/2015 05:35 PM, Uri Mashiach wrote:
+>> Add DT support for the wl1271 SPI WiFi.
 >>
->> We now have a shared wireless directory on kernel.org where we (currently
->> myself and Kalle as backup) will continue to maintain this tree going
->> forward.  The new tree can be found at:
+>> Add documentation file for the wl1271 SPI WiFi.
 >>
->> git://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-testing.git
+>> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+>> Acked-by: Igor Grinberg <grinberg@compulab.co.il>
+>> ---
+>> v1 -> v2: update interrupt documentation.
+>>             replace interrupts and interrupt-parent with interrupts-extended.
+>> 	  IRQ parameters retrieved from spi_device instead of DT.
+>> 	  remove redundant #ifdef CONFIG_OF
 >>
->> Note: unlike John's tree, we are going to try rebasing this tree on every
->> build (like linux-next) instead of merging the downstream trees, in order
->> to avoid certain merge problems when those trees are rebased.
+>>    .../bindings/net/wireless/ti,wlcore,spi.txt        | 34 +++++++++++++
+>>    drivers/net/wireless/ti/wlcore/spi.c               | 55 ++++++++++++++++++++--
+>>    2 files changed, 85 insertions(+), 4 deletions(-)
+>>    create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
 >>
->> This means that if you are working directly off of wireless-testing, use
->> 'git pull --rebase' to sync, instead of just 'git pull'.
+>> diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt b/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
+>> new file mode 100644
+>> index 0000000..502c27e
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
+>> @@ -0,0 +1,34 @@
+>> +* Texas Instruments wl1271 wireless lan controller
+>> +
+>> +The wl1271 chip can be connected via SPI or via SDIO. This
+>> +document describes the binding for the SPI connected chip.
+>> +
+>> +Required properties:
+>> +- compatible :          Should be "ti,wl1271"
+>> +- reg :                 Chip select address of device
+>> +- spi-max-frequency :   Maximum SPI clocking speed of device in Hz
+>> +- ref-clock-frequency : Reference clock frequency
+>> +- interrupts-extended : Should contain parameters for 1 interrupt line.
+>> +                        Interrupt parameters: parent, line number, type.
+>> +- vwlan-supply :        Point the node of the regulator that powers/enable the wl1271 chip
+>> +
+>> +Optional properties:
+>> +- clock-xtal :          boolean, clock is generated from XTAL
+>> +
+>> +- Please consult Documentation/devicetree/bindings/spi/spi-bus.txt
+>> +  for optional SPI connection related properties,
+>> +
+>> +Examples:
+>> +
+>> +&spi1 {
+>> +	wl1271@1 {
+>> +		compatible = "ti,wl1271";
+>> +
+>> +		reg = <1>;
+>> +		spi-max-frequency = <48000000>;
+>> +		clock-xtal;
+>> +		ref-clock-frequency = <38400000>;
+>> +		interrupts-extended = <&gpio3 8 IRQ_TYPE_LEVEL_HIGH>;
+>> +		vwlan-supply = <&vwlan_fixed>;
+>> +	};
+>> +};
+>> diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
+>> index d3a4bcb..e9e8d54 100644
+>> --- a/drivers/net/wireless/ti/wlcore/spi.c
+>> +++ b/drivers/net/wireless/ti/wlcore/spi.c
+>> @@ -30,6 +30,7 @@
+>>    #include <linux/spi/spi.h>
+>>    #include <linux/wl12xx.h>
+>>    #include <linux/platform_device.h>
+>> +#include <linux/of_irq.h>
+>>    #include <linux/regulator/consumer.h>
 >>
->> We'll see how this goes and reassess after a couple of cycles.
+>>    #include "wlcore.h"
+>> @@ -357,6 +358,46 @@ static struct wl1271_if_operations spi_ops = {
+>>    	.set_block_size = NULL,
+>>    };
 >>
->> Please let me know of any issues.
->>
->> [1] http://comments.gmane.org/gmane.linux.kernel.wireless.general/145291
->>
->> [2] wireless-testing is an integration testing tree, consisting of:
->>
->>  * Linus's latest -rc
->>  * patches in mac80211 and wireless-drivers (for the upcoming release)
->>  * patches in mac80211-next and wireless-drivers-next (for the next release)
->>
->> It is not pulled into any upstream tree, but it should be a pretty good
->> indication of what is baking in Linux wireless for the next release, without
->> having unrelated changes from all the other subsystems as in linux-next.
+>> +#ifdef CONFIG_OF
+>> +static const struct of_device_id wlcore_spi_of_match_table[] = {
+>> +	{ .compatible = "ti,wl1271" },
+>> +	{ }
+>> +};
+>> +
+>> +/**
+>> + * wlcore_probe_of - DT node parsing.
+>> + * @spi: SPI slave device parameters.
+>> + * @res: resource parameters.
+>> + * @glue: wl12xx SPI bus to slave device glue parameters.
+>> + * @pdev_data: wlcore device parameters
+>> + */
+>> +static int wlcore_probe_of(struct spi_device *spi, struct wl12xx_spi_glue *glue,
+>> +			   struct wlcore_platdev_data *pdev_data)
+>> +{
+>> +	struct device_node *dt_node = spi->dev.of_node;
+>> +	int ret;
+>> +
+>> +	if (of_find_property(dt_node, "clock-xtal", NULL))
+>> +		pdev_data->ref_clock_xtal = true;
+>> +
+>> +	ret = of_property_read_u32(dt_node, "ref-clock-frequency",
+>> +				   &pdev_data->ref_clock_freq);
+>> +	if (IS_ERR_VALUE(ret)) {
+>> +		dev_err(glue->dev,
+>> +			"can't get reference clock frequency (%d)\n", ret);
+>> +		return ret;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +#else /* CONFIG_OF */
+>> +static int wlcore_probe_of(struct spi_device *spi, struct wl12xx_spi_glue *glue,
+>> +			   struct wlcore_platdev_data *pdev_data)
+>> +{
+>> +	return -ENODATA;
+>> +}
+>> +#endif /* CONFIG_OF */
 >
-> Given this most welcome announcement, I will hereby cease maintenance
-> of the predecessor wireless-testing tree in favor of this new
-> canonical source.
+> My question for your v1 was related to all above ifdefs.
+> If CONFIG_OF=n is not going to be supported then all this ifdefs
+> can be dropped and proper dependency can be added to Kconfig instead.
 >
 
-Somewhat related. I started a while ago to mirror our internal
-development tree to korg. You'll find there the bleeding edge of
-iwlwifi's development: both fixes and new features. It is a backport
-based tree. Pretty much all the patches for mac80211{-next}.git that
-we (Intel) send come from there as well. Note that this is the "raw
-data" (including Change-IDs and server that are inside Intel's
-intranet) which I later edit to send patches upstream. I merge
-mac80211.git and mac80211-next.git to that tree to get mac80211
-patches that come from upstream. In a sense, this tree looks like a
-backport of wireless-testing with content that is not there yet.
-You'll also find there "stable branches" that go through more thorough
-test cycles against their matching firmware version.
+Will be done in v3.
 
-I am not sure anyone is interested, but if someone wants, the tree is here:
-https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/backport-iwlwifi.git/
+>> +
+>>    static int wl1271_probe(struct spi_device *spi)
+>>    {
+>>    	struct wl12xx_spi_glue *glue;
+>> @@ -366,8 +407,6 @@ static int wl1271_probe(struct spi_device *spi)
+>>
+>>    	memset(&pdev_data, 0x00, sizeof(pdev_data));
+>>
+>> -	/* TODO: add DT parsing when needed */
+>> -
+>>    	pdev_data.if_ops = &spi_ops;
+>>
+>>    	glue = devm_kzalloc(&spi->dev, sizeof(*glue), GFP_KERNEL);
+>> @@ -390,6 +429,13 @@ static int wl1271_probe(struct spi_device *spi)
+>>    		return PTR_ERR(glue->reg);
+>>    	}
+>>
+>> +	ret = wlcore_probe_of(spi, glue, &pdev_data);
+>> +	if (IS_ERR_VALUE(ret)) {
+>> +		dev_err(glue->dev,
+>> +			"can't get device tree parameters (%d)\n", ret);
+>> +		return ret;
+>> +	}
+>> +
+>>    	ret = spi_setup(spi);
+>>    	if (ret < 0) {
+>>    		dev_err(glue->dev, "spi_setup failed\n");
+>> @@ -407,7 +453,8 @@ static int wl1271_probe(struct spi_device *spi)
+>>    	memset(res, 0x00, sizeof(res));
+>>
+>>    	res[0].start = spi->irq;
+>> -	res[0].flags = IORESOURCE_IRQ;
+>> +	res[0].flags = IORESOURCE_IRQ |
+>> +			irqd_get_trigger_type(irq_get_irq_data(spi->irq));
+>
+>
+> irq_get_trigger_type()?
+>
 
-A bit more info on the "stable branches":
-https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/core_release
+Will be replaced in v3.
 
-Drop me an email if you start to use this tree just to know if people
-are really using it :)
+>>    	res[0].name = "irq";
+>>
+>>    	ret = platform_device_add_resources(glue->core, res, ARRAY_SIZE(res));
+>> @@ -445,10 +492,10 @@ static int wl1271_remove(struct spi_device *spi)
+>>    	return 0;
+>>    }
+>>
+>> -
+>>    static struct spi_driver wl1271_spi_driver = {
+>>    	.driver = {
+>>    		.name		= "wl1271_spi",
+>> +		.of_match_table = of_match_ptr(wlcore_spi_of_match_table),
+>>    	},
+>>
+>>    	.probe		= wl1271_probe,
+>>
+>
+> Sorry for delayed replay.
+>
+
+-- 
+Thanks,
+Uri
