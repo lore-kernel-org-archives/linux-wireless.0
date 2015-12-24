@@ -1,67 +1,182 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from softlayer.compulab.co.il ([50.23.254.55]:55749 "EHLO
-	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964849AbbLWOLZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2015 09:11:25 -0500
-Subject: Re: [PATCH 1/3] wlcore/wl12xx: spi: fix NULL pointer dereference
- (Oops)
-To: Grygorii Strashko <grygorii.strashko@ti.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Tony Lindgren <tony@atomide.com>
-References: <1450859744-9948-1-git-send-email-uri.mashiach@compulab.co.il>
- <1450859744-9948-2-git-send-email-uri.mashiach@compulab.co.il>
- <567A7287.3010205@ti.com>
-Cc: Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
-	Igor Grinberg <grinberg@compulab.co.il>,
-	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-From: Uri Mashiach <uri.mashiach@compulab.co.il>
-Message-ID: <567AAB89.4010101@compulab.co.il> (sfid-20151223_151135_767017_71BCDD38)
-Date: Wed, 23 Dec 2015 16:11:21 +0200
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:28691 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751594AbbLXMTO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Dec 2015 07:19:14 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [RFC 2/2] brcmfmac: add support for nl80211 BSS_SELECT feature
+Date: Thu, 24 Dec 2015 13:19:10 +0100
+Message-ID: <1450959550-19655-3-git-send-email-arend@broadcom.com> (sfid-20151224_131921_022699_019ED176)
+In-Reply-To: <1450959550-19655-1-git-send-email-arend@broadcom.com>
+References: <1450959550-19655-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <567A7287.3010205@ti.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Grygorii,
+Announce support for extended nl80211 feature BSS_SELECT and
+process BSS selection criteria provided in .connect() callback.
 
-On 12/23/2015 12:08 PM, Grygorii Strashko wrote:
-> On 12/23/2015 10:35 AM, Uri Mashiach wrote:
->> The power function uses a consumer regulator access to update the WiFi
->> enable GPIO value.
->>
->> Fix the below Oops when trying to modprobe wlcore_spi.
->> The oops occurs because the wl1271_power_{off,on}()
->> function doesn't check the power() function pointer.
->>
->> [   23.401447] Unable to handle kernel NULL pointer dereference at
->> virtual address 00000000
->> [   23.409954] pgd = c0004000
->> [   23.412922] [00000000] *pgd=00000000
->> [   23.416693] Internal error: Oops: 80000007 [#1] SMP ARM
->> [   23.422168] Modules linked in: wl12xx wlcore mac80211 cfg80211
->> musb_dsps musb_hdrc usbcore usb_common snd_soc_simple_card evdev joydev
->> omap_rng wlcore_spi snd_soc_tlv320aic23_i2c rng_core snd_soc_tlv320aic23
->> c_can_platform c_can can_dev snd_soc_davinci_mcasp snd_soc_edma
->> snd_soc_omap omap_wdt musb_am335x cpufreq_dt thermal_sys hwmon
->> [   23.453253] CPU: 0 PID: 36 Comm: kworker/0:2 Not tainted
->> 4.2.0-00002-g951efee-dirty #233
->> [   23.461720] Hardware name: Generic AM33XX (Flattened Device Tree)
->> [   23.468123] Workqueue: events request_firmware_work_func
->> [   23.473690] task: de32efc0 ti: de4ee000 task.ti: de4ee000
->> [   23.479341] PC is at 0x0
->> [   23.482112] LR is at wl12xx_set_power_on+0x28/0x124 [wlcore]
->
-> Why can't you just add proper check in wl1271_power_on/wl1271_power_off() instead?
->
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Lei Zhang <leizh@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 47 ++++++++++++++++++++++
+ drivers/net/wireless/brcm80211/brcmfmac/common.c   | 38 ++++++++++-------
+ drivers/net/wireless/brcm80211/brcmfmac/core.h     |  1 +
+ 3 files changed, 71 insertions(+), 15 deletions(-)
 
-Will be done in v2.
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+index deb5f78..9e99900 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c
+@@ -1722,6 +1722,50 @@ enum nl80211_auth_type brcmf_war_auth_type(struct brcmf_if *ifp,
+ 	return type;
+ }
+ 
++static void brcmf_set_join_pref(struct brcmf_if *ifp,
++				struct cfg80211_bss_selection *bss_select)
++{
++	struct brcmf_join_pref_params join_pref_params[2];
++	int err;
++
++	if (!bss_select->present) {
++		brcmf_c_set_joinpref_default(ifp);
++		return;
++	}
++
++	switch (bss_select->pref_band) {
++	case IEEE80211_BAND_2GHZ:
++		join_pref_params[0].band = WLC_BAND_2G;
++		break;
++	case IEEE80211_BAND_5GHZ:
++		join_pref_params[0].band = WLC_BAND_5G;
++		break;
++	default:
++		brcmf_err("unsupported band: %d, ignoring bss selection\n",
++			  bss_select->pref_band);
++		return;
++	}
++	if (bss_select->ignore_rssi) {
++		/* Setup join_pref to select 5GHz over 2.4Ghz */
++		join_pref_params[0].type = BRCMF_JOIN_PREF_BAND;
++		join_pref_params[0].len = 2;
++		join_pref_params[0].rssi_gain = 0;
++	} else {
++		/* Setup join_pref to select target by RSSI (boost on 5GHz) */
++		join_pref_params[0].type = BRCMF_JOIN_PREF_RSSI_DELTA;
++		join_pref_params[0].len = 2;
++		join_pref_params[0].rssi_gain = bss_select->rssi_adjust;
++	}
++	join_pref_params[1].type = BRCMF_JOIN_PREF_RSSI;
++	join_pref_params[1].len = 2;
++	join_pref_params[1].rssi_gain = 0;
++	join_pref_params[1].band = 0;
++	err = brcmf_fil_iovar_data_set(ifp, "join_pref", join_pref_params,
++				       sizeof(join_pref_params));
++	if (err)
++		brcmf_err("Set join_pref error (%d)\n", err);
++}
++
+ static s32
+ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
+ 		       struct cfg80211_connect_params *sme)
+@@ -1858,6 +1902,8 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
+ 	else
+ 		eth_broadcast_addr(ext_join_params->assoc_le.bssid);
+ 
++	brcmf_set_join_pref(ifp, &sme->bss_select);
++
+ 	if (cfg->channel) {
+ 		ext_join_params->assoc_le.chanspec_num = cpu_to_le32(1);
+ 
+@@ -5920,6 +5966,7 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
+ 	wiphy->cipher_suites = __wl_cipher_suites;
+ 	wiphy->n_cipher_suites = ARRAY_SIZE(__wl_cipher_suites);
++	wiphy_ext_feature_set(wiphy, NL80211_EXT_FEATURE_BSS_SELECT);
+ 	wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
+ 			WIPHY_FLAG_OFFCHAN_TX |
+ 			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/common.c b/drivers/net/wireless/brcm80211/brcmfmac/common.c
+index fe54844..7c40979 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/common.c
++++ b/drivers/net/wireless/brcm80211/brcmfmac/common.c
+@@ -33,14 +33,34 @@ const u8 ALLFFMAC[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+ #define BRCMF_DEFAULT_SCAN_CHANNEL_TIME	40
+ #define BRCMF_DEFAULT_SCAN_UNASSOC_TIME	40
+ 
+-/* boost value for RSSI_DELTA in preferred join selection */
++/* default boost value for RSSI_DELTA in preferred join selection */
+ #define BRCMF_JOIN_PREF_RSSI_BOOST	8
+ 
++void brcmf_c_set_joinpref_default(struct brcmf_if *ifp)
++{
++	struct brcmf_join_pref_params join_pref_params[2];
++	int err;
++
++	/* Setup join_pref to select target by RSSI (boost on 5GHz) */
++	join_pref_params[0].type = BRCMF_JOIN_PREF_RSSI_DELTA;
++	join_pref_params[0].len = 2;
++	join_pref_params[0].rssi_gain = BRCMF_JOIN_PREF_RSSI_BOOST;
++	join_pref_params[0].band = WLC_BAND_5G;
++
++	join_pref_params[1].type = BRCMF_JOIN_PREF_RSSI;
++	join_pref_params[1].len = 2;
++	join_pref_params[1].rssi_gain = 0;
++	join_pref_params[1].band = 0;
++	err = brcmf_fil_iovar_data_set(ifp, "join_pref", join_pref_params,
++				       sizeof(join_pref_params));
++	if (err)
++		brcmf_err("Set join_pref error (%d)\n", err);
++}
++
+ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ {
+ 	s8 eventmask[BRCMF_EVENTING_MASK_LEN];
+ 	u8 buf[BRCMF_DCMD_SMLEN];
+-	struct brcmf_join_pref_params join_pref_params[2];
+ 	struct brcmf_rev_info_le revinfo;
+ 	struct brcmf_rev_info *ri;
+ 	char *ptr;
+@@ -127,19 +147,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
+ 		goto done;
+ 	}
+ 
+-	/* Setup join_pref to select target by RSSI(with boost on 5GHz) */
+-	join_pref_params[0].type = BRCMF_JOIN_PREF_RSSI_DELTA;
+-	join_pref_params[0].len = 2;
+-	join_pref_params[0].rssi_gain = BRCMF_JOIN_PREF_RSSI_BOOST;
+-	join_pref_params[0].band = WLC_BAND_5G;
+-	join_pref_params[1].type = BRCMF_JOIN_PREF_RSSI;
+-	join_pref_params[1].len = 2;
+-	join_pref_params[1].rssi_gain = 0;
+-	join_pref_params[1].band = 0;
+-	err = brcmf_fil_iovar_data_set(ifp, "join_pref", join_pref_params,
+-				       sizeof(join_pref_params));
+-	if (err)
+-		brcmf_err("Set join_pref error (%d)\n", err);
++	brcmf_c_set_joinpref_default(ifp);
+ 
+ 	/* Setup event_msgs, enable E_IF */
+ 	err = brcmf_fil_iovar_data_get(ifp, "event_msgs", eventmask,
+diff --git a/drivers/net/wireless/brcm80211/brcmfmac/core.h b/drivers/net/wireless/brcm80211/brcmfmac/core.h
+index 2f9101b..f8b4925 100644
+--- a/drivers/net/wireless/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/brcm80211/brcmfmac/core.h
+@@ -217,5 +217,6 @@ void brcmf_txflowblock_if(struct brcmf_if *ifp,
+ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success);
+ void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb);
+ void brcmf_net_setcarrier(struct brcmf_if *ifp, bool on);
++void brcmf_c_set_joinpref_default(struct brcmf_if *ifp);
+ 
+ #endif /* BRCMFMAC_CORE_H */
+-- 
+1.9.1
 
-Thanks,
-Uri
