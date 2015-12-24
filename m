@@ -1,35 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50712 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752007AbbLKNdO (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:59493 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932069AbbLXF7C (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2015 08:33:14 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: greearb@candelatech.com
-Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 1/2] ath6kl:  fix tx/rx antenna reporting for 2x2 devices.
-References: <1448924508-25672-1-git-send-email-greearb@candelatech.com>
-Date: Fri, 11 Dec 2015 15:33:06 +0200
-In-Reply-To: <1448924508-25672-1-git-send-email-greearb@candelatech.com>
-	(greearb@candelatech.com's message of "Mon, 30 Nov 2015 15:01:47
-	-0800")
-Message-ID: <87oadx3yb1.fsf@kamboji.qca.qualcomm.com> (sfid-20151211_143324_383044_58B4A88F)
+	Thu, 24 Dec 2015 00:59:02 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH v2 2/2] staging: wilc1000: remove wilc_sdio_init
+Date: Thu, 24 Dec 2015 15:02:52 +0900
+Message-ID: <1450936972-5773-2-git-send-email-glen.lee@atmel.com> (sfid-20151224_065906_361740_CF48D63F)
+In-Reply-To: <1450936972-5773-1-git-send-email-glen.lee@atmel.com>
+References: <1450936972-5773-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-greearb@candelatech.com writes:
+wilc_sdio_init return always 1, which is needless. Remove it and it's related
+codes also.
 
-> From: Ben Greear <greearb@candelatech.com>
->
-> My previous patch incorrectly reported the antenna
-> for 2x2 devices.  It should be a mask instead of
-> a numeric count.  This patch fixes that.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+Changes in v2: separate v1 patch into two patches.
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 10 ----------
+ 1 file changed, 10 deletions(-)
 
-Both patches applied, thanks.
-
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index 464d27d..caad876 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -185,11 +185,6 @@ static void wilc_sdio_disable_interrupt(struct wilc *dev)
+ 	dev_info(&func->dev, "wilc_sdio_disable_interrupt OUT\n");
+ }
+ 
+-static int wilc_sdio_init(void)
+-{
+-	return 1;
+-}
+-
+ /********************************************
+  *
+  *      Function 0
+@@ -611,11 +606,6 @@ static int sdio_init(struct wilc *wilc)
+ 
+ 	g_sdio.irq_gpio = (wilc->dev_irq_num);
+ 
+-	if (!wilc_sdio_init()) {
+-		dev_err(&func->dev, "Failed io init bus...\n");
+-		return 0;
+-	}
+-
+ 	/**
+ 	 *      function 0 csa enable
+ 	 **/
 -- 
-Kalle Valo
+1.9.1
+
