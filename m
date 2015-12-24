@@ -1,56 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.osadl.org ([62.245.132.105]:39093 "EHLO www.osadl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932651AbbLSRQa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Dec 2015 12:16:30 -0500
-From: Nicholas Mc Guire <hofrat@osadl.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
-Subject: [PATCH] rsi: consolidate kmalloc/memset 0 calls to kzalloc
-Date: Sat, 19 Dec 2015 17:39:26 +0100
-Message-Id: <1450543166-27531-1-git-send-email-hofrat@osadl.org> (sfid-20151219_181637_744387_B3D5D622)
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:33708 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933140AbbLXHw7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Dec 2015 02:52:59 -0500
+Received: by mail-pa0-f48.google.com with SMTP id cy9so63011539pac.0
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:52:59 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 04/21] staging: wilc1000: rename pu8ssid in wilc_set_join_req
+Date: Thu, 24 Dec 2015 16:52:22 +0900
+Message-Id: <1450943559-20937-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_092246_918280_992AABE3)
+In-Reply-To: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an API consolidation only. The use of kmalloc + memset to 0
-is equivalent to kzalloc.
+This patch renames pu8ssid to ssid to remove pu8 prefix.
+There is no need to add this prefix in order to show data type of this
+variable.
 
-Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-Found by coccinelle script (relaxed version of
-scripts/coccinelle/api/alloc/kzalloc-simple.cocci)
-
-Patch was compile tested with: x86_64_defconfig +
-CONFIG_RSI_91X=m
-
-Patch is against linux-next (localversion-next is -next-20151218)
-
- drivers/net/wireless/rsi/rsi_91x_mgmt.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_mgmt.c b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-index 8d110fd..697caab 100644
---- a/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_mgmt.c
-@@ -1023,7 +1023,7 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
- 		return -ENOMEM;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index bb4b612..a146d4f 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3365,7 +3365,7 @@ int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr)
+ 	return result;
+ }
+ 
+-int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *pu8ssid,
++int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 		      size_t ssidLen, const u8 *pu8IEs, size_t IEsLen,
+ 		      wilc_connect_result pfConnectResult, void *pvUserArg,
+ 		      u8 u8security, enum AUTHTYPE tenuAuth_type,
+@@ -3402,10 +3402,10 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *pu8ssid,
+ 		memcpy(msg.body.con_info.bssid, bssid, 6);
  	}
  
--	selected_rates = kmalloc(2 * RSI_TBL_SZ, GFP_KERNEL);
-+	selected_rates = kzalloc(2 * RSI_TBL_SZ, GFP_KERNEL);
- 	if (!selected_rates) {
- 		rsi_dbg(ERR_ZONE, "%s: Failed in allocation of mem\n",
- 			__func__);
-@@ -1032,7 +1032,6 @@ static int rsi_send_auto_rate_request(struct rsi_common *common)
+-	if (pu8ssid) {
++	if (ssid) {
+ 		msg.body.con_info.ssid_len = ssidLen;
+ 		msg.body.con_info.ssid = kmalloc(ssidLen, GFP_KERNEL);
+-		memcpy(msg.body.con_info.ssid, pu8ssid, ssidLen);
++		memcpy(msg.body.con_info.ssid, ssid, ssidLen);
  	}
  
- 	memset(skb->data, 0, sizeof(struct rsi_auto_rate));
--	memset(selected_rates, 0, 2 * RSI_TBL_SZ);
- 
- 	auto_rate = (struct rsi_auto_rate *)skb->data;
- 
+ 	if (pu8IEs) {
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 0e40c8f..5d6f807 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -326,7 +326,7 @@ int wilc_set_pmkid_info(struct wilc_vif *vif,
+ int wilc_get_mac_address(struct wilc_vif *vif, u8 *mac_addr);
+ int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr);
+ int wilc_wait_msg_queue_idle(void);
+-int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *pu8ssid,
++int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 		      size_t ssidLen, const u8 *pu8IEs, size_t IEsLen,
+ 		      wilc_connect_result pfConnectResult, void *pvUserArg,
+ 		      u8 u8security, enum AUTHTYPE tenuAuth_type,
 -- 
-1.7.10.4
+2.6.4
 
