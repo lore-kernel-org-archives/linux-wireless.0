@@ -1,51 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:33251 "EHLO
-	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751530AbbLVAtU (ORCPT
+Received: from mail-io0-f181.google.com ([209.85.223.181]:33305 "EHLO
+	mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752975AbbLXDHu convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 19:49:20 -0500
-Received: by mail-pf0-f193.google.com with SMTP id 78so1048976pfw.0
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Dec 2015 16:49:19 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 02/13] staging: wilc1000: match argument name of wilc_add_ptk declaration
-Date: Tue, 22 Dec 2015 09:48:58 +0900
-Message-Id: <1450745349-16811-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20151222_014923_066499_5657C84A)
-In-Reply-To: <1450745349-16811-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1450745349-16811-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 23 Dec 2015 22:07:50 -0500
+Received: by mail-io0-f181.google.com with SMTP id 186so235587219iow.0
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 19:07:50 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <567B6140.1090907@atmel.com>
+References: <1450838003-24379-1-git-send-email-glen.lee@atmel.com>
+ <CAGRGNgWrFdRYXg+912stL9fcYE2ZqbEzNoOiHnyjYvX+5BHR=A@mail.gmail.com> <567B6140.1090907@atmel.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 24 Dec 2015 14:07:30 +1100
+Message-ID: <CAGRGNgUv66UgjxA=Yoxy-+9FRpcVOixxc2pPRkWYQxe0ye5J=w@mail.gmail.com> (sfid-20151224_040753_866002_64062379)
+Subject: Re: [PATCH] staging: wilc1000: remove wilc_sdio_init
+To: glen lee <glen.lee@atmel.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tony Cho <tony.cho@atmel.com>, leo.kim@atmel.com,
+	Austin Shin <austin.shin@atmel.com>, adel.noureldin@atmel.com,
+	adham.abozaeid@atmel.com, Nicolas.FERRE@atmel.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some arguments name of wilc_add_pkt declaration is different to those of
-this function definition. It is changed as same name of this function
-declaration and definition.
+Hi Glen,
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.h | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+On Thu, Dec 24, 2015 at 2:06 PM, glen lee <glen.lee@atmel.com> wrote:
+>
+>
+> On 2015년 12월 24일 11:39, Julian Calaby wrote:
+>>
+>> Hi Glen,
+>>
+>> On Wed, Dec 23, 2015 at 1:33 PM, Glen Lee <glen.lee@atmel.com> wrote:
+>>>
+>>> wilc_sdio_init return always 1. It is needless, so just remove it and
+>>> it's
+>>> related codes also.
+>>>
+>>> Signed-off-by: Glen Lee <glen.lee@atmel.com>
+>>> ---
+>>>   drivers/staging/wilc1000/wilc_sdio.c | 12 ------------
+>>>   1 file changed, 12 deletions(-)
+>>>
+>>> diff --git a/drivers/staging/wilc1000/wilc_sdio.c
+>>> b/drivers/staging/wilc1000/wilc_sdio.c
+>>> index e961b50..caad876 100644
+>>> --- a/drivers/staging/wilc1000/wilc_sdio.c
+>>> +++ b/drivers/staging/wilc1000/wilc_sdio.c
+>>> @@ -185,11 +185,6 @@ static void wilc_sdio_disable_interrupt(struct wilc
+>>> *dev)
+>>>          dev_info(&func->dev, "wilc_sdio_disable_interrupt OUT\n");
+>>>   }
+>>>
+>>> -static int wilc_sdio_init(void)
+>>> -{
+>>> -       return 1;
+>>> -}
+>>> -
+>>>   /********************************************
+>>>    *
+>>>    *      Function 0
+>>> @@ -611,13 +606,6 @@ static int sdio_init(struct wilc *wilc)
+>>>
+>>>          g_sdio.irq_gpio = (wilc->dev_irq_num);
+>>>
+>>> -       if (!wilc_sdio_init()) {
+>>> -               dev_err(&func->dev, "Failed io init bus...\n");
+>>> -               return 0;
+>>> -       } else {
+>>> -               return 0;
+>>> -       }
+>>> -
+>>
+>> This isn't equivalent code as both arms of the if statement eventually
+>> call return 0.
+>
+>
+> Hi julian,
+>
+> Yes, you are correct.
+> Actually, The original code was like this before It is patched wrongly.
+> -       if (!wilc_sdio_init()) {
+> -               dev_err(&func->dev, "Failed io init bus...\n");
+> -               return 0;
+> -       }
+> I could fix this first and then remove wilc_sdio_init().
+> But I thought that this can be fixed by removing wilc_sdio_init which also
+> fixes always return 0 error.
+>
+> Do you think I should fix "always return 0 error" first and then remove
+> wilc_sdio_init()?
+> Or update change log about the error which cause this?
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index be1536a..7e89776 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -312,9 +312,9 @@ int wilc_add_wep_key_bss_sta(struct wilc_vif *vif, const u8 *key, u8 len,
- 			     u8 index);
- int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
- 			    u8 index, u8 mode, enum AUTHTYPE auth_type);
--int wilc_add_ptk(struct wilc_vif *vif, const u8 *pu8Ptk, u8 u8PtkKeylen,
--		 const u8 *mac_addr, const u8 *pu8RxMic, const u8 *pu8TxMic,
--		 u8 mode, u8 u8Ciphermode, u8 u8Idx);
-+int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
-+		 const u8 *mac_addr, const u8 *rx_mic, const u8 *tx_mic,
-+		 u8 mode, u8 cipher_mode, u8 index);
- s32 wilc_get_inactive_time(struct wilc_vif *vif, const u8 *mac,
- 			   u32 *pu32InactiveTime);
- s32 wilc_add_rx_gtk(struct wilc_vif *vif, const u8 *pu8RxGtk, u8 u8GtkKeylen,
+It should be two patches, my instinct is to do one which fixes it
+always returning zero, then another that removes the empty function.
+Fixing bugs then cleaning up seems more logical to me.
+
+Thanks,
+
 -- 
-2.6.4
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
