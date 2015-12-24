@@ -1,89 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:36484 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966146AbbLRJWL (ORCPT
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:35908 "EHLO
+	mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933207AbbLXHxR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2015 04:22:11 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH] staging: wilc1000: fix a bug when unload driver
-Date: Fri, 18 Dec 2015 18:26:02 +0900
-Message-ID: <1450430762-8462-1-git-send-email-glen.lee@atmel.com> (sfid-20151218_102607_877780_904826FC)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 24 Dec 2015 02:53:17 -0500
+Received: by mail-pf0-f178.google.com with SMTP id 65so20561484pff.3
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:53:16 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 10/21] staging: wilc1000: rename u8security in wilc_set_join_req
+Date: Thu, 24 Dec 2015 16:52:28 +0900
+Message-Id: <1450943559-20937-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_085336_638935_4CE1901B)
+In-Reply-To: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kernel crashes when load and unload driver several times. I used git bisect to
-track down and found that removing NULL setting caused the panic.
-This reverts only related codes of the patch(a4ab1ade75a3).
+This patch renames u8security to security to remove u8 prefix.
+There is no need to add prefix in order to show data type of this
+variable.
 
-Fixes: a4ab1ade75a3 ("staging: wilc1000: replace drvHandler and hWFIDrv with hif_drv")
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 0125e3d..851560f 100644
+index 1190359..64189fa 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1366,9 +1366,12 @@ static s32 Handle_ConnectTimeout(struct wilc_vif *vif)
+@@ -3368,7 +3368,7 @@ int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr)
+ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 		      size_t ssid_len, const u8 *ies, size_t ies_len,
+ 		      wilc_connect_result connect_result, void *user_arg,
+-		      u8 u8security, enum AUTHTYPE tenuAuth_type,
++		      u8 security, enum AUTHTYPE tenuAuth_type,
+ 		      u8 u8channel, void *pJoinParams)
+ {
+ 	int result = 0;
+@@ -3389,7 +3389,7 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
  
- 	hif_drv->usr_conn_req.ssid_len = 0;
- 	kfree(hif_drv->usr_conn_req.pu8ssid);
-+	hif_drv->usr_conn_req.pu8ssid = NULL;
- 	kfree(hif_drv->usr_conn_req.pu8bssid);
-+	hif_drv->usr_conn_req.pu8bssid = NULL;
- 	hif_drv->usr_conn_req.ies_len = 0;
- 	kfree(hif_drv->usr_conn_req.ies);
-+	hif_drv->usr_conn_req.ies = NULL;
+ 	msg.id = HOST_IF_MSG_CONNECT;
  
- 	eth_zero_addr(wilc_connected_ssid);
- 
-@@ -1624,9 +1627,12 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
- 			strConnectInfo.pu8ReqIEs = NULL;
- 			hif_drv->usr_conn_req.ssid_len = 0;
- 			kfree(hif_drv->usr_conn_req.pu8ssid);
-+			hif_drv->usr_conn_req.pu8ssid = NULL;
- 			kfree(hif_drv->usr_conn_req.pu8bssid);
-+			hif_drv->usr_conn_req.pu8bssid = NULL;
- 			hif_drv->usr_conn_req.ies_len = 0;
- 			kfree(hif_drv->usr_conn_req.ies);
-+			hif_drv->usr_conn_req.ies = NULL;
- 		} else if ((u8MacStatus == MAC_DISCONNECTED) &&
- 			   (hif_drv->hif_state == HOST_IF_CONNECTED)) {
- 			PRINT_D(HOSTINF_DBG, "Received MAC_DISCONNECTED from the FW\n");
-@@ -1660,9 +1666,12 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
- 
- 			hif_drv->usr_conn_req.ssid_len = 0;
- 			kfree(hif_drv->usr_conn_req.pu8ssid);
-+			hif_drv->usr_conn_req.pu8ssid = NULL;
- 			kfree(hif_drv->usr_conn_req.pu8bssid);
-+			hif_drv->usr_conn_req.pu8bssid = NULL;
- 			hif_drv->usr_conn_req.ies_len = 0;
- 			kfree(hif_drv->usr_conn_req.ies);
-+			hif_drv->usr_conn_req.ies = NULL;
- 
- 			if (join_req && join_req_vif == vif) {
- 				kfree(join_req);
-@@ -2034,9 +2043,12 @@ static void Handle_Disconnect(struct wilc_vif *vif)
- 
- 		hif_drv->usr_conn_req.ssid_len = 0;
- 		kfree(hif_drv->usr_conn_req.pu8ssid);
-+		hif_drv->usr_conn_req.pu8ssid = NULL;
- 		kfree(hif_drv->usr_conn_req.pu8bssid);
-+		hif_drv->usr_conn_req.pu8bssid = NULL;
- 		hif_drv->usr_conn_req.ies_len = 0;
- 		kfree(hif_drv->usr_conn_req.ies);
-+		hif_drv->usr_conn_req.ies = NULL;
- 
- 		if (join_req && join_req_vif == vif) {
- 			kfree(join_req);
+-	msg.body.con_info.security = u8security;
++	msg.body.con_info.security = security;
+ 	msg.body.con_info.auth_type = tenuAuth_type;
+ 	msg.body.con_info.ch = u8channel;
+ 	msg.body.con_info.result = connect_result;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 9e66d5e..bb08e7f 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -329,7 +329,7 @@ int wilc_wait_msg_queue_idle(void);
+ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 		      size_t ssid_len, const u8 *ies, size_t ies_len,
+ 		      wilc_connect_result connect_result, void *user_arg,
+-		      u8 u8security, enum AUTHTYPE tenuAuth_type,
++		      u8 security, enum AUTHTYPE tenuAuth_type,
+ 		      u8 u8channel, void *pJoinParams);
+ int wilc_flush_join_req(struct wilc_vif *vif);
+ s32 wilc_disconnect(struct wilc_vif *vif, u16 u16ReasonCode);
 -- 
-1.9.1
+2.6.4
 
