@@ -1,162 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:11533 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751194AbbLUFRW (ORCPT
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:33114 "EHLO
+	mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933198AbbLXHxL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 00:17:22 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 23/46] staging: wilc1000: linux_wlan_spi.c: return linux error value
-Date: Mon, 21 Dec 2015 14:18:27 +0900
-Message-ID: <1450675130-17866-24-git-send-email-glen.lee@atmel.com> (sfid-20151221_063102_148921_73687F96)
-In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 24 Dec 2015 02:53:11 -0500
+Received: by mail-pf0-f179.google.com with SMTP id q63so29060646pfb.0
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:53:11 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 08/21] staging: wilc1000: rename pfConnectResult in wilc_set_join_req
+Date: Thu, 24 Dec 2015 16:52:26 +0900
+Message-Id: <1450943559-20937-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_085334_022010_0E7DFF03)
+In-Reply-To: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-return linux error value instead of 0 or 1 and use -EINVAL. Related codes
-also changed together.
+This patch renames pfConnectResult to connect_result to avoid camelcase.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/linux_wlan_spi.c | 14 +++-----------
- drivers/staging/wilc1000/wilc_spi.c       | 18 +++++++++---------
- 2 files changed, 12 insertions(+), 20 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_spi.c b/drivers/staging/wilc1000/linux_wlan_spi.c
-index 6111405..c7d2542 100644
---- a/drivers/staging/wilc1000/linux_wlan_spi.c
-+++ b/drivers/staging/wilc1000/linux_wlan_spi.c
-@@ -104,13 +104,9 @@ int wilc_spi_write(struct wilc *wilc, u8 *b, u32 len)
- 		dev_err(&spi->dev,
- 			"FAILED due to NULL buffer or ZERO length check the following length: %d\n",
- 			len);
--		ret = -1;
-+		ret = -EINVAL;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 4421bab..d691c95 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3367,7 +3367,7 @@ int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr)
+ 
+ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 		      size_t ssid_len, const u8 *ies, size_t ies_len,
+-		      wilc_connect_result pfConnectResult, void *pvUserArg,
++		      wilc_connect_result connect_result, void *pvUserArg,
+ 		      u8 u8security, enum AUTHTYPE tenuAuth_type,
+ 		      u8 u8channel, void *pJoinParams)
+ {
+@@ -3375,7 +3375,7 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 	struct host_if_msg msg;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+-	if (!hif_drv || !pfConnectResult) {
++	if (!hif_drv || !connect_result) {
+ 		PRINT_ER("Driver is null\n");
+ 		return -EFAULT;
  	}
- 
--	/* change return value to match WILC interface */
--	(ret < 0) ? (ret = 0) : (ret = 1);
--
--
- 	return ret;
- }
- 
-@@ -148,10 +144,8 @@ int wilc_spi_read(struct wilc *wilc, u8 *rb, u32 rlen)
- 		dev_err(&spi->dev,
- 			"can't read data with the following length: %u\n",
- 			rlen);
--		ret = -1;
-+		ret = -EINVAL;
- 	}
--	/* change return value to match WILC interface */
--	(ret < 0) ? (ret = 0) : (ret = 1);
- 
- 	return ret;
- }
-@@ -185,10 +179,8 @@ int wilc_spi_write_read(struct wilc *wilc, u8 *wb, u8 *rb, u32 rlen)
- 		dev_err(&spi->dev,
- 			"can't read data with the following length: %u\n",
- 			rlen);
--		ret = -1;
-+		ret = -EINVAL;
- 	}
--	/* change return value to match WILC interface */
--	(ret < 0) ? (ret = 0) : (ret = 1);
- 
- 	return ret;
- }
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index faaeaf7..bd61aac 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -250,7 +250,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
- 	}
- 	rix = len;
- 
--	if (!wilc_spi_write_read(wilc, wb, rb, len2)) {
-+	if (wilc_spi_write_read(wilc, wb, rb, len2)) {
- 		dev_err(&spi->dev, "Failed cmd write, bus error...\n");
- 		result = N_FAIL;
- 		return result;
-@@ -366,7 +366,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
- 				/**
- 				 * Read bytes
- 				 **/
--				if (!wilc_spi_read(wilc, &b[ix], nbytes)) {
-+				if (wilc_spi_read(wilc, &b[ix], nbytes)) {
- 					dev_err(&spi->dev, "Failed data block read, bus error...\n");
- 					result = N_FAIL;
- 					goto _error_;
-@@ -376,7 +376,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
- 				 * Read Crc
- 				 **/
- 				if (!g_spi.crc_off) {
--					if (!wilc_spi_read(wilc, crc, 2)) {
-+					if (wilc_spi_read(wilc, crc, 2)) {
- 						dev_err(&spi->dev, "Failed data block crc read, bus error...\n");
- 						result = N_FAIL;
- 						goto _error_;
-@@ -407,7 +407,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
- 				 **/
- 				retry = 10;
- 				do {
--					if (!wilc_spi_read(wilc, &rsp, 1)) {
-+					if (wilc_spi_read(wilc, &rsp, 1)) {
- 						dev_err(&spi->dev, "Failed data response read, bus error...\n");
- 						result = N_FAIL;
- 						break;
-@@ -423,7 +423,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
- 				/**
- 				 * Read bytes
- 				 **/
--				if (!wilc_spi_read(wilc, &b[ix], nbytes)) {
-+				if (wilc_spi_read(wilc, &b[ix], nbytes)) {
- 					dev_err(&spi->dev, "Failed data block read, bus error...\n");
- 					result = N_FAIL;
- 					break;
-@@ -433,7 +433,7 @@ static int spi_cmd_complete(struct wilc *wilc, u8 cmd, u32 adr, u8 *b, u32 sz,
- 				 * Read Crc
- 				 **/
- 				if (!g_spi.crc_off) {
--					if (!wilc_spi_read(wilc, crc, 2)) {
-+					if (wilc_spi_read(wilc, crc, 2)) {
- 						dev_err(&spi->dev, "Failed data block crc read, bus error...\n");
- 						result = N_FAIL;
- 						break;
-@@ -484,7 +484,7 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
- 				order = 0x2;
- 		}
- 		cmd |= order;
--		if (!wilc_spi_write(wilc, &cmd, 1)) {
-+		if (wilc_spi_write(wilc, &cmd, 1)) {
- 			dev_err(&spi->dev,
- 				"Failed data block cmd write, bus error...\n");
- 			result = N_FAIL;
-@@ -494,7 +494,7 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
- 		/**
- 		 *      Write data
- 		 **/
--		if (!wilc_spi_write(wilc, &b[ix], nbytes)) {
-+		if (wilc_spi_write(wilc, &b[ix], nbytes)) {
- 			dev_err(&spi->dev,
- 				"Failed data block write, bus error...\n");
- 			result = N_FAIL;
-@@ -505,7 +505,7 @@ static int spi_data_write(struct wilc *wilc, u8 *b, u32 sz)
- 		 *      Write Crc
- 		 **/
- 		if (!g_spi.crc_off) {
--			if (!wilc_spi_write(wilc, crc, 2)) {
-+			if (wilc_spi_write(wilc, crc, 2)) {
- 				dev_err(&spi->dev,"Failed data block crc write, bus error...\n");
- 				result = N_FAIL;
- 				break;
+@@ -3392,7 +3392,7 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 	msg.body.con_info.security = u8security;
+ 	msg.body.con_info.auth_type = tenuAuth_type;
+ 	msg.body.con_info.ch = u8channel;
+-	msg.body.con_info.result = pfConnectResult;
++	msg.body.con_info.result = connect_result;
+ 	msg.body.con_info.arg = pvUserArg;
+ 	msg.body.con_info.params = pJoinParams;
+ 	msg.vif = vif;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 5edb178..b426132 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -328,7 +328,7 @@ int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr);
+ int wilc_wait_msg_queue_idle(void);
+ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 		      size_t ssid_len, const u8 *ies, size_t ies_len,
+-		      wilc_connect_result pfConnectResult, void *pvUserArg,
++		      wilc_connect_result connect_result, void *pvUserArg,
+ 		      u8 u8security, enum AUTHTYPE tenuAuth_type,
+ 		      u8 u8channel, void *pJoinParams);
+ int wilc_flush_join_req(struct wilc_vif *vif);
 -- 
-1.9.1
+2.6.4
 
