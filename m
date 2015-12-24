@@ -1,70 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:52558 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752324AbbLJJmU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Dec 2015 04:42:20 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] rfkill: copy the name into the rfkill struct
-Date: Thu, 10 Dec 2015 10:42:12 +0100
-Message-Id: <1449740532-4292-1-git-send-email-johannes@sipsolutions.net> (sfid-20151210_104224_388217_0123EA52)
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:33756 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933192AbbLXHxF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Dec 2015 02:53:05 -0500
+Received: by mail-pa0-f48.google.com with SMTP id cy9so63012738pac.0
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:53:05 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 06/21] staging: wilc1000: rename pu8IEs in wilc_set_join_req
+Date: Thu, 24 Dec 2015 16:52:24 +0900
+Message-Id: <1450943559-20937-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_092249_496203_4A6DBA5B)
+In-Reply-To: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch renames pu8IEs to ies to avoid camelcase.
 
-Some users of rfkill, like NFC and cfg80211, use a dynamic name when
-allocating rfkill, in those cases dev_name(). Therefore, the pointer
-passed to rfkill_alloc() might not be valid forever, I specifically
-found the case that the rfkill name was quite obviously an invalid
-pointer (or at least garbage) when the wiphy had been renamed.
-
-Fix this by making a copy of the rfkill name in rfkill_alloc().
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- net/rfkill/core.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index b41e9ea2ffff..f53bf3b6558b 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -49,7 +49,6 @@
- struct rfkill {
- 	spinlock_t		lock;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 4730b60..bf1597c 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3366,7 +3366,7 @@ int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr)
+ }
  
--	const char		*name;
- 	enum rfkill_type	type;
+ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+-		      size_t ssid_len, const u8 *pu8IEs, size_t IEsLen,
++		      size_t ssid_len, const u8 *ies, size_t IEsLen,
+ 		      wilc_connect_result pfConnectResult, void *pvUserArg,
+ 		      u8 u8security, enum AUTHTYPE tenuAuth_type,
+ 		      u8 u8channel, void *pJoinParams)
+@@ -3408,10 +3408,10 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 		memcpy(msg.body.con_info.ssid, ssid, ssid_len);
+ 	}
  
- 	unsigned long		state;
-@@ -73,6 +72,7 @@ struct rfkill {
- 	struct delayed_work	poll_work;
- 	struct work_struct	uevent_work;
- 	struct work_struct	sync_work;
-+	char			name[];
- };
- #define to_rfkill(d)	container_of(d, struct rfkill, dev)
- 
-@@ -876,14 +876,14 @@ struct rfkill * __must_check rfkill_alloc(const char *name,
- 	if (WARN_ON(type == RFKILL_TYPE_ALL || type >= NUM_RFKILL_TYPES))
- 		return NULL;
- 
--	rfkill = kzalloc(sizeof(*rfkill), GFP_KERNEL);
-+	rfkill = kzalloc(sizeof(*rfkill) + strlen(name) + 1, GFP_KERNEL);
- 	if (!rfkill)
- 		return NULL;
- 
- 	spin_lock_init(&rfkill->lock);
- 	INIT_LIST_HEAD(&rfkill->node);
- 	rfkill->type = type;
--	rfkill->name = name;
-+	strcpy(rfkill->name, name);
- 	rfkill->ops = ops;
- 	rfkill->data = ops_data;
- 
+-	if (pu8IEs) {
++	if (ies) {
+ 		msg.body.con_info.ies_len = IEsLen;
+ 		msg.body.con_info.ies = kmalloc(IEsLen, GFP_KERNEL);
+-		memcpy(msg.body.con_info.ies, pu8IEs, IEsLen);
++		memcpy(msg.body.con_info.ies, ies, IEsLen);
+ 	}
+ 	if (hif_drv->hif_state < HOST_IF_CONNECTING)
+ 		hif_drv->hif_state = HOST_IF_CONNECTING;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 4c4674b..44929a6 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -327,7 +327,7 @@ int wilc_get_mac_address(struct wilc_vif *vif, u8 *mac_addr);
+ int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr);
+ int wilc_wait_msg_queue_idle(void);
+ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+-		      size_t ssid_len, const u8 *pu8IEs, size_t IEsLen,
++		      size_t ssid_len, const u8 *ies, size_t IEsLen,
+ 		      wilc_connect_result pfConnectResult, void *pvUserArg,
+ 		      u8 u8security, enum AUTHTYPE tenuAuth_type,
+ 		      u8 u8channel, void *pJoinParams);
 -- 
-2.6.2
+2.6.4
 
