@@ -1,68 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:33905 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754524AbbL3MP5 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:13890 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751977AbbLXDM7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 07:15:57 -0500
-Received: by mail-pa0-f45.google.com with SMTP id uo6so116317745pac.1
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 04:15:57 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 03/20] staging: wilc1000: rename bReg in wilc_frame_register
-Date: Wed, 30 Dec 2015 21:15:27 +0900
-Message-Id: <1451477744-11975-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20151230_131618_721342_A98508F5)
-In-Reply-To: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 23 Dec 2015 22:12:59 -0500
+Message-ID: <567B63A5.4070405@atmel.com> (sfid-20151224_041303_361942_9DFB9816)
+Date: Thu, 24 Dec 2015 12:16:53 +0900
+From: glen lee <glen.lee@atmel.com>
+MIME-Version: 1.0
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: Greg KH <gregkh@linuxfoundation.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tony Cho <tony.cho@atmel.com>, <leo.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: Re: [PATCH] staging: wilc1000: remove wilc_sdio_init
+References: <1450838003-24379-1-git-send-email-glen.lee@atmel.com> <CAGRGNgWrFdRYXg+912stL9fcYE2ZqbEzNoOiHnyjYvX+5BHR=A@mail.gmail.com> <567B6140.1090907@atmel.com> <CAGRGNgUv66UgjxA=Yoxy-+9FRpcVOixxc2pPRkWYQxe0ye5J=w@mail.gmail.com>
+In-Reply-To: <CAGRGNgUv66UgjxA=Yoxy-+9FRpcVOixxc2pPRkWYQxe0ye5J=w@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames bReg to reg to avoid camelcase.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index c3e59d8..9b72519 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4123,7 +4123,7 @@ s32 wilc_listen_state_expired(struct wilc_vif *vif, u32 u32SessionID)
- 	return result;
- }
- 
--int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool bReg)
-+int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg)
- {
- 	int result = 0;
- 	struct host_if_msg msg;
-@@ -4153,7 +4153,7 @@ int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool bReg)
- 		break;
- 	}
- 	msg.body.reg_frame.frame_type = frame_type;
--	msg.body.reg_frame.reg = bReg;
-+	msg.body.reg_frame.reg = reg;
- 	msg.vif = vif;
- 
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index efb657b..b43e0a1 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -362,7 +362,7 @@ s32 wilc_remain_on_channel(struct wilc_vif *vif, u32 u32SessionID,
- 			   wilc_remain_on_chan_ready RemainOnChanReady,
- 			   void *pvUserArg);
- s32 wilc_listen_state_expired(struct wilc_vif *vif, u32 u32SessionID);
--int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool bReg);
-+int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg);
- int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index);
- int wilc_set_operation_mode(struct wilc_vif *vif, u32 mode);
- int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *stats);
--- 
-2.6.4
+On 2015년 12월 24일 12:07, Julian Calaby wrote:
+> Hi Glen,
+>
+> On Thu, Dec 24, 2015 at 2:06 PM, glen lee <glen.lee@atmel.com> wrote:
+>>
+>> On 2015년 12월 24일 11:39, Julian Calaby wrote:
+>>> Hi Glen,
+>>>
+>>> On Wed, Dec 23, 2015 at 1:33 PM, Glen Lee <glen.lee@atmel.com> wrote:
+>>>> wilc_sdio_init return always 1. It is needless, so just remove it and
+>>>> it's
+>>>> related codes also.
+>>>>
+>>>> Signed-off-by: Glen Lee <glen.lee@atmel.com>
+>>>> ---
+>>>>    drivers/staging/wilc1000/wilc_sdio.c | 12 ------------
+>>>>    1 file changed, 12 deletions(-)
+>>>>
+>>>> diff --git a/drivers/staging/wilc1000/wilc_sdio.c
+>>>> b/drivers/staging/wilc1000/wilc_sdio.c
+>>>> index e961b50..caad876 100644
+>>>> --- a/drivers/staging/wilc1000/wilc_sdio.c
+>>>> +++ b/drivers/staging/wilc1000/wilc_sdio.c
+>>>> @@ -185,11 +185,6 @@ static void wilc_sdio_disable_interrupt(struct wilc
+>>>> *dev)
+>>>>           dev_info(&func->dev, "wilc_sdio_disable_interrupt OUT\n");
+>>>>    }
+>>>>
+>>>> -static int wilc_sdio_init(void)
+>>>> -{
+>>>> -       return 1;
+>>>> -}
+>>>> -
+>>>>    /********************************************
+>>>>     *
+>>>>     *      Function 0
+>>>> @@ -611,13 +606,6 @@ static int sdio_init(struct wilc *wilc)
+>>>>
+>>>>           g_sdio.irq_gpio = (wilc->dev_irq_num);
+>>>>
+>>>> -       if (!wilc_sdio_init()) {
+>>>> -               dev_err(&func->dev, "Failed io init bus...\n");
+>>>> -               return 0;
+>>>> -       } else {
+>>>> -               return 0;
+>>>> -       }
+>>>> -
+>>> This isn't equivalent code as both arms of the if statement eventually
+>>> call return 0.
+>>
+>> Hi julian,
+>>
+>> Yes, you are correct.
+>> Actually, The original code was like this before It is patched wrongly.
+>> -       if (!wilc_sdio_init()) {
+>> -               dev_err(&func->dev, "Failed io init bus...\n");
+>> -               return 0;
+>> -       }
+>> I could fix this first and then remove wilc_sdio_init().
+>> But I thought that this can be fixed by removing wilc_sdio_init which also
+>> fixes always return 0 error.
+>>
+>> Do you think I should fix "always return 0 error" first and then remove
+>> wilc_sdio_init()?
+>> Or update change log about the error which cause this?
+> It should be two patches, my instinct is to do one which fixes it
+> always returning zero, then another that removes the empty function.
+> Fixing bugs then cleaning up seems more logical to me.
+
+Hi julian,
+
+Thanks for your advise, I will make two patches to fix this.
+
+regards,
+glen lee.
+
+>
+> Thanks,
+>
 
