@@ -1,53 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:8885 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932135AbbLGRwB (ORCPT
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:33698 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753759AbbLXCjb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2015 12:52:01 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-CC: <linux-next@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	"Vivek Natarajan" <nataraja@qti.qualcomm.com>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: linux-next: manual merge of the wireless-drivers-next tree with Linus' tree
-References: <20151207141325.1609aec1@canb.auug.org.au>
-	<87r3iycnj4.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 7 Dec 2015 19:51:35 +0200
-In-Reply-To: <87r3iycnj4.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
-	of "Mon, 07 Dec 2015 16:59:43 +0200")
-Message-ID: <874mfucfko.fsf@kamboji.qca.qualcomm.com> (sfid-20151207_185224_589599_7E224845)
+	Wed, 23 Dec 2015 21:39:31 -0500
+Received: by mail-ig0-f181.google.com with SMTP id mv3so76623041igc.0
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 18:39:30 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1450838003-24379-1-git-send-email-glen.lee@atmel.com>
+References: <1450838003-24379-1-git-send-email-glen.lee@atmel.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 24 Dec 2015 13:39:11 +1100
+Message-ID: <CAGRGNgWrFdRYXg+912stL9fcYE2ZqbEzNoOiHnyjYvX+5BHR=A@mail.gmail.com> (sfid-20151224_033934_701328_E5DCC561)
+Subject: Re: [PATCH] staging: wilc1000: remove wilc_sdio_init
+To: Glen Lee <glen.lee@atmel.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tony Cho <tony.cho@atmel.com>, leo.kim@atmel.com,
+	Austin Shin <austin.shin@atmel.com>, adel.noureldin@atmel.com,
+	adham.abozaeid@atmel.com, Nicolas.FERRE@atmel.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+Hi Glen,
 
-> Stephen Rothwell <sfr@canb.auug.org.au> writes:
+On Wed, Dec 23, 2015 at 1:33 PM, Glen Lee <glen.lee@atmel.com> wrote:
+> wilc_sdio_init return always 1. It is needless, so just remove it and it's
+> related codes also.
 >
->> Today's linux-next merge of the wireless-drivers-next tree got a
->> conflict in:
->>
->>   drivers/net/wireless/ath/ath10k/pci.c
->>
->> between commit:
->>
->>   6419fdbb6f90 ("ath10k: poll HTT send completion when CE 5 is unused")
->>
->> from Linus' tree and commit:
->>
->>   afb0bf7f530b ("ath10k: add support for pktlog in QCA99X0")
->>
->> from the wireless-drivers-next tree.
->>
->> I fixed it up (see below) and can carry the fix as necessary (no action
->> is required).
+> Signed-off-by: Glen Lee <glen.lee@atmel.com>
+> ---
+>  drivers/staging/wilc1000/wilc_sdio.c | 12 ------------
+>  1 file changed, 12 deletions(-)
 >
-> Thanks, the fix looks good to me.
+> diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+> index e961b50..caad876 100644
+> --- a/drivers/staging/wilc1000/wilc_sdio.c
+> +++ b/drivers/staging/wilc1000/wilc_sdio.c
+> @@ -185,11 +185,6 @@ static void wilc_sdio_disable_interrupt(struct wilc *dev)
+>         dev_info(&func->dev, "wilc_sdio_disable_interrupt OUT\n");
+>  }
+>
+> -static int wilc_sdio_init(void)
+> -{
+> -       return 1;
+> -}
+> -
+>  /********************************************
+>   *
+>   *      Function 0
+> @@ -611,13 +606,6 @@ static int sdio_init(struct wilc *wilc)
+>
+>         g_sdio.irq_gpio = (wilc->dev_irq_num);
+>
+> -       if (!wilc_sdio_init()) {
+> -               dev_err(&func->dev, "Failed io init bus...\n");
+> -               return 0;
+> -       } else {
+> -               return 0;
+> -       }
+> -
 
-BTW, this conflict should be fixed once Dave merges my
-wireless-drivers-next pull request.
+This isn't equivalent code as both arms of the if statement eventually
+call return 0.
+
+Thanks,
 
 -- 
-Kalle Valo
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
