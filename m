@@ -1,34 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:38605 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751434AbbLHRk0 (ORCPT
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:33404 "EHLO
+	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933090AbbLXHe4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2015 12:40:26 -0500
-Date: Tue, 08 Dec 2015 12:40:24 -0500 (EST)
-Message-Id: <20151208.124024.486806330737510636.davem@davemloft.net> (sfid-20151208_184032_430260_5DC00B3F)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2015-12-07
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <878u56cfsq.fsf@kamboji.qca.qualcomm.com>
-References: <878u56cfsq.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 24 Dec 2015 02:34:56 -0500
+Received: by mail-oi0-f44.google.com with SMTP id y66so135212236oig.0
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:34:55 -0800 (PST)
+From: Bart Van Assche <bart.vanassche@gmail.com>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: ath9k driver broken since kernel v4.2
+Message-ID: <567BA01B.60806@acm.org> (sfid-20151224_083459_342287_6E4DE6FF)
+Date: Thu, 24 Dec 2015 08:34:51 +0100
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Mon, 07 Dec 2015 19:46:45 +0200
+Hello,
 
-> here's the first "real" pull request after the wireless directory
-> reorganisation. Nothing really out ordinary, new features and bugfixes
-> as usual. This time there's a regression in ath10k because of a bugfix
-> in wireless-drivers.git which conflicted with a patch in
-> wireless-drivers-next.git. But it should be easy to fix, just follow
-> what Stephen did in in linux-next:
-> 
-> http://article.gmane.org/gmane.linux.kernel.next/37391
-> 
-> Please let me know if you have any problems.
+The ath9k driver drops more than 90% of all packets with Linux kernel 
+v4.4-rc6 on my laptop. This behavior also occurs with kernel v4.2. 
+However, with Linux kernel versions v4.1.5 and v3.19.3 the ath9k driver 
+works fine on the same laptop. Is this report sufficient for one of the 
+ath9k drivers to look further into this or do you perhaps expect me to 
+run a bisect ?
 
-Pulled, thanks for the heads-up about the conflicts.
+Thanks,
+
+Bart.
