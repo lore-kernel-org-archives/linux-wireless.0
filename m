@@ -1,38 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:41829 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751262AbbLaPZQ (ORCPT
+Received: from mail-yk0-f176.google.com ([209.85.160.176]:34825 "EHLO
+	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752345AbbLXQdX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Dec 2015 10:25:16 -0500
-Message-ID: <568548DA.10205@candelatech.com> (sfid-20151231_162544_226613_62D3D8C4)
-Date: Thu, 31 Dec 2015 07:25:14 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Thu, 24 Dec 2015 11:33:23 -0500
+Received: by mail-yk0-f176.google.com with SMTP id x67so40414531ykd.2
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Dec 2015 08:33:22 -0800 (PST)
 MIME-Version: 1.0
-To: voncken <cedric.voncken@acksys.fr>,
-	'Emmanuel Grumbach' <egrumbach@gmail.com>
-CC: 'linux-wireless' <linux-wireless@vger.kernel.org>
-Subject: Re: Mac80211 : Wpa rekeying issue
-References: <773DB8A82AB6A046AE0195C68612A31901C5B5A9@sbs2003.acksys.local>	<CANUX_P2k-Feexi5=gBm+UxsFkoic7FeGDFcNa_D3J2ujYL2ghQ@mail.gmail.com>	<0a5101d1424c$eb46d2d0$c1d47870$@acksys.fr>	<0a6a01d143a2$fcb77720$f6266560$@acksys.fr> <CANUX_P2pF_He3mruTxMU_poBXzZpa9rXA7AgYV_RQ4BJ9wS6Mg@mail.gmail.com> <0a7101d143b4$3480de10$9d829a30$@acksys.fr>
-In-Reply-To: <0a7101d143b4$3480de10$9d829a30$@acksys.fr>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <1450971335-15961-4-git-send-email-uri.mashiach@compulab.co.il>
+References: <1450971335-15961-1-git-send-email-uri.mashiach@compulab.co.il>
+	<1450971335-15961-4-git-send-email-uri.mashiach@compulab.co.il>
+Date: Thu, 24 Dec 2015 13:33:22 -0300
+Message-ID: <CABxcv=kjwE2JJ_NDWEF7goHaYpsbP5gMV4P_bHdwyj5iDk-SqA@mail.gmail.com> (sfid-20151224_173354_031458_F5170E71)
+Subject: Re: [PATCH v2 3/3] wlcore/wl12xx: spi: add wifi support to cm-t335
+From: Javier Martinez Canillas <javier@dowhile0.org>
+To: Uri Mashiach <uri.mashiach@compulab.co.il>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Tony Lindgren <tony@atomide.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>,
+	Benoit Cousson <bcousson@baylibre.com>,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Eliad Peller <eliad@wizery.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-omap@vger.kernel.org" <linux-omap@vger.kernel.org>,
+	"linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hello Uri,
 
+On Thu, Dec 24, 2015 at 12:35 PM, Uri Mashiach
+<uri.mashiach@compulab.co.il> wrote:
+> Device tree modifications:
+> - Pinmux for SPI0 and WiFi GPIOs.
+> - SPI0 node with wlcore as a child node.
+>
+> Cc: Tony Lindgren <tony@atomide.com>
+> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+> Acked-by: Igor Grinberg <grinberg@complab.co.il>
+> ---
+> v1 -> v2: replace interrupts and interrupt-parent with interrupts-extended.
+>
+>  arch/arm/boot/dts/am335x-cm-t335.dts | 57 +++++++++++++++++++++++++++++++++++-
+>  1 file changed, 56 insertions(+), 1 deletion(-)
+>
+> diff --git a/arch/arm/boot/dts/am335x-cm-t335.dts b/arch/arm/boot/dts/am335x-cm-t335.dts
+> index 42e9b66..31f8371 100644
+> --- a/arch/arm/boot/dts/am335x-cm-t335.dts
+> +++ b/arch/arm/boot/dts/am335x-cm-t335.dts
+> @@ -11,6 +11,7 @@
+>  /dts-v1/;
+>
+>  #include "am33xx.dtsi"
+> +#include <dt-bindings/interrupt-controller/irq.h>
+>
+>  / {
+>         model = "CompuLab CM-T335";
+> @@ -40,6 +41,15 @@
+>                 regulator-max-microvolt = <3300000>;
+>         };
+>
+> +       /* Regulator for WiFi */
+> +       vwlan_fixed: fixedregulator@2 {
+> +               compatible = "regulator-fixed";
+> +               regulator-name = "vwlan_fixed";
+> +               gpio = <&gpio0 20 GPIO_ACTIVE_HIGH>; /* gpio0_20 */
+> +               enable-active-high;
+> +               regulator-boot-off;
+> +       };
+> +
+>         backlight {
+>                 compatible = "pwm-backlight";
+>                 pwms = <&ecap0 0 50000 0>;
+> @@ -50,7 +60,10 @@
+>
+>  &am33xx_pinmux {
+>         pinctrl-names = "default";
+> -       pinctrl-0 = <&bluetooth_pins>;
+> +       pinctrl-0 = <
+> +                 &bluetooth_pins
+> +                 &wifi_pins
+> +       >;
 
-On 12/31/2015 02:15 AM, voncken wrote:
+The pinctrl lines should be in the device node that needs the pin
+muxing (unless there isn't a device node) so I think is better if you
+mofe the pinctrl-0 = <&wifi_pins> to the wlcore dev node.
 
-> Thanks for your answer.
-> Do you know if we can have the same issue with ATH10K chipset?
-
-Someone else reported re-keying problems with ath10k recently, and
-it appears to be a bug in in upstream firmware, probably related to
-the same issue that keeps 802.11r from working in some upstream
-firmware...
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Best regards,
+Javier
