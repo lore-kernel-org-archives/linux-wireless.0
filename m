@@ -1,117 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from softlayer.compulab.co.il ([50.23.254.55]:60134 "EHLO
-	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754814AbbL3NgC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 08:36:02 -0500
-From: Uri Mashiach <uri.mashiach@compulab.co.il>
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Tony Lindgren <tony@atomide.com>
-Cc: Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
-	Igor Grinberg <grinberg@compulab.co.il>,
-	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	Uri Mashiach <uri.mashiach@compulab.co.il>
-Subject: [PATCH v4 1/3] wlcore/wl12xx: spi: add power operation function
-Date: Wed, 30 Dec 2015 15:35:31 +0200
-Message-Id: <1451482533-8624-2-git-send-email-uri.mashiach@compulab.co.il> (sfid-20151230_143622_424404_75410886)
-In-Reply-To: <1451482533-8624-1-git-send-email-uri.mashiach@compulab.co.il>
-References: <1451482533-8624-1-git-send-email-uri.mashiach@compulab.co.il>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:34831 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751564AbbLYKI5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Dec 2015 05:08:57 -0500
+Received: by mail-wm0-f46.google.com with SMTP id l126so201931536wml.0
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Dec 2015 02:08:57 -0800 (PST)
+Subject: Re: [RFC 0/2] nl80211: allow configuration of BSS selection
+To: Arend van Spriel <arend@broadcom.com>, johannes@sipsolutions.net
+References: <1450959550-19655-1-git-send-email-arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <aspriel@gmail.com>
+Message-ID: <567D15B8.6080704@gmail.com> (sfid-20151225_110901_535979_90463BFF)
+Date: Fri, 25 Dec 2015 11:08:56 +0100
+MIME-Version: 1.0
+In-Reply-To: <1450959550-19655-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The power function uses a consumer regulator access to update the WiFi
-enable GPIO value.
+On 24-12-15 13:19, Arend van Spriel wrote:
+> This patch series adds support for configuration of BSS selection done by
+> the driver and/or firmware. It allows user-space to pass selection criteria
+> with the NL80211_CMD_CONNECT using NL80211_ATTR_BSS_SELECT. When user-space
+> does provide this attribute and no explicit BSSID is provided it will pass
+> the BSS selection criteria to the driver if the driver supports it.
+> 
+> When multiple BSS-es are found belonging to the same ESS, ie. Infra-BSS with
+> same SSID, the criteria can be used to select a BSS. The criteria defined are:
+> 
+> 1. select BSS in specific band regardless RSSI level.
 
-Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
----
-v1 -> v2: oops fix was removed to a separate fix.
-v2 -> v3: no changes
-v3 -> v4: update devm_regulator_get() error handling.
+Not really regardless, but band would take precedence. So if there are
+two BSS-es in the specified band it will still select the one with
+highest RSSI.
 
- drivers/net/wireless/ti/wlcore/spi.c | 39 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+> 2. adjust RSSI level for BSS-es in specified band.
 
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index 44f059f..dec1512 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -30,6 +30,7 @@
- #include <linux/spi/spi.h>
- #include <linux/wl12xx.h>
- #include <linux/platform_device.h>
-+#include <linux/regulator/consumer.h>
- 
- #include "wlcore.h"
- #include "wl12xx_80211.h"
-@@ -81,6 +82,7 @@
- struct wl12xx_spi_glue {
- 	struct device *dev;
- 	struct platform_device *core;
-+	struct regulator *reg; /* Power regulator */
- };
- 
- static void wl12xx_spi_reset(struct device *child)
-@@ -318,11 +320,40 @@ static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
- 	return 0;
- }
- 
-+/**
-+ * wl12xx_spi_set_power - power on/off the wl12xx unit
-+ * @child: wl12xx device handle.
-+ * @enable: true/false to power on/off the unit.
-+ *
-+ * use the WiFi enable regulator to enable/disable the WiFi unit.
-+ */
-+static int wl12xx_spi_set_power(struct device *child, bool enable)
-+{
-+	int ret = 0;
-+	struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
-+
-+	WARN_ON(!glue->reg);
-+
-+	/* Update regulator state */
-+	if (enable) {
-+		ret = regulator_enable(glue->reg);
-+		if (ret)
-+			dev_err(child, "Power enable failure\n");
-+	} else {
-+		ret =  regulator_disable(glue->reg);
-+		if (ret)
-+			dev_err(child, "Power disable failure\n");
-+	}
-+
-+	return ret;
-+}
-+
- static struct wl1271_if_operations spi_ops = {
- 	.read		= wl12xx_spi_raw_read,
- 	.write		= wl12xx_spi_raw_write,
- 	.reset		= wl12xx_spi_reset,
- 	.init		= wl12xx_spi_init,
-+	.power		= wl12xx_spi_set_power,
- 	.set_block_size = NULL,
- };
- 
-@@ -353,6 +384,14 @@ static int wl1271_probe(struct spi_device *spi)
- 	 * comes from the board-peripherals file */
- 	spi->bits_per_word = 32;
- 
-+	glue->reg = devm_regulator_get(&spi->dev, "vwlan");
-+	if (PTR_ERR(glue->reg) == -EPROBE_DEFER)
-+		return -EPROBE_DEFER;
-+	if (IS_ERR(glue->reg)) {
-+		dev_err(glue->dev, "can't get regulator\n");
-+		return PTR_ERR(glue->reg);
-+	}
-+
- 	ret = spi_setup(spi);
- 	if (ret < 0) {
- 		dev_err(glue->dev, "spi_setup failed\n");
--- 
-2.5.0
+I defined the attribute as unsigned, but maybe there are scenarios that
+justify a signed value here. People may prefer using 5G band as it is
+usually more quiet and channels are further apart. However, range can be
+limited so people may use a penalty on RSSI, ie. a negative value.
 
+Gr. AvS
+
+> Open issue:
+> -----------
+> * NL80211_CMD_CONNECT support ATTR_MAC and ATTR_MAC_HINT. When ATTR_MAC is
+>   used BSS selection criteria are ignored. What about ATTR_MAC_HINT?
+> 
+> Arend van Spriel (2):
+>   nl80211: add extended feature for BSS selection support
+>   brcmfmac: add support for nl80211 BSS_SELECT feature
+> 
+>  drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 47 ++++++++++++++++++++++
+>  drivers/net/wireless/brcm80211/brcmfmac/common.c   | 38 ++++++++++-------
+>  drivers/net/wireless/brcm80211/brcmfmac/core.h     |  1 +
+>  include/net/cfg80211.h                             | 17 ++++++++
+>  include/uapi/linux/nl80211.h                       | 35 ++++++++++++++++
+>  net/wireless/nl80211.c                             | 46 +++++++++++++++++++++
+>  6 files changed, 169 insertions(+), 15 deletions(-)
+> 
