@@ -1,35 +1,283 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:41507 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752732AbbLPXep (ORCPT
+Received: from mail-ig0-f193.google.com ([209.85.213.193]:32769 "EHLO
+	mail-ig0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750968AbbLZTVN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2015 18:34:45 -0500
-Date: Wed, 16 Dec 2015 18:34:43 -0500 (EST)
-Message-Id: <20151216.183443.615368179590575650.davem@davemloft.net> (sfid-20151217_003452_655550_538852C6)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2015-12-15
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1450182621.3356.12.camel@sipsolutions.net>
-References: <1450182621.3356.12.camel@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sat, 26 Dec 2015 14:21:13 -0500
+Received: by mail-ig0-f193.google.com with SMTP id y8so11936900igw.0
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Dec 2015 11:21:13 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CAOeNLurGydo_WZEZj3XYuC7=MiHfEwtR-A0yYOp_sEGKJoKKtQ@mail.gmail.com>
+References: <CAOeNLurbw9SG6Zr1tWNfYiqg-_H0NO=7ypR26+jWJmb4Yi=jaA@mail.gmail.com>
+	<567866DA.9080006@lwfinger.net>
+	<CAOeNLurGydo_WZEZj3XYuC7=MiHfEwtR-A0yYOp_sEGKJoKKtQ@mail.gmail.com>
+Date: Sat, 26 Dec 2015 14:21:12 -0500
+Message-ID: <CAOeNLup9d+HpCsXw-ke3sqoAmCCdjDz+S3APuuauK1Qra2K9ig@mail.gmail.com> (sfid-20151226_202146_942342_EE86DC50)
+Subject: Re: Panic in rtl8192ee on 4.2 kernel (Ubuntu 15.10)
+From: Rich <rercola@acm.jhu.edu>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 15 Dec 2015 13:30:21 +0100
+Okay, I'm back with a core dump from the aforementioned git rev.
 
-> After going through my patch queue, I have another set of fixes that
-> I think is still appropriate for the current cycle.
-> 
-> Two of my own restart changes there are fairly big but for the most
-> part just move code around so it can be called in a slightly different
-> order.
-> 
-> Let me know if there are any issues.
+I can put it somewhere for perusal, I can offer login on a machine
+with the symbols available, or I can just provide backtrace and answer
+questions.
 
-Something about your text encoding kept this from ending up
-in patchwork for some reason.
+(I'm somewhat confused by how to convince crash to look up symbols
+from the modules, though - I built the modules unstripped, but it's
+not resolving line numbers inside them when I bt -l.)
 
-Anyways, pulled, thanks a lot!
+crash> bt -l
+PID: 779    TASK: ffff8800d04fb700  CPU: 0   COMMAND: "wpa_supplicant"
+bt: get_cpus_online: online: 4
+ #0 [ffff88011917f7c0] machine_kexec at ffffffff81057e1b
+    /build/linux-cRemOf/linux-4.2.0/arch/x86/kernel/machine_kexec_64.c: 322
+ #1 [ffff88011917f830] crash_kexec at ffffffff811076b2
+    /build/linux-cRemOf/linux-4.2.0/kernel/kexec.c: 1492
+ #2 [ffff88011917f900] oops_end at ffffffff81017e3d
+    /build/linux-cRemOf/linux-4.2.0/arch/x86/kernel/dumpstack.c: 232
+ #3 [ffff88011917f930] no_context at ffffffff81066d55
+    /build/linux-cRemOf/linux-4.2.0/arch/x86/mm/fault.c: 728
+ #4 [ffff88011917f9a0] __bad_area_nosemaphore at ffffffff81067020
+    /build/linux-cRemOf/linux-4.2.0/arch/x86/mm/fault.c: 809
+ #5 [ffff88011917f9f0] bad_area_nosemaphore at ffffffff810671a3
+    /build/linux-cRemOf/linux-4.2.0/arch/x86/mm/fault.c: 816
+ #6 [ffff88011917fa00] __do_page_fault at ffffffff81067487
+    /build/linux-cRemOf/linux-4.2.0/arch/x86/mm/fault.c: 1283
+ #7 [ffff88011917fa60] do_page_fault at ffffffff810677f2
+    /build/linux-cRemOf/linux-4.2.0/arch/x86/mm/fault.c: 1303
+ #8 [ffff88011917fa80] page_fault at ffffffff817f2208
+    /build/linux-cRemOf/linux-4.2.0/arch/x86/entry/entry_64.S: 1078
+< exception frame at: ffff88011917fa88 >
+    [exception RIP: halbtc_get_rfreg+35]
+    RIP: ffffffffc077be43  RSP: ffff88011917fb38  RFLAGS: 00010246
+    RAX: ffffffffc07bfd60  RBX: ffffffffc079e500  RCX: 00000000000fffff
+    RDX: 000000000000001e  RSI: 0000000000000000  RDI: ffff8801192f06a0
+    RBP: ffff88011917fb38   R8: 0000000000000001   R9: 0000000000000001
+    R10: 0000000000000000  R11: 0000000000000020  R12: ffff8800d57b1440
+    R13: ffff8800d57b06a0  R14: 0000000000000000  R15: 0000000000000001
+    ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+ #9 [ffff88011917fb40] ex_halbtc8192e2ant_init_hwconfig at
+ffffffffc077f8e3 [btcoexist]
+#10 [ffff88011917fb60] exhalbtc_init_hw_config at ffffffffc077c5d1 [btcoexist]
+#11 [ffff88011917fb70] rtl_btc_init_hw_config at ffffffffc0791f45 [btcoexist]
+#12 [ffff88011917fb80] rtl92ee_hw_init at ffffffffc07f6e51 [rtl8192ee]
+#13 [ffff88011917fbd0] rtl_pci_start at ffffffffc0593bb5 [rtl_pci]
+#14 [ffff88011917fbf0] rtl_op_start at ffffffffc0659bd4 [rtlwifi]
+#15 [ffff88011917fc20] ieee80211_do_open at ffffffffc05b71fc [mac80211]
+#16 [ffff88011917fc90] ieee80211_open at ffffffffc05b7b16 [mac80211]
+#17 [ffff88011917fcb0] __dev_open at ffffffff816e7358
+    /build/linux-cRemOf/linux-4.2.0/net/core/dev.c: 1308
+#18 [ffff88011917fcf0] __dev_change_flags at ffffffff816e7681
+    /build/linux-cRemOf/linux-4.2.0/net/core/dev.c: 5853
+#19 [ffff88011917fd30] dev_change_flags at ffffffff816e7769
+    /build/linux-cRemOf/linux-4.2.0/net/core/dev.c: 5919
+#20 [ffff88011917fd70] devinet_ioctl at ffffffff81759e06
+    /build/linux-cRemOf/linux-4.2.0/net/ipv4/devinet.c: 1048
+#21 [ffff88011917fe10] inet_ioctl at ffffffff8175af60
+    /build/linux-cRemOf/linux-4.2.0/net/ipv4/af_inet.c: 881
+#22 [ffff88011917fe20] sock_do_ioctl at ffffffff816c54d9
+    /build/linux-cRemOf/linux-4.2.0/net/socket.c: 874
+#23 [ffff88011917fe50] sock_ioctl at ffffffff816c59f2
+    /build/linux-cRemOf/linux-4.2.0/net/socket.c: 958
+#24 [ffff88011917fe80] do_vfs_ioctl at ffffffff81210aa5
+    /build/linux-cRemOf/linux-4.2.0/fs/ioctl.c: 44
+#25 [ffff88011917ff00] sys_ioctl at ffffffff81210d09
+    /build/linux-cRemOf/linux-4.2.0/fs/ioctl.c: 622
+#26 [ffff88011917ff50] entry_SYSCALL_64_fastpath at ffffffff817f02b2
+    /build/linux-cRemOf/linux-4.2.0/arch/x86/entry/entry_64.S: 187
+< exception frame at: ffff88011917ff58 >
+    RIP: 00007f91b57f70b7  RSP: 00007ffd71dcd038  RFLAGS: 00000246
+    RAX: ffffffffffffffda  RBX: 000055566a87c400  RCX: 00007f91b57f70b7
+    RDX: 00007ffd71dcd040  RSI: 0000000000008914  RDI: 0000000000000008
+    RBP: 0000000000000002   R8: 000055566a8a1600   R9: 0000000000000000
+    R10: 00007f91b5abec58  R11: 0000000000000246  R12: 000055566a880038
+    R13: 0000000000000002  R14: 000055566a87feb0  R15: 0000000000000000
+    ORIG_RAX: 0000000000000010  CS: 0033  SS: 002b
+
+- Rich
+
+On Fri, Dec 25, 2015 at 6:09 PM, Rich <rercola@acm.jhu.edu> wrote:
+> Sadly, having tried rtlwifi_new.git (as of
+> 96d2cf8d36ac8d5f28583b2dd4644f509cd018b7), it still panics, though kdump
+> didn't take a dump of it for some reason; I'll try to reproduce it and
+> report back.
+>
+> Debugging symbols on Ubuntu can be provided by the linux-image-$(uname
+> -r)-dbgsym package, found in the ddebs repo. I can also provide ssh to an
+> Ubuntu 15.10 VM with symbols if that would be useful.
+>
+> - Rich
+>
+> On Dec 21, 2015 3:53 PM, "Larry Finger" <Larry.Finger@lwfinger.net> wrote:
+>>
+>> On 12/19/2015 08:29 PM, Rich wrote:
+>>>
+>>> Hi all,
+>>> (Apologies if this is the wrong place, but [1] said I should send my
+>>> report here.)
+>>>
+>>> I've got a Lenovo ThinkPad T440 running Ubuntu 15.10 here, and under
+>>> load, the rtl8192ee wireless driver will panic after a few minutes.
+>>>
+>>> The kernel is the Ubuntu 4.2.0-22-generic amd64 kernel.
+>>>
+>>> I went looking for the current equivalent of what was formerly
+>>> compat-drivers/linux-backports-modules/compat-wireless, and will try
+>>> the new location for wireless-testing next, but wanted to forward on
+>>> the panic while doing so.
+>>>
+>>> The lspci -v entry for the card:
+>>> 03:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8192EE
+>>> PCIe Wireless Network Adapter
+>>> Subsystem: Realtek Semiconductor Co., Ltd. Device 001b
+>>> Flags: bus master, fast devsel, latency 0, IRQ 48
+>>> I/O ports at 3000 [size=256]
+>>> Memory at f0400000 (64-bit, non-prefetchable) [size=16K]
+>>> Capabilities: [40] Power Management version 3
+>>> Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
+>>> Capabilities: [70] Express Endpoint, MSI 00
+>>> Capabilities: [100] Advanced Error Reporting
+>>> Capabilities: [140] Device Serial Number 01-91-81-fe-ff-4c-e0-00
+>>> Capabilities: [150] Latency Tolerance Reporting
+>>> Capabilities: [158] L1 PM Substates
+>>> Kernel driver in use: rtl8192ee
+>>>
+>>> The panic:
+>>> BUG: unable to handle kernel NULL pointer dereference at           (null)
+>>> IP: [<ffffffffc058a0cf>] rtl92ee_set_desc+0x2f/0x1d0 [rtl8192ee]
+>>> PGD 0
+>>> Oops: 0000 [#1] SMP
+>>> Modules linked in: rfcomm drbg ansi_cprng ctr ccm bnep nls_iso8859_1
+>>> intel_rapl iosf_mbi x86_pkg_temp_thermal arc4 intel_powerclamp
+>>> rtl8192ee btcoexist coretemp rtl_pci rtlwifi kvm_intel kvm mac80211
+>>> btusb cfg80211 uvcvideo snd_hda_codec_hdmi btrtl btbcm btintel
+>>> crct10dif_pclmul crc32_pclmul videobuf2_vmalloc videobuf2_memops
+>>> videobuf2_core v4l2_common snd_hda_codec_realtek snd_hda_codec_generic
+>>> bluetooth snd_hda_intel videodev snd_hda_codec rtsx_pci_ms media
+>>> aesni_intel snd_hda_core thinkpad_acpi memstick aes_x86_64 lrw
+>>> gf128mul glue_helper nvram snd_seq_midi snd_hwdep snd_seq_midi_event
+>>> snd_rawmidi snd_pcm snd_seq ablk_helper snd_seq_device cryptd
+>>> snd_timer snd input_leds soundcore joydev shpchp mei_me mei serio_raw
+>>> lpc_ich mac_hid intel_smartconnect efi_pstore parport_pc ppdev lp
+>>> parport
+>>> CPU: 2 PID: 0 Comm: swapper/2 Tainted: G        W
+>>> 4.2.0-21-generic #25-Ubuntu
+>>> Hardware name: LENOVO 20B6CTO1WW/20B6CTO1WW, BIOS GJET64WW (2.14 )
+>>> 11/12/2013
+>>> task: ffff880119c9b700 ti: ffff880119cb0000 task.ti: ffff880119cb0000
+>>> RIP: 0010:[<ffffffffc058a0cf>]  [<ffffffffc058a0cf>]
+>>> rtl92ee_set_desc+0x2f/0x1d0 [rtl8192ee]
+>>> RSP: 0018:ffff88011f283508  EFLAGS: 00010046
+>>> RAX: ffffffffc058cf60 RBX: 0000000000000000 RCX: 0000000000000007
+>>> RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffff8800d56306a0
+>>> RBP: ffff88011f283560 R08: ffff88011f283524 R09: 0000160000000000
+>>> R10: ffffea0001993380 R11: 0000000000000000 R12: ffff8800d56306a0
+>>> R13: 0000000000000195 R14: ffff880086713100 R15: ffff8800d5631440
+>>> FS:  0000000000000000(0000) GS:ffff88011f280000(0000)
+>>> knlGS:0000000000000000
+>>> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+>>> CR2: 0000000000000000 CR3: 0000000002c0c000 CR4: 00000000001406e0
+>>> Stack:
+>>>   ffffffffc054afbf ffff8800664cee00 0000000000000000 d32dc04001283560
+>>>   fdf6cd13473e1849 ffff8800b770cf00 0000000000000000 ffff880086713100
+>>>   ffff8800d56306a0 ffff880086713100 ffff8800d5631440 ffff88011f283760
+>>> Call Trace:
+>>>   <IRQ>
+>>>   [<ffffffffc054afbf>] ? _rtl_pci_init_one_rxdesc+0x1df/0x240 [rtl_pci]
+>>>   [<ffffffffc054d3a3>] _rtl_pci_rx_interrupt+0x4f3/0x790 [rtl_pci]
+>>>   [<ffffffffc054d819>] _rtl_pci_interrupt+0x1d9/0x3b1 [rtl_pci]
+>>>   [<ffffffff810d4204>] handle_irq_event_percpu+0x74/0x180
+>>>   [<ffffffff810d4359>] handle_irq_event+0x49/0x70
+>>>   [<ffffffff810d76d1>] handle_edge_irq+0x81/0x150
+>>>   [<ffffffff810172b5>] handle_irq+0x25/0x40
+>>>   [<ffffffff817f2e2f>] do_IRQ+0x4f/0xe0
+>>>   [<ffffffff817f0dab>] common_interrupt+0x6b/0x6b
+>>>   [<ffffffff81731dc1>] ? tcp_parse_md5sig_option+0x11/0x70
+>>>   [<ffffffff8174606c>] tcp_v4_rcv+0x76c/0xa70
+>>>   [<ffffffff810d42ac>] ? handle_irq_event_percpu+0x11c/0x180
+>>>   [<ffffffff8171fe14>] ip_local_deliver_finish+0xa4/0x1f0
+>>>   [<ffffffff817200e5>] ip_local_deliver+0x55/0xc0
+>>>   [<ffffffff81745899>] ? tcp_v4_early_demux+0x109/0x170
+>>>   [<ffffffff8171fab1>] ip_rcv_finish+0x81/0x340
+>>>   [<ffffffff817f0dab>] ? common_interrupt+0x6b/0x6b
+>>>   [<ffffffff817203f2>] ip_rcv+0x2a2/0x3d0
+>>>   [<ffffffff817ce6d3>] ? packet_rcv+0x43/0x400
+>>>   [<ffffffff816e4145>] __netif_receive_skb_core+0x725/0xa00
+>>>   [<ffffffff8107fadb>] ? irq_exit+0x6b/0xb0
+>>>   [<ffffffff816e4438>] __netif_receive_skb+0x18/0x60
+>>>   [<ffffffff816e44b2>] netif_receive_skb_internal+0x32/0xa0
+>>>   [<ffffffff816e453c>] netif_receive_skb_sk+0x1c/0x60
+>>>   [<ffffffffc0665f4f>] ieee80211_deliver_skb+0x11f/0x1b0 [mac80211]
+>>>   [<ffffffffc066817b>] ieee80211_rx_handlers+0xd3b/0x2460 [mac80211]
+>>>   [<ffffffff810d4364>] ? handle_irq_event+0x54/0x70
+>>>   [<ffffffff810d76d1>] ? handle_edge_irq+0x81/0x150
+>>>   [<ffffffffc0669a54>] ieee80211_prepare_and_rx_handle+0x1b4/0xa90
+>>> [mac80211]
+>>>   [<ffffffff8107fadb>] ? irq_exit+0x6b/0xb0
+>>>   [<ffffffff817f0dab>] ? common_interrupt+0x6b/0x6b
+>>>   [<ffffffffc066a618>] ieee80211_rx+0x2e8/0x8b0 [mac80211]
+>>>   [<ffffffffc0642153>] ieee80211_tasklet_handler+0xc3/0xd0 [mac80211]
+>>>   [<ffffffff8107f1af>] tasklet_action+0xdf/0x100
+>>>   [<ffffffff8107f846>] __do_softirq+0xf6/0x250
+>>>   [<ffffffff8107fb13>] irq_exit+0xa3/0xb0
+>>>   [<ffffffff817f2e38>] do_IRQ+0x58/0xe0
+>>>   [<ffffffff817f0dab>] common_interrupt+0x6b/0x6b
+>>>   <EOI>
+>>>   [<ffffffff810bd473>] ? call_cpuidle+0x33/0x60
+>>>   [<ffffffff810bd708>] ? cpu_startup_entry+0x268/0x320
+>>>   [<ffffffff8104d3d3>] start_secondary+0x183/0x1c0
+>>> Code: 00 84 d2 74 14 84 c9 74 37 80 f9 02 0f 85 79 01 00 00 41 8b 00
+>>> 89 46 30 c3 80 f9 06 0f 84 6b 01 00 00 80 f9 07 0f 85 60 01 00 00 <8b>
+>>> 06 25 00 40 00 80 0d 18 20 00 00 89 06 41 8b 00 89 46 04 c3
+>>> RIP  [<ffffffffc058a0cf>] rtl92ee_set_desc+0x2f/0x1d0 [rtl8192ee]
+>>>   RSP <ffff88011f283508>
+>>> CR2: 0000000000000000
+>>>
+>>> I've got a vmcore from kdump weighing in at about 100 MB if that would
+>>> be useful to someone.
+>>>
+>>> Please let me know if there's anything else of use I can contribute;
+>>> I'm going to go try poking around in the source after I confirm that
+>>> wireless-testing doesn't help with this, but thought I'd report it,
+>>> since I could only find one other report of someone encountering a
+>>> similar panic [2].
+>>>
+>>> Thanks,
+>>> - Rich Ercolani
+>>>
+>>> PS: Please CC me on any replies, as I'm not on linux-wireless.
+>>>
+>>> [1] -
+>>> https://wireless.wiki.kernel.org/en/users/Documentation/Reporting_bugs
+>>> [2] -
+>>> https://bugs.launchpad.net/ubuntu/+source/ubuntu-release-upgrader/+bug/1527603
+>>
+>>
+>> Unfortunately, no one brought the panic in your [2] reference to my
+>> attention, and I do not routinely peruse the bugzillas for Ubuntu. I am not
+>> running Ubuntu, and the live version of 15.10 does not contain debugging
+>> symbols.
+>>
+>> When I try to use the addresses reported in your traceback on my kernel,
+>> the location is in a place that rtl8192ee should never reach. To be certain
+>> that we are comparing the same code, please clone the repo at
+>> http://github.com/lwfinger/rtlwifi_new.git. After cloning, change directory
+>> to rtlwifi_new, run "make" and "sudo make install". You will need to have
+>> the kernel headers installed for the make step to work.
+>>
+>> If you get the panic again, please post the new dump. That will let me see
+>> if the code is really going to the wrong place, or it that is some kind of
+>> artifact. In the meantime, I will test the code here. I think this device is
+>> fairly rare, and it is possible that it has not been widely used.
+>>
+>> Larry
+>>
+>>
+>>
+>>
+>
