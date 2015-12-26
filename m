@@ -1,48 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:11360 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750738AbbLUFQX (ORCPT
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:33890 "EHLO
+	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750947AbbLZPFN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 00:16:23 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 13/46] staging: wilc1000: linux_wlan_sdio.c: remove braces
-Date: Mon, 21 Dec 2015 14:18:17 +0900
-Message-ID: <1450675130-17866-14-git-send-email-glen.lee@atmel.com> (sfid-20151221_063105_358310_77BCFC28)
-In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+	Sat, 26 Dec 2015 10:05:13 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [PATCH] RFKill airplane mode LED trigger
+Date: Sat, 26 Dec 2015 10:05:02 -0500
+Message-Id: <1451142303-1872-1-git-send-email-jprvita@endlessm.com> (sfid-20151226_160638_417793_356FA355)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes checkpatch warning braces{} are not necessary for single
-statment blocks.
+This patch adds a LED trigger to drive the airplane mode LED present in some
+modern laptops. It will be used by the asus-wireless platform driver, which is
+currently under review on platform-driver-x86@vger.kernel.org (the idea was
+mainly approved, but I'm addressing some comments by the maintainers).
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan_sdio.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+João Paulo Rechi Vita (1):
+  net/rfkill: Create "airplane mode" LED trigger
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
-index 78e6808..64fb81b 100644
---- a/drivers/staging/wilc1000/linux_wlan_sdio.c
-+++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
-@@ -159,9 +159,8 @@ void wilc_sdio_disable_interrupt(struct wilc *dev)
- 
- 	sdio_claim_host(func);
- 	ret = sdio_release_irq(func);
--	if (ret < 0) {
-+	if (ret < 0)
- 		dev_err(&func->dev, "can't release sdio_irq, err(%d)\n", ret);
--	}
- 	sdio_release_host(func);
- 
- 	dev_info(&func->dev, "wilc_sdio_disable_interrupt OUT\n");
+ net/rfkill/core.c | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+
 -- 
-1.9.1
+2.5.0
 
