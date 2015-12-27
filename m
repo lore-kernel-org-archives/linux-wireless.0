@@ -1,63 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:34070 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754727AbbLXHwu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2015 02:52:50 -0500
-Received: by mail-pa0-f44.google.com with SMTP id uo6so40377602pac.1
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:52:50 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 01/21] staging: wilc1000: fix return type of wilc_flush_join_req
-Date: Thu, 24 Dec 2015 16:52:19 +0900
-Message-Id: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_085325_114232_A12DD261)
+Received: from softlayer.compulab.co.il ([50.23.254.55]:34994 "EHLO
+	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752197AbbL0ROm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Dec 2015 12:14:42 -0500
+Subject: Re: [PATCH v2 1/3] wlcore/wl12xx: spi: add power operation function
+To: Grygorii Strashko <grygorii.strashko@ti.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Tony Lindgren <tony@atomide.com>
+References: <1450971335-15961-1-git-send-email-uri.mashiach@compulab.co.il>
+ <1450971335-15961-2-git-send-email-uri.mashiach@compulab.co.il>
+ <567C1E3B.3020404@ti.com>
+Cc: Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: Uri Mashiach <uri.mashiach@compulab.co.il>
+Message-ID: <56801C78.9040102@compulab.co.il> (sfid-20151227_181447_371426_67AD0B51)
+Date: Sun, 27 Dec 2015 19:14:32 +0200
+MIME-Version: 1.0
+In-Reply-To: <567C1E3B.3020404@ti.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of wilc_flush_join_req from s32 to int.
-The result variable gets return value from wilc_mq_send that has return
-type of int. It should be changed return type of this function as well
-as data type of result variable.
+Hello Grygorii,
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+On 12/24/2015 06:32 PM, Grygorii Strashko wrote:
+> On 12/24/2015 05:35 PM, Uri Mashiach wrote:
+>> The power function uses a consumer regulator access to update the WiFi
+>> enable GPIO value.
+>>
+>> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+>> ---
+>> v1 -> v2: oops fix was removed to a separate fix.
+>>
+>>   drivers/net/wireless/ti/wlcore/spi.c | 37
+>> ++++++++++++++++++++++++++++++++++++
+>>   1 file changed, 37 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ti/wlcore/spi.c
+>> b/drivers/net/wireless/ti/wlcore/spi.c
+>>
+>
+> [...]
+>
+>> +
+>>   static struct wl1271_if_operations spi_ops = {
+>>       .read        = wl12xx_spi_raw_read,
+>>       .write        = wl12xx_spi_raw_write,
+>>       .reset        = wl12xx_spi_reset,
+>>       .init        = wl12xx_spi_init,
+>> +    .power        = wl12xx_spi_set_power,
+>>       .set_block_size = NULL,
+>>   };
+>>
+>> @@ -353,6 +384,12 @@ static int wl1271_probe(struct spi_device *spi)
+>>        * comes from the board-peripherals file */
+>>       spi->bits_per_word = 32;
+>>
+>> +    glue->reg = devm_regulator_get(&spi->dev, "vwlan");
+>> +    if (IS_ERR(glue->reg)) {
+>
+> It will be more correct to handle -EPROBE_DEFER here also. Like:
+>           if (PTR_ERR(glue->reg) == -EPROBE_DEFER)
+>              return PTR_ERR(glue->reg);
+>
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 78d26ee..78d58e0 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3432,9 +3432,9 @@ s32 wilc_set_join_req(struct wilc_vif *vif, u8 *pu8bssid, const u8 *pu8ssid,
- 	return result;
- }
- 
--s32 wilc_flush_join_req(struct wilc_vif *vif)
-+int wilc_flush_join_req(struct wilc_vif *vif)
- {
--	s32 result = 0;
-+	int result = 0;
- 	struct host_if_msg msg;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
- 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 13d253c..af85824 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -331,7 +331,7 @@ s32 wilc_set_join_req(struct wilc_vif *vif, u8 *pu8bssid, const u8 *pu8ssid,
- 		      wilc_connect_result pfConnectResult, void *pvUserArg,
- 		      u8 u8security, enum AUTHTYPE tenuAuth_type,
- 		      u8 u8channel, void *pJoinParams);
--s32 wilc_flush_join_req(struct wilc_vif *vif);
-+int wilc_flush_join_req(struct wilc_vif *vif);
- s32 wilc_disconnect(struct wilc_vif *vif, u16 u16ReasonCode);
- int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel);
- s32 wilc_get_rssi(struct wilc_vif *vif, s8 *ps8Rssi);
+It seems that the IS_ERR(glue->reg) condition covers the EPROBE_DEFER case.
+
+>> +        dev_err(glue->dev, "can't get regulator\n");
+>> +        return PTR_ERR(glue->reg);
+>> +    }
+>> +
+>>       ret = spi_setup(spi);
+>>       if (ret < 0) {
+>>           dev_err(glue->dev, "spi_setup failed\n");
+>>
+>
+>
+
 -- 
-2.6.4
-
+Thanks,
+Uri
