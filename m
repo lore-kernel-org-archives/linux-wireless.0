@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35031 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752002AbbLaISF convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Dec 2015 03:18:05 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: Re: [PATCH] bcma: use module_init for the main part of bus initialization
-References: <1450382034-3976-1-git-send-email-zajec5@gmail.com>
-Date: Thu, 31 Dec 2015 10:17:56 +0200
-In-Reply-To: <1450382034-3976-1-git-send-email-zajec5@gmail.com>
- (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Thu, 17 Dec 2015
- 20:53:54 +0100")
-Message-ID: <87vb7fnia3.fsf@kamboji.qca.qualcomm.com> (sfid-20151231_091810_382919_E8AF84F9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from m50-134.163.com ([123.125.50.134]:56325 "EHLO m50-134.163.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751948AbbL0Kqo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 27 Dec 2015 05:46:44 -0500
+From: Geliang Tang <geliangtang@163.com>
+To: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 5/9] ipw2x00: sdhci-pci: use to_pci_dev()
+Date: Sun, 27 Dec 2015 18:46:01 +0800
+Message-Id: <896b7d080610c5417a2f09a3bf9d0e20636fcc52.1451211133.git.geliangtang@163.com> (sfid-20151227_114923_480106_6E86998D)
+In-Reply-To: <baf4e17c993f197cc31f8a0e5736ee8a558ba44c.1451211133.git.geliangtang@163.com>
+References: <baf4e17c993f197cc31f8a0e5736ee8a558ba44c.1451211133.git.geliangtang@163.com>
+In-Reply-To: <baf4e17c993f197cc31f8a0e5736ee8a558ba44c.1451211133.git.geliangtang@163.com>
+References: <baf4e17c993f197cc31f8a0e5736ee8a558ba44c.1451211133.git.geliangtang@163.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
+Use to_pci_dev() instead of open-coding it.
 
-> So far we were using fs_initcall. It was (and still is) needed because
-> struct bus_type has to be registered early. However main bus
-> initialization has to happen later as it requires SPROM which depends on
-> NVRAM which depends on mtd.
-> Solve it by using fs_initcall only for bus_register call and module_init
-> for the rest. It affects bcma only when built-in obviously.
->
-> This was tested with BCM4706 and BCM5357C0 (BCM47XX), BCM4708A0
-> (ARCH_BCM_5301X) and BCM43225 (PCIe card with bcma as module).
->
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
-> ---
-> This change was already suggested in RFC patch early this year:
-> https://patchwork.kernel.org/patch/5802611/
->
-> Noone objected / got any better idea, so I'm sending a final version.
->
-> V1 (from RFC):
-> * Use int bcma_bus_registered to avoid #ifdef MODULE and make code simpler.
-> * Document reason for this behavior better.
+Signed-off-by: Geliang Tang <geliangtang@163.com>
+---
+ drivers/net/wireless/intel/ipw2x00/ipw2100.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Applied manually, thanks.
-
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+index 36818c7..121294f 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+@@ -3514,7 +3514,7 @@ static void ipw2100_msg_free(struct ipw2100_priv *priv)
+ static ssize_t show_pci(struct device *d, struct device_attribute *attr,
+ 			char *buf)
+ {
+-	struct pci_dev *pci_dev = container_of(d, struct pci_dev, dev);
++	struct pci_dev *pci_dev = to_pci_dev(d);
+ 	char *out = buf;
+ 	int i, j;
+ 	u32 val;
 -- 
-Kalle Valo
+2.5.0
+
+
