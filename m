@@ -1,66 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:33715 "EHLO
-	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750947AbbLWPFI (ORCPT
+Received: from mail-pf0-f169.google.com ([209.85.192.169]:36701 "EHLO
+	mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751120AbbL1Bei (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2015 10:05:08 -0500
-Received: by mail-wm0-f45.google.com with SMTP id p187so148285084wmp.0
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 07:05:07 -0800 (PST)
-Subject: Re: MediaTek WiFi hardware support in upstream kernel
-To: =?UTF-8?Q?Jakub_Kici=c5=84ski?= <moorray3@wp.pl>
-References: <544DB5A8.7090405@openmailbox.org>
- <20141027152026.GB19976@tuxdriver.com> <544E8CB4.3000607@rempel-privat.de>
- <20141028134608.GA26283@tuxdriver.com> <544FA303.5060303@broadcom.com>
- <544FA627.3000004@rempel-privat.de> <5450BEB2.60208@openwrt.org>
- <5461F937.9060004@rempel-privat.de> <5463CB6C.3030204@openwrt.org>
- <5463D28F.9080106@lwfinger.net> <20150206182915.7467bac7@north>
- <54EF261E.4040109@gmail.com> <20150226154028.380b96f2@north>
- <55592C54.6010204@gmail.com> <555CBEFC.50902@gmail.com>
- <20150520191428.42e9a3ec@north> <555DDFB7.9060705@gmail.com>
- <558F0B68.6030007@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Oleksij Rempel <linux@rempel-privat.de>, kubakici@wp.pl,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Etna <etna@openmailbox.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	"users@rt2x00.serialmonkey.com" <users@rt2x00.serialmonkey.com>,
-	Hua Shao <hua.shao@mediatek.com>,
-	Jay Hung <jay.hung@mediatek.com>
-From: poma <pomidorabelisima@gmail.com>
-Message-ID: <567AB81E.20302@gmail.com> (sfid-20151223_160513_821755_281D0D6D)
-Date: Wed, 23 Dec 2015 16:05:02 +0100
-MIME-Version: 1.0
-In-Reply-To: <558F0B68.6030007@gmail.com>
-Content-Type: text/plain; charset=utf-8
+	Sun, 27 Dec 2015 20:34:38 -0500
+Received: by mail-pf0-f169.google.com with SMTP id 65so60766274pff.3
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Dec 2015 17:34:38 -0800 (PST)
+From: Bjorn Andersson <bjorn@kryo.se>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: fengwei.yin@linaro.org, linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, wcn36xx@lists.infradead.org
+Subject: [PATCH 2/4] wcn36xx: Change indication list lock to spinlock
+Date: Sun, 27 Dec 2015 17:34:25 -0800
+Message-Id: <1451266467-15377-3-git-send-email-bjorn.andersson@sonymobile.com> (sfid-20151228_023625_290387_30490860)
+In-Reply-To: <1451266467-15377-1-git-send-email-bjorn.andersson@sonymobile.com>
+References: <1451266467-15377-1-git-send-email-bjorn.andersson@sonymobile.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27.06.2015 22:45, poma wrote:
-> 
-> mt7601u landed in 'linux-next'
-> https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/log/drivers/net/wireless/mediatek/mt7601u
-> 
-> the v4.2 kernel is predicted for Sunday, 2015-08-23
-> http://phb-crystal-ball.org
-> 
-> For the firmware(mt7601u.bin) as part of the essential functionality of the device
-> it would be good to land in 'linux-firmware' *even* before the actual kernel release v4.2
-> http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/tree
-> 
-> 
-> tempus fugit
-> 
+In preparation for handling incoming messages from IRQ context, change
+the indication list lock to a spinlock
 
+Signed-off-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c     | 12 ++++++------
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  2 +-
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-Add firmware for mt7601u. version 34.
-http://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/commit/?id=9df5430
-
-Thanks Hua Shao for the firmware,
-and of course,
-thanks Jakub Kiciński for the driver.
-
-Oh yeah!
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 6b5dbe6f0d0a..4307429740a9 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -2165,10 +2165,10 @@ static void wcn36xx_smd_rsp_process(struct wcn36xx *wcn, void *buf, size_t len)
+ 		msg_ind->msg_len = len;
+ 		memcpy(msg_ind->msg, buf, len);
+ 
+-		mutex_lock(&wcn->hal_ind_mutex);
++		spin_lock(&wcn->hal_ind_lock);
+ 		list_add_tail(&msg_ind->list, &wcn->hal_ind_queue);
+ 		queue_work(wcn->hal_ind_wq, &wcn->hal_ind_work);
+-		mutex_unlock(&wcn->hal_ind_mutex);
++		spin_unlock(&wcn->hal_ind_lock);
+ 		wcn36xx_dbg(WCN36XX_DBG_HAL, "indication arrived\n");
+ 		break;
+ 	default:
+@@ -2182,8 +2182,9 @@ static void wcn36xx_ind_smd_work(struct work_struct *work)
+ 		container_of(work, struct wcn36xx, hal_ind_work);
+ 	struct wcn36xx_hal_msg_header *msg_header;
+ 	struct wcn36xx_hal_ind_msg *hal_ind_msg;
++	unsigned long flags;
+ 
+-	mutex_lock(&wcn->hal_ind_mutex);
++	spin_lock_irqsave(&wcn->hal_ind_lock, flags);
+ 
+ 	hal_ind_msg = list_first_entry(&wcn->hal_ind_queue,
+ 				       struct wcn36xx_hal_ind_msg,
+@@ -2215,8 +2216,8 @@ static void wcn36xx_ind_smd_work(struct work_struct *work)
+ 			      msg_header->msg_type);
+ 	}
+ 	list_del(wcn->hal_ind_queue.next);
++	spin_unlock_irqrestore(&wcn->hal_ind_lock, flags);
+ 	kfree(hal_ind_msg);
+-	mutex_unlock(&wcn->hal_ind_mutex);
+ }
+ int wcn36xx_smd_open(struct wcn36xx *wcn)
+ {
+@@ -2229,7 +2230,7 @@ int wcn36xx_smd_open(struct wcn36xx *wcn)
+ 	}
+ 	INIT_WORK(&wcn->hal_ind_work, wcn36xx_ind_smd_work);
+ 	INIT_LIST_HEAD(&wcn->hal_ind_queue);
+-	mutex_init(&wcn->hal_ind_mutex);
++	spin_lock_init(&wcn->hal_ind_lock);
+ 
+ 	ret = wcn->ctrl_ops->open(wcn, wcn36xx_smd_rsp_process);
+ 	if (ret) {
+@@ -2249,5 +2250,4 @@ void wcn36xx_smd_close(struct wcn36xx *wcn)
+ {
+ 	wcn->ctrl_ops->close();
+ 	destroy_workqueue(wcn->hal_ind_wq);
+-	mutex_destroy(&wcn->hal_ind_mutex);
+ }
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index 7b41e833e18c..7997cc1312ee 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -215,7 +215,7 @@ struct wcn36xx {
+ 	struct completion	hal_rsp_compl;
+ 	struct workqueue_struct	*hal_ind_wq;
+ 	struct work_struct	hal_ind_work;
+-	struct mutex		hal_ind_mutex;
++	spinlock_t		hal_ind_lock;
+ 	struct list_head	hal_ind_queue;
+ 
+ 	/* DXE channels */
+-- 
+2.5.0
 
