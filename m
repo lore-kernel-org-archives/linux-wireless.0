@@ -1,61 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.18]:55670 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751710AbbLXH4L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2015 02:56:11 -0500
-Subject: Re: ath9k driver broken since kernel v4.2
-To: Bart Van Assche <bart.vanassche@gmail.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-References: <567BA01B.60806@acm.org>
-From: Oleksij Rempel <linux@rempel-privat.de>
-Message-ID: <567BA50D.7000805@rempel-privat.de> (sfid-20151224_092249_022503_719E1401)
-Date: Thu, 24 Dec 2015 08:55:57 +0100
+Received: from gesmail.globaledgesoft.com ([106.51.250.152]:48351 "EHLO
+	gesmail.globaledgesoft.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752101AbbL1MPd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Dec 2015 07:15:33 -0500
+Received: from mail.globaledgesoft.com (mail.globaledgesoft.com [172.16.2.30])
+	(using TLSv1 with cipher ADH-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by gesmail.globaledgesoft.com (Postfix) with ESMTP id 6D5767C82B4
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2015 17:34:59 +0530 (IST)
+Received: from mail.globaledgesoft.com (localhost [127.0.0.1])
+	by mail.globaledgesoft.com (Postfix) with ESMTPS id A25CEB807EB
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2015 17:46:15 +0530 (IST)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.globaledgesoft.com (Postfix) with ESMTP id 7F810B807EA
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2015 17:46:15 +0530 (IST)
+Received: from mail.globaledgesoft.com ([127.0.0.1])
+	by localhost (mail.globaledgesoft.com [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id z4-NlqU7CKQR for <linux-wireless@vger.kernel.org>;
+	Mon, 28 Dec 2015 17:46:15 +0530 (IST)
+Received: from [172.16.5.164] (unknown [172.16.5.164])
+	by mail.globaledgesoft.com (Postfix) with ESMTPSA id 4D2A6B80794
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Dec 2015 17:46:15 +0530 (IST)
+Message-ID: <568122B1.5090707@globaledgesoft.com> (sfid-20151228_131536_541319_26B04B91)
+Date: Mon, 28 Dec 2015 17:23:21 +0530
+From: Swapnil Pathak <p.swapnil@globaledgesoft.com>
 MIME-Version: 1.0
-In-Reply-To: <567BA01B.60806@acm.org>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="awvjan8NPAJDfkk0HGS9gRIvPDhv2GkE4"
+To: linux-wireless@vger.kernel.org
+Subject: getting start
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---awvjan8NPAJDfkk0HGS9gRIvPDhv2GkE4
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Hi ,
 
-Hi Bart
+I also want to contribute to wireless and want to create patches. I am 
+not getting from where I need to start. How to start. Please can any one 
+guide me.
 
-Am 24.12.2015 um 08:34 schrieb Bart Van Assche:
-> Hello,
->=20
-> The ath9k driver drops more than 90% of all packets with Linux kernel
-> v4.4-rc6 on my laptop. This behavior also occurs with kernel v4.2.
-> However, with Linux kernel versions v4.1.5 and v3.19.3 the ath9k driver=
+Thanks
+Swapnil
+Disclaimer:- The information contained in this electronic message and any attachments to this message are intended for the exclusive use of the addressee(s) and may contain proprietary, confidential or privileged information. If you are not the intended recipient, you should not disseminate, distribute or copy this e-mail. Please notify the sender immediately and destroy all copies of this message and any attachments. The views expressed in this E-mail message (including the enclosure/(s) or attachment/(s) if any) are those of the individual sender, except where the sender expressly, and with authority, states them to be the views of GlobalEdge. Before opening any mail and attachments please check them for viruses .GlobalEdge does not accept any liability for virus infected mails.
 
-> works fine on the same laptop. Is this report sufficient for one of the=
-
-> ath9k drivers to look further into this or do you perhaps expect me to
-> run a bisect ?
-
-Many people using this driver. For example it works fine on my laptop.
-Since no body knows why your HW is affected try to use git bisect.
-
---=20
-Regards,
-Oleksij
-
-
---awvjan8NPAJDfkk0HGS9gRIvPDhv2GkE4
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iF4EAREIAAYFAlZ7pRIACgkQHwImuRkmbWmSKgD/XfR5bCrRLMSG7WJonUE5sgrq
-cJ3zPczqVoGhvVkFEW4BAI8F8eAMEzBq9wK73bK5nZsAFHD9O8llHVmkl4iy2Lyn
-=7ylw
------END PGP SIGNATURE-----
-
---awvjan8NPAJDfkk0HGS9gRIvPDhv2GkE4--
