@@ -1,107 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:13890 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751977AbbLXDM7 (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:36682 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751417AbbL1Ben (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2015 22:12:59 -0500
-Message-ID: <567B63A5.4070405@atmel.com> (sfid-20151224_041303_361942_9DFB9816)
-Date: Thu, 24 Dec 2015 12:16:53 +0900
-From: glen lee <glen.lee@atmel.com>
-MIME-Version: 1.0
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: Greg KH <gregkh@linuxfoundation.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tony Cho <tony.cho@atmel.com>, <leo.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	<adel.noureldin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: Re: [PATCH] staging: wilc1000: remove wilc_sdio_init
-References: <1450838003-24379-1-git-send-email-glen.lee@atmel.com> <CAGRGNgWrFdRYXg+912stL9fcYE2ZqbEzNoOiHnyjYvX+5BHR=A@mail.gmail.com> <567B6140.1090907@atmel.com> <CAGRGNgUv66UgjxA=Yoxy-+9FRpcVOixxc2pPRkWYQxe0ye5J=w@mail.gmail.com>
-In-Reply-To: <CAGRGNgUv66UgjxA=Yoxy-+9FRpcVOixxc2pPRkWYQxe0ye5J=w@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
+	Sun, 27 Dec 2015 20:34:43 -0500
+Received: by mail-pa0-f54.google.com with SMTP id yy13so10187081pab.3
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Dec 2015 17:34:42 -0800 (PST)
+From: Bjorn Andersson <bjorn@kryo.se>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>
+Cc: devicetree@vger.kernel.org, fengwei.yin@linaro.org,
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	wcn36xx@lists.infradead.org
+Subject: [PATCH 4/4] dt: binding: Add Qualcomm wcn36xx WiFi binding
+Date: Sun, 27 Dec 2015 17:34:27 -0800
+Message-Id: <1451266467-15377-5-git-send-email-bjorn.andersson@sonymobile.com> (sfid-20151228_023546_282561_465B2876)
+In-Reply-To: <1451266467-15377-1-git-send-email-bjorn.andersson@sonymobile.com>
+References: <1451266467-15377-1-git-send-email-bjorn.andersson@sonymobile.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Add binding representing the Qualcomm wcn3620/60/80 WiFi block.
 
+Signed-off-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
+---
+ .../bindings/net/wireless/qcom,wcn36xx-wifi.txt    | 76 ++++++++++++++++++++++
+ 1 file changed, 76 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt
 
-On 2015년 12월 24일 12:07, Julian Calaby wrote:
-> Hi Glen,
->
-> On Thu, Dec 24, 2015 at 2:06 PM, glen lee <glen.lee@atmel.com> wrote:
->>
->> On 2015년 12월 24일 11:39, Julian Calaby wrote:
->>> Hi Glen,
->>>
->>> On Wed, Dec 23, 2015 at 1:33 PM, Glen Lee <glen.lee@atmel.com> wrote:
->>>> wilc_sdio_init return always 1. It is needless, so just remove it and
->>>> it's
->>>> related codes also.
->>>>
->>>> Signed-off-by: Glen Lee <glen.lee@atmel.com>
->>>> ---
->>>>    drivers/staging/wilc1000/wilc_sdio.c | 12 ------------
->>>>    1 file changed, 12 deletions(-)
->>>>
->>>> diff --git a/drivers/staging/wilc1000/wilc_sdio.c
->>>> b/drivers/staging/wilc1000/wilc_sdio.c
->>>> index e961b50..caad876 100644
->>>> --- a/drivers/staging/wilc1000/wilc_sdio.c
->>>> +++ b/drivers/staging/wilc1000/wilc_sdio.c
->>>> @@ -185,11 +185,6 @@ static void wilc_sdio_disable_interrupt(struct wilc
->>>> *dev)
->>>>           dev_info(&func->dev, "wilc_sdio_disable_interrupt OUT\n");
->>>>    }
->>>>
->>>> -static int wilc_sdio_init(void)
->>>> -{
->>>> -       return 1;
->>>> -}
->>>> -
->>>>    /********************************************
->>>>     *
->>>>     *      Function 0
->>>> @@ -611,13 +606,6 @@ static int sdio_init(struct wilc *wilc)
->>>>
->>>>           g_sdio.irq_gpio = (wilc->dev_irq_num);
->>>>
->>>> -       if (!wilc_sdio_init()) {
->>>> -               dev_err(&func->dev, "Failed io init bus...\n");
->>>> -               return 0;
->>>> -       } else {
->>>> -               return 0;
->>>> -       }
->>>> -
->>> This isn't equivalent code as both arms of the if statement eventually
->>> call return 0.
->>
->> Hi julian,
->>
->> Yes, you are correct.
->> Actually, The original code was like this before It is patched wrongly.
->> -       if (!wilc_sdio_init()) {
->> -               dev_err(&func->dev, "Failed io init bus...\n");
->> -               return 0;
->> -       }
->> I could fix this first and then remove wilc_sdio_init().
->> But I thought that this can be fixed by removing wilc_sdio_init which also
->> fixes always return 0 error.
->>
->> Do you think I should fix "always return 0 error" first and then remove
->> wilc_sdio_init()?
->> Or update change log about the error which cause this?
-> It should be two patches, my instinct is to do one which fixes it
-> always returning zero, then another that removes the empty function.
-> Fixing bugs then cleaning up seems more logical to me.
-
-Hi julian,
-
-Thanks for your advise, I will make two patches to fix this.
-
-regards,
-glen lee.
-
->
-> Thanks,
->
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt b/Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt
+new file mode 100644
+index 000000000000..7b314b9f30af
+--- /dev/null
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt
+@@ -0,0 +1,76 @@
++Qualcomm WCN36xx WiFi Binding
++
++This binding describes the Qualcomm WCN36xx WiFi hardware. The hardware block
++is part of the Qualcomm WCNSS core, a WiFi/BT/FM combo chip, found in a variety
++of Qualcomm platforms.
++
++- compatible:
++	Usage: required
++	Value type: <string>
++	Definition: must be one of:
++		    "qcom,wcn3620-wlan",
++		    "qcom,wcn3660-wlan",
++		    "qcom,wcn3680-wlan"
++
++- qcom,smd-channel:
++	Usage: required
++	Value type: <string>
++	Definition: standard SMD property specifying the SMD channel used for
++		    communication with the WiFi firmware
++
++- interrupts:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: should specify the two IRQs for tx and rx respectively
++
++- qcom,wcnss-mmio:
++	Usage: required
++	Value type: <prop-encoed-array>
++	Definition: should specify base address and size of the WiFi related
++		    registers of WCNSS
++
++- qcom,state:
++	Usage: required
++	Value type: <prop-encoded-array>
++	Definition: should specify the tx-enable and tx-ring-empty state
++		    references
++
++- qcom,state-names:
++	Usage: required
++	Value type: <stringlist>
++	Definition: name of the states, must be "tx-enable", "tx-rings-empty";
++
++- local-mac-address:
++	Usage: optional
++	Value type: <prop-encoded-array> encoded as array of hex numbers
++	Definition: specifies MAC address that was assigned to the network
++		    device described by the node containing this property.
++
++= EXAMPLE
++The following example represents a SMD node, with one edge representing the
++"pronto" subsystem, with the wcn3680 WiFi device described; as found on the
++8974 platform.
++
++smd {
++	compatible = "qcom,smd";
++
++	pronto {
++		interrupts = <0 142 1>;
++
++		qcom,ipc = <&apcs 8 17>;
++		qcom,smd-edge = <6>;
++
++		wifi {
++			compatible = "qcom,wcn3680-wlan";
++			qcom,smd-channels = "WLAN_CTRL";
++
++			interrupts = <0 145 0>, <0 146 0>;
++			interrupt-names = "tx", "rx";
++
++			qcom,wcnss-mmio = <0xfb000000 0x21b000>;
++
++			qcom,state = <&apps_smsm 10>, <&apps_smsm 9>;
++			qcom,state-names = "tx-enable", "tx-rings-empty";
++		};
++	};
++};
+-- 
+2.5.0
 
