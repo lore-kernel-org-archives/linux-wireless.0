@@ -1,44 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43358 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752673AbbLKLui (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2015 06:50:38 -0500
-Content-Type: text/plain; charset="us-ascii"
+Received: from softlayer.compulab.co.il ([50.23.254.55]:60128 "EHLO
+	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751288AbbL1OQP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Dec 2015 09:16:15 -0500
+Subject: Re: [PATCH v2 1/3] wlcore/wl12xx: spi: add power operation function
+To: Grygorii Strashko <grygorii.strashko@ti.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Tony Lindgren <tony@atomide.com>
+References: <1450971335-15961-1-git-send-email-uri.mashiach@compulab.co.il>
+ <1450971335-15961-2-git-send-email-uri.mashiach@compulab.co.il>
+ <567C1E3B.3020404@ti.com> <56801C78.9040102@compulab.co.il>
+ <5681241F.1060603@ti.com>
+Cc: Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: Uri Mashiach <uri.mashiach@compulab.co.il>
+Message-ID: <56814425.7000601@compulab.co.il> (sfid-20151228_151620_698762_48C71C00)
+Date: Mon, 28 Dec 2015 16:16:05 +0200
 MIME-Version: 1.0
-Subject: Re: iwlegacy: mark il_adjust_beacon_interval as noinline
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <36263581.L8412YxJjp@wuerfel>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	nico@linaro.org
-Message-Id: <20151211115037.B4125141D60@smtp.codeaurora.org> (sfid-20151211_125057_829232_74A8BFAD)
-Date: Fri, 11 Dec 2015 11:50:37 +0000 (UTC)
+In-Reply-To: <5681241F.1060603@ti.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Grygorii,
 
-> With the new optimized do_div() code, some versions of gcc
-> produce obviously incorrect code that leads to a link error
-> in iwlegacy/common.o:
-> 
-> drivers/built-in.o: In function `il_send_rxon_timing':
-> :(.text+0xa6b4d4): undefined reference to `____ilog2_NaN'
-> :(.text+0xa6b4f0): undefined reference to `__aeabi_uldivmod'
-> 
-> In a few thousand randconfig builds, I have seen this problem
-> a couple of times in this file, but never anywhere else in the
-> kernel, so we can try to work around this in the only file
-> that shows the behavior, by marking the il_adjust_beacon_interval
-> function as noinline, which convinces gcc to use the unoptimized
-> do_div() all the time.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Acked-by: Nicolas Pitre <nico@linaro.org>
-> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+On 12/28/2015 01:59 PM, Grygorii Strashko wrote:
+> On 12/27/2015 07:14 PM, Uri Mashiach wrote:
+>> Hello Grygorii,
+>>
+>> On 12/24/2015 06:32 PM, Grygorii Strashko wrote:
+>>> On 12/24/2015 05:35 PM, Uri Mashiach wrote:
+>>>> The power function uses a consumer regulator access to update the WiFi
+>>>> enable GPIO value.
+>>>>
+>>>> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+>>>> ---
+>>>> v1 -> v2: oops fix was removed to a separate fix.
+>>>>
+>>>>    drivers/net/wireless/ti/wlcore/spi.c | 37
+>>>> ++++++++++++++++++++++++++++++++++++
+>>>>    1 file changed, 37 insertions(+)
+>>>>
+>>>> diff --git a/drivers/net/wireless/ti/wlcore/spi.c
+>>>> b/drivers/net/wireless/ti/wlcore/spi.c
+>>>>
+>>>
+>>> [...]
+>>>
+>>>> +
+>>>>    static struct wl1271_if_operations spi_ops = {
+>>>>        .read        = wl12xx_spi_raw_read,
+>>>>        .write        = wl12xx_spi_raw_write,
+>>>>        .reset        = wl12xx_spi_reset,
+>>>>        .init        = wl12xx_spi_init,
+>>>> +    .power        = wl12xx_spi_set_power,
+>>>>        .set_block_size = NULL,
+>>>>    };
+>>>>
+>>>> @@ -353,6 +384,12 @@ static int wl1271_probe(struct spi_device *spi)
+>>>>         * comes from the board-peripherals file */
+>>>>        spi->bits_per_word = 32;
+>>>>
+>>>> +    glue->reg = devm_regulator_get(&spi->dev, "vwlan");
+>>>> +    if (IS_ERR(glue->reg)) {
+>>>
+>>> It will be more correct to handle -EPROBE_DEFER here also. Like:
+>>>            if (PTR_ERR(glue->reg) == -EPROBE_DEFER)
+>>>               return PTR_ERR(glue->reg);
+>>>
+>>
+>> It seems that the IS_ERR(glue->reg) condition covers the EPROBE_DEFER case.
+>
+> True. But this is not an error and it's common practice do not print
+> any log messages in this case from driver :)
+>
 
-Thanks, applied to wireless-drivers-next.git.
+Sorry, already posted v3.
+Will be in v4.
 
-Kalle Valo
+>>
+>>>> +        dev_err(glue->dev, "can't get regulator\n");
+>>>> +        return PTR_ERR(glue->reg);
+>>>> +    }
+>>>> +
+>>>>        ret = spi_setup(spi);
+>>>>        if (ret < 0) {
+>>>>            dev_err(glue->dev, "spi_setup failed\n");
+>>>>
+>>>
+>>>
+>>
+>
+>
+
+-- 
+Thanks,
+Uri
