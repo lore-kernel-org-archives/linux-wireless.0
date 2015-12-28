@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:21100 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753895AbbLOPxK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Dec 2015 10:53:10 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Anatoly Stepanov <drivengroove@gmail.com>
-Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: use proper typecast in assignment
-References: <1450136458-2386-1-git-send-email-drivengroove@gmail.com>
-Date: Tue, 15 Dec 2015 10:53:09 -0500
-In-Reply-To: <1450136458-2386-1-git-send-email-drivengroove@gmail.com>
-	(Anatoly Stepanov's message of "Tue, 15 Dec 2015 02:40:58 +0300")
-Message-ID: <wrfjio3zemje.fsf@redhat.com> (sfid-20151215_165316_357883_BC48E20F)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtprelay0247.hostedemail.com ([216.40.44.247]:39631 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750998AbbL1R4z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Dec 2015 12:56:55 -0500
+Message-ID: <1451325412.3219.12.camel@perches.com> (sfid-20151228_185731_316866_E8359B51)
+Subject: Re: [PATCH] /drivers/net/wireless/ath/ath9k remove unnecessary ?:
+ operator
+From: Joe Perches <joe@perches.com>
+To: Ivan Safonov <insafonov@gmail.com>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Date: Mon, 28 Dec 2015 09:56:52 -0800
+In-Reply-To: <20151228134852.GA10572@alpha.sfu-kras.ru>
+References: <20151228134852.GA10572@alpha.sfu-kras.ru>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Anatoly Stepanov <drivengroove@gmail.com> writes:
-> This resolves the following Sparse warning:
-> "incorrect type in assignment (different base types)"
->
-> Signed-off-by: Anatoly Stepanov <drivengroove@gmail.com>
+On Mon, 2015-12-28 at 20:48 +0700, Ivan Safonov wrote:
+> ((thermometer < 0) ? 0 : (thermometer == X)) and (thermometer == X) are equal for X >= 0.
+
+X is not guaranteed to be >= 0 here
+
+> Signed-off-by: Ivan Safonov <insafonov@gmail.com>
 > ---
->  drivers/staging/rtl8723au/hal/rtl8723a_cmd.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-> index 1662c03c..fdd9cf1 100644
-> --- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-> @@ -115,7 +115,7 @@ exit:
->  
->  int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param)
->  {
-> -	*((u32 *)param) = cpu_to_le32(*((u32 *)param));
-> +	*((__le32 *)param) = cpu_to_le32(*((u32 *)param));
->  
->  	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, param);
+>  drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+[]
+> @@ -4097,16 +4097,16 @@ static void ar9003_hw_thermometer_apply(struct ath_hw *ah)
+>  		REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
+>  			      AR_PHY_65NM_CH0_RXTX4_THERM_ON_OVR, therm_on);
+>  
+> -	therm_on = (thermometer < 0) ? 0 : (thermometer == 0);
+> +	therm_on = thermometer == 0;
 
-*Cough*
+This code is not equivalent.
 
-Writing a 32 bit value to a pointer to a u8 is ugly in the first
-place. Rather than just wrapping it in yet another ugly typecast, please
-fix this properly.
+Check what happens when thermometer is -1.
 
-Jes
+>  	REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_RXTX4,
+>  		      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
+>  	if (pCap->chip_chainmask & BIT(1)) {
+> -		therm_on = (thermometer < 0) ? 0 : (thermometer == 1);
+> +		therm_on = thermometer == 1;
+>  		REG_RMW_FIELD(ah, AR_PHY_65NM_CH1_RXTX4,
+>  			      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
+>  	}
+>  	if (pCap->chip_chainmask & BIT(2)) {
+> -		therm_on = (thermometer < 0) ? 0 : (thermometer == 2);
+> +		therm_on = thermometer == 2;
+>  		REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
+>  			      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
+>  	}
+
