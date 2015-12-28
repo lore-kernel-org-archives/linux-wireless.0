@@ -1,95 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:46048 "EHLO mga03.intel.com"
+Received: from arroyo.ext.ti.com ([192.94.94.40]:58083 "EHLO arroyo.ext.ti.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751843AbbLUUv3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 15:51:29 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Golan Ben-Ami <golan.ben.ami@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 20/45] iwlwifi: expose fw usniffer mode to more utilities
-Date: Mon, 21 Dec 2015 22:50:21 +0200
-Message-Id: <1450731046-2796-20-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_215143_944624_6E6618C0)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+	id S1751650AbbL1MBX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Dec 2015 07:01:23 -0500
+Subject: Re: [PATCH v2 1/3] wlcore/wl12xx: spi: add power operation function
+To: Uri Mashiach <uri.mashiach@compulab.co.il>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Tony Lindgren <tony@atomide.com>
+References: <1450971335-15961-1-git-send-email-uri.mashiach@compulab.co.il>
+ <1450971335-15961-2-git-send-email-uri.mashiach@compulab.co.il>
+ <567C1E3B.3020404@ti.com> <56801C78.9040102@compulab.co.il>
+CC: Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, <bcousson@baylibre.com>,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Eliad Peller <eliad@wizery.com>, <devicetree@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+From: Grygorii Strashko <grygorii.strashko@ti.com>
+Message-ID: <5681241F.1060603@ti.com> (sfid-20151228_130135_172709_BB137CA3)
+Date: Mon, 28 Dec 2015 13:59:27 +0200
+MIME-Version: 1.0
+In-Reply-To: <56801C78.9040102@compulab.co.il>
+Content-Type: text/plain; charset="windows-1252"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Golan Ben-Ami <golan.ben.ami@intel.com>
+On 12/27/2015 07:14 PM, Uri Mashiach wrote:
+> Hello Grygorii,
+> 
+> On 12/24/2015 06:32 PM, Grygorii Strashko wrote:
+>> On 12/24/2015 05:35 PM, Uri Mashiach wrote:
+>>> The power function uses a consumer regulator access to update the WiFi
+>>> enable GPIO value.
+>>>
+>>> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+>>> ---
+>>> v1 -> v2: oops fix was removed to a separate fix.
+>>>
+>>>   drivers/net/wireless/ti/wlcore/spi.c | 37
+>>> ++++++++++++++++++++++++++++++++++++
+>>>   1 file changed, 37 insertions(+)
+>>>
+>>> diff --git a/drivers/net/wireless/ti/wlcore/spi.c
+>>> b/drivers/net/wireless/ti/wlcore/spi.c
+>>>
+>>
+>> [...]
+>>
+>>> +
+>>>   static struct wl1271_if_operations spi_ops = {
+>>>       .read        = wl12xx_spi_raw_read,
+>>>       .write        = wl12xx_spi_raw_write,
+>>>       .reset        = wl12xx_spi_reset,
+>>>       .init        = wl12xx_spi_init,
+>>> +    .power        = wl12xx_spi_set_power,
+>>>       .set_block_size = NULL,
+>>>   };
+>>>
+>>> @@ -353,6 +384,12 @@ static int wl1271_probe(struct spi_device *spi)
+>>>        * comes from the board-peripherals file */
+>>>       spi->bits_per_word = 32;
+>>>
+>>> +    glue->reg = devm_regulator_get(&spi->dev, "vwlan");
+>>> +    if (IS_ERR(glue->reg)) {
+>>
+>> It will be more correct to handle -EPROBE_DEFER here also. Like:
+>>           if (PTR_ERR(glue->reg) == -EPROBE_DEFER)
+>>              return PTR_ERR(glue->reg);
+>>
+> 
+> It seems that the IS_ERR(glue->reg) condition covers the EPROBE_DEFER case.
 
-Today, in order to configure fw in usniffer mode, the ucode
-must have the corresponding tlv, which is revealed to the driver
-while parsing the ucode.
+True. But this is not an error and it's common practice do not print
+any log messages in this case from driver :)
 
-Expose the mode of the usniffer to other utilities in the driver
-(other than the ucode parser) by passing back a pointer to the value.
-This can be very useful for allowing configuring the fw dbg data
-using an external configuration file, because this configuration
-depends on the fw usniffer mode.
+> 
+>>> +        dev_err(glue->dev, "can't get regulator\n");
+>>> +        return PTR_ERR(glue->reg);
+>>> +    }
+>>> +
+>>>       ret = spi_setup(spi);
+>>>       if (ret < 0) {
+>>>           dev_err(glue->dev, "spi_setup failed\n");
+>>>
+>>
+>>
+> 
 
-Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 16756f0..47a83ab 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -594,7 +594,8 @@ static int iwl_parse_v1_v2_firmware(struct iwl_drv *drv,
- static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 				const struct firmware *ucode_raw,
- 				struct iwl_firmware_pieces *pieces,
--				struct iwl_ucode_capabilities *capa)
-+				struct iwl_ucode_capabilities *capa,
-+				bool *usniffer_images)
- {
- 	struct iwl_tlv_ucode_header *ucode = (void *)ucode_raw->data;
- 	struct iwl_ucode_tlv *tlv;
-@@ -607,7 +608,6 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 	char buildstr[25];
- 	u32 build, paging_mem_size;
- 	int num_of_cpus;
--	bool usniffer_images = false;
- 	bool usniffer_req = false;
- 	bool gscan_capa = false;
- 
-@@ -980,7 +980,7 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 			break;
- 			}
- 		case IWL_UCODE_TLV_SEC_RT_USNIFFER:
--			usniffer_images = true;
-+			*usniffer_images = true;
- 			iwl_store_ucode_sec(pieces, tlv_data,
- 					    IWL_UCODE_REGULAR_USNIFFER,
- 					    tlv_len);
-@@ -1031,7 +1031,7 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 		}
- 	}
- 
--	if (usniffer_req && !usniffer_images) {
-+	if (usniffer_req && !*usniffer_images) {
- 		IWL_ERR(drv,
- 			"user selected to work with usniffer but usniffer image isn't available in ucode package\n");
- 		return -EINVAL;
-@@ -1192,6 +1192,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	u32 api_ver;
- 	int i;
- 	bool load_module = false;
-+	bool usniffer_images = false;
- 
- 	fw->ucode_capa.max_probe_length = IWL_DEFAULT_MAX_PROBE_LENGTH;
- 	fw->ucode_capa.standard_phy_calibration_size =
-@@ -1229,7 +1230,7 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 		err = iwl_parse_v1_v2_firmware(drv, ucode_raw, pieces);
- 	else
- 		err = iwl_parse_tlv_firmware(drv, ucode_raw, pieces,
--					     &fw->ucode_capa);
-+					     &fw->ucode_capa, &usniffer_images);
- 
- 	if (err)
- 		goto try_again;
 -- 
-2.5.0
-
+regards,
+-grygorii
