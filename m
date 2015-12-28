@@ -1,65 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:32825 "EHLO
-	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750899AbbLIL7a (ORCPT
+Received: from mail-lf0-f50.google.com ([209.85.215.50]:34432 "EHLO
+	mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751598AbbL1Nq4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2015 06:59:30 -0500
-Date: Wed, 9 Dec 2015 17:29:24 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] NFC: nci: fix memory leak
-Message-ID: <20151209115924.GD24852@sudip-pc> (sfid-20151209_125934_365179_B3AB3A19)
-References: <1447678635-11146-1-git-send-email-sudipm.mukherjee@gmail.com>
+	Mon, 28 Dec 2015 08:46:56 -0500
+Date: Mon, 28 Dec 2015 20:48:52 +0700
+From: Ivan Safonov <insafonov@gmail.com>
+To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] /drivers/net/wireless/ath/ath9k remove unnecessary ?:
+ operator
+Message-ID: <20151228134852.GA10572@alpha.sfu-kras.ru> (sfid-20151228_144718_550537_3C3E62A6)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1447678635-11146-1-git-send-email-sudipm.mukherjee@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Nov 16, 2015 at 06:27:15PM +0530, Sudip Mukherjee wrote:
-> In case of invalid number_destination_params we were returning error but
-> we missed releasing cmd. Lets check for the number of parameter before
-> allocating memory so that we don't have a memory leak.
-> 
-> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
-> ---
+((thermometer < 0) ? 0 : (thermometer == X)) and (thermometer == X) are equal for X >= 0.
 
-A gentle ping.
+Signed-off-by: Ivan Safonov <insafonov@gmail.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-regards
-sudip
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 8b4561e..35e57f7 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -4097,16 +4097,16 @@ static void ar9003_hw_thermometer_apply(struct ath_hw *ah)
+ 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
+ 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON_OVR, therm_on);
+ 
+-	therm_on = (thermometer < 0) ? 0 : (thermometer == 0);
++	therm_on = thermometer == 0;
+ 	REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_RXTX4,
+ 		      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
+ 	if (pCap->chip_chainmask & BIT(1)) {
+-		therm_on = (thermometer < 0) ? 0 : (thermometer == 1);
++		therm_on = thermometer == 1;
+ 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH1_RXTX4,
+ 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
+ 	}
+ 	if (pCap->chip_chainmask & BIT(2)) {
+-		therm_on = (thermometer < 0) ? 0 : (thermometer == 2);
++		therm_on = thermometer == 2;
+ 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
+ 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
+ 	}
+-- 
+2.4.10
 
-
->  net/nfc/nci/core.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/net/nfc/nci/core.c b/net/nfc/nci/core.c
-> index 10c99a5..fbb7a2b 100644
-> --- a/net/nfc/nci/core.c
-> +++ b/net/nfc/nci/core.c
-> @@ -610,14 +610,14 @@ int nci_core_conn_create(struct nci_dev *ndev, u8 destination_type,
->  	struct nci_core_conn_create_cmd *cmd;
->  	struct core_conn_create_data data;
->  
-> +	if (!number_destination_params)
-> +		return -EINVAL;
-> +
->  	data.length = params_len + sizeof(struct nci_core_conn_create_cmd);
->  	cmd = kzalloc(data.length, GFP_KERNEL);
->  	if (!cmd)
->  		return -ENOMEM;
->  
-> -	if (!number_destination_params)
-> -		return -EINVAL;
-> -
->  	cmd->destination_type = destination_type;
->  	cmd->number_destination_params = number_destination_params;
->  	memcpy(cmd->params, params, params_len);
-> -- 
-> 1.9.1
-> 
