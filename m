@@ -1,72 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f48.google.com ([209.85.220.48]:33756 "EHLO
-	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933192AbbLXHxF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2015 02:53:05 -0500
-Received: by mail-pa0-f48.google.com with SMTP id cy9so63012738pac.0
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:53:05 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 06/21] staging: wilc1000: rename pu8IEs in wilc_set_join_req
-Date: Thu, 24 Dec 2015 16:52:24 +0900
-Message-Id: <1450943559-20937-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_092249_496203_4A6DBA5B)
-In-Reply-To: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from softlayer.compulab.co.il ([50.23.254.55]:41407 "EHLO
+	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751650AbbL1MCh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Dec 2015 07:02:37 -0500
+From: Uri Mashiach <uri.mashiach@compulab.co.il>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Tony Lindgren <tony@atomide.com>
+Cc: Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	Uri Mashiach <uri.mashiach@compulab.co.il>
+Subject: [PATCH v3 0/3] wlcore/wl12xx: spi: add wifi support to cm-t335
+Date: Mon, 28 Dec 2015 14:02:16 +0200
+Message-Id: <1451304139-10899-1-git-send-email-uri.mashiach@compulab.co.il> (sfid-20151228_130242_011728_3328F4CB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pu8IEs to ies to avoid camelcase.
+Add DT support for WLS1271 SPI driver.
+Add power operation function to the WLS1271 SPI driver.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
+Uri Mashiach (3):
+  wlcore/wl12xx: spi: add power operation function
+  wlcore/wl12xx: spi: add device tree support
+  wlcore/wl12xx: spi: add wifi support to cm-t335
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 4730b60..bf1597c 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3366,7 +3366,7 @@ int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr)
- }
- 
- int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
--		      size_t ssid_len, const u8 *pu8IEs, size_t IEsLen,
-+		      size_t ssid_len, const u8 *ies, size_t IEsLen,
- 		      wilc_connect_result pfConnectResult, void *pvUserArg,
- 		      u8 u8security, enum AUTHTYPE tenuAuth_type,
- 		      u8 u8channel, void *pJoinParams)
-@@ -3408,10 +3408,10 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
- 		memcpy(msg.body.con_info.ssid, ssid, ssid_len);
- 	}
- 
--	if (pu8IEs) {
-+	if (ies) {
- 		msg.body.con_info.ies_len = IEsLen;
- 		msg.body.con_info.ies = kmalloc(IEsLen, GFP_KERNEL);
--		memcpy(msg.body.con_info.ies, pu8IEs, IEsLen);
-+		memcpy(msg.body.con_info.ies, ies, IEsLen);
- 	}
- 	if (hif_drv->hif_state < HOST_IF_CONNECTING)
- 		hif_drv->hif_state = HOST_IF_CONNECTING;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 4c4674b..44929a6 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -327,7 +327,7 @@ int wilc_get_mac_address(struct wilc_vif *vif, u8 *mac_addr);
- int wilc_set_mac_address(struct wilc_vif *vif, u8 *mac_addr);
- int wilc_wait_msg_queue_idle(void);
- int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
--		      size_t ssid_len, const u8 *pu8IEs, size_t IEsLen,
-+		      size_t ssid_len, const u8 *ies, size_t IEsLen,
- 		      wilc_connect_result pfConnectResult, void *pvUserArg,
- 		      u8 u8security, enum AUTHTYPE tenuAuth_type,
- 		      u8 u8channel, void *pJoinParams);
+ .../bindings/net/wireless/ti,wlcore,spi.txt        | 34 +++++++++
+ arch/arm/boot/dts/am335x-cm-t335.dts               | 54 ++++++++++++++
+ drivers/net/wireless/ti/wlcore/Kconfig             |  2 +-
+ drivers/net/wireless/ti/wlcore/spi.c               | 84 ++++++++++++++++++++--
+ 4 files changed, 169 insertions(+), 5 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
+
 -- 
-2.6.4
+2.5.0
 
