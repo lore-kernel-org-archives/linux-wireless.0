@@ -1,63 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from charlotte.tuxdriver.com ([70.61.120.58]:56604 "EHLO
-	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934785AbbLQQAR (ORCPT
+Received: from mail-lf0-f42.google.com ([209.85.215.42]:33925 "EHLO
+	mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753868AbbL2Ur7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 11:00:17 -0500
-Date: Thu, 17 Dec 2015 10:56:33 -0500
-From: "John W. Linville" <linville@tuxdriver.com>
-To: Bob Copeland <me@bobcopeland.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [ANNOUNCE] New location for wireless-testing tree
-Message-ID: <20151217155633.GC6910@tuxdriver.com> (sfid-20151217_170021_722287_E8598492)
-References: <20151216173223.GF4073@localhost>
+	Tue, 29 Dec 2015 15:47:59 -0500
+Received: by mail-lf0-f42.google.com with SMTP id y184so217450336lfc.1
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Dec 2015 12:47:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151216173223.GF4073@localhost>
+In-Reply-To: <1450100394-17414-4-git-send-email-arend@broadcom.com>
+References: <1450100394-17414-1-git-send-email-arend@broadcom.com> <1450100394-17414-4-git-send-email-arend@broadcom.com>
+From: Mathy Vanhoef <vanhoefm@gmail.com>
+Date: Tue, 29 Dec 2015 21:47:38 +0100
+Message-ID: <CAFXAJYwoQRVi_10L5475g1NU5+Abfvv==R6U4P2_rdb=yCPOcw@mail.gmail.com> (sfid-20151229_214807_615033_60682026)
+Subject: Re: [PATCH 3/7] brcmfmac: Add support for scheduled scan mac randomization
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Dec 16, 2015 at 12:32:23PM -0500, Bob Copeland wrote:
-> As reported previously[1], John Linville will be moving on from maintenance
-> of the wireless-testing[2] tree at the end of the year.  A huge thank you to
-> John for doing all this work for so many years!
-> 
-> We now have a shared wireless directory on kernel.org where we (currently
-> myself and Kalle as backup) will continue to maintain this tree going
-> forward.  The new tree can be found at:
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/wireless/wireless-testing.git
-> 
-> Note: unlike John's tree, we are going to try rebasing this tree on every
-> build (like linux-next) instead of merging the downstream trees, in order
-> to avoid certain merge problems when those trees are rebased.
-> 
-> This means that if you are working directly off of wireless-testing, use
-> 'git pull --rebase' to sync, instead of just 'git pull'.
-> 
-> We'll see how this goes and reassess after a couple of cycles.
-> 
-> Please let me know of any issues.
-> 
-> [1] http://comments.gmane.org/gmane.linux.kernel.wireless.general/145291
-> 
-> [2] wireless-testing is an integration testing tree, consisting of:
-> 
->  * Linus's latest -rc
->  * patches in mac80211 and wireless-drivers (for the upcoming release)
->  * patches in mac80211-next and wireless-drivers-next (for the next release)
-> 
-> It is not pulled into any upstream tree, but it should be a pretty good
-> indication of what is baking in Linux wireless for the next release, without
-> having unrelated changes from all the other subsystems as in linux-next.
+On Mon, Dec 14, 2015 at 2:39 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> From: Hante Meuleman <meuleman@broadcom.com>
+>
+> Scheduled scan be requested to use mac randomization. This patch
+> checks the flags and enables the randomization if desired.
 
-Given this most welcome announcement, I will hereby cease maintenance
-of the predecessor wireless-testing tree in favor of this new
-canonical source.
+The driver also needs to advertise support for this using the
+NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR flag, if the firmware
+supports it. This can be done in brcmf_setup_wiphy. Otherwise
+tools like wpa_supplicant won't use randomization.
 
-Thanks guys!
-
-John
--- 
-John W. Linville		Someday the world will need a hero, and you
-linville@tuxdriver.com			might be all we have.  Be ready.
+Kr,
+Mathy
