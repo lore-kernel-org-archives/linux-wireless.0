@@ -1,46 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:2928 "EHLO mga03.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:50329 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751563AbbLUUvF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 15:51:05 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 07/45] iwlwifi: dvm: advertise NETIF_F_SG
-Date: Mon, 21 Dec 2015 22:50:08 +0200
-Message-Id: <1450731046-2796-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_215111_876986_A5303E6C)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+	id S1753838AbbL2X14 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Dec 2015 18:27:56 -0500
+Date: Tue, 29 Dec 2015 17:27:51 -0600
+From: Rob Herring <robh@kernel.org>
+To: Bjorn Andersson <bjorn@kryo.se>
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>, devicetree@vger.kernel.org,
+	fengwei.yin@linaro.org, linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, wcn36xx@lists.infradead.org
+Subject: Re: [PATCH 4/4] dt: binding: Add Qualcomm wcn36xx WiFi binding
+Message-ID: <20151229232751.GA664@rob-hp-laptop> (sfid-20151230_002815_922475_F57BC717)
+References: <1451266467-15377-1-git-send-email-bjorn.andersson@sonymobile.com>
+ <1451266467-15377-5-git-send-email-bjorn.andersson@sonymobile.com>
+ <20151229183440.GC12450@rob-hp-laptop>
+ <20151229190357.GJ16437@tuxbot>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151229190357.GJ16437@tuxbot>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Tue, Dec 29, 2015 at 11:03:57AM -0800, Bjorn Andersson wrote:
+> On Tue 29 Dec 10:34 PST 2015, Rob Herring wrote:
+> 
+> > On Sun, Dec 27, 2015 at 05:34:27PM -0800, Bjorn Andersson wrote:
+> > > Add binding representing the Qualcomm wcn3620/60/80 WiFi block.
+> > > Signed-off-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
+> > > ---
+> > >  .../bindings/net/wireless/qcom,wcn36xx-wifi.txt    | 76 ++++++++++++++++++++++
+> > >  1 file changed, 76 insertions(+)
+> > >  create mode 100644 Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt
+> > > 
+> > > diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt b/Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt
+> > > new file mode 100644
+> > > index 000000000000..7b314b9f30af
+> > > --- /dev/null
+> > > +++ b/Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt
+> > > @@ -0,0 +1,76 @@
+> > > +Qualcomm WCN36xx WiFi Binding
+> > > +
+> > > +This binding describes the Qualcomm WCN36xx WiFi hardware. The hardware block
+> > > +is part of the Qualcomm WCNSS core, a WiFi/BT/FM combo chip, found in a variety
+> > > +of Qualcomm platforms.
+> > 
+> > Are BT/FM functions completely separate? If so, separate bindings are 
+> > okay. If not, then we need to describe the full chip.
+> > 
+> 
+> It's three different hardware blocks (WiFi, BT and FM-radio) with shared
+> RF-hardware and an ARM core for control logic.
+> 
+> There seems to be some control commands going towards the BT part that
+> controls coexistence properties of the RF-hardware, but other than that
+> I see it as logically separate blocks.
+> 
+> 
+> So I think it's fine to model this as separate pieces in DT.
 
-If the transport supports it, advertise NETIF_F_SG to mac80211 to
-be able to use frag SKBs. This will already improve performance by
-allowing software GSO to be used.
+Okay.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
-index a9d8b51..f4c2529 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c
-@@ -115,6 +115,9 @@ int iwlagn_mac_setup_register(struct iwl_priv *priv,
- 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
- 	ieee80211_hw_set(hw, WANT_MONITOR_VIF);
- 
-+	if (priv->trans->max_skb_frags)
-+		hw->netdev_features = NETIF_F_HIGHDMA | NETIF_F_SG;
-+
- 	hw->offchannel_tx_hw_queue = IWL_AUX_QUEUE;
- 	hw->radiotap_mcs_details |= IEEE80211_RADIOTAP_MCS_HAVE_FMT;
- 
--- 
-2.5.0
-
+Acked-by: Rob Herring <robh@kernel.org>
