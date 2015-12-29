@@ -1,75 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shadbolt.e.decadent.org.uk ([88.96.1.126]:45442 "EHLO
-	shadbolt.e.decadent.org.uk" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754191AbbLGCLU (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:36615 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752868AbbL2OTb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Dec 2015 21:11:20 -0500
-Message-ID: <1449454261.2824.62.camel@decadent.org.uk> (sfid-20151207_031123_532941_804DFD0E)
-Subject: Re: [PATCH linux-firmware] mt7601u: Add firmware version 2.6
-From: Ben Hutchings <ben@decadent.org.uk>
-To: Jakub Kicinski <kubakici@wp.pl>
-Cc: linux-firmware@kernel.org,
-	Hua Shao =?UTF-8?Q?=28=E9=82=B5=E5=8D=8E=29?=
-	<hua.shao@mediatek.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Mon, 07 Dec 2015 02:11:01 +0000
-In-Reply-To: <20151127222611.3d2a1e98@laptop>
-References: <20151126032815.GC28542@decadent.org.uk>
-	 <20151127222611.3d2a1e98@laptop>
-Content-Type: multipart/signed; micalg="pgp-sha512";
-	protocol="application/pgp-signature"; boundary="=-E77bVWN0ynUjCSExFiEg"
-Mime-Version: 1.0
+	Tue, 29 Dec 2015 09:19:31 -0500
+Received: by mail-lb0-f172.google.com with SMTP id oh2so104075313lbb.3
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Dec 2015 06:19:31 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <773DB8A82AB6A046AE0195C68612A31901C5B5A9@sbs2003.acksys.local>
+References: <773DB8A82AB6A046AE0195C68612A31901C5B5A9@sbs2003.acksys.local>
+Date: Tue, 29 Dec 2015 16:19:30 +0200
+Message-ID: <CANUX_P2k-Feexi5=gBm+UxsFkoic7FeGDFcNa_D3J2ujYL2ghQ@mail.gmail.com> (sfid-20151229_151934_874371_AB02648C)
+Subject: Re: Mac80211 : Wpa rekeying issue
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Cedric VONCKEN <cedric.voncken@acksys.fr>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Tue, Dec 29, 2015 at 3:01 PM, Cedric VONCKEN
+<cedric.voncken@acksys.fr> wrote:
+> Hi,
+>
+> My test plateform is:
+> 2 equipements
+> Both equipment used compat version 2015-07-21 from openwrt.
+> Both equipment used security WPA2
+>
+> The equipment #1 is an AP.
+>         The Group rekey interval is set to 3601s
+>         The Pair rekey interval set to 50s (I reduced this value to show
+> the issue often)
+>         The Master rekey interval is set to 86400 s.
+>
+> The equipment #2 is a sta+wds
+>
+> I used a 5GHz channel to have a free channel (without other AP)
+> I connected a computer on each equipment.
+>
+> To reproduce the issue:
+>         I ran iperf udp@50Mbps from computer connected to the AP to the
+> computer connected to the sta. After several WPA2 rekeying, iperf server
+> side didn't received any frame.
+>
+> I investigated in the driver. All packets are dropped in sta side,
+> because the function ieee80211_crypto_ccmp_decrypt return
+> Rx_DROP_UNUSABLE. This function return this code because the test
+> if(memcmp(pn,key->u.ccmp.rx_pn[queue],IEEE8021_CCMP_PN_LEN) <=0) return
+> true.
+>
+> Have you any idea to fix this issue?
+>
 
---=-E77bVWN0ynUjCSExFiEg
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, 2015-11-27 at 22:26 +0000, Jakub Kicinski wrote:
-[...]
-> From: Hua Shao (=E9=82=B5=E5=8D=8E) <hua.shao@mediatek.com>
->=20
-> Add firmware for mt7601u. version 34.
->=20
-> Signed-off-by: Hua Shao <hua.shao@mediatek.com>
-> ---
-> =C2=A0WHENCE=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0|=C2=A0=C2=A010 +++++++++=
-+
-> =C2=A0mt7601u.bin | Bin 0 -> 45412 bytes
-> =C2=A02 files changed, 10 insertions(+)
-> =C2=A0create mode 100755 mt7601u.bin
-[...]
-
-I've applied this; thanks.
-
-Ben.
-
---=20
-Ben Hutchings
-Theory and practice are closer in theory than in practice.
-                                - John Levine, moderator of comp.compilers
---=-E77bVWN0ynUjCSExFiEg
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQIVAwUAVmTqtee/yOyVhhEJAQo9Lg//VPzpXhdGzNQXwmkRXCGnHeJ3FKF4Q9jJ
-y4/9f5otYy2Wc+dcXWz819k/1u/D3PeSUsWHy1buafYhFZC+9AZxDJpGKoEzP0Ci
-E9U+fYwyDJqclGdE0RleUjV+hffAbFJ00ELYPYfqcvF/M1MW4QEmBOQiuVyNbsKp
-gRt7sTkVh9VF87WtoESv8KFY77637j5TD+AJOvE6rDeSzRUqGqUAeP/erb8bcs8B
-Xrgp3JEUppUEYPFSvN+/DFyKsy19/1aQIOG5eqUEGgsj8yABk6mTaTjwGp58i5Og
-AwZkCz+0kd6HoEhPmEIV2dOWA/cDaMXe/EdiCY5TdeejIl7sslH5UCfhTAypn6dK
-PW8Ut1GpfR7AbroOYs+kpuFIcDpOlxVRql6j/IrWkpABYL0BD4viAxTMjDcPs/ll
-APpX4/DGFBPLOnvt4aAqytqctm7++0WLr8upK4DtVO1chSUEDpAspMfWFCITIKUi
-Jga8RsSGNr+0NDaGF8+ClEnJ8R4zwDMbKhHcW/3ZLAFDSH2ljLphh9BNB0M3I8Ff
-lqoMV+misFlkYyRcmPTPFupGg4WpXqniF5KUqOdb80UUxQSbMo37QAgnZux89IS2
-OSwqJv/8Q8BOGJDY2cfSx8ZgCED2zPRaQBnJR//FcfvoZjr321MprKBz0wiUXdZ8
-Id0UOzB49YA=
-=1VZM
------END PGP SIGNATURE-----
-
---=-E77bVWN0ynUjCSExFiEg--
+I don't remember exactly what we had, but you may look at
+http://permalink.gmane.org/gmane.linux.kernel.wireless.general/137742
