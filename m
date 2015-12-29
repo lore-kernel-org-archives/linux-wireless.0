@@ -1,79 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from webmail.lairdtech.com ([63.123.150.69]:61516 "EHLO
-	webmail.lairdtech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751329AbbLUWG3 (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:34626 "EHLO
+	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752628AbbL2SQo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 17:06:29 -0500
-From: Dan Kephart <Dan.Kephart@lairdtech.com>
-To: Souptick Joarder <jrdr.linux@gmail.com>,
-	Brent Taylor <motobud@gmail.com>
-CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	"ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ath6kl: Use vmalloc to allocate ar->fw for api1 method
-Date: Mon, 21 Dec 2015 22:00:40 +0000
-Message-ID: <F12301F7-EE8E-4B5A-BE28-17A235DBCA7E@lairdtech.com> (sfid-20151221_230651_131339_ADF769FA)
-References: <1448948470-31111-1-git-send-email-motobud@gmail.com>
- <CAFqt6zaALx895c0BVrMpLdtfgYLz=-mmqaurtD28Nm1Ut2g1Dw@mail.gmail.com>
-In-Reply-To: <CAFqt6zaALx895c0BVrMpLdtfgYLz=-mmqaurtD28Nm1Ut2g1Dw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Tue, 29 Dec 2015 13:16:44 -0500
 MIME-Version: 1.0
+In-Reply-To: <87poxy7spb.fsf@kamboji.qca.qualcomm.com>
+References: <1448948470-31111-1-git-send-email-motobud@gmail.com>
+	<CAFqt6zaALx895c0BVrMpLdtfgYLz=-mmqaurtD28Nm1Ut2g1Dw@mail.gmail.com>
+	<CAP+RiCBK_iEOu27GzqqgG9Pn_MDP1m8JCnSqkGbPMAT7=P9V7g@mail.gmail.com>
+	<CAFqt6zZfmue6XVVno2Ho8UfEwz1Z3YxFzbcZ9ZMOn5Fe_zJLmQ@mail.gmail.com>
+	<87poxy7spb.fsf@kamboji.qca.qualcomm.com>
+Date: Tue, 29 Dec 2015 23:46:43 +0530
+Message-ID: <CAFqt6zacF-n0pRxU0=pq79rKCt1Y-08taaZxBrFdre4JMH6tbQ@mail.gmail.com> (sfid-20151229_191705_726602_12466510)
+Subject: Re: [PATCH] ath6kl: Use vmalloc to allocate ar->fw for api1 method
+From: Souptick Joarder <jrdr.linux@gmail.com>
+To: Brent Taylor <motobud@gmail.com>
+Cc: netdev@vger.kernel.org, ath6kl@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Kalle Valo <kvalo@qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQnJlbnQgYW5kIFNvdXB0aWNrLA0KDQoNCg0KDQpPbiAxMi8yMS8xNSwgMjoyMyBQTSwgImF0
-aDZrbCBvbiBiZWhhbGYgb2YgU291cHRpY2sgSm9hcmRlciIgPGF0aDZrbC1ib3VuY2VzQGxpc3Rz
-LmluZnJhZGVhZC5vcmcgb24gYmVoYWxmIG9mIGpyZHIubGludXhAZ21haWwuY29tPiB3cm90ZToN
-Cg0KPkhpIEJyZW50LA0KPg0KPk9uIFR1ZSwgRGVjIDEsIDIwMTUgYXQgMTE6MTEgQU0sIEJyZW50
-IFRheWxvciA8bW90b2J1ZEBnbWFpbC5jb20+IHdyb3RlOg0KPj4gU2luY2UgY29tbWl0IDg0Mzc3
-NTRjODMzNTFkNjIxM2MxYTQ3ZmYwMjljMTEyNmQ2MDQyYTcsIGFyLT5mdyBpcyBleHBlY3RlZCB0
-byBiZSBwb2ludGluZyB0byBtZW1vcnkgYWxsb2NhdGVkIGJ5IHZtYWxsb2MuICBJZiB0aGUgYXBp
-MSBtZXRob2QgKHZpYSBhdGg2a2xfZmV0Y2hfZndfYXBpMSkgaXMgdXNlZCB0byBhbGxvY2F0ZSBt
-ZW1vcnkgZm9yIGFyLT5mdywgdGhlbiBrbWVtZHVwIGlzIHVzZWQuICBUaGlzIHBhdGNoIGNoZWNr
-cyBpZiB0aGUgZmlybXdhcmUgYmVpbmcgbG9hZGVkIGlzIHRoZSAnZncnIGltYWdlLCB0aGVuIHVz
-ZSB2bWFsbG9jLCBvdGhlcndpc2UgdXNlIGttYWxsb2MuDQo+Pg0KPj4gU2lnbmVkLW9mZi1ieTog
-QnJlbnQgVGF5bG9yIDxtb3RvYnVkQGdtYWlsLmNvbT4NCj4+IC0tLQ0KPj4gIGRyaXZlcnMvbmV0
-L3dpcmVsZXNzL2F0aC9hdGg2a2wvaW5pdC5jIHwgNyArKysrKystDQo+PiAgMSBmaWxlIGNoYW5n
-ZWQsIDYgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQ0KPj4NCj4+IGRpZmYgLS1naXQgYS9k
-cml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoNmtsL2luaXQuYyBiL2RyaXZlcnMvbmV0L3dpcmVs
-ZXNzL2F0aC9hdGg2a2wvaW5pdC5jDQo+PiBpbmRleCA2YWUwNzM0Li40ZjJiMTI0ZCAxMDA2NDQN
-Cj4+IC0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC9hdGg2a2wvaW5pdC5jDQo+PiArKysg
-Yi9kcml2ZXJzL25ldC93aXJlbGVzcy9hdGgvYXRoNmtsL2luaXQuYw0KPj4gQEAgLTY3MywxMCAr
-NjczLDE1IEBAIHN0YXRpYyBpbnQgYXRoNmtsX2dldF9mdyhzdHJ1Y3QgYXRoNmtsICphciwgY29u
-c3QgY2hhciAqZmlsZW5hbWUsDQo+PiAgICAgICAgICAgICAgICAgcmV0dXJuIHJldDsNCj4+DQo+
-PiAgICAgICAgICpmd19sZW4gPSBmd19lbnRyeS0+c2l6ZTsNCj4+IC0gICAgICAgKmZ3ID0ga21l
-bWR1cChmd19lbnRyeS0+ZGF0YSwgZndfZW50cnktPnNpemUsIEdGUF9LRVJORUwpOw0KPj4gKyAg
-IGlmICgmYXItPmZ3ID09IGZ3KQ0KPj4gKyAgICAgICAgICAgICAgICpmdyA9IHZtYWxsb2MoZndf
-ZW50cnktPnNpemUpOw0KPj4gKyAgIGVsc2UNCj4+ICsgICAgICAgICAgICAgICAqZncgPSBrbWFs
-bG9jKGZ3X2VudHJ5LT5zaXplLCBHRlBfS0VSTkVMKTsNCj4NCj4gICAgICAgICAgV2h5IHZtYWxs
-b2MgYW5kIGttYWxsb2MgYm90aCBhcmUgcmVxdWlyZWQ/IGNhbid0IHVzZSBlaXRoZXINCj52bWFs
-bG9jIG9yIGttYWxsb2M/DQoNCk15IGd1ZXNzIGlzIHRoZSByZWFzb24gdG8gdXNlIGJvdGggdm1h
-bGxvYyBhbmQga21hbGxvYyBpcyB0aGF0IHRoZSBmaXJtd2FyZSBibG9iIGNhbiBiZSBuZWFyIDEy
-OEtCLiAgSSBrbm93IG91ciBhcjYwMDMgZmlybXdhcmVzIGFwcHJvYWNoIHRoYXQuICBTbyB2bWFs
-bG9jIG11c3QgaGF2ZSBiZWVuIGNob3NlbiB0byBhdm9pZCBhbnkgaXNzdWVzIGlmIGl0IHdhcyBn
-cmVhdGVyIHRoYW4gMTI4S0IuICBTbyBrbWFsbG9jIGlzIHVzZWQgZm9yIGFsbCB0aGUgc21hbGwg
-ZmlybXdhcmUgcGllY2VzIChib2FyZCBkYXRhLCBvdHAuYmluLCBldGMpIGJ1dCB2bWFsbG9jIGZv
-ciB0aGUgZmlybXdhcmUgaXRzZWxmLiAgDQoNCkkgcGVyc29uYWxseSBmaXhlZCB0aGlzIGlzc3Vl
-IGZvciBsb2FkaW5nIHRoZSBmaXJtd2FyZSAoYnV0IG5vdCBib2FyZCBkYXRhLCBvcHQuYmluLCBl
-dGMpIGluIHRoZSBhcGkxIGFuZCB0ZXN0bW9kZSBmdW5jdGlvbnMgYnkgaGF2ZSBpdCBjYWxsIGEg
-bmV3IGhlbHBlciBmdW5jdGlvbjoNCg0Kc3RhdGljIGludCBhdGg2a2xfZ2V0X2Z3X3ZtKHN0cnVj
-dCBhdGg2a2wgKmFyLCBjb25zdCBjaGFyICpmaWxlbmFtZSwNCgkJCSB1OCAqKmZ3LCBzaXplX3Qg
-KmZ3X2xlbikNCnsNCgljb25zdCBzdHJ1Y3QgZmlybXdhcmUgKmZ3X2VudHJ5Ow0KCWludCByZXQ7
-DQoNCglyZXQgPSByZXF1ZXN0X2Zpcm13YXJlKCZmd19lbnRyeSwgZmlsZW5hbWUsIGFyLT5kZXYp
-Ow0KCWlmIChyZXQpDQoJcmV0dXJuIHJldDsNCg0KCSpmd19sZW4gPSBmd19lbnRyeS0+c2l6ZTsN
-CgkqZncgPSB2bWFsbG9jKCpmd19sZW4pOw0KDQoJaWYgKCpmdyA9PSBOVUxMKQ0KCXJldCA9IC1F
-Tk9NRU07DQoNCgltZW1jcHkoKmZ3LCBmd19lbnRyeS0+ZGF0YSwgKmZ3X2xlbik7DQoNCglyZWxl
-YXNlX2Zpcm13YXJlKGZ3X2VudHJ5KTsNCg0KCXJldHVybiByZXQ7DQp9DQoNCg0KDQo+Pg0KPj4g
-ICAgICAgICBpZiAoKmZ3ID09IE5VTEwpDQo+PiAgICAgICAgICAgICAgICAgcmV0ID0gLUVOT01F
-TTsNCj4+ICsgICAgICAgZWxzZQ0KPj4gKyAgICAgICAgICAgICAgIG1lbWNweSgqZncsIGZ3X2Vu
-dHJ5LT5kYXRhLCBmd19lbnRyeS0+c2l6ZSk7DQo+Pg0KPj4gICAgICAgICByZWxlYXNlX2Zpcm13
-YXJlKGZ3X2VudHJ5KTsNCj4+DQo+PiAtLQ0KPj4gMi42LjMNCj4+DQo+PiAtLQ0KPj4gVG8gdW5z
-dWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4
-LXdpcmVsZXNzIiBpbg0KPj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2Vy
-Lmtlcm5lbC5vcmcNCj4+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5l
-bC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbA0KPg0KPi1Tb3VwdGljaw0KPg0KPl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fDQo+YXRoNmtsIG1haWxpbmcgbGlz
-dA0KPmF0aDZrbEBsaXN0cy5pbmZyYWRlYWQub3JnDQo+aHR0cDovL2xpc3RzLmluZnJhZGVhZC5v
-cmcvbWFpbG1hbi9saXN0aW5mby9hdGg2a2wNCg0KLSBEYW4gS2VwaGFydA0K
+Brent,
+
+On Tue, Dec 22, 2015 at 2:42 PM, Kalle Valo <kvalo@qca.qualcomm.com> wrote:
+> Souptick Joarder <jrdr.linux@gmail.com> writes:
+>
+>> Hi Brent,
+>>
+>> On Tue, Dec 22, 2015 at 3:23 AM, Brent Taylor <motobud@gmail.com> wrote:
+>>> On Mon, Dec 21, 2015 at 1:23 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
+>>>> Hi Brent,
+>>>>
+>>>> On Tue, Dec 1, 2015 at 11:11 AM, Brent Taylor <motobud@gmail.com> wrote:
+>>>>
+>>>>> --- a/drivers/net/wireless/ath/ath6kl/init.c
+>>>>> +++ b/drivers/net/wireless/ath/ath6kl/init.c
+>>>>> @@ -673,10 +673,15 @@ static int ath6kl_get_fw(struct ath6kl *ar, const char *filename,
+>>>>>                 return ret;
+>>>>>
+>>>>>         *fw_len = fw_entry->size;
+>>>>> -       *fw = kmemdup(fw_entry->data, fw_entry->size, GFP_KERNEL);
+>>>>> +   if (&ar->fw == fw)
+>>>>> +               *fw = vmalloc(fw_entry->size);
+>>>>> +   else
+>>>>> +               *fw = kmalloc(fw_entry->size, GFP_KERNEL)
+>>>>
+>>>>           Why vmalloc and kmalloc both are required? can't use either
+>>>> vmalloc or kmalloc?
+>>>
+>>> My original problem was that kmemdup (which uses kmalloc) could not
+>>> allocate enough memory
+>>
+>> If kmemdump ( which uses kmalloc) could not allocate memory then
+>> using kmalloc again can lead to same problem.
+>> I guess it will be correct to use
+>>             *fw = vmalloc(fw_entry->size);
+>> Correct me if i am wrong.
+>
+> That sounds best. But remember take into account DMA requirements, IIRC
+> you cannot DMA from vmalloc memory on all platforms.
+
+Is it possible to modify the patch as per feedback from Kalle.
+
+>
+> --
+> Kalle Valo
+
+-Souptick
