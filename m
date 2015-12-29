@@ -1,45 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:8579 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756056AbbLAJ7u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 04:59:50 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 27/41] iwlwifi: pcie: remove pointer from debug message
-Date: Tue,  1 Dec 2015 11:58:53 +0200
-Message-Id: <1448963947-24302-27-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_110304_808009_E69ACABF)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+Received: from smtp08.msg.oleane.net ([62.161.4.8]:52419 "EHLO
+	smtp08.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751756AbbL2NBp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Dec 2015 08:01:45 -0500
+Received: from acksys.fr ([195.6.104.67]) (authenticated)
+	by smtp08.msg.oleane.net (MTA) with ESMTP id tBTD1gHC007575
+	for <linux-wireless@vger.kernel.org>; Tue, 29 Dec 2015 14:01:43 +0100
+Subject: Mac80211 : Wpa rekeying issue
+Date: Tue, 29 Dec 2015 14:01:41 +0100
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
+Message-ID: <773DB8A82AB6A046AE0195C68612A31901C5B5A9@sbs2003.acksys.local> (sfid-20151229_140149_286125_6434F590)
+From: "Cedric VONCKEN" <cedric.voncken@acksys.fr>
+To: <linux-wireless@vger.kernel.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Hi, 
 
-Since this pointer is not shown anywhere else, it's useless.
-Remove it, just keeping the indexes.
+My test plateform is:
+2 equipements
+Both equipment used compat version 2015-07-21 from openwrt.
+Both equipment used security WPA2
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+The equipment #1 is an AP.
+	The Group rekey interval is set to 3601s 
+	The Pair rekey interval set to 50s (I reduced this value to show
+the issue often)
+	The Master rekey interval is set to 86400 s.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 2b5d3e1..3db82bf 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -996,8 +996,7 @@ restart:
- 		rxb = rxq->queue[i];
- 		rxq->queue[i] = NULL;
- 
--		IWL_DEBUG_RX(trans, "rxbuf: HW = %d, SW = %d (%p)\n",
--			     r, i, rxb);
-+		IWL_DEBUG_RX(trans, "rxbuf: HW = %d, SW = %d\n", r, i);
- 		iwl_pcie_rx_handle_rb(trans, rxb, emergency);
- 
- 		i = (i + 1) & RX_QUEUE_MASK;
--- 
-2.5.0
+The equipment #2 is a sta+wds
 
+I used a 5GHz channel to have a free channel (without other AP)
+I connected a computer on each equipment.
+
+To reproduce the issue:
+	I ran iperf udp@50Mbps from computer connected to the AP to the
+computer connected to the sta. After several WPA2 rekeying, iperf server
+side didn't received any frame.
+
+I investigated in the driver. All packets are dropped in sta side,
+because the function ieee80211_crypto_ccmp_decrypt return
+Rx_DROP_UNUSABLE. This function return this code because the test
+if(memcmp(pn,key->u.ccmp.rx_pn[queue],IEEE8021_CCMP_PN_LEN) <=0) return
+true.
+
+Have you any idea to fix this issue?
+
+Thanks for your help.
+
+Cedric.
