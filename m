@@ -1,50 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:36858 "EHLO
-	mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932352AbbLTNZz (ORCPT
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:36575 "EHLO
+	mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751263AbbL2EJH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2015 08:25:55 -0500
-Received: by mail-pf0-f177.google.com with SMTP id o64so74234804pfb.3
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2015 05:25:55 -0800 (PST)
-From: Fengwei Yin <fengwei.yin@linaro.org>
-To: julian.calaby@gmail.com, linux-wireless@vger.kernel.org,
-	wcn36xx@lists.infradead.org, me@bobcopeland.com,
-	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com
-Cc: fengwei.yin@linaro.org, lking@qti.qualcomm.com
-Subject: [PATCH v3 2/2] wcn36xx: split DMA mask register writing.
-Date: Sun, 20 Dec 2015 21:20:41 +0800
-Message-Id: <1450617641-29531-3-git-send-email-fengwei.yin@linaro.org> (sfid-20151220_142558_747323_38AC8546)
-In-Reply-To: <1450617641-29531-1-git-send-email-fengwei.yin@linaro.org>
-References: <1450617641-29531-1-git-send-email-fengwei.yin@linaro.org>
+	Mon, 28 Dec 2015 23:09:07 -0500
+Subject: Re: [PATCH] /drivers/net/wireless/ath/ath9k remove unnecessary ?:
+ operator
+To: Joe Perches <joe@perches.com>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>
+References: <20151228134852.GA10572@alpha.sfu-kras.ru>
+ <1451325412.3219.12.camel@perches.com> <5681818A.9060406@gmail.com>
+ <1451349084.3219.19.camel@perches.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+From: Ivan Safonov <insafonov@gmail.com>
+Message-ID: <568207D6.3070608@gmail.com> (sfid-20151229_050935_967126_53AF27CE)
+Date: Tue, 29 Dec 2015 11:11:02 +0700
+MIME-Version: 1.0
+In-Reply-To: <1451349084.3219.19.camel@perches.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Per comments from Bjorn Andersson <bjorn.andersson@sonymobile.com>,
-split DMA mask register writing as seperate patch in case we need
-bi-sect in the furture.
+On 12/29/2015 07:31 AM, Joe Perches wrote:
+> On Tue, 2015-12-29 at 01:38 +0700, Ivan Safonov wrote:
+>> On 12/29/2015 12:56 AM, Joe Perches wrote:
+>>> On Mon, 2015-12-28 at 20:48 +0700, Ivan Safonov wrote:
+>>>> ((thermometer < 0) ? 0 : (thermometer == X)) and (thermometer ==
+>>>> X) are equal for X >= 0.
+>>> X is not guaranteed to be >= 0 here
+>> X is fixed constant. In this case X is {0, 1, 2}.
+> Looks like it can be -1 to me (range: -1, 0, 1, 2)
+>
+> static int ar9003_hw_get_thermometer(struct ath_hw *ah)
+> {
+> 	struct ar9300_eeprom *eep = &ah->eeprom.ar9300_eep;
+> 	struct ar9300_base_eep_hdr *pBase = &eep->baseEepHeader;
+> 	int thermometer =  (pBase->miscConfiguration >> 1) & 0x3;
+>
+> 	return --thermometer;
+> }
 
-Signed-off-by: Fengwei Yin <fengwei.yin@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/dxe.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+X is not thermometer. The thermometer is {-1, 0, 1, 2}. X is {0, 1, 2}.
+All possible X valueswritten in the comments:
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/dxe.c b/drivers/net/wireless/ath/wcn36xx/dxe.c
-index 473381f..8643801 100644
---- a/drivers/net/wireless/ath/wcn36xx/dxe.c
-+++ b/drivers/net/wireless/ath/wcn36xx/dxe.c
-@@ -498,11 +498,11 @@ static int wcn36xx_rx_handle_packets(struct wcn36xx *wcn,
- 			wcn36xx_rx_skb(wcn, skb);
- 		} /* else keep old skb not submitted and use it for rx DMA */
- 
--		wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR, int_mask);
- 		dxe->ctrl = value;
- 		ctl = ctl->next;
- 		dxe = ctl->desc;
- 	}
-+	wcn36xx_dxe_write_register(wcn, WCN36XX_DXE_ENCH_ADDR, int_mask);
- 
- 	ch->head_blk_ctl = ctl;
- 	return 0;
--- 
-2.1.4
+ar9003_hw_get_thermometer used only in ar9003_hw_thermometer_apply:
 
+     static void ar9003_hw_thermometer_apply(struct ath_hw *ah)
+     {
+         struct ath9k_hw_capabilities *pCap = &ah->caps;
+         int thermometer = ar9003_hw_get_thermometer(ah);
+         u8 therm_on = (thermometer < 0) ? 0 : 1;
+
+         REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_RXTX4,
+                   AR_PHY_65NM_CH0_RXTX4_THERM_ON_OVR, therm_on);
+         if (pCap->chip_chainmask & BIT(1))
+             REG_RMW_FIELD(ah, AR_PHY_65NM_CH1_RXTX4,
+                       AR_PHY_65NM_CH0_RXTX4_THERM_ON_OVR, therm_on);
+         if (pCap->chip_chainmask & BIT(2))
+             REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
+                       AR_PHY_65NM_CH0_RXTX4_THERM_ON_OVR, therm_on);
+
+         therm_on = (thermometer < 0) ? 0 : (thermometer == 0); /* X = 0 */
+         REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_RXTX4,
+                   AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
+         if (pCap->chip_chainmask & BIT(1)) {
+             therm_on = (thermometer < 0) ? 0 : (thermometer == 1);    
+/* X = 1 */
+             REG_RMW_FIELD(ah, AR_PHY_65NM_CH1_RXTX4,
+                       AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
+         }
+         if (pCap->chip_chainmask & BIT(2)) {
+             therm_on = (thermometer < 0) ? 0 : (thermometer == 2);    
+/* X = 2 */
+             REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
+                       AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
+         }
+     }
+
+There is no X = -1.
