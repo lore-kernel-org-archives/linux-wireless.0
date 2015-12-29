@@ -1,36 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43102 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752183AbbLKLtP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Dec 2015 06:49:15 -0500
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail.kernel.org ([198.145.29.136]:42353 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753661AbbL2Sep (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Dec 2015 13:34:45 -0500
+Date: Tue, 29 Dec 2015 12:34:40 -0600
+From: Rob Herring <robh@kernel.org>
+To: Bjorn Andersson <bjorn@kryo.se>
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>, devicetree@vger.kernel.org,
+	fengwei.yin@linaro.org, linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, wcn36xx@lists.infradead.org
+Subject: Re: [PATCH 4/4] dt: binding: Add Qualcomm wcn36xx WiFi binding
+Message-ID: <20151229183440.GC12450@rob-hp-laptop> (sfid-20151229_193659_235539_E6B3131E)
+References: <1451266467-15377-1-git-send-email-bjorn.andersson@sonymobile.com>
+ <1451266467-15377-5-git-send-email-bjorn.andersson@sonymobile.com>
 MIME-Version: 1.0
-Subject: Re: [v2] rtlwifi: fix memory leak for USB device
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1449446851-2221-1-git-send-email-peter@lekensteyn.nl>
-To: Peter Wu <peter@lekensteyn.nl>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Message-Id: <20151211114914.D9353141D2E@smtp.codeaurora.org> (sfid-20151211_124934_002894_1B6D8808)
-Date: Fri, 11 Dec 2015 11:49:14 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1451266467-15377-5-git-send-email-bjorn.andersson@sonymobile.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-> Free skb for received frames with a wrong checksum. This can happen
-> pretty rapidly, exhausting all memory.
+On Sun, Dec 27, 2015 at 05:34:27PM -0800, Bjorn Andersson wrote:
+> Add binding representing the Qualcomm wcn3620/60/80 WiFi block.
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
+> ---
+>  .../bindings/net/wireless/qcom,wcn36xx-wifi.txt    | 76 ++++++++++++++++++++++
+>  1 file changed, 76 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt
 > 
-> This fixes a memleak (detected with kmemleak). Originally found while
-> using monitor mode, but it also appears during managed mode (once the
-> link is up).
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Peter Wu <peter@lekensteyn.nl>
-> ACKed-by: Larry Finger <Larry.Finger@lwfinger.net>
+> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt b/Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt
+> new file mode 100644
+> index 000000000000..7b314b9f30af
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt
+> @@ -0,0 +1,76 @@
+> +Qualcomm WCN36xx WiFi Binding
+> +
+> +This binding describes the Qualcomm WCN36xx WiFi hardware. The hardware block
+> +is part of the Qualcomm WCNSS core, a WiFi/BT/FM combo chip, found in a variety
+> +of Qualcomm platforms.
 
-Thanks, applied to wireless-drivers-next.git.
+Are BT/FM functions completely separate? If so, separate bindings are 
+okay. If not, then we need to describe the full chip.
 
-Kalle Valo
+Rob
