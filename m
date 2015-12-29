@@ -1,57 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:34463 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753352AbbLROm3 (ORCPT
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:33024 "EHLO
+	mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753901AbbL2TLP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2015 09:42:29 -0500
-Received: by mail-oi0-f50.google.com with SMTP id o124so60622053oia.1
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2015 06:42:28 -0800 (PST)
+	Tue, 29 Dec 2015 14:11:15 -0500
+Received: by mail-pf0-f170.google.com with SMTP id q63so95096296pfb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Dec 2015 11:11:14 -0800 (PST)
+Date: Tue, 29 Dec 2015 13:11:12 -0600
+From: Andy Gross <andy.gross@linaro.org>
+To: Bjorn Andersson <bjorn@kryo.se>
+Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Rob Herring <robh+dt@kernel.org>, devicetree@vger.kernel.org,
+	fengwei.yin@linaro.org, linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, wcn36xx@lists.infradead.org
+Subject: Re: [PATCH 4/4] dt: binding: Add Qualcomm wcn36xx WiFi binding
+Message-ID: <20151229191112.GB27812@hector.attlocal.net> (sfid-20151229_201122_185315_F6ABE7C8)
+References: <1451266467-15377-1-git-send-email-bjorn.andersson@sonymobile.com>
+ <1451266467-15377-5-git-send-email-bjorn.andersson@sonymobile.com>
 MIME-Version: 1.0
-In-Reply-To: <20151214124626.GG23327@localhost>
-References: <1449666515-23343-1-git-send-email-linus.walleij@linaro.org>
-	<20151209134410.GH8644@n2100.arm.linux.org.uk>
-	<CACRpkdZcz73vtgZsCKZCJ=G3nq-yCPiO8hws4ro5HVWd8AVRCw@mail.gmail.com>
-	<20151214124626.GG23327@localhost>
-Date: Fri, 18 Dec 2015 15:42:27 +0100
-Message-ID: <CACRpkdZ9vZmMWHemb8_XDwdhMDjMNoE7EyLUSnvVS6R5yU3i_A@mail.gmail.com> (sfid-20151218_154236_438775_578FDBFA)
-Subject: Re: [PATCH 000/182] Rid struct gpio_chip from container_of() usage
-From: Linus Walleij <linus.walleij@linaro.org>
-To: Johan Hovold <johan@kernel.org>
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"linux-gpio@vger.kernel.org" <linux-gpio@vger.kernel.org>,
-	Alexandre Courbot <acourbot@nvidia.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Michael Welling <mwelling@ieee.org>,
-	Markus Pargmann <mpa@pengutronix.de>,
-	Mark Brown <broonie@kernel.org>,
-	Amit Kucheria <amit.kucheria@linaro.org>,
-	"arm@kernel.org" <arm@kernel.org>,
-	Haavard Skinnemoen <hskinnemoen@gmail.com>,
-	Sonic Zhang <sonic.zhang@analog.com>,
-	Greg Ungerer <gerg@uclinux.org>,
-	Ralf Baechle <ralf@linux-mips.org>,
-	Linux MIPS <linux-mips@linux-mips.org>,
-	Anatolij Gustschin <agust@denx.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Linux Input <linux-input@vger.kernel.org>,
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-	Lee Jones <lee.jones@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1451266467-15377-5-git-send-email-bjorn.andersson@sonymobile.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Dec 14, 2015 at 1:46 PM, Johan Hovold <johan@kernel.org> wrote:
+On Sun, Dec 27, 2015 at 05:34:27PM -0800, Bjorn Andersson wrote:
+> Add binding representing the Qualcomm wcn3620/60/80 WiFi block.
+> 
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
+> ---
 
-> Ok, but let's take a step back. So you have all this in place and a
-> consumer calls gpiod_get_value() that returns an errno because the device
-> is gone. Note that this wasn't even possible before e20538b82f1f ("gpio:
-> Propagate errors from chip->get()") that went into *v4.3*, and I assume
-> most drivers would need to be updated to even handle that that gpio
-> call, and all future calls, are now suddenly failing.
+<snip>
 
-I actually have a revert of that in my fixes queue. So another step back
-and two forward for v4.5 (hopefully): audit all drivers to respect this.
+> +
+> +- qcom,wcnss-mmio:
+> +	Usage: required
+> +	Value type: <prop-encoed-array>
 
-Yours,
-Linus Walleij
+nit:  encoded
+
+> +	Definition: should specify base address and size of the WiFi related
+> +		    registers of WCNSS
+> +
+> +- qcom,state:
+> +	Usage: required
+> +	Value type: <prop-encoded-array>
+> +	Definition: should specify the tx-enable and tx-ring-empty state
+> +		    references
+> +
+
+<snip>
+
+Otherwise looks good.
+
+Reviewed-by: Andy Gross <andy.gross@linaro.org>
