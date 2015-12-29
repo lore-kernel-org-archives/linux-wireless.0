@@ -1,402 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:11560 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750993AbbLUFRd (ORCPT
+Received: from mail-lf0-f51.google.com ([209.85.215.51]:35239 "EHLO
+	mail-lf0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753689AbbL2U6c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 00:17:33 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 25/46] staging: wilc1000: linux_wlan_sdio.c: move all the codes to wilc_sdio.c
-Date: Mon, 21 Dec 2015 14:18:29 +0900
-Message-ID: <1450675130-17866-26-git-send-email-glen.lee@atmel.com> (sfid-20151221_063059_911257_8D4EFAF1)
-In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+	Tue, 29 Dec 2015 15:58:32 -0500
+Received: by mail-lf0-f51.google.com with SMTP id c192so41423909lfe.2
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Dec 2015 12:58:31 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1450100394-17414-5-git-send-email-arend@broadcom.com>
+References: <1450100394-17414-1-git-send-email-arend@broadcom.com> <1450100394-17414-5-git-send-email-arend@broadcom.com>
+From: Mathy Vanhoef <vanhoefm@gmail.com>
+Date: Tue, 29 Dec 2015 21:58:10 +0100
+Message-ID: <CAFXAJYwpk+-U-9pN2tnOmK05gixJZWYGi9_w+r9uktH2PqvEUQ@mail.gmail.com> (sfid-20151229_215835_395563_FA1EC5D5)
+Subject: Re: [PATCH 4/7] brcmfmac: obtain feature info using 'cap' firmware command
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-To Combine linux_wlan_sdio.c and wilc_sdio.c as one file, move all the codes
-in linux_wlan_sdio.c to wilc_sdio.c, and make functions static only.
-No Modification has not been made except static, just moved them.
-Function declaration in linux_wlan_sdio.h is needless, so just remove them.
-linux_wlan_sdio.[ch] will be deleted in the next patch.
+On Mon, Dec 14, 2015 at 2:39 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> Several features in the driver directly map to a firmware feature
+> listed in response of the 'cap' firmware command. For those features
+> this response will be examined instead of attempting individual
+> firmware commands.
+>
+> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> ---
+>  .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 51 +++++++++++++---------
+>  1 file changed, 30 insertions(+), 21 deletions(-)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+> index d9d1ca4..08b7200 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+> @@ -40,6 +40,17 @@ static const char *brcmf_feat_names[] = {
+>  };
+>  #undef BRCMF_FEAT_DEF
+>
+> +struct brcmf_feat_fwcap {
+> +       enum brcmf_feat_id feature;
+> +       const char * const fwcap_id;
+> +};
+> +
+> +static const struct brcmf_feat_fwcap brcmf_fwcap_map[] = {
+> +       { BRCMF_FEAT_MBSS, "mbss" },
+> +       { BRCMF_FEAT_MCHAN, "mchan" },
+> +       { BRCMF_FEAT_P2P, "p2p" },
+> +};
+> +
+>  #ifdef DEBUG
+>  /*
+>   * expand quirk list to array of quirk strings.
+> @@ -104,25 +115,22 @@ static void brcmf_feat_iovar_int_get(struct brcmf_if *ifp,
+>         }
+>  }
+>
+> -/**
+> - * brcmf_feat_iovar_int_set() - determine feature through iovar set.
+> - *
+> - * @ifp: interface to query.
+> - * @id: feature id.
+> - * @name: iovar name.
+> - */
+> -static void brcmf_feat_iovar_int_set(struct brcmf_if *ifp,
+> -                                    enum brcmf_feat_id id, char *name, u32 val)
+> +static void brcmf_feat_firmware_capabilities(struct brcmf_if *ifp)
+>  {
+> -       int err;
+> -
+> -       err = brcmf_fil_iovar_int_set(ifp, name, val);
+> -       if (err == 0) {
+> -               brcmf_dbg(INFO, "enabling feature: %s\n", brcmf_feat_names[id]);
+> -               ifp->drvr->feat_flags |= BIT(id);
+> -       } else {
+> -               brcmf_dbg(TRACE, "%s feature check failed: %d\n",
+> -                         brcmf_feat_names[id], err);
+> +       char caps[256];
+> +       enum brcmf_feat_id id;
+> +       int i;
+> +
+> +       brcmf_fil_iovar_data_get(ifp, "cap", caps, sizeof(caps));
+> +       brcmf_dbg(INFO, "[ %s]\n", caps);
+> +
+> +       for (i = 0; i < ARRAY_SIZE(brcmf_fwcap_map); i++) {
+> +               if (strnstr(caps, brcmf_fwcap_map[i].fwcap_id, sizeof(caps))) {
+> +                       id = brcmf_fwcap_map[i].feature;
+> +                       brcmf_dbg(INFO, "enabling feature: %s\n",
+> +                                 brcmf_feat_names[id]);
+> +                       ifp->drvr->feat_flags |= BIT(id);
+> +               }
+>         }
+>  }
+>
+> @@ -130,13 +138,14 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+>  {
+>         struct brcmf_if *ifp = brcmf_get_ifp(drvr, 0);
+>
+> -       brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_MCHAN, "mchan");
+> +       brcmf_feat_firmware_capabilities(ifp);
+> +
+>         brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_PNO, "pfn");
+>         if (drvr->bus_if->wowl_supported)
+>                 brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
+> +       /* MBSS does not work for 43362 */
+>         if (drvr->bus_if->chip != BRCM_CC_43362_CHIP_ID)
+> -               brcmf_feat_iovar_int_set(ifp, BRCMF_FEAT_MBSS, "mbss", 0);
+> -       brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_P2P, "p2p");
+> +               ifp->drvr->feat_flags &= BIT(BRCMF_FEAT_MBSS);
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan_sdio.c | 160 ----------------------------
- drivers/staging/wilc1000/linux_wlan_sdio.h |   7 --
- drivers/staging/wilc1000/wilc_sdio.c       | 164 ++++++++++++++++++++++++++++-
- 3 files changed, 163 insertions(+), 168 deletions(-)
+Missing ~ before the BIT() declaration? If the if-test fails, all bits are
+cleared except BRCMF_FEAT_MBSS. I think the if-test also needs to be updated
+to an equals `==` instead of the old inequality. So one would get:
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.c b/drivers/staging/wilc1000/linux_wlan_sdio.c
-index 4b9cb55..67d99e9 100644
---- a/drivers/staging/wilc1000/linux_wlan_sdio.c
-+++ b/drivers/staging/wilc1000/linux_wlan_sdio.c
-@@ -8,163 +8,3 @@
- #include <linux/of_gpio.h>
- 
- #include "linux_wlan_sdio.h"
--
--#define SDIO_MODALIAS "wilc1000_sdio"
--
--#define SDIO_VENDOR_ID_WILC 0x0296
--#define SDIO_DEVICE_ID_WILC 0x5347
--
--static const struct sdio_device_id wilc_sdio_ids[] = {
--	{ SDIO_DEVICE(SDIO_VENDOR_ID_WILC, SDIO_DEVICE_ID_WILC) },
--	{ },
--};
--
--
--static void wilc_sdio_interrupt(struct sdio_func *func)
--{
--	sdio_release_host(func);
--	wilc_handle_isr(sdio_get_drvdata(func));
--	sdio_claim_host(func);
--}
--
--int wilc_sdio_cmd52(struct wilc *wilc, sdio_cmd52_t *cmd)
--{
--	struct sdio_func *func = container_of(wilc->dev, struct sdio_func, dev);
--	int ret;
--	u8 data;
--
--	sdio_claim_host(func);
--
--	func->num = cmd->function;
--	if (cmd->read_write) {  /* write */
--		if (cmd->raw) {
--			sdio_writeb(func, cmd->data, cmd->address, &ret);
--			data = sdio_readb(func, cmd->address, &ret);
--			cmd->data = data;
--		} else {
--			sdio_writeb(func, cmd->data, cmd->address, &ret);
--		}
--	} else {        /* read */
--		data = sdio_readb(func, cmd->address, &ret);
--		cmd->data = data;
--	}
--
--	sdio_release_host(func);
--
--	if (ret)
--		dev_err(&func->dev, "wilc_sdio_cmd52..failed, err(%d)\n", ret);
--	return ret;
--}
--
--
--int wilc_sdio_cmd53(struct wilc *wilc, sdio_cmd53_t *cmd)
--{
--	struct sdio_func *func = container_of(wilc->dev, struct sdio_func, dev);
--	int size, ret;
--
--	sdio_claim_host(func);
--
--	func->num = cmd->function;
--	func->cur_blksize = cmd->block_size;
--	if (cmd->block_mode)
--		size = cmd->count * cmd->block_size;
--	else
--		size = cmd->count;
--
--	if (cmd->read_write) {  /* write */
--		ret = sdio_memcpy_toio(func, cmd->address,
--				       (void *)cmd->buffer, size);
--	} else {        /* read */
--		ret = sdio_memcpy_fromio(func, (void *)cmd->buffer,
--					 cmd->address,  size);
--	}
--
--	sdio_release_host(func);
--
--	if (ret)
--		dev_err(&func->dev, "wilc_sdio_cmd53..failed, err(%d)\n", ret);
--
--	return ret;
--}
--
--static int linux_sdio_probe(struct sdio_func *func,
--			    const struct sdio_device_id *id)
--{
--	struct wilc *wilc;
--	int gpio, ret;
--
--	gpio = -1;
--	if (IS_ENABLED(CONFIG_WILC1000_HW_OOB_INTR)) {
--		gpio = of_get_gpio(func->dev.of_node, 0);
--		if (gpio < 0)
--			gpio = GPIO_NUM;
--	}
--
--	dev_dbg(&func->dev, "Initializing netdev\n");
--	ret = wilc_netdev_init(&wilc, &func->dev, HIF_SDIO, gpio,
--			     &wilc_hif_sdio);
--	if (ret) {
--		dev_err(&func->dev, "Couldn't initialize netdev\n");
--		return ret;
--	}
--	sdio_set_drvdata(func, wilc);
--	wilc->dev = &func->dev;
--
--	dev_info(&func->dev, "Driver Initializing success\n");
--	return 0;
--}
--
--static void linux_sdio_remove(struct sdio_func *func)
--{
--	wilc_netdev_cleanup(sdio_get_drvdata(func));
--}
--
--static struct sdio_driver wilc1000_sdio_driver = {
--	.name		= SDIO_MODALIAS,
--	.id_table	= wilc_sdio_ids,
--	.probe		= linux_sdio_probe,
--	.remove		= linux_sdio_remove,
--};
--module_driver(wilc1000_sdio_driver,
--	      sdio_register_driver,
--	      sdio_unregister_driver);
--MODULE_LICENSE("GPL");
--
--int wilc_sdio_enable_interrupt(struct wilc *dev)
--{
--	struct sdio_func *func = container_of(dev->dev, struct sdio_func, dev);
--	int ret = 0;
--
--	sdio_claim_host(func);
--	ret = sdio_claim_irq(func, wilc_sdio_interrupt);
--	sdio_release_host(func);
--
--	if (ret < 0) {
--		dev_err(&func->dev, "can't claim sdio_irq, err(%d)\n", ret);
--		ret = -EIO;
--	}
--	return ret;
--}
--
--void wilc_sdio_disable_interrupt(struct wilc *dev)
--{
--	struct sdio_func *func = container_of(dev->dev, struct sdio_func, dev);
--	int ret;
--
--	dev_dbg(&func->dev, "wilc_sdio_disable_interrupt IN\n");
--
--	sdio_claim_host(func);
--	ret = sdio_release_irq(func);
--	if (ret < 0)
--		dev_err(&func->dev, "can't release sdio_irq, err(%d)\n", ret);
--	sdio_release_host(func);
--
--	dev_info(&func->dev, "wilc_sdio_disable_interrupt OUT\n");
--}
--
--int wilc_sdio_init(void)
--{
--	return 1;
--}
--
--MODULE_LICENSE("GPL");
-diff --git a/drivers/staging/wilc1000/linux_wlan_sdio.h b/drivers/staging/wilc1000/linux_wlan_sdio.h
-index 8d276c6..abb2312 100644
---- a/drivers/staging/wilc1000/linux_wlan_sdio.h
-+++ b/drivers/staging/wilc1000/linux_wlan_sdio.h
-@@ -1,8 +1 @@
- #include <linux/mmc/sdio_func.h>
--
--int wilc_sdio_init(void);
--int wilc_sdio_cmd52(struct wilc *wilc, sdio_cmd52_t *cmd);
--int wilc_sdio_cmd53(struct wilc *wilc, sdio_cmd53_t *cmd);
--
--int wilc_sdio_enable_interrupt(struct wilc *);
--void wilc_sdio_disable_interrupt(struct wilc *);
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index fa1adcf..e961b50 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -10,8 +10,23 @@
- #include <linux/string.h>
- #include "wilc_wlan_if.h"
- #include "wilc_wlan.h"
--#include "linux_wlan_sdio.h"
- #include "wilc_wfi_netdevice.h"
-+#include <linux/mmc/sdio_func.h>
-+#include <linux/mmc/card.h>
-+#include <linux/mmc/sdio_ids.h>
-+#include <linux/mmc/sdio.h>
-+#include <linux/mmc/host.h>
-+#include <linux/of_gpio.h>
-+
-+#define SDIO_MODALIAS "wilc1000_sdio"
-+
-+#define SDIO_VENDOR_ID_WILC 0x0296
-+#define SDIO_DEVICE_ID_WILC 0x5347
-+
-+static const struct sdio_device_id wilc_sdio_ids[] = {
-+	{ SDIO_DEVICE(SDIO_VENDOR_ID_WILC, SDIO_DEVICE_ID_WILC) },
-+	{ },
-+};
- 
- #define WILC_SDIO_BLOCK_SIZE 512
- 
-@@ -28,6 +43,153 @@ static wilc_sdio_t g_sdio;
- static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data);
- static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data);
- 
-+static void wilc_sdio_interrupt(struct sdio_func *func)
-+{
-+	sdio_release_host(func);
-+	wilc_handle_isr(sdio_get_drvdata(func));
-+	sdio_claim_host(func);
-+}
-+
-+static int wilc_sdio_cmd52(struct wilc *wilc, sdio_cmd52_t *cmd)
-+{
-+	struct sdio_func *func = container_of(wilc->dev, struct sdio_func, dev);
-+	int ret;
-+	u8 data;
-+
-+	sdio_claim_host(func);
-+
-+	func->num = cmd->function;
-+	if (cmd->read_write) {  /* write */
-+		if (cmd->raw) {
-+			sdio_writeb(func, cmd->data, cmd->address, &ret);
-+			data = sdio_readb(func, cmd->address, &ret);
-+			cmd->data = data;
-+		} else {
-+			sdio_writeb(func, cmd->data, cmd->address, &ret);
-+		}
-+	} else {        /* read */
-+		data = sdio_readb(func, cmd->address, &ret);
-+		cmd->data = data;
-+	}
-+
-+	sdio_release_host(func);
-+
-+	if (ret)
-+		dev_err(&func->dev, "wilc_sdio_cmd52..failed, err(%d)\n", ret);
-+	return ret;
-+}
-+
-+
-+static int wilc_sdio_cmd53(struct wilc *wilc, sdio_cmd53_t *cmd)
-+{
-+	struct sdio_func *func = container_of(wilc->dev, struct sdio_func, dev);
-+	int size, ret;
-+
-+	sdio_claim_host(func);
-+
-+	func->num = cmd->function;
-+	func->cur_blksize = cmd->block_size;
-+	if (cmd->block_mode)
-+		size = cmd->count * cmd->block_size;
-+	else
-+		size = cmd->count;
-+
-+	if (cmd->read_write) {  /* write */
-+		ret = sdio_memcpy_toio(func, cmd->address,
-+				       (void *)cmd->buffer, size);
-+	} else {        /* read */
-+		ret = sdio_memcpy_fromio(func, (void *)cmd->buffer,
-+					 cmd->address,  size);
-+	}
-+
-+	sdio_release_host(func);
-+
-+	if (ret)
-+		dev_err(&func->dev, "wilc_sdio_cmd53..failed, err(%d)\n", ret);
-+
-+	return ret;
-+}
-+
-+static int linux_sdio_probe(struct sdio_func *func,
-+			    const struct sdio_device_id *id)
-+{
-+	struct wilc *wilc;
-+	int gpio, ret;
-+
-+	gpio = -1;
-+	if (IS_ENABLED(CONFIG_WILC1000_HW_OOB_INTR)) {
-+		gpio = of_get_gpio(func->dev.of_node, 0);
-+		if (gpio < 0)
-+			gpio = GPIO_NUM;
-+	}
-+
-+	dev_dbg(&func->dev, "Initializing netdev\n");
-+	ret = wilc_netdev_init(&wilc, &func->dev, HIF_SDIO, gpio,
-+			     &wilc_hif_sdio);
-+	if (ret) {
-+		dev_err(&func->dev, "Couldn't initialize netdev\n");
-+		return ret;
-+	}
-+	sdio_set_drvdata(func, wilc);
-+	wilc->dev = &func->dev;
-+
-+	dev_info(&func->dev, "Driver Initializing success\n");
-+	return 0;
-+}
-+
-+static void linux_sdio_remove(struct sdio_func *func)
-+{
-+	wilc_netdev_cleanup(sdio_get_drvdata(func));
-+}
-+
-+static struct sdio_driver wilc1000_sdio_driver = {
-+	.name		= SDIO_MODALIAS,
-+	.id_table	= wilc_sdio_ids,
-+	.probe		= linux_sdio_probe,
-+	.remove		= linux_sdio_remove,
-+};
-+module_driver(wilc1000_sdio_driver,
-+	      sdio_register_driver,
-+	      sdio_unregister_driver);
-+MODULE_LICENSE("GPL");
-+
-+static int wilc_sdio_enable_interrupt(struct wilc *dev)
-+{
-+	struct sdio_func *func = container_of(dev->dev, struct sdio_func, dev);
-+	int ret = 0;
-+
-+	sdio_claim_host(func);
-+	ret = sdio_claim_irq(func, wilc_sdio_interrupt);
-+	sdio_release_host(func);
-+
-+	if (ret < 0) {
-+		dev_err(&func->dev, "can't claim sdio_irq, err(%d)\n", ret);
-+		ret = -EIO;
-+	}
-+	return ret;
-+}
-+
-+static void wilc_sdio_disable_interrupt(struct wilc *dev)
-+{
-+	struct sdio_func *func = container_of(dev->dev, struct sdio_func, dev);
-+	int ret;
-+
-+	dev_dbg(&func->dev, "wilc_sdio_disable_interrupt IN\n");
-+
-+	sdio_claim_host(func);
-+	ret = sdio_release_irq(func);
-+	if (ret < 0)
-+		dev_err(&func->dev, "can't release sdio_irq, err(%d)\n", ret);
-+	sdio_release_host(func);
-+
-+	dev_info(&func->dev, "wilc_sdio_disable_interrupt OUT\n");
-+}
-+
-+static int wilc_sdio_init(void)
-+{
-+	return 1;
-+}
-+
- /********************************************
-  *
-  *      Function 0
--- 
-1.9.1
+/* clear MBSS feature for the 43362 (does not work) */
+if (drvr->bus_if->chip == BRCM_CC_43362_CHIP_ID)
+    ifp->drvr->feat_flags &= ~BIT(BRCMF_FEAT_MBSS);
 
+Also, happy holidays!
+Mathy
+
+>         brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_RSDB, "rsdb_mode");
+>         brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_TDLS, "tdls_enable");
+>
+> --
+> 1.9.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
