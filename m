@@ -1,425 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:32910 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751794AbbLRL5u (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:35347 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754540AbbL3MQX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Dec 2015 06:57:50 -0500
-Received: by mail-wm0-f49.google.com with SMTP id p187so61855577wmp.0
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Dec 2015 03:57:49 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, nbd@openwrt.org,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [RFC/RFT v2] mac80211: Add NEED_ALIGNED4_SKBS hw flag
-Date: Fri, 18 Dec 2015 12:57:30 +0100
-Message-Id: <1450439850-1587-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20151218_125755_353546_9E01933F)
+	Wed, 30 Dec 2015 07:16:23 -0500
+Received: by mail-pa0-f48.google.com with SMTP id do7so4199257pab.2
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 04:16:22 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 11/20] staging: wilc1000: rename bIsEnabled in wilc_setup_multicast_filter
+Date: Wed, 30 Dec 2015 21:15:35 +0900
+Message-Id: <1451477744-11975-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20151230_131632_487850_4C2063A8)
+In-Reply-To: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-HW/driver should set NEED_ALIGNED4_SKBS flag in case require
-aligned skbs to four-byte boundaries.
+This patch renames bIsEnabled to enabled to avoid camelcase.
 
-Before we have to do memmove() in the driver before
-pass this to HW and memmove() back in tx completion.
-This patch allow to save CPU and skip such memmoves.
-For each skb we call memmove(ieee80211_hdrsize()) twice.
-
-Currently this was tested with ath9k, both hw/sw crypt for
-tkip/ccmp.
-For sure more tests required (eg. fast path isn't used for
-ath9k STA, wep sw crypt).
-
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- include/net/mac80211.h     |  4 ++++
- net/mac80211/debugfs.c     |  1 +
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/sta_info.h    |  4 ++--
- net/mac80211/tkip.c        | 15 ++++++++++++---
- net/mac80211/tx.c          | 38 +++++++++++++++++++++++++++++++++-----
- net/mac80211/util.c        |  7 ++++++-
- net/mac80211/wep.c         | 11 ++++++-----
- net/mac80211/wep.h         |  1 +
- net/mac80211/wpa.c         | 14 ++++++--------
- 10 files changed, 72 insertions(+), 24 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 7c30faf..0ea9b51 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1910,6 +1910,9 @@ struct ieee80211_txq {
-  *	by just its MAC address; this prevents, for example, the same station
-  *	from connecting to two virtual AP interfaces at the same time.
-  *
-+ * @IEEE80211_HW_NEEDS_ALIGNED4_SKBS: Driver need aligned skbs to four-byte.
-+ *	Padding will be added after ieee80211_hdr.
-+ *
-  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
-  */
- enum ieee80211_hw_flags {
-@@ -1946,6 +1949,7 @@ enum ieee80211_hw_flags {
- 	IEEE80211_HW_SUPPORTS_AMSDU_IN_AMPDU,
- 	IEEE80211_HW_BEACON_TX_STATUS,
- 	IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR,
-+	IEEE80211_HW_NEEDS_ALIGNED4_SKBS,
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 8e8e70e..a32e930 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4423,7 +4423,7 @@ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout)
+ 	return result;
+ }
  
- 	/* keep last, obviously */
- 	NUM_IEEE80211_HW_FLAGS
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index abbdff0..fd45830 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -126,6 +126,7 @@ static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS + 1] = {
- 	FLAG(SUPPORTS_AMSDU_IN_AMPDU),
- 	FLAG(BEACON_TX_STATUS),
- 	FLAG(NEEDS_UNIQUE_STA_ADDR),
-+	FLAG(NEEDS_ALIGNED4_SKBS),
- 
- 	/* keep last for the build bug below */
- 	(void *)0x1
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index c30b684..c5e1b46 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -172,6 +172,7 @@ struct ieee80211_tx_data {
- 	struct ieee80211_tx_rate rate;
- 
- 	unsigned int flags;
-+	unsigned int hdrlen;
- };
- 
- 
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index d605162..3e1cd70 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -268,8 +268,8 @@ struct ieee80211_fast_tx {
- 	u8 hdr_len;
- 	u8 sa_offs, da_offs, pn_offs;
- 	u8 band;
--	u8 hdr[30 + 2 + IEEE80211_FAST_XMIT_MAX_IV +
--	       sizeof(rfc1042_header)];
-+	u8 hdr[round_up(30 + 2 + IEEE80211_FAST_XMIT_MAX_IV +
-+			sizeof(rfc1042_header), 4)];
- 
- 	struct rcu_head rcu_head;
- };
-diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
-index 0ae2077..26b2663 100644
---- a/net/mac80211/tkip.c
-+++ b/net/mac80211/tkip.c
-@@ -204,9 +204,18 @@ void ieee80211_get_tkip_p2k(struct ieee80211_key_conf *keyconf,
- 	const u8 *tk = &key->conf.key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
- 	struct tkip_ctx *ctx = &key->u.tkip.tx;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
--	const u8 *data = (u8 *)hdr + ieee80211_hdrlen(hdr->frame_control);
--	u32 iv32 = get_unaligned_le32(&data[4]);
--	u16 iv16 = data[2] | (data[0] << 8);
-+	unsigned int hdrlen;
-+	const u8 *data;
-+	u32 iv32;
-+	u16 iv16;
-+
-+	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	if (ieee80211_hw_check(&key->local->hw, NEEDS_ALIGNED4_SKBS))
-+		hdrlen += hdrlen & 3;
-+
-+	data = (u8 *)hdr + hdrlen;
-+	iv32 = get_unaligned_le32(&data[4]);
-+	iv16 = data[2] | (data[0] << 8);
- 
- 	spin_lock(&key->u.tkip.txlock);
- 	ieee80211_compute_tkip_p1k(key, iv32);
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 3311ce0..a512c4b 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -205,6 +205,20 @@ static __le16 ieee80211_duration(struct ieee80211_tx_data *tx,
- 
- /* tx handlers */
- static ieee80211_tx_result debug_noinline
-+ieee80211_tx_h_hdrlen_add(struct ieee80211_tx_data *tx)
-+{
-+	struct ieee80211_hw *hw = &tx->local->hw;
-+	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb->data;
-+
-+	tx->hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+
-+	if (ieee80211_hw_check(hw, NEEDS_ALIGNED4_SKBS))
-+		tx->hdrlen += tx->hdrlen & 3;
-+
-+	return TX_CONTINUE;
-+}
-+
-+static ieee80211_tx_result debug_noinline
- ieee80211_tx_h_dynamic_ps(struct ieee80211_tx_data *tx)
+-int wilc_setup_multicast_filter(struct wilc_vif *vif, bool bIsEnabled,
++int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
+ 				u32 u32count)
  {
- 	struct ieee80211_local *local = tx->local;
-@@ -915,7 +929,7 @@ ieee80211_tx_h_fragment(struct ieee80211_tx_data *tx)
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
- 	int frag_threshold = tx->local->hw.wiphy->frag_threshold;
--	int hdrlen;
-+	int hdrlen = tx->hdrlen;
- 	int fragnum;
+ 	int result = 0;
+@@ -4443,7 +4443,7 @@ int wilc_setup_multicast_filter(struct wilc_vif *vif, bool bIsEnabled,
+ 	msg.id = HOST_IF_MSG_SET_MULTICAST_FILTER;
+ 	msg.vif = vif;
  
- 	/* no matter what happens, tx->skb moves to tx->skbs */
-@@ -936,8 +950,6 @@ ieee80211_tx_h_fragment(struct ieee80211_tx_data *tx)
- 	if (WARN_ON(info->flags & IEEE80211_TX_CTL_AMPDU))
- 		return TX_DROP;
+-	pstrMulticastFilterParam->enabled = bIsEnabled;
++	pstrMulticastFilterParam->enabled = enabled;
+ 	pstrMulticastFilterParam->cnt = u32count;
  
--	hdrlen = ieee80211_hdrlen(hdr->frame_control);
--
- 	/* internal error, why isn't DONTFRAG set? */
- 	if (WARN_ON(skb->len + FCS_LEN <= frag_threshold))
- 		return TX_DROP;
-@@ -1471,6 +1483,7 @@ static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
- 			goto txh_done;	\
- 	} while (0)
- 
-+	CALL_TXH(ieee80211_tx_h_hdrlen_add);
- 	CALL_TXH(ieee80211_tx_h_dynamic_ps);
- 	CALL_TXH(ieee80211_tx_h_check_assoc);
- 	CALL_TXH(ieee80211_tx_h_ps_buf);
-@@ -1796,6 +1809,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 
- 	hdr = (struct ieee80211_hdr *)(skb->data + len_rthdr);
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS))
-+		hdrlen += hdrlen & 3;
- 
- 	if (skb->len < len_rthdr + hdrlen)
- 		goto fail;
-@@ -2020,6 +2035,7 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_chanctx_conf *chanctx_conf;
- 	struct ieee80211_sub_if_data *ap_sdata;
- 	enum ieee80211_band band;
-+	int padsize = 0;
- 	int ret;
- 
- 	if (IS_ERR(sta))
-@@ -2237,6 +2253,10 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 		hdrlen += 2;
- 	}
- 
-+	/* Check if HW require skb to be aligned */
-+	if (ieee80211_hw_check(&sdata->local->hw, NEEDS_ALIGNED4_SKBS))
-+		padsize = hdrlen & 3;
-+
- 	/*
- 	 * Drop unicast frames to unauthorised stations unless they are
- 	 * EAPOL frames from the local station.
-@@ -2323,6 +2343,7 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 	h_pos -= skip_header_bytes;
- 
- 	head_need = hdrlen + encaps_len + meshhdrlen - skb_headroom(skb);
-+	head_need += padsize;
- 
- 	/*
- 	 * So we need to modify the skb header and hence need a copy of
-@@ -2361,6 +2382,9 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 	}
- #endif
- 
-+	if (padsize)
-+		skb_push(skb, padsize);
-+
- 	if (ieee80211_is_data_qos(fc)) {
- 		__le16 *qos_control;
- 
-@@ -2374,8 +2398,8 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
- 	} else
- 		memcpy(skb_push(skb, hdrlen), &hdr, hdrlen);
- 
--	nh_pos += hdrlen;
--	h_pos += hdrlen;
-+	nh_pos += hdrlen + padsize;
-+	h_pos += hdrlen + padsize;
- 
- 	/* Update skb pointers to various headers since this modified frame
- 	 * is going to go through Linux networking code that may potentially
-@@ -2544,6 +2568,10 @@ void ieee80211_check_fast_xmit(struct sta_info *sta)
- 		fc |= cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
- 	}
- 
-+	/* Check if aligned skb required */
-+	if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS))
-+		build.hdr_len += build.hdr_len & 3;
-+
- 	/* We store the key here so there's no point in using rcu_dereference()
- 	 * but that's fine because the code that changes the pointers will call
- 	 * this function after doing so. For a single CPU that would be enough,
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 08af2b3..4c2c0e2 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -1225,6 +1225,7 @@ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_local *local = sdata->local;
- 	struct sk_buff *skb;
- 	struct ieee80211_mgmt *mgmt;
-+	unsigned int hdrlen;
- 	int err;
- 
- 	/* 24 + 6 = header + auth_algo + auth_transaction + status_code */
-@@ -1249,8 +1250,12 @@ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
- 		memcpy(skb_put(skb, extra_len), extra, extra_len);
- 
- 	if (auth_alg == WLAN_AUTH_SHARED_KEY && transaction == 3) {
-+		hdrlen = ieee80211_hdrlen(mgmt->frame_control);
-+		if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS))
-+			hdrlen += hdrlen & 3;
- 		mgmt->frame_control |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
--		err = ieee80211_wep_encrypt(local, skb, key, key_len, key_idx);
-+		err = ieee80211_wep_encrypt(local, skb, hdrlen, key,
-+					    key_len, key_idx);
- 		WARN_ON(err);
- 	}
- 
-diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
-index efa3f48..d14bdb0 100644
---- a/net/mac80211/wep.c
-+++ b/net/mac80211/wep.c
-@@ -89,11 +89,11 @@ static void ieee80211_wep_get_iv(struct ieee80211_local *local,
- 
- static u8 *ieee80211_wep_add_iv(struct ieee80211_local *local,
- 				struct sk_buff *skb,
-+				unsigned int hdrlen,
- 				int keylen, int keyidx)
- {
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--	unsigned int hdrlen;
- 	u8 *newhdr;
- 
- 	hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
-@@ -101,7 +101,6 @@ static u8 *ieee80211_wep_add_iv(struct ieee80211_local *local,
- 	if (WARN_ON(skb_headroom(skb) < IEEE80211_WEP_IV_LEN))
- 		return NULL;
- 
--	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 	newhdr = skb_push(skb, IEEE80211_WEP_IV_LEN);
- 	memmove(newhdr, newhdr + IEEE80211_WEP_IV_LEN, hdrlen);
- 
-@@ -160,6 +159,7 @@ int ieee80211_wep_encrypt_data(struct crypto_cipher *tfm, u8 *rc4key,
-  */
- int ieee80211_wep_encrypt(struct ieee80211_local *local,
- 			  struct sk_buff *skb,
-+			  unsigned int hdrlen,
- 			  const u8 *key, int keylen, int keyidx)
- {
- 	u8 *iv;
-@@ -169,7 +169,7 @@ int ieee80211_wep_encrypt(struct ieee80211_local *local,
- 	if (WARN_ON(skb_tailroom(skb) < IEEE80211_WEP_ICV_LEN))
- 		return -1;
- 
--	iv = ieee80211_wep_add_iv(local, skb, keylen, keyidx);
-+	iv = ieee80211_wep_add_iv(local, skb, hdrlen, keylen, keyidx);
- 	if (!iv)
- 		return -1;
- 
-@@ -306,13 +306,14 @@ static int wep_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 	struct ieee80211_key_conf *hw_key = info->control.hw_key;
- 
- 	if (!hw_key) {
--		if (ieee80211_wep_encrypt(tx->local, skb, tx->key->conf.key,
-+		if (ieee80211_wep_encrypt(tx->local, skb, tx->hdrlen,
-+					  tx->key->conf.key,
- 					  tx->key->conf.keylen,
- 					  tx->key->conf.keyidx))
- 			return -1;
- 	} else if ((hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) ||
- 		   (hw_key->flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE)) {
--		if (!ieee80211_wep_add_iv(tx->local, skb,
-+		if (!ieee80211_wep_add_iv(tx->local, skb, tx->hdrlen,
- 					  tx->key->conf.keylen,
- 					  tx->key->conf.keyidx))
- 			return -1;
-diff --git a/net/mac80211/wep.h b/net/mac80211/wep.h
-index 9615749..ad0a52b 100644
---- a/net/mac80211/wep.h
-+++ b/net/mac80211/wep.h
-@@ -22,6 +22,7 @@ int ieee80211_wep_encrypt_data(struct crypto_cipher *tfm, u8 *rc4key,
- 				size_t klen, u8 *data, size_t data_len);
- int ieee80211_wep_encrypt(struct ieee80211_local *local,
- 			  struct sk_buff *skb,
-+			  unsigned int hdrlen,
- 			  const u8 *key, int keylen, int keyidx);
- int ieee80211_wep_decrypt_data(struct crypto_cipher *tfm, u8 *rc4key,
- 			       size_t klen, u8 *data, size_t data_len);
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index d824c38..b94e6c4 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -42,7 +42,7 @@ ieee80211_tx_h_michael_mic_add(struct ieee80211_tx_data *tx)
- 	    skb->len < 24 || !ieee80211_is_data_present(hdr->frame_control))
- 		return TX_CONTINUE;
- 
--	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	hdrlen = tx->hdrlen;
- 	if (skb->len < hdrlen)
- 		return TX_DROP;
- 
-@@ -186,7 +186,6 @@ mic_fail_no_key:
- 
- static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- {
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
- 	struct ieee80211_key *key = tx->key;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	unsigned int hdrlen;
-@@ -200,7 +199,7 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 		return 0;
- 	}
- 
--	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	hdrlen = tx->hdrlen;
- 	len = skb->len - hdrlen;
- 
- 	if (info->control.hw_key)
-@@ -424,7 +423,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
- 		return 0;
- 	}
- 
--	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	hdrlen = tx->hdrlen;
- 	len = skb->len - hdrlen;
- 
- 	if (info->control.hw_key)
-@@ -463,6 +462,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
- 		return 0;
- 
- 	pos += IEEE80211_CCMP_HDR_LEN;
-+
- 	ccmp_special_blocks(skb, pn, b_0, aad);
- 	ieee80211_aes_ccm_encrypt(key->u.ccmp.tfm, b_0, aad, pos, len,
- 				  skb_put(skb, mic_len), mic_len);
-@@ -651,7 +651,7 @@ static int gcmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
- 		return 0;
- 	}
- 
--	hdrlen = ieee80211_hdrlen(hdr->frame_control);
-+	hdrlen = tx->hdrlen;
- 	len = skb->len - hdrlen;
- 
- 	if (info->control.hw_key)
-@@ -787,7 +787,6 @@ static ieee80211_tx_result
- ieee80211_crypto_cs_encrypt(struct ieee80211_tx_data *tx,
- 			    struct sk_buff *skb)
- {
--	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
- 	struct ieee80211_key *key = tx->key;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	int hdrlen;
-@@ -803,8 +802,7 @@ ieee80211_crypto_cs_encrypt(struct ieee80211_tx_data *tx,
- 		     pskb_expand_head(skb, iv_len, 0, GFP_ATOMIC)))
- 		return TX_DROP;
- 
--	hdrlen = ieee80211_hdrlen(hdr->frame_control);
--
-+	hdrlen = tx->hdrlen;
- 	pos = skb_push(skb, iv_len);
- 	memmove(pos, pos + iv_len, hdrlen);
- 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 52032be..9abdd3f 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -352,7 +352,7 @@ int wilc_del_station(struct wilc_vif *vif, const u8 *mac_addr);
+ s32 wilc_edit_station(struct wilc_vif *vif,
+ 		      struct add_sta_param *pstrStaParams);
+ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout);
+-int wilc_setup_multicast_filter(struct wilc_vif *vif, bool bIsEnabled,
++int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
+ 				u32 u32count);
+ s32 wilc_setup_ipaddress(struct wilc_vif *vif, u8 *u16ipadd, u8 idx);
+ s32 wilc_del_all_rx_ba_session(struct wilc_vif *vif, char *pBSSID, char TID);
 -- 
-1.9.1
+2.6.4
 
