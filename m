@@ -1,68 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:20161 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754555AbbLIKW5 (ORCPT
+Received: from mail-ig0-f178.google.com ([209.85.213.178]:35025 "EHLO
+	mail-ig0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750916AbbL3OKS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Dec 2015 05:22:57 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 07/13] brcmfmac: no interface combination check for single interface
-Date: Wed, 9 Dec 2015 11:22:46 +0100
-Message-ID: <1449656572-16158-8-git-send-email-arend@broadcom.com> (sfid-20151209_112334_256750_F6905C3B)
-In-Reply-To: <1449656572-16158-1-git-send-email-arend@broadcom.com>
-References: <1449656572-16158-1-git-send-email-arend@broadcom.com>
+	Wed, 30 Dec 2015 09:10:18 -0500
+Received: by mail-ig0-f178.google.com with SMTP id to4so179773253igc.0
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 06:10:18 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1451477744-11975-17-git-send-email-chaehyun.lim@gmail.com>
+References: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
+	<1451477744-11975-17-git-send-email-chaehyun.lim@gmail.com>
+Date: Wed, 30 Dec 2015 19:40:18 +0530
+Message-ID: <CAFqt6zbZoZAoNrD0LwAxKwtxQT3Yf4=PsyW+mYaYuEf+Bd2j-Q@mail.gmail.com> (sfid-20151230_151022_284711_28C086F4)
+Subject: Re: [PATCH 17/20] staging: wilc1000: fix return type of host_int_get_ipaddress
+From: Souptick Joarder <jrdr.linux@gmail.com>
+To: Chaehyun Lim <chaehyun.lim@gmail.com>
+Cc: gregkh@linuxfoundation.org, johnny.kim@atmel.com,
+	austin.shin@atmel.com, chris.park@atmel.com, tony.cho@atmel.com,
+	glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	devel@driverdev.osuosl.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The interface combinations are intended for use-case in which the driver
-handles multiple interface concurrently. This means that the combinations
-do not need to be checked when there is only a single interface active.
+Hi Lim,
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
-Change-Id: Id8aa05f91f8643ae34848170d1e3f2180e90bd26
-Reviewed-on: http://hnd-swgit.sj.broadcom.com:8080/5521
-Reviewed-by: brcm80211 ci <brcm80211-ci@broadcom.com>
----
- .../net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c    | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+On Wed, Dec 30, 2015 at 5:45 PM, Chaehyun Lim <chaehyun.lim@gmail.com> wrote:
+> This patch changes return type of host_int_get_ipaddress from s32 to
+> int. The result variable gets return value from wilc_mq_send that has
+> data type of int. It should be changed return type of this function as
+> well as data type of result variable.
+>
+> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> ---
+>  drivers/staging/wilc1000/host_interface.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 90fdbdd..a203647 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -362,7 +362,7 @@ static s32 handle_set_operation_mode(struct wilc_vif *vif,
+>         return result;
+>  }
+>
+> -static s32 host_int_get_ipaddress(struct wilc_vif *vif,
+> +static int host_int_get_ipaddress(struct wilc_vif *vif,
+>                                   struct host_if_drv *hif_drv,
+>                                   u8 *u16ipadd, u8 idx);
+>
+    s32 and int both are same. isn't it ?
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 8557566..3ac5cf7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -396,15 +396,23 @@ static int brcmf_vif_change_validate(struct brcmf_cfg80211_info *cfg,
- {
- 	int iftype_num[NUM_NL80211_IFTYPES];
- 	struct brcmf_cfg80211_vif *pos;
-+	bool check_combos = false;
-+	int ret = 0;
- 
- 	memset(&iftype_num[0], 0, sizeof(iftype_num));
- 	list_for_each_entry(pos, &cfg->vif_list, list)
--		if (pos == vif)
-+		if (pos == vif) {
- 			iftype_num[new_type]++;
--		else
-+		} else {
-+			/* concurrent interfaces so need check combinations */
-+			check_combos = true;
- 			iftype_num[pos->wdev.iftype]++;
-+		}
- 
--	return cfg80211_check_combinations(cfg->wiphy, 1, 0, iftype_num);
-+	if (check_combos)
-+		ret = cfg80211_check_combinations(cfg->wiphy, 1, 0, iftype_num);
-+
-+	return ret;
- }
- 
- static int brcmf_vif_add_validate(struct brcmf_cfg80211_info *cfg,
--- 
-1.9.1
+> @@ -4664,11 +4664,11 @@ int wilc_setup_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
+>         return result;
+>  }
+>
+> -static s32 host_int_get_ipaddress(struct wilc_vif *vif,
+> +static int host_int_get_ipaddress(struct wilc_vif *vif,
+>                                   struct host_if_drv *hif_drv,
+>                                   u8 *u16ipadd, u8 idx)
+>  {
+> -       s32 result = 0;
+> +       int result = 0;
+>         struct host_if_msg msg;
+>
+>         if (!hif_drv) {
+> --
+> 2.6.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
+-Souptick
