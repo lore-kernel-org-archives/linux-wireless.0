@@ -1,101 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:11164 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750986AbbLUFPX (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:36509 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754525AbbL3MQU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 00:15:23 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 03/46] staging: wilc1000: rename index to tcp_pending_ack_idx
-Date: Mon, 21 Dec 2015 14:18:07 +0900
-Message-ID: <1450675130-17866-4-git-send-email-glen.lee@atmel.com> (sfid-20151221_061526_592414_D571ABF9)
-In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 30 Dec 2015 07:16:20 -0500
+Received: by mail-pa0-f52.google.com with SMTP id yy13so45547724pab.3
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 04:16:19 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 10/20] staging: wilc1000: fix return type of wilc_setup_multicast_filter
+Date: Wed, 30 Dec 2015 21:15:34 +0900
+Message-Id: <1451477744-11975-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20151230_132248_709346_08BDB1C2)
+In-Reply-To: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames "index" of struct txq_entry_t to tcp_pending_ack_idx since
-this name could be confused index of txq_entry_t. It is index of tcp pending
-ack.
+This patch changes return type of wilc_setup_multicast_filter from s32
+to int. The result variable gets return value from wilc_mq_send that has
+return type of int. It should be changed return type of this function as
+well as data type of result variable.
 
-It fixes 8e55639d066f4ef402ba88fca08ed1be70e1c4da
-
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 12 ++++++------
- drivers/staging/wilc1000/wilc_wlan.h |  2 +-
- 2 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 10def3f..27a44ee 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -249,7 +249,7 @@ static inline int add_tcp_pending_ack(u32 ack, u32 session_index,
- 		pending_acks_info[pending_base + pending_acks].ack_num = ack;
- 		pending_acks_info[pending_base + pending_acks].txqe = txqe;
- 		pending_acks_info[pending_base + pending_acks].session_index = session_index;
--		txqe->index = pending_base + pending_acks;
-+		txqe->tcp_pending_ack_idx = pending_base + pending_acks;
- 		pending_acks++;
- 	}
- 	return 0;
-@@ -421,7 +421,7 @@ static int wilc_wlan_txq_add_cfg_pkt(struct wilc *wilc, u8 *buffer, u32 buffer_s
- 	tqe->tx_complete_func = NULL;
- 	tqe->priv = NULL;
- #ifdef TCP_ACK_FILTER
--	tqe->index = NOT_TCP_ACK;
-+	tqe->tcp_pending_ack_idx = NOT_TCP_ACK;
- #endif
- 	PRINT_D(TX_DBG, "Adding the config packet at the Queue tail\n");
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 83ac21a..8e8e70e 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4423,10 +4423,10 @@ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout)
+ 	return result;
+ }
  
-@@ -451,7 +451,7 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 
- 	PRINT_D(TX_DBG, "Adding mgmt packet at the Queue tail\n");
- #ifdef TCP_ACK_FILTER
--	tqe->index = NOT_TCP_ACK;
-+	tqe->tcp_pending_ack_idx = NOT_TCP_ACK;
- 	if (is_tcp_ack_filter_enabled())
- 		tcp_process(dev, tqe);
- #endif
-@@ -478,7 +478,7 @@ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 	tqe->tx_complete_func = func;
- 	tqe->priv = priv;
- #ifdef TCP_ACK_FILTER
--	tqe->index = NOT_TCP_ACK;
-+	tqe->tcp_pending_ack_idx = NOT_TCP_ACK;
- #endif
- 	PRINT_D(TX_DBG, "Adding Network packet at the Queue tail\n");
- 	wilc_wlan_txq_add_to_tail(dev, tqe);
-@@ -923,8 +923,8 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 					tqe->tx_complete_func(tqe->priv,
- 							      tqe->status);
- 				#ifdef TCP_ACK_FILTER
--				if (tqe->index != NOT_TCP_ACK)
--					pending_acks_info[tqe->index].txqe = NULL;
-+				if (tqe->tcp_pending_ack_idx != NOT_TCP_ACK)
-+					pending_acks_info[tqe->tcp_pending_ack_idx].txqe = NULL;
- 				#endif
- 				kfree(tqe);
- 			} else {
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 2ac63a3..27c7bbb 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -216,7 +216,7 @@ struct txq_entry_t {
- 	struct txq_entry_t *next;
- 	struct txq_entry_t *prev;
- 	int type;
--	int index;
-+	int tcp_pending_ack_idx;
- 	u8 *buffer;
- 	int buffer_size;
- 	void *priv;
+-s32 wilc_setup_multicast_filter(struct wilc_vif *vif, bool bIsEnabled,
++int wilc_setup_multicast_filter(struct wilc_vif *vif, bool bIsEnabled,
+ 				u32 u32count)
+ {
+-	s32 result = 0;
++	int result = 0;
+ 	struct host_if_msg msg;
+ 	struct set_multicast *pstrMulticastFilterParam = &msg.body.multicast_info;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 7b12425..52032be 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -352,7 +352,7 @@ int wilc_del_station(struct wilc_vif *vif, const u8 *mac_addr);
+ s32 wilc_edit_station(struct wilc_vif *vif,
+ 		      struct add_sta_param *pstrStaParams);
+ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout);
+-s32 wilc_setup_multicast_filter(struct wilc_vif *vif, bool bIsEnabled,
++int wilc_setup_multicast_filter(struct wilc_vif *vif, bool bIsEnabled,
+ 				u32 u32count);
+ s32 wilc_setup_ipaddress(struct wilc_vif *vif, u8 *u16ipadd, u8 idx);
+ s32 wilc_del_all_rx_ba_session(struct wilc_vif *vif, char *pBSSID, char TID);
 -- 
-1.9.1
+2.6.4
 
