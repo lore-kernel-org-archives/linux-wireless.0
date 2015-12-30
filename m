@@ -1,122 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:36881 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755285AbbL3RfM convert rfc822-to-8bit (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:27518 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752941AbbL3OpZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Dec 2015 12:35:12 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Nicholas Krause <xerofoify@gmail.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-CC: linuxwifi <linuxwifi@intel.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"Erenfeld, Aviya" <aviya.erenfeld@intel.com>,
-	"Dreyfuss, Haim" <haim.dreyfuss@intel.com>,
-	"Peer, Ilan" <ilan.peer@intel.com>,
-	"Altman, Avri" <avri.altman@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH RESEND] iwlwifi:Fix error handling in the function
- iwl_pcie_enqueue_hcmd
-Date: Wed, 30 Dec 2015 17:35:05 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E973388@hasmsx107.ger.corp.intel.com> (sfid-20151230_183537_210459_A6D3E77C)
-References: <1451495694-28740-1-git-send-email-xerofoify@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 30 Dec 2015 09:45:25 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBUEigAR028536
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 06:45:25 -0800
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+	by mx0a-0016f401.pphosted.com with ESMTP id 203nme3wjc-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 06:45:25 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	chunfan chen <jeffc@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/3] mwifiex: fix IBSS data path issue.
+Date: Wed, 30 Dec 2015 06:43:08 -0800
+Message-ID: <1451486589-15010-2-git-send-email-akarwar@marvell.com> (sfid-20151230_154535_493169_DAD5B7BD)
+In-Reply-To: <1451486589-15010-1-git-send-email-akarwar@marvell.com>
+References: <1451486589-15010-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: chunfan chen <jeffc@marvell.com>
 
+The port_open flag is not applicable for IBSS mode. IBSS data
+path was broken when port_open flag was introduced.
+This patch fixes the problem by correcting the checks.
 
-On 12/30/2015 07:15 PM, Nicholas Krause wrote:
-> This fixes error handling in the function iwl_pcie_enqueue_hcmd
-> by checking if all calls to the function wl_pcie_txq_build_tfd
-> have failed by returning a error code and if so jump to the goto
-> label out from the cleaning up of acquired resources before
+Fixes: 5c8946330abfa4c ("mwifiex: enable traffic only when port is open")
+Signed-off-by: chunfan chen <jeffc@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/sta_event.c | 10 ++++++----
+ drivers/net/wireless/marvell/mwifiex/wmm.c       |  6 ++++--
+ 2 files changed, 10 insertions(+), 6 deletions(-)
 
-
-For sure you haven't ran your code otherwise you would have noticed it
-break pretty much everything.
-Moreover this patch is not based on my -next tree.
-Simple rebasing won't fix the obvious issues in your patch though.
-
-> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
-> ---
->  drivers/net/wireless/iwlwifi/pcie/tx.c | 27 +++++++++++++++++----------
->  1 file changed, 17 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
-> index 2b86c21..49c8c77 100644
-> --- a/drivers/net/wireless/iwlwifi/pcie/tx.c
-> +++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
-> @@ -1472,9 +1472,11 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
->  	/* start the TFD with the scratchbuf */
->  	scratch_size = min_t(int, copy_size, IWL_HCMD_SCRATCHBUF_SIZE);
->  	memcpy(&txq->scratchbufs[q->write_ptr], &out_cmd->hdr, scratch_size);
-> -	iwl_pcie_txq_build_tfd(trans, txq,
-> -			       iwl_pcie_get_scratchbuf_dma(txq, q->write_ptr),
-> -			       scratch_size, true);
-> +	idx = iwl_pcie_txq_build_tfd(trans, txq,
-> +				     iwl_pcie_get_scratchbuf_dma(txq, q->write_ptr),
-> +				     scratch_size, true);
-> +	if (idx)
-> +		goto out;
->  
->  	/* map first command fragment, if any remains */
->  	if (copy_size > scratch_size) {
-> @@ -1489,8 +1491,9 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
->  			goto out;
->  		}
->  
-> -		iwl_pcie_txq_build_tfd(trans, txq, phys_addr,
-> -				       copy_size - scratch_size, false);
-> +		idx = iwl_pcie_txq_build_tfd(trans, txq, phys_addr, copy_size - scratch_size, false);
-> +		if (idx)
-> +			goto out;
->  	}
->  
->  	/* map the remaining (adjusted) nocopy/dup fragments */
-> @@ -1513,7 +1516,9 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
->  			goto out;
->  		}
->  
-> -		iwl_pcie_txq_build_tfd(trans, txq, phys_addr, cmdlen[i], false);
-> +		idx = iwl_pcie_txq_build_tfd(trans, txq, phys_addr, cmdlen[i], false);
-> +		if (idx)
-> +			goto out;
->  	}
->  
->  	out_meta->flags = cmd->flags;
-> @@ -1830,8 +1835,8 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
->  	/* The first TB points to the scratchbuf data - min_copy bytes */
->  	memcpy(&txq->scratchbufs[q->write_ptr], &dev_cmd->hdr,
->  	       IWL_HCMD_SCRATCHBUF_SIZE);
-> -	iwl_pcie_txq_build_tfd(trans, txq, tb0_phys,
-> -			       IWL_HCMD_SCRATCHBUF_SIZE, true);
-> +	if (iwl_pcie_txq_build_tfd(trans, txq, tb0_phys, IWL_HCMD_SCRATCHBUF_SIZE, true))
-> +			goto out_err;
->  
->  	/* there must be data left over for TB1 or this code must be changed */
->  	BUILD_BUG_ON(sizeof(struct iwl_tx_cmd) < IWL_HCMD_SCRATCHBUF_SIZE);
-> @@ -1841,7 +1846,8 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
->  	tb1_phys = dma_map_single(trans->dev, tb1_addr, tb1_len, DMA_TO_DEVICE);
->  	if (unlikely(dma_mapping_error(trans->dev, tb1_phys)))
->  		goto out_err;
-> -	iwl_pcie_txq_build_tfd(trans, txq, tb1_phys, tb1_len, false);
-> +	if (iwl_pcie_txq_build_tfd(trans, txq, tb1_phys, tb1_len, false))
-> +			goto out_err;
->  
->  	/*
->  	 * Set up TFD's third entry to point directly to remainder
-> @@ -1857,7 +1863,8 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
->  					   &txq->tfds[q->write_ptr]);
->  			goto out_err;
->  		}
-> -		iwl_pcie_txq_build_tfd(trans, txq, tb2_phys, tb2_len, false);
-> +		if (iwl_pcie_txq_build_tfd(trans, txq, tb2_phys, tb2_len, false))
-> +			goto out_err;
->  	}
->  
->  	/* Set up entry for this TFD in Tx byte-count array */
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+index ff3ee9d..23bae87 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+@@ -607,11 +607,13 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 
+ 	case EVENT_PS_AWAKE:
+ 		mwifiex_dbg(adapter, EVENT, "info: EVENT: AWAKE\n");
+-		if (!adapter->pps_uapsd_mode && priv->port_open &&
++		if (!adapter->pps_uapsd_mode &&
++		    (priv->port_open ||
++		     (priv->bss_mode == NL80211_IFTYPE_ADHOC)) &&
+ 		    priv->media_connected && adapter->sleep_period.period) {
+-				adapter->pps_uapsd_mode = true;
+-				mwifiex_dbg(adapter, EVENT,
+-					    "event: PPS/UAPSD mode activated\n");
++			adapter->pps_uapsd_mode = true;
++			mwifiex_dbg(adapter, EVENT,
++				    "event: PPS/UAPSD mode activated\n");
+ 		}
+ 		adapter->tx_lock_flag = false;
+ 		if (adapter->pps_uapsd_mode && adapter->gen_null_pkt) {
+diff --git a/drivers/net/wireless/marvell/mwifiex/wmm.c b/drivers/net/wireless/marvell/mwifiex/wmm.c
+index acccd67..499e5a7 100644
+--- a/drivers/net/wireless/marvell/mwifiex/wmm.c
++++ b/drivers/net/wireless/marvell/mwifiex/wmm.c
+@@ -475,7 +475,8 @@ mwifiex_wmm_lists_empty(struct mwifiex_adapter *adapter)
+ 		priv = adapter->priv[i];
+ 		if (!priv)
+ 			continue;
+-		if (!priv->port_open)
++		if (!priv->port_open &&
++		    (priv->bss_mode != NL80211_IFTYPE_ADHOC))
+ 			continue;
+ 		if (adapter->if_ops.is_port_ready &&
+ 		    !adapter->if_ops.is_port_ready(priv))
+@@ -1099,7 +1100,8 @@ mwifiex_wmm_get_highest_priolist_ptr(struct mwifiex_adapter *adapter,
+ 
+ 			priv_tmp = adapter->bss_prio_tbl[j].bss_prio_cur->priv;
+ 
+-			if (!priv_tmp->port_open ||
++			if (((priv_tmp->bss_mode != NL80211_IFTYPE_ADHOC) &&
++			     !priv_tmp->port_open) ||
+ 			    (atomic_read(&priv_tmp->wmm.tx_pkts_queued) == 0))
+ 				continue;
+ 
+-- 
+1.8.1.4
 
