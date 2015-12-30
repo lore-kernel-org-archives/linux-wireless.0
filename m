@@ -1,112 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:53947 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752083AbbLUUws (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 15:52:48 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 45/45] iwlwifi: bail out in case of bad trans state
-Date: Mon, 21 Dec 2015 22:50:46 +0200
-Message-Id: <1450731046-2796-45-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_220100_008685_F2EF83AE)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:35254 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754544AbbL3MQH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Dec 2015 07:16:07 -0500
+Received: by mail-pa0-f50.google.com with SMTP id do7so4196503pab.2
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 04:16:07 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 06/20] staging: wilc1000: fix return type of wilc_set_power_mgmt
+Date: Wed, 30 Dec 2015 21:15:30 +0900
+Message-Id: <1451477744-11975-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20151230_131625_697701_413DA7BC)
+In-Reply-To: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+This patch changes return type of wilc_set_power_mgmt from s32 to int.
+The result variable gets return value from wilc_mq_send that has return
+type of int. It should be changed return type of this function as well
+as data type of result variable.
 
-In case of bad trans state (i.e. fw is not loaded) bail
-out immediately instead of calling the trans, which might
-not be fully initialized yet.
-
-Also add WARN_ON_ONCE to help debugging where the errorneous
-call is coming from.
-
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 24 ++++++++++++++++++------
- 1 file changed, 18 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 290d538..81b7cb7 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -1001,8 +1001,10 @@ static inline int iwl_trans_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 	if (unlikely(test_bit(STATUS_FW_ERROR, &trans->status)))
- 		return -EIO;
- 
--	if (unlikely(trans->state != IWL_TRANS_FW_ALIVE))
-+	if (WARN_ON_ONCE(trans->state != IWL_TRANS_FW_ALIVE)) {
- 		IWL_ERR(trans, "%s bad state = %d\n", __func__, trans->state);
-+		return -EIO;
-+	}
- 
- 	return trans->ops->tx(trans, skb, dev_cmd, queue);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 3a9a967..8b1e535 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4393,9 +4393,9 @@ s32 wilc_edit_station(struct wilc_vif *vif,
+ 	return result;
  }
-@@ -1010,8 +1012,10 @@ static inline int iwl_trans_tx(struct iwl_trans *trans, struct sk_buff *skb,
- static inline void iwl_trans_reclaim(struct iwl_trans *trans, int queue,
- 				     int ssn, struct sk_buff_head *skbs)
+ 
+-s32 wilc_set_power_mgmt(struct wilc_vif *vif, bool bIsEnabled, u32 u32Timeout)
++int wilc_set_power_mgmt(struct wilc_vif *vif, bool bIsEnabled, u32 u32Timeout)
  {
--	if (unlikely(trans->state != IWL_TRANS_FW_ALIVE))
-+	if (WARN_ON_ONCE(trans->state != IWL_TRANS_FW_ALIVE)) {
- 		IWL_ERR(trans, "%s bad state = %d\n", __func__, trans->state);
-+		return;
-+	}
- 
- 	trans->ops->reclaim(trans, queue, ssn, skbs);
- }
-@@ -1029,8 +1033,10 @@ iwl_trans_txq_enable_cfg(struct iwl_trans *trans, int queue, u16 ssn,
- {
- 	might_sleep();
- 
--	if (unlikely((trans->state != IWL_TRANS_FW_ALIVE)))
-+	if (WARN_ON_ONCE(trans->state != IWL_TRANS_FW_ALIVE)) {
- 		IWL_ERR(trans, "%s bad state = %d\n", __func__, trans->state);
-+		return;
-+	}
- 
- 	trans->ops->txq_enable(trans, queue, ssn, cfg, queue_wdg_timeout);
- }
-@@ -1070,8 +1076,10 @@ static inline void iwl_trans_freeze_txq_timer(struct iwl_trans *trans,
- 					      unsigned long txqs,
- 					      bool freeze)
- {
--	if (unlikely(trans->state != IWL_TRANS_FW_ALIVE))
-+	if (WARN_ON_ONCE(trans->state != IWL_TRANS_FW_ALIVE)) {
- 		IWL_ERR(trans, "%s bad state = %d\n", __func__, trans->state);
-+		return;
-+	}
- 
- 	if (trans->ops->freeze_txq_timer)
- 		trans->ops->freeze_txq_timer(trans, txqs, freeze);
-@@ -1080,8 +1088,10 @@ static inline void iwl_trans_freeze_txq_timer(struct iwl_trans *trans,
- static inline void iwl_trans_block_txq_ptrs(struct iwl_trans *trans,
- 					    bool block)
- {
--	if (unlikely(trans->state != IWL_TRANS_FW_ALIVE))
-+	if (WARN_ON_ONCE(trans->state != IWL_TRANS_FW_ALIVE)) {
- 		IWL_ERR(trans, "%s bad state = %d\n", __func__, trans->state);
-+		return;
-+	}
- 
- 	if (trans->ops->block_txq_ptrs)
- 		trans->ops->block_txq_ptrs(trans, block);
-@@ -1090,8 +1100,10 @@ static inline void iwl_trans_block_txq_ptrs(struct iwl_trans *trans,
- static inline int iwl_trans_wait_tx_queue_empty(struct iwl_trans *trans,
- 						u32 txqs)
- {
--	if (unlikely(trans->state != IWL_TRANS_FW_ALIVE))
-+	if (WARN_ON_ONCE(trans->state != IWL_TRANS_FW_ALIVE)) {
- 		IWL_ERR(trans, "%s bad state = %d\n", __func__, trans->state);
-+		return -EIO;
-+	}
- 
- 	return trans->ops->wait_tx_queue_empty(trans, txqs);
- }
+-	s32 result = 0;
++	int result = 0;
+ 	struct host_if_msg msg;
+ 	struct power_mgmt_param *pstrPowerMgmtParam = &msg.body.pwr_mgmt_info;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 47c664e..fb9c0ea 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -351,7 +351,7 @@ s32 wilc_del_allstation(struct wilc_vif *vif, u8 pu8MacAddr[][ETH_ALEN]);
+ int wilc_del_station(struct wilc_vif *vif, const u8 *mac_addr);
+ s32 wilc_edit_station(struct wilc_vif *vif,
+ 		      struct add_sta_param *pstrStaParams);
+-s32 wilc_set_power_mgmt(struct wilc_vif *vif, bool bIsEnabled, u32 u32Timeout);
++int wilc_set_power_mgmt(struct wilc_vif *vif, bool bIsEnabled, u32 u32Timeout);
+ s32 wilc_setup_multicast_filter(struct wilc_vif *vif, bool bIsEnabled,
+ 				u32 u32count);
+ s32 wilc_setup_ipaddress(struct wilc_vif *vif, u8 *u16ipadd, u8 idx);
 -- 
-2.5.0
+2.6.4
 
