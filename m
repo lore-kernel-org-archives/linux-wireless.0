@@ -1,44 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f178.google.com ([209.85.220.178]:33354 "EHLO
-	mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932898AbbLNWfG (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41472 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751506AbbL3Peu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 17:35:06 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH 8/8] rtlwifi: rtl8192cu: Add missing parameter setup
-Date: Mon, 14 Dec 2015 16:34:38 -0600
-Message-Id: <1450132478-2386-9-git-send-email-Larry.Finger@lwfinger.net> (sfid-20151214_233528_883414_816A3D0B)
-In-Reply-To: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
-References: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 30 Dec 2015 10:34:50 -0500
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: rsi: bool tests do not need comparison
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1450543185-27565-1-git-send-email-hofrat@osadl.org>
+To: Nicholas Mc Guire <hofrat@osadl.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+Message-Id: <20151230153450.205F96026F@smtp.codeaurora.org> (sfid-20151230_163511_515267_EA3ABE9D)
+Date: Wed, 30 Dec 2015 15:34:50 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This driver fails to copy the module parameter for software encryption
-to the locations used by the main code.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c | 2 ++
- 1 file changed, 2 insertions(+)
+> This is an API consolidation only. Bool initializations should 
+> use true and false thus bool tests don't need an explicit comparison.
+> 
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-index fd4a535..7c6f7f0 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192cu/sw.c
-@@ -65,6 +65,8 @@ static int rtl92cu_init_sw_vars(struct ieee80211_hw *hw)
- 	rtlpriv->dm.disable_framebursting = false;
- 	rtlpriv->dm.thermalvalue = 0;
- 	rtlpriv->dbg.global_debuglevel = rtlpriv->cfg->mod_params->debug;
-+	rtlpriv->cfg->mod_params->sw_crypto =
-+		rtlpriv->cfg->mod_params->sw_crypto;
- 
- 	/* for firmware buf */
- 	rtlpriv->rtlhal.pfirmware = vzalloc(0x4000);
--- 
-2.1.4
+Thanks, applied to wireless-drivers-next.git.
 
+Kalle Valo
