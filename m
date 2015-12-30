@@ -1,39 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:56910 "EHLO arrakis.dune.hu"
+Received: from mail.kernel.org ([198.145.29.136]:46267 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755332AbbLQKKI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Dec 2015 05:10:08 -0500
-Subject: Re: [RFC/RFT 1/2] mac80211: Add NEED_ALIGNED4_SKBS hw flag
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	id S1752046AbbL3Qag (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Dec 2015 11:30:36 -0500
+Date: Wed, 30 Dec 2015 10:30:31 -0600
+From: Rob Herring <robh@kernel.org>
+To: Uri Mashiach <uri.mashiach@compulab.co.il>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Tony Lindgren <tony@atomide.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
 	linux-wireless@vger.kernel.org
-References: <1450344029-5296-1-git-send-email-janusz.dziedzic@tieto.com>
- <1450346667.8247.23.camel@sipsolutions.net>
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <567289F6.2060308@openwrt.org> (sfid-20151217_111012_722653_B280D1ED)
-Date: Thu, 17 Dec 2015 11:09:58 +0100
+Subject: Re: [PATCH 2/3] wlcore/wl12xx: spi: add device tree support
+Message-ID: <20151230163031.GA24863@rob-hp-laptop> (sfid-20151230_173042_713323_D93DE8F1)
+References: <1450859744-9948-1-git-send-email-uri.mashiach@compulab.co.il>
+ <1450859744-9948-3-git-send-email-uri.mashiach@compulab.co.il>
 MIME-Version: 1.0
-In-Reply-To: <1450346667.8247.23.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1450859744-9948-3-git-send-email-uri.mashiach@compulab.co.il>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2015-12-17 11:04, Johannes Berg wrote:
-> On Thu, 2015-12-17 at 10:20 +0100, Janusz Dziedzic wrote:
->> HW/driver should set NEED_ALIGNED4_SKBS flag in case require
->> aligned skbs to four-byte boundaries.
->> 
->> Before we have to do memmove() in the driver before
->> pass this to HW and memmove() back in tx completion.
->> This patch allow to save CPU and skip such memmoves.
->> For each skb we called memmove(ieee80211_hdrsize()) twice.
+On Wed, Dec 23, 2015 at 10:35:43AM +0200, Uri Mashiach wrote:
+> Add DT support for the wl1271 SPI WiFi.
 > 
-> IMHO this is pretty awful from a code complexity POV. You also forgot
-> to update fast-xmit maximum header length.
+> Add documentation file for the wl1271 SPI WiFi.
 > 
-> Note that we (iwlwifi) also kinda need this, but essentially solve it
-> with the DMA engine. Can't ath9k do the same?
-I tried that approach a few years ago, but it turned out to make the
-hardware unstable, causing random DMA lockups.
+> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+> Acked-by: Igor Grinberg <grinberg@compulab.co.il>
+> ---
+>  .../bindings/net/wireless/ti,wlcore,spi.txt        | 35 +++++++++++
 
-- Felix
+For the binding:
+
+Acked-by: Rob Herring <robh@kernel.org>
