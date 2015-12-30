@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:11243 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751107AbbLUFPr (ORCPT
+Received: from mail-yk0-f175.google.com ([209.85.160.175]:34235 "EHLO
+	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752587AbbL3P6y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 00:15:47 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 07/46] staging: wilc1000: remove unused varialbe tx_buffer_offset
-Date: Mon, 21 Dec 2015 14:18:11 +0900
-Message-ID: <1450675130-17866-8-git-send-email-glen.lee@atmel.com> (sfid-20151221_061549_474578_1BF4C2D5)
-In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 30 Dec 2015 10:58:54 -0500
+From: Insu Yun <wuninsu@gmail.com>
+To: akarwar@marvell.com, nishants@marvell.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: taesoo@gatech.edu, yeongjin.jang@gatech.edu, insu@gatech.edu,
+	changwoo@gatech.edu, Insu Yun <wuninsu@gmail.com>
+Subject: [PATCH v2] mwifiex: correctly handling kzalloc
+Date: Wed, 30 Dec 2015 11:01:44 -0500
+Message-Id: <1451491304-35251-1-git-send-email-wuninsu@gmail.com> (sfid-20151230_165914_129169_1754A22D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unused variable tx_buffer_offset of wilc_wlan_dev_t.
+Since kzalloc can be failed in memory pressure,
+it needs to be handled, otherwise NULL dereference could be happened
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Insu Yun <wuninsu@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/mwifiex/sdio.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 37879cd..502b499 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -13,7 +13,6 @@ typedef struct {
- 	u8 *rx_buffer;
- 	u32 rx_buffer_offset;
- 	u8 *tx_buffer;
--	u32 tx_buffer_offset;
- 
- 	unsigned long txq_spinlock_flags;
- 
+diff --git a/drivers/net/wireless/mwifiex/sdio.c b/drivers/net/wireless/mwifiex/sdio.c
+index 78a8474..a8af72d 100644
+--- a/drivers/net/wireless/mwifiex/sdio.c
++++ b/drivers/net/wireless/mwifiex/sdio.c
+@@ -2053,8 +2053,19 @@ static int mwifiex_init_sdio(struct mwifiex_adapter *adapter)
+ 	/* Allocate skb pointer buffers */
+ 	card->mpa_rx.skb_arr = kzalloc((sizeof(void *)) *
+ 				       card->mp_agg_pkt_limit, GFP_KERNEL);
++	if (!card->mpa_rx.skb_arr) {
++		kfree(card->mp_regs);
++		return -ENOMEM;
++	}
++
+ 	card->mpa_rx.len_arr = kzalloc(sizeof(*card->mpa_rx.len_arr) *
+ 				       card->mp_agg_pkt_limit, GFP_KERNEL);
++	if (!card->mpa_rx.len_arr) {
++		kfree(card->mp_regs);
++		kfree(card->mpa_rx.skb_arr);
++		return -ENOMEM;
++	}
++
+ 	ret = mwifiex_alloc_sdio_mpa_buffers(adapter,
+ 					     card->mp_tx_agg_buf_size,
+ 					     card->mp_rx_agg_buf_size);
 -- 
 1.9.1
 
