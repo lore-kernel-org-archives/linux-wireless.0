@@ -1,35 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56463 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:38702 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932778AbbLGPLM (ORCPT
+	with ESMTP id S1750820AbbL3O7U (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Dec 2015 10:11:12 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Peter Wu <peter@lekensteyn.nl>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: fix gigantic memleak in rtl_usb
-References: <1449424677-3140-1-git-send-email-peter@lekensteyn.nl>
-	<5664981C.1040704@lwfinger.net> <20151206213926.GA30777@al>
-Date: Mon, 07 Dec 2015 17:11:03 +0200
-In-Reply-To: <20151206213926.GA30777@al> (Peter Wu's message of "Sun, 6 Dec
-	2015 22:39:26 +0100")
-Message-ID: <87k2oqcn08.fsf@kamboji.qca.qualcomm.com> (sfid-20151207_161141_269472_0FB60DA8)
+	Wed, 30 Dec 2015 09:59:20 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [01/14] mwifiex: change ap and station interface limits
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1450095315-19927-2-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Shengzhen Li <szli@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20151230145919.D060D60343@smtp.codeaurora.org> (sfid-20151230_155924_015588_CC9C3D3B)
+Date: Wed, 30 Dec 2015 14:59:19 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Wu <peter@lekensteyn.nl> writes:
 
-> Originally I had the Cc: stable line added, but the SubmittingPatches
-> document seems to discourage that for networking. Added it again.
+> From: Shengzhen Li <szli@marvell.com>
+> 
+> ap/station interface limit has been changed to allow
+> creating maximum 3 interfaces.
+> 
+> Signed-off-by: Shengzhen Li <szli@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-Yeah, stable wireless patches are handled differently from rest of the
-networking subsystem. It would be great if somebody could update the
-documentation.
+Thanks, 14 patches applied to wireless-drivers-next.git:
 
--- 
+eb5d912e1564 mwifiex: change ap and station interface limits
+5b13d3e1f926 mwifiex: multiple bss support
+5eab67779974 mwifiex: advertise SMS4 cipher suite
+c8ac6a8ee8e7 mwifiex: fix bug for wildcard-prefix wowlan pattern
+b0922ffa706b mwifiex: increase supported wowlan pattern length
+abffd274a243 mwifiex: abort cac in del_station() handler
+bd642acf3213 mwifiex: suppress "Rx of mgmt packet failed" message
+47f336d7e0df mwifiex: remove redundant timestamp assignment
+76ae3e26ea43 mwifiex: add debugfs file for testing reset of card
+776f742040ca mwifiex: fix AMPDU not setup on TDLS link problem
+7f3f1245ffcd mwifiex: fix wake on disconnect feature
+610d0af8e8d2 mwifiex: update region_code_index array
+19b0a71017aa mwifiex: use world for unidentified region code
+84a38fb3167e mwifiex: fix WPA connection problem
+
 Kalle Valo
