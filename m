@@ -1,56 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f179.google.com ([209.85.220.179]:33859 "EHLO
-	mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753582AbbLNWfD (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:39803 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750945AbbL3OpY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Dec 2015 17:35:03 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH 6/8] rtlwifi: rtl8192se: Fix module parameter initialization
-Date: Mon, 14 Dec 2015 16:34:36 -0600
-Message-Id: <1450132478-2386-7-git-send-email-Larry.Finger@lwfinger.net> (sfid-20151214_233519_691216_7A46FB1A)
-In-Reply-To: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
-References: <1450132478-2386-2-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 30 Dec 2015 09:45:24 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBUEjFvG028706
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 06:45:23 -0800
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+	by mx0a-0016f401.pphosted.com with ESMTP id 203nme3wj7-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 06:45:23 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	chunfan chen <jeffc@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/3] mwifiex: fix misleading firmware download messages
+Date: Wed, 30 Dec 2015 06:43:07 -0800
+Message-ID: <1451486589-15010-1-git-send-email-akarwar@marvell.com> (sfid-20151230_154531_107700_B85B1293)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Two of the module parameter descriptions show incorrect default values.
-In addition the value for software encryption is not transferred to
-the locations used by the driver.
+From: chunfan chen <jeffc@marvell.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org>
+mwifiex_check_fw_status() checks firmware status and also
+check if WLAN is the winner for firmware downloading.
+
+Once we detect that other interface is downloading
+the firmware, we call this routine again with max
+poll count to wait until firmware is ready.
+
+This patch splits the routine to avoid checking
+winner status multiple times and ensures that
+correct warning messages are displayed.
+
+Firmware status poll count is also increased to 150.
+
+Signed-off-by: chunfan chen <jeffc@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/fw.h   |  2 +-
+ drivers/net/wireless/marvell/mwifiex/init.c | 16 +++++++++---
+ drivers/net/wireless/marvell/mwifiex/main.h |  1 +
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 40 +++++++++++++++++------------
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 33 ++++++++++++++----------
+ 5 files changed, 57 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-index e1fd27c..31baca41 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/sw.c
-@@ -187,6 +187,8 @@ static int rtl92s_init_sw_vars(struct ieee80211_hw *hw)
- 	rtlpriv->psc.inactiveps = rtlpriv->cfg->mod_params->inactiveps;
- 	rtlpriv->psc.swctrl_lps = rtlpriv->cfg->mod_params->swctrl_lps;
- 	rtlpriv->psc.fwctrl_lps = rtlpriv->cfg->mod_params->fwctrl_lps;
-+	rtlpriv->cfg->mod_params->sw_crypto =
-+		rtlpriv->cfg->mod_params->sw_crypto;
- 	if (!rtlpriv->psc.inactiveps)
- 		pr_info("Power Save off (module option)\n");
- 	if (!rtlpriv->psc.fwctrl_lps)
-@@ -425,8 +427,8 @@ module_param_named(swlps, rtl92se_mod_params.swctrl_lps, bool, 0444);
- module_param_named(fwlps, rtl92se_mod_params.fwctrl_lps, bool, 0444);
- MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
- MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
--MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
--MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 1)\n");
-+MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 1)\n");
-+MODULE_PARM_DESC(fwlps, "Set to 1 to use FW control power save (default 0)\n");
- MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index ced7af2..426e76a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -96,7 +96,7 @@ enum KEY_TYPE_ID {
+ #define WAPI_KEY_LEN			(WLAN_KEY_LEN_SMS4 + PN_LEN + 2)
  
- static SIMPLE_DEV_PM_OPS(rtlwifi_pm_ops, rtl_pci_suspend, rtl_pci_resume);
+ #define MAX_POLL_TRIES			100
+-#define MAX_FIRMWARE_POLL_TRIES			100
++#define MAX_FIRMWARE_POLL_TRIES			150
+ 
+ #define FIRMWARE_READY_SDIO				0xfedc
+ #define FIRMWARE_READY_PCIE				0xfedcba00
+diff --git a/drivers/net/wireless/marvell/mwifiex/init.c b/drivers/net/wireless/marvell/mwifiex/init.c
+index 6f7876e..517653b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/init.c
++++ b/drivers/net/wireless/marvell/mwifiex/init.c
+@@ -741,8 +741,6 @@ int mwifiex_dnld_fw(struct mwifiex_adapter *adapter,
+ 	u32 poll_num = 1;
+ 
+ 	if (adapter->if_ops.check_fw_status) {
+-		adapter->winner = 0;
+-
+ 		/* check if firmware is already running */
+ 		ret = adapter->if_ops.check_fw_status(adapter, poll_num);
+ 		if (!ret) {
+@@ -750,13 +748,23 @@ int mwifiex_dnld_fw(struct mwifiex_adapter *adapter,
+ 				    "WLAN FW already running! Skip FW dnld\n");
+ 			return 0;
+ 		}
++	}
++
++	/* check if we are the winner for downloading FW */
++	if (adapter->if_ops.check_winner_status) {
++		adapter->winner = 0;
++		ret = adapter->if_ops.check_winner_status(adapter);
+ 
+ 		poll_num = MAX_FIRMWARE_POLL_TRIES;
++		if (ret) {
++			mwifiex_dbg(adapter, MSG,
++				    "WLAN read winner status failed!\n");
++			return ret;
++		}
+ 
+-		/* check if we are the winner for downloading FW */
+ 		if (!adapter->winner) {
+ 			mwifiex_dbg(adapter, MSG,
+-				    "FW already running! Skip FW dnld\n");
++				    "WLAN is not the winner! Skip FW dnld\n");
+ 			goto poll_fw;
+ 		}
+ 	}
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 2f7f478..c08be79 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -791,6 +791,7 @@ struct mwifiex_if_ops {
+ 	int (*init_if) (struct mwifiex_adapter *);
+ 	void (*cleanup_if) (struct mwifiex_adapter *);
+ 	int (*check_fw_status) (struct mwifiex_adapter *, u32);
++	int (*check_winner_status)(struct mwifiex_adapter *);
+ 	int (*prog_fw) (struct mwifiex_adapter *, struct mwifiex_fw_image *);
+ 	int (*register_dev) (struct mwifiex_adapter *);
+ 	void (*unregister_dev) (struct mwifiex_adapter *);
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 9703848..4000357 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2007,14 +2007,12 @@ done:
+ 
+ /*
+  * This function checks the firmware status in card.
+- *
+- * The winner interface is also determined by this function.
+  */
+ static int
+ mwifiex_check_fw_status(struct mwifiex_adapter *adapter, u32 poll_num)
+ {
+ 	int ret = 0;
+-	u32 firmware_stat, winner_status;
++	u32 firmware_stat;
+ 	struct pcie_service_card *card = adapter->card;
+ 	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
+ 	u32 tries;
+@@ -2054,19 +2052,28 @@ mwifiex_check_fw_status(struct mwifiex_adapter *adapter, u32 poll_num)
+ 		}
+ 	}
+ 
+-	if (ret) {
+-		if (mwifiex_read_reg(adapter, reg->fw_status,
+-				     &winner_status))
+-			ret = -1;
+-		else if (!winner_status) {
+-			mwifiex_dbg(adapter, INFO,
+-				    "PCI-E is the winner\n");
+-			adapter->winner = 1;
+-		} else {
+-			mwifiex_dbg(adapter, ERROR,
+-				    "PCI-E is not the winner <%#x,%d>, exit dnld\n",
+-				    ret, adapter->winner);
+-		}
++	return ret;
++}
++
++/* This function checks if WLAN is the winner.
++ */
++static int
++mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
++{
++	u32 winner = 0;
++	int ret = 0;
++	struct pcie_service_card *card = adapter->card;
++	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
++
++	if (mwifiex_read_reg(adapter, reg->fw_status, &winner)) {
++		ret = -1;
++	} else if (!winner) {
++		mwifiex_dbg(adapter, INFO, "PCI-E is the winner\n");
++		adapter->winner = 1;
++	} else {
++		mwifiex_dbg(adapter, ERROR,
++			    "PCI-E is not the winner <%#x,%d>, exit dnld\n",
++			    ret, adapter->winner);
+ 	}
+ 
+ 	return ret;
+@@ -2681,6 +2688,7 @@ static struct mwifiex_if_ops pcie_ops = {
+ 	.init_if =			mwifiex_pcie_init,
+ 	.cleanup_if =			mwifiex_pcie_cleanup,
+ 	.check_fw_status =		mwifiex_check_fw_status,
++	.check_winner_status =          mwifiex_check_winner_status,
+ 	.prog_fw =			mwifiex_prog_fw_w_helper,
+ 	.register_dev =			mwifiex_register_dev,
+ 	.unregister_dev =		mwifiex_unregister_dev,
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 78a8474..024306a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -1039,19 +1039,14 @@ done:
+ 
+ /*
+  * This function checks the firmware status in card.
+- *
+- * The winner interface is also determined by this function.
+  */
+ static int mwifiex_check_fw_status(struct mwifiex_adapter *adapter,
+ 				   u32 poll_num)
+ {
+-	struct sdio_mmc_card *card = adapter->card;
+ 	int ret = 0;
+ 	u16 firmware_stat;
+ 	u32 tries;
+-	u8 winner_status;
+ 
+-	/* Wait for firmware initialization event */
+ 	for (tries = 0; tries < poll_num; tries++) {
+ 		ret = mwifiex_sdio_read_fw_status(adapter, &firmware_stat);
+ 		if (ret)
+@@ -1065,16 +1060,25 @@ static int mwifiex_check_fw_status(struct mwifiex_adapter *adapter,
+ 		}
+ 	}
+ 
+-	if (ret) {
+-		if (mwifiex_read_reg
+-		    (adapter, card->reg->status_reg_0, &winner_status))
+-			winner_status = 0;
++	return ret;
++}
++
++/* This function checks if WLAN is the winner.
++ */
++static int mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
++{
++	int ret = 0;
++	u8 winner = 0;
++	struct sdio_mmc_card *card = adapter->card;
++
++	if (mwifiex_read_reg(adapter, card->reg->status_reg_0, &winner))
++		return -1;
++
++	if (winner)
++		adapter->winner = 0;
++	else
++		adapter->winner = 1;
+ 
+-		if (winner_status)
+-			adapter->winner = 0;
+-		else
+-			adapter->winner = 1;
+-	}
+ 	return ret;
+ }
+ 
+@@ -2609,6 +2613,7 @@ static struct mwifiex_if_ops sdio_ops = {
+ 	.init_if = mwifiex_init_sdio,
+ 	.cleanup_if = mwifiex_cleanup_sdio,
+ 	.check_fw_status = mwifiex_check_fw_status,
++	.check_winner_status = mwifiex_check_winner_status,
+ 	.prog_fw = mwifiex_prog_fw_w_helper,
+ 	.register_dev = mwifiex_register_dev,
+ 	.unregister_dev = mwifiex_unregister_dev,
 -- 
-2.1.4
+1.8.1.4
 
