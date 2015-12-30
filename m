@@ -1,32 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59607 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932432AbbLCJDx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Dec 2015 04:03:53 -0500
-Message-ID: <1449133427.2181.5.camel@sipsolutions.net> (sfid-20151203_100358_865828_0BBA78B5)
-Subject: Re: wlan0: set_features() failed (-1); wanted 0x0000000000004008,
- left 0x0000000000004808
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 03 Dec 2015 10:03:47 +0100
-In-Reply-To: <CALhHN=pXxEvY4wZcaQ8EL9jNgCy-sC97RwiO7PgaNVfKEO1FGw@mail.gmail.com> (sfid-20151203_090413_916734_C3AB3C9F)
-References: <87bna8f1si.fsf@kamboji.qca.qualcomm.com>
-	 <CALhHN=pXxEvY4wZcaQ8EL9jNgCy-sC97RwiO7PgaNVfKEO1FGw@mail.gmail.com>
-	 (sfid-20151203_090413_916734_C3AB3C9F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:41154 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754670AbbL3PdW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Dec 2015 10:33:22 -0500
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: rsi: consolidate kmalloc/memset 0 calls to kzalloc
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1450543166-27531-1-git-send-email-hofrat@osadl.org>
+To: Nicholas Mc Guire <hofrat@osadl.org>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Nicholas Mc Guire <hofrat@osadl.org>
+Message-Id: <20151230153322.2F7B06026F@smtp.codeaurora.org> (sfid-20151230_163343_199065_E9D00DB8)
+Date: Wed, 30 Dec 2015 15:33:22 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2015-12-03 at 09:03 +0100, Janusz Dziedzic wrote:
-> 
-> Missing:
-> net: fix feature changes on devices without ndo_set_features ?
+
+> This is an API consolidation only. The use of kmalloc + memset to 0
+> is equivalent to kzalloc.
 > 
+> Signed-off-by: Nicholas Mc Guire <hofrat@osadl.org>
 
-According to the *code* that's there, but maybe Kalle hasn't recompiled
-it to the latest tree quite right?
+Thanks, applied to wireless-drivers-next.git.
 
-johannes
+Kalle Valo
