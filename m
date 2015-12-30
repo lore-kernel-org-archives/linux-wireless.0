@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:53947 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751948AbbLUUwS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 15:52:18 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 29/45] iwlwifi: 9000: increase the number of queues
-Date: Mon, 21 Dec 2015 22:50:30 +0200
-Message-Id: <1450731046-2796-29-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151221_220058_188556_BAC61808)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E949792@hasmsx107.ger.corp.intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:40853 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752975AbbL3PcP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Dec 2015 10:32:15 -0500
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [1/4] mwifiex: fix potential integer truncation
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1450268505-2682-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	chunfan chen <jeffc@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20151230153214.ADD3260345@smtp.codeaurora.org> (sfid-20151230_163218_437630_ECC51AE8)
+Date: Wed, 30 Dec 2015 15:32:14 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-9000 family devices have 31 queues.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-9000.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> From: chunfan chen <jeffc@marvell.com>
+> 
+> At some places, ie length is truncated from u16 to u8 while
+> storing it to driver's internal variable. This patch fixes
+> the problem.
+> 
+> Signed-off-by: chunfan chen <jeffc@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-index a784bb6..0d2aa1d 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
-@@ -83,7 +83,7 @@
- 
- static const struct iwl_base_params iwl9000_base_params = {
- 	.eeprom_size = OTP_LOW_IMAGE_SIZE_FAMILY_9000,
--	.num_of_queues = IWLAGN_NUM_QUEUES,
-+	.num_of_queues = 31,
- 	.pll_cfg_val = 0,
- 	.shadow_ram_support = true,
- 	.led_compensation = 57,
--- 
-2.5.0
+Thanks, 4 patches applied to wireless-drivers-next.git:
 
+1d8f5c138540 mwifiex: fix potential integer truncation
+ce0c58d99841 mwifiex: fix PCIe register information for 8997 chipset
+f3b35f280968 mwifiex: add missing check for PCIe8997 chipset
+7be0f5b5e169 mwifiex: enable MSI interrupt support in pcie
+
+Kalle Valo
