@@ -1,87 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56030 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934349AbbLPXu4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Dec 2015 18:50:56 -0500
-Message-ID: <5671F8B7.2060801@codeaurora.org> (sfid-20151217_005109_516576_04DDF4FA)
-Date: Wed, 16 Dec 2015 15:50:15 -0800
-From: Peter Oh <poh@codeaurora.org>
-MIME-Version: 1.0
-To: Felix Fietkau <nbd@openwrt.org>, Peter Oh <poh@qca.qualcomm.com>,
-	ath10k@lists.infradead.org
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: add modparam 'hw_csum' to make HW checksum configurable
-References: <1450290051-15593-1-git-send-email-poh@qca.qualcomm.com> <5671AD10.70004@openwrt.org> <5671C99A.703@codeaurora.org> <5671CAF5.6010606@openwrt.org> <5671CDBD.5060006@codeaurora.org> <5671CF63.9040308@openwrt.org> <5671D56F.8030903@codeaurora.org> <5671DDA1.5030709@openwrt.org>
-In-Reply-To: <5671DDA1.5030709@openwrt.org>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from softlayer.compulab.co.il ([50.23.254.55]:60134 "EHLO
+	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754814AbbL3NgC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Dec 2015 08:36:02 -0500
+From: Uri Mashiach <uri.mashiach@compulab.co.il>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Tony Lindgren <tony@atomide.com>
+Cc: Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org,
+	Uri Mashiach <uri.mashiach@compulab.co.il>
+Subject: [PATCH v4 1/3] wlcore/wl12xx: spi: add power operation function
+Date: Wed, 30 Dec 2015 15:35:31 +0200
+Message-Id: <1451482533-8624-2-git-send-email-uri.mashiach@compulab.co.il> (sfid-20151230_143622_424404_75410886)
+In-Reply-To: <1451482533-8624-1-git-send-email-uri.mashiach@compulab.co.il>
+References: <1451482533-8624-1-git-send-email-uri.mashiach@compulab.co.il>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The power function uses a consumer regulator access to update the WiFi
+enable GPIO value.
 
-On 12/16/2015 01:54 PM, Felix Fietkau wrote:
-> On 2015-12-16 22:19, Peter Oh wrote:
->> On 12/16/2015 12:53 PM, Felix Fietkau wrote:
->>> On 2015-12-16 21:46, Peter Oh wrote:
->>>> On 12/16/2015 12:35 PM, Felix Fietkau wrote:
->>>>> On 2015-12-16 21:29, Peter Oh wrote:
->>>>>> On 12/16/2015 10:27 AM, Felix Fietkau wrote:
->>>>>>> On 2015-12-16 19:20, Peter Oh wrote:
->>>>>>>> Some hardwares such as QCA988X and QCA99X0 doesn't have
->>>>>>>> capability of checksum offload when frame formats are not
->>>>>>>> suitable for it such as Mesh frame.
->>>>>>>> Hence add a module parameter, hw_csum, to make checksum offload
->>>>>>>> configurable during module registration time.
->>>>>>>>
->>>>>>>> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
->>>>>>> How about instead of inventing yet another crappy module parameter, you
->>>>>>> call skb_checksum_help() in the driver in cases where the hardware is
->>>>>>> unable to offload the checksum calculation.
->>>>>>>
->>>>>>> That way the user has to worry about less driver specific hackery ;)
->>>>>> That will be good option for hardware not supporting HW checksum, but I
->>>>>> mind that using the function will add more workload per every packet on
->>>>>> critical data path when HW supports checksum resulting in throughput down.
->>>>> I didn't mean calling it for every single frame in the data path.
->>>>> What I'm suggesting is calling it selectively only for mesh frames, or
->>>>> any other frames that the hardware cannot offload, and leaving the rest
->>>>> for the hardware to process.
->>>>>
->>>>> There should be no performance difference between disabling checksum
->>>>> offload and calling skb_checksum_help from the driver.
->>>> To call it selectively for Mesh frame or interface, we need to add it on
->>>> mac80211 layer such as ieee80211_build_hdr() since driver layer does not
->>>> care the interface type in data path.
->>> No need to change mac80211 - it only touches the headers, and
->>> skb_checksum_help does not care about that. The skb has enough
->>> information for it to find the right range to calculate the checksum and
->>> the place to store it.
->> If mentioned to use the function to mesh frame only without touching
->> mac80211, then how do you suggest it to apply it only to mesh frame
->> without interfere other data frames?
->> Can you share your example?
-> It's trivial - in ath10k_tx you do this:
->
-> if (vif->type == NL80211_IFTYPE_MESH_POINT &&
->      skb->ip_summed == CHECKSUM_PARTIAL)
-> 	skb_checksum_help(skb);
-Thank you Felix for the quick response.
-I agree on your user experience opinion,
-but what do you think when ath10k has a new chip supporting HW checksum 
-for Mesh?
->>>> In that case it will also introduce throughput degrade to HW that
->>>> supports HW checksum for Mesh.
->>> This doesn't make any sense to me. Are you saying that there's no way
->>> for the driver to detect the cases where the hardware cannot do checksum
->>> offloading?
->> I'm saying the case that HW supports checksum except for specific frame
->> such as Mesh and to make driver support both case dynamically at code
->> level, it requires extra codes which need to check if the frame is Mesh
->> or not. Since this approach requires extra workload especially in data
->> path, it will degrade driver's performance.
-> The check is cheap enough that it will not have any visible impact. And
-> the improved user experience is certainly worth it ;)
->
-> - Felix
-Thanks,
-Peter
+Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+---
+v1 -> v2: oops fix was removed to a separate fix.
+v2 -> v3: no changes
+v3 -> v4: update devm_regulator_get() error handling.
+
+ drivers/net/wireless/ti/wlcore/spi.c | 39 ++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
+
+diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
+index 44f059f..dec1512 100644
+--- a/drivers/net/wireless/ti/wlcore/spi.c
++++ b/drivers/net/wireless/ti/wlcore/spi.c
+@@ -30,6 +30,7 @@
+ #include <linux/spi/spi.h>
+ #include <linux/wl12xx.h>
+ #include <linux/platform_device.h>
++#include <linux/regulator/consumer.h>
+ 
+ #include "wlcore.h"
+ #include "wl12xx_80211.h"
+@@ -81,6 +82,7 @@
+ struct wl12xx_spi_glue {
+ 	struct device *dev;
+ 	struct platform_device *core;
++	struct regulator *reg; /* Power regulator */
+ };
+ 
+ static void wl12xx_spi_reset(struct device *child)
+@@ -318,11 +320,40 @@ static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
+ 	return 0;
+ }
+ 
++/**
++ * wl12xx_spi_set_power - power on/off the wl12xx unit
++ * @child: wl12xx device handle.
++ * @enable: true/false to power on/off the unit.
++ *
++ * use the WiFi enable regulator to enable/disable the WiFi unit.
++ */
++static int wl12xx_spi_set_power(struct device *child, bool enable)
++{
++	int ret = 0;
++	struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
++
++	WARN_ON(!glue->reg);
++
++	/* Update regulator state */
++	if (enable) {
++		ret = regulator_enable(glue->reg);
++		if (ret)
++			dev_err(child, "Power enable failure\n");
++	} else {
++		ret =  regulator_disable(glue->reg);
++		if (ret)
++			dev_err(child, "Power disable failure\n");
++	}
++
++	return ret;
++}
++
+ static struct wl1271_if_operations spi_ops = {
+ 	.read		= wl12xx_spi_raw_read,
+ 	.write		= wl12xx_spi_raw_write,
+ 	.reset		= wl12xx_spi_reset,
+ 	.init		= wl12xx_spi_init,
++	.power		= wl12xx_spi_set_power,
+ 	.set_block_size = NULL,
+ };
+ 
+@@ -353,6 +384,14 @@ static int wl1271_probe(struct spi_device *spi)
+ 	 * comes from the board-peripherals file */
+ 	spi->bits_per_word = 32;
+ 
++	glue->reg = devm_regulator_get(&spi->dev, "vwlan");
++	if (PTR_ERR(glue->reg) == -EPROBE_DEFER)
++		return -EPROBE_DEFER;
++	if (IS_ERR(glue->reg)) {
++		dev_err(glue->dev, "can't get regulator\n");
++		return PTR_ERR(glue->reg);
++	}
++
+ 	ret = spi_setup(spi);
+ 	if (ret < 0) {
+ 		dev_err(glue->dev, "spi_setup failed\n");
+-- 
+2.5.0
+
