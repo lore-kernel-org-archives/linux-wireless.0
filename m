@@ -1,44 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:33888 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750785AbbLTVew (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38367 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752707AbbL3Oha (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Dec 2015 16:34:52 -0500
-Received: by mail-ig0-f179.google.com with SMTP id m11so21057126igk.1
-        for <linux-wireless@vger.kernel.org>; Sun, 20 Dec 2015 13:34:52 -0800 (PST)
+	Wed, 30 Dec 2015 09:37:30 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Andy Shevchenko <andy.shevchenko@gmail.com>
+Cc: Insu Yun <wuninsu@gmail.com>, akarwar@marvell.com,
+	nishants@marvell.com,
+	"open list\:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	taesoo@gatech.edu, yeongjin.jang@gatech.edu, insu@gatech.edu,
+	changwoo@gatech.edu
+Subject: Re: [PATCH] mwifiex: correctly handling kzalloc
+References: <1451420268-15862-1-git-send-email-wuninsu@gmail.com>
+	<CAHp75VdZHrXbUytAcXzitH8zzELjimNihG5LfLqX85u4y502SA@mail.gmail.com>
+Date: Wed, 30 Dec 2015 16:37:20 +0200
+In-Reply-To: <CAHp75VdZHrXbUytAcXzitH8zzELjimNihG5LfLqX85u4y502SA@mail.gmail.com>
+	(Andy Shevchenko's message of "Wed, 30 Dec 2015 03:37:06 +0200")
+Message-ID: <87k2nwovdr.fsf@kamboji.qca.qualcomm.com> (sfid-20151230_153825_108799_282B2D3F)
 MIME-Version: 1.0
-In-Reply-To: <5677109E.1000209@sigmadrone.org>
-References: <5677109E.1000209@sigmadrone.org>
-Date: Sun, 20 Dec 2015 22:34:51 +0100
-Message-ID: <CACna6rwPa3akf5u3WwxtJVsuEdW986JHkk0NDOSVCzY_C3DLew@mail.gmail.com> (sfid-20151220_223455_533229_F236E79A)
-Subject: Re: Broadcom AP failure
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Martin Stoilov <martin@sigmadrone.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 20 December 2015 at 21:33, Martin Stoilov <martin@sigmadrone.org> wrote:
-> I am running AP with Broadcom 4330. Occasionally, I am getting failures with
-> the following stack trace. Any idea what the problem might be here?
+Andy Shevchenko <andy.shevchenko@gmail.com> writes:
+
+> On Tue, Dec 29, 2015 at 10:17 PM, Insu Yun <wuninsu@gmail.com> wrote:
 >
-> Best Regards,
-> -Martin
->
-> ------------[ cut here ]------------
-> WARNING: CPU: 0 PID: 550 at
-> /home/mstoilov/workspace-yocto/fsl-community-bsp/build-colibri-lsb/tmp/work-shared/colibri/kernel-source/drivers/net/wireless/brcm80211/brcmfmac/dhd_linux.c:1076
-> brcmf_netdev_wait_pend8021x+0xe8/0xfc [brcmfmac]()
+> Empty commit message?
 
-It was reported once in e-mail thread [0] [1]:
-WARNING: brcmfmac/core.c:1144 brcmf_netdev_wait_pend8021x
+Yeah, no empty commit log, please.
 
-It was most likely fixed by the following patchset [2] [3]:
-[PATCH 00/12] brcmfmac: multiple interface rework and cleanup
+And then you submit a new version remember to add v2, v3 and so on:
 
-[0] https://marc.info/?t=143646507500003&r=1&w=4
-[1] http://comments.gmane.org/gmane.linux.kernel.wireless.general/139828
-[3] https://marc.info/?t=144062024700017&r=1&w=2
-[4] http://article.gmane.org/gmane.linux.kernel.wireless.general/141389/match=brcmfmac
+http://kernelnewbies.org/FirstKernelPatch#head-5c81b3c517a1d0bbc24f92594cb734e155fcbbcb
+
+-- 
+Kalle Valo
