@@ -1,50 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:35066 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752009AbbLENWb (ORCPT
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:36145 "EHLO
+	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754587AbbL3MQR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Dec 2015 08:22:31 -0500
-Received: by wmuu63 with SMTP id u63so92369417wmu.0
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Dec 2015 05:22:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <5660CC65.3000507@candelatech.com>
-References: <5660A31E.3010507@candelatech.com>
-	<1449174081.31265.3.camel@sipsolutions.net>
-	<5660CC65.3000507@candelatech.com>
-Date: Sat, 5 Dec 2015 18:52:29 +0530
-Message-ID: <CA+BoTQmU8Wnrazg8M5GFCaONNuZvFveRwe0tAyu9wh8-CXYghA@mail.gmail.com> (sfid-20151205_142235_005603_55D3EA23)
-Subject: Re: Can we increase IEEE80211_MAX_QUEUES
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 30 Dec 2015 07:16:17 -0500
+Received: by mail-pf0-f174.google.com with SMTP id 65so96829021pff.3
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Dec 2015 04:16:16 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 09/20] staging: wilc1000: rename pstrPowerMgmtParam in wilc_set_power_mgmt
+Date: Wed, 30 Dec 2015 21:15:33 +0900
+Message-Id: <1451477744-11975-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20151230_132248_439810_985BD2AF)
+In-Reply-To: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1451477744-11975-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/12/2015, Ben Greear <greearb@candelatech.com> wrote:
-> On 12/03/2015 12:21 PM, Johannes Berg wrote:
->> On Thu, 2015-12-03 at 12:16 -0800, Ben Greear wrote:
->>> ath10k wants to use vdev-id as a queue-id, and I want to support up
->>> to
->>> 64 vdevs.  In the 4.2 kernel, this is causing splats when using lots
->>> of
->>> vdevs because then queue is out of range.
->>>
->>> Can we just increase IEEE80211_MAX_QUEUES to 64?
->>>
->>
->> I think not, that would likely cause a lot of data structures to grow
->> too much. We'd have to do more dynamic things in that case, I suppose.
->>
->> Does the original premise even make sense though? A single queue for
->> each vdev seems a bit strange.
->
-> Comments in ath10k claim that the approach makes per-vif tx locking
-> much easier and that is why that code was added....
+This patch renames pstrPowerMgmtParam to pwr_mgmt_info to avoid
+camelcase.
 
-This was introduced for qca6174 firmware which can do multi-channel
-and can hint host driver to stop/wake tx queues associated per vdev.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index dc1773d..83ac21a 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4397,7 +4397,7 @@ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout)
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+-	struct power_mgmt_param *pstrPowerMgmtParam = &msg.body.pwr_mgmt_info;
++	struct power_mgmt_param *pwr_mgmt_info = &msg.body.pwr_mgmt_info;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	PRINT_INFO(HOSTINF_DBG, "\n\n>> Setting PS to %d <<\n\n", enabled);
+@@ -4414,8 +4414,8 @@ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout)
+ 	msg.id = HOST_IF_MSG_POWER_MGMT;
+ 	msg.vif = vif;
+ 
+-	pstrPowerMgmtParam->enabled = enabled;
+-	pstrPowerMgmtParam->timeout = timeout;
++	pwr_mgmt_info->enabled = enabled;
++	pwr_mgmt_info->timeout = timeout;
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-- 
+2.6.4
 
-Michal
