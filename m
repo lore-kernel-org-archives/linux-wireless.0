@@ -1,157 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:11779 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750993AbbLUFSz (ORCPT
+Received: from mga04.intel.com ([192.55.52.120]:36881 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755285AbbL3RfM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 00:18:55 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 38/46] staging: wilc1000: pass struct wilc
-Date: Mon, 21 Dec 2015 14:18:42 +0900
-Message-ID: <1450675130-17866-39-git-send-email-glen.lee@atmel.com> (sfid-20151221_063108_162526_54F0FB53)
-In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+	Wed, 30 Dec 2015 12:35:12 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Nicholas Krause <xerofoify@gmail.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>
+CC: linuxwifi <linuxwifi@intel.com>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"Erenfeld, Aviya" <aviya.erenfeld@intel.com>,
+	"Dreyfuss, Haim" <haim.dreyfuss@intel.com>,
+	"Peer, Ilan" <ilan.peer@intel.com>,
+	"Altman, Avri" <avri.altman@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH RESEND] iwlwifi:Fix error handling in the function
+ iwl_pcie_enqueue_hcmd
+Date: Wed, 30 Dec 2015 17:35:05 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E973388@hasmsx107.ger.corp.intel.com> (sfid-20151230_183537_210459_A6D3E77C)
+References: <1451495694-28740-1-git-send-email-xerofoify@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pass struct wilc to the following functions. The functions need wilc to
-get proper vif using id from wilc device.
+Hi,
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/coreconfigurator.h | 11 ++++++-----
- drivers/staging/wilc1000/host_interface.c   |  9 ++++++---
- drivers/staging/wilc1000/wilc_wlan.c        |  2 +-
- drivers/staging/wilc1000/wilc_wlan_cfg.c    |  9 +++++----
- drivers/staging/wilc1000/wilc_wlan_cfg.h    |  4 +++-
- 5 files changed, 21 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 3f2a7d3..fc43d04 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -135,9 +135,10 @@ s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo);
- s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
- 		       tstrConnectRespInfo **ppstrConnectRespInfo);
- s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo);
--
--void wilc_network_info_received(u8 *pu8Buffer, u32 u32Length);
--void wilc_gnrl_async_info_received(u8 *pu8Buffer, u32 u32Length);
--void wilc_scan_complete_received(u8 *pu8Buffer, u32 u32Length);
--
-+void wilc_scan_complete_received(struct wilc *wilc, u8 *pu8Buffer,
-+				 u32 u32Length);
-+void wilc_network_info_received(struct wilc *wilc, u8 *pu8Buffer,
-+				u32 u32Length);
-+void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *pu8Buffer,
-+				   u32 u32Length);
- #endif
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 007b9a0..123887cf 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4028,7 +4028,8 @@ s32 wilc_deinit(struct wilc_vif *vif)
- 	return result;
- }
- 
--void wilc_network_info_received(u8 *pu8Buffer, u32 u32Length)
-+void wilc_network_info_received(struct wilc *wilc, u8 *pu8Buffer,
-+				u32 u32Length)
- {
- 	s32 result = 0;
- 	struct host_if_msg msg;
-@@ -4057,7 +4058,8 @@ void wilc_network_info_received(u8 *pu8Buffer, u32 u32Length)
- 		PRINT_ER("Error in sending network info message queue message parameters: Error(%d)\n", result);
- }
- 
--void wilc_gnrl_async_info_received(u8 *pu8Buffer, u32 u32Length)
-+void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *pu8Buffer,
-+				   u32 u32Length)
- {
- 	s32 result = 0;
- 	struct host_if_msg msg;
-@@ -4098,7 +4100,8 @@ void wilc_gnrl_async_info_received(u8 *pu8Buffer, u32 u32Length)
- 	up(&hif_sema_deinit);
- }
- 
--void wilc_scan_complete_received(u8 *pu8Buffer, u32 u32Length)
-+void wilc_scan_complete_received(struct wilc *wilc, u8 *pu8Buffer,
-+				 u32 u32Length)
- {
- 	s32 result = 0;
- 	struct host_if_msg msg;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 768a42c..00f3464 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -988,7 +988,7 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- 				} else {
- 					struct wilc_cfg_rsp rsp;
- 
--					wilc_wlan_cfg_indicate_rx(&buffer[pkt_offset + offset], pkt_len, &rsp);
-+					wilc_wlan_cfg_indicate_rx(wilc, &buffer[pkt_offset + offset], pkt_len, &rsp);
- 					if (rsp.type == WILC_CFG_RSP) {
- 						PRINT_D(RX_DBG, "wilc->cfg_seq_no = %d - rsp.seq_no = %d\n", wilc->cfg_seq_no, rsp.seq_no);
- 						if (wilc->cfg_seq_no == rsp.seq_no)
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index f62c0e6..b72c77b 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -495,7 +495,8 @@ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
- 	return ret;
- }
- 
--int wilc_wlan_cfg_indicate_rx(u8 *frame, int size, struct wilc_cfg_rsp *rsp)
-+int wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
-+			      struct wilc_cfg_rsp *rsp)
- {
- 	int ret = 1;
- 	u8 msg_type;
-@@ -522,17 +523,17 @@ int wilc_wlan_cfg_indicate_rx(u8 *frame, int size, struct wilc_cfg_rsp *rsp)
- 		rsp->seq_no = msg_id;
- 		/*call host interface info parse as well*/
- 		PRINT_INFO(RX_DBG, "Info message received\n");
--		wilc_gnrl_async_info_received(frame - 4, size + 4);
-+		wilc_gnrl_async_info_received(wilc, frame - 4, size + 4);
- 		break;
- 
- 	case 'N':
--		wilc_network_info_received(frame - 4, size + 4);
-+		wilc_network_info_received(wilc, frame - 4, size + 4);
- 		rsp->type = 0;
- 		break;
- 
- 	case 'S':
- 		PRINT_INFO(RX_DBG, "Scan Notification Received\n");
--		wilc_scan_complete_received(frame - 4, size + 4);
-+		wilc_scan_complete_received(wilc, frame - 4, size + 4);
- 		break;
- 
- 	default:
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-index 443b2d5..5f74eb8 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-@@ -30,10 +30,12 @@ typedef struct {
- 	u8 *str;
- } wilc_cfg_str_t;
- 
-+struct wilc;
- int wilc_wlan_cfg_set_wid(u8 *frame, u32 offset, u16 id, u8 *buf, int size);
- int wilc_wlan_cfg_get_wid(u8 *frame, u32 offset, u16 id);
- int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size);
--int wilc_wlan_cfg_indicate_rx(u8 *frame, int size, struct wilc_cfg_rsp *rsp);
-+int wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
-+			      struct wilc_cfg_rsp *rsp);
- int wilc_wlan_cfg_init(wilc_debug_func func);
- 
- #endif
--- 
-1.9.1
+On 12/30/2015 07:15 PM, Nicholas Krause wrote:
+> This fixes error handling in the function iwl_pcie_enqueue_hcmd
+> by checking if all calls to the function wl_pcie_txq_build_tfd
+> have failed by returning a error code and if so jump to the goto
+> label out from the cleaning up of acquired resources before
+
+
+For sure you haven't ran your code otherwise you would have noticed it
+break pretty much everything.
+Moreover this patch is not based on my -next tree.
+Simple rebasing won't fix the obvious issues in your patch though.
+
+> Signed-off-by: Nicholas Krause <xerofoify@gmail.com>
+> ---
+>  drivers/net/wireless/iwlwifi/pcie/tx.c | 27 +++++++++++++++++----------
+>  1 file changed, 17 insertions(+), 10 deletions(-)
+>
+> diff --git a/drivers/net/wireless/iwlwifi/pcie/tx.c b/drivers/net/wireless/iwlwifi/pcie/tx.c
+> index 2b86c21..49c8c77 100644
+> --- a/drivers/net/wireless/iwlwifi/pcie/tx.c
+> +++ b/drivers/net/wireless/iwlwifi/pcie/tx.c
+> @@ -1472,9 +1472,11 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+>  	/* start the TFD with the scratchbuf */
+>  	scratch_size = min_t(int, copy_size, IWL_HCMD_SCRATCHBUF_SIZE);
+>  	memcpy(&txq->scratchbufs[q->write_ptr], &out_cmd->hdr, scratch_size);
+> -	iwl_pcie_txq_build_tfd(trans, txq,
+> -			       iwl_pcie_get_scratchbuf_dma(txq, q->write_ptr),
+> -			       scratch_size, true);
+> +	idx = iwl_pcie_txq_build_tfd(trans, txq,
+> +				     iwl_pcie_get_scratchbuf_dma(txq, q->write_ptr),
+> +				     scratch_size, true);
+> +	if (idx)
+> +		goto out;
+>  
+>  	/* map first command fragment, if any remains */
+>  	if (copy_size > scratch_size) {
+> @@ -1489,8 +1491,9 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+>  			goto out;
+>  		}
+>  
+> -		iwl_pcie_txq_build_tfd(trans, txq, phys_addr,
+> -				       copy_size - scratch_size, false);
+> +		idx = iwl_pcie_txq_build_tfd(trans, txq, phys_addr, copy_size - scratch_size, false);
+> +		if (idx)
+> +			goto out;
+>  	}
+>  
+>  	/* map the remaining (adjusted) nocopy/dup fragments */
+> @@ -1513,7 +1516,9 @@ static int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
+>  			goto out;
+>  		}
+>  
+> -		iwl_pcie_txq_build_tfd(trans, txq, phys_addr, cmdlen[i], false);
+> +		idx = iwl_pcie_txq_build_tfd(trans, txq, phys_addr, cmdlen[i], false);
+> +		if (idx)
+> +			goto out;
+>  	}
+>  
+>  	out_meta->flags = cmd->flags;
+> @@ -1830,8 +1835,8 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+>  	/* The first TB points to the scratchbuf data - min_copy bytes */
+>  	memcpy(&txq->scratchbufs[q->write_ptr], &dev_cmd->hdr,
+>  	       IWL_HCMD_SCRATCHBUF_SIZE);
+> -	iwl_pcie_txq_build_tfd(trans, txq, tb0_phys,
+> -			       IWL_HCMD_SCRATCHBUF_SIZE, true);
+> +	if (iwl_pcie_txq_build_tfd(trans, txq, tb0_phys, IWL_HCMD_SCRATCHBUF_SIZE, true))
+> +			goto out_err;
+>  
+>  	/* there must be data left over for TB1 or this code must be changed */
+>  	BUILD_BUG_ON(sizeof(struct iwl_tx_cmd) < IWL_HCMD_SCRATCHBUF_SIZE);
+> @@ -1841,7 +1846,8 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+>  	tb1_phys = dma_map_single(trans->dev, tb1_addr, tb1_len, DMA_TO_DEVICE);
+>  	if (unlikely(dma_mapping_error(trans->dev, tb1_phys)))
+>  		goto out_err;
+> -	iwl_pcie_txq_build_tfd(trans, txq, tb1_phys, tb1_len, false);
+> +	if (iwl_pcie_txq_build_tfd(trans, txq, tb1_phys, tb1_len, false))
+> +			goto out_err;
+>  
+>  	/*
+>  	 * Set up TFD's third entry to point directly to remainder
+> @@ -1857,7 +1863,8 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
+>  					   &txq->tfds[q->write_ptr]);
+>  			goto out_err;
+>  		}
+> -		iwl_pcie_txq_build_tfd(trans, txq, tb2_phys, tb2_len, false);
+> +		if (iwl_pcie_txq_build_tfd(trans, txq, tb2_phys, tb2_len, false))
+> +			goto out_err;
+>  	}
+>  
+>  	/* Set up entry for this TFD in Tx byte-count array */
 
