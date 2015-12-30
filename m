@@ -1,67 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:36226 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933209AbbLXHxu (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38808 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750940AbbL3PCf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Dec 2015 02:53:50 -0500
-Received: by mail-pa0-f52.google.com with SMTP id q3so124624974pav.3
-        for <linux-wireless@vger.kernel.org>; Wed, 23 Dec 2015 23:53:49 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 21/21] staging: wilc1000: rename pstrStatistics in wilc_get_statistics
-Date: Thu, 24 Dec 2015 16:52:39 +0900
-Message-Id: <1450943559-20937-21-git-send-email-chaehyun.lim@gmail.com> (sfid-20151224_092249_800051_29309C65)
-In-Reply-To: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1450943559-20937-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 30 Dec 2015 10:02:35 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Shengzhen Li <szli@marvell.com>
+Subject: Re: [PATCH 02/14] mwifiex: multiple bss support
+References: <1450095315-19927-1-git-send-email-akarwar@marvell.com>
+	<1450095315-19927-3-git-send-email-akarwar@marvell.com>
+Date: Wed, 30 Dec 2015 17:02:27 +0200
+In-Reply-To: <1450095315-19927-3-git-send-email-akarwar@marvell.com>
+	(Amitkumar Karwar's message of "Mon, 14 Dec 2015 04:15:03 -0800")
+Message-ID: <87fuykou7w.fsf@kamboji.qca.qualcomm.com> (sfid-20151230_160237_447571_0A2258F4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pstrStatistics to stats to avoid camelcase.
+Amitkumar Karwar <akarwar@marvell.com> writes:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+> From: Shengzhen Li <szli@marvell.com>
+>
+> This patch fixes issues observed while starting 3 different
+> bss simultaneously, eg, 2 AP + 1 STA or 3 AP
+>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 732ea96..5113d3d 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3656,14 +3656,14 @@ int wilc_get_rssi(struct wilc_vif *vif, s8 *rssi_level)
- 	return result;
- }
- 
--int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *pstrStatistics)
-+int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *stats)
- {
- 	int result = 0;
- 	struct host_if_msg msg;
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 	msg.id = HOST_IF_MSG_GET_STATISTICS;
--	msg.body.data = (char *)pstrStatistics;
-+	msg.body.data = (char *)stats;
- 	msg.vif = vif;
- 
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index c64dc13d..b8b235d 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -365,7 +365,7 @@ s32 wilc_listen_state_expired(struct wilc_vif *vif, u32 u32SessionID);
- s32 wilc_frame_register(struct wilc_vif *vif, u16 u16FrameType, bool bReg);
- int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index);
- int wilc_set_operation_mode(struct wilc_vif *vif, u32 mode);
--int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *pstrStatistics);
-+int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *stats);
- void wilc_resolve_disconnect_aberration(struct wilc_vif *vif);
- int wilc_get_vif_idx(struct wilc_vif *vif);
- 
+I applied this already but I want to point out still that the title is
+quite vague. For example, "mwifiex: fix an issue with 3 simultaneous
+bss" would have been more informative.
+
 -- 
-2.6.4
-
+Kalle Valo
