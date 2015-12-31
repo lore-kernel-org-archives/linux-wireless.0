@@ -1,165 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from softlayer.compulab.co.il ([50.23.254.55]:46105 "EHLO
-	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755584AbbLWIfx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Dec 2015 03:35:53 -0500
-From: Uri Mashiach <uri.mashiach@compulab.co.il>
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Tony Lindgren <tony@atomide.com>
-Cc: Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
-	Igor Grinberg <grinberg@compulab.co.il>,
-	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org,
-	Uri Mashiach <uri.mashiach@compulab.co.il>
-Subject: [PATCH 1/3] wlcore/wl12xx: spi: fix NULL pointer dereference (Oops)
-Date: Wed, 23 Dec 2015 10:35:42 +0200
-Message-Id: <1450859744-9948-2-git-send-email-uri.mashiach@compulab.co.il> (sfid-20151223_093620_660353_B339E74C)
-In-Reply-To: <1450859744-9948-1-git-send-email-uri.mashiach@compulab.co.il>
-References: <1450859744-9948-1-git-send-email-uri.mashiach@compulab.co.il>
+Received: from mail-lf0-f48.google.com ([209.85.215.48]:33868 "EHLO
+	mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751234AbbLaMhd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Dec 2015 07:37:33 -0500
+From: meleodr@gmail.com
+To: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Cc: Daniil Leshchev <meleodr@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joe Perches <joe@perches.com>
+Subject: [PATCH] staging: rtl8723au: use %pM and %ph formatting
+Date: Thu, 31 Dec 2015 15:36:42 +0300
+Message-Id: <1451565407-15039-1-git-send-email-meleodr@gmail.com> (sfid-20151231_133740_125479_30B06ACA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The power function uses a consumer regulator access to update the WiFi
-enable GPIO value.
+From: Daniil Leshchev <meleodr@gmail.com>
 
-Fix the below Oops when trying to modprobe wlcore_spi.
-The oops occurs because the wl1271_power_{off,on}()
-function doesn't check the power() function pointer.
+use %pM and %ph specifiers instead of placing each byte on stack.
+(staging/rtl8723au/TODO)
 
-[   23.401447] Unable to handle kernel NULL pointer dereference at
-virtual address 00000000
-[   23.409954] pgd = c0004000
-[   23.412922] [00000000] *pgd=00000000
-[   23.416693] Internal error: Oops: 80000007 [#1] SMP ARM
-[   23.422168] Modules linked in: wl12xx wlcore mac80211 cfg80211
-musb_dsps musb_hdrc usbcore usb_common snd_soc_simple_card evdev joydev
-omap_rng wlcore_spi snd_soc_tlv320aic23_i2c rng_core snd_soc_tlv320aic23
-c_can_platform c_can can_dev snd_soc_davinci_mcasp snd_soc_edma
-snd_soc_omap omap_wdt musb_am335x cpufreq_dt thermal_sys hwmon
-[   23.453253] CPU: 0 PID: 36 Comm: kworker/0:2 Not tainted
-4.2.0-00002-g951efee-dirty #233
-[   23.461720] Hardware name: Generic AM33XX (Flattened Device Tree)
-[   23.468123] Workqueue: events request_firmware_work_func
-[   23.473690] task: de32efc0 ti: de4ee000 task.ti: de4ee000
-[   23.479341] PC is at 0x0
-[   23.482112] LR is at wl12xx_set_power_on+0x28/0x124 [wlcore]
-[   23.488074] pc : [<00000000>]    lr : [<bf2581f0>]    psr: 60000013
-[   23.488074] sp : de4efe50  ip : 00000002  fp : 00000000
-[   23.500162] r10: de7cdd00  r9 : dc848800  r8 : bf27af00
-[   23.505663] r7 : bf27a1a8  r6 : dcbd8a80  r5 : dce0e2e0  r4 :
-dce0d2e0
-[   23.512536] r3 : 00000000  r2 : 00000000  r1 : 00000001  r0 :
-dc848810
-[   23.519412] Flags: nZCv  IRQs on  FIQs on  Mode SVC_32  ISA ARM
-Segment kernel
-[   23.527109] Control: 10c5387d  Table: 9cb78019  DAC: 00000015
-[   23.533160] Process kworker/0:2 (pid: 36, stack limit = 0xde4ee218)
-[   23.539760] Stack: (0xde4efe50 to 0xde4f0000)
-
-[...]
-
-[   23.665030] [<bf2581f0>] (wl12xx_set_power_on [wlcore]) from
-[<bf25f7ac>] (wlcore_nvs_cb+0x118/0xa4c [wlcore])
-[   23.675604] [<bf25f7ac>] (wlcore_nvs_cb [wlcore]) from [<c04387ec>]
-(request_firmware_work_func+0x30/0x58)
-[   23.685784] [<c04387ec>] (request_firmware_work_func) from
-[<c0058e2c>] (process_one_work+0x1b4/0x4b4)
-[   23.695591] [<c0058e2c>] (process_one_work) from [<c0059168>]
-(worker_thread+0x3c/0x4a4)
-[   23.704124] [<c0059168>] (worker_thread) from [<c005ee68>]
-(kthread+0xd4/0xf0)
-[   23.711747] [<c005ee68>] (kthread) from [<c000f598>]
-(ret_from_fork+0x14/0x3c)
-[   23.719357] Code: bad PC value
-[   23.722760] ---[ end trace 981be8510db9b3a9 ]---
-
-Fix this by adding a power() function implementation.
-
-Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
-Acked-by: Igor Grinberg <grinberg@compulab.co.il>
+Signed-off-by: Daniil Leshchev <meleodr@gmail.com>
 ---
- drivers/net/wireless/ti/wlcore/spi.c | 37 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 37 insertions(+)
+ drivers/staging/rtl8723au/core/rtw_recv.c          | 32 +++++-----------------
+ .../staging/rtl8723au/hal/rtl8723a_bt-coexist.c    | 24 ++++------------
+ drivers/staging/rtl8723au/hal/usb_halinit.c        |  6 ++--
+ 3 files changed, 15 insertions(+), 47 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
-index 44f059f..d3a4bcb 100644
---- a/drivers/net/wireless/ti/wlcore/spi.c
-+++ b/drivers/net/wireless/ti/wlcore/spi.c
-@@ -30,6 +30,7 @@
- #include <linux/spi/spi.h>
- #include <linux/wl12xx.h>
- #include <linux/platform_device.h>
-+#include <linux/regulator/consumer.h>
+diff --git a/drivers/staging/rtl8723au/core/rtw_recv.c b/drivers/staging/rtl8723au/core/rtw_recv.c
+index 404b618..81abe50 100644
+--- a/drivers/staging/rtl8723au/core/rtw_recv.c
++++ b/drivers/staging/rtl8723au/core/rtw_recv.c
+@@ -361,33 +361,19 @@ int recvframe_chkmic(struct rtw_adapter *adapter,
+ 				int i;
  
- #include "wlcore.h"
- #include "wl12xx_80211.h"
-@@ -81,6 +82,7 @@
- struct wl12xx_spi_glue {
- 	struct device *dev;
- 	struct platform_device *core;
-+	struct regulator *reg; /* Power regulator */
- };
+ 				RT_TRACE(_module_rtl871x_recv_c_, _drv_err_,
+-					 "*(pframemic-8)-*(pframemic-1) =0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x\n",
+-					 *(pframemic - 8), *(pframemic - 7),
+-					 *(pframemic - 6), *(pframemic - 5),
+-					 *(pframemic - 4), *(pframemic - 3),
+-					 *(pframemic - 2), *(pframemic - 1));
++					 "*(pframemic-8)-*(pframemic-1) =%*phC\n",
++					 8, pframemic - 8);
+ 				RT_TRACE(_module_rtl871x_recv_c_, _drv_err_,
+-					 "*(pframemic-16)-*(pframemic-9) =0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x\n",
+-					 *(pframemic - 16), *(pframemic - 15),
+-					 *(pframemic - 14), *(pframemic - 13),
+-					 *(pframemic - 12), *(pframemic - 11),
+-					 *(pframemic - 10), *(pframemic - 9));
++					 "*(pframemic-16)-*(pframemic-9) =%*phC\n",
++					 8, pframemic - 16);
  
- static void wl12xx_spi_reset(struct device *child)
-@@ -318,11 +320,40 @@ static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
- 	return 0;
+ 				RT_TRACE(_module_rtl871x_recv_c_, _drv_err_,
+ 					 "====== demp packet (len =%d) ======\n",
+ 					 precvframe->pkt->len);
+ 				for (i = 0; i < precvframe->pkt->len; i = i + 8) {
+ 					RT_TRACE(_module_rtl871x_recv_c_,
+-						 _drv_err_,
+-						 "0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x:0x%02x\n",
+-						 *(precvframe->pkt->data+i),
+-						 *(precvframe->pkt->data+i+1),
+-						 *(precvframe->pkt->data+i+2),
+-						 *(precvframe->pkt->data+i+3),
+-						 *(precvframe->pkt->data+i+4),
+-						 *(precvframe->pkt->data+i+5),
+-						 *(precvframe->pkt->data+i+6),
+-						 *(precvframe->pkt->data+i+7));
++						 _drv_err_, "%*phC\n",
++						 8, precvframe->pkt->data + i);
+ 				}
+ 				RT_TRACE(_module_rtl871x_recv_c_, _drv_err_,
+ 					 "====== demp packet end [len =%d]======\n",
+@@ -1402,11 +1388,7 @@ static void dump_rx_pkt(struct sk_buff *skb, u16 type, int level)
+ 		DBG_8723A("#############################\n");
+ 
+ 		for (i = 0; i < 64; i = i + 8)
+-			DBG_8723A("%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X:\n",
+-				  *(ptr + i), *(ptr + i + 1), *(ptr + i + 2),
+-				  *(ptr + i + 3), *(ptr + i + 4),
+-				  *(ptr + i + 5), *(ptr + i + 6),
+-				  *(ptr + i + 7));
++			DBG_8723A("%*phC:\n", 8, ptr + i);
+ 		DBG_8723A("#############################\n");
+ 	}
+ }
+diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
+index d5c48a5..d46d1c7 100644
+--- a/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
++++ b/drivers/staging/rtl8723au/hal/rtl8723a_bt-coexist.c
+@@ -1454,21 +1454,11 @@ bthci_StartBeaconAndConnect(
+ 	}
+ 
+ 	if (pBTInfo->BtAsocEntry[CurrentAssocNum].AMPRole == AMP_BTAP_CREATOR) {
+-		snprintf((char *)pBTInfo->BtAsocEntry[CurrentAssocNum].BTSsidBuf, 32, "AMP-%02x-%02x-%02x-%02x-%02x-%02x",
+-		padapter->eeprompriv.mac_addr[0],
+-		padapter->eeprompriv.mac_addr[1],
+-		padapter->eeprompriv.mac_addr[2],
+-		padapter->eeprompriv.mac_addr[3],
+-		padapter->eeprompriv.mac_addr[4],
+-		padapter->eeprompriv.mac_addr[5]);
++		snprintf((char *)pBTInfo->BtAsocEntry[CurrentAssocNum].BTSsidBuf, 32,
++			 "AMP-%pMF", padapter->eeprompriv.mac_addr);
+ 	} else if (pBTInfo->BtAsocEntry[CurrentAssocNum].AMPRole == AMP_BTAP_JOINER) {
+-		snprintf((char *)pBTInfo->BtAsocEntry[CurrentAssocNum].BTSsidBuf, 32, "AMP-%02x-%02x-%02x-%02x-%02x-%02x",
+-		pBTInfo->BtAsocEntry[CurrentAssocNum].BTRemoteMACAddr[0],
+-		pBTInfo->BtAsocEntry[CurrentAssocNum].BTRemoteMACAddr[1],
+-		pBTInfo->BtAsocEntry[CurrentAssocNum].BTRemoteMACAddr[2],
+-		pBTInfo->BtAsocEntry[CurrentAssocNum].BTRemoteMACAddr[3],
+-		pBTInfo->BtAsocEntry[CurrentAssocNum].BTRemoteMACAddr[4],
+-		pBTInfo->BtAsocEntry[CurrentAssocNum].BTRemoteMACAddr[5]);
++		snprintf((char *)pBTInfo->BtAsocEntry[CurrentAssocNum].BTSsidBuf, 32,
++			 "AMP-%pMF", pBTInfo->BtAsocEntry[CurrentAssocNum].BTRemoteMACAddr);
+ 	}
+ 
+ 	FillOctetString(pBTInfo->BtAsocEntry[CurrentAssocNum].BTSsid, pBTInfo->BtAsocEntry[CurrentAssocNum].BTSsidBuf, 21);
+@@ -9475,10 +9465,8 @@ static void BTDM_Display8723ABtCoexInfo(struct rtw_adapter *padapter)
+ 			psTdmaCase = pHalData->bt_coexist.halCoex8723.btdm1Ant.curPsTdma;
+ 		else
+ 			psTdmaCase = pHalData->bt_coexist.halCoex8723.btdm2Ant.curPsTdma;
+-		snprintf(btCoexDbgBuf, BT_TMP_BUF_SIZE, "\r\n %-35s = %02x %02x %02x %02x %02x case-%d", "PS TDMA(0x3a)", \
+-			pHalData->bt_coexist.fw3aVal[0], pHalData->bt_coexist.fw3aVal[1],
+-			pHalData->bt_coexist.fw3aVal[2], pHalData->bt_coexist.fw3aVal[3],
+-			pHalData->bt_coexist.fw3aVal[4], psTdmaCase);
++		snprintf(btCoexDbgBuf, BT_TMP_BUF_SIZE, "\r\n %-35s = %*ph case-%d",
++			 "PS TDMA(0x3a)", 5, pHalData->bt_coexist.fw3aVal, psTdmaCase);
+ 		DCMD_Printf(btCoexDbgBuf);
+ 
+ 		snprintf(btCoexDbgBuf, BT_TMP_BUF_SIZE, "\r\n %-35s = %d ", "Decrease Bt Power", \
+diff --git a/drivers/staging/rtl8723au/hal/usb_halinit.c b/drivers/staging/rtl8723au/hal/usb_halinit.c
+index 9926b07..3c2d03e 100644
+--- a/drivers/staging/rtl8723au/hal/usb_halinit.c
++++ b/drivers/staging/rtl8723au/hal/usb_halinit.c
+@@ -1021,10 +1021,8 @@ static void Hal_EfuseParseMACAddr_8723AU(struct rtw_adapter *padapter,
+ 	}
+ 
+ 	RT_TRACE(_module_hci_hal_init_c_, _drv_notice_,
+-		 "Hal_EfuseParseMACAddr_8723AU: Permanent Address =%02x:%02x:%02x:%02x:%02x:%02x\n",
+-		 pEEPROM->mac_addr[0], pEEPROM->mac_addr[1],
+-		 pEEPROM->mac_addr[2], pEEPROM->mac_addr[3],
+-		 pEEPROM->mac_addr[4], pEEPROM->mac_addr[5]);
++		 "Hal_EfuseParseMACAddr_8723AU: Permanent Address =%pM\n",
++		 pEEPROM->mac_addr);
  }
  
-+/**
-+ * wl12xx_spi_set_power - power on/off the wl12xx unit
-+ * @child: wl12xx device handle.
-+ * @enable: true/false to power on/off the unit.
-+ *
-+ * use the WiFi enable regulator to enable/disable the WiFi unit.
-+ */
-+static int wl12xx_spi_set_power(struct device *child, bool enable)
-+{
-+	int ret = 0;
-+	struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
-+
-+	WARN_ON(!glue->reg);
-+
-+	/* Update regulator state */
-+	if (enable) {
-+		ret = regulator_enable(glue->reg);
-+		if (ret)
-+			dev_err(child, "Power enable failure\n");
-+	} else {
-+		ret =  regulator_disable(glue->reg);
-+		if (ret)
-+			dev_err(child, "Power disable failure\n");
-+	}
-+
-+	return ret;
-+}
-+
- static struct wl1271_if_operations spi_ops = {
- 	.read		= wl12xx_spi_raw_read,
- 	.write		= wl12xx_spi_raw_write,
- 	.reset		= wl12xx_spi_reset,
- 	.init		= wl12xx_spi_init,
-+	.power		= wl12xx_spi_set_power,
- 	.set_block_size = NULL,
- };
- 
-@@ -353,6 +384,12 @@ static int wl1271_probe(struct spi_device *spi)
- 	 * comes from the board-peripherals file */
- 	spi->bits_per_word = 32;
- 
-+	glue->reg = devm_regulator_get(&spi->dev, "vwlan");
-+	if (IS_ERR(glue->reg)) {
-+		dev_err(glue->dev, "can't get regulator\n");
-+		return PTR_ERR(glue->reg);
-+	}
-+
- 	ret = spi_setup(spi);
- 	if (ret < 0) {
- 		dev_err(glue->dev, "spi_setup failed\n");
+ static void readAdapterInfo(struct rtw_adapter *padapter)
 -- 
-2.5.0
+1.9.1
 
