@@ -1,96 +1,373 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:18072 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751856AbbLDOOl (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:16157 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751183AbbLaO0h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Dec 2015 09:14:41 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tB4E9UL2029053
-	for <linux-wireless@vger.kernel.org>; Fri, 4 Dec 2015 06:14:41 -0800
+	Thu, 31 Dec 2015 09:26:37 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id tBVEPCOQ013010
+	for <linux-wireless@vger.kernel.org>; Thu, 31 Dec 2015 06:26:37 -0800
 Received: from sc-exch04.marvell.com ([199.233.58.184])
-	by mx0a-0016f401.pphosted.com with ESMTP id 1yk5tpa135-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Fri, 04 Dec 2015 06:14:41 -0800
+	by mx0b-0016f401.pphosted.com with ESMTP id 20327phmm5-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 31 Dec 2015 06:26:37 -0800
 From: Amitkumar Karwar <akarwar@marvell.com>
 To: <linux-wireless@vger.kernel.org>
 CC: Cathy Luo <cluo@marvell.com>,
 	Nishant Sarmukadam <nishants@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
 	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 3/6] mwifiex: set regulatory info from EEPROM
-Date: Fri, 4 Dec 2015 06:13:04 -0800
-Message-ID: <1449238387-27396-3-git-send-email-akarwar@marvell.com> (sfid-20151204_151449_702583_6112EDE4)
-In-Reply-To: <1449238387-27396-1-git-send-email-akarwar@marvell.com>
-References: <1449238387-27396-1-git-send-email-akarwar@marvell.com>
+Subject: [PATCH 2/4] mwifiex: enable pcie MSIx interrupt mode support
+Date: Thu, 31 Dec 2015 06:24:13 -0800
+Message-ID: <1451571855-29449-2-git-send-email-akarwar@marvell.com> (sfid-20151231_152709_227709_9A6C60F8)
+In-Reply-To: <1451571855-29449-1-git-send-email-akarwar@marvell.com>
+References: <1451571855-29449-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver gets country information from EEPROM during
-initialization. We will call regulatory_hint to update
-current regulatory domain.
-As by default world regulatory domain is selected by
-cfg80211, country '00' from EEPROM is ignored.
+From: Xinming Hu <huxm@marvell.com>
 
+Newer pcie chipsets (8997 onwards) support MSIx. This
+patch enables it.
+
+Signed-off-by: Xinming Hu <huxm@marvell.com>
 Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 14 +++++++++-----
- drivers/net/wireless/marvell/mwifiex/cfp.c      |  2 +-
- drivers/net/wireless/marvell/mwifiex/main.h     |  2 +-
- 3 files changed, 11 insertions(+), 7 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 187 +++++++++++++++++++++++-----
+ drivers/net/wireless/marvell/mwifiex/pcie.h |  15 +++
+ 2 files changed, 174 insertions(+), 28 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 4073116..9b570e1 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3862,11 +3862,15 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
- 			    "driver hint alpha2: %2.2s\n", reg_alpha2);
- 		regulatory_hint(wiphy, reg_alpha2);
- 	} else {
--		country_code = mwifiex_11d_code_2_region(adapter->region_code);
--		if (country_code)
--			mwifiex_dbg(adapter, WARN,
--				    "ignoring F/W country code %2.2s\n",
--				    country_code);
-+		if (adapter->region_code == 0x00) {
-+			mwifiex_dbg(adapter, WARN, "Ignore world regulatory domain\n");
-+		} else {
-+			country_code =
-+				mwifiex_11d_code_2_region(adapter->region_code);
-+			if (country_code &&
-+			    regulatory_hint(wiphy, country_code))
-+				mwifiex_dbg(priv->adapter, ERROR, "regulatory_hint() failed\n");
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 165fe4f..57750f5 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2082,20 +2082,28 @@ mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
+ /*
+  * This function reads the interrupt status from card.
+  */
+-static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
++static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter,
++				     int msg_id)
+ {
+ 	u32 pcie_ireg;
+ 	unsigned long flags;
++	struct pcie_service_card *card = adapter->card;
+ 
+ 	if (!mwifiex_pcie_ok_to_access_hw(adapter))
+ 		return;
+ 
+-	if (mwifiex_read_reg(adapter, PCIE_HOST_INT_STATUS, &pcie_ireg)) {
+-		mwifiex_dbg(adapter, ERROR, "Read register failed\n");
+-		return;
+-	}
++	if (card->msix_enable && msg_id >= 0) {
++		pcie_ireg = BIT(msg_id);
++	} else {
++		if (mwifiex_read_reg(adapter, PCIE_HOST_INT_STATUS,
++				     &pcie_ireg)) {
++			mwifiex_dbg(adapter, ERROR, "Read register failed\n");
++			return;
 +		}
++
++		if ((pcie_ireg == 0xFFFFFFFF) || !pcie_ireg)
++			return;
+ 
+-	if ((pcie_ireg != 0xFFFFFFFF) && (pcie_ireg)) {
+ 
+ 		mwifiex_pcie_disable_host_int(adapter);
+ 
+@@ -2106,20 +2114,23 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
+ 				    "Write register failed\n");
+ 			return;
+ 		}
+-		spin_lock_irqsave(&adapter->int_lock, flags);
+-		adapter->int_status |= pcie_ireg;
+-		spin_unlock_irqrestore(&adapter->int_lock, flags);
+-
+-		if (!adapter->pps_uapsd_mode &&
+-		    adapter->ps_state == PS_STATE_SLEEP &&
+-		    mwifiex_pcie_ok_to_access_hw(adapter)) {
+-				/* Potentially for PCIe we could get other
+-				 * interrupts like shared. Don't change power
+-				 * state until cookie is set */
+-				adapter->ps_state = PS_STATE_AWAKE;
+-				adapter->pm_wakeup_fw_try = false;
+-				del_timer(&adapter->wakeup_timer);
+-		}
++	}
++
++	spin_lock_irqsave(&adapter->int_lock, flags);
++	adapter->int_status |= pcie_ireg;
++	spin_unlock_irqrestore(&adapter->int_lock, flags);
++	mwifiex_dbg(adapter, INTR, "ireg: 0x%08x\n", pcie_ireg);
++
++	if (!adapter->pps_uapsd_mode &&
++	    adapter->ps_state == PS_STATE_SLEEP &&
++	    mwifiex_pcie_ok_to_access_hw(adapter)) {
++		/* Potentially for PCIe we could get other
++		 * interrupts like shared. Don't change power
++		 * state until cookie is set
++		 */
++		adapter->ps_state = PS_STATE_AWAKE;
++		adapter->pm_wakeup_fw_try = false;
++		del_timer(&adapter->wakeup_timer);
  	}
+ }
  
- 	mwifiex_send_cmd(priv, HostCmd_CMD_802_11_SNMP_MIB,
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfp.c b/drivers/net/wireless/marvell/mwifiex/cfp.c
-index 3ddb8ec..dd3adc5 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfp.c
-@@ -66,7 +66,7 @@ static u8 supported_rates_bg[BG_SUPPORTED_RATES] = { 0x02, 0x04, 0x0b, 0x0c,
- 					0x12, 0x16, 0x18, 0x24, 0x30, 0x48,
- 					0x60, 0x6c, 0 };
+@@ -2131,7 +2142,8 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
+  */
+ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
+ {
+-	struct pci_dev *pdev = (struct pci_dev *)context;
++	struct mwifiex_msix_context *ctx = context;
++	struct pci_dev *pdev = ctx->dev;
+ 	struct pcie_service_card *card;
+ 	struct mwifiex_adapter *adapter;
  
--u16 region_code_index[MWIFIEX_MAX_REGION_CODE] = { 0x10, 0x20, 0x30,
-+u16 region_code_index[MWIFIEX_MAX_REGION_CODE] = { 0x00, 0x10, 0x20, 0x30,
- 						0x32, 0x40, 0x41, 0xff };
+@@ -2151,7 +2163,11 @@ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
+ 	if (adapter->surprise_removed)
+ 		goto exit;
  
- static u8 supported_rates_n[N_SUPPORTED_RATES] = { 0x02, 0x04, 0 };
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 3959f1c..a86e2ae 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -84,7 +84,7 @@ enum {
+-	mwifiex_interrupt_status(adapter);
++	if (card->msix_enable)
++		mwifiex_interrupt_status(adapter, ctx->msg_id);
++	else
++		mwifiex_interrupt_status(adapter, -1);
++
+ 	mwifiex_queue_main_work(adapter);
  
- #define MWIFIEX_KEY_BUFFER_SIZE			16
- #define MWIFIEX_DEFAULT_LISTEN_INTERVAL 10
--#define MWIFIEX_MAX_REGION_CODE         7
-+#define MWIFIEX_MAX_REGION_CODE         8
+ exit:
+@@ -2171,7 +2187,7 @@ exit:
+  * In case of Rx packets received, the packets are uploaded from card to
+  * host and processed accordingly.
+  */
+-static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
++static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
+ {
+ 	int ret;
+ 	u32 pcie_ireg;
+@@ -2251,6 +2267,69 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
+ 	return 0;
+ }
  
- #define DEFAULT_BCN_AVG_FACTOR          8
- #define DEFAULT_DATA_AVG_FACTOR         8
++static int mwifiex_process_msix_int(struct mwifiex_adapter *adapter)
++{
++	int ret;
++	u32 pcie_ireg;
++	unsigned long flags;
++
++	spin_lock_irqsave(&adapter->int_lock, flags);
++	/* Clear out unused interrupts */
++	pcie_ireg = adapter->int_status;
++	adapter->int_status = 0;
++	spin_unlock_irqrestore(&adapter->int_lock, flags);
++
++	if (pcie_ireg & HOST_INTR_DNLD_DONE) {
++		mwifiex_dbg(adapter, INTR,
++			    "info: TX DNLD Done\n");
++		ret = mwifiex_pcie_send_data_complete(adapter);
++		if (ret)
++			return ret;
++	}
++	if (pcie_ireg & HOST_INTR_UPLD_RDY) {
++		mwifiex_dbg(adapter, INTR,
++			    "info: Rx DATA\n");
++		ret = mwifiex_pcie_process_recv_data(adapter);
++		if (ret)
++			return ret;
++	}
++	if (pcie_ireg & HOST_INTR_EVENT_RDY) {
++		mwifiex_dbg(adapter, INTR,
++			    "info: Rx EVENT\n");
++		ret = mwifiex_pcie_process_event_ready(adapter);
++		if (ret)
++			return ret;
++	}
++
++	if (pcie_ireg & HOST_INTR_CMD_DONE) {
++		if (adapter->cmd_sent) {
++			mwifiex_dbg(adapter, INTR,
++				    "info: CMD sent Interrupt\n");
++			adapter->cmd_sent = false;
++		}
++		/* Handle command response */
++		ret = mwifiex_pcie_process_cmd_complete(adapter);
++		if (ret)
++			return ret;
++	}
++
++	mwifiex_dbg(adapter, INTR,
++		    "info: cmd_sent=%d data_sent=%d\n",
++		    adapter->cmd_sent, adapter->data_sent);
++
++	return 0;
++}
++
++static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
++{
++	struct pcie_service_card *card = adapter->card;
++
++	if (card->msix_enable)
++		return mwifiex_process_msix_int(adapter);
++	else
++		return mwifiex_process_pcie_int(adapter);
++}
++
+ /*
+  * This function downloads data from driver to card.
+  *
+@@ -2602,10 +2681,43 @@ static void mwifiex_pcie_cleanup(struct mwifiex_adapter *adapter)
+ 
+ static int mwifiex_pcie_request_irq(struct mwifiex_adapter *adapter)
+ {
+-	int ret;
++	int ret, i, j;
+ 	struct pcie_service_card *card = adapter->card;
+ 	struct pci_dev *pdev = card->dev;
+ 
++	if (card->pcie.reg->msix_support) {
++		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
++			card->msix_entries[i].entry = i;
++		ret = pci_enable_msix_exact(pdev, card->msix_entries,
++					    MWIFIEX_NUM_MSIX_VECTORS);
++		if (!ret) {
++			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++) {
++				card->msix_ctx[i].dev = pdev;
++				card->msix_ctx[i].msg_id = i;
++
++				ret = request_irq(card->msix_entries[i].vector,
++						  mwifiex_pcie_interrupt, 0,
++						  "MWIFIEX_PCIE_MSIX",
++						  &card->msix_ctx[i]);
++				if (ret)
++					break;
++			}
++
++			if (ret) {
++				mwifiex_dbg(adapter, INFO, "request_irq fail: %d\n",
++					    ret);
++				for (j = 0; j < i; j++)
++					free_irq(card->msix_entries[j].vector,
++						 &card->msix_ctx[i]);
++				pci_disable_msix(pdev);
++			} else {
++				mwifiex_dbg(adapter, MSG, "MSIx enabled!");
++				card->msix_enable = 1;
++				return 0;
++			}
++		}
++	}
++
+ 	if (pci_enable_msi(pdev) != 0)
+ 		pci_disable_msi(pdev);
+ 	else
+@@ -2613,8 +2725,10 @@ static int mwifiex_pcie_request_irq(struct mwifiex_adapter *adapter)
+ 
+ 	mwifiex_dbg(adapter, INFO, "msi_enable = %d\n", card->msi_enable);
+ 
++	card->share_irq_ctx.dev = pdev;
++	card->share_irq_ctx.msg_id = -1;
+ 	ret = request_irq(pdev->irq, mwifiex_pcie_interrupt, IRQF_SHARED,
+-			  "MRVL_PCIE", pdev);
++			  "MRVL_PCIE", &card->share_irq_ctx);
+ 	if (ret) {
+ 		pr_err("request_irq failed: ret=%d\n", ret);
+ 		adapter->card = NULL;
+@@ -2660,11 +2774,28 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+ {
+ 	struct pcie_service_card *card = adapter->card;
+ 	const struct mwifiex_pcie_card_reg *reg;
++	struct pci_dev *pdev = card->dev;
++	int i;
+ 
+ 	if (card) {
+-		mwifiex_dbg(adapter, INFO,
+-			    "%s(): calling free_irq()\n", __func__);
+-		free_irq(card->dev->irq, card->dev);
++		if (card->msix_enable) {
++			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
++				synchronize_irq(card->msix_entries[i].vector);
++
++			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
++				free_irq(card->msix_entries[i].vector,
++					 &card->msix_ctx[i]);
++
++			card->msix_enable = 0;
++			pci_disable_msix(pdev);
++	       } else {
++			mwifiex_dbg(adapter, INFO,
++				    "%s(): calling free_irq()\n", __func__);
++		       free_irq(card->dev->irq, &card->share_irq_ctx);
++
++			if (card->msi_enable)
++				pci_disable_msi(pdev);
++	       }
+ 
+ 		reg = card->pcie.reg;
+ 		if (reg->sleep_cookie)
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
+index 6fc2873..41b7f5e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.h
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+@@ -135,6 +135,7 @@ struct mwifiex_pcie_card_reg {
+ 	u16 fw_dump_ctrl;
+ 	u16 fw_dump_start;
+ 	u16 fw_dump_end;
++	u8 msix_support;
+ };
+ 
+ static const struct mwifiex_pcie_card_reg mwifiex_reg_8766 = {
+@@ -166,6 +167,7 @@ static const struct mwifiex_pcie_card_reg mwifiex_reg_8766 = {
+ 	.ring_tx_start_ptr = 0,
+ 	.pfu_enabled = 0,
+ 	.sleep_cookie = 1,
++	.msix_support = 0,
+ };
+ 
+ static const struct mwifiex_pcie_card_reg mwifiex_reg_8897 = {
+@@ -200,6 +202,7 @@ static const struct mwifiex_pcie_card_reg mwifiex_reg_8897 = {
+ 	.fw_dump_ctrl = 0xcf4,
+ 	.fw_dump_start = 0xcf8,
+ 	.fw_dump_end = 0xcff,
++	.msix_support = 0,
+ };
+ 
+ static const struct mwifiex_pcie_card_reg mwifiex_reg_8997 = {
+@@ -231,6 +234,7 @@ static const struct mwifiex_pcie_card_reg mwifiex_reg_8997 = {
+ 	.ring_tx_start_ptr = MWIFIEX_BD_FLAG_TX_START_PTR,
+ 	.pfu_enabled = 1,
+ 	.sleep_cookie = 0,
++	.msix_support = 1,
+ };
+ 
+ struct mwifiex_pcie_device {
+@@ -290,6 +294,13 @@ struct mwifiex_pfu_buf_desc {
+ 	u32 reserved;
+ } __packed;
+ 
++#define MWIFIEX_NUM_MSIX_VECTORS   4
++
++struct mwifiex_msix_context {
++	struct pci_dev *dev;
++	u16 msg_id;
++};
++
+ struct pcie_service_card {
+ 	struct pci_dev *dev;
+ 	struct mwifiex_adapter *adapter;
+@@ -327,6 +338,10 @@ struct pcie_service_card {
+ 	void __iomem *pci_mmap;
+ 	void __iomem *pci_mmap1;
+ 	int msi_enable;
++	int msix_enable;
++	struct msix_entry msix_entries[MWIFIEX_NUM_MSIX_VECTORS];
++	struct mwifiex_msix_context msix_ctx[MWIFIEX_NUM_MSIX_VECTORS];
++	struct mwifiex_msix_context share_irq_ctx;
+ };
+ 
+ static inline int
 -- 
 1.8.1.4
 
