@@ -1,85 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:35670 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933304AbbLHQb5 convert rfc822-to-8bit (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:33975 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751619AbbLaVzp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Dec 2015 11:31:57 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-CC: Johannes Berg <johannes@sipsolutions.net>,
+	Thu, 31 Dec 2015 16:55:45 -0500
+Received: by mail-wm0-f51.google.com with SMTP id u188so75546259wmu.1
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Dec 2015 13:55:44 -0800 (PST)
+Subject: Re: [PATCH 4/7] brcmfmac: obtain feature info using 'cap' firmware
+ command
+To: Mathy Vanhoef <vanhoefm@gmail.com>,
+	Arend van Spriel <arend@broadcom.com>
+References: <1450100394-17414-1-git-send-email-arend@broadcom.com>
+ <1450100394-17414-5-git-send-email-arend@broadcom.com>
+ <CAFXAJYwpk+-U-9pN2tnOmK05gixJZWYGi9_w+r9uktH2PqvEUQ@mail.gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/9] mac80211: limit the A-MSDU Tx based on peer's
- capabilities
-Date: Tue, 8 Dec 2015 16:31:21 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E912959@hasmsx107.ger.corp.intel.com> (sfid-20151208_173205_046336_89B75323)
-References: <1449583479-26658-1-git-send-email-emmanuel.grumbach@intel.com>
- <1449583479-26658-3-git-send-email-emmanuel.grumbach@intel.com>
- <CABPxzYJB9M5FtxdjXeB5t-ygqv8OQ9LpVqsMvGTJa_r=nOb4Bw@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+From: Arend van Spriel <aspriel@gmail.com>
+Message-ID: <5685A464.5030105@gmail.com> (sfid-20151231_225549_270885_CCD55B5A)
+Date: Thu, 31 Dec 2015 22:55:48 +0100
 MIME-Version: 1.0
+In-Reply-To: <CAFXAJYwpk+-U-9pN2tnOmK05gixJZWYGi9_w+r9uktH2PqvEUQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 12/08/2015 06:03 PM, Krishna Chaitanya wrote:
-> On Tue, Dec 8, 2015 at 7:34 PM, Emmanuel Grumbach
-> <emmanuel.grumbach@intel.com> wrote:
->> index 7a76ce6..f4a5287 100644
->> --- a/net/mac80211/ht.c
->> +++ b/net/mac80211/ht.c
->> @@ -230,6 +230,11 @@ bool ieee80211_ht_cap_ie_to_sta_ht_cap(struct ieee80211_sub_if_data *sdata,
->>         /* set Rx highest rate */
->>         ht_cap.mcs.rx_highest = ht_cap_ie->mcs.rx_highest;
+On 29-12-15 21:58, Mathy Vanhoef wrote:
+> On Mon, Dec 14, 2015 at 2:39 PM, Arend van Spriel <arend@broadcom.com> wrote:
+>> Several features in the driver directly map to a firmware feature
+>> listed in response of the 'cap' firmware command. For those features
+>> this response will be examined instead of attempting individual
+>> firmware commands.
 >>
->> +       if (ht_cap.cap & IEEE80211_HT_CAP_MAX_AMSDU)
->> +               sta->sta.max_amsdu_len = IEEE80211_MAX_MPDU_LEN_HT_7935;
->> +       else
->> +               sta->sta.max_amsdu_len = IEEE80211_MAX_MPDU_LEN_HT_3839;
+>> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>> ---
+>>  .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 51 +++++++++++++---------
+>>  1 file changed, 30 insertions(+), 21 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>> index d9d1ca4..08b7200 100644
+>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>> @@ -40,6 +40,17 @@ static const char *brcmf_feat_names[] = {
+>>  };
+>>  #undef BRCMF_FEAT_DEF
+>>
+>> +struct brcmf_feat_fwcap {
+>> +       enum brcmf_feat_id feature;
+>> +       const char * const fwcap_id;
+>> +};
 >> +
->>   apply:
->>         changed = memcmp(&sta->sta.ht_cap, &ht_cap, sizeof(ht_cap));
->>
->> diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
->> index 92c9843..d2f2ff6 100644
->> --- a/net/mac80211/vht.c
->> +++ b/net/mac80211/vht.c
->> @@ -281,6 +281,24 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+>> +static const struct brcmf_feat_fwcap brcmf_fwcap_map[] = {
+>> +       { BRCMF_FEAT_MBSS, "mbss" },
+>> +       { BRCMF_FEAT_MCHAN, "mchan" },
+>> +       { BRCMF_FEAT_P2P, "p2p" },
+>> +};
+>> +
+>>  #ifdef DEBUG
+>>  /*
+>>   * expand quirk list to array of quirk strings.
+>> @@ -104,25 +115,22 @@ static void brcmf_feat_iovar_int_get(struct brcmf_if *ifp,
 >>         }
+>>  }
 >>
->>         sta->sta.bandwidth = ieee80211_sta_cur_vht_bw(sta);
+>> -/**
+>> - * brcmf_feat_iovar_int_set() - determine feature through iovar set.
+>> - *
+>> - * @ifp: interface to query.
+>> - * @id: feature id.
+>> - * @name: iovar name.
+>> - */
+>> -static void brcmf_feat_iovar_int_set(struct brcmf_if *ifp,
+>> -                                    enum brcmf_feat_id id, char *name, u32 val)
+>> +static void brcmf_feat_firmware_capabilities(struct brcmf_if *ifp)
+>>  {
+>> -       int err;
+>> -
+>> -       err = brcmf_fil_iovar_int_set(ifp, name, val);
+>> -       if (err == 0) {
+>> -               brcmf_dbg(INFO, "enabling feature: %s\n", brcmf_feat_names[id]);
+>> -               ifp->drvr->feat_flags |= BIT(id);
+>> -       } else {
+>> -               brcmf_dbg(TRACE, "%s feature check failed: %d\n",
+>> -                         brcmf_feat_names[id], err);
+>> +       char caps[256];
+>> +       enum brcmf_feat_id id;
+>> +       int i;
 >> +
->> +       /* If HT IE reported 3839 bytes only, stay with that size. */
->> +       if (sta->sta.max_amsdu_len == IEEE80211_MAX_MPDU_LEN_HT_3839)
->> +               return;
+>> +       brcmf_fil_iovar_data_get(ifp, "cap", caps, sizeof(caps));
+>> +       brcmf_dbg(INFO, "[ %s]\n", caps);
 >> +
->> +       switch (vht_cap->cap & IEEE80211_VHT_CAP_MAX_MPDU_MASK) {
->> +       case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_11454:
->> +               sta->sta.max_amsdu_len = IEEE80211_MAX_MPDU_LEN_VHT_11454;
->> +               break;
->> +       case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_7991:
->> +               sta->sta.max_amsdu_len = IEEE80211_MAX_MPDU_LEN_VHT_7991;
->> +               break;
->> +       case IEEE80211_VHT_CAP_MAX_MPDU_LENGTH_3895:
->> +       default:
->> +               sta->sta.max_amsdu_len = IEEE80211_MAX_MPDU_LEN_VHT_3895;
->> +               break;
->> +       }
-> Ideally speaking shouldn't we use different variables for HT and VHT
-> and depending on
-> rate HT/VHT we should aggregate accordingly? of course that will be
-> tricky as we dont
-> have the rate control info at the time of aggregation. Standard is
-> clear about usage of
-> independent lengths depending on whether its an VHT/HT PPDU.
+>> +       for (i = 0; i < ARRAY_SIZE(brcmf_fwcap_map); i++) {
+>> +               if (strnstr(caps, brcmf_fwcap_map[i].fwcap_id, sizeof(caps))) {
+>> +                       id = brcmf_fwcap_map[i].feature;
+>> +                       brcmf_dbg(INFO, "enabling feature: %s\n",
+>> +                                 brcmf_feat_names[id]);
+>> +                       ifp->drvr->feat_flags |= BIT(id);
+>> +               }
+>>         }
+>>  }
+>>
+>> @@ -130,13 +138,14 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+>>  {
+>>         struct brcmf_if *ifp = brcmf_get_ifp(drvr, 0);
+>>
+>> -       brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_MCHAN, "mchan");
+>> +       brcmf_feat_firmware_capabilities(ifp);
+>> +
+>>         brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_PNO, "pfn");
+>>         if (drvr->bus_if->wowl_supported)
+>>                 brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
+>> +       /* MBSS does not work for 43362 */
+>>         if (drvr->bus_if->chip != BRCM_CC_43362_CHIP_ID)
+>> -               brcmf_feat_iovar_int_set(ifp, BRCMF_FEAT_MBSS, "mbss", 0);
+>> -       brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_P2P, "p2p");
+>> +               ifp->drvr->feat_flags &= BIT(BRCMF_FEAT_MBSS);
+> 
+> Missing ~ before the BIT() declaration? If the if-test fails, all bits are
+> cleared except BRCMF_FEAT_MBSS. I think the if-test also needs to be updated
+> to an equals `==` instead of the old inequality. So one would get:
+> 
+> /* clear MBSS feature for the 43362 (does not work) */
+> if (drvr->bus_if->chip == BRCM_CC_43362_CHIP_ID)
+>     ifp->drvr->feat_flags &= ~BIT(BRCMF_FEAT_MBSS);
 
-Yes - but since it is tricky, I preferred to be on the safe side and
-limit VHT amsdus for the very peculiar AP that would decide to have
-large A-MSDUs in VHT and small ones in HT (?!).
+Geez. You are absolutely right. Apparently my head was already in
+christmas mode writing that code.
 
-> If we use the same variable to arrive at max_amsdu_len for both VHT
-> and HT, we might
-> end up sending 11454 sized MSDU in a HT rate.
->
-And since that can't be handled at the time of the A-MSDU building,
-leave that to another entity :)
+Thanks,
+Arend
+
+> Also, happy holidays!
+> Mathy
+> 
+>>         brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_RSDB, "rsdb_mode");
+>>         brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_TDLS, "tdls_enable");
+>>
+>> --
+>> 1.9.1
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
