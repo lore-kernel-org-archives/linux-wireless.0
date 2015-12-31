@@ -1,163 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11374 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754516AbbLAJ7K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Dec 2015 04:59:10 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Moshe Harel <moshe.harel@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/41] iwlwifi: nvm: fix up phy section when reading it
-Date: Tue,  1 Dec 2015 11:58:27 +0200
-Message-Id: <1448963947-24302-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20151201_105915_675170_2F836B27)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E905B07@hasmsx107.ger.corp.intel.com>
+Received: from smtp06.msg.oleane.net ([62.161.4.6]:57727 "EHLO
+	smtp06.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751952AbbLaIMc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Dec 2015 03:12:32 -0500
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Emmanuel Grumbach'" <egrumbach@gmail.com>
+Cc: "'linux-wireless'" <linux-wireless@vger.kernel.org>,
+	"'Johannes Berg'" <johannes@sipsolutions.net>
+References: <773DB8A82AB6A046AE0195C68612A31901C5B5A9@sbs2003.acksys.local> <CANUX_P2k-Feexi5=gBm+UxsFkoic7FeGDFcNa_D3J2ujYL2ghQ@mail.gmail.com> <0a5101d1424c$eb46d2d0$c1d47870$@acksys.fr>
+In-Reply-To: <0a5101d1424c$eb46d2d0$c1d47870$@acksys.fr>
+Subject: RE: Mac80211 : Wpa rekeying issue
+Date: Thu, 31 Dec 2015 09:12:26 +0100
+Message-ID: <0a6a01d143a2$fcb77720$f6266560$@acksys.fr> (sfid-20151231_091235_685236_2A85A16B)
+MIME-Version: 1.0
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_0A6B_01D143AB.5E7C7B60"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This is a multipart message in MIME format.
 
-This is a workaround to an OTP bug. In Series 8000 1x1, the OTP
-0xA052 defines 2x2 antenna configuration. This workaround overrides
-the decision based on HW id and on MIMO disabled bit which is
-correct in the OTP and set to disabled. This fixes the previous
-workaround "force 1x1 antenna in Series 8000".
+------=_NextPart_000_0A6B_01D143AB.5E7C7B60
+Content-Type: text/plain;
+	charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Moshe Harel <moshe.harel@intel.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 15 +-----------
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c       | 27 +++++++++++++++++++---
- 3 files changed, 26 insertions(+), 18 deletions(-)
+	Hi,=20
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index d829849..3b8e85e 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -580,15 +580,13 @@ static void iwl_set_hw_address_family_8000(struct device *dev,
- 	IWL_ERR_DEV(dev, "mac address is not found\n");
- }
- 
--#define IWL_4165_DEVICE_ID 0x5501
--
- struct iwl_nvm_data *
- iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
- 		   const __le16 *nvm_hw, const __le16 *nvm_sw,
- 		   const __le16 *nvm_calib, const __le16 *regulatory,
- 		   const __le16 *mac_override, const __le16 *phy_sku,
- 		   u8 tx_chains, u8 rx_chains, bool lar_fw_supported,
--		   u32 mac_addr0, u32 mac_addr1, u32 hw_id)
-+		   u32 mac_addr0, u32 mac_addr1)
- {
- 	struct iwl_nvm_data *data;
- 	u32 sku;
-@@ -627,17 +625,6 @@ iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
- 				    (sku & NVM_SKU_CAP_11AC_ENABLE);
- 	data->sku_cap_mimo_disabled = sku & NVM_SKU_CAP_MIMO_DISABLE;
- 
--	/*
--	 * OTP 0x52 bug work around
--	 * define antenna 1x1 according to MIMO disabled
--	 */
--	if (hw_id == IWL_4165_DEVICE_ID && data->sku_cap_mimo_disabled) {
--		data->valid_tx_ant = ANT_B;
--		data->valid_rx_ant = ANT_B;
--		tx_chains = ANT_B;
--		rx_chains = ANT_B;
--	}
--
- 	data->n_hw_addrs = iwl_get_n_hw_addrs(cfg, nvm_sw);
- 
- 	if (cfg->device_family != IWL_DEVICE_FAMILY_8000) {
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-index 9f44d81..822ba52 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-@@ -79,7 +79,7 @@ iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
- 		   const __le16 *nvm_calib, const __le16 *regulatory,
- 		   const __le16 *mac_override, const __le16 *phy_sku,
- 		   u8 tx_chains, u8 rx_chains, bool lar_fw_supported,
--		   u32 mac_addr0, u32 mac_addr1, u32 hw_id);
-+		   u32 mac_addr0, u32 mac_addr1);
- 
- /**
-  * iwl_parse_mcc_info - parse MCC (mobile country code) info coming from FW
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-index 2ee0f6f..1edcfcc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-@@ -210,6 +210,19 @@ static int iwl_nvm_write_section(struct iwl_mvm *mvm, u16 section,
- 	return 0;
- }
- 
-+static void iwl_mvm_nvm_fixups(struct iwl_mvm *mvm, unsigned int section,
-+			       u8 *data, unsigned int len)
-+{
-+#define IWL_4165_DEVICE_ID	0x5501
-+#define NVM_SKU_CAP_MIMO_DISABLE BIT(5)
-+
-+	if (section == NVM_SECTION_TYPE_PHY_SKU &&
-+	    mvm->trans->hw_id == IWL_4165_DEVICE_ID && data && len >= 5 &&
-+	    (data[4] & NVM_SKU_CAP_MIMO_DISABLE))
-+		/* OTP 0x52 bug work around: it's a 1x1 device */
-+		data[3] = ANT_B | (ANT_B << 4);
-+}
-+
- /*
-  * Reads an NVM section completely.
-  * NICs prior to 7000 family doesn't have a real NVM, but just read
-@@ -250,6 +263,8 @@ static int iwl_nvm_read_section(struct iwl_mvm *mvm, u16 section,
- 		offset += ret;
+I'm not a WPA expert and security expert,=20
+
+Could you explain why the patch sent by Alexander Wetzel break the =
+security properties of this code?
+
+The Alexander's patch is in attachment.
+
+Thanks for your help.
+
+> -----Message d'origine-----
+> De : linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+> owner@vger.kernel.org] De la part de voncken
+> Envoy=C3=A9 : mardi 29 d=C3=A9cembre 2015 16:24
+> =C3=80 : 'Emmanuel Grumbach'
+> Cc : 'linux-wireless'; 'Johannes Berg'
+> Objet : RE: Mac80211 : Wpa rekeying issue
+>=20
+> 	> -----Message d'origine-----
+> > De : Emmanuel Grumbach [mailto:egrumbach@gmail.com] Envoy=C3=A9 : =
+mardi 29
+> > d=C3=A9cembre 2015 15:20 =C3=80 : Cedric VONCKEN Cc : linux-wireless =
+Objet : Re:
+> > Mac80211 : Wpa rekeying issue
+> >
+> > On Tue, Dec 29, 2015 at 3:01 PM, Cedric VONCKEN
+> > <cedric.voncken@acksys.fr>
+> > wrote:
+> > > Hi,
+> > >
+> > > My test plateform is:
+> > > 2 equipements
+> > > Both equipment used compat version 2015-07-21 from openwrt.
+> > > Both equipment used security WPA2
+> > >
+> > > The equipment #1 is an AP.
+> > >         The Group rekey interval is set to 3601s
+> > >         The Pair rekey interval set to 50s (I reduced this value =
+to
+> > > show the issue often)
+> > >         The Master rekey interval is set to 86400 s.
+> > >
+> > > The equipment #2 is a sta+wds
+> > >
+> > > I used a 5GHz channel to have a free channel (without other AP) I
+> > > connected a computer on each equipment.
+> > >
+> > > To reproduce the issue:
+> > >         I ran iperf udp@50Mbps from computer connected to the AP =
+to
+> > > the computer connected to the sta. After several WPA2 rekeying,
+> > > iperf server side didn't received any frame.
+> > >
+> > > I investigated in the driver. All packets are dropped in sta side,
+> > > because the function ieee80211_crypto_ccmp_decrypt return
+> > > Rx_DROP_UNUSABLE. This function return this code because the test
+> > > if(memcmp(pn,key->u.ccmp.rx_pn[queue],IEEE8021_CCMP_PN_LEN) <=3D0)
+> > > return true.
+> > >
+> > > Have you any idea to fix this issue?
+> > >
+> >
+> > I don't remember exactly what we had, but you may look at
+> > =
+http://permalink.gmane.org/gmane.linux.kernel.wireless.general/137742
+>=20
+> Thanks for the link, I think I'm in the same situation.
+>=20
+> How can I fix this issue?
+>=20
+> Because the patch sent by Alexander Wetzel was rejected by Johannes =
+(for
+> security reason), and if I disable the hw crypto I will have =
+performance
+> issue.
+>=20
+>=20
+> --
+> To unsubscribe from this list: send the line "unsubscribe =
+linux-wireless"
+> in the body of a message to majordomo@vger.kernel.org More majordomo =
+info
+> at  http://vger.kernel.org/majordomo-info.html
+
+------=_NextPart_000_0A6B_01D143AB.5E7C7B60
+Content-Type: application/octet-stream;
+	name="fix1.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="fix1.patch"
+
+diff -ur linux-4.0.4-gentoo/net/mac80211/key.h =
+linux-4.0.4-gentoo_patched/net/mac80211/key.h
+--- linux-4.0.4-gentoo/net/mac80211/key.h	2015-04-13 00:12:50.000000000 =
++0200
++++ linux-4.0.4-gentoo_patched/net/mac80211/key.h	2015-05-20 =
+13:16:06.370256697 +0200
+@@ -84,12 +84,14 @@
+ 			 * Management frames.
+ 			 */
+ 			u8 rx_pn[IEEE80211_NUM_TIDS + 1][IEEE80211_CCMP_PN_LEN];
++			u8 rx_pn_old[IEEE80211_NUM_TIDS + 1][IEEE80211_CCMP_PN_LEN];
+ 			struct crypto_aead *tfm;
+ 			u32 replays; /* dot11RSNAStatsCCMPReplays */
+ 		} ccmp;
+ 		struct {
+ 			atomic64_t tx_pn;
+ 			u8 rx_pn[IEEE80211_CMAC_PN_LEN];
++			u8 rx_pn_old[IEEE80211_CMAC_PN_LEN];
+ 			struct crypto_cipher *tfm;
+ 			u32 replays; /* dot11RSNAStatsCMACReplays */
+ 			u32 icverrors; /* dot11RSNAStatsCMACICVErrors */
+@@ -97,6 +99,7 @@
+ 		struct {
+ 			atomic64_t tx_pn;
+ 			u8 rx_pn[IEEE80211_GMAC_PN_LEN];
++			u8 rx_pn_old[IEEE80211_GMAC_PN_LEN];
+ 			struct crypto_aead *tfm;
+ 			u32 replays; /* dot11RSNAStatsCMACReplays */
+ 			u32 icverrors; /* dot11RSNAStatsCMACICVErrors */
+@@ -109,12 +112,14 @@
+ 			 * Management frames.
+ 			 */
+ 			u8 rx_pn[IEEE80211_NUM_TIDS + 1][IEEE80211_GCMP_PN_LEN];
++			u8 rx_pn_old[IEEE80211_NUM_TIDS + 1][IEEE80211_GCMP_PN_LEN];
+ 			struct crypto_aead *tfm;
+ 			u32 replays; /* dot11RSNAStatsGCMPReplays */
+ 		} gcmp;
+ 		struct {
+ 			/* generic cipher scheme */
+ 			u8 rx_pn[IEEE80211_NUM_TIDS + 1][MAX_PN_LEN];
++			u8 rx_pn_old[IEEE80211_NUM_TIDS + 1][MAX_PN_LEN];
+ 		} gen;
+ 	} u;
+=20
+diff -ur linux-4.0.4-gentoo/net/mac80211/wpa.c =
+linux-4.0.4-gentoo_patched/net/mac80211/wpa.c
+--- linux-4.0.4-gentoo/net/mac80211/wpa.c	2015-04-13 00:12:50.000000000 =
++0200
++++ linux-4.0.4-gentoo_patched/net/mac80211/wpa.c	2015-05-20 =
+21:43:25.529721066 +0200
+@@ -495,6 +495,7 @@
+ 	struct sk_buff *skb =3D rx->skb;
+ 	struct ieee80211_rx_status *status =3D IEEE80211_SKB_RXCB(skb);
+ 	u8 pn[IEEE80211_CCMP_PN_LEN];
++	static u8 zero[IEEE80211_CCMP_PN_LEN];
+ 	int data_len;
+ 	int queue;
+=20
+@@ -525,6 +526,31 @@
+ 		return RX_DROP_UNUSABLE;
  	}
- 
-+	iwl_mvm_nvm_fixups(mvm, section, data, offset);
+=20
++	/* HACK: try to work around race when replacing PSK with enabled =
+hardware offload on AP or STA */
++	if (unlikely(memcmp(key->u.ccmp.rx_pn[queue], zero, =
+IEEE80211_CCMP_PN_LEN) =3D=3D 0 )) {
 +
- 	IWL_DEBUG_EEPROM(mvm->trans->dev,
- 			 "NVM section %d read completed\n", section);
- 	return offset;
-@@ -316,8 +331,7 @@ iwl_parse_nvm_sections(struct iwl_mvm *mvm)
- 	return iwl_parse_nvm_data(mvm->trans->dev, mvm->cfg, hw, sw, calib,
- 				  regulatory, mac_override, phy_sku,
- 				  mvm->fw->valid_tx_ant, mvm->fw->valid_rx_ant,
--				  lar_enabled, mac_addr0, mac_addr1,
--				  mvm->trans->hw_id);
-+				  lar_enabled, mac_addr0, mac_addr1);
- }
- 
- #define MAX_NVM_FILE_LEN	16384
-@@ -353,7 +367,8 @@ static int iwl_mvm_read_external_nvm(struct iwl_mvm *mvm)
- 		__le16 word2;
- 		u8 data[];
- 	} *file_sec;
--	const u8 *eof, *temp;
-+	const u8 *eof;
-+	u8 *temp;
- 	int max_section_size;
- 	const __le32 *dword_buff;
- 
-@@ -483,6 +498,9 @@ static int iwl_mvm_read_external_nvm(struct iwl_mvm *mvm)
- 			ret = -ENOMEM;
- 			break;
- 		}
++		printk ("DDD - rx_pn is zero, virgin key detected! pl=3D%x\n", =
+pn[IEEE80211_CCMP_PN_LEN-1]);
++		print_hex_dump_debug("cnt: ", DUMP_PREFIX_OFFSET, =
+IEEE80211_CCMP_PN_LEN, 1, key->u.ccmp.rx_pn[queue], =
+IEEE80211_CCMP_PN_LEN, false);
++		print_hex_dump_debug("pn : ", DUMP_PREFIX_OFFSET, =
+IEEE80211_CCMP_PN_LEN, 1, pn, IEEE80211_CCMP_PN_LEN, false);
 +
-+		iwl_mvm_nvm_fixups(mvm, section_id, temp, section_size);
++		if ((memcmp(pn, zero, IEEE80211_CCMP_PN_LEN -1) =3D=3D 0) && =
+pn[IEEE80211_CCMP_PN_LEN-1] <=3D 10) {
++			/* pn is <=3D10 , we can start using the new counter */
++			printk ("DDD - set new pn\n");
++			memcpy(key->u.ccmp.rx_pn[queue], pn, IEEE80211_CCMP_PN_LEN);
++		} else if (memcmp(pn, key->u.ccmp.rx_pn_old[queue], =
+IEEE80211_CCMP_PN_LEN) <=3D 0) {
++			printk ("DDD - attack!\n");
++			/* reply attack during rekey operation, guess it will really hard to =
+do that... */
++			key->u.ccmp.replays++; /* we count it as an reply anyway...*/
++			return RX_DROP_UNUSABLE;=20
++		} else {=09
++			printk ("DDD - prevent poisening \n");
++			memcpy(key->u.ccmp.rx_pn_old[queue], pn, IEEE80211_CCMP_PN_LEN);
++		}
++	} else {
++		=09
++		memcpy(key->u.ccmp.rx_pn[queue], pn, IEEE80211_CCMP_PN_LEN);
++	}
 +
- 		kfree(mvm->nvm_sections[section_id].data);
- 		mvm->nvm_sections[section_id].data = temp;
- 		mvm->nvm_sections[section_id].length = section_size;
-@@ -548,6 +566,9 @@ int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
- 				ret = -ENOMEM;
- 				break;
- 			}
-+
-+			iwl_mvm_nvm_fixups(mvm, section, temp, ret);
-+
- 			mvm->nvm_sections[section].data = temp;
- 			mvm->nvm_sections[section].length = ret;
- 
--- 
-2.5.0
+ 	if (!(status->flag & RX_FLAG_DECRYPTED)) {
+ 		u8 aad[2 * AES_BLOCK_SIZE];
+ 		u8 b_0[AES_BLOCK_SIZE];
+@@ -539,8 +565,6 @@
+ 			return RX_DROP_UNUSABLE;
+ 	}
+=20
+-	memcpy(key->u.ccmp.rx_pn[queue], pn, IEEE80211_CCMP_PN_LEN);
+-
+ 	/* Remove CCMP header and MIC */
+ 	if (pskb_trim(skb, skb->len - mic_len))
+ 		return RX_DROP_UNUSABLE;
+
+------=_NextPart_000_0A6B_01D143AB.5E7C7B60--
 
