@@ -1,70 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:11883 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751499AbbLUFTg (ORCPT
+Received: from smtp28.msg.oleane.net ([62.161.4.28]:45075 "EHLO
+	smtp28.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751250AbbLaKPp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Dec 2015 00:19:36 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 45/46] staging: wilc1000: set hif_drv before it is used
-Date: Mon, 21 Dec 2015 14:18:49 +0900
-Message-ID: <1450675130-17866-46-git-send-email-glen.lee@atmel.com> (sfid-20151221_061939_740537_BC58CCF9)
-In-Reply-To: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
-References: <1450675130-17866-1-git-send-email-glen.lee@atmel.com>
+	Thu, 31 Dec 2015 05:15:45 -0500
+From: "voncken" <cedric.voncken@acksys.fr>
+To: "'Emmanuel Grumbach'" <egrumbach@gmail.com>
+Cc: "'linux-wireless'" <linux-wireless@vger.kernel.org>
+References: <773DB8A82AB6A046AE0195C68612A31901C5B5A9@sbs2003.acksys.local>	<CANUX_P2k-Feexi5=gBm+UxsFkoic7FeGDFcNa_D3J2ujYL2ghQ@mail.gmail.com>	<0a5101d1424c$eb46d2d0$c1d47870$@acksys.fr>	<0a6a01d143a2$fcb77720$f6266560$@acksys.fr> <CANUX_P2pF_He3mruTxMU_poBXzZpa9rXA7AgYV_RQ4BJ9wS6Mg@mail.gmail.com>
+In-Reply-To: <CANUX_P2pF_He3mruTxMU_poBXzZpa9rXA7AgYV_RQ4BJ9wS6Mg@mail.gmail.com>
+Subject: RE: Mac80211 : Wpa rekeying issue
+Date: Thu, 31 Dec 2015 11:15:42 +0100
+Message-ID: <0a7101d143b4$3480de10$9d829a30$@acksys.fr> (sfid-20151231_111617_893169_1533C906)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+	charset="UTF-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We are using hif_drv of vif, so it needs to be set before it is used.
-Set hif_drv to vif->hifdrv soon after it is allocated.
+> >
+> >         Hi,
+> >
+> > I'm not a WPA expert and security expert,
+> >
+> > Could you explain why the patch sent by Alexander Wetzel break the
+> security properties of this code?
+> >
+> > The Alexander's patch is in attachment.
+> >
+> > Thanks for your help.
+> 
+> It simply disables the replay attack detection :) You could receive the
+> same (encrypted) packet twice and not throw away the second one.
+> The author of the patch never said that this patch is a "fix", it is rather
+> a debug step to understand what happens.
+> 
+> PTK rekeying is a problem from the spec point of view. In Intel, we did
+> inquiries and in the end we understood that what we should really do
+> whenever we get to a situation where we need to rekey the PTK is to
+> disconnect and reconnect. Only weird configuration allow to change the PTK
+> more frequently than after X packet (don't remember what X is bu something
+> like 2^32 which is big enough to hold the connection for days...).
+> 
+> IIRC, Intel devices don't have problems in Tx while we rekey because we
+> give the key material along with the packet itself, so that we can't get to
+> a situation where we have old PN and new key. The Atheros devices separate
+> the key material and the Tx packet (which is a perfectly valid design
+> decision), but this introduce the possibility to use the old PN with a new
+> key meaning that the recipient could decrypt the packet after the new key
+> has been installed, but it would also update the PN to be high and discard
+> all the next packets that will come with a new (low) PN.
+> So essentially, this is a bug in the TX'ing side. Fixing it requires to hit
+> the performance which is not something people are willing to do, when the
+> bug is really in the spec.
+> That's what I remember, but I may be wrong.
+> 
+Thanks for your answer.
+Do you know if we can have the same issue with ATH10K chipset?
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 ++++++
- drivers/staging/wilc1000/linux_wlan.c     | 1 -
- 2 files changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d6b23cd..8c77520 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3782,6 +3782,7 @@ s32 wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 	struct host_if_drv *hif_drv;
- 	struct wilc_vif *vif;
- 	struct wilc *wilc;
-+	int i;
- 
- 	vif = netdev_priv(dev);
- 	wilc = vif->wilc;
-@@ -3798,6 +3799,11 @@ s32 wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 		goto _fail_;
- 	}
- 	*hif_drv_handler = hif_drv;
-+	for (i = 0; i < wilc->vif_num; i++)
-+		if (dev == wilc->vif[i]->ndev) {
-+			wilc->vif[i]->hif_drv = hif_drv;
-+			break;
-+		}
- 
- 	wilc_optaining_ip = false;
- 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index a50e3ff..54fe9d7 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1036,7 +1036,6 @@ int wilc_mac_open(struct net_device *ndev)
- 	for (i = 0; i < wl->vif_num; i++) {
- 		if (ndev == wl->vif[i]->ndev) {
- 			memcpy(wl->vif[i]->src_addr, mac_add, ETH_ALEN);
--			wl->vif[i]->hif_drv = priv->hWILCWFIDrv;
- 			break;
- 		}
- 	}
--- 
-1.9.1
 
