@@ -1,40 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f65.google.com ([209.85.192.65]:34412 "EHLO
-	mail-qg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964797AbcA1PMh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 10:12:37 -0500
-Received: by mail-qg0-f65.google.com with SMTP id 94so3361999qgt.1
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jan 2016 07:12:37 -0800 (PST)
-Date: Thu, 28 Jan 2016 10:12:27 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Henning Rogge <hrogge@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
-Subject: Re: [PATCH 0/2] mac80211: add cleanup path for MPP table entries
-Message-ID: <20160128151227.GC24581@localhost> (sfid-20160128_161241_071374_9FD85666)
-References: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
- <20160128134415.GA24581@localhost>
- <CAGnRvupPyh=+UF11KobqnSfP=J4JuKqugrmD=wC+ZP2pXgw-iQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGnRvupPyh=+UF11KobqnSfP=J4JuKqugrmD=wC+ZP2pXgw-iQ@mail.gmail.com>
+Received: from mail.ispras.ru ([83.149.199.45]:34831 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751354AbcAAXMu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jan 2016 18:12:50 -0500
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+To: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
+Subject: [PATCH] ipw2x00: add checks for dma mapping errors
+Date: Sat,  2 Jan 2016 02:12:38 +0300
+Message-Id: <1451689958-8005-1-git-send-email-khoroshilov@ispras.ru> (sfid-20160102_001313_111903_FCBDFB29)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 28, 2016 at 04:07:52PM +0100, Henning Rogge wrote:
-> > Just so I know what to do with my series: do you plan to resend these
-> > with comments addressed?  Or I could adopt the patches if you want.
-> 
-> What would be easier for you?
-> 
-> I can easily resend a "v2" tomorrow, depends on how much work it would
-> be for you to integrate them (or adapt them) to your patch set.
+ipw2100_alloc_skb() and ipw2100_tx_send_data() do not check if mapping
+dma memory succeed. The patch adds the checks and failure handling.
 
-It's roughly the same amount of work, so whatever works for you is fine
-by me.
+Found by Linux Driver Verification project (linuxtesting.org).
 
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/net/wireless/ipw2x00/ipw2100.c | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
+index 36818c7f30b9..f93a7f71c047 100644
+--- a/drivers/net/wireless/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/ipw2x00/ipw2100.c
+@@ -2311,8 +2311,10 @@ static int ipw2100_alloc_skb(struct ipw2100_priv *priv,
+ 	packet->dma_addr = pci_map_single(priv->pci_dev, packet->skb->data,
+ 					  sizeof(struct ipw2100_rx),
+ 					  PCI_DMA_FROMDEVICE);
+-	/* NOTE: pci_map_single does not return an error code, and 0 is a valid
+-	 *       dma_addr */
++	if (pci_dma_mapping_error(priv->pci_dev, packet->dma_addr)) {
++		dev_kfree_skb(packet->skb);
++		return -ENOMEM;
++	}
+ 
+ 	return 0;
+ }
+@@ -3183,6 +3185,11 @@ static void ipw2100_tx_send_data(struct ipw2100_priv *priv)
+ 							LIBIPW_3ADDR_LEN,
+ 							tbd->buf_length,
+ 							PCI_DMA_TODEVICE);
++			if (pci_dma_mapping_error(priv->pci_dev,
++						  tbd->host_addr)) {
++				IPW_DEBUG_TX("dma mapping error\n");
++				break;
++			}
+ 
+ 			IPW_DEBUG_TX("data frag tbd TX%d P=%08x L=%d\n",
+ 				     txq->next, tbd->host_addr,
 -- 
-Bob Copeland %% http://bobcopeland.com/
+1.9.1
+
