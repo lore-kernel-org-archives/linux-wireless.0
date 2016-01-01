@@ -1,303 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:6408 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964875AbcAZKBy (ORCPT
+Received: from mail-yk0-f171.google.com ([209.85.160.171]:36398 "EHLO
+	mail-yk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750771AbcAAU6N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 05:01:54 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [RFC V3 1/2] nl80211: add feature for BSS selection support
-Date: Tue, 26 Jan 2016 11:01:47 +0100
-Message-ID: <1453802508-30195-2-git-send-email-arend@broadcom.com> (sfid-20160126_110200_866489_E775657F)
-In-Reply-To: <1453802508-30195-1-git-send-email-arend@broadcom.com>
-References: <1453802508-30195-1-git-send-email-arend@broadcom.com>
+	Fri, 1 Jan 2016 15:58:13 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CACT4Y+baorktL_dBHEWcz_jHYTzhM_-DJoms81bzVx8FbYk63w@mail.gmail.com>
+References: <CACT4Y+baorktL_dBHEWcz_jHYTzhM_-DJoms81bzVx8FbYk63w@mail.gmail.com>
+Date: Fri, 1 Jan 2016 12:58:11 -0800
+Message-ID: <CAM_iQpX-vHywG6DJb=5wLCouNAXXqA1wo=tKJ1S78MDyZfkNCw@mail.gmail.com> (sfid-20160101_215923_098806_706354D9)
+Subject: Re: net/nfc: GPF in llcp_sock_getname
+From: Cong Wang <xiyou.wangcong@gmail.com>
+To: Dmitry Vyukov <dvyukov@google.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	syzkaller <syzkaller@googlegroups.com>,
+	Kostya Serebryany <kcc@google.com>,
+	Alexander Potapenko <glider@google.com>,
+	Sasha Levin <sasha.levin@oracle.com>,
+	Eric Dumazet <edumazet@google.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introducing a new feature that the driver can use to
-indicate the driver/firmware supports configuration of BSS
-selection criteria upon CONNECT command. This can be useful
-when multiple BSS-es are found belonging to the same ESS,
-ie. Infra-BSS with same SSID. The criteria can then be used to
-offload selection of a preferred BSS.
+On Fri, Jan 1, 2016 at 5:58 AM, Dmitry Vyukov <dvyukov@google.com> wrote:
+>
+> kasan: GPF could be caused by NULL-ptr deref or user memory
+> accessgeneral protection fault: 0000 [#51] SMP KASAN
+> Modules linked in:
+> CPU: 2 PID: 4207 Comm: a.out Not tainted 4.4.0-rc7+ #184
+> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+> task: ffff8800683e9780 ti: ffff880064c70000 task.ti: ffff880064c70000
+> RIP: 0010:[<ffffffff816d1d5b>]  [<ffffffff816d1d5b>]
+> kasan_report_error+0x1b/0x560
+> RSP: 0018:ffff880064c77c90  EFLAGS: 00010286
+> RAX: dffffc0000000000 RBX: 0000000000000003 RCX: dffffc0000000000
+> RDX: 0000000000000000 RSI: 0000000000000003 RDI: ffff880064c77c98
+> RBP: ffff880064c77cc0 R08: ffffed000c98efd6 R09: ffff880064c77e58
+> R10: ffff8800639670a0 R11: ffff880063967098 R12: ffff880064c77e6a
+> R13: 0000000000000000 R14: 0000000000000000 R15: ffff880063967088
+> FS:  00000000018ca880(0063) GS:ffff88006da00000(0000) knlGS:0000000000000000
+> CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+> CR2: 000000c8200012e0 CR3: 0000000064c59000 CR4: 00000000000006e0
+> Stack:
+>  ffffffff816d25d4 0000000000000000 0000000000000018 0000000000000003
+>  0000000300004000 ffffffff816d17ed ffff880064c77cd0 ffffffff816d1264
+>  ffff880064c77cf8 ffffffff816d17ed 0000000000000000 ffff880064c77e58
+> Call Trace:
+>  [<     inline     >] check_memory_region mm/kasan/kasan.c:264
+>  [<ffffffff816d1264>] __asan_loadN+0x124/0x1a0 mm/kasan/kasan.c:512
+>  [<ffffffff816d17ed>] memcpy+0x1d/0x40 mm/kasan/kasan.c:297
+>  [<ffffffff85becf44>] llcp_sock_getname+0x424/0x600 net/nfc/llcp_sock.c:519
+>  [<ffffffff84b5ab4d>] SYSC_getsockname+0x1bd/0x220 net/socket.c:1570
+>  [<ffffffff84b60244>] SyS_getsockname+0x24/0x30 net/socket.c:1555
+>  [<ffffffff85c8eaf6>] entry_SYSCALL_64_fastpath+0x16/0x7a
+> arch/x86/entry/entry_64.S:185
+> Code: 48 01 c7 e8 38 2b fc ff 5d c3 66 0f 1f 44 00 00 48 8b 17 48 b9
+> 00 00 00 00 00 fc ff df 48 8b 77 10 48 89 d0 48 c1 e8 03 48 01 c8 <80>
+> 38 00 75 1d 48 01 d6 eb 13 48 83 c2 08 48 89 d0 48 c1 e8 03
+> RIP  [<ffffffff816d1d5b>] kasan_report_error+0x1b/0x560 mm/kasan/report.c:214
+>  RSP <ffff880064c77c90>
+> ---[ end trace b0c68fb0d02b9447 ]---
+>
+> On commit 8513342170278468bac126640a5d2d12ffbff106 (Dec 28).
+> GPF seems to be caused by a data race on socket state.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Lei Zhang <leizh@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- include/net/cfg80211.h       | 34 ++++++++++++++++++++
- include/uapi/linux/nl80211.h | 42 ++++++++++++++++++++++++
- net/wireless/core.c          |  4 +++
- net/wireless/nl80211.c       | 76 ++++++++++++++++++++++++++++++++++++++++++++
- 4 files changed, 156 insertions(+)
+It looks like we forget to initialize ->service_name_len
+and ->servicce_name before bind().
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9bcaaf7..b4c1bf4 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1854,6 +1854,33 @@ struct cfg80211_ibss_params {
- };
- 
- /**
-+ * struct cfg80211_bss_select_adjust - BSS selection with RSSI adjustment.
-+ *
-+ * @band: band of BSS which should match for RSSI level adjustment.
-+ * @delta: value of RSSI level adjustment.
-+ */
-+struct cfg80211_bss_select_adjust {
-+	enum nl80211_band band;
-+	s8 delta;
-+};
-+
-+/**
-+ * struct cfg80211_bss_selection - connection parameters for BSS selection.
-+ *
-+ * @behaviour: requested BSS selection behaviour.
-+ * @param: parameters for given primitive.
-+ * @band_pref: preferred band for %BSS_SELECT_BAND_PREF primitive.
-+ * @adjust: parameters for %BSS_SELECT_ADJUST_RSSI primitive.
-+ */
-+struct cfg80211_bss_selection {
-+	enum nl80211_bss_select_attr behaviour;
-+	union {
-+		enum nl80211_band band_pref;
-+		struct cfg80211_bss_select_adjust adjust;
-+	} param;
-+};
-+
-+/**
-  * struct cfg80211_connect_params - Connection parameters
-  *
-  * This structure provides information needed to complete IEEE 802.11
-@@ -1888,6 +1915,7 @@ struct cfg80211_ibss_params {
-  * @ht_capa_mask:  The bits of ht_capa which are to be used.
-  * @vht_capa:  VHT Capability overrides
-  * @vht_capa_mask: The bits of vht_capa which are to be used.
-+ * @bss_select: criteria to be used for BSS selection.
-  */
- struct cfg80211_connect_params {
- 	struct ieee80211_channel *channel;
-@@ -1910,6 +1938,7 @@ struct cfg80211_connect_params {
- 	struct ieee80211_ht_cap ht_capa_mask;
- 	struct ieee80211_vht_cap vht_capa;
- 	struct ieee80211_vht_cap vht_capa_mask;
-+	struct cfg80211_bss_selection bss_select;
- };
- 
- /**
-@@ -3178,6 +3207,9 @@ struct wiphy_vendor_command {
-  *	low rssi when a frame is heard on different channel, then it should set
-  *	this variable to the maximal offset for which it can compensate.
-  *	This value should be set in MHz.
-+ * @bss_select_support: bitmask indicating the BSS selection criteria supported
-+ *	by the driver in the .connect() callback. The bit position maps to the
-+ *	criteria defined in &enum nl80211_bss_select_primitive.
-  */
- struct wiphy {
- 	/* assign these fields before you register the wiphy */
-@@ -3300,6 +3332,8 @@ struct wiphy {
- 	u8 max_num_csa_counters;
- 	u8 max_adj_channel_rssi_comp;
- 
-+	u32 bss_select_support;
-+
- 	char priv[0] __aligned(NETDEV_ALIGN);
- };
- 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 5b7b5eb..e9f5ae7 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1789,6 +1789,12 @@ enum nl80211_commands {
-  *	thus it must not specify the number of iterations, only the interval
-  *	between scans. The scan plans are executed sequentially.
-  *	Each scan plan is a nested attribute of &enum nl80211_sched_scan_plan.
-+ * @NL80211_ATTR_BSS_SELECT: nested attribute for driver supporting the
-+ *	extended feature %NL80211_EXT_FEATURE_BSS_SELECT. When used with
-+ *	%NL80211_CMD_GET_WIPHY is contains NLA_FLAG type according
-+ *	&enum nl80211_bss_select_attr to indicate what primitives are
-+ *	supported. When used with %NL80211_CMD_CONNECT is contains the behaviour
-+ *	and parameters for BSS selection to be done by driver and/or firmware.
-  *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-@@ -2164,6 +2170,8 @@ enum nl80211_attrs {
- 	NL80211_ATTR_MAX_SCAN_PLAN_ITERATIONS,
- 	NL80211_ATTR_SCHED_SCAN_PLANS,
- 
-+	NL80211_ATTR_BSS_SELECT,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-@@ -4651,4 +4659,38 @@ enum nl80211_sched_scan_plan {
- 		__NL80211_SCHED_SCAN_PLAN_AFTER_LAST - 1
- };
- 
-+/**
-+ * enum nl80211_bss_select_attr - attributes for bss selection.
-+ *
-+ * @__NL80211_BSS_SELECT_ATTR_INVALID: reserved.
-+ * @NL80211_BSS_SELECT_ATTR_RSSI: Flag indicating only RSSI-based BSS selection
-+ *	is requested.
-+ * @NL80211_BSS_SELECT_ATTR_BAND_PREF: attribute indicating BSS
-+ *	selection should be done such that the specified band is preferred.
-+ *	When there are multiple BSS-es in the preferred band, the driver
-+ *	shall use RSSI-based BSS selection. The value of this attribute
-+ *	is according to &enum nl80211_band (u32).
-+ * @NL80211_BSS_SELECT_ATTR_RSSI_ADJUST: When present the RSSI level for
-+ *	BSS-es in the specified band is to be adjusted before doing
-+ *	RSSI-based BSS selection. The attribute value is a packed two-byte
-+ *	value. The lower byte contains the adjustment value (s8) and the
-+ *	high byte contains the band according &enum nl80211_band.
-+ * @NL80211_BSS_SELECT_ATTR_MAX: highest bss select attribute number.
-+ *@__NL80211_BSS_SELECT_ATTR_AFTER_LAST: internal use.
-+ *
-+ * These attributes are found within %NL80211_ATTR_BSS_SELECT and
-+ * indicate the required BSS selection behaviour which the driver
-+ * should use.
-+ */
-+enum nl80211_bss_select_attr {
-+	__NL80211_BSS_SELECT_ATTR_INVALID,
-+	NL80211_BSS_SELECT_ATTR_RSSI,
-+	NL80211_BSS_SELECT_ATTR_BAND_PREF,
-+	NL80211_BSS_SELECT_ATTR_RSSI_ADJUST,
-+
-+	/* keep last */
-+	__NL80211_BSS_SELECT_ATTR_AFTER_LAST,
-+	NL80211_BSS_SELECT_ATTR_MAX = __NL80211_BSS_SELECT_ATTR_AFTER_LAST - 1
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/core.c b/net/wireless/core.c
-index 3a9c41b..f6b2976 100644
---- a/net/wireless/core.c
-+++ b/net/wireless/core.c
-@@ -626,6 +626,10 @@ int wiphy_register(struct wiphy *wiphy)
- 		     !rdev->ops->set_mac_acl)))
- 		return -EINVAL;
- 
-+	if (WARN_ON(wiphy->bss_select_support &&
-+		    (wiphy->bss_select_support & ~(BIT(NL80211_BSS_SELECT_ATTR_MAX) - 1))))
-+		return -EINVAL;
-+
- 	if (wiphy->addresses)
- 		memcpy(wiphy->perm_addr, wiphy->addresses[0].addr, ETH_ALEN);
- 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d4786f2..e17044d 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -485,6 +485,13 @@ nl80211_plan_policy[NL80211_SCHED_SCAN_PLAN_MAX + 1] = {
- 	[NL80211_SCHED_SCAN_PLAN_ITERATIONS] = { .type = NLA_U32 },
- };
- 
-+static const struct nla_policy
-+nl80211_bss_select_policy[NL80211_BSS_SELECT_ATTR_MAX + 1] = {
-+	[NL80211_BSS_SELECT_ATTR_RSSI] = { .type = NLA_FLAG },
-+	[NL80211_BSS_SELECT_ATTR_BAND_PREF] = { .type = NLA_U32 },
-+	[NL80211_BSS_SELECT_ATTR_RSSI_ADJUST] = { .type = NLA_U8 },
-+};
-+
- static int nl80211_prepare_wdev_dump(struct sk_buff *skb,
- 				     struct netlink_callback *cb,
- 				     struct cfg80211_registered_device **rdev,
-@@ -1730,6 +1737,24 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 			    rdev->wiphy.ext_features))
- 			goto nla_put_failure;
- 
-+		if (rdev->wiphy.bss_select_support) {
-+			struct nlattr *nested;
-+			u32 bss_select_support = rdev->wiphy.bss_select_support;
-+
-+			nested = nla_nest_start(msg, NL80211_ATTR_BSS_SELECT);
-+			if (!nested)
-+				goto nla_put_failure;
-+
-+			i = 0;
-+			while (bss_select_support) {
-+				if ((bss_select_support & 1) &&
-+				    nla_put_flag(msg, i))
-+					goto nla_put_failure;
-+				i++;
-+				bss_select_support >>= 1;
-+			}
-+			nla_nest_end(msg, nested);
-+		}
- 		/* done */
- 		state->split_start = 0;
- 		break;
-@@ -5753,6 +5778,42 @@ static int validate_scan_freqs(struct nlattr *freqs)
- 	return n_channels;
- }
- 
-+static int parse_bss_select(struct nlattr *nla,
-+			    struct cfg80211_bss_selection *bss_select)
-+{
-+	struct nlattr *attr[NL80211_BSS_SELECT_ATTR_MAX + 1];
-+	u16 band_delta;
-+	int err;
-+
-+	err = nla_parse(attr, NL80211_BSS_SELECT_ATTR_MAX,
-+			nla_data(nla), nla_len(nla), nl80211_bss_select_policy);
-+	if (err)
-+		return err;
-+
-+	bss_select->behaviour = __NL80211_BSS_SELECT_ATTR_INVALID;
-+
-+	if (attr[NL80211_BSS_SELECT_ATTR_RSSI])
-+		bss_select->behaviour = NL80211_BSS_SELECT_ATTR_RSSI;
-+
-+	if (attr[NL80211_BSS_SELECT_ATTR_BAND_PREF]) {
-+		bss_select->behaviour = NL80211_BSS_SELECT_ATTR_BAND_PREF;
-+		bss_select->param.band_pref =
-+			nla_get_u32(attr[NL80211_BSS_SELECT_ATTR_BAND_PREF]);
-+	}
-+	if (attr[NL80211_BSS_SELECT_ATTR_RSSI_ADJUST]) {
-+		bss_select->behaviour = NL80211_BSS_SELECT_ATTR_RSSI_ADJUST;
-+		band_delta =
-+			nla_get_u16(attr[NL80211_BSS_SELECT_ATTR_RSSI_ADJUST]);
-+		bss_select->param.adjust.delta = (s8)(band_delta & 0xFF);
-+		bss_select->param.adjust.band = band_delta >> 8;
-+	}
-+
-+	if (bss_select->behaviour == __NL80211_BSS_SELECT_ATTR_INVALID)
-+		return -EINVAL;
-+
-+	return 0;
-+}
-+
- static int nl80211_parse_random_mac(struct nlattr **attrs,
- 				    u8 *mac_addr, u8 *mac_addr_mask)
- {
-@@ -7980,6 +8041,21 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
- 		connect.flags |= ASSOC_REQ_USE_RRM;
- 	}
- 
-+	/* only do bss selection when no BSSID is specified. */
-+	if (!connect.bssid && rdev->wiphy.bss_select_support &&
-+	    info->attrs[NL80211_ATTR_BSS_SELECT]) {
-+		err = parse_bss_select(info->attrs[NL80211_ATTR_BSS_SELECT],
-+				       &connect.bss_select);
-+		if (err) {
-+			kzfree(connkeys);
-+			return err;
-+		}
-+		if (!(rdev->wiphy.bss_select_support & BIT(connect.bss_select.behaviour))) {
-+			kzfree(connkeys);
-+			return -EINVAL;
-+		}
-+	}
-+
- 	wdev_lock(dev->ieee80211_ptr);
- 	err = cfg80211_connect(rdev, dev, &connect, connkeys, NULL);
- 	wdev_unlock(dev->ieee80211_ptr);
--- 
-1.9.1
+Could you try the following patch?
 
+Thanks!
+
+----------------->
+
+diff --git a/net/nfc/llcp_sock.c b/net/nfc/llcp_sock.c
+index ecf0a01..252f3c0 100644
+--- a/net/nfc/llcp_sock.c
++++ b/net/nfc/llcp_sock.c
+@@ -961,6 +961,8 @@ struct sock *nfc_llcp_sock_alloc(struct socket
+*sock, int type, gfp_t gfp, int k
+
+        llcp_sock->ssap = 0;
+        llcp_sock->dsap = LLCP_SAP_SDP;
++       llcp_sock->service_name_len = 0;
++       llcp_sock->service_name = NULL;
+        llcp_sock->rw = LLCP_MAX_RW + 1;
+        llcp_sock->miux = cpu_to_be16(LLCP_MAX_MIUX + 1);
+        llcp_sock->send_n = llcp_sock->send_ack_n = 0;
