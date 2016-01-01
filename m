@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:21224 "EHLO mga09.intel.com"
+Received: from m50-132.163.com ([123.125.50.132]:49041 "EHLO m50-132.163.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753490AbcAGMsI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 07:48:08 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 17/21] iwlwifi: mvm: initialize gtkdata->mvm correctly
-Date: Thu,  7 Jan 2016 14:47:37 +0200
-Message-Id: <1452170861-10060-17-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160107_134815_684426_0F064029)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+	id S1752059AbcAAPuE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jan 2016 10:50:04 -0500
+From: Geliang Tang <geliangtang@163.com>
+To: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 5/6] mwifiex: use to_delayed_work
+Date: Fri,  1 Jan 2016 23:48:56 +0800
+Message-Id: <2ae1e4a43ac4e78a747ffd52320ca4c7c275a4a7.1451661580.git.geliangtang@163.com> (sfid-20160101_165130_832972_47EF2D37)
+In-Reply-To: <5df0633bd7779dd21192f7a41c634efd78f8606c.1451661580.git.geliangtang@163.com>
+References: <5df0633bd7779dd21192f7a41c634efd78f8606c.1451661580.git.geliangtang@163.com>
+In-Reply-To: <5df0633bd7779dd21192f7a41c634efd78f8606c.1451661580.git.geliangtang@163.com>
+References: <5df0633bd7779dd21192f7a41c634efd78f8606c.1451661580.git.geliangtang@163.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+Use to_delayed_work() instead of open-coding it.
 
-gtkdata->mvm wasn't set in iwl_mvm_d0i3_update_keys,
-resulting in kernel panic in some flows (when mvm
-is actually used...)
-
-Fixes: a3f7ba5c8825 ("iwlwifi: update key params on d0i3 entrance/exit")
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Geliang Tang <geliangtang@163.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/marvell/mwifiex/11h.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index 2cd9052..d3e21d9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -1843,6 +1843,7 @@ void iwl_mvm_d0i3_update_keys(struct iwl_mvm *mvm,
- 			      struct iwl_wowlan_status *status)
+diff --git a/drivers/net/wireless/marvell/mwifiex/11h.c b/drivers/net/wireless/marvell/mwifiex/11h.c
+index 71a1b58..81c60d0 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11h.c
++++ b/drivers/net/wireless/marvell/mwifiex/11h.c
+@@ -123,8 +123,7 @@ void mwifiex_11h_process_join(struct mwifiex_private *priv, u8 **buffer,
+ void mwifiex_dfs_cac_work_queue(struct work_struct *work)
  {
- 	struct iwl_mvm_d3_gtk_iter_data gtkdata = {
-+		.mvm = mvm,
- 		.status = status,
- 	};
- 
+ 	struct cfg80211_chan_def chandef;
+-	struct delayed_work *delayed_work =
+-			container_of(work, struct delayed_work, work);
++	struct delayed_work *delayed_work = to_delayed_work(work);
+ 	struct mwifiex_private *priv =
+ 			container_of(delayed_work, struct mwifiex_private,
+ 				     dfs_cac_work);
+@@ -289,8 +288,7 @@ int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
+ void mwifiex_dfs_chan_sw_work_queue(struct work_struct *work)
+ {
+ 	struct mwifiex_uap_bss_param *bss_cfg;
+-	struct delayed_work *delayed_work =
+-			container_of(work, struct delayed_work, work);
++	struct delayed_work *delayed_work = to_delayed_work(work);
+ 	struct mwifiex_private *priv =
+ 			container_of(delayed_work, struct mwifiex_private,
+ 				     dfs_chan_sw_work);
 -- 
 2.5.0
+
 
