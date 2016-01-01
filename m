@@ -1,225 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:38245 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754871AbcARWFt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jan 2016 17:05:49 -0500
-Subject: Re: [GIT] Networking
-To: Marc Zyngier <marc.zyngier@arm.com>,
+Received: from mout.web.de ([212.227.17.12]:50802 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752273AbcAAUcn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jan 2016 15:32:43 -0500
+Subject: [PATCH 3/3] net-iwlegacy: Another refactoring for il_eeprom_init()
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	Kalle Valo <kvalo@codeaurora.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-References: <20160112.215136.850414372508130298.davem@davemloft.net>
- <56978094.4050302@arm.com> <87k2n97n5e.fsf@kamboji.qca.qualcomm.com>
- <569CCCD2.4040105@arm.com>
-CC: David Miller <davem@davemloft.net>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-wireless@vger.kernel.org>
-From: Arend van Spriel <arend@broadcom.com>
-Message-ID: <569D61BA.8020701@broadcom.com> (sfid-20160118_230555_090469_BAE2D6FC)
-Date: Mon, 18 Jan 2016 23:05:46 +0100
+	Stanislaw Gruszka <sgruszka@redhat.com>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <5686E13F.2010309@users.sourceforge.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <5686E263.1020901@users.sourceforge.net> (sfid-20160101_213259_230671_4A358EB6)
+Date: Fri, 1 Jan 2016 21:32:35 +0100
 MIME-Version: 1.0
-In-Reply-To: <569CCCD2.4040105@arm.com>
-Content-Type: text/plain; charset="windows-1252"
+In-Reply-To: <5686E13F.2010309@users.sourceforge.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18-1-2016 12:30, Marc Zyngier wrote:
-> Hi Kalle,
-> 
-> On 16/01/16 11:57, Kalle Valo wrote:
->> Marc Zyngier <marc.zyngier@arm.com> writes:
->>
->>> David, Hante,
->>>
->>> On 13/01/16 02:51, David Miller wrote:
->>>
->>> [...]
->>>
->>>> Hante Meuleman (33):
->>> [...]
->>>>       brcmfmac: Move all module parameters to one place
->>
->> As a reminder to myself this is the commit id:
->>
->> 7d34b0560567 brcmfmac: Move all module parameters to one place
->>
->>> This particular patch breaks one of my boxes in a spectacular way:
->>>
->>> [    3.602155] Unable to handle kernel paging request at virtual address 000027e4
->>> [    3.602160] pgd = c0003000
->>> [    3.602169] [000027e4] *pgd=80000040004003, *pmd=00000000
->>> [    3.602181] Internal error: Oops: 206 [#1] PREEMPT SMP ARM
->>
->> [...]
->>
->>> This is caused by this hunk:
->>>
->>> @@ -890,7 +887,8 @@ static void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
->>>  	if (!sdiodev->sg_support)
->>>  		return;
->>>  
->>> -	nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE, brcmf_sdiod_txglomsz);
->>> +	nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE,
->>> +		      sdiodev->bus_if->drvr->settings->sdiod_txglomsz);
->>>  	nents += (nents >> 4) + 1;
->>>  
->>>  	WARN_ON(nents > sdiodev->max_segment_count);
->>>
->>> were drvr->settings is NULL (as the settings allocation seems to be done
->>> much later). The fix is not completely obvious to me (probably requires
->>> pushing the call to brcmf_mp_device_attach() down into the various bus
->>> specific functions). An alternative would be to restore the txglomsz
->>> parameter as it was before and not rely on settings being allocated.
->>
->> Should we revert the patch or can you Hante fix this? The revert doesn't
->> seem to be trivial so I would appreciate if someone could send a patch.
-> 
-> I've worked out a partial revert (see below) that allows my system to
-> boot, but I'd rather see a proper fix from the maintainer of this code.
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Fri, 1 Jan 2016 21:16:01 +0100
 
-Hi Marc,
+Rename a jump label according to the current Linux coding style convention.
 
-Thanks for the patch, but Hante has created a different patch basically
-deferring the allocation of the sgtable. Feel free to give it a spin on
-your box and share the results. I am looking for a arm64 platform to add
-to my test machines so if you can recommend one (with PCIe).
-
-Regards,
-Arend
-
->From f7d015866f24cfad5af0c35b1ab60c567835c5e8 Mon Sep 17 00:00:00 2001
-From: Hante Meuleman <meuleman@broadcom.com>
-Date: Mon, 18 Jan 2016 15:19:45 +0100
-Subject: [PATCH] brcmfmac: fix sdio sg table alloc crash
-
-With the patch to move all module paramaters to one place a bug was
-introduced causing a null pointer exception. This patch fixes the
-bug by initializing the sg table till after the settings have been
-initialized.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 40
-++++++++--------------
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  5 +++
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |  1 +
- 3 files changed, 21 insertions(+), 25 deletions(-)
+ drivers/net/wireless/intel/iwlegacy/common.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 5363739..b98db8a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -879,11 +879,24 @@ int brcmf_sdiod_abort(struct brcmf_sdio_dev
-*sdiodev, uint fn)
- 	return 0;
- }
-
--static void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
-+void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
- {
-+	struct sdio_func *func;
-+	struct mmc_host *host;
-+	uint max_blocks;
- 	uint nents;
- 	int err;
-
-+	func = sdiodev->func[2];
-+	host = func->card->host;
-+	sdiodev->sg_support = host->max_segs > 1;
-+	max_blocks = min_t(uint, host->max_blk_count, 511u);
-+	sdiodev->max_request_size = min_t(uint, host->max_req_size,
-+					  max_blocks * func->cur_blksize);
-+	sdiodev->max_segment_count = min_t(uint, host->max_segs,
-+					   SG_MAX_SINGLE_ALLOC);
-+	sdiodev->max_segment_size = host->max_seg_size;
-+
- 	if (!sdiodev->sg_support)
- 		return;
-
-@@ -1021,9 +1034,6 @@ static void brcmf_sdiod_host_fixup(struct mmc_host
-*host)
-
- static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
- {
--	struct sdio_func *func;
--	struct mmc_host *host;
--	uint max_blocks;
- 	int ret = 0;
-
- 	sdiodev->num_funcs = 2;
-@@ -1054,26 +1064,6 @@ static int brcmf_sdiod_probe(struct
-brcmf_sdio_dev *sdiodev)
- 		goto out;
- 	}
-
--	/*
--	 * determine host related variables after brcmf_sdiod_probe()
--	 * as func->cur_blksize is properly set and F2 init has been
--	 * completed successfully.
--	 */
--	func = sdiodev->func[2];
--	host = func->card->host;
--	sdiodev->sg_support = host->max_segs > 1;
--	max_blocks = min_t(uint, host->max_blk_count, 511u);
--	sdiodev->max_request_size = min_t(uint, host->max_req_size,
--					  max_blocks * func->cur_blksize);
--	sdiodev->max_segment_count = min_t(uint, host->max_segs,
--					   SG_MAX_SINGLE_ALLOC);
--	sdiodev->max_segment_size = host->max_seg_size;
--
--	/* allocate scatter-gather table. sg support
--	 * will be disabled upon allocation failure.
--	 */
--	brcmf_sdiod_sgtable_alloc(sdiodev);
--
- 	ret = brcmf_sdiod_freezer_attach(sdiodev);
- 	if (ret)
- 		goto out;
-@@ -1084,7 +1074,7 @@ static int brcmf_sdiod_probe(struct brcmf_sdio_dev
-*sdiodev)
- 		ret = -ENODEV;
- 		goto out;
- 	}
--	brcmf_sdiod_host_fixup(host);
-+	brcmf_sdiod_host_fixup(sdiodev->func[2]->card->host);
- out:
- 	if (ret)
- 		brcmf_sdiod_remove(sdiodev);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index dd66143..a14d9d9d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -4114,6 +4114,11 @@ struct brcmf_sdio *brcmf_sdio_probe(struct
-brcmf_sdio_dev *sdiodev)
- 		goto fail;
- 	}
-
-+	/* allocate scatter-gather table. sg support
-+	 * will be disabled upon allocation failure.
-+	 */
-+	brcmf_sdiod_sgtable_alloc(bus->sdiodev);
-+
- 	/* Query the F2 block size, set roundup accordingly */
- 	bus->blocksize = bus->sdiodev->func[2]->cur_blksize;
- 	bus->roundup = min(max_roundup, bus->blocksize);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index 5ec7a6d..23f2231 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -342,6 +342,7 @@ int brcmf_sdiod_ramrw(struct brcmf_sdio_dev
-*sdiodev, bool write, u32 address,
-
- /* Issue an abort to the specified function */
- int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn);
-+void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev);
- void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
- 			      enum brcmf_sdiod_state state);
- #ifdef CONFIG_PM_SLEEP
+diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
+index ae45fd3..660ab2b 100644
+--- a/drivers/net/wireless/intel/iwlegacy/common.c
++++ b/drivers/net/wireless/intel/iwlegacy/common.c
+@@ -759,7 +759,7 @@ il_eeprom_init(struct il_priv *il)
+ 				 IL_EEPROM_ACCESS_TIMEOUT);
+ 		if (ret < 0) {
+ 			IL_ERR("Time out reading EEPROM[%d]\n", addr);
+-			goto done;
++			goto release_semaphore;
+ 		}
+ 		r = _il_rd(il, CSR_EEPROM_REG);
+ 		e[addr / 2] = cpu_to_le16(r >> 16);
+@@ -769,7 +769,7 @@ il_eeprom_init(struct il_priv *il)
+ 		 il_eeprom_query16(il, EEPROM_VERSION));
+ 
+ 	ret = 0;
+-done:
++release_semaphore:
+ 	il->ops->eeprom_release_semaphore(il);
+ 
+ 	if (ret) {
 -- 
-1.9.1
+2.6.3
+
