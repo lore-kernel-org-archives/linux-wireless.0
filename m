@@ -1,46 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from glaubenleben.de ([85.214.105.140]:57593 "EHLO glaubenleben.de"
+Received: from mout.gmx.net ([212.227.17.22]:55637 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752082AbcAFVSI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2016 16:18:08 -0500
-From: Andreas Kemnade <andreas@kemnade.info>
-To: Kalle Valo <kvalo@codeaurora.org>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Andreas Kemnade <andreas@kemnade.info>
-Subject: [PATCH 4/6] wireless:libertas: do not confirm sleep if commands are pending
-Date: Wed,  6 Jan 2016 22:08:12 +0100
-Message-Id: <1452114494-6451-5-git-send-email-andreas@kemnade.info> (sfid-20160106_221819_688516_A2287AA0)
-In-Reply-To: <1452114494-6451-1-git-send-email-andreas@kemnade.info>
-References: <1452114494-6451-1-git-send-email-andreas@kemnade.info>
+	id S1752290AbcAATO4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jan 2016 14:14:56 -0500
+Subject: Re: [PATCH 2/2] net-ath9k_htc: Replace a variable initialisation by
+ an assignment in ath9k_htc_set_channel()
+To: SF Markus Elfring <elfring@users.sourceforge.net>,
+	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <5686C390.5060600@users.sourceforge.net>
+ <5686C47E.1040906@users.sourceforge.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+From: Oleksij Rempel <linux@rempel-privat.de>
+Message-ID: <5686D010.1060401@rempel-privat.de> (sfid-20160101_201549_304538_A7E63D74)
+Date: Fri, 1 Jan 2016 20:14:24 +0100
+MIME-Version: 1.0
+In-Reply-To: <5686C47E.1040906@users.sourceforge.net>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="iIDs71WpC9nd6brTonQTiKvAI0rg09UA7"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the main thread gets one PS AWAKE event and one PS SLEEP event
-in one iteration over event_fifo there will never be checks for
-commands to be processed, since psstate will always be
-PS_STATE_SLEEP or PS_STATE_PRE_SLEEP
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--iIDs71WpC9nd6brTonQTiKvAI0rg09UA7
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
----
- drivers/net/wireless/libertas/cmdresp.c | 4 ++++
- 1 file changed, 4 insertions(+)
+Am 01.01.2016 um 19:25 schrieb SF Markus Elfring:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Fri, 1 Jan 2016 19:09:32 +0100
+>=20
+> Replace an explicit initialisation for one local variable at the beginn=
+ing
+> by a conditional assignment.
+>=20
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> ---
+>  drivers/net/wireless/ath/ath9k/htc_drv_main.c | 7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
+>=20
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/ne=
+t/wireless/ath/ath9k/htc_drv_main.c
+> index a680a97..30bd59e 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> @@ -246,7 +246,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_p=
+riv *priv,
+>  	struct ieee80211_conf *conf =3D &common->hw->conf;
+>  	bool fastcc;
+>  	struct ieee80211_channel *channel =3D hw->conf.chandef.chan;
+> -	struct ath9k_hw_cal_data *caldata =3D NULL;
+> +	struct ath9k_hw_cal_data *caldata;
+>  	enum htc_phymode mode;
+>  	__be16 htc_mode;
+>  	u8 cmd_rsp;
+> @@ -274,10 +274,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_=
+priv *priv,
+>  		priv->ah->curchan->channel,
+>  		channel->center_freq, conf_is_ht(conf), conf_is_ht40(conf),
+>  		fastcc);
+> -
+> -	if (!fastcc)
+> -		caldata =3D &priv->caldata;
+> -
+> +	caldata =3D fastcc ? NULL : &priv->caldata;
+>  	ret =3D ath9k_hw_reset(ah, hchan, caldata, fastcc);
+>  	if (ret) {
+>  		ath_err(common,
+>=20
 
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index 701125f..c95bf6d 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -257,6 +257,10 @@ int lbs_process_event(struct lbs_private *priv, u32 event)
- 			       "EVENT: in FULL POWER mode, ignoring PS_SLEEP\n");
- 			break;
- 		}
-+		if (!list_empty(&priv->cmdpendingq)) {
-+			lbs_deb_cmd("EVENT: commands in queue, do not sleep\n");
-+			break;
-+		}
- 		priv->psstate = PS_STATE_PRE_SLEEP;
- 
- 		lbs_ps_confirm_sleep(priv);
--- 
-2.1.4
+Reviewed-by: Oleksij Rempel <linux@rempel-privat.de>
 
+--=20
+Regards,
+Oleksij
+
+
+--iIDs71WpC9nd6brTonQTiKvAI0rg09UA7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iF4EAREIAAYFAlaG0BUACgkQHwImuRkmbWmbIAD/atiZa0Xy3ThlaQHLJVSFBLkS
+ypnkjeykyF5QClTNPRsA/R2K1RddEZFk+dMfjZdq5iuOaz6oUaz5qvPS2G55rsE2
+=KzYR
+-----END PGP SIGNATURE-----
+
+--iIDs71WpC9nd6brTonQTiKvAI0rg09UA7--
