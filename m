@@ -1,37 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:32955 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751369AbcAMOkJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2016 09:40:09 -0500
-Date: Wed, 13 Jan 2016 15:40:05 +0100
-From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Pavel Machek <pavel@ucw.cz>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, David Gnedt <david.gnedt@davizone.at>
-Subject: Re: [PATCH v2] wl1251: add sysfs interface for bluetooth coexistence
- mode configuration
-Message-ID: <20160113144005.GR11560@pali> (sfid-20160113_154039_512623_A7F492AD)
-References: <1451130310-16666-1-git-send-email-pali.rohar@gmail.com>
- <20160113121641.GM11560@pali>
- <877fjdeixf.fsf@kamboji.qca.qualcomm.com>
+Received: from mout.web.de ([212.227.17.11]:64129 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752263AbcAAUaY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jan 2016 15:30:24 -0500
+Subject: [PATCH 1/3] net-iwlegacy: Refactoring for il_eeprom_init()
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <5686E13F.2010309@users.sourceforge.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <5686E1D2.60107@users.sourceforge.net> (sfid-20160101_213047_415265_BEC970C8)
+Date: Fri, 1 Jan 2016 21:30:10 +0100
 MIME-Version: 1.0
+In-Reply-To: <5686E13F.2010309@users.sourceforge.net>
 Content-Type: text/plain; charset=utf-8
-In-Reply-To: <877fjdeixf.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 13 January 2016 14:57:16 Kalle Valo wrote:
-> Please be patient. I'm backlogged at the moment but I will get to your
-> patch eventually. You can follow the status from patchwork:
-> 
-> https://patchwork.kernel.org/project/linux-wireless/list/?state=*
-> 
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Fri, 1 Jan 2016 20:54:25 +0100
 
-Thanks for info!
+Return directly if a memory allocation failed at the beginning.
 
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/net/wireless/intel/iwlegacy/common.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
+index eb5cb60..c3afaf7 100644
+--- a/drivers/net/wireless/intel/iwlegacy/common.c
++++ b/drivers/net/wireless/intel/iwlegacy/common.c
+@@ -723,10 +723,9 @@ il_eeprom_init(struct il_priv *il)
+ 	sz = il->cfg->eeprom_size;
+ 	D_EEPROM("NVM size = %d\n", sz);
+ 	il->eeprom = kzalloc(sz, GFP_KERNEL);
+-	if (!il->eeprom) {
+-		ret = -ENOMEM;
+-		goto alloc_err;
+-	}
++	if (!il->eeprom)
++		return -ENOMEM;
++
+ 	e = (__le16 *) il->eeprom;
+ 
+ 	il->ops->apm_init(il);
+@@ -778,7 +777,6 @@ err:
+ 		il_eeprom_free(il);
+ 	/* Reset chip to save power until we load uCode during "up". */
+ 	il_apm_stop(il);
+-alloc_err:
+ 	return ret;
+ }
+ EXPORT_SYMBOL(il_eeprom_init);
 -- 
-Pali Rohár
-pali.rohar@gmail.com
+2.6.3
+
