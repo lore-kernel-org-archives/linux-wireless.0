@@ -1,51 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:12137 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933200AbcA1HQU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 02:16:20 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 03/12] staging: wilc1000: renames u16TagParamOffset variable
-Date: Thu, 28 Jan 2016 16:13:37 +0900
-Message-ID: <1453965226-6158-3-git-send-email-leo.kim@atmel.com> (sfid-20160128_081632_298750_D08FF0D1)
-In-Reply-To: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
-References: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
+Received: from mout.web.de ([212.227.17.12]:58042 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752487AbcAASZI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jan 2016 13:25:08 -0500
+Subject: [PATCH 2/2] net-ath9k_htc: Replace a variable initialisation by an
+ assignment in ath9k_htc_set_channel()
+To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <5686C390.5060600@users.sourceforge.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <5686C47E.1040906@users.sourceforge.net> (sfid-20160101_192535_754416_9729D519)
+Date: Fri, 1 Jan 2016 19:25:02 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5686C390.5060600@users.sourceforge.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames u16TagParamOffset variable to tag_param_offset
-to avoid camelcase.
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Fri, 1 Jan 2016 19:09:32 +0100
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Replace an explicit initialisation for one local variable at the beginning
+by a conditional assignment.
+
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/staging/wilc1000/coreconfigurator.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 9f85fff..b769d3c 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -241,11 +241,11 @@ static inline u16 get_asoc_id(u8 *data)
- 	return asoc_id;
- }
- 
--static u8 *get_tim_elm(u8 *pu8msa, u16 rx_len, u16 u16TagParamOffset)
-+static u8 *get_tim_elm(u8 *pu8msa, u16 rx_len, u16 tag_param_offset)
- {
- 	u16 u16index;
- 
--	u16index = u16TagParamOffset;
-+	u16index = tag_param_offset;
- 
- 	while (u16index < (rx_len - FCS_LEN)) {
- 		if (pu8msa[u16index] == ITIM)
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+index a680a97..30bd59e 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+@@ -246,7 +246,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 	struct ieee80211_conf *conf = &common->hw->conf;
+ 	bool fastcc;
+ 	struct ieee80211_channel *channel = hw->conf.chandef.chan;
+-	struct ath9k_hw_cal_data *caldata = NULL;
++	struct ath9k_hw_cal_data *caldata;
+ 	enum htc_phymode mode;
+ 	__be16 htc_mode;
+ 	u8 cmd_rsp;
+@@ -274,10 +274,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+ 		priv->ah->curchan->channel,
+ 		channel->center_freq, conf_is_ht(conf), conf_is_ht40(conf),
+ 		fastcc);
+-
+-	if (!fastcc)
+-		caldata = &priv->caldata;
+-
++	caldata = fastcc ? NULL : &priv->caldata;
+ 	ret = ath9k_hw_reset(ah, hchan, caldata, fastcc);
+ 	if (ret) {
+ 		ath_err(common,
 -- 
-1.9.1
+2.6.3
 
