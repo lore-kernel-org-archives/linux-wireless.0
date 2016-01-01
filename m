@@ -1,45 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m50-135.163.com ([123.125.50.135]:58224 "EHLO m50-135.163.com"
+Received: from mout.web.de ([212.227.17.11]:50781 "EHLO mout.web.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751476AbcAAMEX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2016 07:04:23 -0500
-From: Geliang Tang <geliangtang@163.com>
-To: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2] ipw2x00: use to_pci_dev()
-Date: Fri,  1 Jan 2016 20:03:43 +0800
-Message-Id: <b9596d8ac5e81b9334408de148a810b2931ec4a2.1451649453.git.geliangtang@163.com> (sfid-20160101_130427_431526_707B51D7)
+	id S1752292AbcAAVeW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Jan 2016 16:34:22 -0500
+Subject: [PATCH] net-libertas: Better exception handling in
+ if_spi_host_to_card_worker()
+References: <566ABCD9.1060404@users.sourceforge.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <5686F0B2.5000000@users.sourceforge.net> (sfid-20160101_223535_344079_D09BB80E)
+Date: Fri, 1 Jan 2016 22:33:38 +0100
+MIME-Version: 1.0
+In-Reply-To: <566ABCD9.1060404@users.sourceforge.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use to_pci_dev() instead of open-coding it.
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Fri, 1 Jan 2016 22:27:20 +0100
 
-Signed-off-by: Geliang Tang <geliangtang@163.com>
+This issue was detected by using the Coccinelle software.
+
+Move the jump label directly before the desired log statement
+so that the variable "err" will not be checked once more
+after it was determined that a function call failed.
+Use the identifier "report_failure" instead of the label "err".
+
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
-This patch is against net-next tree.
+ drivers/net/wireless/marvell/libertas/if_spi.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-Changes in v2:
- - fix wrong title.
----
- drivers/net/wireless/intel/ipw2x00/ipw2100.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-index 36818c7..121294f 100644
---- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
-@@ -3514,7 +3514,7 @@ static void ipw2100_msg_free(struct ipw2100_priv *priv)
- static ssize_t show_pci(struct device *d, struct device_attribute *attr,
- 			char *buf)
- {
--	struct pci_dev *pci_dev = container_of(d, struct pci_dev, dev);
-+	struct pci_dev *pci_dev = to_pci_dev(d);
- 	char *out = buf;
- 	int i, j;
- 	u32 val;
+diff --git a/drivers/net/wireless/marvell/libertas/if_spi.c b/drivers/net/wireless/marvell/libertas/if_spi.c
+index 82c0796..c9ae27e 100644
+--- a/drivers/net/wireless/marvell/libertas/if_spi.c
++++ b/drivers/net/wireless/marvell/libertas/if_spi.c
+@@ -880,18 +880,18 @@ static void if_spi_host_to_card_worker(struct work_struct *work)
+ 				&hiStatus);
+ 	if (err) {
+ 		netdev_err(priv->dev, "I/O error\n");
+-		goto err;
++		goto report_failure;
+ 	}
+ 
+ 	if (hiStatus & IF_SPI_HIST_CMD_UPLOAD_RDY) {
+ 		err = if_spi_c2h_cmd(card);
+ 		if (err)
+-			goto err;
++			goto report_failure;
+ 	}
+ 	if (hiStatus & IF_SPI_HIST_RX_UPLOAD_RDY) {
+ 		err = if_spi_c2h_data(card);
+ 		if (err)
+-			goto err;
++			goto report_failure;
+ 	}
+ 
+ 	/*
+@@ -940,9 +940,10 @@ static void if_spi_host_to_card_worker(struct work_struct *work)
+ 	if (hiStatus & IF_SPI_HIST_CARD_EVENT)
+ 		if_spi_e2h(card);
+ 
+-err:
+-	if (err)
++	if (err) {
++report_failure:
+ 		netdev_err(priv->dev, "%s: got error %d\n", __func__, err);
++	}
+ 
+ 	lbs_deb_leave(LBS_DEB_SPI);
+ }
 -- 
-2.5.0
-
+2.6.3
 
