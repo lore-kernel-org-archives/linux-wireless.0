@@ -1,51 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from glaubenleben.de ([85.214.105.140]:44445 "EHLO glaubenleben.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758123AbcATHg6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 02:36:58 -0500
-From: Andreas Kemnade <andreas@kemnade.info>
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, hns@goldelico.com
-Cc: Andreas Kemnade <andreas@kemnade.info>
-Subject: [PATCH v2 5/6] wireless:libertas: fix ps-mode related removal problems
-Date: Wed, 20 Jan 2016 08:35:38 +0100
-Message-Id: <1453275339-25122-6-git-send-email-andreas@kemnade.info> (sfid-20160120_083831_030872_0A350CEB)
-In-Reply-To: <1453275339-25122-1-git-send-email-andreas@kemnade.info>
-References: <1453275339-25122-1-git-send-email-andreas@kemnade.info>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:32579 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751543AbcABIlw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Jan 2016 03:41:52 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V2 5/7] brcmfmac: Fix warn trace on module unload while in ibss mode
+Date: Sat, 2 Jan 2016 09:41:40 +0100
+Message-ID: <1451724102-21911-6-git-send-email-arend@broadcom.com> (sfid-20160102_094230_803849_B469BB75)
+In-Reply-To: <1451724102-21911-1-git-send-email-arend@broadcom.com>
+References: <1451724102-21911-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the device is remove e.g. because of going to suspend
- mode with powersaving enabled, lbs_remove_card tries to exit
-powersaving state even when already woken up. That command is
-not processed properly in that situation, since the command
-processing queue is already stopped, so it waits forever
-for the command being processed, so disable it.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
+When the driver is being unloaded a situation can occur where the
+wirelesss core (cfg80211) wants to remove the ibss, but the state
+of brcmfmac has already been set to down. When an error is
+returned in that situation then that will result in a stack
+trace on removal of the wiphy object. This is avoided by
+returning 0 when device is down on a leave_ibss call.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
-changes in v2: improved commit message, reordered: was 6/6
- drivers/net/wireless/libertas/main.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
-index 8079560..b35b8bc 100644
---- a/drivers/net/wireless/libertas/main.c
-+++ b/drivers/net/wireless/libertas/main.c
-@@ -1060,7 +1060,12 @@ void lbs_remove_card(struct lbs_private *priv)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 05843b7..dc14dd4 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -1448,8 +1448,13 @@ brcmf_cfg80211_leave_ibss(struct wiphy *wiphy, struct net_device *ndev)
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
  
- 	if (priv->psmode == LBS802_11POWERMODEMAX_PSP) {
- 		priv->psmode = LBS802_11POWERMODECAM;
--		lbs_set_ps_mode(priv, PS_MODE_ACTION_EXIT_PS, true);
-+		/* no need to wakeup if already woken up,
-+		 * on suspend, this exit ps command is not processed
-+		 * the driver hangs
+ 	brcmf_dbg(TRACE, "Enter\n");
+-	if (!check_vif_up(ifp->vif))
+-		return -EIO;
++	if (!check_vif_up(ifp->vif)) {
++		/* When driver is being unloaded, it can end up here. If an
++		 * error is returned then later on a debug trace in the wireless
++		 * core module will be printed. To avoid this 0 is returned.
 +		 */
-+		if (priv->psstate != PS_STATE_FULL_POWER)
-+			lbs_set_ps_mode(priv, PS_MODE_ACTION_EXIT_PS, true);
- 	}
++		return 0;
++	}
  
- 	if (priv->is_deep_sleep) {
+ 	brcmf_link_down(ifp->vif, WLAN_REASON_DEAUTH_LEAVING);
+ 
 -- 
-2.1.4
+1.9.1
 
