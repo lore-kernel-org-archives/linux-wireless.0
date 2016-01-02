@@ -1,114 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44620 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750808AbcAOBYQ (ORCPT
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:37553 "EHLO
+	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751039AbcABKNb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2016 20:24:16 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH 2/5] ath9k: clean up ANI per-channel pointer checking
-Date: Fri, 15 Jan 2016 09:23:26 +0800
-Message-Id: <1452821009-1156-3-git-send-email-miaoqing@codeaurora.org> (sfid-20160115_022418_623915_1C9254EB)
-In-Reply-To: <1452821009-1156-1-git-send-email-miaoqing@codeaurora.org>
-References: <1452821009-1156-1-git-send-email-miaoqing@codeaurora.org>
+	Sat, 2 Jan 2016 05:13:31 -0500
+Subject: Re: net-libertas: Better exception handling in
+ if_spi_host_to_card_worker()
+To: SF Markus Elfring <elfring@users.sourceforge.net>,
+	Julia Lawall <julia.lawall@lip6.fr>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <5686F0B2.5000000@users.sourceforge.net>
+ <56870866.7020000@cogentembedded.com>
+ <568785B3.5000905@users.sourceforge.net>
+ <alpine.DEB.2.02.1601020914100.2063@localhost6.localdomain6>
+ <5687939E.7010701@users.sourceforge.net>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org
+From: Arend van Spriel <aspriel@gmail.com>
+Message-ID: <5687A2C7.3000704@gmail.com> (sfid-20160102_111356_885749_81D438BE)
+Date: Sat, 2 Jan 2016 11:13:27 +0100
+MIME-Version: 1.0
+In-Reply-To: <5687939E.7010701@users.sourceforge.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-commit c24bd3620c50 ("ath9k: Do not maintain ANI state per-channel")
-removed per-channel handling, the code to check 'curchan' also
-should be removed as never used.
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/ani.c | 32 ++++++--------------------------
- 1 file changed, 6 insertions(+), 26 deletions(-)
+On 02-01-16 10:08, SF Markus Elfring wrote:
+>>> I assume that a software development taste can evolve, can't it?
+>>
+>> So far, you have gotten several down votes for this kind of change,
+> 
+> I am curious when more contributors will share corresponding opinions.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 0f74d59..bd1b573 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -126,12 +126,8 @@ static void ath9k_hw_update_mibstats(struct ath_hw *ah,
- 
- static void ath9k_ani_restart(struct ath_hw *ah)
- {
--	struct ar5416AniState *aniState;
--
--	if (!ah->curchan)
--		return;
-+	struct ar5416AniState *aniState = &ah->ani;
- 
--	aniState = &ah->ani;
- 	aniState->listenTime = 0;
- 
- 	ENABLE_REGWRITE_BUFFER(ah);
-@@ -221,12 +217,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
- 
- static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
- {
--	struct ar5416AniState *aniState;
--
--	if (!ah->curchan)
--		return;
--
--	aniState = &ah->ani;
-+	struct ar5416AniState *aniState = &ah->ani;
- 
- 	if (aniState->ofdmNoiseImmunityLevel < ATH9K_ANI_OFDM_MAX_LEVEL)
- 		ath9k_hw_set_ofdm_nil(ah, aniState->ofdmNoiseImmunityLevel + 1, false);
-@@ -281,12 +272,7 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel,
- 
- static void ath9k_hw_ani_cck_err_trigger(struct ath_hw *ah)
- {
--	struct ar5416AniState *aniState;
--
--	if (!ah->curchan)
--		return;
--
--	aniState = &ah->ani;
-+	struct ar5416AniState *aniState = &ah->ani;
- 
- 	if (aniState->cckNoiseImmunityLevel < ATH9K_ANI_CCK_MAX_LEVEL)
- 		ath9k_hw_set_cck_nil(ah, aniState->cckNoiseImmunityLevel + 1,
-@@ -299,9 +285,7 @@ static void ath9k_hw_ani_cck_err_trigger(struct ath_hw *ah)
-  */
- static void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
- {
--	struct ar5416AniState *aniState;
--
--	aniState = &ah->ani;
-+	struct ar5416AniState *aniState = &ah->ani;
- 
- 	/* lower OFDM noise immunity */
- 	if (aniState->ofdmNoiseImmunityLevel > 0 &&
-@@ -329,7 +313,7 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int ofdm_nil, cck_nil;
- 
--	if (!ah->curchan)
-+	if (!chan)
- 		return;
- 
- 	BUG_ON(aniState == NULL);
-@@ -416,14 +400,10 @@ static bool ath9k_hw_ani_read_counters(struct ath_hw *ah)
- 
- void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
- {
--	struct ar5416AniState *aniState;
-+	struct ar5416AniState *aniState = &ah->ani;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	u32 ofdmPhyErrRate, cckPhyErrRate;
- 
--	if (!ah->curchan)
--		return;
--
--	aniState = &ah->ani;
- 	if (!ath9k_hw_ani_read_counters(ah))
- 		return;
- 
--- 
-1.9.1
+Let's burn some cycles on this while the holidays give me time to do so.
+"software development taste" is another term for "coding style". In
+every project battles are fought over this between friends and foes. I
+have never seen much evolution going on in this area.
 
+>> and no enthusiasm.
+> 
+> How many software designers and developers can become enthusiastic
+> about better exception handling to some degree?
+
+I had to  take a look at this particular patch and I have to say that I
+don't see, using your favorite term, evolution at work. It looks more
+like the result of inbred. What the patch tries to do is avoid the extra
+'if (err)'. Setting coding style aside, the question is whether there is
+a good metric for the patch. So does it really safe processing time? Did
+you look at the resulting assembly code for different target architectures?
+
+You got pushed back on the change so you have to come up with solid
+arguments for your change instead of spewing ideas about evolution in
+software development. Running Coccinelle is one thing, but understanding
+the results and what you are ultimately proposing to be changed is more
+important.
+
+Regards,
+Arend
+
+>> The code that is performance critical, you should probably not touch, ever.
+> 
+> I imagine that technical evolution will result in further considerations
+> so that "unchangeable" components can be adjusted once more.
+> 
+> 
+>> The people who wrote it knew what was important and what was not.
+> 
+> I might come along at some places where the affected knowledge will also evolve.
+> 
+> Regards,
+> Markus
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
