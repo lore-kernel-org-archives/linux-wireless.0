@@ -1,91 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:36042 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755368AbcAYLGz (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:57046 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751598AbcABIlw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 06:06:55 -0500
+	Sat, 2 Jan 2016 03:41:52 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V2 4/7] brcmfmac: obtain feature info using 'cap' firmware command
+Date: Sat, 2 Jan 2016 09:41:39 +0100
+Message-ID: <1451724102-21911-5-git-send-email-arend@broadcom.com> (sfid-20160102_094235_446609_6813F455)
+In-Reply-To: <1451724102-21911-1-git-send-email-arend@broadcom.com>
+References: <1451724102-21911-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <1453718849-3508-1-git-send-email-sjoerd.simons@collabora.co.uk>
-References: <1453718849-3508-1-git-send-email-sjoerd.simons@collabora.co.uk>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 25 Jan 2016 22:06:35 +1100
-Message-ID: <CAGRGNgXWE=b52Mcy8NsKBZS_4gz-TUiuFipjsuTZh1xjja=uUg@mail.gmail.com> (sfid-20160125_120722_574570_8780640A)
-Subject: Re: [PATCH] brcmfmac: sdio: Increase the default timeouts a bit
-To: Sjoerd Simons <sjoerd.simons@collabora.co.uk>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Paul Stewart <pstew@chromium.org>,
-	Doug Anderson <dianders@chromium.org>,
-	linux-rockchip@lists.infradead.org,
-	Arend van Spriel <arend@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	brcm80211-dev-list@broadcom.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	netdev <netdev@vger.kernel.org>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sjoerd,
+Several features in the driver directly map to a firmware feature
+listed in response of the 'cap' firmware command. For those features
+this response will be examined instead of attempting individual
+firmware commands.
 
-On Mon, Jan 25, 2016 at 9:47 PM, Sjoerd Simons
-<sjoerd.simons@collabora.co.uk> wrote:
-> On a Radxa Rock2 board with a Ampak AP6335 (Broadcom 4339 core) it seems
-> the card responds very quickly most of the time, unfortunately during
-> initialisation it sometimes seems to take just a bit over 2 seconds to
-> respond.
->
-> This results intialization failing with message like:
->   brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -52
->   brcmf_bus_start: failed: -52
->   brcmf_sdio_firmware_callback: dongle is not responding
->
-> Increasing the timeout to allow for a bit more headroom allows the
-> card to initialize reliably.
->
-> A quick search online after diagnosing/fixing this showed that Google
-> has a similar patch in their ChromeOS tree, so this doesn't seem
-> specific to the board I'm using.
->
-> Signed-off-by: Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+V2:
+ - Correct feature bitmap update for 43362.
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 53 +++++++++++++---------
+ 1 file changed, 31 insertions(+), 22 deletions(-)
 
-Looks sane to me.
-
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> index dd66143..75ac4bd 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> @@ -45,8 +45,8 @@
->  #include "chip.h"
->  #include "firmware.h"
->
-> -#define DCMD_RESP_TIMEOUT      msecs_to_jiffies(2000)
-> -#define CTL_DONE_TIMEOUT       msecs_to_jiffies(2000)
-> +#define DCMD_RESP_TIMEOUT      msecs_to_jiffies(2500)
-> +#define CTL_DONE_TIMEOUT       msecs_to_jiffies(2500)
->
->  #ifdef DEBUG
->
-> --
-> 2.7.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+index e7ac8a2..d41f343 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+@@ -42,6 +42,17 @@ static const char *brcmf_feat_names[] = {
+ };
+ #undef BRCMF_FEAT_DEF
+ 
++struct brcmf_feat_fwcap {
++	enum brcmf_feat_id feature;
++	const char * const fwcap_id;
++};
++
++static const struct brcmf_feat_fwcap brcmf_fwcap_map[] = {
++	{ BRCMF_FEAT_MBSS, "mbss" },
++	{ BRCMF_FEAT_MCHAN, "mchan" },
++	{ BRCMF_FEAT_P2P, "p2p" },
++};
++
+ #ifdef DEBUG
+ /*
+  * expand quirk list to array of quirk strings.
+@@ -106,25 +117,22 @@ static void brcmf_feat_iovar_int_get(struct brcmf_if *ifp,
+ 	}
+ }
+ 
+-/**
+- * brcmf_feat_iovar_int_set() - determine feature through iovar set.
+- *
+- * @ifp: interface to query.
+- * @id: feature id.
+- * @name: iovar name.
+- */
+-static void brcmf_feat_iovar_int_set(struct brcmf_if *ifp,
+-				     enum brcmf_feat_id id, char *name, u32 val)
++static void brcmf_feat_firmware_capabilities(struct brcmf_if *ifp)
+ {
+-	int err;
+-
+-	err = brcmf_fil_iovar_int_set(ifp, name, val);
+-	if (err == 0) {
+-		brcmf_dbg(INFO, "enabling feature: %s\n", brcmf_feat_names[id]);
+-		ifp->drvr->feat_flags |= BIT(id);
+-	} else {
+-		brcmf_dbg(TRACE, "%s feature check failed: %d\n",
+-			  brcmf_feat_names[id], err);
++	char caps[256];
++	enum brcmf_feat_id id;
++	int i;
++
++	brcmf_fil_iovar_data_get(ifp, "cap", caps, sizeof(caps));
++	brcmf_dbg(INFO, "[ %s]\n", caps);
++
++	for (i = 0; i < ARRAY_SIZE(brcmf_fwcap_map); i++) {
++		if (strnstr(caps, brcmf_fwcap_map[i].fwcap_id, sizeof(caps))) {
++			id = brcmf_fwcap_map[i].feature;
++			brcmf_dbg(INFO, "enabling feature: %s\n",
++				  brcmf_feat_names[id]);
++			ifp->drvr->feat_flags |= BIT(id);
++		}
+ 	}
+ }
+ 
+@@ -134,13 +142,14 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+ 	struct brcmf_pno_macaddr_le pfn_mac;
+ 	s32 err;
+ 
+-	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_MCHAN, "mchan");
++	brcmf_feat_firmware_capabilities(ifp);
++
+ 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_PNO, "pfn");
+ 	if (drvr->bus_if->wowl_supported)
+ 		brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
+-	if (drvr->bus_if->chip != BRCM_CC_43362_CHIP_ID)
+-		brcmf_feat_iovar_int_set(ifp, BRCMF_FEAT_MBSS, "mbss", 0);
+-	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_P2P, "p2p");
++	/* MBSS does not work for 43362 */
++	if (drvr->bus_if->chip == BRCM_CC_43362_CHIP_ID)
++		ifp->drvr->feat_flags &= ~BIT(BRCMF_FEAT_MBSS);
+ 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_RSDB, "rsdb_mode");
+ 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_TDLS, "tdls_enable");
+ 
 -- 
-Julian Calaby
+1.9.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
