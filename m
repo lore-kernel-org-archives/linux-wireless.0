@@ -1,87 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:35716 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755597AbcARQxw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jan 2016 11:53:52 -0500
-Date: Mon, 18 Jan 2016 17:53:03 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel\@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-mips\@linux-mips.org" <linux-mips@linux-mips.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Subject: ssb: Set linux-wireless as MAINTAINERS list
-Message-ID: <20160118175303.19164539@wiggum> (sfid-20160118_175414_635941_E1A521FB)
-In-Reply-To: <87y4bn5m4q.fsf@kamboji.qca.qualcomm.com>
-References: <8128014.DbbgBtKY3z@wuerfel>
- <8760ywd5fe.fsf@kamboji.qca.qualcomm.com>
- <4037550.DMaVTE01Aq@wuerfel>
- <87bn8l7miw.fsf@kamboji.qca.qualcomm.com>
- <CACna6ryvDFHqwJ3ExURcyFT2ZaT9fS9v36wCnJfze5BLnE88og@mail.gmail.com>
- <87y4bn5m4q.fsf@kamboji.qca.qualcomm.com>
+Received: from mail-io0-f173.google.com ([209.85.223.173]:35235 "EHLO
+	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750952AbcABXlm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Jan 2016 18:41:42 -0500
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/W9FSX.bWK4dE3/AP7ZDba/G"; protocol="application/pgp-signature"
+In-Reply-To: <5688390B.3080800@users.sourceforge.net>
+References: <566ABCD9.1060404@users.sourceforge.net> <56883849.2080304@users.sourceforge.net>
+ <5688390B.3080800@users.sourceforge.net>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sun, 3 Jan 2016 10:41:22 +1100
+Message-ID: <CAGRGNgWiHKLrHMUySnCpfiF1+C=QV-i4C4KNmziga3-E1CLfKA@mail.gmail.com> (sfid-20160103_004223_182680_EA2AE4ED)
+Subject: Re: [PATCH 1/3] NFC-mei_phy: Refactoring for mei_nfc_connect()
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/W9FSX.bWK4dE3/AP7ZDba/G
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Markus,
 
-ssb patches go through the linux-wireless tree.
-Set the list to linux-wireless, so linux-wireless patchwork can catch the p=
-atches.
+On Sun, Jan 3, 2016 at 7:54 AM, SF Markus Elfring
+<elfring@users.sourceforge.net> wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Sat, 2 Jan 2016 21:21:24 +0100
+>
+> This issue was detected by using the Coccinelle software.
+>
+> Adjust jump targets according to the current Linux coding style convention.
+>
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> ---
+>  drivers/nfc/mei_phy.c | 13 ++++++-------
+>  1 file changed, 6 insertions(+), 7 deletions(-)
+>
+> diff --git a/drivers/nfc/mei_phy.c b/drivers/nfc/mei_phy.c
+> index 83deda4..8e3a69f 100644
+> --- a/drivers/nfc/mei_phy.c
+> +++ b/drivers/nfc/mei_phy.c
+> @@ -173,8 +173,8 @@ static int mei_nfc_connect(struct nfc_mei_phy *phy)
+>
+>         reply = kzalloc(connect_resp_length, GFP_KERNEL);
+>         if (!reply) {
+> -               kfree(cmd);
+> -               return -ENOMEM;
+> +               r = -ENOMEM;
+> +               goto free_cmd;
+>         }
+>
+>         connect_resp = (struct mei_nfc_connect_resp *)reply->data;
+> @@ -189,7 +189,7 @@ static int mei_nfc_connect(struct nfc_mei_phy *phy)
+>         r = mei_cldev_send(phy->cldev, (u8 *)cmd, connect_length);
+>         if (r < 0) {
+>                 pr_err("Could not send connect cmd %d\n", r);
+> -               goto err;
+> +               goto free_reply;
+>         }
+>
+>         bytes_recv = mei_cldev_recv(phy->cldev, (u8 *)reply,
+> @@ -197,7 +197,7 @@ static int mei_nfc_connect(struct nfc_mei_phy *phy)
+>         if (bytes_recv < 0) {
+>                 r = bytes_recv;
+>                 pr_err("Could not read connect response %d\n", r);
+> -               goto err;
+> +               goto free_reply;
+>         }
+>
+>         MEI_DUMP_NFC_HDR("connect reply", &reply->hdr);
+> @@ -210,11 +210,10 @@ static int mei_nfc_connect(struct nfc_mei_phy *phy)
+>                 connect_resp->me_hotfix, connect_resp->me_build);
+>
+>         r = 0;
+> -
+> -err:
+> +free_reply:
+>         kfree(reply);
+> +free_cmd:
+>         kfree(cmd);
+> -
 
-Signed-off-by: Michael Buesch <m@bues.ch>
+Why are you deleting the two blank lines here?
 
----
+Thanks,
 
-Index: linux/MAINTAINERS
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- linux.orig/MAINTAINERS
-+++ linux/MAINTAINERS
-@@ -10036,7 +10036,7 @@ F:	drivers/net/ethernet/natsemi/sonic.*
-=20
- SONICS SILICON BACKPLANE DRIVER (SSB)
- M:	Michael Buesch <m@bues.ch>
--L:	netdev@vger.kernel.org
-+L:	linux-wireless@vger.kernel.org
- S:	Maintained
- F:	drivers/ssb/
- F:	include/linux/ssb/
+-- 
+Julian Calaby
 
-
---=20
-Michael
-
---Sig_/W9FSX.bWK4dE3/AP7ZDba/G
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWnRhvAAoJEPUyvh2QjYsOPYMP+wVU8Zgs2cPYZAxBjr/7/ZKX
-7/S5jsyNck3aQRMfwW9l2od0ZC1zwkSCRZLNzwtbWlXTdsc5ti/5xY8b1BG8AMai
-jvuwrpQFJTP3pDBfITcfHy1TOCRAp9WlZYftbz5AsnweHe3c9pGZVSEi5kdRXQrt
-5UlcViNaQ2Xj6mcbvSHGL78lvspgUGikjztlKq2FDfeYn++iyr71x9cSBfbNkB3v
-ZKa3bFPAaNR2/0gY9xVKE6pcHBroGUB6RxuLoXXp2rCX6XpTtI6hq0ITFUcyEwuQ
-MQqFqh67iB3prN6hRHX+dJl2VsuruyAZpgPCOVDysF0xThHdEZFDTlAgPmpdnju9
-wRb6hKiQkjvjzYAHAxo6YepAOIXHEhaPqnPs8u2hxVCZk8mM4dOMGp5ZNdsmQi8q
-F/Dd9MbYYDpgy/1y65dCPTz0KRq0UzzUdu85MSOk/SQ3ZxA5vlYs8t8IKeIM7x+A
-9QDwtlcNjnqzJ8qgd/rweC/Pty8m3Tg6wzIXYeDs8lty7VygC2MZ5cggCUHMdap1
-urBEE09Vz9aK8/q+SvMGis//flrjcodlhrmQPZkJ5x5I+pACf0n/t5JMrRWkw49n
-EF1djRh9+YHd0KdsuYU336RgW00GV2FWUepPGeKVuQH9Z+cGKriakXeTDkpsnm+w
-Nf2mv0KxPsLC53wdZlyN
-=OMM2
------END PGP SIGNATURE-----
-
---Sig_/W9FSX.bWK4dE3/AP7ZDba/G--
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
