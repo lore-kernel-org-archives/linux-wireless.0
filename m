@@ -1,39 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42352 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966563AbcA1I1a (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 03:27:30 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: miaoqing@codeaurora.org
-Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
-	ath9k-devel@qca.qualcomm.com, nbd@openwrt.org
-Subject: Re: [PATCH v3 0/5] ath9k bug fixes
-References: <1453080830-7616-1-git-send-email-miaoqing@codeaurora.org>
-Date: Thu, 28 Jan 2016 10:27:24 +0200
-In-Reply-To: <1453080830-7616-1-git-send-email-miaoqing@codeaurora.org>
-	(miaoqing@codeaurora.org's message of "Mon, 18 Jan 2016 09:33:45
-	+0800")
-Message-ID: <877fium7mb.fsf@kamboji.qca.qualcomm.com> (sfid-20160128_092735_972209_136FDE25)
+Received: from mout.web.de ([212.227.17.12]:60842 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751751AbcABUyn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Jan 2016 15:54:43 -0500
+Subject: [PATCH 1/3] NFC-mei_phy: Refactoring for mei_nfc_connect()
+To: linux-wireless@vger.kernel.org,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <56883849.2080304@users.sourceforge.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <5688390B.3080800@users.sourceforge.net> (sfid-20160102_215500_753074_288124B5)
+Date: Sat, 2 Jan 2016 21:54:35 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56883849.2080304@users.sourceforge.net>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-miaoqing@codeaurora.org writes:
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Sat, 2 Jan 2016 21:21:24 +0100
 
-> From: Miaoqing Pan <miaoqing@codeaurora.org>
->
-> ath9k bug fixes
->
-> Miaoqing Pan (5):
->   ath9k: avoid ANI restart if no trigger
->   ath9k: clean up ANI per-channel pointer checking
->   ath9k: do not reset while BB panic(0x4000409) on ar9561
->   ath9k: fix inconsistent use of tab and space in indentation
->   ath9k: fix data bus error on ar9300 and ar9580
+This issue was detected by using the Coccinelle software.
 
-All applied to ath.git, thanks.
+Adjust jump targets according to the current Linux coding style convention.
 
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/nfc/mei_phy.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/nfc/mei_phy.c b/drivers/nfc/mei_phy.c
+index 83deda4..8e3a69f 100644
+--- a/drivers/nfc/mei_phy.c
++++ b/drivers/nfc/mei_phy.c
+@@ -173,8 +173,8 @@ static int mei_nfc_connect(struct nfc_mei_phy *phy)
+ 
+ 	reply = kzalloc(connect_resp_length, GFP_KERNEL);
+ 	if (!reply) {
+-		kfree(cmd);
+-		return -ENOMEM;
++		r = -ENOMEM;
++		goto free_cmd;
+ 	}
+ 
+ 	connect_resp = (struct mei_nfc_connect_resp *)reply->data;
+@@ -189,7 +189,7 @@ static int mei_nfc_connect(struct nfc_mei_phy *phy)
+ 	r = mei_cldev_send(phy->cldev, (u8 *)cmd, connect_length);
+ 	if (r < 0) {
+ 		pr_err("Could not send connect cmd %d\n", r);
+-		goto err;
++		goto free_reply;
+ 	}
+ 
+ 	bytes_recv = mei_cldev_recv(phy->cldev, (u8 *)reply,
+@@ -197,7 +197,7 @@ static int mei_nfc_connect(struct nfc_mei_phy *phy)
+ 	if (bytes_recv < 0) {
+ 		r = bytes_recv;
+ 		pr_err("Could not read connect response %d\n", r);
+-		goto err;
++		goto free_reply;
+ 	}
+ 
+ 	MEI_DUMP_NFC_HDR("connect reply", &reply->hdr);
+@@ -210,11 +210,10 @@ static int mei_nfc_connect(struct nfc_mei_phy *phy)
+ 		connect_resp->me_hotfix, connect_resp->me_build);
+ 
+ 	r = 0;
+-
+-err:
++free_reply:
+ 	kfree(reply);
++free_cmd:
+ 	kfree(cmd);
+-
+ 	return r;
+ }
+ 
 -- 
-Kalle Valo
+2.6.3
+
