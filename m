@@ -1,73 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:39263 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751515AbcAGQdh (ORCPT
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:35867 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751818AbcABSS7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 11:33:37 -0500
-Subject: Re: lost connectivity until "wpa_cli reassociate" is issued
-To: David Mosberger <davidm@egauge.net>
-References: <CALnQHM3C=DVaTf58XDyh+rttVs-FSpc4ghozg9HJktEonq7w-g@mail.gmail.com>
- <568E913D.7050301@candelatech.com>
- <CALnQHM1mzqFbprQqujB7BWncOa=D9uAxLQ0paiv-21vrx+hFvw@mail.gmail.com>
-Cc: linux-wireless@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <568E9360.3060906@candelatech.com> (sfid-20160107_173340_336533_E1AE129E)
-Date: Thu, 7 Jan 2016 08:33:36 -0800
+	Sat, 2 Jan 2016 13:18:59 -0500
 MIME-Version: 1.0
-In-Reply-To: <CALnQHM1mzqFbprQqujB7BWncOa=D9uAxLQ0paiv-21vrx+hFvw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <5686E263.1020901@users.sourceforge.net>
+References: <566ABCD9.1060404@users.sourceforge.net>
+	<5686E13F.2010309@users.sourceforge.net>
+	<5686E263.1020901@users.sourceforge.net>
+Date: Sat, 2 Jan 2016 23:48:58 +0530
+Message-ID: <CAFqt6za=NzwNC2myx95OxffpVzfyuPWLJfjx_nDHXsGE=myvfg@mail.gmail.com> (sfid-20160102_191920_540466_E02D1AD0)
+Subject: Re: [PATCH 3/3] net-iwlegacy: Another refactoring for il_eeprom_init()
+From: Souptick Joarder <jrdr.linux@gmail.com>
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/07/2016 08:29 AM, David Mosberger wrote:
-> Ben,
+On Sat, Jan 2, 2016 at 2:02 AM, SF Markus Elfring
+<elfring@users.sourceforge.net> wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Fri, 1 Jan 2016 21:16:01 +0100
 >
-> On Thu, Jan 7, 2016 at 9:24 AM, Ben Greear <greearb@candelatech.com> wrote:
->> On 01/07/2016 08:19 AM, David Mosberger wrote:
->>>
->>> We are seeing a curious issue where WLAN connectivity sometimes
->>> gets stuck until a "wpa_cli reassociate" command is issued.
->>>
->>> At the WPA level, everything appears to be working fine)
->>> (see thread starting at
->>> http://lists.infradead.org/pipermail/hostap/2016-January/034454.html).
->>
->> I don't remember seeing you mention the driver and NIC you are using.
->>
->> I think this is likely a driver bug, so please provide that info.
+> Rename a jump label according to the current Linux coding style convention.
 >
-> Sure, we're using rtl8192cu.  I started out suspecting a driver bug as
-> well, but since we're processing management frames during those
-> "stuck" periods just fine (see
-> debug output in
-> http://lists.infradead.org/pipermail/hostap/2016-January/034459.html),
-> I'm not so sure anymore.  Like mac80211, we have patched rtl8192cu
-> driver with current
-> bug-fixes already.
-
-I have no experience with that chip, but wifi is a tricky beast.  Could be
-a power-save issue perhaps.  I assume you have sniffed to see if any frames
-are going out on the air during the time of trouble?
-
-If correct packets go out on the air and AP doesn't answer, then likely AP problem.
-
-If pkts don't get on the air, then check to see if they at least get to
-the driver.
-
-If they don't get to the driver, then probably it is a kernel/stack issue.
-
-If they get to the driver but not on the air, then NIC and/or it's firmware
-and/or the driver is likely the culprit.
-
-Thanks,
-Ben
-
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> ---
+>  drivers/net/wireless/intel/iwlegacy/common.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 >
->    --david
+> diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
+> index ae45fd3..660ab2b 100644
+> --- a/drivers/net/wireless/intel/iwlegacy/common.c
+> +++ b/drivers/net/wireless/intel/iwlegacy/common.c
+> @@ -759,7 +759,7 @@ il_eeprom_init(struct il_priv *il)
+>                                  IL_EEPROM_ACCESS_TIMEOUT);
+>                 if (ret < 0) {
+>                         IL_ERR("Time out reading EEPROM[%d]\n", addr);
+> -                       goto done;
+> +                       goto release_semaphore;
+
+Current code looks good.
+>                 }
+>                 r = _il_rd(il, CSR_EEPROM_REG);
+>                 e[addr / 2] = cpu_to_le16(r >> 16);
+> @@ -769,7 +769,7 @@ il_eeprom_init(struct il_priv *il)
+>                  il_eeprom_query16(il, EEPROM_VERSION));
 >
+>         ret = 0;
+> -done:
+> +release_semaphore:
+>         il->ops->eeprom_release_semaphore(il);
+>
+>         if (ret) {
+> --
+> 2.6.3
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+-Souptick
