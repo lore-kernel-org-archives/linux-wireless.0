@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:35244 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932787AbcASVsZ (ORCPT
+Received: from fbr02-uk.csee.siteprotect.eu ([81.3.27.132]:55569 "EHLO
+	fbr02-uk.csee.siteprotect.eu" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751503AbcABQhE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 16:48:25 -0500
-Received: by mail-pa0-f54.google.com with SMTP id ho8so197098891pac.2
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2016 13:48:25 -0800 (PST)
-Date: Tue, 19 Jan 2016 13:48:32 -0800
-From: Stephen Hemminger <stephen@networkplumber.org>
-To: YanBo <dreamfly281@gmail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>, jouni@qca.qualcomm.com,
-	kvalo@codeaurora.org, Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	netdev <netdev@vger.kernel.org>, hostap@lists.infradead.org
-Subject: Re: Regression in 3.9 caused by "bridge: respect RFC2863
- operational state"
-Message-ID: <20160119134832.3ab2f04b@xeon-e3> (sfid-20160119_224830_874613_FE8C6CC0)
-In-Reply-To: <CAFuUQkhHsRZMnNYBbVZU0=BcAKMEktzYgPv6oc=CMFd7MFDi6g@mail.gmail.com>
-References: <CAFuUQkhHsRZMnNYBbVZU0=BcAKMEktzYgPv6oc=CMFd7MFDi6g@mail.gmail.com>
+	Sat, 2 Jan 2016 11:37:04 -0500
+Received: from smtpauth02-uk.csee.siteprotect.eu (unknown [192.168.22.214])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(Client CN "smtp.securepod.com", Issuer "RapidSSL SHA256 CA - G3" (not verified))
+	by fbr02-uk.csee.siteprotect.eu (Postfix) with ESMTPS id 112E741639
+	for <linux-wireless@vger.kernel.org>; Sat,  2 Jan 2016 17:27:31 +0100 (CET)
+Received: from Authenticated sender: roger@beardandsandals.co.uk
+	by smtpauth02-uk.csee.siteprotect.eu (Postfix) with ESMTPSA id E73BB40020
+	for <linux-wireless@vger.kernel.org>; Sat,  2 Jan 2016 17:27:30 +0100 (CET)
+To: linux-wireless@vger.kernel.org
+From: Roger James <roger@beardandsandals.co.uk>
+Subject: Reading the current monitor flags of an interface
+Message-ID: <5687FA72.9000301@beardandsandals.co.uk> (sfid-20160102_173707_470075_5C473AA9)
+Date: Sat, 2 Jan 2016 16:27:30 +0000
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 3 Dec 2015 18:29:00 -0800
-YanBo <dreamfly281@gmail.com> wrote:
+Hi,
 
-> Sorry to pick up this thread again,  it looks this issue still existed  in
-> the newer 4.3 kernel. (The EAP frames can not be received by wireless
-> interface due to the bridge interface,
-> http://marc.info/?l=linux-wireless&m=136743495526905&w=2)
-> 
-> Wonder is anyone know some update for this issue?  Currently the only
-> workaround is make the 4-address  AP and STA associated in security mode
-> firstly and then create the bridge, the renew key configuration also need
-> be disable at the hostapd side to  avoid renew the key at bridge status.
-> 
-> Thanks
-> Yanbo
+I am trying to get at the current monitor flags setting of a wireless 
+monitor mode virtual interface. I have tried to do this by hacking the 
+iw source. However I never see a NL80211_ATTR_MNTR_FLAGS attribute 
+returned in response to the
 
-How does wireless device indicate that is up?  It may just be that
-the code is missing the logic to propagate operstate correctly.
-This is normally done by netif_stacked_transfer_operstate and linkwatch
-event.
+TOPLEVEL(info, NULL, NL80211_CMD_GET_INTERFACE, 0, CIB_NETDEV, 
+handle_interface_info,
+      "Show information for this interface.");
 
-Also STP can be disabled if you don't need it.
+command in iw's interface.c code.
+
+Questions.
+
+1. Am I wasting my time? (e.g. the rt2800usb driver never returns this 
+info, or there is another easy way of viewing this info, etc)
+
+2. Am I doing something stupid? (e.g. I need to specify some additional 
+flags to the get command.)
+
+3. Has anybody else tried this before?
+
+All help will be gratefully received.
+
+Roger
+
+
