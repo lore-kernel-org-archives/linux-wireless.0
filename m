@@ -1,77 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:36802 "EHLO
-	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755461AbcAUBVt (ORCPT
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:35150 "EHLO
+	mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752394AbcABAe3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 20:21:49 -0500
-Received: by mail-pf0-f193.google.com with SMTP id n128so1047124pfn.3
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:21:49 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 23/27] staging: wilc1000: rename pu32ReceivedLength in wilc_mq_recv
-Date: Thu, 21 Jan 2016 10:20:26 +0900
-Message-Id: <1453339230-1377-23-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_023653_663353_D4CC57AC)
-In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 1 Jan 2016 19:34:29 -0500
+From: Cong Wang <xiyou.wangcong@gmail.com>
+To: netdev@vger.kernel.org
+Cc: dvyukov@google.com, linux-wireless@vger.kernel.org,
+	Cong Wang <xiyou.wangcong@gmail.com>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [Patch net] nfc: check sock state in llcp_sock_getname()
+Date: Fri,  1 Jan 2016 16:34:17 -0800
+Message-Id: <1451694857-21873-2-git-send-email-xiyou.wangcong@gmail.com> (sfid-20160102_013518_561121_07C49A7B)
+In-Reply-To: <1451694857-21873-1-git-send-email-xiyou.wangcong@gmail.com>
+References: <1451694857-21873-1-git-send-email-xiyou.wangcong@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pu32ReceivedLength to recv_len to avoid camelcase.
+llcp_sock_getname() checks llcp_sock->dev to make sure
+llcp_sock is already connected or bound, however, we could
+be in the middle of llcp_sock_bind() where llcp_sock->dev
+is bound and llcp_sock->service_name_len is set,
+but llcp_sock->service_name is not, in this case we would
+lead to copy some bytes from a NULL pointer.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+We should just check if sk->sk_state is still closed since
+both connect() and bind() will update this state at the end.
+
+Reported-by: Dmitry Vyukov <dvyukov@google.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_msgqueue.c | 7 +++----
- drivers/staging/wilc1000/wilc_msgqueue.h | 3 +--
- 2 files changed, 4 insertions(+), 6 deletions(-)
+ net/nfc/llcp_sock.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index c86bd7c..5601de8 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -110,14 +110,13 @@ int wilc_mq_send(struct message_queue *mq,
-  *  @version		1.0
-  */
- int wilc_mq_recv(struct message_queue *mq,
--		 void *recv_buf, u32 recv_buf_size,
--		 u32 *pu32ReceivedLength)
-+		 void *recv_buf, u32 recv_buf_size, u32 *recv_len)
- {
- 	struct message *pstrMessage;
- 	unsigned long flags;
+diff --git a/net/nfc/llcp_sock.c b/net/nfc/llcp_sock.c
+index ecf0a01..5a91997 100644
+--- a/net/nfc/llcp_sock.c
++++ b/net/nfc/llcp_sock.c
+@@ -500,7 +500,7 @@ static int llcp_sock_getname(struct socket *sock, struct sockaddr *uaddr,
+ 	struct nfc_llcp_sock *llcp_sock = nfc_llcp_sock(sk);
+ 	DECLARE_SOCKADDR(struct sockaddr_nfc_llcp *, llcp_addr, uaddr);
  
- 	if ((!mq) || (recv_buf_size == 0)
--	    || (!recv_buf) || (!pu32ReceivedLength)) {
-+	    || (!recv_buf) || (!recv_len)) {
- 		PRINT_ER("mq or recv_buf is null\n");
- 		return -EINVAL;
- 	}
-@@ -151,7 +150,7 @@ int wilc_mq_recv(struct message_queue *mq,
- 	/* consume the message */
- 	mq->recv_count--;
- 	memcpy(recv_buf, pstrMessage->buf, pstrMessage->len);
--	*pu32ReceivedLength = pstrMessage->len;
-+	*recv_len = pstrMessage->len;
+-	if (llcp_sock == NULL || llcp_sock->dev == NULL)
++	if (llcp_sock == NULL || sk->sk_state == LLCP_CLOSED)
+ 		return -EBADFD;
  
- 	mq->msg_list = pstrMessage->next;
- 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index 3804b3b..4f79ead 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -77,8 +77,7 @@ int wilc_mq_send(struct message_queue *mq,
-  *  @version		1.0
-  */
- int wilc_mq_recv(struct message_queue *mq,
--		 void *recv_buf, u32 recv_buf_size,
--		 u32 *pu32ReceivedLength);
-+		 void *recv_buf, u32 recv_buf_size, u32 *recv_len);
- 
- /*!
-  *  @brief		Destroys an existing  Message queue
+ 	pr_debug("%p %d %d %d\n", sk, llcp_sock->target_idx,
 -- 
-2.6.4
+1.8.3.1
 
