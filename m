@@ -1,36 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:33276 "EHLO
-	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761188AbcAKQmh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jan 2016 11:42:37 -0500
+Received: from mout.web.de ([212.227.15.3]:54929 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751205AbcABOnW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Jan 2016 09:43:22 -0500
+Subject: [PATCH 1/3] rsi: Delete unnecessary variable initialisations in
+ rsi_send_mgmt_pkt()
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <5687E169.4070704@users.sourceforge.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <5687E203.1070404@users.sourceforge.net> (sfid-20160102_154336_112574_2C00357C)
+Date: Sat, 2 Jan 2016 15:43:15 +0100
 MIME-Version: 1.0
-In-Reply-To: <1452483457-568-1-git-send-email-baijiaju1990@163.com>
-References: <1452483457-568-1-git-send-email-baijiaju1990@163.com>
-Date: Mon, 11 Jan 2016 17:42:36 +0100
-Message-ID: <CACna6ryM1vekanY6WEC9g5G70uZi=rEOShgv1xamK8MuD=YsrA@mail.gmail.com> (sfid-20160111_174323_233726_E5D7A6C7)
-Subject: Re: [PATCH] b43: Fix a memory leak in b43_bus_dev_ssb_init
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Jia-Ju Bai <baijiaju1990@163.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, Joe Perches <joe@perches.com>,
-	David Miller <davem@davemloft.net>,
-	=?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>,
-	Johannes Berg <johannes.berg@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <5687E169.4070704@users.sourceforge.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 11 January 2016 at 04:37, Jia-Ju Bai <baijiaju1990@163.com> wrote:
-> The memory allocated by kzalloc in b43_bus_dev_ssb_init is not freed.
-> This patch fixes the bug by adding kfree in b43_ssb_remove.
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Sat, 2 Jan 2016 14:54:30 +0100
 
-Nice. If you want somethig more to scratch your head, see
-"Missing b43 firmware handling"
-http://lists.infradead.org/pipermail/b43-dev/2014-June/003467.html
+Omit explicit initialisation at the beginning for five local variables
+which are redefined before their first use.
 
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/net/wireless/rsi/rsi_91x_pkt.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/rsi/rsi_91x_pkt.c b/drivers/net/wireless/rsi/rsi_91x_pkt.c
+index 702593f..ee98f5b 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_pkt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_pkt.c
+@@ -123,15 +123,15 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
+ 		      struct sk_buff *skb)
+ {
+ 	struct rsi_hw *adapter = common->priv;
+-	struct ieee80211_hdr *wh = NULL;
++	struct ieee80211_hdr *wh;
+ 	struct ieee80211_tx_info *info;
+-	struct ieee80211_bss_conf *bss = NULL;
++	struct ieee80211_bss_conf *bss;
+ 	struct ieee80211_hw *hw = adapter->hw;
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 	struct skb_info *tx_params;
+-	int status = -E2BIG;
+-	__le16 *msg = NULL;
+-	u8 extnd_size = 0;
++	int status;
++	__le16 *msg;
++	u8 extnd_size;
+ 	u8 vap_id = 0;
+ 
+ 	info = IEEE80211_SKB_CB(skb);
 -- 
-Rafał
+2.6.3
+
