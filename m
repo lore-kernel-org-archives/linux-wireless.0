@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:34979 "EHLO
-	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755242AbcA1CEl (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:34980 "EHLO
+	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751344AbcABIDk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 21:04:41 -0500
-Received: by mail-oi0-f68.google.com with SMTP id r14so48198oie.2
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2016 18:04:41 -0800 (PST)
+	Sat, 2 Jan 2016 03:03:40 -0500
+Received: by mail-wm0-f50.google.com with SMTP id f206so94396167wmf.0
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Jan 2016 00:03:39 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <56A93C56.5070205@codeaurora.org>
-References: <1453920957-9908-1-git-send-email-poh@qca.qualcomm.com>
-	<20160127193955.GC12639@localhost>
-	<56A93C56.5070205@codeaurora.org>
-Date: Thu, 28 Jan 2016 10:04:40 +0800
-Message-ID: <CAEFj984ULyZNa5YcLXZngrsYNT43WZCX5CHJLZ5msfHMmNABdg@mail.gmail.com> (sfid-20160128_030445_184164_4CD0EA59)
-Subject: Re: [PATCH 0/4] ath10k: rename mesh and add abstraction layer
-From: Yeoh Chun-Yeow <yeohchunyeow@gmail.com>
-To: Peter Oh <poh@codeaurora.org>
-Cc: Bob Copeland <me@bobcopeland.com>, Peter Oh <poh@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+In-Reply-To: <1451694857-21873-2-git-send-email-xiyou.wangcong@gmail.com>
+References: <1451694857-21873-1-git-send-email-xiyou.wangcong@gmail.com> <1451694857-21873-2-git-send-email-xiyou.wangcong@gmail.com>
+From: Dmitry Vyukov <dvyukov@google.com>
+Date: Sat, 2 Jan 2016 09:03:19 +0100
+Message-ID: <CACT4Y+Y6YCYA_v=--spYpPDYj3Jo0cXcntFRe8XzYS3NJFUwqQ@mail.gmail.com> (sfid-20160102_090348_868463_CD81A2EE)
+Subject: Re: [Patch net] nfc: check sock state in llcp_sock_getname()
+To: Cong Wang <xiyou.wangcong@gmail.com>
+Cc: netdev <netdev@vger.kernel.org>, linux-wireless@vger.kernel.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 28, 2016 at 5:53 AM, Peter Oh <poh@codeaurora.org> wrote:
+On Sat, Jan 2, 2016 at 1:34 AM, Cong Wang <xiyou.wangcong@gmail.com> wrote:
+> llcp_sock_getname() checks llcp_sock->dev to make sure
+> llcp_sock is already connected or bound, however, we could
+> be in the middle of llcp_sock_bind() where llcp_sock->dev
+> is bound and llcp_sock->service_name_len is set,
+> but llcp_sock->service_name is not, in this case we would
+> lead to copy some bytes from a NULL pointer.
 >
-> On 01/27/2016 11:39 AM, Bob Copeland wrote:
->>
->> On Wed, Jan 27, 2016 at 10:55:53AM -0800, Peter Oh wrote:
->>>
->>> Split Mesh service to 11s Mesh and non-11s Mesh according to
->>> firmware service bit to help users distinguish 11s Mesh from
->>> non 11s Mesh.
->>> And add abstraction layer for vdev subtype to solve subtype mismatch
->>> and to give flexible compatibility among different firmware revisions.
->>
->> Out of curiosity, which non-11s mesh, if you can share?
+> We should just check if sk->sk_state is still closed since
+> both connect() and bind() will update this state at the end.
+
+Hi Cong,
+
+This is still racy. If you want to play lock-free then you also need
+proper memory barriers. Stores to sk_state need to be
+smp_store_release, while the load needs to be smp_load_acquire.
+Otherwise getname still can see partially initialized socket.
+
+
+> Reported-by: Dmitry Vyukov <dvyukov@google.com>
+> Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+> Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+> Cc: Samuel Ortiz <sameo@linux.intel.com>
+> Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
+> ---
+>  net/nfc/llcp_sock.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 >
-> non-11s Mesh can be anything, but 11s Mesh such as meraki mesh.
+> diff --git a/net/nfc/llcp_sock.c b/net/nfc/llcp_sock.c
+> index ecf0a01..5a91997 100644
+> --- a/net/nfc/llcp_sock.c
+> +++ b/net/nfc/llcp_sock.c
+> @@ -500,7 +500,7 @@ static int llcp_sock_getname(struct socket *sock, struct sockaddr *uaddr,
+>         struct nfc_llcp_sock *llcp_sock = nfc_llcp_sock(sk);
+>         DECLARE_SOCKADDR(struct sockaddr_nfc_llcp *, llcp_addr, uaddr);
 >
-
-I thought that non-11s mesh is for meraki mesh since it is not 802.11s
-implementation.
-
-WMI_10_4_SERVICE_MESH_NON_11S for non IEEE802.11s Mesh
-WMI_SERVICE_MESH_11S and WMI_VDEV_SUBTYPE_MESH for IEEE 802.11s Mesh
-
-Correct me if I am wrong.
-
-Thanks
-
-----
-Chun-Yeow
+> -       if (llcp_sock == NULL || llcp_sock->dev == NULL)
+> +       if (llcp_sock == NULL || sk->sk_state == LLCP_CLOSED)
+>                 return -EBADFD;
+>
+>         pr_debug("%p %d %d %d\n", sk, llcp_sock->target_idx,
+> --
+> 1.8.3.1
+>
