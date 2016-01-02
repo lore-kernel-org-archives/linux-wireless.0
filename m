@@ -1,43 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:41522 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751832AbcA1R4y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 12:56:54 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH 0/4] wil6210 bug fixes and performance enhancement
-Date: Thu, 28 Jan 2016 19:24:01 +0200
-Message-Id: <1454001845-28414-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160128_185658_036605_60B3E870)
+Received: from mout.web.de ([212.227.15.4]:57409 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750709AbcABJJY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Jan 2016 04:09:24 -0500
+Subject: Re: net-libertas: Better exception handling in
+ if_spi_host_to_card_worker()
+To: Julia Lawall <julia.lawall@lip6.fr>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <5686F0B2.5000000@users.sourceforge.net>
+ <56870866.7020000@cogentembedded.com>
+ <568785B3.5000905@users.sourceforge.net>
+ <alpine.DEB.2.02.1601020914100.2063@localhost6.localdomain6>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <5687939E.7010701@users.sourceforge.net> (sfid-20160102_101043_963543_D70A551F)
+Date: Sat, 2 Jan 2016 10:08:46 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <alpine.DEB.2.02.1601020914100.2063@localhost6.localdomain6>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The below patches include:
-- Bug fixes seen in stress connect/disconnect tests
-- Increasing the TX vring size for performance boost
+>> I assume that a software development taste can evolve, can't it?
+> 
+> So far, you have gotten several down votes for this kind of change,
 
-Hamad Kadmany (1):
-  wil6210: TX vring optimization
+I am curious when more contributors will share corresponding opinions.
 
-Maya Erez (2):
-  wil6210: prevent access to vring_tx_data lock during its init
-  wil6210: protect synchronous wmi commands handling
 
-Vladimir Kondratiev (1):
-  wil6210: wait for disconnect completion
+> and no enthusiasm.
 
- drivers/net/wireless/ath/wil6210/cfg80211.c | 13 +++++++++++-
- drivers/net/wireless/ath/wil6210/debugfs.c  |  6 +++---
- drivers/net/wireless/ath/wil6210/main.c     | 31 +++++++++++------------------
- drivers/net/wireless/ath/wil6210/txrx.c     | 26 +++++++++++++++++++-----
- drivers/net/wireless/ath/wil6210/wil6210.h  |  3 ++-
- drivers/net/wireless/ath/wil6210/wmi.c      | 17 ++++++++++++----
- 6 files changed, 63 insertions(+), 33 deletions(-)
+How many software designers and developers can become enthusiastic
+about better exception handling to some degree?
 
--- 
-1.8.5.2
 
+> The code that is performance critical, you should probably not touch, ever.
+
+I imagine that technical evolution will result in further considerations
+so that "unchangeable" components can be adjusted once more.
+
+
+> The people who wrote it knew what was important and what was not.
+
+I might come along at some places where the affected knowledge will also evolve.
+
+Regards,
+Markus
