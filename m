@@ -1,108 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:12104 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751488AbcA1HQO (ORCPT
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:32944 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751501AbcABUV7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 02:16:14 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 02/12] staging: wilc1000: renames u16RxLen variable
-Date: Thu, 28 Jan 2016 16:13:36 +0900
-Message-ID: <1453965226-6158-2-git-send-email-leo.kim@atmel.com> (sfid-20160128_081618_599992_513570D3)
-In-Reply-To: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
-References: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
+	Sat, 2 Jan 2016 15:21:59 -0500
+Received: by mail-lb0-f179.google.com with SMTP id sv6so136630319lbb.0
+        for <linux-wireless@vger.kernel.org>; Sat, 02 Jan 2016 12:21:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5686253C.4060305@broadcom.com>
+References: <1450100394-17414-1-git-send-email-arend@broadcom.com>
+ <1450100394-17414-5-git-send-email-arend@broadcom.com> <CAFXAJYwpk+-U-9pN2tnOmK05gixJZWYGi9_w+r9uktH2PqvEUQ@mail.gmail.com>
+ <5686253C.4060305@broadcom.com>
+From: Mathy Vanhoef <vanhoefm@gmail.com>
+Date: Sat, 2 Jan 2016 21:21:37 +0100
+Message-ID: <CAFXAJYwh=ptqqgP6cty6quu8phqAQCrpo827Q=jhYwvC+pyuyA@mail.gmail.com> (sfid-20160102_212202_548744_13692EFD)
+Subject: Re: [PATCH 4/7] brcmfmac: obtain feature info using 'cap' firmware command
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames u16RxLen variable to rx_len to avoid camelcase.
+On Fri, Jan 1, 2016 at 8:05 AM, Arend van Spriel <arend@broadcom.com> wrote:
+> On 12/29/2015 09:58 PM, Mathy Vanhoef wrote:
+>>
+>> On Mon, Dec 14, 2015 at 2:39 PM, Arend van Spriel <arend@broadcom.com>
+>> wrote:
+>>>
+>>> Several features in the driver directly map to a firmware feature
+>>> listed in response of the 'cap' firmware command. For those features
+>>> this response will be examined instead of attempting individual
+>>> firmware commands.
+>>>
+>>> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+>>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>
+>
+> Hi Mathy,
+>
+> Do you want credits, ie. have "Reviewed-by:" tag added?
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+Sure, glad I could help.
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 37d40bb..9f85fff 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -241,13 +241,13 @@ static inline u16 get_asoc_id(u8 *data)
- 	return asoc_id;
- }
- 
--static u8 *get_tim_elm(u8 *pu8msa, u16 u16RxLen, u16 u16TagParamOffset)
-+static u8 *get_tim_elm(u8 *pu8msa, u16 rx_len, u16 u16TagParamOffset)
- {
- 	u16 u16index;
- 
- 	u16index = u16TagParamOffset;
- 
--	while (u16index < (u16RxLen - FCS_LEN)) {
-+	while (u16index < (rx_len - FCS_LEN)) {
- 		if (pu8msa[u16index] == ITIM)
- 			return &pu8msa[u16index];
- 		u16index += (IE_HDR_LEN + pu8msa[u16index + 1]);
-@@ -256,12 +256,12 @@ static u8 *get_tim_elm(u8 *pu8msa, u16 u16RxLen, u16 u16TagParamOffset)
- 	return NULL;
- }
- 
--static u8 get_current_channel_802_11n(u8 *pu8msa, u16 u16RxLen)
-+static u8 get_current_channel_802_11n(u8 *pu8msa, u16 rx_len)
- {
- 	u16 index;
- 
- 	index = TAG_PARAM_OFFSET;
--	while (index < (u16RxLen - FCS_LEN)) {
-+	while (index < (rx_len - FCS_LEN)) {
- 		if (pu8msa[index] == IDSPARMS)
- 			return pu8msa[index + 2];
- 		index += pu8msa[index + 1] + IE_HDR_LEN;
-@@ -296,7 +296,7 @@ s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo
- 
- 	{
- 		u8  *pu8msa = NULL;
--		u16 u16RxLen = 0;
-+		u16 rx_len = 0;
- 		u8 *pu8TimElm = NULL;
- 		u8 *pu8IEs = NULL;
- 		u16 u16IEsLen = 0;
-@@ -312,7 +312,7 @@ s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo
- 
- 		pu8msa = &pu8WidVal[1];
- 
--		u16RxLen = u16WidLen - 1;
-+		rx_len = u16WidLen - 1;
- 		pstrNetworkInfo->u16CapInfo = get_cap_info(pu8msa);
- 		pstrNetworkInfo->u32Tsf = get_beacon_timestamp_lo(pu8msa);
- 		PRINT_D(CORECONFIG_DBG, "TSF :%x\n", pstrNetworkInfo->u32Tsf);
-@@ -326,7 +326,7 @@ s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo
- 		get_BSSID(pu8msa, pstrNetworkInfo->au8bssid);
- 
- 		pstrNetworkInfo->u8channel = get_current_channel_802_11n(pu8msa,
--							u16RxLen + FCS_LEN);
-+							rx_len + FCS_LEN);
- 
- 		u8index = MAC_HDR_LEN + TIME_STAMP_LEN;
- 
-@@ -334,11 +334,11 @@ s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo
- 
- 		u8index += BEACON_INTERVAL_LEN + CAP_INFO_LEN;
- 
--		pu8TimElm = get_tim_elm(pu8msa, u16RxLen + FCS_LEN, u8index);
-+		pu8TimElm = get_tim_elm(pu8msa, rx_len + FCS_LEN, u8index);
- 		if (pu8TimElm)
- 			pstrNetworkInfo->u8DtimPeriod = pu8TimElm[3];
- 		pu8IEs = &pu8msa[MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN];
--		u16IEsLen = u16RxLen - (MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN);
-+		u16IEsLen = rx_len - (MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN);
- 
- 		if (u16IEsLen > 0) {
- 			pstrNetworkInfo->pu8IEs = kmemdup(pu8IEs, u16IEsLen,
--- 
-1.9.1
+Kr,
+Mathy
 
+>
+> Regards,
+> Arend
+>
+>
+>>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>>> ---
+>>>   .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 51
+>>> +++++++++++++---------
+>>>   1 file changed, 30 insertions(+), 21 deletions(-)
+>>>
+>>> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>>> b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>>> index d9d1ca4..08b7200 100644
+>>> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>>> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+>>> @@ -40,6 +40,17 @@ static const char *brcmf_feat_names[] = {
+>>>   };
+>>>   #undef BRCMF_FEAT_DEF
+>>>
+>>> +struct brcmf_feat_fwcap {
+>>> +       enum brcmf_feat_id feature;
+>>> +       const char * const fwcap_id;
+>>> +};
+>>> +
+>>> +static const struct brcmf_feat_fwcap brcmf_fwcap_map[] = {
+>>> +       { BRCMF_FEAT_MBSS, "mbss" },
+>>> +       { BRCMF_FEAT_MCHAN, "mchan" },
+>>> +       { BRCMF_FEAT_P2P, "p2p" },
+>>> +};
+>>> +
+>>>   #ifdef DEBUG
+>>>   /*
+>>>    * expand quirk list to array of quirk strings.
+>>> @@ -104,25 +115,22 @@ static void brcmf_feat_iovar_int_get(struct
+>>> brcmf_if *ifp,
+>>>          }
+>>>   }
+>>>
+>>> -/**
+>>> - * brcmf_feat_iovar_int_set() - determine feature through iovar set.
+>>> - *
+>>> - * @ifp: interface to query.
+>>> - * @id: feature id.
+>>> - * @name: iovar name.
+>>> - */
+>>> -static void brcmf_feat_iovar_int_set(struct brcmf_if *ifp,
+>>> -                                    enum brcmf_feat_id id, char *name,
+>>> u32 val)
+>>> +static void brcmf_feat_firmware_capabilities(struct brcmf_if *ifp)
+>>>   {
+>>> -       int err;
+>>> -
+>>> -       err = brcmf_fil_iovar_int_set(ifp, name, val);
+>>> -       if (err == 0) {
+>>> -               brcmf_dbg(INFO, "enabling feature: %s\n",
+>>> brcmf_feat_names[id]);
+>>> -               ifp->drvr->feat_flags |= BIT(id);
+>>> -       } else {
+>>> -               brcmf_dbg(TRACE, "%s feature check failed: %d\n",
+>>> -                         brcmf_feat_names[id], err);
+>>> +       char caps[256];
+>>> +       enum brcmf_feat_id id;
+>>> +       int i;
+>>> +
+>>> +       brcmf_fil_iovar_data_get(ifp, "cap", caps, sizeof(caps));
+>>> +       brcmf_dbg(INFO, "[ %s]\n", caps);
+>>> +
+>>> +       for (i = 0; i < ARRAY_SIZE(brcmf_fwcap_map); i++) {
+>>> +               if (strnstr(caps, brcmf_fwcap_map[i].fwcap_id,
+>>> sizeof(caps))) {
+>>> +                       id = brcmf_fwcap_map[i].feature;
+>>> +                       brcmf_dbg(INFO, "enabling feature: %s\n",
+>>> +                                 brcmf_feat_names[id]);
+>>> +                       ifp->drvr->feat_flags |= BIT(id);
+>>> +               }
+>>>          }
+>>>   }
+>>>
+>>> @@ -130,13 +138,14 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+>>>   {
+>>>          struct brcmf_if *ifp = brcmf_get_ifp(drvr, 0);
+>>>
+>>> -       brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_MCHAN, "mchan");
+>>> +       brcmf_feat_firmware_capabilities(ifp);
+>>> +
+>>>          brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_PNO, "pfn");
+>>>          if (drvr->bus_if->wowl_supported)
+>>>                  brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
+>>> +       /* MBSS does not work for 43362 */
+>>>          if (drvr->bus_if->chip != BRCM_CC_43362_CHIP_ID)
+>>> -               brcmf_feat_iovar_int_set(ifp, BRCMF_FEAT_MBSS, "mbss",
+>>> 0);
+>>> -       brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_P2P, "p2p");
+>>> +               ifp->drvr->feat_flags &= BIT(BRCMF_FEAT_MBSS);
+>>
+>>
+>> Missing ~ before the BIT() declaration? If the if-test fails, all bits are
+>> cleared except BRCMF_FEAT_MBSS. I think the if-test also needs to be
+>> updated
+>> to an equals `==` instead of the old inequality. So one would get:
+>>
+>> /* clear MBSS feature for the 43362 (does not work) */
+>> if (drvr->bus_if->chip == BRCM_CC_43362_CHIP_ID)
+>>      ifp->drvr->feat_flags &= ~BIT(BRCMF_FEAT_MBSS);
+>>
+>> Also, happy holidays!
+>> Mathy
+>>
+>>>          brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_RSDB, "rsdb_mode");
+>>>          brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_TDLS, "tdls_enable");
+>>>
+>>> --
+>>> 1.9.1
+>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>>> in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
