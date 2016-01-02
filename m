@@ -1,43 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:28518 "EHLO mga04.intel.com"
+Received: from mout.web.de ([212.227.17.12]:54591 "EHLO mout.web.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757268AbcAaLGs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2016 06:06:48 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 19/31] iwlwifi: mvm: change access to ieee80211_hdr
-Date: Sun, 31 Jan 2016 13:06:14 +0200
-Message-Id: <1454238386-27032-19-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160131_120654_260276_640D0F5F)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+	id S1751812AbcABPMg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Jan 2016 10:12:36 -0500
+Subject: net-rsi: Reconsider usage of variable "vap_id" in rsi_send_mgmt_pkt()
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <5687E169.4070704@users.sourceforge.net>
+ <5687E203.1070404@users.sourceforge.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <5687E8DB.3080706@users.sourceforge.net> (sfid-20160102_161257_489832_072E8800)
+Date: Sat, 2 Jan 2016 16:12:27 +0100
+MIME-Version: 1.0
+In-Reply-To: <5687E203.1070404@users.sourceforge.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Hello,
 
-Make the code clearer.
+I have taken another look at the implementation of the function "rsi_send_mgmt_pkt".
+https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/tree/drivers/net/wireless/rsi/rsi_91x_pkt.c?id=e8c58e7a5a106c3d557fccd01cd4d1128f9bab38#n114
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I find the following statement combination interesting there.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 0c073e0..4cce372 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -294,7 +294,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	struct ieee80211_rx_status *rx_status;
- 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
- 	struct iwl_rx_mpdu_desc *desc = (void *)pkt->data;
--	struct ieee80211_hdr *hdr = (void *)(desc + 1);
-+	struct ieee80211_hdr *hdr = (void *)(pkt->data + sizeof(*desc));
- 	u32 len = le16_to_cpu(desc->mpdu_len);
- 	u32 rate_n_flags = le32_to_cpu(desc->rate_n_flags);
- 	struct ieee80211_sta *sta = NULL;
--- 
-2.5.0
+…
+	u8 vap_id = 0;
+…
+	msg[7] |= cpu_to_le16(vap_id << 8);
+…
 
+I would appreciate a further clarification.
+Does a shift operation for a variable which contains zero indicate an open issue?
+
+Regards,
+Markus
