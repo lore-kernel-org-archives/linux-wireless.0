@@ -1,198 +1,199 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:12298 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754024AbcA0J7F (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:4471 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751344AbcABIlv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 04:59:05 -0500
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH 11/12] ath10k: add resource init and deinit in ahb
-Date: Wed, 27 Jan 2016 15:24:32 +0530
-Message-ID: <1453888473-2879-12-git-send-email-rmani@qti.qualcomm.com> (sfid-20160127_105910_025915_2864637A)
-In-Reply-To: <1453888473-2879-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1453888473-2879-1-git-send-email-rmani@qti.qualcomm.com>
+	Sat, 2 Jan 2016 03:41:51 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Franky Lin <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V2 1/7] brcmfmac: add arp offload ip address table configuration support
+Date: Sat, 2 Jan 2016 09:41:36 +0100
+Message-ID: <1451724102-21911-2-git-send-email-arend@broadcom.com> (sfid-20160102_094230_144248_5B6BA796)
+In-Reply-To: <1451724102-21911-1-git-send-email-arend@broadcom.com>
+References: <1451724102-21911-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add function to gather resources required for qca4019 to operate
-(memory, irq, dma setting, clock init , rest control init) and
-function release those resources when it's not needed.
+From: Franky Lin <frankyl@broadcom.com>
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+Obtain ipv4 address through inetaddr notification for ARP offload host
+ip table configuration.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath10k/ahb.c | 122 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/ahb.h |   7 ++
- 2 files changed, 129 insertions(+)
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 108 +++++++++++++++++++++
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   2 +
+ 2 files changed, 110 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
-index 29d0b6c..d83a864 100644
---- a/drivers/net/wireless/ath/ath10k/ahb.c
-+++ b/drivers/net/wireless/ath/ath10k/ahb.c
-@@ -15,6 +15,8 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 3a39192..4c8f7bf 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -17,6 +17,7 @@
+ #include <linux/kernel.h>
+ #include <linux/etherdevice.h>
  #include <linux/module.h>
-+#include <linux/of.h>
-+#include <linux/of_device.h>
- #include <linux/clk.h>
- #include <linux/reset.h>
- #include "core.h"
-@@ -502,6 +504,126 @@ static void ath10k_ahb_irq_disable(struct ath10k *ar)
- 	ath10k_pci_disable_and_clear_legacy_irq(ar);
++#include <linux/inetdevice.h>
+ #include <net/cfg80211.h>
+ #include <net/rtnetlink.h>
+ #include <brcmu_utils.h>
+@@ -620,6 +621,8 @@ static int brcmf_netdev_stop(struct net_device *ndev)
+ 
+ 	brcmf_cfg80211_down(ndev);
+ 
++	brcmf_fil_iovar_data_set(ifp, "arp_hostip_clear", NULL, 0);
++
+ 	brcmf_net_setcarrier(ifp, false);
+ 
+ 	return 0;
+@@ -940,6 +943,98 @@ int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr)
+ 	return available ? bsscfgidx : -ENOMEM;
  }
  
-+static int ath10k_ahb_resource_init(struct ath10k *ar)
++#ifdef CONFIG_INET
++#define ARPOL_MAX_ENTRIES	8
++static int brcmf_inetaddr_changed(struct notifier_block *nb,
++				  unsigned long action, void *data)
 +{
-+	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
-+	struct platform_device *pdev;
-+	struct device *dev;
-+	struct resource *res;
-+	int ret;
++	struct brcmf_pub *drvr = container_of(nb, struct brcmf_pub,
++					      inetaddr_notifier);
++	struct in_ifaddr *ifa = data;
++	struct net_device *ndev = ifa->ifa_dev->dev;
++	struct brcmf_if *ifp;
++	int idx, i, ret;
++	u32 val;
++	__be32 addr_table[ARPOL_MAX_ENTRIES] = {0};
 +
-+	pdev = ar_ahb->pdev;
-+	dev = &pdev->dev;
-+
-+	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-+	if (!res) {
-+		ath10k_err(ar, "failed to get memory resource\n");
-+		ret = -ENXIO;
-+		goto out;
++	/* Find out if the notification is meant for us */
++	for (idx = 0; idx < BRCMF_MAX_IFS; idx++) {
++		ifp = drvr->iflist[idx];
++		if (ifp && ifp->ndev == ndev)
++			break;
++		if (idx == BRCMF_MAX_IFS - 1)
++			return NOTIFY_DONE;
 +	}
 +
-+	ar_ahb->mem = devm_ioremap_resource(&pdev->dev, res);
-+	if (IS_ERR(ar_ahb->mem)) {
-+		ath10k_err(ar, "mem ioremap error\n");
-+		ret = PTR_ERR(ar_ahb->mem);
-+		goto out;
-+	}
-+
-+	ar_ahb->mem_len = resource_size(res);
-+
-+	ar_ahb->gcc_mem = ioremap_nocache(ATH10K_GCC_REG_BASE,
-+					  ATH10K_GCC_REG_SIZE);
-+	if (!ar_ahb->gcc_mem) {
-+		ath10k_err(ar, "gcc mem ioremap error\n");
-+		ret = -ENOMEM;
-+		goto err_mem_unmap;
-+	}
-+
-+	ar_ahb->tcsr_mem = ioremap_nocache(ATH10K_TCSR_REG_BASE,
-+					   ATH10K_TCSR_REG_SIZE);
-+	if (!ar_ahb->tcsr_mem) {
-+		ath10k_err(ar, "tcsr mem ioremap error\n");
-+		ret = -ENOMEM;
-+		goto err_gcc_mem_unmap;
-+	}
-+
-+	ret = dma_set_mask(&pdev->dev, DMA_BIT_MASK(32));
-+	if (ret) {
-+		ath10k_err(ar, "failed to set 32-bit dma mask: %d\n", ret);
-+		goto err_tcsr_mem_unmap;
-+	}
-+
-+	ret = dma_set_coherent_mask(&pdev->dev, DMA_BIT_MASK(32));
-+	if (ret) {
-+		ath10k_err(ar, "failed to set 32-bit consistent dma: %d\n",
-+			   ret);
-+		goto err_tcsr_mem_unmap;
-+	}
-+
-+	ret = ath10k_ahb_clock_init(ar);
++	/* check if arp offload is supported */
++	ret = brcmf_fil_iovar_int_get(ifp, "arpoe", &val);
 +	if (ret)
-+		goto err_tcsr_mem_unmap;
++		return NOTIFY_OK;
 +
-+	ret = ath10k_ahb_rst_ctrl_init(ar);
++	/* old version only support primary index */
++	ret = brcmf_fil_iovar_int_get(ifp, "arp_version", &val);
 +	if (ret)
-+		goto err_clock_deinit;
++		val = 1;
++	if (val == 1)
++		ifp = drvr->iflist[0];
 +
-+	ar_ahb->irq = platform_get_irq_byname(pdev, "legacy");
-+	if (ar_ahb->irq < 0) {
-+		ath10k_err(ar, "failed to get irq number: %d\n", ar_ahb->irq);
-+		goto err_clock_deinit;
++	/* retrieve the table from firmware */
++	ret = brcmf_fil_iovar_data_get(ifp, "arp_hostip", addr_table,
++				       sizeof(addr_table));
++	if (ret) {
++		brcmf_err("fail to get arp ip table err:%d\n", ret);
++		return NOTIFY_OK;
 +	}
 +
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT, "irq: %d\n", ar_ahb->irq);
++	for (i = 0; i < ARPOL_MAX_ENTRIES; i++)
++		if (ifa->ifa_address == addr_table[i])
++			break;
 +
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT, "mem: 0x%p mem_len: %lu gcc mem: 0x%p tcsr_mem: 0x%p\n",
-+		   ar_ahb->mem, ar_ahb->mem_len,
-+		   ar_ahb->gcc_mem, ar_ahb->tcsr_mem);
-+	return 0;
++	switch (action) {
++	case NETDEV_UP:
++		if (i == ARPOL_MAX_ENTRIES) {
++			brcmf_dbg(TRACE, "add %pI4 to arp table\n",
++				  &ifa->ifa_address);
++			/* set it directly */
++			ret = brcmf_fil_iovar_data_set(ifp, "arp_hostip",
++				&ifa->ifa_address, sizeof(ifa->ifa_address));
++			if (ret)
++				brcmf_err("add arp ip err %d\n", ret);
++		}
++		break;
++	case NETDEV_DOWN:
++		if (i < ARPOL_MAX_ENTRIES) {
++			addr_table[i] = 0;
++			brcmf_dbg(TRACE, "remove %pI4 from arp table\n",
++				  &ifa->ifa_address);
++			/* clear the table in firmware */
++			ret = brcmf_fil_iovar_data_set(ifp, "arp_hostip_clear",
++						       NULL, 0);
++			if (ret) {
++				brcmf_err("fail to clear arp ip table err:%d\n",
++					  ret);
++				return NOTIFY_OK;
++			}
++			for (i = 0; i < ARPOL_MAX_ENTRIES; i++) {
++				if (addr_table[i] != 0) {
++					brcmf_fil_iovar_data_set(ifp,
++						"arp_hostip", &addr_table[i],
++						sizeof(addr_table[i]));
++					if (ret)
++						brcmf_err("add arp ip err %d\n",
++							  ret);
++				}
++			}
++		}
++		break;
++	default:
++		break;
++	}
 +
-+err_clock_deinit:
-+	ath10k_ahb_clock_deinit(ar);
-+
-+err_tcsr_mem_unmap:
-+	iounmap(ar_ahb->tcsr_mem);
-+
-+err_gcc_mem_unmap:
-+	ar_ahb->tcsr_mem = NULL;
-+	iounmap(ar_ahb->gcc_mem);
-+
-+err_mem_unmap:
-+	ar_ahb->gcc_mem = NULL;
-+	devm_iounmap(&pdev->dev, ar_ahb->mem);
-+
-+out:
-+	ar_ahb->mem = NULL;
-+	return ret;
++	return NOTIFY_OK;
 +}
++#endif
 +
-+static void ath10k_ahb_resource_deinit(struct ath10k *ar)
-+{
-+	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
-+	struct device *dev;
-+
-+	dev = &ar_ahb->pdev->dev;
-+
-+	if (ar_ahb->mem)
-+		devm_iounmap(dev, ar_ahb->mem);
-+
-+	if (ar_ahb->gcc_mem)
-+		iounmap(ar_ahb->gcc_mem);
-+
-+	if (ar_ahb->tcsr_mem)
-+		iounmap(ar_ahb->tcsr_mem);
-+
-+	ar_ahb->mem = NULL;
-+	ar_ahb->gcc_mem = NULL;
-+	ar_ahb->tcsr_mem = NULL;
-+
-+	ath10k_ahb_clock_deinit(ar);
-+	ath10k_ahb_rst_ctrl_deinit(ar);
-+}
-+
- static int ath10k_ahb_probe(struct platform_device *pdev)
+ int brcmf_attach(struct device *dev)
  {
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath10k/ahb.h b/drivers/net/wireless/ath/ath10k/ahb.h
-index 97c40e4..5bd01b4 100644
---- a/drivers/net/wireless/ath/ath10k/ahb.h
-+++ b/drivers/net/wireless/ath/ath10k/ahb.h
-@@ -23,6 +23,7 @@
- struct ath10k_ahb {
- 	struct platform_device *pdev;
- 	void __iomem *mem;
-+	unsigned long mem_len;
- 	void __iomem *gcc_mem;
- 	void __iomem *tcsr_mem;
- 
-@@ -41,6 +42,12 @@ struct ath10k_ahb {
- 
- #ifdef CONFIG_ATH10K_AHB
- 
-+#define ATH10K_GCC_REG_BASE                  0x1800000
-+#define ATH10K_GCC_REG_SIZE                  0x60000
+ 	struct brcmf_pub *drvr = NULL;
+@@ -1068,6 +1163,15 @@ int brcmf_bus_start(struct device *dev)
+ 		if (p2p_ifp)
+ 			ret = brcmf_net_p2p_attach(p2p_ifp);
+ 	}
 +
-+#define ATH10K_TCSR_REG_BASE                 0x1900000
-+#define ATH10K_TCSR_REG_SIZE                 0x80000
++	if (ret)
++		goto fail;
 +
- #define ATH10K_AHB_WLAN_CORE_ID_REG          0x82030
++#ifdef CONFIG_INET
++	drvr->inetaddr_notifier.notifier_call = brcmf_inetaddr_changed;
++	ret = register_inetaddr_notifier(&drvr->inetaddr_notifier);
++#endif
++
+ fail:
+ 	if (ret < 0) {
+ 		brcmf_err("failed: %d\n", ret);
+@@ -1133,6 +1237,10 @@ void brcmf_detach(struct device *dev)
+ 	if (drvr == NULL)
+ 		return;
  
- #define ATH10K_AHB_TCSR_WIFI0_GLB_CFG        0x49000
++#ifdef CONFIG_INET
++	unregister_inetaddr_notifier(&drvr->inetaddr_notifier);
++#endif
++
+ 	/* stop firmware event handling */
+ 	brcmf_fweh_detach(drvr);
+ 	if (drvr->config)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index 77d8239..6018af7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -141,6 +141,8 @@ struct brcmf_pub {
+ #ifdef DEBUG
+ 	struct dentry *dbgfs_dir;
+ #endif
++
++	struct notifier_block inetaddr_notifier;
+ };
+ 
+ /* forward declarations */
 -- 
-1.8.1.2
+1.9.1
 
