@@ -1,53 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.4]:50380 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752156AbcAAT0k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2016 14:26:40 -0500
-Subject: [PATCH] net-brcmfmac: Delete an unnecessary variable initialisation
- in brcmf_sdio_download_firmware()
-References: <566ABCD9.1060404@users.sourceforge.net>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-To: brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Arend van Spriel <arend@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Message-ID: <5686D2E0.2010309@users.sourceforge.net> (sfid-20160101_202751_144210_D0D10B0D)
-Date: Fri, 1 Jan 2016 20:26:24 +0100
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:51403 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751556AbcABIlw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 2 Jan 2016 03:41:52 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V2 0/7] brcmfmac: IBSS fixes and random mac scheduled scan
+Date: Sat, 2 Jan 2016 09:41:35 +0100
+Message-ID: <1451724102-21911-1-git-send-email-arend@broadcom.com> (sfid-20160102_094233_997832_A8634992)
 MIME-Version: 1.0
-In-Reply-To: <566ABCD9.1060404@users.sourceforge.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Fri, 1 Jan 2016 20:20:15 +0100
+Start the new year setting things straight so resending series
+incorporating review comments from Mathy Vanhoef. This replaces
+the series with Message-ID:
 
-Omit explicit initialisation at the beginning for one local variable
-that is redefined before its first use.
+<1450100394-17414-1-git-send-email-arend@broadcom.com>
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This series adds the following:
+* query features through firmware command.
+* IBSS fixes.
+* ARP offload through inet notifier.
+* force probe to succeed for debugging.
+* random mac support for scheduled scan.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index ceb2a75..c21eeb1 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -3260,7 +3260,7 @@ static int brcmf_sdio_download_firmware(struct brcmf_sdio *bus,
- 					const struct firmware *fw,
- 					void *nvram, u32 nvlen)
- {
--	int bcmerror = -EFAULT;
-+	int bcmerror;
- 	u32 rstvec;
- 
- 	sdio_claim_host(bus->sdiodev->func[1]);
+Arend van Spriel (2):
+  brcmfmac: obtain feature info using 'cap' firmware command
+  brcmfmac: introduce module parameter to force successful probe
+
+Franky Lin (1):
+  brcmfmac: add arp offload ip address table configuration support
+
+Hante Meuleman (4):
+  brcmfmac: Add get_station support for IBSS
+  brcmfmac: Add support for scheduled scan mac randomization
+  brcmfmac: Fix warn trace on module unload while in ibss mode
+  brcmfmac: Move all module parameters to one place
+
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  |  12 +-
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 127 +++++++++++++++++---
+ .../wireless/broadcom/brcm80211/brcmfmac/common.c  |  72 +++++++++++
+ .../wireless/broadcom/brcm80211/brcmfmac/common.h  |  56 +++++++++
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 132 +++++++++++++++++++--
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   7 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c |  76 +++++++-----
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.h |   4 +-
+ .../broadcom/brcm80211/brcmfmac/firmware.c         |  16 +--
+ .../wireless/broadcom/brcm80211/brcmfmac/fwil.h    |   1 +
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       |  34 ++++++
+ .../broadcom/brcm80211/brcmfmac/fwsignal.c         |   9 +-
+ 12 files changed, 462 insertions(+), 84 deletions(-)
+
 -- 
-2.6.3
+1.9.1
 
