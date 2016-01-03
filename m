@@ -1,97 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f46.google.com ([209.85.215.46]:33833 "EHLO
-	mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759214AbcAUNMW (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:32858 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751355AbcACIga (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 08:12:22 -0500
-Received: by mail-lf0-f46.google.com with SMTP id 17so26277209lfz.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 05:12:22 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/5] ath10k: rename some HTT events
-Date: Thu, 21 Jan 2016 14:13:23 +0100
-Message-Id: <1453382007-24622-2-git-send-email-michal.kazior@tieto.com> (sfid-20160121_141226_528365_76687DEF)
-In-Reply-To: <1453382007-24622-1-git-send-email-michal.kazior@tieto.com>
-References: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
- <1453382007-24622-1-git-send-email-michal.kazior@tieto.com>
+	Sun, 3 Jan 2016 03:36:30 -0500
+Received: by mail-pa0-f42.google.com with SMTP id cy9so181761246pac.0
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 00:36:30 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 05/30] staging: wilc1000: rename RemainOnChanExpired in wilc_remain_on_channel
+Date: Sun,  3 Jan 2016 17:35:37 +0900
+Message-Id: <1451810162-16993-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20160103_093644_515411_0D5F1701)
+In-Reply-To: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-New names make a bit more sense.
+This patch renames RemainOnChanExpired to expired to avoid camelcase.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/htt.c    | 8 ++++----
- drivers/net/wireless/ath/ath10k/htt.h    | 8 ++++----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 4 ++--
- 3 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
-index 3e6ba63dfdff..7561f22f10f9 100644
---- a/drivers/net/wireless/ath/ath10k/htt.c
-+++ b/drivers/net/wireless/ath/ath10k/htt.c
-@@ -131,12 +131,12 @@ static const enum htt_t2h_msg_type htt_10_4_t2h_msg_types[] = {
- 	[HTT_10_4_T2H_MSG_TYPE_AGGR_CONF] = HTT_T2H_MSG_TYPE_AGGR_CONF,
- 	[HTT_10_4_T2H_MSG_TYPE_TX_FETCH_IND] =
- 				HTT_T2H_MSG_TYPE_TX_FETCH_IND,
--	[HTT_10_4_T2H_MSG_TYPE_TX_FETCH_CONF] =
--				HTT_T2H_MSG_TYPE_TX_FETCH_CONF,
-+	[HTT_10_4_T2H_MSG_TYPE_TX_FETCH_CONFIRM] =
-+				HTT_T2H_MSG_TYPE_TX_FETCH_CONFIRM,
- 	[HTT_10_4_T2H_MSG_TYPE_STATS_NOUPLOAD] =
- 				HTT_T2H_MSG_TYPE_STATS_NOUPLOAD,
--	[HTT_10_4_T2H_MSG_TYPE_TX_LOW_LATENCY_IND] =
--				HTT_T2H_MSG_TYPE_TX_LOW_LATENCY_IND,
-+	[HTT_10_4_T2H_MSG_TYPE_TX_MODE_SWITCH_IND] =
-+				HTT_T2H_MSG_TYPE_TX_MODE_SWITCH_IND,
- };
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 116942d..9265328 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4063,7 +4063,7 @@ void wilc_scan_complete_received(struct wilc *wilc, u8 *pu8Buffer,
  
- int ath10k_htt_connect(struct ath10k_htt *htt)
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 47ca048feaf0..edd3b9070de9 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -413,10 +413,10 @@ enum htt_10_4_t2h_msg_type {
- 	HTT_10_4_T2H_MSG_TYPE_EN_STATS               = 0x14,
- 	HTT_10_4_T2H_MSG_TYPE_AGGR_CONF              = 0x15,
- 	HTT_10_4_T2H_MSG_TYPE_TX_FETCH_IND           = 0x16,
--	HTT_10_4_T2H_MSG_TYPE_TX_FETCH_CONF          = 0x17,
-+	HTT_10_4_T2H_MSG_TYPE_TX_FETCH_CONFIRM       = 0x17,
- 	HTT_10_4_T2H_MSG_TYPE_STATS_NOUPLOAD         = 0x18,
- 	/* 0x19 to 0x2f are reserved */
--	HTT_10_4_T2H_MSG_TYPE_TX_LOW_LATENCY_IND     = 0x30,
-+	HTT_10_4_T2H_MSG_TYPE_TX_MODE_SWITCH_IND     = 0x30,
- 	/* keep this last */
- 	HTT_10_4_T2H_NUM_MSGS
- };
-@@ -449,8 +449,8 @@ enum htt_t2h_msg_type {
- 	HTT_T2H_MSG_TYPE_TEST,
- 	HTT_T2H_MSG_TYPE_EN_STATS,
- 	HTT_T2H_MSG_TYPE_TX_FETCH_IND,
--	HTT_T2H_MSG_TYPE_TX_FETCH_CONF,
--	HTT_T2H_MSG_TYPE_TX_LOW_LATENCY_IND,
-+	HTT_T2H_MSG_TYPE_TX_FETCH_CONFIRM,
-+	HTT_T2H_MSG_TYPE_TX_MODE_SWITCH_IND,
- 	/* keep this last */
- 	HTT_T2H_NUM_MSGS
- };
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 91afa3ae414c..d923f64e4f42 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2125,8 +2125,8 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 		break;
- 	case HTT_T2H_MSG_TYPE_EN_STATS:
- 	case HTT_T2H_MSG_TYPE_TX_FETCH_IND:
--	case HTT_T2H_MSG_TYPE_TX_FETCH_CONF:
--	case HTT_T2H_MSG_TYPE_TX_LOW_LATENCY_IND:
-+	case HTT_T2H_MSG_TYPE_TX_FETCH_CONFIRM:
-+	case HTT_T2H_MSG_TYPE_TX_MODE_SWITCH_IND:
- 	default:
- 		ath10k_warn(ar, "htt event (%d) not handled\n",
- 			    resp->hdr.msg_type);
+ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
+ 			   u32 duration, u16 chan,
+-			   wilc_remain_on_chan_expired RemainOnChanExpired,
++			   wilc_remain_on_chan_expired expired,
+ 			   wilc_remain_on_chan_ready RemainOnChanReady,
+ 			   void *pvUserArg)
+ {
+@@ -4080,7 +4080,7 @@ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
+ 
+ 	msg.id = HOST_IF_MSG_REMAIN_ON_CHAN;
+ 	msg.body.remain_on_ch.ch = chan;
+-	msg.body.remain_on_ch.expired = RemainOnChanExpired;
++	msg.body.remain_on_ch.expired = expired;
+ 	msg.body.remain_on_ch.ready = RemainOnChanReady;
+ 	msg.body.remain_on_ch.arg = pvUserArg;
+ 	msg.body.remain_on_ch.duration = duration;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 4902cc8..d2ca27e 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -358,7 +358,7 @@ int wilc_setup_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
+ s32 wilc_del_all_rx_ba_session(struct wilc_vif *vif, char *pBSSID, char TID);
+ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
+ 			   u32 duration, u16 chan,
+-			   wilc_remain_on_chan_expired RemainOnChanExpired,
++			   wilc_remain_on_chan_expired expired,
+ 			   wilc_remain_on_chan_ready RemainOnChanReady,
+ 			   void *pvUserArg);
+ int wilc_listen_state_expired(struct wilc_vif *vif, u32 session_id);
 -- 
-2.1.4
+2.6.4
 
