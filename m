@@ -1,74 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:41098 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753321AbcAYHn6 (ORCPT
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:34546 "EHLO
+	mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751301AbcACIhK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 02:43:58 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 18/26] staging: wilc1000: handle connecting error
-Date: Mon, 25 Jan 2016 16:35:22 +0900
-Message-ID: <1453707330-13526-19-git-send-email-glen.lee@atmel.com> (sfid-20160125_090653_722739_14014937)
-In-Reply-To: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
-References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 3 Jan 2016 03:37:10 -0500
+Received: by mail-pf0-f177.google.com with SMTP id e65so133507729pfe.1
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 00:37:10 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 18/30] staging: wilc1000: rename pu8MacAddr in wilc_del_allstation
+Date: Sun,  3 Jan 2016 17:35:50 +0900
+Message-Id: <1451810162-16993-18-git-send-email-chaehyun.lim@gmail.com> (sfid-20160103_095251_637299_3AEAEF2B)
+In-Reply-To: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If connection fails, wilc1000_connecting needs to be set false also and return
-immediately because goto lable 'done' doesn't do anything. Remove lable 'done'
-as well.
+This patch renames pu8MacAddr to mac_addr to avoid camelcase.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 05ba686..d3ad098 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -757,8 +757,8 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 			PRINT_D(CFG80211_DBG, "No Scan results yet\n");
- 		else
- 			PRINT_D(CFG80211_DBG, "Required bss not in scan results: Error(%d)\n", s32Error);
--
--		goto done;
-+		wilc_connecting = 0;
-+		return s32Error;
- 	}
- 
- 	priv->WILC_WFI_wep_default = 0;
-@@ -845,8 +845,8 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 		} else {
- 			s32Error = -ENOTSUPP;
- 			PRINT_ER("Not supported cipher: Error(%d)\n", s32Error);
--
--			goto done;
-+			wilc_connecting = 0;
-+			return s32Error;
- 		}
- 	}
- 
-@@ -912,11 +912,10 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 	if (s32Error != 0) {
- 		PRINT_ER("wilc_set_join_req(): Error(%d)\n", s32Error);
- 		s32Error = -ENOENT;
--		goto done;
-+		wilc_connecting = 0;
-+		return s32Error;
- 	}
- 
--done:
--
- 	return s32Error;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 3f410b2..37a78a3 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4299,7 +4299,7 @@ int wilc_del_station(struct wilc_vif *vif, const u8 *mac_addr)
+ 	return result;
  }
  
+-int wilc_del_allstation(struct wilc_vif *vif, u8 pu8MacAddr[][ETH_ALEN])
++int wilc_del_allstation(struct wilc_vif *vif, u8 mac_addr[][ETH_ALEN])
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+@@ -4322,8 +4322,8 @@ int wilc_del_allstation(struct wilc_vif *vif, u8 pu8MacAddr[][ETH_ALEN])
+ 	msg.vif = vif;
+ 
+ 	for (i = 0; i < MAX_NUM_STA; i++) {
+-		if (memcmp(pu8MacAddr[i], au8Zero_Buff, ETH_ALEN)) {
+-			memcpy(pstrDelAllStationMsg->del_all_sta[i], pu8MacAddr[i], ETH_ALEN);
++		if (memcmp(mac_addr[i], au8Zero_Buff, ETH_ALEN)) {
++			memcpy(pstrDelAllStationMsg->del_all_sta[i], mac_addr[i], ETH_ALEN);
+ 			PRINT_D(CFG80211_DBG, "BSSID = %x%x%x%x%x%x\n",
+ 				pstrDelAllStationMsg->del_all_sta[i][0],
+ 				pstrDelAllStationMsg->del_all_sta[i][1],
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 6d424e7..3c932e7a 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -347,7 +347,7 @@ s32 wilc_add_beacon(struct wilc_vif *vif, u32 u32Interval, u32 u32DTIMPeriod,
+ 		    u32 u32HeadLen, u8 *pu8Head, u32 u32TailLen, u8 *pu8Tail);
+ int wilc_del_beacon(struct wilc_vif *vif);
+ int wilc_add_station(struct wilc_vif *vif, struct add_sta_param *sta_param);
+-int wilc_del_allstation(struct wilc_vif *vif, u8 pu8MacAddr[][ETH_ALEN]);
++int wilc_del_allstation(struct wilc_vif *vif, u8 mac_addr[][ETH_ALEN]);
+ int wilc_del_station(struct wilc_vif *vif, const u8 *mac_addr);
+ int wilc_edit_station(struct wilc_vif *vif,
+ 		      struct add_sta_param *sta_param);
 -- 
-1.9.1
+2.6.4
 
