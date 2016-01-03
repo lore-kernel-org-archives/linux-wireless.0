@@ -1,85 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:34347 "EHLO
-	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751165AbcA2QAW (ORCPT
+Received: from mail-pa0-f47.google.com ([209.85.220.47]:32906 "EHLO
+	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751666AbcACIgm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2016 11:00:22 -0500
-Received: by mail-wm0-f44.google.com with SMTP id 128so58770376wmz.1
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Jan 2016 08:00:21 -0800 (PST)
-To: ksenija.stanojevic@gmail.com,
-	"driverdev-devel@linuxdriverproject.org"
-	<driverdev-devel@linuxdriverproject.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: Move wlan-ng out of staging?
-Message-ID: <56AB8C90.2050909@gmail.com> (sfid-20160129_170027_409578_351B0500)
-Date: Fri, 29 Jan 2016 17:00:16 +0100
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Sun, 3 Jan 2016 03:36:42 -0500
+Received: by mail-pa0-f47.google.com with SMTP id cy9so181762476pac.0
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 00:36:42 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 09/30] staging: wilc1000: rename pBSSID in wilc_del_all_rx_ba_session
+Date: Sun,  3 Jan 2016 17:35:41 +0900
+Message-Id: <1451810162-16993-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20160103_093651_562366_EB808534)
+In-Reply-To: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ksenija wrote:
+This patch renames pBSSID to bssid to avoid camelcase.
 
-> I'm helping Greg do a bit of cleanup in the staging tree, I noticed that
-> wlan-ng driver is maybe ready to be moved out of staging. Are there
-> any TODO tasks left to do beside checkpatch.pl clean-up?
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Its FAQ was very clear: ftp://ftp.linux-wlan.org/pub/linux-wlan-ng/FAQ
-[archived at http://puppylinux.dreamhosters.com/wireless/linux-wlan-org_FAQ.txt ]
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index bf01e83..735e6f1 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4605,7 +4605,7 @@ static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
+ 	return (void *)pNewJoinBssParam;
+ }
+ 
+-int wilc_del_all_rx_ba_session(struct wilc_vif *vif, char *pBSSID, char TID)
++int wilc_del_all_rx_ba_session(struct wilc_vif *vif, char *bssid, char TID)
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+@@ -4621,7 +4621,7 @@ int wilc_del_all_rx_ba_session(struct wilc_vif *vif, char *pBSSID, char TID)
+ 
+ 	msg.id = HOST_IF_MSG_DEL_ALL_RX_BA_SESSIONS;
+ 
+-	memcpy(pBASessionInfo->bssid, pBSSID, ETH_ALEN);
++	memcpy(pBASessionInfo->bssid, bssid, ETH_ALEN);
+ 	pBASessionInfo->tid = TID;
+ 	msg.vif = vif;
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 85064cd..5f7156e 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -355,7 +355,7 @@ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout);
+ int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
+ 				u32 count);
+ int wilc_setup_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
+-int wilc_del_all_rx_ba_session(struct wilc_vif *vif, char *pBSSID, char TID);
++int wilc_del_all_rx_ba_session(struct wilc_vif *vif, char *bssid, char TID);
+ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
+ 			   u32 duration, u16 chan,
+ 			   wilc_remain_on_chan_expired expired,
+-- 
+2.6.4
 
---cut--
-Q: When will linux-wlan-ng be merged into the mainline kernel?
-
-	Short answer:  Never.
-
-	First, the linux-netdev people will soundly reject this driver.
-	I don't begrudge them for this; indeed in their position I'd do
-	exactly the same.  It's a sound engineering decision.
-
-	linux-wlan-ng is obselete, and effort spent fixing it is better
-	spent elsewhere.  You can't even buy the hardware any longer.
-
-	The original design for linux-wlan-ng was to separate the 802.11
-	stack from the actual hardware driver.  This added a lot of
-	complexity, but would greatly ease the pain of supporitng
-	multiple hardware types.  Unfortunately, the implementation was
-	turned out to be somewhat flawed, and hardware manufaturers went
-	away from the thick-mac model, leaving linux-wlan-ng overly
-	complex for what it did.
-
-	(Ironically, the linux kernel is adopting a similar
-	 separation model, but it is a long way off from being ready)
-
-	So why not rewrite linux-wlan-ng to be more suitable, the
-	enterprising reader may ask?
-
-	The kernel already has two drivers for prism2 (cs/pci/plx)
-	hardware -- hostap and orinoco. linux-wlan-ng basically
-	has three features not present in kernel drivers:
-	
-		1) USB support
-		2) nearly complete implemettion of the 802.11 MIB/MLME
-		3) Firmware-based AP support
-	
-	(3) requires an expensive license that isn't even available any
-	longer, as the hostap mode works far better -- and is already
-	supported by in-kernel drivers.
-
-	(2) would need to be removed or completely rewritten in order to
-	be merged, as it does not fit within existing kernel APIs, and
-	it would be effectively merging new kernel APIs.
-
-	(1) Is the only truly unique thing that linux-wlan-ng does that
-	is generally needed any more.
-
-	To merge it into the kernel, we'd need to strip out (2), which
-	would necessitate a complete rewrite -- to the point where
-	writing a new driver from scratch is easier.
-
-	Basically, it would take far less effort to add USB
-	support to the in-kernel drivers than it would to make
-	linux-wlan-ng acceptable to be merged.
-
-	In other words, the short answer is:  Never.
---end--
