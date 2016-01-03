@@ -1,196 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:19382 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754530AbcA0J6G (ORCPT
+Received: from mail-ig0-f170.google.com ([209.85.213.170]:37792 "EHLO
+	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751355AbcACPSM convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 04:58:06 -0500
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH 07/12] ath10k: add clock ctrl related functions in ahb
-Date: Wed, 27 Jan 2016 15:24:28 +0530
-Message-ID: <1453888473-2879-8-git-send-email-rmani@qti.qualcomm.com> (sfid-20160127_105811_994921_5D577BC4)
-In-Reply-To: <1453888473-2879-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1453888473-2879-1-git-send-email-rmani@qti.qualcomm.com>
+	Sun, 3 Jan 2016 10:18:12 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <5688EBAC.5000701@gmail.com>
+References: <566ABCD9.1060404@users.sourceforge.net>
+	<5686F0B2.5000000@users.sourceforge.net>
+	<56870866.7020000@cogentembedded.com>
+	<568785B3.5000905@users.sourceforge.net>
+	<alpine.DEB.2.02.1601020914100.2063@localhost6.localdomain6>
+	<5687939E.7010701@users.sourceforge.net>
+	<5687A2C7.3000704@gmail.com>
+	<5687B2BC.8090901@users.sourceforge.net>
+	<5688EBAC.5000701@gmail.com>
+Date: Sun, 3 Jan 2016 16:18:11 +0100
+Message-ID: <CACna6rzoJLRuTTDi3JjXg1roDbk3HXcBhhe0iOUH9xRaGU5p7A@mail.gmail.com> (sfid-20160103_161920_208866_CADC4179)
+Subject: Re: net-libertas: Better exception handling in if_spi_host_to_card_worker()
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <aspriel@gmail.com>
+Cc: SF Markus Elfring <elfring@users.sourceforge.net>,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	libertas-dev@lists.infradead.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pre qca4019 chipsets has/uses internal clock generator for
-the operation. But, qca4019 uses external clocks supplied from
-outside of target (ie, outside of wifi core). Three different clocks
-(cmd clock, ref clock, rtc clock) comes into picture in qca4019.
-All those clocks needs to configured with help of global clock
-controller (gcc) to make qca4019 functioning.
+On 3 January 2016 at 10:36, Arend van Spriel <aspriel@gmail.com> wrote:
+> On 02-01-16 12:21, SF Markus Elfring wrote:
+>>> Did you look at the resulting assembly code for different target architectures?
+>>
+>> Not yet. - Which execution system variants would you recommend for
+>> further comparisons?
+>
+> Guess x86{,_64} and arm would be good candidates, ie. CISC vs. RISC.
 
-Add functions for clock init/deinit, clock enable/disable in ahb.
-This is just a preparation, functions added in this patch will be
-used in later patches.
+Oh, don't forget about MIPS with its fancy branches handling. You know
+about it, don't you?
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/ahb.c | 123 ++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/ahb.h |   4 ++
- 2 files changed, 127 insertions(+)
+I'm against this patch as well.
 
-diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
-index eab4b47..11185c0 100644
---- a/drivers/net/wireless/ath/ath10k/ahb.c
-+++ b/drivers/net/wireless/ath/ath10k/ahb.c
-@@ -15,6 +15,7 @@
-  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- #include <linux/module.h>
-+#include <linux/clk.h>
- #include "core.h"
- #include "debug.h"
- #include "pci.h"
-@@ -84,6 +85,128 @@ static int ath10k_ahb_get_num_banks(struct ath10k *ar)
- 	return 1;
- }
- 
-+static int ath10k_ahb_clock_init(struct ath10k *ar)
-+{
-+	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
-+	struct device *dev;
-+	int ret;
-+
-+	dev = &ar_ahb->pdev->dev;
-+
-+	ar_ahb->cmd_clk = clk_get(dev, "wifi_wcss_cmd");
-+	if (IS_ERR_OR_NULL(ar_ahb->cmd_clk)) {
-+		ath10k_err(ar, "failed to get cmd clk: %ld\n",
-+			   PTR_ERR(ar_ahb->cmd_clk));
-+		ret = ar_ahb->cmd_clk ? PTR_ERR(ar_ahb->cmd_clk) : -ENODEV;
-+		goto out;
-+	}
-+
-+	ar_ahb->ref_clk = clk_get(dev, "wifi_wcss_ref");
-+	if (IS_ERR_OR_NULL(ar_ahb->ref_clk)) {
-+		ath10k_err(ar, "failed to get ref clk: %ld\n",
-+			   PTR_ERR(ar_ahb->ref_clk));
-+		ret = ar_ahb->ref_clk ? PTR_ERR(ar_ahb->ref_clk) : -ENODEV;
-+		goto err_cmd_clk_put;
-+	}
-+
-+	ar_ahb->rtc_clk = clk_get(dev, "wifi_wcss_rtc");
-+	if (IS_ERR_OR_NULL(ar_ahb->rtc_clk)) {
-+		ath10k_err(ar, "failed to get rtc clk: %ld\n",
-+			   PTR_ERR(ar_ahb->rtc_clk));
-+		ret = ar_ahb->rtc_clk ? PTR_ERR(ar_ahb->rtc_clk) : -ENODEV;
-+		goto err_ref_clk_put;
-+	}
-+
-+	return 0;
-+
-+err_ref_clk_put:
-+	clk_put(ar_ahb->ref_clk);
-+
-+err_cmd_clk_put:
-+	clk_put(ar_ahb->cmd_clk);
-+
-+out:
-+	return ret;
-+}
-+
-+static void ath10k_ahb_clock_deinit(struct ath10k *ar)
-+{
-+	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
-+
-+	if (!IS_ERR_OR_NULL(ar_ahb->cmd_clk))
-+		clk_put(ar_ahb->cmd_clk);
-+
-+	if (!IS_ERR_OR_NULL(ar_ahb->ref_clk))
-+		clk_put(ar_ahb->ref_clk);
-+
-+	if (!IS_ERR_OR_NULL(ar_ahb->rtc_clk))
-+		clk_put(ar_ahb->rtc_clk);
-+
-+	ar_ahb->cmd_clk = NULL;
-+	ar_ahb->ref_clk = NULL;
-+	ar_ahb->rtc_clk = NULL;
-+}
-+
-+static int ath10k_ahb_clock_enable(struct ath10k *ar)
-+{
-+	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
-+	struct device *dev;
-+	int ret;
-+
-+	dev = &ar_ahb->pdev->dev;
-+
-+	if (IS_ERR_OR_NULL(ar_ahb->cmd_clk) ||
-+	    IS_ERR_OR_NULL(ar_ahb->ref_clk) ||
-+	    IS_ERR_OR_NULL(ar_ahb->rtc_clk)) {
-+		ath10k_err(ar, "clock(s) is/are not initialized\n");
-+		ret = -EIO;
-+		goto out;
-+	}
-+
-+	ret = clk_prepare_enable(ar_ahb->cmd_clk);
-+	if (ret) {
-+		ath10k_err(ar, "failed to enable cmd clk: %d\n", ret);
-+		goto out;
-+	}
-+
-+	ret = clk_prepare_enable(ar_ahb->ref_clk);
-+	if (ret) {
-+		ath10k_err(ar, "failed to enable ref clk: %d\n", ret);
-+		goto err_cmd_clk_disable;
-+	}
-+
-+	ret = clk_prepare_enable(ar_ahb->rtc_clk);
-+	if (ret) {
-+		ath10k_err(ar, "failed to enable rtc clk: %d\n", ret);
-+		goto err_ref_clk_disable;
-+	}
-+
-+	return 0;
-+
-+err_ref_clk_disable:
-+	clk_disable_unprepare(ar_ahb->ref_clk);
-+
-+err_cmd_clk_disable:
-+	clk_disable_unprepare(ar_ahb->cmd_clk);
-+
-+out:
-+	return ret;
-+}
-+
-+static void ath10k_ahb_clock_disable(struct ath10k *ar)
-+{
-+	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
-+
-+	if (!IS_ERR_OR_NULL(ar_ahb->cmd_clk))
-+		clk_disable_unprepare(ar_ahb->cmd_clk);
-+
-+	if (!IS_ERR_OR_NULL(ar_ahb->ref_clk))
-+		clk_disable_unprepare(ar_ahb->ref_clk);
-+
-+	if (!IS_ERR_OR_NULL(ar_ahb->rtc_clk))
-+		clk_disable_unprepare(ar_ahb->rtc_clk);
-+}
-+
- static int ath10k_ahb_probe(struct platform_device *pdev)
- {
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath10k/ahb.h b/drivers/net/wireless/ath/ath10k/ahb.h
-index 77d15af..753b433 100644
---- a/drivers/net/wireless/ath/ath10k/ahb.h
-+++ b/drivers/net/wireless/ath/ath10k/ahb.h
-@@ -25,6 +25,10 @@ struct ath10k_ahb {
- 	void __iomem *mem;
- 	void __iomem *gcc_mem;
- 	void __iomem *tcsr_mem;
-+
-+	struct clk *cmd_clk;
-+	struct clk *ref_clk;
-+	struct clk *rtc_clk;
- };
- 
- #ifdef CONFIG_ATH10K_AHB
 -- 
-1.8.1.2
-
+Rafał
