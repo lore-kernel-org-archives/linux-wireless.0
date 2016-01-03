@@ -1,58 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f65.google.com ([209.85.213.65]:33500 "EHLO
-	mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752660AbcALXSa (ORCPT
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:35087 "EHLO
+	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751815AbcACIgv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 18:18:30 -0500
-Received: by mail-vk0-f65.google.com with SMTP id n1so6248918vkb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2016 15:18:30 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1452560419.7773.87.camel@perches.com>
-References: <1452558775-21532-1-git-send-email-chaehyun.lim@gmail.com>
-	<1452558775-21532-2-git-send-email-chaehyun.lim@gmail.com>
-	<1452560419.7773.87.camel@perches.com>
-Date: Wed, 13 Jan 2016 08:18:29 +0900
-Message-ID: <CAKV=isuDM=pOMkYwQSmt2QQB9LGpwnCZ-scuWZ_7OXsG4kWJew@mail.gmail.com> (sfid-20160113_001842_369257_2EAB5BEB)
-Subject: Re: [PATCH 2/5] staging: wilc1000: remove typedef from struct wilc_cfg_byte_t
+	Sun, 3 Jan 2016 03:36:51 -0500
+Received: by mail-pf0-f181.google.com with SMTP id 78so187622202pfw.2
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 00:36:51 -0800 (PST)
 From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	"tony.cho" <tony.cho@atmel.com>, glen.lee@atmel.com,
-	leo.kim@atmel.com, linux-wireless <linux-wireless@vger.kernel.org>,
-	devel@driverdev.osuosl.org
-Content-Type: text/plain; charset=UTF-8
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 12/30] staging: wilc1000: fix return type of wilc_edit_station
+Date: Sun,  3 Jan 2016 17:35:44 +0900
+Message-Id: <1451810162-16993-12-git-send-email-chaehyun.lim@gmail.com> (sfid-20160103_095251_149562_6B8E6F11)
+In-Reply-To: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you for your comment.
-I'll resend again this patch after considering your suggestion.
+This patch changes return type of wilc_edit_station from s32 to int.
+The result variable gets return value from wilc_mq_send that has data
+type of int. It should be changed return type of this function as well
+as data type of result variable.
 
-regards
-Chaehyun Lim
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-On Tue, Jan 12, 2016 at 10:00 AM, Joe Perches <joe@perches.com> wrote:
-> On Tue, 2016-01-12 at 09:32 +0900, Chaehyun Lim wrote:
->> This patch removes typedef from struct wilc_cfg_byte_t and renames it to
->> wilc_cfg_byte.
->
-> Is this really a good name?
->
->> diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-> []
->> @@ -10,10 +10,10 @@
->>  #ifndef WILC_WLAN_CFG_H
->>  #define WILC_WLAN_CFG_H
->>
->> -typedef struct {
->> +struct wilc_cfg_byte {
->>       u16 id;
->>       u16 val;
->> -} wilc_cfg_byte_t;
->> +};
->
-> val is a u16, calling it cfg_byte seems misleading.
->
->
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 409d910..eb2d664 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4350,10 +4350,10 @@ s32 wilc_del_allstation(struct wilc_vif *vif, u8 pu8MacAddr[][ETH_ALEN])
+ 	return result;
+ }
+ 
+-s32 wilc_edit_station(struct wilc_vif *vif,
++int wilc_edit_station(struct wilc_vif *vif,
+ 		      struct add_sta_param *pstrStaParams)
+ {
+-	s32 result = 0;
++	int result = 0;
+ 	struct host_if_msg msg;
+ 	struct add_sta_param *pstrAddStationMsg = &msg.body.add_sta_info;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 6c8fe3a..f60bebb 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -349,7 +349,7 @@ int wilc_del_beacon(struct wilc_vif *vif);
+ int wilc_add_station(struct wilc_vif *vif, struct add_sta_param *sta_param);
+ s32 wilc_del_allstation(struct wilc_vif *vif, u8 pu8MacAddr[][ETH_ALEN]);
+ int wilc_del_station(struct wilc_vif *vif, const u8 *mac_addr);
+-s32 wilc_edit_station(struct wilc_vif *vif,
++int wilc_edit_station(struct wilc_vif *vif,
+ 		      struct add_sta_param *pstrStaParams);
+ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout);
+ int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
+-- 
+2.6.4
+
