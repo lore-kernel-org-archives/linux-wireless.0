@@ -1,156 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:22248 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751539AbcAEKGB (ORCPT
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:32957 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751826AbcACIgy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 05:06:01 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 3/6] brcmfmac: change brcmf_sdio_wd_timer() prototype
-Date: Tue, 5 Jan 2016 11:05:47 +0100
-Message-ID: <1451988350-2197-4-git-send-email-arend@broadcom.com> (sfid-20160105_110616_885836_47B67EB0)
-In-Reply-To: <1451988350-2197-1-git-send-email-arend@broadcom.com>
-References: <1451988350-2197-1-git-send-email-arend@broadcom.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 3 Jan 2016 03:36:54 -0500
+Received: by mail-pa0-f51.google.com with SMTP id cy9so181763772pac.0
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 00:36:54 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 13/30] staging: wilc1000: rename pstrStaParams in wilc_edit_station
+Date: Sun,  3 Jan 2016 17:35:45 +0900
+Message-Id: <1451810162-16993-13-git-send-email-chaehyun.lim@gmail.com> (sfid-20160103_095248_377748_0527A0BA)
+In-Reply-To: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function brcmf_sdio_wd_timer() has wdtick parameter. However, it
-is only called with two values and as such the parameter is replaced
-with boolean value indicating the timer should be active or not.
+This patch renames pstrStaParams to sta_param to avoid camelcase.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 33 ++++++++--------------
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |  2 +-
- 2 files changed, 13 insertions(+), 22 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index ceb2a75..2f02020 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -503,8 +503,7 @@ struct brcmf_sdio {
- 	struct timer_list timer;
- 	struct completion watchdog_wait;
- 	struct task_struct *watchdog_tsk;
--	bool wd_timer_valid;
--	uint save_ms;
-+	bool wd_active;
- 
- 	struct workqueue_struct *brcmf_wq;
- 	struct work_struct datawork;
-@@ -961,7 +960,7 @@ end:
- 			brcmf_sdio_clkctl(bus, CLK_NONE, pendok);
- 	} else {
- 		brcmf_sdio_clkctl(bus, CLK_AVAIL, pendok);
--		brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
-+		brcmf_sdio_wd_timer(bus, true);
- 	}
- 	bus->sleeping = sleep;
- 	brcmf_dbg(SDIO, "new state %s\n",
-@@ -3576,7 +3575,7 @@ static void brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
- 			if (bus->idlecount > bus->idletime) {
- 				brcmf_dbg(SDIO, "idle\n");
- 				sdio_claim_host(bus->sdiodev->func[1]);
--				brcmf_sdio_wd_timer(bus, 0);
-+				brcmf_sdio_wd_timer(bus, false);
- 				bus->idlecount = 0;
- 				brcmf_sdio_bus_sleep(bus, true, false);
- 				sdio_release_host(bus->sdiodev->func[1]);
-@@ -3908,7 +3907,7 @@ brcmf_sdio_watchdog(unsigned long data)
- 	if (bus->watchdog_tsk) {
- 		complete(&bus->watchdog_wait);
- 		/* Reschedule the watchdog */
--		if (bus->wd_timer_valid)
-+		if (bus->wd_active)
- 			mod_timer(&bus->timer,
- 				  jiffies + msecs_to_jiffies(BRCMF_WD_POLL_MS));
- 	}
-@@ -3950,7 +3949,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev,
- 
- 	/* Start the watchdog timer */
- 	bus->sdcnt.tickcnt = 0;
--	brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
-+	brcmf_sdio_wd_timer(bus, true);
- 
- 	sdio_claim_host(sdiodev->func[1]);
- 
-@@ -4195,7 +4194,7 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
- 		if (bus->ci) {
- 			if (bus->sdiodev->state != BRCMF_SDIOD_NOMEDIUM) {
- 				sdio_claim_host(bus->sdiodev->func[1]);
--				brcmf_sdio_wd_timer(bus, 0);
-+				brcmf_sdio_wd_timer(bus, false);
- 				brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
- 				/* Leave the device in state where it is
- 				 * 'passive'. This is done by resetting all
-@@ -4217,13 +4216,12 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
- 	brcmf_dbg(TRACE, "Disconnected\n");
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index eb2d664..de921fa 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4351,7 +4351,7 @@ s32 wilc_del_allstation(struct wilc_vif *vif, u8 pu8MacAddr[][ETH_ALEN])
  }
  
--void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, uint wdtick)
-+void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, bool active)
+ int wilc_edit_station(struct wilc_vif *vif,
+-		      struct add_sta_param *pstrStaParams)
++		      struct add_sta_param *sta_param)
  {
- 	/* Totally stop the timer */
--	if (!wdtick && bus->wd_timer_valid) {
-+	if (!active && bus->wd_active) {
- 		del_timer_sync(&bus->timer);
--		bus->wd_timer_valid = false;
--		bus->save_ms = wdtick;
-+		bus->wd_active = false;
- 		return;
+ 	int result = 0;
+ 	struct host_if_msg msg;
+@@ -4370,14 +4370,14 @@ int wilc_edit_station(struct wilc_vif *vif,
+ 	msg.id = HOST_IF_MSG_EDIT_STATION;
+ 	msg.vif = vif;
+ 
+-	memcpy(pstrAddStationMsg, pstrStaParams, sizeof(struct add_sta_param));
++	memcpy(pstrAddStationMsg, sta_param, sizeof(struct add_sta_param));
+ 	if (pstrAddStationMsg->rates_len > 0) {
+ 		u8 *rates = kmalloc(pstrAddStationMsg->rates_len, GFP_KERNEL);
+ 
+ 		if (!rates)
+ 			return -ENOMEM;
+ 
+-		memcpy(rates, pstrStaParams->rates,
++		memcpy(rates, sta_param->rates,
+ 		       pstrAddStationMsg->rates_len);
+ 		pstrAddStationMsg->rates = rates;
  	}
- 
-@@ -4231,27 +4229,20 @@ void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, uint wdtick)
- 	if (bus->sdiodev->state != BRCMF_SDIOD_DATA)
- 		return;
- 
--	if (wdtick) {
--		if (bus->save_ms != BRCMF_WD_POLL_MS) {
--			if (bus->wd_timer_valid)
--				/* Stop timer and restart at new value */
--				del_timer_sync(&bus->timer);
--
-+	if (active) {
-+		if (!bus->wd_active) {
- 			/* Create timer again when watchdog period is
- 			   dynamically changed or in the first instance
- 			 */
- 			bus->timer.expires =
- 				jiffies + msecs_to_jiffies(BRCMF_WD_POLL_MS);
- 			add_timer(&bus->timer);
--
-+			bus->wd_active = true;
- 		} else {
- 			/* Re arm the timer, at last watchdog period */
- 			mod_timer(&bus->timer,
- 				jiffies + msecs_to_jiffies(BRCMF_WD_POLL_MS));
- 		}
--
--		bus->wd_timer_valid = true;
--		bus->save_ms = wdtick;
- 	}
- }
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index d86ecf2..ff47cee 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -369,7 +369,7 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev);
- void brcmf_sdio_remove(struct brcmf_sdio *bus);
- void brcmf_sdio_isr(struct brcmf_sdio *bus);
- 
--void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, uint wdtick);
-+void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, bool active);
- void brcmf_sdio_wowl_config(struct device *dev, bool enabled);
- int brcmf_sdio_sleep(struct brcmf_sdio *bus, bool sleep);
- void brcmf_sdio_trigger_dpc(struct brcmf_sdio *bus);
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index f60bebb..abb626e 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -350,7 +350,7 @@ int wilc_add_station(struct wilc_vif *vif, struct add_sta_param *sta_param);
+ s32 wilc_del_allstation(struct wilc_vif *vif, u8 pu8MacAddr[][ETH_ALEN]);
+ int wilc_del_station(struct wilc_vif *vif, const u8 *mac_addr);
+ int wilc_edit_station(struct wilc_vif *vif,
+-		      struct add_sta_param *pstrStaParams);
++		      struct add_sta_param *sta_param);
+ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout);
+ int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
+ 				u32 count);
 -- 
-1.9.1
+2.6.4
 
