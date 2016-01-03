@@ -1,299 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:65235 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752018AbcAGJea (ORCPT
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:35212 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751826AbcACIg5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 04:34:30 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u079TJjV014216
-	for <linux-wireless@vger.kernel.org>; Thu, 7 Jan 2016 01:34:30 -0800
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-	by mx0b-0016f401.pphosted.com with ESMTP id 208ynrkk5u-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2016 01:34:30 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	chunfan chen <jeffc@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 4/6] mwifiex: report wakeup reason to cfg80211
-Date: Thu, 7 Jan 2016 01:31:29 -0800
-Message-ID: <1452159091-30997-5-git-send-email-akarwar@marvell.com> (sfid-20160107_103439_583999_DC40F455)
-In-Reply-To: <1452159091-30997-1-git-send-email-akarwar@marvell.com>
-References: <1452159091-30997-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 3 Jan 2016 03:36:57 -0500
+Received: by mail-pa0-f42.google.com with SMTP id do7so1063734pab.2
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 00:36:57 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 14/30] staging: wilc1000: rename pstrAddStationMsg in wilc_edit_station
+Date: Sun,  3 Jan 2016 17:35:46 +0900
+Message-Id: <1451810162-16993-14-git-send-email-chaehyun.lim@gmail.com> (sfid-20160103_095250_330982_68BDEB00)
+In-Reply-To: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: chunfan chen <jeffc@marvell.com>
+This patch renames pstrAddStationMsg to add_sta_info to avoid camelcase.
 
-This patch adds code to report wakeup reason to cfg80211
-when system is resumed.
-
-Signed-off-by: chunfan chen <jeffc@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c    | 58 ++++++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/cmdevt.c      | 13 +++++
- drivers/net/wireless/marvell/mwifiex/fw.h          | 20 ++++++++
- drivers/net/wireless/marvell/mwifiex/ioctl.h       |  4 ++
- drivers/net/wireless/marvell/mwifiex/main.h        |  6 +++
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c     | 19 +++++++
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |  3 ++
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c   | 16 ++++++
- 8 files changed, 139 insertions(+)
+ drivers/staging/wilc1000/host_interface.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index a1b8d89..c80d9e2 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3316,6 +3316,64 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
- 
- static int mwifiex_cfg80211_resume(struct wiphy *wiphy)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index de921fa..2f94804 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4355,7 +4355,7 @@ int wilc_edit_station(struct wilc_vif *vif,
  {
-+	struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
-+	struct mwifiex_private *priv =
-+		mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
-+	struct mwifiex_ds_wakeup_reason wakeup_reason;
-+	struct cfg80211_wowlan_wakeup wakeup_report;
-+	int i;
-+
-+	mwifiex_get_wakeup_reason(priv, HostCmd_ACT_GEN_GET, MWIFIEX_SYNC_CMD,
-+				  &wakeup_reason);
-+	memset(&wakeup_report, 0, sizeof(struct cfg80211_wowlan_wakeup));
-+
-+	wakeup_report.pattern_idx = -1;
-+
-+	switch (wakeup_reason.hs_wakeup_reason) {
-+	case NO_HSWAKEUP_REASON:
-+		break;
-+	case BCAST_DATA_MATCHED:
-+		break;
-+	case MCAST_DATA_MATCHED:
-+		break;
-+	case UCAST_DATA_MATCHED:
-+		break;
-+	case MASKTABLE_EVENT_MATCHED:
-+		break;
-+	case NON_MASKABLE_EVENT_MATCHED:
-+		if (wiphy->wowlan_config->disconnect)
-+			wakeup_report.disconnect = true;
-+		if (wiphy->wowlan_config->nd_config)
-+			wakeup_report.net_detect = adapter->nd_info;
-+		break;
-+	case NON_MASKABLE_CONDITION_MATCHED:
-+		break;
-+	case MAGIC_PATTERN_MATCHED:
-+		if (wiphy->wowlan_config->magic_pkt)
-+			wakeup_report.magic_pkt = true;
-+		if (wiphy->wowlan_config->n_patterns)
-+			wakeup_report.pattern_idx = 1;
-+		break;
-+	case CONTROL_FRAME_MATCHED:
-+		break;
-+	case	MANAGEMENT_FRAME_MATCHED:
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	if ((wakeup_reason.hs_wakeup_reason > 0) &&
-+	    (wakeup_reason.hs_wakeup_reason <= 7))
-+		cfg80211_report_wowlan_wakeup(&priv->wdev, &wakeup_report,
-+					      GFP_KERNEL);
-+
-+	if (adapter->nd_info) {
-+		for (i = 0 ; i < adapter->nd_info->n_matches ; i++)
-+			kfree(adapter->nd_info->matches[i]);
-+		kfree(adapter->nd_info);
-+		adapter->nd_info = NULL;
-+	}
-+
- 	return 0;
- }
+ 	int result = 0;
+ 	struct host_if_msg msg;
+-	struct add_sta_param *pstrAddStationMsg = &msg.body.add_sta_info;
++	struct add_sta_param *add_sta_info = &msg.body.add_sta_info;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
  
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index cb25aa7..a12adee 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -1657,3 +1657,16 @@ int mwifiex_ret_get_hw_spec(struct mwifiex_private *priv,
+ 	if (!hif_drv) {
+@@ -4370,16 +4370,16 @@ int wilc_edit_station(struct wilc_vif *vif,
+ 	msg.id = HOST_IF_MSG_EDIT_STATION;
+ 	msg.vif = vif;
  
- 	return 0;
- }
-+
-+/* This function handles the command response of hs wakeup reason
-+ * command.
-+ */
-+int mwifiex_ret_wakeup_reason(struct mwifiex_private *priv,
-+			      struct host_cmd_ds_command *resp,
-+			      struct host_cmd_ds_wakeup_reason *wakeup_reason)
-+{
-+	wakeup_reason->wakeup_reason =
-+		resp->params.hs_wakeup_reason.wakeup_reason;
-+
-+	return 0;
-+}
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 81b491a..d293e48 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -373,6 +373,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define HostCmd_CMD_MGMT_FRAME_REG                    0x010c
- #define HostCmd_CMD_REMAIN_ON_CHAN                    0x010d
- #define HostCmd_CMD_11AC_CFG			      0x0112
-+#define HostCmd_CMD_HS_WAKEUP_REASON                  0x0116
- #define HostCmd_CMD_TDLS_CONFIG                       0x0100
- #define HostCmd_CMD_MC_POLICY                         0x0121
- #define HostCmd_CMD_TDLS_OPER                         0x0122
-@@ -607,6 +608,20 @@ struct mwifiex_ie_types_data {
- #define MWIFIEX_RXPD_FLAGS_TDLS_PACKET      0x01
- #define MWIFIEX_TXPD_FLAGS_REQ_TX_STATUS    0x20
+-	memcpy(pstrAddStationMsg, sta_param, sizeof(struct add_sta_param));
+-	if (pstrAddStationMsg->rates_len > 0) {
+-		u8 *rates = kmalloc(pstrAddStationMsg->rates_len, GFP_KERNEL);
++	memcpy(add_sta_info, sta_param, sizeof(struct add_sta_param));
++	if (add_sta_info->rates_len > 0) {
++		u8 *rates = kmalloc(add_sta_info->rates_len, GFP_KERNEL);
  
-+enum HS_WAKEUP_REASON {
-+	NO_HSWAKEUP_REASON = 0,
-+	BCAST_DATA_MATCHED,
-+	MCAST_DATA_MATCHED,
-+	UCAST_DATA_MATCHED,
-+	MASKTABLE_EVENT_MATCHED,
-+	NON_MASKABLE_EVENT_MATCHED,
-+	NON_MASKABLE_CONDITION_MATCHED,
-+	MAGIC_PATTERN_MATCHED,
-+	CONTROL_FRAME_MATCHED,
-+	MANAGEMENT_FRAME_MATCHED,
-+	RESERVED
-+};
-+
- struct txpd {
- 	u8 bss_type;
- 	u8 bss_num;
-@@ -2159,6 +2174,10 @@ struct host_cmd_ds_robust_coex {
- 	__le16 reserved;
- } __packed;
+ 		if (!rates)
+ 			return -ENOMEM;
  
-+struct host_cmd_ds_wakeup_reason {
-+	u16  wakeup_reason;
-+} __packed;
-+
- struct host_cmd_ds_command {
- 	__le16 command;
- 	__le16 size;
-@@ -2231,6 +2250,7 @@ struct host_cmd_ds_command {
- 		struct host_cmd_sdio_sp_rx_aggr_cfg sdio_rx_aggr_cfg;
- 		struct host_cmd_ds_multi_chan_policy mc_policy;
- 		struct host_cmd_ds_robust_coex coex;
-+		struct host_cmd_ds_wakeup_reason hs_wakeup_reason;
- 	} params;
- } __packed;
+ 		memcpy(rates, sta_param->rates,
+-		       pstrAddStationMsg->rates_len);
+-		pstrAddStationMsg->rates = rates;
++		       add_sta_info->rates_len);
++		add_sta_info->rates = rates;
+ 	}
  
-diff --git a/drivers/net/wireless/marvell/mwifiex/ioctl.h b/drivers/net/wireless/marvell/mwifiex/ioctl.h
-index 6333b16..14cfa37 100644
---- a/drivers/net/wireless/marvell/mwifiex/ioctl.h
-+++ b/drivers/net/wireless/marvell/mwifiex/ioctl.h
-@@ -271,6 +271,10 @@ struct mwifiex_ds_hs_cfg {
- 	u32 gap;
- };
- 
-+struct mwifiex_ds_wakeup_reason {
-+	u16  hs_wakeup_reason;
-+};
-+
- #define DEEP_SLEEP_ON  1
- #define DEEP_SLEEP_OFF 0
- #define DEEP_SLEEP_IDLE_TIME	100
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index bf9b24a..c755be54c 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1599,6 +1599,12 @@ void mwifiex_drv_info_dump(struct mwifiex_adapter *adapter);
- void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter);
- void *mwifiex_alloc_dma_align_buf(int rx_len, gfp_t flags);
- void mwifiex_queue_main_work(struct mwifiex_adapter *adapter);
-+int mwifiex_get_wakeup_reason(struct mwifiex_private *priv, u16 action,
-+			      int cmd_type,
-+			      struct mwifiex_ds_wakeup_reason *wakeup_reason);
-+int mwifiex_ret_wakeup_reason(struct mwifiex_private *priv,
-+			      struct host_cmd_ds_command *resp,
-+			      struct host_cmd_ds_wakeup_reason *wakeup_reason);
- void mwifiex_coex_ampdu_rxwinsize(struct mwifiex_adapter *adapter);
- void mwifiex_11n_delba(struct mwifiex_private *priv, int tid);
- int mwifiex_send_domain_info_cmd_fw(struct wiphy *wiphy);
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index 60f3ded..30f1526 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -1813,6 +1813,22 @@ static int mwifiex_cmd_sdio_rx_aggr_cfg(struct host_cmd_ds_command *cmd,
- 	return 0;
- }
- 
-+/* This function prepares command to get HS wakeup reason.
-+ *
-+ * Preparation includes -
-+ *      - Setting command ID, action and proper size
-+ *      - Ensuring correct endian-ness
-+ */
-+static int mwifiex_cmd_get_wakeup_reason(struct mwifiex_private *priv,
-+					 struct host_cmd_ds_command *cmd)
-+{
-+	cmd->command = cpu_to_le16(HostCmd_CMD_HS_WAKEUP_REASON);
-+	cmd->size = cpu_to_le16(sizeof(struct host_cmd_ds_wakeup_reason) +
-+				S_DS_GEN);
-+
-+	return 0;
-+}
-+
- /*
-  * This function prepares the commands before sending them to the firmware.
-  *
-@@ -2067,6 +2083,9 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
- 		ret = mwifiex_cmd_sdio_rx_aggr_cfg(cmd_ptr, cmd_action,
- 						   data_buf);
- 		break;
-+	case HostCmd_CMD_HS_WAKEUP_REASON:
-+		ret = mwifiex_cmd_get_wakeup_reason(priv, cmd_ptr);
-+		break;
- 	case HostCmd_CMD_MC_POLICY:
- 		ret = mwifiex_cmd_set_mc_policy(priv, cmd_ptr, cmd_action,
- 						data_buf);
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-index 4b23d3b..d96523e 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-@@ -1236,6 +1236,9 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
- 	case HostCmd_CMD_SDIO_SP_RX_AGGR_CFG:
- 		ret = mwifiex_ret_sdio_rx_aggr_cfg(priv, resp);
- 		break;
-+	case HostCmd_CMD_HS_WAKEUP_REASON:
-+		ret = mwifiex_ret_wakeup_reason(priv, resp, data_buf);
-+		break;
- 	case HostCmd_CMD_TDLS_CONFIG:
- 		break;
- 	case HostCmd_CMD_ROBUST_COEX:
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-index cf4b6dd..bd3d2f2 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -1460,3 +1460,19 @@ mwifiex_set_gen_ie(struct mwifiex_private *priv, const u8 *ie, int ie_len)
- 
- 	return 0;
- }
-+
-+/* This function get Host Sleep wake up reason.
-+ *
-+ */
-+int mwifiex_get_wakeup_reason(struct mwifiex_private *priv, u16 action,
-+			      int cmd_type,
-+			      struct mwifiex_ds_wakeup_reason *wakeup_reason)
-+{
-+	int status = 0;
-+
-+	status = mwifiex_send_cmd(priv, HostCmd_CMD_HS_WAKEUP_REASON,
-+				  HostCmd_ACT_GEN_GET, 0, wakeup_reason,
-+				  cmd_type == MWIFIEX_SYNC_CMD);
-+
-+	return status;
-+}
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
 -- 
-1.8.1.4
+2.6.4
 
