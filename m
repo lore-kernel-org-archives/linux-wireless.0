@@ -1,169 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:52796 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933853AbcALHhk (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36628 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751603AbcACIhT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 02:37:40 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 20/26] staging: wilc1000: remove define TCP_ACK_FILTER
-Date: Tue, 12 Jan 2016 16:39:49 +0900
-Message-ID: <1452584395-24910-21-git-send-email-glen.lee@atmel.com> (sfid-20160112_083754_307451_E8EDF422)
-In-Reply-To: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
-References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 3 Jan 2016 03:37:19 -0500
+Received: by mail-pa0-f44.google.com with SMTP id yy13so89273464pab.3
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 00:37:19 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 21/30] staging: wilc1000: use int instead of u32
+Date: Sun,  3 Jan 2016 17:35:53 +0900
+Message-Id: <1451810162-16993-21-git-send-email-chaehyun.lim@gmail.com> (sfid-20160103_095249_112213_96DDB0C2)
+In-Reply-To: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes define TCP_ACK_FILTER and use it's feature codes.
-Add argument wilc to wilc_wlan_txq_remove because compile error happens.
+The variable i is used as array index so that it is better to use data
+type of int.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/Makefile    |  1 -
- drivers/staging/wilc1000/wilc_wlan.c | 22 ++--------------------
- 2 files changed, 2 insertions(+), 21 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
-index 90c3760..acc3f3e 100644
---- a/drivers/staging/wilc1000/Makefile
-+++ b/drivers/staging/wilc1000/Makefile
-@@ -4,7 +4,6 @@ ccflags-y += -DFIRMWARE_1002=\"atmel/wilc1002_firmware.bin\" \
- 		-DFIRMWARE_1003=\"atmel/wilc1003_firmware.bin\"
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index a3f120a..c0f30a2 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4306,7 +4306,7 @@ int wilc_del_allstation(struct wilc_vif *vif, u8 mac_addr[][ETH_ALEN])
+ 	struct del_all_sta *del_all_sta_info = &msg.body.del_all_sta_info;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 	u8 zero_addr[ETH_ALEN] = {0};
+-	u32 i;
++	int i;
+ 	u8 u8AssocNumb = 0;
  
- ccflags-y += -I$(src)/ -DWILC_ASIC_A0 -DWILC_DEBUGFS
--#ccflags-y += -DTCP_ACK_FILTER
- 
- wilc1000-objs := wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
- 			wilc_msgqueue.o \
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index e0696505..337a1ba 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -36,8 +36,7 @@ static inline void release_bus(struct wilc *wilc, BUS_RELEASE_T release)
- 	mutex_unlock(&wilc->hif_cs);
- }
- 
--#ifdef TCP_ACK_FILTER
--static void wilc_wlan_txq_remove(struct txq_entry_t *tqe)
-+static void wilc_wlan_txq_remove(struct wilc *wilc, struct txq_entry_t *tqe)
- {
- 
- 	if (tqe == wilc->txq_head) {
-@@ -54,7 +53,6 @@ static void wilc_wlan_txq_remove(struct txq_entry_t *tqe)
- 	}
- 	wilc->txq_entries -= 1;
- }
--#endif
- 
- static struct txq_entry_t *
- wilc_wlan_txq_remove_from_head(struct net_device *dev)
-@@ -146,7 +144,6 @@ static int wilc_wlan_txq_add_to_head(struct wilc *wilc, struct txq_entry_t *tqe)
- 	return 0;
- }
- 
--#ifdef	TCP_ACK_FILTER
- struct ack_session_info;
- struct ack_session_info {
- 	u32 seq_num;
-@@ -308,7 +305,7 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- 				pending_acks_info[i].ack_num);
- 			tqe = pending_acks_info[i].txqe;
- 			if (tqe) {
--				wilc_wlan_txq_remove(tqe);
-+				wilc_wlan_txq_remove(wilc, tqe);
- 				tqe->status = 1;
- 				if (tqe->tx_complete_func)
- 					tqe->tx_complete_func(tqe->priv,
-@@ -335,7 +332,6 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- 
- 	return 1;
- }
--#endif
- 
- static bool enabled = false;
- 
-@@ -344,12 +340,10 @@ void wilc_enable_tcp_ack_filter(bool value)
- 	enabled = value;
- }
- 
--#ifdef TCP_ACK_FILTER
- static bool is_tcp_ack_filter_enabled(void)
- {
- 	return enabled;
- }
--#endif
- 
- static int wilc_wlan_txq_add_cfg_pkt(struct wilc *wilc, u8 *buffer, u32 buffer_size)
- {
-@@ -373,9 +367,7 @@ static int wilc_wlan_txq_add_cfg_pkt(struct wilc *wilc, u8 *buffer, u32 buffer_s
- 	tqe->buffer_size = buffer_size;
- 	tqe->tx_complete_func = NULL;
- 	tqe->priv = NULL;
--#ifdef TCP_ACK_FILTER
- 	tqe->tcp_pending_ack_idx = NOT_TCP_ACK;
--#endif
- 	PRINT_D(TX_DBG, "Adding the config packet at the Queue tail\n");
- 
- 	if (wilc_wlan_txq_add_to_head(wilc, tqe))
-@@ -406,11 +398,9 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 	tqe->priv = priv;
- 
- 	PRINT_D(TX_DBG, "Adding mgmt packet at the Queue tail\n");
--#ifdef TCP_ACK_FILTER
- 	tqe->tcp_pending_ack_idx = NOT_TCP_ACK;
- 	if (is_tcp_ack_filter_enabled())
- 		tcp_process(dev, tqe);
--#endif
- 	wilc_wlan_txq_add_to_tail(dev, tqe);
- 	return wilc->txq_entries;
- }
-@@ -436,9 +426,7 @@ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 	tqe->buffer_size = buffer_size;
- 	tqe->tx_complete_func = func;
- 	tqe->priv = priv;
--#ifdef TCP_ACK_FILTER
- 	tqe->tcp_pending_ack_idx = NOT_TCP_ACK;
--#endif
- 	PRINT_D(TX_DBG, "Adding Network packet at the Queue tail\n");
- 	wilc_wlan_txq_add_to_tail(dev, tqe);
- 	return 1;
-@@ -643,9 +631,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 
- 		wilc_lock_timeout(wilc, &wilc->txq_add_to_head_cs,
- 					CFG_PKTS_TIMEOUT);
--#ifdef	TCP_ACK_FILTER
- 		wilc_wlan_txq_filter_dup_tcp_ack(dev);
--#endif
- 		PRINT_D(TX_DBG, "Getting the head of the TxQ\n");
- 		tqe = wilc_wlan_txq_get_first(wilc);
- 		i = 0;
-@@ -829,10 +815,8 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 				if (tqe->tx_complete_func)
- 					tqe->tx_complete_func(tqe->priv,
- 							      tqe->status);
--				#ifdef TCP_ACK_FILTER
- 				if (tqe->tcp_pending_ack_idx != NOT_TCP_ACK)
- 					pending_acks_info[tqe->tcp_pending_ack_idx].txqe = NULL;
--				#endif
- 				kfree(tqe);
- 			} else {
- 				break;
-@@ -1564,9 +1548,7 @@ int wilc_wlan_init(struct net_device *dev)
- 		ret = -EIO;
- 		goto _fail_;
- 	}
--#ifdef	TCP_ACK_FILTER
- 	init_tcp_tracking();
--#endif
- 
- 	return 1;
- 
+ 	if (!hif_drv) {
 -- 
-1.9.1
+2.6.4
 
