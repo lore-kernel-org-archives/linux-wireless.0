@@ -1,50 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:35700 "EHLO
-	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750722AbcAGQTq (ORCPT
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:36139 "EHLO
+	mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751301AbcACKRI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 11:19:46 -0500
-Received: by mail-io0-f174.google.com with SMTP id 77so226201236ioc.2
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2016 08:19:46 -0800 (PST)
+	Sun, 3 Jan 2016 05:17:08 -0500
+Received: by mail-lf0-f54.google.com with SMTP id z124so257189334lfa.3
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 02:17:07 -0800 (PST)
 MIME-Version: 1.0
-Date: Thu, 7 Jan 2016 09:19:45 -0700
-Message-ID: <CALnQHM3C=DVaTf58XDyh+rttVs-FSpc4ghozg9HJktEonq7w-g@mail.gmail.com> (sfid-20160107_172017_138652_5BA0D2A3)
-Subject: lost connectivity until "wpa_cli reassociate" is issued
-From: David Mosberger <davidm@egauge.net>
-To: linux-wireless@vger.kernel.org
+Date: Sun, 3 Jan 2016 12:17:06 +0200
+Message-ID: <CANUX_P3Wft5YhvckAzogXy-cV8Ngf8n+Y+6jn1Je3q7r-RDe_g@mail.gmail.com> (sfid-20160103_111712_598386_55F386C9)
+Subject: power save settings for WiFi
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Dan Williams <dcbw@redhat.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We are seeing a curious issue where WLAN connectivity sometimes
-gets stuck until a "wpa_cli reassociate" command is issued.
+Hi Dan,
 
-At the WPA level, everything appears to be working fine)
-(see thread starting at
-http://lists.infradead.org/pipermail/hostap/2016-January/034454.html).
+I wanted to debug something with power save control and saw that NM
+disables power save by default. This was a complete surprise for me.
+This probably is because Ubuntu upgraded my NM version to 1.0.4.
+I tried to enabled power save with:
 
-What's truly odd is when connectivity is stuck, you can often "ping" the
-network's gateway exactly once and then you either get no response anymore
-or, after a long time (like 40-60 seconds), the floodgate opens and
-(almost) all previously sent ping responses arrive all at the same time
-(in the latter case, connectivity is fine afterwards again).
+ nmcli c modify <MYSSID> 802-11-wireless.powersave 1
 
-This makes me wonder if there may be a packet queue that somehow gets
-stuck.
+That command returns 0, but power save is still disabled. Note that
+the decision to disable power save by default is a bit surprising.
+I understand that some device may not behave well with power save
+enabled, but then, I'd expect those (bad) devices to disable power
+save in the driver level.
 
-I have turned on mac80211 debugging but have not found anything
-that seems to correlate with the loss of connectivity.  All I know is that
-wpa_cli reassociate so far is the least intrusive workaround that seems
-to reliably bring back connectivity.
+Any advice on how can I re-allow power save by default since the
+command above didn't help?
 
-We are based on kernel 3.7.0 but have back-ported the mac80211 fixes
-from the linux-3.7.y stable branch.
+thanks.
 
-I'm not very familiar with the wireless stack, so any tips or hints on how to
-further debug this would be greatly appreciated.
-
-Thanks and best regards,
-
-  --david
--- 
-eGauge Systems LLC, http://egauge.net/, 1.877-EGAUGE1, fax 720.545.9768
+Emmanuel Grumbach
+egrumbach@gmail.com
