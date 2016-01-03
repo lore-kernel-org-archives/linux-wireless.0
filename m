@@ -1,78 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from glaubenleben.de ([85.214.105.140]:53793 "EHLO glaubenleben.de"
+Received: from mout.web.de ([212.227.15.3]:56578 "EHLO mout.web.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752155AbcA3RCQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2016 12:02:16 -0500
-From: Andreas Kemnade <andreas@kemnade.info>
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, hns@goldelico.com
-Cc: Andreas Kemnade <andreas@kemnade.info>
-Subject: [PATCH v3 1/6] libertas: fix pointer bugs for PS_MODE commands
-Date: Sat, 30 Jan 2016 18:01:51 +0100
-Message-Id: <1454173316-13444-2-git-send-email-andreas@kemnade.info> (sfid-20160130_180309_732985_8A78466C)
-In-Reply-To: <1454173316-13444-1-git-send-email-andreas@kemnade.info>
-References: <1454173316-13444-1-git-send-email-andreas@kemnade.info>
+	id S1751760AbcACMOU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Jan 2016 07:14:20 -0500
+Subject: Re: net-libertas: Better exception handling in
+ if_spi_host_to_card_worker()
+To: Arend van Spriel <aspriel@gmail.com>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <5686F0B2.5000000@users.sourceforge.net>
+ <56870866.7020000@cogentembedded.com>
+ <568785B3.5000905@users.sourceforge.net>
+ <alpine.DEB.2.02.1601020914100.2063@localhost6.localdomain6>
+ <5687939E.7010701@users.sourceforge.net> <5687A2C7.3000704@gmail.com>
+ <5687B2BC.8090901@users.sourceforge.net> <5688EBAC.5000701@gmail.com>
+Cc: Julia Lawall <julia.lawall@lip6.fr>,
+	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <5689105B.50005@users.sourceforge.net> (sfid-20160103_131442_403599_27398F0B)
+Date: Sun, 3 Jan 2016 13:13:15 +0100
+MIME-Version: 1.0
+In-Reply-To: <5688EBAC.5000701@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-struct cmd_ds_802_11_ps_mode
-contains the command header and a pointer to it was
-initialized with data points to the body which leads to
-mis-interpretation of the cmd_ds_802_11_ps_mode.action member.
-cmd[0] contains the header, &cmd[1] points beyond that.
-cmdnode->cmdbuf is a pointer to the command buffer
-This piece of code was unused since power saving was
-not enabled.
+>>> What the patch tries to do is avoid the extra 'if (err)'.
+>>
+>> Yes. - I propose to look at related consequences together with the usage
+>> of a popular short jump label once more.
+> 
+> When I read a subject saying "Better exception handling" it sounds like
+> a functional improvement. Your change does not change anything
+> functionally and may or may not save a bit of execution time depending
+> on how smart the compiler is.
 
-Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
----
-changes in v3:
-corrected paths
-changes in v2:
-improved commit message
+Can it eventually matter to skip another condition check in three cases?
 
- drivers/net/wireless/marvell/libertas/cmd.c     | 4 ++--
- drivers/net/wireless/marvell/libertas/cmdresp.c | 5 ++++-
- 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 0387a5b..40467d6 100644
---- a/drivers/net/wireless/marvell/libertas/cmd.c
-+++ b/drivers/net/wireless/marvell/libertas/cmd.c
-@@ -957,7 +957,7 @@ static void lbs_queue_cmd(struct lbs_private *priv,
- 
- 	/* Exit_PS command needs to be queued in the header always. */
- 	if (le16_to_cpu(cmdnode->cmdbuf->command) == CMD_802_11_PS_MODE) {
--		struct cmd_ds_802_11_ps_mode *psm = (void *) &cmdnode->cmdbuf;
-+		struct cmd_ds_802_11_ps_mode *psm = (void *)cmdnode->cmdbuf;
- 
- 		if (psm->action == cpu_to_le16(PS_MODE_ACTION_EXIT_PS)) {
- 			if (priv->psstate != PS_STATE_FULL_POWER)
-@@ -1387,7 +1387,7 @@ int lbs_execute_next_command(struct lbs_private *priv)
- 				 * PS command. Ignore it if it is not Exit_PS.
- 				 * otherwise send it down immediately.
- 				 */
--				struct cmd_ds_802_11_ps_mode *psm = (void *)&cmd[1];
-+				struct cmd_ds_802_11_ps_mode *psm = (void *)cmd;
- 
- 				lbs_deb_host(
- 				       "EXEC_NEXT_CMD: PS cmd, action 0x%02x\n",
-diff --git a/drivers/net/wireless/marvell/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index e5442e8..701125f 100644
---- a/drivers/net/wireless/marvell/libertas/cmdresp.c
-+++ b/drivers/net/wireless/marvell/libertas/cmdresp.c
-@@ -123,7 +123,10 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
- 	priv->cmd_timed_out = 0;
- 
- 	if (respcmd == CMD_RET(CMD_802_11_PS_MODE)) {
--		struct cmd_ds_802_11_ps_mode *psmode = (void *) &resp[1];
-+		/* struct cmd_ds_802_11_ps_mode also contains
-+		 * the header
-+		 */
-+		struct cmd_ds_802_11_ps_mode *psmode = (void *)resp;
- 		u16 action = le16_to_cpu(psmode->action);
- 
- 		lbs_deb_host(
--- 
-2.1.4
+> What you change does is confuse people reading the code.
 
+A few software developers might find this proposal unusual.
+
+
+> So please explain why your update improves exception handling here.
+> I don't see it.
+
+How does this feedback fit to the mentioned check avoidance?
+
+
+> The code is not making the driver more robust against failures
+
+That's true for this update suggestion.
+
+
+> in this function, which is what I think of reading "better exception handling".
+
+Other implementation details are affected by the shown fine-tuning.
+
+Regards,
+Markus
