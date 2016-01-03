@@ -1,55 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f65.google.com ([209.85.192.65]:33824 "EHLO
-	mail-qg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750759AbcAWPSB (ORCPT
+Received: from smtprelay0143.hostedemail.com ([216.40.44.143]:51767 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750855AbcACH33 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jan 2016 10:18:01 -0500
-Received: by mail-qg0-f65.google.com with SMTP id 94so7002273qgt.1
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2016 07:18:00 -0800 (PST)
-Date: Sat, 23 Jan 2016 10:15:48 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Henning Rogge <hrogge@gmail.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
-Subject: Re: [PATCH 2/2] mac80211: let unused MPP table entries timeout
-Message-ID: <20160123151548.GB4621@localhost> (sfid-20160123_161806_785475_9819CDB3)
-References: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
- <1453190672-9748-3-git-send-email-henning.rogge@fkie.fraunhofer.de>
- <20160122203008.GA4621@localhost>
- <CAGnRvur8eKjiwWCR69NESnMDQoA4qro1ryH=DoeMFRd1RPFKOQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGnRvur8eKjiwWCR69NESnMDQoA4qro1ryH=DoeMFRd1RPFKOQ@mail.gmail.com>
+	Sun, 3 Jan 2016 02:29:29 -0500
+Message-ID: <1451806163.4334.36.camel@perches.com> (sfid-20160103_083041_959818_1051F49F)
+Subject: Re: [PATCH 1/3] NFC-mei_phy: Refactoring for mei_nfc_connect()
+From: Joe Perches <joe@perches.com>
+To: SF Markus Elfring <elfring@users.sourceforge.net>,
+	Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+Date: Sat, 02 Jan 2016 23:29:23 -0800
+In-Reply-To: <5688C712.3070900@users.sourceforge.net>
+References: <566ABCD9.1060404@users.sourceforge.net>
+	 <56883849.2080304@users.sourceforge.net>
+	 <5688390B.3080800@users.sourceforge.net>
+	 <CAGRGNgWiHKLrHMUySnCpfiF1+C=QV-i4C4KNmziga3-E1CLfKA@mail.gmail.com>
+	 <5688C712.3070900@users.sourceforge.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 23, 2016 at 10:39:04AM +0100, Henning Rogge wrote:
-> > FYI I have a patch set I'm testing which rewrites a big chunk of
-> > the path table stuff.
+On Sun, 2016-01-03 at 08:00 +0100, SF Markus Elfring wrote:
+> > >         r = 0;
+> > > -
+> > > -err:
+> > > +free_reply:
+> > >         kfree(reply);
+> > > +free_cmd:
+> > >         kfree(cmd);
+> > > -
+> > 
+> > Why are you deleting the two blank lines here?
 > 
-> Does it include some cleanup paths for the MPP table? At the moment
-> the "missing cleanup" still allows remote users to make the Linux
-> kernel to allocate as much memory as it wants... with no way to free
-> it except for shutting down the interface.
+> Can they be unnecessary at this source code place
+> according to the Linux coding style convention?
 
-No, it needs these patches too.  I did harmonize them a little bit,
-so that e.g. the expiry check will be done during lookup, but I didn't
-add an equivalent to flush-by-proxy.
+As far as I know, there's no linux specific accepted
+convention for blank lines preceding labels.
 
-One issue it does address is that the path table can eventually shrink
-by virtue of the rhashtable, whereas now the bucket size is
-ever-growing.
+My personal preference is for a blank line before a
+new block, but not before the second and subsequent
+labels in an error handling block.
 
-> > Let me know if you want me to base on top.
-> 
-> I would like them to go in first... my experience of the kernel code
-> (outside some parts of the wifi stack) is not that good, so I don't
-> know how long I would need to adapt the patches to your new data
-> structures.
-
-Ok, sounds good, I'll just rebase on top of yours.
-
--- 
-Bob Copeland %% http://bobcopeland.com/
