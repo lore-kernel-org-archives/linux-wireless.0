@@ -1,54 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1050.oracle.com ([141.146.126.70]:27212 "EHLO
-	aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751808AbcASMqc (ORCPT
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:36093 "EHLO
+	mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751926AbcACIhb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 07:46:32 -0500
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-	by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id u0JBW2OC015977
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-	for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2016 11:32:03 GMT
-Date: Tue, 19 Jan 2016 14:30:44 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Chaehyun Lim <chaehyun.lim@gmail.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	chris.park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, johnny.kim@atmel.com,
-	tony.cho@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH 3/3] staging: wilc1000: use int type for counter variable
-Message-ID: <20160119113043.GA6370@mwanda> (sfid-20160119_134637_541627_9C5307FB)
-References: <1453199177-21085-1-git-send-email-chaehyun.lim@gmail.com>
- <1453199177-21085-3-git-send-email-chaehyun.lim@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1453199177-21085-3-git-send-email-chaehyun.lim@gmail.com>
+	Sun, 3 Jan 2016 03:37:31 -0500
+Received: by mail-pf0-f176.google.com with SMTP id 65so141451594pff.3
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 00:37:31 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 25/30] staging: wilc1000: rename u32DTIMPeriod in wilc_add_beacon
+Date: Sun,  3 Jan 2016 17:35:57 +0900
+Message-Id: <1451810162-16993-25-git-send-email-chaehyun.lim@gmail.com> (sfid-20160103_095248_848578_1B8FA1A6)
+In-Reply-To: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 19, 2016 at 07:26:17PM +0900, Chaehyun Lim wrote:
-> counter is used as for-loop control variable and indicating index of
-> struct wid array so that it is better to use int type.
-> There is no need to set to 0 when it is declared at the top of this
-> function. counter is initialized as 0 in for-loop statement.
-> 
-> Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
-> ---
->  drivers/staging/wilc1000/coreconfigurator.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-> index 86dfe77..7e8e423 100644
-> --- a/drivers/staging/wilc1000/coreconfigurator.c
-> +++ b/drivers/staging/wilc1000/coreconfigurator.c
-> @@ -591,7 +591,7 @@ s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo)
->  int wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
->  			 u32 count, u32 drv)
->  {
-> -	s32 counter = 0;
-> +	int counter;
+This patch renames u32DTIMPeriod to dtim_period to avoid camelcase.
 
-rename it to "i" as well.  "int i;"
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-regards,
-dan carpenter
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 615ae59..9d9cf91 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4159,7 +4159,7 @@ int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg)
+ 	return result;
+ }
+ 
+-int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 u32DTIMPeriod,
++int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 dtim_period,
+ 		    u32 u32HeadLen, u8 *pu8Head, u32 u32TailLen, u8 *pu8Tail)
+ {
+ 	int result = 0;
+@@ -4179,7 +4179,7 @@ int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 u32DTIMPeriod,
+ 	msg.id = HOST_IF_MSG_ADD_BEACON;
+ 	msg.vif = vif;
+ 	pstrSetBeaconParam->interval = interval;
+-	pstrSetBeaconParam->dtim_period = u32DTIMPeriod;
++	pstrSetBeaconParam->dtim_period = dtim_period;
+ 	pstrSetBeaconParam->head_len = u32HeadLen;
+ 	pstrSetBeaconParam->head = kmemdup(pu8Head, u32HeadLen, GFP_KERNEL);
+ 	if (!pstrSetBeaconParam->head) {
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 93a8abb..58b73d6 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -343,7 +343,7 @@ s32 wilc_hif_set_cfg(struct wilc_vif *vif,
+ 		     struct cfg_param_val *pstrCfgParamVal);
+ s32 wilc_init(struct net_device *dev, struct host_if_drv **phWFIDrv);
+ s32 wilc_deinit(struct wilc_vif *vif);
+-int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 u32DTIMPeriod,
++int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 dtim_period,
+ 		    u32 u32HeadLen, u8 *pu8Head, u32 u32TailLen, u8 *pu8Tail);
+ int wilc_del_beacon(struct wilc_vif *vif);
+ int wilc_add_station(struct wilc_vif *vif, struct add_sta_param *sta_param);
+-- 
+2.6.4
 
