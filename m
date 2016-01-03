@@ -1,103 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f169.google.com ([209.85.223.169]:34428 "EHLO
-	mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755098AbcAXWkL (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36410 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751101AbcACIgS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jan 2016 17:40:11 -0500
-Received: by mail-io0-f169.google.com with SMTP id 1so135204530ion.1
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jan 2016 14:40:11 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1453527309-23881-1-git-send-email-mar.kolya@gmail.com>
-References: <1453527309-23881-1-git-send-email-mar.kolya@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 25 Jan 2016 09:39:51 +1100
-Message-ID: <CAGRGNgUPEaMrxjT5McKSzpxeZke-zDKeqMsoT+76d90KUwzcyA@mail.gmail.com> (sfid-20160124_234019_468492_00C259E7)
-Subject: Re: [PATCH] iwldvm: fix chain gain calibration when firmware return
- zero values
-To: Nikolay Martynov <mar.kolya@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Wey-Yi Guy <wey-yi.w.guy@intel.com>,
-	Intel Linux Wireless <ilw@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 3 Jan 2016 03:36:18 -0500
+Received: by mail-pa0-f44.google.com with SMTP id yy13so89267106pab.3
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 00:36:17 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 01/30] staging: wilc1000: rename u32duration in struct remain_ch
+Date: Sun,  3 Jan 2016 17:35:33 +0900
+Message-Id: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160103_093637_717792_5C526E21)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Nikolay,
+The patch renames u32duration to duration that is a member of struct
+remain_ch. The prefix u32 shows data type of its member, but there is no
+need to use u32 prefix to represent data type.
 
-A couple of minor points:
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-On Sat, Jan 23, 2016 at 4:35 PM, Nikolay Martynov <mar.kolya@gmail.com> wrote:
-> From: Nikolay Martynov <(none)>
-
-You really need an email address here instead of "(none)" as this will
-be used for the author field of the eventual commit. Check the "user"
-section of your git configuration. (Try git config --list)
-
-> It looks like sometimes firmware returns zero for chain noise and signal
-> during calibration period. This seems to be a known problem and current
-> implementation accounts for this by ignoring invalid data when all chains
-> return zero signal and noise.
->
-> The problem is that sometimes firmware returns zero for only one chain for
-> some (not all) beacons used for calibration. This leads to perfectly valid
-> chains be disabled and may cause invalid gain settings.
-> For example this is calibration data taken on laptop with Intel 6300 card
-> with all three antennas attached:
->
-> active_chains:                   3
-> chain_noise_a:                   312
-> chain_noise_b:                   297
-> chain_noise_c:                   0
-> chain_signal_a:                  549
-> chain_signal_b:                  513
-> chain_signal_c:                  0
-> beacon_count:                    16
-> disconn_array:                   0 0 1
-> delta_gain_code:                 4 0 0
-> radio_write:                     1
-> state:                           3
->
-> This patch changes statistics gathering to make sure that zero noise
-> results are ignored for valid rx chains. The rationale being that even if
-> anntenna is not connected we should be able to see non zero noise if rx
-> chain is present.
->
-> This patch fixes the problem of disabling working chains on hardware I
-> have (6300 and 5300). It also works fine in case one 3-chain hardware has
-> only two antennas attached.
->
-> Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
-> ---
->  drivers/net/wireless/iwlwifi/dvm/calib.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
->
-> diff --git a/drivers/net/wireless/iwlwifi/dvm/calib.c b/drivers/net/wireless/iwlwifi/dvm/calib.c
-> index 20e6aa9..59e73e2 100644
-> --- a/drivers/net/wireless/iwlwifi/dvm/calib.c
-> +++ b/drivers/net/wireless/iwlwifi/dvm/calib.c
-> @@ -1026,6 +1026,18 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv)
->
->         spin_unlock_bh(&priv->statistics.lock);
->
-> +       /* Sometimes firmware returns zero for chain noise and signal
-> +        * even if chain is present and antenna is connected. This
-> +        * often results in perfectly valid chains being disabled.
-> +        * Ignore statistics if it contains zero noise for valid rx
-> +        * chain: even with antenna disconnected we should hear some noise.
-> +        */
-> +       if (((priv->nvm_data->valid_rx_ant & (1 << 0)) && chain_noise_a == 0) ||
-> +           ((priv->nvm_data->valid_rx_ant & (2 << 0)) && chain_noise_b == 0) ||
-> +           ((priv->nvm_data->valid_rx_ant & (3 << 0)) && chain_noise_c == 0)) {
-
-To expand on Emmanuel's comment, 3 << 0 is equivalent to 3. If you're
-trying to set specific bits then you need to use the BIT() macro,
-otherwise just get rid of the "<< 0"s.
-
-Thanks,
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 5a97a9d..39fa5a3 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2558,7 +2558,7 @@ ERRORHANDLER:
+ 		hif_drv->remain_on_ch_timer.data = (unsigned long)vif;
+ 		mod_timer(&hif_drv->remain_on_ch_timer,
+ 			  jiffies +
+-			  msecs_to_jiffies(pstrHostIfRemainOnChan->u32duration));
++			  msecs_to_jiffies(pstrHostIfRemainOnChan->duration));
+ 
+ 		if (hif_drv->remain_on_ch.ready)
+ 			hif_drv->remain_on_ch.ready(hif_drv->remain_on_ch.arg);
+@@ -4083,7 +4083,7 @@ s32 wilc_remain_on_channel(struct wilc_vif *vif, u32 u32SessionID,
+ 	msg.body.remain_on_ch.expired = RemainOnChanExpired;
+ 	msg.body.remain_on_ch.ready = RemainOnChanReady;
+ 	msg.body.remain_on_ch.arg = pvUserArg;
+-	msg.body.remain_on_ch.u32duration = u32duration;
++	msg.body.remain_on_ch.duration = u32duration;
+ 	msg.body.remain_on_ch.id = u32SessionID;
+ 	msg.vif = vif;
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index f90a530..a2f428f 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -240,7 +240,7 @@ struct ba_session_info {
+ 
+ struct remain_ch {
+ 	u16 ch;
+-	u32 u32duration;
++	u32 duration;
+ 	wilc_remain_on_chan_expired expired;
+ 	wilc_remain_on_chan_ready ready;
+ 	void *arg;
 -- 
-Julian Calaby
+2.6.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
