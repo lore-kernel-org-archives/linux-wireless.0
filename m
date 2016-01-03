@@ -1,137 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:33456 "EHLO
-	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752924AbcAZLaA (ORCPT
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:33145 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751926AbcACIhn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 06:30:00 -0500
-MIME-Version: 1.0
-In-Reply-To: <20160126105455.GA19674@gondor.apana.org.au>
-References: <20160124131021.GA31153@gondor.apana.org.au>
-	<E1aNKYy-0008E6-GI@gondolin.me.apana.org.au>
-	<CAOi1vP9jmMYHR21UeAO175susZ5V74vcXyoxwayBVSTFHxjhBQ@mail.gmail.com>
-	<20160126105455.GA19674@gondor.apana.org.au>
-Date: Tue, 26 Jan 2016 12:29:57 +0100
-Message-ID: <CAOi1vP9kB5a-JeZ1PriwyQO0XH4Qh3UKidp==NPvVw-AsL=uqw@mail.gmail.com> (sfid-20160126_123019_799433_6DD70C87)
-Subject: Re: [PATCH 16/26] libceph: Use skcipher
-From: Ilya Dryomov <idryomov@gmail.com>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, devel@driverdev.osuosl.org,
-	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
-	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org,
-	Ceph Development <ceph-devel@vger.kernel.org>,
-	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
-	Lars Ellenberg <drbd-dev@lists.linbit.com>,
-	open-iscsi@googlegroups.com
-Content-Type: text/plain; charset=UTF-8
+	Sun, 3 Jan 2016 03:37:43 -0500
+Received: by mail-pa0-f45.google.com with SMTP id cy9so181769033pac.0
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 00:37:43 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 29/30] staging: wilc1000: rename pu8Tail in wilc_add_beacon
+Date: Sun,  3 Jan 2016 17:36:01 +0900
+Message-Id: <1451810162-16993-29-git-send-email-chaehyun.lim@gmail.com> (sfid-20160103_095247_110535_2B76E3AA)
+In-Reply-To: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 26, 2016 at 11:54 AM, Herbert Xu
-<herbert@gondor.apana.org.au> wrote:
-> On Mon, Jan 25, 2016 at 05:18:47PM +0100, Ilya Dryomov wrote:
->>
->> Could you get rid of ivsize instead of assigning to it - see the
->> attached diff?
->
-> How about an incremental patch like this? Thanks!
->
-> ---8<---
-> From: Ilya Dryomov <idryomov@gmail.com>
-> Subject: libceph: Remove unnecessary ivsize variables
->
-> This patch removes the unnecessary ivsize variabls as they always
-> have the value of AES_BLOCK_SIZE.
->
-> Signed-off-by: Ilya Dryomov <idryomov@gmail.com>
->
-> diff --git a/net/ceph/crypto.c b/net/ceph/crypto.c
-> index fb9cb2b..db2847a 100644
-> --- a/net/ceph/crypto.c
-> +++ b/net/ceph/crypto.c
-> @@ -166,8 +166,7 @@ static int ceph_aes_encrypt(const void *key, int key_len,
->         struct crypto_skcipher *tfm = ceph_crypto_alloc_cipher();
->         SKCIPHER_REQUEST_ON_STACK(req, tfm);
->         int ret;
-> -       int ivsize = AES_BLOCK_SIZE;
-> -       char iv[ivsize];
-> +       char iv[AES_BLOCK_SIZE];
->         size_t zero_padding = (0x10 - (src_len & 0x0f));
->         char pad[16];
->
-> @@ -186,7 +185,7 @@ static int ceph_aes_encrypt(const void *key, int key_len,
->                 goto out_tfm;
->
->         crypto_skcipher_setkey((void *)tfm, key, key_len);
-> -       memcpy(iv, aes_iv, ivsize);
-> +       memcpy(iv, aes_iv, AES_BLOCK_SIZE);
->
->         skcipher_request_set_tfm(req, tfm);
->         skcipher_request_set_callback(req, 0, NULL, NULL);
-> @@ -229,8 +228,7 @@ static int ceph_aes_encrypt2(const void *key, int key_len, void *dst,
->         struct crypto_skcipher *tfm = ceph_crypto_alloc_cipher();
->         SKCIPHER_REQUEST_ON_STACK(req, tfm);
->         int ret;
-> -       int ivsize = AES_BLOCK_SIZE;
-> -       char iv[ivsize];
-> +       char iv[AES_BLOCK_SIZE];
->         size_t zero_padding = (0x10 - ((src1_len + src2_len) & 0x0f));
->         char pad[16];
->
-> @@ -250,7 +248,7 @@ static int ceph_aes_encrypt2(const void *key, int key_len, void *dst,
->                 goto out_tfm;
->
->         crypto_skcipher_setkey((void *)tfm, key, key_len);
-> -       memcpy(iv, aes_iv, ivsize);
-> +       memcpy(iv, aes_iv, AES_BLOCK_SIZE);
->
->         skcipher_request_set_tfm(req, tfm);
->         skcipher_request_set_callback(req, 0, NULL, NULL);
-> @@ -294,8 +292,7 @@ static int ceph_aes_decrypt(const void *key, int key_len,
->         struct crypto_skcipher *tfm = ceph_crypto_alloc_cipher();
->         SKCIPHER_REQUEST_ON_STACK(req, tfm);
->         char pad[16];
-> -       int ivsize = AES_BLOCK_SIZE;
-> -       char iv[16];
-> +       char iv[AES_BLOCK_SIZE];
->         int ret;
->         int last_byte;
->
-> @@ -310,7 +307,7 @@ static int ceph_aes_decrypt(const void *key, int key_len,
->                 goto out_tfm;
->
->         crypto_skcipher_setkey((void *)tfm, key, key_len);
-> -       memcpy(iv, aes_iv, ivsize);
-> +       memcpy(iv, aes_iv, AES_BLOCK_SIZE);
->
->         skcipher_request_set_tfm(req, tfm);
->         skcipher_request_set_callback(req, 0, NULL, NULL);
-> @@ -363,8 +360,7 @@ static int ceph_aes_decrypt2(const void *key, int key_len,
->         struct crypto_skcipher *tfm = ceph_crypto_alloc_cipher();
->         SKCIPHER_REQUEST_ON_STACK(req, tfm);
->         char pad[16];
-> -       int ivsize = AES_BLOCK_SIZE;
-> -       char iv[ivsize];
-> +       char iv[AES_BLOCK_SIZE];
->         int ret;
->         int last_byte;
->
-> @@ -380,7 +376,7 @@ static int ceph_aes_decrypt2(const void *key, int key_len,
->                 goto out_tfm;
->
->         crypto_skcipher_setkey((void *)tfm, key, key_len);
-> -       memcpy(iv, aes_iv, ivsize);
-> +       memcpy(iv, aes_iv, AES_BLOCK_SIZE);
->
->         skcipher_request_set_tfm(req, tfm);
->         skcipher_request_set_callback(req, 0, NULL, NULL);
+This patch renames pu8Tail to tail to avoid camelcase.
 
-LGTM.  You want to take it through crypto?
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 ++--
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-Thanks,
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c81c749..8f8c583 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4160,7 +4160,7 @@ int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg)
+ }
+ 
+ int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 dtim_period,
+-		    u32 head_len, u8 *head, u32 tail_len, u8 *pu8Tail)
++		    u32 head_len, u8 *head, u32 tail_len, u8 *tail)
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+@@ -4189,7 +4189,7 @@ int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 dtim_period,
+ 	pstrSetBeaconParam->tail_len = tail_len;
+ 
+ 	if (tail_len > 0) {
+-		pstrSetBeaconParam->tail = kmemdup(pu8Tail, tail_len,
++		pstrSetBeaconParam->tail = kmemdup(tail, tail_len,
+ 						   GFP_KERNEL);
+ 		if (!pstrSetBeaconParam->tail) {
+ 			result = -ENOMEM;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 7e4ea18..b61b484 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -344,7 +344,7 @@ s32 wilc_hif_set_cfg(struct wilc_vif *vif,
+ s32 wilc_init(struct net_device *dev, struct host_if_drv **phWFIDrv);
+ s32 wilc_deinit(struct wilc_vif *vif);
+ int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 dtim_period,
+-		    u32 head_len, u8 *head, u32 tail_len, u8 *pu8Tail);
++		    u32 head_len, u8 *head, u32 tail_len, u8 *tail);
+ int wilc_del_beacon(struct wilc_vif *vif);
+ int wilc_add_station(struct wilc_vif *vif, struct add_sta_param *sta_param);
+ int wilc_del_allstation(struct wilc_vif *vif, u8 mac_addr[][ETH_ALEN]);
+-- 
+2.6.4
 
-                Ilya
