@@ -1,41 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38576 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932118AbcAYNPi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 08:15:38 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Glen Lee <glen.lee@atmel.com>
-Cc: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
-	<linux-wireless@vger.kernel.org>, <tony.cho@atmel.com>,
-	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: Re: [PATCH V2 00/26] use unified firmware and add ops in cfg
-References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
-Date: Mon, 25 Jan 2016 15:15:31 +0200
-In-Reply-To: <1453707330-13526-1-git-send-email-glen.lee@atmel.com> (Glen
-	Lee's message of "Mon, 25 Jan 2016 16:35:04 +0900")
-Message-ID: <87vb6hu7f0.fsf@purkki.adurom.net> (sfid-20160125_141541_227417_04995FD6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from m12-13.163.com ([220.181.12.13]:43980 "EHLO m12-13.163.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751941AbcADH4N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jan 2016 02:56:13 -0500
+From: Jia-Ju Bai <baijiaju1990@163.com>
+To: sgruszka@redhat.com, helmut.schaa@googlemail.com,
+	kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@163.com>
+Subject: [PATCH] rt2x00pci: Disable memory-write-invalidate when the driver exits
+Date: Mon,  4 Jan 2016 15:55:38 +0800
+Message-Id: <1451894138-3482-1-git-send-email-baijiaju1990@163.com> (sfid-20160104_085632_168183_A6AA8544)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Glen Lee <glen.lee@atmel.com> writes:
+The driver calls pci_set_mwi to enable memory-write-invalidate when it
+is initialized, but does not call pci_clear_mwi when it is removed. Many
+other drivers calls pci_clear_mwi when pci_set_mwi is called, such as
+r8169, 8139cp and e1000.
 
-> This patch series contains                                                      
-> * support suspend and resume functionality                                      
-> * use a unified firmware for all mode of operations(station, ap, p2p)           
-> * support Station/AP concurrency                                                
-> * increase link speed                                                           
-> * add a cfg operation for adjusting the tx power                                
-> * fix bug on p2p, WEP security and chaning virtual interface
->
-> Changes in V2: details in each patch files.
->  - 0004-staging-wilc1000-add-sdio-resume-suspend.patch
+This patch adds pci_clear_mwi in error handling and removal procedure, 
+which can fix the problem.
 
-It's good practise to also add "staging: wilc1000: " prefix to the cover
-letter.
+Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+---
+ drivers/net/wireless/rt2x00/rt2x00pci.c |    2 ++
+ 1 file changed, 2 insertions(+)
 
+diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
+index d93db4b..eb6dbcd 100644
+--- a/drivers/net/wireless/rt2x00/rt2x00pci.c
++++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
+@@ -149,6 +149,7 @@ exit_free_device:
+ 	ieee80211_free_hw(hw);
+ 
+ exit_release_regions:
++	pci_clear_mwi(pci_dev);
+ 	pci_release_regions(pci_dev);
+ 
+ exit_disable_device:
+@@ -173,6 +174,7 @@ void rt2x00pci_remove(struct pci_dev *pci_dev)
+ 	/*
+ 	 * Free the PCI device data.
+ 	 */
++	pci_clear_mwi(pci_dev);
+ 	pci_disable_device(pci_dev);
+ 	pci_release_regions(pci_dev);
+ }
 -- 
-Kalle Valo
+1.7.9.5
+
+
