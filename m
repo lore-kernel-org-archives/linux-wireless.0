@@ -1,107 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f43.google.com ([209.85.215.43]:36260 "EHLO
-	mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751412AbcAXUHc (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jan 2016 15:07:32 -0500
-Received: by mail-lf0-f43.google.com with SMTP id h129so74100361lfh.3
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jan 2016 12:07:31 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1453527309-23881-1-git-send-email-mar.kolya@gmail.com>
-References: <1453527309-23881-1-git-send-email-mar.kolya@gmail.com>
-Date: Sun, 24 Jan 2016 22:07:30 +0200
-Message-ID: <CANUX_P3FyFOu5gfyOq8aGk9AkUN=PVx8jbgcf3_0tegBWszEjQ@mail.gmail.com> (sfid-20160124_210735_982641_B8EB6328)
-Subject: Re: [PATCH] iwldvm: fix chain gain calibration when firmware return
- zero values
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	linuxwifi <linuxwifi@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:59931 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752013AbcADQO7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jan 2016 11:14:59 -0500
+Message-ID: <1451924098.8568.8.camel@redhat.com> (sfid-20160104_171503_038416_37368F69)
+Subject: Re: power save settings for WiFi
+From: Dan Williams <dcbw@redhat.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Mon, 04 Jan 2016 10:14:58 -0600
+In-Reply-To: <CANUX_P3Wft5YhvckAzogXy-cV8Ngf8n+Y+6jn1Je3q7r-RDe_g@mail.gmail.com>
+References: <CANUX_P3Wft5YhvckAzogXy-cV8Ngf8n+Y+6jn1Je3q7r-RDe_g@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Sun, 2016-01-03 at 12:17 +0200, Emmanuel Grumbach wrote:
+> Hi Dan,
+> 
+> I wanted to debug something with power save control and saw that NM
+> disables power save by default. This was a complete surprise for me.
+> This probably is because Ubuntu upgraded my NM version to 1.0.4.
 
-Note that Wey-Yi has stepped down from maintaining iwlwifi for a while now.
+Note that upstream NM 1.0.x does not support powersave, that was
+apparently backported from NM 1.2.x by Ubuntu (?).  So anything I'm
+talking about here applies to NM 1.2...
 
-On Sat, Jan 23, 2016 at 7:35 AM, Nikolay Martynov <mar.kolya@gmail.com> wrote:
-> From: Nikolay Martynov <(none)>
->
-> It looks like sometimes firmware returns zero for chain noise and signal
-> during calibration period. This seems to be a known problem and current
-> implementation accounts for this by ignoring invalid data when all chains
-> return zero signal and noise.
->
-> The problem is that sometimes firmware returns zero for only one chain for
-> some (not all) beacons used for calibration. This leads to perfectly valid
-> chains be disabled and may cause invalid gain settings.
-> For example this is calibration data taken on laptop with Intel 6300 card
-> with all three antennas attached:
->
-> active_chains:                   3
-> chain_noise_a:                   312
-> chain_noise_b:                   297
-> chain_noise_c:                   0
-> chain_signal_a:                  549
-> chain_signal_b:                  513
-> chain_signal_c:                  0
-> beacon_count:                    16
-> disconn_array:                   0 0 1
-> delta_gain_code:                 4 0 0
-> radio_write:                     1
-> state:                           3
->
-> This patch changes statistics gathering to make sure that zero noise
-> results are ignored for valid rx chains. The rationale being that even if
-> anntenna is not connected we should be able to see non zero noise if rx
-> chain is present.
->
-> This patch fixes the problem of disabling working chains on hardware I
-> have (6300 and 5300). It also works fine in case one 3-chain hardware has
-> only two antennas attached.
+> I tried to enabled power save with:
+> 
+>  nmcli c modify <MYSSID> 802-11-wireless.powersave 1
+> 
+> That command returns 0, but power save is still disabled. Note that
 
-So how will that work if an antenna is disconnected? You always seem
-to ignore the sampling that returned 0.
+This simply modifies the saved configuration, it doesn't modify the
+runtime value.  To change that, the connection must be bounced. 
+ Upcoming NM versions will support live changes by reflecting what you
+do with nmcli to the runtime state of the device (or IP
+addresses/routes/etc).  But not in 1.2 and lower.
 
->
-> Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
-> ---
->  drivers/net/wireless/iwlwifi/dvm/calib.c | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
->
-> diff --git a/drivers/net/wireless/iwlwifi/dvm/calib.c b/drivers/net/wireless/iwlwifi/dvm/calib.c
-> index 20e6aa9..59e73e2 100644
-> --- a/drivers/net/wireless/iwlwifi/dvm/calib.c
-> +++ b/drivers/net/wireless/iwlwifi/dvm/calib.c
-> @@ -1026,6 +1026,18 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv)
->
->         spin_unlock_bh(&priv->statistics.lock);
->
-> +       /* Sometimes firmware returns zero for chain noise and signal
-> +        * even if chain is present and antenna is connected. This
-> +        * often results in perfectly valid chains being disabled.
-> +        * Ignore statistics if it contains zero noise for valid rx
-> +        * chain: even with antenna disconnected we should hear some noise.
-> +        */
-> +       if (((priv->nvm_data->valid_rx_ant & (1 << 0)) && chain_noise_a == 0) ||
-> +           ((priv->nvm_data->valid_rx_ant & (2 << 0)) && chain_noise_b == 0) ||
-> +           ((priv->nvm_data->valid_rx_ant & (3 << 0)) && chain_noise_c == 0)) {
-> +               return;
-> +       }
+So 'nmcli con up <MYSSID>' *should* enable powersave on the device.
 
-I guess this is a typo, you wanted BIT(1), BIT(2) and BIT(3), right?
+> the decision to disable power save by default is a bit surprising.
+> I understand that some device may not behave well with power save
+> enabled, but then, I'd expect those (bad) devices to disable power
+> save in the driver level.
 
-> +
->         data->beacon_count++;
->
->         data->chain_noise_a = (chain_noise_a + data->chain_noise_a);
-> --
-> 2.7.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+When adding new features to NM (like powersave) we attempt to not
+horribly break existing use-cases.  Which, for users of devices where
+powersave doesn't work very well, would mean breaking their connection
+by enabling it by default.  However, NM could have handled this better
+by leaving the driver-default value enabled unless the user explicitly
+sets the 'powersave' property.  Which it should really do...
+
+I've filed https://bugzilla.gnome.org/show_bug.cgi?id=760125 for that.
+
+Dan
