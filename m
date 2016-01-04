@@ -1,44 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:36169 "EHLO
-	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752280AbcABAe2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2016 19:34:28 -0500
-From: Cong Wang <xiyou.wangcong@gmail.com>
-To: netdev@vger.kernel.org
-Cc: dvyukov@google.com, linux-wireless@vger.kernel.org,
-	Cong Wang <xiyou.wangcong@gmail.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [Patch net] nfc: use GFP_USER for user-controlled kmalloc
-Date: Fri,  1 Jan 2016 16:34:16 -0800
-Message-Id: <1451694857-21873-1-git-send-email-xiyou.wangcong@gmail.com> (sfid-20160102_013514_354319_84A95564)
+Received: from mout.web.de ([212.227.15.3]:63022 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753318AbcADMd3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jan 2016 07:33:29 -0500
+Subject: Re: rsi: Delete unnecessary variable initialisations in
+ rsi_send_mgmt_pkt()
+To: Dan Carpenter <dan.carpenter@oracle.com>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <5687E169.4070704@users.sourceforge.net>
+ <5687E203.1070404@users.sourceforge.net> <20160104092857.GD5284@mwanda>
+ <568A4CFF.8060600@users.sourceforge.net> <20160104114849.GH5284@mwanda>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Kalle Valo <kvalo@codeaurora.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <568A668D.8090007@users.sourceforge.net> (sfid-20160104_133356_455988_9621B6E4)
+Date: Mon, 4 Jan 2016 13:33:17 +0100
+MIME-Version: 1.0
+In-Reply-To: <20160104114849.GH5284@mwanda>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reported-by: Dmitry Vyukov <dvyukov@google.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Cc: Samuel Ortiz <sameo@linux.intel.com>
-Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
----
- net/nfc/llcp_commands.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+>> May I resend a consistent patch series for the source file
+>> "drivers/net/wireless/rsi/rsi_91x_pkt.c" in the near future?
+> 
+> If you were sending checkpatch.pl fixes that would be easier to deal with
 
-diff --git a/net/nfc/llcp_commands.c b/net/nfc/llcp_commands.c
-index 3621a90..5d94055 100644
---- a/net/nfc/llcp_commands.c
-+++ b/net/nfc/llcp_commands.c
-@@ -729,7 +729,7 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
- 	if (local == NULL)
- 		return -ENODEV;
- 
--	msg_data = kzalloc(len, GFP_KERNEL);
-+	msg_data = kzalloc(len, GFP_USER | __GFP_NOWARN);
- 	if (msg_data == NULL)
- 		return -ENOMEM;
- 
--- 
-1.8.3.1
+Does this feedback mean that you would accept any more suggestions around
+source code updates which are derived from recommendations of this script?
+
+
+> but you are sending hundreds of "controversial" cleanups.
+
+It depends on the time range you look at for my proposals.
+
+
+> They are controversial in the sense that they don't fix anything
+> against official kernel style
+
+I find that I suggested also few changes that fit to this aspect.
+
+
+> and they go against the author's original intention.
+
+Can it occasionally help to reconsider the "first approach"?
+
+
+> I tend to agree that useless initializers are bad
+
+Would any more software developers like to share their opinions on this detail?
+
+
+> and disable GCCs uninitialized variable warnings
+
+I hope that this software area can be also improved.
+
+
+> but just because I agree with you doesn't make it official kernel style.
+
+That is fine. - Will it become useful to clarify any extensions
+to a document like "CodingStyle"?
+
+
+> It's slightly rude to go against the author's intention.
+
+I just dare to propose further special changes.
+
+Regards,
+Markus
 
