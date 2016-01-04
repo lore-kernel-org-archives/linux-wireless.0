@@ -1,45 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49980 "EHLO sipsolutions.net"
+Received: from canardo.mork.no ([148.122.252.1]:55046 "EHLO canardo.mork.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753655AbcALNFy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 08:05:54 -0500
-Message-ID: <1452603950.3473.6.camel@sipsolutions.net> (sfid-20160112_140638_454602_C5456579)
-Subject: Re: How to revert RFKILL_IOC_NOINPUT ioctl?
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bastien Nocera <hadess@hadess.net>, linux-wireless@vger.kernel.org
-Date: Tue, 12 Jan 2016 14:05:50 +0100
-In-Reply-To: <1452600332.17103.10.camel@hadess.net>
-References: <1452600332.17103.10.camel@hadess.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752209AbcADNSN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jan 2016 08:18:13 -0500
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: SF Markus Elfring <elfring@users.sourceforge.net>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Kalle Valo <kvalo@codeaurora.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH 1/3] rsi: Delete unnecessary variable initialisations in rsi_send_mgmt_pkt()
+References: <566ABCD9.1060404@users.sourceforge.net>
+	<5687E169.4070704@users.sourceforge.net>
+	<5687E203.1070404@users.sourceforge.net>
+	<20160104092857.GD5284@mwanda>
+Date: Mon, 04 Jan 2016 14:17:40 +0100
+In-Reply-To: <20160104092857.GD5284@mwanda> (Dan Carpenter's message of "Mon,
+	4 Jan 2016 12:28:57 +0300")
+Message-ID: <87poxhiivf.fsf@nemi.mork.no> (sfid-20160104_141835_239811_FA7C20C4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-01-12 at 13:05 +0100, Bastien Nocera wrote:
-> 
-> I realised looking at the rfkill kernel configuration, and noticed
-> that it wasn't possible to disable CONFIG_RFKILL_INPUT without
-> enabling the expert mode. "Why" would be the first question in this
-> mail.
+Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-I guess the answer would be that at the time, you couldn't really get a
-fully functional setup without it, and there wasn't really any default
-userspace to deal with it. Perhaps there is now at least a bigger
-chance that userspace will deal with it.
+> Please stop sending cleanup patches, Markus.  Just send fixes.
 
-That said, I don't really see a need to disable this code since
-userspace that wants to handle it should use the ioctl to disable the
-in-kernel code (if it's at all present.)
+Thanks for your continued but unwarranted belief in AI.
 
-> See https://lists.fedoraproject.org/archives/list/kernel@lists.fedora
-> project.org/thread/FWCOCU2ODZHK7AQVOWSFJLBXL744LYNO/
-> 
-> To make my GNOME code work, I'd need to disable rfkill-input. But if
-> I still wanted to allow rfkill-input to work when GNOME isn't
-> running, such as when switching to a console, or another less-capable 
-> desktop environment. But there doesn't seem to be a counterpart
-> for RFKILL_IOC_NOINPUT. Any reason why?
+Do you mind if I remind you of https://lkml.org/lkml/2014/11/3/162 ?
+I am sure there are lots and lots of other examples.  There is no reason
+to believe this will ever stop.  He just goes into Eliza mode.
 
-It's automatically released when you close the fd.
 
-johannes
+Bjørn
