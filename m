@@ -1,43 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f180.google.com ([209.85.217.180]:34864 "EHLO
-	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751970AbcAEKf6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 05:35:58 -0500
-Received: by mail-lb0-f180.google.com with SMTP id bc4so172036476lbc.2
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2016 02:35:57 -0800 (PST)
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, j@w1.fi,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Subject: [PATCH v2 2/2] ath9k: use min rate when MCC and nullfunc
-Date: Tue,  5 Jan 2016 11:35:34 +0100
-Message-Id: <1451990134-15183-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20160105_113607_793565_95B546E4)
-In-Reply-To: <1451990134-15183-1-git-send-email-janusz.dziedzic@tieto.com>
-References: <1451990134-15183-1-git-send-email-janusz.dziedzic@tieto.com>
+Received: from mail.us.es ([193.147.175.20]:54313 "EHLO mail.us.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752261AbcADRc0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jan 2016 12:32:26 -0500
+Received: from antivirus1-rhel7.int (unknown [192.168.2.11])
+	by mail.us.es (Postfix) with ESMTP id 727611324CC
+	for <linux-wireless@vger.kernel.org>; Mon,  4 Jan 2016 18:32:23 +0100 (CET)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+	by antivirus1-rhel7.int (Postfix) with ESMTP id 60B4FDA86C
+	for <linux-wireless@vger.kernel.org>; Mon,  4 Jan 2016 18:32:23 +0100 (CET)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+	by antivirus1-rhel7.int (Postfix) with ESMTP id 6EEEFDA876
+	for <linux-wireless@vger.kernel.org>; Mon,  4 Jan 2016 18:32:18 +0100 (CET)
+Date: Mon, 4 Jan 2016 18:32:17 +0100
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+To: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netfilter-devel@vger.kernel.org
+Subject: [ANNOUNCE] NetDev 1.1 is approaching...
+Message-ID: <20160104173217.GA3239@salvia> (sfid-20160104_183232_805093_3B541BFA)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of nullfunc and MCC case use lowest
-possible rates.
+Hi!
 
-Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
----
- drivers/net/wireless/ath/ath9k/channel.c | 1 +
- 1 file changed, 1 insertion(+)
+For those that still didn't hear about us, Netdev 1.1 is the
+community-driven Linux networking conference. This event will be again
+held back-to-back with NetConf in Sevilla, Spain, February 10-12, 2016.
 
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index b81f65c..988c859 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -1155,6 +1155,7 @@ ath_chanctx_send_vif_ps_frame(struct ath_softc *sc, struct ath_vif *avp,
- 
- 		skb->priority = 7;
- 		skb_set_queue_mapping(skb, IEEE80211_AC_VO);
-+		IEEE80211_SKB_CB(skb)->flags |= IEEE80211_TX_CTL_USE_MINRATE;
- 		if (!ieee80211_tx_prepare_skb(sc->hw, vif, skb, band, &sta)) {
- 			dev_kfree_skb_any(skb);
- 			return false;
--- 
-1.9.1
+After the holidays break (happy new year everyone!), we would like to
+make a quick summary on what's been accepted meanwhile.
 
+= BoF =
+
+* Switchdev (Roopa Prabhu & Shrijeet Mukherjee)
+
+* IPsec performance (Steffen Klassert)
+
+= Talks =
+
+* Zebra 2.0 and Lagopus: newly-designed routing stack on high-performance
+  packet forwarder (Yoshihiro Nakajima, Kunihiro Ishiguro, Masaru Oki,
+  Hirokazu Takahashi)
+
+* Reducing Latency in Linux Wireless Network Drivers" (Tim Shepard)
+
+* Deterministic network emulation using KauNet" (Per Hurtig & Johan Garcia)
+
+* Suricata IDPS and its interaction with Linux kernel" (Eric Leblond &
+  Giuseppe Longo)
+
+* The CLASShoFIREs: who's got your back?" (Jamal Hadi Salim)
+
+* MACsec: encryption for the wired LAN" (Sabrina Dubroca)
+
+* Bridge filtering with nftables" (Florian Westphal)
+
+* Deploying MPLS with Linux" (Roopa Prabhu)
+
+* IPv6 route lookup performance and scaling" (Michal Kubeček)
+
+* Namespaces and CGroups, the basis of Linux containers" (Rami Rosen)
+
+             ________________________________
+            / We still have more sessions to \
+            \    be announced, stay tuned!   /
+             --------------------------------
+                \   ^__^
+                 \  (oo)\_______
+                    (__)\       )\/\
+                        ||----w |
+                        ||     ||
+
+For more info, visit:
+* netdev 1.1: https://www.netdevconf.org/1.1/
+* netconf 2016: http://vger.kernel.org/netconf2016.html
+
+We would also like to thank those that already confirmed sponsorship:
+Cumulus Networks, Facebook, VmWare, Google, Cisco, Mellanox,
+Mojatatu Networks, OISF/Suricata, Zen Load Balancer and LWN.net.
