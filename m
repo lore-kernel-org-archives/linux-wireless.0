@@ -1,121 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:40606 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752179AbcA2GzC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2016 01:55:02 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH 6/6] staging: wilc1000: Optimize code of wilc_get_chipid function
-Date: Fri, 29 Jan 2016 15:51:38 +0900
-Message-ID: <1454050298-25815-6-git-send-email-leo.kim@atmel.com> (sfid-20160129_075507_559486_80677DFE)
-In-Reply-To: <1454050298-25815-1-git-send-email-leo.kim@atmel.com>
-References: <1454050298-25815-1-git-send-email-leo.kim@atmel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:51747 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751523AbcADPrL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 4 Jan 2016 10:47:11 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Sven Dziadek <sven.dziadek@gmx.de>
+Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC PATCH] staging: rtl8723au: fix byte order problems
+References: <1451921374-471-1-git-send-email-sven.dziadek@gmx.de>
+Date: Mon, 04 Jan 2016 10:47:10 -0500
+In-Reply-To: <1451921374-471-1-git-send-email-sven.dziadek@gmx.de> (Sven
+	Dziadek's message of "Mon, 4 Jan 2016 16:29:34 +0100")
+Message-ID: <wrfjlh85s5xd.fsf@redhat.com> (sfid-20160104_164728_454920_B43BB2E6)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+Sven Dziadek <sven.dziadek@gmx.de> writes:
+> Remove byte order conversions.
+> Conversion is already done in usb_ops_linux.c when accessing usb port.
+> The deleted lines convert to little-endian and then call FillH2CCmd to
+> convert back. Additionally, they are applied to wrong types and
+> process wrong parts of variables later on.
+>
+> Signed-off-by: Sven Dziadek <sven.dziadek@gmx.de>
+> ---
+>
+> I was looking for some Sparse warnings that I could fix and found this:
+>
+> drivers/staging/rtl8723au//hal/rtl8723a_cmd.c:96:38: warning: cast to
+> restricted __le16
+> drivers/staging/rtl8723au//hal/rtl8723a_cmd.c:100:27: warning: cast to
+> restricted __le32
+> drivers/staging/rtl8723au//hal/rtl8723a_cmd.c:118:25: warning: incorrect
+> type in assignment (different base types)
+> drivers/staging/rtl8723au//hal/rtl8723a_cmd.c:118:25:    expected
+> unsigned int [unsigned] [usertype] <noident>
+> drivers/staging/rtl8723au//hal/rtl8723a_cmd.c:118:25:    got restricted
+> __le32 [usertype] <noident>
+>
+> The rtl8723au drivers seems to work on many machines already, but
+> probably mostly on little-endian machines.
+> The file staging/rtl8723au/hal/rtl8723a_cmd.c contains four conversions
+> from or to little-endian that look suspicious.
+> The best example is:
+>
+> int rtl8723a_set_rssi_cmd(struct rtw_adapter *padapter, u8 *param)
+> {
+> 	*((u32 *)param) = cpu_to_le32(*((u32 *)param));
+>
+> 	FillH2CCmd(padapter, RSSI_SETTING_EID, 3, param);
+>
+> 	return _SUCCESS;
+> }
+>
+> On little-endian, the conversion does nothing, but on big-endian, it
+> swaps the order and then only 3 bytes are used in FillH2CCmd (3rd
+> argument). So it actually ignores the original argument param.
+>
+> I think it is best to delete these conversions because the actual
+> conversions are done when transferring data to or from the usb port already.
+>
+> Unfortunately, I do not have the hardware to test it.
+> What do you think about the patch?
 
-This patch optimize code of wilc_get_chipid function.
-u8 type changed to boolean type and removed unnecessary if statement.
+Be *very* careful with this - there is a lot of dodgy passing back and
+forth to the hardware and the format needs to match what the firmware
+expects.
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c   |  4 ++--
- drivers/staging/wilc1000/wilc_wlan.c    | 19 +++++++------------
- drivers/staging/wilc1000/wilc_wlan_if.h |  2 +-
- 3 files changed, 10 insertions(+), 15 deletions(-)
+Unless you are going to test this and confirm that it actually works,
+then please stay away from this.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 22a2f98..9e5dea4 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -388,7 +388,7 @@ int wilc_wlan_get_firmware(struct net_device *dev)
- 	vif = netdev_priv(dev);
- 	wilc = vif->wilc;
- 
--	chip_id = wilc_get_chipid(wilc, 0);
-+	chip_id = wilc_get_chipid(wilc, false);
- 
- 	if (chip_id < 0x1003a0)
- 		firmware = FIRMWARE_1002;
-@@ -475,7 +475,7 @@ static int linux_wlan_init_test_config(struct net_device *dev,
- 	wilc_get_mac_address(vif, mac_add);
- 
- 	netdev_dbg(dev, "MAC address is : %pM\n", mac_add);
--	wilc_get_chipid(wilc, 0);
-+	wilc_get_chipid(wilc, false);
- 
- 	*(int *)c_val = 1;
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 8024cc2..1efd61a 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1441,36 +1441,31 @@ static u32 init_chip(struct net_device *dev)
- 	return ret;
- }
- 
--u32 wilc_get_chipid(struct wilc *wilc, u8 update)
-+u32 wilc_get_chipid(struct wilc *wilc, bool update)
- {
- 	static u32 chipid;
- 	u32 tempchipid = 0;
--	u32 rfrevid;
-+	u32 rfrevid = 0;
- 
--	if (chipid == 0 || update != 0) {
-+	if (chipid == 0 || update) {
- 		wilc->hif_func->hif_read_reg(wilc, 0x1000, &tempchipid);
- 		wilc->hif_func->hif_read_reg(wilc, 0x13f4, &rfrevid);
- 		if (!ISWILC1000(tempchipid)) {
- 			chipid = 0;
--			goto _fail_;
-+			return chipid;
- 		}
- 		if (tempchipid == 0x1002a0) {
--			if (rfrevid == 0x1) {
--			} else {
-+			if (rfrevid != 0x1)
- 				tempchipid = 0x1002a1;
--			}
- 		} else if (tempchipid == 0x1002b0) {
--			if (rfrevid == 3) {
--			} else if (rfrevid == 4) {
-+			if (rfrevid == 0x4)
- 				tempchipid = 0x1002b1;
--			} else {
-+			else if (rfrevid != 0x3)
- 				tempchipid = 0x1002b2;
--			}
- 		}
- 
- 		chipid = tempchipid;
- 	}
--_fail_:
- 	return chipid;
- }
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 294552d..269c56e 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -921,6 +921,6 @@ struct wilc;
- int wilc_wlan_init(struct net_device *dev);
- void wilc_bus_set_max_speed(void);
- void wilc_bus_set_default_speed(void);
--u32 wilc_get_chipid(struct wilc *wilc, u8 update);
-+u32 wilc_get_chipid(struct wilc *wilc, bool update);
- 
- #endif
--- 
-1.9.1
+NAK
 
+Thanks,
+Jes
