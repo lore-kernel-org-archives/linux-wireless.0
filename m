@@ -1,53 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44601 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750791AbcAOBX7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2016 20:23:59 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH 1/5] ath9k: avoid ANI restart if no trigger
-Date: Fri, 15 Jan 2016 09:23:25 +0800
-Message-Id: <1452821009-1156-2-git-send-email-miaoqing@codeaurora.org> (sfid-20160115_022401_712635_1D3D3170)
-In-Reply-To: <1452821009-1156-1-git-send-email-miaoqing@codeaurora.org>
-References: <1452821009-1156-1-git-send-email-miaoqing@codeaurora.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38373 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751625AbcAEQVj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jan 2016 11:21:39 -0500
+Message-ID: <1452010897.12357.48.camel@sipsolutions.net> (sfid-20160105_172143_468275_C031479B)
+Subject: Re: Reading the current monitor flags of an interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Roger James <roger@beardandsandals.co.uk>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 05 Jan 2016 17:21:37 +0100
+In-Reply-To: <568BED11.50302@beardandsandals.co.uk>
+References: <5687FA72.9000301@beardandsandals.co.uk>
+	 <1452009755.12357.44.camel@sipsolutions.net>
+	 <568BED11.50302@beardandsandals.co.uk>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+On Tue, 2016-01-05 at 16:19 +0000, Roger James wrote:
+> 
+> Thanks Johannes, that was my conclusion, but I was not sure if that was 
+> true in all cases. I tried another chipset and got the same results. 
 
-ath9k_ani_restart() is always be invoked even if the trigger
-condition is false.
+It is true in all cases, since it's the generic cfg80211 code not doing
+this. It's not even storing the flags, so it's not a trivial patch.
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/ani.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+> I 
+> am trying to debug a problem with an adapter only seeing broadcast and 
+> multicast packets in monitor mode, and the significance of the setting 
+> of the  otherbss flag in this case. It would be really helpful if iw
+> could return the complete state of an interface, but it looks like that 
+> would require a kernel patch. This seems like a can of worms to me.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 25e45e4..0f74d59 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -444,14 +444,16 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
- 		    ofdmPhyErrRate < ah->config.ofdm_trig_low) {
- 			ath9k_hw_ani_lower_immunity(ah);
- 			aniState->ofdmsTurn = !aniState->ofdmsTurn;
-+			ath9k_ani_restart(ah);
- 		} else if (ofdmPhyErrRate > ah->config.ofdm_trig_high) {
- 			ath9k_hw_ani_ofdm_err_trigger(ah);
- 			aniState->ofdmsTurn = false;
-+			ath9k_ani_restart(ah);
- 		} else if (cckPhyErrRate > ah->config.cck_trig_high) {
- 			ath9k_hw_ani_cck_err_trigger(ah);
- 			aniState->ofdmsTurn = true;
-+			ath9k_ani_restart(ah);
- 		}
--		ath9k_ani_restart(ah);
- 	}
- }
- EXPORT_SYMBOL(ath9k_hw_ani_monitor);
--- 
-1.9.1
+It's not trivial, agree, since you'd have to query the underlying
+driver (mac80211) for the flags.
 
+johannes
