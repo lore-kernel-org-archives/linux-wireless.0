@@ -1,35 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f66.google.com ([209.85.192.66]:36557 "EHLO
-	mail-qg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751832AbcA1No0 (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:38361 "EHLO
+	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751188AbcAEJ4T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 08:44:26 -0500
-Received: by mail-qg0-f66.google.com with SMTP id 6so3099877qgy.3
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jan 2016 05:44:25 -0800 (PST)
-Date: Thu, 28 Jan 2016 08:44:15 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: Henning Rogge <hrogge@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
-Subject: Re: [PATCH 0/2] mac80211: add cleanup path for MPP table entries
-Message-ID: <20160128134415.GA24581@localhost> (sfid-20160128_144430_144446_7E8DF6AE)
-References: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+	Tue, 5 Jan 2016 04:56:19 -0500
+Received: by mail-wm0-f52.google.com with SMTP id b14so20577762wmb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2016 01:56:18 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+In-Reply-To: <20160105094504.GA3015@w1.fi>
+References: <1451984419-5727-1-git-send-email-janusz.dziedzic@tieto.com>
+	<20160105094504.GA3015@w1.fi>
+Date: Tue, 5 Jan 2016 10:56:18 +0100
+Message-ID: <CALhHN=qfmdQuTeHEAvE0BgS2XvZJrBVUhU3BYgXMCY-pe5Ur0g@mail.gmail.com> (sfid-20160105_105623_950850_E71C7816)
+Subject: Re: [PATCH] mac80211: add use_minrate param to ieee80211_tx_prepare_skb()
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Jouni Malinen <j@w1.fi>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 19, 2016 at 09:04:30AM +0100, Henning Rogge wrote:
-> Currently MPP table entries are only removed from memory when their
-> 802.11s mesh interface goes down. This can make the kernel to remember
-> a growing list of proxied mac addresses which are not relevant or even
-> reachable anymore.
+On 5 January 2016 at 10:45, Jouni Malinen <j@w1.fi> wrote:
+> On Tue, Jan 05, 2016 at 10:00:19AM +0100, Janusz Dziedzic wrote:
+>> Add use_minrate param to ieee80211_tx_prepare_skb() function.
+>> This is useful in case we would like to send frames
+>> with lowest rates, eg. nullfunc, probe_resp.
+>
+> I could kind of understand this for short frames like Data nullfunc and
+> PS-Poll, but why would we like to hard code Probe Response frames to be
+> sent at the lowest rate? Shouldn't the frames be sent at a rate that is
+> most likely to get them through and do so in a manner that does not use
+> excessive amount of air time?
+>
+This is used to get/send probe_req() frame, next used by ath9k
+"hw_scan" when chanctx used.
 
-Just so I know what to do with my series: do you plan to resend these
-with comments addressed?  Or I could adopt the patches if you want.
 
--- 
-Bob Copeland %% http://bobcopeland.com/
+> --
+> Jouni Malinen                                            PGP id EFC895FA
