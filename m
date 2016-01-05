@@ -1,132 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48152 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754424AbcA0Mlm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 07:41:42 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Beniamino Galvani <bgalvani@redhat.com>, netdev@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/2] wext: fix message delay/ordering
-Date: Wed, 27 Jan 2016 13:41:34 +0100
-Message-Id: <1453898495-11790-1-git-send-email-johannes@sipsolutions.net> (sfid-20160127_134158_427251_ECB0A1C2)
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:33344 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751676AbcAEOHZ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jan 2016 09:07:25 -0500
+Received: by mail-pa0-f50.google.com with SMTP id cy9so215791161pac.0
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2016 06:07:25 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 08/13] staging: wilc1000: rename ScanResult in wilc_scan
+Date: Tue,  5 Jan 2016 23:06:52 +0900
+Message-Id: <1452002817-30937-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20160105_150728_363562_57A9D6BA)
+In-Reply-To: <1452002817-30937-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1452002817-30937-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This patch renames ScanResult to scan_result to avoid camelcase.
 
-Beniamino reported that he was getting an RTM_NEWLINK message for a
-given interface, after the RTM_DELLINK for it. It turns out that the
-message is a wireless extensions message, which was sent because the
-interface had been connected and disconnection while it was deleted
-caused a wext message.
-
-For its netlink messages, wext uses RTM_NEWLINK, but the message is
-without all the regular rtnetlink attributes, so "ip monitor link"
-prints just rudimentary information:
-
-5: wlan1: <BROADCAST,MULTICAST> mtu 1500 qdisc mq state DOWN group default
-    link/ether 02:00:00:00:01:00 brd ff:ff:ff:ff:ff:ff
-Deleted 5: wlan1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN group default
-    link/ether 02:00:00:00:01:00 brd ff:ff:ff:ff:ff:ff
-5: wlan1: <BROADCAST,MULTICAST,UP>
-    link/ether
-(from my hwsim reproduction)
-
-This can cause userspace to get confused since it doesn't expect an
-RTM_NEWLINK message after RTM_DELLINK.
-
-The reason for this is that wext schedules a worker to send out the
-messages, and the scheduling delay can cause the messages to get out
-to userspace in different order.
-
-To fix this, have wext register a netdevice notifier and flush out
-any pending messages when netdevice state changes. This fixes any
-ordering whenever the original message wasn't sent by a notifier
-itself.
-
-Cc: stable@vger.kernel.org
-Reported-by: Beniamino Galvani <bgalvani@redhat.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- net/wireless/wext-core.c | 49 ++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 39 insertions(+), 10 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
-index c8717c1d082e..5f429637efff 100644
---- a/net/wireless/wext-core.c
-+++ b/net/wireless/wext-core.c
-@@ -342,6 +342,39 @@ static const int compat_event_type_size[] = {
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 67d0d14..a1e9052 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3674,15 +3674,15 @@ int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *stats)
  
- /* IW event code */
- 
-+static void wireless_nlevent_flush(void)
-+{
-+	struct sk_buff *skb;
-+	struct net *net;
-+
-+	ASSERT_RTNL();
-+
-+	for_each_net(net) {
-+		while ((skb = skb_dequeue(&net->wext_nlevents)))
-+			rtnl_notify(skb, net, 0, RTNLGRP_LINK, NULL,
-+				    GFP_KERNEL);
-+	}
-+}
-+
-+static int wext_netdev_notifier_call(struct notifier_block *nb,
-+				     unsigned long state, void *ptr)
-+{
-+	/*
-+	 * When a netdev changes state in any way, flush all pending messages
-+	 * to avoid them going out in a strange order, e.g. RTM_NEWLINK after
-+	 * RTM_DELLINK, or with IFF_UP after without IFF_UP during dev_close()
-+	 * or similar - all of which could otherwise happen due to delays from
-+	 * schedule_work().
-+	 */
-+	wireless_nlevent_flush();
-+
-+	return NOTIFY_OK;
-+}
-+
-+static struct notifier_block wext_netdev_notifier = {
-+	.notifier_call = wext_netdev_notifier_call,
-+};
-+
- static int __net_init wext_pernet_init(struct net *net)
+ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
+ 	      u8 *ch_freq_list, u8 ch_list_len, const u8 *ies,
+-	      size_t ies_len, wilc_scan_result ScanResult, void *pvUserArg,
++	      size_t ies_len, wilc_scan_result scan_result, void *pvUserArg,
+ 	      struct hidden_network *pstrHiddenNetwork)
  {
- 	skb_queue_head_init(&net->wext_nlevents);
-@@ -360,6 +393,11 @@ static struct pernet_operations wext_pernet_ops = {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
  
- static int __init wireless_nlevent_init(void)
- {
-+	int err = register_netdevice_notifier(&wext_netdev_notifier);
-+
-+	if (err)
-+		return err;
-+
- 	return register_pernet_subsys(&wext_pernet_ops);
- }
+-	if (!hif_drv || !ScanResult) {
+-		PRINT_ER("hif_drv or ScanResult = NULL\n");
++	if (!hif_drv || !scan_result) {
++		PRINT_ER("hif_drv or scan_result = NULL\n");
+ 		return -EFAULT;
+ 	}
  
-@@ -368,17 +406,8 @@ subsys_initcall(wireless_nlevent_init);
- /* Process events generated by the wireless layer or the driver. */
- static void wireless_nlevent_process(struct work_struct *work)
- {
--	struct sk_buff *skb;
--	struct net *net;
--
- 	rtnl_lock();
--
--	for_each_net(net) {
--		while ((skb = skb_dequeue(&net->wext_nlevents)))
--			rtnl_notify(skb, net, 0, RTNLGRP_LINK, NULL,
--				    GFP_KERNEL);
--	}
--
-+	wireless_nlevent_flush();
- 	rtnl_unlock();
- }
+@@ -3700,7 +3700,7 @@ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
+ 	msg.vif = vif;
+ 	msg.body.scan_info.src = scan_source;
+ 	msg.body.scan_info.type = scan_type;
+-	msg.body.scan_info.result = ScanResult;
++	msg.body.scan_info.result = scan_result;
+ 	msg.body.scan_info.arg = pvUserArg;
  
+ 	msg.body.scan_info.ch_list_len = ch_list_len;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index ed00f9d..fd9f21739 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -337,7 +337,7 @@ int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel);
+ int wilc_get_rssi(struct wilc_vif *vif, s8 *rssi_level);
+ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
+ 	      u8 *ch_freq_list, u8 ch_list_len, const u8 *ies,
+-	      size_t ies_len, wilc_scan_result ScanResult, void *pvUserArg,
++	      size_t ies_len, wilc_scan_result scan_result, void *pvUserArg,
+ 	      struct hidden_network *pstrHiddenNetwork);
+ int wilc_hif_set_cfg(struct wilc_vif *vif,
+ 		     struct cfg_param_val *cfg_param);
 -- 
-2.6.2
+2.6.4
 
