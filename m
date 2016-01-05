@@ -1,58 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from relay2-d.mail.gandi.net ([217.70.183.194]:56336 "EHLO
-	relay2-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752509AbcALNIG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 08:08:06 -0500
-Message-ID: <1452604081.17103.12.camel@hadess.net> (sfid-20160112_140809_761837_2C39F162)
-Subject: Re: How to revert RFKILL_IOC_NOINPUT ioctl?
-From: Bastien Nocera <hadess@hadess.net>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 12 Jan 2016 14:08:01 +0100
-In-Reply-To: <1452603950.3473.6.camel@sipsolutions.net>
-References: <1452600332.17103.10.camel@hadess.net>
-	 <1452603950.3473.6.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49889 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751922AbcAEM5n convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jan 2016 07:57:43 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: kbuild test robot <lkp@intel.com>
+CC: "kbuild-all@01.org" <kbuild-all@01.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Cathy Luo <cluo@marvell.com>,
+	"Nishant Sarmukadam" <nishants@marvell.com>,
+	Xinming Hu <huxm@marvell.com>
+Subject: RE: [PATCH 2/4] mwifiex: enable pcie MSIx interrupt mode support
+Date: Tue, 5 Jan 2016 12:57:38 +0000
+Message-ID: <20d9447a788a4a4daf709bd4d2622971@SC-EXCH04.marvell.com> (sfid-20160105_135757_182120_DBF946EE)
+References: <1451571855-29449-2-git-send-email-akarwar@marvell.com>
+ <201601010258.TdInjVcJ%fengguang.wu@intel.com>
+In-Reply-To: <201601010258.TdInjVcJ%fengguang.wu@intel.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-01-12 at 14:05 +0100, Johannes Berg wrote:
-> On Tue, 2016-01-12 at 13:05 +0100, Bastien Nocera wrote:
-> >  
-> > I realised looking at the rfkill kernel configuration, and noticed
-> > that it wasn't possible to disable CONFIG_RFKILL_INPUT without
-> > enabling the expert mode. "Why" would be the first question in this
-> > mail.
+> From: kbuild test robot [mailto:lkp@intel.com]
+> Sent: Thursday, December 31, 2015 11:33 PM
+> To: Amitkumar Karwar
+> Cc: kbuild-all@01.org; linux-wireless@vger.kernel.org; Cathy Luo;
+> Nishant Sarmukadam; Xinming Hu; Amitkumar Karwar
+> Subject: Re: [PATCH 2/4] mwifiex: enable pcie MSIx interrupt mode
+> support
 > 
-> I guess the answer would be that at the time, you couldn't really get
-> a
-> fully functional setup without it, and there wasn't really any
-> default
-> userspace to deal with it. Perhaps there is now at least a bigger
-> chance that userspace will deal with it.
+> Hi Xinming,
 > 
-> That said, I don't really see a need to disable this code since
-> userspace that wants to handle it should use the ioctl to disable the
-> in-kernel code (if it's at all present.)
-
-Right. I'll leave it there then.
-
-> > See https://lists.fedoraproject.org/archives/list/kernel@lists.fedo
-> > ra
-> > project.org/thread/FWCOCU2ODZHK7AQVOWSFJLBXL744LYNO/
-> > 
-> > To make my GNOME code work, I'd need to disable rfkill-input. But
-> > if
-> > I still wanted to allow rfkill-input to work when GNOME isn't
-> > running, such as when switching to a console, or another less-
-> > capable 
-> > desktop environment. But there doesn't seem to be a counterpart
-> > for RFKILL_IOC_NOINPUT. Any reason why?
+> [auto build test ERROR on wireless-drivers-next/master] [also build test
+> ERROR on next-20151231] [cannot apply to v4.4-rc7] [if your patch is
+> applied to the wrong git tree, please drop us a note to help improving
+> the system]
 > 
-> It's automatically released when you close the fd.
+> url:    https://github.com/0day-ci/linux/commits/Amitkumar-
+> Karwar/mwifiex-fix-missing-debug-messages/20151231-222922
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-
+> drivers-next.git master
+> config: mips-allyesconfig (attached as .config)
+> reproduce:
+>         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-
+> tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         # save the attached .config to linux build tree
+>         make.cross ARCH=mips
+> 
+> All errors (new ones prefixed by >>):
+> 
+>    In file included from
+> drivers/net/wireless/marvell/mwifiex/main.h:45:0,
+>                     from drivers/net/wireless/marvell/mwifiex/main.c:20:
+> >> drivers/net/wireless/marvell/mwifiex/pcie.h:342:20: error: array type
+> has incomplete element type 'struct msix_entry'
+>      struct msix_entry msix_entries[MWIFIEX_NUM_MSIX_VECTORS];
+>                        ^
+> 
+> vim +342 drivers/net/wireless/marvell/mwifiex/pcie.h
+> 
+>    336		u8 *sleep_cookie_vbase;
+>    337		dma_addr_t sleep_cookie_pbase;
+>    338		void __iomem *pci_mmap;
+>    339		void __iomem *pci_mmap1;
+>    340		int msi_enable;
+>    341		int msix_enable;
+>  > 342		struct msix_entry
+> msix_entries[MWIFIEX_NUM_MSIX_VECTORS];
+>    343		struct mwifiex_msix_context
+> msix_ctx[MWIFIEX_NUM_MSIX_VECTORS];
+>    344		struct mwifiex_msix_context share_irq_ctx;
+>    345	};
+> 
 
-OK, good enough for me.
+"struct msix_entry" has been defined in "include/linux/pci.h". We have already included this file. 
+Any suggestions to fix this MIPS specific compilation error? OR it's just a false alarm.
 
-Cheers
+Regards,
+Amitkumar Karwar
