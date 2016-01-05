@@ -1,55 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52619 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753359AbcARBes (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:31395 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751625AbcAEKGB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2016 20:34:48 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, nbd@openwrt.org,
-	Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH v3 3/5] ath9k: do not reset while BB panic(0x4000409) on ar9561
-Date: Mon, 18 Jan 2016 09:33:48 +0800
-Message-Id: <1453080830-7616-4-git-send-email-miaoqing@codeaurora.org> (sfid-20160118_023451_083269_0878A76D)
-In-Reply-To: <1453080830-7616-1-git-send-email-miaoqing@codeaurora.org>
-References: <1453080830-7616-1-git-send-email-miaoqing@codeaurora.org>
+	Tue, 5 Jan 2016 05:06:01 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 6/6] brcmfmac: Do not handle link downs for ibss.
+Date: Tue, 5 Jan 2016 11:05:50 +0100
+Message-ID: <1451988350-2197-7-git-send-email-arend@broadcom.com> (sfid-20160105_110633_958505_5ADEBBF3)
+In-Reply-To: <1451988350-2197-1-git-send-email-arend@broadcom.com>
+References: <1451988350-2197-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-BB panic(0x4000409) observed while AP enabling/disabling
-bursting.
+Sometimes on module reload and reconnect to ibss a deauth from
+other station can be received. This is treated as a link down but
+for ibss this is wrong. It will close the interface and no data
+is possible. Ignore the firmware generated link down events in
+ibss mode, as ibss is always teared down by cfg80211.
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_phy.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 201425e..abd9646 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -2071,7 +2071,8 @@ void ar9003_hw_attach_phy_ops(struct ath_hw *ah)
-  *             to be disabled.
-  *
-  * 0x04000409: Packet stuck on receive.
-- *             Full chip reset is required for all chips except AR9340.
-+ *             Full chip reset is required for all chips except
-+ *	       AR9340, AR9531 and AR9561.
-  */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 84788ea..7b01e4d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -1454,6 +1454,7 @@ brcmf_cfg80211_leave_ibss(struct wiphy *wiphy, struct net_device *ndev)
+ 	}
  
- /*
-@@ -2100,7 +2101,7 @@ bool ar9003_hw_bb_watchdog_check(struct ath_hw *ah)
- 	case 0x04000b09:
- 		return true;
- 	case 0x04000409:
--		if (AR_SREV_9340(ah) || AR_SREV_9531(ah))
-+		if (AR_SREV_9340(ah) || AR_SREV_9531(ah) || AR_SREV_9561(ah))
- 			return false;
- 		else
- 			return true;
+ 	brcmf_link_down(ifp->vif, WLAN_REASON_DEAUTH_LEAVING);
++	brcmf_net_setcarrier(ifp, false);
+ 
+ 	brcmf_dbg(TRACE, "Exit\n");
+ 
+@@ -5248,12 +5249,13 @@ brcmf_notify_connect_status(struct brcmf_if *ifp,
+ 		brcmf_dbg(CONN, "Linkdown\n");
+ 		if (!brcmf_is_ibssmode(ifp->vif)) {
+ 			brcmf_bss_connect_done(cfg, ndev, e, false);
++			brcmf_link_down(ifp->vif,
++					brcmf_map_fw_linkdown_reason(e));
++			brcmf_init_prof(ndev_to_prof(ndev));
++			if (ndev != cfg_to_ndev(cfg))
++				complete(&cfg->vif_disabled);
++			brcmf_net_setcarrier(ifp, false);
+ 		}
+-		brcmf_link_down(ifp->vif, brcmf_map_fw_linkdown_reason(e));
+-		brcmf_init_prof(ndev_to_prof(ndev));
+-		if (ndev != cfg_to_ndev(cfg))
+-			complete(&cfg->vif_disabled);
+-		brcmf_net_setcarrier(ifp, false);
+ 	} else if (brcmf_is_nonetwork(cfg, e)) {
+ 		if (brcmf_is_ibssmode(ifp->vif))
+ 			clear_bit(BRCMF_VIF_STATUS_CONNECTING,
 -- 
 1.9.1
 
