@@ -1,82 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:34479 "EHLO
-	mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754673AbcASPoF (ORCPT
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:38497 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761AbcAEJsD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 10:44:05 -0500
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
-To: johannes@sipsolutions.net
-Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
-	davem@davemloft.net, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jprvita@endlessm.com,
-	linux@endlessm.com
-Subject: [PATCH 1/8] rfkill: Documentation and style fixes
-Date: Tue, 19 Jan 2016 10:42:36 -0500
-Message-Id: <1453218163-31998-2-git-send-email-jprvita@endlessm.com> (sfid-20160119_164516_957937_0AE601ED)
-In-Reply-To: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
-References: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
+	Tue, 5 Jan 2016 04:48:03 -0500
 MIME-Version: 1.0
+In-Reply-To: <568B7F06.1010500@users.sourceforge.net>
+References: <566ABCD9.1060404@users.sourceforge.net> <5687E169.4070704@users.sourceforge.net>
+ <5687E203.1070404@users.sourceforge.net> <20160104092857.GD5284@mwanda>
+ <568A4CFF.8060600@users.sourceforge.net> <20160104114849.GH5284@mwanda>
+ <568A668D.8090007@users.sourceforge.net> <CAGRGNgXw+G6ZcmFmM=VWZT_jibuZyxe-kSvPSF8W7hPueLhNrw@mail.gmail.com>
+ <568B7F06.1010500@users.sourceforge.net>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 5 Jan 2016 20:47:42 +1100
+Message-ID: <CAGRGNgVVnFGt_mHV+ZrZW0HuGuuh++ohkkNMHPBFt73-+X3L8Q@mail.gmail.com> (sfid-20160105_104836_828110_92868E4F)
+Subject: Re: rsi: Delete unnecessary variable initialisations in rsi_send_mgmt_pkt()
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes some small typos, punctuation, and copy & paste issues. Also
-removes an extra blank line.
+Hi Markus,
 
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
----
- include/linux/rfkill.h | 7 ++++---
- net/rfkill/core.c      | 5 ++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
+On Tue, Jan 5, 2016 at 7:29 PM, SF Markus Elfring
+<elfring@users.sourceforge.net> wrote:
+>> That said, if you figure out some change that produces significant
+>> reductions in code or binary size on multiple architectures without
+>> making things more complicated, less readable or making the code or
+>> binary size larger, then by all means propose it.
+>
+> Are you looking also for "a proof" that such changes are worthwhile?
 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index d901078..3dcbaf6 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -104,16 +104,17 @@ int __must_check rfkill_register(struct rfkill *rfkill);
-  *
-  * Pause polling -- say transmitter is off for other reasons.
-  * NOTE: not necessary for suspend/resume -- in that case the
-- * core stops polling anyway
-+ * core stops polling anyway.
-  */
- void rfkill_pause_polling(struct rfkill *rfkill);
- 
- /**
-  * rfkill_resume_polling(struct rfkill *rfkill)
-  *
-- * Pause polling -- say transmitter is off for other reasons.
-+ * Resume polling previously paused with rfkill_pause_polling.
-  * NOTE: not necessary for suspend/resume -- in that case the
-- * core stops polling anyway
-+ * core restarts polling anyway, even if was explicitly paused
-+ * before suspending.
-  */
- void rfkill_resume_polling(struct rfkill *rfkill);
- 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index f53bf3b6..4d6d726 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -303,8 +303,8 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
- 	spin_lock_irqsave(&rfkill->lock, flags);
- 	if (err) {
- 		/*
--		 * Failed -- reset status to _prev, this may be different
--		 * from what set set _PREV to earlier in this function
-+		 * Failed -- reset status to _PREV. This may be different
-+		 * from what we have set _PREV to earlier in this function
- 		 * if rfkill_set_sw_state was invoked.
- 		 */
- 		if (rfkill->state & RFKILL_BLOCK_SW_PREV)
-@@ -477,7 +477,6 @@ bool rfkill_get_global_sw_state(const enum rfkill_type type)
- }
- #endif
- 
--
- bool rfkill_set_hw_state(struct rfkill *rfkill, bool blocked)
- {
- 	bool ret, change;
+It'd be better than "I think doing things this way is better", which
+is the hallmark of most of your patch sets. (Admittedly not this one,
+but this one is where the discussion is now, so that's where we're
+discussing it.)
+
+>> "This makes things smaller" carries much more weight than
+>> "I think this is better".
+>
+> Can the discussed implementation of a function like "rsi_send_mgmt_pkt"
+> become a bit smaller by the deletion of extra variable initialisations
+
+I'm talking in general.
+
+In this case you're asking people to review a patch which requires a
+lot of careful review for a fairly minor improvement. I must also note
+that you haven't CC'd the people who wrote this driver, so it's
+possible that the only people who have reviewed it aren't experts in
+the code.
+
+The patches you sent recently which moved labels into if statements
+were a clear case of "I think this is better" where any actual benefit
+from the changes was eclipsed by the style and readability issues they
+introduced.
+
+>> Almost all of the changes you've proposed that have seen any
+>> discussion whatsoever fall into the latter category.
+>
+> Thanks for your interesting feedback.
+
+No problem.
+
+> Can a further constructive dialogue evolve from the presented information?
+
+Part of the issue here is that you don't seem to be listening to the
+discussion of your patches, or if you are, you're not significantly
+changing your approach or attitude in response.
+
+Every time you send a set of patches, there are legitimate issues
+which people raise, and every time they are discussed, you assert that
+your patches improve things and seem to ignore the concerns people
+raise.
+
+I've seen this same pattern of discussion here with these patches,
+with your patches to move labels into if statements, with the patches
+you sent late June last year, your patches to remove conditions before
+kfree() and friends, etc.
+
+You need to change you attitude: just because you can see some benefit
+from your patches doesn't mean others do and it doesn't mean that
+they're willing to accept them.
+
+Thanks,
+
 -- 
-2.5.0
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
