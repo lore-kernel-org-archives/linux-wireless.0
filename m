@@ -1,73 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:5732 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755246AbcA1V5V (ORCPT
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:33965 "EHLO
+	mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751676AbcAEOHe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 16:57:21 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 2/4] ath10k: update 10.4 WMI service map
-Date: Thu, 28 Jan 2016 13:54:08 -0800
-Message-ID: <20d44823ecdacb54a92efaf56020c9d2f2cc4ff5.1454015989.git.poh@qca.qualcomm.com> (sfid-20160128_225724_554845_06DB4D1E)
-In-Reply-To: <cover.1454015989.git.poh@qca.qualcomm.com>
-References: <cover.1454015989.git.poh@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 5 Jan 2016 09:07:34 -0500
+Received: by mail-pf0-f170.google.com with SMTP id e65so167954585pfe.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2016 06:07:34 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 11/13] staging: wilc1000: use kmemdup instead of kmalloc/memcpy
+Date: Tue,  5 Jan 2016 23:06:55 +0900
+Message-Id: <1452002817-30937-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20160105_150737_436118_38ED3771)
+In-Reply-To: <1452002817-30937-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1452002817-30937-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Update 10.4 WMI service map to sync to the latest 10.4 firmware
-as of 1/20/2016.
+This patch replaces kmalloc followed by memcpy with kmemdup.
+It is also added error checking to return -ENOMEM when kmemdup is
+failed.
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.h | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/staging/wilc1000/host_interface.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 0458bf6..031018a 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -179,6 +179,7 @@ enum wmi_service {
- 	WMI_SERVICE_MESH_11S,
- 	WMI_SERVICE_MESH_NON_11S,
- 	WMI_SERVICE_PEER_STATS,
-+	WMI_SERVICE_RESTRT_CHNL_SUPPORT,
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 85aae56..8d022a0 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3704,12 +3704,16 @@ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
+ 	msg.body.scan_info.arg = user_arg;
  
- 	/* keep last */
- 	WMI_SERVICE_MAX,
-@@ -298,6 +299,9 @@ enum wmi_10_4_service {
- 	WMI_10_4_SERVICE_BSS_CHANNEL_INFO_64,
- 	WMI_10_4_SERVICE_EXT_RES_CFG_SUPPORT,
- 	WMI_10_4_SERVICE_MESH_NON_11S,
-+	WMI_10_4_SERVICE_RESTRT_CHNL_SUPPORT,
-+	WMI_10_4_SERVICE_PEER_STATS,
-+	WMI_10_4_SERVICE_MESH_11S,
- };
+ 	msg.body.scan_info.ch_list_len = ch_list_len;
+-	msg.body.scan_info.ch_freq_list = kmalloc(ch_list_len, GFP_KERNEL);
+-	memcpy(msg.body.scan_info.ch_freq_list, ch_freq_list, ch_list_len);
++	msg.body.scan_info.ch_freq_list = kmemdup(ch_freq_list,
++						  ch_list_len,
++						  GFP_KERNEL);
++	if (!msg.body.scan_info.ch_freq_list)
++		return -ENOMEM;
  
- static inline char *wmi_service_name(int service_id)
-@@ -391,6 +395,7 @@ static inline char *wmi_service_name(int service_id)
- 	SVCSTR(WMI_SERVICE_MESH_11S);
- 	SVCSTR(WMI_SERVICE_MESH_NON_11S);
- 	SVCSTR(WMI_SERVICE_PEER_STATS);
-+	SVCSTR(WMI_SERVICE_RESTRT_CHNL_SUPPORT);
- 	default:
- 		return NULL;
- 	}
-@@ -632,6 +637,12 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
- 	       WMI_SERVICE_EXT_RES_CFG_SUPPORT, len);
- 	SVCMAP(WMI_10_4_SERVICE_MESH_NON_11S,
- 	       WMI_SERVICE_MESH_NON_11S, len);
-+	SVCMAP(WMI_10_4_SERVICE_RESTRT_CHNL_SUPPORT,
-+	       WMI_SERVICE_RESTRT_CHNL_SUPPORT, len);
-+	SVCMAP(WMI_10_4_SERVICE_PEER_STATS,
-+	       WMI_SERVICE_PEER_STATS, len);
-+	SVCMAP(WMI_10_4_SERVICE_MESH_11S,
-+	       WMI_SERVICE_MESH_11S, len);
- }
+ 	msg.body.scan_info.ies_len = ies_len;
+-	msg.body.scan_info.ies = kmalloc(ies_len, GFP_KERNEL);
+-	memcpy(msg.body.scan_info.ies, ies, ies_len);
++	msg.body.scan_info.ies = kmemdup(ies, ies_len, GFP_KERNEL);
++	if (!msg.body.scan_info.ies)
++		return -ENOMEM;
  
- #undef SVCMAP
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result) {
 -- 
-1.9.1
+2.6.4
 
