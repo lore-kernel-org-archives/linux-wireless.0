@@ -1,72 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f195.google.com ([209.85.214.195]:35536 "EHLO
-	mail-ob0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751623AbcAEQKC (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:22248 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751539AbcAEKGB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 11:10:02 -0500
-Subject: Re: [RFC PATCH] staging: rtl8723au: fix byte order problems
-To: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Julian Calaby <julian.calaby@gmail.com>
-References: <1451921374-471-1-git-send-email-sven.dziadek@gmx.de>
- <CAGRGNgXxO2ZAGob=p83dNw+98kgZyYKdGcrh8m-vxXo+a7ezMw@mail.gmail.com>
- <wrfj60z8qayn.fsf@redhat.com>
-Cc: Sven Dziadek <sven.dziadek@gmx.de>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <568BEAD6.2060406@lwfinger.net> (sfid-20160105_171022_912603_7FFC0DD2)
-Date: Tue, 5 Jan 2016 10:09:58 -0600
+	Tue, 5 Jan 2016 05:06:01 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 3/6] brcmfmac: change brcmf_sdio_wd_timer() prototype
+Date: Tue, 5 Jan 2016 11:05:47 +0100
+Message-ID: <1451988350-2197-4-git-send-email-arend@broadcom.com> (sfid-20160105_110616_885836_47B67EB0)
+In-Reply-To: <1451988350-2197-1-git-send-email-arend@broadcom.com>
+References: <1451988350-2197-1-git-send-email-arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <wrfj60z8qayn.fsf@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/2016 09:53 AM, Jes Sorensen wrote:
-> Julian Calaby <julian.calaby@gmail.com> writes:
->> Hi Sven,
->>
->> On Tue, Jan 5, 2016 at 2:29 AM, Sven Dziadek <sven.dziadek@gmx.de> wrote:
->>> diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
->>> index 1662c03c..57f5941 100644
->>> --- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
->>> +++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
->>> @@ -93,11 +93,9 @@ int FillH2CCmd(struct rtw_adapter *padapter, u8 ElementID, u32 CmdLen,
->>>
->>>                  if (h2c_cmd & BIT(7)) {
->>>                          msgbox_ex_addr = REG_HMEBOX_EXT_0 + (h2c_box_num * EX_MESSAGE_BOX_SIZE);
->>> -                       h2c_cmd_ex = le16_to_cpu(h2c_cmd_ex);
->>>                          rtl8723au_write16(padapter, msgbox_ex_addr, h2c_cmd_ex);
->>>                  }
->>>                  msgbox_addr = REG_HMEBOX_0 + (h2c_box_num * MESSAGE_BOX_SIZE);
->>> -               h2c_cmd = le32_to_cpu(h2c_cmd);
->>>                  rtl8723au_write32(padapter, msgbox_addr, h2c_cmd);
->>
->> While Jes has NACK'd this change, it does highlight that the h2c_cmd
->> and h2c_cmd_ex variables are being used to hold both cpu-endian and
->> little-endian data. A worthwhile change here might be to move the
->> conversion into the function call following these lines so that they
->> remain "clean".
->>
->> That said, I'm not sure this particular snippet of code would work on
->> big-endian at all as I'm pretty sure that BIT() produces cpu-endian
->> values and we know from the line you remove that h2c_cmd is
->> little-endian at this point.
->
-> I am not opposed to cleaning it up, however I hope we can just remove
-> all of the code down the line instead. You may want to look at the h2c
-> implementation I did for rtl8xxxu. I believe it does work on big-endian,
-> at least I know Larry has been able to test it on big-endian systems.
+The function brcmf_sdio_wd_timer() has wdtick parameter. However, it
+is only called with two values and as such the parameter is replaced
+with boolean value indicating the timer should be active or not.
 
-I have tested rtl8xxxu for the RTL8192CU devices on a PowerBook G4 with a 
-big-endian processor.
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    | 33 ++++++++--------------
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |  2 +-
+ 2 files changed, 13 insertions(+), 22 deletions(-)
 
-I do not have any RTL8723AU devices that can be tested this way, thus I have no 
-idea if either of the drivers work on BE. If I were to guess, I would expect the 
-staging driver to fail and rtl8xxxu to work.
-
-Larry
-
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index ceb2a75..2f02020 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -503,8 +503,7 @@ struct brcmf_sdio {
+ 	struct timer_list timer;
+ 	struct completion watchdog_wait;
+ 	struct task_struct *watchdog_tsk;
+-	bool wd_timer_valid;
+-	uint save_ms;
++	bool wd_active;
+ 
+ 	struct workqueue_struct *brcmf_wq;
+ 	struct work_struct datawork;
+@@ -961,7 +960,7 @@ end:
+ 			brcmf_sdio_clkctl(bus, CLK_NONE, pendok);
+ 	} else {
+ 		brcmf_sdio_clkctl(bus, CLK_AVAIL, pendok);
+-		brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
++		brcmf_sdio_wd_timer(bus, true);
+ 	}
+ 	bus->sleeping = sleep;
+ 	brcmf_dbg(SDIO, "new state %s\n",
+@@ -3576,7 +3575,7 @@ static void brcmf_sdio_bus_watchdog(struct brcmf_sdio *bus)
+ 			if (bus->idlecount > bus->idletime) {
+ 				brcmf_dbg(SDIO, "idle\n");
+ 				sdio_claim_host(bus->sdiodev->func[1]);
+-				brcmf_sdio_wd_timer(bus, 0);
++				brcmf_sdio_wd_timer(bus, false);
+ 				bus->idlecount = 0;
+ 				brcmf_sdio_bus_sleep(bus, true, false);
+ 				sdio_release_host(bus->sdiodev->func[1]);
+@@ -3908,7 +3907,7 @@ brcmf_sdio_watchdog(unsigned long data)
+ 	if (bus->watchdog_tsk) {
+ 		complete(&bus->watchdog_wait);
+ 		/* Reschedule the watchdog */
+-		if (bus->wd_timer_valid)
++		if (bus->wd_active)
+ 			mod_timer(&bus->timer,
+ 				  jiffies + msecs_to_jiffies(BRCMF_WD_POLL_MS));
+ 	}
+@@ -3950,7 +3949,7 @@ static void brcmf_sdio_firmware_callback(struct device *dev,
+ 
+ 	/* Start the watchdog timer */
+ 	bus->sdcnt.tickcnt = 0;
+-	brcmf_sdio_wd_timer(bus, BRCMF_WD_POLL_MS);
++	brcmf_sdio_wd_timer(bus, true);
+ 
+ 	sdio_claim_host(sdiodev->func[1]);
+ 
+@@ -4195,7 +4194,7 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
+ 		if (bus->ci) {
+ 			if (bus->sdiodev->state != BRCMF_SDIOD_NOMEDIUM) {
+ 				sdio_claim_host(bus->sdiodev->func[1]);
+-				brcmf_sdio_wd_timer(bus, 0);
++				brcmf_sdio_wd_timer(bus, false);
+ 				brcmf_sdio_clkctl(bus, CLK_AVAIL, false);
+ 				/* Leave the device in state where it is
+ 				 * 'passive'. This is done by resetting all
+@@ -4217,13 +4216,12 @@ void brcmf_sdio_remove(struct brcmf_sdio *bus)
+ 	brcmf_dbg(TRACE, "Disconnected\n");
+ }
+ 
+-void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, uint wdtick)
++void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, bool active)
+ {
+ 	/* Totally stop the timer */
+-	if (!wdtick && bus->wd_timer_valid) {
++	if (!active && bus->wd_active) {
+ 		del_timer_sync(&bus->timer);
+-		bus->wd_timer_valid = false;
+-		bus->save_ms = wdtick;
++		bus->wd_active = false;
+ 		return;
+ 	}
+ 
+@@ -4231,27 +4229,20 @@ void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, uint wdtick)
+ 	if (bus->sdiodev->state != BRCMF_SDIOD_DATA)
+ 		return;
+ 
+-	if (wdtick) {
+-		if (bus->save_ms != BRCMF_WD_POLL_MS) {
+-			if (bus->wd_timer_valid)
+-				/* Stop timer and restart at new value */
+-				del_timer_sync(&bus->timer);
+-
++	if (active) {
++		if (!bus->wd_active) {
+ 			/* Create timer again when watchdog period is
+ 			   dynamically changed or in the first instance
+ 			 */
+ 			bus->timer.expires =
+ 				jiffies + msecs_to_jiffies(BRCMF_WD_POLL_MS);
+ 			add_timer(&bus->timer);
+-
++			bus->wd_active = true;
+ 		} else {
+ 			/* Re arm the timer, at last watchdog period */
+ 			mod_timer(&bus->timer,
+ 				jiffies + msecs_to_jiffies(BRCMF_WD_POLL_MS));
+ 		}
+-
+-		bus->wd_timer_valid = true;
+-		bus->save_ms = wdtick;
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index d86ecf2..ff47cee 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -369,7 +369,7 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev);
+ void brcmf_sdio_remove(struct brcmf_sdio *bus);
+ void brcmf_sdio_isr(struct brcmf_sdio *bus);
+ 
+-void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, uint wdtick);
++void brcmf_sdio_wd_timer(struct brcmf_sdio *bus, bool active);
+ void brcmf_sdio_wowl_config(struct device *dev, bool enabled);
+ int brcmf_sdio_sleep(struct brcmf_sdio *bus, bool sleep);
+ void brcmf_sdio_trigger_dpc(struct brcmf_sdio *bus);
+-- 
+1.9.1
 
