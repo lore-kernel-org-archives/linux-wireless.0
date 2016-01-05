@@ -1,114 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:33740 "EHLO
-	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932084AbcAYWTm (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:35180 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753969AbcAEE0t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 17:19:42 -0500
-Received: by mail-io0-f194.google.com with SMTP id f81so14335315iof.0
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2016 14:19:42 -0800 (PST)
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Nikolay Martynov <mar.kolya@gmail.com>, johannes.berg@intel.com,
-	emmanuel.grumbach@intel.com, julian.calaby@gmail.com,
-	ilw@linux.intel.com
-Subject: [PATCH v2] iwldvm: fix chain gain calibration when firmware return zero values
-Date: Mon, 25 Jan 2016 17:19:01 -0500
-Message-Id: <1453760341-30008-1-git-send-email-mar.kolya@gmail.com> (sfid-20160125_231946_413409_76303A30)
-In-Reply-To: <1453527309-23881-1-git-send-email-mar.kolya@gmail.com>
-References: <1453527309-23881-1-git-send-email-mar.kolya@gmail.com>
+	Mon, 4 Jan 2016 23:26:49 -0500
+Received: by mail-pa0-f52.google.com with SMTP id ho8so1281972pac.2
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Jan 2016 20:26:49 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 3/4] staging: wilc1000: rename pstrHiddenNetworkInfo in struct hidden_network
+Date: Tue,  5 Jan 2016 13:26:32 +0900
+Message-Id: <1451967993-12178-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20160105_052652_488585_13B9BDBF)
+In-Reply-To: <1451967993-12178-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1451967993-12178-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It looks like sometimes firmware returns zero for chain noise and signal
-during calibration period. This seems to be a known problem and current
-implementation accounts for this by ignoring invalid data when all chains
-return zero signal and noise.
+This patch renames pstrHiddenNetworkInfo to net_info to avoid camelcase.
 
-The problem is that sometimes firmware returns zero for only one chain for
-some (not all) beacons used for calibration. This leads to perfectly valid
-chains be disabled and may cause invalid gain settings.
-For example this is calibration data taken on laptop with Intel 6300 card
-with all three antennas attached:
-
-active_chains:			 3
-chain_noise_a:			 312
-chain_noise_b:			 297
-chain_noise_c:			 0
-chain_signal_a:			 549
-chain_signal_b:			 513
-chain_signal_c:			 0
-beacon_count:			 16
-disconn_array:			 0 0 1
-delta_gain_code:		 4 0 0
-radio_write:			 1
-state:				 3
-
-This patch changes statistics gathering to make sure that zero noise
-results are ignored for valid rx chains. The rationale being that even if
-anntenna is not connected we should be able to see non zero noise if rx
-chain is present.
-
-This patch fixes the problem of disabling working chains on hardware I
-have (6300 and 5300). With three connected antennas statistics in
-chain_noise looks like this (6300):
-
-active_chains:			 7
-chain_noise_a:			 321
-chain_noise_b:			 243
-chain_noise_c:			 311
-chain_signal_a:			 559
-chain_signal_b:			 452
-chain_signal_c:			 512
-beacon_count:			 16
-disconn_array:			 0 0 0
-delta_gain_code:		 4 3 0
-radio_write:			 1
-state:				 3
-
-It also works fine in case one 3-chain hardware has only two antennas
-attached (tested in 5300):
-
-active_chains:			 3
-chain_noise_a:			 238
-chain_noise_b:			 234
-chain_noise_c:			 219
-chain_signal_a:			 533
-chain_signal_b:			 514
-chain_signal_c:			 206
-beacon_count:			 16
-disconn_array:			 0 0 1
-delta_gain_code:		 4 0 0
-radio_write:			 1
-state:				 3
-
-Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/dvm/calib.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/staging/wilc1000/host_interface.c         | 14 +++++++-------
+ drivers/staging/wilc1000/host_interface.h         |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  8 ++++----
+ 3 files changed, 12 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/calib.c b/drivers/net/wireless/iwlwifi/dvm/calib.c
-index 20e6aa9..cdaa88d 100644
---- a/drivers/net/wireless/iwlwifi/dvm/calib.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/calib.c
-@@ -1026,6 +1026,18 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c4d83b9..f5c6bfb 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -830,7 +830,7 @@ static s32 Handle_Scan(struct wilc_vif *vif,
+ 	strWIDList[u32WidsCount].type = WID_STR;
  
- 	spin_unlock_bh(&priv->statistics.lock);
+ 	for (i = 0; i < pstrHostIFscanAttr->hidden_network.u8ssidnum; i++)
+-		valuesize += ((pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo[i].ssid_len) + 1);
++		valuesize += ((pstrHostIFscanAttr->hidden_network.net_info[i].ssid_len) + 1);
+ 	pu8HdnNtwrksWidVal = kmalloc(valuesize + 1, GFP_KERNEL);
+ 	strWIDList[u32WidsCount].val = pu8HdnNtwrksWidVal;
+ 	if (strWIDList[u32WidsCount].val) {
+@@ -841,9 +841,9 @@ static s32 Handle_Scan(struct wilc_vif *vif,
+ 		PRINT_D(HOSTINF_DBG, "In Handle_ProbeRequest number of ssid %d\n", pstrHostIFscanAttr->hidden_network.u8ssidnum);
  
-+	/* Sometimes firmware returns zero for chain noise and signal
-+	 * even if chain is present and antenna is connected. This
-+	 * often results in perfectly valid chains being disabled.
-+	 * Ignore statistics if it contains zero noise for valid rx
-+	 * chain: even with antenna disconnected we should hear some noise.
-+	 */
-+	if ((priv->nvm_data->valid_rx_ant & ANT_A && chain_noise_a == 0) ||
-+	    (priv->nvm_data->valid_rx_ant & ANT_B && chain_noise_b == 0) ||
-+	    (priv->nvm_data->valid_rx_ant & ANT_C && chain_noise_c == 0)) {
-+		return;
-+	}
-+
- 	data->beacon_count++;
+ 		for (i = 0; i < pstrHostIFscanAttr->hidden_network.u8ssidnum; i++) {
+-			*pu8Buffer++ = pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo[i].ssid_len;
+-			memcpy(pu8Buffer, pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo[i].ssid, pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo[i].ssid_len);
+-			pu8Buffer += pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo[i].ssid_len;
++			*pu8Buffer++ = pstrHostIFscanAttr->hidden_network.net_info[i].ssid_len;
++			memcpy(pu8Buffer, pstrHostIFscanAttr->hidden_network.net_info[i].ssid, pstrHostIFscanAttr->hidden_network.net_info[i].ssid_len);
++			pu8Buffer += pstrHostIFscanAttr->hidden_network.net_info[i].ssid_len;
+ 		}
  
- 	data->chain_noise_a = (chain_noise_a + data->chain_noise_a);
+ 		strWIDList[u32WidsCount].size = (s32)(valuesize + 1);
+@@ -912,8 +912,8 @@ ERRORHANDLER:
+ 
+ 	kfree(pstrHostIFscanAttr->ies);
+ 	pstrHostIFscanAttr->ies = NULL;
+-	kfree(pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo);
+-	pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo = NULL;
++	kfree(pstrHostIFscanAttr->hidden_network.net_info);
++	pstrHostIFscanAttr->hidden_network.net_info = NULL;
+ 
+ 	kfree(pu8HdnNtwrksWidVal);
+ 
+@@ -3691,7 +3691,7 @@ s32 wilc_scan(struct wilc_vif *vif, u8 u8ScanSource, u8 u8ScanType,
+ 	msg.id = HOST_IF_MSG_SCAN;
+ 
+ 	if (pstrHiddenNetwork) {
+-		msg.body.scan_info.hidden_network.pstrHiddenNetworkInfo = pstrHiddenNetwork->pstrHiddenNetworkInfo;
++		msg.body.scan_info.hidden_network.net_info = pstrHiddenNetwork->net_info;
+ 		msg.body.scan_info.hidden_network.u8ssidnum = pstrHiddenNetwork->u8ssidnum;
+ 
+ 	} else
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 3bc609a..93a9e9a 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -191,7 +191,7 @@ struct hidden_net_info {
+ };
+ 
+ struct hidden_network {
+-	struct hidden_net_info *pstrHiddenNetworkInfo;
++	struct hidden_net_info *net_info;
+ 	u8 u8ssidnum;
+ };
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 56d736c..f0dd38d 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -644,16 +644,16 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 		PRINT_D(CFG80211_DBG, "Number of SSIDs %d\n", request->n_ssids);
+ 
+ 		if (request->n_ssids >= 1) {
+-			strHiddenNetwork.pstrHiddenNetworkInfo = kmalloc(request->n_ssids * sizeof(struct hidden_network), GFP_KERNEL);
++			strHiddenNetwork.net_info = kmalloc(request->n_ssids * sizeof(struct hidden_network), GFP_KERNEL);
+ 			strHiddenNetwork.u8ssidnum = request->n_ssids;
+ 
+ 
+ 			for (i = 0; i < request->n_ssids; i++) {
+ 				if (request->ssids[i].ssid &&
+ 				    request->ssids[i].ssid_len != 0) {
+-					strHiddenNetwork.pstrHiddenNetworkInfo[i].ssid = kmalloc(request->ssids[i].ssid_len, GFP_KERNEL);
+-					memcpy(strHiddenNetwork.pstrHiddenNetworkInfo[i].ssid, request->ssids[i].ssid, request->ssids[i].ssid_len);
+-					strHiddenNetwork.pstrHiddenNetworkInfo[i].ssid_len = request->ssids[i].ssid_len;
++					strHiddenNetwork.net_info[i].ssid = kmalloc(request->ssids[i].ssid_len, GFP_KERNEL);
++					memcpy(strHiddenNetwork.net_info[i].ssid, request->ssids[i].ssid, request->ssids[i].ssid_len);
++					strHiddenNetwork.net_info[i].ssid_len = request->ssids[i].ssid_len;
+ 				} else {
+ 					PRINT_D(CFG80211_DBG, "Received one NULL SSID\n");
+ 					strHiddenNetwork.u8ssidnum -= 1;
 -- 
-2.7.0
+2.6.4
 
