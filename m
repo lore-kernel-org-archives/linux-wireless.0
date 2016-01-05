@@ -1,83 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f196.google.com ([209.85.217.196]:33919 "EHLO
-	mail-lb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933691AbcAYRuT (ORCPT
+Received: from mail-pf0-f169.google.com ([209.85.192.169]:33847 "EHLO
+	mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751740AbcAEOHQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 12:50:19 -0500
-Received: by mail-lb0-f196.google.com with SMTP id oe3so7233462lbb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2016 09:50:18 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20151229190357.GJ16437@tuxbot>
-References: <1451266467-15377-1-git-send-email-bjorn.andersson@sonymobile.com>
-	<1451266467-15377-5-git-send-email-bjorn.andersson@sonymobile.com>
-	<20151229183440.GC12450@rob-hp-laptop>
-	<20151229190357.GJ16437@tuxbot>
-Date: Mon, 25 Jan 2016 09:50:17 -0800
-Message-ID: <CAJAp7OjVBkBQTsmg5JUcmeA+ZQO=NCATn0zRj3ipdkB2qGPuhA@mail.gmail.com> (sfid-20160125_185024_448898_54663CA7)
-Subject: Re: [PATCH 4/4] dt: binding: Add Qualcomm wcn36xx WiFi binding
-From: Bjorn Andersson <bjorn@kryo.se>
-To: Rob Herring <robh@kernel.org>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	yfw <fengwei.yin@linaro.org>,
-	linux-arm-msm <linux-arm-msm@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	wcn36xx <wcn36xx@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 5 Jan 2016 09:07:16 -0500
+Received: by mail-pf0-f169.google.com with SMTP id e65so167951214pfe.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2016 06:07:15 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 05/13] staging: wilc1000: rename u8ChnlListLen in wilc_scan
+Date: Tue,  5 Jan 2016 23:06:49 +0900
+Message-Id: <1452002817-30937-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20160105_150719_401129_482DB0CF)
+In-Reply-To: <1452002817-30937-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1452002817-30937-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 29, 2015 at 11:03 AM, Bjorn Andersson <bjorn@kryo.se> wrote:
-> On Tue 29 Dec 10:34 PST 2015, Rob Herring wrote:
->
->> On Sun, Dec 27, 2015 at 05:34:27PM -0800, Bjorn Andersson wrote:
->> > Add binding representing the Qualcomm wcn3620/60/80 WiFi block.
->> > Signed-off-by: Bjorn Andersson <bjorn.andersson@sonymobile.com>
->> > ---
->> >  .../bindings/net/wireless/qcom,wcn36xx-wifi.txt    | 76 ++++++++++++++++++++++
->> >  1 file changed, 76 insertions(+)
->> >  create mode 100644 Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt
->> >
->> > diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt b/Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt
->> > new file mode 100644
->> > index 000000000000..7b314b9f30af
->> > --- /dev/null
->> > +++ b/Documentation/devicetree/bindings/net/wireless/qcom,wcn36xx-wifi.txt
->> > @@ -0,0 +1,76 @@
->> > +Qualcomm WCN36xx WiFi Binding
->> > +
->> > +This binding describes the Qualcomm WCN36xx WiFi hardware. The hardware block
->> > +is part of the Qualcomm WCNSS core, a WiFi/BT/FM combo chip, found in a variety
->> > +of Qualcomm platforms.
->>
->> Are BT/FM functions completely separate? If so, separate bindings are
->> okay. If not, then we need to describe the full chip.
->>
->
-> It's three different hardware blocks (WiFi, BT and FM-radio) with shared
-> RF-hardware and an ARM core for control logic.
->
-> There seems to be some control commands going towards the BT part that
-> controls coexistence properties of the RF-hardware, but other than that
-> I see it as logically separate blocks.
->
->
-> So I think it's fine to model this as separate pieces in DT.
->
+This patch renames u8ChnlListLen to ch_list_len to avoid camelcase.
 
-After more testing I've concluded that there is a timing dependency
-between the WiFi driver and the wcnss_ctrl driver. If the WiFi driver
-starts communicating with the WLAN subsystem in the WCNSS block before
-we have finished uploading the NV data to the WCNSS core further
-communication will fail.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-So looks like I need to remodel this slightly to take this into account :/
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 48c40de..07ff083 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3673,7 +3673,7 @@ int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *stats)
+ }
+ 
+ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
+-	      u8 *ch_freq_list, u8 u8ChnlListLen, const u8 *pu8IEs,
++	      u8 *ch_freq_list, u8 ch_list_len, const u8 *pu8IEs,
+ 	      size_t IEsLen, wilc_scan_result ScanResult, void *pvUserArg,
+ 	      struct hidden_network *pstrHiddenNetwork)
+ {
+@@ -3703,9 +3703,9 @@ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
+ 	msg.body.scan_info.result = ScanResult;
+ 	msg.body.scan_info.arg = pvUserArg;
+ 
+-	msg.body.scan_info.ch_list_len = u8ChnlListLen;
+-	msg.body.scan_info.ch_freq_list = kmalloc(u8ChnlListLen, GFP_KERNEL);
+-	memcpy(msg.body.scan_info.ch_freq_list, ch_freq_list, u8ChnlListLen);
++	msg.body.scan_info.ch_list_len = ch_list_len;
++	msg.body.scan_info.ch_freq_list = kmalloc(ch_list_len, GFP_KERNEL);
++	memcpy(msg.body.scan_info.ch_freq_list, ch_freq_list, ch_list_len);
+ 
+ 	msg.body.scan_info.ies_len = IEsLen;
+ 	msg.body.scan_info.ies = kmalloc(IEsLen, GFP_KERNEL);
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 998d449..7d7675a 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -336,7 +336,7 @@ int wilc_disconnect(struct wilc_vif *vif, u16 reason_code);
+ int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel);
+ int wilc_get_rssi(struct wilc_vif *vif, s8 *rssi_level);
+ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
+-	      u8 *ch_freq_list, u8 u8ChnlListLen, const u8 *pu8IEs,
++	      u8 *ch_freq_list, u8 ch_list_len, const u8 *pu8IEs,
+ 	      size_t IEsLen, wilc_scan_result ScanResult, void *pvUserArg,
+ 	      struct hidden_network *pstrHiddenNetwork);
+ int wilc_hif_set_cfg(struct wilc_vif *vif,
+-- 
+2.6.4
 
-Regards,
-Bjorn
