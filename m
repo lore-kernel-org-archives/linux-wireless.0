@@ -1,90 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f179.google.com ([209.85.192.179]:33249 "EHLO
-	mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752518AbcA1ORv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 09:17:51 -0500
-Received: by mail-pf0-f179.google.com with SMTP id x125so24560503pfb.0
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jan 2016 06:17:44 -0800 (PST)
-From: Kees Cook <keescook@chromium.org>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Kees Cook <keescook@chromium.org>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Joe Perches <joe@perches.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Steve French <sfrench@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>, x86@kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-cifs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 2/3] lib: add "on" and "off" to strtobool
-Date: Thu, 28 Jan 2016 06:17:06 -0800
-Message-Id: <1453990627-19164-3-git-send-email-keescook@chromium.org> (sfid-20160128_151856_510221_38479A04)
-In-Reply-To: <1453990627-19164-1-git-send-email-keescook@chromium.org>
-References: <1453990627-19164-1-git-send-email-keescook@chromium.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38277 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751998AbcAEQCh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Jan 2016 11:02:37 -0500
+Message-ID: <1452009755.12357.44.camel@sipsolutions.net> (sfid-20160105_170241_005612_30E20363)
+Subject: Re: Reading the current monitor flags of an interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Roger James <roger@beardandsandals.co.uk>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 05 Jan 2016 17:02:35 +0100
+In-Reply-To: <5687FA72.9000301@beardandsandals.co.uk> (sfid-20160102_173707_470075_5C473AA9)
+References: <5687FA72.9000301@beardandsandals.co.uk>
+	 (sfid-20160102_173707_470075_5C473AA9)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Several places in the kernel expect to use "on" and "off" for their
-boolean signifiers, so add them to strtobool.
+On Sat, 2016-01-02 at 16:27 +0000, Roger James wrote:
+> Hi,
+> 
+> I am trying to get at the current monitor flags setting of a wireless
+> monitor mode virtual interface. I have tried to do this by hacking
+> the 
+> iw source. However I never see a NL80211_ATTR_MNTR_FLAGS attribute 
+> returned in response to the
+> 
+> TOPLEVEL(info, NULL, NL80211_CMD_GET_INTERFACE, 0, CIB_NETDEV, 
+> handle_interface_info,
+>       "Show information for this interface.");
+> 
+> command in iw's interface.c code.
+> 
+> Questions.
+> 
+> 1. Am I wasting my time? (e.g. the rt2800usb driver never returns
+> this 
+> info, or there is another easy way of viewing this info, etc)
+> 
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
-Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: Daniel Borkmann <daniel@iogearbox.net>
----
- lib/string.c | 24 +++++++++++++++++++++---
- 1 file changed, 21 insertions(+), 3 deletions(-)
+Looks like it's never set in the corresponding kernel code.
 
-diff --git a/lib/string.c b/lib/string.c
-index 0323c0d5629a..091570708db7 100644
---- a/lib/string.c
-+++ b/lib/string.c
-@@ -635,12 +635,15 @@ EXPORT_SYMBOL(sysfs_streq);
-  * @s: input string
-  * @res: result
-  *
-- * This routine returns 0 iff the first character is one of 'Yy1Nn0'.
-- * Otherwise it will return -EINVAL.  Value pointed to by res is
-- * updated upon finding a match.
-+ * This routine returns 0 iff the first character is one of 'Yy1Nn0', or
-+ * [oO][NnFf] for "on" and "off". Otherwise it will return -EINVAL.  Value
-+ * pointed to by res is updated upon finding a match.
-  */
- int strtobool(const char *s, bool *res)
- {
-+	if (!s)
-+		return -EINVAL;
-+
- 	switch (s[0]) {
- 	case 'y':
- 	case 'Y':
-@@ -652,6 +655,21 @@ int strtobool(const char *s, bool *res)
- 	case '0':
- 		*res = false;
- 		break;
-+	case 'o':
-+	case 'O':
-+		switch (s[1]) {
-+		case 'n':
-+		case 'N':
-+			*res = true;
-+			break;
-+		case 'f':
-+		case 'F':
-+			*res = false;
-+			break;
-+		default:
-+			return -EINVAL;
-+		}
-+		break;
- 	default:
- 		return -EINVAL;
- 	}
--- 
-2.6.3
-
+johannes
