@@ -1,98 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:36985 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754885AbcAJLE1 (ORCPT
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:35909 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751094AbcAEJAc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jan 2016 06:04:27 -0500
-Received: by mail-wm0-f54.google.com with SMTP id f206so229578319wmf.0
-        for <linux-wireless@vger.kernel.org>; Sun, 10 Jan 2016 03:04:26 -0800 (PST)
-From: poma <pomidorabelisima@gmail.com>
-Subject: Re: Wi-Fi - ath10k QCA9377 chipset support - kernel 4.2.x backport
-References: <CADtwgbzdjw3Ef-64Fu1OahnARnb9u8Q-jcZR8GeWoMXBco=7DA@mail.gmail.com>
- <CAJm42398V=NVFsRVZp9EmL6=9gfCfiYehMYOBeB-3rhonn2hwg@mail.gmail.com>
- <CADtwgbzUVSnhQdojbRmNud_v1NsgipjkwvKL_k884js3_WKsYA@mail.gmail.com>
- <5691AE01.8070203@gmail.com>
- <CADtwgbxw1BmXn_nFLxD9xJgAw8xsdM-3ri-Kd5CTU9+2QEOmEQ@mail.gmail.com>
- <CAJm4238HOP0fWK-86-ujSGieiUGRL=5O2VQY_13d5k0hf2d1qw@mail.gmail.com>
-Cc: Community support for Fedora users
-	<users@lists.fedoraproject.org>, Brandon.Vincent@asu.edu,
-	linux-wireless <linux-wireless@vger.kernel.org>
-To: outperformer@gmail.com
-Message-ID: <56923AB7.8020905@gmail.com> (sfid-20160110_120458_621699_1BD27870)
-Date: Sun, 10 Jan 2016 12:04:23 +0100
-MIME-Version: 1.0
-In-Reply-To: <CAJm4238HOP0fWK-86-ujSGieiUGRL=5O2VQY_13d5k0hf2d1qw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+	Tue, 5 Jan 2016 04:00:32 -0500
+Received: by mail-lb0-f169.google.com with SMTP id oh2so171446269lbb.3
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2016 01:00:31 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH] mac80211: add use_minrate param to ieee80211_tx_prepare_skb()
+Date: Tue,  5 Jan 2016 10:00:19 +0100
+Message-Id: <1451984419-5727-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20160105_100035_907131_981B03DF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 10.01.2016 02:36, Brandon Vincent wrote:
-> On Sat, Jan 9, 2016 at 6:12 PM, M. Gelle <outperformer@gmail.com> wrote:
->> Sorry, I thought you new there was only one public download that wasn't
->> working. I'll try this although I thought the file should have been a Linux
->> archive. I'll see if Brandon comes up with another link. Sorry again, for my
->> frustration.
-> 
-> Let's try using the latest backport drivers from upstream.
-> 
-> dnf group install "Development Tools"
-> dnf install kernel-devel
-> wget https://www.kernel.org/pub/linux/kernel/projects/backports/stable/v4.3/backports-4.3-1.tar.gz
-> tar -zxvf backports-4.3.1.tar.gz
-> cd backports-4.3.1
-> make defconfig-ath10k
-> make
-> sudo make install
-> 
-> Reboot the system and see if you wireless card starts to work.
-> 
-> Brandon Vincent
-> 
+Add use_minrate param to ieee80211_tx_prepare_skb() function.
+This is useful in case we would like to send frames
+with lowest rates, eg. nullfunc, probe_resp.
 
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ drivers/net/wireless/ath/ath9k/channel.c | 5 +++--
+ include/net/mac80211.h                   | 4 +++-
+ net/mac80211/tx.c                        | 6 +++++-
+ 3 files changed, 11 insertions(+), 4 deletions(-)
 
-Kernel:
-4.2.8-200.fc22.x86_64
-
-
-Modules:
-ath10k backports releases
-https://wireless.wiki.kernel.org/en/users/drivers/ath10k/backports
-
-This one includes ath10k QCA9377 chipset support:
-$ wget https://www.kernel.org/pub/linux/kernel/projects/backports/2015/11/20/sha256sums.asc
-$ wget https://www.kernel.org/pub/linux/kernel/projects/backports/2015/11/20/backports-20151120.tar.sign
-$ wget https://www.kernel.org/pub/linux/kernel/projects/backports/2015/11/20/backports-20151120.tar.xz
-
-$ gpg --verify sha256sums.asc
-$ gpg --verify backports-20151120.tar.sign backports-20151120.tar.xz
-$ sha256sum -c sha256sums.asc
-
-$ tar xf backports-20151120.tar.xz
-$ cd backports-20151120/
-$ make defconfig-ath10k
-$ make
-$ su
-# make install
-
-
-Firmware:
-[PATCH v2] ath10k: add QCA9377 chipset support
-http://www.spinics.net/lists/linux-wireless/msg143148.html
-
-<quote>
-... pushed the firmware image here:
-
-https://github.com/kvalo/ath10k-firmware/tree/master/QCA9377/hw1.0
-
-All reports, good or bad, are very welcome.
-...
-</quote>
-
-
-# mkdirhier /usr/lib/firmware/ath10k/QCA9377/hw1.0
-# cd /usr/lib/firmware/ath10k/QCA9377/hw1.0
-# wget https://github.com/kvalo/ath10k-firmware/raw/master/QCA9377/hw1.0/board.bin
-# wget https://github.com/kvalo/ath10k-firmware/raw/master/QCA9377/hw1.0/firmware-5.bin_WLAN.TF.1.0-00267-1 -O firmware-5.bin
-# wget https://github.com/kvalo/ath10k-firmware/raw/master/QCA9377/hw1.0/notice.txt_WLAN.TF.1.0-00267-1 -O notice-WLAN.TF.1.0-00267-1.txt
-
+diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
+index b81f65c..ccb2d76 100644
+--- a/drivers/net/wireless/ath/ath9k/channel.c
++++ b/drivers/net/wireless/ath/ath9k/channel.c
+@@ -1040,7 +1040,7 @@ static void ath_scan_send_probe(struct ath_softc *sc,
+ 
+ 	skb_set_queue_mapping(skb, IEEE80211_AC_VO);
+ 
+-	if (!ieee80211_tx_prepare_skb(sc->hw, vif, skb, band, NULL))
++	if (!ieee80211_tx_prepare_skb(sc->hw, vif, skb, band, NULL, true))
+ 		goto error;
+ 
+ 	txctl.txq = sc->tx.txq_map[IEEE80211_AC_VO];
+@@ -1155,7 +1155,8 @@ ath_chanctx_send_vif_ps_frame(struct ath_softc *sc, struct ath_vif *avp,
+ 
+ 		skb->priority = 7;
+ 		skb_set_queue_mapping(skb, IEEE80211_AC_VO);
+-		if (!ieee80211_tx_prepare_skb(sc->hw, vif, skb, band, &sta)) {
++		if (!ieee80211_tx_prepare_skb(sc->hw, vif, skb,
++					      band, &sta, true)) {
+ 			dev_kfree_skb_any(skb);
+ 			return false;
+ 		}
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 0ea9b51..7269fca 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5412,12 +5412,14 @@ void ieee80211_report_wowlan_wakeup(struct ieee80211_vif *vif,
+  * @skb: frame to be sent from within the driver
+  * @band: the band to transmit on
+  * @sta: optional pointer to get the station to send the frame to
++ * @use_minrate: use lowest rate
+  *
+  * Note: must be called under RCU lock
+  */
+ bool ieee80211_tx_prepare_skb(struct ieee80211_hw *hw,
+ 			      struct ieee80211_vif *vif, struct sk_buff *skb,
+-			      int band, struct ieee80211_sta **sta);
++			      int band, struct ieee80211_sta **sta,
++			      bool use_minrate);
+ 
+ /**
+  * struct ieee80211_noa_data - holds temporary data for tracking P2P NoA state
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index a512c4b..ebe8268 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1526,7 +1526,8 @@ static int invoke_tx_handlers(struct ieee80211_tx_data *tx)
+ 
+ bool ieee80211_tx_prepare_skb(struct ieee80211_hw *hw,
+ 			      struct ieee80211_vif *vif, struct sk_buff *skb,
+-			      int band, struct ieee80211_sta **sta)
++			      int band, struct ieee80211_sta **sta,
++			      bool use_minrate)
+ {
+ 	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+@@ -1540,6 +1541,9 @@ bool ieee80211_tx_prepare_skb(struct ieee80211_hw *hw,
+ 	info->control.vif = vif;
+ 	info->hw_queue = vif->hw_queue[skb_get_queue_mapping(skb)];
+ 
++	if (use_minrate)
++		info->flags |= IEEE80211_TX_CTL_USE_MINRATE;
++
+ 	if (invoke_tx_handlers(&tx))
+ 		return false;
+ 
+-- 
+1.9.1
 
