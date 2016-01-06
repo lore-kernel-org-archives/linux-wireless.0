@@ -1,91 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:33257 "EHLO
-	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934244AbcAULb5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 06:31:57 -0500
-Received: by mail-pf0-f196.google.com with SMTP id e65so1726837pfe.0
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:31:57 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 04/27] staging: wilc1000: rename pstrNext in struct message
-Date: Thu, 21 Jan 2016 20:30:34 +0900
-Message-Id: <1453375857-20645-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123200_748386_6875C22F)
-In-Reply-To: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:42541 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752610AbcAFLLD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jan 2016 06:11:03 -0500
+Message-ID: <1452078660.2541.7.camel@sipsolutions.net> (sfid-20160106_121122_103069_8550436B)
+Subject: Re: [PATCH] iw:Fix memory leak if nla_put fails
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Rahul Jain <rahul.jain@samsung.com>
+Cc: linux-wireless@vger.kernel.org,
+	Amit Khatri <amit.khatri@samsung.com>
+Date: Wed, 06 Jan 2016 12:11:00 +0100
+In-Reply-To: <1448617041-20120-1-git-send-email-rahul.jain@samsung.com>
+References: <1448617041-20120-1-git-send-email-rahul.jain@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pstrNext to next to avoid camelcase.
+On Fri, 2015-11-27 at 15:07 +0530, Rahul Jain wrote:
+> 
+> @@ -124,7 +124,8 @@ static int handle_coalesce_enable(struct
+> nl80211_state *state,
+>  					nla_nest_end(msg, nl_pat);
+>  					free(mask);
+>  					free(pat);
+> -
+> +					pat = NULL;
+> +					mask = NULL;
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_msgqueue.c | 12 ++++++------
- drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
- 2 files changed, 7 insertions(+), 7 deletions(-)
+I'd prefer to keep the blank line.
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 0e66a64..4d79a31 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -38,7 +38,7 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
- 	}
- 
- 	while (pHandle->pstrMessageList) {
--		struct message *pstrMessge = pHandle->pstrMessageList->pstrNext;
-+		struct message *pstrMessge = pHandle->pstrMessageList->next;
- 
- 		kfree(pHandle->pstrMessageList);
- 		pHandle->pstrMessageList = pstrMessge;
-@@ -75,7 +75,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 		return -ENOMEM;
- 
- 	pstrMessage->len = u32SendBufferSize;
--	pstrMessage->pstrNext = NULL;
-+	pstrMessage->next = NULL;
- 	pstrMessage->buf = kmemdup(pvSendBuffer, u32SendBufferSize,
- 				   GFP_ATOMIC);
- 	if (!pstrMessage->buf) {
-@@ -91,10 +91,10 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 	} else {
- 		struct message *pstrTailMsg = pHandle->pstrMessageList;
- 
--		while (pstrTailMsg->pstrNext)
--			pstrTailMsg = pstrTailMsg->pstrNext;
-+		while (pstrTailMsg->next)
-+			pstrTailMsg = pstrTailMsg->next;
- 
--		pstrTailMsg->pstrNext = pstrMessage;
-+		pstrTailMsg->next = pstrMessage;
- 	}
- 
- 	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
-@@ -154,7 +154,7 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
- 	memcpy(pvRecvBuffer, pstrMessage->buf, pstrMessage->len);
- 	*pu32ReceivedLength = pstrMessage->len;
- 
--	pHandle->pstrMessageList = pstrMessage->pstrNext;
-+	pHandle->pstrMessageList = pstrMessage->next;
- 
- 	kfree(pstrMessage->buf);
- 	kfree(pstrMessage);
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index b0ccd1d..ec503c3 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -16,7 +16,7 @@
- struct message {
- 	void *buf;
- 	u32 len;
--	struct message *pstrNext;
-+	struct message *next;
- };
- 
- typedef struct __MessageQueue_struct {
--- 
-2.7.0
+> +	if (pat)
+> +		free(pat);
 
+free(NULL) is valid and a no-op.
+
+> -			NLA_PUT(msg, NL80211_WOWLAN_TCP_WAKE_MASK,
+> -				DIV_ROUND_UP(patlen, 8), mask);
+> -			NLA_PUT(msg,
+> NL80211_WOWLAN_TCP_WAKE_PAYLOAD,
+> -				patlen, pat);
+> +			if (nla_put(msg,
+> NL80211_WOWLAN_TCP_WAKE_MASK,
+> +				DIV_ROUND_UP(patlen, 8), mask) < 0)
+> {
+> +				free(mask);
+> +				free(pat);
+> +				mask = NULL;
+> +				pat = NULL;
+> +				goto nla_put_failure;
+> +			}
+> +			if (nla_put(msg,
+> NL80211_WOWLAN_TCP_WAKE_PAYLOAD,
+> +				patlen, pat) < 0){
+> +				free(pat);
+> +				free(mask);
+> +				pat = NULL;
+> +				mask = NULL;
+> +				goto nla_put_failure;
+> +			}
+
+I don't understand - you also updated the nla_put_failure label to free
+it.
+
+>  			free(mask);
+>  			free(pat);
+
+seems like you need NULL here though.
+
+johannes
