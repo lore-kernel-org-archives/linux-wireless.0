@@ -1,94 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:28518 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757348AbcAaLHE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2016 06:07:04 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 31/31] iwlwifi: mvm: allow to disable beacon filtering for AP/GO interface
-Date: Sun, 31 Jan 2016 13:06:26 +0200
-Message-Id: <1454238386-27032-31-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160131_123654_424309_D76F74D1)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+Received: from [82.165.8.211] ([82.165.8.211]:56697 "EHLO mail.holtmann.org"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750845AbcAFG4L convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jan 2016 01:56:11 -0500
+Content-Type: text/plain; charset=utf-8
+Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
+Subject: Re: [PATCH] net/rfkill: Create "airplane mode" LED trigger
+From: Marcel Holtmann <marcel@holtmann.org>
+In-Reply-To: <1451142303-1872-2-git-send-email-jprvita@endlessm.com>
+Date: Tue, 5 Jan 2016 22:55:46 -0800
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	=?utf-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
+Message-Id: <6DC3AA8C-DDE9-44B8-91C5-94B1EB0DBE9A@holtmann.org> (sfid-20160106_075632_263112_2D38A2D6)
+References: <1451142303-1872-1-git-send-email-jprvita@endlessm.com> <1451142303-1872-2-git-send-email-jprvita@endlessm.com>
+To: =?utf-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Hi Joao,
 
-When in AP mode we need to filter in beacons from other APs to update HT
-operation mode. As a power optimization the beacons are filtered out when
-there are no associated stations. As a result, when there are no
-associated stations, we will not update the HT operation mode until a
-station connects.
-Add a debugfs parameter that allows to disable this optimization.
+> For platform drivers to be able to correctly drive the "Airplane Mode"
+> indicative LED there needs to be a RFKill LED trigger tied to the global
+> state of RFKILL_TYPE_ALL (instead of to a specific RFKill) and that
+> works in an inverted manner of regular RFKill LED triggers, that is, the
+> LED is ON when the state is blocked, and OFF otherwise.
+> 
+> This commit implements such a trigger, which will be used by the
+> asus-wireless x86 platform driver.
+> 
+> Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+> ---
+> net/rfkill/core.c | 30 ++++++++++++++++++++++++++++++
+> 1 file changed, 30 insertions(+)
+> 
+> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+> index b41e9ea..3effc29 100644
+> --- a/net/rfkill/core.c
+> +++ b/net/rfkill/core.c
+> @@ -124,6 +124,26 @@ static bool rfkill_epo_lock_active;
+> 
+> 
+> #ifdef CONFIG_RFKILL_LEDS
+> +static void airplane_mode_led_trigger_activate(struct led_classdev *led);
+> +
+> +static struct led_trigger airplane_mode_led_trigger = {
+> +	.name     = "rfkill-airplane-mode",
+> +	.activate = airplane_mode_led_trigger_activate,
+> +};
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c  | 3 +++
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 6 ++++++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c      | 1 +
- 4 files changed, 11 insertions(+), 1 deletion(-)
+so I am not convinced the kernel should have the concept of airplane mode at all. It is kinda of a term that keeps changing since airlines do now allow WiFi and Bluetooth short range transmissions during flight. We stayed away from calling it airplane mode since by the nature of it being governed by local regulations it will change over time.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-index 005cc09..c529e53 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
-@@ -1548,6 +1548,9 @@ int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir)
- 				 mvm->debugfs_dir,
- 				 &mvm->scan_iter_notif_enabled))
- 		goto err;
-+	if (!debugfs_create_bool("drop_bcn_ap_mode", S_IRUSR | S_IWUSR,
-+				 mvm->debugfs_dir, &mvm->drop_bcn_ap_mode))
-+		goto err;
- 
- #ifdef CONFIG_IWLWIFI_BCAST_FILTERING
- 	if (mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_BCAST_FILTERING) {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index 62927f5..535134d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -744,7 +744,7 @@ static void iwl_mvm_mac_ctxt_cmd_common(struct iwl_mvm *mvm,
- 		 * wake-ups.
- 		 */
- 		cmd->filter_flags |= cpu_to_le32(MAC_FILTER_IN_PROBE_REQUEST);
--		if (mvmvif->ap_assoc_sta_count) {
-+		if (mvmvif->ap_assoc_sta_count || !mvm->drop_bcn_ap_mode) {
- 			cmd->filter_flags |= cpu_to_le32(MAC_FILTER_IN_BEACON);
- 			IWL_DEBUG_HC(mvm, "Asking FW to pass beacons\n");
- 		} else {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 747f7eb..ebe37bb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -859,6 +859,12 @@ struct iwl_mvm {
- 
- 	u32 ciphers[6];
- 	struct iwl_mvm_tof_data tof_data;
-+
-+	/*
-+	 * Drop beacons from other APs in AP mode when there are no connected
-+	 * clients.
-+	 */
-+	bool drop_bcn_ap_mode;
- };
- 
- /* Extract MVM priv from op_mode and _hw */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 325ff8a..09a94a5 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -492,6 +492,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	}
- 	mvm->sf_state = SF_UNINIT;
- 	mvm->cur_ucode = IWL_UCODE_INIT;
-+	mvm->drop_bcn_ap_mode = true;
- 
- 	mutex_init(&mvm->mutex);
- 	mutex_init(&mvm->d0i3_suspend_mutex);
--- 
-2.5.0
+The RFKILL subsystem got away with not labeling it by just saying RFKILL_CHANGE_ALL and if we want a trigger for that action we better find a more general term to describe the fact that all RF devices are shut off.
+
+Keep in mind that even with airplane mode on, you can re-activate Bluetooth and WiFi these days. So while you are in airplane mode, then RFKILL switches for these two technologies can be taken back off. If we wanted to model that in the kernel we would be putting policy in the kernel and I think that is a bad idea.
+
+That is pretty much the main reason why ConnMan never tried to push the information about flight mode back into the kernel. It is not a policy that the kernel can determine in the first place.
+
+Regards
+
+Marcel
 
