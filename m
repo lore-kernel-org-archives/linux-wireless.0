@@ -1,82 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44214 "EHLO mail.kernel.org"
+Received: from glaubenleben.de ([85.214.105.140]:57606 "EHLO glaubenleben.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750957AbcAOCUZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2016 21:20:25 -0500
-Date: Thu, 14 Jan 2016 20:20:21 -0600
-From: Rob Herring <robh@kernel.org>
-To: Raja Mani <rmani@qti.qualcomm.com>
-Cc: agross@codeaurora.org, devicetree@vger.kernel.org,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH v3] dt: bindings: add bindings for ipq4019 wifi block
-Message-ID: <20160115022021.GA27099@rob-hp-laptop> (sfid-20160115_032039_727708_372CBD65)
-References: <1452664604-8014-1-git-send-email-rmani@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1452664604-8014-1-git-send-email-rmani@qti.qualcomm.com>
+	id S1751969AbcAFVSb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jan 2016 16:18:31 -0500
+From: Andreas Kemnade <andreas@kemnade.info>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Andreas Kemnade <andreas@kemnade.info>
+Subject: [PATCH 3/6] wireless:libertas: add an cfg80211 interface for powersaving
+Date: Wed,  6 Jan 2016 22:08:11 +0100
+Message-Id: <1452114494-6451-4-git-send-email-andreas@kemnade.info> (sfid-20160106_221834_413083_3C9E45F9)
+In-Reply-To: <1452114494-6451-1-git-send-email-andreas@kemnade.info>
+References: <1452114494-6451-1-git-send-email-andreas@kemnade.info>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 13, 2016 at 11:26:44AM +0530, Raja Mani wrote:
-> Add device tree binding documentation details for wifi block present
-> in Qualcomm IPQ4019 SoC into "qcom,ath10k.txt".
-> 
-> Right now, ath10k wireless driver has support for PCI based wlan devices.
-> There is a plan to extend ath10k driver to support wifi devices which are
-> connected over AHB as well (enumeration will happen via device tree node).
-> For AHB based devices (ie, ipq4019), all wifi properties are supplied via
-> device tree (including irq, reg addr, cal data,etc).
-> 
-> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
-> ---
-> v3 changes:
->   - Removed core-id - [Rob]
->   - Documented which compatible string corresponds to pci devices
->     and which corresponds to ahb devices. - [Rob]
-> 
-> v2 changes:
->  - Improved "core-id" description - [Rob]
->  - Removed "status" documentation - [Rob]
->  - Added description which properties are applicable
->    for ahb and which are applicable for pci devices - [Rob]
->  - Improved commit msg to explain the context.
->  - Renamed "qca,msi_addr" to "qcom,msi_addr" and
->    "qca,msi_base" to "qcom,msi_base" to follow uniformity.
-> 
->  .../bindings/net/wireless/qcom,ath10k.txt          | 89 ++++++++++++++++++++--
->  1 file changed, 84 insertions(+), 5 deletions(-)
+This patch adds an interface for handling commands like
+iwconfig wlanX power on/off. Such an interface formerly existed
+when the driver used wext.
 
-A few typos, otherwise:
+While performance with sdio in polling mode without using
+powersave mode is quite bad, powersaving mode is unusable,
+so do not enable it under such conditions.
 
-Acked-by: Rob Herring <robh@kernel.org>
+Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
+---
+ drivers/net/wireless/libertas/cfg.c | 38 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
 
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> index edefc26..bf8c0f8c 100644
-> --- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> +++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-> @@ -1,17 +1,46 @@
->  * Qualcomm Atheros ath10k wireless devices
->  
-> -For ath10k devices the calibration data can be provided through Device
-> -Tree. The node is a child node of the PCI controller.
-> -
->  Required properties:
-> --compatible : Should be "qcom,ath10k"
-> +- compatible: Should be one of the following:
-> +	* "qcom,ath10k"
-> +	* "qcom,ipq4019-wifi"
-> +
-> +PCI based devices uses compatible string "qcom,ath10k" and takes only
-> +calibration data via "qcom,ath10k-calibration-data". Reset of the properties
+diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
+index 8317afd..fd18d03 100644
+--- a/drivers/net/wireless/libertas/cfg.c
++++ b/drivers/net/wireless/libertas/cfg.c
+@@ -2038,6 +2038,43 @@ static int lbs_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
+ 
+ 
+ 
++int lbs_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
++		       bool enabled, int timeout)
++{
++	struct lbs_private *priv = wiphy_priv(wiphy);
++
++	if  (!(priv->fwcapinfo & FW_CAPINFO_PS)) {
++		if (!enabled)
++			return 0;
++		else
++			return -EINVAL;
++	}
++	/* firmware does not work well with too long latency with power saving
++	 * enabled, so do not enable it if there is only polling, no
++	 * interrupts (like in some sdio hosts which can only
++	 * poll for sdio irqs)
++	 */
++	if  (priv->is_polling) {
++		if (!enabled)
++			return 0;
++		else
++			return -EINVAL;
++	}
++	if (!enabled) {
++		priv->psmode = LBS802_11POWERMODECAM;
++		if (priv->psstate != PS_STATE_FULL_POWER)
++			lbs_set_ps_mode(priv,
++					PS_MODE_ACTION_EXIT_PS,
++					true);
++		return 0;
++	}
++	if (priv->psmode != LBS802_11POWERMODECAM)
++		return 0;
++	priv->psmode = LBS802_11POWERMODEMAX_PSP;
++	if (priv->connect_status == LBS_CONNECTED)
++		lbs_set_ps_mode(priv, PS_MODE_ACTION_ENTER_PS, true);
++	return 0;
++}
+ 
+ /*
+  * Initialization
+@@ -2056,6 +2093,7 @@ static struct cfg80211_ops lbs_cfg80211_ops = {
+ 	.change_virtual_intf = lbs_change_intf,
+ 	.join_ibss = lbs_join_ibss,
+ 	.leave_ibss = lbs_leave_ibss,
++	.set_power_mgmt = lbs_set_power_mgmt,
+ };
+ 
+ 
+-- 
+2.1.4
 
-s/Reset/Rest/
-
-> +are not applicable for PCI based devices.
-> +
-> +AHB based devices (ie, ipq4019) uses compatible string "qcom,ipq4019-wifi"
-
-s/ie,/i.e./
-
-> +and also uses most of the properties defined in this doc.
