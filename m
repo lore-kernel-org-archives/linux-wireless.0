@@ -1,221 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:52312 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932750AbcALHgE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 02:36:04 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 04/26] staging: wilc1000: add sdio resume/suspend
-Date: Tue, 12 Jan 2016 16:39:33 +0900
-Message-ID: <1452584395-24910-5-git-send-email-glen.lee@atmel.com> (sfid-20160112_083608_676368_68C2ED9C)
-In-Reply-To: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
-References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from glaubenleben.de ([85.214.105.140]:57587 "EHLO glaubenleben.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751906AbcAFVSC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jan 2016 16:18:02 -0500
+From: Andreas Kemnade <andreas@kemnade.info>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Andreas Kemnade <andreas@kemnade.info>
+Subject: [PATCH 5/6] wireless:libertas: go back to ps mode without commands pending
+Date: Wed,  6 Jan 2016 22:08:13 +0100
+Message-Id: <1452114494-6451-6-git-send-email-andreas@kemnade.info> (sfid-20160106_221818_527028_88D49BB0)
+In-Reply-To: <1452114494-6451-1-git-send-email-andreas@kemnade.info>
+References: <1452114494-6451-1-git-send-email-andreas@kemnade.info>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch introduces sdio device suspend and resume functionality. sdio_reset
-function is added to reset sdio. Remove static inline keyword from
-chip_allow_sleep and chip_wakeup, and export symbols.
+Removes the old todo block and checks only whether ieee powersave
+mode is requested. We still have to check for being connected as
+this powersave mode includes logic for regularly waking up and
+checking for packets which only makes sense when connected.
+For not being connected, another mode is needed.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
 ---
- drivers/staging/wilc1000/wilc_sdio.c          | 72 +++++++++++++++++++++++++++
- drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 +
- drivers/staging/wilc1000/wilc_wlan.c          | 11 ++--
- drivers/staging/wilc1000/wilc_wlan.h          |  3 +-
- 4 files changed, 82 insertions(+), 5 deletions(-)
+ drivers/net/wireless/libertas/cmd.c | 36 +++++-------------------------------
+ 1 file changed, 5 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
-index caad876..ece2f58 100644
---- a/drivers/staging/wilc1000/wilc_sdio.c
-+++ b/drivers/staging/wilc1000/wilc_sdio.c
-@@ -42,6 +42,7 @@ static wilc_sdio_t g_sdio;
- 
- static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data);
- static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data);
-+static int sdio_init(struct wilc *wilc);
- 
- static void wilc_sdio_interrupt(struct sdio_func *func)
- {
-@@ -142,11 +143,82 @@ static void linux_sdio_remove(struct sdio_func *func)
- 	wilc_netdev_cleanup(sdio_get_drvdata(func));
- }
- 
-+static int sdio_reset(struct wilc *wilc)
-+{
-+	sdio_cmd52_t cmd;
-+	int ret;
-+	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
-+
-+	cmd.read_write = 1;
-+	cmd.function = 0;
-+	cmd.raw = 0;
-+	cmd.address = 0x6;
-+	cmd.data = 0x8;
-+	ret = wilc_sdio_cmd52(wilc, &cmd);
-+	if (ret) {
-+		dev_err(&func->dev, "Fail cmd 52, reset cmd ...\n");
-+		return ret;
-+	}
-+	return 0;
-+}
-+
-+static int wilc_sdio_suspend(struct device *dev)
-+{
-+	struct sdio_func *func = dev_to_sdio_func(dev);
-+	struct wilc *wilc = sdio_get_drvdata(func);
-+	int ret;
-+
-+	dev_info(dev, "sdio suspend\n");
-+	chip_wakeup(wilc);
-+
-+	if(!wilc->suspend_event) {
-+		wilc_chip_sleep_manually(wilc);
-+	} else {
-+		host_sleep_notify(wilc);
-+		chip_allow_sleep(wilc);
-+	}
-+
-+	ret = sdio_reset(wilc);
-+	if (ret) {
-+		dev_err(&func->dev, "Fail reset sdio\n");
-+		return ret;
-+	}
-+	sdio_claim_host(func);
-+
-+	return 0;
-+}
-+
-+static int wilc_sdio_resume(struct device *dev)
-+{
-+	struct sdio_func *func = dev_to_sdio_func(dev);
-+	struct wilc *wilc = sdio_get_drvdata(func);
-+
-+	dev_info(dev, "sdio resume\n");
-+	sdio_release_host(func);
-+	chip_wakeup(wilc);
-+	sdio_init(wilc);
-+
-+	if(wilc->suspend_event)
-+		host_wakeup_notify(wilc);
-+
-+	chip_allow_sleep(wilc);
-+
-+	return 0;
-+}
-+
-+static const struct dev_pm_ops wilc_sdio_pm_ops = {
-+	.suspend = wilc_sdio_suspend,
-+	.resume = wilc_sdio_resume,
-+};
-+
- static struct sdio_driver wilc1000_sdio_driver = {
- 	.name		= SDIO_MODALIAS,
- 	.id_table	= wilc_sdio_ids,
- 	.probe		= linux_sdio_probe,
- 	.remove		= linux_sdio_remove,
-+	.drv = {
-+		.pm = &wilc_sdio_pm_ops,
-+	}
- };
- module_driver(wilc1000_sdio_driver,
- 	      sdio_register_driver,
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 98ac8ed..cd3d21d 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -215,6 +215,7 @@ struct wilc {
- 	const struct firmware *firmware;
- 
- 	struct device *dev;
-+	bool suspend_event;
- };
- 
- struct WILC_WFI_mon_priv {
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 977bd8a0..8a39a05 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -3,8 +3,6 @@
- #include "wilc_wfi_netdevice.h"
- #include "wilc_wlan_cfg.h"
- 
--static inline void chip_allow_sleep(struct wilc *wilc);
--static inline void chip_wakeup(struct wilc *wilc);
- static u32 dbgflag = N_INIT | N_ERR | N_INTR | N_TXQ | N_RXQ;
- 
- /* FIXME: replace with dev_debug() */
-@@ -515,7 +513,7 @@ static struct rxq_entry_t *wilc_wlan_rxq_remove(struct wilc *wilc)
- 	return NULL;
- }
- 
--static inline void chip_allow_sleep(struct wilc *wilc)
-+void chip_allow_sleep(struct wilc *wilc)
- {
- 	u32 reg = 0;
- 
-@@ -524,8 +522,9 @@ static inline void chip_allow_sleep(struct wilc *wilc)
- 	wilc->hif_func->hif_write_reg(wilc, 0xf0, reg & ~BIT(0));
- 	wilc->hif_func->hif_write_reg(wilc, 0xfa, 0);
- }
-+EXPORT_SYMBOL_GPL(chip_allow_sleep);
- 
--static inline void chip_wakeup(struct wilc *wilc)
-+void chip_wakeup(struct wilc *wilc)
- {
- 	u32 reg, clk_status_reg, trials = 0;
- 
-@@ -584,6 +583,7 @@ static inline void chip_wakeup(struct wilc *wilc)
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 40467d6..4ddd0e5 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -1428,40 +1428,14 @@ int lbs_execute_next_command(struct lbs_private *priv)
+ 		 * check if in power save mode, if yes, put the device back
+ 		 * to PS mode
+ 		 */
+-#ifdef TODO
+-		/*
+-		 * This was the old code for libertas+wext. Someone that
+-		 * understands this beast should re-code it in a sane way.
+-		 *
+-		 * I actually don't understand why this is related to WPA
+-		 * and to connection status, shouldn't powering should be
+-		 * independ of such things?
+-		 */
+ 		if ((priv->psmode != LBS802_11POWERMODECAM) &&
+ 		    (priv->psstate == PS_STATE_FULL_POWER) &&
+-		    ((priv->connect_status == LBS_CONNECTED) ||
+-		    lbs_mesh_connected(priv))) {
+-			if (priv->secinfo.WPAenabled ||
+-			    priv->secinfo.WPA2enabled) {
+-				/* check for valid WPA group keys */
+-				if (priv->wpa_mcast_key.len ||
+-				    priv->wpa_unicast_key.len) {
+-					lbs_deb_host(
+-					       "EXEC_NEXT_CMD: WPA enabled and GTK_SET"
+-					       " go back to PS_SLEEP");
+-					lbs_set_ps_mode(priv,
+-							PS_MODE_ACTION_ENTER_PS,
+-							false);
+-				}
+-			} else {
+-				lbs_deb_host(
+-				       "EXEC_NEXT_CMD: cmdpendingq empty, "
+-				       "go back to PS_SLEEP");
+-				lbs_set_ps_mode(priv, PS_MODE_ACTION_ENTER_PS,
+-						false);
+-			}
++		    (priv->connect_status == LBS_CONNECTED)) {
++			lbs_deb_host(
++				"EXEC_NEXT_CMD: cmdpendingq empty, go back to PS_SLEEP");
++			lbs_set_ps_mode(priv, PS_MODE_ACTION_ENTER_PS,
++					false);
+ 		}
+-#endif
  	}
- 	chip_ps_state = CHIP_WAKEDUP;
- }
-+EXPORT_SYMBOL_GPL(chip_wakeup);
  
- void wilc_chip_sleep_manually(struct wilc *wilc)
- {
-@@ -597,6 +597,7 @@ void wilc_chip_sleep_manually(struct wilc *wilc)
- 	chip_ps_state = CHIP_SLEEPING_MANUAL;
- 	release_bus(wilc, RELEASE_ONLY);
- }
-+EXPORT_SYMBOL_GPL(wilc_chip_sleep_manually);
- 
- void host_wakeup_notify(struct wilc *wilc)
- {
-@@ -604,6 +605,7 @@ void host_wakeup_notify(struct wilc *wilc)
- 	wilc->hif_func->hif_write_reg(wilc, 0x10b0, 1);
- 	release_bus(wilc, RELEASE_ONLY);
- }
-+EXPORT_SYMBOL_GPL(host_wakeup_notify);
- 
- void host_sleep_notify(struct wilc *wilc)
- {
-@@ -611,6 +613,7 @@ void host_sleep_notify(struct wilc *wilc)
- 	wilc->hif_func->hif_write_reg(wilc, 0x10ac, 1);
- 	release_bus(wilc, RELEASE_ONLY);
- }
-+EXPORT_SYMBOL_GPL(host_sleep_notify);
- 
- int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- {
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index dd5abc5..53e56ff 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -298,5 +298,6 @@ void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size);
- void host_wakeup_notify(struct wilc *wilc);
- void host_sleep_notify(struct wilc *wilc);
- extern bool wilc_enable_ps;
--
-+void chip_allow_sleep(struct wilc *wilc);
-+void chip_wakeup(struct wilc *wilc);
- #endif
+ 	ret = 0;
 -- 
-1.9.1
+2.1.4
 
