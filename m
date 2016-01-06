@@ -1,60 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:32772 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751423AbcADLSb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2016 06:18:31 -0500
-MIME-Version: 1.0
-In-Reply-To: <568A4403.8020701@gmail.com>
-References: <566ABCD9.1060404@users.sourceforge.net>
-	<5686F0B2.5000000@users.sourceforge.net>
-	<56870866.7020000@cogentembedded.com>
-	<568785B3.5000905@users.sourceforge.net>
-	<alpine.DEB.2.02.1601020914100.2063@localhost6.localdomain6>
-	<5687939E.7010701@users.sourceforge.net>
-	<5687A2C7.3000704@gmail.com>
-	<5687B2BC.8090901@users.sourceforge.net>
-	<5688EBAC.5000701@gmail.com>
-	<CACna6rzoJLRuTTDi3JjXg1roDbk3HXcBhhe0iOUH9xRaGU5p7A@mail.gmail.com>
-	<568A4403.8020701@gmail.com>
-Date: Mon, 4 Jan 2016 12:18:30 +0100
-Message-ID: <CACna6rwAVhKX0KnW=BTBDvNe8aaSvQiuMSnMmbQ64Benm50g9w@mail.gmail.com> (sfid-20160104_121852_105378_32385F44)
-Subject: Re: net-libertas: Better exception handling in if_spi_host_to_card_worker()
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <aspriel@gmail.com>
-Cc: SF Markus Elfring <elfring@users.sourceforge.net>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	libertas-dev@lists.infradead.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from glaubenleben.de ([85.214.105.140]:57589 "EHLO glaubenleben.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752043AbcAFVSE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Jan 2016 16:18:04 -0500
+From: Andreas Kemnade <andreas@kemnade.info>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Andreas Kemnade <andreas@kemnade.info>
+Subject: [PATCH 2/6] wireless:libertas: check whether bus can do more than polling
+Date: Wed,  6 Jan 2016 22:08:10 +0100
+Message-Id: <1452114494-6451-3-git-send-email-andreas@kemnade.info> (sfid-20160106_221819_091545_305D053C)
+In-Reply-To: <1452114494-6451-1-git-send-email-andreas@kemnade.info>
+References: <1452114494-6451-1-git-send-email-andreas@kemnade.info>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 January 2016 at 11:05, Arend van Spriel <aspriel@gmail.com> wrote:
-> On 03-01-16 16:18, Rafał Miłecki wrote:
->> On 3 January 2016 at 10:36, Arend van Spriel <aspriel@gmail.com> wrote:
->>> On 02-01-16 12:21, SF Markus Elfring wrote:
->>>>> Did you look at the resulting assembly code for different target architectures?
->>>>
->>>> Not yet. - Which execution system variants would you recommend for
->>>> further comparisons?
->>>
->>> Guess x86{,_64} and arm would be good candidates, ie. CISC vs. RISC.
->>
->> Oh, don't forget about MIPS with its fancy branches handling. You know
->> about it, don't you?
->
-> You are asking me, right ;-) ? I have come across my share of MIPS
-> platforms here at Broadcom, but I still try to avoid them as much as
-> possible.
+If a sdio host does not support sdio irqs, polling is used
+instead. That has an impact on performance. Some functionality
+should not be enabled then. This add a variable in
+libertas_priv to indicate that.
 
-I was more thinking about author on this patch. But it's indeed an
-interesting thing, just to know, how MIPS CPU handles branches ;)
+Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
+---
+ drivers/net/wireless/libertas/dev.h     | 1 +
+ drivers/net/wireless/libertas/if_sdio.c | 2 +-
+ drivers/net/wireless/libertas/if_usb.c  | 1 +
+ 3 files changed, 3 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index 6bd1608..edf710b 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -99,6 +99,7 @@ struct lbs_private {
+ 	/* Hardware access */
+ 	void *card;
+ 	bool iface_running;
++	u8 is_polling; /* host has to poll the card irq */
+ 	u8 fw_ready;
+ 	u8 surpriseremoved;
+ 	u8 setup_fw_on_resume;
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index f1f31a2..13db8b5 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -1271,7 +1271,7 @@ static int if_sdio_probe(struct sdio_func *func,
+ 	priv->reset_card = if_sdio_reset_card;
+ 	priv->power_save = if_sdio_power_save;
+ 	priv->power_restore = if_sdio_power_restore;
+-
++	priv->is_polling = !(func->card->host->caps & MMC_CAP_SDIO_IRQ);
+ 	ret = if_sdio_power_on(card);
+ 	if (ret)
+ 		goto err_activate_card;
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index dff08a2..aba0c99 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -267,6 +267,7 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	priv->enter_deep_sleep = NULL;
+ 	priv->exit_deep_sleep = NULL;
+ 	priv->reset_deep_sleep_wakeup = NULL;
++	priv->is_polling = false;
+ #ifdef CONFIG_OLPC
+ 	if (machine_is_olpc())
+ 		priv->reset_card = if_usb_reset_olpc_card;
 -- 
-Rafał
+2.1.4
+
