@@ -1,88 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:33886 "EHLO
-	mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753969AbcAEE0q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2016 23:26:46 -0500
-Received: by mail-pf0-f182.google.com with SMTP id e65so160309840pfe.1
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Jan 2016 20:26:45 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 2/4] staging: wilc1000: rename u8ssidlen in struct hidden_net_info
-Date: Tue,  5 Jan 2016 13:26:31 +0900
-Message-Id: <1451967993-12178-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20160105_052648_442191_7E648D4B)
-In-Reply-To: <1451967993-12178-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1451967993-12178-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:55846 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753397AbcAGMrr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2016 07:47:47 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 03/21] iwlwifi: mvm: let the firmware choose the antenna for beacons
+Date: Thu,  7 Jan 2016 14:47:23 +0200
+Message-Id: <1452170861-10060-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160107_134857_735657_351D6D1E)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames u8ssidlen to ssid_len that is a member of
-hidden_net_info. There is no need to use u8 prefix to show data type so
-just rename it.
+The firmware knows better what antenna to choose.
+Old firmware still need the setting, so use a flag to know
+if the driver should choose the antenna or if the firmware
+can do it iself.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c         | 8 ++++----
- drivers/staging/wilc1000/host_interface.h         | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
- 3 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h  | 3 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 9 ++++++---
+ 2 files changed, 9 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index cd04048..c4d83b9 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -830,7 +830,7 @@ static s32 Handle_Scan(struct wilc_vif *vif,
- 	strWIDList[u32WidsCount].type = WID_STR;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+index d2294ad6..9f24f99 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+@@ -309,6 +309,8 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_capa_t;
+  * @IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE: extended DTS measurement
+  * @IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS: supports short PM timeouts
+  * @IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT: supports bt-coex Multi-priority LUT
++ * @IWL_UCODE_TLV_CAPA_BEACON_ANT_SELECTION: firmware will decide on what
++ *	antenna the beacon should be transmitted
+  *
+  * @NUM_IWL_UCODE_TLV_CAPA: number of bits used
+  */
+@@ -336,6 +338,7 @@ enum iwl_ucode_tlv_capa {
+ 	IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE		= (__force iwl_ucode_tlv_capa_t)64,
+ 	IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS		= (__force iwl_ucode_tlv_capa_t)65,
+ 	IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT		= (__force iwl_ucode_tlv_capa_t)67,
++	IWL_UCODE_TLV_CAPA_BEACON_ANT_SELECTION		= (__force iwl_ucode_tlv_capa_t)71,
  
- 	for (i = 0; i < pstrHostIFscanAttr->hidden_network.u8ssidnum; i++)
--		valuesize += ((pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo[i].u8ssidlen) + 1);
-+		valuesize += ((pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo[i].ssid_len) + 1);
- 	pu8HdnNtwrksWidVal = kmalloc(valuesize + 1, GFP_KERNEL);
- 	strWIDList[u32WidsCount].val = pu8HdnNtwrksWidVal;
- 	if (strWIDList[u32WidsCount].val) {
-@@ -841,9 +841,9 @@ static s32 Handle_Scan(struct wilc_vif *vif,
- 		PRINT_D(HOSTINF_DBG, "In Handle_ProbeRequest number of ssid %d\n", pstrHostIFscanAttr->hidden_network.u8ssidnum);
+ 	NUM_IWL_UCODE_TLV_CAPA
+ #ifdef __CHECKER__
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index 5e3a758..448b9c9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -1012,9 +1012,12 @@ static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
+ 						TX_CMD_FLG_BT_PRIO_POS;
+ 	beacon_cmd.tx.tx_flags = cpu_to_le32(tx_flags);
  
- 		for (i = 0; i < pstrHostIFscanAttr->hidden_network.u8ssidnum; i++) {
--			*pu8Buffer++ = pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo[i].u8ssidlen;
--			memcpy(pu8Buffer, pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo[i].ssid, pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo[i].u8ssidlen);
--			pu8Buffer += pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo[i].u8ssidlen;
-+			*pu8Buffer++ = pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo[i].ssid_len;
-+			memcpy(pu8Buffer, pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo[i].ssid, pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo[i].ssid_len);
-+			pu8Buffer += pstrHostIFscanAttr->hidden_network.pstrHiddenNetworkInfo[i].ssid_len;
- 		}
+-	mvm->mgmt_last_antenna_idx =
+-		iwl_mvm_next_antenna(mvm, iwl_mvm_get_valid_tx_ant(mvm),
+-				     mvm->mgmt_last_antenna_idx);
++	if (!fw_has_capa(&mvm->fw->ucode_capa,
++			 IWL_UCODE_TLV_CAPA_BEACON_ANT_SELECTION)) {
++		mvm->mgmt_last_antenna_idx =
++			iwl_mvm_next_antenna(mvm, iwl_mvm_get_valid_tx_ant(mvm),
++					     mvm->mgmt_last_antenna_idx);
++	}
  
- 		strWIDList[u32WidsCount].size = (s32)(valuesize + 1);
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 9115b15..3bc609a 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -187,7 +187,7 @@ struct rcvd_net_info {
- 
- struct hidden_net_info {
- 	u8  *ssid;
--	u8 u8ssidlen;
-+	u8 ssid_len;
- };
- 
- struct hidden_network {
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index acd0c8d..56d736c 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -653,7 +653,7 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
- 				    request->ssids[i].ssid_len != 0) {
- 					strHiddenNetwork.pstrHiddenNetworkInfo[i].ssid = kmalloc(request->ssids[i].ssid_len, GFP_KERNEL);
- 					memcpy(strHiddenNetwork.pstrHiddenNetworkInfo[i].ssid, request->ssids[i].ssid, request->ssids[i].ssid_len);
--					strHiddenNetwork.pstrHiddenNetworkInfo[i].u8ssidlen = request->ssids[i].ssid_len;
-+					strHiddenNetwork.pstrHiddenNetworkInfo[i].ssid_len = request->ssids[i].ssid_len;
- 				} else {
- 					PRINT_D(CFG80211_DBG, "Received one NULL SSID\n");
- 					strHiddenNetwork.u8ssidnum -= 1;
+ 	beacon_cmd.tx.rate_n_flags =
+ 		cpu_to_le32(BIT(mvm->mgmt_last_antenna_idx) <<
 -- 
-2.6.4
+2.5.0
 
