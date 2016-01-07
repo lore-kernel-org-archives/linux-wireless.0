@@ -1,144 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:33911 "EHLO
+Received: from mail-io0-f174.google.com ([209.85.223.174]:35700 "EHLO
 	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754689AbcA1VoH (ORCPT
+	with ESMTP id S1750722AbcAGQTq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 16:44:07 -0500
+	Thu, 7 Jan 2016 11:19:46 -0500
+Received: by mail-io0-f174.google.com with SMTP id 77so226201236ioc.2
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2016 08:19:46 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1454013625.2332.9.camel@sipsolutions.net>
-References: <CA+55aFxe22iWok6UojY=hCoG2k1wNpJ9CfQ0b+STSxq67tb86Q@mail.gmail.com>
-	<1453983185.2217.12.camel@sipsolutions.net>
-	<CA+55aFya9K4JboNY8kB9cg6zt9otguhdzfHm3jvLmWedxQTSWg@mail.gmail.com>
-	<1454013625.2332.9.camel@sipsolutions.net>
-Date: Thu, 28 Jan 2016 13:44:06 -0800
-Message-ID: <CA+55aFx73nv9ny-fu5BR6v8wL=f2oFomwrZoLRw=x2kNP76cYA@mail.gmail.com> (sfid-20160128_224416_734289_367ADE18)
-Subject: Re: WARNING at net/mac80211/rate.c:513 ieee80211_get_tx_rates [mac80211]
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: David Miller <davem@davemloft.net>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
+Date: Thu, 7 Jan 2016 09:19:45 -0700
+Message-ID: <CALnQHM3C=DVaTf58XDyh+rttVs-FSpc4ghozg9HJktEonq7w-g@mail.gmail.com> (sfid-20160107_172017_138652_5BA0D2A3)
+Subject: lost connectivity until "wpa_cli reassociate" is issued
+From: David Mosberger <davidm@egauge.net>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Adding the RTL people to the cc, and leaving the whole thing quoted at
-the bottom..
+We are seeing a curious issue where WLAN connectivity sometimes
+gets stuck until a "wpa_cli reassociate" command is issued.
 
-I will try Johannes' suggestion on that machine to see if it makes a
-difference, but somebody who knows the rtlwifi rate control code
-should take a double- or triple-look at this.
+At the WPA level, everything appears to be working fine)
+(see thread starting at
+http://lists.infradead.org/pipermail/hostap/2016-January/034454.html).
 
-Please? Some googling shows that this is not a new issue. Or at least
-I seem to find reports that look very much like this from over a year
-ago.
+What's truly odd is when connectivity is stuck, you can often "ping" the
+network's gateway exactly once and then you either get no response anymore
+or, after a long time (like 40-60 seconds), the floodgate opens and
+(almost) all previously sent ping responses arrive all at the same time
+(in the latter case, connectivity is fine afterwards again).
 
-                 Linus
+This makes me wonder if there may be a packet queue that somehow gets
+stuck.
 
-On Thu, Jan 28, 2016 at 12:40 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Thu, 2016-01-28 at 11:01 -0800, Linus Torvalds wrote:
->>
->> I used to have the basic original UniFi UAP. I've replaced them with
->> the newer "AC Lite" version:
->>
->>     https://www.ubnt.com/unifi/unifi-ap-ac-lite/
->>
->> so it's a fairly big jump from a 2.4GHz-only network to a dual-band
->> one.
->>
->> The old 2.4GHz-only AP's showed the problem with minstrel-ht
->> incorrectly starting off at the highest rate (on a totally different
->> machine). So the Unifi AP's have shown problems in the kernel
->> wireless before, but so far it's always been the fault of the kernel
->> wireless, not the AP.
->
-> Yeah; I wasn't trying to blame it on this change, I was just trying to
-> understand the change in the environment. Seems likely that it's simply
-> the switch to 5 GHz, which is strange, I'd have thought that even that
-> rtlwifi driver would've been tested with that :)
->
->> > Could you print out the entire table there when the warning
->> > happens?
->>
->> This is the best I can come up with: printing out the index, and the
->> rate and bitrate tables:
->>
->>   rates[i].idx (9) >= sband->n_bitrates (8)
->>   Rates:
->>       0: idx 9 count 1 flags a0
->>       1: idx 8 count 1 flags a0
->>       2: idx 7 count 2 flags a0
->>       3: idx 6 count 3 flags a0
->
-> Yeah, perfect. See, this is already evidently not making any sense:
->
-> flags a0 is
-> IEEE80211_TX_RC_40_MHZ_WIDTH | IEEE80211_TX_RC_SHORT_GI
->
-> both of those options *require* IEEE80211_TX_RC_MCS or
-> IEEE80211_TX_RC_VHT_MCS as well, so the flags really should be a8 or
-> 1a0.
->
->>   Bitrates:
->>       0: flags 00000002 bitrate 60 (hw: 0004 0000)
->>       1: flags 00000000 bitrate 90 (hw: 0005 0000)
->>       2: flags 00000002 bitrate 120 (hw: 0006 0000)
->>       3: flags 00000000 bitrate 180 (hw: 0007 0000)
->>       4: flags 00000002 bitrate 240 (hw: 0008 0000)
->>       5: flags 00000000 bitrate 360 (hw: 0009 0000)
->>       6: flags 00000000 bitrate 480 (hw: 000a 0000)
->>       7: flags 00000000 bitrate 540 (hw: 000b 0000)
->>
->> So it's the very first rate that has index 9, but the bitrate table
->> only goes from 0-7.
->>
->> So I suspect that once the first index has been marked invalid, it
->> now will never even look at the later indices, so it has no transmit
->> rates at all.  Or something.
->
-> Indeed.
->
->> That bitrate table does seem to match:
->>
->>    static struct ieee80211_rate rtl_ratetable_5g[] = {
->>
->> in drivers/net/wireless/realtek/rtlwifi/base.c
->>
->
-> Yeah, it would, but it's irrelevant since the rate table isn't actually
-> used with MCS rates.
->
-> I'm not familiar with this code at all, but looking at it suggests that
-> perhaps the switch to 5 GHz wasn't at fault, but instead the switch to
-> VHT (802.11ac) - that's more plausible too, not testing with VHT seems
-> like something that could have happened for this driver.
->
-> And as I figured, the code in _rtl_rc_rate_set_series() is obviously
-> not handling VHT correctly: it has
->
->                 if (sgi_20 || sgi_40 || sgi_80)
->                         rate->flags |= IEEE80211_TX_RC_SHORT_GI;
->                 if (sta && sta->ht_cap.ht_supported &&
->                     ((wireless_mode == WIRELESS_MODE_N_5G) ||
->                      (wireless_mode == WIRELESS_MODE_N_24G)))
->                         rate->flags |= IEEE80211_TX_RC_MCS;
->
-> but can never set IEEE80211_TX_RC_VHT_MCS. Seems like there should be
-> something like
->
->                 if (sta && sta->ht_cap.vht_supported &&
->                     (wireless_mode == WIRELESS_MODE_AC_5G ||
->                      wireless_mode == WIRELESS_MODE_AC_24G ||
->                      wireless_mode == WIRELESS_MODE_AC_ONLY))
->                         rate->flags |= IEEE80211_TX_RC_VHT_MCS;
->
-> just after/before the above block.
->
-> But I'm not familiar with this code at all, so that may not really be
-> the right fix or even work.
->
-> johannes
+I have turned on mac80211 debugging but have not found anything
+that seems to correlate with the loss of connectivity.  All I know is that
+wpa_cli reassociate so far is the least intrusive workaround that seems
+to reliably bring back connectivity.
+
+We are based on kernel 3.7.0 but have back-ported the mac80211 fixes
+from the linux-3.7.y stable branch.
+
+I'm not very familiar with the wireless stack, so any tips or hints on how to
+further debug this would be greatly appreciated.
+
+Thanks and best regards,
+
+  --david
+-- 
+eGauge Systems LLC, http://egauge.net/, 1.877-EGAUGE1, fax 720.545.9768
