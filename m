@@ -1,56 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40845 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932100AbcAYHmx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 02:42:53 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 07/26] staging: wilc1000: remove sleep and reduce close timeout
-Date: Mon, 25 Jan 2016 16:35:11 +0900
-Message-ID: <1453707330-13526-8-git-send-email-glen.lee@atmel.com> (sfid-20160125_084258_177794_9718F8F0)
-In-Reply-To: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
-References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:39244 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753490AbcAGMsB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2016 07:48:01 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 13/21] iwlwifi: mvm: remove useless WARN_ON and rely on cfg80211's combination
+Date: Thu,  7 Jan 2016 14:47:33 +0200
+Message-Id: <1452170861-10060-13-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160107_134815_120248_5DCDD22C)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-sleep is not necessary during handling tx queue so remove it and also reduce
-close time to 5 sec since it is enough time to close.
+We advertise one STATION vif only, so this just can't
+happen. Remove this useless WARN_ON.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/power.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 54fe9d7..236996f 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -391,9 +391,6 @@ static int linux_wlan_txq_task(void *vp)
- 			}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/power.c b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
+index 87a9f24..9de159f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
+@@ -613,8 +613,6 @@ static void iwl_mvm_power_get_vifs_iterator(void *_data, u8 *mac,
+ 		break;
  
- 			if (ret == WILC_TX_ERR_NO_BUF) {
--				do {
--					msleep(TX_BACKOFF_WEIGHT_UNIT_MS << backoff_weight);
--				} while (0);
- 				backoff_weight += TX_BACKOFF_WEIGHT_INCR_STEP;
- 				if (backoff_weight > TX_BACKOFF_WEIGHT_MAX)
- 					backoff_weight = TX_BACKOFF_WEIGHT_MAX;
-@@ -1403,7 +1400,7 @@ void wilc_netdev_cleanup(struct wilc *wilc)
- 		release_firmware(wilc->firmware);
- 
- 	if (wilc && (wilc->vif[0]->ndev || wilc->vif[1]->ndev)) {
--		wilc_lock_timeout(wilc, &close_exit_sync, 12 * 1000);
-+		wilc_lock_timeout(wilc, &close_exit_sync, 5 * 1000);
- 
- 		for (i = 0; i < NUM_CONCURRENT_IFC; i++)
- 			if (wilc->vif[i]->ndev)
+ 	case NL80211_IFTYPE_STATION:
+-		/* only a single MAC of the same type */
+-		WARN_ON(power_iterator->bss_vif);
+ 		power_iterator->bss_vif = vif;
+ 		if (mvmvif->phy_ctxt)
+ 			if (mvmvif->phy_ctxt->id < MAX_PHYS)
 -- 
-1.9.1
+2.5.0
 
