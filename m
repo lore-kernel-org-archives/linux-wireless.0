@@ -1,307 +1,781 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:48375 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753431AbcAGMrt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 07:47:49 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Matti Gottlieb <matti.gottlieb@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 04/21] iwlwifi: mvm: change mcc update API
-Date: Thu,  7 Jan 2016 14:47:24 +0200
-Message-Id: <1452170861-10060-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160107_134909_310877_5296C1D3)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:19190 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752018AbcAGJeV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2016 04:34:21 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u079TIsr014210
+	for <linux-wireless@vger.kernel.org>; Thu, 7 Jan 2016 01:34:20 -0800
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+	by mx0b-0016f401.pphosted.com with ESMTP id 208ynrkk5g-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2016 01:34:20 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	chunfan chen <jeffc@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/6] mwifiex: add schedule scan support
+Date: Thu, 7 Jan 2016 01:31:26 -0800
+Message-ID: <1452159091-30997-2-git-send-email-akarwar@marvell.com> (sfid-20160107_103432_778196_CB0786AE)
+In-Reply-To: <1452159091-30997-1-git-send-email-akarwar@marvell.com>
+References: <1452159091-30997-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matti Gottlieb <matti.gottlieb@intel.com>
+From: Xinming Hu <huxm@marvell.com>
 
-New functionality for testing that is not relevant for
-this driver has been added. This required an API change.
+This patch add sched scan support for mwifiex, include cfg80211
+sched_scan_start/sched_scan_stop handler, corresponding bgscan
+command path and event handler.
 
-Add new cmd & response versions for the MCC update cmd & response.
-Add new TLV indicating that the FW is using the new API.
-
-Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: chunfan chen <jeffc@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h |  4 ++
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h  | 60 ++++++++++++++++++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c     | 52 +++++++++++++++-----
- 3 files changed, 100 insertions(+), 16 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c    | 134 +++++++++++
+ drivers/net/wireless/marvell/mwifiex/fw.h          |  59 +++++
+ drivers/net/wireless/marvell/mwifiex/ioctl.h       |   1 +
+ drivers/net/wireless/marvell/mwifiex/main.c        |   7 +
+ drivers/net/wireless/marvell/mwifiex/main.h        |  10 +
+ drivers/net/wireless/marvell/mwifiex/scan.c        | 261 +++++++++++++++++++++
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |   4 +
+ drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |   3 +
+ drivers/net/wireless/marvell/mwifiex/sta_event.c   |   7 +
+ drivers/net/wireless/marvell/mwifiex/sta_ioctl.c   |   7 +
+ 10 files changed, 493 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-index 9f24f99..8d37e33 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-@@ -7,6 +7,7 @@
-  *
-  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016        Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -33,6 +34,7 @@
-  *
-  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016        Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -311,6 +313,7 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_capa_t;
-  * @IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT: supports bt-coex Multi-priority LUT
-  * @IWL_UCODE_TLV_CAPA_BEACON_ANT_SELECTION: firmware will decide on what
-  *	antenna the beacon should be transmitted
-+ * @IWL_UCODE_TLV_CAPA_LAR_SUPPORT_V2: support LAR API V2
-  *
-  * @NUM_IWL_UCODE_TLV_CAPA: number of bits used
-  */
-@@ -339,6 +342,7 @@ enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS		= (__force iwl_ucode_tlv_capa_t)65,
- 	IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT		= (__force iwl_ucode_tlv_capa_t)67,
- 	IWL_UCODE_TLV_CAPA_BEACON_ANT_SELECTION		= (__force iwl_ucode_tlv_capa_t)71,
-+	IWL_UCODE_TLV_CAPA_LAR_SUPPORT_V2		= (__force iwl_ucode_tlv_capa_t)73,
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index e7adef7..c27c6cc 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -1962,6 +1962,9 @@ mwifiex_cfg80211_disconnect(struct wiphy *wiphy, struct net_device *dev,
+ {
+ 	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
  
- 	NUM_IWL_UCODE_TLV_CAPA
- #ifdef __CHECKER__
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index 995898c..82049bb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -7,6 +7,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016        Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -33,6 +34,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016        Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -1452,6 +1454,22 @@ struct iwl_sf_cfg_cmd {
-  ***********************************/
- 
- /**
-+ * struct iwl_mcc_update_cmd_v1 - Request the device to update geographic
-+ * regulatory profile according to the given MCC (Mobile Country Code).
-+ * The MCC is two letter-code, ascii upper case[A-Z] or '00' for world domain.
-+ * 'ZZ' MCC will be used to switch to NVM default profile; in this case, the
-+ * MCC in the cmd response will be the relevant MCC in the NVM.
-+ * @mcc: given mobile country code
-+ * @source_id: the source from where we got the MCC, see iwl_mcc_source
-+ * @reserved: reserved for alignment
-+ */
-+struct iwl_mcc_update_cmd_v1 {
-+	__le16 mcc;
-+	u8 source_id;
-+	u8 reserved;
-+} __packed; /* LAR_UPDATE_MCC_CMD_API_S_VER_1 */
++	if (!mwifiex_stop_bg_scan(priv))
++		cfg80211_sched_scan_stopped_rtnl(priv->wdev.wiphy);
 +
-+/**
-  * struct iwl_mcc_update_cmd - Request the device to update geographic
-  * regulatory profile according to the given MCC (Mobile Country Code).
-  * The MCC is two letter-code, ascii upper case[A-Z] or '00' for world domain.
-@@ -1460,12 +1478,39 @@ struct iwl_sf_cfg_cmd {
-  * @mcc: given mobile country code
-  * @source_id: the source from where we got the MCC, see iwl_mcc_source
-  * @reserved: reserved for alignment
-+ * @key: integrity key for MCC API OEM testing
-+ * @reserved2: reserved
-  */
- struct iwl_mcc_update_cmd {
- 	__le16 mcc;
- 	u8 source_id;
- 	u8 reserved;
--} __packed; /* LAR_UPDATE_MCC_CMD_API_S */
-+	__le32 key;
-+	__le32 reserved2[5];
-+} __packed; /* LAR_UPDATE_MCC_CMD_API_S_VER_2 */
+ 	if (mwifiex_deauthenticate(priv, NULL))
+ 		return -EFAULT;
+ 
+@@ -2217,6 +2220,9 @@ mwifiex_cfg80211_connect(struct wiphy *wiphy, struct net_device *dev,
+ 		    "info: Trying to associate to %s and bssid %pM\n",
+ 		    (char *)sme->ssid, sme->bssid);
+ 
++	if (!mwifiex_stop_bg_scan(priv))
++		cfg80211_sched_scan_stopped_rtnl(priv->wdev.wiphy);
 +
-+/**
-+ * iwl_mcc_update_resp_v1  - response to MCC_UPDATE_CMD.
-+ * Contains the new channel control profile map, if changed, and the new MCC
-+ * (mobile country code).
-+ * The new MCC may be different than what was requested in MCC_UPDATE_CMD.
-+ * @status: see &enum iwl_mcc_update_status
-+ * @mcc: the new applied MCC
-+ * @cap: capabilities for all channels which matches the MCC
-+ * @source_id: the MCC source, see iwl_mcc_source
-+ * @n_channels: number of channels in @channels_data (may be 14, 39, 50 or 51
-+ *		channels, depending on platform)
-+ * @channels: channel control data map, DWORD for each channel. Only the first
-+ *	16bits are used.
-+ */
-+struct iwl_mcc_update_resp_v1  {
-+	__le32 status;
-+	__le16 mcc;
-+	u8 cap;
-+	u8 source_id;
-+	__le32 n_channels;
-+	__le32 channels[0];
-+} __packed; /* LAR_UPDATE_MCC_CMD_RESP_S_VER_1 */
- 
- /**
-  * iwl_mcc_update_resp - response to MCC_UPDATE_CMD.
-@@ -1476,6 +1521,8 @@ struct iwl_mcc_update_cmd {
-  * @mcc: the new applied MCC
-  * @cap: capabilities for all channels which matches the MCC
-  * @source_id: the MCC source, see iwl_mcc_source
-+ * @time: time elapsed from the MCC test start (in 30 seconds TU)
-+ * @reserved: reserved.
-  * @n_channels: number of channels in @channels_data (may be 14, 39, 50 or 51
-  *		channels, depending on platform)
-  * @channels: channel control data map, DWORD for each channel. Only the first
-@@ -1486,9 +1533,11 @@ struct iwl_mcc_update_resp {
- 	__le16 mcc;
- 	u8 cap;
- 	u8 source_id;
-+	__le16 time;
-+	__le16 reserved;
- 	__le32 n_channels;
- 	__le32 channels[0];
--} __packed; /* LAR_UPDATE_MCC_CMD_RESP_S */
-+} __packed; /* LAR_UPDATE_MCC_CMD_RESP_S_VER_2 */
- 
- /**
-  * struct iwl_mcc_chub_notif - chub notifies of mcc change
-@@ -1518,6 +1567,9 @@ enum iwl_mcc_update_status {
- 	MCC_RESP_NVM_DISABLED,
- 	MCC_RESP_ILLEGAL,
- 	MCC_RESP_LOW_PRIORITY,
-+	MCC_RESP_TEST_MODE_ACTIVE,
-+	MCC_RESP_TEST_MODE_NOT_ACTIVE,
-+	MCC_RESP_TEST_MODE_DENIAL_OF_SERVICE,
- };
- 
- enum iwl_mcc_source {
-@@ -1530,7 +1582,9 @@ enum iwl_mcc_source {
- 	MCC_SOURCE_RESERVED = 6,
- 	MCC_SOURCE_DEFAULT = 7,
- 	MCC_SOURCE_UNINITIALIZED = 8,
--	MCC_SOURCE_GET_CURRENT = 0x10
-+	MCC_SOURCE_MCC_API = 9,
-+	MCC_SOURCE_GET_CURRENT = 0x10,
-+	MCC_SOURCE_GETTING_MCC_TEST_MODE = 0x11,
- };
- 
- /* DTS measurements */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-index d8dcb67..e4fe8a6 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-@@ -7,6 +7,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016        Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -33,6 +34,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016        Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -670,6 +672,7 @@ iwl_mvm_update_mcc(struct iwl_mvm *mvm, const char *alpha2,
- 		.source_id = (u8)src_id,
- 	};
- 	struct iwl_mcc_update_resp *mcc_resp, *resp_cp = NULL;
-+	struct iwl_mcc_update_resp_v1 *mcc_resp_v1 = NULL;
- 	struct iwl_rx_packet *pkt;
- 	struct iwl_host_cmd cmd = {
- 		.id = MCC_UPDATE_CMD,
-@@ -681,11 +684,15 @@ iwl_mvm_update_mcc(struct iwl_mvm *mvm, const char *alpha2,
- 	u32 status;
- 	int resp_len, n_channels;
- 	u16 mcc;
-+	bool resp_v2 = fw_has_capa(&mvm->fw->ucode_capa,
-+				   IWL_UCODE_TLV_CAPA_LAR_SUPPORT_V2);
- 
- 	if (WARN_ON_ONCE(!iwl_mvm_is_lar_supported(mvm)))
- 		return ERR_PTR(-EOPNOTSUPP);
- 
- 	cmd.len[0] = sizeof(struct iwl_mcc_update_cmd);
-+	if (!resp_v2)
-+		cmd.len[0] = sizeof(struct iwl_mcc_update_cmd_v1);
- 
- 	IWL_DEBUG_LAR(mvm, "send MCC update to FW with '%c%c' src = %d\n",
- 		      alpha2[0], alpha2[1], src_id);
-@@ -697,31 +704,50 @@ iwl_mvm_update_mcc(struct iwl_mvm *mvm, const char *alpha2,
- 	pkt = cmd.resp_pkt;
- 
- 	/* Extract MCC response */
--	mcc_resp = (void *)pkt->data;
--	status = le32_to_cpu(mcc_resp->status);
-+	if (resp_v2) {
-+		mcc_resp = (void *)pkt->data;
-+		n_channels =  __le32_to_cpu(mcc_resp->n_channels);
-+	} else {
-+		mcc_resp_v1 = (void *)pkt->data;
-+		n_channels =  __le32_to_cpu(mcc_resp_v1->n_channels);
-+	}
- 
--	mcc = le16_to_cpu(mcc_resp->mcc);
-+	resp_len = sizeof(struct iwl_mcc_update_resp) + n_channels *
-+		sizeof(__le32);
-+
-+	resp_cp = kzalloc(resp_len, GFP_KERNEL);
-+	if (!resp_cp) {
-+		ret = -ENOMEM;
-+		goto exit;
-+	}
-+
-+	if (resp_v2) {
-+		memcpy(resp_cp, mcc_resp, resp_len);
-+	} else {
-+		resp_cp->status = mcc_resp_v1->status;
-+		resp_cp->mcc = mcc_resp_v1->mcc;
-+		resp_cp->cap = mcc_resp_v1->cap;
-+		resp_cp->source_id = mcc_resp_v1->source_id;
-+		resp_cp->n_channels = mcc_resp_v1->n_channels;
-+		memcpy(resp_cp->channels, mcc_resp_v1->channels,
-+		       n_channels * sizeof(__le32));
-+	}
-+
-+	status = le32_to_cpu(resp_cp->status);
-+
-+	mcc = le16_to_cpu(resp_cp->mcc);
- 
- 	/* W/A for a FW/NVM issue - returns 0x00 for the world domain */
- 	if (mcc == 0) {
- 		mcc = 0x3030;  /* "00" - world */
--		mcc_resp->mcc = cpu_to_le16(mcc);
-+		resp_cp->mcc = cpu_to_le16(mcc);
+ 	ret = mwifiex_cfg80211_assoc(priv, sme->ssid_len, sme->ssid, sme->bssid,
+ 				     priv->bss_mode, sme->channel, sme, 0);
+ 	if (!ret) {
+@@ -2420,6 +2426,9 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
+ 		return -EBUSY;
  	}
  
--	n_channels =  __le32_to_cpu(mcc_resp->n_channels);
- 	IWL_DEBUG_LAR(mvm,
- 		      "MCC response status: 0x%x. new MCC: 0x%x ('%c%c') change: %d n_chans: %d\n",
- 		      status, mcc, mcc >> 8, mcc & 0xff,
- 		      !!(status == MCC_RESP_NEW_CHAN_PROFILE), n_channels);
++	if (!mwifiex_stop_bg_scan(priv))
++		cfg80211_sched_scan_stopped_rtnl(priv->wdev.wiphy);
++
+ 	user_scan_cfg = kzalloc(sizeof(*user_scan_cfg), GFP_KERNEL);
+ 	if (!user_scan_cfg)
+ 		return -ENOMEM;
+@@ -2487,6 +2496,121 @@ mwifiex_cfg80211_scan(struct wiphy *wiphy,
+ 	return 0;
+ }
  
--	resp_len = sizeof(*mcc_resp) + n_channels * sizeof(__le32);
--	resp_cp = kmemdup(mcc_resp, resp_len, GFP_KERNEL);
--	if (!resp_cp) {
--		ret = -ENOMEM;
--		goto exit;
--	}
--
--	ret = 0;
- exit:
- 	iwl_free_resp(&cmd);
- 	if (ret)
++/* CFG802.11 operation handler for sched_scan_start.
++ *
++ * This function issues a bgscan config request to the firmware based upon
++ * the user specified sched_scan configuration. On successful completion,
++ * firmware will generate BGSCAN_REPORT event, driver should issue bgscan
++ * query command to get sched_scan results from firmware.
++ */
++static int
++mwifiex_cfg80211_sched_scan_start(struct wiphy *wiphy,
++				  struct net_device *dev,
++				  struct cfg80211_sched_scan_request *request)
++{
++	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
++	int i, offset;
++	struct ieee80211_channel *chan;
++	struct mwifiex_bg_scan_cfg *bgscan_cfg;
++	struct ieee_types_header *ie;
++
++	if (!request || (!request->n_ssids && !request->n_match_sets)) {
++		wiphy_err(wiphy, "%s : Invalid Sched_scan parameters",
++			  __func__);
++		return -EINVAL;
++	}
++
++	wiphy_info(wiphy, "sched_scan start : n_ssids=%d n_match_sets=%d ",
++		   request->n_ssids, request->n_match_sets);
++	wiphy_info(wiphy, "n_channels=%d interval=%d ie_len=%d\n",
++		   request->n_channels, request->scan_plans->interval,
++		   (int)request->ie_len);
++
++	bgscan_cfg = kzalloc(sizeof(*bgscan_cfg), GFP_KERNEL);
++	if (!bgscan_cfg)
++		return -ENOMEM;
++
++	if (priv->scan_request || priv->scan_aborting)
++		bgscan_cfg->start_later = true;
++
++	bgscan_cfg->num_ssids = request->n_match_sets;
++	bgscan_cfg->ssid_list = request->match_sets;
++
++	if (request->ie && request->ie_len) {
++		offset = 0;
++		for (i = 0; i < MWIFIEX_MAX_VSIE_NUM; i++) {
++			if (priv->vs_ie[i].mask != MWIFIEX_VSIE_MASK_CLEAR)
++				continue;
++			priv->vs_ie[i].mask = MWIFIEX_VSIE_MASK_BGSCAN;
++			ie = (struct ieee_types_header *)(request->ie + offset);
++			memcpy(&priv->vs_ie[i].ie, ie, sizeof(*ie) + ie->len);
++			offset += sizeof(*ie) + ie->len;
++
++			if (offset >= request->ie_len)
++				break;
++		}
++	}
++
++	for (i = 0; i < min_t(u32, request->n_channels,
++			      MWIFIEX_BG_SCAN_CHAN_MAX); i++) {
++		chan = request->channels[i];
++		bgscan_cfg->chan_list[i].chan_number = chan->hw_value;
++		bgscan_cfg->chan_list[i].radio_type = chan->band;
++
++		if ((chan->flags & IEEE80211_CHAN_NO_IR) || !request->n_ssids)
++			bgscan_cfg->chan_list[i].scan_type =
++						MWIFIEX_SCAN_TYPE_PASSIVE;
++		else
++			bgscan_cfg->chan_list[i].scan_type =
++						MWIFIEX_SCAN_TYPE_ACTIVE;
++
++		bgscan_cfg->chan_list[i].scan_time = 0;
++	}
++
++	bgscan_cfg->chan_per_scan = min_t(u32, request->n_channels,
++					  MWIFIEX_BG_SCAN_CHAN_MAX);
++
++	/* Use at least 15 second for per scan cycle */
++	bgscan_cfg->scan_interval = (request->scan_plans->interval >
++				     MWIFIEX_BGSCAN_INTERVAL) ?
++				request->scan_plans->interval :
++				MWIFIEX_BGSCAN_INTERVAL;
++
++	bgscan_cfg->repeat_count = MWIFIEX_BGSCAN_REPEAT_COUNT;
++	bgscan_cfg->report_condition = MWIFIEX_BGSCAN_SSID_MATCH |
++				MWIFIEX_BGSCAN_WAIT_ALL_CHAN_DONE;
++	bgscan_cfg->bss_type = MWIFIEX_BSS_MODE_INFRA;
++	bgscan_cfg->action = MWIFIEX_BGSCAN_ACT_SET;
++	bgscan_cfg->enable = true;
++
++	if (mwifiex_send_cmd(priv, HostCmd_CMD_802_11_BG_SCAN_CONFIG,
++			     HostCmd_ACT_GEN_SET, 0, bgscan_cfg, true)) {
++		kfree(bgscan_cfg);
++		return -EFAULT;
++	}
++
++	priv->sched_scanning = true;
++
++	kfree(bgscan_cfg);
++	return 0;
++}
++
++/* CFG802.11 operation handler for sched_scan_stop.
++ *
++ * This function issues a bgscan config command to disable
++ * previous bgscan configuration in the firmware
++ */
++static int mwifiex_cfg80211_sched_scan_stop(struct wiphy *wiphy,
++					    struct net_device *dev)
++{
++	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
++
++	wiphy_info(wiphy, "sched scan stop!");
++	mwifiex_stop_bg_scan(priv);
++
++	return 0;
++}
++
+ static void mwifiex_setup_vht_caps(struct ieee80211_sta_vht_cap *vht_info,
+ 				   struct mwifiex_private *priv)
+ {
+@@ -2848,6 +2972,9 @@ int mwifiex_del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 	mwifiex_dev_debugfs_remove(priv);
+ #endif
+ 
++	if (priv->sched_scanning)
++		priv->sched_scanning = false;
++
+ 	mwifiex_stop_net_dev_queue(priv->netdev, adapter);
+ 
+ 	skb_queue_walk_safe(&priv->bypass_txq, skb, tmp)
+@@ -3701,6 +3828,8 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
+ 	.set_cqm_rssi_config = mwifiex_cfg80211_set_cqm_rssi_config,
+ 	.set_antenna = mwifiex_cfg80211_set_antenna,
+ 	.del_station = mwifiex_cfg80211_del_station,
++	.sched_scan_start = mwifiex_cfg80211_sched_scan_start,
++	.sched_scan_stop = mwifiex_cfg80211_sched_scan_stop,
+ #ifdef CONFIG_PM
+ 	.suspend = mwifiex_cfg80211_suspend,
+ 	.resume = mwifiex_cfg80211_resume,
+@@ -3829,6 +3958,7 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+ 	wiphy->flags |= WIPHY_FLAG_HAVE_AP_SME |
+ 			WIPHY_FLAG_AP_PROBE_RESP_OFFLOAD |
+ 			WIPHY_FLAG_AP_UAPSD |
++			WIPHY_FLAG_SUPPORTS_SCHED_SCAN |
+ 			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL |
+ 			WIPHY_FLAG_HAS_CHANNEL_SWITCH |
+ 			WIPHY_FLAG_PS_ON_BY_DEFAULT;
+@@ -3847,6 +3977,10 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+ 				    NL80211_PROBE_RESP_OFFLOAD_SUPPORT_WPS2 |
+ 				    NL80211_PROBE_RESP_OFFLOAD_SUPPORT_P2P;
+ 
++	wiphy->max_sched_scan_ssids = MWIFIEX_MAX_SSID_LIST_LENGTH;
++	wiphy->max_sched_scan_ie_len = MWIFIEX_MAX_VSIE_LEN;
++	wiphy->max_match_sets = MWIFIEX_MAX_SSID_LIST_LENGTH;
++
+ 	wiphy->available_antennas_tx = BIT(adapter->number_of_antenna) - 1;
+ 	wiphy->available_antennas_rx = BIT(adapter->number_of_antenna) - 1;
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 426e76a..07bdc2a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -144,6 +144,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define TLV_TYPE_WILDCARDSSID       (PROPRIETARY_TLV_BASE_ID + 18)
+ #define TLV_TYPE_TSFTIMESTAMP       (PROPRIETARY_TLV_BASE_ID + 19)
+ #define TLV_TYPE_RSSI_HIGH          (PROPRIETARY_TLV_BASE_ID + 22)
++#define TLV_TYPE_BGSCAN_START_LATER (PROPRIETARY_TLV_BASE_ID + 30)
+ #define TLV_TYPE_AUTH_TYPE          (PROPRIETARY_TLV_BASE_ID + 31)
+ #define TLV_TYPE_STA_MAC_ADDR       (PROPRIETARY_TLV_BASE_ID + 32)
+ #define TLV_TYPE_BSSID              (PROPRIETARY_TLV_BASE_ID + 35)
+@@ -177,6 +178,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define TLV_TYPE_TX_PAUSE           (PROPRIETARY_TLV_BASE_ID + 148)
+ #define TLV_TYPE_COALESCE_RULE      (PROPRIETARY_TLV_BASE_ID + 154)
+ #define TLV_TYPE_KEY_PARAM_V2       (PROPRIETARY_TLV_BASE_ID + 156)
++#define TLV_TYPE_REPEAT_COUNT       (PROPRIETARY_TLV_BASE_ID + 176)
+ #define TLV_TYPE_MULTI_CHAN_INFO    (PROPRIETARY_TLV_BASE_ID + 183)
+ #define TLV_TYPE_MC_GROUP_INFO      (PROPRIETARY_TLV_BASE_ID + 184)
+ #define TLV_TYPE_TDLS_IDLE_TIMEOUT  (PROPRIETARY_TLV_BASE_ID + 194)
+@@ -331,6 +333,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define HostCmd_CMD_802_11_MAC_ADDRESS                0x004D
+ #define HostCmd_CMD_802_11D_DOMAIN_INFO               0x005b
+ #define HostCmd_CMD_802_11_KEY_MATERIAL               0x005e
++#define HostCmd_CMD_802_11_BG_SCAN_CONFIG             0x006b
+ #define HostCmd_CMD_802_11_BG_SCAN_QUERY              0x006c
+ #define HostCmd_CMD_WMM_GET_STATUS                    0x0071
+ #define HostCmd_CMD_802_11_SUBSCRIBE_EVENT            0x0075
+@@ -523,6 +526,7 @@ enum P2P_MODES {
+ #define EVENT_CHANNEL_REPORT_RDY        0x00000054
+ #define EVENT_TX_DATA_PAUSE             0x00000055
+ #define EVENT_EXT_SCAN_REPORT           0x00000058
++#define EVENT_BG_SCAN_STOPPED           0x00000065
+ #define EVENT_REMAIN_ON_CHAN_EXPIRED    0x0000005f
+ #define EVENT_MULTI_CHAN_INFO           0x0000006a
+ #define EVENT_TX_STATUS_REPORT		0x00000074
+@@ -733,6 +737,16 @@ struct mwifiex_ie_types_num_probes {
+ 	__le16 num_probes;
+ } __packed;
+ 
++struct mwifiex_ie_types_repeat_count {
++	struct mwifiex_ie_types_header header;
++	__le16 repeat_count;
++} __packed;
++
++struct mwifiex_ie_types_bgscan_start_later {
++	struct mwifiex_ie_types_header header;
++	__le16 start_later;
++} __packed;
++
+ struct mwifiex_ie_types_scan_chan_gap {
+ 	struct mwifiex_ie_types_header header;
+ 	/* time gap in TUs to be used between two consecutive channels scan */
+@@ -1425,6 +1439,36 @@ struct mwifiex_user_scan_cfg {
+ 	u16 scan_chan_gap;
+ } __packed;
+ 
++#define MWIFIEX_BG_SCAN_CHAN_MAX 38
++#define MWIFIEX_BSS_MODE_INFRA 1
++#define MWIFIEX_BGSCAN_ACT_GET     0x0000
++#define MWIFIEX_BGSCAN_ACT_SET     0x0001
++#define MWIFIEX_BGSCAN_ACT_SET_ALL 0xff01
++/** ssid match */
++#define MWIFIEX_BGSCAN_SSID_MATCH          0x0001
++/** ssid match and RSSI exceeded */
++#define MWIFIEX_BGSCAN_SSID_RSSI_MATCH     0x0004
++/**wait for all channel scan to complete to report scan result*/
++#define MWIFIEX_BGSCAN_WAIT_ALL_CHAN_DONE  0x80000000
++
++struct mwifiex_bg_scan_cfg {
++	u16 action;
++	u8 enable;
++	u8 bss_type;
++	u8 chan_per_scan;
++	u32 scan_interval;
++	u32 report_condition;
++	u8 num_probes;
++	u8 rssi_threshold;
++	u8 snr_threshold;
++	u16 repeat_count;
++	u16 start_later;
++	struct cfg80211_match_set *ssid_list;
++	u8 num_ssids;
++	struct mwifiex_user_scan_chan chan_list[MWIFIEX_BG_SCAN_CHAN_MAX];
++	u16 scan_chan_gap;
++} __packed;
++
+ struct ie_body {
+ 	u8 grp_key_oui[4];
+ 	u8 ptk_cnt[2];
+@@ -1470,6 +1514,20 @@ struct mwifiex_ie_types_bss_scan_info {
+ 	__le64 tsf;
+ } __packed;
+ 
++struct host_cmd_ds_802_11_bg_scan_config {
++	__le16 action;
++	u8 enable;
++	u8 bss_type;
++	u8 chan_per_scan;
++	u8 reserved;
++	__le16 reserved1;
++	__le32 scan_interval;
++	__le32 reserved2;
++	__le32 report_condition;
++	__le16 reserved3;
++	u8 tlv[0];
++} __packed;
++
+ struct host_cmd_ds_802_11_bg_scan_query {
+ 	u8 flush;
+ } __packed;
+@@ -2124,6 +2182,7 @@ struct host_cmd_ds_command {
+ 		struct host_cmd_ds_802_11_scan scan;
+ 		struct host_cmd_ds_802_11_scan_ext ext_scan;
+ 		struct host_cmd_ds_802_11_scan_rsp scan_resp;
++		struct host_cmd_ds_802_11_bg_scan_config bg_scan_config;
+ 		struct host_cmd_ds_802_11_bg_scan_query bg_scan_query;
+ 		struct host_cmd_ds_802_11_bg_scan_query_rsp bg_scan_query_resp;
+ 		struct host_cmd_ds_802_11_associate associate;
+diff --git a/drivers/net/wireless/marvell/mwifiex/ioctl.h b/drivers/net/wireless/marvell/mwifiex/ioctl.h
+index 4f0174c..6333b16 100644
+--- a/drivers/net/wireless/marvell/mwifiex/ioctl.h
++++ b/drivers/net/wireless/marvell/mwifiex/ioctl.h
+@@ -414,6 +414,7 @@ struct mwifiex_ds_mef_cfg {
+ #define MWIFIEX_VSIE_MASK_SCAN     0x01
+ #define MWIFIEX_VSIE_MASK_ASSOC    0x02
+ #define MWIFIEX_VSIE_MASK_ADHOC    0x04
++#define MWIFIEX_VSIE_MASK_BGSCAN   0x08
+ 
+ enum {
+ 	MWIFIEX_FUNC_INIT = 1,
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 79c16de..a99b72b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -746,6 +746,13 @@ int mwifiex_queue_tx_pkt(struct mwifiex_private *priv, struct sk_buff *skb)
+ 
+ 	mwifiex_queue_main_work(priv->adapter);
+ 
++	if (priv->sched_scanning) {
++		mwifiex_dbg(priv->adapter, INFO,
++			    "aborting bgscan on ndo_stop\n");
++		mwifiex_stop_bg_scan(priv);
++		cfg80211_sched_scan_stopped(priv->wdev.wiphy);
++	}
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 35ab052..5f5bcf8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -198,6 +198,11 @@ do {								\
+ 			       buf, len, false);		\
+ } while (0)
+ 
++/** Min BGSCAN interval 15 second */
++#define MWIFIEX_BGSCAN_INTERVAL 15000
++/** default repeat count */
++#define MWIFIEX_BGSCAN_REPEAT_COUNT 6
++
+ struct mwifiex_dbg {
+ 	u32 num_cmd_host_to_card_failure;
+ 	u32 num_cmd_sleep_cfm_host_to_card_failure;
+@@ -641,6 +646,7 @@ struct mwifiex_private {
+ 	u32 mgmt_frame_mask;
+ 	struct mwifiex_roc_cfg roc_cfg;
+ 	bool scan_aborting;
++	u8 sched_scanning;
+ 	u8 csa_chan;
+ 	unsigned long csa_expire_time;
+ 	u8 del_list_idx;
+@@ -1198,6 +1204,10 @@ int mwifiex_ret_802_11_scan_ext(struct mwifiex_private *priv,
+ 				struct host_cmd_ds_command *resp);
+ int mwifiex_handle_event_ext_scan_report(struct mwifiex_private *priv,
+ 					 void *buf);
++int mwifiex_cmd_802_11_bg_scan_config(struct mwifiex_private *priv,
++				      struct host_cmd_ds_command *cmd,
++				      void *data_buf);
++int mwifiex_stop_bg_scan(struct mwifiex_private *priv);
+ 
+ /*
+  * This function checks if the queuing is RA based or not.
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index c20017c..d4e2143 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -547,6 +547,61 @@ mwifiex_scan_create_channel_list(struct mwifiex_private *priv,
+ 	return chan_idx;
+ }
+ 
++/* This function creates a channel list tlv for bgscan config, based
++ * on region/band information.
++ */
++static int
++mwifiex_bgscan_create_channel_list(struct mwifiex_private *priv,
++				   const struct mwifiex_bg_scan_cfg
++						*bgscan_cfg_in,
++				   struct mwifiex_chan_scan_param_set
++						*scan_chan_list)
++{
++	enum ieee80211_band band;
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_channel *ch;
++	struct mwifiex_adapter *adapter = priv->adapter;
++	int chan_idx = 0, i;
++
++	for (band = 0; (band < IEEE80211_NUM_BANDS); band++) {
++		if (!priv->wdev.wiphy->bands[band])
++			continue;
++
++		sband = priv->wdev.wiphy->bands[band];
++
++		for (i = 0; (i < sband->n_channels) ; i++) {
++			ch = &sband->channels[i];
++			if (ch->flags & IEEE80211_CHAN_DISABLED)
++				continue;
++			scan_chan_list[chan_idx].radio_type = band;
++
++			if (bgscan_cfg_in->chan_list[0].scan_time)
++				scan_chan_list[chan_idx].max_scan_time =
++					cpu_to_le16((u16)bgscan_cfg_in->
++					chan_list[0].scan_time);
++			else if (ch->flags & IEEE80211_CHAN_NO_IR)
++				scan_chan_list[chan_idx].max_scan_time =
++					cpu_to_le16(adapter->passive_scan_time);
++			else
++				scan_chan_list[chan_idx].max_scan_time =
++					cpu_to_le16(adapter->
++						    specific_scan_time);
++
++			if (ch->flags & IEEE80211_CHAN_NO_IR)
++				scan_chan_list[chan_idx].chan_scan_mode_bitmap
++					|= MWIFIEX_PASSIVE_SCAN;
++			else
++				scan_chan_list[chan_idx].chan_scan_mode_bitmap
++					&= ~MWIFIEX_PASSIVE_SCAN;
++
++			scan_chan_list[chan_idx].chan_number =
++							(u32)ch->hw_value;
++			chan_idx++;
++		}
++	}
++	return chan_idx;
++}
++
+ /* This function appends rate TLV to scan config command. */
+ static int
+ mwifiex_append_rate_tlv(struct mwifiex_private *priv,
+@@ -2155,6 +2210,212 @@ int mwifiex_cmd_802_11_scan_ext(struct mwifiex_private *priv,
+ 	return 0;
+ }
+ 
++/* This function prepares an background scan config command to be sent
++ * to the firmware
++ */
++int mwifiex_cmd_802_11_bg_scan_config(struct mwifiex_private *priv,
++				      struct host_cmd_ds_command *cmd,
++				      void *data_buf)
++{
++	struct host_cmd_ds_802_11_bg_scan_config *bgscan_config =
++					&cmd->params.bg_scan_config;
++	struct mwifiex_bg_scan_cfg *bgscan_cfg_in = data_buf;
++	u8 *tlv_pos = bgscan_config->tlv;
++	u8 num_probes;
++	u32 ssid_len, chan_idx, scan_type, scan_dur, chan_num;
++	int i;
++	struct mwifiex_ie_types_num_probes *num_probes_tlv;
++	struct mwifiex_ie_types_repeat_count *repeat_count_tlv;
++	struct mwifiex_ie_types_bgscan_start_later *start_later_tlv;
++	struct mwifiex_ie_types_wildcard_ssid_params *wildcard_ssid_tlv;
++	struct mwifiex_ie_types_chan_list_param_set *chan_list_tlv;
++	struct mwifiex_chan_scan_param_set *temp_chan;
++
++	cmd->command = cpu_to_le16(HostCmd_CMD_802_11_BG_SCAN_CONFIG);
++	cmd->size = cpu_to_le16(sizeof(*bgscan_config) + S_DS_GEN);
++
++	bgscan_config->action = cpu_to_le16(bgscan_cfg_in->action);
++	bgscan_config->enable = bgscan_cfg_in->enable;
++	bgscan_config->bss_type = bgscan_cfg_in->bss_type;
++	bgscan_config->scan_interval =
++		cpu_to_le32(bgscan_cfg_in->scan_interval);
++	bgscan_config->report_condition =
++		cpu_to_le32(bgscan_cfg_in->report_condition);
++
++	/*  stop sched scan  */
++	if (!bgscan_config->enable)
++		return 0;
++
++	bgscan_config->chan_per_scan = bgscan_cfg_in->chan_per_scan;
++
++	num_probes = (bgscan_cfg_in->num_probes ? bgscan_cfg_in->
++		      num_probes : priv->adapter->scan_probes);
++
++	if (num_probes) {
++		num_probes_tlv = (struct mwifiex_ie_types_num_probes *)tlv_pos;
++		num_probes_tlv->header.type = cpu_to_le16(TLV_TYPE_NUMPROBES);
++		num_probes_tlv->header.len =
++			cpu_to_le16(sizeof(num_probes_tlv->num_probes));
++		num_probes_tlv->num_probes = cpu_to_le16((u16)num_probes);
++
++		tlv_pos += sizeof(num_probes_tlv->header) +
++			le16_to_cpu(num_probes_tlv->header.len);
++	}
++
++	if (bgscan_cfg_in->repeat_count) {
++		repeat_count_tlv =
++			(struct mwifiex_ie_types_repeat_count *)tlv_pos;
++		repeat_count_tlv->header.type =
++			cpu_to_le16(TLV_TYPE_REPEAT_COUNT);
++		repeat_count_tlv->header.len =
++			cpu_to_le16(sizeof(repeat_count_tlv->repeat_count));
++		repeat_count_tlv->repeat_count =
++			cpu_to_le16(bgscan_cfg_in->repeat_count);
++
++		tlv_pos += sizeof(repeat_count_tlv->header) +
++			le16_to_cpu(repeat_count_tlv->header.len);
++	}
++
++	for (i = 0; i < bgscan_cfg_in->num_ssids; i++) {
++		ssid_len = bgscan_cfg_in->ssid_list[i].ssid.ssid_len;
++
++		wildcard_ssid_tlv =
++			(struct mwifiex_ie_types_wildcard_ssid_params *)tlv_pos;
++		wildcard_ssid_tlv->header.type =
++				cpu_to_le16(TLV_TYPE_WILDCARDSSID);
++		wildcard_ssid_tlv->header.len = cpu_to_le16(
++				(u16)(ssid_len + sizeof(wildcard_ssid_tlv->
++							 max_ssid_length)));
++
++		/* max_ssid_length = 0 tells firmware to perform
++		 * specific scan for the SSID filled, whereas
++		 * max_ssid_length = IEEE80211_MAX_SSID_LEN is for
++		 * wildcard scan.
++		 */
++		if (ssid_len)
++			wildcard_ssid_tlv->max_ssid_length = 0;
++		else
++			wildcard_ssid_tlv->max_ssid_length =
++						IEEE80211_MAX_SSID_LEN;
++
++		memcpy(wildcard_ssid_tlv->ssid,
++		       bgscan_cfg_in->ssid_list[i].ssid.ssid, ssid_len);
++
++		tlv_pos += (sizeof(wildcard_ssid_tlv->header)
++				+ le16_to_cpu(wildcard_ssid_tlv->header.len));
++	}
++
++	chan_list_tlv = (struct mwifiex_ie_types_chan_list_param_set *)tlv_pos;
++
++	if (bgscan_cfg_in->chan_list[0].chan_number) {
++		dev_dbg(priv->adapter->dev, "info: bgscan: Using supplied channel list\n");
++
++		chan_list_tlv->header.type = cpu_to_le16(TLV_TYPE_CHANLIST);
++
++		for (chan_idx = 0;
++		     chan_idx < MWIFIEX_BG_SCAN_CHAN_MAX &&
++		     bgscan_cfg_in->chan_list[chan_idx].chan_number;
++		     chan_idx++) {
++			temp_chan = chan_list_tlv->chan_scan_param + chan_idx;
++
++			/* Increment the TLV header length by size appended */
++			le16_add_cpu(&chan_list_tlv->header.len,
++				     sizeof(chan_list_tlv->chan_scan_param));
++
++			temp_chan->chan_number =
++				bgscan_cfg_in->chan_list[chan_idx].chan_number;
++			temp_chan->radio_type =
++				bgscan_cfg_in->chan_list[chan_idx].radio_type;
++
++			scan_type =
++				bgscan_cfg_in->chan_list[chan_idx].scan_type;
++
++			if (scan_type == MWIFIEX_SCAN_TYPE_PASSIVE)
++				temp_chan->chan_scan_mode_bitmap
++					|= MWIFIEX_PASSIVE_SCAN;
++			else
++				temp_chan->chan_scan_mode_bitmap
++					&= ~MWIFIEX_PASSIVE_SCAN;
++
++			if (bgscan_cfg_in->chan_list[chan_idx].scan_time) {
++				scan_dur = (u16)bgscan_cfg_in->
++					chan_list[chan_idx].scan_time;
++			} else {
++				scan_dur = (scan_type ==
++					    MWIFIEX_SCAN_TYPE_PASSIVE) ?
++					    priv->adapter->passive_scan_time :
++					    priv->adapter->specific_scan_time;
++			}
++
++			temp_chan->min_scan_time = cpu_to_le16(scan_dur);
++			temp_chan->max_scan_time = cpu_to_le16(scan_dur);
++		}
++	} else {
++		dev_dbg(priv->adapter->dev,
++			"info: bgscan: Creating full region channel list\n");
++		chan_num =
++			mwifiex_bgscan_create_channel_list(priv, bgscan_cfg_in,
++							   chan_list_tlv->
++							   chan_scan_param);
++		le16_add_cpu(&chan_list_tlv->header.len,
++			     chan_num *
++			     sizeof(chan_list_tlv->chan_scan_param[0]));
++	}
++
++	tlv_pos += (sizeof(chan_list_tlv->header)
++			+ le16_to_cpu(chan_list_tlv->header.len));
++
++	if (bgscan_cfg_in->start_later) {
++		start_later_tlv =
++			(struct mwifiex_ie_types_bgscan_start_later *)tlv_pos;
++		start_later_tlv->header.type =
++			cpu_to_le16(TLV_TYPE_BGSCAN_START_LATER);
++		start_later_tlv->header.len =
++			cpu_to_le16(sizeof(start_later_tlv->start_later));
++		start_later_tlv->start_later =
++			cpu_to_le16(bgscan_cfg_in->start_later);
++
++		tlv_pos += sizeof(start_later_tlv->header) +
++			le16_to_cpu(start_later_tlv->header.len);
++	}
++
++	/* Append vendor specific IE TLV */
++	mwifiex_cmd_append_vsie_tlv(priv, MWIFIEX_VSIE_MASK_BGSCAN, &tlv_pos);
++
++	le16_add_cpu(&cmd->size, tlv_pos - bgscan_config->tlv);
++
++	return 0;
++}
++
++int mwifiex_stop_bg_scan(struct mwifiex_private *priv)
++{
++	struct mwifiex_bg_scan_cfg *bgscan_cfg;
++
++	if (!priv->sched_scanning) {
++		dev_dbg(priv->adapter->dev, "bgscan already stopped!\n");
++		return 0;
++	}
++
++	bgscan_cfg = kzalloc(sizeof(*bgscan_cfg), GFP_KERNEL);
++	if (!bgscan_cfg)
++		return -ENOMEM;
++
++	bgscan_cfg->bss_type = MWIFIEX_BSS_MODE_INFRA;
++	bgscan_cfg->action = MWIFIEX_BGSCAN_ACT_SET;
++	bgscan_cfg->enable = false;
++
++	if (mwifiex_send_cmd(priv, HostCmd_CMD_802_11_BG_SCAN_CONFIG,
++			     HostCmd_ACT_GEN_SET, 0, bgscan_cfg, true)) {
++		kfree(bgscan_cfg);
++		return -EFAULT;
++	}
++
++	kfree(bgscan_cfg);
++	priv->sched_scanning = false;
++
++	return 0;
++}
++
+ static void
+ mwifiex_update_chan_statistics(struct mwifiex_private *priv,
+ 			       struct mwifiex_ietypes_chanstats *tlv_stat)
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index e486867..60f3ded 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -1873,6 +1873,10 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
+ 	case HostCmd_CMD_802_11_SCAN:
+ 		ret = mwifiex_cmd_802_11_scan(cmd_ptr, data_buf);
+ 		break;
++	case HostCmd_CMD_802_11_BG_SCAN_CONFIG:
++		ret = mwifiex_cmd_802_11_bg_scan_config(priv, cmd_ptr,
++							data_buf);
++		break;
+ 	case HostCmd_CMD_802_11_BG_SCAN_QUERY:
+ 		ret = mwifiex_cmd_802_11_bg_scan_query(cmd_ptr);
+ 		break;
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+index 9ac7aa2..4b23d3b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+@@ -1076,9 +1076,12 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
+ 		break;
+ 	case HostCmd_CMD_802_11_BG_SCAN_QUERY:
+ 		ret = mwifiex_ret_802_11_scan(priv, resp);
++		cfg80211_sched_scan_results(priv->wdev.wiphy);
+ 		mwifiex_dbg(adapter, CMD,
+ 			    "info: CMD_RESP: BG_SCAN result is ready!\n");
+ 		break;
++	case HostCmd_CMD_802_11_BG_SCAN_CONFIG:
++		break;
+ 	case HostCmd_CMD_TXPWR_CFG:
+ 		ret = mwifiex_ret_tx_power_cfg(priv, resp);
+ 		break;
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+index 23bae87..fd8061c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+@@ -688,6 +688,13 @@ int mwifiex_process_sta_event(struct mwifiex_private *priv)
+ 				       HostCmd_ACT_GEN_GET, 0, NULL, false);
+ 		break;
+ 
++	case EVENT_BG_SCAN_STOPPED:
++		dev_dbg(adapter->dev, "event: BGS_STOPPED\n");
++		cfg80211_sched_scan_stopped(priv->wdev.wiphy);
++		if (priv->sched_scanning)
++			priv->sched_scanning = false;
++		break;
++
+ 	case EVENT_PORT_RELEASE:
+ 		mwifiex_dbg(adapter, EVENT, "event: PORT RELEASE\n");
+ 		priv->port_open = true;
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+index 210b257..2cc1a32 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+@@ -504,6 +504,13 @@ int mwifiex_enable_hs(struct mwifiex_adapter *adapter)
+ 		}
+ 	}
+ 
++	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
++	if (priv && priv->sched_scanning) {
++		dev_dbg(adapter->dev, "aborting bgscan!\n");
++		mwifiex_stop_bg_scan(priv);
++		cfg80211_sched_scan_stopped(priv->wdev.wiphy);
++	}
++
+ 	if (adapter->hs_activated) {
+ 		mwifiex_dbg(adapter, CMD,
+ 			    "cmd: HS Already activated\n");
 -- 
-2.5.0
+1.8.1.4
 
