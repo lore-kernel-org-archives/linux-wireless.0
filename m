@@ -1,142 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:41967 "EHLO mga09.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:46219 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753517AbcAGMsL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 07:48:11 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 19/21] iwlwifi: mvm: constify the parameters of a few functions in fw-dbg.c
-Date: Thu,  7 Jan 2016 14:47:39 +0200
-Message-Id: <1452170861-10060-19-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160107_134820_938871_E78CF9DE)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+	id S1751693AbcAGVBK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2016 16:01:10 -0500
+Message-ID: <1452200461.3141.19.camel@sipsolutions.net> (sfid-20160107_220131_352308_C85B504A)
+Subject: Re: [PATCH] net/rfkill: Create "airplane mode" LED trigger
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Network Development <netdev@vger.kernel.org>,
+	=?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
+	<jprvita@endlessm.com>, LKML <linux-kernel@vger.kernel.org>,
+	Darren Hart <dvhart@infradead.org>,
+	platform-driver-x86@vger.kernel.org
+Date: Thu, 07 Jan 2016 22:01:01 +0100
+In-Reply-To: <CA+A7VXW3Fsf2O_xnnZAWxieMMhSP2ngTbhtuJEB1JpMc6EFPxQ@mail.gmail.com> (sfid-20160107_172007_086281_804D2523)
+References: <1451142303-1872-1-git-send-email-jprvita@endlessm.com>
+	 <1451142303-1872-2-git-send-email-jprvita@endlessm.com>
+	 <6DC3AA8C-DDE9-44B8-91C5-94B1EB0DBE9A@holtmann.org>
+	 <1452076319.2541.3.camel@sipsolutions.net>
+	 <CA+A7VXW3Fsf2O_xnnZAWxieMMhSP2ngTbhtuJEB1JpMc6EFPxQ@mail.gmail.com>
+	 (sfid-20160107_172007_086281_804D2523)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The debug functions of fw-dbg.c don't really need to modify
-the trigger and the description they receive as a parameter.
-Constify the pointers.
+On Thu, 2016-01-07 at 11:19 -0500, João Paulo Rechi Vita wrote:
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h  | 4 ++--
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c | 8 ++++----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.h | 6 +++---
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h    | 6 +++---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 2 +-
- 5 files changed, 13 insertions(+), 13 deletions(-)
+> Trying to answer both Marcel's and your comments, I think we should
+> rather have a trigger which fires when the global state of
+> RFKILL_TYPE_ALL changes, instead of tied to the op
+> RFKILL_OP_CHANGE_ALL. Then we should also update the global states on
+> every set block operation instead of only on RFKILL_OP_CHANGE_ALL.
+> This part does not look like policy to me (please correct me if I'm
+> wrong).
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 81b7cb7..82fb3a9 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -663,7 +663,7 @@ struct iwl_trans_ops {
- 	void (*resume)(struct iwl_trans *trans);
- 
- 	struct iwl_trans_dump_data *(*dump_data)(struct iwl_trans *trans,
--						 struct iwl_fw_dbg_trigger_tlv
-+						 const struct iwl_fw_dbg_trigger_tlv
- 						 *trigger);
- };
- 
-@@ -966,7 +966,7 @@ static inline void iwl_trans_resume(struct iwl_trans *trans)
- 
- static inline struct iwl_trans_dump_data *
- iwl_trans_dump_data(struct iwl_trans *trans,
--		    struct iwl_fw_dbg_trigger_tlv *trigger)
-+		    const struct iwl_fw_dbg_trigger_tlv *trigger)
- {
- 	if (!trans->ops->dump_data)
- 		return NULL;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-index 59450f1..b3bc212 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
-@@ -681,15 +681,15 @@ dump_trans_data:
- 	clear_bit(IWL_MVM_STATUS_DUMPING_FW_LOG, &mvm->status);
- }
- 
--struct iwl_mvm_dump_desc iwl_mvm_dump_desc_assert = {
-+const struct iwl_mvm_dump_desc iwl_mvm_dump_desc_assert = {
- 	.trig_desc = {
- 		.type = cpu_to_le32(FW_DBG_TRIGGER_FW_ASSERT),
- 	},
- };
- 
- int iwl_mvm_fw_dbg_collect_desc(struct iwl_mvm *mvm,
--				struct iwl_mvm_dump_desc *desc,
--				struct iwl_fw_dbg_trigger_tlv *trigger)
-+				const struct iwl_mvm_dump_desc *desc,
-+				const struct iwl_fw_dbg_trigger_tlv *trigger)
- {
- 	unsigned int delay = 0;
- 
-@@ -715,7 +715,7 @@ int iwl_mvm_fw_dbg_collect_desc(struct iwl_mvm *mvm,
- 
- int iwl_mvm_fw_dbg_collect(struct iwl_mvm *mvm, enum iwl_fw_dbg_trigger trig,
- 			   const char *str, size_t len,
--			   struct iwl_fw_dbg_trigger_tlv *trigger)
-+			   const struct iwl_fw_dbg_trigger_tlv *trigger)
- {
- 	struct iwl_mvm_dump_desc *desc;
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.h
-index 08148b2..f7dff76 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.h
-@@ -72,11 +72,11 @@
- void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm);
- void iwl_mvm_free_fw_dump_desc(struct iwl_mvm *mvm);
- int iwl_mvm_fw_dbg_collect_desc(struct iwl_mvm *mvm,
--				struct iwl_mvm_dump_desc *desc,
--				struct iwl_fw_dbg_trigger_tlv *trigger);
-+				const struct iwl_mvm_dump_desc *desc,
-+				const struct iwl_fw_dbg_trigger_tlv *trigger);
- int iwl_mvm_fw_dbg_collect(struct iwl_mvm *mvm, enum iwl_fw_dbg_trigger trig,
- 			   const char *str, size_t len,
--			   struct iwl_fw_dbg_trigger_tlv *trigger);
-+			   const struct iwl_fw_dbg_trigger_tlv *trigger);
- int iwl_mvm_fw_dbg_collect_trig(struct iwl_mvm *mvm,
- 				struct iwl_fw_dbg_trigger_tlv *trigger,
- 				const char *fmt, ...) __printf(3, 4);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 7517dc13..5f3ac8c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -157,7 +157,7 @@ struct iwl_mvm_dump_desc {
- 	struct iwl_fw_error_dump_trigger_desc trig_desc;
- };
- 
--extern struct iwl_mvm_dump_desc iwl_mvm_dump_desc_assert;
-+extern const struct iwl_mvm_dump_desc iwl_mvm_dump_desc_assert;
- 
- struct iwl_mvm_phy_ctxt {
- 	u16 id;
-@@ -732,8 +732,8 @@ struct iwl_mvm {
- 	s8 restart_fw;
- 	u8 fw_dbg_conf;
- 	struct delayed_work fw_dump_wk;
--	struct iwl_mvm_dump_desc *fw_dump_desc;
--	struct iwl_fw_dbg_trigger_tlv *fw_dump_trig;
-+	const struct iwl_mvm_dump_desc *fw_dump_desc;
-+	const struct iwl_fw_dbg_trigger_tlv *fw_dump_trig;
- 
- #ifdef CONFIG_IWLWIFI_LEDS
- 	struct led_classdev led;
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index d44e7af..3a43109 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -2364,7 +2364,7 @@ iwl_trans_pcie_dump_monitor(struct iwl_trans *trans,
- 
- static struct iwl_trans_dump_data
- *iwl_trans_pcie_dump_data(struct iwl_trans *trans,
--			  struct iwl_fw_dbg_trigger_tlv *trigger)
-+			  const struct iwl_fw_dbg_trigger_tlv *trigger)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
- 	struct iwl_fw_error_dump_data *data;
--- 
-2.5.0
+Yeah, this seems fine. I'm not sure really quite what the difference
+between the state and OP_CHANGE_ALL would be, but using the state does
+seem reasonable to me. I also agree it's not really policy. In a sense
+though, one might argue that it encourages the wrong policy.
 
+> The platform driver can default this trigger and have the LED reflect
+> the global state of RFKILL_TYPE_ALL. This indeed looks like policy,
+> but mostly because the physical LED label is an airplane icon, what
+> the LED will be representing is "all radios are off". If that is not
+> acceptable in the kernel, I can expose the LED to userspace instead
+> and different userspaces can decide when to trigger it (in which case
+> we don't need this patch at all). But considering this is a laptop
+> platform driver, the only way I can see this being used is having the
+> LED lit when all the radios are off, and unlit otherwise (maybe I'm
+> being a bit short-visioned).
+
+As Marcel said, the question is whether or not a physical LED with an
+airplane icon really should be lit when all the radios are off, or
+should instead be lit when the system is in an "airplane safe" mode.
+Consider, for example, an Android phone: You can quite easily display
+both the WiFi connection icon and the airplane icon.
+
+> If I'm following this correctly, your suggestion is to have an
+> "airplane mode indicator" switch in the RFKill subsystem, which would
+> be driven by userspace and will be tied to a trigger that could be
+> used by platform drivers to drive physical airplane mode LEDs and
+> similar. That's an interesting idea and probably better than
+> expecting
+> userspaces to know about platform details like LED presence. If this
+> is feasible looks like a nice generic solution for this problem.
+
+Mostly correct, yes. I'd argue that it should come with the following
+semantics:
+ * default to the state of all as you described, so that without any
+   userspace you still get some kind of sane default behaviour
+ * allow only a single userspace owner, and require that owner to
+   toggle it as required, to avoid multiple userspace applications
+   stepping on each others' toes. This could be implemented by making
+   this a new /dev/rfkill command, and requiring the fd to be held
+   open while controlling the airplane mode state.
+
+This would be the most generic solution, starting with the default
+behaviour you implemented but allowing userspace to implement its own
+airplane mode semantics without having to know about the platform LEDs
+etc.
+
+We could even do that in two stages, with your (updated) patch as the
+first stage.
+
+I would want to see some interest from userspace (e.g. Marcel for
+connman) though before implementing that.
+
+
+johannes
