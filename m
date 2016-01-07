@@ -1,48 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35678 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752707AbcAGVPl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 16:15:41 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org, <stable@vger.kernel.org>
-Subject: Re: [PATCH 01/21] iwlwifi: dvm: fix WoWLAN
+Received: from mga09.intel.com ([134.134.136.24]:24258 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753473AbcAGMr4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2016 07:47:56 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 08/21] iwlwifi: nvm: fix loading default NVM file
+Date: Thu,  7 Jan 2016 14:47:28 +0200
+Message-Id: <1452170861-10060-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160107_134853_166651_736F38FF)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
 References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
-	<1452170861-10060-1-git-send-email-emmanuel.grumbach@intel.com>
-Date: Thu, 07 Jan 2016 23:15:35 +0200
-In-Reply-To: <1452170861-10060-1-git-send-email-emmanuel.grumbach@intel.com>
-	(Emmanuel Grumbach's message of "Thu, 7 Jan 2016 14:47:21 +0200")
-Message-ID: <87k2nljdl4.fsf@kamboji.qca.qualcomm.com> (sfid-20160107_221545_144820_E4103F1D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
+From: Oren Givon <oren.givon@intel.com>
 
-> My commit below introduced a mutex in the transport to
-> prevent concurrent operations. To do so, it added a flag
-> (is_down) to make sure the transport is in the right state.
-> This uncoverred an bug that didn't cause any harm until
-> now: iwldvm calls stop_device and then starts the firmware
-> without calling start_hw in between. While this flow is
-> fine from the device configuration point of view (register,
-> etc...), it is now forbidden by the new is_down flag.
-> This led to this error to appear:
-> iwlwifi 0000:05:00.0: Can't start_fw since the HW hasn't been started
-> and the suspend would fail.
->
-> This fixes:
-> https://bugzilla.kernel.org/show_bug.cgi?id=109591
->
-> CC: <stable@vger.kernel.org> [4.3+]
-> Reported-by: Bogdan Bogush <bogdan.s.bogush@gmail.com>
-> Fixes=fa9f3281cbb1 ("iwlwifi: pcie: lock start_hw / start_fw / stop_device")
+Fix loading the default NVM file, in the case where the
+requested NVM file isn't found in the file system.
 
-No need to change this anymore, but this should be:
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Fixes: fa9f3281cbb1 ("iwlwifi: pcie: lock start_hw / start_fw / stop_device")
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+index e4fe8a6..7a3da2d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+@@ -642,7 +642,8 @@ int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
+ 			else
+ 				mvm->nvm_file_name = nvm_file_C;
+ 
+-			if (ret == -EFAULT && mvm->nvm_file_name) {
++			if ((ret == -EFAULT || ret == -ENOENT) &&
++			    mvm->nvm_file_name) {
+ 				/* in case nvm file was failed try again */
+ 				ret = iwl_mvm_read_external_nvm(mvm);
+ 				if (ret)
 -- 
-Kalle Valo
+2.5.0
+
