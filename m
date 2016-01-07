@@ -1,105 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:36005 "EHLO
-	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751781AbcAUBVW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 20:21:22 -0500
-Received: by mail-pa0-f67.google.com with SMTP id a20so1009961pag.3
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:21:22 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 14/27] staging: wilc1000: rename pHandle in wilc_mq_send
-Date: Thu, 21 Jan 2016 10:20:17 +0900
-Message-Id: <1453339230-1377-14-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_023655_847762_14C8DFA0)
-In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mga09.intel.com ([134.134.136.24]:24258 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753432AbcAGMru (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2016 07:47:50 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 05/21] iwlwifi: mvm: reset mvm->scan_type when firmware is started
+Date: Thu,  7 Jan 2016 14:47:25 +0200
+Message-Id: <1452170861-10060-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160107_134907_958741_709D0E4E)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pHandle to mq to avoid camelcase.
+If we don't reset the scan type when the firmware is
+started, we will think the firmware is still configured
+after the interface has been brought down. When we will
+bring it up again, we will not configure the scan type
+in firmware and it will crash with the following assert:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+0x0000100A | ADVANCED_SYSASSERT
+
+Fixes: 355346ba3050 ("iwlwifi: mvm: configure scheduled scan according to traffic conditions")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/wilc1000/wilc_msgqueue.c | 22 +++++++++++-----------
- drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
- 2 files changed, 12 insertions(+), 12 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c       | 1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 1 -
+ 2 files changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index a01420a..71ce1f5 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -53,19 +53,19 @@ int wilc_mq_destroy(struct message_queue *mq)
-  *  @note		copied from FLO glue implementatuion
-  *  @version		1.0
-  */
--int wilc_mq_send(struct message_queue *pHandle,
-+int wilc_mq_send(struct message_queue *mq,
- 		 const void *pvSendBuffer, u32 u32SendBufferSize)
- {
- 	unsigned long flags;
- 	struct message *pstrMessage = NULL;
- 
--	if ((!pHandle) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
--		PRINT_ER("pHandle or pvSendBuffer is null\n");
-+	if ((!mq) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
-+		PRINT_ER("mq or pvSendBuffer is null\n");
- 		return -EFAULT;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index e6e8088..4ed5180 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -943,6 +943,7 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
  	}
  
--	if (pHandle->exiting) {
--		PRINT_ER("pHandle fail\n");
-+	if (mq->exiting) {
-+		PRINT_ER("mq fail\n");
- 		return -EFAULT;
- 	}
+ 	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_UMAC_SCAN)) {
++		mvm->scan_type = IWL_SCAN_TYPE_NOT_SET;
+ 		ret = iwl_mvm_config_scan(mvm);
+ 		if (ret)
+ 			goto error;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 296b9c5..2d65040 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1002,7 +1002,6 @@ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
+ 	mvm->vif_count = 0;
+ 	mvm->rx_ba_sessions = 0;
+ 	mvm->fw_dbg_conf = FW_DBG_INVALID;
+-	mvm->scan_type = IWL_SCAN_TYPE_NOT_SET;
  
-@@ -83,13 +83,13 @@ int wilc_mq_send(struct message_queue *pHandle,
- 		return -ENOMEM;
- 	}
- 
--	spin_lock_irqsave(&pHandle->lock, flags);
-+	spin_lock_irqsave(&mq->lock, flags);
- 
- 	/* add it to the message queue */
--	if (!pHandle->msg_list) {
--		pHandle->msg_list  = pstrMessage;
-+	if (!mq->msg_list) {
-+		mq->msg_list  = pstrMessage;
- 	} else {
--		struct message *pstrTailMsg = pHandle->msg_list;
-+		struct message *pstrTailMsg = mq->msg_list;
- 
- 		while (pstrTailMsg->next)
- 			pstrTailMsg = pstrTailMsg->next;
-@@ -97,9 +97,9 @@ int wilc_mq_send(struct message_queue *pHandle,
- 		pstrTailMsg->next = pstrMessage;
- 	}
- 
--	spin_unlock_irqrestore(&pHandle->lock, flags);
-+	spin_unlock_irqrestore(&mq->lock, flags);
- 
--	up(&pHandle->sem);
-+	up(&mq->sem);
- 
- 	return 0;
- }
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index b91822e..e6cdc10 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -57,7 +57,7 @@ int wilc_mq_create(struct message_queue *mq);
-  *  @date		30 Aug 2010
-  *  @version		1.0
-  */
--int wilc_mq_send(struct message_queue *pHandle,
-+int wilc_mq_send(struct message_queue *mq,
- 		 const void *pvSendBuffer, u32 u32SendBufferSize);
- 
- /*!
+ 	/* keep statistics ticking */
+ 	iwl_mvm_accu_radio_stats(mvm);
 -- 
-2.6.4
+2.5.0
 
