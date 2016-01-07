@@ -1,48 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:37882 "EHLO
-	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750707AbcAGGRg (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:35978 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751545AbcAGJee (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 01:17:36 -0500
-Received: by mail-wm0-f41.google.com with SMTP id f206so106958624wmf.0
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Jan 2016 22:17:36 -0800 (PST)
+	Thu, 7 Jan 2016 04:34:34 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u079YYmD018916
+	for <linux-wireless@vger.kernel.org>; Thu, 7 Jan 2016 01:34:34 -0800
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+	by mx0b-0016f401.pphosted.com with ESMTP id 208ynrkk5v-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2016 01:34:34 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 6/6] mwifiex: use SYNC flag for canceling host sleep
+Date: Thu, 7 Jan 2016 01:31:31 -0800
+Message-ID: <1452159091-30997-7-git-send-email-akarwar@marvell.com> (sfid-20160107_103445_495568_423D9CD2)
+In-Reply-To: <1452159091-30997-1-git-send-email-akarwar@marvell.com>
+References: <1452159091-30997-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <1452077048.2541.5.camel@sipsolutions.net>
-References: <1451990134-15183-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1452077048.2541.5.camel@sipsolutions.net>
-Date: Thu, 7 Jan 2016 07:17:35 +0100
-Message-ID: <CALhHN=rO7477CNLA6+rE_y0UjL=kx9W0SxaQn-xFY+A=GMTSRQ@mail.gmail.com> (sfid-20160107_071740_869530_47A50DCC)
-Subject: Re: [PATCH v2 1/2] mac80211: check requested flags in ieee80211_tx_prepare_skb()
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Jouni Malinen <j@w1.fi>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6 January 2016 at 11:44, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2016-01-05 at 11:35 +0100, Janusz Dziedzic wrote:
->> In case driver already set info->flags (eg.
->> IEEE80211_TX_CTL_NO_CCK_RATE
->> in ath9k driver), before this patch we skip this requested flags.
->
-> I don't see how we "skip" them?
->
->> +     unsigned int flags = info->flags;
->>
->>       if (ieee80211_tx_prepare(sdata, &tx, NULL, skb) == TX_DROP)
->>               return false;
->>
->>       info->band = band;
->>       info->control.vif = vif;
->>       info->hw_queue = vif->hw_queue[skb_get_queue_mapping(skb)];
->> +     info->flags |= flags;
->
-> tx_prepare() doesn't [seem to] do anything to the flags but twiddle a
-> few, so ?
->
-Yes, you right - this patch is not needed.
-Thanks.
+Host sleep is cancelled in sdio resume() handler.
+Cfg80211's resume handler is immediately called after
+this. SYNC flag here ensures that host sleep handshake
+gets completed and we have valid "adapter->nd_config"
+before we report host wakeup reason in cfg80211's
+resume handler.
 
-BR
-Janusz
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index ec1e8c3..031c599 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -181,7 +181,7 @@ static int mwifiex_sdio_resume(struct device *dev)
+ 
+ 	/* Disable Host Sleep */
+ 	mwifiex_cancel_hs(mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA),
+-			  MWIFIEX_ASYNC_CMD);
++			  MWIFIEX_SYNC_CMD);
+ 
+ 	return 0;
+ }
+-- 
+1.8.1.4
+
