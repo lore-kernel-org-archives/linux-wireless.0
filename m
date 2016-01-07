@@ -1,152 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:35672 "EHLO
-	mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756317AbcASPoI (ORCPT
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:24596 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753448AbcAGMwS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 10:44:08 -0500
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
-To: johannes@sipsolutions.net
-Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
-	davem@davemloft.net, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jprvita@endlessm.com,
-	linux@endlessm.com
-Subject: [PATCH 5/8] rfkill: Remove obsolete "state" sysfs interface
-Date: Tue, 19 Jan 2016 10:42:40 -0500
-Message-Id: <1453218163-31998-6-git-send-email-jprvita@endlessm.com> (sfid-20160119_164647_511887_3E86A040)
-In-Reply-To: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
-References: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
+	Thu, 7 Jan 2016 07:52:18 -0500
+Message-ID: <568E5F7F.4050604@broadcom.com> (sfid-20160107_135223_193865_B617DA3D)
+Date: Thu, 7 Jan 2016 13:52:15 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Paul Stewart <pstew@chromium.org>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: [RFC 1/2] nl80211: add extended feature for BSS selection support
+References: <1450959550-19655-1-git-send-email-arend@broadcom.com>			 <1450959550-19655-2-git-send-email-arend@broadcom.com>		 <1451985926.12357.16.camel@sipsolutions.net>		 <568B91D6.6080404@broadcom.com>	 <1452011509.12357.51.camel@sipsolutions.net>	 <568CE980.5050005@broadcom.com> <1452090998.2541.18.camel@sipsolutions.net>
+In-Reply-To: <1452090998.2541.18.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This was schedule to be removed in 2014 by:
+On 01/06/2016 03:36 PM, Johannes Berg wrote:
+> On Wed, 2016-01-06 at 11:16 +0100, Arend van Spriel wrote:
+>
+>> So do we want want a dedicated "bss selection capability" flag iso
+>> extended feature in which the driver can indicate the supported
+>> selection criteria to user-space? Guess so.
+>
+> Frankly, I'm not really quite sure.
+>
+> The alternative is to just treat all of this as advisory and not worry,
+> so that userspace can specify all it wants and the driver will use all
+> it can.
+>
+> That seems mostly reasonable as well.
 
- commit 69c86373c6ea1149aa559e6088362d58d8ec8835
- Author: florian@mickler.org <florian@mickler.org>
- Date:   Wed Feb 24 12:05:16 2010 +0100
+Agree. However, ne of the reasons I added the ext_feature is because 
+people gave feedback they wanted it for testing purposes so they know 
+what to expect from the driver. That same argument could used for the 
+supported selection criteria. I have no strong opinion though.
 
-     Document the rfkill sysfs ABI
+>> I played a trick in reusing ATTR_BSS_SELECT_BAND_PREF. When
+>> ATTR_BSS_SELECT_RSSI_ADJUST is passed the ATTR_BSS_SELECT_BAND_PREF
+>> is
+>> used to determine in which band the rssi is adjusted. So "band" and
+>> "rssi_adjust" are mutual exclusive.
+>
+> Yeah, OK, I think that might have confused me a bit :)
+>
+>>> But logically - does it even make sense? If you already prefer that
+>>> band, why give it a boost still? Just disable RSSI? Hmm.
+>>
+>> I hope the use-cases mentioned clarify this.
+>>
+>
+> Right. So realistically, writing this a bit more verbosely, you have
+>
+> 1) rssi_preference, band_preference(band)
+> 2) rssi_adjust(band, delta), rssi_preference
+>
+> and perhaps
+>
+> 3) rssi_preference
+>
+> as the default?
 
-     This moves sysfs ABI info from Documentation/rfkill.txt to the
-     ABI subfolder and reformats it.
+Good point.
 
-     This also schedules the deprecated sysfs parts to be removed in
-     2012 (claim file) and 2014 (state file).
+> As for 1), you said it was "band, rssi" but it seems you really meant
+> the other way around since before you said "band" was a tie-breaker.
 
-     Signed-off-by: Florian Mickler <florian@mickler.org>
-     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+My bad. When using "band_preference()" the selected BSS is in specified 
+band even though the BSS in other band would be stronger. If there is no 
+proper BSS in the specified band the preference is obviously discarded.
 
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
----
- Documentation/ABI/obsolete/sysfs-class-rfkill | 20 ---------------
- Documentation/ABI/removed/sysfs-class-rfkill  | 17 +++++++++++++
- net/rfkill/core.c                             | 35 ---------------------------
- 3 files changed, 17 insertions(+), 55 deletions(-)
- delete mode 100644 Documentation/ABI/obsolete/sysfs-class-rfkill
+> Perhaps then, the API should just expose the two "primitives"
+>   * band_preference(band)
+>   * rssi_adjust(band, delta)?
 
-diff --git a/Documentation/ABI/obsolete/sysfs-class-rfkill b/Documentation/ABI/obsolete/sysfs-class-rfkill
-deleted file mode 100644
-index e736d14..0000000
---- a/Documentation/ABI/obsolete/sysfs-class-rfkill
-+++ /dev/null
-@@ -1,20 +0,0 @@
--rfkill - radio frequency (RF) connector kill switch support
--
--For details to this subsystem look at Documentation/rfkill.txt.
--
--What:		/sys/class/rfkill/rfkill[0-9]+/state
--Date:		09-Jul-2007
--KernelVersion	v2.6.22
--Contact:	linux-wireless@vger.kernel.org
--Description: 	Current state of the transmitter.
--		This file is deprecated and scheduled to be removed in 2014,
--		because its not possible to express the 'soft and hard block'
--		state of the rfkill driver.
--Values: 	A numeric value.
--		0: RFKILL_STATE_SOFT_BLOCKED
--			transmitter is turned off by software
--		1: RFKILL_STATE_UNBLOCKED
--			transmitter is (potentially) active
--		2: RFKILL_STATE_HARD_BLOCKED
--			transmitter is forced off by something outside of
--			the driver's control.
-diff --git a/Documentation/ABI/removed/sysfs-class-rfkill b/Documentation/ABI/removed/sysfs-class-rfkill
-index 3ce6231..1b93139 100644
---- a/Documentation/ABI/removed/sysfs-class-rfkill
-+++ b/Documentation/ABI/removed/sysfs-class-rfkill
-@@ -11,3 +11,20 @@ Description:	This file was deprecated because there no longer was a way to
- 		This file was scheduled to be removed in 2012, and was removed
- 		in 2016.
- Values: 	0: Kernel handles events
-+
-+What:		/sys/class/rfkill/rfkill[0-9]+/state
-+Date:		09-Jul-2007
-+KernelVersion	v2.6.22
-+Contact:	linux-wireless@vger.kernel.org
-+Description: 	Current state of the transmitter.
-+		This file was deprecated and scheduled to be removed in 2014,
-+		because it was not possible to express the 'soft and hard block'
-+		state of the rfkill driver. It was removed in 2016.
-+Values: 	A numeric value.
-+		0: RFKILL_STATE_SOFT_BLOCKED
-+			transmitter is turned off by software
-+		1: RFKILL_STATE_UNBLOCKED
-+			transmitter is (potentially) active
-+		2: RFKILL_STATE_HARD_BLOCKED
-+			transmitter is forced off by something outside of
-+			the driver's control.
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index a05d1f1..26da4f0 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -683,46 +683,11 @@ static u8 user_state_from_blocked(unsigned long state)
- 	return RFKILL_USER_STATE_UNBLOCKED;
- }
- 
--static ssize_t state_show(struct device *dev, struct device_attribute *attr,
--			  char *buf)
--{
--	struct rfkill *rfkill = to_rfkill(dev);
--
--	return sprintf(buf, "%d\n", user_state_from_blocked(rfkill->state));
--}
--
--static ssize_t state_store(struct device *dev, struct device_attribute *attr,
--			   const char *buf, size_t count)
--{
--	struct rfkill *rfkill = to_rfkill(dev);
--	unsigned long state;
--	int err;
--
--	if (!capable(CAP_NET_ADMIN))
--		return -EPERM;
--
--	err = kstrtoul(buf, 0, &state);
--	if (err)
--		return err;
--
--	if (state != RFKILL_USER_STATE_SOFT_BLOCKED &&
--	    state != RFKILL_USER_STATE_UNBLOCKED)
--		return -EINVAL;
--
--	mutex_lock(&rfkill_global_mutex);
--	rfkill_set_block(rfkill, state == RFKILL_USER_STATE_SOFT_BLOCKED);
--	mutex_unlock(&rfkill_global_mutex);
--
--	return count;
--}
--static DEVICE_ATTR_RW(state);
--
- static struct attribute *rfkill_dev_attrs[] = {
- 	&dev_attr_name.attr,
- 	&dev_attr_type.attr,
- 	&dev_attr_index.attr,
- 	&dev_attr_persistent.attr,
--	&dev_attr_state.attr,
- 	&dev_attr_soft.attr,
- 	&dev_attr_hard.attr,
- 	NULL,
--- 
-2.5.0
+And for use-case number #3:
 
+   * rssi_preference(void)
+
+Gr. AvS
