@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:52945 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751412AbcAXUAV (ORCPT
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:38806 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752073AbcAGRc6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jan 2016 15:00:21 -0500
-Date: Sun, 24 Jan 2016 12:00:19 -0800
-From: Greg KH <greg@kroah.com>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
-	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
-	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, ceph-devel@vger.kernel.org,
-	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
-	drbd-dev@lists.linbit.com, open-iscsi@googlegroups.com
-Subject: Re: [PATCH 3/26] staging: rtl8192e: Replace uses of obsolete
- blkcipher and hash
-Message-ID: <20160124200019.GA17868@kroah.com> (sfid-20160124_210136_770916_748BCACB)
-References: <20160124131021.GA31153@gondor.apana.org.au>
- <E1aNKWo-0008AS-PG@gondolin.me.apana.org.au>
+	Thu, 7 Jan 2016 12:32:58 -0500
+Received: by mail-ig0-f176.google.com with SMTP id mw1so58021387igb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2016 09:32:58 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E1aNKWo-0008AS-PG@gondolin.me.apana.org.au>
+In-Reply-To: <568E997C.1030003@einfach.org>
+References: <CALnQHM3C=DVaTf58XDyh+rttVs-FSpc4ghozg9HJktEonq7w-g@mail.gmail.com>
+	<568E913D.7050301@candelatech.com>
+	<CALnQHM1mzqFbprQqujB7BWncOa=D9uAxLQ0paiv-21vrx+hFvw@mail.gmail.com>
+	<568E997C.1030003@einfach.org>
+Date: Thu, 7 Jan 2016 10:32:57 -0700
+Message-ID: <CALnQHM2y=Uj4AUZDXL1tqgMbebbkaj2UF1HPMmXfbK-X8rsSjA@mail.gmail.com> (sfid-20160107_183301_928464_C2F7B382)
+Subject: Re: lost connectivity until "wpa_cli reassociate" is issued
+From: David Mosberger <davidm@egauge.net>
+To: Bruno Randolf <br1@einfach.org>
+Cc: Ben Greear <greearb@candelatech.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 24, 2016 at 09:16:26PM +0800, Herbert Xu wrote:
-> The interfaces blkcipher and hash are obsolete.  This patch replaces
-> them with skcipher and ahash respectively.
-> 
-> Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
-> ---
-> 
->  drivers/staging/rtl8192e/rtllib_crypt_tkip.c |   99 ++++++++++++++-------------
->  drivers/staging/rtl8192e/rtllib_crypt_wep.c  |   48 +++++++------
->  2 files changed, 82 insertions(+), 65 deletions(-)
+On Thu, Jan 7, 2016 at 9:59 AM, Bruno Randolf <br1@einfach.org> wrote:
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Although I have not checked if the "wpa_cli reassociate" command helps,
+> I have seen rtl8192cu get "stuck" in similar ways. Maybe you can give
+> the new rtl8xxxu driver from Jes Sorensen try? It has less features, but
+> works more reliable, IMHO...
+
+Oh, boy, switching to a completely different driver is not what I'd
+like to do at this
+stage, but perhaps it's the right thing to do.  Thanks for the suggestion!
+
+I'll check with Jes.
+
+  --david
+-- 
+eGauge Systems LLC, http://egauge.net/, 1.877-EGAUGE1, fax 720.545.9768
