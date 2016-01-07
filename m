@@ -1,68 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:33145 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751926AbcACIhn (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34911 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750722AbcAGNFU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jan 2016 03:37:43 -0500
-Received: by mail-pa0-f45.google.com with SMTP id cy9so181769033pac.0
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 00:37:43 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 29/30] staging: wilc1000: rename pu8Tail in wilc_add_beacon
-Date: Sun,  3 Jan 2016 17:36:01 +0900
-Message-Id: <1451810162-16993-29-git-send-email-chaehyun.lim@gmail.com> (sfid-20160103_095247_110535_2B76E3AA)
-In-Reply-To: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 7 Jan 2016 08:05:20 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+	linux-wireless@vger.kernel.org, ath9k-devel@venema.h4ckr.net,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [patch -next] ath9k: fix ath9k_hw_nvram_check_version()
+References: <20151219105919.GB3749@mwanda>
+Date: Thu, 07 Jan 2016 15:05:13 +0200
+In-Reply-To: <20151219105919.GB3749@mwanda> (Dan Carpenter's message of "Sat,
+	19 Dec 2015 13:59:19 +0300")
+Message-ID: <87wprlk0ae.fsf@kamboji.qca.qualcomm.com> (sfid-20160107_140524_873354_7C71C2EE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pu8Tail to tail to avoid camelcase.
+Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+> There is a type bug so it always returns success.
+>
+> Fixes: 6fa658fd5ab2 ('ath9k: Simplify and fix eeprom endianness swapping')
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index c81c749..8f8c583 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4160,7 +4160,7 @@ int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg)
- }
- 
- int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 dtim_period,
--		    u32 head_len, u8 *head, u32 tail_len, u8 *pu8Tail)
-+		    u32 head_len, u8 *head, u32 tail_len, u8 *tail)
- {
- 	int result = 0;
- 	struct host_if_msg msg;
-@@ -4189,7 +4189,7 @@ int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 dtim_period,
- 	pstrSetBeaconParam->tail_len = tail_len;
- 
- 	if (tail_len > 0) {
--		pstrSetBeaconParam->tail = kmemdup(pu8Tail, tail_len,
-+		pstrSetBeaconParam->tail = kmemdup(tail, tail_len,
- 						   GFP_KERNEL);
- 		if (!pstrSetBeaconParam->tail) {
- 			result = -ENOMEM;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 7e4ea18..b61b484 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -344,7 +344,7 @@ s32 wilc_hif_set_cfg(struct wilc_vif *vif,
- s32 wilc_init(struct net_device *dev, struct host_if_drv **phWFIDrv);
- s32 wilc_deinit(struct wilc_vif *vif);
- int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 dtim_period,
--		    u32 head_len, u8 *head, u32 tail_len, u8 *pu8Tail);
-+		    u32 head_len, u8 *head, u32 tail_len, u8 *tail);
- int wilc_del_beacon(struct wilc_vif *vif);
- int wilc_add_station(struct wilc_vif *vif, struct add_sta_param *sta_param);
- int wilc_del_allstation(struct wilc_vif *vif, u8 mac_addr[][ETH_ALEN]);
+Applied to ath.git, thanks.
+
 -- 
-2.6.4
-
+Kalle Valo
