@@ -1,68 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:34170 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751357AbcACIgd (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:47379 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751924AbcAGJDG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jan 2016 03:36:33 -0500
-Received: by mail-pa0-f43.google.com with SMTP id uo6so161301857pac.1
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 00:36:33 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 06/30] staging: wilc1000: rename RemainOnChanReady in wilc_remain_on_channel
-Date: Sun,  3 Jan 2016 17:35:38 +0900
-Message-Id: <1451810162-16993-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20160103_093646_100319_B2008B10)
-In-Reply-To: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 7 Jan 2016 04:03:06 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Uri Mashiach <uri.mashiach@compulab.co.il>
+Cc: Rob Herring <robh+dt@kernel.org>, Tony Lindgren <tony@atomide.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v4 3/3] wlcore/wl12xx: spi: add wifi support to cm-t335
+References: <1451482533-8624-1-git-send-email-uri.mashiach@compulab.co.il>
+	<1451482533-8624-4-git-send-email-uri.mashiach@compulab.co.il>
+Date: Thu, 07 Jan 2016 11:02:54 +0200
+In-Reply-To: <1451482533-8624-4-git-send-email-uri.mashiach@compulab.co.il>
+	(Uri Mashiach's message of "Wed, 30 Dec 2015 15:35:33 +0200")
+Message-ID: <87io35lq2p.fsf@kamboji.qca.qualcomm.com> (sfid-20160107_100342_423856_E11F9714)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames RemainOnChanReady to ready to avoid camelcase.
+Uri Mashiach <uri.mashiach@compulab.co.il> writes:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+> Device tree modifications:
+> - Pinmux for SPI0 and WiFi GPIOs.
+> - SPI0 node with wlcore as a child node.
+>
+> Cc: Tony Lindgren <tony@atomide.com>
+> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+> ---
+> v1 -> v2: Replace interrupts and interrupt-parent with interrupts-extended.
+> v2 -> v3: Move the pinctrl-0 = <&wifi_pins> to the wlcore node.
+> v3 -> v4: replace interrupts-extended with interrupts and interrupt-parent. (revert v2 modification).
+>           According to Rob Herring and Documentation/devicetree/bindings/interrupt-controller/interrupts.txt,
+> 	  interrupts-extended should only be used when a device has multiple interrupt parents.
+>
+>  arch/arm/boot/dts/am335x-cm-t335.dts | 55 ++++++++++++++++++++++++++++++++++++
+>  1 file changed, 55 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 9265328..21d1e87e 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4064,7 +4064,7 @@ void wilc_scan_complete_received(struct wilc *wilc, u8 *pu8Buffer,
- int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
- 			   u32 duration, u16 chan,
- 			   wilc_remain_on_chan_expired expired,
--			   wilc_remain_on_chan_ready RemainOnChanReady,
-+			   wilc_remain_on_chan_ready ready,
- 			   void *pvUserArg)
- {
- 	int result = 0;
-@@ -4081,7 +4081,7 @@ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
- 	msg.id = HOST_IF_MSG_REMAIN_ON_CHAN;
- 	msg.body.remain_on_ch.ch = chan;
- 	msg.body.remain_on_ch.expired = expired;
--	msg.body.remain_on_ch.ready = RemainOnChanReady;
-+	msg.body.remain_on_ch.ready = ready;
- 	msg.body.remain_on_ch.arg = pvUserArg;
- 	msg.body.remain_on_ch.duration = duration;
- 	msg.body.remain_on_ch.id = session_id;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index d2ca27e..8a03055 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -359,7 +359,7 @@ s32 wilc_del_all_rx_ba_session(struct wilc_vif *vif, char *pBSSID, char TID);
- int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
- 			   u32 duration, u16 chan,
- 			   wilc_remain_on_chan_expired expired,
--			   wilc_remain_on_chan_ready RemainOnChanReady,
-+			   wilc_remain_on_chan_ready ready,
- 			   void *pvUserArg);
- int wilc_listen_state_expired(struct wilc_vif *vif, u32 session_id);
- int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg);
+To what tree should this patch go? My wireless-drivers-next tree doesn't
+even have this file.
+
+https://patchwork.kernel.org/patch/7933441/
+
 -- 
-2.6.4
-
+Kalle Valo
