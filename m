@@ -1,110 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:36720 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759324AbcAULbs (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:3728 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752192AbcAGJeW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 06:31:48 -0500
-Received: by mail-pa0-f65.google.com with SMTP id a20so1630844pag.3
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:31:48 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 01/27] staging: wilc1000: rename struct __Message_struct
-Date: Thu, 21 Jan 2016 20:30:31 +0900
-Message-Id: <1453375857-20645-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123151_894703_49ED2361)
-In-Reply-To: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 7 Jan 2016 04:34:22 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u079TKXD014224
+	for <linux-wireless@vger.kernel.org>; Thu, 7 Jan 2016 01:34:21 -0800
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+	by mx0b-0016f401.pphosted.com with ESMTP id 208ynrkk5j-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2016 01:34:21 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	chunfan chen <jeffc@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/6] mwifiex: add wowlan info messages
+Date: Thu, 7 Jan 2016 01:31:27 -0800
+Message-ID: <1452159091-30997-3-git-send-email-akarwar@marvell.com> (sfid-20160107_103430_889112_7DFB481B)
+In-Reply-To: <1452159091-30997-1-git-send-email-akarwar@marvell.com>
+References: <1452159091-30997-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames typedef from struct __Message_struct and renames it
-to struct message.
+From: chunfan chen <jeffc@marvell.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch adds informative messages in wake up on
+magic packet, disconnect, pattern configuration paths.
+
+Signed-off-by: chunfan chen <jeffc@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/staging/wilc1000/wilc_msgqueue.c | 10 +++++-----
- drivers/staging/wilc1000/wilc_msgqueue.h |  8 ++++----
- 2 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index abc780c..9b78fcd 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -38,7 +38,7 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index c27c6cc..6d36d08 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -3171,10 +3171,12 @@ static int mwifiex_set_wowlan_mef_entry(struct mwifiex_private *priv,
+ 				sizeof(byte_seq));
+ 		mef_entry->filter[filt_num].filt_type = TYPE_EQ;
+ 
+-		if (first_pat)
++		if (first_pat) {
+ 			first_pat = false;
+-		else
++			mwifiex_dbg(priv->adapter, INFO, "Wake on patterns\n");
++		} else {
+ 			mef_entry->filter[filt_num].filt_action = TYPE_AND;
++		}
+ 
+ 		filt_num++;
+ 	}
+@@ -3200,6 +3202,7 @@ static int mwifiex_set_wowlan_mef_entry(struct mwifiex_private *priv,
+ 		mef_entry->filter[filt_num].offset = 56;
+ 		mef_entry->filter[filt_num].filt_type = TYPE_EQ;
+ 		mef_entry->filter[filt_num].filt_action = TYPE_OR;
++		mwifiex_dbg(priv->adapter, INFO, "Wake on magic packet\n");
+ 	}
+ 	return ret;
+ }
+@@ -3295,6 +3298,7 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
+ 				    "Failed to set HS params\n");
+ 			return ret;
+ 		}
++		mwifiex_dbg(priv->adapter, INFO, "Wake on device disconnect\n");
  	}
  
- 	while (pHandle->pstrMessageList) {
--		Message *pstrMessge = pHandle->pstrMessageList->pstrNext;
-+		struct message *pstrMessge = pHandle->pstrMessageList->pstrNext;
- 
- 		kfree(pHandle->pstrMessageList);
- 		pHandle->pstrMessageList = pstrMessge;
-@@ -57,7 +57,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 			     const void *pvSendBuffer, u32 u32SendBufferSize)
- {
- 	unsigned long flags;
--	Message *pstrMessage = NULL;
-+	struct message *pstrMessage = NULL;
- 
- 	if ((!pHandle) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
- 		PRINT_ER("pHandle or pvSendBuffer is null\n");
-@@ -70,7 +70,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 	}
- 
- 	/* construct a new message */
--	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
-+	pstrMessage = kmalloc(sizeof(struct message), GFP_ATOMIC);
- 	if (!pstrMessage)
- 		return -ENOMEM;
- 
-@@ -89,7 +89,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 	if (!pHandle->pstrMessageList) {
- 		pHandle->pstrMessageList  = pstrMessage;
- 	} else {
--		Message *pstrTailMsg = pHandle->pstrMessageList;
-+		struct message *pstrTailMsg = pHandle->pstrMessageList;
- 
- 		while (pstrTailMsg->pstrNext)
- 			pstrTailMsg = pstrTailMsg->pstrNext;
-@@ -114,7 +114,7 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
- 			     void *pvRecvBuffer, u32 u32RecvBufferSize,
- 			     u32 *pu32ReceivedLength)
- {
--	Message *pstrMessage;
-+	struct message *pstrMessage;
- 	unsigned long flags;
- 
- 	if ((!pHandle) || (u32RecvBufferSize == 0)
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index d7e0328..1a7c652 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -13,18 +13,18 @@
- #include <linux/semaphore.h>
- 
- /* Message Queue type is a structure */
--typedef struct __Message_struct {
-+struct message {
- 	void *pvBuffer;
- 	u32 u32Length;
--	struct __Message_struct *pstrNext;
--} Message;
-+	struct message *pstrNext;
-+};
- 
- typedef struct __MessageQueue_struct {
- 	struct semaphore hSem;
- 	spinlock_t strCriticalSection;
- 	bool bExiting;
- 	u32 u32ReceiversCount;
--	Message *pstrMessageList;
-+	struct message *pstrMessageList;
- } WILC_MsgQueueHandle;
- 
- /*!
+ 	return ret;
 -- 
-2.7.0
+1.8.1.4
 
