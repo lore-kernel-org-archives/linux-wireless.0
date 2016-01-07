@@ -1,86 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m12-11.163.com ([220.181.12.11]:46018 "EHLO m12-11.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756634AbcAJCTO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jan 2016 21:19:14 -0500
-From: Jia-Ju Bai <baijiaju1990@163.com>
-To: sgruszka@redhat.com, kvalo@codeaurora.org, johannes.berg@intel.com,
-	emmanuel.grumbach@intel.com
-Cc: ilw@linux.intel.com, linuxwifi@intel.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Jia-Ju Bai <baijiaju1990@163.com>
-Subject: [PATCH] iwl4965: Fix a null pointer dereference in il_tx_queue_free and il_cmd_queue_free
-Date: Sun, 10 Jan 2016 10:19:09 +0800
-Message-Id: <1452392349-3561-1-git-send-email-baijiaju1990@163.com> (sfid-20160110_031958_611977_58F22189)
+Received: from softlayer.compulab.co.il ([50.23.254.55]:51612 "EHLO
+	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752032AbcAGLUh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2016 06:20:37 -0500
+Subject: Re: [PATCH v4 3/3] wlcore/wl12xx: spi: add wifi support to cm-t335
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1451482533-8624-1-git-send-email-uri.mashiach@compulab.co.il>
+ <1451482533-8624-4-git-send-email-uri.mashiach@compulab.co.il>
+ <87io35lq2p.fsf@kamboji.qca.qualcomm.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Tony Lindgren <tony@atomide.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: Uri Mashiach <uri.mashiach@compulab.co.il>
+Message-ID: <568E49FC.3090808@compulab.co.il> (sfid-20160107_122043_415440_B78C5C47)
+Date: Thu, 7 Jan 2016 13:20:28 +0200
+MIME-Version: 1.0
+In-Reply-To: <87io35lq2p.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If "txq->cmd = kzalloc(...)" in il_tx_queue_init fails, 
-"kfree(txq->cmd[i])" in il_tx_queue_free and il_cmd_queue_free 
-in iwl4965_hw_txq_ctx_free will causes a null pointer dereference,
-because txq->cmd is NULL at that time.
+Hi Kalle Valo,
 
-This patch fixes this problem by adding a if-check before kfree.
-To avoid double free in il_tx_queue_free and il_cmd_queue_free 
-caused by the fixing, txq->cmd[i], txq->meta and txq->cmd in
-error handling code of il_tx_queue_init are assigned null values.
-Otherwise, a double free will occur.
+On 01/07/2016 11:02 AM, Kalle Valo wrote:
+> Uri Mashiach <uri.mashiach@compulab.co.il> writes:
+>
+>> Device tree modifications:
+>> - Pinmux for SPI0 and WiFi GPIOs.
+>> - SPI0 node with wlcore as a child node.
+>>
+>> Cc: Tony Lindgren <tony@atomide.com>
+>> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+>> ---
+>> v1 -> v2: Replace interrupts and interrupt-parent with interrupts-extended.
+>> v2 -> v3: Move the pinctrl-0 = <&wifi_pins> to the wlcore node.
+>> v3 -> v4: replace interrupts-extended with interrupts and interrupt-parent. (revert v2 modification).
+>>            According to Rob Herring and Documentation/devicetree/bindings/interrupt-controller/interrupts.txt,
+>> 	  interrupts-extended should only be used when a device has multiple interrupt parents.
+>>
+>>   arch/arm/boot/dts/am335x-cm-t335.dts | 55 ++++++++++++++++++++++++++++++++++++
+>>   1 file changed, 55 insertions(+)
+>
+> To what tree should this patch go? My wireless-drivers-next tree doesn't
+> even have this file.
 
-This patch has been tested in real device, and it actually fixes the bug.
+Should be applied into omap-for-v4.x/dt
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
----
- drivers/net/wireless/iwlegacy/common.c |   18 +++++++++++++-----
- 1 file changed, 13 insertions(+), 5 deletions(-)
+>
+> https://patchwork.kernel.org/patch/7933441/
+>
 
-diff --git a/drivers/net/wireless/iwlegacy/common.c b/drivers/net/wireless/iwlegacy/common.c
-index 8871145..2656a15 100644
---- a/drivers/net/wireless/iwlegacy/common.c
-+++ b/drivers/net/wireless/iwlegacy/common.c
-@@ -2794,8 +2794,10 @@ il_tx_queue_free(struct il_priv *il, int txq_id)
- 	il_tx_queue_unmap(il, txq_id);
- 
- 	/* De-alloc array of command/tx buffers */
--	for (i = 0; i < TFD_TX_CMD_SLOTS; i++)
--		kfree(txq->cmd[i]);
-+	if (txq->cmd) {
-+		for (i = 0; i < TFD_TX_CMD_SLOTS; i++)
-+			kfree(txq->cmd[i]);
-+	}
- 
- 	/* De-alloc circular buffer of TFDs */
- 	if (txq->q.n_bd)
-@@ -2873,8 +2875,10 @@ il_cmd_queue_free(struct il_priv *il)
- 	il_cmd_queue_unmap(il);
- 
- 	/* De-alloc array of command/tx buffers */
--	for (i = 0; i <= TFD_CMD_SLOTS; i++)
--		kfree(txq->cmd[i]);
-+	if (txq->cmd) {
-+		for (i = 0; i <= TFD_CMD_SLOTS; i++)
-+			kfree(txq->cmd[i]);
-+	}
- 
- 	/* De-alloc circular buffer of TFDs */
- 	if (txq->q.n_bd)
-@@ -3076,11 +3080,15 @@ il_tx_queue_init(struct il_priv *il, u32 txq_id)
- 
- 	return 0;
- err:
--	for (i = 0; i < actual_slots; i++)
-+	for (i = 0; i < actual_slots; i++) {
- 		kfree(txq->cmd[i]);
-+		txq->cmd[i] = NULL;
-+	}
- out_free_arrays:
- 	kfree(txq->meta);
-+	txq->meta = NULL;
- 	kfree(txq->cmd);
-+	txq->cmd = NULL;
- 
- 	return -ENOMEM;
- }
 -- 
-1.7.9.5
-
-
+Thanks,
+Uri
