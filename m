@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:41967 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753490AbcAGMsK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 07:48:10 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 18/21] iwlwifi: mvm: check minimum temperature notification length
-Date: Thu,  7 Jan 2016 14:47:38 +0200
-Message-Id: <1452170861-10060-18-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160107_134816_263690_B24C34F1)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:33682 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750791AbcAGNIP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2016 08:08:15 -0500
+Received: by mail-pa0-f50.google.com with SMTP id cy9so258706079pac.0
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2016 05:08:15 -0800 (PST)
+Subject: Re: [PATCH v3 0/2] wcn36xx: fix crash because rx skb allocation
+ failure
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1450617641-29531-1-git-send-email-fengwei.yin@linaro.org>
+ <87si29k09a.fsf@kamboji.qca.qualcomm.com>
+Cc: julian.calaby@gmail.com, linux-wireless@vger.kernel.org,
+	wcn36xx@lists.infradead.org, me@bobcopeland.com,
+	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com,
+	lking@qti.qualcomm.com
+From: yfw <fengwei.yin@linaro.org>
+Message-ID: <568E6337.7070105@linaro.org> (sfid-20160107_140818_397494_6574D9BE)
+Date: Thu, 7 Jan 2016 21:08:07 +0800
+MIME-Version: 1.0
+In-Reply-To: <87si29k09a.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-This notification will be extended with extra data, so just
-check that it has a minimum length, not the exact length;
-we might later add handling for the extra fields added and
-have more code to handle both versions.
+On 2016年01月07日 21:05, Kalle Valo wrote:
+> Fengwei Yin <fengwei.yin@linaro.org> writes:
+>
+>> The current wcn36xx driver didn't handle rx skb allocation failure case.
+>> It only could be triggered when system is in extremly memory shortage
+>> case. King Lawrence <lking@qti.qualcomm.com> hit it by git clone linux
+>> kernel tree on DragonBoard <1>.
+>>
+>> The fixing is not to submit the old rx skb to network upper layer and
+>> reuse it as rx DMA buffer again.
+>>
+>> Changes from v2:
+>>   * Remove the ugly macro introduced in v2 per comment from Julian Calaby.
+>>   * Seperate the DMA int mask register writing as one patch per comment
+>>     from Bjorn Andersson.
+>>
+>> Changes from v1:
+>>   * Move switch block out of while loop.
+>>   * Remove the warning of unknown channel because we didn't deal with it.
+>>
+>> Fengwei Yin (2):
+>>    wcn36xx: handle rx skb allocation failure to avoid system crash
+>>    wcn36xx: split DMA mask register writing.
+>
+> Applied to ath.git, thanks.
+>
+Thanks a lot.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tt.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-index 473975c..fb76004 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-@@ -120,7 +120,7 @@ static int iwl_mvm_temp_notif_parse(struct iwl_mvm *mvm,
- 	int len = iwl_rx_packet_payload_len(pkt);
- 	int temp;
- 
--	if (WARN_ON_ONCE(len != sizeof(*notif))) {
-+	if (WARN_ON_ONCE(len < sizeof(*notif))) {
- 		IWL_ERR(mvm, "Invalid DTS_MEASUREMENT_NOTIFICATION\n");
- 		return -EINVAL;
- 	}
--- 
-2.5.0
-
+Regards
+Yin, Fengwei
