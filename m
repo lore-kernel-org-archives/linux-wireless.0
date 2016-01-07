@@ -1,37 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:35963 "EHLO
-	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756071AbcARTJx convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jan 2016 14:09:53 -0500
-MIME-Version: 1.0
-In-Reply-To: <20160118175303.19164539@wiggum>
-References: <8128014.DbbgBtKY3z@wuerfel>
-	<8760ywd5fe.fsf@kamboji.qca.qualcomm.com>
-	<4037550.DMaVTE01Aq@wuerfel>
-	<87bn8l7miw.fsf@kamboji.qca.qualcomm.com>
-	<CACna6ryvDFHqwJ3ExURcyFT2ZaT9fS9v36wCnJfze5BLnE88og@mail.gmail.com>
-	<87y4bn5m4q.fsf@kamboji.qca.qualcomm.com>
-	<20160118175303.19164539@wiggum>
-Date: Mon, 18 Jan 2016 20:09:52 +0100
-Message-ID: <CACna6ry2jSJpov1Mcvk=NF+GKrZVSHKjOsinpEQh7_BQAx34wQ@mail.gmail.com> (sfid-20160118_201013_745168_91026CDB)
-Subject: Re: ssb: Set linux-wireless as MAINTAINERS list
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: =?UTF-8?Q?Michael_B=C3=BCsch?= <m@bues.ch>
-Cc: Kalle Valo <kvalo@codeaurora.org>, Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-mips@linux-mips.org" <linux-mips@linux-mips.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from puleglot.ru ([78.47.112.147]:48896 "EHLO puleglot.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753718AbcAHBdf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2016 20:33:35 -0500
+From: Alexander Tsoy <alexander@tsoy.me>
+Date: Fri, 8 Jan 2016 01:26:03 +0300
+Subject: [PATCH] ath9k_htc: add device ID for Toshiba WLM-20U2/GN-1080
+To: <linux-wireless@vger.kernel.org>
+Cc: <ath9k-devel@lists.ath9k.org>
+Message-Id: <E1aHLfh-0001d1-FT@puleglot.ru> (sfid-20160108_023351_482246_C5E98F12)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18 January 2016 at 17:53, Michael Büsch <m@bues.ch> wrote:
-> ssb patches go through the linux-wireless tree.
-> Set the list to linux-wireless, so linux-wireless patchwork can catch the patches.
+This device is available under different marketing names:
+WLM-20U2 - Wireless USB Dongle for Toshiba TVs
+GN-1080 - Wireless LAN Module for Toshiba MFPs.
 
-Thanks Michael
+Signed-off-by: Alexander Tsoy <alexander@tsoy.me>
+---
+ drivers/net/wireless/ath/ath9k/hif_usb.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 165dd20..8cbf490 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -55,6 +55,8 @@ static struct usb_device_id ath9k_hif_usb_ids[] = {
+ 	  .driver_info = AR9280_USB },  /* Buffalo WLI-UV-AG300P */
+ 	{ USB_DEVICE(0x04da, 0x3904),
+ 	  .driver_info = AR9280_USB },
++	{ USB_DEVICE(0x0930, 0x0a08),
++	  .driver_info = AR9280_USB },  /* Toshiba WLM-20U2 and GN-1080 */
+ 
+ 	{ USB_DEVICE(0x0cf3, 0x20ff),
+ 	  .driver_info = STORAGE_DEVICE },
+-- 
+2.4.10
+
