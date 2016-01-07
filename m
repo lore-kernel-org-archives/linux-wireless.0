@@ -1,56 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:32845 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933389AbcAZLRf (ORCPT
+Received: from mail-qk0-f177.google.com ([209.85.220.177]:35588 "EHLO
+	mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751896AbcAGQUH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 06:17:35 -0500
-Date: Tue, 26 Jan 2016 11:17:30 +0000
-From: Chris Bainbridge <chris.bainbridge@gmail.com>
-To: linux-kernel@vger.kernel.org
-Cc: aryabinin@virtuozzo.com, johannes@sipsolutions.net,
-	sgruszka@redhat.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: UBSAN: Undefined behaviour in net/mac80211/rx.c:924:18
-Message-ID: <20160126111730.GA6765@localhost> (sfid-20160126_121748_885314_1512897C)
+	Thu, 7 Jan 2016 11:20:07 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1452076319.2541.3.camel@sipsolutions.net>
+References: <1451142303-1872-1-git-send-email-jprvita@endlessm.com>
+ <1451142303-1872-2-git-send-email-jprvita@endlessm.com> <6DC3AA8C-DDE9-44B8-91C5-94B1EB0DBE9A@holtmann.org>
+ <1452076319.2541.3.camel@sipsolutions.net>
+From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
+Date: Thu, 7 Jan 2016 11:19:25 -0500
+Message-ID: <CA+A7VXW3Fsf2O_xnnZAWxieMMhSP2ngTbhtuJEB1JpMc6EFPxQ@mail.gmail.com> (sfid-20160107_172053_126151_C8FF823E)
+Subject: Re: [PATCH] net/rfkill: Create "airplane mode" LED trigger
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	Network Development <netdev@vger.kernel.org>,
+	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Darren Hart <dvhart@infradead.org>,
+	platform-driver-x86@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-4.5.0-rc1 another UBSAN error:
++ Darren Hart and platform-drivers-x86 (sorry, I was trying to avoid
+too much cross-posting and ended up leaving interested parties out).
 
-[ 4845.229441] ================================================================================
-[ 4845.229454] UBSAN: Undefined behaviour in net/mac80211/rx.c:924:18
-[ 4845.229458] load of value 2 is not a valid value for type '_Bool'
-[ 4845.229464] CPU: 1 PID: 6266 Comm: kworker/u16:8 Not tainted 4.5.0-rc1 #252
-[ 4845.229468] Hardware name: Apple Inc. MacBookPro10,2/Mac-AFD8A9D944EA4843, BIOS MBP102.88Z.0106.B0A.1509130955 09/13/2015
-[ 4845.229491] Workqueue: phy2 rt2x00usb_work_rxdone
-[ 4845.229493]  0000000000000000 0000000000000000 0000000000000002 ffff8801b13c39f8
-[ 4845.229496]  ffffffff81b2e7d9 0000000000000007 ffff8801b13c3a20 ffff8801b13c3a10
-[ 4845.229498]  ffffffff81bcb87d ffffffff85016890 ffff8801b13c3a60 ffffffff81bcc279
-[ 4845.229501] Call Trace:
-[ 4845.229506]  [<ffffffff81b2e7d9>] dump_stack+0x45/0x6c
-[ 4845.229510]  [<ffffffff81bcb87d>] ubsan_epilogue+0xd/0x40
-[ 4845.229513]  [<ffffffff81bcc279>] __ubsan_handle_load_invalid_value+0x69/0x80
-[ 4845.229517]  [<ffffffff82280032>] ? xhci_setup_addressable_virt_dev+0xeb2/0x13b0
-[ 4845.229520]  [<ffffffff8121230b>] ? pick_next_entity+0xcb/0x280
-[ 4845.229524]  [<ffffffff82a7bce3>] ieee80211_sta_reorder_release.isra.15+0x7e3/0xad0
-[ 4845.229527]  [<ffffffff82a86837>] ieee80211_prepare_and_rx_handle+0x11a7/0x2ab0
-[ 4845.229530]  [<ffffffff82272694>] ? xhci_urb_enqueue+0x394/0x1140
-[ 4845.229533]  [<ffffffff82205d8f>] ? usb_hcd_map_urb_for_dma+0x94f/0x1140
-[ 4845.229537]  [<ffffffff82552927>] ? skb_release_data+0x117/0x2f0
-[ 4845.229539]  [<ffffffff82a883aa>] __ieee80211_rx_handle_packet+0x26a/0x9a0
-[ 4845.229542]  [<ffffffff8254ef8c>] ? __kmalloc_reserve.isra.11+0x2c/0x80
-[ 4845.229545]  [<ffffffff82a89131>] ieee80211_rx_napi+0x651/0x12b0
-[ 4845.229549]  [<ffffffff82188972>] rt2x00lib_rxdone+0x402/0x1120
-[ 4845.229552]  [<ffffffff8121b8ff>] ? dequeue_task_fair+0x97f/0x41d0
-[ 4845.229554]  [<ffffffff8219d19c>] rt2x00usb_work_rxdone+0xac/0x1f0
-[ 4845.229558]  [<ffffffff82b37cbd>] ? __schedule+0x5cd/0x1770
-[ 4845.229561]  [<ffffffff811dc3b6>] process_one_work+0x266/0xc00
-[ 4845.229563]  [<ffffffff811dce56>] worker_thread+0x96/0xd40
-[ 4845.229565]  [<ffffffff811dcdc0>] ? process_scheduled_works+0x70/0x70
-[ 4845.229568]  [<ffffffff811e91d8>] kthread+0x108/0x180
-[ 4845.229571]  [<ffffffff811e90d0>] ? kthread_create_on_node+0x210/0x210
-[ 4845.229573]  [<ffffffff82b40d9f>] ret_from_fork+0x3f/0x70
-[ 4845.229576]  [<ffffffff811e90d0>] ? kthread_create_on_node+0x210/0x210
-[ 4845.229577] ================================================================================
+On 6 Jan 2016 05:32, "Johannes Berg" <johannes@sipsolutions.net> wrote:
+>
+> On Tue, 2016-01-05 at 22:55 -0800, Marcel Holtmann wrote:
+> >
+> > so I am not convinced the kernel should have the concept of airplane
+> > mode at all.
+>
+> [snip long story]
+>
+> This is true, but that doesn't mean the patch is bad, just the naming
+> could be different.
+>
+> I think the patch could name this "rfkill-all" (or so) instead, and
+> replace all the "airplane_mode" identifiers as well.
+>
+
+I agree "airplane mode" is not the best name here and I can change in
+an updated version.
+
+> Then the driver can still default to "rfkill-all" trigger, or a
+> suitably interested userspace could remove the trigger and manage the
+> LED state itself.
+>
+
+Trying to answer both Marcel's and your comments, I think we should
+rather have a trigger which fires when the global state of
+RFKILL_TYPE_ALL changes, instead of tied to the op
+RFKILL_OP_CHANGE_ALL. Then we should also update the global states on
+every set block operation instead of only on RFKILL_OP_CHANGE_ALL.
+This part does not look like policy to me (please correct me if I'm
+wrong).
+
+The platform driver can default this trigger and have the LED reflect
+the global state of RFKILL_TYPE_ALL. This indeed looks like policy,
+but mostly because the physical LED label is an airplane icon, what
+the LED will be representing is "all radios are off". If that is not
+acceptable in the kernel, I can expose the LED to userspace instead
+and different userspaces can decide when to trigger it (in which case
+we don't need this patch at all). But considering this is a laptop
+platform driver, the only way I can see this being used is having the
+LED lit when all the radios are off, and unlit otherwise (maybe I'm
+being a bit short-visioned).
+
+In any case, I think we should update the global states on every set
+block operation, to have them consistent with the individual states. I
+can provide a patch for that.
+
+> Then again - if I think about that more - perhaps the kernel *should*
+> have a concept of airplane mode, just one that's not necessarily tied
+> to the "rfkill_all" setting, but could be controlled by userspace. That
+> way, userspace wouldn't have to know about the LED, just about the
+> airplane mode indicator (for which rfkill would probably be an
+> appropriate place)
+>
+
+If I'm following this correctly, your suggestion is to have an
+"airplane mode indicator" switch in the RFKill subsystem, which would
+be driven by userspace and will be tied to a trigger that could be
+used by platform drivers to drive physical airplane mode LEDs and
+similar. That's an interesting idea and probably better than expecting
+userspaces to know about platform details like LED presence. If this
+is feasible looks like a nice generic solution for this problem.
+
+Please let me know what you guys think is the best solution so I can work on it.
+
+> Two comments on the patch itself:
+>
+> > +#ifdef CONFIG_RFKILL_LEDS
+> > +       led_trigger_register(&amp;airplane_mode_led_trigger);
+> > +#endif
+>
+> Everything else uses inlines to avoid ifdefs, you can do the same here.
+> Also, error handling seems necessary.
+>
+
+Ok, I can fix this if there is an updated version of this patch.
+
+--
+João Paulo Rechi Vita
+http://about.me/jprvita
