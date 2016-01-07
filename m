@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:46917 "EHLO mga11.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:46266 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751941AbcAGN7U convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 08:59:20 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Rodrigo Freire <rfreire@redhat.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-CC: linuxwifi <linuxwifi@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] iwlwifi: Document missing module options
-Date: Thu, 7 Jan 2016 13:59:16 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E983FBD@hasmsx107.ger.corp.intel.com> (sfid-20160107_145937_103821_3C3C19C1)
-References: <91cd61cc8ed52fab61dcf19531d821dda75db267.1452118569.git.rfreire@redhat.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S1752073AbcAGVGb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2016 16:06:31 -0500
+Message-ID: <1452200788.3141.22.camel@sipsolutions.net> (sfid-20160107_220634_782110_BB99499D)
+Subject: Re: Mac80211 : Wpa rekeying issue
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Matthias May <matthias.may@neratec.com>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	voncken <cedric.voncken@acksys.fr>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 07 Jan 2016 22:06:28 +0100
+In-Reply-To: <568CD9D1.6080001@neratec.com>
+References: <773DB8A82AB6A046AE0195C68612A31901C5B5A9@sbs2003.acksys.local>
+	 <CANUX_P2k-Feexi5=gBm+UxsFkoic7FeGDFcNa_D3J2ujYL2ghQ@mail.gmail.com>
+	 <0a5101d1424c$eb46d2d0$c1d47870$@acksys.fr>
+	 <0a6a01d143a2$fcb77720$f6266560$@acksys.fr>
+	 <CANUX_P2pF_He3mruTxMU_poBXzZpa9rXA7AgYV_RQ4BJ9wS6Mg@mail.gmail.com>
+	 <568B912F.8070100@neratec.com> <1451987939.12357.18.camel@sipsolutions.net>
+	 <568BA0E3.5080905@neratec.com> <1452009029.12357.37.camel@sipsolutions.net>
+	 <568CD9D1.6080001@neratec.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On Wed, 2016-01-06 at 10:09 +0100, Matthias May wrote:
+> 
+> afaik it solves the issue that when a STA roames from AP1 to AP2, and
+> key material is installed at different times.
+> We observed encrypted frames which had a wrong CCMP counter. If the
+> STA 
+> updates it's counter with these frames then depending on the wrong
+> CCMP 
+> value received, up to a few hundred frames were dropped.
 
+I don't really see how it has any effect there either, since in that
+case the old key material should be deleted long before the new one is
+installed, so the cross-over that causes the PN update problem with
+rekeying can't happen?
 
-On 01/07/2016 12:24 AM, Rodrigo Freire wrote:
-> This patch documents two missing module options in the internal
-> code comment block.
->
-> Signed-off-by: Rodrigo Freire <rfreire@redhat.com>
-> ---
->  drivers/net/wireless/iwlwifi/iwl-modparams.h |    2 ++
->  1 files changed, 2 insertions(+), 0 deletions(-)
->
-> diff --git a/drivers/net/wireless/iwlwifi/iwl-modparams.h b/drivers/net/wireless/iwlwifi/iwl-modparams.h
-> index ac2b90d..1477277 100644
-> --- a/drivers/net/wireless/iwlwifi/iwl-modparams.h
-> +++ b/drivers/net/wireless/iwlwifi/iwl-modparams.h
-> @@ -102,6 +102,8 @@ enum iwl_disable_11n {
->   * @power_level: power level, default = 1
->   * @debug_level: levels are IWL_DL_*
->   * @ant_coupling: antenna coupling in dB, default = 0
-> + * @nvm_file: specifies a external NVM file
-> + * @uapsd_disable: disable U-APSD, default = 1
->   * @d0i3_disable: disable d0i3, default = 1,
->   * @lar_disable: disable LAR (regulatory), default = 0
->   * @fw_monitor: allow to use firmware monitor
-Applied in our internal tree. Thanks.
+> Not exactly the same as rekeying but the effect are pretty similar.
+
+Ignoring the discussion about the effect of the patch in roaming, the
+patch really can't do anything for rekeying since the station never
+goes back to !authorized in that case, so it can't really be relevant
+for this thread.
+
+johannes
