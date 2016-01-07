@@ -1,81 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:32795 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754525AbcA0J6C (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 04:58:02 -0500
-Received: by mail-wm0-f46.google.com with SMTP id 123so143976773wmz.0
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2016 01:58:01 -0800 (PST)
-Subject: Re: [PATCH] wireless-regdb: add 2.4GHz regulatory rules for Cuba (CU)
-To: Seth Forshee <seth.forshee@canonical.com>
-References: <1439299795-17359-1-git-send-email-xose.vazquez@gmail.com>
- <20150813143154.GA121347@ubuntu-hedt> <55EEE9CA.5010309@gmail.com>
- <20150908142208.GB26645@ubuntu-hedt>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	wireless-regdb@lists.infradead.org
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Message-ID: <56A894A5.4040306@gmail.com> (sfid-20160127_105813_664923_900BE3C5)
-Date: Wed, 27 Jan 2016 10:57:57 +0100
-MIME-Version: 1.0
-In-Reply-To: <20150908142208.GB26645@ubuntu-hedt>
-Content-Type: text/plain; charset=utf-8
+Received: from mga09.intel.com ([134.134.136.24]:41967 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753490AbcAGMsM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2016 07:48:12 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 20/21] iwlwifi: mvm: fix memory leaks in error paths upon fw error dump
+Date: Thu,  7 Jan 2016 14:47:40 +0200
+Message-Id: <1452170861-10060-20-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160107_134817_844304_FC7A6F58)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 09/08/2015 04:22 PM, Seth Forshee wrote:
-> On Tue, Sep 08, 2015 at 03:59:38PM +0200, Xose Vazquez Perez wrote:
->> On 08/13/2015 04:31 PM, Seth Forshee wrote:
->>
->>> On Tue, Aug 11, 2015 at 03:29:55PM +0200, Xose Vazquez Perez wrote:
->>>> Resolución 127, 2011 - Reglamento Banda 2,4 GHz.:
->>>> http://www.mincom.gob.cu/sites/default/files/marcoregulatorio/R%20127-11%20Reglamento%20banda%202,4%20GHz.pdf
->>>>
->>>> Cc: Seth Forshee <seth.forshee@canonical.com>
->>>> Cc: linux-wireless@vger.kernel.org
->>>> Cc: wireless-regdb@lists.infradead.org
->>>> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
->>>> ---
->>>>  db.txt | 7 +++++++
->>>>  1 file changed, 7 insertions(+)
->>>>
->>>> diff --git a/db.txt b/db.txt
->>>> index 982db34..2edbf90 100644
->>>> --- a/db.txt
->>>> +++ b/db.txt
->>>> @@ -275,6 +275,13 @@ country CR: DFS-FCC
->>>>  	(5490 - 5730 @ 20), (24), DFS
->>>>  	(5735 - 5835 @ 20), (30)
->>>>  
->>>> +# http://www.mincom.gob.cu/?q=marcoregulatorio
->>>> +# - Redes Informáticas
->>>> +# Resolución 127, 2011 - Reglamento Banda 2,4 GHz.
->>>> +country CU: DFS-FCC
->>>> +	(2400 - 2456 @ 40), (200 mW)
->>>> +	(2456 - 2483.5 @ 40), (200 mW)
->>>> +
->>>
->>> Based on the Google translation of the document you linked to, I don't
->>> see anything which would prevent merging these rules into one rule. Am I
->>> missing something?
->>
->> from http://www.mincom.gob.cu/sites/default/files/marcoregulatorio/R%20127-11%20Reglamento%20banda%202,4%20GHz.pdf
->> page 7:
->>
->> Artículo 4: Disposiciones de carácter técnico
->> [..]
->> 4.3.- No obstante lo anterior, los equipos que operen en las frecuencias entre 2456 y
->> 2483,5 MHz pueden emplear valores de p.i.r.e superiores, cuando ello se justifique en
->> beneficio de objetivos de interés nacional [...]
->> 4.4.- Para estos casos es necesario obtener una autorización expresa de la Agencia
->> [...]
->>
->> If you grant an authorization, for 2456-2483.5 pire can be increased.
-> 
-> Okay, but for the purposes of this database that provision isn't going
-> to apply, and it seems you agree since you've listed both as having the
-> exact same power limit. So I'd still prefer that we make it a single
-> rule.
+When iwl_mvm_fw_error_dump fails, it needs to clear the
+state in mvm, which includes:
+	* clear IWL_MVM_STATUS_DUMPING_FW_LOG
+	* set mvm->fw_dump_trig to NULL
+	* free the description
 
-OK. Done in v2.
+While at it, remove a NULL check in
+iwl_mvm_free_fw_dump_desc since kfree is NULL safe.
 
--thanks-
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c | 14 ++++++--------
+ 1 file changed, 6 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+index b3bc212..0813f81 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+@@ -270,8 +270,7 @@ static void iwl_mvm_dump_fifos(struct iwl_mvm *mvm,
+ 
+ void iwl_mvm_free_fw_dump_desc(struct iwl_mvm *mvm)
+ {
+-	if (mvm->fw_dump_desc == &iwl_mvm_dump_desc_assert ||
+-	    !mvm->fw_dump_desc)
++	if (mvm->fw_dump_desc == &iwl_mvm_dump_desc_assert)
+ 		return;
+ 
+ 	kfree(mvm->fw_dump_desc);
+@@ -441,7 +440,7 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 	/* there's no point in fw dump if the bus is dead */
+ 	if (test_bit(STATUS_TRANS_DEAD, &mvm->trans->status)) {
+ 		IWL_ERR(mvm, "Skip fw error dump since bus is dead\n");
+-		return;
++		goto out;
+ 	}
+ 
+ 	if (mvm->fw_dump_trig &&
+@@ -450,7 +449,7 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 
+ 	fw_error_dump = kzalloc(sizeof(*fw_error_dump), GFP_KERNEL);
+ 	if (!fw_error_dump)
+-		return;
++		goto out;
+ 
+ 	/* SRAM - include stack CCM if driver knows the values for it */
+ 	if (!mvm->cfg->dccm_offset || !mvm->cfg->dccm_len) {
+@@ -550,8 +549,7 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 	dump_file = vzalloc(file_len);
+ 	if (!dump_file) {
+ 		kfree(fw_error_dump);
+-		iwl_mvm_free_fw_dump_desc(mvm);
+-		return;
++		goto out;
+ 	}
+ 
+ 	fw_error_dump->op_mode_ptr = dump_file;
+@@ -590,8 +588,6 @@ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm)
+ 		memcpy(dump_trig, &mvm->fw_dump_desc->trig_desc,
+ 		       sizeof(*dump_trig) + mvm->fw_dump_desc->len);
+ 
+-		/* now we can free this copy */
+-		iwl_mvm_free_fw_dump_desc(mvm);
+ 		dump_data = iwl_fw_error_next_data(dump_data);
+ 	}
+ 
+@@ -677,6 +673,8 @@ dump_trans_data:
+ 	dev_coredumpm(mvm->trans->dev, THIS_MODULE, fw_error_dump, 0,
+ 		      GFP_KERNEL, iwl_mvm_read_coredump, iwl_mvm_free_coredump);
+ 
++out:
++	iwl_mvm_free_fw_dump_desc(mvm);
+ 	mvm->fw_dump_trig = NULL;
+ 	clear_bit(IWL_MVM_STATUS_DUMPING_FW_LOG, &mvm->status);
+ }
+-- 
+2.5.0
+
