@@ -1,60 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:36065 "EHLO
-	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751979AbcAEQmj (ORCPT
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:35693 "EHLO
+	mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751220AbcAGQ7H (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 11:42:39 -0500
-Received: by mail-wm0-f42.google.com with SMTP id l65so29699418wmf.1
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2016 08:42:38 -0800 (PST)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Helmut Schaa <helmut.schaa@googlemail.com>
-Subject: [PATCHv2] mac80211: Don't buffer non-bufferable MMPDUs
-Date: Tue,  5 Jan 2016 17:42:13 +0100
-Message-Id: <1452012133-19157-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20160105_174246_843756_2BDF6BD9)
-In-Reply-To: <1452004632-20263-1-git-send-email-helmut.schaa@googlemail.com>
-References: <1452004632-20263-1-git-send-email-helmut.schaa@googlemail.com>
+	Thu, 7 Jan 2016 11:59:07 -0500
+Received: by mail-qk0-f173.google.com with SMTP id n135so187108466qka.2
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2016 08:59:06 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CALnQHM3O6Z3E2wSkVLirDHCdT8vQqvQbqVEcSs8mfsfGs9KFyg@mail.gmail.com>
+References: <CALnQHM3C=DVaTf58XDyh+rttVs-FSpc4ghozg9HJktEonq7w-g@mail.gmail.com>
+ <568E913D.7050301@candelatech.com> <CALnQHM1mzqFbprQqujB7BWncOa=D9uAxLQ0paiv-21vrx+hFvw@mail.gmail.com>
+ <CABPxzYKaMPY6bz=Nr+W2wG5y_bV_wFN=7AMNUNcZNJBeVyYVJA@mail.gmail.com> <CALnQHM3O6Z3E2wSkVLirDHCdT8vQqvQbqVEcSs8mfsfGs9KFyg@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Thu, 7 Jan 2016 22:28:46 +0530
+Message-ID: <CABPxzY+Me1ocZQYPtw83Wa_0ti+eOiOf1d1srHqtf_nsu-ON9w@mail.gmail.com> (sfid-20160107_175911_536979_AD86B739)
+Subject: Re: lost connectivity until "wpa_cli reassociate" is issued
+To: David Mosberger <davidm@egauge.net>
+Cc: Ben Greear <greearb@candelatech.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Non-bufferable MMPDUs are sent out to STAs even while in PS mode
-(for example probe responses). Applying filtered frame handling for
-these doesn't seem to make much sense and will only create more
-air utilization when the STA wakes up. Hence, apply filtered frame
-handling only for bufferable MMPDUs.
+On Thu, Jan 7, 2016 at 10:17 PM, David Mosberger <davidm@egauge.net> wrote:
+> On Thu, Jan 7, 2016 at 9:32 AM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+>
+>> Management frames use a different queue (VO)
+>> from the logs it looks like a data path issue in driver/FW.
+>>
+>> The re-association might be clearing/triggering TX in driver
+>> solving the issue.
+>
+> That sounds plausible to me.  Is there an easy way to see the queues?
+> I haven't tried debugfs yet.
+We can check pending packets per queue at mac80211, but first
+we need some info from driver level. Someone familiar with RTL
+should help.
 
-Discovered while testing an old VOIP phone that started probing
-for APs while in PS mode. The mac80211/ath9k AP where the STA is
-associated would reply with a probe response but the phone sometimes
-moved to a new channel already and couldn't ack the probe response
-anymore. In that case mac80211 applied filtered frame handling
-for the un-acked probe response.
+cat /sys/kernel/debug/ieee80211/phy*/queues
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
----
-
-Changes in v2: Check IEEE80211_TX_CTL_NO_PS_BUFFER instead of frame_control field
-
- net/mac80211/status.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-index 5bad05e..6101deb 100644
---- a/net/mac80211/status.c
-+++ b/net/mac80211/status.c
-@@ -51,6 +51,11 @@ static void ieee80211_handle_filtered_frame(struct ieee80211_local *local,
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
- 	int ac;
- 
-+	if (info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER) {
-+		ieee80211_free_txskb(&local->hw, skb);
-+		return;
-+	}
-+
- 	/*
- 	 * This skb 'survived' a round-trip through the driver, and
- 	 * hopefully the driver didn't mangle it too badly. However,
--- 
-1.8.4.5
-
+If you see non-zero packets here (or) if the queue is stopped
+that might explain this behavior...
