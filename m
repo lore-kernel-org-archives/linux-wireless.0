@@ -1,60 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57261 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:39244 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757479AbcAaOcB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2016 09:32:01 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joe Perches <joe@perches.com>,
-	Alexander Kuleshov <kuleshovmail@gmail.com>,
-	Haneen Mohammed <hamohammed.sa@gmail.com>,
-	Andreas Ruprecht <andreas.ruprecht@fau.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel\@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] staging: rtl8723au: Fixes unnecessary return warning
-References: <20160129172908.GA14077@Karyakshetra>
-	<wrfjk2ms465z.fsf@redhat.com>
-	<CAGRGNgWQvdfQc-L9z0NKCyCOorxU0seQ-XvYnZDBWA3QKySrRA@mail.gmail.com>
-Date: Sun, 31 Jan 2016 09:31:58 -0500
-In-Reply-To: <CAGRGNgWQvdfQc-L9z0NKCyCOorxU0seQ-XvYnZDBWA3QKySrRA@mail.gmail.com>
-	(Julian Calaby's message of "Sat, 30 Jan 2016 10:17:00 +1100")
-Message-ID: <wrfjfuxd2529.fsf@redhat.com> (sfid-20160131_153309_852026_7211534B)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S1752254AbcAGMsD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2016 07:48:03 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 14/21] iwlwifi: mvm: prevent multiple stations with the same address
+Date: Thu,  7 Jan 2016 14:47:34 +0200
+Message-Id: <1452170861-10060-14-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160107_134827_135569_7778FBDE)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Julian Calaby <julian.calaby@gmail.com> writes:
-> Hi Bhaktipriya,
->
-> On Sat, Jan 30, 2016 at 5:00 AM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
->> Bhaktipriya Shridhar <bhaktipriya96@gmail.com> writes:
->> If you insist on pushing this rather unncessary change, please do it
->> properly, and remove the blank line before the return statement as well.
->
-> As Jes said, you need to remove the blank lines before the returns
-> too. checkpatch should have picked this up, you did run the patch
-> through checkpatch before you sent it, right?
->
-> Jes,
->
-> I know you have strong feelings on coding style, but there are a lot
-> of people out there who see deviations from the standard as bugs to be
-> fixed, so stuff like this isn't going to stop until it matches the
-> coding style document's spec.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Julian,
+As the device (and parts of the driver) cannot deal with having the
+same MAC address for two stations (on two virtual interfaces), add
+some explicit code to prevent this case.
 
-rtl8723au is pretty dead development wise, so I don't care too much.
-checkpatch is broken and has effectively turned into a policing tool for
-a few people who wish to apply their narrow view onto everyone else.
-I'll continue top reject broken patches to my code pushed out under
-those rules.
+Note that in practice this cannot happen since the device doesn't
+support operating with two AP/GO interfaces at the same time either,
+and other scenarios for this are, while not impossible, not going to
+happen in practice.
 
-Maybe it's time to introduce checkpatchconsideredharmful.com
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Jes
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 8539dfe..40b5c53 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -439,6 +439,7 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 	ieee80211_hw_set(hw, SUPPORT_FAST_XMIT);
+ 	ieee80211_hw_set(hw, SUPPORTS_CLONED_SKBS);
+ 	ieee80211_hw_set(hw, SUPPORTS_AMSDU_IN_AMPDU);
++	ieee80211_hw_set(hw, NEEDS_UNIQUE_STA_ADDR);
+ 
+ 	if (mvm->trans->max_skb_frags)
+ 		hw->netdev_features = NETIF_F_HIGHDMA | NETIF_F_SG;
+-- 
+2.5.0
+
