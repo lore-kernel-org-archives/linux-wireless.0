@@ -1,48 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35487 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753656AbcAGVIP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 16:08:15 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi-next 2016-01-07
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32E9844E2@hasmsx107.ger.corp.intel.com>
-Date: Thu, 07 Jan 2016 23:08:08 +0200
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9844E2@hasmsx107.ger.corp.intel.com>
-	(Emmanuel Grumbach's message of "Thu, 7 Jan 2016 17:05:14 +0000")
-Message-ID: <87oacxjdxj.fsf@kamboji.qca.qualcomm.com> (sfid-20160107_220819_775102_6102D37F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from m12-18.163.com ([220.181.12.18]:50754 "EHLO m12-18.163.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752018AbcAGMRl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2016 07:17:41 -0500
+From: Jia-Ju Bai <baijiaju1990@163.com>
+To: sgruszka@redhat.com, kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@163.com>
+Subject: [PATCH] iwl4965: Fix a memory leak in error handling code of __il4965_up
+Date: Thu,  7 Jan 2016 20:17:39 +0800
+Message-Id: <1452169059-20617-1-git-send-email-baijiaju1990@163.com> (sfid-20160107_131803_941562_B087FC2C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+When il4965_hw_nic_init in __il4965_up fails, the memory allocated by 
+iwl4965_sta_alloc_lq in iwl4965_alloc_bcast_station is not freed.
 
-> Me again,
->
-> On 01/07/2016 02:46 PM, Grumbach, Emmanuel wrote:
->> Hi Kalle,
->>
->> Here is the last round of patches for 4.5. Most of them are small and / or fixes.
->> Let me know if you have issues.
->> FYI - I scripted a few checks so that I hope that the internal tags that leaked
->> in the previous pull request won't leak any more.
->>
->> The following changes since commit e5d15cb530082cc13a6c9457eddd6f75b0f4de65:
->
-> I had to edit one commit. I re-pushed to the same tag and added another
-> _2 tag if you prefer to be sure.
+This patches adds il_dealloc_bcast_stations in the error handling code of 
+__il4965_up to fix this problem.
 
-Heh, you sent this just in the last minute (if Linus releases 4.4 this
-weekend as planned). I pulled iwlwifi-next-for-kalle-2016-01-07_2 now,
-thanks.
+This patch has been tested in real device, and it actually fixes the bug.
 
-BTW, I would prefer that you don't change the tag after you have sent a
-pull request for it, instead just create a new tag and leave the old one
-intact. This way it's easy for me to check what has changed etc.
+Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+---
+ drivers/net/wireless/iwlegacy/4965-mac.c |    1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+index 6656215..fd7b5c7 100644
+--- a/drivers/net/wireless/iwlegacy/4965-mac.c
++++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+@@ -5577,6 +5577,7 @@ __il4965_up(struct il_priv *il)
+ 	ret = il4965_hw_nic_init(il);
+ 	if (ret) {
+ 		IL_ERR("Unable to init nic\n");
++		il_dealloc_bcast_stations(il);
+ 		return ret;
+ 	}
+ 
 -- 
-Kalle Valo
+1.7.9.5
+
+
