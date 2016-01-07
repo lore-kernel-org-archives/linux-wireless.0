@@ -1,184 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:52660 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933315AbcALHhL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 02:37:11 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 15/26] staging: wilc1000: wilc_set_wfi_drv_handler: add mac index
-Date: Tue, 12 Jan 2016 16:39:44 +0900
-Message-ID: <1452584395-24910-16-git-send-email-glen.lee@atmel.com> (sfid-20160112_083721_457113_A7486968)
-In-Reply-To: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
-References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga09.intel.com ([134.134.136.24]:41967 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753517AbcAGMsL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Jan 2016 07:48:11 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 19/21] iwlwifi: mvm: constify the parameters of a few functions in fw-dbg.c
+Date: Thu,  7 Jan 2016 14:47:39 +0200
+Message-Id: <1452170861-10060-19-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160107_134820_938871_E78CF9DE)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware supports sta/ap concurrency so mac index will be passed to wilc.
-Remove wilc_set_wfi_drv_handler in scan and connect functions, and call
-the function in ndo_open which is wilc_mac_open.
-WID_SET_DRV_HANDLER value has been changed as well.
+The debug functions of fw-dbg.c don't really need to modify
+the trigger and the description they receive as a parameter.
+Constify the pointers.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/wilc1000/host_interface.c         | 11 ++++++-----
- drivers/staging/wilc1000/host_interface.h         |  3 ++-
- drivers/staging/wilc1000/linux_wlan.c             | 19 +++++++++++++++++++
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  6 ++----
- drivers/staging/wilc1000/wilc_wlan_if.h           |  2 +-
- 5 files changed, 30 insertions(+), 11 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h  | 4 ++--
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c | 8 ++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.h | 6 +++---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h    | 6 +++---
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 2 +-
+ 5 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 8c77520..9ffed32 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -319,9 +319,9 @@ static s32 handle_set_wfi_drv_handler(struct wilc_vif *vif,
- 	struct wid wid;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 81b7cb7..82fb3a9 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -663,7 +663,7 @@ struct iwl_trans_ops {
+ 	void (*resume)(struct iwl_trans *trans);
  
- 	wid.id = (u16)WID_SET_DRV_HANDLER;
--	wid.type = WID_INT;
--	wid.val = (s8 *)&hif_drv_handler->handler;
--	wid.size = sizeof(u32);
-+	wid.type = WID_STR;
-+	wid.val = (s8 *)hif_drv_handler;
-+	wid.size = sizeof(*hif_drv_handler);
- 
- 	result = wilc_send_config_pkt(vif->wilc, SET_CFG, &wid, 1,
- 				      hif_drv_handler->handler);
-@@ -3558,7 +3558,7 @@ int wilc_wait_msg_queue_idle(void)
- 	return result;
- }
- 
--int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index)
-+int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mac_idx)
- {
- 	int result = 0;
- 	struct host_if_msg msg;
-@@ -3566,6 +3566,7 @@ int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index)
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 	msg.id = HOST_IF_MSG_SET_WFIDRV_HANDLER;
- 	msg.body.drv.handler = index;
-+	msg.body.drv.mac_idx = mac_idx;
- 	msg.vif = vif;
- 
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
-@@ -3906,7 +3907,7 @@ s32 wilc_deinit(struct wilc_vif *vif)
- 
- 	del_timer_sync(&hif_drv->remain_on_ch_timer);
- 
--	wilc_set_wfi_drv_handler(vif, 0);
-+	wilc_set_wfi_drv_handler(vif, 0, 0);
- 	down(&hif_sema_driver);
- 
- 	if (hif_drv->usr_scan_req.scan_result) {
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 8faac27..5794246 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -217,6 +217,7 @@ struct user_conn_req {
- 
- struct drv_handler {
- 	u32 handler;
-+	u8 mac_idx;
+ 	struct iwl_trans_dump_data *(*dump_data)(struct iwl_trans *trans,
+-						 struct iwl_fw_dbg_trigger_tlv
++						 const struct iwl_fw_dbg_trigger_tlv
+ 						 *trigger);
  };
  
- struct op_mode {
-@@ -366,7 +367,7 @@ s32 wilc_remain_on_channel(struct wilc_vif *vif, u32 u32SessionID,
- 			   void *pvUserArg);
- s32 wilc_listen_state_expired(struct wilc_vif *vif, u32 u32SessionID);
- s32 wilc_frame_register(struct wilc_vif *vif, u16 u16FrameType, bool bReg);
--int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index);
-+int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mac_idx);
- int wilc_set_operation_mode(struct wilc_vif *vif, u32 mode);
+@@ -966,7 +966,7 @@ static inline void iwl_trans_resume(struct iwl_trans *trans)
  
- void wilc_free_join_params(void *pJoinParams);
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 68a50e6..9dd59da 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1024,6 +1024,25 @@ int wilc_mac_open(struct net_device *ndev)
- 	for (i = 0; i < wl->vif_num; i++) {
- 		if (ndev == wl->vif[i]->ndev) {
- 			memcpy(wl->vif[i]->src_addr, mac_add, ETH_ALEN);
-+			if (vif->iftype == AP_MODE) {
-+				wilc_set_wfi_drv_handler(vif,
-+							 wilc_get_vif_idx(vif),
-+							 0);
-+			} else if (!wilc_wlan_get_num_conn_ifcs(wilc)) {
-+				wilc_set_wfi_drv_handler(vif,
-+							 wilc_get_vif_idx(vif),
-+							 wilc->open_ifcs);
-+			} else {
-+				if (memcmp(wilc->vif[i^1]->bssid,
-+					   wilc->vif[i^1]->src_addr, 6))
-+					wilc_set_wfi_drv_handler(vif,
-+							 wilc_get_vif_idx(vif),
-+							 0);
-+				else
-+					wilc_set_wfi_drv_handler(vif,
-+							 wilc_get_vif_idx(vif),
-+							 1);
-+			}
- 			wilc_set_operation_mode(vif, vif->iftype);
- 			break;
- 		}
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index c399326..fe99a13 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -633,7 +633,6 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ static inline struct iwl_trans_dump_data *
+ iwl_trans_dump_data(struct iwl_trans *trans,
+-		    struct iwl_fw_dbg_trigger_tlv *trigger)
++		    const struct iwl_fw_dbg_trigger_tlv *trigger)
+ {
+ 	if (!trans->ops->dump_data)
+ 		return NULL;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+index 59450f1..b3bc212 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.c
+@@ -681,15 +681,15 @@ dump_trans_data:
+ 	clear_bit(IWL_MVM_STATUS_DUMPING_FW_LOG, &mvm->status);
+ }
  
- 	priv->u32RcvdChCount = 0;
+-struct iwl_mvm_dump_desc iwl_mvm_dump_desc_assert = {
++const struct iwl_mvm_dump_desc iwl_mvm_dump_desc_assert = {
+ 	.trig_desc = {
+ 		.type = cpu_to_le32(FW_DBG_TRIGGER_FW_ASSERT),
+ 	},
+ };
  
--	wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif));
- 	reset_shadow_found();
+ int iwl_mvm_fw_dbg_collect_desc(struct iwl_mvm *mvm,
+-				struct iwl_mvm_dump_desc *desc,
+-				struct iwl_fw_dbg_trigger_tlv *trigger)
++				const struct iwl_mvm_dump_desc *desc,
++				const struct iwl_fw_dbg_trigger_tlv *trigger)
+ {
+ 	unsigned int delay = 0;
  
- 	priv->bCfgScanning = true;
-@@ -714,8 +713,6 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 	vif = netdev_priv(priv->dev);
- 	pstrWFIDrv = (struct host_if_drv *)(priv->hWILCWFIDrv);
+@@ -715,7 +715,7 @@ int iwl_mvm_fw_dbg_collect_desc(struct iwl_mvm *mvm,
  
--	wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif));
--
- 	PRINT_D(CFG80211_DBG, "Connecting to SSID [%s] on netdev [%p] host if [%p]\n", sme->ssid, dev, priv->hWILCWFIDrv);
- 	if (!(strncmp(sme->ssid, "DIRECT-", 7))) {
- 		PRINT_D(CFG80211_DBG, "Connected to Direct network,OBSS disabled\n");
-@@ -2152,7 +2149,8 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 		vif->iftype = AP_MODE;
+ int iwl_mvm_fw_dbg_collect(struct iwl_mvm *mvm, enum iwl_fw_dbg_trigger trig,
+ 			   const char *str, size_t len,
+-			   struct iwl_fw_dbg_trigger_tlv *trigger)
++			   const struct iwl_fw_dbg_trigger_tlv *trigger)
+ {
+ 	struct iwl_mvm_dump_desc *desc;
  
- 		if (wl->initialized) {
--			wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif));
-+			wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif),
-+						 0);
- 			wilc_set_operation_mode(vif, AP_MODE);
- 			wilc_set_power_mgmt(vif, 0, 0);
- 		}
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 618903c..d306ec1a 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -832,7 +832,6 @@ typedef enum {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.h
+index 08148b2..f7dff76 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-dbg.h
+@@ -72,11 +72,11 @@
+ void iwl_mvm_fw_error_dump(struct iwl_mvm *mvm);
+ void iwl_mvm_free_fw_dump_desc(struct iwl_mvm *mvm);
+ int iwl_mvm_fw_dbg_collect_desc(struct iwl_mvm *mvm,
+-				struct iwl_mvm_dump_desc *desc,
+-				struct iwl_fw_dbg_trigger_tlv *trigger);
++				const struct iwl_mvm_dump_desc *desc,
++				const struct iwl_fw_dbg_trigger_tlv *trigger);
+ int iwl_mvm_fw_dbg_collect(struct iwl_mvm *mvm, enum iwl_fw_dbg_trigger trig,
+ 			   const char *str, size_t len,
+-			   struct iwl_fw_dbg_trigger_tlv *trigger);
++			   const struct iwl_fw_dbg_trigger_tlv *trigger);
+ int iwl_mvm_fw_dbg_collect_trig(struct iwl_mvm *mvm,
+ 				struct iwl_fw_dbg_trigger_tlv *trigger,
+ 				const char *fmt, ...) __printf(3, 4);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 7517dc13..5f3ac8c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -157,7 +157,7 @@ struct iwl_mvm_dump_desc {
+ 	struct iwl_fw_error_dump_trigger_desc trig_desc;
+ };
  
- 	/* Custom Integer WID list */
- 	WID_GET_INACTIVE_TIME		= 0x2084,
--	WID_SET_DRV_HANDLER		= 0X2085,
- 	WID_SET_OPERATION_MODE		= 0X2086,
- 	/* EMAC String WID list */
- 	WID_SSID			= 0x3000,
-@@ -865,6 +864,7 @@ typedef enum {
- 	WID_MODEL_NAME			= 0x3027, /*Added for CAPI tool */
- 	WID_MODEL_NUM			= 0x3028, /*Added for CAPI tool */
- 	WID_DEVICE_NAME			= 0x3029, /*Added for CAPI tool */
-+	WID_SET_DRV_HANDLER		= 0x3030,
+-extern struct iwl_mvm_dump_desc iwl_mvm_dump_desc_assert;
++extern const struct iwl_mvm_dump_desc iwl_mvm_dump_desc_assert;
  
- 	/* NMAC String WID list */
- 	WID_11N_P_ACTION_REQ		= 0x3080,
+ struct iwl_mvm_phy_ctxt {
+ 	u16 id;
+@@ -732,8 +732,8 @@ struct iwl_mvm {
+ 	s8 restart_fw;
+ 	u8 fw_dbg_conf;
+ 	struct delayed_work fw_dump_wk;
+-	struct iwl_mvm_dump_desc *fw_dump_desc;
+-	struct iwl_fw_dbg_trigger_tlv *fw_dump_trig;
++	const struct iwl_mvm_dump_desc *fw_dump_desc;
++	const struct iwl_fw_dbg_trigger_tlv *fw_dump_trig;
+ 
+ #ifdef CONFIG_IWLWIFI_LEDS
+ 	struct led_classdev led;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index d44e7af..3a43109 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -2364,7 +2364,7 @@ iwl_trans_pcie_dump_monitor(struct iwl_trans *trans,
+ 
+ static struct iwl_trans_dump_data
+ *iwl_trans_pcie_dump_data(struct iwl_trans *trans,
+-			  struct iwl_fw_dbg_trigger_tlv *trigger)
++			  const struct iwl_fw_dbg_trigger_tlv *trigger)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_fw_error_dump_data *data;
 -- 
-1.9.1
+2.5.0
 
