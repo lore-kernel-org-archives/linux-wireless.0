@@ -1,31 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f194.google.com ([209.85.213.194]:34458 "EHLO
-	mail-ig0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756173AbcAIXsl (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:49029 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751775AbcAGJVa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jan 2016 18:48:41 -0500
-Received: by mail-ig0-f194.google.com with SMTP id ik10so10658997igb.1
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Jan 2016 15:48:41 -0800 (PST)
+	Thu, 7 Jan 2016 04:21:30 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1442606899-31872-1-git-send-email-arend@broadcom.com>
-References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
-Date: Sun, 10 Jan 2016 00:48:41 +0100
-Message-ID: <CACna6rzWKv7d7zjfJdnceLbknu+drbbjks_=JAkep0NiiLk7JA@mail.gmail.com> (sfid-20160110_004845_178256_3D47E7AD)
-Subject: Re: [PATCH 00/16] brcmfmac: new device support and P2P fixes
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+Subject: Re: [V2,
+ 1/7] brcmfmac: add arp offload ip address table configuration support
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1451724102-21911-2-git-send-email-arend@broadcom.com>
 To: Arend van Spriel <arend@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Franky Lin <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Message-Id: <20160107092130.4460F605BD@smtp.codeaurora.org> (sfid-20160107_102141_236584_C54D72F1)
+Date: Thu,  7 Jan 2016 09:21:30 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18 September 2015 at 22:08, Arend van Spriel <arend@broadcom.com> wrote:
-> This series is intended for v4.4 containing the following highlights:
->
-> * support for BCM4350, BCM4365, and BCM4366 PCIE devices.
-> * fixed for legacy P2P and P2P device handling.
-> * correct set and get tx-power.
 
-Hi Arend, can you provide us some update on progress of releasing
-brcmfmac4366b-pcie.bin, please?
+> From: Franky Lin <frankyl@broadcom.com>
+> 
+> Obtain ipv4 address through inetaddr notification for ARP offload host
+> ip table configuration.
+> 
+> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> Signed-off-by: Franky Lin <frankyl@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+
+Thanks, 7 patches applied to wireless-drivers-next.git:
+
+44129ed04b2b brcmfmac: add arp offload ip address table configuration support
+3f5893d1b30a brcmfmac: Add get_station support for IBSS
+48ed16e86b28 brcmfmac: Add support for scheduled scan mac randomization
+ec64241c9fd2 brcmfmac: obtain feature info using 'cap' firmware command
+6a98d64a27de brcmfmac: Fix warn trace on module unload while in ibss mode
+7d34b0560567 brcmfmac: Move all module parameters to one place
+8ba83d4daab9 brcmfmac: introduce module parameter to force successful probe
+
+Kalle Valo
