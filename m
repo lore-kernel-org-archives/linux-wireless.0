@@ -1,47 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38293 "EHLO sipsolutions.net"
+Received: from mga14.intel.com ([192.55.52.115]:52757 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751543AbcAEQFw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 11:05:52 -0500
-Message-ID: <1452009950.12357.46.camel@sipsolutions.net> (sfid-20160105_170555_662907_31696412)
-Subject: Re: warning at net/mac80211/driver-ops.h:647
- ieee80211_sta_wmm_params
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Toralf =?ISO-8859-1?Q?F=F6rster?= <toralf.foerster@gmx.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>
-Date: Tue, 05 Jan 2016 17:05:50 +0100
-In-Reply-To: <567FCB67.1000101@gmx.de> (sfid-20151227_122919_319415_803E9245)
-References: <567FCB67.1000101@gmx.de> (sfid-20151227_122919_319415_803E9245)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751305AbcAHIId convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jan 2016 03:08:33 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>
+Subject: Re: [PATCH 01/21] iwlwifi: dvm: fix WoWLAN
+Date: Fri, 8 Jan 2016 08:08:30 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E984EE3@hasmsx107.ger.corp.intel.com> (sfid-20160108_090837_892223_ADBA9DB8)
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+ <1452170861-10060-1-git-send-email-emmanuel.grumbach@intel.com>
+ <87k2nljdl4.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2015-12-27 at 12:28 +0100, Toralf Förster wrote:
-> Yesterday I got this warning for the first time while using WLAN in a
-> train, I'm unsure if this warning is worth to be reported or not :
-
-Definitely worth it, thanks!
-
-> Dec 26 20:26:48 t44 kernel: [45827.647635] cfg80211:   (5490000 KHz -
-> 5710000 KHz @ 160000 KHz), (N/A, 2700 mBm), (0 s)
-> Dec 26 20:26:48 t44 kernel: [45827.647637] cfg80211:   (57000000 KHz
-> - 66000000 KHz @ 2160000 KHz), (N/A, 4000 mBm), (N/A)
-> Dec 26 20:26:48 t44 kernel: [45827.700734] ------------[ cut here ]
-> ------------
-> Dec 26 20:26:48 t44 kernel: [45827.700762] WARNING: CPU: 0 PID: 1498
-> at net/mac80211/driver-ops.h:647 ieee80211_sta_wmm_params+0x3f7/0x410
-> [mac80211]()
-> Dec 26 20:26:48 t44 kernel: [45827.700764] wlp3s0: invalid
-> CW_min/CW_max: 127/3
-
-Ugly. I once met a guy who worked on the train AP network, should dig
-up his contact info ...
-
-In the meantime, we should catch this bug at a higher layer and do ...
-something. But what exactly? Use default WMM parameters like we usually
-do in cases like this?
 
 
-johannes
+On 01/07/2016 11:15 PM, Kalle Valo wrote:
+> Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
+>
+>> My commit below introduced a mutex in the transport to
+>> prevent concurrent operations. To do so, it added a flag
+>> (is_down) to make sure the transport is in the right state.
+>> This uncoverred an bug that didn't cause any harm until
+>> now: iwldvm calls stop_device and then starts the firmware
+>> without calling start_hw in between. While this flow is
+>> fine from the device configuration point of view (register,
+>> etc...), it is now forbidden by the new is_down flag.
+>> This led to this error to appear:
+>> iwlwifi 0000:05:00.0: Can't start_fw since the HW hasn't been started
+>> and the suspend would fail.
+>>
+>> This fixes:
+>> https://bugzilla.kernel.org/show_bug.cgi?id=109591
+>>
+>> CC: <stable@vger.kernel.org> [4.3+]
+>> Reported-by: Bogdan Bogush <bogdan.s.bogush@gmail.com>
+>> Fixes=fa9f3281cbb1 ("iwlwifi: pcie: lock start_hw / start_fw / stop_device")
+> No need to change this anymore, but this should be:
+>
+> Fixes: fa9f3281cbb1 ("iwlwifi: pcie: lock start_hw / start_fw / stop_device")
+>
+Added to my "do_no_screw_up_before_upstreaming.sh" script.
