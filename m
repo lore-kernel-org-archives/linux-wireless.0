@@ -1,37 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:43234 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932651AbcA1Mau (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34268 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754382AbcAHIpT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 07:30:50 -0500
-Date: Thu, 28 Jan 2016 15:30:22 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Chris Bainbridge <chris.bainbridge@gmail.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	aryabinin@virtuozzo.com, Julia Lawall <Julia.Lawall@lip6.fr>,
-	kernel-janitors@vger.kernel.org, Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] net/mac80211/agg-rx.c: fix use of uninitialised values
-Message-ID: <20160128123022.GB13219@mwanda> (sfid-20160128_133131_757251_09ED0150)
-References: <20160126111730.GA6765@localhost>
- <20160127154618.GA5717@localhost>
- <CAGRGNgXkvNfzM9Q1RO5kFwUWpFZbQ3mNQi3aVHcPTCw0A9fyFA@mail.gmail.com>
+	Fri, 8 Jan 2016 03:45:19 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGRGNgXkvNfzM9Q1RO5kFwUWpFZbQ3mNQi3aVHcPTCw0A9fyFA@mail.gmail.com>
+Subject: Re: [1/6] brcmfmac: Add wowl net detect support
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1451988350-2197-2-git-send-email-arend@broadcom.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Message-Id: <20160108084519.11356605C3@smtp.codeaurora.org> (sfid-20160108_094528_208882_70B03102)
+Date: Fri,  8 Jan 2016 08:45:19 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's not the return where we should trigger the warning it's at the
 
-	rcu_assign_pointer(sta->ampdu_mlme.tid_rx[tid], tid_agg_rx);
+> From: Hante Meuleman <meuleman@broadcom.com>
+> 
+> With wowl net detect it becomes possible to scan for specific ssids
+> and wakeup once found.
+> 
+> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
 
-line.  That's for correctness, but also it should be slightly easier.
-Or it should cut down on false positives if we ignored returns and only
-looked global scope type assignements.
+Thanks, 6 patches applied to wireless-drivers-next.git:
 
-regards,
-dan carpenter
+3021ad9a4f00 brcmfmac: Add wowl net detect support
+5419f7f17d5b brcmfmac: Reshuffle functions to avoid forward declarations
+4011fc499690 brcmfmac: change brcmf_sdio_wd_timer() prototype
+63ce3d5db093 brcmfmac: use msecs_to_jiffies() in macro definitions
+5ce96c0808ac brcmfmac: use jiffies for timeout in btcoex
+42e0ed0d454c brcmfmac: Do not handle link downs for ibss.
 
+Kalle Valo
