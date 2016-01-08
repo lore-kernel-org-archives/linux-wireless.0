@@ -1,120 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:33017 "EHLO
-	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756582AbcA2R3D (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34077 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752883AbcAHImf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2016 12:29:03 -0500
-Date: Fri, 29 Jan 2016 22:59:08 +0530
-From: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Joe Perches <joe@perches.com>,
-	Bhaktipriya Shridhar <bhaktipriya96@gmail.com>,
-	Alexander Kuleshov <kuleshovmail@gmail.com>,
-	Haneen Mohammed <hamohammed.sa@gmail.com>,
-	Andreas Ruprecht <andreas.ruprecht@fau.de>
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: rtl8723au: Fixes unnecessary return warning
-Message-ID: <20160129172908.GA14077@Karyakshetra> (sfid-20160129_182907_819283_5F2CA294)
+	Fri, 8 Jan 2016 03:42:35 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi-next 2016-01-07
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB32E9844E2@hasmsx107.ger.corp.intel.com>
+	<87oacxjdxj.fsf@kamboji.qca.qualcomm.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB32E984F12@hasmsx107.ger.corp.intel.com>
+Date: Fri, 08 Jan 2016 10:42:28 +0200
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E984F12@hasmsx107.ger.corp.intel.com>
+	(Emmanuel Grumbach's message of "Fri, 8 Jan 2016 08:12:02 +0000")
+Message-ID: <87fuy8jwcr.fsf@kamboji.qca.qualcomm.com> (sfid-20160108_094239_315929_AEB7C571)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes checkpatch.pl warning in rtw_mlme_ext.c file.
-WARNING: void function return statements are not generally useful
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-Signed-off-by: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
----
- drivers/staging/rtl8723au/core/rtw_mlme_ext.c | 10 ----------
- 1 file changed, 10 deletions(-)
+> On 01/07/2016 11:08 PM, Kalle Valo wrote:
+>> "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+>>
+>>> Me again,
+>>>
+>>> On 01/07/2016 02:46 PM, Grumbach, Emmanuel wrote:
+>>>> Hi Kalle,
+>>>>
+>>>> Here is the last round of patches for 4.5. Most of them are small and / or fixes.
+>>>> Let me know if you have issues.
+>>>> FYI - I scripted a few checks so that I hope that the internal tags that leaked
+>>>> in the previous pull request won't leak any more.
+>>>>
+>>>> The following changes since commit e5d15cb530082cc13a6c9457eddd6f75b0f4de65:
+>>> I had to edit one commit. I re-pushed to the same tag and added another
+>>> _2 tag if you prefer to be sure.
+>> Heh, you sent this just in the last minute (if Linus releases 4.4 this
+>> weekend as planned). I pulled iwlwifi-next-for-kalle-2016-01-07_2 now,
+>> thanks.
+>
+> Right, OTOH, most of the patches here are really fixes.
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
-index d28f29a..e8a16b9 100644
---- a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
-+++ b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
-@@ -2657,7 +2657,6 @@ static void issue_probersp(struct rtw_adapter *padapter, unsigned char *da)
+Sure. I meant about sending these patches via wireless-drivers-next
+which I'm just about to close. I'll "open" both wireless-drivers trees
+again once -rc1 is released.
 
- 	dump_mgntframe23a(padapter, pmgntframe);
-
--	return;
- }
-
- static int _issue_probereq(struct rtw_adapter *padapter,
-@@ -2958,7 +2957,6 @@ static void issue_auth(struct rtw_adapter *padapter, struct sta_info *psta,
- 	DBG_8723A("%s\n", __func__);
- 	dump_mgntframe23a(padapter, pmgntframe);
-
--	return;
- }
-
- #ifdef CONFIG_8723AU_AP_MODE
-@@ -3339,7 +3337,6 @@ exit:
- 	} else
- 		kfree(pmlmepriv->assoc_req);
-
--	return;
- }
-
- /* when wait_ack is true, this function should be called at process context */
-@@ -4103,7 +4100,6 @@ static void rtw_site_survey(struct rtw_adapter *padapter)
- 		pmlmeext->sitesurvey_res.state = SCAN_DISABLE;
- 	}
-
--	return;
- }
-
- /* collect bss info from Beacon and Probe request/response frames. */
-@@ -4760,7 +4756,6 @@ void report_survey_event23a(struct rtw_adapter *padapter,
-
- 	pmlmeext->sitesurvey_res.bss_cnt++;
-
--	return;
- }
-
- void report_surveydone_event23a(struct rtw_adapter *padapter)
-@@ -4803,7 +4798,6 @@ void report_surveydone_event23a(struct rtw_adapter *padapter)
-
- 	rtw_enqueue_cmd23a(pcmdpriv, pcmd_obj);
-
--	return;
- }
-
- void report_join_res23a(struct rtw_adapter *padapter, int res)
-@@ -4851,7 +4845,6 @@ void report_join_res23a(struct rtw_adapter *padapter, int res)
-
- 	rtw_enqueue_cmd23a(pcmdpriv, pcmd_obj);
-
--	return;
- }
-
- void report_del_sta_event23a(struct rtw_adapter *padapter,
-@@ -4907,7 +4900,6 @@ void report_del_sta_event23a(struct rtw_adapter *padapter,
-
- 	rtw_enqueue_cmd23a(pcmdpriv, pcmd_obj);
-
--	return;
- }
-
- void report_add_sta_event23a(struct rtw_adapter *padapter,
-@@ -4952,7 +4944,6 @@ void report_add_sta_event23a(struct rtw_adapter *padapter,
-
- 	rtw_enqueue_cmd23a(pcmdpriv, pcmd_obj);
-
--	return;
- }
-
- /****************************************************************************
-@@ -5395,7 +5386,6 @@ static void link_timer_hdl(unsigned long data)
- 		set_link_timer(pmlmeext, REASSOC_TO);
- 	}
-
--	return;
- }
-
- static void addba_timer_hdl(unsigned long data)
---
-2.1.4
-
+-- 
+Kalle Valo
