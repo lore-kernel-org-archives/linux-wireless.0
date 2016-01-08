@@ -1,56 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:63781 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964896AbcAZKBy (ORCPT
+Received: from mga03.intel.com ([134.134.136.65]:43522 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751279AbcAHIMH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 05:01:54 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [RFC V3 0/2] nl80211: allow configuration of BSS selection
-Date: Tue, 26 Jan 2016 11:01:46 +0100
-Message-ID: <1453802508-30195-1-git-send-email-arend@broadcom.com> (sfid-20160126_110205_106016_F777E7B7)
+	Fri, 8 Jan 2016 03:12:07 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi-next 2016-01-07
+Date: Fri, 8 Jan 2016 08:12:02 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E984F12@hasmsx107.ger.corp.intel.com> (sfid-20160108_091211_790204_7E8F5BB0)
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB32E9844E2@hasmsx107.ger.corp.intel.com>
+ <87oacxjdxj.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series adds support for configuration of BSS selection done by
-the driver and/or firmware. It allows user-space to pass selection criteria
-with the NL80211_CMD_CONNECT using NL80211_ATTR_BSS_SELECT. When user-space
-does provide this attribute and no explicit BSSID is provided it will pass
-the BSS selection criteria to the driver if the driver supports it.
 
-When multiple BSS-es are found belonging to the same ESS, ie. Infra-BSS with
-same SSID, the criteria can be used to select a BSS. The criteria defined are:
 
-1. RSSI based selection.
-2. Band selection, RSSI based selection.
-3. RSSI adjustment in given band, RSSI based selection.
+On 01/07/2016 11:08 PM, Kalle Valo wrote:
+> "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+>
+>> Me again,
+>>
+>> On 01/07/2016 02:46 PM, Grumbach, Emmanuel wrote:
+>>> Hi Kalle,
+>>>
+>>> Here is the last round of patches for 4.5. Most of them are small and / or fixes.
+>>> Let me know if you have issues.
+>>> FYI - I scripted a few checks so that I hope that the internal tags that leaked
+>>> in the previous pull request won't leak any more.
+>>>
+>>> The following changes since commit e5d15cb530082cc13a6c9457eddd6f75b0f4de65:
+>> I had to edit one commit. I re-pushed to the same tag and added another
+>> _2 tag if you prefer to be sure.
+> Heh, you sent this just in the last minute (if Linus releases 4.4 this
+> weekend as planned). I pulled iwlwifi-next-for-kalle-2016-01-07_2 now,
+> thanks.
 
-V2:
- - incorporate comments from Johannes Berg (may have missed some).
- - split nl80211 patch in two separate patches.
+Right, OTOH, most of the patches here are really fixes.
 
-V3:
- - remove enum nl80211_bss_select_primitive.
- - reword documentation of nl80211_bss_select_attr enum values.
+> BTW, I would prefer that you don't change the tag after you have sent a
+> pull request for it, instead just create a new tag and leave the old one
+> intact. This way it's easy for me to check what has changed etc.
+>
 
-Arend van Spriel (3):
-  nl80211: add extended feature for BSS selection support
-  nl80211: add bss selection attribute to CONNECT command
-  brcmfmac: add support for nl80211 BSS_SELECT feature
 
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 63 +++++++++++++++++-
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  | 38 ++++++-----
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  1 +
- include/net/cfg80211.h                             | 34 ++++++++++
- include/uapi/linux/nl80211.h                       | 42 ++++++++++++
- net/wireless/core.c                                |  4 ++
- net/wireless/nl80211.c                             | 76 ++++++++++++++++++++++
- 7 files changed, 240 insertions(+), 18 deletions(-)
+FWIW:
 
--- 
-1.9.1
+$ git diff ccecff6..iwlwifi-next-for-kalle-2016-01-07_2
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
+b/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
+index fd409ad..4841be2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/lib.c
+@@ -1250,7 +1250,6 @@ int iwlagn_suspend(struct iwl_priv *priv, struct
+cfg80211_wowlan *wowlan)
+ 
+        ret = iwlagn_send_patterns(priv, wowlan);
+  out:
+-       iwl_trans_stop_device(priv->trans);
+        kfree(key_data.rsc_tsc);
+        return ret;
+ }
 
