@@ -1,41 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:52964 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751996AbcAXUAy (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34350 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752070AbcAHIrO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jan 2016 15:00:54 -0500
-Date: Sun, 24 Jan 2016 12:00:52 -0800
-From: Greg KH <greg@kroah.com>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
-	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
-	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, ceph-devel@vger.kernel.org,
-	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
-	drbd-dev@lists.linbit.com, open-iscsi@googlegroups.com
-Subject: Re: [PATCH 6/26] staging: rtl8192u: Use skcipher and ahash
-Message-ID: <20160124200052.GB17868@kroah.com> (sfid-20160124_210131_040734_B2AAC15A)
-References: <20160124131021.GA31153@gondor.apana.org.au>
- <E1aNKXJ-0008BG-BI@gondolin.me.apana.org.au>
+	Fri, 8 Jan 2016 03:47:14 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/6] brcmfmac: extend wowl and cleanup
+References: <1451988350-2197-1-git-send-email-arend@broadcom.com>
+	<568EEF26.2060401@broadcom.com>
+Date: Fri, 08 Jan 2016 10:47:06 +0200
+In-Reply-To: <568EEF26.2060401@broadcom.com> (Arend van Spriel's message of
+	"Fri, 8 Jan 2016 00:05:10 +0100")
+Message-ID: <87bn8wjw51.fsf@kamboji.qca.qualcomm.com> (sfid-20160108_094718_165548_721D9EBD)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E1aNKXJ-0008BG-BI@gondolin.me.apana.org.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 24, 2016 at 09:16:57PM +0800, Herbert Xu wrote:
-> This patch replaces uses of blkcipher with skcipher, and the long
-> obsolete hash interface with ahash.
->     
-> Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
-> ---
-> 
->  drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_tkip.c |   92 +++++++-------
->  drivers/staging/rtl8192u/ieee80211/ieee80211_crypt_wep.c  |   46 ++++---
->  2 files changed, 81 insertions(+), 57 deletions(-)
+Arend van Spriel <arend@broadcom.com> writes:
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> On 01/05/2016 11:05 AM, Arend van Spriel wrote:
+>> This smallish series contains:
+>> * link down fix for IBSS.
+>> * support wowl upon net detect.
+>> * cleanup timeout definitions.
+>>
+>> The series are intended for 4.5 kernel and apply to
+>> the master branch of wireless-drivers-next repo on top
+>> of series posted earlier with Message-ID:
+>>
+>> <1451724102-21911-1-git-send-email-arend@broadcom.com>
+>
+> Hi Kalle,
+>
+> Is this one I send last tuesday going to make it. I did not get any
+> remarks on these patches so.. pretty please ;-)
+
+Hehe :) I have to admit that I was about to postpone these to 4.6 but
+these are actually so simple so I took them anyway.
+
+-- 
+Kalle Valo
