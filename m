@@ -1,65 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.3]:56578 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751760AbcACMOU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jan 2016 07:14:20 -0500
-Subject: Re: net-libertas: Better exception handling in
- if_spi_host_to_card_worker()
-To: Arend van Spriel <aspriel@gmail.com>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <5686F0B2.5000000@users.sourceforge.net>
- <56870866.7020000@cogentembedded.com>
- <568785B3.5000905@users.sourceforge.net>
- <alpine.DEB.2.02.1601020914100.2063@localhost6.localdomain6>
- <5687939E.7010701@users.sourceforge.net> <5687A2C7.3000704@gmail.com>
- <5687B2BC.8090901@users.sourceforge.net> <5688EBAC.5000701@gmail.com>
-Cc: Julia Lawall <julia.lawall@lip6.fr>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Message-ID: <5689105B.50005@users.sourceforge.net> (sfid-20160103_131442_403599_27398F0B)
-Date: Sun, 3 Jan 2016 13:13:15 +0100
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:53234 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754526AbcAHJSu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 8 Jan 2016 04:18:50 -0500
+Message-ID: <568F7EF7.2070907@broadcom.com> (sfid-20160108_101855_894116_F928F1F2)
+Date: Fri, 8 Jan 2016 10:18:47 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <5688EBAC.5000701@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Paul Stewart <pstew@chromium.org>,
+	Dan Williams <dcbw@redhat.com>
+Subject: Re: [RFC 1/2] nl80211: add extended feature for BSS selection support
+References: <1450959550-19655-1-git-send-email-arend@broadcom.com>				 <1450959550-19655-2-git-send-email-arend@broadcom.com>			 <1451985926.12357.16.camel@sipsolutions.net>			 <568B91D6.6080404@broadcom.com>		 <1452011509.12357.51.camel@sipsolutions.net>		 <568CE980.5050005@broadcom.com>	 <1452090998.2541.18.camel@sipsolutions.net> <568E5F7F.4050604@broadcom.com> <1452177663.3141.9.camel@sipsolutions.net>
+In-Reply-To: <1452177663.3141.9.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>> What the patch tries to do is avoid the extra 'if (err)'.
+On 01/07/2016 03:41 PM, Johannes Berg wrote:
+> On Thu, 2016-01-07 at 13:52 +0100, Arend van Spriel wrote:
 >>
->> Yes. - I propose to look at related consequences together with the usage
->> of a popular short jump label once more.
-> 
-> When I read a subject saying "Better exception handling" it sounds like
-> a functional improvement. Your change does not change anything
-> functionally and may or may not save a bit of execution time depending
-> on how smart the compiler is.
+>> Agree. However, one of the reasons I added the ext_feature is because
+>> people gave feedback they wanted it for testing purposes so they know
+>> what to expect from the driver. That same argument could used for the
+>> supported selection criteria. I have no strong opinion though.
+>
+> Yeah, that's true - if we play the "advisory" card then we don't really
+> need to add it at all... Not sure what to do really. I'd love to
+> specify it very clearly if we need to at all.
 
-Can it eventually matter to skip another condition check in three cases?
+Yes. If we add something like this it should be a specific as possible.
 
+> Perhaps for features we can add NL80211_ATTR_BSS_SELECT to the wiphy
+> information, and within that add each of the supported
+> ATTR_BSS_SELECT_* as an NLA_FLAG? That way at least we don't need to
+> define all kinds of new flags in the API.
 
-> What you change does is confuse people reading the code.
+That sounds like a plan.
 
-A few software developers might find this proposal unusual.
+>>> Right. So realistically, writing this a bit more verbosely, you
+>>> have
+>>>
+>>> 1) rssi_preference, band_preference(band)
+>>> 2) rssi_adjust(band, delta), rssi_preference
+>>>
+>>> and perhaps
+>>>
+>>> 3) rssi_preference
+>>>
+>>> as the default?
+>>
+>> Good point.
+>>
+>>> As for 1), you said it was "band, rssi" but it seems you really
+>>> meant
+>>> the other way around since before you said "band" was a tie-
+>>> breaker.
+>>
+>> My bad. When using "band_preference()" the selected BSS is in specified
+>> band even though the BSS in other band would be stronger. If there is no
+>> proper BSS in the specified band the preference is obviously
+>> discarded.
+>
+> So 1) really becomes just
+>   1) band_preference(band)
+>
+> without any RSSI at all? Ah, I get it. You have to kind of reword that
+> in terms of the logic used:
+>
+>   1) select_highest_rssi_in_band(band), select_highest_rssi()
+>   2) adjust_rssi_if_in_band(band, delta), select_highest_rssi()
+>   3) select_highest_rssi()
+>
+> But if you look at that, then "select_highest_rssi_in_band(band)" is
+> really the same as "adjust_rssi_if_in_band(band, 1000)" since you can't
+> have real RSSI that high, which leaves us with just a single primitive
+> and perhaps a standard value for that "1000"?
 
+True. Although I may have a firmware issue with that as RSSI is probably 
+typed as s8 there. At least the adjustment is so can do up to 127 there, 
+which would probably be enough as well. I think I prefer an explicit 
+primitive though.
 
-> So please explain why your update improves exception handling here.
-> I don't see it.
+>>> Perhaps then, the API should just expose the two "primitives"
+>>>    * band_preference(band)
+>>>    * rssi_adjust(band, delta)?
+>
+> I guess it makes even more sense as I just worded it.
+>
+>>> And for use-case number #3:
+>>
+>>     * rssi_preference(void)
+>
+> Yeah although you'd assume that's the default anyway?
 
-How does this feedback fit to the mentioned check avoidance?
-
-
-> The code is not making the driver more robust against failures
-
-That's true for this update suggestion.
-
-
-> in this function, which is what I think of reading "better exception handling".
-
-Other implementation details are affected by the shown fine-tuning.
+That kinda depends on the driver I guess. Currently our driver defaults 
+to rssi_adjust(5g, 8) and we restore to that when no BSS_SELECT 
+attribute is provided in the .connect() callback.
 
 Regards,
-Markus
+Arend
