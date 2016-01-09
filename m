@@ -1,34 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:35824 "EHLO
-	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753572AbcAMH6I (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:1586 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753607AbcAIRVH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2016 02:58:08 -0500
-Received: by mail-oi0-f53.google.com with SMTP id p187so71285383oia.2
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2016 23:58:07 -0800 (PST)
+	Sat, 9 Jan 2016 12:21:07 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "xbolshe@relvarsoft.com" <xbolshe@relvarsoft.com>,
+	linuxwifi <linuxwifi@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"An, Tedd" <tedd.an@intel.com>
+Subject: Re: [linuxwifi] [Bluetooth firmware for Intel 7260 WiFi card]
+Date: Sat, 9 Jan 2016 17:21:00 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E985901@hasmsx107.ger.corp.intel.com> (sfid-20160109_182138_401319_948F6471)
+References: <56903E80.6050403@relvarsoft.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Date: Wed, 13 Jan 2016 08:58:07 +0100
-Message-ID: <CACZXzRCSnc_5vTBRVpX7Z1eY8JtAeeOux_UQknbRCvj5ysbAFQ@mail.gmail.com> (sfid-20160113_085813_855380_BD3C4A26)
-Subject: Advice about otherbss monitor flag for Wireshark use
-From: Mikael Kanstrup <mikael.kanstrup@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Adding Tedd
 
-Roger James reported that capturing wireless data on monitor
-interfaces created by Wireshark only capture frames to/from BSSID of
-the monitor interface. This was solved using iw by setting otherbss
-monitor flag. See Wireshark mailing list thread here:
-https://www.wireshark.org/lists/wireshark-dev/201601/msg00031.html
+On 01/09/2016 12:56 AM, xbolshe@relvarsoft.com wrote:
+> Hi,
+>
+> I cannot find a firmware for Bluetooth part of Intel Dual Band 
+> Wireless-N 7260 card (Model 7260HMWAN).
+> This firmware based on Intel card version is 
+> ibt-hw-37.7.10-fw-1.80.1.29.c.bseq
+>
+> And here is a link on Kernel.Org Bluetooth firmwares:
+> https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/tree/intel
+> A required version is absent there.
+>
+> More information is described here:
+> https://communities.intel.com/thread/96931
+>
+> Question: where can I get ibt-hw-37.7.10-fw-1.80.1.29.c.bseq firmware?
+>
+> Thanks.
+>
+> Best regards,
+> xbolshe
+>
+>
+>
+> -------------------------------------
+> linuxwifi@eclists.intel.com
+> https://eclists.intel.com/sympa/info/linuxwifi
+> Unsubscribe by sending email to sympa@eclists.intel.com with subject "Unsubscribe linuxwifi"
+>
 
-I suggested a patch to handle this within Wireshark:
-https://code.wireshark.org/review/#/c/13219
-
-Now before merging I hope to get some feedback here if this is safe
-for the general case? For most users/drivers it appears explicitly
-setting the flag is not needed.
-
-/Mikael
