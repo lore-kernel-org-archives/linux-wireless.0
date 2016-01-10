@@ -1,97 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:50724 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751176AbcA2LFp (ORCPT
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:36985 "EHLO
+	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754885AbcAJLE1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2016 06:05:45 -0500
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, Raja Mani <rmani@codeaurora.org>,
-	"Raja Mani" <rmani@qti.qualcomm.com>
-Subject: [PATCH 1/2] ath10k: add qca4019 hw params
-Date: Fri, 29 Jan 2016 16:35:11 +0530
-Message-ID: <1454065512-8238-2-git-send-email-rmani@qti.qualcomm.com> (sfid-20160129_120548_144333_0184AC62)
-In-Reply-To: <1454065512-8238-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1454065512-8238-1-git-send-email-rmani@qti.qualcomm.com>
+	Sun, 10 Jan 2016 06:04:27 -0500
+Received: by mail-wm0-f54.google.com with SMTP id f206so229578319wmf.0
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Jan 2016 03:04:26 -0800 (PST)
+From: poma <pomidorabelisima@gmail.com>
+Subject: Re: Wi-Fi - ath10k QCA9377 chipset support - kernel 4.2.x backport
+References: <CADtwgbzdjw3Ef-64Fu1OahnARnb9u8Q-jcZR8GeWoMXBco=7DA@mail.gmail.com>
+ <CAJm42398V=NVFsRVZp9EmL6=9gfCfiYehMYOBeB-3rhonn2hwg@mail.gmail.com>
+ <CADtwgbzUVSnhQdojbRmNud_v1NsgipjkwvKL_k884js3_WKsYA@mail.gmail.com>
+ <5691AE01.8070203@gmail.com>
+ <CADtwgbxw1BmXn_nFLxD9xJgAw8xsdM-3ri-Kd5CTU9+2QEOmEQ@mail.gmail.com>
+ <CAJm4238HOP0fWK-86-ujSGieiUGRL=5O2VQY_13d5k0hf2d1qw@mail.gmail.com>
+Cc: Community support for Fedora users
+	<users@lists.fedoraproject.org>, Brandon.Vincent@asu.edu,
+	linux-wireless <linux-wireless@vger.kernel.org>
+To: outperformer@gmail.com
+Message-ID: <56923AB7.8020905@gmail.com> (sfid-20160110_120458_621699_1BD27870)
+Date: Sun, 10 Jan 2016 12:04:23 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAJm4238HOP0fWK-86-ujSGieiUGRL=5O2VQY_13d5k0hf2d1qw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Raja Mani <rmani@codeaurora.org>
+On 10.01.2016 02:36, Brandon Vincent wrote:
+> On Sat, Jan 9, 2016 at 6:12 PM, M. Gelle <outperformer@gmail.com> wrote:
+>> Sorry, I thought you new there was only one public download that wasn't
+>> working. I'll try this although I thought the file should have been a Linux
+>> archive. I'll see if Brandon comes up with another link. Sorry again, for my
+>> frustration.
+> 
+> Let's try using the latest backport drivers from upstream.
+> 
+> dnf group install "Development Tools"
+> dnf install kernel-devel
+> wget https://www.kernel.org/pub/linux/kernel/projects/backports/stable/v4.3/backports-4.3-1.tar.gz
+> tar -zxvf backports-4.3.1.tar.gz
+> cd backports-4.3.1
+> make defconfig-ath10k
+> make
+> sudo make install
+> 
+> Reboot the system and see if you wireless card starts to work.
+> 
+> Brandon Vincent
+> 
 
-Add a new entry in hw_params_list for qca4019 with list of
-it's own details.
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c      | 20 ++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/hw.h        |  8 ++++++++
- drivers/net/wireless/ath/ath10k/targaddrs.h |  3 +++
- 3 files changed, 31 insertions(+)
+Kernel:
+4.2.8-200.fc22.x86_64
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 5c684e0..ac29813 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -201,6 +201,26 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 			.board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
- 		},
- 	},
-+	{
-+		.id = QCA4019_HW_1_0_DEV_VERSION,
-+		.dev_id = 0,
-+		.name = "qca4019 hw1.0",
-+		.patch_load_addr = QCA4019_HW_1_0_PATCH_LOAD_ADDR,
-+		.uart_pin = 7,
-+		.otp_exe_param = 0x0010000,
-+		.continuous_frag_desc = true,
-+		.channel_counters_freq_hz = 125000,
-+		.max_probe_resp_desc_thres = 24,
-+		.hw_4addr_pad = ATH10K_HW_4ADDR_PAD_BEFORE,
-+		.fw = {
-+			.dir = QCA4019_HW_1_0_FW_DIR,
-+			.fw = QCA4019_HW_1_0_FW_FILE,
-+			.otp = QCA4019_HW_1_0_OTP_FILE,
-+			.board = QCA4019_HW_1_0_BOARD_DATA_FILE,
-+			.board_size = QCA4019_BOARD_DATA_SZ,
-+			.board_ext_size = QCA4019_BOARD_EXT_DATA_SZ,
-+		},
-+	},
- };
- 
- static const char *const ath10k_core_fw_feature_str[] = {
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 4217bdb..291ca1f 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -106,6 +106,14 @@ enum qca9377_chip_id_rev {
- #define QCA9377_HW_1_0_BOARD_DATA_FILE "board.bin"
- #define QCA9377_HW_1_0_PATCH_LOAD_ADDR	0x1234
- 
-+/* QCA4019 1.0 definitions */
-+#define QCA4019_HW_1_0_DEV_VERSION     0x01000000
-+#define QCA4019_HW_1_0_FW_DIR          ATH10K_FW_DIR "/QCA4019/hw1.0"
-+#define QCA4019_HW_1_0_FW_FILE         "firmware.bin"
-+#define QCA4019_HW_1_0_OTP_FILE        "otp.bin"
-+#define QCA4019_HW_1_0_BOARD_DATA_FILE "board.bin"
-+#define QCA4019_HW_1_0_PATCH_LOAD_ADDR  0x1234
-+
- #define ATH10K_FW_API2_FILE		"firmware-2.bin"
- #define ATH10K_FW_API3_FILE		"firmware-3.bin"
- 
-diff --git a/drivers/net/wireless/ath/ath10k/targaddrs.h b/drivers/net/wireless/ath/ath10k/targaddrs.h
-index 05a421b..361f143 100644
---- a/drivers/net/wireless/ath/ath10k/targaddrs.h
-+++ b/drivers/net/wireless/ath/ath10k/targaddrs.h
-@@ -456,4 +456,7 @@ Fw Mode/SubMode Mask
- #define QCA99X0_BOARD_DATA_SZ	  12288
- #define QCA99X0_BOARD_EXT_DATA_SZ 0
- 
-+#define QCA4019_BOARD_DATA_SZ	  12064
-+#define QCA4019_BOARD_EXT_DATA_SZ 0
-+
- #endif /* __TARGADDRS_H__ */
--- 
-1.8.1.2
+
+Modules:
+ath10k backports releases
+https://wireless.wiki.kernel.org/en/users/drivers/ath10k/backports
+
+This one includes ath10k QCA9377 chipset support:
+$ wget https://www.kernel.org/pub/linux/kernel/projects/backports/2015/11/20/sha256sums.asc
+$ wget https://www.kernel.org/pub/linux/kernel/projects/backports/2015/11/20/backports-20151120.tar.sign
+$ wget https://www.kernel.org/pub/linux/kernel/projects/backports/2015/11/20/backports-20151120.tar.xz
+
+$ gpg --verify sha256sums.asc
+$ gpg --verify backports-20151120.tar.sign backports-20151120.tar.xz
+$ sha256sum -c sha256sums.asc
+
+$ tar xf backports-20151120.tar.xz
+$ cd backports-20151120/
+$ make defconfig-ath10k
+$ make
+$ su
+# make install
+
+
+Firmware:
+[PATCH v2] ath10k: add QCA9377 chipset support
+http://www.spinics.net/lists/linux-wireless/msg143148.html
+
+<quote>
+... pushed the firmware image here:
+
+https://github.com/kvalo/ath10k-firmware/tree/master/QCA9377/hw1.0
+
+All reports, good or bad, are very welcome.
+...
+</quote>
+
+
+# mkdirhier /usr/lib/firmware/ath10k/QCA9377/hw1.0
+# cd /usr/lib/firmware/ath10k/QCA9377/hw1.0
+# wget https://github.com/kvalo/ath10k-firmware/raw/master/QCA9377/hw1.0/board.bin
+# wget https://github.com/kvalo/ath10k-firmware/raw/master/QCA9377/hw1.0/firmware-5.bin_WLAN.TF.1.0-00267-1 -O firmware-5.bin
+# wget https://github.com/kvalo/ath10k-firmware/raw/master/QCA9377/hw1.0/notice.txt_WLAN.TF.1.0-00267-1 -O notice-WLAN.TF.1.0-00267-1.txt
+
 
