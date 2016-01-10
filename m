@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41599 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751681AbcASNE6 convert rfc822-to-8bit (ORCPT
+Received: from mail-io0-f194.google.com ([209.85.223.194]:33911 "EHLO
+	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752557AbcAJVMP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 08:04:58 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel\@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-mips\@linux-mips.org" <linux-mips@linux-mips.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: ssb: Set linux-wireless as MAINTAINERS list
-References: <8128014.DbbgBtKY3z@wuerfel>
-	<8760ywd5fe.fsf@kamboji.qca.qualcomm.com> <4037550.DMaVTE01Aq@wuerfel>
-	<87bn8l7miw.fsf@kamboji.qca.qualcomm.com>
-	<CACna6ryvDFHqwJ3ExURcyFT2ZaT9fS9v36wCnJfze5BLnE88og@mail.gmail.com>
-	<87y4bn5m4q.fsf@kamboji.qca.qualcomm.com>
-	<20160118175303.19164539@wiggum>
-	<CACna6ry2jSJpov1Mcvk=NF+GKrZVSHKjOsinpEQh7_BQAx34wQ@mail.gmail.com>
-Date: Tue, 19 Jan 2016 15:04:47 +0200
-In-Reply-To: <CACna6ry2jSJpov1Mcvk=NF+GKrZVSHKjOsinpEQh7_BQAx34wQ@mail.gmail.com>
-	(=?utf-8?Q?=22Rafa=C5=82_Mi=C5=82ecki=22's?= message of "Mon, 18 Jan 2016
- 20:09:52 +0100")
-Message-ID: <8737tt67ps.fsf@kamboji.qca.qualcomm.com> (sfid-20160119_140523_201979_F4593C72)
+	Sun, 10 Jan 2016 16:12:15 -0500
+Received: by mail-io0-f194.google.com with SMTP id k127so41364747iok.1
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Jan 2016 13:12:15 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <5692C627.6050003@broadcom.com>
+References: <1442606899-31872-1-git-send-email-arend@broadcom.com>
+	<CACna6rzWKv7d7zjfJdnceLbknu+drbbjks_=JAkep0NiiLk7JA@mail.gmail.com>
+	<5692C627.6050003@broadcom.com>
+Date: Sun, 10 Jan 2016 22:12:14 +0100
+Message-ID: <CACna6rxWJNo5vB+XH4nmL5bwqp5cmLO1O=V3XpB-NfFLeQVYDw@mail.gmail.com> (sfid-20160110_221219_038779_D1AA5E13)
+Subject: Re: [PATCH 00/16] brcmfmac: new device support and P2P fixes
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
-
-> On 18 January 2016 at 17:53, Michael Büsch <m@bues.ch> wrote:
+On 10 January 2016 at 21:59, Arend van Spriel <arend@broadcom.com> wrote:
+> On 01/10/2016 12:48 AM, Rafał Miłecki wrote:
+>>
+>> On 18 September 2015 at 22:08, Arend van Spriel <arend@broadcom.com>
+>> wrote:
+>>>
+>>> This series is intended for v4.4 containing the following highlights:
+>>>
+>>> * support for BCM4350, BCM4365, and BCM4366 PCIE devices.
+>>> * fixed for legacy P2P and P2P device handling.
+>>> * correct set and get tx-power.
+>>
+>>
+>> Hi Arend, can you provide us some update on progress of releasing
+>> brcmfmac4366b-pcie.bin, please?
 >
->> ssb patches go through the linux-wireless tree. Set the list to
->> linux-wireless, so linux-wireless patchwork can catch the patches.
 >
-> Thanks Michael
+> Sure. No progress. You also want to know about brcmfmac4365b-pcie.bin? Both
+> devices are still in development or just taped-out if I am not mistaken
+> (maybe missed a memo or two). I will ask for expected eta.
 
-Thanks from me also. I'm planning to send this to 4.5.
+I'm not really interested in BCM4365 as I can't find any market device
+using this chipset.
+
+BCM4366 can be found in following devices:
+ASUS RT-AC3100
+ASUS RT-AC5300
+ASUS RT-AC88U
+D-Link DIR-885L rev A1
+D-Link DIR-895L rev A1
+Netgear R8500
+
+You can already buy most of them in US, ASUS RT-AC5300 is also
+available in Europe.
 
 -- 
-Kalle Valo
+Rafał
