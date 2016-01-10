@@ -1,66 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f181.google.com ([209.85.192.181]:35087 "EHLO
-	mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751815AbcACIgv (ORCPT
+Received: from merlin.infradead.org ([205.233.59.134]:36552 "EHLO
+	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757131AbcAJTpH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jan 2016 03:36:51 -0500
-Received: by mail-pf0-f181.google.com with SMTP id 78so187622202pfw.2
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 00:36:51 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 12/30] staging: wilc1000: fix return type of wilc_edit_station
-Date: Sun,  3 Jan 2016 17:35:44 +0900
-Message-Id: <1451810162-16993-12-git-send-email-chaehyun.lim@gmail.com> (sfid-20160103_095251_149562_6B8E6F11)
-In-Reply-To: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
+	Sun, 10 Jan 2016 14:45:07 -0500
+Date: Sun, 10 Jan 2016 14:45:06 -0500
+From: Kyle McMartin <kyle@infradead.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Frank Huang <frankh@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Cathy Luo <cluo@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	linux-firmware@kernel.org
+Subject: Re: pull-request mwifiex-firmware 2015-12-23
+Message-ID: <20160110194506.GH32062@merlin.infradead.org> (sfid-20160110_204514_920056_7B177739)
+References: <2b4ceab04f0e4bcf9b5b94a0d259b9d3@SC-EXCH04.marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <2b4ceab04f0e4bcf9b5b94a0d259b9d3@SC-EXCH04.marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes return type of wilc_edit_station from s32 to int.
-The result variable gets return value from wilc_mq_send that has data
-type of int. It should be changed return type of this function as well
-as data type of result variable.
+On Wed, Dec 23, 2015 at 09:36:58AM +0000, Amitkumar Karwar wrote:
+> The following changes since commit 7f02df82736a85606cd9f33cb709545d9fc5326e:
+> 
+>   linux-firmware: update Marvell 8897-B0 firmware images to p112 (2015-01-27 16:02:53 +0530)
+> 
+> are available in the git repository at:
+> 
+>   git://git.marvell.com/mwifiex-firmware.git master
+> 
+> for you to fetch changes up to e92f8b3f65443764297b947b1843955d9a65dde7:
+> 
+>   linux-firmware: update Marvell USB8797-B0 firmware image (2015-11-02 06:25:05 -0500)
+> 
+> ----------------------------------------------------------------
+> Amitkumar Karwar (3):
+>       linux-firmware: update Marvell 8897-B0 firmware images to 7.p18
+>       linux-firmware: update Marvell 8897-B0 firmware images to 7.p53
+>       linux-firmware: update Marvell USB8797-B0 firmware image
+> 
+> Avinash Patil (1):
+>       linux-firmware: add Marvell SD/USB8801 B0 firmware images
+> 
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Pulled, thanks.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 409d910..eb2d664 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4350,10 +4350,10 @@ s32 wilc_del_allstation(struct wilc_vif *vif, u8 pu8MacAddr[][ETH_ALEN])
- 	return result;
- }
- 
--s32 wilc_edit_station(struct wilc_vif *vif,
-+int wilc_edit_station(struct wilc_vif *vif,
- 		      struct add_sta_param *pstrStaParams)
- {
--	s32 result = 0;
-+	int result = 0;
- 	struct host_if_msg msg;
- 	struct add_sta_param *pstrAddStationMsg = &msg.body.add_sta_info;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 6c8fe3a..f60bebb 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -349,7 +349,7 @@ int wilc_del_beacon(struct wilc_vif *vif);
- int wilc_add_station(struct wilc_vif *vif, struct add_sta_param *sta_param);
- s32 wilc_del_allstation(struct wilc_vif *vif, u8 pu8MacAddr[][ETH_ALEN]);
- int wilc_del_station(struct wilc_vif *vif, const u8 *mac_addr);
--s32 wilc_edit_station(struct wilc_vif *vif,
-+int wilc_edit_station(struct wilc_vif *vif,
- 		      struct add_sta_param *pstrStaParams);
- int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout);
- int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
--- 
-2.6.4
-
+--Kyle
