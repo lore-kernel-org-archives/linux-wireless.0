@@ -1,60 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:37036 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752658AbcADKF7 (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:36185 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755212AbcAJQnc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2016 05:05:59 -0500
-Subject: Re: net-libertas: Better exception handling in
- if_spi_host_to_card_worker()
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <5686F0B2.5000000@users.sourceforge.net>
- <56870866.7020000@cogentembedded.com>
- <568785B3.5000905@users.sourceforge.net>
- <alpine.DEB.2.02.1601020914100.2063@localhost6.localdomain6>
- <5687939E.7010701@users.sourceforge.net> <5687A2C7.3000704@gmail.com>
- <5687B2BC.8090901@users.sourceforge.net> <5688EBAC.5000701@gmail.com>
- <CACna6rzoJLRuTTDi3JjXg1roDbk3HXcBhhe0iOUH9xRaGU5p7A@mail.gmail.com>
-Cc: SF Markus Elfring <elfring@users.sourceforge.net>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	libertas-dev@lists.infradead.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org
-From: Arend van Spriel <aspriel@gmail.com>
-Message-ID: <568A4403.8020701@gmail.com> (sfid-20160104_110637_772656_D197B454)
-Date: Mon, 4 Jan 2016 11:05:55 +0100
+	Sun, 10 Jan 2016 11:43:32 -0500
+Received: by mail-wm0-f47.google.com with SMTP id l65so185774152wmf.1
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Jan 2016 08:43:32 -0800 (PST)
+From: poma <pomidorabelisima@gmail.com>
+Subject: ath10k QCA6174 firmwares match
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Message-ID: <56928A30.6010803@gmail.com> (sfid-20160110_174355_713833_FF6BB17F)
+Date: Sun, 10 Jan 2016 17:43:28 +0100
 MIME-Version: 1.0
-In-Reply-To: <CACna6rzoJLRuTTDi3JjXg1roDbk3HXcBhhe0iOUH9xRaGU5p7A@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
+It's not that they fully correspond,
+however here is a brief overview
 
-On 03-01-16 16:18, Rafał Miłecki wrote:
-> On 3 January 2016 at 10:36, Arend van Spriel <aspriel@gmail.com> wrote:
->> On 02-01-16 12:21, SF Markus Elfring wrote:
->>>> Did you look at the resulting assembly code for different target architectures?
->>>
->>> Not yet. - Which execution system variants would you recommend for
->>> further comparisons?
->>
->> Guess x86{,_64} and arm would be good candidates, ie. CISC vs. RISC.
-> 
-> Oh, don't forget about MIPS with its fancy branches handling. You know
-> about it, don't you?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You are asking me, right ;-) ? I have come across my share of MIPS
-platforms here at Broadcom, but I still try to avoid them as much as
-possible.
+"Ath10k drivers can't find firmware"
+https://bugzilla.redhat.com/show_bug.cgi?id=1208986
 
-> I'm against this patch as well.
 
-and counting... :-p
+- dmesg -2:
+  ath10k/QCA6174/hw2.1/board.bin
+  ath10k/QCA6174/hw2.1/firmware-2.bin
+  ath10k/QCA6174/hw2.1/firmware-3.bin
+  ath10k/QCA6174/hw2.1/firmware-4.bin
 
-Regards,
-Arend
+
+- linux-firmware-20151214-60.gitbbe4917c:
+  /usr/lib/firmware/ath10k/QCA6174/hw2.1/
+  board.bin
+  firmware-5.bin
+
+
+- github.com/kvalo/ath10k-firmware.git:
+  ath10k-firmware/QCA6174/hw2.1/
+  board.bin
+  firmware-5.bin
+
+
+- modinfo ath10k_pci | grep QCA6174/hw2.1
+  firmware:       ath10k/QCA6174/hw2.1/board-2.bin
+  firmware:       ath10k/QCA6174/hw2.1/board.bin
+  firmware:       ath10k/QCA6174/hw2.1/firmware-5.bin
+  firmware:       ath10k/QCA6174/hw2.1/firmware-4.bin
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+"Qualcomm Atheros QCA6174 not working"
+https://bugzilla.redhat.com/show_bug.cgi?id=1294263
+
+
+- dmesg -2:
+  ath10k/QCA6174/hw3.0/board.bin
+  ath10k/QCA6174/hw3.0/firmware-5.bin
+
+
+- linux-firmware-20151214-60.gitbbe4917c:
+  /usr/lib/firmware/ath10k/QCA6174/hw3.0/
+  board.bin
+  firmware-4.bin
+
+
+- github.com/kvalo/ath10k-firmware.git:
+  ath10k-firmware/QCA6174/hw3.0/
+  board-2.bin
+  board.bin
+  firmware-4.bin
+
+
+- modinfo ath10k_pci | grep QCA6174/hw3.0
+  firmware:       ath10k/QCA6174/hw3.0/board-2.bin
+  firmware:       ath10k/QCA6174/hw3.0/board.bin
+  firmware:       ath10k/QCA6174/hw3.0/firmware-5.bin
+  firmware:       ath10k/QCA6174/hw3.0/firmware-4.bin
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+"Qualcomm Atheros QCA6164 not working"
+https://bugzilla.redhat.com/show_bug.cgi?id=1257500
+
+  firmware?
+
+
