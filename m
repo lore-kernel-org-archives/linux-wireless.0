@@ -1,94 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:40908 "EHLO
-	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751288AbcAAVlb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2016 16:41:31 -0500
-Date: Fri, 1 Jan 2016 22:41:28 +0100 (CET)
-From: Julia Lawall <julia.lawall@lip6.fr>
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH] net-libertas: Better exception handling in
- if_spi_host_to_card_worker()
-In-Reply-To: <5686F0B2.5000000@users.sourceforge.net>
-Message-ID: <alpine.DEB.2.02.1601012240380.2077@localhost6.localdomain6> (sfid-20160101_224237_878858_9FD65FE1)
-References: <566ABCD9.1060404@users.sourceforge.net> <5686F0B2.5000000@users.sourceforge.net>
+Received: from mx1.redhat.com ([209.132.183.28]:35765 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932831AbcAKMSF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jan 2016 07:18:05 -0500
+Date: Mon, 11 Jan 2016 13:16:10 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Jia-Ju Bai <baijiaju1990@163.com>
+Cc: kvalo@codeaurora.org, johannes.berg@intel.com,
+	emmanuel.grumbach@intel.com, ilw@linux.intel.com,
+	linuxwifi@intel.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] iwl4965: Fix a memory leak in error handling code of
+ __il4965_up
+Message-ID: <20160111121610.GF25015@redhat.com> (sfid-20160111_131821_665405_D5D35BE4)
+References: <1452392363-3600-1-git-send-email-baijiaju1990@163.com>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1452392363-3600-1-git-send-email-baijiaju1990@163.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On Fri, 1 Jan 2016, SF Markus Elfring wrote:
-
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Fri, 1 Jan 2016 22:27:20 +0100
-> 
-> This issue was detected by using the Coccinelle software.
-> 
-> Move the jump label directly before the desired log statement
-> so that the variable "err" will not be checked once more
-> after it was determined that a function call failed.
-
-Putting a label inside an if is ugly.
-
-julia
-
-> Use the identifier "report_failure" instead of the label "err".
-> 
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-> ---
->  drivers/net/wireless/marvell/libertas/if_spi.c | 11 ++++++-----
->  1 file changed, 6 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/libertas/if_spi.c b/drivers/net/wireless/marvell/libertas/if_spi.c
-> index 82c0796..c9ae27e 100644
-> --- a/drivers/net/wireless/marvell/libertas/if_spi.c
-> +++ b/drivers/net/wireless/marvell/libertas/if_spi.c
-> @@ -880,18 +880,18 @@ static void if_spi_host_to_card_worker(struct work_struct *work)
->  				&hiStatus);
->  	if (err) {
->  		netdev_err(priv->dev, "I/O error\n");
-> -		goto err;
-> +		goto report_failure;
+On Sun, Jan 10, 2016 at 10:19:23AM +0800, Jia-Ju Bai wrote:
+> diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+> index 6656215..fd7b5c7 100644
+> --- a/drivers/net/wireless/iwlegacy/4965-mac.c
+> +++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+> @@ -5577,6 +5577,7 @@ __il4965_up(struct il_priv *il)
+>  	ret = il4965_hw_nic_init(il);
+>  	if (ret) {
+>  		IL_ERR("Unable to init nic\n");
+> +		il_dealloc_bcast_stations(il);
+>  		return ret;
 >  	}
->  
->  	if (hiStatus & IF_SPI_HIST_CMD_UPLOAD_RDY) {
->  		err = if_spi_c2h_cmd(card);
->  		if (err)
-> -			goto err;
-> +			goto report_failure;
->  	}
->  	if (hiStatus & IF_SPI_HIST_RX_UPLOAD_RDY) {
->  		err = if_spi_c2h_data(card);
->  		if (err)
-> -			goto err;
-> +			goto report_failure;
->  	}
->  
->  	/*
-> @@ -940,9 +940,10 @@ static void if_spi_host_to_card_worker(struct work_struct *work)
->  	if (hiStatus & IF_SPI_HIST_CARD_EVENT)
->  		if_spi_e2h(card);
->  
-> -err:
-> -	if (err)
-> +	if (err) {
-> +report_failure:
->  		netdev_err(priv->dev, "%s: got error %d\n", __func__, err);
-> +	}
->  
->  	lbs_deb_leave(LBS_DEB_SPI);
->  }
-> -- 
-> 2.6.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+
+Please do not repost patches so frequent and if you repost
+the unchanged patch mark it so i.e. [PATCH repost].
+
+Stanislaw
