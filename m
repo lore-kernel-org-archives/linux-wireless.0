@@ -1,37 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:43120 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750818AbcAYGBv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 01:01:51 -0500
-Date: Sun, 24 Jan 2016 22:01:47 -0800 (PST)
-Message-Id: <20160124.220147.1840338377819463012.davem@davemloft.net> (sfid-20160125_070216_359290_712F9954)
-To: herbert@gondor.apana.org.au
-Cc: linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
-	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
-	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, ceph-devel@vger.kernel.org,
-	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
-	drbd-dev@lists.linbit.com, open-iscsi@googlegroups.com
-Subject: Re: [PATCH 26/26] tcp: Use ahash
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <E1aNKad-0008H5-Ax@gondolin.me.apana.org.au>
-References: <20160124131021.GA31153@gondor.apana.org.au>
-	<E1aNKad-0008H5-Ax@gondolin.me.apana.org.au>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:54662 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932103AbcAKMOE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jan 2016 07:14:04 -0500
+Date: Mon, 11 Jan 2016 13:12:08 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Jia-Ju Bai <baijiaju1990@163.com>
+Cc: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] iwl4965: Fix a null pointer dereference in
+ il_tx_queue_free and il_cmd_queue_free
+Message-ID: <20160111121208.GD25015@redhat.com> (sfid-20160111_131409_223161_924A7935)
+References: <1452167498-10823-1-git-send-email-baijiaju1990@163.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1452167498-10823-1-git-send-email-baijiaju1990@163.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Date: Sun, 24 Jan 2016 21:20:23 +0800
+On Thu, Jan 07, 2016 at 07:51:38PM +0800, Jia-Ju Bai wrote:
+>  err:
+> -	for (i = 0; i < actual_slots; i++)
+> +	for (i = 0; i < actual_slots; i++) {
+>  		kfree(txq->cmd[i]);
+> +		txq->cmd[i] = NULL;
 
-> This patch replaces uses of the long obsolete hash interface with
-> ahash.
-> 
-> Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
+I don't think we need this, otherwise patch looks good.
 
-Acked-by: David S. Miller <davem@davemloft.net>
+Stanislaw
+
