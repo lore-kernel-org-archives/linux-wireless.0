@@ -1,62 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:36416 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753065AbcARBDQ (ORCPT
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:35191 "EHLO
+	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759094AbcAKLbx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2016 20:03:16 -0500
-Received: by mail-ob0-f169.google.com with SMTP id ba1so561824301obb.3
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Jan 2016 17:03:15 -0800 (PST)
-Subject: Re: Fwd: 8192 WiFi Realtek 8192E disconnects after a while and fails
- to reconnect
-To: Mateusz Kulikowski <mateusz.kulikowski@gmail.com>,
-	gilbertdion@gmail.com, wlanfae@realtek.com,
-	chaoming_li@realsil.com.cn
-References: <CAKQFV0H+K46CO62w=9yNRvVaOpwmDj3UKXD0QOmF1XPs54GwnQ@mail.gmail.com>
- <CAKQFV0EV9WvmzJaUaFEGODc-kxpt=rXJVYe5Md4oM5H00cBaeQ@mail.gmail.com>
- <568EE125.1030103@gmail.com> <569C10A9.8020200@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <569C39D0.4060909@lwfinger.net> (sfid-20160118_020322_152662_73173101)
-Date: Sun, 17 Jan 2016 19:03:12 -0600
+	Mon, 11 Jan 2016 06:31:53 -0500
+Received: by mail-wm0-f48.google.com with SMTP id f206so207488268wmf.0
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2016 03:31:53 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <569C10A9.8020200@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <CADaZW1Gi0k2WjhCo+KZ=pijO2q7o9dE7fM8tTXMG8+LW=36acw@mail.gmail.com>
+References: <CADaZW1Gi0k2WjhCo+KZ=pijO2q7o9dE7fM8tTXMG8+LW=36acw@mail.gmail.com>
+Date: Mon, 11 Jan 2016 12:31:52 +0100
+Message-ID: <CALhHN=rXuKN9YhEKo0-DVH24AcOsovCodMWMRRCX9+zRCpoO3Q@mail.gmail.com> (sfid-20160111_123157_159513_9DE4FFAC)
+Subject: Re: WLAN drivers provided by Realtek do not work with backports
+ (cfg80211 module not compatible)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: Bartlomiej Grzeskowiak <bartlomiej.grzeskowiak@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/17/2016 04:07 PM, Mateusz Kulikowski wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA256
+On 11 January 2016 at 12:02, Bartlomiej Grzeskowiak
+<bartlomiej.grzeskowiak@gmail.com> wrote:
+> We use 8192cu and 8811AU provided by Realtek. Our kernel is 3.10.
+> We would like to add parallel support for ath10k_pci from backports.
 >
-> Hi Gilbert,
+> However after inserting compat.ko, cfg80211.ko and mac80211.ko from
+> backports, 8192cu.ko and 8821au.ko terminate with following message:
+> [  512.188364] 8192cu: Unknown symbol wiphy_new (err 0)
+> [  512.188481] 8192cu: Unknown symbol cfg80211_send_disassoc (err 0)
+> [  512.188554] 8192cu: Unknown symbol cfg80211_send_rx_assoc (err 0)
+> [  512.188607] 8192cu: Unknown symbol cfg80211_inform_bss_frame (err 0)
 >
-> Small update from my side - It took me a while to setup x86_64 machine,
-> but today was finally able to do test.
->
->
-> My result are the same as Larry:
-> I got my board running for ~4 hours and there was no disconnect.
-> For part of the time I was doing (some) activity, for around hour machine
-> was idle.
->
-> I also did suspend-resume cycle.
->
-> System: Ubuntu 15.04 (from usb stick), kernel 3.19.0-15-generic, x86_64
-> Machine: MSI AM1I, Sempron 2650,
-> PCIe to mini-pcie "wifi" bridge (with antenna connector and proper RFKILL
-> wiring).
->
->
-> Are you able to do more troubleshooting?
->
-> Perhaps try different AP/Channel/mode, (dis)connect power cable from laptop etc.
->
-> I'll try to make another reproduction attempt, as without being able
-> to reproduce it I will probably not be able to fix it.
+Seems they were renamed/cleaned in patch:
 
-Did you see lots of messages regarding the TX rings in the dmesg output? If so, 
-those are errors.
+cfg80211/mac80211: clean up cfg80211 SME APIs
 
-Larry
+so, newest cfg80211.ko don't have them.
 
+Patch for 8192cu seems to be required - at least to use this new API.
 
+BR
+Janusz
+
+> Those interfaces are exported when I load cfg80211.ko compiled from kernel 3.10.
+> But I can not see them in cfg80211.ko provided by backports.
+>
+> Do you know this problem ?
+> Is there any easy way to solve this issue ?
+>
+> BR
+> Bartek
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
