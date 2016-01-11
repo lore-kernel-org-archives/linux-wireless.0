@@ -1,40 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:48526 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965143AbcAZKVu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 05:21:50 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/5] iwlwifi: add device ID for 8265
-Date: Tue, 26 Jan 2016 12:21:35 +0200
-Message-Id: <1453803698-20550-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160126_112200_774682_3165463D)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9D452F@hasmsx109.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9D452F@hasmsx109.ger.corp.intel.com>
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:22153 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752296AbcAKIdX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Jan 2016 03:33:23 -0500
+Message-ID: <569368D0.8080906@broadcom.com> (sfid-20160111_093326_711338_FA3CCC47)
+Date: Mon, 11 Jan 2016 09:33:20 +0100
+From: Arend van Spriel <arend@broadcom.com>
+MIME-Version: 1.0
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 00/16] brcmfmac: new device support and P2P fixes
+References: <1442606899-31872-1-git-send-email-arend@broadcom.com>	<CACna6rzWKv7d7zjfJdnceLbknu+drbbjks_=JAkep0NiiLk7JA@mail.gmail.com>	<5692C627.6050003@broadcom.com> <CACna6rxWJNo5vB+XH4nmL5bwqp5cmLO1O=V3XpB-NfFLeQVYDw@mail.gmail.com>
+In-Reply-To: <CACna6rxWJNo5vB+XH4nmL5bwqp5cmLO1O=V3XpB-NfFLeQVYDw@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+On 01/10/2016 10:12 PM, Rafał Miłecki wrote:
+> On 10 January 2016 at 21:59, Arend van Spriel <arend@broadcom.com> wrote:
+>> On 01/10/2016 12:48 AM, Rafał Miłecki wrote:
+>>>
+>>> On 18 September 2015 at 22:08, Arend van Spriel <arend@broadcom.com>
+>>> wrote:
+>>>>
+>>>> This series is intended for v4.4 containing the following highlights:
+>>>>
+>>>> * support for BCM4350, BCM4365, and BCM4366 PCIE devices.
+>>>> * fixed for legacy P2P and P2P device handling.
+>>>> * correct set and get tx-power.
+>>>
+>>>
+>>> Hi Arend, can you provide us some update on progress of releasing
+>>> brcmfmac4366b-pcie.bin, please?
+>>
+>>
+>> Sure. No progress. You also want to know about brcmfmac4365b-pcie.bin? Both
+>> devices are still in development or just taped-out if I am not mistaken
+>> (maybe missed a memo or two). I will ask for expected eta.
+>
+> I'm not really interested in BCM4365 as I can't find any market device
+> using this chipset.
+>
+> BCM4366 can be found in following devices:
+> ASUS RT-AC3100
+> ASUS RT-AC5300
+> ASUS RT-AC88U
+> D-Link DIR-885L rev A1
+> D-Link DIR-895L rev A1
+> Netgear R8500
+>
+> You can already buy most of them in US, ASUS RT-AC5300 is also
+> available in Europe.
 
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 1 +
- 1 file changed, 1 insertion(+)
+So I missed the memo. Thanks.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 944e88a..00335ea 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -478,6 +478,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x24F3, 0x0000, iwl8265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24FD, 0x0010, iwl8265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x24FD, 0x8010, iwl8265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x24FD, 0x0810, iwl8265_2ac_cfg)},
- 
- /* 9000 Series */
- 	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl5165_2ac_cfg)},
--- 
-2.5.0
+Gr. AvS
 
