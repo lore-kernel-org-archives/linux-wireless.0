@@ -1,49 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36867 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:51962 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755534AbcAOKSl (ORCPT
+	with ESMTP id S1758955AbcAKMoo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2016 05:18:41 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH v2 4/5] ath9k: fix inconsistent use of tab and space in indentation
-Date: Fri, 15 Jan 2016 18:17:20 +0800
-Message-Id: <1452853041-3674-5-git-send-email-miaoqing@codeaurora.org> (sfid-20160115_111845_185949_E50277A3)
-In-Reply-To: <1452853041-3674-1-git-send-email-miaoqing@codeaurora.org>
-References: <1452853041-3674-1-git-send-email-miaoqing@codeaurora.org>
+	Mon, 11 Jan 2016 07:44:44 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Jia-Ju Bai <baijiaju1990@163.com>, johannes.berg@intel.com,
+	emmanuel.grumbach@intel.com, ilw@linux.intel.com,
+	linuxwifi@intel.com, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] iwl4965: Fix a memory leak in error handling code of __il4965_up
+References: <1452392363-3600-1-git-send-email-baijiaju1990@163.com>
+	<20160111121610.GF25015@redhat.com>
+Date: Mon, 11 Jan 2016 14:44:31 +0200
+In-Reply-To: <20160111121610.GF25015@redhat.com> (Stanislaw Gruszka's message
+	of "Mon, 11 Jan 2016 13:16:10 +0100")
+Message-ID: <878u3wi8uo.fsf@kamboji.qca.qualcomm.com> (sfid-20160111_134452_516038_CF914B97)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+Stanislaw Gruszka <sgruszka@redhat.com> writes:
 
-Minor changes for indenting.
+> On Sun, Jan 10, 2016 at 10:19:23AM +0800, Jia-Ju Bai wrote:
+>> diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
+>> index 6656215..fd7b5c7 100644
+>> --- a/drivers/net/wireless/iwlegacy/4965-mac.c
+>> +++ b/drivers/net/wireless/iwlegacy/4965-mac.c
+>> @@ -5577,6 +5577,7 @@ __il4965_up(struct il_priv *il)
+>>  	ret = il4965_hw_nic_init(il);
+>>  	if (ret) {
+>>  		IL_ERR("Unable to init nic\n");
+>> +		il_dealloc_bcast_stations(il);
+>>  		return ret;
+>>  	}
+>
+> Please do not repost patches so frequent and if you repost
+> the unchanged patch mark it so i.e. [PATCH repost].
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+"repost" just confuses me and creates more work for me. Better to ping
+on the original patch and even better is to check patchwork which shows
+up-to-date status of wireless patches:
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 8b4561e..54ed2f7 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -5485,11 +5485,11 @@ unsigned int ar9003_get_paprd_scale_factor(struct ath_hw *ah,
- 			  AR9300_PAPRD_SCALE_1);
- 	else {
- 		if (chan->channel >= 5700)
--		return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt20),
--			  AR9300_PAPRD_SCALE_1);
-+			return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt20),
-+				  AR9300_PAPRD_SCALE_1);
- 		else if (chan->channel >= 5400)
- 			return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt40),
--				   AR9300_PAPRD_SCALE_2);
-+				  AR9300_PAPRD_SCALE_2);
- 		else
- 			return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt40),
- 				  AR9300_PAPRD_SCALE_1);
+https://patchwork.kernel.org/project/linux-wireless/list/
+
 -- 
-1.9.1
-
+Kalle Valo
