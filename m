@@ -1,58 +1,221 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:63305 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933597AbcAZNGh (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:52312 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932750AbcALHgE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 08:06:37 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [RFC V4 0/2] nl80211: allow configuration of BSS selection
-Date: Tue, 26 Jan 2016 14:06:30 +0100
-Message-ID: <1453813592-5266-1-git-send-email-arend@broadcom.com> (sfid-20160126_140641_247097_42EF34C2)
+	Tue, 12 Jan 2016 02:36:04 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 04/26] staging: wilc1000: add sdio resume/suspend
+Date: Tue, 12 Jan 2016 16:39:33 +0900
+Message-ID: <1452584395-24910-5-git-send-email-glen.lee@atmel.com> (sfid-20160112_083608_676368_68C2ED9C)
+In-Reply-To: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
+References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series adds support for configuration of BSS selection done by
-the driver and/or firmware. It allows user-space to pass selection behaviour
-with the NL80211_CMD_CONNECT using NL80211_ATTR_BSS_SELECT. When user-space
-does provide this attribute and no explicit BSSID is provided it will pass
-the BSS selection behaviour to the driver if the driver supports it.
+This patch introduces sdio device suspend and resume functionality. sdio_reset
+function is added to reset sdio. Remove static inline keyword from
+chip_allow_sleep and chip_wakeup, and export symbols.
 
-When multiple BSS-es are found belonging to the same ESS, ie. Infra-BSS with
-same SSID, this can be used to select a BSS. The behaviours defined are:
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c          | 72 +++++++++++++++++++++++++++
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h |  1 +
+ drivers/staging/wilc1000/wilc_wlan.c          | 11 ++--
+ drivers/staging/wilc1000/wilc_wlan.h          |  3 +-
+ 4 files changed, 82 insertions(+), 5 deletions(-)
 
-1. RSSI based selection.
-2. Band selection, RSSI based selection.
-3. RSSI adjustment in given band, RSSI based selection.
-
-V2:
- - incorporate comments from Johannes Berg (may have missed some).
- - split nl80211 patch in two separate patches.
-
-V3:
- - remove enum nl80211_bss_select_primitive.
- - reword documentation of nl80211_bss_select_attr enum values.
-
-V4:
- - remove documentation reference to removed primitive.
-
-Arend van Spriel (2):
-  nl80211: add feature for BSS selection support
-  brcmfmac: add support for nl80211 BSS_SELECT feature
-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 63 +++++++++++++++++-
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  | 38 ++++++-----
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  1 +
- include/net/cfg80211.h                             | 34 ++++++++++
- include/uapi/linux/nl80211.h                       | 42 ++++++++++++
- net/wireless/core.c                                |  4 ++
- net/wireless/nl80211.c                             | 76 ++++++++++++++++++++++
- 7 files changed, 240 insertions(+), 18 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index caad876..ece2f58 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -42,6 +42,7 @@ static wilc_sdio_t g_sdio;
+ 
+ static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data);
+ static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data);
++static int sdio_init(struct wilc *wilc);
+ 
+ static void wilc_sdio_interrupt(struct sdio_func *func)
+ {
+@@ -142,11 +143,82 @@ static void linux_sdio_remove(struct sdio_func *func)
+ 	wilc_netdev_cleanup(sdio_get_drvdata(func));
+ }
+ 
++static int sdio_reset(struct wilc *wilc)
++{
++	sdio_cmd52_t cmd;
++	int ret;
++	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
++
++	cmd.read_write = 1;
++	cmd.function = 0;
++	cmd.raw = 0;
++	cmd.address = 0x6;
++	cmd.data = 0x8;
++	ret = wilc_sdio_cmd52(wilc, &cmd);
++	if (ret) {
++		dev_err(&func->dev, "Fail cmd 52, reset cmd ...\n");
++		return ret;
++	}
++	return 0;
++}
++
++static int wilc_sdio_suspend(struct device *dev)
++{
++	struct sdio_func *func = dev_to_sdio_func(dev);
++	struct wilc *wilc = sdio_get_drvdata(func);
++	int ret;
++
++	dev_info(dev, "sdio suspend\n");
++	chip_wakeup(wilc);
++
++	if(!wilc->suspend_event) {
++		wilc_chip_sleep_manually(wilc);
++	} else {
++		host_sleep_notify(wilc);
++		chip_allow_sleep(wilc);
++	}
++
++	ret = sdio_reset(wilc);
++	if (ret) {
++		dev_err(&func->dev, "Fail reset sdio\n");
++		return ret;
++	}
++	sdio_claim_host(func);
++
++	return 0;
++}
++
++static int wilc_sdio_resume(struct device *dev)
++{
++	struct sdio_func *func = dev_to_sdio_func(dev);
++	struct wilc *wilc = sdio_get_drvdata(func);
++
++	dev_info(dev, "sdio resume\n");
++	sdio_release_host(func);
++	chip_wakeup(wilc);
++	sdio_init(wilc);
++
++	if(wilc->suspend_event)
++		host_wakeup_notify(wilc);
++
++	chip_allow_sleep(wilc);
++
++	return 0;
++}
++
++static const struct dev_pm_ops wilc_sdio_pm_ops = {
++	.suspend = wilc_sdio_suspend,
++	.resume = wilc_sdio_resume,
++};
++
+ static struct sdio_driver wilc1000_sdio_driver = {
+ 	.name		= SDIO_MODALIAS,
+ 	.id_table	= wilc_sdio_ids,
+ 	.probe		= linux_sdio_probe,
+ 	.remove		= linux_sdio_remove,
++	.drv = {
++		.pm = &wilc_sdio_pm_ops,
++	}
+ };
+ module_driver(wilc1000_sdio_driver,
+ 	      sdio_register_driver,
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 98ac8ed..cd3d21d 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -215,6 +215,7 @@ struct wilc {
+ 	const struct firmware *firmware;
+ 
+ 	struct device *dev;
++	bool suspend_event;
+ };
+ 
+ struct WILC_WFI_mon_priv {
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 977bd8a0..8a39a05 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -3,8 +3,6 @@
+ #include "wilc_wfi_netdevice.h"
+ #include "wilc_wlan_cfg.h"
+ 
+-static inline void chip_allow_sleep(struct wilc *wilc);
+-static inline void chip_wakeup(struct wilc *wilc);
+ static u32 dbgflag = N_INIT | N_ERR | N_INTR | N_TXQ | N_RXQ;
+ 
+ /* FIXME: replace with dev_debug() */
+@@ -515,7 +513,7 @@ static struct rxq_entry_t *wilc_wlan_rxq_remove(struct wilc *wilc)
+ 	return NULL;
+ }
+ 
+-static inline void chip_allow_sleep(struct wilc *wilc)
++void chip_allow_sleep(struct wilc *wilc)
+ {
+ 	u32 reg = 0;
+ 
+@@ -524,8 +522,9 @@ static inline void chip_allow_sleep(struct wilc *wilc)
+ 	wilc->hif_func->hif_write_reg(wilc, 0xf0, reg & ~BIT(0));
+ 	wilc->hif_func->hif_write_reg(wilc, 0xfa, 0);
+ }
++EXPORT_SYMBOL_GPL(chip_allow_sleep);
+ 
+-static inline void chip_wakeup(struct wilc *wilc)
++void chip_wakeup(struct wilc *wilc)
+ {
+ 	u32 reg, clk_status_reg, trials = 0;
+ 
+@@ -584,6 +583,7 @@ static inline void chip_wakeup(struct wilc *wilc)
+ 	}
+ 	chip_ps_state = CHIP_WAKEDUP;
+ }
++EXPORT_SYMBOL_GPL(chip_wakeup);
+ 
+ void wilc_chip_sleep_manually(struct wilc *wilc)
+ {
+@@ -597,6 +597,7 @@ void wilc_chip_sleep_manually(struct wilc *wilc)
+ 	chip_ps_state = CHIP_SLEEPING_MANUAL;
+ 	release_bus(wilc, RELEASE_ONLY);
+ }
++EXPORT_SYMBOL_GPL(wilc_chip_sleep_manually);
+ 
+ void host_wakeup_notify(struct wilc *wilc)
+ {
+@@ -604,6 +605,7 @@ void host_wakeup_notify(struct wilc *wilc)
+ 	wilc->hif_func->hif_write_reg(wilc, 0x10b0, 1);
+ 	release_bus(wilc, RELEASE_ONLY);
+ }
++EXPORT_SYMBOL_GPL(host_wakeup_notify);
+ 
+ void host_sleep_notify(struct wilc *wilc)
+ {
+@@ -611,6 +613,7 @@ void host_sleep_notify(struct wilc *wilc)
+ 	wilc->hif_func->hif_write_reg(wilc, 0x10ac, 1);
+ 	release_bus(wilc, RELEASE_ONLY);
+ }
++EXPORT_SYMBOL_GPL(host_sleep_notify);
+ 
+ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ {
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index dd5abc5..53e56ff 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -298,5 +298,6 @@ void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size);
+ void host_wakeup_notify(struct wilc *wilc);
+ void host_sleep_notify(struct wilc *wilc);
+ extern bool wilc_enable_ps;
+-
++void chip_allow_sleep(struct wilc *wilc);
++void chip_wakeup(struct wilc *wilc);
+ #endif
 -- 
 1.9.1
 
