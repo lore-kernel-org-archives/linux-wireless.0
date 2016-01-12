@@ -1,58 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f53.google.com ([209.85.215.53]:33111 "EHLO
-	mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965248AbcAUNpt (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:52944 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933829AbcALHiJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 08:45:49 -0500
-Received: by mail-lf0-f53.google.com with SMTP id m198so26896419lfm.0
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 05:45:49 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 09/13] ath10k: add txq placeholder
-Date: Thu, 21 Jan 2016 14:46:42 +0100
-Message-Id: <1453384006-31907-10-git-send-email-michal.kazior@tieto.com> (sfid-20160121_144558_866845_F47454F5)
-In-Reply-To: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
-References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 12 Jan 2016 02:38:09 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 25/26] staging: wilc1000: fix WEP security bug
+Date: Tue, 12 Jan 2016 16:39:54 +0900
+Message-ID: <1452584395-24910-26-git-send-email-glen.lee@atmel.com> (sfid-20160112_083813_675210_FF91D4CD)
+In-Reply-To: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
+References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Driver will make use of this in the future.
+Station cannot connect to soft AP mode wilc when it is configured for WEP
+security. This patch fixes it by setting the key index within the key value and
+change the last else condition with DEFAULTKEY action case, and also do not use
+WILC_WFI_wep_default index to set wep key id.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h | 4 ++++
- drivers/net/wireless/ath/ath10k/mac.c  | 1 +
- 2 files changed, 5 insertions(+)
+ drivers/staging/wilc1000/host_interface.c         | 27 +++++++++++------------
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  9 +-------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  1 -
+ 3 files changed, 14 insertions(+), 23 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index bc0e546c79d4..d09d6fdf1149 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -304,6 +304,10 @@ struct ath10k_peer {
- 	struct ieee80211_key_conf *keys[WMI_MAX_KEY_INDEX + 1];
- };
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6bdaace..dd2cd60 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1741,14 +1741,7 @@ static int Handle_Key(struct wilc_vif *vif,
+ 			strWIDList[1].size = sizeof(char);
+ 			strWIDList[1].val = (s8 *)&pstrHostIFkeyAttr->attr.wep.auth_type;
  
-+struct ath10k_txq {
-+	/* TBD */
-+};
+-			strWIDList[2].id = (u16)WID_KEY_ID;
+-			strWIDList[2].type = WID_CHAR;
+-
+-			strWIDList[2].val = (s8 *)&pstrHostIFkeyAttr->attr.wep.index;
+-			strWIDList[2].size = sizeof(char);
+-
+-			pu8keybuf = kmemdup(pstrHostIFkeyAttr->attr.wep.key,
+-					    pstrHostIFkeyAttr->attr.wep.key_len,
++			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2,
+ 					    GFP_KERNEL);
+ 
+ 			if (pu8keybuf == NULL) {
+@@ -1756,15 +1749,21 @@ static int Handle_Key(struct wilc_vif *vif,
+ 				return -ENOMEM;
+ 			}
+ 
++			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
++			pu8keybuf[1] = pstrHostIFkeyAttr->attr.wep.key_len;
 +
- struct ath10k_sta {
- 	struct ath10k_vif *arvif;
++			memcpy(&pu8keybuf[2], pstrHostIFkeyAttr->attr.wep.key,
++			       pstrHostIFkeyAttr->attr.wep.key_len);
++
+ 			kfree(pstrHostIFkeyAttr->attr.wep.key);
  
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index d9566ba70af3..205ccf3760a3 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -7548,6 +7548,7 @@ int ath10k_mac_register(struct ath10k *ar)
+-			strWIDList[3].id = (u16)WID_WEP_KEY_VALUE;
+-			strWIDList[3].type = WID_STR;
+-			strWIDList[3].size = pstrHostIFkeyAttr->attr.wep.key_len;
+-			strWIDList[3].val = (s8 *)pu8keybuf;
++			strWIDList[2].id = (u16)WID_WEP_KEY_VALUE;
++			strWIDList[2].type = WID_STR;
++			strWIDList[2].size = pstrHostIFkeyAttr->attr.wep.key_len + 2;
++			strWIDList[2].val = (s8 *)pu8keybuf;
  
- 	ar->hw->vif_data_size = sizeof(struct ath10k_vif);
- 	ar->hw->sta_data_size = sizeof(struct ath10k_sta);
-+	ar->hw->txq_data_size = sizeof(struct ath10k_txq);
+ 			result = wilc_send_config_pkt(vif->wilc, SET_CFG,
+-						strWIDList, 4,
++						strWIDList, 3,
+ 						wilc_get_vif_idx(vif));
+ 			kfree(pu8keybuf);
+ 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
+@@ -1801,7 +1800,7 @@ static int Handle_Key(struct wilc_vif *vif,
+ 			result = wilc_send_config_pkt(vif->wilc, SET_CFG,
+ 						&wid, 1,
+ 						wilc_get_vif_idx(vif));
+-		} else {
++		} else if (pstrHostIFkeyAttr->action & DEFAULTKEY) {
+ 			wid.id = (u16)WID_KEY_ID;
+ 			wid.type = WID_CHAR;
+ 			wid.val = (s8 *)&pstrHostIFkeyAttr->attr.wep.index;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index a790f70..eb99722 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -761,7 +761,6 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 		return s32Error;
+ 	}
  
- 	ar->hw->max_listen_interval = ATH10K_MAX_HW_LISTEN_INTERVAL;
+-	priv->WILC_WFI_wep_default = 0;
+ 	memset(priv->WILC_WFI_wep_key, 0, sizeof(priv->WILC_WFI_wep_key));
+ 	memset(priv->WILC_WFI_wep_key_len, 0, sizeof(priv->WILC_WFI_wep_key_len));
  
+@@ -788,7 +787,6 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 				for (i = 0; i < sme->key_len; i++)
+ 					PRINT_D(CORECONFIG_DBG, "WEP Key Value[%d] = %d\n", i, sme->key[i]);
+ 			}
+-			priv->WILC_WFI_wep_default = sme->key_idx;
+ 			priv->WILC_WFI_wep_key_len[sme->key_idx] = sme->key_len;
+ 			memcpy(priv->WILC_WFI_wep_key[sme->key_idx], sme->key, sme->key_len);
+ 
+@@ -806,7 +804,6 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 			pcgroup_encrypt_val = "WEP104";
+ 			pccipher_group = "WLAN_CIPHER_SUITE_WEP104";
+ 
+-			priv->WILC_WFI_wep_default = sme->key_idx;
+ 			priv->WILC_WFI_wep_key_len[sme->key_idx] = sme->key_len;
+ 			memcpy(priv->WILC_WFI_wep_key[sme->key_idx], sme->key, sme->key_len);
+ 
+@@ -986,7 +983,6 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 	case WLAN_CIPHER_SUITE_WEP40:
+ 	case WLAN_CIPHER_SUITE_WEP104:
+ 		if (priv->wdev->iftype == NL80211_IFTYPE_AP) {
+-			priv->WILC_WFI_wep_default = key_index;
+ 			priv->WILC_WFI_wep_key_len[key_index] = params->key_len;
+ 			memcpy(priv->WILC_WFI_wep_key[key_index], params->key, params->key_len);
+ 
+@@ -1009,7 +1005,6 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 			break;
+ 		}
+ 		if (memcmp(params->key, priv->WILC_WFI_wep_key[key_index], params->key_len)) {
+-			priv->WILC_WFI_wep_default = key_index;
+ 			priv->WILC_WFI_wep_key_len[key_index] = params->key_len;
+ 			memcpy(priv->WILC_WFI_wep_key[key_index], params->key, params->key_len);
+ 
+@@ -1336,9 +1331,7 @@ static int set_default_key(struct wiphy *wiphy, struct net_device *netdev, u8 ke
+ 
+ 	PRINT_D(CFG80211_DBG, "Setting default key with idx = %d\n", key_index);
+ 
+-	if (key_index != priv->WILC_WFI_wep_default) {
+-		wilc_set_wep_default_keyid(vif, key_index);
+-	}
++	wilc_set_wep_default_keyid(vif, key_index);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 9f8c79e..07eda4d 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -124,7 +124,6 @@ struct wilc_priv {
+ 	struct host_if_drv *hWILCWFIDrv;
+ 	struct host_if_pmkid_attr pmkid_list;
+ 	struct WILC_WFI_stats netstats;
+-	u8 WILC_WFI_wep_default;
+ 	u8 WILC_WFI_wep_key[4][WLAN_KEY_LEN_WEP104];
+ 	u8 WILC_WFI_wep_key_len[4];
+ 	/* The real interface that the monitor is on */
 -- 
-2.1.4
+1.9.1
 
