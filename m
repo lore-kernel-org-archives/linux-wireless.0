@@ -1,74 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56783 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751030AbcAPL5K (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:32891 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932523AbcALAdM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jan 2016 06:57:10 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Marc Zyngier <marc.zyngier@arm.com>
-Cc: David Miller <davem@davemloft.net>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [GIT] Networking
-References: <20160112.215136.850414372508130298.davem@davemloft.net>
-	<56978094.4050302@arm.com>
-Date: Sat, 16 Jan 2016 13:57:01 +0200
-In-Reply-To: <56978094.4050302@arm.com> (Marc Zyngier's message of "Thu, 14
-	Jan 2016 11:03:48 +0000")
-Message-ID: <87k2n97n5e.fsf@kamboji.qca.qualcomm.com> (sfid-20160116_125819_079567_FAF54D22)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Mon, 11 Jan 2016 19:33:12 -0500
+Received: by mail-pf0-f193.google.com with SMTP id e65so4187192pfe.0
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2016 16:33:12 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 3/5] staging: wilc1000: remove typedef from struct wilc_cfg_hword_t
+Date: Tue, 12 Jan 2016 09:32:53 +0900
+Message-Id: <1452558775-21532-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20160112_013316_616565_80A3059C)
+In-Reply-To: <1452558775-21532-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1452558775-21532-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marc Zyngier <marc.zyngier@arm.com> writes:
+This patch removes typedef from struct wilc_cfg_hword_t and renames it
+to wilc_cfg_hword.
 
-> David, Hante,
->
-> On 13/01/16 02:51, David Miller wrote:
->
-> [...]
->
->> Hante Meuleman (33):
-> [...]
->>       brcmfmac: Move all module parameters to one place
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wlan_cfg.c | 2 +-
+ drivers/staging/wilc1000/wilc_wlan_cfg.h | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-As a reminder to myself this is the commit id:
-
-7d34b0560567 brcmfmac: Move all module parameters to one place
-
-> This particular patch breaks one of my boxes in a spectacular way:
->
-> [    3.602155] Unable to handle kernel paging request at virtual address 000027e4
-> [    3.602160] pgd = c0003000
-> [    3.602169] [000027e4] *pgd=80000040004003, *pmd=00000000
-> [    3.602181] Internal error: Oops: 206 [#1] PREEMPT SMP ARM
-
-[...]
-
-> This is caused by this hunk:
->
-> @@ -890,7 +887,8 @@ static void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
->  	if (!sdiodev->sg_support)
->  		return;
->  
-> -	nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE, brcmf_sdiod_txglomsz);
-> +	nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE,
-> +		      sdiodev->bus_if->drvr->settings->sdiod_txglomsz);
->  	nents += (nents >> 4) + 1;
->  
->  	WARN_ON(nents > sdiodev->max_segment_count);
->
-> were drvr->settings is NULL (as the settings allocation seems to be done
-> much later). The fix is not completely obvious to me (probably requires
-> pushing the call to brcmf_mp_device_attach() down into the various bus
-> specific functions). An alternative would be to restore the txglomsz
-> parameter as it was before and not rely on settings being allocated.
-
-Should we revert the patch or can you Hante fix this? The revert doesn't
-seem to be trivial so I would appreciate if someone could send a patch.
-
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+index 54b394c..003f2af 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+@@ -87,7 +87,7 @@ static struct wilc_cfg_byte g_cfg_byte[] = {
+ 	{WID_NIL, 0}
+ };
+ 
+-static wilc_cfg_hword_t g_cfg_hword[] = {
++static struct wilc_cfg_hword g_cfg_hword[] = {
+ 	{WID_LINK_LOSS_THRESHOLD, 0},
+ 	{WID_RTS_THRESHOLD, 0},
+ 	{WID_FRAG_THRESHOLD, 0},
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
+index d978615..aed7b80 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
+@@ -15,10 +15,10 @@ struct wilc_cfg_byte {
+ 	u16 val;
+ };
+ 
+-typedef struct {
++struct wilc_cfg_hword {
+ 	u16 id;
+ 	u16 val;
+-} wilc_cfg_hword_t;
++};
+ 
+ typedef struct {
+ 	u32 id;
 -- 
-Kalle Valo
+2.6.4
+
