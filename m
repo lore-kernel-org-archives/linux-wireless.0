@@ -1,91 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:47688 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751112AbcATTeM (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:52505 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933572AbcALHgf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 14:34:12 -0500
-Subject: Re: [PATCH 4/5] ath10k: clean up cont frag desc init code
-To: Michal Kazior <michal.kazior@tieto.com>, ath10k@lists.infradead.org
-References: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
- <1452693668-30030-5-git-send-email-michal.kazior@tieto.com>
-Cc: linux-wireless@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <569FE132.7040006@candelatech.com> (sfid-20160120_203415_265538_87190404)
-Date: Wed, 20 Jan 2016 11:34:10 -0800
+	Tue, 12 Jan 2016 02:36:35 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 09/26] staging: wilc1000: use unified firmware
+Date: Tue, 12 Jan 2016 16:39:38 +0900
+Message-ID: <1452584395-24910-10-git-send-email-glen.lee@atmel.com> (sfid-20160112_083638_313151_5A933BE0)
+In-Reply-To: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
+References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1452693668-30030-5-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/13/2016 06:01 AM, Michal Kazior wrote:
-> This makes the code easier to extend and re-use.
->
-> While at it fix _warn to _err. Other than that
-> there are no functional changes.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
->   drivers/net/wireless/ath/ath10k/htt_tx.c | 58 ++++++++++++++++++++++----------
->   1 file changed, 41 insertions(+), 17 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-> index b3adadb5f824..41a9811820e8 100644
-> --- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-> @@ -97,6 +97,41 @@ void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id)
->   	idr_remove(&htt->pending_tx, msdu_id);
->   }
->
-> +static void ath10k_htt_tx_free_cont_frag_desc(struct ath10k_htt *htt)
-> +{
-> +	size_t size;
-> +
-> +	if (!htt->frag_desc.vaddr)
-> +		return;
-> +
-> +	size = htt->max_num_pending_tx * sizeof(struct htt_msdu_ext_desc);
-> +
-> +	dma_free_coherent(htt->ar->dev,
-> +			  size,
-> +			  htt->frag_desc.vaddr,
-> +			  htt->frag_desc.paddr);
-> +}
-> +
-> +static int ath10k_htt_tx_alloc_cont_frag_desc(struct ath10k_htt *htt)
-> +{
-> +	struct ath10k *ar = htt->ar;
-> +	size_t size;
-> +
-> +	if (!ar->hw_params.continuous_frag_desc)
-> +		return 0;
-> +
-> +	size = htt->max_num_pending_tx * sizeof(struct htt_msdu_ext_desc);
-> +	htt->frag_desc.vaddr = dma_alloc_coherent(ar->dev, size,
-> +						  &htt->frag_desc.paddr,
-> +						  GFP_DMA);
+Use a unified firmware for all mode of operations which are station, ap and
+p2p. Two firmware are introduced for 1002 and 1003 chipset.
 
-Did you mean to change GFP_KERNEL to GFP_DMA?
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/Makefile     |  5 ++---
+ drivers/staging/wilc1000/linux_wlan.c | 18 +++++++++---------
+ 2 files changed, 11 insertions(+), 12 deletions(-)
 
-> -	size = htt->max_num_pending_tx * sizeof(struct htt_msdu_ext_desc);
-> -	htt->frag_desc.vaddr = dma_alloc_coherent(ar->dev, size,
-> -						  &htt->frag_desc.paddr,
-> -						  GFP_KERNEL);
-> -	if (!htt->frag_desc.vaddr) {
-> -		ath10k_warn(ar, "failed to alloc fragment desc memory\n");
-> -		ret = -ENOMEM;
-> +	ret = ath10k_htt_tx_alloc_cont_frag_desc(htt);
-> +	if (ret) {
-> +		ath10k_err(ar, "failed to alloc cont frag desc: %d\n", ret);
->   		goto free_txbuf;
->   	}
-
-
-Thanks,
-Ben
-
-
+diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
+index 20a5cb9..90c3760 100644
+--- a/drivers/staging/wilc1000/Makefile
++++ b/drivers/staging/wilc1000/Makefile
+@@ -1,8 +1,7 @@
+ obj-$(CONFIG_WILC1000) += wilc1000.o
+ 
+-ccflags-y += -DSTA_FIRMWARE=\"atmel/wilc1000_fw.bin\" \
+-		-DAP_FIRMWARE=\"atmel/wilc1000_ap_fw.bin\" \
+-		-DP2P_CONCURRENCY_FIRMWARE=\"atmel/wilc1000_p2p_fw.bin\"
++ccflags-y += -DFIRMWARE_1002=\"atmel/wilc1002_firmware.bin\" \
++		-DFIRMWARE_1003=\"atmel/wilc1003_firmware.bin\"
+ 
+ ccflags-y += -I$(src)/ -DWILC_ASIC_A0 -DWILC_DEBUGFS
+ #ccflags-y += -DTCP_ACK_FILTER
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 58837d7..9dccfd8 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -416,21 +416,21 @@ int wilc_wlan_get_firmware(struct net_device *dev)
+ {
+ 	struct wilc_vif *vif;
+ 	struct wilc *wilc;
+-	int ret = 0;
++	int chip_id, ret = 0;
+ 	const struct firmware *wilc_firmware;
+ 	char *firmware;
+ 
+ 	vif = netdev_priv(dev);
+ 	wilc = vif->wilc;
+ 
+-	if (vif->iftype == AP_MODE) {
+-		firmware = AP_FIRMWARE;
+-	} else if (vif->iftype == STATION_MODE) {
+-		firmware = STA_FIRMWARE;
+-	} else {
+-		PRINT_D(INIT_DBG, "Get P2P_CONCURRENCY_FIRMWARE\n");
+-		firmware = P2P_CONCURRENCY_FIRMWARE;
+-	}
++	chip_id = wilc_get_chipid(wilc, 0);
++
++	if(chip_id < 0x1003a0)
++		firmware = FIRMWARE_1002;
++	else
++		firmware = FIRMWARE_1003;
++
++	netdev_info(dev, "loading firmware %s\n", firmware);
+ 
+ 	if (!vif) {
+ 		PRINT_ER("vif is NULL\n");
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
