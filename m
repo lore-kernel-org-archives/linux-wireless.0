@@ -1,71 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:33184 "EHLO
-	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934148AbcA0X26 convert rfc822-to-8bit (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36322 "EHLO
+	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758982AbcALAdH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 18:28:58 -0500
-MIME-Version: 1.0
-In-Reply-To: <20160127230700.GA13701@kroah.com>
-References: <CAL7P5j+iYzpnR+xT013A7AV=bQ8bSn4W1K=qjieFCAiv1YmwRw@mail.gmail.com>
- <20160125181220.GJ5325@mwanda> <87r3h2ubcp.fsf@purkki.adurom.net>
- <CAGRGNgVzbBGBOko-YG7h7rX+ZZHeKa5XHM3x+zdqz9mHX7nfRg@mail.gmail.com> <20160127230700.GA13701@kroah.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 28 Jan 2016 10:28:38 +1100
-Message-ID: <CAGRGNgU6-saYqZ-LAHjq9cNeptYo8OR-GZQ-66Bv5DDnYi3k5g@mail.gmail.com> (sfid-20160128_002922_078411_F5D3315C)
-Subject: Re: Move wlan-ng out of staging?
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Glen Lee <glen.lee@atmel.com>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	=?UTF-8?Q?Ksenija_Stanojevi=C4=87?= <ksenija.stanojevic@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 11 Jan 2016 19:33:07 -0500
+Received: by mail-pf0-f196.google.com with SMTP id n128so4171290pfn.3
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2016 16:33:06 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 1/5] staging: wilc1000: fix alignment of open parenthesis
+Date: Tue, 12 Jan 2016 09:32:51 +0900
+Message-Id: <1452558775-21532-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160112_013311_408068_19961F04)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Greg,
+This patch fixes alignment of open parenthesis found by checkpatch.pl
+CHECK: Alignment should match open parenthesis
 
-On Thu, Jan 28, 2016 at 10:07 AM, Greg KH <gregkh@linuxfoundation.org> wrote:
-> On Thu, Jan 28, 2016 at 09:48:16AM +1100, Julian Calaby wrote:
->> Hi Glen,
->>
->> On Thu, Jan 28, 2016 at 5:27 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> > Dan Carpenter <dan.carpenter@oracle.com> writes:
->> >
->> >> On Mon, Jan 25, 2016 at 01:16:56PM +0100, Ksenija Stanojević wrote:
->> >>> Hi All,
->> >>>
->> >>> I'm helping Greg do a bit of cleanup in the staging tree, I noticed that
->> >>> wlan-ng driver is maybe ready to be moved out of staging. Are there
->> >>> any TODO tasks left to do beside checkpatch.pl clean-up?
->> >
->> > For questions like this you should CC linux-wireless.
->> >
->> >> I happened to look through this code recently.  It's terrible.
->> >
->> > And uses wireless extensions, yuck. There's a lot of work to get it into
->> > reasonable shape, fixing checkpatch warnings will not be enough.
->>
->> On the same subject, the wilc1000 driver has taken some pretty big
->> steps in the past few days, how far away do you think it is from
->> graduating from staging?
->
-> I have 221 patches in my to-apply queue to be merged for this driver, at
-> the very least, those need to be merged before anyone should review it
-> for graduation.  That number also implies that there is still quite a
-> lot to be done, but I would not know for sure until that happens.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-I figured that was the case (there's a _lot_ of churn on that driver)
-however I've noticed the patches recently have swung away from being
-straight checkpatch / coding style cleanups towards feature additions
-and bug fixes, hence my question.
-
-Thanks,
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 5fac516..d735267 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -303,7 +303,7 @@ static s32 handle_set_channel(struct wilc_vif *vif,
+ 	PRINT_D(HOSTINF_DBG, "Setting channel\n");
+ 
+ 	result = wilc_send_config_pkt(vif->wilc, SET_CFG, &wid, 1,
+-				 wilc_get_vif_idx(vif));
++				      wilc_get_vif_idx(vif));
+ 
+ 	if (result) {
+ 		PRINT_ER("Failed to set channel\n");
+@@ -350,7 +350,7 @@ static s32 handle_set_operation_mode(struct wilc_vif *vif,
+ 	wid.size = sizeof(u32);
+ 
+ 	result = wilc_send_config_pkt(vif->wilc, SET_CFG, &wid, 1,
+-				 wilc_get_vif_idx(vif));
++				      wilc_get_vif_idx(vif));
+ 
+ 	if ((hif_op_mode->mode) == IDLE_MODE)
+ 		up(&hif_sema_driver);
+@@ -383,7 +383,7 @@ static s32 handle_set_ip_address(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
+ 	wid.size = IP_ALEN;
+ 
+ 	result = wilc_send_config_pkt(vif->wilc, SET_CFG, &wid, 1,
+-				 wilc_get_vif_idx(vif));
++				      wilc_get_vif_idx(vif));
+ 
+ 	host_int_get_ipaddress(vif, firmware_ip_addr, idx);
+ 
+@@ -408,7 +408,7 @@ static s32 handle_get_ip_address(struct wilc_vif *vif, u8 idx)
+ 	wid.size = IP_ALEN;
+ 
+ 	result = wilc_send_config_pkt(vif->wilc, GET_CFG, &wid, 1,
+-				 wilc_get_vif_idx(vif));
++				      wilc_get_vif_idx(vif));
+ 
+ 	PRINT_INFO(HOSTINF_DBG, "%pI4\n", wid.val);
+ 
+@@ -451,7 +451,7 @@ static s32 handle_set_mac_address(struct wilc_vif *vif,
+ 	PRINT_D(GENERIC_DBG, "mac addr = :%pM\n", wid.val);
+ 
+ 	result = wilc_send_config_pkt(vif->wilc, SET_CFG, &wid, 1,
+-				 wilc_get_vif_idx(vif));
++				      wilc_get_vif_idx(vif));
+ 	if (result) {
+ 		PRINT_ER("Failed to set mac address\n");
+ 		result = -EFAULT;
+@@ -473,7 +473,7 @@ static s32 handle_get_mac_address(struct wilc_vif *vif,
+ 	wid.size = ETH_ALEN;
+ 
+ 	result = wilc_send_config_pkt(vif->wilc, GET_CFG, &wid, 1,
+-				 wilc_get_vif_idx(vif));
++				      wilc_get_vif_idx(vif));
+ 
+ 	if (result) {
+ 		PRINT_ER("Failed to get mac address\n");
 -- 
-Julian Calaby
+2.6.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
