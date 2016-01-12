@@ -1,51 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:38770 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932827AbcA0Odz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 09:33:55 -0500
-Received: by mail-wm0-f48.google.com with SMTP id p63so29323080wmp.1
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2016 06:33:54 -0800 (PST)
+Received: from comal.ext.ti.com ([198.47.26.152]:59618 "EHLO comal.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758791AbcALLXE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jan 2016 06:23:04 -0500
+Subject: Re: [PATCH v4 1/3] wlcore/wl12xx: spi: add power operation function
+To: Sebastian Reichel <sre@kernel.org>,
+	Uri Mashiach <uri.mashiach@compulab.co.il>
+References: <1451482533-8624-1-git-send-email-uri.mashiach@compulab.co.il>
+ <1451482533-8624-2-git-send-email-uri.mashiach@compulab.co.il>
+ <20160109025356.GA3644@earth>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Tony Lindgren <tony@atomide.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, <bcousson@baylibre.com>,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Eliad Peller <eliad@wizery.com>, <devicetree@vger.kernel.org>,
+	<linux-omap@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>
+From: Grygorii Strashko <grygorii.strashko@ti.com>
+Message-ID: <5694E1A4.20303@ti.com> (sfid-20160112_122311_289565_3FD1E8DF)
+Date: Tue, 12 Jan 2016 13:21:08 +0200
 MIME-Version: 1.0
-In-Reply-To: <1453904819.2351.7.camel@sipsolutions.net>
-References: <1453382588-27105-1-git-send-email-michal.kazior@tieto.com>
-	<1453904772-25289-1-git-send-email-michal.kazior@tieto.com>
-	<1453904819.2351.7.camel@sipsolutions.net>
-Date: Wed, 27 Jan 2016 15:33:54 +0100
-Message-ID: <CA+BoTQn0AhDg628XF2+0gBBPM+8krTnTdeE6FiEBz-ZT+0k6Kg@mail.gmail.com> (sfid-20160127_153401_421179_793DE6A2)
-Subject: Re: [PATCH v2] mac80211: expose txq queue depth and size to drivers
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20160109025356.GA3644@earth>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 January 2016 at 15:26, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Wed, 2016-01-27 at 15:26 +0100, Michal Kazior wrote:
->>
->> @@ -1294,6 +1298,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct
->> ieee80211_hw *hw,
->>       if (!skb)
->>               goto out;
->>
->> +     txqi->byte_cnt -= skb->len;
->> +
->>       atomic_dec(&sdata->txqs_len[ac]);
->>
-> This *looks* a bit worrying - you have an atomic dec for the # of
-> packets and a non-atomic one for the bytes.
+On 01/09/2016 04:53 AM, Sebastian Reichel wrote:
+> Hi,
 >
-> You probably thought about it and I guess it's fine, but can you
-> explain it?
-
-The atomic was used because it accesses per-vif counters. You can't
-use txqi->queue.lock for that.
-
-On the other hand byte_cnt is per txqi and it was very easy to make
-use of the txqi->queue.lock (which was already acquired in both drv_tx
-and tx_dequeue functions). Using atomic* for byte_cnt would be
-wasteful a bit.
+> On Wed, Dec 30, 2015 at 03:35:31PM +0200, Uri Mashiach wrote:
+>> The power function uses a consumer regulator access to update the WiFi
+>> enable GPIO value.
+>>
+>> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+>
+> [On Nokia N950]
+> Tested-By: Sebastian Reichel <sre@kernel.org>
 
 
-Michał
+Reviewed-by: Grygorii Strashko <grygorii.strashko@ti.com>
+
+Thanks.
+-- 
+regards,
+-grygorii
