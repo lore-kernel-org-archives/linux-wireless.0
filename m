@@ -1,70 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from softlayer.compulab.co.il ([50.23.254.55]:48943 "EHLO
-	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752218AbcAMGAp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2016 01:00:45 -0500
-Subject: Re: [PATCH v4 3/3] wlcore/wl12xx: spi: add wifi support to cm-t335
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Uri Mashiach <uri.mashiach@compulab.co.il>
-References: <1451482533-8624-1-git-send-email-uri.mashiach@compulab.co.il>
- <1451482533-8624-4-git-send-email-uri.mashiach@compulab.co.il>
- <87io35lq2p.fsf@kamboji.qca.qualcomm.com>
-Cc: Rob Herring <robh+dt@kernel.org>, Tony Lindgren <tony@atomide.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
-	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
-	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-wireless@vger.kernel.org
-From: Igor Grinberg <grinberg@compulab.co.il>
-Message-ID: <5695E802.7050909@compulab.co.il> (sfid-20160113_070054_146114_EEBEC5F9)
-Date: Wed, 13 Jan 2016 08:00:34 +0200
+Received: from eusmtp01.atmel.com ([212.144.249.243]:52222 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932750AbcALHfp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jan 2016 02:35:45 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 01/26] staging: wilc1000: fix bug when changing virtual interface
+Date: Tue, 12 Jan 2016 16:39:30 +0900
+Message-ID: <1452584395-24910-2-git-send-email-glen.lee@atmel.com> (sfid-20160112_083548_496872_33EEB60C)
+In-Reply-To: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
+References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <87io35lq2p.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle Valo,
+This patch fixes a bug connection error when changing virtual interface to p2p.
+Variable quit needs to be set 0 when wilc is reinitialized again.
 
-On 01/07/16 11:02, Kalle Valo wrote:
-> Uri Mashiach <uri.mashiach@compulab.co.il> writes:
-> 
->> Device tree modifications:
->> - Pinmux for SPI0 and WiFi GPIOs.
->> - SPI0 node with wlcore as a child node.
->>
->> Cc: Tony Lindgren <tony@atomide.com>
->> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
->> ---
+Fixes : 67e2a07ed800 ("staging: wilc1000: move all of wilc_wlan_dev_t to struct wilc")
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Uri, please document the dependencies next time. Thanks!
-
->> v1 -> v2: Replace interrupts and interrupt-parent with interrupts-extended.
->> v2 -> v3: Move the pinctrl-0 = <&wifi_pins> to the wlcore node.
->> v3 -> v4: replace interrupts-extended with interrupts and interrupt-parent. (revert v2 modification).
->>           According to Rob Herring and Documentation/devicetree/bindings/interrupt-controller/interrupts.txt,
->> 	  interrupts-extended should only be used when a device has multiple interrupt parents.
->>
->>  arch/arm/boot/dts/am335x-cm-t335.dts | 55 ++++++++++++++++++++++++++++++++++++
->>  1 file changed, 55 insertions(+)
-> 
-> To what tree should this patch go? My wireless-drivers-next tree doesn't
-> even have this file.
-
-Right. It will hit the mainline during this merge window through Tony's and
-arm-soc trees.
-
-Do you think it will be sensible if you take 1/3 and 2/3 patches and Tony
-will take the 3/3 (there is no code dependency between first two and the last one),
-or we can just wait till arm-soc hits the mainline, so you will have the
-needed code?
-
-> 
-> https://patchwork.kernel.org/patch/7933441/
-> 
-
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 83af51b..07460ff 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1588,6 +1588,8 @@ int wilc_wlan_init(struct net_device *dev)
+ 
+ 	PRINT_D(INIT_DBG, "Initializing WILC_Wlan ...\n");
+ 
++	wilc->quit = 0;
++
+ 	if (!wilc->hif_func->hif_init(wilc)) {
+ 		ret = -EIO;
+ 		goto _fail_;
 -- 
-Regards,
-Igor.
+1.9.1
+
