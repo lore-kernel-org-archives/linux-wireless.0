@@ -1,47 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54868 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759002AbcAUNS5 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:2582 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934549AbcALNpr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 08:18:57 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Eli Cooper <elicooper@gmx.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3] rt2x00: fix monitor mode regression
-References: <1453116619-29933-1-git-send-email-elicooper@gmx.com>
-Date: Thu, 21 Jan 2016 15:18:51 +0200
-In-Reply-To: <1453116619-29933-1-git-send-email-elicooper@gmx.com> (Eli
-	Cooper's message of "Mon, 18 Jan 2016 19:30:19 +0800")
-Message-ID: <87lh7jyssk.fsf@kamboji.qca.qualcomm.com> (sfid-20160121_141900_642535_F5D356C9)
+	Tue, 12 Jan 2016 08:45:47 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u0CDXjSV023925
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2016 05:45:46 -0800
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+	by mx0b-0016f401.pphosted.com with ESMTP id 20d0t3r8dc-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2016 05:45:46 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Shengzhen Li <szli@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH] mwifiex: fix power state out of sync problem
+Date: Tue, 12 Jan 2016 05:43:16 -0800
+Message-ID: <1452606196-9582-1-git-send-email-akarwar@marvell.com> (sfid-20160112_144551_415862_EC329E95)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Eli Cooper <elicooper@gmx.com> writes:
+From: Shengzhen Li <szli@marvell.com>
 
-> Since commit df1404650ccb ("mac80211: remove support for IFF_PROMISC")
-> monitor mode for rt2x00 has been made effectively useless because the
-> hardware filter is configured to drop packets whose intended recipient is
-> not the device, regardless of the presence of monitor mode interfaces.
->
-> This patch fixes this regression by adding explicit monitor mode support,
-> and by configuring the hardware filter accordingly.
->
-> Changes in v3:
->   introduce and use CONFIG_MONITORING in rt2x00_state_flags
->   remove unnecessary debug messages
->   improve patch format
->
-> Changes in v2:
->   fix patch format
+It's been observed that driver's power state goes out
+of sync with firmware in some corner cases. When this
+happens, driver tries to download the data to firmware
+assuming it's awake which causes Tx data timeout.
 
-No changelog inside the commit log, please. Instead add them under "---"
-line so that git will ignore them. I can fix it this time.
+Main thread will process interrupt as soon as interrupt
+handler fills 'int_status' variable.
 
-> Signed-off-by: Eli Cooper <elicooper@gmx.com>
+This patch fixes the race issue by updating 'int_status'
+at the end of mwifiex_interrupt_status().
 
-I'll queue this to 4.5.
+Signed-off-by: Shengzhen Li <szli@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 5e15464..918e049 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2116,11 +2116,6 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter,
+ 		}
+ 	}
+ 
+-	spin_lock_irqsave(&adapter->int_lock, flags);
+-	adapter->int_status |= pcie_ireg;
+-	spin_unlock_irqrestore(&adapter->int_lock, flags);
+-	mwifiex_dbg(adapter, INTR, "ireg: 0x%08x\n", pcie_ireg);
+-
+ 	if (!adapter->pps_uapsd_mode &&
+ 	    adapter->ps_state == PS_STATE_SLEEP &&
+ 	    mwifiex_pcie_ok_to_access_hw(adapter)) {
+@@ -2132,6 +2127,11 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter,
+ 		adapter->pm_wakeup_fw_try = false;
+ 		del_timer(&adapter->wakeup_timer);
+ 	}
++
++	spin_lock_irqsave(&adapter->int_lock, flags);
++	adapter->int_status |= pcie_ireg;
++	spin_unlock_irqrestore(&adapter->int_lock, flags);
++	mwifiex_dbg(adapter, INTR, "ireg: 0x%08x\n", pcie_ireg);
+ }
+ 
+ /*
 -- 
-Kalle Valo
+1.8.1.4
+
