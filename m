@@ -1,68 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:34951 "EHLO
-	mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751543AbcAEOHH (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:36339 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932523AbcALAdP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 09:07:07 -0500
-Received: by mail-pf0-f177.google.com with SMTP id 78so223447049pfw.2
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2016 06:07:06 -0800 (PST)
+	Mon, 11 Jan 2016 19:33:15 -0500
+Received: by mail-pf0-f194.google.com with SMTP id n128so4171444pfn.3
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2016 16:33:15 -0800 (PST)
 From: Chaehyun Lim <chaehyun.lim@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
 	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
 	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
 	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 02/13] staging: wilc1000: rename u8ScanSource in wilc_scan
-Date: Tue,  5 Jan 2016 23:06:46 +0900
-Message-Id: <1452002817-30937-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20160105_150710_004933_8013F014)
-In-Reply-To: <1452002817-30937-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1452002817-30937-1-git-send-email-chaehyun.lim@gmail.com>
+Subject: [PATCH 4/5] staging: wilc1000: remove typedef from struct wilc_cfg_word_t
+Date: Tue, 12 Jan 2016 09:32:54 +0900
+Message-Id: <1452558775-21532-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20160112_013319_015497_3E731E44)
+In-Reply-To: <1452558775-21532-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1452558775-21532-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames u8ScanSource to scan_source to avoid camelcase.
+This patch removes typedef from struct wilc_cfg_word_t and renames it to
+wilc_cfg_word.
 
 Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
+ drivers/staging/wilc1000/wilc_wlan_cfg.c | 2 +-
+ drivers/staging/wilc1000/wilc_wlan_cfg.h | 4 ++--
  2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 7581c8f..f32cb76 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3672,7 +3672,7 @@ int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *stats)
- 	return result;
- }
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+index 003f2af..94193b3 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+@@ -108,7 +108,7 @@ static struct wilc_cfg_hword g_cfg_hword[] = {
+ 	{WID_NIL, 0}
+ };
  
--int wilc_scan(struct wilc_vif *vif, u8 u8ScanSource, u8 u8ScanType,
-+int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 u8ScanType,
- 	      u8 *pu8ChnlFreqList, u8 u8ChnlListLen, const u8 *pu8IEs,
- 	      size_t IEsLen, wilc_scan_result ScanResult, void *pvUserArg,
- 	      struct hidden_network *pstrHiddenNetwork)
-@@ -3698,7 +3698,7 @@ int wilc_scan(struct wilc_vif *vif, u8 u8ScanSource, u8 u8ScanType,
- 		PRINT_D(HOSTINF_DBG, "pstrHiddenNetwork IS EQUAL TO NULL\n");
+-static wilc_cfg_word_t g_cfg_word[] = {
++static struct wilc_cfg_word g_cfg_word[] = {
+ 	{WID_FAILED_COUNT, 0},
+ 	{WID_RETRY_COUNT, 0},
+ 	{WID_MULTIPLE_RETRY_COUNT, 0},
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
+index aed7b80..f51091e 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
+@@ -20,10 +20,10 @@ struct wilc_cfg_hword {
+ 	u16 val;
+ };
  
- 	msg.vif = vif;
--	msg.body.scan_info.src = u8ScanSource;
-+	msg.body.scan_info.src = scan_source;
- 	msg.body.scan_info.type = u8ScanType;
- 	msg.body.scan_info.result = ScanResult;
- 	msg.body.scan_info.arg = pvUserArg;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 4ff6b4f..fc71f16 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -335,7 +335,7 @@ int wilc_flush_join_req(struct wilc_vif *vif);
- int wilc_disconnect(struct wilc_vif *vif, u16 reason_code);
- int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel);
- int wilc_get_rssi(struct wilc_vif *vif, s8 *rssi_level);
--int wilc_scan(struct wilc_vif *vif, u8 u8ScanSource, u8 u8ScanType,
-+int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 u8ScanType,
- 	      u8 *pu8ChnlFreqList, u8 u8ChnlListLen, const u8 *pu8IEs,
- 	      size_t IEsLen, wilc_scan_result ScanResult, void *pvUserArg,
- 	      struct hidden_network *pstrHiddenNetwork);
+-typedef struct {
++struct wilc_cfg_word {
+ 	u32 id;
+ 	u32 val;
+-} wilc_cfg_word_t;
++};
+ 
+ typedef struct {
+ 	u32 id;
 -- 
 2.6.4
 
