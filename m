@@ -1,80 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:36794 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752561AbcAUBVq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 20:21:46 -0500
-Received: by mail-pf0-f195.google.com with SMTP id n128so1047088pfn.3
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:21:46 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 22/27] staging: wilc1000: rename u32RecvBufferSize in wilc_mq_recv
-Date: Thu, 21 Jan 2016 10:20:25 +0900
-Message-Id: <1453339230-1377-22-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_023658_002399_F5FB2F4B)
-In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from m12-17.163.com ([220.181.12.17]:60477 "EHLO m12-17.163.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752187AbcALHAh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jan 2016 02:00:37 -0500
+From: Jia-Ju Bai <baijiaju1990@163.com>
+To: kvalo@codeaurora.org, zajec5@gmail.com, joe@perches.com,
+	davem@davemloft.net, m@bues.ch, johannes.berg@intel.com
+Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jia-Ju Bai <baijiaju1990@163.com>
+Subject: [PATCH v2] b43: Fix memory leaks in b43_bus_dev_ssb_init and b43_bus_dev_bcma_init
+Date: Tue, 12 Jan 2016 15:00:06 +0800
+Message-Id: <1452582006-6796-1-git-send-email-baijiaju1990@163.com> (sfid-20160112_080056_995738_D329808F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames u32RecvBufferSize to recv_buf_size to avoid
-camelcase.
+The memory allocated by kzalloc in b43_bus_dev_ssb_init and
+b43_bus_dev_bcma_init is not freed.
+This patch fixes the bug by adding kfree in b43_ssb_remove,
+b43_bcma_remove and error handling code of b43_bcma_probe.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Thanks Michael for his suggestion.
+
+Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
 ---
- drivers/staging/wilc1000/wilc_msgqueue.c | 8 ++++----
- drivers/staging/wilc1000/wilc_msgqueue.h | 2 +-
- 2 files changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/b43/main.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index b836b2e..c86bd7c 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -110,13 +110,13 @@ int wilc_mq_send(struct message_queue *mq,
-  *  @version		1.0
-  */
- int wilc_mq_recv(struct message_queue *mq,
--		 void *recv_buf, u32 u32RecvBufferSize,
-+		 void *recv_buf, u32 recv_buf_size,
- 		 u32 *pu32ReceivedLength)
- {
- 	struct message *pstrMessage;
- 	unsigned long flags;
+diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
+index ec013fb..bbea769 100644
+--- a/drivers/net/wireless/b43/main.c
++++ b/drivers/net/wireless/b43/main.c
+@@ -5682,11 +5682,12 @@ static int b43_bcma_probe(struct bcma_device *core)
+ 	INIT_WORK(&wl->firmware_load, b43_request_firmware);
+ 	schedule_work(&wl->firmware_load);
  
--	if ((!mq) || (u32RecvBufferSize == 0)
-+	if ((!mq) || (recv_buf_size == 0)
- 	    || (!recv_buf) || (!pu32ReceivedLength)) {
- 		PRINT_ER("mq or recv_buf is null\n");
- 		return -EINVAL;
-@@ -141,10 +141,10 @@ int wilc_mq_recv(struct message_queue *mq,
- 		return -EFAULT;
- 	}
- 	/* check buffer size */
--	if (u32RecvBufferSize < pstrMessage->len) {
-+	if (recv_buf_size < pstrMessage->len) {
- 		spin_unlock_irqrestore(&mq->lock, flags);
- 		up(&mq->sem);
--		PRINT_ER("u32RecvBufferSize overflow\n");
-+		PRINT_ER("recv_buf_size overflow\n");
- 		return -EOVERFLOW;
- 	}
+-bcma_out:
+ 	return err;
  
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index 81b51dd..3804b3b 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -77,7 +77,7 @@ int wilc_mq_send(struct message_queue *mq,
-  *  @version		1.0
-  */
- int wilc_mq_recv(struct message_queue *mq,
--		 void *recv_buf, u32 u32RecvBufferSize,
-+		 void *recv_buf, u32 recv_buf_size,
- 		 u32 *pu32ReceivedLength);
+ bcma_err_wireless_exit:
+ 	ieee80211_free_hw(wl->hw);
++bcma_out:
++	kfree(dev);
+ 	return err;
+ }
  
- /*!
+@@ -5714,8 +5715,8 @@ static void b43_bcma_remove(struct bcma_device *core)
+ 	b43_rng_exit(wl);
+ 
+ 	b43_leds_unregister(wl);
+-
+ 	ieee80211_free_hw(wl->hw);
++	kfree(wldev->dev);
+ }
+ 
+ static struct bcma_driver b43_bcma_driver = {
+@@ -5798,6 +5799,7 @@ static void b43_ssb_remove(struct ssb_device *sdev)
+ 
+ 	b43_leds_unregister(wl);
+ 	b43_wireless_exit(dev, wl);
++	kfree(dev);
+ }
+ 
+ static struct ssb_driver b43_ssb_driver = {
 -- 
-2.6.4
+1.7.9.5
+
 
