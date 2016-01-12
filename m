@@ -1,71 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:55846 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753397AbcAGMrr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 07:47:47 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 03/21] iwlwifi: mvm: let the firmware choose the antenna for beacons
-Date: Thu,  7 Jan 2016 14:47:23 +0200
-Message-Id: <1452170861-10060-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160107_134857_735657_351D6D1E)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+Received: from mail-vk0-f65.google.com ([209.85.213.65]:33500 "EHLO
+	mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752660AbcALXSa (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jan 2016 18:18:30 -0500
+Received: by mail-vk0-f65.google.com with SMTP id n1so6248918vkb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2016 15:18:30 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1452560419.7773.87.camel@perches.com>
+References: <1452558775-21532-1-git-send-email-chaehyun.lim@gmail.com>
+	<1452558775-21532-2-git-send-email-chaehyun.lim@gmail.com>
+	<1452560419.7773.87.camel@perches.com>
+Date: Wed, 13 Jan 2016 08:18:29 +0900
+Message-ID: <CAKV=isuDM=pOMkYwQSmt2QQB9LGpwnCZ-scuWZ_7OXsG4kWJew@mail.gmail.com> (sfid-20160113_001842_369257_2EAB5BEB)
+Subject: Re: [PATCH 2/5] staging: wilc1000: remove typedef from struct wilc_cfg_byte_t
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: Joe Perches <joe@perches.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	"tony.cho" <tony.cho@atmel.com>, glen.lee@atmel.com,
+	leo.kim@atmel.com, linux-wireless <linux-wireless@vger.kernel.org>,
+	devel@driverdev.osuosl.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The firmware knows better what antenna to choose.
-Old firmware still need the setting, so use a flag to know
-if the driver should choose the antenna or if the firmware
-can do it iself.
+Thank you for your comment.
+I'll resend again this patch after considering your suggestion.
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h  | 3 +++
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 9 ++++++---
- 2 files changed, 9 insertions(+), 3 deletions(-)
+regards
+Chaehyun Lim
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-index d2294ad6..9f24f99 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-@@ -309,6 +309,8 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_capa_t;
-  * @IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE: extended DTS measurement
-  * @IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS: supports short PM timeouts
-  * @IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT: supports bt-coex Multi-priority LUT
-+ * @IWL_UCODE_TLV_CAPA_BEACON_ANT_SELECTION: firmware will decide on what
-+ *	antenna the beacon should be transmitted
-  *
-  * @NUM_IWL_UCODE_TLV_CAPA: number of bits used
-  */
-@@ -336,6 +338,7 @@ enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE		= (__force iwl_ucode_tlv_capa_t)64,
- 	IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS		= (__force iwl_ucode_tlv_capa_t)65,
- 	IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT		= (__force iwl_ucode_tlv_capa_t)67,
-+	IWL_UCODE_TLV_CAPA_BEACON_ANT_SELECTION		= (__force iwl_ucode_tlv_capa_t)71,
- 
- 	NUM_IWL_UCODE_TLV_CAPA
- #ifdef __CHECKER__
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index 5e3a758..448b9c9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -1012,9 +1012,12 @@ static int iwl_mvm_mac_ctxt_send_beacon(struct iwl_mvm *mvm,
- 						TX_CMD_FLG_BT_PRIO_POS;
- 	beacon_cmd.tx.tx_flags = cpu_to_le32(tx_flags);
- 
--	mvm->mgmt_last_antenna_idx =
--		iwl_mvm_next_antenna(mvm, iwl_mvm_get_valid_tx_ant(mvm),
--				     mvm->mgmt_last_antenna_idx);
-+	if (!fw_has_capa(&mvm->fw->ucode_capa,
-+			 IWL_UCODE_TLV_CAPA_BEACON_ANT_SELECTION)) {
-+		mvm->mgmt_last_antenna_idx =
-+			iwl_mvm_next_antenna(mvm, iwl_mvm_get_valid_tx_ant(mvm),
-+					     mvm->mgmt_last_antenna_idx);
-+	}
- 
- 	beacon_cmd.tx.rate_n_flags =
- 		cpu_to_le32(BIT(mvm->mgmt_last_antenna_idx) <<
--- 
-2.5.0
-
+On Tue, Jan 12, 2016 at 10:00 AM, Joe Perches <joe@perches.com> wrote:
+> On Tue, 2016-01-12 at 09:32 +0900, Chaehyun Lim wrote:
+>> This patch removes typedef from struct wilc_cfg_byte_t and renames it to
+>> wilc_cfg_byte.
+>
+> Is this really a good name?
+>
+>> diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
+> []
+>> @@ -10,10 +10,10 @@
+>>  #ifndef WILC_WLAN_CFG_H
+>>  #define WILC_WLAN_CFG_H
+>>
+>> -typedef struct {
+>> +struct wilc_cfg_byte {
+>>       u16 id;
+>>       u16 val;
+>> -} wilc_cfg_byte_t;
+>> +};
+>
+> val is a u16, calling it cfg_byte seems misleading.
+>
+>
