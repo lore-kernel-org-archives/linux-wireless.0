@@ -1,103 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.hengli.com.au ([209.40.204.226]:59759 "EHLO
-	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932186AbcAXNUl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jan 2016 08:20:41 -0500
-Subject: [PATCH 24/26] nfsd: Use shash
-References: <20160124131021.GA31153@gondor.apana.org.au>
-To: Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
-	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
-	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, ceph-devel@vger.kernel.org,
-	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
-	drbd-dev@lists.linbit.com, open-iscsi@googlegroups.com
-Message-Id: <E1aNKaI-0008GJ-Fn@gondolin.me.apana.org.au> (sfid-20160124_142220_214788_B2FA4213)
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Date: Sun, 24 Jan 2016 21:20:02 +0800
+Received: from mx1.redhat.com ([209.132.183.28]:35326 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750915AbcALXeH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Jan 2016 18:34:07 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Tobias Klauser <tklauser@distanz.ch>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtl8xxxu: Check return value of kmemdup()
+References: <1452601604-11309-1-git-send-email-tklauser@distanz.ch>
+Date: Tue, 12 Jan 2016 18:34:05 -0500
+In-Reply-To: <1452601604-11309-1-git-send-email-tklauser@distanz.ch> (Tobias
+	Klauser's message of "Tue, 12 Jan 2016 13:26:44 +0100")
+Message-ID: <wrfjk2ne1ifm.fsf@redhat.com> (sfid-20160113_003411_738512_3874571D)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces uses of the long obsolete hash interface with
-shash.
+Tobias Klauser <tklauser@distanz.ch> writes:
+> In rtl8xxxu_load_firmware() check the return value of kmemdup() and
+> error out with -ENOMEM in case of NULL to prevent a NULL pointer
+> dereference.
+>
+> Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
+> ---
+>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 
-Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
----
+Thanks, I'll add it to my queue!
 
- fs/nfsd/nfs4recover.c |   28 +++++++++++++++++-----------
- 1 file changed, 17 insertions(+), 11 deletions(-)
+Jes
 
-diff --git a/fs/nfsd/nfs4recover.c b/fs/nfsd/nfs4recover.c
-index 79f0307..a79c150 100644
---- a/fs/nfsd/nfs4recover.c
-+++ b/fs/nfsd/nfs4recover.c
-@@ -32,10 +32,10 @@
- *
- */
- 
-+#include <crypto/hash.h>
- #include <linux/file.h>
- #include <linux/slab.h>
- #include <linux/namei.h>
--#include <linux/crypto.h>
- #include <linux/sched.h>
- #include <linux/fs.h>
- #include <linux/module.h>
-@@ -104,29 +104,35 @@ static int
- nfs4_make_rec_clidname(char *dname, const struct xdr_netobj *clname)
- {
- 	struct xdr_netobj cksum;
--	struct hash_desc desc;
--	struct scatterlist sg;
-+	struct crypto_shash *tfm;
- 	int status;
- 
- 	dprintk("NFSD: nfs4_make_rec_clidname for %.*s\n",
- 			clname->len, clname->data);
--	desc.flags = CRYPTO_TFM_REQ_MAY_SLEEP;
--	desc.tfm = crypto_alloc_hash("md5", 0, CRYPTO_ALG_ASYNC);
--	if (IS_ERR(desc.tfm)) {
--		status = PTR_ERR(desc.tfm);
-+	tfm = crypto_alloc_shash("md5", 0, 0);
-+	if (IS_ERR(tfm)) {
-+		status = PTR_ERR(tfm);
- 		goto out_no_tfm;
- 	}
- 
--	cksum.len = crypto_hash_digestsize(desc.tfm);
-+	cksum.len = crypto_shash_digestsize(tfm);
- 	cksum.data = kmalloc(cksum.len, GFP_KERNEL);
- 	if (cksum.data == NULL) {
- 		status = -ENOMEM;
-  		goto out;
- 	}
- 
--	sg_init_one(&sg, clname->data, clname->len);
-+	{
-+		SHASH_DESC_ON_STACK(desc, tfm);
-+
-+		desc->tfm = tfm;
-+		desc->flags = CRYPTO_TFM_REQ_MAY_SLEEP;
-+
-+		status = crypto_shash_digest(desc, clname->data, clname->len,
-+					     cksum.data);
-+		shash_desc_zero(desc);
-+	}
- 
--	status = crypto_hash_digest(&desc, &sg, sg.length, cksum.data);
- 	if (status)
- 		goto out;
- 
-@@ -135,7 +141,7 @@ nfs4_make_rec_clidname(char *dname, const struct xdr_netobj *clname)
- 	status = 0;
- out:
- 	kfree(cksum.data);
--	crypto_free_hash(desc.tfm);
-+	crypto_free_shash(tfm);
- out_no_tfm:
- 	return status;
- }
+>
+> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+> index 7d820c395375..59f70513c491 100644
+> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+> @@ -2174,6 +2174,10 @@ static int rtl8xxxu_load_firmware(struct rtl8xxxu_priv *priv, char *fw_name)
+>  	}
+>  
+>  	priv->fw_data = kmemdup(fw->data, fw->size, GFP_KERNEL);
+> +	if (!priv->fw_data) {
+> +		ret = -ENOMEM;
+> +		goto exit;
+> +	}
+>  	priv->fw_size = fw->size - sizeof(struct rtl8xxxu_firmware_header);
+>  
+>  	signature = le16_to_cpu(priv->fw_data->signature);
