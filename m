@@ -1,217 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f196.google.com ([209.85.213.196]:36759 "EHLO
-	mail-ig0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752725AbcAMQc0 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:52360 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932750AbcALHgL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2016 11:32:26 -0500
-Received: by mail-ig0-f196.google.com with SMTP id o2so18113032iga.3
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 08:32:26 -0800 (PST)
+	Tue, 12 Jan 2016 02:36:11 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 05/26] staging: wilc1000: sdio_init: add resume argument
+Date: Tue, 12 Jan 2016 16:39:34 +0900
+Message-ID: <1452584395-24910-6-git-send-email-glen.lee@atmel.com> (sfid-20160112_083615_339141_AA9D720E)
+In-Reply-To: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
+References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1452701232-12619-1-git-send-email-elicooper@gmx.com>
-References: <1452701232-12619-1-git-send-email-elicooper@gmx.com>
-Date: Wed, 13 Jan 2016 17:32:25 +0100
-Message-ID: <CAGXE3d9fbPesSPjNx=u6qQBCf0qCYotNejwcn10L1k0grfue=w@mail.gmail.com> (sfid-20160113_173240_602246_52DDE7E0)
-Subject: Re: [PATCH v2] rt2x00: fix monitor mode regression
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Eli Cooper <elicooper@gmx.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 13, 2016 at 5:07 PM, Eli Cooper <elicooper@gmx.com> wrote:
-> Since commit df1404650ccbfeb76a84f301f22316be0d00a864 monitor mode for rt2x00
-> has been made effectively useless because the hardware filter is configured to
-> drop packets whose intended recipient is not the device, regardless of the
-> presence of monitor mode interfaces.
->
-> This patch fixes this regression by adding explicit monitor mode support, and
-> configuring the hardware filter accordingly.
->
-> Signed-off-by: Eli Cooper <elicooper@gmx.com>
+Part of sdio init codes should not run when sdio init function is called on
+sdio resume so skip them.
 
-Looks good to me, thanks!
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 34 +++++++++++++++++++---------------
+ drivers/staging/wilc1000/wilc_spi.c  |  2 +-
+ drivers/staging/wilc1000/wilc_wlan.c |  2 +-
+ drivers/staging/wilc1000/wilc_wlan.h |  2 +-
+ 4 files changed, 22 insertions(+), 18 deletions(-)
 
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index ece2f58..c8d003b 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -42,7 +42,7 @@ static wilc_sdio_t g_sdio;
+ 
+ static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data);
+ static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data);
+-static int sdio_init(struct wilc *wilc);
++static int sdio_init(struct wilc *wilc, bool resume);
+ 
+ static void wilc_sdio_interrupt(struct sdio_func *func)
+ {
+@@ -196,7 +196,7 @@ static int wilc_sdio_resume(struct device *dev)
+ 	dev_info(dev, "sdio resume\n");
+ 	sdio_release_host(func);
+ 	chip_wakeup(wilc);
+-	sdio_init(wilc);
++	sdio_init(wilc, true);
+ 
+ 	if(wilc->suspend_event)
+ 		host_wakeup_notify(wilc);
+@@ -667,16 +667,17 @@ static int sdio_deinit(struct wilc *wilc)
+ 	return 1;
+ }
+ 
+-static int sdio_init(struct wilc *wilc)
++static int sdio_init(struct wilc *wilc, bool resume)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
+ 	sdio_cmd52_t cmd;
+ 	int loop, ret;
+ 	u32 chipid;
+ 
+-	memset(&g_sdio, 0, sizeof(wilc_sdio_t));
+-
+-	g_sdio.irq_gpio = (wilc->dev_irq_num);
++	if (!resume) {
++		memset(&g_sdio, 0, sizeof(wilc_sdio_t));
++		g_sdio.irq_gpio = (wilc->dev_irq_num);
++	}
+ 
+ 	/**
+ 	 *      function 0 csa enable
+@@ -766,16 +767,19 @@ static int sdio_init(struct wilc *wilc)
+ 	/**
+ 	 *      make sure can read back chip id correctly
+ 	 **/
+-	if (!sdio_read_reg(wilc, 0x1000, &chipid)) {
+-		dev_err(&func->dev, "Fail cmd read chip id...\n");
+-		goto _fail_;
++	if (!resume) {
++		if (!sdio_read_reg(wilc, 0x1000, &chipid)) {
++			dev_err(&func->dev, "Fail cmd read chip id...\n");
++			goto _fail_;
++		}
++		dev_err(&func->dev, "chipid (%08x)\n", chipid);
++		if ((chipid & 0xfff) > 0x2a0)
++			g_sdio.has_thrpt_enh3 = 1;
++		else
++			g_sdio.has_thrpt_enh3 = 0;
++		dev_info(&func->dev, "has_thrpt_enh3 = %d...\n",
++			 g_sdio.has_thrpt_enh3);
+ 	}
+-	dev_err(&func->dev, "chipid (%08x)\n", chipid);
+-	if ((chipid & 0xfff) > 0x2a0)
+-		g_sdio.has_thrpt_enh3 = 1;
+-	else
+-		g_sdio.has_thrpt_enh3 = 0;
+-	dev_info(&func->dev, "has_thrpt_enh3 = %d...\n", g_sdio.has_thrpt_enh3);
+ 
+ 	return 1;
+ 
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 86de50c..356a446 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -852,7 +852,7 @@ static int _wilc_spi_deinit(struct wilc *wilc)
+ 	return 1;
+ }
+ 
+-static int wilc_spi_init(struct wilc *wilc)
++static int wilc_spi_init(struct wilc *wilc, bool resume)
+ {
+ 	struct spi_device *spi = to_spi_device(wilc->dev);
+ 	u32 reg;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 8a39a05..aed1dd2 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1530,7 +1530,7 @@ int wilc_wlan_init(struct net_device *dev)
+ 
+ 	wilc->quit = 0;
+ 
+-	if (!wilc->hif_func->hif_init(wilc)) {
++	if (!wilc->hif_func->hif_init(wilc, false)) {
+ 		ret = -EIO;
+ 		goto _fail_;
+ 	}
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 53e56ff..a1096ed 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -227,7 +227,7 @@ struct rxq_entry_t {
+  ********************************************/
+ struct wilc;
+ struct wilc_hif_func {
+-	int (*hif_init)(struct wilc *);
++	int (*hif_init)(struct wilc *, bool resume);
+ 	int (*hif_deinit)(struct wilc *);
+ 	int (*hif_read_reg)(struct wilc *, u32, u32 *);
+ 	int (*hif_write_reg)(struct wilc *, u32, u32);
+-- 
+1.9.1
 
-> ---
->  drivers/net/wireless/ralink/rt2x00/rt2400pci.c    |  4 +++-
->  drivers/net/wireless/ralink/rt2x00/rt2500pci.c    |  4 +++-
->  drivers/net/wireless/ralink/rt2x00/rt2500usb.c    |  4 +++-
->  drivers/net/wireless/ralink/rt2x00/rt2800lib.c    |  3 ++-
->  drivers/net/wireless/ralink/rt2x00/rt2x00.h       |  2 ++
->  drivers/net/wireless/ralink/rt2x00/rt2x00config.c | 10 ++++++++++
->  drivers/net/wireless/ralink/rt2x00/rt2x00dev.c    |  1 +
->  drivers/net/wireless/ralink/rt2x00/rt2x00mac.c    |  5 -----
->  drivers/net/wireless/ralink/rt2x00/rt61pci.c      |  4 +++-
->  drivers/net/wireless/ralink/rt2x00/rt73usb.c      |  4 +++-
->  10 files changed, 30 insertions(+), 11 deletions(-)
->
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
-> index 9a3966c..578b8a4 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
-> @@ -273,8 +273,10 @@ static void rt2400pci_config_filter(struct rt2x00_dev *rt2x00dev,
->                            !(filter_flags & FIF_PLCPFAIL));
->         rt2x00_set_field32(&reg, RXCSR0_DROP_CONTROL,
->                            !(filter_flags & FIF_CONTROL));
-> -       rt2x00_set_field32(&reg, RXCSR0_DROP_NOT_TO_ME, 1);
-> +       rt2x00_set_field32(&reg, RXCSR0_DROP_NOT_TO_ME,
-> +                          !rt2x00dev->is_monitoring);
->         rt2x00_set_field32(&reg, RXCSR0_DROP_TODS,
-> +                          !rt2x00dev->is_monitoring &&
->                            !rt2x00dev->intf_ap_count);
->         rt2x00_set_field32(&reg, RXCSR0_DROP_VERSION_ERROR, 1);
->         rt2x00mmio_register_write(rt2x00dev, RXCSR0, reg);
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
-> index 1a6740b..9aec12e 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
-> @@ -274,8 +274,10 @@ static void rt2500pci_config_filter(struct rt2x00_dev *rt2x00dev,
->                            !(filter_flags & FIF_PLCPFAIL));
->         rt2x00_set_field32(&reg, RXCSR0_DROP_CONTROL,
->                            !(filter_flags & FIF_CONTROL));
-> -       rt2x00_set_field32(&reg, RXCSR0_DROP_NOT_TO_ME, 1);
-> +       rt2x00_set_field32(&reg, RXCSR0_DROP_NOT_TO_ME,
-> +                          !rt2x00dev->is_monitoring);
->         rt2x00_set_field32(&reg, RXCSR0_DROP_TODS,
-> +                          !rt2x00dev->is_monitoring &&
->                            !rt2x00dev->intf_ap_count);
->         rt2x00_set_field32(&reg, RXCSR0_DROP_VERSION_ERROR, 1);
->         rt2x00_set_field32(&reg, RXCSR0_DROP_MCAST,
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-> index d26018f..d66364e 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
-> @@ -437,8 +437,10 @@ static void rt2500usb_config_filter(struct rt2x00_dev *rt2x00dev,
->                            !(filter_flags & FIF_PLCPFAIL));
->         rt2x00_set_field16(&reg, TXRX_CSR2_DROP_CONTROL,
->                            !(filter_flags & FIF_CONTROL));
-> -       rt2x00_set_field16(&reg, TXRX_CSR2_DROP_NOT_TO_ME, 1);
-> +       rt2x00_set_field16(&reg, TXRX_CSR2_DROP_NOT_TO_ME,
-> +                          !rt2x00dev->is_monitoring);
->         rt2x00_set_field16(&reg, TXRX_CSR2_DROP_TODS,
-> +                          !rt2x00dev->is_monitoring &&
->                            !rt2x00dev->intf_ap_count);
->         rt2x00_set_field16(&reg, TXRX_CSR2_DROP_VERSION_ERROR, 1);
->         rt2x00_set_field16(&reg, TXRX_CSR2_DROP_MULTICAST,
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> index 9733b31..ee8215a 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
-> @@ -1490,7 +1490,8 @@ void rt2800_config_filter(struct rt2x00_dev *rt2x00dev,
->                            !(filter_flags & FIF_FCSFAIL));
->         rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_PHY_ERROR,
->                            !(filter_flags & FIF_PLCPFAIL));
-> -       rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_NOT_TO_ME, 1);
-> +       rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_NOT_TO_ME,
-> +                          !rt2x00dev->is_monitoring);
->         rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_NOT_MY_BSSD, 0);
->         rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_VER_ERROR, 1);
->         rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_MULTICAST,
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-> index 3282ddb..a2e70ec 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-> @@ -844,11 +844,13 @@ struct rt2x00_dev {
->          *  - Open sta interface count.
->          *  - Association count.
->          *  - Beaconing enabled count.
-> +        *  - Whether the device is monitoring.
->          */
->         unsigned int intf_ap_count;
->         unsigned int intf_sta_count;
->         unsigned int intf_associated;
->         unsigned int intf_beaconing;
-> +       bool is_monitoring;
->
->         /*
->          * Interface combinations
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00config.c b/drivers/net/wireless/ralink/rt2x00/rt2x00config.c
-> index 7e8bb11..3b531f0 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00config.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00config.c
-> @@ -244,6 +244,16 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
->             (ieee80211_flags & IEEE80211_CONF_CHANGE_PS))
->                 cancel_delayed_work_sync(&rt2x00dev->autowakeup_work);
->
-> +       if (ieee80211_flags & IEEE80211_CONF_CHANGE_MONITOR) {
-> +               if (conf->flags & IEEE80211_CONF_MONITOR) {
-> +                       rt2x00_dbg(rt2x00dev, "Monitor mode is enabled\n");
-> +                       rt2x00dev->is_monitoring = true;
-> +               } else {
-> +                       rt2x00_dbg(rt2x00dev, "Monitor mode is disabled\n");
-> +                       rt2x00dev->is_monitoring = false;
-> +               }
-> +       }
-> +
->         /*
->          * Start configuration.
->          */
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-> index 5639ed8..e979dca 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-> @@ -1204,6 +1204,7 @@ int rt2x00lib_start(struct rt2x00_dev *rt2x00dev)
->         rt2x00dev->intf_ap_count = 0;
->         rt2x00dev->intf_sta_count = 0;
->         rt2x00dev->intf_associated = 0;
-> +       rt2x00dev->is_monitoring = false;
->
->         /* Enable the radio */
->         retval = rt2x00lib_enable_radio(rt2x00dev);
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
-> index 3c26ee6..13da95a 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
-> @@ -385,11 +385,6 @@ void rt2x00mac_configure_filter(struct ieee80211_hw *hw,
->                         *total_flags |= FIF_PSPOLL;
->         }
->
-> -       /*
-> -        * Check if there is any work left for us.
-> -        */
-> -       if (rt2x00dev->packet_filter == *total_flags)
-> -               return;
->         rt2x00dev->packet_filter = *total_flags;
->
->         rt2x00dev->ops->lib->config_filter(rt2x00dev, *total_flags);
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt61pci.c b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
-> index c0e730e..b875a0f 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt61pci.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
-> @@ -530,8 +530,10 @@ static void rt61pci_config_filter(struct rt2x00_dev *rt2x00dev,
->                            !(filter_flags & FIF_PLCPFAIL));
->         rt2x00_set_field32(&reg, TXRX_CSR0_DROP_CONTROL,
->                            !(filter_flags & (FIF_CONTROL | FIF_PSPOLL)));
-> -       rt2x00_set_field32(&reg, TXRX_CSR0_DROP_NOT_TO_ME, 1);
-> +       rt2x00_set_field32(&reg, TXRX_CSR0_DROP_NOT_TO_ME,
-> +                          !rt2x00dev->is_monitoring);
->         rt2x00_set_field32(&reg, TXRX_CSR0_DROP_TO_DS,
-> +                          !rt2x00dev->is_monitoring &&
->                            !rt2x00dev->intf_ap_count);
->         rt2x00_set_field32(&reg, TXRX_CSR0_DROP_VERSION_ERROR, 1);
->         rt2x00_set_field32(&reg, TXRX_CSR0_DROP_MULTICAST,
-> diff --git a/drivers/net/wireless/ralink/rt2x00/rt73usb.c b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
-> index 7081e13..6e8e620 100644
-> --- a/drivers/net/wireless/ralink/rt2x00/rt73usb.c
-> +++ b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
-> @@ -480,8 +480,10 @@ static void rt73usb_config_filter(struct rt2x00_dev *rt2x00dev,
->                            !(filter_flags & FIF_PLCPFAIL));
->         rt2x00_set_field32(&reg, TXRX_CSR0_DROP_CONTROL,
->                            !(filter_flags & (FIF_CONTROL | FIF_PSPOLL)));
-> -       rt2x00_set_field32(&reg, TXRX_CSR0_DROP_NOT_TO_ME, 1);
-> +       rt2x00_set_field32(&reg, TXRX_CSR0_DROP_NOT_TO_ME,
-> +                          !rt2x00dev->is_monitoring);
->         rt2x00_set_field32(&reg, TXRX_CSR0_DROP_TO_DS,
-> +                          !rt2x00dev->is_monitoring &&
->                            !rt2x00dev->intf_ap_count);
->         rt2x00_set_field32(&reg, TXRX_CSR0_DROP_VERSION_ERROR, 1);
->         rt2x00_set_field32(&reg, TXRX_CSR0_DROP_MULTICAST,
-> --
-> 2.7.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
