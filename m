@@ -1,231 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:44475 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750970AbcAQKjt (ORCPT
+Received: from mail-lf0-f51.google.com ([209.85.215.51]:34692 "EHLO
+	mail-lf0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759351AbcAMOAE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2016 05:39:49 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH 2/5] wil6210: use extra IEs from probe response
-Date: Sun, 17 Jan 2016 12:39:07 +0200
-Message-Id: <1453027150-18224-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160117_114025_980566_23F4677B)
-In-Reply-To: <1453027150-18224-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1453027150-18224-1-git-send-email-qca_merez@qca.qualcomm.com>
+	Wed, 13 Jan 2016 09:00:04 -0500
+Received: by mail-lf0-f51.google.com with SMTP id 17so53548074lfz.1
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 06:00:03 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 5/5] ath10k: implement basic support for new tx path firmware
+Date: Wed, 13 Jan 2016 15:01:08 +0100
+Message-Id: <1452693668-30030-6-git-send-email-michal.kazior@tieto.com> (sfid-20160113_150015_498991_A4FD36F4)
+In-Reply-To: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
+References: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+This allows to use the new firmware which
+implements the new tx data path. Without this
+patch firmware supporting new tx path stops
+responding shortly after booting.
 
-In the start_ap/change_beacon API, when we set up probe response
-offloading, we only use the IE list from the probe response
-template and not the IE list from the proberesp_ies argument.
-As a result, we miss important IEs and it causes problems with
-some scenarios such as P2P.
-With this change, we merge the list of IEs from the probe response
-template and proberesp_ies and send the merged list to the FW
-for offloading. It is still FW responsibility to filter out
-irrelevant IEs when sending probe response, based on the actual
-contents of the probe request.
-Also in case association response termplate is not provided,
-we will use the merged list of IEs from probe response in the
-association response as well.
+This patch doesn't implement the entire pull-push
+logic available in the new firmware. This will be
+done in subsequent patches.
 
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/wil6210/cfg80211.c | 141 ++++++++++++++++++++--------
- 1 file changed, 102 insertions(+), 39 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt.h    |  8 +++
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  4 +-
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 88 +++++++++++++++++++++++++++++---
+ 3 files changed, 91 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 182f071..774352f 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -696,6 +696,79 @@ static int wil_cancel_remain_on_channel(struct wiphy *wiphy,
- 	return rc;
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 0c5628dafabf..13391ea4422d 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1665,6 +1665,14 @@ struct ath10k_htt {
+ 		dma_addr_t paddr;
+ 		struct ath10k_htt_txbuf *vaddr;
+ 	} txbuf;
++
++	struct {
++		struct htt_q_state *vaddr;
++		dma_addr_t paddr;
++		u16 num_peers;
++		u16 num_tids;
++		enum htt_q_depth_type type;
++	} tx_q_state;
+ };
+ 
+ #define RX_HTT_HDR_STATUS_LEN 64
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index d923f64e4f42..248405b53ef4 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2123,10 +2123,12 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		break;
+ 	case HTT_T2H_MSG_TYPE_AGGR_CONF:
+ 		break;
+-	case HTT_T2H_MSG_TYPE_EN_STATS:
+ 	case HTT_T2H_MSG_TYPE_TX_FETCH_IND:
+ 	case HTT_T2H_MSG_TYPE_TX_FETCH_CONFIRM:
+ 	case HTT_T2H_MSG_TYPE_TX_MODE_SWITCH_IND:
++		/* TODO: Implement pull-push logic */
++		break;
++	case HTT_T2H_MSG_TYPE_EN_STATS:
+ 	default:
+ 		ath10k_warn(ar, "htt event (%d) not handled\n",
+ 			    resp->hdr.msg_type);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 41a9811820e8..3cc2261b459e 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -132,6 +132,50 @@ static int ath10k_htt_tx_alloc_cont_frag_desc(struct ath10k_htt *htt)
+ 	return 0;
  }
  
-+/**
-+ * find a specific IE in a list of IEs
-+ * return a pointer to the beginning of IE in the list
-+ * or NULL if not found
-+ */
-+static const u8 *_wil_cfg80211_find_ie(const u8 *ies, u16 ies_len, const u8 *ie,
-+				       u16 ie_len)
++static void ath10k_htt_tx_free_txq(struct ath10k_htt *htt)
 +{
-+	struct ieee80211_vendor_ie *vie;
-+	u32 oui;
++	struct ath10k *ar = htt->ar;
++	size_t size;
 +
-+	/* IE tag at offset 0, length at offset 1 */
-+	if (ie_len < 2 || 2 + ie[1] > ie_len)
-+		return NULL;
++	if (!test_bit(ATH10K_FW_FEATURE_PEER_FLOW_CONTROL, ar->fw_features))
++		return;
 +
-+	if (ie[0] != WLAN_EID_VENDOR_SPECIFIC)
-+		return cfg80211_find_ie(ie[0], ies, ies_len);
++	size = sizeof(*htt->tx_q_state.vaddr);
 +
-+	/* make sure there is room for 3 bytes OUI + 1 byte OUI type */
-+	if (ie[1] < 4)
-+		return NULL;
-+	vie = (struct ieee80211_vendor_ie *)ie;
-+	oui = vie->oui[0] << 16 | vie->oui[1] << 8 | vie->oui[2];
-+	return cfg80211_find_vendor_ie(oui, vie->oui_type, ies,
-+				       ies_len);
++	dma_unmap_single(ar->dev, htt->tx_q_state.paddr, size, DMA_TO_DEVICE);
++	kfree(htt->tx_q_state.vaddr);
 +}
 +
-+/**
-+ * merge the IEs in two lists into a single list.
-+ * do not include IEs from the second list which exist in the first list.
-+ * add only vendor specific IEs from second list to keep
-+ * the merged list sorted (since vendor-specific IE has the
-+ * highest tag number)
-+ * caller must free the allocated memory for merged IEs
-+ */
-+static int _wil_cfg80211_merge_extra_ies(const u8 *ies1, u16 ies1_len,
-+					 const u8 *ies2, u16 ies2_len,
-+					 u8 **merged_ies, u16 *merged_len)
++static int ath10k_htt_tx_alloc_txq(struct ath10k_htt *htt)
 +{
-+	u8 *buf, *dpos;
-+	const u8 *spos;
++	struct ath10k *ar = htt->ar;
++	size_t size;
++	int ret;
 +
-+	if (ies1_len == 0 && ies2_len == 0) {
-+		*merged_ies = NULL;
-+		*merged_len = 0;
++	if (!test_bit(ATH10K_FW_FEATURE_PEER_FLOW_CONTROL, ar->fw_features))
 +		return 0;
-+	}
 +
-+	buf = kmalloc(ies1_len + ies2_len, GFP_KERNEL);
-+	if (!buf)
++	htt->tx_q_state.num_peers = HTT_TX_Q_STATE_NUM_PEERS;
++	htt->tx_q_state.num_tids = HTT_TX_Q_STATE_NUM_TIDS;
++	htt->tx_q_state.type = HTT_Q_DEPTH_TYPE_BYTES;
++
++	size = sizeof(*htt->tx_q_state.vaddr);
++	htt->tx_q_state.vaddr = kzalloc(size, GFP_KERNEL);
++	if (!htt->tx_q_state.vaddr)
 +		return -ENOMEM;
-+	memcpy(buf, ies1, ies1_len);
-+	dpos = buf + ies1_len;
-+	spos = ies2;
-+	while (spos + 1 < ies2 + ies2_len) {
-+		/* IE tag at offset 0, length at offset 1 */
-+		u16 ielen = 2 + spos[1];
 +
-+		if (spos + ielen > ies2 + ies2_len)
-+			break;
-+		if (spos[0] == WLAN_EID_VENDOR_SPECIFIC &&
-+		    !_wil_cfg80211_find_ie(ies1, ies1_len, spos, ielen)) {
-+			memcpy(dpos, spos, ielen);
-+			dpos += ielen;
-+		}
-+		spos += ielen;
++	htt->tx_q_state.paddr = dma_map_single(ar->dev, htt->tx_q_state.vaddr,
++					       size, DMA_TO_DEVICE);
++	ret = dma_mapping_error(ar->dev, htt->tx_q_state.paddr);
++	if (ret) {
++		ath10k_warn(ar, "failed to dma map tx_q_state: %d\n", ret);
++		kfree(htt->tx_q_state.vaddr);
++		return -EIO;
 +	}
 +
-+	*merged_ies = buf;
-+	*merged_len = dpos - buf;
 +	return 0;
 +}
 +
- static void wil_print_bcon_data(struct cfg80211_beacon_data *b)
+ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
  {
- 	print_hex_dump_bytes("head     ", DUMP_PREFIX_OFFSET,
-@@ -712,49 +785,49 @@ static void wil_print_bcon_data(struct cfg80211_beacon_data *b)
- 			     b->assocresp_ies, b->assocresp_ies_len);
- }
+ 	struct ath10k *ar = htt->ar;
+@@ -159,8 +203,17 @@ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
+ 		goto free_txbuf;
+ 	}
  
--static int wil_fix_bcon(struct wil6210_priv *wil,
--			struct cfg80211_beacon_data *bcon)
--{
--	struct ieee80211_mgmt *f = (struct ieee80211_mgmt *)bcon->probe_resp;
--	size_t hlen = offsetof(struct ieee80211_mgmt, u.probe_resp.variable);
--
--	if (bcon->probe_resp_len <= hlen)
--		return 0;
--
--/* always use IE's from full probe frame, they has more info
-- * notable RSN
-- */
--	bcon->proberesp_ies = f->u.probe_resp.variable;
--	bcon->proberesp_ies_len = bcon->probe_resp_len - hlen;
--	if (!bcon->assocresp_ies) {
--		bcon->assocresp_ies = bcon->proberesp_ies;
--		bcon->assocresp_ies_len = bcon->proberesp_ies_len;
--	}
--
--	return 1;
--}
--
- /* internal functions for device reset and starting AP */
- static int _wil_cfg80211_set_ies(struct wiphy *wiphy,
- 				 struct cfg80211_beacon_data *bcon)
- {
- 	int rc;
- 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
-+	u16 len = 0, proberesp_len = 0;
-+	u8 *ies = NULL, *proberesp = NULL;
-+
-+	if (bcon->probe_resp) {
-+		struct ieee80211_mgmt *f =
-+			(struct ieee80211_mgmt *)bcon->probe_resp;
-+		size_t hlen = offsetof(struct ieee80211_mgmt,
-+				       u.probe_resp.variable);
-+		proberesp = f->u.probe_resp.variable;
-+		proberesp_len = bcon->probe_resp_len - hlen;
++	ret = ath10k_htt_tx_alloc_txq(htt);
++	if (ret) {
++		ath10k_err(ar, "failed to alloc txq: %d\n", ret);
++		goto free_frag_desc;
 +	}
-+	rc = _wil_cfg80211_merge_extra_ies(proberesp,
-+					   proberesp_len,
-+					   bcon->proberesp_ies,
-+					   bcon->proberesp_ies_len,
-+					   &ies, &len);
- 
--	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, bcon->proberesp_ies_len,
--			bcon->proberesp_ies);
- 	if (rc)
--		return rc;
-+		goto out;
- 
--	rc = wmi_set_ie(wil, WMI_FRAME_ASSOC_RESP, bcon->assocresp_ies_len,
--			bcon->assocresp_ies);
-+	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, len, ies);
-+	if (rc)
-+		goto out;
 +
-+	if (bcon->assocresp_ies)
-+		rc = wmi_set_ie(wil, WMI_FRAME_ASSOC_RESP,
-+				bcon->assocresp_ies_len, bcon->assocresp_ies);
-+	else
-+		rc = wmi_set_ie(wil, WMI_FRAME_ASSOC_RESP, len, ies);
- #if 0 /* to use beacon IE's, remove this #if 0 */
- 	if (rc)
--		return rc;
-+		goto out;
+ 	return 0;
  
- 	rc = wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->tail_len, bcon->tail);
- #endif
--
-+out:
-+	kfree(ies);
- 	return rc;
++free_frag_desc:
++	ath10k_htt_tx_free_cont_frag_desc(htt);
++
+ free_txbuf:
+ 	size = htt->max_num_pending_tx *
+ 			  sizeof(struct ath10k_htt_txbuf);
+@@ -203,6 +256,7 @@ void ath10k_htt_tx_free(struct ath10k_htt *htt)
+ 				  htt->txbuf.paddr);
+ 	}
+ 
++	ath10k_htt_tx_free_txq(htt);
+ 	ath10k_htt_tx_free_cont_frag_desc(htt);
  }
  
-@@ -823,11 +896,6 @@ static int wil_cfg80211_change_beacon(struct wiphy *wiphy,
- 	wil_dbg_misc(wil, "%s()\n", __func__);
- 	wil_print_bcon_data(bcon);
+@@ -292,7 +346,9 @@ int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt)
+ 	struct ath10k *ar = htt->ar;
+ 	struct sk_buff *skb;
+ 	struct htt_cmd *cmd;
++	struct htt_frag_desc_bank_cfg *cfg;
+ 	int ret, size;
++	u8 info;
  
--	if (wil_fix_bcon(wil, bcon)) {
--		wil_dbg_misc(wil, "Fixed bcon\n");
--		wil_print_bcon_data(bcon);
--	}
--
- 	if (bcon->tail &&
- 	    cfg80211_find_ie(WLAN_EID_RSN, bcon->tail,
- 			     bcon->tail_len))
-@@ -900,11 +968,6 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
- 	wil_print_bcon_data(bcon);
- 	wil_print_crypto(wil, crypto);
+ 	if (!ar->hw_params.continuous_frag_desc)
+ 		return 0;
+@@ -310,14 +366,30 @@ int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt)
+ 	skb_put(skb, size);
+ 	cmd = (struct htt_cmd *)skb->data;
+ 	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_FRAG_DESC_BANK_CFG;
+-	cmd->frag_desc_bank_cfg.info = 0;
+-	cmd->frag_desc_bank_cfg.num_banks = 1;
+-	cmd->frag_desc_bank_cfg.desc_size = sizeof(struct htt_msdu_ext_desc);
+-	cmd->frag_desc_bank_cfg.bank_base_addrs[0] =
+-				__cpu_to_le32(htt->frag_desc.paddr);
+-	cmd->frag_desc_bank_cfg.bank_id[0].bank_min_id = 0;
+-	cmd->frag_desc_bank_cfg.bank_id[0].bank_max_id =
+-				__cpu_to_le16(htt->max_num_pending_tx - 1);
++
++	info = 0;
++	info |= SM(htt->tx_q_state.type,
++		   HTT_FRAG_DESC_BANK_CFG_INFO_Q_STATE_DEPTH_TYPE);
++
++	if (test_bit(ATH10K_FW_FEATURE_PEER_FLOW_CONTROL, ar->fw_features))
++		info |= HTT_FRAG_DESC_BANK_CFG_INFO_Q_STATE_VALID;
++
++	cfg = &cmd->frag_desc_bank_cfg;
++	cfg->info = info;
++	cfg->num_banks = 1;
++	cfg->desc_size = sizeof(struct htt_msdu_ext_desc);
++	cfg->bank_base_addrs[0] = __cpu_to_le32(htt->frag_desc.paddr);
++	cfg->bank_id[0].bank_min_id = 0;
++	cfg->bank_id[0].bank_max_id = __cpu_to_le16(htt->max_num_pending_tx -
++						    1);
++
++	cfg->q_state.paddr = cpu_to_le32(htt->tx_q_state.paddr);
++	cfg->q_state.num_peers = cpu_to_le16(htt->tx_q_state.num_peers);
++	cfg->q_state.num_tids = cpu_to_le16(htt->tx_q_state.num_tids);
++	cfg->q_state.record_size = HTT_TX_Q_STATE_ENTRY_SIZE;
++	cfg->q_state.record_multiplier = HTT_TX_Q_STATE_ENTRY_MULTIPLIER;
++
++	ath10k_dbg(ar, ATH10K_DBG_HTT, "htt frag desc bank cmd\n");
  
--	if (wil_fix_bcon(wil, bcon)) {
--		wil_dbg_misc(wil, "Fixed bcon\n");
--		wil_print_bcon_data(bcon);
--	}
--
- 	rc = _wil_cfg80211_start_ap(wiphy, ndev,
- 				    info->ssid, info->ssid_len, info->privacy,
- 				    info->beacon_interval, channel->hw_value,
+ 	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb);
+ 	if (ret) {
 -- 
-1.8.5.2
+2.1.4
 
