@@ -1,79 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:38942 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750794AbcA1Sw7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 13:52:59 -0500
-Subject: Re: KASAN splal in minstrel_ht_update_stats()
-To: Konstantin Khlebnikov <koct9i@gmail.com>,
-	linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <CALYGNiNyJhSaVnE35qS6UCGaSb2Dx1_i5HcRavuOX14oTz2P+w@mail.gmail.com>
-Cc: Linux Kernel Network Developers <netdev@vger.kernel.org>,
-	Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <56AA637A.6030407@openwrt.org> (sfid-20160128_195308_068152_88553B3A)
-Date: Thu, 28 Jan 2016 19:52:42 +0100
-MIME-Version: 1.0
-In-Reply-To: <CALYGNiNyJhSaVnE35qS6UCGaSb2Dx1_i5HcRavuOX14oTz2P+w@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-lf0-f51.google.com ([209.85.215.51]:36046 "EHLO
+	mail-lf0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759427AbcAMOAD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jan 2016 09:00:03 -0500
+Received: by mail-lf0-f51.google.com with SMTP id h129so60645557lfh.3
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 06:00:02 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 4/5] ath10k: clean up cont frag desc init code
+Date: Wed, 13 Jan 2016 15:01:07 +0100
+Message-Id: <1452693668-30030-5-git-send-email-michal.kazior@tieto.com> (sfid-20160113_150020_437590_CA3C0D2F)
+In-Reply-To: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
+References: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-01-15 06:23, Konstantin Khlebnikov wrote:
-> Jan 10 17:56:25 hamm kernel: [184374.378842]
-> ==================================================================
-> Jan 10 17:56:25 hamm kernel: [184374.379001] BUG: KASAN:
-> slab-out-of-bounds in minstrel_ht_update_stats.isra.7+0x6e1/0x9e0
-[...]
-> ==================================================================
-> 
-> out-of-bound in
-> 
-> if (mrs->prob_ewma > mg->rates[mg->max_group_prob_rate].prob_ewma)
->              mg->max_group_prob_rate = index;
-> 
-> 
-> 
-> Fix should be something like this:
-> 
-> --- a/net/mac80211/rc80211_minstrel_ht.c
-> +++ b/net/mac80211/rc80211_minstrel_ht.c
-> @@ -414,15 +414,16 @@ minstrel_ht_set_best_prob_rate(struct
-> minstrel_ht_sta *mi, u16 index)
->             (max_tp_group != MINSTREL_CCK_GROUP))
->                 return;
-> 
-> +       max_gpr_group = mg->max_group_prob_rate / MCS_GROUP_RATES;
-> +       max_gpr_idx = mg->max_group_prob_rate % MCS_GROUP_RATES;
-> +       max_gpr_prob = mi->groups[max_gpr_group].rates[max_gpr_idx].prob_ewma;
-> +
->         if (mrs->prob_ewma > MINSTREL_FRAC(75, 100)) {
->                 cur_tp_avg = minstrel_ht_get_tp_avg(mi, cur_group, cur_idx,
->                                                     mrs->prob_ewma);
->                 if (cur_tp_avg > tmp_tp_avg)
->                         mi->max_prob_rate = index;
-> 
-> -               max_gpr_group = mg->max_group_prob_rate / MCS_GROUP_RATES;
-> -               max_gpr_idx = mg->max_group_prob_rate % MCS_GROUP_RATES;
-> -               max_gpr_prob =
-> mi->groups[max_gpr_group].rates[max_gpr_idx].prob_ewma;
->                 max_gpr_tp_avg = minstrel_ht_get_tp_avg(mi, max_gpr_group,
->                                                         max_gpr_idx,
->                                                         max_gpr_prob);
-> @@ -431,7 +432,7 @@ minstrel_ht_set_best_prob_rate(struct
-> minstrel_ht_sta *mi, u16 index)
->         } else {
->                 if (mrs->prob_ewma > tmp_prob)
->                         mi->max_prob_rate = index;
-> -               if (mrs->prob_ewma >
-> mg->rates[mg->max_group_prob_rate].prob_ewma)
-> +               if (mrs->prob_ewma > max_gpr_prob)
->                         mg->max_group_prob_rate = index;
->         }
->  }
-Fix looks correct, but does not apply (line wrapped). Please resubmit
-with a proper description and your Signed-off-by.
+This makes the code easier to extend and re-use.
 
-Thanks,
+While at it fix _warn to _err. Other than that
+there are no functional changes.
 
-- Felix
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 58 ++++++++++++++++++++++----------
+ 1 file changed, 41 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index b3adadb5f824..41a9811820e8 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -97,6 +97,41 @@ void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id)
+ 	idr_remove(&htt->pending_tx, msdu_id);
+ }
+ 
++static void ath10k_htt_tx_free_cont_frag_desc(struct ath10k_htt *htt)
++{
++	size_t size;
++
++	if (!htt->frag_desc.vaddr)
++		return;
++
++	size = htt->max_num_pending_tx * sizeof(struct htt_msdu_ext_desc);
++
++	dma_free_coherent(htt->ar->dev,
++			  size,
++			  htt->frag_desc.vaddr,
++			  htt->frag_desc.paddr);
++}
++
++static int ath10k_htt_tx_alloc_cont_frag_desc(struct ath10k_htt *htt)
++{
++	struct ath10k *ar = htt->ar;
++	size_t size;
++
++	if (!ar->hw_params.continuous_frag_desc)
++		return 0;
++
++	size = htt->max_num_pending_tx * sizeof(struct htt_msdu_ext_desc);
++	htt->frag_desc.vaddr = dma_alloc_coherent(ar->dev, size,
++						  &htt->frag_desc.paddr,
++						  GFP_DMA);
++	if (!htt->frag_desc.vaddr) {
++		ath10k_err(ar, "failed to alloc fragment desc memory\n");
++		return -ENOMEM;
++	}
++
++	return 0;
++}
++
+ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
+ {
+ 	struct ath10k *ar = htt->ar;
+@@ -118,20 +153,12 @@ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
+ 		goto free_idr_pending_tx;
+ 	}
+ 
+-	if (!ar->hw_params.continuous_frag_desc)
+-		goto skip_frag_desc_alloc;
+-
+-	size = htt->max_num_pending_tx * sizeof(struct htt_msdu_ext_desc);
+-	htt->frag_desc.vaddr = dma_alloc_coherent(ar->dev, size,
+-						  &htt->frag_desc.paddr,
+-						  GFP_KERNEL);
+-	if (!htt->frag_desc.vaddr) {
+-		ath10k_warn(ar, "failed to alloc fragment desc memory\n");
+-		ret = -ENOMEM;
++	ret = ath10k_htt_tx_alloc_cont_frag_desc(htt);
++	if (ret) {
++		ath10k_err(ar, "failed to alloc cont frag desc: %d\n", ret);
+ 		goto free_txbuf;
+ 	}
+ 
+-skip_frag_desc_alloc:
+ 	return 0;
+ 
+ free_txbuf:
+@@ -139,8 +166,10 @@ free_txbuf:
+ 			  sizeof(struct ath10k_htt_txbuf);
+ 	dma_free_coherent(htt->ar->dev, size, htt->txbuf.vaddr,
+ 			  htt->txbuf.paddr);
++
+ free_idr_pending_tx:
+ 	idr_destroy(&htt->pending_tx);
++
+ 	return ret;
+ }
+ 
+@@ -174,12 +203,7 @@ void ath10k_htt_tx_free(struct ath10k_htt *htt)
+ 				  htt->txbuf.paddr);
+ 	}
+ 
+-	if (htt->frag_desc.vaddr) {
+-		size = htt->max_num_pending_tx *
+-				  sizeof(struct htt_msdu_ext_desc);
+-		dma_free_coherent(htt->ar->dev, size, htt->frag_desc.vaddr,
+-				  htt->frag_desc.paddr);
+-	}
++	ath10k_htt_tx_free_cont_frag_desc(htt);
+ }
+ 
+ void ath10k_htt_htc_tx_complete(struct ath10k *ar, struct sk_buff *skb)
+-- 
+2.1.4
+
