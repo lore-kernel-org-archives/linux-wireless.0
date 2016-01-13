@@ -1,39 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:51664 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752138AbcAEWIS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 17:08:18 -0500
-Date: Wed, 6 Jan 2016 00:08:15 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Subject: Re: [PATCH] mac80211: add use_minrate param to
- ieee80211_tx_prepare_skb()
-Message-ID: <20160105220815.GB19972@w1.fi> (sfid-20160105_230836_377293_FE697CA1)
-References: <1451984419-5727-1-git-send-email-janusz.dziedzic@tieto.com>
- <20160105094504.GA3015@w1.fi>
- <CALhHN=qfmdQuTeHEAvE0BgS2XvZJrBVUhU3BYgXMCY-pe5Ur0g@mail.gmail.com>
- <20160105100659.GA3864@w1.fi>
- <CALhHN=q1kFn7tTQNhj=WH+7RUz+KT+fn9ovBaYJ_wzE5TtXu8Q@mail.gmail.com>
+Received: from softlayer.compulab.co.il ([50.23.254.55]:32804 "EHLO
+	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751145AbcAMGDS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jan 2016 01:03:18 -0500
+Subject: Re: [PATCH v4 1/3] wlcore/wl12xx: spi: add power operation function
+To: Uri Mashiach <uri.mashiach@compulab.co.il>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Tony Lindgren <tony@atomide.com>
+References: <1451482533-8624-1-git-send-email-uri.mashiach@compulab.co.il>
+ <1451482533-8624-2-git-send-email-uri.mashiach@compulab.co.il>
+Cc: Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
+	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: Igor Grinberg <grinberg@compulab.co.il>
+Message-ID: <5695E8A2.403@compulab.co.il> (sfid-20160113_070324_754359_00D3E937)
+Date: Wed, 13 Jan 2016 08:03:14 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CALhHN=q1kFn7tTQNhj=WH+7RUz+KT+fn9ovBaYJ_wzE5TtXu8Q@mail.gmail.com>
+In-Reply-To: <1451482533-8624-2-git-send-email-uri.mashiach@compulab.co.il>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 05, 2016 at 11:16:52AM +0100, Janusz Dziedzic wrote:
-> I did it because most of devices I saw send probe_req using lowest rates?
-> Anyway I can skip this for probe_res() frames in next patch if this is
-> better idea.
 
-Taken into account that there is strong desire to move towards the
-opposite direction, yes, it would be good not to try to force Probe
-Request frames use the minimal rate. We already force no-CCK policy for
-P2P use cases and in the not too distant future, we'll probably need to
-provide means for forcing at least 1 and 2 Mbps rates not being used for
-any Probe Request frame..
+
+On 12/30/15 15:35, Uri Mashiach wrote:
+> The power function uses a consumer regulator access to update the WiFi
+> enable GPIO value.
+> 
+> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+
+Acked-by: Igor Grinberg <grinberg@compulab.co.il>
+
 
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+Regards,
+Igor.
