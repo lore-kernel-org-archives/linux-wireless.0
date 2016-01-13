@@ -1,115 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52596 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753263AbcARBee (ORCPT
+Received: from mail-lf0-f41.google.com ([209.85.215.41]:33125 "EHLO
+	mail-lf0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759336AbcAMOAC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2016 20:34:34 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, nbd@openwrt.org,
-	Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH v3 2/5] ath9k: clean up ANI per-channel pointer checking
-Date: Mon, 18 Jan 2016 09:33:47 +0800
-Message-Id: <1453080830-7616-3-git-send-email-miaoqing@codeaurora.org> (sfid-20160118_023436_946974_EE80CC70)
-In-Reply-To: <1453080830-7616-1-git-send-email-miaoqing@codeaurora.org>
-References: <1453080830-7616-1-git-send-email-miaoqing@codeaurora.org>
+	Wed, 13 Jan 2016 09:00:02 -0500
+Received: by mail-lf0-f41.google.com with SMTP id m198so108395924lfm.0
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 06:00:01 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 3/5] ath10k: add new FW_FEATURE_PEER_FLOW_CONTROL
+Date: Wed, 13 Jan 2016 15:01:06 +0100
+Message-Id: <1452693668-30030-4-git-send-email-michal.kazior@tieto.com> (sfid-20160113_150017_335591_F55BA554)
+In-Reply-To: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
+References: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+This feature flag will be used for firmware which
+supports pull-push model where host shares it's
+software queue state with firmware and firmware
+generates fetch requests telling host which queues
+to dequeue tx from.
 
-commit c24bd3620c50 ("ath9k: Do not maintain ANI state per-channel")
-removed per-channel handling, the code to check 'curchan' also
-should be removed as never used.
+Primary function of this is improved MU-MIMO
+performance with multiple clients.
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/ani.c | 32 ++++++--------------------------
- 1 file changed, 6 insertions(+), 26 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c | 1 +
+ drivers/net/wireless/ath/ath10k/core.h | 9 +++++++++
+ 2 files changed, 10 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index aa82e13..815efe9 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -126,12 +126,8 @@ static void ath9k_hw_update_mibstats(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index b41eb3f4ee56..48a26206c5c1 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -217,6 +217,7 @@ static const char *const ath10k_core_fw_feature_str[] = {
+ 	[ATH10K_FW_FEATURE_RAW_MODE_SUPPORT] = "raw-mode",
+ 	[ATH10K_FW_FEATURE_SUPPORTS_ADAPTIVE_CCA] = "adaptive-cca",
+ 	[ATH10K_FW_FEATURE_MFP_SUPPORT] = "mfp",
++	[ATH10K_FW_FEATURE_PEER_FLOW_CONTROL] = "peer-flow-ctrl",
+ };
  
- static void ath9k_ani_restart(struct ath_hw *ah)
- {
--	struct ar5416AniState *aniState;
--
--	if (!ah->curchan)
--		return;
-+	struct ar5416AniState *aniState = &ah->ani;
+ static unsigned int ath10k_core_get_fw_feature_str(char *buf,
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 7840cf3ef7a6..822e3195533a 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -510,6 +510,15 @@ enum ath10k_fw_features {
+ 	/* Firmware supports management frame protection */
+ 	ATH10K_FW_FEATURE_MFP_SUPPORT = 12,
  
--	aniState = &ah->ani;
- 	aniState->listenTime = 0;
- 
- 	ENABLE_REGWRITE_BUFFER(ah);
-@@ -221,12 +217,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
- 
- static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
- {
--	struct ar5416AniState *aniState;
--
--	if (!ah->curchan)
--		return;
--
--	aniState = &ah->ani;
-+	struct ar5416AniState *aniState = &ah->ani;
- 
- 	if (aniState->ofdmNoiseImmunityLevel < ATH9K_ANI_OFDM_MAX_LEVEL)
- 		ath9k_hw_set_ofdm_nil(ah, aniState->ofdmNoiseImmunityLevel + 1, false);
-@@ -281,12 +272,7 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel,
- 
- static void ath9k_hw_ani_cck_err_trigger(struct ath_hw *ah)
- {
--	struct ar5416AniState *aniState;
--
--	if (!ah->curchan)
--		return;
--
--	aniState = &ah->ani;
-+	struct ar5416AniState *aniState = &ah->ani;
- 
- 	if (aniState->cckNoiseImmunityLevel < ATH9K_ANI_CCK_MAX_LEVEL)
- 		ath9k_hw_set_cck_nil(ah, aniState->cckNoiseImmunityLevel + 1,
-@@ -299,9 +285,7 @@ static void ath9k_hw_ani_cck_err_trigger(struct ath_hw *ah)
-  */
- static void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
- {
--	struct ar5416AniState *aniState;
--
--	aniState = &ah->ani;
-+	struct ar5416AniState *aniState = &ah->ani;
- 
- 	/* lower OFDM noise immunity */
- 	if (aniState->ofdmNoiseImmunityLevel > 0 &&
-@@ -329,7 +313,7 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int ofdm_nil, cck_nil;
- 
--	if (!ah->curchan)
-+	if (!chan)
- 		return;
- 
- 	BUG_ON(aniState == NULL);
-@@ -416,14 +400,10 @@ static bool ath9k_hw_ani_read_counters(struct ath_hw *ah)
- 
- void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
- {
--	struct ar5416AniState *aniState;
-+	struct ar5416AniState *aniState = &ah->ani;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	u32 ofdmPhyErrRate, cckPhyErrRate;
- 
--	if (!ah->curchan)
--		return;
--
--	aniState = &ah->ani;
- 	if (!ath9k_hw_ani_read_counters(ah))
- 		return;
- 
++	/* Firmware supports pull-push model where host shares it's software
++	 * queue state with firmware and firmware generates fetch requests
++	 * telling host which queues to dequeue tx from.
++	 *
++	 * Primary function of this is improved MU-MIMO performance with
++	 * multiple clients.
++	 */
++	ATH10K_FW_FEATURE_PEER_FLOW_CONTROL = 13,
++
+ 	/* keep last */
+ 	ATH10K_FW_FEATURE_COUNT,
+ };
 -- 
-1.9.1
+2.1.4
 
