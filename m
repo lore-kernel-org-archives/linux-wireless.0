@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36542 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933042AbcAST1w (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:65167 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751929AbcAMPrV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 14:27:52 -0500
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 13 Jan 2016 10:47:21 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Subject: [PATCH 2/7] ath10k: Fix naming Peer stats rssi_changed field in 10.2.4
+Date: Wed, 13 Jan 2016 21:16:29 +0530
+Message-ID: <1452699994-5078-3-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160113_164725_999218_A00290AD)
+In-Reply-To: <1452699994-5078-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1452699994-5078-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Subject: Re: brcmfmac: fix sdio sg table alloc crash
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1453203564-15974-1-git-send-email-arend@broadcom.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Message-Id: <20160119192751.CFFBB60266@smtp.codeaurora.org> (sfid-20160119_202756_024598_E4DEEA07)
-Date: Tue, 19 Jan 2016 19:27:51 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-> From: Hante Meuleman <meuleman@broadcom.com>
-> 
-> With commit 7d34b0560567 ("brcmfmac: Move all module parameters to
-> one place") a bug was introduced causing a null pointer exception.
-> This patch fixes the bug by initializing the sg table till after
-> the settings have been initialized.
-> 
-> Fixes: 7d34b0560567 ("brcmfmac: Move all module parameters to one place")
-> Reported-by: Marc Zyngier <marc.zyngier@arm.com>
-> Tested-by: Marc Zyngier <marc.zyngier@arm.com>
-> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Fix naming of peer stats rssi_changed field in 10.2.4 to make it
+more readable. As of now this field is not used, but necessary to
+pull in fw_stats with appropriate length.
 
-Thanks, applied to wireless-drivers.git.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Kalle Valo
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index e1bb02b..187f495 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4233,7 +4233,7 @@ struct wmi_10_2_peer_stats {
+ 
+ struct wmi_10_2_4_peer_stats {
+ 	struct wmi_10_2_peer_stats common;
+-	__le32 unknown_value; /* FIXME: what is this word? */
++	__le32 peer_rssi_changed;
+ } __packed;
+ 
+ struct wmi_10_2_4_ext_peer_stats {
+-- 
+1.7.9.5
+
