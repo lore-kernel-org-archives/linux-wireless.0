@@ -1,29 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46773 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966450AbcA1JVf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 04:21:35 -0500
-Received: from potku.adurom.net (a88-115-185-251.elisa-laajakaista.fi [88.115.185.251])
-	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	(Authenticated sender: kvalo@smtp.codeaurora.org)
-	by smtp.codeaurora.org (Postfix) with ESMTPSA id 51B1660445
-	for <linux-wireless@vger.kernel.org>; Thu, 28 Jan 2016 09:21:34 +0000 (UTC)
-From: Kalle Valo <kvalo@codeaurora.org>
+Received: from mout.gmx.net ([212.227.17.21]:58801 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755183AbcAMOpb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jan 2016 09:45:31 -0500
+Received: from dc7700.localdomain ([168.235.78.26]) by mail.gmx.com (mrgmx102)
+ with ESMTPA (Nemesis) id 0MdXSC-1aXcqC0jZk-00PNca for
+ <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 15:45:29 +0100
+From: Eli Cooper <eli.cooper@gmx.com>
 To: linux-wireless@vger.kernel.org
-Subject: wireless-drivers-next is now open
-Date: Thu, 28 Jan 2016 11:21:30 +0200
-Message-ID: <87io2ekqjp.fsf@kamboji.qca.qualcomm.com> (sfid-20160128_102253_242293_00A895E2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH 0/1] rt2x00: fix monitor mode regression
+Date: Wed, 13 Jan 2016 22:45:11 +0800
+Message-Id: <1452696312-10394-1-git-send-email-eli.cooper@gmx.com> (sfid-20160113_154546_359291_EA701164)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Since commit df1404650ccbfeb76a84f301f22316be0d00a864 monitor mode for rt2x00
+has been made effectively useless because the hardware filter is configured to
+drop packets whose intended recipient is not the device, regardless of the
+presence of monitor mode interfaces.
 
-I'll now start applying new features and lower priority bugfixes to
-wireless-drivers-next. These will go to 4.6.
+This patch fixes this regression by adding explicit monitor mode support, and
+configuring the hardware filter accordingly.
+
+Eli Cooper (1):
+  rt2x00: fix monitor mode regression
+
+ drivers/net/wireless/ralink/rt2x00/rt2400pci.c    |  4 +++-
+ drivers/net/wireless/ralink/rt2x00/rt2500pci.c    |  4 +++-
+ drivers/net/wireless/ralink/rt2x00/rt2500usb.c    |  4 +++-
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c    |  3 ++-
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h       |  2 ++
+ drivers/net/wireless/ralink/rt2x00/rt2x00config.c | 10 ++++++++++
+ drivers/net/wireless/ralink/rt2x00/rt2x00dev.c    |  1 +
+ drivers/net/wireless/ralink/rt2x00/rt2x00mac.c    |  5 -----
+ drivers/net/wireless/ralink/rt2x00/rt61pci.c      |  4 +++-
+ drivers/net/wireless/ralink/rt2x00/rt73usb.c      |  4 +++-
+ 10 files changed, 30 insertions(+), 11 deletions(-)
 
 -- 
-Kalle Valo
+2.7.0
+
