@@ -1,74 +1,338 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.3]:63022 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753318AbcADMd3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2016 07:33:29 -0500
-Subject: Re: rsi: Delete unnecessary variable initialisations in
- rsi_send_mgmt_pkt()
-To: Dan Carpenter <dan.carpenter@oracle.com>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <5687E169.4070704@users.sourceforge.net>
- <5687E203.1070404@users.sourceforge.net> <20160104092857.GD5284@mwanda>
- <568A4CFF.8060600@users.sourceforge.net> <20160104114849.GH5284@mwanda>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Kalle Valo <kvalo@codeaurora.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Message-ID: <568A668D.8090007@users.sourceforge.net> (sfid-20160104_133356_455988_9621B6E4)
-Date: Mon, 4 Jan 2016 13:33:17 +0100
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:15016 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751314AbcAMWcv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jan 2016 17:32:51 -0500
+Message-ID: <5696D08F.9030906@broadcom.com> (sfid-20160113_233334_107913_8BA6785D)
+Date: Wed, 13 Jan 2016 23:32:47 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20160104114849.GH5284@mwanda>
-Content-Type: text/plain; charset=windows-1252
+To: =?UTF-8?B?UGFsaSBSb2jDoXI=?= <pali.rohar@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>, Pavel Machek <pavel@ucw.cz>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>
+CC: <linux-wireless@vger.kernel.org>, <netdev@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>,
+	David Gnedt <david.gnedt@davizone.at>
+Subject: Re: [PATCH v2] wl1251: add sysfs interface for bluetooth coexistence
+ mode configuration
+References: <1451130310-16666-1-git-send-email-pali.rohar@gmail.com>
+In-Reply-To: <1451130310-16666-1-git-send-email-pali.rohar@gmail.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> May I resend a consistent patch series for the source file
->> "drivers/net/wireless/rsi/rsi_91x_pkt.c" in the near future?
-> 
-> If you were sending checkpatch.pl fixes that would be easier to deal with
+On 12/26/2015 12:45 PM, Pali Rohár wrote:
+> Port the bt_coex_mode sysfs interface from wl1251 driver version included
+> in the Maemo Fremantle kernel to allow bt-coexistence mode configuration.
+> This enables userspace applications to set one of the modes
+> WL1251_BT_COEX_OFF, WL1251_BT_COEX_ENABLE and WL1251_BT_COEX_MONOAUDIO.
+> The default mode is WL1251_BT_COEX_OFF.
+> It should be noted that this driver always enabled bt-coexistence before
+> and enabled bt-coexistence directly affects the receiving performance,
+> rendering it unusable in some low-signal situations. Especially monitor
+> mode is affected very badly with bt-coexistence enabled.
 
-Does this feedback mean that you would accept any more suggestions around
-source code updates which are derived from recommendations of this script?
-
-
-> but you are sending hundreds of "controversial" cleanups.
-
-It depends on the time range you look at for my proposals.
-
-
-> They are controversial in the sense that they don't fix anything
-> against official kernel style
-
-I find that I suggested also few changes that fit to this aspect.
-
-
-> and they go against the author's original intention.
-
-Can it occasionally help to reconsider the "first approach"?
-
-
-> I tend to agree that useless initializers are bad
-
-Would any more software developers like to share their opinions on this detail?
-
-
-> and disable GCCs uninitialized variable warnings
-
-I hope that this software area can be also improved.
-
-
-> but just because I agree with you doesn't make it official kernel style.
-
-That is fine. - Will it become useful to clarify any extensions
-to a document like "CodingStyle"?
-
-
-> It's slightly rude to go against the author's intention.
-
-I just dare to propose further special changes.
+So what user-space process will be using this interface. Did you 
+consider adding debugfs interface? In case of monitor mode you could 
+consider disabling bt-coex from within the driver itself.
 
 Regards,
-Markus
+Arend
+
+> Signed-off-by: David Gnedt <david.gnedt@davizone.at>
+> Signed-off-by: Pali Rohár <pali.rohar@gmail.com>
+> ---
+> I'm resending this patch for review again as after two years there is no
+> nl80211 interface for bt coex and wl1251 on Nokia N900 needs it. Once
+> there will be common interface for bt coex I can rewrite my patches, but
+> I do not want to wait another 2 years...
+>
+> Changes:
+> In v2 is sysfs node attached directly to wl1251 device instead of creating
+> new platform device for sysfs node. So sysfs node is now available at:
+> /sys/class/net/wlan0/device/bt_coex_mode
+> ---
+>   drivers/net/wireless/ti/wl1251/acx.c    |   43 ++++++++++++++--
+>   drivers/net/wireless/ti/wl1251/acx.h    |    8 +--
+>   drivers/net/wireless/ti/wl1251/init.c   |    6 +--
+>   drivers/net/wireless/ti/wl1251/main.c   |   84 +++++++++++++++++++++++++++++++
+>   drivers/net/wireless/ti/wl1251/wl1251.h |    8 +++
+>   5 files changed, 137 insertions(+), 12 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ti/wl1251/acx.c b/drivers/net/wireless/ti/wl1251/acx.c
+> index d6fbdda..a119d77 100644
+> --- a/drivers/net/wireless/ti/wl1251/acx.c
+> +++ b/drivers/net/wireless/ti/wl1251/acx.c
+> @@ -539,7 +539,7 @@ out:
+>   	return ret;
+>   }
+>
+> -int wl1251_acx_sg_enable(struct wl1251 *wl)
+> +int wl1251_acx_sg_enable(struct wl1251 *wl, u8 mode)
+>   {
+>   	struct acx_bt_wlan_coex *pta;
+>   	int ret;
+> @@ -550,7 +550,7 @@ int wl1251_acx_sg_enable(struct wl1251 *wl)
+>   	if (!pta)
+>   		return -ENOMEM;
+>
+> -	pta->enable = SG_ENABLE;
+> +	pta->enable = mode;
+>
+>   	ret = wl1251_cmd_configure(wl, ACX_SG_ENABLE, pta, sizeof(*pta));
+>   	if (ret < 0) {
+> @@ -563,7 +563,7 @@ out:
+>   	return ret;
+>   }
+>
+> -int wl1251_acx_sg_cfg(struct wl1251 *wl)
+> +int wl1251_acx_sg_cfg(struct wl1251 *wl, u16 wake_up_beacon)
+>   {
+>   	struct acx_bt_wlan_coex_param *param;
+>   	int ret;
+> @@ -586,7 +586,7 @@ int wl1251_acx_sg_cfg(struct wl1251 *wl)
+>   	param->wlan_cycle_fast = PTA_CYCLE_TIME_FAST_DEF;
+>   	param->bt_anti_starvation_period = PTA_ANTI_STARVE_PERIOD_DEF;
+>   	param->next_bt_lp_packet = PTA_TIMEOUT_NEXT_BT_LP_PACKET_DEF;
+> -	param->wake_up_beacon = PTA_TIME_BEFORE_BEACON_DEF;
+> +	param->wake_up_beacon = wake_up_beacon;
+>   	param->hp_dm_max_guard_time = PTA_HPDM_MAX_TIME_DEF;
+>   	param->next_wlan_packet = PTA_TIME_OUT_NEXT_WLAN_DEF;
+>   	param->antenna_type = PTA_ANTENNA_TYPE_DEF;
+> @@ -615,6 +615,41 @@ out:
+>   	return ret;
+>   }
+>
+> +int wl1251_acx_sg_configure(struct wl1251 *wl, bool force)
+> +{
+> +	int ret;
+> +
+> +	if (wl->state == WL1251_STATE_OFF && !force)
+> +		return 0;
+> +
+> +	switch (wl->bt_coex_mode) {
+> +	case WL1251_BT_COEX_OFF:
+> +		ret = wl1251_acx_sg_enable(wl, SG_DISABLE);
+> +		if (ret)
+> +			break;
+> +		ret = wl1251_acx_sg_cfg(wl, 0);
+> +		break;
+> +	case WL1251_BT_COEX_ENABLE:
+> +		ret = wl1251_acx_sg_enable(wl, SG_ENABLE);
+> +		if (ret)
+> +			break;
+> +		ret = wl1251_acx_sg_cfg(wl, PTA_TIME_BEFORE_BEACON_DEF);
+> +		break;
+> +	case WL1251_BT_COEX_MONOAUDIO:
+> +		ret = wl1251_acx_sg_enable(wl, SG_ENABLE);
+> +		if (ret)
+> +			break;
+> +		ret = wl1251_acx_sg_cfg(wl, PTA_TIME_BEFORE_BEACON_MONO_AUDIO);
+> +		break;
+> +	default:
+> +		wl1251_error("Invalid BT co-ex mode!");
+> +		ret = -EOPNOTSUPP;
+> +		break;
+> +	}
+> +
+> +	return ret;
+> +}
+> +
+>   int wl1251_acx_cca_threshold(struct wl1251 *wl)
+>   {
+>   	struct acx_energy_detection *detection;
+> diff --git a/drivers/net/wireless/ti/wl1251/acx.h b/drivers/net/wireless/ti/wl1251/acx.h
+> index 2bdec38..820573c 100644
+> --- a/drivers/net/wireless/ti/wl1251/acx.h
+> +++ b/drivers/net/wireless/ti/wl1251/acx.h
+> @@ -558,7 +558,8 @@ struct acx_bt_wlan_coex {
+>   #define PTA_ANTI_STARVE_PERIOD_DEF	  (500)
+>   #define PTA_ANTI_STARVE_NUM_CYCLE_DEF	  (4)
+>   #define PTA_ALLOW_PA_SD_DEF		  (1)
+> -#define PTA_TIME_BEFORE_BEACON_DEF	  (6300)
+> +#define PTA_TIME_BEFORE_BEACON_DEF	  (500)
+> +#define PTA_TIME_BEFORE_BEACON_MONO_AUDIO (6300)
+>   #define PTA_HPDM_MAX_TIME_DEF		  (1600)
+>   #define PTA_TIME_OUT_NEXT_WLAN_DEF	  (2550)
+>   #define PTA_AUTO_MODE_NO_CTS_DEF	  (0)
+> @@ -1470,8 +1471,9 @@ int wl1251_acx_rts_threshold(struct wl1251 *wl, u16 rts_threshold);
+>   int wl1251_acx_beacon_filter_opt(struct wl1251 *wl, bool enable_filter);
+>   int wl1251_acx_beacon_filter_table(struct wl1251 *wl);
+>   int wl1251_acx_conn_monit_params(struct wl1251 *wl);
+> -int wl1251_acx_sg_enable(struct wl1251 *wl);
+> -int wl1251_acx_sg_cfg(struct wl1251 *wl);
+> +int wl1251_acx_sg_enable(struct wl1251 *wl, u8 mode);
+> +int wl1251_acx_sg_cfg(struct wl1251 *wl, u16 wake_up_beacon);
+> +int wl1251_acx_sg_configure(struct wl1251 *wl, bool force);
+>   int wl1251_acx_cca_threshold(struct wl1251 *wl);
+>   int wl1251_acx_bcn_dtim_options(struct wl1251 *wl);
+>   int wl1251_acx_aid(struct wl1251 *wl, u16 aid);
+> diff --git a/drivers/net/wireless/ti/wl1251/init.c b/drivers/net/wireless/ti/wl1251/init.c
+> index 1d799bf..f8a2ea9 100644
+> --- a/drivers/net/wireless/ti/wl1251/init.c
+> +++ b/drivers/net/wireless/ti/wl1251/init.c
+> @@ -162,11 +162,7 @@ int wl1251_hw_init_pta(struct wl1251 *wl)
+>   {
+>   	int ret;
+>
+> -	ret = wl1251_acx_sg_enable(wl);
+> -	if (ret < 0)
+> -		return ret;
+> -
+> -	ret = wl1251_acx_sg_cfg(wl);
+> +	ret = wl1251_acx_sg_configure(wl, true);
+>   	if (ret < 0)
+>   		return ret;
+>
+> diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+> index cd47779..8f53e43 100644
+> --- a/drivers/net/wireless/ti/wl1251/main.c
+> +++ b/drivers/net/wireless/ti/wl1251/main.c
+> @@ -1383,6 +1383,77 @@ static const struct ieee80211_ops wl1251_ops = {
+>   	.get_survey = wl1251_op_get_survey,
+>   };
+>
+> +static ssize_t wl1251_sysfs_show_bt_coex_mode(struct device *dev,
+> +					      struct device_attribute *attr,
+> +					      char *buf)
+> +{
+> +	struct wl1251 *wl = dev_get_drvdata(dev);
+> +	ssize_t len;
+> +
+> +	/* FIXME: what's the maximum length of buf? page size?*/
+> +	len = 500;
+> +
+> +	mutex_lock(&wl->mutex);
+> +	len = snprintf(buf, len, "%d\n\n%d - off\n%d - on\n%d - monoaudio\n",
+> +		       wl->bt_coex_mode,
+> +		       WL1251_BT_COEX_OFF,
+> +		       WL1251_BT_COEX_ENABLE,
+> +		       WL1251_BT_COEX_MONOAUDIO);
+> +	mutex_unlock(&wl->mutex);
+> +
+> +	return len;
+> +}
+> +
+> +static ssize_t wl1251_sysfs_store_bt_coex_mode(struct device *dev,
+> +					       struct device_attribute *attr,
+> +					       const char *buf, size_t count)
+> +{
+> +	struct wl1251 *wl = dev_get_drvdata(dev);
+> +	unsigned long res;
+> +	int ret;
+> +
+> +	ret = kstrtoul(buf, 10, &res);
+> +
+> +	if (ret < 0) {
+> +		wl1251_warning("incorrect value written to bt_coex_mode");
+> +		return count;
+> +	}
+> +
+> +	mutex_lock(&wl->mutex);
+> +
+> +	if (res == wl->bt_coex_mode)
+> +		goto out;
+> +
+> +	switch (res) {
+> +	case WL1251_BT_COEX_OFF:
+> +	case WL1251_BT_COEX_ENABLE:
+> +	case WL1251_BT_COEX_MONOAUDIO:
+> +		wl->bt_coex_mode = res;
+> +		break;
+> +	default:
+> +		wl1251_warning("incorrect value written to bt_coex_mode");
+> +		goto out;
+> +	}
+> +
+> +	if (wl->state == WL1251_STATE_OFF)
+> +		goto out;
+> +
+> +	ret = wl1251_ps_elp_wakeup(wl);
+> +	if (ret < 0)
+> +		goto out;
+> +
+> +	wl1251_acx_sg_configure(wl, false);
+> +	wl1251_ps_elp_sleep(wl);
+> +
+> +out:
+> +	mutex_unlock(&wl->mutex);
+> +	return count;
+> +}
+> +
+> +static DEVICE_ATTR(bt_coex_mode, S_IRUGO | S_IWUSR,
+> +		   wl1251_sysfs_show_bt_coex_mode,
+> +		   wl1251_sysfs_store_bt_coex_mode);
+> +
+>   static int wl1251_read_eeprom_byte(struct wl1251 *wl, off_t offset, u8 *data)
+>   {
+>   	unsigned long timeout;
+> @@ -1467,6 +1538,7 @@ static int wl1251_register_hw(struct wl1251 *wl)
+>
+>   int wl1251_init_ieee80211(struct wl1251 *wl)
+>   {
+> +	struct device *dev = wiphy_dev(wl->hw->wiphy);
+>   	int ret;
+>
+>   	/* The tx descriptor buffer and the TKIP space */
+> @@ -1493,6 +1565,13 @@ int wl1251_init_ieee80211(struct wl1251 *wl)
+>   	if (ret)
+>   		goto out;
+>
+> +	/* Create sysfs file to control bt coex state */
+> +	ret = device_create_file(dev, &dev_attr_bt_coex_mode);
+> +	if (ret < 0) {
+> +		wl1251_error("failed to create sysfs file bt_coex_mode");
+> +		goto out;
+> +	}
+> +
+>   	wl1251_debugfs_init(wl);
+>   	wl1251_notice("initialized");
+>
+> @@ -1549,6 +1628,7 @@ struct ieee80211_hw *wl1251_alloc_hw(void)
+>   	wl->beacon_int = WL1251_DEFAULT_BEACON_INT;
+>   	wl->dtim_period = WL1251_DEFAULT_DTIM_PERIOD;
+>   	wl->vif = NULL;
+> +	wl->bt_coex_mode = WL1251_BT_COEX_OFF;
+>
+>   	for (i = 0; i < FW_TX_CMPLT_BLOCK_SIZE; i++)
+>   		wl->tx_frames[i] = NULL;
+> @@ -1584,6 +1664,10 @@ EXPORT_SYMBOL_GPL(wl1251_alloc_hw);
+>
+>   int wl1251_free_hw(struct wl1251 *wl)
+>   {
+> +	struct device *dev = wiphy_dev(wl->hw->wiphy);
+> +
+> +	device_remove_file(dev, &dev_attr_bt_coex_mode);
+> +
+>   	ieee80211_unregister_hw(wl->hw);
+>
+>   	wl1251_debugfs_exit(wl);
+> diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
+> index 16dae52..b8b7ab7 100644
+> --- a/drivers/net/wireless/ti/wl1251/wl1251.h
+> +++ b/drivers/net/wireless/ti/wl1251/wl1251.h
+> @@ -258,6 +258,12 @@ struct wl1251_debugfs {
+>   	struct dentry *excessive_retries;
+>   };
+>
+> +enum wl1251_bt_coex_mode {
+> +	WL1251_BT_COEX_OFF,
+> +	WL1251_BT_COEX_ENABLE,
+> +	WL1251_BT_COEX_MONOAUDIO
+> +};
+> +
+>   struct wl1251_if_operations {
+>   	void (*read)(struct wl1251 *wl, int addr, void *buf, size_t len);
+>   	void (*write)(struct wl1251 *wl, int addr, void *buf, size_t len);
+> @@ -394,6 +400,8 @@ struct wl1251 {
+>
+>   	struct ieee80211_vif *vif;
+>
+> +	enum wl1251_bt_coex_mode bt_coex_mode;
+> +
+>   	u32 chip_id;
+>   	char fw_ver[21];
+>
+>
 
