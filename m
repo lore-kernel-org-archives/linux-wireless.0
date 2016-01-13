@@ -1,207 +1,217 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:33980 "EHLO foss.arm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754767AbcARLa3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jan 2016 06:30:29 -0500
-Subject: Re: [GIT] Networking
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-References: <20160112.215136.850414372508130298.davem@davemloft.net>
- <56978094.4050302@arm.com> <87k2n97n5e.fsf@kamboji.qca.qualcomm.com>
-Cc: David Miller <davem@davemloft.net>,
-	Arend van Spriel <arend@broadcom.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <569CCCD2.4040105@arm.com> (sfid-20160118_123120_119780_1008D670)
-Date: Mon, 18 Jan 2016 11:30:26 +0000
+Received: from mail-ig0-f196.google.com ([209.85.213.196]:36759 "EHLO
+	mail-ig0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752725AbcAMQc0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jan 2016 11:32:26 -0500
+Received: by mail-ig0-f196.google.com with SMTP id o2so18113032iga.3
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 08:32:26 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <87k2n97n5e.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+In-Reply-To: <1452701232-12619-1-git-send-email-elicooper@gmx.com>
+References: <1452701232-12619-1-git-send-email-elicooper@gmx.com>
+Date: Wed, 13 Jan 2016 17:32:25 +0100
+Message-ID: <CAGXE3d9fbPesSPjNx=u6qQBCf0qCYotNejwcn10L1k0grfue=w@mail.gmail.com> (sfid-20160113_173240_602246_52DDE7E0)
+Subject: Re: [PATCH v2] rt2x00: fix monitor mode regression
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Eli Cooper <elicooper@gmx.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+On Wed, Jan 13, 2016 at 5:07 PM, Eli Cooper <elicooper@gmx.com> wrote:
+> Since commit df1404650ccbfeb76a84f301f22316be0d00a864 monitor mode for rt2x00
+> has been made effectively useless because the hardware filter is configured to
+> drop packets whose intended recipient is not the device, regardless of the
+> presence of monitor mode interfaces.
+>
+> This patch fixes this regression by adding explicit monitor mode support, and
+> configuring the hardware filter accordingly.
+>
+> Signed-off-by: Eli Cooper <elicooper@gmx.com>
 
-On 16/01/16 11:57, Kalle Valo wrote:
-> Marc Zyngier <marc.zyngier@arm.com> writes:
-> 
->> David, Hante,
->>
->> On 13/01/16 02:51, David Miller wrote:
->>
->> [...]
->>
->>> Hante Meuleman (33):
->> [...]
->>>       brcmfmac: Move all module parameters to one place
-> 
-> As a reminder to myself this is the commit id:
-> 
-> 7d34b0560567 brcmfmac: Move all module parameters to one place
-> 
->> This particular patch breaks one of my boxes in a spectacular way:
->>
->> [    3.602155] Unable to handle kernel paging request at virtual address 000027e4
->> [    3.602160] pgd = c0003000
->> [    3.602169] [000027e4] *pgd=80000040004003, *pmd=00000000
->> [    3.602181] Internal error: Oops: 206 [#1] PREEMPT SMP ARM
-> 
-> [...]
-> 
->> This is caused by this hunk:
->>
->> @@ -890,7 +887,8 @@ static void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
->>  	if (!sdiodev->sg_support)
->>  		return;
->>  
->> -	nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE, brcmf_sdiod_txglomsz);
->> +	nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE,
->> +		      sdiodev->bus_if->drvr->settings->sdiod_txglomsz);
->>  	nents += (nents >> 4) + 1;
->>  
->>  	WARN_ON(nents > sdiodev->max_segment_count);
->>
->> were drvr->settings is NULL (as the settings allocation seems to be done
->> much later). The fix is not completely obvious to me (probably requires
->> pushing the call to brcmf_mp_device_attach() down into the various bus
->> specific functions). An alternative would be to restore the txglomsz
->> parameter as it was before and not rely on settings being allocated.
-> 
-> Should we revert the patch or can you Hante fix this? The revert doesn't
-> seem to be trivial so I would appreciate if someone could send a patch.
+Looks good to me, thanks!
 
-I've worked out a partial revert (see below) that allows my system to
-boot, but I'd rather see a proper fix from the maintainer of this code.
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
-Thanks,
-
-	M.
-
->From 4dcd43e859ebf4453da90de2034c37174bb88d13 Mon Sep 17 00:00:00 2001
-From: Marc Zyngier <marc.zyngier@arm.com>
-Date: Mon, 18 Jan 2016 11:16:36 +0000
-Subject: [PATCH] brcmfmac: Partial revert of module parameter rework
-
-Commit 7d34b0560567 ("brcmfmac: Move all module parameters to one
-place") reworked the brcmfmac driver parameters and moved them to
-a dynamically allocated structure.
-
-It turns out that at least one parameter (sdiod_txglomsz) is required
-before this structure is allocated, leading to a crash.
-
-This patch reverts the handling of that parameter until the maintainer
-of this driver can sort it out for good.
-
-Cc: Arend Van Spriel <arend@broadcom.com>
-Cc: Hante Meuleman <meuleman@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>
-Signed-off-by: Marc Zyngier <marc.zyngier@arm.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c | 12 +++++++-----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c |  7 -------
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h |  2 --
- 3 files changed, 7 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 5363739..410a664 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -47,8 +47,6 @@
- #include "debug.h"
- #include "sdio.h"
- #include "of.h"
--#include "core.h"
--#include "common.h"
- 
- #define SDIOH_API_ACCESS_RETRY_LIMIT	2
- 
-@@ -59,6 +57,7 @@
- /* Maximum milliseconds to wait for F2 to come up */
- #define SDIO_WAIT_F2RDY	3000
- 
-+#define BRCMF_DEFAULT_TXGLOM_SIZE	32  /* max tx frames in glom chain */
- #define BRCMF_DEFAULT_RXGLOM_SIZE	32  /* max rx frames in glom chain */
- 
- struct brcmf_sdiod_freezer {
-@@ -69,6 +68,10 @@ struct brcmf_sdiod_freezer {
- 	struct completion resumed;
- };
- 
-+static int brcmf_sdiod_txglomsz = BRCMF_DEFAULT_TXGLOM_SIZE;
-+module_param_named(txglomsz, brcmf_sdiod_txglomsz, int, 0);
-+MODULE_PARM_DESC(txglomsz, "maximum tx packet chain size [SDIO]");
-+
- static irqreturn_t brcmf_sdiod_oob_irqhandler(int irq, void *dev_id)
- {
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev_id);
-@@ -887,8 +890,7 @@ static void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
- 	if (!sdiodev->sg_support)
- 		return;
- 
--	nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE,
--		      sdiodev->bus_if->drvr->settings->sdiod_txglomsz);
-+	nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE, brcmf_sdiod_txglomsz);
- 	nents += (nents >> 4) + 1;
- 
- 	WARN_ON(nents > sdiodev->max_segment_count);
-@@ -900,7 +902,7 @@ static void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
- 		sdiodev->sg_support = false;
- 	}
- 
--	sdiodev->txglomsz = sdiodev->bus_if->drvr->settings->sdiod_txglomsz;
-+	sdiodev->txglomsz = brcmf_sdiod_txglomsz;
- }
- 
- #ifdef CONFIG_PM_SLEEP
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 4265b50..1f57c42 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -35,12 +35,6 @@ const u8 ALLFFMAC[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
- /* boost value for RSSI_DELTA in preferred join selection */
- #define BRCMF_JOIN_PREF_RSSI_BOOST	8
- 
--#define BRCMF_DEFAULT_TXGLOM_SIZE	32  /* max tx frames in glom chain */
--
--static int brcmf_sdiod_txglomsz = BRCMF_DEFAULT_TXGLOM_SIZE;
--module_param_named(txglomsz, brcmf_sdiod_txglomsz, int, 0);
--MODULE_PARM_DESC(txglomsz, "Maximum tx packet chain size [SDIO]");
--
- /* Debug level configuration. See debug.h for bits, sysfs modifiable */
- int brcmf_msg_level;
- module_param_named(debug, brcmf_msg_level, int, S_IRUSR | S_IWUSR);
-@@ -234,7 +228,6 @@ int brcmf_mp_device_attach(struct brcmf_pub *drvr)
- 		return -ENOMEM;
- 	}
- 
--	drvr->settings->sdiod_txglomsz = brcmf_sdiod_txglomsz;
- 	drvr->settings->p2p_enable = !!brcmf_p2p_enable;
- 	drvr->settings->feature_disable = brcmf_feature_disable;
- 	drvr->settings->fcmode = brcmf_fcmode;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-index 3b0a63b..05ad4b8 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-@@ -41,7 +41,6 @@ extern struct brcmf_mp_global_t brcmf_mp_global;
- /**
-  * struct brcmf_mp_device - Device module paramaters.
-  *
-- * @sdiod_txglomsz: SDIO txglom size.
-  * @joinboost_5g_rssi: 5g rssi booost for preferred join selection.
-  * @p2p_enable: Legacy P2P0 enable (old wpa_supplicant).
-  * @feature_disable: Feature_disable bitmask.
-@@ -49,7 +48,6 @@ extern struct brcmf_mp_global_t brcmf_mp_global;
-  * @roamoff: Firmware roaming off?
-  */
- struct brcmf_mp_device {
--	int	sdiod_txglomsz;
- 	int	joinboost_5g_rssi;
- 	bool	p2p_enable;
- 	int	feature_disable;
--- 
-2.1.4
-
-
--- 
-Jazz is not dead. It just smells funny...
+> ---
+>  drivers/net/wireless/ralink/rt2x00/rt2400pci.c    |  4 +++-
+>  drivers/net/wireless/ralink/rt2x00/rt2500pci.c    |  4 +++-
+>  drivers/net/wireless/ralink/rt2x00/rt2500usb.c    |  4 +++-
+>  drivers/net/wireless/ralink/rt2x00/rt2800lib.c    |  3 ++-
+>  drivers/net/wireless/ralink/rt2x00/rt2x00.h       |  2 ++
+>  drivers/net/wireless/ralink/rt2x00/rt2x00config.c | 10 ++++++++++
+>  drivers/net/wireless/ralink/rt2x00/rt2x00dev.c    |  1 +
+>  drivers/net/wireless/ralink/rt2x00/rt2x00mac.c    |  5 -----
+>  drivers/net/wireless/ralink/rt2x00/rt61pci.c      |  4 +++-
+>  drivers/net/wireless/ralink/rt2x00/rt73usb.c      |  4 +++-
+>  10 files changed, 30 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
+> index 9a3966c..578b8a4 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
+> @@ -273,8 +273,10 @@ static void rt2400pci_config_filter(struct rt2x00_dev *rt2x00dev,
+>                            !(filter_flags & FIF_PLCPFAIL));
+>         rt2x00_set_field32(&reg, RXCSR0_DROP_CONTROL,
+>                            !(filter_flags & FIF_CONTROL));
+> -       rt2x00_set_field32(&reg, RXCSR0_DROP_NOT_TO_ME, 1);
+> +       rt2x00_set_field32(&reg, RXCSR0_DROP_NOT_TO_ME,
+> +                          !rt2x00dev->is_monitoring);
+>         rt2x00_set_field32(&reg, RXCSR0_DROP_TODS,
+> +                          !rt2x00dev->is_monitoring &&
+>                            !rt2x00dev->intf_ap_count);
+>         rt2x00_set_field32(&reg, RXCSR0_DROP_VERSION_ERROR, 1);
+>         rt2x00mmio_register_write(rt2x00dev, RXCSR0, reg);
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
+> index 1a6740b..9aec12e 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
+> @@ -274,8 +274,10 @@ static void rt2500pci_config_filter(struct rt2x00_dev *rt2x00dev,
+>                            !(filter_flags & FIF_PLCPFAIL));
+>         rt2x00_set_field32(&reg, RXCSR0_DROP_CONTROL,
+>                            !(filter_flags & FIF_CONTROL));
+> -       rt2x00_set_field32(&reg, RXCSR0_DROP_NOT_TO_ME, 1);
+> +       rt2x00_set_field32(&reg, RXCSR0_DROP_NOT_TO_ME,
+> +                          !rt2x00dev->is_monitoring);
+>         rt2x00_set_field32(&reg, RXCSR0_DROP_TODS,
+> +                          !rt2x00dev->is_monitoring &&
+>                            !rt2x00dev->intf_ap_count);
+>         rt2x00_set_field32(&reg, RXCSR0_DROP_VERSION_ERROR, 1);
+>         rt2x00_set_field32(&reg, RXCSR0_DROP_MCAST,
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
+> index d26018f..d66364e 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
+> @@ -437,8 +437,10 @@ static void rt2500usb_config_filter(struct rt2x00_dev *rt2x00dev,
+>                            !(filter_flags & FIF_PLCPFAIL));
+>         rt2x00_set_field16(&reg, TXRX_CSR2_DROP_CONTROL,
+>                            !(filter_flags & FIF_CONTROL));
+> -       rt2x00_set_field16(&reg, TXRX_CSR2_DROP_NOT_TO_ME, 1);
+> +       rt2x00_set_field16(&reg, TXRX_CSR2_DROP_NOT_TO_ME,
+> +                          !rt2x00dev->is_monitoring);
+>         rt2x00_set_field16(&reg, TXRX_CSR2_DROP_TODS,
+> +                          !rt2x00dev->is_monitoring &&
+>                            !rt2x00dev->intf_ap_count);
+>         rt2x00_set_field16(&reg, TXRX_CSR2_DROP_VERSION_ERROR, 1);
+>         rt2x00_set_field16(&reg, TXRX_CSR2_DROP_MULTICAST,
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> index 9733b31..ee8215a 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+> @@ -1490,7 +1490,8 @@ void rt2800_config_filter(struct rt2x00_dev *rt2x00dev,
+>                            !(filter_flags & FIF_FCSFAIL));
+>         rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_PHY_ERROR,
+>                            !(filter_flags & FIF_PLCPFAIL));
+> -       rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_NOT_TO_ME, 1);
+> +       rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_NOT_TO_ME,
+> +                          !rt2x00dev->is_monitoring);
+>         rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_NOT_MY_BSSD, 0);
+>         rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_VER_ERROR, 1);
+>         rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_MULTICAST,
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+> index 3282ddb..a2e70ec 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+> @@ -844,11 +844,13 @@ struct rt2x00_dev {
+>          *  - Open sta interface count.
+>          *  - Association count.
+>          *  - Beaconing enabled count.
+> +        *  - Whether the device is monitoring.
+>          */
+>         unsigned int intf_ap_count;
+>         unsigned int intf_sta_count;
+>         unsigned int intf_associated;
+>         unsigned int intf_beaconing;
+> +       bool is_monitoring;
+>
+>         /*
+>          * Interface combinations
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00config.c b/drivers/net/wireless/ralink/rt2x00/rt2x00config.c
+> index 7e8bb11..3b531f0 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00config.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00config.c
+> @@ -244,6 +244,16 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
+>             (ieee80211_flags & IEEE80211_CONF_CHANGE_PS))
+>                 cancel_delayed_work_sync(&rt2x00dev->autowakeup_work);
+>
+> +       if (ieee80211_flags & IEEE80211_CONF_CHANGE_MONITOR) {
+> +               if (conf->flags & IEEE80211_CONF_MONITOR) {
+> +                       rt2x00_dbg(rt2x00dev, "Monitor mode is enabled\n");
+> +                       rt2x00dev->is_monitoring = true;
+> +               } else {
+> +                       rt2x00_dbg(rt2x00dev, "Monitor mode is disabled\n");
+> +                       rt2x00dev->is_monitoring = false;
+> +               }
+> +       }
+> +
+>         /*
+>          * Start configuration.
+>          */
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+> index 5639ed8..e979dca 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
+> @@ -1204,6 +1204,7 @@ int rt2x00lib_start(struct rt2x00_dev *rt2x00dev)
+>         rt2x00dev->intf_ap_count = 0;
+>         rt2x00dev->intf_sta_count = 0;
+>         rt2x00dev->intf_associated = 0;
+> +       rt2x00dev->is_monitoring = false;
+>
+>         /* Enable the radio */
+>         retval = rt2x00lib_enable_radio(rt2x00dev);
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+> index 3c26ee6..13da95a 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+> @@ -385,11 +385,6 @@ void rt2x00mac_configure_filter(struct ieee80211_hw *hw,
+>                         *total_flags |= FIF_PSPOLL;
+>         }
+>
+> -       /*
+> -        * Check if there is any work left for us.
+> -        */
+> -       if (rt2x00dev->packet_filter == *total_flags)
+> -               return;
+>         rt2x00dev->packet_filter = *total_flags;
+>
+>         rt2x00dev->ops->lib->config_filter(rt2x00dev, *total_flags);
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt61pci.c b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
+> index c0e730e..b875a0f 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt61pci.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
+> @@ -530,8 +530,10 @@ static void rt61pci_config_filter(struct rt2x00_dev *rt2x00dev,
+>                            !(filter_flags & FIF_PLCPFAIL));
+>         rt2x00_set_field32(&reg, TXRX_CSR0_DROP_CONTROL,
+>                            !(filter_flags & (FIF_CONTROL | FIF_PSPOLL)));
+> -       rt2x00_set_field32(&reg, TXRX_CSR0_DROP_NOT_TO_ME, 1);
+> +       rt2x00_set_field32(&reg, TXRX_CSR0_DROP_NOT_TO_ME,
+> +                          !rt2x00dev->is_monitoring);
+>         rt2x00_set_field32(&reg, TXRX_CSR0_DROP_TO_DS,
+> +                          !rt2x00dev->is_monitoring &&
+>                            !rt2x00dev->intf_ap_count);
+>         rt2x00_set_field32(&reg, TXRX_CSR0_DROP_VERSION_ERROR, 1);
+>         rt2x00_set_field32(&reg, TXRX_CSR0_DROP_MULTICAST,
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt73usb.c b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+> index 7081e13..6e8e620 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+> @@ -480,8 +480,10 @@ static void rt73usb_config_filter(struct rt2x00_dev *rt2x00dev,
+>                            !(filter_flags & FIF_PLCPFAIL));
+>         rt2x00_set_field32(&reg, TXRX_CSR0_DROP_CONTROL,
+>                            !(filter_flags & (FIF_CONTROL | FIF_PSPOLL)));
+> -       rt2x00_set_field32(&reg, TXRX_CSR0_DROP_NOT_TO_ME, 1);
+> +       rt2x00_set_field32(&reg, TXRX_CSR0_DROP_NOT_TO_ME,
+> +                          !rt2x00dev->is_monitoring);
+>         rt2x00_set_field32(&reg, TXRX_CSR0_DROP_TO_DS,
+> +                          !rt2x00dev->is_monitoring &&
+>                            !rt2x00dev->intf_ap_count);
+>         rt2x00_set_field32(&reg, TXRX_CSR0_DROP_VERSION_ERROR, 1);
+>         rt2x00_set_field32(&reg, TXRX_CSR0_DROP_MULTICAST,
+> --
+> 2.7.0
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
