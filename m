@@ -1,47 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:35160 "EHLO
-	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751676AbcAEOHh (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:26900 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751799AbcAMPsb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 09:07:37 -0500
-Received: by mail-pf0-f174.google.com with SMTP id 78so223452930pfw.2
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2016 06:07:37 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 12/13] staging: wilc1000: rename phWFIDrv in wilc_init declaration
-Date: Tue,  5 Jan 2016 23:06:56 +0900
-Message-Id: <1452002817-30937-12-git-send-email-chaehyun.lim@gmail.com> (sfid-20160105_150742_152620_441355C8)
-In-Reply-To: <1452002817-30937-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1452002817-30937-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 13 Jan 2016 10:48:31 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Subject: [PATCH 6/7] ath10k: Enable periodic peer stats update
+Date: Wed, 13 Jan 2016 21:16:33 +0530
+Message-ID: <1452699994-5078-7-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160113_164835_961644_CBC0C13D)
+In-Reply-To: <1452699994-5078-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1452699994-5078-1-git-send-email-mohammed@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The second argument name is different between wilc_init declaration and
-definition. This patch renames phWFIDrv to hif_drv_handler to match
-argument name.
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Register for 500ms as periodic peer stats update period,
+and parameters like rx_duration that needs to be tracked
+in host can be achieved by this provision, also periodic
+stats update is the future of fw_stats and shall be extended
+for pdev / vdev stats irrespecitive PEER_STATS service is enabled
+or not
+
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/mac.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index b58c33a..e2d5ee2 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -341,7 +341,7 @@ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
- 	      struct hidden_network *hidden_network);
- int wilc_hif_set_cfg(struct wilc_vif *vif,
- 		     struct cfg_param_val *cfg_param);
--s32 wilc_init(struct net_device *dev, struct host_if_drv **phWFIDrv);
-+s32 wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler);
- int wilc_deinit(struct wilc_vif *vif);
- int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 dtim_period,
- 		    u32 head_len, u8 *head, u32 tail_len, u8 *tail);
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 2dba57c..fd4b4df 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4103,6 +4103,18 @@ static int ath10k_start(struct ieee80211_hw *hw)
+ 
+ 	ar->ani_enabled = true;
+ 
++	if (test_bit(WMI_SERVICE_PEER_STATS, ar->wmi.svc_map)) {
++		param = ar->wmi.pdev_param->peer_stats_update_period;
++		ret = ath10k_wmi_pdev_set_param(ar, param,
++					PEER_DEFAULT_STATS_UPDATE_PERIOD);
++		if (ret) {
++			ath10k_warn(ar,
++				    "failed to set peer stats period : %d\n",
++				    ret);
++			goto err_core_stop;
++		}
++	}
++
+ 	ar->num_started_vdevs = 0;
+ 	ath10k_regd_update(ar);
+ 
 -- 
-2.6.4
+1.7.9.5
 
