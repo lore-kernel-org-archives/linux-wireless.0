@@ -1,84 +1,254 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f175.google.com ([209.85.223.175]:33546 "EHLO
-	mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750823AbcAWFfx (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18779 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932655AbcAMJaC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jan 2016 00:35:53 -0500
-Received: by mail-io0-f175.google.com with SMTP id q21so108407445iod.0
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2016 21:35:53 -0800 (PST)
-From: Nikolay Martynov <mar.kolya@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Nikolay Martynov <mar.kolya@gmail.com>, johannes.berg@intel.com,
-	wey-yi.w.guy@intel.com, ilw@linux.intel.com
-Subject: [PATCH] iwldvm: fix chain gain calibration when firmware return zero values
-Date: Sat, 23 Jan 2016 00:35:09 -0500
-Message-Id: <1453527309-23881-1-git-send-email-mar.kolya@gmail.com> (sfid-20160123_063557_927421_F0A57B2F)
+	Wed, 13 Jan 2016 04:30:02 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u0D9U2hW017870
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 01:30:02 -0800
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+	by mx0b-0016f401.pphosted.com with ESMTP id 20dkx580ax-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 01:30:02 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	chunfan chen <jeffc@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Xinming Hu <huxm@marvell.com>
+Subject: [PATCH v2 3/6] mwifiex: add wowlan net-detect support
+Date: Wed, 13 Jan 2016 01:26:54 -0800
+Message-ID: <1452677217-21439-4-git-send-email-akarwar@marvell.com> (sfid-20160113_103011_182455_2049C832)
+In-Reply-To: <1452677217-21439-1-git-send-email-akarwar@marvell.com>
+References: <1452677217-21439-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Nikolay Martynov <(none)>
+From: chunfan chen <jeffc@marvell.com>
 
-It looks like sometimes firmware returns zero for chain noise and signal
-during calibration period. This seems to be a known problem and current
-implementation accounts for this by ignoring invalid data when all chains
-return zero signal and noise.
+This patch adds support for wakeup when configured
+network is detected.
 
-The problem is that sometimes firmware returns zero for only one chain for
-some (not all) beacons used for calibration. This leads to perfectly valid
-chains be disabled and may cause invalid gain settings.
-For example this is calibration data taken on laptop with Intel 6300 card
-with all three antennas attached:
-
-active_chains:			 3
-chain_noise_a:			 312
-chain_noise_b:			 297
-chain_noise_c:			 0
-chain_signal_a:			 549
-chain_signal_b:			 513
-chain_signal_c:			 0
-beacon_count:			 16
-disconn_array:			 0 0 1
-delta_gain_code:		 4 0 0
-radio_write:			 1
-state:				 3
-
-This patch changes statistics gathering to make sure that zero noise
-results are ignored for valid rx chains. The rationale being that even if
-anntenna is not connected we should be able to see non zero noise if rx
-chain is present.
-
-This patch fixes the problem of disabling working chains on hardware I
-have (6300 and 5300). It also works fine in case one 3-chain hardware has
-only two antennas attached.
-
-Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
+Signed-off-by: chunfan chen <jeffc@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
 ---
- drivers/net/wireless/iwlwifi/dvm/calib.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+v2: Following error reported by kbuild test robot for
+on m68k architecture has been resolved.
+"'struct wiphy' has no member named 'wowlan_config'"
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c  | 40 +++++++++++++++---------
+ drivers/net/wireless/marvell/mwifiex/fw.h        |  2 ++
+ drivers/net/wireless/marvell/mwifiex/main.c      |  7 +++++
+ drivers/net/wireless/marvell/mwifiex/main.h      |  1 +
+ drivers/net/wireless/marvell/mwifiex/scan.c      | 34 ++++++++++++++++++++
+ drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 13 ++++++--
+ 6 files changed, 80 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/dvm/calib.c b/drivers/net/wireless/iwlwifi/dvm/calib.c
-index 20e6aa9..59e73e2 100644
---- a/drivers/net/wireless/iwlwifi/dvm/calib.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/calib.c
-@@ -1026,6 +1026,18 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 6d36d08..a1b8d89 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -3273,7 +3273,7 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
  
- 	spin_unlock_bh(&priv->statistics.lock);
+ 	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
  
-+	/* Sometimes firmware returns zero for chain noise and signal
-+	 * even if chain is present and antenna is connected. This
-+	 * often results in perfectly valid chains being disabled.
-+	 * Ignore statistics if it contains zero noise for valid rx
-+	 * chain: even with antenna disconnected we should hear some noise.
-+	 */
-+	if (((priv->nvm_data->valid_rx_ant & (1 << 0)) && chain_noise_a == 0) ||
-+	    ((priv->nvm_data->valid_rx_ant & (2 << 0)) && chain_noise_b == 0) ||
-+	    ((priv->nvm_data->valid_rx_ant & (3 << 0)) && chain_noise_c == 0)) {
-+		return;
+-	if (!priv->media_connected) {
++	if (!priv->media_connected && !wowlan->nd_config) {
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "Can not configure WOWLAN in disconnected state\n");
+ 		return 0;
+@@ -3285,22 +3285,32 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
+ 		return ret;
+ 	}
+ 
++	memset(&hs_cfg, 0, sizeof(hs_cfg));
++	hs_cfg.conditions = le32_to_cpu(adapter->hs_cfg.conditions);
++
++	if (wowlan->nd_config) {
++		mwifiex_dbg(adapter, INFO, "Wake on net detect\n");
++		hs_cfg.conditions |= HS_CFG_COND_MAC_EVENT;
++		mwifiex_cfg80211_sched_scan_start(wiphy, priv->netdev,
++						  wowlan->nd_config);
 +	}
 +
- 	data->beacon_count++;
+ 	if (wowlan->disconnect) {
+-		memset(&hs_cfg, 0, sizeof(hs_cfg));
+-		hs_cfg.is_invoke_hostcmd = false;
+-		hs_cfg.conditions = HS_CFG_COND_MAC_EVENT;
+-		hs_cfg.gpio = adapter->hs_cfg.gpio;
+-		hs_cfg.gap = adapter->hs_cfg.gap;
+-		ret = mwifiex_set_hs_params(priv, HostCmd_ACT_GEN_SET,
+-					    MWIFIEX_SYNC_CMD, &hs_cfg);
+-		if (ret) {
+-			mwifiex_dbg(adapter, ERROR,
+-				    "Failed to set HS params\n");
+-			return ret;
+-		}
++		hs_cfg.conditions |= HS_CFG_COND_MAC_EVENT;
+ 		mwifiex_dbg(priv->adapter, INFO, "Wake on device disconnect\n");
+ 	}
  
- 	data->chain_noise_a = (chain_noise_a + data->chain_noise_a);
++	hs_cfg.is_invoke_hostcmd = false;
++	hs_cfg.gpio = adapter->hs_cfg.gpio;
++	hs_cfg.gap = adapter->hs_cfg.gap;
++	ret = mwifiex_set_hs_params(priv, HostCmd_ACT_GEN_SET,
++				    MWIFIEX_SYNC_CMD, &hs_cfg);
++	if (ret) {
++		mwifiex_dbg(adapter, ERROR,
++			    "Failed to set HS params\n");
++		return ret;
++	}
++
+ 	return ret;
+ }
+ 
+@@ -3853,11 +3863,13 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
+ 
+ #ifdef CONFIG_PM
+ static const struct wiphy_wowlan_support mwifiex_wowlan_support = {
+-	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT,
++	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT |
++		WIPHY_WOWLAN_NET_DETECT,
+ 	.n_patterns = MWIFIEX_MEF_MAX_FILTERS,
+ 	.pattern_min_len = 1,
+ 	.pattern_max_len = MWIFIEX_MAX_PATTERN_LEN,
+ 	.max_pkt_offset = MWIFIEX_MAX_OFFSET_LEN,
++	.max_nd_match_sets = MWIFIEX_MAX_ND_MATCH_SETS,
+ };
+ #endif
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 07bdc2a..81b491a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -543,6 +543,8 @@ enum P2P_MODES {
+ 
+ #define MWIFIEX_MAX_PATTERN_LEN		40
+ #define MWIFIEX_MAX_OFFSET_LEN		100
++#define MWIFIEX_MAX_ND_MATCH_SETS	10
++
+ #define STACK_NBYTES			100
+ #define TYPE_DNUM			1
+ #define TYPE_BYTESEQ			2
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index a99b72b..3cfa946 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -132,6 +132,13 @@ static int mwifiex_unregister(struct mwifiex_adapter *adapter)
+ 		}
+ 	}
+ 
++	if (adapter->nd_info) {
++		for (i = 0 ; i < adapter->nd_info->n_matches ; i++)
++			kfree(adapter->nd_info->matches[i]);
++		kfree(adapter->nd_info);
++		adapter->nd_info = NULL;
++	}
++
+ 	vfree(adapter->chan_stats);
+ 	kfree(adapter);
+ 	return 0;
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 5f5bcf8..bf9b24a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1002,6 +1002,7 @@ struct mwifiex_adapter {
+ 	u8 active_scan_triggered;
+ 	bool usb_mc_status;
+ 	bool usb_mc_setup;
++	struct cfg80211_wowlan_nd_info *nd_info;
+ };
+ 
+ void mwifiex_process_tx_queue(struct mwifiex_adapter *adapter);
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index d4e2143..2702bd9 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -2092,6 +2092,8 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+ 	u8 is_bgscan_resp;
+ 	__le64 fw_tsf = 0;
+ 	u8 *radio_type;
++	struct cfg80211_wowlan_nd_match *pmatch;
++	struct cfg80211_sched_scan_request *nd_config = NULL;
+ 
+ 	is_bgscan_resp = (le16_to_cpu(resp->command)
+ 			  == HostCmd_CMD_802_11_BG_SCAN_QUERY);
+@@ -2154,6 +2156,21 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+ 					     (struct mwifiex_ie_types_data **)
+ 					     &chan_band_tlv);
+ 
++#ifdef CONFIG_PM
++	if (priv->wdev.wiphy->wowlan_config)
++		nd_config = priv->wdev.wiphy->wowlan_config->nd_config;
++#endif
++
++	if (nd_config) {
++		adapter->nd_info =
++			kzalloc(sizeof(struct cfg80211_wowlan_nd_match) +
++				sizeof(struct cfg80211_wowlan_nd_match *) *
++				scan_rsp->number_of_sets, GFP_ATOMIC);
++
++		if (adapter->nd_info)
++			adapter->nd_info->n_matches = scan_rsp->number_of_sets;
++	}
++
+ 	for (idx = 0; idx < scan_rsp->number_of_sets && bytes_left; idx++) {
+ 		/*
+ 		 * If the TSF TLV was appended to the scan results, save this
+@@ -2172,6 +2189,23 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
+ 			radio_type = NULL;
+ 		}
+ 
++		if (chan_band_tlv && adapter->nd_info) {
++			adapter->nd_info->matches[idx] =
++				kzalloc(sizeof(*pmatch) +
++				sizeof(u32), GFP_ATOMIC);
++
++			pmatch = adapter->nd_info->matches[idx];
++
++			if (!pmatch) {
++				memset(pmatch, 0, sizeof(*pmatch));
++				if (chan_band_tlv) {
++					pmatch->n_channels = 1;
++					pmatch->channels[0] =
++						chan_band->chan_number;
++				}
++			}
++		}
++
+ 		ret = mwifiex_parse_single_response_buf(priv, &bss_info,
+ 							&bytes_left,
+ 							le64_to_cpu(fw_tsf),
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+index 2cc1a32..7277c24 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+@@ -505,10 +505,17 @@ int mwifiex_enable_hs(struct mwifiex_adapter *adapter)
+ 	}
+ 
+ 	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
++
+ 	if (priv && priv->sched_scanning) {
+-		dev_dbg(adapter->dev, "aborting bgscan!\n");
+-		mwifiex_stop_bg_scan(priv);
+-		cfg80211_sched_scan_stopped(priv->wdev.wiphy);
++#ifdef CONFIG_PM
++		if (!priv->wdev.wiphy->wowlan_config->nd_config) {
++#endif
++			mwifiex_dbg(adapter, CMD, "aborting bgscan!\n");
++			mwifiex_stop_bg_scan(priv);
++			cfg80211_sched_scan_stopped(priv->wdev.wiphy);
++#ifdef CONFIG_PM
++		}
++#endif
+ 	}
+ 
+ 	if (adapter->hs_activated) {
 -- 
-2.7.0
+1.8.1.4
 
