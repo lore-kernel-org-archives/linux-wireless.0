@@ -1,102 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:8120 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753622AbcA0J6t (ORCPT
+Received: from mail-lb0-f178.google.com ([209.85.217.178]:34735 "EHLO
+	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759348AbcAMN76 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 04:58:49 -0500
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH 10/12] ath10k: include irq related functions in ahb
-Date: Wed, 27 Jan 2016 15:24:31 +0530
-Message-ID: <1453888473-2879-11-git-send-email-rmani@qti.qualcomm.com> (sfid-20160127_105858_808549_B93E27E3)
-In-Reply-To: <1453888473-2879-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1453888473-2879-1-git-send-email-rmani@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 13 Jan 2016 08:59:58 -0500
+Received: by mail-lb0-f178.google.com with SMTP id cl12so73599432lbc.1
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 05:59:58 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/5] ath10k: add basic hostq support
+Date: Wed, 13 Jan 2016 15:01:03 +0100
+Message-Id: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com> (sfid-20160113_150008_614104_68A8AB0C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add irq related functions to register,handle,release,disable interrupt.
+There's a new firmware feature which uses a shared
+DMA memory so host can share it's per-sta per-tid
+queue size which is then subsequently used for
+firmware to assist in deciding which frames to put
+on the intermediate host-device tx queue.
 
-qca4019 supports msi interrupt, but it has the problem. Until the issue
-gets sorted out, only legacy interrupt model is enabled and used.
+This patchset adds only basic support to make
+the firmware supporting the feature happy and
+running at all. Without it firmware would freeze
+shortly after booting.
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/ahb.c | 44 +++++++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/ahb.h |  2 ++
- 2 files changed, 46 insertions(+)
+More patches will follow some time later to add
+the "new data path" logic.
 
-diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
-index 2305078..29d0b6c 100644
---- a/drivers/net/wireless/ath/ath10k/ahb.c
-+++ b/drivers/net/wireless/ath/ath10k/ahb.c
-@@ -458,6 +458,50 @@ static void ath10k_ahb_halt_chip(struct ath10k *ar)
- 	ath10k_dbg(ar, ATH10K_DBG_AHB, "core %d reset done\n", core_id);
- }
- 
-+static irqreturn_t ath10k_ahb_interrupt_handler(int irq, void *arg)
-+{
-+	struct ath10k *ar = arg;
-+	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-+
-+	if (!ath10k_pci_irq_pending(ar))
-+		return IRQ_NONE;
-+
-+	ath10k_pci_disable_and_clear_legacy_irq(ar);
-+	tasklet_schedule(&ar_pci->intr_tq);
-+
-+	return IRQ_HANDLED;
-+}
-+
-+static int ath10k_ahb_request_irq_legacy(struct ath10k *ar)
-+{
-+	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
-+	int ret;
-+
-+	ret = request_irq(ar_ahb->irq,
-+			  ath10k_ahb_interrupt_handler,
-+			  IRQF_SHARED, "ath10k_ahb", ar);
-+	if (ret) {
-+		ath10k_warn(ar, "failed to request legacy irq %d: %d\n",
-+			    ar_ahb->irq, ret);
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static void ath10k_ahb_release_irq_legacy(struct ath10k *ar)
-+{
-+	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
-+
-+	free_irq(ar_ahb->irq, ar);
-+}
-+
-+static void ath10k_ahb_irq_disable(struct ath10k *ar)
-+{
-+	ath10k_ce_disable_interrupts(ar);
-+	ath10k_pci_disable_and_clear_legacy_irq(ar);
-+}
-+
- static int ath10k_ahb_probe(struct platform_device *pdev)
- {
- 	return 0;
-diff --git a/drivers/net/wireless/ath/ath10k/ahb.h b/drivers/net/wireless/ath/ath10k/ahb.h
-index 4761eeb..97c40e4 100644
---- a/drivers/net/wireless/ath/ath10k/ahb.h
-+++ b/drivers/net/wireless/ath/ath10k/ahb.h
-@@ -26,6 +26,8 @@ struct ath10k_ahb {
- 	void __iomem *gcc_mem;
- 	void __iomem *tcsr_mem;
- 
-+	int irq;
-+
- 	struct clk *cmd_clk;
- 	struct clk *ref_clk;
- 	struct clk *rtc_clk;
+
+Michal Kazior (5):
+  ath10k: rename some HTT events
+  ath10k: add new htt definitions
+  ath10k: add new FW_FEATURE_PEER_FLOW_CONTROL
+  ath10k: clean up cont frag desc init code
+  ath10k: implement basic support for new tx path firmware
+
+ drivers/net/wireless/ath/ath10k/core.c   |   1 +
+ drivers/net/wireless/ath/ath10k/core.h   |   9 ++
+ drivers/net/wireless/ath/ath10k/htt.c    |   8 +-
+ drivers/net/wireless/ath/ath10k/htt.h    | 169 +++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   8 +-
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 146 +++++++++++++++++++++-----
+ 6 files changed, 302 insertions(+), 39 deletions(-)
+
 -- 
-1.8.1.2
+2.1.4
 
