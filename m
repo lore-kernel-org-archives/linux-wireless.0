@@ -1,105 +1,223 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:36821 "EHLO
-	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965184AbcAULc2 (ORCPT
+Received: from mail-lb0-f175.google.com ([209.85.217.175]:36428 "EHLO
+	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759353AbcAMOAB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 06:32:28 -0500
-Received: by mail-pa0-f66.google.com with SMTP id a20so1631533pag.3
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:32:28 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 14/27] staging: wilc1000: rename pHandle in wilc_mq_send
-Date: Thu, 21 Jan 2016 20:30:44 +0900
-Message-Id: <1453375857-20645-15-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123656_679924_4192EA9E)
-In-Reply-To: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 13 Jan 2016 09:00:01 -0500
+Received: by mail-lb0-f175.google.com with SMTP id oh2so291594241lbb.3
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 06:00:00 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/5] ath10k: add new htt definitions
+Date: Wed, 13 Jan 2016 15:01:05 +0100
+Message-Id: <1452693668-30030-3-git-send-email-michal.kazior@tieto.com> (sfid-20160113_150025_458730_04E11E74)
+In-Reply-To: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
+References: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pHandle to mq to avoid camelcase.
+These definitions are associated with some
+improvements upcomming for 10.4 and QCA99X0.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/wilc1000/wilc_msgqueue.c | 22 +++++++++++-----------
- drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
- 2 files changed, 12 insertions(+), 12 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt.h | 153 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 150 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index a01420a..71ce1f5 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -53,19 +53,19 @@ int wilc_mq_destroy(struct message_queue *mq)
-  *  @note		copied from FLO glue implementatuion
-  *  @version		1.0
-  */
--int wilc_mq_send(struct message_queue *pHandle,
-+int wilc_mq_send(struct message_queue *mq,
- 		 const void *pvSendBuffer, u32 u32SendBufferSize)
- {
- 	unsigned long flags;
- 	struct message *pstrMessage = NULL;
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index edd3b9070de9..0c5628dafabf 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -52,6 +52,7 @@ enum htt_h2t_msg_type { /* host-to-target */
+ 	/* This command is used for sending management frames in HTT < 3.0.
+ 	 * HTT >= 3.0 uses TX_FRM for everything. */
+ 	HTT_H2T_MSG_TYPE_MGMT_TX            = 7,
++	HTT_H2T_MSG_TYPE_TX_FETCH_RESP      = 11,
  
--	if ((!pHandle) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
--		PRINT_ER("pHandle or pvSendBuffer is null\n");
-+	if ((!mq) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
-+		PRINT_ER("mq or pvSendBuffer is null\n");
- 		return -EFAULT;
- 	}
+ 	HTT_H2T_NUM_MSGS /* keep this last */
+ };
+@@ -1306,9 +1307,43 @@ struct htt_frag_desc_bank_id {
+  * so we use a conservatively safe value for now */
+ #define HTT_FRAG_DESC_BANK_MAX 4
  
--	if (pHandle->exiting) {
--		PRINT_ER("pHandle fail\n");
-+	if (mq->exiting) {
-+		PRINT_ER("mq fail\n");
- 		return -EFAULT;
- 	}
+-#define HTT_FRAG_DESC_BANK_CFG_INFO_PDEV_ID_MASK 0x03
+-#define HTT_FRAG_DESC_BANK_CFG_INFO_PDEV_ID_LSB  0
+-#define HTT_FRAG_DESC_BANK_CFG_INFO_SWAP         (1 << 2)
++#define HTT_FRAG_DESC_BANK_CFG_INFO_PDEV_ID_MASK		0x03
++#define HTT_FRAG_DESC_BANK_CFG_INFO_PDEV_ID_LSB			0
++#define HTT_FRAG_DESC_BANK_CFG_INFO_SWAP			BIT(2)
++#define HTT_FRAG_DESC_BANK_CFG_INFO_Q_STATE_VALID		BIT(3)
++#define HTT_FRAG_DESC_BANK_CFG_INFO_Q_STATE_DEPTH_TYPE_MASK	BIT(4)
++#define HTT_FRAG_DESC_BANK_CFG_INFO_Q_STATE_DEPTH_TYPE_LSB	4
++
++enum htt_q_depth_type {
++	HTT_Q_DEPTH_TYPE_BYTES = 0,
++	HTT_Q_DEPTH_TYPE_MSDUS = 1,
++};
++
++#define HTT_TX_Q_STATE_NUM_PEERS		(TARGET_10_4_NUM_QCACHE_PEERS_MAX + \
++						 TARGET_10_4_NUM_VDEVS)
++#define HTT_TX_Q_STATE_NUM_TIDS			8
++#define HTT_TX_Q_STATE_ENTRY_SIZE		1
++#define HTT_TX_Q_STATE_ENTRY_MULTIPLIER		0
++
++/**
++ * htt_q_state_conf - part of htt_frag_desc_bank_cfg for host q state config
++ *
++ * Defines host q state format and behavior. See htt_q_state.
++ *
++ * @record_size: Defines the size of each host q entry in bytes. In practice
++ *	however firmware (at least 10.4.3-00191) ignores this host
++ *	configuration value and uses hardcoded value of 1.
++ * @record_multiplier: This is valid only when q depth type is MSDUs. It
++ *	defines the exponent for the power of 2 multiplication.
++ */
++struct htt_q_state_conf {
++	__le32 paddr;
++	__le16 num_peers;
++	__le16 num_tids;
++	u8 record_size;
++	u8 record_multiplier;
++	u8 pad[2];
++} __packed;
  
-@@ -83,13 +83,13 @@ int wilc_mq_send(struct message_queue *pHandle,
- 		return -ENOMEM;
- 	}
+ struct htt_frag_desc_bank_cfg {
+ 	u8 info; /* HTT_FRAG_DESC_BANK_CFG_INFO_ */
+@@ -1316,6 +1351,114 @@ struct htt_frag_desc_bank_cfg {
+ 	u8 desc_size;
+ 	__le32 bank_base_addrs[HTT_FRAG_DESC_BANK_MAX];
+ 	struct htt_frag_desc_bank_id bank_id[HTT_FRAG_DESC_BANK_MAX];
++	struct htt_q_state_conf q_state;
++} __packed;
++
++#define HTT_TX_Q_STATE_ENTRY_COEFFICIENT	128
++#define HTT_TX_Q_STATE_ENTRY_FACTOR_MASK	0x3f
++#define HTT_TX_Q_STATE_ENTRY_FACTOR_LSB		0
++#define HTT_TX_Q_STATE_ENTRY_EXP_MASK		0xc0
++#define HTT_TX_Q_STATE_ENTRY_EXP_LSB		6
++
++/**
++ * htt_q_state - shared between host and firmware via DMA
++ *
++ * This structure is used for the host to expose it's software queue state to
++ * firmware so that its rate control can schedule fetch requests for optimized
++ * performance. This is most notably used for MU-MIMO aggregation when multiple
++ * MU clients are connected.
++ *
++ * @count: Each element defines the host queue depth. When q depth type was
++ *	configured as HTT_Q_DEPTH_TYPE_BYTES then each entry is defined as:
++ *	FACTOR * 128 * 8^EXP (see HTT_TX_Q_STATE_ENTRY_FACTOR_MASK and
++ *	HTT_TX_Q_STATE_ENTRY_EXP_MASK). When q depth type was configured as
++ *	HTT_Q_DEPTH_TYPE_MSDUS the number of packets is scaled by 2 **
++ *	record_multiplier (see htt_q_state_conf).
++ * @map: Used by firmware to quickly check which host queues are not empty. It
++ *	is a bitmap simply saying.
++ * @seq: Used by firmware to quickly check if the host queues were updated
++ *	since it last checked.
++ *
++ * FIXME: Is the q_state map[] size calculation really correct?
++ */
++struct htt_q_state {
++	u8 count[HTT_TX_Q_STATE_NUM_TIDS][HTT_TX_Q_STATE_NUM_PEERS];
++	u32 map[HTT_TX_Q_STATE_NUM_TIDS][(HTT_TX_Q_STATE_NUM_PEERS + 31) / 32];
++	__le32 seq;
++} __packed;
++
++#define HTT_TX_FETCH_RECORD_INFO_PEER_ID_MASK	0x0fff
++#define HTT_TX_FETCH_RECORD_INFO_PEER_ID_LSB	0
++#define HTT_TX_FETCH_RECORD_INFO_TID_MASK	0xf000
++#define HTT_TX_FETCH_RECORD_INFO_TID_LSB	12
++
++struct htt_tx_fetch_record {
++	__le16 info; /* HTT_TX_FETCH_IND_RECORD_INFO_ */
++	__le16 num_msdus;
++	__le32 num_bytes;
++} __packed;
++
++struct htt_tx_fetch_ind {
++	u8 pad0;
++	__le16 fetch_seq_num;
++	__le32 token;
++	__le16 num_resp_ids;
++	__le16 num_records;
++	struct htt_tx_fetch_record records[0];
++	__le32 resp_ids[0]; /* ath10k_htt_get_tx_fetch_ind_resp_ids() */
++} __packed;
++
++static inline void *
++ath10k_htt_get_tx_fetch_ind_resp_ids(struct htt_tx_fetch_ind *ind)
++{
++	return (void *)&ind->records[le16_to_cpu(ind->num_records)];
++}
++
++struct htt_tx_fetch_resp {
++	u8 pad0;
++	__le16 resp_id;
++	__le16 fetch_seq_num;
++	__le16 num_records;
++	__le32 token;
++	struct htt_tx_fetch_record records[0];
++} __packed;
++
++struct htt_tx_fetch_confirm {
++	u8 pad0;
++	__le16 num_resp_ids;
++	__le32 resp_ids[0];
++} __packed;
++
++enum htt_tx_mode_switch_mode {
++	HTT_TX_MODE_SWITCH_PUSH = 0,
++	HTT_TX_MODE_SWITCH_PUSH_PULL = 1,
++};
++
++#define HTT_TX_MODE_SWITCH_IND_INFO0_ENABLE		BIT(0)
++#define HTT_TX_MODE_SWITCH_IND_INFO0_NUM_RECORDS_MASK	0xfffe
++#define HTT_TX_MODE_SWITCH_IND_INFO0_NUM_RECORDS_LSB	1
++
++#define HTT_TX_MODE_SWITCH_IND_INFO1_MODE_MASK		0x0003
++#define HTT_TX_MODE_SWITCH_IND_INFO1_MODE_LSB		0
++#define HTT_TX_MODE_SWITCH_IND_INFO1_THRESHOLD_MASK	0xfffc
++#define HTT_TX_MODE_SWITCH_IND_INFO1_THRESHOLD_LSB	2
++
++#define HTT_TX_MODE_SWITCH_RECORD_INFO0_PEER_ID_MASK	0x0fff
++#define HTT_TX_MODE_SWITCH_RECORD_INFO0_PEER_ID_LSB	0
++#define HTT_TX_MODE_SWITCH_RECORD_INFO0_TID_MASK	0xf000
++#define HTT_TX_MODE_SWITCH_RECORD_INFO0_TID_LSB		12
++
++struct htt_tx_mode_switch_record {
++	__le16 info0; /* HTT_TX_MODE_SWITCH_RECORD_INFO0_ */
++	__le16 num_max_msdus;
++} __packed;
++
++struct htt_tx_mode_switch_ind {
++	u8 pad0;
++	__le16 info0; /* HTT_TX_MODE_SWITCH_IND_INFO0_ */
++	__le16 info1; /* HTT_TX_MODE_SWITCH_IND_INFO1_ */
++	u8 pad1[2];
++	struct htt_tx_mode_switch_record records[0];
+ } __packed;
  
--	spin_lock_irqsave(&pHandle->lock, flags);
-+	spin_lock_irqsave(&mq->lock, flags);
+ union htt_rx_pn_t {
+@@ -1340,6 +1483,7 @@ struct htt_cmd {
+ 		struct htt_oob_sync_req oob_sync_req;
+ 		struct htt_aggr_conf aggr_conf;
+ 		struct htt_frag_desc_bank_cfg frag_desc_bank_cfg;
++		struct htt_tx_fetch_resp tx_fetch_resp;
+ 	};
+ } __packed;
  
- 	/* add it to the message queue */
--	if (!pHandle->msg_list) {
--		pHandle->msg_list  = pstrMessage;
-+	if (!mq->msg_list) {
-+		mq->msg_list  = pstrMessage;
- 	} else {
--		struct message *pstrTailMsg = pHandle->msg_list;
-+		struct message *pstrTailMsg = mq->msg_list;
+@@ -1364,6 +1508,9 @@ struct htt_resp {
+ 		struct htt_rx_pn_ind rx_pn_ind;
+ 		struct htt_rx_offload_ind rx_offload_ind;
+ 		struct htt_rx_in_ord_ind rx_in_ord_ind;
++		struct htt_tx_fetch_ind tx_fetch_ind;
++		struct htt_tx_fetch_confirm tx_fetch_confirm;
++		struct htt_tx_mode_switch_ind tx_mode_switch_ind;
+ 	};
+ } __packed;
  
- 		while (pstrTailMsg->next)
- 			pstrTailMsg = pstrTailMsg->next;
-@@ -97,9 +97,9 @@ int wilc_mq_send(struct message_queue *pHandle,
- 		pstrTailMsg->next = pstrMessage;
- 	}
- 
--	spin_unlock_irqrestore(&pHandle->lock, flags);
-+	spin_unlock_irqrestore(&mq->lock, flags);
- 
--	up(&pHandle->sem);
-+	up(&mq->sem);
- 
- 	return 0;
- }
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index b91822e..e6cdc10 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -57,7 +57,7 @@ int wilc_mq_create(struct message_queue *mq);
-  *  @date		30 Aug 2010
-  *  @version		1.0
-  */
--int wilc_mq_send(struct message_queue *pHandle,
-+int wilc_mq_send(struct message_queue *mq,
- 		 const void *pvSendBuffer, u32 u32SendBufferSize);
- 
- /*!
 -- 
-2.7.0
+2.1.4
 
