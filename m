@@ -1,49 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52570 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753263AbcARBeW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2016 20:34:22 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, nbd@openwrt.org,
-	Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH v3 1/5] ath9k: avoid ANI restart if no trigger
-Date: Mon, 18 Jan 2016 09:33:46 +0800
-Message-Id: <1453080830-7616-2-git-send-email-miaoqing@codeaurora.org> (sfid-20160118_023425_605722_499C705E)
-In-Reply-To: <1453080830-7616-1-git-send-email-miaoqing@codeaurora.org>
-References: <1453080830-7616-1-git-send-email-miaoqing@codeaurora.org>
+Received: from softlayer.compulab.co.il ([50.23.254.55]:48943 "EHLO
+	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752218AbcAMGAp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jan 2016 01:00:45 -0500
+Subject: Re: [PATCH v4 3/3] wlcore/wl12xx: spi: add wifi support to cm-t335
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Uri Mashiach <uri.mashiach@compulab.co.il>
+References: <1451482533-8624-1-git-send-email-uri.mashiach@compulab.co.il>
+ <1451482533-8624-4-git-send-email-uri.mashiach@compulab.co.il>
+ <87io35lq2p.fsf@kamboji.qca.qualcomm.com>
+Cc: Rob Herring <robh+dt@kernel.org>, Tony Lindgren <tony@atomide.com>,
+	Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
+	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: Igor Grinberg <grinberg@compulab.co.il>
+Message-ID: <5695E802.7050909@compulab.co.il> (sfid-20160113_070054_146114_EEBEC5F9)
+Date: Wed, 13 Jan 2016 08:00:34 +0200
+MIME-Version: 1.0
+In-Reply-To: <87io35lq2p.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+Hi Kalle Valo,
 
-Fixes commit 54da20d83f0e ("ath9k_hw: improve ANI processing and rx desensitizing parameters")
+On 01/07/16 11:02, Kalle Valo wrote:
+> Uri Mashiach <uri.mashiach@compulab.co.il> writes:
+> 
+>> Device tree modifications:
+>> - Pinmux for SPI0 and WiFi GPIOs.
+>> - SPI0 node with wlcore as a child node.
+>>
+>> Cc: Tony Lindgren <tony@atomide.com>
+>> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+>> ---
 
-Call ath9k_ani_restart() only when the phy error rate reach the
-ANI immunity threshold. Sync the logic with internal code base.
+Uri, please document the dependencies next time. Thanks!
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/ani.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+>> v1 -> v2: Replace interrupts and interrupt-parent with interrupts-extended.
+>> v2 -> v3: Move the pinctrl-0 = <&wifi_pins> to the wlcore node.
+>> v3 -> v4: replace interrupts-extended with interrupts and interrupt-parent. (revert v2 modification).
+>>           According to Rob Herring and Documentation/devicetree/bindings/interrupt-controller/interrupts.txt,
+>> 	  interrupts-extended should only be used when a device has multiple interrupt parents.
+>>
+>>  arch/arm/boot/dts/am335x-cm-t335.dts | 55 ++++++++++++++++++++++++++++++++++++
+>>  1 file changed, 55 insertions(+)
+> 
+> To what tree should this patch go? My wireless-drivers-next tree doesn't
+> even have this file.
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 25e45e4..aa82e13 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -450,7 +450,9 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
- 		} else if (cckPhyErrRate > ah->config.cck_trig_high) {
- 			ath9k_hw_ani_cck_err_trigger(ah);
- 			aniState->ofdmsTurn = true;
--		}
-+		} else
-+			return;
-+			
- 		ath9k_ani_restart(ah);
- 	}
- }
+Right. It will hit the mainline during this merge window through Tony's and
+arm-soc trees.
+
+Do you think it will be sensible if you take 1/3 and 2/3 patches and Tony
+will take the 3/3 (there is no code dependency between first two and the last one),
+or we can just wait till arm-soc hits the mainline, so you will have the
+needed code?
+
+> 
+> https://patchwork.kernel.org/patch/7933441/
+> 
+
 -- 
-1.9.1
-
+Regards,
+Igor.
