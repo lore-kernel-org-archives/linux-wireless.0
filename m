@@ -1,64 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:39015 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752256AbcAGQYa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 11:24:30 -0500
-Subject: Re: lost connectivity until "wpa_cli reassociate" is issued
-To: David Mosberger <davidm@egauge.net>, linux-wireless@vger.kernel.org
-References: <CALnQHM3C=DVaTf58XDyh+rttVs-FSpc4ghozg9HJktEonq7w-g@mail.gmail.com>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <568E913D.7050301@candelatech.com> (sfid-20160107_172433_989369_294134D0)
-Date: Thu, 7 Jan 2016 08:24:29 -0800
+Received: from softlayer.compulab.co.il ([50.23.254.55]:35054 "EHLO
+	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750779AbcAMGJO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jan 2016 01:09:14 -0500
+Subject: Re: [PATCH v4 3/3] wlcore/wl12xx: spi: add wifi support to cm-t335
+To: Uri Mashiach <uri.mashiach@compulab.co.il>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Tony Lindgren <tony@atomide.com>
+References: <1451482533-8624-1-git-send-email-uri.mashiach@compulab.co.il>
+ <1451482533-8624-4-git-send-email-uri.mashiach@compulab.co.il>
+Cc: Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
+	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: Igor Grinberg <grinberg@compulab.co.il>
+Message-ID: <5695EA06.5020801@compulab.co.il> (sfid-20160113_070919_518179_3496EC44)
+Date: Wed, 13 Jan 2016 08:09:10 +0200
 MIME-Version: 1.0
-In-Reply-To: <CALnQHM3C=DVaTf58XDyh+rttVs-FSpc4ghozg9HJktEonq7w-g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <1451482533-8624-4-git-send-email-uri.mashiach@compulab.co.il>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/07/2016 08:19 AM, David Mosberger wrote:
-> We are seeing a curious issue where WLAN connectivity sometimes
-> gets stuck until a "wpa_cli reassociate" command is issued.
->
-> At the WPA level, everything appears to be working fine)
-> (see thread starting at
-> http://lists.infradead.org/pipermail/hostap/2016-January/034454.html).
 
-I don't remember seeing you mention the driver and NIC you are using.
 
-I think this is likely a driver bug, so please provide that info.
+On 12/30/15 15:35, Uri Mashiach wrote:
+> Device tree modifications:
+> - Pinmux for SPI0 and WiFi GPIOs.
+> - SPI0 node with wlcore as a child node.
+> 
+> Cc: Tony Lindgren <tony@atomide.com>
+> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
 
-Thanks,
-Ben
-
->
-> What's truly odd is when connectivity is stuck, you can often "ping" the
-> network's gateway exactly once and then you either get no response anymore
-> or, after a long time (like 40-60 seconds), the floodgate opens and
-> (almost) all previously sent ping responses arrive all at the same time
-> (in the latter case, connectivity is fine afterwards again).
->
-> This makes me wonder if there may be a packet queue that somehow gets
-> stuck.
->
-> I have turned on mac80211 debugging but have not found anything
-> that seems to correlate with the loss of connectivity.  All I know is that
-> wpa_cli reassociate so far is the least intrusive workaround that seems
-> to reliably bring back connectivity.
->
-> We are based on kernel 3.7.0 but have back-ported the mac80211 fixes
-> from the linux-3.7.y stable branch.
->
-> I'm not very familiar with the wireless stack, so any tips or hints on how to
-> further debug this would be greatly appreciated.
->
-> Thanks and best regards,
->
->    --david
->
-
+Acked-by: Igor Grinberg <grinberg@compulab.co.il>
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Regards,
+Igor.
