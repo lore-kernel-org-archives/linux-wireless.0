@@ -1,94 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.hengli.com.au ([209.40.204.226]:40861 "EHLO
-	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754266AbcAXNUL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jan 2016 08:20:11 -0500
-Subject: [PATCH 21/26] nfc: s3fwrn5: Use shash
-References: <20160124131021.GA31153@gondor.apana.org.au>
-To: Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
-	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
-	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, ceph-devel@vger.kernel.org,
-	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
-	drbd-dev@lists.linbit.com, open-iscsi@googlegroups.com
-Message-Id: <E1aNKZn-0008FU-OU@gondolin.me.apana.org.au> (sfid-20160124_142041_280997_2924DB67)
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Date: Sun, 24 Jan 2016 21:19:31 +0800
+Received: from softlayer.compulab.co.il ([50.23.254.55]:53176 "EHLO
+	compulab.co.il" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750752AbcAMGFX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Jan 2016 01:05:23 -0500
+Subject: Re: [PATCH v4 2/3] wlcore/wl12xx: spi: add device tree support
+To: Uri Mashiach <uri.mashiach@compulab.co.il>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Rob Herring <robh+dt@kernel.org>,
+	Tony Lindgren <tony@atomide.com>
+References: <1451482533-8624-1-git-send-email-uri.mashiach@compulab.co.il>
+ <1451482533-8624-3-git-send-email-uri.mashiach@compulab.co.il>
+Cc: Pawel Moll <pawel.moll@arm.com>,
+	Mark Rutland <mark.rutland@arm.com>,
+	Ian Campbell <ijc+devicetree@hellion.org.uk>,
+	Kumar Gala <galak@codeaurora.org>, bcousson@baylibre.com,
+	Eliad Peller <eliad@wizery.com>, devicetree@vger.kernel.org,
+	linux-omap@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+From: Igor Grinberg <grinberg@compulab.co.il>
+Message-ID: <5695E91E.4000409@compulab.co.il> (sfid-20160113_070526_837151_729D9CE6)
+Date: Wed, 13 Jan 2016 08:05:18 +0200
+MIME-Version: 1.0
+In-Reply-To: <1451482533-8624-3-git-send-email-uri.mashiach@compulab.co.il>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces uses of the long obsolete hash interface with
-shash.
 
-Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
----
 
- drivers/nfc/s3fwrn5/firmware.c |   36 +++++++++++++++++++++++++++---------
- 1 file changed, 27 insertions(+), 9 deletions(-)
+On 12/30/15 15:35, Uri Mashiach wrote:
+> Add DT support for the wl1271 SPI WiFi.
+> 
+> Add documentation file for the wl1271 SPI WiFi.
+> 
+> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
+> Acked-by: Rob Herring <robh@kernel.org>
 
-diff --git a/drivers/nfc/s3fwrn5/firmware.c b/drivers/nfc/s3fwrn5/firmware.c
-index 64a9025..5f97da1 100644
---- a/drivers/nfc/s3fwrn5/firmware.c
-+++ b/drivers/nfc/s3fwrn5/firmware.c
-@@ -19,7 +19,7 @@
- 
- #include <linux/completion.h>
- #include <linux/firmware.h>
--#include <linux/crypto.h>
-+#include <crypto/hash.h>
- #include <crypto/sha.h>
- 
- #include "s3fwrn5.h"
-@@ -429,8 +429,7 @@ int s3fwrn5_fw_download(struct s3fwrn5_fw_info *fw_info)
- {
- 	struct s3fwrn5_fw_image *fw = &fw_info->fw;
- 	u8 hash_data[SHA1_DIGEST_SIZE];
--	struct scatterlist sg;
--	struct hash_desc desc;
-+	struct crypto_shash *tfm;
- 	u32 image_size, off;
- 	int ret;
- 
-@@ -438,12 +437,31 @@ int s3fwrn5_fw_download(struct s3fwrn5_fw_info *fw_info)
- 
- 	/* Compute SHA of firmware data */
- 
--	sg_init_one(&sg, fw->image, image_size);
--	desc.tfm = crypto_alloc_hash("sha1", 0, CRYPTO_ALG_ASYNC);
--	crypto_hash_init(&desc);
--	crypto_hash_update(&desc, &sg, image_size);
--	crypto_hash_final(&desc, hash_data);
--	crypto_free_hash(desc.tfm);
-+	tfm = crypto_alloc_shash("sha1", 0, 0);
-+	if (IS_ERR(tfm)) {
-+		ret = PTR_ERR(tfm);
-+		dev_err(&fw_info->ndev->nfc_dev->dev,
-+			"Cannot allocate shash (code=%d)\n", ret);
-+		goto out;
-+	}
-+
-+	{
-+		SHASH_DESC_ON_STACK(desc, tfm);
-+
-+		desc->tfm = tfm;
-+		desc->flags = CRYPTO_TFM_REQ_MAY_SLEEP;
-+
-+		ret = crypto_shash_digest(desc, fw->image, image_size,
-+					  hash_data);
-+		shash_desc_zero(desc);
-+	}
-+
-+	crypto_free_shash(tfm);
-+	if (ret) {
-+		dev_err(&fw_info->ndev->nfc_dev->dev,
-+			"Cannot compute hash (code=%d)\n", ret);
-+		goto out;
-+	}
- 
- 	/* Firmware update process */
- 
+Acked-by: Igor Grinberg <grinberg@compulab.co.il>
+
+
+-- 
+Regards,
+Igor.
