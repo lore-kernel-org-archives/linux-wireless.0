@@ -1,74 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:49698 "EHLO mga14.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:33474 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752521AbcAYJF6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 04:05:58 -0500
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: [PATCHv2 2/4] net: rfkill: gpio: get the name and type from device property
-Date: Mon, 25 Jan 2016 12:03:47 +0300
-Message-Id: <1453712629-143317-3-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20160125_100757_180869_54005198)
-In-Reply-To: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com>
-References: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com>
+	id S1754101AbcANLMR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jan 2016 06:12:17 -0500
+Message-ID: <1452769934.2444.16.camel@sipsolutions.net> (sfid-20160114_121231_656945_DCDB4C93)
+Subject: Re: [RFC V2 2/3] nl80211: add bss selection attribute to CONNECT
+ command
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 14 Jan 2016 12:12:14 +0100
+In-Reply-To: <1452769832.2444.14.camel@sipsolutions.net> (sfid-20160114_121044_346336_2FC9C7ED)
+References: <1452678583-20086-1-git-send-email-arend@broadcom.com>
+	 <1452678583-20086-3-git-send-email-arend@broadcom.com>
+	 <1452769832.2444.14.camel@sipsolutions.net>
+	 (sfid-20160114_121044_346336_2FC9C7ED)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This prepares the driver for removal of platform data.
+On Thu, 2016-01-14 at 12:10 +0100, Johannes Berg wrote:
 
-Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
----
- net/rfkill/rfkill-gpio.c | 16 +++++++++++-----
- 1 file changed, 11 insertions(+), 5 deletions(-)
+> Perhaps a good way of documenting this would be to say each primitive
+> has a priority? E.g.
+> 
+>     Primitives with a lower document priority are executed first
+> while
+>     selecting a BSS:
+> 
+>     RSSI (priority 100)
+>     BAND_PREF (priority 1)
+>     RSSI_ADJUST (priority 1) [since it's mutually exclusive with
+>     BAND_PREF]
+> 
 
-diff --git a/net/rfkill/rfkill-gpio.c b/net/rfkill/rfkill-gpio.c
-index 4b1e3f3..1a9c031 100644
---- a/net/rfkill/rfkill-gpio.c
-+++ b/net/rfkill/rfkill-gpio.c
-@@ -81,7 +81,6 @@ static int rfkill_gpio_acpi_probe(struct device *dev,
- 	if (!id)
- 		return -ENODEV;
- 
--	rfkill->name = dev_name(dev);
- 	rfkill->type = (unsigned)id->driver_data;
- 
- 	return acpi_dev_add_driver_gpios(ACPI_COMPANION(dev),
-@@ -93,12 +92,21 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 	struct rfkill_gpio_platform_data *pdata = pdev->dev.platform_data;
- 	struct rfkill_gpio_data *rfkill;
- 	struct gpio_desc *gpio;
-+	const char *type_name;
- 	int ret;
- 
- 	rfkill = devm_kzalloc(&pdev->dev, sizeof(*rfkill), GFP_KERNEL);
- 	if (!rfkill)
- 		return -ENOMEM;
- 
-+	device_property_read_string(&pdev->dev, "name", &rfkill->name);
-+	device_property_read_string(&pdev->dev, "type", &type_name);
-+
-+	if (!rfkill->name)
-+		rfkill->name = dev_name(&pdev->dev);
-+
-+	rfkill->type = rfkill_find_type(type_name);
-+
- 	if (ACPI_HANDLE(&pdev->dev)) {
- 		ret = rfkill_gpio_acpi_probe(&pdev->dev, rfkill);
- 		if (ret)
-@@ -124,10 +132,8 @@ static int rfkill_gpio_probe(struct platform_device *pdev)
- 
- 	rfkill->shutdown_gpio = gpio;
- 
--	/* Make sure at-least one of the GPIO is defined and that
--	 * a name is specified for this instance
--	 */
--	if ((!rfkill->reset_gpio && !rfkill->shutdown_gpio) || !rfkill->name) {
-+	/* Make sure at-least one GPIO is defined for this instance */
-+	if (!rfkill->reset_gpio && !rfkill->shutdown_gpio) {
- 		dev_err(&pdev->dev, "invalid platform data\n");
- 		return -EINVAL;
- 	}
--- 
-2.7.0.rc3
+I do wonder though what should happen if you just specify *only*
+BAND_PREF, for example, or only RSSI_ADJUST. The latter doesn't even
+make sense without then going to RSSI as the next level, and BAND_PREF
+only can't really pick a single AP (just throw out ones that aren't on
+the right band)
 
+johannes
