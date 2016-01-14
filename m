@@ -1,42 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39586 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934009AbcAZNIV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 08:08:21 -0500
-Message-ID: <1453813698.2759.41.camel@sipsolutions.net> (sfid-20160126_140842_465652_BE0B7B7C)
-Subject: Re: [PATCH 0/8] General RFKill improvements
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>
-Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
-	davem@davemloft.net, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jprvita@endlessm.com,
-	linux@endlessm.com
-Date: Tue, 26 Jan 2016 14:08:18 +0100
-In-Reply-To: <1453218163-31998-1-git-send-email-jprvita@endlessm.com> (sfid-20160119_164404_701975_4C6B6276)
-References: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
-	 (sfid-20160119_164404_701975_4C6B6276)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-io0-f174.google.com ([209.85.223.174]:35081 "EHLO
+	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754220AbcANUX6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jan 2016 15:23:58 -0500
+MIME-Version: 1.0
+Date: Thu, 14 Jan 2016 21:23:57 +0100
+Message-ID: <CAMuHMdWYrQtWUwPJ0i95WphvW-Q6pj900xYgbjwkizj6tp26cg@mail.gmail.com> (sfid-20160114_212425_211580_1B4547B0)
+Subject: brcmfmac build failure with gcc < 4.3 due to __UNIQUE_ID() clash
+ (was: Re: brcmfmac: Unify methods to define and map firmware files.)
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+To: Hante Meuleman <meuleman@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211-dev-list@broadcom.com,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Hi Hante,
 
-On Tue, 2016-01-19 at 10:42 -0500, João Paulo Rechi Vita wrote:
-> This series contains a few general improvements to the RFKill code,
-> found while
-> I was writing the rfkill-all / airplane mode LED trigger. All were
-> points where
-> I had to read twice or do some other kind of extra effort to fully
-> understand
-> it, so I think merging these changes will benefit someone trying to
-> understand
-> the RFKill subsystem in the future.
+On Wed, Jan 13, 2016 at 5:55 AM, Linux Kernel Mailing List
+<linux-kernel@vger.kernel.org> wrote:
+> Commit:     46d703a775394e4724509ff55cdda41d228c028c
+>    brcmfmac: Unify methods to define and map firmware files.
 
-I applied some of this. I think we need to keep the "state" sysfs
-interface, perhaps you want to document it more clearly. I also didn't
-apply the first patch since I'd fixed the suspend/pause issue, please
-see if any of your patches remain relevant and resend that.
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+> @@ -44,25 +44,29 @@ enum brcmf_pcie_state {
+>         BRCMFMAC_PCIE_STATE_UP
+>  };
+>
+> -
+> -#define BRCMF_PCIE_43602_FW_NAME               "brcm/brcmfmac43602-pcie.bin"
+> -#define BRCMF_PCIE_43602_NVRAM_NAME            "brcm/brcmfmac43602-pcie.txt"
+> -#define BRCMF_PCIE_4350_FW_NAME                        "brcm/brcmfmac4350-pcie.bin"
+> -#define BRCMF_PCIE_4350_NVRAM_NAME             "brcm/brcmfmac4350-pcie.txt"
+> -#define BRCMF_PCIE_4356_FW_NAME                        "brcm/brcmfmac4356-pcie.bin"
+> -#define BRCMF_PCIE_4356_NVRAM_NAME             "brcm/brcmfmac4356-pcie.txt"
+> -#define BRCMF_PCIE_43570_FW_NAME               "brcm/brcmfmac43570-pcie.bin"
+> -#define BRCMF_PCIE_43570_NVRAM_NAME            "brcm/brcmfmac43570-pcie.txt"
+> -#define BRCMF_PCIE_4358_FW_NAME                        "brcm/brcmfmac4358-pcie.bin"
+> -#define BRCMF_PCIE_4358_NVRAM_NAME             "brcm/brcmfmac4358-pcie.txt"
+> -#define BRCMF_PCIE_4359_FW_NAME                        "brcm/brcmfmac4359-pcie.bin"
+> -#define BRCMF_PCIE_4359_NVRAM_NAME             "brcm/brcmfmac4359-pcie.txt"
+> -#define BRCMF_PCIE_4365_FW_NAME                        "brcm/brcmfmac4365b-pcie.bin"
+> -#define BRCMF_PCIE_4365_NVRAM_NAME             "brcm/brcmfmac4365b-pcie.txt"
+> -#define BRCMF_PCIE_4366_FW_NAME                        "brcm/brcmfmac4366b-pcie.bin"
+> -#define BRCMF_PCIE_4366_NVRAM_NAME             "brcm/brcmfmac4366b-pcie.txt"
+> -#define BRCMF_PCIE_4371_FW_NAME                        "brcm/brcmfmac4371-pcie.bin"
+> -#define BRCMF_PCIE_4371_NVRAM_NAME             "brcm/brcmfmac4371-pcie.txt"
+> +BRCMF_FW_NVRAM_DEF(43602, "brcmfmac43602-pcie.bin", "brcmfmac43602-pcie.txt");
+> +BRCMF_FW_NVRAM_DEF(4350, "brcmfmac4350-pcie.bin", "brcmfmac4350-pcie.txt");
+> +BRCMF_FW_NVRAM_DEF(4356, "brcmfmac4356-pcie.bin", "brcmfmac4356-pcie.txt");
+> +BRCMF_FW_NVRAM_DEF(43570, "brcmfmac43570-pcie.bin", "brcmfmac43570-pcie.txt");
+> +BRCMF_FW_NVRAM_DEF(4358, "brcmfmac4358-pcie.bin", "brcmfmac4358-pcie.txt");
+> +BRCMF_FW_NVRAM_DEF(4359, "brcmfmac4359-pcie.bin", "brcmfmac4359-pcie.txt");
+> +BRCMF_FW_NVRAM_DEF(4365B, "brcmfmac4365b-pcie.bin", "brcmfmac4365b-pcie.txt");
+> +BRCMF_FW_NVRAM_DEF(4366B, "brcmfmac4366b-pcie.bin", "brcmfmac4366b-pcie.txt");
+> +BRCMF_FW_NVRAM_DEF(4371, "brcmfmac4371-pcie.bin", "brcmfmac4371-pcie.txt");
+> +
+> +static struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
+> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43602_CHIP_ID, 0xFFFFFFFF, 43602),
+> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4350_CHIP_ID, 0xFFFFFFFF, 4350),
+> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356),
+> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43567_CHIP_ID, 0xFFFFFFFF, 43570),
+> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43569_CHIP_ID, 0xFFFFFFFF, 43570),
+> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43570_CHIP_ID, 0xFFFFFFFF, 43570),
+> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4358_CHIP_ID, 0xFFFFFFFF, 4358),
+> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4359_CHIP_ID, 0xFFFFFFFF, 4359),
+> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4365_CHIP_ID, 0xFFFFFFFF, 4365B),
+> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4366_CHIP_ID, 0xFFFFFFFF, 4366B),
+> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4371_CHIP_ID, 0xFFFFFFFF, 4371),
+> +};
+>
+>  #define BRCMF_PCIE_FW_UP_TIMEOUT               2000 /* msec */
+>
+> @@ -202,26 +206,6 @@ enum brcmf_pcie_state {
+>  #define BRCMF_PCIE_LINK_STATUS_CTRL_ASPM_ENAB  3
+>
+>
+> -MODULE_FIRMWARE(BRCMF_PCIE_43602_FW_NAME);
+> -MODULE_FIRMWARE(BRCMF_PCIE_43602_NVRAM_NAME);
+> -MODULE_FIRMWARE(BRCMF_PCIE_4350_FW_NAME);
+> -MODULE_FIRMWARE(BRCMF_PCIE_4350_NVRAM_NAME);
 
-Thanks,
-johannes
+This change breaks the build with gcc < 4.3:
+
+    drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:598:
+error: redefinition of ‘__UNIQUE_ID_firmware598’
+    drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:598:
+error: previous definition of ‘__UNIQUE_ID_firmware598’ was here
+    drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:599:
+error: redefinition of ‘__UNIQUE_ID_firmware600’
+    drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:599:
+error: previous definition of ‘__UNIQUE_ID_firmware600’ was here
+    ...
+
+The reason is that BRCMF_FW_NVRAM_DEF() expands to two instances of
+MODULE_FIRMWARE():
+
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+>
+> +#define BRCMF_FW_NVRAM_DEF(fw_nvram_name, fw, nvram) \
+> +static const char BRCM_ ## fw_nvram_name ## _FIRMWARE_NAME[] = \
+> +       BRCMF_FW_DEFAULT_PATH fw; \
+> +static const char BRCM_ ## fw_nvram_name ## _NVRAM_NAME[] = \
+> +       BRCMF_FW_DEFAULT_PATH nvram; \
+> +MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH fw); \
+> +MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH nvram)
+
+When compiling using gcc < 4.3, __UNIQUE_ID() uses __LINE__ instead of
+__COUNTER__, as the latter is not available. Hence it derives a "unique" ID
+from the same source line number, causing a redefinition.
+
+Gr{oetje,eeting}s,
+
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
