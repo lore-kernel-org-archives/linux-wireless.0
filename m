@@ -1,107 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:33256 "EHLO
-	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751781AbcAUBVK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 20:21:10 -0500
-Received: by mail-pa0-f67.google.com with SMTP id pv5so1014689pac.0
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:21:10 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 10/27] staging: wilc1000: rename pstrMessageList in struct message_queue
-Date: Thu, 21 Jan 2016 10:20:13 +0900
-Message-Id: <1453339230-1377-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_022115_006033_087F2384)
-In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:42894 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753184AbcANMr7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jan 2016 07:47:59 -0500
+Subject: Re: [RFC/RFT v3] mac80211: Add NEED_ALIGNED4_SKBS hw flag
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless@vger.kernel.org
+References: <1451999161-7286-1-git-send-email-janusz.dziedzic@tieto.com>
+ <1452774738.2444.22.camel@sipsolutions.net>
+From: Felix Fietkau <nbd@openwrt.org>
+Message-ID: <569798F7.3050409@openwrt.org> (sfid-20160114_134804_629815_FC05FD60)
+Date: Thu, 14 Jan 2016 13:47:51 +0100
+MIME-Version: 1.0
+In-Reply-To: <1452774738.2444.22.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pstrMessageList to msg_list to avoid camelcase.
+On 2016-01-14 13:32, Johannes Berg wrote:
+> On Tue, 2016-01-05 at 14:06 +0100, Janusz Dziedzic wrote:
+>>  	struct net_device *prev_dev = NULL;
+>> +	unsigned int padsize, hdrlen;
+>>  	int rtap_len;
+>>  
+>> +	/* Remove padding if was added */
+>> +	if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS)) {
+>> +		hdrlen = ieee80211_hdrlen(hdr->frame_control);
+>> +		padsize = hdrlen & 3;
+>> +
+>> +		if (padsize && skb->len > hdrlen + padsize) {
+>> +			memmove(skb->data + padsize, skb->data,
+>> hdrlen);
+>> +			skb_pull(skb, padsize);
+>> +		}
+>> +	}
+> 
+> But perhaps this should just be done by the driver?
+I think it's better to do it here, because the driver can't know if a
+frame will end up on a (cooked) monitor interface.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_msgqueue.c | 20 ++++++++++----------
- drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
- 2 files changed, 11 insertions(+), 11 deletions(-)
+>> +	/* Check if aligned skb required */
+>> +	if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS))
+>> +		build.hdr_len += build.hdr_len & 3;
+> 
+> Pretty sure you need to increase the reserved space in the fast-xmit
+> struct?
+Is the round_up he added not enough?
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 363e003..d13c9a7 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -15,7 +15,7 @@ int wilc_mq_create(struct message_queue *pHandle)
- {
- 	spin_lock_init(&pHandle->lock);
- 	sema_init(&pHandle->sem, 0);
--	pHandle->pstrMessageList = NULL;
-+	pHandle->msg_list = NULL;
- 	pHandle->recv_count = 0;
- 	pHandle->exiting = false;
- 	return 0;
-@@ -37,11 +37,11 @@ int wilc_mq_destroy(struct message_queue *pHandle)
- 		pHandle->recv_count--;
- 	}
- 
--	while (pHandle->pstrMessageList) {
--		struct message *pstrMessge = pHandle->pstrMessageList->next;
-+	while (pHandle->msg_list) {
-+		struct message *pstrMessge = pHandle->msg_list->next;
- 
--		kfree(pHandle->pstrMessageList);
--		pHandle->pstrMessageList = pstrMessge;
-+		kfree(pHandle->msg_list);
-+		pHandle->msg_list = pstrMessge;
- 	}
- 
- 	return 0;
-@@ -86,10 +86,10 @@ int wilc_mq_send(struct message_queue *pHandle,
- 	spin_lock_irqsave(&pHandle->lock, flags);
- 
- 	/* add it to the message queue */
--	if (!pHandle->pstrMessageList) {
--		pHandle->pstrMessageList  = pstrMessage;
-+	if (!pHandle->msg_list) {
-+		pHandle->msg_list  = pstrMessage;
- 	} else {
--		struct message *pstrTailMsg = pHandle->pstrMessageList;
-+		struct message *pstrTailMsg = pHandle->msg_list;
- 
- 		while (pstrTailMsg->next)
- 			pstrTailMsg = pstrTailMsg->next;
-@@ -135,7 +135,7 @@ int wilc_mq_recv(struct message_queue *pHandle,
- 	down(&pHandle->sem);
- 	spin_lock_irqsave(&pHandle->lock, flags);
- 
--	pstrMessage = pHandle->pstrMessageList;
-+	pstrMessage = pHandle->msg_list;
- 	if (!pstrMessage) {
- 		spin_unlock_irqrestore(&pHandle->lock, flags);
- 		PRINT_ER("pstrMessage is null\n");
-@@ -154,7 +154,7 @@ int wilc_mq_recv(struct message_queue *pHandle,
- 	memcpy(pvRecvBuffer, pstrMessage->buf, pstrMessage->len);
- 	*pu32ReceivedLength = pstrMessage->len;
- 
--	pHandle->pstrMessageList = pstrMessage->next;
-+	pHandle->msg_list = pstrMessage->next;
- 
- 	kfree(pstrMessage->buf);
- 	kfree(pstrMessage);
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index dcf54ea..7e7ec06 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -24,7 +24,7 @@ struct message_queue {
- 	spinlock_t lock;
- 	bool exiting;
- 	u32 recv_count;
--	struct message *pstrMessageList;
-+	struct message *msg_list;
- };
- 
- /*!
--- 
-2.6.4
-
+- Felix
