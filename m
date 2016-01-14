@@ -1,56 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:27372 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751096AbcAUIz3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 03:55:29 -0500
-Date: Thu, 21 Jan 2016 11:55:08 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: Chaehyun Lim <chaehyun.lim@gmail.com>, devel@driverdev.osuosl.org,
-	chris.park@atmel.com, austin.shin@atmel.com,
-	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-	johnny.kim@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com
-Subject: Re: [PATCH 25/27] staging: wilc1000: fix coding style of kmalloc
- usage
-Message-ID: <20160121085508.GD6370@mwanda> (sfid-20160121_095532_554481_71AE4DB1)
-References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
- <1453339230-1377-25-git-send-email-chaehyun.lim@gmail.com>
- <20160121081816.GA10063@sudip-pc>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160121081816.GA10063@sudip-pc>
+Received: from s3.sipsolutions.net ([5.9.151.49]:33470 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752990AbcANLKg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jan 2016 06:10:36 -0500
+Message-ID: <1452769832.2444.14.camel@sipsolutions.net> (sfid-20160114_121044_346336_2FC9C7ED)
+Subject: Re: [RFC V2 2/3] nl80211: add bss selection attribute to CONNECT
+ command
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 14 Jan 2016 12:10:32 +0100
+In-Reply-To: <1452678583-20086-3-git-send-email-arend@broadcom.com>
+References: <1452678583-20086-1-git-send-email-arend@broadcom.com>
+	 <1452678583-20086-3-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 21, 2016 at 01:48:16PM +0530, Sudip Mukherjee wrote:
-> On Thu, Jan 21, 2016 at 10:20:28AM +0900, Chaehyun Lim wrote:
-> > This patch fixes coding style of kmalloc usage found by checkpatch.
-> > CHECK: Prefer kmalloc(sizeof(*new_msg)...) over kmalloc(sizeof(struct message)...)
-> > 
-> > Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
-> > ---
-> >  drivers/staging/wilc1000/wilc_msgqueue.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-> > index 7107715..c7a60f4 100644
-> > --- a/drivers/staging/wilc1000/wilc_msgqueue.c
-> > +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-> > @@ -70,7 +70,7 @@ int wilc_mq_send(struct message_queue *mq,
-> >  	}
-> >  
-> >  	/* construct a new message */
-> > -	new_msg = kmalloc(sizeof(struct message), GFP_ATOMIC);
-> > +	new_msg = kmalloc(sizeof(*new_msg), GFP_ATOMIC);
-> 
-> This checkpatch error was introduced by 1/27 patch of this series. Maybe
-> it will be better to fix it in that one.
+On Wed, 2016-01-13 at 10:49 +0100, Arend van Spriel wrote:
+> 
+> +/**
+> + * enum nl80211_attr_bss_select - attributes for bss selection.
 
-The warning was introduced there but the issue went back further it's
-just that checkpatch didn't detect it because of other issues.  This
-seems fine.
+I'd prefer nl80211_bss_select_attr in this name and the constants too,
+so it's more obvious that it doesn't belong to the top-level namespace.
 
-regards,
-dan carpenter
+> + * @__NL80211_ATTR_BSS_SELECT_INVALID: reserved.
+> + * @NL80211_ATTR_BSS_SELECT_PRIMITIVE: Indicates what criteria are to
+> + *> 	> be used for bss selection. Value according
+> + *	%enum nl80211_bss_select_primitive.
 
+This I don't understand now. Wouldn't the given attributes just be
+used?
+
+I was thinking you'd keep the NLA_FLAG "RSSI" preference, and use the
+attribute values for the bitmap ...
+
+But still I think this isn't described very well.
+
+Perhaps a good way of documenting this would be to say each primitive
+has a priority? E.g.
+
+    Primitives with a lower document priority are executed first while
+    selecting a BSS:
+
+    RSSI (priority 100)
+    BAND_PREF (priority 1)
+    RSSI_ADJUST (priority 1) [since it's mutually exclusive with
+    BAND_PREF]
+
+> + * @NL80211_ATTR_BSS_SELECT_BAND_PREF: Required attribute indicating the
+> + *	preferred band. Value according %enum nl80211_band.
+
+Why required?
+
+> + * @NL80211_ATTR_BSS_SELECT_RSSI_ADJUST: When present the value is to be
+> + *	added to the RSSI level for BSS-es in the preferred band (s8).
+
+Oh, ok, I see. It's necessary with this too. Still, I wouldn't say
+required, in case future extensions don't need it.
+
+You should also more clearly document this though, I think, since in
+this case the preferred band isn't really a preferred band any more, it
+becomes just the "adjusted band".
+
+I wonder if it'd be simpler to define two band attributes, and make
+RSSI_ADJUST and BAND_PREF mutually exclusive, adding RSSI_ADJUST_BAND.
+We could also use a complex struct value for the contents of
+RSSI_ADJUST, but that doesn't seem great either.
+
+johannes
