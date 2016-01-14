@@ -1,54 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:37166 "EHLO
-	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751415AbcAEKQx (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:54470 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751939AbcANJPK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 05:16:53 -0500
-Received: by mail-wm0-f50.google.com with SMTP id f206so21508401wmf.0
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2016 02:16:53 -0800 (PST)
+	Thu, 14 Jan 2016 04:15:10 -0500
+Message-ID: <5697671B.2040302@broadcom.com> (sfid-20160114_101530_397654_CE4277A9)
+Date: Thu, 14 Jan 2016 10:15:07 +0100
+From: Arend van Spriel <arend@broadcom.com>
 MIME-Version: 1.0
-In-Reply-To: <20160105100659.GA3864@w1.fi>
-References: <1451984419-5727-1-git-send-email-janusz.dziedzic@tieto.com>
-	<20160105094504.GA3015@w1.fi>
-	<CALhHN=qfmdQuTeHEAvE0BgS2XvZJrBVUhU3BYgXMCY-pe5Ur0g@mail.gmail.com>
-	<20160105100659.GA3864@w1.fi>
-Date: Tue, 5 Jan 2016 11:16:52 +0100
-Message-ID: <CALhHN=q1kFn7tTQNhj=WH+7RUz+KT+fn9ovBaYJ_wzE5TtXu8Q@mail.gmail.com> (sfid-20160105_111657_088332_5773B459)
-Subject: Re: [PATCH] mac80211: add use_minrate param to ieee80211_tx_prepare_skb()
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Jouni Malinen <j@w1.fi>
+Subject: Re: [RFC V2 0/3] nl80211: allow configuration of BSS selection
+References: <1452678583-20086-1-git-send-email-arend@broadcom.com>
+In-Reply-To: <1452678583-20086-1-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5 January 2016 at 11:06, Jouni Malinen <j@w1.fi> wrote:
-> On Tue, Jan 05, 2016 at 10:56:18AM +0100, Janusz Dziedzic wrote:
->> On 5 January 2016 at 10:45, Jouni Malinen <j@w1.fi> wrote:
->> > On Tue, Jan 05, 2016 at 10:00:19AM +0100, Janusz Dziedzic wrote:
->> >> Add use_minrate param to ieee80211_tx_prepare_skb() function.
->> >> This is useful in case we would like to send frames
->> >> with lowest rates, eg. nullfunc, probe_resp.
->> >
->> > I could kind of understand this for short frames like Data nullfunc and
->> > PS-Poll, but why would we like to hard code Probe Response frames to be
->> > sent at the lowest rate? Shouldn't the frames be sent at a rate that is
->> > most likely to get them through and do so in a manner that does not use
->> > excessive amount of air time?
->> >
->> This is used to get/send probe_req() frame, next used by ath9k
->> "hw_scan" when chanctx used.
+On 01/13/2016 10:49 AM, Arend van Spriel wrote:
+> This patch series adds support for configuration of BSS selection done by
+> the driver and/or firmware. It allows user-space to pass selection criteria
+> with the NL80211_CMD_CONNECT using NL80211_ATTR_BSS_SELECT. When user-space
+> does provide this attribute and no explicit BSSID is provided it will pass
+> the BSS selection criteria to the driver if the driver supports it.
 >
-> Sure, but that's not what I'm asking. I'm asking why would we want to
-> force Probe Response frames to use the lowest rate based on that commit
-> message above. If that's a typo and should have been Probe Request
-> frame, I'm going to ask the same question about Probe Request frames.
-> Why would we like to force the lowest rate to be used for them?
+> When multiple BSS-es are found belonging to the same ESS, ie. Infra-BSS with
+> same SSID, the criteria can be used to select a BSS. The criteria defined are:
 >
-I did it because most of devices I saw send probe_req using lowest rates?
-Anyway I can skip this for probe_res() frames in next patch if this is
-better idea.
+> 1. RSSI based selection.
+> 2. Band selection, RSSI based selection.
+> 3. RSSI adjustment in given band, RSSI based selection.
+>
+> V2:
+>   - incorporate comments from Johannes Berg (may have missed some).
+>   - split nl80211 patch in two separate patches.
 
-> --
-> Jouni Malinen                                            PGP id EFC895FA
+I looked into the suggested mac80211 "demo", but it seems this bss 
+selection could be handled in net/wireless/sme.c for drivers support 
+.assoc() and friends instead of .connect(). However, I recall Jouni 
+suggesting to have NL80211_ATTR_BSS_SELECT in NL80211_CMD_ASSOC as well. 
+So I guess wpa_s uses that command directly?
+
+Regards,
+Arend
+
+> Arend van Spriel (3):
+>    nl80211: add extended feature for BSS selection support
+>    nl80211: add bss selection attribute to CONNECT command
+>    brcmfmac: add support for nl80211 BSS_SELECT feature
+>
+>   drivers/net/wireless/brcm80211/brcmfmac/cfg80211.c | 63 ++++++++++++++++
+>   drivers/net/wireless/brcm80211/brcmfmac/common.c   | 38 ++++++----
+>   drivers/net/wireless/brcm80211/brcmfmac/core.h     |  1 +
+>   include/net/cfg80211.h                             | 34 +++++++++
+>   include/uapi/linux/nl80211.h                       | 52 +++++++++++++
+>   net/wireless/core.c                                |  5 ++
+>   net/wireless/nl80211.c                             | 86 ++++++++++++++++++++++
+>   7 files changed, 264 insertions(+), 15 deletions(-)
+>
+
