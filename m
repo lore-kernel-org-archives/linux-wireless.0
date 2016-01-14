@@ -1,86 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:35662 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754489AbcAUBVb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 20:21:31 -0500
-Received: by mail-pa0-f65.google.com with SMTP id gi1so1022651pac.2
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:21:31 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 17/27] staging: wilc1000: rename pstrMessage in wilc_mq_send
-Date: Thu, 21 Jan 2016 10:20:20 +0900
-Message-Id: <1453339230-1377-17-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_023655_520740_BFFBD7AE)
-In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:33932 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753049AbcANMcV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Jan 2016 07:32:21 -0500
+Message-ID: <1452774738.2444.22.camel@sipsolutions.net> (sfid-20160114_133228_735250_DCB2445B)
+Subject: Re: [RFC/RFT v3] mac80211: Add NEED_ALIGNED4_SKBS hw flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless@vger.kernel.org
+Cc: nbd@openwrt.org
+Date: Thu, 14 Jan 2016 13:32:18 +0100
+In-Reply-To: <1451999161-7286-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20160105_140614_128232_306916F3)
+References: <1451999161-7286-1-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20160105_140614_128232_306916F3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pstrMessage to new_msg to avoid camelcase.
+On Tue, 2016-01-05 at 14:06 +0100, Janusz Dziedzic wrote:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_msgqueue.c | 21 ++++++++++-----------
- 1 file changed, 10 insertions(+), 11 deletions(-)
+> +++ b/net/mac80211/status.c
+> @@ -678,9 +678,22 @@ void ieee80211_tx_monitor(struct ieee80211_local
+> *local, struct sk_buff *skb,
+>  	struct sk_buff *skb2;
+>  	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+>  	struct ieee80211_sub_if_data *sdata;
+> +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb-
+> >data;
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 8e37cff0..9a80fe6 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -57,7 +57,7 @@ int wilc_mq_send(struct message_queue *mq,
- 		 const void *send_buf, u32 send_buf_size)
- {
- 	unsigned long flags;
--	struct message *pstrMessage = NULL;
-+	struct message *new_msg = NULL;
- 
- 	if ((!mq) || (send_buf_size == 0) || (!send_buf)) {
- 		PRINT_ER("mq or send_buf is null\n");
-@@ -70,16 +70,15 @@ int wilc_mq_send(struct message_queue *mq,
- 	}
- 
- 	/* construct a new message */
--	pstrMessage = kmalloc(sizeof(struct message), GFP_ATOMIC);
--	if (!pstrMessage)
-+	new_msg = kmalloc(sizeof(struct message), GFP_ATOMIC);
-+	if (!new_msg)
- 		return -ENOMEM;
- 
--	pstrMessage->len = send_buf_size;
--	pstrMessage->next = NULL;
--	pstrMessage->buf = kmemdup(send_buf, send_buf_size,
--				   GFP_ATOMIC);
--	if (!pstrMessage->buf) {
--		kfree(pstrMessage);
-+	new_msg->len = send_buf_size;
-+	new_msg->next = NULL;
-+	new_msg->buf = kmemdup(send_buf, send_buf_size, GFP_ATOMIC);
-+	if (!new_msg->buf) {
-+		kfree(new_msg);
- 		return -ENOMEM;
- 	}
- 
-@@ -87,14 +86,14 @@ int wilc_mq_send(struct message_queue *mq,
- 
- 	/* add it to the message queue */
- 	if (!mq->msg_list) {
--		mq->msg_list  = pstrMessage;
-+		mq->msg_list  = new_msg;
- 	} else {
- 		struct message *pstrTailMsg = mq->msg_list;
- 
- 		while (pstrTailMsg->next)
- 			pstrTailMsg = pstrTailMsg->next;
- 
--		pstrTailMsg->next = pstrMessage;
-+		pstrTailMsg->next = new_msg;
- 	}
- 
- 	spin_unlock_irqrestore(&mq->lock, flags);
--- 
-2.6.4
+Could be (void *) cast
 
+>  	struct net_device *prev_dev = NULL;
+> +	unsigned int padsize, hdrlen;
+>  	int rtap_len;
+>  
+> +	/* Remove padding if was added */
+> +	if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS)) {
+> +		hdrlen = ieee80211_hdrlen(hdr->frame_control);
+> +		padsize = hdrlen & 3;
+> +
+> +		if (padsize && skb->len > hdrlen + padsize) {
+> +			memmove(skb->data + padsize, skb->data,
+> hdrlen);
+> +			skb_pull(skb, padsize);
+> +		}
+> +	}
+
+But perhaps this should just be done by the driver?
+
+>  /* tx handlers */
+>  static ieee80211_tx_result debug_noinline
+> +ieee80211_tx_h_hdrlen_add(struct ieee80211_tx_data *tx)
+> +{
+> +	struct ieee80211_hw *hw = &tx->local->hw;
+> +	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)tx->skb-
+> >data;
+> +
+> +	tx->hdrlen = ieee80211_hdrlen(hdr->frame_control);
+> +
+> +	if (ieee80211_hw_check(hw, NEEDS_ALIGNED4_SKBS))
+> +		tx->hdrlen += tx->hdrlen & 3;
+> +
+> +	return TX_CONTINUE;
+> +}
+
+Can't we do this in the same place that actually adds the padding? Even
+if not, I don't think it should be a separate TX handler, most of the
+tx setup is done elsewhere.
+
+> +	/* Check if aligned skb required */
+> +	if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS))
+> +		build.hdr_len += build.hdr_len & 3;
+
+Pretty sure you need to increase the reserved space in the fast-xmit
+struct?
+
+> -	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+> +	hdrlen = tx->hdrlen;
+
+maybe you can also do all these changes separately?
+
+>  	pos += IEEE80211_CCMP_HDR_LEN;
+> +
+>  	ccmp_special_blocks(skb, pn, b_0, aad);
+
+spurious change
+
+johannes
