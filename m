@@ -1,55 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f172.google.com ([209.85.220.172]:33312 "EHLO
-	mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751702AbcAGQcv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 11:32:51 -0500
-Received: by mail-qk0-f172.google.com with SMTP id p186so105710547qke.0
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2016 08:32:50 -0800 (PST)
+Received: from arrakis.dune.hu ([78.24.191.176]:55540 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751388AbcAOL2Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jan 2016 06:28:25 -0500
+Subject: Re: [PATCH 1/5] ath9k: avoid ANI restart if no trigger
+To: miaoqing@codeaurora.org, linville@tuxdriver.com
+References: <1452821009-1156-1-git-send-email-miaoqing@codeaurora.org>
+ <1452821009-1156-2-git-send-email-miaoqing@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com
+From: Felix Fietkau <nbd@openwrt.org>
+Message-ID: <5698D7D0.5080204@openwrt.org> (sfid-20160115_122829_138687_5E0C042D)
+Date: Fri, 15 Jan 2016 12:28:16 +0100
 MIME-Version: 1.0
-In-Reply-To: <CALnQHM1mzqFbprQqujB7BWncOa=D9uAxLQ0paiv-21vrx+hFvw@mail.gmail.com>
-References: <CALnQHM3C=DVaTf58XDyh+rttVs-FSpc4ghozg9HJktEonq7w-g@mail.gmail.com>
- <568E913D.7050301@candelatech.com> <CALnQHM1mzqFbprQqujB7BWncOa=D9uAxLQ0paiv-21vrx+hFvw@mail.gmail.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Thu, 7 Jan 2016 22:02:31 +0530
-Message-ID: <CABPxzYKaMPY6bz=Nr+W2wG5y_bV_wFN=7AMNUNcZNJBeVyYVJA@mail.gmail.com> (sfid-20160107_173254_117356_419EBB11)
-Subject: Re: lost connectivity until "wpa_cli reassociate" is issued
-To: David Mosberger <davidm@egauge.net>
-Cc: Ben Greear <greearb@candelatech.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1452821009-1156-2-git-send-email-miaoqing@codeaurora.org>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 7, 2016 at 9:59 PM, David Mosberger <davidm@egauge.net> wrote:
->
-> Ben,
->
-> On Thu, Jan 7, 2016 at 9:24 AM, Ben Greear <greearb@candelatech.com> wrote:
-> > On 01/07/2016 08:19 AM, David Mosberger wrote:
-> >>
-> >> We are seeing a curious issue where WLAN connectivity sometimes
-> >> gets stuck until a "wpa_cli reassociate" command is issued.
-> >>
-> >> At the WPA level, everything appears to be working fine)
-> >> (see thread starting at
-> >> http://lists.infradead.org/pipermail/hostap/2016-January/034454.html).
-> >
-> > I don't remember seeing you mention the driver and NIC you are using.
-> >
-> > I think this is likely a driver bug, so please provide that info.
->
-> Sure, we're using rtl8192cu.  I started out suspecting a driver bug as
-> well, but since we're processing management frames during those
-> "stuck" periods just fine (see
-> debug output in
-> http://lists.infradead.org/pipermail/hostap/2016-January/034459.html),
-> I'm not so sure anymore.  Like mac80211, we have patched rtl8192cu
-> driver with current
-> bug-fixes already.
+On 2016-01-15 02:23, miaoqing@codeaurora.org wrote:
+> From: Miaoqing Pan <miaoqing@codeaurora.org>
+> 
+> ath9k_ani_restart() is always be invoked even if the trigger
+> condition is false.
+> 
+> Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+> ---
+>  drivers/net/wireless/ath/ath9k/ani.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+> index 25e45e4..0f74d59 100644
+> --- a/drivers/net/wireless/ath/ath9k/ani.c
+> +++ b/drivers/net/wireless/ath/ath9k/ani.c
+> @@ -444,14 +444,16 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
+>  		    ofdmPhyErrRate < ah->config.ofdm_trig_low) {
+>  			ath9k_hw_ani_lower_immunity(ah);
+>  			aniState->ofdmsTurn = !aniState->ofdmsTurn;
+> +			ath9k_ani_restart(ah);
+>  		} else if (ofdmPhyErrRate > ah->config.ofdm_trig_high) {
+>  			ath9k_hw_ani_ofdm_err_trigger(ah);
+>  			aniState->ofdmsTurn = false;
+> +			ath9k_ani_restart(ah);
+>  		} else if (cckPhyErrRate > ah->config.cck_trig_high) {
+>  			ath9k_hw_ani_cck_err_trigger(ah);
+>  			aniState->ofdmsTurn = true;
+> +			ath9k_ani_restart(ah);
+>  		}
+How about adding an 'else return' here instead of duplicating the
+ath9k_ani_restart lines?
 
-Management frames use a different queue (VO)
-from the logs it looks like a data path issue in driver/FW.
-
-The re-association might be clearing/triggering TX in driver
-solving the issue.
+- Felix
