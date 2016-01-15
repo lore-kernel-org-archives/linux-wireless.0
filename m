@@ -1,41 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f175.google.com ([209.85.217.175]:34223 "EHLO
-	mail-lb0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752057AbcAXLqB (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36887 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754264AbcAOKSx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jan 2016 06:46:01 -0500
-Received: by mail-lb0-f175.google.com with SMTP id cl12so61201025lbc.1
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jan 2016 03:46:00 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <56A4A837.5030509@gmail.com>
-References: <bug-110551-148371@https.bugzilla.kernel.org/>
-	<bug-110551-148371-jY9LWPEyBc@https.bugzilla.kernel.org/>
-	<56A4A837.5030509@gmail.com>
-Date: Sun, 24 Jan 2016 13:45:59 +0200
-Message-ID: <CANUX_P3CARmHDJ5gpdOdo3ppcRBmZx7j0vqwaHKLPnmwDhLjww@mail.gmail.com> (sfid-20160124_124641_868807_5620A251)
-Subject: Re: [Bug 110551] iwlwifi: dvm: cannot turn off wifi LED
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Hubert Tarasiuk <hubert.tarasiuk@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	bugzilla-daemon@bugzilla.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Fri, 15 Jan 2016 05:18:53 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v2 5/5] ath9k: fix data bus error on ar9300 and ar9580
+Date: Fri, 15 Jan 2016 18:17:21 +0800
+Message-Id: <1452853041-3674-6-git-send-email-miaoqing@codeaurora.org> (sfid-20160115_111857_852991_9D31F41A)
+In-Reply-To: <1452853041-3674-1-git-send-email-miaoqing@codeaurora.org>
+References: <1452853041-3674-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 24, 2016 at 12:32 PM, Hubert Tarasiuk
-<hubert.tarasiuk@gmail.com> wrote:
-> Attached is the patch for bug 110551.
->
-> W dniu 24.01.2016 o 11:16, bugzilla-daemon@bugzilla.kernel.org pisze:
->> https://bugzilla.kernel.org/show_bug.cgi?id=110551
->>
->> --- Comment #13 from Emmanuel Grumbach <emmanuel.grumbach@intel.com> ---
->> https://bugzilla.kernel.org/attachment.cgi?id=201271
->>
->> This one seems to have a fix for the module param as well.
->> I would much prefer you to send the patch to the wireless mailing list rather
->> than attaching it to this bugzilla.
->>
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-The better way is send the patches with git-send-email tool.
+One crash issue be found on ar9300: RTC_RC reg read leads crash, leading
+the data bus error, due to RTC_RC reg write not happen properly.
+
+Warm Reset trigger in continuous beacon stuck for one of the customer for
+other chip, noticed the MAC was stuck in RTC reset. After analysis noticed
+DMA did not complete when RTC was put in reset.
+
+So, before resetting the MAC need to make sure there are no pending DMA
+transactions because this reset does not reset all parts of the chip.
+
+The 12th and 11th bit of MAC _DMA_CFG register used to do that.
+	12 cfg_halt_ack 0x0
+		0 DMA has not yet halted
+		1 DMA has halted
+	11 cfg_halt_req 0x0
+		0 DMA logic operates normally
+		1 Request DMA logic to stop so software can reset the MAC
+
+The Bit [12] of this register indicates when the halt has taken effect or
+not. the DMA halt IS NOT recoverable; once software sets bit [11] to
+request a DMA halt, software must wait for bit [12] to be set and reset
+the MAC.
+
+So, the same thing we implemented for ar9580 chip.
+
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  | 10 ++++++++++
+ drivers/net/wireless/ath/ath9k/reg.h |  4 +++-
+ 2 files changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 257f46e..e7a3101 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1368,6 +1368,16 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
+ 	if (ath9k_hw_mci_is_enabled(ah))
+ 		ar9003_mci_check_gpm_offset(ah);
+ 
++	/* DMA HALT added to resolve ar9300 and ar9580 bus error during
++	 * RTC_RC reg read
++	 */
++	if (AR_SREV_9300(ah) || AR_SREV_9580(ah)) {
++		REG_SET_BIT(ah, AR_CFG, AR_CFG_HALT_REQ);
++		ath9k_hw_wait(ah, AR_CFG, AR_CFG_HALT_ACK, AR_CFG_HALT_ACK,
++			      20 * AH_WAIT_TIMEOUT);
++		REG_CLR_BIT(ah, AR_CFG, AR_CFG_HALT_REQ);
++	}
++
+ 	REG_WRITE(ah, AR_RTC_RC, rst_flags);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index caba54d..c8d35fe 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -34,8 +34,10 @@
+ #define AR_CFG_SWRG          0x00000010
+ #define AR_CFG_AP_ADHOC_INDICATION 0x00000020
+ #define AR_CFG_PHOK          0x00000100
+-#define AR_CFG_CLK_GATE_DIS  0x00000400
+ #define AR_CFG_EEBS          0x00000200
++#define AR_CFG_CLK_GATE_DIS  0x00000400
++#define AR_CFG_HALT_REQ	     0x00000800
++#define AR_CFG_HALT_ACK	     0x00001000
+ #define AR_CFG_PCI_MASTER_REQ_Q_THRESH         0x00060000
+ #define AR_CFG_PCI_MASTER_REQ_Q_THRESH_S       17
+ 
+-- 
+1.9.1
+
