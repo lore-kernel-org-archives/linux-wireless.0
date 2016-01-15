@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:34939 "EHLO
-	mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751428AbcAaHad (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:36867 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755534AbcAOKSl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2016 02:30:33 -0500
-Received: by mail-lf0-f67.google.com with SMTP id j99so3899173lfi.2
-        for <linux-wireless@vger.kernel.org>; Sat, 30 Jan 2016 23:30:32 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20160130235613.GB1507@localhost>
-References: <1454062138-18012-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
- <1454062138-18012-4-git-send-email-henning.rogge@fkie.fraunhofer.de> <20160130235613.GB1507@localhost>
-From: Henning Rogge <hrogge@gmail.com>
-Date: Sun, 31 Jan 2016 08:30:01 +0100
-Message-ID: <CAGnRvurcTY4VaZ-q8KTfW07LsnAEgkhDsBZeHiaVa88u-kf6yA@mail.gmail.com> (sfid-20160131_083036_694226_0D4E8336)
-Subject: Re: [PATCH v2 3/3] mac80211: Unify mesh and mpp path removal function
-To: Bob Copeland <me@bobcopeland.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 15 Jan 2016 05:18:41 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v2 4/5] ath9k: fix inconsistent use of tab and space in indentation
+Date: Fri, 15 Jan 2016 18:17:20 +0800
+Message-Id: <1452853041-3674-5-git-send-email-miaoqing@codeaurora.org> (sfid-20160115_111845_185949_E50277A3)
+In-Reply-To: <1452853041-3674-1-git-send-email-miaoqing@codeaurora.org>
+References: <1452853041-3674-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 31, 2016 at 12:56 AM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Fri, Jan 29, 2016 at 11:08:58AM +0100, Henning Rogge wrote:
->> @@ -951,37 +974,14 @@ enddel:
->>   */
->>  static int mpp_path_del(struct ieee80211_sub_if_data *sdata, const u8 *addr)
->>  {
->> -     struct mesh_table *tbl;
->> -     struct mesh_path *mpath;
->> -     struct mpath_node *node;
->> -     struct hlist_head *bucket;
->> -     int hash_idx;
->> -     int err = 0;
->> -
->> -     /* flush relevant mpp entries first */
->> -     mpp_flush_by_proxy(sdata, addr);
->> -
->
-> Is it intentional that mpp_path_del no longer calls mpp_flush_by_proxy()
-> while mesh_path_del does?
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-You just found a bug in the original patch... the "mpp_flush_by_proxy"
-is the function that erase all MPP entries going through a certain
-MPath entry... so it is wrong in the mpp_path_del() function.
+Minor changes for indenting.
 
-I will respin the series tomorrow.
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Henning
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 8b4561e..54ed2f7 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -5485,11 +5485,11 @@ unsigned int ar9003_get_paprd_scale_factor(struct ath_hw *ah,
+ 			  AR9300_PAPRD_SCALE_1);
+ 	else {
+ 		if (chan->channel >= 5700)
+-		return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt20),
+-			  AR9300_PAPRD_SCALE_1);
++			return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt20),
++				  AR9300_PAPRD_SCALE_1);
+ 		else if (chan->channel >= 5400)
+ 			return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt40),
+-				   AR9300_PAPRD_SCALE_2);
++				  AR9300_PAPRD_SCALE_2);
+ 		else
+ 			return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt40),
+ 				  AR9300_PAPRD_SCALE_1);
+-- 
+1.9.1
+
