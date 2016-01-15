@@ -1,48 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54212 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755358AbcA1JsS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 04:48:18 -0500
-Message-ID: <1453974492.2217.2.camel@sipsolutions.net> (sfid-20160128_104844_895973_1F80D210)
-Subject: Re: [PATCH] net/mac80211/agg-rx.c: fix use of uninitialised values
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Julian Calaby <julian.calaby@gmail.com>,
-	Chris Bainbridge <chris.bainbridge@gmail.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	aryabinin@virtuozzo.com, Julia Lawall <Julia.Lawall@lip6.fr>,
-	kernel-janitors@vger.kernel.org, Joe Perches <joe@perches.com>
-Date: Thu, 28 Jan 2016 10:48:12 +0100
-In-Reply-To: <CAGRGNgXkvNfzM9Q1RO5kFwUWpFZbQ3mNQi3aVHcPTCw0A9fyFA@mail.gmail.com> (sfid-20160128_002736_648758_DED52DA5)
-References: <20160126111730.GA6765@localhost>
-	 <20160127154618.GA5717@localhost>
-	 <CAGRGNgXkvNfzM9Q1RO5kFwUWpFZbQ3mNQi3aVHcPTCw0A9fyFA@mail.gmail.com>
-	 (sfid-20160128_002736_648758_DED52DA5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lb0-f182.google.com ([209.85.217.182]:33667 "EHLO
+	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753764AbcAOXtD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jan 2016 18:49:03 -0500
+Received: by mail-lb0-f182.google.com with SMTP id x4so66539595lbm.0
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Jan 2016 15:49:02 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/2] bcma: identify bus cores (devices) found on BCM47189
+Date: Sat, 16 Jan 2016 00:48:52 +0100
+Message-Id: <1452901733-22271-1-git-send-email-zajec5@gmail.com> (sfid-20160116_004906_798516_6B5DE91E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-01-28 at 10:27 +1100, Julian Calaby wrote:
-> 
-> This looks like a "big hammer" solution to this problem.
+Add missing defines and print proper names.
 
-It is, in a way, but it also avoids future errors like it.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/bcma/scan.c       | 3 +++
+ include/linux/bcma/bcma.h | 2 ++
+ 2 files changed, 5 insertions(+)
 
-> I'd prefer to just set ->removed to false right after we set
-> ->auto_seq as that should be faster, however I don't know if
-> __ieee80211_start_rx_ba_session() is a fast path so I don't know if
-> this is saving anything.
+diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
+index df806b9..5ee7311 100644
+--- a/drivers/bcma/scan.c
++++ b/drivers/bcma/scan.c
+@@ -98,6 +98,9 @@ static const struct bcma_device_id_name bcma_bcm_device_names[] = {
+ 	{ BCMA_CORE_SHIM, "SHIM" },
+ 	{ BCMA_CORE_PCIE2, "PCIe Gen2" },
+ 	{ BCMA_CORE_ARM_CR4, "ARM CR4" },
++	{ BCMA_CORE_GCI, "GCI" },
++	{ BCMA_CORE_CMEM, "CNDS DDR2/3 memory controller" },
++	{ BCMA_CORE_ARM_CA7, "ARM CA7" },
+ 	{ BCMA_CORE_DEFAULT, "Default" },
+ };
+ 
+diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
+index 3feb1b2..991ebb4 100644
+--- a/include/linux/bcma/bcma.h
++++ b/include/linux/bcma/bcma.h
+@@ -151,6 +151,8 @@ struct bcma_host_ops {
+ #define BCMA_CORE_PCIE2			0x83C	/* PCI Express Gen2 */
+ #define BCMA_CORE_USB30_DEV		0x83D
+ #define BCMA_CORE_ARM_CR4		0x83E
++#define BCMA_CORE_GCI			0x840
++#define BCMA_CORE_CMEM			0x846	/* CNDS DDR2/3 memory controller */
+ #define BCMA_CORE_ARM_CA7		0x847
+ #define BCMA_CORE_SYS_MEM		0x849
+ #define BCMA_CORE_DEFAULT		0xFFF
+-- 
+1.8.4.5
 
-It's not supposed to be called frequently, no.
-
-> On another note, this is an error that should be pretty easy to spot.
-> Could any of the automated tools find cases where a struct containing
-> a bool variable is kmalloc'd and returned without assigning all the
-> bools?
-
-I think you'd quickly drown in false positives, since "return" isn't
-necessarily something that means it needs to have been fully
-initialized.
-
-johannes
