@@ -1,52 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f195.google.com ([209.85.160.195]:36063 "EHLO
-	mail-yk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932734AbcASUcx convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44695 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750753AbcAOBZR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 15:32:53 -0500
-MIME-Version: 1.0
-In-Reply-To: <201601200135.n1cR5fZx%fengguang.wu@intel.com>
-References: <1453218163-31998-9-git-send-email-jprvita@endlessm.com> <201601200135.n1cR5fZx%fengguang.wu@intel.com>
-From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Date: Tue, 19 Jan 2016 15:32:13 -0500
-Message-ID: <CA+A7VXWEp9WAFirRpwpkLheSWv9=XJMfSrgF2LgX7evrYj5aOQ@mail.gmail.com> (sfid-20160119_213259_309792_52FB238C)
-Subject: Re: [PATCH 8/8] rfkill: Factor common code
-To: kbuild test robot <lkp@intel.com>
-Cc: kbuild-all@01.org, Johannes Berg <johannes@sipsolutions.net>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Network Development <netdev@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>,
-	linux@endlessm.com
-Content-Type: text/plain; charset=UTF-8
+	Thu, 14 Jan 2016 20:25:17 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 5/5] ath9k: fix data bus error on ar9300 and ar9580
+Date: Fri, 15 Jan 2016 09:23:29 +0800
+Message-Id: <1452821009-1156-6-git-send-email-miaoqing@codeaurora.org> (sfid-20160115_022520_852234_F3DD875C)
+In-Reply-To: <1452821009-1156-1-git-send-email-miaoqing@codeaurora.org>
+References: <1452821009-1156-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 January 2016 at 12:39, kbuild test robot <lkp@intel.com> wrote:
-> Hi João,
->
-> [auto build test ERROR on mac80211-next/master]
-> [also build test ERROR on v4.4 next-20160119]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
->
-> url:    https://github.com/0day-ci/linux/commits/Jo-o-Paulo-Rechi-Vita/General-RFKill-improvements/20160119-234934
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
-> config: i386-randconfig-s0-201603 (attached as .config)
-> reproduce:
->         # save the attached .config to linux build tree
->         make ARCH=i386
->
-> All errors (new ones prefixed by >>):
->
->    net/built-in.o: In function `rfkill_sync_work':
->>> core.c:(.text+0x13d849): undefined reference to `rfkill_get_global_sw_state'
->
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-I've overlooked the fact that rfkill_get_global_sw_state() is inside a
-#ifdef block -- I'll fix this in an updated version.
+One crash issue be found on ar9300: RTC_RC reg read leads crash, leading
+the data bus error, due to RTC_RC reg write not happen properly.
 
---
-João Paulo Rechi Vita
-http://about.me/jprvita
+Warm Reset trigger in continuous beacon stuck for one of the customer for
+other chip, noticed the MAC was stuck in RTC reset. After analysis noticed
+DMA did not complete when RTC was put in reset.
+
+So, before resetting the MAC need to make sure there are no pending DMA
+transactions because this reset does not reset all parts of the chip.
+
+The 12th and 11th bit of MAC _DMA_CFG register used to do that.
+	12 cfg_halt_ack 0x0
+		0 DMA has not yet halted
+		1 DMA has halted
+	11 cfg_halt_req 0x0
+		0 DMA logic operates normally
+		1 Request DMA logic to stop so software can reset the MAC
+
+The Bit [12] of this register indicates when the halt has taken effect or
+not. the DMA halt IS NOT recoverable; once software sets bit [11] to
+request a DMA halt, software must wait for bit [12] to be set and reset
+the MAC.
+
+So, the same thing we implemented for ar9580 chip.
+
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  | 10 ++++++++++
+ drivers/net/wireless/ath/ath9k/reg.h |  4 +++-
+ 2 files changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 257f46e..e7a3101 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1368,6 +1368,16 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
+ 	if (ath9k_hw_mci_is_enabled(ah))
+ 		ar9003_mci_check_gpm_offset(ah);
+ 
++	/* DMA HALT added to resolve ar9300 and ar9580 bus error during
++	 * RTC_RC reg read
++	 */
++	if (AR_SREV_9300(ah) || AR_SREV_9580(ah)) {
++		REG_SET_BIT(ah, AR_CFG, AR_CFG_HALT_REQ);
++		ath9k_hw_wait(ah, AR_CFG, AR_CFG_HALT_ACK, AR_CFG_HALT_ACK,
++			      20 * AH_WAIT_TIMEOUT);
++		REG_CLR_BIT(ah, AR_CFG, AR_CFG_HALT_REQ);
++	}
++
+ 	REG_WRITE(ah, AR_RTC_RC, rst_flags);
+ 
+ 	REGWRITE_BUFFER_FLUSH(ah);
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index caba54d..c8d35fe 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -34,8 +34,10 @@
+ #define AR_CFG_SWRG          0x00000010
+ #define AR_CFG_AP_ADHOC_INDICATION 0x00000020
+ #define AR_CFG_PHOK          0x00000100
+-#define AR_CFG_CLK_GATE_DIS  0x00000400
+ #define AR_CFG_EEBS          0x00000200
++#define AR_CFG_CLK_GATE_DIS  0x00000400
++#define AR_CFG_HALT_REQ	     0x00000800
++#define AR_CFG_HALT_ACK	     0x00001000
+ #define AR_CFG_PCI_MASTER_REQ_Q_THRESH         0x00060000
+ #define AR_CFG_PCI_MASTER_REQ_Q_THRESH_S       17
+ 
+-- 
+1.9.1
+
