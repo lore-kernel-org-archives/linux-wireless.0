@@ -1,54 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47311 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752929AbcANJLm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2016 04:11:42 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Tony Lindgren <tony@atomide.com>,
-	Igor Grinberg <grinberg@compulab.co.il>,
-	Uri Mashiach <uri.mashiach@compulab.co.il>,
-	Rob Herring <robh+dt@kernel.org>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, <bcousson@baylibre.com>,
-	Eliad Peller <eliad@wizery.com>, <devicetree@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v4 3/3] wlcore/wl12xx: spi: add wifi support to cm-t335
-References: <1451482533-8624-1-git-send-email-uri.mashiach@compulab.co.il>
-	<1451482533-8624-4-git-send-email-uri.mashiach@compulab.co.il>
-	<87io35lq2p.fsf@kamboji.qca.qualcomm.com>
-	<5695E802.7050909@compulab.co.il> <20160113172712.GI12777@atomide.com>
-	<87wprcbpyr.fsf@kamboji.qca.qualcomm.com>
-	<56976588.3060707@broadcom.com>
-Date: Thu, 14 Jan 2016 11:11:30 +0200
-In-Reply-To: <56976588.3060707@broadcom.com> (Arend van Spriel's message of
-	"Thu, 14 Jan 2016 10:08:24 +0100")
-Message-ID: <87y4bsa5kt.fsf@kamboji.qca.qualcomm.com> (sfid-20160114_101149_844243_BF157CD1)
+Received: from mout.web.de ([212.227.15.3]:61245 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751002AbcAONJ2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jan 2016 08:09:28 -0500
+Subject: [PATCH v3 1/3] rsi: Delete unnecessary variable initialisations in
+ rsi_send_mgmt_pkt()
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Fariya Fatima <fariyaf@gmail.com>,
+	Jahnavi Meher <jahnavi.meher@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <566ABCD9.1060404@users.sourceforge.net>
+ <5687E169.4070704@users.sourceforge.net>
+ <5698EE65.7010607@users.sourceforge.net>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	kernel-janitors@vger.kernel.org,
+	Julia Lawall <julia.lawall@lip6.fr>,
+	"John W. Linville" <linville@tuxdriver.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <5698EF71.7060102@users.sourceforge.net> (sfid-20160115_141005_745889_7EC49114)
+Date: Fri, 15 Jan 2016 14:09:05 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <5698EE65.7010607@users.sourceforge.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Fri, 15 Jan 2016 13:30:39 +0100
 
-> On 01/14/2016 08:05 AM, Kalle Valo wrote:
->> Tony Lindgren <tony@atomide.com> writes:
->>
->>> Yeah I'll pick the dts changes separately after the merge window as
->>> there is no dependency to the driver changes.
->>
->> Ok, I'll then take patches 1 and 2 once the merge window opens.
->
-> I guess it is semantics, but the merge window is open right now so you
-> probably mean to say after the merge window closes, ie. when 4.5-rc1
-> is ready.
+Omit explicit initialisation at the beginning for four local variables
+which are redefined before their first use.
 
-Exactly. Sorry, I suck in multitasking :)
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+---
+ drivers/net/wireless/rsi/rsi_91x_pkt.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/net/wireless/rsi/rsi_91x_pkt.c b/drivers/net/wireless/rsi/rsi_91x_pkt.c
+index 702593f..571eaba 100644
+--- a/drivers/net/wireless/rsi/rsi_91x_pkt.c
++++ b/drivers/net/wireless/rsi/rsi_91x_pkt.c
+@@ -123,15 +123,15 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
+ 		      struct sk_buff *skb)
+ {
+ 	struct rsi_hw *adapter = common->priv;
+-	struct ieee80211_hdr *wh = NULL;
++	struct ieee80211_hdr *wh;
+ 	struct ieee80211_tx_info *info;
+-	struct ieee80211_bss_conf *bss = NULL;
++	struct ieee80211_bss_conf *bss;
+ 	struct ieee80211_hw *hw = adapter->hw;
+ 	struct ieee80211_conf *conf = &hw->conf;
+ 	struct skb_info *tx_params;
+ 	int status = -E2BIG;
+-	__le16 *msg = NULL;
+-	u8 extnd_size = 0;
++	__le16 *msg;
++	u8 extnd_size;
+ 	u8 vap_id = 0;
+ 
+ 	info = IEEE80211_SKB_CB(skb);
 -- 
-Kalle Valo
+2.6.3
+
