@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39524 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965096AbcAZMye (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 07:54:34 -0500
-Message-ID: <1453812869.2759.38.camel@sipsolutions.net> (sfid-20160126_135437_057538_D753226F)
-Subject: Re: [PATCH] cfg80211: basic support for PBSS network type
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lior David <liord@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Dedy Lansky <dlansky@codeaurora.org>,
-	Maya Erez <merez@codeaurora.org>,
-	Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Date: Tue, 26 Jan 2016 13:54:29 +0100
-In-Reply-To: <56A767E4.7090906@codeaurora.org>
-References: <56961335.4040801@codeaurora.org>
-	 <1453807346.2759.29.camel@sipsolutions.net>
-	 <56A767E4.7090906@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31785 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754760AbcAOJlX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Jan 2016 04:41:23 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: "Pan, Miaoqing" <miaoqing@qti.qualcomm.com>
+CC: "miaoqing@codeaurora.org" <miaoqing@codeaurora.org>,
+	"linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>
+Subject: Re: [PATCH 1/5] ath9k: avoid ANI restart if no trigger
+References: <1452821009-1156-1-git-send-email-miaoqing@codeaurora.org>
+	<1452821009-1156-2-git-send-email-miaoqing@codeaurora.org>
+	<871t9j8e7i.fsf@kamboji.qca.qualcomm.com>
+	<1452847122461.2165@qti.qualcomm.com>
+Date: Fri, 15 Jan 2016 11:41:03 +0200
+In-Reply-To: <1452847122461.2165@qti.qualcomm.com> (Miaoqing Pan's message of
+	"Fri, 15 Jan 2016 10:38:46 +0200")
+Message-ID: <87wprb6uz4.fsf@kamboji.qca.qualcomm.com> (sfid-20160115_104128_829635_772466F0)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+"Pan, Miaoqing" <miaoqing@qti.qualcomm.com> writes:
 
-> Yes, DMG devices can function as a full AP in addition to PCP.
+> The commit 54da20d83f0e7fe87b75aec44bc2b1448d119320 ("ath9k_hw:
+> improve ANI processing and rx desensitizing parameters") first
+> introduced this issue, ath9k_ani_restart() is always be invoked is
+> wrong.
 
-Ok. I'll try to remember :)
+Then you should add this to the commit log:
 
-> Certified 11ad devices must support PBSS, but in theory you can have
-> 11ad drivers that do not support it. 11ac devices cannot support
-> it and currently will just ignore this flag, so I think I will add a
-> feature flag (something like NL80211_EXT_FEATURE_PBSS) and return an
-> error if the driver does not support this feature.
+Fixes: 54da20d83f0e ("ath9k_hw: improve ANI processing and rx desensitizing parameters")
 
-I'd rather return an error when the device isn't 11ad.
+Also you need to explain more, especially why you think it's wrong. How
+did you notice this? What kind of user visible issue this fixes?
 
-If it's basically a requirement then I don't think we really need a
-feature flag, but can just have the driver reject the flag in the
-meantime. I do want to avoid having a situation where userspace
-specified PBSS and it gets ignored entirely though.
-
-> I have a patch for the wil6210 driver that uses this feature. Do you
-> prefer that I add the wil6210 driver changes to this patch?
-
-Great. No, I don't want bigger wil6210 changes in this patch, so I'd
-prefer you add a few lines to this patch that make wil6210 reject the
-configuration with PBSS, and then obviously in the real wil6210 patch
-remove that again.
-
-johannes
+-- 
+Kalle Valo
