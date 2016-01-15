@@ -1,42 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41089 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:36782 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752119AbcASMz5 (ORCPT
+	with ESMTP id S932093AbcAOKSJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 07:55:57 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-Subject: Re: [PATCH] brcmfmac: fix sdio sg table alloc crash
-References: <1453203564-15974-1-git-send-email-arend@broadcom.com>
-Date: Tue, 19 Jan 2016 14:55:49 +0200
-In-Reply-To: <1453203564-15974-1-git-send-email-arend@broadcom.com> (Arend van
-	Spriel's message of "Tue, 19 Jan 2016 12:39:24 +0100")
-Message-ID: <87egdd684q.fsf@kamboji.qca.qualcomm.com> (sfid-20160119_135629_866941_7D3AB13C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Fri, 15 Jan 2016 05:18:09 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v2 2/5] ath9k: clean up ANI per-channel pointer checking
+Date: Fri, 15 Jan 2016 18:17:18 +0800
+Message-Id: <1452853041-3674-3-git-send-email-miaoqing@codeaurora.org> (sfid-20160115_111817_603809_C6DD2849)
+In-Reply-To: <1452853041-3674-1-git-send-email-miaoqing@codeaurora.org>
+References: <1452853041-3674-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-> From: Hante Meuleman <meuleman@broadcom.com>
->
-> With commit 7d34b0560567 ("brcmfmac: Move all module parameters to
-> one place") a bug was introduced causing a null pointer exception.
-> This patch fixes the bug by initializing the sg table till after
-> the settings have been initialized.
->
-> Reported-by: Marc Zyngier <marc.zyngier@arm.com>
-> Tested-by: Marc Zyngier <marc.zyngier@arm.com>
-> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+commit c24bd3620c50 ("ath9k: Do not maintain ANI state per-channel")
+removed per-channel handling, the code to check 'curchan' also
+should be removed as never used.
 
-Thanks, I'm planning to push this to 4.5.
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/ani.c | 32 ++++++--------------------------
+ 1 file changed, 6 insertions(+), 26 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 0f74d59..bd1b573 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -126,12 +126,8 @@ static void ath9k_hw_update_mibstats(struct ath_hw *ah,
+ 
+ static void ath9k_ani_restart(struct ath_hw *ah)
+ {
+-	struct ar5416AniState *aniState;
+-
+-	if (!ah->curchan)
+-		return;
++	struct ar5416AniState *aniState = &ah->ani;
+ 
+-	aniState = &ah->ani;
+ 	aniState->listenTime = 0;
+ 
+ 	ENABLE_REGWRITE_BUFFER(ah);
+@@ -221,12 +217,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
+ 
+ static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
+ {
+-	struct ar5416AniState *aniState;
+-
+-	if (!ah->curchan)
+-		return;
+-
+-	aniState = &ah->ani;
++	struct ar5416AniState *aniState = &ah->ani;
+ 
+ 	if (aniState->ofdmNoiseImmunityLevel < ATH9K_ANI_OFDM_MAX_LEVEL)
+ 		ath9k_hw_set_ofdm_nil(ah, aniState->ofdmNoiseImmunityLevel + 1, false);
+@@ -281,12 +272,7 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel,
+ 
+ static void ath9k_hw_ani_cck_err_trigger(struct ath_hw *ah)
+ {
+-	struct ar5416AniState *aniState;
+-
+-	if (!ah->curchan)
+-		return;
+-
+-	aniState = &ah->ani;
++	struct ar5416AniState *aniState = &ah->ani;
+ 
+ 	if (aniState->cckNoiseImmunityLevel < ATH9K_ANI_CCK_MAX_LEVEL)
+ 		ath9k_hw_set_cck_nil(ah, aniState->cckNoiseImmunityLevel + 1,
+@@ -299,9 +285,7 @@ static void ath9k_hw_ani_cck_err_trigger(struct ath_hw *ah)
+  */
+ static void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
+ {
+-	struct ar5416AniState *aniState;
+-
+-	aniState = &ah->ani;
++	struct ar5416AniState *aniState = &ah->ani;
+ 
+ 	/* lower OFDM noise immunity */
+ 	if (aniState->ofdmNoiseImmunityLevel > 0 &&
+@@ -329,7 +313,7 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	int ofdm_nil, cck_nil;
+ 
+-	if (!ah->curchan)
++	if (!chan)
+ 		return;
+ 
+ 	BUG_ON(aniState == NULL);
+@@ -416,14 +400,10 @@ static bool ath9k_hw_ani_read_counters(struct ath_hw *ah)
+ 
+ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
+ {
+-	struct ar5416AniState *aniState;
++	struct ar5416AniState *aniState = &ah->ani;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	u32 ofdmPhyErrRate, cckPhyErrRate;
+ 
+-	if (!ah->curchan)
+-		return;
+-
+-	aniState = &ah->ani;
+ 	if (!ath9k_hw_ani_read_counters(ah))
+ 		return;
+ 
 -- 
-Kalle Valo
+1.9.1
+
