@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.hengli.com.au ([209.40.204.226]:53112 "EHLO
-	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755297AbcAXNTq (ORCPT
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:35695 "EHLO
+	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751930AbcAPPjQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jan 2016 08:19:46 -0500
-Subject: [PATCH 19/26] ipsec: Use skcipher and ahash when probing algorithms
-References: <20160124131021.GA31153@gondor.apana.org.au>
-To: Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
-	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
-	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, ceph-devel@vger.kernel.org,
-	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
-	drbd-dev@lists.linbit.com, open-iscsi@googlegroups.com
-Message-Id: <E1aNKZT-0008Ew-7q@gondolin.me.apana.org.au> (sfid-20160124_142359_639695_5843DCFB)
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Date: Sun, 24 Jan 2016 21:19:11 +0800
+	Sat, 16 Jan 2016 10:39:16 -0500
+Received: by mail-wm0-f48.google.com with SMTP id r129so4592967wmr.0
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Jan 2016 07:39:15 -0800 (PST)
+From: Arend van Spriel <aspriel@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+	Arend van Spriel <aspriel@gmail.com>
+Subject: [PATCH] brcmfmac: fix BRCMF_FW_NVRAM_DEF macro for older gcc compilers
+Date: Sat, 16 Jan 2016 16:39:13 +0100
+Message-Id: <1452958753-12307-1-git-send-email-aspriel@gmail.com> (sfid-20160116_163949_058318_E20C3657)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the last reference to hash and ablkcipher from
-IPsec and replaces them with ahash and skcipher respectively.  For
-skcipher there is currently no difference at all, while for ahash
-the current code is actually buggy and would prevent asynchronous
-algorithms from being discovered.
+With gcc < 4.3 __UNIQUE_ID does not create unique ids with the macro
+BRCMF_FW_NVRAM_DEF. Fix this by removing the MODULE_FIRMWARE instance
+for the nvram file. This file is not in linux-firmware repo so it may
+not be needed anyway. Otherwise consider this as a temporary fix.
 
-Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
+Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Signed-off-by: Arend van Spriel <aspriel@gmail.com>
 ---
+Hi Kalle,
 
- net/xfrm/xfrm_algo.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+Here a quick fix for the __UNIQUE_ID issue. Looking at the other
+issue right now, which seems a bit more complicated.
 
-diff --git a/net/xfrm/xfrm_algo.c b/net/xfrm/xfrm_algo.c
-index f07224d..250e567 100644
---- a/net/xfrm/xfrm_algo.c
-+++ b/net/xfrm/xfrm_algo.c
-@@ -9,6 +9,8 @@
-  * any later version.
-  */
+Regards,
+Arend
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+index ef06f57..d3c9f0d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
+@@ -47,8 +47,7 @@ static const char BRCM_ ## fw_nvram_name ## _FIRMWARE_NAME[] = \
+ 	BRCMF_FW_DEFAULT_PATH fw; \
+ static const char BRCM_ ## fw_nvram_name ## _NVRAM_NAME[] = \
+ 	BRCMF_FW_DEFAULT_PATH nvram; \
+-MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH fw); \
+-MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH nvram)
++MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH fw);
  
-+#include <crypto/hash.h>
-+#include <crypto/skcipher.h>
- #include <linux/module.h>
- #include <linux/kernel.h>
- #include <linux/pfkeyv2.h>
-@@ -782,14 +784,13 @@ void xfrm_probe_algs(void)
- 	BUG_ON(in_softirq());
- 
- 	for (i = 0; i < aalg_entries(); i++) {
--		status = crypto_has_hash(aalg_list[i].name, 0,
--					 CRYPTO_ALG_ASYNC);
-+		status = crypto_has_ahash(aalg_list[i].name, 0, 0);
- 		if (aalg_list[i].available != status)
- 			aalg_list[i].available = status;
- 	}
- 
- 	for (i = 0; i < ealg_entries(); i++) {
--		status = crypto_has_ablkcipher(ealg_list[i].name, 0, 0);
-+		status = crypto_has_skcipher(ealg_list[i].name, 0, 0);
- 		if (ealg_list[i].available != status)
- 			ealg_list[i].available = status;
- 	}
+ #define BRCMF_FW_DEF(fw_name, fw) \
+ static const char BRCM_ ## fw_name ## _FIRMWARE_NAME[] = \
+-- 
+1.9.1
+
