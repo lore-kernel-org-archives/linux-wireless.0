@@ -1,60 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.11]:52680 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751751AbcABUzm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jan 2016 15:55:42 -0500
-Subject: [PATCH 2/3] NFC-mei_phy: Refactoring for mei_nfc_if_version()
-To: linux-wireless@vger.kernel.org,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <56883849.2080304@users.sourceforge.net>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Message-ID: <56883947.7050505@users.sourceforge.net> (sfid-20160102_215558_896623_F7FE1019)
-Date: Sat, 2 Jan 2016 21:55:35 +0100
-MIME-Version: 1.0
-In-Reply-To: <56883849.2080304@users.sourceforge.net>
-Content-Type: text/plain; charset=windows-1252
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44475 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751004AbcAQKjv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jan 2016 05:39:51 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH 3/5] wil6210: handle tx completions only if vring tx data is enabled
+Date: Sun, 17 Jan 2016 12:39:08 +0200
+Message-Id: <1453027150-18224-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160117_114022_206537_81CC11C5)
+In-Reply-To: <1453027150-18224-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1453027150-18224-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sat, 2 Jan 2016 21:33:04 +0100
+wil_vring_fini_tx is called in disconnect in order to free the
+allocated vrings.
+wil_vring_fini_tx is disabling the vring_tx_data before napi_synchronize
+is called in order to avoid the tx handling of this vring, while
+wil_vring_free is called only after napi finished the current handling
+of the tx completed packets.
+Due to that, in case of disconnect, wil6210_netdev_poll_tx can be called
+when vring->va is not NULL but vring_tx_data[i]->enabled is already
+disabled.
 
-Rename a jump label according to the current Linux coding style convention.
+This patch checks vring_tx_data[i]->enabled in wil6210_netdev_poll_tx
+to prevent handling of disabled vrings.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/nfc/mei_phy.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/wil6210/netdev.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/nfc/mei_phy.c b/drivers/nfc/mei_phy.c
-index 8e3a69f..3c74028 100644
---- a/drivers/nfc/mei_phy.c
-+++ b/drivers/nfc/mei_phy.c
-@@ -136,7 +136,7 @@ static int mei_nfc_if_version(struct nfc_mei_phy *phy)
- 	if (bytes_recv < 0 || bytes_recv < sizeof(struct mei_nfc_reply)) {
- 		pr_err("Could not read IF version\n");
- 		r = -EIO;
--		goto err;
-+		goto free_reply;
- 	}
+diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
+index 56aaa2d..ecc3c1b 100644
+--- a/drivers/net/wireless/ath/wil6210/netdev.c
++++ b/drivers/net/wireless/ath/wil6210/netdev.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2012-2015 Qualcomm Atheros, Inc.
++ * Copyright (c) 2012-2016 Qualcomm Atheros, Inc.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -108,8 +108,9 @@ static int wil6210_netdev_poll_tx(struct napi_struct *napi, int budget)
+ 	/* always process ALL Tx complete, regardless budget - it is fast */
+ 	for (i = 0; i < WIL6210_MAX_TX_RINGS; i++) {
+ 		struct vring *vring = &wil->vring_tx[i];
++		struct vring_tx_data *txdata = &wil->vring_tx_data[i];
  
- 	version = (struct mei_nfc_if_version *)reply->data;
-@@ -144,8 +144,7 @@ static int mei_nfc_if_version(struct nfc_mei_phy *phy)
- 	phy->fw_ivn = version->fw_ivn;
- 	phy->vendor_id = version->vendor_id;
- 	phy->radio_type = version->radio_type;
--
--err:
-+free_reply:
- 	kfree(reply);
- 	return r;
- }
+-		if (!vring->va)
++		if (!vring->va || !txdata->enabled)
+ 			continue;
+ 
+ 		tx_done += wil_tx_complete(wil, i);
 -- 
-2.6.3
+1.8.5.2
 
