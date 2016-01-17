@@ -1,33 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48619 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932555AbcA0Odv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 09:33:51 -0500
-Message-ID: <1453905229.2351.8.camel@sipsolutions.net> (sfid-20160127_153356_502496_03234AF8)
-Subject: Re: [RFC] mac80211: introduce netdev queue control for txqs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 27 Jan 2016 15:33:49 +0100
-In-Reply-To: <1453904917-25458-1-git-send-email-michal.kazior@tieto.com> (sfid-20160127_152732_241232_E83365C7)
-References: <1453904917-25458-1-git-send-email-michal.kazior@tieto.com>
-	 (sfid-20160127_152732_241232_E83365C7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44475 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750885AbcAQKjp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jan 2016 05:39:45 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH 0/5] 11AD fixes
+Date: Sun, 17 Jan 2016 12:39:05 +0200
+Message-Id: <1453027150-18224-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160117_114010_844717_45FF0160)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-01-27 at 15:28 +0100, Michal Kazior wrote:
-> Until now all stations (notably in AP mode) would
-> share 4 AC queues exposed via netdev. This meant
-> that whenever a single station's AC became full
-> all other stations' AC were considered full and
-> stopped as well.
-> 
-> This was suboptimal and could lead to per station
-> traffic starvation and/or suboptimal Tx
-> aggregation performance.
+The below patches include several fixes to wil6210 driver:
+- Fixes in IEs handling
+- Fixes in TX vring validation before access
+- Fix in connect flow to allow concurrent multiple connect events
 
-I really think you need to Cc netdev on this :)
+Lior David (2):
+  wil6210: fix privacy flag calculation in change_beacon
+  wil6210: use extra IEs from probe response
 
-johannes
+Maya Erez (3):
+  wil6210: handle tx completions only if vring tx data is enabled
+  wil6210: find TX vring only if vring_tx_data is enabled
+  wil6210: handle multiple connect/disconnect events
+
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 149 ++++++++++++++++++--------
+ drivers/net/wireless/ath/wil6210/main.c     |  81 +++++++-------
+ drivers/net/wireless/ath/wil6210/netdev.c   |   5 +-
+ drivers/net/wireless/ath/wil6210/txrx.c     |  20 +++-
+ drivers/net/wireless/ath/wil6210/wil6210.h  |   8 +-
+ drivers/net/wireless/ath/wil6210/wmi.c      | 157 ++++++++++++++++++++--------
+ 6 files changed, 277 insertions(+), 143 deletions(-)
+
+-- 
+1.8.5.2
+
