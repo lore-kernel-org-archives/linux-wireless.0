@@ -1,68 +1,231 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:35887 "EHLO
-	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751398AbcACIgg (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:44475 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750970AbcAQKjt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jan 2016 03:36:36 -0500
-Received: by mail-pf0-f173.google.com with SMTP id 65so141445837pff.3
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 00:36:36 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 07/30] staging: wilc1000: rename pvUserArg in wilc_remain_on_channel
-Date: Sun,  3 Jan 2016 17:35:39 +0900
-Message-Id: <1451810162-16993-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20160103_093654_228269_17830C0A)
-In-Reply-To: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
+	Sun, 17 Jan 2016 05:39:49 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH 2/5] wil6210: use extra IEs from probe response
+Date: Sun, 17 Jan 2016 12:39:07 +0200
+Message-Id: <1453027150-18224-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160117_114025_980566_23F4677B)
+In-Reply-To: <1453027150-18224-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1453027150-18224-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pvUserArg to user_arg to avoid camelcase.
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+In the start_ap/change_beacon API, when we set up probe response
+offloading, we only use the IE list from the probe response
+template and not the IE list from the proberesp_ies argument.
+As a result, we miss important IEs and it causes problems with
+some scenarios such as P2P.
+With this change, we merge the list of IEs from the probe response
+template and proberesp_ies and send the merged list to the FW
+for offloading. It is still FW responsibility to filter out
+irrelevant IEs when sending probe response, based on the actual
+contents of the probe request.
+Also in case association response termplate is not provided,
+we will use the merged list of IEs from probe response in the
+association response as well.
+
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/wil6210/cfg80211.c | 141 ++++++++++++++++++++--------
+ 1 file changed, 102 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 21d1e87e..3636f76 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4065,7 +4065,7 @@ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
- 			   u32 duration, u16 chan,
- 			   wilc_remain_on_chan_expired expired,
- 			   wilc_remain_on_chan_ready ready,
--			   void *pvUserArg)
-+			   void *user_arg)
+diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
+index 182f071..774352f 100644
+--- a/drivers/net/wireless/ath/wil6210/cfg80211.c
++++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
+@@ -696,6 +696,79 @@ static int wil_cancel_remain_on_channel(struct wiphy *wiphy,
+ 	return rc;
+ }
+ 
++/**
++ * find a specific IE in a list of IEs
++ * return a pointer to the beginning of IE in the list
++ * or NULL if not found
++ */
++static const u8 *_wil_cfg80211_find_ie(const u8 *ies, u16 ies_len, const u8 *ie,
++				       u16 ie_len)
++{
++	struct ieee80211_vendor_ie *vie;
++	u32 oui;
++
++	/* IE tag at offset 0, length at offset 1 */
++	if (ie_len < 2 || 2 + ie[1] > ie_len)
++		return NULL;
++
++	if (ie[0] != WLAN_EID_VENDOR_SPECIFIC)
++		return cfg80211_find_ie(ie[0], ies, ies_len);
++
++	/* make sure there is room for 3 bytes OUI + 1 byte OUI type */
++	if (ie[1] < 4)
++		return NULL;
++	vie = (struct ieee80211_vendor_ie *)ie;
++	oui = vie->oui[0] << 16 | vie->oui[1] << 8 | vie->oui[2];
++	return cfg80211_find_vendor_ie(oui, vie->oui_type, ies,
++				       ies_len);
++}
++
++/**
++ * merge the IEs in two lists into a single list.
++ * do not include IEs from the second list which exist in the first list.
++ * add only vendor specific IEs from second list to keep
++ * the merged list sorted (since vendor-specific IE has the
++ * highest tag number)
++ * caller must free the allocated memory for merged IEs
++ */
++static int _wil_cfg80211_merge_extra_ies(const u8 *ies1, u16 ies1_len,
++					 const u8 *ies2, u16 ies2_len,
++					 u8 **merged_ies, u16 *merged_len)
++{
++	u8 *buf, *dpos;
++	const u8 *spos;
++
++	if (ies1_len == 0 && ies2_len == 0) {
++		*merged_ies = NULL;
++		*merged_len = 0;
++		return 0;
++	}
++
++	buf = kmalloc(ies1_len + ies2_len, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++	memcpy(buf, ies1, ies1_len);
++	dpos = buf + ies1_len;
++	spos = ies2;
++	while (spos + 1 < ies2 + ies2_len) {
++		/* IE tag at offset 0, length at offset 1 */
++		u16 ielen = 2 + spos[1];
++
++		if (spos + ielen > ies2 + ies2_len)
++			break;
++		if (spos[0] == WLAN_EID_VENDOR_SPECIFIC &&
++		    !_wil_cfg80211_find_ie(ies1, ies1_len, spos, ielen)) {
++			memcpy(dpos, spos, ielen);
++			dpos += ielen;
++		}
++		spos += ielen;
++	}
++
++	*merged_ies = buf;
++	*merged_len = dpos - buf;
++	return 0;
++}
++
+ static void wil_print_bcon_data(struct cfg80211_beacon_data *b)
  {
- 	int result = 0;
- 	struct host_if_msg msg;
-@@ -4082,7 +4082,7 @@ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
- 	msg.body.remain_on_ch.ch = chan;
- 	msg.body.remain_on_ch.expired = expired;
- 	msg.body.remain_on_ch.ready = ready;
--	msg.body.remain_on_ch.arg = pvUserArg;
-+	msg.body.remain_on_ch.arg = user_arg;
- 	msg.body.remain_on_ch.duration = duration;
- 	msg.body.remain_on_ch.id = session_id;
- 	msg.vif = vif;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 8a03055..4f741ff 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -360,7 +360,7 @@ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
- 			   u32 duration, u16 chan,
- 			   wilc_remain_on_chan_expired expired,
- 			   wilc_remain_on_chan_ready ready,
--			   void *pvUserArg);
-+			   void *user_arg);
- int wilc_listen_state_expired(struct wilc_vif *vif, u32 session_id);
- int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg);
- int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index);
+ 	print_hex_dump_bytes("head     ", DUMP_PREFIX_OFFSET,
+@@ -712,49 +785,49 @@ static void wil_print_bcon_data(struct cfg80211_beacon_data *b)
+ 			     b->assocresp_ies, b->assocresp_ies_len);
+ }
+ 
+-static int wil_fix_bcon(struct wil6210_priv *wil,
+-			struct cfg80211_beacon_data *bcon)
+-{
+-	struct ieee80211_mgmt *f = (struct ieee80211_mgmt *)bcon->probe_resp;
+-	size_t hlen = offsetof(struct ieee80211_mgmt, u.probe_resp.variable);
+-
+-	if (bcon->probe_resp_len <= hlen)
+-		return 0;
+-
+-/* always use IE's from full probe frame, they has more info
+- * notable RSN
+- */
+-	bcon->proberesp_ies = f->u.probe_resp.variable;
+-	bcon->proberesp_ies_len = bcon->probe_resp_len - hlen;
+-	if (!bcon->assocresp_ies) {
+-		bcon->assocresp_ies = bcon->proberesp_ies;
+-		bcon->assocresp_ies_len = bcon->proberesp_ies_len;
+-	}
+-
+-	return 1;
+-}
+-
+ /* internal functions for device reset and starting AP */
+ static int _wil_cfg80211_set_ies(struct wiphy *wiphy,
+ 				 struct cfg80211_beacon_data *bcon)
+ {
+ 	int rc;
+ 	struct wil6210_priv *wil = wiphy_to_wil(wiphy);
++	u16 len = 0, proberesp_len = 0;
++	u8 *ies = NULL, *proberesp = NULL;
++
++	if (bcon->probe_resp) {
++		struct ieee80211_mgmt *f =
++			(struct ieee80211_mgmt *)bcon->probe_resp;
++		size_t hlen = offsetof(struct ieee80211_mgmt,
++				       u.probe_resp.variable);
++		proberesp = f->u.probe_resp.variable;
++		proberesp_len = bcon->probe_resp_len - hlen;
++	}
++	rc = _wil_cfg80211_merge_extra_ies(proberesp,
++					   proberesp_len,
++					   bcon->proberesp_ies,
++					   bcon->proberesp_ies_len,
++					   &ies, &len);
+ 
+-	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, bcon->proberesp_ies_len,
+-			bcon->proberesp_ies);
+ 	if (rc)
+-		return rc;
++		goto out;
+ 
+-	rc = wmi_set_ie(wil, WMI_FRAME_ASSOC_RESP, bcon->assocresp_ies_len,
+-			bcon->assocresp_ies);
++	rc = wmi_set_ie(wil, WMI_FRAME_PROBE_RESP, len, ies);
++	if (rc)
++		goto out;
++
++	if (bcon->assocresp_ies)
++		rc = wmi_set_ie(wil, WMI_FRAME_ASSOC_RESP,
++				bcon->assocresp_ies_len, bcon->assocresp_ies);
++	else
++		rc = wmi_set_ie(wil, WMI_FRAME_ASSOC_RESP, len, ies);
+ #if 0 /* to use beacon IE's, remove this #if 0 */
+ 	if (rc)
+-		return rc;
++		goto out;
+ 
+ 	rc = wmi_set_ie(wil, WMI_FRAME_BEACON, bcon->tail_len, bcon->tail);
+ #endif
+-
++out:
++	kfree(ies);
+ 	return rc;
+ }
+ 
+@@ -823,11 +896,6 @@ static int wil_cfg80211_change_beacon(struct wiphy *wiphy,
+ 	wil_dbg_misc(wil, "%s()\n", __func__);
+ 	wil_print_bcon_data(bcon);
+ 
+-	if (wil_fix_bcon(wil, bcon)) {
+-		wil_dbg_misc(wil, "Fixed bcon\n");
+-		wil_print_bcon_data(bcon);
+-	}
+-
+ 	if (bcon->tail &&
+ 	    cfg80211_find_ie(WLAN_EID_RSN, bcon->tail,
+ 			     bcon->tail_len))
+@@ -900,11 +968,6 @@ static int wil_cfg80211_start_ap(struct wiphy *wiphy,
+ 	wil_print_bcon_data(bcon);
+ 	wil_print_crypto(wil, crypto);
+ 
+-	if (wil_fix_bcon(wil, bcon)) {
+-		wil_dbg_misc(wil, "Fixed bcon\n");
+-		wil_print_bcon_data(bcon);
+-	}
+-
+ 	rc = _wil_cfg80211_start_ap(wiphy, ndev,
+ 				    info->ssid, info->ssid_len, info->privacy,
+ 				    info->beacon_interval, channel->hw_value,
 -- 
-2.6.4
+1.8.5.2
 
