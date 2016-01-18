@@ -1,75 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:35068 "EHLO
-	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932141AbcA3RQB (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52570 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753263AbcARBeW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2016 12:16:01 -0500
-MIME-Version: 1.0
-Reply-To: andrea.merello@gmail.com
-In-Reply-To: <1452949632-16329-1-git-send-email-baijiaju1990@163.com>
-References: <1452949632-16329-1-git-send-email-baijiaju1990@163.com>
-From: Andrea Merello <andrea.merello@gmail.com>
-Date: Sat, 30 Jan 2016 18:15:40 +0100
-Message-ID: <CAN8YU5OiiCn1LfSZ8+9eX9ZLRC-Tda7wm=Yp2RDyrtLzFN5quw@mail.gmail.com> (sfid-20160130_181621_990397_A47AB168)
-Subject: Re: [PATCH resend] rtl818x_pci: Fix a memory leak in rtl8180_init_rx_ring
-To: Jia-Ju Bai <baijiaju1990@163.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Michael Wu <flamingice@sourmilk.net>, kvalo@codeaurora.org,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Sun, 17 Jan 2016 20:34:22 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, nbd@openwrt.org,
+	Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v3 1/5] ath9k: avoid ANI restart if no trigger
+Date: Mon, 18 Jan 2016 09:33:46 +0800
+Message-Id: <1453080830-7616-2-git-send-email-miaoqing@codeaurora.org> (sfid-20160118_023425_605722_499C705E)
+In-Reply-To: <1453080830-7616-1-git-send-email-miaoqing@codeaurora.org>
+References: <1453080830-7616-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks for pointing this out!
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-At a first look I'd propose to merge the two identical
-pci_fee_consistent() in a single one, and place it in an error exit
-path at the end of function.
+Fixes commit 54da20d83f0e ("ath9k_hw: improve ANI processing and rx desensitizing parameters")
 
-BTW, looking at the code, it seems there is another leak here that
-your patch does not address: we still leaks allocated (and dma-mapped)
-skbs.
+Call ath9k_ani_restart() only when the phy error rate reach the
+ANI immunity threshold. Sync the logic with internal code base.
 
-Indeed we probably need to rework error handling in this piece of code..
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/ani.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Andrea
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index 25e45e4..aa82e13 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -450,7 +450,9 @@ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
+ 		} else if (cckPhyErrRate > ah->config.cck_trig_high) {
+ 			ath9k_hw_ani_cck_err_trigger(ah);
+ 			aniState->ofdmsTurn = true;
+-		}
++		} else
++			return;
++			
+ 		ath9k_ani_restart(ah);
+ 	}
+ }
+-- 
+1.9.1
 
-On Sat, Jan 16, 2016 at 2:07 PM, Jia-Ju Bai <baijiaju1990@163.com> wrote:
-> When dev_alloc_skb or pci_dma_mapping_error in rtl8180_init_rx_ring fails,
-> the memory allocated by pci_zalloc_consistent is not freed.
->
-> This patch fixes the bug by adding pci_free_consistent
-> in error handling code.
->
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
-> ---
->  drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c |    4 ++++
->  1 file changed, 4 insertions(+)
->
-> diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
-> index a43a16f..28479b1 100644
-> --- a/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
-> +++ b/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
-> @@ -1018,6 +1018,8 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
->                 dma_addr_t *mapping;
->                 entry = priv->rx_ring + priv->rx_ring_sz*i;
->                 if (!skb) {
-> +                       pci_free_consistent(priv->pdev, priv->rx_ring_sz * 32,
-> +                                       priv->rx_ring, priv->rx_ring_dma);
->                         wiphy_err(dev->wiphy, "Cannot allocate RX skb\n");
->                         return -ENOMEM;
->                 }
-> @@ -1028,6 +1030,8 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
->
->                 if (pci_dma_mapping_error(priv->pdev, *mapping)) {
->                         kfree_skb(skb);
-> +                       pci_free_consistent(priv->pdev, priv->rx_ring_sz * 32,
-> +                                       priv->rx_ring, priv->rx_ring_dma);
->                         wiphy_err(dev->wiphy, "Cannot map DMA for RX skb\n");
->                         return -ENOMEM;
->                 }
-> --
-> 1.7.9.5
->
->
