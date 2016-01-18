@@ -1,66 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53810 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:52532 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753320AbcAVMSA (ORCPT
+	with ESMTP id S1753173AbcARBeK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2016 07:18:00 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: wireless-drivers: random cleanup patches piling up
-References: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com>
-	<CAGRGNgVDhqGdC4NrWgTAbhGKtodTGsMVJ-QGdXG_hPWYeuGe4g@mail.gmail.com>
-Date: Fri, 22 Jan 2016 14:17:52 +0200
-In-Reply-To: <CAGRGNgVDhqGdC4NrWgTAbhGKtodTGsMVJ-QGdXG_hPWYeuGe4g@mail.gmail.com>
-	(Julian Calaby's message of "Fri, 22 Jan 2016 09:32:56 +1100")
-Message-ID: <87oacdx0y7.fsf@kamboji.qca.qualcomm.com> (sfid-20160122_131804_908534_C804CB30)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 17 Jan 2016 20:34:10 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, nbd@openwrt.org,
+	Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v3 0/5] ath9k bug fixes
+Date: Mon, 18 Jan 2016 09:33:45 +0800
+Message-Id: <1453080830-7616-1-git-send-email-miaoqing@codeaurora.org> (sfid-20160118_023413_866391_DDE4D26A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Julian Calaby <julian.calaby@gmail.com> writes:
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-> Hi Kalle,
->
-> On Fri, Jan 22, 2016 at 1:58 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Hi,
->>
->> I have quite a lot of random cleanup patches from new developers waiting
->> in my queue:
->>
->> https://patchwork.kernel.org/project/linux-wireless/list/?state=10&delegate=25621&order=date
->>
->> (Not all of them are cleanup patches, there are also few patches
->> deferred due to other reasons, but you get the idea.)
->>
->> These cleanup patches usually take quite a lot of my time and I'm
->> starting to doubt the benefit, compared to the time needed to dig
->> through them and figuring out what to apply. And this is of course time
->> away from other patches, so it's slowing down "real" development.
->>
->> I really don't know what to do. Part of me is saying that I just should
->> drop them unless it's reviewed by a more experienced developer but on
->> the other hand this is a good way get new developers onboard.
->>
->> What others think? Are these kind of patches useful?
->
-> I'm not experienced or knowledgeable enough
+ath9k bug fixes
 
-I have seen your comments, you are most certainly knowledgeable enough :)
+Miaoqing Pan (5):
+  ath9k: avoid ANI restart if no trigger
+  ath9k: clean up ANI per-channel pointer checking
+  ath9k: do not reset while BB panic(0x4000409) on ar9561
+  ath9k: fix inconsistent use of tab and space in indentation
+  ath9k: fix data bus error on ar9300 and ar9580
 
-> to give an ack or formal review of a patch, however I generally read
-> all of them. Would it be helpful if I were to give an informal "this
-> patch looks sane" for cleanups and other small patches?
-
-That would be _very_ helpful, especially with these cleanup patches from
-newbies.
-
-And even better if you can add the official Reviewed-by tag because when
-we get the promised patchwork update (crossing my fingers) it will
-actually show the review count on the top page. That makes it really
-easy to spot what cleanup patches are worth looking at (and which one to
-drop). So I very much welcome this practice.
+ drivers/net/wireless/ath/ath9k/ani.c           | 36 +++++++-------------------
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |  6 ++---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c    |  5 ++--
+ drivers/net/wireless/ath/ath9k/hw.c            | 10 +++++++
+ drivers/net/wireless/ath/ath9k/reg.h           |  4 ++-
+ 5 files changed, 28 insertions(+), 33 deletions(-)
 
 -- 
-Kalle Valo
+1.9.1
+
