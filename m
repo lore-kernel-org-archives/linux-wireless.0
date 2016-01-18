@@ -1,47 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from postler.einfach.org ([5.9.2.179]:42458 "EHLO
-	postler.einfach.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750722AbcAGQ7o (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 11:59:44 -0500
-Subject: Re: lost connectivity until "wpa_cli reassociate" is issued
-To: David Mosberger <davidm@egauge.net>,
-	Ben Greear <greearb@candelatech.com>
-References: <CALnQHM3C=DVaTf58XDyh+rttVs-FSpc4ghozg9HJktEonq7w-g@mail.gmail.com>
- <568E913D.7050301@candelatech.com>
- <CALnQHM1mzqFbprQqujB7BWncOa=D9uAxLQ0paiv-21vrx+hFvw@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:58889 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752489AbcARIq3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jan 2016 03:46:29 -0500
+Date: Mon, 18 Jan 2016 09:45:00 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Eli Cooper <elicooper@gmx.com>
 Cc: linux-wireless@vger.kernel.org
-From: Bruno Randolf <br1@einfach.org>
-Message-ID: <568E997C.1030003@einfach.org> (sfid-20160107_175946_977332_D5778527)
-Date: Thu, 7 Jan 2016 16:59:40 +0000
+Subject: Re: [PATCH v2] rt2x00: fix monitor mode regression
+Message-ID: <20160118084500.GA3731@redhat.com> (sfid-20160118_094633_099445_5EB74B44)
+References: <1452701232-12619-1-git-send-email-elicooper@gmx.com>
 MIME-Version: 1.0
-In-Reply-To: <CALnQHM1mzqFbprQqujB7BWncOa=D9uAxLQ0paiv-21vrx+hFvw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1452701232-12619-1-git-send-email-elicooper@gmx.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/07/2016 04:29 PM, David Mosberger wrote:
-> On Thu, Jan 7, 2016 at 9:24 AM, Ben Greear <greearb@candelatech.com> wrote:
->> On 01/07/2016 08:19 AM, David Mosberger wrote:
->>>
->>> We are seeing a curious issue where WLAN connectivity sometimes
->>> gets stuck until a "wpa_cli reassociate" command is issued.
->>>
->>> At the WPA level, everything appears to be working fine)
->>> (see thread starting at
->>> http://lists.infradead.org/pipermail/hostap/2016-January/034454.html).
->>
->> I don't remember seeing you mention the driver and NIC you are using.
->>
->> I think this is likely a driver bug, so please provide that info.
+On Thu, Jan 14, 2016 at 12:07:12AM +0800, Eli Cooper wrote:
+> Since commit df1404650ccbfeb76a84f301f22316be0d00a864 monitor mode for rt2x00
+> has been made effectively useless because the hardware filter is configured to
+> drop packets whose intended recipient is not the device, regardless of the
+> presence of monitor mode interfaces.
 > 
-> Sure, we're using rtl8192cu.  I started out suspecting a driver bug as
-> well, but since we're processing management frames during those
-> "stuck" periods just fine (see
+> This patch fixes this regression by adding explicit monitor mode support, and
+> configuring the hardware filter accordingly.
+> 
+> Signed-off-by: Eli Cooper <elicooper@gmx.com>
+[snip]
+>  	unsigned int intf_associated;
+>  	unsigned int intf_beaconing;
+> +	bool is_monitoring;
 
-Although I have not checked if the "wpa_cli reassociate" command helps,
-I have seen rtl8192cu get "stuck" in similar ways. Maybe you can give
-the new rtl8xxxu driver from Jes Sorensen try? It has less features, but
-works more reliable, IMHO...
+Could you change to use rt2x00dev->flags instead of new bool
+variable i.e. introduce CONFIG_MONITORING in rt2x00_state_flags ?
 
-bruno
+> +	if (ieee80211_flags & IEEE80211_CONF_CHANGE_MONITOR) {
+> +		if (conf->flags & IEEE80211_CONF_MONITOR) {
+> +			rt2x00_dbg(rt2x00dev, "Monitor mode is enabled\n");
+
+I don't think those debug messages are actually needed.
+
+Thanks
+Stanislaw
