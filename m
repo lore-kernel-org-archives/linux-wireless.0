@@ -1,75 +1,115 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:36410 "EHLO
-	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751379AbcAMWjy (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52596 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753263AbcARBee (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2016 17:39:54 -0500
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Subject: Re: [PATCH v2] wl1251: add sysfs interface for bluetooth coexistence mode configuration
-Date: Wed, 13 Jan 2016 23:39:49 +0100
-Cc: Kalle Valo <kvalo@codeaurora.org>, Pavel Machek <pavel@ucw.cz>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, David Gnedt <david.gnedt@davizone.at>
-References: <1451130310-16666-1-git-send-email-pali.rohar@gmail.com> <5696D08F.9030906@broadcom.com>
-In-Reply-To: <5696D08F.9030906@broadcom.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart9379298.SYUCXtDZX4";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201601132339.50004@pali> (sfid-20160113_234022_734518_7D7B2FF6)
+	Sun, 17 Jan 2016 20:34:34 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, nbd@openwrt.org,
+	Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v3 2/5] ath9k: clean up ANI per-channel pointer checking
+Date: Mon, 18 Jan 2016 09:33:47 +0800
+Message-Id: <1453080830-7616-3-git-send-email-miaoqing@codeaurora.org> (sfid-20160118_023436_946974_EE80CC70)
+In-Reply-To: <1453080830-7616-1-git-send-email-miaoqing@codeaurora.org>
+References: <1453080830-7616-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart9379298.SYUCXtDZX4
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-On Wednesday 13 January 2016 23:32:47 Arend van Spriel wrote:
-> On 12/26/2015 12:45 PM, Pali Roh=C3=A1r wrote:
-> > Port the bt_coex_mode sysfs interface from wl1251 driver version
-> > included in the Maemo Fremantle kernel to allow bt-coexistence
-> > mode configuration. This enables userspace applications to set one
-> > of the modes WL1251_BT_COEX_OFF, WL1251_BT_COEX_ENABLE and
-> > WL1251_BT_COEX_MONOAUDIO. The default mode is WL1251_BT_COEX_OFF.
-> > It should be noted that this driver always enabled bt-coexistence
-> > before and enabled bt-coexistence directly affects the receiving
-> > performance, rendering it unusable in some low-signal situations.
-> > Especially monitor mode is affected very badly with bt-coexistence
-> > enabled.
->=20
-> So what user-space process will be using this interface.
+commit c24bd3620c50 ("ath9k: Do not maintain ANI state per-channel")
+removed per-channel handling, the code to check 'curchan' also
+should be removed as never used.
 
-On Maemo daemon wlancond use this interface. It use information from=20
-bluez daemon to decide if btcoex is needed to enable or not (and also=20
-which mode).
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/ani.c | 32 ++++++--------------------------
+ 1 file changed, 6 insertions(+), 26 deletions(-)
 
-> Did you consider adding debugfs interface?
+diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
+index aa82e13..815efe9 100644
+--- a/drivers/net/wireless/ath/ath9k/ani.c
++++ b/drivers/net/wireless/ath/ath9k/ani.c
+@@ -126,12 +126,8 @@ static void ath9k_hw_update_mibstats(struct ath_hw *ah,
+ 
+ static void ath9k_ani_restart(struct ath_hw *ah)
+ {
+-	struct ar5416AniState *aniState;
+-
+-	if (!ah->curchan)
+-		return;
++	struct ar5416AniState *aniState = &ah->ani;
+ 
+-	aniState = &ah->ani;
+ 	aniState->listenTime = 0;
+ 
+ 	ENABLE_REGWRITE_BUFFER(ah);
+@@ -221,12 +217,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
+ 
+ static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
+ {
+-	struct ar5416AniState *aniState;
+-
+-	if (!ah->curchan)
+-		return;
+-
+-	aniState = &ah->ani;
++	struct ar5416AniState *aniState = &ah->ani;
+ 
+ 	if (aniState->ofdmNoiseImmunityLevel < ATH9K_ANI_OFDM_MAX_LEVEL)
+ 		ath9k_hw_set_ofdm_nil(ah, aniState->ofdmNoiseImmunityLevel + 1, false);
+@@ -281,12 +272,7 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel,
+ 
+ static void ath9k_hw_ani_cck_err_trigger(struct ath_hw *ah)
+ {
+-	struct ar5416AniState *aniState;
+-
+-	if (!ah->curchan)
+-		return;
+-
+-	aniState = &ah->ani;
++	struct ar5416AniState *aniState = &ah->ani;
+ 
+ 	if (aniState->cckNoiseImmunityLevel < ATH9K_ANI_CCK_MAX_LEVEL)
+ 		ath9k_hw_set_cck_nil(ah, aniState->cckNoiseImmunityLevel + 1,
+@@ -299,9 +285,7 @@ static void ath9k_hw_ani_cck_err_trigger(struct ath_hw *ah)
+  */
+ static void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
+ {
+-	struct ar5416AniState *aniState;
+-
+-	aniState = &ah->ani;
++	struct ar5416AniState *aniState = &ah->ani;
+ 
+ 	/* lower OFDM noise immunity */
+ 	if (aniState->ofdmNoiseImmunityLevel > 0 &&
+@@ -329,7 +313,7 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	int ofdm_nil, cck_nil;
+ 
+-	if (!ah->curchan)
++	if (!chan)
+ 		return;
+ 
+ 	BUG_ON(aniState == NULL);
+@@ -416,14 +400,10 @@ static bool ath9k_hw_ani_read_counters(struct ath_hw *ah)
+ 
+ void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
+ {
+-	struct ar5416AniState *aniState;
++	struct ar5416AniState *aniState = &ah->ani;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	u32 ofdmPhyErrRate, cckPhyErrRate;
+ 
+-	if (!ah->curchan)
+-		return;
+-
+-	aniState = &ah->ani;
+ 	if (!ath9k_hw_ani_read_counters(ah))
+ 		return;
+ 
+-- 
+1.9.1
 
-Other drivers uses sysfs, so I proposed also sysfs interface.
-
-> In case of monitor mode you could
-> consider disabling bt-coex from within the driver itself.
-
-I'm not sure if you want to do it always in this case...
-
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
-
---nextPart9379298.SYUCXtDZX4
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlaW0jUACgkQi/DJPQPkQ1JgcACgqv0VNU+3jY2ExMnTgpXtU8Xi
-4XMAnjtGGOwb2/DgggXPGrvH456GdPR3
-=wEtO
------END PGP SIGNATURE-----
-
---nextPart9379298.SYUCXtDZX4--
