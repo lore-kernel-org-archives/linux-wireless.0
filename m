@@ -1,76 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f54.google.com ([209.85.215.54]:34620 "EHLO
-	mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966826AbcAZQ5W (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 11:57:22 -0500
-Received: by mail-lf0-f54.google.com with SMTP id 17so109170182lfz.1
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2016 08:57:21 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/5] brcmfmac: analyze descriptors of current component only
-Date: Tue, 26 Jan 2016 17:57:01 +0100
-Message-Id: <1453827425-16455-2-git-send-email-zajec5@gmail.com> (sfid-20160126_175730_199770_950D66CE)
-In-Reply-To: <1453827425-16455-1-git-send-email-zajec5@gmail.com>
-References: <1453827425-16455-1-git-send-email-zajec5@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mout.gmx.net ([212.227.17.20]:49545 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754776AbcARLa6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jan 2016 06:30:58 -0500
+Received: from dc7700.localdomain ([168.235.78.26]) by mail.gmx.com (mrgmx102)
+ with ESMTPSA (Nemesis) id 0LaJWs-1ZrrjV3GAQ-00m3BF for
+ <linux-wireless@vger.kernel.org>; Mon, 18 Jan 2016 12:30:56 +0100
+From: Eli Cooper <elicooper@gmx.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v3] rt2x00: fix monitor mode regression
+Date: Mon, 18 Jan 2016 19:30:19 +0800
+Message-Id: <1453116619-29933-1-git-send-email-elicooper@gmx.com> (sfid-20160118_123128_176347_53E67A04)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-So far we were looking for address descriptors without a check for
-crossing current component border. In case of dealing with unsupported
-descriptor or descriptor missing at all the code would incorrectly get
-data from another component.
+Since commit df1404650ccb ("mac80211: remove support for IFF_PROMISC")
+monitor mode for rt2x00 has been made effectively useless because the
+hardware filter is configured to drop packets whose intended recipient is
+not the device, regardless of the presence of monitor mode interfaces.
 
-Consider this binary-described component from BCM4366 EROM:
-4bf83b01	TAG==CI		CID==0x83b
-20080201	TAG==CI		PORTS==0+1	WRAPPERS==0+1
-18400035	TAG==ADDR	SZ_SZD		TYPE_SLAVE
-00050000
-18107085	TAG==ADDR	SZ_4K		TYPE_SWRAP
+This patch fixes this regression by adding explicit monitor mode support,
+and by configuring the hardware filter accordingly.
 
-Driver was assigning invalid base address to this core:
-brcmfmac:  [6 ] core 0x83b:32 base 0x18109000 wrap 0x18107000
-which came from totally different component defined in EROM:
-43b36701	TAG==CI		CID==0x367
-00000201	TAG==CI		PORTS==0+1	WRAPPERS==0+0
-18109005	TAG==ADDR	SZ_4K		TYPE_SLAVE
+Changes in v3:
+  introduce and use CONFIG_MONITORING in rt2x00_state_flags
+  remove unnecessary debug messages
+  improve patch format
 
-This change will also allow us to support components without wrapper
-address in the future.
+Changes in v2:
+  fix patch format
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Signed-off-by: Eli Cooper <elicooper@gmx.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ralink/rt2x00/rt2400pci.c    | 4 +++-
+ drivers/net/wireless/ralink/rt2x00/rt2500pci.c    | 4 +++-
+ drivers/net/wireless/ralink/rt2x00/rt2500usb.c    | 4 +++-
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c    | 3 ++-
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h       | 1 +
+ drivers/net/wireless/ralink/rt2x00/rt2x00config.c | 5 +++++
+ drivers/net/wireless/ralink/rt2x00/rt2x00mac.c    | 5 -----
+ drivers/net/wireless/ralink/rt2x00/rt61pci.c      | 4 +++-
+ drivers/net/wireless/ralink/rt2x00/rt73usb.c      | 4 +++-
+ 9 files changed, 23 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-index 82e4382..e434e2a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
-@@ -803,7 +803,14 @@ static int brcmf_chip_dmp_get_regaddr(struct brcmf_chip_priv *ci, u32 *eromaddr,
- 				*eromaddr -= 4;
- 				return -EFAULT;
- 			}
--		} while (desc != DMP_DESC_ADDRESS);
-+		} while (desc != DMP_DESC_ADDRESS &&
-+			 desc != DMP_DESC_COMPONENT);
-+
-+		/* stop if we crossed current component border */
-+		if (desc == DMP_DESC_COMPONENT) {
-+			*eromaddr -= 4;
-+			return 0;
-+		}
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
+index 9a3966c..155f343 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2400pci.c
+@@ -273,8 +273,10 @@ static void rt2400pci_config_filter(struct rt2x00_dev *rt2x00dev,
+ 			   !(filter_flags & FIF_PLCPFAIL));
+ 	rt2x00_set_field32(&reg, RXCSR0_DROP_CONTROL,
+ 			   !(filter_flags & FIF_CONTROL));
+-	rt2x00_set_field32(&reg, RXCSR0_DROP_NOT_TO_ME, 1);
++	rt2x00_set_field32(&reg, RXCSR0_DROP_NOT_TO_ME,
++			   !test_bit(CONFIG_MONITORING, &rt2x00dev->flags));
+ 	rt2x00_set_field32(&reg, RXCSR0_DROP_TODS,
++			   !test_bit(CONFIG_MONITORING, &rt2x00dev->flags) &&
+ 			   !rt2x00dev->intf_ap_count);
+ 	rt2x00_set_field32(&reg, RXCSR0_DROP_VERSION_ERROR, 1);
+ 	rt2x00mmio_register_write(rt2x00dev, RXCSR0, reg);
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
+index 1a6740b..2553cdd 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2500pci.c
+@@ -274,8 +274,10 @@ static void rt2500pci_config_filter(struct rt2x00_dev *rt2x00dev,
+ 			   !(filter_flags & FIF_PLCPFAIL));
+ 	rt2x00_set_field32(&reg, RXCSR0_DROP_CONTROL,
+ 			   !(filter_flags & FIF_CONTROL));
+-	rt2x00_set_field32(&reg, RXCSR0_DROP_NOT_TO_ME, 1);
++	rt2x00_set_field32(&reg, RXCSR0_DROP_NOT_TO_ME,
++			   !test_bit(CONFIG_MONITORING, &rt2x00dev->flags));
+ 	rt2x00_set_field32(&reg, RXCSR0_DROP_TODS,
++			   !test_bit(CONFIG_MONITORING, &rt2x00dev->flags) &&
+ 			   !rt2x00dev->intf_ap_count);
+ 	rt2x00_set_field32(&reg, RXCSR0_DROP_VERSION_ERROR, 1);
+ 	rt2x00_set_field32(&reg, RXCSR0_DROP_MCAST,
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
+index d26018f..2d64611 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2500usb.c
+@@ -437,8 +437,10 @@ static void rt2500usb_config_filter(struct rt2x00_dev *rt2x00dev,
+ 			   !(filter_flags & FIF_PLCPFAIL));
+ 	rt2x00_set_field16(&reg, TXRX_CSR2_DROP_CONTROL,
+ 			   !(filter_flags & FIF_CONTROL));
+-	rt2x00_set_field16(&reg, TXRX_CSR2_DROP_NOT_TO_ME, 1);
++	rt2x00_set_field16(&reg, TXRX_CSR2_DROP_NOT_TO_ME,
++			   !test_bit(CONFIG_MONITORING, &rt2x00dev->flags));
+ 	rt2x00_set_field16(&reg, TXRX_CSR2_DROP_TODS,
++			   !test_bit(CONFIG_MONITORING, &rt2x00dev->flags) &&
+ 			   !rt2x00dev->intf_ap_count);
+ 	rt2x00_set_field16(&reg, TXRX_CSR2_DROP_VERSION_ERROR, 1);
+ 	rt2x00_set_field16(&reg, TXRX_CSR2_DROP_MULTICAST,
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+index 9733b31..a26afca 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2800lib.c
+@@ -1490,7 +1490,8 @@ void rt2800_config_filter(struct rt2x00_dev *rt2x00dev,
+ 			   !(filter_flags & FIF_FCSFAIL));
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_PHY_ERROR,
+ 			   !(filter_flags & FIF_PLCPFAIL));
+-	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_NOT_TO_ME, 1);
++	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_NOT_TO_ME,
++			   !test_bit(CONFIG_MONITORING, &rt2x00dev->flags));
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_NOT_MY_BSSD, 0);
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_VER_ERROR, 1);
+ 	rt2x00_set_field32(&reg, RX_FILTER_CFG_DROP_MULTICAST,
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+index 3282ddb..2642714 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
+@@ -669,6 +669,7 @@ enum rt2x00_state_flags {
+ 	CONFIG_POWERSAVING,
+ 	CONFIG_HT_DISABLED,
+ 	CONFIG_QOS_DISABLED,
++	CONFIG_MONITORING,
  
- 		/* skip upper 32-bit address descriptor */
- 		if (val & DMP_DESC_ADDRSIZE_GT32)
+ 	/*
+ 	 * Mark we currently are sequentially reading TX_STA_FIFO register
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00config.c b/drivers/net/wireless/ralink/rt2x00/rt2x00config.c
+index 7e8bb11..6a1f508 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00config.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00config.c
+@@ -277,6 +277,11 @@ void rt2x00lib_config(struct rt2x00_dev *rt2x00dev,
+ 	else
+ 		clear_bit(CONFIG_POWERSAVING, &rt2x00dev->flags);
+ 
++	if (conf->flags & IEEE80211_CONF_MONITOR)
++		set_bit(CONFIG_MONITORING, &rt2x00dev->flags);
++	else
++		clear_bit(CONFIG_MONITORING, &rt2x00dev->flags);
++
+ 	rt2x00dev->curr_band = conf->chandef.chan->band;
+ 	rt2x00dev->curr_freq = conf->chandef.chan->center_freq;
+ 	rt2x00dev->tx_power = conf->power_level;
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+index 3c26ee6..13da95a 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00mac.c
+@@ -385,11 +385,6 @@ void rt2x00mac_configure_filter(struct ieee80211_hw *hw,
+ 			*total_flags |= FIF_PSPOLL;
+ 	}
+ 
+-	/*
+-	 * Check if there is any work left for us.
+-	 */
+-	if (rt2x00dev->packet_filter == *total_flags)
+-		return;
+ 	rt2x00dev->packet_filter = *total_flags;
+ 
+ 	rt2x00dev->ops->lib->config_filter(rt2x00dev, *total_flags);
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt61pci.c b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
+index c0e730e..24a3436 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt61pci.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt61pci.c
+@@ -530,8 +530,10 @@ static void rt61pci_config_filter(struct rt2x00_dev *rt2x00dev,
+ 			   !(filter_flags & FIF_PLCPFAIL));
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_CONTROL,
+ 			   !(filter_flags & (FIF_CONTROL | FIF_PSPOLL)));
+-	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_NOT_TO_ME, 1);
++	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_NOT_TO_ME,
++			   !test_bit(CONFIG_MONITORING, &rt2x00dev->flags));
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_TO_DS,
++			   !test_bit(CONFIG_MONITORING, &rt2x00dev->flags) &&
+ 			   !rt2x00dev->intf_ap_count);
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_VERSION_ERROR, 1);
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_MULTICAST,
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt73usb.c b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+index 7081e13..7bbc869 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt73usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt73usb.c
+@@ -480,8 +480,10 @@ static void rt73usb_config_filter(struct rt2x00_dev *rt2x00dev,
+ 			   !(filter_flags & FIF_PLCPFAIL));
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_CONTROL,
+ 			   !(filter_flags & (FIF_CONTROL | FIF_PSPOLL)));
+-	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_NOT_TO_ME, 1);
++	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_NOT_TO_ME,
++			   !test_bit(CONFIG_MONITORING, &rt2x00dev->flags));
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_TO_DS,
++			   !test_bit(CONFIG_MONITORING, &rt2x00dev->flags) &&
+ 			   !rt2x00dev->intf_ap_count);
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_VERSION_ERROR, 1);
+ 	rt2x00_set_field32(&reg, TXRX_CSR0_DROP_MULTICAST,
 -- 
-1.8.4.5
+2.7.0
 
