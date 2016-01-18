@@ -1,70 +1,100 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from glaubenleben.de ([85.214.105.140]:57591 "EHLO glaubenleben.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751906AbcAFVSG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2016 16:18:06 -0500
-From: Andreas Kemnade <andreas@kemnade.info>
-To: Kalle Valo <kvalo@codeaurora.org>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Andreas Kemnade <andreas@kemnade.info>
-Subject: [PATCH 1/6] wireless:libertas: do not strip header for PS_MODE commands
-Date: Wed,  6 Jan 2016 22:08:09 +0100
-Message-Id: <1452114494-6451-2-git-send-email-andreas@kemnade.info> (sfid-20160106_221820_256894_BCEA8AB9)
-In-Reply-To: <1452114494-6451-1-git-send-email-andreas@kemnade.info>
-References: <1452114494-6451-1-git-send-email-andreas@kemnade.info>
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:27488 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752001AbcARJeL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jan 2016 04:34:11 -0500
+Subject: Re: [RFC V2 2/3] nl80211: add bss selection attribute to CONNECT
+ command
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <1452678583-20086-1-git-send-email-arend@broadcom.com>
+ <1452678583-20086-3-git-send-email-arend@broadcom.com>
+ <1452769832.2444.14.camel@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend@broadcom.com>
+Message-ID: <569CB190.1000901@broadcom.com> (sfid-20160118_103415_301511_EC70727B)
+Date: Mon, 18 Jan 2016 10:34:08 +0100
+MIME-Version: 1.0
+In-Reply-To: <1452769832.2444.14.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-struct cmd_ds_802_11_ps_mode
-contains the command header and a pointer to it was
-initialized with data points to the body which leads to
-mis-interpretation of the cmd_ds_802_11_ps_mode.action member.
 
-Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
----
- drivers/net/wireless/libertas/cmd.c     | 4 ++--
- drivers/net/wireless/libertas/cmdresp.c | 5 ++++-
- 2 files changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 0387a5b..40467d6 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -957,7 +957,7 @@ static void lbs_queue_cmd(struct lbs_private *priv,
- 
- 	/* Exit_PS command needs to be queued in the header always. */
- 	if (le16_to_cpu(cmdnode->cmdbuf->command) == CMD_802_11_PS_MODE) {
--		struct cmd_ds_802_11_ps_mode *psm = (void *) &cmdnode->cmdbuf;
-+		struct cmd_ds_802_11_ps_mode *psm = (void *)cmdnode->cmdbuf;
- 
- 		if (psm->action == cpu_to_le16(PS_MODE_ACTION_EXIT_PS)) {
- 			if (priv->psstate != PS_STATE_FULL_POWER)
-@@ -1387,7 +1387,7 @@ int lbs_execute_next_command(struct lbs_private *priv)
- 				 * PS command. Ignore it if it is not Exit_PS.
- 				 * otherwise send it down immediately.
- 				 */
--				struct cmd_ds_802_11_ps_mode *psm = (void *)&cmd[1];
-+				struct cmd_ds_802_11_ps_mode *psm = (void *)cmd;
- 
- 				lbs_deb_host(
- 				       "EXEC_NEXT_CMD: PS cmd, action 0x%02x\n",
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index e5442e8..701125f 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -123,7 +123,10 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
- 	priv->cmd_timed_out = 0;
- 
- 	if (respcmd == CMD_RET(CMD_802_11_PS_MODE)) {
--		struct cmd_ds_802_11_ps_mode *psmode = (void *) &resp[1];
-+		/* struct cmd_ds_802_11_ps_mode also contains
-+		 * the header
-+		 */
-+		struct cmd_ds_802_11_ps_mode *psmode = (void *)resp;
- 		u16 action = le16_to_cpu(psmode->action);
- 
- 		lbs_deb_host(
--- 
-2.1.4
+On 14-1-2016 12:10, Johannes Berg wrote:
+> On Wed, 2016-01-13 at 10:49 +0100, Arend van Spriel wrote:
+>>  
+>> +/**
+>> + * enum nl80211_attr_bss_select - attributes for bss selection.
+> 
+> I'd prefer nl80211_bss_select_attr in this name and the constants too,
+> so it's more obvious that it doesn't belong to the top-level namespace.
 
+Ok. Did not know that convention so it was not that obvious to me ;-)
+Will change it.
+
+>> + * @__NL80211_ATTR_BSS_SELECT_INVALID: reserved.
+>> + * @NL80211_ATTR_BSS_SELECT_PRIMITIVE: Indicates what criteria are to
+>> + *> 	> be used for bss selection. Value according
+>> + *	%enum nl80211_bss_select_primitive.
+> 
+> This I don't understand now. Wouldn't the given attributes just be
+> used?
+
+The primitive just indicates the requested bss selection criteria and
+determines what other attributes are to be expected. Could determine it
+by looking at the other attributes, but that would make it harder to
+validate the request. This way it also makes them mutually exclusive.
+
+> I was thinking you'd keep the NLA_FLAG "RSSI" preference, and use the
+> attribute values for the bitmap ...
+
+You lost me here.
+
+> But still I think this isn't described very well.
+> 
+> Perhaps a good way of documenting this would be to say each primitive
+> has a priority? E.g.
+> 
+>     Primitives with a lower document priority are executed first while
+>     selecting a BSS:
+> 
+>     RSSI (priority 100)
+>     BAND_PREF (priority 1)
+>     RSSI_ADJUST (priority 1) [since it's mutually exclusive with
+>     BAND_PREF]
+
+Not sure about the priority. What I should document is that BAND_PREF
+and RSSI_ADJUST also do RSSI based selection as a second step. As a
+(possibly important) side note our firmware api allows multiple
+primitives, but RSSI must be one of them as it will reject the
+configuration otherwise. As such I could combine RSSI and RSSI_ADJUST as
+RSSI would be RSSI_ADJUST(band=unspec, delta=0).
+
+>> + * @NL80211_ATTR_BSS_SELECT_BAND_PREF: Required attribute indicating the
+>> + *	preferred band. Value according %enum nl80211_band.
+> 
+> Why required?
+> 
+>> + * @NL80211_ATTR_BSS_SELECT_RSSI_ADJUST: When present the value is to be
+>> + *	added to the RSSI level for BSS-es in the preferred band (s8).
+> 
+> Oh, ok, I see. It's necessary with this too. Still, I wouldn't say
+> required, in case future extensions don't need it.
+> 
+> You should also more clearly document this though, I think, since in
+> this case the preferred band isn't really a preferred band any more, it
+> becomes just the "adjusted band".
+
+Indeed. Will change it.
+
+> I wonder if it'd be simpler to define two band attributes, and make
+> RSSI_ADJUST and BAND_PREF mutually exclusive, adding RSSI_ADJUST_BAND.
+> We could also use a complex struct value for the contents of
+> RSSI_ADJUST, but that doesn't seem great either.
+
+They are mutually exclusive as user-space can only give a single primitive.
+
+Regards,
+Arend
