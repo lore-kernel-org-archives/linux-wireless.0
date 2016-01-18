@@ -1,76 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.12]:50717 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752331AbcAAUbf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2016 15:31:35 -0500
-Subject: [PATCH 2/3] net-iwlegacy: One check less in il_eeprom_init() after
- error detection
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <5686E13F.2010309@users.sourceforge.net>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Message-ID: <5686E21E.4090901@users.sourceforge.net> (sfid-20160101_213155_410883_890AEA0C)
-Date: Fri, 1 Jan 2016 21:31:26 +0100
-MIME-Version: 1.0
-In-Reply-To: <5686E13F.2010309@users.sourceforge.net>
-Content-Type: text/plain; charset=utf-8
+Received: from smtp.codeaurora.org ([198.145.29.96]:52667 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753238AbcARBfB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 17 Jan 2016 20:35:01 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, nbd@openwrt.org,
+	Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v3 4/5] ath9k: fix inconsistent use of tab and space in indentation
+Date: Mon, 18 Jan 2016 09:33:49 +0800
+Message-Id: <1453080830-7616-5-git-send-email-miaoqing@codeaurora.org> (sfid-20160118_023505_052244_46E2EACF)
+In-Reply-To: <1453080830-7616-1-git-send-email-miaoqing@codeaurora.org>
+References: <1453080830-7616-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Fri, 1 Jan 2016 21:12:29 +0100
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-This issue was detected by using the Coccinelle software.
+Minor changes for indenting.
 
-Adjust a jump target to avoid a check repetition before the function
-call "il_eeprom_free".
-
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 ---
- drivers/net/wireless/intel/iwlegacy/common.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
-index c3afaf7..ae45fd3 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.c
-+++ b/drivers/net/wireless/intel/iwlegacy/common.c
-@@ -734,7 +734,7 @@ il_eeprom_init(struct il_priv *il)
- 	if (ret < 0) {
- 		IL_ERR("EEPROM not found, EEPROM_GP=0x%08x\n", gp);
- 		ret = -ENOENT;
--		goto err;
-+		goto free_eeprom;
- 	}
- 
- 	/* Make sure driver (instead of uCode) is allowed to read EEPROM */
-@@ -742,7 +742,7 @@ il_eeprom_init(struct il_priv *il)
- 	if (ret < 0) {
- 		IL_ERR("Failed to acquire EEPROM semaphore.\n");
- 		ret = -ENOENT;
--		goto err;
-+		goto free_eeprom;
- 	}
- 
- 	/* eeprom is an array of 16bit values */
-@@ -772,9 +772,11 @@ il_eeprom_init(struct il_priv *il)
- done:
- 	il->ops->eeprom_release_semaphore(il);
- 
--err:
--	if (ret)
-+	if (ret) {
-+free_eeprom:
- 		il_eeprom_free(il);
-+	}
-+
- 	/* Reset chip to save power until we load uCode during "up". */
- 	il_apm_stop(il);
- 	return ret;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 8b4561e..54ed2f7 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -5485,11 +5485,11 @@ unsigned int ar9003_get_paprd_scale_factor(struct ath_hw *ah,
+ 			  AR9300_PAPRD_SCALE_1);
+ 	else {
+ 		if (chan->channel >= 5700)
+-		return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt20),
+-			  AR9300_PAPRD_SCALE_1);
++			return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt20),
++				  AR9300_PAPRD_SCALE_1);
+ 		else if (chan->channel >= 5400)
+ 			return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt40),
+-				   AR9300_PAPRD_SCALE_2);
++				  AR9300_PAPRD_SCALE_2);
+ 		else
+ 			return MS(le32_to_cpu(eep->modalHeader5G.papdRateMaskHt40),
+ 				  AR9300_PAPRD_SCALE_1);
 -- 
-2.6.3
+1.9.1
 
