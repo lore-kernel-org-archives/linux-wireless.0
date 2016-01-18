@@ -1,149 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:49698 "EHLO mga14.intel.com"
+Received: from bues.ch ([80.190.117.144]:35716 "EHLO bues.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754796AbcAYJFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 04:05:55 -0500
-From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org
-Subject: [PATCHv2 1/4] net: rfkill: add rfkill_find_type function
-Date: Mon, 25 Jan 2016 12:03:46 +0300
-Message-Id: <1453712629-143317-2-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20160125_100721_815159_A22DE8FE)
-In-Reply-To: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com>
-References: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com>
+	id S1755597AbcARQxw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 18 Jan 2016 11:53:52 -0500
+Date: Mon, 18 Jan 2016 17:53:03 +0100
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	"linux-arm-kernel\@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>,
+	"linux-mips\@linux-mips.org" <linux-mips@linux-mips.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	linux-wireless@vger.kernel.org
+Subject: ssb: Set linux-wireless as MAINTAINERS list
+Message-ID: <20160118175303.19164539@wiggum> (sfid-20160118_175414_635941_E1A521FB)
+In-Reply-To: <87y4bn5m4q.fsf@kamboji.qca.qualcomm.com>
+References: <8128014.DbbgBtKY3z@wuerfel>
+ <8760ywd5fe.fsf@kamboji.qca.qualcomm.com>
+ <4037550.DMaVTE01Aq@wuerfel>
+ <87bn8l7miw.fsf@kamboji.qca.qualcomm.com>
+ <CACna6ryvDFHqwJ3ExURcyFT2ZaT9fS9v36wCnJfze5BLnE88og@mail.gmail.com>
+ <87y4bn5m4q.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/W9FSX.bWK4dE3/AP7ZDba/G"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helper for finding the type based on name. Useful if the
-type needs to be determined based on device property.
+--Sig_/W9FSX.bWK4dE3/AP7ZDba/G
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+ssb patches go through the linux-wireless tree.
+Set the list to linux-wireless, so linux-wireless patchwork can catch the p=
+atches.
+
+Signed-off-by: Michael Buesch <m@bues.ch>
+
 ---
- include/linux/rfkill.h | 15 +++++++++++++
- net/rfkill/core.c      | 57 +++++++++++++++++++++++++-------------------------
- 2 files changed, 44 insertions(+), 28 deletions(-)
 
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index d901078..522ccbc 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -212,6 +212,15 @@ void rfkill_set_states(struct rfkill *rfkill, bool sw, bool hw);
-  * @rfkill: rfkill struct to query
-  */
- bool rfkill_blocked(struct rfkill *rfkill);
-+
-+/**
-+ * rfkill_find_type - Helpper for finding rfkill type by name
-+ * @name: the name of the type
-+ *
-+ * Returns enum rfkill_type that conrresponds the name.
-+ */
-+enum rfkill_type rfkill_find_type(const char *name);
-+
- #else /* !RFKILL */
- static inline struct rfkill * __must_check
- rfkill_alloc(const char *name,
-@@ -268,6 +277,12 @@ static inline bool rfkill_blocked(struct rfkill *rfkill)
- {
- 	return false;
- }
-+
-+static inline enum rfkill_type rfkill_find_type(const char *name)
-+{
-+	return RFKILL_TYPE_ALL;
-+}
-+
- #endif /* RFKILL || RFKILL_MODULE */
- 
- 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index f53bf3b6..e9a5cdf 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -582,6 +582,33 @@ void rfkill_set_states(struct rfkill *rfkill, bool sw, bool hw)
- }
- EXPORT_SYMBOL(rfkill_set_states);
- 
-+static const char *rfkill_types[NUM_RFKILL_TYPES] = {
-+	[RFKILL_TYPE_WLAN]	= "wlan",
-+	[RFKILL_TYPE_BLUETOOTH]	= "bluetooth",
-+	[RFKILL_TYPE_UWB]	= "ultrawideband",
-+	[RFKILL_TYPE_WIMAX]	= "wimax",
-+	[RFKILL_TYPE_WWAN]	= "wwan",
-+	[RFKILL_TYPE_GPS]	= "gps",
-+	[RFKILL_TYPE_FM]	= "fm",
-+	[RFKILL_TYPE_NFC]	= "nfc",
-+};
-+
-+enum rfkill_type rfkill_find_type(const char *name)
-+{
-+	int i;
-+
-+	BUILD_BUG_ON(!rfkill_types[NUM_RFKILL_TYPES - 1]);
-+
-+	if (!name)
-+		return RFKILL_TYPE_ALL;
-+
-+	for (i = 1; i < NUM_RFKILL_TYPES; i++)
-+		if (!strcmp(name, rfkill_types[i]))
-+			return i;
-+	return RFKILL_TYPE_ALL;
-+}
-+EXPORT_SYMBOL(rfkill_find_type);
-+
- static ssize_t name_show(struct device *dev, struct device_attribute *attr,
- 			 char *buf)
- {
-@@ -591,38 +618,12 @@ static ssize_t name_show(struct device *dev, struct device_attribute *attr,
- }
- static DEVICE_ATTR_RO(name);
- 
--static const char *rfkill_get_type_str(enum rfkill_type type)
--{
--	BUILD_BUG_ON(NUM_RFKILL_TYPES != RFKILL_TYPE_NFC + 1);
--
--	switch (type) {
--	case RFKILL_TYPE_WLAN:
--		return "wlan";
--	case RFKILL_TYPE_BLUETOOTH:
--		return "bluetooth";
--	case RFKILL_TYPE_UWB:
--		return "ultrawideband";
--	case RFKILL_TYPE_WIMAX:
--		return "wimax";
--	case RFKILL_TYPE_WWAN:
--		return "wwan";
--	case RFKILL_TYPE_GPS:
--		return "gps";
--	case RFKILL_TYPE_FM:
--		return "fm";
--	case RFKILL_TYPE_NFC:
--		return "nfc";
--	default:
--		BUG();
--	}
--}
--
- static ssize_t type_show(struct device *dev, struct device_attribute *attr,
- 			 char *buf)
- {
- 	struct rfkill *rfkill = to_rfkill(dev);
- 
--	return sprintf(buf, "%s\n", rfkill_get_type_str(rfkill->type));
-+	return sprintf(buf, "%s\n", rfkill_types[rfkill->type]);
- }
- static DEVICE_ATTR_RO(type);
- 
-@@ -768,7 +769,7 @@ static int rfkill_dev_uevent(struct device *dev, struct kobj_uevent_env *env)
- 	if (error)
- 		return error;
- 	error = add_uevent_var(env, "RFKILL_TYPE=%s",
--			       rfkill_get_type_str(rfkill->type));
-+			       rfkill_types[rfkill->type]);
- 	if (error)
- 		return error;
- 	spin_lock_irqsave(&rfkill->lock, flags);
--- 
-2.7.0.rc3
+Index: linux/MAINTAINERS
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- linux.orig/MAINTAINERS
++++ linux/MAINTAINERS
+@@ -10036,7 +10036,7 @@ F:	drivers/net/ethernet/natsemi/sonic.*
+=20
+ SONICS SILICON BACKPLANE DRIVER (SSB)
+ M:	Michael Buesch <m@bues.ch>
+-L:	netdev@vger.kernel.org
++L:	linux-wireless@vger.kernel.org
+ S:	Maintained
+ F:	drivers/ssb/
+ F:	include/linux/ssb/
 
+
+--=20
+Michael
+
+--Sig_/W9FSX.bWK4dE3/AP7ZDba/G
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWnRhvAAoJEPUyvh2QjYsOPYMP+wVU8Zgs2cPYZAxBjr/7/ZKX
+7/S5jsyNck3aQRMfwW9l2od0ZC1zwkSCRZLNzwtbWlXTdsc5ti/5xY8b1BG8AMai
+jvuwrpQFJTP3pDBfITcfHy1TOCRAp9WlZYftbz5AsnweHe3c9pGZVSEi5kdRXQrt
+5UlcViNaQ2Xj6mcbvSHGL78lvspgUGikjztlKq2FDfeYn++iyr71x9cSBfbNkB3v
+ZKa3bFPAaNR2/0gY9xVKE6pcHBroGUB6RxuLoXXp2rCX6XpTtI6hq0ITFUcyEwuQ
+MQqFqh67iB3prN6hRHX+dJl2VsuruyAZpgPCOVDysF0xThHdEZFDTlAgPmpdnju9
+wRb6hKiQkjvjzYAHAxo6YepAOIXHEhaPqnPs8u2hxVCZk8mM4dOMGp5ZNdsmQi8q
+F/Dd9MbYYDpgy/1y65dCPTz0KRq0UzzUdu85MSOk/SQ3ZxA5vlYs8t8IKeIM7x+A
+9QDwtlcNjnqzJ8qgd/rweC/Pty8m3Tg6wzIXYeDs8lty7VygC2MZ5cggCUHMdap1
+urBEE09Vz9aK8/q+SvMGis//flrjcodlhrmQPZkJ5x5I+pACf0n/t5JMrRWkw49n
+EF1djRh9+YHd0KdsuYU336RgW00GV2FWUepPGeKVuQH9Z+cGKriakXeTDkpsnm+w
+Nf2mv0KxPsLC53wdZlyN
+=OMM2
+-----END PGP SIGNATURE-----
+
+--Sig_/W9FSX.bWK4dE3/AP7ZDba/G--
