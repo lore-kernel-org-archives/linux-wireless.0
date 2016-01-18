@@ -1,44 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:32834 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751939AbcA0MUQ (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.187]:59468 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756247AbcARTkl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 07:20:16 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi 2016-01-26
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9D452F@hasmsx109.ger.corp.intel.com>
-	<87h9i0qwjp.fsf@kamboji.qca.qualcomm.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32E9D570C@hasmsx109.ger.corp.intel.com>
-	<1453816889.2759.72.camel@sipsolutions.net>
-	<0BA3FCBA62E2DC44AF3030971E174FB32E9D5780@hasmsx109.ger.corp.intel.com>
-Date: Wed, 27 Jan 2016 14:20:08 +0200
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9D5780@hasmsx109.ger.corp.intel.com>
-	(Emmanuel Grumbach's message of "Tue, 26 Jan 2016 14:05:56 +0000")
-Message-ID: <87oac7nrif.fsf@kamboji.qca.qualcomm.com> (sfid-20160127_132019_449420_27C90D17)
+	Mon, 18 Jan 2016 14:40:41 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: linux-arm-kernel@lists.infradead.org
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-mips@linux-mips.org,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	=?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	linux-kernel@vger.kernel.org, Michael Buesch <m@bues.ch>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: [PATCH, RESEND^2] ssb: mark ssb_bus_register as __maybe_unused
+Date: Mon, 18 Jan 2016 20:39:56 +0100
+Message-ID: <6063400.39vor3soEb@wuerfel> (sfid-20160118_204058_955692_7778C912)
+In-Reply-To: <8760ywd5fe.fsf@kamboji.qca.qualcomm.com>
+References: <8128014.DbbgBtKY3z@wuerfel> <8760ywd5fe.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+The SoC variant of the ssb code is now optional like the other
+ones, which means we can build the framwork without any
+front-end, but that results in a warning:
 
-> On 01/26/2016 04:01 PM, Johannes Berg wrote:
->>>> There's a conflict due to 8f57e4d930d, how should I fix it?
->> I think we can thus drop my patch - that commit fixes the issue that
->> Andrew had reported as well, and that I worked around by casting the
->> result... now that abs() has a consistent result, using s32 in both
->> sides of the min() is perfectly fine.
->>
->> johannes
->>
->>
->
-> I did just that in my new tag: iwlwifi-for-kalle-2016-01-26_2
+drivers/ssb/main.c:616:12: warning: 'ssb_bus_register' defined but not used [-Wunused-function]
 
-Pulled, thanks.
+This annotates the ssb_bus_register function as __maybe_unused to
+shut up the warning. A configuration like this will not work on
+any hardware of course, but we still want this to silently build
+without warnings if the configuration is allowed in the first
+place.
 
--- 
-Kalle Valo
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Fixes: 845da6e58e19 ("ssb: add Kconfig entry for compiling SoC related code")
+Acked-by: Michael Buesch <m@bues.ch>
+---
+Resent to linux-wireless as requested
+
+diff --git a/drivers/ssb/main.c b/drivers/ssb/main.c
+index cde5ff7529eb..d1a750760cf3 100644
+--- a/drivers/ssb/main.c
++++ b/drivers/ssb/main.c
+@@ -613,9 +613,10 @@ out:
+ 	return err;
+ }
+ 
+-static int ssb_bus_register(struct ssb_bus *bus,
+-			    ssb_invariants_func_t get_invariants,
+-			    unsigned long baseaddr)
++static int __maybe_unused
++ssb_bus_register(struct ssb_bus *bus,
++		 ssb_invariants_func_t get_invariants,
++		 unsigned long baseaddr)
+ {
+ 	int err;
+ 
