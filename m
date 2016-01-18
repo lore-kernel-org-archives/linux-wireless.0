@@ -1,108 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:36647 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751028AbcAUBUn (ORCPT
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:34556 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756616AbcARUar (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 20:20:43 -0500
-Received: by mail-pf0-f195.google.com with SMTP id n128so1046200pfn.3
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:20:42 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 01/27] staging: wilc1000: rename struct __Message_struct
-Date: Thu, 21 Jan 2016 10:20:04 +0900
-Message-Id: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_022046_643692_7B670CEE)
+	Mon, 18 Jan 2016 15:30:47 -0500
+Received: by mail-ob0-f173.google.com with SMTP id vt7so170693023obb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 18 Jan 2016 12:30:47 -0800 (PST)
+Subject: Re: Fwd: 8192 WiFi Realtek 8192E disconnects after a while and fails
+ to reconnect
+To: Mateusz Kulikowski <mateusz.kulikowski@gmail.com>,
+	gilbertdion@gmail.com, wlanfae@realtek.com,
+	chaoming_li@realsil.com.cn
+References: <CAKQFV0H+K46CO62w=9yNRvVaOpwmDj3UKXD0QOmF1XPs54GwnQ@mail.gmail.com>
+ <CAKQFV0EV9WvmzJaUaFEGODc-kxpt=rXJVYe5Md4oM5H00cBaeQ@mail.gmail.com>
+ <568EE125.1030103@gmail.com> <569C10A9.8020200@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <569D4B74.4040709@lwfinger.net> (sfid-20160118_213104_499919_FC956233)
+Date: Mon, 18 Jan 2016 14:30:44 -0600
+MIME-Version: 1.0
+In-Reply-To: <569C10A9.8020200@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames typedef from struct __Message_struct and renames it
-to struct message.
+On 01/17/2016 04:07 PM, Mateusz Kulikowski wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA256
+>
+> Hi Gilbert,
+>
+> Small update from my side - It took me a while to setup x86_64 machine,
+> but today was finally able to do test.
+>
+>
+> My result are the same as Larry:
+> I got my board running for ~4 hours and there was no disconnect.
+> For part of the time I was doing (some) activity, for around hour machine
+> was idle.
+>
+> I also did suspend-resume cycle.
+>
+> System: Ubuntu 15.04 (from usb stick), kernel 3.19.0-15-generic, x86_64
+> Machine: MSI AM1I, Sempron 2650,
+> PCIe to mini-pcie "wifi" bridge (with antenna connector and proper RFKILL
+> wiring).
+>
+>
+> Are you able to do more troubleshooting?
+>
+> Perhaps try different AP/Channel/mode, (dis)connect power cable from laptop etc.
+>
+> I'll try to make another reproduction attempt, as without being able
+> to reproduce it I will probably not be able to fix it.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_msgqueue.c | 10 +++++-----
- drivers/staging/wilc1000/wilc_msgqueue.h |  8 ++++----
- 2 files changed, 9 insertions(+), 9 deletions(-)
+The problem only shows up when you hit the NIC hard. Try downloading a large 
+file while browsing.
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index abc780c..9b78fcd 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -38,7 +38,7 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
- 	}
- 
- 	while (pHandle->pstrMessageList) {
--		Message *pstrMessge = pHandle->pstrMessageList->pstrNext;
-+		struct message *pstrMessge = pHandle->pstrMessageList->pstrNext;
- 
- 		kfree(pHandle->pstrMessageList);
- 		pHandle->pstrMessageList = pstrMessge;
-@@ -57,7 +57,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 			     const void *pvSendBuffer, u32 u32SendBufferSize)
- {
- 	unsigned long flags;
--	Message *pstrMessage = NULL;
-+	struct message *pstrMessage = NULL;
- 
- 	if ((!pHandle) || (u32SendBufferSize == 0) || (!pvSendBuffer)) {
- 		PRINT_ER("pHandle or pvSendBuffer is null\n");
-@@ -70,7 +70,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 	}
- 
- 	/* construct a new message */
--	pstrMessage = kmalloc(sizeof(Message), GFP_ATOMIC);
-+	pstrMessage = kmalloc(sizeof(struct message), GFP_ATOMIC);
- 	if (!pstrMessage)
- 		return -ENOMEM;
- 
-@@ -89,7 +89,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 	if (!pHandle->pstrMessageList) {
- 		pHandle->pstrMessageList  = pstrMessage;
- 	} else {
--		Message *pstrTailMsg = pHandle->pstrMessageList;
-+		struct message *pstrTailMsg = pHandle->pstrMessageList;
- 
- 		while (pstrTailMsg->pstrNext)
- 			pstrTailMsg = pstrTailMsg->pstrNext;
-@@ -114,7 +114,7 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
- 			     void *pvRecvBuffer, u32 u32RecvBufferSize,
- 			     u32 *pu32ReceivedLength)
- {
--	Message *pstrMessage;
-+	struct message *pstrMessage;
- 	unsigned long flags;
- 
- 	if ((!pHandle) || (u32RecvBufferSize == 0)
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index d7e0328..1a7c652 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -13,18 +13,18 @@
- #include <linux/semaphore.h>
- 
- /* Message Queue type is a structure */
--typedef struct __Message_struct {
-+struct message {
- 	void *pvBuffer;
- 	u32 u32Length;
--	struct __Message_struct *pstrNext;
--} Message;
-+	struct message *pstrNext;
-+};
- 
- typedef struct __MessageQueue_struct {
- 	struct semaphore hSem;
- 	spinlock_t strCriticalSection;
- 	bool bExiting;
- 	u32 u32ReceiversCount;
--	Message *pstrMessageList;
-+	struct message *pstrMessageList;
- } WILC_MsgQueueHandle;
- 
- /*!
--- 
-2.6.4
+Some info from the Realtek engineer:
+
+=============================
+About 92EE's 64 bit mode (PCI DAC), there are three roles -- (PCI host, PCI 
+device, TRX desc).
+All possible combinations are:
+(32, 32, 32)
+(64, 64, 64)
+(32, 32, 64)	<== special one
+
+To setup 64 bit mode, please use followings:
+1. PCI host
+     pci_set_dma_mask(pdev, DMA_BIT_MASK(64))
+2. PCI device
+     configuration space 0x719[5] = 1 indicate 64 bit mode
+3. TRX desc
+     register 0x382[15] = 1 indicate 64 bits mode
+
+
+If we turn on DMA_IS_64BIT, it will be the combination (32, 32, 64).
+It is rare to use because of 32 bit DMA address (SAC), but I think it will be work.
+We may extend DMA_IS_64BIT to the combination (64, 64, 64) to be meaningful.
+=============================
+
+I did the easy step by effectively turning on DMA_IS_64BIT, and the driver 
+failed. I have not had time to investigate any other of the 64-bit fixes.
+
+Larry
 
