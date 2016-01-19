@@ -1,49 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:32982 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932741AbcATHpR (ORCPT
+Received: from sabertooth01.qualcomm.com ([65.197.215.72]:32632 "EHLO
+	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754627AbcASPuL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 02:45:17 -0500
-Received: by mail-pa0-f68.google.com with SMTP id pv5so41054pac.0
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2016 23:45:17 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH] staging: wilc1000: remove redundant check in wilc_mq_recv
-Date: Wed, 20 Jan 2016 16:44:57 +0900
-Message-Id: <1453275897-13395-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160120_084521_611779_216D1953)
+	Tue, 19 Jan 2016 10:50:11 -0500
+From: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+	<mohammed@qti.qualcomm.com>
+To: YanBo <dreamfly281@gmail.com>, "nbd@openwrt.org" <nbd@openwrt.org>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: Stephen Hemminger <stephen@networkplumber.org>,
+	Krishna Chaitanya <chaitanya.mgit@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	netdev <netdev@vger.kernel.org>,
+	"hostap@lists.infradead.org" <hostap@lists.infradead.org>
+Subject: RE: Regression in 3.9 caused by "bridge: respect RFC2863 operational
+ state"
+Date: Tue, 19 Jan 2016 15:45:03 +0000
+Message-ID: <439966a35f064c7690f2ccbe7296c552@aphydexm01b.ap.qualcomm.com> (sfid-20160119_165021_940580_523D5443)
+References: <CAFuUQkhHsRZMnNYBbVZU0=BcAKMEktzYgPv6oc=CMFd7MFDi6g@mail.gmail.com>
+ <CAFuUQkjm3RFnrzWWSvbnYFC8gMnbX7C4bP_x0+2bREYumcoJyg@mail.gmail.com>
+In-Reply-To: <CAFuUQkjm3RFnrzWWSvbnYFC8gMnbX7C4bP_x0+2bREYumcoJyg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-At the beginning of wilc_mq_recv, it is checked if pHandle->bExiting is
-false or true. There is no need to check it again at the middle of this
-function. So just remove it.
-
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_msgqueue.c | 6 ------
- 1 file changed, 6 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 098390c..abc780c 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -133,12 +133,6 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
- 	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
- 
- 	down(&pHandle->hSem);
--
--	if (pHandle->bExiting) {
--		PRINT_ER("pHandle fail\n");
--		return -EFAULT;
--	}
--
- 	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
- 
- 	pstrMessage = pHandle->pstrMessageList;
--- 
-2.6.4
-
+SGkgYWxsLA0KDQpBbnkgdXBkYXRlcyBvbiB0aGlzIHBsZWFzZS4gDQoNClRoYW5rcywNCnNoYWZp
+DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBsaW51eC13aXJlbGVzcy1vd25l
+ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5l
+bC5vcmddIE9uIEJlaGFsZiBPZiBZYW5Cbw0KU2VudDogRnJpZGF5LCBEZWNlbWJlciAwNCwgMjAx
+NSA4OjAxIEFNDQpUbzogbmJkQG9wZW53cnQub3JnOyBNYWxpbmVuLCBKb3VuaTsga3ZhbG9AY29k
+ZWF1cm9yYS5vcmcNCkNjOiBTdGVwaGVuIEhlbW1pbmdlcjsgS3Jpc2huYSBDaGFpdGFueWE7IGxp
+bnV4LXdpcmVsZXNzOyBTZWJhc3RpYW4gR290dHNjaGFsbDsgSm9oYW5uZXMgQmVyZzsgbmV0ZGV2
+OyBob3N0YXBAbGlzdHMuaW5mcmFkZWFkLm9yZw0KU3ViamVjdDogUmU6IFJlZ3Jlc3Npb24gaW4g
+My45IGNhdXNlZCBieSAiYnJpZGdlOiByZXNwZWN0IFJGQzI4NjMgb3BlcmF0aW9uYWwgc3RhdGUi
+DQoNCiBTb3JyeSB0byBwaWNrIHVwIHRoaXMgdGhyZWFkIGFnYWluLCAgaXQgbG9va3MgdGhpcyBp
+c3N1ZSBzdGlsbCBleGlzdGVkICBpbiB0aGUgbmV3ZXIgNC4zIGtlcm5lbC4gKFRoZSBFQVAgZnJh
+bWVzIGNhbiBub3QgYmUgcmVjZWl2ZWQgYnkgd2lyZWxlc3MgaW50ZXJmYWNlIGR1ZSB0byB0aGUg
+YnJpZGdlIGludGVyZmFjZSwNCmh0dHA6Ly9tYXJjLmluZm8vP2w9bGludXgtd2lyZWxlc3MmbT0x
+MzY3NDM0OTU1MjY5MDUmdz0yKQ0KDQogV29uZGVyIGlzIGFueW9uZSBrbm93IHNvbWUgdXBkYXRl
+IGZvciB0aGlzIGlzc3VlPyAgQ3VycmVudGx5IHRoZSBvbmx5IHdvcmthcm91bmQgaXMgbWFrZSB0
+aGUgNC1hZGRyZXNzICBBUCBhbmQgU1RBIGFzc29jaWF0ZWQgaW4gc2VjdXJpdHkgbW9kZSBmaXJz
+dGx5IGFuZCB0aGVuIGNyZWF0ZSB0aGUgYnJpZGdlLCB0aGUgcmVuZXcga2V5IGNvbmZpZ3VyYXRp
+b24gYWxzbyBuZWVkIGJlIGRpc2FibGUgYXQgdGhlIGhvc3RhcGQgc2lkZSB0byAgYXZvaWQgcmVu
+ZXcgdGhlIGtleSBhdCBicmlkZ2Ugc3RhdHVzLg0KDQpUaGFua3MNCllhbmJvDQo+IE9uIFdlZCwg
+TWF5IDEsIDIwMTMgYXQgNTo1MyBQTSwgRmVsaXggRmlldGthdSA8bmJkQG9wZW53cnQub3JnPiB3
+cm90ZToNCj4gPg0KPiA+IE9uIDIwMTMtMDUtMDIgMTI6NDkgQU0sIFN0ZXBoZW4gSGVtbWluZ2Vy
+IHdyb3RlOg0KPiA+ID4gT24gV2VkLCAwMSBNYXkgMjAxMyAyMzowNjoxNiArMDIwMCBGZWxpeCBG
+aWV0a2F1IDxuYmRAb3BlbndydC5vcmc+IA0KPiA+ID4gd3JvdGU6DQo+ID4gPg0KPiA+ID4+IE9u
+IDIwMTMtMDUtMDEgMTA6MjEgUE0sIFN0ZXBoZW4gSGVtbWluZ2VyIHdyb3RlOg0KPiA+ID4+ID4g
+V2hhdCBhYm91dCB1c2luZyBBRl9QQUNLRVQgYm91bmQgdG8gdW5kZXJseWluZyB3aXJlbGVzcyBk
+ZXZpY2UgDQo+ID4gPj4gPiBhbmQgdGhlIHBhY2tldCB0eXBlLiBZb3UgY2FuIGV2ZW4gdXNlIEJQ
+RiB0byBmaWx0ZXIuDQo+ID4gPj4gQXMgZmFyIGFzIEkga25vdywgQUZfUEFDS0VUIG9ubHkgd29y
+a3Mgd2hlbiBub3QgYmluZGluZyBpdCB0byB0aGUgDQo+ID4gPj4gcGFja2V0IHR5cGUgKG90aGVy
+d2lzZSBpdCBnZXQgc3RvbGVuIGJ5IHRoZSByeCBoYW5kbGVyKS4NCj4gPiA+DQo+ID4gPiBZb3Ug
+Y2FuIGRvIEFGX1BBQ0tFVCBhbmQgaXQgZ2V0cyBoYW5kbGUgYmVmb3JlIHJ4X2hhbmRsZXIuDQo+
+ID4gSWYgSSBkb24ndCBiaW5kIGl0IHRvIGEgcHJvdG9jb2wsIGl0IGVuZHMgdXAgaW4gcHR5cGVf
+YWxsLCBpZiBJIGRvLCANCj4gPiBpdCBlbmRzIHVwIGluICZwdHlwZV9iYXNlLiBwdHlwZV9hbGwg
+aXMgcHJvY2Vzc2VkIGJlZm9yZSB0aGUgDQo+ID4gcnhfaGFuZGxlciwgcHR5cGVfYmFzZSBpcyBw
+cm9jZXNzZWQgYWZ0ZXIgdGhlIHJ4IGhhbmRsZXIuDQo+ID4gSG9va2luZyBpbnRvIHB0eXBlX2Fs
+bCB3YXN0ZXMgdG9ucyBvZiBDUFUgY3ljbGVzLCBob29raW5nIGludG8gDQo+ID4gcHR5cGVfYmFz
+ZSBkb2VzIG5vdCBzb2x2ZSB0aGUgcHJvYmxlbS4NCj4gPg0KPiA+IC0gRmVsaXgNCj4gPiAtLQ0K
+PiA+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNj
+cmliZSANCj4gPiBsaW51eC13aXJlbGVzcyIgaW4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIA0K
+PiA+IG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcgTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgDQo+
+ID4gaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQotLQ0KVG8gdW5z
+dWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4
+LXdpcmVsZXNzIiBpbiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2Vy
+bmVsLm9yZyBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21h
+am9yZG9tby1pbmZvLmh0bWwNCg==
