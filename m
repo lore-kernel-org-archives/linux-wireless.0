@@ -1,146 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f193.google.com ([209.85.213.193]:33075 "EHLO
-	mail-ig0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485AbcA2Aza (ORCPT
+Received: from mail-qg0-f66.google.com ([209.85.192.66]:35460 "EHLO
+	mail-qg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756261AbcASPoH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 19:55:30 -0500
-Received: by mail-ig0-f193.google.com with SMTP id h5so2997775igh.0
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jan 2016 16:55:30 -0800 (PST)
+	Tue, 19 Jan 2016 10:44:07 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: johannes@sipsolutions.net
+Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
+	davem@davemloft.net, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jprvita@endlessm.com,
+	linux@endlessm.com
+Subject: [PATCH 4/8] rfkill: Remove obsolete "claim" sysfs interface
+Date: Tue, 19 Jan 2016 10:42:39 -0500
+Message-Id: <1453218163-31998-5-git-send-email-jprvita@endlessm.com> (sfid-20160119_164644_376663_8028D6EA)
+In-Reply-To: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
+References: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
 MIME-Version: 1.0
-In-Reply-To: <1453965226-6158-8-git-send-email-leo.kim@atmel.com>
-References: <1453965226-6158-1-git-send-email-leo.kim@atmel.com> <1453965226-6158-8-git-send-email-leo.kim@atmel.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 29 Jan 2016 11:55:10 +1100
-Message-ID: <CAGRGNgXxcZBzOkJa++pAHWZLAZs9wrD48cEiGhzKatmzd+usRw@mail.gmail.com> (sfid-20160129_015534_401284_D6D1574B)
-Subject: Re: [PATCH 08/12] staging: wilc1000: rename variable s32Error
-To: Leo Kim <leo.kim@atmel.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <Chris.Park@atmel.com>, adham.abozaeid@atmel.com,
-	Nicolas.FERRE@atmel.com
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Leo,
+This was schedule to be removed in 2012 by:
 
-On Thu, Jan 28, 2016 at 6:13 PM, Leo Kim <leo.kim@atmel.com> wrote:
-> This patch renames variable s32Error to result
-> to avoid CamelCase naming convention.
-> Also, remove the unused variable s32Error and replace with direct return.
->
-> Signed-off-by: Leo Kim <leo.kim@atmel.com>
-> ---
->  drivers/staging/wilc1000/coreconfigurator.c | 19 +++++++++----------
->  1 file changed, 9 insertions(+), 10 deletions(-)
->
-> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-> index 2a4e324..88e5661 100644
-> --- a/drivers/staging/wilc1000/coreconfigurator.c
-> +++ b/drivers/staging/wilc1000/coreconfigurator.c
-> @@ -356,30 +356,29 @@ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
->
->  s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo)
->  {
-> -       s32 s32Error = 0;
-> +       s32 result = 0;
->
->         if (pstrNetworkInfo) {
->                 if (pstrNetworkInfo->pu8IEs) {
->                         kfree(pstrNetworkInfo->pu8IEs);
->                         pstrNetworkInfo->pu8IEs = NULL;
+ commit 69c86373c6ea1149aa559e6088362d58d8ec8835
+ Author: florian@mickler.org <florian@mickler.org>
+ Date:   Wed Feb 24 12:05:16 2010 +0100
 
-I'm not sure it's necessary to set this to NULL here.
+     Document the rfkill sysfs ABI
 
->                 } else {
-> -                       s32Error = -EFAULT;
-> +                       result = -EFAULT;
->                 }
->
->                 kfree(pstrNetworkInfo);
->                 pstrNetworkInfo = NULL;
+     This moves sysfs ABI info from Documentation/rfkill.txt to the
+     ABI subfolder and reformats it.
 
-Or this to NULL here.
+     This also schedules the deprecated sysfs parts to be removed in
+     2012 (claim file) and 2014 (state file).
 
-Also, is the return value from this function actually checked? kfree()
-can have NULL passed to it.
+     Signed-off-by: Florian Mickler <florian@mickler.org>
+     Signed-off-by: John W. Linville <linville@tuxdriver.com>
 
-If the return value isn't checked, this entire function could be simplified to:
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+---
+ Documentation/ABI/obsolete/sysfs-class-rfkill |  9 ---------
+ Documentation/ABI/removed/sysfs-class-rfkill  | 13 +++++++++++++
+ net/rfkill/core.c                             | 11 +----------
+ 3 files changed, 14 insertions(+), 19 deletions(-)
+ create mode 100644 Documentation/ABI/removed/sysfs-class-rfkill
 
-- - - - -
-
-if (pstrNetworkInfo) {
-    kfree(pstrNetworkInfo->pu8IEs);
-    kfree(pstrNetworkInfo);
-}
-
-return 0;
-
-- - - - -
-
-Also, when tstrNetworkInfo structs are allocated, wouldn't the
-allocating function fail if ->pu8IEs is NULL?
-
->         } else {
-> -               s32Error = -EFAULT;
-> +               result = -EFAULT;
->         }
->
-> -       return s32Error;
-> +       return result;
->  }
->
->  s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
->                                tstrConnectRespInfo **ppstrConnectRespInfo)
->  {
-> -       s32 s32Error = 0;
->         tstrConnectRespInfo *pstrConnectRespInfo = NULL;
->         u16 u16AssocRespLen = 0;
->         u8 *pu8IEs = NULL;
-> @@ -408,27 +407,27 @@ s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
->
->         *ppstrConnectRespInfo = pstrConnectRespInfo;
->
-> -       return s32Error;
-> +       return 0;
->  }
->
->  s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo)
->  {
-> -       s32 s32Error = 0;
-> +       s32 result = 0;
-
-All the comments above apply to this function as well.
-
->
->         if (pstrConnectRespInfo) {
->                 if (pstrConnectRespInfo->pu8RespIEs) {
->                         kfree(pstrConnectRespInfo->pu8RespIEs);
->                         pstrConnectRespInfo->pu8RespIEs = NULL;
->                 } else {
-> -                       s32Error = -EFAULT;
-> +                       result = -EFAULT;
->                 }
->
->                 kfree(pstrConnectRespInfo);
->                 pstrConnectRespInfo = NULL;
->
->         } else {
-> -               s32Error = -EFAULT;
-> +               result = -EFAULT;
->         }
->
-> -       return s32Error;
-> +       return result;
->  }
-
-Thanks,
-
+diff --git a/Documentation/ABI/obsolete/sysfs-class-rfkill b/Documentation/ABI/obsolete/sysfs-class-rfkill
+index ff60ad9..e736d14 100644
+--- a/Documentation/ABI/obsolete/sysfs-class-rfkill
++++ b/Documentation/ABI/obsolete/sysfs-class-rfkill
+@@ -18,12 +18,3 @@ Values: 	A numeric value.
+ 		2: RFKILL_STATE_HARD_BLOCKED
+ 			transmitter is forced off by something outside of
+ 			the driver's control.
+-
+-What:		/sys/class/rfkill/rfkill[0-9]+/claim
+-Date:		09-Jul-2007
+-KernelVersion	v2.6.22
+-Contact:	linux-wireless@vger.kernel.org
+-Description:	This file is deprecated because there no longer is a way to
+-		claim just control over a single rfkill instance.
+-		This file is scheduled to be removed in 2012.
+-Values: 	0: Kernel handles events
+diff --git a/Documentation/ABI/removed/sysfs-class-rfkill b/Documentation/ABI/removed/sysfs-class-rfkill
+new file mode 100644
+index 0000000..3ce6231
+--- /dev/null
++++ b/Documentation/ABI/removed/sysfs-class-rfkill
+@@ -0,0 +1,13 @@
++rfkill - radio frequency (RF) connector kill switch support
++
++For details to this subsystem look at Documentation/rfkill.txt.
++
++What:		/sys/class/rfkill/rfkill[0-9]+/claim
++Date:		09-Jul-2007
++KernelVersion	v2.6.22
++Contact:	linux-wireless@vger.kernel.org
++Description:	This file was deprecated because there no longer was a way to
++		claim just control over a single rfkill instance.
++		This file was scheduled to be removed in 2012, and was removed
++		in 2016.
++Values: 	0: Kernel handles events
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 5406c76..a05d1f1 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -309,8 +309,7 @@ static atomic_t rfkill_input_disabled = ATOMIC_INIT(0);
+  * @blocked: the new state
+  *
+  * This function sets the state of all switches of given type,
+- * unless a specific switch is claimed by userspace (in which case,
+- * that switch is left alone) or suspended.
++ * unless a specific switch is suspended.
+  *
+  * Caller must have acquired rfkill_global_mutex.
+  */
+@@ -718,20 +717,12 @@ static ssize_t state_store(struct device *dev, struct device_attribute *attr,
+ }
+ static DEVICE_ATTR_RW(state);
+ 
+-static ssize_t claim_show(struct device *dev, struct device_attribute *attr,
+-			  char *buf)
+-{
+-	return sprintf(buf, "%d\n", 0);
+-}
+-static DEVICE_ATTR_RO(claim);
+-
+ static struct attribute *rfkill_dev_attrs[] = {
+ 	&dev_attr_name.attr,
+ 	&dev_attr_type.attr,
+ 	&dev_attr_index.attr,
+ 	&dev_attr_persistent.attr,
+ 	&dev_attr_state.attr,
+-	&dev_attr_claim.attr,
+ 	&dev_attr_soft.attr,
+ 	&dev_attr_hard.attr,
+ 	NULL,
 -- 
-Julian Calaby
+2.5.0
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
