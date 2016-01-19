@@ -1,44 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:34182 "EHLO
-	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753789AbcA0FW3 (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:33203 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932625AbcASK0e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 00:22:29 -0500
-Message-ID: <1453872145.4956.3.camel@sunil.sibshivalik.com> (sfid-20160127_062253_531129_23E8CDA1)
-Subject: Need direction to understand mac80211
-From: Sunil Shahu <shshahu@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Wed, 27 Jan 2016 10:52:25 +0530
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Tue, 19 Jan 2016 05:26:34 -0500
+Received: by mail-pf0-f193.google.com with SMTP id e65so13023446pfe.0
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2016 02:26:33 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 3/3] staging: wilc1000: use int type for counter variable
+Date: Tue, 19 Jan 2016 19:26:17 +0900
+Message-Id: <1453199177-21085-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20160119_112637_390243_707D712B)
+In-Reply-To: <1453199177-21085-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453199177-21085-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+counter is used as for-loop control variable and indicating index of
+struct wid array so that it is better to use int type.
+There is no need to set to 0 when it is declared at the top of this
+function. counter is initialized as 0 in for-loop statement.
 
-I am currently working on an project that aims to provide multiple 802.11ac radio support on a single node for mesh network. In this both the radios will operate in different channel and will talk to different nodes in mesh network.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-I need to work with kernel mac80211 driver subsystem for the same. I went through different documentation to understand the theories of 802.11s which can help during working on mac80211 driver. However I am not able to understand the source code properly. 
-
-Can you please provide some guidance to understand mac80211 and related networking stack in Linux kernel.
-
-I am looking for 
-1) How to create bridge bridge for two Phy radios during initialization/packet forwarding?
-2) Also, need some idea about how packets will be routed in mesh_hwmp.
-3) How the path request and response should behave in this case?
-4) Will there be any changes for mesh path table entries?
-
-Any suggestion for document/book/blog will be great help.
-
-I already went through following materials.
-http://kernelnewbies.org/Documents/Kernel-Docbooks?action=AttachFile&do=get&target=mac80211_2.6.29.pdf
-http://www.campsmur.cat/files/mac80211_intro.pdf
-https://www.cwnp.com/uploads/802-11s_mesh_networking_v1-0.pdf
-http://www.ieee802.org/802_tutorials/06-November/802.11s_Tutorial_r5.pdf
-
-Any suggestion and directions will be great help.
-
-Thanks,
-Sunil Shahu.
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 86dfe77..7e8e423 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -591,7 +591,7 @@ s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo)
+ int wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
+ 			 u32 count, u32 drv)
+ {
+-	s32 counter = 0;
++	int counter;
+ 	int ret = 0;
+ 
+ 	if (mode == GET_CFG) {
+-- 
+2.6.4
 
