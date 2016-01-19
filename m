@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42711 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758874AbcAUIwm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 03:52:42 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	littlesmartguy@gmail.com, gabe@codehaus.org,
-	Stable <stable@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi: rtl8821ae: Fix 5G failure when EEPROM is incorrectly encoded
-References: <1453348719-5546-1-git-send-email-Larry.Finger@lwfinger.net>
-Date: Thu, 21 Jan 2016 10:52:35 +0200
-In-Reply-To: <1453348719-5546-1-git-send-email-Larry.Finger@lwfinger.net>
-	(Larry Finger's message of "Wed, 20 Jan 2016 21:58:39 -0600")
-Message-ID: <87oacf1fho.fsf@kamboji.qca.qualcomm.com> (sfid-20160121_095247_256631_CB124994)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:46636 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932776AbcASUoz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jan 2016 15:44:55 -0500
+Message-ID: <1453236291.25499.0.camel@sipsolutions.net> (sfid-20160119_214518_560198_153E951F)
+Subject: Re: [PATCH 5/8] rfkill: Remove obsolete "state" sysfs interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Network Development <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	=?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
+	<jprvita@endlessm.com>, linux@endlessm.com
+Date: Tue, 19 Jan 2016 21:44:51 +0100
+In-Reply-To: <CA+A7VXVOYY4vzYupsoG0A9kinBvRhrD3_MP2DByR5v+5gGYuyA@mail.gmail.com> (sfid-20160119_213710_142942_A54A4B35)
+References: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
+	 <1453218163-31998-6-git-send-email-jprvita@endlessm.com>
+	 <1453234505.23600.6.camel@sipsolutions.net>
+	 <CA+A7VXVOYY4vzYupsoG0A9kinBvRhrD3_MP2DByR5v+5gGYuyA@mail.gmail.com>
+	 (sfid-20160119_213710_142942_A54A4B35)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+On Tue, 2016-01-19 at 15:36 -0500, João Paulo Rechi Vita wrote:
+> 
+> > I suspect that nevertheless, we can't just remove it - Googling
+> > around shows quite a bit of (e.g. Android) code using it.
+> > 
+> 
+> Should I update the expected removal date to 2018, or some other time
+> in the future? Or if this is not going to be removed at all,
+> shouldn't it be moved back to stable?
+> 
 
-> Recently, it has been reported that D-Link DWA-582 cards, which use an
-> RTL8812AE chip are not able to scan for 5G networks. The problems started
-> with kernel 4.2, which is the first version that had commit d10101a60372
-> ("rtlwifi: rtl8821ae: Fix problem with regulatory information"). With this
-> patch, the driver went from setting a default channel plan to using
-> the value derived from EEPROM.
->
-> Bug reports at https://bugzilla.kernel.org/show_bug.cgi?id=111031 and
-> https://bugzilla.redhat.com/show_bug.cgi?id=1279653 are examples of this
-> problem.
->
-> The problem was solved once I learned that the internal country code was
-> resulting in a regulatory set with only 2.4 GHz channels. With the RTL8821AE
-> chips available to me, the country code was such that both 2.4 and 5 GHz
-> channels are allowed. The fix is to allow both bands even when the EEPROM
-> is incorrectly encoded.
->
-> Fixes: d10101a60372 ("rtlwifi: rtl8821ae: Fix problem with regulatory information")
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: littlesmartguy@gmail.com
-> Cc: gabe@codehaus.org
-> Cc: Stable <stable@vger.kernel.org> [v4.2+]
+Yeah, maybe we should just move it back. The problem with it is that it
+doesn't fully reflect the state (both sw+hw blocked can't be reflected)
+but if the current users are happy with it then that's not really a
+problem.
 
-I'll queue this to 4.5.
-
--- 
-Kalle Valo
+johannes
