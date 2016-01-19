@@ -1,107 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49715 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933229AbcATJok (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 04:44:40 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: jprvita@gmail.com, netdev@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] rfkill: disentangle polling pause and suspend
-Date: Wed, 20 Jan 2016 10:44:34 +0100
-Message-Id: <1453283074-23925-1-git-send-email-johannes@sipsolutions.net> (sfid-20160120_104449_898261_12802F98)
+Received: from mail-yk0-f195.google.com ([209.85.160.195]:35046 "EHLO
+	mail-yk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933184AbcASUT5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jan 2016 15:19:57 -0500
+MIME-Version: 1.0
+In-Reply-To: <1453234283.23600.5.camel@sipsolutions.net>
+References: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
+ <1453218163-31998-2-git-send-email-jprvita@endlessm.com> <1453234283.23600.5.camel@sipsolutions.net>
+From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
+Date: Tue, 19 Jan 2016 15:19:16 -0500
+Message-ID: <CA+A7VXU3VDyMHWDjtqNgHDydCcEcEDFO-ZBGAZEz9CB2Lh1gPA@mail.gmail.com> (sfid-20160119_212018_702279_AF14F3BB)
+Subject: Re: [PATCH 1/8] rfkill: Documentation and style fixes
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Network Development <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>,
+	linux@endlessm.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 19 January 2016 at 15:11, Johannes Berg <johannes@sipsolutions.net> wrote:
+>
+>>  /**
+>>   * rfkill_resume_polling(struct rfkill *rfkill)
+>>   *
+>> - * Pause polling -- say transmitter is off for other reasons.
+>> + * Resume polling previously paused with rfkill_pause_polling.
+>>   * NOTE: not necessary for suspend/resume -- in that case the
+>> - * core stops polling anyway
+>> + * core restarts polling anyway, even if was explicitly paused
+>> + * before suspending.
+>>   */
+>
+> If this is true, that's a bug, no? Drivers would call pause/resume when
+> their status changes, and shouldn't be required to check status at
+> resume time?
+>
 
-When suspended while polling is paused, polling will erroneously
-resume at resume time. Fix this by tracking pause and suspend in
-separate state variable and adding the necessary checks.
+I did not dive too much into the logic here, but
+rfkill_resume_polling() is called unconditionally on rfkill_resume(),
+so it seems that if a driver call rfkill_pause_polling() before
+suspend, on resume polling will be "un-paused". That indeed looks
+strange.
 
-Clarify the documentation on this as well.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- include/linux/rfkill.h |  3 ++-
- net/rfkill/core.c      | 17 +++++++++++++++--
- 2 files changed, 17 insertions(+), 3 deletions(-)
-
-diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
-index d9010789b4e8..7af625f6d226 100644
---- a/include/linux/rfkill.h
-+++ b/include/linux/rfkill.h
-@@ -104,7 +104,8 @@ int __must_check rfkill_register(struct rfkill *rfkill);
-  *
-  * Pause polling -- say transmitter is off for other reasons.
-  * NOTE: not necessary for suspend/resume -- in that case the
-- * core stops polling anyway
-+ * core stops polling anyway (but will also correctly handle
-+ * the case of polling having been paused before suspend.)
-  */
- void rfkill_pause_polling(struct rfkill *rfkill);
- 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index f53bf3b6558b..166439995f34 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -57,6 +57,8 @@ struct rfkill {
- 
- 	bool			registered;
- 	bool			persistent;
-+	bool			polling_paused;
-+	bool			suspended;
- 
- 	const struct rfkill_ops	*ops;
- 	void			*data;
-@@ -786,6 +788,7 @@ void rfkill_pause_polling(struct rfkill *rfkill)
- 	if (!rfkill->ops->poll)
- 		return;
- 
-+	rfkill->polling_paused = true;
- 	cancel_delayed_work_sync(&rfkill->poll_work);
- }
- EXPORT_SYMBOL(rfkill_pause_polling);
-@@ -797,6 +800,11 @@ void rfkill_resume_polling(struct rfkill *rfkill)
- 	if (!rfkill->ops->poll)
- 		return;
- 
-+	rfkill->polling_paused = false;
-+
-+	if (rfkill->suspended)
-+		return;
-+
- 	queue_delayed_work(system_power_efficient_wq,
- 			   &rfkill->poll_work, 0);
- }
-@@ -807,7 +815,8 @@ static int rfkill_suspend(struct device *dev)
- {
- 	struct rfkill *rfkill = to_rfkill(dev);
- 
--	rfkill_pause_polling(rfkill);
-+	rfkill->suspended = true;
-+	cancel_delayed_work_sync(&rfkill->poll_work);
- 
- 	return 0;
- }
-@@ -817,12 +826,16 @@ static int rfkill_resume(struct device *dev)
- 	struct rfkill *rfkill = to_rfkill(dev);
- 	bool cur;
- 
-+	rfkill->suspended = false;
-+
- 	if (!rfkill->persistent) {
- 		cur = !!(rfkill->state & RFKILL_BLOCK_SW);
- 		rfkill_set_block(rfkill, cur);
- 	}
- 
--	rfkill_resume_polling(rfkill);
-+	if (rfkill->ops->poll && !rfkill->polling_paused)
-+		queue_delayed_work(system_power_efficient_wq,
-+				   &rfkill->poll_work, 0);
- 
- 	return 0;
- }
--- 
-2.6.2
-
+--
+João Paulo Rechi Vita
+http://about.me/jprvita
