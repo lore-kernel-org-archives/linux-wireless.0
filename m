@@ -1,31 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:45502 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751969AbcADROQ (ORCPT
+Received: from mail-yk0-f196.google.com ([209.85.160.196]:32794 "EHLO
+	mail-yk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932734AbcASUhK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2016 12:14:16 -0500
-Date: Mon, 04 Jan 2016 12:14:10 -0500 (EST)
-Message-Id: <20160104.121410.1963933976498579568.davem@davemloft.net> (sfid-20160104_181433_496400_790AF328)
-To: dan.carpenter@oracle.com
-Cc: elfring@users.sourceforge.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, kvalo@codeaurora.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
-	julia.lawall@lip6.fr
-Subject: Re: [PATCH 1/3] rsi: Delete unnecessary variable initialisations
- in rsi_send_mgmt_pkt()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20160104092857.GD5284@mwanda>
-References: <5687E169.4070704@users.sourceforge.net>
-	<5687E203.1070404@users.sourceforge.net>
-	<20160104092857.GD5284@mwanda>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Tue, 19 Jan 2016 15:37:10 -0500
+MIME-Version: 1.0
+In-Reply-To: <1453234505.23600.6.camel@sipsolutions.net>
+References: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
+ <1453218163-31998-6-git-send-email-jprvita@endlessm.com> <1453234505.23600.6.camel@sipsolutions.net>
+From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
+Date: Tue, 19 Jan 2016 15:36:29 -0500
+Message-ID: <CA+A7VXVOYY4vzYupsoG0A9kinBvRhrD3_MP2DByR5v+5gGYuyA@mail.gmail.com> (sfid-20160119_213731_622706_2A011037)
+Subject: Re: [PATCH 5/8] rfkill: Remove obsolete "state" sysfs interface
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Network Development <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>,
+	linux@endlessm.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Date: Mon, 4 Jan 2016 12:28:57 +0300
+On 19 January 2016 at 15:15, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2016-01-19 at 10:42 -0500, João Paulo Rechi Vita wrote:
+>> This was schedule to be removed in 2014 by:
+>
+>> -For details to this subsystem look at Documentation/rfkill.txt.
+>> -
+>> -What:                /sys/class/rfkill/rfkill[0-9]+/state
+>> -Date:                09-Jul-2007
+>> -KernelVersion        v2.6.22
+>> -Contact:     linux-wireless@vger.kernel.org
+>> -Description:         Current state of the transmitter.
+>> -             This file is deprecated and scheduled to be removed
+>> in 2014,
+>> -             because its not possible to express the 'soft and
+>> hard block'
+>> -             state of the rfkill driver.
+>> -Values:      A numeric value.
+>> -             0: RFKILL_STATE_SOFT_BLOCKED
+>> -                     transmitter is turned off by software
+>> -             1: RFKILL_STATE_UNBLOCKED
+>> -                     transmitter is (potentially) active
+>> -             2: RFKILL_STATE_HARD_BLOCKED
+>> -                     transmitter is forced off by something
+>> outside of
+>> -                     the driver's control.
+>
+> I suspect that nevertheless, we can't just remove it - Googling around
+> shows quite a bit of (e.g. Android) code using it.
+>
 
-> Please stop sending cleanup patches, Markus.  Just send fixes.
+Should I update the expected removal date to 2018, or some other time
+in the future? Or if this is not going to be removed at all, shouldn't
+it be moved back to stable?
 
-+1
+--
+João Paulo Rechi Vita
+http://about.me/jprvita
