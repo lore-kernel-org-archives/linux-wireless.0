@@ -1,92 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:35051 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750900AbcA2ETu (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:33743 "EHLO
+	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751786AbcASIEt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 23:19:50 -0500
-MIME-Version: 1.0
-In-Reply-To: <56AAC66C.1080800@lwfinger.net>
-References: <CA+55aFxe22iWok6UojY=hCoG2k1wNpJ9CfQ0b+STSxq67tb86Q@mail.gmail.com>
-	<1453983185.2217.12.camel@sipsolutions.net>
-	<CA+55aFya9K4JboNY8kB9cg6zt9otguhdzfHm3jvLmWedxQTSWg@mail.gmail.com>
-	<1454013625.2332.9.camel@sipsolutions.net>
-	<CA+55aFx73nv9ny-fu5BR6v8wL=f2oFomwrZoLRw=x2kNP76cYA@mail.gmail.com>
-	<CA+55aFzF0gWfvmE+6ZcHmjnO4xp-oVAQ5SWxYJhOzns2ocgCsw@mail.gmail.com>
-	<1454019155.2332.15.camel@sipsolutions.net>
-	<CA+55aFxjpdepHYD_6uU48kW38Z9bmf2wwA8yPZt4ibhkofmfQA@mail.gmail.com>
-	<56AAC66C.1080800@lwfinger.net>
-Date: Thu, 28 Jan 2016 20:19:49 -0800
-Message-ID: <CA+55aFz79CwRsQJjN9LSKr68c0JQR8DrK16C6_8SwXct3pbnhg@mail.gmail.com> (sfid-20160129_051958_309757_95B8C443)
-Subject: Re: WARNING at net/mac80211/rate.c:513 ieee80211_get_tx_rates [mac80211]
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
+	Tue, 19 Jan 2016 03:04:49 -0500
+Received: by mail-wm0-f67.google.com with SMTP id u188so21423094wmu.0
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2016 00:04:49 -0800 (PST)
+From: Henning Rogge <hrogge@gmail.com>
+To: linux-wireless@vger.kernel.org
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	David Miller <davem@davemloft.net>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	"David S. Miller" <davem@davemloft.net>,
+	Henning Rogge <hrogge@gmail.com>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+Subject: [PATCH 0/2] mac80211: add cleanup path for MPP table entries
+Date: Tue, 19 Jan 2016 09:04:30 +0100
+Message-Id: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20160119_090453_078827_4170B2ED)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 28, 2016 at 5:54 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
->
-> I have been running an RTL8821AE since kernel 3.18 without hitting this
-> problem using a TRENDnet AC1750 dual-band AP. The UniFi may be doing
-> something that the driver is not expecting.
+Currently MPP table entries are only removed from memory when their
+802.11s mesh interface goes down. This can make the kernel to remember
+a growing list of proxied mac addresses which are not relevant or even
+reachable anymore.
 
-I've had issues with unifi ap's before, but to be honest, I've had
-issues with lots of hotel and airport wifi too. I don't think the
-Unifi APs are outside of the normal spectrum..
+This patchset adds two additional cleanup paths for MPP table entries
+to remove them when their corresponding mesh node is removed or when
+the MPP table entry is not used for MESH_PATH_EXPIRE time.
 
-> Attached is a minimal patch that comments out the "vht_cap->vht_supported =
-> true;" statement for both RTL8821AE and RTL8812AE in
-> _rtl_init_hw_vht_capab(). Does that allow your system to work?
+Henning Rogge (2):
+  mac80211: Remove connected MPP table entries with MPath
+  mac80211: let unused MPP table entries timeout
 
-That works too, yes.
+ net/mac80211/mesh_pathtbl.c | 84 +++++++++++++++++++++++++++++++++++++++++++--
+ net/mac80211/rx.c           |  1 +
+ net/mac80211/tx.c           |  8 ++++-
+ 3 files changed, 90 insertions(+), 3 deletions(-)
 
-> The patch
-> also logs some information regarding the channelplan and the country code.
-> Please let me know the values for those.
+-- 
+2.5.0
 
-  rtlwifi: **** channelplan 127
-  rtlwifi: **** country code 13
-
-> I apparently missed a previous complaint about this issue. If you still have
-> the reference, please send it to me.
-
-So googling for similar issues, I found
-
-  https://bugzilla.redhat.com/show_bug.cgi?id=1168467
-  https://bugzilla.redhat.com/show_bug.cgi?id=1293136
-
-where that second one in particular looks very like my issue
-("Association succeeds, and ARP/DHCP work, but no IP frames can be
-transmitted").
-
-In both cases you have to go into the dmesg attachment to see that its
-rtlwifi in both cases).
-
-And there's an ubuntuforum thread
-
-  http://ubuntuforums.org/showthread.php?t=2226009&page=2
-
-where it you follow the thing, it's an rtl chip on a PCI card, and it
-has very similar "connected but no internet" behavior, along with the
-"net/mac80211/rate.c:526" warning (different line numbers, different
-kernel version, but it smells similar).
-
-Or this one:
-
-  http://forums.debian.net/viewtopic.php?f=5&t=111781
-
-which is also rtl-wifi, and also has the "associated, connected, got
-an IP, but no data, not even a ping" behavior. It also has the
-warning, but it looks different in other ways (2.4GHz only and
-actually says it's not doing HT/VHT).
-
-So I don't know. The warning in net/mac80211/rate.c:does seem to be
-associated with the realtek driver.
-
-             Linus
