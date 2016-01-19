@@ -1,78 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:35926 "EHLO
-	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751228AbcAUBUq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 20:20:46 -0500
-Received: by mail-pa0-f66.google.com with SMTP id a20so1009457pag.3
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:20:46 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 02/27] staging: wilc1000: rename pvBuffer in struct message
-Date: Thu, 21 Jan 2016 10:20:05 +0900
-Message-Id: <1453339230-1377-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_022049_081711_9E7F1821)
-In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:46333 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933194AbcASUPL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jan 2016 15:15:11 -0500
+Message-ID: <1453234505.23600.6.camel@sipsolutions.net> (sfid-20160119_211533_314734_6D343DD6)
+Subject: Re: [PATCH 5/8] rfkill: Remove obsolete "state" sysfs interface
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>
+Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
+	davem@davemloft.net, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jprvita@endlessm.com,
+	linux@endlessm.com
+Date: Tue, 19 Jan 2016 21:15:05 +0100
+In-Reply-To: <1453218163-31998-6-git-send-email-jprvita@endlessm.com> (sfid-20160119_164408_265494_73AD3CE5)
+References: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
+	 <1453218163-31998-6-git-send-email-jprvita@endlessm.com>
+	 (sfid-20160119_164408_265494_73AD3CE5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pvBuffer to buf to avoid camelcase.
+On Tue, 2016-01-19 at 10:42 -0500, João Paulo Rechi Vita wrote:
+> This was schedule to be removed in 2014 by:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_msgqueue.c | 10 +++++-----
- drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+> -For details to this subsystem look at Documentation/rfkill.txt.
+> -
+> -What:		/sys/class/rfkill/rfkill[0-9]+/state
+> -Date:		09-Jul-2007
+> -KernelVersion	v2.6.22
+> -Contact:	linux-wireless@vger.kernel.org
+> -Description: 	Current state of the transmitter.
+> -		This file is deprecated and scheduled to be removed
+> in 2014,
+> -		because its not possible to express the 'soft and
+> hard block'
+> -		state of the rfkill driver.
+> -Values: 	A numeric value.
+> -		0: RFKILL_STATE_SOFT_BLOCKED
+> -			transmitter is turned off by software
+> -		1: RFKILL_STATE_UNBLOCKED
+> -			transmitter is (potentially) active
+> -		2: RFKILL_STATE_HARD_BLOCKED
+> -			transmitter is forced off by something
+> outside of
+> -			the driver's control.
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 9b78fcd..a4e612d 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -76,9 +76,9 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
- 
- 	pstrMessage->u32Length = u32SendBufferSize;
- 	pstrMessage->pstrNext = NULL;
--	pstrMessage->pvBuffer = kmemdup(pvSendBuffer, u32SendBufferSize,
--					GFP_ATOMIC);
--	if (!pstrMessage->pvBuffer) {
-+	pstrMessage->buf = kmemdup(pvSendBuffer, u32SendBufferSize,
-+				   GFP_ATOMIC);
-+	if (!pstrMessage->buf) {
- 		kfree(pstrMessage);
- 		return -ENOMEM;
- 	}
-@@ -151,12 +151,12 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
- 
- 	/* consume the message */
- 	pHandle->u32ReceiversCount--;
--	memcpy(pvRecvBuffer, pstrMessage->pvBuffer, pstrMessage->u32Length);
-+	memcpy(pvRecvBuffer, pstrMessage->buf, pstrMessage->u32Length);
- 	*pu32ReceivedLength = pstrMessage->u32Length;
- 
- 	pHandle->pstrMessageList = pstrMessage->pstrNext;
- 
--	kfree(pstrMessage->pvBuffer);
-+	kfree(pstrMessage->buf);
- 	kfree(pstrMessage);
- 
- 	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index 1a7c652..848ed82 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -14,7 +14,7 @@
- 
- /* Message Queue type is a structure */
- struct message {
--	void *pvBuffer;
-+	void *buf;
- 	u32 u32Length;
- 	struct message *pstrNext;
- };
--- 
-2.6.4
+I suspect that nevertheless, we can't just remove it - Googling around
+shows quite a bit of (e.g. Android) code using it.
 
+johannes
