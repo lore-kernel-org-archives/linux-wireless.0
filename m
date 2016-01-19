@@ -1,89 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:36642 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965022AbcAULcN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 06:32:13 -0500
-Received: by mail-pf0-f195.google.com with SMTP id n128so1693721pfn.3
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:32:13 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 09/27] staging: wilc1000: rename u32ReceiversCount in struct message_queue
-Date: Thu, 21 Jan 2016 20:30:39 +0900
-Message-Id: <1453375857-20645-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123216_742618_17B3F405)
-In-Reply-To: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from foss.arm.com ([217.140.101.70]:38183 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757288AbcASJvk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jan 2016 04:51:40 -0500
+Subject: Re: [GIT] Networking
+To: Arend van Spriel <arend@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+References: <20160112.215136.850414372508130298.davem@davemloft.net>
+ <56978094.4050302@arm.com> <87k2n97n5e.fsf@kamboji.qca.qualcomm.com>
+ <569CCCD2.4040105@arm.com> <569D61BA.8020701@broadcom.com>
+ <569DFA0A.6070900@arm.com> <569E0387.1070601@broadcom.com>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <569E0729.9020603@arm.com> (sfid-20160119_105200_479025_2D902ABC)
+Date: Tue, 19 Jan 2016 09:51:37 +0000
+MIME-Version: 1.0
+In-Reply-To: <569E0387.1070601@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames u32ReceiversCount to recv_count to avoid camelcase.
+On 19/01/16 09:36, Arend van Spriel wrote:
+> On 19-1-2016 9:55, Marc Zyngier wrote:
+>> On 18/01/16 22:05, Arend van Spriel wrote:
+>>> On 18-1-2016 12:30, Marc Zyngier wrote:
+>>>> Hi Kalle,
+>>>>
+>>>> On 16/01/16 11:57, Kalle Valo wrote:
+>>>>> Marc Zyngier <marc.zyngier@arm.com> writes:
+>>>>>
+>>>>>> David, Hante,
+>>>>>>
+>>>>>> On 13/01/16 02:51, David Miller wrote:
+>>>>>>
+>>>>>> [...]
+>>>>>>
+>>>>>>> Hante Meuleman (33):
+>>>>>> [...]
+>>>>>>>       brcmfmac: Move all module parameters to one place
+>>>>>
+>>>>> As a reminder to myself this is the commit id:
+>>>>>
+>>>>> 7d34b0560567 brcmfmac: Move all module parameters to one place
+>>>>>
+>>>>>> This particular patch breaks one of my boxes in a spectacular way:
+>>>>>>
+>>>>>> [    3.602155] Unable to handle kernel paging request at virtual address 000027e4
+>>>>>> [    3.602160] pgd = c0003000
+>>>>>> [    3.602169] [000027e4] *pgd=80000040004003, *pmd=00000000
+>>>>>> [    3.602181] Internal error: Oops: 206 [#1] PREEMPT SMP ARM
+>>>>>
+>>>>> [...]
+>>>>>
+>>>>>> This is caused by this hunk:
+>>>>>>
+>>>>>> @@ -890,7 +887,8 @@ static void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
+>>>>>>  	if (!sdiodev->sg_support)
+>>>>>>  		return;
+>>>>>>  
+>>>>>> -	nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE, brcmf_sdiod_txglomsz);
+>>>>>> +	nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE,
+>>>>>> +		      sdiodev->bus_if->drvr->settings->sdiod_txglomsz);
+>>>>>>  	nents += (nents >> 4) + 1;
+>>>>>>  
+>>>>>>  	WARN_ON(nents > sdiodev->max_segment_count);
+>>>>>>
+>>>>>> were drvr->settings is NULL (as the settings allocation seems to be done
+>>>>>> much later). The fix is not completely obvious to me (probably requires
+>>>>>> pushing the call to brcmf_mp_device_attach() down into the various bus
+>>>>>> specific functions). An alternative would be to restore the txglomsz
+>>>>>> parameter as it was before and not rely on settings being allocated.
+>>>>>
+>>>>> Should we revert the patch or can you Hante fix this? The revert doesn't
+>>>>> seem to be trivial so I would appreciate if someone could send a patch.
+>>>>
+>>>> I've worked out a partial revert (see below) that allows my system to
+>>>> boot, but I'd rather see a proper fix from the maintainer of this code.
+>>>
+>>> Hi Marc,
+>>>
+>>> Thanks for the patch, but Hante has created a different patch basically
+>>> deferring the allocation of the sgtable. Feel free to give it a spin on
+>>> your box and share the results.
+>>
+>> Hi Arend,
+>>
+>> This patch fixes indeed the problem, thanks (I had to undo the mangling
+>> your mailer had done, though). So feel free to add my:
+> 
+> Thanks, Marc
+> 
+> I started using thunderbird on windows 7. Probably better revert to the
+> one on Citrix.
+> 
+>> Reported-by: Marc Zyngier <marc.zyngier@arm.com>
+>> Tested-by: Marc Zyngier <marc.zyngier@arm.com>
+>>
+>> It would be good if this could make it in -rc1.
+> 
+> Will try to submit a clean patch to Kalle.
+> 
+>>> I am looking for a arm64 platform to add to my test machines so if
+>>> you can recommend one (with PCIe).
+>>
+>> Note that this crash happened with 32bit ARM, without PCIe (the box is a
+>> "Cubietruck").
+>>
+>> As for arm64, there is now quite a few machines out there (ARM sells a
+>> dev board called Juno, but there is also various offerings with AMD
+>> Opteron A1100, Cavium ThunderX, APM X-Gene, and maybe even some Broadcom
+>> based systems, who knows! ;-).
+> 
+> Thanks. Actually found something in our corporate spam:
+> 
+> http://www.broadcom.com/press/release.php?id=s948493
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_msgqueue.c | 10 +++++-----
- drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+Ah, quality marketroid blurb! :-) Yeah, this looks promising, assuming
+it is available in the not too distant future (I think I reviewed some
+of the PCIe code for that platform...).
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 47ba256..363e003 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -16,7 +16,7 @@ int wilc_mq_create(struct message_queue *pHandle)
- 	spin_lock_init(&pHandle->lock);
- 	sema_init(&pHandle->sem, 0);
- 	pHandle->pstrMessageList = NULL;
--	pHandle->u32ReceiversCount = 0;
-+	pHandle->recv_count = 0;
- 	pHandle->exiting = false;
- 	return 0;
- }
-@@ -32,9 +32,9 @@ int wilc_mq_destroy(struct message_queue *pHandle)
- 	pHandle->exiting = true;
- 
- 	/* Release any waiting receiver thread. */
--	while (pHandle->u32ReceiversCount > 0) {
-+	while (pHandle->recv_count > 0) {
- 		up(&pHandle->sem);
--		pHandle->u32ReceiversCount--;
-+		pHandle->recv_count--;
- 	}
- 
- 	while (pHandle->pstrMessageList) {
-@@ -129,7 +129,7 @@ int wilc_mq_recv(struct message_queue *pHandle,
- 	}
- 
- 	spin_lock_irqsave(&pHandle->lock, flags);
--	pHandle->u32ReceiversCount++;
-+	pHandle->recv_count++;
- 	spin_unlock_irqrestore(&pHandle->lock, flags);
- 
- 	down(&pHandle->sem);
-@@ -150,7 +150,7 @@ int wilc_mq_recv(struct message_queue *pHandle,
- 	}
- 
- 	/* consume the message */
--	pHandle->u32ReceiversCount--;
-+	pHandle->recv_count--;
- 	memcpy(pvRecvBuffer, pstrMessage->buf, pstrMessage->len);
- 	*pu32ReceivedLength = pstrMessage->len;
- 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index 2c21b3e..dcf54ea 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -23,7 +23,7 @@ struct message_queue {
- 	struct semaphore sem;
- 	spinlock_t lock;
- 	bool exiting;
--	u32 u32ReceiversCount;
-+	u32 recv_count;
- 	struct message *pstrMessageList;
- };
- 
+Thanks,
+
+	M.
 -- 
-2.7.0
-
+Jazz is not dead. It just smells funny...
