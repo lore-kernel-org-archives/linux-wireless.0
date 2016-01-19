@@ -1,53 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36998 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751409AbcAAKjg (ORCPT
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:34479 "EHLO
+	mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754673AbcASPoF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2016 05:39:36 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <aspriel@gmail.com>
-Cc: Mathy Vanhoef <vanhoefm@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-Subject: Re: [PATCH 3/7] brcmfmac: Add support for scheduled scan mac randomization
-References: <1450100394-17414-1-git-send-email-arend@broadcom.com>
-	<1450100394-17414-4-git-send-email-arend@broadcom.com>
-	<CAFXAJYwoQRVi_10L5475g1NU5+Abfvv==R6U4P2_rdb=yCPOcw@mail.gmail.com>
-	<5685A31F.5020408@gmail.com>
-Date: Fri, 01 Jan 2016 12:39:29 +0200
-In-Reply-To: <5685A31F.5020408@gmail.com> (Arend van Spriel's message of "Thu,
-	31 Dec 2015 22:50:23 +0100")
-Message-ID: <87h9ixmvmm.fsf@kamboji.qca.qualcomm.com> (sfid-20160101_114010_549100_698D2265)
+	Tue, 19 Jan 2016 10:44:05 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: johannes@sipsolutions.net
+Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
+	davem@davemloft.net, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jprvita@endlessm.com,
+	linux@endlessm.com
+Subject: [PATCH 1/8] rfkill: Documentation and style fixes
+Date: Tue, 19 Jan 2016 10:42:36 -0500
+Message-Id: <1453218163-31998-2-git-send-email-jprvita@endlessm.com> (sfid-20160119_164516_957937_0AE601ED)
+In-Reply-To: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
+References: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <aspriel@gmail.com> writes:
+Fixes some small typos, punctuation, and copy & paste issues. Also
+removes an extra blank line.
 
-> On 29-12-15 21:47, Mathy Vanhoef wrote:
->> On Mon, Dec 14, 2015 at 2:39 PM, Arend van Spriel <arend@broadcom.com> wrote:
->>> From: Hante Meuleman <meuleman@broadcom.com>
->>>
->>> Scheduled scan be requested to use mac randomization. This patch
->>> checks the flags and enables the randomization if desired.
->> 
->> The driver also needs to advertise support for this using the
->> NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR flag, if the firmware
->> supports it. This can be done in brcmf_setup_wiphy. Otherwise
->> tools like wpa_supplicant won't use randomization.
->
-> Indeed. Hante found that out later on and we have a follow-up patch for
-> that.
->
-> Kalle,
->
-> How do you want to treat this? Should I squash the patches into one and
-> resubmit or can I just submit follow-up patch.
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+---
+ include/linux/rfkill.h | 7 ++++---
+ net/rfkill/core.c      | 5 ++---
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-I would prefer that you squash the patches and resubmit the whole
-series.
-
+diff --git a/include/linux/rfkill.h b/include/linux/rfkill.h
+index d901078..3dcbaf6 100644
+--- a/include/linux/rfkill.h
++++ b/include/linux/rfkill.h
+@@ -104,16 +104,17 @@ int __must_check rfkill_register(struct rfkill *rfkill);
+  *
+  * Pause polling -- say transmitter is off for other reasons.
+  * NOTE: not necessary for suspend/resume -- in that case the
+- * core stops polling anyway
++ * core stops polling anyway.
+  */
+ void rfkill_pause_polling(struct rfkill *rfkill);
+ 
+ /**
+  * rfkill_resume_polling(struct rfkill *rfkill)
+  *
+- * Pause polling -- say transmitter is off for other reasons.
++ * Resume polling previously paused with rfkill_pause_polling.
+  * NOTE: not necessary for suspend/resume -- in that case the
+- * core stops polling anyway
++ * core restarts polling anyway, even if was explicitly paused
++ * before suspending.
+  */
+ void rfkill_resume_polling(struct rfkill *rfkill);
+ 
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index f53bf3b6..4d6d726 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -303,8 +303,8 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
+ 	spin_lock_irqsave(&rfkill->lock, flags);
+ 	if (err) {
+ 		/*
+-		 * Failed -- reset status to _prev, this may be different
+-		 * from what set set _PREV to earlier in this function
++		 * Failed -- reset status to _PREV. This may be different
++		 * from what we have set _PREV to earlier in this function
+ 		 * if rfkill_set_sw_state was invoked.
+ 		 */
+ 		if (rfkill->state & RFKILL_BLOCK_SW_PREV)
+@@ -477,7 +477,6 @@ bool rfkill_get_global_sw_state(const enum rfkill_type type)
+ }
+ #endif
+ 
+-
+ bool rfkill_set_hw_state(struct rfkill *rfkill, bool blocked)
+ {
+ 	bool ret, change;
 -- 
-Kalle Valo
+2.5.0
+
