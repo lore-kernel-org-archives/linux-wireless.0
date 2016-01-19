@@ -1,140 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40753 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753321AbcAYHm1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 02:42:27 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 03/26] staging: wilc1000: support suspend/resume functionality
-Date: Mon, 25 Jan 2016 16:35:07 +0900
-Message-ID: <1453707330-13526-4-git-send-email-glen.lee@atmel.com> (sfid-20160125_084230_173675_E33A222C)
-In-Reply-To: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
-References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+Received: from foss.arm.com ([217.140.101.70]:37971 "EHLO foss.arm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752267AbcASIzl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jan 2016 03:55:41 -0500
+Subject: Re: [GIT] Networking
+To: Arend van Spriel <arend@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+References: <20160112.215136.850414372508130298.davem@davemloft.net>
+ <56978094.4050302@arm.com> <87k2n97n5e.fsf@kamboji.qca.qualcomm.com>
+ <569CCCD2.4040105@arm.com> <569D61BA.8020701@broadcom.com>
+Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
+From: Marc Zyngier <marc.zyngier@arm.com>
+Message-ID: <569DFA0A.6070900@arm.com> (sfid-20160119_095602_179542_01984ABE)
+Date: Tue, 19 Jan 2016 08:55:38 +0000
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <569D61BA.8020701@broadcom.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wilc supports suspend/resume functionality. Introduce new sleep and wakeup
-functions and remove old codes since that will be handled in the new functions.
+On 18/01/16 22:05, Arend van Spriel wrote:
+> On 18-1-2016 12:30, Marc Zyngier wrote:
+>> Hi Kalle,
+>>
+>> On 16/01/16 11:57, Kalle Valo wrote:
+>>> Marc Zyngier <marc.zyngier@arm.com> writes:
+>>>
+>>>> David, Hante,
+>>>>
+>>>> On 13/01/16 02:51, David Miller wrote:
+>>>>
+>>>> [...]
+>>>>
+>>>>> Hante Meuleman (33):
+>>>> [...]
+>>>>>       brcmfmac: Move all module parameters to one place
+>>>
+>>> As a reminder to myself this is the commit id:
+>>>
+>>> 7d34b0560567 brcmfmac: Move all module parameters to one place
+>>>
+>>>> This particular patch breaks one of my boxes in a spectacular way:
+>>>>
+>>>> [    3.602155] Unable to handle kernel paging request at virtual address 000027e4
+>>>> [    3.602160] pgd = c0003000
+>>>> [    3.602169] [000027e4] *pgd=80000040004003, *pmd=00000000
+>>>> [    3.602181] Internal error: Oops: 206 [#1] PREEMPT SMP ARM
+>>>
+>>> [...]
+>>>
+>>>> This is caused by this hunk:
+>>>>
+>>>> @@ -890,7 +887,8 @@ static void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
+>>>>  	if (!sdiodev->sg_support)
+>>>>  		return;
+>>>>  
+>>>> -	nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE, brcmf_sdiod_txglomsz);
+>>>> +	nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE,
+>>>> +		      sdiodev->bus_if->drvr->settings->sdiod_txglomsz);
+>>>>  	nents += (nents >> 4) + 1;
+>>>>  
+>>>>  	WARN_ON(nents > sdiodev->max_segment_count);
+>>>>
+>>>> were drvr->settings is NULL (as the settings allocation seems to be done
+>>>> much later). The fix is not completely obvious to me (probably requires
+>>>> pushing the call to brcmf_mp_device_attach() down into the various bus
+>>>> specific functions). An alternative would be to restore the txglomsz
+>>>> parameter as it was before and not rely on settings being allocated.
+>>>
+>>> Should we revert the patch or can you Hante fix this? The revert doesn't
+>>> seem to be trivial so I would appreciate if someone could send a patch.
+>>
+>> I've worked out a partial revert (see below) that allows my system to
+>> boot, but I'd rather see a proper fix from the maintainer of this code.
+> 
+> Hi Marc,
+> 
+> Thanks for the patch, but Hante has created a different patch basically
+> deferring the allocation of the sgtable. Feel free to give it a spin on
+> your box and share the results.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 31 +++++++++++++++++++------------
- drivers/staging/wilc1000/wilc_wlan.h |  4 +++-
- 2 files changed, 22 insertions(+), 13 deletions(-)
+Hi Arend,
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index dabb0bd..977bd8a0 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -522,6 +522,7 @@ static inline void chip_allow_sleep(struct wilc *wilc)
- 	wilc->hif_func->hif_read_reg(wilc, 0xf0, &reg);
- 
- 	wilc->hif_func->hif_write_reg(wilc, 0xf0, reg & ~BIT(0));
-+	wilc->hif_func->hif_write_reg(wilc, 0xfa, 0);
- }
- 
- static inline void chip_wakeup(struct wilc *wilc)
-@@ -543,6 +544,8 @@ static inline void chip_wakeup(struct wilc *wilc)
- 
- 		} while (wilc_get_chipid(wilc, true) == 0);
- 	} else if ((wilc->io_type & 0x1) == HIF_SDIO)	 {
-+		wilc->hif_func->hif_write_reg(wilc, 0xfa, 1);
-+		udelay(200);
- 		wilc->hif_func->hif_read_reg(wilc, 0xf0, &reg);
- 		do {
- 			wilc->hif_func->hif_write_reg(wilc, 0xf0,
-@@ -567,11 +570,7 @@ static inline void chip_wakeup(struct wilc *wilc)
- 	}
- 
- 	if (chip_ps_state == CHIP_SLEEPING_MANUAL) {
--		wilc->hif_func->hif_read_reg(wilc, 0x1C0C, &reg);
--		reg &= ~BIT(0);
--		wilc->hif_func->hif_write_reg(wilc, 0x1C0C, reg);
--
--		if (wilc_get_chipid(wilc, false) >= 0x1002b0) {
-+		if (wilc_get_chipid(wilc, false) < 0x1002b0) {
- 			u32 val32;
- 
- 			wilc->hif_func->hif_read_reg(wilc, 0x1e1c, &val32);
-@@ -599,6 +598,20 @@ void wilc_chip_sleep_manually(struct wilc *wilc)
- 	release_bus(wilc, RELEASE_ONLY);
- }
- 
-+void host_wakeup_notify(struct wilc *wilc)
-+{
-+	acquire_bus(wilc, ACQUIRE_ONLY);
-+	wilc->hif_func->hif_write_reg(wilc, 0x10b0, 1);
-+	release_bus(wilc, RELEASE_ONLY);
-+}
-+
-+void host_sleep_notify(struct wilc *wilc)
-+{
-+	acquire_bus(wilc, ACQUIRE_ONLY);
-+	wilc->hif_func->hif_write_reg(wilc, 0x10ac, 1);
-+	release_bus(wilc, RELEASE_ONLY);
-+}
-+
- int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- {
- 	int i, entries = 0;
-@@ -701,9 +714,6 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 					break;
- 				}
- 				PRINT_WRN(GENERIC_DBG, "[wilc txq]: warn, vmm table not clear yet, wait...\n");
--				release_bus(wilc, RELEASE_ALLOW_SLEEP);
--				usleep_range(3000, 3000);
--				acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
- 			}
- 		} while (!wilc->quit);
- 
-@@ -736,9 +746,6 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 					break;
- 				} else {
- 					release_bus(wilc, RELEASE_ALLOW_SLEEP);
--					usleep_range(3000, 3000);
--					acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
--					PRINT_WRN(GENERIC_DBG, "Can't get VMM entery - reg = %2x\n", reg);
- 				}
- 			} while (--timeout);
- 			if (timeout <= 0) {
-@@ -1156,7 +1163,7 @@ int wilc_wlan_start(struct wilc *wilc)
- #ifdef WILC_EXT_PA_INV_TX_RX
- 	reg |= WILC_HAVE_EXT_PA_INV_TX_RX;
- #endif
--
-+	reg |= WILC_HAVE_USE_IRQ_AS_HOST_WAKE;
- 	reg |= WILC_HAVE_LEGACY_RF_SETTINGS;
- #ifdef XTAL_24
- 	reg |= WILC_HAVE_XTAL_24;
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 2edd744..dd5abc5 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -106,6 +106,7 @@
- #define WILC_HAVE_LEGACY_RF_SETTINGS	BIT(5)
- #define WILC_HAVE_XTAL_24		BIT(6)
- #define WILC_HAVE_DISABLE_WILC_UART	BIT(7)
-+#define WILC_HAVE_USE_IRQ_AS_HOST_WAKE	BIT(8)
- 
- /********************************************
-  *
-@@ -294,7 +295,8 @@ int wilc_mac_close(struct net_device *ndev);
- 
- int wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *pBSSID);
- void WILC_WFI_p2p_rx(struct net_device *dev, u8 *buff, u32 size);
--
-+void host_wakeup_notify(struct wilc *wilc);
-+void host_sleep_notify(struct wilc *wilc);
- extern bool wilc_enable_ps;
- 
- #endif
+This patch fixes indeed the problem, thanks (I had to undo the mangling
+your mailer had done, though). So feel free to add my:
+
+Reported-by: Marc Zyngier <marc.zyngier@arm.com>
+Tested-by: Marc Zyngier <marc.zyngier@arm.com>
+
+It would be good if this could make it in -rc1.
+
+> I am looking for a arm64 platform to add to my test machines so if
+> you can recommend one (with PCIe).
+
+Note that this crash happened with 32bit ARM, without PCIe (the box is a
+"Cubietruck").
+
+As for arm64, there is now quite a few machines out there (ARM sells a
+dev board called Juno, but there is also various offerings with AMD
+Opteron A1100, Cavium ThunderX, APM X-Gene, and maybe even some Broadcom
+based systems, who knows! ;-).
+
+Thanks,
+
+	M.
 -- 
-1.9.1
-
+Jazz is not dead. It just smells funny...
