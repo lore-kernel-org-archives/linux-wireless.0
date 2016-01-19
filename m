@@ -1,140 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f179.google.com ([209.85.160.179]:35432 "EHLO
-	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932483AbcASU1x convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 15:27:53 -0500
-MIME-Version: 1.0
-In-Reply-To: <1453234129.23600.3.camel@sipsolutions.net>
-References: <1451142303-1872-1-git-send-email-jprvita@endlessm.com>
- <1451142303-1872-2-git-send-email-jprvita@endlessm.com> <6DC3AA8C-DDE9-44B8-91C5-94B1EB0DBE9A@holtmann.org>
- <1452076319.2541.3.camel@sipsolutions.net> <CA+A7VXW3Fsf2O_xnnZAWxieMMhSP2ngTbhtuJEB1JpMc6EFPxQ@mail.gmail.com>
- <1452200461.3141.19.camel@sipsolutions.net> <CA+A7VXWeUJHTnSiGGT2WZER=pAX7hhhhi2oQVeu4U8xSM5VZag@mail.gmail.com>
- <1453234129.23600.3.camel@sipsolutions.net>
-From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Date: Tue, 19 Jan 2016 15:27:12 -0500
-Message-ID: <CA+A7VXWGF5eoa0zFmqef_oo-r2FoaD3jsy87w=-MXVjw22F7Ow@mail.gmail.com> (sfid-20160119_212800_140367_5EE9DD79)
-Subject: Re: [PATCH] net/rfkill: Create "airplane mode" LED trigger
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Network Development <netdev@vger.kernel.org>,
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Darren Hart <dvhart@infradead.org>,
-	platform-driver-x86@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:43744 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752083AbcASL5x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jan 2016 06:57:53 -0500
+Message-ID: <1453204670.3896.9.camel@sipsolutions.net> (sfid-20160119_125756_178142_486DBF73)
+Subject: Re: Checking p2p capabilities
+From: Johannes Berg <johannes@sipsolutions.net>
+To: albertofanjul@gmail.com, linux-wireless@vger.kernel.org
+Date: Tue, 19 Jan 2016 12:57:50 +0100
+In-Reply-To: <20160119113457.GA32060@archlinux-alberto> (sfid-20160119_123521_709483_A29A5BDE)
+References: <20160119113457.GA32060@archlinux-alberto>
+	 (sfid-20160119_123521_709483_A29A5BDE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Johannes,
+On Tue, 2016-01-19 at 12:34 +0100, albertofanjul@gmail.com wrote:
 
-On 19 January 2016 at 15:08, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Hi,
->
->> There was a misunderstanding of these semantics on my side, despite
->> this being documented in Documentation/rfkill.txt. Now I've realized
->> the semantic difference between 1."having all the individual switches
->> of a certain type blocked at a certain moment" and 2."blocking all
->> switches of a certain type": on the 1st situation, each switch was
->> individually blocked in different moments, and by chance a certain
->> type had all its registered switches blocked, while on the 2nd, all
->> switches of a certain type were blocked altogether using
->> RFKILL_OP_CHANGE_ALL. Only on the 2nd situation we want to update the
->> default state for hotplugged devices, and that's why
->> rfkill_global_states[type] is not updated when individual switches
->> are
->> driven, even if we read situation 1. Then there is actually no
->> difference between the state value and the operation, and there is
->> nothing to be fixed on an individual switch change. Sorry for the
->> confusion.
->
-> Ok, glad you have that cleared up because I'm not sure I understand
-> what you were confused about :)
->
->> I'm going to add a note about this behavior to
->> include/uapi/linux/rfkill.h as well.
->
-> If it helps the next person, sure!
->
->> >  * allow only a single userspace owner, and require that owner to
->> >    toggle it as required, to avoid multiple userspace applications
->> >    stepping on each others' toes. This could be implemented by
->> > making
->> >    this a new /dev/rfkill command, and requiring the fd to be held
->> >    open while controlling the airplane mode state.
->> >
->>
->> And when the fd gets released we would fallback to default, right?
->
-> Yeah, I guess so. Something has to be known to be controlling it, and
-> two applications can't really do it at the same time.
->
+> Lot of people trying miraclecast ask me:why it's device do not
+> support p2p?  (while it's documentation says it does, many times is
+> just what they think, not reality).
 
-Ack.
+Well, often the documentation is for the windows or vendor driver, not
+for the upstream driver.
 
->>  So
->> that would avoid two userpace apps trying to control it at the same
->> time, but not one after the other (which is a good thing). As I
->> understand it also implies we would not expose this control point
->> through sysfs.
->
-> Yes, and I agree, sysfs wouldn't make a lot of sense for this (since
-> you can't track ownership that way.)
->
+> I wonder if that is a matter of driver, modules or pure hardware. Is
+> there any way to check it directly and not from a grep inside iw ?.
+> 
+> something like:
+> 
+> iw phy wlp3s0 get P2P-client
+> iw phy wlp3s0 get P2P-GO
 
-Yes, that's what I thought.
+I'm not sure it makes sense to add commands to iw for that, but you can
+use python or C code to talk to nl80211 directly.
 
->> Great, I already fixed the previous comments and started working on a
->> prototype of the second stage, but then a naming question came to my
->> mind. They way I'm designing it is to have only one trigger and
->> change
->> its behavior when the "airplane mode indicator" is under userspace
->> control (basically changing when to call led_trigger_event() to fire
->> the trigger). In this case it probably makes sense to call the
->> trigger
->> something like "rfkill-airplane_mode", as before, because it will
->> fire when we're in an "airplane safe" mode, controlled by userspace
->> or with a fallback default behavior.
->
-> Sure.
->
+> About kernel, modules and hardware, are they completely black box for
+> others?, I mean, can I detect if my device hardware supports some
+> interface but my driver or module can't?
 
-Ack.
+No, you can't detect that.
 
->> Another option would be to have two separate triggers,
->> "rfkill-airplane_mode" controlled by userspace, and "rfkill-all"
->> implementing the default behavior, and change which trigger is set to
->> each LED *from the trigger implementation side* in rfkill. Unless I'm
->> missing something, I don't think this second approach is possible.
->
-> Yes, this doesn't make sense.
->
+> At this point my script informs pretty well, and there's a few people
+> ask such things, but I would like to check it in a better way, even
+> with an api inside my project
+> 
+> Something related with this lines I could check by myself (I use that
+> clone for it's line anchors)
+> 
+> https://github.com/cozybit/iw/blob/master/util.c#L124
+> https://github.com/cozybit/iw/blob/master/info.c#L276
+> 
+> NL80211_ATTR_SUPPORTED_IFTYPES
+> NL80211_IFTYPE_MAX
+> 
 
-Ok, good to know :)
+Right, you'd do something along these lines to directly speak to
+nl80211 and query the supported interface types.
 
->> So the question is, if we go with the 1st approach, would it be fine
->> to call the trigger "rkill-airplane_mode", even for the first stage
->> when only the default behavior is implemented, or should I rename it
->> (which implies renaming an API to other drivers) during the 2nd stage
->> implementation? I think sticking with one name from the beginning is
->> better, but since it goes against previous feedback, I decided to ask
->> first.
->
-> Indeed, I think it's better. I wasn't previously considering (much) the
-> possibility of enhancing the framework :)
->
-> Thanks for your work on this - I see also your patches already, will go
-> over them soon; I'm working part-time on parental leave right now, so things take a bit longer than usual.
->
-
-Thanks for the clarifications! I'll clean-up the patches that actually
-implement this (the ones I've send are only general
-fixes/improvements) and send them in the next days.
-
-Don't worry about delays, enjoy your parental leave!
-
---
-João Paulo Rechi Vita
-http://about.me/jprvita
+johannes
