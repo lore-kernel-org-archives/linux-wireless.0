@@ -1,41 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:38806 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752073AbcAGRc6 (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:34496 "EHLO
+	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751786AbcASIE5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 12:32:58 -0500
-Received: by mail-ig0-f176.google.com with SMTP id mw1so58021387igb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2016 09:32:58 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <568E997C.1030003@einfach.org>
-References: <CALnQHM3C=DVaTf58XDyh+rttVs-FSpc4ghozg9HJktEonq7w-g@mail.gmail.com>
-	<568E913D.7050301@candelatech.com>
-	<CALnQHM1mzqFbprQqujB7BWncOa=D9uAxLQ0paiv-21vrx+hFvw@mail.gmail.com>
-	<568E997C.1030003@einfach.org>
-Date: Thu, 7 Jan 2016 10:32:57 -0700
-Message-ID: <CALnQHM2y=Uj4AUZDXL1tqgMbebbkaj2UF1HPMmXfbK-X8rsSjA@mail.gmail.com> (sfid-20160107_183301_928464_C2F7B382)
-Subject: Re: lost connectivity until "wpa_cli reassociate" is issued
-From: David Mosberger <davidm@egauge.net>
-To: Bruno Randolf <br1@einfach.org>
-Cc: Ben Greear <greearb@candelatech.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 19 Jan 2016 03:04:57 -0500
+Received: by mail-wm0-f67.google.com with SMTP id b14so21500238wmb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2016 00:04:57 -0800 (PST)
+From: Henning Rogge <hrogge@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Henning Rogge <hrogge@gmail.com>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+Subject: [PATCH 1/2] mac80211: Remove connected MPP table entries with MPath
+Date: Tue, 19 Jan 2016 09:04:31 +0100
+Message-Id: <1453190672-9748-2-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20160119_090500_435048_643FCD5B)
+In-Reply-To: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+References: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 7, 2016 at 9:59 AM, Bruno Randolf <br1@einfach.org> wrote:
+Make the mesh_path_del() function remove all mpp table entries
+that are proxied by the removed mesh path.
 
-> Although I have not checked if the "wpa_cli reassociate" command helps,
-> I have seen rtl8192cu get "stuck" in similar ways. Maybe you can give
-> the new rtl8xxxu driver from Jes Sorensen try? It has less features, but
-> works more reliable, IMHO...
+Signed-off-by: Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+---
+ net/mac80211/mesh_pathtbl.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-Oh, boy, switching to a completely different driver is not what I'd
-like to do at this
-stage, but perhaps it's the right thing to do.  Thanks for the suggestion!
-
-I'll check with Jes.
-
-  --david
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index dadf8dc..d9424ea 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -835,6 +835,29 @@ void mesh_path_flush_by_nexthop(struct sta_info *sta)
+ 	rcu_read_unlock();
+ }
+ 
++static void mpp_flush_by_proxy(struct ieee80211_sub_if_data *sdata,
++			       const u8 *proxy)
++{
++	struct mesh_table *tbl;
++	struct mesh_path *mpp;
++	struct mpath_node *node;
++	int i;
++
++	rcu_read_lock();
++	read_lock_bh(&pathtbl_resize_lock);
++	tbl = resize_dereference_mpp_paths();
++	for_each_mesh_entry(tbl, node, i) {
++		mpp = node->mpath;
++		if (ether_addr_equal(mpp->mpp, proxy)) {
++			spin_lock(&tbl->hashwlock[i]);
++			__mesh_path_del(tbl, node);
++			spin_unlock(&tbl->hashwlock[i]);
++		}
++	}
++	read_unlock_bh(&pathtbl_resize_lock);
++	rcu_read_unlock();
++}
++
+ static void table_flush_by_iface(struct mesh_table *tbl,
+ 				 struct ieee80211_sub_if_data *sdata)
+ {
+@@ -892,6 +915,9 @@ int mesh_path_del(struct ieee80211_sub_if_data *sdata, const u8 *addr)
+ 	int hash_idx;
+ 	int err = 0;
+ 
++	/* flush relevant mpp entries first */
++	mpp_flush_by_proxy(sdata, addr);
++
+ 	read_lock_bh(&pathtbl_resize_lock);
+ 	tbl = resize_dereference_mesh_paths();
+ 	hash_idx = mesh_table_hash(addr, sdata, tbl);
 -- 
-eGauge Systems LLC, http://egauge.net/, 1.877-EGAUGE1, fax 720.545.9768
+2.5.0
+
