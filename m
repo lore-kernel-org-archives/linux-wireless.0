@@ -1,45 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24258 "EHLO mga09.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47044 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753473AbcAGMr4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 07:47:56 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 08/21] iwlwifi: nvm: fix loading default NVM file
-Date: Thu,  7 Jan 2016 14:47:28 +0200
-Message-Id: <1452170861-10060-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160107_134853_166651_736F38FF)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+	id S1752191AbcASIYX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jan 2016 03:24:23 -0500
+Date: Tue, 19 Jan 2016 09:22:59 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Eli Cooper <elicooper@gmx.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3] rt2x00: fix monitor mode regression
+Message-ID: <20160119082258.GA3340@redhat.com> (sfid-20160119_092427_047270_77EBF351)
+References: <1453116619-29933-1-git-send-email-elicooper@gmx.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1453116619-29933-1-git-send-email-elicooper@gmx.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+On Mon, Jan 18, 2016 at 07:30:19PM +0800, Eli Cooper wrote:
+> Since commit df1404650ccb ("mac80211: remove support for IFF_PROMISC")
+> monitor mode for rt2x00 has been made effectively useless because the
+> hardware filter is configured to drop packets whose intended recipient is
+> not the device, regardless of the presence of monitor mode interfaces.
+> 
+> This patch fixes this regression by adding explicit monitor mode support,
+> and by configuring the hardware filter accordingly.
+> 
+> Changes in v3:
+>   introduce and use CONFIG_MONITORING in rt2x00_state_flags
+>   remove unnecessary debug messages
+>   improve patch format
+> 
+> Changes in v2:
+>   fix patch format
+> 
+> Signed-off-by: Eli Cooper <elicooper@gmx.com>
 
-Fix loading the default NVM file, in the case where the
-requested NVM file isn't found in the file system.
-
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-index e4fe8a6..7a3da2d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-@@ -642,7 +642,8 @@ int iwl_nvm_init(struct iwl_mvm *mvm, bool read_nvm_from_nic)
- 			else
- 				mvm->nvm_file_name = nvm_file_C;
- 
--			if (ret == -EFAULT && mvm->nvm_file_name) {
-+			if ((ret == -EFAULT || ret == -ENOENT) &&
-+			    mvm->nvm_file_name) {
- 				/* in case nvm file was failed try again */
- 				ret = iwl_mvm_read_external_nvm(mvm);
- 				if (ret)
--- 
-2.5.0
-
+Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
