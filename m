@@ -1,115 +1,146 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f44.google.com ([209.85.215.44]:34993 "EHLO
-	mail-lf0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759368AbcAUNpk (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:44778 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751638AbcASLj2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 08:45:40 -0500
-Received: by mail-lf0-f44.google.com with SMTP id c192so26816973lfe.2
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 05:45:39 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 02/13] ath10k: unify txpath decision
-Date: Thu, 21 Jan 2016 14:46:35 +0100
-Message-Id: <1453384006-31907-3-git-send-email-michal.kazior@tieto.com> (sfid-20160121_144543_225322_5FD83D1C)
-In-Reply-To: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
-References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 19 Jan 2016 06:39:28 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH] brcmfmac: fix sdio sg table alloc crash
+Date: Tue, 19 Jan 2016 12:39:24 +0100
+Message-ID: <1453203564-15974-1-git-send-email-arend@broadcom.com> (sfid-20160119_123932_595400_32579B82)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some future changes will need to determine final
-tx method early on. Prepare the code.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+With commit 7d34b0560567 ("brcmfmac: Move all module parameters to
+one place") a bug was introduced causing a null pointer exception.
+This patch fixes the bug by initializing the sg table till after
+the settings have been initialized.
+
+Reported-by: Marc Zyngier <marc.zyngier@arm.com>
+Tested-by: Marc Zyngier <marc.zyngier@arm.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 58 +++++++++++++++++++++++++++--------
- 1 file changed, 45 insertions(+), 13 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 40 ++++++++--------------
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  5 +++
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |  1 +
+ 3 files changed, 21 insertions(+), 25 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index a684718f6389..9abb52924432 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2997,6 +2997,13 @@ static void ath10k_reg_notifier(struct wiphy *wiphy,
- /* TX handlers */
- /***************/
- 
-+enum ath10k_mac_tx_path {
-+	ATH10K_MAC_TX_HTT,
-+	ATH10K_MAC_TX_HTT_MGMT,
-+	ATH10K_MAC_TX_WMI_MGMT,
-+	ATH10K_MAC_TX_UNKNOWN,
-+};
-+
- void ath10k_mac_tx_lock(struct ath10k *ar, int reason)
- {
- 	lockdep_assert_held(&ar->htt.tx_lock);
-@@ -3330,27 +3337,52 @@ unlock:
- 	return ret;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+index 5363739..b98db8a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
+@@ -879,11 +879,24 @@ int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn)
+ 	return 0;
  }
  
-+static enum ath10k_mac_tx_path
-+ath10k_mac_tx_h_get_txpath(struct ath10k *ar,
-+			   struct sk_buff *skb,
-+			   enum ath10k_hw_txrx_mode txmode)
-+{
-+	switch (txmode) {
-+	case ATH10K_HW_TXRX_RAW:
-+	case ATH10K_HW_TXRX_NATIVE_WIFI:
-+	case ATH10K_HW_TXRX_ETHERNET:
-+		return ATH10K_MAC_TX_HTT;
-+	case ATH10K_HW_TXRX_MGMT:
-+		if (test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
-+			     ar->fw_features))
-+			return ATH10K_MAC_TX_WMI_MGMT;
-+		else if (ar->htt.target_version_major >= 3)
-+			return ATH10K_MAC_TX_HTT;
-+		else
-+			return ATH10K_MAC_TX_HTT_MGMT;
-+	}
-+
-+	return ATH10K_MAC_TX_UNKNOWN;
-+}
-+
- static int ath10k_mac_tx_submit(struct ath10k *ar,
- 				enum ath10k_hw_txrx_mode txmode,
- 				struct sk_buff *skb)
+-static void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
++void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
  {
- 	struct ath10k_htt *htt = &ar->htt;
--	int ret = 0;
-+	enum ath10k_mac_tx_path txpath;
-+	int ret;
++	struct sdio_func *func;
++	struct mmc_host *host;
++	uint max_blocks;
+ 	uint nents;
+ 	int err;
  
--	switch (txmode) {
--	case ATH10K_HW_TXRX_RAW:
--	case ATH10K_HW_TXRX_NATIVE_WIFI:
--	case ATH10K_HW_TXRX_ETHERNET:
-+	txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
++	func = sdiodev->func[2];
++	host = func->card->host;
++	sdiodev->sg_support = host->max_segs > 1;
++	max_blocks = min_t(uint, host->max_blk_count, 511u);
++	sdiodev->max_request_size = min_t(uint, host->max_req_size,
++					  max_blocks * func->cur_blksize);
++	sdiodev->max_segment_count = min_t(uint, host->max_segs,
++					   SG_MAX_SINGLE_ALLOC);
++	sdiodev->max_segment_size = host->max_seg_size;
 +
-+	switch (txpath) {
-+	case ATH10K_MAC_TX_HTT:
- 		ret = ath10k_htt_tx(htt, txmode, skb);
- 		break;
--	case ATH10K_HW_TXRX_MGMT:
--		if (test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
--			     ar->fw_features))
--			ret = ath10k_mac_tx_wmi_mgmt(ar, skb);
--		else if (ar->htt.target_version_major >= 3)
--			ret = ath10k_htt_tx(htt, txmode, skb);
--		else
--			ret = ath10k_htt_mgmt_tx(htt, skb);
-+	case ATH10K_MAC_TX_HTT_MGMT:
-+		ret = ath10k_htt_mgmt_tx(htt, skb);
-+		break;
-+	case ATH10K_MAC_TX_WMI_MGMT:
-+		ret = ath10k_mac_tx_wmi_mgmt(ar, skb);
-+		break;
-+	case ATH10K_MAC_TX_UNKNOWN:
-+		WARN_ON_ONCE(1);
-+		ret = -EINVAL;
- 		break;
+ 	if (!sdiodev->sg_support)
+ 		return;
+ 
+@@ -1021,9 +1034,6 @@ static void brcmf_sdiod_host_fixup(struct mmc_host *host)
+ 
+ static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
+ {
+-	struct sdio_func *func;
+-	struct mmc_host *host;
+-	uint max_blocks;
+ 	int ret = 0;
+ 
+ 	sdiodev->num_funcs = 2;
+@@ -1054,26 +1064,6 @@ static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
+ 		goto out;
  	}
  
+-	/*
+-	 * determine host related variables after brcmf_sdiod_probe()
+-	 * as func->cur_blksize is properly set and F2 init has been
+-	 * completed successfully.
+-	 */
+-	func = sdiodev->func[2];
+-	host = func->card->host;
+-	sdiodev->sg_support = host->max_segs > 1;
+-	max_blocks = min_t(uint, host->max_blk_count, 511u);
+-	sdiodev->max_request_size = min_t(uint, host->max_req_size,
+-					  max_blocks * func->cur_blksize);
+-	sdiodev->max_segment_count = min_t(uint, host->max_segs,
+-					   SG_MAX_SINGLE_ALLOC);
+-	sdiodev->max_segment_size = host->max_seg_size;
+-
+-	/* allocate scatter-gather table. sg support
+-	 * will be disabled upon allocation failure.
+-	 */
+-	brcmf_sdiod_sgtable_alloc(sdiodev);
+-
+ 	ret = brcmf_sdiod_freezer_attach(sdiodev);
+ 	if (ret)
+ 		goto out;
+@@ -1084,7 +1074,7 @@ static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
+ 		ret = -ENODEV;
+ 		goto out;
+ 	}
+-	brcmf_sdiod_host_fixup(host);
++	brcmf_sdiod_host_fixup(sdiodev->func[2]->card->host);
+ out:
+ 	if (ret)
+ 		brcmf_sdiod_remove(sdiodev);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index dd66143..a14d9d9d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -4114,6 +4114,11 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
+ 		goto fail;
+ 	}
+ 
++	/* allocate scatter-gather table. sg support
++	 * will be disabled upon allocation failure.
++	 */
++	brcmf_sdiod_sgtable_alloc(bus->sdiodev);
++
+ 	/* Query the F2 block size, set roundup accordingly */
+ 	bus->blocksize = bus->sdiodev->func[2]->cur_blksize;
+ 	bus->roundup = min(max_roundup, bus->blocksize);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+index 5ec7a6d..23f2231 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
+@@ -342,6 +342,7 @@ int brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
+ 
+ /* Issue an abort to the specified function */
+ int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn);
++void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev);
+ void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
+ 			      enum brcmf_sdiod_state state);
+ #ifdef CONFIG_PM_SLEEP
 -- 
-2.1.4
+1.9.1
 
