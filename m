@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m12-18.163.com ([220.181.12.18]:48650 "EHLO m12-18.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751717AbcALBB5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jan 2016 20:01:57 -0500
-From: Jia-Ju Bai <baijiaju1990@163.com>
-To: kvalo@codeaurora.org, zajec5@gmail.com, joe@perches.com,
-	davem@davemloft.net, m@bues.ch, johannes.berg@intel.com
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jia-Ju Bai <baijiaju1990@163.com>
-Subject: [PATCH] b43: Fix memory leaks in b43_bus_dev_ssb_init and b43_bus_dev_bcma_init
-Date: Tue, 12 Jan 2016 09:01:04 +0800
-Message-Id: <1452560464-7146-1-git-send-email-baijiaju1990@163.com> (sfid-20160112_020243_029939_4860D2D8)
+Received: from mail-qg0-f68.google.com ([209.85.192.68]:34162 "EHLO
+	mail-qg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754881AbcASPoF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jan 2016 10:44:05 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: johannes@sipsolutions.net
+Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
+	davem@davemloft.net, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jprvita@endlessm.com,
+	linux@endlessm.com
+Subject: [PATCH 2/8] rfkill: Improve code readability
+Date: Tue, 19 Jan 2016 10:42:37 -0500
+Message-Id: <1453218163-31998-3-git-send-email-jprvita@endlessm.com> (sfid-20160119_164508_528396_A5E8C21A)
+In-Reply-To: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
+References: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The memory allocated by kzalloc in b43_bus_dev_ssb_init and
-b43_bus_dev_bcma_initis not freed.
-This patch fixes the bug by adding kfree in b43_ssb_remove,
-b43_bcma_remove and error handling code of b43_bcma_probe.
+RFKILL_BLOCK_SW value have just been saved to prev, no need to check it
+again in the if expression. This makes code a little bit easier to read.
 
-Thanks Michael for his suggestion.
-
-Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
 ---
- drivers/net/wireless/b43/main.c |    3 +++
- 1 file changed, 3 insertions(+)
+ net/rfkill/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index ec013fb..2c9d9c1 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -5683,6 +5683,7 @@ static int b43_bcma_probe(struct bcma_device *core)
- 	schedule_work(&wl->firmware_load);
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 4d6d726..838e869 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -285,7 +285,7 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
+ 	spin_lock_irqsave(&rfkill->lock, flags);
+ 	prev = rfkill->state & RFKILL_BLOCK_SW;
  
- bcma_out:
-+	kfree(dev);
- 	return err;
- 
- bcma_err_wireless_exit:
-@@ -5716,6 +5717,7 @@ static void b43_bcma_remove(struct bcma_device *core)
- 	b43_leds_unregister(wl);
- 
- 	ieee80211_free_hw(wl->hw);
-+	kfree(wldev->dev);
- }
- 
- static struct bcma_driver b43_bcma_driver = {
-@@ -5798,6 +5800,7 @@ static void b43_ssb_remove(struct ssb_device *sdev)
- 
- 	b43_leds_unregister(wl);
- 	b43_wireless_exit(dev, wl);
-+	kfree(dev);
- }
- 
- static struct ssb_driver b43_ssb_driver = {
+-	if (rfkill->state & RFKILL_BLOCK_SW)
++	if (prev)
+ 		rfkill->state |= RFKILL_BLOCK_SW_PREV;
+ 	else
+ 		rfkill->state &= ~RFKILL_BLOCK_SW_PREV;
 -- 
-1.7.9.5
-
+2.5.0
 
