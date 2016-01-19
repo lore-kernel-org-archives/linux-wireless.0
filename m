@@ -1,98 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:38497 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761AbcAEJsD (ORCPT
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:33895 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932252AbcASVKw convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 04:48:03 -0500
+	Tue, 19 Jan 2016 16:10:52 -0500
 MIME-Version: 1.0
-In-Reply-To: <568B7F06.1010500@users.sourceforge.net>
-References: <566ABCD9.1060404@users.sourceforge.net> <5687E169.4070704@users.sourceforge.net>
- <5687E203.1070404@users.sourceforge.net> <20160104092857.GD5284@mwanda>
- <568A4CFF.8060600@users.sourceforge.net> <20160104114849.GH5284@mwanda>
- <568A668D.8090007@users.sourceforge.net> <CAGRGNgXw+G6ZcmFmM=VWZT_jibuZyxe-kSvPSF8W7hPueLhNrw@mail.gmail.com>
- <568B7F06.1010500@users.sourceforge.net>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 5 Jan 2016 20:47:42 +1100
-Message-ID: <CAGRGNgVVnFGt_mHV+ZrZW0HuGuuh++ohkkNMHPBFt73-+X3L8Q@mail.gmail.com> (sfid-20160105_104836_828110_92868E4F)
-Subject: Re: rsi: Delete unnecessary variable initialisations in rsi_send_mgmt_pkt()
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+In-Reply-To: <439966a35f064c7690f2ccbe7296c552@aphydexm01b.ap.qualcomm.com>
+References: <CAFuUQkhHsRZMnNYBbVZU0=BcAKMEktzYgPv6oc=CMFd7MFDi6g@mail.gmail.com>
+	<CAFuUQkjm3RFnrzWWSvbnYFC8gMnbX7C4bP_x0+2bREYumcoJyg@mail.gmail.com>
+	<439966a35f064c7690f2ccbe7296c552@aphydexm01b.ap.qualcomm.com>
+Date: Tue, 19 Jan 2016 13:10:51 -0800
+Message-ID: <CAFuUQkgCvS6+1+3YRhBMLt3i5vvJh1SQ6EG_pe07AD14TssSrg@mail.gmail.com> (sfid-20160119_221058_577439_5F56882C)
+Subject: Re: Regression in 3.9 caused by "bridge: respect RFC2863 operational state"
+From: YanBo <dreamfly281@gmail.com>
+To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+	<mohammed@qti.qualcomm.com>
+Cc: "nbd@openwrt.org" <nbd@openwrt.org>,
+	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	Stephen Hemminger <stephen@networkplumber.org>,
+	Krishna Chaitanya <chaitanya.mgit@gmail.com>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
+	Sebastian Gottschall <s.gottschall@dd-wrt.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
 	netdev <netdev@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
+	"hostap@lists.infradead.org" <hostap@lists.infradead.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Markus,
+There is a fixing in
+http://git.openwrt.org/?p=openwrt.git;a=blob_plain;f=target/linux/generic/patches-4.3/120-bridge_allow_receiption_on_disabled_port.patch
+for your reference.
 
-On Tue, Jan 5, 2016 at 7:29 PM, SF Markus Elfring
-<elfring@users.sourceforge.net> wrote:
->> That said, if you figure out some change that produces significant
->> reductions in code or binary size on multiple architectures without
->> making things more complicated, less readable or making the code or
->> binary size larger, then by all means propose it.
+Yanbo
+
+On Tue, Jan 19, 2016 at 7:45 AM, Shajakhan, Mohammed Shafi (Mohammed
+Shafi) <mohammed@qti.qualcomm.com> wrote:
+> Hi all,
 >
-> Are you looking also for "a proof" that such changes are worthwhile?
-
-It'd be better than "I think doing things this way is better", which
-is the hallmark of most of your patch sets. (Admittedly not this one,
-but this one is where the discussion is now, so that's where we're
-discussing it.)
-
->> "This makes things smaller" carries much more weight than
->> "I think this is better".
+> Any updates on this please.
 >
-> Can the discussed implementation of a function like "rsi_send_mgmt_pkt"
-> become a bit smaller by the deletion of extra variable initialisations
-
-I'm talking in general.
-
-In this case you're asking people to review a patch which requires a
-lot of careful review for a fairly minor improvement. I must also note
-that you haven't CC'd the people who wrote this driver, so it's
-possible that the only people who have reviewed it aren't experts in
-the code.
-
-The patches you sent recently which moved labels into if statements
-were a clear case of "I think this is better" where any actual benefit
-from the changes was eclipsed by the style and readability issues they
-introduced.
-
->> Almost all of the changes you've proposed that have seen any
->> discussion whatsoever fall into the latter category.
+> Thanks,
+> shafi
 >
-> Thanks for your interesting feedback.
-
-No problem.
-
-> Can a further constructive dialogue evolve from the presented information?
-
-Part of the issue here is that you don't seem to be listening to the
-discussion of your patches, or if you are, you're not significantly
-changing your approach or attitude in response.
-
-Every time you send a set of patches, there are legitimate issues
-which people raise, and every time they are discussed, you assert that
-your patches improve things and seem to ignore the concerns people
-raise.
-
-I've seen this same pattern of discussion here with these patches,
-with your patches to move labels into if statements, with the patches
-you sent late June last year, your patches to remove conditions before
-kfree() and friends, etc.
-
-You need to change you attitude: just because you can see some benefit
-from your patches doesn't mean others do and it doesn't mean that
-they're willing to accept them.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+> -----Original Message-----
+> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of YanBo
+> Sent: Friday, December 04, 2015 8:01 AM
+> To: nbd@openwrt.org; Malinen, Jouni; kvalo@codeaurora.org
+> Cc: Stephen Hemminger; Krishna Chaitanya; linux-wireless; Sebastian Gottschall; Johannes Berg; netdev; hostap@lists.infradead.org
+> Subject: Re: Regression in 3.9 caused by "bridge: respect RFC2863 operational state"
+>
+>  Sorry to pick up this thread again,  it looks this issue still existed  in the newer 4.3 kernel. (The EAP frames can not be received by wireless interface due to the bridge interface,
+> http://marc.info/?l=linux-wireless&m=136743495526905&w=2)
+>
+>  Wonder is anyone know some update for this issue?  Currently the only workaround is make the 4-address  AP and STA associated in security mode firstly and then create the bridge, the renew key configuration also need be disable at the hostapd side to  avoid renew the key at bridge status.
+>
+> Thanks
+> Yanbo
+>> On Wed, May 1, 2013 at 5:53 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> >
+>> > On 2013-05-02 12:49 AM, Stephen Hemminger wrote:
+>> > > On Wed, 01 May 2013 23:06:16 +0200 Felix Fietkau <nbd@openwrt.org>
+>> > > wrote:
+>> > >
+>> > >> On 2013-05-01 10:21 PM, Stephen Hemminger wrote:
+>> > >> > What about using AF_PACKET bound to underlying wireless device
+>> > >> > and the packet type. You can even use BPF to filter.
+>> > >> As far as I know, AF_PACKET only works when not binding it to the
+>> > >> packet type (otherwise it get stolen by the rx handler).
+>> > >
+>> > > You can do AF_PACKET and it gets handle before rx_handler.
+>> > If I don't bind it to a protocol, it ends up in ptype_all, if I do,
+>> > it ends up in &ptype_base. ptype_all is processed before the
+>> > rx_handler, ptype_base is processed after the rx handler.
+>> > Hooking into ptype_all wastes tons of CPU cycles, hooking into
+>> > ptype_base does not solve the problem.
+>> >
+>> > - Felix
+>> > --
+>> > To unsubscribe from this list: send the line "unsubscribe
+>> > linux-wireless" in the body of a message to
+>> > majordomo@vger.kernel.org More majordomo info at
+>> > http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
