@@ -1,53 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m12-12.163.com ([220.181.12.12]:55996 "EHLO m12-12.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754303AbcAMOpK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2016 09:45:10 -0500
-From: Jia-Ju Bai <baijiaju1990@163.com>
-To: andrea.merello@gmail.com, Larry.Finger@lwfinger.net,
-	flamingice@sourmilk.net, kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Jia-Ju Bai <baijiaju1990@163.com>
-Subject: [PATCH] rtl818x_pci: Fix a memory leak in rtl8180_init_rx_ring
-Date: Wed, 13 Jan 2016 22:44:32 +0800
-Message-Id: <1452696272-31229-1-git-send-email-baijiaju1990@163.com> (sfid-20160113_154532_067285_D305D695)
+Received: from mail-yk0-f195.google.com ([209.85.160.195]:36063 "EHLO
+	mail-yk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932734AbcASUcx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jan 2016 15:32:53 -0500
+MIME-Version: 1.0
+In-Reply-To: <201601200135.n1cR5fZx%fengguang.wu@intel.com>
+References: <1453218163-31998-9-git-send-email-jprvita@endlessm.com> <201601200135.n1cR5fZx%fengguang.wu@intel.com>
+From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
+Date: Tue, 19 Jan 2016 15:32:13 -0500
+Message-ID: <CA+A7VXWEp9WAFirRpwpkLheSWv9=XJMfSrgF2LgX7evrYj5aOQ@mail.gmail.com> (sfid-20160119_213259_309792_52FB238C)
+Subject: Re: [PATCH 8/8] rfkill: Factor common code
+To: kbuild test robot <lkp@intel.com>
+Cc: kbuild-all@01.org, Johannes Berg <johannes@sipsolutions.net>,
+	Marcel Holtmann <marcel@holtmann.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Network Development <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>,
+	linux@endlessm.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When dev_alloc_skb or pci_dma_mapping_error in rtl8180_init_rx_ring fails,
-the memory allocated by pci_zalloc_consistent is not freed.
+On 19 January 2016 at 12:39, kbuild test robot <lkp@intel.com> wrote:
+> Hi João,
+>
+> [auto build test ERROR on mac80211-next/master]
+> [also build test ERROR on v4.4 next-20160119]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
+>
+> url:    https://github.com/0day-ci/linux/commits/Jo-o-Paulo-Rechi-Vita/General-RFKill-improvements/20160119-234934
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
+> config: i386-randconfig-s0-201603 (attached as .config)
+> reproduce:
+>         # save the attached .config to linux build tree
+>         make ARCH=i386
+>
+> All errors (new ones prefixed by >>):
+>
+>    net/built-in.o: In function `rfkill_sync_work':
+>>> core.c:(.text+0x13d849): undefined reference to `rfkill_get_global_sw_state'
+>
 
-This patch fixes the bug by adding pci_free_consistent
-in error handling code.
+I've overlooked the fact that rfkill_get_global_sw_state() is inside a
+#ifdef block -- I'll fix this in an updated version.
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
----
- drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c |    4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
-index a43a16f..28479b1 100644
---- a/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
-@@ -1018,6 +1018,8 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
- 		dma_addr_t *mapping;
- 		entry = priv->rx_ring + priv->rx_ring_sz*i;
- 		if (!skb) {
-+			pci_free_consistent(priv->pdev, priv->rx_ring_sz * 32,
-+					priv->rx_ring, priv->rx_ring_dma);
- 			wiphy_err(dev->wiphy, "Cannot allocate RX skb\n");
- 			return -ENOMEM;
- 		}
-@@ -1028,6 +1030,8 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
- 
- 		if (pci_dma_mapping_error(priv->pdev, *mapping)) {
- 			kfree_skb(skb);
-+			pci_free_consistent(priv->pdev, priv->rx_ring_sz * 32,
-+					priv->rx_ring, priv->rx_ring_dma);
- 			wiphy_err(dev->wiphy, "Cannot map DMA for RX skb\n");
- 			return -ENOMEM;
- 		}
--- 
-1.7.9.5
-
-
+--
+João Paulo Rechi Vita
+http://about.me/jprvita
