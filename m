@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from ozlabs.org ([103.22.144.67]:37447 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751403AbcA2DQA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 22:16:00 -0500
-Message-ID: <1454037358.30708.1.camel@ellerman.id.au> (sfid-20160129_041627_271566_658BE256)
-Subject: Re: [PATCH 3/3] param: convert some "on"/"off" users to strtobool
-From: Michael Ellerman <mpe@ellerman.id.au>
-To: Kees Cook <keescook@chromium.org>,
-	Andrew Morton <akpm@linux-foundation.org>
-Cc: x86@kernel.org, linuxppc-dev@lists.ozlabs.org,
-	linux-s390@vger.kernel.org, Joe Perches <joe@perches.com>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Steve French <sfrench@samba.org>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-cifs@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Fri, 29 Jan 2016 14:15:58 +1100
-In-Reply-To: <1453990627-19164-4-git-send-email-keescook@chromium.org>
-References: <1453990627-19164-1-git-send-email-keescook@chromium.org>
-	 <1453990627-19164-4-git-send-email-keescook@chromium.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f67.google.com ([209.85.220.67]:36863 "EHLO
+	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932625AbcASK0a (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 19 Jan 2016 05:26:30 -0500
+Received: by mail-pa0-f67.google.com with SMTP id a20so28698419pag.3
+        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2016 02:26:30 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 2/3] staging: wilc1000: remove redundant initialization for counter variable
+Date: Tue, 19 Jan 2016 19:26:16 +0900
+Message-Id: <1453199177-21085-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20160119_112633_548839_182AF997)
+In-Reply-To: <1453199177-21085-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453199177-21085-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-01-28 at 06:17 -0800, Kees Cook wrote:
+There is no need to set counter variable to 0 because it is initialized
+in next for-loop statement. So, just delete it.
 
-> This changes several users of manual "on"/"off" parsing to use strtobool.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-You should probably point out that it's a slight behaviour change for some
-users. ie. parameters that previously *only* worked with "on"/"off", can now
-also take 0/1/y/n etc.
-
-But I don't think that's a show stopper.
-
-
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> Cc: x86@kernel.org
-> Cc: linuxppc-dev@lists.ozlabs.org
-> Cc: linux-s390@vger.kernel.org
-> ---
->  arch/powerpc/kernel/rtasd.c                  | 10 +++-------
->  arch/powerpc/platforms/pseries/hotplug-cpu.c | 11 +++--------
-
-Acked-by: Michael Ellerman <mpe@ellerman.id.au> (powerpc)
-
-
-cheers
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index ee9f91f..86dfe77 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -607,7 +607,6 @@ int wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
+ 				break;
+ 			}
+ 		}
+-		counter = 0;
+ 		for (counter = 0; counter < count; counter++) {
+ 			wids[counter].size = wilc_wlan_cfg_get_val(
+ 					wids[counter].id,
+-- 
+2.6.4
 
