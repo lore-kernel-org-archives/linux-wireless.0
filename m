@@ -1,63 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:64302 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752040AbcAGXFR (ORCPT
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:35672 "EHLO
+	mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756317AbcASPoI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 18:05:17 -0500
-Message-ID: <568EEF26.2060401@broadcom.com> (sfid-20160108_000525_440492_DFDCF869)
-Date: Fri, 8 Jan 2016 00:05:10 +0100
-From: Arend van Spriel <arend@broadcom.com>
+	Tue, 19 Jan 2016 10:44:08 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: johannes@sipsolutions.net
+Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
+	davem@davemloft.net, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jprvita@endlessm.com,
+	linux@endlessm.com
+Subject: [PATCH 5/8] rfkill: Remove obsolete "state" sysfs interface
+Date: Tue, 19 Jan 2016 10:42:40 -0500
+Message-Id: <1453218163-31998-6-git-send-email-jprvita@endlessm.com> (sfid-20160119_164647_511887_3E86A040)
+In-Reply-To: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
+References: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
 MIME-Version: 1.0
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/6] brcmfmac: extend wowl and cleanup
-References: <1451988350-2197-1-git-send-email-arend@broadcom.com>
-In-Reply-To: <1451988350-2197-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/05/2016 11:05 AM, Arend van Spriel wrote:
-> This smallish series contains:
-> * link down fix for IBSS.
-> * support wowl upon net detect.
-> * cleanup timeout definitions.
->
-> The series are intended for 4.5 kernel and apply to
-> the master branch of wireless-drivers-next repo on top
-> of series posted earlier with Message-ID:
->
-> <1451724102-21911-1-git-send-email-arend@broadcom.com>
+This was schedule to be removed in 2014 by:
 
-Hi Kalle,
+ commit 69c86373c6ea1149aa559e6088362d58d8ec8835
+ Author: florian@mickler.org <florian@mickler.org>
+ Date:   Wed Feb 24 12:05:16 2010 +0100
 
-Is this one I send last tuesday going to make it. I did not get any 
-remarks on these patches so.. pretty please ;-)
+     Document the rfkill sysfs ABI
 
-Regards,
-Arend
+     This moves sysfs ABI info from Documentation/rfkill.txt to the
+     ABI subfolder and reformats it.
 
-> Arend van Spriel (3):
->    brcmfmac: change brcmf_sdio_wd_timer() prototype
->    brcmfmac: use msecs_to_jiffies() in macro definitions
->    brcmfmac: use jiffies for timeout in btcoex
->
-> Hante Meuleman (3):
->    brcmfmac: Add wowl net detect support
->    brcmfmac: Reshuffle functions to avoid forward declarations
->    brcmfmac: Do not handle link downs for ibss.
->
->   .../wireless/broadcom/brcm80211/brcmfmac/btcoex.c  |   12 +-
->   .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 1116 +++++++++++---------
->   .../broadcom/brcm80211/brcmfmac/cfg80211.h         |   29 +-
->   .../wireless/broadcom/brcm80211/brcmfmac/core.c    |    4 +-
->   .../broadcom/brcm80211/brcmfmac/fwil_types.h       |    2 +
->   .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  |    4 +-
->   .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c |   18 +-
->   .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |    7 +-
->   .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |   51 +-
->   .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |    6 +-
->   .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |    5 +-
->   11 files changed, 683 insertions(+), 571 deletions(-)
->
+     This also schedules the deprecated sysfs parts to be removed in
+     2012 (claim file) and 2014 (state file).
+
+     Signed-off-by: Florian Mickler <florian@mickler.org>
+     Signed-off-by: John W. Linville <linville@tuxdriver.com>
+
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+---
+ Documentation/ABI/obsolete/sysfs-class-rfkill | 20 ---------------
+ Documentation/ABI/removed/sysfs-class-rfkill  | 17 +++++++++++++
+ net/rfkill/core.c                             | 35 ---------------------------
+ 3 files changed, 17 insertions(+), 55 deletions(-)
+ delete mode 100644 Documentation/ABI/obsolete/sysfs-class-rfkill
+
+diff --git a/Documentation/ABI/obsolete/sysfs-class-rfkill b/Documentation/ABI/obsolete/sysfs-class-rfkill
+deleted file mode 100644
+index e736d14..0000000
+--- a/Documentation/ABI/obsolete/sysfs-class-rfkill
++++ /dev/null
+@@ -1,20 +0,0 @@
+-rfkill - radio frequency (RF) connector kill switch support
+-
+-For details to this subsystem look at Documentation/rfkill.txt.
+-
+-What:		/sys/class/rfkill/rfkill[0-9]+/state
+-Date:		09-Jul-2007
+-KernelVersion	v2.6.22
+-Contact:	linux-wireless@vger.kernel.org
+-Description: 	Current state of the transmitter.
+-		This file is deprecated and scheduled to be removed in 2014,
+-		because its not possible to express the 'soft and hard block'
+-		state of the rfkill driver.
+-Values: 	A numeric value.
+-		0: RFKILL_STATE_SOFT_BLOCKED
+-			transmitter is turned off by software
+-		1: RFKILL_STATE_UNBLOCKED
+-			transmitter is (potentially) active
+-		2: RFKILL_STATE_HARD_BLOCKED
+-			transmitter is forced off by something outside of
+-			the driver's control.
+diff --git a/Documentation/ABI/removed/sysfs-class-rfkill b/Documentation/ABI/removed/sysfs-class-rfkill
+index 3ce6231..1b93139 100644
+--- a/Documentation/ABI/removed/sysfs-class-rfkill
++++ b/Documentation/ABI/removed/sysfs-class-rfkill
+@@ -11,3 +11,20 @@ Description:	This file was deprecated because there no longer was a way to
+ 		This file was scheduled to be removed in 2012, and was removed
+ 		in 2016.
+ Values: 	0: Kernel handles events
++
++What:		/sys/class/rfkill/rfkill[0-9]+/state
++Date:		09-Jul-2007
++KernelVersion	v2.6.22
++Contact:	linux-wireless@vger.kernel.org
++Description: 	Current state of the transmitter.
++		This file was deprecated and scheduled to be removed in 2014,
++		because it was not possible to express the 'soft and hard block'
++		state of the rfkill driver. It was removed in 2016.
++Values: 	A numeric value.
++		0: RFKILL_STATE_SOFT_BLOCKED
++			transmitter is turned off by software
++		1: RFKILL_STATE_UNBLOCKED
++			transmitter is (potentially) active
++		2: RFKILL_STATE_HARD_BLOCKED
++			transmitter is forced off by something outside of
++			the driver's control.
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index a05d1f1..26da4f0 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -683,46 +683,11 @@ static u8 user_state_from_blocked(unsigned long state)
+ 	return RFKILL_USER_STATE_UNBLOCKED;
+ }
+ 
+-static ssize_t state_show(struct device *dev, struct device_attribute *attr,
+-			  char *buf)
+-{
+-	struct rfkill *rfkill = to_rfkill(dev);
+-
+-	return sprintf(buf, "%d\n", user_state_from_blocked(rfkill->state));
+-}
+-
+-static ssize_t state_store(struct device *dev, struct device_attribute *attr,
+-			   const char *buf, size_t count)
+-{
+-	struct rfkill *rfkill = to_rfkill(dev);
+-	unsigned long state;
+-	int err;
+-
+-	if (!capable(CAP_NET_ADMIN))
+-		return -EPERM;
+-
+-	err = kstrtoul(buf, 0, &state);
+-	if (err)
+-		return err;
+-
+-	if (state != RFKILL_USER_STATE_SOFT_BLOCKED &&
+-	    state != RFKILL_USER_STATE_UNBLOCKED)
+-		return -EINVAL;
+-
+-	mutex_lock(&rfkill_global_mutex);
+-	rfkill_set_block(rfkill, state == RFKILL_USER_STATE_SOFT_BLOCKED);
+-	mutex_unlock(&rfkill_global_mutex);
+-
+-	return count;
+-}
+-static DEVICE_ATTR_RW(state);
+-
+ static struct attribute *rfkill_dev_attrs[] = {
+ 	&dev_attr_name.attr,
+ 	&dev_attr_type.attr,
+ 	&dev_attr_index.attr,
+ 	&dev_attr_persistent.attr,
+-	&dev_attr_state.attr,
+ 	&dev_attr_soft.attr,
+ 	&dev_attr_hard.attr,
+ 	NULL,
+-- 
+2.5.0
 
