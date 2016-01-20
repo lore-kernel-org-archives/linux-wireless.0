@@ -1,111 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f177.google.com ([209.85.220.177]:35588 "EHLO
-	mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751896AbcAGQUH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 11:20:07 -0500
-MIME-Version: 1.0
-In-Reply-To: <1452076319.2541.3.camel@sipsolutions.net>
-References: <1451142303-1872-1-git-send-email-jprvita@endlessm.com>
- <1451142303-1872-2-git-send-email-jprvita@endlessm.com> <6DC3AA8C-DDE9-44B8-91C5-94B1EB0DBE9A@holtmann.org>
- <1452076319.2541.3.camel@sipsolutions.net>
-From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Date: Thu, 7 Jan 2016 11:19:25 -0500
-Message-ID: <CA+A7VXW3Fsf2O_xnnZAWxieMMhSP2ngTbhtuJEB1JpMc6EFPxQ@mail.gmail.com> (sfid-20160107_172053_126151_C8FF823E)
-Subject: Re: [PATCH] net/rfkill: Create "airplane mode" LED trigger
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Marcel Holtmann <marcel@holtmann.org>,
-	Network Development <netdev@vger.kernel.org>,
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Darren Hart <dvhart@infradead.org>,
-	platform-driver-x86@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from glaubenleben.de ([85.214.105.140]:44438 "EHLO glaubenleben.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757924AbcATHg6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jan 2016 02:36:58 -0500
+From: Andreas Kemnade <andreas@kemnade.info>
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, hns@goldelico.com
+Cc: Andreas Kemnade <andreas@kemnade.info>
+Subject: [PATCH v2 2/6] wireless:libertas: check whether bus can do more than polling
+Date: Wed, 20 Jan 2016 08:35:35 +0100
+Message-Id: <1453275339-25122-3-git-send-email-andreas@kemnade.info> (sfid-20160120_083705_617277_03317A27)
+In-Reply-To: <1453275339-25122-1-git-send-email-andreas@kemnade.info>
+References: <1453275339-25122-1-git-send-email-andreas@kemnade.info>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ Darren Hart and platform-drivers-x86 (sorry, I was trying to avoid
-too much cross-posting and ended up leaving interested parties out).
+If a sdio host does not support sdio irqs, polling is used
+instead. That has an impact on performance. Some functionality
+should not be enabled then. This add a variable in
+libertas_priv to indicate that.
 
-On 6 Jan 2016 05:32, "Johannes Berg" <johannes@sipsolutions.net> wrote:
->
-> On Tue, 2016-01-05 at 22:55 -0800, Marcel Holtmann wrote:
-> >
-> > so I am not convinced the kernel should have the concept of airplane
-> > mode at all.
->
-> [snip long story]
->
-> This is true, but that doesn't mean the patch is bad, just the naming
-> could be different.
->
-> I think the patch could name this "rfkill-all" (or so) instead, and
-> replace all the "airplane_mode" identifiers as well.
->
+Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
+---
+ drivers/net/wireless/libertas/dev.h     | 1 +
+ drivers/net/wireless/libertas/if_sdio.c | 2 +-
+ drivers/net/wireless/libertas/if_usb.c  | 1 +
+ 3 files changed, 3 insertions(+), 1 deletion(-)
 
-I agree "airplane mode" is not the best name here and I can change in
-an updated version.
+diff --git a/drivers/net/wireless/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index 6bd1608..edf710b 100644
+--- a/drivers/net/wireless/libertas/dev.h
++++ b/drivers/net/wireless/libertas/dev.h
+@@ -99,6 +99,7 @@ struct lbs_private {
+ 	/* Hardware access */
+ 	void *card;
+ 	bool iface_running;
++	u8 is_polling; /* host has to poll the card irq */
+ 	u8 fw_ready;
+ 	u8 surpriseremoved;
+ 	u8 setup_fw_on_resume;
+diff --git a/drivers/net/wireless/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index f1f31a2..13db8b5 100644
+--- a/drivers/net/wireless/libertas/if_sdio.c
++++ b/drivers/net/wireless/libertas/if_sdio.c
+@@ -1271,7 +1271,7 @@ static int if_sdio_probe(struct sdio_func *func,
+ 	priv->reset_card = if_sdio_reset_card;
+ 	priv->power_save = if_sdio_power_save;
+ 	priv->power_restore = if_sdio_power_restore;
+-
++	priv->is_polling = !(func->card->host->caps & MMC_CAP_SDIO_IRQ);
+ 	ret = if_sdio_power_on(card);
+ 	if (ret)
+ 		goto err_activate_card;
+diff --git a/drivers/net/wireless/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index dff08a2..aba0c99 100644
+--- a/drivers/net/wireless/libertas/if_usb.c
++++ b/drivers/net/wireless/libertas/if_usb.c
+@@ -267,6 +267,7 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	priv->enter_deep_sleep = NULL;
+ 	priv->exit_deep_sleep = NULL;
+ 	priv->reset_deep_sleep_wakeup = NULL;
++	priv->is_polling = false;
+ #ifdef CONFIG_OLPC
+ 	if (machine_is_olpc())
+ 		priv->reset_card = if_usb_reset_olpc_card;
+-- 
+2.1.4
 
-> Then the driver can still default to "rfkill-all" trigger, or a
-> suitably interested userspace could remove the trigger and manage the
-> LED state itself.
->
-
-Trying to answer both Marcel's and your comments, I think we should
-rather have a trigger which fires when the global state of
-RFKILL_TYPE_ALL changes, instead of tied to the op
-RFKILL_OP_CHANGE_ALL. Then we should also update the global states on
-every set block operation instead of only on RFKILL_OP_CHANGE_ALL.
-This part does not look like policy to me (please correct me if I'm
-wrong).
-
-The platform driver can default this trigger and have the LED reflect
-the global state of RFKILL_TYPE_ALL. This indeed looks like policy,
-but mostly because the physical LED label is an airplane icon, what
-the LED will be representing is "all radios are off". If that is not
-acceptable in the kernel, I can expose the LED to userspace instead
-and different userspaces can decide when to trigger it (in which case
-we don't need this patch at all). But considering this is a laptop
-platform driver, the only way I can see this being used is having the
-LED lit when all the radios are off, and unlit otherwise (maybe I'm
-being a bit short-visioned).
-
-In any case, I think we should update the global states on every set
-block operation, to have them consistent with the individual states. I
-can provide a patch for that.
-
-> Then again - if I think about that more - perhaps the kernel *should*
-> have a concept of airplane mode, just one that's not necessarily tied
-> to the "rfkill_all" setting, but could be controlled by userspace. That
-> way, userspace wouldn't have to know about the LED, just about the
-> airplane mode indicator (for which rfkill would probably be an
-> appropriate place)
->
-
-If I'm following this correctly, your suggestion is to have an
-"airplane mode indicator" switch in the RFKill subsystem, which would
-be driven by userspace and will be tied to a trigger that could be
-used by platform drivers to drive physical airplane mode LEDs and
-similar. That's an interesting idea and probably better than expecting
-userspaces to know about platform details like LED presence. If this
-is feasible looks like a nice generic solution for this problem.
-
-Please let me know what you guys think is the best solution so I can work on it.
-
-> Two comments on the patch itself:
->
-> > +#ifdef CONFIG_RFKILL_LEDS
-> > +       led_trigger_register(&amp;airplane_mode_led_trigger);
-> > +#endif
->
-> Everything else uses inlines to avoid ifdefs, you can do the same here.
-> Also, error handling seems necessary.
->
-
-Ok, I can fix this if there is an updated version of this patch.
-
---
-João Paulo Rechi Vita
-http://about.me/jprvita
