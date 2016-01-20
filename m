@@ -1,49 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:52757 "EHLO mga14.intel.com"
+Received: from glaubenleben.de ([85.214.105.140]:44446 "EHLO glaubenleben.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751305AbcAHIId convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2016 03:08:33 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"stable@vger.kernel.org" <stable@vger.kernel.org>
-Subject: Re: [PATCH 01/21] iwlwifi: dvm: fix WoWLAN
-Date: Fri, 8 Jan 2016 08:08:30 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E984EE3@hasmsx107.ger.corp.intel.com> (sfid-20160108_090837_892223_ADBA9DB8)
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
- <1452170861-10060-1-git-send-email-emmanuel.grumbach@intel.com>
- <87k2nljdl4.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S1758130AbcATHg6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jan 2016 02:36:58 -0500
+From: Andreas Kemnade <andreas@kemnade.info>
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, hns@goldelico.com
+Cc: Andreas Kemnade <andreas@kemnade.info>
+Subject: [PATCH v2 1/6] wireless:libertas: fix pointer bugs for PS_MODE commands
+Date: Wed, 20 Jan 2016 08:35:34 +0100
+Message-Id: <1453275339-25122-2-git-send-email-andreas@kemnade.info> (sfid-20160120_083748_849997_643A9ADB)
+In-Reply-To: <1453275339-25122-1-git-send-email-andreas@kemnade.info>
+References: <1453275339-25122-1-git-send-email-andreas@kemnade.info>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+struct cmd_ds_802_11_ps_mode
+contains the command header and a pointer to it was
+initialized with data points to the body which leads to
+mis-interpretation of the cmd_ds_802_11_ps_mode.action member.
+cmd[0] contains the header, &cmd[1] points beyond that.
+cmdnode->cmdbuf is a pointer to the command buffer
+This piece of code was unused since power saving was
+not enabled.
 
+Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
+---
+changes in v2:
+improved commit message
 
-On 01/07/2016 11:15 PM, Kalle Valo wrote:
-> Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
->
->> My commit below introduced a mutex in the transport to
->> prevent concurrent operations. To do so, it added a flag
->> (is_down) to make sure the transport is in the right state.
->> This uncoverred an bug that didn't cause any harm until
->> now: iwldvm calls stop_device and then starts the firmware
->> without calling start_hw in between. While this flow is
->> fine from the device configuration point of view (register,
->> etc...), it is now forbidden by the new is_down flag.
->> This led to this error to appear:
->> iwlwifi 0000:05:00.0: Can't start_fw since the HW hasn't been started
->> and the suspend would fail.
->>
->> This fixes:
->> https://bugzilla.kernel.org/show_bug.cgi?id=109591
->>
->> CC: <stable@vger.kernel.org> [4.3+]
->> Reported-by: Bogdan Bogush <bogdan.s.bogush@gmail.com>
->> Fixes=fa9f3281cbb1 ("iwlwifi: pcie: lock start_hw / start_fw / stop_device")
-> No need to change this anymore, but this should be:
->
-> Fixes: fa9f3281cbb1 ("iwlwifi: pcie: lock start_hw / start_fw / stop_device")
->
-Added to my "do_no_screw_up_before_upstreaming.sh" script.
+ drivers/net/wireless/libertas/cmd.c     | 4 ++--
+ drivers/net/wireless/libertas/cmdresp.c | 5 ++++-
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 0387a5b..40467d6 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -957,7 +957,7 @@ static void lbs_queue_cmd(struct lbs_private *priv,
+ 
+ 	/* Exit_PS command needs to be queued in the header always. */
+ 	if (le16_to_cpu(cmdnode->cmdbuf->command) == CMD_802_11_PS_MODE) {
+-		struct cmd_ds_802_11_ps_mode *psm = (void *) &cmdnode->cmdbuf;
++		struct cmd_ds_802_11_ps_mode *psm = (void *)cmdnode->cmdbuf;
+ 
+ 		if (psm->action == cpu_to_le16(PS_MODE_ACTION_EXIT_PS)) {
+ 			if (priv->psstate != PS_STATE_FULL_POWER)
+@@ -1387,7 +1387,7 @@ int lbs_execute_next_command(struct lbs_private *priv)
+ 				 * PS command. Ignore it if it is not Exit_PS.
+ 				 * otherwise send it down immediately.
+ 				 */
+-				struct cmd_ds_802_11_ps_mode *psm = (void *)&cmd[1];
++				struct cmd_ds_802_11_ps_mode *psm = (void *)cmd;
+ 
+ 				lbs_deb_host(
+ 				       "EXEC_NEXT_CMD: PS cmd, action 0x%02x\n",
+diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
+index e5442e8..701125f 100644
+--- a/drivers/net/wireless/libertas/cmdresp.c
++++ b/drivers/net/wireless/libertas/cmdresp.c
+@@ -123,7 +123,10 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
+ 	priv->cmd_timed_out = 0;
+ 
+ 	if (respcmd == CMD_RET(CMD_802_11_PS_MODE)) {
+-		struct cmd_ds_802_11_ps_mode *psmode = (void *) &resp[1];
++		/* struct cmd_ds_802_11_ps_mode also contains
++		 * the header
++		 */
++		struct cmd_ds_802_11_ps_mode *psmode = (void *)resp;
+ 		u16 action = le16_to_cpu(psmode->action);
+ 
+ 		lbs_deb_host(
+-- 
+2.1.4
+
