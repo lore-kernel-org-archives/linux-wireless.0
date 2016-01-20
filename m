@@ -1,55 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:24637 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751572AbcAEKF5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 05:05:57 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 0/6] brcmfmac: extend wowl and cleanup
-Date: Tue, 5 Jan 2016 11:05:44 +0100
-Message-ID: <1451988350-2197-1-git-send-email-arend@broadcom.com> (sfid-20160105_110601_607102_B0D0562C)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:52061 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932890AbcATOCZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jan 2016 09:02:25 -0500
+Message-ID: <1453298541.13263.10.camel@sipsolutions.net> (sfid-20160120_150228_482905_66867511)
+Subject: Re: [RFC V2 2/3] nl80211: add bss selection attribute to CONNECT
+ command
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Ilan Peer <ilan.peer@intel.com>
+Date: Wed, 20 Jan 2016 15:02:21 +0100
+In-Reply-To: <569EB9A6.4030808@broadcom.com>
+References: <1452678583-20086-1-git-send-email-arend@broadcom.com>
+	 <1452678583-20086-3-git-send-email-arend@broadcom.com>
+	 <1452769832.2444.14.camel@sipsolutions.net> <569CB190.1000901@broadcom.com>
+	 <1453209647.3896.22.camel@sipsolutions.net> <569EB9A6.4030808@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This smallish series contains:
-* link down fix for IBSS.
-* support wowl upon net detect.
-* cleanup timeout definitions.
+Ilan pointed me to this:
 
-The series are intended for 4.5 kernel and apply to
-the master branch of wireless-drivers-next repo on top
-of series posted earlier with Message-ID:
+http://androidxref.com/6.0.1_r10/xref/hardware/libhardware_legacy/include/hardware_legacy/gscan.h#351
 
-<1451724102-21911-1-git-send-email-arend@broadcom.com>
 
-Arend van Spriel (3):
-  brcmfmac: change brcmf_sdio_wd_timer() prototype
-  brcmfmac: use msecs_to_jiffies() in macro definitions
-  brcmfmac: use jiffies for timeout in btcoex
+I'd say that would just be a separate primitive, and then Android would
+pick that in some way?
 
-Hante Meuleman (3):
-  brcmfmac: Add wowl net detect support
-  brcmfmac: Reshuffle functions to avoid forward declarations
-  brcmfmac: Do not handle link downs for ibss.
-
- .../wireless/broadcom/brcm80211/brcmfmac/btcoex.c  |   12 +-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 1116 +++++++++++---------
- .../broadcom/brcm80211/brcmfmac/cfg80211.h         |   29 +-
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    |    4 +-
- .../broadcom/brcm80211/brcmfmac/fwil_types.h       |    2 +
- .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  |    4 +-
- .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c |   18 +-
- .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |    7 +-
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |   51 +-
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |    6 +-
- .../net/wireless/broadcom/brcm80211/brcmfmac/usb.c |    5 +-
- 11 files changed, 683 insertions(+), 571 deletions(-)
-
--- 
-1.9.1
-
+johannes
