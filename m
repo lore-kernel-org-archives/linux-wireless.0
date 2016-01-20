@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38731 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754570AbcAWUVA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jan 2016 15:21:00 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Carlo Caione <carlo@caione.org>
-Cc: Ulf Hansson <ulf.hansson@linaro.org>, arend@broadcom.com,
-	meuleman@broadcom.com, linux-wireless@vger.kernel.org
-Subject: Re: [BISECTED] brcmfmac issue
-References: <CAOQ7t2Z2E3vn+t9gDZKfs9Ke1aPEGObgSi2RZDzD7kPVR2LJzg@mail.gmail.com>
-Date: Sat, 23 Jan 2016 22:20:53 +0200
-In-Reply-To: <CAOQ7t2Z2E3vn+t9gDZKfs9Ke1aPEGObgSi2RZDzD7kPVR2LJzg@mail.gmail.com>
-	(Carlo Caione's message of "Sat, 23 Jan 2016 19:09:33 +0100")
-Message-ID: <87d1sst5cq.fsf@kamboji.qca.qualcomm.com> (sfid-20160123_212104_232659_0B1DA15C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from glaubenleben.de ([85.214.105.140]:44409 "EHLO glaubenleben.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758062AbcATHgZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jan 2016 02:36:25 -0500
+From: Andreas Kemnade <andreas@kemnade.info>
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, hns@goldelico.com
+Subject: [PATCH 0/6] wireless:libertas: ieee80211 powersave mode
+Date: Wed, 20 Jan 2016 08:35:33 +0100
+Message-Id: <1453275339-25122-1-git-send-email-andreas@kemnade.info> (sfid-20160120_083644_174304_F2486E88)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Carlo Caione <carlo@caione.org> writes:
+This series makes IEEE 80211 powersave mode work again so
+that power usage is dramatically reduced when the device is connected.
+It does not include other power saving methods which are working
+when the device is not connected (like enabling
+deep sleep modus)
 
-> I submitted [1] e10c3219 "mmc: core: Enable tuning according to the
-> actual timing"  to solve a problem with the BCM43340 SDIO WiFi card.
-> This patch works perfectly fine on top of v4.4 tag, solving the
-> problem with the WiFi card. With the latest master the asus x205ta
-> laptop fails to boot. The failure seems related to a weird interaction
-> between this patch and 7d34b05 "brcmfmac: Move all module parameters
-> to one place" (bad commit).
->
-> The bad commit was found bisecting between master and v4.4 and
-> applying my patch when not already present.
->
-> Here the log: https://gist.github.com/9db683a467496c942659
->
-> Any idea?
+Tested on GTA04 which includes a
+W2CBW003 chip (Marvel 8686) with sdio interface
 
-Does this patch fix it?
+Changes in v2:
+improved some commit messages, order changed,
+former 6/6 was too late it needs to be before
+implementing the cfg80211  power saving interface
+to have it git-bisectable. 
+moving the former 3/6 to the end fixes
+all bisect problems
 
-https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=e0045bf80f62779ba75ba04513020d60e59f5298
-
--- 
-Kalle Valo
+[PATCH v2 1/6] wireless:libertas: fix pointer bugs for PS_MODE
+[PATCH v2 2/6] wireless:libertas: check whether bus can do more than
+[PATCH v2 3/6] wireless:libertas: do not confirm sleep if commands
+[PATCH v2 4/6] wireless:libertas: go back to ps mode without commands
+[PATCH v2 5/6] wireless:libertas: fix ps-mode related removal
+[PATCH v2 6/6] wireless:libertas: add an cfg80211 interface for
