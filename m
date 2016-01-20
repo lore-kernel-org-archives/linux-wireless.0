@@ -1,74 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:32632 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754627AbcASPuL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 10:50:11 -0500
-From: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>
-To: YanBo <dreamfly281@gmail.com>, "nbd@openwrt.org" <nbd@openwrt.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: Stephen Hemminger <stephen@networkplumber.org>,
-	Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	netdev <netdev@vger.kernel.org>,
-	"hostap@lists.infradead.org" <hostap@lists.infradead.org>
-Subject: RE: Regression in 3.9 caused by "bridge: respect RFC2863 operational
- state"
-Date: Tue, 19 Jan 2016 15:45:03 +0000
-Message-ID: <439966a35f064c7690f2ccbe7296c552@aphydexm01b.ap.qualcomm.com> (sfid-20160119_165021_940580_523D5443)
-References: <CAFuUQkhHsRZMnNYBbVZU0=BcAKMEktzYgPv6oc=CMFd7MFDi6g@mail.gmail.com>
- <CAFuUQkjm3RFnrzWWSvbnYFC8gMnbX7C4bP_x0+2bREYumcoJyg@mail.gmail.com>
-In-Reply-To: <CAFuUQkjm3RFnrzWWSvbnYFC8gMnbX7C4bP_x0+2bREYumcoJyg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:49600 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934249AbcATJaP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jan 2016 04:30:15 -0500
+Message-ID: <1453282207.13263.5.camel@sipsolutions.net> (sfid-20160120_103030_091173_B4F5A9C1)
+Subject: Re: [RFC V2 2/3] nl80211: add bss selection attribute to CONNECT
+ command
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 20 Jan 2016 10:30:07 +0100
+In-Reply-To: <569EB9A6.4030808@broadcom.com>
+References: <1452678583-20086-1-git-send-email-arend@broadcom.com>
+	 <1452678583-20086-3-git-send-email-arend@broadcom.com>
+	 <1452769832.2444.14.camel@sipsolutions.net> <569CB190.1000901@broadcom.com>
+	 <1453209647.3896.22.camel@sipsolutions.net> <569EB9A6.4030808@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgYWxsLA0KDQpBbnkgdXBkYXRlcyBvbiB0aGlzIHBsZWFzZS4gDQoNClRoYW5rcywNCnNoYWZp
-DQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBsaW51eC13aXJlbGVzcy1vd25l
-ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC13aXJlbGVzcy1vd25lckB2Z2VyLmtlcm5l
-bC5vcmddIE9uIEJlaGFsZiBPZiBZYW5Cbw0KU2VudDogRnJpZGF5LCBEZWNlbWJlciAwNCwgMjAx
-NSA4OjAxIEFNDQpUbzogbmJkQG9wZW53cnQub3JnOyBNYWxpbmVuLCBKb3VuaTsga3ZhbG9AY29k
-ZWF1cm9yYS5vcmcNCkNjOiBTdGVwaGVuIEhlbW1pbmdlcjsgS3Jpc2huYSBDaGFpdGFueWE7IGxp
-bnV4LXdpcmVsZXNzOyBTZWJhc3RpYW4gR290dHNjaGFsbDsgSm9oYW5uZXMgQmVyZzsgbmV0ZGV2
-OyBob3N0YXBAbGlzdHMuaW5mcmFkZWFkLm9yZw0KU3ViamVjdDogUmU6IFJlZ3Jlc3Npb24gaW4g
-My45IGNhdXNlZCBieSAiYnJpZGdlOiByZXNwZWN0IFJGQzI4NjMgb3BlcmF0aW9uYWwgc3RhdGUi
-DQoNCiBTb3JyeSB0byBwaWNrIHVwIHRoaXMgdGhyZWFkIGFnYWluLCAgaXQgbG9va3MgdGhpcyBp
-c3N1ZSBzdGlsbCBleGlzdGVkICBpbiB0aGUgbmV3ZXIgNC4zIGtlcm5lbC4gKFRoZSBFQVAgZnJh
-bWVzIGNhbiBub3QgYmUgcmVjZWl2ZWQgYnkgd2lyZWxlc3MgaW50ZXJmYWNlIGR1ZSB0byB0aGUg
-YnJpZGdlIGludGVyZmFjZSwNCmh0dHA6Ly9tYXJjLmluZm8vP2w9bGludXgtd2lyZWxlc3MmbT0x
-MzY3NDM0OTU1MjY5MDUmdz0yKQ0KDQogV29uZGVyIGlzIGFueW9uZSBrbm93IHNvbWUgdXBkYXRl
-IGZvciB0aGlzIGlzc3VlPyAgQ3VycmVudGx5IHRoZSBvbmx5IHdvcmthcm91bmQgaXMgbWFrZSB0
-aGUgNC1hZGRyZXNzICBBUCBhbmQgU1RBIGFzc29jaWF0ZWQgaW4gc2VjdXJpdHkgbW9kZSBmaXJz
-dGx5IGFuZCB0aGVuIGNyZWF0ZSB0aGUgYnJpZGdlLCB0aGUgcmVuZXcga2V5IGNvbmZpZ3VyYXRp
-b24gYWxzbyBuZWVkIGJlIGRpc2FibGUgYXQgdGhlIGhvc3RhcGQgc2lkZSB0byAgYXZvaWQgcmVu
-ZXcgdGhlIGtleSBhdCBicmlkZ2Ugc3RhdHVzLg0KDQpUaGFua3MNCllhbmJvDQo+IE9uIFdlZCwg
-TWF5IDEsIDIwMTMgYXQgNTo1MyBQTSwgRmVsaXggRmlldGthdSA8bmJkQG9wZW53cnQub3JnPiB3
-cm90ZToNCj4gPg0KPiA+IE9uIDIwMTMtMDUtMDIgMTI6NDkgQU0sIFN0ZXBoZW4gSGVtbWluZ2Vy
-IHdyb3RlOg0KPiA+ID4gT24gV2VkLCAwMSBNYXkgMjAxMyAyMzowNjoxNiArMDIwMCBGZWxpeCBG
-aWV0a2F1IDxuYmRAb3BlbndydC5vcmc+IA0KPiA+ID4gd3JvdGU6DQo+ID4gPg0KPiA+ID4+IE9u
-IDIwMTMtMDUtMDEgMTA6MjEgUE0sIFN0ZXBoZW4gSGVtbWluZ2VyIHdyb3RlOg0KPiA+ID4+ID4g
-V2hhdCBhYm91dCB1c2luZyBBRl9QQUNLRVQgYm91bmQgdG8gdW5kZXJseWluZyB3aXJlbGVzcyBk
-ZXZpY2UgDQo+ID4gPj4gPiBhbmQgdGhlIHBhY2tldCB0eXBlLiBZb3UgY2FuIGV2ZW4gdXNlIEJQ
-RiB0byBmaWx0ZXIuDQo+ID4gPj4gQXMgZmFyIGFzIEkga25vdywgQUZfUEFDS0VUIG9ubHkgd29y
-a3Mgd2hlbiBub3QgYmluZGluZyBpdCB0byB0aGUgDQo+ID4gPj4gcGFja2V0IHR5cGUgKG90aGVy
-d2lzZSBpdCBnZXQgc3RvbGVuIGJ5IHRoZSByeCBoYW5kbGVyKS4NCj4gPiA+DQo+ID4gPiBZb3Ug
-Y2FuIGRvIEFGX1BBQ0tFVCBhbmQgaXQgZ2V0cyBoYW5kbGUgYmVmb3JlIHJ4X2hhbmRsZXIuDQo+
-ID4gSWYgSSBkb24ndCBiaW5kIGl0IHRvIGEgcHJvdG9jb2wsIGl0IGVuZHMgdXAgaW4gcHR5cGVf
-YWxsLCBpZiBJIGRvLCANCj4gPiBpdCBlbmRzIHVwIGluICZwdHlwZV9iYXNlLiBwdHlwZV9hbGwg
-aXMgcHJvY2Vzc2VkIGJlZm9yZSB0aGUgDQo+ID4gcnhfaGFuZGxlciwgcHR5cGVfYmFzZSBpcyBw
-cm9jZXNzZWQgYWZ0ZXIgdGhlIHJ4IGhhbmRsZXIuDQo+ID4gSG9va2luZyBpbnRvIHB0eXBlX2Fs
-bCB3YXN0ZXMgdG9ucyBvZiBDUFUgY3ljbGVzLCBob29raW5nIGludG8gDQo+ID4gcHR5cGVfYmFz
-ZSBkb2VzIG5vdCBzb2x2ZSB0aGUgcHJvYmxlbS4NCj4gPg0KPiA+IC0gRmVsaXgNCj4gPiAtLQ0K
-PiA+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5lICJ1bnN1YnNj
-cmliZSANCj4gPiBsaW51eC13aXJlbGVzcyIgaW4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIA0K
-PiA+IG1ham9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcgTW9yZSBtYWpvcmRvbW8gaW5mbyBhdCAgDQo+
-ID4gaHR0cDovL3ZnZXIua2VybmVsLm9yZy9tYWpvcmRvbW8taW5mby5odG1sDQotLQ0KVG8gdW5z
-dWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4
-LXdpcmVsZXNzIiBpbiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2Vy
-bmVsLm9yZyBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3JnL21h
-am9yZG9tby1pbmZvLmh0bWwNCg==
+On Tue, 2016-01-19 at 23:33 +0100, Arend van Spriel wrote:
+
+> I looked at our firmware and it has a kinda pipeline, but it uses a
+> weighted score. So for "band_pref, rssi" the band_pref score would
+> have more weight than the rssi score and bss-es are sorted based on
+> the score. So not really throwing things away.
+
+Yeah, ok - similar result. It makes sense to keep the next ones too, in
+case all the ones on the band you preferred weren't usable or something
+(due to later conditions, like garbled beacons or whatever.)
+
+> > But then I understand the whole point of the "primitive" even less,
+> > since it should be trivial to check that of multiple attributes
+> > only a single one is specified?
+> 
+> Not really a single one as rssi_adjust needs two attributes, ie. band
+> and rssi_delta. Still you are right and we can probably drop the
+> primitive.
+
+Fair enough, not really a single attribute, but a single "behaviour"
+attribute; the other (band) attribute would just provide data for the
+behavioural one.
+
+I think then I really would prefer one of these options:
+ * pack two u32 value into a tiny struct in the single "rssi_adjust"
+   behavioural attribute, so that it really becomes a single one
+ * make the rssi_adjust behavioural attribute nested with band and 
+   adjustment inside
+ * use a rssi_adjust_band attribute, rather than reusing the band_pref 
+   one
+
+I think the first option is perfectly reasonable (and we do this in
+other places) and makes for the easiest semantics since we can then
+just say "specify exactly one of these attributes"?
+
+johannes
