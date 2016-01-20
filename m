@@ -1,58 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38945 "EHLO sipsolutions.net"
+Received: from glaubenleben.de ([85.214.105.140]:44445 "EHLO glaubenleben.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965117AbcAZLQv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 06:16:51 -0500
-Message-ID: <1453807009.2759.23.camel@sipsolutions.net> (sfid-20160126_121654_532371_2B7BE4B3)
-Subject: Re: [PATCH-v2 1/2] mac80211: Take bitrates into account when
- building IEs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com, linux-wireless@vger.kernel.org
-Date: Tue, 26 Jan 2016 12:16:49 +0100
-In-Reply-To: <1445361858-24976-1-git-send-email-greearb@candelatech.com>
-References: <1445361858-24976-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1758123AbcATHg6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jan 2016 02:36:58 -0500
+From: Andreas Kemnade <andreas@kemnade.info>
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, hns@goldelico.com
+Cc: Andreas Kemnade <andreas@kemnade.info>
+Subject: [PATCH v2 5/6] wireless:libertas: fix ps-mode related removal problems
+Date: Wed, 20 Jan 2016 08:35:38 +0100
+Message-Id: <1453275339-25122-6-git-send-email-andreas@kemnade.info> (sfid-20160120_083831_030872_0A350CEB)
+In-Reply-To: <1453275339-25122-1-git-send-email-andreas@kemnade.info>
+References: <1453275339-25122-1-git-send-email-andreas@kemnade.info>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2015-10-20 at 10:24 -0700, greearb@candelatech.com wrote:
+When the device is remove e.g. because of going to suspend
+ mode with powersaving enabled, lbs_remove_card tries to exit
+powersaving state even when already woken up. That command is
+not processed properly in that situation, since the command
+processing queue is already stopped, so it waits forever
+for the command being processed, so disable it.
 
-> --- a/include/uapi/linux/nl80211.h
-> +++ b/include/uapi/linux/nl80211.h
-> @@ -2130,6 +2130,8 @@ enum nl80211_attrs {
->  
->  	NL80211_ATTR_REG_INDOOR,
->  
-> +	NL80211_ATTR_TX_ADVERT_RATEMASK,
+Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
+---
+changes in v2: improved commit message, reordered: was 6/6
+ drivers/net/wireless/libertas/main.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-First of all, this is missing documentation. It's a FLAG as far as I
-can tell, but if it's set should it affect only the advertised or both?
+diff --git a/drivers/net/wireless/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 8079560..b35b8bc 100644
+--- a/drivers/net/wireless/libertas/main.c
++++ b/drivers/net/wireless/libertas/main.c
+@@ -1060,7 +1060,12 @@ void lbs_remove_card(struct lbs_private *priv)
+ 
+ 	if (priv->psmode == LBS802_11POWERMODEMAX_PSP) {
+ 		priv->psmode = LBS802_11POWERMODECAM;
+-		lbs_set_ps_mode(priv, PS_MODE_ACTION_EXIT_PS, true);
++		/* no need to wakeup if already woken up,
++		 * on suspend, this exit ps command is not processed
++		 * the driver hangs
++		 */
++		if (priv->psstate != PS_STATE_FULL_POWER)
++			lbs_set_ps_mode(priv, PS_MODE_ACTION_EXIT_PS, true);
+ 	}
+ 
+ 	if (priv->is_deep_sleep) {
+-- 
+2.1.4
 
-I also think you added this because I had commented that we might not
-want to do it unconditionally, but is there really a good reason not to
-do it unconditionally? I was probably more thinking out loud what would
-happen with P2P, but there we already say "no cck" for scanning so it
-shouldn't really have any effect.
-
-But given that we have NL80211_ATTR_SCAN_SUPP_RATES, where does your
-patch even have an effect, other than this not handling HT/VHT?
-
-I'm a bit wary that we're introducing two ways of achieving a very
-similar thing.
-
-Also, adding these overrides all over the code seems very complex.
-Perhaps we can achieve the goal of being able to pretend to have
-limited hardware capabilities by actually restricting hardware
-capabilities instead? That would also avoid having to play whack-a-mole 
-with code paths using the device capabilities.
-
-I'd imagine an API along the lines of doing some kind of higher-layer
-re-register of the wiphy in mac80211 with limited capabilites. At that
-point you'd allocate a copy of the original capabilities (as far as the
-new restricted ones overwrite the data), and remove the device from the
-system as far as higher layers like cfg80211 are concerned.
-
-Would something like that work for you?
-
-johannes
