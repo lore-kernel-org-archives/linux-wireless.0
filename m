@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f179.google.com ([209.85.192.179]:34743 "EHLO
-	mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725AbcA2JtN (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:35860 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751039AbcATNGl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2016 04:49:13 -0500
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org,
-	Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Subject: [PATCH] mac80211: fix memory leak
-Date: Fri, 29 Jan 2016 15:19:04 +0530
-Message-Id: <1454060944-11320-1-git-send-email-sudipm.mukherjee@gmail.com> (sfid-20160129_105005_920106_66296B26)
+	Wed, 20 Jan 2016 08:06:41 -0500
+Received: by mail-lb0-f172.google.com with SMTP id oh2so4677747lbb.3
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 05:06:40 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
+Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] brcmfmac: advertise frames supported for TX in AP mode
+Date: Wed, 20 Jan 2016 14:06:30 +0100
+Message-Id: <1453295190-28404-1-git-send-email-zajec5@gmail.com> (sfid-20160120_140644_772327_6E4028AE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On error we jumped to the error label and returned the error code but we
-missed releasing sinfo.
+Callback mgmt_tx implementation supports both: PROBE_RESP and ACTION.
 
-Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- net/mac80211/sta_info.c | 1 +
- 1 file changed, 1 insertion(+)
+This matches code I can see in brcmf_cfg80211_mgmt_tx, hope it makes
+sense.
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 6c198e6..36e75c4 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -561,6 +561,7 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
- 	__cleanup_single_sta(sta);
-  out_err:
- 	mutex_unlock(&local->sta_mtx);
-+	kfree(sinfo);
- 	rcu_read_lock();
- 	return err;
- }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index ab431e5..8d9cff4 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -5948,6 +5948,10 @@ brcmf_txrx_stypes[NUM_NL80211_IFTYPES] = {
+ 		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
+ 		      BIT(IEEE80211_STYPE_PROBE_REQ >> 4)
+ 	},
++	[NL80211_IFTYPE_AP] = {
++		.tx = BIT(IEEE80211_STYPE_ACTION >> 4) |
++		      BIT(IEEE80211_STYPE_PROBE_RESP >> 4)
++	},
+ 	[NL80211_IFTYPE_P2P_CLIENT] = {
+ 		.tx = 0xffff,
+ 		.rx = BIT(IEEE80211_STYPE_ACTION >> 4) |
 -- 
-1.9.1
+1.8.4.5
 
