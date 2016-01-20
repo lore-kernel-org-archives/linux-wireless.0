@@ -1,56 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f169.google.com ([209.85.223.169]:33149 "EHLO
-	mail-io0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754772AbcA0Wsg convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 17:48:36 -0500
-MIME-Version: 1.0
-In-Reply-To: <87r3h2ubcp.fsf@purkki.adurom.net>
-References: <CAL7P5j+iYzpnR+xT013A7AV=bQ8bSn4W1K=qjieFCAiv1YmwRw@mail.gmail.com>
- <20160125181220.GJ5325@mwanda> <87r3h2ubcp.fsf@purkki.adurom.net>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 28 Jan 2016 09:48:16 +1100
-Message-ID: <CAGRGNgVzbBGBOko-YG7h7rX+ZZHeKa5XHM3x+zdqz9mHX7nfRg@mail.gmail.com> (sfid-20160127_234851_160349_F9397A6B)
-Subject: Re: Move wlan-ng out of staging?
-To: Glen Lee <glen.lee@atmel.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	=?UTF-8?Q?Ksenija_Stanojevi=C4=87?= <ksenija.stanojevic@gmail.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from glaubenleben.de ([85.214.105.140]:44439 "EHLO glaubenleben.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758062AbcATHg6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jan 2016 02:36:58 -0500
+From: Andreas Kemnade <andreas@kemnade.info>
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, hns@goldelico.com
+Cc: Andreas Kemnade <andreas@kemnade.info>
+Subject: [PATCH v2 4/6] wireless:libertas: go back to ps mode without commands pending
+Date: Wed, 20 Jan 2016 08:35:37 +0100
+Message-Id: <1453275339-25122-5-git-send-email-andreas@kemnade.info> (sfid-20160120_083828_575771_D5C1679A)
+In-Reply-To: <1453275339-25122-1-git-send-email-andreas@kemnade.info>
+References: <1453275339-25122-1-git-send-email-andreas@kemnade.info>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Glen,
+Removes the old todo block and checks only whether ieee powersave
+mode is requested. We still have to check for being connected as
+this powersave mode includes logic for regularly waking up and
+checking for packets which only makes sense when connected.
+For not being connected, another mode is needed.
 
-On Thu, Jan 28, 2016 at 5:27 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Dan Carpenter <dan.carpenter@oracle.com> writes:
->
->> On Mon, Jan 25, 2016 at 01:16:56PM +0100, Ksenija Stanojević wrote:
->>> Hi All,
->>>
->>> I'm helping Greg do a bit of cleanup in the staging tree, I noticed that
->>> wlan-ng driver is maybe ready to be moved out of staging. Are there
->>> any TODO tasks left to do beside checkpatch.pl clean-up?
->
-> For questions like this you should CC linux-wireless.
->
->> I happened to look through this code recently.  It's terrible.
->
-> And uses wireless extensions, yuck. There's a lot of work to get it into
-> reasonable shape, fixing checkpatch warnings will not be enough.
+Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
+---
+changes in v2: reordered, was 5/6
+ drivers/net/wireless/libertas/cmd.c | 36 +++++-------------------------------
+ 1 file changed, 5 insertions(+), 31 deletions(-)
 
-On the same subject, the wilc1000 driver has taken some pretty big
-steps in the past few days, how far away do you think it is from
-graduating from staging?
-
-Thanks,
-
+diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 40467d6..4ddd0e5 100644
+--- a/drivers/net/wireless/libertas/cmd.c
++++ b/drivers/net/wireless/libertas/cmd.c
+@@ -1428,40 +1428,14 @@ int lbs_execute_next_command(struct lbs_private *priv)
+ 		 * check if in power save mode, if yes, put the device back
+ 		 * to PS mode
+ 		 */
+-#ifdef TODO
+-		/*
+-		 * This was the old code for libertas+wext. Someone that
+-		 * understands this beast should re-code it in a sane way.
+-		 *
+-		 * I actually don't understand why this is related to WPA
+-		 * and to connection status, shouldn't powering should be
+-		 * independ of such things?
+-		 */
+ 		if ((priv->psmode != LBS802_11POWERMODECAM) &&
+ 		    (priv->psstate == PS_STATE_FULL_POWER) &&
+-		    ((priv->connect_status == LBS_CONNECTED) ||
+-		    lbs_mesh_connected(priv))) {
+-			if (priv->secinfo.WPAenabled ||
+-			    priv->secinfo.WPA2enabled) {
+-				/* check for valid WPA group keys */
+-				if (priv->wpa_mcast_key.len ||
+-				    priv->wpa_unicast_key.len) {
+-					lbs_deb_host(
+-					       "EXEC_NEXT_CMD: WPA enabled and GTK_SET"
+-					       " go back to PS_SLEEP");
+-					lbs_set_ps_mode(priv,
+-							PS_MODE_ACTION_ENTER_PS,
+-							false);
+-				}
+-			} else {
+-				lbs_deb_host(
+-				       "EXEC_NEXT_CMD: cmdpendingq empty, "
+-				       "go back to PS_SLEEP");
+-				lbs_set_ps_mode(priv, PS_MODE_ACTION_ENTER_PS,
+-						false);
+-			}
++		    (priv->connect_status == LBS_CONNECTED)) {
++			lbs_deb_host(
++				"EXEC_NEXT_CMD: cmdpendingq empty, go back to PS_SLEEP");
++			lbs_set_ps_mode(priv, PS_MODE_ACTION_ENTER_PS,
++					false);
+ 		}
+-#endif
+ 	}
+ 
+ 	ret = 0;
 -- 
-Julian Calaby
+2.1.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
