@@ -1,46 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:33812 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965238AbcAULdC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 06:33:02 -0500
-Received: by mail-pa0-f65.google.com with SMTP id yy13so1622790pab.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:33:02 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 25/27] staging: wilc1000: fix coding style of kmalloc usage
-Date: Thu, 21 Jan 2016 20:30:55 +0900
-Message-Id: <1453375857-20645-26-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123307_853073_C5703BB8)
-In-Reply-To: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from glaubenleben.de ([85.214.105.140]:35055 "EHLO glaubenleben.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934611AbcATQsy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jan 2016 11:48:54 -0500
+Date: Wed, 20 Jan 2016 17:43:22 +0100
+From: Andreas Kemnade <andreas@kemnade.info>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, hns@goldelico.com
+Subject: Re: [PATCH RFC] wireless:libertas: enable auto deep sleep
+Message-ID: <20160120174322.67fdbc27@kemnade.info> (sfid-20160120_174901_135902_AEA866C5)
+In-Reply-To: <87lh7k2zi0.fsf@kamboji.qca.qualcomm.com>
+References: <1453275709-25276-1-git-send-email-andreas@kemnade.info>
+	<87lh7k2zi0.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/keIKodY7MAUe+ZxVB_NL_Ip"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes coding style of kmalloc usage found by checkpatch.
-CHECK: Prefer kmalloc(sizeof(*new_msg)...) over kmalloc(sizeof(struct message)...)
+--Sig_/keIKodY7MAUe+ZxVB_NL_Ip
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_msgqueue.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Wed, 20 Jan 2016 14:42:47 +0200
+Kalle Valo <kvalo@codeaurora.org> wrote:
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 7107715..c7a60f4 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -70,7 +70,7 @@ int wilc_mq_send(struct message_queue *mq,
- 	}
- 
- 	/* construct a new message */
--	new_msg = kmalloc(sizeof(struct message), GFP_ATOMIC);
-+	new_msg = kmalloc(sizeof(*new_msg), GFP_ATOMIC);
- 	if (!new_msg)
- 		return -ENOMEM;
- 
--- 
-2.7.0
+> Andreas Kemnade <andreas@kemnade.info> writes:
+>=20
+> > Enables auto deep sleep whenever the interface is up and
+> > power managament is enabled, so there is also power management
+> > when there is no connection
+> > That reduces power consumption between scanning
+> > intervals. Deep sleep mode is entered when there is
+> > no activity for 1s.
+> >
+> > The code looks a bit different to how things were done
+> > with the wext interface in earlier times.
+> >
+> > Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
+>=20
+> Please use just "libertas: " as the prefix and drop the "wireless:".
+>=20
+Hmm, is there any rule for that or do I just find that out
+by analysing git log output?
 
+BTW: That patch depends on my ieee80211 powersave mode series where I sent
+a second version today. Has that series found the way into your review queu=
+e?
+
+Regards,
+Andreas Kemnade
+
+--Sig_/keIKodY7MAUe+ZxVB_NL_Ip
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAEBCAAGBQJWn7k0AAoJEGGrpYhZ30HuKnYH+wdvsx9s/F9lAWgYttQHvWQm
+VcCvEAb633FVdkpzmc1StQZN8QBtQNJDJFWZmZn5rHZCSWnFlT2yn5o5JJzpRcNW
+eSMhswvzKoDN18FGGoSXPvJQUjAkW+1rQHcLRBNyhDZQ0XRxlWFV5oxglyrwPs2Q
+Hc2zSAviTPkhuIvcilA7o7H+SKd0SDBtTBuIeHf2AqeFicxX+fYJP4VHuYvN76p0
+bUWDt/Bki5CC8wEJVw0fnWMgNJ0vXFmVY/ESfl6oRDpJap24bnMYz3bHHRQ1O2bt
+Em7/8LmiYjMy66x/i5PJzPAeaK7dJbLJQ612XjWMJIDhNPnEr//xwNq5FCQmjVs=
+=V9zg
+-----END PGP SIGNATURE-----
+
+--Sig_/keIKodY7MAUe+ZxVB_NL_Ip--
