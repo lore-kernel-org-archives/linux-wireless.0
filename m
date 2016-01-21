@@ -1,77 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:2582 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934549AbcALNpr (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:36794 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752561AbcAUBVq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 08:45:47 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u0CDXjSV023925
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2016 05:45:46 -0800
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-	by mx0b-0016f401.pphosted.com with ESMTP id 20d0t3r8dc-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2016 05:45:46 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Shengzhen Li <szli@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH] mwifiex: fix power state out of sync problem
-Date: Tue, 12 Jan 2016 05:43:16 -0800
-Message-ID: <1452606196-9582-1-git-send-email-akarwar@marvell.com> (sfid-20160112_144551_415862_EC329E95)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 20 Jan 2016 20:21:46 -0500
+Received: by mail-pf0-f195.google.com with SMTP id n128so1047088pfn.3
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:21:46 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 22/27] staging: wilc1000: rename u32RecvBufferSize in wilc_mq_recv
+Date: Thu, 21 Jan 2016 10:20:25 +0900
+Message-Id: <1453339230-1377-22-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_023658_002399_F5FB2F4B)
+In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Shengzhen Li <szli@marvell.com>
+This patch renames u32RecvBufferSize to recv_buf_size to avoid
+camelcase.
 
-It's been observed that driver's power state goes out
-of sync with firmware in some corner cases. When this
-happens, driver tries to download the data to firmware
-assuming it's awake which causes Tx data timeout.
-
-Main thread will process interrupt as soon as interrupt
-handler fills 'int_status' variable.
-
-This patch fixes the race issue by updating 'int_status'
-at the end of mwifiex_interrupt_status().
-
-Signed-off-by: Shengzhen Li <szli@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/marvell/mwifiex/pcie.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/wilc_msgqueue.c | 8 ++++----
+ drivers/staging/wilc1000/wilc_msgqueue.h | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 5e15464..918e049 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2116,11 +2116,6 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter,
- 		}
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index b836b2e..c86bd7c 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -110,13 +110,13 @@ int wilc_mq_send(struct message_queue *mq,
+  *  @version		1.0
+  */
+ int wilc_mq_recv(struct message_queue *mq,
+-		 void *recv_buf, u32 u32RecvBufferSize,
++		 void *recv_buf, u32 recv_buf_size,
+ 		 u32 *pu32ReceivedLength)
+ {
+ 	struct message *pstrMessage;
+ 	unsigned long flags;
+ 
+-	if ((!mq) || (u32RecvBufferSize == 0)
++	if ((!mq) || (recv_buf_size == 0)
+ 	    || (!recv_buf) || (!pu32ReceivedLength)) {
+ 		PRINT_ER("mq or recv_buf is null\n");
+ 		return -EINVAL;
+@@ -141,10 +141,10 @@ int wilc_mq_recv(struct message_queue *mq,
+ 		return -EFAULT;
+ 	}
+ 	/* check buffer size */
+-	if (u32RecvBufferSize < pstrMessage->len) {
++	if (recv_buf_size < pstrMessage->len) {
+ 		spin_unlock_irqrestore(&mq->lock, flags);
+ 		up(&mq->sem);
+-		PRINT_ER("u32RecvBufferSize overflow\n");
++		PRINT_ER("recv_buf_size overflow\n");
+ 		return -EOVERFLOW;
  	}
  
--	spin_lock_irqsave(&adapter->int_lock, flags);
--	adapter->int_status |= pcie_ireg;
--	spin_unlock_irqrestore(&adapter->int_lock, flags);
--	mwifiex_dbg(adapter, INTR, "ireg: 0x%08x\n", pcie_ireg);
--
- 	if (!adapter->pps_uapsd_mode &&
- 	    adapter->ps_state == PS_STATE_SLEEP &&
- 	    mwifiex_pcie_ok_to_access_hw(adapter)) {
-@@ -2132,6 +2127,11 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter,
- 		adapter->pm_wakeup_fw_try = false;
- 		del_timer(&adapter->wakeup_timer);
- 	}
-+
-+	spin_lock_irqsave(&adapter->int_lock, flags);
-+	adapter->int_status |= pcie_ireg;
-+	spin_unlock_irqrestore(&adapter->int_lock, flags);
-+	mwifiex_dbg(adapter, INTR, "ireg: 0x%08x\n", pcie_ireg);
- }
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index 81b51dd..3804b3b 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -77,7 +77,7 @@ int wilc_mq_send(struct message_queue *mq,
+  *  @version		1.0
+  */
+ int wilc_mq_recv(struct message_queue *mq,
+-		 void *recv_buf, u32 u32RecvBufferSize,
++		 void *recv_buf, u32 recv_buf_size,
+ 		 u32 *pu32ReceivedLength);
  
- /*
+ /*!
 -- 
-1.8.1.4
+2.6.4
 
