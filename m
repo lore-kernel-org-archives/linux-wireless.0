@@ -1,57 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39693 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933342AbcAZN1X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 08:27:23 -0500
-Message-ID: <1453814840.2759.52.camel@sipsolutions.net> (sfid-20160126_142726_220880_CD250ED1)
-Subject: Re: [PATCH v2] mac80211: Parse legacy and HT rate in injected frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sven Eckelmann <sven@narfation.org>, linux-wireless@vger.kernel.org
-Cc: Simon Wunderlich <sw@simonwunderlich.de>
-Date: Tue, 26 Jan 2016 14:27:20 +0100
-In-Reply-To: <1453728154-20070-1-git-send-email-sven@narfation.org>
-References: <1453728154-20070-1-git-send-email-sven@narfation.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:36642 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965022AbcAULcN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2016 06:32:13 -0500
+Received: by mail-pf0-f195.google.com with SMTP id n128so1693721pfn.3
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:32:13 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 09/27] staging: wilc1000: rename u32ReceiversCount in struct message_queue
+Date: Thu, 21 Jan 2016 20:30:39 +0900
+Message-Id: <1453375857-20645-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123216_742618_17B3F405)
+In-Reply-To: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
->  	CALL_TXH(ieee80211_tx_h_select_key);
-> -	if (!ieee80211_hw_check(&tx->local->hw, HAS_RATE_CONTROL))
-> +	if (!ieee80211_hw_check(&tx->local->hw, HAS_RATE_CONTROL) &&
-> +	    !(info->control.flags & IEEE80211_TX_CTRL_RATE_INJECT))
->  		CALL_TXH(ieee80211_tx_h_rate_ctrl);
+This patch renames u32ReceiversCount to recv_count to avoid camelcase.
 
-This seems a bit problematic. ieee80211_tx_h_rate_ctrl() also sets up
-some protection, e.g.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 10 +++++-----
+ drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-        info->control.use_rts = txrc.rts;
-        info->control.use_cts_prot = tx->sdata->vif.bss_conf.use_cts_prot;
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 47ba256..363e003 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -16,7 +16,7 @@ int wilc_mq_create(struct message_queue *pHandle)
+ 	spin_lock_init(&pHandle->lock);
+ 	sema_init(&pHandle->sem, 0);
+ 	pHandle->pstrMessageList = NULL;
+-	pHandle->u32ReceiversCount = 0;
++	pHandle->recv_count = 0;
+ 	pHandle->exiting = false;
+ 	return 0;
+ }
+@@ -32,9 +32,9 @@ int wilc_mq_destroy(struct message_queue *pHandle)
+ 	pHandle->exiting = true;
+ 
+ 	/* Release any waiting receiver thread. */
+-	while (pHandle->u32ReceiversCount > 0) {
++	while (pHandle->recv_count > 0) {
+ 		up(&pHandle->sem);
+-		pHandle->u32ReceiversCount--;
++		pHandle->recv_count--;
+ 	}
+ 
+ 	while (pHandle->pstrMessageList) {
+@@ -129,7 +129,7 @@ int wilc_mq_recv(struct message_queue *pHandle,
+ 	}
+ 
+ 	spin_lock_irqsave(&pHandle->lock, flags);
+-	pHandle->u32ReceiversCount++;
++	pHandle->recv_count++;
+ 	spin_unlock_irqrestore(&pHandle->lock, flags);
+ 
+ 	down(&pHandle->sem);
+@@ -150,7 +150,7 @@ int wilc_mq_recv(struct message_queue *pHandle,
+ 	}
+ 
+ 	/* consume the message */
+-	pHandle->u32ReceiversCount--;
++	pHandle->recv_count--;
+ 	memcpy(pvRecvBuffer, pstrMessage->buf, pstrMessage->len);
+ 	*pu32ReceivedLength = pstrMessage->len;
+ 
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index 2c21b3e..dcf54ea 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -23,7 +23,7 @@ struct message_queue {
+ 	struct semaphore sem;
+ 	spinlock_t lock;
+ 	bool exiting;
+-	u32 u32ReceiversCount;
++	u32 recv_count;
+ 	struct message *pstrMessageList;
+ };
+ 
+-- 
+2.7.0
 
-and preamble settings
-
-        info->control.short_preamble = txrc.short_preamble;
-
-Are you sure you want to skip that entirely?
-
-> +		info->control.rates[0].flags = rate_flags;
-> +		if (rate_retries + 1 > local->hw.max_rate_tries)
-> +			info->control.rates[0].count = local-
-> >hw.max_rate_tries;
-> +		else
-> +			info->control.rates[0].count = rate_retries
-> + 1;
-
-max() or max_t()?
-
->  	/* process and remove the injection radiotap header */
-> -	if (!ieee80211_parse_tx_radiotap(skb))
-> +	if (!ieee80211_parse_tx_radiotap(skb, local))
->  		goto fail;
-
-I'd prefer adding "local" as the first argument since that's far more
-commonly done in mac80211.
-
-
-johannes
