@@ -1,93 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39046 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756003AbcAZLoo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 06:44:44 -0500
-Message-ID: <1453808681.2759.35.camel@sipsolutions.net> (sfid-20160126_124447_582981_495C7DF5)
-Subject: Re: [PATCH 2/2] mac80211: let unused MPP table entries timeout
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Henning Rogge <hrogge@gmail.com>, linux-wireless@vger.kernel.org
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
-Date: Tue, 26 Jan 2016 12:44:41 +0100
-In-Reply-To: <1453190672-9748-3-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20160119_090459_536071_3CC17F87)
-References: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
-	 <1453190672-9748-3-git-send-email-henning.rogge@fkie.fraunhofer.de>
-	 (sfid-20160119_090459_536071_3CC17F87)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:36802 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755461AbcAUBVt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jan 2016 20:21:49 -0500
+Received: by mail-pf0-f193.google.com with SMTP id n128so1047124pfn.3
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:21:49 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 23/27] staging: wilc1000: rename pu32ReceivedLength in wilc_mq_recv
+Date: Thu, 21 Jan 2016 10:20:26 +0900
+Message-Id: <1453339230-1377-23-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_023653_663353_D4CC57AC)
+In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-01-19 at 09:04 +0100, Henning Rogge wrote:
+This patch renames pu32ReceivedLength to recv_len to avoid camelcase.
 
-> +++ b/net/mac80211/mesh_pathtbl.c
-> @@ -929,12 +929,55 @@ int mesh_path_del(struct ieee80211_sub_if_data
-> *sdata, const u8 *addr)
->  		if (mpath->sdata == sdata &&
->  		    ether_addr_equal(addr, mpath->dst)) {
->  			__mesh_path_del(tbl, node);
-> -			goto enddel;
-> +			goto enddelpath;
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 7 +++----
+ drivers/staging/wilc1000/wilc_msgqueue.h | 3 +--
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
-C labels are scoped, why rename it?
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index c86bd7c..5601de8 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -110,14 +110,13 @@ int wilc_mq_send(struct message_queue *mq,
+  *  @version		1.0
+  */
+ int wilc_mq_recv(struct message_queue *mq,
+-		 void *recv_buf, u32 recv_buf_size,
+-		 u32 *pu32ReceivedLength)
++		 void *recv_buf, u32 recv_buf_size, u32 *recv_len)
+ {
+ 	struct message *pstrMessage;
+ 	unsigned long flags;
+ 
+ 	if ((!mq) || (recv_buf_size == 0)
+-	    || (!recv_buf) || (!pu32ReceivedLength)) {
++	    || (!recv_buf) || (!recv_len)) {
+ 		PRINT_ER("mq or recv_buf is null\n");
+ 		return -EINVAL;
+ 	}
+@@ -151,7 +150,7 @@ int wilc_mq_recv(struct message_queue *mq,
+ 	/* consume the message */
+ 	mq->recv_count--;
+ 	memcpy(recv_buf, pstrMessage->buf, pstrMessage->len);
+-	*pu32ReceivedLength = pstrMessage->len;
++	*recv_len = pstrMessage->len;
+ 
+ 	mq->msg_list = pstrMessage->next;
+ 
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index 3804b3b..4f79ead 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -77,8 +77,7 @@ int wilc_mq_send(struct message_queue *mq,
+  *  @version		1.0
+  */
+ int wilc_mq_recv(struct message_queue *mq,
+-		 void *recv_buf, u32 recv_buf_size,
+-		 u32 *pu32ReceivedLength);
++		 void *recv_buf, u32 recv_buf_size, u32 *recv_len);
+ 
+ /*!
+  *  @brief		Destroys an existing  Message queue
+-- 
+2.6.4
 
->  		}
->  	}
->  
->  	err = -ENXIO;
-> -enddel:
-> +enddelpath:
-> +	mesh_paths_generation++;
-> +	spin_unlock(&tbl->hashwlock[hash_idx]);
-> +	read_unlock_bh(&pathtbl_resize_lock);
-> +	return err;
-> +}
-> +
-> +/**
-> + * mpp_path_del - delete a mesh proxy path from the table
-> + *
-> + * @addr: addr address (ETH_ALEN length)
-> + * @sdata: local subif
-> + *
-> + * Returns: 0 if successful
-> + */
-> +static int mpp_path_del(struct ieee80211_sub_if_data *sdata, const
-> u8 *addr)
-> +{
-> +	struct mesh_table *tbl;
-> +	struct mesh_path *mpath;
-> +	struct mpath_node *node;
-> +	struct hlist_head *bucket;
-> +	int hash_idx;
-> +	int err = 0;
-> +
-> +	/* flush relevant mpp entries first */
-> +	mpp_flush_by_proxy(sdata, addr);
-> +
-> +	read_lock_bh(&pathtbl_resize_lock);
-> +	tbl = resize_dereference_mpp_paths();
-> +	hash_idx = mesh_table_hash(addr, sdata, tbl);
-> +	bucket = &tbl->hash_buckets[hash_idx];
-> +
-> +	spin_lock(&tbl->hashwlock[hash_idx]);
-> +	hlist_for_each_entry(node, bucket, list) {
-> +		mpath = node->mpath;
-> +		if (mpath->sdata == sdata &&
-> +		    ether_addr_equal(addr, mpath->dst)) {
-> +			__mesh_path_del(tbl, node);
-> +			goto enddelmpp;
-
-This has the same use-after-free, I'd say?
-And another instance later in this file.
-
-
-> +					spin_lock_bh(&mppath-
-> >state_lock);
-> +					mppath->exp_time = jiffies;
-
-That locking seems fairly pointless? You only write to this value here,
-and it's an unsigned long, so in itself it's atomic and there's no
-synchronisation against anything else needed.
-
-johannes
