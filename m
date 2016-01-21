@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:55654 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757351AbcAJU7W (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:34562 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965254AbcAULdF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Jan 2016 15:59:22 -0500
-Message-ID: <5692C627.6050003@broadcom.com> (sfid-20160110_215926_694849_B578EE93)
-Date: Sun, 10 Jan 2016 21:59:19 +0100
-From: Arend van Spriel <arend@broadcom.com>
-MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/16] brcmfmac: new device support and P2P fixes
-References: <1442606899-31872-1-git-send-email-arend@broadcom.com> <CACna6rzWKv7d7zjfJdnceLbknu+drbbjks_=JAkep0NiiLk7JA@mail.gmail.com>
-In-Reply-To: <CACna6rzWKv7d7zjfJdnceLbknu+drbbjks_=JAkep0NiiLk7JA@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+	Thu, 21 Jan 2016 06:33:05 -0500
+Received: by mail-pf0-f194.google.com with SMTP id 65so1708873pfd.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:33:05 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 26/27] staging: wilc1000: fix logical continuations
+Date: Thu, 21 Jan 2016 20:30:56 +0900
+Message-Id: <1453375857-20645-27-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123322_516044_7E7CBFDA)
+In-Reply-To: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/10/2016 12:48 AM, Rafał Miłecki wrote:
-> On 18 September 2015 at 22:08, Arend van Spriel <arend@broadcom.com> wrote:
->> This series is intended for v4.4 containing the following highlights:
->>
->> * support for BCM4350, BCM4365, and BCM4366 PCIE devices.
->> * fixed for legacy P2P and P2P device handling.
->> * correct set and get tx-power.
->
-> Hi Arend, can you provide us some update on progress of releasing
-> brcmfmac4366b-pcie.bin, please?
+This patch fixes logical continuations found by checkpatch
+CHECK: Logical continuations should be on the previous line
 
-Sure. No progress. You also want to know about brcmfmac4365b-pcie.bin? 
-Both devices are still in development or just taped-out if I am not 
-mistaken (maybe missed a memo or two). I will ask for expected eta.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index c7a60f4..4493ca9 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -115,8 +115,7 @@ int wilc_mq_recv(struct message_queue *mq,
+ 	struct message *msg;
+ 	unsigned long flags;
+ 
+-	if ((!mq) || (recv_buf_size == 0)
+-	    || (!recv_buf) || (!recv_len)) {
++	if ((!mq) || (recv_buf_size == 0) || (!recv_buf) || (!recv_len)) {
+ 		PRINT_ER("mq or recv_buf is null\n");
+ 		return -EINVAL;
+ 	}
+-- 
+2.7.0
+
