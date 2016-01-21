@@ -1,48 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [82.165.8.211] ([82.165.8.211]:55480 "EHLO mail.holtmann.org"
-	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751092AbcAYGtI convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55957 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759002AbcAUNww (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 01:49:08 -0500
+	Thu, 21 Jan 2016 08:52:52 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Guy Mishol <guym@ti.com>
+Cc: <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] wlcore: fix return value of wlcore_event_fw_logger
+References: <1453109702-15750-1-git-send-email-guym@ti.com>
+Date: Thu, 21 Jan 2016 15:52:47 +0200
+In-Reply-To: <1453109702-15750-1-git-send-email-guym@ti.com> (Guy Mishol's
+	message of "Mon, 18 Jan 2016 11:35:02 +0200")
+Message-ID: <8760ynyr80.fsf@kamboji.qca.qualcomm.com> (sfid-20160121_145255_773465_E13CCF91)
+MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
-Subject: Re: [PATCH 15/26] Bluetooth: Use skcipher and hash
-From: Marcel Holtmann <marcel@holtmann.org>
-In-Reply-To: <E1aNKYo-0008Dp-5h@gondolin.me.apana.org.au>
-Date: Mon, 25 Jan 2016 07:48:46 +0100
-Cc: Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	devel@driverdev.osuosl.org, dm-devel@redhat.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
-	BlueZ development <linux-bluetooth@vger.kernel.org>,
-	ceph-devel@vger.kernel.org, linux-wpan@vger.kernel.org,
-	linux-afs@lists.infradead.org, drbd-dev@lists.linbit.com,
-	open-iscsi@googlegroups.com
-Message-Id: <B35B9E9E-DA6B-4AAD-B1EF-2DE778645CAC@holtmann.org> (sfid-20160125_074934_654530_EEA298B4)
-References: <20160124131021.GA31153@gondor.apana.org.au> <E1aNKYo-0008Dp-5h@gondolin.me.apana.org.au>
-To: Herbert Xu <herbert@gondor.apana.org.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Herbert,
+Guy Mishol <guym@ti.com> writes:
 
-> This patch replaces uses of blkcipher with skcipher and the long
-> obsolete hash interface with shash.
-> 
-> Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
+> The function can return negative values in case of error.
+> Fixes: 3719c17e1816 ("wlcore/wl18xx: fw logger over sdio")
+>
+> Signed-off-by: Guy Mishol <guym@ti.com>
 
-Acked-by: Marcel Holtmann <marcel@holtmann.org>
+Andrzej already submitted identical patch:
 
-> ---
-> 
-> net/bluetooth/smp.c |  135 ++++++++++++++++++++++++----------------------------
-> 1 file changed, 63 insertions(+), 72 deletions(-)
+https://patchwork.kernel.org/patch/7977461/
 
-Regards
+So I'm dropping this.
 
-Marcel
-
+-- 
+Kalle Valo
