@@ -1,142 +1,344 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40936 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932100AbcAYHnL (ORCPT
+Received: from mail-lf0-f48.google.com ([209.85.215.48]:33040 "EHLO
+	mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759489AbcAUNpl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 02:43:11 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 10/26] staging: wilc1000: remove wilc_set_machw_change_vir_if
-Date: Mon, 25 Jan 2016 16:35:14 +0900
-Message-ID: <1453707330-13526-11-git-send-email-glen.lee@atmel.com> (sfid-20160125_084314_278582_56B73E29)
-In-Reply-To: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
-References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 21 Jan 2016 08:45:41 -0500
+Received: by mail-lf0-f48.google.com with SMTP id m198so26893894lfm.0
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 05:45:40 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 03/13] ath10k: refactor tx pending management
+Date: Thu, 21 Jan 2016 14:46:36 +0100
+Message-Id: <1453384006-31907-4-git-send-email-michal.kazior@tieto.com> (sfid-20160121_144550_768736_1027B3AA)
+In-Reply-To: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
+References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wilc_set_machw_change_vir_if is not used anymore since we use one unified
-firmware. Instead, wilc_set_operation_mode is called when wilc_mac_open to
-let the wilc use the proper firmware. Remove wilc_set_machw_change_vir_if
-and it's functions calls.
-In the later patch, mac index will be passed to wilc device.
+Tx pending counter logic assumed that the sk_buff
+is already known and hence was performed in HTT
+functions themselves.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+However, for the sake of future wake_tx_queue()
+usage the driver must be able to tell whether it
+can submit more frames to firmware before it
+dequeues frame from ieee80211_txq (and thus long
+before HTT Tx functions are called) because once a
+frame is dequeued it cannot be requeud back to
+mac80211.
+
+This prepares the driver for future changes.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c             |  3 +--
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  6 -----
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  1 -
- drivers/staging/wilc1000/wilc_wlan.c              | 32 -----------------------
- 4 files changed, 1 insertion(+), 41 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt.h    |  7 ++-
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 85 ++++++++------------------------
+ drivers/net/wireless/ath/ath10k/mac.c    | 51 ++++++++++++++++---
+ drivers/net/wireless/ath/ath10k/txrx.c   |  2 +-
+ 4 files changed, 71 insertions(+), 74 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 006f75f7..08d2cb2 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1024,14 +1024,13 @@ int wilc_mac_open(struct net_device *ndev)
- 		return ret;
- 	}
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 13391ea4422d..cb6d4fd687da 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1753,7 +1753,12 @@ int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
+ 				u8 max_subfrms_amsdu);
+ void ath10k_htt_hif_tx_complete(struct ath10k *ar, struct sk_buff *skb);
  
--	wilc_set_machw_change_vir_if(ndev, false);
+-void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt, bool limit_mgmt_desc);
++void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt,
++			       bool is_mgmt);
++int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt,
++			      bool is_mgmt,
++			      bool is_presp);
++
+ int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb);
+ void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id);
+ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 95acb727c068..860661d3812f 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -22,9 +22,12 @@
+ #include "txrx.h"
+ #include "debug.h"
+ 
+-void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt, bool limit_mgmt_desc)
++void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt,
++			       bool is_mgmt)
+ {
+-	if (limit_mgmt_desc)
++	lockdep_assert_held(&htt->tx_lock);
++
++	if (is_mgmt)
+ 		htt->num_pending_mgmt_tx--;
+ 
+ 	htt->num_pending_tx--;
+@@ -32,43 +35,31 @@ void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt, bool limit_mgmt_desc)
+ 		ath10k_mac_tx_unlock(htt->ar, ATH10K_TX_PAUSE_Q_FULL);
+ }
+ 
+-static void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt,
+-				      bool limit_mgmt_desc)
+-{
+-	spin_lock_bh(&htt->tx_lock);
+-	__ath10k_htt_tx_dec_pending(htt, limit_mgmt_desc);
+-	spin_unlock_bh(&htt->tx_lock);
+-}
 -
- 	wilc_get_mac_address(vif, mac_add);
- 	PRINT_D(INIT_DBG, "Mac address: %pM\n", mac_add);
+-static int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt,
+-				     bool limit_mgmt_desc, bool is_probe_resp)
++int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt,
++			      bool is_mgmt,
++			      bool is_presp)
+ {
+ 	struct ath10k *ar = htt->ar;
+-	int ret = 0;
  
- 	for (i = 0; i < wl->vif_num; i++) {
- 		if (ndev == wl->vif[i]->ndev) {
- 			memcpy(wl->vif[i]->src_addr, mac_add, ETH_ALEN);
-+			wilc_set_operation_mode(vif, vif->iftype);
- 			break;
- 		}
- 	}
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 5c23462..ecc63f4 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1274,7 +1274,6 @@ static int del_key(struct wiphy *wiphy, struct net_device *netdev,
- 		kfree(g_key_gtk_params.seq);
- 		g_key_gtk_params.seq = NULL;
+-	spin_lock_bh(&htt->tx_lock);
++	lockdep_assert_held(&htt->tx_lock);
  
--		wilc_set_machw_change_vir_if(netdev, false);
- 	}
+-	if (htt->num_pending_tx >= htt->max_num_pending_tx) {
+-		ret = -EBUSY;
+-		goto exit;
+-	}
++	if (htt->num_pending_tx >= htt->max_num_pending_tx)
++		return -EBUSY;
  
- 	if (key_index >= 0 && key_index <= 3) {
-@@ -2116,10 +2115,6 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 	del_timer(&wilc_during_ip_timer);
- 	PRINT_D(GENERIC_DBG, "Changing virtual interface, enable scan\n");
+-	if (limit_mgmt_desc) {
+-		if (is_probe_resp && (htt->num_pending_mgmt_tx >
+-		    ar->hw_params.max_probe_resp_desc_thres)) {
+-			ret = -EBUSY;
+-			goto exit;
+-		}
++	if (is_mgmt &&
++	    is_presp &&
++	    ar->hw_params.max_probe_resp_desc_thres &&
++	    ar->hw_params.max_probe_resp_desc_thres < htt->num_pending_mgmt_tx)
++		return -EBUSY;
++
++	if (is_mgmt)
+ 		htt->num_pending_mgmt_tx++;
+-	}
  
--	if (g_ptk_keys_saved && g_gtk_keys_saved) {
--		wilc_set_machw_change_vir_if(dev, true);
+ 	htt->num_pending_tx++;
+ 	if (htt->num_pending_tx == htt->max_num_pending_tx)
+ 		ath10k_mac_tx_lock(htt->ar, ATH10K_TX_PAUSE_Q_FULL);
+ 
+-exit:
+-	spin_unlock_bh(&htt->tx_lock);
+-	return ret;
++	return 0;
+ }
+ 
+ int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb)
+@@ -576,20 +567,6 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	int msdu_id = -1;
+ 	int res;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)msdu->data;
+-	bool limit_mgmt_desc = false;
+-	bool is_probe_resp = false;
+-
+-	if (ar->hw_params.max_probe_resp_desc_thres) {
+-		limit_mgmt_desc = true;
+-
+-		if (ieee80211_is_probe_resp(hdr->frame_control))
+-			is_probe_resp = true;
 -	}
 -
- 	switch (type) {
- 	case NL80211_IFTYPE_STATION:
- 		wilc_connecting = 0;
-@@ -2261,7 +2256,6 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 			}
+-	res = ath10k_htt_tx_inc_pending(htt, limit_mgmt_desc, is_probe_resp);
+-
+-	if (res)
+-		goto err;
  
- 			refresh_scan(priv, 1, true);
--			wilc_set_machw_change_vir_if(dev, false);
+ 	len += sizeof(cmd->hdr);
+ 	len += sizeof(cmd->mgmt_tx);
+@@ -598,7 +575,7 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
+ 	res = ath10k_htt_tx_alloc_msdu_id(htt, msdu);
+ 	spin_unlock_bh(&htt->tx_lock);
+ 	if (res < 0)
+-		goto err_tx_dec;
++		goto err;
  
- 			if (wl->initialized)	{
- 				for (i = 0; i < num_reg_frame; i++) {
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index cd3d21d..0d851f8 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -235,7 +235,6 @@ int wilc_netdev_init(struct wilc **wilc, struct device *, int io_type, int gpio,
- 		     const struct wilc_hif_func *ops);
- void wilc1000_wlan_deinit(struct net_device *dev);
- void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
--u16 wilc_set_machw_change_vir_if(struct net_device *dev, bool value);
- int wilc_wlan_get_firmware(struct net_device *dev);
- int wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid);
+ 	msdu_id = res;
  
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index aed1dd2..cc487d8 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1578,35 +1578,3 @@ _fail_:
- 
- 	return ret;
+@@ -649,8 +626,6 @@ err_free_msdu_id:
+ 	spin_lock_bh(&htt->tx_lock);
+ 	ath10k_htt_tx_free_msdu_id(htt, msdu_id);
+ 	spin_unlock_bh(&htt->tx_lock);
+-err_tx_dec:
+-	ath10k_htt_tx_dec_pending(htt, limit_mgmt_desc);
+ err:
+ 	return res;
  }
+@@ -677,26 +652,12 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+ 	u32 frags_paddr = 0;
+ 	u32 txbuf_paddr;
+ 	struct htt_msdu_ext_desc *ext_desc = NULL;
+-	bool limit_mgmt_desc = false;
+-	bool is_probe_resp = false;
 -
--u16 wilc_set_machw_change_vir_if(struct net_device *dev, bool value)
--{
--	u16 ret;
--	u32 reg;
--	struct wilc_vif *vif;
--	struct wilc *wilc;
+-	if (unlikely(ieee80211_is_mgmt(hdr->frame_control)) &&
+-	    ar->hw_params.max_probe_resp_desc_thres) {
+-		limit_mgmt_desc = true;
 -
--	vif = netdev_priv(dev);
--	wilc = vif->wilc;
+-		if (ieee80211_is_probe_resp(hdr->frame_control))
+-			is_probe_resp = true;
+-	}
 -
--	mutex_lock(&wilc->hif_cs);
--	ret = wilc->hif_func->hif_read_reg(wilc, WILC_CHANGING_VIR_IF,
--					       &reg);
--	if (!ret)
--		PRINT_ER("Error while Reading reg WILC_CHANGING_VIR_IF\n");
+-	res = ath10k_htt_tx_inc_pending(htt, limit_mgmt_desc, is_probe_resp);
+-	if (res)
+-		goto err;
+ 
+ 	spin_lock_bh(&htt->tx_lock);
+ 	res = ath10k_htt_tx_alloc_msdu_id(htt, msdu);
+ 	spin_unlock_bh(&htt->tx_lock);
+ 	if (res < 0)
+-		goto err_tx_dec;
++		goto err;
+ 
+ 	msdu_id = res;
+ 
+@@ -862,11 +823,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
+ err_unmap_msdu:
+ 	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
+ err_free_msdu_id:
+-	spin_lock_bh(&htt->tx_lock);
+ 	ath10k_htt_tx_free_msdu_id(htt, msdu_id);
+-	spin_unlock_bh(&htt->tx_lock);
+-err_tx_dec:
+-	ath10k_htt_tx_dec_pending(htt, limit_mgmt_desc);
+ err:
+ 	return res;
+ }
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 9abb52924432..212c840e1599 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3362,13 +3362,11 @@ ath10k_mac_tx_h_get_txpath(struct ath10k *ar,
+ 
+ static int ath10k_mac_tx_submit(struct ath10k *ar,
+ 				enum ath10k_hw_txrx_mode txmode,
++				enum ath10k_mac_tx_path txpath,
+ 				struct sk_buff *skb)
+ {
+ 	struct ath10k_htt *htt = &ar->htt;
+-	enum ath10k_mac_tx_path txpath;
+-	int ret;
 -
--	if (value)
--		reg |= BIT(31);
--	else
--		reg &= ~BIT(31);
--
--	ret = wilc->hif_func->hif_write_reg(wilc, WILC_CHANGING_VIR_IF,
--						reg);
--
--	if (!ret)
--		PRINT_ER("Error while writing reg WILC_CHANGING_VIR_IF\n");
--
--	mutex_unlock(&wilc->hif_cs);
--
--	return ret;
--}
+-	txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
++	int ret = -EINVAL;
+ 
+ 	switch (txpath) {
+ 	case ATH10K_MAC_TX_HTT:
+@@ -3402,6 +3400,7 @@ static int ath10k_mac_tx(struct ath10k *ar,
+ 			 struct ieee80211_vif *vif,
+ 			 struct ieee80211_sta *sta,
+ 			 enum ath10k_hw_txrx_mode txmode,
++			 enum ath10k_mac_tx_path txpath,
+ 			 struct sk_buff *skb)
+ {
+ 	struct ieee80211_hw *hw = ar->hw;
+@@ -3441,7 +3440,7 @@ static int ath10k_mac_tx(struct ath10k *ar,
+ 		}
+ 	}
+ 
+-	ret = ath10k_mac_tx_submit(ar, txmode, skb);
++	ret = ath10k_mac_tx_submit(ar, txmode, txpath, skb);
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to submit frame: %d\n", ret);
+ 		return ret;
+@@ -3469,6 +3468,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
+ 	struct ath10k_peer *peer;
+ 	struct ath10k_vif *arvif;
+ 	enum ath10k_hw_txrx_mode txmode;
++	enum ath10k_mac_tx_path txpath;
+ 	struct ieee80211_hdr *hdr;
+ 	struct ieee80211_vif *vif;
+ 	struct ieee80211_sta *sta;
+@@ -3537,8 +3537,9 @@ void ath10k_offchan_tx_work(struct work_struct *work)
+ 		}
+ 
+ 		txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
++		txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
+ 
+-		ret = ath10k_mac_tx(ar, vif, sta, txmode, skb);
++		ret = ath10k_mac_tx(ar, vif, sta, txmode, txpath, skb);
+ 		if (ret) {
+ 			ath10k_warn(ar, "failed to transmit offchannel frame: %d\n",
+ 				    ret);
+@@ -3762,19 +3763,53 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
+ 			     struct sk_buff *skb)
+ {
+ 	struct ath10k *ar = hw->priv;
++	struct ath10k_htt *htt = &ar->htt;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_vif *vif = info->control.vif;
+ 	struct ieee80211_sta *sta = control->sta;
++	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	enum ath10k_hw_txrx_mode txmode;
++	enum ath10k_mac_tx_path txpath;
++	bool is_htt;
++	bool is_mgmt;
++	bool is_presp;
+ 	int ret;
+ 
+ 	ath10k_mac_tx_h_fill_cb(ar, vif, skb);
+ 
+ 	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
++	txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
++	is_htt = (txpath == ATH10K_MAC_TX_HTT ||
++		  txpath == ATH10K_MAC_TX_HTT_MGMT);
+ 
+-	ret = ath10k_mac_tx(ar, vif, sta, txmode, skb);
+-	if (ret)
++	if (is_htt) {
++		spin_lock_bh(&ar->htt.tx_lock);
++
++		is_mgmt = ieee80211_is_mgmt(hdr->frame_control);
++		is_presp = ieee80211_is_probe_resp(hdr->frame_control);
++
++		ret = ath10k_htt_tx_inc_pending(htt, is_mgmt, is_presp);
++		if (ret) {
++			ath10k_warn(ar, "failed to increase tx pending count: %d, dropping\n",
++				    ret);
++			spin_unlock_bh(&ar->htt.tx_lock);
++			ieee80211_free_txskb(ar->hw, skb);
++			return;
++		}
++
++		spin_unlock_bh(&ar->htt.tx_lock);
++	}
++
++	ret = ath10k_mac_tx(ar, vif, sta, txmode, txpath, skb);
++	if (ret) {
+ 		ath10k_warn(ar, "failed to transmit frame: %d\n", ret);
++		if (is_htt) {
++			spin_lock_bh(&ar->htt.tx_lock);
++			ath10k_htt_tx_dec_pending(htt, is_mgmt);
++			spin_unlock_bh(&ar->htt.tx_lock);
++		}
++		return;
++	}
+ }
+ 
+ /* Must not be called with conf_mutex held as workers can use that also. */
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index fbfb608e48ab..118586ece20e 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -86,7 +86,7 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 		limit_mgmt_desc = true;
+ 
+ 	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
+-	__ath10k_htt_tx_dec_pending(htt, limit_mgmt_desc);
++	ath10k_htt_tx_dec_pending(htt, limit_mgmt_desc);
+ 	if (htt->num_pending_tx == 0)
+ 		wake_up(&htt->empty_tx_wq);
+ 	spin_unlock_bh(&htt->tx_lock);
 -- 
-1.9.1
+2.1.4
 
