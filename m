@@ -1,48 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:65167 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751929AbcAMPrV (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:35315 "EHLO
+	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752192AbcAUQ7I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2016 10:47:21 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Subject: [PATCH 2/7] ath10k: Fix naming Peer stats rssi_changed field in 10.2.4
-Date: Wed, 13 Jan 2016 21:16:29 +0530
-Message-ID: <1452699994-5078-3-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160113_164725_999218_A00290AD)
-In-Reply-To: <1452699994-5078-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1452699994-5078-1-git-send-email-mohammed@qca.qualcomm.com>
+	Thu, 21 Jan 2016 11:59:08 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1445116005-28670-2-git-send-email-paulmcquad@gmail.com>
+References: <1445116005-28670-1-git-send-email-paulmcquad@gmail.com>
+	<1445116005-28670-2-git-send-email-paulmcquad@gmail.com>
+Date: Thu, 21 Jan 2016 17:59:07 +0100
+Message-ID: <CAGXE3d8buJC8kSvDJV8u_2OeWKbJOVrNkdFM5qxwuS_7DqH=JA@mail.gmail.com> (sfid-20160121_175929_390648_4757840E)
+Subject: Re: [PATCH 2/3] net: wireless: rt2x00: Pointer issue
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Paul McQuade <paulmcquad@gmail.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>, kvalo@codeaurora.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+On Sat, Oct 17, 2015 at 11:06 PM, Paul McQuade <paulmcquad@gmail.com> wrote:
+> Code Style: pointer is declared wrong
+>
+> Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
 
-Fix naming of peer stats rssi_changed field in 10.2.4 to make it
-more readable. As of now this field is not used, but necessary to
-pull in fw_stats with appropriate length.
+Thanks for fixing this code style issue.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/wmi.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index e1bb02b..187f495 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -4233,7 +4233,7 @@ struct wmi_10_2_peer_stats {
- 
- struct wmi_10_2_4_peer_stats {
- 	struct wmi_10_2_peer_stats common;
--	__le32 unknown_value; /* FIXME: what is this word? */
-+	__le32 peer_rssi_changed;
- } __packed;
- 
- struct wmi_10_2_4_ext_peer_stats {
--- 
-1.7.9.5
-
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00.h | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+> index 6f8310a..b052e87 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> @@ -380,7 +380,7 @@ struct rt2x00_intf {
+>         atomic_t seqno;
+>  };
+>
+> -static inline struct rt2x00_intf* vif_to_intf(struct ieee80211_vif *vif)
+> +static inline struct rt2x00_intf *vif_to_intf(struct ieee80211_vif *vif)
+>  {
+>         return (struct rt2x00_intf *)vif->drv_priv;
+>  }
+> @@ -507,7 +507,7 @@ struct rt2x00_sta {
+>         int wcid;
+>  };
+>
+> -static inline struct rt2x00_sta* sta_to_rt2x00_sta(struct ieee80211_sta *sta)
+> +static inline struct rt2x00_sta *sta_to_rt2x00_sta(struct ieee80211_sta *sta)
+>  {
+>         return (struct rt2x00_sta *)sta->drv_priv;
+>  }
+> --
+> 2.6.1
+>
