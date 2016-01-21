@@ -1,37 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34734 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752512AbcAGNBu (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:34975 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758865AbcAULbp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 08:01:50 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH v1 0/2] wil6210 patches
-References: <1450281106-29416-1-git-send-email-qca_merez@qca.qualcomm.com>
-Date: Thu, 07 Jan 2016 15:01:43 +0200
-In-Reply-To: <1450281106-29416-1-git-send-email-qca_merez@qca.qualcomm.com>
-	(Maya Erez's message of "Wed, 16 Dec 2015 17:51:44 +0200")
-Message-ID: <8760z5lf0o.fsf@kamboji.qca.qualcomm.com> (sfid-20160107_140153_632544_2C8236E7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 21 Jan 2016 06:31:45 -0500
+Received: by mail-pf0-f195.google.com with SMTP id 65so1704127pff.2
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:31:45 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 00/27] rename variables in wilc1000 driver
+Date: Thu, 21 Jan 2016 20:30:30 +0900
+Message-Id: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123148_793558_C24A0D42)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> writes:
+V2:
+A 18/27 patch of series has a wrong name as tail_msg, which is should be
+changed to pstrTailMsg. I fixed it in V2.
 
-> Chanes in V1:
-> - Fixed patches author and sign-off.
->
-> Those patches fix wil6210 issue and add support for platform specific recovery after FW crash
->
-> Hamad Kadmany (1):
->   wil6210: fix kernel OOPS when stopping interface during Rx traffic
->
-> Lior David (1):
->   wil6210: support for platform specific crash recovery
+Chaehyun Lim (27):
+  staging: wilc1000: rename struct __Message_struct
+  staging: wilc1000: rename pvBuffer in struct message
+  staging: wilc1000: rename u32Length in struct message
+  staging: wilc1000: rename pstrNext in struct message
+  staging: wilc1000: rename struct WILC_MsgQueueHandle
+  staging: wilc1000: rename hSem in struct message_queue
+  staging: wilc1000: rename strCriticalSection in struct message_queue
+  staging: wilc1000: rename bExiting in struct message_queue
+  staging: wilc1000: rename u32ReceiversCount in struct message_queue
+  staging: wilc1000: rename pstrMessageList in struct message_queue
+  staging: wilc1000: rename pHandle in wilc_mq_create
+  staging: wilc1000: rename pHandle in wilc_mq_destroy
+  staging: wilc1000: rename pstrMessge in wilc_mq_destroy
+  staging: wilc1000: rename pHandle in wilc_mq_send
+  staging: wilc1000: rename pvSendBuffer in wilc_mq_send
+  staging: wilc1000: rename u32SendBufferSize in wilc_mq_send
+  staging: wilc1000: rename pstrMessage in wilc_mq_send
+  staging: wilc1000: rename pstrTailMsg in wilc_mq_send
+  staging: wilc1000: fix return error code
+  staging: wilc1000: rename pHandle in wilc_mq_recv
+  staging: wilc1000: rename pvRecvBuffer in wilc_mq_recv
+  staging: wilc1000: rename u32RecvBufferSize in wilc_mq_recv
+  staging: wilc1000: rename pu32ReceivedLength in wilc_mq_recv
+  staging: wilc1000: rename pstrMessage in wilc_mq_recv
+  staging: wilc1000: fix coding style of kmalloc usage
+  staging: wilc1000: fix logical continuations
+  staging: wilc1000: remove over-commenting
 
-Applied to ath.git, thanks.
+ drivers/staging/wilc1000/host_interface.c |   2 +-
+ drivers/staging/wilc1000/wilc_msgqueue.c  | 135 +++++++++++++++---------------
+ drivers/staging/wilc1000/wilc_msgqueue.h  | 107 +++++------------------
+ 3 files changed, 87 insertions(+), 157 deletions(-)
 
 -- 
-Kalle Valo
+2.7.0
+
