@@ -1,129 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:35081 "EHLO
-	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754220AbcANUX6 convert rfc822-to-8bit (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:34423 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965156AbcAULcW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2016 15:23:58 -0500
-MIME-Version: 1.0
-Date: Thu, 14 Jan 2016 21:23:57 +0100
-Message-ID: <CAMuHMdWYrQtWUwPJ0i95WphvW-Q6pj900xYgbjwkizj6tp26cg@mail.gmail.com> (sfid-20160114_212425_211580_1B4547B0)
-Subject: brcmfmac build failure with gcc < 4.3 due to __UNIQUE_ID() clash
- (was: Re: brcmfmac: Unify methods to define and map firmware files.)
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-To: Hante Meuleman <meuleman@broadcom.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	brcm80211-dev-list@broadcom.com,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 21 Jan 2016 06:32:22 -0500
+Received: by mail-pf0-f195.google.com with SMTP id 65so1708038pfd.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:32:22 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 12/27] staging: wilc1000: rename pHandle in wilc_mq_destroy
+Date: Thu, 21 Jan 2016 20:30:42 +0900
+Message-Id: <1453375857-20645-13-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123655_909415_84EF59F5)
+In-Reply-To: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Hante,
+This patch renames pHandle to mq to avoid camelcase
 
-On Wed, Jan 13, 2016 at 5:55 AM, Linux Kernel Mailing List
-<linux-kernel@vger.kernel.org> wrote:
-> Commit:     46d703a775394e4724509ff55cdda41d228c028c
->    brcmfmac: Unify methods to define and map firmware files.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 18 +++++++++---------
+ drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-> @@ -44,25 +44,29 @@ enum brcmf_pcie_state {
->         BRCMFMAC_PCIE_STATE_UP
->  };
->
-> -
-> -#define BRCMF_PCIE_43602_FW_NAME               "brcm/brcmfmac43602-pcie.bin"
-> -#define BRCMF_PCIE_43602_NVRAM_NAME            "brcm/brcmfmac43602-pcie.txt"
-> -#define BRCMF_PCIE_4350_FW_NAME                        "brcm/brcmfmac4350-pcie.bin"
-> -#define BRCMF_PCIE_4350_NVRAM_NAME             "brcm/brcmfmac4350-pcie.txt"
-> -#define BRCMF_PCIE_4356_FW_NAME                        "brcm/brcmfmac4356-pcie.bin"
-> -#define BRCMF_PCIE_4356_NVRAM_NAME             "brcm/brcmfmac4356-pcie.txt"
-> -#define BRCMF_PCIE_43570_FW_NAME               "brcm/brcmfmac43570-pcie.bin"
-> -#define BRCMF_PCIE_43570_NVRAM_NAME            "brcm/brcmfmac43570-pcie.txt"
-> -#define BRCMF_PCIE_4358_FW_NAME                        "brcm/brcmfmac4358-pcie.bin"
-> -#define BRCMF_PCIE_4358_NVRAM_NAME             "brcm/brcmfmac4358-pcie.txt"
-> -#define BRCMF_PCIE_4359_FW_NAME                        "brcm/brcmfmac4359-pcie.bin"
-> -#define BRCMF_PCIE_4359_NVRAM_NAME             "brcm/brcmfmac4359-pcie.txt"
-> -#define BRCMF_PCIE_4365_FW_NAME                        "brcm/brcmfmac4365b-pcie.bin"
-> -#define BRCMF_PCIE_4365_NVRAM_NAME             "brcm/brcmfmac4365b-pcie.txt"
-> -#define BRCMF_PCIE_4366_FW_NAME                        "brcm/brcmfmac4366b-pcie.bin"
-> -#define BRCMF_PCIE_4366_NVRAM_NAME             "brcm/brcmfmac4366b-pcie.txt"
-> -#define BRCMF_PCIE_4371_FW_NAME                        "brcm/brcmfmac4371-pcie.bin"
-> -#define BRCMF_PCIE_4371_NVRAM_NAME             "brcm/brcmfmac4371-pcie.txt"
-> +BRCMF_FW_NVRAM_DEF(43602, "brcmfmac43602-pcie.bin", "brcmfmac43602-pcie.txt");
-> +BRCMF_FW_NVRAM_DEF(4350, "brcmfmac4350-pcie.bin", "brcmfmac4350-pcie.txt");
-> +BRCMF_FW_NVRAM_DEF(4356, "brcmfmac4356-pcie.bin", "brcmfmac4356-pcie.txt");
-> +BRCMF_FW_NVRAM_DEF(43570, "brcmfmac43570-pcie.bin", "brcmfmac43570-pcie.txt");
-> +BRCMF_FW_NVRAM_DEF(4358, "brcmfmac4358-pcie.bin", "brcmfmac4358-pcie.txt");
-> +BRCMF_FW_NVRAM_DEF(4359, "brcmfmac4359-pcie.bin", "brcmfmac4359-pcie.txt");
-> +BRCMF_FW_NVRAM_DEF(4365B, "brcmfmac4365b-pcie.bin", "brcmfmac4365b-pcie.txt");
-> +BRCMF_FW_NVRAM_DEF(4366B, "brcmfmac4366b-pcie.bin", "brcmfmac4366b-pcie.txt");
-> +BRCMF_FW_NVRAM_DEF(4371, "brcmfmac4371-pcie.bin", "brcmfmac4371-pcie.txt");
-> +
-> +static struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
-> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43602_CHIP_ID, 0xFFFFFFFF, 43602),
-> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4350_CHIP_ID, 0xFFFFFFFF, 4350),
-> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4356_CHIP_ID, 0xFFFFFFFF, 4356),
-> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43567_CHIP_ID, 0xFFFFFFFF, 43570),
-> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43569_CHIP_ID, 0xFFFFFFFF, 43570),
-> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_43570_CHIP_ID, 0xFFFFFFFF, 43570),
-> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4358_CHIP_ID, 0xFFFFFFFF, 4358),
-> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4359_CHIP_ID, 0xFFFFFFFF, 4359),
-> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4365_CHIP_ID, 0xFFFFFFFF, 4365B),
-> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4366_CHIP_ID, 0xFFFFFFFF, 4366B),
-> +       BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4371_CHIP_ID, 0xFFFFFFFF, 4371),
-> +};
->
->  #define BRCMF_PCIE_FW_UP_TIMEOUT               2000 /* msec */
->
-> @@ -202,26 +206,6 @@ enum brcmf_pcie_state {
->  #define BRCMF_PCIE_LINK_STATUS_CTRL_ASPM_ENAB  3
->
->
-> -MODULE_FIRMWARE(BRCMF_PCIE_43602_FW_NAME);
-> -MODULE_FIRMWARE(BRCMF_PCIE_43602_NVRAM_NAME);
-> -MODULE_FIRMWARE(BRCMF_PCIE_4350_FW_NAME);
-> -MODULE_FIRMWARE(BRCMF_PCIE_4350_NVRAM_NAME);
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 453fa19..103fcfd 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -27,21 +27,21 @@ int wilc_mq_create(struct message_queue *mq)
+  *  @note		copied from FLO glue implementatuion
+  *  @version		1.0
+  */
+-int wilc_mq_destroy(struct message_queue *pHandle)
++int wilc_mq_destroy(struct message_queue *mq)
+ {
+-	pHandle->exiting = true;
++	mq->exiting = true;
+ 
+ 	/* Release any waiting receiver thread. */
+-	while (pHandle->recv_count > 0) {
+-		up(&pHandle->sem);
+-		pHandle->recv_count--;
++	while (mq->recv_count > 0) {
++		up(&mq->sem);
++		mq->recv_count--;
+ 	}
+ 
+-	while (pHandle->msg_list) {
+-		struct message *pstrMessge = pHandle->msg_list->next;
++	while (mq->msg_list) {
++		struct message *pstrMessge = mq->msg_list->next;
+ 
+-		kfree(pHandle->msg_list);
+-		pHandle->msg_list = pstrMessge;
++		kfree(mq->msg_list);
++		mq->msg_list = pstrMessge;
+ 	}
+ 
+ 	return 0;
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index bfd2347..b91822e 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -89,6 +89,6 @@ int wilc_mq_recv(struct message_queue *pHandle,
+  *  @date		30 Aug 2010
+  *  @version		1.0
+  */
+-int wilc_mq_destroy(struct message_queue *pHandle);
++int wilc_mq_destroy(struct message_queue *mq);
+ 
+ #endif
+-- 
+2.7.0
 
-This change breaks the build with gcc < 4.3:
-
-    drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:598:
-error: redefinition of ‘__UNIQUE_ID_firmware598’
-    drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:598:
-error: previous definition of ‘__UNIQUE_ID_firmware598’ was here
-    drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:599:
-error: redefinition of ‘__UNIQUE_ID_firmware600’
-    drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c:599:
-error: previous definition of ‘__UNIQUE_ID_firmware600’ was here
-    ...
-
-The reason is that BRCMF_FW_NVRAM_DEF() expands to two instances of
-MODULE_FIRMWARE():
-
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
->
-> +#define BRCMF_FW_NVRAM_DEF(fw_nvram_name, fw, nvram) \
-> +static const char BRCM_ ## fw_nvram_name ## _FIRMWARE_NAME[] = \
-> +       BRCMF_FW_DEFAULT_PATH fw; \
-> +static const char BRCM_ ## fw_nvram_name ## _NVRAM_NAME[] = \
-> +       BRCMF_FW_DEFAULT_PATH nvram; \
-> +MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH fw); \
-> +MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH nvram)
-
-When compiling using gcc < 4.3, __UNIQUE_ID() uses __LINE__ instead of
-__COUNTER__, as the latter is not available. Hence it derives a "unique" ID
-from the same source line number, causing a redefinition.
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
