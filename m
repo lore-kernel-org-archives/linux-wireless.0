@@ -1,82 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:13896 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751636AbcAEKGF (ORCPT
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:33064 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751016AbcAUWdQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 05:06:05 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 5/6] brcmfmac: use jiffies for timeout in btcoex
-Date: Tue, 5 Jan 2016 11:05:49 +0100
-Message-ID: <1451988350-2197-6-git-send-email-arend@broadcom.com> (sfid-20160105_110632_735783_43A09960)
-In-Reply-To: <1451988350-2197-1-git-send-email-arend@broadcom.com>
-References: <1451988350-2197-1-git-send-email-arend@broadcom.com>
+	Thu, 21 Jan 2016 17:33:16 -0500
+Received: by mail-ig0-f182.google.com with SMTP id z14so134575349igp.0
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 14:33:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com>
+References: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 22 Jan 2016 09:32:56 +1100
+Message-ID: <CAGRGNgVDhqGdC4NrWgTAbhGKtodTGsMVJ-QGdXG_hPWYeuGe4g@mail.gmail.com> (sfid-20160121_233319_757024_47FADCE1)
+Subject: Re: wireless-drivers: random cleanup patches piling up
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The btcoex uses a timeout which was in milliseconds and got
-converted to jiffies upon using timer api. Instead, convert
-it to jiffies and treat it as such further.
+Hi Kalle,
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+On Fri, Jan 22, 2016 at 1:58 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Hi,
+>
+> I have quite a lot of random cleanup patches from new developers waiting
+> in my queue:
+>
+> https://patchwork.kernel.org/project/linux-wireless/list/?state=10&delegate=25621&order=date
+>
+> (Not all of them are cleanup patches, there are also few patches
+> deferred due to other reasons, but you get the idea.)
+>
+> These cleanup patches usually take quite a lot of my time and I'm
+> starting to doubt the benefit, compared to the time needed to dig
+> through them and figuring out what to apply. And this is of course time
+> away from other patches, so it's slowing down "real" development.
+>
+> I really don't know what to do. Part of me is saying that I just should
+> drop them unless it's reviewed by a more experienced developer but on
+> the other hand this is a good way get new developers onboard.
+>
+> What others think? Are these kind of patches useful?
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
-index 4e33f96..14a70d4 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/btcoex.c
-@@ -29,7 +29,7 @@
- #include "cfg80211.h"
- 
- /* T1 start SCO/eSCO priority suppression */
--#define BRCMF_BTCOEX_OPPR_WIN_TIME   2000
-+#define BRCMF_BTCOEX_OPPR_WIN_TIME   msecs_to_jiffies(2000)
- 
- /* BT registers values during DHCP */
- #define BRCMF_BT_DHCP_REG50 0x8022
-@@ -314,8 +314,7 @@ static void brcmf_btcoex_handler(struct work_struct *work)
- 		} else {
- 			btci->timeout -= BRCMF_BTCOEX_OPPR_WIN_TIME;
- 			mod_timer(&btci->timer,
--				  jiffies +
--				  msecs_to_jiffies(BRCMF_BTCOEX_OPPR_WIN_TIME));
-+				  jiffies + BRCMF_BTCOEX_OPPR_WIN_TIME);
- 		}
- 		btci->timer_on = true;
- 		break;
-@@ -328,12 +327,11 @@ static void brcmf_btcoex_handler(struct work_struct *work)
- 
- 		/* DHCP is not over yet, start lowering BT priority */
- 		brcmf_dbg(INFO, "DHCP T1:%d expired\n",
--			  BRCMF_BTCOEX_OPPR_WIN_TIME);
-+			  jiffies_to_msecs(BRCMF_BTCOEX_OPPR_WIN_TIME));
- 		brcmf_btcoex_boost_wifi(btci, true);
- 
- 		btci->bt_state = BRCMF_BT_DHCP_FLAG_FORCE_TIMEOUT;
--		mod_timer(&btci->timer,
--			  jiffies + msecs_to_jiffies(btci->timeout));
-+		mod_timer(&btci->timer, jiffies + btci->timeout);
- 		btci->timer_on = true;
- 		break;
- 
-@@ -477,7 +475,7 @@ int brcmf_btcoex_set_mode(struct brcmf_cfg80211_vif *vif,
- 			return -EBUSY;
- 		/* Start BT timer only for SCO connection */
- 		if (brcmf_btcoex_is_sco_active(ifp)) {
--			btci->timeout = duration;
-+			btci->timeout = msecs_to_jiffies(duration);
- 			btci->vif = vif;
- 			brcmf_btcoex_dhcp_start(btci);
- 		}
+I'm not experienced or knowledgeable enough to give an ack or formal
+review of a patch, however I generally read all of them. Would it be
+helpful if I were to give an informal "this patch looks sane" for
+cleanups and other small patches?
+
+Thanks,
+
 -- 
-1.9.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
