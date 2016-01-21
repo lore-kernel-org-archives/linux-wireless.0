@@ -1,56 +1,155 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:35182 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751798AbcACIgs (ORCPT
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:33227 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751796AbcAUBUz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jan 2016 03:36:48 -0500
-Received: by mail-pa0-f51.google.com with SMTP id do7so1062874pab.2
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 00:36:48 -0800 (PST)
+	Wed, 20 Jan 2016 20:20:55 -0500
+Received: by mail-pa0-f66.google.com with SMTP id pv5so1014462pac.0
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:20:54 -0800 (PST)
 From: Chaehyun Lim <chaehyun.lim@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
 	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
 	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
 	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 11/30] staging: wilc1000: rename pBASessionInfo in wilc_del_all_rx_ba_session
-Date: Sun,  3 Jan 2016 17:35:43 +0900
-Message-Id: <1451810162-16993-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20160103_095249_604090_1C4589BA)
-In-Reply-To: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
+Subject: [PATCH 05/27] staging: wilc1000: rename struct WILC_MsgQueueHandle
+Date: Thu, 21 Jan 2016 10:20:08 +0900
+Message-Id: <1453339230-1377-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_022057_844599_196E9E31)
+In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pBASessionInfo to ba_session_info to avoid camelcase.
+This patch removes typedef from struct WILC_MsgQueueHandle and renames
+it to struct message_queue.
 
 Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c |  2 +-
+ drivers/staging/wilc1000/wilc_msgqueue.c  | 14 +++++++-------
+ drivers/staging/wilc1000/wilc_msgqueue.h  | 18 +++++++++---------
+ 3 files changed, 17 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 265c42b..409d910 100644
+index 5fac516..98627a6 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4609,7 +4609,7 @@ int wilc_del_all_rx_ba_session(struct wilc_vif *vif, char *bssid, char tid)
+@@ -229,7 +229,7 @@ struct host_if_drv *terminated_handle;
+ bool wilc_optaining_ip;
+ static u8 P2P_LISTEN_STATE;
+ static struct task_struct *hif_thread_handler;
+-static WILC_MsgQueueHandle hif_msg_q;
++static struct message_queue hif_msg_q;
+ static struct semaphore hif_sema_thread;
+ static struct semaphore hif_sema_driver;
+ static struct semaphore hif_sema_wait_response;
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 4d79a31..907bae1 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -11,7 +11,7 @@
+  *  @note		copied from FLO glue implementatuion
+  *  @version		1.0
+  */
+-int wilc_mq_create(WILC_MsgQueueHandle *pHandle)
++int wilc_mq_create(struct message_queue *pHandle)
  {
- 	int result = 0;
- 	struct host_if_msg msg;
--	struct ba_session_info *pBASessionInfo = &msg.body.session_info;
-+	struct ba_session_info *ba_session_info = &msg.body.session_info;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 	spin_lock_init(&pHandle->strCriticalSection);
+ 	sema_init(&pHandle->hSem, 0);
+@@ -27,7 +27,7 @@ int wilc_mq_create(WILC_MsgQueueHandle *pHandle)
+  *  @note		copied from FLO glue implementatuion
+  *  @version		1.0
+  */
+-int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
++int wilc_mq_destroy(struct message_queue *pHandle)
+ {
+ 	pHandle->bExiting = true;
  
- 	if (!hif_drv) {
-@@ -4621,8 +4621,8 @@ int wilc_del_all_rx_ba_session(struct wilc_vif *vif, char *bssid, char tid)
+@@ -53,8 +53,8 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
+  *  @note		copied from FLO glue implementatuion
+  *  @version		1.0
+  */
+-int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+-			     const void *pvSendBuffer, u32 u32SendBufferSize)
++int wilc_mq_send(struct message_queue *pHandle,
++		 const void *pvSendBuffer, u32 u32SendBufferSize)
+ {
+ 	unsigned long flags;
+ 	struct message *pstrMessage = NULL;
+@@ -110,9 +110,9 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+  *  @note		copied from FLO glue implementatuion
+  *  @version		1.0
+  */
+-int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
+-			     void *pvRecvBuffer, u32 u32RecvBufferSize,
+-			     u32 *pu32ReceivedLength)
++int wilc_mq_recv(struct message_queue *pHandle,
++		 void *pvRecvBuffer, u32 u32RecvBufferSize,
++		 u32 *pu32ReceivedLength)
+ {
+ 	struct message *pstrMessage;
+ 	unsigned long flags;
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index ec503c3..111be46 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -19,13 +19,13 @@ struct message {
+ 	struct message *next;
+ };
  
- 	msg.id = HOST_IF_MSG_DEL_ALL_RX_BA_SESSIONS;
+-typedef struct __MessageQueue_struct {
++struct message_queue {
+ 	struct semaphore hSem;
+ 	spinlock_t strCriticalSection;
+ 	bool bExiting;
+ 	u32 u32ReceiversCount;
+ 	struct message *pstrMessageList;
+-} WILC_MsgQueueHandle;
++};
  
--	memcpy(pBASessionInfo->bssid, bssid, ETH_ALEN);
--	pBASessionInfo->tid = tid;
-+	memcpy(ba_session_info->bssid, bssid, ETH_ALEN);
-+	ba_session_info->tid = tid;
- 	msg.vif = vif;
+ /*!
+  *  @brief		Creates a new Message queue
+@@ -40,7 +40,7 @@ typedef struct __MessageQueue_struct {
+  *  @date		30 Aug 2010
+  *  @version		1.0
+  */
+-int wilc_mq_create(WILC_MsgQueueHandle *pHandle);
++int wilc_mq_create(struct message_queue *pHandle);
  
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ /*!
+  *  @brief		Sends a message
+@@ -57,8 +57,8 @@ int wilc_mq_create(WILC_MsgQueueHandle *pHandle);
+  *  @date		30 Aug 2010
+  *  @version		1.0
+  */
+-int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+-			     const void *pvSendBuffer, u32 u32SendBufferSize);
++int wilc_mq_send(struct message_queue *pHandle,
++		 const void *pvSendBuffer, u32 u32SendBufferSize);
+ 
+ /*!
+  *  @brief		Receives a message
+@@ -76,9 +76,9 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+  *  @date		30 Aug 2010
+  *  @version		1.0
+  */
+-int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
+-			     void *pvRecvBuffer, u32 u32RecvBufferSize,
+-			     u32 *pu32ReceivedLength);
++int wilc_mq_recv(struct message_queue *pHandle,
++		 void *pvRecvBuffer, u32 u32RecvBufferSize,
++		 u32 *pu32ReceivedLength);
+ 
+ /*!
+  *  @brief		Destroys an existing  Message queue
+@@ -89,6 +89,6 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
+  *  @date		30 Aug 2010
+  *  @version		1.0
+  */
+-int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle);
++int wilc_mq_destroy(struct message_queue *pHandle);
+ 
+ #endif
 -- 
 2.6.4
 
