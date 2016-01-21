@@ -1,57 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:33682 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750791AbcAGNIP (ORCPT
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:35926 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751228AbcAUBUq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 08:08:15 -0500
-Received: by mail-pa0-f50.google.com with SMTP id cy9so258706079pac.0
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2016 05:08:15 -0800 (PST)
-Subject: Re: [PATCH v3 0/2] wcn36xx: fix crash because rx skb allocation
- failure
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <1450617641-29531-1-git-send-email-fengwei.yin@linaro.org>
- <87si29k09a.fsf@kamboji.qca.qualcomm.com>
-Cc: julian.calaby@gmail.com, linux-wireless@vger.kernel.org,
-	wcn36xx@lists.infradead.org, me@bobcopeland.com,
-	k.eugene.e@gmail.com, bjorn.andersson@sonymobile.com,
-	lking@qti.qualcomm.com
-From: yfw <fengwei.yin@linaro.org>
-Message-ID: <568E6337.7070105@linaro.org> (sfid-20160107_140818_397494_6574D9BE)
-Date: Thu, 7 Jan 2016 21:08:07 +0800
-MIME-Version: 1.0
-In-Reply-To: <87si29k09a.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+	Wed, 20 Jan 2016 20:20:46 -0500
+Received: by mail-pa0-f66.google.com with SMTP id a20so1009457pag.3
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:20:46 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 02/27] staging: wilc1000: rename pvBuffer in struct message
+Date: Thu, 21 Jan 2016 10:20:05 +0900
+Message-Id: <1453339230-1377-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_022049_081711_9E7F1821)
+In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch renames pvBuffer to buf to avoid camelcase.
 
-On 2016年01月07日 21:05, Kalle Valo wrote:
-> Fengwei Yin <fengwei.yin@linaro.org> writes:
->
->> The current wcn36xx driver didn't handle rx skb allocation failure case.
->> It only could be triggered when system is in extremly memory shortage
->> case. King Lawrence <lking@qti.qualcomm.com> hit it by git clone linux
->> kernel tree on DragonBoard <1>.
->>
->> The fixing is not to submit the old rx skb to network upper layer and
->> reuse it as rx DMA buffer again.
->>
->> Changes from v2:
->>   * Remove the ugly macro introduced in v2 per comment from Julian Calaby.
->>   * Seperate the DMA int mask register writing as one patch per comment
->>     from Bjorn Andersson.
->>
->> Changes from v1:
->>   * Move switch block out of while loop.
->>   * Remove the warning of unknown channel because we didn't deal with it.
->>
->> Fengwei Yin (2):
->>    wcn36xx: handle rx skb allocation failure to avoid system crash
->>    wcn36xx: split DMA mask register writing.
->
-> Applied to ath.git, thanks.
->
-Thanks a lot.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 10 +++++-----
+ drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-Regards
-Yin, Fengwei
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 9b78fcd..a4e612d 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -76,9 +76,9 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+ 
+ 	pstrMessage->u32Length = u32SendBufferSize;
+ 	pstrMessage->pstrNext = NULL;
+-	pstrMessage->pvBuffer = kmemdup(pvSendBuffer, u32SendBufferSize,
+-					GFP_ATOMIC);
+-	if (!pstrMessage->pvBuffer) {
++	pstrMessage->buf = kmemdup(pvSendBuffer, u32SendBufferSize,
++				   GFP_ATOMIC);
++	if (!pstrMessage->buf) {
+ 		kfree(pstrMessage);
+ 		return -ENOMEM;
+ 	}
+@@ -151,12 +151,12 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
+ 
+ 	/* consume the message */
+ 	pHandle->u32ReceiversCount--;
+-	memcpy(pvRecvBuffer, pstrMessage->pvBuffer, pstrMessage->u32Length);
++	memcpy(pvRecvBuffer, pstrMessage->buf, pstrMessage->u32Length);
+ 	*pu32ReceivedLength = pstrMessage->u32Length;
+ 
+ 	pHandle->pstrMessageList = pstrMessage->pstrNext;
+ 
+-	kfree(pstrMessage->pvBuffer);
++	kfree(pstrMessage->buf);
+ 	kfree(pstrMessage);
+ 
+ 	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index 1a7c652..848ed82 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -14,7 +14,7 @@
+ 
+ /* Message Queue type is a structure */
+ struct message {
+-	void *pvBuffer;
++	void *buf;
+ 	u32 u32Length;
+ 	struct message *pstrNext;
+ };
+-- 
+2.6.4
+
