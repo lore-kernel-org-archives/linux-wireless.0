@@ -1,46 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38027 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932681AbcAZImI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 03:42:08 -0500
-Message-ID: <1453797724.2759.4.camel@sipsolutions.net> (sfid-20160126_094225_772889_A4D7E381)
-Subject: Re: [PATCHv2 3/4] ARM: tegra: use build-in device properties with
- rfkill_gpio
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thierry Reding <thierry.reding@gmail.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Marc Dietrich <marvin24@gmx.de>
-Date: Tue, 26 Jan 2016 09:42:04 +0100
-In-Reply-To: <20160125121840.GA20452@ulmo.nvidia.com> (sfid-20160125_131846_334590_41466BBA)
-References: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com>
-	 <1453712629-143317-4-git-send-email-heikki.krogerus@linux.intel.com>
-	 <20160125121840.GA20452@ulmo.nvidia.com>
-	 (sfid-20160125_131846_334590_41466BBA)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:36646 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752622AbcAUD6v (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jan 2016 22:58:51 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	littlesmartguy@gmail.com, gabe@codehaus.org,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH] rtlwifi: rtl8821ae: Fix 5G failure when EEPROM is incorrectly encoded
+Date: Wed, 20 Jan 2016 21:58:39 -0600
+Message-Id: <1453348719-5546-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160121_045856_231577_149B5E63)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-01-25 at 13:18 +0100, Thierry Reding wrote:
-> 
-> Johannes, I assume that you'll want to take this through your tree
-> because of the dependency? In that case:
-> 
-> Acked-by: Thierry Reding <treding@nvidia.com>
+Recently, it has been reported that D-Link DWA-582 cards, which use an
+RTL8812AE chip are not able to scan for 5G networks. The problems started
+with kernel 4.2, which is the first version that had commit d10101a60372
+("rtlwifi: rtl8821ae: Fix problem with regulatory information"). With this
+patch, the driver went from setting a default channel plan to using
+the value derived from EEPROM.
 
-I can, but I don't really care - perhaps you'd rather take the entire
-series through your tree to get it into one place for Marc?
+Bug reports at https://bugzilla.kernel.org/show_bug.cgi?id=111031 and
+https://bugzilla.redhat.com/show_bug.cgi?id=1279653 are examples of this
+problem.
 
-In which case, you have my
+The problem was solved once I learned that the internal country code was
+resulting in a regulatory set with only 2.4 GHz channels. With the RTL8821AE
+chips available to me, the country code was such that both 2.4 and 5 GHz
+channels are allowed. The fix is to allow both bands even when the EEPROM
+is incorrectly encoded.
 
-Acked-by: Johannes Berg <johannes@sipsolutions.net>
+Fixes: d10101a60372 ("rtlwifi: rtl8821ae: Fix problem with regulatory information")
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: littlesmartguy@gmail.com
+Cc: gabe@codehaus.org
+Cc: Stable <stable@vger.kernel.org> [v4.2+]
+---
+ drivers/net/wireless/realtek/rtlwifi/regd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-for the other 3 patches.
+diff --git a/drivers/net/wireless/realtek/rtlwifi/regd.c b/drivers/net/wireless/realtek/rtlwifi/regd.c
+index a62bf0a..5be3411 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/regd.c
++++ b/drivers/net/wireless/realtek/rtlwifi/regd.c
+@@ -351,7 +351,6 @@ static const struct ieee80211_regdomain *_rtl_regdomain_select(
+ 	case COUNTRY_CODE_SPAIN:
+ 	case COUNTRY_CODE_FRANCE:
+ 	case COUNTRY_CODE_ISRAEL:
+-	case COUNTRY_CODE_WORLD_WIDE_13:
+ 		return &rtl_regdom_12_13;
+ 	case COUNTRY_CODE_MKK:
+ 	case COUNTRY_CODE_MKK1:
+@@ -360,6 +359,7 @@ static const struct ieee80211_regdomain *_rtl_regdomain_select(
+ 		return &rtl_regdom_14_60_64;
+ 	case COUNTRY_CODE_GLOBAL_DOMAIN:
+ 		return &rtl_regdom_14;
++	case COUNTRY_CODE_WORLD_WIDE_13:
+ 	case COUNTRY_CODE_WORLD_WIDE_13_5G_ALL:
+ 		return &rtl_regdom_12_13_5g_all;
+ 	default:
+-- 
+2.1.4
 
-Let me know which you prefer.
-
-johannes
