@@ -1,62 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43744 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752083AbcASL5x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 06:57:53 -0500
-Message-ID: <1453204670.3896.9.camel@sipsolutions.net> (sfid-20160119_125756_178142_486DBF73)
-Subject: Re: Checking p2p capabilities
-From: Johannes Berg <johannes@sipsolutions.net>
-To: albertofanjul@gmail.com, linux-wireless@vger.kernel.org
-Date: Tue, 19 Jan 2016 12:57:50 +0100
-In-Reply-To: <20160119113457.GA32060@archlinux-alberto> (sfid-20160119_123521_709483_A29A5BDE)
-References: <20160119113457.GA32060@archlinux-alberto>
-	 (sfid-20160119_123521_709483_A29A5BDE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:33105 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751796AbcAUBUt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jan 2016 20:20:49 -0500
+Received: by mail-pf0-f195.google.com with SMTP id e65so1068729pfe.0
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:20:49 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 03/27] staging: wilc1000: rename u32Length in struct message
+Date: Thu, 21 Jan 2016 10:20:06 +0900
+Message-Id: <1453339230-1377-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_022051_925124_312D6F7F)
+In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-01-19 at 12:34 +0100, albertofanjul@gmail.com wrote:
+This patch renames u32Length to len to avoid camelcase.
 
-> Lot of people trying miraclecast ask me:why it's device do not
-> support p2p?  (while it's documentation says it does, many times is
-> just what they think, not reality).
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 8 ++++----
+ drivers/staging/wilc1000/wilc_msgqueue.h | 2 +-
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-Well, often the documentation is for the windows or vendor driver, not
-for the upstream driver.
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index a4e612d..0e66a64 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -74,7 +74,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+ 	if (!pstrMessage)
+ 		return -ENOMEM;
+ 
+-	pstrMessage->u32Length = u32SendBufferSize;
++	pstrMessage->len = u32SendBufferSize;
+ 	pstrMessage->pstrNext = NULL;
+ 	pstrMessage->buf = kmemdup(pvSendBuffer, u32SendBufferSize,
+ 				   GFP_ATOMIC);
+@@ -142,7 +142,7 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
+ 		return -EFAULT;
+ 	}
+ 	/* check buffer size */
+-	if (u32RecvBufferSize < pstrMessage->u32Length)	{
++	if (u32RecvBufferSize < pstrMessage->len) {
+ 		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
+ 		up(&pHandle->hSem);
+ 		PRINT_ER("u32RecvBufferSize overflow\n");
+@@ -151,8 +151,8 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
+ 
+ 	/* consume the message */
+ 	pHandle->u32ReceiversCount--;
+-	memcpy(pvRecvBuffer, pstrMessage->buf, pstrMessage->u32Length);
+-	*pu32ReceivedLength = pstrMessage->u32Length;
++	memcpy(pvRecvBuffer, pstrMessage->buf, pstrMessage->len);
++	*pu32ReceivedLength = pstrMessage->len;
+ 
+ 	pHandle->pstrMessageList = pstrMessage->pstrNext;
+ 
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index 848ed82..b0ccd1d 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -15,7 +15,7 @@
+ /* Message Queue type is a structure */
+ struct message {
+ 	void *buf;
+-	u32 u32Length;
++	u32 len;
+ 	struct message *pstrNext;
+ };
+ 
+-- 
+2.6.4
 
-> I wonder if that is a matter of driver, modules or pure hardware. Is
-> there any way to check it directly and not from a grep inside iw ?.
-> 
-> something like:
-> 
-> iw phy wlp3s0 get P2P-client
-> iw phy wlp3s0 get P2P-GO
-
-I'm not sure it makes sense to add commands to iw for that, but you can
-use python or C code to talk to nl80211 directly.
-
-> About kernel, modules and hardware, are they completely black box for
-> others?, I mean, can I detect if my device hardware supports some
-> interface but my driver or module can't?
-
-No, you can't detect that.
-
-> At this point my script informs pretty well, and there's a few people
-> ask such things, but I would like to check it in a better way, even
-> with an api inside my project
-> 
-> Something related with this lines I could check by myself (I use that
-> clone for it's line anchors)
-> 
-> https://github.com/cozybit/iw/blob/master/util.c#L124
-> https://github.com/cozybit/iw/blob/master/info.c#L276
-> 
-> NL80211_ATTR_SUPPORTED_IFTYPES
-> NL80211_IFTYPE_MAX
-> 
-
-Right, you'd do something along these lines to directly speak to
-nl80211 and query the supported interface types.
-
-johannes
