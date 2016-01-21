@@ -1,41 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:56304 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757974AbcAUG5z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 01:57:55 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: Arend van Spriel <arend@broadcom.com>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: [RFC V2 2/3] nl80211: add bss selection attribute to CONNECT
- command
-Date: Thu, 21 Jan 2016 06:57:50 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A0612BF0B2@HASMSX110.ger.corp.intel.com> (sfid-20160121_075759_150780_C841CA9E)
-References: <1452678583-20086-1-git-send-email-arend@broadcom.com>
- <1452678583-20086-3-git-send-email-arend@broadcom.com>
- <1452769832.2444.14.camel@sipsolutions.net> <569CB190.1000901@broadcom.com>
- <1453209647.3896.22.camel@sipsolutions.net> <569EB9A6.4030808@broadcom.com>
- <1453298541.13263.10.camel@sipsolutions.net> <56A001DA.9010400@broadcom.com>
-In-Reply-To: <56A001DA.9010400@broadcom.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:35662 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754489AbcAUBVb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jan 2016 20:21:31 -0500
+Received: by mail-pa0-f65.google.com with SMTP id gi1so1022651pac.2
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:21:31 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 17/27] staging: wilc1000: rename pstrMessage in wilc_mq_send
+Date: Thu, 21 Jan 2016 10:20:20 +0900
+Message-Id: <1453339230-1377-17-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_023655_520740_BFFBD7AE)
+In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBBcmVuZCB2YW4gU3ByaWVsIFtt
-YWlsdG86YXJlbmRAYnJvYWRjb20uY29tXQ0KPiBTZW50OiBXZWRuZXNkYXksIEphbnVhcnkgMjAs
-IDIwMTYgMjM6NTQNCj4gVG86IEpvaGFubmVzIEJlcmcNCj4gQ2M6IGxpbnV4LXdpcmVsZXNzOyBQ
-ZWVyLCBJbGFuDQo+IFN1YmplY3Q6IFJlOiBbUkZDIFYyIDIvM10gbmw4MDIxMTogYWRkIGJzcyBz
-ZWxlY3Rpb24gYXR0cmlidXRlIHRvIENPTk5FQ1QNCj4gY29tbWFuZA0KPiANCj4gDQo+IA0KPiBP
-biAyMC0xLTIwMTYgMTU6MDIsIEpvaGFubmVzIEJlcmcgd3JvdGU6DQo+ID4gSWxhbiBwb2ludGVk
-IG1lIHRvIHRoaXM6DQo+ID4NCj4gPiBodHRwOi8vYW5kcm9pZHhyZWYuY29tLzYuMC4xX3IxMC94
-cmVmL2hhcmR3YXJlL2xpYmhhcmR3YXJlX2xlZ2FjeS9pbmNsDQo+ID4gdWRlL2hhcmR3YXJlX2xl
-Z2FjeS9nc2Nhbi5oIzM1MQ0KPiA+DQo+ID4NCj4gPiBJJ2Qgc2F5IHRoYXQgd291bGQganVzdCBi
-ZSBhIHNlcGFyYXRlIHByaW1pdGl2ZSwgYW5kIHRoZW4gQW5kcm9pZA0KPiA+IHdvdWxkIHBpY2sg
-dGhhdCBpbiBzb21lIHdheT8NCj4gDQo+IEl0IHdhcyBub3QgcGFydCBvZiBteSBwbGFuLCBidXQg
-aXQgc2VlbXMgdG8gZml0LCB5ZXMuIEFuZHJvaWQgbm93IHVzZXMgdmVuZG9yDQo+IGNvbW1hbmQg
-d2l0aCBnb29nbGUgb3VpIGZvciBnc2NhbiBpZiBJIGFtIG5vdCBtaXN0YWtlbi4NCj4gDQoNClRo
-ZXNlIGRvIG5vdCBuZWVkIHRvIG5lY2Vzc2FyaWx5IGJlIHZlbmRvciBjb21tYW5kcyA6KSBXZSBj
-YW4gZXh0ZW5kIHlvdXIgd29yayB0byBhbHNvIHN1cHBvcnQgdGhlIGFuZHJvaWQgYmVoYXZpb3Ig
-KGp1c3QgcG9pbnRlZCB0aGlzIG91dCBzbyB3ZSB3b3VsZCBub3QgYmUgYmxvY2tlZCB3aGVuIHdh
-bnRpbmcgdG8gZXh0ZW5kIGl0KS4NCg0KUmVnYXJkcywNCg0KSWxhbi4NCg==
+This patch renames pstrMessage to new_msg to avoid camelcase.
+
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 8e37cff0..9a80fe6 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -57,7 +57,7 @@ int wilc_mq_send(struct message_queue *mq,
+ 		 const void *send_buf, u32 send_buf_size)
+ {
+ 	unsigned long flags;
+-	struct message *pstrMessage = NULL;
++	struct message *new_msg = NULL;
+ 
+ 	if ((!mq) || (send_buf_size == 0) || (!send_buf)) {
+ 		PRINT_ER("mq or send_buf is null\n");
+@@ -70,16 +70,15 @@ int wilc_mq_send(struct message_queue *mq,
+ 	}
+ 
+ 	/* construct a new message */
+-	pstrMessage = kmalloc(sizeof(struct message), GFP_ATOMIC);
+-	if (!pstrMessage)
++	new_msg = kmalloc(sizeof(struct message), GFP_ATOMIC);
++	if (!new_msg)
+ 		return -ENOMEM;
+ 
+-	pstrMessage->len = send_buf_size;
+-	pstrMessage->next = NULL;
+-	pstrMessage->buf = kmemdup(send_buf, send_buf_size,
+-				   GFP_ATOMIC);
+-	if (!pstrMessage->buf) {
+-		kfree(pstrMessage);
++	new_msg->len = send_buf_size;
++	new_msg->next = NULL;
++	new_msg->buf = kmemdup(send_buf, send_buf_size, GFP_ATOMIC);
++	if (!new_msg->buf) {
++		kfree(new_msg);
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -87,14 +86,14 @@ int wilc_mq_send(struct message_queue *mq,
+ 
+ 	/* add it to the message queue */
+ 	if (!mq->msg_list) {
+-		mq->msg_list  = pstrMessage;
++		mq->msg_list  = new_msg;
+ 	} else {
+ 		struct message *pstrTailMsg = mq->msg_list;
+ 
+ 		while (pstrTailMsg->next)
+ 			pstrTailMsg = pstrTailMsg->next;
+ 
+-		pstrTailMsg->next = pstrMessage;
++		pstrTailMsg->next = new_msg;
+ 	}
+ 
+ 	spin_unlock_irqrestore(&mq->lock, flags);
+-- 
+2.6.4
+
