@@ -1,34 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:36853 "EHLO
-	mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932544AbcAYXYB (ORCPT
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:36036 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754640AbcAUBVe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 18:24:01 -0500
-Received: by mail-io0-f178.google.com with SMTP id g73so172333863ioe.3
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2016 15:24:00 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1453712816-2343-1-git-send-email-arend@broadcom.com>
-References: <1453712816-2343-1-git-send-email-arend@broadcom.com>
-Date: Tue, 26 Jan 2016 00:24:00 +0100
-Message-ID: <CACna6rwQz3ES=CopxJNshX9iWgc4PCOqQeVr0WeJo3E=ST1Dqg@mail.gmail.com> (sfid-20160126_002405_333861_684C6D62)
-Subject: Re: [PATCH] brcm: add firmware for bcm4366 device
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-firmware@kernel.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 20 Jan 2016 20:21:34 -0500
+Received: by mail-pa0-f66.google.com with SMTP id a20so1010180pag.3
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:21:34 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 18/27] staging: wilc1000: rename tail_msg in wilc_mq_send
+Date: Thu, 21 Jan 2016 10:20:21 +0900
+Message-Id: <1453339230-1377-18-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_023658_307709_3464CEA4)
+In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 January 2016 at 10:06, Arend van Spriel <arend@broadcom.com> wrote:
-> This patch adds firmware for the bcm4366 11ac wlan device which
-> is supported by the brcmfmac driver since commit 55acca90da52
-> ("brcmfmac: Add support for the BCM4365 and BCM4366 PCIE devices").
+This patch renames pstrTailMsg to tail_msg to avoid camelcase.
 
-Thanks a lot for releasing it so quickly since my report!
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-Unfrotunately there is some problem with this firmware or brcmfmac
-driver. I tried the latest brcmfmac + added 14e4:4365 support on my
-D-Link DIR-885L and got this:
-[   52.853422] brcmfmac: brcmf_pcie_download_fw_nvram: FW failed to initialize
-any hint what could cause this problem?
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 9a80fe6..764723f 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -88,12 +88,12 @@ int wilc_mq_send(struct message_queue *mq,
+ 	if (!mq->msg_list) {
+ 		mq->msg_list  = new_msg;
+ 	} else {
+-		struct message *pstrTailMsg = mq->msg_list;
++		struct message *tail_msg = mq->msg_list;
+ 
+-		while (pstrTailMsg->next)
+-			pstrTailMsg = pstrTailMsg->next;
++		while (tail_msg->next)
++			tail_msg = tail_msg->next;
+ 
+-		pstrTailMsg->next = new_msg;
++		tail_msg->next = new_msg;
+ 	}
+ 
+ 	spin_unlock_irqrestore(&mq->lock, flags);
+-- 
+2.6.4
+
