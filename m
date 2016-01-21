@@ -1,41 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41837 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752507AbcA2JSr (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:27372 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751096AbcAUIz3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2016 04:18:47 -0500
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 21 Jan 2016 03:55:29 -0500
+Date: Thu, 21 Jan 2016 11:55:08 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: Chaehyun Lim <chaehyun.lim@gmail.com>, devel@driverdev.osuosl.org,
+	chris.park@atmel.com, austin.shin@atmel.com,
+	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	johnny.kim@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com
+Subject: Re: [PATCH 25/27] staging: wilc1000: fix coding style of kmalloc
+ usage
+Message-ID: <20160121085508.GD6370@mwanda> (sfid-20160121_095532_554481_71AE4DB1)
+References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+ <1453339230-1377-25-git-send-email-chaehyun.lim@gmail.com>
+ <20160121081816.GA10063@sudip-pc>
 MIME-Version: 1.0
-Subject: Re: mwifiex: fix power state out of sync problem
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1452606196-9582-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Shengzhen Li <szli@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20160129091846.EE9AE6044B@smtp.codeaurora.org> (sfid-20160129_101853_311514_173D401A)
-Date: Fri, 29 Jan 2016 09:18:46 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160121081816.GA10063@sudip-pc>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Thu, Jan 21, 2016 at 01:48:16PM +0530, Sudip Mukherjee wrote:
+> On Thu, Jan 21, 2016 at 10:20:28AM +0900, Chaehyun Lim wrote:
+> > This patch fixes coding style of kmalloc usage found by checkpatch.
+> > CHECK: Prefer kmalloc(sizeof(*new_msg)...) over kmalloc(sizeof(struct message)...)
+> > 
+> > Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+> > ---
+> >  drivers/staging/wilc1000/wilc_msgqueue.c | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+> > index 7107715..c7a60f4 100644
+> > --- a/drivers/staging/wilc1000/wilc_msgqueue.c
+> > +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+> > @@ -70,7 +70,7 @@ int wilc_mq_send(struct message_queue *mq,
+> >  	}
+> >  
+> >  	/* construct a new message */
+> > -	new_msg = kmalloc(sizeof(struct message), GFP_ATOMIC);
+> > +	new_msg = kmalloc(sizeof(*new_msg), GFP_ATOMIC);
+> 
+> This checkpatch error was introduced by 1/27 patch of this series. Maybe
+> it will be better to fix it in that one.
 
-> From: Shengzhen Li <szli@marvell.com>
-> 
-> It's been observed that driver's power state goes out
-> of sync with firmware in some corner cases. When this
-> happens, driver tries to download the data to firmware
-> assuming it's awake which causes Tx data timeout.
-> 
-> Main thread will process interrupt as soon as interrupt
-> handler fills 'int_status' variable.
-> 
-> This patch fixes the race issue by updating 'int_status'
-> at the end of mwifiex_interrupt_status().
-> 
-> Signed-off-by: Shengzhen Li <szli@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+The warning was introduced there but the issue went back further it's
+just that checkpatch didn't detect it because of other issues.  This
+seems fine.
 
-Thanks, applied to wireless-drivers-next.git.
+regards,
+dan carpenter
 
-Kalle Valo
