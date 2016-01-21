@@ -1,48 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f51.google.com ([209.85.215.51]:32770 "EHLO
-	mail-lf0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966733AbcAZQ5S (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:34415 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965156AbcAULcT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 11:57:18 -0500
-Received: by mail-lf0-f51.google.com with SMTP id s81so2863321lfd.0
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2016 08:57:17 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 0/5] brcmfmac: support for new 14e43:4365 card with BCM4366
-Date: Tue, 26 Jan 2016 17:57:00 +0100
-Message-Id: <1453827425-16455-1-git-send-email-zajec5@gmail.com> (sfid-20160126_175728_347006_43F2DEE1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 21 Jan 2016 06:32:19 -0500
+Received: by mail-pf0-f195.google.com with SMTP id 65so1707986pfd.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:32:19 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 11/27] staging: wilc1000: rename pHandle in wilc_mq_create
+Date: Thu, 21 Jan 2016 20:30:41 +0900
+Message-Id: <1453375857-20645-12-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123654_494834_C7458A51)
+In-Reply-To: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I got D-Link DIR-885L with two 14e4:4365 PCI cards both using BCM4366 chipset.
-It seems to have newer ChipCommon and separated PMU core so I needed these
-patches on top of recent Broadcom's work.
+This patch renames pHandle to mq to avoid camelcase
 
-Please note this patchset depends on:
-[PATCH 2/2] bcma: support PMU present as separated bus core
-as I had to use BCMA_CC_CAP_EXT_AOB_PRESENT.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 12 ++++++------
+ drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-Rafał Miłecki (5):
-  brcmfmac: analyze descriptors of current component only
-  brcmfmac: allow storing PMU core without wrapper address
-  brcmfmac: read extended capabilities of ChipCommon core
-  brcmfmac: access PMU registers using standalone PMU core if available
-  brcmfmac: add support for 14e4:4365 PCI ID with BCM4366 chipset
-
- .../wireless/broadcom/brcm80211/brcmfmac/chip.c    | 45 ++++++++++++++++++----
- .../wireless/broadcom/brcm80211/brcmfmac/chip.h    |  3 ++
- .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    |  4 ++
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  9 ++---
- 4 files changed, 49 insertions(+), 12 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index d13c9a7..453fa19 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -11,13 +11,13 @@
+  *  @note		copied from FLO glue implementatuion
+  *  @version		1.0
+  */
+-int wilc_mq_create(struct message_queue *pHandle)
++int wilc_mq_create(struct message_queue *mq)
+ {
+-	spin_lock_init(&pHandle->lock);
+-	sema_init(&pHandle->sem, 0);
+-	pHandle->msg_list = NULL;
+-	pHandle->recv_count = 0;
+-	pHandle->exiting = false;
++	spin_lock_init(&mq->lock);
++	sema_init(&mq->sem, 0);
++	mq->msg_list = NULL;
++	mq->recv_count = 0;
++	mq->exiting = false;
+ 	return 0;
+ }
+ 
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index 7e7ec06..bfd2347 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -40,7 +40,7 @@ struct message_queue {
+  *  @date		30 Aug 2010
+  *  @version		1.0
+  */
+-int wilc_mq_create(struct message_queue *pHandle);
++int wilc_mq_create(struct message_queue *mq);
+ 
+ /*!
+  *  @brief		Sends a message
 -- 
-1.8.4.5
+2.7.0
 
