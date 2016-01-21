@@ -1,81 +1,332 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f66.google.com ([209.85.213.66]:35980 "EHLO
-	mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759234AbcAULLl (ORCPT
+Received: from mail-lb0-f172.google.com ([209.85.217.172]:33567 "EHLO
+	mail-lb0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965248AbcAUNpp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 06:11:41 -0500
-Received: by mail-vk0-f66.google.com with SMTP id e64so1505095vkg.3
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:11:41 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20160121100456.GD6421@mwanda>
-References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
-	<1453339230-1377-25-git-send-email-chaehyun.lim@gmail.com>
-	<20160121081816.GA10063@sudip-pc>
-	<20160121085508.GD6370@mwanda>
-	<CAKV=isvj-RbzMCOS+UyXkXyuyX2_SLhDyVTNaJy4kQbfN+bxSg@mail.gmail.com>
-	<20160121100456.GD6421@mwanda>
-Date: Thu, 21 Jan 2016 20:11:40 +0900
-Message-ID: <CAKV=iss0QH9=5CEJdttt2qrpJYFV9cgfHZsTw0NB=+UZH89b9Q@mail.gmail.com> (sfid-20160121_121145_001051_475C3D51)
-Subject: Re: [PATCH 25/27] staging: wilc1000: fix coding style of kmalloc usage
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-	devel@driverdev.osuosl.org, Chris Park <chris.park@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	"tony.cho" <tony.cho@atmel.com>, leo.kim@atmel.com
-Content-Type: text/plain; charset=UTF-8
+	Thu, 21 Jan 2016 08:45:45 -0500
+Received: by mail-lb0-f172.google.com with SMTP id x4so23776532lbm.0
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 05:45:44 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 06/13] ath10k: add new htt message generation/parsing logic
+Date: Thu, 21 Jan 2016 14:46:39 +0100
+Message-Id: <1453384006-31907-7-git-send-email-michal.kazior@tieto.com> (sfid-20160121_144552_961817_AACEEEA4)
+In-Reply-To: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
+References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 21, 2016 at 7:04 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> On Thu, Jan 21, 2016 at 07:01:45PM +0900, Chaehyun Lim wrote:
->> On Thu, Jan 21, 2016 at 5:55 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
->> > On Thu, Jan 21, 2016 at 01:48:16PM +0530, Sudip Mukherjee wrote:
->> >> On Thu, Jan 21, 2016 at 10:20:28AM +0900, Chaehyun Lim wrote:
->> >> > This patch fixes coding style of kmalloc usage found by checkpatch.
->> >> > CHECK: Prefer kmalloc(sizeof(*new_msg)...) over kmalloc(sizeof(struct message)...)
->> >> >
->> >> > Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
->> >> > ---
->> >> >  drivers/staging/wilc1000/wilc_msgqueue.c | 2 +-
->> >> >  1 file changed, 1 insertion(+), 1 deletion(-)
->> >> >
->> >> > diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
->> >> > index 7107715..c7a60f4 100644
->> >> > --- a/drivers/staging/wilc1000/wilc_msgqueue.c
->> >> > +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
->> >> > @@ -70,7 +70,7 @@ int wilc_mq_send(struct message_queue *mq,
->> >> >     }
->> >> >
->> >> >     /* construct a new message */
->> >> > -   new_msg = kmalloc(sizeof(struct message), GFP_ATOMIC);
->> >> > +   new_msg = kmalloc(sizeof(*new_msg), GFP_ATOMIC);
->> >>
->> >> This checkpatch error was introduced by 1/27 patch of this series. Maybe
->> >> it will be better to fix it in that one.
->> >
->> > The warning was introduced there but the issue went back further it's
->> > just that checkpatch didn't detect it because of other issues.  This
->> > seems fine.
->>
->> I appreciate for all comment. I will resend it after applying Sudip's review.
->>
->
-> That's fine too, but the original way is more correct because it only
-> fixes one thing at a time and is easier to review.
->
-I will keep the original way, even 1/27 patch was introduced a new
-checkpatch warning.
-I agree that one patch should be changed one thing.
+This merely adds some parsing, generation and
+sanity checks with placeholders for real
+code/functionality to be added later.
 
-But I need to resend again because I find a wrong variable name at commit title.
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.h    |   5 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 198 ++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/htt_tx.c |  53 +++++++++
+ 3 files changed, 255 insertions(+), 1 deletion(-)
 
-regards
-Chaehyun Lim
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index cb6d4fd687da..65dcd22f31df 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1752,6 +1752,11 @@ int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
+ 				u8 max_subfrms_ampdu,
+ 				u8 max_subfrms_amsdu);
+ void ath10k_htt_hif_tx_complete(struct ath10k *ar, struct sk_buff *skb);
++int ath10k_htt_tx_fetch_resp(struct ath10k *ar,
++			     __le32 token,
++			     __le16 fetch_seq_num,
++			     struct htt_tx_fetch_record *records,
++			     size_t num_records);
+ 
+ void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt,
+ 			       bool is_mgmt);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index cc957a625605..be7dc88b3316 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -1982,6 +1982,198 @@ static void ath10k_htt_rx_in_ord_ind(struct ath10k *ar, struct sk_buff *skb)
+ 	tasklet_schedule(&htt->rx_replenish_task);
+ }
+ 
++static void ath10k_htt_rx_tx_fetch_resp_id_confirm(struct ath10k *ar,
++						   const __le32 *resp_ids,
++						   int num_resp_ids)
++{
++	int i;
++	u32 resp_id;
++
++	ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx tx fetch confirm num_resp_ids %d\n",
++		   num_resp_ids);
++
++	for (i = 0; i < num_resp_ids; i++) {
++		resp_id = le32_to_cpu(resp_ids[i]);
++
++		ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx tx fetch confirm resp_id %u\n",
++			   resp_id);
++
++		/* TODO: free resp_id */
++	}
++}
++
++static void ath10k_htt_rx_tx_fetch_ind(struct ath10k *ar, struct sk_buff *skb)
++{
++	struct htt_resp *resp = (struct htt_resp *)skb->data;
++	struct htt_tx_fetch_record *record;
++	size_t len;
++	size_t max_num_bytes;
++	size_t max_num_msdus;
++	const __le32 *resp_ids;
++	u16 num_records;
++	u16 num_resp_ids;
++	u16 peer_id;
++	u8 tid;
++	int i;
++
++	ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx tx fetch ind\n");
++
++	len = sizeof(resp->hdr) + sizeof(resp->tx_fetch_ind);
++	if (unlikely(skb->len < len)) {
++		ath10k_warn(ar, "received corrupted tx_fetch_ind event: buffer too short\n");
++		return;
++	}
++
++	num_records = le16_to_cpu(resp->tx_fetch_ind.num_records);
++	num_resp_ids = le16_to_cpu(resp->tx_fetch_ind.num_resp_ids);
++
++	len += sizeof(resp->tx_fetch_ind.records[0]) * num_records;
++	len += sizeof(resp->tx_fetch_ind.resp_ids[0]) * num_resp_ids;
++
++	if (unlikely(skb->len < len)) {
++		ath10k_warn(ar, "received corrupted tx_fetch_ind event: too many records/resp_ids\n");
++		return;
++	}
++
++	ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx tx fetch ind num records %hu num resps %hu seq %hu\n",
++		   num_records, num_resp_ids,
++		   le16_to_cpu(resp->tx_fetch_ind.fetch_seq_num));
++
++	/* TODO: runtime sanity checks */
++
++	for (i = 0; i < num_records; i++) {
++		record = &resp->tx_fetch_ind.records[i];
++		peer_id = MS(le16_to_cpu(record->info),
++			     HTT_TX_FETCH_RECORD_INFO_PEER_ID);
++		tid = MS(le16_to_cpu(record->info),
++			 HTT_TX_FETCH_RECORD_INFO_TID);
++		max_num_msdus = le16_to_cpu(record->num_msdus);
++		max_num_bytes = le32_to_cpu(record->num_bytes);
++
++		ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx tx fetch record %i peer_id %hu tid %hhu msdus %zu bytes %zu\n",
++			   i, peer_id, tid, max_num_msdus, max_num_bytes);
++
++		if (unlikely(peer_id >= ar->htt.tx_q_state.num_peers) ||
++		    unlikely(tid >= ar->htt.tx_q_state.num_tids)) {
++			ath10k_warn(ar, "received out of range peer_id %hu tid %hhu\n",
++				    peer_id, tid);
++			continue;
++		}
++
++		/* TODO: dequeue and submit tx to device */
++	}
++
++	resp_ids = ath10k_htt_get_tx_fetch_ind_resp_ids(&resp->tx_fetch_ind);
++	ath10k_htt_rx_tx_fetch_resp_id_confirm(ar, resp_ids, num_resp_ids);
++
++	/* TODO: generate and send fetch response to device */
++}
++
++static void ath10k_htt_rx_tx_fetch_confirm(struct ath10k *ar,
++					   struct sk_buff *skb)
++{
++	const struct htt_resp *resp = (void *)skb->data;
++	size_t len;
++	int num_resp_ids;
++
++	ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx tx fetch confirm\n");
++
++	len = sizeof(resp->hdr) + sizeof(resp->tx_fetch_confirm);
++	if (unlikely(skb->len < len)) {
++		ath10k_warn(ar, "received corrupted tx_fetch_confirm event: buffer too short\n");
++		return;
++	}
++
++	num_resp_ids = le16_to_cpu(resp->tx_fetch_confirm.num_resp_ids);
++	len += sizeof(resp->tx_fetch_confirm.resp_ids[0]) * num_resp_ids;
++
++	if (unlikely(skb->len < len)) {
++		ath10k_warn(ar, "received corrupted tx_fetch_confirm event: resp_ids buffer overflow\n");
++		return;
++	}
++
++	ath10k_htt_rx_tx_fetch_resp_id_confirm(ar,
++					       resp->tx_fetch_confirm.resp_ids,
++					       num_resp_ids);
++}
++
++static void ath10k_htt_rx_tx_mode_switch_ind(struct ath10k *ar,
++					     struct sk_buff *skb)
++{
++	const struct htt_resp *resp = (void *)skb->data;
++	const struct htt_tx_mode_switch_record *record;
++	size_t len;
++	size_t num_records;
++	enum htt_tx_mode_switch_mode mode;
++	bool enable;
++	u16 info0;
++	u16 info1;
++	u16 threshold;
++	u16 peer_id;
++	u8 tid;
++	int i;
++
++	ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx tx mode switch ind\n");
++
++	len = sizeof(resp->hdr) + sizeof(resp->tx_mode_switch_ind);
++	if (unlikely(skb->len < len)) {
++		ath10k_warn(ar, "received corrupted tx_mode_switch_ind event: buffer too short\n");
++		return;
++	}
++
++	info0 = le16_to_cpu(resp->tx_mode_switch_ind.info0);
++	info1 = le16_to_cpu(resp->tx_mode_switch_ind.info1);
++
++	enable = !!(info0 & HTT_TX_MODE_SWITCH_IND_INFO0_ENABLE);
++	num_records = MS(info0, HTT_TX_MODE_SWITCH_IND_INFO1_THRESHOLD);
++	mode = MS(info1, HTT_TX_MODE_SWITCH_IND_INFO1_MODE);
++	threshold = MS(info1, HTT_TX_MODE_SWITCH_IND_INFO1_THRESHOLD);
++
++	ath10k_dbg(ar, ATH10K_DBG_HTT,
++		   "htt rx tx mode switch ind info0 0x%04hx info1 0x%04hx enable %d num records %zd mode %d threshold %hu\n",
++		   info0, info1, enable, num_records, mode, threshold);
++
++	len += sizeof(resp->tx_mode_switch_ind.records[0]) * num_records;
++
++	if (unlikely(skb->len < len)) {
++		ath10k_warn(ar, "received corrupted tx_mode_switch_mode_ind event: too many records\n");
++		return;
++	}
++
++	switch (mode) {
++	case HTT_TX_MODE_SWITCH_PUSH:
++	case HTT_TX_MODE_SWITCH_PUSH_PULL:
++		break;
++	default:
++		ath10k_warn(ar, "received invalid tx_mode_switch_mode_ind mode %d, ignoring\n",
++			    mode);
++		return;
++	}
++
++	if (!enable)
++		return;
++
++	/* TODO: apply configuration */
++
++	for (i = 0; i < num_records; i++) {
++		record = &resp->tx_mode_switch_ind.records[i];
++		info0 = le16_to_cpu(record->info0);
++		peer_id = MS(info0, HTT_TX_MODE_SWITCH_RECORD_INFO0_PEER_ID);
++		tid = MS(info0, HTT_TX_MODE_SWITCH_RECORD_INFO0_TID);
++
++		if (unlikely(peer_id >= ar->htt.tx_q_state.num_peers) ||
++		    unlikely(tid >= ar->htt.tx_q_state.num_tids)) {
++			ath10k_warn(ar, "received out of range peer_id %hu tid %hhu\n",
++				    peer_id, tid);
++			continue;
++		}
++
++		/* TODO: apply configuration */
++	}
++
++	/* TODO: apply configuration */
++}
++
+ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct ath10k_htt *htt = &ar->htt;
+@@ -2124,9 +2316,13 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 	case HTT_T2H_MSG_TYPE_AGGR_CONF:
+ 		break;
+ 	case HTT_T2H_MSG_TYPE_TX_FETCH_IND:
++		ath10k_htt_rx_tx_fetch_ind(ar, skb);
++		break;
+ 	case HTT_T2H_MSG_TYPE_TX_FETCH_CONFIRM:
++		ath10k_htt_rx_tx_fetch_confirm(ar, skb);
++		break;
+ 	case HTT_T2H_MSG_TYPE_TX_MODE_SWITCH_IND:
+-		/* TODO: Implement pull-push logic */
++		ath10k_htt_rx_tx_mode_switch_ind(ar, skb);
+ 		break;
+ 	case HTT_T2H_MSG_TYPE_EN_STATS:
+ 	default:
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 860661d3812f..225f0561b3fd 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -526,6 +526,59 @@ int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
+ 	return 0;
+ }
+ 
++int ath10k_htt_tx_fetch_resp(struct ath10k *ar,
++			     __le32 token,
++			     __le16 fetch_seq_num,
++			     struct htt_tx_fetch_record *records,
++			     size_t num_records)
++{
++	struct sk_buff *skb;
++	struct htt_cmd *cmd;
++	u16 resp_id;
++	int len = 0;
++	int ret;
++
++	len += sizeof(cmd->hdr);
++	len += sizeof(cmd->tx_fetch_resp);
++	len += sizeof(cmd->tx_fetch_resp.records[0]) * num_records;
++
++	skb = ath10k_htc_alloc_skb(ar, len);
++	if (!skb)
++		return -ENOMEM;
++
++	resp_id = 0; /* TODO: allocate resp_id */
++	ret = 0;
++	if (ret)
++		goto err_free_skb;
++
++	skb_put(skb, len);
++	cmd = (struct htt_cmd *)skb->data;
++	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_TX_FETCH_RESP;
++	cmd->tx_fetch_resp.resp_id = cpu_to_le16(resp_id);
++	cmd->tx_fetch_resp.fetch_seq_num = fetch_seq_num;
++	cmd->tx_fetch_resp.num_records = cpu_to_le16(num_records);
++	cmd->tx_fetch_resp.token = token;
++
++	memcpy(cmd->tx_fetch_resp.records, records,
++	       sizeof(records[0]) * num_records);
++
++	ret = ath10k_htc_send(&ar->htc, ar->htt.eid, skb);
++	if (ret) {
++		ath10k_warn(ar, "failed to submit htc command: %d\n", ret);
++		goto err_free_resp_id;
++	}
++
++	return 0;
++
++err_free_resp_id:
++	(void)resp_id; /* TODO: free resp_id */
++
++err_free_skb:
++	dev_kfree_skb_any(skb);
++
++	return ret;
++}
++
+ static u8 ath10k_htt_tx_get_vdev_id(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-- 
+2.1.4
 
-> regards,
-> dan carpenter
->
