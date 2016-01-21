@@ -1,66 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:5856 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754123AbcA0J4X (ORCPT
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:33232 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752342AbcAUBU6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 04:56:23 -0500
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH 00/12] add ahb (qca4019) support
-Date: Wed, 27 Jan 2016 15:24:21 +0530
-Message-ID: <1453888473-2879-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20160127_105822_006241_60E8727E)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 20 Jan 2016 20:20:58 -0500
+Received: by mail-pa0-f66.google.com with SMTP id pv5so1014521pac.0
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:20:57 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 06/27] staging: wilc1000: rename hSem in struct message_queue
+Date: Thu, 21 Jan 2016 10:20:09 +0900
+Message-Id: <1453339230-1377-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_022100_768305_B8A35792)
+In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series attempts to add ahb support (qca4019) in ath10k.
-All ahb related ops are grouped and kept in new file called ahb.c/ahb.h 
-and will get compiled/linked to ath10k_pci.ko based on kernel config flag
-CONFIG_ATH10K_AHB flag. Most of function in pci.c file are reusable and
-called as it's without changing function name (ath10k_pci_*) in ahb.c.
+This patch renames hSem to sem to avoid camelcase.
 
-Still, some more work needs to be done in ath10k driver to make ahb
-functional (qca4019). Hence, i disabled device probing in ahb module
-for the time being. I'll post follow patch soon to enable it along
-with missing patches.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 10 +++++-----
+ drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-The patch to update device tree bindings document with list of DT node
-attributes referred in this patch series is already committed in ath.git,
-
-      https://patchwork.kernel.org/patch/8022221/
-
-Raja Mani (12):
-  ath10k: make some of ath10k_pci_* func reusable
-  ath10k: make ath10k_pci_read32/write32() ops more generic
-  ath10k: pull reusable code from pci probe and remove for ahb
-  ath10k: add basic skeleton to support ahb
-  ath10k: include qca4019 register map table
-  ath10k: add helper functions in ahb.c for reg rd/wr
-  ath10k: add clock ctrl related functions in ahb
-  ath10k: add reset ctrl related functions in ahb
-  ath10k: add chip and bus halt logic in ahb
-  ath10k: include irq related functions in ahb
-  ath10k: add resource init and deinit in ahb
-  ath10k: expose hif ops for ahb
-
- drivers/net/wireless/ath/ath10k/Kconfig  |   6 +
- drivers/net/wireless/ath/ath10k/Makefile |   2 +
- drivers/net/wireless/ath/ath10k/ahb.c    | 933 +++++++++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/ahb.h    |  87 +++
- drivers/net/wireless/ath/ath10k/core.c   |   4 +
- drivers/net/wireless/ath/ath10k/core.h   |   3 +
- drivers/net/wireless/ath/ath10k/debug.h  |   1 +
- drivers/net/wireless/ath/ath10k/hw.c     |  39 ++
- drivers/net/wireless/ath/ath10k/hw.h     |   5 +
- drivers/net/wireless/ath/ath10k/pci.c    | 169 ++++--
- drivers/net/wireless/ath/ath10k/pci.h    |  49 ++
- 11 files changed, 1241 insertions(+), 57 deletions(-)
- create mode 100644 drivers/net/wireless/ath/ath10k/ahb.c
- create mode 100644 drivers/net/wireless/ath/ath10k/ahb.h
-
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 907bae1..b996c47 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -14,7 +14,7 @@
+ int wilc_mq_create(struct message_queue *pHandle)
+ {
+ 	spin_lock_init(&pHandle->strCriticalSection);
+-	sema_init(&pHandle->hSem, 0);
++	sema_init(&pHandle->sem, 0);
+ 	pHandle->pstrMessageList = NULL;
+ 	pHandle->u32ReceiversCount = 0;
+ 	pHandle->bExiting = false;
+@@ -33,7 +33,7 @@ int wilc_mq_destroy(struct message_queue *pHandle)
+ 
+ 	/* Release any waiting receiver thread. */
+ 	while (pHandle->u32ReceiversCount > 0) {
+-		up(&pHandle->hSem);
++		up(&pHandle->sem);
+ 		pHandle->u32ReceiversCount--;
+ 	}
+ 
+@@ -99,7 +99,7 @@ int wilc_mq_send(struct message_queue *pHandle,
+ 
+ 	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
+ 
+-	up(&pHandle->hSem);
++	up(&pHandle->sem);
+ 
+ 	return 0;
+ }
+@@ -132,7 +132,7 @@ int wilc_mq_recv(struct message_queue *pHandle,
+ 	pHandle->u32ReceiversCount++;
+ 	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
+ 
+-	down(&pHandle->hSem);
++	down(&pHandle->sem);
+ 	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
+ 
+ 	pstrMessage = pHandle->pstrMessageList;
+@@ -144,7 +144,7 @@ int wilc_mq_recv(struct message_queue *pHandle,
+ 	/* check buffer size */
+ 	if (u32RecvBufferSize < pstrMessage->len) {
+ 		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
+-		up(&pHandle->hSem);
++		up(&pHandle->sem);
+ 		PRINT_ER("u32RecvBufferSize overflow\n");
+ 		return -EOVERFLOW;
+ 	}
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index 111be46..3ea4068 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -20,7 +20,7 @@ struct message {
+ };
+ 
+ struct message_queue {
+-	struct semaphore hSem;
++	struct semaphore sem;
+ 	spinlock_t strCriticalSection;
+ 	bool bExiting;
+ 	u32 u32ReceiversCount;
 -- 
-1.8.1.2
+2.6.4
 
