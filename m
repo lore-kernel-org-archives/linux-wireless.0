@@ -1,84 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:33184 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750936AbcALFpS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 00:45:18 -0500
-Date: Tue, 12 Jan 2016 06:44:47 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Jia-Ju Bai <baijiaju1990@163.com>
-Cc: kvalo@codeaurora.org, zajec5@gmail.com, joe@perches.com,
-	davem@davemloft.net, johannes.berg@intel.com,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] b43: Fix memory leaks in b43_bus_dev_ssb_init and
- b43_bus_dev_bcma_init
-Message-ID: <20160112064447.055dcf7f@wiggum> (sfid-20160112_064522_298762_BCDC8574)
-In-Reply-To: <1452560464-7146-1-git-send-email-baijiaju1990@163.com>
-References: <1452560464-7146-1-git-send-email-baijiaju1990@163.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/qZtyUa6f2J+v2Tw04WbZD61"; protocol="application/pgp-signature"
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:34397 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752527AbcAUBVB (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 20 Jan 2016 20:21:01 -0500
+Received: by mail-pa0-f66.google.com with SMTP id yy13so1007366pab.1
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:21:01 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 07/27] staging: wilc1000: rename strCriticalSection in struct message_queue
+Date: Thu, 21 Jan 2016 10:20:10 +0900
+Message-Id: <1453339230-1377-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_022105_548394_3A764C27)
+In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/qZtyUa6f2J+v2Tw04WbZD61
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+This patch renames strCriticalSection to lock to avoid camelcase.
 
-On Tue, 12 Jan 2016 09:01:04 +0800
-Jia-Ju Bai <baijiaju1990@163.com> wrote:
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 18 +++++++++---------
+ drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
+ 2 files changed, 10 insertions(+), 10 deletions(-)
 
-> The memory allocated by kzalloc in b43_bus_dev_ssb_init and
-> b43_bus_dev_bcma_initis not freed.
-> This patch fixes the bug by adding kfree in b43_ssb_remove,
-> b43_bcma_remove and error handling code of b43_bcma_probe.
->=20
-> Thanks Michael for his suggestion.
->=20
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
-> ---
->  drivers/net/wireless/b43/main.c |    3 +++
->  1 file changed, 3 insertions(+)
->=20
-> diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/m=
-ain.c
-> index ec013fb..2c9d9c1 100644
-> --- a/drivers/net/wireless/b43/main.c
-> +++ b/drivers/net/wireless/b43/main.c
-> @@ -5683,6 +5683,7 @@ static int b43_bcma_probe(struct bcma_device *core)
->  	schedule_work(&wl->firmware_load);
-> =20
->  bcma_out:
-> +	kfree(dev);
->  	return err;
-> =20
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index b996c47..67bf147 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -13,7 +13,7 @@
+  */
+ int wilc_mq_create(struct message_queue *pHandle)
+ {
+-	spin_lock_init(&pHandle->strCriticalSection);
++	spin_lock_init(&pHandle->lock);
+ 	sema_init(&pHandle->sem, 0);
+ 	pHandle->pstrMessageList = NULL;
+ 	pHandle->u32ReceiversCount = 0;
+@@ -83,7 +83,7 @@ int wilc_mq_send(struct message_queue *pHandle,
+ 		return -ENOMEM;
+ 	}
+ 
+-	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
++	spin_lock_irqsave(&pHandle->lock, flags);
+ 
+ 	/* add it to the message queue */
+ 	if (!pHandle->pstrMessageList) {
+@@ -97,7 +97,7 @@ int wilc_mq_send(struct message_queue *pHandle,
+ 		pstrTailMsg->next = pstrMessage;
+ 	}
+ 
+-	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
++	spin_unlock_irqrestore(&pHandle->lock, flags);
+ 
+ 	up(&pHandle->sem);
+ 
+@@ -128,22 +128,22 @@ int wilc_mq_recv(struct message_queue *pHandle,
+ 		return -EFAULT;
+ 	}
+ 
+-	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
++	spin_lock_irqsave(&pHandle->lock, flags);
+ 	pHandle->u32ReceiversCount++;
+-	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
++	spin_unlock_irqrestore(&pHandle->lock, flags);
+ 
+ 	down(&pHandle->sem);
+-	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
++	spin_lock_irqsave(&pHandle->lock, flags);
+ 
+ 	pstrMessage = pHandle->pstrMessageList;
+ 	if (!pstrMessage) {
+-		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
++		spin_unlock_irqrestore(&pHandle->lock, flags);
+ 		PRINT_ER("pstrMessage is null\n");
+ 		return -EFAULT;
+ 	}
+ 	/* check buffer size */
+ 	if (u32RecvBufferSize < pstrMessage->len) {
+-		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
++		spin_unlock_irqrestore(&pHandle->lock, flags);
+ 		up(&pHandle->sem);
+ 		PRINT_ER("u32RecvBufferSize overflow\n");
+ 		return -EOVERFLOW;
+@@ -159,7 +159,7 @@ int wilc_mq_recv(struct message_queue *pHandle,
+ 	kfree(pstrMessage->buf);
+ 	kfree(pstrMessage);
+ 
+-	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
++	spin_unlock_irqrestore(&pHandle->lock, flags);
+ 
+ 	return 0;
+ }
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index 3ea4068..6cdebbf 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -21,7 +21,7 @@ struct message {
+ 
+ struct message_queue {
+ 	struct semaphore sem;
+-	spinlock_t strCriticalSection;
++	spinlock_t lock;
+ 	bool bExiting;
+ 	u32 u32ReceiversCount;
+ 	struct message *pstrMessageList;
+-- 
+2.6.4
 
-This is not correct. It will also free dev for the non-error exit.
-
-
---=20
-Michael
-
---Sig_/qZtyUa6f2J+v2Tw04WbZD61
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWlJLPAAoJEPUyvh2QjYsONhoQAI7FaZe4H66UaVF4C3ZRZ7Gz
-qaIkdpgUL96dFNp0YvPWIaGz89iZal2ZJEr7RJvLSpmT9S0K8FVYkNumO4dLPy8v
-PTi1Lvs+nCyKrJWBa2nHTGMP381OC9+qLlEWRsEbhZsh/8ubQVdyQhpcXzXAMrzo
-phaFOVe8XPc50QD96Dfoh+UggYC9VtNJwPukYy8lHXxePnujc8HzDnh8eh18X1Cf
-oWLSr3Ujv7hoTt5Xk5+JhGI86RaYEPW3mp9dRafMjydvXe9eqVMj4uMfeLmnYDTI
-75lp1x5yX3zdpDdUPrnRT3/JR3DaToPoXIgD4a1v7mXRMEb6y1OOxKrqUFIR/a4v
-47P60tLeQV5CU8793RKGQfuoUbUoO7rK3YLX4J2Z+DhTY/s9Y4IQtFymeQLX9IHH
-5zhBxe59PaB3Cq/v3Tbv4s5RLwaH6TuvskEnbSOAH538x9uAF1sXVGuJ3R+p5qgE
-aKp1Ly64iqzj8w594uUXJw5WKi9tuw78esYkJ3PBhr5T7OfakdtBMbnpTJh0tymh
-yeShqGx2uHSl5aQwI9VOFS73RWP83aNAsL4ZZ1ElNQNTHZK0SisvxffnS8h+xfjj
-oIpuGlcJotOqbm9NUvWIsVzs3xmmqefalYAHt33ACcPbZp4qLmwCxCex4d9R9wvN
-qW1C8qWlYWh90oXlCZaU
-=BgSF
------END PGP SIGNATURE-----
-
---Sig_/qZtyUa6f2J+v2Tw04WbZD61--
