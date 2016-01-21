@@ -1,110 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from foss.arm.com ([217.140.101.70]:37971 "EHLO foss.arm.com"
+Received: from mx2.suse.de ([195.135.220.15]:51320 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752267AbcASIzl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 03:55:41 -0500
-Subject: Re: [GIT] Networking
-To: Arend van Spriel <arend@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-References: <20160112.215136.850414372508130298.davem@davemloft.net>
- <56978094.4050302@arm.com> <87k2n97n5e.fsf@kamboji.qca.qualcomm.com>
- <569CCCD2.4040105@arm.com> <569D61BA.8020701@broadcom.com>
-Cc: David Miller <davem@davemloft.net>, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org
-From: Marc Zyngier <marc.zyngier@arm.com>
-Message-ID: <569DFA0A.6070900@arm.com> (sfid-20160119_095602_179542_01984ABE)
-Date: Tue, 19 Jan 2016 08:55:38 +0000
+	id S1750878AbcAUIsG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2016 03:48:06 -0500
+Date: Thu, 21 Jan 2016 09:47:57 +0100
+From: Jean Delvare <jdelvare@suse.de>
+To: linux-wireless@vger.kernel.org
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: Re: [PATCH] NFC: microread: Drop platform data header file
+Message-ID: <20160121094757.0f151e73@endymion.delvare> (sfid-20160121_094811_090356_1E8A04E5)
+In-Reply-To: <20160121092012.0e0f73e1@endymion.delvare>
+References: <20160121092012.0e0f73e1@endymion.delvare>
 MIME-Version: 1.0
-In-Reply-To: <569D61BA.8020701@broadcom.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18/01/16 22:05, Arend van Spriel wrote:
-> On 18-1-2016 12:30, Marc Zyngier wrote:
->> Hi Kalle,
->>
->> On 16/01/16 11:57, Kalle Valo wrote:
->>> Marc Zyngier <marc.zyngier@arm.com> writes:
->>>
->>>> David, Hante,
->>>>
->>>> On 13/01/16 02:51, David Miller wrote:
->>>>
->>>> [...]
->>>>
->>>>> Hante Meuleman (33):
->>>> [...]
->>>>>       brcmfmac: Move all module parameters to one place
->>>
->>> As a reminder to myself this is the commit id:
->>>
->>> 7d34b0560567 brcmfmac: Move all module parameters to one place
->>>
->>>> This particular patch breaks one of my boxes in a spectacular way:
->>>>
->>>> [    3.602155] Unable to handle kernel paging request at virtual address 000027e4
->>>> [    3.602160] pgd = c0003000
->>>> [    3.602169] [000027e4] *pgd=80000040004003, *pmd=00000000
->>>> [    3.602181] Internal error: Oops: 206 [#1] PREEMPT SMP ARM
->>>
->>> [...]
->>>
->>>> This is caused by this hunk:
->>>>
->>>> @@ -890,7 +887,8 @@ static void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
->>>>  	if (!sdiodev->sg_support)
->>>>  		return;
->>>>  
->>>> -	nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE, brcmf_sdiod_txglomsz);
->>>> +	nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE,
->>>> +		      sdiodev->bus_if->drvr->settings->sdiod_txglomsz);
->>>>  	nents += (nents >> 4) + 1;
->>>>  
->>>>  	WARN_ON(nents > sdiodev->max_segment_count);
->>>>
->>>> were drvr->settings is NULL (as the settings allocation seems to be done
->>>> much later). The fix is not completely obvious to me (probably requires
->>>> pushing the call to brcmf_mp_device_attach() down into the various bus
->>>> specific functions). An alternative would be to restore the txglomsz
->>>> parameter as it was before and not rely on settings being allocated.
->>>
->>> Should we revert the patch or can you Hante fix this? The revert doesn't
->>> seem to be trivial so I would appreciate if someone could send a patch.
->>
->> I've worked out a partial revert (see below) that allows my system to
->> boot, but I'd rather see a proper fix from the maintainer of this code.
+On Thu, 21 Jan 2016 09:20:12 +0100, Jean Delvare wrote:
+> Originally I only wanted to drop the unneeded inclusion of
+> <linux/i2c.h>, but then noticed that struct
+> microread_nfc_platform_data isn't actually used, and
+> MICROREAD_DRIVER_NAME is redefined in the only file where it is used,
+> so we can get rid of the header file and dead code altogether.
 > 
-> Hi Marc,
-> 
-> Thanks for the patch, but Hante has created a different patch basically
-> deferring the allocation of the sgtable. Feel free to give it a spin on
-> your box and share the results.
+> Signed-off-by: Jean Delvare <jdelvare@suse.de>
+> Cc: Eric Lapuyade <eric.lapuyade@intel.com>
 
-Hi Arend,
+Note: it seems Eric is no longer with Intel so this Cc should be
+dropped.
 
-This patch fixes indeed the problem, thanks (I had to undo the mangling
-your mailer had done, though). So feel free to add my:
+> Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+> Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+> Cc: Samuel Ortiz <sameo@linux.intel.com>
+> ---
+> Makes me wonder if this driver is used at all? I can't see any
+> instance in the kernel tree.
+> (...)
 
-Reported-by: Marc Zyngier <marc.zyngier@arm.com>
-Tested-by: Marc Zyngier <marc.zyngier@arm.com>
-
-It would be good if this could make it in -rc1.
-
-> I am looking for a arm64 platform to add to my test machines so if
-> you can recommend one (with PCIe).
-
-Note that this crash happened with 32bit ARM, without PCIe (the box is a
-"Cubietruck").
-
-As for arm64, there is now quite a few machines out there (ARM sells a
-dev board called Juno, but there is also various offerings with AMD
-Opteron A1100, Cavium ThunderX, APM X-Gene, and maybe even some Broadcom
-based systems, who knows! ;-).
-
-Thanks,
-
-	M.
 -- 
-Jazz is not dead. It just smells funny...
+Jean Delvare
+SUSE L3 Support
