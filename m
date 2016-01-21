@@ -1,76 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from glaubenleben.de ([85.214.105.140]:44446 "EHLO glaubenleben.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758130AbcATHg6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 02:36:58 -0500
-From: Andreas Kemnade <andreas@kemnade.info>
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, hns@goldelico.com
-Cc: Andreas Kemnade <andreas@kemnade.info>
-Subject: [PATCH v2 1/6] wireless:libertas: fix pointer bugs for PS_MODE commands
-Date: Wed, 20 Jan 2016 08:35:34 +0100
-Message-Id: <1453275339-25122-2-git-send-email-andreas@kemnade.info> (sfid-20160120_083748_849997_643A9ADB)
-In-Reply-To: <1453275339-25122-1-git-send-email-andreas@kemnade.info>
-References: <1453275339-25122-1-git-send-email-andreas@kemnade.info>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:35902 "EHLO
+	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759002AbcAUNvN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2016 08:51:13 -0500
+Date: Thu, 21 Jan 2016 14:51:10 +0100
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Pavel Machek <pavel@ucw.cz>, Arend van Spriel <arend@broadcom.com>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, David Gnedt <david.gnedt@davizone.at>
+Subject: Re: [PATCH v2] wl1251: add sysfs interface for bluetooth coexistence
+ mode configuration
+Message-ID: <20160121135110.GH7192@pali> (sfid-20160121_145116_365515_EA30CBDC)
+References: <1451130310-16666-1-git-send-email-pali.rohar@gmail.com>
+ <5696D08F.9030906@broadcom.com>
+ <20160114091654.GA15380@amd>
+ <20160121085331.GO7192@pali>
+ <87d1svyrfl.fsf@kamboji.qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <87d1svyrfl.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-struct cmd_ds_802_11_ps_mode
-contains the command header and a pointer to it was
-initialized with data points to the body which leads to
-mis-interpretation of the cmd_ds_802_11_ps_mode.action member.
-cmd[0] contains the header, &cmd[1] points beyond that.
-cmdnode->cmdbuf is a pointer to the command buffer
-This piece of code was unused since power saving was
-not enabled.
+On Thursday 21 January 2016 15:48:14 Kalle Valo wrote:
+> Pali Rohár <pali.rohar@gmail.com> writes:
+> 
+> > On Thursday 14 January 2016 10:16:54 Pavel Machek wrote:
+> >> On Wed 2016-01-13 23:32:47, Arend van Spriel wrote:
+> >> > On 12/26/2015 12:45 PM, Pali Rohár wrote:
+> >> > >Port the bt_coex_mode sysfs interface from wl1251 driver version included
+> >> > >in the Maemo Fremantle kernel to allow bt-coexistence mode configuration.
+> >> > >This enables userspace applications to set one of the modes
+> >> > >WL1251_BT_COEX_OFF, WL1251_BT_COEX_ENABLE and WL1251_BT_COEX_MONOAUDIO.
+> >> > >The default mode is WL1251_BT_COEX_OFF.
+> >> > >It should be noted that this driver always enabled bt-coexistence before
+> >> > >and enabled bt-coexistence directly affects the receiving performance,
+> >> > >rendering it unusable in some low-signal situations. Especially monitor
+> >> > >mode is affected very badly with bt-coexistence enabled.
+> >> > 
+> >> > So what user-space process will be using this interface. Did you consider
+> >> > adding debugfs interface? In case of monitor mode you could consider
+> >> > disabling bt-coex from within the driver itself.
+> >> 
+> >> This aint no debugging feature.
+> >
+> > Right, bt-coex is not for debugging purpose, but for normal usage, when
+> > user want to use together bluetooth and wifi or just one of those.
+> 
+> I think most of other drivers have a debugfs interface for btcoex, I
+> guess mostly for testing purposes. But this really should be added to
+> cfg80211.
 
-Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
----
-changes in v2:
-improved commit message
+All other TI wireless drivers have "bt_coex_state" sysfs node.
 
- drivers/net/wireless/libertas/cmd.c     | 4 ++--
- drivers/net/wireless/libertas/cmdresp.c | 5 ++++-
- 2 files changed, 6 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
-index 0387a5b..40467d6 100644
---- a/drivers/net/wireless/libertas/cmd.c
-+++ b/drivers/net/wireless/libertas/cmd.c
-@@ -957,7 +957,7 @@ static void lbs_queue_cmd(struct lbs_private *priv,
- 
- 	/* Exit_PS command needs to be queued in the header always. */
- 	if (le16_to_cpu(cmdnode->cmdbuf->command) == CMD_802_11_PS_MODE) {
--		struct cmd_ds_802_11_ps_mode *psm = (void *) &cmdnode->cmdbuf;
-+		struct cmd_ds_802_11_ps_mode *psm = (void *)cmdnode->cmdbuf;
- 
- 		if (psm->action == cpu_to_le16(PS_MODE_ACTION_EXIT_PS)) {
- 			if (priv->psstate != PS_STATE_FULL_POWER)
-@@ -1387,7 +1387,7 @@ int lbs_execute_next_command(struct lbs_private *priv)
- 				 * PS command. Ignore it if it is not Exit_PS.
- 				 * otherwise send it down immediately.
- 				 */
--				struct cmd_ds_802_11_ps_mode *psm = (void *)&cmd[1];
-+				struct cmd_ds_802_11_ps_mode *psm = (void *)cmd;
- 
- 				lbs_deb_host(
- 				       "EXEC_NEXT_CMD: PS cmd, action 0x%02x\n",
-diff --git a/drivers/net/wireless/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index e5442e8..701125f 100644
---- a/drivers/net/wireless/libertas/cmdresp.c
-+++ b/drivers/net/wireless/libertas/cmdresp.c
-@@ -123,7 +123,10 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
- 	priv->cmd_timed_out = 0;
- 
- 	if (respcmd == CMD_RET(CMD_802_11_PS_MODE)) {
--		struct cmd_ds_802_11_ps_mode *psmode = (void *) &resp[1];
-+		/* struct cmd_ds_802_11_ps_mode also contains
-+		 * the header
-+		 */
-+		struct cmd_ds_802_11_ps_mode *psmode = (void *)resp;
- 		u16 action = le16_to_cpu(psmode->action);
- 
- 		lbs_deb_host(
 -- 
-2.1.4
-
+Pali Rohár
+pali.rohar@gmail.com
