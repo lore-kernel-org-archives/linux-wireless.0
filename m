@@ -1,75 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 162-17-110-37-static.hfc.comcastbusiness.net ([162.17.110.37]:29780
-	"EHLO stuffed.shaftnet.org" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753640AbcA2T70 (ORCPT
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:34823 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965022AbcAULcD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2016 14:59:26 -0500
-Date: Fri, 29 Jan 2016 14:24:34 -0500
-From: Solomon Peachy <pizza@shaftnet.org>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: ksenija.stanojevic@gmail.com,
-	"driverdev-devel@linuxdriverproject.org"
-	<driverdev-devel@linuxdriverproject.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: Move wlan-ng out of staging?
-Message-ID: <20160129192434.GD5811@shaftnet.org> (sfid-20160129_205929_645234_20BD535A)
-References: <56AB8C90.2050909@gmail.com>
- <56AB8F18.9000909@gmail.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="0/kgSOzhNoDC5T3a"
-In-Reply-To: <56AB8F18.9000909@gmail.com>
+	Thu, 21 Jan 2016 06:32:03 -0500
+Received: by mail-pa0-f65.google.com with SMTP id gi1so1651020pac.2
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:32:03 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 06/27] staging: wilc1000: rename hSem in struct message_queue
+Date: Thu, 21 Jan 2016 20:30:36 +0900
+Message-Id: <1453375857-20645-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123207_444112_690E36DD)
+In-Reply-To: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch renames hSem to sem to avoid camelcase.
 
---0/kgSOzhNoDC5T3a
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 10 +++++-----
+ drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-On Fri, Jan 29, 2016 at 05:11:04PM +0100, Xose Vazquez Perez wrote:
-> >> I'm helping Greg do a bit of cleanup in the staging tree, I noticed th=
-at
-> >> wlan-ng driver is maybe ready to be moved out of staging. Are there
-> >> any TODO tasks left to do beside checkpatch.pl clean-up?
-> >=20
-> > Its FAQ was very clear: ftp://ftp.linux-wlan.org/pub/linux-wlan-ng/FAQ
-> > [archived at http://puppylinux.dreamhosters.com/wireless/linux-wlan-org=
-_FAQ.txt ]
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 907bae1..b996c47 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -14,7 +14,7 @@
+ int wilc_mq_create(struct message_queue *pHandle)
+ {
+ 	spin_lock_init(&pHandle->strCriticalSection);
+-	sema_init(&pHandle->hSem, 0);
++	sema_init(&pHandle->sem, 0);
+ 	pHandle->pstrMessageList = NULL;
+ 	pHandle->u32ReceiversCount = 0;
+ 	pHandle->bExiting = false;
+@@ -33,7 +33,7 @@ int wilc_mq_destroy(struct message_queue *pHandle)
+ 
+ 	/* Release any waiting receiver thread. */
+ 	while (pHandle->u32ReceiversCount > 0) {
+-		up(&pHandle->hSem);
++		up(&pHandle->sem);
+ 		pHandle->u32ReceiversCount--;
+ 	}
+ 
+@@ -99,7 +99,7 @@ int wilc_mq_send(struct message_queue *pHandle,
+ 
+ 	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
+ 
+-	up(&pHandle->hSem);
++	up(&pHandle->sem);
+ 
+ 	return 0;
+ }
+@@ -132,7 +132,7 @@ int wilc_mq_recv(struct message_queue *pHandle,
+ 	pHandle->u32ReceiversCount++;
+ 	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
+ 
+-	down(&pHandle->hSem);
++	down(&pHandle->sem);
+ 	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
+ 
+ 	pstrMessage = pHandle->pstrMessageList;
+@@ -144,7 +144,7 @@ int wilc_mq_recv(struct message_queue *pHandle,
+ 	/* check buffer size */
+ 	if (u32RecvBufferSize < pstrMessage->len) {
+ 		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
+-		up(&pHandle->hSem);
++		up(&pHandle->sem);
+ 		PRINT_ER("u32RecvBufferSize overflow\n");
+ 		return -EOVERFLOW;
+ 	}
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index 111be46..3ea4068 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -20,7 +20,7 @@ struct message {
+ };
+ 
+ struct message_queue {
+-	struct semaphore hSem;
++	struct semaphore sem;
+ 	spinlock_t strCriticalSection;
+ 	bool bExiting;
+ 	u32 u32ReceiversCount;
+-- 
+2.7.0
 
-As author of that particular FAQ entry (written nearly ten years ago)=20
-let me say that nothing in there has any bearing on the situation that=20
-exists today.
-
-At the time, I didn't think it was worth the significant effort to get=20
-prism2_usb into the mainline, but obviously some enterprising folks=20
-disagreed with me, and eventually put forth the elbow grease necessary=20
-to get it into -staging and all of the subsequent cleanups.
-
-=46rom where I sit, the basic question is this: Is the prism2_usb driver=20
-now considered good enough to promote out of -staging? If not, what=20
-needs doing and who is willing to see it through?  If it is, then just=20
-do it already.  :)
-
-Oh, I'm still hosting the firmware files needed for this thing, and I=20
-see a consistent 4K or so downloads a month.  So there are obviously=20
-users out there still.
-
- - Solomon
---=20
-Solomon Peachy        		       pizza at shaftnet dot org
-Delray Beach, FL                          ^^ (email/xmpp) ^^
-Quidquid latine dictum sit, altum viditur.
-
---0/kgSOzhNoDC5T3a
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iD8DBQFWq7xyPuLgii2759ARAn10AKCzi1wInzfItvFkG9CfDV4L+BFASQCgjZHS
-z2I4/S3SxQEkZmzgKS23Zc8=
-=X+7Z
------END PGP SIGNATURE-----
-
---0/kgSOzhNoDC5T3a--
