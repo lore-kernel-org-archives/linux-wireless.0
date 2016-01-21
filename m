@@ -1,59 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:38875 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751908AbcADVC3 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54868 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759002AbcAUNS5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2016 16:02:29 -0500
-From: Hugo Camboulive <hugo.camboulive@gmail.com>
-To: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org,
-	Hugo Camboulive <hugo.camboulive@gmail.com>
-Subject: [PATCH] staging: wilc1000: make some variables static
-Date: Mon,  4 Jan 2016 22:02:23 +0000
-Message-Id: <1451944943-7136-1-git-send-email-hugo.camboulive@gmail.com> (sfid-20160104_220243_241729_61A0E175)
+	Thu, 21 Jan 2016 08:18:57 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Eli Cooper <elicooper@gmx.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v3] rt2x00: fix monitor mode regression
+References: <1453116619-29933-1-git-send-email-elicooper@gmx.com>
+Date: Thu, 21 Jan 2016 15:18:51 +0200
+In-Reply-To: <1453116619-29933-1-git-send-email-elicooper@gmx.com> (Eli
+	Cooper's message of "Mon, 18 Jan 2016 19:30:19 +0800")
+Message-ID: <87lh7jyssk.fsf@kamboji.qca.qualcomm.com> (sfid-20160121_141900_642535_F5D356C9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-terminated_handle is used only in host_interface.c
-wilc1000_spi_driver is exported by module_spi_driver()
+Eli Cooper <elicooper@gmx.com> writes:
 
-This fixes a few Sparse warnings.
+> Since commit df1404650ccb ("mac80211: remove support for IFF_PROMISC")
+> monitor mode for rt2x00 has been made effectively useless because the
+> hardware filter is configured to drop packets whose intended recipient is
+> not the device, regardless of the presence of monitor mode interfaces.
+>
+> This patch fixes this regression by adding explicit monitor mode support,
+> and by configuring the hardware filter accordingly.
+>
+> Changes in v3:
+>   introduce and use CONFIG_MONITORING in rt2x00_state_flags
+>   remove unnecessary debug messages
+>   improve patch format
+>
+> Changes in v2:
+>   fix patch format
 
-Signed-off-by: Hugo Camboulive <hugo.camboulive@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- drivers/staging/wilc1000/wilc_spi.c       | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+No changelog inside the commit log, please. Instead add them under "---"
+line so that git will ignore them. I can fix it this time.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 8c77520..886b30c 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -225,7 +225,7 @@ struct join_bss_param {
- 	u8 start_time[4];
- };
- 
--struct host_if_drv *terminated_handle;
-+static struct host_if_drv *terminated_handle;
- bool wilc_optaining_ip;
- static u8 P2P_LISTEN_STATE;
- static struct task_struct *hif_thread_handler;
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index 86de50c..b9dc91d 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -153,7 +153,7 @@ static const struct of_device_id wilc1000_of_match[] = {
- };
- MODULE_DEVICE_TABLE(of, wilc1000_of_match);
- 
--struct spi_driver wilc1000_spi_driver = {
-+static struct spi_driver wilc1000_spi_driver = {
- 	.driver = {
- 		.name = MODALIAS,
- 		.of_match_table = wilc1000_of_match,
+> Signed-off-by: Eli Cooper <elicooper@gmx.com>
+
+I'll queue this to 4.5.
+
 -- 
-2.6.4
-
+Kalle Valo
