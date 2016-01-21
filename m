@@ -1,75 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f175.google.com ([209.85.213.175]:36047 "EHLO
-	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933570AbcAYXl5 (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:34534 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965191AbcAULc4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 18:41:57 -0500
-MIME-Version: 1.0
-In-Reply-To: <56A641CC.6020500@gmail.com>
-References: <1453718849-3508-1-git-send-email-sjoerd.simons@collabora.co.uk>
- <CAGRGNgXWE=b52Mcy8NsKBZS_4gz-TUiuFipjsuTZh1xjja=uUg@mail.gmail.com> <56A641CC.6020500@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 26 Jan 2016 10:41:37 +1100
-Message-ID: <CAGRGNgVftXxnq06MOHKNVzVjvCkwCM8Bc+Sfs4NoOQR=sfYP-g@mail.gmail.com> (sfid-20160126_004220_680934_799F26A2)
-Subject: Re: [PATCH] brcmfmac: sdio: Increase the default timeouts a bit
-To: Arend van Spriel <aspriel@gmail.com>
-Cc: Sjoerd Simons <sjoerd.simons@collabora.co.uk>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Paul Stewart <pstew@chromium.org>,
-	Doug Anderson <dianders@chromium.org>,
-	linux-rockchip@lists.infradead.org,
-	Arend van Spriel <arend@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	brcm80211-dev-list@broadcom.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	netdev <netdev@vger.kernel.org>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 21 Jan 2016 06:32:56 -0500
+Received: by mail-pf0-f193.google.com with SMTP id 65so1708708pfd.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:32:56 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 23/27] staging: wilc1000: rename pu32ReceivedLength in wilc_mq_recv
+Date: Thu, 21 Jan 2016 20:30:53 +0900
+Message-Id: <1453375857-20645-24-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123653_747711_BC460359)
+In-Reply-To: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arend,
+This patch renames pu32ReceivedLength to recv_len to avoid camelcase.
 
-On Tue, Jan 26, 2016 at 2:39 AM, Arend van Spriel <aspriel@gmail.com> wrote:
-> On 25-01-16 12:06, Julian Calaby wrote:
->> Hi Sjoerd,
->>
->> On Mon, Jan 25, 2016 at 9:47 PM, Sjoerd Simons
->> <sjoerd.simons@collabora.co.uk> wrote:
->>> On a Radxa Rock2 board with a Ampak AP6335 (Broadcom 4339 core) it seems
->>> the card responds very quickly most of the time, unfortunately during
->>> initialisation it sometimes seems to take just a bit over 2 seconds to
->>> respond.
->>>
->>> This results intialization failing with message like:
->>>   brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -52
->>>   brcmf_bus_start: failed: -52
->>>   brcmf_sdio_firmware_callback: dongle is not responding
->>>
->>> Increasing the timeout to allow for a bit more headroom allows the
->>> card to initialize reliably.
->>>
->>> A quick search online after diagnosing/fixing this showed that Google
->>> has a similar patch in their ChromeOS tree, so this doesn't seem
->>> specific to the board I'm using.
->>>
->>> Signed-off-by: Sjoerd Simons <sjoerd.simons@collabora.co.uk>
->>
->> Looks sane to me.
->>
->> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
->
-> Not really a cleanup patch :-p , but thanks for the review.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 7 +++----
+ drivers/staging/wilc1000/wilc_msgqueue.h | 3 +--
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
-I'm trying to review any "small" patch from (relatively) new people.
-
-Thanks,
-
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index c86bd7c..5601de8 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -110,14 +110,13 @@ int wilc_mq_send(struct message_queue *mq,
+  *  @version		1.0
+  */
+ int wilc_mq_recv(struct message_queue *mq,
+-		 void *recv_buf, u32 recv_buf_size,
+-		 u32 *pu32ReceivedLength)
++		 void *recv_buf, u32 recv_buf_size, u32 *recv_len)
+ {
+ 	struct message *pstrMessage;
+ 	unsigned long flags;
+ 
+ 	if ((!mq) || (recv_buf_size == 0)
+-	    || (!recv_buf) || (!pu32ReceivedLength)) {
++	    || (!recv_buf) || (!recv_len)) {
+ 		PRINT_ER("mq or recv_buf is null\n");
+ 		return -EINVAL;
+ 	}
+@@ -151,7 +150,7 @@ int wilc_mq_recv(struct message_queue *mq,
+ 	/* consume the message */
+ 	mq->recv_count--;
+ 	memcpy(recv_buf, pstrMessage->buf, pstrMessage->len);
+-	*pu32ReceivedLength = pstrMessage->len;
++	*recv_len = pstrMessage->len;
+ 
+ 	mq->msg_list = pstrMessage->next;
+ 
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index 3804b3b..4f79ead 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -77,8 +77,7 @@ int wilc_mq_send(struct message_queue *mq,
+  *  @version		1.0
+  */
+ int wilc_mq_recv(struct message_queue *mq,
+-		 void *recv_buf, u32 recv_buf_size,
+-		 u32 *pu32ReceivedLength);
++		 void *recv_buf, u32 recv_buf_size, u32 *recv_len);
+ 
+ /*!
+  *  @brief		Destroys an existing  Message queue
 -- 
-Julian Calaby
+2.7.0
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
