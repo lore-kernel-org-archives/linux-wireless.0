@@ -1,127 +1,224 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:15433 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932762AbcA1Hns (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 02:43:48 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"julian.calaby@gmail.com" <julian.calaby@gmail.com>,
-	"ilw@linux.intel.com" <ilw@linux.intel.com>
-Subject: RE: [PATCH v2] iwldvm: fix chain gain calibration when firmware
- return zero values
-Date: Thu, 28 Jan 2016 07:43:42 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E9ED4FD@hasmsx107.ger.corp.intel.com> (sfid-20160128_084352_403395_CE788B63)
-References: <1453527309-23881-1-git-send-email-mar.kolya@gmail.com>
-	<1453760341-30008-1-git-send-email-mar.kolya@gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32E9D2EC6@hasmsx109.ger.corp.intel.com>
-	<CALGY4fv5t7k9Xcw1iysL3gyLih7S4z2Y7ShXTJiXWc5aDVVM_A@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32E9E3F16@hasmsx107.ger.corp.intel.com>
- <CALGY4fsx3uPox8+=S13thXarW0yGLK+8BSqzjwqRtubrAG1ybQ@mail.gmail.com>
-In-Reply-To: <CALGY4fsx3uPox8+=S13thXarW0yGLK+8BSqzjwqRtubrAG1ybQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-lf0-f43.google.com ([209.85.215.43]:32998 "EHLO
+	mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759368AbcAUNMY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2016 08:12:24 -0500
+Received: by mail-lf0-f43.google.com with SMTP id m198so26301317lfm.0
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 05:12:23 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 2/5] ath10k: add new htt definitions
+Date: Thu, 21 Jan 2016 14:13:24 +0100
+Message-Id: <1453382007-24622-3-git-send-email-michal.kazior@tieto.com> (sfid-20160121_141228_807030_4FE6B8EE)
+In-Reply-To: <1453382007-24622-1-git-send-email-michal.kazior@tieto.com>
+References: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
+ <1453382007-24622-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gMjAxNi0wMS0yNyAyOjQ2IEdNVC0wNTowMCBHcnVtYmFjaCwgRW1tYW51ZWwNCj4gPGVt
-bWFudWVsLmdydW1iYWNoQGludGVsLmNvbT46DQo+ID4+IEhpDQo+ID4+DQo+ID4+IDIwMTYtMDEt
-MjYgMzoyOCBHTVQtMDU6MDAgR3J1bWJhY2gsIEVtbWFudWVsDQo+ID4+IDxlbW1hbnVlbC5ncnVt
-YmFjaEBpbnRlbC5jb20+Og0KPiA+PiA+DQo+ID4+ID4NCj4gPj4gPiBPbiAwMS8yNi8yMDE2IDEy
-OjIwIEFNLCBOaWtvbGF5IE1hcnR5bm92IHdyb3RlOg0KPiA+PiA+PiBJdCBsb29rcyBsaWtlIHNv
-bWV0aW1lcyBmaXJtd2FyZSByZXR1cm5zIHplcm8gZm9yIGNoYWluIG5vaXNlIGFuZA0KPiA+PiA+
-PiBzaWduYWwgZHVyaW5nIGNhbGlicmF0aW9uIHBlcmlvZC4gVGhpcyBzZWVtcyB0byBiZSBhIGtu
-b3duIHByb2JsZW0NCj4gPj4gPj4gYW5kIGN1cnJlbnQgaW1wbGVtZW50YXRpb24gYWNjb3VudHMg
-Zm9yIHRoaXMgYnkgaWdub3JpbmcgaW52YWxpZA0KPiA+PiA+PiBkYXRhIHdoZW4gYWxsIGNoYWlu
-cyByZXR1cm4gemVybyBzaWduYWwgYW5kIG5vaXNlLg0KPiA+PiA+Pg0KPiA+PiA+PiBUaGUgcHJv
-YmxlbSBpcyB0aGF0IHNvbWV0aW1lcyBmaXJtd2FyZSByZXR1cm5zIHplcm8gZm9yIG9ubHkgb25l
-DQo+ID4+ID4+IGNoYWluIGZvciBzb21lIChub3QgYWxsKSBiZWFjb25zIHVzZWQgZm9yIGNhbGli
-cmF0aW9uLiBUaGlzIGxlYWRzDQo+ID4+ID4+IHRvIHBlcmZlY3RseSB2YWxpZCBjaGFpbnMgYmUg
-ZGlzYWJsZWQgYW5kIG1heSBjYXVzZSBpbnZhbGlkIGdhaW4NCj4gc2V0dGluZ3MuDQo+ID4+ID4+
-IEZvciBleGFtcGxlIHRoaXMgaXMgY2FsaWJyYXRpb24gZGF0YSB0YWtlbiBvbiBsYXB0b3Agd2l0
-aCBJbnRlbA0KPiA+PiA+PiA2MzAwIGNhcmQgd2l0aCBhbGwgdGhyZWUgYW50ZW5uYXMgYXR0YWNo
-ZWQ6DQo+ID4+ID4+DQo+ID4+ID4+IGFjdGl2ZV9jaGFpbnM6ICAgICAgICAgICAgICAgICAgICAg
-ICAgIDMNCj4gPj4gPj4gY2hhaW5fbm9pc2VfYTogICAgICAgICAgICAgICAgICAgICAgICAgMzEy
-DQo+ID4+ID4+IGNoYWluX25vaXNlX2I6ICAgICAgICAgICAgICAgICAgICAgICAgIDI5Nw0KPiA+
-PiA+PiBjaGFpbl9ub2lzZV9jOiAgICAgICAgICAgICAgICAgICAgICAgICAwDQo+ID4+ID4+IGNo
-YWluX3NpZ25hbF9hOiAgICAgICAgICAgICAgICAgICAgICAgIDU0OQ0KPiA+PiA+PiBjaGFpbl9z
-aWduYWxfYjogICAgICAgICAgICAgICAgICAgICAgICA1MTMNCj4gPj4gPj4gY2hhaW5fc2lnbmFs
-X2M6ICAgICAgICAgICAgICAgICAgICAgICAgMA0KPiA+PiA+PiBiZWFjb25fY291bnQ6ICAgICAg
-ICAgICAgICAgICAgMTYNCj4gPj4gPj4gZGlzY29ubl9hcnJheTogICAgICAgICAgICAgICAgICAg
-ICAgICAgMCAwIDENCj4gPj4gPj4gZGVsdGFfZ2Fpbl9jb2RlOiAgICAgICAgICAgICAgIDQgMCAw
-DQo+ID4+ID4+IHJhZGlvX3dyaXRlOiAgICAgICAgICAgICAgICAgICAxDQo+ID4+ID4+IHN0YXRl
-OiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDMNCj4gPj4gPj4NCj4gPj4gPj4gVGhp
-cyBwYXRjaCBjaGFuZ2VzIHN0YXRpc3RpY3MgZ2F0aGVyaW5nIHRvIG1ha2Ugc3VyZSB0aGF0IHpl
-cm8NCj4gPj4gPj4gbm9pc2UgcmVzdWx0cyBhcmUgaWdub3JlZCBmb3IgdmFsaWQgcnggY2hhaW5z
-LiBUaGUgcmF0aW9uYWxlIGJlaW5nDQo+ID4+ID4+IHRoYXQgZXZlbiBpZiBhbm50ZW5uYSBpcyBu
-b3QgY29ubmVjdGVkIHdlIHNob3VsZCBiZSBhYmxlIHRvIHNlZQ0KPiA+PiA+PiBub24gemVybyBu
-b2lzZSBpZiByeCBjaGFpbiBpcyBwcmVzZW50Lg0KPiA+PiA+DQo+ID4+ID4gQnV0IHRoZW4gdGhl
-IGZpcm13YXJlIHdpbGwgY29udGludWUgdG8gc2VuZCB6ZXJvIGZvciBzaWduYWwgYW5kDQo+ID4+
-ID4gdGhpcyB3aWxsIGltcGFjdCBsb3RzIG9mIGZsb3dzIGxpa2Ugcm9hbWluZy4gSWYgdGhlIGRy
-aXZlciBhbGxvd3MNCj4gPj4gPiB0aGUgZmlybXdhcmUgdG8gdXNlIHRoYXQgYW50ZW5uYSwgdGhl
-IGZpcm13YXJlIG1heSB1c2UgdGhpcyBhbnRlbm5hDQo+ID4+ID4gZm9yIHNjYW5uaW5nIGFuZCBy
-b2FtaW5nIHdpbGwgYmUgYnJva2VuLg0KPiA+PiA+IFRoaXMgc2VlbXMgdG8gYmUgYSBidWcgaW4g
-dGhlIGZpcm13YXJlLCBidXQgdGhlcmUgaXNuJ3QgbXVjaCBJIGNhbg0KPiA+PiA+IGRvIGFib3V0
-IGl0Lg0KPiA+PiA+IFNvcnJ5LCBJIGhhdmUgdG8gTkFDSyB0aGlzIHBhdGNoLg0KPiA+Pg0KPiA+
-PiAgIENvdWxkIHlvdSBwbGVhc2UgZWxhYm9yYXRlIG9uIGhvdyB0aGlzIHBhdGNoIHdvdWxkIGFm
-ZmVjdCByb2FtaW5nDQo+ID4+IG9yIG90aGVyIHRoaW5ncy4gQXMgZmFyIGFzIEkgY2FuIHNlZSB0
-aGlzIHBhdGNoIGRvZXNuJ3QgY2hhbmdlIG11Y2gNCj4gPj4gYmVoYXZpb3IgYXBhcnQgZnJvbSBp
-Z25vcmluZyBpbnZhbGlkIHZhbHVlcyBmcm9tIGZpcm13YXJlLg0KPiA+PiBEaXNjb25uZWN0ZWQg
-YW50ZW5uYXMgc3RpbGwgZ2V0IGRpc2FibGVkIChhcyBiZWZvcmUpIGNvbm5lY3RlZA0KPiA+PiBh
-bnRlbm5hcyBzdGlsbCB3b3JrIChtb3JlIG9mdGVuIHRoYW4gYmVmb3JlKS4gU28gSSdtIG5vdCBz
-dXJlIEkgY2FuDQo+ID4+IHNlZSBob3cgdGhpcyBwYXRjaCB3b3VsZCBjaGFuZ2Ugd2hhdCBmaXJt
-d2FyZSBkb2VzIGF0IGFsbC4gSSByZWFsbHkNCj4gPj4gaG9wZSB5b3UgY291bGQgZmluZCBhIG1v
-bWVudCBhbmQgZXhwbGFpbiB0aGlzLg0KPiA+Pg0KPiA+DQo+ID4gV2hhdCB5b3UgYXJlIHNheWlu
-ZyBoZXJlIGlzIHRoYXQgdGhlcmUgaXMgYSBidWcgaW4gdGhlIGZpcm13YXJlIHdoaWNoDQo+ID4g
-bWFrZXMgaXQgcmVwb3J0IHdyb25nIHZhbHVlcyBmb3Igb25lIG9mIHRoZSBhbnRlbm5hcy4gQnV0
-IHdoZW4geW91DQo+ID4gd2lsbCBoYXZlIHRoaXMgYW50ZW5uYSBlbmFibGVkICh3aXRoIHlvdXIg
-cGF0Y2gpLCB0aGUgZmlybXdhcmUgd2lsbA0KPiA+IGtlZXAgc2VuZGluZyBiYWQgc2lnbmFsIC8g
-bm9pc2UgdmFsdWVzIGZvciBpdC4gSWYgdGhlIGRyaXZlciBhbGxvd3MNCj4gPiB0aGUgZmlybXdh
-cmUgdG8gdXNlIHRoaXMgYW50ZW5uYSAoYWZ0ZXIgeW91ciBwYXRjaCksIHRoZSBmaXJtd2FyZSB3
-aWxsDQo+ID4gY2hvb3NlIHRoaXMgYW50ZW5uYSB0byByZWNlaXZlIGJlYWNvbnMgb3IgdG8gc2Nh
-bi4gVGhlbiwgdGhlIGRyaXZlciB3aWxsDQo+IGxvb2sgYXQgdGhlIGJlYWNvbnMnIHJzc2kgKHdo
-aWNoIHdpbGwgYmUgd3JvbmcpIGFuZCBpdCB3aWxsIHRoaW5rIHRoYXQgYW4gQVANCj4gd2hpY2gg
-aXMgdmVyeSBjbG9zZSBpcyBpbiBmYWN0IGZhciBhd2F5Lg0KPiA+DQo+IE5vLiBUaGF0IGlzIG5v
-dCBjb3JyZWN0LCBJIHRoaW5rLiBXaGF0IEknbSBzYXlpbmcgaXMgdGhhdCBzb21ldGltZXMgKG5v
-dA0KPiBhbHdheXMpIGZpcm13YXJlIGlzIHNlbmRpbmcgMCAoZXhhY3RseSAwKSBmb3Igc2lnbmFs
-IGFuZCBub2lzZSBmb3Igc29tZSAob3IgYWxsKQ0KPiBjaGFpbnMuDQo+IFRoZSBjYXNlIHdoZW4g
-YWxsIGNoYWlucyBnZXQgMCBzZWVtIHRvIGJlIGEga25vd24gcHJvYmxlbTogaXQgaXMgd29ya2Vk
-DQo+IGFyb3VuZCBpbiBpd2xfZmluZF9kaXNjb25uX2FudGVubmEuIFRoZSBjYXNlIHdoZW4gb25s
-eSBvbmUgY2hhaW4gZ2V0cw0KPiB6ZXJvIGlzIG5vdCBjdXJyZW50bHkgaGFuZGxlZC4NCj4gQW5k
-IGp1c3QgdG8gY2xhcmlmeSAtIGFsbCBjaGFpbnMgYXJlIGFmZmVjdGVkIGJ5IHRoaXMgcHJvYmxl
-bSwgaXQncyBub3QgbGlrZSBvbmUNCj4gc3BlY2lmaWMgY2hhaW4gaXMgYnJva2VuIGluIHNvbWUg
-d2F5IGFuZCBnZXRzIHplcm8uIFNvIGJvdGggb2YgdGhlIGNhcmRzIEkNCj4gaGF2ZSBtYXkgYmUg
-cnVubmluZyB3aXRoIDMgY2hhaW5zIG9yIHdpdGggMiBjaGFpbnMgZGVwZW5kaW5nIG9uIGhvdyBs
-dWNreQ0KPiBJJ20gZHVyaW5nIGluaXRpYWwgc2Nhbi4NCj4gDQo+IEl0J3MganVzdCBmaXJtd2Fy
-ZSB0aGF0IGhhcyBhIGJ1ZyB0aGF0IHNvbWV0aW1lcyByZXR1cm5zIHplcm8gZm9yIGNoYWluIDEs
-DQo+IHNvbWV0aW1lcyBmb3IgY2hhaW4gMiwgYW5kIHNvbWV0aW1lcyBmb3IgYWxsIG9mIHRoZW0u
-DQo+IFNvIGN1cnJlbnRseSBkcml2ZXIgaXMgYWxyZWFkeSBlbmFibGluZyBjaGFpbnMgZm9yIHdo
-aWNoIHdlIG1heSBnZXQgemVybyBsYXRlcg0KPiBmb3IgcnNzaSAocHJlc3VtYWJseSB0aGlzIGlz
-IHRydWUpIGlmIGl0IGdldHMgbm9uIHplcm8gZHVyaW5nIHNjYW4gZm9yIGZpcnN0IDE2DQo+IGJl
-YWNvbnMuDQo+IE1vcmVvdmVyLCBpZiBpdCBnZXRzIG5vbi16ZXJvIGZvciAxNSBvdXQgb2YgMTYg
-YmVhY29ucyB0aGUgY2hhaW4gaXMgbm90DQo+IGRpc2FibGVkIGJ1dCBnYWluIHZhbHVlcyBhcmUg
-d3JvbmcgYmVjYXVzZSBvZiB0aGlzIC0gYW5kIG9uZSBjaGFpbiB3b3VsZCBiZQ0KPiBhbXBsaWZ5
-aW5nIHRoaW5ncyBtb3JlIHRoYW4gaXQgc2hvdWxkIC0gdGhpcyBpcyBjdXJyZW50bHkgaGFwcGVu
-aW5nIHRvIHRoZSBiZXN0DQo+IG9mIG15IHVuZGVyc3RhbmRpbmcuDQo+IA0KPiBTbyBteSBwYXRj
-aCBmaWx0ZXJzIG91dCByZXN1bHRzIHRoYXQgd2Uga25vdyBhcmUgYmFkIHRvIGFjY291bnQgZm9y
-IHRoaXMNCj4gZmlybXdhcmUgYnVnLg0KPiBXaXRoIHRoaXMgcGF0Y2ggYWxsIGNoYWlucyB3aXRo
-IGFudGVubmEgYXR0YWNoZWQgZ2V0IHNpZ25hbCBhbmQgbm9pc2UgcmVhZGluZyAtDQo+IHN1Z2dl
-c3RpbmcgdGhhdCBmaXJtd2FyZSBhY3R1YWxseSByZXR1cm5zIHplcm8gb25seSBzb21lIHRpbWVz
-IGFuZCBhZnRlcg0KPiBzZXZlcmFsIHJldHJpZXMgd2UgZ2V0IHJlYXNvbmFibGUgc3RhdGlzdGlj
-cy4gSXQgbG9va3MgbGlrZSB0aGVyZSBhcmUgc29tZQ0KPiAndHJhbnNpdGlvbmluZycgcHJvY2Vz
-c2VzIGluIGZpcm13YXJlIGFuZCBpZiB3ZSBvdXQtd2FpdCB0aGVtIHdlIGdldCBnb29kDQo+IHN0
-YXRpc3RpY3MuDQo+IA0KPiBJJ20gbm90IHN1cmUgSSBzZWUgaG93IHRoaXMgcGF0Y2ggbWFrZXMg
-YW55dGhpbmcgbW9yZSB3b3JzZSB0aGFuIHRoZXkNCj4gY3VycmVudGx5IGFscmVhZHkgYXJlLg0K
-PiBDdXJyZW50bHkgaXQgaXMgYWxyZWFkeSAocHJlc3VtYWJseSkgcG9zc2libGUgdG8gZ2V0IHdy
-b25nIHJzc2kgcmVhZGluZw0KPiBiZWNhdXNlIGNoYWluIHRoYXQgbWF5IGhhdmUgYmVlbiBlbmFi
-bGVkIGR1cmluZyBmaXJzdCBzY2FuIG1heSBnZXQgemVyb3MNCj4gbGF0ZXIuIEFsbCBteSBwYXRj
-aCBkb2VzIGlzIHRvIGVuYWJsZSBhbGwgZXF1aXZhbGVudGx5IGdvb2QgKG9yIGJhZCkgYW50ZW5u
-YXMsDQo+IGluc3RlYWQgb2YgdHdvIGVxdWl2YWxlbnRseSBnb29kIChvciBiYWQpIGFzIGN1cnJl
-bnQgY29kZSBkb2VzLg0KPiANCj4gRG9lcyB0aGlzIGV4cGxhbmF0aW9uIG1ha2UgYW55IHNlbnNl
-PyBJcyBpdCBmbGF3ZWQgaW4gc29tZSB3YXk/DQo+IElmIHBhdGNoIGluIGl0J3MgY3VycmVudCBz
-dGF0ZSBzZWVtcyB0b28gY29udHJvdmVyc2lhbCB3b3VsZCBwYXRjaCB0aGF0IGVuYWJsZXMNCj4g
-dGhpcyBjaGVjayBpZiBzb21lIG1vZHVsZSBwYXJhbWV0ZXIgaXMgc2V0IChhbmQgaXQgaXMgbm90
-IHNldCBteSBkZWZhdWx0KSBiZQ0KPiBtb3JlIGFjY2VwdGFibGU/DQo+IA0KDQpBcmUgeW91IHN1
-cmUgdGhhdCB0aGUgYW50ZW5uYSB0aGF0IHJlcG9ydGVkIDAgInJlY292ZXJzIiBhbmQgcmVwb3J0
-cyBnb29kIHZhbHVlcyBsYXRlcj8NCg==
+These definitions are associated with some
+improvements upcomming for 10.4 and QCA99X0.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.h | 153 +++++++++++++++++++++++++++++++++-
+ 1 file changed, 150 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index edd3b9070de9..0c5628dafabf 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -52,6 +52,7 @@ enum htt_h2t_msg_type { /* host-to-target */
+ 	/* This command is used for sending management frames in HTT < 3.0.
+ 	 * HTT >= 3.0 uses TX_FRM for everything. */
+ 	HTT_H2T_MSG_TYPE_MGMT_TX            = 7,
++	HTT_H2T_MSG_TYPE_TX_FETCH_RESP      = 11,
+ 
+ 	HTT_H2T_NUM_MSGS /* keep this last */
+ };
+@@ -1306,9 +1307,43 @@ struct htt_frag_desc_bank_id {
+  * so we use a conservatively safe value for now */
+ #define HTT_FRAG_DESC_BANK_MAX 4
+ 
+-#define HTT_FRAG_DESC_BANK_CFG_INFO_PDEV_ID_MASK 0x03
+-#define HTT_FRAG_DESC_BANK_CFG_INFO_PDEV_ID_LSB  0
+-#define HTT_FRAG_DESC_BANK_CFG_INFO_SWAP         (1 << 2)
++#define HTT_FRAG_DESC_BANK_CFG_INFO_PDEV_ID_MASK		0x03
++#define HTT_FRAG_DESC_BANK_CFG_INFO_PDEV_ID_LSB			0
++#define HTT_FRAG_DESC_BANK_CFG_INFO_SWAP			BIT(2)
++#define HTT_FRAG_DESC_BANK_CFG_INFO_Q_STATE_VALID		BIT(3)
++#define HTT_FRAG_DESC_BANK_CFG_INFO_Q_STATE_DEPTH_TYPE_MASK	BIT(4)
++#define HTT_FRAG_DESC_BANK_CFG_INFO_Q_STATE_DEPTH_TYPE_LSB	4
++
++enum htt_q_depth_type {
++	HTT_Q_DEPTH_TYPE_BYTES = 0,
++	HTT_Q_DEPTH_TYPE_MSDUS = 1,
++};
++
++#define HTT_TX_Q_STATE_NUM_PEERS		(TARGET_10_4_NUM_QCACHE_PEERS_MAX + \
++						 TARGET_10_4_NUM_VDEVS)
++#define HTT_TX_Q_STATE_NUM_TIDS			8
++#define HTT_TX_Q_STATE_ENTRY_SIZE		1
++#define HTT_TX_Q_STATE_ENTRY_MULTIPLIER		0
++
++/**
++ * htt_q_state_conf - part of htt_frag_desc_bank_cfg for host q state config
++ *
++ * Defines host q state format and behavior. See htt_q_state.
++ *
++ * @record_size: Defines the size of each host q entry in bytes. In practice
++ *	however firmware (at least 10.4.3-00191) ignores this host
++ *	configuration value and uses hardcoded value of 1.
++ * @record_multiplier: This is valid only when q depth type is MSDUs. It
++ *	defines the exponent for the power of 2 multiplication.
++ */
++struct htt_q_state_conf {
++	__le32 paddr;
++	__le16 num_peers;
++	__le16 num_tids;
++	u8 record_size;
++	u8 record_multiplier;
++	u8 pad[2];
++} __packed;
+ 
+ struct htt_frag_desc_bank_cfg {
+ 	u8 info; /* HTT_FRAG_DESC_BANK_CFG_INFO_ */
+@@ -1316,6 +1351,114 @@ struct htt_frag_desc_bank_cfg {
+ 	u8 desc_size;
+ 	__le32 bank_base_addrs[HTT_FRAG_DESC_BANK_MAX];
+ 	struct htt_frag_desc_bank_id bank_id[HTT_FRAG_DESC_BANK_MAX];
++	struct htt_q_state_conf q_state;
++} __packed;
++
++#define HTT_TX_Q_STATE_ENTRY_COEFFICIENT	128
++#define HTT_TX_Q_STATE_ENTRY_FACTOR_MASK	0x3f
++#define HTT_TX_Q_STATE_ENTRY_FACTOR_LSB		0
++#define HTT_TX_Q_STATE_ENTRY_EXP_MASK		0xc0
++#define HTT_TX_Q_STATE_ENTRY_EXP_LSB		6
++
++/**
++ * htt_q_state - shared between host and firmware via DMA
++ *
++ * This structure is used for the host to expose it's software queue state to
++ * firmware so that its rate control can schedule fetch requests for optimized
++ * performance. This is most notably used for MU-MIMO aggregation when multiple
++ * MU clients are connected.
++ *
++ * @count: Each element defines the host queue depth. When q depth type was
++ *	configured as HTT_Q_DEPTH_TYPE_BYTES then each entry is defined as:
++ *	FACTOR * 128 * 8^EXP (see HTT_TX_Q_STATE_ENTRY_FACTOR_MASK and
++ *	HTT_TX_Q_STATE_ENTRY_EXP_MASK). When q depth type was configured as
++ *	HTT_Q_DEPTH_TYPE_MSDUS the number of packets is scaled by 2 **
++ *	record_multiplier (see htt_q_state_conf).
++ * @map: Used by firmware to quickly check which host queues are not empty. It
++ *	is a bitmap simply saying.
++ * @seq: Used by firmware to quickly check if the host queues were updated
++ *	since it last checked.
++ *
++ * FIXME: Is the q_state map[] size calculation really correct?
++ */
++struct htt_q_state {
++	u8 count[HTT_TX_Q_STATE_NUM_TIDS][HTT_TX_Q_STATE_NUM_PEERS];
++	u32 map[HTT_TX_Q_STATE_NUM_TIDS][(HTT_TX_Q_STATE_NUM_PEERS + 31) / 32];
++	__le32 seq;
++} __packed;
++
++#define HTT_TX_FETCH_RECORD_INFO_PEER_ID_MASK	0x0fff
++#define HTT_TX_FETCH_RECORD_INFO_PEER_ID_LSB	0
++#define HTT_TX_FETCH_RECORD_INFO_TID_MASK	0xf000
++#define HTT_TX_FETCH_RECORD_INFO_TID_LSB	12
++
++struct htt_tx_fetch_record {
++	__le16 info; /* HTT_TX_FETCH_IND_RECORD_INFO_ */
++	__le16 num_msdus;
++	__le32 num_bytes;
++} __packed;
++
++struct htt_tx_fetch_ind {
++	u8 pad0;
++	__le16 fetch_seq_num;
++	__le32 token;
++	__le16 num_resp_ids;
++	__le16 num_records;
++	struct htt_tx_fetch_record records[0];
++	__le32 resp_ids[0]; /* ath10k_htt_get_tx_fetch_ind_resp_ids() */
++} __packed;
++
++static inline void *
++ath10k_htt_get_tx_fetch_ind_resp_ids(struct htt_tx_fetch_ind *ind)
++{
++	return (void *)&ind->records[le16_to_cpu(ind->num_records)];
++}
++
++struct htt_tx_fetch_resp {
++	u8 pad0;
++	__le16 resp_id;
++	__le16 fetch_seq_num;
++	__le16 num_records;
++	__le32 token;
++	struct htt_tx_fetch_record records[0];
++} __packed;
++
++struct htt_tx_fetch_confirm {
++	u8 pad0;
++	__le16 num_resp_ids;
++	__le32 resp_ids[0];
++} __packed;
++
++enum htt_tx_mode_switch_mode {
++	HTT_TX_MODE_SWITCH_PUSH = 0,
++	HTT_TX_MODE_SWITCH_PUSH_PULL = 1,
++};
++
++#define HTT_TX_MODE_SWITCH_IND_INFO0_ENABLE		BIT(0)
++#define HTT_TX_MODE_SWITCH_IND_INFO0_NUM_RECORDS_MASK	0xfffe
++#define HTT_TX_MODE_SWITCH_IND_INFO0_NUM_RECORDS_LSB	1
++
++#define HTT_TX_MODE_SWITCH_IND_INFO1_MODE_MASK		0x0003
++#define HTT_TX_MODE_SWITCH_IND_INFO1_MODE_LSB		0
++#define HTT_TX_MODE_SWITCH_IND_INFO1_THRESHOLD_MASK	0xfffc
++#define HTT_TX_MODE_SWITCH_IND_INFO1_THRESHOLD_LSB	2
++
++#define HTT_TX_MODE_SWITCH_RECORD_INFO0_PEER_ID_MASK	0x0fff
++#define HTT_TX_MODE_SWITCH_RECORD_INFO0_PEER_ID_LSB	0
++#define HTT_TX_MODE_SWITCH_RECORD_INFO0_TID_MASK	0xf000
++#define HTT_TX_MODE_SWITCH_RECORD_INFO0_TID_LSB		12
++
++struct htt_tx_mode_switch_record {
++	__le16 info0; /* HTT_TX_MODE_SWITCH_RECORD_INFO0_ */
++	__le16 num_max_msdus;
++} __packed;
++
++struct htt_tx_mode_switch_ind {
++	u8 pad0;
++	__le16 info0; /* HTT_TX_MODE_SWITCH_IND_INFO0_ */
++	__le16 info1; /* HTT_TX_MODE_SWITCH_IND_INFO1_ */
++	u8 pad1[2];
++	struct htt_tx_mode_switch_record records[0];
+ } __packed;
+ 
+ union htt_rx_pn_t {
+@@ -1340,6 +1483,7 @@ struct htt_cmd {
+ 		struct htt_oob_sync_req oob_sync_req;
+ 		struct htt_aggr_conf aggr_conf;
+ 		struct htt_frag_desc_bank_cfg frag_desc_bank_cfg;
++		struct htt_tx_fetch_resp tx_fetch_resp;
+ 	};
+ } __packed;
+ 
+@@ -1364,6 +1508,9 @@ struct htt_resp {
+ 		struct htt_rx_pn_ind rx_pn_ind;
+ 		struct htt_rx_offload_ind rx_offload_ind;
+ 		struct htt_rx_in_ord_ind rx_in_ord_ind;
++		struct htt_tx_fetch_ind tx_fetch_ind;
++		struct htt_tx_fetch_confirm tx_fetch_confirm;
++		struct htt_tx_mode_switch_ind tx_mode_switch_ind;
+ 	};
+ } __packed;
+ 
+-- 
+2.1.4
+
