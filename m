@@ -1,39 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from puleglot.ru ([78.47.112.147]:48896 "EHLO puleglot.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753718AbcAHBdf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 20:33:35 -0500
-From: Alexander Tsoy <alexander@tsoy.me>
-Date: Fri, 8 Jan 2016 01:26:03 +0300
-Subject: [PATCH] ath9k_htc: add device ID for Toshiba WLM-20U2/GN-1080
-To: <linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@lists.ath9k.org>
-Message-Id: <E1aHLfh-0001d1-FT@puleglot.ru> (sfid-20160108_023351_482246_C5E98F12)
+Received: from mail-lf0-f46.google.com ([209.85.215.46]:33833 "EHLO
+	mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759214AbcAUNMW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2016 08:12:22 -0500
+Received: by mail-lf0-f46.google.com with SMTP id 17so26277209lfz.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 05:12:22 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/5] ath10k: rename some HTT events
+Date: Thu, 21 Jan 2016 14:13:23 +0100
+Message-Id: <1453382007-24622-2-git-send-email-michal.kazior@tieto.com> (sfid-20160121_141226_528365_76687DEF)
+In-Reply-To: <1453382007-24622-1-git-send-email-michal.kazior@tieto.com>
+References: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
+ <1453382007-24622-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This device is available under different marketing names:
-WLM-20U2 - Wireless USB Dongle for Toshiba TVs
-GN-1080 - Wireless LAN Module for Toshiba MFPs.
+New names make a bit more sense.
 
-Signed-off-by: Alexander Tsoy <alexander@tsoy.me>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/ath/ath9k/hif_usb.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/ath/ath10k/htt.c    | 8 ++++----
+ drivers/net/wireless/ath/ath10k/htt.h    | 8 ++++----
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 4 ++--
+ 3 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
-index 165dd20..8cbf490 100644
---- a/drivers/net/wireless/ath/ath9k/hif_usb.c
-+++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
-@@ -55,6 +55,8 @@ static struct usb_device_id ath9k_hif_usb_ids[] = {
- 	  .driver_info = AR9280_USB },  /* Buffalo WLI-UV-AG300P */
- 	{ USB_DEVICE(0x04da, 0x3904),
- 	  .driver_info = AR9280_USB },
-+	{ USB_DEVICE(0x0930, 0x0a08),
-+	  .driver_info = AR9280_USB },  /* Toshiba WLM-20U2 and GN-1080 */
+diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
+index 3e6ba63dfdff..7561f22f10f9 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.c
++++ b/drivers/net/wireless/ath/ath10k/htt.c
+@@ -131,12 +131,12 @@ static const enum htt_t2h_msg_type htt_10_4_t2h_msg_types[] = {
+ 	[HTT_10_4_T2H_MSG_TYPE_AGGR_CONF] = HTT_T2H_MSG_TYPE_AGGR_CONF,
+ 	[HTT_10_4_T2H_MSG_TYPE_TX_FETCH_IND] =
+ 				HTT_T2H_MSG_TYPE_TX_FETCH_IND,
+-	[HTT_10_4_T2H_MSG_TYPE_TX_FETCH_CONF] =
+-				HTT_T2H_MSG_TYPE_TX_FETCH_CONF,
++	[HTT_10_4_T2H_MSG_TYPE_TX_FETCH_CONFIRM] =
++				HTT_T2H_MSG_TYPE_TX_FETCH_CONFIRM,
+ 	[HTT_10_4_T2H_MSG_TYPE_STATS_NOUPLOAD] =
+ 				HTT_T2H_MSG_TYPE_STATS_NOUPLOAD,
+-	[HTT_10_4_T2H_MSG_TYPE_TX_LOW_LATENCY_IND] =
+-				HTT_T2H_MSG_TYPE_TX_LOW_LATENCY_IND,
++	[HTT_10_4_T2H_MSG_TYPE_TX_MODE_SWITCH_IND] =
++				HTT_T2H_MSG_TYPE_TX_MODE_SWITCH_IND,
+ };
  
- 	{ USB_DEVICE(0x0cf3, 0x20ff),
- 	  .driver_info = STORAGE_DEVICE },
+ int ath10k_htt_connect(struct ath10k_htt *htt)
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 47ca048feaf0..edd3b9070de9 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -413,10 +413,10 @@ enum htt_10_4_t2h_msg_type {
+ 	HTT_10_4_T2H_MSG_TYPE_EN_STATS               = 0x14,
+ 	HTT_10_4_T2H_MSG_TYPE_AGGR_CONF              = 0x15,
+ 	HTT_10_4_T2H_MSG_TYPE_TX_FETCH_IND           = 0x16,
+-	HTT_10_4_T2H_MSG_TYPE_TX_FETCH_CONF          = 0x17,
++	HTT_10_4_T2H_MSG_TYPE_TX_FETCH_CONFIRM       = 0x17,
+ 	HTT_10_4_T2H_MSG_TYPE_STATS_NOUPLOAD         = 0x18,
+ 	/* 0x19 to 0x2f are reserved */
+-	HTT_10_4_T2H_MSG_TYPE_TX_LOW_LATENCY_IND     = 0x30,
++	HTT_10_4_T2H_MSG_TYPE_TX_MODE_SWITCH_IND     = 0x30,
+ 	/* keep this last */
+ 	HTT_10_4_T2H_NUM_MSGS
+ };
+@@ -449,8 +449,8 @@ enum htt_t2h_msg_type {
+ 	HTT_T2H_MSG_TYPE_TEST,
+ 	HTT_T2H_MSG_TYPE_EN_STATS,
+ 	HTT_T2H_MSG_TYPE_TX_FETCH_IND,
+-	HTT_T2H_MSG_TYPE_TX_FETCH_CONF,
+-	HTT_T2H_MSG_TYPE_TX_LOW_LATENCY_IND,
++	HTT_T2H_MSG_TYPE_TX_FETCH_CONFIRM,
++	HTT_T2H_MSG_TYPE_TX_MODE_SWITCH_IND,
+ 	/* keep this last */
+ 	HTT_T2H_NUM_MSGS
+ };
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 91afa3ae414c..d923f64e4f42 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2125,8 +2125,8 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		break;
+ 	case HTT_T2H_MSG_TYPE_EN_STATS:
+ 	case HTT_T2H_MSG_TYPE_TX_FETCH_IND:
+-	case HTT_T2H_MSG_TYPE_TX_FETCH_CONF:
+-	case HTT_T2H_MSG_TYPE_TX_LOW_LATENCY_IND:
++	case HTT_T2H_MSG_TYPE_TX_FETCH_CONFIRM:
++	case HTT_T2H_MSG_TYPE_TX_MODE_SWITCH_IND:
+ 	default:
+ 		ath10k_warn(ar, "htt event (%d) not handled\n",
+ 			    resp->hdr.msg_type);
 -- 
-2.4.10
+2.1.4
 
