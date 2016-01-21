@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:34877 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965184AbcAULcZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 06:32:25 -0500
-Received: by mail-pa0-f68.google.com with SMTP id gi1so1651378pac.2
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:32:25 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 13/27] staging: wilc1000: rename pstrMessge in wilc_mq_destroy
-Date: Thu, 21 Jan 2016 20:30:43 +0900
-Message-Id: <1453375857-20645-14-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123654_751522_AB832EFB)
-In-Reply-To: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from nbd.name ([46.4.11.11]:60885 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758925AbcAUPeO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2016 10:34:14 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, martin.blumenstingl@googlemail.com
+Subject: [PATCH] ath9k_hw: ignore eeprom magic mismatch on flash based devices
+Date: Thu, 21 Jan 2016 16:34:08 +0100
+Message-Id: <1453390448-87417-1-git-send-email-nbd@openwrt.org> (sfid-20160121_163417_634968_3A7461ED)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pstrMessge to msg to avoid camelcase.
+Many AR913x based devices (maybe others too) do not have a valid EEPROM
+magic in their calibration data partition.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Fixes: 6fa658fd5ab2 ("ath9k: Simplify and fix eeprom endianness swapping")
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/staging/wilc1000/wilc_msgqueue.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/eeprom.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 103fcfd..a01420a 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -38,10 +38,10 @@ int wilc_mq_destroy(struct message_queue *mq)
+diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
+index a7afdee..73fb423 100644
+--- a/drivers/net/wireless/ath/ath9k/eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/eeprom.c
+@@ -150,18 +150,18 @@ int ath9k_hw_nvram_swap_data(struct ath_hw *ah, bool *swap_needed, int size)
+ 		return -EIO;
  	}
  
- 	while (mq->msg_list) {
--		struct message *pstrMessge = mq->msg_list->next;
-+		struct message *msg = mq->msg_list->next;
- 
- 		kfree(mq->msg_list);
--		mq->msg_list = pstrMessge;
-+		mq->msg_list = msg;
- 	}
- 
- 	return 0;
+-	if (magic == AR5416_EEPROM_MAGIC) {
+-		*swap_needed = false;
+-	} else if (swab16(magic) == AR5416_EEPROM_MAGIC) {
++	*swap_needed = false;
++	if (swab16(magic) == AR5416_EEPROM_MAGIC) {
+ 		if (ah->ah_flags & AH_NO_EEP_SWAP) {
+ 			ath_info(common,
+ 				 "Ignoring endianness difference in EEPROM magic bytes.\n");
+-
+-			*swap_needed = false;
+ 		} else {
+ 			*swap_needed = true;
+ 		}
+-	} else {
++	} else if (magic != AR5416_EEPROM_MAGIC) {
++		if (ath9k_hw_use_flash(ah))
++			return 0;
++
+ 		ath_err(common,
+ 			"Invalid EEPROM Magic (0x%04x).\n", magic);
+ 		return -EINVAL;
 -- 
-2.7.0
+2.2.2
 
