@@ -1,55 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38964 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932135AbcAZLWa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 06:22:30 -0500
-Message-ID: <1453807346.2759.29.camel@sipsolutions.net> (sfid-20160126_122233_471552_77BFDC51)
-Subject: Re: [PATCH] cfg80211: basic support for PBSS network type
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lior David <liord@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Dedy Lansky <dlansky@codeaurora.org>,
-	Maya Erez <merez@codeaurora.org>,
-	Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Date: Tue, 26 Jan 2016 12:22:26 +0100
-In-Reply-To: <56961335.4040801@codeaurora.org>
-References: <56961335.4040801@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:60173 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965064AbcAUO6t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2016 09:58:49 -0500
+Received: from potku.adurom.net (a88-115-185-251.elisa-laajakaista.fi [88.115.185.251])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	(Authenticated sender: kvalo@smtp.codeaurora.org)
+	by smtp.codeaurora.org (Postfix) with ESMTPSA id 6EE5B6037C
+	for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 14:58:48 +0000 (UTC)
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Subject: wireless-drivers: random cleanup patches piling up
+Date: Thu, 21 Jan 2016 16:58:44 +0200
+Message-ID: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com> (sfid-20160121_155854_644978_1153FC7B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-01-13 at 11:04 +0200, Lior David wrote:
-> 
-> + * @NL80211_ATTR_PBSS: flag attribute. If set it means operate
-> + *	in a PBSS. Specified in %NL80211_CMD_CONNECT to request
-> + *	connecting to a PCP, and in %NL80211_CMD_START_AP to start
-> + *	a PCP instead of AP. Relevant for DMG networks only.
+Hi,
 
-I'm continually confused by this; is it possible for DMG devices to be
-a "real" AP rather than a PCP?
+I have quite a lot of random cleanup patches from new developers waiting
+in my queue:
 
-> @@ -3461,6 +3462,8 @@  static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
->  			return PTR_ERR(params.acl);
->  	}
->  
-> +	params.pbss = nla_get_flag(info->attrs[NL80211_ATTR_PBSS]);
-> +
->  	wdev_lock(wdev);
->  	err = rdev_start_ap(rdev, dev, &params);
->  	if (!err) {
+https://patchwork.kernel.org/project/linux-wireless/list/?state=10&delegate=25621&order=date
 
-This, and the corresponding code in nl80211_connect, really ought to
-check that the device is a DMG device and able to do this.
+(Not all of them are cleanup patches, there are also few patches
+deferred due to other reasons, but you get the idea.)
 
-Perhaps this even needs a capability check, or do we assume that all
-devices/drivers will be able to do this (or should reject it?)
+These cleanup patches usually take quite a lot of my time and I'm
+starting to doubt the benefit, compared to the time needed to dig
+through them and figuring out what to apply. And this is of course time
+away from other patches, so it's slowing down "real" development.
 
-If you want to rely on drivers though you need to have (in this patch!)
-a small change to the existing driver to reject the operations if
-pbss==true since obviously it cannot be doing the right thing right now
-without further changes. That reject would then of course be removed
-again with the driver update.
+I really don't know what to do. Part of me is saying that I just should
+drop them unless it's reviewed by a more experienced developer but on
+the other hand this is a good way get new developers onboard.
 
-johannes
+What others think? Are these kind of patches useful?
+
+-- 
+Kalle Valo
