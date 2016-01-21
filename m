@@ -1,62 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:35165 "EHLO
-	mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751385AbcAZW4P (ORCPT
+Received: from mail-lf0-f54.google.com ([209.85.215.54]:35856 "EHLO
+	mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759071AbcAUNMV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 17:56:15 -0500
-MIME-Version: 1.0
-In-Reply-To: <1453830820-27104-1-git-send-email-xiyou.wangcong@gmail.com>
-References: <1453830820-27104-1-git-send-email-xiyou.wangcong@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 27 Jan 2016 09:55:55 +1100
-Message-ID: <CAGRGNgV7MUXdk+e8Arx05yiWX6owei5dmnFQ-TBfs55jfy+qBw@mail.gmail.com> (sfid-20160126_235621_296707_3458CAB7)
-Subject: Re: [PATCH RESEND net] nfc: use GFP_USER for user-controlled kmalloc
-To: Cong Wang <xiyou.wangcong@gmail.com>
-Cc: netdev <netdev@vger.kernel.org>, dvyukov@google.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 21 Jan 2016 08:12:21 -0500
+Received: by mail-lf0-f54.google.com with SMTP id h129so26537520lfh.3
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 05:12:21 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 0/5] ath10k: add basic hostq support
+Date: Thu, 21 Jan 2016 14:13:22 +0100
+Message-Id: <1453382007-24622-1-git-send-email-michal.kazior@tieto.com> (sfid-20160121_141224_451378_71845F6F)
+In-Reply-To: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
+References: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Cong,
+There's a new firmware feature which uses a shared
+DMA memory so host can share it's per-sta per-tid
+queue size which is then subsequently used for
+firmware to assist in deciding which frames to put
+on the intermediate host-device tx queue.
 
-On Wed, Jan 27, 2016 at 4:53 AM, Cong Wang <xiyou.wangcong@gmail.com> wrote:
+This patchset adds only basic support to make
+the firmware supporting the feature happy and
+running at all. Without it firmware would freeze
+shortly after booting.
 
-A commit message would be nice. A brief rundown of how this is called
-from userspace would be nice (I'm talking a single sentence here, e.g.
-"this is allocated when submitting a nfc packet") and what issue
-__GFP_NOWARN is fixing. (I'm guessing log spam due to allocation
-failures.)
+More patches will follow some time later to add
+the "new data path" logic.
 
-> Reported-by: Dmitry Vyukov <dvyukov@google.com>
-> Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-> Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-> Cc: Samuel Ortiz <sameo@linux.intel.com>
-> Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
-> ---
->  net/nfc/llcp_commands.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/net/nfc/llcp_commands.c b/net/nfc/llcp_commands.c
-> index 3621a90..5d94055 100644
-> --- a/net/nfc/llcp_commands.c
-> +++ b/net/nfc/llcp_commands.c
-> @@ -729,7 +729,7 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
->         if (local == NULL)
->                 return -ENODEV;
->
-> -       msg_data = kzalloc(len, GFP_KERNEL);
-> +       msg_data = kzalloc(len, GFP_USER | __GFP_NOWARN);
->         if (msg_data == NULL)
->                 return -ENOMEM;
 
-Thanks,
+v2:
+ * fix gfp allocation [Ben]
+
+
+Michal Kazior (5):
+  ath10k: rename some HTT events
+  ath10k: add new htt definitions
+  ath10k: add new FW_FEATURE_PEER_FLOW_CONTROL
+  ath10k: clean up cont frag desc init code
+  ath10k: implement basic support for new tx path firmware
+
+ drivers/net/wireless/ath/ath10k/core.c   |   1 +
+ drivers/net/wireless/ath/ath10k/core.h   |   9 ++
+ drivers/net/wireless/ath/ath10k/htt.c    |   8 +-
+ drivers/net/wireless/ath/ath10k/htt.h    | 169 +++++++++++++++++++++++++++++--
+ drivers/net/wireless/ath/ath10k/htt_rx.c |   8 +-
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 146 +++++++++++++++++++++-----
+ 6 files changed, 302 insertions(+), 39 deletions(-)
 
 -- 
-Julian Calaby
+2.1.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
