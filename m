@@ -1,56 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55868 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965183AbcAUNsV convert rfc822-to-8bit (ORCPT
+Received: from mail-vk0-f66.google.com ([209.85.213.66]:35980 "EHLO
+	mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759234AbcAULLl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 08:48:21 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-Cc: Pavel Machek <pavel@ucw.cz>, Arend van Spriel <arend@broadcom.com>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, David Gnedt <david.gnedt@davizone.at>
-Subject: Re: [PATCH v2] wl1251: add sysfs interface for bluetooth coexistence mode configuration
-References: <1451130310-16666-1-git-send-email-pali.rohar@gmail.com>
-	<5696D08F.9030906@broadcom.com> <20160114091654.GA15380@amd>
-	<20160121085331.GO7192@pali>
-Date: Thu, 21 Jan 2016 15:48:14 +0200
-In-Reply-To: <20160121085331.GO7192@pali> ("Pali =?utf-8?Q?Roh=C3=A1r=22's?=
- message of "Thu, 21
-	Jan 2016 09:53:31 +0100")
-Message-ID: <87d1svyrfl.fsf@kamboji.qca.qualcomm.com> (sfid-20160121_144840_014183_8194ACF8)
+	Thu, 21 Jan 2016 06:11:41 -0500
+Received: by mail-vk0-f66.google.com with SMTP id e64so1505095vkg.3
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:11:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160121100456.GD6421@mwanda>
+References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+	<1453339230-1377-25-git-send-email-chaehyun.lim@gmail.com>
+	<20160121081816.GA10063@sudip-pc>
+	<20160121085508.GD6370@mwanda>
+	<CAKV=isvj-RbzMCOS+UyXkXyuyX2_SLhDyVTNaJy4kQbfN+bxSg@mail.gmail.com>
+	<20160121100456.GD6421@mwanda>
+Date: Thu, 21 Jan 2016 20:11:40 +0900
+Message-ID: <CAKV=iss0QH9=5CEJdttt2qrpJYFV9cgfHZsTw0NB=+UZH89b9Q@mail.gmail.com> (sfid-20160121_121145_001051_475C3D51)
+Subject: Re: [PATCH 25/27] staging: wilc1000: fix coding style of kmalloc usage
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+	devel@driverdev.osuosl.org, Chris Park <chris.park@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	"tony.cho" <tony.cho@atmel.com>, leo.kim@atmel.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pali Rohár <pali.rohar@gmail.com> writes:
-
-> On Thursday 14 January 2016 10:16:54 Pavel Machek wrote:
->> On Wed 2016-01-13 23:32:47, Arend van Spriel wrote:
->> > On 12/26/2015 12:45 PM, Pali Rohár wrote:
->> > >Port the bt_coex_mode sysfs interface from wl1251 driver version included
->> > >in the Maemo Fremantle kernel to allow bt-coexistence mode configuration.
->> > >This enables userspace applications to set one of the modes
->> > >WL1251_BT_COEX_OFF, WL1251_BT_COEX_ENABLE and WL1251_BT_COEX_MONOAUDIO.
->> > >The default mode is WL1251_BT_COEX_OFF.
->> > >It should be noted that this driver always enabled bt-coexistence before
->> > >and enabled bt-coexistence directly affects the receiving performance,
->> > >rendering it unusable in some low-signal situations. Especially monitor
->> > >mode is affected very badly with bt-coexistence enabled.
->> > 
->> > So what user-space process will be using this interface. Did you consider
->> > adding debugfs interface? In case of monitor mode you could consider
->> > disabling bt-coex from within the driver itself.
->> 
->> This aint no debugging feature.
+On Thu, Jan 21, 2016 at 7:04 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+> On Thu, Jan 21, 2016 at 07:01:45PM +0900, Chaehyun Lim wrote:
+>> On Thu, Jan 21, 2016 at 5:55 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
+>> > On Thu, Jan 21, 2016 at 01:48:16PM +0530, Sudip Mukherjee wrote:
+>> >> On Thu, Jan 21, 2016 at 10:20:28AM +0900, Chaehyun Lim wrote:
+>> >> > This patch fixes coding style of kmalloc usage found by checkpatch.
+>> >> > CHECK: Prefer kmalloc(sizeof(*new_msg)...) over kmalloc(sizeof(struct message)...)
+>> >> >
+>> >> > Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+>> >> > ---
+>> >> >  drivers/staging/wilc1000/wilc_msgqueue.c | 2 +-
+>> >> >  1 file changed, 1 insertion(+), 1 deletion(-)
+>> >> >
+>> >> > diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+>> >> > index 7107715..c7a60f4 100644
+>> >> > --- a/drivers/staging/wilc1000/wilc_msgqueue.c
+>> >> > +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+>> >> > @@ -70,7 +70,7 @@ int wilc_mq_send(struct message_queue *mq,
+>> >> >     }
+>> >> >
+>> >> >     /* construct a new message */
+>> >> > -   new_msg = kmalloc(sizeof(struct message), GFP_ATOMIC);
+>> >> > +   new_msg = kmalloc(sizeof(*new_msg), GFP_ATOMIC);
+>> >>
+>> >> This checkpatch error was introduced by 1/27 patch of this series. Maybe
+>> >> it will be better to fix it in that one.
+>> >
+>> > The warning was introduced there but the issue went back further it's
+>> > just that checkpatch didn't detect it because of other issues.  This
+>> > seems fine.
+>>
+>> I appreciate for all comment. I will resend it after applying Sudip's review.
+>>
 >
-> Right, bt-coex is not for debugging purpose, but for normal usage, when
-> user want to use together bluetooth and wifi or just one of those.
+> That's fine too, but the original way is more correct because it only
+> fixes one thing at a time and is easier to review.
+>
+I will keep the original way, even 1/27 patch was introduced a new
+checkpatch warning.
+I agree that one patch should be changed one thing.
 
-I think most of other drivers have a debugfs interface for btcoex, I
-guess mostly for testing purposes. But this really should be added to
-cfg80211.
+But I need to resend again because I find a wrong variable name at commit title.
 
--- 
-Kalle Valo
+regards
+Chaehyun Lim
+
+> regards,
+> dan carpenter
+>
