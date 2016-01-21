@@ -1,35 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36274 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932702AbcASTZc (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33257 "EHLO
+	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934244AbcAULb5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 14:25:32 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: ssb: Set linux-wireless as MAINTAINERS list
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20160118175303.19164539@wiggum>
-To: =?utf-8?q?Michael_B=C3=BCsch?= <m@bues.ch>
-Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	"linux-arm-kernel\@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-mips\@linux-mips.org" <linux-mips@linux-mips.org>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	linux-wireless@vger.kernel.org
-Message-Id: <20160119192532.047C460631@smtp.codeaurora.org> (sfid-20160119_202551_579591_0A75EB8D)
-Date: Tue, 19 Jan 2016 19:25:32 +0000 (UTC)
+	Thu, 21 Jan 2016 06:31:57 -0500
+Received: by mail-pf0-f196.google.com with SMTP id e65so1726837pfe.0
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:31:57 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 04/27] staging: wilc1000: rename pstrNext in struct message
+Date: Thu, 21 Jan 2016 20:30:34 +0900
+Message-Id: <1453375857-20645-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123200_748386_6875C22F)
+In-Reply-To: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch renames pstrNext to next to avoid camelcase.
 
-> ssb patches go through the linux-wireless tree.
-> Set the list to linux-wireless, so linux-wireless patchwork can catch the patches.
-> 
-> Signed-off-by: Michael Buesch <m@bues.ch>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_msgqueue.c | 12 ++++++------
+ drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-Thanks, applied to wireless-drivers.git.
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 0e66a64..4d79a31 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -38,7 +38,7 @@ int wilc_mq_destroy(WILC_MsgQueueHandle *pHandle)
+ 	}
+ 
+ 	while (pHandle->pstrMessageList) {
+-		struct message *pstrMessge = pHandle->pstrMessageList->pstrNext;
++		struct message *pstrMessge = pHandle->pstrMessageList->next;
+ 
+ 		kfree(pHandle->pstrMessageList);
+ 		pHandle->pstrMessageList = pstrMessge;
+@@ -75,7 +75,7 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+ 		return -ENOMEM;
+ 
+ 	pstrMessage->len = u32SendBufferSize;
+-	pstrMessage->pstrNext = NULL;
++	pstrMessage->next = NULL;
+ 	pstrMessage->buf = kmemdup(pvSendBuffer, u32SendBufferSize,
+ 				   GFP_ATOMIC);
+ 	if (!pstrMessage->buf) {
+@@ -91,10 +91,10 @@ int wilc_mq_send(WILC_MsgQueueHandle *pHandle,
+ 	} else {
+ 		struct message *pstrTailMsg = pHandle->pstrMessageList;
+ 
+-		while (pstrTailMsg->pstrNext)
+-			pstrTailMsg = pstrTailMsg->pstrNext;
++		while (pstrTailMsg->next)
++			pstrTailMsg = pstrTailMsg->next;
+ 
+-		pstrTailMsg->pstrNext = pstrMessage;
++		pstrTailMsg->next = pstrMessage;
+ 	}
+ 
+ 	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
+@@ -154,7 +154,7 @@ int wilc_mq_recv(WILC_MsgQueueHandle *pHandle,
+ 	memcpy(pvRecvBuffer, pstrMessage->buf, pstrMessage->len);
+ 	*pu32ReceivedLength = pstrMessage->len;
+ 
+-	pHandle->pstrMessageList = pstrMessage->pstrNext;
++	pHandle->pstrMessageList = pstrMessage->next;
+ 
+ 	kfree(pstrMessage->buf);
+ 	kfree(pstrMessage);
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
+index b0ccd1d..ec503c3 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.h
++++ b/drivers/staging/wilc1000/wilc_msgqueue.h
+@@ -16,7 +16,7 @@
+ struct message {
+ 	void *buf;
+ 	u32 len;
+-	struct message *pstrNext;
++	struct message *next;
+ };
+ 
+ typedef struct __MessageQueue_struct {
+-- 
+2.7.0
 
-Kalle Valo
