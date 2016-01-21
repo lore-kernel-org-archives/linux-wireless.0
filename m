@@ -1,75 +1,175 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:34638 "EHLO
-	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751329AbcACJgr (ORCPT
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:34551 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965318AbcAUNpv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jan 2016 04:36:47 -0500
-Subject: Re: net-libertas: Better exception handling in
- if_spi_host_to_card_worker()
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <5686F0B2.5000000@users.sourceforge.net>
- <56870866.7020000@cogentembedded.com>
- <568785B3.5000905@users.sourceforge.net>
- <alpine.DEB.2.02.1601020914100.2063@localhost6.localdomain6>
- <5687939E.7010701@users.sourceforge.net> <5687A2C7.3000704@gmail.com>
- <5687B2BC.8090901@users.sourceforge.net>
-Cc: Julia Lawall <julia.lawall@lip6.fr>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org
-From: Arend van Spriel <aspriel@gmail.com>
-Message-ID: <5688EBAC.5000701@gmail.com> (sfid-20160103_103713_238919_D99AA12A)
-Date: Sun, 3 Jan 2016 10:36:44 +0100
-MIME-Version: 1.0
-In-Reply-To: <5687B2BC.8090901@users.sourceforge.net>
-Content-Type: text/plain; charset=windows-1252
+	Thu, 21 Jan 2016 08:45:51 -0500
+Received: by mail-lb0-f176.google.com with SMTP id cl12so23453862lbc.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 05:45:50 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 10/13] ath10k: implement flushing of pending frames in txqs
+Date: Thu, 21 Jan 2016 14:46:43 +0100
+Message-Id: <1453384006-31907-11-git-send-email-michal.kazior@tieto.com> (sfid-20160121_144556_480138_B3425BF7)
+In-Reply-To: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
+References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Firmware supporting pull-push tx model may request
+a switch between modes. When switching from
+pull-push to push-only it will be necessary to
+flush all pending frames. The code will do that
+once other bits that actually trigger it are added.
 
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h   |  1 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  3 ++
+ drivers/net/wireless/ath/ath10k/mac.c    | 82 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/mac.h    |  1 +
+ 4 files changed, 87 insertions(+)
 
-On 02-01-16 12:21, SF Markus Elfring wrote:
->> I have never seen much evolution going on in this area.
-> 
-> I can get an other impression from a specific document for example.
-> https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/log/Documentation/CodingStyle
-> 
-> 
->> What the patch tries to do is avoid the extra 'if (err)'.
-> 
-> Yes. - I propose to look at related consequences together with the usage
-> of a popular short jump label once more.
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index d09d6fdf1149..38ed4bbd220b 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -607,6 +607,7 @@ static inline const char *ath10k_scan_state_str(enum ath10k_scan_state state)
+ 
+ enum ath10k_tx_pause_reason {
+ 	ATH10K_TX_PAUSE_Q_FULL,
++	ATH10K_TX_PAUSE_Q_FLUSH_PENDING,
+ 	ATH10K_TX_PAUSE_MAX,
+ };
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index be7dc88b3316..6e3d95c95568 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2244,6 +2244,7 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		}
+ 
+ 		ath10k_txrx_tx_unref(htt, &tx_done);
++		ath10k_mac_tx_push_pending(ar);
+ 		break;
+ 	}
+ 	case HTT_T2H_MSG_TYPE_TX_COMPL_IND:
+@@ -2370,6 +2371,8 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
+ 		dev_kfree_skb_any(skb);
+ 	}
+ 
++	ath10k_mac_tx_push_pending(ar);
++
+ 	spin_lock_bh(&htt->rx_ring.lock);
+ 	while ((skb = __skb_dequeue(&htt->rx_compl_q))) {
+ 		resp = (struct htt_resp *)skb->data;
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 205ccf3760a3..42020c22eaed 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3710,6 +3710,88 @@ static void ath10k_mac_tx_wake(struct ieee80211_hw *hw,
+ 	ath10k_htt_tx_txq_update(hw, txq);
+ }
+ 
++struct ath10k_mac_tx_push_arg {
++	struct ieee80211_hw *hw;
++	bool more;
++};
++
++static void ath10k_mac_tx_push_pending_txq(struct ieee80211_hw *hw,
++					   struct ieee80211_txq *txq,
++					   struct ath10k_mac_tx_push_arg *arg)
++{
++	bool can_push;
++	bool has_more;
++	int ret;
++
++	if (!txq)
++		return;
++
++	while (txq->qdepth > 0) {
++		if (!ath10k_mac_tx_can_push(hw, txq))
++			break;
++
++		ret = ath10k_mac_tx_push_txq(hw, txq);
++		if (ret)
++			break;
++	}
++
++	can_push = ath10k_mac_tx_can_push(hw, txq);
++	has_more = txq->qdepth > 0;
++
++	if (can_push && has_more)
++		arg->more = true;
++}
++
++static void ath10k_mac_tx_push_pending_vif_iter(void *data,
++						u8 *mac,
++						struct ieee80211_vif *vif)
++{
++	struct ath10k_mac_tx_push_arg *arg = data;
++	struct ieee80211_hw *hw = arg->hw;
++
++	ath10k_mac_tx_push_pending_txq(hw, vif->txq, arg);
++}
++
++static void ath10k_mac_tx_push_pending_sta_iter(void *data,
++						struct ieee80211_sta *sta)
++{
++	struct ath10k_mac_tx_push_arg *arg = data;
++	struct ieee80211_hw *hw = arg->hw;
++	int tid;
++
++	for (tid = 0; tid < ARRAY_SIZE(sta->txq); tid++)
++		ath10k_mac_tx_push_pending_txq(hw, sta->txq[tid], arg);
++}
++
++void ath10k_mac_tx_push_pending(struct ath10k *ar)
++{
++	struct ieee80211_hw *hw = ar->hw;
++	struct ath10k_mac_tx_push_arg arg = {};
++
++	if (likely(!(ar->tx_paused & BIT(ATH10K_TX_PAUSE_Q_FLUSH_PENDING))))
++		return;
++
++	arg.hw = hw;
++	arg.more = false;
++
++	ieee80211_iterate_active_interfaces_atomic(hw,
++						   IEEE80211_IFACE_ITER_NORMAL,
++						   ath10k_mac_tx_push_pending_vif_iter,
++						   &arg);
++	if (arg.more)
++		return;
++
++	ieee80211_iterate_stations_atomic(hw,
++					  ath10k_mac_tx_push_pending_sta_iter,
++					  &arg);
++	if (arg.more)
++		return;
++
++	spin_lock_bh(&ar->htt.tx_lock);
++	ath10k_mac_tx_unlock(ar, ATH10K_TX_PAUSE_Q_FLUSH_PENDING);
++	spin_unlock_bh(&ar->htt.tx_lock);
++}
++
+ /************/
+ /* Scanning */
+ /************/
+diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
+index 53091588090d..453f606a250e 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.h
++++ b/drivers/net/wireless/ath/ath10k/mac.h
+@@ -75,6 +75,7 @@ void ath10k_mac_tx_unlock(struct ath10k *ar, int reason);
+ void ath10k_mac_vif_tx_lock(struct ath10k_vif *arvif, int reason);
+ void ath10k_mac_vif_tx_unlock(struct ath10k_vif *arvif, int reason);
+ bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar);
++void ath10k_mac_tx_push_pending(struct ath10k *ar);
+ 
+ static inline struct ath10k_vif *ath10k_vif_to_arvif(struct ieee80211_vif *vif)
+ {
+-- 
+2.1.4
 
-When I read a subject saying "Better exception handling" it sounds like
-a functional improvement. Your change does not change anything
-functionally and may or may not save a bit of execution time depending
-on how smart the compiler is. What you change does is confuse people
-reading the code. So please explain why your update improves exception
-handling here. I don't see it. The code is not making the driver more
-robust against failures in this function, which is what I think of
-reading "better exception handling".
-
->> Setting coding style aside, the question is whether there is
->> a good metric for the patch.
-> 
-> A software development challenge is to accept changes also around a topic
-> like "error handling". My update suggestion for the source file
-> "drivers/net/wireless/marvell/libertas/if_spi.c" should only improve
-> exception handling. (I came along other source files where more improvements
-> will eventually be possible.)
-> 
-> When will the run-time behaviour matter also for exceptional situations?
-> 
-> 
->> Did you look at the resulting assembly code for different target architectures?
-> 
-> Not yet. - Which execution system variants would you recommend for
-> further comparisons?
-
-Guess x86{,_64} and arm would be good candidates, ie. CISC vs. RISC.
-
-Regards,
-Arend
