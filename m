@@ -1,39 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38618 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752128AbcAFWYP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2016 17:24:15 -0500
-From: Rodrigo Freire <rfreire@redhat.com>
-To: johannes.berg@intel.com
-Cc: emmanuel.grumbach@intel.com, linuxwifi@intel.com,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] iwlwifi: Document missing module options
-Date: Wed,  6 Jan 2016 20:24:01 -0200
-Message-Id: <91cd61cc8ed52fab61dcf19531d821dda75db267.1452118569.git.rfreire@redhat.com> (sfid-20160106_232434_919727_A8EBFFB4)
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:33812 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965238AbcAULdC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2016 06:33:02 -0500
+Received: by mail-pa0-f65.google.com with SMTP id yy13so1622790pab.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:33:02 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 25/27] staging: wilc1000: fix coding style of kmalloc usage
+Date: Thu, 21 Jan 2016 20:30:55 +0900
+Message-Id: <1453375857-20645-26-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123307_853073_C5703BB8)
+In-Reply-To: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch documents two missing module options in the internal
-code comment block.
+This patch fixes coding style of kmalloc usage found by checkpatch.
+CHECK: Prefer kmalloc(sizeof(*new_msg)...) over kmalloc(sizeof(struct message)...)
 
-Signed-off-by: Rodrigo Freire <rfreire@redhat.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/iwlwifi/iwl-modparams.h |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+ drivers/staging/wilc1000/wilc_msgqueue.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/iwlwifi/iwl-modparams.h b/drivers/net/wireless/iwlwifi/iwl-modparams.h
-index ac2b90d..1477277 100644
---- a/drivers/net/wireless/iwlwifi/iwl-modparams.h
-+++ b/drivers/net/wireless/iwlwifi/iwl-modparams.h
-@@ -102,6 +102,8 @@ enum iwl_disable_11n {
-  * @power_level: power level, default = 1
-  * @debug_level: levels are IWL_DL_*
-  * @ant_coupling: antenna coupling in dB, default = 0
-+ * @nvm_file: specifies a external NVM file
-+ * @uapsd_disable: disable U-APSD, default = 1
-  * @d0i3_disable: disable d0i3, default = 1,
-  * @lar_disable: disable LAR (regulatory), default = 0
-  * @fw_monitor: allow to use firmware monitor
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 7107715..c7a60f4 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -70,7 +70,7 @@ int wilc_mq_send(struct message_queue *mq,
+ 	}
+ 
+ 	/* construct a new message */
+-	new_msg = kmalloc(sizeof(struct message), GFP_ATOMIC);
++	new_msg = kmalloc(sizeof(*new_msg), GFP_ATOMIC);
+ 	if (!new_msg)
+ 		return -ENOMEM;
+ 
 -- 
-1.7.1
+2.7.0
 
