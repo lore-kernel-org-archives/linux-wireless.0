@@ -1,254 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:18779 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932655AbcAMJaC (ORCPT
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:35542 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750905AbcAUTqT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2016 04:30:02 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u0D9U2hW017870
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 01:30:02 -0800
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-	by mx0b-0016f401.pphosted.com with ESMTP id 20dkx580ax-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 01:30:02 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	chunfan chen <jeffc@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Xinming Hu <huxm@marvell.com>
-Subject: [PATCH v2 3/6] mwifiex: add wowlan net-detect support
-Date: Wed, 13 Jan 2016 01:26:54 -0800
-Message-ID: <1452677217-21439-4-git-send-email-akarwar@marvell.com> (sfid-20160113_103011_182455_2049C832)
-In-Reply-To: <1452677217-21439-1-git-send-email-akarwar@marvell.com>
-References: <1452677217-21439-1-git-send-email-akarwar@marvell.com>
+	Thu, 21 Jan 2016 14:46:19 -0500
+Received: by mail-ob0-f173.google.com with SMTP id yo10so19081873obb.2
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 11:46:18 -0800 (PST)
+Subject: Re: wireless-drivers: random cleanup patches piling up
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+References: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <56A13587.7040809@lwfinger.net> (sfid-20160121_204622_842582_7021B1FD)
+Date: Thu, 21 Jan 2016 13:46:15 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: chunfan chen <jeffc@marvell.com>
+On 01/21/2016 08:58 AM, Kalle Valo wrote:
+> Hi,
+>
+> I have quite a lot of random cleanup patches from new developers waiting
+> in my queue:
+>
+> https://patchwork.kernel.org/project/linux-wireless/list/?state=10&delegate=25621&order=date
+>
+> (Not all of them are cleanup patches, there are also few patches
+> deferred due to other reasons, but you get the idea.)
+>
+> These cleanup patches usually take quite a lot of my time and I'm
+> starting to doubt the benefit, compared to the time needed to dig
+> through them and figuring out what to apply. And this is of course time
+> away from other patches, so it's slowing down "real" development.
+>
+> I really don't know what to do. Part of me is saying that I just should
+> drop them unless it's reviewed by a more experienced developer but on
+> the other hand this is a good way get new developers onboard.
+>
+> What others think? Are these kind of patches useful?
 
-This patch adds support for wakeup when configured
-network is detected.
+Kalle,
 
-Signed-off-by: chunfan chen <jeffc@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Signed-off-by: Xinming Hu <huxm@marvell.com>
----
-v2: Following error reported by kbuild test robot for
-on m68k architecture has been resolved.
-"'struct wiphy' has no member named 'wowlan_config'"
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c  | 40 +++++++++++++++---------
- drivers/net/wireless/marvell/mwifiex/fw.h        |  2 ++
- drivers/net/wireless/marvell/mwifiex/main.c      |  7 +++++
- drivers/net/wireless/marvell/mwifiex/main.h      |  1 +
- drivers/net/wireless/marvell/mwifiex/scan.c      | 34 ++++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 13 ++++++--
- 6 files changed, 80 insertions(+), 17 deletions(-)
+We might get new developers, but the cost may be high. In the staging tree, 
+things are worse. The tools can be applied in a blind fashion, but the results 
+can be really stupid. GregKH has told a few would-be contributors to "go away" 
+after a few patches that would not build.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 6d36d08..a1b8d89 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3273,7 +3273,7 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
- 
- 	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
- 
--	if (!priv->media_connected) {
-+	if (!priv->media_connected && !wowlan->nd_config) {
- 		mwifiex_dbg(adapter, ERROR,
- 			    "Can not configure WOWLAN in disconnected state\n");
- 		return 0;
-@@ -3285,22 +3285,32 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
- 		return ret;
- 	}
- 
-+	memset(&hs_cfg, 0, sizeof(hs_cfg));
-+	hs_cfg.conditions = le32_to_cpu(adapter->hs_cfg.conditions);
-+
-+	if (wowlan->nd_config) {
-+		mwifiex_dbg(adapter, INFO, "Wake on net detect\n");
-+		hs_cfg.conditions |= HS_CFG_COND_MAC_EVENT;
-+		mwifiex_cfg80211_sched_scan_start(wiphy, priv->netdev,
-+						  wowlan->nd_config);
-+	}
-+
- 	if (wowlan->disconnect) {
--		memset(&hs_cfg, 0, sizeof(hs_cfg));
--		hs_cfg.is_invoke_hostcmd = false;
--		hs_cfg.conditions = HS_CFG_COND_MAC_EVENT;
--		hs_cfg.gpio = adapter->hs_cfg.gpio;
--		hs_cfg.gap = adapter->hs_cfg.gap;
--		ret = mwifiex_set_hs_params(priv, HostCmd_ACT_GEN_SET,
--					    MWIFIEX_SYNC_CMD, &hs_cfg);
--		if (ret) {
--			mwifiex_dbg(adapter, ERROR,
--				    "Failed to set HS params\n");
--			return ret;
--		}
-+		hs_cfg.conditions |= HS_CFG_COND_MAC_EVENT;
- 		mwifiex_dbg(priv->adapter, INFO, "Wake on device disconnect\n");
- 	}
- 
-+	hs_cfg.is_invoke_hostcmd = false;
-+	hs_cfg.gpio = adapter->hs_cfg.gpio;
-+	hs_cfg.gap = adapter->hs_cfg.gap;
-+	ret = mwifiex_set_hs_params(priv, HostCmd_ACT_GEN_SET,
-+				    MWIFIEX_SYNC_CMD, &hs_cfg);
-+	if (ret) {
-+		mwifiex_dbg(adapter, ERROR,
-+			    "Failed to set HS params\n");
-+		return ret;
-+	}
-+
- 	return ret;
- }
- 
-@@ -3853,11 +3863,13 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
- 
- #ifdef CONFIG_PM
- static const struct wiphy_wowlan_support mwifiex_wowlan_support = {
--	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT,
-+	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT |
-+		WIPHY_WOWLAN_NET_DETECT,
- 	.n_patterns = MWIFIEX_MEF_MAX_FILTERS,
- 	.pattern_min_len = 1,
- 	.pattern_max_len = MWIFIEX_MAX_PATTERN_LEN,
- 	.max_pkt_offset = MWIFIEX_MAX_OFFSET_LEN,
-+	.max_nd_match_sets = MWIFIEX_MAX_ND_MATCH_SETS,
- };
- #endif
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 07bdc2a..81b491a 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -543,6 +543,8 @@ enum P2P_MODES {
- 
- #define MWIFIEX_MAX_PATTERN_LEN		40
- #define MWIFIEX_MAX_OFFSET_LEN		100
-+#define MWIFIEX_MAX_ND_MATCH_SETS	10
-+
- #define STACK_NBYTES			100
- #define TYPE_DNUM			1
- #define TYPE_BYTESEQ			2
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index a99b72b..3cfa946 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -132,6 +132,13 @@ static int mwifiex_unregister(struct mwifiex_adapter *adapter)
- 		}
- 	}
- 
-+	if (adapter->nd_info) {
-+		for (i = 0 ; i < adapter->nd_info->n_matches ; i++)
-+			kfree(adapter->nd_info->matches[i]);
-+		kfree(adapter->nd_info);
-+		adapter->nd_info = NULL;
-+	}
-+
- 	vfree(adapter->chan_stats);
- 	kfree(adapter);
- 	return 0;
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 5f5bcf8..bf9b24a 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1002,6 +1002,7 @@ struct mwifiex_adapter {
- 	u8 active_scan_triggered;
- 	bool usb_mc_status;
- 	bool usb_mc_setup;
-+	struct cfg80211_wowlan_nd_info *nd_info;
- };
- 
- void mwifiex_process_tx_queue(struct mwifiex_adapter *adapter);
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index d4e2143..2702bd9 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -2092,6 +2092,8 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 	u8 is_bgscan_resp;
- 	__le64 fw_tsf = 0;
- 	u8 *radio_type;
-+	struct cfg80211_wowlan_nd_match *pmatch;
-+	struct cfg80211_sched_scan_request *nd_config = NULL;
- 
- 	is_bgscan_resp = (le16_to_cpu(resp->command)
- 			  == HostCmd_CMD_802_11_BG_SCAN_QUERY);
-@@ -2154,6 +2156,21 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 					     (struct mwifiex_ie_types_data **)
- 					     &chan_band_tlv);
- 
-+#ifdef CONFIG_PM
-+	if (priv->wdev.wiphy->wowlan_config)
-+		nd_config = priv->wdev.wiphy->wowlan_config->nd_config;
-+#endif
-+
-+	if (nd_config) {
-+		adapter->nd_info =
-+			kzalloc(sizeof(struct cfg80211_wowlan_nd_match) +
-+				sizeof(struct cfg80211_wowlan_nd_match *) *
-+				scan_rsp->number_of_sets, GFP_ATOMIC);
-+
-+		if (adapter->nd_info)
-+			adapter->nd_info->n_matches = scan_rsp->number_of_sets;
-+	}
-+
- 	for (idx = 0; idx < scan_rsp->number_of_sets && bytes_left; idx++) {
- 		/*
- 		 * If the TSF TLV was appended to the scan results, save this
-@@ -2172,6 +2189,23 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
- 			radio_type = NULL;
- 		}
- 
-+		if (chan_band_tlv && adapter->nd_info) {
-+			adapter->nd_info->matches[idx] =
-+				kzalloc(sizeof(*pmatch) +
-+				sizeof(u32), GFP_ATOMIC);
-+
-+			pmatch = adapter->nd_info->matches[idx];
-+
-+			if (!pmatch) {
-+				memset(pmatch, 0, sizeof(*pmatch));
-+				if (chan_band_tlv) {
-+					pmatch->n_channels = 1;
-+					pmatch->channels[0] =
-+						chan_band->chan_number;
-+				}
-+			}
-+		}
-+
- 		ret = mwifiex_parse_single_response_buf(priv, &bss_info,
- 							&bytes_left,
- 							le64_to_cpu(fw_tsf),
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-index 2cc1a32..7277c24 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -505,10 +505,17 @@ int mwifiex_enable_hs(struct mwifiex_adapter *adapter)
- 	}
- 
- 	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
-+
- 	if (priv && priv->sched_scanning) {
--		dev_dbg(adapter->dev, "aborting bgscan!\n");
--		mwifiex_stop_bg_scan(priv);
--		cfg80211_sched_scan_stopped(priv->wdev.wiphy);
-+#ifdef CONFIG_PM
-+		if (!priv->wdev.wiphy->wowlan_config->nd_config) {
-+#endif
-+			mwifiex_dbg(adapter, CMD, "aborting bgscan!\n");
-+			mwifiex_stop_bg_scan(priv);
-+			cfg80211_sched_scan_stopped(priv->wdev.wiphy);
-+#ifdef CONFIG_PM
-+		}
-+#endif
- 	}
- 
- 	if (adapter->hs_activated) {
--- 
-1.8.1.4
+As most of these patches are based on "problems" found by application of various 
+standard tools, they will likely be resubmitted over and over until the code is 
+"fixed". Whether the patches are useful may not be the main question.
+
+My real complaint with these patches is that very few are more than compile 
+tested. For example, there are 3 patches for memory leaks in b43. One 
+(https://patchwork.kernel.org/patch/7998941) was rejected because it missed some 
+such leaks, but there was not a formal NACK. The patch was fixed and resubmitted 
+(https://patchwork.kernel.org/patch/8014311/), but not yet tested. The author 
+then resent it (https://patchwork.kernel.org/patch/8049041/) and was chastised 
+for resending as it still had not been tested. Of course, the first two of these 
+can be dropped. Unfortunately, there are very few devs who have the necessary 
+hardware to test.
+
+Most of the current set do not account for the directory restructuring and will 
+not apply.Those can be rejected with the appropriate message asking that they be 
+rebased. That should not require too much of your time. That will at last clean 
+out the current backlog.
+
+Is it possible for us to require the patch author to supply the level of testing 
+when that is not obvious? This information should be in the comments location 
+after the first ---. I suspect I know the answer for non-maintainers, but the 
+formal requirement might be helpful. I will start NACKing those patches without 
+such information.
+
+I also promise to be more diligent in reviewing the patches that are directed at 
+the drivers that I maintain.
+
+Larry
+
 
