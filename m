@@ -1,72 +1,239 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:51322 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934283AbcA0S64 (ORCPT
+Received: from mail-lf0-f53.google.com ([209.85.215.53]:34446 "EHLO
+	mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759019AbcAUJam (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 13:58:56 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/4] ath10k: use vif->type and vif->p2p for P2P_GO check
-Date: Wed, 27 Jan 2016 10:55:56 -0800
-Message-ID: <1453920957-9908-4-git-send-email-poh@qca.qualcomm.com> (sfid-20160127_195907_609677_BA560EE5)
-In-Reply-To: <1453920957-9908-1-git-send-email-poh@qca.qualcomm.com>
-References: <1453920957-9908-1-git-send-email-poh@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 21 Jan 2016 04:30:42 -0500
+Received: by mail-lf0-f53.google.com with SMTP id 17so22735623lfz.1
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 01:30:41 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [RFC/RFT v4 1/2] mac80211: add hdrlen to ieee80211_tx_data
+Date: Thu, 21 Jan 2016 10:30:24 +0100
+Message-Id: <1453368625-3615-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20160121_103048_121395_F23317DC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Interface type P2P_GO can be checked by either arvif->vdev_type
-and arvif->vdev_subtype or vif->type and vif->p2p.
-Use later one to avoid more cpu consumption that could happen
-when subtype abstraction layer change is introduced.
+Add hdrlen to ieee80211_tx_data and use this
+when wep/ccmd/tkip. This is preparation for
+aligned4 code.
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 8 ++------
- drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
- 2 files changed, 3 insertions(+), 7 deletions(-)
+ net/mac80211/ieee80211_i.h |  1 +
+ net/mac80211/tx.c          |  6 +++---
+ net/mac80211/util.c        |  5 ++++-
+ net/mac80211/wep.c         | 11 ++++++-----
+ net/mac80211/wep.h         |  1 +
+ net/mac80211/wpa.c         | 13 +++++--------
+ 6 files changed, 20 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 6bf5c91..2940b00 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -1358,10 +1358,7 @@ static int ath10k_mac_setup_bcn_p2p_ie(struct ath10k_vif *arvif,
- 	const u8 *p2p_ie;
- 	int ret;
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index b84f6aa..f9ff470 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -172,6 +172,7 @@ struct ieee80211_tx_data {
+ 	struct ieee80211_tx_rate rate;
  
--	if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
--		return 0;
+ 	unsigned int flags;
++	unsigned int hdrlen;
+ };
+ 
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 3311ce0..cd4c361 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -915,7 +915,7 @@ ieee80211_tx_h_fragment(struct ieee80211_tx_data *tx)
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	int frag_threshold = tx->local->hw.wiphy->frag_threshold;
+-	int hdrlen;
++	int hdrlen = tx->hdrlen;
+ 	int fragnum;
+ 
+ 	/* no matter what happens, tx->skb moves to tx->skbs */
+@@ -936,8 +936,6 @@ ieee80211_tx_h_fragment(struct ieee80211_tx_data *tx)
+ 	if (WARN_ON(info->flags & IEEE80211_TX_CTL_AMPDU))
+ 		return TX_DROP;
+ 
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
 -
--	if (arvif->vdev_subtype != WMI_VDEV_SUBTYPE_P2P_GO)
-+	if (arvif->vif->type != NL80211_IFTYPE_AP || !arvif->vif->p2p)
- 		return 0;
+ 	/* internal error, why isn't DONTFRAG set? */
+ 	if (WARN_ON(skb->len + FCS_LEN <= frag_threshold))
+ 		return TX_DROP;
+@@ -1165,6 +1163,8 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
  
- 	mgmt = (void *)bcn->data;
-@@ -3259,8 +3256,7 @@ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar,
- 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
+ 	hdr = (struct ieee80211_hdr *) skb->data;
  
- 	/* This is case only for P2P_GO */
--	if (arvif->vdev_type != WMI_VDEV_TYPE_AP ||
--	    arvif->vdev_subtype != WMI_VDEV_SUBTYPE_P2P_GO)
-+	if (vif->type != NL80211_IFTYPE_AP || !vif->p2p)
- 		return;
++	tx->hdrlen = ieee80211_hdrlen(hdr->frame_control);
++
+ 	if (likely(sta)) {
+ 		if (!IS_ERR(sta))
+ 			tx->sta = sta;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 3943d4b..ce1aeba 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1225,6 +1225,7 @@ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_local *local = sdata->local;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
++	unsigned int hdrlen;
+ 	int err;
  
- 	if (unlikely(ieee80211_is_probe_resp(hdr->frame_control))) {
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index a7c3d29..723fb9bc 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -3184,7 +3184,7 @@ static void ath10k_wmi_update_noa(struct ath10k *ar, struct ath10k_vif *arvif,
- 				  struct sk_buff *bcn,
- 				  const struct wmi_p2p_noa_info *noa)
+ 	/* 24 + 6 = header + auth_algo + auth_transaction + status_code */
+@@ -1249,8 +1250,10 @@ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 		memcpy(skb_put(skb, extra_len), extra, extra_len);
+ 
+ 	if (auth_alg == WLAN_AUTH_SHARED_KEY && transaction == 3) {
++		hdrlen = ieee80211_hdrlen(mgmt->frame_control);
+ 		mgmt->frame_control |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
+-		err = ieee80211_wep_encrypt(local, skb, key, key_len, key_idx);
++		err = ieee80211_wep_encrypt(local, skb, hdrlen, key,
++					    key_len, key_idx);
+ 		WARN_ON(err);
+ 	}
+ 
+diff --git a/net/mac80211/wep.c b/net/mac80211/wep.c
+index efa3f48..d14bdb0 100644
+--- a/net/mac80211/wep.c
++++ b/net/mac80211/wep.c
+@@ -89,11 +89,11 @@ static void ieee80211_wep_get_iv(struct ieee80211_local *local,
+ 
+ static u8 *ieee80211_wep_add_iv(struct ieee80211_local *local,
+ 				struct sk_buff *skb,
++				unsigned int hdrlen,
+ 				int keylen, int keyidx)
  {
--	if (arvif->vdev_subtype != WMI_VDEV_SUBTYPE_P2P_GO)
-+	if (!arvif->vif->p2p)
- 		return;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	unsigned int hdrlen;
+ 	u8 *newhdr;
  
- 	ath10k_dbg(ar, ATH10K_DBG_MGMT, "noa changed: %d\n", noa->changed);
+ 	hdr->frame_control |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
+@@ -101,7 +101,6 @@ static u8 *ieee80211_wep_add_iv(struct ieee80211_local *local,
+ 	if (WARN_ON(skb_headroom(skb) < IEEE80211_WEP_IV_LEN))
+ 		return NULL;
+ 
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 	newhdr = skb_push(skb, IEEE80211_WEP_IV_LEN);
+ 	memmove(newhdr, newhdr + IEEE80211_WEP_IV_LEN, hdrlen);
+ 
+@@ -160,6 +159,7 @@ int ieee80211_wep_encrypt_data(struct crypto_cipher *tfm, u8 *rc4key,
+  */
+ int ieee80211_wep_encrypt(struct ieee80211_local *local,
+ 			  struct sk_buff *skb,
++			  unsigned int hdrlen,
+ 			  const u8 *key, int keylen, int keyidx)
+ {
+ 	u8 *iv;
+@@ -169,7 +169,7 @@ int ieee80211_wep_encrypt(struct ieee80211_local *local,
+ 	if (WARN_ON(skb_tailroom(skb) < IEEE80211_WEP_ICV_LEN))
+ 		return -1;
+ 
+-	iv = ieee80211_wep_add_iv(local, skb, keylen, keyidx);
++	iv = ieee80211_wep_add_iv(local, skb, hdrlen, keylen, keyidx);
+ 	if (!iv)
+ 		return -1;
+ 
+@@ -306,13 +306,14 @@ static int wep_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 	struct ieee80211_key_conf *hw_key = info->control.hw_key;
+ 
+ 	if (!hw_key) {
+-		if (ieee80211_wep_encrypt(tx->local, skb, tx->key->conf.key,
++		if (ieee80211_wep_encrypt(tx->local, skb, tx->hdrlen,
++					  tx->key->conf.key,
+ 					  tx->key->conf.keylen,
+ 					  tx->key->conf.keyidx))
+ 			return -1;
+ 	} else if ((hw_key->flags & IEEE80211_KEY_FLAG_GENERATE_IV) ||
+ 		   (hw_key->flags & IEEE80211_KEY_FLAG_PUT_IV_SPACE)) {
+-		if (!ieee80211_wep_add_iv(tx->local, skb,
++		if (!ieee80211_wep_add_iv(tx->local, skb, tx->hdrlen,
+ 					  tx->key->conf.keylen,
+ 					  tx->key->conf.keyidx))
+ 			return -1;
+diff --git a/net/mac80211/wep.h b/net/mac80211/wep.h
+index 9615749..ad0a52b 100644
+--- a/net/mac80211/wep.h
++++ b/net/mac80211/wep.h
+@@ -22,6 +22,7 @@ int ieee80211_wep_encrypt_data(struct crypto_cipher *tfm, u8 *rc4key,
+ 				size_t klen, u8 *data, size_t data_len);
+ int ieee80211_wep_encrypt(struct ieee80211_local *local,
+ 			  struct sk_buff *skb,
++			  unsigned int hdrlen,
+ 			  const u8 *key, int keylen, int keyidx);
+ int ieee80211_wep_decrypt_data(struct crypto_cipher *tfm, u8 *rc4key,
+ 			       size_t klen, u8 *data, size_t data_len);
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index d824c38..e8bfb13 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -42,7 +42,7 @@ ieee80211_tx_h_michael_mic_add(struct ieee80211_tx_data *tx)
+ 	    skb->len < 24 || !ieee80211_is_data_present(hdr->frame_control))
+ 		return TX_CONTINUE;
+ 
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
++	hdrlen = tx->hdrlen;
+ 	if (skb->len < hdrlen)
+ 		return TX_DROP;
+ 
+@@ -186,7 +186,6 @@ mic_fail_no_key:
+ 
+ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ {
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+ 	struct ieee80211_key *key = tx->key;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	unsigned int hdrlen;
+@@ -200,7 +199,7 @@ static int tkip_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 		return 0;
+ 	}
+ 
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
++	hdrlen = tx->hdrlen;
+ 	len = skb->len - hdrlen;
+ 
+ 	if (info->control.hw_key)
+@@ -424,7 +423,7 @@ static int ccmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb,
+ 		return 0;
+ 	}
+ 
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
++	hdrlen = tx->hdrlen;
+ 	len = skb->len - hdrlen;
+ 
+ 	if (info->control.hw_key)
+@@ -651,7 +650,7 @@ static int gcmp_encrypt_skb(struct ieee80211_tx_data *tx, struct sk_buff *skb)
+ 		return 0;
+ 	}
+ 
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
++	hdrlen = tx->hdrlen;
+ 	len = skb->len - hdrlen;
+ 
+ 	if (info->control.hw_key)
+@@ -787,7 +786,6 @@ static ieee80211_tx_result
+ ieee80211_crypto_cs_encrypt(struct ieee80211_tx_data *tx,
+ 			    struct sk_buff *skb)
+ {
+-	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	struct ieee80211_key *key = tx->key;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	int hdrlen;
+@@ -803,8 +801,7 @@ ieee80211_crypto_cs_encrypt(struct ieee80211_tx_data *tx,
+ 		     pskb_expand_head(skb, iv_len, 0, GFP_ATOMIC)))
+ 		return TX_DROP;
+ 
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+-
++	hdrlen = tx->hdrlen;
+ 	pos = skb_push(skb, iv_len);
+ 	memmove(pos, pos + iv_len, hdrlen);
+ 
 -- 
 1.9.1
 
