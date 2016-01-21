@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40988 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932100AbcAYHnX (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36767 "EHLO
+	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752511AbcAUBVh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 02:43:23 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 12/26] staging: wilc1000: set proper bssid address
-Date: Mon, 25 Jan 2016 16:35:16 +0900
-Message-ID: <1453707330-13526-13-git-send-email-glen.lee@atmel.com> (sfid-20160125_084326_028547_98EE8C76)
-In-Reply-To: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
-References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 20 Jan 2016 20:21:37 -0500
+Received: by mail-pf0-f196.google.com with SMTP id n128so1046919pfn.3
+        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:21:37 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 19/27] staging: wilc1000: fix return error code
+Date: Thu, 21 Jan 2016 10:20:22 +0900
+Message-Id: <1453339230-1377-19-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_023656_216900_EE1008A3)
+In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes index 0 to index of vif which is currently beging used
-because AP mode can run on any interface.
+Three argument are checked at the beginning of wilc_mq_send whether
+they are valid arguments or not. It is correct to use return error code
+as -EINVAL, not -EFAULT.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ drivers/staging/wilc1000/wilc_msgqueue.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 95be39a..2db023f 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2401,7 +2401,7 @@ static int start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	if (s32Error != 0)
- 		PRINT_ER("Error in setting channel\n");
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 764723f..361ca8f 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -61,7 +61,7 @@ int wilc_mq_send(struct message_queue *mq,
  
--	wilc_wlan_set_bssid(dev, wl->vif[0]->src_addr, AP_MODE);
-+	wilc_wlan_set_bssid(dev, wl->vif[vif->u8IfIdx]->src_addr, AP_MODE);
+ 	if ((!mq) || (send_buf_size == 0) || (!send_buf)) {
+ 		PRINT_ER("mq or send_buf is null\n");
+-		return -EFAULT;
++		return -EINVAL;
+ 	}
  
- 	s32Error = wilc_add_beacon(vif, settings->beacon_interval,
- 				   settings->dtim_period, beacon->head_len,
+ 	if (mq->exiting) {
 -- 
-1.9.1
+2.6.4
 
