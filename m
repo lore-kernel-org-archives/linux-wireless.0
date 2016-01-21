@@ -1,46 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:52890 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933757AbcALHh6 (ORCPT
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:33124 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759005AbcAUI4n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 02:37:58 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 23/26] staging: wilc1000: fix bug on p2p connection
-Date: Tue, 12 Jan 2016 16:39:52 +0900
-Message-ID: <1452584395-24910-24-git-send-email-glen.lee@atmel.com> (sfid-20160112_083801_719667_62D3700C)
-In-Reply-To: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
-References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
+	Thu, 21 Jan 2016 03:56:43 -0500
+Subject: Re: [PATCH] rtlwifi: rtl8821ae: Fix 5G failure when EEPROM is
+ incorrectly encoded
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1453348719-5546-1-git-send-email-Larry.Finger@lwfinger.net>
+ <87oacf1fho.fsf@kamboji.qca.qualcomm.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	littlesmartguy@gmail.com, gabe@codehaus.org,
+	Stable <stable@vger.kernel.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <56A09D47.6010600@lwfinger.net> (sfid-20160121_095649_773133_93E37B14)
+Date: Thu, 21 Jan 2016 02:56:39 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <87oacf1fho.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In case of action frame, size -7 is correct, but in this case, size should be
-used as it is.
+On 01/21/2016 02:52 AM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>
+>> Recently, it has been reported that D-Link DWA-582 cards, which use an
+>> RTL8812AE chip are not able to scan for 5G networks. The problems started
+>> with kernel 4.2, which is the first version that had commit d10101a60372
+>> ("rtlwifi: rtl8821ae: Fix problem with regulatory information"). With this
+>> patch, the driver went from setting a default channel plan to using
+>> the value derived from EEPROM.
+>>
+>> Bug reports at https://bugzilla.kernel.org/show_bug.cgi?id=111031 and
+>> https://bugzilla.redhat.com/show_bug.cgi?id=1279653 are examples of this
+>> problem.
+>>
+>> The problem was solved once I learned that the internal country code was
+>> resulting in a regulatory set with only 2.4 GHz channels. With the RTL8821AE
+>> chips available to me, the country code was such that both 2.4 and 5 GHz
+>> channels are allowed. The fix is to allow both bands even when the EEPROM
+>> is incorrectly encoded.
+>>
+>> Fixes: d10101a60372 ("rtlwifi: rtl8821ae: Fix problem with regulatory information")
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Cc: littlesmartguy@gmail.com
+>> Cc: gabe@codehaus.org
+>> Cc: Stable <stable@vger.kernel.org> [v4.2+]
+>
+> I'll queue this to 4.5.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Thanks.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 5839c2b..8197892 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1728,7 +1728,7 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
- 			}
- 		}
- 
--		cfg80211_rx_mgmt(priv->wdev, s32Freq, 0, buff, size - 7, 0);
-+		cfg80211_rx_mgmt(priv->wdev, s32Freq, 0, buff, size, 0);
- 	}
- }
- 
--- 
-1.9.1
+Larry
+
 
