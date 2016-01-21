@@ -1,67 +1,207 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:36798 "EHLO
-	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756078AbcAZMp5 convert rfc822-to-8bit (ORCPT
+Received: from mail-lf0-f42.google.com ([209.85.215.42]:33035 "EHLO
+	mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965018AbcAUNM1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 07:45:57 -0500
-Received: by mail-wm0-f41.google.com with SMTP id l65so102493138wmf.1
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2016 04:45:57 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <56A760C8.3050300@openwrt.org>
-References: <1453382588-27105-1-git-send-email-michal.kazior@tieto.com>
-	<1453382588-27105-2-git-send-email-michal.kazior@tieto.com>
-	<56A74E51.80609@openwrt.org>
-	<CA+BoTQk+7cpP9jZ8UyUjOrnPc309LdgYN8BbNBfEOyTSUDBcAw@mail.gmail.com>
-	<56A760C8.3050300@openwrt.org>
-Date: Tue, 26 Jan 2016 13:45:56 +0100
-Message-ID: <CA+BoTQny4BqBpk_M_5=L_=R_8x+U2+Xyr1w=oLHPSsWDbEjwog@mail.gmail.com> (sfid-20160126_134600_920812_17813A04)
-Subject: Re: [PATCH 2/2] mac80211: expose txq queue depth and size to drivers
+	Thu, 21 Jan 2016 08:12:27 -0500
+Received: by mail-lf0-f42.google.com with SMTP id m198so26302592lfm.0
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 05:12:26 -0800 (PST)
 From: Michal Kazior <michal.kazior@tieto.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 5/5] ath10k: implement basic support for new tx path firmware
+Date: Thu, 21 Jan 2016 14:13:27 +0100
+Message-Id: <1453382007-24622-6-git-send-email-michal.kazior@tieto.com> (sfid-20160121_141234_262903_7D5AC254)
+In-Reply-To: <1453382007-24622-1-git-send-email-michal.kazior@tieto.com>
+References: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
+ <1453382007-24622-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 January 2016 at 13:04, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2016-01-26 12:56, Michal Kazior wrote:
->> On 26 January 2016 at 11:45, Felix Fietkau <nbd@openwrt.org> wrote:
->>> On 2016-01-21 14:23, Michal Kazior wrote:
->>>> This will allow drivers to make more educated
->>>> decisions whether to defer transmission or not.
->>>>
->>>> Relying on wake_tx_queue() call count implicitly
->>>> was not possible because it could be called
->>>> without queued frame count actually changing on
->>>> software tx aggregation start/stop code paths.
->>>>
->>>> It was also not possible to know how long
->>>> byte-wise queue was without dequeueing.
->>>>
->>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->>> Instead of exposing these in the struct to the driver directly, please
->>> make a function to get them. Since the number of frames is already
->>> tracked in txqi->queue, you can avoid counter duplication that way.
->>
->> Hmm, so you suggest to have something like:
-[...]
->>> Also, that way you can fix a race condition between accessing the number
->>> of frames counter and the bytes counter.
->>
->> I don't see a point in maintaining coherency between the two counters
->> with regard to each other alone. Do you have a use-case that would
->> actually make use of that property?
->>
->> I'd like to avoid any unnecessary spinlocks.
-> OK. I guess we can leave them out for now. How frequently are you going
-> to call this function?
+This allows to use the new firmware which
+implements the new tx data path. Without this
+patch firmware supporting new tx path stops
+responding shortly after booting.
 
-Depends, but with new data path in ath10k[1][2] it'll be at least once
-for each wake_tx_queue() + once for each txq in each fetch-ind event.
+This patch doesn't implement the entire pull-push
+logic available in the new firmware. This will be
+done in subsequent patches.
 
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.h    |  8 +++
+ drivers/net/wireless/ath/ath10k/htt_rx.c |  4 +-
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 88 +++++++++++++++++++++++++++++---
+ 3 files changed, 91 insertions(+), 9 deletions(-)
 
-Michał
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 0c5628dafabf..13391ea4422d 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1665,6 +1665,14 @@ struct ath10k_htt {
+ 		dma_addr_t paddr;
+ 		struct ath10k_htt_txbuf *vaddr;
+ 	} txbuf;
++
++	struct {
++		struct htt_q_state *vaddr;
++		dma_addr_t paddr;
++		u16 num_peers;
++		u16 num_tids;
++		enum htt_q_depth_type type;
++	} tx_q_state;
+ };
+ 
+ #define RX_HTT_HDR_STATUS_LEN 64
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index d923f64e4f42..248405b53ef4 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2123,10 +2123,12 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		break;
+ 	case HTT_T2H_MSG_TYPE_AGGR_CONF:
+ 		break;
+-	case HTT_T2H_MSG_TYPE_EN_STATS:
+ 	case HTT_T2H_MSG_TYPE_TX_FETCH_IND:
+ 	case HTT_T2H_MSG_TYPE_TX_FETCH_CONFIRM:
+ 	case HTT_T2H_MSG_TYPE_TX_MODE_SWITCH_IND:
++		/* TODO: Implement pull-push logic */
++		break;
++	case HTT_T2H_MSG_TYPE_EN_STATS:
+ 	default:
+ 		ath10k_warn(ar, "htt event (%d) not handled\n",
+ 			    resp->hdr.msg_type);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 28b8d7af8506..95acb727c068 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -132,6 +132,50 @@ static int ath10k_htt_tx_alloc_cont_frag_desc(struct ath10k_htt *htt)
+ 	return 0;
+ }
+ 
++static void ath10k_htt_tx_free_txq(struct ath10k_htt *htt)
++{
++	struct ath10k *ar = htt->ar;
++	size_t size;
++
++	if (!test_bit(ATH10K_FW_FEATURE_PEER_FLOW_CONTROL, ar->fw_features))
++		return;
++
++	size = sizeof(*htt->tx_q_state.vaddr);
++
++	dma_unmap_single(ar->dev, htt->tx_q_state.paddr, size, DMA_TO_DEVICE);
++	kfree(htt->tx_q_state.vaddr);
++}
++
++static int ath10k_htt_tx_alloc_txq(struct ath10k_htt *htt)
++{
++	struct ath10k *ar = htt->ar;
++	size_t size;
++	int ret;
++
++	if (!test_bit(ATH10K_FW_FEATURE_PEER_FLOW_CONTROL, ar->fw_features))
++		return 0;
++
++	htt->tx_q_state.num_peers = HTT_TX_Q_STATE_NUM_PEERS;
++	htt->tx_q_state.num_tids = HTT_TX_Q_STATE_NUM_TIDS;
++	htt->tx_q_state.type = HTT_Q_DEPTH_TYPE_BYTES;
++
++	size = sizeof(*htt->tx_q_state.vaddr);
++	htt->tx_q_state.vaddr = kzalloc(size, GFP_KERNEL);
++	if (!htt->tx_q_state.vaddr)
++		return -ENOMEM;
++
++	htt->tx_q_state.paddr = dma_map_single(ar->dev, htt->tx_q_state.vaddr,
++					       size, DMA_TO_DEVICE);
++	ret = dma_mapping_error(ar->dev, htt->tx_q_state.paddr);
++	if (ret) {
++		ath10k_warn(ar, "failed to dma map tx_q_state: %d\n", ret);
++		kfree(htt->tx_q_state.vaddr);
++		return -EIO;
++	}
++
++	return 0;
++}
++
+ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
+ {
+ 	struct ath10k *ar = htt->ar;
+@@ -159,8 +203,17 @@ int ath10k_htt_tx_alloc(struct ath10k_htt *htt)
+ 		goto free_txbuf;
+ 	}
+ 
++	ret = ath10k_htt_tx_alloc_txq(htt);
++	if (ret) {
++		ath10k_err(ar, "failed to alloc txq: %d\n", ret);
++		goto free_frag_desc;
++	}
++
+ 	return 0;
+ 
++free_frag_desc:
++	ath10k_htt_tx_free_cont_frag_desc(htt);
++
+ free_txbuf:
+ 	size = htt->max_num_pending_tx *
+ 			  sizeof(struct ath10k_htt_txbuf);
+@@ -203,6 +256,7 @@ void ath10k_htt_tx_free(struct ath10k_htt *htt)
+ 				  htt->txbuf.paddr);
+ 	}
+ 
++	ath10k_htt_tx_free_txq(htt);
+ 	ath10k_htt_tx_free_cont_frag_desc(htt);
+ }
+ 
+@@ -292,7 +346,9 @@ int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt)
+ 	struct ath10k *ar = htt->ar;
+ 	struct sk_buff *skb;
+ 	struct htt_cmd *cmd;
++	struct htt_frag_desc_bank_cfg *cfg;
+ 	int ret, size;
++	u8 info;
+ 
+ 	if (!ar->hw_params.continuous_frag_desc)
+ 		return 0;
+@@ -310,14 +366,30 @@ int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt)
+ 	skb_put(skb, size);
+ 	cmd = (struct htt_cmd *)skb->data;
+ 	cmd->hdr.msg_type = HTT_H2T_MSG_TYPE_FRAG_DESC_BANK_CFG;
+-	cmd->frag_desc_bank_cfg.info = 0;
+-	cmd->frag_desc_bank_cfg.num_banks = 1;
+-	cmd->frag_desc_bank_cfg.desc_size = sizeof(struct htt_msdu_ext_desc);
+-	cmd->frag_desc_bank_cfg.bank_base_addrs[0] =
+-				__cpu_to_le32(htt->frag_desc.paddr);
+-	cmd->frag_desc_bank_cfg.bank_id[0].bank_min_id = 0;
+-	cmd->frag_desc_bank_cfg.bank_id[0].bank_max_id =
+-				__cpu_to_le16(htt->max_num_pending_tx - 1);
++
++	info = 0;
++	info |= SM(htt->tx_q_state.type,
++		   HTT_FRAG_DESC_BANK_CFG_INFO_Q_STATE_DEPTH_TYPE);
++
++	if (test_bit(ATH10K_FW_FEATURE_PEER_FLOW_CONTROL, ar->fw_features))
++		info |= HTT_FRAG_DESC_BANK_CFG_INFO_Q_STATE_VALID;
++
++	cfg = &cmd->frag_desc_bank_cfg;
++	cfg->info = info;
++	cfg->num_banks = 1;
++	cfg->desc_size = sizeof(struct htt_msdu_ext_desc);
++	cfg->bank_base_addrs[0] = __cpu_to_le32(htt->frag_desc.paddr);
++	cfg->bank_id[0].bank_min_id = 0;
++	cfg->bank_id[0].bank_max_id = __cpu_to_le16(htt->max_num_pending_tx -
++						    1);
++
++	cfg->q_state.paddr = cpu_to_le32(htt->tx_q_state.paddr);
++	cfg->q_state.num_peers = cpu_to_le16(htt->tx_q_state.num_peers);
++	cfg->q_state.num_tids = cpu_to_le16(htt->tx_q_state.num_tids);
++	cfg->q_state.record_size = HTT_TX_Q_STATE_ENTRY_SIZE;
++	cfg->q_state.record_multiplier = HTT_TX_Q_STATE_ENTRY_MULTIPLIER;
++
++	ath10k_dbg(ar, ATH10K_DBG_HTT, "htt frag desc bank cmd\n");
+ 
+ 	ret = ath10k_htc_send(&htt->ar->htc, htt->eid, skb);
+ 	if (ret) {
+-- 
+2.1.4
 
-[1]: https://patchwork.kernel.org/patch/8081301/
-[2]: https://patchwork.kernel.org/patch/8081331/
