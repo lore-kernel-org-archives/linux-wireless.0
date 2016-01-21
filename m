@@ -1,47 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:52222 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932750AbcALHfp (ORCPT
+Received: from mail-ig0-f196.google.com ([209.85.213.196]:36723 "EHLO
+	mail-ig0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759366AbcAUREI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 02:35:45 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 01/26] staging: wilc1000: fix bug when changing virtual interface
-Date: Tue, 12 Jan 2016 16:39:30 +0900
-Message-ID: <1452584395-24910-2-git-send-email-glen.lee@atmel.com> (sfid-20160112_083548_496872_33EEB60C)
-In-Reply-To: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
-References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
+	Thu, 21 Jan 2016 12:04:08 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1445116005-28670-1-git-send-email-paulmcquad@gmail.com>
+References: <1445116005-28670-1-git-send-email-paulmcquad@gmail.com>
+Date: Thu, 21 Jan 2016 18:04:07 +0100
+Message-ID: <CAGXE3d-XH5Efi_9cypT=HmJYzYdzyGoGJxcnrXZ86EVTcDM4Fg@mail.gmail.com> (sfid-20160121_180429_317990_56321FFE)
+Subject: Re: [PATCH 1/3] net: wireless: rt2x00: Space issue
+From: Helmut Schaa <helmut.schaa@googlemail.com>
+To: Paul McQuade <paulmcquad@gmail.com>
+Cc: Stanislaw Gruszka <sgruszka@redhat.com>, kvalo@codeaurora.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a bug connection error when changing virtual interface to p2p.
-Variable quit needs to be set 0 when wilc is reinitialized again.
+On Sat, Oct 17, 2015 at 11:06 PM, Paul McQuade <paulmcquad@gmail.com> wrote:
+> Removed empty spaces before/after parenthesis
+>
+> Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
 
-Fixes : 67e2a07ed800 ("staging: wilc1000: move all of wilc_wlan_dev_t to struct wilc")
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 2 ++
- 1 file changed, 2 insertions(+)
+Looks valid to me as well.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 83af51b..07460ff 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1588,6 +1588,8 @@ int wilc_wlan_init(struct net_device *dev)
- 
- 	PRINT_D(INIT_DBG, "Initializing WILC_Wlan ...\n");
- 
-+	wilc->quit = 0;
-+
- 	if (!wilc->hif_func->hif_init(wilc)) {
- 		ret = -EIO;
- 		goto _fail_;
--- 
-1.9.1
+Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
+> ---
+>  drivers/net/wireless/rt2x00/rt2x00.h | 24 ++++++++++++------------
+>  1 file changed, 12 insertions(+), 12 deletions(-)
+>
+> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
+> index 3282ddb..6f8310a 100644
+> --- a/drivers/net/wireless/rt2x00/rt2x00.h
+> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
+> @@ -107,7 +107,7 @@
+>   * amount of bytes needed to move the data.
+>   */
+>  #define ALIGN_SIZE(__skb, __header) \
+> -       (  ((unsigned long)((__skb)->data + (__header))) & 3 )
+> +       (((unsigned long)((__skb)->data + (__header))) & 3)
+>
+>  /*
+>   * Constants for extra TX headroom for alignment purposes.
+> @@ -128,14 +128,14 @@
+>  #define SLOT_TIME              20
+>  #define SHORT_SLOT_TIME                9
+>  #define SIFS                   10
+> -#define PIFS                   ( SIFS + SLOT_TIME )
+> -#define SHORT_PIFS             ( SIFS + SHORT_SLOT_TIME )
+> -#define DIFS                   ( PIFS + SLOT_TIME )
+> -#define SHORT_DIFS             ( SHORT_PIFS + SHORT_SLOT_TIME )
+> -#define EIFS                   ( SIFS + DIFS + \
+> -                                 GET_DURATION(IEEE80211_HEADER + ACK_SIZE, 10) )
+> -#define SHORT_EIFS             ( SIFS + SHORT_DIFS + \
+> -                                 GET_DURATION(IEEE80211_HEADER + ACK_SIZE, 10) )
+> +#define PIFS                   (SIFS + SLOT_TIME)
+> +#define SHORT_PIFS             (SIFS + SHORT_SLOT_TIME)
+> +#define DIFS                   (PIFS + SLOT_TIME)
+> +#define SHORT_DIFS             (SHORT_PIFS + SHORT_SLOT_TIME)
+> +#define EIFS                   (SIFS + DIFS + \
+> +                                 GET_DURATION(IEEE80211_HEADER + ACK_SIZE, 10))
+> +#define SHORT_EIFS             (SIFS + SHORT_DIFS + \
+> +                                 GET_DURATION(IEEE80211_HEADER + ACK_SIZE, 10))
+>
+>  enum rt2x00_chip_intf {
+>         RT2X00_CHIP_INTF_PCI,
+>
+> --
+> 2.6.1
+>
