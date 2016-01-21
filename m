@@ -1,158 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f45.google.com ([209.85.215.45]:34871 "EHLO
-	mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932374AbcA0OZK (ORCPT
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:33588 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965308AbcAUNps (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 09:25:10 -0500
-Received: by mail-lf0-f45.google.com with SMTP id c192so7030166lfe.2
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2016 06:25:08 -0800 (PST)
+	Thu, 21 Jan 2016 08:45:48 -0500
+Received: by mail-lb0-f179.google.com with SMTP id x4so23777354lbm.0
+        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 05:45:47 -0800 (PST)
 From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2] mac80211: expose txq queue depth and size to drivers
-Date: Wed, 27 Jan 2016 15:26:12 +0100
-Message-Id: <1453904772-25289-1-git-send-email-michal.kazior@tieto.com> (sfid-20160127_152514_390328_392A884C)
-In-Reply-To: <1453382588-27105-1-git-send-email-michal.kazior@tieto.com>
-References: <1453382588-27105-1-git-send-email-michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 08/13] ath10k: implement updating shared htt txq state
+Date: Thu, 21 Jan 2016 14:46:41 +0100
+Message-Id: <1453384006-31907-9-git-send-email-michal.kazior@tieto.com> (sfid-20160121_150653_366599_CAD2C810)
+In-Reply-To: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
+References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will allow drivers to make more educated
-decisions whether to defer transmission or not.
+Firmware 10.4.3 onwards can support a pull-push Tx
+model where it shares a Tx queue state with the
+host.
 
-Relying on wake_tx_queue() call count implicitly
-was not possible because it could be called
-without queued frame count actually changing on
-software tx aggregation start/stop code paths.
+The host updates the DMA region it pointed to
+during HTT setup whenever number of software
+queued from (on host) changes. Based on this
+information firmware issues fetch requests to the
+host telling the host how many frames from a list
+of given stations/tids should be submitted to the
+firmware.
 
-It was also not possible to know how long
-byte-wise queue was without dequeueing.
+The code won't be called because not all
+appropriate HTT events are processed yet.
 
 Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
+ drivers/net/wireless/ath/ath10k/htt.h    |   3 +
+ drivers/net/wireless/ath/ath10k/htt_tx.c | 100 +++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/mac.c    |   9 ++-
+ 3 files changed, 111 insertions(+), 1 deletion(-)
 
-Notes:
-    v2:
-     * export a dedicated API call to get both
-       frame/byte counts to reduce redundancy and
-       offer possible synchronized reads in the future [Felix]
-
- include/net/mac80211.h     | 15 +++++++++++++++
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/iface.c       |  1 +
- net/mac80211/sta_info.c    |  1 +
- net/mac80211/tx.c          |  8 +++++++-
- net/mac80211/util.c        | 14 ++++++++++++++
- 6 files changed, 39 insertions(+), 1 deletion(-)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 31337f81ec03..6617516a276f 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -5594,4 +5594,19 @@ void ieee80211_unreserve_tid(struct ieee80211_sta *sta, u8 tid);
-  */
- struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 				     struct ieee80211_txq *txq);
-+
-+/**
-+ * ieee80211_txq_get_depth - get pending frame/byte count of given txq
-+ *
-+ * The values are not guaranteed to be coherent with regard to each other, i.e.
-+ * txq state can change half-way of this function and the caller may end up
-+ * with "new" frame_cnt and "old" byte_cnt or vice-versa.
-+ *
-+ * @txq: pointer obtained from station or virtual interface
-+ * @frame_cnt: pointer to store frame count
-+ * @byte_cnt: pointer to store byte count
-+ */
-+void ieee80211_txq_get_depth(struct ieee80211_txq *txq,
-+			     unsigned long *frame_cnt,
-+			     unsigned long *byte_cnt);
- #endif /* MAC80211_H */
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index a29f61dc9c06..a96f8c0461f6 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -804,6 +804,7 @@ enum txq_info_flags {
- struct txq_info {
- 	struct sk_buff_head queue;
- 	unsigned long flags;
-+	unsigned long byte_cnt;
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 65dcd22f31df..b1e40f44e76b 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1667,6 +1667,7 @@ struct ath10k_htt {
+ 	} txbuf;
  
- 	/* keep last! */
- 	struct ieee80211_txq txq;
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 0451f120746e..453b4e741780 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -979,6 +979,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	struct {
++		bool enabled;
+ 		struct htt_q_state *vaddr;
+ 		dma_addr_t paddr;
+ 		u16 num_peers;
+@@ -1758,6 +1759,8 @@ int ath10k_htt_tx_fetch_resp(struct ath10k *ar,
+ 			     struct htt_tx_fetch_record *records,
+ 			     size_t num_records);
  
- 		spin_lock_bh(&txqi->queue.lock);
- 		ieee80211_purge_tx_queue(&local->hw, &txqi->queue);
-+		txqi->byte_cnt = 0;
- 		spin_unlock_bh(&txqi->queue.lock);
++void ath10k_htt_tx_txq_update(struct ieee80211_hw *hw,
++			      struct ieee80211_txq *txq);
+ void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt,
+ 			       bool is_mgmt);
+ int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt,
+diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+index 225f0561b3fd..5ef0a1b3773c 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_tx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+@@ -22,6 +22,106 @@
+ #include "txrx.h"
+ #include "debug.h"
  
- 		atomic_set(&sdata->txqs_len[txqi->txq.ac], 0);
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 7e007cf12cb2..e1d9ccc5d197 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -116,6 +116,7 @@ static void __cleanup_single_sta(struct sta_info *sta)
- 
- 			ieee80211_purge_tx_queue(&local->hw, &txqi->queue);
- 			atomic_sub(n, &sdata->txqs_len[txqi->txq.ac]);
-+			txqi->byte_cnt = 0;
- 		}
- 	}
- 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 3311ce0f3d6c..af584f7cdd63 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1266,7 +1266,11 @@ static void ieee80211_drv_tx(struct ieee80211_local *local,
- 	if (atomic_read(&sdata->txqs_len[ac]) >= local->hw.txq_ac_max_pending)
- 		netif_stop_subqueue(sdata->dev, ac);
- 
--	skb_queue_tail(&txqi->queue, skb);
-+	spin_lock_bh(&txqi->queue.lock);
-+	txqi->byte_cnt += skb->len;
-+	__skb_queue_tail(&txqi->queue, skb);
-+	spin_unlock_bh(&txqi->queue.lock);
-+
- 	drv_wake_tx_queue(local, txqi);
- 
- 	return;
-@@ -1294,6 +1298,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 	if (!skb)
- 		goto out;
- 
-+	txqi->byte_cnt -= skb->len;
-+
- 	atomic_dec(&sdata->txqs_len[ac]);
- 	if (__netif_subqueue_stopped(sdata->dev, ac))
- 		ieee80211_propagate_queue_wake(local, sdata->vif.hw_queue[ac]);
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index fb90d9c5df59..091f3dd62ad1 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -3368,3 +3368,17 @@ void ieee80211_init_tx_queue(struct ieee80211_sub_if_data *sdata,
- 		txqi->txq.ac = IEEE80211_AC_BE;
- 	}
- }
-+
-+void ieee80211_txq_get_depth(struct ieee80211_txq *txq,
-+			     unsigned long *frame_cnt,
-+			     unsigned long *byte_cnt)
++static u8 ath10k_htt_tx_txq_calc_size(size_t count)
 +{
-+	struct txq_info *txqi = to_txq_info(txq);
++	int exp;
++	int factor;
 +
-+	if (frame_cnt)
-+		*frame_cnt = txqi->queue.qlen;
++	exp = 0;
++	factor = count >> 7;
 +
-+	if (byte_cnt)
-+		*byte_cnt = txqi->byte_cnt;
++	while (factor >= 64 && exp < 4) {
++		factor >>= 3;
++		exp++;
++	}
++
++	if (exp == 4)
++		return 0xff;
++
++	if (count > 0)
++		factor = max(1, factor);
++
++	return SM(exp, HTT_TX_Q_STATE_ENTRY_EXP) |
++	       SM(factor, HTT_TX_Q_STATE_ENTRY_FACTOR);
 +}
-+EXPORT_SYMBOL(ieee80211_txq_get_depth);
++
++static void __ath10k_htt_tx_txq_recalc(struct ieee80211_hw *hw,
++				       struct ieee80211_txq *txq)
++{
++	struct ath10k *ar = hw->priv;
++	struct ath10k_sta *arsta = (void *)txq->sta->drv_priv;
++	struct ath10k_vif *arvif = (void *)txq->vif->drv_priv;
++	int idx;
++	u32 bit;
++	u16 peer_id;
++	u8 tid;
++	u8 count;
++
++	lockdep_assert_held(&ar->htt.tx_lock);
++
++	if (!ar->htt.tx_q_state.enabled)
++		return;
++
++	if (txq->sta)
++		peer_id = arsta->peer_id;
++	else
++		peer_id = arvif->peer_id;
++
++	tid = txq->tid;
++	bit = BIT(peer_id % 32);
++	idx = peer_id / 32;
++	count = ath10k_htt_tx_txq_calc_size(txq->qsize);
++
++	if (unlikely(peer_id >= ar->htt.tx_q_state.num_peers) ||
++	    unlikely(tid >= ar->htt.tx_q_state.num_tids)) {
++		ath10k_warn(ar, "refusing to update txq for peer_id %hu tid %hhu due to out of bounds\n",
++			    peer_id, tid);
++		return;
++	}
++
++	ar->htt.tx_q_state.vaddr->count[tid][peer_id] = count;
++	ar->htt.tx_q_state.vaddr->map[tid][idx] &= ~bit;
++	ar->htt.tx_q_state.vaddr->map[tid][idx] |= count ? bit : 0;
++
++	ath10k_dbg(ar, ATH10K_DBG_HTT, "htt tx txq state update peer_id %hu tid %hhu count %hhu\n",
++		   peer_id, tid, count);
++}
++
++static void __ath10k_htt_tx_txq_sync(struct ath10k *ar)
++{
++	u32 seq;
++	size_t size;
++
++	lockdep_assert_held(&ar->htt.tx_lock);
++
++	if (!ar->htt.tx_q_state.enabled)
++		return;
++
++	seq = le32_to_cpu(ar->htt.tx_q_state.vaddr->seq);
++	seq++;
++	ar->htt.tx_q_state.vaddr->seq = cpu_to_le32(seq);
++
++	ath10k_dbg(ar, ATH10K_DBG_HTT, "htt tx txq state update commit seq %u\n",
++		   seq);
++
++	size = sizeof(*ar->htt.tx_q_state.vaddr);
++	dma_sync_single_for_device(ar->dev,
++				   ar->htt.tx_q_state.paddr,
++				   size,
++				   DMA_TO_DEVICE);
++}
++
++void ath10k_htt_tx_txq_update(struct ieee80211_hw *hw,
++			      struct ieee80211_txq *txq)
++{
++	struct ath10k *ar = hw->priv;
++
++	spin_lock_bh(&ar->htt.tx_lock);
++	__ath10k_htt_tx_txq_recalc(hw, txq);
++	__ath10k_htt_tx_txq_sync(ar);
++	spin_unlock_bh(&ar->htt.tx_lock);
++}
++
+ void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt,
+ 			       bool is_mgmt)
+ {
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 111baa104f8e..d9566ba70af3 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3695,12 +3695,19 @@ static void ath10k_mac_tx_push(struct ieee80211_hw *hw,
+ 				    txq->vif->addr, ret);
+ 		return;
+ 	}
++
++	ath10k_htt_tx_txq_update(hw, txq);
+ }
+ 
+ static void ath10k_mac_tx_wake(struct ieee80211_hw *hw,
+ 			       struct ieee80211_txq *txq)
+ {
+-	WARN_ON(1); /* TBD */
++	/* TODO: Possible optimization is to defer the updates until a certain
++	 * time/quantity threshold is reached to avoid hammering DMA and
++	 * flushing d-caches for each submitted msdu.
++	 */
++
++	ath10k_htt_tx_txq_update(hw, txq);
+ }
+ 
+ /************/
 -- 
 2.1.4
 
