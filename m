@@ -1,46 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:52586 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933315AbcALHgx (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:35741 "EHLO
+	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752599AbcAVJ3i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 02:36:53 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 12/26] staging: wilc1000: set proper bssid address
-Date: Tue, 12 Jan 2016 16:39:41 +0900
-Message-ID: <1452584395-24910-13-git-send-email-glen.lee@atmel.com> (sfid-20160112_090653_190557_1C921315)
-In-Reply-To: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
-References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
+	Fri, 22 Jan 2016 04:29:38 -0500
+Date: Fri, 22 Jan 2016 10:29:35 +0100
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Pavel Machek <pavel@ucw.cz>, Arend van Spriel <arend@broadcom.com>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, David Gnedt <david.gnedt@davizone.at>
+Subject: Re: [PATCH v2] wl1251: add sysfs interface for bluetooth coexistence
+ mode configuration
+Message-ID: <20160122092935.GL7192@pali> (sfid-20160122_102947_027589_E1006726)
+References: <1451130310-16666-1-git-send-email-pali.rohar@gmail.com>
+ <5696D08F.9030906@broadcom.com>
+ <20160114091654.GA15380@amd>
+ <20160121085331.GO7192@pali>
+ <87d1svyrfl.fsf@kamboji.qca.qualcomm.com>
+ <20160121135110.GH7192@pali>
+ <871t9byotq.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <871t9byotq.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes index 0 to index of vif which is currently beging used
-because AP mode can run on any interface.
+On Thursday 21 January 2016 16:44:33 Kalle Valo wrote:
+> Pali Rohár <pali.rohar@gmail.com> writes:
+> 
+> > On Thursday 21 January 2016 15:48:14 Kalle Valo wrote:
+> >> Pali Rohár <pali.rohar@gmail.com> writes:
+> >> 
+> >> > On Thursday 14 January 2016 10:16:54 Pavel Machek wrote:
+> >> >> On Wed 2016-01-13 23:32:47, Arend van Spriel wrote:
+> >> >> > On 12/26/2015 12:45 PM, Pali Rohár wrote:
+> >> >> > >Port the bt_coex_mode sysfs interface from wl1251 driver version included
+> >> >> > >in the Maemo Fremantle kernel to allow bt-coexistence mode configuration.
+> >> >> > >This enables userspace applications to set one of the modes
+> >> >> > >WL1251_BT_COEX_OFF, WL1251_BT_COEX_ENABLE and WL1251_BT_COEX_MONOAUDIO.
+> >> >> > >The default mode is WL1251_BT_COEX_OFF.
+> >> >> > >It should be noted that this driver always enabled bt-coexistence before
+> >> >> > >and enabled bt-coexistence directly affects the receiving performance,
+> >> >> > >rendering it unusable in some low-signal situations. Especially monitor
+> >> >> > >mode is affected very badly with bt-coexistence enabled.
+> >> >> > 
+> >> >> > So what user-space process will be using this interface. Did you consider
+> >> >> > adding debugfs interface? In case of monitor mode you could consider
+> >> >> > disabling bt-coex from within the driver itself.
+> >> >> 
+> >> >> This aint no debugging feature.
+> >> >
+> >> > Right, bt-coex is not for debugging purpose, but for normal usage, when
+> >> > user want to use together bluetooth and wifi or just one of those.
+> >> 
+> >> I think most of other drivers have a debugfs interface for btcoex, I
+> >> guess mostly for testing purposes. But this really should be added to
+> >> cfg80211.
+> >
+> > All other TI wireless drivers have "bt_coex_state" sysfs node.
+> 
+> Then that's a mistake, they shouldn't have that.
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+But it is there, wl1251 is also TI wireless driver and for last two
+years there is no interface to deal with this problem...
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index a55d337..3379111 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2401,7 +2401,7 @@ static int start_ap(struct wiphy *wiphy, struct net_device *dev,
- 	if (s32Error != 0)
- 		PRINT_ER("Error in setting channel\n");
- 
--	wilc_wlan_set_bssid(dev, wl->vif[0]->src_addr, AP_MODE);
-+	wilc_wlan_set_bssid(dev, wl->vif[vif->u8IfIdx]->src_addr, AP_MODE);
- 
- 	s32Error = wilc_add_beacon(vif, settings->beacon_interval,
- 				   settings->dtim_period, beacon->head_len,
+So as other drivers do, I'm proposing solution which fix bt coex also
+for wl1251 driver need on Nokia N900.
+
 -- 
-1.9.1
-
+Pali Rohár
+pali.rohar@gmail.com
