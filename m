@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f178.google.com ([209.85.217.178]:34735 "EHLO
-	mail-lb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759348AbcAMN76 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:52517 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753228AbcAVLlx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2016 08:59:58 -0500
-Received: by mail-lb0-f178.google.com with SMTP id cl12so73599432lbc.1
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 05:59:58 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/5] ath10k: add basic hostq support
-Date: Wed, 13 Jan 2016 15:01:03 +0100
-Message-Id: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com> (sfid-20160113_150008_614104_68A8AB0C)
+	Fri, 22 Jan 2016 06:41:53 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath9k_hw: ignore eeprom magic mismatch on flash based devices
+References: <1453390448-87417-1-git-send-email-nbd@openwrt.org>
+	<CAFBinCByH_HSMHNhQO93U+K21ssb5W_abzOVTp=XWqOcqAnL_w@mail.gmail.com>
+Date: Fri, 22 Jan 2016 13:41:46 +0200
+In-Reply-To: <CAFBinCByH_HSMHNhQO93U+K21ssb5W_abzOVTp=XWqOcqAnL_w@mail.gmail.com>
+	(Martin Blumenstingl's message of "Thu, 21 Jan 2016 17:46:22 +0100")
+Message-ID: <871t99yh6t.fsf@kamboji.qca.qualcomm.com> (sfid-20160122_124156_809706_01A716D6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's a new firmware feature which uses a shared
-DMA memory so host can share it's per-sta per-tid
-queue size which is then subsequently used for
-firmware to assist in deciding which frames to put
-on the intermediate host-device tx queue.
+Martin Blumenstingl <martin.blumenstingl@googlemail.com> writes:
 
-This patchset adds only basic support to make
-the firmware supporting the feature happy and
-running at all. Without it firmware would freeze
-shortly after booting.
+> On Thu, Jan 21, 2016 at 4:34 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>> Many AR913x based devices (maybe others too) do not have a valid EEPROM
+>> magic in their calibration data partition.
+>>
+>> Fixes: 6fa658fd5ab2 ("ath9k: Simplify and fix eeprom endianness swapping")
+>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>
+> Acked-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
 
-More patches will follow some time later to add
-the "new data path" logic.
+I'll queue this to 4.5.
 
+> I wonder if we should also backport this to 4.4, because that is
+> affected as well.
 
-Michal Kazior (5):
-  ath10k: rename some HTT events
-  ath10k: add new htt definitions
-  ath10k: add new FW_FEATURE_PEER_FLOW_CONTROL
-  ath10k: clean up cont frag desc init code
-  ath10k: implement basic support for new tx path firmware
-
- drivers/net/wireless/ath/ath10k/core.c   |   1 +
- drivers/net/wireless/ath/ath10k/core.h   |   9 ++
- drivers/net/wireless/ath/ath10k/htt.c    |   8 +-
- drivers/net/wireless/ath/ath10k/htt.h    | 169 +++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath10k/htt_rx.c |   8 +-
- drivers/net/wireless/ath/ath10k/htt_tx.c | 146 +++++++++++++++++++++-----
- 6 files changed, 302 insertions(+), 39 deletions(-)
+Is it? I don't see 6fa658fd5ab2 in 4.4. Can you double check, please?
 
 -- 
-2.1.4
-
+Kalle Valo
