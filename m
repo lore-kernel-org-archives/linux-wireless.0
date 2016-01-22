@@ -1,151 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:9395 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757298AbcAaLGi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2016 06:06:38 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Avri Altman <avri.altman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 11/31] iwlwifi: mvm: Add P2P client snoozing
-Date: Sun, 31 Jan 2016 13:06:06 +0200
-Message-Id: <1454238386-27032-11-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160131_123653_710248_0535A7DE)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:52886 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753320AbcAVLzx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jan 2016 06:55:53 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+Cc: Pavel Machek <pavel@ucw.cz>, Arend van Spriel <arend@broadcom.com>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, David Gnedt <david.gnedt@davizone.at>
+Subject: Re: [PATCH v2] wl1251: add sysfs interface for bluetooth coexistence mode configuration
+References: <1451130310-16666-1-git-send-email-pali.rohar@gmail.com>
+	<5696D08F.9030906@broadcom.com> <20160114091654.GA15380@amd>
+	<20160121085331.GO7192@pali> <87d1svyrfl.fsf@kamboji.qca.qualcomm.com>
+	<20160121135110.GH7192@pali> <871t9byotq.fsf@kamboji.qca.qualcomm.com>
+	<20160122092935.GL7192@pali>
+Date: Fri, 22 Jan 2016 13:55:44 +0200
+In-Reply-To: <20160122092935.GL7192@pali> ("Pali =?utf-8?Q?Roh=C3=A1r=22's?=
+ message of "Fri, 22
+	Jan 2016 10:29:35 +0100")
+Message-ID: <87wpr1x1z3.fsf@kamboji.qca.qualcomm.com> (sfid-20160122_125619_613389_349F27E4)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avri Altman <avri.altman@intel.com>
+Pali Rohár <pali.rohar@gmail.com> writes:
 
-Enable snoozing and U-APSD on P2P client. The firwmare will
-support this only if the BSS vif is not associated.
-Make this configurable by a constant variable and disable
-it by default.
+>> >> > Right, bt-coex is not for debugging purpose, but for normal usage, when
+>> >> > user want to use together bluetooth and wifi or just one of those.
+>> >> 
+>> >> I think most of other drivers have a debugfs interface for btcoex, I
+>> >> guess mostly for testing purposes. But this really should be added to
+>> >> cfg80211.
+>> >
+>> > All other TI wireless drivers have "bt_coex_state" sysfs node.
+>> 
+>> Then that's a mistake, they shouldn't have that.
+>
+> But it is there, wl1251 is also TI wireless driver and for last two
+> years there is no interface to deal with this problem...
+>
+> So as other drivers do, I'm proposing solution which fix bt coex also
+> for wl1251 driver need on Nokia N900.
 
-Signed-off-by: Avri Altman <avri.altman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h   |  2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/constants.h |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  8 +++++
- drivers/net/wireless/intel/iwlwifi/mvm/power.c     | 39 ++++++++++++++++++++--
- 4 files changed, 47 insertions(+), 3 deletions(-)
+Even if the wlcore sysfs interface fell through the cracks it's no
+excuse to add more private interfaces to wireless drivers. We have
+cfg80211 and all generic interfaces, like btcoex control, should go
+through that subsystem. That way all drivers can share a common
+interface and everyone are happy.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-index 4050b4a..dbf08c4 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-@@ -302,6 +302,7 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_capa_t;
-  * @IWL_UCODE_TLV_CAPA_DC2DC_SUPPORT: supports DC2DC Command
-  * @IWL_UCODE_TLV_CAPA_CSUM_SUPPORT: supports TCP Checksum Offload
-  * @IWL_UCODE_TLV_CAPA_RADIO_BEACON_STATS: support radio and beacon statistics
-+ * @IWL_UCODE_TLV_CAPA_P2P_STANDALONE_UAPSD: support p2p standalone U-APSD
-  * @IWL_UCODE_TLV_CAPA_BT_COEX_PLCR: enabled BT Coex packet level co-running
-  * @IWL_UCODE_TLV_CAPA_LAR_MULTI_MCC: ucode supports LAR updates with different
-  *	sources for the MCC. This TLV bit is a future replacement to
-@@ -336,6 +337,7 @@ enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_DC2DC_CONFIG_SUPPORT		= (__force iwl_ucode_tlv_capa_t)19,
- 	IWL_UCODE_TLV_CAPA_CSUM_SUPPORT			= (__force iwl_ucode_tlv_capa_t)21,
- 	IWL_UCODE_TLV_CAPA_RADIO_BEACON_STATS		= (__force iwl_ucode_tlv_capa_t)22,
-+	IWL_UCODE_TLV_CAPA_P2P_STANDALONE_UAPSD		= (__force iwl_ucode_tlv_capa_t)26,
- 	IWL_UCODE_TLV_CAPA_BT_COEX_PLCR			= (__force iwl_ucode_tlv_capa_t)28,
- 	IWL_UCODE_TLV_CAPA_LAR_MULTI_MCC		= (__force iwl_ucode_tlv_capa_t)29,
- 	IWL_UCODE_TLV_CAPA_BT_COEX_RRC			= (__force iwl_ucode_tlv_capa_t)30,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-index b00c03f..959fc4d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/constants.h
-@@ -73,6 +73,7 @@
- #define IWL_MVM_WOWLAN_PS_RX_DATA_TIMEOUT	(10 * USEC_PER_MSEC)
- #define IWL_MVM_SHORT_PS_TX_DATA_TIMEOUT	(2 * 1024) /* defined in TU */
- #define IWL_MVM_SHORT_PS_RX_DATA_TIMEOUT	(40 * 1024) /* defined in TU */
-+#define IWL_MVM_P2P_UAPSD_STANDALONE		0
- #define IWL_MVM_P2P_LOWLATENCY_PS_ENABLE	0
- #define IWL_MVM_UAPSD_RX_DATA_TIMEOUT		(50 * USEC_PER_MSEC)
- #define IWL_MVM_UAPSD_TX_DATA_TIMEOUT		(50 * USEC_PER_MSEC)
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 5f3ac8c..5a92ab1 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1005,6 +1005,14 @@ static inline bool iwl_mvm_is_mplut_supported(struct iwl_mvm *mvm)
- 		IWL_MVM_BT_COEX_MPLUT;
- }
- 
-+static inline
-+bool iwl_mvm_is_p2p_standalone_uapsd_supported(struct iwl_mvm *mvm)
-+{
-+	return fw_has_capa(&mvm->fw->ucode_capa,
-+			   IWL_UCODE_TLV_CAPA_P2P_STANDALONE_UAPSD) &&
-+		IWL_MVM_P2P_UAPSD_STANDALONE;
-+}
-+
- static inline bool iwl_mvm_has_new_rx_api(struct iwl_mvm *mvm)
- {
- 	/* firmware flag isn't defined yet */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/power.c b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-index 9de159f..16b3e36 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-@@ -259,6 +259,26 @@ static void iwl_mvm_power_configure_uapsd(struct iwl_mvm *mvm,
- 		IWL_MVM_PS_HEAVY_RX_THLD_PERCENT;
- }
- 
-+static void iwl_mvm_p2p_standalone_iterator(void *_data, u8 *mac,
-+					    struct ieee80211_vif *vif)
-+{
-+	bool *is_p2p_standalone = _data;
-+
-+	switch (ieee80211_vif_type_p2p(vif)) {
-+	case NL80211_IFTYPE_P2P_GO:
-+	case NL80211_IFTYPE_AP:
-+		*is_p2p_standalone = false;
-+		break;
-+	case NL80211_IFTYPE_STATION:
-+		if (vif->bss_conf.assoc)
-+			*is_p2p_standalone = false;
-+		break;
-+
-+	default:
-+		break;
-+	}
-+}
-+
- static bool iwl_mvm_power_allow_uapsd(struct iwl_mvm *mvm,
- 				       struct ieee80211_vif *vif)
- {
-@@ -268,9 +288,6 @@ static bool iwl_mvm_power_allow_uapsd(struct iwl_mvm *mvm,
- 		    ETH_ALEN))
- 		return false;
- 
--	if (vif->p2p &&
--	    !(mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_P2P_PS_UAPSD))
--		return false;
- 	/*
- 	 * Avoid using uAPSD if P2P client is associated to GO that uses
- 	 * opportunistic power save. This is due to current FW limitation.
-@@ -287,6 +304,22 @@ static bool iwl_mvm_power_allow_uapsd(struct iwl_mvm *mvm,
- 	if (iwl_mvm_phy_ctx_count(mvm) >= 2)
- 		return false;
- 
-+	if (vif->p2p) {
-+		/* Allow U-APSD only if p2p is stand alone */
-+		bool is_p2p_standalone = true;
-+
-+		if (!iwl_mvm_is_p2p_standalone_uapsd_supported(mvm))
-+			return false;
-+
-+		ieee80211_iterate_active_interfaces_atomic(mvm->hw,
-+					IEEE80211_IFACE_ITER_NORMAL,
-+					iwl_mvm_p2p_standalone_iterator,
-+					&is_p2p_standalone);
-+
-+		if (!is_p2p_standalone)
-+			return false;
-+	}
-+
- 	return true;
- }
- 
+What I suggest is that you add this yourself to cfg80211 and mac80211.
+It's not that hard and I think you could use NL80211_CMD_SET_POWER_SAVE
+as an example.
+
 -- 
-2.5.0
-
+Kalle Valo
