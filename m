@@ -1,215 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:47094 "EHLO v3-1039.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964834AbcAZQLT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 11:11:19 -0500
-From: Sven Eckelmann <sven@narfation.org>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Sven Eckelmann <sven@narfation.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Subject: [PATCH v3] mac80211: Parse legacy and HT rate in injected frames
-Date: Tue, 26 Jan 2016 17:11:13 +0100
-Message-Id: <1453824673-12379-1-git-send-email-sven@narfation.org> (sfid-20160126_171124_512292_48E1E6CF)
+Received: from eusmtp01.atmel.com ([212.144.249.242]:7538 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752499AbcAVIRT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jan 2016 03:17:19 -0500
+Subject: Re: [PATCH 04/26] staging: wilc1000: add sdio resume/suspend
+To: Dan Carpenter <dan.carpenter@oracle.com>
+References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
+ <1452584395-24910-5-git-send-email-glen.lee@atmel.com>
+ <20160122074459.GC5325@mwanda>
+CC: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
+	<austin.shin@atmel.com>, <linux-wireless@vger.kernel.org>,
+	<Nicolas.FERRE@atmel.com>, <adel.noureldin@atmel.com>,
+	<tony.cho@atmel.com>, <leo.kim@atmel.com>,
+	<adham.abozaeid@atmel.com>
+From: glen lee <glen.lee@atmel.com>
+Message-ID: <56A1E3FF.506@atmel.com> (sfid-20160122_091722_966486_A55DBBFB)
+Date: Fri, 22 Jan 2016 17:10:39 +0900
+MIME-Version: 1.0
+In-Reply-To: <20160122074459.GC5325@mwanda>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Drivers/devices without their own rate control algorithm can get the
-information what rates they should use from either the radiotap header of
-injected frames or from the rate control algorithm. But the parsing of the
-legacy rate information from the radiotap header was removed in commit
-e6a9854b05c1 ("mac80211/drivers: rewrite the rate control API").
 
-The removal of this feature heavily reduced the usefulness of frame
-injection when wanting to simulate specific transmission behavior. Having
-rate parsing together with MCS rates and retry support allows a fine
-grained selection of the tx behavior of injected frames for these kind of
-tests.
+On 2016년 01월 22일 16:44, Dan Carpenter wrote:
+> You should be running checkpatch.pl on your patches.
 
-Signed-off-by: Sven Eckelmann <sven@narfation.org>
-Cc: Simon Wunderlich <sw@simonwunderlich.de>
----
-v3:
- - switch order of arguments in ieee80211_parse_tx_radiotap
- - simplify selection of the retry counter
- - move IEEE80211_TX_CTRL_RATE_INJECT check inside ieee80211_tx_h_rate_ctrl
-   to let it set use_rts, use_cts_prot, short_preamble
-v2:
- - resent RFC as v2 because first patch was not correctly marked as RFC
- - removed check from ieee80211_xmit_fast because this one is never called
-   for injected frames
----
- Documentation/networking/mac80211-injection.txt | 17 ++++++
- include/net/mac80211.h                          |  2 +
- net/mac80211/tx.c                               | 72 ++++++++++++++++++++++++-
- 3 files changed, 89 insertions(+), 2 deletions(-)
+It's my mistake. I will run checkpatch.pl on the patch series.
+Thank you your advise.
 
-diff --git a/Documentation/networking/mac80211-injection.txt b/Documentation/networking/mac80211-injection.txt
-index 3a93007..ec8f934 100644
---- a/Documentation/networking/mac80211-injection.txt
-+++ b/Documentation/networking/mac80211-injection.txt
-@@ -28,6 +28,23 @@ radiotap headers and used to control injection:
-    IEEE80211_RADIOTAP_F_TX_NOACK: frame should be sent without waiting for
- 				  an ACK even if it is a unicast frame
- 
-+ * IEEE80211_RADIOTAP_RATE
-+
-+   legacy rate for the transmission (only for devices without own rate control)
-+
-+ * IEEE80211_RADIOTAP_MCS
-+
-+   HT rate for the transmission (only for devices without own rate control).
-+   Also some flags are parsed
-+
-+   IEEE80211_TX_RC_SHORT_GI: use short guard interval
-+   IEEE80211_TX_RC_40_MHZ_WIDTH: send in HT40 mode
-+
-+ * IEEE80211_RADIOTAP_DATA_RETRIES
-+
-+   number of retries when either IEEE80211_RADIOTAP_RATE or
-+   IEEE80211_RADIOTAP_MCS was used
-+
- The injection code can also skip all other currently defined radiotap fields
- facilitating replay of captured radiotap headers directly.
- 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 566df20..3c3c1f3 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -708,12 +708,14 @@ enum mac80211_tx_info_flags {
-  *	protocol frame (e.g. EAP)
-  * @IEEE80211_TX_CTRL_PS_RESPONSE: This frame is a response to a poll
-  *	frame (PS-Poll or uAPSD).
-+ * @IEEE80211_TX_CTRL_RATE_INJECT: This frame is injected with rate information
-  *
-  * These flags are used in tx_info->control.flags.
-  */
- enum mac80211_tx_control_flags {
- 	IEEE80211_TX_CTRL_PORT_CTRL_PROTO	= BIT(0),
- 	IEEE80211_TX_CTRL_PS_RESPONSE		= BIT(1),
-+	IEEE80211_TX_CTRL_RATE_INJECT		= BIT(2),
- };
- 
- /*
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 3311ce0..723cd7a 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -710,6 +710,10 @@ ieee80211_tx_h_rate_ctrl(struct ieee80211_tx_data *tx)
- 
- 	info->control.short_preamble = txrc.short_preamble;
- 
-+	/* don't ask rate control when rate already injected via radiotap */
-+	if (info->control.flags & IEEE80211_TX_CTRL_RATE_INJECT)
-+		return TX_CONTINUE;
-+
- 	if (tx->sta)
- 		assoc = test_sta_flag(tx->sta, WLAN_STA_ASSOC);
- 
-@@ -1665,15 +1669,24 @@ void ieee80211_xmit(struct ieee80211_sub_if_data *sdata,
- 	ieee80211_tx(sdata, sta, skb, false);
- }
- 
--static bool ieee80211_parse_tx_radiotap(struct sk_buff *skb)
-+static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
-+					struct sk_buff *skb)
- {
- 	struct ieee80211_radiotap_iterator iterator;
- 	struct ieee80211_radiotap_header *rthdr =
- 		(struct ieee80211_radiotap_header *) skb->data;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+	struct ieee80211_supported_band *sband =
-+		local->hw.wiphy->bands[info->band];
- 	int ret = ieee80211_radiotap_iterator_init(&iterator, rthdr, skb->len,
- 						   NULL);
- 	u16 txflags;
-+	u16 rate = 0;
-+	bool rate_found = false;
-+	u8 rate_retries = 0;
-+	u16 rate_flags = 0;
-+	u8 mcs_known, mcs_flags;
-+	int i;
- 
- 	info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT |
- 		       IEEE80211_TX_CTL_DONTFRAG;
-@@ -1724,6 +1737,35 @@ static bool ieee80211_parse_tx_radiotap(struct sk_buff *skb)
- 				info->flags |= IEEE80211_TX_CTL_NO_ACK;
- 			break;
- 
-+		case IEEE80211_RADIOTAP_RATE:
-+			rate = *iterator.this_arg;
-+			rate_flags = 0;
-+			rate_found = true;
-+			break;
-+
-+		case IEEE80211_RADIOTAP_DATA_RETRIES:
-+			rate_retries = *iterator.this_arg;
-+			break;
-+
-+		case IEEE80211_RADIOTAP_MCS:
-+			mcs_known = iterator.this_arg[0];
-+			mcs_flags = iterator.this_arg[1];
-+			if (!(mcs_known & IEEE80211_RADIOTAP_MCS_HAVE_MCS))
-+				break;
-+
-+			rate_found = true;
-+			rate = iterator.this_arg[2];
-+			rate_flags = IEEE80211_TX_RC_MCS;
-+
-+			if (mcs_known & IEEE80211_RADIOTAP_MCS_HAVE_GI &&
-+			    mcs_flags & IEEE80211_RADIOTAP_MCS_SGI)
-+				rate_flags |= IEEE80211_TX_RC_SHORT_GI;
-+
-+			if (mcs_known & IEEE80211_RADIOTAP_MCS_HAVE_BW &&
-+			    mcs_flags & IEEE80211_RADIOTAP_MCS_BW_40)
-+				rate_flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
-+			break;
-+
- 		/*
- 		 * Please update the file
- 		 * Documentation/networking/mac80211-injection.txt
-@@ -1738,6 +1780,32 @@ static bool ieee80211_parse_tx_radiotap(struct sk_buff *skb)
- 	if (ret != -ENOENT) /* ie, if we didn't simply run out of fields */
- 		return false;
- 
-+	if (rate_found) {
-+		info->control.flags |= IEEE80211_TX_CTRL_RATE_INJECT;
-+
-+		for (i = 0; i < IEEE80211_TX_MAX_RATES; i++) {
-+			info->control.rates[i].idx = -1;
-+			info->control.rates[i].flags = 0;
-+			info->control.rates[i].count = 0;
-+		}
-+
-+		if (rate_flags & IEEE80211_TX_RC_MCS) {
-+			info->control.rates[0].idx = rate;
-+		} else {
-+			for (i = 0; i < sband->n_bitrates; i++) {
-+				if (rate * 5 != sband->bitrates[i].bitrate)
-+					continue;
-+
-+				info->control.rates[0].idx = i;
-+				break;
-+			}
-+		}
-+
-+		info->control.rates[0].flags = rate_flags;
-+		info->control.rates[0].count = min_t(u8, rate_retries + 1,
-+						     local->hw.max_rate_tries);
-+	}
-+
- 	/*
- 	 * remove the radiotap header
- 	 * iterator->_max_length was sanity-checked against
-@@ -1819,7 +1887,7 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 		      IEEE80211_TX_CTL_INJECTED;
- 
- 	/* process and remove the injection radiotap header */
--	if (!ieee80211_parse_tx_radiotap(skb))
-+	if (!ieee80211_parse_tx_radiotap(local, skb))
- 		goto fail;
- 
- 	rcu_read_lock();
--- 
-2.7.0
+glen lee.
+
+>
+> regards,
+> dan carpenter
+>
 
