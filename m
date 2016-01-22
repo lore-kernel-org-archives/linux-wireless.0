@@ -1,170 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:58066 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757213AbcAaLGZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2016 06:06:25 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/31] iwlwifi: pcie: buffer packets to avoid overflowing Tx queues
-Date: Sun, 31 Jan 2016 13:05:56 +0200
-Message-Id: <1454238386-27032-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160131_120628_140138_BB462961)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:53431 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753375AbcAVMLc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jan 2016 07:11:32 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: wireless-drivers: random cleanup patches piling up
+References: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com>
+	<56A13587.7040809@lwfinger.net>
+Date: Fri, 22 Jan 2016 14:11:25 +0200
+In-Reply-To: <56A13587.7040809@lwfinger.net> (Larry Finger's message of "Thu,
+	21 Jan 2016 13:46:15 -0600")
+Message-ID: <87si1px18y.fsf@kamboji.qca.qualcomm.com> (sfid-20160122_131151_201177_564A1C97)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When the Tx queues are full above a threshold, we
-immediately stop the mac80211's queue to stop getting new
-packets. This worked until TSO was enabled.
-With TSO, one single packet from mac80211 can use many
-descriptors since a large send needs to be split into
-several segments.
-This means that stopping mac80211's queues is not enough
-and we also need to ensure that we don't overflow the Tx
-queues with one single packet from mac80211.
-Add code to transport layer to do just that. Stop
-mac80211's queue as soon as the queue is full above the
-same threshold as before, and keep pushing the current
-packet along with its segments on the queue, but check
-that we don't overflow. If that would happen, buffer the
-segments, and send them when there is room in the Tx queue
-again. Of course, we first need to send the buffered
-segments and only then, wake up mac80211's queues.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  1 +
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 69 +++++++++++++++++++---
- 2 files changed, 62 insertions(+), 8 deletions(-)
+> We might get new developers, but the cost may be high. In the staging
+> tree, things are worse. The tools can be applied in a blind fashion,
+> but the results can be really stupid. GregKH has told a few would-be
+> contributors to "go away" after a few patches that would not build.
+>
+> As most of these patches are based on "problems" found by application
+> of various standard tools, they will likely be resubmitted over and
+> over until the code is "fixed". Whether the patches are useful may not
+> be the main question.
+>
+> My real complaint with these patches is that very few are more than
+> compile tested. For example, there are 3 patches for memory leaks in
+> b43. One (https://patchwork.kernel.org/patch/7998941) was rejected
+> because it missed some such leaks, but there was not a formal NACK.
+> The patch was fixed and resubmitted
+> (https://patchwork.kernel.org/patch/8014311/), but not yet tested. The
+> author then resent it (https://patchwork.kernel.org/patch/8049041/)
+> and was chastised for resending as it still had not been tested. Of
+> course, the first two of these can be dropped. Unfortunately, there
+> are very few devs who have the necessary hardware to test.
+>
+> Most of the current set do not account for the directory restructuring
+> and will not apply.Those can be rejected with the appropriate message
+> asking that they be rebased. That should not require too much of your
+> time. That will at last clean out the current backlog.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index cc3888e..2d8b415 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -280,6 +280,7 @@ struct iwl_txq {
- 	bool ampdu;
- 	bool block;
- 	unsigned long wd_timeout;
-+	struct sk_buff_head overflow_q;
- };
- 
- static inline dma_addr_t
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 5262028..b0b0fd9 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -571,6 +571,7 @@ static int iwl_pcie_txq_init(struct iwl_trans *trans, struct iwl_txq *txq,
- 		return ret;
- 
- 	spin_lock_init(&txq->lock);
-+	__skb_queue_head_init(&txq->overflow_q);
- 
- 	/*
- 	 * Tell nic where to find circular buffer of Tx Frame Descriptors for
-@@ -621,6 +622,13 @@ static void iwl_pcie_txq_unmap(struct iwl_trans *trans, int txq_id)
- 		q->read_ptr = iwl_queue_inc_wrap(q->read_ptr);
- 	}
- 	txq->active = false;
-+
-+	while (!skb_queue_empty(&txq->overflow_q)) {
-+		struct sk_buff *skb = __skb_dequeue(&txq->overflow_q);
-+
-+		iwl_op_mode_free_skb(trans->op_mode, skb);
-+	}
-+
- 	spin_unlock_bh(&txq->lock);
- 
- 	/* just in case - this queue may have been stopped */
-@@ -1052,8 +1060,41 @@ void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
- 
- 	iwl_pcie_txq_progress(txq);
- 
--	if (iwl_queue_space(&txq->q) > txq->q.low_mark)
--		iwl_wake_queue(trans, txq);
-+	if (iwl_queue_space(&txq->q) > txq->q.low_mark &&
-+	    test_bit(txq_id, trans_pcie->queue_stopped)) {
-+		struct sk_buff_head skbs;
-+
-+		__skb_queue_head_init(&skbs);
-+		skb_queue_splice_init(&txq->overflow_q, &skbs);
-+
-+		/*
-+		 * This is tricky: we are in reclaim path which is non
-+		 * re-entrant, so noone will try to take the access the
-+		 * txq data from that path. We stopped tx, so we can't
-+		 * have tx as well. Bottom line, we can unlock and re-lock
-+		 * later.
-+		 */
-+		spin_unlock_bh(&txq->lock);
-+
-+		while (!skb_queue_empty(&skbs)) {
-+			struct sk_buff *skb = __skb_dequeue(&skbs);
-+			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+			u8 dev_cmd_idx = IWL_TRANS_FIRST_DRIVER_DATA + 1;
-+			struct iwl_device_cmd *dev_cmd =
-+				info->driver_data[dev_cmd_idx];
-+
-+			/*
-+			 * Note that we can very well be overflowing again.
-+			 * In that case, iwl_queue_space will be small again
-+			 * and we won't wake mac80211's queue.
-+			 */
-+			iwl_trans_pcie_tx(trans, skb, dev_cmd, txq_id);
-+		}
-+		spin_lock_bh(&txq->lock);
-+
-+		if (iwl_queue_space(&txq->q) > txq->q.low_mark)
-+			iwl_wake_queue(trans, txq);
-+	}
- 
- 	if (q->read_ptr == q->write_ptr) {
- 		IWL_DEBUG_RPM(trans, "Q %d - last tx reclaimed\n", q->id);
-@@ -2161,6 +2202,8 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 
- 		csum = skb_checksum(skb, offs, skb->len - offs, 0);
- 		*(__sum16 *)(skb->data + csum_offs) = csum_fold(csum);
-+
-+		skb->ip_summed = CHECKSUM_UNNECESSARY;
- 	}
- 
- 	if (skb_is_nonlinear(skb) &&
-@@ -2177,6 +2220,22 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 
- 	spin_lock(&txq->lock);
- 
-+	if (iwl_queue_space(q) < q->high_mark) {
-+		iwl_stop_queue(trans, txq);
-+
-+		/* don't put the packet on the ring, if there is no room */
-+		if (unlikely(iwl_queue_space(q) < 3)) {
-+			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-+
-+			info->driver_data[IWL_TRANS_FIRST_DRIVER_DATA + 1] =
-+				dev_cmd;
-+			__skb_queue_tail(&txq->overflow_q, skb);
-+
-+			spin_unlock(&txq->lock);
-+			return 0;
-+		}
-+	}
-+
- 	/* In AGG mode, the index in the ring must correspond to the WiFi
- 	 * sequence number. This is a HW requirements to help the SCD to parse
- 	 * the BA.
-@@ -2281,12 +2340,6 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 	 * At this point the frame is "transmitted" successfully
- 	 * and we will get a TX status notification eventually.
- 	 */
--	if (iwl_queue_space(q) < q->high_mark) {
--		if (wait_write_ptr)
--			iwl_pcie_txq_inc_wr_ptr(trans, txq);
--		else
--			iwl_stop_queue(trans, txq);
--	}
- 	spin_unlock(&txq->lock);
- 	return 0;
- out_err:
+Actually 'git am -3' handles the directory restructuring just fine, so
+that's not a problem. And I can also manage the current backlog, it just
+takes some time to clear it up. I'm just worried that these cleanup
+patches become even a bigger problem in the future.
+
+> Is it possible for us to require the patch author to supply the level
+> of testing when that is not obvious? This information should be in the
+> comments location after the first ---. I suspect I know the answer for
+> non-maintainers, but the formal requirement might be helpful. 
+
+I think that's a good idea. If it's only compile tested that should be
+properly documented in the commit log so that people are aware of it.
+
+> I also promise to be more diligent in reviewing the patches that are
+> directed at the drivers that I maintain.
+
+Thanks, I appreciate that.
+
 -- 
-2.5.0
-
+Kalle Valo
