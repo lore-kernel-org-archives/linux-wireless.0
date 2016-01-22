@@ -1,61 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:35315 "EHLO
-	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752192AbcAUQ7I (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 11:59:08 -0500
+Received: from hauke-m.de ([5.39.93.123]:55934 "EHLO hauke-m.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753020AbcAVVIC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 22 Jan 2016 16:08:02 -0500
+Subject: Re: [PATCH] bcma: init serial console directly from ChipCommon code
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org
+References: <1453482174-11021-1-git-send-email-zajec5@gmail.com>
+From: Hauke Mehrtens <hauke@hauke-m.de>
+Message-ID: <56A29A2F.2040800@hauke-m.de> (sfid-20160122_220806_984067_66A99209)
+Date: Fri, 22 Jan 2016 22:07:59 +0100
 MIME-Version: 1.0
-In-Reply-To: <1445116005-28670-2-git-send-email-paulmcquad@gmail.com>
-References: <1445116005-28670-1-git-send-email-paulmcquad@gmail.com>
-	<1445116005-28670-2-git-send-email-paulmcquad@gmail.com>
-Date: Thu, 21 Jan 2016 17:59:07 +0100
-Message-ID: <CAGXE3d8buJC8kSvDJV8u_2OeWKbJOVrNkdFM5qxwuS_7DqH=JA@mail.gmail.com> (sfid-20160121_175929_390648_4757840E)
-Subject: Re: [PATCH 2/3] net: wireless: rt2x00: Pointer issue
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Paul McQuade <paulmcquad@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>, kvalo@codeaurora.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1453482174-11021-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 17, 2015 at 11:06 PM, Paul McQuade <paulmcquad@gmail.com> wrote:
-> Code Style: pointer is declared wrong
->
-> Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
+On 01/22/2016 06:02 PM, Rafał Miłecki wrote:
+> UART is connected to and controlled over ChipCommon core. It doesn't
+> have much to do with MIPS core (where we initialize it currently)
+> except just existing on embedded systemms. There isn't point of such
+> cross-core initialization (and we needed #ifdef anyway) so just handle
+> it in ChipCommon.
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-Thanks for fixing this code style issue.
+Reviewed-by: Hauke Mehrtens <hauke@hauke-m.de>
 
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+This looks good.
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> index 6f8310a..b052e87 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -380,7 +380,7 @@ struct rt2x00_intf {
->         atomic_t seqno;
->  };
->
-> -static inline struct rt2x00_intf* vif_to_intf(struct ieee80211_vif *vif)
-> +static inline struct rt2x00_intf *vif_to_intf(struct ieee80211_vif *vif)
->  {
->         return (struct rt2x00_intf *)vif->drv_priv;
->  }
-> @@ -507,7 +507,7 @@ struct rt2x00_sta {
->         int wcid;
->  };
->
-> -static inline struct rt2x00_sta* sta_to_rt2x00_sta(struct ieee80211_sta *sta)
-> +static inline struct rt2x00_sta *sta_to_rt2x00_sta(struct ieee80211_sta *sta)
->  {
->         return (struct rt2x00_sta *)sta->drv_priv;
->  }
-> --
-> 2.6.1
->
+We should probably also move the registration of the serial console from
+arch/mips/bcm47xx to bcma and ssb.
+
+Hauke
