@@ -1,52 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:54947 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751038AbcAMPq4 (ORCPT
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:42422 "EHLO
+	smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753344AbcAVPPP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2016 10:46:56 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Subject: [PATCH 0/7] Add support for Per STA Rx duration
-Date: Wed, 13 Jan 2016 21:16:27 +0530
-Message-ID: <1452699994-5078-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160113_164700_137771_47300B59)
+	Fri, 22 Jan 2016 10:15:15 -0500
+Date: Fri, 22 Jan 2016 10:12:12 -0500
+From: "John W. Linville" <linville@tuxdriver.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
+	kbuild test robot <lkp@intel.com>,
+	kernel-janitors <kernel-janitors@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: wireless-drivers: random cleanup patches piling up
+Message-ID: <20160122151211.GB1500@tuxdriver.com> (sfid-20160122_161534_554764_1A7A1D54)
+References: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com>
+ <1453423965.3856.22.camel@perches.com>
+ <87k2n1x0sf.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <87k2n1x0sf.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+On Fri, Jan 22, 2016 at 02:21:20PM +0200, Kalle Valo wrote:
+> Joe Perches <joe@perches.com> writes:
+> 
+> > On Thu, 2016-01-21 at 16:58 +0200, Kalle Valo wrote:
+> >> Hi,
+> >> 
+> >> I have quite a lot of random cleanup patches from new developers waiting
+> >> in my queue:
+> >> 
+> >> https://patchwork.kernel.org/project/linux-wireless/list/?state=10&delegate=25621&order=date
+> >> 
+> >> (Not all of them are cleanup patches, there are also few patches
+> >> deferred due to other reasons, but you get the idea.)
+> >> 
+> >> These cleanup patches usually take quite a lot of my time and I'm
+> >> starting to doubt the benefit, compared to the time needed to dig
+> >> through them and figuring out what to apply. And this is of course time
+> >> away from other patches, so it's slowing down "real" development.
+> >> 
+> >> I really don't know what to do. Part of me is saying that I just should
+> >> drop them unless it's reviewed by a more experienced developer but on
+> >> the other hand this is a good way get new developers onboard.
+> >> 
+> >> What others think? Are these kind of patches useful?
+> >
+> > Some yes, mostly not really.
+> >
+> > While whitespace style patches have some small value,
+> > very few of the new contributors that use tools like
+> > "scripts/checkpatch.pl -f" on various kernel files 
+> > actually continue on to submit actual defect fixing
+> > or optimization or code clarity patches.
+> 
+> That's also my experience from maintaining wireless-drivers for a year,
+> this seems to be a "hit and run" type of phenomenon.
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Should we be looking for someone to run a "wireless-driver-cleanups"
+tree?  They could handle the cleanups and trivial stuff, and send
+you a pull request a couple of times per release...?
 
-*Enable parsing of rx_duration as part of peer stats support
- by the new 10.2.4 firmware
-*Add support to dump per STA rx_duration  (usecs)
-*Pre-requisite cleanups
-*For calculating total rx-duration in host, enable provision to
- support periodic peer stats update.
-*Also enable mac80211 debugfs entry to track per STA rx duration(usecs)
-
-Mohammed Shafi Shajakhan (7):
-  ath10k: Add support for parsing per STA rx_duration for 10.2.4
-  ath10k: Fix naming Peer stats rssi_changed field in 10.2.4
-  ath10k: Cleanup setting pdev paramaters
-  ath10k: Rename few function names of firmware stats
-  ath10k: Provision to support periodic peer stats update
-  ath10k: Enable periodic peer stats update
-  ath10k: Add debugfs support for Per STA total rx duration
-
- drivers/net/wireless/ath/ath10k/core.h        |    2 ++
- drivers/net/wireless/ath/ath10k/debug.c       |   28 ++++++++++-------
- drivers/net/wireless/ath/ath10k/debug.h       |    6 ++++
- drivers/net/wireless/ath/ath10k/debugfs_sta.c |   41 +++++++++++++++++++++++++
- drivers/net/wireless/ath/ath10k/mac.c         |   32 +++++++++++++------
- drivers/net/wireless/ath/ath10k/wmi.c         |   22 +++++++++++--
- drivers/net/wireless/ath/ath10k/wmi.h         |   14 ++++++++-
- 7 files changed, 122 insertions(+), 23 deletions(-)
-
+John
 -- 
-1.7.9.5
-
+John W. Linville		Someday the world will need a hero, and you
+linville@tuxdriver.com			might be all we have.  Be ready.
