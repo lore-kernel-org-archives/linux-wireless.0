@@ -1,58 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f182.google.com ([209.85.217.182]:33667 "EHLO
-	mail-lb0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753764AbcAOXtD (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:32635 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750978AbcAVH6K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2016 18:49:03 -0500
-Received: by mail-lb0-f182.google.com with SMTP id x4so66539595lbm.0
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jan 2016 15:49:02 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/2] bcma: identify bus cores (devices) found on BCM47189
-Date: Sat, 16 Jan 2016 00:48:52 +0100
-Message-Id: <1452901733-22271-1-git-send-email-zajec5@gmail.com> (sfid-20160116_004906_798516_6B5DE91E)
+	Fri, 22 Jan 2016 02:58:10 -0500
+Date: Fri, 22 Jan 2016 10:57:58 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Glen Lee <glen.lee@atmel.com>
+Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
+	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
+	Nicolas.FERRE@atmel.com, adel.noureldin@atmel.com,
+	tony.cho@atmel.com, leo.kim@atmel.com, adham.abozaeid@atmel.com
+Subject: Re: [PATCH 20/26] staging: wilc1000: remove define TCP_ACK_FILTER
+Message-ID: <20160122075758.GD5325@mwanda> (sfid-20160122_085814_155217_7D581F7A)
+References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
+ <1452584395-24910-21-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1452584395-24910-21-git-send-email-glen.lee@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add missing defines and print proper names.
+What does TCP_ACK_FILTER do?
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/bcma/scan.c       | 3 +++
- include/linux/bcma/bcma.h | 2 ++
- 2 files changed, 5 insertions(+)
-
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index df806b9..5ee7311 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -98,6 +98,9 @@ static const struct bcma_device_id_name bcma_bcm_device_names[] = {
- 	{ BCMA_CORE_SHIM, "SHIM" },
- 	{ BCMA_CORE_PCIE2, "PCIe Gen2" },
- 	{ BCMA_CORE_ARM_CR4, "ARM CR4" },
-+	{ BCMA_CORE_GCI, "GCI" },
-+	{ BCMA_CORE_CMEM, "CNDS DDR2/3 memory controller" },
-+	{ BCMA_CORE_ARM_CA7, "ARM CA7" },
- 	{ BCMA_CORE_DEFAULT, "Default" },
- };
- 
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 3feb1b2..991ebb4 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -151,6 +151,8 @@ struct bcma_host_ops {
- #define BCMA_CORE_PCIE2			0x83C	/* PCI Express Gen2 */
- #define BCMA_CORE_USB30_DEV		0x83D
- #define BCMA_CORE_ARM_CR4		0x83E
-+#define BCMA_CORE_GCI			0x840
-+#define BCMA_CORE_CMEM			0x846	/* CNDS DDR2/3 memory controller */
- #define BCMA_CORE_ARM_CA7		0x847
- #define BCMA_CORE_SYS_MEM		0x849
- #define BCMA_CORE_DEFAULT		0xFFF
--- 
-1.8.4.5
+regards,
+dan carpenter
 
