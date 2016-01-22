@@ -1,111 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:3025 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754805AbcA0Vxo (ORCPT
+Received: from mail-ig0-f181.google.com ([209.85.213.181]:33691 "EHLO
+	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753493AbcAVNNy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 16:53:44 -0500
-Subject: Re: [RFC V4 1/2] nl80211: add feature for BSS selection support
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <1453813592-5266-1-git-send-email-arend@broadcom.com>
- <1453813592-5266-2-git-send-email-arend@broadcom.com>
- <1453816594.2759.70.camel@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-From: Arend van Spriel <arend@broadcom.com>
-Message-ID: <56A93C65.50204@broadcom.com> (sfid-20160127_225351_740210_1F21A1D8)
-Date: Wed, 27 Jan 2016 22:53:41 +0100
+	Fri, 22 Jan 2016 08:13:54 -0500
+Received: by mail-ig0-f181.google.com with SMTP id z14so10526726igp.0
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2016 05:13:54 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1453816594.2759.70.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <87oacdx0y7.fsf@kamboji.qca.qualcomm.com>
+References: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com> <CAGRGNgVDhqGdC4NrWgTAbhGKtodTGsMVJ-QGdXG_hPWYeuGe4g@mail.gmail.com>
+ <87oacdx0y7.fsf@kamboji.qca.qualcomm.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sat, 23 Jan 2016 00:13:34 +1100
+Message-ID: <CAGRGNgV8A+H_UsOpNTQLaHunvm=raaAoagMKQqFJkvE9hms8Cg@mail.gmail.com> (sfid-20160122_141358_933724_B11FE5AE)
+Subject: Re: wireless-drivers: random cleanup patches piling up
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Kalle,
 
+On Fri, Jan 22, 2016 at 11:17 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Julian Calaby <julian.calaby@gmail.com> writes:
+>
+>> Hi Kalle,
+>>
+>> On Fri, Jan 22, 2016 at 1:58 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>> Hi,
+>>>
+>>> I have quite a lot of random cleanup patches from new developers waiting
+>>> in my queue:
+>>>
+>>> https://patchwork.kernel.org/project/linux-wireless/list/?state=10&delegate=25621&order=date
+>>>
+>>> (Not all of them are cleanup patches, there are also few patches
+>>> deferred due to other reasons, but you get the idea.)
+>>>
+>>> These cleanup patches usually take quite a lot of my time and I'm
+>>> starting to doubt the benefit, compared to the time needed to dig
+>>> through them and figuring out what to apply. And this is of course time
+>>> away from other patches, so it's slowing down "real" development.
+>>>
+>>> I really don't know what to do. Part of me is saying that I just should
+>>> drop them unless it's reviewed by a more experienced developer but on
+>>> the other hand this is a good way get new developers onboard.
+>>>
+>>> What others think? Are these kind of patches useful?
+>>
+>> I'm not experienced or knowledgeable enough
+>
+> I have seen your comments, you are most certainly knowledgeable enough :)
 
-On 26-1-2016 14:56, Johannes Berg wrote:
-> On Tue, 2016-01-26 at 14:06 +0100, Arend van Spriel wrote:
->>  
->> + * @behaviour: requested BSS selection behaviour.
->> + * @param: parameters for requestion behaviour.
->> + * @band_pref: preferred band for
->> %NL80211_BSS_SELECT_ATTR_BAND_PREF.
->> + * @adjust: parameters for %NL80211_BSS_SELECT_ATTR_RSSI_ADJUST.
-> 
-> Sadly, I don't think this works with kernel-doc. You'd have to split it
-> out into a named union to get this working properly.
+I'm glad one of us has confidence in me. I know general stuff, but I
+lack driver / subsystem specific knowledge, i.e. I can tell if
+someone's patch looks stupid, but I can't generally tell if the end
+result is doing the "right" thing. Thankfully most of the small
+cleanup patches aren't generally changing anything that significant.
 
-Yeah. I did not run kernel-doc. Will look into it.
+>> to give an ack or formal review of a patch, however I generally read
+>> all of them. Would it be helpful if I were to give an informal "this
+>> patch looks sane" for cleanups and other small patches?
+>
+> That would be _very_ helpful, especially with these cleanup patches from
+> newbies.
+>
+> And even better if you can add the official Reviewed-by tag because when
+> we get the promised patchwork update (crossing my fingers) it will
+> actually show the review count on the top page. That makes it really
+> easy to spot what cleanup patches are worth looking at (and which one to
+> drop). So I very much welcome this practice.
 
->> +/**
->> + * enum nl80211_bss_select_attr - attributes for bss selection.
->> + *
->> + * @__NL80211_BSS_SELECT_ATTR_INVALID: reserved.
->> + * @NL80211_BSS_SELECT_ATTR_RSSI: Flag indicating only RSSI-based BSS selection
->> + * is requested.
->> + * @NL80211_BSS_SELECT_ATTR_BAND_PREF: attribute indicating BSS
->> + *> 	> selection should be done such that the specified band is preferred.
->> + *> 	> When there are multiple BSS-es in the preferred band, the driver
->> + *> 	> shall use RSSI-based BSS selection as a second step. The value of
->> + *> 	> this attribute is according to &enum nl80211_band (u32).
->> + * @NL80211_BSS_SELECT_ATTR_RSSI_ADJUST: When present the RSSI level for
->> + *> 	> BSS-es in the specified band is to be adjusted before doing
->> + *> 	> RSSI-based BSS selection. The attribute value is a packed two-byte
->> + *> 	> value. The lower byte contains the adjustment value (s8) and the
->> + *	high byte contains the band according &enum nl80211_band.
-> 
-> I think it might be nicer to define an explicit struct for this, then
-> you don't have to use u8 for the band in one attribute and u32 for the
-> band in the other attribute either.
-> 
-> As long as there's no u64 in the struct that's pretty much safe - if
-> u64 is needed use compat_u64 :)
+Ok, done. I'll give any sane patches my reviewed-by with a brief "this
+looks sane" note.
 
-So you mean mapping the explicit structure over the nla_data()?
+I'll also try to ensure the maintainers of the driver are CC'd on my
+reply and ask them to review the more technical stuff if it's
+required.
 
->> + * @NL80211_BSS_SELECT_ATTR_MAX: highest bss select attribute number.
->> + *@__NL80211_BSS_SELECT_ATTR_AFTER_LAST: internal use.
->> + *
->> + * These attributes are found within %NL80211_ATTR_BSS_SELECT and
->> + * indicate the required BSS selection behaviour which the driver
->> + * should use.
-> 
-> You should probably indicate that only a single one can ever be
-> specified?
+Thanks,
 
-Realized that was missing indeed. Will add it.
+-- 
+Julian Calaby
 
->> +static const struct nla_policy
->> +nl80211_bss_select_policy[NL80211_BSS_SELECT_ATTR_MAX + 1] = {
->> +	[NL80211_BSS_SELECT_ATTR_RSSI] = { .type = NLA_FLAG },
->> +	[NL80211_BSS_SELECT_ATTR_BAND_PREF] = { .type = NLA_U32 },
->> +	[NL80211_BSS_SELECT_ATTR_RSSI_ADJUST] = { .type = NLA_U8 },
-> 
-> The RSSI_ADJUST here seems wrong in any case? Should've been NLA_U16
-> now?
-
-It should have, yes.
-
->> @@ -5753,6 +5778,42 @@ static int validate_scan_freqs(struct nlattr
->> *freqs)
->>  	return n_channels;
->>  }
->>  
->> +static int parse_bss_select(struct nlattr *nla,
->> +			    struct cfg80211_bss_selection
->> *bss_select)
->> +{
->> +	struct nlattr *attr[NL80211_BSS_SELECT_ATTR_MAX + 1];
->> +	u16 band_delta;
->> +	int err;
-> 
-> This should perhaps reject specification of multiple attributes, since
-> otherwise the order of the code here dictates which one "wins".
-
-I was waiting for your opinion on this as it did not feel right to me
-either.
-
-> But these are small things - looks good!
-
-Thanks. Will work on final patch (famous last words).
-
-Regards,
-Arend
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
