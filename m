@@ -1,95 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:36519 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751913AbcAYPjx (ORCPT
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:33540 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753682AbcAVRDJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 10:39:53 -0500
-Subject: Re: [PATCH] brcmfmac: sdio: Increase the default timeouts a bit
-To: Julian Calaby <julian.calaby@gmail.com>,
-	Sjoerd Simons <sjoerd.simons@collabora.co.uk>
-References: <1453718849-3508-1-git-send-email-sjoerd.simons@collabora.co.uk>
- <CAGRGNgXWE=b52Mcy8NsKBZS_4gz-TUiuFipjsuTZh1xjja=uUg@mail.gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Paul Stewart <pstew@chromium.org>,
-	Doug Anderson <dianders@chromium.org>,
-	linux-rockchip@lists.infradead.org,
-	Arend van Spriel <arend@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	brcm80211-dev-list@broadcom.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	netdev <netdev@vger.kernel.org>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-From: Arend van Spriel <aspriel@gmail.com>
-Message-ID: <56A641CC.6020500@gmail.com> (sfid-20160125_164008_047204_82BCB3C9)
-Date: Mon, 25 Jan 2016 16:39:56 +0100
+	Fri, 22 Jan 2016 12:03:09 -0500
+Received: by mail-lb0-f179.google.com with SMTP id x4so45046483lbm.0
+        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2016 09:03:08 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] bcma: init serial console directly from ChipCommon code
+Date: Fri, 22 Jan 2016 18:02:54 +0100
+Message-Id: <1453482174-11021-1-git-send-email-zajec5@gmail.com> (sfid-20160122_180313_747708_06133CD2)
 MIME-Version: 1.0
-In-Reply-To: <CAGRGNgXWE=b52Mcy8NsKBZS_4gz-TUiuFipjsuTZh1xjja=uUg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25-01-16 12:06, Julian Calaby wrote:
-> Hi Sjoerd,
-> 
-> On Mon, Jan 25, 2016 at 9:47 PM, Sjoerd Simons
-> <sjoerd.simons@collabora.co.uk> wrote:
->> On a Radxa Rock2 board with a Ampak AP6335 (Broadcom 4339 core) it seems
->> the card responds very quickly most of the time, unfortunately during
->> initialisation it sometimes seems to take just a bit over 2 seconds to
->> respond.
->>
->> This results intialization failing with message like:
->>   brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -52
->>   brcmf_bus_start: failed: -52
->>   brcmf_sdio_firmware_callback: dongle is not responding
->>
->> Increasing the timeout to allow for a bit more headroom allows the
->> card to initialize reliably.
->>
->> A quick search online after diagnosing/fixing this showed that Google
->> has a similar patch in their ChromeOS tree, so this doesn't seem
->> specific to the board I'm using.
->>
->> Signed-off-by: Sjoerd Simons <sjoerd.simons@collabora.co.uk>
-> 
-> Looks sane to me.
-> 
-> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+UART is connected to and controlled over ChipCommon core. It doesn't
+have much to do with MIPS core (where we initialize it currently)
+except just existing on embedded systemms. There isn't point of such
+cross-core initialization (and we needed #ifdef anyway) so just handle
+it in ChipCommon.
 
-Not really a cleanup patch :-p , but thanks for the review.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/bcma/bcma_private.h      |  1 -
+ drivers/bcma/driver_chipcommon.c | 13 ++++++++++---
+ drivers/bcma/driver_mips.c       |  3 ---
+ 3 files changed, 10 insertions(+), 7 deletions(-)
 
-Regards,
-Arend
+diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
+index 38f1567..7e4ddfb 100644
+--- a/drivers/bcma/bcma_private.h
++++ b/drivers/bcma/bcma_private.h
+@@ -48,7 +48,6 @@ void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc);
+ void bcma_core_chipcommon_init(struct bcma_drv_cc *cc);
+ void bcma_chipco_bcm4331_ext_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable);
+ #ifdef CONFIG_BCMA_DRIVER_MIPS
+-void bcma_chipco_serial_init(struct bcma_drv_cc *cc);
+ extern struct platform_device bcma_pflash_dev;
+ #endif /* CONFIG_BCMA_DRIVER_MIPS */
+ 
+diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
+index 36ee221..bdb73d9 100644
+--- a/drivers/bcma/driver_chipcommon.c
++++ b/drivers/bcma/driver_chipcommon.c
+@@ -15,6 +15,8 @@
+ #include <linux/platform_device.h>
+ #include <linux/bcma/bcma.h>
+ 
++static void bcma_chipco_serial_init(struct bcma_drv_cc *cc);
++
+ static inline u32 bcma_cc_write32_masked(struct bcma_drv_cc *cc, u16 offset,
+ 					 u32 mask, u32 value)
+ {
+@@ -115,6 +117,8 @@ int bcma_chipco_watchdog_register(struct bcma_drv_cc *cc)
+ 
+ void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc)
+ {
++	struct bcma_bus *bus = cc->core->bus;
++
+ 	if (cc->early_setup_done)
+ 		return;
+ 
+@@ -129,6 +133,9 @@ void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc)
+ 	if (cc->capabilities & BCMA_CC_CAP_PMU)
+ 		bcma_pmu_early_init(cc);
+ 
++	if (IS_BUILTIN(CONFIG_BCM47XX) && bus->hosttype == BCMA_HOSTTYPE_SOC)
++		bcma_chipco_serial_init(cc);
++
+ 	cc->early_setup_done = true;
+ }
+ 
+@@ -314,9 +321,9 @@ u32 bcma_chipco_gpio_pulldown(struct bcma_drv_cc *cc, u32 mask, u32 value)
+ 	return res;
+ }
+ 
+-#ifdef CONFIG_BCMA_DRIVER_MIPS
+-void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
++static void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
+ {
++#if IS_BUILTIN(CONFIG_BCM47XX)
+ 	unsigned int irq;
+ 	u32 baud_base;
+ 	u32 i;
+@@ -358,5 +365,5 @@ void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
+ 		ports[i].baud_base = baud_base;
+ 		ports[i].reg_shift = 0;
+ 	}
++#endif /* CONFIG_BCM47XX */
+ }
+-#endif /* CONFIG_BCMA_DRIVER_MIPS */
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index 24424f3..a40a203 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -337,12 +337,9 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
+ 
+ void bcma_core_mips_early_init(struct bcma_drv_mips *mcore)
+ {
+-	struct bcma_bus *bus = mcore->core->bus;
+-
+ 	if (mcore->early_setup_done)
+ 		return;
+ 
+-	bcma_chipco_serial_init(&bus->drv_cc);
+ 	bcma_core_mips_flash_detect(mcore);
+ 
+ 	mcore->early_setup_done = true;
+-- 
+1.8.4.5
 
-> 
->>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
->> index dd66143..75ac4bd 100644
->> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
->> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
->> @@ -45,8 +45,8 @@
->>  #include "chip.h"
->>  #include "firmware.h"
->>
->> -#define DCMD_RESP_TIMEOUT      msecs_to_jiffies(2000)
->> -#define CTL_DONE_TIMEOUT       msecs_to_jiffies(2000)
->> +#define DCMD_RESP_TIMEOUT      msecs_to_jiffies(2500)
->> +#define CTL_DONE_TIMEOUT       msecs_to_jiffies(2500)
->>
->>  #ifdef DEBUG
->>
->> --
->> 2.7.0
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
-> 
