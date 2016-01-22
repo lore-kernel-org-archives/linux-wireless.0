@@ -1,69 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m12-17.163.com ([220.181.12.17]:60477 "EHLO m12-17.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752187AbcALHAh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 02:00:37 -0500
-From: Jia-Ju Bai <baijiaju1990@163.com>
-To: kvalo@codeaurora.org, zajec5@gmail.com, joe@perches.com,
-	davem@davemloft.net, m@bues.ch, johannes.berg@intel.com
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Jia-Ju Bai <baijiaju1990@163.com>
-Subject: [PATCH v2] b43: Fix memory leaks in b43_bus_dev_ssb_init and b43_bus_dev_bcma_init
-Date: Tue, 12 Jan 2016 15:00:06 +0800
-Message-Id: <1452582006-6796-1-git-send-email-baijiaju1990@163.com> (sfid-20160112_080056_995738_D329808F)
+Received: from mail2.candelatech.com ([208.74.158.173]:40243 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751648AbcAVAny (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 21 Jan 2016 19:43:54 -0500
+Subject: Re: [PATCH 00/13] ath10k: implement push-pull tx model
+To: Michal Kazior <michal.kazior@tieto.com>, ath10k@lists.infradead.org
+References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
+Cc: linux-wireless@vger.kernel.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <56A17B49.7040703@candelatech.com> (sfid-20160122_014403_193636_F11BBEE2)
+Date: Thu, 21 Jan 2016 16:43:53 -0800
+MIME-Version: 1.0
+In-Reply-To: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The memory allocated by kzalloc in b43_bus_dev_ssb_init and
-b43_bus_dev_bcma_init is not freed.
-This patch fixes the bug by adding kfree in b43_ssb_remove,
-b43_bcma_remove and error handling code of b43_bcma_probe.
+On 01/21/2016 05:46 AM, Michal Kazior wrote:
+> This adds support for the new logic where host
+> tells firmware how many frames are queued for each
+> station/tid and then firmware asks host to submit
+> frames for given station/tid.
 
-Thanks Michael for his suggestion.
+Just FYI, with your tree (including this patch-set),
+the non-upstream 10.4.1-ish firmware that was giving me fits finally works,
+at least enough to grab an IP address.
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
----
- drivers/net/wireless/b43/main.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Thanks!
+Ben
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index ec013fb..bbea769 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -5682,11 +5682,12 @@ static int b43_bcma_probe(struct bcma_device *core)
- 	INIT_WORK(&wl->firmware_load, b43_request_firmware);
- 	schedule_work(&wl->firmware_load);
- 
--bcma_out:
- 	return err;
- 
- bcma_err_wireless_exit:
- 	ieee80211_free_hw(wl->hw);
-+bcma_out:
-+	kfree(dev);
- 	return err;
- }
- 
-@@ -5714,8 +5715,8 @@ static void b43_bcma_remove(struct bcma_device *core)
- 	b43_rng_exit(wl);
- 
- 	b43_leds_unregister(wl);
--
- 	ieee80211_free_hw(wl->hw);
-+	kfree(wldev->dev);
- }
- 
- static struct bcma_driver b43_bcma_driver = {
-@@ -5798,6 +5799,7 @@ static void b43_ssb_remove(struct ssb_device *sdev)
- 
- 	b43_leds_unregister(wl);
- 	b43_wireless_exit(dev, wl);
-+	kfree(dev);
- }
- 
- static struct ssb_driver b43_ssb_driver = {
+
 -- 
-1.7.9.5
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
