@@ -1,375 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:19805 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758907AbcAKKTN (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53810 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753320AbcAVMSA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jan 2016 05:19:13 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u0BAITQS001223
-	for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2016 02:19:13 -0800
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-	by mx0b-0016f401.pphosted.com with ESMTP id 20cahag01u-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2016 02:19:12 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v2] mwifiex: enable pcie MSIx interrupt mode support
-Date: Mon, 11 Jan 2016 02:16:40 -0800
-Message-ID: <1452507400-25009-1-git-send-email-akarwar@marvell.com> (sfid-20160111_111917_534726_B9069950)
+	Fri, 22 Jan 2016 07:18:00 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: wireless-drivers: random cleanup patches piling up
+References: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com>
+	<CAGRGNgVDhqGdC4NrWgTAbhGKtodTGsMVJ-QGdXG_hPWYeuGe4g@mail.gmail.com>
+Date: Fri, 22 Jan 2016 14:17:52 +0200
+In-Reply-To: <CAGRGNgVDhqGdC4NrWgTAbhGKtodTGsMVJ-QGdXG_hPWYeuGe4g@mail.gmail.com>
+	(Julian Calaby's message of "Fri, 22 Jan 2016 09:32:56 +1100")
+Message-ID: <87oacdx0y7.fsf@kamboji.qca.qualcomm.com> (sfid-20160122_131804_908534_C804CB30)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Julian Calaby <julian.calaby@gmail.com> writes:
 
-Newer pcie chipsets (8997 onwards) support MSIx. This
-patch enables it.
+> Hi Kalle,
+>
+> On Fri, Jan 22, 2016 at 1:58 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Hi,
+>>
+>> I have quite a lot of random cleanup patches from new developers waiting
+>> in my queue:
+>>
+>> https://patchwork.kernel.org/project/linux-wireless/list/?state=10&delegate=25621&order=date
+>>
+>> (Not all of them are cleanup patches, there are also few patches
+>> deferred due to other reasons, but you get the idea.)
+>>
+>> These cleanup patches usually take quite a lot of my time and I'm
+>> starting to doubt the benefit, compared to the time needed to dig
+>> through them and figuring out what to apply. And this is of course time
+>> away from other patches, so it's slowing down "real" development.
+>>
+>> I really don't know what to do. Part of me is saying that I just should
+>> drop them unless it's reviewed by a more experienced developer but on
+>> the other hand this is a good way get new developers onboard.
+>>
+>> What others think? Are these kind of patches useful?
+>
+> I'm not experienced or knowledgeable enough
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
-v2: Fixes auto build test ERROR reported by kbuild test robot for MIPS.
----
- drivers/net/wireless/marvell/mwifiex/pcie.c | 187 +++++++++++++++++++++++-----
- drivers/net/wireless/marvell/mwifiex/pcie.h |  17 +++
- 2 files changed, 176 insertions(+), 28 deletions(-)
+I have seen your comments, you are most certainly knowledgeable enough :)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index f448d7c..5e15464 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -2082,20 +2082,28 @@ mwifiex_check_winner_status(struct mwifiex_adapter *adapter)
- /*
-  * This function reads the interrupt status from card.
-  */
--static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
-+static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter,
-+				     int msg_id)
- {
- 	u32 pcie_ireg;
- 	unsigned long flags;
-+	struct pcie_service_card *card = adapter->card;
- 
- 	if (!mwifiex_pcie_ok_to_access_hw(adapter))
- 		return;
- 
--	if (mwifiex_read_reg(adapter, PCIE_HOST_INT_STATUS, &pcie_ireg)) {
--		mwifiex_dbg(adapter, ERROR, "Read register failed\n");
--		return;
--	}
-+	if (card->msix_enable && msg_id >= 0) {
-+		pcie_ireg = BIT(msg_id);
-+	} else {
-+		if (mwifiex_read_reg(adapter, PCIE_HOST_INT_STATUS,
-+				     &pcie_ireg)) {
-+			mwifiex_dbg(adapter, ERROR, "Read register failed\n");
-+			return;
-+		}
-+
-+		if ((pcie_ireg == 0xFFFFFFFF) || !pcie_ireg)
-+			return;
- 
--	if ((pcie_ireg != 0xFFFFFFFF) && (pcie_ireg)) {
- 
- 		mwifiex_pcie_disable_host_int(adapter);
- 
-@@ -2106,20 +2114,23 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
- 				    "Write register failed\n");
- 			return;
- 		}
--		spin_lock_irqsave(&adapter->int_lock, flags);
--		adapter->int_status |= pcie_ireg;
--		spin_unlock_irqrestore(&adapter->int_lock, flags);
--
--		if (!adapter->pps_uapsd_mode &&
--		    adapter->ps_state == PS_STATE_SLEEP &&
--		    mwifiex_pcie_ok_to_access_hw(adapter)) {
--				/* Potentially for PCIe we could get other
--				 * interrupts like shared. Don't change power
--				 * state until cookie is set */
--				adapter->ps_state = PS_STATE_AWAKE;
--				adapter->pm_wakeup_fw_try = false;
--				del_timer(&adapter->wakeup_timer);
--		}
-+	}
-+
-+	spin_lock_irqsave(&adapter->int_lock, flags);
-+	adapter->int_status |= pcie_ireg;
-+	spin_unlock_irqrestore(&adapter->int_lock, flags);
-+	mwifiex_dbg(adapter, INTR, "ireg: 0x%08x\n", pcie_ireg);
-+
-+	if (!adapter->pps_uapsd_mode &&
-+	    adapter->ps_state == PS_STATE_SLEEP &&
-+	    mwifiex_pcie_ok_to_access_hw(adapter)) {
-+		/* Potentially for PCIe we could get other
-+		 * interrupts like shared. Don't change power
-+		 * state until cookie is set
-+		 */
-+		adapter->ps_state = PS_STATE_AWAKE;
-+		adapter->pm_wakeup_fw_try = false;
-+		del_timer(&adapter->wakeup_timer);
- 	}
- }
- 
-@@ -2131,7 +2142,8 @@ static void mwifiex_interrupt_status(struct mwifiex_adapter *adapter)
-  */
- static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
- {
--	struct pci_dev *pdev = (struct pci_dev *)context;
-+	struct mwifiex_msix_context *ctx = context;
-+	struct pci_dev *pdev = ctx->dev;
- 	struct pcie_service_card *card;
- 	struct mwifiex_adapter *adapter;
- 
-@@ -2151,7 +2163,11 @@ static irqreturn_t mwifiex_pcie_interrupt(int irq, void *context)
- 	if (adapter->surprise_removed)
- 		goto exit;
- 
--	mwifiex_interrupt_status(adapter);
-+	if (card->msix_enable)
-+		mwifiex_interrupt_status(adapter, ctx->msg_id);
-+	else
-+		mwifiex_interrupt_status(adapter, -1);
-+
- 	mwifiex_queue_main_work(adapter);
- 
- exit:
-@@ -2171,7 +2187,7 @@ exit:
-  * In case of Rx packets received, the packets are uploaded from card to
-  * host and processed accordingly.
-  */
--static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
-+static int mwifiex_process_pcie_int(struct mwifiex_adapter *adapter)
- {
- 	int ret;
- 	u32 pcie_ireg;
-@@ -2251,6 +2267,69 @@ static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
- 	return 0;
- }
- 
-+static int mwifiex_process_msix_int(struct mwifiex_adapter *adapter)
-+{
-+	int ret;
-+	u32 pcie_ireg;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&adapter->int_lock, flags);
-+	/* Clear out unused interrupts */
-+	pcie_ireg = adapter->int_status;
-+	adapter->int_status = 0;
-+	spin_unlock_irqrestore(&adapter->int_lock, flags);
-+
-+	if (pcie_ireg & HOST_INTR_DNLD_DONE) {
-+		mwifiex_dbg(adapter, INTR,
-+			    "info: TX DNLD Done\n");
-+		ret = mwifiex_pcie_send_data_complete(adapter);
-+		if (ret)
-+			return ret;
-+	}
-+	if (pcie_ireg & HOST_INTR_UPLD_RDY) {
-+		mwifiex_dbg(adapter, INTR,
-+			    "info: Rx DATA\n");
-+		ret = mwifiex_pcie_process_recv_data(adapter);
-+		if (ret)
-+			return ret;
-+	}
-+	if (pcie_ireg & HOST_INTR_EVENT_RDY) {
-+		mwifiex_dbg(adapter, INTR,
-+			    "info: Rx EVENT\n");
-+		ret = mwifiex_pcie_process_event_ready(adapter);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	if (pcie_ireg & HOST_INTR_CMD_DONE) {
-+		if (adapter->cmd_sent) {
-+			mwifiex_dbg(adapter, INTR,
-+				    "info: CMD sent Interrupt\n");
-+			adapter->cmd_sent = false;
-+		}
-+		/* Handle command response */
-+		ret = mwifiex_pcie_process_cmd_complete(adapter);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	mwifiex_dbg(adapter, INTR,
-+		    "info: cmd_sent=%d data_sent=%d\n",
-+		    adapter->cmd_sent, adapter->data_sent);
-+
-+	return 0;
-+}
-+
-+static int mwifiex_process_int_status(struct mwifiex_adapter *adapter)
-+{
-+	struct pcie_service_card *card = adapter->card;
-+
-+	if (card->msix_enable)
-+		return mwifiex_process_msix_int(adapter);
-+	else
-+		return mwifiex_process_pcie_int(adapter);
-+}
-+
- /*
-  * This function downloads data from driver to card.
-  *
-@@ -2602,10 +2681,43 @@ static void mwifiex_pcie_cleanup(struct mwifiex_adapter *adapter)
- 
- static int mwifiex_pcie_request_irq(struct mwifiex_adapter *adapter)
- {
--	int ret;
-+	int ret, i, j;
- 	struct pcie_service_card *card = adapter->card;
- 	struct pci_dev *pdev = card->dev;
- 
-+	if (card->pcie.reg->msix_support) {
-+		for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
-+			card->msix_entries[i].entry = i;
-+		ret = pci_enable_msix_exact(pdev, card->msix_entries,
-+					    MWIFIEX_NUM_MSIX_VECTORS);
-+		if (!ret) {
-+			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++) {
-+				card->msix_ctx[i].dev = pdev;
-+				card->msix_ctx[i].msg_id = i;
-+
-+				ret = request_irq(card->msix_entries[i].vector,
-+						  mwifiex_pcie_interrupt, 0,
-+						  "MWIFIEX_PCIE_MSIX",
-+						  &card->msix_ctx[i]);
-+				if (ret)
-+					break;
-+			}
-+
-+			if (ret) {
-+				mwifiex_dbg(adapter, INFO, "request_irq fail: %d\n",
-+					    ret);
-+				for (j = 0; j < i; j++)
-+					free_irq(card->msix_entries[j].vector,
-+						 &card->msix_ctx[i]);
-+				pci_disable_msix(pdev);
-+			} else {
-+				mwifiex_dbg(adapter, MSG, "MSIx enabled!");
-+				card->msix_enable = 1;
-+				return 0;
-+			}
-+		}
-+	}
-+
- 	if (pci_enable_msi(pdev) != 0)
- 		pci_disable_msi(pdev);
- 	else
-@@ -2613,8 +2725,10 @@ static int mwifiex_pcie_request_irq(struct mwifiex_adapter *adapter)
- 
- 	mwifiex_dbg(adapter, INFO, "msi_enable = %d\n", card->msi_enable);
- 
-+	card->share_irq_ctx.dev = pdev;
-+	card->share_irq_ctx.msg_id = -1;
- 	ret = request_irq(pdev->irq, mwifiex_pcie_interrupt, IRQF_SHARED,
--			  "MRVL_PCIE", pdev);
-+			  "MRVL_PCIE", &card->share_irq_ctx);
- 	if (ret) {
- 		pr_err("request_irq failed: ret=%d\n", ret);
- 		adapter->card = NULL;
-@@ -2660,11 +2774,28 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
- {
- 	struct pcie_service_card *card = adapter->card;
- 	const struct mwifiex_pcie_card_reg *reg;
-+	struct pci_dev *pdev = card->dev;
-+	int i;
- 
- 	if (card) {
--		mwifiex_dbg(adapter, INFO,
--			    "%s(): calling free_irq()\n", __func__);
--		free_irq(card->dev->irq, card->dev);
-+		if (card->msix_enable) {
-+			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
-+				synchronize_irq(card->msix_entries[i].vector);
-+
-+			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
-+				free_irq(card->msix_entries[i].vector,
-+					 &card->msix_ctx[i]);
-+
-+			card->msix_enable = 0;
-+			pci_disable_msix(pdev);
-+	       } else {
-+			mwifiex_dbg(adapter, INFO,
-+				    "%s(): calling free_irq()\n", __func__);
-+		       free_irq(card->dev->irq, &card->share_irq_ctx);
-+
-+			if (card->msi_enable)
-+				pci_disable_msi(pdev);
-+	       }
- 
- 		reg = card->pcie.reg;
- 		if (reg->sleep_cookie)
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
-index 6fc2873..9700ac3 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.h
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
-@@ -135,6 +135,7 @@ struct mwifiex_pcie_card_reg {
- 	u16 fw_dump_ctrl;
- 	u16 fw_dump_start;
- 	u16 fw_dump_end;
-+	u8 msix_support;
- };
- 
- static const struct mwifiex_pcie_card_reg mwifiex_reg_8766 = {
-@@ -166,6 +167,7 @@ static const struct mwifiex_pcie_card_reg mwifiex_reg_8766 = {
- 	.ring_tx_start_ptr = 0,
- 	.pfu_enabled = 0,
- 	.sleep_cookie = 1,
-+	.msix_support = 0,
- };
- 
- static const struct mwifiex_pcie_card_reg mwifiex_reg_8897 = {
-@@ -200,6 +202,7 @@ static const struct mwifiex_pcie_card_reg mwifiex_reg_8897 = {
- 	.fw_dump_ctrl = 0xcf4,
- 	.fw_dump_start = 0xcf8,
- 	.fw_dump_end = 0xcff,
-+	.msix_support = 0,
- };
- 
- static const struct mwifiex_pcie_card_reg mwifiex_reg_8997 = {
-@@ -231,6 +234,7 @@ static const struct mwifiex_pcie_card_reg mwifiex_reg_8997 = {
- 	.ring_tx_start_ptr = MWIFIEX_BD_FLAG_TX_START_PTR,
- 	.pfu_enabled = 1,
- 	.sleep_cookie = 0,
-+	.msix_support = 1,
- };
- 
- struct mwifiex_pcie_device {
-@@ -290,6 +294,13 @@ struct mwifiex_pfu_buf_desc {
- 	u32 reserved;
- } __packed;
- 
-+#define MWIFIEX_NUM_MSIX_VECTORS   4
-+
-+struct mwifiex_msix_context {
-+	struct pci_dev *dev;
-+	u16 msg_id;
-+};
-+
- struct pcie_service_card {
- 	struct pci_dev *dev;
- 	struct mwifiex_adapter *adapter;
-@@ -327,6 +338,12 @@ struct pcie_service_card {
- 	void __iomem *pci_mmap;
- 	void __iomem *pci_mmap1;
- 	int msi_enable;
-+	int msix_enable;
-+#ifdef CONFIG_PCI
-+	struct msix_entry msix_entries[MWIFIEX_NUM_MSIX_VECTORS];
-+#endif
-+	struct mwifiex_msix_context msix_ctx[MWIFIEX_NUM_MSIX_VECTORS];
-+	struct mwifiex_msix_context share_irq_ctx;
- };
- 
- static inline int
+> to give an ack or formal review of a patch, however I generally read
+> all of them. Would it be helpful if I were to give an informal "this
+> patch looks sane" for cleanups and other small patches?
+
+That would be _very_ helpful, especially with these cleanup patches from
+newbies.
+
+And even better if you can add the official Reviewed-by tag because when
+we get the promised patchwork update (crossing my fingers) it will
+actually show the review count on the top page. That makes it really
+easy to spot what cleanup patches are worth looking at (and which one to
+drop). So I very much welcome this practice.
+
 -- 
-1.8.1.4
-
+Kalle Valo
