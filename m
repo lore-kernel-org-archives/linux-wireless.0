@@ -1,87 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:28518 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757268AbcAaLHD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2016 06:07:03 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 30/31] iwlwifi: pcie: update iwl_mpdu_desc fields
-Date: Sun, 31 Jan 2016 13:06:25 +0200
-Message-Id: <1454238386-27032-30-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160131_123653_527785_5E37153C)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:38731 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754570AbcAWUVA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 23 Jan 2016 15:21:00 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Carlo Caione <carlo@caione.org>
+Cc: Ulf Hansson <ulf.hansson@linaro.org>, arend@broadcom.com,
+	meuleman@broadcom.com, linux-wireless@vger.kernel.org
+Subject: Re: [BISECTED] brcmfmac issue
+References: <CAOQ7t2Z2E3vn+t9gDZKfs9Ke1aPEGObgSi2RZDzD7kPVR2LJzg@mail.gmail.com>
+Date: Sat, 23 Jan 2016 22:20:53 +0200
+In-Reply-To: <CAOQ7t2Z2E3vn+t9gDZKfs9Ke1aPEGObgSi2RZDzD7kPVR2LJzg@mail.gmail.com>
+	(Carlo Caione's message of "Sat, 23 Jan 2016 19:09:33 +0100")
+Message-ID: <87d1sst5cq.fsf@kamboji.qca.qualcomm.com> (sfid-20160123_212104_232659_0B1DA15C)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Carlo Caione <carlo@caione.org> writes:
 
-Final API of iwl_mpdu_desc has a change in the order of
-the fields and does not include energy from the third
-antenna (which is perfectly fine, since we don't have one).
-Update the structure accordingly.
+> I submitted [1] e10c3219 "mmc: core: Enable tuning according to the
+> actual timing"  to solve a problem with the BCM43340 SDIO WiFi card.
+> This patch works perfectly fine on top of v4.4 tag, solving the
+> problem with the WiFi card. With the latest master the asus x205ta
+> laptop fails to boot. The failure seems related to a weird interaction
+> between this patch and 7d34b05 "brcmfmac: Move all module parameters
+> to one place" (bad commit).
+>
+> The bad commit was found bisecting between master and v4.4 and
+> applying my patch when not already present.
+>
+> Here the log: https://gist.github.com/9db683a467496c942659
+>
+> Any idea?
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h |  6 +++---
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      | 11 ++++-------
- 2 files changed, 7 insertions(+), 10 deletions(-)
+Does this patch fix it?
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
-index b45c61e..df939f5 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
-@@ -347,11 +347,11 @@ struct iwl_rx_mpdu_desc {
- 	/* DW8 */
- 	__le32 filter_match;
- 	/* DW9 */
--	__le32 gp2_on_air_rise;
--	/* DW10 */
- 	__le32 rate_n_flags;
-+	/* DW10 */
-+	u8 energy_a, energy_b, channel, reserved;
- 	/* DW11 */
--	u8 energy_a, energy_b, energy_c, channel;
-+	__le32 gp2_on_air_rise;
- 	/* DW12 & DW13 */
- 	__le64 tsf_on_air_rise;
- } __packed;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 4cce372..615dea1 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -201,25 +201,22 @@ static void iwl_mvm_get_signal_strength(struct iwl_mvm *mvm,
- 					struct iwl_rx_mpdu_desc *desc,
- 					struct ieee80211_rx_status *rx_status)
- {
--	int energy_a, energy_b, energy_c, max_energy;
-+	int energy_a, energy_b, max_energy;
- 
- 	energy_a = desc->energy_a;
- 	energy_a = energy_a ? -energy_a : S8_MIN;
- 	energy_b = desc->energy_b;
- 	energy_b = energy_b ? -energy_b : S8_MIN;
--	energy_c = desc->energy_c;
--	energy_c = energy_c ? -energy_c : S8_MIN;
- 	max_energy = max(energy_a, energy_b);
--	max_energy = max(max_energy, energy_c);
- 
--	IWL_DEBUG_STATS(mvm, "energy In A %d B %d C %d , and max %d\n",
--			energy_a, energy_b, energy_c, max_energy);
-+	IWL_DEBUG_STATS(mvm, "energy In A %d B %d, and max %d\n",
-+			energy_a, energy_b, max_energy);
- 
- 	rx_status->signal = max_energy;
- 	rx_status->chains = 0; /* TODO: phy info */
- 	rx_status->chain_signal[0] = energy_a;
- 	rx_status->chain_signal[1] = energy_b;
--	rx_status->chain_signal[2] = energy_c;
-+	rx_status->chain_signal[2] = S8_MIN;
- }
- 
- static int iwl_mvm_rx_crypto(struct iwl_mvm *mvm, struct ieee80211_hdr *hdr,
+https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=e0045bf80f62779ba75ba04513020d60e59f5298
+
 -- 
-2.5.0
-
+Kalle Valo
