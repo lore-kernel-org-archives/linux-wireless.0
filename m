@@ -1,77 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:34496 "EHLO
-	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751786AbcASIE5 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39639 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753624AbcAWVEj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 03:04:57 -0500
-Received: by mail-wm0-f67.google.com with SMTP id b14so21500238wmb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2016 00:04:57 -0800 (PST)
-From: Henning Rogge <hrogge@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Henning Rogge <hrogge@gmail.com>,
-	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
-Subject: [PATCH 1/2] mac80211: Remove connected MPP table entries with MPath
-Date: Tue, 19 Jan 2016 09:04:31 +0100
-Message-Id: <1453190672-9748-2-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20160119_090500_435048_643FCD5B)
-In-Reply-To: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
-References: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+	Sat, 23 Jan 2016 16:04:39 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Carlo Caione <carlo@caione.org>
+Cc: Ulf Hansson <ulf.hansson@linaro.org>, arend@broadcom.com,
+	meuleman@broadcom.com, linux-wireless@vger.kernel.org
+Subject: Re: [BISECTED] brcmfmac issue
+References: <CAOQ7t2Z2E3vn+t9gDZKfs9Ke1aPEGObgSi2RZDzD7kPVR2LJzg@mail.gmail.com>
+	<87d1sst5cq.fsf@kamboji.qca.qualcomm.com>
+	<CAOQ7t2bO-0EEb1b0jrg1Vyrsr8zX5c7k3syU6ji2SBs5bfbL_g@mail.gmail.com>
+Date: Sat, 23 Jan 2016 23:04:32 +0200
+In-Reply-To: <CAOQ7t2bO-0EEb1b0jrg1Vyrsr8zX5c7k3syU6ji2SBs5bfbL_g@mail.gmail.com>
+	(Carlo Caione's message of "Sat, 23 Jan 2016 21:55:21 +0100")
+Message-ID: <878u3gt3bz.fsf@kamboji.qca.qualcomm.com> (sfid-20160123_220512_582727_44A350E8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make the mesh_path_del() function remove all mpp table entries
-that are proxied by the removed mesh path.
+Carlo Caione <carlo@caione.org> writes:
 
-Signed-off-by: Henning Rogge <henning.rogge@fkie.fraunhofer.de>
----
- net/mac80211/mesh_pathtbl.c | 26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+> On Sat, Jan 23, 2016 at 9:20 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Carlo Caione <carlo@caione.org> writes:
+>>
+>>> I submitted [1] e10c3219 "mmc: core: Enable tuning according to the
+>>> actual timing"  to solve a problem with the BCM43340 SDIO WiFi card.
+>>> This patch works perfectly fine on top of v4.4 tag, solving the
+>>> problem with the WiFi card. With the latest master the asus x205ta
+>>> laptop fails to boot. The failure seems related to a weird interaction
+>>> between this patch and 7d34b05 "brcmfmac: Move all module parameters
+>>> to one place" (bad commit).
+>>>
+>>> The bad commit was found bisecting between master and v4.4 and
+>>> applying my patch when not already present.
+>>>
+>>> Here the log: https://gist.github.com/9db683a467496c942659
+>>>
+>>> Any idea?
+>>
+>> Does this patch fix it?
+>>
+>> https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=e0045bf80f62779ba75ba04513020d60e59f5298
+>
+> Yes, it does. Sorry for the noise.
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index dadf8dc..d9424ea 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -835,6 +835,29 @@ void mesh_path_flush_by_nexthop(struct sta_info *sta)
- 	rcu_read_unlock();
- }
- 
-+static void mpp_flush_by_proxy(struct ieee80211_sub_if_data *sdata,
-+			       const u8 *proxy)
-+{
-+	struct mesh_table *tbl;
-+	struct mesh_path *mpp;
-+	struct mpath_node *node;
-+	int i;
-+
-+	rcu_read_lock();
-+	read_lock_bh(&pathtbl_resize_lock);
-+	tbl = resize_dereference_mpp_paths();
-+	for_each_mesh_entry(tbl, node, i) {
-+		mpp = node->mpath;
-+		if (ether_addr_equal(mpp->mpp, proxy)) {
-+			spin_lock(&tbl->hashwlock[i]);
-+			__mesh_path_del(tbl, node);
-+			spin_unlock(&tbl->hashwlock[i]);
-+		}
-+	}
-+	read_unlock_bh(&pathtbl_resize_lock);
-+	rcu_read_unlock();
-+}
-+
- static void table_flush_by_iface(struct mesh_table *tbl,
- 				 struct ieee80211_sub_if_data *sdata)
- {
-@@ -892,6 +915,9 @@ int mesh_path_del(struct ieee80211_sub_if_data *sdata, const u8 *addr)
- 	int hash_idx;
- 	int err = 0;
- 
-+	/* flush relevant mpp entries first */
-+	mpp_flush_by_proxy(sdata, addr);
-+
- 	read_lock_bh(&pathtbl_resize_lock);
- 	tbl = resize_dereference_mesh_paths();
- 	hash_idx = mesh_table_hash(addr, sdata, tbl);
+Thanks for checking. And it's not noise, it's good to get confirmation
+that the fix really fixes the issue for many people.
+
+If everything goes well the fix should be in -rc2.
+
 -- 
-2.5.0
-
+Kalle Valo
