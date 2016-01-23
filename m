@@ -1,61 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f177.google.com ([209.85.223.177]:35680 "EHLO
-	mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753556AbcADXyk (ORCPT
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:35527 "EHLO
+	mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751739AbcAWJjf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2016 18:54:40 -0500
+	Sat, 23 Jan 2016 04:39:35 -0500
+Received: by mail-lf0-f68.google.com with SMTP id c134so5482353lfb.2
+        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2016 01:39:35 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <568A668D.8090007@users.sourceforge.net>
-References: <566ABCD9.1060404@users.sourceforge.net> <5687E169.4070704@users.sourceforge.net>
- <5687E203.1070404@users.sourceforge.net> <20160104092857.GD5284@mwanda>
- <568A4CFF.8060600@users.sourceforge.net> <20160104114849.GH5284@mwanda> <568A668D.8090007@users.sourceforge.net>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 5 Jan 2016 10:54:19 +1100
-Message-ID: <CAGRGNgXw+G6ZcmFmM=VWZT_jibuZyxe-kSvPSF8W7hPueLhNrw@mail.gmail.com> (sfid-20160105_005445_501923_F9C44FC1)
-Subject: Re: rsi: Delete unnecessary variable initialisations in rsi_send_mgmt_pkt()
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
+In-Reply-To: <20160122203008.GA4621@localhost>
+References: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+ <1453190672-9748-3-git-send-email-henning.rogge@fkie.fraunhofer.de> <20160122203008.GA4621@localhost>
+From: Henning Rogge <hrogge@gmail.com>
+Date: Sat, 23 Jan 2016 10:39:04 +0100
+Message-ID: <CAGnRvur8eKjiwWCR69NESnMDQoA4qro1ryH=DoeMFRd1RPFKOQ@mail.gmail.com> (sfid-20160123_104019_314824_A149954B)
+Subject: Re: [PATCH 2/2] mac80211: let unused MPP table entries timeout
+To: Bob Copeland <me@bobcopeland.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Markus,
-
-On Mon, Jan 4, 2016 at 11:33 PM, SF Markus Elfring
-<elfring@users.sourceforge.net> wrote:
->>> May I resend a consistent patch series for the source file
->>> "drivers/net/wireless/rsi/rsi_91x_pkt.c" in the near future?
->>
->> If you were sending checkpatch.pl fixes that would be easier to deal with
+On Fri, Jan 22, 2016 at 9:30 PM, Bob Copeland <me@bobcopeland.com> wrote:
+> On Tue, Jan 19, 2016 at 09:04:32AM +0100, Henning Rogge wrote:
+>> Remember the last time when a mpp table entry is used for
+>> rx or tx and remove them after MESH_PATH_EXPIRE time.
 >
-> Does this feedback mean that you would accept any more suggestions around
-> source code updates which are derived from recommendations of this script?
+> FYI I have a patch set I'm testing which rewrites a big chunk of
+> the path table stuff.
 
-A good rule of thumb here would be that if people start complaining
-about a particular type of change, stop sending them.
+Does it include some cleanup paths for the MPP table? At the moment
+the "missing cleanup" still allows remote users to make the Linux
+kernel to allocate as much memory as it wants... with no way to free
+it except for shutting down the interface.
 
-Another good rule of thumb is to try to "rock the boat" on coding
-style and conventions as little as possible. Just because it's
-possible doesn't mean that people want to do it.
+If you run a "meshed group of Access Points", any user of the AP could
+run an attack on the kernel of all mesh nodes by changing its MAC
+address very often.
 
-That said, if you figure out some change that produces significant
-reductions in code or binary size on multiple architectures without
-making things more complicated, less readable or making the code or
-binary size larger, then by all means propose it. "This makes things
-smaller" carries much more weight than "I think this is better".
-Almost all of the changes you've proposed that have seen any
-discussion whatsoever fall into the latter category.
+> As I haven't posted it yet, I guess it doesn't matter if this
+> goes in first or not, I can adjust -- but it will conflict as-is.
+> I was hoping to post it early next week after a few fixes.
+>
+> Let me know if you want me to base on top.
 
-Thanks,
+I would like them to go in first... my experience of the kernel code
+(outside some parts of the wifi stack) is not that good, so I don't
+know how long I would need to adapt the patches to your new data
+structures.
 
--- 
-Julian Calaby
+Most likely it is not that complicated, but I don't know.
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+> Shortlog looks like:
+>
+> Bob Copeland (6):
+>       mac80211: mesh: move path tables into ieee82011_if_mesh
+>       mac80211: mesh: don't hash subif data in mesh path tables
+>       mac80211: mesh: factor out common mesh path allocation code
+>       mac80211: mesh: embed known gates list in struct mesh_path
+>       mac80211: mesh: convert path table to rhashtable
+>       mac80211: mesh: get rid of write-only field mean_chain_len
+
+Sounds useful, the 80211s data structures are really a mess.
+
+Henning
