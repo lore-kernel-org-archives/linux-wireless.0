@@ -1,51 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:42894 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753184AbcANMr7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2016 07:47:59 -0500
-Subject: Re: [RFC/RFT v3] mac80211: Add NEED_ALIGNED4_SKBS hw flag
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless@vger.kernel.org
-References: <1451999161-7286-1-git-send-email-janusz.dziedzic@tieto.com>
- <1452774738.2444.22.camel@sipsolutions.net>
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <569798F7.3050409@openwrt.org> (sfid-20160114_134804_629815_FC05FD60)
-Date: Thu, 14 Jan 2016 13:47:51 +0100
+Received: from mail.linuxfoundation.org ([140.211.169.12]:56803 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751605AbcAXU5T (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Jan 2016 15:57:19 -0500
+Date: Sun, 24 Jan 2016 12:57:18 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: glen lee <glen.lee@atmel.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>,
+	devel@driverdev.osuosl.org, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
+	adel.noureldin@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
+	adham.abozaeid@atmel.com
+Subject: Re: [PATCH 04/26] staging: wilc1000: add sdio resume/suspend
+Message-ID: <20160124205718.GB8292@kroah.com> (sfid-20160124_215754_963890_91C09591)
+References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
+ <1452584395-24910-5-git-send-email-glen.lee@atmel.com>
+ <20160122074459.GC5325@mwanda>
+ <56A1E3FF.506@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1452774738.2444.22.camel@sipsolutions.net>
 Content-Type: text/plain; charset=utf-8
+In-Reply-To: <56A1E3FF.506@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-01-14 13:32, Johannes Berg wrote:
-> On Tue, 2016-01-05 at 14:06 +0100, Janusz Dziedzic wrote:
->>  	struct net_device *prev_dev = NULL;
->> +	unsigned int padsize, hdrlen;
->>  	int rtap_len;
->>  
->> +	/* Remove padding if was added */
->> +	if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS)) {
->> +		hdrlen = ieee80211_hdrlen(hdr->frame_control);
->> +		padsize = hdrlen & 3;
->> +
->> +		if (padsize && skb->len > hdrlen + padsize) {
->> +			memmove(skb->data + padsize, skb->data,
->> hdrlen);
->> +			skb_pull(skb, padsize);
->> +		}
->> +	}
+On Fri, Jan 22, 2016 at 05:10:39PM +0900, glen lee wrote:
 > 
-> But perhaps this should just be done by the driver?
-I think it's better to do it here, because the driver can't know if a
-frame will end up on a (cooked) monitor interface.
-
->> +	/* Check if aligned skb required */
->> +	if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS))
->> +		build.hdr_len += build.hdr_len & 3;
+> On 2016년 01월 22일 16:44, Dan Carpenter wrote:
+> >You should be running checkpatch.pl on your patches.
 > 
-> Pretty sure you need to increase the reserved space in the fast-xmit
-> struct?
-Is the round_up he added not enough?
+> It's my mistake. I will run checkpatch.pl on the patch series.
+> Thank you your advise.
 
-- Felix
+Please do so and resend this series, I've dropped it from my queue.
+
+greg k-h
