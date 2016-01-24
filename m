@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m50-133.163.com ([123.125.50.133]:44020 "EHLO m50-133.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752057AbcAAPt4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2016 10:49:56 -0500
-From: Geliang Tang <geliangtang@163.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 4/6] rtlwifi: use to_delayed_work
-Date: Fri,  1 Jan 2016 23:48:55 +0800
-Message-Id: <9453f5a6fe422f47b095d1b0a9fb5eb5a4935c4d.1451661580.git.geliangtang@163.com> (sfid-20160101_165146_272640_44750804)
-In-Reply-To: <5df0633bd7779dd21192f7a41c634efd78f8606c.1451661580.git.geliangtang@163.com>
-References: <5df0633bd7779dd21192f7a41c634efd78f8606c.1451661580.git.geliangtang@163.com>
-In-Reply-To: <5df0633bd7779dd21192f7a41c634efd78f8606c.1451661580.git.geliangtang@163.com>
-References: <5df0633bd7779dd21192f7a41c634efd78f8606c.1451661580.git.geliangtang@163.com>
+Received: from mail.linuxfoundation.org ([140.211.169.12]:52945 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751412AbcAXUAV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Jan 2016 15:00:21 -0500
+Date: Sun, 24 Jan 2016 12:00:19 -0800
+From: Greg KH <greg@kroah.com>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
+	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
+	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, ceph-devel@vger.kernel.org,
+	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
+	drbd-dev@lists.linbit.com, open-iscsi@googlegroups.com
+Subject: Re: [PATCH 3/26] staging: rtl8192e: Replace uses of obsolete
+ blkcipher and hash
+Message-ID: <20160124200019.GA17868@kroah.com> (sfid-20160124_210136_770916_748BCACB)
+References: <20160124131021.GA31153@gondor.apana.org.au>
+ <E1aNKWo-0008AS-PG@gondolin.me.apana.org.au>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <E1aNKWo-0008AS-PG@gondolin.me.apana.org.au>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use to_delayed_work() instead of open-coding it.
+On Sun, Jan 24, 2016 at 09:16:26PM +0800, Herbert Xu wrote:
+> The interfaces blkcipher and hash are obsolete.  This patch replaces
+> them with skcipher and ahash respectively.
+> 
+> Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
+> ---
+> 
+>  drivers/staging/rtl8192e/rtllib_crypt_tkip.c |   99 ++++++++++++++-------------
+>  drivers/staging/rtl8192e/rtllib_crypt_wep.c  |   48 +++++++------
+>  2 files changed, 82 insertions(+), 65 deletions(-)
 
-Signed-off-by: Geliang Tang <geliangtang@163.com>
----
- drivers/net/wireless/realtek/rtlwifi/wifi.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 4544752..d37ce16 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2873,7 +2873,7 @@ value to host byte ordering.*/
- 	(ppsc->cur_ps_level |= _ps_flg)
- 
- #define container_of_dwork_rtl(x, y, z) \
--	container_of(container_of(x, struct delayed_work, work), y, z)
-+	container_of(to_delayed_work(x), y, z)
- 
- #define FILL_OCTET_STRING(_os, _octet, _len)	\
- 		(_os).octet = (u8 *)(_octet);		\
--- 
-2.5.0
-
-
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
