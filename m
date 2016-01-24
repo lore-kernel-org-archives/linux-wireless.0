@@ -1,107 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:53187 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750900AbcAZWGk (ORCPT
+Received: from helcar.hengli.com.au ([209.40.204.226]:54873 "EHLO
+	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753889AbcAXNRq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 17:06:40 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] mac80211: avoid excessive stack usage in sta_info
-Date: Tue, 26 Jan 2016 23:05:31 +0100
-Message-Id: <1453845942-3402704-1-git-send-email-arnd@arndb.de> (sfid-20160126_230705_046149_B90E139F)
+	Sun, 24 Jan 2016 08:17:46 -0500
+Subject: [PATCH 7/26] wusb: Use skcipher
+References: <20160124131021.GA31153@gondor.apana.org.au>
+To: Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
+	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
+	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, ceph-devel@vger.kernel.org,
+	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
+	drbd-dev@lists.linbit.com, open-iscsi@googlegroups.com
+Message-Id: <E1aNKXT-0008BX-N7@gondolin.me.apana.org.au> (sfid-20160124_142806_017695_6DD543DE)
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Date: Sun, 24 Jan 2016 21:17:07 +0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When CONFIG_OPTIMIZE_INLINING is set, the sta_info_insert_finish
-function consumes more stack than normally, exceeding the
-1024 byte limit on ARM:
-
-net/mac80211/sta_info.c: In function 'sta_info_insert_finish':
-net/mac80211/sta_info.c:561:1: error: the frame size of 1080 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
-
-It turns out that there are two functions that put a 'struct station_info'
-on the stack: __sta_info_destroy_part2 and sta_info_insert_finish, and
-this structure alone requires up to 792 bytes.
-
-Hoping that both are called rarely enough, this replaces the
-on-stack structure with a dynamic allocation, which unfortunately
-requires some suboptimal error handling for out-of-memory.
-
-The __sta_info_destroy_part2 function is actually affected by the
-stack usage twice because it calls cfg80211_del_sta_sinfo(), which
-has another instance of struct station_info on its stack.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: 98b6218388e3 ("mac80211/cfg80211: add station events")
-Fixes: 6f7a8d26e266 ("mac80211: send statistics with delete station event")
+This patch replaces uses of blkcipher with skcipher.
+    
+Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
 ---
- net/mac80211/sta_info.c | 24 ++++++++++++++++--------
- 1 file changed, 16 insertions(+), 8 deletions(-)
 
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 4402ad5b27d1..a29199ec4c3c 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -498,11 +498,17 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
+ drivers/usb/wusbcore/crypto.c |   30 ++++++++++++++++--------------
+ 1 file changed, 16 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/usb/wusbcore/crypto.c b/drivers/usb/wusbcore/crypto.c
+index 50ce80d..8ed8e34 100644
+--- a/drivers/usb/wusbcore/crypto.c
++++ b/drivers/usb/wusbcore/crypto.c
+@@ -45,6 +45,7 @@
+  *             funneled through AES are...16 bytes in size!
+  */
+ 
++#include <crypto/skcipher.h>
+ #include <linux/crypto.h>
+ #include <linux/module.h>
+ #include <linux/err.h>
+@@ -195,21 +196,22 @@ static void bytewise_xor(void *_bo, const void *_bi1, const void *_bi2,
+  * NOTE: blen is not aligned to a block size, we'll pad zeros, that's
+  *       what sg[4] is for. Maybe there is a smarter way to do this.
+  */
+-static int wusb_ccm_mac(struct crypto_blkcipher *tfm_cbc,
++static int wusb_ccm_mac(struct crypto_skcipher *tfm_cbc,
+ 			struct crypto_cipher *tfm_aes, void *mic,
+ 			const struct aes_ccm_nonce *n,
+ 			const struct aes_ccm_label *a, const void *b,
+ 			size_t blen)
  {
- 	struct ieee80211_local *local = sta->local;
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
--	struct station_info sinfo;
-+	struct station_info *sinfo;
- 	int err = 0;
- 
- 	lockdep_assert_held(&local->sta_mtx);
- 
-+	sinfo = kzalloc(sizeof(struct station_info), GFP_KERNEL);
-+	if (!sinfo) {
-+		err = -ENOMEM;
-+		goto out_err;
-+	}
-+
- 	/* check if STA exists already */
- 	if (sta_info_get_bss(sdata, sta->sta.addr)) {
- 		err = -EEXIST;
-@@ -534,10 +540,9 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
- 	ieee80211_sta_debugfs_add(sta);
- 	rate_control_add_sta_debugfs(sta);
- 
--	memset(&sinfo, 0, sizeof(sinfo));
--	sinfo.filled = 0;
--	sinfo.generation = local->sta_generation;
--	cfg80211_new_sta(sdata->dev, sta->sta.addr, &sinfo, GFP_KERNEL);
-+	sinfo->generation = local->sta_generation;
-+	cfg80211_new_sta(sdata->dev, sta->sta.addr, sinfo, GFP_KERNEL);
-+	kfree(sinfo);
- 
- 	sta_dbg(sdata, "Inserted STA %pM\n", sta->sta.addr);
- 
-@@ -898,7 +903,7 @@ static void __sta_info_destroy_part2(struct sta_info *sta)
- {
- 	struct ieee80211_local *local = sta->local;
- 	struct ieee80211_sub_if_data *sdata = sta->sdata;
--	struct station_info sinfo = {};
-+	struct station_info *sinfo;
- 	int ret;
+ 	int result = 0;
+-	struct blkcipher_desc desc;
++	SKCIPHER_REQUEST_ON_STACK(req, tfm_cbc);
+ 	struct aes_ccm_b0 b0;
+ 	struct aes_ccm_b1 b1;
+ 	struct aes_ccm_a ax;
+ 	struct scatterlist sg[4], sg_dst;
+-	void *iv, *dst_buf;
+-	size_t ivsize, dst_size;
++	void *dst_buf;
++	size_t dst_size;
+ 	const u8 bzero[16] = { 0 };
++	u8 iv[crypto_skcipher_ivsize(tfm_cbc)];
+ 	size_t zero_padding;
  
  	/*
-@@ -936,8 +941,11 @@ static void __sta_info_destroy_part2(struct sta_info *sta)
+@@ -232,9 +234,7 @@ static int wusb_ccm_mac(struct crypto_blkcipher *tfm_cbc,
+ 		goto error_dst_buf;
+ 	}
  
- 	sta_dbg(sdata, "Removed STA %pM\n", sta->sta.addr);
+-	iv = crypto_blkcipher_crt(tfm_cbc)->iv;
+-	ivsize = crypto_blkcipher_ivsize(tfm_cbc);
+-	memset(iv, 0, ivsize);
++	memset(iv, 0, sizeof(iv));
  
--	sta_set_sinfo(sta, &sinfo);
--	cfg80211_del_sta_sinfo(sdata->dev, sta->sta.addr, &sinfo, GFP_KERNEL);
-+	sinfo = kzalloc(sizeof(*sinfo), GFP_KERNEL);
-+	if (sinfo)
-+		sta_set_sinfo(sta, sinfo);
-+	cfg80211_del_sta_sinfo(sdata->dev, sta->sta.addr, sinfo, GFP_KERNEL);
-+	kfree(sinfo);
+ 	/* Setup B0 */
+ 	b0.flags = 0x59;	/* Format B0 */
+@@ -259,9 +259,11 @@ static int wusb_ccm_mac(struct crypto_blkcipher *tfm_cbc,
+ 	sg_set_buf(&sg[3], bzero, zero_padding);
+ 	sg_init_one(&sg_dst, dst_buf, dst_size);
  
- 	rate_control_remove_sta_debugfs(sta);
- 	ieee80211_sta_debugfs_remove(sta);
--- 
-2.7.0
-
+-	desc.tfm = tfm_cbc;
+-	desc.flags = 0;
+-	result = crypto_blkcipher_encrypt(&desc, &sg_dst, sg, dst_size);
++	skcipher_request_set_tfm(req, tfm_cbc);
++	skcipher_request_set_callback(req, 0, NULL, NULL);
++	skcipher_request_set_crypt(req, sg, &sg_dst, dst_size, iv);
++	result = crypto_skcipher_encrypt(req);
++	skcipher_request_zero(req);
+ 	if (result < 0) {
+ 		printk(KERN_ERR "E: can't compute CBC-MAC tag (MIC): %d\n",
+ 		       result);
+@@ -301,18 +303,18 @@ ssize_t wusb_prf(void *out, size_t out_size,
+ {
+ 	ssize_t result, bytes = 0, bitr;
+ 	struct aes_ccm_nonce n = *_n;
+-	struct crypto_blkcipher *tfm_cbc;
++	struct crypto_skcipher *tfm_cbc;
+ 	struct crypto_cipher *tfm_aes;
+ 	u64 sfn = 0;
+ 	__le64 sfn_le;
+ 
+-	tfm_cbc = crypto_alloc_blkcipher("cbc(aes)", 0, CRYPTO_ALG_ASYNC);
++	tfm_cbc = crypto_alloc_skcipher("cbc(aes)", 0, CRYPTO_ALG_ASYNC);
+ 	if (IS_ERR(tfm_cbc)) {
+ 		result = PTR_ERR(tfm_cbc);
+ 		printk(KERN_ERR "E: can't load CBC(AES): %d\n", (int)result);
+ 		goto error_alloc_cbc;
+ 	}
+-	result = crypto_blkcipher_setkey(tfm_cbc, key, 16);
++	result = crypto_skcipher_setkey(tfm_cbc, key, 16);
+ 	if (result < 0) {
+ 		printk(KERN_ERR "E: can't set CBC key: %d\n", (int)result);
+ 		goto error_setkey_cbc;
+@@ -345,7 +347,7 @@ error_setkey_aes:
+ 	crypto_free_cipher(tfm_aes);
+ error_alloc_aes:
+ error_setkey_cbc:
+-	crypto_free_blkcipher(tfm_cbc);
++	crypto_free_skcipher(tfm_cbc);
+ error_alloc_cbc:
+ 	return result;
+ }
