@@ -1,112 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49433 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751329AbcAUIUW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 03:20:22 -0500
-Date: Thu, 21 Jan 2016 09:20:12 +0100
-From: Jean Delvare <jdelvare@suse.de>
-To: linux-wireless@vger.kernel.org
-Cc: Eric Lapuyade <eric.lapuyade@intel.com>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Subject: [PATCH] NFC: microread: Drop platform data header file
-Message-ID: <20160121092012.0e0f73e1@endymion.delvare> (sfid-20160121_092026_746587_0B50B464)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Received: from helcar.hengli.com.au ([209.40.204.226]:59759 "EHLO
+	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932186AbcAXNUl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Jan 2016 08:20:41 -0500
+Subject: [PATCH 24/26] nfsd: Use shash
+References: <20160124131021.GA31153@gondor.apana.org.au>
+To: Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
+	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
+	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, ceph-devel@vger.kernel.org,
+	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
+	drbd-dev@lists.linbit.com, open-iscsi@googlegroups.com
+Message-Id: <E1aNKaI-0008GJ-Fn@gondolin.me.apana.org.au> (sfid-20160124_142220_214788_B2FA4213)
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Date: Sun, 24 Jan 2016 21:20:02 +0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Originally I only wanted to drop the unneeded inclusion of
-<linux/i2c.h>, but then noticed that struct
-microread_nfc_platform_data isn't actually used, and
-MICROREAD_DRIVER_NAME is redefined in the only file where it is used,
-so we can get rid of the header file and dead code altogether.
+This patch replaces uses of the long obsolete hash interface with
+shash.
 
-Signed-off-by: Jean Delvare <jdelvare@suse.de>
-Cc: Eric Lapuyade <eric.lapuyade@intel.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Cc: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
 ---
-Makes me wonder if this driver is used at all? I can't see any
-instance in the kernel tree.
 
- MAINTAINERS                             |    1 
- drivers/nfc/microread/i2c.c             |    8 -------
- include/linux/platform_data/microread.h |   35 --------------------------------
- 3 files changed, 44 deletions(-)
+ fs/nfsd/nfs4recover.c |   28 +++++++++++++++++-----------
+ 1 file changed, 17 insertions(+), 11 deletions(-)
 
---- linux-4.5-rc0.orig/MAINTAINERS	2016-01-20 09:32:43.217162788 +0100
-+++ linux-4.5-rc0/MAINTAINERS	2016-01-21 08:45:28.544988567 +0100
-@@ -7561,7 +7561,6 @@ F:	net/nfc/
- F:	include/net/nfc/
- F:	include/uapi/linux/nfc.h
- F:	drivers/nfc/
--F:	include/linux/platform_data/microread.h
- F:	include/linux/platform_data/nfcmrvl.h
- F:	include/linux/platform_data/nxp-nci.h
- F:	include/linux/platform_data/pn544.h
---- linux-4.5-rc0.orig/drivers/nfc/microread/i2c.c	2016-01-21 08:00:28.787349137 +0100
-+++ linux-4.5-rc0/drivers/nfc/microread/i2c.c	2016-01-21 08:45:54.420569448 +0100
-@@ -246,18 +246,10 @@ static int microread_i2c_probe(struct i2
- 			       const struct i2c_device_id *id)
+diff --git a/fs/nfsd/nfs4recover.c b/fs/nfsd/nfs4recover.c
+index 79f0307..a79c150 100644
+--- a/fs/nfsd/nfs4recover.c
++++ b/fs/nfsd/nfs4recover.c
+@@ -32,10 +32,10 @@
+ *
+ */
+ 
++#include <crypto/hash.h>
+ #include <linux/file.h>
+ #include <linux/slab.h>
+ #include <linux/namei.h>
+-#include <linux/crypto.h>
+ #include <linux/sched.h>
+ #include <linux/fs.h>
+ #include <linux/module.h>
+@@ -104,29 +104,35 @@ static int
+ nfs4_make_rec_clidname(char *dname, const struct xdr_netobj *clname)
  {
- 	struct microread_i2c_phy *phy;
--	struct microread_nfc_platform_data *pdata =
--		dev_get_platdata(&client->dev);
- 	int r;
+ 	struct xdr_netobj cksum;
+-	struct hash_desc desc;
+-	struct scatterlist sg;
++	struct crypto_shash *tfm;
+ 	int status;
  
- 	dev_dbg(&client->dev, "client %p\n", client);
+ 	dprintk("NFSD: nfs4_make_rec_clidname for %.*s\n",
+ 			clname->len, clname->data);
+-	desc.flags = CRYPTO_TFM_REQ_MAY_SLEEP;
+-	desc.tfm = crypto_alloc_hash("md5", 0, CRYPTO_ALG_ASYNC);
+-	if (IS_ERR(desc.tfm)) {
+-		status = PTR_ERR(desc.tfm);
++	tfm = crypto_alloc_shash("md5", 0, 0);
++	if (IS_ERR(tfm)) {
++		status = PTR_ERR(tfm);
+ 		goto out_no_tfm;
+ 	}
  
--	if (!pdata) {
--		nfc_err(&client->dev, "client %p: missing platform data\n",
--			client);
--		return -EINVAL;
--	}
--
- 	phy = devm_kzalloc(&client->dev, sizeof(struct microread_i2c_phy),
- 			   GFP_KERNEL);
- 	if (!phy)
---- linux-4.5-rc0.orig/include/linux/platform_data/microread.h	2016-01-21 08:00:28.787349137 +0100
-+++ /dev/null	1970-01-01 00:00:00.000000000 +0000
-@@ -1,35 +0,0 @@
--/*
-- * Driver include for the Inside Secure microread NFC Chip.
-- *
-- * Copyright (C) 2011 Tieto Poland
-- * Copyright (C) 2012 Intel Corporation. All rights reserved.
-- *
-- * This program is free software; you can redistribute it and/or
-- * modify it under the terms of the GNU General Public License
-- * version 2 as published by the Free Software Foundation.
-- *
-- * This program is distributed in the hope that it will be useful,
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	See the
-- * GNU General Public License for more details.
-- *
-- * You should have received a copy of the GNU General Public License
-- * along with this program; if not, write to the Free Software
-- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-- */
--
--#ifndef _MICROREAD_H
--#define _MICROREAD_H
--
--#include <linux/i2c.h>
--
--#define MICROREAD_DRIVER_NAME	"microread"
--
--/* board config platform data for microread */
--struct microread_nfc_platform_data {
--	unsigned int rst_gpio;
--	unsigned int irq_gpio;
--	unsigned int ioh_gpio;
--};
--
--#endif /* _MICROREAD_H */
-
--- 
-Jean Delvare
-SUSE L3 Support
+-	cksum.len = crypto_hash_digestsize(desc.tfm);
++	cksum.len = crypto_shash_digestsize(tfm);
+ 	cksum.data = kmalloc(cksum.len, GFP_KERNEL);
+ 	if (cksum.data == NULL) {
+ 		status = -ENOMEM;
+  		goto out;
+ 	}
+ 
+-	sg_init_one(&sg, clname->data, clname->len);
++	{
++		SHASH_DESC_ON_STACK(desc, tfm);
++
++		desc->tfm = tfm;
++		desc->flags = CRYPTO_TFM_REQ_MAY_SLEEP;
++
++		status = crypto_shash_digest(desc, clname->data, clname->len,
++					     cksum.data);
++		shash_desc_zero(desc);
++	}
+ 
+-	status = crypto_hash_digest(&desc, &sg, sg.length, cksum.data);
+ 	if (status)
+ 		goto out;
+ 
+@@ -135,7 +141,7 @@ nfs4_make_rec_clidname(char *dname, const struct xdr_netobj *clname)
+ 	status = 0;
+ out:
+ 	kfree(cksum.data);
+-	crypto_free_hash(desc.tfm);
++	crypto_free_shash(tfm);
+ out_no_tfm:
+ 	return status;
+ }
