@@ -1,54 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48011 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932301AbcA0M2k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 07:28:40 -0500
-Message-ID: <1453897716.2351.5.camel@sipsolutions.net> (sfid-20160127_132843_675817_A137C4AE)
-Subject: Re: [PATCH] wext: fix message delay/ordering
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Beniamino Galvani <bgalvani@redhat.com>
-Date: Wed, 27 Jan 2016 13:28:36 +0100
-In-Reply-To: <1453897114.2351.4.camel@sipsolutions.net> (sfid-20160127_131839_160369_0C70BCFE)
-References: <1453896850-22775-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20160127_131419_031860_43892E09) <1453897040.2351.3.camel@sipsolutions.net>
-	 (sfid-20160127_131726_366051_5927EBBD) <1453897114.2351.4.camel@sipsolutions.net>
-	 (sfid-20160127_131839_160369_0C70BCFE)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from helcar.hengli.com.au ([209.40.204.226]:40861 "EHLO
+	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754266AbcAXNUL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Jan 2016 08:20:11 -0500
+Subject: [PATCH 21/26] nfc: s3fwrn5: Use shash
+References: <20160124131021.GA31153@gondor.apana.org.au>
+To: Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
+	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
+	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, ceph-devel@vger.kernel.org,
+	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
+	drbd-dev@lists.linbit.com, open-iscsi@googlegroups.com
+Message-Id: <E1aNKZn-0008FU-OU@gondolin.me.apana.org.au> (sfid-20160124_142041_280997_2924DB67)
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Date: Sun, 24 Jan 2016 21:19:31 +0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-01-27 at 13:18 +0100, Johannes Berg wrote:
-> > > +	if (state == NETDEV_UNREGISTER)
-> > > +		wireless_nlevent_flush();
-> > > 
-> > It could be argued that the state check isn't really necessary and
-> > should be removed to avoid ordering issues with up/down vs. wext,
-> > but
-> > this fixes the really strange issue where you get an RTM_NEWLINK
-> > after
-> > RTM_DELLINK (with the same ifidx), and I don't see how any software
-> > would care much about the ordering otherwise.
-> > 
-> 
-> Actually though, with the fix I still get:
-> 
-> 5: wlan1: <BROADCAST,MULTICAST> mtu 1500 qdisc mq state DOWN group
-> default 
->     link/ether 02:00:00:00:01:00 brd ff:ff:ff:ff:ff:ff
-> 5: wlan1: <BROADCAST,MULTICAST,UP> 
->     link/ether 
-> Deleted 5: wlan1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state
-> DOWN group default 
->     link/ether 02:00:00:00:01:00 brd ff:ff:ff:ff:ff:ff
-> 
-> which is clearly odd (see the UP flag), so I'll change it.
-> 
+This patch replaces uses of the long obsolete hash interface with
+shash.
 
-Doesn't help, since the wext netdev notifier is registered earlier and
-thus runs earlier than the cfg80211 one that triggers the action ...
+Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
+---
 
-I'll fix that differently then.
+ drivers/nfc/s3fwrn5/firmware.c |   36 +++++++++++++++++++++++++++---------
+ 1 file changed, 27 insertions(+), 9 deletions(-)
 
-johannes
+diff --git a/drivers/nfc/s3fwrn5/firmware.c b/drivers/nfc/s3fwrn5/firmware.c
+index 64a9025..5f97da1 100644
+--- a/drivers/nfc/s3fwrn5/firmware.c
++++ b/drivers/nfc/s3fwrn5/firmware.c
+@@ -19,7 +19,7 @@
+ 
+ #include <linux/completion.h>
+ #include <linux/firmware.h>
+-#include <linux/crypto.h>
++#include <crypto/hash.h>
+ #include <crypto/sha.h>
+ 
+ #include "s3fwrn5.h"
+@@ -429,8 +429,7 @@ int s3fwrn5_fw_download(struct s3fwrn5_fw_info *fw_info)
+ {
+ 	struct s3fwrn5_fw_image *fw = &fw_info->fw;
+ 	u8 hash_data[SHA1_DIGEST_SIZE];
+-	struct scatterlist sg;
+-	struct hash_desc desc;
++	struct crypto_shash *tfm;
+ 	u32 image_size, off;
+ 	int ret;
+ 
+@@ -438,12 +437,31 @@ int s3fwrn5_fw_download(struct s3fwrn5_fw_info *fw_info)
+ 
+ 	/* Compute SHA of firmware data */
+ 
+-	sg_init_one(&sg, fw->image, image_size);
+-	desc.tfm = crypto_alloc_hash("sha1", 0, CRYPTO_ALG_ASYNC);
+-	crypto_hash_init(&desc);
+-	crypto_hash_update(&desc, &sg, image_size);
+-	crypto_hash_final(&desc, hash_data);
+-	crypto_free_hash(desc.tfm);
++	tfm = crypto_alloc_shash("sha1", 0, 0);
++	if (IS_ERR(tfm)) {
++		ret = PTR_ERR(tfm);
++		dev_err(&fw_info->ndev->nfc_dev->dev,
++			"Cannot allocate shash (code=%d)\n", ret);
++		goto out;
++	}
++
++	{
++		SHASH_DESC_ON_STACK(desc, tfm);
++
++		desc->tfm = tfm;
++		desc->flags = CRYPTO_TFM_REQ_MAY_SLEEP;
++
++		ret = crypto_shash_digest(desc, fw->image, image_size,
++					  hash_data);
++		shash_desc_zero(desc);
++	}
++
++	crypto_free_shash(tfm);
++	if (ret) {
++		dev_err(&fw_info->ndev->nfc_dev->dev,
++			"Cannot compute hash (code=%d)\n", ret);
++		goto out;
++	}
+ 
+ 	/* Firmware update process */
+ 
