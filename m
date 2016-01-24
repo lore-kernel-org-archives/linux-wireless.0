@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:47892 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751608AbcA0MRX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 07:17:23 -0500
-Message-ID: <1453897040.2351.3.camel@sipsolutions.net> (sfid-20160127_131726_366051_5927EBBD)
-Subject: Re: [PATCH] wext: fix message delay/ordering
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Beniamino Galvani <bgalvani@redhat.com>
-Date: Wed, 27 Jan 2016 13:17:20 +0100
-In-Reply-To: <1453896850-22775-1-git-send-email-johannes@sipsolutions.net> (sfid-20160127_131419_031860_43892E09)
-References: <1453896850-22775-1-git-send-email-johannes@sipsolutions.net>
-	 (sfid-20160127_131419_031860_43892E09)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from helcar.hengli.com.au ([209.40.204.226]:58116 "EHLO
+	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753932AbcAXNjy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 24 Jan 2016 08:39:54 -0500
+Date: Sun, 24 Jan 2016 21:39:39 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: kbuild test robot <lkp@intel.com>
+Cc: kbuild-all@01.org,
+	Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
+	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
+	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, ceph-devel@vger.kernel.org,
+	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
+	drbd-dev@lists.linbit.com, open-iscsi@googlegroups.com
+Subject: Re: [PATCH 1/26] block: cryptoloop - Use new skcipher interface
+Message-ID: <20160124133939.GA32106@gondor.apana.org.au> (sfid-20160124_144004_040412_5C163590)
+References: <E1aNKWU-0008A9-Dx@gondolin.me.apana.org.au>
+ <201601242148.Yk7531Nh%fengguang.wu@intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <201601242148.Yk7531Nh%fengguang.wu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-01-27 at 13:14 +0100, Johannes Berg wrote:
-> 
-> +static int wext_netdev_notifier_call(struct notifier_block *nb,
-> +				     unsigned long state, void *ptr)
-> +{
-> +	/*
-> +	 * When a netdev is unregistered, flush all pending messages
-> +	 * to avoid them going out after the RTM_DELLINK, which can
-> +	 * happen due to the schedule_work().
-> +	 */
-> +	if (state == NETDEV_UNREGISTER)
-> +		wireless_nlevent_flush();
+On Sun, Jan 24, 2016 at 09:37:33PM +0800, kbuild test robot wrote:
 > 
-It could be argued that the state check isn't really necessary and
-should be removed to avoid ordering issues with up/down vs. wext, but
-this fixes the really strange issue where you get an RTM_NEWLINK after
-RTM_DELLINK (with the same ifidx), and I don't see how any software
-would care much about the ordering otherwise.
+> [auto build test ERROR on net/master]
+> [also build test ERROR on v4.4 next-20160122]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
 
-johannes
+These patches depend on the two helpers that I posted yesterday
+so unfortunately we'll be getting quite a few build errors from
+the bot.
+
+Cheers,
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
