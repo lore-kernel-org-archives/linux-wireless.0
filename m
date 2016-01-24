@@ -1,68 +1,143 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:32858 "EHLO
-	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751355AbcACIga (ORCPT
+Received: from helcar.hengli.com.au ([209.40.204.226]:43366 "EHLO
+	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753571AbcAXNR1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jan 2016 03:36:30 -0500
-Received: by mail-pa0-f42.google.com with SMTP id cy9so181761246pac.0
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 00:36:30 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 05/30] staging: wilc1000: rename RemainOnChanExpired in wilc_remain_on_channel
-Date: Sun,  3 Jan 2016 17:35:37 +0900
-Message-Id: <1451810162-16993-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20160103_093644_515411_0D5F1701)
-In-Reply-To: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
+	Sun, 24 Jan 2016 08:17:27 -0500
+Subject: [PATCH 5/26] orinoco: Use ahash
+References: <20160124131021.GA31153@gondor.apana.org.au>
+To: Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
+	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
+	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, ceph-devel@vger.kernel.org,
+	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
+	drbd-dev@lists.linbit.com, open-iscsi@googlegroups.com
+Message-Id: <E1aNKX9-0008Az-6R@gondolin.me.apana.org.au> (sfid-20160124_142851_212646_C6E23ADA)
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Date: Sun, 24 Jan 2016 21:16:47 +0800
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames RemainOnChanExpired to expired to avoid camelcase.
-
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch replaces uses the long obsolete hash interface with ahash.
+    
+Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 116942d..9265328 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4063,7 +4063,7 @@ void wilc_scan_complete_received(struct wilc *wilc, u8 *pu8Buffer,
+ drivers/net/wireless/intersil/orinoco/mic.c     |   29 ++++++++++++++----------
+ drivers/net/wireless/intersil/orinoco/mic.h     |    4 +--
+ drivers/net/wireless/intersil/orinoco/orinoco.h |    4 +--
+ 3 files changed, 21 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/net/wireless/intersil/orinoco/mic.c b/drivers/net/wireless/intersil/orinoco/mic.c
+index fce4a84..bc7397d 100644
+--- a/drivers/net/wireless/intersil/orinoco/mic.c
++++ b/drivers/net/wireless/intersil/orinoco/mic.c
+@@ -6,7 +6,7 @@
+ #include <linux/string.h>
+ #include <linux/if_ether.h>
+ #include <linux/scatterlist.h>
+-#include <linux/crypto.h>
++#include <crypto/hash.h>
  
- int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
- 			   u32 duration, u16 chan,
--			   wilc_remain_on_chan_expired RemainOnChanExpired,
-+			   wilc_remain_on_chan_expired expired,
- 			   wilc_remain_on_chan_ready RemainOnChanReady,
- 			   void *pvUserArg)
+ #include "orinoco.h"
+ #include "mic.h"
+@@ -16,7 +16,8 @@
+ /********************************************************************/
+ int orinoco_mic_init(struct orinoco_private *priv)
  {
-@@ -4080,7 +4080,7 @@ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
+-	priv->tx_tfm_mic = crypto_alloc_hash("michael_mic", 0, 0);
++	priv->tx_tfm_mic = crypto_alloc_ahash("michael_mic", 0,
++					      CRYPTO_ALG_ASYNC);
+ 	if (IS_ERR(priv->tx_tfm_mic)) {
+ 		printk(KERN_DEBUG "orinoco_mic_init: could not allocate "
+ 		       "crypto API michael_mic\n");
+@@ -24,7 +25,8 @@ int orinoco_mic_init(struct orinoco_private *priv)
+ 		return -ENOMEM;
+ 	}
  
- 	msg.id = HOST_IF_MSG_REMAIN_ON_CHAN;
- 	msg.body.remain_on_ch.ch = chan;
--	msg.body.remain_on_ch.expired = RemainOnChanExpired;
-+	msg.body.remain_on_ch.expired = expired;
- 	msg.body.remain_on_ch.ready = RemainOnChanReady;
- 	msg.body.remain_on_ch.arg = pvUserArg;
- 	msg.body.remain_on_ch.duration = duration;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 4902cc8..d2ca27e 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -358,7 +358,7 @@ int wilc_setup_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
- s32 wilc_del_all_rx_ba_session(struct wilc_vif *vif, char *pBSSID, char TID);
- int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
- 			   u32 duration, u16 chan,
--			   wilc_remain_on_chan_expired RemainOnChanExpired,
-+			   wilc_remain_on_chan_expired expired,
- 			   wilc_remain_on_chan_ready RemainOnChanReady,
- 			   void *pvUserArg);
- int wilc_listen_state_expired(struct wilc_vif *vif, u32 session_id);
--- 
-2.6.4
-
+-	priv->rx_tfm_mic = crypto_alloc_hash("michael_mic", 0, 0);
++	priv->rx_tfm_mic = crypto_alloc_ahash("michael_mic", 0,
++					      CRYPTO_ALG_ASYNC);
+ 	if (IS_ERR(priv->rx_tfm_mic)) {
+ 		printk(KERN_DEBUG "orinoco_mic_init: could not allocate "
+ 		       "crypto API michael_mic\n");
+@@ -38,18 +40,19 @@ int orinoco_mic_init(struct orinoco_private *priv)
+ void orinoco_mic_free(struct orinoco_private *priv)
+ {
+ 	if (priv->tx_tfm_mic)
+-		crypto_free_hash(priv->tx_tfm_mic);
++		crypto_free_ahash(priv->tx_tfm_mic);
+ 	if (priv->rx_tfm_mic)
+-		crypto_free_hash(priv->rx_tfm_mic);
++		crypto_free_ahash(priv->rx_tfm_mic);
+ }
+ 
+-int orinoco_mic(struct crypto_hash *tfm_michael, u8 *key,
++int orinoco_mic(struct crypto_ahash *tfm_michael, u8 *key,
+ 		u8 *da, u8 *sa, u8 priority,
+ 		u8 *data, size_t data_len, u8 *mic)
+ {
+-	struct hash_desc desc;
++	AHASH_REQUEST_ON_STACK(req, tfm_michael);
+ 	struct scatterlist sg[2];
+ 	u8 hdr[ETH_HLEN + 2]; /* size of header + padding */
++	int err;
+ 
+ 	if (tfm_michael == NULL) {
+ 		printk(KERN_WARNING "orinoco_mic: tfm_michael == NULL\n");
+@@ -69,11 +72,13 @@ int orinoco_mic(struct crypto_hash *tfm_michael, u8 *key,
+ 	sg_set_buf(&sg[0], hdr, sizeof(hdr));
+ 	sg_set_buf(&sg[1], data, data_len);
+ 
+-	if (crypto_hash_setkey(tfm_michael, key, MIC_KEYLEN))
++	if (crypto_ahash_setkey(tfm_michael, key, MIC_KEYLEN))
+ 		return -1;
+ 
+-	desc.tfm = tfm_michael;
+-	desc.flags = 0;
+-	return crypto_hash_digest(&desc, sg, data_len + sizeof(hdr),
+-				  mic);
++	ahash_request_set_tfm(req, tfm_michael);
++	ahash_request_set_callback(req, 0, NULL, NULL);
++	ahash_request_set_crypt(req, sg, mic, data_len + sizeof(hdr));
++	err = crypto_ahash_digest(req);
++	ahash_request_zero(req);
++	return err;
+ }
+diff --git a/drivers/net/wireless/intersil/orinoco/mic.h b/drivers/net/wireless/intersil/orinoco/mic.h
+index 04d05bc..ce731d0 100644
+--- a/drivers/net/wireless/intersil/orinoco/mic.h
++++ b/drivers/net/wireless/intersil/orinoco/mic.h
+@@ -11,11 +11,11 @@
+ 
+ /* Forward declarations */
+ struct orinoco_private;
+-struct crypto_hash;
++struct crypto_ahash;
+ 
+ int orinoco_mic_init(struct orinoco_private *priv);
+ void orinoco_mic_free(struct orinoco_private *priv);
+-int orinoco_mic(struct crypto_hash *tfm_michael, u8 *key,
++int orinoco_mic(struct crypto_ahash *tfm_michael, u8 *key,
+ 		u8 *da, u8 *sa, u8 priority,
+ 		u8 *data, size_t data_len, u8 *mic);
+ 
+diff --git a/drivers/net/wireless/intersil/orinoco/orinoco.h b/drivers/net/wireless/intersil/orinoco/orinoco.h
+index eebd2be..2f0c84b 100644
+--- a/drivers/net/wireless/intersil/orinoco/orinoco.h
++++ b/drivers/net/wireless/intersil/orinoco/orinoco.h
+@@ -152,8 +152,8 @@ struct orinoco_private {
+ 	u8 *wpa_ie;
+ 	int wpa_ie_len;
+ 
+-	struct crypto_hash *rx_tfm_mic;
+-	struct crypto_hash *tx_tfm_mic;
++	struct crypto_ahash *rx_tfm_mic;
++	struct crypto_ahash *tx_tfm_mic;
+ 
+ 	unsigned int wpa_enabled:1;
+ 	unsigned int tkip_cm_active:1;
