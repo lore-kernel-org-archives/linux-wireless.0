@@ -1,41 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:38361 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751188AbcAEJ4T (ORCPT
+Received: from mail-ig0-f175.google.com ([209.85.213.175]:36047 "EHLO
+	mail-ig0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933570AbcAYXl5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 04:56:19 -0500
-Received: by mail-wm0-f52.google.com with SMTP id b14so20577762wmb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2016 01:56:18 -0800 (PST)
+	Mon, 25 Jan 2016 18:41:57 -0500
 MIME-Version: 1.0
-In-Reply-To: <20160105094504.GA3015@w1.fi>
-References: <1451984419-5727-1-git-send-email-janusz.dziedzic@tieto.com>
-	<20160105094504.GA3015@w1.fi>
-Date: Tue, 5 Jan 2016 10:56:18 +0100
-Message-ID: <CALhHN=qfmdQuTeHEAvE0BgS2XvZJrBVUhU3BYgXMCY-pe5Ur0g@mail.gmail.com> (sfid-20160105_105623_950850_E71C7816)
-Subject: Re: [PATCH] mac80211: add use_minrate param to ieee80211_tx_prepare_skb()
-From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-To: Jouni Malinen <j@w1.fi>
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <56A641CC.6020500@gmail.com>
+References: <1453718849-3508-1-git-send-email-sjoerd.simons@collabora.co.uk>
+ <CAGRGNgXWE=b52Mcy8NsKBZS_4gz-TUiuFipjsuTZh1xjja=uUg@mail.gmail.com> <56A641CC.6020500@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 26 Jan 2016 10:41:37 +1100
+Message-ID: <CAGRGNgVftXxnq06MOHKNVzVjvCkwCM8Bc+Sfs4NoOQR=sfYP-g@mail.gmail.com> (sfid-20160126_004220_680934_799F26A2)
+Subject: Re: [PATCH] brcmfmac: sdio: Increase the default timeouts a bit
+To: Arend van Spriel <aspriel@gmail.com>
+Cc: Sjoerd Simons <sjoerd.simons@collabora.co.uk>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Paul Stewart <pstew@chromium.org>,
+	Doug Anderson <dianders@chromium.org>,
+	linux-rockchip@lists.infradead.org,
+	Arend van Spriel <arend@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	brcm80211-dev-list@broadcom.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	netdev <netdev@vger.kernel.org>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5 January 2016 at 10:45, Jouni Malinen <j@w1.fi> wrote:
-> On Tue, Jan 05, 2016 at 10:00:19AM +0100, Janusz Dziedzic wrote:
->> Add use_minrate param to ieee80211_tx_prepare_skb() function.
->> This is useful in case we would like to send frames
->> with lowest rates, eg. nullfunc, probe_resp.
->
-> I could kind of understand this for short frames like Data nullfunc and
-> PS-Poll, but why would we like to hard code Probe Response frames to be
-> sent at the lowest rate? Shouldn't the frames be sent at a rate that is
-> most likely to get them through and do so in a manner that does not use
-> excessive amount of air time?
->
-This is used to get/send probe_req() frame, next used by ath9k
-"hw_scan" when chanctx used.
+Hi Arend,
 
+On Tue, Jan 26, 2016 at 2:39 AM, Arend van Spriel <aspriel@gmail.com> wrote:
+> On 25-01-16 12:06, Julian Calaby wrote:
+>> Hi Sjoerd,
+>>
+>> On Mon, Jan 25, 2016 at 9:47 PM, Sjoerd Simons
+>> <sjoerd.simons@collabora.co.uk> wrote:
+>>> On a Radxa Rock2 board with a Ampak AP6335 (Broadcom 4339 core) it seems
+>>> the card responds very quickly most of the time, unfortunately during
+>>> initialisation it sometimes seems to take just a bit over 2 seconds to
+>>> respond.
+>>>
+>>> This results intialization failing with message like:
+>>>   brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -52
+>>>   brcmf_bus_start: failed: -52
+>>>   brcmf_sdio_firmware_callback: dongle is not responding
+>>>
+>>> Increasing the timeout to allow for a bit more headroom allows the
+>>> card to initialize reliably.
+>>>
+>>> A quick search online after diagnosing/fixing this showed that Google
+>>> has a similar patch in their ChromeOS tree, so this doesn't seem
+>>> specific to the board I'm using.
+>>>
+>>> Signed-off-by: Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+>>
+>> Looks sane to me.
+>>
+>> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+>
+> Not really a cleanup patch :-p , but thanks for the review.
 
-> --
-> Jouni Malinen                                            PGP id EFC895FA
+I'm trying to review any "small" patch from (relatively) new people.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
