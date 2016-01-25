@@ -1,68 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f66.google.com ([209.85.213.66]:36162 "EHLO
-	mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751224AbcAUKBq (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:40936 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932100AbcAYHnL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 05:01:46 -0500
-Received: by mail-vk0-f66.google.com with SMTP id e64so1432286vkg.3
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 02:01:46 -0800 (PST)
+	Mon, 25 Jan 2016 02:43:11 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 10/26] staging: wilc1000: remove wilc_set_machw_change_vir_if
+Date: Mon, 25 Jan 2016 16:35:14 +0900
+Message-ID: <1453707330-13526-11-git-send-email-glen.lee@atmel.com> (sfid-20160125_084314_278582_56B73E29)
+In-Reply-To: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160121085508.GD6370@mwanda>
-References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
-	<1453339230-1377-25-git-send-email-chaehyun.lim@gmail.com>
-	<20160121081816.GA10063@sudip-pc>
-	<20160121085508.GD6370@mwanda>
-Date: Thu, 21 Jan 2016 19:01:45 +0900
-Message-ID: <CAKV=isvj-RbzMCOS+UyXkXyuyX2_SLhDyVTNaJy4kQbfN+bxSg@mail.gmail.com> (sfid-20160121_110153_680789_EAEDDD26)
-Subject: Re: [PATCH 25/27] staging: wilc1000: fix coding style of kmalloc usage
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-	devel@driverdev.osuosl.org, Chris Park <chris.park@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	"tony.cho" <tony.cho@atmel.com>, leo.kim@atmel.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 21, 2016 at 5:55 PM, Dan Carpenter <dan.carpenter@oracle.com> wrote:
-> On Thu, Jan 21, 2016 at 01:48:16PM +0530, Sudip Mukherjee wrote:
->> On Thu, Jan 21, 2016 at 10:20:28AM +0900, Chaehyun Lim wrote:
->> > This patch fixes coding style of kmalloc usage found by checkpatch.
->> > CHECK: Prefer kmalloc(sizeof(*new_msg)...) over kmalloc(sizeof(struct message)...)
->> >
->> > Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
->> > ---
->> >  drivers/staging/wilc1000/wilc_msgqueue.c | 2 +-
->> >  1 file changed, 1 insertion(+), 1 deletion(-)
->> >
->> > diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
->> > index 7107715..c7a60f4 100644
->> > --- a/drivers/staging/wilc1000/wilc_msgqueue.c
->> > +++ b/drivers/staging/wilc1000/wilc_msgqueue.c
->> > @@ -70,7 +70,7 @@ int wilc_mq_send(struct message_queue *mq,
->> >     }
->> >
->> >     /* construct a new message */
->> > -   new_msg = kmalloc(sizeof(struct message), GFP_ATOMIC);
->> > +   new_msg = kmalloc(sizeof(*new_msg), GFP_ATOMIC);
->>
->> This checkpatch error was introduced by 1/27 patch of this series. Maybe
->> it will be better to fix it in that one.
->
-> The warning was introduced there but the issue went back further it's
-> just that checkpatch didn't detect it because of other issues.  This
-> seems fine.
+wilc_set_machw_change_vir_if is not used anymore since we use one unified
+firmware. Instead, wilc_set_operation_mode is called when wilc_mac_open to
+let the wilc use the proper firmware. Remove wilc_set_machw_change_vir_if
+and it's functions calls.
+In the later patch, mac index will be passed to wilc device.
 
-I appreciate for all comment. I will resend it after applying Sudip's review.
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c             |  3 +--
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  6 -----
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  1 -
+ drivers/staging/wilc1000/wilc_wlan.c              | 32 -----------------------
+ 4 files changed, 1 insertion(+), 41 deletions(-)
 
-regards,
-Chaehyun Lim
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 006f75f7..08d2cb2 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1024,14 +1024,13 @@ int wilc_mac_open(struct net_device *ndev)
+ 		return ret;
+ 	}
+ 
+-	wilc_set_machw_change_vir_if(ndev, false);
+-
+ 	wilc_get_mac_address(vif, mac_add);
+ 	PRINT_D(INIT_DBG, "Mac address: %pM\n", mac_add);
+ 
+ 	for (i = 0; i < wl->vif_num; i++) {
+ 		if (ndev == wl->vif[i]->ndev) {
+ 			memcpy(wl->vif[i]->src_addr, mac_add, ETH_ALEN);
++			wilc_set_operation_mode(vif, vif->iftype);
+ 			break;
+ 		}
+ 	}
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 5c23462..ecc63f4 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1274,7 +1274,6 @@ static int del_key(struct wiphy *wiphy, struct net_device *netdev,
+ 		kfree(g_key_gtk_params.seq);
+ 		g_key_gtk_params.seq = NULL;
+ 
+-		wilc_set_machw_change_vir_if(netdev, false);
+ 	}
+ 
+ 	if (key_index >= 0 && key_index <= 3) {
+@@ -2116,10 +2115,6 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 	del_timer(&wilc_during_ip_timer);
+ 	PRINT_D(GENERIC_DBG, "Changing virtual interface, enable scan\n");
+ 
+-	if (g_ptk_keys_saved && g_gtk_keys_saved) {
+-		wilc_set_machw_change_vir_if(dev, true);
+-	}
+-
+ 	switch (type) {
+ 	case NL80211_IFTYPE_STATION:
+ 		wilc_connecting = 0;
+@@ -2261,7 +2256,6 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 			}
+ 
+ 			refresh_scan(priv, 1, true);
+-			wilc_set_machw_change_vir_if(dev, false);
+ 
+ 			if (wl->initialized)	{
+ 				for (i = 0; i < num_reg_frame; i++) {
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index cd3d21d..0d851f8 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -235,7 +235,6 @@ int wilc_netdev_init(struct wilc **wilc, struct device *, int io_type, int gpio,
+ 		     const struct wilc_hif_func *ops);
+ void wilc1000_wlan_deinit(struct net_device *dev);
+ void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size);
+-u16 wilc_set_machw_change_vir_if(struct net_device *dev, bool value);
+ int wilc_wlan_get_firmware(struct net_device *dev);
+ int wilc_wlan_set_bssid(struct net_device *wilc_netdev, u8 *bssid);
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index aed1dd2..cc487d8 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1578,35 +1578,3 @@ _fail_:
+ 
+ 	return ret;
+ }
+-
+-u16 wilc_set_machw_change_vir_if(struct net_device *dev, bool value)
+-{
+-	u16 ret;
+-	u32 reg;
+-	struct wilc_vif *vif;
+-	struct wilc *wilc;
+-
+-	vif = netdev_priv(dev);
+-	wilc = vif->wilc;
+-
+-	mutex_lock(&wilc->hif_cs);
+-	ret = wilc->hif_func->hif_read_reg(wilc, WILC_CHANGING_VIR_IF,
+-					       &reg);
+-	if (!ret)
+-		PRINT_ER("Error while Reading reg WILC_CHANGING_VIR_IF\n");
+-
+-	if (value)
+-		reg |= BIT(31);
+-	else
+-		reg &= ~BIT(31);
+-
+-	ret = wilc->hif_func->hif_write_reg(wilc, WILC_CHANGING_VIR_IF,
+-						reg);
+-
+-	if (!ret)
+-		PRINT_ER("Error while writing reg WILC_CHANGING_VIR_IF\n");
+-
+-	mutex_unlock(&wilc->hif_cs);
+-
+-	return ret;
+-}
+-- 
+1.9.1
 
->
-> regards,
-> dan carpenter
->
