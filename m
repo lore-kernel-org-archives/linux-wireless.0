@@ -1,51 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:59618 "EHLO comal.ext.ti.com"
+Received: from mga14.intel.com ([192.55.52.115]:49698 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758791AbcALLXE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 06:23:04 -0500
-Subject: Re: [PATCH v4 1/3] wlcore/wl12xx: spi: add power operation function
-To: Sebastian Reichel <sre@kernel.org>,
-	Uri Mashiach <uri.mashiach@compulab.co.il>
-References: <1451482533-8624-1-git-send-email-uri.mashiach@compulab.co.il>
- <1451482533-8624-2-git-send-email-uri.mashiach@compulab.co.il>
- <20160109025356.GA3644@earth>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	Rob Herring <robh+dt@kernel.org>,
-	Tony Lindgren <tony@atomide.com>,
-	Pawel Moll <pawel.moll@arm.com>,
-	Mark Rutland <mark.rutland@arm.com>,
-	Ian Campbell <ijc+devicetree@hellion.org.uk>,
-	Kumar Gala <galak@codeaurora.org>, <bcousson@baylibre.com>,
-	Igor Grinberg <grinberg@compulab.co.il>,
-	Eliad Peller <eliad@wizery.com>, <devicetree@vger.kernel.org>,
-	<linux-omap@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>
-From: Grygorii Strashko <grygorii.strashko@ti.com>
-Message-ID: <5694E1A4.20303@ti.com> (sfid-20160112_122311_289565_3FD1E8DF)
-Date: Tue, 12 Jan 2016 13:21:08 +0200
-MIME-Version: 1.0
-In-Reply-To: <20160109025356.GA3644@earth>
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+	id S1755839AbcAYJGA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2016 04:06:00 -0500
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Subject: [PATCHv2 3/4] ARM: tegra: use build-in device properties with rfkill_gpio
+Date: Mon, 25 Jan 2016 12:03:48 +0300
+Message-Id: <1453712629-143317-4-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20160125_100740_058001_AE4E8344)
+In-Reply-To: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com>
+References: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/09/2016 04:53 AM, Sebastian Reichel wrote:
-> Hi,
->
-> On Wed, Dec 30, 2015 at 03:35:31PM +0200, Uri Mashiach wrote:
->> The power function uses a consumer regulator access to update the WiFi
->> enable GPIO value.
->>
->> Signed-off-by: Uri Mashiach <uri.mashiach@compulab.co.il>
->
-> [On Nokia N950]
-> Tested-By: Sebastian Reichel <sre@kernel.org>
+Pass the rfkill name and type to the device with properties
+instead of driver specific platform data.
 
+Signed-off-by: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+CC: Alexandre Courbot <gnurou@gmail.com>
+CC: Thierry Reding <thierry.reding@gmail.com>
+CC: Stephen Warren <swarren@wwwdotorg.org>
+---
+ arch/arm/mach-tegra/board-paz00.c | 17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
 
-Reviewed-by: Grygorii Strashko <grygorii.strashko@ti.com>
-
-Thanks.
+diff --git a/arch/arm/mach-tegra/board-paz00.c b/arch/arm/mach-tegra/board-paz00.c
+index 49d1110..52db8bf 100644
+--- a/arch/arm/mach-tegra/board-paz00.c
++++ b/arch/arm/mach-tegra/board-paz00.c
+@@ -17,23 +17,25 @@
+  *
+  */
+ 
++#include <linux/property.h>
+ #include <linux/gpio/machine.h>
+ #include <linux/platform_device.h>
+-#include <linux/rfkill-gpio.h>
+ 
+ #include "board.h"
+ 
+-static struct rfkill_gpio_platform_data wifi_rfkill_platform_data = {
+-	.name	= "wifi_rfkill",
+-	.type	= RFKILL_TYPE_WLAN,
++static struct property_entry __initdata wifi_rfkill_prop[] = {
++	PROPERTY_ENTRY_STRING("name", "wifi_rfkill"),
++	PROPERTY_ENTRY_STRING("type", "wlan"),
++	{ },
++};
++
++static struct property_set __initdata wifi_rfkill_pset = {
++	.properties = wifi_rfkill_prop,
+ };
+ 
+ static struct platform_device wifi_rfkill_device = {
+ 	.name	= "rfkill_gpio",
+ 	.id	= -1,
+-	.dev	= {
+-		.platform_data = &wifi_rfkill_platform_data,
+-	},
+ };
+ 
+ static struct gpiod_lookup_table wifi_gpio_lookup = {
+@@ -47,6 +49,7 @@ static struct gpiod_lookup_table wifi_gpio_lookup = {
+ 
+ void __init tegra_paz00_wifikill_init(void)
+ {
++	platform_device_add_properties(&wifi_rfkill_device, &wifi_rfkill_pset);
+ 	gpiod_add_lookup_table(&wifi_gpio_lookup);
+ 	platform_device_register(&wifi_rfkill_device);
+ }
 -- 
-regards,
--grygorii
+2.7.0.rc3
+
