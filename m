@@ -1,101 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0105.hostedemail.com ([216.40.44.105]:48659 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757309AbcAaRZu (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:41202 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753321AbcAYHo1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2016 12:25:50 -0500
-Message-ID: <1454261145.7329.58.camel@perches.com> (sfid-20160131_182623_060727_39F0F7CA)
-Subject: Re: [PATCH 3/3] Staging: rtl8723au: core: rtw_ieee80211: Fixed
- space and brace coding style issue.
-From: Joe Perches <joe@perches.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Rakhi Sharma <rakhish1994@gmail.com>
-Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Date: Sun, 31 Jan 2016 09:25:45 -0800
-In-Reply-To: <wrfjy4b5zuhl.fsf@redhat.com>
-References: <1454246643-24049-1-git-send-email-rakhish1994@gmail.com>
-	 <wrfjy4b5zuhl.fsf@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Mon, 25 Jan 2016 02:44:27 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 23/26] staging: wilc1000: fix bug on p2p connection
+Date: Mon, 25 Jan 2016 16:35:27 +0900
+Message-ID: <1453707330-13526-24-git-send-email-glen.lee@atmel.com> (sfid-20160125_084430_514548_218C3CA6)
+In-Reply-To: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2016-01-31 at 09:36 -0500, Jes Sorensen wrote:
-> Rakhi Sharma <rakhish1994@gmail.com> writes:
-> > Fixed the space and brace coding style error.
-> > ERROR: space required before that '='
-> > ERROR: that open brace { should be on the previous line.
-> > 
-> > Signed-off-by: Rakhi Sharma <rakhish1994@gmail.com>
-> > ---
-> >  drivers/staging/rtl8723au/core/rtw_ieee80211.c | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/staging/rtl8723au/core/rtw_ieee80211.c b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
-> > index 3b0d782..0c933e4 100644
-> > --- a/drivers/staging/rtl8723au/core/rtw_ieee80211.c
-> > +++ b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
-> > @@ -65,8 +65,8 @@ static u8 WIFI_OFDMRATES[] = {
-> >  
-> >  int rtw_get_bit_value_from_ieee_value23a(u8 val)
-> >  {
-> > -	unsigned char dot11_rate_table[] =
-> > -			{2, 4, 11, 22, 12, 18, 24, 36, 48, 72, 96, 108, 0};
-> > +	unsigned char dot11_rate_table[] = {
-> > +		2, 4, 11, 22, 12, 18, 24, 36, 48, 72, 96, 108, 0};
-> >  
-> >  	int i = 0;
-> 
-> This is a great example of checkpatch doing the wrong thing. What you
-> did here was to make the code uglier rather than better.
-> 
-> NACK
+In case of action frame, size -7 is correct, but in this case, size should be
+used as it is.
 
-Here's the original code:
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-int rtw_get_bit_value_from_ieee_value23a(u8 val)
-{
-	unsigned char dot11_rate_table[]=
-		{2, 4, 11, 22, 12, 18, 24, 36, 48, 72, 96, 108, 0};
-
-	int i = 0;
-
-	while (dot11_rate_table[i] != 0) {
-		if (dot11_rate_table[i] == val)
-			return BIT(i);
-		i++;
-	}
-	return 0;
-}
-
-It has several nominal style defects:
-
-o compares different types (unsigned char to u8)
-o uses a while loop and test of a known sized array
-o array isn't declared static const
-o array initialization is different style from others
-  in the same file. "type foo[] = { bar, baz };"
-o the function argument is tested on the right side
-  tested on left side is more common.
-
-So this could be transformed into something like:
-
-int rtw_get_bit_value_from_ieee_value23a(u8 val)
-{
-	int i;
-	static const u8 dot11_rate_table[] = {
-		2, 4, 11, 22, 12, 18, 24, 36, 48, 72, 96, 108
-	};
-
-	for (i = 0; i < ARRAY_SIZE(dot11_rate_table); i++) {
-		if (val == dot11_rate_table[i])
-			return BIT(i);
-	}
-
-	return 0;
-}
-
-Rakhi, do please strive to make the code "better" rather
-than merely shut up checkpatch.
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 8930d1c..5f7f5e5 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1728,7 +1728,7 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
+ 			}
+ 		}
+ 
+-		cfg80211_rx_mgmt(priv->wdev, s32Freq, 0, buff, size - 7, 0);
++		cfg80211_rx_mgmt(priv->wdev, s32Freq, 0, buff, size, 0);
+ 	}
+ }
+ 
+-- 
+1.9.1
 
