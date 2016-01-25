@@ -1,65 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:37715 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932339AbcAYR7x (ORCPT
+Received: from mail-io0-f178.google.com ([209.85.223.178]:36853 "EHLO
+	mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932544AbcAYXYB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 12:59:53 -0500
-Subject: Re: [PATCH 1/2] mac80211: fix txq queue related crashes
-To: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless@vger.kernel.org
-References: <1453382588-27105-1-git-send-email-michal.kazior@tieto.com>
-Cc: johannes@sipsolutions.net
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <56A66298.1000607@candelatech.com> (sfid-20160125_185956_624980_9E872160)
-Date: Mon, 25 Jan 2016 09:59:52 -0800
+	Mon, 25 Jan 2016 18:24:01 -0500
+Received: by mail-io0-f178.google.com with SMTP id g73so172333863ioe.3
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2016 15:24:00 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1453382588-27105-1-git-send-email-michal.kazior@tieto.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1453712816-2343-1-git-send-email-arend@broadcom.com>
+References: <1453712816-2343-1-git-send-email-arend@broadcom.com>
+Date: Tue, 26 Jan 2016 00:24:00 +0100
+Message-ID: <CACna6rwQz3ES=CopxJNshX9iWgc4PCOqQeVr0WeJo3E=ST1Dqg@mail.gmail.com> (sfid-20160126_002405_333861_684C6D62)
+Subject: Re: [PATCH] brcm: add firmware for bcm4366 device
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-firmware@kernel.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/21/2016 05:23 AM, Michal Kazior wrote:
-> The driver can access the queue simultanously
-> while mac80211 tears down the interface. Without
-> spinlock protection this could lead to corrupting
-> sk_buff_head and subsequently to an invalid
-> pointer dereference.
+On 25 January 2016 at 10:06, Arend van Spriel <arend@broadcom.com> wrote:
+> This patch adds firmware for the bcm4366 11ac wlan device which
+> is supported by the brcmfmac driver since commit 55acca90da52
+> ("brcmfmac: Add support for the BCM4365 and BCM4366 PCIE devices").
 
-Hard to know for certain, but this *appears* to fix the unexpectedly large
-amount of CE/AXI ath10k firmware crashes that we saw in the 4.2 kernel (4.0 previously
-ran much better han 4.2 for us).
+Thanks a lot for releasing it so quickly since my report!
 
-We'll continue testing, in case we are just getting lucky so far.
-
-Thanks,
-Ben
-
->
-> Fixes: ba8c3d6f16a1 ("mac80211: add an intermediate software queue implementation")
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
-> ---
->   net/mac80211/iface.c | 3 +++
->   1 file changed, 3 insertions(+)
->
-> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-> index 33ae3c81bfc5..0451f120746e 100644
-> --- a/net/mac80211/iface.c
-> +++ b/net/mac80211/iface.c
-> @@ -977,7 +977,10 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
->   	if (sdata->vif.txq) {
->   		struct txq_info *txqi = to_txq_info(sdata->vif.txq);
->
-> +		spin_lock_bh(&txqi->queue.lock);
->   		ieee80211_purge_tx_queue(&local->hw, &txqi->queue);
-> +		spin_unlock_bh(&txqi->queue.lock);
-> +
->   		atomic_set(&sdata->txqs_len[txqi->txq.ac], 0);
->   	}
->
->
-
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Unfrotunately there is some problem with this firmware or brcmfmac
+driver. I tried the latest brcmfmac + added 14e4:4365 support on my
+D-Link DIR-885L and got this:
+[   52.853422] brcmfmac: brcmf_pcie_download_fw_nvram: FW failed to initialize
+any hint what could cause this problem?
