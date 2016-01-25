@@ -1,47 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40707 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753321AbcAYHmP (ORCPT
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:36042 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755368AbcAYLGz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 02:42:15 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 01/26] staging: wilc1000: fix bug when changing virtual interface
-Date: Mon, 25 Jan 2016 16:35:05 +0900
-Message-ID: <1453707330-13526-2-git-send-email-glen.lee@atmel.com> (sfid-20160125_084218_282373_56F18488)
-In-Reply-To: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
-References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+	Mon, 25 Jan 2016 06:06:55 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1453718849-3508-1-git-send-email-sjoerd.simons@collabora.co.uk>
+References: <1453718849-3508-1-git-send-email-sjoerd.simons@collabora.co.uk>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 25 Jan 2016 22:06:35 +1100
+Message-ID: <CAGRGNgXWE=b52Mcy8NsKBZS_4gz-TUiuFipjsuTZh1xjja=uUg@mail.gmail.com> (sfid-20160125_120722_574570_8780640A)
+Subject: Re: [PATCH] brcmfmac: sdio: Increase the default timeouts a bit
+To: Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Paul Stewart <pstew@chromium.org>,
+	Doug Anderson <dianders@chromium.org>,
+	linux-rockchip@lists.infradead.org,
+	Arend van Spriel <arend@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	brcm80211-dev-list@broadcom.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	netdev <netdev@vger.kernel.org>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes a bug connection error when changing virtual interface to p2p.
-Variable quit needs to be set 0 when wilc is reinitialized again.
+Hi Sjoerd,
 
-Fixes : 67e2a07ed800 ("staging: wilc1000: move all of wilc_wlan_dev_t to struct wilc")
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 2 ++
- 1 file changed, 2 insertions(+)
+On Mon, Jan 25, 2016 at 9:47 PM, Sjoerd Simons
+<sjoerd.simons@collabora.co.uk> wrote:
+> On a Radxa Rock2 board with a Ampak AP6335 (Broadcom 4339 core) it seems
+> the card responds very quickly most of the time, unfortunately during
+> initialisation it sometimes seems to take just a bit over 2 seconds to
+> respond.
+>
+> This results intialization failing with message like:
+>   brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -52
+>   brcmf_bus_start: failed: -52
+>   brcmf_sdio_firmware_callback: dongle is not responding
+>
+> Increasing the timeout to allow for a bit more headroom allows the
+> card to initialize reliably.
+>
+> A quick search online after diagnosing/fixing this showed that Google
+> has a similar patch in their ChromeOS tree, so this doesn't seem
+> specific to the board I'm using.
+>
+> Signed-off-by: Sjoerd Simons <sjoerd.simons@collabora.co.uk>
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 83af51b..07460ff 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1588,6 +1588,8 @@ int wilc_wlan_init(struct net_device *dev)
- 
- 	PRINT_D(INIT_DBG, "Initializing WILC_Wlan ...\n");
- 
-+	wilc->quit = 0;
-+
- 	if (!wilc->hif_func->hif_init(wilc)) {
- 		ret = -EIO;
- 		goto _fail_;
+Looks sane to me.
+
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> index dd66143..75ac4bd 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> @@ -45,8 +45,8 @@
+>  #include "chip.h"
+>  #include "firmware.h"
+>
+> -#define DCMD_RESP_TIMEOUT      msecs_to_jiffies(2000)
+> -#define CTL_DONE_TIMEOUT       msecs_to_jiffies(2000)
+> +#define DCMD_RESP_TIMEOUT      msecs_to_jiffies(2500)
+> +#define CTL_DONE_TIMEOUT       msecs_to_jiffies(2500)
+>
+>  #ifdef DEBUG
+>
+> --
+> 2.7.0
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-1.9.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
