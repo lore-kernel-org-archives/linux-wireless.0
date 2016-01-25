@@ -1,66 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0180.hostedemail.com ([216.40.44.180]:38134 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751595AbcAFRwu (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:40814 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755498AbcAYHmk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2016 12:52:50 -0500
-Message-ID: <1452102761.24575.44.camel@perches.com> (sfid-20160106_185311_476755_1FA80765)
-Subject: Re: [PATCH] staging: wilc1000: Removed unnecessary braces
-From: Joe Perches <joe@perches.com>
-To: Anjali Menon <cse.anjalimenon@gmail.com>,
-	gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Date: Wed, 06 Jan 2016 09:52:41 -0800
-In-Reply-To: <1452086991-6997-1-git-send-email-cse.anjalimenon@gmail.com>
-References: <1452086991-6997-1-git-send-email-cse.anjalimenon@gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Mon, 25 Jan 2016 02:42:40 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 05/26] staging: wilc1000: sdio_init: add resume argument
+Date: Mon, 25 Jan 2016 16:35:09 +0900
+Message-ID: <1453707330-13526-6-git-send-email-glen.lee@atmel.com> (sfid-20160125_084252_229569_2A86F66D)
+In-Reply-To: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-01-06 at 18:59 +0530, Anjali Menon wrote:
-> Removed unnecessary braces for single statement blocks to
-> fix the warning detected by checkpatch.pl
-> 
-> WARNING: braces {} are not necessary for single statement blocks
-> 
-> Signed-off-by: Anjali Menon <cse.anjalimenon@gmail.com>
-> ---
->  drivers/staging/wilc1000/wilc_wlan_cfg.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-> index a34a81c..afb5d2c 100644
-> --- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-> +++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-> @@ -251,9 +251,8 @@ static int wilc_wlan_cfg_set_bin(u8 *frame, u32 offset, u16 id, u8 *b, u32 size)
->  
->  	if ((b != NULL) && (size != 0)) {
->  		memcpy(&buf[4], b, size);
-> -		for (i = 0; i < size; i++) {
-> +		for (i = 0; i < size; i++)
->  			checksum += buf[i + 4];
-> -		}
->  	}
->  
->  	buf[size + 4] = checksum;
+Part of sdio init codes should not run when sdio init function is called on
+sdio resume so skip them.
 
-Please think of what the code is doing instead
-of just shutting up checkpatch.
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_sdio.c | 34 +++++++++++++++++++---------------
+ drivers/staging/wilc1000/wilc_spi.c  |  2 +-
+ drivers/staging/wilc1000/wilc_wlan.c |  2 +-
+ drivers/staging/wilc1000/wilc_wlan.h |  2 +-
+ 4 files changed, 22 insertions(+), 18 deletions(-)
 
-Maybe instead of walking the buffer twice, once
-for the memcpy, another for the checksum, perhaps
-using a routine to do both at the same time would
-be better.
-
-Maybe something like:
-
-	if (b && size) {
-		u32 count = size;
-		u8 *to = &buf[4];
-
-		while (count--)
-			checksum += (*to++ = *b++);
-	}
+diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+index f40a527..7c20c8c 100644
+--- a/drivers/staging/wilc1000/wilc_sdio.c
++++ b/drivers/staging/wilc1000/wilc_sdio.c
+@@ -42,7 +42,7 @@ static wilc_sdio_t g_sdio;
+ 
+ static int sdio_write_reg(struct wilc *wilc, u32 addr, u32 data);
+ static int sdio_read_reg(struct wilc *wilc, u32 addr, u32 *data);
+-static int sdio_init(struct wilc *wilc);
++static int sdio_init(struct wilc *wilc, bool resume);
+ 
+ static void wilc_sdio_interrupt(struct sdio_func *func)
+ {
+@@ -196,7 +196,7 @@ static int wilc_sdio_resume(struct device *dev)
+ 	dev_info(dev, "sdio resume\n");
+ 	sdio_release_host(func);
+ 	chip_wakeup(wilc);
+-	sdio_init(wilc);
++	sdio_init(wilc, true);
+ 
+ 	if (wilc->suspend_event)
+ 		host_wakeup_notify(wilc);
+@@ -667,16 +667,17 @@ static int sdio_deinit(struct wilc *wilc)
+ 	return 1;
+ }
+ 
+-static int sdio_init(struct wilc *wilc)
++static int sdio_init(struct wilc *wilc, bool resume)
+ {
+ 	struct sdio_func *func = dev_to_sdio_func(wilc->dev);
+ 	sdio_cmd52_t cmd;
+ 	int loop, ret;
+ 	u32 chipid;
+ 
+-	memset(&g_sdio, 0, sizeof(wilc_sdio_t));
+-
+-	g_sdio.irq_gpio = (wilc->dev_irq_num);
++	if (!resume) {
++		memset(&g_sdio, 0, sizeof(wilc_sdio_t));
++		g_sdio.irq_gpio = (wilc->dev_irq_num);
++	}
+ 
+ 	/**
+ 	 *      function 0 csa enable
+@@ -766,16 +767,19 @@ static int sdio_init(struct wilc *wilc)
+ 	/**
+ 	 *      make sure can read back chip id correctly
+ 	 **/
+-	if (!sdio_read_reg(wilc, 0x1000, &chipid)) {
+-		dev_err(&func->dev, "Fail cmd read chip id...\n");
+-		goto _fail_;
++	if (!resume) {
++		if (!sdio_read_reg(wilc, 0x1000, &chipid)) {
++			dev_err(&func->dev, "Fail cmd read chip id...\n");
++			goto _fail_;
++		}
++		dev_err(&func->dev, "chipid (%08x)\n", chipid);
++		if ((chipid & 0xfff) > 0x2a0)
++			g_sdio.has_thrpt_enh3 = 1;
++		else
++			g_sdio.has_thrpt_enh3 = 0;
++		dev_info(&func->dev, "has_thrpt_enh3 = %d...\n",
++			 g_sdio.has_thrpt_enh3);
+ 	}
+-	dev_err(&func->dev, "chipid (%08x)\n", chipid);
+-	if ((chipid & 0xfff) > 0x2a0)
+-		g_sdio.has_thrpt_enh3 = 1;
+-	else
+-		g_sdio.has_thrpt_enh3 = 0;
+-	dev_info(&func->dev, "has_thrpt_enh3 = %d...\n", g_sdio.has_thrpt_enh3);
+ 
+ 	return 1;
+ 
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index 86de50c..356a446 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -852,7 +852,7 @@ static int _wilc_spi_deinit(struct wilc *wilc)
+ 	return 1;
+ }
+ 
+-static int wilc_spi_init(struct wilc *wilc)
++static int wilc_spi_init(struct wilc *wilc, bool resume)
+ {
+ 	struct spi_device *spi = to_spi_device(wilc->dev);
+ 	u32 reg;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 8a39a05..aed1dd2 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1530,7 +1530,7 @@ int wilc_wlan_init(struct net_device *dev)
+ 
+ 	wilc->quit = 0;
+ 
+-	if (!wilc->hif_func->hif_init(wilc)) {
++	if (!wilc->hif_func->hif_init(wilc, false)) {
+ 		ret = -EIO;
+ 		goto _fail_;
+ 	}
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 53e56ff..a1096ed 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -227,7 +227,7 @@ struct rxq_entry_t {
+  ********************************************/
+ struct wilc;
+ struct wilc_hif_func {
+-	int (*hif_init)(struct wilc *);
++	int (*hif_init)(struct wilc *, bool resume);
+ 	int (*hif_deinit)(struct wilc *);
+ 	int (*hif_read_reg)(struct wilc *, u32, u32 *);
+ 	int (*hif_write_reg)(struct wilc *, u32, u32);
+-- 
+1.9.1
 
