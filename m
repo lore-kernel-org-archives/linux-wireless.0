@@ -1,42 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42372 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753876AbcAFKoL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Jan 2016 05:44:11 -0500
-Message-ID: <1452077048.2541.5.camel@sipsolutions.net> (sfid-20160106_114417_294668_D1802852)
-Subject: Re: [PATCH v2 1/2] mac80211: check requested flags in
- ieee80211_tx_prepare_skb()
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless@vger.kernel.org
-Cc: j@w1.fi
-Date: Wed, 06 Jan 2016 11:44:08 +0100
-In-Reply-To: <1451990134-15183-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20160105_113556_363725_B1436A7B)
-References: <1451990134-15183-1-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20160105_113556_363725_B1436A7B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from merlin.infradead.org ([205.233.59.134]:58765 "EHLO
+	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932175AbcAYXRD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2016 18:17:03 -0500
+Date: Mon, 25 Jan 2016 18:17:02 -0500
+From: Kyle McMartin <kyle@infradead.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless@vger.kernel.org, Rafal Milecki <zajec5@gmail.com>,
+	linux-firmware@kernel.org
+Subject: Re: [PATCH] brcm: add firmware for bcm4366 device
+Message-ID: <20160125231702.GE16381@merlin.infradead.org> (sfid-20160126_001707_465429_B3348E26)
+References: <1453712816-2343-1-git-send-email-arend@broadcom.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1453712816-2343-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-01-05 at 11:35 +0100, Janusz Dziedzic wrote:
-> In case driver already set info->flags (eg.
-> IEEE80211_TX_CTL_NO_CCK_RATE
-> in ath9k driver), before this patch we skip this requested flags.
+On Mon, Jan 25, 2016 at 10:06:56AM +0100, Arend van Spriel wrote:
+> This patch adds firmware for the bcm4366 11ac wlan device which
+> is supported by the brcmfmac driver since commit 55acca90da52
+> ("brcmfmac: Add support for the BCM4365 and BCM4366 PCIE devices").
+> 
+> Cc: Rafal Milecki <zajec5@gmail.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
 
-I don't see how we "skip" them?
+applied, thanks.
 
-> +	unsigned int flags = info->flags;
->  
->  	if (ieee80211_tx_prepare(sdata, &tx, NULL, skb) == TX_DROP)
->  		return false;
-> 
->  	info->band = band;
->  	info->control.vif = vif;
->  	info->hw_queue = vif->hw_queue[skb_get_queue_mapping(skb)];
-> +	info->flags |= flags;
-
-tx_prepare() doesn't [seem to] do anything to the flags but twiddle a
-few, so ?
-
-johannes
+regards, --kyle
