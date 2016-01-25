@@ -1,45 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35350 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750915AbcALXeU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 18:34:20 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Tobias Klauser <tklauser@distanz.ch>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtl8xxxu: Fix typo in Kconfig help text
-References: <1452601608-11361-1-git-send-email-tklauser@distanz.ch>
-Date: Tue, 12 Jan 2016 18:34:19 -0500
-In-Reply-To: <1452601608-11361-1-git-send-email-tklauser@distanz.ch> (Tobias
-	Klauser's message of "Tue, 12 Jan 2016 13:26:48 +0100")
-Message-ID: <wrfjfuy21if8.fsf@redhat.com> (sfid-20160113_003422_488983_EB047239)
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:34810 "EHLO
+	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754830AbcAYPgt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2016 10:36:49 -0500
+Subject: Re: [PATCH] brcmfmac: sdio: Increase the default timeouts a bit
+To: Sjoerd Simons <sjoerd.simons@collabora.co.uk>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <1453718849-3508-1-git-send-email-sjoerd.simons@collabora.co.uk>
+Cc: Paul Stewart <pstew@chromium.org>,
+	Doug Anderson <dianders@chromium.org>,
+	linux-rockchip@lists.infradead.org,
+	Arend van Spriel <arend@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>, netdev@vger.kernel.org,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	linux-mmc@vger.kernel.org
+From: Arend van Spriel <aspriel@gmail.com>
+Message-ID: <56A64114.3010400@gmail.com> (sfid-20160125_163730_522246_18759FCE)
+Date: Mon, 25 Jan 2016 16:36:52 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1453718849-3508-1-git-send-email-sjoerd.simons@collabora.co.uk>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tobias Klauser <tklauser@distanz.ch> writes:
-> Fix spelling of "benefits".
->
-> Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
+On 25-01-16 11:47, Sjoerd Simons wrote:
+> On a Radxa Rock2 board with a Ampak AP6335 (Broadcom 4339 core) it seems
+> the card responds very quickly most of the time, unfortunately during
+> initialisation it sometimes seems to take just a bit over 2 seconds to
+> respond.
+> 
+> This results intialization failing with message like:
+>   brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -52
+>   brcmf_bus_start: failed: -52
+>   brcmf_sdio_firmware_callback: dongle is not responding
+> 
+> Increasing the timeout to allow for a bit more headroom allows the
+> card to initialize reliably.
+
+I would prefer to know where the 2 second response time comes from.
+Could be sdio retuning. Maybe the chromeos people can comment whether
+this has been root caused.
+
+There is a mmc patch pending in which retuning procedure can be deferred
+by the driver. Using that API may resolve the issue as well and I would
+prefer that solution.
+
+> A quick search online after diagnosing/fixing this showed that Google
+> has a similar patch in their ChromeOS tree, so this doesn't seem
+> specific to the board I'm using.
+
+As the retuning stuff is not in main line I guess we need this fix for
+now so...
+
+Acked-by: Arend van Spriel <arend@broadcom.com>
+> Signed-off-by: Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+> 
 > ---
->  drivers/net/wireless/realtek/rtl8xxxu/Kconfig | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+Still would like to know whether it is firmware initialization or some
+mmc stack procedure. Any suggestions to debug this are welcome.
 
-Thanks, I'll put it in my queue.
-
-Jes
-
->
-> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/Kconfig b/drivers/net/wireless/realtek/rtl8xxxu/Kconfig
-> index dd4d626aecbc..8f053c350227 100644
-> --- a/drivers/net/wireless/realtek/rtl8xxxu/Kconfig
-> +++ b/drivers/net/wireless/realtek/rtl8xxxu/Kconfig
-> @@ -13,7 +13,7 @@ config RTL8XXXU
->  	  This driver is under development and has a limited feature
->  	  set. In particular it does not yet support 40MHz channels
->  	  and power management. However it should have a smaller
-> -	  memory footprint than the vendor drivers and benetifs
-> +	  memory footprint than the vendor drivers and benefits
->  	  from the in kernel mac80211 stack.
+Regards,
+Arend
+---
+> 
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> index dd66143..75ac4bd 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> @@ -45,8 +45,8 @@
+>  #include "chip.h"
+>  #include "firmware.h"
 >  
->  	  It can coexist with drivers from drivers/staging/rtl8723au,
+> -#define DCMD_RESP_TIMEOUT	msecs_to_jiffies(2000)
+> -#define CTL_DONE_TIMEOUT	msecs_to_jiffies(2000)
+> +#define DCMD_RESP_TIMEOUT	msecs_to_jiffies(2500)
+> +#define CTL_DONE_TIMEOUT	msecs_to_jiffies(2500)
+>  
+>  #ifdef DEBUG
+>  
+> 
