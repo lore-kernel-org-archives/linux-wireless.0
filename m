@@ -1,54 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.11]:60771 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751221AbcAEIaR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 03:30:17 -0500
-Subject: Re: rsi: Delete unnecessary variable initialisations in
- rsi_send_mgmt_pkt()
-To: Julian Calaby <julian.calaby@gmail.com>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <5687E169.4070704@users.sourceforge.net>
- <5687E203.1070404@users.sourceforge.net> <20160104092857.GD5284@mwanda>
- <568A4CFF.8060600@users.sourceforge.net> <20160104114849.GH5284@mwanda>
- <568A668D.8090007@users.sourceforge.net>
- <CAGRGNgXw+G6ZcmFmM=VWZT_jibuZyxe-kSvPSF8W7hPueLhNrw@mail.gmail.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Message-ID: <568B7F06.1010500@users.sourceforge.net> (sfid-20160105_093039_247560_46110C08)
-Date: Tue, 5 Jan 2016 09:29:58 +0100
-MIME-Version: 1.0
-In-Reply-To: <CAGRGNgXw+G6ZcmFmM=VWZT_jibuZyxe-kSvPSF8W7hPueLhNrw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from shards.monkeyblade.net ([149.20.54.216]:43120 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750818AbcAYGBv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2016 01:01:51 -0500
+Date: Sun, 24 Jan 2016 22:01:47 -0800 (PST)
+Message-Id: <20160124.220147.1840338377819463012.davem@davemloft.net> (sfid-20160125_070216_359290_712F9954)
+To: herbert@gondor.apana.org.au
+Cc: linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
+	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
+	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, ceph-devel@vger.kernel.org,
+	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
+	drbd-dev@lists.linbit.com, open-iscsi@googlegroups.com
+Subject: Re: [PATCH 26/26] tcp: Use ahash
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <E1aNKad-0008H5-Ax@gondolin.me.apana.org.au>
+References: <20160124131021.GA31153@gondor.apana.org.au>
+	<E1aNKad-0008H5-Ax@gondolin.me.apana.org.au>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> That said, if you figure out some change that produces significant
-> reductions in code or binary size on multiple architectures without
-> making things more complicated, less readable or making the code or
-> binary size larger, then by all means propose it.
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Date: Sun, 24 Jan 2016 21:20:23 +0800
 
-Are you looking also for "a proof" that such changes are worthwhile?
+> This patch replaces uses of the long obsolete hash interface with
+> ahash.
+> 
+> Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
 
-
-> "This makes things smaller" carries much more weight than
-> "I think this is better".
-
-Can the discussed implementation of a function like "rsi_send_mgmt_pkt"
-become a bit smaller by the deletion of extra variable initialisations
-
-
-> Almost all of the changes you've proposed that have seen any
-> discussion whatsoever fall into the latter category.
-
-Thanks for your interesting feedback.
-
-Can a further constructive dialogue evolve from the presented information?
-
-Regards,
-Markus
+Acked-by: David S. Miller <davem@davemloft.net>
