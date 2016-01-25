@@ -1,44 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from slow1-d.mail.gandi.net ([217.70.178.86]:60055 "EHLO
-	slow1-d.mail.gandi.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933527AbcALMM4 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:40830 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932100AbcAYHmq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 07:12:56 -0500
-Received: from relay6-d.mail.gandi.net (relay6-d.mail.gandi.net [217.70.183.198])
-	by slow1-d.mail.gandi.net (Postfix) with ESMTP id 375D547FBF7
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2016 13:05:38 +0100 (CET)
-Message-ID: <1452600332.17103.10.camel@hadess.net> (sfid-20160112_131300_106800_BE4A6C82)
-Subject: How to revert RFKILL_IOC_NOINPUT ioctl?
-From: Bastien Nocera <hadess@hadess.net>
-To: johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Date: Tue, 12 Jan 2016 13:05:32 +0100
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 25 Jan 2016 02:42:46 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 06/26] staging: wilc1000: add ops resuem/suspend/wakeup in cfg80211
+Date: Mon, 25 Jan 2016 16:35:10 +0900
+Message-ID: <1453707330-13526-7-git-send-email-glen.lee@atmel.com> (sfid-20160125_084253_914926_DCCBE5E8)
+In-Reply-To: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hey,
+This patch adds ops resume, suspend and set_wakeup in cfg80211. Together with
+previous patches, driver will support suspend/resume functionality.
 
-I recently implemented support for rfkill multimedia/keyboard keys in
-GNOME:
-http://www.hadess.net/2016/01/support-for-airplane-mode-keys.html
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+Changes in V2:
+ - fix checkpatch ERROR: space required before the open parenthesis
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 39 +++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-But, as my laptop doesn't have those keys (or rather it does have them,
-but they're not supported by the thinkpad kernel driver), I assigned
-the functionality temporarily to other keys. It worked well enough.
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 53fb2d4..5c23462 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -74,6 +74,10 @@ static const struct ieee80211_txrx_stypes
+ 	}
+ };
+ 
++static const struct wiphy_wowlan_support wowlan_support = {
++	.flags = WIPHY_WOWLAN_ANY
++};
++
+ #define WILC_WFI_DWELL_PASSIVE 100
+ #define WILC_WFI_DWELL_ACTIVE  40
+ 
+@@ -2673,6 +2677,36 @@ static int del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
+ 	return 0;
+ }
+ 
++static int wilc_suspend(struct wiphy *wiphy, struct cfg80211_wowlan *wow)
++{
++	struct wilc_priv *priv = wiphy_priv(wiphy);
++	struct wilc_vif *vif = netdev_priv(priv->dev);
++
++	if (!wow && wilc_wlan_get_num_conn_ifcs(vif->wilc))
++		vif->wilc->suspend_event = true;
++	else
++		vif->wilc->suspend_event = false;
++
++	return 0;
++}
++
++static int wilc_resume(struct wiphy *wiphy)
++{
++	struct wilc_priv *priv = wiphy_priv(wiphy);
++	struct wilc_vif *vif = netdev_priv(priv->dev);
++
++	netdev_info(vif->ndev, "cfg resume\n");
++	return 0;
++}
++
++static void wilc_set_wakeup(struct wiphy *wiphy, bool enabled)
++{
++	struct wilc_priv *priv = wiphy_priv(wiphy);
++	struct wilc_vif *vif = netdev_priv(priv->dev);
++
++	netdev_info(vif->ndev, "cfg set wake up = %d\n", enabled);
++}
++
+ static struct cfg80211_ops wilc_cfg80211_ops = {
+ 	.set_monitor_channel = set_channel,
+ 	.scan = scan,
+@@ -2708,6 +2742,10 @@ static struct cfg80211_ops wilc_cfg80211_ops = {
+ 	.set_power_mgmt = set_power_mgmt,
+ 	.set_cqm_rssi_config = set_cqm_rssi_config,
+ 
++	.suspend = wilc_suspend,
++	.resume = wilc_resume,
++	.set_wakeup = wilc_set_wakeup,
++
+ };
+ 
+ int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed)
+@@ -2792,6 +2830,7 @@ struct wireless_dev *wilc_create_wiphy(struct net_device *net, struct device *de
+ 	sema_init(&(priv->SemHandleUpdateStats), 1);
+ 	priv->wdev = wdev;
+ 	wdev->wiphy->max_scan_ssids = MAX_NUM_PROBED_SSID;
++	wdev->wiphy->wowlan = &wowlan_support;
+ 	wdev->wiphy->max_num_pmkids = WILC_MAX_NUM_PMKIDS;
+ 	PRINT_INFO(CFG80211_DBG, "Max number of PMKIDs = %d\n", wdev->wiphy->max_num_pmkids);
+ 
+-- 
+1.9.1
 
-I realised looking at the rfkill kernel configuration, and noticed that
-it wasn't possible to disable CONFIG_RFKILL_INPUT without enabling the
-expert mode. "Why" would be the first question in this mail.
-
-See https://lists.fedoraproject.org/archives/list/kernel@lists.fedoraproject.org/thread/FWCOCU2ODZHK7AQVOWSFJLBXL744LYNO/
-
-To make my GNOME code work, I'd need to disable rfkill-input. But if I
-still wanted to allow rfkill-input to work when GNOME isn't running,
-such as when switching to a console, or another less-capable desktop
-environment. But there doesn't seem to be a counterpart
-for RFKILL_IOC_NOINPUT. Any reason why?
-
-See https://bugzilla.gnome.org/show_bug.cgi?id=760517
-
-Cheers
