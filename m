@@ -1,53 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m12-13.163.com ([220.181.12.13]:43980 "EHLO m12-13.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751941AbcADH4N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2016 02:56:13 -0500
-From: Jia-Ju Bai <baijiaju1990@163.com>
-To: sgruszka@redhat.com, helmut.schaa@googlemail.com,
-	kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jia-Ju Bai <baijiaju1990@163.com>
-Subject: [PATCH] rt2x00pci: Disable memory-write-invalidate when the driver exits
-Date: Mon,  4 Jan 2016 15:55:38 +0800
-Message-Id: <1451894138-3482-1-git-send-email-baijiaju1990@163.com> (sfid-20160104_085632_168183_A6AA8544)
+Received: from shards.monkeyblade.net ([149.20.54.216]:43134 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754687AbcAYGCH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2016 01:02:07 -0500
+Date: Sun, 24 Jan 2016 22:02:05 -0800 (PST)
+Message-Id: <20160124.220205.1803303055782377145.davem@davemloft.net> (sfid-20160125_070233_426228_7BB4B2ED)
+To: herbert@gondor.apana.org.au
+Cc: linux-crypto@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
+	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
+	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org, ceph-devel@vger.kernel.org,
+	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
+	drbd-dev@lists.linbit.com, open-iscsi@googlegroups.com
+Subject: Re: [PATCH 25/26] sctp: Use shash
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <E1aNKaS-0008Gn-Rz@gondolin.me.apana.org.au>
+References: <20160124131021.GA31153@gondor.apana.org.au>
+	<E1aNKaS-0008Gn-Rz@gondolin.me.apana.org.au>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver calls pci_set_mwi to enable memory-write-invalidate when it
-is initialized, but does not call pci_clear_mwi when it is removed. Many
-other drivers calls pci_clear_mwi when pci_set_mwi is called, such as
-r8169, 8139cp and e1000.
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Date: Sun, 24 Jan 2016 21:20:12 +0800
 
-This patch adds pci_clear_mwi in error handling and removal procedure, 
-which can fix the problem.
+> This patch replaces uses of the long obsolete hash interface with
+> shash.
+> 
+> Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
----
- drivers/net/wireless/rt2x00/rt2x00pci.c |    2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-index d93db4b..eb6dbcd 100644
---- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-+++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-@@ -149,6 +149,7 @@ exit_free_device:
- 	ieee80211_free_hw(hw);
- 
- exit_release_regions:
-+	pci_clear_mwi(pci_dev);
- 	pci_release_regions(pci_dev);
- 
- exit_disable_device:
-@@ -173,6 +174,7 @@ void rt2x00pci_remove(struct pci_dev *pci_dev)
- 	/*
- 	 * Free the PCI device data.
- 	 */
-+	pci_clear_mwi(pci_dev);
- 	pci_disable_device(pci_dev);
- 	pci_release_regions(pci_dev);
- }
--- 
-1.7.9.5
-
-
+Acked-by: David S. Miller <davem@davemloft.net>
