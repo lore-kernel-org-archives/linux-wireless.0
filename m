@@ -1,57 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38252 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751169AbcA2IIc (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:37715 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932339AbcAYR7x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2016 03:08:32 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	kbuild test robot <lkp@intel.com>,
-	kernel-janitors <kernel-janitors@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: wireless-drivers: random cleanup patches piling up
-References: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com>
-	<1453423965.3856.22.camel@perches.com>
-	<87k2n1x0sf.fsf@kamboji.qca.qualcomm.com>
-	<20160122151211.GB1500@tuxdriver.com>
-	<87si1pvcd7.fsf@kamboji.qca.qualcomm.com>
-	<20160126052823.GA2053@sudip-laptop>
-Date: Fri, 29 Jan 2016 10:08:23 +0200
-In-Reply-To: <20160126052823.GA2053@sudip-laptop> (Sudip Mukherjee's message
-	of "Tue, 26 Jan 2016 10:58:23 +0530")
-Message-ID: <87bn84kdu0.fsf@kamboji.qca.qualcomm.com> (sfid-20160129_090935_458419_7298F5B2)
+	Mon, 25 Jan 2016 12:59:53 -0500
+Subject: Re: [PATCH 1/2] mac80211: fix txq queue related crashes
+To: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless@vger.kernel.org
+References: <1453382588-27105-1-git-send-email-michal.kazior@tieto.com>
+Cc: johannes@sipsolutions.net
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <56A66298.1000607@candelatech.com> (sfid-20160125_185956_624980_9E872160)
+Date: Mon, 25 Jan 2016 09:59:52 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1453382588-27105-1-git-send-email-michal.kazior@tieto.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
+On 01/21/2016 05:23 AM, Michal Kazior wrote:
+> The driver can access the queue simultanously
+> while mac80211 tears down the interface. Without
+> spinlock protection this could lead to corrupting
+> sk_buff_head and subsequently to an invalid
+> pointer dereference.
 
->> >> That's also my experience from maintaining wireless-drivers for a year,
->> >> this seems to be a "hit and run" type of phenomenon.
->> >
->> > Should we be looking for someone to run a "wireless-driver-cleanups"
->> > tree?  They could handle the cleanups and trivial stuff, and send
->> > you a pull request a couple of times per release...?
->> 
->> Not a bad idea! But I don't think we need a separate tree as applying
->> patches from patchwork is easy. It should be doable that we add an
->> account to patchwork and whenever I see a this type of trivial cleanup
->> patch I'll assign it to the cleanup maintainer and whenever he/she
->> thinks it's ready he assigns the patch back to me and I'll apply it.
->> 
->> The only difficult part is finding a victim/volunteer to
->> do that ;)
+Hard to know for certain, but this *appears* to fix the unexpectedly large
+amount of CE/AXI ath10k firmware crashes that we saw in the 4.2 kernel (4.0 previously
+ran much better han 4.2 for us).
+
+We'll continue testing, in case we are just getting lucky so far.
+
+Thanks,
+Ben
+
 >
-> I can be a volunteer (victim?). Though i donot know much about
-> wireless-drivers, but I do know a little about cleanup patches.
-> And maybe, in the process I will start knowing wireless-drivers.
+> Fixes: ba8c3d6f16a1 ("mac80211: add an intermediate software queue implementation")
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+>   net/mac80211/iface.c | 3 +++
+>   1 file changed, 3 insertions(+)
+>
+> diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+> index 33ae3c81bfc5..0451f120746e 100644
+> --- a/net/mac80211/iface.c
+> +++ b/net/mac80211/iface.c
+> @@ -977,7 +977,10 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+>   	if (sdata->vif.txq) {
+>   		struct txq_info *txqi = to_txq_info(sdata->vif.txq);
+>
+> +		spin_lock_bh(&txqi->queue.lock);
+>   		ieee80211_purge_tx_queue(&local->hw, &txqi->queue);
+> +		spin_unlock_bh(&txqi->queue.lock);
+> +
+>   		atomic_set(&sdata->txqs_len[txqi->txq.ac], 0);
+>   	}
+>
+>
 
-I think it's better that you have prior experience with linux-wireless
-before doing something like this. You can start by reviewing patches and
-providing Reviewed-by tags.
 
 -- 
-Kalle Valo
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
