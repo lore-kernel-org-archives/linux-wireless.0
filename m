@@ -1,46 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m12-16.163.com ([220.181.12.16]:44639 "EHLO m12-16.163.com"
+Received: from mga14.intel.com ([192.55.52.115]:49698 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756634AbcAJCT0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Jan 2016 21:19:26 -0500
-From: Jia-Ju Bai <baijiaju1990@163.com>
-To: sgruszka@redhat.com, kvalo@codeaurora.org, johannes.berg@intel.com,
-	emmanuel.grumbach@intel.com
-Cc: ilw@linux.intel.com, linuxwifi@intel.com,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Jia-Ju Bai <baijiaju1990@163.com>
-Subject: [PATCH] iwl4965: Fix a memory leak in error handling code of __il4965_up
-Date: Sun, 10 Jan 2016 10:19:23 +0800
-Message-Id: <1452392363-3600-1-git-send-email-baijiaju1990@163.com> (sfid-20160110_032002_808915_EC645D5A)
+	id S1752521AbcAYJFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2016 04:05:53 -0500
+From: Heikki Krogerus <heikki.krogerus@linux.intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCHv2 0/4] net: rfkill: gpio: replace platform data with build-in property
+Date: Mon, 25 Jan 2016 12:03:45 +0300
+Message-Id: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com> (sfid-20160125_100559_359155_E3ED392E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When il4965_hw_nic_init in __il4965_up fails, the memory allocated by 
-iwl4965_sta_alloc_lq in iwl4965_alloc_bcast_station is not freed.
+Hi,
 
-This patches adds il_dealloc_bcast_stations in the error handling code of 
-__il4965_up to fix this problem.
+The changes to the unified properties interface that I have been
+waiting for are finally available in v4.5-rc1.
 
-This patch has been tested in real device, and it actually fixes the bug.
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
----
- drivers/net/wireless/iwlegacy/4965-mac.c |    1 +
- 1 file changed, 1 insertion(+)
+Heikki Krogerus (4):
+  net: rfkill: add rfkill_find_type function
+  net: rfkill: gpio: get the name and type from device property
+  ARM: tegra: use build-in device properties with rfkill_gpio
+  net: rfkill: gpio: remove rfkill_gpio_platform_data
 
-diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-index 6656215..fd7b5c7 100644
---- a/drivers/net/wireless/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-@@ -5577,6 +5577,7 @@ __il4965_up(struct il_priv *il)
- 	ret = il4965_hw_nic_init(il);
- 	if (ret) {
- 		IL_ERR("Unable to init nic\n");
-+		il_dealloc_bcast_stations(il);
- 		return ret;
- 	}
- 
+ arch/arm/mach-tegra/board-paz00.c | 17 +++++++-----
+ include/linux/rfkill-gpio.h       | 37 -------------------------
+ include/linux/rfkill.h            | 15 +++++++++++
+ net/rfkill/Kconfig                |  3 +--
+ net/rfkill/core.c                 | 57 ++++++++++++++++++++-------------------
+ net/rfkill/rfkill-gpio.c          | 24 ++++++++---------
+ 6 files changed, 66 insertions(+), 87 deletions(-)
+ delete mode 100644 include/linux/rfkill-gpio.h
+
 -- 
-1.7.9.5
-
+2.7.0.rc3
 
