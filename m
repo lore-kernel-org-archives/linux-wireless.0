@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46333 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933194AbcASUPL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 15:15:11 -0500
-Message-ID: <1453234505.23600.6.camel@sipsolutions.net> (sfid-20160119_211533_314734_6D343DD6)
-Subject: Re: [PATCH 5/8] rfkill: Remove obsolete "state" sysfs interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>
-Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
-	davem@davemloft.net, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jprvita@endlessm.com,
-	linux@endlessm.com
-Date: Tue, 19 Jan 2016 21:15:05 +0100
-In-Reply-To: <1453218163-31998-6-git-send-email-jprvita@endlessm.com> (sfid-20160119_164408_265494_73AD3CE5)
-References: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
-	 <1453218163-31998-6-git-send-email-jprvita@endlessm.com>
-	 (sfid-20160119_164408_265494_73AD3CE5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.243]:40707 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753321AbcAYHmP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2016 02:42:15 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 01/26] staging: wilc1000: fix bug when changing virtual interface
+Date: Mon, 25 Jan 2016 16:35:05 +0900
+Message-ID: <1453707330-13526-2-git-send-email-glen.lee@atmel.com> (sfid-20160125_084218_282373_56F18488)
+In-Reply-To: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-01-19 at 10:42 -0500, João Paulo Rechi Vita wrote:
-> This was schedule to be removed in 2014 by:
+This patch fixes a bug connection error when changing virtual interface to p2p.
+Variable quit needs to be set 0 when wilc is reinitialized again.
 
-> -For details to this subsystem look at Documentation/rfkill.txt.
-> -
-> -What:		/sys/class/rfkill/rfkill[0-9]+/state
-> -Date:		09-Jul-2007
-> -KernelVersion	v2.6.22
-> -Contact:	linux-wireless@vger.kernel.org
-> -Description: 	Current state of the transmitter.
-> -		This file is deprecated and scheduled to be removed
-> in 2014,
-> -		because its not possible to express the 'soft and
-> hard block'
-> -		state of the rfkill driver.
-> -Values: 	A numeric value.
-> -		0: RFKILL_STATE_SOFT_BLOCKED
-> -			transmitter is turned off by software
-> -		1: RFKILL_STATE_UNBLOCKED
-> -			transmitter is (potentially) active
-> -		2: RFKILL_STATE_HARD_BLOCKED
-> -			transmitter is forced off by something
-> outside of
-> -			the driver's control.
+Fixes : 67e2a07ed800 ("staging: wilc1000: move all of wilc_wlan_dev_t to struct wilc")
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-I suspect that nevertheless, we can't just remove it - Googling around
-shows quite a bit of (e.g. Android) code using it.
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 83af51b..07460ff 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1588,6 +1588,8 @@ int wilc_wlan_init(struct net_device *dev)
+ 
+ 	PRINT_D(INIT_DBG, "Initializing WILC_Wlan ...\n");
+ 
++	wilc->quit = 0;
++
+ 	if (!wilc->hif_func->hif_init(wilc)) {
+ 		ret = -EIO;
+ 		goto _fail_;
+-- 
+1.9.1
 
-johannes
