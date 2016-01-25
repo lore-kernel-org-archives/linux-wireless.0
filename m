@@ -1,68 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f176.google.com ([209.85.192.176]:36093 "EHLO
-	mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751926AbcACIhb (ORCPT
+Received: from mail-yk0-f182.google.com ([209.85.160.182]:33682 "EHLO
+	mail-yk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758381AbcAYUcz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jan 2016 03:37:31 -0500
-Received: by mail-pf0-f176.google.com with SMTP id 65so141451594pff.3
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Jan 2016 00:37:31 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 25/30] staging: wilc1000: rename u32DTIMPeriod in wilc_add_beacon
-Date: Sun,  3 Jan 2016 17:35:57 +0900
-Message-Id: <1451810162-16993-25-git-send-email-chaehyun.lim@gmail.com> (sfid-20160103_095248_848578_1B8FA1A6)
-In-Reply-To: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1451810162-16993-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 25 Jan 2016 15:32:55 -0500
+Received: by mail-yk0-f182.google.com with SMTP id k129so176401411yke.0
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2016 12:32:55 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <56A68064.5020702@broadcom.com>
+References: <1453718849-3508-1-git-send-email-sjoerd.simons@collabora.co.uk>
+	<56A64114.3010400@gmail.com>
+	<CAD=FV=X-ejMLnh30TofU7dKP5WwZaXcgLaQwFs__wo9wHsv53Q@mail.gmail.com>
+	<56A68064.5020702@broadcom.com>
+Date: Mon, 25 Jan 2016 12:32:54 -0800
+Message-ID: <CAD=FV=XEuEdUH+cj0qGgszY5_BExsHKrpt31068j_XticsabKA@mail.gmail.com> (sfid-20160125_213316_342685_3F47F65E)
+Subject: Re: [PATCH] brcmfmac: sdio: Increase the default timeouts a bit
+From: Doug Anderson <dianders@chromium.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Arend van Spriel <aspriel@gmail.com>,
+	Sjoerd Simons <sjoerd.simons@collabora.co.uk>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Paul Stewart <pstew@chromium.org>,
+	"open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	brcm80211-dev-list@broadcom.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>, netdev@vger.kernel.org,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames u32DTIMPeriod to dtim_period to avoid camelcase.
+Hi,
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+On Mon, Jan 25, 2016 at 12:07 PM, Arend van Spriel <arend@broadcom.com> wrote:
+>> In any case, in my experience the Broadcom firmware is fairly
+>> complicated and has numerous cases where it stretches SDIO more than
+>> the other SDIO WiFi chip I've worked with.  It wouldn't terribly
+>> surprise me if there was a period of time during bootup where it was
+>> non-responsive for 2 seconds.  As unrelated "evidence" showing some of
+>> the Broadcom SDIO limitations, you can see
+>> <https://chromium-review.googlesource.com/#/c/250228/> and also the
+>> fact that Broadcom often holds the SDIO "busy" signal whereas the
+>> other SDIO WiFi chip I've worked never did that.  Also, even with all
+>> fixes the Broadcom WiFi module will still show periodic SDIO errors
+>> that the higher level driver just knows to ignore.
+>
+> The busy signal is in accordance with the SDIO spec.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 615ae59..9d9cf91 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4159,7 +4159,7 @@ int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg)
- 	return result;
- }
- 
--int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 u32DTIMPeriod,
-+int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 dtim_period,
- 		    u32 u32HeadLen, u8 *pu8Head, u32 u32TailLen, u8 *pu8Tail)
- {
- 	int result = 0;
-@@ -4179,7 +4179,7 @@ int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 u32DTIMPeriod,
- 	msg.id = HOST_IF_MSG_ADD_BEACON;
- 	msg.vif = vif;
- 	pstrSetBeaconParam->interval = interval;
--	pstrSetBeaconParam->dtim_period = u32DTIMPeriod;
-+	pstrSetBeaconParam->dtim_period = dtim_period;
- 	pstrSetBeaconParam->head_len = u32HeadLen;
- 	pstrSetBeaconParam->head = kmemdup(pu8Head, u32HeadLen, GFP_KERNEL);
- 	if (!pstrSetBeaconParam->head) {
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 93a8abb..58b73d6 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -343,7 +343,7 @@ s32 wilc_hif_set_cfg(struct wilc_vif *vif,
- 		     struct cfg_param_val *pstrCfgParamVal);
- s32 wilc_init(struct net_device *dev, struct host_if_drv **phWFIDrv);
- s32 wilc_deinit(struct wilc_vif *vif);
--int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 u32DTIMPeriod,
-+int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 dtim_period,
- 		    u32 u32HeadLen, u8 *pu8Head, u32 u32TailLen, u8 *pu8Tail);
- int wilc_del_beacon(struct wilc_vif *vif);
- int wilc_add_station(struct wilc_vif *vif, struct add_sta_param *sta_param);
--- 
-2.6.4
+Sorry, didn't mean to imply that it wasn't.  That particular instance
+is definitely legal, but it was also just showing a case where the
+Broadcom WiFi needed something that wasn't needed elsewhere.
 
+AKA: it's kinda like saying that other modules work on a UART without
+flow control lines and the Broadcom needs the flow control lines.
+UARTs are designed with flow control lines and it's totally legal to
+need them.  ...but if you saw that one serial device didn't need them
+then you would presume that maybe the device on the other end had very
+low interrupt latency or had some other hardware help (large FIFOs,
+DMA, fast processor, hard real time OS, etc).  A device with low
+interrupt latency, large FIFOs, DMA, fast processor, etc would
+presumably be less likely to have other pauses in communication.
+
+
+> It would be good to
+> know if that is what is happening. Unfortunately I do have an SDIO
+> analyzer, but not reproduced it. May retry on veyron device.
+
+You might just be able to put a trace to see if it hits the busy
+signal.  Depending on your Linux version you might just be able to put
+a trace in __mmc_start_request().  If not and if you're on dw_mmc you
+can put a trace in dw_mci_wait_while_busy().
+
+
+>> My old debugging from the (sorry, private) bug
+>> http://crosbug.com/p/36975 showed this periodically even with all
+>> known fixes:
+>>
+>> [21310.271635] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000104
+>> [21550.583598] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000104
+>> [21550.616035] brcmfmac: brcmf_sdio_readframes: RXHEADER FAILED: -110
+>> [21550.648460] brcmfmac: brcmf_sdio_rxfail: abort command, terminate
+>> frame, send NAK
+>> [21550.683502] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000104
+>> [21550.691214] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000100
+>> [22671.121329] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000104
+>> [22671.153167] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x01000104
+>> [22671.184581] brcmfmac: brcmf_sdio_readframes: RXHEADER FAILED: -110
+>> [22671.192600] brcmfmac: brcmf_sdio_rxfail: abort command, terminate
+>> frame, send NAK
+>> [22671.201929] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000114
+>> [22671.209536] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000100
+>> [28463.941736] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000104
+>>
+>> At the time dekim@ responded:
+>>
+>>> There are several sleep/wake control at different level. The one we're talking
+>>> about here is controlled by brcmf_sdio_bus_sleep() in the host driver to turn
+>>> on/off bus core on the chip. There can be a period of time when chip is not
+>>> paying attention to the host command (cmd52 to the
+>>> SBSDIO_FUNC1_SLEEPCSR).
+>>
+>> ...and we decided that the periodic SDIO errors weren't causing any
+>> huge problems (since they were retried).  As far as I know, they still
+>> happen today.
+>
+> Were these true periodic errors or random at interval.
+
+I believe they were random, and I believe that I needed "power save"
+mode turned on for WiFi.  I believe errors were made worse if I had a
+TCP/IP ping running (AKA bring out of power save and go back in
+constantly).
