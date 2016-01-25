@@ -1,95 +1,135 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:12187 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751382AbcA1HQd (ORCPT
+Received: from mail-yk0-f174.google.com ([209.85.160.174]:36733 "EHLO
+	mail-yk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758356AbcAYTXF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 02:16:33 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 05/12] staging: wilc1000: wilc_parse_network_info(): renames function variables
-Date: Thu, 28 Jan 2016 16:13:39 +0900
-Message-ID: <1453965226-6158-5-git-send-email-leo.kim@atmel.com> (sfid-20160128_081726_227234_BC8D14B2)
-In-Reply-To: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
-References: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
+	Mon, 25 Jan 2016 14:23:05 -0500
+Received: by mail-yk0-f174.google.com with SMTP id v14so173114568ykd.3
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2016 11:23:04 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <56A64114.3010400@gmail.com>
+References: <1453718849-3508-1-git-send-email-sjoerd.simons@collabora.co.uk>
+	<56A64114.3010400@gmail.com>
+Date: Mon, 25 Jan 2016 11:23:04 -0800
+Message-ID: <CAD=FV=X-ejMLnh30TofU7dKP5WwZaXcgLaQwFs__wo9wHsv53Q@mail.gmail.com> (sfid-20160125_202329_426616_877C8F10)
+Subject: Re: [PATCH] brcmfmac: sdio: Increase the default timeouts a bit
+From: Doug Anderson <dianders@chromium.org>
+To: Arend van Spriel <aspriel@gmail.com>
+Cc: Sjoerd Simons <sjoerd.simons@collabora.co.uk>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Paul Stewart <pstew@chromium.org>,
+	"open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
+	Arend van Spriel <arend@broadcom.com>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	brcm80211-dev-list@broadcom.com,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>, netdev@vger.kernel.org,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Adrian Hunter <adrian.hunter@intel.com>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames to avoid camelcase, changes follow are:
- - pu8MsgBuffer to msg_buffer
- - ppstrNetworkInfo to ret_network_info
+Hi,
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 16 ++++++++--------
- drivers/staging/wilc1000/coreconfigurator.h |  2 +-
- 2 files changed, 9 insertions(+), 9 deletions(-)
+On Mon, Jan 25, 2016 at 7:36 AM, Arend van Spriel <aspriel@gmail.com> wrote:
+> On 25-01-16 11:47, Sjoerd Simons wrote:
+>> On a Radxa Rock2 board with a Ampak AP6335 (Broadcom 4339 core) it seems
+>> the card responds very quickly most of the time, unfortunately during
+>> initialisation it sometimes seems to take just a bit over 2 seconds to
+>> respond.
+>>
+>> This results intialization failing with message like:
+>>   brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -52
+>>   brcmf_bus_start: failed: -52
+>>   brcmf_sdio_firmware_callback: dongle is not responding
+>>
+>> Increasing the timeout to allow for a bit more headroom allows the
+>> card to initialize reliably.
+>
+> I would prefer to know where the 2 second response time comes from.
+> Could be sdio retuning. Maybe the chromeos people can comment whether
+> this has been root caused.
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 6f17e2b..43f0a29 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -270,7 +270,7 @@ static u8 get_current_channel_802_11n(u8 *pu8msa, u16 rx_len)
- 	return 0;
- }
- 
--s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
-+s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
- {
- 	tstrNetworkInfo *pstrNetworkInfo = NULL;
- 	u8 u8MsgType = 0;
-@@ -281,18 +281,18 @@ s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo
- 	u16 u16WidLen  = 0;
- 	u8  *pu8WidVal = NULL;
- 
--	u8MsgType = pu8MsgBuffer[0];
-+	u8MsgType = msg_buffer[0];
- 
- 	if ('N' != u8MsgType) {
- 		PRINT_ER("Received Message format incorrect.\n");
- 		return -EFAULT;
- 	}
- 
--	u8MsgID = pu8MsgBuffer[1];
--	u16MsgLen = MAKE_WORD16(pu8MsgBuffer[2], pu8MsgBuffer[3]);
--	u16WidID = MAKE_WORD16(pu8MsgBuffer[4], pu8MsgBuffer[5]);
--	u16WidLen = MAKE_WORD16(pu8MsgBuffer[6], pu8MsgBuffer[7]);
--	pu8WidVal  = &pu8MsgBuffer[8];
-+	u8MsgID = msg_buffer[1];
-+	u16MsgLen = MAKE_WORD16(msg_buffer[2], msg_buffer[3]);
-+	u16WidID = MAKE_WORD16(msg_buffer[4], msg_buffer[5]);
-+	u16WidLen = MAKE_WORD16(msg_buffer[6], msg_buffer[7]);
-+	pu8WidVal = &msg_buffer[8];
- 
- 	{
- 		u8  *pu8msa = NULL;
-@@ -350,7 +350,7 @@ s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo
- 
- 	}
- 
--	*ppstrNetworkInfo = pstrNetworkInfo;
-+	*ret_network_info = pstrNetworkInfo;
- 
- 	return 0;
- }
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index ee107ac..aec0779 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -120,7 +120,7 @@ typedef struct {
- 	size_t ie_len;
- } tstrDisconnectNotifInfo;
- 
--s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo);
-+s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info);
- s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo);
- 
- s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
--- 
-1.9.1
+I reviewed Paul's change here
+<https://chromium-review.googlesource.com/#/c/225921/> but didn't do
+any root causing.
 
+I think that, like Sjoerd saw, we were seeing this problem at boot
+time.  Certainly at boot time lots of things are happening all at the
+same time in the system and there are often delays, so anything that
+might have been close to timing out in the past may now be actually
+timing out.
+
+This is the kind of thing that, IMHO, should have a real timeout that
+is 10x what was expected and a non-fatal warning whenever we go over
+the expected time.  ...but maybe that's overdesign.  :-P
+
+Kinda curious: do we get one or two really slow responses on every
+bootup, or just some bootups?  Do we ever succeed even with a slow
+(like 1.8 or 1.9 seconds) response, or is it always either "fast" or
+"2.1" seconds?
+
+
+In any case, in my experience the Broadcom firmware is fairly
+complicated and has numerous cases where it stretches SDIO more than
+the other SDIO WiFi chip I've worked with.  It wouldn't terribly
+surprise me if there was a period of time during bootup where it was
+non-responsive for 2 seconds.  As unrelated "evidence" showing some of
+the Broadcom SDIO limitations, you can see
+<https://chromium-review.googlesource.com/#/c/250228/> and also the
+fact that Broadcom often holds the SDIO "busy" signal whereas the
+other SDIO WiFi chip I've worked never did that.  Also, even with all
+fixes the Broadcom WiFi module will still show periodic SDIO errors
+that the higher level driver just knows to ignore.
+
+My old debugging from the (sorry, private) bug
+http://crosbug.com/p/36975 showed this periodically even with all
+known fixes:
+
+[21310.271635] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000104
+[21550.583598] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000104
+[21550.616035] brcmfmac: brcmf_sdio_readframes: RXHEADER FAILED: -110
+[21550.648460] brcmfmac: brcmf_sdio_rxfail: abort command, terminate
+frame, send NAK
+[21550.683502] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000104
+[21550.691214] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000100
+[22671.121329] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000104
+[22671.153167] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x01000104
+[22671.184581] brcmfmac: brcmf_sdio_readframes: RXHEADER FAILED: -110
+[22671.192600] brcmfmac: brcmf_sdio_rxfail: abort command, terminate
+frame, send NAK
+[22671.201929] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000114
+[22671.209536] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000100
+[28463.941736] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000104
+
+At the time dekim@ responded:
+
+> There are several sleep/wake control at different level. The one we're talking
+> about here is controlled by brcmf_sdio_bus_sleep() in the host driver to turn
+> on/off bus core on the chip. There can be a period of time when chip is not
+> paying attention to the host command (cmd52 to the
+> SBSDIO_FUNC1_SLEEPCSR).
+
+...and we decided that the periodic SDIO errors weren't causing any
+huge problems (since they were retried).  As far as I know, they still
+happen today.
+
+
+All of the above may not help you, but it serves as evidence that the
+SDIO communication to Broadcom isn't terribly amazing and apparently
+that's just the way that the module (or perhaps its firmware) is
+designed.  It doesn't seem to affect anything in the real world, so I
+suppose it is just something we need to live with.
+
+
+Obviously if you have access to the firmware source code and can debug
+further, that would be awesome.  I'm just not hopeful.
+
+
+In any case:
+
+Reviewed-by: Douglas Anderson <dianders@chromium.org>
