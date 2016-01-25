@@ -1,174 +1,169 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.hengli.com.au ([209.40.204.226]:43865 "EHLO
-	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754100AbcAXNR4 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:41153 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753321AbcAYHoK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jan 2016 08:17:56 -0500
-Subject: [PATCH 8/26] cifs: Use skcipher
-References: <20160124131021.GA31153@gondor.apana.org.au>
-To: Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
-	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
-	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
-	linux-bluetooth@vger.kernel.org, ceph-devel@vger.kernel.org,
-	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
-	drbd-dev@lists.linbit.com, open-iscsi@googlegroups.com
-Message-Id: <E1aNKXd-0008Bs-VK@gondolin.me.apana.org.au> (sfid-20160124_142748_807803_B77A3A9C)
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Date: Sun, 24 Jan 2016 21:17:17 +0800
+	Mon, 25 Jan 2016 02:44:10 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 20/26] staging: wilc1000: remove define TCP_ACK_FILTER
+Date: Mon, 25 Jan 2016 16:35:24 +0900
+Message-ID: <1453707330-13526-21-git-send-email-glen.lee@atmel.com> (sfid-20160125_084415_187205_96618CF7)
+In-Reply-To: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces uses of blkcipher with skcipher.
-    
-Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
+This patch removes define TCP_ACK_FILTER and use it's feature codes.
+Add argument wilc to wilc_wlan_txq_remove because compile error happens.
+
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
+ drivers/staging/wilc1000/Makefile    |  1 -
+ drivers/staging/wilc1000/wilc_wlan.c | 22 ++--------------------
+ 2 files changed, 2 insertions(+), 21 deletions(-)
 
- fs/cifs/cifsencrypt.c |   32 +++++++++++++++++++++-----------
- fs/cifs/smbencrypt.c  |   26 +++++++++++++++++++-------
- 2 files changed, 40 insertions(+), 18 deletions(-)
+diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
+index 90c3760..acc3f3e 100644
+--- a/drivers/staging/wilc1000/Makefile
++++ b/drivers/staging/wilc1000/Makefile
+@@ -4,7 +4,6 @@ ccflags-y += -DFIRMWARE_1002=\"atmel/wilc1002_firmware.bin\" \
+ 		-DFIRMWARE_1003=\"atmel/wilc1003_firmware.bin\"
+ 
+ ccflags-y += -I$(src)/ -DWILC_ASIC_A0 -DWILC_DEBUGFS
+-#ccflags-y += -DTCP_ACK_FILTER
+ 
+ wilc1000-objs := wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
+ 			wilc_msgqueue.o \
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index e0696505..337a1ba 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -36,8 +36,7 @@ static inline void release_bus(struct wilc *wilc, BUS_RELEASE_T release)
+ 	mutex_unlock(&wilc->hif_cs);
+ }
+ 
+-#ifdef TCP_ACK_FILTER
+-static void wilc_wlan_txq_remove(struct txq_entry_t *tqe)
++static void wilc_wlan_txq_remove(struct wilc *wilc, struct txq_entry_t *tqe)
+ {
+ 
+ 	if (tqe == wilc->txq_head) {
+@@ -54,7 +53,6 @@ static void wilc_wlan_txq_remove(struct txq_entry_t *tqe)
+ 	}
+ 	wilc->txq_entries -= 1;
+ }
+-#endif
+ 
+ static struct txq_entry_t *
+ wilc_wlan_txq_remove_from_head(struct net_device *dev)
+@@ -146,7 +144,6 @@ static int wilc_wlan_txq_add_to_head(struct wilc *wilc, struct txq_entry_t *tqe)
+ 	return 0;
+ }
+ 
+-#ifdef	TCP_ACK_FILTER
+ struct ack_session_info;
+ struct ack_session_info {
+ 	u32 seq_num;
+@@ -308,7 +305,7 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+ 				pending_acks_info[i].ack_num);
+ 			tqe = pending_acks_info[i].txqe;
+ 			if (tqe) {
+-				wilc_wlan_txq_remove(tqe);
++				wilc_wlan_txq_remove(wilc, tqe);
+ 				tqe->status = 1;
+ 				if (tqe->tx_complete_func)
+ 					tqe->tx_complete_func(tqe->priv,
+@@ -335,7 +332,6 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
+ 
+ 	return 1;
+ }
+-#endif
+ 
+ static bool enabled = false;
+ 
+@@ -344,12 +340,10 @@ void wilc_enable_tcp_ack_filter(bool value)
+ 	enabled = value;
+ }
+ 
+-#ifdef TCP_ACK_FILTER
+ static bool is_tcp_ack_filter_enabled(void)
+ {
+ 	return enabled;
+ }
+-#endif
+ 
+ static int wilc_wlan_txq_add_cfg_pkt(struct wilc *wilc, u8 *buffer, u32 buffer_size)
+ {
+@@ -373,9 +367,7 @@ static int wilc_wlan_txq_add_cfg_pkt(struct wilc *wilc, u8 *buffer, u32 buffer_s
+ 	tqe->buffer_size = buffer_size;
+ 	tqe->tx_complete_func = NULL;
+ 	tqe->priv = NULL;
+-#ifdef TCP_ACK_FILTER
+ 	tqe->tcp_pending_ack_idx = NOT_TCP_ACK;
+-#endif
+ 	PRINT_D(TX_DBG, "Adding the config packet at the Queue tail\n");
+ 
+ 	if (wilc_wlan_txq_add_to_head(wilc, tqe))
+@@ -406,11 +398,9 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 	tqe->priv = priv;
+ 
+ 	PRINT_D(TX_DBG, "Adding mgmt packet at the Queue tail\n");
+-#ifdef TCP_ACK_FILTER
+ 	tqe->tcp_pending_ack_idx = NOT_TCP_ACK;
+ 	if (is_tcp_ack_filter_enabled())
+ 		tcp_process(dev, tqe);
+-#endif
+ 	wilc_wlan_txq_add_to_tail(dev, tqe);
+ 	return wilc->txq_entries;
+ }
+@@ -436,9 +426,7 @@ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 	tqe->buffer_size = buffer_size;
+ 	tqe->tx_complete_func = func;
+ 	tqe->priv = priv;
+-#ifdef TCP_ACK_FILTER
+ 	tqe->tcp_pending_ack_idx = NOT_TCP_ACK;
+-#endif
+ 	PRINT_D(TX_DBG, "Adding Network packet at the Queue tail\n");
+ 	wilc_wlan_txq_add_to_tail(dev, tqe);
+ 	return 1;
+@@ -643,9 +631,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 
+ 		wilc_lock_timeout(wilc, &wilc->txq_add_to_head_cs,
+ 					CFG_PKTS_TIMEOUT);
+-#ifdef	TCP_ACK_FILTER
+ 		wilc_wlan_txq_filter_dup_tcp_ack(dev);
+-#endif
+ 		PRINT_D(TX_DBG, "Getting the head of the TxQ\n");
+ 		tqe = wilc_wlan_txq_get_first(wilc);
+ 		i = 0;
+@@ -829,10 +815,8 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 				if (tqe->tx_complete_func)
+ 					tqe->tx_complete_func(tqe->priv,
+ 							      tqe->status);
+-				#ifdef TCP_ACK_FILTER
+ 				if (tqe->tcp_pending_ack_idx != NOT_TCP_ACK)
+ 					pending_acks_info[tqe->tcp_pending_ack_idx].txqe = NULL;
+-				#endif
+ 				kfree(tqe);
+ 			} else {
+ 				break;
+@@ -1564,9 +1548,7 @@ int wilc_wlan_init(struct net_device *dev)
+ 		ret = -EIO;
+ 		goto _fail_;
+ 	}
+-#ifdef	TCP_ACK_FILTER
+ 	init_tcp_tracking();
+-#endif
+ 
+ 	return 1;
+ 
+-- 
+1.9.1
 
-diff --git a/fs/cifs/cifsencrypt.c b/fs/cifs/cifsencrypt.c
-index afa09fc..d411654 100644
---- a/fs/cifs/cifsencrypt.c
-+++ b/fs/cifs/cifsencrypt.c
-@@ -33,6 +33,7 @@
- #include <linux/ctype.h>
- #include <linux/random.h>
- #include <linux/highmem.h>
-+#include <crypto/skcipher.h>
- 
- static int
- cifs_crypto_shash_md5_allocate(struct TCP_Server_Info *server)
-@@ -789,38 +790,46 @@ int
- calc_seckey(struct cifs_ses *ses)
- {
- 	int rc;
--	struct crypto_blkcipher *tfm_arc4;
-+	struct crypto_skcipher *tfm_arc4;
- 	struct scatterlist sgin, sgout;
--	struct blkcipher_desc desc;
-+	struct skcipher_request *req;
- 	unsigned char sec_key[CIFS_SESS_KEY_SIZE]; /* a nonce */
- 
- 	get_random_bytes(sec_key, CIFS_SESS_KEY_SIZE);
- 
--	tfm_arc4 = crypto_alloc_blkcipher("ecb(arc4)", 0, CRYPTO_ALG_ASYNC);
-+	tfm_arc4 = crypto_alloc_skcipher("ecb(arc4)", 0, CRYPTO_ALG_ASYNC);
- 	if (IS_ERR(tfm_arc4)) {
- 		rc = PTR_ERR(tfm_arc4);
- 		cifs_dbg(VFS, "could not allocate crypto API arc4\n");
- 		return rc;
- 	}
- 
--	desc.tfm = tfm_arc4;
--
--	rc = crypto_blkcipher_setkey(tfm_arc4, ses->auth_key.response,
-+	rc = crypto_skcipher_setkey(tfm_arc4, ses->auth_key.response,
- 					CIFS_SESS_KEY_SIZE);
- 	if (rc) {
- 		cifs_dbg(VFS, "%s: Could not set response as a key\n",
- 			 __func__);
--		return rc;
-+		goto out_free_cipher;
-+	}
-+
-+	req = skcipher_request_alloc(tfm_arc4, GFP_KERNEL);
-+	if (!req) {
-+		rc = -ENOMEM;
-+		cifs_dbg(VFS, "could not allocate crypto API arc4 request\n");
-+		goto out_free_cipher;
- 	}
- 
- 	sg_init_one(&sgin, sec_key, CIFS_SESS_KEY_SIZE);
- 	sg_init_one(&sgout, ses->ntlmssp->ciphertext, CIFS_CPHTXT_SIZE);
- 
--	rc = crypto_blkcipher_encrypt(&desc, &sgout, &sgin, CIFS_CPHTXT_SIZE);
-+	skcipher_request_set_callback(req, 0, NULL, NULL);
-+	skcipher_request_set_crypt(req, &sgin, &sgout, CIFS_CPHTXT_SIZE, NULL);
-+
-+	rc = crypto_skcipher_encrypt(req);
-+	skcipher_request_free(req);
- 	if (rc) {
- 		cifs_dbg(VFS, "could not encrypt session key rc: %d\n", rc);
--		crypto_free_blkcipher(tfm_arc4);
--		return rc;
-+		goto out_free_cipher;
- 	}
- 
- 	/* make secondary_key/nonce as session key */
-@@ -828,7 +837,8 @@ calc_seckey(struct cifs_ses *ses)
- 	/* and make len as that of session key only */
- 	ses->auth_key.len = CIFS_SESS_KEY_SIZE;
- 
--	crypto_free_blkcipher(tfm_arc4);
-+out_free_cipher:
-+	crypto_free_skcipher(tfm_arc4);
- 
- 	return rc;
- }
-diff --git a/fs/cifs/smbencrypt.c b/fs/cifs/smbencrypt.c
-index a4232ec..699b786 100644
---- a/fs/cifs/smbencrypt.c
-+++ b/fs/cifs/smbencrypt.c
-@@ -23,6 +23,7 @@
-    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
- 
-+#include <crypto/skcipher.h>
- #include <linux/module.h>
- #include <linux/slab.h>
- #include <linux/fs.h>
-@@ -70,31 +71,42 @@ smbhash(unsigned char *out, const unsigned char *in, unsigned char *key)
- {
- 	int rc;
- 	unsigned char key2[8];
--	struct crypto_blkcipher *tfm_des;
-+	struct crypto_skcipher *tfm_des;
- 	struct scatterlist sgin, sgout;
--	struct blkcipher_desc desc;
-+	struct skcipher_request *req;
- 
- 	str_to_key(key, key2);
- 
--	tfm_des = crypto_alloc_blkcipher("ecb(des)", 0, CRYPTO_ALG_ASYNC);
-+	tfm_des = crypto_alloc_skcipher("ecb(des)", 0, CRYPTO_ALG_ASYNC);
- 	if (IS_ERR(tfm_des)) {
- 		rc = PTR_ERR(tfm_des);
- 		cifs_dbg(VFS, "could not allocate des crypto API\n");
- 		goto smbhash_err;
- 	}
- 
--	desc.tfm = tfm_des;
-+	req = skcipher_request_alloc(tfm_des, GFP_KERNEL);
-+	if (!req) {
-+		rc = -ENOMEM;
-+		cifs_dbg(VFS, "could not allocate des crypto API\n");
-+		goto smbhash_free_skcipher;
-+	}
- 
--	crypto_blkcipher_setkey(tfm_des, key2, 8);
-+	crypto_skcipher_setkey(tfm_des, key2, 8);
- 
- 	sg_init_one(&sgin, in, 8);
- 	sg_init_one(&sgout, out, 8);
- 
--	rc = crypto_blkcipher_encrypt(&desc, &sgout, &sgin, 8);
-+	skcipher_request_set_callback(req, 0, NULL, NULL);
-+	skcipher_request_set_crypt(req, &sgin, &sgout, 8, NULL);
-+
-+	rc = crypto_skcipher_encrypt(req);
- 	if (rc)
- 		cifs_dbg(VFS, "could not encrypt crypt key rc: %d\n", rc);
- 
--	crypto_free_blkcipher(tfm_des);
-+	skcipher_request_free(req);
-+
-+smbhash_free_skcipher:
-+	crypto_free_skcipher(tfm_des);
- smbhash_err:
- 	return rc;
- }
