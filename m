@@ -1,60 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:22153 "EHLO
-	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752296AbcAKIdX (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:37045 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753830AbcAYJuX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jan 2016 03:33:23 -0500
-Message-ID: <569368D0.8080906@broadcom.com> (sfid-20160111_093326_711338_FA3CCC47)
-Date: Mon, 11 Jan 2016 09:33:20 +0100
+	Mon, 25 Jan 2016 04:50:23 -0500
+Subject: Re: [RFC PATCH] brcmfmac: set WIPHY_FLAG_HAVE_AP_SME
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	<linux-wireless@vger.kernel.org>, <brcm80211-dev-list@broadcom.com>
+References: <1453294027-12811-1-git-send-email-zajec5@gmail.com>
 From: Arend van Spriel <arend@broadcom.com>
+Message-ID: <56A5EFBD.5070400@broadcom.com> (sfid-20160125_105027_755901_2054FE62)
+Date: Mon, 25 Jan 2016 10:49:49 +0100
 MIME-Version: 1.0
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 00/16] brcmfmac: new device support and P2P fixes
-References: <1442606899-31872-1-git-send-email-arend@broadcom.com>	<CACna6rzWKv7d7zjfJdnceLbknu+drbbjks_=JAkep0NiiLk7JA@mail.gmail.com>	<5692C627.6050003@broadcom.com> <CACna6rxWJNo5vB+XH4nmL5bwqp5cmLO1O=V3XpB-NfFLeQVYDw@mail.gmail.com>
-In-Reply-To: <CACna6rxWJNo5vB+XH4nmL5bwqp5cmLO1O=V3XpB-NfFLeQVYDw@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+In-Reply-To: <1453294027-12811-1-git-send-email-zajec5@gmail.com>
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/10/2016 10:12 PM, Rafał Miłecki wrote:
-> On 10 January 2016 at 21:59, Arend van Spriel <arend@broadcom.com> wrote:
->> On 01/10/2016 12:48 AM, Rafał Miłecki wrote:
->>>
->>> On 18 September 2015 at 22:08, Arend van Spriel <arend@broadcom.com>
->>> wrote:
->>>>
->>>> This series is intended for v4.4 containing the following highlights:
->>>>
->>>> * support for BCM4350, BCM4365, and BCM4366 PCIE devices.
->>>> * fixed for legacy P2P and P2P device handling.
->>>> * correct set and get tx-power.
->>>
->>>
->>> Hi Arend, can you provide us some update on progress of releasing
->>> brcmfmac4366b-pcie.bin, please?
->>
->>
->> Sure. No progress. You also want to know about brcmfmac4365b-pcie.bin? Both
->> devices are still in development or just taped-out if I am not mistaken
->> (maybe missed a memo or two). I will ask for expected eta.
->
-> I'm not really interested in BCM4365 as I can't find any market device
-> using this chipset.
->
-> BCM4366 can be found in following devices:
-> ASUS RT-AC3100
-> ASUS RT-AC5300
-> ASUS RT-AC88U
-> D-Link DIR-885L rev A1
-> D-Link DIR-895L rev A1
-> Netgear R8500
->
-> You can already buy most of them in US, ASUS RT-AC5300 is also
-> available in Europe.
+On 20-1-2016 13:47, Rafał Miłecki wrote:
+> This allows user space check NL80211_ATTR_DEVICE_AP_SME and realize it's
+> dealing with a FullMAC device. It's important for a proper AP setup.
+> So far user space was only able to guess it's AP_SME after failing to
+> create monitor interface.
+> 
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> ---
+> While this patch makes sense to me, it's breaking user space (hostapd).
+> 
+> There are two similar code paths in hostapd for FullMAC devices. For
+> details see nl80211_setup_ap, below is my summary:
+> 
+> 1) hostapd doesn't get AP_SME
+> It tries to create monitor interface and after failing to it fallbacks
+> to the AP_SME:
+>> nl80211: Setup AP(wlan0) - device_ap_sme=0 use_monitor=1
+>> Failed to create interface mon.wlan0: -95 (Not supported)
+>> nl80211: Driver does not support monitor interface type - try to run without it
+> After that it tries to register for PROBE_REQ management frames but it's
+> not required to succeed.
+> 
+> 2) hostapd knows about AP_SME
+> It tries to register for ACTION management frames requiring it to
+> succeed. If it fails it goes like this:
+>> nl80211: Subscribe to mgmt frames with AP handle 0x99f50 (device SME)
+>> nl80211: Register frame type=0xd0 (WLAN_FC_STYPE_ACTION) nl_handle=0x99f50 match=
+>> nl80211: Register frame command failed (type=208): ret=-22 (Invalid argument)
+>> nl80211: Register frame match - hexdump(len=0): [NULL]
+>> nl80211: Could not configure driver mode
+> 
+> Now, the problem with brcmfmac is that it doesn't report support for any
+> management frames in AP mode. It supports sending ACTION (and maybe
+> PROBE_RESP) frames, but it can't pass ACTION to the cfg80211. So even if
+> we report we can send ACTION (as it seems we do), it won't fix the
+> problem.
+> 
+> So this patch will trigger another code path in hostapd that due to
+> brcmfmac missing support for receiving & passing ACTION will fail.
+> 
+> Do you have any idea how to handle this?
 
-So I missed the memo. Thanks.
+The mgmt_tx callback in brcmfmac was added for P2P functionality. So if
+anything, a check should be added to assure it is only used on P2P
+interfaces.
 
-Gr. AvS
+> Should hostapd drop depndency on ACTION frames? Should brcmfmac fake
+> support for receiving & passing ACTION frames? Or should support for
+> ACTION frames be added indeed?
 
+So why not stick with the current implementation. It may not seem
+optimal to first try one thing and fallback to another, but at least it
+works. I was thinking about trying with use_monitor=0, but looking in
+the code nl80211_setup_ap() that will not resolve it either.
+
+Regards,
+Arend
+
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> index 7b01e4d..ab431e5 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+> @@ -6180,6 +6180,7 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+>  	wiphy->cipher_suites = __wl_cipher_suites;
+>  	wiphy->n_cipher_suites = ARRAY_SIZE(__wl_cipher_suites);
+>  	wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
+> +			WIPHY_FLAG_HAVE_AP_SME |
+>  			WIPHY_FLAG_OFFCHAN_TX |
+>  			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+>  	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_TDLS))
+> 
