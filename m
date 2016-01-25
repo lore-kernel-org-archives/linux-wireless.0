@@ -1,36 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from hauke-m.de ([5.39.93.123]:55934 "EHLO hauke-m.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753020AbcAVVIC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2016 16:08:02 -0500
-Subject: Re: [PATCH] bcma: init serial console directly from ChipCommon code
-To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org
-References: <1453482174-11021-1-git-send-email-zajec5@gmail.com>
-From: Hauke Mehrtens <hauke@hauke-m.de>
-Message-ID: <56A29A2F.2040800@hauke-m.de> (sfid-20160122_220806_984067_66A99209)
-Date: Fri, 22 Jan 2016 22:07:59 +0100
+Received: from smtp.codeaurora.org ([198.145.29.96]:38576 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932118AbcAYNPi (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2016 08:15:38 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Glen Lee <glen.lee@atmel.com>
+Cc: <gregkh@linuxfoundation.org>, <devel@driverdev.osuosl.org>,
+	<linux-wireless@vger.kernel.org>, <tony.cho@atmel.com>,
+	<leo.kim@atmel.com>, <austin.shin@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: Re: [PATCH V2 00/26] use unified firmware and add ops in cfg
+References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+Date: Mon, 25 Jan 2016 15:15:31 +0200
+In-Reply-To: <1453707330-13526-1-git-send-email-glen.lee@atmel.com> (Glen
+	Lee's message of "Mon, 25 Jan 2016 16:35:04 +0900")
+Message-ID: <87vb6hu7f0.fsf@purkki.adurom.net> (sfid-20160125_141541_227417_04995FD6)
 MIME-Version: 1.0
-In-Reply-To: <1453482174-11021-1-git-send-email-zajec5@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/22/2016 06:02 PM, Rafał Miłecki wrote:
-> UART is connected to and controlled over ChipCommon core. It doesn't
-> have much to do with MIPS core (where we initialize it currently)
-> except just existing on embedded systemms. There isn't point of such
-> cross-core initialization (and we needed #ifdef anyway) so just handle
-> it in ChipCommon.
-> 
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Glen Lee <glen.lee@atmel.com> writes:
 
-Reviewed-by: Hauke Mehrtens <hauke@hauke-m.de>
+> This patch series contains                                                      
+> * support suspend and resume functionality                                      
+> * use a unified firmware for all mode of operations(station, ap, p2p)           
+> * support Station/AP concurrency                                                
+> * increase link speed                                                           
+> * add a cfg operation for adjusting the tx power                                
+> * fix bug on p2p, WEP security and chaning virtual interface
+>
+> Changes in V2: details in each patch files.
+>  - 0004-staging-wilc1000-add-sdio-resume-suspend.patch
 
-This looks good.
+It's good practise to also add "staging: wilc1000: " prefix to the cover
+letter.
 
-We should probably also move the registration of the serial console from
-arch/mips/bcm47xx to bcma and ssb.
-
-Hauke
+-- 
+Kalle Valo
