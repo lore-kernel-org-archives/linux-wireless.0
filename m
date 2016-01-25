@@ -1,80 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:34423 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965156AbcAULcW (ORCPT
+Received: from mail-io0-f194.google.com ([209.85.223.194]:33740 "EHLO
+	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932084AbcAYWTm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 06:32:22 -0500
-Received: by mail-pf0-f195.google.com with SMTP id 65so1708038pfd.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:32:22 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 12/27] staging: wilc1000: rename pHandle in wilc_mq_destroy
-Date: Thu, 21 Jan 2016 20:30:42 +0900
-Message-Id: <1453375857-20645-13-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123655_909415_84EF59F5)
-In-Reply-To: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
+	Mon, 25 Jan 2016 17:19:42 -0500
+Received: by mail-io0-f194.google.com with SMTP id f81so14335315iof.0
+        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2016 14:19:42 -0800 (PST)
+From: Nikolay Martynov <mar.kolya@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Nikolay Martynov <mar.kolya@gmail.com>, johannes.berg@intel.com,
+	emmanuel.grumbach@intel.com, julian.calaby@gmail.com,
+	ilw@linux.intel.com
+Subject: [PATCH v2] iwldvm: fix chain gain calibration when firmware return zero values
+Date: Mon, 25 Jan 2016 17:19:01 -0500
+Message-Id: <1453760341-30008-1-git-send-email-mar.kolya@gmail.com> (sfid-20160125_231946_413409_76303A30)
+In-Reply-To: <1453527309-23881-1-git-send-email-mar.kolya@gmail.com>
+References: <1453527309-23881-1-git-send-email-mar.kolya@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pHandle to mq to avoid camelcase
+It looks like sometimes firmware returns zero for chain noise and signal
+during calibration period. This seems to be a known problem and current
+implementation accounts for this by ignoring invalid data when all chains
+return zero signal and noise.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+The problem is that sometimes firmware returns zero for only one chain for
+some (not all) beacons used for calibration. This leads to perfectly valid
+chains be disabled and may cause invalid gain settings.
+For example this is calibration data taken on laptop with Intel 6300 card
+with all three antennas attached:
+
+active_chains:			 3
+chain_noise_a:			 312
+chain_noise_b:			 297
+chain_noise_c:			 0
+chain_signal_a:			 549
+chain_signal_b:			 513
+chain_signal_c:			 0
+beacon_count:			 16
+disconn_array:			 0 0 1
+delta_gain_code:		 4 0 0
+radio_write:			 1
+state:				 3
+
+This patch changes statistics gathering to make sure that zero noise
+results are ignored for valid rx chains. The rationale being that even if
+anntenna is not connected we should be able to see non zero noise if rx
+chain is present.
+
+This patch fixes the problem of disabling working chains on hardware I
+have (6300 and 5300). With three connected antennas statistics in
+chain_noise looks like this (6300):
+
+active_chains:			 7
+chain_noise_a:			 321
+chain_noise_b:			 243
+chain_noise_c:			 311
+chain_signal_a:			 559
+chain_signal_b:			 452
+chain_signal_c:			 512
+beacon_count:			 16
+disconn_array:			 0 0 0
+delta_gain_code:		 4 3 0
+radio_write:			 1
+state:				 3
+
+It also works fine in case one 3-chain hardware has only two antennas
+attached (tested in 5300):
+
+active_chains:			 3
+chain_noise_a:			 238
+chain_noise_b:			 234
+chain_noise_c:			 219
+chain_signal_a:			 533
+chain_signal_b:			 514
+chain_signal_c:			 206
+beacon_count:			 16
+disconn_array:			 0 0 1
+delta_gain_code:		 4 0 0
+radio_write:			 1
+state:				 3
+
+Signed-off-by: Nikolay Martynov <mar.kolya@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_msgqueue.c | 18 +++++++++---------
- drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
- 2 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/net/wireless/iwlwifi/dvm/calib.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 453fa19..103fcfd 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -27,21 +27,21 @@ int wilc_mq_create(struct message_queue *mq)
-  *  @note		copied from FLO glue implementatuion
-  *  @version		1.0
-  */
--int wilc_mq_destroy(struct message_queue *pHandle)
-+int wilc_mq_destroy(struct message_queue *mq)
- {
--	pHandle->exiting = true;
-+	mq->exiting = true;
+diff --git a/drivers/net/wireless/iwlwifi/dvm/calib.c b/drivers/net/wireless/iwlwifi/dvm/calib.c
+index 20e6aa9..cdaa88d 100644
+--- a/drivers/net/wireless/iwlwifi/dvm/calib.c
++++ b/drivers/net/wireless/iwlwifi/dvm/calib.c
+@@ -1026,6 +1026,18 @@ void iwl_chain_noise_calibration(struct iwl_priv *priv)
  
- 	/* Release any waiting receiver thread. */
--	while (pHandle->recv_count > 0) {
--		up(&pHandle->sem);
--		pHandle->recv_count--;
-+	while (mq->recv_count > 0) {
-+		up(&mq->sem);
-+		mq->recv_count--;
- 	}
+ 	spin_unlock_bh(&priv->statistics.lock);
  
--	while (pHandle->msg_list) {
--		struct message *pstrMessge = pHandle->msg_list->next;
-+	while (mq->msg_list) {
-+		struct message *pstrMessge = mq->msg_list->next;
++	/* Sometimes firmware returns zero for chain noise and signal
++	 * even if chain is present and antenna is connected. This
++	 * often results in perfectly valid chains being disabled.
++	 * Ignore statistics if it contains zero noise for valid rx
++	 * chain: even with antenna disconnected we should hear some noise.
++	 */
++	if ((priv->nvm_data->valid_rx_ant & ANT_A && chain_noise_a == 0) ||
++	    (priv->nvm_data->valid_rx_ant & ANT_B && chain_noise_b == 0) ||
++	    (priv->nvm_data->valid_rx_ant & ANT_C && chain_noise_c == 0)) {
++		return;
++	}
++
+ 	data->beacon_count++;
  
--		kfree(pHandle->msg_list);
--		pHandle->msg_list = pstrMessge;
-+		kfree(mq->msg_list);
-+		mq->msg_list = pstrMessge;
- 	}
- 
- 	return 0;
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index bfd2347..b91822e 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -89,6 +89,6 @@ int wilc_mq_recv(struct message_queue *pHandle,
-  *  @date		30 Aug 2010
-  *  @version		1.0
-  */
--int wilc_mq_destroy(struct message_queue *pHandle);
-+int wilc_mq_destroy(struct message_queue *mq);
- 
- #endif
+ 	data->chain_noise_a = (chain_noise_a + data->chain_noise_a);
 -- 
 2.7.0
 
