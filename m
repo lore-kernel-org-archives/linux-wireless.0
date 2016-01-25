@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:40509 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752695AbcA2Gy2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2016 01:54:28 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH 3/6] staging: wilc1000: remove useless function
-Date: Fri, 29 Jan 2016 15:51:35 +0900
-Message-ID: <1454050298-25815-3-git-send-email-leo.kim@atmel.com> (sfid-20160129_075431_297911_1ACCB8FE)
-In-Reply-To: <1454050298-25815-1-git-send-email-leo.kim@atmel.com>
-References: <1454050298-25815-1-git-send-email-leo.kim@atmel.com>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:50737 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933261AbcAYT7y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2016 14:59:54 -0500
+Message-ID: <56A67C6E.1090903@cs.wisc.edu> (sfid-20160125_210002_564160_1D0FDD20)
+Date: Mon, 25 Jan 2016 13:50:06 -0600
+From: Mike Christie <michaelc@cs.wisc.edu>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: device-mapper development <dm-devel@redhat.com>,
+	Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org, linux-cifs@vger.kernel.org,
+	ecryptfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net, linux-nfs@vger.kernel.org,
+	keyrings@vger.kernel.org, linux-bluetooth@vger.kernel.org,
+	ceph-devel@vger.kernel.org, linux-wpan@vger.kernel.org,
+	linux-afs@lists.infradead.org, drbd-dev@lists.linbit.com,
+	open-iscsi@googlegroups.com
+Subject: Re: [dm-devel] [PATCH 22/26] iscsi_tcp: Use ahash
+References: <20160124131021.GA31153@gondor.apana.org.au> <E1aNKZy-0008Fl-01@gondolin.me.apana.org.au>
+In-Reply-To: <E1aNKZy-0008Fl-01@gondolin.me.apana.org.au>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+On 01/24/2016 07:19 AM, Herbert Xu wrote:
+> This patch replaces uses of the long obsolete hash interface with
+> ahash.
+> 
+> Signed-off-by: Herbert Xu <herbert@gondor.apana.org.au>
+> ---
+> 
+>  drivers/scsi/iscsi_tcp.c    |   54 ++++++++++++++++++++++++++------------------
+>  drivers/scsi/iscsi_tcp.h    |    4 +--
+>  drivers/scsi/libiscsi_tcp.c |   29 +++++++++++++----------
+>  include/scsi/libiscsi_tcp.h |   13 +++++-----
+>  4 files changed, 58 insertions(+), 42 deletions(-)
+> 
 
-This patch remove useless function remove_TCP_related
-in wilc_wlan.c file
+iSCSI parts look ok.
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 9 ---------
- 1 file changed, 9 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 30e3c21..7b3a260 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -206,15 +206,6 @@ static inline int add_tcp_pending_ack(u32 ack, u32 session_index,
- 	}
- 	return 0;
- }
--static inline int remove_TCP_related(struct wilc *wilc)
--{
--	unsigned long flags;
--
--	spin_lock_irqsave(&wilc->txq_spinlock, flags);
--
--	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
--	return 0;
--}
- 
- static inline int tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
- {
--- 
-1.9.1
+Reviewed-by: Mike Christie <michaelc@cs.wisc.edu>
 
