@@ -1,116 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:33540 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753682AbcAVRDJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2016 12:03:09 -0500
-Received: by mail-lb0-f179.google.com with SMTP id x4so45046483lbm.0
-        for <linux-wireless@vger.kernel.org>; Fri, 22 Jan 2016 09:03:08 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH] bcma: init serial console directly from ChipCommon code
-Date: Fri, 22 Jan 2016 18:02:54 +0100
-Message-Id: <1453482174-11021-1-git-send-email-zajec5@gmail.com> (sfid-20160122_180313_747708_06133CD2)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:39101 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756009AbcAYNqk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2016 08:46:40 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/3] mac80211: add RX_FLAG_MACTIME_PLCP_START
+Date: Mon, 25 Jan 2016 15:46:34 +0200
+Message-Id: <1453729596-9847-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160125_144644_131591_82F506DA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-UART is connected to and controlled over ChipCommon core. It doesn't
-have much to do with MIPS core (where we initialize it currently)
-except just existing on embedded systemms. There isn't point of such
-cross-core initialization (and we needed #ifdef anyway) so just handle
-it in ChipCommon.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+The timestamp given by iwlwifi is at the beginning of the
+frame over the air, at (or during) the SYNC field. Allow
+such timestamps to be given to mac80211, at least (for now)
+for frames with non-HT/VHT preambles.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/bcma/bcma_private.h      |  1 -
- drivers/bcma/driver_chipcommon.c | 13 ++++++++++---
- drivers/bcma/driver_mips.c       |  3 ---
- 3 files changed, 10 insertions(+), 7 deletions(-)
+ include/net/mac80211.h     |  3 +++
+ net/mac80211/ieee80211_i.h |  8 +++++++-
+ net/mac80211/util.c        | 14 +++++++++++++-
+ 3 files changed, 23 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index 38f1567..7e4ddfb 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -48,7 +48,6 @@ void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc);
- void bcma_core_chipcommon_init(struct bcma_drv_cc *cc);
- void bcma_chipco_bcm4331_ext_pa_lines_ctl(struct bcma_drv_cc *cc, bool enable);
- #ifdef CONFIG_BCMA_DRIVER_MIPS
--void bcma_chipco_serial_init(struct bcma_drv_cc *cc);
- extern struct platform_device bcma_pflash_dev;
- #endif /* CONFIG_BCMA_DRIVER_MIPS */
- 
-diff --git a/drivers/bcma/driver_chipcommon.c b/drivers/bcma/driver_chipcommon.c
-index 36ee221..bdb73d9 100644
---- a/drivers/bcma/driver_chipcommon.c
-+++ b/drivers/bcma/driver_chipcommon.c
-@@ -15,6 +15,8 @@
- #include <linux/platform_device.h>
- #include <linux/bcma/bcma.h>
- 
-+static void bcma_chipco_serial_init(struct bcma_drv_cc *cc);
-+
- static inline u32 bcma_cc_write32_masked(struct bcma_drv_cc *cc, u16 offset,
- 					 u32 mask, u32 value)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 566df20..31337f8 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1010,6 +1010,8 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  * @RX_FLAG_MACTIME_END: The timestamp passed in the RX status (@mactime
+  *	field) is valid and contains the time the last symbol of the MPDU
+  *	(including FCS) was received.
++ * @RX_FLAG_MACTIME_PLCP_START: The timestamp passed in the RX status (@mactime
++ *	field) is valid and contains the time the SYNC preamble was received.
+  * @RX_FLAG_SHORTPRE: Short preamble was used for this frame
+  * @RX_FLAG_HT: HT MCS was used and rate_idx is MCS index
+  * @RX_FLAG_VHT: VHT MCS was used and rate_index is MCS index
+@@ -1058,6 +1060,7 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+ enum mac80211_rx_flags {
+ 	RX_FLAG_MMIC_ERROR		= BIT(0),
+ 	RX_FLAG_DECRYPTED		= BIT(1),
++	RX_FLAG_MACTIME_PLCP_START	= BIT(2),
+ 	RX_FLAG_MMIC_STRIPPED		= BIT(3),
+ 	RX_FLAG_IV_STRIPPED		= BIT(4),
+ 	RX_FLAG_FAILED_FCS_CRC		= BIT(5),
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 9934447..a29f61d 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1466,7 +1466,13 @@ ieee80211_have_rx_timestamp(struct ieee80211_rx_status *status)
  {
-@@ -115,6 +117,8 @@ int bcma_chipco_watchdog_register(struct bcma_drv_cc *cc)
- 
- void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc)
- {
-+	struct bcma_bus *bus = cc->core->bus;
-+
- 	if (cc->early_setup_done)
- 		return;
- 
-@@ -129,6 +133,9 @@ void bcma_core_chipcommon_early_init(struct bcma_drv_cc *cc)
- 	if (cc->capabilities & BCMA_CC_CAP_PMU)
- 		bcma_pmu_early_init(cc);
- 
-+	if (IS_BUILTIN(CONFIG_BCM47XX) && bus->hosttype == BCMA_HOSTTYPE_SOC)
-+		bcma_chipco_serial_init(cc);
-+
- 	cc->early_setup_done = true;
+ 	WARN_ON_ONCE(status->flag & RX_FLAG_MACTIME_START &&
+ 		     status->flag & RX_FLAG_MACTIME_END);
+-	return status->flag & (RX_FLAG_MACTIME_START | RX_FLAG_MACTIME_END);
++	if (status->flag & (RX_FLAG_MACTIME_START | RX_FLAG_MACTIME_END))
++		return true;
++	/* can't handle HT/VHT preamble yet */
++	if (status->flag & RX_FLAG_MACTIME_PLCP_START &&
++	    !(status->flag & (RX_FLAG_HT | RX_FLAG_VHT)))
++		return true;
++	return false;
  }
  
-@@ -314,9 +321,9 @@ u32 bcma_chipco_gpio_pulldown(struct bcma_drv_cc *cc, u32 mask, u32 value)
- 	return res;
- }
- 
--#ifdef CONFIG_BCMA_DRIVER_MIPS
--void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
-+static void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
- {
-+#if IS_BUILTIN(CONFIG_BCM47XX)
- 	unsigned int irq;
- 	u32 baud_base;
- 	u32 i;
-@@ -358,5 +365,5 @@ void bcma_chipco_serial_init(struct bcma_drv_cc *cc)
- 		ports[i].baud_base = baud_base;
- 		ports[i].reg_shift = 0;
+ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index dbdac3a..54afbf4 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -4,7 +4,7 @@
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2007	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+- * Copyright (C) 2015	Intel Deutschland GmbH
++ * Copyright (C) 2015-2016	Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -2681,6 +2681,18 @@ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
+ 		sband = local->hw.wiphy->bands[status->band];
+ 		bitrate = sband->bitrates[status->rate_idx].bitrate;
+ 		ri.legacy = DIV_ROUND_UP(bitrate, (1 << shift));
++
++		if (status->flag & RX_FLAG_MACTIME_PLCP_START) {
++			/* TODO: handle HT/VHT preambles */
++			if (status->band == IEEE80211_BAND_5GHZ) {
++				ts += 20 << shift;
++				mpdu_offset += 2;
++			} else if (status->flag & RX_FLAG_SHORTPRE) {
++				ts += 96;
++			} else {
++				ts += 192;
++			}
++		}
  	}
-+#endif /* CONFIG_BCM47XX */
- }
--#endif /* CONFIG_BCMA_DRIVER_MIPS */
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index 24424f3..a40a203 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -337,12 +337,9 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
  
- void bcma_core_mips_early_init(struct bcma_drv_mips *mcore)
- {
--	struct bcma_bus *bus = mcore->core->bus;
--
- 	if (mcore->early_setup_done)
- 		return;
- 
--	bcma_chipco_serial_init(&bus->drv_cc);
- 	bcma_core_mips_flash_detect(mcore);
- 
- 	mcore->early_setup_done = true;
+ 	rate = cfg80211_calculate_bitrate(&ri);
 -- 
-1.8.4.5
+2.5.0
 
