@@ -1,47 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from glaubenleben.de ([85.214.105.140]:53800 "EHLO glaubenleben.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757049AbcA3RCT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2016 12:02:19 -0500
-From: Andreas Kemnade <andreas@kemnade.info>
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, hns@goldelico.com
-Cc: Andreas Kemnade <andreas@kemnade.info>
-Subject: [PATCH v3 3/6] libertas: do not confirm sleep if commands are pending
-Date: Sat, 30 Jan 2016 18:01:53 +0100
-Message-Id: <1454173316-13444-4-git-send-email-andreas@kemnade.info> (sfid-20160130_180310_385738_71099238)
-In-Reply-To: <1454173316-13444-1-git-send-email-andreas@kemnade.info>
-References: <1454173316-13444-1-git-send-email-andreas@kemnade.info>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:41122 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752026AbcAYHoE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 25 Jan 2016 02:44:04 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <adham.abozaeid@atmel.com>,
+	<Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 19/26] staging: wilc1000: tcp_process: fix a build warning
+Date: Mon, 25 Jan 2016 16:35:23 +0900
+Message-ID: <1453707330-13526-20-git-send-email-glen.lee@atmel.com> (sfid-20160125_090654_244992_7AA97C40)
+In-Reply-To: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the main thread gets one PS AWAKE event and one PS SLEEP event
-in one iteration over event_fifo there will never be checks for
-commands to be processed, since psstate will always be
-PS_STATE_SLEEP or PS_STATE_PRE_SLEEP
+This patch fixes build warning "flags is used uninitialized" when
+TCP_ACK_FILTER is defined.
 
-Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
+Fixes: 562ed3f1f78a ("staging/wilc1000: pass struct wilc to most linux_wlan.c functions")
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
-changes in v3: corrected paths
-changes in v2: reordered: was 4/6
- drivers/net/wireless/marvell/libertas/cmdresp.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/staging/wilc1000/wilc_wlan.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/marvell/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
-index 701125f..c95bf6d 100644
---- a/drivers/net/wireless/marvell/libertas/cmdresp.c
-+++ b/drivers/net/wireless/marvell/libertas/cmdresp.c
-@@ -257,6 +257,10 @@ int lbs_process_event(struct lbs_private *priv, u32 event)
- 			       "EVENT: in FULL POWER mode, ignoring PS_SLEEP\n");
- 			break;
- 		}
-+		if (!list_empty(&priv->cmdpendingq)) {
-+			lbs_deb_cmd("EVENT: commands in queue, do not sleep\n");
-+			break;
-+		}
- 		priv->psstate = PS_STATE_PRE_SLEEP;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index cc487d8..e0696505 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -234,6 +234,7 @@ static inline int tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+ 	vif = netdev_priv(dev);
+ 	wilc = vif->wilc;
  
- 		lbs_ps_confirm_sleep(priv);
++	spin_lock_irqsave(&wilc->txq_spinlock, flags);
+ 
+ 	eth_hdr_ptr = &buffer[0];
+ 	h_proto = ntohs(*((unsigned short *)&eth_hdr_ptr[12]));
 -- 
-2.1.4
+1.9.1
 
