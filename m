@@ -1,108 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:51403 "EHLO
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:63781 "EHLO
 	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751739AbcABIlw (ORCPT
+	with ESMTP id S964896AbcAZKBy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jan 2016 03:41:52 -0500
+	Tue, 26 Jan 2016 05:01:54 -0500
 From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
 CC: linux-wireless <linux-wireless@vger.kernel.org>,
 	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V2 7/7] brcmfmac: introduce module parameter to force successful probe
-Date: Sat, 2 Jan 2016 09:41:42 +0100
-Message-ID: <1451724102-21911-8-git-send-email-arend@broadcom.com> (sfid-20160102_094231_401539_CD4C7378)
-In-Reply-To: <1451724102-21911-1-git-send-email-arend@broadcom.com>
-References: <1451724102-21911-1-git-send-email-arend@broadcom.com>
+Subject: [RFC V3 0/2] nl80211: allow configuration of BSS selection
+Date: Tue, 26 Jan 2016 11:01:46 +0100
+Message-ID: <1453802508-30195-1-git-send-email-arend@broadcom.com> (sfid-20160126_110205_106016_F777E7B7)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The module parameter can be used to ensure the probe succeeds thus
-claiming the device and allowing post-mortem debugging in case of
-firmware crash. It is only available when select CONFIG_BRCMDBG.
+This patch series adds support for configuration of BSS selection done by
+the driver and/or firmware. It allows user-space to pass selection criteria
+with the NL80211_CMD_CONNECT using NL80211_ATTR_BSS_SELECT. When user-space
+does provide this attribute and no explicit BSSID is provided it will pass
+the BSS selection criteria to the driver if the driver supports it.
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c | 11 ++++++++++-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h | 13 +++++++++++++
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c   |  2 ++
- 3 files changed, 25 insertions(+), 1 deletion(-)
+When multiple BSS-es are found belonging to the same ESS, ie. Infra-BSS with
+same SSID, the criteria can be used to select a BSS. The criteria defined are:
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index bb9e2b3..4265b50 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -67,6 +67,13 @@ static int brcmf_roamoff;
- module_param_named(roamoff, brcmf_roamoff, int, S_IRUSR);
- MODULE_PARM_DESC(roamoff, "Do not use internal roaming engine");
- 
-+#ifdef DEBUG
-+/* always succeed brcmf_bus_start() */
-+static int brcmf_ignore_probe_fail;
-+module_param_named(ignore_probe_fail, brcmf_ignore_probe_fail, int, 0);
-+MODULE_PARM_DESC(ignore_probe_fail, "always succeed probe for debugging");
-+#endif
-+
- struct brcmf_mp_global_t brcmf_mp_global;
- 
- int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
-@@ -232,7 +239,9 @@ int brcmf_mp_device_attach(struct brcmf_pub *drvr)
- 	drvr->settings->feature_disable = brcmf_feature_disable;
- 	drvr->settings->fcmode = brcmf_fcmode;
- 	drvr->settings->roamoff = !!brcmf_roamoff;
--
-+#ifdef DEBUG
-+	drvr->settings->ignore_probe_fail = !!brcmf_ignore_probe_fail;
-+#endif
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-index abe3764..3b0a63b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-@@ -55,11 +55,24 @@ struct brcmf_mp_device {
- 	int	feature_disable;
- 	int	fcmode;
- 	bool	roamoff;
-+	bool	ignore_probe_fail;
- };
- 
- void brcmf_mp_attach(void);
- int brcmf_mp_device_attach(struct brcmf_pub *drvr);
- void brcmf_mp_device_detach(struct brcmf_pub *drvr);
-+#ifdef DEBUG
-+static inline bool brcmf_ignoring_probe_fail(struct brcmf_pub *drvr)
-+{
-+	return drvr->settings->ignore_probe_fail;
-+}
-+#else
-+static inline bool brcmf_ignoring_probe_fail(struct brcmf_pub *drvr)
-+{
-+	return false;
-+}
-+#endif
-+
- /* Sets dongle media info (drv_version, mac address). */
- int brcmf_c_preinit_dcmds(struct brcmf_if *ifp);
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 3fa7bc5..7c75b1a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -1183,6 +1183,8 @@ fail:
- 			brcmf_net_detach(p2p_ifp->ndev);
- 		drvr->iflist[0] = NULL;
- 		drvr->iflist[1] = NULL;
-+		if (brcmf_ignoring_probe_fail(drvr))
-+			ret = 0;
- 		return ret;
- 	}
- 	return 0;
+1. RSSI based selection.
+2. Band selection, RSSI based selection.
+3. RSSI adjustment in given band, RSSI based selection.
+
+V2:
+ - incorporate comments from Johannes Berg (may have missed some).
+ - split nl80211 patch in two separate patches.
+
+V3:
+ - remove enum nl80211_bss_select_primitive.
+ - reword documentation of nl80211_bss_select_attr enum values.
+
+Arend van Spriel (3):
+  nl80211: add extended feature for BSS selection support
+  nl80211: add bss selection attribute to CONNECT command
+  brcmfmac: add support for nl80211 BSS_SELECT feature
+
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 63 +++++++++++++++++-
+ .../wireless/broadcom/brcm80211/brcmfmac/common.c  | 38 ++++++-----
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  1 +
+ include/net/cfg80211.h                             | 34 ++++++++++
+ include/uapi/linux/nl80211.h                       | 42 ++++++++++++
+ net/wireless/core.c                                |  4 ++
+ net/wireless/nl80211.c                             | 76 ++++++++++++++++++++++
+ 7 files changed, 240 insertions(+), 18 deletions(-)
+
 -- 
 1.9.1
 
