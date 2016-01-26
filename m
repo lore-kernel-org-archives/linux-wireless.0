@@ -1,69 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:35071 "EHLO
-	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751846AbcAEP4p (ORCPT
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:37464 "EHLO
+	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933801AbcAZL4d convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 10:56:45 -0500
-Received: by mail-io0-f174.google.com with SMTP id 77so159784792ioc.2
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2016 07:56:45 -0800 (PST)
+	Tue, 26 Jan 2016 06:56:33 -0500
+Received: by mail-wm0-f45.google.com with SMTP id n5so126167367wmn.0
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2016 03:56:32 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1452009156.12357.38.camel@sipsolutions.net>
-References: <1452004632-20263-1-git-send-email-helmut.schaa@googlemail.com>
-	<1452008139.12357.32.camel@sipsolutions.net>
-	<CAGXE3d9TZbUF0k0moa_hzOUip9q5PgDSe0kDbiD1KCH7mjX+Ng@mail.gmail.com>
-	<1452009156.12357.38.camel@sipsolutions.net>
-Date: Tue, 5 Jan 2016 16:56:44 +0100
-Message-ID: <CAGXE3d9CVOAkQm_76k8mZUKPpVj4M2fTL76dhQH6Mp2GsTWE3g@mail.gmail.com> (sfid-20160105_165648_492023_7B4FF132)
-Subject: Re: [PATCH] mac80211: Don't buffer non-bufferable MMPDUs
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+In-Reply-To: <56A74E51.80609@openwrt.org>
+References: <1453382588-27105-1-git-send-email-michal.kazior@tieto.com>
+	<1453382588-27105-2-git-send-email-michal.kazior@tieto.com>
+	<56A74E51.80609@openwrt.org>
+Date: Tue, 26 Jan 2016 12:56:32 +0100
+Message-ID: <CA+BoTQk+7cpP9jZ8UyUjOrnPc309LdgYN8BbNBfEOyTSUDBcAw@mail.gmail.com> (sfid-20160126_125637_111278_37BCF14F)
+Subject: Re: [PATCH 2/2] mac80211: expose txq queue depth and size to drivers
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 5, 2016 at 4:52 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2016-01-05 at 16:43 +0100, Helmut Schaa wrote:
->
->> > That said, it obviously also points to a driver bug not treating
->> > these frames correctly, so you might want to investigate why you
->> > got here to start with!
+On 26 January 2016 at 11:45, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2016-01-21 14:23, Michal Kazior wrote:
+>> This will allow drivers to make more educated
+>> decisions whether to defer transmission or not.
 >>
->> It was not the driver marking the frame as filtered but mac80211
->> itself in status.c:
+>> Relying on wake_tx_queue() call count implicitly
+>> was not possible because it could be called
+>> without queued frame count actually changing on
+>> software tx aggregation start/stop code paths.
 >>
->>                 acked = !!(info->flags & IEEE80211_TX_STAT_ACK);
->>                 if (!acked && test_sta_flag(sta, WLAN_STA_PS_STA)) {
->>                         /*
->>                          * The STA is in power save mode, so assume
->>                          * that this TX packet failed because of
->> that.
->>                          */
->>                         ieee80211_handle_filtered_frame(local, sta,
->> skb);
->>                         rcu_read_unlock();
->>                         return;
->>                 }
->
-> Ah, yes, ok. So the frame simply didn't go through, for whatever
-> reason. Hopefully the driver actually transmitted it :)
-
-Yep, saw it on the air.
-
-It was a STA sending probe requests while in PS mode and jumping to a new
-channel before receiving/acking all probe responses. Hence, a probe response
-ended up in the filtered queue. And it was easy to reproduce with this specific
-STA (some old voip phone).
-
->> However, I've put the code into ieee80211_handle_filtered_frame to
->> not grow ieee80211_tx_status even more :)
+>> It was also not possible to know how long
+>> byte-wise queue was without dequeueing.
 >>
->> If you prefer to add it here directly I'm fine to change it.
->>
->
-> No, looks fine as is. I just misunderstood how we got here.
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> Instead of exposing these in the struct to the driver directly, please
+> make a function to get them. Since the number of frames is already
+> tracked in txqi->queue, you can avoid counter duplication that way.
 
-Ok, I'd still like to change to checking IEEE80211_TX_CTL_NO_PS_BUFFER
-instead -> v2 follows.
+Hmm, so you suggest to have something like:
 
-Helmut
+ void
+ ieee80211_get_txq_depth(struct ieee80211_txq *txq,
+                         unsigned int *frame_cnt,
+                         unsigned int *byte_count) {
+   struct txq_info *txqi = txq_to_info(txq);
+
+   if (frame_cnt)
+     *frame_cnt = txqi->queue.qlen;
+
+   if (byte_count)
+     *byte_cnt = txqi->byte_cnt;
+ }
+
+Correct?
+
+Sounds reasonable.
+
+
+> Also, that way you can fix a race condition between accessing the number
+> of frames counter and the bytes counter.
+
+I don't see a point in maintaining coherency between the two counters
+with regard to each other alone. Do you have a use-case that would
+actually make use of that property?
+
+I'd like to avoid any unnecessary spinlocks.
+
+
+Michał
