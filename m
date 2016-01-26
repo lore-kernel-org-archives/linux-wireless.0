@@ -1,50 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:33354 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754004AbcASLfD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 06:35:03 -0500
-Received: by mail-wm0-f53.google.com with SMTP id 123so87494886wmz.0
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2016 03:35:02 -0800 (PST)
-Received: from archlinux-alberto (cm-93-156-107-18.telecable.es. [93.156.107.18])
-        by smtp.gmail.com with ESMTPSA id l7sm28256422wjx.14.2016.01.19.03.34.59
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 19 Jan 2016 03:34:59 -0800 (PST)
-Date: Tue, 19 Jan 2016 12:34:57 +0100
-From: albertofanjul@gmail.com
-To: linux-wireless@vger.kernel.org
-Subject: Checking p2p capabilities
-Message-ID: <20160119113457.GA32060@archlinux-alberto> (sfid-20160119_123521_709483_A29A5BDE)
+Received: from mout.gmx.net ([212.227.15.15]:63001 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932681AbcAZIwd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 03:52:33 -0500
+From: Marc Dietrich <marvin24@gmx.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Subject: Re: [PATCHv2 3/4] ARM: tegra: use build-in device propertieswithrfkill_gpio
+Date: Tue, 26 Jan 2016 09:52:08 +0100
+Message-ID: <7911934.5tJp6vWQjI@fb07-iapwap2> (sfid-20160126_095257_016713_EDC3F5D4)
+In-Reply-To: <1453798016.2759.5.camel@sipsolutions.net>
+References: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com> <1626364.s6q6eBGYVQ@ax5200p> <1453798016.2759.5.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; boundary="nextPart1679971.baOqhhWpfy"; micalg="pgp-sha256"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi, I'm maintainer of https://github.com/albfan/miraclecast and as a project with specific hardware needs, I build a hardware tester, but it is to naive:
+--nextPart1679971.baOqhhWpfy
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"
 
-https://github.com/albfan/miraclecast/blob/master/res/miracle-utils.sh#L68
+Am Dienstag, 26. Januar 2016, 09:46:56 CET schrieb Johannes Berg:
+> On Mon, 2016-01-25 at 21:59 +0100, Marc Dietrich wrote:
+> > 
+> >
+> > seems to work fine. I wish we could instantiate this from device-tree
+> > so we can finially get rid of this file.
+> 
+> That'd be nice - anyone want to propose rfkill DT bindings? :)
 
-basically it look for p2p interface modes grepping iw phy <phyname> info.
+There have been at least 5 attempts to do this in the past - all fail. You've 
+been warned :-)
 
-Lot of people trying miraclecast ask me:why it's device do not support p2p?  (while it's documentation says it does, many times is just what they think, not reality).
-
-I wonder if that is a matter of driver, modules or pure hardware. Is there any way to check it directly and not from a grep inside iw ?.
-
-something like:
-
-iw phy wlp3s0 get P2P-client
-iw phy wlp3s0 get P2P-GO
-
-About kernel, modules and hardware, are they completely black box for others?, I mean, can I detect if my device hardware supports some interface but my driver or module can't?
+Marc
 
 
-At this point my script informs pretty well, and there's a few people ask such things, but I would like to check it in a better way, even with an api inside my project
+--nextPart1679971.baOqhhWpfy
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
 
-Something related with this lines I could check by myself (I use that clone for it's line anchors)
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
-https://github.com/cozybit/iw/blob/master/util.c#L124
-https://github.com/cozybit/iw/blob/master/info.c#L276
+iQEcBAABCAAGBQJWpzO4AAoJEKyeR39HFBtoXMUH/2IE8u7/Fj5UBqUr0fi+qyFV
+6UxTjBv90FooFukmOpmJuU3yKeGO5TFfK+W5uZ80GtO7lySjw28Ugw8i+t03uCBi
+Vu6Lgh1oRBWghiucwKvFVlmyz1ZqonIZ53swQ3fAk1INX2qtcTyKVQigJy/3yEFR
+mFBcpS6q4I8QnUe1sZseB9JUPD/Fu7E3H6xOXQyDVwXy9VwhWRyc7huAoZIvlkHH
+b14fXokls7fsKIJa6FFFZPEtRvyBpbki1xcoxMq1NJYFWep1hq50yj+9BNrBAkPv
+5PUGxaBm6rRv0epgc4pFt+P/fJikTCcATcOnp+iQBRgMozXn4J39qwJ6F9k/HP4=
+=I/ky
+-----END PGP SIGNATURE-----
 
-NL80211_ATTR_SUPPORTED_IFTYPES
-NL80211_IFTYPE_MAX
+--nextPart1679971.baOqhhWpfy--
+
