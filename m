@@ -1,82 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49889 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751922AbcAEM5n convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 07:57:43 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: kbuild test robot <lkp@intel.com>
-CC: "kbuild-all@01.org" <kbuild-all@01.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Cathy Luo <cluo@marvell.com>,
-	"Nishant Sarmukadam" <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>
-Subject: RE: [PATCH 2/4] mwifiex: enable pcie MSIx interrupt mode support
-Date: Tue, 5 Jan 2016 12:57:38 +0000
-Message-ID: <20d9447a788a4a4daf709bd4d2622971@SC-EXCH04.marvell.com> (sfid-20160105_135757_182120_DBF946EE)
-References: <1451571855-29449-2-git-send-email-akarwar@marvell.com>
- <201601010258.TdInjVcJ%fengguang.wu@intel.com>
-In-Reply-To: <201601010258.TdInjVcJ%fengguang.wu@intel.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:38964 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932135AbcAZLWa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 06:22:30 -0500
+Message-ID: <1453807346.2759.29.camel@sipsolutions.net> (sfid-20160126_122233_471552_77BFDC51)
+Subject: Re: [PATCH] cfg80211: basic support for PBSS network type
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lior David <liord@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Dedy Lansky <dlansky@codeaurora.org>,
+	Maya Erez <merez@codeaurora.org>,
+	Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Date: Tue, 26 Jan 2016 12:22:26 +0100
+In-Reply-To: <56961335.4040801@codeaurora.org>
+References: <56961335.4040801@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: kbuild test robot [mailto:lkp@intel.com]
-> Sent: Thursday, December 31, 2015 11:33 PM
-> To: Amitkumar Karwar
-> Cc: kbuild-all@01.org; linux-wireless@vger.kernel.org; Cathy Luo;
-> Nishant Sarmukadam; Xinming Hu; Amitkumar Karwar
-> Subject: Re: [PATCH 2/4] mwifiex: enable pcie MSIx interrupt mode
-> support
-> 
-> Hi Xinming,
-> 
-> [auto build test ERROR on wireless-drivers-next/master] [also build test
-> ERROR on next-20151231] [cannot apply to v4.4-rc7] [if your patch is
-> applied to the wrong git tree, please drop us a note to help improving
-> the system]
-> 
-> url:    https://github.com/0day-ci/linux/commits/Amitkumar-
-> Karwar/mwifiex-fix-missing-debug-messages/20151231-222922
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-
-> drivers-next.git master
-> config: mips-allyesconfig (attached as .config)
-> reproduce:
->         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-
-> tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # save the attached .config to linux build tree
->         make.cross ARCH=mips
-> 
-> All errors (new ones prefixed by >>):
-> 
->    In file included from
-> drivers/net/wireless/marvell/mwifiex/main.h:45:0,
->                     from drivers/net/wireless/marvell/mwifiex/main.c:20:
-> >> drivers/net/wireless/marvell/mwifiex/pcie.h:342:20: error: array type
-> has incomplete element type 'struct msix_entry'
->      struct msix_entry msix_entries[MWIFIEX_NUM_MSIX_VECTORS];
->                        ^
-> 
-> vim +342 drivers/net/wireless/marvell/mwifiex/pcie.h
-> 
->    336		u8 *sleep_cookie_vbase;
->    337		dma_addr_t sleep_cookie_pbase;
->    338		void __iomem *pci_mmap;
->    339		void __iomem *pci_mmap1;
->    340		int msi_enable;
->    341		int msix_enable;
->  > 342		struct msix_entry
-> msix_entries[MWIFIEX_NUM_MSIX_VECTORS];
->    343		struct mwifiex_msix_context
-> msix_ctx[MWIFIEX_NUM_MSIX_VECTORS];
->    344		struct mwifiex_msix_context share_irq_ctx;
->    345	};
-> 
+On Wed, 2016-01-13 at 11:04 +0200, Lior David wrote:
+> 
+> + * @NL80211_ATTR_PBSS: flag attribute. If set it means operate
+> + *	in a PBSS. Specified in %NL80211_CMD_CONNECT to request
+> + *	connecting to a PCP, and in %NL80211_CMD_START_AP to start
+> + *	a PCP instead of AP. Relevant for DMG networks only.
 
-"struct msix_entry" has been defined in "include/linux/pci.h". We have already included this file. 
-Any suggestions to fix this MIPS specific compilation error? OR it's just a false alarm.
+I'm continually confused by this; is it possible for DMG devices to be
+a "real" AP rather than a PCP?
 
-Regards,
-Amitkumar Karwar
+> @@ -3461,6 +3462,8 @@  static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+>  			return PTR_ERR(params.acl);
+>  	}
+>  
+> +	params.pbss = nla_get_flag(info->attrs[NL80211_ATTR_PBSS]);
+> +
+>  	wdev_lock(wdev);
+>  	err = rdev_start_ap(rdev, dev, &params);
+>  	if (!err) {
+
+This, and the corresponding code in nl80211_connect, really ought to
+check that the device is a DMG device and able to do this.
+
+Perhaps this even needs a capability check, or do we assume that all
+devices/drivers will be able to do this (or should reject it?)
+
+If you want to rely on drivers though you need to have (in this patch!)
+a small change to the existing driver to reject the operations if
+pbss==true since obviously it cannot be doing the right thing right now
+without further changes. That reject would then of course be removed
+again with the driver update.
+
+johannes
