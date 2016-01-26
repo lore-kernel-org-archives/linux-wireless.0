@@ -1,104 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:22749 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751631AbcA2CzT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 21:55:19 -0500
-From: "Kim, Leo" <Leo.Kim@atmel.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: Greg KH <gregkh@linuxfoundation.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Cho, Tony" <Tony.Cho@atmel.com>, "Lee, Glen" <Glen.Lee@atmel.com>,
-	"Shin, Austin" <Austin.Shin@atmel.com>,
-	"Park, Chris" <Chris.Park@atmel.com>,
-	"Abozaeid, Adham" <Adham.Abozaeid@atmel.com>,
-	"Ferre, Nicolas" <Nicolas.FERRE@atmel.com>
-Subject: RE: [PATCH 08/12] staging: wilc1000: rename variable s32Error
-Date: Fri, 29 Jan 2016 02:55:12 +0000
-Message-ID: <74F3875218FC364C9618AB19CB60E905800419AC@penmbx02.corp.atmel.com> (sfid-20160129_035525_504534_DDD85E10)
-References: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
- <1453965226-6158-8-git-send-email-leo.kim@atmel.com>
- <CAGRGNgXxcZBzOkJa++pAHWZLAZs9wrD48cEiGhzKatmzd+usRw@mail.gmail.com>
-In-Reply-To: <CAGRGNgXxcZBzOkJa++pAHWZLAZs9wrD48cEiGhzKatmzd+usRw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:39046 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756003AbcAZLoo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 06:44:44 -0500
+Message-ID: <1453808681.2759.35.camel@sipsolutions.net> (sfid-20160126_124447_582981_495C7DF5)
+Subject: Re: [PATCH 2/2] mac80211: let unused MPP table entries timeout
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henning Rogge <hrogge@gmail.com>, linux-wireless@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+Date: Tue, 26 Jan 2016 12:44:41 +0100
+In-Reply-To: <1453190672-9748-3-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20160119_090459_536071_3CC17F87)
+References: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+	 <1453190672-9748-3-git-send-email-henning.rogge@fkie.fraunhofer.de>
+	 (sfid-20160119_090459_536071_3CC17F87)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RGVhciBKdWxpYW4NCg0KVGhhbmsgeW91IGluIHlvdXIgYWR2aXNlcy4NClRoaXMgcGF0Y2ggc3Vi
-amVjdCBpcyAncmVuYW1lIHZhcmlhYmxlcycuDQpUaGlzIHRpbWUsIEkgaG9wZSB0aGUgcGF0Y2gg
-aXMgYXBwbGllZC4NCg0KSSB3aWxsIGJlIHlvdXIgcG9zaXRpdmUgYWR2aXNlcyBjaGFuZ2UgdG8g
-bmV4dCBwYXRjaC4NCg0KwqBUaGFua3MsIEJSDQrCoExlbw0KDQotLS0tLU9yaWdpbmFsIE1lc3Nh
-Z2UtLS0tLQ0KRnJvbTogSnVsaWFuIENhbGFieSBbbWFpbHRvOmp1bGlhbi5jYWxhYnlAZ21haWwu
-Y29tXSANClNlbnQ6IEZyaWRheSwgSmFudWFyeSAyOSwgMjAxNiA5OjU1IEFNDQpUbzogS2ltLCBM
-ZW8gPExlby5LaW1AYXRtZWwuY29tPg0KQ2M6IEdyZWcgS0ggPGdyZWdraEBsaW51eGZvdW5kYXRp
-b24ub3JnPjsgZGV2ZWxAZHJpdmVyZGV2Lm9zdW9zbC5vcmc7IGxpbnV4LXdpcmVsZXNzIDxsaW51
-eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc+OyBDaG8sIFRvbnkgPFRvbnkuQ2hvQGF0bWVsLmNv
-bT47IExlZSwgR2xlbiA8R2xlbi5MZWVAYXRtZWwuY29tPjsgU2hpbiwgQXVzdGluIDxBdXN0aW4u
-U2hpbkBhdG1lbC5jb20+OyBQYXJrLCBDaHJpcyA8Q2hyaXMuUGFya0BhdG1lbC5jb20+OyBBYm96
-YWVpZCwgQWRoYW0gPEFkaGFtLkFib3phZWlkQGF0bWVsLmNvbT47IEZlcnJlLCBOaWNvbGFzIDxO
-aWNvbGFzLkZFUlJFQGF0bWVsLmNvbT4NClN1YmplY3Q6IFJlOiBbUEFUQ0ggMDgvMTJdIHN0YWdp
-bmc6IHdpbGMxMDAwOiByZW5hbWUgdmFyaWFibGUgczMyRXJyb3INCg0KSGkgTGVvLA0KDQpPbiBU
-aHUsIEphbiAyOCwgMjAxNiBhdCA2OjEzIFBNLCBMZW8gS2ltIDxsZW8ua2ltQGF0bWVsLmNvbT4g
-d3JvdGU6DQo+IFRoaXMgcGF0Y2ggcmVuYW1lcyB2YXJpYWJsZSBzMzJFcnJvciB0byByZXN1bHQg
-dG8gYXZvaWQgQ2FtZWxDYXNlIA0KPiBuYW1pbmcgY29udmVudGlvbi4NCj4gQWxzbywgcmVtb3Zl
-IHRoZSB1bnVzZWQgdmFyaWFibGUgczMyRXJyb3IgYW5kIHJlcGxhY2Ugd2l0aCBkaXJlY3QgcmV0
-dXJuLg0KPg0KPiBTaWduZWQtb2ZmLWJ5OiBMZW8gS2ltIDxsZW8ua2ltQGF0bWVsLmNvbT4NCj4g
-LS0tDQo+ICBkcml2ZXJzL3N0YWdpbmcvd2lsYzEwMDAvY29yZWNvbmZpZ3VyYXRvci5jIHwgMTkg
-KysrKysrKysrLS0tLS0tLS0tLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDkgaW5zZXJ0aW9ucygrKSwg
-MTAgZGVsZXRpb25zKC0pDQo+DQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3N0YWdpbmcvd2lsYzEw
-MDAvY29yZWNvbmZpZ3VyYXRvci5jIA0KPiBiL2RyaXZlcnMvc3RhZ2luZy93aWxjMTAwMC9jb3Jl
-Y29uZmlndXJhdG9yLmMNCj4gaW5kZXggMmE0ZTMyNC4uODhlNTY2MSAxMDA2NDQNCj4gLS0tIGEv
-ZHJpdmVycy9zdGFnaW5nL3dpbGMxMDAwL2NvcmVjb25maWd1cmF0b3IuYw0KPiArKysgYi9kcml2
-ZXJzL3N0YWdpbmcvd2lsYzEwMDAvY29yZWNvbmZpZ3VyYXRvci5jDQo+IEBAIC0zNTYsMzAgKzM1
-NiwyOSBAQCBzMzIgd2lsY19wYXJzZV9uZXR3b3JrX2luZm8odTggKm1zZ19idWZmZXIsIA0KPiB0
-c3RyTmV0d29ya0luZm8gKipyZXRfbmV0d29ya19pbmZvKQ0KPg0KPiAgczMyIHdpbGNfZGVhbGxv
-Y19uZXR3b3JrX2luZm8odHN0ck5ldHdvcmtJbmZvICpwc3RyTmV0d29ya0luZm8pICB7DQo+IC0g
-ICAgICAgczMyIHMzMkVycm9yID0gMDsNCj4gKyAgICAgICBzMzIgcmVzdWx0ID0gMDsNCj4NCj4g
-ICAgICAgICBpZiAocHN0ck5ldHdvcmtJbmZvKSB7DQo+ICAgICAgICAgICAgICAgICBpZiAocHN0
-ck5ldHdvcmtJbmZvLT5wdThJRXMpIHsNCj4gICAgICAgICAgICAgICAgICAgICAgICAga2ZyZWUo
-cHN0ck5ldHdvcmtJbmZvLT5wdThJRXMpOw0KPiAgICAgICAgICAgICAgICAgICAgICAgICBwc3Ry
-TmV0d29ya0luZm8tPnB1OElFcyA9IE5VTEw7DQoNCkknbSBub3Qgc3VyZSBpdCdzIG5lY2Vzc2Fy
-eSB0byBzZXQgdGhpcyB0byBOVUxMIGhlcmUuDQoNCj4gICAgICAgICAgICAgICAgIH0gZWxzZSB7
-DQo+IC0gICAgICAgICAgICAgICAgICAgICAgIHMzMkVycm9yID0gLUVGQVVMVDsNCj4gKyAgICAg
-ICAgICAgICAgICAgICAgICAgcmVzdWx0ID0gLUVGQVVMVDsNCj4gICAgICAgICAgICAgICAgIH0N
-Cj4NCj4gICAgICAgICAgICAgICAgIGtmcmVlKHBzdHJOZXR3b3JrSW5mbyk7DQo+ICAgICAgICAg
-ICAgICAgICBwc3RyTmV0d29ya0luZm8gPSBOVUxMOw0KDQpPciB0aGlzIHRvIE5VTEwgaGVyZS4N
-Cg0KQWxzbywgaXMgdGhlIHJldHVybiB2YWx1ZSBmcm9tIHRoaXMgZnVuY3Rpb24gYWN0dWFsbHkg
-Y2hlY2tlZD8ga2ZyZWUoKQ0KY2FuIGhhdmUgTlVMTCBwYXNzZWQgdG8gaXQuDQoNCklmIHRoZSBy
-ZXR1cm4gdmFsdWUgaXNuJ3QgY2hlY2tlZCwgdGhpcyBlbnRpcmUgZnVuY3Rpb24gY291bGQgYmUg
-c2ltcGxpZmllZCB0bzoNCg0KLSAtIC0gLSAtDQoNCmlmIChwc3RyTmV0d29ya0luZm8pIHsNCiAg
-ICBrZnJlZShwc3RyTmV0d29ya0luZm8tPnB1OElFcyk7DQogICAga2ZyZWUocHN0ck5ldHdvcmtJ
-bmZvKTsNCn0NCg0KcmV0dXJuIDA7DQoNCi0gLSAtIC0gLQ0KDQpBbHNvLCB3aGVuIHRzdHJOZXR3
-b3JrSW5mbyBzdHJ1Y3RzIGFyZSBhbGxvY2F0ZWQsIHdvdWxkbid0IHRoZQ0KYWxsb2NhdGluZyBm
-dW5jdGlvbiBmYWlsIGlmIC0+cHU4SUVzIGlzIE5VTEw/DQoNCj4gICAgICAgICB9IGVsc2Ugew0K
-PiAtICAgICAgICAgICAgICAgczMyRXJyb3IgPSAtRUZBVUxUOw0KPiArICAgICAgICAgICAgICAg
-cmVzdWx0ID0gLUVGQVVMVDsNCj4gICAgICAgICB9DQo+DQo+IC0gICAgICAgcmV0dXJuIHMzMkVy
-cm9yOw0KPiArICAgICAgIHJldHVybiByZXN1bHQ7DQo+ICB9DQo+DQo+ICBzMzIgd2lsY19wYXJz
-ZV9hc3NvY19yZXNwX2luZm8odTggKnB1OEJ1ZmZlciwgdTMyIHUzMkJ1ZmZlckxlbiwNCj4gICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHRzdHJDb25uZWN0UmVzcEluZm8gKipwcHN0ckNv
-bm5lY3RSZXNwSW5mbykNCj4gIHsNCj4gLSAgICAgICBzMzIgczMyRXJyb3IgPSAwOw0KPiAgICAg
-ICAgIHRzdHJDb25uZWN0UmVzcEluZm8gKnBzdHJDb25uZWN0UmVzcEluZm8gPSBOVUxMOw0KPiAg
-ICAgICAgIHUxNiB1MTZBc3NvY1Jlc3BMZW4gPSAwOw0KPiAgICAgICAgIHU4ICpwdThJRXMgPSBO
-VUxMOw0KPiBAQCAtNDA4LDI3ICs0MDcsMjcgQEAgczMyIHdpbGNfcGFyc2VfYXNzb2NfcmVzcF9p
-bmZvKHU4ICpwdThCdWZmZXIsIHUzMiB1MzJCdWZmZXJMZW4sDQo+DQo+ICAgICAgICAgKnBwc3Ry
-Q29ubmVjdFJlc3BJbmZvID0gcHN0ckNvbm5lY3RSZXNwSW5mbzsNCj4NCj4gLSAgICAgICByZXR1
-cm4gczMyRXJyb3I7DQo+ICsgICAgICAgcmV0dXJuIDA7DQo+ICB9DQo+DQo+ICBzMzIgd2lsY19k
-ZWFsbG9jX2Fzc29jX3Jlc3BfaW5mbyh0c3RyQ29ubmVjdFJlc3BJbmZvICpwc3RyQ29ubmVjdFJl
-c3BJbmZvKQ0KPiAgew0KPiAtICAgICAgIHMzMiBzMzJFcnJvciA9IDA7DQo+ICsgICAgICAgczMy
-IHJlc3VsdCA9IDA7DQoNCkFsbCB0aGUgY29tbWVudHMgYWJvdmUgYXBwbHkgdG8gdGhpcyBmdW5j
-dGlvbiBhcyB3ZWxsLg0KDQo+DQo+ICAgICAgICAgaWYgKHBzdHJDb25uZWN0UmVzcEluZm8pIHsN
-Cj4gICAgICAgICAgICAgICAgIGlmIChwc3RyQ29ubmVjdFJlc3BJbmZvLT5wdThSZXNwSUVzKSB7
-DQo+ICAgICAgICAgICAgICAgICAgICAgICAgIGtmcmVlKHBzdHJDb25uZWN0UmVzcEluZm8tPnB1
-OFJlc3BJRXMpOw0KPiAgICAgICAgICAgICAgICAgICAgICAgICBwc3RyQ29ubmVjdFJlc3BJbmZv
-LT5wdThSZXNwSUVzID0gTlVMTDsNCj4gICAgICAgICAgICAgICAgIH0gZWxzZSB7DQo+IC0gICAg
-ICAgICAgICAgICAgICAgICAgIHMzMkVycm9yID0gLUVGQVVMVDsNCj4gKyAgICAgICAgICAgICAg
-ICAgICAgICAgcmVzdWx0ID0gLUVGQVVMVDsNCj4gICAgICAgICAgICAgICAgIH0NCj4NCj4gICAg
-ICAgICAgICAgICAgIGtmcmVlKHBzdHJDb25uZWN0UmVzcEluZm8pOw0KPiAgICAgICAgICAgICAg
-ICAgcHN0ckNvbm5lY3RSZXNwSW5mbyA9IE5VTEw7DQo+DQo+ICAgICAgICAgfSBlbHNlIHsNCj4g
-LSAgICAgICAgICAgICAgIHMzMkVycm9yID0gLUVGQVVMVDsNCj4gKyAgICAgICAgICAgICAgIHJl
-c3VsdCA9IC1FRkFVTFQ7DQo+ICAgICAgICAgfQ0KPg0KPiAtICAgICAgIHJldHVybiBzMzJFcnJv
-cjsNCj4gKyAgICAgICByZXR1cm4gcmVzdWx0Ow0KPiAgfQ0KDQpUaGFua3MsDQoNCi0tIA0KSnVs
-aWFuIENhbGFieQ0KDQpFbWFpbDoganVsaWFuLmNhbGFieUBnbWFpbC5jb20NClByb2ZpbGU6IGh0
-dHA6Ly93d3cuZ29vZ2xlLmNvbS9wcm9maWxlcy9qdWxpYW4uY2FsYWJ5Lw0K
+On Tue, 2016-01-19 at 09:04 +0100, Henning Rogge wrote:
+
+> +++ b/net/mac80211/mesh_pathtbl.c
+> @@ -929,12 +929,55 @@ int mesh_path_del(struct ieee80211_sub_if_data
+> *sdata, const u8 *addr)
+>  		if (mpath->sdata == sdata &&
+>  		    ether_addr_equal(addr, mpath->dst)) {
+>  			__mesh_path_del(tbl, node);
+> -			goto enddel;
+> +			goto enddelpath;
+
+C labels are scoped, why rename it?
+
+>  		}
+>  	}
+>  
+>  	err = -ENXIO;
+> -enddel:
+> +enddelpath:
+> +	mesh_paths_generation++;
+> +	spin_unlock(&tbl->hashwlock[hash_idx]);
+> +	read_unlock_bh(&pathtbl_resize_lock);
+> +	return err;
+> +}
+> +
+> +/**
+> + * mpp_path_del - delete a mesh proxy path from the table
+> + *
+> + * @addr: addr address (ETH_ALEN length)
+> + * @sdata: local subif
+> + *
+> + * Returns: 0 if successful
+> + */
+> +static int mpp_path_del(struct ieee80211_sub_if_data *sdata, const
+> u8 *addr)
+> +{
+> +	struct mesh_table *tbl;
+> +	struct mesh_path *mpath;
+> +	struct mpath_node *node;
+> +	struct hlist_head *bucket;
+> +	int hash_idx;
+> +	int err = 0;
+> +
+> +	/* flush relevant mpp entries first */
+> +	mpp_flush_by_proxy(sdata, addr);
+> +
+> +	read_lock_bh(&pathtbl_resize_lock);
+> +	tbl = resize_dereference_mpp_paths();
+> +	hash_idx = mesh_table_hash(addr, sdata, tbl);
+> +	bucket = &tbl->hash_buckets[hash_idx];
+> +
+> +	spin_lock(&tbl->hashwlock[hash_idx]);
+> +	hlist_for_each_entry(node, bucket, list) {
+> +		mpath = node->mpath;
+> +		if (mpath->sdata == sdata &&
+> +		    ether_addr_equal(addr, mpath->dst)) {
+> +			__mesh_path_del(tbl, node);
+> +			goto enddelmpp;
+
+This has the same use-after-free, I'd say?
+And another instance later in this file.
+
+
+> +					spin_lock_bh(&mppath-
+> >state_lock);
+> +					mppath->exp_time = jiffies;
+
+That locking seems fairly pointless? You only write to this value here,
+and it's an unsigned long, so in itself it's atomic and there's no
+synchronisation against anything else needed.
+
+johannes
