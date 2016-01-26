@@ -1,65 +1,137 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f170.google.com ([209.85.217.170]:34732 "EHLO
-	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753129AbcA2IfS (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:33456 "EHLO
+	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752924AbcAZLaA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2016 03:35:18 -0500
-Subject: [PATCH] mac80211: minstrel_ht: fix out-of-bound in
- minstrel_ht_set_best_prob_rate
-From: Konstantin Khlebnikov <koct9i@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>
-Cc: netdev@vger.kernel.org,
-	Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
-Date: Fri, 29 Jan 2016 11:35:12 +0300
-Message-ID: <145405651192.4948.10685647900939287282.stgit@zurg> (sfid-20160129_093525_824280_923ACC4A)
+	Tue, 26 Jan 2016 06:30:00 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20160126105455.GA19674@gondor.apana.org.au>
+References: <20160124131021.GA31153@gondor.apana.org.au>
+	<E1aNKYy-0008E6-GI@gondolin.me.apana.org.au>
+	<CAOi1vP9jmMYHR21UeAO175susZ5V74vcXyoxwayBVSTFHxjhBQ@mail.gmail.com>
+	<20160126105455.GA19674@gondor.apana.org.au>
+Date: Tue, 26 Jan 2016 12:29:57 +0100
+Message-ID: <CAOi1vP9kB5a-JeZ1PriwyQO0XH4Qh3UKidp==NPvVw-AsL=uqw@mail.gmail.com> (sfid-20160126_123019_799433_6DD70C87)
+Subject: Re: [PATCH 16/26] libceph: Use skcipher
+From: Ilya Dryomov <idryomov@gmail.com>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, devel@driverdev.osuosl.org,
+	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
+	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org,
+	Ceph Development <ceph-devel@vger.kernel.org>,
+	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
+	Lars Ellenberg <drbd-dev@lists.linbit.com>,
+	open-iscsi@googlegroups.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Patch fixes this splat
+On Tue, Jan 26, 2016 at 11:54 AM, Herbert Xu
+<herbert@gondor.apana.org.au> wrote:
+> On Mon, Jan 25, 2016 at 05:18:47PM +0100, Ilya Dryomov wrote:
+>>
+>> Could you get rid of ivsize instead of assigning to it - see the
+>> attached diff?
+>
+> How about an incremental patch like this? Thanks!
+>
+> ---8<---
+> From: Ilya Dryomov <idryomov@gmail.com>
+> Subject: libceph: Remove unnecessary ivsize variables
+>
+> This patch removes the unnecessary ivsize variabls as they always
+> have the value of AES_BLOCK_SIZE.
+>
+> Signed-off-by: Ilya Dryomov <idryomov@gmail.com>
+>
+> diff --git a/net/ceph/crypto.c b/net/ceph/crypto.c
+> index fb9cb2b..db2847a 100644
+> --- a/net/ceph/crypto.c
+> +++ b/net/ceph/crypto.c
+> @@ -166,8 +166,7 @@ static int ceph_aes_encrypt(const void *key, int key_len,
+>         struct crypto_skcipher *tfm = ceph_crypto_alloc_cipher();
+>         SKCIPHER_REQUEST_ON_STACK(req, tfm);
+>         int ret;
+> -       int ivsize = AES_BLOCK_SIZE;
+> -       char iv[ivsize];
+> +       char iv[AES_BLOCK_SIZE];
+>         size_t zero_padding = (0x10 - (src_len & 0x0f));
+>         char pad[16];
+>
+> @@ -186,7 +185,7 @@ static int ceph_aes_encrypt(const void *key, int key_len,
+>                 goto out_tfm;
+>
+>         crypto_skcipher_setkey((void *)tfm, key, key_len);
+> -       memcpy(iv, aes_iv, ivsize);
+> +       memcpy(iv, aes_iv, AES_BLOCK_SIZE);
+>
+>         skcipher_request_set_tfm(req, tfm);
+>         skcipher_request_set_callback(req, 0, NULL, NULL);
+> @@ -229,8 +228,7 @@ static int ceph_aes_encrypt2(const void *key, int key_len, void *dst,
+>         struct crypto_skcipher *tfm = ceph_crypto_alloc_cipher();
+>         SKCIPHER_REQUEST_ON_STACK(req, tfm);
+>         int ret;
+> -       int ivsize = AES_BLOCK_SIZE;
+> -       char iv[ivsize];
+> +       char iv[AES_BLOCK_SIZE];
+>         size_t zero_padding = (0x10 - ((src1_len + src2_len) & 0x0f));
+>         char pad[16];
+>
+> @@ -250,7 +248,7 @@ static int ceph_aes_encrypt2(const void *key, int key_len, void *dst,
+>                 goto out_tfm;
+>
+>         crypto_skcipher_setkey((void *)tfm, key, key_len);
+> -       memcpy(iv, aes_iv, ivsize);
+> +       memcpy(iv, aes_iv, AES_BLOCK_SIZE);
+>
+>         skcipher_request_set_tfm(req, tfm);
+>         skcipher_request_set_callback(req, 0, NULL, NULL);
+> @@ -294,8 +292,7 @@ static int ceph_aes_decrypt(const void *key, int key_len,
+>         struct crypto_skcipher *tfm = ceph_crypto_alloc_cipher();
+>         SKCIPHER_REQUEST_ON_STACK(req, tfm);
+>         char pad[16];
+> -       int ivsize = AES_BLOCK_SIZE;
+> -       char iv[16];
+> +       char iv[AES_BLOCK_SIZE];
+>         int ret;
+>         int last_byte;
+>
+> @@ -310,7 +307,7 @@ static int ceph_aes_decrypt(const void *key, int key_len,
+>                 goto out_tfm;
+>
+>         crypto_skcipher_setkey((void *)tfm, key, key_len);
+> -       memcpy(iv, aes_iv, ivsize);
+> +       memcpy(iv, aes_iv, AES_BLOCK_SIZE);
+>
+>         skcipher_request_set_tfm(req, tfm);
+>         skcipher_request_set_callback(req, 0, NULL, NULL);
+> @@ -363,8 +360,7 @@ static int ceph_aes_decrypt2(const void *key, int key_len,
+>         struct crypto_skcipher *tfm = ceph_crypto_alloc_cipher();
+>         SKCIPHER_REQUEST_ON_STACK(req, tfm);
+>         char pad[16];
+> -       int ivsize = AES_BLOCK_SIZE;
+> -       char iv[ivsize];
+> +       char iv[AES_BLOCK_SIZE];
+>         int ret;
+>         int last_byte;
+>
+> @@ -380,7 +376,7 @@ static int ceph_aes_decrypt2(const void *key, int key_len,
+>                 goto out_tfm;
+>
+>         crypto_skcipher_setkey((void *)tfm, key, key_len);
+> -       memcpy(iv, aes_iv, ivsize);
+> +       memcpy(iv, aes_iv, AES_BLOCK_SIZE);
+>
+>         skcipher_request_set_tfm(req, tfm);
+>         skcipher_request_set_callback(req, 0, NULL, NULL);
 
-BUG: KASAN: slab-out-of-bounds in minstrel_ht_update_stats.isra.7+0x6e1/0x9e0
-[mac80211] at addr ffff8800cee640f4 Read of size 4 by task swapper/3/0
+LGTM.  You want to take it through crypto?
 
-Signed-off-by: Konstantin Khlebnikov <koct9i@gmail.com>
-Link: http://lkml.kernel.org/r/CALYGNiNyJhSaVnE35qS6UCGaSb2Dx1_i5HcRavuOX14oTz2P+w@mail.gmail.com
----
- net/mac80211/rc80211_minstrel_ht.c |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+Thanks,
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 3928dbd24e25..93bf2b743e20 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -414,15 +414,16 @@ minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u16 index)
- 	    (max_tp_group != MINSTREL_CCK_GROUP))
- 		return;
- 
-+	max_gpr_group = mg->max_group_prob_rate / MCS_GROUP_RATES;
-+	max_gpr_idx = mg->max_group_prob_rate % MCS_GROUP_RATES;
-+	max_gpr_prob = mi->groups[max_gpr_group].rates[max_gpr_idx].prob_ewma;
-+
- 	if (mrs->prob_ewma > MINSTREL_FRAC(75, 100)) {
- 		cur_tp_avg = minstrel_ht_get_tp_avg(mi, cur_group, cur_idx,
- 						    mrs->prob_ewma);
- 		if (cur_tp_avg > tmp_tp_avg)
- 			mi->max_prob_rate = index;
- 
--		max_gpr_group = mg->max_group_prob_rate / MCS_GROUP_RATES;
--		max_gpr_idx = mg->max_group_prob_rate %	MCS_GROUP_RATES;
--		max_gpr_prob = mi->groups[max_gpr_group].rates[max_gpr_idx].prob_ewma;
- 		max_gpr_tp_avg = minstrel_ht_get_tp_avg(mi, max_gpr_group,
- 							max_gpr_idx,
- 							max_gpr_prob);
-@@ -431,7 +432,7 @@ minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u16 index)
- 	} else {
- 		if (mrs->prob_ewma > tmp_prob)
- 			mi->max_prob_rate = index;
--		if (mrs->prob_ewma > mg->rates[mg->max_group_prob_rate].prob_ewma)
-+		if (mrs->prob_ewma > max_gpr_prob)
- 			mg->max_group_prob_rate = index;
- 	}
- }
-
+                Ilya
