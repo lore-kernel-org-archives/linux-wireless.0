@@ -1,63 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f45.google.com ([209.85.215.45]:35550 "EHLO
-	mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755429AbcAMNv5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2016 08:51:57 -0500
-Received: by mail-lf0-f45.google.com with SMTP id c192so255743217lfe.2
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 05:51:56 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH] ath10k: prevent txrx running for too long
-Date: Wed, 13 Jan 2016 14:52:52 +0100
-Message-Id: <1452693172-28340-1-git-send-email-michal.kazior@tieto.com> (sfid-20160113_145201_758310_416DA541)
+Received: from s3.sipsolutions.net ([5.9.151.49]:38027 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932681AbcAZImI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 03:42:08 -0500
+Message-ID: <1453797724.2759.4.camel@sipsolutions.net> (sfid-20160126_094225_772889_A4D7E381)
+Subject: Re: [PATCHv2 3/4] ARM: tegra: use build-in device properties with
+ rfkill_gpio
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Thierry Reding <thierry.reding@gmail.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Marc Dietrich <marvin24@gmx.de>
+Date: Tue, 26 Jan 2016 09:42:04 +0100
+In-Reply-To: <20160125121840.GA20452@ulmo.nvidia.com> (sfid-20160125_131846_334590_41466BBA)
+References: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com>
+	 <1453712629-143317-4-git-send-email-heikki.krogerus@linux.intel.com>
+	 <20160125121840.GA20452@ulmo.nvidia.com>
+	 (sfid-20160125_131846_334590_41466BBA)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On multicore systems it was possible for the txrx
-tasklet to keep on running for long periods of
-time on a single CPU due to tx completion
-processing. Another CPU could feed the running
-tasklet for an indefinite amount of time.
+On Mon, 2016-01-25 at 13:18 +0100, Thierry Reding wrote:
+> 
+> Johannes, I assume that you'll want to take this through your tree
+> because of the dependency? In that case:
+> 
+> Acked-by: Thierry Reding <treding@nvidia.com>
 
-The tasklet is now guaranteed to run a finite
-amount of time and is limited by HTT CE Rx ring
-depth.
+I can, but I don't really care - perhaps you'd rather take the entire
+series through your tree to get it into one place for Marc?
 
-This improves behavior when RPS is used on target
-system and might improve TCP handling as well.
+In which case, you have my
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+Acked-by: Johannes Berg <johannes@sipsolutions.net>
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 91afa3ae414c..3079434b5d9b 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2156,10 +2156,18 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
- {
- 	struct ath10k_htt *htt = (struct ath10k_htt *)ptr;
- 	struct ath10k *ar = htt->ar;
-+	struct sk_buff_head tx_q;
- 	struct htt_resp *resp;
- 	struct sk_buff *skb;
-+	unsigned long flags;
- 
--	while ((skb = skb_dequeue(&htt->tx_compl_q))) {
-+	__skb_queue_head_init(&tx_q);
-+
-+	spin_lock_irqsave(&htt->tx_compl_q.lock, flags);
-+	skb_queue_splice_init(&htt->tx_compl_q, &tx_q);
-+	spin_unlock_irqrestore(&htt->tx_compl_q.lock, flags);
-+
-+	while ((skb = __skb_dequeue(&tx_q))) {
- 		ath10k_htt_rx_frm_tx_compl(htt->ar, skb);
- 		dev_kfree_skb_any(skb);
- 	}
--- 
-2.1.4
+for the other 3 patches.
 
+Let me know which you prefer.
+
+johannes
