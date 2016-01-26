@@ -1,90 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:34810 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754830AbcAYPgt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 10:36:49 -0500
-Subject: Re: [PATCH] brcmfmac: sdio: Increase the default timeouts a bit
-To: Sjoerd Simons <sjoerd.simons@collabora.co.uk>,
-	Kalle Valo <kvalo@codeaurora.org>
-References: <1453718849-3508-1-git-send-email-sjoerd.simons@collabora.co.uk>
-Cc: Paul Stewart <pstew@chromium.org>,
-	Doug Anderson <dianders@chromium.org>,
-	linux-rockchip@lists.infradead.org,
-	Arend van Spriel <arend@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	brcm80211-dev-list@broadcom.com, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>, netdev@vger.kernel.org,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	linux-mmc@vger.kernel.org
-From: Arend van Spriel <aspriel@gmail.com>
-Message-ID: <56A64114.3010400@gmail.com> (sfid-20160125_163730_522246_18759FCE)
-Date: Mon, 25 Jan 2016 16:36:52 +0100
-MIME-Version: 1.0
-In-Reply-To: <1453718849-3508-1-git-send-email-sjoerd.simons@collabora.co.uk>
-Content-Type: text/plain; charset=windows-1252
+Received: from s3.sipsolutions.net ([5.9.151.49]:39013 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964958AbcAZLl2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 06:41:28 -0500
+Message-ID: <1453808485.2759.32.camel@sipsolutions.net> (sfid-20160126_124131_646854_7E24AE63)
+Subject: Re: [PATCH 1/2] mac80211: Remove connected MPP table entries with
+ MPath
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Henning Rogge <hrogge@gmail.com>, linux-wireless@vger.kernel.org
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+Date: Tue, 26 Jan 2016 12:41:25 +0100
+In-Reply-To: <1453190672-9748-2-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20160119_090458_613391_4030F52E)
+References: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+	 <1453190672-9748-2-git-send-email-henning.rogge@fkie.fraunhofer.de>
+	 (sfid-20160119_090458_613391_4030F52E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25-01-16 11:47, Sjoerd Simons wrote:
-> On a Radxa Rock2 board with a Ampak AP6335 (Broadcom 4339 core) it seems
-> the card responds very quickly most of the time, unfortunately during
-> initialisation it sometimes seems to take just a bit over 2 seconds to
-> respond.
-> 
-> This results intialization failing with message like:
->   brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -52
->   brcmf_bus_start: failed: -52
->   brcmf_sdio_firmware_callback: dongle is not responding
-> 
-> Increasing the timeout to allow for a bit more headroom allows the
-> card to initialize reliably.
+On Tue, 2016-01-19 at 09:04 +0100, Henning Rogge wrote:
+> 
+> +static void mpp_flush_by_proxy(struct ieee80211_sub_if_data *sdata,
+> +			       const u8 *proxy)
+> +{
+> +	struct mesh_table *tbl;
+> +	struct mesh_path *mpp;
+> +	struct mpath_node *node;
+> +	int i;
+> +
+> +	rcu_read_lock();
+> +	read_lock_bh(&pathtbl_resize_lock);
+> +	tbl = resize_dereference_mpp_paths();
+> +	for_each_mesh_entry(tbl, node, i) {
 
-I would prefer to know where the 2 second response time comes from.
-Could be sdio retuning. Maybe the chromeos people can comment whether
-this has been root caused.
+It does not seem to me that the rcu_read_lock() above is necessary or
+correct, though it's probably not hurting it should be removed to avoid
+having misleading code.
 
-There is a mmc patch pending in which retuning procedure can be deferred
-by the driver. Using that API may resolve the issue as well and I would
-prefer that solution.
+> +		mpp = node->mpath;
+> +		if (ether_addr_equal(mpp->mpp, proxy)) {
+> +			spin_lock(&tbl->hashwlock[i]);
+> +			__mesh_path_del(tbl, node);
+> +			spin_unlock(&tbl->hashwlock[i]);
 
-> A quick search online after diagnosing/fixing this showed that Google
-> has a similar patch in their ChromeOS tree, so this doesn't seem
-> specific to the board I'm using.
+It also doesn't seem like for_each_mesh_entry() can deal with "node"
+getting deleted from underneath it? It accesses it through
+hlist_next_rcu() after the deletion, so you have a use-after-free here
+afaict.
 
-As the retuning stuff is not in main line I guess we need this fix for
-now so...
+johannes
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Sjoerd Simons <sjoerd.simons@collabora.co.uk>
-> 
-> ---
-Still would like to know whether it is firmware initialization or some
-mmc stack procedure. Any suggestions to debug this are welcome.
-
-Regards,
-Arend
----
-> 
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> index dd66143..75ac4bd 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-> @@ -45,8 +45,8 @@
->  #include "chip.h"
->  #include "firmware.h"
->  
-> -#define DCMD_RESP_TIMEOUT	msecs_to_jiffies(2000)
-> -#define CTL_DONE_TIMEOUT	msecs_to_jiffies(2000)
-> +#define DCMD_RESP_TIMEOUT	msecs_to_jiffies(2500)
-> +#define CTL_DONE_TIMEOUT	msecs_to_jiffies(2500)
->  
->  #ifdef DEBUG
->  
-> 
