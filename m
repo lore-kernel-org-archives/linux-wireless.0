@@ -1,83 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:36077 "EHLO
-	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755461AbcAUBVw (ORCPT
+Received: from mail-qg0-f68.google.com ([209.85.192.68]:36615 "EHLO
+	mail-qg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750908AbcAZXSF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 20:21:52 -0500
-Received: by mail-pa0-f67.google.com with SMTP id a20so1010467pag.3
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:21:52 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 24/27] staging: wilc1000: rename pstrMessage in wilc_mq_recv
-Date: Thu, 21 Jan 2016 10:20:27 +0900
-Message-Id: <1453339230-1377-24-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_023657_379529_F762E0B2)
-In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 26 Jan 2016 18:18:05 -0500
+Received: by mail-qg0-f68.google.com with SMTP id 6so13381716qgy.3
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2016 15:18:04 -0800 (PST)
+Date: Tue, 26 Jan 2016 18:17:59 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Henning Rogge <hrogge@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+Subject: Re: [PATCH 2/2] mac80211: let unused MPP table entries timeout
+Message-ID: <20160126231759.GA9708@localhost> (sfid-20160127_001809_830416_E5928484)
+References: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+ <1453190672-9748-3-git-send-email-henning.rogge@fkie.fraunhofer.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1453190672-9748-3-git-send-email-henning.rogge@fkie.fraunhofer.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pstrMessage to msg to avoid camelcase.
+On Tue, Jan 19, 2016 at 09:04:32AM +0100, Henning Rogge wrote:
+>  	err = -ENXIO;
+> -enddel:
+> +enddelpath:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_msgqueue.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+Concur about it being better to leave this label alone, also the diff looks
+weird because it continues:
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 5601de8..7107715 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -112,7 +112,7 @@ int wilc_mq_send(struct message_queue *mq,
- int wilc_mq_recv(struct message_queue *mq,
- 		 void *recv_buf, u32 recv_buf_size, u32 *recv_len)
- {
--	struct message *pstrMessage;
-+	struct message *msg;
- 	unsigned long flags;
- 
- 	if ((!mq) || (recv_buf_size == 0)
-@@ -133,14 +133,14 @@ int wilc_mq_recv(struct message_queue *mq,
- 	down(&mq->sem);
- 	spin_lock_irqsave(&mq->lock, flags);
- 
--	pstrMessage = mq->msg_list;
--	if (!pstrMessage) {
-+	msg = mq->msg_list;
-+	if (!msg) {
- 		spin_unlock_irqrestore(&mq->lock, flags);
--		PRINT_ER("pstrMessage is null\n");
-+		PRINT_ER("msg is null\n");
- 		return -EFAULT;
- 	}
- 	/* check buffer size */
--	if (recv_buf_size < pstrMessage->len) {
-+	if (recv_buf_size < msg->len) {
- 		spin_unlock_irqrestore(&mq->lock, flags);
- 		up(&mq->sem);
- 		PRINT_ER("recv_buf_size overflow\n");
-@@ -149,13 +149,13 @@ int wilc_mq_recv(struct message_queue *mq,
- 
- 	/* consume the message */
- 	mq->recv_count--;
--	memcpy(recv_buf, pstrMessage->buf, pstrMessage->len);
--	*recv_len = pstrMessage->len;
-+	memcpy(recv_buf, msg->buf, msg->len);
-+	*recv_len = msg->len;
- 
--	mq->msg_list = pstrMessage->next;
-+	mq->msg_list = msg->next;
- 
--	kfree(pstrMessage->buf);
--	kfree(pstrMessage);
-+	kfree(msg->buf);
-+	kfree(msg);
- 
- 	spin_unlock_irqrestore(&mq->lock, flags);
- 
+> +	mesh_paths_generation++;
+> +	spin_unlock(&tbl->hashwlock[hash_idx]);
+> +	read_unlock_bh(&pathtbl_resize_lock);
+> +	return err;
+> +}
+
+[...]
+
+> +	err = -ENXIO;
+> +enddelmpp:
+>  	mesh_paths_generation++;
+>  	spin_unlock(&tbl->hashwlock[hash_idx]);
+>  	read_unlock_bh(&pathtbl_resize_lock);
+
+At first I wondered why the last half of the function was changed, but then
+I saw that.  Shouldn't the above be "mpp_paths_generation++;"?
+
+In general I'd like to merge these two into one function; the only thing
+different is the initial table pointer that gets dereferenced and the
+generation counter (and now the labels).  So something like this should
+be doable:
+
+static int mesh_table_delete(struct ieee80211_sub_if_data *sdata,
+                             struct mesh_table *tbl,
+                             const u8 *addr)
+{
+        /* basically what mesh_path_del is today */
+}
+
+int mesh_path_del(...)
+{
+        tbl = resize_dereference_mesh_paths();
+        ret = mesh_table_delete(sdata, tbl, addr);
+        mesh_paths_generation++;
+        return ret;
+}
+
+int mpp_path_del(...)
+{
+        tbl = resize_dereference_mpp_paths();
+        ret = mesh_table_delete(sdata, tbl, addr);
+        mpp_paths_generation++;
+        return ret;
+}
+
 -- 
-2.6.4
-
+Bob Copeland %% http://bobcopeland.com/
