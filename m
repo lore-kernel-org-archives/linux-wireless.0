@@ -1,47 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:34808 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759002AbcAUNWA (ORCPT
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:33395 "EHLO
+	mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752196AbcAZVow (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 08:22:00 -0500
-Received: by mail-lb0-f174.google.com with SMTP id cl12so23080537lbc.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 05:21:59 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 1/2] mac80211: fix txq queue related crashes
-Date: Thu, 21 Jan 2016 14:23:07 +0100
-Message-Id: <1453382588-27105-1-git-send-email-michal.kazior@tieto.com> (sfid-20160121_142203_456286_FD7808D4)
+	Tue, 26 Jan 2016 16:44:52 -0500
+Received: by mail-qk0-f196.google.com with SMTP id q184so6345903qkb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2016 13:44:51 -0800 (PST)
+Date: Tue, 26 Jan 2016 16:44:46 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Henning Rogge <hrogge@gmail.com>, linux-wireless@vger.kernel.org,
+	"David S. Miller" <davem@davemloft.net>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+Subject: Re: [PATCH 1/2] mac80211: Remove connected MPP table entries with
+ MPath
+Message-ID: <20160126214446.GB5710@localhost> (sfid-20160126_224455_386323_12664750)
+References: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+ <1453190672-9748-2-git-send-email-henning.rogge@fkie.fraunhofer.de>
+ <1453808485.2759.32.camel@sipsolutions.net>
+ <20160126183628.GA30183@localhost>
+ <1453841613.2759.77.camel@sipsolutions.net>
+ <20160126212221.GA5710@localhost>
+ <1453843889.2759.78.camel@sipsolutions.net>
+ <1453843943.2759.79.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1453843943.2759.79.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver can access the queue simultanously
-while mac80211 tears down the interface. Without
-spinlock protection this could lead to corrupting
-sk_buff_head and subsequently to an invalid
-pointer dereference.
+On Tue, Jan 26, 2016 at 10:32:23PM +0100, Johannes Berg wrote:
+> On Tue, 2016-01-26 at 22:31 +0100, Johannes Berg wrote:
+> > On Tue, 2016-01-26 at 16:22 -0500, Bob Copeland wrote:
+> > >  
+> > > void mesh_path_flush_by_nexthop(struct sta_info *sta)
+> > > {
+> > >     [...]
+> > > 	rhashtable_walk_start(&iter);
+> > 
+> > It seems you need to check the return value here?
+> > 
+> 
+> Actually, maybe not. Not sure I understand the return to beginning
+> though.
 
-Fixes: ba8c3d6f16a1 ("mac80211: add an intermediate software queue implementation")
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/iface.c | 3 +++
- 1 file changed, 3 insertions(+)
+I'll RFC that patch, it doesn't work right now anyway as
+rhashtable_walk_init() does a GFP_KERNEL allocation and we want to call
+it from the RX path (maybe not a good idea, but that's what the code
+currently does).
 
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 33ae3c81bfc5..0451f120746e 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -977,7 +977,10 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
- 	if (sdata->vif.txq) {
- 		struct txq_info *txqi = to_txq_info(sdata->vif.txq);
- 
-+		spin_lock_bh(&txqi->queue.lock);
- 		ieee80211_purge_tx_queue(&local->hw, &txqi->queue);
-+		spin_unlock_bh(&txqi->queue.lock);
-+
- 		atomic_set(&sdata->txqs_len[txqi->txq.ac], 0);
- 	}
- 
 -- 
-2.1.4
-
+Bob Copeland %% http://bobcopeland.com/
