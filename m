@@ -1,59 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:34831 "EHLO mail.ispras.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751354AbcAAXMu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2016 18:12:50 -0500
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-To: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
-Subject: [PATCH] ipw2x00: add checks for dma mapping errors
-Date: Sat,  2 Jan 2016 02:12:38 +0300
-Message-Id: <1451689958-8005-1-git-send-email-khoroshilov@ispras.ru> (sfid-20160102_001313_111903_FCBDFB29)
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:25181 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965184AbcAZPBg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 10:01:36 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Raja Mani <rmani@qti.qualcomm.com>
+CC: <agross@codeaurora.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-msm@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v3] dt: bindings: add bindings for ipq4019 wifi block
+References: <1452664604-8014-1-git-send-email-rmani@qti.qualcomm.com>
+Date: Tue, 26 Jan 2016 17:01:17 +0200
+In-Reply-To: <1452664604-8014-1-git-send-email-rmani@qti.qualcomm.com> (Raja
+	Mani's message of "Wed, 13 Jan 2016 11:26:44 +0530")
+Message-ID: <87y4bcpepu.fsf@kamboji.qca.qualcomm.com> (sfid-20160126_160158_827955_ADF47F47)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ipw2100_alloc_skb() and ipw2100_tx_send_data() do not check if mapping
-dma memory succeed. The patch adds the checks and failure handling.
+Raja Mani <rmani@qti.qualcomm.com> writes:
 
-Found by Linux Driver Verification project (linuxtesting.org).
+> Add device tree binding documentation details for wifi block present
+> in Qualcomm IPQ4019 SoC into "qcom,ath10k.txt".
+>
+> Right now, ath10k wireless driver has support for PCI based wlan devices.
+> There is a plan to extend ath10k driver to support wifi devices which are
+> connected over AHB as well (enumeration will happen via device tree node).
+> For AHB based devices (ie, ipq4019), all wifi properties are supplied via
+> device tree (including irq, reg addr, cal data,etc).
+>
+> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
 
-Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
----
- drivers/net/wireless/ipw2x00/ipw2100.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+Applied, thanks.
 
-diff --git a/drivers/net/wireless/ipw2x00/ipw2100.c b/drivers/net/wireless/ipw2x00/ipw2100.c
-index 36818c7f30b9..f93a7f71c047 100644
---- a/drivers/net/wireless/ipw2x00/ipw2100.c
-+++ b/drivers/net/wireless/ipw2x00/ipw2100.c
-@@ -2311,8 +2311,10 @@ static int ipw2100_alloc_skb(struct ipw2100_priv *priv,
- 	packet->dma_addr = pci_map_single(priv->pci_dev, packet->skb->data,
- 					  sizeof(struct ipw2100_rx),
- 					  PCI_DMA_FROMDEVICE);
--	/* NOTE: pci_map_single does not return an error code, and 0 is a valid
--	 *       dma_addr */
-+	if (pci_dma_mapping_error(priv->pci_dev, packet->dma_addr)) {
-+		dev_kfree_skb(packet->skb);
-+		return -ENOMEM;
-+	}
- 
- 	return 0;
- }
-@@ -3183,6 +3185,11 @@ static void ipw2100_tx_send_data(struct ipw2100_priv *priv)
- 							LIBIPW_3ADDR_LEN,
- 							tbd->buf_length,
- 							PCI_DMA_TODEVICE);
-+			if (pci_dma_mapping_error(priv->pci_dev,
-+						  tbd->host_addr)) {
-+				IPW_DEBUG_TX("dma mapping error\n");
-+				break;
-+			}
- 
- 			IPW_DEBUG_TX("data frag tbd TX%d P=%08x L=%d\n",
- 				     txq->next, tbd->host_addr,
 -- 
-1.9.1
-
+Kalle Valo
