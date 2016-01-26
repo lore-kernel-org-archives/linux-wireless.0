@@ -1,68 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m12-12.163.com ([220.181.12.12]:60709 "EHLO m12-12.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751633AbcAPNIs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jan 2016 08:08:48 -0500
-From: Jia-Ju Bai <baijiaju1990@163.com>
-To: kvalo@codeaurora.org, zajec5@gmail.com, joe@perches.com,
-	davem@davemloft.net, m@bues.ch, johannes.berg@intel.com
-Cc: linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org, Jia-Ju Bai <baijiaju1990@163.com>
-Subject: [PATCH v2 resend] b43: Fix memory leaks in b43_bus_dev_ssb_init and b43_bus_dev_bcma_init
-Date: Sat, 16 Jan 2016 21:08:10 +0800
-Message-Id: <1452949690-16387-1-git-send-email-baijiaju1990@163.com> (sfid-20160116_140855_659846_57D09CAC)
+Received: from smtp.codeaurora.org ([198.145.29.96]:35913 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965005AbcAZMet (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 07:34:49 -0500
+Subject: Re: [PATCH] cfg80211: basic support for PBSS network type
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <56961335.4040801@codeaurora.org>
+ <1453807346.2759.29.camel@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Dedy Lansky <dlansky@codeaurora.org>,
+	Maya Erez <merez@codeaurora.org>,
+	Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+From: Lior David <liord@codeaurora.org>
+Message-ID: <56A767E4.7090906@codeaurora.org> (sfid-20160126_133452_571001_97FA4A22)
+Date: Tue, 26 Jan 2016 14:34:44 +0200
+MIME-Version: 1.0
+In-Reply-To: <1453807346.2759.29.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The memory allocated by kzalloc in b43_bus_dev_ssb_init and
-b43_bus_dev_bcma_init is not freed.
-This patch fixes the bug by adding kfree in b43_ssb_remove,
-b43_bcma_remove and error handling code of b43_bcma_probe.
+On 1/26/2016 1:22 PM, Johannes Berg wrote:
+> On Wed, 2016-01-13 at 11:04 +0200, Lior David wrote:
+>>  
+>> + * @NL80211_ATTR_PBSS: flag attribute. If set it means operate
+>> + *	in a PBSS. Specified in %NL80211_CMD_CONNECT to request
+>> + *	connecting to a PCP, and in %NL80211_CMD_START_AP to start
+>> + *	a PCP instead of AP. Relevant for DMG networks only.
+> 
+> I'm continually confused by this; is it possible for DMG devices to be
+> a "real" AP rather than a PCP?
+> 
+Yes, DMG devices can function as a full AP in addition to PCP.
 
-Thanks Michael for his suggestion.
+>> @@ -3461,6 +3462,8 @@  static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
+>>  			return PTR_ERR(params.acl);
+>>  	}
+>>  
+>> +	params.pbss = nla_get_flag(info->attrs[NL80211_ATTR_PBSS]);
+>> +
+>>  	wdev_lock(wdev);
+>>  	err = rdev_start_ap(rdev, dev, &params);
+>>  	if (!err) {
+> 
+> This, and the corresponding code in nl80211_connect, really ought to
+> check that the device is a DMG device and able to do this.
+> 
+> Perhaps this even needs a capability check, or do we assume that all
+> devices/drivers will be able to do this (or should reject it?)
+> 
+Certified 11ad devices must support PBSS, but in theory you can have
+11ad drivers that do not support it. 11ac devices cannot support
+it and currently will just ignore this flag, so I think I will add a
+feature flag (something like NL80211_EXT_FEATURE_PBSS) and return an
+error if the driver does not support this feature.
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
----
- drivers/net/wireless/b43/main.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+> If you want to rely on drivers though you need to have (in this patch!)
+> a small change to the existing driver to reject the operations if
+> pbss==true since obviously it cannot be doing the right thing right now
+> without further changes. That reject would then of course be removed
+> again with the driver update.
+I have a patch for the wil6210 driver that uses this feature. Do you prefer
+that I add the wil6210 driver changes to this patch?
 
-diff --git a/drivers/net/wireless/b43/main.c b/drivers/net/wireless/b43/main.c
-index ec013fb..bbea769 100644
---- a/drivers/net/wireless/b43/main.c
-+++ b/drivers/net/wireless/b43/main.c
-@@ -5682,11 +5682,12 @@ static int b43_bcma_probe(struct bcma_device *core)
- 	INIT_WORK(&wl->firmware_load, b43_request_firmware);
- 	schedule_work(&wl->firmware_load);
- 
--bcma_out:
- 	return err;
- 
- bcma_err_wireless_exit:
- 	ieee80211_free_hw(wl->hw);
-+bcma_out:
-+	kfree(dev);
- 	return err;
- }
- 
-@@ -5714,8 +5715,8 @@ static void b43_bcma_remove(struct bcma_device *core)
- 	b43_rng_exit(wl);
- 
- 	b43_leds_unregister(wl);
--
- 	ieee80211_free_hw(wl->hw);
-+	kfree(wldev->dev);
- }
- 
- static struct bcma_driver b43_bcma_driver = {
-@@ -5798,6 +5799,7 @@ static void b43_ssb_remove(struct ssb_device *sdev)
- 
- 	b43_leds_unregister(wl);
- 	b43_wireless_exit(dev, wl);
-+	kfree(dev);
- }
- 
- static struct ssb_driver b43_ssb_driver = {
--- 
-1.7.9.5
-
-
+Thanks,
+Lior
