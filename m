@@ -1,70 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:33158 "EHLO
-	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751781AbcAUBVN (ORCPT
+Received: from mail-lf0-f41.google.com ([209.85.215.41]:32833 "EHLO
+	mail-lf0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966867AbcAZQ5Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 20:21:13 -0500
-Received: by mail-pf0-f196.google.com with SMTP id e65so1069061pfe.0
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:21:13 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 11/27] staging: wilc1000: rename pHandle in wilc_mq_create
-Date: Thu, 21 Jan 2016 10:20:14 +0900
-Message-Id: <1453339230-1377-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_023655_207681_E21E5358)
-In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 26 Jan 2016 11:57:25 -0500
+Received: by mail-lf0-f41.google.com with SMTP id s81so2865605lfd.0
+        for <linux-wireless@vger.kernel.org>; Tue, 26 Jan 2016 08:57:24 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 2/5] brcmfmac: allow storing PMU core without wrapper address
+Date: Tue, 26 Jan 2016 17:57:02 +0100
+Message-Id: <1453827425-16455-3-git-send-email-zajec5@gmail.com> (sfid-20160126_175735_486961_461B00C0)
+In-Reply-To: <1453827425-16455-1-git-send-email-zajec5@gmail.com>
+References: <1453827425-16455-1-git-send-email-zajec5@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pHandle to mq to avoid camelcase
+Separated PMU core can be found in new devices and should be used for
+accessing PMU registers (which were routed through ChipCommon so far).
+This core is one of exceptions that doesn't have or need wrapper address
+to be still safely accessible.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_msgqueue.c | 12 ++++++------
- drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
- 2 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index d13c9a7..453fa19 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -11,13 +11,13 @@
-  *  @note		copied from FLO glue implementatuion
-  *  @version		1.0
-  */
--int wilc_mq_create(struct message_queue *pHandle)
-+int wilc_mq_create(struct message_queue *mq)
- {
--	spin_lock_init(&pHandle->lock);
--	sema_init(&pHandle->sem, 0);
--	pHandle->msg_list = NULL;
--	pHandle->recv_count = 0;
--	pHandle->exiting = false;
-+	spin_lock_init(&mq->lock);
-+	sema_init(&mq->sem, 0);
-+	mq->msg_list = NULL;
-+	mq->recv_count = 0;
-+	mq->exiting = false;
- 	return 0;
- }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+index e434e2a..55952d4 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c
+@@ -883,7 +883,8 @@ int brcmf_chip_dmp_erom_scan(struct brcmf_chip_priv *ci)
+ 		rev = (val & DMP_COMP_REVISION) >> DMP_COMP_REVISION_S;
  
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index 7e7ec06..bfd2347 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -40,7 +40,7 @@ struct message_queue {
-  *  @date		30 Aug 2010
-  *  @version		1.0
-  */
--int wilc_mq_create(struct message_queue *pHandle);
-+int wilc_mq_create(struct message_queue *mq);
+ 		/* need core with ports */
+-		if (nmw + nsw == 0)
++		if (nmw + nsw == 0 &&
++		    id != BCMA_CORE_PMU)
+ 			continue;
  
- /*!
-  *  @brief		Sends a message
+ 		/* try to obtain register address info */
 -- 
-2.6.4
+1.8.4.5
 
