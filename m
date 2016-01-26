@@ -1,64 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:36766 "EHLO
-	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932523AbcALAdJ (ORCPT
+Received: from sabertooth02.qualcomm.com ([65.197.215.38]:32487 "EHLO
+	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965184AbcAZPCw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jan 2016 19:33:09 -0500
-Received: by mail-pa0-f67.google.com with SMTP id a20so20042498pag.3
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2016 16:33:09 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 2/5] staging: wilc1000: remove typedef from struct wilc_cfg_byte_t
-Date: Tue, 12 Jan 2016 09:32:52 +0900
-Message-Id: <1452558775-21532-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20160112_013313_391887_CA7C4523)
-In-Reply-To: <1452558775-21532-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1452558775-21532-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 26 Jan 2016 10:02:52 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/7] Add support for Per STA Rx duration
+References: <1452699994-5078-1-git-send-email-mohammed@qca.qualcomm.com>
+Date: Tue, 26 Jan 2016 17:02:35 +0200
+In-Reply-To: <1452699994-5078-1-git-send-email-mohammed@qca.qualcomm.com>
+	(Mohammed Shafi Shajakhan's message of "Wed, 13 Jan 2016 21:16:27
+	+0530")
+Message-ID: <87powopeno.fsf@kamboji.qca.qualcomm.com> (sfid-20160126_160255_021512_66096A63)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from struct wilc_cfg_byte_t and renames it to
-wilc_cfg_byte.
+Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_wlan_cfg.c | 2 +-
- drivers/staging/wilc1000/wilc_wlan_cfg.h | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+>
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+>
+> *Enable parsing of rx_duration as part of peer stats support
+>  by the new 10.2.4 firmware
+> *Add support to dump per STA rx_duration  (usecs)
+> *Pre-requisite cleanups
+> *For calculating total rx-duration in host, enable provision to
+>  support periodic peer stats update.
+> *Also enable mac80211 debugfs entry to track per STA rx duration(usecs)
+>
+> Mohammed Shafi Shajakhan (7):
+>   ath10k: Add support for parsing per STA rx_duration for 10.2.4
+>   ath10k: Fix naming Peer stats rssi_changed field in 10.2.4
+>   ath10k: Cleanup setting pdev paramaters
+>   ath10k: Rename few function names of firmware stats
+>   ath10k: Provision to support periodic peer stats update
+>   ath10k: Enable periodic peer stats update
+>   ath10k: Add debugfs support for Per STA total rx duration
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index b72c77b..54b394c 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -44,7 +44,7 @@ typedef struct {
- 
- static wilc_mac_cfg_t g_mac;
- 
--static wilc_cfg_byte_t g_cfg_byte[] = {
-+static struct wilc_cfg_byte g_cfg_byte[] = {
- 	{WID_BSS_TYPE, 0},
- 	{WID_CURRENT_TX_RATE, 0},
- 	{WID_CURRENT_CHANNEL, 0},
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-index 5f74eb8..d978615 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-@@ -10,10 +10,10 @@
- #ifndef WILC_WLAN_CFG_H
- #define WILC_WLAN_CFG_H
- 
--typedef struct {
-+struct wilc_cfg_byte {
- 	u16 id;
- 	u16 val;
--} wilc_cfg_byte_t;
-+};
- 
- typedef struct {
- 	u16 id;
+Applied, thanks.
+
 -- 
-2.6.4
-
+Kalle Valo
