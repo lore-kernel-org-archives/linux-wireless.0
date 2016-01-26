@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f181.google.com ([209.85.213.181]:37331 "EHLO
-	mail-ig0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752015AbcAGRAH (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40661 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964992AbcAZNu6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 12:00:07 -0500
-Received: by mail-ig0-f181.google.com with SMTP id h5so18393887igh.0
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2016 09:00:06 -0800 (PST)
+	Tue, 26 Jan 2016 08:50:58 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi 2016-01-26
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9D452F@hasmsx109.ger.corp.intel.com>
+Date: Tue, 26 Jan 2016 15:50:50 +0200
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9D452F@hasmsx109.ger.corp.intel.com>
+	(Emmanuel Grumbach's message of "Tue, 26 Jan 2016 10:19:08 +0000")
+Message-ID: <87h9i0qwjp.fsf@kamboji.qca.qualcomm.com> (sfid-20160126_145101_765595_C63B158D)
 MIME-Version: 1.0
-In-Reply-To: <CABPxzY+Me1ocZQYPtw83Wa_0ti+eOiOf1d1srHqtf_nsu-ON9w@mail.gmail.com>
-References: <CALnQHM3C=DVaTf58XDyh+rttVs-FSpc4ghozg9HJktEonq7w-g@mail.gmail.com>
-	<568E913D.7050301@candelatech.com>
-	<CALnQHM1mzqFbprQqujB7BWncOa=D9uAxLQ0paiv-21vrx+hFvw@mail.gmail.com>
-	<CABPxzYKaMPY6bz=Nr+W2wG5y_bV_wFN=7AMNUNcZNJBeVyYVJA@mail.gmail.com>
-	<CALnQHM3O6Z3E2wSkVLirDHCdT8vQqvQbqVEcSs8mfsfGs9KFyg@mail.gmail.com>
-	<CABPxzY+Me1ocZQYPtw83Wa_0ti+eOiOf1d1srHqtf_nsu-ON9w@mail.gmail.com>
-Date: Thu, 7 Jan 2016 10:00:06 -0700
-Message-ID: <CALnQHM1991akQy7_Ze-VzWJ7QBoe3cOwneL0pdufdUYEBjYKZw@mail.gmail.com> (sfid-20160107_180011_115452_F5441FA8)
-Subject: Re: lost connectivity until "wpa_cli reassociate" is issued
-From: David Mosberger <davidm@egauge.net>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 7, 2016 at 9:58 AM, Krishna Chaitanya
-<chaitanya.mgit@gmail.com> wrote:
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-> We can check pending packets per queue at mac80211, but first
-> we need some info from driver level. Someone familiar with RTL
-> should help.
->
-> cat /sys/kernel/debug/ieee80211/phy*/queues
->
-> If you see non-zero packets here (or) if the queue is stopped
-> that might explain this behavior...
+> This is the first round of fixes for 4.5. Most of them are really
+> trivial. The TPC stats one stands out a little bit. It can fix traffic
+> issues which are typically hard to debug. Please pull and let me know
+> if you have issues.
 
-Cool.  I'll check that next time it happens, thanks!
+There's a conflict due to 8f57e4d930d, how should I fix it?
 
-  --david
+diff --cc drivers/net/wireless/intel/iwlwifi/dvm/calib.c
+index e9cef9de9ed8,14949efc4a35..000000000000
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/calib.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/calib.c
+@@@ -900,8 -900,8 +900,13 @@@ static void iwlagn_gain_computation(str
+  
+                /* bound gain by 2 bits value max, 3rd bit is sign */
+                data->delta_gain_code[i] =
+++<<<<<<< HEAD
+ +                      min(abs(delta_g),
+ +                      (s32) CHAIN_NOISE_MAX_DELTA_GAIN_CODE);
+++=======
++                       min_t(u8, abs(delta_g),
++                             CHAIN_NOISE_MAX_DELTA_GAIN_CODE);
+++>>>>>>> c3653efc57d9b3c51ee657a471578d2493b6e3f0
+  
+                if (delta_g < 0)
+                        /*
+
+
+> I also have a batch of patches for -next, but
+> wireless-drivers-next.git doesn't seem ready to accept new patches at
+> this stage.
+
+I'll open wireless-drivers-next once net-next is open, but AFAIK Dave
+hasn't opened it yet.
+
 -- 
-eGauge Systems LLC, http://egauge.net/, 1.877-EGAUGE1, fax 720.545.9768
+Kalle Valo
