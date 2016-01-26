@@ -1,61 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.130]:57368 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751602AbcA1V5u (ORCPT
+Received: from mail-ig0-f195.google.com ([209.85.213.195]:35961 "EHLO
+	mail-ig0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752163AbcAZXQR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 16:57:50 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: linux-arm-kernel@lists.infradead.org
-Cc: Russell King - ARM Linux <linux@arm.linux.org.uk>,
-	Jouni Malinen <j@w1.fi>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: [PATCH] hostap: avoid uninitialized variable use in hfa384x_get_rid
-Date: Thu, 28 Jan 2016 22:57:07 +0100
-Message-ID: <2640544.07pTZp3kGe@wuerfel> (sfid-20160128_225755_060779_E4605B2A)
-In-Reply-To: <20160127192612.GD10826@n2100.arm.linux.org.uk>
-References: <1453902342-3420391-1-git-send-email-arnd@arndb.de> <20160127192612.GD10826@n2100.arm.linux.org.uk>
+	Tue, 26 Jan 2016 18:16:17 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <CAM_iQpWawou1Z_NnAzM5TxH7TUQUCAhf+k96PErNV8q_SOCShw@mail.gmail.com>
+References: <1453830820-27104-1-git-send-email-xiyou.wangcong@gmail.com>
+ <CAGRGNgV7MUXdk+e8Arx05yiWX6owei5dmnFQ-TBfs55jfy+qBw@mail.gmail.com> <CAM_iQpWawou1Z_NnAzM5TxH7TUQUCAhf+k96PErNV8q_SOCShw@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 27 Jan 2016 10:15:57 +1100
+Message-ID: <CAGRGNgXSbo1ZjFda5qyg8cesddTSUO2=rMEsopzHDuVBpHJqaA@mail.gmail.com> (sfid-20160127_001626_076765_53B36E84)
+Subject: Re: [PATCH RESEND net] nfc: use GFP_USER for user-controlled kmalloc
+To: Cong Wang <xiyou.wangcong@gmail.com>
+Cc: netdev <netdev@vger.kernel.org>,
+	Dmitry Vyukov <dvyukov@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 27 January 2016 19:26:13 Russell King - ARM Linux wrote:
-> On Wed, Jan 27, 2016 at 02:45:26PM +0100, Arnd Bergmann wrote:
-> So, why give the compiler a hard time as you're doing, why make the code
-> harder to read.  What's wrong with:
-> 
->         spin_lock_bh(&local->baplock);
-> 
->         res = hfa384x_setup_bap(dev, BAP0, rid, 0);
->         if (res)
->                 goto unlock;
-> 
->         res = hfa384x_from_bap(dev, BAP0, &rec, sizeof(rec));
->         if (res)
->                 goto unlock;
-> 
->         if (le16_to_cpu(rec.len) == 0) {
->                 /* RID not available */
->                 res = -ENODATA;
->                 goto unlock;
->         }
-> 
->         rlen = (le16_to_cpu(rec.len) - 1) * 2;
->         if (exact_len && rlen != len) {
->                 printk(KERN_DEBUG "%s: hfa384x_get_rid - RID len mismatch: rid=0x%04x, len=%d (expected %d)\n",
->                        dev->name, rid, rlen, len);
->                 res = -ENODATA;
->                 goto unlock;
->         }
-> 
->         res = hfa384x_from_bap(dev, BAP0, buf, len);
-> unlock:
->         spin_unlock_bh(&local->baplock);
-> 
-> ?
-> 
+Hi Cong,
 
-Good idea, I'll send a new version.
+On Wed, Jan 27, 2016 at 10:12 AM, Cong Wang <xiyou.wangcong@gmail.com> wrote:
+> On Tue, Jan 26, 2016 at 2:55 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+>> Hi Cong,
+>>
+>> On Wed, Jan 27, 2016 at 4:53 AM, Cong Wang <xiyou.wangcong@gmail.com> wrote:
+>>
+>> A commit message would be nice. A brief rundown of how this is called
+>> from userspace would be nice (I'm talking a single sentence here, e.g.
+>> "this is allocated when submitting a nfc packet") and what issue
+>> __GFP_NOWARN is fixing. (I'm guessing log spam due to allocation
+>> failures.)
+>>
+>
+> I thought it is obvious. ;) Keep in mind that $subject is one part of commit
+> message too, so there is a commit message although very short.
+>
+> I will add it.
 
-	Arnd
+I know almost nothing about how the NFC subsystem works, and this
+looks like a potential security issue, so more information is better
+IMHO.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
