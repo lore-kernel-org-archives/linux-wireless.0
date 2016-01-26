@@ -1,94 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:63818 "EHLO mga09.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:39693 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753476AbcAGMr4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 07:47:56 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: David Spinadel <david.spinadel@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 09/21] iwlwifi: mvm: fix extended dwell time
-Date: Thu,  7 Jan 2016 14:47:29 +0200
-Message-Id: <1452170861-10060-9-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160107_140653_548774_3DD4B036)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+	id S933342AbcAZN1X (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 08:27:23 -0500
+Message-ID: <1453814840.2759.52.camel@sipsolutions.net> (sfid-20160126_142726_220880_CD250ED1)
+Subject: Re: [PATCH v2] mac80211: Parse legacy and HT rate in injected frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sven Eckelmann <sven@narfation.org>, linux-wireless@vger.kernel.org
+Cc: Simon Wunderlich <sw@simonwunderlich.de>
+Date: Tue, 26 Jan 2016 14:27:20 +0100
+In-Reply-To: <1453728154-20070-1-git-send-email-sven@narfation.org>
+References: <1453728154-20070-1-git-send-email-sven@narfation.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+Hi,
+>  	CALL_TXH(ieee80211_tx_h_select_key);
+> -	if (!ieee80211_hw_check(&tx->local->hw, HAS_RATE_CONTROL))
+> +	if (!ieee80211_hw_check(&tx->local->hw, HAS_RATE_CONTROL) &&
+> +	    !(info->control.flags & IEEE80211_TX_CTRL_RATE_INJECT))
+>  		CALL_TXH(ieee80211_tx_h_rate_ctrl);
 
-FW adds 10 msec for every dwell time in low band, so we need
-to set 10 msec less.
-Don't use extended dwell time when fragmented scan is needed
-because FW adds 3 msec per probe and it can easily exceed
-max out of channel time.
+This seems a bit problematic. ieee80211_tx_h_rate_ctrl() also sets up
+some protection, e.g.
 
-Fixes: c3e230b167a9 ("iwlwifi: mvm: add extended dwell time")
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+        info->control.use_rts = txrc.rts;
+        info->control.use_cts_prot = tx->sdata->vif.bss_conf.use_cts_prot;
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index bee3201..9a15642 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -92,7 +92,7 @@ static struct iwl_mvm_scan_timing_params scan_timing[] = {
- 		.dwell_active = 10,
- 		.dwell_passive = 110,
- 		.dwell_fragmented = 44,
--		.dwell_extended = 100,
-+		.dwell_extended = 90,
- 		.suspend_time = 0,
- 		.max_out_time = 0,
- 	},
-@@ -100,7 +100,7 @@ static struct iwl_mvm_scan_timing_params scan_timing[] = {
- 		.dwell_active = 10,
- 		.dwell_passive = 110,
- 		.dwell_fragmented = 44,
--		.dwell_extended = 100,
-+		.dwell_extended = 90,
- 		.suspend_time = 30,
- 		.max_out_time = 120,
- 	},
-@@ -108,7 +108,7 @@ static struct iwl_mvm_scan_timing_params scan_timing[] = {
- 		.dwell_active = 10,
- 		.dwell_passive = 110,
- 		.dwell_fragmented = 44,
--		.dwell_extended = 100,
-+		.dwell_extended = 90,
- 		.suspend_time = 120,
- 		.max_out_time = 120,
- 	},
-@@ -116,7 +116,6 @@ static struct iwl_mvm_scan_timing_params scan_timing[] = {
- 		.dwell_active = 10,
- 		.dwell_passive = 110,
- 		.dwell_fragmented = 44,
--		.dwell_extended = 44,
- 		.suspend_time = 95,
- 		.max_out_time = 44,
- 	},
-@@ -790,7 +789,8 @@ static int iwl_mvm_scan_lmac_flags(struct iwl_mvm *mvm,
- #endif
- 
- 	if (iwl_mvm_is_regular_scan(params) &&
--	    vif->type != NL80211_IFTYPE_P2P_DEVICE)
-+	    vif->type != NL80211_IFTYPE_P2P_DEVICE &&
-+	    params->type != IWL_SCAN_TYPE_FRAGMENTED)
- 		flags |= IWL_MVM_LMAC_SCAN_FLAG_EXTENDED_DWELL;
- 
- 	return flags;
-@@ -1072,7 +1072,8 @@ static u32 iwl_mvm_scan_umac_flags(struct iwl_mvm *mvm,
- #endif
- 
- 	if (iwl_mvm_is_regular_scan(params) &&
--	    vif->type != NL80211_IFTYPE_P2P_DEVICE)
-+	    vif->type != NL80211_IFTYPE_P2P_DEVICE &&
-+	    params->type != IWL_SCAN_TYPE_FRAGMENTED)
- 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_EXTENDED_DWELL;
- 
- 	return flags;
--- 
-2.5.0
+and preamble settings
 
+        info->control.short_preamble = txrc.short_preamble;
+
+Are you sure you want to skip that entirely?
+
+> +		info->control.rates[0].flags = rate_flags;
+> +		if (rate_retries + 1 > local->hw.max_rate_tries)
+> +			info->control.rates[0].count = local-
+> >hw.max_rate_tries;
+> +		else
+> +			info->control.rates[0].count = rate_retries
+> + 1;
+
+max() or max_t()?
+
+>  	/* process and remove the injection radiotap header */
+> -	if (!ieee80211_parse_tx_radiotap(skb))
+> +	if (!ieee80211_parse_tx_radiotap(skb, local))
+>  		goto fail;
+
+I'd prefer adding "local" as the first argument since that's far more
+commonly done in mac80211.
+
+
+johannes
