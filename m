@@ -1,174 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40725 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753321AbcAYHmV (ORCPT
+Received: from helcar.hengli.com.au ([209.40.204.226]:59305 "EHLO
+	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755079AbcAZKzN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 02:42:21 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 02/26] staging: wilc1000: remove define WILC_OPTIMIZE_SLEEP_INT
-Date: Mon, 25 Jan 2016 16:35:06 +0900
-Message-ID: <1453707330-13526-3-git-send-email-glen.lee@atmel.com> (sfid-20160125_084224_188936_BD54E1AC)
-In-Reply-To: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
-References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+	Tue, 26 Jan 2016 05:55:13 -0500
+Date: Tue, 26 Jan 2016 18:54:55 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Ilya Dryomov <idryomov@gmail.com>
+Cc: Linux Crypto Mailing List <linux-crypto@vger.kernel.org>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, devel@driverdev.osuosl.org,
+	dm-devel@redhat.com, linux-wireless@vger.kernel.org,
+	linux-cifs@vger.kernel.org, ecryptfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-nfs@vger.kernel.org, keyrings@vger.kernel.org,
+	linux-bluetooth@vger.kernel.org,
+	Ceph Development <ceph-devel@vger.kernel.org>,
+	linux-wpan@vger.kernel.org, linux-afs@lists.infradead.org,
+	Lars Ellenberg <drbd-dev@lists.linbit.com>,
+	open-iscsi@googlegroups.com
+Subject: Re: [PATCH 16/26] libceph: Use skcipher
+Message-ID: <20160126105455.GA19674@gondor.apana.org.au> (sfid-20160126_115641_516897_872A05E3)
+References: <20160124131021.GA31153@gondor.apana.org.au>
+ <E1aNKYy-0008E6-GI@gondolin.me.apana.org.au>
+ <CAOi1vP9jmMYHR21UeAO175susZ5V74vcXyoxwayBVSTFHxjhBQ@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAOi1vP9jmMYHR21UeAO175susZ5V74vcXyoxwayBVSTFHxjhBQ@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Take the codes of WILC_OPTIMIZE_SLEEP_INT and remove codes inside ifndef.
+On Mon, Jan 25, 2016 at 05:18:47PM +0100, Ilya Dryomov wrote:
+> 
+> Could you get rid of ivsize instead of assigning to it - see the
+> attached diff?
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 74 +-----------------------------------
- 1 file changed, 2 insertions(+), 72 deletions(-)
+How about an incremental patch like this? Thanks!
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 07460ff..dabb0bd 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -3,9 +3,7 @@
- #include "wilc_wfi_netdevice.h"
- #include "wilc_wlan_cfg.h"
+---8<---
+From: Ilya Dryomov <idryomov@gmail.com>
+Subject: libceph: Remove unnecessary ivsize variables
+
+This patch removes the unnecessary ivsize variabls as they always
+have the value of AES_BLOCK_SIZE.
+
+Signed-off-by: Ilya Dryomov <idryomov@gmail.com>
+
+diff --git a/net/ceph/crypto.c b/net/ceph/crypto.c
+index fb9cb2b..db2847a 100644
+--- a/net/ceph/crypto.c
++++ b/net/ceph/crypto.c
+@@ -166,8 +166,7 @@ static int ceph_aes_encrypt(const void *key, int key_len,
+ 	struct crypto_skcipher *tfm = ceph_crypto_alloc_cipher();
+ 	SKCIPHER_REQUEST_ON_STACK(req, tfm);
+ 	int ret;
+-	int ivsize = AES_BLOCK_SIZE;
+-	char iv[ivsize];
++	char iv[AES_BLOCK_SIZE];
+ 	size_t zero_padding = (0x10 - (src_len & 0x0f));
+ 	char pad[16];
  
--#ifdef WILC_OPTIMIZE_SLEEP_INT
- static inline void chip_allow_sleep(struct wilc *wilc);
--#endif
- static inline void chip_wakeup(struct wilc *wilc);
- static u32 dbgflag = N_INIT | N_ERR | N_INTR | N_TXQ | N_RXQ;
+@@ -186,7 +185,7 @@ static int ceph_aes_encrypt(const void *key, int key_len,
+ 		goto out_tfm;
  
-@@ -29,21 +27,14 @@ static CHIP_PS_STATE_T chip_ps_state = CHIP_WAKEDUP;
- static inline void acquire_bus(struct wilc *wilc, BUS_ACQUIRE_T acquire)
- {
- 	mutex_lock(&wilc->hif_cs);
--	#ifndef WILC_OPTIMIZE_SLEEP_INT
--	if (chip_ps_state != CHIP_WAKEDUP)
--	#endif
--	{
--		if (acquire == ACQUIRE_AND_WAKEUP)
--			chip_wakeup(wilc);
--	}
-+	if (acquire == ACQUIRE_AND_WAKEUP)
-+		chip_wakeup(wilc);
- }
+ 	crypto_skcipher_setkey((void *)tfm, key, key_len);
+-	memcpy(iv, aes_iv, ivsize);
++	memcpy(iv, aes_iv, AES_BLOCK_SIZE);
  
- static inline void release_bus(struct wilc *wilc, BUS_RELEASE_T release)
- {
--	#ifdef WILC_OPTIMIZE_SLEEP_INT
- 	if (release == RELEASE_ALLOW_SLEEP)
- 		chip_allow_sleep(wilc);
--	#endif
- 	mutex_unlock(&wilc->hif_cs);
- }
+ 	skcipher_request_set_tfm(req, tfm);
+ 	skcipher_request_set_callback(req, 0, NULL, NULL);
+@@ -229,8 +228,7 @@ static int ceph_aes_encrypt2(const void *key, int key_len, void *dst,
+ 	struct crypto_skcipher *tfm = ceph_crypto_alloc_cipher();
+ 	SKCIPHER_REQUEST_ON_STACK(req, tfm);
+ 	int ret;
+-	int ivsize = AES_BLOCK_SIZE;
+-	char iv[ivsize];
++	char iv[AES_BLOCK_SIZE];
+ 	size_t zero_padding = (0x10 - ((src1_len + src2_len) & 0x0f));
+ 	char pad[16];
  
-@@ -524,8 +515,6 @@ static struct rxq_entry_t *wilc_wlan_rxq_remove(struct wilc *wilc)
- 	return NULL;
- }
+@@ -250,7 +248,7 @@ static int ceph_aes_encrypt2(const void *key, int key_len, void *dst,
+ 		goto out_tfm;
  
--#ifdef WILC_OPTIMIZE_SLEEP_INT
--
- static inline void chip_allow_sleep(struct wilc *wilc)
- {
- 	u32 reg = 0;
-@@ -538,7 +527,6 @@ static inline void chip_allow_sleep(struct wilc *wilc)
- static inline void chip_wakeup(struct wilc *wilc)
- {
- 	u32 reg, clk_status_reg, trials = 0;
--	u32 sleep_time;
+ 	crypto_skcipher_setkey((void *)tfm, key, key_len);
+-	memcpy(iv, aes_iv, ivsize);
++	memcpy(iv, aes_iv, AES_BLOCK_SIZE);
  
- 	if ((wilc->io_type & 0x1) == HIF_SPI) {
- 		do {
-@@ -597,66 +585,14 @@ static inline void chip_wakeup(struct wilc *wilc)
- 	}
- 	chip_ps_state = CHIP_WAKEDUP;
- }
--#else
--static inline void chip_wakeup(struct wilc *wilc)
--{
--	u32 reg, trials = 0;
--
--	do {
--		if ((wilc->io_type & 0x1) == HIF_SPI) {
--			wilc->hif_func->hif_read_reg(wilc, 1, &reg);
--			wilc->hif_func->hif_write_reg(wilc, 1, reg & ~BIT(1));
--			wilc->hif_func->hif_write_reg(wilc, 1, reg | BIT(1));
--			wilc->hif_func->hif_write_reg(wilc, 1, reg  & ~BIT(1));
--		} else if ((wilc->io_type & 0x1) == HIF_SDIO)	 {
--			wilc->hif_func->hif_read_reg(wilc, 0xf0, &reg);
--			wilc->hif_func->hif_write_reg(wilc, 0xf0,
--						      reg & ~BIT(0));
--			wilc->hif_func->hif_write_reg(wilc, 0xf0,
--						      reg | BIT(0));
--			wilc->hif_func->hif_write_reg(wilc, 0xf0,
--						      reg  & ~BIT(0));
--		}
--
--		do {
--			mdelay(3);
--
--			if ((wilc_get_chipid(wilc, true) == 0))
--				wilc_debug(N_ERR, "Couldn't read chip id. Wake up failed\n");
--
--		} while ((wilc_get_chipid(wilc, true) == 0) && ((++trials % 3) == 0));
--
--	} while (wilc_get_chipid(wilc, true) == 0);
+ 	skcipher_request_set_tfm(req, tfm);
+ 	skcipher_request_set_callback(req, 0, NULL, NULL);
+@@ -294,8 +292,7 @@ static int ceph_aes_decrypt(const void *key, int key_len,
+ 	struct crypto_skcipher *tfm = ceph_crypto_alloc_cipher();
+ 	SKCIPHER_REQUEST_ON_STACK(req, tfm);
+ 	char pad[16];
+-	int ivsize = AES_BLOCK_SIZE;
+-	char iv[16];
++	char iv[AES_BLOCK_SIZE];
+ 	int ret;
+ 	int last_byte;
  
--	if (chip_ps_state == CHIP_SLEEPING_MANUAL) {
--		wilc->hif_func->hif_read_reg(wilc, 0x1C0C, &reg);
--		reg &= ~BIT(0);
--		wilc->hif_func->hif_write_reg(wilc, 0x1C0C, reg);
--
--		if (wilc_get_chipid(wilc, false) >= 0x1002b0) {
--			u32 val32;
--
--			wilc->hif_func->hif_read_reg(wilc, 0x1e1c, &val32);
--			val32 |= BIT(6);
--			wilc->hif_func->hif_write_reg(wilc, 0x1e1c, val32);
--
--			wilc->hif_func->hif_read_reg(wilc, 0x1e9c, &val32);
--			val32 |= BIT(6);
--			wilc->hif_func->hif_write_reg(wilc, 0x1e9c, val32);
--		}
--	}
--	chip_ps_state = CHIP_WAKEDUP;
--}
--#endif
- void wilc_chip_sleep_manually(struct wilc *wilc)
- {
- 	if (chip_ps_state != CHIP_WAKEDUP)
- 		return;
- 	acquire_bus(wilc, ACQUIRE_ONLY);
+@@ -310,7 +307,7 @@ static int ceph_aes_decrypt(const void *key, int key_len,
+ 		goto out_tfm;
  
--#ifdef WILC_OPTIMIZE_SLEEP_INT
- 	chip_allow_sleep(wilc);
--#endif
- 	wilc->hif_func->hif_write_reg(wilc, 0x10a8, 1);
+ 	crypto_skcipher_setkey((void *)tfm, key, key_len);
+-	memcpy(iv, aes_iv, ivsize);
++	memcpy(iv, aes_iv, AES_BLOCK_SIZE);
  
- 	chip_ps_state = CHIP_SLEEPING_MANUAL;
-@@ -1041,9 +977,6 @@ static void wilc_pllupdate_isr_ext(struct wilc *wilc, u32 int_stats)
- static void wilc_sleeptimer_isr_ext(struct wilc *wilc, u32 int_stats1)
- {
- 	wilc->hif_func->hif_clear_int_ext(wilc, SLEEP_INT_CLR);
--#ifndef WILC_OPTIMIZE_SLEEP_INT
--	chip_ps_state = CHIP_SLEEPING_AUTO;
--#endif
- }
+ 	skcipher_request_set_tfm(req, tfm);
+ 	skcipher_request_set_callback(req, 0, NULL, NULL);
+@@ -363,8 +360,7 @@ static int ceph_aes_decrypt2(const void *key, int key_len,
+ 	struct crypto_skcipher *tfm = ceph_crypto_alloc_cipher();
+ 	SKCIPHER_REQUEST_ON_STACK(req, tfm);
+ 	char pad[16];
+-	int ivsize = AES_BLOCK_SIZE;
+-	char iv[ivsize];
++	char iv[AES_BLOCK_SIZE];
+ 	int ret;
+ 	int last_byte;
  
- static void wilc_wlan_handle_isr_ext(struct wilc *wilc, u32 int_status)
-@@ -1113,9 +1046,6 @@ void wilc_handle_isr(struct wilc *wilc)
+@@ -380,7 +376,7 @@ static int ceph_aes_decrypt2(const void *key, int key_len,
+ 		goto out_tfm;
  
- 	if (int_status & DATA_INT_EXT) {
- 		wilc_wlan_handle_isr_ext(wilc, int_status);
--	#ifndef WILC_OPTIMIZE_SLEEP_INT
--		chip_ps_state = CHIP_WAKEDUP;
--	#endif
- 	}
- 	if (int_status & SLEEP_INT_EXT)
- 		wilc_sleeptimer_isr_ext(wilc, int_status);
+ 	crypto_skcipher_setkey((void *)tfm, key, key_len);
+-	memcpy(iv, aes_iv, ivsize);
++	memcpy(iv, aes_iv, AES_BLOCK_SIZE);
+ 
+ 	skcipher_request_set_tfm(req, tfm);
+ 	skcipher_request_set_callback(req, 0, NULL, NULL);
+
 -- 
-1.9.1
-
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
