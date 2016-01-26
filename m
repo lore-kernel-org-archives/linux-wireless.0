@@ -1,56 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:48375 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753426AbcAGMrq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 07:47:46 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>, <stable@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 02/21] iwlwifi: update and fix 7265 series PCI IDs
-Date: Thu,  7 Jan 2016 14:47:22 +0200
-Message-Id: <1452170861-10060-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160107_134902_097478_D18DA88B)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+Received: from mail-io0-f193.google.com ([209.85.223.193]:35165 "EHLO
+	mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751385AbcAZW4P (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 17:56:15 -0500
+MIME-Version: 1.0
+In-Reply-To: <1453830820-27104-1-git-send-email-xiyou.wangcong@gmail.com>
+References: <1453830820-27104-1-git-send-email-xiyou.wangcong@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 27 Jan 2016 09:55:55 +1100
+Message-ID: <CAGRGNgV7MUXdk+e8Arx05yiWX6owei5dmnFQ-TBfs55jfy+qBw@mail.gmail.com> (sfid-20160126_235621_296707_3458CAB7)
+Subject: Re: [PATCH RESEND net] nfc: use GFP_USER for user-controlled kmalloc
+To: Cong Wang <xiyou.wangcong@gmail.com>
+Cc: netdev <netdev@vger.kernel.org>, dvyukov@google.com,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+Hi Cong,
 
-Update and fix some 7265 PCI IDs entries.
+On Wed, Jan 27, 2016 at 4:53 AM, Cong Wang <xiyou.wangcong@gmail.com> wrote:
 
-CC: <stable@vger.kernel.org> [3.13+]
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+A commit message would be nice. A brief rundown of how this is called
+from userspace would be nice (I'm talking a single sentence here, e.g.
+"this is allocated when submitting a nfc packet") and what issue
+__GFP_NOWARN is fixing. (I'm guessing log spam due to allocation
+failures.)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index af10651..6261a68 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -388,6 +388,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x095B, 0x5310, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095B, 0x5302, iwl7265_n_cfg)},
- 	{IWL_PCI_DEVICE(0x095B, 0x5210, iwl7265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x095A, 0x5C10, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x5012, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x5412, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x5410, iwl7265_2ac_cfg)},
-@@ -405,10 +406,10 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
- 	{IWL_PCI_DEVICE(0x095A, 0x900A, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9110, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9112, iwl7265_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x095A, 0x9210, iwl7265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x095B, 0x9210, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095B, 0x9200, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9510, iwl7265_2ac_cfg)},
--	{IWL_PCI_DEVICE(0x095A, 0x9310, iwl7265_2ac_cfg)},
-+	{IWL_PCI_DEVICE(0x095B, 0x9310, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x9410, iwl7265_2ac_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x5020, iwl7265_2n_cfg)},
- 	{IWL_PCI_DEVICE(0x095A, 0x502A, iwl7265_2n_cfg)},
+> Reported-by: Dmitry Vyukov <dvyukov@google.com>
+> Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+> Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+> Cc: Samuel Ortiz <sameo@linux.intel.com>
+> Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
+> ---
+>  net/nfc/llcp_commands.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/net/nfc/llcp_commands.c b/net/nfc/llcp_commands.c
+> index 3621a90..5d94055 100644
+> --- a/net/nfc/llcp_commands.c
+> +++ b/net/nfc/llcp_commands.c
+> @@ -729,7 +729,7 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
+>         if (local == NULL)
+>                 return -ENODEV;
+>
+> -       msg_data = kzalloc(len, GFP_KERNEL);
+> +       msg_data = kzalloc(len, GFP_USER | __GFP_NOWARN);
+>         if (msg_data == NULL)
+>                 return -ENOMEM;
+
+Thanks,
+
 -- 
-2.5.0
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
