@@ -1,41 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:39858 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751408AbcADTAa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2016 14:00:30 -0500
-To: ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Subject: VHT 20Mhz, MCS 9 RX rate reported by (my) ath10k
-Message-ID: <568AC14D.4000102@candelatech.com> (sfid-20160104_200033_510932_8E6D2D56)
-Date: Mon, 4 Jan 2016 11:00:29 -0800
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mga11.intel.com ([192.55.52.93]:48526 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965143AbcAZKVu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 05:21:50 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/5] iwlwifi: add device ID for 8265
+Date: Tue, 26 Jan 2016 12:21:35 +0200
+Message-Id: <1453803698-20550-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160126_112200_774682_3165463D)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9D452F@hasmsx109.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9D452F@hasmsx109.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-While trying to track down some funny results from 'iw station dump',
-I find that my ath10k NIC is occasionally reporting MCS 9, 20Mhz bandwidth,
-which I guess must be an invalid rate.
+From: Oren Givon <oren.givon@intel.com>
 
-This is with non-stock firmware and patched driver, but I have mostly messed
-with the TX rate reporting, not RX rate, so I'm not sure this is a local
-issue.
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Previously, I have also verified that ath10k can send and receive CCK rates
-on 5Ghz, which is also evidently not supposed to be valid, so I'm suspicious
-that maybe it can do MCS 9 at 20Mhz as well.  Or, maybe it is just reporting
-bogus values.
-
-Either way, I'd like it to do better than show a zero rate in the
-station dump.  Any suggestions for the least-bad way to report a
-non-zero rate when I have a NIC reporting this rate info?
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 944e88a..00335ea 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -478,6 +478,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0000, iwl8265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24FD, 0x0010, iwl8265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24FD, 0x8010, iwl8265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24FD, 0x0810, iwl8265_2ac_cfg)},
+ 
+ /* 9000 Series */
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl5165_2ac_cfg)},
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.5.0
 
