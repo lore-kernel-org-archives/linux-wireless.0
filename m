@@ -1,77 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:36040 "EHLO
-	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750797AbcAZG3w (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 01:29:52 -0500
-Subject: Re: [PATCH] brcmfmac: sdio: Increase the default timeouts a bit
-To: Julian Calaby <julian.calaby@gmail.com>
-References: <1453718849-3508-1-git-send-email-sjoerd.simons@collabora.co.uk>
- <CAGRGNgXWE=b52Mcy8NsKBZS_4gz-TUiuFipjsuTZh1xjja=uUg@mail.gmail.com>
- <56A641CC.6020500@gmail.com>
- <CAGRGNgVftXxnq06MOHKNVzVjvCkwCM8Bc+Sfs4NoOQR=sfYP-g@mail.gmail.com>
-Cc: Sjoerd Simons <sjoerd.simons@collabora.co.uk>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Paul Stewart <pstew@chromium.org>,
-	Doug Anderson <dianders@chromium.org>,
-	linux-rockchip@lists.infradead.org,
-	Arend van Spriel <arend@broadcom.com>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	brcm80211-dev-list@broadcom.com,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	netdev <netdev@vger.kernel.org>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>
-From: Arend van Spriel <aspriel@gmail.com>
-Message-ID: <56A71262.8000804@gmail.com> (sfid-20160126_073016_284204_C8199286)
-Date: Tue, 26 Jan 2016 07:29:54 +0100
-MIME-Version: 1.0
-In-Reply-To: <CAGRGNgVftXxnq06MOHKNVzVjvCkwCM8Bc+Sfs4NoOQR=sfYP-g@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:39784 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965242AbcAZNsj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 08:48:39 -0500
+Message-ID: <1453816116.2759.64.camel@sipsolutions.net> (sfid-20160126_144842_052941_2EAB74AB)
+Subject: Re: [RFC/RFT v4 2/2] mac80211: add NEED_ALIGNED4_SKBS hw flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 26 Jan 2016 14:48:36 +0100
+In-Reply-To: <1453368625-3615-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20160121_103042_364939_C8B32286)
+References: <1453368625-3615-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1453368625-3615-2-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20160121_103042_364939_C8B32286)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26-01-16 00:41, Julian Calaby wrote:
-> Hi Arend,
-> 
-> On Tue, Jan 26, 2016 at 2:39 AM, Arend van Spriel <aspriel@gmail.com> wrote:
->> On 25-01-16 12:06, Julian Calaby wrote:
->>> Hi Sjoerd,
->>>
->>> On Mon, Jan 25, 2016 at 9:47 PM, Sjoerd Simons
->>> <sjoerd.simons@collabora.co.uk> wrote:
->>>> On a Radxa Rock2 board with a Ampak AP6335 (Broadcom 4339 core) it seems
->>>> the card responds very quickly most of the time, unfortunately during
->>>> initialisation it sometimes seems to take just a bit over 2 seconds to
->>>> respond.
->>>>
->>>> This results intialization failing with message like:
->>>>   brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -52
->>>>   brcmf_bus_start: failed: -52
->>>>   brcmf_sdio_firmware_callback: dongle is not responding
->>>>
->>>> Increasing the timeout to allow for a bit more headroom allows the
->>>> card to initialize reliably.
->>>>
->>>> A quick search online after diagnosing/fixing this showed that Google
->>>> has a similar patch in their ChromeOS tree, so this doesn't seem
->>>> specific to the board I'm using.
->>>>
->>>> Signed-off-by: Sjoerd Simons <sjoerd.simons@collabora.co.uk>
->>>
->>> Looks sane to me.
->>>
->>> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
->>
->> Not really a cleanup patch :-p , but thanks for the review.
-> 
-> I'm trying to review any "small" patch from (relatively) new people.
+On Thu, 2016-01-21 at 10:30 +0100, Janusz Dziedzic wrote:
+> 
+> +static inline unsigned int
+> +__ieee80211_hdrlen(struct ieee80211_hw *hw, __le16 fc) {
 
-And it is surely appreciated. Just read your reply in "cleanup patch
-pile" thread and felt I had to make the stupid remark with just fun
-intended.
+coding style - should have that brace on the next line
 
-Regards,
-Arend
+perhaps this really ought to be called
+
+ieee80211_padded_hdrlen() or so instead of just the __.
+
+
+> +	unsigned int hdrlen;
+> +
+> +	hdrlen = ieee80211_hdrlen(fc);
+> +	if (ieee80211_hw_check(hw, NEEDS_ALIGNED4_SKBS))
+> +		hdrlen += hdrlen & 3;
+
+This needs a a comment, it only works because the hdrlen is guaranteed
+to be a multiple of 2 already. Perhaps it should be & 2 ;-)
+
+> -	u8 hdr[30 + 2 + IEEE80211_FAST_XMIT_MAX_IV +
+> -	       sizeof(rfc1042_header)];
+> +	u8 hdr[round_up(30 + 2 + IEEE80211_FAST_XMIT_MAX_IV +
+> +			sizeof(rfc1042_header), 4)];
+
+I'm still not sure this is right, given the position of the padding. It
+probably works since MAX_IV and sizeof() are divisible by 4, but
+shouldn't it really be
+
+round_up(30 + 2, 4) + MAX_IV + sizeof()?
+
+> +	/* Remove padding if was added */
+> +	if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS)) {
+> +		hdrlen = ieee80211_hdrlen(hdr->frame_control);
+> +		padsize = hdrlen & 3;
+
+same as above
+
+> +	/* Check if HW require skb to be aligned */
+> +	if (ieee80211_hw_check(&sdata->local->hw,
+> NEEDS_ALIGNED4_SKBS))
+> +		padsize = hdrlen & 3;
+> 
+
+ditto
+
+Perhaps also extract this if (...) padsize=... into a helper? Although
+then the "hdrlen += 0" would remain for !ALIGNED4 drivers.
+
+> +	if (padsize)
+> +		skb_push(skb, padsize);
+
+You should initialize the memory, imho, just in case it goes out
+anywhere by accident.
+ 
+> +	/* Check if aligned skb required */
+> +	if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS))
+> +		build.hdr_len += build.hdr_len & 3;
+
+As above.
+
+You also need to clarify - IIRC the PN/IV fields are considered part of
+the MAC header even if we don't really take them into account in
+hdrlen(), so you should clearly document that the padding is before
+those.
+
+johannes
