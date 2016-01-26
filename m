@@ -1,68 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f193.google.com ([209.85.213.193]:36448 "EHLO
-	mail-ig0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751740AbcADQui (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2016 11:50:38 -0500
-MIME-Version: 1.0
-In-Reply-To: <1451894138-3482-1-git-send-email-baijiaju1990@163.com>
-References: <1451894138-3482-1-git-send-email-baijiaju1990@163.com>
-Date: Mon, 4 Jan 2016 17:50:36 +0100
-Message-ID: <CAGXE3d9tTr6hyOjh==Mn5tNQSy-hMBhxtmsWNY_tLgJqE=B38A@mail.gmail.com> (sfid-20160104_175119_488692_A210E02A)
-Subject: Re: [PATCH] rt2x00pci: Disable memory-write-invalidate when the
- driver exits
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Jia-Ju Bai <baijiaju1990@163.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>, kvalo@codeaurora.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:38078 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932681AbcAZIq7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 03:46:59 -0500
+Message-ID: <1453798016.2759.5.camel@sipsolutions.net> (sfid-20160126_094721_945579_65FE5ABF)
+Subject: Re: [PATCHv2 3/4] ARM: tegra: use build-in device properties
+ withrfkill_gpio
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Marc Dietrich <marvin24@gmx.de>,
+	Thierry Reding <thierry.reding@gmail.com>
+Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Date: Tue, 26 Jan 2016 09:46:56 +0100
+In-Reply-To: <1626364.s6q6eBGYVQ@ax5200p> (sfid-20160125_220148_930415_998CEFCC)
+References: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com>
+	 <1453712629-143317-4-git-send-email-heikki.krogerus@linux.intel.com>
+	 <20160125121840.GA20452@ulmo.nvidia.com> <1626364.s6q6eBGYVQ@ax5200p>
+	 (sfid-20160125_220148_930415_998CEFCC)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 4, 2016 at 8:55 AM, Jia-Ju Bai <baijiaju1990@163.com> wrote:
-> The driver calls pci_set_mwi to enable memory-write-invalidate when it
-> is initialized, but does not call pci_clear_mwi when it is removed. Many
-> other drivers calls pci_clear_mwi when pci_set_mwi is called, such as
-> r8169, 8139cp and e1000.
->
-> This patch adds pci_clear_mwi in error handling and removal procedure,
-> which can fix the problem.
->
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+On Mon, 2016-01-25 at 21:59 +0100, Marc Dietrich wrote:
+> 
+> seems to work fine. I wish we could instantiate this from device-tree 
+> so we can finially get rid of this file.
 
-Looks good to me.
-Does this fix any actual issue?
-If yes it might we worth to mention it in the commit message.
-Helmut
+That'd be nice - anyone want to propose rfkill DT bindings? :)
 
-
-> ---
->  drivers/net/wireless/rt2x00/rt2x00pci.c |    2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00pci.c b/drivers/net/wireless/rt2x00/rt2x00pci.c
-> index d93db4b..eb6dbcd 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00pci.c
-> +++ b/drivers/net/wireless/rt2x00/rt2x00pci.c
-> @@ -149,6 +149,7 @@ exit_free_device:
->         ieee80211_free_hw(hw);
->
->  exit_release_regions:
-> +       pci_clear_mwi(pci_dev);
->         pci_release_regions(pci_dev);
->
->  exit_disable_device:
-> @@ -173,6 +174,7 @@ void rt2x00pci_remove(struct pci_dev *pci_dev)
->         /*
->          * Free the PCI device data.
->          */
-> +       pci_clear_mwi(pci_dev);
->         pci_disable_device(pci_dev);
->         pci_release_regions(pci_dev);
->  }
-> --
-> 1.7.9.5
->
->
+johannes
