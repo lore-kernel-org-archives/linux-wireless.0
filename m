@@ -1,62 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f194.google.com ([209.85.217.194]:36662 "EHLO
-	mail-lb0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752450AbcAXRyG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Jan 2016 12:54:06 -0500
-Received: by mail-lb0-f194.google.com with SMTP id ad5so5327354lbc.3
-        for <linux-wireless@vger.kernel.org>; Sun, 24 Jan 2016 09:54:05 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20160123151548.GB4621@localhost>
-References: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
- <1453190672-9748-3-git-send-email-henning.rogge@fkie.fraunhofer.de>
- <20160122203008.GA4621@localhost> <CAGnRvur8eKjiwWCR69NESnMDQoA4qro1ryH=DoeMFRd1RPFKOQ@mail.gmail.com>
- <20160123151548.GB4621@localhost>
-From: Henning Rogge <hrogge@gmail.com>
-Date: Sun, 24 Jan 2016 18:53:35 +0100
-Message-ID: <CAGnRvupwvwV6a84zcO06p3rohReGMaQTz9FLUKG62DZC2TVyeQ@mail.gmail.com> (sfid-20160124_185410_881842_1F2F1D98)
-Subject: Re: [PATCH 2/2] mac80211: let unused MPP table entries timeout
-To: Bob Copeland <me@bobcopeland.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:39810 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964992AbcAZN4h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 08:56:37 -0500
+Message-ID: <1453816594.2759.70.camel@sipsolutions.net> (sfid-20160126_145640_826432_E07278C9)
+Subject: Re: [RFC V4 1/2] nl80211: add feature for BSS selection support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 26 Jan 2016 14:56:34 +0100
+In-Reply-To: <1453813592-5266-2-git-send-email-arend@broadcom.com>
+References: <1453813592-5266-1-git-send-email-arend@broadcom.com>
+	 <1453813592-5266-2-git-send-email-arend@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Jan 23, 2016 at 4:15 PM, Bob Copeland <me@bobcopeland.com> wrote:
-> On Sat, Jan 23, 2016 at 10:39:04AM +0100, Henning Rogge wrote:
->> > FYI I have a patch set I'm testing which rewrites a big chunk of
->> > the path table stuff.
->>
->> Does it include some cleanup paths for the MPP table? At the moment
->> the "missing cleanup" still allows remote users to make the Linux
->> kernel to allocate as much memory as it wants... with no way to free
->> it except for shutting down the interface.
->
-> No, it needs these patches too.  I did harmonize them a little bit,
-> so that e.g. the expiry check will be done during lookup, but I didn't
-> add an equivalent to flush-by-proxy.
->
-> One issue it does address is that the path table can eventually shrink
-> by virtue of the rhashtable, whereas now the bucket size is
-> ever-growing.
->
->> > Let me know if you want me to base on top.
->>
->> I would like them to go in first... my experience of the kernel code
->> (outside some parts of the wifi stack) is not that good, so I don't
->> know how long I would need to adapt the patches to your new data
->> structures.
->
-> Ok, sounds good, I'll just rebase on top of yours.
+On Tue, 2016-01-26 at 14:06 +0100, Arend van Spriel wrote:
+> 
+> + * @behaviour: requested BSS selection behaviour.
+> + * @param: parameters for requestion behaviour.
+> + * @band_pref: preferred band for
+> %NL80211_BSS_SELECT_ATTR_BAND_PREF.
+> + * @adjust: parameters for %NL80211_BSS_SELECT_ATTR_RSSI_ADJUST.
 
-Thank you...
+Sadly, I don't think this works with kernel-doc. You'd have to split it
+out into a named union to get this working properly.
 
-if you have problem with the "remove by proxy" patch I could look over
-the patches you made... this part was quite trivial to do on the old
-code and it should be easy for the new one too (as long as there is a
-"remove MPath" and a "remove MPP" function).
+> +/**
+> + * enum nl80211_bss_select_attr - attributes for bss selection.
+> + *
+> + * @__NL80211_BSS_SELECT_ATTR_INVALID: reserved.
+> + * @NL80211_BSS_SELECT_ATTR_RSSI: Flag indicating only RSSI-based BSS selection
+> + * is requested.
+> + * @NL80211_BSS_SELECT_ATTR_BAND_PREF: attribute indicating BSS
+> + *> 	> selection should be done such that the specified band is preferred.
+> + *> 	> When there are multiple BSS-es in the preferred band, the driver
+> + *> 	> shall use RSSI-based BSS selection as a second step. The value of
+> + *> 	> this attribute is according to &enum nl80211_band (u32).
+> + * @NL80211_BSS_SELECT_ATTR_RSSI_ADJUST: When present the RSSI level for
+> + *> 	> BSS-es in the specified band is to be adjusted before doing
+> + *> 	> RSSI-based BSS selection. The attribute value is a packed two-byte
+> + *> 	> value. The lower byte contains the adjustment value (s8) and the
+> + *	high byte contains the band according &enum nl80211_band.
 
-Henning
+I think it might be nicer to define an explicit struct for this, then
+you don't have to use u8 for the band in one attribute and u32 for the
+band in the other attribute either.
+
+As long as there's no u64 in the struct that's pretty much safe - if
+u64 is needed use compat_u64 :)
+
+> + * @NL80211_BSS_SELECT_ATTR_MAX: highest bss select attribute number.
+> + *@__NL80211_BSS_SELECT_ATTR_AFTER_LAST: internal use.
+> + *
+> + * These attributes are found within %NL80211_ATTR_BSS_SELECT and
+> + * indicate the required BSS selection behaviour which the driver
+> + * should use.
+
+You should probably indicate that only a single one can ever be
+specified?
+
+> +static const struct nla_policy
+> +nl80211_bss_select_policy[NL80211_BSS_SELECT_ATTR_MAX + 1] = {
+> +	[NL80211_BSS_SELECT_ATTR_RSSI] = { .type = NLA_FLAG },
+> +	[NL80211_BSS_SELECT_ATTR_BAND_PREF] = { .type = NLA_U32 },
+> +	[NL80211_BSS_SELECT_ATTR_RSSI_ADJUST] = { .type = NLA_U8 },
+
+The RSSI_ADJUST here seems wrong in any case? Should've been NLA_U16
+now?
+
+> @@ -5753,6 +5778,42 @@ static int validate_scan_freqs(struct nlattr
+> *freqs)
+>  	return n_channels;
+>  }
+>  
+> +static int parse_bss_select(struct nlattr *nla,
+> +			    struct cfg80211_bss_selection
+> *bss_select)
+> +{
+> +	struct nlattr *attr[NL80211_BSS_SELECT_ATTR_MAX + 1];
+> +	u16 band_delta;
+> +	int err;
+
+This should perhaps reject specification of multiple attributes, since
+otherwise the order of the code here dictates which one "wins".
+
+
+But these are small things - looks good!
+
+johannes
