@@ -1,90 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from glaubenleben.de ([85.214.105.140]:44443 "EHLO glaubenleben.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758128AbcATHg6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 02:36:58 -0500
-From: Andreas Kemnade <andreas@kemnade.info>
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, hns@goldelico.com
-Cc: Andreas Kemnade <andreas@kemnade.info>
-Subject: [PATCH v2 6/6] wireless:libertas: add an cfg80211 interface for powersaving
-Date: Wed, 20 Jan 2016 08:35:39 +0100
-Message-Id: <1453275339-25122-7-git-send-email-andreas@kemnade.info> (sfid-20160120_083915_863467_F142D100)
-In-Reply-To: <1453275339-25122-1-git-send-email-andreas@kemnade.info>
-References: <1453275339-25122-1-git-send-email-andreas@kemnade.info>
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:33371 "EHLO
+	mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757002AbcAZRyE (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 12:54:04 -0500
+From: Cong Wang <xiyou.wangcong@gmail.com>
+To: netdev@vger.kernel.org
+Cc: dvyukov@google.com, linux-wireless@vger.kernel.org,
+	Cong Wang <xiyou.wangcong@gmail.com>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH RESEND net] nfc: use GFP_USER for user-controlled kmalloc
+Date: Tue, 26 Jan 2016 09:53:39 -0800
+Message-Id: <1453830820-27104-1-git-send-email-xiyou.wangcong@gmail.com> (sfid-20160126_185429_328271_22D93113)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds an interface for handling commands like
-iwconfig wlanX power on/off. Such an interface formerly existed
-when the driver used wext.
-
-While performance with sdio in polling mode without using
-powersave mode is quite bad, powersaving mode is unusable,
-so do not enable it under such conditions.
-
-Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
+Reported-by: Dmitry Vyukov <dvyukov@google.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
 ---
-changes in v2: reordered, was 3/6
- drivers/net/wireless/libertas/cfg.c | 38 +++++++++++++++++++++++++++++++++++++
- 1 file changed, 38 insertions(+)
+ net/nfc/llcp_commands.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/libertas/cfg.c b/drivers/net/wireless/libertas/cfg.c
-index 8317afd..fd18d03 100644
---- a/drivers/net/wireless/libertas/cfg.c
-+++ b/drivers/net/wireless/libertas/cfg.c
-@@ -2038,6 +2038,43 @@ static int lbs_leave_ibss(struct wiphy *wiphy, struct net_device *dev)
+diff --git a/net/nfc/llcp_commands.c b/net/nfc/llcp_commands.c
+index 3621a90..5d94055 100644
+--- a/net/nfc/llcp_commands.c
++++ b/net/nfc/llcp_commands.c
+@@ -729,7 +729,7 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
+ 	if (local == NULL)
+ 		return -ENODEV;
  
- 
- 
-+int lbs_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
-+		       bool enabled, int timeout)
-+{
-+	struct lbs_private *priv = wiphy_priv(wiphy);
-+
-+	if  (!(priv->fwcapinfo & FW_CAPINFO_PS)) {
-+		if (!enabled)
-+			return 0;
-+		else
-+			return -EINVAL;
-+	}
-+	/* firmware does not work well with too long latency with power saving
-+	 * enabled, so do not enable it if there is only polling, no
-+	 * interrupts (like in some sdio hosts which can only
-+	 * poll for sdio irqs)
-+	 */
-+	if  (priv->is_polling) {
-+		if (!enabled)
-+			return 0;
-+		else
-+			return -EINVAL;
-+	}
-+	if (!enabled) {
-+		priv->psmode = LBS802_11POWERMODECAM;
-+		if (priv->psstate != PS_STATE_FULL_POWER)
-+			lbs_set_ps_mode(priv,
-+					PS_MODE_ACTION_EXIT_PS,
-+					true);
-+		return 0;
-+	}
-+	if (priv->psmode != LBS802_11POWERMODECAM)
-+		return 0;
-+	priv->psmode = LBS802_11POWERMODEMAX_PSP;
-+	if (priv->connect_status == LBS_CONNECTED)
-+		lbs_set_ps_mode(priv, PS_MODE_ACTION_ENTER_PS, true);
-+	return 0;
-+}
- 
- /*
-  * Initialization
-@@ -2056,6 +2093,7 @@ static struct cfg80211_ops lbs_cfg80211_ops = {
- 	.change_virtual_intf = lbs_change_intf,
- 	.join_ibss = lbs_join_ibss,
- 	.leave_ibss = lbs_leave_ibss,
-+	.set_power_mgmt = lbs_set_power_mgmt,
- };
- 
+-	msg_data = kzalloc(len, GFP_KERNEL);
++	msg_data = kzalloc(len, GFP_USER | __GFP_NOWARN);
+ 	if (msg_data == NULL)
+ 		return -ENOMEM;
  
 -- 
-2.1.4
+1.8.3.1
 
