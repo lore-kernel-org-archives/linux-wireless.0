@@ -1,41 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from glaubenleben.de ([85.214.105.140]:53789 "EHLO glaubenleben.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751977AbcA3RCR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2016 12:02:17 -0500
-From: Andreas Kemnade <andreas@kemnade.info>
-To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, hns@goldelico.com
-Subject: [PATCH v3 0/6] libertas: ieee80211 powersave mode 
-Date: Sat, 30 Jan 2016 18:01:50 +0100
-Message-Id: <1454173316-13444-1-git-send-email-andreas@kemnade.info> (sfid-20160130_180440_870440_BAA97CB5)
+Received: from mail-yk0-f179.google.com ([209.85.160.179]:36380 "EHLO
+	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750951AbcAZXML (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 18:12:11 -0500
+MIME-Version: 1.0
+In-Reply-To: <CAGRGNgV7MUXdk+e8Arx05yiWX6owei5dmnFQ-TBfs55jfy+qBw@mail.gmail.com>
+References: <1453830820-27104-1-git-send-email-xiyou.wangcong@gmail.com>
+	<CAGRGNgV7MUXdk+e8Arx05yiWX6owei5dmnFQ-TBfs55jfy+qBw@mail.gmail.com>
+Date: Tue, 26 Jan 2016 15:12:09 -0800
+Message-ID: <CAM_iQpWawou1Z_NnAzM5TxH7TUQUCAhf+k96PErNV8q_SOCShw@mail.gmail.com> (sfid-20160127_001214_839963_3160555F)
+Subject: Re: [PATCH RESEND net] nfc: use GFP_USER for user-controlled kmalloc
+From: Cong Wang <xiyou.wangcong@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: netdev <netdev@vger.kernel.org>,
+	Dmitry Vyukov <dvyukov@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series makes IEEE 80211 powersave mode work again so
-that power usage is dramatically reduced when the device is connected.
-It does not include other power saving methods which are working
-when the device is not connected (like enabling
-deep sleep modus)
+On Tue, Jan 26, 2016 at 2:55 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> Hi Cong,
+>
+> On Wed, Jan 27, 2016 at 4:53 AM, Cong Wang <xiyou.wangcong@gmail.com> wrote:
+>
+> A commit message would be nice. A brief rundown of how this is called
+> from userspace would be nice (I'm talking a single sentence here, e.g.
+> "this is allocated when submitting a nfc packet") and what issue
+> __GFP_NOWARN is fixing. (I'm guessing log spam due to allocation
+> failures.)
+>
 
-Tested on GTA04 which includes a
-W2CBW003 chip (Marvel 8686) with sdio interface
+I thought it is obvious. ;) Keep in mind that $subject is one part of commit
+message too, so there is a commit message although very short.
 
-Changes in v3:
-s/wireless:libertas/libertas/
-s|net/wireless/libertas|net/wireless/marvell/libertas|
-
-Changes in v2:
-improved some commit messages, order changed,
-former 6/6 was too late it needs to be before
-implementing the cfg80211  power saving interface
-to have it git-bisectable. 
-moving the former 3/6 to the end fixes
-all bisect problems
-
-[PATCH v3 1/6] libertas: fix pointer bugs for PS_MODE
-[PATCH v3 2/6] libertas: check whether bus can do more than
-[PATCH v3 3/6] libertas: do not confirm sleep if commands
-[PATCH v3 4/6] libertas: go back to ps mode without commands
-[PATCH v3 5/6] libertas: fix ps-mode related removal
-[PATCH v3 6/6] libertas: add an cfg80211 interface for
+I will add it.
