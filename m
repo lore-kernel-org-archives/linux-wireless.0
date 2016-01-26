@@ -1,68 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:35034 "EHLO
-	mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751768AbcAEOHT (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:37858 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934265AbcAZKUS convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 09:07:19 -0500
-Received: by mail-pf0-f182.google.com with SMTP id 78so223449370pfw.2
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2016 06:07:19 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 06/13] staging: wilc1000: rename pu8IEs in wilc_scan
-Date: Tue,  5 Jan 2016 23:06:50 +0900
-Message-Id: <1452002817-30937-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20160105_150723_127404_E0A075AF)
-In-Reply-To: <1452002817-30937-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1452002817-30937-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 26 Jan 2016 05:20:18 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "Kalle Valo <kvalo@adurom.com> Kalle Valo" <kvalo@adurom.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: pull request: iwlwifi 2016-01-26
+Date: Tue, 26 Jan 2016 10:19:08 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E9D452F@hasmsx109.ger.corp.intel.com> (sfid-20160126_112024_489342_95CD6887)
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pu8IEs to ies to avoid camelcase.
+Hi Kalle,
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 ++--
- drivers/staging/wilc1000/host_interface.h | 2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
+This is the first round of fixes for 4.5.
+Most of them are really trivial. The TPC stats one stands out a little bit.
+It can fix traffic issues which are typically hard to debug.
+Please pull and let me know if you have issues.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 07ff083..3907717 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3673,7 +3673,7 @@ int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *stats)
- }
- 
- int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
--	      u8 *ch_freq_list, u8 ch_list_len, const u8 *pu8IEs,
-+	      u8 *ch_freq_list, u8 ch_list_len, const u8 *ies,
- 	      size_t IEsLen, wilc_scan_result ScanResult, void *pvUserArg,
- 	      struct hidden_network *pstrHiddenNetwork)
- {
-@@ -3709,7 +3709,7 @@ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
- 
- 	msg.body.scan_info.ies_len = IEsLen;
- 	msg.body.scan_info.ies = kmalloc(IEsLen, GFP_KERNEL);
--	memcpy(msg.body.scan_info.ies, pu8IEs, IEsLen);
-+	memcpy(msg.body.scan_info.ies, ies, IEsLen);
- 
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
- 	if (result) {
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 7d7675a..b7bcd93 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -336,7 +336,7 @@ int wilc_disconnect(struct wilc_vif *vif, u16 reason_code);
- int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel);
- int wilc_get_rssi(struct wilc_vif *vif, s8 *rssi_level);
- int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
--	      u8 *ch_freq_list, u8 ch_list_len, const u8 *pu8IEs,
-+	      u8 *ch_freq_list, u8 ch_list_len, const u8 *ies,
- 	      size_t IEsLen, wilc_scan_result ScanResult, void *pvUserArg,
- 	      struct hidden_network *pstrHiddenNetwork);
- int wilc_hif_set_cfg(struct wilc_vif *vif,
--- 
-2.6.4
+I also have a batch of patches for -next, but wireless-drivers-next.git doesn't
+seem ready to accept new patches at this stage.
+
+Thanks!
+
+The following changes since commit aee3bfa3307cd0da2126bdc0ea359dabea5ee8f7:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next (2016-01-12 18:57:02 -0800)
+
+are available in the git repository at:
+
+  https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2016-01-26
+
+for you to fetch changes up to a0d792850af3257d9b4b1dbf4e3df57994a481e7:
+
+  iwlwifi: mvm: rs: fix TPC statistics handling (2016-01-25 14:42:11 +0200)
+
+----------------------------------------------------------------
+* Fix support for 3168 device
+	+ NVM version
+	+ firmware file name
+	+ device IDs
+* Fix a compilation warning in dvm calibration code
+* Fix the TPC (reduced Tx Power) code. This fixes performance issues
+* Device IDs for 8265
+
+----------------------------------------------------------------
+Gregory Greenman (1):
+      iwlwifi: mvm: rs: fix TPC statistics handling
+
+Johannes Berg (1):
+      iwlwifi: dvm: calib.c: fix min() warning
+
+Oren Givon (3):
+      iwlwifi: add new 3168 series devices support
+      iwlwifi: add device ID for 8265
+      iwlwifi: update support for 3168 series firmware and NVM
+
+ drivers/net/wireless/intel/iwlwifi/dvm/calib.c     |  4 ++--
+ drivers/net/wireless/intel/iwlwifi/iwl-7000.c      | 23 +++++++++++++++++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h |  6 +++++-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c        | 74 ++++++++++++++++++++++++++++++++++++++++++++++++--------------------------
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  5 +++--
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |  4 ++++
+ 6 files changed, 81 insertions(+), 35 deletions(-)
 
