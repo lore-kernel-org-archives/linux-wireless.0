@@ -1,92 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52699 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753238AbcARBfL (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:34655 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932395AbcAZCvK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Jan 2016 20:35:11 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, nbd@openwrt.org,
-	Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH v3 5/5] ath9k: fix data bus error on ar9300 and ar9580
-Date: Mon, 18 Jan 2016 09:33:50 +0800
-Message-Id: <1453080830-7616-6-git-send-email-miaoqing@codeaurora.org> (sfid-20160118_023515_416468_62BF3AB0)
-In-Reply-To: <1453080830-7616-1-git-send-email-miaoqing@codeaurora.org>
-References: <1453080830-7616-1-git-send-email-miaoqing@codeaurora.org>
+	Mon, 25 Jan 2016 21:51:10 -0500
+Subject: Re: [PATCH V2 00/26] use unified firmware and add ops in cfg
+To: Greg KH <gregkh@linuxfoundation.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+ <87vb6hu7f0.fsf@purkki.adurom.net> <20160125172131.GA27361@kroah.com>
+CC: <devel@driverdev.osuosl.org>, <austin.shin@atmel.com>,
+	<linux-wireless@vger.kernel.org>, <Nicolas.FERRE@atmel.com>,
+	<tony.cho@atmel.com>, <leo.kim@atmel.com>,
+	<adham.abozaeid@atmel.com>
+From: glen lee <glen.lee@atmel.com>
+Message-ID: <56A6DD8E.70607@atmel.com> (sfid-20160126_035114_005049_9C64BC1C)
+Date: Tue, 26 Jan 2016 11:44:30 +0900
+MIME-Version: 1.0
+In-Reply-To: <20160125172131.GA27361@kroah.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-One crash issue be found on ar9300: RTC_RC reg read leads crash, leading
-the data bus error, due to RTC_RC reg write not happen properly.
 
-Warm Reset trigger in continuous beacon stuck for one of the customer for
-other chip, noticed the MAC was stuck in RTC reset. After analysis noticed
-DMA did not complete when RTC was put in reset.
+On 2016년 01월 26일 02:21, Greg KH wrote:
+> On Mon, Jan 25, 2016 at 03:15:31PM +0200, Kalle Valo wrote:
+>> Glen Lee <glen.lee@atmel.com> writes:
+>>
+>>> This patch series contains
+>>> * support suspend and resume functionality
+>>> * use a unified firmware for all mode of operations(station, ap, p2p)
+>>> * support Station/AP concurrency
+>>> * increase link speed
+>>> * add a cfg operation for adjusting the tx power
+>>> * fix bug on p2p, WEP security and chaning virtual interface
+>>>
+>>> Changes in V2: details in each patch files.
+>>>   - 0004-staging-wilc1000-add-sdio-resume-suspend.patch
+>> It's good practise to also add "staging: wilc1000: " prefix to the cover
+>> letter.
+> Yes please, otherwise it misses my filters when I go to apply patches
+> for a subsystem and I have to find it by hand :(
 
-So, before resetting the MAC need to make sure there are no pending DMA
-transactions because this reset does not reset all parts of the chip.
+Oh, I see it helps to filter. I will add prefix also.
+Do I need to resend V3 patch series with adding prefix to cover letter?
 
-The 12th and 11th bit of MAC _DMA_CFG register used to do that.
-	12 cfg_halt_ack 0x0
-		0 DMA has not yet halted
-		1 DMA has halted
-	11 cfg_halt_req 0x0
-		0 DMA logic operates normally
-		1 Request DMA logic to stop so software can reset the MAC
+regards,
+glen lee.
 
-The Bit [12] of this register indicates when the halt has taken effect or
-not. the DMA halt IS NOT recoverable; once software sets bit [11] to
-request a DMA halt, software must wait for bit [12] to be set and reset
-the MAC.
-
-So, the same thing we implemented for ar9580 chip.
-
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/hw.c  | 10 ++++++++++
- drivers/net/wireless/ath/ath9k/reg.h |  4 +++-
- 2 files changed, 13 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 257f46e..e7a3101 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1368,6 +1368,16 @@ static bool ath9k_hw_set_reset(struct ath_hw *ah, int type)
- 	if (ath9k_hw_mci_is_enabled(ah))
- 		ar9003_mci_check_gpm_offset(ah);
- 
-+	/* DMA HALT added to resolve ar9300 and ar9580 bus error during
-+	 * RTC_RC reg read
-+	 */
-+	if (AR_SREV_9300(ah) || AR_SREV_9580(ah)) {
-+		REG_SET_BIT(ah, AR_CFG, AR_CFG_HALT_REQ);
-+		ath9k_hw_wait(ah, AR_CFG, AR_CFG_HALT_ACK, AR_CFG_HALT_ACK,
-+			      20 * AH_WAIT_TIMEOUT);
-+		REG_CLR_BIT(ah, AR_CFG, AR_CFG_HALT_REQ);
-+	}
-+
- 	REG_WRITE(ah, AR_RTC_RC, rst_flags);
- 
- 	REGWRITE_BUFFER_FLUSH(ah);
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index caba54d..c8d35fe 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -34,8 +34,10 @@
- #define AR_CFG_SWRG          0x00000010
- #define AR_CFG_AP_ADHOC_INDICATION 0x00000020
- #define AR_CFG_PHOK          0x00000100
--#define AR_CFG_CLK_GATE_DIS  0x00000400
- #define AR_CFG_EEBS          0x00000200
-+#define AR_CFG_CLK_GATE_DIS  0x00000400
-+#define AR_CFG_HALT_REQ	     0x00000800
-+#define AR_CFG_HALT_ACK	     0x00001000
- #define AR_CFG_PCI_MASTER_REQ_Q_THRESH         0x00060000
- #define AR_CFG_PCI_MASTER_REQ_Q_THRESH_S       17
- 
--- 
-1.9.1
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
