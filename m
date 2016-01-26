@@ -1,43 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34337 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752049AbcARIOd (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:63305 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933597AbcAZNGh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jan 2016 03:14:33 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <aspriel@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Geert Uytterhoeven <geert@linux-m68k.org>,
-	David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] brcmfmac: fix BRCMF_FW_NVRAM_DEF macro for older gcc compilers
-References: <1452958753-12307-1-git-send-email-aspriel@gmail.com>
-Date: Mon, 18 Jan 2016 10:14:27 +0200
-In-Reply-To: <1452958753-12307-1-git-send-email-aspriel@gmail.com> (Arend van
-	Spriel's message of "Sat, 16 Jan 2016 16:39:13 +0100")
-Message-ID: <8737tv7198.fsf@kamboji.qca.qualcomm.com> (sfid-20160118_091436_505354_42C04EF8)
+	Tue, 26 Jan 2016 08:06:37 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [RFC V4 0/2] nl80211: allow configuration of BSS selection
+Date: Tue, 26 Jan 2016 14:06:30 +0100
+Message-ID: <1453813592-5266-1-git-send-email-arend@broadcom.com> (sfid-20160126_140641_247097_42EF34C2)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <aspriel@gmail.com> writes:
+This patch series adds support for configuration of BSS selection done by
+the driver and/or firmware. It allows user-space to pass selection behaviour
+with the NL80211_CMD_CONNECT using NL80211_ATTR_BSS_SELECT. When user-space
+does provide this attribute and no explicit BSSID is provided it will pass
+the BSS selection behaviour to the driver if the driver supports it.
 
-> With gcc < 4.3 __UNIQUE_ID does not create unique ids with the macro
-> BRCMF_FW_NVRAM_DEF. Fix this by removing the MODULE_FIRMWARE instance
-> for the nvram file. This file is not in linux-firmware repo so it may
-> not be needed anyway. Otherwise consider this as a temporary fix.
->
-> Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-> Signed-off-by: Arend van Spriel <aspriel@gmail.com>
+When multiple BSS-es are found belonging to the same ESS, ie. Infra-BSS with
+same SSID, this can be used to select a BSS. The behaviours defined are:
 
-Thanks. Geert, it would be great if you could test this.
+1. RSSI based selection.
+2. Band selection, RSSI based selection.
+3. RSSI adjustment in given band, RSSI based selection.
 
-Dave, if Geert says the patch is ok do you mind taking this directly? I
-would like to fix this build breakage quickly.
+V2:
+ - incorporate comments from Johannes Berg (may have missed some).
+ - split nl80211 patch in two separate patches.
 
-https://patchwork.kernel.org/patch/8049181/
+V3:
+ - remove enum nl80211_bss_select_primitive.
+ - reword documentation of nl80211_bss_select_attr enum values.
 
-Acked-by: Kalle Valo <kvalo@codeaurora.org>
+V4:
+ - remove documentation reference to removed primitive.
+
+Arend van Spriel (2):
+  nl80211: add feature for BSS selection support
+  brcmfmac: add support for nl80211 BSS_SELECT feature
+
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 63 +++++++++++++++++-
+ .../wireless/broadcom/brcm80211/brcmfmac/common.c  | 38 ++++++-----
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  1 +
+ include/net/cfg80211.h                             | 34 ++++++++++
+ include/uapi/linux/nl80211.h                       | 42 ++++++++++++
+ net/wireless/core.c                                |  4 ++
+ net/wireless/nl80211.c                             | 76 ++++++++++++++++++++++
+ 7 files changed, 240 insertions(+), 18 deletions(-)
 
 -- 
-Kalle Valo
+1.9.1
+
