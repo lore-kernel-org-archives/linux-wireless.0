@@ -1,36 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41669 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965515AbcA1IVy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 03:21:54 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	nbd@openwrt.org
-Subject: Re: [PATCH v2 09/13] ath9k: request NOA update when chanctx active
-References: <1448613438-5173-1-git-send-email-janusz.dziedzic@tieto.com>
-	<1448613438-5173-9-git-send-email-janusz.dziedzic@tieto.com>
-Date: Thu, 28 Jan 2016 10:21:46 +0200
-In-Reply-To: <1448613438-5173-9-git-send-email-janusz.dziedzic@tieto.com>
-	(Janusz Dziedzic's message of "Fri, 27 Nov 2015 09:37:14 +0100")
-Message-ID: <87si1im7vp.fsf@kamboji.qca.qualcomm.com> (sfid-20160128_092202_415346_66809E23)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:39586 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934009AbcAZNIV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 08:08:21 -0500
+Message-ID: <1453813698.2759.41.camel@sipsolutions.net> (sfid-20160126_140842_465652_BE0B7B7C)
+Subject: Re: [PATCH 0/8] General RFKill improvements
+From: Johannes Berg <johannes@sipsolutions.net>
+To: =?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>
+Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
+	davem@davemloft.net, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, jprvita@endlessm.com,
+	linux@endlessm.com
+Date: Tue, 26 Jan 2016 14:08:18 +0100
+In-Reply-To: <1453218163-31998-1-git-send-email-jprvita@endlessm.com> (sfid-20160119_164404_701975_4C6B6276)
+References: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
+	 (sfid-20160119_164404_701975_4C6B6276)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Janusz Dziedzic <janusz.dziedzic@tieto.com> writes:
+Hi,
 
-> Request NOA update when chanctx active, also in case
-> of STA.
->
-> Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
-> ---
-> This depends on:
-> mac80211: add new IEEE80211_VIF_GET_NOA_UPDATE flag
+On Tue, 2016-01-19 at 10:42 -0500, João Paulo Rechi Vita wrote:
+> This series contains a few general improvements to the RFKill code,
+> found while
+> I was writing the rfkill-all / airplane mode LED trigger. All were
+> points where
+> I had to read twice or do some other kind of extra effort to fully
+> understand
+> it, so I think merging these changes will benefit someone trying to
+> understand
+> the RFKill subsystem in the future.
 
-The dependency is now in ath.git and I have applied this, thanks.
+I applied some of this. I think we need to keep the "state" sysfs
+interface, perhaps you want to document it more clearly. I also didn't
+apply the first patch since I'd fixed the suspend/pause issue, please
+see if any of your patches remain relevant and resend that.
 
--- 
-Kalle Valo
+Thanks,
+johannes
