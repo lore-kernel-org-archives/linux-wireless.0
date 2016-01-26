@@ -1,126 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:35520 "EHLO
-	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755866AbcAUBWB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 20:22:01 -0500
-Received: by mail-pf0-f196.google.com with SMTP id 65so1055977pff.2
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:22:01 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 27/27] staging: wilc1000: remove over-commenting
-Date: Thu, 21 Jan 2016 10:20:30 +0900
-Message-Id: <1453339230-1377-27-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_023654_854609_BAAF17E2)
-In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38515 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S964914AbcAZKe2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 05:34:28 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Dmitry Vyukov <dvyukov@google.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] rfkill: fix rfkill_fop_read wait_event usage
+Date: Tue, 26 Jan 2016 11:34:21 +0100
+Message-Id: <1453804461-7787-1-git-send-email-johannes@sipsolutions.net> (sfid-20160126_113432_912051_5D4CC7DA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are over-commenting in wilc_msgqueue.h file. This comment is not
-explain exactly what codes do and make checkpatch warning about "line
-over 80 charcters". If necessary, comment will be added later with
-preferred coding style.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+The code within wait_event_interruptible() is called with
+!TASK_RUNNING, so mustn't call any functions that can sleep,
+like mutex_lock().
+
+Since we re-check the list_empty() in a loop after the wait,
+it's safe to simply use list_empty() without locking.
+
+This bug has existed forever, but was only discovered now
+because all userspace implementations, including the default
+'rfkill' tool, use poll() or select() to get a readable fd
+before attempting to read.
+
+Cc: stable@vger.kernel.org
+Fixes: c64fb01627e24 ("rfkill: create useful userspace interface")
+Reported-by: Dmitry Vyukov <dvyukov@google.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/wilc1000/wilc_msgqueue.h | 66 --------------------------------
- 1 file changed, 66 deletions(-)
+ net/rfkill/core.c | 16 ++++------------
+ 1 file changed, 4 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index 4f79ead..ddd09843 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -1,18 +1,8 @@
- #ifndef __WILC_MSG_QUEUE_H__
- #define __WILC_MSG_QUEUE_H__
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index f53bf3b6558b..cf5b69ab1829 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -1095,17 +1095,6 @@ static unsigned int rfkill_fop_poll(struct file *file, poll_table *wait)
+ 	return res;
+ }
  
--/*!
-- *  @file	wilc_msgqueue.h
-- *  @brief	Message Queue OS wrapper functionality
-- *  @author	syounan
-- *  @sa		wilc_oswrapper.h top level OS wrapper file
-- *  @date	30 Aug 2010
-- *  @version	1.0
-- */
+-static bool rfkill_readable(struct rfkill_data *data)
+-{
+-	bool r;
 -
- #include <linux/semaphore.h>
+-	mutex_lock(&data->mtx);
+-	r = !list_empty(&data->events);
+-	mutex_unlock(&data->mtx);
+-
+-	return r;
+-}
+-
+ static ssize_t rfkill_fop_read(struct file *file, char __user *buf,
+ 			       size_t count, loff_t *pos)
+ {
+@@ -1122,8 +1111,11 @@ static ssize_t rfkill_fop_read(struct file *file, char __user *buf,
+ 			goto out;
+ 		}
+ 		mutex_unlock(&data->mtx);
++		/* since we re-check and it just compares pointers,
++		 * using !list_empty() without locking isn't a problem
++		 */
+ 		ret = wait_event_interruptible(data->read_wait,
+-					       rfkill_readable(data));
++					       !list_empty(&data->events));
+ 		mutex_lock(&data->mtx);
  
--/* Message Queue type is a structure */
- struct message {
- 	void *buf;
- 	u32 len;
-@@ -27,67 +17,11 @@ struct message_queue {
- 	struct message *msg_list;
- };
- 
--/*!
-- *  @brief		Creates a new Message queue
-- *  @details		Creates a new Message queue, if the feature
-- *                              CONFIG_WILC_MSG_QUEUE_IPC_NAME is enabled and pstrAttrs->pcName
-- *                              is not Null, then this message queue can be used for IPC with
-- *                              any other message queue having the same name in the system
-- *  @param[in,out]	pHandle handle to the message queue object
-- *  @param[in]	pstrAttrs Optional attributes, NULL for default
-- *  @return		Error code indicating success/failure
-- *  @author		syounan
-- *  @date		30 Aug 2010
-- *  @version		1.0
-- */
- int wilc_mq_create(struct message_queue *mq);
--
--/*!
-- *  @brief		Sends a message
-- *  @details		Sends a message, this API will block until the message is
-- *                              actually sent or until it is timedout (as long as the feature
-- *                              CONFIG_WILC_MSG_QUEUE_TIMEOUT is enabled and pstrAttrs->u32Timeout
-- *                              is not set to WILC_OS_INFINITY), zero timeout is a valid value
-- *  @param[in]	pHandle handle to the message queue object
-- *  @param[in]	pvSendBuffer pointer to the data to send
-- *  @param[in]	u32SendBufferSize the size of the data to send
-- *  @param[in]	pstrAttrs Optional attributes, NULL for default
-- *  @return		Error code indicating success/failure
-- *  @author		syounan
-- *  @date		30 Aug 2010
-- *  @version		1.0
-- */
- int wilc_mq_send(struct message_queue *mq,
- 		 const void *send_buf, u32 send_buf_size);
--
--/*!
-- *  @brief		Receives a message
-- *  @details		Receives a message, this API will block until a message is
-- *                              received or until it is timedout (as long as the feature
-- *                              CONFIG_WILC_MSG_QUEUE_TIMEOUT is enabled and pstrAttrs->u32Timeout
-- *                              is not set to WILC_OS_INFINITY), zero timeout is a valid value
-- *  @param[in]	pHandle handle to the message queue object
-- *  @param[out]	pvRecvBuffer pointer to a buffer to fill with the received message
-- *  @param[in]	u32RecvBufferSize the size of the receive buffer
-- *  @param[out]	pu32ReceivedLength the length of received data
-- *  @param[in]	pstrAttrs Optional attributes, NULL for default
-- *  @return		Error code indicating success/failure
-- *  @author		syounan
-- *  @date		30 Aug 2010
-- *  @version		1.0
-- */
- int wilc_mq_recv(struct message_queue *mq,
- 		 void *recv_buf, u32 recv_buf_size, u32 *recv_len);
--
--/*!
-- *  @brief		Destroys an existing  Message queue
-- *  @param[in]	pHandle handle to the message queue object
-- *  @param[in]	pstrAttrs Optional attributes, NULL for default
-- *  @return		Error code indicating success/failure
-- *  @author		syounan
-- *  @date		30 Aug 2010
-- *  @version		1.0
-- */
- int wilc_mq_destroy(struct message_queue *mq);
- 
- #endif
+ 		if (ret)
 -- 
-2.6.4
+2.6.2
 
