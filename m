@@ -1,33 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:53312 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750708AbcALTjy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 14:39:54 -0500
-Date: Tue, 12 Jan 2016 14:39:52 -0500 (EST)
-Message-Id: <20160112.143952.1560016419671758971.davem@davemloft.net> (sfid-20160112_204003_051673_728072AD)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: net-next is CLOSED
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1452592508.3473.2.camel@sipsolutions.net>
-References: <20160110.220410.1596275588914865505.davem@davemloft.net>
-	<1452592508.3473.2.camel@sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:47892 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751608AbcA0MRX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2016 07:17:23 -0500
+Message-ID: <1453897040.2351.3.camel@sipsolutions.net> (sfid-20160127_131726_366051_5927EBBD)
+Subject: Re: [PATCH] wext: fix message delay/ordering
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Beniamino Galvani <bgalvani@redhat.com>
+Date: Wed, 27 Jan 2016 13:17:20 +0100
+In-Reply-To: <1453896850-22775-1-git-send-email-johannes@sipsolutions.net> (sfid-20160127_131419_031860_43892E09)
+References: <1453896850-22775-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20160127_131419_031860_43892E09)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Tue, 12 Jan 2016 10:55:08 +0100
-
-> On Sun, 2016-01-10 at 22:04 -0500, David Miller wrote:
->> The merge window has just openned, which means that no new
->> submissions for net-next should be made at this time.
->> 
+On Wed, 2016-01-27 at 13:14 +0100, Johannes Berg wrote:
+> 
+> +static int wext_netdev_notifier_call(struct notifier_block *nb,
+> +				     unsigned long state, void *ptr)
+> +{
+> +	/*
+> +	 * When a netdev is unregistered, flush all pending messages
+> +	 * to avoid them going out after the RTM_DELLINK, which can
+> +	 * happen due to the schedule_work().
+> +	 */
+> +	if (state == NETDEV_UNREGISTER)
+> +		wireless_nlevent_flush();
 > 
-> I had a submission before, but perhaps due to my UTF-8 problem
-> patchwork didn't pick it up and you missed it. Sorry.
+It could be argued that the state check isn't really necessary and
+should be removed to avoid ordering issues with up/down vs. wext, but
+this fixes the really strange issue where you get an RTM_NEWLINK after
+RTM_DELLINK (with the same ifidx), and I don't see how any software
+would care much about the ordering otherwise.
 
-Please just resubmit, thanks.
+johannes
