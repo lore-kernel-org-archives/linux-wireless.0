@@ -1,38 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47044 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752191AbcASIYX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 03:24:23 -0500
-Date: Tue, 19 Jan 2016 09:22:59 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Eli Cooper <elicooper@gmx.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3] rt2x00: fix monitor mode regression
-Message-ID: <20160119082258.GA3340@redhat.com> (sfid-20160119_092427_047270_77EBF351)
-References: <1453116619-29933-1-git-send-email-elicooper@gmx.com>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:14250 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751765AbcA0C5Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 26 Jan 2016 21:57:16 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 02/13] staging: wilc1000: fixes no space is necessary after a cast
+Date: Wed, 27 Jan 2016 11:50:26 +0900
+Message-ID: <1453863037-31073-2-git-send-email-glen.lee@atmel.com> (sfid-20160127_035719_680070_AC7F2F7B)
+In-Reply-To: <1453863037-31073-1-git-send-email-glen.lee@atmel.com>
+References: <1453863037-31073-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1453116619-29933-1-git-send-email-elicooper@gmx.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 18, 2016 at 07:30:19PM +0800, Eli Cooper wrote:
-> Since commit df1404650ccb ("mac80211: remove support for IFF_PROMISC")
-> monitor mode for rt2x00 has been made effectively useless because the
-> hardware filter is configured to drop packets whose intended recipient is
-> not the device, regardless of the presence of monitor mode interfaces.
-> 
-> This patch fixes this regression by adding explicit monitor mode support,
-> and by configuring the hardware filter accordingly.
-> 
-> Changes in v3:
->   introduce and use CONFIG_MONITORING in rt2x00_state_flags
->   remove unnecessary debug messages
->   improve patch format
-> 
-> Changes in v2:
->   fix patch format
-> 
-> Signed-off-by: Eli Cooper <elicooper@gmx.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+This patch fixes the check reported by checkpatch.pl
+for 'no space is necessary after a cast'.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index db91a21..9552469 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1287,7 +1287,7 @@ static int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
+ 	switch (cmd) {
+ 	case SIOCSIWPRIV:
+ 	{
+-		struct iwreq *wrq = (struct iwreq *) req;
++		struct iwreq *wrq = (struct iwreq *)req;
+ 
+ 		size = wrq->u.data.length;
+ 
+-- 
+1.9.1
+
