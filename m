@@ -1,126 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:33830 "EHLO
-	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965242AbcAULdJ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33355 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754197AbcA0M1Q convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 06:33:09 -0500
-Received: by mail-pa0-f66.google.com with SMTP id yy13so1622929pab.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:33:08 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 27/27] staging: wilc1000: remove over-commenting
-Date: Thu, 21 Jan 2016 20:30:57 +0900
-Message-Id: <1453375857-20645-28-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123323_983060_BCC06A72)
-In-Reply-To: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 27 Jan 2016 07:27:16 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: kbuild test robot <lkp@intel.com>
+Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	kbuild-all@01.org, linux-wireless@vger.kernel.org,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH 4/5] brcmfmac: access PMU registers using standalone PMU core if available
+References: <201601270149.Nwdmoe5L%fengguang.wu@intel.com>
+Date: Wed, 27 Jan 2016 14:27:08 +0200
+In-Reply-To: <201601270149.Nwdmoe5L%fengguang.wu@intel.com> (kbuild test
+	robot's message of "Wed, 27 Jan 2016 01:30:32 +0800")
+Message-ID: <87k2mvnr6r.fsf@kamboji.qca.qualcomm.com> (sfid-20160127_132719_981490_29BFFD73)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are over-commenting in wilc_msgqueue.h file. This comment is not
-explain exactly what codes do and make checkpatch warning about "line
-over 80 charcters". If necessary, comment will be added later with
-preferred coding style.
+kbuild test robot <lkp@intel.com> writes:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_msgqueue.h | 66 --------------------------------
- 1 file changed, 66 deletions(-)
+> Hi Rafał,
+>
+> [auto build test ERROR on wireless-drivers/master]
+> [also build test ERROR on v4.5-rc1 next-20160125]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
+>
+> url:    https://github.com/0day-ci/linux/commits/Rafa-Mi-ecki/brcmfmac-support-for-new-14e43-4365-card-with-BCM4366/20160127-010149
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git master
+> config: x86_64-allmodconfig (attached as .config)
+> reproduce:
+>         # save the attached .config to linux build tree
+>         make ARCH=x86_64 
+>
+> All errors (new ones prefixed by >>):
+>
+>    drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c: In function 'brcmf_chip_get_pmu':
+>>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:1143:25: error: 'BCMA_CC_CAP_EXT_AOB_PRESENT' undeclared (first use in this function)
+>          pub->cc_caps_ext & BCMA_CC_CAP_EXT_AOB_PRESENT) {
+>                             ^
+>    drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:1143:25: note: each undeclared identifier is reported only once for each function it appears in
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index 4f79ead..ddd09843 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -1,18 +1,8 @@
- #ifndef __WILC_MSG_QUEUE_H__
- #define __WILC_MSG_QUEUE_H__
- 
--/*!
-- *  @file	wilc_msgqueue.h
-- *  @brief	Message Queue OS wrapper functionality
-- *  @author	syounan
-- *  @sa		wilc_oswrapper.h top level OS wrapper file
-- *  @date	30 Aug 2010
-- *  @version	1.0
-- */
--
- #include <linux/semaphore.h>
- 
--/* Message Queue type is a structure */
- struct message {
- 	void *buf;
- 	u32 len;
-@@ -27,67 +17,11 @@ struct message_queue {
- 	struct message *msg_list;
- };
- 
--/*!
-- *  @brief		Creates a new Message queue
-- *  @details		Creates a new Message queue, if the feature
-- *                              CONFIG_WILC_MSG_QUEUE_IPC_NAME is enabled and pstrAttrs->pcName
-- *                              is not Null, then this message queue can be used for IPC with
-- *                              any other message queue having the same name in the system
-- *  @param[in,out]	pHandle handle to the message queue object
-- *  @param[in]	pstrAttrs Optional attributes, NULL for default
-- *  @return		Error code indicating success/failure
-- *  @author		syounan
-- *  @date		30 Aug 2010
-- *  @version		1.0
-- */
- int wilc_mq_create(struct message_queue *mq);
--
--/*!
-- *  @brief		Sends a message
-- *  @details		Sends a message, this API will block until the message is
-- *                              actually sent or until it is timedout (as long as the feature
-- *                              CONFIG_WILC_MSG_QUEUE_TIMEOUT is enabled and pstrAttrs->u32Timeout
-- *                              is not set to WILC_OS_INFINITY), zero timeout is a valid value
-- *  @param[in]	pHandle handle to the message queue object
-- *  @param[in]	pvSendBuffer pointer to the data to send
-- *  @param[in]	u32SendBufferSize the size of the data to send
-- *  @param[in]	pstrAttrs Optional attributes, NULL for default
-- *  @return		Error code indicating success/failure
-- *  @author		syounan
-- *  @date		30 Aug 2010
-- *  @version		1.0
-- */
- int wilc_mq_send(struct message_queue *mq,
- 		 const void *send_buf, u32 send_buf_size);
--
--/*!
-- *  @brief		Receives a message
-- *  @details		Receives a message, this API will block until a message is
-- *                              received or until it is timedout (as long as the feature
-- *                              CONFIG_WILC_MSG_QUEUE_TIMEOUT is enabled and pstrAttrs->u32Timeout
-- *                              is not set to WILC_OS_INFINITY), zero timeout is a valid value
-- *  @param[in]	pHandle handle to the message queue object
-- *  @param[out]	pvRecvBuffer pointer to a buffer to fill with the received message
-- *  @param[in]	u32RecvBufferSize the size of the receive buffer
-- *  @param[out]	pu32ReceivedLength the length of received data
-- *  @param[in]	pstrAttrs Optional attributes, NULL for default
-- *  @return		Error code indicating success/failure
-- *  @author		syounan
-- *  @date		30 Aug 2010
-- *  @version		1.0
-- */
- int wilc_mq_recv(struct message_queue *mq,
- 		 void *recv_buf, u32 recv_buf_size, u32 *recv_len);
--
--/*!
-- *  @brief		Destroys an existing  Message queue
-- *  @param[in]	pHandle handle to the message queue object
-- *  @param[in]	pstrAttrs Optional attributes, NULL for default
-- *  @return		Error code indicating success/failure
-- *  @author		syounan
-- *  @date		30 Aug 2010
-- *  @version		1.0
-- */
- int wilc_mq_destroy(struct message_queue *mq);
- 
- #endif
+I think this error was as expected because this set depends on "bcma:
+support PMU present as separated bus core" which is not yet applied.
+
 -- 
-2.7.0
-
+Kalle Valo
