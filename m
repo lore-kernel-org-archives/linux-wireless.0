@@ -1,64 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:36339 "EHLO
-	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932523AbcALAdP (ORCPT
+Received: from pandora.arm.linux.org.uk ([78.32.30.218]:40229 "EHLO
+	pandora.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965698AbcA0T0Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jan 2016 19:33:15 -0500
-Received: by mail-pf0-f194.google.com with SMTP id n128so4171444pfn.3
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2016 16:33:15 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 4/5] staging: wilc1000: remove typedef from struct wilc_cfg_word_t
-Date: Tue, 12 Jan 2016 09:32:54 +0900
-Message-Id: <1452558775-21532-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20160112_013319_015497_3E731E44)
-In-Reply-To: <1452558775-21532-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1452558775-21532-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 27 Jan 2016 14:26:25 -0500
+Date: Wed, 27 Jan 2016 19:26:13 +0000
+From: Russell King - ARM Linux <linux@arm.linux.org.uk>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Jouni Malinen <j@w1.fi>, Kalle Valo <kvalo@codeaurora.org>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] hostap: avoid uninitialized variable use in
+ hfa384x_get_rid
+Message-ID: <20160127192612.GD10826@n2100.arm.linux.org.uk> (sfid-20160127_202649_869573_CF815117)
+References: <1453902342-3420391-1-git-send-email-arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1453902342-3420391-1-git-send-email-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from struct wilc_cfg_word_t and renames it to
-wilc_cfg_word.
+On Wed, Jan 27, 2016 at 02:45:26PM +0100, Arnd Bergmann wrote:
+> To ensure we get consistent error handling here, this changes the code
+> to only set rlen if we actually read data correctly, which also takes
+> care of the warning.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_wlan_cfg.c | 2 +-
- drivers/staging/wilc1000/wilc_wlan_cfg.h | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+It may be a good idea to do the job better.  Looking at the code:
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index 003f2af..94193b3 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -108,7 +108,7 @@ static struct wilc_cfg_hword g_cfg_hword[] = {
- 	{WID_NIL, 0}
- };
- 
--static wilc_cfg_word_t g_cfg_word[] = {
-+static struct wilc_cfg_word g_cfg_word[] = {
- 	{WID_FAILED_COUNT, 0},
- 	{WID_RETRY_COUNT, 0},
- 	{WID_MULTIPLE_RETRY_COUNT, 0},
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-index aed7b80..f51091e 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-@@ -20,10 +20,10 @@ struct wilc_cfg_hword {
- 	u16 val;
- };
- 
--typedef struct {
-+struct wilc_cfg_word {
- 	u32 id;
- 	u32 val;
--} wilc_cfg_word_t;
-+};
- 
- typedef struct {
- 	u32 id;
+        struct hfa384x_rid_hdr rec;
+
+        spin_lock_bh(&local->baplock);
+
+        res = hfa384x_setup_bap(dev, BAP0, rid, 0);
+        if (!res)
+                res = hfa384x_from_bap(dev, BAP0, &rec, sizeof(rec));
+
+The only thing which initialises any of "rec" is that function call.
+The following lines are:
+
+        if (le16_to_cpu(rec.len) == 0) {
+                /* RID not available */
+                res = -ENODATA;
+        }
+
+        rlen = (le16_to_cpu(rec.len) - 1) * 2;
+
+So, why give the compiler a hard time as you're doing, why make the code
+harder to read.  What's wrong with:
+
+	spin_lock_bh(&local->baplock);
+
+	res = hfa384x_setup_bap(dev, BAP0, rid, 0);
+	if (res)
+		goto unlock;
+
+	res = hfa384x_from_bap(dev, BAP0, &rec, sizeof(rec));
+	if (res)
+		goto unlock;
+
+	if (le16_to_cpu(rec.len) == 0) {
+		/* RID not available */
+		res = -ENODATA;
+		goto unlock;
+	}
+
+	rlen = (le16_to_cpu(rec.len) - 1) * 2;
+	if (exact_len && rlen != len) {
+		printk(KERN_DEBUG "%s: hfa384x_get_rid - RID len mismatch: rid=0x%04x, len=%d (expected %d)\n",
+		       dev->name, rid, rlen, len);
+		res = -ENODATA;
+		goto unlock;
+	}
+
+	res = hfa384x_from_bap(dev, BAP0, buf, len);
+unlock:
+	spin_unlock_bh(&local->baplock);
+
+?
+
 -- 
-2.6.4
-
+RMK's Patch system: http://www.arm.linux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
