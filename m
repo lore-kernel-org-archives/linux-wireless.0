@@ -1,52 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.11]:55423 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751824AbcABU4g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jan 2016 15:56:36 -0500
-Subject: [PATCH 3/3] NFC-mei_phy: Delete an unnecessary variable
- initialisation in mei_nfc_if_version()
-To: linux-wireless@vger.kernel.org,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <56883849.2080304@users.sourceforge.net>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Message-ID: <5688397F.50701@users.sourceforge.net> (sfid-20160102_215640_133304_1B099A6A)
-Date: Sat, 2 Jan 2016 21:56:31 +0100
+Received: from smtp.codeaurora.org ([198.145.29.96]:47844 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161941AbcA0V4K (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2016 16:56:10 -0500
+Message-ID: <56A93C56.5070205@codeaurora.org> (sfid-20160127_225656_338377_D5A24330)
+Date: Wed, 27 Jan 2016 13:53:26 -0800
+From: Peter Oh <poh@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <56883849.2080304@users.sourceforge.net>
-Content-Type: text/plain; charset=windows-1252
+To: Bob Copeland <me@bobcopeland.com>, Peter Oh <poh@qca.qualcomm.com>
+CC: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 0/4] ath10k: rename mesh and add abstraction layer
+References: <1453920957-9908-1-git-send-email-poh@qca.qualcomm.com> <20160127193955.GC12639@localhost>
+In-Reply-To: <20160127193955.GC12639@localhost>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sat, 2 Jan 2016 21:40:10 +0100
 
-Omit explicit initialisation at the beginning for one local variable
-that is redefined before its first use.
-
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
----
- drivers/nfc/mei_phy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/nfc/mei_phy.c b/drivers/nfc/mei_phy.c
-index 3c74028..99fd87d 100644
---- a/drivers/nfc/mei_phy.c
-+++ b/drivers/nfc/mei_phy.c
-@@ -105,7 +105,7 @@ static int mei_nfc_if_version(struct nfc_mei_phy *phy)
- {
- 
- 	struct mei_nfc_cmd cmd;
--	struct mei_nfc_reply *reply = NULL;
-+	struct mei_nfc_reply *reply;
- 	struct mei_nfc_if_version *version;
- 	size_t if_version_length;
- 	int bytes_recv, r;
--- 
-2.6.3
+On 01/27/2016 11:39 AM, Bob Copeland wrote:
+> On Wed, Jan 27, 2016 at 10:55:53AM -0800, Peter Oh wrote:
+>> Split Mesh service to 11s Mesh and non-11s Mesh according to
+>> firmware service bit to help users distinguish 11s Mesh from
+>> non 11s Mesh.
+>> And add abstraction layer for vdev subtype to solve subtype mismatch
+>> and to give flexible compatibility among different firmware revisions.
+> Out of curiosity, which non-11s mesh, if you can share?
+non-11s Mesh can be anything, but 11s Mesh such as meraki mesh.
+>
 
