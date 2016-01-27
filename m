@@ -1,114 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:34397 "EHLO
-	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752527AbcAUBVB (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:40801 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965794AbcA0TLC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 20:21:01 -0500
-Received: by mail-pa0-f66.google.com with SMTP id yy13so1007366pab.1
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:21:01 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 07/27] staging: wilc1000: rename strCriticalSection in struct message_queue
-Date: Thu, 21 Jan 2016 10:20:10 +0900
-Message-Id: <1453339230-1377-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_022105_548394_3A764C27)
-In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 27 Jan 2016 14:11:02 -0500
+Subject: Re: [PATCH 4/4] ath10k: add abstraction layer for vdev subtype
+To: Peter Oh <poh@qca.qualcomm.com>, ath10k@lists.infradead.org
+References: <1453920957-9908-1-git-send-email-poh@qca.qualcomm.com>
+ <1453920957-9908-5-git-send-email-poh@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <56A91645.9040602@candelatech.com> (sfid-20160127_201110_716919_104B2895)
+Date: Wed, 27 Jan 2016 11:11:01 -0800
+MIME-Version: 1.0
+In-Reply-To: <1453920957-9908-5-git-send-email-poh@qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames strCriticalSection to lock to avoid camelcase.
+On 01/27/2016 10:55 AM, Peter Oh wrote:
+> Abstraction layer for vdev subtype is added to solve
+> subtype mismatch and to give flexible compatibility
+> among different firmware revisions.
+>
+> For instance, 10.2 and 10.4 firmware has different
+> definition of their vdev subtypes for Mesh.
+> 10.4 defined subtype 6 for 802.11s Mesh while 10.2 uses 5.
+> Hence use the abstraction API to get right subtype to use.
+>
+> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+> ---
+>   drivers/net/wireless/ath/ath10k/mac.c     | 15 ++++---
+>   drivers/net/wireless/ath/ath10k/wmi-ops.h | 11 +++++
+>   drivers/net/wireless/ath/ath10k/wmi-tlv.c |  1 +
+>   drivers/net/wireless/ath/ath10k/wmi.c     | 70 +++++++++++++++++++++++++++++++
+>   drivers/net/wireless/ath/ath10k/wmi.h     | 42 ++++++++++++++++---
+>   5 files changed, 128 insertions(+), 11 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index 2940b00..c9a39ab 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -4345,25 +4345,29 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+>   		   bit, ar->free_vdev_map);
+>
+>   	arvif->vdev_id = bit;
+> -	arvif->vdev_subtype = WMI_VDEV_SUBTYPE_NONE;
+> +	arvif->vdev_subtype =
+> +		ath10k_wmi_get_vdev_subtype(ar, WMI_VDEV_SUBTYPE_NONE);
+>
+>   	switch (vif->type) {
+>   	case NL80211_IFTYPE_P2P_DEVICE:
+>   		arvif->vdev_type = WMI_VDEV_TYPE_STA;
+> -		arvif->vdev_subtype = WMI_VDEV_SUBTYPE_P2P_DEVICE;
+> +		arvif->vdev_subtype = ath10k_wmi_get_vdev_subtype
+> +					(ar, WMI_VDEV_SUBTYPE_P2P_DEVICE);
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_msgqueue.c | 18 +++++++++---------
- drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
- 2 files changed, 10 insertions(+), 10 deletions(-)
+Would it maybe be simpler code to just assign these types to the ar struct at
+firmware init time.  And then do something like:
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index b996c47..67bf147 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -13,7 +13,7 @@
-  */
- int wilc_mq_create(struct message_queue *pHandle)
- {
--	spin_lock_init(&pHandle->strCriticalSection);
-+	spin_lock_init(&pHandle->lock);
- 	sema_init(&pHandle->sem, 0);
- 	pHandle->pstrMessageList = NULL;
- 	pHandle->u32ReceiversCount = 0;
-@@ -83,7 +83,7 @@ int wilc_mq_send(struct message_queue *pHandle,
- 		return -ENOMEM;
- 	}
- 
--	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
-+	spin_lock_irqsave(&pHandle->lock, flags);
- 
- 	/* add it to the message queue */
- 	if (!pHandle->pstrMessageList) {
-@@ -97,7 +97,7 @@ int wilc_mq_send(struct message_queue *pHandle,
- 		pstrTailMsg->next = pstrMessage;
- 	}
- 
--	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
-+	spin_unlock_irqrestore(&pHandle->lock, flags);
- 
- 	up(&pHandle->sem);
- 
-@@ -128,22 +128,22 @@ int wilc_mq_recv(struct message_queue *pHandle,
- 		return -EFAULT;
- 	}
- 
--	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
-+	spin_lock_irqsave(&pHandle->lock, flags);
- 	pHandle->u32ReceiversCount++;
--	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
-+	spin_unlock_irqrestore(&pHandle->lock, flags);
- 
- 	down(&pHandle->sem);
--	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
-+	spin_lock_irqsave(&pHandle->lock, flags);
- 
- 	pstrMessage = pHandle->pstrMessageList;
- 	if (!pstrMessage) {
--		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
-+		spin_unlock_irqrestore(&pHandle->lock, flags);
- 		PRINT_ER("pstrMessage is null\n");
- 		return -EFAULT;
- 	}
- 	/* check buffer size */
- 	if (u32RecvBufferSize < pstrMessage->len) {
--		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
-+		spin_unlock_irqrestore(&pHandle->lock, flags);
- 		up(&pHandle->sem);
- 		PRINT_ER("u32RecvBufferSize overflow\n");
- 		return -EOVERFLOW;
-@@ -159,7 +159,7 @@ int wilc_mq_recv(struct message_queue *pHandle,
- 	kfree(pstrMessage->buf);
- 	kfree(pstrMessage);
- 
--	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
-+	spin_unlock_irqrestore(&pHandle->lock, flags);
- 
- 	return 0;
- }
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index 3ea4068..6cdebbf 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -21,7 +21,7 @@ struct message {
- 
- struct message_queue {
- 	struct semaphore sem;
--	spinlock_t strCriticalSection;
-+	spinlock_t lock;
- 	bool bExiting;
- 	u32 u32ReceiversCount;
- 	struct message *pstrMessageList;
+arvif->vdev_subtype = ar->p2p_subtype;
+
+Or even maybe:
+
+arvif->vdev_subtype = ar->subtype_for_viftype[vif->type];
+
+I'm not sure how much it matters, but in general I find the abstraction in
+ath10k makes it hard to read through the code.
+
+Thanks,
+Ben
+
 -- 
-2.6.4
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
