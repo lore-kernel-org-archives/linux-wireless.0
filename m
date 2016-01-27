@@ -1,106 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f46.google.com ([209.85.192.46]:33548 "EHLO
-	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752523AbcA1OY3 (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:36202 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754423AbcA0J5O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 09:24:29 -0500
-Received: by mail-qg0-f46.google.com with SMTP id b35so39292565qge.0
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jan 2016 06:24:29 -0800 (PST)
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH] mac80211: mesh: drop write-only var mean_chain_len
-Date: Thu, 28 Jan 2016 09:24:12 -0500
-Message-Id: <1453991052-11899-1-git-send-email-me@bobcopeland.com> (sfid-20160128_152436_639416_C61E279B)
+	Wed, 27 Jan 2016 04:57:14 -0500
+Received: by mail-wm0-f66.google.com with SMTP id l65so2292079wmf.3
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2016 01:57:14 -0800 (PST)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Seth Forshee <seth.forshee@canonical.com>,
+	linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: [PATCH v2] wireless-regdb: add 2.4GHz regulatory rules for Cuba (CU)
+Date: Wed, 27 Jan 2016 10:56:33 +0100
+Message-Id: <1453888593-7705-1-git-send-email-xose.vazquez@gmail.com> (sfid-20160127_105723_995323_E9A61A53)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf8
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mean_chain_len is copied into mesh path table
-structures, but only ever has the value 2 and
-is never read, so just remove it.
+Resolución 127, 2011 - Reglamento Banda 2,4 GHz.:
+http://www.mincom.gob.cu/sites/default/files/marcoregulatorio/R%20127-11%20Reglamento%20banda%202,4%20GHz.pdf
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Cc: Seth Forshee <seth.forshee@canonical.com>
+Cc: linux-wireless@vger.kernel.org
+Cc: wireless-regdb@lists.infradead.org
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 ---
+ db.txt | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Sending this by itself as it's pretty trivial and doesn't conflict with
-other outstanding patches.
-
- net/mac80211/mesh.h         | 3 ---
- net/mac80211/mesh_pathtbl.c | 9 +++------
- 2 files changed, 3 insertions(+), 9 deletions(-)
-
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 4a8019f..87c017a 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -137,8 +137,6 @@ struct mesh_path {
-  * @copy_node: function to copy nodes of the table
-  * @size_order: determines size of the table, there will be 2^size_order hash
-  *	buckets
-- * @mean_chain_len: maximum average length for the hash buckets' list, if it is
-- *	reached, the table will grow
-  * @known_gates: list of known mesh gates and their mpaths by the station. The
-  * gate's mpath may or may not be resolved and active.
-  *
-@@ -154,7 +152,6 @@ struct mesh_table {
- 	void (*free_node) (struct hlist_node *p, bool free_leafs);
- 	int (*copy_node) (struct hlist_node *p, struct mesh_table *newtbl);
- 	int size_order;
--	int mean_chain_len;
- 	struct hlist_head *known_gates;
- 	spinlock_t gates_lock;
+diff --git a/db.txt b/db.txt
+index 13cc7ad..e9ba21a 100644
+--- a/db.txt
++++ b/db.txt
+@@ -275,6 +275,12 @@ country CR: DFS-FCC
+ 	(5490 - 5730 @ 20), (24), DFS
+ 	(5735 - 5835 @ 20), (30)
  
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index dadf8dc..c95bdb8 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -160,11 +160,10 @@ static int mesh_table_grow(struct mesh_table *oldtbl,
- 	int i;
- 
- 	if (atomic_read(&oldtbl->entries)
--			< oldtbl->mean_chain_len * (oldtbl->hash_mask + 1))
-+			< MEAN_CHAIN_LEN * (oldtbl->hash_mask + 1))
- 		return -EAGAIN;
- 
- 	newtbl->free_node = oldtbl->free_node;
--	newtbl->mean_chain_len = oldtbl->mean_chain_len;
- 	newtbl->copy_node = oldtbl->copy_node;
- 	newtbl->known_gates = oldtbl->known_gates;
- 	atomic_set(&newtbl->entries, atomic_read(&oldtbl->entries));
-@@ -585,7 +584,7 @@ struct mesh_path *mesh_path_add(struct ieee80211_sub_if_data *sdata,
- 
- 	hlist_add_head_rcu(&new_node->list, bucket);
- 	if (atomic_inc_return(&tbl->entries) >=
--	    tbl->mean_chain_len * (tbl->hash_mask + 1))
-+	    MEAN_CHAIN_LEN * (tbl->hash_mask + 1))
- 		grow = 1;
- 
- 	mesh_paths_generation++;
-@@ -714,7 +713,7 @@ int mpp_path_add(struct ieee80211_sub_if_data *sdata,
- 
- 	hlist_add_head_rcu(&new_node->list, bucket);
- 	if (atomic_inc_return(&tbl->entries) >=
--	    tbl->mean_chain_len * (tbl->hash_mask + 1))
-+	    MEAN_CHAIN_LEN * (tbl->hash_mask + 1))
- 		grow = 1;
- 
- 	spin_unlock(&tbl->hashwlock[hash_idx]);
-@@ -1076,7 +1075,6 @@ int mesh_pathtbl_init(void)
- 		return -ENOMEM;
- 	tbl_path->free_node = &mesh_path_node_free;
- 	tbl_path->copy_node = &mesh_path_node_copy;
--	tbl_path->mean_chain_len = MEAN_CHAIN_LEN;
- 	tbl_path->known_gates = kzalloc(sizeof(struct hlist_head), GFP_ATOMIC);
- 	if (!tbl_path->known_gates) {
- 		ret = -ENOMEM;
-@@ -1092,7 +1090,6 @@ int mesh_pathtbl_init(void)
- 	}
- 	tbl_mpp->free_node = &mesh_path_node_free;
- 	tbl_mpp->copy_node = &mesh_path_node_copy;
--	tbl_mpp->mean_chain_len = MEAN_CHAIN_LEN;
- 	tbl_mpp->known_gates = kzalloc(sizeof(struct hlist_head), GFP_ATOMIC);
- 	if (!tbl_mpp->known_gates) {
- 		ret = -ENOMEM;
++# http://www.mincom.gob.cu/?q=marcoregulatorio
++# - Redes Informáticas
++# Resolución 127, 2011 - Reglamento Banda 2,4 GHz.
++country CU: DFS-FCC
++	(2400 - 2483.5 @ 40), (200 mW)
++
+ country CX: DFS-FCC
+ 	(2402 - 2482 @ 40), (20)
+ 	(5170 - 5250 @ 80), (24), AUTO-BW
 -- 
-2.1.4
+2.5.0
 
