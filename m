@@ -1,52 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from fbr02-uk.csee.siteprotect.eu ([81.3.27.132]:55569 "EHLO
-	fbr02-uk.csee.siteprotect.eu" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751503AbcABQhE (ORCPT
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:36543 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753539AbcA0NIV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jan 2016 11:37:04 -0500
-Received: from smtpauth02-uk.csee.siteprotect.eu (unknown [192.168.22.214])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(Client CN "smtp.securepod.com", Issuer "RapidSSL SHA256 CA - G3" (not verified))
-	by fbr02-uk.csee.siteprotect.eu (Postfix) with ESMTPS id 112E741639
-	for <linux-wireless@vger.kernel.org>; Sat,  2 Jan 2016 17:27:31 +0100 (CET)
-Received: from Authenticated sender: roger@beardandsandals.co.uk
-	by smtpauth02-uk.csee.siteprotect.eu (Postfix) with ESMTPSA id E73BB40020
-	for <linux-wireless@vger.kernel.org>; Sat,  2 Jan 2016 17:27:30 +0100 (CET)
-To: linux-wireless@vger.kernel.org
-From: Roger James <roger@beardandsandals.co.uk>
-Subject: Reading the current monitor flags of an interface
-Message-ID: <5687FA72.9000301@beardandsandals.co.uk> (sfid-20160102_173707_470075_5C473AA9)
-Date: Sat, 2 Jan 2016 16:27:30 +0000
+	Wed, 27 Jan 2016 08:08:21 -0500
+Received: by mail-ig0-f179.google.com with SMTP id z14so82808333igp.1
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2016 05:08:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <87k2mvnr6r.fsf@kamboji.qca.qualcomm.com>
+References: <201601270149.Nwdmoe5L%fengguang.wu@intel.com>
+	<87k2mvnr6r.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 27 Jan 2016 14:08:20 +0100
+Message-ID: <CACna6rzxNOq1JWFc=5EvE+UmtfUMZq4QYjAdGn1UE7zE-VRu8Q@mail.gmail.com> (sfid-20160127_140824_684531_7FF9517F)
+Subject: Re: [PATCH 4/5] brcmfmac: access PMU registers using standalone PMU
+ core if available
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+On 27 January 2016 at 13:27, Kalle Valo <kvalo@codeaurora.org> wrote:
+> kbuild test robot <lkp@intel.com> writes:
+>
+>> Hi Rafał,
+>>
+>> [auto build test ERROR on wireless-drivers/master]
+>> [also build test ERROR on v4.5-rc1 next-20160125]
+>> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
+>>
+>> url:    https://github.com/0day-ci/linux/commits/Rafa-Mi-ecki/brcmfmac-support-for-new-14e43-4365-card-with-BCM4366/20160127-010149
+>> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git master
+>> config: x86_64-allmodconfig (attached as .config)
+>> reproduce:
+>>         # save the attached .config to linux build tree
+>>         make ARCH=x86_64
+>>
+>> All errors (new ones prefixed by >>):
+>>
+>>    drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c: In function 'brcmf_chip_get_pmu':
+>>>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:1143:25: error: 'BCMA_CC_CAP_EXT_AOB_PRESENT' undeclared (first use in this function)
+>>          pub->cc_caps_ext & BCMA_CC_CAP_EXT_AOB_PRESENT) {
+>>                             ^
+>>    drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:1143:25: note: each undeclared identifier is reported only once for each function it appears in
+>
+> I think this error was as expected because this set depends on "bcma:
+> support PMU present as separated bus core" which is not yet applied.
 
-I am trying to get at the current monitor flags setting of a wireless 
-monitor mode virtual interface. I have tried to do this by hacking the 
-iw source. However I never see a NL80211_ATTR_MNTR_FLAGS attribute 
-returned in response to the
+Yes, builbot simply couldn't know about this, but I should have reply
+to make it clear I guess.
 
-TOPLEVEL(info, NULL, NL80211_CMD_GET_INTERFACE, 0, CIB_NETDEV, 
-handle_interface_info,
-      "Show information for this interface.");
-
-command in iw's interface.c code.
-
-Questions.
-
-1. Am I wasting my time? (e.g. the rt2800usb driver never returns this 
-info, or there is another easy way of viewing this info, etc)
-
-2. Am I doing something stupid? (e.g. I need to specify some additional 
-flags to the get command.)
-
-3. Has anybody else tried this before?
-
-All help will be gratefully received.
-
-Roger
-
-
+-- 
+Rafał
