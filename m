@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35679 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932272AbcA2Qyn (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:14399 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752153AbcA0C6L (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2016 11:54:43 -0500
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: Re: WARNING at net/mac80211/rate.c:513 ieee80211_get_tx_rates
- [mac80211]
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <CA+55aFxe22iWok6UojY=hCoG2k1wNpJ9CfQ0b+STSxq67tb86Q@mail.gmail.com>
- <1453983185.2217.12.camel@sipsolutions.net>
- <CA+55aFya9K4JboNY8kB9cg6zt9otguhdzfHm3jvLmWedxQTSWg@mail.gmail.com>
- <1454013625.2332.9.camel@sipsolutions.net>
- <CA+55aFx73nv9ny-fu5BR6v8wL=f2oFomwrZoLRw=x2kNP76cYA@mail.gmail.com>
- <CA+55aFzF0gWfvmE+6ZcHmjnO4xp-oVAQ5SWxYJhOzns2ocgCsw@mail.gmail.com>
- <1454019155.2332.15.camel@sipsolutions.net>
- <CA+55aFxjpdepHYD_6uU48kW38Z9bmf2wwA8yPZt4ibhkofmfQA@mail.gmail.com>
- <56AAC66C.1080800@lwfinger.net> <1454056380.3369.2.camel@sipsolutions.net>
- <CAP71bdVZzUUNwP3py_m1pwU21qMKth=0BmMfLuUb7=B-1840zg@mail.gmail.com>
- <1454084146.2800.0.camel@sipsolutions.net>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	David Miller <davem@davemloft.net>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Message-ID: <56AB9950.5080800@lwfinger.net> (sfid-20160129_175451_623460_D56E0608)
-Date: Fri, 29 Jan 2016 10:54:40 -0600
+	Tue, 26 Jan 2016 21:58:11 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 11/13] staging: wilc1000: removes void function return
+Date: Wed, 27 Jan 2016 11:50:35 +0900
+Message-ID: <1453863037-31073-11-git-send-email-glen.lee@atmel.com> (sfid-20160127_035814_565211_E3186279)
+In-Reply-To: <1453863037-31073-1-git-send-email-glen.lee@atmel.com>
+References: <1453863037-31073-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1454084146.2800.0.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/29/2016 10:15 AM, Johannes Berg wrote:
-> On Fri, 2016-01-29 at 10:12 -0600, Larry Finger wrote:
->>
->> Upon further inspection, my log has the line "rtl8821ae 0000:02:00.0
->> wlp2s0: disabling HT/VHT due to WEP/TKIP use". I need to fix that
->> first.
->>
-> Likely TKIP; enable only WPA2 (CCMP) on the AP.
+From: Leo Kim <leo.kim@atmel.com>
 
-I found and fixed it. The AP was using only 20 MHz channels, but now is 
-configured for 20/40/80. That duplicates the warning for me and the lack of 
-throughput even though it associates and authenticates.
+This patch removes the warning reported by checkpatch.pl
+for void function return statements are not generally useful.
 
-Larry
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 2 --
+ 1 file changed, 2 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index c16cc40..5c87105 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1047,8 +1047,6 @@ static void wilc_set_multicast_list(struct net_device *dev)
+ 	}
+ 
+ 	wilc_setup_multicast_filter(vif, true, (dev->mc.count));
+-
+-	return;
+ }
+ 
+ static void linux_wlan_tx_complete(void *priv, int status)
+-- 
+1.9.1
 
