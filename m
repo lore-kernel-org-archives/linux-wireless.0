@@ -1,46 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f68.google.com ([209.85.192.68]:34162 "EHLO
-	mail-qg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754881AbcASPoF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 10:44:05 -0500
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
-To: johannes@sipsolutions.net
-Cc: marcel@holtmann.org, linux-wireless@vger.kernel.org,
-	davem@davemloft.net, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, jprvita@endlessm.com,
-	linux@endlessm.com
-Subject: [PATCH 2/8] rfkill: Improve code readability
-Date: Tue, 19 Jan 2016 10:42:37 -0500
-Message-Id: <1453218163-31998-3-git-send-email-jprvita@endlessm.com> (sfid-20160119_164508_528396_A5E8C21A)
-In-Reply-To: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
-References: <1453218163-31998-1-git-send-email-jprvita@endlessm.com>
+Received: from mga04.intel.com ([192.55.52.120]:48558 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753710AbcA0HrC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2016 02:47:02 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Nikolay Martynov <mar.kolya@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"julian.calaby@gmail.com" <julian.calaby@gmail.com>,
+	"ilw@linux.intel.com" <ilw@linux.intel.com>
+Subject: RE: [PATCH v2] iwldvm: fix chain gain calibration when firmware
+ return zero values
+Date: Wed, 27 Jan 2016 07:46:57 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E9E3F16@hasmsx107.ger.corp.intel.com> (sfid-20160127_084706_858459_59F9D226)
+References: <1453527309-23881-1-git-send-email-mar.kolya@gmail.com>
+	<1453760341-30008-1-git-send-email-mar.kolya@gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB32E9D2EC6@hasmsx109.ger.corp.intel.com>
+ <CALGY4fv5t7k9Xcw1iysL3gyLih7S4z2Y7ShXTJiXWc5aDVVM_A@mail.gmail.com>
+In-Reply-To: <CALGY4fv5t7k9Xcw1iysL3gyLih7S4z2Y7ShXTJiXWc5aDVVM_A@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RFKILL_BLOCK_SW value have just been saved to prev, no need to check it
-again in the if expression. This makes code a little bit easier to read.
-
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
----
- net/rfkill/core.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index 4d6d726..838e869 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -285,7 +285,7 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
- 	spin_lock_irqsave(&rfkill->lock, flags);
- 	prev = rfkill->state & RFKILL_BLOCK_SW;
- 
--	if (rfkill->state & RFKILL_BLOCK_SW)
-+	if (prev)
- 		rfkill->state |= RFKILL_BLOCK_SW_PREV;
- 	else
- 		rfkill->state &= ~RFKILL_BLOCK_SW_PREV;
--- 
-2.5.0
-
+PiBIaQ0KPiANCj4gMjAxNi0wMS0yNiAzOjI4IEdNVC0wNTowMCBHcnVtYmFjaCwgRW1tYW51ZWwN
+Cj4gPGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT46DQo+ID4NCj4gPg0KPiA+IE9uIDAxLzI2
+LzIwMTYgMTI6MjAgQU0sIE5pa29sYXkgTWFydHlub3Ygd3JvdGU6DQo+ID4+IEl0IGxvb2tzIGxp
+a2Ugc29tZXRpbWVzIGZpcm13YXJlIHJldHVybnMgemVybyBmb3IgY2hhaW4gbm9pc2UgYW5kDQo+
+ID4+IHNpZ25hbCBkdXJpbmcgY2FsaWJyYXRpb24gcGVyaW9kLiBUaGlzIHNlZW1zIHRvIGJlIGEg
+a25vd24gcHJvYmxlbQ0KPiA+PiBhbmQgY3VycmVudCBpbXBsZW1lbnRhdGlvbiBhY2NvdW50cyBm
+b3IgdGhpcyBieSBpZ25vcmluZyBpbnZhbGlkIGRhdGENCj4gPj4gd2hlbiBhbGwgY2hhaW5zIHJl
+dHVybiB6ZXJvIHNpZ25hbCBhbmQgbm9pc2UuDQo+ID4+DQo+ID4+IFRoZSBwcm9ibGVtIGlzIHRo
+YXQgc29tZXRpbWVzIGZpcm13YXJlIHJldHVybnMgemVybyBmb3Igb25seSBvbmUNCj4gPj4gY2hh
+aW4gZm9yIHNvbWUgKG5vdCBhbGwpIGJlYWNvbnMgdXNlZCBmb3IgY2FsaWJyYXRpb24uIFRoaXMg
+bGVhZHMgdG8NCj4gPj4gcGVyZmVjdGx5IHZhbGlkIGNoYWlucyBiZSBkaXNhYmxlZCBhbmQgbWF5
+IGNhdXNlIGludmFsaWQgZ2FpbiBzZXR0aW5ncy4NCj4gPj4gRm9yIGV4YW1wbGUgdGhpcyBpcyBj
+YWxpYnJhdGlvbiBkYXRhIHRha2VuIG9uIGxhcHRvcCB3aXRoIEludGVsIDYzMDANCj4gPj4gY2Fy
+ZCB3aXRoIGFsbCB0aHJlZSBhbnRlbm5hcyBhdHRhY2hlZDoNCj4gPj4NCj4gPj4gYWN0aXZlX2No
+YWluczogICAgICAgICAgICAgICAgICAgICAgICAgMw0KPiA+PiBjaGFpbl9ub2lzZV9hOiAgICAg
+ICAgICAgICAgICAgICAgICAgICAzMTINCj4gPj4gY2hhaW5fbm9pc2VfYjogICAgICAgICAgICAg
+ICAgICAgICAgICAgMjk3DQo+ID4+IGNoYWluX25vaXNlX2M6ICAgICAgICAgICAgICAgICAgICAg
+ICAgIDANCj4gPj4gY2hhaW5fc2lnbmFsX2E6ICAgICAgICAgICAgICAgICAgICAgICAgNTQ5DQo+
+ID4+IGNoYWluX3NpZ25hbF9iOiAgICAgICAgICAgICAgICAgICAgICAgIDUxMw0KPiA+PiBjaGFp
+bl9zaWduYWxfYzogICAgICAgICAgICAgICAgICAgICAgICAwDQo+ID4+IGJlYWNvbl9jb3VudDog
+ICAgICAgICAgICAgICAgICAxNg0KPiA+PiBkaXNjb25uX2FycmF5OiAgICAgICAgICAgICAgICAg
+ICAgICAgICAwIDAgMQ0KPiA+PiBkZWx0YV9nYWluX2NvZGU6ICAgICAgICAgICAgICAgNCAwIDAN
+Cj4gPj4gcmFkaW9fd3JpdGU6ICAgICAgICAgICAgICAgICAgIDENCj4gPj4gc3RhdGU6ICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgMw0KPiA+Pg0KPiA+PiBUaGlzIHBhdGNoIGNoYW5n
+ZXMgc3RhdGlzdGljcyBnYXRoZXJpbmcgdG8gbWFrZSBzdXJlIHRoYXQgemVybyBub2lzZQ0KPiA+
+PiByZXN1bHRzIGFyZSBpZ25vcmVkIGZvciB2YWxpZCByeCBjaGFpbnMuIFRoZSByYXRpb25hbGUg
+YmVpbmcgdGhhdA0KPiA+PiBldmVuIGlmIGFubnRlbm5hIGlzIG5vdCBjb25uZWN0ZWQgd2Ugc2hv
+dWxkIGJlIGFibGUgdG8gc2VlIG5vbiB6ZXJvDQo+ID4+IG5vaXNlIGlmIHJ4IGNoYWluIGlzIHBy
+ZXNlbnQuDQo+ID4NCj4gPiBCdXQgdGhlbiB0aGUgZmlybXdhcmUgd2lsbCBjb250aW51ZSB0byBz
+ZW5kIHplcm8gZm9yIHNpZ25hbCBhbmQgdGhpcw0KPiA+IHdpbGwgaW1wYWN0IGxvdHMgb2YgZmxv
+d3MgbGlrZSByb2FtaW5nLiBJZiB0aGUgZHJpdmVyIGFsbG93cyB0aGUNCj4gPiBmaXJtd2FyZSB0
+byB1c2UgdGhhdCBhbnRlbm5hLCB0aGUgZmlybXdhcmUgbWF5IHVzZSB0aGlzIGFudGVubmEgZm9y
+DQo+ID4gc2Nhbm5pbmcgYW5kIHJvYW1pbmcgd2lsbCBiZSBicm9rZW4uDQo+ID4gVGhpcyBzZWVt
+cyB0byBiZSBhIGJ1ZyBpbiB0aGUgZmlybXdhcmUsIGJ1dCB0aGVyZSBpc24ndCBtdWNoIEkgY2Fu
+IGRvDQo+ID4gYWJvdXQgaXQuDQo+ID4gU29ycnksIEkgaGF2ZSB0byBOQUNLIHRoaXMgcGF0Y2gu
+DQo+IA0KPiAgIENvdWxkIHlvdSBwbGVhc2UgZWxhYm9yYXRlIG9uIGhvdyB0aGlzIHBhdGNoIHdv
+dWxkIGFmZmVjdCByb2FtaW5nIG9yIG90aGVyDQo+IHRoaW5ncy4gQXMgZmFyIGFzIEkgY2FuIHNl
+ZSB0aGlzIHBhdGNoIGRvZXNuJ3QgY2hhbmdlIG11Y2ggYmVoYXZpb3IgYXBhcnQNCj4gZnJvbSBp
+Z25vcmluZyBpbnZhbGlkIHZhbHVlcyBmcm9tIGZpcm13YXJlLg0KPiBEaXNjb25uZWN0ZWQgYW50
+ZW5uYXMgc3RpbGwgZ2V0IGRpc2FibGVkIChhcyBiZWZvcmUpIGNvbm5lY3RlZCBhbnRlbm5hcyBz
+dGlsbA0KPiB3b3JrIChtb3JlIG9mdGVuIHRoYW4gYmVmb3JlKS4gU28gSSdtIG5vdCBzdXJlIEkg
+Y2FuIHNlZSBob3cgdGhpcyBwYXRjaA0KPiB3b3VsZCBjaGFuZ2Ugd2hhdCBmaXJtd2FyZSBkb2Vz
+IGF0IGFsbC4gSSByZWFsbHkgaG9wZSB5b3UgY291bGQgZmluZCBhDQo+IG1vbWVudCBhbmQgZXhw
+bGFpbiB0aGlzLg0KPiANCg0KV2hhdCB5b3UgYXJlIHNheWluZyBoZXJlIGlzIHRoYXQgdGhlcmUg
+aXMgYSBidWcgaW4gdGhlIGZpcm13YXJlIHdoaWNoIG1ha2VzIGl0IHJlcG9ydCB3cm9uZw0KdmFs
+dWVzIGZvciBvbmUgb2YgdGhlIGFudGVubmFzLiBCdXQgd2hlbiB5b3Ugd2lsbCBoYXZlIHRoaXMg
+YW50ZW5uYSBlbmFibGVkICh3aXRoIHlvdXIgcGF0Y2gpLA0KdGhlIGZpcm13YXJlIHdpbGwga2Vl
+cCBzZW5kaW5nIGJhZCBzaWduYWwgLyBub2lzZSB2YWx1ZXMgZm9yIGl0LiBJZiB0aGUgZHJpdmVy
+IGFsbG93cyB0aGUgZmlybXdhcmUNCnRvIHVzZSB0aGlzIGFudGVubmEgKGFmdGVyIHlvdXIgcGF0
+Y2gpLCB0aGUgZmlybXdhcmUgd2lsbCBjaG9vc2UgdGhpcyBhbnRlbm5hIHRvIHJlY2VpdmUgYmVh
+Y29ucw0Kb3IgdG8gc2Nhbi4gVGhlbiwgdGhlIGRyaXZlciB3aWxsIGxvb2sgYXQgdGhlIGJlYWNv
+bnMnIHJzc2kgKHdoaWNoIHdpbGwgYmUgd3JvbmcpIGFuZCBpdCB3aWxsIHRoaW5rIHRoYXQNCmFu
+IEFQIHdoaWNoIGlzIHZlcnkgY2xvc2UgaXMgaW4gZmFjdCBmYXIgYXdheS4NCg0K
