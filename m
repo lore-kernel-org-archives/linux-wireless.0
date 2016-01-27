@@ -1,41 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52517 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753228AbcAVLlx (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:51322 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934156AbcA0S6w (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2016 06:41:53 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath9k_hw: ignore eeprom magic mismatch on flash based devices
-References: <1453390448-87417-1-git-send-email-nbd@openwrt.org>
-	<CAFBinCByH_HSMHNhQO93U+K21ssb5W_abzOVTp=XWqOcqAnL_w@mail.gmail.com>
-Date: Fri, 22 Jan 2016 13:41:46 +0200
-In-Reply-To: <CAFBinCByH_HSMHNhQO93U+K21ssb5W_abzOVTp=XWqOcqAnL_w@mail.gmail.com>
-	(Martin Blumenstingl's message of "Thu, 21 Jan 2016 17:46:22 +0100")
-Message-ID: <871t99yh6t.fsf@kamboji.qca.qualcomm.com> (sfid-20160122_124156_809706_01A716D6)
+	Wed, 27 Jan 2016 13:58:52 -0500
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/4] ath10k: update 10.4 WMI service map
+Date: Wed, 27 Jan 2016 10:55:55 -0800
+Message-ID: <1453920957-9908-3-git-send-email-poh@qca.qualcomm.com> (sfid-20160127_195900_412156_FC3DB149)
+In-Reply-To: <1453920957-9908-1-git-send-email-poh@qca.qualcomm.com>
+References: <1453920957-9908-1-git-send-email-poh@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Martin Blumenstingl <martin.blumenstingl@googlemail.com> writes:
+Update 10.4 WMI service map to sync to the latest 10.4 firmware
+as of 1/20/2016.
 
-> On Thu, Jan 21, 2016 at 4:34 PM, Felix Fietkau <nbd@openwrt.org> wrote:
->> Many AR913x based devices (maybe others too) do not have a valid EEPROM
->> magic in their calibration data partition.
->>
->> Fixes: 6fa658fd5ab2 ("ath9k: Simplify and fix eeprom endianness swapping")
->> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->
-> Acked-by: Martin Blumenstingl <martin.blumenstingl@googlemail.com>
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.h | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-I'll queue this to 4.5.
-
-> I wonder if we should also backport this to 4.4, because that is
-> affected as well.
-
-Is it? I don't see 6fa658fd5ab2 in 4.4. Can you double check, please?
-
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 26a1bb9..90b6581 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -178,6 +178,8 @@ enum wmi_service {
+ 	WMI_SERVICE_EXT_RES_CFG_SUPPORT,
+ 	WMI_SERVICE_MESH_11S,
+ 	WMI_SERVICE_MESH_NON_11S,
++	WMI_SERVICE_RESTRT_CHNL_SUPPORT,
++	WMI_SERVICE_PEER_STATS,
+ 
+ 	/* keep last */
+ 	WMI_SERVICE_MAX,
+@@ -296,6 +298,9 @@ enum wmi_10_4_service {
+ 	WMI_10_4_SERVICE_BSS_CHANNEL_INFO_64,
+ 	WMI_10_4_SERVICE_EXT_RES_CFG_SUPPORT,
+ 	WMI_10_4_SERVICE_MESH_NON_11S,
++	WMI_10_4_SERVICE_RESTRT_CHNL_SUPPORT,
++	WMI_10_4_SERVICE_PEER_STATS,
++	WMI_10_4_SERVICE_MESH_11S,
+ };
+ 
+ static inline char *wmi_service_name(int service_id)
+@@ -388,6 +393,8 @@ static inline char *wmi_service_name(int service_id)
+ 	SVCSTR(WMI_SERVICE_EXT_RES_CFG_SUPPORT);
+ 	SVCSTR(WMI_SERVICE_MESH_11S);
+ 	SVCSTR(WMI_SERVICE_MESH_NON_11S);
++	SVCSTR(WMI_SERVICE_RESTRT_CHNL_SUPPORT);
++	SVCSTR(WMI_SERVICE_PEER_STATS);
+ 	default:
+ 		return NULL;
+ 	}
+@@ -627,6 +634,12 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
+ 	       WMI_SERVICE_EXT_RES_CFG_SUPPORT, len);
+ 	SVCMAP(WMI_10_4_SERVICE_MESH_NON_11S,
+ 	       WMI_SERVICE_MESH_NON_11S, len);
++	SVCMAP(WMI_10_4_SERVICE_RESTRT_CHNL_SUPPORT,
++	       WMI_SERVICE_RESTRT_CHNL_SUPPORT, len);
++	SVCMAP(WMI_10_4_SERVICE_PEER_STATS,
++	       WMI_SERVICE_PEER_STATS, len);
++	SVCMAP(WMI_10_4_SERVICE_MESH_11S,
++	       WMI_SERVICE_MESH_11S, len);
+ }
+ 
+ #undef SVCMAP
 -- 
-Kalle Valo
+1.9.1
+
