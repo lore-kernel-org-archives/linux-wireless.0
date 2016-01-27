@@ -1,81 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:36341 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964949AbcA1TBg (ORCPT
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:34182 "EHLO
+	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753789AbcA0FW3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 14:01:36 -0500
-MIME-Version: 1.0
-In-Reply-To: <1453983185.2217.12.camel@sipsolutions.net>
-References: <CA+55aFxe22iWok6UojY=hCoG2k1wNpJ9CfQ0b+STSxq67tb86Q@mail.gmail.com>
-	<1453983185.2217.12.camel@sipsolutions.net>
-Date: Thu, 28 Jan 2016 11:01:36 -0800
-Message-ID: <CA+55aFya9K4JboNY8kB9cg6zt9otguhdzfHm3jvLmWedxQTSWg@mail.gmail.com> (sfid-20160128_200145_418845_A3FFDF62)
-Subject: Re: WARNING at net/mac80211/rate.c:513 ieee80211_get_tx_rates [mac80211]
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: David Miller <davem@davemloft.net>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 27 Jan 2016 00:22:29 -0500
+Message-ID: <1453872145.4956.3.camel@sunil.sibshivalik.com> (sfid-20160127_062253_531129_23E8CDA1)
+Subject: Need direction to understand mac80211
+From: Sunil Shahu <shshahu@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 27 Jan 2016 10:52:25 +0530
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Jan 28, 2016 at 4:13 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Wed, 2016-01-27 at 21:34 -0800, Linus Torvalds wrote:
->
->> .. except now I upgraded the nearest access point, and now wireless
->> on that machine no longer works.
->
-> Can you describe the upgrade a bit more, just for background?
+Hi,
 
-I used to have the basic original UniFi UAP. I've replaced them with
-the newer "AC Lite" version:
+I am currently working on an project that aims to provide multiple 802.11ac radio support on a single node for mesh network. In this both the radios will operate in different channel and will talk to different nodes in mesh network.
 
-    https://www.ubnt.com/unifi/unifi-ap-ac-lite/
+I need to work with kernel mac80211 driver subsystem for the same. I went through different documentation to understand the theories of 802.11s which can help during working on mac80211 driver. However I am not able to understand the source code properly. 
 
-so it's a fairly big jump from a 2.4GHz-only network to a dual-band one.
+Can you please provide some guidance to understand mac80211 and related networking stack in Linux kernel.
 
-The old 2.4GHz-only AP's showed the problem with minstrel-ht
-incorrectly starting off at the highest rate (on a totally different
-machine). So the Unifi AP's have shown problems in the kernel wireless
-before, but so far it's always been the fault of the kernel wireless,
-not the AP.
+I am looking for 
+1) How to create bridge bridge for two Phy radios during initialization/packet forwarding?
+2) Also, need some idea about how packets will be routed in mesh_hwmp.
+3) How the path request and response should behave in this case?
+4) Will there be any changes for mesh path table entries?
 
-> Could you print out the entire table there when the warning happens?
+Any suggestion for document/book/blog will be great help.
 
-This is the best I can come up with: printing out the index, and the
-rate and bitrate tables:
+I already went through following materials.
+http://kernelnewbies.org/Documents/Kernel-Docbooks?action=AttachFile&do=get&target=mac80211_2.6.29.pdf
+http://www.campsmur.cat/files/mac80211_intro.pdf
+https://www.cwnp.com/uploads/802-11s_mesh_networking_v1-0.pdf
+http://www.ieee802.org/802_tutorials/06-November/802.11s_Tutorial_r5.pdf
 
-  rates[i].idx (9) >= sband->n_bitrates (8)
-  Rates:
-      0: idx 9 count 1 flags a0
-      1: idx 8 count 1 flags a0
-      2: idx 7 count 2 flags a0
-      3: idx 6 count 3 flags a0
-  Bitrates:
-      0: flags 00000002 bitrate 60 (hw: 0004 0000)
-      1: flags 00000000 bitrate 90 (hw: 0005 0000)
-      2: flags 00000002 bitrate 120 (hw: 0006 0000)
-      3: flags 00000000 bitrate 180 (hw: 0007 0000)
-      4: flags 00000002 bitrate 240 (hw: 0008 0000)
-      5: flags 00000000 bitrate 360 (hw: 0009 0000)
-      6: flags 00000000 bitrate 480 (hw: 000a 0000)
-      7: flags 00000000 bitrate 540 (hw: 000b 0000)
+Any suggestion and directions will be great help.
 
-So it's the very first rate that has index 9, but the bitrate table
-only goes from 0-7.
+Thanks,
+Sunil Shahu.
 
-So I suspect that once the first index has been marked invalid, it now
-will never even look at the later indices, so it has no transmit rates
-at all.  Or something.
-
-That bitrate table does seem to match:
-
-   static struct ieee80211_rate rtl_ratetable_5g[] = {
-
-in drivers/net/wireless/realtek/rtlwifi/base.c
-
-Does this give you any ideas?
-
-              Linus
