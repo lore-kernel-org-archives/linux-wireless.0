@@ -1,70 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f41.google.com ([209.85.215.41]:33125 "EHLO
-	mail-lf0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759336AbcAMOAC (ORCPT
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:38770 "EHLO
+	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932827AbcA0Odz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2016 09:00:02 -0500
-Received: by mail-lf0-f41.google.com with SMTP id m198so108395924lfm.0
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 06:00:01 -0800 (PST)
+	Wed, 27 Jan 2016 09:33:55 -0500
+Received: by mail-wm0-f48.google.com with SMTP id p63so29323080wmp.1
+        for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2016 06:33:54 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1453904819.2351.7.camel@sipsolutions.net>
+References: <1453382588-27105-1-git-send-email-michal.kazior@tieto.com>
+	<1453904772-25289-1-git-send-email-michal.kazior@tieto.com>
+	<1453904819.2351.7.camel@sipsolutions.net>
+Date: Wed, 27 Jan 2016 15:33:54 +0100
+Message-ID: <CA+BoTQn0AhDg628XF2+0gBBPM+8krTnTdeE6FiEBz-ZT+0k6Kg@mail.gmail.com> (sfid-20160127_153401_421179_793DE6A2)
+Subject: Re: [PATCH v2] mac80211: expose txq queue depth and size to drivers
 From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 3/5] ath10k: add new FW_FEATURE_PEER_FLOW_CONTROL
-Date: Wed, 13 Jan 2016 15:01:06 +0100
-Message-Id: <1452693668-30030-4-git-send-email-michal.kazior@tieto.com> (sfid-20160113_150017_335591_F55BA554)
-In-Reply-To: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
-References: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This feature flag will be used for firmware which
-supports pull-push model where host shares it's
-software queue state with firmware and firmware
-generates fetch requests telling host which queues
-to dequeue tx from.
+On 27 January 2016 at 15:26, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Wed, 2016-01-27 at 15:26 +0100, Michal Kazior wrote:
+>>
+>> @@ -1294,6 +1298,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct
+>> ieee80211_hw *hw,
+>>       if (!skb)
+>>               goto out;
+>>
+>> +     txqi->byte_cnt -= skb->len;
+>> +
+>>       atomic_dec(&sdata->txqs_len[ac]);
+>>
+> This *looks* a bit worrying - you have an atomic dec for the # of
+> packets and a non-atomic one for the bytes.
+>
+> You probably thought about it and I guess it's fine, but can you
+> explain it?
 
-Primary function of this is improved MU-MIMO
-performance with multiple clients.
+The atomic was used because it accesses per-vif counters. You can't
+use txqi->queue.lock for that.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 1 +
- drivers/net/wireless/ath/ath10k/core.h | 9 +++++++++
- 2 files changed, 10 insertions(+)
+On the other hand byte_cnt is per txqi and it was very easy to make
+use of the txqi->queue.lock (which was already acquired in both drv_tx
+and tx_dequeue functions). Using atomic* for byte_cnt would be
+wasteful a bit.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index b41eb3f4ee56..48a26206c5c1 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -217,6 +217,7 @@ static const char *const ath10k_core_fw_feature_str[] = {
- 	[ATH10K_FW_FEATURE_RAW_MODE_SUPPORT] = "raw-mode",
- 	[ATH10K_FW_FEATURE_SUPPORTS_ADAPTIVE_CCA] = "adaptive-cca",
- 	[ATH10K_FW_FEATURE_MFP_SUPPORT] = "mfp",
-+	[ATH10K_FW_FEATURE_PEER_FLOW_CONTROL] = "peer-flow-ctrl",
- };
- 
- static unsigned int ath10k_core_get_fw_feature_str(char *buf,
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 7840cf3ef7a6..822e3195533a 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -510,6 +510,15 @@ enum ath10k_fw_features {
- 	/* Firmware supports management frame protection */
- 	ATH10K_FW_FEATURE_MFP_SUPPORT = 12,
- 
-+	/* Firmware supports pull-push model where host shares it's software
-+	 * queue state with firmware and firmware generates fetch requests
-+	 * telling host which queues to dequeue tx from.
-+	 *
-+	 * Primary function of this is improved MU-MIMO performance with
-+	 * multiple clients.
-+	 */
-+	ATH10K_FW_FEATURE_PEER_FLOW_CONTROL = 13,
-+
- 	/* keep last */
- 	ATH10K_FW_FEATURE_COUNT,
- };
--- 
-2.1.4
 
+Michał
