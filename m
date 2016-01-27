@@ -1,41 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f179.google.com ([209.85.160.179]:36380 "EHLO
-	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750951AbcAZXML (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 18:12:11 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAGRGNgV7MUXdk+e8Arx05yiWX6owei5dmnFQ-TBfs55jfy+qBw@mail.gmail.com>
-References: <1453830820-27104-1-git-send-email-xiyou.wangcong@gmail.com>
-	<CAGRGNgV7MUXdk+e8Arx05yiWX6owei5dmnFQ-TBfs55jfy+qBw@mail.gmail.com>
-Date: Tue, 26 Jan 2016 15:12:09 -0800
-Message-ID: <CAM_iQpWawou1Z_NnAzM5TxH7TUQUCAhf+k96PErNV8q_SOCShw@mail.gmail.com> (sfid-20160127_001214_839963_3160555F)
-Subject: Re: [PATCH RESEND net] nfc: use GFP_USER for user-controlled kmalloc
-From: Cong Wang <xiyou.wangcong@gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: netdev <netdev@vger.kernel.org>,
-	Dmitry Vyukov <dvyukov@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:48011 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932301AbcA0M2k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2016 07:28:40 -0500
+Message-ID: <1453897716.2351.5.camel@sipsolutions.net> (sfid-20160127_132843_675817_A137C4AE)
+Subject: Re: [PATCH] wext: fix message delay/ordering
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Beniamino Galvani <bgalvani@redhat.com>
+Date: Wed, 27 Jan 2016 13:28:36 +0100
+In-Reply-To: <1453897114.2351.4.camel@sipsolutions.net> (sfid-20160127_131839_160369_0C70BCFE)
+References: <1453896850-22775-1-git-send-email-johannes@sipsolutions.net>
+	 (sfid-20160127_131419_031860_43892E09) <1453897040.2351.3.camel@sipsolutions.net>
+	 (sfid-20160127_131726_366051_5927EBBD) <1453897114.2351.4.camel@sipsolutions.net>
+	 (sfid-20160127_131839_160369_0C70BCFE)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 26, 2016 at 2:55 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
-> Hi Cong,
->
-> On Wed, Jan 27, 2016 at 4:53 AM, Cong Wang <xiyou.wangcong@gmail.com> wrote:
->
-> A commit message would be nice. A brief rundown of how this is called
-> from userspace would be nice (I'm talking a single sentence here, e.g.
-> "this is allocated when submitting a nfc packet") and what issue
-> __GFP_NOWARN is fixing. (I'm guessing log spam due to allocation
-> failures.)
->
+On Wed, 2016-01-27 at 13:18 +0100, Johannes Berg wrote:
+> > > +	if (state == NETDEV_UNREGISTER)
+> > > +		wireless_nlevent_flush();
+> > > 
+> > It could be argued that the state check isn't really necessary and
+> > should be removed to avoid ordering issues with up/down vs. wext,
+> > but
+> > this fixes the really strange issue where you get an RTM_NEWLINK
+> > after
+> > RTM_DELLINK (with the same ifidx), and I don't see how any software
+> > would care much about the ordering otherwise.
+> > 
+> 
+> Actually though, with the fix I still get:
+> 
+> 5: wlan1: <BROADCAST,MULTICAST> mtu 1500 qdisc mq state DOWN group
+> default 
+>     link/ether 02:00:00:00:01:00 brd ff:ff:ff:ff:ff:ff
+> 5: wlan1: <BROADCAST,MULTICAST,UP> 
+>     link/ether 
+> Deleted 5: wlan1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state
+> DOWN group default 
+>     link/ether 02:00:00:00:01:00 brd ff:ff:ff:ff:ff:ff
+> 
+> which is clearly odd (see the UP flag), so I'll change it.
+> 
 
-I thought it is obvious. ;) Keep in mind that $subject is one part of commit
-message too, so there is a commit message although very short.
+Doesn't help, since the wext netdev notifier is registered earlier and
+thus runs earlier than the cfg80211 one that triggers the action ...
 
-I will add it.
+I'll fix that differently then.
+
+johannes
