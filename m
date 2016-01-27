@@ -1,48 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f179.google.com ([209.85.160.179]:35262 "EHLO
-	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932905AbcA2SVV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2016 13:21:21 -0500
-MIME-Version: 1.0
-In-Reply-To: <1453928752.20722.27.camel@edumazet-glaptop2.roam.corp.google.com>
-References: <1453830820-27104-1-git-send-email-xiyou.wangcong@gmail.com>
-	<CAGRGNgV7MUXdk+e8Arx05yiWX6owei5dmnFQ-TBfs55jfy+qBw@mail.gmail.com>
-	<CAM_iQpWawou1Z_NnAzM5TxH7TUQUCAhf+k96PErNV8q_SOCShw@mail.gmail.com>
-	<1453861388.11327.51.camel@edumazet-glaptop2.roam.corp.google.com>
-	<CAM_iQpXOEQhwPp6HD3L16DV1tygEyKNoHH+zHkukux7zYzaJeA@mail.gmail.com>
-	<1453928752.20722.27.camel@edumazet-glaptop2.roam.corp.google.com>
-Date: Fri, 29 Jan 2016 10:21:21 -0800
-Message-ID: <CAM_iQpVWpF_QZwORkcumw7=awVXQQ4SqGrymj7aSd5fGSyrddg@mail.gmail.com> (sfid-20160129_192145_790183_0BBBDD41)
-Subject: Re: [PATCH RESEND net] nfc: use GFP_USER for user-controlled kmalloc
-From: Cong Wang <xiyou.wangcong@gmail.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	netdev <netdev@vger.kernel.org>,
-	Dmitry Vyukov <dvyukov@google.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:48152 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754424AbcA0Mlm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2016 07:41:42 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Beniamino Galvani <bgalvani@redhat.com>, netdev@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/2] wext: fix message delay/ordering
+Date: Wed, 27 Jan 2016 13:41:34 +0100
+Message-Id: <1453898495-11790-1-git-send-email-johannes@sipsolutions.net> (sfid-20160127_134158_427251_ECB0A1C2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 27, 2016 at 1:05 PM, Eric Dumazet <eric.dumazet@gmail.com> wrote:
-> On Wed, 2016-01-27 at 11:50 -0800, Cong Wang wrote:
->
->> Hmm? I think nfc_llcp_send_ui_frame() needs to do some fragmention
->> with this temporary memory, or you are saying msg_iter has some
->> API available to seek the pointer? Even if so, it doesn't look like
->> suitable for -stable.
->>
->
-> memcpy_from_msg(msg_data, msg, len) will overwrite the msg_data with len
-> bytes, or return an error.
->
-> So prior msg_data content does not matter.
->
-> kzalloc() before a memset() or memcpy() sounds defensive programming,
-> kmalloc() is a bit faster.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Oh, you mean s/kzalloc/kmalloc/, I thought you mean s/kzalloc//. ;)
+Beniamino reported that he was getting an RTM_NEWLINK message for a
+given interface, after the RTM_DELLINK for it. It turns out that the
+message is a wireless extensions message, which was sent because the
+interface had been connected and disconnection while it was deleted
+caused a wext message.
+
+For its netlink messages, wext uses RTM_NEWLINK, but the message is
+without all the regular rtnetlink attributes, so "ip monitor link"
+prints just rudimentary information:
+
+5: wlan1: <BROADCAST,MULTICAST> mtu 1500 qdisc mq state DOWN group default
+    link/ether 02:00:00:00:01:00 brd ff:ff:ff:ff:ff:ff
+Deleted 5: wlan1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN group default
+    link/ether 02:00:00:00:01:00 brd ff:ff:ff:ff:ff:ff
+5: wlan1: <BROADCAST,MULTICAST,UP>
+    link/ether
+(from my hwsim reproduction)
+
+This can cause userspace to get confused since it doesn't expect an
+RTM_NEWLINK message after RTM_DELLINK.
+
+The reason for this is that wext schedules a worker to send out the
+messages, and the scheduling delay can cause the messages to get out
+to userspace in different order.
+
+To fix this, have wext register a netdevice notifier and flush out
+any pending messages when netdevice state changes. This fixes any
+ordering whenever the original message wasn't sent by a notifier
+itself.
+
+Cc: stable@vger.kernel.org
+Reported-by: Beniamino Galvani <bgalvani@redhat.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/wext-core.c | 49 ++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 39 insertions(+), 10 deletions(-)
+
+diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
+index c8717c1d082e..5f429637efff 100644
+--- a/net/wireless/wext-core.c
++++ b/net/wireless/wext-core.c
+@@ -342,6 +342,39 @@ static const int compat_event_type_size[] = {
+ 
+ /* IW event code */
+ 
++static void wireless_nlevent_flush(void)
++{
++	struct sk_buff *skb;
++	struct net *net;
++
++	ASSERT_RTNL();
++
++	for_each_net(net) {
++		while ((skb = skb_dequeue(&net->wext_nlevents)))
++			rtnl_notify(skb, net, 0, RTNLGRP_LINK, NULL,
++				    GFP_KERNEL);
++	}
++}
++
++static int wext_netdev_notifier_call(struct notifier_block *nb,
++				     unsigned long state, void *ptr)
++{
++	/*
++	 * When a netdev changes state in any way, flush all pending messages
++	 * to avoid them going out in a strange order, e.g. RTM_NEWLINK after
++	 * RTM_DELLINK, or with IFF_UP after without IFF_UP during dev_close()
++	 * or similar - all of which could otherwise happen due to delays from
++	 * schedule_work().
++	 */
++	wireless_nlevent_flush();
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block wext_netdev_notifier = {
++	.notifier_call = wext_netdev_notifier_call,
++};
++
+ static int __net_init wext_pernet_init(struct net *net)
+ {
+ 	skb_queue_head_init(&net->wext_nlevents);
+@@ -360,6 +393,11 @@ static struct pernet_operations wext_pernet_ops = {
+ 
+ static int __init wireless_nlevent_init(void)
+ {
++	int err = register_netdevice_notifier(&wext_netdev_notifier);
++
++	if (err)
++		return err;
++
+ 	return register_pernet_subsys(&wext_pernet_ops);
+ }
+ 
+@@ -368,17 +406,8 @@ subsys_initcall(wireless_nlevent_init);
+ /* Process events generated by the wireless layer or the driver. */
+ static void wireless_nlevent_process(struct work_struct *work)
+ {
+-	struct sk_buff *skb;
+-	struct net *net;
+-
+ 	rtnl_lock();
+-
+-	for_each_net(net) {
+-		while ((skb = skb_dequeue(&net->wext_nlevents)))
+-			rtnl_notify(skb, net, 0, RTNLGRP_LINK, NULL,
+-				    GFP_KERNEL);
+-	}
+-
++	wireless_nlevent_flush();
+ 	rtnl_unlock();
+ }
+ 
+-- 
+2.6.2
+
