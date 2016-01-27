@@ -1,152 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f53.google.com ([209.85.215.53]:34309 "EHLO
-	mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752409AbcAMWdr (ORCPT
+Received: from mail-io0-f177.google.com ([209.85.223.177]:33816 "EHLO
+	mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752975AbcA0X13 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2016 17:33:47 -0500
-Received: by mail-lf0-f53.google.com with SMTP id 17so62719496lfz.1
-        for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 14:33:46 -0800 (PST)
-Subject: [Bug 110551] iwlwifi: dvm: cannot turn off wifi LED
-References: <CALwVF7Q2ApSy0DR4JS1qkovg=EoLot2ABaLimhXkMmKp0hwq6w@mail.gmail.com>
-To: emmanuel.grumbach@intel.com
-Cc: linux-wireless@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.org
-From: Hubert Tarasiuk <hubert.tarasiuk@gmail.com>
-Message-ID: <5696D0C5.8080501@gmail.com> (sfid-20160113_233350_219865_73DA094C)
-Date: Wed, 13 Jan 2016 23:33:41 +0100
+	Wed, 27 Jan 2016 18:27:29 -0500
 MIME-Version: 1.0
-In-Reply-To: <CALwVF7Q2ApSy0DR4JS1qkovg=EoLot2ABaLimhXkMmKp0hwq6w@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="SInoIxWHElmxroJ9Qc9hQXCHpVLKWxuKg"
+In-Reply-To: <20160127154618.GA5717@localhost>
+References: <20160126111730.GA6765@localhost> <20160127154618.GA5717@localhost>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 28 Jan 2016 10:27:09 +1100
+Message-ID: <CAGRGNgXkvNfzM9Q1RO5kFwUWpFZbQ3mNQi3aVHcPTCw0A9fyFA@mail.gmail.com> (sfid-20160128_002736_648758_DED52DA5)
+Subject: Re: [PATCH] net/mac80211/agg-rx.c: fix use of uninitialised values
+To: Chris Bainbridge <chris.bainbridge@gmail.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	aryabinin@virtuozzo.com, Julia Lawall <Julia.Lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org, Joe Perches <joe@perches.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---SInoIxWHElmxroJ9Qc9hQXCHpVLKWxuKg
-Content-Type: multipart/mixed;
- boundary="------------060400070906080800090900"
+Hi Chris,
 
-This is a multi-part message in MIME format.
---------------060400070906080800090900
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+On Thu, Jan 28, 2016 at 2:46 AM, Chris Bainbridge
+<chris.bainbridge@gmail.com> wrote:
+> Use kzalloc instead of kmalloc for struct tid_ampdu_rx. Fixes:
+>
+> [    7.976605] UBSAN: Undefined behaviour in net/mac80211/rx.c:932:29
+> [    7.976608] load of value 2 is not a valid value for type '_Bool'
+> [    7.976611] CPU: 3 PID: 1134 Comm: kworker/u16:7 Not tainted 4.5.0-rc1+ #265
+> [    7.976613] Hardware name: Apple Inc. MacBookPro10,2/Mac-AFD8A9D944EA4843, BIOS MBP102.88Z.0106.B0A.1509130955 09/13/2015
+> [    7.976616] Workqueue: phy0 rt2x00usb_work_rxdone
+> [    7.976619]  0000000000000004 ffff880254a7ba50 ffffffff8181d866 0000000000000007
+> [    7.976622]  ffff880254a7ba78 ffff880254a7ba68 ffffffff8188422d ffffffff8379b500
+> [    7.976626]  ffff880254a7bab8 ffffffff81884747 0000000000000202 0000000348620032
+> [    7.976629] Call Trace:
+> [    7.976633]  [<ffffffff8181d866>] dump_stack+0x45/0x5f
+> [    7.976637]  [<ffffffff8188422d>] ubsan_epilogue+0xd/0x40
+> [    7.976642]  [<ffffffff81884747>] __ubsan_handle_load_invalid_value+0x67/0x70
+> [    7.976646]  [<ffffffff82227b4d>] ieee80211_sta_reorder_release.isra.16+0x5ed/0x730
+> [    7.976650]  [<ffffffff8222ca14>] ieee80211_prepare_and_rx_handle+0xd04/0x1c00
+> [    7.976654]  [<ffffffff81cb27ce>] ? usb_hcd_map_urb_for_dma+0x65e/0x960
+> [    7.976659]  [<ffffffff8222db03>] __ieee80211_rx_handle_packet+0x1f3/0x750
+> [    7.976663]  [<ffffffff8222e4a7>] ieee80211_rx_napi+0x447/0x990
+> [    7.976667]  [<ffffffff81c5fb85>] rt2x00lib_rxdone+0x305/0xbd0
+> [    7.976670]  [<ffffffff811ac23f>] ? dequeue_task_fair+0x64f/0x1de0
+> [    7.976674]  [<ffffffff811a1516>] ? sched_clock_cpu+0xe6/0x150
+> [    7.976678]  [<ffffffff81c6c45c>] rt2x00usb_work_rxdone+0x7c/0x140
+> [    7.976682]  [<ffffffff8117aef6>] process_one_work+0x226/0x860
+> [    7.976686]  [<ffffffff8117b58c>] worker_thread+0x5c/0x680
+> [    7.976690]  [<ffffffff8117b530>] ? process_one_work+0x860/0x860
+> [    7.976693]  [<ffffffff81184f86>] kthread+0xf6/0x150
+> [    7.976697]  [<ffffffff81184e90>] ? kthread_worker_fn+0x310/0x310
+> [    7.976700]  [<ffffffff822a94df>] ret_from_fork+0x3f/0x70
+> [    7.976703]  [<ffffffff81184e90>] ? kthread_worker_fn+0x310/0x310
+>
+> Link: https://lkml.org/lkml/2016/1/26/230
+> Signed-off-by: Chris Bainbridge <chris.bainbridge@gmail.com>
+> ---
+>  net/mac80211/agg-rx.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/net/mac80211/agg-rx.c b/net/mac80211/agg-rx.c
+> index 10ad4ac1fa0b..bde3344cbdd0 100644
+> --- a/net/mac80211/agg-rx.c
+> +++ b/net/mac80211/agg-rx.c
+> @@ -291,7 +291,7 @@ void __ieee80211_start_rx_ba_session(struct sta_info *sta,
+>         }
+>
+>         /* prepare A-MPDU MLME for Rx aggregation */
+> -       tid_agg_rx = kmalloc(sizeof(struct tid_ampdu_rx), GFP_KERNEL);
+> +       tid_agg_rx = kzalloc(sizeof(struct tid_ampdu_rx), GFP_KERNEL);
 
-Re-sending as plain-text.
+This looks like a "big hammer" solution to this problem.
 
+My reading of this is that the events leading up to UBSAN's warning are:
 
---- Tre=C5=9B=C4=87 przekazanej wiadomo=C5=9Bci ---
-Temat: 	[Bug 110551] iwlwifi: dvm: cannot turn off wifi LED
-Data: 	Wed, 13 Jan 2016 23:31:28 +0100
-Nadawca: 	Hubert Tarasiuk <hubert.tarasiuk@gmail.com>
-Adresat: 	emmanuel.grumbach@intel.com
-Kopia: 	linux-wireless@vger.kernel.org, bugzilla-daemon@bugzilla.kernel.o=
-rg
+1. In __ieee80211_start_rx_ba_session() tid_agg_rx is kmalloc'd and
+has "random" data
+2. All of tid_ampdu_rx's fields except the boolean "removed" are initialised
+3. Stuff happens
+4. We get to "set_release_timer" in ieee80211_sta_reorder_release
+5. the random data means that "removed" has an incorrect value for a boolean
+6. UBSAN barfs as above
 
+I believe that false is stored as 0 internally (and true as 1) so
+kzalloc is a correct solution, but it's the heavy weight solution as
+all but one of the fields in the struct are initialised immediately
+after, so we're essentially zeroing the entire struct to ensure that
+one field is set to zero.
 
+I'd prefer to just set ->removed to false right after we set
+->auto_seq as that should be faster, however I don't know if
+__ieee80211_start_rx_ba_session() is a fast path so I don't know if
+this is saving anything.
 
-Hi Emmanuel,
+Either way, this looks sane to me.
 
-Actually to properly handle led_mode=3D3 option is not as easy as it seem=
-s.
-Even if I initially turn of the LED in case of led_mode=3D3, it still get=
-s
-turned on after doing
-# ifconfig wlan0 down && ifconfig wlan0 up
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 
-Maybe if I have more time later I can investigate further on how to
-avoid this behaviour. (the LED trigger is set to none according to
-sysfs) Or you have an idea on how to stop this behaviour?
+On another note, this is an error that should be pretty easy to spot.
+Could any of the automated tools find cases where a struct containing
+a bool variable is kmalloc'd and returned without assigning all the
+bools?
 
-Otherwise I would suggest that you apply the patch that I posted on
-bugzilla (attached) that fixes sysfs handling. It is then easy to keep
-the LED on or off as desired using simple shell scripts.
+Thanks,
 
-Thank you,
-Hubert
+-- 
+Julian Calaby
 
-On Tue, Jan 12, 2016 at 7:58 AM,=C3=82 <bugzilla-daemon@bugzilla.kernel.o=
-rg
-<mailto:bugzilla-daemon@bugzilla.kernel.org>>=C3=82 wrote:
-
-    https://bugzilla.kernel.org/show_bug.cgi?id=3D110551
-
-    --- Comment #1 from Emmanuel Grumbach <emmanuel.grumbach@intel.com
-    <mailto:emmanuel.grumbach@intel.com>> ---
-    Your bug is fine, but I'd prefer if you'd send the patch :)
-
-    you can send it to me and CC=C3=82 linux-wireless@vger.kernel.org
-    <mailto:linux-wireless@vger.kernel.org>
-
-    thanks.
-
-    --
-    You are receiving this mail because:
-    You are on the CC list for the bug.
-    You reported the bug.
-
-
-
-
---------------060400070906080800090900
-Content-Type: text/x-patch;
- name="0001-iwlwifi-allow-led-turn-off-in-iwl-dvm-module.patch"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
- filename="0001-iwlwifi-allow-led-turn-off-in-iwl-dvm-module.patch"
-
-=46rom 132afdea768bea0a5dc0f46417b261138b9b0286 Mon Sep 17 00:00:00 2001
-From: Hubert Tarasiuk <hubert.tarasiuk@gmail.com>
-Date: Mon, 4 Jan 2016 23:45:18 +0100
-Subject: [PATCH] iwlwifi: allow led turn off in iwl dvm module
-
----
- drivers/net/wireless/iwlwifi/dvm/led.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/iwlwifi/dvm/led.c b/drivers/net/wireles=
-s/iwlwifi/dvm/led.c
-index ca4d669..218617a 100644
---- a/drivers/net/wireless/iwlwifi/dvm/led.c
-+++ b/drivers/net/wireless/iwlwifi/dvm/led.c
-@@ -154,11 +154,14 @@ static void iwl_led_brightness_set(struct led_class=
-dev *led_cdev,
- {
- 	struct iwl_priv *priv =3D container_of(led_cdev, struct iwl_priv, led);=
-
- 	unsigned long on =3D 0;
-+	unsigned long off =3D 0;
-=20
- 	if (brightness > 0)
- 		on =3D IWL_LED_SOLID;
-+	else
-+		off =3D IWL_LED_SOLID;
-=20
--	iwl_led_cmd(priv, on, 0);
-+	iwl_led_cmd(priv, on, off);
- }
-=20
- static int iwl_led_blink_set(struct led_classdev *led_cdev,
---=20
-2.6.4
-
-
---------------060400070906080800090900--
-
---SInoIxWHElmxroJ9Qc9hQXCHpVLKWxuKg
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAEBCAAGBQJWltDHAAoJEGzXtIeRP38CSCkH/jCkejvsyxnPrCwg4M9b1OqJ
-SnBEgnRzkT/luApiElYKgeP0u1sASyUfzZP761H1aJ5h83AeIcVqOFGcSUroaaI/
-OnjffxxuWYtStRfh001fejrbYn1LBl/3PQG+KvQaMMWB4n8LGhO5pMhK5a0RzQQn
-lVWgTEjY98uv8i++xG5SHw9JGLoKv9muIKuLmY8PuRl0VFxz1NW0PWXxzBxjvBZQ
-8Bd/cc5dOAb+rVv4JosYdNUwVhtUZ4fJwvwIPkTrF1GkFuyxHU+9VKXfdluxCsQu
-j4amBwEoWEp2HAufwY6/2nH8XUrAo3CSvnjjeJ2/xgknOCF0KNFe9wxki0z3SZc=
-=H4sB
------END PGP SIGNATURE-----
-
---SInoIxWHElmxroJ9Qc9hQXCHpVLKWxuKg--
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
