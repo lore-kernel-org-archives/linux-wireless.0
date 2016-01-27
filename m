@@ -1,114 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:34831 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965022AbcAULcH (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:14334 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752335AbcA0C5s (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 06:32:07 -0500
-Received: by mail-pa0-f68.google.com with SMTP id gi1so1651078pac.2
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 03:32:06 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 07/27] staging: wilc1000: rename strCriticalSection in struct message_queue
-Date: Thu, 21 Jan 2016 20:30:37 +0900
-Message-Id: <1453375857-20645-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_123210_112669_DA685F6D)
-In-Reply-To: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453375857-20645-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 26 Jan 2016 21:57:48 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 07/13] staging: wilc1000: rename pBssid of tx_complete_data structure
+Date: Wed, 27 Jan 2016 11:50:31 +0900
+Message-ID: <1453863037-31073-7-git-send-email-glen.lee@atmel.com> (sfid-20160127_035750_340651_AD1C674E)
+In-Reply-To: <1453863037-31073-1-git-send-email-glen.lee@atmel.com>
+References: <1453863037-31073-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames strCriticalSection to lock to avoid camelcase.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch renames pBssid variable of tx_complete_data structure to bssid
+to avoid camelcase.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_msgqueue.c | 18 +++++++++---------
- drivers/staging/wilc1000/wilc_msgqueue.h |  2 +-
- 2 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c   | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.c    | 2 +-
+ drivers/staging/wilc1000/wilc_wlan_if.h | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index b996c47..67bf147 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -13,7 +13,7 @@
-  */
- int wilc_mq_create(struct message_queue *pHandle)
- {
--	spin_lock_init(&pHandle->strCriticalSection);
-+	spin_lock_init(&pHandle->lock);
- 	sema_init(&pHandle->sem, 0);
- 	pHandle->pstrMessageList = NULL;
- 	pHandle->u32ReceiversCount = 0;
-@@ -83,7 +83,7 @@ int wilc_mq_send(struct message_queue *pHandle,
- 		return -ENOMEM;
- 	}
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 402f8ce..4b544df 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1194,7 +1194,7 @@ int wilc_mac_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	PRINT_D(TX_DBG, "Adding tx packet to TX Queue\n");
+ 	vif->netstats.tx_packets++;
+ 	vif->netstats.tx_bytes += tx_data->size;
+-	tx_data->pBssid = wilc->vif[vif->u8IfIdx]->bssid;
++	tx_data->bssid = wilc->vif[vif->u8IfIdx]->bssid;
+ 	queue_count = wilc_wlan_txq_add_net_pkt(ndev, (void *)tx_data,
+ 						tx_data->buff, tx_data->size,
+ 						linux_wlan_tx_complete);
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index d7238e7..703dbe0 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -809,7 +809,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 				if (tqe->type == WILC_CFG_PKT) {
+ 					buffer_offset = ETH_CONFIG_PKT_HDR_OFFSET;
+ 				} else if (tqe->type == WILC_NET_PKT) {
+-					char *bssid = ((struct tx_complete_data *)(tqe->priv))->pBssid;
++					char *bssid = ((struct tx_complete_data *)(tqe->priv))->bssid;
  
--	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
-+	spin_lock_irqsave(&pHandle->lock, flags);
+ 					buffer_offset = ETH_ETHERNET_HDR_OFFSET;
+ 					memcpy(&txb[offset + 4], bssid, 6);
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 455a98f..294552d 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -82,7 +82,7 @@ typedef struct {
+ struct tx_complete_data {
+ 	int size;
+ 	void *buff;
+-	u8 *pBssid;
++	u8 *bssid;
+ 	struct sk_buff *skb;
+ };
  
- 	/* add it to the message queue */
- 	if (!pHandle->pstrMessageList) {
-@@ -97,7 +97,7 @@ int wilc_mq_send(struct message_queue *pHandle,
- 		pstrTailMsg->next = pstrMessage;
- 	}
- 
--	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
-+	spin_unlock_irqrestore(&pHandle->lock, flags);
- 
- 	up(&pHandle->sem);
- 
-@@ -128,22 +128,22 @@ int wilc_mq_recv(struct message_queue *pHandle,
- 		return -EFAULT;
- 	}
- 
--	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
-+	spin_lock_irqsave(&pHandle->lock, flags);
- 	pHandle->u32ReceiversCount++;
--	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
-+	spin_unlock_irqrestore(&pHandle->lock, flags);
- 
- 	down(&pHandle->sem);
--	spin_lock_irqsave(&pHandle->strCriticalSection, flags);
-+	spin_lock_irqsave(&pHandle->lock, flags);
- 
- 	pstrMessage = pHandle->pstrMessageList;
- 	if (!pstrMessage) {
--		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
-+		spin_unlock_irqrestore(&pHandle->lock, flags);
- 		PRINT_ER("pstrMessage is null\n");
- 		return -EFAULT;
- 	}
- 	/* check buffer size */
- 	if (u32RecvBufferSize < pstrMessage->len) {
--		spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
-+		spin_unlock_irqrestore(&pHandle->lock, flags);
- 		up(&pHandle->sem);
- 		PRINT_ER("u32RecvBufferSize overflow\n");
- 		return -EOVERFLOW;
-@@ -159,7 +159,7 @@ int wilc_mq_recv(struct message_queue *pHandle,
- 	kfree(pstrMessage->buf);
- 	kfree(pstrMessage);
- 
--	spin_unlock_irqrestore(&pHandle->strCriticalSection, flags);
-+	spin_unlock_irqrestore(&pHandle->lock, flags);
- 
- 	return 0;
- }
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.h b/drivers/staging/wilc1000/wilc_msgqueue.h
-index 3ea4068..6cdebbf 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.h
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.h
-@@ -21,7 +21,7 @@ struct message {
- 
- struct message_queue {
- 	struct semaphore sem;
--	spinlock_t strCriticalSection;
-+	spinlock_t lock;
- 	bool bExiting;
- 	u32 u32ReceiversCount;
- 	struct message *pstrMessageList;
 -- 
-2.7.0
+1.9.1
 
