@@ -1,33 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m12-13.163.com ([220.181.12.13]:40810 "EHLO m12-13.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751277AbcAPNRp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jan 2016 08:17:45 -0500
-Message-ID: <569A42EA.5080509@163.com> (sfid-20160116_141752_614244_9458E351)
-Date: Sat, 16 Jan 2016 21:17:30 +0800
-From: Jia-Ju Bai <baijiaju1990@163.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:59212 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934691AbcA0TBk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2016 14:01:40 -0500
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 0/4] ath10k: rename mesh and add abstraction layer
+Date: Wed, 27 Jan 2016 10:55:53 -0800
+Message-ID: <1453920957-9908-1-git-send-email-poh@qca.qualcomm.com> (sfid-20160127_200208_023921_14C6F8DE)
 MIME-Version: 1.0
-To: =?ISO-8859-1?Q?Michael_B=FCsch?= <m@bues.ch>
-CC: kvalo@codeaurora.org, zajec5@gmail.com, joe@perches.com,
-	davem@davemloft.net, johannes.berg@intel.com,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH v2 resend] b43: Fix memory leaks in b43_bus_dev_ssb_init
- and b43_bus_dev_bcma_init
-References: <1452949690-16387-1-git-send-email-baijiaju1990@163.com> <20160116141321.6e0d5a87@wiggum>
-In-Reply-To: <20160116141321.6e0d5a87@wiggum>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 01/16/2016 09:13 PM, Michael Büsch wrote:
->
-> This still needs to be tested on both ssb and bcma devices. As long as
-> it's untested, there is no need to resend it to the maintainers.
->
+Split Mesh service to 11s Mesh and non-11s Mesh according to
+firmware service bit to help users distinguish 11s Mesh from
+non 11s Mesh.
+And add abstraction layer for vdev subtype to solve subtype mismatch
+and to give flexible compatibility among different firmware revisions.
 
-Okay, thanks for the reply :)
+Peter Oh (4):
+  ath10k: rename Mesh related service names
+  ath10k: update 10.4 WMI service map
+  ath10k: use vif->type and vif->p2p for P2P_GO check
+  ath10k: add abstraction layer for vdev subtype
 
+ drivers/net/wireless/ath/ath10k/mac.c     | 25 +++++------
+ drivers/net/wireless/ath/ath10k/wmi-ops.h | 11 +++++
+ drivers/net/wireless/ath/ath10k/wmi-tlv.c |  1 +
+ drivers/net/wireless/ath/ath10k/wmi.c     | 72 ++++++++++++++++++++++++++++++-
+ drivers/net/wireless/ath/ath10k/wmi.h     | 69 +++++++++++++++++++++++------
+ 5 files changed, 153 insertions(+), 25 deletions(-)
 
-Jia-Ju Bai
+-- 
+1.9.1
 
