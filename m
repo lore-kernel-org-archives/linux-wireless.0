@@ -1,59 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth01.qualcomm.com ([65.197.215.72]:52683 "EHLO
-	sabertooth01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759002AbcAUMsY (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:14350 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752335AbcA0C5x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 07:48:24 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 6/7] ath10k: Enable periodic peer stats update
-References: <1452699994-5078-1-git-send-email-mohammed@qca.qualcomm.com>
-	<1452699994-5078-7-git-send-email-mohammed@qca.qualcomm.com>
-Date: Thu, 21 Jan 2016 14:48:13 +0200
-In-Reply-To: <1452699994-5078-7-git-send-email-mohammed@qca.qualcomm.com>
-	(Mohammed Shafi Shajakhan's message of "Wed, 13 Jan 2016 21:16:33
-	+0530")
-Message-ID: <87twm7yu7m.fsf@kamboji.qca.qualcomm.com> (sfid-20160121_134827_537951_D0DD8361)
+	Tue, 26 Jan 2016 21:57:53 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 08/13] staging: wilc1000: remove warnings line over 80 characters
+Date: Wed, 27 Jan 2016 11:50:32 +0900
+Message-ID: <1453863037-31073-8-git-send-email-glen.lee@atmel.com> (sfid-20160127_035755_907243_C42F3A04)
+In-Reply-To: <1453863037-31073-1-git-send-email-glen.lee@atmel.com>
+References: <1453863037-31073-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
+From: Leo Kim <leo.kim@atmel.com>
 
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
->
-> Register for 500ms as periodic peer stats update period,
-> and parameters like rx_duration that needs to be tracked
-> in host can be achieved by this provision, also periodic
-> stats update is the future of fw_stats and shall be extended
-> for pdev / vdev stats irrespecitive PEER_STATS service is enabled
-> or not
->
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath10k/mac.c |   12 ++++++++++++
->  1 file changed, 12 insertions(+)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index 2dba57c..fd4b4df 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -4103,6 +4103,18 @@ static int ath10k_start(struct ieee80211_hw *hw)
->  
->  	ar->ani_enabled = true;
->  
-> +	if (test_bit(WMI_SERVICE_PEER_STATS, ar->wmi.svc_map)) {
-> +		param = ar->wmi.pdev_param->peer_stats_update_period;
-> +		ret = ath10k_wmi_pdev_set_param(ar, param,
-> +					PEER_DEFAULT_STATS_UPDATE_PERIOD);
+This patch removes the warnings reported by checkpatch.pl
+for line over 80 characters.
 
-This gives a new checkpatch warning:
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-drivers/net/wireless/ath/ath10k/mac.c:4110: Alignment should match open parenthesis
-
-I fixed that in the pending branch.
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 4b544df..f03daff 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -25,7 +25,8 @@
+ 
+ #include <linux/semaphore.h>
+ 
+-static int dev_state_ev_handler(struct notifier_block *this, unsigned long event, void *ptr);
++static int dev_state_ev_handler(struct notifier_block *this,
++				unsigned long event, void *ptr);
+ 
+ static struct notifier_block g_dev_notifier = {
+ 	.notifier_call = dev_state_ev_handler
+@@ -57,7 +58,8 @@ static const struct net_device_ops wilc_netdev_ops = {
+ 
+ };
+ 
+-static int dev_state_ev_handler(struct notifier_block *this, unsigned long event, void *ptr)
++static int dev_state_ev_handler(struct notifier_block *this,
++				unsigned long event, void *ptr)
+ {
+ 	struct in_ifaddr *dev_iface = (struct in_ifaddr *)ptr;
+ 	struct wilc_priv *priv;
 -- 
-Kalle Valo
+1.9.1
+
