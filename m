@@ -1,41 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:20312 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751034AbcATVxd (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:47616 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755033AbcA0XHB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 16:53:33 -0500
-Subject: Re: [RFC V2 2/3] nl80211: add bss selection attribute to CONNECT
- command
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <1452678583-20086-1-git-send-email-arend@broadcom.com>
- <1452678583-20086-3-git-send-email-arend@broadcom.com>
- <1452769832.2444.14.camel@sipsolutions.net> <569CB190.1000901@broadcom.com>
- <1453209647.3896.22.camel@sipsolutions.net> <569EB9A6.4030808@broadcom.com>
- <1453298541.13263.10.camel@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Ilan Peer <ilan.peer@intel.com>
-From: Arend van Spriel <arend@broadcom.com>
-Message-ID: <56A001DA.9010400@broadcom.com> (sfid-20160120_225342_221279_AA3AE92E)
-Date: Wed, 20 Jan 2016 22:53:30 +0100
+	Wed, 27 Jan 2016 18:07:01 -0500
+Date: Wed, 27 Jan 2016 15:07:00 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Glen Lee <glen.lee@atmel.com>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	Ksenija =?utf-8?Q?Stanojevi=C4=87?=
+	<ksenija.stanojevic@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: Move wlan-ng out of staging?
+Message-ID: <20160127230700.GA13701@kroah.com> (sfid-20160128_000729_111309_DB22CDFA)
+References: <CAL7P5j+iYzpnR+xT013A7AV=bQ8bSn4W1K=qjieFCAiv1YmwRw@mail.gmail.com>
+ <20160125181220.GJ5325@mwanda>
+ <87r3h2ubcp.fsf@purkki.adurom.net>
+ <CAGRGNgVzbBGBOko-YG7h7rX+ZZHeKa5XHM3x+zdqz9mHX7nfRg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <1453298541.13263.10.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CAGRGNgVzbBGBOko-YG7h7rX+ZZHeKa5XHM3x+zdqz9mHX7nfRg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 20-1-2016 15:02, Johannes Berg wrote:
-> Ilan pointed me to this:
+On Thu, Jan 28, 2016 at 09:48:16AM +1100, Julian Calaby wrote:
+> Hi Glen,
 > 
-> http://androidxref.com/6.0.1_r10/xref/hardware/libhardware_legacy/include/hardware_legacy/gscan.h#351
+> On Thu, Jan 28, 2016 at 5:27 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> > Dan Carpenter <dan.carpenter@oracle.com> writes:
+> >
+> >> On Mon, Jan 25, 2016 at 01:16:56PM +0100, Ksenija Stanojević wrote:
+> >>> Hi All,
+> >>>
+> >>> I'm helping Greg do a bit of cleanup in the staging tree, I noticed that
+> >>> wlan-ng driver is maybe ready to be moved out of staging. Are there
+> >>> any TODO tasks left to do beside checkpatch.pl clean-up?
+> >
+> > For questions like this you should CC linux-wireless.
+> >
+> >> I happened to look through this code recently.  It's terrible.
+> >
+> > And uses wireless extensions, yuck. There's a lot of work to get it into
+> > reasonable shape, fixing checkpatch warnings will not be enough.
 > 
-> 
-> I'd say that would just be a separate primitive, and then Android would
-> pick that in some way?
+> On the same subject, the wilc1000 driver has taken some pretty big
+> steps in the past few days, how far away do you think it is from
+> graduating from staging?
 
-It was not part of my plan, but it seems to fit, yes. Android now uses
-vendor command with google oui for gscan if I am not mistaken.
+I have 221 patches in my to-apply queue to be merged for this driver, at
+the very least, those need to be merged before anyone should review it
+for graduation.  That number also implies that there is still quite a
+lot to be done, but I would not know for sure until that happens.
 
-Regards,
-Arend
+thanks,
+
+greg k-h
