@@ -1,77 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f41.google.com ([209.85.220.41]:36661 "EHLO
-	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751676AbcAEOHb (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8120 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753622AbcA0J6t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 09:07:31 -0500
-Received: by mail-pa0-f41.google.com with SMTP id yy13so123272972pab.3
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Jan 2016 06:07:31 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 10/13] staging: wilc1000: rename pstrHiddenNetwork in wilc_scan
-Date: Tue,  5 Jan 2016 23:06:54 +0900
-Message-Id: <1452002817-30937-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20160105_150734_472992_FFA94D71)
-In-Reply-To: <1452002817-30937-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1452002817-30937-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 27 Jan 2016 04:58:49 -0500
+From: Raja Mani <rmani@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH 10/12] ath10k: include irq related functions in ahb
+Date: Wed, 27 Jan 2016 15:24:31 +0530
+Message-ID: <1453888473-2879-11-git-send-email-rmani@qti.qualcomm.com> (sfid-20160127_105858_808549_B93E27E3)
+In-Reply-To: <1453888473-2879-1-git-send-email-rmani@qti.qualcomm.com>
+References: <1453888473-2879-1-git-send-email-rmani@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pstrHiddenNetwork to hidden_network to avoid
-camelcase.
+Add irq related functions to register,handle,release,disable interrupt.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+qca4019 supports msi interrupt, but it has the problem. Until the issue
+gets sorted out, only legacy interrupt model is enabled and used.
+
+Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 10 +++++-----
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath10k/ahb.c | 44 +++++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/ahb.h |  2 ++
+ 2 files changed, 46 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 1e27431..85aae56 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3675,7 +3675,7 @@ int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *stats)
- int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
- 	      u8 *ch_freq_list, u8 ch_list_len, const u8 *ies,
- 	      size_t ies_len, wilc_scan_result scan_result, void *user_arg,
--	      struct hidden_network *pstrHiddenNetwork)
-+	      struct hidden_network *hidden_network)
+diff --git a/drivers/net/wireless/ath/ath10k/ahb.c b/drivers/net/wireless/ath/ath10k/ahb.c
+index 2305078..29d0b6c 100644
+--- a/drivers/net/wireless/ath/ath10k/ahb.c
++++ b/drivers/net/wireless/ath/ath10k/ahb.c
+@@ -458,6 +458,50 @@ static void ath10k_ahb_halt_chip(struct ath10k *ar)
+ 	ath10k_dbg(ar, ATH10K_DBG_AHB, "core %d reset done\n", core_id);
+ }
+ 
++static irqreturn_t ath10k_ahb_interrupt_handler(int irq, void *arg)
++{
++	struct ath10k *ar = arg;
++	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
++
++	if (!ath10k_pci_irq_pending(ar))
++		return IRQ_NONE;
++
++	ath10k_pci_disable_and_clear_legacy_irq(ar);
++	tasklet_schedule(&ar_pci->intr_tq);
++
++	return IRQ_HANDLED;
++}
++
++static int ath10k_ahb_request_irq_legacy(struct ath10k *ar)
++{
++	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
++	int ret;
++
++	ret = request_irq(ar_ahb->irq,
++			  ath10k_ahb_interrupt_handler,
++			  IRQF_SHARED, "ath10k_ahb", ar);
++	if (ret) {
++		ath10k_warn(ar, "failed to request legacy irq %d: %d\n",
++			    ar_ahb->irq, ret);
++		return ret;
++	}
++
++	return 0;
++}
++
++static void ath10k_ahb_release_irq_legacy(struct ath10k *ar)
++{
++	struct ath10k_ahb *ar_ahb = ath10k_ahb_priv(ar);
++
++	free_irq(ar_ahb->irq, ar);
++}
++
++static void ath10k_ahb_irq_disable(struct ath10k *ar)
++{
++	ath10k_ce_disable_interrupts(ar);
++	ath10k_pci_disable_and_clear_legacy_irq(ar);
++}
++
+ static int ath10k_ahb_probe(struct platform_device *pdev)
  {
- 	int result = 0;
- 	struct host_if_msg msg;
-@@ -3690,12 +3690,12 @@ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
+ 	return 0;
+diff --git a/drivers/net/wireless/ath/ath10k/ahb.h b/drivers/net/wireless/ath/ath10k/ahb.h
+index 4761eeb..97c40e4 100644
+--- a/drivers/net/wireless/ath/ath10k/ahb.h
++++ b/drivers/net/wireless/ath/ath10k/ahb.h
+@@ -26,6 +26,8 @@ struct ath10k_ahb {
+ 	void __iomem *gcc_mem;
+ 	void __iomem *tcsr_mem;
  
- 	msg.id = HOST_IF_MSG_SCAN;
- 
--	if (pstrHiddenNetwork) {
--		msg.body.scan_info.hidden_network.net_info = pstrHiddenNetwork->net_info;
--		msg.body.scan_info.hidden_network.n_ssids = pstrHiddenNetwork->n_ssids;
-+	if (hidden_network) {
-+		msg.body.scan_info.hidden_network.net_info = hidden_network->net_info;
-+		msg.body.scan_info.hidden_network.n_ssids = hidden_network->n_ssids;
- 
- 	} else
--		PRINT_D(HOSTINF_DBG, "pstrHiddenNetwork IS EQUAL TO NULL\n");
-+		PRINT_D(HOSTINF_DBG, "hidden_network IS EQUAL TO NULL\n");
- 
- 	msg.vif = vif;
- 	msg.body.scan_info.src = scan_source;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 693a3f5..b58c33a 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -338,7 +338,7 @@ int wilc_get_rssi(struct wilc_vif *vif, s8 *rssi_level);
- int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
- 	      u8 *ch_freq_list, u8 ch_list_len, const u8 *ies,
- 	      size_t ies_len, wilc_scan_result scan_result, void *user_arg,
--	      struct hidden_network *pstrHiddenNetwork);
-+	      struct hidden_network *hidden_network);
- int wilc_hif_set_cfg(struct wilc_vif *vif,
- 		     struct cfg_param_val *cfg_param);
- s32 wilc_init(struct net_device *dev, struct host_if_drv **phWFIDrv);
++	int irq;
++
+ 	struct clk *cmd_clk;
+ 	struct clk *ref_clk;
+ 	struct clk *rtc_clk;
 -- 
-2.6.4
+1.8.1.2
 
