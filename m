@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:52866 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:14320 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933853AbcALHhw (ORCPT
+	with ESMTP id S1752238AbcA0C5m (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 02:37:52 -0500
+	Tue, 26 Jan 2016 21:57:42 -0500
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 22/26] staging: wilc1000: disable power save when AP mode
-Date: Tue, 12 Jan 2016 16:39:51 +0900
-Message-ID: <1452584395-24910-23-git-send-email-glen.lee@atmel.com> (sfid-20160112_083757_646946_DD1B42C1)
-In-Reply-To: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
-References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH 06/13] staging: wilc1000: fixes missing a blank line after declarations
+Date: Wed, 27 Jan 2016 11:50:30 +0900
+Message-ID: <1453863037-31073-6-git-send-email-glen.lee@atmel.com> (sfid-20160127_035744_377211_43CA6367)
+In-Reply-To: <1453863037-31073-1-git-send-email-glen.lee@atmel.com>
+References: <1453863037-31073-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch disables power save mode in case of AP mode.
+From: Leo Kim <leo.kim@atmel.com>
 
+This patch fixes the warnings reported by checkpatch.pl
+for Missing a blank line after declarations.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/staging/wilc1000/linux_wlan.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index b5731af..5839c2b 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2203,6 +2203,7 @@ static int start_ap(struct wiphy *wiphy, struct net_device *dev,
- 		PRINT_ER("Error in setting channel\n");
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index fd405b0..402f8ce 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -853,6 +853,7 @@ static void wlan_deinitialize_threads(struct net_device *dev)
+ {
+ 	struct wilc_vif *vif;
+ 	struct wilc *wl;
++
+ 	vif = netdev_priv(dev);
+ 	wl = vif->wilc;
  
- 	wilc_wlan_set_bssid(dev, wl->vif[vif->u8IfIdx]->src_addr, AP_MODE);
-+	wilc_set_power_mgmt(vif, 0, 0);
+@@ -1473,6 +1474,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
  
- 	s32Error = wilc_add_beacon(vif, settings->beacon_interval,
- 				   settings->dtim_period, beacon->head_len,
+ 		{
+ 			struct wireless_dev *wdev;
++
+ 			wdev = wilc_create_wiphy(ndev, dev);
+ 
+ 			if (dev)
 -- 
 1.9.1
 
