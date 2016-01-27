@@ -1,54 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33355 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754197AbcA0M1Q convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 07:27:16 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: kbuild test robot <lkp@intel.com>
-Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	kbuild-all@01.org, linux-wireless@vger.kernel.org,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH 4/5] brcmfmac: access PMU registers using standalone PMU core if available
-References: <201601270149.Nwdmoe5L%fengguang.wu@intel.com>
-Date: Wed, 27 Jan 2016 14:27:08 +0200
-In-Reply-To: <201601270149.Nwdmoe5L%fengguang.wu@intel.com> (kbuild test
-	robot's message of "Wed, 27 Jan 2016 01:30:32 +0800")
-Message-ID: <87k2mvnr6r.fsf@kamboji.qca.qualcomm.com> (sfid-20160127_132719_981490_29BFFD73)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:47873 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751298AbcA0MOP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2016 07:14:15 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Beniamino Galvani <bgalvani@redhat.com>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] wext: fix message delay/ordering
+Date: Wed, 27 Jan 2016 13:14:10 +0100
+Message-Id: <1453896850-22775-1-git-send-email-johannes@sipsolutions.net> (sfid-20160127_131419_031860_43892E09)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kbuild test robot <lkp@intel.com> writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> Hi Rafał,
->
-> [auto build test ERROR on wireless-drivers/master]
-> [also build test ERROR on v4.5-rc1 next-20160125]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
->
-> url:    https://github.com/0day-ci/linux/commits/Rafa-Mi-ecki/brcmfmac-support-for-new-14e43-4365-card-with-BCM4366/20160127-010149
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git master
-> config: x86_64-allmodconfig (attached as .config)
-> reproduce:
->         # save the attached .config to linux build tree
->         make ARCH=x86_64 
->
-> All errors (new ones prefixed by >>):
->
->    drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c: In function 'brcmf_chip_get_pmu':
->>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:1143:25: error: 'BCMA_CC_CAP_EXT_AOB_PRESENT' undeclared (first use in this function)
->          pub->cc_caps_ext & BCMA_CC_CAP_EXT_AOB_PRESENT) {
->                             ^
->    drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:1143:25: note: each undeclared identifier is reported only once for each function it appears in
+Beniamino reported that he was getting an RTM_NEWLINK message for a
+given interface, after the RTM_DELLINK for it. It turns out that the
+message is a wireless extensions message, which was sent because the
+interface had been connected and disconnection while it was deleted
+caused a wext message.
 
-I think this error was as expected because this set depends on "bcma:
-support PMU present as separated bus core" which is not yet applied.
+It's strange that wext uses RTM_NEWLINK, and the message is somewhat
+malformed without any proper attributes, causing "ip monitor link"
+to print just rudimentary information:
 
+5: wlan1: <BROADCAST,MULTICAST> mtu 1500 qdisc mq state DOWN group default
+    link/ether 02:00:00:00:01:00 brd ff:ff:ff:ff:ff:ff
+Deleted 5: wlan1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN group default
+    link/ether 02:00:00:00:01:00 brd ff:ff:ff:ff:ff:ff
+5: wlan1: <BROADCAST,MULTICAST,UP>
+    link/ether
+(from my hwsim reproduction)
+
+The reason for this is that wext schedules a worker to send out the
+messages, and the scheduling delay can cause the messages to get out
+to userspace after the RTM_DELLINK.
+
+To fix this, have wext register a netdevice notifier and flush out
+any pending messages when a netdevice is unregistered.
+
+Cc: stable@vger.kernel.org
+Reported-by: Beniamino Galvani <bgalvani@redhat.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/wireless/wext-core.c | 48 ++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 38 insertions(+), 10 deletions(-)
+
+diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
+index c8717c1d082e..4e4e1c5236cc 100644
+--- a/net/wireless/wext-core.c
++++ b/net/wireless/wext-core.c
+@@ -342,6 +342,38 @@ static const int compat_event_type_size[] = {
+ 
+ /* IW event code */
+ 
++static void wireless_nlevent_flush(void)
++{
++	struct sk_buff *skb;
++	struct net *net;
++
++	ASSERT_RTNL();
++
++	for_each_net(net) {
++		while ((skb = skb_dequeue(&net->wext_nlevents)))
++			rtnl_notify(skb, net, 0, RTNLGRP_LINK, NULL,
++				    GFP_KERNEL);
++	}
++}
++
++static int wext_netdev_notifier_call(struct notifier_block *nb,
++				     unsigned long state, void *ptr)
++{
++	/*
++	 * When a netdev is unregistered, flush all pending messages
++	 * to avoid them going out after the RTM_DELLINK, which can
++	 * happen due to the schedule_work().
++	 */
++	if (state == NETDEV_UNREGISTER)
++		wireless_nlevent_flush();
++
++	return NOTIFY_OK;
++}
++
++static struct notifier_block wext_netdev_notifier = {
++	.notifier_call = wext_netdev_notifier_call,
++};
++
+ static int __net_init wext_pernet_init(struct net *net)
+ {
+ 	skb_queue_head_init(&net->wext_nlevents);
+@@ -360,6 +392,11 @@ static struct pernet_operations wext_pernet_ops = {
+ 
+ static int __init wireless_nlevent_init(void)
+ {
++	int err = register_netdevice_notifier(&wext_netdev_notifier);
++
++	if (err)
++		return err;
++
+ 	return register_pernet_subsys(&wext_pernet_ops);
+ }
+ 
+@@ -368,17 +405,8 @@ subsys_initcall(wireless_nlevent_init);
+ /* Process events generated by the wireless layer or the driver. */
+ static void wireless_nlevent_process(struct work_struct *work)
+ {
+-	struct sk_buff *skb;
+-	struct net *net;
+-
+ 	rtnl_lock();
+-
+-	for_each_net(net) {
+-		while ((skb = skb_dequeue(&net->wext_nlevents)))
+-			rtnl_notify(skb, net, 0, RTNLGRP_LINK, NULL,
+-				    GFP_KERNEL);
+-	}
+-
++	wireless_nlevent_flush();
+ 	rtnl_unlock();
+ }
+ 
 -- 
-Kalle Valo
+2.6.2
+
