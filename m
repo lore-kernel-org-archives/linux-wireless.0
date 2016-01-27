@@ -1,46 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:34601 "EHLO
-	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757343AbcAaNZF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2016 08:25:05 -0500
-Received: by mail-pf0-f194.google.com with SMTP id 65so6221203pfd.1
-        for <linux-wireless@vger.kernel.org>; Sun, 31 Jan 2016 05:25:05 -0800 (PST)
-From: Rakhi Sharma <rakhish1994@gmail.com>
-To: Jes.Sorensen@redhat.com, Larry.Finger@lwfinger.net,
-	gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Rakhi Sharma <rakhish1994@gmail.com>
-Subject: [PATCH 3/3] Staging: rtl8723au: core: rtw_ieee80211: Fixed space and brace coding style issue.
-Date: Sun, 31 Jan 2016 18:54:03 +0530
-Message-Id: <1454246643-24049-1-git-send-email-rakhish1994@gmail.com> (sfid-20160131_142511_027624_86D3B620)
+Received: from s3.sipsolutions.net ([5.9.151.49]:48600 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932555AbcA0O1C (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2016 09:27:02 -0500
+Message-ID: <1453904819.2351.7.camel@sipsolutions.net> (sfid-20160127_152706_374919_F898E305)
+Subject: Re: [PATCH v2] mac80211: expose txq queue depth and size to drivers
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 27 Jan 2016 15:26:59 +0100
+In-Reply-To: <1453904772-25289-1-git-send-email-michal.kazior@tieto.com> (sfid-20160127_152508_654339_7FE9E06C)
+References: <1453382588-27105-1-git-send-email-michal.kazior@tieto.com>
+	 <1453904772-25289-1-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20160127_152508_654339_7FE9E06C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixed the space and brace coding style error.
-ERROR: space required before that '='
-ERROR: that open brace { should be on the previous line.
+On Wed, 2016-01-27 at 15:26 +0100, Michal Kazior wrote:
+> 
+> @@ -1294,6 +1298,8 @@ struct sk_buff *ieee80211_tx_dequeue(struct
+> ieee80211_hw *hw,
+>  	if (!skb)
+>  		goto out;
+>  
+> +	txqi->byte_cnt -= skb->len;
+> +
+>  	atomic_dec(&sdata->txqs_len[ac]);
+> 
+This *looks* a bit worrying - you have an atomic dec for the # of
+packets and a non-atomic one for the bytes.
 
-Signed-off-by: Rakhi Sharma <rakhish1994@gmail.com>
----
- drivers/staging/rtl8723au/core/rtw_ieee80211.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+You probably thought about it and I guess it's fine, but can you
+explain it?
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_ieee80211.c b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
-index 3b0d782..0c933e4 100644
---- a/drivers/staging/rtl8723au/core/rtw_ieee80211.c
-+++ b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
-@@ -65,8 +65,8 @@ static u8 WIFI_OFDMRATES[] = {
- 
- int rtw_get_bit_value_from_ieee_value23a(u8 val)
- {
--	unsigned char dot11_rate_table[] =
--			{2, 4, 11, 22, 12, 18, 24, 36, 48, 72, 96, 108, 0};
-+	unsigned char dot11_rate_table[] = {
-+		2, 4, 11, 22, 12, 18, 24, 36, 48, 72, 96, 108, 0};
- 
- 	int i = 0;
- 
--- 
-1.9.1
-
+johannes
