@@ -1,45 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:28518 "EHLO mga04.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:48619 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757268AbcAaLG7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2016 06:06:59 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Gregory Greenman <gregory.greenman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 27/31] iwlwifi: mvm: rs: fix TPC action decision algorithm
-Date: Sun, 31 Jan 2016 13:06:22 +0200
-Message-Id: <1454238386-27032-27-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160131_123655_431477_846CED1F)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+	id S932555AbcA0Odv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2016 09:33:51 -0500
+Message-ID: <1453905229.2351.8.camel@sipsolutions.net> (sfid-20160127_153356_502496_03234AF8)
+Subject: Re: [RFC] mac80211: introduce netdev queue control for txqs
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless@vger.kernel.org
+Date: Wed, 27 Jan 2016 15:33:49 +0100
+In-Reply-To: <1453904917-25458-1-git-send-email-michal.kazior@tieto.com> (sfid-20160127_152732_241232_E83365C7)
+References: <1453904917-25458-1-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20160127_152732_241232_E83365C7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+On Wed, 2016-01-27 at 15:28 +0100, Michal Kazior wrote:
+> Until now all stations (notably in AP mode) would
+> share 4 AC queues exposed via netdev. This meant
+> that whenever a single station's AC became full
+> all other stations' AC were considered full and
+> stopped as well.
+> 
+> This was suboptimal and could lead to per station
+> traffic starvation and/or suboptimal Tx
+> aggregation performance.
 
-Decreasing Tx power is allowed only when success ratio is
-above the threshold defined in the algorithm. Add this condition.
+I really think you need to Cc netdev on this :)
 
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index 7bb6fd0..986e12a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -2040,7 +2040,8 @@ static enum tpc_action rs_get_tpc_action(struct iwl_mvm *mvm,
- 	}
- 
- 	/* try decreasing first if applicable */
--	if (weak != TPC_INVALID) {
-+	if (sr >= RS_PERCENT(IWL_MVM_RS_TPC_SR_NO_INCREASE) &&
-+	    weak != TPC_INVALID) {
- 		if (weak_tpt == IWL_INVALID_VALUE &&
- 		    (strong_tpt == IWL_INVALID_VALUE ||
- 		     current_tpt >= strong_tpt)) {
--- 
-2.5.0
-
+johannes
