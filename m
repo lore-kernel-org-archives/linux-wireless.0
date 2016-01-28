@@ -1,89 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:36322 "EHLO
-	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758982AbcALAdH (ORCPT
+Received: from mail2-relais-roc.national.inria.fr ([192.134.164.83]:8650 "EHLO
+	mail2-relais-roc.national.inria.fr" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934321AbcA1KYb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jan 2016 19:33:07 -0500
-Received: by mail-pf0-f196.google.com with SMTP id n128so4171290pfn.3
-        for <linux-wireless@vger.kernel.org>; Mon, 11 Jan 2016 16:33:06 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 1/5] staging: wilc1000: fix alignment of open parenthesis
-Date: Tue, 12 Jan 2016 09:32:51 +0900
-Message-Id: <1452558775-21532-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160112_013311_408068_19961F04)
+	Thu, 28 Jan 2016 05:24:31 -0500
+Date: Thu, 28 Jan 2016 11:24:03 +0100 (CET)
+From: Julia Lawall <julia.lawall@lip6.fr>
+To: Julian Calaby <julian.calaby@gmail.com>
+cc: Johannes Berg <johannes@sipsolutions.net>,
+	Chris Bainbridge <chris.bainbridge@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	aryabinin@virtuozzo.com, Julia Lawall <Julia.Lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org, Joe Perches <joe@perches.com>
+Subject: Re: [PATCH] net/mac80211/agg-rx.c: fix use of uninitialised values
+In-Reply-To: <CAGRGNgVqtj8SwP-gEt0ZnbgWzgVHjcY9Q=JyB6bf6d_m+8mvhA@mail.gmail.com>
+Message-ID: <alpine.DEB.2.10.1601281120580.2516@hadrien> (sfid-20160128_112457_790876_C9F3509E)
+References: <20160126111730.GA6765@localhost> <20160127154618.GA5717@localhost> <CAGRGNgXkvNfzM9Q1RO5kFwUWpFZbQ3mNQi3aVHcPTCw0A9fyFA@mail.gmail.com> <1453974492.2217.2.camel@sipsolutions.net>
+ <CAGRGNgVqtj8SwP-gEt0ZnbgWzgVHjcY9Q=JyB6bf6d_m+8mvhA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes alignment of open parenthesis found by checkpatch.pl
-CHECK: Alignment should match open parenthesis
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 5fac516..d735267 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -303,7 +303,7 @@ static s32 handle_set_channel(struct wilc_vif *vif,
- 	PRINT_D(HOSTINF_DBG, "Setting channel\n");
- 
- 	result = wilc_send_config_pkt(vif->wilc, SET_CFG, &wid, 1,
--				 wilc_get_vif_idx(vif));
-+				      wilc_get_vif_idx(vif));
- 
- 	if (result) {
- 		PRINT_ER("Failed to set channel\n");
-@@ -350,7 +350,7 @@ static s32 handle_set_operation_mode(struct wilc_vif *vif,
- 	wid.size = sizeof(u32);
- 
- 	result = wilc_send_config_pkt(vif->wilc, SET_CFG, &wid, 1,
--				 wilc_get_vif_idx(vif));
-+				      wilc_get_vif_idx(vif));
- 
- 	if ((hif_op_mode->mode) == IDLE_MODE)
- 		up(&hif_sema_driver);
-@@ -383,7 +383,7 @@ static s32 handle_set_ip_address(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
- 	wid.size = IP_ALEN;
- 
- 	result = wilc_send_config_pkt(vif->wilc, SET_CFG, &wid, 1,
--				 wilc_get_vif_idx(vif));
-+				      wilc_get_vif_idx(vif));
- 
- 	host_int_get_ipaddress(vif, firmware_ip_addr, idx);
- 
-@@ -408,7 +408,7 @@ static s32 handle_get_ip_address(struct wilc_vif *vif, u8 idx)
- 	wid.size = IP_ALEN;
- 
- 	result = wilc_send_config_pkt(vif->wilc, GET_CFG, &wid, 1,
--				 wilc_get_vif_idx(vif));
-+				      wilc_get_vif_idx(vif));
- 
- 	PRINT_INFO(HOSTINF_DBG, "%pI4\n", wid.val);
- 
-@@ -451,7 +451,7 @@ static s32 handle_set_mac_address(struct wilc_vif *vif,
- 	PRINT_D(GENERIC_DBG, "mac addr = :%pM\n", wid.val);
- 
- 	result = wilc_send_config_pkt(vif->wilc, SET_CFG, &wid, 1,
--				 wilc_get_vif_idx(vif));
-+				      wilc_get_vif_idx(vif));
- 	if (result) {
- 		PRINT_ER("Failed to set mac address\n");
- 		result = -EFAULT;
-@@ -473,7 +473,7 @@ static s32 handle_get_mac_address(struct wilc_vif *vif,
- 	wid.size = ETH_ALEN;
- 
- 	result = wilc_send_config_pkt(vif->wilc, GET_CFG, &wid, 1,
--				 wilc_get_vif_idx(vif));
-+				      wilc_get_vif_idx(vif));
- 
- 	if (result) {
- 		PRINT_ER("Failed to get mac address\n");
--- 
-2.6.4
+On Thu, 28 Jan 2016, Julian Calaby wrote:
+
+> Hi Johannes,
+>
+> On Thu, Jan 28, 2016 at 8:48 PM, Johannes Berg
+> <johannes@sipsolutions.net> wrote:
+> > On Thu, 2016-01-28 at 10:27 +1100, Julian Calaby wrote:
+> >> I'd prefer to just set ->removed to false right after we set
+> >> ->auto_seq as that should be faster, however I don't know if
+> >> __ieee80211_start_rx_ba_session() is a fast path so I don't know if
+> >> this is saving anything.
+> >
+> > It's not supposed to be called frequently, no.
+>
+> Then most of my commentary is moot.
+>
+> I guess the argument comes down to do we zero everything or initialise
+> everything, and if speed isn't an issue, the former is better.
+>
+> >> On another note, this is an error that should be pretty easy to spot.
+> >> Could any of the automated tools find cases where a struct containing
+> >> a bool variable is kmalloc'd and returned without assigning all the
+> >> bools?
+> >
+> > I think you'd quickly drown in false positives, since "return" isn't
+> > necessarily something that means it needs to have been fully
+> > initialized.
+>
+> True.
+>
+> Either way, I'm guessing that UBSAN will pick up a lot of similar bugs
+> and the output of that is probably a much smaller haystack to dig
+> through than just "every" kmalloc() call.
+
+It could be possible to find the cases where most of the fields are
+initialized, but one is left out.  This could be done for all the fields of
+a given type, or in general.
+
+julia
 
