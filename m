@@ -1,57 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f54.google.com ([209.85.215.54]:35856 "EHLO
-	mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759071AbcAUNMV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 08:12:21 -0500
-Received: by mail-lf0-f54.google.com with SMTP id h129so26537520lfh.3
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 05:12:21 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
+Received: from mga09.intel.com ([134.134.136.24]:20530 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755477AbcA1OTa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jan 2016 09:19:30 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 0/5] ath10k: add basic hostq support
-Date: Thu, 21 Jan 2016 14:13:22 +0100
-Message-Id: <1453382007-24622-1-git-send-email-michal.kazior@tieto.com> (sfid-20160121_141224_451378_71845F6F)
-In-Reply-To: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
-References: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/3] mac80211: change ieee80211_rx_reorder_ready() arguments
+Date: Thu, 28 Jan 2016 16:19:24 +0200
+Message-Id: <1453990766-2065-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160128_152050_872632_9F5706B9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There's a new firmware feature which uses a shared
-DMA memory so host can share it's per-sta per-tid
-queue size which is then subsequently used for
-firmware to assist in deciding which frames to put
-on the intermediate host-device tx queue.
+From: Johannes Berg <johannes.berg@intel.com>
 
-This patchset adds only basic support to make
-the firmware supporting the feature happy and
-running at all. Without it firmware would freeze
-shortly after booting.
+Clean up ieee80211_rx_reorder_ready() callers by passing the RX
+TID struct and the index, instead of the frames list. This will
+make it more extensible as well.
 
-More patches will follow some time later to add
-the "new data path" logic.
+While at it, move the inline to rx.c as it's only used there.
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/ieee80211_i.h | 14 --------------
+ net/mac80211/rx.c          | 33 ++++++++++++++++++++++++---------
+ 2 files changed, 24 insertions(+), 23 deletions(-)
 
-v2:
- * fix gfp allocation [Ben]
-
-
-Michal Kazior (5):
-  ath10k: rename some HTT events
-  ath10k: add new htt definitions
-  ath10k: add new FW_FEATURE_PEER_FLOW_CONTROL
-  ath10k: clean up cont frag desc init code
-  ath10k: implement basic support for new tx path firmware
-
- drivers/net/wireless/ath/ath10k/core.c   |   1 +
- drivers/net/wireless/ath/ath10k/core.h   |   9 ++
- drivers/net/wireless/ath/ath10k/htt.c    |   8 +-
- drivers/net/wireless/ath/ath10k/htt.h    | 169 +++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath10k/htt_rx.c |   8 +-
- drivers/net/wireless/ath/ath10k/htt_tx.c | 146 +++++++++++++++++++++-----
- 6 files changed, 302 insertions(+), 39 deletions(-)
-
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index a29f61d..5ea9514 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1837,20 +1837,6 @@ static inline void ieee802_11_parse_elems(const u8 *start, size_t len,
+ 	ieee802_11_parse_elems_crc(start, len, action, elems, 0, 0);
+ }
+ 
+-static inline bool ieee80211_rx_reorder_ready(struct sk_buff_head *frames)
+-{
+-	struct sk_buff *tail = skb_peek_tail(frames);
+-	struct ieee80211_rx_status *status;
+-
+-	if (!tail)
+-		return false;
+-
+-	status = IEEE80211_SKB_RXCB(tail);
+-	if (status->flag & RX_FLAG_AMSDU_MORE)
+-		return false;
+-
+-	return true;
+-}
+ 
+ extern const int ieee802_1d_to_ac[8];
+ 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index ae993ed..a607518 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -4,6 +4,7 @@
+  * Copyright 2006-2007	Jiri Benc <jbenc@suse.cz>
+  * Copyright 2007-2010	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
++ * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -798,6 +799,23 @@ static ieee80211_rx_result ieee80211_rx_mesh_check(struct ieee80211_rx_data *rx)
+ 	return RX_CONTINUE;
+ }
+ 
++static inline bool ieee80211_rx_reorder_ready(struct tid_ampdu_rx *tid_agg_rx,
++					      int index)
++{
++	struct sk_buff_head *frames = &tid_agg_rx->reorder_buf[index];
++	struct sk_buff *tail = skb_peek_tail(frames);
++	struct ieee80211_rx_status *status;
++
++	if (!tail)
++		return false;
++
++	status = IEEE80211_SKB_RXCB(tail);
++	if (status->flag & RX_FLAG_AMSDU_MORE)
++		return false;
++
++	return true;
++}
++
+ static void ieee80211_release_reorder_frame(struct ieee80211_sub_if_data *sdata,
+ 					    struct tid_ampdu_rx *tid_agg_rx,
+ 					    int index,
+@@ -812,7 +830,7 @@ static void ieee80211_release_reorder_frame(struct ieee80211_sub_if_data *sdata,
+ 	if (skb_queue_empty(skb_list))
+ 		goto no_frame;
+ 
+-	if (!ieee80211_rx_reorder_ready(skb_list)) {
++	if (!ieee80211_rx_reorder_ready(tid_agg_rx, index)) {
+ 		__skb_queue_purge(skb_list);
+ 		goto no_frame;
+ 	}
+@@ -866,7 +884,7 @@ static void ieee80211_sta_reorder_release(struct ieee80211_sub_if_data *sdata,
+ 
+ 	/* release the buffer until next missing frame */
+ 	index = tid_agg_rx->head_seq_num % tid_agg_rx->buf_size;
+-	if (!ieee80211_rx_reorder_ready(&tid_agg_rx->reorder_buf[index]) &&
++	if (!ieee80211_rx_reorder_ready(tid_agg_rx, index) &&
+ 	    tid_agg_rx->stored_mpdu_num) {
+ 		/*
+ 		 * No buffers ready to be released, but check whether any
+@@ -875,8 +893,7 @@ static void ieee80211_sta_reorder_release(struct ieee80211_sub_if_data *sdata,
+ 		int skipped = 1;
+ 		for (j = (index + 1) % tid_agg_rx->buf_size; j != index;
+ 		     j = (j + 1) % tid_agg_rx->buf_size) {
+-			if (!ieee80211_rx_reorder_ready(
+-					&tid_agg_rx->reorder_buf[j])) {
++			if (!ieee80211_rx_reorder_ready(tid_agg_rx, j)) {
+ 				skipped++;
+ 				continue;
+ 			}
+@@ -903,8 +920,7 @@ static void ieee80211_sta_reorder_release(struct ieee80211_sub_if_data *sdata,
+ 				 skipped) & IEEE80211_SN_MASK;
+ 			skipped = 0;
+ 		}
+-	} else while (ieee80211_rx_reorder_ready(
+-				&tid_agg_rx->reorder_buf[index])) {
++	} else while (ieee80211_rx_reorder_ready(tid_agg_rx, index)) {
+ 		ieee80211_release_reorder_frame(sdata, tid_agg_rx, index,
+ 						frames);
+ 		index =	tid_agg_rx->head_seq_num % tid_agg_rx->buf_size;
+@@ -915,8 +931,7 @@ static void ieee80211_sta_reorder_release(struct ieee80211_sub_if_data *sdata,
+ 
+ 		for (; j != (index - 1) % tid_agg_rx->buf_size;
+ 		     j = (j + 1) % tid_agg_rx->buf_size) {
+-			if (ieee80211_rx_reorder_ready(
+-					&tid_agg_rx->reorder_buf[j]))
++			if (ieee80211_rx_reorder_ready(tid_agg_rx, j))
+ 				break;
+ 		}
+ 
+@@ -987,7 +1002,7 @@ static bool ieee80211_sta_manage_reorder_buf(struct ieee80211_sub_if_data *sdata
+ 	index = mpdu_seq_num % tid_agg_rx->buf_size;
+ 
+ 	/* check if we already stored this frame */
+-	if (ieee80211_rx_reorder_ready(&tid_agg_rx->reorder_buf[index])) {
++	if (ieee80211_rx_reorder_ready(tid_agg_rx, index)) {
+ 		dev_kfree_skb(skb);
+ 		goto out;
+ 	}
 -- 
-2.1.4
+2.5.0
 
