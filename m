@@ -1,97 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.22]:55637 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752290AbcAATO4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2016 14:14:56 -0500
-Subject: Re: [PATCH 2/2] net-ath9k_htc: Replace a variable initialisation by
- an assignment in ath9k_htc_set_channel()
-To: SF Markus Elfring <elfring@users.sourceforge.net>,
-	ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	Kalle Valo <kvalo@codeaurora.org>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <5686C390.5060600@users.sourceforge.net>
- <5686C47E.1040906@users.sourceforge.net>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-From: Oleksij Rempel <linux@rempel-privat.de>
-Message-ID: <5686D010.1060401@rempel-privat.de> (sfid-20160101_201549_304538_A7E63D74)
-Date: Fri, 1 Jan 2016 20:14:24 +0100
-MIME-Version: 1.0
-In-Reply-To: <5686C47E.1040906@users.sourceforge.net>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="iIDs71WpC9nd6brTonQTiKvAI0rg09UA7"
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:32450 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752271AbcA1SLN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jan 2016 13:11:13 -0500
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 4/4] wil6210: TX vring optimization
+Date: Thu, 28 Jan 2016 19:24:05 +0200
+Message-Id: <1454001845-28414-5-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160128_191115_687214_9F8F4948)
+In-Reply-To: <1454001845-28414-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1454001845-28414-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---iIDs71WpC9nd6brTonQTiKvAI0rg09UA7
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
 
-Am 01.01.2016 um 19:25 schrieb SF Markus Elfring:
-> From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Fri, 1 Jan 2016 19:09:32 +0100
->=20
-> Replace an explicit initialisation for one local variable at the beginn=
-ing
-> by a conditional assignment.
->=20
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-> ---
->  drivers/net/wireless/ath/ath9k/htc_drv_main.c | 7 ++-----
->  1 file changed, 2 insertions(+), 5 deletions(-)
->=20
-> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/ne=
-t/wireless/ath/ath9k/htc_drv_main.c
-> index a680a97..30bd59e 100644
-> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
-> @@ -246,7 +246,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_p=
-riv *priv,
->  	struct ieee80211_conf *conf =3D &common->hw->conf;
->  	bool fastcc;
->  	struct ieee80211_channel *channel =3D hw->conf.chandef.chan;
-> -	struct ath9k_hw_cal_data *caldata =3D NULL;
-> +	struct ath9k_hw_cal_data *caldata;
->  	enum htc_phymode mode;
->  	__be16 htc_mode;
->  	u8 cmd_rsp;
-> @@ -274,10 +274,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_=
-priv *priv,
->  		priv->ah->curchan->channel,
->  		channel->center_freq, conf_is_ht(conf), conf_is_ht40(conf),
->  		fastcc);
-> -
-> -	if (!fastcc)
-> -		caldata =3D &priv->caldata;
-> -
-> +	caldata =3D fastcc ? NULL : &priv->caldata;
->  	ret =3D ath9k_hw_reset(ah, hchan, caldata, fastcc);
->  	if (ret) {
->  		ath_err(common,
->=20
+Tx vring needs to be enlarged to get better
+performance for traffic over 2Gbps.
 
-Reviewed-by: Oleksij Rempel <linux@rempel-privat.de>
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c | 6 +++---
+ drivers/net/wireless/ath/wil6210/wil6210.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
---=20
-Regards,
-Oleksij
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index a1d10b8..3bbe73b 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2012-2015 Qualcomm Atheros, Inc.
++ * Copyright (c) 2012-2016 Qualcomm Atheros, Inc.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -68,13 +68,13 @@ static void wil_print_vring(struct seq_file *s, struct wil6210_priv *wil,
+ 		seq_puts(s, "???\n");
+ 	}
+ 
+-	if (vring->va && (vring->size < 1025)) {
++	if (vring->va && (vring->size <= (1 << WIL_RING_SIZE_ORDER_MAX))) {
+ 		uint i;
+ 
+ 		for (i = 0; i < vring->size; i++) {
+ 			volatile struct vring_tx_desc *d = &vring->va[i].tx;
+ 
+-			if ((i % 64) == 0 && (i != 0))
++			if ((i % 128) == 0 && (i != 0))
+ 				seq_puts(s, "\n");
+ 			seq_printf(s, "%c", (d->dma.status & BIT(0)) ?
+ 					_s : (vring->ctx[i].skb ? _h : 'h'));
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 9502965..8427d68 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -51,7 +51,7 @@ static inline u32 WIL_GET_BITS(u32 x, int b0, int b1)
+ 
+ #define WIL_TX_Q_LEN_DEFAULT		(4000)
+ #define WIL_RX_RING_SIZE_ORDER_DEFAULT	(10)
+-#define WIL_TX_RING_SIZE_ORDER_DEFAULT	(10)
++#define WIL_TX_RING_SIZE_ORDER_DEFAULT	(12)
+ #define WIL_BCAST_RING_SIZE_ORDER_DEFAULT	(7)
+ #define WIL_BCAST_MCS0_LIMIT		(1024) /* limit for MCS0 frame size */
+ /* limit ring size in range [32..32k] */
+-- 
+1.8.5.2
 
-
---iIDs71WpC9nd6brTonQTiKvAI0rg09UA7
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iF4EAREIAAYFAlaG0BUACgkQHwImuRkmbWmbIAD/atiZa0Xy3ThlaQHLJVSFBLkS
-ypnkjeykyF5QClTNPRsA/R2K1RddEZFk+dMfjZdq5iuOaz6oUaz5qvPS2G55rsE2
-=KzYR
------END PGP SIGNATURE-----
-
---iIDs71WpC9nd6brTonQTiKvAI0rg09UA7--
