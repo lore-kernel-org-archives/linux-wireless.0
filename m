@@ -1,37 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41727 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505AbcADJig (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:12187 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751382AbcA1HQd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2016 04:38:36 -0500
-Date: Mon, 4 Jan 2016 12:38:29 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Kalle Valo <kvalo@codeaurora.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH 1/3] rsi: Delete unnecessary variable initialisations in
- rsi_send_mgmt_pkt()
-Message-ID: <20160104093829.GE5284@mwanda> (sfid-20160104_103855_554320_4B218D89)
-References: <566ABCD9.1060404@users.sourceforge.net>
- <5687E169.4070704@users.sourceforge.net>
- <5687E203.1070404@users.sourceforge.net>
- <20160104092857.GD5284@mwanda>
+	Thu, 28 Jan 2016 02:16:33 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 05/12] staging: wilc1000: wilc_parse_network_info(): renames function variables
+Date: Thu, 28 Jan 2016 16:13:39 +0900
+Message-ID: <1453965226-6158-5-git-send-email-leo.kim@atmel.com> (sfid-20160128_081726_227234_BC8D14B2)
+In-Reply-To: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
+References: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160104092857.GD5284@mwanda>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Btw, GCC misses a lot of uninitialized variable bugs.  I have a Smatch
-check which sometimes catches the bugs that GCC misses but you should
-not rely on the tools here.  These patches need to be reviewed manually.
+This patch renames to avoid camelcase, changes follow are:
+ - pu8MsgBuffer to msg_buffer
+ - ppstrNetworkInfo to ret_network_info
 
-And the "goto err" before the initialization makes everything more
-complicated (that's actually what caused the bug in this patch, in fact).
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 16 ++++++++--------
+ drivers/staging/wilc1000/coreconfigurator.h |  2 +-
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-regards,
-dan carpenter
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 6f17e2b..43f0a29 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -270,7 +270,7 @@ static u8 get_current_channel_802_11n(u8 *pu8msa, u16 rx_len)
+ 	return 0;
+ }
+ 
+-s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
++s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
+ {
+ 	tstrNetworkInfo *pstrNetworkInfo = NULL;
+ 	u8 u8MsgType = 0;
+@@ -281,18 +281,18 @@ s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo
+ 	u16 u16WidLen  = 0;
+ 	u8  *pu8WidVal = NULL;
+ 
+-	u8MsgType = pu8MsgBuffer[0];
++	u8MsgType = msg_buffer[0];
+ 
+ 	if ('N' != u8MsgType) {
+ 		PRINT_ER("Received Message format incorrect.\n");
+ 		return -EFAULT;
+ 	}
+ 
+-	u8MsgID = pu8MsgBuffer[1];
+-	u16MsgLen = MAKE_WORD16(pu8MsgBuffer[2], pu8MsgBuffer[3]);
+-	u16WidID = MAKE_WORD16(pu8MsgBuffer[4], pu8MsgBuffer[5]);
+-	u16WidLen = MAKE_WORD16(pu8MsgBuffer[6], pu8MsgBuffer[7]);
+-	pu8WidVal  = &pu8MsgBuffer[8];
++	u8MsgID = msg_buffer[1];
++	u16MsgLen = MAKE_WORD16(msg_buffer[2], msg_buffer[3]);
++	u16WidID = MAKE_WORD16(msg_buffer[4], msg_buffer[5]);
++	u16WidLen = MAKE_WORD16(msg_buffer[6], msg_buffer[7]);
++	pu8WidVal = &msg_buffer[8];
+ 
+ 	{
+ 		u8  *pu8msa = NULL;
+@@ -350,7 +350,7 @@ s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo
+ 
+ 	}
+ 
+-	*ppstrNetworkInfo = pstrNetworkInfo;
++	*ret_network_info = pstrNetworkInfo;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index ee107ac..aec0779 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -120,7 +120,7 @@ typedef struct {
+ 	size_t ie_len;
+ } tstrDisconnectNotifInfo;
+ 
+-s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo);
++s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info);
+ s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo);
+ 
+ s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
+-- 
+1.9.1
 
