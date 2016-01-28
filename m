@@ -1,39 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35765 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932831AbcAKMSF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jan 2016 07:18:05 -0500
-Date: Mon, 11 Jan 2016 13:16:10 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Jia-Ju Bai <baijiaju1990@163.com>
-Cc: kvalo@codeaurora.org, johannes.berg@intel.com,
-	emmanuel.grumbach@intel.com, ilw@linux.intel.com,
-	linuxwifi@intel.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] iwl4965: Fix a memory leak in error handling code of
- __il4965_up
-Message-ID: <20160111121610.GF25015@redhat.com> (sfid-20160111_131821_665405_D5D35BE4)
-References: <1452392363-3600-1-git-send-email-baijiaju1990@163.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:46773 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966450AbcA1JVf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jan 2016 04:21:35 -0500
+Received: from potku.adurom.net (a88-115-185-251.elisa-laajakaista.fi [88.115.185.251])
+	(using TLSv1.2 with cipher DHE-RSA-AES128-SHA (128/128 bits))
+	(No client certificate requested)
+	(Authenticated sender: kvalo@smtp.codeaurora.org)
+	by smtp.codeaurora.org (Postfix) with ESMTPSA id 51B1660445
+	for <linux-wireless@vger.kernel.org>; Thu, 28 Jan 2016 09:21:34 +0000 (UTC)
+From: Kalle Valo <kvalo@codeaurora.org>
+To: linux-wireless@vger.kernel.org
+Subject: wireless-drivers-next is now open
+Date: Thu, 28 Jan 2016 11:21:30 +0200
+Message-ID: <87io2ekqjp.fsf@kamboji.qca.qualcomm.com> (sfid-20160128_102253_242293_00A895E2)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1452392363-3600-1-git-send-email-baijiaju1990@163.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Jan 10, 2016 at 10:19:23AM +0800, Jia-Ju Bai wrote:
-> diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
-> index 6656215..fd7b5c7 100644
-> --- a/drivers/net/wireless/iwlegacy/4965-mac.c
-> +++ b/drivers/net/wireless/iwlegacy/4965-mac.c
-> @@ -5577,6 +5577,7 @@ __il4965_up(struct il_priv *il)
->  	ret = il4965_hw_nic_init(il);
->  	if (ret) {
->  		IL_ERR("Unable to init nic\n");
-> +		il_dealloc_bcast_stations(il);
->  		return ret;
->  	}
+Hi,
 
-Please do not repost patches so frequent and if you repost
-the unchanged patch mark it so i.e. [PATCH repost].
+I'll now start applying new features and lower priority bugfixes to
+wireless-drivers-next. These will go to 4.6.
 
-Stanislaw
+-- 
+Kalle Valo
