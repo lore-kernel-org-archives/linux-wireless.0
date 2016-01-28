@@ -1,46 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0007.hostedemail.com ([216.40.44.7]:33234 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751302AbcA3HY5 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:12171 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933200AbcA1HQ2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 30 Jan 2016 02:24:57 -0500
-Message-ID: <1454138693.3524.1.camel@perches.com> (sfid-20160130_082527_349101_EB3C6B88)
-Subject: Re: [PATCH] staging: rtl8723au: Fixes unnecessary return warning
-From: Joe Perches <joe@perches.com>
-To: Bhakti Priya <bhaktipriya96@gmail.com>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Alexander Kuleshov <kuleshovmail@gmail.com>,
-	Haneen Mohammed <hamohammed.sa@gmail.com>,
-	Andreas Ruprecht <andreas.ruprecht@fau.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Date: Fri, 29 Jan 2016 23:24:53 -0800
-In-Reply-To: <CAFNHFT9nosMWgAvDdhvpMQLa2+02kD-wk0ChuZWpvCbLGMFYOg@mail.gmail.com>
-References: <20160129172908.GA14077@Karyakshetra>
-	 <wrfjk2ms465z.fsf@redhat.com>
-	 <CAGRGNgWQvdfQc-L9z0NKCyCOorxU0seQ-XvYnZDBWA3QKySrRA@mail.gmail.com>
-	 <1454117303.10099.84.camel@perches.com>
-	 <CAGRGNgU2EuY9fpe8rhHtA8OLDRC0s5=tcBStqpq=ZbMNrnuf0w@mail.gmail.com>
-	 <1454123891.10099.89.camel@perches.com>
-	 <CAFNHFT9nosMWgAvDdhvpMQLa2+02kD-wk0ChuZWpvCbLGMFYOg@mail.gmail.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Thu, 28 Jan 2016 02:16:28 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 04/12] staging: wilc1000: renames u16index variable
+Date: Thu, 28 Jan 2016 16:13:38 +0900
+Message-ID: <1453965226-6158-4-git-send-email-leo.kim@atmel.com> (sfid-20160128_081634_983190_9C4D46CA)
+In-Reply-To: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
+References: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2016-01-30 at 12:23 +0530, Bhakti Priya wrote:
-> I will be happy to extend checkpatch.pl. As suggested by you, I am
-> trying to detect such blank lines in a line removal patch by checking
-> if the line above the deleted line was a blank line and the line
-> following the deleted line had a closing brace.
-> Can you please guide me and let me know if I am headed in the right
-> direction.
+This patch renames u16index variable to index
+to remove the prefix variable defined name.
 
-You have to track all the + and - lines that precede the
-deleted line.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-Good luck.
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index b769d3c..6f17e2b 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -243,14 +243,14 @@ static inline u16 get_asoc_id(u8 *data)
+ 
+ static u8 *get_tim_elm(u8 *pu8msa, u16 rx_len, u16 tag_param_offset)
+ {
+-	u16 u16index;
++	u16 index;
+ 
+-	u16index = tag_param_offset;
++	index = tag_param_offset;
+ 
+-	while (u16index < (rx_len - FCS_LEN)) {
+-		if (pu8msa[u16index] == ITIM)
+-			return &pu8msa[u16index];
+-		u16index += (IE_HDR_LEN + pu8msa[u16index + 1]);
++	while (index < (rx_len - FCS_LEN)) {
++		if (pu8msa[index] == ITIM)
++			return &pu8msa[index];
++		index += (IE_HDR_LEN + pu8msa[index + 1]);
+ 	}
+ 
+ 	return NULL;
+-- 
+1.9.1
+
