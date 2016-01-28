@@ -1,49 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:40560 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752179AbcA2Gyv (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:43234 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932651AbcA1Mau (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2016 01:54:51 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH 5/6] staging: wilc1000: remove warnings missing a blank line after declarations
-Date: Fri, 29 Jan 2016 15:51:37 +0900
-Message-ID: <1454050298-25815-5-git-send-email-leo.kim@atmel.com> (sfid-20160129_075454_042280_E1B3F3DB)
-In-Reply-To: <1454050298-25815-1-git-send-email-leo.kim@atmel.com>
-References: <1454050298-25815-1-git-send-email-leo.kim@atmel.com>
+	Thu, 28 Jan 2016 07:30:50 -0500
+Date: Thu, 28 Jan 2016 15:30:22 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Chris Bainbridge <chris.bainbridge@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	aryabinin@virtuozzo.com, Julia Lawall <Julia.Lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org, Joe Perches <joe@perches.com>
+Subject: Re: [PATCH] net/mac80211/agg-rx.c: fix use of uninitialised values
+Message-ID: <20160128123022.GB13219@mwanda> (sfid-20160128_133131_757251_09ED0150)
+References: <20160126111730.GA6765@localhost>
+ <20160127154618.GA5717@localhost>
+ <CAGRGNgXkvNfzM9Q1RO5kFwUWpFZbQ3mNQi3aVHcPTCw0A9fyFA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGRGNgXkvNfzM9Q1RO5kFwUWpFZbQ3mNQi3aVHcPTCw0A9fyFA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+It's not the return where we should trigger the warning it's at the
 
-This patch remove warnings reported by checkpatch.pl
-for missing a blank line after declarations
+	rcu_assign_pointer(sta->ampdu_mlme.tid_rx[tid], tid_agg_rx);
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 1 +
- 1 file changed, 1 insertion(+)
+line.  That's for correctness, but also it should be slightly easier.
+Or it should cut down on false positives if we ignored returns and only
+looked global scope type assignements.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 63b7492..8024cc2 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1143,6 +1143,7 @@ int wilc_wlan_stop(struct wilc *wilc)
- 	u32 reg = 0;
- 	int ret;
- 	u8 timeout = 10;
-+
- 	acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
- 
- 	ret = wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0, &reg);
--- 
-1.9.1
+regards,
+dan carpenter
 
