@@ -1,47 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f173.google.com ([209.85.217.173]:33798 "EHLO
-	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753560AbcAOXtE (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:12253 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932537AbcA1HQp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2016 18:49:04 -0500
-Received: by mail-lb0-f173.google.com with SMTP id cl12so105492220lbc.1
-        for <linux-wireless@vger.kernel.org>; Fri, 15 Jan 2016 15:49:03 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 2/2] bcma: support chipsets with PMU and GCI cores (devices)
-Date: Sat, 16 Jan 2016 00:48:53 +0100
-Message-Id: <1452901733-22271-2-git-send-email-zajec5@gmail.com> (sfid-20160116_004909_565629_EFCA0E9D)
-In-Reply-To: <1452901733-22271-1-git-send-email-zajec5@gmail.com>
-References: <1452901733-22271-1-git-send-email-zajec5@gmail.com>
+	Thu, 28 Jan 2016 02:16:45 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 07/12] staging: wilc1000: wilc_parse_network_info(): renames local inner variables
+Date: Thu, 28 Jan 2016 16:13:41 +0900
+Message-ID: <1453965226-6158-7-git-send-email-leo.kim@atmel.com> (sfid-20160128_081651_513747_3EF563EA)
+In-Reply-To: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
+References: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both cores are another exceptions. They are not accessed in a standard
-way and to they don't need or have wrapping addresses.
-This fixes bus scanning after finding such core.
+This patch renames to avoid camelcase, changes follow are:
+ - pu8TimElm to tim_elm
+ - pu8IEs to ies
+ - u16IEsLen to ies_len
+ - u32Tsf_Lo to tsf_lo
+ - u32Tsf_Hi to tsf_hi
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+And, remove the prefix variable defined name, below are:
+ - u8index to index
+ - pu8msa to msa
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/bcma/scan.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/staging/wilc1000/coreconfigurator.c | 54 ++++++++++++++---------------
+ 1 file changed, 27 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/bcma/scan.c b/drivers/bcma/scan.c
-index 5ee7311..4a2d1b2 100644
---- a/drivers/bcma/scan.c
-+++ b/drivers/bcma/scan.c
-@@ -318,6 +318,8 @@ static int bcma_get_next_core(struct bcma_bus *bus, u32 __iomem **eromptr,
- 		switch (core->id.id) {
- 		case BCMA_CORE_4706_MAC_GBIT_COMMON:
- 		case BCMA_CORE_NS_CHIPCOMMON_B:
-+		case BCMA_CORE_PMU:
-+		case BCMA_CORE_GCI:
- 		/* Not used yet: case BCMA_CORE_OOB_ROUTER: */
- 			break;
- 		default:
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 24afeb8..2a4e324 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -295,14 +295,14 @@ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
+ 	wid_val = &msg_buffer[8];
+ 
+ 	{
+-		u8  *pu8msa = NULL;
++		u8 *msa = NULL;
+ 		u16 rx_len = 0;
+-		u8 *pu8TimElm = NULL;
+-		u8 *pu8IEs = NULL;
+-		u16 u16IEsLen = 0;
+-		u8 u8index = 0;
+-		u32 u32Tsf_Lo;
+-		u32 u32Tsf_Hi;
++		u8 *tim_elm = NULL;
++		u8 *ies = NULL;
++		u16 ies_len = 0;
++		u8 index = 0;
++		u32 tsf_lo;
++		u32 tsf_hi;
+ 
+ 		network_info = kzalloc(sizeof(tstrNetworkInfo), GFP_KERNEL);
+ 		if (!network_info)
+@@ -310,43 +310,43 @@ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
+ 
+ 		network_info->s8rssi = wid_val[0];
+ 
+-		pu8msa = &wid_val[1];
++		msa = &wid_val[1];
+ 
+ 		rx_len = wid_len - 1;
+-		network_info->u16CapInfo = get_cap_info(pu8msa);
+-		network_info->u32Tsf = get_beacon_timestamp_lo(pu8msa);
++		network_info->u16CapInfo = get_cap_info(msa);
++		network_info->u32Tsf = get_beacon_timestamp_lo(msa);
+ 		PRINT_D(CORECONFIG_DBG, "TSF :%x\n", network_info->u32Tsf);
+ 
+-		u32Tsf_Lo = get_beacon_timestamp_lo(pu8msa);
+-		u32Tsf_Hi = get_beacon_timestamp_hi(pu8msa);
++		tsf_lo = get_beacon_timestamp_lo(msa);
++		tsf_hi = get_beacon_timestamp_hi(msa);
+ 
+-		network_info->u64Tsf = u32Tsf_Lo | ((u64)u32Tsf_Hi << 32);
++		network_info->u64Tsf = tsf_lo | ((u64)tsf_hi << 32);
+ 
+-		get_ssid(pu8msa, network_info->au8ssid, &network_info->u8SsidLen);
+-		get_BSSID(pu8msa, network_info->au8bssid);
++		get_ssid(msa, network_info->au8ssid, &network_info->u8SsidLen);
++		get_BSSID(msa, network_info->au8bssid);
+ 
+-		network_info->u8channel = get_current_channel_802_11n(pu8msa,
++		network_info->u8channel = get_current_channel_802_11n(msa,
+ 							rx_len + FCS_LEN);
+ 
+-		u8index = MAC_HDR_LEN + TIME_STAMP_LEN;
++		index = MAC_HDR_LEN + TIME_STAMP_LEN;
+ 
+-		network_info->u16BeaconPeriod = get_beacon_period(pu8msa + u8index);
++		network_info->u16BeaconPeriod = get_beacon_period(msa + index);
+ 
+-		u8index += BEACON_INTERVAL_LEN + CAP_INFO_LEN;
++		index += BEACON_INTERVAL_LEN + CAP_INFO_LEN;
+ 
+-		pu8TimElm = get_tim_elm(pu8msa, rx_len + FCS_LEN, u8index);
+-		if (pu8TimElm)
+-			network_info->u8DtimPeriod = pu8TimElm[3];
+-		pu8IEs = &pu8msa[MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN];
+-		u16IEsLen = rx_len - (MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN);
++		tim_elm = get_tim_elm(msa, rx_len + FCS_LEN, index);
++		if (tim_elm)
++			network_info->u8DtimPeriod = tim_elm[3];
++		ies = &msa[MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN];
++		ies_len = rx_len - (MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN);
+ 
+-		if (u16IEsLen > 0) {
+-			network_info->pu8IEs = kmemdup(pu8IEs, u16IEsLen,
++		if (ies_len > 0) {
++			network_info->pu8IEs = kmemdup(ies, ies_len,
+ 						       GFP_KERNEL);
+ 			if (!network_info->pu8IEs)
+ 				return -ENOMEM;
+ 		}
+-		network_info->u16IEsLen = u16IEsLen;
++		network_info->u16IEsLen = ies_len;
+ 	}
+ 
+ 	*ret_network_info = network_info;
 -- 
-1.8.4.5
+1.9.1
 
