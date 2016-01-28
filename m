@@ -1,52 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0143.hostedemail.com ([216.40.44.143]:51767 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750855AbcACH33 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:5732 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755668AbcA1V5V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jan 2016 02:29:29 -0500
-Message-ID: <1451806163.4334.36.camel@perches.com> (sfid-20160103_083041_959818_1051F49F)
-Subject: Re: [PATCH 1/3] NFC-mei_phy: Refactoring for mei_nfc_connect()
-From: Joe Perches <joe@perches.com>
-To: SF Markus Elfring <elfring@users.sourceforge.net>,
-	Julian Calaby <julian.calaby@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-Date: Sat, 02 Jan 2016 23:29:23 -0800
-In-Reply-To: <5688C712.3070900@users.sourceforge.net>
-References: <566ABCD9.1060404@users.sourceforge.net>
-	 <56883849.2080304@users.sourceforge.net>
-	 <5688390B.3080800@users.sourceforge.net>
-	 <CAGRGNgWiHKLrHMUySnCpfiF1+C=QV-i4C4KNmziga3-E1CLfKA@mail.gmail.com>
-	 <5688C712.3070900@users.sourceforge.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Thu, 28 Jan 2016 16:57:21 -0500
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 3/4] ath10k: use vif->type and vif->p2p for P2P_GO check
+Date: Thu, 28 Jan 2016 13:54:09 -0800
+Message-ID: <fb4f9c48f4939c86d573521eeb9059244d84e299.1454015989.git.poh@qca.qualcomm.com> (sfid-20160128_225726_075483_ABD84A64)
+In-Reply-To: <cover.1454015989.git.poh@qca.qualcomm.com>
+References: <cover.1454015989.git.poh@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, 2016-01-03 at 08:00 +0100, SF Markus Elfring wrote:
-> > >         r = 0;
-> > > -
-> > > -err:
-> > > +free_reply:
-> > >         kfree(reply);
-> > > +free_cmd:
-> > >         kfree(cmd);
-> > > -
-> > 
-> > Why are you deleting the two blank lines here?
-> 
-> Can they be unnecessary at this source code place
-> according to the Linux coding style convention?
+Interface type P2P_GO can be checked by either arvif->vdev_type
+and arvif->vdev_subtype or vif->type and vif->p2p.
+Use later one to avoid more cpu consumption that could happen
+when subtype abstraction layer change is introduced.
 
-As far as I know, there's no linux specific accepted
-convention for blank lines preceding labels.
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 8 ++------
+ drivers/net/wireless/ath/ath10k/wmi.c | 2 +-
+ 2 files changed, 3 insertions(+), 7 deletions(-)
 
-My personal preference is for a blank line before a
-new block, but not before the second and subsequent
-labels in an error handling block.
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 1406b0f..addf3cb 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -1358,10 +1358,7 @@ static int ath10k_mac_setup_bcn_p2p_ie(struct ath10k_vif *arvif,
+ 	const u8 *p2p_ie;
+ 	int ret;
+ 
+-	if (arvif->vdev_type != WMI_VDEV_TYPE_AP)
+-		return 0;
+-
+-	if (arvif->vdev_subtype != WMI_VDEV_SUBTYPE_P2P_GO)
++	if (arvif->vif->type != NL80211_IFTYPE_AP || !arvif->vif->p2p)
+ 		return 0;
+ 
+ 	mgmt = (void *)bcn->data;
+@@ -3259,8 +3256,7 @@ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar,
+ 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
+ 
+ 	/* This is case only for P2P_GO */
+-	if (arvif->vdev_type != WMI_VDEV_TYPE_AP ||
+-	    arvif->vdev_subtype != WMI_VDEV_SUBTYPE_P2P_GO)
++	if (vif->type != NL80211_IFTYPE_AP || !vif->p2p)
+ 		return;
+ 
+ 	if (unlikely(ieee80211_is_probe_resp(hdr->frame_control))) {
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 0f01a8d..5158716 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -3196,7 +3196,7 @@ static void ath10k_wmi_update_noa(struct ath10k *ar, struct ath10k_vif *arvif,
+ 				  struct sk_buff *bcn,
+ 				  const struct wmi_p2p_noa_info *noa)
+ {
+-	if (arvif->vdev_subtype != WMI_VDEV_SUBTYPE_P2P_GO)
++	if (!arvif->vif->p2p)
+ 		return;
+ 
+ 	ath10k_dbg(ar, ATH10K_DBG_MGMT, "noa changed: %d\n", noa->changed);
+-- 
+1.9.1
 
