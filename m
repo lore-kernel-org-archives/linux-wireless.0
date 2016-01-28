@@ -1,52 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.15.4]:57409 "EHLO mout.web.de"
+Received: from s3.sipsolutions.net ([5.9.151.49]:54990 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750709AbcABJJY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jan 2016 04:09:24 -0500
-Subject: Re: net-libertas: Better exception handling in
- if_spi_host_to_card_worker()
-To: Julia Lawall <julia.lawall@lip6.fr>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <5686F0B2.5000000@users.sourceforge.net>
- <56870866.7020000@cogentembedded.com>
- <568785B3.5000905@users.sourceforge.net>
- <alpine.DEB.2.02.1601020914100.2063@localhost6.localdomain6>
-Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Message-ID: <5687939E.7010701@users.sourceforge.net> (sfid-20160102_101043_963543_D70A551F)
-Date: Sat, 2 Jan 2016 10:08:46 +0100
-MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.02.1601020914100.2063@localhost6.localdomain6>
-Content-Type: text/plain; charset=windows-1252
+	id S935428AbcA1MfV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jan 2016 07:35:21 -0500
+Message-ID: <1453984512.2217.15.camel@sipsolutions.net> (sfid-20160128_133542_535617_B8A766EF)
+Subject: Re: [PATCH] net/mac80211/agg-rx.c: fix use of uninitialised values
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dan Carpenter <dan.carpenter@oracle.com>,
+	Julian Calaby <julian.calaby@gmail.com>
+Cc: Chris Bainbridge <chris.bainbridge@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	aryabinin@virtuozzo.com, Julia Lawall <Julia.Lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org, Joe Perches <joe@perches.com>
+Date: Thu, 28 Jan 2016 13:35:12 +0100
+In-Reply-To: <20160128123022.GB13219@mwanda>
+References: <20160126111730.GA6765@localhost>
+	 <20160127154618.GA5717@localhost>
+	 <CAGRGNgXkvNfzM9Q1RO5kFwUWpFZbQ3mNQi3aVHcPTCw0A9fyFA@mail.gmail.com>
+	 <20160128123022.GB13219@mwanda>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->> I assume that a software development taste can evolve, can't it?
+On Thu, 2016-01-28 at 15:30 +0300, Dan Carpenter wrote:
+> It's not the return where we should trigger the warning it's at the
 > 
-> So far, you have gotten several down votes for this kind of change,
+> 	rcu_assign_pointer(sta->ampdu_mlme.tid_rx[tid], tid_agg_rx);
+> 
+> line.  That's for correctness, but also it should be slightly easier.
+> Or it should cut down on false positives if we ignored returns and
+> only looked global scope type assignements.
 
-I am curious when more contributors will share corresponding opinions.
+That's a good idea! But even that will probably get you a lot of false
+positives. For example, in this structure, the rcu_head is never
+initialized until we need it for kfree_rcu() or call_rcu(). I'm sure
+there are other places like it.
 
-
-> and no enthusiasm.
-
-How many software designers and developers can become enthusiastic
-about better exception handling to some degree?
-
-
-> The code that is performance critical, you should probably not touch, ever.
-
-I imagine that technical evolution will result in further considerations
-so that "unchangeable" components can be adjusted once more.
-
-
-> The people who wrote it knew what was important and what was not.
-
-I might come along at some places where the affected knowledge will also evolve.
-
-Regards,
-Markus
+johannes
