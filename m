@@ -1,87 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f46.google.com ([209.85.220.46]:33895 "EHLO
-	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932252AbcASVKw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 16:10:52 -0500
-MIME-Version: 1.0
-In-Reply-To: <439966a35f064c7690f2ccbe7296c552@aphydexm01b.ap.qualcomm.com>
-References: <CAFuUQkhHsRZMnNYBbVZU0=BcAKMEktzYgPv6oc=CMFd7MFDi6g@mail.gmail.com>
-	<CAFuUQkjm3RFnrzWWSvbnYFC8gMnbX7C4bP_x0+2bREYumcoJyg@mail.gmail.com>
-	<439966a35f064c7690f2ccbe7296c552@aphydexm01b.ap.qualcomm.com>
-Date: Tue, 19 Jan 2016 13:10:51 -0800
-Message-ID: <CAFuUQkgCvS6+1+3YRhBMLt3i5vvJh1SQ6EG_pe07AD14TssSrg@mail.gmail.com> (sfid-20160119_221058_577439_5F56882C)
-Subject: Re: Regression in 3.9 caused by "bridge: respect RFC2863 operational state"
-From: YanBo <dreamfly281@gmail.com>
-To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>
-Cc: "nbd@openwrt.org" <nbd@openwrt.org>,
-	"Malinen, Jouni" <jouni@qca.qualcomm.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	Stephen Hemminger <stephen@networkplumber.org>,
-	Krishna Chaitanya <chaitanya.mgit@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Sebastian Gottschall <s.gottschall@dd-wrt.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	netdev <netdev@vger.kernel.org>,
-	"hostap@lists.infradead.org" <hostap@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:56994 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161254AbcA1Ukb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jan 2016 15:40:31 -0500
+Message-ID: <1454013625.2332.9.camel@sipsolutions.net> (sfid-20160128_214138_072467_11C59005)
+Subject: Re: WARNING at net/mac80211/rate.c:513 ieee80211_get_tx_rates
+ [mac80211]
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: David Miller <davem@davemloft.net>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Date: Thu, 28 Jan 2016 21:40:25 +0100
+In-Reply-To: <CA+55aFya9K4JboNY8kB9cg6zt9otguhdzfHm3jvLmWedxQTSWg@mail.gmail.com> (sfid-20160128_200137_617680_79F89D8E)
+References: <CA+55aFxe22iWok6UojY=hCoG2k1wNpJ9CfQ0b+STSxq67tb86Q@mail.gmail.com>
+	 <1453983185.2217.12.camel@sipsolutions.net>
+	 <CA+55aFya9K4JboNY8kB9cg6zt9otguhdzfHm3jvLmWedxQTSWg@mail.gmail.com>
+	 (sfid-20160128_200137_617680_79F89D8E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is a fixing in
-http://git.openwrt.org/?p=openwrt.git;a=blob_plain;f=target/linux/generic/patches-4.3/120-bridge_allow_receiption_on_disabled_port.patch
-for your reference.
+On Thu, 2016-01-28 at 11:01 -0800, Linus Torvalds wrote:
+> 
+> I used to have the basic original UniFi UAP. I've replaced them with
+> the newer "AC Lite" version:
+> 
+>     https://www.ubnt.com/unifi/unifi-ap-ac-lite/
+> 
+> so it's a fairly big jump from a 2.4GHz-only network to a dual-band
+> one.
+> 
+> The old 2.4GHz-only AP's showed the problem with minstrel-ht
+> incorrectly starting off at the highest rate (on a totally different
+> machine). So the Unifi AP's have shown problems in the kernel
+> wireless before, but so far it's always been the fault of the kernel
+> wireless, not the AP.
 
-Yanbo
+Yeah; I wasn't trying to blame it on this change, I was just trying to
+understand the change in the environment. Seems likely that it's simply
+the switch to 5 GHz, which is strange, I'd have thought that even that
+rtlwifi driver would've been tested with that :)
 
-On Tue, Jan 19, 2016 at 7:45 AM, Shajakhan, Mohammed Shafi (Mohammed
-Shafi) <mohammed@qti.qualcomm.com> wrote:
-> Hi all,
->
-> Any updates on this please.
->
-> Thanks,
-> shafi
->
-> -----Original Message-----
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-owner@vger.kernel.org] On Behalf Of YanBo
-> Sent: Friday, December 04, 2015 8:01 AM
-> To: nbd@openwrt.org; Malinen, Jouni; kvalo@codeaurora.org
-> Cc: Stephen Hemminger; Krishna Chaitanya; linux-wireless; Sebastian Gottschall; Johannes Berg; netdev; hostap@lists.infradead.org
-> Subject: Re: Regression in 3.9 caused by "bridge: respect RFC2863 operational state"
->
->  Sorry to pick up this thread again,  it looks this issue still existed  in the newer 4.3 kernel. (The EAP frames can not be received by wireless interface due to the bridge interface,
-> http://marc.info/?l=linux-wireless&m=136743495526905&w=2)
->
->  Wonder is anyone know some update for this issue?  Currently the only workaround is make the 4-address  AP and STA associated in security mode firstly and then create the bridge, the renew key configuration also need be disable at the hostapd side to  avoid renew the key at bridge status.
->
-> Thanks
-> Yanbo
->> On Wed, May 1, 2013 at 5:53 PM, Felix Fietkau <nbd@openwrt.org> wrote:
->> >
->> > On 2013-05-02 12:49 AM, Stephen Hemminger wrote:
->> > > On Wed, 01 May 2013 23:06:16 +0200 Felix Fietkau <nbd@openwrt.org>
->> > > wrote:
->> > >
->> > >> On 2013-05-01 10:21 PM, Stephen Hemminger wrote:
->> > >> > What about using AF_PACKET bound to underlying wireless device
->> > >> > and the packet type. You can even use BPF to filter.
->> > >> As far as I know, AF_PACKET only works when not binding it to the
->> > >> packet type (otherwise it get stolen by the rx handler).
->> > >
->> > > You can do AF_PACKET and it gets handle before rx_handler.
->> > If I don't bind it to a protocol, it ends up in ptype_all, if I do,
->> > it ends up in &ptype_base. ptype_all is processed before the
->> > rx_handler, ptype_base is processed after the rx handler.
->> > Hooking into ptype_all wastes tons of CPU cycles, hooking into
->> > ptype_base does not solve the problem.
->> >
->> > - Felix
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe
->> > linux-wireless" in the body of a message to
->> > majordomo@vger.kernel.org More majordomo info at
->> > http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in the body of a message to majordomo@vger.kernel.org More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > Could you print out the entire table there when the warning
+> > happens?
+> 
+> This is the best I can come up with: printing out the index, and the
+> rate and bitrate tables:
+> 
+>   rates[i].idx (9) >= sband->n_bitrates (8)
+>   Rates:
+>       0: idx 9 count 1 flags a0
+>       1: idx 8 count 1 flags a0
+>       2: idx 7 count 2 flags a0
+>       3: idx 6 count 3 flags a0
+
+Yeah, perfect. See, this is already evidently not making any sense:
+
+flags a0 is
+IEEE80211_TX_RC_40_MHZ_WIDTH | IEEE80211_TX_RC_SHORT_GI
+
+both of those options *require* IEEE80211_TX_RC_MCS or
+IEEE80211_TX_RC_VHT_MCS as well, so the flags really should be a8 or
+1a0.
+
+>   Bitrates:
+>       0: flags 00000002 bitrate 60 (hw: 0004 0000)
+>       1: flags 00000000 bitrate 90 (hw: 0005 0000)
+>       2: flags 00000002 bitrate 120 (hw: 0006 0000)
+>       3: flags 00000000 bitrate 180 (hw: 0007 0000)
+>       4: flags 00000002 bitrate 240 (hw: 0008 0000)
+>       5: flags 00000000 bitrate 360 (hw: 0009 0000)
+>       6: flags 00000000 bitrate 480 (hw: 000a 0000)
+>       7: flags 00000000 bitrate 540 (hw: 000b 0000)
+> 
+> So it's the very first rate that has index 9, but the bitrate table
+> only goes from 0-7.
+> 
+> So I suspect that once the first index has been marked invalid, it
+> now will never even look at the later indices, so it has no transmit
+> rates at all.  Or something.
+
+Indeed.
+
+> That bitrate table does seem to match:
+> 
+>    static struct ieee80211_rate rtl_ratetable_5g[] = {
+> 
+> in drivers/net/wireless/realtek/rtlwifi/base.c
+> 
+
+Yeah, it would, but it's irrelevant since the rate table isn't actually
+used with MCS rates.
+
+I'm not familiar with this code at all, but looking at it suggests that
+perhaps the switch to 5 GHz wasn't at fault, but instead the switch to
+VHT (802.11ac) - that's more plausible too, not testing with VHT seems
+like something that could have happened for this driver.
+
+And as I figured, the code in _rtl_rc_rate_set_series() is obviously
+not handling VHT correctly: it has
+
+                if (sgi_20 || sgi_40 || sgi_80)
+                        rate->flags |= IEEE80211_TX_RC_SHORT_GI;
+                if (sta && sta->ht_cap.ht_supported &&
+                    ((wireless_mode == WIRELESS_MODE_N_5G) ||
+                     (wireless_mode == WIRELESS_MODE_N_24G)))
+                        rate->flags |= IEEE80211_TX_RC_MCS;
+
+but can never set IEEE80211_TX_RC_VHT_MCS. Seems like there should be
+something like
+
+                if (sta && sta->ht_cap.vht_supported &&
+                    (wireless_mode == WIRELESS_MODE_AC_5G ||
+                     wireless_mode == WIRELESS_MODE_AC_24G ||
+                     wireless_mode == WIRELESS_MODE_AC_ONLY))
+                        rate->flags |= IEEE80211_TX_RC_VHT_MCS;
+
+just after/before the above block.
+
+But I'm not familiar with this code at all, so that may not really be
+the right fix or even work.
+
+johannes
