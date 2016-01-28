@@ -1,43 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:37716 "EHLO
-	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750989AbcAZGfr convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:12371 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932298AbcA1HRI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 01:35:47 -0500
-Received: by mail-wm0-f50.google.com with SMTP id n5so113862538wmn.0
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2016 22:35:46 -0800 (PST)
+	Thu, 28 Jan 2016 02:17:08 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 11/12] staging: wilc1000: wilc_dealloc_assoc_resp_info(): renames function variables
+Date: Thu, 28 Jan 2016 16:13:45 +0900
+Message-ID: <1453965226-6158-11-git-send-email-leo.kim@atmel.com> (sfid-20160128_081713_970027_CA16224E)
+In-Reply-To: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
+References: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <56A66298.1000607@candelatech.com>
-References: <1453382588-27105-1-git-send-email-michal.kazior@tieto.com>
-	<56A66298.1000607@candelatech.com>
-Date: Tue, 26 Jan 2016 07:35:45 +0100
-Message-ID: <CA+BoTQmha9HveqrKE9qLKLHu8vWfv+V=Sbkd7rhWyk7ALoJOmg@mail.gmail.com> (sfid-20160126_073550_352982_501E73E6)
-Subject: Re: [PATCH 1/2] mac80211: fix txq queue related crashes
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 January 2016 at 18:59, Ben Greear <greearb@candelatech.com> wrote:
-> On 01/21/2016 05:23 AM, Michal Kazior wrote:
->>
->> The driver can access the queue simultanously
->> while mac80211 tears down the interface. Without
->> spinlock protection this could lead to corrupting
->> sk_buff_head and subsequently to an invalid
->> pointer dereference.
->
-> Hard to know for certain, but this *appears* to fix the unexpectedly large
-> amount of CE/AXI ath10k firmware crashes that we saw in the 4.2 kernel (4.0
-> previously
-> ran much better han 4.2 for us).
+This patch renames to avoid camelcase, changes follow are:
+ - pstrConnectRespInfo to connect_resp_info
 
-That's impossible.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 14 +++++++-------
+ drivers/staging/wilc1000/coreconfigurator.h |  2 +-
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-Without wake_tx_queue() txqs aren't even allocated (sdata->vif.txq is NULL).
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index c0be33d..c78da2c 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -410,20 +410,20 @@ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
+ 	return 0;
+ }
+ 
+-s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo)
++s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *connect_resp_info)
+ {
+ 	s32 result = 0;
+ 
+-	if (pstrConnectRespInfo) {
+-		if (pstrConnectRespInfo->pu8RespIEs) {
+-			kfree(pstrConnectRespInfo->pu8RespIEs);
+-			pstrConnectRespInfo->pu8RespIEs = NULL;
++	if (connect_resp_info) {
++		if (connect_resp_info->pu8RespIEs) {
++			kfree(connect_resp_info->pu8RespIEs);
++			connect_resp_info->pu8RespIEs = NULL;
+ 		} else {
+ 			result = -EFAULT;
+ 		}
+ 
+-		kfree(pstrConnectRespInfo);
+-		pstrConnectRespInfo = NULL;
++		kfree(connect_resp_info);
++		connect_resp_info = NULL;
+ 
+ 	} else {
+ 		result = -EFAULT;
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 6a2c323..ec810b5 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -124,7 +124,7 @@ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info);
+ s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo);
+ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
+ 			       tstrConnectRespInfo **ret_connect_resp_info);
+-s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo);
++s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *connect_resp_info);
+ void wilc_scan_complete_received(struct wilc *wilc, u8 *pu8Buffer,
+ 				 u32 u32Length);
+ void wilc_network_info_received(struct wilc *wilc, u8 *pu8Buffer,
+-- 
+1.9.1
 
-
-Michał
