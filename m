@@ -1,39 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sabertooth02.qualcomm.com ([65.197.215.38]:25181 "EHLO
-	sabertooth02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965184AbcAZPBg (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:12406 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932298AbcA1HRO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 10:01:36 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Raja Mani <rmani@qti.qualcomm.com>
-CC: <agross@codeaurora.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-msm@vger.kernel.org>, <linux-wireless@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v3] dt: bindings: add bindings for ipq4019 wifi block
-References: <1452664604-8014-1-git-send-email-rmani@qti.qualcomm.com>
-Date: Tue, 26 Jan 2016 17:01:17 +0200
-In-Reply-To: <1452664604-8014-1-git-send-email-rmani@qti.qualcomm.com> (Raja
-	Mani's message of "Wed, 13 Jan 2016 11:26:44 +0530")
-Message-ID: <87y4bcpepu.fsf@kamboji.qca.qualcomm.com> (sfid-20160126_160158_827955_ADF47F47)
+	Thu, 28 Jan 2016 02:17:14 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 12/12] staging: wilc1000: wilc_dealloc_network_info(): renames function variables
+Date: Thu, 28 Jan 2016 16:13:46 +0900
+Message-ID: <1453965226-6158-12-git-send-email-leo.kim@atmel.com> (sfid-20160128_081719_696484_15621F65)
+In-Reply-To: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
+References: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Raja Mani <rmani@qti.qualcomm.com> writes:
+This patch renames to avoid camelcase, changes follow are:
+ - pstrNetworkInfo to network_info
 
-> Add device tree binding documentation details for wifi block present
-> in Qualcomm IPQ4019 SoC into "qcom,ath10k.txt".
->
-> Right now, ath10k wireless driver has support for PCI based wlan devices.
-> There is a plan to extend ath10k driver to support wifi devices which are
-> connected over AHB as well (enumeration will happen via device tree node).
-> For AHB based devices (ie, ipq4019), all wifi properties are supplied via
-> device tree (including irq, reg addr, cal data,etc).
->
-> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 14 +++++++-------
+ drivers/staging/wilc1000/coreconfigurator.h |  2 +-
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-Applied, thanks.
-
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index c78da2c..a0b80bf 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -354,20 +354,20 @@ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
+ 	return 0;
+ }
+ 
+-s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo)
++s32 wilc_dealloc_network_info(tstrNetworkInfo *network_info)
+ {
+ 	s32 result = 0;
+ 
+-	if (pstrNetworkInfo) {
+-		if (pstrNetworkInfo->pu8IEs) {
+-			kfree(pstrNetworkInfo->pu8IEs);
+-			pstrNetworkInfo->pu8IEs = NULL;
++	if (network_info) {
++		if (network_info->pu8IEs) {
++			kfree(network_info->pu8IEs);
++			network_info->pu8IEs = NULL;
+ 		} else {
+ 			result = -EFAULT;
+ 		}
+ 
+-		kfree(pstrNetworkInfo);
+-		pstrNetworkInfo = NULL;
++		kfree(network_info);
++		network_info = NULL;
+ 
+ 	} else {
+ 		result = -EFAULT;
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index ec810b5..d801e58 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -121,7 +121,7 @@ typedef struct {
+ } tstrDisconnectNotifInfo;
+ 
+ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info);
+-s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo);
++s32 wilc_dealloc_network_info(tstrNetworkInfo *network_info);
+ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
+ 			       tstrConnectRespInfo **ret_connect_resp_info);
+ s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *connect_resp_info);
 -- 
-Kalle Valo
+1.9.1
+
