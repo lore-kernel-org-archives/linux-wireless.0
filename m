@@ -1,39 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.zhinst.com ([212.126.164.98]:53333 "EHLO mail.zhinst.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:54905 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933247AbcALM0v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 07:26:51 -0500
-From: Tobias Klauser <tklauser@distanz.ch>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] rtl8xxxu: Fix typo in Kconfig help text
-Date: Tue, 12 Jan 2016 13:26:48 +0100
-Message-Id: <1452601608-11361-1-git-send-email-tklauser@distanz.ch> (sfid-20160112_132653_646841_AE198066)
+	id S965179AbcA1MNK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jan 2016 07:13:10 -0500
+Message-ID: <1453983185.2217.12.camel@sipsolutions.net> (sfid-20160128_131318_962643_8246A477)
+Subject: Re: WARNING at net/mac80211/rate.c:513 ieee80211_get_tx_rates
+ [mac80211]
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	David Miller <davem@davemloft.net>
+Cc: Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Date: Thu, 28 Jan 2016 13:13:05 +0100
+In-Reply-To: <CA+55aFxe22iWok6UojY=hCoG2k1wNpJ9CfQ0b+STSxq67tb86Q@mail.gmail.com> (sfid-20160128_063527_929413_6B184FD5)
+References: <CA+55aFxe22iWok6UojY=hCoG2k1wNpJ9CfQ0b+STSxq67tb86Q@mail.gmail.com>
+	 (sfid-20160128_063527_929413_6B184FD5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix spelling of "benefits".
+On Wed, 2016-01-27 at 21:34 -0800, Linus Torvalds wrote:
 
-Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
----
- drivers/net/wireless/realtek/rtl8xxxu/Kconfig | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> .. except now I upgraded the nearest access point, and now wireless
+> on that machine no longer works.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/Kconfig b/drivers/net/wireless/realtek/rtl8xxxu/Kconfig
-index dd4d626aecbc..8f053c350227 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/Kconfig
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/Kconfig
-@@ -13,7 +13,7 @@ config RTL8XXXU
- 	  This driver is under development and has a limited feature
- 	  set. In particular it does not yet support 40MHz channels
- 	  and power management. However it should have a smaller
--	  memory footprint than the vendor drivers and benetifs
-+	  memory footprint than the vendor drivers and benefits
- 	  from the in kernel mac80211 stack.
- 
- 	  It can coexist with drivers from drivers/staging/rtl8723au,
--- 
-2.7.0.1.g5e091f5
+Can you describe the upgrade a bit more, just for background?
 
+> Or rather, it actually *does* work in the sense that it
+> authenticates, it associates, and it actually gets a DHCP lease etc.
+> So the darn thing has an IP address and everything, but then nothing
+> else seems to go through after that. Very odd. My guess is that the
+> auth/assoc/dhcp thign happens at low rates, then it starts trying to
+> up the rates, and things go to hell.
 
+That's usually the case, yes. Auth/assoc/etc. management frames use low
+rates anyway, and the first few data frames usually also do until it
+scales up.
+
+The code involved is drivers/net/wireless/realtek/rtlwifi/rc.c
+
+> I do note that that rate_fixup_ratelist() function is a bit odd wrt
+> those rate indexes: it has code to make sure that there are no valid
+> rates following an invalid one:
+> 
+>                 /*
+>                  * make sure there's no valid rate following
+>                  * an invalid one, just in case drivers don't
+>                  * take the API seriously to stop at -1.
+>                  */
+>                 if (inval) {
+>                         rates[i].idx = -1;
+>                         continue;
+>                 }
+>                 if (rates[i].idx < 0) {
+>                         inval = true;
+>                         continue;
+>                 }
+> 
+> but then that "RC is busted" case that generates a warning will add
+> one of those invalid rates in the middle anyway. So I get the feeling
+> that if that warning ever triggers, it will basically be screwing up
+> that whole rate table. I dunno.
+
+This should be OK, it's more of a sanity check. The driver is supposed
+to stop transmission attempts at the first -1 it seems, but the rate
+control algorithm shouldn't generate useless attempts that will never
+really get used, since that indicates a bug in the rate scaling.
+
+> Is there anything sane I can do to help debug this case?
+
+Could you print out the entire table there when the warning happens? Or
+at least, it'd help to figure out at which index the invalid actually
+happens. It seems that if that perhaps happens on the very first index,
+the driver might get completely confused and perhaps not even send the
+frame, which would lead to symptoms like the one you describe.
+
+It seems plausible that there's a path somewhere in the rate scaling
+code that forgets to set IEEE80211_TX_RC_MCS or so.
+
+johannes
