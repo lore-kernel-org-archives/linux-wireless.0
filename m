@@ -1,51 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:33013 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932625AbcASK01 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:12289 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932537AbcA1HQ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 05:26:27 -0500
-Received: by mail-pa0-f65.google.com with SMTP id pv5so34794945pac.0
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Jan 2016 02:26:27 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 1/3] staging: wilc1000: fix return type of wilc_send_config_pkt
-Date: Tue, 19 Jan 2016 19:26:15 +0900
-Message-Id: <1453199177-21085-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160119_112631_009788_D8944C4A)
+	Thu, 28 Jan 2016 02:16:57 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 09/12] staging: wilc1000: wilc_parse_assoc_resp_info(): renames function variables
+Date: Thu, 28 Jan 2016 16:13:43 +0900
+Message-ID: <1453965226-6158-9-git-send-email-leo.kim@atmel.com> (sfid-20160128_081706_072753_43A94D1D)
+In-Reply-To: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
+References: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wilc_send_config_pkt is returned to 0 or -ETIMEDOUT according to return
-value of wilc_wlan_cfg_get and wilc_wlan_cfg_set functions.
-It is better to use int type in order to represent linux standard error
-code.
+This patch renames to avoid camelcase, changes follow are:
+ - pu8Buffer to buffer
+ - u32BufferLen to buffer_len
+ - ppstrConnectRespInfo to ret_connect_resp_info
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 16 ++++++++--------
+ drivers/staging/wilc1000/coreconfigurator.h |  5 ++---
+ 2 files changed, 10 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 2d4d3f1..ee9f91f 100644
+index 88e5661..48c8573 100644
 --- a/drivers/staging/wilc1000/coreconfigurator.c
 +++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -588,10 +588,11 @@ s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo)
-  *  @date		1 Mar 2012
-  *  @version	1.0
-  */
--s32 wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
-+int wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
- 			 u32 count, u32 drv)
- {
--	s32 counter = 0, ret = 0;
-+	s32 counter = 0;
-+	int ret = 0;
+@@ -376,8 +376,8 @@ s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo)
+ 	return result;
+ }
  
- 	if (mode == GET_CFG) {
- 		for (counter = 0; counter < count; counter++) {
+-s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
+-			       tstrConnectRespInfo **ppstrConnectRespInfo)
++s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
++			       tstrConnectRespInfo **ret_connect_resp_info)
+ {
+ 	tstrConnectRespInfo *pstrConnectRespInfo = NULL;
+ 	u16 u16AssocRespLen = 0;
+@@ -388,14 +388,14 @@ s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
+ 	if (!pstrConnectRespInfo)
+ 		return -ENOMEM;
+ 
+-	u16AssocRespLen = (u16)u32BufferLen;
++	u16AssocRespLen = (u16)buffer_len;
+ 
+-	pstrConnectRespInfo->u16ConnectStatus = get_asoc_status(pu8Buffer);
++	pstrConnectRespInfo->u16ConnectStatus = get_asoc_status(buffer);
+ 	if (pstrConnectRespInfo->u16ConnectStatus == SUCCESSFUL_STATUSCODE) {
+-		pstrConnectRespInfo->u16capability = get_assoc_resp_cap_info(pu8Buffer);
+-		pstrConnectRespInfo->u16AssocID = get_asoc_id(pu8Buffer);
++		pstrConnectRespInfo->u16capability = get_assoc_resp_cap_info(buffer);
++		pstrConnectRespInfo->u16AssocID = get_asoc_id(buffer);
+ 
+-		pu8IEs = &pu8Buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
++		pu8IEs = &buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
+ 		u16IEsLen = u16AssocRespLen - (CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN);
+ 
+ 		pstrConnectRespInfo->pu8RespIEs = kmemdup(pu8IEs, u16IEsLen, GFP_KERNEL);
+@@ -405,7 +405,7 @@ s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
+ 		pstrConnectRespInfo->u16RespIEsLen = u16IEsLen;
+ 	}
+ 
+-	*ppstrConnectRespInfo = pstrConnectRespInfo;
++	*ret_connect_resp_info = pstrConnectRespInfo;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index aec0779..6a2c323 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -122,9 +122,8 @@ typedef struct {
+ 
+ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info);
+ s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo);
+-
+-s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
+-		       tstrConnectRespInfo **ppstrConnectRespInfo);
++s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
++			       tstrConnectRespInfo **ret_connect_resp_info);
+ s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo);
+ void wilc_scan_complete_received(struct wilc *wilc, u8 *pu8Buffer,
+ 				 u32 u32Length);
 -- 
-2.6.4
+1.9.1
 
