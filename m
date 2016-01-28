@@ -1,42 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:63818 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753451AbcAGMrv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 07:47:51 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/21] iwlwifi: set max firmware version of 7265 to 17
-Date: Thu,  7 Jan 2016 14:47:26 +0200
-Message-Id: <1452170861-10060-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160107_134901_328039_4738963B)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:12137 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933200AbcA1HQU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jan 2016 02:16:20 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 03/12] staging: wilc1000: renames u16TagParamOffset variable
+Date: Thu, 28 Jan 2016 16:13:37 +0900
+Message-ID: <1453965226-6158-3-git-send-email-leo.kim@atmel.com> (sfid-20160128_081632_298750_D08FF0D1)
+In-Reply-To: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
+References: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just like 7260, 7265 will not have firmware releases newer
-than iwlwifi-7265-17.ucode. 7265D is still supported in
-latest firmware releases.
+This patch renames u16TagParamOffset variable to tag_param_offset
+to avoid camelcase.
 
-Fixes: 628a2918afe4 ("iwlwifi: separate firmware version for 7260 devices")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-7000.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-7000.c b/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
-index fd9064b..d15117c 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-7000.c
-@@ -72,7 +72,7 @@
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 9f85fff..b769d3c 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -241,11 +241,11 @@ static inline u16 get_asoc_id(u8 *data)
+ 	return asoc_id;
+ }
  
- /* Highest firmware API version supported */
- #define IWL7260_UCODE_API_MAX	17
--#define IWL7265_UCODE_API_MAX	19
-+#define IWL7265_UCODE_API_MAX	17
- #define IWL7265D_UCODE_API_MAX	19
+-static u8 *get_tim_elm(u8 *pu8msa, u16 rx_len, u16 u16TagParamOffset)
++static u8 *get_tim_elm(u8 *pu8msa, u16 rx_len, u16 tag_param_offset)
+ {
+ 	u16 u16index;
  
- /* Oldest version we won't warn about */
+-	u16index = u16TagParamOffset;
++	u16index = tag_param_offset;
+ 
+ 	while (u16index < (rx_len - FCS_LEN)) {
+ 		if (pu8msa[u16index] == ITIM)
 -- 
-2.5.0
+1.9.1
 
