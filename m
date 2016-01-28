@@ -1,45 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:39230 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751505AbcADJgK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Jan 2016 04:36:10 -0500
-From: Hante Meuleman <meuleman@broadcom.com>
-To: Carlo Caione <carlo@caione.org>,
-	Arend van Spriel <aspriel@gmail.com>
-CC: Arend Van Spriel <arend@broadcom.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [BISECTED] brcmfmac issue since 4.3.0-rc3
-Date: Mon, 4 Jan 2016 09:36:09 +0000
-Message-ID: <F51492713EF10846800D8C0ED37A7DCE019C6610@SJEXCHMB15.corp.ad.broadcom.com> (sfid-20160104_103613_627724_B989D9C0)
-References: <CAOQ7t2bEs2UhxfWUCs7TBwidw2JKCKLmeUzcYjng4f5p4Wr-Mw@mail.gmail.com>
-	<567D1268.70709@gmail.com>
- <CAOQ7t2aJr6Ub+7t1B7XfJvJb_p2AMV+77MsiozZz73uQaxOVnw@mail.gmail.com>
-In-Reply-To: <CAOQ7t2aJr6Ub+7t1B7XfJvJb_p2AMV+77MsiozZz73uQaxOVnw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:57428 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750857AbcA1WMr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jan 2016 17:12:47 -0500
+Message-ID: <1454019155.2332.15.camel@sipsolutions.net> (sfid-20160128_231256_462881_DF986834)
+Subject: Re: WARNING at net/mac80211/rate.c:513 ieee80211_get_tx_rates
+ [mac80211]
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Linus Torvalds <torvalds@linux-foundation.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: David Miller <davem@davemloft.net>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Date: Thu, 28 Jan 2016 23:12:35 +0100
+In-Reply-To: <CA+55aFzF0gWfvmE+6ZcHmjnO4xp-oVAQ5SWxYJhOzns2ocgCsw@mail.gmail.com> (sfid-20160128_230454_551008_3AE61B48)
+References: <CA+55aFxe22iWok6UojY=hCoG2k1wNpJ9CfQ0b+STSxq67tb86Q@mail.gmail.com>
+	 <1453983185.2217.12.camel@sipsolutions.net>
+	 <CA+55aFya9K4JboNY8kB9cg6zt9otguhdzfHm3jvLmWedxQTSWg@mail.gmail.com>
+	 <1454013625.2332.9.camel@sipsolutions.net>
+	 <CA+55aFx73nv9ny-fu5BR6v8wL=f2oFomwrZoLRw=x2kNP76cYA@mail.gmail.com>
+	 <CA+55aFzF0gWfvmE+6ZcHmjnO4xp-oVAQ5SWxYJhOzns2ocgCsw@mail.gmail.com>
+	 (sfid-20160128_230454_551008_3AE61B48)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQ2FybG8NCg0KVGhlIGV4cGVjdGlvbiB3YXMgbGlrZWx5IGZpeGVkIHdpdGggYSBwYXRjaCB3
-aXRoIHRoZSB0aXRsZToNCg0KYnJjbWZtYWM6IEZpeCBkb3VibGUgZnJlZSBvbiBleGNlcHRpb24g
-YXQgbW9kdWxlIGxvYWQuDQoNClRoZSBjaGFuZ2UgeW91IGZvdW5kIHdoaWNoIGlzIGNhdXNpbmcg
-YSBjcmFzaCBjYXVzZWQgYSBkb3VibGUgZnJlZS4gDQoNCkl0IHdvbid0IGZpeCB0aGUgZmlybXdh
-cmUgY3Jhc2gsIGJ1dCBpdCB3aWxsIGZpeCB0aGUgc3lzdGVtIGNyYXNoIG9uIGZhaWx1cmUuDQoN
-ClJlZ2FyZHMsDQpIYW50ZQ0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogY2Fy
-bG8uY2Fpb25lQGdtYWlsLmNvbSBbbWFpbHRvOmNhcmxvLmNhaW9uZUBnbWFpbC5jb21dIE9uIEJl
-aGFsZiBPZiBDYXJsbyBDYWlvbmUNClNlbnQ6IEZyaWRheSwgRGVjZW1iZXIgMjUsIDIwMTUgMTE6
-MTYgQU0NClRvOiBBcmVuZCB2YW4gU3ByaWVsDQpDYzogQ2FybG8gQ2Fpb25lOyBIYW50ZSBNZXVs
-ZW1hbjsgQXJlbmQgVmFuIFNwcmllbDsga3ZhbG9AY29kZWF1cm9yYS5vcmc7IGxpbnV4LXdpcmVs
-ZXNzQHZnZXIua2VybmVsLm9yZw0KU3ViamVjdDogUmU6IFtCSVNFQ1RFRF0gYnJjbWZtYWMgaXNz
-dWUgc2luY2UgNC4zLjAtcmMzDQoNCk9uIEZyaSwgRGVjIDI1LCAyMDE1IGF0IDEwOjU0IEFNLCBB
-cmVuZCB2YW4gU3ByaWVsIDxhc3ByaWVsQGdtYWlsLmNvbT4gd3JvdGU6DQo+IEhpIENhcmxvLA0K
-Pg0KPiBUaGlzIHNtZWxscyBsaWtlIGEgZmlybXdhcmUgY3Jhc2guIFVwb24gdGhlIGJyY21mX2J1
-c19zdGFydCBmYWlsdXJlIHdlDQo+IGJhaWwgb3V0IG9uIHRoZSBwcm9iZS4gSSBzdXNwZWN0IGlu
-IHRoZSBlcnJvciBwYXRoIHRoZXJlIGlzIGFuIGlzc3VlDQo+IGludHJvZHVjZWQgKG9yIGV4cG9z
-ZWQpIGJ5IHRoZSBtZW50aW9uZWQgcGF0Y2guIERpZCBub3QgbG9vayBmdXJ0aGVyDQo+IGludG8g
-aXQgYXMgdGhlIGZhbWlseSBpcyBnaXZpbmcgbWUgdGhlIGFuZ3J5IGxvb2sgZHVyaW5nIHRoZSBo
-b2xpZGF5cyA7LSkNCg0KSGkgQXJlbmQsDQpUaGFuayB5b3UgZm9yIHRoZSBxdWljayByZXBseSwg
-dGhpcyBjYW4gZGVmaW5pdGVseSB3YWl0IDstKQ0KSGFwcHkgaG9saWRheXMgYW5kIGhhcHB5IG5l
-dyB5ZWFyIQ0KDQotLSANCkNhcmxvIENhaW9uZQ0KDQo=
+On Thu, 2016-01-28 at 14:04 -0800, Linus Torvalds wrote:
+> 
+> Well, it "makes a difference" in the sense that the warning goes
+> away.
+> But it doesn't make things work. In fact, it might be making things
+> worse.
+
+Heh, ok.
+
+> Because with that patch, the wireless still authenticates and
+> associates, but then it doesn't even get an IP address, so now even
+> dhcp doesn't work. Of course, I was surprised that it worked last
+> time, and I'm not 100% sure it did work consistently. I'll re-test
+> without the patch, just to make sure, but it doesn't really seem to
+> improve on anything.
+> 
+
+It makes some sense, here's some speculation:
+
+VHT rates are MCS 0-9. If the rate scaling decides to use only VHT
+MCSes with a VHT-capable peer, then it stands to reason it might still
+start at 0, but forget to set the VHT_MCS flag, so it would really use
+rate index 0 from the table, which is 6 MBps. Then, it would see that
+"working" (since it's not the right thing) and scale up until it hits
+MCS 8 or 9, which is no longer a valid rate (those are only 0-7).
+
+Since the suggested changes make it worse, we can assume that this is
+not the only place where VHT is simply completely broken, and fixing
+VHT here will instead uncover a bug elsewhere, that was previously not
+happening because we never got to real VHT rates.
+
+Your best workaround may just be to ignore VHT for now - clearly it's
+broken so using "just" HT (which is likely not that much of a penalty
+anyway since you're apparently not using 80 MHz) will be much better.
+
+Go into
+
+_rtl_init_hw_vht_capab()
+
+and just remove or stub out the entire contents of that (or you could
+just remove the "vht_supported=true" if you feel like it.)
+
+That should get it to HT only, which is likely tested and working
+better.
+
+johannes
