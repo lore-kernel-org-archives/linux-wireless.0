@@ -1,114 +1,298 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36782 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932093AbcAOKSJ (ORCPT
+Received: from mail-pa0-f52.google.com ([209.85.220.52]:36456 "EHLO
+	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752881AbcA1OSF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Jan 2016 05:18:09 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH v2 2/5] ath9k: clean up ANI per-channel pointer checking
-Date: Fri, 15 Jan 2016 18:17:18 +0800
-Message-Id: <1452853041-3674-3-git-send-email-miaoqing@codeaurora.org> (sfid-20160115_111817_603809_C6DD2849)
-In-Reply-To: <1452853041-3674-1-git-send-email-miaoqing@codeaurora.org>
-References: <1452853041-3674-1-git-send-email-miaoqing@codeaurora.org>
+	Thu, 28 Jan 2016 09:18:05 -0500
+Received: by mail-pa0-f52.google.com with SMTP id yy13so23832762pab.3
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jan 2016 06:17:45 -0800 (PST)
+From: Kees Cook <keescook@chromium.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Kees Cook <keescook@chromium.org>, x86@kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Joe Perches <joe@perches.com>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Steve French <sfrench@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-cifs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 3/3] param: convert some "on"/"off" users to strtobool
+Date: Thu, 28 Jan 2016 06:17:07 -0800
+Message-Id: <1453990627-19164-4-git-send-email-keescook@chromium.org> (sfid-20160128_151940_562170_E4D67825)
+In-Reply-To: <1453990627-19164-1-git-send-email-keescook@chromium.org>
+References: <1453990627-19164-1-git-send-email-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+This changes several users of manual "on"/"off" parsing to use strtobool.
 
-commit c24bd3620c50 ("ath9k: Do not maintain ANI state per-channel")
-removed per-channel handling, the code to check 'curchan' also
-should be removed as never used.
-
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Signed-off-by: Kees Cook <keescook@chromium.org>
+Cc: x86@kernel.org
+Cc: linuxppc-dev@lists.ozlabs.org
+Cc: linux-s390@vger.kernel.org
 ---
- drivers/net/wireless/ath/ath9k/ani.c | 32 ++++++--------------------------
- 1 file changed, 6 insertions(+), 26 deletions(-)
+ arch/powerpc/kernel/rtasd.c                  | 10 +++-------
+ arch/powerpc/platforms/pseries/hotplug-cpu.c | 11 +++--------
+ arch/s390/kernel/time.c                      |  8 ++------
+ arch/s390/kernel/topology.c                  |  8 +++-----
+ arch/x86/kernel/aperture_64.c                | 13 +++----------
+ include/linux/tick.h                         |  2 +-
+ kernel/time/hrtimer.c                        | 11 +++--------
+ kernel/time/tick-sched.c                     | 11 +++--------
+ 8 files changed, 21 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ani.c b/drivers/net/wireless/ath/ath9k/ani.c
-index 0f74d59..bd1b573 100644
---- a/drivers/net/wireless/ath/ath9k/ani.c
-+++ b/drivers/net/wireless/ath/ath9k/ani.c
-@@ -126,12 +126,8 @@ static void ath9k_hw_update_mibstats(struct ath_hw *ah,
+diff --git a/arch/powerpc/kernel/rtasd.c b/arch/powerpc/kernel/rtasd.c
+index 5a2c049c1c61..984e67e91ba3 100644
+--- a/arch/powerpc/kernel/rtasd.c
++++ b/arch/powerpc/kernel/rtasd.c
+@@ -21,6 +21,7 @@
+ #include <linux/cpu.h>
+ #include <linux/workqueue.h>
+ #include <linux/slab.h>
++#include <linux/string.h>
  
- static void ath9k_ani_restart(struct ath_hw *ah)
+ #include <asm/uaccess.h>
+ #include <asm/io.h>
+@@ -49,7 +50,7 @@ static unsigned int rtas_error_log_buffer_max;
+ static unsigned int event_scan;
+ static unsigned int rtas_event_scan_rate;
+ 
+-static int full_rtas_msgs = 0;
++static bool full_rtas_msgs;
+ 
+ /* Stop logging to nvram after first fatal error */
+ static int logging_enabled; /* Until we initialize everything,
+@@ -592,11 +593,6 @@ __setup("surveillance=", surveillance_setup);
+ 
+ static int __init rtasmsgs_setup(char *str)
  {
--	struct ar5416AniState *aniState;
+-	if (strcmp(str, "on") == 0)
+-		full_rtas_msgs = 1;
+-	else if (strcmp(str, "off") == 0)
+-		full_rtas_msgs = 0;
 -
--	if (!ah->curchan)
--		return;
-+	struct ar5416AniState *aniState = &ah->ani;
+-	return 1;
++	return strtobool(str, &full_rtas_msgs);
+ }
+ __setup("rtasmsgs=", rtasmsgs_setup);
+diff --git a/arch/powerpc/platforms/pseries/hotplug-cpu.c b/arch/powerpc/platforms/pseries/hotplug-cpu.c
+index 32274f72fe3f..bb333e9fd77a 100644
+--- a/arch/powerpc/platforms/pseries/hotplug-cpu.c
++++ b/arch/powerpc/platforms/pseries/hotplug-cpu.c
+@@ -27,6 +27,7 @@
+ #include <linux/cpu.h>
+ #include <linux/of.h>
+ #include <linux/slab.h>
++#include <linux/string.h>
+ #include <asm/prom.h>
+ #include <asm/rtas.h>
+ #include <asm/firmware.h>
+@@ -47,20 +48,14 @@ static DEFINE_PER_CPU(enum cpu_state_vals, current_state) = CPU_STATE_OFFLINE;
  
--	aniState = &ah->ani;
- 	aniState->listenTime = 0;
+ static enum cpu_state_vals default_offline_state = CPU_STATE_OFFLINE;
  
- 	ENABLE_REGWRITE_BUFFER(ah);
-@@ -221,12 +217,7 @@ static void ath9k_hw_set_ofdm_nil(struct ath_hw *ah, u8 immunityLevel,
+-static int cede_offline_enabled __read_mostly = 1;
++static bool cede_offline_enabled __read_mostly = true;
  
- static void ath9k_hw_ani_ofdm_err_trigger(struct ath_hw *ah)
- {
--	struct ar5416AniState *aniState;
--
--	if (!ah->curchan)
--		return;
--
--	aniState = &ah->ani;
-+	struct ar5416AniState *aniState = &ah->ani;
- 
- 	if (aniState->ofdmNoiseImmunityLevel < ATH9K_ANI_OFDM_MAX_LEVEL)
- 		ath9k_hw_set_ofdm_nil(ah, aniState->ofdmNoiseImmunityLevel + 1, false);
-@@ -281,12 +272,7 @@ static void ath9k_hw_set_cck_nil(struct ath_hw *ah, u_int8_t immunityLevel,
- 
- static void ath9k_hw_ani_cck_err_trigger(struct ath_hw *ah)
- {
--	struct ar5416AniState *aniState;
--
--	if (!ah->curchan)
--		return;
--
--	aniState = &ah->ani;
-+	struct ar5416AniState *aniState = &ah->ani;
- 
- 	if (aniState->cckNoiseImmunityLevel < ATH9K_ANI_CCK_MAX_LEVEL)
- 		ath9k_hw_set_cck_nil(ah, aniState->cckNoiseImmunityLevel + 1,
-@@ -299,9 +285,7 @@ static void ath9k_hw_ani_cck_err_trigger(struct ath_hw *ah)
+ /*
+  * Enable/disable cede_offline when available.
   */
- static void ath9k_hw_ani_lower_immunity(struct ath_hw *ah)
+ static int __init setup_cede_offline(char *str)
  {
--	struct ar5416AniState *aniState;
--
--	aniState = &ah->ani;
-+	struct ar5416AniState *aniState = &ah->ani;
+-	if (!strcmp(str, "off"))
+-		cede_offline_enabled = 0;
+-	else if (!strcmp(str, "on"))
+-		cede_offline_enabled = 1;
+-	else
+-		return 0;
+-	return 1;
++	return strtobool(str, &cede_offline_enabled);
+ }
  
- 	/* lower OFDM noise immunity */
- 	if (aniState->ofdmNoiseImmunityLevel > 0 &&
-@@ -329,7 +313,7 @@ void ath9k_ani_reset(struct ath_hw *ah, bool is_scanning)
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	int ofdm_nil, cck_nil;
+ __setup("cede_offline=", setup_cede_offline);
+diff --git a/arch/s390/kernel/time.c b/arch/s390/kernel/time.c
+index 99f84ac31307..afc7fc9684ba 100644
+--- a/arch/s390/kernel/time.c
++++ b/arch/s390/kernel/time.c
+@@ -1433,7 +1433,7 @@ device_initcall(etr_init_sysfs);
+ /*
+  * Server Time Protocol (STP) code.
+  */
+-static int stp_online;
++static bool stp_online;
+ static struct stp_sstpi stp_info;
+ static void *stp_page;
  
--	if (!ah->curchan)
-+	if (!chan)
- 		return;
+@@ -1444,11 +1444,7 @@ static struct timer_list stp_timer;
  
- 	BUG_ON(aniState == NULL);
-@@ -416,14 +400,10 @@ static bool ath9k_hw_ani_read_counters(struct ath_hw *ah)
- 
- void ath9k_hw_ani_monitor(struct ath_hw *ah, struct ath9k_channel *chan)
+ static int __init early_parse_stp(char *p)
  {
--	struct ar5416AniState *aniState;
-+	struct ar5416AniState *aniState = &ah->ani;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	u32 ofdmPhyErrRate, cckPhyErrRate;
+-	if (strncmp(p, "off", 3) == 0)
+-		stp_online = 0;
+-	else if (strncmp(p, "on", 2) == 0)
+-		stp_online = 1;
+-	return 0;
++	return strtobool(p, &stp_online);
+ }
+ early_param("stp", early_parse_stp);
  
--	if (!ah->curchan)
--		return;
+diff --git a/arch/s390/kernel/topology.c b/arch/s390/kernel/topology.c
+index 40b8102fdadb..10e388216307 100644
+--- a/arch/s390/kernel/topology.c
++++ b/arch/s390/kernel/topology.c
+@@ -15,6 +15,7 @@
+ #include <linux/delay.h>
+ #include <linux/init.h>
+ #include <linux/slab.h>
++#include <linux/string.h>
+ #include <linux/cpu.h>
+ #include <linux/smp.h>
+ #include <linux/mm.h>
+@@ -37,7 +38,7 @@ static void set_topology_timer(void);
+ static void topology_work_fn(struct work_struct *work);
+ static struct sysinfo_15_1_x *tl_info;
+ 
+-static int topology_enabled = 1;
++static bool topology_enabled = true;
+ static DECLARE_WORK(topology_work, topology_work_fn);
+ 
+ /*
+@@ -444,10 +445,7 @@ static const struct cpumask *cpu_book_mask(int cpu)
+ 
+ static int __init early_parse_topology(char *p)
+ {
+-	if (strncmp(p, "off", 3))
+-		return 0;
+-	topology_enabled = 0;
+-	return 0;
++	return strtobool(p, &topology_enabled);
+ }
+ early_param("topology", early_parse_topology);
+ 
+diff --git a/arch/x86/kernel/aperture_64.c b/arch/x86/kernel/aperture_64.c
+index 6e85f713641d..6608b00a516a 100644
+--- a/arch/x86/kernel/aperture_64.c
++++ b/arch/x86/kernel/aperture_64.c
+@@ -20,6 +20,7 @@
+ #include <linux/pci_ids.h>
+ #include <linux/pci.h>
+ #include <linux/bitops.h>
++#include <linux/string.h>
+ #include <linux/suspend.h>
+ #include <asm/e820.h>
+ #include <asm/io.h>
+@@ -227,19 +228,11 @@ static u32 __init search_agp_bridge(u32 *order, int *valid_agp)
+ 	return 0;
+ }
+ 
+-static int gart_fix_e820 __initdata = 1;
++static bool gart_fix_e820 __initdata = true;
+ 
+ static int __init parse_gart_mem(char *p)
+ {
+-	if (!p)
+-		return -EINVAL;
 -
--	aniState = &ah->ani;
- 	if (!ath9k_hw_ani_read_counters(ah))
- 		return;
+-	if (!strncmp(p, "off", 3))
+-		gart_fix_e820 = 0;
+-	else if (!strncmp(p, "on", 2))
+-		gart_fix_e820 = 1;
+-
+-	return 0;
++	return strtobool(p, &gart_fix_e820);
+ }
+ early_param("gart_fix_e820", parse_gart_mem);
  
+diff --git a/include/linux/tick.h b/include/linux/tick.h
+index 97fd4e543846..0ecdf0e248f4 100644
+--- a/include/linux/tick.h
++++ b/include/linux/tick.h
+@@ -98,7 +98,7 @@ static inline void tick_broadcast_exit(void)
+ }
+ 
+ #ifdef CONFIG_NO_HZ_COMMON
+-extern int tick_nohz_enabled;
++extern bool tick_nohz_enabled;
+ extern int tick_nohz_tick_stopped(void);
+ extern void tick_nohz_idle_enter(void);
+ extern void tick_nohz_idle_exit(void);
+diff --git a/kernel/time/hrtimer.c b/kernel/time/hrtimer.c
+index 435b8850dd80..40d82fe4d2a5 100644
+--- a/kernel/time/hrtimer.c
++++ b/kernel/time/hrtimer.c
+@@ -39,6 +39,7 @@
+ #include <linux/syscalls.h>
+ #include <linux/kallsyms.h>
+ #include <linux/interrupt.h>
++#include <linux/string.h>
+ #include <linux/tick.h>
+ #include <linux/seq_file.h>
+ #include <linux/err.h>
+@@ -515,7 +516,7 @@ static inline ktime_t hrtimer_update_base(struct hrtimer_cpu_base *base)
+ /*
+  * High resolution timer enabled ?
+  */
+-static int hrtimer_hres_enabled __read_mostly  = 1;
++static bool hrtimer_hres_enabled __read_mostly  = true;
+ unsigned int hrtimer_resolution __read_mostly = LOW_RES_NSEC;
+ EXPORT_SYMBOL_GPL(hrtimer_resolution);
+ 
+@@ -524,13 +525,7 @@ EXPORT_SYMBOL_GPL(hrtimer_resolution);
+  */
+ static int __init setup_hrtimer_hres(char *str)
+ {
+-	if (!strcmp(str, "off"))
+-		hrtimer_hres_enabled = 0;
+-	else if (!strcmp(str, "on"))
+-		hrtimer_hres_enabled = 1;
+-	else
+-		return 0;
+-	return 1;
++	return strtobool(str, &hrtimer_hres_enabled);
+ }
+ 
+ __setup("highres=", setup_hrtimer_hres);
+diff --git a/kernel/time/tick-sched.c b/kernel/time/tick-sched.c
+index 9d7a053545f5..bd97702a0760 100644
+--- a/kernel/time/tick-sched.c
++++ b/kernel/time/tick-sched.c
+@@ -19,6 +19,7 @@
+ #include <linux/percpu.h>
+ #include <linux/profile.h>
+ #include <linux/sched.h>
++#include <linux/string.h>
+ #include <linux/module.h>
+ #include <linux/irq_work.h>
+ #include <linux/posix-timers.h>
+@@ -387,20 +388,14 @@ void __init tick_nohz_init(void)
+ /*
+  * NO HZ enabled ?
+  */
+-int tick_nohz_enabled __read_mostly = 1;
++bool tick_nohz_enabled __read_mostly  = true;
+ unsigned long tick_nohz_active  __read_mostly;
+ /*
+  * Enable / Disable tickless mode
+  */
+ static int __init setup_tick_nohz(char *str)
+ {
+-	if (!strcmp(str, "off"))
+-		tick_nohz_enabled = 0;
+-	else if (!strcmp(str, "on"))
+-		tick_nohz_enabled = 1;
+-	else
+-		return 0;
+-	return 1;
++	return strtobool(str, &tick_nohz_enabled);
+ }
+ 
+ __setup("nohz=", setup_tick_nohz);
 -- 
-1.9.1
+2.6.3
 
