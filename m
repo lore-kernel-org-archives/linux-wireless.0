@@ -1,54 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:35695 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751930AbcAPPjQ (ORCPT
+Received: from mail-qg0-f66.google.com ([209.85.192.66]:36557 "EHLO
+	mail-qg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751832AbcA1No0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Jan 2016 10:39:16 -0500
-Received: by mail-wm0-f48.google.com with SMTP id r129so4592967wmr.0
-        for <linux-wireless@vger.kernel.org>; Sat, 16 Jan 2016 07:39:15 -0800 (PST)
-From: Arend van Spriel <aspriel@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
+	Thu, 28 Jan 2016 08:44:26 -0500
+Received: by mail-qg0-f66.google.com with SMTP id 6so3099877qgy.3
+        for <linux-wireless@vger.kernel.org>; Thu, 28 Jan 2016 05:44:25 -0800 (PST)
+Date: Thu, 28 Jan 2016 08:44:15 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Henning Rogge <hrogge@gmail.com>
 Cc: linux-wireless@vger.kernel.org,
-	Arend van Spriel <aspriel@gmail.com>
-Subject: [PATCH] brcmfmac: fix BRCMF_FW_NVRAM_DEF macro for older gcc compilers
-Date: Sat, 16 Jan 2016 16:39:13 +0100
-Message-Id: <1452958753-12307-1-git-send-email-aspriel@gmail.com> (sfid-20160116_163949_058318_E20C3657)
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+Subject: Re: [PATCH 0/2] mac80211: add cleanup path for MPP table entries
+Message-ID: <20160128134415.GA24581@localhost> (sfid-20160128_144430_144446_7E8DF6AE)
+References: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1453190672-9748-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With gcc < 4.3 __UNIQUE_ID does not create unique ids with the macro
-BRCMF_FW_NVRAM_DEF. Fix this by removing the MODULE_FIRMWARE instance
-for the nvram file. This file is not in linux-firmware repo so it may
-not be needed anyway. Otherwise consider this as a temporary fix.
+On Tue, Jan 19, 2016 at 09:04:30AM +0100, Henning Rogge wrote:
+> Currently MPP table entries are only removed from memory when their
+> 802.11s mesh interface goes down. This can make the kernel to remember
+> a growing list of proxied mac addresses which are not relevant or even
+> reachable anymore.
 
-Reported-by: Geert Uytterhoeven <geert@linux-m68k.org>
-Signed-off-by: Arend van Spriel <aspriel@gmail.com>
----
-Hi Kalle,
+Just so I know what to do with my series: do you plan to resend these
+with comments addressed?  Or I could adopt the patches if you want.
 
-Here a quick fix for the __UNIQUE_ID issue. Looking at the other
-issue right now, which seems a bit more complicated.
-
-Regards,
-Arend
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-index ef06f57..d3c9f0d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.h
-@@ -47,8 +47,7 @@ static const char BRCM_ ## fw_nvram_name ## _FIRMWARE_NAME[] = \
- 	BRCMF_FW_DEFAULT_PATH fw; \
- static const char BRCM_ ## fw_nvram_name ## _NVRAM_NAME[] = \
- 	BRCMF_FW_DEFAULT_PATH nvram; \
--MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH fw); \
--MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH nvram)
-+MODULE_FIRMWARE(BRCMF_FW_DEFAULT_PATH fw);
- 
- #define BRCMF_FW_DEF(fw_name, fw) \
- static const char BRCM_ ## fw_name ## _FIRMWARE_NAME[] = \
 -- 
-1.9.1
-
+Bob Copeland %% http://bobcopeland.com/
