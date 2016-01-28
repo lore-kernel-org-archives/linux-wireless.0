@@ -1,40 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.12]:55443 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752102AbcAASV2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2016 13:21:28 -0500
-Subject: [PATCH 0/2] net-ath9k_htc: Fine-tuning for two function
- implementations
-References: <566ABCD9.1060404@users.sourceforge.net>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>
-To: ath9k-devel@lists.ath9k.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	Kalle Valo <kvalo@codeaurora.org>
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Message-ID: <5686C390.5060600@users.sourceforge.net> (sfid-20160101_192207_666150_99A85182)
-Date: Fri, 1 Jan 2016 19:21:04 +0100
+Received: from smtp.codeaurora.org ([198.145.29.96]:42308 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966558AbcA1I0p (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 28 Jan 2016 03:26:45 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: Re: [PATCH 0/5] 11AD fixes
+References: <1453027150-18224-1-git-send-email-qca_merez@qca.qualcomm.com>
+Date: Thu, 28 Jan 2016 10:26:38 +0200
+In-Reply-To: <1453027150-18224-1-git-send-email-qca_merez@qca.qualcomm.com>
+	(Maya Erez's message of "Sun, 17 Jan 2016 12:39:05 +0200")
+Message-ID: <87bn86m7nl.fsf@kamboji.qca.qualcomm.com> (sfid-20160128_092653_340715_787944F4)
 MIME-Version: 1.0
-In-Reply-To: <566ABCD9.1060404@users.sourceforge.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Fri, 1 Jan 2016 19:16:05 +0100
+Maya Erez <qca_merez@qca.qualcomm.com> writes:
 
-A few update suggestions were taken into account
-from static source code analysis.
+> The below patches include several fixes to wil6210 driver:
+> - Fixes in IEs handling
+> - Fixes in TX vring validation before access
+> - Fix in connect flow to allow concurrent multiple connect events
+>
+> Lior David (2):
+>   wil6210: fix privacy flag calculation in change_beacon
+>   wil6210: use extra IEs from probe response
+>
+> Maya Erez (3):
+>   wil6210: handle tx completions only if vring tx data is enabled
+>   wil6210: find TX vring only if vring_tx_data is enabled
+>   wil6210: handle multiple connect/disconnect events
 
-Markus Elfring (2):
-  Delete an unnecessary variable initialisation in ath9k_hif_usb_rx_stream()
-  Replace a variable initialisation by an assignment in ath9k_htc_set_channel()
+All applied to ath.git, thanks.
 
- drivers/net/wireless/ath/ath9k/hif_usb.c      | 2 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c | 7 ++-----
- 2 files changed, 3 insertions(+), 6 deletions(-)
+Please remember to use "wil6210: " prefix also in the cover letter,
+makes it easier to filter and find it.
 
 -- 
-2.6.3
-
+Kalle Valo
