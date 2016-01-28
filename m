@@ -1,113 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0081.hostedemail.com ([216.40.44.81]:34653 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754403AbcAVSFc (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:19212 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751676AbcA1V5M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2016 13:05:32 -0500
-Message-ID: <1453485926.13870.27.camel@perches.com> (sfid-20160122_190537_172502_748F086F)
-Subject: Re: wireless-drivers: random cleanup patches piling up
-From: Joe Perches <joe@perches.com>
-To: "John W. Linville" <linville@tuxdriver.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, kbuild test robot <lkp@intel.com>,
-	kernel-janitors <kernel-janitors@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Date: Fri, 22 Jan 2016 10:05:26 -0800
-In-Reply-To: <20160122151211.GB1500@tuxdriver.com>
-References: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com>
-	 <1453423965.3856.22.camel@perches.com>
-	 <87k2n1x0sf.fsf@kamboji.qca.qualcomm.com>
-	 <20160122151211.GB1500@tuxdriver.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Thu, 28 Jan 2016 16:57:12 -0500
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 1/4] ath10k: rename Mesh related service names
+Date: Thu, 28 Jan 2016 13:54:07 -0800
+Message-ID: <1e6f61146a6fdc7a11b85b796d3921d75d308764.1454015989.git.poh@qca.qualcomm.com> (sfid-20160128_225718_412066_0982055B)
+In-Reply-To: <cover.1454015989.git.poh@qca.qualcomm.com>
+References: <cover.1454015989.git.poh@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-01-22 at 10:12 -0500, John W. Linville wrote:
-> On Fri, Jan 22, 2016 at 02:21:20PM +0200, Kalle Valo wrote:
-> > Joe Perches <joe@perches.com> writes:
-> > 
-> > > On Thu, 2016-01-21 at 16:58 +0200, Kalle Valo wrote:
-> > > > Hi,
-> > > > 
-> > > > I have quite a lot of random cleanup patches from new developers waiting
-> > > > in my queue:
-> > > > 
-> > > > https://patchwork.kernel.org/project/linux-wireless/list/?state=10&delegate=25621&order=date
-> > > > 
-> > > > (Not all of them are cleanup patches, there are also few patches
-> > > > deferred due to other reasons, but you get the idea.)
-> > > > 
-> > > > These cleanup patches usually take quite a lot of my time and I'm
-> > > > starting to doubt the benefit, compared to the time needed to dig
-> > > > through them and figuring out what to apply. And this is of course time
-> > > > away from other patches, so it's slowing down "real" development.
-> > > > 
-> > > > I really don't know what to do. Part of me is saying that I just should
-> > > > drop them unless it's reviewed by a more experienced developer but on
-> > > > the other hand this is a good way get new developers onboard.
-> > > > 
-> > > > What others think? Are these kind of patches useful?
-> > > 
-> > > Some yes, mostly not really.
-> > > 
-> > > While whitespace style patches have some small value,
-> > > very few of the new contributors that use tools like
-> > > "scripts/checkpatch.pl -f" on various kernel files 
-> > > actually continue on to submit actual defect fixing
-> > > or optimization or code clarity patches.
-> > 
-> > That's also my experience from maintaining wireless-drivers for a year,
-> > this seems to be a "hit and run" type of phenomenon.
-> 
-> Should we be looking for someone to run a "wireless-driver-cleanups"
-> tree?  They could handle the cleanups and trivial stuff, and send
-> you a pull request a couple of times per release...?
+WMI_10_4_SERVICE_MESH bit is for non IEEE802.11s Mesh.
+Hence rename it to WMI_10_4_SERVICE_MESH_NON_11S.
+Also add _11S as post-fix to each of WMI_SERVICE_MESH and
+WMI_VDEV_SUBTYPE_MESH specifying the service is for 11s Mesh.
+This will help users to distinguish 11s Mesh from non 11s Mesh.
 
-If you are really interested in this sort of code cleanup,
-and not in a new developer that might show up because of
-a "my first kernel patch" process, maybe it'd be better
-to do a preemptive run of something like:
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c |  4 ++--
+ drivers/net/wireless/ath/ath10k/wmi.h | 16 +++++++++-------
+ 2 files changed, 11 insertions(+), 9 deletions(-)
 
-$ git ls-files drivers/net/wireless | \
-  while read file ; do \
-    ./scripts/checkpatch.pl -f --fix-inplace --types=spacing $file ; \
-  done
-
-with git diff -w, compile every modified file, use objdiff, etc.
-and a commit per subdirectory or driver.
-
-A problem with that is checkpatch messages really aren't
-dicta and there are some things that maybe look nicer
-before the script mucks them up.
-
-For instance, in the first file from that pass:
-
-drivers/net/wireless/admtek/adm8211.c
-[]
-@@ -273,7 +273,7 @@ static void adm8211_write_sram_bytes(struct ieee80211_hw *dev
-                }
-        } else {
-                for (i = 0; i < len; i += 4) {
--                       u32 val = (buf[i + 0] << 0 ) | (buf[i + 1] << 8 ) |
-+                       u32 val = (buf[i + 0] << 0) | (buf[i + 1] << 8 ) |
-                                  (buf[i + 2] << 16) | (buf[i + 3] << 24);
-                        adm8211_write_sram(dev, addr + i / 4, val);
-                }
-
-You could reasonably argue that the "<< 0 )" was used
-for alignment and doesn't need to be changed.  Perhaps
-this should be "<<  0)" instead.
-
-But a better change would be not be a whitespace change
-but "get_unaligned_le32(buf + i)", maybe removing the
-temporary too.
-
-And there's an equivalent change that could use
-get_unaligned_le16 in the preceding block that
-checkpatch doesn't flag.
-
-Anyway, a trivial change like the first block I looked
-at could be done automatically, but it really doesn't
-improve the code much.
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index ef0438d..1406b0f 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -4380,8 +4380,8 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
+ 		arvif->vdev_type = WMI_VDEV_TYPE_IBSS;
+ 		break;
+ 	case NL80211_IFTYPE_MESH_POINT:
+-		if (test_bit(WMI_SERVICE_MESH, ar->wmi.svc_map)) {
+-			arvif->vdev_subtype = WMI_VDEV_SUBTYPE_MESH;
++		if (test_bit(WMI_SERVICE_MESH_11S, ar->wmi.svc_map)) {
++			arvif->vdev_subtype = WMI_VDEV_SUBTYPE_MESH_11S;
+ 		} else if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
+ 			ret = -EINVAL;
+ 			ath10k_warn(ar, "must load driver with rawmode=1 to add mesh interfaces\n");
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 806d4bb..0458bf6 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -176,7 +176,8 @@ enum wmi_service {
+ 	WMI_SERVICE_AUX_CHAN_LOAD_INTF,
+ 	WMI_SERVICE_BSS_CHANNEL_INFO_64,
+ 	WMI_SERVICE_EXT_RES_CFG_SUPPORT,
+-	WMI_SERVICE_MESH,
++	WMI_SERVICE_MESH_11S,
++	WMI_SERVICE_MESH_NON_11S,
+ 	WMI_SERVICE_PEER_STATS,
+ 
+ 	/* keep last */
+@@ -296,7 +297,7 @@ enum wmi_10_4_service {
+ 	WMI_10_4_SERVICE_AUX_CHAN_LOAD_INTF,
+ 	WMI_10_4_SERVICE_BSS_CHANNEL_INFO_64,
+ 	WMI_10_4_SERVICE_EXT_RES_CFG_SUPPORT,
+-	WMI_10_4_SERVICE_MESH,
++	WMI_10_4_SERVICE_MESH_NON_11S,
+ };
+ 
+ static inline char *wmi_service_name(int service_id)
+@@ -387,7 +388,8 @@ static inline char *wmi_service_name(int service_id)
+ 	SVCSTR(WMI_SERVICE_AUX_CHAN_LOAD_INTF);
+ 	SVCSTR(WMI_SERVICE_BSS_CHANNEL_INFO_64);
+ 	SVCSTR(WMI_SERVICE_EXT_RES_CFG_SUPPORT);
+-	SVCSTR(WMI_SERVICE_MESH);
++	SVCSTR(WMI_SERVICE_MESH_11S);
++	SVCSTR(WMI_SERVICE_MESH_NON_11S);
+ 	SVCSTR(WMI_SERVICE_PEER_STATS);
+ 	default:
+ 		return NULL;
+@@ -463,7 +465,7 @@ static inline void wmi_10x_svc_map(const __le32 *in, unsigned long *out,
+ 	SVCMAP(WMI_10X_SERVICE_BSS_CHANNEL_INFO_64,
+ 	       WMI_SERVICE_BSS_CHANNEL_INFO_64, len);
+ 	SVCMAP(WMI_10X_SERVICE_MESH,
+-	       WMI_SERVICE_MESH, len);
++	       WMI_SERVICE_MESH_11S, len);
+ 	SVCMAP(WMI_10X_SERVICE_EXT_RES_CFG_SUPPORT,
+ 	       WMI_SERVICE_EXT_RES_CFG_SUPPORT, len);
+ 	SVCMAP(WMI_10X_SERVICE_PEER_STATS,
+@@ -628,8 +630,8 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
+ 	       WMI_SERVICE_BSS_CHANNEL_INFO_64, len);
+ 	SVCMAP(WMI_10_4_SERVICE_EXT_RES_CFG_SUPPORT,
+ 	       WMI_SERVICE_EXT_RES_CFG_SUPPORT, len);
+-	SVCMAP(WMI_10_4_SERVICE_MESH,
+-	       WMI_SERVICE_MESH, len);
++	SVCMAP(WMI_10_4_SERVICE_MESH_NON_11S,
++	       WMI_SERVICE_MESH_NON_11S, len);
+ }
+ 
+ #undef SVCMAP
+@@ -4287,7 +4289,7 @@ enum wmi_vdev_subtype {
+ 	WMI_VDEV_SUBTYPE_P2P_CLIENT = 2,
+ 	WMI_VDEV_SUBTYPE_P2P_GO     = 3,
+ 	WMI_VDEV_SUBTYPE_PROXY_STA	= 4,
+-	WMI_VDEV_SUBTYPE_MESH		= 5,
++	WMI_VDEV_SUBTYPE_MESH_11S   = 5,
+ };
+ 
+ /* values for vdev_subtype */
+-- 
+1.9.1
 
