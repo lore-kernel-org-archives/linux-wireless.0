@@ -1,63 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f172.google.com ([209.85.223.172]:33564 "EHLO
-	mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753158AbcA3DJ2 (ORCPT
+Received: from mail-ig0-f182.google.com ([209.85.213.182]:38757 "EHLO
+	mail-ig0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755058AbcA1KMG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2016 22:09:28 -0500
+	Thu, 28 Jan 2016 05:12:06 -0500
 MIME-Version: 1.0
-In-Reply-To: <1454117303.10099.84.camel@perches.com>
-References: <20160129172908.GA14077@Karyakshetra> <wrfjk2ms465z.fsf@redhat.com>
- <CAGRGNgWQvdfQc-L9z0NKCyCOorxU0seQ-XvYnZDBWA3QKySrRA@mail.gmail.com> <1454117303.10099.84.camel@perches.com>
+In-Reply-To: <1453974492.2217.2.camel@sipsolutions.net>
+References: <20160126111730.GA6765@localhost> <20160127154618.GA5717@localhost>
+ <CAGRGNgXkvNfzM9Q1RO5kFwUWpFZbQ3mNQi3aVHcPTCw0A9fyFA@mail.gmail.com> <1453974492.2217.2.camel@sipsolutions.net>
 From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sat, 30 Jan 2016 14:09:08 +1100
-Message-ID: <CAGRGNgU2EuY9fpe8rhHtA8OLDRC0s5=tcBStqpq=ZbMNrnuf0w@mail.gmail.com> (sfid-20160130_040945_143235_11488CBD)
-Subject: Re: [PATCH] staging: rtl8723au: Fixes unnecessary return warning
-To: Joe Perches <joe@perches.com>
-Cc: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Alexander Kuleshov <kuleshovmail@gmail.com>,
-	Haneen Mohammed <hamohammed.sa@gmail.com>,
-	Andreas Ruprecht <andreas.ruprecht@fau.de>,
+Date: Thu, 28 Jan 2016 21:11:45 +1100
+Message-ID: <CAGRGNgVqtj8SwP-gEt0ZnbgWzgVHjcY9Q=JyB6bf6d_m+8mvhA@mail.gmail.com> (sfid-20160128_111250_717631_1F54C65C)
+Subject: Re: [PATCH] net/mac80211/agg-rx.c: fix use of uninitialised values
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Chris Bainbridge <chris.bainbridge@gmail.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+	aryabinin@virtuozzo.com, Julia Lawall <Julia.Lawall@lip6.fr>,
+	kernel-janitors@vger.kernel.org, Joe Perches <joe@perches.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Joe,
+Hi Johannes,
 
-On Sat, Jan 30, 2016 at 12:28 PM, Joe Perches <joe@perches.com> wrote:
-> On Sat, 2016-01-30 at 10:17 +1100, Julian Calaby wrote:
->> On Sat, Jan 30, 2016 at 5:00 AM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
->> > Bhaktipriya Shridhar <bhaktipriya96@gmail.com> writes:
->> > > This patch fixes checkpatch.pl warning in rtw_mlme_ext.c file.
->> > > WARNING: void function return statements are not generally useful
-> []
->> > > diff --git a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
-> []
->> > > @@ -2657,7 +2657,6 @@ static void issue_probersp(struct rtw_adapter *padapter, unsigned char *da)
->> > >
->> > >       dump_mgntframe23a(padapter, pmgntframe);
->> > >
->> > > -     return;
->> > >  }
->> >
->> > If you insist on pushing this rather unncessary change, please do it
->> > properly, and remove the blank line before the return statement as well.
->>
->> As Jes said, you need to remove the blank lines before the returns
->> too. checkpatch should have picked this up, you did run the patch
->> through checkpatch before you sent it, right?
+On Thu, Jan 28, 2016 at 8:48 PM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Thu, 2016-01-28 at 10:27 +1100, Julian Calaby wrote:
+>> I'd prefer to just set ->removed to false right after we set
+>> ->auto_seq as that should be faster, however I don't know if
+>> __ieee80211_start_rx_ba_session() is a fast path so I don't know if
+>> this is saving anything.
 >
-> checkpatch doesn't pick this up.
->
-> If you'd like to make it do so, you're welcome to try
-> but it's likely a bit more complicated than it appears.
+> It's not supposed to be called frequently, no.
 
-I meant the extra blank lines, not the useless return statements.
+Then most of my commentary is moot.
+
+I guess the argument comes down to do we zero everything or initialise
+everything, and if speed isn't an issue, the former is better.
+
+>> On another note, this is an error that should be pretty easy to spot.
+>> Could any of the automated tools find cases where a struct containing
+>> a bool variable is kmalloc'd and returned without assigning all the
+>> bools?
+>
+> I think you'd quickly drown in false positives, since "return" isn't
+> necessarily something that means it needs to have been fully
+> initialized.
+
+True.
+
+Either way, I'm guessing that UBSAN will pick up a lot of similar bugs
+and the output of that is probably a much smaller haystack to dig
+through than just "every" kmalloc() call.
 
 Thanks,
 
