@@ -1,44 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:41191 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753321AbcAYHoV (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:11187 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751115AbcA1TCw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 02:44:21 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adham.abozaeid@atmel.com>,
-	<Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 22/26] staging: wilc1000: disable power save when AP mode
-Date: Mon, 25 Jan 2016 16:35:26 +0900
-Message-ID: <1453707330-13526-23-git-send-email-glen.lee@atmel.com> (sfid-20160125_084424_627067_EB4E55A0)
-In-Reply-To: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
-References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
+	Thu, 28 Jan 2016 14:02:52 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Peter Oh <poh@codeaurora.org>
+CC: Michal Kazior <michal.kazior@tieto.com>,
+	<ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 13/13] ath10k: implement push-pull tx
+References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
+	<1453384006-31907-14-git-send-email-michal.kazior@tieto.com>
+	<56A1182A.4060309@codeaurora.org>
+Date: Thu, 28 Jan 2016 10:36:20 +0200
+In-Reply-To: <56A1182A.4060309@codeaurora.org> (Peter Oh's message of "Thu, 21
+	Jan 2016 09:40:58 -0800")
+Message-ID: <8737tim77f.fsf@kamboji.qca.qualcomm.com> (sfid-20160128_200256_214016_BF3DEE3F)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch disables power save mode in case of AP mode.
+Peter Oh <poh@codeaurora.org> writes:
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 1 +
- 1 file changed, 1 insertion(+)
+>> +	spin_lock_bh(&ar->htt.tx_lock);
+>> +	ath10k_mac_tx_lock(ar, ATH10K_TX_PAUSE_Q_FLUSH_PENDING);
+>> +	spin_unlock_bh(&ar->htt.tx_lock);
+>> +
+>
+> Isn't it proved it break Mesh from working?
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index d3ad098..8930d1c 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2203,6 +2203,7 @@ static int start_ap(struct wiphy *wiphy, struct net_device *dev,
- 		PRINT_ER("Error in setting channel\n");
- 
- 	wilc_wlan_set_bssid(dev, wl->vif[vif->u8IfIdx]->src_addr, AP_MODE);
-+	wilc_set_power_mgmt(vif, 0, 0);
- 
- 	s32Error = wilc_add_beacon(vif, settings->beacon_interval,
- 				   settings->dtim_period, beacon->head_len,
+Please think of others and edit your quotes, it was annoying to find
+this oneliner from a 500+ line message.
+
 -- 
-1.9.1
-
+Kalle Valo
