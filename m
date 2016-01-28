@@ -1,77 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.74]:64996 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932198AbcA1V7H (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:32198 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752271AbcA1SKj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 16:59:07 -0500
-From: Arnd Bergmann <arnd@arndb.de>
+	Thu, 28 Jan 2016 13:10:39 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Jouni Malinen <j@w1.fi>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Russell King - ARM Linux <linux@arm.linux.org.uk>
-Subject: [PATCH v2] hostap: avoid uninitialized variable use in hfa384x_get_rid
-Date: Thu, 28 Jan 2016 22:58:28 +0100
-Message-ID: <18181682.hKPVvnQWXk@wuerfel> (sfid-20160128_225929_837145_66A94E28)
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH 3/4] wil6210: protect synchronous wmi commands handling
+Date: Thu, 28 Jan 2016 19:24:04 +0200
+Message-Id: <1454001845-28414-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160128_191044_149267_5D68467B)
+In-Reply-To: <1454001845-28414-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1454001845-28414-1-git-send-email-qca_merez@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver reads a value from hfa384x_from_bap(), which may fail,
-and then assigns the value to a local variable. gcc detects that
-in in the failure case, the 'rlen' variable now contains
-uninitialized data:
+In case there are multiple WMI commands with the same reply_id,
+the following scenario can occur:
+- Driver sends the first command to the device
+- The reply didn’t get on time and there is timeout
+- Reply_id, reply_buf and reply_size are set to 0
+- Driver sends second wmi command with the same reply_id as the first
+- Driver sets wil->reply_id
+- Reply for the first wmi command arrives and handled by wmi_recv_cmd
+- As its ID fits the reply_id but the reply_buf is not set yet it is
+handled as a reply with event handler, and WARN_ON is printed
 
-In file included from ../drivers/net/wireless/intersil/hostap/hostap_pci.c:220:0:
-drivers/net/wireless/intersil/hostap/hostap_hw.c: In function 'hfa384x_get_rid':
-drivers/net/wireless/intersil/hostap/hostap_hw.c:842:5: warning: 'rec' may be used uninitialized in this function [-Wmaybe-uninitialized]
-  if (le16_to_cpu(rec.len) == 0) {
+This patch guarantee atomic setting of all the reply variables and
+prevents the above scenario.
 
-This restructures the function as suggested by Russell King, to
-make it more readable and get more reliable error handling, by
-handling each failure mode using a goto.
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/wmi.c | 17 +++++++++++++----
+ 1 file changed, 13 insertions(+), 4 deletions(-)
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-
-diff --git a/drivers/net/wireless/intersil/hostap/hostap_hw.c b/drivers/net/wireless/intersil/hostap/hostap_hw.c
-index 6df3ee561d52..515aa3f993f3 100644
---- a/drivers/net/wireless/intersil/hostap/hostap_hw.c
-+++ b/drivers/net/wireless/intersil/hostap/hostap_hw.c
-@@ -836,25 +836,30 @@ static int hfa384x_get_rid(struct net_device *dev, u16 rid, void *buf, int len,
- 	spin_lock_bh(&local->baplock);
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index e1a6cb8..493e721 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -838,6 +838,7 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
+ 			struct wil6210_mbox_hdr_wmi *wmi = &evt->event.wmi;
+ 			u16 id = le16_to_cpu(wmi->id);
+ 			u32 tstamp = le32_to_cpu(wmi->timestamp);
++			spin_lock_irqsave(&wil->wmi_ev_lock, flags);
+ 			if (wil->reply_id && wil->reply_id == id) {
+ 				if (wil->reply_buf) {
+ 					memcpy(wil->reply_buf, wmi,
+@@ -845,6 +846,7 @@ void wmi_recv_cmd(struct wil6210_priv *wil)
+ 					immed_reply = true;
+ 				}
+ 			}
++			spin_unlock_irqrestore(&wil->wmi_ev_lock, flags);
  
- 	res = hfa384x_setup_bap(dev, BAP0, rid, 0);
--	if (!res)
--		res = hfa384x_from_bap(dev, BAP0, &rec, sizeof(rec));
-+	if (res)
-+		goto unlock;
+ 			wil_dbg_wmi(wil, "WMI event 0x%04x MID %d @%d msec\n",
+ 				    id, wmi->mid, tstamp);
+@@ -888,13 +890,16 @@ int wmi_call(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len,
+ 
+ 	mutex_lock(&wil->wmi_mutex);
+ 
++	spin_lock(&wil->wmi_ev_lock);
++	wil->reply_id = reply_id;
++	wil->reply_buf = reply;
++	wil->reply_size = reply_size;
++	spin_unlock(&wil->wmi_ev_lock);
 +
-+	res = hfa384x_from_bap(dev, BAP0, &rec, sizeof(rec));
-+	if (res)
-+		goto unlock;
+ 	rc = __wmi_send(wil, cmdid, buf, len);
+ 	if (rc)
+ 		goto out;
  
- 	if (le16_to_cpu(rec.len) == 0) {
- 		/* RID not available */
- 		res = -ENODATA;
-+		goto unlock;
+-	wil->reply_id = reply_id;
+-	wil->reply_buf = reply;
+-	wil->reply_size = reply_size;
+ 	remain = wait_for_completion_timeout(&wil->wmi_call,
+ 					     msecs_to_jiffies(to_msec));
+ 	if (0 == remain) {
+@@ -907,10 +912,14 @@ int wmi_call(struct wil6210_priv *wil, u16 cmdid, void *buf, u16 len,
+ 			    cmdid, reply_id,
+ 			    to_msec - jiffies_to_msecs(remain));
  	}
++
++out:
++	spin_lock(&wil->wmi_ev_lock);
+ 	wil->reply_id = 0;
+ 	wil->reply_buf = NULL;
+ 	wil->reply_size = 0;
+- out:
++	spin_unlock(&wil->wmi_ev_lock);
++
+ 	mutex_unlock(&wil->wmi_mutex);
  
- 	rlen = (le16_to_cpu(rec.len) - 1) * 2;
--	if (!res && exact_len && rlen != len) {
-+	if (exact_len && rlen != len) {
- 		printk(KERN_DEBUG "%s: hfa384x_get_rid - RID len mismatch: "
- 		       "rid=0x%04x, len=%d (expected %d)\n",
- 		       dev->name, rid, rlen, len);
- 		res = -ENODATA;
- 	}
- 
--	if (!res)
--		res = hfa384x_from_bap(dev, BAP0, buf, len);
-+	res = hfa384x_from_bap(dev, BAP0, buf, len);
- 
-+unlock:
- 	spin_unlock_bh(&local->baplock);
- 	mutex_unlock(&local->rid_bap_mtx);
- 
+ 	return rc;
+-- 
+1.8.5.2
 
