@@ -1,46 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:59314 "EHLO comal.ext.ti.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753953AbcARJuI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Jan 2016 04:50:08 -0500
-Received: from dlelxv90.itg.ti.com ([172.17.2.17])
-	by comal.ext.ti.com (8.13.7/8.13.7) with ESMTP id u0I9o7W6005348
-	for <linux-wireless@vger.kernel.org>; Mon, 18 Jan 2016 03:50:07 -0600
-Received: from DLEE71.ent.ti.com (dlee71.ent.ti.com [157.170.170.114])
-	by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id u0I9o7NW021020
-	for <linux-wireless@vger.kernel.org>; Mon, 18 Jan 2016 03:50:07 -0600
-From: Guy Mishol <guym@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Guy Mishol <guym@ti.com>
-Subject: [PATCH] wlcore: fix return value of wlcore_event_fw_logger
-Date: Mon, 18 Jan 2016 11:35:02 +0200
-Message-ID: <1453109702-15750-1-git-send-email-guym@ti.com> (sfid-20160118_105011_467108_4664167A)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtprelay0045.hostedemail.com ([216.40.44.45]:37620 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S935453AbcA1A6c (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 27 Jan 2016 19:58:32 -0500
+Message-ID: <1453942708.10099.41.camel@perches.com> (sfid-20160128_015836_420565_0F3742F8)
+Subject: Re: [PATCH] lib: fix callers of strtobool to use char array
+From: Joe Perches <joe@perches.com>
+To: Kees Cook <keescook@chromium.org>, linux-kernel@vger.kernel.org
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Steve French <sfrench@samba.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-cifs@vger.kernel.org, samba-technical@lists.samba.org
+Date: Wed, 27 Jan 2016 16:58:28 -0800
+In-Reply-To: <20160128004542.GA15247@www.outflux.net>
+References: <20160128004542.GA15247@www.outflux.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The function can return negative values in case of error.
-Fixes: 3719c17e1816 ("wlcore/wl18xx: fw logger over sdio")
+On Wed, 2016-01-27 at 16:45 -0800, Kees Cook wrote:
+> Some callers of strtobool were passing a pointer to unterminated strings.
+> This fixes the issue and consolidates some logic in cifs.
 
-Signed-off-by: Guy Mishol <guym@ti.com>
----
- drivers/net/wireless/ti/wlcore/event.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This may be incomplete as it duplicates the behavior for
+the old number of characters, but this is not a solution
+for the entry of a bool that is "on" or "off".
 
-diff --git a/drivers/net/wireless/ti/wlcore/event.c b/drivers/net/wireless/ti/wlcore/event.c
-index c964054..4b59f67 100644
---- a/drivers/net/wireless/ti/wlcore/event.c
-+++ b/drivers/net/wireless/ti/wlcore/event.c
-@@ -38,7 +38,7 @@
- 
- int wlcore_event_fw_logger(struct wl1271 *wl)
- {
--	u32 ret;
-+	int ret;
- 	struct fw_logger_information fw_log;
- 	u8  *buffer;
- 	u32 internal_fw_addrbase = WL18XX_DATA_RAM_BASE_ADDRESS;
--- 
-2.6.4
+> diff --git a/fs/cifs/cifs_debug.c b/fs/cifs/cifs_debug.c
+[]
+> @@ -290,7 +305,8 @@ static ssize_t cifs_stats_proc_write(struct file *file,
+>  			}
+>  		}
+>  		spin_unlock(&cifs_tcp_ses_lock);
+> -	}
+> +	} else
+> +		return rc;
+
+Likely better to reverse the test and unindent the
+preceding block.
+
+Otherwise, please make sure to use the general brace
+form of when one branch needs braces, the other branch
+should have them too.
 
