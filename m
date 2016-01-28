@@ -1,51 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:58191 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932472AbcAZC4A (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:12267 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932537AbcA1HQv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 21:56:00 -0500
-Date: Mon, 25 Jan 2016 18:55:59 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: glen lee <glen.lee@atmel.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, devel@driverdev.osuosl.org,
-	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
-	Nicolas.FERRE@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
-	adham.abozaeid@atmel.com
-Subject: Re: [PATCH V2 00/26] use unified firmware and add ops in cfg
-Message-ID: <20160126025559.GA14245@kroah.com> (sfid-20160126_035614_199326_98705DC5)
-References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
- <87vb6hu7f0.fsf@purkki.adurom.net>
- <20160125172131.GA27361@kroah.com>
- <56A6DD8E.70607@atmel.com>
+	Thu, 28 Jan 2016 02:16:51 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 08/12] staging: wilc1000: rename variable s32Error
+Date: Thu, 28 Jan 2016 16:13:42 +0900
+Message-ID: <1453965226-6158-8-git-send-email-leo.kim@atmel.com> (sfid-20160128_081712_368882_9C9196B5)
+In-Reply-To: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
+References: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <56A6DD8E.70607@atmel.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Jan 26, 2016 at 11:44:30AM +0900, glen lee wrote:
-> 
-> 
-> On 2016년 01월 26일 02:21, Greg KH wrote:
-> >On Mon, Jan 25, 2016 at 03:15:31PM +0200, Kalle Valo wrote:
-> >>Glen Lee <glen.lee@atmel.com> writes:
-> >>
-> >>>This patch series contains
-> >>>* support suspend and resume functionality
-> >>>* use a unified firmware for all mode of operations(station, ap, p2p)
-> >>>* support Station/AP concurrency
-> >>>* increase link speed
-> >>>* add a cfg operation for adjusting the tx power
-> >>>* fix bug on p2p, WEP security and chaning virtual interface
-> >>>
-> >>>Changes in V2: details in each patch files.
-> >>>  - 0004-staging-wilc1000-add-sdio-resume-suspend.patch
-> >>It's good practise to also add "staging: wilc1000: " prefix to the cover
-> >>letter.
-> >Yes please, otherwise it misses my filters when I go to apply patches
-> >for a subsystem and I have to find it by hand :(
-> 
-> Oh, I see it helps to filter. I will add prefix also.
-> Do I need to resend V3 patch series with adding prefix to cover letter?
+This patch renames variable s32Error to result
+to avoid CamelCase naming convention.
+Also, remove the unused variable s32Error and replace with direct return.
 
-No, I'll take it this time...
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 19 +++++++++----------
+ 1 file changed, 9 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 2a4e324..88e5661 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -356,30 +356,29 @@ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
+ 
+ s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 
+ 	if (pstrNetworkInfo) {
+ 		if (pstrNetworkInfo->pu8IEs) {
+ 			kfree(pstrNetworkInfo->pu8IEs);
+ 			pstrNetworkInfo->pu8IEs = NULL;
+ 		} else {
+-			s32Error = -EFAULT;
++			result = -EFAULT;
+ 		}
+ 
+ 		kfree(pstrNetworkInfo);
+ 		pstrNetworkInfo = NULL;
+ 
+ 	} else {
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 	}
+ 
+-	return s32Error;
++	return result;
+ }
+ 
+ s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
+ 			       tstrConnectRespInfo **ppstrConnectRespInfo)
+ {
+-	s32 s32Error = 0;
+ 	tstrConnectRespInfo *pstrConnectRespInfo = NULL;
+ 	u16 u16AssocRespLen = 0;
+ 	u8 *pu8IEs = NULL;
+@@ -408,27 +407,27 @@ s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
+ 
+ 	*ppstrConnectRespInfo = pstrConnectRespInfo;
+ 
+-	return s32Error;
++	return 0;
+ }
+ 
+ s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo)
+ {
+-	s32 s32Error = 0;
++	s32 result = 0;
+ 
+ 	if (pstrConnectRespInfo) {
+ 		if (pstrConnectRespInfo->pu8RespIEs) {
+ 			kfree(pstrConnectRespInfo->pu8RespIEs);
+ 			pstrConnectRespInfo->pu8RespIEs = NULL;
+ 		} else {
+-			s32Error = -EFAULT;
++			result = -EFAULT;
+ 		}
+ 
+ 		kfree(pstrConnectRespInfo);
+ 		pstrConnectRespInfo = NULL;
+ 
+ 	} else {
+-		s32Error = -EFAULT;
++		result = -EFAULT;
+ 	}
+ 
+-	return s32Error;
++	return result;
+ }
+-- 
+1.9.1
+
