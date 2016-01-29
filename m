@@ -1,57 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38146 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751581AbcAEPfl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Jan 2016 10:35:41 -0500
-Message-ID: <1452008139.12357.32.camel@sipsolutions.net> (sfid-20160105_163544_756258_CB978486)
-Subject: Re: [PATCH] mac80211: Don't buffer non-bufferable MMPDUs
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 05 Jan 2016 16:35:39 +0100
-In-Reply-To: <1452004632-20263-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20160105_153736_255867_4249A787)
-References: <1452004632-20263-1-git-send-email-helmut.schaa@googlemail.com>
-	 (sfid-20160105_153736_255867_4249A787)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-io0-f174.google.com ([209.85.223.174]:34321 "EHLO
+	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753296AbcA2Sjl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2016 13:39:41 -0500
+MIME-Version: 1.0
+In-Reply-To: <56ABA73C.1060504@lwfinger.net>
+References: <CA+55aFxe22iWok6UojY=hCoG2k1wNpJ9CfQ0b+STSxq67tb86Q@mail.gmail.com>
+	<1453983185.2217.12.camel@sipsolutions.net>
+	<CA+55aFya9K4JboNY8kB9cg6zt9otguhdzfHm3jvLmWedxQTSWg@mail.gmail.com>
+	<1454013625.2332.9.camel@sipsolutions.net>
+	<CA+55aFx73nv9ny-fu5BR6v8wL=f2oFomwrZoLRw=x2kNP76cYA@mail.gmail.com>
+	<CA+55aFzF0gWfvmE+6ZcHmjnO4xp-oVAQ5SWxYJhOzns2ocgCsw@mail.gmail.com>
+	<1454019155.2332.15.camel@sipsolutions.net>
+	<CA+55aFxjpdepHYD_6uU48kW38Z9bmf2wwA8yPZt4ibhkofmfQA@mail.gmail.com>
+	<56AAC66C.1080800@lwfinger.net>
+	<1454056380.3369.2.camel@sipsolutions.net>
+	<CAP71bdVZzUUNwP3py_m1pwU21qMKth=0BmMfLuUb7=B-1840zg@mail.gmail.com>
+	<1454084146.2800.0.camel@sipsolutions.net>
+	<56ABA73C.1060504@lwfinger.net>
+Date: Fri, 29 Jan 2016 10:39:40 -0800
+Message-ID: <CA+55aFysqqp-BCZs1ue6_1tE=h9SOUZTH_o7TwGbsaBnaFvXGA@mail.gmail.com> (sfid-20160129_193948_857292_32EFD4CA)
+Subject: Re: WARNING at net/mac80211/rate.c:513 ieee80211_get_tx_rates [mac80211]
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	David Miller <davem@davemloft.net>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-01-05 at 15:37 +0100, Helmut Schaa wrote:
-> Non-bufferable MMPDUs are sent out to STAs even while in PS mode
-> (for example probe responses). Applying filtered frame handling for
-> these doesn't seem to make much sense and will only create more
-> air utilization when the STA wakes up. Hence, apply filtered frame
-> handling only for bufferable MMPDUs.
-> 
-> Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-> ---
->  net/mac80211/status.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-> 
-> diff --git a/net/mac80211/status.c b/net/mac80211/status.c
-> index 5bad05e..14bd53b 100644
-> --- a/net/mac80211/status.c
-> +++ b/net/mac80211/status.c
-> @@ -51,6 +51,12 @@ static void ieee80211_handle_filtered_frame(struct
-> ieee80211_local *local,
->  	struct ieee80211_hdr *hdr = (void *)skb->data;
->  	int ac;
->  
-> +	if (ieee80211_is_mgmt(hdr->frame_control) &&
-> +	    !ieee80211_is_bufferable_mmpdu(hdr->frame_control)) {
-> +		ieee80211_free_txskb(&local->hw, skb);
-> +		return;
-> +	}
-> 
-I don't really see a problem per se with this patch, but it seems that
-we could just check the flags instead? Perhaps we simply shouldn't
-apply buffering filtered frames here to frames that were already marked
-with IEEE80211_TX_CTL_NO_PS_BUFFER, since those frames shouldn't be
-filtered by the driver to start with.
+On Fri, Jan 29, 2016 at 9:54 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>
+> The test patch that Johannes sent earlier was close. The section needed to
+> add VHT rates is:
 
-That said, it obviously also points to a driver bug not treating these
-frames correctly, so you might want to investigate why you got here to
-start with!
+Hmm. This looks pretty much exactly like what I already tried (I had
+fixed Johannes' patch to use "vht_cap" already, since it didn't
+compile otherwise).
 
-johannes
+So the only difference is that it only checks WIRELESS_MODE_AC_5G.
+
+But it worked for me this time. I have no idea why.
+
+Maybe Johannes' patch actually always worked for me, but I just had a
+transient problem that made me think it didn't. I think I only booted
+it once, and went "oh, ok, no network, that didn't work".
+
+                  Linus
