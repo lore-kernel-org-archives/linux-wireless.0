@@ -1,48 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39651 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965309AbcAURMm (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:60103 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751219AbcA2AQ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 12:12:42 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Paul McQuade <paulmcquad@gmail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] net: wireless: rt2x00: Fixed Spacing issues
-References: <1445112279-27796-1-git-send-email-paulmcquad@gmail.com>
-	<CAGXE3d-nbDGOgxGiasPixtiUhNtWZ+C7AgV3zMQAo1JN9KgbNw@mail.gmail.com>
-	<CAGXE3d-3M6s0k0rbA2-vihLfwvjhdVgxDsQSt_84WxXme+U7bg@mail.gmail.com>
-Date: Thu, 21 Jan 2016 19:12:34 +0200
-In-Reply-To: <CAGXE3d-3M6s0k0rbA2-vihLfwvjhdVgxDsQSt_84WxXme+U7bg@mail.gmail.com>
-	(Helmut Schaa's message of "Thu, 21 Jan 2016 18:02:45 +0100")
-Message-ID: <87oaceyhz1.fsf@kamboji.qca.qualcomm.com> (sfid-20160121_181257_198735_F14986E6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 28 Jan 2016 19:16:59 -0500
+Date: Thu, 28 Jan 2016 16:16:57 -0800 (PST)
+Message-Id: <20160128.161657.1850505368474577536.davem@davemloft.net> (sfid-20160129_011707_592332_1722761D)
+To: johannes@sipsolutions.net
+Cc: ja@ssi.bg, linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH v3 1/4] ipv4: add option to drop unicast encapsulated
+ in L2 multicast
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1453984413.2217.13.camel@sipsolutions.net>
+References: <1446712923-9136-1-git-send-email-johannes@sipsolutions.net>
+	<1453984413.2217.13.camel@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Helmut Schaa <helmut.schaa@googlemail.com> writes:
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Thu, 28 Jan 2016 13:33:33 +0100
 
-> On Thu, Jan 21, 2016 at 5:56 PM, Helmut Schaa
-> <helmut.schaa@googlemail.com> wrote:
->> On Sat, Oct 17, 2015 at 10:04 PM, Paul McQuade <paulmcquad@gmail.com> wrote:
->>> Removed empty spaces before/after parenthesis
->>>
->>> Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
->>
->> Just noticed these did not get applied by Kalle yet.
->
-> Kalle, can you fix up the path (ralink/rt2x00 instead of rt2x00) when applying?
-> Or would you prefer Paul to respin the whole code style cleanup series?
+> Is there anything I should do about these patches?
+> 
+> I see you marked them as "deferred" in patchwork, but I don't really
+> know how you're using that state.
 
-Actually git should be manage that automatically, it's so awesome :)
+I use it in two situations, the first is the most often used case but
+doesn't apply to this specific situation :-)
 
-I can also fix the title and remove the unnecessary "net: wireless:"
-prefix.
+1) net-next change submitted while net-next is closed
 
+2) discussion has ensued for several days, no resolution imminent
 
--- 
-Kalle Valo
+And I think #2 is the case that happened here.
+
+You can submit them again to reignite the conversation if you
+like.
