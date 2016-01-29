@@ -1,308 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:52614 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933315AbcALHg7 (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:32986 "EHLO
+	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756863AbcA2Tmz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 02:36:59 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 13/26] staging: wilc1000: change_virtual_intf: change codes for unified firmware
-Date: Tue, 12 Jan 2016 16:39:42 +0900
-Message-ID: <1452584395-24910-14-git-send-email-glen.lee@atmel.com> (sfid-20160112_090654_251432_48C3CBFD)
-In-Reply-To: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
-References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
+	Fri, 29 Jan 2016 14:42:55 -0500
+Subject: Re: WARNING at net/mac80211/rate.c:513 ieee80211_get_tx_rates
+ [mac80211]
+To: Linus Torvalds <torvalds@linux-foundation.org>
+References: <CA+55aFxe22iWok6UojY=hCoG2k1wNpJ9CfQ0b+STSxq67tb86Q@mail.gmail.com>
+ <1453983185.2217.12.camel@sipsolutions.net>
+ <CA+55aFya9K4JboNY8kB9cg6zt9otguhdzfHm3jvLmWedxQTSWg@mail.gmail.com>
+ <1454013625.2332.9.camel@sipsolutions.net>
+ <CA+55aFx73nv9ny-fu5BR6v8wL=f2oFomwrZoLRw=x2kNP76cYA@mail.gmail.com>
+ <CA+55aFzF0gWfvmE+6ZcHmjnO4xp-oVAQ5SWxYJhOzns2ocgCsw@mail.gmail.com>
+ <1454019155.2332.15.camel@sipsolutions.net>
+ <CA+55aFxjpdepHYD_6uU48kW38Z9bmf2wwA8yPZt4ibhkofmfQA@mail.gmail.com>
+ <56AAC66C.1080800@lwfinger.net> <1454056380.3369.2.camel@sipsolutions.net>
+ <CAP71bdVZzUUNwP3py_m1pwU21qMKth=0BmMfLuUb7=B-1840zg@mail.gmail.com>
+ <1454084146.2800.0.camel@sipsolutions.net> <56ABA73C.1060504@lwfinger.net>
+ <CA+55aFysqqp-BCZs1ue6_1tE=h9SOUZTH_o7TwGbsaBnaFvXGA@mail.gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	David Miller <davem@davemloft.net>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <56ABC0BC.9010202@lwfinger.net> (sfid-20160129_204259_634646_F6E902AC)
+Date: Fri, 29 Jan 2016 13:42:52 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CA+55aFysqqp-BCZs1ue6_1tE=h9SOUZTH_o7TwGbsaBnaFvXGA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In previous patch, we use unified firmware on wilc, which means we do not need
-to download firmware again to change virtual interfaces.
-There are a lot of codes to change interface and they are needless now, so
-remove them except wilc_set_operation_mode function which change the mode and
-wilc_set_power_mgmt which control power save.
-There will be unused functions and they will be removed in later patch.
+On 01/29/2016 12:39 PM, Linus Torvalds wrote:
+> On Fri, Jan 29, 2016 at 9:54 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+>>
+>> The test patch that Johannes sent earlier was close. The section needed to
+>> add VHT rates is:
+>
+> Hmm. This looks pretty much exactly like what I already tried (I had
+> fixed Johannes' patch to use "vht_cap" already, since it didn't
+> compile otherwise).
+>
+> So the only difference is that it only checks WIRELESS_MODE_AC_5G.
+>
+> But it worked for me this time. I have no idea why.
+>
+> Maybe Johannes' patch actually always worked for me, but I just had a
+> transient problem that made me think it didn't. I think I only booted
+> it once, and went "oh, ok, no network, that didn't work".
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 220 ++--------------------
- 1 file changed, 11 insertions(+), 209 deletions(-)
+Thanks for testing.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 3379111..ba4c770 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2098,9 +2098,6 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- {
- 	struct wilc_priv *priv;
- 	struct wilc_vif *vif;
--	u8 interface_type;
--	u16 TID = 0;
--	u8 i;
- 	struct wilc *wl;
- 
- 	vif = netdev_priv(dev);
-@@ -2125,74 +2122,12 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 		priv->wdev->iftype = type;
- 		vif->monitor_flag = 0;
- 		vif->iftype = STATION_MODE;
-+		wilc_set_operation_mode(vif, STATION_MODE);
- 
- 		memset(priv->assoc_stainfo.au8Sta_AssociatedBss, 0, MAX_NUM_STA * ETH_ALEN);
--		interface_type = vif->iftype;
--		vif->iftype = STATION_MODE;
--
--		if (wl->initialized) {
--			wilc_del_all_rx_ba_session(vif, wl->vif[0]->bssid,
--						   TID);
--			wilc_wait_msg_queue_idle();
--
--			up(&wl->cfg_event);
--
--			wilc1000_wlan_deinit(dev);
--			wilc1000_wlan_init(dev, vif);
--			wilc_initialized = 1;
--			vif->iftype = interface_type;
--
--			wilc_set_wfi_drv_handler(vif,
--						 wilc_get_vif_idx(wl->vif[0]));
--			wilc_set_mac_address(wl->vif[0], wl->vif[0]->src_addr);
--			wilc_set_operation_mode(vif, STATION_MODE);
--
--			if (g_wep_keys_saved) {
--				wilc_set_wep_default_keyid(wl->vif[0],
--						g_key_wep_params.key_idx);
--				wilc_add_wep_key_bss_sta(wl->vif[0],
--						g_key_wep_params.key,
--						g_key_wep_params.key_len,
--						g_key_wep_params.key_idx);
--			}
--
--			wilc_flush_join_req(vif);
--
--			if (g_ptk_keys_saved && g_gtk_keys_saved) {
--				PRINT_D(CFG80211_DBG, "ptk %x %x %x\n", g_key_ptk_params.key[0],
--					g_key_ptk_params.key[1],
--					g_key_ptk_params.key[2]);
--				PRINT_D(CFG80211_DBG, "gtk %x %x %x\n", g_key_gtk_params.key[0],
--					g_key_gtk_params.key[1],
--					g_key_gtk_params.key[2]);
--				add_key(wl->vif[0]->ndev->ieee80211_ptr->wiphy,
--					wl->vif[0]->ndev,
--					g_add_ptk_key_params.key_idx,
--					g_add_ptk_key_params.pairwise,
--					g_add_ptk_key_params.mac_addr,
--					(struct key_params *)(&g_key_ptk_params));
--
--				add_key(wl->vif[0]->ndev->ieee80211_ptr->wiphy,
--					wl->vif[0]->ndev,
--					g_add_gtk_key_params.key_idx,
--					g_add_gtk_key_params.pairwise,
--					g_add_gtk_key_params.mac_addr,
--					(struct key_params *)(&g_key_gtk_params));
--			}
--
--			if (wl->initialized)	{
--				for (i = 0; i < num_reg_frame; i++) {
--					PRINT_D(INIT_DBG, "Frame registering Type: %x - Reg: %d\n", vif->g_struct_frame_reg[i].frame_type,
--						vif->g_struct_frame_reg[i].reg);
--					wilc_frame_register(vif,
--								vif->g_struct_frame_reg[i].frame_type,
--								vif->g_struct_frame_reg[i].reg);
--				}
--			}
- 
--			wilc_enable_ps = true;
--			wilc_set_power_mgmt(vif, 1, 0);
--		}
-+		wilc_enable_ps = true;
-+		wilc_set_power_mgmt(vif, 1, 0);
- 		break;
- 
- 	case NL80211_IFTYPE_P2P_CLIENT:
-@@ -2201,73 +2136,11 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 		wilc_connecting = 0;
- 		PRINT_D(HOSTAPD_DBG, "Interface type = NL80211_IFTYPE_P2P_CLIENT\n");
- 
--		wilc_del_all_rx_ba_session(vif, wl->vif[0]->bssid, TID);
--
- 		dev->ieee80211_ptr->iftype = type;
- 		priv->wdev->iftype = type;
- 		vif->monitor_flag = 0;
--
--		PRINT_D(HOSTAPD_DBG, "Downloading P2P_CONCURRENCY_FIRMWARE\n");
- 		vif->iftype = CLIENT_MODE;
--
--
--		if (wl->initialized)	{
--			wilc_wait_msg_queue_idle();
--
--			wilc1000_wlan_deinit(dev);
--			wilc1000_wlan_init(dev, vif);
--			wilc_initialized = 1;
--
--			wilc_set_wfi_drv_handler(vif,
--						 wilc_get_vif_idx(wl->vif[0]));
--			wilc_set_mac_address(wl->vif[0], wl->vif[0]->src_addr);
--			wilc_set_operation_mode(vif, STATION_MODE);
--
--			if (g_wep_keys_saved) {
--				wilc_set_wep_default_keyid(wl->vif[0],
--						g_key_wep_params.key_idx);
--				wilc_add_wep_key_bss_sta(wl->vif[0],
--						g_key_wep_params.key,
--						g_key_wep_params.key_len,
--						g_key_wep_params.key_idx);
--			}
--
--			wilc_flush_join_req(vif);
--
--			if (g_ptk_keys_saved && g_gtk_keys_saved) {
--				PRINT_D(CFG80211_DBG, "ptk %x %x %x\n", g_key_ptk_params.key[0],
--					g_key_ptk_params.key[1],
--					g_key_ptk_params.key[2]);
--				PRINT_D(CFG80211_DBG, "gtk %x %x %x\n", g_key_gtk_params.key[0],
--					g_key_gtk_params.key[1],
--					g_key_gtk_params.key[2]);
--				add_key(wl->vif[0]->ndev->ieee80211_ptr->wiphy,
--					wl->vif[0]->ndev,
--					g_add_ptk_key_params.key_idx,
--					g_add_ptk_key_params.pairwise,
--					g_add_ptk_key_params.mac_addr,
--					(struct key_params *)(&g_key_ptk_params));
--
--				add_key(wl->vif[0]->ndev->ieee80211_ptr->wiphy,
--					wl->vif[0]->ndev,
--					g_add_gtk_key_params.key_idx,
--					g_add_gtk_key_params.pairwise,
--					g_add_gtk_key_params.mac_addr,
--					(struct key_params *)(&g_key_gtk_params));
--			}
--
--			refresh_scan(priv, 1, true);
--
--			if (wl->initialized)	{
--				for (i = 0; i < num_reg_frame; i++) {
--					PRINT_D(INIT_DBG, "Frame registering Type: %x - Reg: %d\n", vif->g_struct_frame_reg[i].frame_type,
--						vif->g_struct_frame_reg[i].reg);
--					wilc_frame_register(vif,
--								vif->g_struct_frame_reg[i].frame_type,
--								vif->g_struct_frame_reg[i].reg);
--				}
--			}
--		}
-+		wilc_set_operation_mode(vif, STATION_MODE);
- 		break;
- 
- 	case NL80211_IFTYPE_AP:
-@@ -2276,23 +2149,11 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 		dev->ieee80211_ptr->iftype = type;
- 		priv->wdev->iftype = type;
- 		vif->iftype = AP_MODE;
--		PRINT_D(CORECONFIG_DBG, "priv->hWILCWFIDrv[%p]\n", priv->hWILCWFIDrv);
--
--		PRINT_D(HOSTAPD_DBG, "Downloading AP firmware\n");
--		wilc_wlan_get_firmware(dev);
--
--		if (wl->initialized)	{
--			vif->iftype = AP_MODE;
--			wilc_mac_close(dev);
--			wilc_mac_open(dev);
--
--			for (i = 0; i < num_reg_frame; i++) {
--				PRINT_D(INIT_DBG, "Frame registering Type: %x - Reg: %d\n", vif->g_struct_frame_reg[i].frame_type,
--					vif->g_struct_frame_reg[i].reg);
--				wilc_frame_register(vif,
--							vif->g_struct_frame_reg[i].frame_type,
--							vif->g_struct_frame_reg[i].reg);
--			}
-+
-+		if (wl->initialized) {
-+			wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif));
-+			wilc_set_operation_mode(vif, AP_MODE);
-+			wilc_set_power_mgmt(vif, 0, 0);
- 		}
- 		break;
- 
-@@ -2303,72 +2164,13 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
- 		mod_timer(&wilc_during_ip_timer,
- 			  jiffies + msecs_to_jiffies(during_ip_time));
- 		wilc_set_power_mgmt(vif, 0, 0);
--		wilc_del_all_rx_ba_session(vif, wl->vif[0]->bssid, TID);
- 		wilc_enable_ps = false;
- 		PRINT_D(HOSTAPD_DBG, "Interface type = NL80211_IFTYPE_GO\n");
-+
-+		wilc_set_operation_mode(vif, AP_MODE);
- 		dev->ieee80211_ptr->iftype = type;
- 		priv->wdev->iftype = type;
--
--		PRINT_D(CORECONFIG_DBG, "priv->hWILCWFIDrv[%p]\n", priv->hWILCWFIDrv);
--
--		PRINT_D(HOSTAPD_DBG, "Downloading P2P_CONCURRENCY_FIRMWARE\n");
--
--
- 		vif->iftype = GO_MODE;
--
--		wilc_wait_msg_queue_idle();
--		wilc1000_wlan_deinit(dev);
--		wilc1000_wlan_init(dev, vif);
--		wilc_initialized = 1;
--
--		wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(wl->vif[0]));
--		wilc_set_mac_address(wl->vif[0], wl->vif[0]->src_addr);
--		wilc_set_operation_mode(vif, AP_MODE);
--
--		if (g_wep_keys_saved) {
--			wilc_set_wep_default_keyid(wl->vif[0],
--						   g_key_wep_params.key_idx);
--			wilc_add_wep_key_bss_sta(wl->vif[0],
--						 g_key_wep_params.key,
--						 g_key_wep_params.key_len,
--						 g_key_wep_params.key_idx);
--		}
--
--		wilc_flush_join_req(vif);
--
--		if (g_ptk_keys_saved && g_gtk_keys_saved) {
--			PRINT_D(CFG80211_DBG, "ptk %x %x %x cipher %x\n", g_key_ptk_params.key[0],
--				g_key_ptk_params.key[1],
--				g_key_ptk_params.key[2],
--				g_key_ptk_params.cipher);
--			PRINT_D(CFG80211_DBG, "gtk %x %x %x cipher %x\n", g_key_gtk_params.key[0],
--				g_key_gtk_params.key[1],
--				g_key_gtk_params.key[2],
--				g_key_gtk_params.cipher);
--			add_key(wl->vif[0]->ndev->ieee80211_ptr->wiphy,
--				wl->vif[0]->ndev,
--				g_add_ptk_key_params.key_idx,
--				g_add_ptk_key_params.pairwise,
--				g_add_ptk_key_params.mac_addr,
--				(struct key_params *)(&g_key_ptk_params));
--
--			add_key(wl->vif[0]->ndev->ieee80211_ptr->wiphy,
--				wl->vif[0]->ndev,
--				g_add_gtk_key_params.key_idx,
--				g_add_gtk_key_params.pairwise,
--				g_add_gtk_key_params.mac_addr,
--				(struct key_params *)(&g_key_gtk_params));
--		}
--
--		if (wl->initialized)	{
--			for (i = 0; i < num_reg_frame; i++) {
--				PRINT_D(INIT_DBG, "Frame registering Type: %x - Reg: %d\n", vif->g_struct_frame_reg[i].frame_type,
--					vif->g_struct_frame_reg[i].reg);
--				wilc_frame_register(vif,
--							vif->g_struct_frame_reg[i].frame_type,
--							vif->g_struct_frame_reg[i].reg);
--			}
--		}
- 		break;
- 
- 	default:
--- 
-1.9.1
+Upon reflection, it really should check the other WIRELESS_MODE_AC_x bits. 
+Johannes' patch was indeed correct.
+
+With my AP setup changed, I get about 100 Mb/s RX using netperf. TX is still bad.
+
+@Johannes: OK if I make you the author of the final version of the patch?
+
+Larry
+
+
 
