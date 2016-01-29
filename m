@@ -1,97 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:28518 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757268AbcAaLGv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2016 06:06:51 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 21/31] iwlwifi: mvm: change the check for ADD_STA status
-Date: Sun, 31 Jan 2016 13:06:16 +0200
-Message-Id: <1454238386-27032-21-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160131_123654_080011_9B5FBC63)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:40867 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754022AbcA2Ir0 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2016 03:47:26 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: pull-request: wireless-drivers 2016-01-29
+Date: Fri, 29 Jan 2016 10:47:19 +0200
+Message-ID: <8737tgkc14.fsf@kamboji.qca.qualcomm.com> (sfid-20160129_094836_043061_1BB89689)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Hi Dave,
 
-The firmware will return the baid for BA session in the
-ADD_STA command response.
-This requires masking the check of the status, which is
-actually only 8 bits, and not the whole 32 bits.
+few fixes for 4.5. Nothing really standing out, see the tag for
+more info. Please let me know if you have any problems.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h |  3 +++
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c        | 10 +++++-----
- 2 files changed, 8 insertions(+), 5 deletions(-)
+Kalle
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
-index 6fca4fb..1eb3983 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-sta.h
-@@ -253,6 +253,9 @@ struct iwl_mvm_keyinfo {
- 	__le64 hw_tkip_mic_tx_key;
- } __packed;
- 
-+#define IWL_ADD_STA_STATUS_MASK	0xFF
-+#define IWL_ADD_STA_BAID_MASK	0xFF00
-+
- /**
-  * struct iwl_mvm_add_sta_cmd - Add/modify a station in the fw's sta table.
-  * ( REPLY_ADD_STA = 0x18 )
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index b556e33..84b7fd1 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -192,7 +192,7 @@ int iwl_mvm_sta_send_to_fw(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	if (ret)
- 		return ret;
- 
--	switch (status) {
-+	switch (status & IWL_ADD_STA_STATUS_MASK) {
- 	case ADD_STA_SUCCESS:
- 		IWL_DEBUG_ASSOC(mvm, "ADD_STA PASSED\n");
- 		break;
-@@ -362,7 +362,7 @@ int iwl_mvm_drain_sta(struct iwl_mvm *mvm, struct iwl_mvm_sta *mvmsta,
- 	if (ret)
- 		return ret;
- 
--	switch (status) {
-+	switch (status & IWL_ADD_STA_STATUS_MASK) {
- 	case ADD_STA_SUCCESS:
- 		IWL_DEBUG_INFO(mvm, "Frames for staid %d will drained in fw\n",
- 			       mvmsta->sta_id);
-@@ -628,7 +628,7 @@ static int iwl_mvm_add_int_sta_common(struct iwl_mvm *mvm,
- 	if (ret)
- 		return ret;
- 
--	switch (status) {
-+	switch (status & IWL_ADD_STA_STATUS_MASK) {
- 	case ADD_STA_SUCCESS:
- 		IWL_DEBUG_INFO(mvm, "Internal station added.\n");
- 		return 0;
-@@ -851,7 +851,7 @@ int iwl_mvm_sta_rx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	if (ret)
- 		return ret;
- 
--	switch (status) {
-+	switch (status & IWL_ADD_STA_STATUS_MASK) {
- 	case ADD_STA_SUCCESS:
- 		IWL_DEBUG_INFO(mvm, "RX BA Session %sed in fw\n",
- 			       start ? "start" : "stopp");
-@@ -909,7 +909,7 @@ static int iwl_mvm_sta_tx_agg(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	if (ret)
- 		return ret;
- 
--	switch (status) {
-+	switch (status & IWL_ADD_STA_STATUS_MASK) {
- 	case ADD_STA_SUCCESS:
- 		break;
- 	default:
+The following changes since commit a200dcb34693084e56496960d855afdeaaf9578f:
+
+  Merge tag 'for_linus' of git://git.kernel.org/pub/scm/linux/kernel/git/mst/vhost (2016-01-18 16:44:24 -0800)
+
+are available in the git repository at:
+
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2016-01-29
+
+for you to fetch changes up to f9ead9beef3f44be0db4b542a8c2ce698fb1530e:
+
+  Merge tag 'iwlwifi-for-kalle-2016-01-26_2' of https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2016-01-27 14:19:18 +0200)
+
+----------------------------------------------------------------
+
+iwlwifi
+
+* Fix support for 3168 device:
+  * NVM version
+  * firmware file name
+  * device IDs
+* Fix a compilation warning in dvm calibration code
+* Fix the TPC (reduced Tx Power) code. This fixes performance issues
+* Add device IDs for 8265
+
+rtx2x00
+
+* fix monitor mode regression dating back to 4.1
+
+brcmfmac
+
+* fix sdio initialisation related crash
+
+rtlwifi
+
+* rtl8821ae: Fix 5G failure when EEPROM is incorrectly encoded
+
+ath9k
+
+* ignore eeprom magic mismatch on flash based devices
+
+----------------------------------------------------------------
+Arnd Bergmann (1):
+      ssb: mark ssb_bus_register as __maybe_unused
+
+Eli Cooper (1):
+      rt2x00: fix monitor mode regression
+
+Felix Fietkau (2):
+      brcmfmac: add missing include
+      ath9k_hw: ignore eeprom magic mismatch on flash based devices
+
+Gregory Greenman (1):
+      iwlwifi: mvm: rs: fix TPC statistics handling
+
+Hante Meuleman (1):
+      brcmfmac: fix sdio sg table alloc crash
+
+Kalle Valo (2):
+      Merge ath-current from ath.git
+      Merge tag 'iwlwifi-for-kalle-2016-01-26_2' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
+
+Larry Finger (1):
+      rtlwifi: rtl8821ae: Fix 5G failure when EEPROM is incorrectly encoded
+
+Michael Buesch (1):
+      ssb: Set linux-wireless as MAINTAINERS list
+
+Oren Givon (3):
+      iwlwifi: add new 3168 series devices support
+      iwlwifi: add device ID for 8265
+      iwlwifi: update support for 3168 series firmware and NVM
+
+ MAINTAINERS                                        |    2 +-
+ drivers/net/wireless/ath/ath9k/eeprom.c            |   12 ++--
+ .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  |   40 ++++-------
+ .../wireless/broadcom/brcm80211/brcmfmac/common.c  |    1 +
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |    5 ++
+ .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |    1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-7000.c      |   23 ++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h |    6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c        |   74 +++++++++++++-------
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |    5 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c      |    4 ++
+ drivers/net/wireless/ralink/rt2x00/rt2400pci.c     |    4 +-
+ drivers/net/wireless/ralink/rt2x00/rt2500pci.c     |    4 +-
+ drivers/net/wireless/ralink/rt2x00/rt2500usb.c     |    4 +-
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c     |    3 +-
+ drivers/net/wireless/ralink/rt2x00/rt2x00.h        |    1 +
+ drivers/net/wireless/ralink/rt2x00/rt2x00config.c  |    5 ++
+ drivers/net/wireless/ralink/rt2x00/rt2x00mac.c     |    5 --
+ drivers/net/wireless/ralink/rt2x00/rt61pci.c       |    4 +-
+ drivers/net/wireless/ralink/rt2x00/rt73usb.c       |    4 +-
+ drivers/net/wireless/realtek/rtlwifi/regd.c        |    2 +-
+ drivers/ssb/main.c                                 |    7 +-
+ 22 files changed, 136 insertions(+), 80 deletions(-)
+
 -- 
-2.5.0
-
+Kalle Valo
