@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:37792 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751355AbcACPSM convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:40560 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752179AbcA2Gyv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Jan 2016 10:18:12 -0500
+	Fri, 29 Jan 2016 01:54:51 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH 5/6] staging: wilc1000: remove warnings missing a blank line after declarations
+Date: Fri, 29 Jan 2016 15:51:37 +0900
+Message-ID: <1454050298-25815-5-git-send-email-leo.kim@atmel.com> (sfid-20160129_075454_042280_E1B3F3DB)
+In-Reply-To: <1454050298-25815-1-git-send-email-leo.kim@atmel.com>
+References: <1454050298-25815-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <5688EBAC.5000701@gmail.com>
-References: <566ABCD9.1060404@users.sourceforge.net>
-	<5686F0B2.5000000@users.sourceforge.net>
-	<56870866.7020000@cogentembedded.com>
-	<568785B3.5000905@users.sourceforge.net>
-	<alpine.DEB.2.02.1601020914100.2063@localhost6.localdomain6>
-	<5687939E.7010701@users.sourceforge.net>
-	<5687A2C7.3000704@gmail.com>
-	<5687B2BC.8090901@users.sourceforge.net>
-	<5688EBAC.5000701@gmail.com>
-Date: Sun, 3 Jan 2016 16:18:11 +0100
-Message-ID: <CACna6rzoJLRuTTDi3JjXg1roDbk3HXcBhhe0iOUH9xRaGU5p7A@mail.gmail.com> (sfid-20160103_161920_208866_CADC4179)
-Subject: Re: net-libertas: Better exception handling in if_spi_host_to_card_worker()
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <aspriel@gmail.com>
-Cc: SF Markus Elfring <elfring@users.sourceforge.net>,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	libertas-dev@lists.infradead.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 3 January 2016 at 10:36, Arend van Spriel <aspriel@gmail.com> wrote:
-> On 02-01-16 12:21, SF Markus Elfring wrote:
->>> Did you look at the resulting assembly code for different target architectures?
->>
->> Not yet. - Which execution system variants would you recommend for
->> further comparisons?
->
-> Guess x86{,_64} and arm would be good candidates, ie. CISC vs. RISC.
+From: Chris Park <chris.park@atmel.com>
 
-Oh, don't forget about MIPS with its fancy branches handling. You know
-about it, don't you?
+This patch remove warnings reported by checkpatch.pl
+for missing a blank line after declarations
 
-I'm against this patch as well.
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 63b7492..8024cc2 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1143,6 +1143,7 @@ int wilc_wlan_stop(struct wilc *wilc)
+ 	u32 reg = 0;
+ 	int ret;
+ 	u8 timeout = 10;
++
+ 	acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
+ 
+ 	ret = wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0, &reg);
 -- 
-Rafał
+1.9.1
+
