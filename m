@@ -1,75 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:34270 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750726AbcAVA4d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 19:56:33 -0500
-From: Felix Fietkau <nbd@openwrt.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:34940 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752732AbcA2KJI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2016 05:09:08 -0500
+Received: by mail-wm0-f66.google.com with SMTP id l66so8873973wml.2
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jan 2016 02:09:08 -0800 (PST)
+From: Henning Rogge <hrogge@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org
-Subject: [PATCH] ath9k: do not limit the number of DFS channel interfaces to 1
-Date: Fri, 22 Jan 2016 01:56:30 +0100
-Message-Id: <1453424190-64499-1-git-send-email-nbd@openwrt.org> (sfid-20160122_015636_811889_EF2A1C81)
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Henning Rogge <hrogge@gmail.com>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+Subject: [PATCH v2 3/3] mac80211: Unify mesh and mpp path removal function
+Date: Fri, 29 Jan 2016 11:08:58 +0100
+Message-Id: <1454062138-18012-4-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20160129_110917_854669_4D7DB3A1)
+In-Reply-To: <1454062138-18012-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+References: <1454062138-18012-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I think this limit was added when CSA with multiple interfaces wasn't
-working yet. It should no longer be necessary
+mpp_path_del() and mesh_path_del() are mostly the same function.
+Move common code into a new static function.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Henning Rogge <henning.rogge@fkie.fraunhofer.de>
 ---
- drivers/net/wireless/ath/ath9k/init.c | 25 +++++--------------------
- 1 file changed, 5 insertions(+), 20 deletions(-)
+ net/mac80211/mesh_pathtbl.c | 110 ++++++++++++++++++++++----------------------
+ 1 file changed, 55 insertions(+), 55 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index ab7a1ac..d4e0ac9 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -751,14 +751,6 @@ static const struct ieee80211_iface_combination if_comb_multi[] = {
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 33bb1f25..86316ee 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -55,16 +55,20 @@ int mpp_paths_generation;
+ static DEFINE_RWLOCK(pathtbl_resize_lock);
  
- #endif /* CONFIG_ATH9K_CHANNEL_CONTEXT */
  
--static const struct ieee80211_iface_limit if_dfs_limits[] = {
--	{ .max = 1,	.types = BIT(NL80211_IFTYPE_AP) |
--#ifdef CONFIG_MAC80211_MESH
--				 BIT(NL80211_IFTYPE_MESH_POINT) |
--#endif
--				 BIT(NL80211_IFTYPE_ADHOC) },
--};
++static inline struct mesh_table *resize_dereference_paths(struct mesh_table *table)
++{
++  return rcu_dereference_protected(table,
++    lockdep_is_held(&pathtbl_resize_lock));
++}
++
+ static inline struct mesh_table *resize_dereference_mesh_paths(void)
+ {
+-	return rcu_dereference_protected(mesh_paths,
+-		lockdep_is_held(&pathtbl_resize_lock));
++	return resize_dereference_paths(mesh_paths);
+ }
+ 
+ static inline struct mesh_table *resize_dereference_mpp_paths(void)
+ {
+-	return rcu_dereference_protected(mpp_paths,
+-		lockdep_is_held(&pathtbl_resize_lock));
++    return resize_dereference_paths(mpp_paths);
+ }
+ 
+ /*
+@@ -899,6 +903,45 @@ void mesh_path_flush_by_iface(struct ieee80211_sub_if_data *sdata)
+ }
+ 
+ /**
++ * table_path_del - delete a path from the mesh or mpp table
++ *
++ * @tbl: mesh or mpp path table
++ * @sdata: local subif
++ * @addr: dst address (ETH_ALEN length)
++ *
++ * Returns: 0 if successful
++ */
++static int table_path_del(struct mesh_table *rcu_tbl,
++    struct ieee80211_sub_if_data *sdata, const u8 *addr)
++{
++  struct mesh_table *tbl;
++  struct mesh_path *mpath;
++  struct mpath_node *node;
++  struct hlist_head *bucket;
++  int hash_idx;
++  int err = 0;
++
++  tbl = resize_dereference_paths(rcu_tbl);
++  hash_idx = mesh_table_hash(addr, sdata, tbl);
++  bucket = &tbl->hash_buckets[hash_idx];
++
++  spin_lock(&tbl->hashwlock[hash_idx]);
++  hlist_for_each_entry(node, bucket, list) {
++    mpath = node->mpath;
++    if (mpath->sdata == sdata &&
++        ether_addr_equal(addr, mpath->dst)) {
++      __mesh_path_del(tbl, node);
++      goto enddel;
++    }
++  }
++
++  err = -ENXIO;
++enddel:
++  spin_unlock(&tbl->hashwlock[hash_idx]);
++  return err;
++}
++
++/**
+  * mesh_path_del - delete a mesh path from the table
+  *
+  * @addr: dst address (ETH_ALEN length)
+@@ -908,36 +951,16 @@ void mesh_path_flush_by_iface(struct ieee80211_sub_if_data *sdata)
+  */
+ int mesh_path_del(struct ieee80211_sub_if_data *sdata, const u8 *addr)
+ {
+-	struct mesh_table *tbl;
+-	struct mesh_path *mpath;
+-	struct mpath_node *node;
+-	struct hlist_head *bucket;
+-	int hash_idx;
+ 	int err = 0;
+ 
+ 	/* flush relevant mpp entries first */
+ 	mpp_flush_by_proxy(sdata, addr);
+ 
+ 	read_lock_bh(&pathtbl_resize_lock);
+-	tbl = resize_dereference_mesh_paths();
+-	hash_idx = mesh_table_hash(addr, sdata, tbl);
+-	bucket = &tbl->hash_buckets[hash_idx];
 -
- static const struct ieee80211_iface_combination if_comb[] = {
- 	{
- 		.limits = if_limits,
-@@ -766,6 +758,11 @@ static const struct ieee80211_iface_combination if_comb[] = {
- 		.max_interfaces = 2048,
- 		.num_different_channels = 1,
- 		.beacon_int_infra_match = true,
-+#ifdef CONFIG_ATH9K_DFS_CERTIFIED
-+		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT) |
-+					BIT(NL80211_CHAN_WIDTH_20) |
-+					BIT(NL80211_CHAN_WIDTH_40),
-+#endif
- 	},
- 	{
- 		.limits = wds_limits,
-@@ -774,18 +771,6 @@ static const struct ieee80211_iface_combination if_comb[] = {
- 		.num_different_channels = 1,
- 		.beacon_int_infra_match = true,
- 	},
--#ifdef CONFIG_ATH9K_DFS_CERTIFIED
--	{
--		.limits = if_dfs_limits,
--		.n_limits = ARRAY_SIZE(if_dfs_limits),
--		.max_interfaces = 1,
--		.num_different_channels = 1,
--		.beacon_int_infra_match = true,
--		.radar_detect_widths =	BIT(NL80211_CHAN_WIDTH_20_NOHT) |
--					BIT(NL80211_CHAN_WIDTH_20) |
--					BIT(NL80211_CHAN_WIDTH_40),
+-	spin_lock(&tbl->hashwlock[hash_idx]);
+-	hlist_for_each_entry(node, bucket, list) {
+-		mpath = node->mpath;
+-		if (mpath->sdata == sdata &&
+-		    ether_addr_equal(addr, mpath->dst)) {
+-			__mesh_path_del(tbl, node);
+-			goto enddel;
+-		}
 -	}
--#endif
- };
+-
+-	err = -ENXIO;
+-enddel:
++	err = table_path_del(mesh_paths, sdata, addr);
+ 	mesh_paths_generation++;
+-	spin_unlock(&tbl->hashwlock[hash_idx]);
+ 	read_unlock_bh(&pathtbl_resize_lock);
++
+ 	return err;
+ }
  
- #ifdef CONFIG_ATH9K_CHANNEL_CONTEXT
+@@ -951,37 +974,14 @@ enddel:
+  */
+ static int mpp_path_del(struct ieee80211_sub_if_data *sdata, const u8 *addr)
+ {
+-	struct mesh_table *tbl;
+-	struct mesh_path *mpath;
+-	struct mpath_node *node;
+-	struct hlist_head *bucket;
+-	int hash_idx;
+-	int err = 0;
+-
+-	/* flush relevant mpp entries first */
+-	mpp_flush_by_proxy(sdata, addr);
+-
+-	read_lock_bh(&pathtbl_resize_lock);
+-	tbl = resize_dereference_mpp_paths();
+-	hash_idx = mesh_table_hash(addr, sdata, tbl);
+-	bucket = &tbl->hash_buckets[hash_idx];
++  int err = 0;
+ 
+-	spin_lock(&tbl->hashwlock[hash_idx]);
+-	hlist_for_each_entry(node, bucket, list) {
+-		mpath = node->mpath;
+-		if (mpath->sdata == sdata &&
+-		    ether_addr_equal(addr, mpath->dst)) {
+-			__mesh_path_del(tbl, node);
+-			goto enddel;
+-		}
+-	}
++  read_lock_bh(&pathtbl_resize_lock);
++  err = table_path_del(mpp_paths, sdata, addr);
++  mpp_paths_generation++;
++  read_unlock_bh(&pathtbl_resize_lock);
+ 
+-	err = -ENXIO;
+-enddel:
+-	mesh_paths_generation++;
+-	spin_unlock(&tbl->hashwlock[hash_idx]);
+-	read_unlock_bh(&pathtbl_resize_lock);
+-	return err;
++  return err;
+ }
+ 
+ /**
 -- 
-2.2.2
+2.5.0
 
