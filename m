@@ -1,230 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:5684 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933085AbcAMJtw (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:22749 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751631AbcA2CzT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2016 04:49:52 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [RFC V2 2/3] nl80211: add bss selection attribute to CONNECT command
-Date: Wed, 13 Jan 2016 10:49:42 +0100
-Message-ID: <1452678583-20086-3-git-send-email-arend@broadcom.com> (sfid-20160113_105000_216630_3B17D3E0)
-In-Reply-To: <1452678583-20086-1-git-send-email-arend@broadcom.com>
-References: <1452678583-20086-1-git-send-email-arend@broadcom.com>
+	Thu, 28 Jan 2016 21:55:19 -0500
+From: "Kim, Leo" <Leo.Kim@atmel.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: Greg KH <gregkh@linuxfoundation.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Cho, Tony" <Tony.Cho@atmel.com>, "Lee, Glen" <Glen.Lee@atmel.com>,
+	"Shin, Austin" <Austin.Shin@atmel.com>,
+	"Park, Chris" <Chris.Park@atmel.com>,
+	"Abozaeid, Adham" <Adham.Abozaeid@atmel.com>,
+	"Ferre, Nicolas" <Nicolas.FERRE@atmel.com>
+Subject: RE: [PATCH 08/12] staging: wilc1000: rename variable s32Error
+Date: Fri, 29 Jan 2016 02:55:12 +0000
+Message-ID: <74F3875218FC364C9618AB19CB60E905800419AC@penmbx02.corp.atmel.com> (sfid-20160129_035525_504534_DDD85E10)
+References: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
+ <1453965226-6158-8-git-send-email-leo.kim@atmel.com>
+ <CAGRGNgXxcZBzOkJa++pAHWZLAZs9wrD48cEiGhzKatmzd+usRw@mail.gmail.com>
+In-Reply-To: <CAGRGNgXxcZBzOkJa++pAHWZLAZs9wrD48cEiGhzKatmzd+usRw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Pass user-space provided bss selection criteria to the driver
-in the .connect() callback. It handles three selection primitives:
-
-1. RSSI based selection.
-2. Band selection, RSSI based selection.
-3. RSSI adjustment in given band, RSSI based selection.
-
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Lei Zhang <leizh@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- include/net/cfg80211.h       | 29 +++++++++++++++++++
- include/uapi/linux/nl80211.h | 28 ++++++++++++++++++-
- net/wireless/nl80211.c       | 66 ++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 122 insertions(+), 1 deletion(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 34c4929..68695fd 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1854,6 +1854,33 @@ struct cfg80211_ibss_params {
- };
- 
- /**
-+ * struct cfg80211_bss_select_adjust - BSS selection with RSSI adjustment.
-+ *
-+ * @band: band of BSS which should match for RSSI level adjustment.
-+ * @delta: value of RSSI level adjustment.
-+ */
-+struct cfg80211_bss_select_adjust {
-+	enum nl80211_band band;
-+	s8 delta;
-+};
-+
-+/**
-+ * struct cfg80211_bss_selection - connection parameters for BSS selection.
-+ *
-+ * @primitive: primitive for BSS selection.
-+ * @param: parameters for given primitive.
-+ * @band_pref: preferred band for %NL80211_BSS_SELECT_BAND_PREF primitive.
-+ * @adjust: parameters for %NL80211_BSS_SELECT_ADJUST_RSSI primitive.
-+ */
-+struct cfg80211_bss_selection {
-+	enum nl80211_bss_select_primitive primitive;
-+	union {
-+		enum nl80211_band band_pref;
-+		struct cfg80211_bss_select_adjust adjust;
-+	} param;
-+};
-+
-+/**
-  * struct cfg80211_connect_params - Connection parameters
-  *
-  * This structure provides information needed to complete IEEE 802.11
-@@ -1888,6 +1915,7 @@ struct cfg80211_ibss_params {
-  * @ht_capa_mask:  The bits of ht_capa which are to be used.
-  * @vht_capa:  VHT Capability overrides
-  * @vht_capa_mask: The bits of vht_capa which are to be used.
-+ * @bss_select: criteria to be used for BSS selection.
-  */
- struct cfg80211_connect_params {
- 	struct ieee80211_channel *channel;
-@@ -1910,6 +1938,7 @@ struct cfg80211_connect_params {
- 	struct ieee80211_ht_cap ht_capa_mask;
- 	struct ieee80211_vht_cap vht_capa;
- 	struct ieee80211_vht_cap vht_capa_mask;
-+	struct cfg80211_bss_selection bss_select;
- };
- 
- /**
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index a5baf93..9a1b968 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1793,7 +1793,8 @@ enum nl80211_commands {
-  *	extended feature %NL80211_EXT_FEATURE_BSS_SELECT. When used with
-  *	%NL80211_CMD_GET_WIPHY is contains NLA_FLAG type according
-  *	&enum nl80211_bss_select_primitive to indicate what primitives are
-- *	supported.
-+ *	supported. When used with %NL80211_CMD_CONNECT is contains the criteria
-+ *	for BSS selection to be done by driver and/or firmware.
-  *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-@@ -4677,4 +4678,29 @@ enum nl80211_bss_select_primitive {
- 	NUM_NL80211_BSS_SELECT
- };
- 
-+/**
-+ * enum nl80211_attr_bss_select - attributes for bss selection.
-+ *
-+ * @__NL80211_ATTR_BSS_SELECT_INVALID: reserved.
-+ * @NL80211_ATTR_BSS_SELECT_PRIMITIVE: Indicates what criteria are to
-+ *	be used for bss selection. Value according
-+ *	%enum nl80211_bss_select_primitive.
-+ * @NL80211_ATTR_BSS_SELECT_BAND_PREF: Required attribute indicating the
-+ *	preferred band. Value according %enum nl80211_band.
-+ * @NL80211_ATTR_BSS_SELECT_RSSI_ADJUST: When present the value is to be
-+ *	added to the RSSI level for BSS-es in the preferred band (s8).
-+ * @NL80211_ATTR_BSS_SELECT_MAX: highest bss select attribute number.
-+ *@__NL80211_ATTR_BSS_SELECT_AFTER_LAST: internal use.
-+ */
-+enum nl80211_attr_bss_select {
-+	__NL80211_ATTR_BSS_SELECT_INVALID,
-+	NL80211_ATTR_BSS_SELECT_PRIMITIVE,
-+	NL80211_ATTR_BSS_SELECT_BAND_PREF,
-+	NL80211_ATTR_BSS_SELECT_RSSI_ADJUST,
-+
-+	/* keep last */
-+	__NL80211_ATTR_BSS_SELECT_AFTER_LAST,
-+	NL80211_ATTR_BSS_SELECT_MAX = __NL80211_ATTR_BSS_SELECT_AFTER_LAST - 1
-+};
-+
- #endif /* __LINUX_NL80211_H */
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 7a51de0..580c6ef 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -485,6 +485,13 @@ nl80211_plan_policy[NL80211_SCHED_SCAN_PLAN_MAX + 1] = {
- 	[NL80211_SCHED_SCAN_PLAN_ITERATIONS] = { .type = NLA_U32 },
- };
- 
-+static const struct nla_policy
-+nl80211_bss_select_policy[NL80211_ATTR_BSS_SELECT_MAX + 1] = {
-+	[NL80211_ATTR_BSS_SELECT_PRIMITIVE] = { .type = NLA_U32 },
-+	[NL80211_ATTR_BSS_SELECT_BAND_PREF] = { .type = NLA_U32 },
-+	[NL80211_ATTR_BSS_SELECT_RSSI_ADJUST] = { .type = NLA_U8 },
-+};
-+
- static int nl80211_prepare_wdev_dump(struct sk_buff *skb,
- 				     struct netlink_callback *cb,
- 				     struct cfg80211_registered_device **rdev,
-@@ -5773,6 +5780,53 @@ static int validate_scan_freqs(struct nlattr *freqs)
- 	return n_channels;
- }
- 
-+static int parse_bss_select(struct nlattr *nla,
-+			    struct cfg80211_bss_selection *bss_select)
-+{
-+	struct nlattr *attr[NL80211_ATTR_BSS_SELECT_MAX + 1];
-+	enum nl80211_band band = NL80211_BAND_2GHZ;
-+	int err;
-+
-+	if (!nla)
-+		return 0;
-+
-+	err = nla_parse(attr, NL80211_ATTR_BSS_SELECT_MAX,
-+			nla_data(nla), nla_len(nla), nl80211_bss_select_policy);
-+	if (err)
-+		return err;
-+
-+	if (!attr[NL80211_ATTR_BSS_SELECT_PRIMITIVE])
-+		return -EINVAL;
-+
-+	bss_select->primitive =
-+		nla_get_u32(attr[NL80211_ATTR_BSS_SELECT_PRIMITIVE]);
-+
-+	if (bss_select->primitive == NL80211_BSS_SELECT_BAND_PREF ||
-+	    bss_select->primitive == NL80211_BSS_SELECT_ADJUST_RSSI) {
-+		if (!attr[NL80211_ATTR_BSS_SELECT_BAND_PREF])
-+			return -EINVAL;
-+		band = nla_get_u32(attr[NL80211_ATTR_BSS_SELECT_BAND_PREF]);
-+	}
-+
-+	switch (bss_select->primitive) {
-+	case NL80211_BSS_SELECT_BAND_PREF:
-+		bss_select->param.band_pref = band;
-+		break;
-+	case NL80211_BSS_SELECT_ADJUST_RSSI:
-+		bss_select->param.adjust.band = band;
-+		if (!attr[NL80211_ATTR_BSS_SELECT_RSSI_ADJUST])
-+			return -EINVAL;
-+		bss_select->param.adjust.delta =
-+			nla_get_u8(attr[NL80211_ATTR_BSS_SELECT_RSSI_ADJUST]);
-+		break;
-+	case NL80211_BSS_SELECT_RSSI:
-+	default:
-+		break;
-+	}
-+
-+	return 0;
-+}
-+
- static int nl80211_parse_random_mac(struct nlattr **attrs,
- 				    u8 *mac_addr, u8 *mac_addr_mask)
- {
-@@ -7998,6 +8052,18 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
- 		connect.flags |= ASSOC_REQ_USE_RRM;
- 	}
- 
-+	/* only do bss selection when no BSSID is specified. */
-+	if (!connect.bssid &&
-+	    wiphy_ext_feature_isset(&rdev->wiphy,
-+				    NL80211_EXT_FEATURE_BSS_SELECT)) {
-+		err = parse_bss_select(info->attrs[NL80211_ATTR_BSS_SELECT],
-+				       &connect.bss_select);
-+		if (err) {
-+			kzfree(connkeys);
-+			return err;
-+		}
-+	}
-+
- 	wdev_lock(dev->ieee80211_ptr);
- 	err = cfg80211_connect(rdev, dev, &connect, connkeys, NULL);
- 	wdev_unlock(dev->ieee80211_ptr);
--- 
-1.9.1
-
+RGVhciBKdWxpYW4NCg0KVGhhbmsgeW91IGluIHlvdXIgYWR2aXNlcy4NClRoaXMgcGF0Y2ggc3Vi
+amVjdCBpcyAncmVuYW1lIHZhcmlhYmxlcycuDQpUaGlzIHRpbWUsIEkgaG9wZSB0aGUgcGF0Y2gg
+aXMgYXBwbGllZC4NCg0KSSB3aWxsIGJlIHlvdXIgcG9zaXRpdmUgYWR2aXNlcyBjaGFuZ2UgdG8g
+bmV4dCBwYXRjaC4NCg0KwqBUaGFua3MsIEJSDQrCoExlbw0KDQotLS0tLU9yaWdpbmFsIE1lc3Nh
+Z2UtLS0tLQ0KRnJvbTogSnVsaWFuIENhbGFieSBbbWFpbHRvOmp1bGlhbi5jYWxhYnlAZ21haWwu
+Y29tXSANClNlbnQ6IEZyaWRheSwgSmFudWFyeSAyOSwgMjAxNiA5OjU1IEFNDQpUbzogS2ltLCBM
+ZW8gPExlby5LaW1AYXRtZWwuY29tPg0KQ2M6IEdyZWcgS0ggPGdyZWdraEBsaW51eGZvdW5kYXRp
+b24ub3JnPjsgZGV2ZWxAZHJpdmVyZGV2Lm9zdW9zbC5vcmc7IGxpbnV4LXdpcmVsZXNzIDxsaW51
+eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc+OyBDaG8sIFRvbnkgPFRvbnkuQ2hvQGF0bWVsLmNv
+bT47IExlZSwgR2xlbiA8R2xlbi5MZWVAYXRtZWwuY29tPjsgU2hpbiwgQXVzdGluIDxBdXN0aW4u
+U2hpbkBhdG1lbC5jb20+OyBQYXJrLCBDaHJpcyA8Q2hyaXMuUGFya0BhdG1lbC5jb20+OyBBYm96
+YWVpZCwgQWRoYW0gPEFkaGFtLkFib3phZWlkQGF0bWVsLmNvbT47IEZlcnJlLCBOaWNvbGFzIDxO
+aWNvbGFzLkZFUlJFQGF0bWVsLmNvbT4NClN1YmplY3Q6IFJlOiBbUEFUQ0ggMDgvMTJdIHN0YWdp
+bmc6IHdpbGMxMDAwOiByZW5hbWUgdmFyaWFibGUgczMyRXJyb3INCg0KSGkgTGVvLA0KDQpPbiBU
+aHUsIEphbiAyOCwgMjAxNiBhdCA2OjEzIFBNLCBMZW8gS2ltIDxsZW8ua2ltQGF0bWVsLmNvbT4g
+d3JvdGU6DQo+IFRoaXMgcGF0Y2ggcmVuYW1lcyB2YXJpYWJsZSBzMzJFcnJvciB0byByZXN1bHQg
+dG8gYXZvaWQgQ2FtZWxDYXNlIA0KPiBuYW1pbmcgY29udmVudGlvbi4NCj4gQWxzbywgcmVtb3Zl
+IHRoZSB1bnVzZWQgdmFyaWFibGUgczMyRXJyb3IgYW5kIHJlcGxhY2Ugd2l0aCBkaXJlY3QgcmV0
+dXJuLg0KPg0KPiBTaWduZWQtb2ZmLWJ5OiBMZW8gS2ltIDxsZW8ua2ltQGF0bWVsLmNvbT4NCj4g
+LS0tDQo+ICBkcml2ZXJzL3N0YWdpbmcvd2lsYzEwMDAvY29yZWNvbmZpZ3VyYXRvci5jIHwgMTkg
+KysrKysrKysrLS0tLS0tLS0tLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDkgaW5zZXJ0aW9ucygrKSwg
+MTAgZGVsZXRpb25zKC0pDQo+DQo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3N0YWdpbmcvd2lsYzEw
+MDAvY29yZWNvbmZpZ3VyYXRvci5jIA0KPiBiL2RyaXZlcnMvc3RhZ2luZy93aWxjMTAwMC9jb3Jl
+Y29uZmlndXJhdG9yLmMNCj4gaW5kZXggMmE0ZTMyNC4uODhlNTY2MSAxMDA2NDQNCj4gLS0tIGEv
+ZHJpdmVycy9zdGFnaW5nL3dpbGMxMDAwL2NvcmVjb25maWd1cmF0b3IuYw0KPiArKysgYi9kcml2
+ZXJzL3N0YWdpbmcvd2lsYzEwMDAvY29yZWNvbmZpZ3VyYXRvci5jDQo+IEBAIC0zNTYsMzAgKzM1
+NiwyOSBAQCBzMzIgd2lsY19wYXJzZV9uZXR3b3JrX2luZm8odTggKm1zZ19idWZmZXIsIA0KPiB0
+c3RyTmV0d29ya0luZm8gKipyZXRfbmV0d29ya19pbmZvKQ0KPg0KPiAgczMyIHdpbGNfZGVhbGxv
+Y19uZXR3b3JrX2luZm8odHN0ck5ldHdvcmtJbmZvICpwc3RyTmV0d29ya0luZm8pICB7DQo+IC0g
+ICAgICAgczMyIHMzMkVycm9yID0gMDsNCj4gKyAgICAgICBzMzIgcmVzdWx0ID0gMDsNCj4NCj4g
+ICAgICAgICBpZiAocHN0ck5ldHdvcmtJbmZvKSB7DQo+ICAgICAgICAgICAgICAgICBpZiAocHN0
+ck5ldHdvcmtJbmZvLT5wdThJRXMpIHsNCj4gICAgICAgICAgICAgICAgICAgICAgICAga2ZyZWUo
+cHN0ck5ldHdvcmtJbmZvLT5wdThJRXMpOw0KPiAgICAgICAgICAgICAgICAgICAgICAgICBwc3Ry
+TmV0d29ya0luZm8tPnB1OElFcyA9IE5VTEw7DQoNCkknbSBub3Qgc3VyZSBpdCdzIG5lY2Vzc2Fy
+eSB0byBzZXQgdGhpcyB0byBOVUxMIGhlcmUuDQoNCj4gICAgICAgICAgICAgICAgIH0gZWxzZSB7
+DQo+IC0gICAgICAgICAgICAgICAgICAgICAgIHMzMkVycm9yID0gLUVGQVVMVDsNCj4gKyAgICAg
+ICAgICAgICAgICAgICAgICAgcmVzdWx0ID0gLUVGQVVMVDsNCj4gICAgICAgICAgICAgICAgIH0N
+Cj4NCj4gICAgICAgICAgICAgICAgIGtmcmVlKHBzdHJOZXR3b3JrSW5mbyk7DQo+ICAgICAgICAg
+ICAgICAgICBwc3RyTmV0d29ya0luZm8gPSBOVUxMOw0KDQpPciB0aGlzIHRvIE5VTEwgaGVyZS4N
+Cg0KQWxzbywgaXMgdGhlIHJldHVybiB2YWx1ZSBmcm9tIHRoaXMgZnVuY3Rpb24gYWN0dWFsbHkg
+Y2hlY2tlZD8ga2ZyZWUoKQ0KY2FuIGhhdmUgTlVMTCBwYXNzZWQgdG8gaXQuDQoNCklmIHRoZSBy
+ZXR1cm4gdmFsdWUgaXNuJ3QgY2hlY2tlZCwgdGhpcyBlbnRpcmUgZnVuY3Rpb24gY291bGQgYmUg
+c2ltcGxpZmllZCB0bzoNCg0KLSAtIC0gLSAtDQoNCmlmIChwc3RyTmV0d29ya0luZm8pIHsNCiAg
+ICBrZnJlZShwc3RyTmV0d29ya0luZm8tPnB1OElFcyk7DQogICAga2ZyZWUocHN0ck5ldHdvcmtJ
+bmZvKTsNCn0NCg0KcmV0dXJuIDA7DQoNCi0gLSAtIC0gLQ0KDQpBbHNvLCB3aGVuIHRzdHJOZXR3
+b3JrSW5mbyBzdHJ1Y3RzIGFyZSBhbGxvY2F0ZWQsIHdvdWxkbid0IHRoZQ0KYWxsb2NhdGluZyBm
+dW5jdGlvbiBmYWlsIGlmIC0+cHU4SUVzIGlzIE5VTEw/DQoNCj4gICAgICAgICB9IGVsc2Ugew0K
+PiAtICAgICAgICAgICAgICAgczMyRXJyb3IgPSAtRUZBVUxUOw0KPiArICAgICAgICAgICAgICAg
+cmVzdWx0ID0gLUVGQVVMVDsNCj4gICAgICAgICB9DQo+DQo+IC0gICAgICAgcmV0dXJuIHMzMkVy
+cm9yOw0KPiArICAgICAgIHJldHVybiByZXN1bHQ7DQo+ICB9DQo+DQo+ICBzMzIgd2lsY19wYXJz
+ZV9hc3NvY19yZXNwX2luZm8odTggKnB1OEJ1ZmZlciwgdTMyIHUzMkJ1ZmZlckxlbiwNCj4gICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgIHRzdHJDb25uZWN0UmVzcEluZm8gKipwcHN0ckNv
+bm5lY3RSZXNwSW5mbykNCj4gIHsNCj4gLSAgICAgICBzMzIgczMyRXJyb3IgPSAwOw0KPiAgICAg
+ICAgIHRzdHJDb25uZWN0UmVzcEluZm8gKnBzdHJDb25uZWN0UmVzcEluZm8gPSBOVUxMOw0KPiAg
+ICAgICAgIHUxNiB1MTZBc3NvY1Jlc3BMZW4gPSAwOw0KPiAgICAgICAgIHU4ICpwdThJRXMgPSBO
+VUxMOw0KPiBAQCAtNDA4LDI3ICs0MDcsMjcgQEAgczMyIHdpbGNfcGFyc2VfYXNzb2NfcmVzcF9p
+bmZvKHU4ICpwdThCdWZmZXIsIHUzMiB1MzJCdWZmZXJMZW4sDQo+DQo+ICAgICAgICAgKnBwc3Ry
+Q29ubmVjdFJlc3BJbmZvID0gcHN0ckNvbm5lY3RSZXNwSW5mbzsNCj4NCj4gLSAgICAgICByZXR1
+cm4gczMyRXJyb3I7DQo+ICsgICAgICAgcmV0dXJuIDA7DQo+ICB9DQo+DQo+ICBzMzIgd2lsY19k
+ZWFsbG9jX2Fzc29jX3Jlc3BfaW5mbyh0c3RyQ29ubmVjdFJlc3BJbmZvICpwc3RyQ29ubmVjdFJl
+c3BJbmZvKQ0KPiAgew0KPiAtICAgICAgIHMzMiBzMzJFcnJvciA9IDA7DQo+ICsgICAgICAgczMy
+IHJlc3VsdCA9IDA7DQoNCkFsbCB0aGUgY29tbWVudHMgYWJvdmUgYXBwbHkgdG8gdGhpcyBmdW5j
+dGlvbiBhcyB3ZWxsLg0KDQo+DQo+ICAgICAgICAgaWYgKHBzdHJDb25uZWN0UmVzcEluZm8pIHsN
+Cj4gICAgICAgICAgICAgICAgIGlmIChwc3RyQ29ubmVjdFJlc3BJbmZvLT5wdThSZXNwSUVzKSB7
+DQo+ICAgICAgICAgICAgICAgICAgICAgICAgIGtmcmVlKHBzdHJDb25uZWN0UmVzcEluZm8tPnB1
+OFJlc3BJRXMpOw0KPiAgICAgICAgICAgICAgICAgICAgICAgICBwc3RyQ29ubmVjdFJlc3BJbmZv
+LT5wdThSZXNwSUVzID0gTlVMTDsNCj4gICAgICAgICAgICAgICAgIH0gZWxzZSB7DQo+IC0gICAg
+ICAgICAgICAgICAgICAgICAgIHMzMkVycm9yID0gLUVGQVVMVDsNCj4gKyAgICAgICAgICAgICAg
+ICAgICAgICAgcmVzdWx0ID0gLUVGQVVMVDsNCj4gICAgICAgICAgICAgICAgIH0NCj4NCj4gICAg
+ICAgICAgICAgICAgIGtmcmVlKHBzdHJDb25uZWN0UmVzcEluZm8pOw0KPiAgICAgICAgICAgICAg
+ICAgcHN0ckNvbm5lY3RSZXNwSW5mbyA9IE5VTEw7DQo+DQo+ICAgICAgICAgfSBlbHNlIHsNCj4g
+LSAgICAgICAgICAgICAgIHMzMkVycm9yID0gLUVGQVVMVDsNCj4gKyAgICAgICAgICAgICAgIHJl
+c3VsdCA9IC1FRkFVTFQ7DQo+ICAgICAgICAgfQ0KPg0KPiAtICAgICAgIHJldHVybiBzMzJFcnJv
+cjsNCj4gKyAgICAgICByZXR1cm4gcmVzdWx0Ow0KPiAgfQ0KDQpUaGFua3MsDQoNCi0tIA0KSnVs
+aWFuIENhbGFieQ0KDQpFbWFpbDoganVsaWFuLmNhbGFieUBnbWFpbC5jb20NClByb2ZpbGU6IGh0
+dHA6Ly93d3cuZ29vZ2xlLmNvbS9wcm9maWxlcy9qdWxpYW4uY2FsYWJ5Lw0K
