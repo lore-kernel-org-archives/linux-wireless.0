@@ -1,43 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:37538 "EHLO
-	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753472AbcAWSJf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 23 Jan 2016 13:09:35 -0500
-Received: by mail-wm0-f42.google.com with SMTP id n5so24854090wmn.0
-        for <linux-wireless@vger.kernel.org>; Sat, 23 Jan 2016 10:09:35 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:53091 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932801AbcA2SAm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2016 13:00:42 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joe Perches <joe@perches.com>,
+	Alexander Kuleshov <kuleshovmail@gmail.com>,
+	Haneen Mohammed <hamohammed.sa@gmail.com>,
+	Andreas Ruprecht <andreas.ruprecht@fau.de>,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] staging: rtl8723au: Fixes unnecessary return warning
+References: <20160129172908.GA14077@Karyakshetra>
+Date: Fri, 29 Jan 2016 13:00:40 -0500
+In-Reply-To: <20160129172908.GA14077@Karyakshetra> (Bhaktipriya Shridhar's
+	message of "Fri, 29 Jan 2016 22:59:08 +0530")
+Message-ID: <wrfjk2ms465z.fsf@redhat.com> (sfid-20160129_190100_021179_CEC0C950)
 MIME-Version: 1.0
-Date: Sat, 23 Jan 2016 19:09:33 +0100
-Message-ID: <CAOQ7t2Z2E3vn+t9gDZKfs9Ke1aPEGObgSi2RZDzD7kPVR2LJzg@mail.gmail.com> (sfid-20160123_191006_045173_603F54B2)
-Subject: [BISECTED] brcmfmac issue
-From: Carlo Caione <carlo@caione.org>
-To: Ulf Hansson <ulf.hansson@linaro.org>, arend@broadcom.com,
-	meuleman@broadcom.com, kvalo@codeaurora.org,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Bhaktipriya Shridhar <bhaktipriya96@gmail.com> writes:
+> This patch fixes checkpatch.pl warning in rtw_mlme_ext.c file.
+> WARNING: void function return statements are not generally useful
+>
+> Signed-off-by: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
+> ---
+>  drivers/staging/rtl8723au/core/rtw_mlme_ext.c | 10 ----------
+>  1 file changed, 10 deletions(-)
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+> index d28f29a..e8a16b9 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+> @@ -2657,7 +2657,6 @@ static void issue_probersp(struct rtw_adapter *padapter, unsigned char *da)
+>
+>  	dump_mgntframe23a(padapter, pmgntframe);
+>
+> -	return;
+>  }
 
-I submitted [1] e10c3219 "mmc: core: Enable tuning according to the
-actual timing"  to solve a problem with the BCM43340 SDIO WiFi card.
-This patch works perfectly fine on top of v4.4 tag, solving the
-problem with the WiFi card. With the latest master the asus x205ta
-laptop fails to boot. The failure seems related to a weird interaction
-between this patch and 7d34b05 "brcmfmac: Move all module parameters
-to one place" (bad commit).
+If you insist on pushing this rather unncessary change, please do it
+properly, and remove the blank line before the return statement as well.
 
-The bad commit was found bisecting between master and v4.4 and
-applying my patch when not already present.
-
-Here the log: https://gist.github.com/9db683a467496c942659
-
-Any idea?
-
-Cheers,
-
-[1] http://www.spinics.net/lists/linux-mmc/msg34791.html
-
--- 
-Carlo Caione
+Jes
