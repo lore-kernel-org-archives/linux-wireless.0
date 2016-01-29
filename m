@@ -1,35 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48938 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752178AbcASMkk (ORCPT
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:36212 "EHLO
+	mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752946AbcA2TYi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Jan 2016 07:40:40 -0500
-Date: Tue, 19 Jan 2016 15:40:06 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Fariya Fatima <fariyaf@gmail.com>,
-	Jahnavi Meher <jahnavi.meher@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org,
-	Julia Lawall <julia.lawall@lip6.fr>,
-	"John W. Linville" <linville@tuxdriver.com>
-Subject: Re: [PATCH v3 3/3] rsi: Replace variable initialisations by
- assignments in rsi_send_data_pkt()
-Message-ID: <20160119124006.GB6370@mwanda> (sfid-20160119_134046_396797_C646A850)
-References: <566ABCD9.1060404@users.sourceforge.net>
- <5687E169.4070704@users.sourceforge.net>
- <5698EE65.7010607@users.sourceforge.net>
- <5698F021.1070707@users.sourceforge.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5698F021.1070707@users.sourceforge.net>
+	Fri, 29 Jan 2016 14:24:38 -0500
+From: Cong Wang <xiyou.wangcong@gmail.com>
+To: netdev@vger.kernel.org
+Cc: dvyukov@google.com, linux-wireless@vger.kernel.org,
+	julian.calaby@gmail.com, eric.dumazet@gmail.com,
+	Cong Wang <xiyou.wangcong@gmail.com>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Subject: [PATCH v2 net] nfc: use GFP_USER for user-controlled kmalloc
+Date: Fri, 29 Jan 2016 11:24:24 -0800
+Message-Id: <1454095465-16685-1-git-send-email-xiyou.wangcong@gmail.com> (sfid-20160129_202446_476274_0A839E39)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Still makes no sense for adapter like Francois Romieu said.
+These two functions are called in sendmsg path, and the
+'len' is passed from user-space, so we should not allow
+malicious users to OOM kernel on purpose.
 
-regards,
-dan carpenter
+Reported-by: Dmitry Vyukov <dvyukov@google.com>
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Cc: Samuel Ortiz <sameo@linux.intel.com>
+Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
+---
+ net/nfc/llcp_commands.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/net/nfc/llcp_commands.c b/net/nfc/llcp_commands.c
+index 3621a90..3425532 100644
+--- a/net/nfc/llcp_commands.c
++++ b/net/nfc/llcp_commands.c
+@@ -663,7 +663,7 @@ int nfc_llcp_send_i_frame(struct nfc_llcp_sock *sock,
+ 		return -ENOBUFS;
+ 	}
+ 
+-	msg_data = kzalloc(len, GFP_KERNEL);
++	msg_data = kmalloc(len, GFP_USER | __GFP_NOWARN);
+ 	if (msg_data == NULL)
+ 		return -ENOMEM;
+ 
+@@ -729,7 +729,7 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
+ 	if (local == NULL)
+ 		return -ENODEV;
+ 
+-	msg_data = kzalloc(len, GFP_KERNEL);
++	msg_data = kmalloc(len, GFP_USER | __GFP_NOWARN);
+ 	if (msg_data == NULL)
+ 		return -ENOMEM;
+ 
+-- 
+1.8.3.1
 
