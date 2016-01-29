@@ -1,49 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:35636 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751781AbcAUBVT (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:40530 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752695AbcA2Gyk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 20:21:19 -0500
-Received: by mail-pa0-f68.google.com with SMTP id gi1so1022480pac.2
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:21:19 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 13/27] staging: wilc1000: rename pstrMessge in wilc_mq_destroy
-Date: Thu, 21 Jan 2016 10:20:16 +0900
-Message-Id: <1453339230-1377-13-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_023659_271755_A61DA32A)
-In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+	Fri, 29 Jan 2016 01:54:40 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH 4/6] staging: wilc1000: remove unnecessary braces
+Date: Fri, 29 Jan 2016 15:51:36 +0900
+Message-ID: <1454050298-25815-4-git-send-email-leo.kim@atmel.com> (sfid-20160129_075445_563525_8C7F5BB9)
+In-Reply-To: <1454050298-25815-1-git-send-email-leo.kim@atmel.com>
+References: <1454050298-25815-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pstrMessge to msg to avoid camelcase.
+From: Chris Park <chris.park@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch remove warnings reported by checkpatch.pl
+for unnecessary braces
+
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_msgqueue.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 103fcfd..a01420a 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -38,10 +38,10 @@ int wilc_mq_destroy(struct message_queue *mq)
- 	}
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 7b3a260..63b7492 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -984,15 +984,15 @@ void wilc_handle_isr(struct wilc *wilc)
+ 	if (int_status & PLL_INT_EXT)
+ 		wilc_pllupdate_isr_ext(wilc, int_status);
  
- 	while (mq->msg_list) {
--		struct message *pstrMessge = mq->msg_list->next;
-+		struct message *msg = mq->msg_list->next;
+-	if (int_status & DATA_INT_EXT) {
++	if (int_status & DATA_INT_EXT)
+ 		wilc_wlan_handle_isr_ext(wilc, int_status);
+-	}
++
+ 	if (int_status & SLEEP_INT_EXT)
+ 		wilc_sleeptimer_isr_ext(wilc, int_status);
  
- 		kfree(mq->msg_list);
--		mq->msg_list = pstrMessge;
-+		mq->msg_list = msg;
- 	}
- 
- 	return 0;
+-	if (!(int_status & (ALL_INT_EXT))) {
++	if (!(int_status & (ALL_INT_EXT)))
+ 		wilc_unknown_isr_ext(wilc);
+-	}
++
+ 	release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ }
+ EXPORT_SYMBOL_GPL(wilc_handle_isr);
 -- 
-2.6.4
+1.9.1
 
