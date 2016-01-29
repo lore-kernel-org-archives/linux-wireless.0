@@ -1,51 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:34718 "EHLO
-	mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751631AbcA2C65 (ORCPT
+Received: from mail-lb0-f170.google.com ([209.85.217.170]:34732 "EHLO
+	mail-lb0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753129AbcA2IfS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 21:58:57 -0500
-Received: by mail-io0-f193.google.com with SMTP id k127so5499088iok.1
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Jan 2016 18:58:57 -0800 (PST)
+	Fri, 29 Jan 2016 03:35:18 -0500
+Subject: [PATCH] mac80211: minstrel_ht: fix out-of-bound in
+ minstrel_ht_set_best_prob_rate
+From: Konstantin Khlebnikov <koct9i@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: netdev@vger.kernel.org,
+	Thomas Huehn <thomas@net.t-labs.tu-berlin.de>
+Date: Fri, 29 Jan 2016 11:35:12 +0300
+Message-ID: <145405651192.4948.10685647900939287282.stgit@zurg> (sfid-20160129_093525_824280_923ACC4A)
 MIME-Version: 1.0
-In-Reply-To: <74F3875218FC364C9618AB19CB60E905800419AC@penmbx02.corp.atmel.com>
-References: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
- <1453965226-6158-8-git-send-email-leo.kim@atmel.com> <CAGRGNgXxcZBzOkJa++pAHWZLAZs9wrD48cEiGhzKatmzd+usRw@mail.gmail.com>
- <74F3875218FC364C9618AB19CB60E905800419AC@penmbx02.corp.atmel.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 29 Jan 2016 13:58:37 +1100
-Message-ID: <CAGRGNgXh9YL0=zbTcDGB760iqKzOJJ4BZPnd=pF5+XtOiBsD3g@mail.gmail.com> (sfid-20160129_035900_869265_33478C8E)
-Subject: Re: [PATCH 08/12] staging: wilc1000: rename variable s32Error
-To: "Kim, Leo" <Leo.Kim@atmel.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Cho, Tony" <Tony.Cho@atmel.com>, "Lee, Glen" <Glen.Lee@atmel.com>,
-	"Shin, Austin" <Austin.Shin@atmel.com>,
-	"Park, Chris" <Chris.Park@atmel.com>,
-	"Abozaeid, Adham" <Adham.Abozaeid@atmel.com>,
-	"Ferre, Nicolas" <Nicolas.FERRE@atmel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Leo,
+Patch fixes this splat
 
-On Fri, Jan 29, 2016 at 1:55 PM, Kim, Leo <Leo.Kim@atmel.com> wrote:
-> Dear Julian
->
-> Thank you in your advises.
-> This patch subject is 'rename variables'.
-> This time, I hope the patch is applied.
->
-> I will be your positive advises change to next patch.
+BUG: KASAN: slab-out-of-bounds in minstrel_ht_update_stats.isra.7+0x6e1/0x9e0
+[mac80211] at addr ffff8800cee640f4 Read of size 4 by task swapper/3/0
 
-I should have been more clear, these were ideas for the next round of
-changes, not changes you should make to this patch.
+Signed-off-by: Konstantin Khlebnikov <koct9i@gmail.com>
+Link: http://lkml.kernel.org/r/CALYGNiNyJhSaVnE35qS6UCGaSb2Dx1_i5HcRavuOX14oTz2P+w@mail.gmail.com
+---
+ net/mac80211/rc80211_minstrel_ht.c |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-Thanks,
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 3928dbd24e25..93bf2b743e20 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -414,15 +414,16 @@ minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u16 index)
+ 	    (max_tp_group != MINSTREL_CCK_GROUP))
+ 		return;
+ 
++	max_gpr_group = mg->max_group_prob_rate / MCS_GROUP_RATES;
++	max_gpr_idx = mg->max_group_prob_rate % MCS_GROUP_RATES;
++	max_gpr_prob = mi->groups[max_gpr_group].rates[max_gpr_idx].prob_ewma;
++
+ 	if (mrs->prob_ewma > MINSTREL_FRAC(75, 100)) {
+ 		cur_tp_avg = minstrel_ht_get_tp_avg(mi, cur_group, cur_idx,
+ 						    mrs->prob_ewma);
+ 		if (cur_tp_avg > tmp_tp_avg)
+ 			mi->max_prob_rate = index;
+ 
+-		max_gpr_group = mg->max_group_prob_rate / MCS_GROUP_RATES;
+-		max_gpr_idx = mg->max_group_prob_rate %	MCS_GROUP_RATES;
+-		max_gpr_prob = mi->groups[max_gpr_group].rates[max_gpr_idx].prob_ewma;
+ 		max_gpr_tp_avg = minstrel_ht_get_tp_avg(mi, max_gpr_group,
+ 							max_gpr_idx,
+ 							max_gpr_prob);
+@@ -431,7 +432,7 @@ minstrel_ht_set_best_prob_rate(struct minstrel_ht_sta *mi, u16 index)
+ 	} else {
+ 		if (mrs->prob_ewma > tmp_prob)
+ 			mi->max_prob_rate = index;
+-		if (mrs->prob_ewma > mg->rates[mg->max_group_prob_rate].prob_ewma)
++		if (mrs->prob_ewma > max_gpr_prob)
+ 			mg->max_group_prob_rate = index;
+ 	}
+ }
 
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
