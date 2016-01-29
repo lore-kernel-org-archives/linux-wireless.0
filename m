@@ -1,61 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:36543 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753539AbcA0NIV convert rfc822-to-8bit (ORCPT
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35679 "EHLO
+	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932272AbcA2Qyn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 08:08:21 -0500
-Received: by mail-ig0-f179.google.com with SMTP id z14so82808333igp.1
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2016 05:08:21 -0800 (PST)
+	Fri, 29 Jan 2016 11:54:43 -0500
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: WARNING at net/mac80211/rate.c:513 ieee80211_get_tx_rates
+ [mac80211]
+To: Johannes Berg <johannes@sipsolutions.net>
+References: <CA+55aFxe22iWok6UojY=hCoG2k1wNpJ9CfQ0b+STSxq67tb86Q@mail.gmail.com>
+ <1453983185.2217.12.camel@sipsolutions.net>
+ <CA+55aFya9K4JboNY8kB9cg6zt9otguhdzfHm3jvLmWedxQTSWg@mail.gmail.com>
+ <1454013625.2332.9.camel@sipsolutions.net>
+ <CA+55aFx73nv9ny-fu5BR6v8wL=f2oFomwrZoLRw=x2kNP76cYA@mail.gmail.com>
+ <CA+55aFzF0gWfvmE+6ZcHmjnO4xp-oVAQ5SWxYJhOzns2ocgCsw@mail.gmail.com>
+ <1454019155.2332.15.camel@sipsolutions.net>
+ <CA+55aFxjpdepHYD_6uU48kW38Z9bmf2wwA8yPZt4ibhkofmfQA@mail.gmail.com>
+ <56AAC66C.1080800@lwfinger.net> <1454056380.3369.2.camel@sipsolutions.net>
+ <CAP71bdVZzUUNwP3py_m1pwU21qMKth=0BmMfLuUb7=B-1840zg@mail.gmail.com>
+ <1454084146.2800.0.camel@sipsolutions.net>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	David Miller <davem@davemloft.net>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
+Message-ID: <56AB9950.5080800@lwfinger.net> (sfid-20160129_175451_623460_D56E0608)
+Date: Fri, 29 Jan 2016 10:54:40 -0600
 MIME-Version: 1.0
-In-Reply-To: <87k2mvnr6r.fsf@kamboji.qca.qualcomm.com>
-References: <201601270149.Nwdmoe5L%fengguang.wu@intel.com>
-	<87k2mvnr6r.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 27 Jan 2016 14:08:20 +0100
-Message-ID: <CACna6rzxNOq1JWFc=5EvE+UmtfUMZq4QYjAdGn1UE7zE-VRu8Q@mail.gmail.com> (sfid-20160127_140824_684531_7FF9517F)
-Subject: Re: [PATCH 4/5] brcmfmac: access PMU registers using standalone PMU
- core if available
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: kbuild test robot <lkp@intel.com>, kbuild-all@01.org,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <1454084146.2800.0.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 27 January 2016 at 13:27, Kalle Valo <kvalo@codeaurora.org> wrote:
-> kbuild test robot <lkp@intel.com> writes:
->
->> Hi Rafał,
+On 01/29/2016 10:15 AM, Johannes Berg wrote:
+> On Fri, 2016-01-29 at 10:12 -0600, Larry Finger wrote:
 >>
->> [auto build test ERROR on wireless-drivers/master]
->> [also build test ERROR on v4.5-rc1 next-20160125]
->> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
+>> Upon further inspection, my log has the line "rtl8821ae 0000:02:00.0
+>> wlp2s0: disabling HT/VHT due to WEP/TKIP use". I need to fix that
+>> first.
 >>
->> url:    https://github.com/0day-ci/linux/commits/Rafa-Mi-ecki/brcmfmac-support-for-new-14e43-4365-card-with-BCM4366/20160127-010149
->> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git master
->> config: x86_64-allmodconfig (attached as .config)
->> reproduce:
->>         # save the attached .config to linux build tree
->>         make ARCH=x86_64
->>
->> All errors (new ones prefixed by >>):
->>
->>    drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c: In function 'brcmf_chip_get_pmu':
->>>> drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:1143:25: error: 'BCMA_CC_CAP_EXT_AOB_PRESENT' undeclared (first use in this function)
->>          pub->cc_caps_ext & BCMA_CC_CAP_EXT_AOB_PRESENT) {
->>                             ^
->>    drivers/net/wireless/broadcom/brcm80211/brcmfmac/chip.c:1143:25: note: each undeclared identifier is reported only once for each function it appears in
->
-> I think this error was as expected because this set depends on "bcma:
-> support PMU present as separated bus core" which is not yet applied.
+> Likely TKIP; enable only WPA2 (CCMP) on the AP.
 
-Yes, builbot simply couldn't know about this, but I should have reply
-to make it clear I guess.
+I found and fixed it. The AP was using only 20 MHz channels, but now is 
+configured for 20/40/80. That duplicates the warning for me and the lack of 
+throughput even though it associates and authenticates.
 
--- 
-Rafał
+Larry
+
+
