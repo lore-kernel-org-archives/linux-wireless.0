@@ -1,70 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:33987 "EHLO
-	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751057AbcAGQpl (ORCPT
+Received: from mail-yk0-f179.google.com ([209.85.160.179]:35262 "EHLO
+	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932905AbcA2SVV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 11:45:41 -0500
-Received: by mail-io0-f171.google.com with SMTP id 1so211134572ion.1
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2016 08:45:40 -0800 (PST)
+	Fri, 29 Jan 2016 13:21:21 -0500
 MIME-Version: 1.0
-In-Reply-To: <568E9360.3060906@candelatech.com>
-References: <CALnQHM3C=DVaTf58XDyh+rttVs-FSpc4ghozg9HJktEonq7w-g@mail.gmail.com>
-	<568E913D.7050301@candelatech.com>
-	<CALnQHM1mzqFbprQqujB7BWncOa=D9uAxLQ0paiv-21vrx+hFvw@mail.gmail.com>
-	<568E9360.3060906@candelatech.com>
-Date: Thu, 7 Jan 2016 09:45:40 -0700
-Message-ID: <CALnQHM3-R+g+4o2qKyBbRM2VDcyhXqx6YpJLNHS3TKeLh7T6DA@mail.gmail.com> (sfid-20160107_174544_725267_63770154)
-Subject: Re: lost connectivity until "wpa_cli reassociate" is issued
-From: David Mosberger <davidm@egauge.net>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
+In-Reply-To: <1453928752.20722.27.camel@edumazet-glaptop2.roam.corp.google.com>
+References: <1453830820-27104-1-git-send-email-xiyou.wangcong@gmail.com>
+	<CAGRGNgV7MUXdk+e8Arx05yiWX6owei5dmnFQ-TBfs55jfy+qBw@mail.gmail.com>
+	<CAM_iQpWawou1Z_NnAzM5TxH7TUQUCAhf+k96PErNV8q_SOCShw@mail.gmail.com>
+	<1453861388.11327.51.camel@edumazet-glaptop2.roam.corp.google.com>
+	<CAM_iQpXOEQhwPp6HD3L16DV1tygEyKNoHH+zHkukux7zYzaJeA@mail.gmail.com>
+	<1453928752.20722.27.camel@edumazet-glaptop2.roam.corp.google.com>
+Date: Fri, 29 Jan 2016 10:21:21 -0800
+Message-ID: <CAM_iQpVWpF_QZwORkcumw7=awVXQQ4SqGrymj7aSd5fGSyrddg@mail.gmail.com> (sfid-20160129_192145_790183_0BBBDD41)
+Subject: Re: [PATCH RESEND net] nfc: use GFP_USER for user-controlled kmalloc
+From: Cong Wang <xiyou.wangcong@gmail.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	netdev <netdev@vger.kernel.org>,
+	Dmitry Vyukov <dvyukov@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ben,
-
-On Thu, Jan 7, 2016 at 9:33 AM, Ben Greear <greearb@candelatech.com> wrote:
-
-> Could be
-> a power-save issue perhaps.
-
-That was our thought, too.  Particularly, since if there is steady
-traffic (at least a ping every 8 seconds), the problem does not appear
-to occur.
-
-However, the rtl8192cu doesn't support power-saving mode and in any
-case, we made sure it's off:
-
-  # iw wlan0 get power_save
-  Power save: off
-
-> I assume you have sniffed to see if any frames are going out on the air during the time of trouble?
-
-No, I'm not actually sure how I'd do that.  The site we see this most
-frequently with is
-remote and we don't have any special WiFi packet sniffer.
-
-> If correct packets go out on the air and AP doesn't answer, then likely AP
-> problem.
-
-Not likely an AP problem, since we're seeing this with multiple APs of
-different brands etc.
-
-> If pkts don't get on the air, then check to see if they at least get to
-> the driver.
-
-Yeah, that should be easy to do, I suppose.  We had rtl8192cu
-debugging turned on
-before but at that time it didn't help.
-
-> If they don't get to the driver, then probably it is a kernel/stack issue.
+On Wed, Jan 27, 2016 at 1:05 PM, Eric Dumazet <eric.dumazet@gmail.com> wrote:
+> On Wed, 2016-01-27 at 11:50 -0800, Cong Wang wrote:
 >
-> If they get to the driver but not on the air, then NIC and/or it's firmware
-> and/or the driver is likely the culprit.
+>> Hmm? I think nfc_llcp_send_ui_frame() needs to do some fragmention
+>> with this temporary memory, or you are saying msg_iter has some
+>> API available to seek the pointer? Even if so, it doesn't look like
+>> suitable for -stable.
+>>
+>
+> memcpy_from_msg(msg_data, msg, len) will overwrite the msg_data with len
+> bytes, or return an error.
+>
+> So prior msg_data content does not matter.
+>
+> kzalloc() before a memset() or memcpy() sounds defensive programming,
+> kmalloc() is a bit faster.
 
-Thanks for your thoughts!
-
-  --david
--- 
-eGauge Systems LLC, http://egauge.net/, 1.877-EGAUGE1, fax 720.545.9768
+Oh, you mean s/kzalloc/kmalloc/, I thought you mean s/kzalloc//. ;)
