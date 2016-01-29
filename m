@@ -1,57 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f43.google.com ([209.85.215.43]:35301 "EHLO
-	mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751135AbcAHGEz (ORCPT
+Received: from mail-io0-f180.google.com ([209.85.223.180]:36789 "EHLO
+	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754030AbcA2XRU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Jan 2016 01:04:55 -0500
-Received: by mail-lf0-f43.google.com with SMTP id c192so169342111lfe.2
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2016 22:04:54 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: brcm80211-dev-list@broadcom.com,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [RFC PATCH] brcmfmac: keep device specific settings when changing country
-Date: Fri,  8 Jan 2016 07:04:40 +0100
-Message-Id: <1452233080-11569-1-git-send-email-zajec5@gmail.com> (sfid-20160108_070458_382268_7A98190D)
+	Fri, 29 Jan 2016 18:17:20 -0500
 MIME-Version: 1.0
+In-Reply-To: <wrfjk2ms465z.fsf@redhat.com>
+References: <20160129172908.GA14077@Karyakshetra> <wrfjk2ms465z.fsf@redhat.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sat, 30 Jan 2016 10:17:00 +1100
+Message-ID: <CAGRGNgWQvdfQc-L9z0NKCyCOorxU0seQ-XvYnZDBWA3QKySrRA@mail.gmail.com> (sfid-20160130_001738_992963_59805BA0)
+Subject: Re: [PATCH] staging: rtl8723au: Fixes unnecessary return warning
+To: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joe Perches <joe@perches.com>,
+	Alexander Kuleshov <kuleshovmail@gmail.com>,
+	Haneen Mohammed <hamohammed.sa@gmail.com>,
+	Andreas Ruprecht <andreas.ruprecht@fau.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When changing country driver has to submit two values: alpha2 and
-rev(ision). We don't want to change revision as it's device specific.
-So far we were submitting value -1 in hope firmware will treat it as
-invalid and will simply keep using the old one. It doesn't work however,
-firmware treats -1 as 0 which may result in setting wrong revision.
+Hi Bhaktipriya,
 
-Solve it by reading current value and submit it back with changed
-country.
+On Sat, Jan 30, 2016 at 5:00 AM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+> Bhaktipriya Shridhar <bhaktipriya96@gmail.com> writes:
+>> This patch fixes checkpatch.pl warning in rtw_mlme_ext.c file.
+>> WARNING: void function return statements are not generally useful
+>>
+>> Signed-off-by: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
+>> ---
+>>  drivers/staging/rtl8723au/core/rtw_mlme_ext.c | 10 ----------
+>>  1 file changed, 10 deletions(-)
+>>
+>> diff --git a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+>> index d28f29a..e8a16b9 100644
+>> --- a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+>> +++ b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+>> @@ -2657,7 +2657,6 @@ static void issue_probersp(struct rtw_adapter *padapter, unsigned char *da)
+>>
+>>       dump_mgntframe23a(padapter, pmgntframe);
+>>
+>> -     return;
+>>  }
+>
+> If you insist on pushing this rather unncessary change, please do it
+> properly, and remove the blank line before the return statement as well.
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+As Jes said, you need to remove the blank lines before the returns
+too. checkpatch should have picked this up, you did run the patch
+through checkpatch before you sent it, right?
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 17658b3..dcd8c8d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -6236,8 +6236,14 @@ static void brcmf_cfg80211_reg_notifier(struct wiphy *wiphy,
- 			brcmf_err("not a ISO3166 code\n");
- 			return;
- 		}
-+
- 	memset(&ccreq, 0, sizeof(ccreq));
--	ccreq.rev = cpu_to_le32(-1);
-+	if (brcmf_fil_iovar_data_get(ifp, "country", &ccreq, sizeof(ccreq))) {
-+		brcmf_err("could not obtain country info\n");
-+		return;
-+	}
-+
-+	memset(ccreq.country_abbrev, 0, sizeof(ccreq.country_abbrev));
- 	memcpy(ccreq.ccode, req->alpha2, sizeof(req->alpha2));
- 	if (brcmf_fil_iovar_data_set(ifp, "country", &ccreq, sizeof(ccreq))) {
- 		brcmf_err("firmware rejected country setting\n");
+Jes,
+
+I know you have strong feelings on coding style, but there are a lot
+of people out there who see deviations from the standard as bugs to be
+fixed, so stuff like this isn't going to stop until it matches the
+coding style document's spec.
+
+Thanks,
+
 -- 
-1.8.4.5
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
