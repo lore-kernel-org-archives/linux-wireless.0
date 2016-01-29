@@ -1,117 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f182.google.com ([209.85.160.182]:33682 "EHLO
-	mail-yk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758381AbcAYUcz (ORCPT
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:34065 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753640AbcA2UEE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 15:32:55 -0500
-Received: by mail-yk0-f182.google.com with SMTP id k129so176401411yke.0
-        for <linux-wireless@vger.kernel.org>; Mon, 25 Jan 2016 12:32:55 -0800 (PST)
+	Fri, 29 Jan 2016 15:04:04 -0500
 MIME-Version: 1.0
-In-Reply-To: <56A68064.5020702@broadcom.com>
-References: <1453718849-3508-1-git-send-email-sjoerd.simons@collabora.co.uk>
-	<56A64114.3010400@gmail.com>
-	<CAD=FV=X-ejMLnh30TofU7dKP5WwZaXcgLaQwFs__wo9wHsv53Q@mail.gmail.com>
-	<56A68064.5020702@broadcom.com>
-Date: Mon, 25 Jan 2016 12:32:54 -0800
-Message-ID: <CAD=FV=XEuEdUH+cj0qGgszY5_BExsHKrpt31068j_XticsabKA@mail.gmail.com> (sfid-20160125_213316_342685_3F47F65E)
-Subject: Re: [PATCH] brcmfmac: sdio: Increase the default timeouts a bit
-From: Doug Anderson <dianders@chromium.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Arend van Spriel <aspriel@gmail.com>,
-	Sjoerd Simons <sjoerd.simons@collabora.co.uk>,
+In-Reply-To: <56ABC0BC.9010202@lwfinger.net>
+References: <CA+55aFxe22iWok6UojY=hCoG2k1wNpJ9CfQ0b+STSxq67tb86Q@mail.gmail.com>
+	<1453983185.2217.12.camel@sipsolutions.net>
+	<CA+55aFya9K4JboNY8kB9cg6zt9otguhdzfHm3jvLmWedxQTSWg@mail.gmail.com>
+	<1454013625.2332.9.camel@sipsolutions.net>
+	<CA+55aFx73nv9ny-fu5BR6v8wL=f2oFomwrZoLRw=x2kNP76cYA@mail.gmail.com>
+	<CA+55aFzF0gWfvmE+6ZcHmjnO4xp-oVAQ5SWxYJhOzns2ocgCsw@mail.gmail.com>
+	<1454019155.2332.15.camel@sipsolutions.net>
+	<CA+55aFxjpdepHYD_6uU48kW38Z9bmf2wwA8yPZt4ibhkofmfQA@mail.gmail.com>
+	<56AAC66C.1080800@lwfinger.net>
+	<1454056380.3369.2.camel@sipsolutions.net>
+	<CAP71bdVZzUUNwP3py_m1pwU21qMKth=0BmMfLuUb7=B-1840zg@mail.gmail.com>
+	<1454084146.2800.0.camel@sipsolutions.net>
+	<56ABA73C.1060504@lwfinger.net>
+	<CA+55aFysqqp-BCZs1ue6_1tE=h9SOUZTH_o7TwGbsaBnaFvXGA@mail.gmail.com>
+	<56ABC0BC.9010202@lwfinger.net>
+Date: Fri, 29 Jan 2016 12:04:03 -0800
+Message-ID: <CA+55aFz2QbPdFP1u5OWQgs=VkD1N1VcE7RUoeAoA9UAkvpVT4Q@mail.gmail.com> (sfid-20160129_210414_690542_072452C7)
+Subject: Re: WARNING at net/mac80211/rate.c:513 ieee80211_get_tx_rates [mac80211]
+From: Linus Torvalds <torvalds@linux-foundation.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
 	Kalle Valo <kvalo@codeaurora.org>,
-	Paul Stewart <pstew@chromium.org>,
-	"open list:ARM/Rockchip SoC..." <linux-rockchip@lists.infradead.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	brcm80211-dev-list@broadcom.com,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>, netdev@vger.kernel.org,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>
+	David Miller <davem@davemloft.net>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On Mon, Jan 25, 2016 at 12:07 PM, Arend van Spriel <arend@broadcom.com> wrote:
->> In any case, in my experience the Broadcom firmware is fairly
->> complicated and has numerous cases where it stretches SDIO more than
->> the other SDIO WiFi chip I've worked with.  It wouldn't terribly
->> surprise me if there was a period of time during bootup where it was
->> non-responsive for 2 seconds.  As unrelated "evidence" showing some of
->> the Broadcom SDIO limitations, you can see
->> <https://chromium-review.googlesource.com/#/c/250228/> and also the
->> fact that Broadcom often holds the SDIO "busy" signal whereas the
->> other SDIO WiFi chip I've worked never did that.  Also, even with all
->> fixes the Broadcom WiFi module will still show periodic SDIO errors
->> that the higher level driver just knows to ignore.
+On Fri, Jan 29, 2016 at 11:42 AM, Larry Finger
+<Larry.Finger@lwfinger.net> wrote:
 >
-> The busy signal is in accordance with the SDIO spec.
-
-Sorry, didn't mean to imply that it wasn't.  That particular instance
-is definitely legal, but it was also just showing a case where the
-Broadcom WiFi needed something that wasn't needed elsewhere.
-
-AKA: it's kinda like saying that other modules work on a UART without
-flow control lines and the Broadcom needs the flow control lines.
-UARTs are designed with flow control lines and it's totally legal to
-need them.  ...but if you saw that one serial device didn't need them
-then you would presume that maybe the device on the other end had very
-low interrupt latency or had some other hardware help (large FIFOs,
-DMA, fast processor, hard real time OS, etc).  A device with low
-interrupt latency, large FIFOs, DMA, fast processor, etc would
-presumably be less likely to have other pauses in communication.
-
-
-> It would be good to
-> know if that is what is happening. Unfortunately I do have an SDIO
-> analyzer, but not reproduced it. May retry on veyron device.
-
-You might just be able to put a trace to see if it hits the busy
-signal.  Depending on your Linux version you might just be able to put
-a trace in __mmc_start_request().  If not and if you're on dw_mmc you
-can put a trace in dw_mci_wait_while_busy().
-
-
->> My old debugging from the (sorry, private) bug
->> http://crosbug.com/p/36975 showed this periodically even with all
->> known fixes:
->>
->> [21310.271635] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000104
->> [21550.583598] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000104
->> [21550.616035] brcmfmac: brcmf_sdio_readframes: RXHEADER FAILED: -110
->> [21550.648460] brcmfmac: brcmf_sdio_rxfail: abort command, terminate
->> frame, send NAK
->> [21550.683502] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000104
->> [21550.691214] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000100
->> [22671.121329] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000104
->> [22671.153167] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x01000104
->> [22671.184581] brcmfmac: brcmf_sdio_readframes: RXHEADER FAILED: -110
->> [22671.192600] brcmfmac: brcmf_sdio_rxfail: abort command, terminate
->> frame, send NAK
->> [22671.201929] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000114
->> [22671.209536] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000100
->> [28463.941736] dwmmc_rockchip ff0d0000.dwmmc: CMD ERR: 0x00000104
->>
->> At the time dekim@ responded:
->>
->>> There are several sleep/wake control at different level. The one we're talking
->>> about here is controlled by brcmf_sdio_bus_sleep() in the host driver to turn
->>> on/off bus core on the chip. There can be a period of time when chip is not
->>> paying attention to the host command (cmd52 to the
->>> SBSDIO_FUNC1_SLEEPCSR).
->>
->> ...and we decided that the periodic SDIO errors weren't causing any
->> huge problems (since they were retried).  As far as I know, they still
->> happen today.
+> Thanks for testing.
 >
-> Were these true periodic errors or random at interval.
+> Upon reflection, it really should check the other WIRELESS_MODE_AC_x bits.
+> Johannes' patch was indeed correct.
 
-I believe they were random, and I believe that I needed "power save"
-mode turned on for WiFi.  I believe errors were made worse if I had a
-TCP/IP ping running (AKA bring out of power save and go back in
-constantly).
+I just retested with this incremental (and whitespace-damaged) patch:
+
+  @@ -139,7 +139,9 @@ static void _rtl_rc_rate_set_series(struct
+rtl_priv *rtlpriv,
+                       (wireless_mode == WIRELESS_MODE_N_24G)))
+                          rate->flags |= IEEE80211_TX_RC_MCS;
+                  if (sta && sta->vht_cap.vht_supported &&
+  -                   (wireless_mode == WIRELESS_MODE_AC_5G))
+  +                   ((wireless_mode == WIRELESS_MODE_AC_5G) ||
+  +                    (wireless_mode == WIRELESS_MODE_AC_24G) ||
+  +                    (wireless_mode == WIRELESS_MODE_AC_ONLY)))
+                          rate->flags |= IEEE80211_TX_RC_VHT_MCS;
+          }
+   }
+
+which brings it in line with Johannes' patch, and it does indeed still work.
+
+I think marking it for stable is also the right thing to do - the
+driver clearly doesn't work well in a wide-channel AC environment
+otherwise, and I assume it's going to be more and more common..
+
+                Linus
