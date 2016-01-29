@@ -1,91 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:12328 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932537AbcA1HRC (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:35596 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753757AbcA2TqF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 02:17:02 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 10/12] staging: wilc1000: wilc_parse_assoc_resp_info(): renames local variables
-Date: Thu, 28 Jan 2016 16:13:44 +0900
-Message-ID: <1453965226-6158-10-git-send-email-leo.kim@atmel.com> (sfid-20160128_081709_085251_5152E7E7)
-In-Reply-To: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
-References: <1453965226-6158-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 29 Jan 2016 14:46:05 -0500
+Message-ID: <1454096764.7627.66.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20160129_204615_486758_FE1C22D4)
+Subject: Re: [PATCH v2 net] nfc: use GFP_USER for user-controlled kmalloc
+From: Eric Dumazet <eric.dumazet@gmail.com>
+To: Cong Wang <xiyou.wangcong@gmail.com>
+Cc: netdev@vger.kernel.org, dvyukov@google.com,
+	linux-wireless@vger.kernel.org, julian.calaby@gmail.com,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Date: Fri, 29 Jan 2016 11:46:04 -0800
+In-Reply-To: <1454095465-16685-1-git-send-email-xiyou.wangcong@gmail.com>
+References: <1454095465-16685-1-git-send-email-xiyou.wangcong@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames to avoid camelcase, changes follow are:
- - pstrConnectRespInfo to connect_resp_info
- - u16AssocRespLen to assoc_resp_len
- - pu8IEs to ies
- - u16IEsLen to ies_len
+On Fri, 2016-01-29 at 11:24 -0800, Cong Wang wrote:
+> These two functions are called in sendmsg path, and the
+> 'len' is passed from user-space, so we should not allow
+> malicious users to OOM kernel on purpose.
+> 
+> Reported-by: Dmitry Vyukov <dvyukov@google.com>
+> Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+> Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+> Cc: Samuel Ortiz <sameo@linux.intel.com>
+> Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
+> ---
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 34 ++++++++++++++---------------
- 1 file changed, 17 insertions(+), 17 deletions(-)
+Note that the issue is not OOM the kernel (as the allocation is
+attempted even after your patch), but having a way to
+spill stack traces in the syslog.
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 48c8573..c0be33d 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -379,33 +379,33 @@ s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo)
- s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
- 			       tstrConnectRespInfo **ret_connect_resp_info)
- {
--	tstrConnectRespInfo *pstrConnectRespInfo = NULL;
--	u16 u16AssocRespLen = 0;
--	u8 *pu8IEs = NULL;
--	u16 u16IEsLen = 0;
-+	tstrConnectRespInfo *connect_resp_info = NULL;
-+	u16 assoc_resp_len = 0;
-+	u8 *ies = NULL;
-+	u16 ies_len = 0;
- 
--	pstrConnectRespInfo = kzalloc(sizeof(tstrConnectRespInfo), GFP_KERNEL);
--	if (!pstrConnectRespInfo)
-+	connect_resp_info = kzalloc(sizeof(tstrConnectRespInfo), GFP_KERNEL);
-+	if (!connect_resp_info)
- 		return -ENOMEM;
- 
--	u16AssocRespLen = (u16)buffer_len;
-+	assoc_resp_len = (u16)buffer_len;
- 
--	pstrConnectRespInfo->u16ConnectStatus = get_asoc_status(buffer);
--	if (pstrConnectRespInfo->u16ConnectStatus == SUCCESSFUL_STATUSCODE) {
--		pstrConnectRespInfo->u16capability = get_assoc_resp_cap_info(buffer);
--		pstrConnectRespInfo->u16AssocID = get_asoc_id(buffer);
-+	connect_resp_info->u16ConnectStatus = get_asoc_status(buffer);
-+	if (connect_resp_info->u16ConnectStatus == SUCCESSFUL_STATUSCODE) {
-+		connect_resp_info->u16capability = get_assoc_resp_cap_info(buffer);
-+		connect_resp_info->u16AssocID = get_asoc_id(buffer);
- 
--		pu8IEs = &buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
--		u16IEsLen = u16AssocRespLen - (CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN);
-+		ies = &buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
-+		ies_len = assoc_resp_len - (CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN);
- 
--		pstrConnectRespInfo->pu8RespIEs = kmemdup(pu8IEs, u16IEsLen, GFP_KERNEL);
--		if (!pstrConnectRespInfo->pu8RespIEs)
-+		connect_resp_info->pu8RespIEs = kmemdup(ies, ies_len, GFP_KERNEL);
-+		if (!connect_resp_info->pu8RespIEs)
- 			return -ENOMEM;
- 
--		pstrConnectRespInfo->u16RespIEsLen = u16IEsLen;
-+		connect_resp_info->u16RespIEsLen = ies_len;
- 	}
- 
--	*ret_connect_resp_info = pstrConnectRespInfo;
-+	*ret_connect_resp_info = connect_resp_info;
- 
- 	return 0;
- }
--- 
-1.9.1
+Acked-by: Eric Dumazet <edumazet@google.com>
+
+Thanks!
+
+
 
