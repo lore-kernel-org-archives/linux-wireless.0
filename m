@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33474 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754101AbcANLMR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Jan 2016 06:12:17 -0500
-Message-ID: <1452769934.2444.16.camel@sipsolutions.net> (sfid-20160114_121231_656945_DCDB4C93)
-Subject: Re: [RFC V2 2/3] nl80211: add bss selection attribute to CONNECT
- command
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 14 Jan 2016 12:12:14 +0100
-In-Reply-To: <1452769832.2444.14.camel@sipsolutions.net> (sfid-20160114_121044_346336_2FC9C7ED)
-References: <1452678583-20086-1-git-send-email-arend@broadcom.com>
-	 <1452678583-20086-3-git-send-email-arend@broadcom.com>
-	 <1452769832.2444.14.camel@sipsolutions.net>
-	 (sfid-20160114_121044_346336_2FC9C7ED)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-io0-f194.google.com ([209.85.223.194]:36098 "EHLO
+	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757040AbcA2WCQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2016 17:02:16 -0500
+MIME-Version: 1.0
+In-Reply-To: <1454096764.7627.66.camel@edumazet-glaptop2.roam.corp.google.com>
+References: <1454095465-16685-1-git-send-email-xiyou.wangcong@gmail.com> <1454096764.7627.66.camel@edumazet-glaptop2.roam.corp.google.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sat, 30 Jan 2016 09:01:56 +1100
+Message-ID: <CAGRGNgW16nQrvuePehmiirLxJpO-Oatd6iMP_tXQfu8JjmoVnA@mail.gmail.com> (sfid-20160129_230221_326231_40AF8D97)
+Subject: Re: [PATCH v2 net] nfc: use GFP_USER for user-controlled kmalloc
+To: Cong Wang <xiyou.wangcong@gmail.com>
+Cc: netdev <netdev@vger.kernel.org>,
+	Dmitry Vyukov <dvyukov@google.com>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-01-14 at 12:10 +0100, Johannes Berg wrote:
+Hi Cong
 
-> Perhaps a good way of documenting this would be to say each primitive
-> has a priority? E.g.
-> 
->     Primitives with a lower document priority are executed first
-> while
->     selecting a BSS:
-> 
->     RSSI (priority 100)
->     BAND_PREF (priority 1)
->     RSSI_ADJUST (priority 1) [since it's mutually exclusive with
->     BAND_PREF]
-> 
+On Sat, Jan 30, 2016 at 6:46 AM, Eric Dumazet <eric.dumazet@gmail.com> wrote:
+> On Fri, 2016-01-29 at 11:24 -0800, Cong Wang wrote:
+>> These two functions are called in sendmsg path, and the
+>> 'len' is passed from user-space, so we should not allow
+>> malicious users to OOM kernel on purpose.
+>>
+>> Reported-by: Dmitry Vyukov <dvyukov@google.com>
+>> Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+>> Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+>> Cc: Samuel Ortiz <sameo@linux.intel.com>
+>> Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
+>> ---
+>
+> Note that the issue is not OOM the kernel (as the allocation is
+> attempted even after your patch), but having a way to
+> spill stack traces in the syslog.
+>
+> Acked-by: Eric Dumazet <edumazet@google.com>
 
-I do wonder though what should happen if you just specify *only*
-BAND_PREF, for example, or only RSSI_ADJUST. The latter doesn't even
-make sense without then going to RSSI as the next level, and BAND_PREF
-only can't really pick a single AP (just throw out ones that aren't on
-the right band)
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 
-johannes
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
