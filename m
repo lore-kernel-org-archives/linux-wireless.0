@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:24258 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753432AbcAGMru (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 07:47:50 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 05/21] iwlwifi: mvm: reset mvm->scan_type when firmware is started
-Date: Thu,  7 Jan 2016 14:47:25 +0200
-Message-Id: <1452170861-10060-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160107_134907_958741_709D0E4E)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9836B4@hasmsx107.ger.corp.intel.com>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:40509 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752695AbcA2Gy2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2016 01:54:28 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH 3/6] staging: wilc1000: remove useless function
+Date: Fri, 29 Jan 2016 15:51:35 +0900
+Message-ID: <1454050298-25815-3-git-send-email-leo.kim@atmel.com> (sfid-20160129_075431_297911_1ACCB8FE)
+In-Reply-To: <1454050298-25815-1-git-send-email-leo.kim@atmel.com>
+References: <1454050298-25815-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If we don't reset the scan type when the firmware is
-started, we will think the firmware is still configured
-after the interface has been brought down. When we will
-bring it up again, we will not configure the scan type
-in firmware and it will crash with the following assert:
+From: Chris Park <chris.park@atmel.com>
 
-0x0000100A | ADVANCED_SYSASSERT
+This patch remove useless function remove_TCP_related
+in wilc_wlan.c file
 
-Fixes: 355346ba3050 ("iwlwifi: mvm: configure scheduled scan according to traffic conditions")
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c       | 1 +
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 1 -
- 2 files changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 9 ---------
+ 1 file changed, 9 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index e6e8088..4ed5180 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -943,6 +943,7 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 30e3c21..7b3a260 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -206,15 +206,6 @@ static inline int add_tcp_pending_ack(u32 ack, u32 session_index,
  	}
+ 	return 0;
+ }
+-static inline int remove_TCP_related(struct wilc *wilc)
+-{
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&wilc->txq_spinlock, flags);
+-
+-	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
+-	return 0;
+-}
  
- 	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_UMAC_SCAN)) {
-+		mvm->scan_type = IWL_SCAN_TYPE_NOT_SET;
- 		ret = iwl_mvm_config_scan(mvm);
- 		if (ret)
- 			goto error;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 296b9c5..2d65040 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1002,7 +1002,6 @@ static void iwl_mvm_restart_cleanup(struct iwl_mvm *mvm)
- 	mvm->vif_count = 0;
- 	mvm->rx_ba_sessions = 0;
- 	mvm->fw_dbg_conf = FW_DBG_INVALID;
--	mvm->scan_type = IWL_SCAN_TYPE_NOT_SET;
- 
- 	/* keep statistics ticking */
- 	iwl_mvm_accu_radio_stats(mvm);
+ static inline int tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+ {
 -- 
-2.5.0
+1.9.1
 
