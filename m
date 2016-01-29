@@ -1,57 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:9395 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757256AbcAaLGe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2016 06:06:34 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Hubert Tarasiuk <hubert.tarasiuk@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 08/31] iwlwifi: dvm: handle zero brightness for wifi LED
-Date: Sun, 31 Jan 2016 13:06:03 +0200
-Message-Id: <1454238386-27032-8-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160131_120638_669156_7A4C7EA6)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:34306 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756438AbcA2Ovo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2016 09:51:44 -0500
+Received: by mail-pf0-f195.google.com with SMTP id 65so3888952pfd.1
+        for <linux-wireless@vger.kernel.org>; Fri, 29 Jan 2016 06:51:44 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 2/2] staging: wilc1000: wilc_msgqueue: release semaphore in error path
+Date: Fri, 29 Jan 2016 23:51:33 +0900
+Message-Id: <1454079093-7011-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20160129_155157_075506_B3B0D91D)
+In-Reply-To: <1454079093-7011-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1454079093-7011-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hubert Tarasiuk <hubert.tarasiuk@gmail.com>
+It should be called up(&mq->sem) to release semaphore before returning
+error codes as -EFAULT when list is empty.
 
-In order to have the LED being OFF constantly when the
-brightness is set to 0, we need to pass IWL_LED_SOLID to
-iwl_led_cmd as the off parameter, otherwise the led will
-stay on constantly.
-
-This fixes
-https://bugzilla.kernel.org/show_bug.cgi?id=110551
-
-Signed-off-by: Hubert Tarasiuk <hubert.tarasiuk@gmail.com>
-[reworked the commit message]
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/dvm/led.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_msgqueue.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/led.c b/drivers/net/wireless/intel/iwlwifi/dvm/led.c
-index 1aabb5e..1bbd17a 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/led.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/led.c
-@@ -152,11 +152,14 @@ static void iwl_led_brightness_set(struct led_classdev *led_cdev,
- {
- 	struct iwl_priv *priv = container_of(led_cdev, struct iwl_priv, led);
- 	unsigned long on = 0;
-+	unsigned long off = 0;
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index f57e4ec..5fe85eb 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -126,6 +126,7 @@ int wilc_mq_recv(struct message_queue *mq,
  
- 	if (brightness > 0)
- 		on = IWL_LED_SOLID;
-+	else
-+		off = IWL_LED_SOLID;
- 
--	iwl_led_cmd(priv, on, 0);
-+	iwl_led_cmd(priv, on, off);
- }
- 
- static int iwl_led_blink_set(struct led_classdev *led_cdev,
+ 	if (list_empty(&mq->msg_list)) {
+ 		spin_unlock_irqrestore(&mq->lock, flags);
++		up(&mq->sem);
+ 		PRINT_ER("msg is null\n");
+ 		return -EFAULT;
+ 	}
 -- 
-2.5.0
+2.7.0
 
