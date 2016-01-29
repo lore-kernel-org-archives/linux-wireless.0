@@ -1,79 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60043 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751874AbcAVPyU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 22 Jan 2016 10:54:20 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "John W. Linville" <linville@tuxdriver.com>
-Cc: Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	kbuild test robot <lkp@intel.com>,
-	kernel-janitors <kernel-janitors@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: wireless-drivers: random cleanup patches piling up
-References: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com>
-	<1453423965.3856.22.camel@perches.com>
-	<87k2n1x0sf.fsf@kamboji.qca.qualcomm.com>
-	<20160122151211.GB1500@tuxdriver.com>
-Date: Fri, 22 Jan 2016 17:54:12 +0200
-In-Reply-To: <20160122151211.GB1500@tuxdriver.com> (John W. Linville's message
-	of "Fri, 22 Jan 2016 10:12:12 -0500")
-Message-ID: <87si1pvcd7.fsf@kamboji.qca.qualcomm.com> (sfid-20160122_165425_528805_A1FFC17F)
+Received: from mga02.intel.com ([134.134.136.20]:61904 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751048AbcA2MJS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 29 Jan 2016 07:09:18 -0500
+Date: Fri, 29 Jan 2016 20:08:30 +0800
+From: kbuild test robot <lkp@intel.com>
+To: Henning Rogge <hrogge@gmail.com>
+Cc: kbuild-all@01.org, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Henning Rogge <hrogge@gmail.com>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+Subject: Re: [PATCH v2 3/3] mac80211: Unify mesh and mpp path removal function
+Message-ID: <201601292046.1EmSMGRP%fengguang.wu@intel.com> (sfid-20160129_130922_710761_00E9ED6C)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1454062138-18012-4-git-send-email-henning.rogge@fkie.fraunhofer.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"John W. Linville" <linville@tuxdriver.com> writes:
+Hi Henning,
 
-> On Fri, Jan 22, 2016 at 02:21:20PM +0200, Kalle Valo wrote:
->> Joe Perches <joe@perches.com> writes:
->> 
->> > On Thu, 2016-01-21 at 16:58 +0200, Kalle Valo wrote:
->> >> Hi,
->> >> 
->> >> I have quite a lot of random cleanup patches from new developers waiting
->> >> in my queue:
->> >> 
->> >> https://patchwork.kernel.org/project/linux-wireless/list/?state=10&delegate=25621&order=date
->> >> 
->> >> (Not all of them are cleanup patches, there are also few patches
->> >> deferred due to other reasons, but you get the idea.)
->> >> 
->> >> These cleanup patches usually take quite a lot of my time and I'm
->> >> starting to doubt the benefit, compared to the time needed to dig
->> >> through them and figuring out what to apply. And this is of course time
->> >> away from other patches, so it's slowing down "real" development.
->> >> 
->> >> I really don't know what to do. Part of me is saying that I just should
->> >> drop them unless it's reviewed by a more experienced developer but on
->> >> the other hand this is a good way get new developers onboard.
->> >> 
->> >> What others think? Are these kind of patches useful?
->> >
->> > Some yes, mostly not really.
->> >
->> > While whitespace style patches have some small value,
->> > very few of the new contributors that use tools like
->> > "scripts/checkpatch.pl -f" on various kernel files 
->> > actually continue on to submit actual defect fixing
->> > or optimization or code clarity patches.
->> 
->> That's also my experience from maintaining wireless-drivers for a year,
->> this seems to be a "hit and run" type of phenomenon.
->
-> Should we be looking for someone to run a "wireless-driver-cleanups"
-> tree?  They could handle the cleanups and trivial stuff, and send
-> you a pull request a couple of times per release...?
+[auto build test WARNING on mac80211-next/master]
+[also build test WARNING on v4.5-rc1 next-20160129]
+[if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
 
-Not a bad idea! But I don't think we need a separate tree as applying
-patches from patchwork is easy. It should be doable that we add an
-account to patchwork and whenever I see a this type of trivial cleanup
-patch I'll assign it to the cleanup maintainer and whenever he/she
-thinks it's ready he assigns the patch back to me and I'll apply it.
+url:    https://github.com/0day-ci/linux/commits/Henning-Rogge/mac80211-add-cleanup-path-for-MPP-table-entries/20160129-181045
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git master
+reproduce:
+        # apt-get install sparse
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF=-D__CHECK_ENDIAN__
 
-The only difficult part is finding a victim/volunteer to
-do that ;)
 
--- 
-Kalle Valo
+sparse warnings: (new ones prefixed by >>)
+
+   include/linux/compiler.h:228:8: sparse: attribute 'no_sanitize_address': unknown attribute
+>> net/mac80211/mesh_pathtbl.c:60:10: sparse: incompatible types in comparison expression (different address spaces)
+>> net/mac80211/mesh_pathtbl.c:60:10: sparse: incompatible types in comparison expression (different address spaces)
+>> net/mac80211/mesh_pathtbl.c:60:10: sparse: incompatible types in comparison expression (different address spaces)
+>> net/mac80211/mesh_pathtbl.c:60:10: sparse: incompatible types in comparison expression (different address spaces)
+>> net/mac80211/mesh_pathtbl.c:60:10: sparse: incompatible types in comparison expression (different address spaces)
+>> net/mac80211/mesh_pathtbl.c:60:10: sparse: incompatible types in comparison expression (different address spaces)
+>> net/mac80211/mesh_pathtbl.c:60:10: sparse: incompatible types in comparison expression (different address spaces)
+>> net/mac80211/mesh_pathtbl.c:60:10: sparse: incompatible types in comparison expression (different address spaces)
+>> net/mac80211/mesh_pathtbl.c:60:10: sparse: incompatible types in comparison expression (different address spaces)
+
+vim +60 net/mac80211/mesh_pathtbl.c
+
+    44	static struct mesh_table __rcu *mpp_paths; /* Store paths for MPP&MAP */
+    45	
+    46	int mesh_paths_generation;
+    47	int mpp_paths_generation;
+    48	
+    49	/* This lock will have the grow table function as writer and add / delete nodes
+    50	 * as readers. RCU provides sufficient protection only when reading the table
+    51	 * (i.e. doing lookups).  Adding or adding or removing nodes requires we take
+    52	 * the read lock or we risk operating on an old table.  The write lock is only
+    53	 * needed when modifying the number of buckets a table.
+    54	 */
+    55	static DEFINE_RWLOCK(pathtbl_resize_lock);
+    56	
+    57	
+    58	static inline struct mesh_table *resize_dereference_paths(struct mesh_table *table)
+    59	{
+  > 60	  return rcu_dereference_protected(table,
+    61	    lockdep_is_held(&pathtbl_resize_lock));
+    62	}
+    63	
+    64	static inline struct mesh_table *resize_dereference_mesh_paths(void)
+    65	{
+    66		return resize_dereference_paths(mesh_paths);
+    67	}
+    68	
+
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
