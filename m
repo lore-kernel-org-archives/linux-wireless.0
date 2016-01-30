@@ -1,70 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:34798 "EHLO
-	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757298AbcAaLne convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2016 06:43:34 -0500
-Received: by mail-io0-f171.google.com with SMTP id 9so51397949iom.1
-        for <linux-wireless@vger.kernel.org>; Sun, 31 Jan 2016 03:43:33 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <56ADDA44.90707@gmail.com>
-References: <1454198830-13971-1-git-send-email-zajec5@gmail.com>
-	<56ADDA44.90707@gmail.com>
-Date: Sun, 31 Jan 2016 12:43:33 +0100
-Message-ID: <CACna6rzMQ2St4HUiccp37Ki3-K5_f_cLddi-m4dk0iyzq-_rYA@mail.gmail.com> (sfid-20160131_124337_462722_126B7941)
-Subject: Re: [PATCH FIX?] brcmfmac: fix possible overflows in flowrings code
- by bumping u8 to u16
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Arend van Spriel <aspriel@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from glaubenleben.de ([85.214.105.140]:53807 "EHLO glaubenleben.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757098AbcA3RCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jan 2016 12:02:20 -0500
+From: Andreas Kemnade <andreas@kemnade.info>
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, hns@goldelico.com
+Cc: Andreas Kemnade <andreas@kemnade.info>
+Subject: [PATCH v3 4/6] libertas: go back to ps mode without commands pending
+Date: Sat, 30 Jan 2016 18:01:54 +0100
+Message-Id: <1454173316-13444-5-git-send-email-andreas@kemnade.info> (sfid-20160130_180311_013425_759F291C)
+In-Reply-To: <1454173316-13444-1-git-send-email-andreas@kemnade.info>
+References: <1454173316-13444-1-git-send-email-andreas@kemnade.info>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31 January 2016 at 10:56, Arend van Spriel <aspriel@gmail.com> wrote:
-> On 31-01-16 01:07, Rafał Miłecki wrote:
->> Some devices may use more than 255 flowings, below is log from BCM4366:
->> [  194.606245] brcmfmac: brcmf_pcie_init_ringbuffers Nr of flowrings is 264
->>
->> At various places we were using u8 which could lead to storing wrong
->> number or infinite loops when indexing incorrectly. Initially this
->> issue was spotted as infinite loop in brcmf_flowring_detach.
->
-> There has already been a patch submitted for this [1]. However, because
-> you reported issues with it on your device (not sure which one). Did you
-> test this patch on that particular device.
+Removes the old todo block and checks only whether ieee powersave
+mode is requested. We still have to check for being connected as
+this powersave mode includes logic for regularly waking up and
+checking for packets which only makes sense when connected.
+For not being connected, another mode is needed.
 
-I wasn't aware Hante's patch contained changes from this patch. Anyway
-the main difference is that my patch doesn't touch
-BRCMF_FLOWRING_HASHSIZE.
+Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
+---
+changes in v3: corrected paths
+changes in v2: reordered, was 5/6
+ drivers/net/wireless/marvell/libertas/cmd.c | 36 +++++-------------------------------
+ 1 file changed, 5 insertions(+), 31 deletions(-)
 
-So my patch:
-1) Fixes possible overflows in flowrings
+diff --git a/drivers/net/wireless/marvell/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 40467d6..4ddd0e5 100644
+--- a/drivers/net/wireless/marvell/libertas/cmd.c
++++ b/drivers/net/wireless/marvell/libertas/cmd.c
+@@ -1428,40 +1428,14 @@ int lbs_execute_next_command(struct lbs_private *priv)
+ 		 * check if in power save mode, if yes, put the device back
+ 		 * to PS mode
+ 		 */
+-#ifdef TODO
+-		/*
+-		 * This was the old code for libertas+wext. Someone that
+-		 * understands this beast should re-code it in a sane way.
+-		 *
+-		 * I actually don't understand why this is related to WPA
+-		 * and to connection status, shouldn't powering should be
+-		 * independ of such things?
+-		 */
+ 		if ((priv->psmode != LBS802_11POWERMODECAM) &&
+ 		    (priv->psstate == PS_STATE_FULL_POWER) &&
+-		    ((priv->connect_status == LBS_CONNECTED) ||
+-		    lbs_mesh_connected(priv))) {
+-			if (priv->secinfo.WPAenabled ||
+-			    priv->secinfo.WPA2enabled) {
+-				/* check for valid WPA group keys */
+-				if (priv->wpa_mcast_key.len ||
+-				    priv->wpa_unicast_key.len) {
+-					lbs_deb_host(
+-					       "EXEC_NEXT_CMD: WPA enabled and GTK_SET"
+-					       " go back to PS_SLEEP");
+-					lbs_set_ps_mode(priv,
+-							PS_MODE_ACTION_ENTER_PS,
+-							false);
+-				}
+-			} else {
+-				lbs_deb_host(
+-				       "EXEC_NEXT_CMD: cmdpendingq empty, "
+-				       "go back to PS_SLEEP");
+-				lbs_set_ps_mode(priv, PS_MODE_ACTION_ENTER_PS,
+-						false);
+-			}
++		    (priv->connect_status == LBS_CONNECTED)) {
++			lbs_deb_host(
++				"EXEC_NEXT_CMD: cmdpendingq empty, go back to PS_SLEEP");
++			lbs_set_ps_mode(priv, PS_MODE_ACTION_ENTER_PS,
++					false);
+ 		}
+-#endif
+ 	}
+ 
+ 	ret = 0;
+-- 
+2.1.4
 
-Hante's patch:
-1) Fixes possible overflows in flowrings
-2) Bumps BRCMF_FLOWRING_HASHSIZE
-
-It was bumping BRCMF_FLOWRING_HASHSIZE that caused problems on my
-BCM43602 device back then. Please note BCM43602 wasn't affected by
-flowings overflows because it wasn't using more than 255 of them:
-brcmfmac: brcmf_pcie_init_ringbuffers Nr of flowrings is 132
-
-The story is different with my BCM4366. I didn't try it with bumping
-BRCMF_FLOWRING_HASHSIZE but it suffers from overflows in flowrings as
-it seems to be independent issue. It's crucial that BCM4366 uses more
-than 255 flowrings:
-brcmfmac: brcmf_pcie_init_ringbuffers Nr of flowrings is 264
-
-
-> I want Hante to review your patch, but indeed this would be 4.5 material
-> and probably stable.
-
-I just realized BCM4366 support went into 4.4 not 4.5, so Cc-ing
-stable for 4.4+ is probably a good idea.
