@@ -1,66 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:34337 "EHLO
-	mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934623AbcA1BDY (ORCPT
+Received: from smtprelay0007.hostedemail.com ([216.40.44.7]:33234 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751302AbcA3HY5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 20:03:24 -0500
-Received: by mail-io0-f178.google.com with SMTP id 1so38583303ion.1
-        for <linux-wireless@vger.kernel.org>; Wed, 27 Jan 2016 17:03:24 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1453942708.10099.41.camel@perches.com>
-References: <20160128004542.GA15247@www.outflux.net>
-	<1453942708.10099.41.camel@perches.com>
-Date: Wed, 27 Jan 2016 17:03:23 -0800
-Message-ID: <CAGXu5jKhTDX_JcEgO=kVfb-LRdPAfoRtiYXTHJLT_ABTt3MY6g@mail.gmail.com> (sfid-20160128_020340_134021_0EE09848)
-Subject: Re: [PATCH] lib: fix callers of strtobool to use char array
-From: Kees Cook <keescook@chromium.org>
-To: Joe Perches <joe@perches.com>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Steve French <sfrench@samba.org>,
+	Sat, 30 Jan 2016 02:24:57 -0500
+Message-ID: <1454138693.3524.1.camel@perches.com> (sfid-20160130_082527_349101_EB3C6B88)
+Subject: Re: [PATCH] staging: rtl8723au: Fixes unnecessary return warning
+From: Joe Perches <joe@perches.com>
+To: Bhakti Priya <bhaktipriya96@gmail.com>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Alexander Kuleshov <kuleshovmail@gmail.com>,
+	Haneen Mohammed <hamohammed.sa@gmail.com>,
+	Andreas Ruprecht <andreas.ruprecht@fau.de>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	linux-cifs@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Fri, 29 Jan 2016 23:24:53 -0800
+In-Reply-To: <CAFNHFT9nosMWgAvDdhvpMQLa2+02kD-wk0ChuZWpvCbLGMFYOg@mail.gmail.com>
+References: <20160129172908.GA14077@Karyakshetra>
+	 <wrfjk2ms465z.fsf@redhat.com>
+	 <CAGRGNgWQvdfQc-L9z0NKCyCOorxU0seQ-XvYnZDBWA3QKySrRA@mail.gmail.com>
+	 <1454117303.10099.84.camel@perches.com>
+	 <CAGRGNgU2EuY9fpe8rhHtA8OLDRC0s5=tcBStqpq=ZbMNrnuf0w@mail.gmail.com>
+	 <1454123891.10099.89.camel@perches.com>
+	 <CAFNHFT9nosMWgAvDdhvpMQLa2+02kD-wk0ChuZWpvCbLGMFYOg@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Jan 27, 2016 at 4:58 PM, Joe Perches <joe@perches.com> wrote:
-> On Wed, 2016-01-27 at 16:45 -0800, Kees Cook wrote:
->> Some callers of strtobool were passing a pointer to unterminated strings.
->> This fixes the issue and consolidates some logic in cifs.
->
-> This may be incomplete as it duplicates the behavior for
-> the old number of characters, but this is not a solution
-> for the entry of a bool that is "on" or "off".
+On Sat, 2016-01-30 at 12:23 +0530, Bhakti Priya wrote:
+> I will be happy to extend checkpatch.pl. As suggested by you, I am
+> trying to detect such blank lines in a line removal patch by checking
+> if the line above the deleted line was a blank line and the line
+> following the deleted line had a closing brace.
+> Can you please guide me and let me know if I am headed in the right
+> direction.
 
-As in, the on/off patch is missing? Yes, that's been sent separately,
-but I wanted to make sure these changes weren't upsetting to the two
-users.
+You have to track all the + and - lines that precede the
+deleted line.
 
->> diff --git a/fs/cifs/cifs_debug.c b/fs/cifs/cifs_debug.c
-> []
->> @@ -290,7 +305,8 @@ static ssize_t cifs_stats_proc_write(struct file *file,
->>                       }
->>               }
->>               spin_unlock(&cifs_tcp_ses_lock);
->> -     }
->> +     } else
->> +             return rc;
->
-> Likely better to reverse the test and unindent the
-> preceding block.
->
-> Otherwise, please make sure to use the general brace
-> form of when one branch needs braces, the other branch
-> should have them too.
-
-Okay, sure, I'll rework this and send it together with the on/off patch.
-
--Kees
-
--- 
-Kees Cook
-Chrome OS & Brillo Security
+Good luck.
