@@ -1,61 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:14301 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751765AbcA0C5f (ORCPT
+Received: from mail-qg0-f68.google.com ([209.85.192.68]:36207 "EHLO
+	mail-qg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757162AbcA3X42 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 21:57:35 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 05/13] staging: wilc1000: rename Firmware_ver variable
-Date: Wed, 27 Jan 2016 11:50:29 +0900
-Message-ID: <1453863037-31073-5-git-send-email-glen.lee@atmel.com> (sfid-20160127_035738_016387_0BCCD1B3)
-In-Reply-To: <1453863037-31073-1-git-send-email-glen.lee@atmel.com>
-References: <1453863037-31073-1-git-send-email-glen.lee@atmel.com>
+	Sat, 30 Jan 2016 18:56:28 -0500
+Received: by mail-qg0-f68.google.com with SMTP id 6so7778521qgy.3
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Jan 2016 15:56:28 -0800 (PST)
+Date: Sat, 30 Jan 2016 18:56:13 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Henning Rogge <hrogge@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+Subject: Re: [PATCH v2 3/3] mac80211: Unify mesh and mpp path removal function
+Message-ID: <20160130235613.GB1507@localhost> (sfid-20160131_005701_345553_6C4B3560)
+References: <1454062138-18012-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+ <1454062138-18012-4-git-send-email-henning.rogge@fkie.fraunhofer.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1454062138-18012-4-git-send-email-henning.rogge@fkie.fraunhofer.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Fri, Jan 29, 2016 at 11:08:58AM +0100, Henning Rogge wrote:
+> @@ -951,37 +974,14 @@ enddel:
+>   */
+>  static int mpp_path_del(struct ieee80211_sub_if_data *sdata, const u8 *addr)
+>  {
+> -	struct mesh_table *tbl;
+> -	struct mesh_path *mpath;
+> -	struct mpath_node *node;
+> -	struct hlist_head *bucket;
+> -	int hash_idx;
+> -	int err = 0;
+> -
+> -	/* flush relevant mpp entries first */
+> -	mpp_flush_by_proxy(sdata, addr);
+> -
 
-This patch renames Firmware_ver variable to firmware_ver to avoid camelcase.
+Is it intentional that mpp_path_del no longer calls mpp_flush_by_proxy()
+while mesh_path_del does?
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 15 ++++++++-------
- 1 file changed, 8 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 06c79dd..fd405b0 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -929,13 +929,14 @@ int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif)
- 
- 		if (wilc_wlan_cfg_get(vif, 1, WID_FIRMWARE_VERSION, 1, 0)) {
- 			int size;
--			char Firmware_ver[20];
--
--			size = wilc_wlan_cfg_get_val(
--					WID_FIRMWARE_VERSION,
--					Firmware_ver, sizeof(Firmware_ver));
--			Firmware_ver[size] = '\0';
--			PRINT_D(INIT_DBG, "***** Firmware Ver = %s  *******\n", Firmware_ver);
-+			char firmware_ver[20];
-+
-+			size = wilc_wlan_cfg_get_val(WID_FIRMWARE_VERSION,
-+						     firmware_ver,
-+						     sizeof(firmware_ver));
-+			firmware_ver[size] = '\0';
-+			PRINT_D(INIT_DBG, "**** Firmware Ver = %s ****\n",
-+				firmware_ver);
- 		}
- 		ret = linux_wlan_init_test_config(dev, vif);
- 
 -- 
-1.9.1
-
+Bob Copeland %% http://bobcopeland.com/
