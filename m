@@ -1,39 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41650 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725AbcA2JPV (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:35068 "EHLO
+	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932141AbcA3RQB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2016 04:15:21 -0500
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 30 Jan 2016 12:16:01 -0500
 MIME-Version: 1.0
-Subject: Re: wlcore: fix error handling in wlcore_event_fw_logger
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1452173330-19963-1-git-send-email-a.hajda@samsung.com>
-To: Andrzej Hajda <a.hajda@samsung.com>
-Cc: Shahar Patury <shaharp@ti.com>,
-	linux-wireless@vger.kernel.org (open list:TI WILINK WIRELESS DRIVERS),
-	Andrzej Hajda <a.hajda@samsung.com>,
-	Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	netdev@vger.kernel.org (open list:NETWORKING DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Message-Id: <20160129091520.9A0D76045B@smtp.codeaurora.org> (sfid-20160129_101739_838890_BFA9EE8C)
-Date: Fri, 29 Jan 2016 09:15:20 +0000 (UTC)
+Reply-To: andrea.merello@gmail.com
+In-Reply-To: <1452949632-16329-1-git-send-email-baijiaju1990@163.com>
+References: <1452949632-16329-1-git-send-email-baijiaju1990@163.com>
+From: Andrea Merello <andrea.merello@gmail.com>
+Date: Sat, 30 Jan 2016 18:15:40 +0100
+Message-ID: <CAN8YU5OiiCn1LfSZ8+9eX9ZLRC-Tda7wm=Yp2RDyrtLzFN5quw@mail.gmail.com> (sfid-20160130_181621_990397_A47AB168)
+Subject: Re: [PATCH resend] rtl818x_pci: Fix a memory leak in rtl8180_init_rx_ring
+To: Jia-Ju Bai <baijiaju1990@163.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Michael Wu <flamingice@sourmilk.net>, kvalo@codeaurora.org,
+	Linux Wireless List <linux-wireless@vger.kernel.org>,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Thanks for pointing this out!
 
-> wlcore_read/wlcore_write can return negative values so it should
-> be assigned to signed variable.
-> 
-> The problem has been detected using proposed semantic patch
-> scripts/coccinelle/tests/unsigned_lesser_than_zero.cocci [1].
-> 
-> [1]: http://permalink.gmane.org/gmane.linux.kernel/2120705
-> 
-> Fixes: 3719c17e1816 ("wlcore/wl18xx: fw logger over sdio")
-> Signed-off-by: Andrzej Hajda <a.hajda@samsung.com>
+At a first look I'd propose to merge the two identical
+pci_fee_consistent() in a single one, and place it in an error exit
+path at the end of function.
 
-Thanks, applied to wireless-drivers-next.git.
+BTW, looking at the code, it seems there is another leak here that
+your patch does not address: we still leaks allocated (and dma-mapped)
+skbs.
 
-Kalle Valo
+Indeed we probably need to rework error handling in this piece of code..
+
+Andrea
+
+On Sat, Jan 16, 2016 at 2:07 PM, Jia-Ju Bai <baijiaju1990@163.com> wrote:
+> When dev_alloc_skb or pci_dma_mapping_error in rtl8180_init_rx_ring fails,
+> the memory allocated by pci_zalloc_consistent is not freed.
+>
+> This patch fixes the bug by adding pci_free_consistent
+> in error handling code.
+>
+> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+> ---
+>  drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c |    4 ++++
+>  1 file changed, 4 insertions(+)
+>
+> diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
+> index a43a16f..28479b1 100644
+> --- a/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
+> +++ b/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
+> @@ -1018,6 +1018,8 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
+>                 dma_addr_t *mapping;
+>                 entry = priv->rx_ring + priv->rx_ring_sz*i;
+>                 if (!skb) {
+> +                       pci_free_consistent(priv->pdev, priv->rx_ring_sz * 32,
+> +                                       priv->rx_ring, priv->rx_ring_dma);
+>                         wiphy_err(dev->wiphy, "Cannot allocate RX skb\n");
+>                         return -ENOMEM;
+>                 }
+> @@ -1028,6 +1030,8 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
+>
+>                 if (pci_dma_mapping_error(priv->pdev, *mapping)) {
+>                         kfree_skb(skb);
+> +                       pci_free_consistent(priv->pdev, priv->rx_ring_sz * 32,
+> +                                       priv->rx_ring, priv->rx_ring_dma);
+>                         wiphy_err(dev->wiphy, "Cannot map DMA for RX skb\n");
+>                         return -ENOMEM;
+>                 }
+> --
+> 1.7.9.5
+>
+>
