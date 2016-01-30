@@ -1,69 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35913 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965005AbcAZMet (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 07:34:49 -0500
-Subject: Re: [PATCH] cfg80211: basic support for PBSS network type
-To: Johannes Berg <johannes@sipsolutions.net>
-References: <56961335.4040801@codeaurora.org>
- <1453807346.2759.29.camel@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Dedy Lansky <dlansky@codeaurora.org>,
-	Maya Erez <merez@codeaurora.org>,
-	Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-From: Lior David <liord@codeaurora.org>
-Message-ID: <56A767E4.7090906@codeaurora.org> (sfid-20160126_133452_571001_97FA4A22)
-Date: Tue, 26 Jan 2016 14:34:44 +0200
-MIME-Version: 1.0
-In-Reply-To: <1453807346.2759.29.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Received: from glaubenleben.de ([85.214.105.140]:53809 "EHLO glaubenleben.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757101AbcA3RCU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jan 2016 12:02:20 -0500
+From: Andreas Kemnade <andreas@kemnade.info>
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, hns@goldelico.com
+Cc: Andreas Kemnade <andreas@kemnade.info>
+Subject: [PATCH v3 5/6] libertas: fix ps-mode related removal problems
+Date: Sat, 30 Jan 2016 18:01:55 +0100
+Message-Id: <1454173316-13444-6-git-send-email-andreas@kemnade.info> (sfid-20160130_180457_308550_494D87C3)
+In-Reply-To: <1454173316-13444-1-git-send-email-andreas@kemnade.info>
+References: <1454173316-13444-1-git-send-email-andreas@kemnade.info>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1/26/2016 1:22 PM, Johannes Berg wrote:
-> On Wed, 2016-01-13 at 11:04 +0200, Lior David wrote:
->>  
->> + * @NL80211_ATTR_PBSS: flag attribute. If set it means operate
->> + *	in a PBSS. Specified in %NL80211_CMD_CONNECT to request
->> + *	connecting to a PCP, and in %NL80211_CMD_START_AP to start
->> + *	a PCP instead of AP. Relevant for DMG networks only.
-> 
-> I'm continually confused by this; is it possible for DMG devices to be
-> a "real" AP rather than a PCP?
-> 
-Yes, DMG devices can function as a full AP in addition to PCP.
+When the device is remove e.g. because of going to suspend
+ mode with powersaving enabled, lbs_remove_card tries to exit
+powersaving state even when already woken up. That command is
+not processed properly in that situation, since the command
+processing queue is already stopped, so it waits forever
+for the command being processed, so disable it.
 
->> @@ -3461,6 +3462,8 @@  static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
->>  			return PTR_ERR(params.acl);
->>  	}
->>  
->> +	params.pbss = nla_get_flag(info->attrs[NL80211_ATTR_PBSS]);
->> +
->>  	wdev_lock(wdev);
->>  	err = rdev_start_ap(rdev, dev, &params);
->>  	if (!err) {
-> 
-> This, and the corresponding code in nl80211_connect, really ought to
-> check that the device is a DMG device and able to do this.
-> 
-> Perhaps this even needs a capability check, or do we assume that all
-> devices/drivers will be able to do this (or should reject it?)
-> 
-Certified 11ad devices must support PBSS, but in theory you can have
-11ad drivers that do not support it. 11ac devices cannot support
-it and currently will just ignore this flag, so I think I will add a
-feature flag (something like NL80211_EXT_FEATURE_PBSS) and return an
-error if the driver does not support this feature.
+Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
+---
+changes in v3: corrected paths
+changes in v2: improved commit message, reordered: was 6/6
+ drivers/net/wireless/marvell/libertas/main.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-> If you want to rely on drivers though you need to have (in this patch!)
-> a small change to the existing driver to reject the operations if
-> pbss==true since obviously it cannot be doing the right thing right now
-> without further changes. That reject would then of course be removed
-> again with the driver update.
-I have a patch for the wil6210 driver that uses this feature. Do you prefer
-that I add the wil6210 driver changes to this patch?
+diff --git a/drivers/net/wireless/marvell/libertas/main.c b/drivers/net/wireless/libertas/main.c
+index 8079560..b35b8bc 100644
+--- a/drivers/net/wireless/marvell/libertas/main.c
++++ b/drivers/net/wireless/marvell/libertas/main.c
+@@ -1060,7 +1060,12 @@ void lbs_remove_card(struct lbs_private *priv)
+ 
+ 	if (priv->psmode == LBS802_11POWERMODEMAX_PSP) {
+ 		priv->psmode = LBS802_11POWERMODECAM;
+-		lbs_set_ps_mode(priv, PS_MODE_ACTION_EXIT_PS, true);
++		/* no need to wakeup if already woken up,
++		 * on suspend, this exit ps command is not processed
++		 * the driver hangs
++		 */
++		if (priv->psstate != PS_STATE_FULL_POWER)
++			lbs_set_ps_mode(priv, PS_MODE_ACTION_EXIT_PS, true);
+ 	}
+ 
+ 	if (priv->is_deep_sleep) {
+-- 
+2.1.4
 
-Thanks,
-Lior
