@@ -1,42 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:19212 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750857AbcA1V5M (ORCPT
+Received: from smtprelay0147.hostedemail.com ([216.40.44.147]:47148 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752806AbcA3MJi (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Jan 2016 16:57:12 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2 0/4] ath10k: rename mesh and add abstraction layer
-Date: Thu, 28 Jan 2016 13:54:06 -0800
-Message-ID: <cover.1454015989.git.poh@qca.qualcomm.com> (sfid-20160128_225716_234753_B13D6E3C)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 30 Jan 2016 07:09:38 -0500
+Message-ID: <1454155774.7329.3.camel@perches.com> (sfid-20160130_131035_674369_C29E389C)
+Subject: Re: [PATCH] staging: rtl8723au: Fixes unnecessary return warning
+From: Joe Perches <joe@perches.com>
+To: Julian Calaby <julian.calaby@gmail.com>,
+	Bhakti Priya <bhaktipriya96@gmail.com>,
+	Andy Whitcroft <apw@shadowen.org>
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Alexander Kuleshov <kuleshovmail@gmail.com>,
+	Haneen Mohammed <hamohammed.sa@gmail.com>,
+	Andreas Ruprecht <andreas.ruprecht@fau.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Date: Sat, 30 Jan 2016 04:09:34 -0800
+In-Reply-To: <CAGRGNgUPiFUyDw01RZ2iXQ-doPokdDnprqF2Jr=8mzHkbMgfvA@mail.gmail.com>
+References: <20160129172908.GA14077@Karyakshetra>
+	 <wrfjk2ms465z.fsf@redhat.com>
+	 <CAGRGNgWQvdfQc-L9z0NKCyCOorxU0seQ-XvYnZDBWA3QKySrRA@mail.gmail.com>
+	 <1454117303.10099.84.camel@perches.com>
+	 <CAGRGNgU2EuY9fpe8rhHtA8OLDRC0s5=tcBStqpq=ZbMNrnuf0w@mail.gmail.com>
+	 <1454123891.10099.89.camel@perches.com>
+	 <CAFNHFT9nosMWgAvDdhvpMQLa2+02kD-wk0ChuZWpvCbLGMFYOg@mail.gmail.com>
+	 <CAGRGNgUPiFUyDw01RZ2iXQ-doPokdDnprqF2Jr=8mzHkbMgfvA@mail.gmail.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Split Mesh service to 11s Mesh and non-11s Mesh according to
-firmware service bit to help users distinguish 11s Mesh from
-non 11s Mesh.
-And add abstraction layer for vdev subtype to solve subtype mismatch
-and to give flexible compatibility among different firmware revisions.
+On Sat, 2016-01-30 at 23:02 +1100, Julian Calaby wrote:
+> Hi Bhakti,
+> 
+> On Sat, Jan 30, 2016 at 5:53 PM, Bhakti Priya  wrote:
+> > Hi,
+> > 
+> > Thank you for your reply. I've just sent version 2 of the patch with
+> > the blank lines removed.
+> > I will be happy to extend checkpatch.pl. As suggested by you, I am
+> > trying to detect such blank lines in a line removal patch by checking
+> > if the line above the deleted line was a blank line and the line
+> > following the deleted line had a closing brace.
+> > Can you please guide me and let me know if I am headed in the right direction.
+> 
+> As I understand it, the algorithm needs to work like this:
+> 1. For each patch hunk:
+> 2. Filter out all lines that match /^-/
+> 3. Remove the first character (" " or "+")
+> 4. Normalise EOL characters: s/\r\n?/\n/
+> 5. Over the entire hunk, find any case that matches
+> /({|\n)\s*\n\s*(\n|})/ where \s matches all space characters except
+> \n.
+> 6. Report the middle line the preceding regular expression matches to the user.
+> 
+> I'm confident I can write it as a shell script, but I don't know
+> enough Perl to add that test to checkpatch.pl
 
-v2:
- * Rebased. No code changes.
-
-Peter Oh (4):
-  ath10k: rename Mesh related service names
-  ath10k: update 10.4 WMI service map
-  ath10k: use vif->type and vif->p2p for P2P_GO check
-  ath10k: add abstraction layer for vdev subtype
-
- drivers/net/wireless/ath/ath10k/mac.c     | 25 +++++------
- drivers/net/wireless/ath/ath10k/wmi-ops.h | 11 +++++
- drivers/net/wireless/ath/ath10k/wmi-tlv.c |  1 +
- drivers/net/wireless/ath/ath10k/wmi.c     | 72 ++++++++++++++++++++++++++++++-
- drivers/net/wireless/ath/ath10k/wmi.h     | 67 ++++++++++++++++++++++------
- 5 files changed, 151 insertions(+), 25 deletions(-)
-
--- 
-1.9.1
+That's basically what the $prevline variable in checkpatch does.
+Likely it's enough to check that.
+Perhaps Andy Whitcroft knows.
 
