@@ -1,111 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:59212 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934640AbcA0TBm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Jan 2016 14:01:42 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/4] ath10k: rename Mesh related service names
-Date: Wed, 27 Jan 2016 10:55:54 -0800
-Message-ID: <1453920957-9908-2-git-send-email-poh@qca.qualcomm.com> (sfid-20160127_200155_387780_12122484)
-In-Reply-To: <1453920957-9908-1-git-send-email-poh@qca.qualcomm.com>
-References: <1453920957-9908-1-git-send-email-poh@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from glaubenleben.de ([85.214.105.140]:53793 "EHLO glaubenleben.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752155AbcA3RCQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jan 2016 12:02:16 -0500
+From: Andreas Kemnade <andreas@kemnade.info>
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, hns@goldelico.com
+Cc: Andreas Kemnade <andreas@kemnade.info>
+Subject: [PATCH v3 1/6] libertas: fix pointer bugs for PS_MODE commands
+Date: Sat, 30 Jan 2016 18:01:51 +0100
+Message-Id: <1454173316-13444-2-git-send-email-andreas@kemnade.info> (sfid-20160130_180309_732985_8A78466C)
+In-Reply-To: <1454173316-13444-1-git-send-email-andreas@kemnade.info>
+References: <1454173316-13444-1-git-send-email-andreas@kemnade.info>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WMI_10_4_SERVICE_MESH bit is for non IEEE802.11s Mesh.
-Hence rename it to WMI_10_4_SERVICE_MESH_NON_11S.
-Also add _11S as post-fix to each of WMI_SERVICE_MESH and
-WMI_VDEV_SUBTYPE_MESH specifying the service is for 11s Mesh.
-This will help users to distinguish 11s Mesh from non 11s Mesh.
+struct cmd_ds_802_11_ps_mode
+contains the command header and a pointer to it was
+initialized with data points to the body which leads to
+mis-interpretation of the cmd_ds_802_11_ps_mode.action member.
+cmd[0] contains the header, &cmd[1] points beyond that.
+cmdnode->cmdbuf is a pointer to the command buffer
+This piece of code was unused since power saving was
+not enabled.
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
 ---
- drivers/net/wireless/ath/ath10k/mac.c |  4 ++--
- drivers/net/wireless/ath/ath10k/wmi.h | 16 +++++++++-------
- 2 files changed, 11 insertions(+), 9 deletions(-)
+changes in v3:
+corrected paths
+changes in v2:
+improved commit message
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 6146a29..6bf5c91 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4366,8 +4366,8 @@ static int ath10k_add_interface(struct ieee80211_hw *hw,
- 		arvif->vdev_type = WMI_VDEV_TYPE_IBSS;
- 		break;
- 	case NL80211_IFTYPE_MESH_POINT:
--		if (test_bit(WMI_SERVICE_MESH, ar->wmi.svc_map)) {
--			arvif->vdev_subtype = WMI_VDEV_SUBTYPE_MESH;
-+		if (test_bit(WMI_SERVICE_MESH_11S, ar->wmi.svc_map)) {
-+			arvif->vdev_subtype = WMI_VDEV_SUBTYPE_MESH_11S;
- 		} else if (!test_bit(ATH10K_FLAG_RAW_MODE, &ar->dev_flags)) {
- 			ret = -EINVAL;
- 			ath10k_warn(ar, "must load driver with rawmode=1 to add mesh interfaces\n");
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index d85ad78..26a1bb9 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -176,7 +176,8 @@ enum wmi_service {
- 	WMI_SERVICE_AUX_CHAN_LOAD_INTF,
- 	WMI_SERVICE_BSS_CHANNEL_INFO_64,
- 	WMI_SERVICE_EXT_RES_CFG_SUPPORT,
--	WMI_SERVICE_MESH,
-+	WMI_SERVICE_MESH_11S,
-+	WMI_SERVICE_MESH_NON_11S,
+ drivers/net/wireless/marvell/libertas/cmd.c     | 4 ++--
+ drivers/net/wireless/marvell/libertas/cmdresp.c | 5 ++++-
+ 2 files changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/libertas/cmd.c b/drivers/net/wireless/libertas/cmd.c
+index 0387a5b..40467d6 100644
+--- a/drivers/net/wireless/marvell/libertas/cmd.c
++++ b/drivers/net/wireless/marvell/libertas/cmd.c
+@@ -957,7 +957,7 @@ static void lbs_queue_cmd(struct lbs_private *priv,
  
- 	/* keep last */
- 	WMI_SERVICE_MAX,
-@@ -294,7 +295,7 @@ enum wmi_10_4_service {
- 	WMI_10_4_SERVICE_AUX_CHAN_LOAD_INTF,
- 	WMI_10_4_SERVICE_BSS_CHANNEL_INFO_64,
- 	WMI_10_4_SERVICE_EXT_RES_CFG_SUPPORT,
--	WMI_10_4_SERVICE_MESH,
-+	WMI_10_4_SERVICE_MESH_NON_11S,
- };
+ 	/* Exit_PS command needs to be queued in the header always. */
+ 	if (le16_to_cpu(cmdnode->cmdbuf->command) == CMD_802_11_PS_MODE) {
+-		struct cmd_ds_802_11_ps_mode *psm = (void *) &cmdnode->cmdbuf;
++		struct cmd_ds_802_11_ps_mode *psm = (void *)cmdnode->cmdbuf;
  
- static inline char *wmi_service_name(int service_id)
-@@ -385,7 +386,8 @@ static inline char *wmi_service_name(int service_id)
- 	SVCSTR(WMI_SERVICE_AUX_CHAN_LOAD_INTF);
- 	SVCSTR(WMI_SERVICE_BSS_CHANNEL_INFO_64);
- 	SVCSTR(WMI_SERVICE_EXT_RES_CFG_SUPPORT);
--	SVCSTR(WMI_SERVICE_MESH);
-+	SVCSTR(WMI_SERVICE_MESH_11S);
-+	SVCSTR(WMI_SERVICE_MESH_NON_11S);
- 	default:
- 		return NULL;
- 	}
-@@ -460,7 +462,7 @@ static inline void wmi_10x_svc_map(const __le32 *in, unsigned long *out,
- 	SVCMAP(WMI_10X_SERVICE_BSS_CHANNEL_INFO_64,
- 	       WMI_SERVICE_BSS_CHANNEL_INFO_64, len);
- 	SVCMAP(WMI_10X_SERVICE_MESH,
--	       WMI_SERVICE_MESH, len);
-+	       WMI_SERVICE_MESH_11S, len);
- 	SVCMAP(WMI_10X_SERVICE_EXT_RES_CFG_SUPPORT,
- 	       WMI_SERVICE_EXT_RES_CFG_SUPPORT, len);
- }
-@@ -623,8 +625,8 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
- 	       WMI_SERVICE_BSS_CHANNEL_INFO_64, len);
- 	SVCMAP(WMI_10_4_SERVICE_EXT_RES_CFG_SUPPORT,
- 	       WMI_SERVICE_EXT_RES_CFG_SUPPORT, len);
--	SVCMAP(WMI_10_4_SERVICE_MESH,
--	       WMI_SERVICE_MESH, len);
-+	SVCMAP(WMI_10_4_SERVICE_MESH_NON_11S,
-+	       WMI_SERVICE_MESH_NON_11S, len);
- }
+ 		if (psm->action == cpu_to_le16(PS_MODE_ACTION_EXIT_PS)) {
+ 			if (priv->psstate != PS_STATE_FULL_POWER)
+@@ -1387,7 +1387,7 @@ int lbs_execute_next_command(struct lbs_private *priv)
+ 				 * PS command. Ignore it if it is not Exit_PS.
+ 				 * otherwise send it down immediately.
+ 				 */
+-				struct cmd_ds_802_11_ps_mode *psm = (void *)&cmd[1];
++				struct cmd_ds_802_11_ps_mode *psm = (void *)cmd;
  
- #undef SVCMAP
-@@ -4275,7 +4277,7 @@ enum wmi_vdev_subtype {
- 	WMI_VDEV_SUBTYPE_P2P_CLIENT = 2,
- 	WMI_VDEV_SUBTYPE_P2P_GO     = 3,
- 	WMI_VDEV_SUBTYPE_PROXY_STA	= 4,
--	WMI_VDEV_SUBTYPE_MESH		= 5,
-+	WMI_VDEV_SUBTYPE_MESH_11S   = 5,
- };
+ 				lbs_deb_host(
+ 				       "EXEC_NEXT_CMD: PS cmd, action 0x%02x\n",
+diff --git a/drivers/net/wireless/marvell/libertas/cmdresp.c b/drivers/net/wireless/libertas/cmdresp.c
+index e5442e8..701125f 100644
+--- a/drivers/net/wireless/marvell/libertas/cmdresp.c
++++ b/drivers/net/wireless/marvell/libertas/cmdresp.c
+@@ -123,7 +123,10 @@ int lbs_process_command_response(struct lbs_private *priv, u8 *data, u32 len)
+ 	priv->cmd_timed_out = 0;
  
- /* values for vdev_subtype */
+ 	if (respcmd == CMD_RET(CMD_802_11_PS_MODE)) {
+-		struct cmd_ds_802_11_ps_mode *psmode = (void *) &resp[1];
++		/* struct cmd_ds_802_11_ps_mode also contains
++		 * the header
++		 */
++		struct cmd_ds_802_11_ps_mode *psmode = (void *)resp;
+ 		u16 action = le16_to_cpu(psmode->action);
+ 
+ 		lbs_deb_host(
 -- 
-1.9.1
+2.1.4
 
