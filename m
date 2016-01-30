@@ -1,104 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:52393 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932750AbcALHgR (ORCPT
+Received: from mail-qg0-f67.google.com ([209.85.192.67]:34085 "EHLO
+	mail-qg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757158AbcA3Xhs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 02:36:17 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <adel.noureldin@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 06/26] staging: wilc1000: add ops resuem/suspend/wakeup in cfg80211
-Date: Tue, 12 Jan 2016 16:39:35 +0900
-Message-ID: <1452584395-24910-7-git-send-email-glen.lee@atmel.com> (sfid-20160112_083620_213718_62B41823)
-In-Reply-To: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
-References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com>
+	Sat, 30 Jan 2016 18:37:48 -0500
+Received: by mail-qg0-f67.google.com with SMTP id 94so7782590qgt.1
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Jan 2016 15:37:48 -0800 (PST)
+Date: Sat, 30 Jan 2016 18:37:32 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Henning Rogge <hrogge@gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+Subject: Re: [PATCH v2 3/3] mac80211: Unify mesh and mpp path removal function
+Message-ID: <20160130233732.GA1507@localhost> (sfid-20160131_003751_954054_C4E0B6C2)
+References: <1454062138-18012-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+ <1454062138-18012-4-git-send-email-henning.rogge@fkie.fraunhofer.de>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1454062138-18012-4-git-send-email-henning.rogge@fkie.fraunhofer.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds ops resume, suspend and set_wakeup in cfg80211. Together with
-previous patches, driver will support suspend/resume functionality.
+On Fri, Jan 29, 2016 at 11:08:58AM +0100, Henning Rogge wrote:
+> mpp_path_del() and mesh_path_del() are mostly the same function.
+> Move common code into a new static function.
+> 
+> Signed-off-by: Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+> ---
+>  net/mac80211/mesh_pathtbl.c | 110 ++++++++++++++++++++++----------------------
+>  1 file changed, 55 insertions(+), 55 deletions(-)
+> 
+> diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+> index 33bb1f25..86316ee 100644
+> --- a/net/mac80211/mesh_pathtbl.c
+> +++ b/net/mac80211/mesh_pathtbl.c
+> @@ -55,16 +55,20 @@ int mpp_paths_generation;
+>  static DEFINE_RWLOCK(pathtbl_resize_lock);
+>  
+>  
+> +static inline struct mesh_table *resize_dereference_paths(struct mesh_table *table)
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 39 +++++++++++++++++++++++
- 1 file changed, 39 insertions(+)
+0-day caught this -- the parameter should be "struct mesh_table __rcu *table"
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 53fb2d4..b9c3564 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -74,6 +74,10 @@ static const struct ieee80211_txrx_stypes
- 	}
- };
- 
-+static const struct wiphy_wowlan_support wowlan_support = {
-+	.flags = WIPHY_WOWLAN_ANY
-+};
-+
- #define WILC_WFI_DWELL_PASSIVE 100
- #define WILC_WFI_DWELL_ACTIVE  40
- 
-@@ -2673,6 +2677,36 @@ static int del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
- 	return 0;
- }
- 
-+static int wilc_suspend(struct wiphy *wiphy, struct cfg80211_wowlan *wow)
-+{
-+	struct wilc_priv *priv = wiphy_priv(wiphy);
-+	struct wilc_vif *vif = netdev_priv(priv->dev);
-+
-+	if(!wow && wilc_wlan_get_num_conn_ifcs(vif->wilc))
-+		vif->wilc->suspend_event = true;
-+	else
-+		vif->wilc->suspend_event = false;
-+
-+	return 0;
-+}
-+
-+static int wilc_resume(struct wiphy *wiphy)
-+{
-+	struct wilc_priv *priv = wiphy_priv(wiphy);
-+	struct wilc_vif *vif = netdev_priv(priv->dev);
-+
-+	netdev_info(vif->ndev, "cfg resume\n");
-+	return 0;
-+}
-+
-+static void wilc_set_wakeup(struct wiphy *wiphy, bool enabled)
-+{
-+	struct wilc_priv *priv = wiphy_priv(wiphy);
-+	struct wilc_vif *vif = netdev_priv(priv->dev);
-+
-+	netdev_info(vif->ndev, "cfg set wake up = %d\n", enabled);
-+}
-+
- static struct cfg80211_ops wilc_cfg80211_ops = {
- 	.set_monitor_channel = set_channel,
- 	.scan = scan,
-@@ -2708,6 +2742,10 @@ static struct cfg80211_ops wilc_cfg80211_ops = {
- 	.set_power_mgmt = set_power_mgmt,
- 	.set_cqm_rssi_config = set_cqm_rssi_config,
- 
-+	.suspend = wilc_suspend,
-+	.resume = wilc_resume,
-+	.set_wakeup = wilc_set_wakeup,
-+
- };
- 
- int WILC_WFI_update_stats(struct wiphy *wiphy, u32 pktlen, u8 changed)
-@@ -2792,6 +2830,7 @@ struct wireless_dev *wilc_create_wiphy(struct net_device *net, struct device *de
- 	sema_init(&(priv->SemHandleUpdateStats), 1);
- 	priv->wdev = wdev;
- 	wdev->wiphy->max_scan_ssids = MAX_NUM_PROBED_SSID;
-+	wdev->wiphy->wowlan = &wowlan_support;
- 	wdev->wiphy->max_num_pmkids = WILC_MAX_NUM_PMKIDS;
- 	PRINT_INFO(CFG80211_DBG, "Max number of PMKIDs = %d\n", wdev->wiphy->max_num_pmkids);
- 
+You can install sparse, set CONFIG_SPARSE_RCU_POINTER=y and then check it
+with something like:
+
+        make C=2 M=net/mac80211
+
+The code is ok but the annotation catches cases where a dereference
+would happen without the right lock -- in this case pathtable resize
+lock is held.
+
+> +{
+> +  return rcu_dereference_protected(table,
+> +    lockdep_is_held(&pathtbl_resize_lock));
+> +}
+> +
+
+Besides that though, something is wrong with whitespace throughout
+the patch, looks like lots of 2-space indents instead of tabs.
+
+Approach looks fine though.  I might've moved the resize lock into
+table_path_del, but it doesn't really matter as I plan to replace
+with rhashtable anyway.
+
 -- 
-1.9.1
-
+Bob Copeland %% http://bobcopeland.com/
