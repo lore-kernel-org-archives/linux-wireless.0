@@ -1,140 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:40443 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751826AbcA2GyF (ORCPT
+Received: from mail-io0-f177.google.com ([209.85.223.177]:33916 "EHLO
+	mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752250AbcA3MCe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2016 01:54:05 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH 1/6] staging: wilc1000: fix warnings for line over 80 characters
-Date: Fri, 29 Jan 2016 15:51:33 +0900
-Message-ID: <1454050298-25815-1-git-send-email-leo.kim@atmel.com> (sfid-20160129_075409_510817_5876FC95)
+	Sat, 30 Jan 2016 07:02:34 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAFNHFT9nosMWgAvDdhvpMQLa2+02kD-wk0ChuZWpvCbLGMFYOg@mail.gmail.com>
+References: <20160129172908.GA14077@Karyakshetra> <wrfjk2ms465z.fsf@redhat.com>
+ <CAGRGNgWQvdfQc-L9z0NKCyCOorxU0seQ-XvYnZDBWA3QKySrRA@mail.gmail.com>
+ <1454117303.10099.84.camel@perches.com> <CAGRGNgU2EuY9fpe8rhHtA8OLDRC0s5=tcBStqpq=ZbMNrnuf0w@mail.gmail.com>
+ <1454123891.10099.89.camel@perches.com> <CAFNHFT9nosMWgAvDdhvpMQLa2+02kD-wk0ChuZWpvCbLGMFYOg@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sat, 30 Jan 2016 23:02:14 +1100
+Message-ID: <CAGRGNgUPiFUyDw01RZ2iXQ-doPokdDnprqF2Jr=8mzHkbMgfvA@mail.gmail.com> (sfid-20160130_130254_658339_AACA9C54)
+Subject: Re: [PATCH] staging: rtl8723au: Fixes unnecessary return warning
+To: Bhakti Priya <bhaktipriya96@gmail.com>
+Cc: Joe Perches <joe@perches.com>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Alexander Kuleshov <kuleshovmail@gmail.com>,
+	Haneen Mohammed <hamohammed.sa@gmail.com>,
+	Andreas Ruprecht <andreas.ruprecht@fau.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+Hi Bhakti,
 
-This patch fixes warnings reported by checkpatch.pl
-for line over 80 characters
+On Sat, Jan 30, 2016 at 5:53 PM, Bhakti Priya <bhaktipriya96@gmail.com> wrote:
+> Hi,
+>
+> Thank you for your reply. I've just sent version 2 of the patch with
+> the blank lines removed.
+> I will be happy to extend checkpatch.pl. As suggested by you, I am
+> trying to detect such blank lines in a line removal patch by checking
+> if the line above the deleted line was a blank line and the line
+> following the deleted line had a closing brace.
+> Can you please guide me and let me know if I am headed in the right direction.
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 33 ++++++++++++++++++++-------------
- drivers/staging/wilc1000/wilc_wlan.h |  3 ++-
- 2 files changed, 22 insertions(+), 14 deletions(-)
+As I understand it, the algorithm needs to work like this:
+1. For each patch hunk:
+2. Filter out all lines that match /^-/
+3. Remove the first character (" " or "+")
+4. Normalise EOL characters: s/\r\n?/\n/
+5. Over the entire hunk, find any case that matches
+/({|\n)\s*\n\s*(\n|})/ where \s matches all space characters except
+\n.
+6. Report the middle line the preceding regular expression matches to the user.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 703dbe0..d0a499a 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -113,7 +113,8 @@ static void wilc_wlan_txq_add_to_tail(struct net_device *dev,
- 	up(&wilc->txq_event);
- }
- 
--static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif, struct txq_entry_t *tqe)
-+static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
-+				     struct txq_entry_t *tqe)
- {
- 	unsigned long flags;
- 	struct wilc *wilc = vif->wilc;
-@@ -695,8 +696,9 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 		acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
- 		counter = 0;
- 		do {
--			ret = wilc->hif_func->hif_read_reg(wilc, WILC_HOST_TX_CTRL,
--						       &reg);
-+			ret = wilc->hif_func->hif_read_reg(wilc,
-+							   WILC_HOST_TX_CTRL,
-+							   &reg);
- 			if (!ret) {
- 				wilc_debug(N_ERR, "[wilc txq]: fail can't read reg vmm_tbl_entry..\n");
- 				break;
-@@ -728,8 +730,9 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 				break;
- 			}
- 
--			ret = wilc->hif_func->hif_write_reg(wilc, WILC_HOST_VMM_CTL,
--							0x2);
-+			ret = wilc->hif_func->hif_write_reg(wilc,
-+							    WILC_HOST_VMM_CTL,
-+							    0x2);
- 			if (!ret) {
- 				wilc_debug(N_ERR, "[wilc txq]: fail can't write reg host_vmm_ctl..\n");
- 				break;
-@@ -1063,7 +1066,8 @@ void wilc_handle_isr(struct wilc *wilc)
- }
- EXPORT_SYMBOL_GPL(wilc_handle_isr);
- 
--int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer, u32 buffer_size)
-+int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
-+				u32 buffer_size)
- {
- 	u32 offset;
- 	u32 addr, size, size2, blksz;
-@@ -1096,8 +1100,8 @@ int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer, u32 buffer_
- 				size2 = blksz;
- 
- 			memcpy(dma_buffer, &buffer[offset], size2);
--			ret = wilc->hif_func->hif_block_tx(wilc, addr, dma_buffer,
--						       size2);
-+			ret = wilc->hif_func->hif_block_tx(wilc, addr,
-+							   dma_buffer, size2);
- 			if (!ret)
- 				break;
- 
-@@ -1233,7 +1237,8 @@ int wilc_wlan_stop(struct wilc *wilc)
- 	}
- 
- 	do {
--		ret = wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0, &reg);
-+		ret = wilc->hif_func->hif_read_reg(wilc,
-+						   WILC_GLB_RESET_0, &reg);
- 		if (!ret) {
- 			PRINT_ER("Error while reading reg\n");
- 			release_bus(wilc, RELEASE_ALLOW_SLEEP);
-@@ -1246,14 +1251,16 @@ int wilc_wlan_stop(struct wilc *wilc)
- 			PRINT_D(GENERIC_DBG, "Bit 10 not reset : Retry %d\n",
- 				timeout);
- 			reg &= ~BIT(10);
--			ret = wilc->hif_func->hif_write_reg(wilc, WILC_GLB_RESET_0,
--							reg);
-+			ret = wilc->hif_func->hif_write_reg(wilc,
-+							    WILC_GLB_RESET_0,
-+							    reg);
- 			timeout--;
- 		} else {
- 			PRINT_D(GENERIC_DBG, "Bit 10 reset after : Retry %d\n",
- 				timeout);
--			ret = wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0,
--						       &reg);
-+			ret = wilc->hif_func->hif_read_reg(wilc,
-+							   WILC_GLB_RESET_0,
-+							   &reg);
- 			if (!ret) {
- 				PRINT_ER("Error while reading reg\n");
- 				release_bus(wilc, RELEASE_ALLOW_SLEEP);
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index e913ae7..d362fa8 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -270,7 +270,8 @@ struct wilc_cfg_rsp {
- struct wilc;
- struct wilc_vif;
- 
--int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer, u32 buffer_size);
-+int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
-+				u32 buffer_size);
- int wilc_wlan_start(struct wilc *);
- int wilc_wlan_stop(struct wilc *);
- int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+I'm confident I can write it as a shell script, but I don't know
+enough Perl to add that test to checkpatch.pl
+
+Thanks,
+
 -- 
-1.9.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
