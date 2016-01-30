@@ -1,223 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:11809 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965143AbcAZKVx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 05:21:53 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Gregory Greenman <gregory.greenman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 5/5] iwlwifi: mvm: rs: fix TPC statistics handling
-Date: Tue, 26 Jan 2016 12:21:38 +0200
-Message-Id: <1453803698-20550-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160126_112202_481032_C4575E54)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9D452F@hasmsx109.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9D452F@hasmsx109.ger.corp.intel.com>
+Received: from mail-io0-f195.google.com ([209.85.223.195]:33537 "EHLO
+	mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754085AbcA3Lzu (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jan 2016 06:55:50 -0500
+MIME-Version: 1.0
+In-Reply-To: <20160130055747.GA16656@Karyakshetra>
+References: <20160130055747.GA16656@Karyakshetra>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sat, 30 Jan 2016 22:55:29 +1100
+Message-ID: <CAGRGNgXSL5a8=Pkx=ipcpaUmCit3NLM7gUhRwE5PD2xCcX-00Q@mail.gmail.com> (sfid-20160130_125610_431008_C143BC12)
+Subject: Re: [PATCH v2] staging: rtl8723au: Fixes unnecessary return warning
+To: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Joe Perches <joe@perches.com>,
+	Alexander Kuleshov <kuleshovmail@gmail.com>,
+	Haneen Mohammed <hamohammed.sa@gmail.com>,
+	Andreas Ruprecht <andreas.ruprecht@fau.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+On Sat, Jan 30, 2016 at 4:57 PM, Bhaktipriya Shridhar
+<bhaktipriya96@gmail.com> wrote:
+> This patch fixes checkpatch.pl warning in rtw_mlme_ext.c file.
+> WARNING: void function return statements are not generally useful
+>
+> Signed-off-by: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
 
-FW behaviour changed and now updates driver about the used TPC
-reduction in the following cases:
-1. In tx response, which is used mostly for a single frame case
-2. In BA notification
+Looks sane to me.
 
-When tx aggregation fails with the initial rate, FW will send
-to the driver BA notification and will try to transmit with the
-next rate, but this time without tx power reduction. Thus, in case
-of a failure with the initial rate, driver will get two BA notifications,
-the first one with reduced tx power as in the LQ command and the second
-one with 0 power reduction.
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 
-This patch adapts the TPC statistics according to the description above:
-1. Use BA notifications instead of Tx response
-2. For TPC only, drop the optimization which considers empty BA as one
-MPDU. The reason is that with TPC we want to recover very quickly from
-a bad power reduction and, therefore we'd like the success ratio to get
-an immediate hit when failing to get a BA, so we'd switch back to a
-lower or zero power reduction
+> ---
+>  Changes in v2:
+>    - Removed the unnecessary blank lines.
+>  drivers/staging/rtl8723au/core/rtw_mlme_ext.c | 20 --------------------
+>  1 file changed, 20 deletions(-)
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+> index d28f29a..7cd0052 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_mlme_ext.c
+> @@ -2656,8 +2656,6 @@ static void issue_probersp(struct rtw_adapter *padapter, unsigned char *da)
+>         pattrib->last_txcmdsz = pattrib->pktlen;
+>
+>         dump_mgntframe23a(padapter, pmgntframe);
+> -
+> -       return;
+>  }
+>
+>  static int _issue_probereq(struct rtw_adapter *padapter,
+> @@ -2957,8 +2955,6 @@ static void issue_auth(struct rtw_adapter *padapter, struct sta_info *psta,
+>         rtw_wep_encrypt23a(padapter, pmgntframe);
+>         DBG_8723A("%s\n", __func__);
+>         dump_mgntframe23a(padapter, pmgntframe);
+> -
+> -       return;
+>  }
+>
+>  #ifdef CONFIG_8723AU_AP_MODE
+> @@ -3338,8 +3334,6 @@ exit:
+>                 }
+>         } else
+>                 kfree(pmlmepriv->assoc_req);
+> -
+> -       return;
+>  }
+>
+>  /* when wait_ack is true, this function should be called at process context */
+> @@ -4102,8 +4096,6 @@ static void rtw_site_survey(struct rtw_adapter *padapter)
+>                 pmlmeext->chan_scan_time = SURVEY_TO;
+>                 pmlmeext->sitesurvey_res.state = SCAN_DISABLE;
+>         }
+> -
+> -       return;
+>  }
+>
+>  /* collect bss info from Beacon and Probe request/response frames. */
+> @@ -4759,8 +4751,6 @@ void report_survey_event23a(struct rtw_adapter *padapter,
+>         rtw_enqueue_cmd23a(pcmdpriv, pcmd_obj);
+>
+>         pmlmeext->sitesurvey_res.bss_cnt++;
+> -
+> -       return;
+>  }
+>
+>  void report_surveydone_event23a(struct rtw_adapter *padapter)
+> @@ -4802,8 +4792,6 @@ void report_surveydone_event23a(struct rtw_adapter *padapter)
+>         DBG_8723A("survey done event(%x)\n", psurveydone_evt->bss_cnt);
+>
+>         rtw_enqueue_cmd23a(pcmdpriv, pcmd_obj);
+> -
+> -       return;
+>  }
+>
+>  void report_join_res23a(struct rtw_adapter *padapter, int res)
+> @@ -4850,8 +4838,6 @@ void report_join_res23a(struct rtw_adapter *padapter, int res)
+>         rtw_joinbss_event_prehandle23a(padapter, (u8 *)&pjoinbss_evt->network);
+>
+>         rtw_enqueue_cmd23a(pcmdpriv, pcmd_obj);
+> -
+> -       return;
+>  }
+>
+>  void report_del_sta_event23a(struct rtw_adapter *padapter,
+> @@ -4906,8 +4892,6 @@ void report_del_sta_event23a(struct rtw_adapter *padapter,
+>         DBG_8723A("report_del_sta_event23a: delete STA, mac_id =%d\n", mac_id);
+>
+>         rtw_enqueue_cmd23a(pcmdpriv, pcmd_obj);
+> -
+> -       return;
+>  }
+>
+>  void report_add_sta_event23a(struct rtw_adapter *padapter,
+> @@ -4951,8 +4935,6 @@ void report_add_sta_event23a(struct rtw_adapter *padapter,
+>         DBG_8723A("report_add_sta_event23a: add STA\n");
+>
+>         rtw_enqueue_cmd23a(pcmdpriv, pcmd_obj);
+> -
+> -       return;
+>  }
+>
+>  /****************************************************************************
+> @@ -5394,8 +5376,6 @@ static void link_timer_hdl(unsigned long data)
+>                 issue_assocreq(padapter);
+>                 set_link_timer(pmlmeext, REASSOC_TO);
+>         }
+> -
+> -       return;
+>  }
+>
+>  static void addba_timer_hdl(unsigned long data)
+> --
+> 2.1.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h |  6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/rs.c        | 74 ++++++++++++++--------
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |  5 +-
- 3 files changed, 56 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-index 0036d18..ba3f0bb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-tx.h
-@@ -510,6 +510,9 @@ struct iwl_mvm_tx_resp {
-  * @scd_ssn: the index of the last contiguously sent packet
-  * @txed: number of Txed frames in this batch
-  * @txed_2_done: number of Acked frames in this batch
-+ * @reduced_txp: power reduced according to TPC. This is the actual value and
-+ *	not a copy from the LQ command. Thus, if not the first rate was used
-+ *	for Tx-ing then this value will be set to 0 by FW.
-  */
- struct iwl_mvm_ba_notif {
- 	__le32 sta_addr_lo32;
-@@ -524,7 +527,8 @@ struct iwl_mvm_ba_notif {
- 	__le16 scd_ssn;
- 	u8 txed;
- 	u8 txed_2_done;
--	__le16 reserved1;
-+	u8 reduced_txp;
-+	u8 reserved1;
- } __packed;
- 
- /*
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-index 7bb6fd0..94caa88 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
-@@ -2,6 +2,7 @@
-  *
-  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-@@ -724,14 +725,28 @@ static int _rs_collect_tx_data(struct iwl_mvm *mvm,
- 	return 0;
- }
- 
--static int rs_collect_tx_data(struct iwl_mvm *mvm,
--			      struct iwl_lq_sta *lq_sta,
--			      struct iwl_scale_tbl_info *tbl,
--			      int scale_index, int attempts, int successes,
--			      u8 reduced_txp)
-+static int rs_collect_tpc_data(struct iwl_mvm *mvm,
-+			       struct iwl_lq_sta *lq_sta,
-+			       struct iwl_scale_tbl_info *tbl,
-+			       int scale_index, int attempts, int successes,
-+			       u8 reduced_txp)
-+{
-+	struct iwl_rate_scale_data *window = NULL;
-+
-+	if (WARN_ON_ONCE(reduced_txp > TPC_MAX_REDUCTION))
-+		return -EINVAL;
-+
-+	window = &tbl->tpc_win[reduced_txp];
-+	return  _rs_collect_tx_data(mvm, tbl, scale_index, attempts, successes,
-+				    window);
-+}
-+
-+static int rs_collect_tlc_data(struct iwl_mvm *mvm,
-+			       struct iwl_lq_sta *lq_sta,
-+			       struct iwl_scale_tbl_info *tbl,
-+			       int scale_index, int attempts, int successes)
- {
- 	struct iwl_rate_scale_data *window = NULL;
--	int ret;
- 
- 	if (scale_index < 0 || scale_index >= IWL_RATE_COUNT)
- 		return -EINVAL;
-@@ -745,16 +760,6 @@ static int rs_collect_tx_data(struct iwl_mvm *mvm,
- 
- 	/* Select window for current tx bit rate */
- 	window = &(tbl->win[scale_index]);
--
--	ret = _rs_collect_tx_data(mvm, tbl, scale_index, attempts, successes,
--				  window);
--	if (ret)
--		return ret;
--
--	if (WARN_ON_ONCE(reduced_txp > TPC_MAX_REDUCTION))
--		return -EINVAL;
--
--	window = &tbl->tpc_win[reduced_txp];
- 	return _rs_collect_tx_data(mvm, tbl, scale_index, attempts, successes,
- 				   window);
- }
-@@ -1301,17 +1306,30 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 	 * first index into rate scale table.
- 	 */
- 	if (info->flags & IEEE80211_TX_STAT_AMPDU) {
--		/* ampdu_ack_len = 0 marks no BA was received. In this case
--		 * treat it as a single frame loss as we don't want the success
--		 * ratio to dip too quickly because a BA wasn't received
-+		rs_collect_tpc_data(mvm, lq_sta, curr_tbl, lq_rate.index,
-+				    info->status.ampdu_len,
-+				    info->status.ampdu_ack_len,
-+				    reduced_txp);
-+
-+		/* ampdu_ack_len = 0 marks no BA was received. For TLC, treat
-+		 * it as a single frame loss as we don't want the success ratio
-+		 * to dip too quickly because a BA wasn't received.
-+		 * For TPC, there's no need for this optimisation since we want
-+		 * to recover very quickly from a bad power reduction and,
-+		 * therefore we'd like the success ratio to get an immediate hit
-+		 * when failing to get a BA, so we'd switch back to a lower or
-+		 * zero power reduction. When FW transmits agg with a rate
-+		 * different from the initial rate, it will not use reduced txp
-+		 * and will send BA notification twice (one empty with reduced
-+		 * txp equal to the value from LQ and one with reduced txp 0).
-+		 * We need to update counters for each txp level accordingly.
- 		 */
- 		if (info->status.ampdu_ack_len == 0)
- 			info->status.ampdu_len = 1;
- 
--		rs_collect_tx_data(mvm, lq_sta, curr_tbl, lq_rate.index,
--				   info->status.ampdu_len,
--				   info->status.ampdu_ack_len,
--				   reduced_txp);
-+		rs_collect_tlc_data(mvm, lq_sta, curr_tbl, lq_rate.index,
-+				    info->status.ampdu_len,
-+				    info->status.ampdu_ack_len);
- 
- 		/* Update success/fail counts if not searching for new mode */
- 		if (lq_sta->rs_state == RS_STATE_STAY_IN_COLUMN) {
-@@ -1344,9 +1362,13 @@ void iwl_mvm_rs_tx_status(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
- 			else
- 				continue;
- 
--			rs_collect_tx_data(mvm, lq_sta, tmp_tbl, lq_rate.index,
--					   1, i < retries ? 0 : legacy_success,
--					   reduced_txp);
-+			rs_collect_tpc_data(mvm, lq_sta, tmp_tbl,
-+					    lq_rate.index, 1,
-+					    i < retries ? 0 : legacy_success,
-+					    reduced_txp);
-+			rs_collect_tlc_data(mvm, lq_sta, tmp_tbl,
-+					    lq_rate.index, 1,
-+					    i < retries ? 0 : legacy_success);
- 		}
- 
- 		/* Update success/fail counts if not searching for new mode */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 8bf48a7..0914ec2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -1029,7 +1029,6 @@ static void iwl_mvm_rx_tx_cmd_agg(struct iwl_mvm *mvm,
- 		struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 		mvmsta->tid_data[tid].rate_n_flags =
- 			le32_to_cpu(tx_resp->initial_rate);
--		mvmsta->tid_data[tid].reduced_tpc = tx_resp->reduced_tpc;
- 		mvmsta->tid_data[tid].tx_time =
- 			le16_to_cpu(tx_resp->wireless_media_time);
- 	}
-@@ -1060,7 +1059,7 @@ static void iwl_mvm_tx_info_from_ba_notif(struct ieee80211_tx_info *info,
- 	/* TODO: not accounted if the whole A-MPDU failed */
- 	info->status.tx_time = tid_data->tx_time;
- 	info->status.status_driver_data[0] =
--		(void *)(uintptr_t)tid_data->reduced_tpc;
-+		(void *)(uintptr_t)ba_notif->reduced_txp;
- 	info->status.status_driver_data[1] =
- 		(void *)(uintptr_t)tid_data->rate_n_flags;
- }
-@@ -1133,6 +1132,8 @@ void iwl_mvm_rx_ba_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 			   scd_flow, ba_resp_scd_ssn, ba_notif->txed,
- 			   ba_notif->txed_2_done);
- 
-+	IWL_DEBUG_TX_REPLY(mvm, "reduced txp from ba notif %d\n",
-+			   ba_notif->reduced_txp);
- 	tid_data->next_reclaimed = ba_resp_scd_ssn;
- 
- 	iwl_mvm_check_ratid_empty(mvm, sta, tid);
+
 -- 
-2.5.0
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
