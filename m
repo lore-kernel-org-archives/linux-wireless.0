@@ -1,53 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41624 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751475AbcA2JO0 (ORCPT
+Received: from mail-qg0-f65.google.com ([209.85.192.65]:33824 "EHLO
+	mail-qg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932820AbcA3SRr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Jan 2016 04:14:26 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [v2,1/3] mwifiex: firmware download enhancements
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1452152449-29803-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	chunfan chen <jeffc@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20160129091425.73F1C6045B@smtp.codeaurora.org> (sfid-20160129_101432_613647_7CFD4EC2)
-Date: Fri, 29 Jan 2016 09:14:25 +0000 (UTC)
+	Sat, 30 Jan 2016 13:17:47 -0500
+Received: by mail-qg0-f65.google.com with SMTP id 94so7466950qgt.1
+        for <linux-wireless@vger.kernel.org>; Sat, 30 Jan 2016 10:17:46 -0800 (PST)
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH v2] mac80211: mesh: drop constant field mean_chain_len
+Date: Sat, 30 Jan 2016 13:17:03 -0500
+Message-Id: <1454177823-24313-1-git-send-email-me@bobcopeland.com> (sfid-20160130_191750_882466_18CB2126)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+The mean_chain_len field in struct mesh_table is copied whenever a
+new mesh table is allocated, but only ever has the value 2 and is
+never otherwise updated, so just remove it and use the related
+define instead.
 
-> From: chunfan chen <jeffc@marvell.com>
-> 
-> Same chip is being used by WLAN as well as bluetooth
-> drivers. Each driver needs to check during initialisation
-> if firmware is already active or it needs to be freshly
-> downloaded. If one driver has started downloading the
-> firmware, other finds the winner flag as false.
-> 
-> mwifiex_check_fw_status() checks firmware status and also
-> check if WLAN is the winner for firmware downloading.
-> 
-> Once we detect that other interface is downloading
-> the firmware, we call this routine again with max
-> poll count to wait until firmware is ready.
-> 
-> This patch splits the routine to avoid checking
-> winner status unnecessarily multiple times and ensures
-> that correct messages are displayed to user.
-> 
-> Firmware status poll count is also increased to 150.
-> 
-> Signed-off-by: Chunfan Chen <jeffc@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
 
-Thanks, 3 patches applied to wireless-drivers-next.git:
+v2: Upon rereading the commit log, noticed some lies.  Reworded.
 
-2fd5c6ed0b4f mwifiex: firmware download enhancements
-dc386ce76ded mwifiex: fix IBSS data path issue.
-17934b6a32b2 mwifiex: add debugfs file to read chip information
+v1: Sending this by itself as it's pretty trivial and doesn't conflict with
+other outstanding patches.
 
-Kalle Valo
+ net/mac80211/mesh.h         | 3 ---
+ net/mac80211/mesh_pathtbl.c | 9 +++------
+ 2 files changed, 3 insertions(+), 9 deletions(-)
+
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index 4a8019f..87c017a 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -137,8 +137,6 @@ struct mesh_path {
+  * @copy_node: function to copy nodes of the table
+  * @size_order: determines size of the table, there will be 2^size_order hash
+  *	buckets
+- * @mean_chain_len: maximum average length for the hash buckets' list, if it is
+- *	reached, the table will grow
+  * @known_gates: list of known mesh gates and their mpaths by the station. The
+  * gate's mpath may or may not be resolved and active.
+  *
+@@ -154,7 +152,6 @@ struct mesh_table {
+ 	void (*free_node) (struct hlist_node *p, bool free_leafs);
+ 	int (*copy_node) (struct hlist_node *p, struct mesh_table *newtbl);
+ 	int size_order;
+-	int mean_chain_len;
+ 	struct hlist_head *known_gates;
+ 	spinlock_t gates_lock;
+ 
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index dadf8dc..c95bdb8 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -160,11 +160,10 @@ static int mesh_table_grow(struct mesh_table *oldtbl,
+ 	int i;
+ 
+ 	if (atomic_read(&oldtbl->entries)
+-			< oldtbl->mean_chain_len * (oldtbl->hash_mask + 1))
++			< MEAN_CHAIN_LEN * (oldtbl->hash_mask + 1))
+ 		return -EAGAIN;
+ 
+ 	newtbl->free_node = oldtbl->free_node;
+-	newtbl->mean_chain_len = oldtbl->mean_chain_len;
+ 	newtbl->copy_node = oldtbl->copy_node;
+ 	newtbl->known_gates = oldtbl->known_gates;
+ 	atomic_set(&newtbl->entries, atomic_read(&oldtbl->entries));
+@@ -585,7 +584,7 @@ struct mesh_path *mesh_path_add(struct ieee80211_sub_if_data *sdata,
+ 
+ 	hlist_add_head_rcu(&new_node->list, bucket);
+ 	if (atomic_inc_return(&tbl->entries) >=
+-	    tbl->mean_chain_len * (tbl->hash_mask + 1))
++	    MEAN_CHAIN_LEN * (tbl->hash_mask + 1))
+ 		grow = 1;
+ 
+ 	mesh_paths_generation++;
+@@ -714,7 +713,7 @@ int mpp_path_add(struct ieee80211_sub_if_data *sdata,
+ 
+ 	hlist_add_head_rcu(&new_node->list, bucket);
+ 	if (atomic_inc_return(&tbl->entries) >=
+-	    tbl->mean_chain_len * (tbl->hash_mask + 1))
++	    MEAN_CHAIN_LEN * (tbl->hash_mask + 1))
+ 		grow = 1;
+ 
+ 	spin_unlock(&tbl->hashwlock[hash_idx]);
+@@ -1076,7 +1075,6 @@ int mesh_pathtbl_init(void)
+ 		return -ENOMEM;
+ 	tbl_path->free_node = &mesh_path_node_free;
+ 	tbl_path->copy_node = &mesh_path_node_copy;
+-	tbl_path->mean_chain_len = MEAN_CHAIN_LEN;
+ 	tbl_path->known_gates = kzalloc(sizeof(struct hlist_head), GFP_ATOMIC);
+ 	if (!tbl_path->known_gates) {
+ 		ret = -ENOMEM;
+@@ -1092,7 +1090,6 @@ int mesh_pathtbl_init(void)
+ 	}
+ 	tbl_mpp->free_node = &mesh_path_node_free;
+ 	tbl_mpp->copy_node = &mesh_path_node_copy;
+-	tbl_mpp->mean_chain_len = MEAN_CHAIN_LEN;
+ 	tbl_mpp->known_gates = kzalloc(sizeof(struct hlist_head), GFP_ATOMIC);
+ 	if (!tbl_mpp->known_gates) {
+ 		ret = -ENOMEM;
+-- 
+2.1.4
+
