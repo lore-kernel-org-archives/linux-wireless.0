@@ -1,94 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f171.google.com ([209.85.160.171]:36398 "EHLO
-	mail-yk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750771AbcAAU6N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Jan 2016 15:58:13 -0500
-MIME-Version: 1.0
-In-Reply-To: <CACT4Y+baorktL_dBHEWcz_jHYTzhM_-DJoms81bzVx8FbYk63w@mail.gmail.com>
-References: <CACT4Y+baorktL_dBHEWcz_jHYTzhM_-DJoms81bzVx8FbYk63w@mail.gmail.com>
-Date: Fri, 1 Jan 2016 12:58:11 -0800
-Message-ID: <CAM_iQpX-vHywG6DJb=5wLCouNAXXqA1wo=tKJ1S78MDyZfkNCw@mail.gmail.com> (sfid-20160101_215923_098806_706354D9)
-Subject: Re: net/nfc: GPF in llcp_sock_getname
-From: Cong Wang <xiyou.wangcong@gmail.com>
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	linux-wireless@vger.kernel.org, netdev <netdev@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	syzkaller <syzkaller@googlegroups.com>,
-	Kostya Serebryany <kcc@google.com>,
-	Alexander Potapenko <glider@google.com>,
-	Sasha Levin <sasha.levin@oracle.com>,
-	Eric Dumazet <edumazet@google.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from glaubenleben.de ([85.214.105.140]:53795 "EHLO glaubenleben.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752683AbcA3RCR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 30 Jan 2016 12:02:17 -0500
+From: Andreas Kemnade <andreas@kemnade.info>
+To: libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, hns@goldelico.com
+Cc: Andreas Kemnade <andreas@kemnade.info>
+Subject: [PATCH v3 2/6] libertas: check whether bus can do more than polling
+Date: Sat, 30 Jan 2016 18:01:52 +0100
+Message-Id: <1454173316-13444-3-git-send-email-andreas@kemnade.info> (sfid-20160130_180451_604177_117DE5BA)
+In-Reply-To: <1454173316-13444-1-git-send-email-andreas@kemnade.info>
+References: <1454173316-13444-1-git-send-email-andreas@kemnade.info>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 1, 2016 at 5:58 AM, Dmitry Vyukov <dvyukov@google.com> wrote:
->
-> kasan: GPF could be caused by NULL-ptr deref or user memory
-> accessgeneral protection fault: 0000 [#51] SMP KASAN
-> Modules linked in:
-> CPU: 2 PID: 4207 Comm: a.out Not tainted 4.4.0-rc7+ #184
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
-> task: ffff8800683e9780 ti: ffff880064c70000 task.ti: ffff880064c70000
-> RIP: 0010:[<ffffffff816d1d5b>]  [<ffffffff816d1d5b>]
-> kasan_report_error+0x1b/0x560
-> RSP: 0018:ffff880064c77c90  EFLAGS: 00010286
-> RAX: dffffc0000000000 RBX: 0000000000000003 RCX: dffffc0000000000
-> RDX: 0000000000000000 RSI: 0000000000000003 RDI: ffff880064c77c98
-> RBP: ffff880064c77cc0 R08: ffffed000c98efd6 R09: ffff880064c77e58
-> R10: ffff8800639670a0 R11: ffff880063967098 R12: ffff880064c77e6a
-> R13: 0000000000000000 R14: 0000000000000000 R15: ffff880063967088
-> FS:  00000000018ca880(0063) GS:ffff88006da00000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-> CR2: 000000c8200012e0 CR3: 0000000064c59000 CR4: 00000000000006e0
-> Stack:
->  ffffffff816d25d4 0000000000000000 0000000000000018 0000000000000003
->  0000000300004000 ffffffff816d17ed ffff880064c77cd0 ffffffff816d1264
->  ffff880064c77cf8 ffffffff816d17ed 0000000000000000 ffff880064c77e58
-> Call Trace:
->  [<     inline     >] check_memory_region mm/kasan/kasan.c:264
->  [<ffffffff816d1264>] __asan_loadN+0x124/0x1a0 mm/kasan/kasan.c:512
->  [<ffffffff816d17ed>] memcpy+0x1d/0x40 mm/kasan/kasan.c:297
->  [<ffffffff85becf44>] llcp_sock_getname+0x424/0x600 net/nfc/llcp_sock.c:519
->  [<ffffffff84b5ab4d>] SYSC_getsockname+0x1bd/0x220 net/socket.c:1570
->  [<ffffffff84b60244>] SyS_getsockname+0x24/0x30 net/socket.c:1555
->  [<ffffffff85c8eaf6>] entry_SYSCALL_64_fastpath+0x16/0x7a
-> arch/x86/entry/entry_64.S:185
-> Code: 48 01 c7 e8 38 2b fc ff 5d c3 66 0f 1f 44 00 00 48 8b 17 48 b9
-> 00 00 00 00 00 fc ff df 48 8b 77 10 48 89 d0 48 c1 e8 03 48 01 c8 <80>
-> 38 00 75 1d 48 01 d6 eb 13 48 83 c2 08 48 89 d0 48 c1 e8 03
-> RIP  [<ffffffff816d1d5b>] kasan_report_error+0x1b/0x560 mm/kasan/report.c:214
->  RSP <ffff880064c77c90>
-> ---[ end trace b0c68fb0d02b9447 ]---
->
-> On commit 8513342170278468bac126640a5d2d12ffbff106 (Dec 28).
-> GPF seems to be caused by a data race on socket state.
+If a sdio host does not support sdio irqs, polling is used
+instead. That has an impact on performance. Some functionality
+should not be enabled then. This add a variable in
+libertas_priv to indicate that.
 
-It looks like we forget to initialize ->service_name_len
-and ->servicce_name before bind().
+Signed-off-by: Andreas Kemnade <andreas@kemnade.info>
+---
+changes in v3:
+corrected paths
+ drivers/net/wireless/marvell/libertas/dev.h     | 1 +
+ drivers/net/wireless/marvell/libertas/if_sdio.c | 2 +-
+ drivers/net/wireless/marvell/libertas/if_usb.c  | 1 +
+ 3 files changed, 3 insertions(+), 1 deletion(-)
 
-Could you try the following patch?
+diff --git a/drivers/net/wireless/marvell/libertas/dev.h b/drivers/net/wireless/libertas/dev.h
+index 6bd1608..edf710b 100644
+--- a/drivers/net/wireless/marvell/libertas/dev.h
++++ b/drivers/net/wireless/marvell/libertas/dev.h
+@@ -99,6 +99,7 @@ struct lbs_private {
+ 	/* Hardware access */
+ 	void *card;
+ 	bool iface_running;
++	u8 is_polling; /* host has to poll the card irq */
+ 	u8 fw_ready;
+ 	u8 surpriseremoved;
+ 	u8 setup_fw_on_resume;
+diff --git a/drivers/net/wireless/marvell/libertas/if_sdio.c b/drivers/net/wireless/libertas/if_sdio.c
+index f1f31a2..13db8b5 100644
+--- a/drivers/net/wireless/marvell/libertas/if_sdio.c
++++ b/drivers/net/wireless/marvell/libertas/if_sdio.c
+@@ -1271,7 +1271,7 @@ static int if_sdio_probe(struct sdio_func *func,
+ 	priv->reset_card = if_sdio_reset_card;
+ 	priv->power_save = if_sdio_power_save;
+ 	priv->power_restore = if_sdio_power_restore;
+-
++	priv->is_polling = !(func->card->host->caps & MMC_CAP_SDIO_IRQ);
+ 	ret = if_sdio_power_on(card);
+ 	if (ret)
+ 		goto err_activate_card;
+diff --git a/drivers/net/wireless/marvell/libertas/if_usb.c b/drivers/net/wireless/libertas/if_usb.c
+index dff08a2..aba0c99 100644
+--- a/drivers/net/wireless/marvell/libertas/if_usb.c
++++ b/drivers/net/wireless/marvell/libertas/if_usb.c
+@@ -267,6 +267,7 @@ static int if_usb_probe(struct usb_interface *intf,
+ 	priv->enter_deep_sleep = NULL;
+ 	priv->exit_deep_sleep = NULL;
+ 	priv->reset_deep_sleep_wakeup = NULL;
++	priv->is_polling = false;
+ #ifdef CONFIG_OLPC
+ 	if (machine_is_olpc())
+ 		priv->reset_card = if_usb_reset_olpc_card;
+-- 
+2.1.4
 
-Thanks!
-
------------------>
-
-diff --git a/net/nfc/llcp_sock.c b/net/nfc/llcp_sock.c
-index ecf0a01..252f3c0 100644
---- a/net/nfc/llcp_sock.c
-+++ b/net/nfc/llcp_sock.c
-@@ -961,6 +961,8 @@ struct sock *nfc_llcp_sock_alloc(struct socket
-*sock, int type, gfp_t gfp, int k
-
-        llcp_sock->ssap = 0;
-        llcp_sock->dsap = LLCP_SAP_SDP;
-+       llcp_sock->service_name_len = 0;
-+       llcp_sock->service_name = NULL;
-        llcp_sock->rw = LLCP_MAX_RW + 1;
-        llcp_sock->miux = cpu_to_be16(LLCP_MAX_MIUX + 1);
-        llcp_sock->send_n = llcp_sock->send_ack_n = 0;
