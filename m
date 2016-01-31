@@ -1,299 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:33486 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932902AbcAMJaE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Jan 2016 04:30:04 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u0D9U3HU005844
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 01:30:03 -0800
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-	by mx0a-0016f401.pphosted.com with ESMTP id 20dm0m000a-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Wed, 13 Jan 2016 01:30:03 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	chunfan chen <jeffc@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v2 4/6] mwifiex: report wakeup reason to cfg80211
-Date: Wed, 13 Jan 2016 01:26:55 -0800
-Message-ID: <1452677217-21439-5-git-send-email-akarwar@marvell.com> (sfid-20160113_103022_960257_F401C572)
-In-Reply-To: <1452677217-21439-1-git-send-email-akarwar@marvell.com>
-References: <1452677217-21439-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga04.intel.com ([192.55.52.120]:9395 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757312AbcAaLGq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jan 2016 06:06:46 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 17/31] iwlwifi: mvm: track low-latency sources separately
+Date: Sun, 31 Jan 2016 13:06:12 +0200
+Message-Id: <1454238386-27032-17-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160131_120653_948974_0151EC51)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: chunfan chen <jeffc@marvell.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-This patch adds code to report wakeup reason to cfg80211
-when system is resumed.
+To be able to test low-latency behaviour properly, split the
+different low-latency sources so that setting any one of them,
+for example from debugfs, is sufficient; this avoids getting
+the debug setting overwritten by other sources.
 
-Signed-off-by: chunfan chen <jeffc@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c    | 58 ++++++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/cmdevt.c      | 13 +++++
- drivers/net/wireless/marvell/mwifiex/fw.h          | 20 ++++++++
- drivers/net/wireless/marvell/mwifiex/ioctl.h       |  4 ++
- drivers/net/wireless/marvell/mwifiex/main.h        |  6 +++
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c     | 19 +++++++
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |  3 ++
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c   | 16 ++++++
- 8 files changed, 139 insertions(+)
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c | 19 ++++++++++++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h         | 12 +++++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c       |  6 ++----
+ 3 files changed, 23 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index a1b8d89..c80d9e2 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3316,6 +3316,64 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
- 
- static int mwifiex_cfg80211_resume(struct wiphy *wiphy)
- {
-+	struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
-+	struct mwifiex_private *priv =
-+		mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
-+	struct mwifiex_ds_wakeup_reason wakeup_reason;
-+	struct cfg80211_wowlan_wakeup wakeup_report;
-+	int i;
-+
-+	mwifiex_get_wakeup_reason(priv, HostCmd_ACT_GEN_GET, MWIFIEX_SYNC_CMD,
-+				  &wakeup_reason);
-+	memset(&wakeup_report, 0, sizeof(struct cfg80211_wowlan_wakeup));
-+
-+	wakeup_report.pattern_idx = -1;
-+
-+	switch (wakeup_reason.hs_wakeup_reason) {
-+	case NO_HSWAKEUP_REASON:
-+		break;
-+	case BCAST_DATA_MATCHED:
-+		break;
-+	case MCAST_DATA_MATCHED:
-+		break;
-+	case UCAST_DATA_MATCHED:
-+		break;
-+	case MASKTABLE_EVENT_MATCHED:
-+		break;
-+	case NON_MASKABLE_EVENT_MATCHED:
-+		if (wiphy->wowlan_config->disconnect)
-+			wakeup_report.disconnect = true;
-+		if (wiphy->wowlan_config->nd_config)
-+			wakeup_report.net_detect = adapter->nd_info;
-+		break;
-+	case NON_MASKABLE_CONDITION_MATCHED:
-+		break;
-+	case MAGIC_PATTERN_MATCHED:
-+		if (wiphy->wowlan_config->magic_pkt)
-+			wakeup_report.magic_pkt = true;
-+		if (wiphy->wowlan_config->n_patterns)
-+			wakeup_report.pattern_idx = 1;
-+		break;
-+	case CONTROL_FRAME_MATCHED:
-+		break;
-+	case	MANAGEMENT_FRAME_MATCHED:
-+		break;
-+	default:
-+		break;
-+	}
-+
-+	if ((wakeup_reason.hs_wakeup_reason > 0) &&
-+	    (wakeup_reason.hs_wakeup_reason <= 7))
-+		cfg80211_report_wowlan_wakeup(&priv->wdev, &wakeup_report,
-+					      GFP_KERNEL);
-+
-+	if (adapter->nd_info) {
-+		for (i = 0 ; i < adapter->nd_info->n_matches ; i++)
-+			kfree(adapter->nd_info->matches[i]);
-+		kfree(adapter->nd_info);
-+		adapter->nd_info = NULL;
-+	}
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index cb25aa7..a12adee 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -1657,3 +1657,16 @@ int mwifiex_ret_get_hw_spec(struct mwifiex_private *priv,
- 
- 	return 0;
- }
-+
-+/* This function handles the command response of hs wakeup reason
-+ * command.
-+ */
-+int mwifiex_ret_wakeup_reason(struct mwifiex_private *priv,
-+			      struct host_cmd_ds_command *resp,
-+			      struct host_cmd_ds_wakeup_reason *wakeup_reason)
-+{
-+	wakeup_reason->wakeup_reason =
-+		resp->params.hs_wakeup_reason.wakeup_reason;
-+
-+	return 0;
-+}
-diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
-index 81b491a..d293e48 100644
---- a/drivers/net/wireless/marvell/mwifiex/fw.h
-+++ b/drivers/net/wireless/marvell/mwifiex/fw.h
-@@ -373,6 +373,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
- #define HostCmd_CMD_MGMT_FRAME_REG                    0x010c
- #define HostCmd_CMD_REMAIN_ON_CHAN                    0x010d
- #define HostCmd_CMD_11AC_CFG			      0x0112
-+#define HostCmd_CMD_HS_WAKEUP_REASON                  0x0116
- #define HostCmd_CMD_TDLS_CONFIG                       0x0100
- #define HostCmd_CMD_MC_POLICY                         0x0121
- #define HostCmd_CMD_TDLS_OPER                         0x0122
-@@ -607,6 +608,20 @@ struct mwifiex_ie_types_data {
- #define MWIFIEX_RXPD_FLAGS_TDLS_PACKET      0x01
- #define MWIFIEX_TXPD_FLAGS_REQ_TX_STATUS    0x20
- 
-+enum HS_WAKEUP_REASON {
-+	NO_HSWAKEUP_REASON = 0,
-+	BCAST_DATA_MATCHED,
-+	MCAST_DATA_MATCHED,
-+	UCAST_DATA_MATCHED,
-+	MASKTABLE_EVENT_MATCHED,
-+	NON_MASKABLE_EVENT_MATCHED,
-+	NON_MASKABLE_CONDITION_MATCHED,
-+	MAGIC_PATTERN_MATCHED,
-+	CONTROL_FRAME_MATCHED,
-+	MANAGEMENT_FRAME_MATCHED,
-+	RESERVED
-+};
-+
- struct txpd {
- 	u8 bss_type;
- 	u8 bss_num;
-@@ -2159,6 +2174,10 @@ struct host_cmd_ds_robust_coex {
- 	__le16 reserved;
- } __packed;
- 
-+struct host_cmd_ds_wakeup_reason {
-+	u16  wakeup_reason;
-+} __packed;
-+
- struct host_cmd_ds_command {
- 	__le16 command;
- 	__le16 size;
-@@ -2231,6 +2250,7 @@ struct host_cmd_ds_command {
- 		struct host_cmd_sdio_sp_rx_aggr_cfg sdio_rx_aggr_cfg;
- 		struct host_cmd_ds_multi_chan_policy mc_policy;
- 		struct host_cmd_ds_robust_coex coex;
-+		struct host_cmd_ds_wakeup_reason hs_wakeup_reason;
- 	} params;
- } __packed;
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/ioctl.h b/drivers/net/wireless/marvell/mwifiex/ioctl.h
-index 6333b16..14cfa37 100644
---- a/drivers/net/wireless/marvell/mwifiex/ioctl.h
-+++ b/drivers/net/wireless/marvell/mwifiex/ioctl.h
-@@ -271,6 +271,10 @@ struct mwifiex_ds_hs_cfg {
- 	u32 gap;
- };
- 
-+struct mwifiex_ds_wakeup_reason {
-+	u16  hs_wakeup_reason;
-+};
-+
- #define DEEP_SLEEP_ON  1
- #define DEEP_SLEEP_OFF 0
- #define DEEP_SLEEP_IDLE_TIME	100
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index bf9b24a..c755be54c 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1599,6 +1599,12 @@ void mwifiex_drv_info_dump(struct mwifiex_adapter *adapter);
- void mwifiex_upload_device_dump(struct mwifiex_adapter *adapter);
- void *mwifiex_alloc_dma_align_buf(int rx_len, gfp_t flags);
- void mwifiex_queue_main_work(struct mwifiex_adapter *adapter);
-+int mwifiex_get_wakeup_reason(struct mwifiex_private *priv, u16 action,
-+			      int cmd_type,
-+			      struct mwifiex_ds_wakeup_reason *wakeup_reason);
-+int mwifiex_ret_wakeup_reason(struct mwifiex_private *priv,
-+			      struct host_cmd_ds_command *resp,
-+			      struct host_cmd_ds_wakeup_reason *wakeup_reason);
- void mwifiex_coex_ampdu_rxwinsize(struct mwifiex_adapter *adapter);
- void mwifiex_11n_delba(struct mwifiex_private *priv, int tid);
- int mwifiex_send_domain_info_cmd_fw(struct wiphy *wiphy);
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index 60f3ded..30f1526 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -1813,6 +1813,22 @@ static int mwifiex_cmd_sdio_rx_aggr_cfg(struct host_cmd_ds_command *cmd,
- 	return 0;
- }
- 
-+/* This function prepares command to get HS wakeup reason.
-+ *
-+ * Preparation includes -
-+ *      - Setting command ID, action and proper size
-+ *      - Ensuring correct endian-ness
-+ */
-+static int mwifiex_cmd_get_wakeup_reason(struct mwifiex_private *priv,
-+					 struct host_cmd_ds_command *cmd)
-+{
-+	cmd->command = cpu_to_le16(HostCmd_CMD_HS_WAKEUP_REASON);
-+	cmd->size = cpu_to_le16(sizeof(struct host_cmd_ds_wakeup_reason) +
-+				S_DS_GEN);
-+
-+	return 0;
-+}
-+
- /*
-  * This function prepares the commands before sending them to the firmware.
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
+index 9e0d463..c286a5f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
+@@ -7,6 +7,7 @@
   *
-@@ -2067,6 +2083,9 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
- 		ret = mwifiex_cmd_sdio_rx_aggr_cfg(cmd_ptr, cmd_action,
- 						   data_buf);
- 		break;
-+	case HostCmd_CMD_HS_WAKEUP_REASON:
-+		ret = mwifiex_cmd_get_wakeup_reason(priv, cmd_ptr);
-+		break;
- 	case HostCmd_CMD_MC_POLICY:
- 		ret = mwifiex_cmd_set_mc_policy(priv, cmd_ptr, cmd_action,
- 						data_buf);
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-index 4b23d3b..d96523e 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
-@@ -1236,6 +1236,9 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
- 	case HostCmd_CMD_SDIO_SP_RX_AGGR_CFG:
- 		ret = mwifiex_ret_sdio_rx_aggr_cfg(priv, resp);
- 		break;
-+	case HostCmd_CMD_HS_WAKEUP_REASON:
-+		ret = mwifiex_ret_wakeup_reason(priv, resp, data_buf);
-+		break;
- 	case HostCmd_CMD_TDLS_CONFIG:
- 		break;
- 	case HostCmd_CMD_ROBUST_COEX:
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-index 7277c24..5cbee58 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -1465,3 +1465,19 @@ mwifiex_set_gen_ie(struct mwifiex_private *priv, const u8 *ie, int ie_len)
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016        Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -33,6 +34,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016        Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -1255,6 +1257,7 @@ static ssize_t iwl_dbgfs_low_latency_write(struct ieee80211_vif *vif, char *buf,
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	struct iwl_mvm *mvm = mvmvif->mvm;
++	bool prev;
+ 	u8 value;
+ 	int ret;
  
- 	return 0;
+@@ -1265,7 +1268,9 @@ static ssize_t iwl_dbgfs_low_latency_write(struct ieee80211_vif *vif, char *buf,
+ 		return -EINVAL;
+ 
+ 	mutex_lock(&mvm->mutex);
+-	iwl_mvm_update_low_latency(mvm, vif, value);
++	prev = iwl_mvm_vif_low_latency(mvmvif);
++	mvmvif->low_latency_dbgfs = value;
++	iwl_mvm_update_low_latency(mvm, vif, prev);
+ 	mutex_unlock(&mvm->mutex);
+ 
+ 	return count;
+@@ -1277,11 +1282,15 @@ static ssize_t iwl_dbgfs_low_latency_read(struct file *file,
+ {
+ 	struct ieee80211_vif *vif = file->private_data;
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+-	char buf[2];
++	char buf[30] = {};
++	int len;
+ 
+-	buf[0] = mvmvif->low_latency ? '1' : '0';
+-	buf[1] = '\n';
+-	return simple_read_from_buffer(user_buf, count, ppos, buf, sizeof(buf));
++	len = snprintf(buf, sizeof(buf) - 1,
++		       "traffic=%d\ndbgfs=%d\nvcmd=%d\n",
++		       mvmvif->low_latency_traffic,
++		       mvmvif->low_latency_dbgfs,
++		       mvmvif->low_latency_vcmd);
++	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
  }
-+
-+/* This function get Host Sleep wake up reason.
-+ *
-+ */
-+int mwifiex_get_wakeup_reason(struct mwifiex_private *priv, u16 action,
-+			      int cmd_type,
-+			      struct mwifiex_ds_wakeup_reason *wakeup_reason)
-+{
-+	int status = 0;
-+
-+	status = mwifiex_send_cmd(priv, HostCmd_CMD_HS_WAKEUP_REASON,
-+				  HostCmd_ACT_GEN_GET, 0, wakeup_reason,
-+				  cmd_type == MWIFIEX_SYNC_CMD);
-+
-+	return status;
-+}
+ 
+ static ssize_t iwl_dbgfs_uapsd_misbehaving_read(struct file *file,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index b45cf4f..418aeff 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -346,8 +346,9 @@ struct iwl_mvm_vif_bf_data {
+  * @pm_enabled - Indicate if MAC power management is allowed
+  * @monitor_active: indicates that monitor context is configured, and that the
+  *	interface should get quota etc.
+- * @low_latency: indicates that this interface is in low-latency mode
+- *	(VMACLowLatencyMode)
++ * @low_latency_traffic: indicates low latency traffic was detected
++ * @low_latency_dbgfs: low latency mode set from debugfs
++ * @low_latency_vcmd: low latency mode set from vendor command
+  * @ps_disabled: indicates that this interface requires PS to be disabled
+  * @queue_params: QoS params for this MAC
+  * @bcast_sta: station used for broadcast packets. Used by the following
+@@ -375,7 +376,7 @@ struct iwl_mvm_vif {
+ 	bool ap_ibss_active;
+ 	bool pm_enabled;
+ 	bool monitor_active;
+-	bool low_latency;
++	bool low_latency_traffic, low_latency_dbgfs, low_latency_vcmd;
+ 	bool ps_disabled;
+ 	struct iwl_mvm_vif_bf_data bf_data;
+ 
+@@ -1427,8 +1428,9 @@ static inline bool iwl_mvm_vif_low_latency(struct iwl_mvm_vif *mvmvif)
+ 	 * binding, so this has no real impact. For now, just return
+ 	 * the current desired low-latency state.
+ 	 */
+-
+-	return mvmvif->low_latency;
++	return mvmvif->low_latency_dbgfs ||
++	       mvmvif->low_latency_traffic ||
++	       mvmvif->low_latency_vcmd;
+ }
+ 
+ /* hw scheduler queue config */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 3a989f5..59453c1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -937,18 +937,16 @@ bool iwl_mvm_rx_diversity_allowed(struct iwl_mvm *mvm)
+ }
+ 
+ int iwl_mvm_update_low_latency(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
+-			       bool value)
++			       bool prev)
+ {
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 	int res;
+ 
+ 	lockdep_assert_held(&mvm->mutex);
+ 
+-	if (mvmvif->low_latency == value)
++	if (iwl_mvm_vif_low_latency(mvmvif) == prev)
+ 		return 0;
+ 
+-	mvmvif->low_latency = value;
+-
+ 	res = iwl_mvm_update_quotas(mvm, false, NULL);
+ 	if (res)
+ 		return res;
 -- 
-1.8.1.4
+2.5.0
 
