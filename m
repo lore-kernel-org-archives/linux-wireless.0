@@ -1,118 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f176.google.com ([209.85.217.176]:33720 "EHLO
-	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965064AbcAUNWB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 08:22:01 -0500
-Received: by mail-lb0-f176.google.com with SMTP id x4so23400640lbm.0
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Jan 2016 05:22:00 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
+Received: from mga04.intel.com ([192.55.52.120]:9395 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757256AbcAaLGg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jan 2016 06:06:36 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH 2/2] mac80211: expose txq queue depth and size to drivers
-Date: Thu, 21 Jan 2016 14:23:08 +0100
-Message-Id: <1453382588-27105-2-git-send-email-michal.kazior@tieto.com> (sfid-20160121_142205_565285_DC42DB91)
-In-Reply-To: <1453382588-27105-1-git-send-email-michal.kazior@tieto.com>
-References: <1453382588-27105-1-git-send-email-michal.kazior@tieto.com>
+Cc: Golan Ben-Ami <golan.ben.ami@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 10/31] iwlwifi: mvm: add trigger for firmware dump upon TX response status
+Date: Sun, 31 Jan 2016 13:06:05 +0200
+Message-Id: <1454238386-27032-10-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160131_123654_591499_85619E99)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will allow drivers to make more educated
-decisions whether to defer transmission or not.
+From: Golan Ben-Ami <golan.ben.ami@intel.com>
 
-Relying on wake_tx_queue() call count implicitly
-was not possible because it could be called
-without queued frame count actually changing on
-software tx aggregation start/stop code paths.
+This will allow to collect the data when the firmware
+sends a specific tx response status.
 
-It was also not possible to know how long
-byte-wise queue was without dequeueing.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- include/net/mac80211.h  |  4 ++++
- net/mac80211/iface.c    |  2 ++
- net/mac80211/sta_info.c |  2 ++
- net/mac80211/tx.c       | 11 ++++++++++-
- 4 files changed, 18 insertions(+), 1 deletion(-)
+ .../net/wireless/intel/iwlwifi/iwl-fw-error-dump.h |  3 ++
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h   | 13 +++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        | 33 ++++++++++++++++++++++
+ 3 files changed, 49 insertions(+)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 566df20dc957..c29ca8be9ac2 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1781,6 +1781,8 @@ struct ieee80211_tx_control {
-  *
-  * @vif: &struct ieee80211_vif pointer from the add_interface callback.
-  * @sta: station table entry, %NULL for per-vif queue
-+ * @qdepth: number of pending frames
-+ * @qsize: number of pending bytes
-  * @tid: the TID for this queue (unused for per-vif queue)
-  * @ac: the AC for this queue
-  * @drv_priv: driver private area, sized by hw->txq_data_size
-@@ -1791,6 +1793,8 @@ struct ieee80211_tx_control {
- struct ieee80211_txq {
- 	struct ieee80211_vif *vif;
- 	struct ieee80211_sta *sta;
-+	int qdepth;
-+	int qsize;
- 	u8 tid;
- 	u8 ac;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h
+index a5aaf68..8425e1a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-error-dump.h
+@@ -293,6 +293,8 @@ iwl_fw_error_next_data(struct iwl_fw_error_dump_data *data)
+  * @FW_DBG_TX_LATENCY: trigger log collection when the tx latency goes above a
+  *	threshold.
+  * @FW_DBG_TDLS: trigger log collection upon TDLS related events.
++ * @FW_DBG_TRIGGER_TX_STATUS: trigger log collection upon tx status when
++ *  the firmware sends a tx reply.
+  */
+ enum iwl_fw_dbg_trigger {
+ 	FW_DBG_TRIGGER_INVALID = 0,
+@@ -309,6 +311,7 @@ enum iwl_fw_dbg_trigger {
+ 	FW_DBG_TRIGGER_BA,
+ 	FW_DBG_TRIGGER_TX_LATENCY,
+ 	FW_DBG_TRIGGER_TDLS,
++	FW_DBG_TRIGGER_TX_STATUS,
  
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 0451f120746e..dfcb19080eb0 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -979,6 +979,8 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	/* must be last */
+ 	FW_DBG_TRIGGER_MAX,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+index 2273908..4050b4a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+@@ -750,6 +750,19 @@ struct iwl_fw_dbg_trigger_tdls {
+ } __packed;
  
- 		spin_lock_bh(&txqi->queue.lock);
- 		ieee80211_purge_tx_queue(&local->hw, &txqi->queue);
-+		txqi->txq.qdepth = 0;
-+		txqi->txq.qsize = 0;
- 		spin_unlock_bh(&txqi->queue.lock);
+ /**
++ * struct iwl_fw_dbg_trigger_tx_status - configures trigger for tx response
++ *  status.
++ * @statuses: the list of statuses to trigger the collection on
++ */
++struct iwl_fw_dbg_trigger_tx_status {
++	struct tx_status {
++		u8 status;
++		u8 reserved[3];
++	} __packed statuses[16];
++	__le32 reserved[2];
++} __packed;
++
++/**
+  * struct iwl_fw_dbg_conf_tlv - a TLV that describes a debug configuration.
+  * @id: conf id
+  * @usniffer: should the uSniffer image be used
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 8bf48a7..5d73db2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -736,6 +736,37 @@ static void iwl_mvm_hwrate_to_tx_status(u32 rate_n_flags,
+ 	iwl_mvm_hwrate_to_tx_rate(rate_n_flags, info->band, r);
+ }
  
- 		atomic_set(&sdata->txqs_len[txqi->txq.ac], 0);
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 7e007cf12cb2..4b93a11f4a0d 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -116,6 +116,8 @@ static void __cleanup_single_sta(struct sta_info *sta)
- 
- 			ieee80211_purge_tx_queue(&local->hw, &txqi->queue);
- 			atomic_sub(n, &sdata->txqs_len[txqi->txq.ac]);
-+			txqi->txq.qdepth = 0;
-+			txqi->txq.qsize = 0;
++static void iwl_mvm_tx_status_check_trigger(struct iwl_mvm *mvm,
++					    u32 status)
++{
++	struct iwl_fw_dbg_trigger_tlv *trig;
++	struct iwl_fw_dbg_trigger_tx_status *status_trig;
++	int i;
++
++	if (!iwl_fw_dbg_trigger_enabled(mvm->fw, FW_DBG_TRIGGER_TX_STATUS))
++		return;
++
++	trig = iwl_fw_dbg_get_trigger(mvm->fw, FW_DBG_TRIGGER_TX_STATUS);
++	status_trig = (void *)trig->data;
++
++	if (!iwl_fw_dbg_trigger_check_stop(mvm, NULL, trig))
++		return;
++
++	for (i = 0; i < ARRAY_SIZE(status_trig->statuses); i++) {
++		/* don't collect on status 0 */
++		if (!status_trig->statuses[i].status)
++			break;
++
++		if (status_trig->statuses[i].status != (status & TX_STATUS_MSK))
++			continue;
++
++		iwl_mvm_fw_dbg_collect_trig(mvm, trig,
++					    "Tx status %d was received",
++					    status & TX_STATUS_MSK);
++		break;
++	}
++}
++
+ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
+ 				     struct iwl_rx_packet *pkt)
+ {
+@@ -784,6 +815,8 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
+ 			break;
  		}
- 	}
  
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 3311ce0f3d6c..6f9a0db3824e 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1266,7 +1266,13 @@ static void ieee80211_drv_tx(struct ieee80211_local *local,
- 	if (atomic_read(&sdata->txqs_len[ac]) >= local->hw.txq_ac_max_pending)
- 		netif_stop_subqueue(sdata->dev, ac);
- 
--	skb_queue_tail(&txqi->queue, skb);
-+	spin_lock_bh(&txqi->queue.lock);
-+	txq->qdepth++;
-+	txq->qsize += skb->len;
++		iwl_mvm_tx_status_check_trigger(mvm, status);
 +
-+	__skb_queue_tail(&txqi->queue, skb);
-+	spin_unlock_bh(&txqi->queue.lock);
-+
- 	drv_wake_tx_queue(local, txqi);
- 
- 	return;
-@@ -1294,6 +1300,9 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
- 	if (!skb)
- 		goto out;
- 
-+	txq->qdepth--;
-+	txq->qsize -= skb->len;
-+
- 	atomic_dec(&sdata->txqs_len[ac]);
- 	if (__netif_subqueue_stopped(sdata->dev, ac))
- 		ieee80211_propagate_queue_wake(local, sdata->vif.hw_queue[ac]);
+ 		info->status.rates[0].count = tx_resp->failure_frame + 1;
+ 		iwl_mvm_hwrate_to_tx_status(le32_to_cpu(tx_resp->initial_rate),
+ 					    info);
 -- 
-2.1.4
+2.5.0
 
