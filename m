@@ -1,42 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:40392 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932253AbcAYRVc (ORCPT
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:37688 "EHLO
+	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757218AbcAaPQS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Jan 2016 12:21:32 -0500
-Date: Mon, 25 Jan 2016 09:21:31 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Glen Lee <glen.lee@atmel.com>, devel@driverdev.osuosl.org,
-	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
-	Nicolas.FERRE@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
-	adham.abozaeid@atmel.com
-Subject: Re: [PATCH V2 00/26] use unified firmware and add ops in cfg
-Message-ID: <20160125172131.GA27361@kroah.com> (sfid-20160125_182136_203188_53CEE8CA)
-References: <1453707330-13526-1-git-send-email-glen.lee@atmel.com>
- <87vb6hu7f0.fsf@purkki.adurom.net>
+	Sun, 31 Jan 2016 10:16:18 -0500
+Received: by mail-wm0-f43.google.com with SMTP id l66so38728703wml.0
+        for <linux-wireless@vger.kernel.org>; Sun, 31 Jan 2016 07:16:17 -0800 (PST)
+Date: Sun, 31 Jan 2016 16:16:15 +0100
+From: Seth Forshee <seth.forshee@canonical.com>
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
+Subject: Re: [PATCH v2] wireless-regdb: add 2.4GHz regulatory rules for Cuba
+ (CU)
+Message-ID: <20160131151615.GC15850@ubuntu-xps13> (sfid-20160131_161642_188137_0D24C1DA)
+References: <1453888593-7705-1-git-send-email-xose.vazquez@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87vb6hu7f0.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1453888593-7705-1-git-send-email-xose.vazquez@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Jan 25, 2016 at 03:15:31PM +0200, Kalle Valo wrote:
-> Glen Lee <glen.lee@atmel.com> writes:
+On Wed, Jan 27, 2016 at 10:56:33AM +0100, Xose Vazquez Perez wrote:
+> Resolución 127, 2011 - Reglamento Banda 2,4 GHz.:
+> http://www.mincom.gob.cu/sites/default/files/marcoregulatorio/R%20127-11%20Reglamento%20banda%202,4%20GHz.pdf
 > 
-> > This patch series contains                                                      
-> > * support suspend and resume functionality                                      
-> > * use a unified firmware for all mode of operations(station, ap, p2p)           
-> > * support Station/AP concurrency                                                
-> > * increase link speed                                                           
-> > * add a cfg operation for adjusting the tx power                                
-> > * fix bug on p2p, WEP security and chaning virtual interface
-> >
-> > Changes in V2: details in each patch files.
-> >  - 0004-staging-wilc1000-add-sdio-resume-suspend.patch
-> 
-> It's good practise to also add "staging: wilc1000: " prefix to the cover
-> letter.
+> Cc: Seth Forshee <seth.forshee@canonical.com>
+> Cc: linux-wireless@vger.kernel.org
+> Cc: wireless-regdb@lists.infradead.org
+> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 
-Yes please, otherwise it misses my filters when I go to apply patches
-for a subsystem and I have to find it by hand :(
+Applied, thanks.
