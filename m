@@ -1,60 +1,369 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.12]:54205 "EHLO mout.web.de"
+Received: from mga04.intel.com ([192.55.52.120]:9395 "EHLO mga04.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751117AbcABLWI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Jan 2016 06:22:08 -0500
-Subject: Re: net-libertas: Better exception handling in
- if_spi_host_to_card_worker()
-To: Arend van Spriel <aspriel@gmail.com>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <5686F0B2.5000000@users.sourceforge.net>
- <56870866.7020000@cogentembedded.com>
- <568785B3.5000905@users.sourceforge.net>
- <alpine.DEB.2.02.1601020914100.2063@localhost6.localdomain6>
- <5687939E.7010701@users.sourceforge.net> <5687A2C7.3000704@gmail.com>
-Cc: Julia Lawall <julia.lawall@lip6.fr>,
-	Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, Kalle Valo <kvalo@codeaurora.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	kernel-janitors@vger.kernel.org
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Message-ID: <5687B2BC.8090901@users.sourceforge.net> (sfid-20160102_122230_402491_77B8D491)
-Date: Sat, 2 Jan 2016 12:21:32 +0100
-MIME-Version: 1.0
-In-Reply-To: <5687A2C7.3000704@gmail.com>
-Content-Type: text/plain; charset=windows-1252
+	id S1757272AbcAaLGo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jan 2016 06:06:44 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 16/31] iwlwifi: mvm: support beacon storing
+Date: Sun, 31 Jan 2016 13:06:11 +0200
+Message-Id: <1454238386-27032-16-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160131_123655_131150_B414141A)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I have never seen much evolution going on in this area.
+From: Sara Sharon <sara.sharon@intel.com>
 
-I can get an other impression from a specific document for example.
-https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/log/Documentation/CodingStyle
+Currently firmware is configured to filter out beacons. In case
+a beacon was changed - it is waking the host.
+However, some vendors change their IEs frequently without any
+significant change, and redundant wakeups are triggered as a
+result.
+As a solution disable beacon filtering when entering d0i3.
+Instead, firmware will store the latest beacon and upon exiting
+d0i3 it will send it up to the host, so the host can act upon
+changes (if there were any).
+This beacon will arrive as a dedicated notification - support it
+as well.
 
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h   |  3 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c        |  3 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h |  1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h    | 29 +++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  | 41 ++++++++++++++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h       |  2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       | 22 ++++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/power.c     | 33 ++++++++++++-----
+ 8 files changed, 120 insertions(+), 14 deletions(-)
 
-> What the patch tries to do is avoid the extra 'if (err)'.
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+index dbf08c4..5152987 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+@@ -315,6 +315,8 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_capa_t;
+  * @IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT: supports bt-coex Multi-priority LUT
+  * @IWL_UCODE_TLV_CAPA_BEACON_ANT_SELECTION: firmware will decide on what
+  *	antenna the beacon should be transmitted
++ * @IWL_UCODE_TLV_CAPA_BEACON_STORING: firmware will store the latest beacon
++ *	from AP and will send it upon d0i3 exit.
+  * @IWL_UCODE_TLV_CAPA_LAR_SUPPORT_V2: support LAR API V2
+  *
+  * @NUM_IWL_UCODE_TLV_CAPA: number of bits used
+@@ -346,6 +348,7 @@ enum iwl_ucode_tlv_capa {
+ 	IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS		= (__force iwl_ucode_tlv_capa_t)65,
+ 	IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT		= (__force iwl_ucode_tlv_capa_t)67,
+ 	IWL_UCODE_TLV_CAPA_BEACON_ANT_SELECTION		= (__force iwl_ucode_tlv_capa_t)71,
++	IWL_UCODE_TLV_CAPA_BEACON_STORING		= (__force iwl_ucode_tlv_capa_t)72,
+ 	IWL_UCODE_TLV_CAPA_LAR_SUPPORT_V2		= (__force iwl_ucode_tlv_capa_t)73,
+ 
+ 	NUM_IWL_UCODE_TLV_CAPA
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 78572ef..3463761 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -853,7 +853,8 @@ iwl_mvm_get_wowlan_config(struct iwl_mvm *mvm,
+ 	wowlan_config_cmd->is_11n_connection =
+ 					ap_sta->ht_cap.ht_supported;
+ 	wowlan_config_cmd->flags = ENABLE_L3_FILTERING |
+-		ENABLE_NBNS_FILTERING | ENABLE_DHCP_FILTERING;
++		ENABLE_NBNS_FILTERING | ENABLE_DHCP_FILTERING |
++		ENABLE_STORE_BEACON;
+ 
+ 	/* Query the last used seqno and set it */
+ 	ret = iwl_mvm_get_last_nonqos_seq(mvm, vif);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
+index 62b9a0a..eec52c5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-d3.h
+@@ -251,6 +251,7 @@ enum iwl_wowlan_flags {
+ 	ENABLE_L3_FILTERING	= BIT(1),
+ 	ENABLE_NBNS_FILTERING	= BIT(2),
+ 	ENABLE_DHCP_FILTERING	= BIT(3),
++	ENABLE_STORE_BEACON	= BIT(4),
+ };
+ 
+ struct iwl_wowlan_config_cmd {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index 82049bb..b6b5727 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -280,11 +280,16 @@ enum iwl_phy_ops_subcmd_ids {
+ 	DTS_MEASUREMENT_NOTIF_WIDE = 0xFF,
+ };
+ 
++enum iwl_prot_offload_subcmd_ids {
++	STORED_BEACON_NTF = 0xFF,
++};
++
+ /* command groups */
+ enum {
+ 	LEGACY_GROUP = 0x0,
+ 	LONG_GROUP = 0x1,
+ 	PHY_OPS_GROUP = 0x4,
++	PROT_OFFLOAD_GROUP = 0xb,
+ };
+ 
+ /**
+@@ -1851,4 +1856,28 @@ struct iwl_shared_mem_cfg {
+ 	__le32 page_buff_size;
+ } __packed; /* SHARED_MEM_ALLOC_API_S_VER_1 */
+ 
++#define MAX_STORED_BEACON_SIZE 600
++
++/**
++ * Stored beacon notification
++ *
++ * @system_time: system time on air rise
++ * @tsf: TSF on air rise
++ * @beacon_timestamp: beacon on air rise
++ * @phy_flags: general phy flags: band, modulation, etc.
++ * @channel: channel this beacon was received on
++ * @rates: rate in ucode internal format
++ * @byte_count: frame's byte count
++ */
++struct iwl_stored_beacon_notif {
++	__le32 system_time;
++	__le64 tsf;
++	__le32 beacon_timestamp;
++	__le16 phy_flags;
++	__le16 channel;
++	__le32 rates;
++	__le32 byte_count;
++	u8 data[MAX_STORED_BEACON_SIZE];
++} __packed; /* WOWLAN_STROED_BEACON_INFO_S_VER_1 */
++
+ #endif /* __fw_api_h__ */
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index bf1e5eb..62927f5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -7,7 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+- * Copyright(c) 2015 Intel Deutschland GmbH
++ * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -34,7 +34,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+- * Copyright(c) 2015 Intel Deutschland GmbH
++ * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -1462,3 +1462,40 @@ void iwl_mvm_rx_missed_beacons_notif(struct iwl_mvm *mvm,
+ 						   iwl_mvm_beacon_loss_iterator,
+ 						   mb);
+ }
++
++void iwl_mvm_rx_stored_beacon_notif(struct iwl_mvm *mvm,
++				    struct iwl_rx_cmd_buffer *rxb)
++{
++	struct iwl_rx_packet *pkt = rxb_addr(rxb);
++	struct iwl_stored_beacon_notif *sb = (void *)pkt->data;
++	struct ieee80211_rx_status rx_status;
++	struct sk_buff *skb;
++	u32 size = le32_to_cpu(sb->byte_count);
++
++	if (size == 0)
++		return;
++
++	skb = alloc_skb(size, GFP_ATOMIC);
++	if (!skb) {
++		IWL_ERR(mvm, "alloc_skb failed\n");
++		return;
++	}
++
++	/* update rx_status according to the notification's metadata */
++	memset(&rx_status, 0, sizeof(rx_status));
++	rx_status.mactime = le64_to_cpu(sb->tsf);
++	rx_status.device_timestamp = le32_to_cpu(sb->system_time);
++	rx_status.band =
++		(sb->phy_flags & cpu_to_le16(RX_RES_PHY_FLAGS_BAND_24)) ?
++				IEEE80211_BAND_2GHZ : IEEE80211_BAND_5GHZ;
++	rx_status.freq =
++		ieee80211_channel_to_frequency(le16_to_cpu(sb->channel),
++					       rx_status.band);
++
++	/* copy the data */
++	memcpy(skb_put(skb, size), sb->data, size);
++	memcpy(IEEE80211_SKB_RXCB(skb), &rx_status, sizeof(rx_status));
++
++	/* pass it as regular rx to mac80211 */
++	ieee80211_rx_napi(mvm->hw, skb, NULL);
++}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 216c8d6..b45cf4f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1192,6 +1192,8 @@ void iwl_mvm_rx_beacon_notif(struct iwl_mvm *mvm,
+ 			     struct iwl_rx_cmd_buffer *rxb);
+ void iwl_mvm_rx_missed_beacons_notif(struct iwl_mvm *mvm,
+ 				     struct iwl_rx_cmd_buffer *rxb);
++void iwl_mvm_rx_stored_beacon_notif(struct iwl_mvm *mvm,
++				    struct iwl_rx_cmd_buffer *rxb);
+ void iwl_mvm_mac_ctxt_recalc_tsf_id(struct iwl_mvm *mvm,
+ 				    struct ieee80211_vif *vif);
+ unsigned long iwl_mvm_get_used_hw_queues(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 6bf2bde..3c869ad 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -33,6 +33,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -267,6 +268,8 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
+ 		   true),
+ 	RX_HANDLER(MFUART_LOAD_NOTIFICATION, iwl_mvm_rx_mfuart_notif, false),
+ 	RX_HANDLER(TOF_NOTIFICATION, iwl_mvm_tof_resp_handler, true),
++	RX_HANDLER_GRP(PROT_OFFLOAD_GROUP, STORED_BEACON_NTF,
++		       iwl_mvm_rx_stored_beacon_notif, false),
+ 
+ };
+ #undef RX_HANDLER
+@@ -386,10 +389,18 @@ static const struct iwl_hcmd_names iwl_mvm_phy_names[] = {
+ 	HCMD_NAME(DTS_MEASUREMENT_NOTIF_WIDE),
+ };
+ 
++/* Please keep this array *SORTED* by hex value.
++ * Access is done through binary search
++ */
++static const struct iwl_hcmd_names iwl_mvm_prot_offload_names[] = {
++	HCMD_NAME(STORED_BEACON_NTF),
++};
++
+ static const struct iwl_hcmd_arr iwl_mvm_groups[] = {
+ 	[LEGACY_GROUP] = HCMD_ARR(iwl_mvm_legacy_names),
+ 	[LONG_GROUP] = HCMD_ARR(iwl_mvm_legacy_names),
+ 	[PHY_OPS_GROUP] = HCMD_ARR(iwl_mvm_phy_names),
++	[PROT_OFFLOAD_GROUP] = HCMD_ARR(iwl_mvm_prot_offload_names),
+ };
+ 
+ /* this forward declaration can avoid to export the function */
+@@ -1195,7 +1206,7 @@ static void iwl_mvm_set_wowlan_data(struct iwl_mvm *mvm,
+ 	cmd->is_11n_connection = ap_sta->ht_cap.ht_supported;
+ 	cmd->offloading_tid = iter_data->offloading_tid;
+ 	cmd->flags = ENABLE_L3_FILTERING | ENABLE_NBNS_FILTERING |
+-		ENABLE_DHCP_FILTERING;
++		ENABLE_DHCP_FILTERING | ENABLE_STORE_BEACON;
+ 	/*
+ 	 * The d0i3 uCode takes care of the nonqos counters,
+ 	 * so configure only the qos seq ones.
+@@ -1216,8 +1227,7 @@ int iwl_mvm_enter_d0i3(struct iwl_op_mode *op_mode)
+ 	struct iwl_wowlan_config_cmd wowlan_config_cmd = {
+ 		.wakeup_filter = cpu_to_le32(IWL_WOWLAN_WAKEUP_RX_FRAME |
+ 					     IWL_WOWLAN_WAKEUP_BEACON_MISS |
+-					     IWL_WOWLAN_WAKEUP_LINK_CHANGE |
+-					     IWL_WOWLAN_WAKEUP_BCN_FILTERING),
++					     IWL_WOWLAN_WAKEUP_LINK_CHANGE),
+ 	};
+ 	struct iwl_d3_manager_config d3_cfg_cmd = {
+ 		.min_sleep_time = cpu_to_le32(1000),
+@@ -1267,6 +1277,12 @@ int iwl_mvm_enter_d0i3(struct iwl_op_mode *op_mode)
+ 
+ 	/* configure wowlan configuration only if needed */
+ 	if (mvm->d0i3_ap_sta_id != IWL_MVM_STATION_COUNT) {
++		/* wake on beacons only if beacon storing isn't supported */
++		if (!fw_has_capa(&mvm->fw->ucode_capa,
++				 IWL_UCODE_TLV_CAPA_BEACON_STORING))
++			wowlan_config_cmd.wakeup_filter |=
++				cpu_to_le32(IWL_WOWLAN_WAKEUP_BCN_FILTERING);
++
+ 		iwl_mvm_wowlan_config_key_params(mvm,
+ 						 d0i3_iter_data.connected_vif,
+ 						 true, flags);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/power.c b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
+index 16b3e36..0d03b3e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/power.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
+@@ -7,7 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+- * Copyright(c) 2015        Intel Deutschland GmbH
++ * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -34,7 +34,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
+- * Copyright(c) 2015        Intel Deutschland GmbH
++ * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -903,9 +903,9 @@ static int iwl_mvm_update_beacon_abort(struct iwl_mvm *mvm,
+ 	return _iwl_mvm_enable_beacon_filter(mvm, vif, &cmd, 0, false);
+ }
+ 
+-int iwl_mvm_disable_beacon_filter(struct iwl_mvm *mvm,
+-				  struct ieee80211_vif *vif,
+-				  u32 flags)
++static int _iwl_mvm_disable_beacon_filter(struct iwl_mvm *mvm,
++					  struct ieee80211_vif *vif,
++					  u32 flags, bool d0i3)
+ {
+ 	struct iwl_beacon_filter_cmd cmd = {};
+ 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+@@ -916,12 +916,20 @@ int iwl_mvm_disable_beacon_filter(struct iwl_mvm *mvm,
+ 
+ 	ret = iwl_mvm_beacon_filter_send_cmd(mvm, &cmd, flags);
+ 
+-	if (!ret)
++	/* don't change bf_enabled in case of temporary d0i3 configuration */
++	if (!ret && !d0i3)
+ 		mvmvif->bf_data.bf_enabled = false;
+ 
+ 	return ret;
+ }
+ 
++int iwl_mvm_disable_beacon_filter(struct iwl_mvm *mvm,
++				  struct ieee80211_vif *vif,
++				  u32 flags)
++{
++	return _iwl_mvm_disable_beacon_filter(mvm, vif, flags, false);
++}
++
+ static int iwl_mvm_power_set_ps(struct iwl_mvm *mvm)
+ {
+ 	bool disable_ps;
+@@ -1058,8 +1066,17 @@ int iwl_mvm_update_d0i3_power_mode(struct iwl_mvm *mvm,
+ 			IWL_BF_CMD_CONFIG_D0I3,
+ 			.bf_enable_beacon_filter = cpu_to_le32(1),
+ 		};
+-		ret = _iwl_mvm_enable_beacon_filter(mvm, vif, &cmd_bf,
+-						    flags, true);
++		/*
++		 * When beacon storing is supported - disable beacon filtering
++		 * altogether - the latest beacon will be sent when exiting d0i3
++		 */
++		if (fw_has_capa(&mvm->fw->ucode_capa,
++				IWL_UCODE_TLV_CAPA_BEACON_STORING))
++			ret = _iwl_mvm_disable_beacon_filter(mvm, vif, flags,
++							     true);
++		else
++			ret = _iwl_mvm_enable_beacon_filter(mvm, vif, &cmd_bf,
++							    flags, true);
+ 	} else {
+ 		if (mvmvif->bf_data.bf_enabled)
+ 			ret = iwl_mvm_enable_beacon_filter(mvm, vif, flags);
+-- 
+2.5.0
 
-Yes. - I propose to look at related consequences together with the usage
-of a popular short jump label once more.
-
-
-> Setting coding style aside, the question is whether there is
-> a good metric for the patch.
-
-A software development challenge is to accept changes also around a topic
-like "error handling". My update suggestion for the source file
-"drivers/net/wireless/marvell/libertas/if_spi.c" should only improve
-exception handling. (I came along other source files where more improvements
-will eventually be possible.)
-
-When will the run-time behaviour matter also for exceptional situations?
-
-
-> Did you look at the resulting assembly code for different target architectures?
-
-Not yet. - Which execution system variants would you recommend for
-further comparisons?
-
-Regards,
-Markus
