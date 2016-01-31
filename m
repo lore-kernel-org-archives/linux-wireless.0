@@ -1,47 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:36767 "EHLO
-	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752511AbcAUBVh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Jan 2016 20:21:37 -0500
-Received: by mail-pf0-f196.google.com with SMTP id n128so1046919pfn.3
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Jan 2016 17:21:37 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 19/27] staging: wilc1000: fix return error code
-Date: Thu, 21 Jan 2016 10:20:22 +0900
-Message-Id: <1453339230-1377-19-git-send-email-chaehyun.lim@gmail.com> (sfid-20160121_023656_216900_EE1008A3)
-In-Reply-To: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1453339230-1377-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mga04.intel.com ([192.55.52.120]:21579 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757272AbcAaLGc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jan 2016 06:06:32 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 07/31] iwlwifi: various comments and code cleanups
+Date: Sun, 31 Jan 2016 13:06:02 +0200
+Message-Id: <1454238386-27032-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160131_120636_681311_76ADD690)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Three argument are checked at the beginning of wilc_mq_send whether
-they are valid arguments or not. It is correct to use return error code
-as -EINVAL, not -EFAULT.
+No need to include net/ip6_checksum.h twice.
+Remove TODOs.
+Remove trailing space.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/wilc1000/wilc_msgqueue.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h     | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h | 3 ---
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c       | 1 -
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 1 -
+ 4 files changed, 1 insertion(+), 6 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 764723f..361ca8f 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -61,7 +61,7 @@ int wilc_mq_send(struct message_queue *mq,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index e6a5e99..0ca0f13 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -506,7 +506,7 @@ struct iwl_trans_config {
+ 	bool sw_csum_tx;
+ 	const struct iwl_hcmd_arr *command_groups;
+ 	int command_groups_size;
+- 
++
+ 	u32 sdio_adma_addr;
+ };
  
- 	if ((!mq) || (send_buf_size == 0) || (!send_buf)) {
- 		PRINT_ER("mq or send_buf is null\n");
--		return -EFAULT;
-+		return -EINVAL;
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
+index fb6d341..ab467cb 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
+@@ -287,16 +287,13 @@ enum iwl_rx_mpdu_status {
+ 	IWL_RX_MPDU_STATUS_KEY_ERROR		= BIT(4),
+ 	IWL_RX_MPDU_STATUS_ICV_OK		= BIT(5),
+ 	IWL_RX_MPDU_STATUS_MIC_OK		= BIT(6),
+-	/* TODO - verify this is the correct value */
+ 	IWL_RX_MPDU_RES_STATUS_TTAK_OK		= BIT(7),
+ 	IWL_RX_MPDU_STATUS_SEC_MASK		= 0x7 << 8,
+ 	IWL_RX_MPDU_STATUS_SEC_NONE		= 0x0 << 8,
+ 	IWL_RX_MPDU_STATUS_SEC_WEP		= 0x1 << 8,
+ 	IWL_RX_MPDU_STATUS_SEC_CCM		= 0x2 << 8,
+ 	IWL_RX_MPDU_STATUS_SEC_TKIP		= 0x3 << 8,
+-	/* TODO - define IWL_RX_MPDU_STATUS_SEC_EXT_ENC - this is a stub */
+ 	IWL_RX_MPDU_STATUS_SEC_EXT_ENC		= 0x4 << 8,
+-	/* TODO - define IWL_RX_MPDU_STATUS_SEC_GCM - this is a stub */
+ 	IWL_RX_MPDU_STATUS_SEC_GCM		= 0x5 << 8,
+ 	IWL_RX_MPDU_STATUS_DECRYPTED		= BIT(11),
+ 	IWL_RX_MPDU_STATUS_WEP_MATCH		= BIT(12),
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 89ea70d..6bf2bde 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -392,7 +392,6 @@ static const struct iwl_hcmd_arr iwl_mvm_groups[] = {
+ 	[PHY_OPS_GROUP] = HCMD_ARR(iwl_mvm_phy_names),
+ };
  
- 	if (mq->exiting) {
+-
+ /* this forward declaration can avoid to export the function */
+ static void iwl_mvm_async_handlers_wk(struct work_struct *wk);
+ static void iwl_mvm_d0i3_exit_work(struct work_struct *wk);
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index c499345..837a7d5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -34,7 +34,6 @@
+ #include <linux/sched.h>
+ #include <net/ip6_checksum.h>
+ #include <net/tso.h>
+-#include <net/ip6_checksum.h>
+ 
+ #include "iwl-debug.h"
+ #include "iwl-csr.h"
 -- 
-2.6.4
+2.5.0
 
