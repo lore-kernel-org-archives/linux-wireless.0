@@ -1,78 +1,142 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:3728 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752192AbcAGJeW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Jan 2016 04:34:22 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u079TKXD014224
-	for <linux-wireless@vger.kernel.org>; Thu, 7 Jan 2016 01:34:21 -0800
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-	by mx0b-0016f401.pphosted.com with ESMTP id 208ynrkk5j-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Thu, 07 Jan 2016 01:34:21 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	chunfan chen <jeffc@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 2/6] mwifiex: add wowlan info messages
-Date: Thu, 7 Jan 2016 01:31:27 -0800
-Message-ID: <1452159091-30997-3-git-send-email-akarwar@marvell.com> (sfid-20160107_103430_889112_7DFB481B)
-In-Reply-To: <1452159091-30997-1-git-send-email-akarwar@marvell.com>
-References: <1452159091-30997-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga04.intel.com ([192.55.52.120]:9395 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757307AbcAaLGn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jan 2016 06:06:43 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 15/31] iwlwifi: mvm: add support for negative temperatures
+Date: Sun, 31 Jan 2016 13:06:10 +0200
+Message-Id: <1454238386-27032-15-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160131_120653_555201_5F781F67)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: chunfan chen <jeffc@marvell.com>
+From: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
 
-This patch adds informative messages in wake up on
-magic packet, disconnect, pattern configuration paths.
+The driver should support also negative temperatures.
+So there is a need to separate between the return value and
+temperature in order to be able to distinguish between
+a negative temperature and error value.
 
-Signed-off-by: chunfan chen <jeffc@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c |  9 +++++----
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c      | 17 ++++++++---------
+ 3 files changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index c27c6cc..6d36d08 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3171,10 +3171,12 @@ static int mwifiex_set_wowlan_mef_entry(struct mwifiex_private *priv,
- 				sizeof(byte_seq));
- 		mef_entry->filter[filt_num].filt_type = TYPE_EQ;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+index 8059efa..5c0f939 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c
+@@ -261,17 +261,18 @@ static ssize_t iwl_dbgfs_nic_temp_read(struct file *file,
+ {
+ 	struct iwl_mvm *mvm = file->private_data;
+ 	char buf[16];
+-	int pos, temp;
++	int pos, ret;
++	s32 temp;
  
--		if (first_pat)
-+		if (first_pat) {
- 			first_pat = false;
--		else
-+			mwifiex_dbg(priv->adapter, INFO, "Wake on patterns\n");
-+		} else {
- 			mef_entry->filter[filt_num].filt_action = TYPE_AND;
-+		}
+ 	if (!mvm->ucode_loaded)
+ 		return -EIO;
  
- 		filt_num++;
- 	}
-@@ -3200,6 +3202,7 @@ static int mwifiex_set_wowlan_mef_entry(struct mwifiex_private *priv,
- 		mef_entry->filter[filt_num].offset = 56;
- 		mef_entry->filter[filt_num].filt_type = TYPE_EQ;
- 		mef_entry->filter[filt_num].filt_action = TYPE_OR;
-+		mwifiex_dbg(priv->adapter, INFO, "Wake on magic packet\n");
- 	}
- 	return ret;
+ 	mutex_lock(&mvm->mutex);
+-	temp = iwl_mvm_get_temp(mvm);
++	ret = iwl_mvm_get_temp(mvm, &temp);
+ 	mutex_unlock(&mvm->mutex);
+ 
+-	if (temp < 0)
+-		return temp;
++	if (ret)
++		return -EIO;
+ 
+ 	pos = scnprintf(buf , sizeof(buf), "%d\n", temp);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 5a92ab1..216c8d6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1489,7 +1489,7 @@ void iwl_mvm_tt_handler(struct iwl_mvm *mvm);
+ void iwl_mvm_tt_initialize(struct iwl_mvm *mvm, u32 min_backoff);
+ void iwl_mvm_tt_exit(struct iwl_mvm *mvm);
+ void iwl_mvm_set_hw_ctkill_state(struct iwl_mvm *mvm, bool state);
+-int iwl_mvm_get_temp(struct iwl_mvm *mvm);
++int iwl_mvm_get_temp(struct iwl_mvm *mvm, s32 *temp);
+ 
+ /* Location Aware Regulatory */
+ struct iwl_mcc_update_resp *
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+index fb76004..758d05a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+@@ -194,12 +194,12 @@ static int iwl_mvm_get_temp_cmd(struct iwl_mvm *mvm)
+ 	return iwl_mvm_send_cmd_pdu(mvm, cmdid, 0, sizeof(extcmd), &extcmd);
  }
-@@ -3295,6 +3298,7 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
- 				    "Failed to set HS params\n");
- 			return ret;
- 		}
-+		mwifiex_dbg(priv->adapter, INFO, "Wake on device disconnect\n");
+ 
+-int iwl_mvm_get_temp(struct iwl_mvm *mvm)
++int iwl_mvm_get_temp(struct iwl_mvm *mvm, s32 *temp)
+ {
+ 	struct iwl_notification_wait wait_temp_notif;
+ 	static u16 temp_notif[] = { WIDE_ID(PHY_OPS_GROUP,
+ 					    DTS_MEASUREMENT_NOTIF_WIDE) };
+-	int ret, temp;
++	int ret;
+ 
+ 	if (!fw_has_api(&mvm->fw->ucode_capa, IWL_UCODE_TLV_API_WIDE_CMD_HDR))
+ 		temp_notif[0] = DTS_MEASUREMENT_NOTIFICATION;
+@@ -208,7 +208,7 @@ int iwl_mvm_get_temp(struct iwl_mvm *mvm)
+ 
+ 	iwl_init_notification_wait(&mvm->notif_wait, &wait_temp_notif,
+ 				   temp_notif, ARRAY_SIZE(temp_notif),
+-				   iwl_mvm_temp_notif_wait, &temp);
++				   iwl_mvm_temp_notif_wait, temp);
+ 
+ 	ret = iwl_mvm_get_temp_cmd(mvm);
+ 	if (ret) {
+@@ -219,12 +219,10 @@ int iwl_mvm_get_temp(struct iwl_mvm *mvm)
+ 
+ 	ret = iwl_wait_notification(&mvm->notif_wait, &wait_temp_notif,
+ 				    IWL_MVM_TEMP_NOTIF_WAIT_TIMEOUT);
+-	if (ret) {
++	if (ret)
+ 		IWL_ERR(mvm, "Getting the temperature timed out\n");
+-		return ret;
+-	}
+ 
+-	return temp;
++	return ret;
+ }
+ 
+ static void check_exit_ctkill(struct work_struct *work)
+@@ -233,6 +231,7 @@ static void check_exit_ctkill(struct work_struct *work)
+ 	struct iwl_mvm *mvm;
+ 	u32 duration;
+ 	s32 temp;
++	int ret;
+ 
+ 	tt = container_of(work, struct iwl_mvm_tt_mgmt, ct_kill_exit.work);
+ 	mvm = container_of(tt, struct iwl_mvm, thermal_throttle);
+@@ -250,13 +249,13 @@ static void check_exit_ctkill(struct work_struct *work)
+ 		goto reschedule;
  	}
  
- 	return ret;
+-	temp = iwl_mvm_get_temp(mvm);
++	ret = iwl_mvm_get_temp(mvm, &temp);
+ 
+ 	iwl_mvm_unref(mvm, IWL_MVM_REF_CHECK_CTKILL);
+ 
+ 	__iwl_mvm_mac_stop(mvm);
+ 
+-	if (temp < 0)
++	if (ret)
+ 		goto reschedule;
+ 
+ 	IWL_DEBUG_TEMP(mvm, "NIC temperature: %d\n", temp);
 -- 
-1.8.1.4
+2.5.0
 
