@@ -1,37 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39827 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965766AbcAZOCi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Jan 2016 09:02:38 -0500
-Message-ID: <1453816956.2759.73.camel@sipsolutions.net> (sfid-20160126_150255_073944_FA8E5766)
-Subject: Re: [RFC V4 2/2] brcmfmac: add support for nl80211 BSS_SELECT
- feature
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 26 Jan 2016 15:02:36 +0100
-In-Reply-To: <1453813592-5266-3-git-send-email-arend@broadcom.com>
-References: <1453813592-5266-1-git-send-email-arend@broadcom.com>
-	 <1453813592-5266-3-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lf0-f42.google.com ([209.85.215.42]:33295 "EHLO
+	mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757205AbcAaLOr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jan 2016 06:14:47 -0500
+Received: by mail-lf0-f42.google.com with SMTP id m1so5061114lfg.0
+        for <linux-wireless@vger.kernel.org>; Sun, 31 Jan 2016 03:14:46 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	brcm80211-dev-list@broadcom.com,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH] brcmfmac: treat NULL character in NVRAM as separator
+Date: Sun, 31 Jan 2016 12:14:34 +0100
+Message-Id: <1454238874-20118-1-git-send-email-zajec5@gmail.com> (sfid-20160131_121451_126145_44D36FA3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-01-26 at 14:06 +0100, Arend van Spriel wrote:
-> 
-> +static u8 nl80211_band_to_fwil(enum nl80211_band band)
-> +{
-> +	switch (band) {
-> +	case NL80211_BAND_2GHZ:
-> +		return WLC_BAND_2G;
-> +	case NL80211_BAND_5GHZ:
-> +		return WLC_BAND_5G;
-> +	default:
-> +		WARN_ON(1);
-> 
-This, btw, is trivially triggerable - you need to check in nl80211 that
-the specified band is actually supported by the driver, otherwise even
-non-sense like "17" can be specified.
+Platform NVRAM (stored on a flash partition) has entries separated by a
+NULL (\0) char. Our parsing code switches from VALUE state to IDLE
+whenever it meets a NULL (\0). When that happens our IDLE handler should
+simply consume it and analyze whatever is placed ahead.
 
-johannes
+This fixes harmless warnings spamming debugging output:
+[  155.165624] brcmfmac: brcmf_nvram_handle_idle warning: ln=1:col=20: ignoring invalid character
+[  155.180806] brcmfmac: brcmf_nvram_handle_idle warning: ln=1:col=44: ignoring invalid character
+[  155.195971] brcmfmac: brcmf_nvram_handle_idle warning: ln=1:col=63: ignoring invalid character
+
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+index 1365c12..7269056 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/firmware.c
+@@ -93,7 +93,7 @@ static enum nvram_parser_state brcmf_nvram_handle_idle(struct nvram_parser *nvp)
+ 	c = nvp->data[nvp->pos];
+ 	if (c == '\n')
+ 		return COMMENT;
+-	if (is_whitespace(c))
++	if (is_whitespace(c) || c == '\0')
+ 		goto proceed;
+ 	if (c == '#')
+ 		return COMMENT;
+-- 
+1.8.4.5
+
