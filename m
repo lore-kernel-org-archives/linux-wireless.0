@@ -1,50 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51962 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758955AbcAKMoo (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Jan 2016 07:44:44 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: Jia-Ju Bai <baijiaju1990@163.com>, johannes.berg@intel.com,
-	emmanuel.grumbach@intel.com, ilw@linux.intel.com,
-	linuxwifi@intel.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH] iwl4965: Fix a memory leak in error handling code of __il4965_up
-References: <1452392363-3600-1-git-send-email-baijiaju1990@163.com>
-	<20160111121610.GF25015@redhat.com>
-Date: Mon, 11 Jan 2016 14:44:31 +0200
-In-Reply-To: <20160111121610.GF25015@redhat.com> (Stanislaw Gruszka's message
-	of "Mon, 11 Jan 2016 13:16:10 +0100")
-Message-ID: <878u3wi8uo.fsf@kamboji.qca.qualcomm.com> (sfid-20160111_134452_516038_CF914B97)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga04.intel.com ([192.55.52.120]:28518 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757268AbcAaLG7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jan 2016 06:06:59 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Gregory Greenman <gregory.greenman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 27/31] iwlwifi: mvm: rs: fix TPC action decision algorithm
+Date: Sun, 31 Jan 2016 13:06:22 +0200
+Message-Id: <1454238386-27032-27-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160131_123655_431477_846CED1F)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Stanislaw Gruszka <sgruszka@redhat.com> writes:
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-> On Sun, Jan 10, 2016 at 10:19:23AM +0800, Jia-Ju Bai wrote:
->> diff --git a/drivers/net/wireless/iwlegacy/4965-mac.c b/drivers/net/wireless/iwlegacy/4965-mac.c
->> index 6656215..fd7b5c7 100644
->> --- a/drivers/net/wireless/iwlegacy/4965-mac.c
->> +++ b/drivers/net/wireless/iwlegacy/4965-mac.c
->> @@ -5577,6 +5577,7 @@ __il4965_up(struct il_priv *il)
->>  	ret = il4965_hw_nic_init(il);
->>  	if (ret) {
->>  		IL_ERR("Unable to init nic\n");
->> +		il_dealloc_bcast_stations(il);
->>  		return ret;
->>  	}
->
-> Please do not repost patches so frequent and if you repost
-> the unchanged patch mark it so i.e. [PATCH repost].
+Decreasing Tx power is allowed only when success ratio is
+above the threshold defined in the algorithm. Add this condition.
 
-"repost" just confuses me and creates more work for me. Better to ping
-on the original patch and even better is to check patchwork which shows
-up-to-date status of wireless patches:
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-https://patchwork.kernel.org/project/linux-wireless/list/
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index 7bb6fd0..986e12a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -2040,7 +2040,8 @@ static enum tpc_action rs_get_tpc_action(struct iwl_mvm *mvm,
+ 	}
+ 
+ 	/* try decreasing first if applicable */
+-	if (weak != TPC_INVALID) {
++	if (sr >= RS_PERCENT(IWL_MVM_RS_TPC_SR_NO_INCREASE) &&
++	    weak != TPC_INVALID) {
+ 		if (weak_tpt == IWL_INVALID_VALUE &&
+ 		    (strong_tpt == IWL_INVALID_VALUE ||
+ 		     current_tpt >= strong_tpt)) {
 -- 
-Kalle Valo
+2.5.0
+
