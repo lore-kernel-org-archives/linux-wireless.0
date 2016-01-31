@@ -1,63 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f194.google.com ([209.85.213.194]:35760 "EHLO
-	mail-ig0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752660AbcALXSe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Jan 2016 18:18:34 -0500
-Received: by mail-ig0-f194.google.com with SMTP id mw1so16088284igb.2
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Jan 2016 15:18:33 -0800 (PST)
+Received: from mx1.redhat.com ([209.132.183.28]:33553 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757218AbcAaOgX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jan 2016 09:36:23 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Rakhi Sharma <rakhish1994@gmail.com>
+Cc: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: Re: [PATCH 3/3] Staging: rtl8723au: core: rtw_ieee80211: Fixed space and brace coding style issue.
+References: <1454246643-24049-1-git-send-email-rakhish1994@gmail.com>
+Date: Sun, 31 Jan 2016 09:36:22 -0500
+In-Reply-To: <1454246643-24049-1-git-send-email-rakhish1994@gmail.com> (Rakhi
+	Sharma's message of "Sun, 31 Jan 2016 18:54:03 +0530")
+Message-ID: <wrfjy4b5zuhl.fsf@redhat.com> (sfid-20160131_153626_373654_7BC98874)
 MIME-Version: 1.0
-In-Reply-To: <1452584395-24910-10-git-send-email-glen.lee@atmel.com>
-References: <1452584395-24910-1-git-send-email-glen.lee@atmel.com> <1452584395-24910-10-git-send-email-glen.lee@atmel.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 13 Jan 2016 10:18:14 +1100
-Message-ID: <CAGRGNgXMezjrT3Uec_MMQ0goCHyPjhDF4OjD=kJ-ukeCiTARGg@mail.gmail.com> (sfid-20160113_001843_686177_244ABB50)
-Subject: Re: [PATCH 09/26] staging: wilc1000: use unified firmware
-To: Glen Lee <glen.lee@atmel.com>
-Cc: Greg KH <gregkh@linuxfoundation.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Tony Cho <tony.cho@atmel.com>, leo.kim@atmel.com,
-	Austin Shin <austin.shin@atmel.com>, adel.noureldin@atmel.com,
-	adham.abozaeid@atmel.com, Nicolas.FERRE@atmel.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Glen,
-
-On Tue, Jan 12, 2016 at 6:39 PM, Glen Lee <glen.lee@atmel.com> wrote:
-> Use a unified firmware for all mode of operations which are station, ap and
-> p2p. Two firmware are introduced for 1002 and 1003 chipset.
+Rakhi Sharma <rakhish1994@gmail.com> writes:
+> Fixed the space and brace coding style error.
+> ERROR: space required before that '='
+> ERROR: that open brace { should be on the previous line.
 >
-> Signed-off-by: Glen Lee <glen.lee@atmel.com>
+> Signed-off-by: Rakhi Sharma <rakhish1994@gmail.com>
 > ---
->  drivers/staging/wilc1000/Makefile     |  5 ++---
->  drivers/staging/wilc1000/linux_wlan.c | 18 +++++++++---------
->  2 files changed, 11 insertions(+), 12 deletions(-)
+>  drivers/staging/rtl8723au/core/rtw_ieee80211.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 >
-> diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
-> index 20a5cb9..90c3760 100644
-> --- a/drivers/staging/wilc1000/Makefile
-> +++ b/drivers/staging/wilc1000/Makefile
-> @@ -1,8 +1,7 @@
->  obj-$(CONFIG_WILC1000) += wilc1000.o
->
-> -ccflags-y += -DSTA_FIRMWARE=\"atmel/wilc1000_fw.bin\" \
-> -               -DAP_FIRMWARE=\"atmel/wilc1000_ap_fw.bin\" \
-> -               -DP2P_CONCURRENCY_FIRMWARE=\"atmel/wilc1000_p2p_fw.bin\"
-> +ccflags-y += -DFIRMWARE_1002=\"atmel/wilc1002_firmware.bin\" \
-> +               -DFIRMWARE_1003=\"atmel/wilc1003_firmware.bin\"
+> diff --git a/drivers/staging/rtl8723au/core/rtw_ieee80211.c b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+> index 3b0d782..0c933e4 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+> @@ -65,8 +65,8 @@ static u8 WIFI_OFDMRATES[] = {
+>  
+>  int rtw_get_bit_value_from_ieee_value23a(u8 val)
+>  {
+> -	unsigned char dot11_rate_table[] =
+> -			{2, 4, 11, 22, 12, 18, 24, 36, 48, 72, 96, 108, 0};
+> +	unsigned char dot11_rate_table[] = {
+> +		2, 4, 11, 22, 12, 18, 24, 36, 48, 72, 96, 108, 0};
+>  
+>  	int i = 0;
 
-You can probably put these defines in a header somewhere instead of here.
+This is a great example of checkpatch doing the wrong thing. What you
+did here was to make the code uglier rather than better.
 
-Also, are these firmwares publicly available and have they been
-submitted to linux-firmware?
+NACK
 
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Jes
