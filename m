@@ -1,79 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:46776 "EHLO nbd.name"
+Received: from s3.sipsolutions.net ([5.9.151.49]:53882 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756334AbcBXVYO (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2016 16:24:14 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, egrumbach@gmail.com
-Subject: [PATCH v2 2/2] mac80211: minstrel_ht: set A-MSDU tx limits based on selected max_prob_rate
-Date: Wed, 24 Feb 2016 10:29:00 +0100
-Message-Id: <1456306140-78485-2-git-send-email-nbd@openwrt.org> (sfid-20160224_222418_599211_6B778756)
-In-Reply-To: <1456306140-78485-1-git-send-email-nbd@openwrt.org>
-References: <1456306140-78485-1-git-send-email-nbd@openwrt.org>
+	id S932065AbcBAM54 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Feb 2016 07:57:56 -0500
+Message-ID: <1454331473.3211.3.camel@sipsolutions.net> (sfid-20160201_135759_289209_D42E28A4)
+Subject: Re: [PATCH] mac80211: minstrel: Scale expected_throughput by 10
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sven Eckelmann <sven@open-mesh.com>
+Cc: linux-wireless@vger.kernel.org, thomas@net.t-labs.tu-berlin.de,
+	antonio@open-mesh.com, nbd@nbd.name
+Date: Mon, 01 Feb 2016 13:57:53 +0100
+In-Reply-To: <7460390.ua0GvOE4DE@bentobox> (sfid-20160201_135611_528149_53AC3A85)
+References: <1454329450-31527-1-git-send-email-sven@open-mesh.com>
+	 <1454329837.3211.2.camel@sipsolutions.net> <7460390.ua0GvOE4DE@bentobox>
+	 (sfid-20160201_135611_528149_53AC3A85)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prevents excessive A-MSDU aggregation at low data rates or bad
-conditions.
+On Mon, 2016-02-01 at 13:56 +0100, Sven Eckelmann wrote:
+> On Monday 01 February 2016 13:30:37 Johannes Berg wrote:
+> > On Mon, 2016-02-01 at 13:24 +0100, Sven Eckelmann wrote:
+> > > The change from cur_tp to the function
+> > > minstrel_get_tp_avg/minstrel_ht_get_tp_avg changed the unit used
+> > > for
+> > > the
+> > > current throughtput. For example in minstrel_ht the correct
+> > > conversion between them would be:
+> > > 
+> > >     mrs->cur_tp / 10 == minstrel_ht_get_tp_avg(..).
+> > > 
+> > > This factor 10 must also be included in the calculation of
+> > > minstrel_get_expected_throughput and
+> > > minstrel_ht_get_expected_throughput to
+> > > get similar results as before the change.
+> > > 
+> > 
+> > 10 is a pretty expensive factor, perhaps that should use 16
+> > instead?
+> 
+> Not really funny but I will change the title.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/rc80211_minstrel_ht.c | 34 ++++++++++++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+Huh? Not sure what you mean. I really meant to change 10 to 16 overall
+as far as the factor is concerned, since division by/multiplication
+with 16 is far easier in base 2 than by/with 10.
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 3928dbd..ad8859c 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -882,6 +882,39 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 	ratetbl->rate[offset].flags = flags;
- }
- 
-+static int
-+minstrel_ht_get_max_amsdu_len(struct minstrel_ht_sta *mi)
-+{
-+	int group = mi->max_prob_rate / MCS_GROUP_RATES;
-+	const struct mcs_group *g = &minstrel_mcs_groups[group];
-+	int rate = mi->max_prob_rate % MCS_GROUP_RATES;
-+
-+	/* Disable A-MSDU if max_prob_rate is bad */
-+	if (mi->groups[group].rates[rate].prob_ewma < MINSTREL_FRAC(50, 100))
-+		return 1;
-+
-+	/* If the rate is slower than single-stream MCS1, make A-MSDU limit small */
-+	if (g->duration[rate] > MCS_DURATION(1, 0, 52))
-+		return 500;
-+
-+	/*
-+	 * If the rate is slower than single-stream MCS4, limit A-MSDU to usual
-+	 * data packet size
-+	 */
-+	if (g->duration[rate] > MCS_DURATION(1, 0, 104))
-+		return 1500;
-+
-+	/*
-+	 * If the rate is slower than single-stream MCS7, limit A-MSDU to twice
-+	 * the usual data packet size
-+	 */
-+	if (g->duration[rate] > MCS_DURATION(1, 0, 260))
-+		return 3000;
-+
-+	/* unlimited */
-+	return 0;
-+}
-+
- static void
- minstrel_ht_update_rates(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- {
-@@ -906,6 +939,7 @@ minstrel_ht_update_rates(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 		minstrel_ht_set_rate(mp, mi, rates, i++, mi->max_prob_rate);
- 	}
- 
-+	mi->sta->max_rc_amsdu_len = minstrel_ht_get_max_amsdu_len(mi);
- 	rates->rate[i].idx = -1;
- 	rate_control_set_rates(mp->hw, mi->sta, rates);
- }
--- 
-2.2.2
-
+johannes
