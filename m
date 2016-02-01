@@ -1,72 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37724 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753277AbcB2WF5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:57 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 090/113] rtl8xxxu: Do not unconditionally print debug info in rtl8723bu_handle_c2h()
-Date: Mon, 29 Feb 2016 17:05:28 -0500
-Message-Id: <1456783551-28315-91-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232953_286858_0923AA46)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:36378 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932210AbcBAM13 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Feb 2016 07:27:29 -0500
+Received: by mail-pf0-f193.google.com with SMTP id n128so7472838pfn.3
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 04:27:28 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 10/11] staging: wilc1000: linux_mon: fix error code of kmalloc
+Date: Mon,  1 Feb 2016 21:26:46 +0900
+Message-Id: <1454329607-9486-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20160201_132735_278941_3FF66DB5)
+In-Reply-To: <1454329607-9486-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1454329607-9486-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+This patch fixes error codes as -ENOMEM instead of using -EFAULT if
+kmalloc is failed.
 
-Reduce the log level in rtl8723bu_handle_c2h()
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/staging/wilc1000/linux_mon.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index c69a062..d137915c 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -7296,29 +7296,29 @@ static void rtl8723bu_handle_c2h(struct rtl8xxxu_priv *priv,
- 
- 	len = skb->len - 2;
- 
--	dev_info(dev, "C2H ID %02x seq %02x, len %02x source %02x\n",
--		 c2h->id, c2h->seq, len, c2h->bt_info.response_source);
-+	dev_dbg(dev, "C2H ID %02x seq %02x, len %02x source %02x\n",
-+		c2h->id, c2h->seq, len, c2h->bt_info.response_source);
- 
- 	switch(c2h->id) {
- 	case C2H_8723B_BT_INFO:
- 		if (c2h->bt_info.response_source >
- 		    BT_INFO_SRC_8723B_BT_ACTIVE_SEND)
--			dev_info(dev, "C2H_BT_INFO WiFi only firmware\n");
-+			dev_dbg(dev, "C2H_BT_INFO WiFi only firmware\n");
- 		else
--			dev_info(dev, "C2H_BT_INFO BT/WiFi coexist firmware\n");
-+			dev_dbg(dev, "C2H_BT_INFO BT/WiFi coexist firmware\n");
- 
- 		if (c2h->bt_info.bt_has_reset)
--			dev_info(dev, "BT has been reset\n");
-+			dev_dbg(dev, "BT has been reset\n");
- 		if (c2h->bt_info.tx_rx_mask)
--			dev_info(dev, "BT TRx mask\n");
-+			dev_dbg(dev, "BT TRx mask\n");
- 
- 		break;
- 	case C2H_8723B_BT_MP_INFO:
--		dev_info(dev, "C2H_MP_INFO ext ID %02x, status %02x\n",
--			 c2h->bt_mp_info.ext_id, c2h->bt_mp_info.status);
-+		dev_dbg(dev, "C2H_MP_INFO ext ID %02x, status %02x\n",
-+			c2h->bt_mp_info.ext_id, c2h->bt_mp_info.status);
- 		break;
- 	default:
--		pr_info("%s: Unhandled C2H event %02x\n", __func__, c2h->id);
-+		dev_info(dev, "Unhandled C2H event %02x\n", c2h->id);
- 		break;
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index a19755e..1443a23 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -166,14 +166,14 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
+ 	mgmt_tx = kmalloc(sizeof(*mgmt_tx), GFP_ATOMIC);
+ 	if (!mgmt_tx) {
+ 		PRINT_ER("Failed to allocate memory for mgmt_tx structure\n");
+-		return -EFAULT;
++		return -ENOMEM;
  	}
- }
+ 
+ 	mgmt_tx->buff = kmalloc(len, GFP_ATOMIC);
+ 	if (!mgmt_tx->buff) {
+ 		PRINT_ER("Failed to allocate memory for mgmt_tx buff\n");
+ 		kfree(mgmt_tx);
+-		return -EFAULT;
++		return -ENOMEM;
+ 	}
+ 
+ 	mgmt_tx->size = len;
 -- 
-2.5.0
+2.7.0
 
