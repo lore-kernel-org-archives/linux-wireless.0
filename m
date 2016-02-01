@@ -1,169 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:9290 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750957AbcBDJX3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:23:29 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 06/70] staging: wilc1000: remove define TCP_ACK_FILTER
-Date: Thu, 4 Feb 2016 18:15:23 +0900
-Message-ID: <1454577387-509-7-git-send-email-glen.lee@atmel.com> (sfid-20160204_102333_808406_D6F3664E)
-In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:46132 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932143AbcBAM2P (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Feb 2016 07:28:15 -0500
+Subject: Re: mt76 tx status
+To: Johannes Stezenbach <js@sig21.net>
+References: <20160131222441.GA20283@sig21.net>
+Cc: linux-wireless@vger.kernel.org
+From: Felix Fietkau <nbd@openwrt.org>
+Message-ID: <56AF4F56.5080901@openwrt.org> (sfid-20160201_132821_895783_5B26D285)
+Date: Mon, 1 Feb 2016 13:28:06 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20160131222441.GA20283@sig21.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes define TCP_ACK_FILTER and use it's feature codes.
-Add argument wilc to wilc_wlan_txq_remove because compile error happens.
+On 2016-01-31 23:24, Johannes Stezenbach wrote:
+> Hi Felix,
+> 
+> I noticed in mt76x2_mac_poll_tx_status() you are reading
+> MT_TX_STAT_FIFO before reading MT_TX_STAT_FIFO_EXT,
+> however I have a hunch that reading MT_TX_STAT_FIFO clobbers
+> the corresponding MT_TX_STAT_FIFO_EXT since MT_TX_STAT_FIFO
+> has the valid bit, and both registers together seem to implement
+> reading a 64bit FIFO entry.  I.e. you need to read
+> MT_TX_STAT_FIFO_EXT first otherwise you get a mix from
+> two FIFO entries.
+> 
+> I played a bit with the vendor driver for the mt7610u
+> and confirmed that multiple reads from MT_TX_STAT_FIFO_EXT
+> return the same value until MT_TX_STAT_FIFO is read.
+> (Note the mt7610u vendor driver does not define FIFO_EXT_SUPPORT
+> but the FIFO seems to exist in hardware.  The mt7612u vendor driver
+> code reads the MT_TX_STAT_FIFO_EXT first.)
+Hi Johannes,
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/Makefile    |  1 -
- drivers/staging/wilc1000/wilc_wlan.c | 22 ++--------------------
- 2 files changed, 2 insertions(+), 21 deletions(-)
+When I wrote that particular part of the code, I still had a lot of
+other bugs regarding aggregation and rate probing. Back then, somehow I
+got better results reading FIFO before FIFO_EXT.
+I just did a few experiments to not only verify that reading FIFO
+clobbers FIFO_EXT, but also to ensure that the data from reading
+FIFO_EXT first really belongs to the value read from FIFO.
 
-diff --git a/drivers/staging/wilc1000/Makefile b/drivers/staging/wilc1000/Makefile
-index 90c3760..acc3f3e 100644
---- a/drivers/staging/wilc1000/Makefile
-+++ b/drivers/staging/wilc1000/Makefile
-@@ -4,7 +4,6 @@ ccflags-y += -DFIRMWARE_1002=\"atmel/wilc1002_firmware.bin\" \
- 		-DFIRMWARE_1003=\"atmel/wilc1003_firmware.bin\"
- 
- ccflags-y += -I$(src)/ -DWILC_ASIC_A0 -DWILC_DEBUGFS
--#ccflags-y += -DTCP_ACK_FILTER
- 
- wilc1000-objs := wilc_wfi_cfgoperations.o linux_wlan.o linux_mon.o \
- 			wilc_msgqueue.o \
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 25cf325..9442016 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -36,8 +36,7 @@ static inline void release_bus(struct wilc *wilc, BUS_RELEASE_T release)
- 	mutex_unlock(&wilc->hif_cs);
- }
- 
--#ifdef TCP_ACK_FILTER
--static void wilc_wlan_txq_remove(struct txq_entry_t *tqe)
-+static void wilc_wlan_txq_remove(struct wilc *wilc, struct txq_entry_t *tqe)
- {
- 
- 	if (tqe == wilc->txq_head) {
-@@ -54,7 +53,6 @@ static void wilc_wlan_txq_remove(struct txq_entry_t *tqe)
- 	}
- 	wilc->txq_entries -= 1;
- }
--#endif
- 
- static struct txq_entry_t *
- wilc_wlan_txq_remove_from_head(struct net_device *dev)
-@@ -146,7 +144,6 @@ static int wilc_wlan_txq_add_to_head(struct wilc *wilc, struct txq_entry_t *tqe)
- 	return 0;
- }
- 
--#ifdef	TCP_ACK_FILTER
- struct ack_session_info;
- struct ack_session_info {
- 	u32 seq_num;
-@@ -308,7 +305,7 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- 				pending_acks_info[i].ack_num);
- 			tqe = pending_acks_info[i].txqe;
- 			if (tqe) {
--				wilc_wlan_txq_remove(tqe);
-+				wilc_wlan_txq_remove(wilc, tqe);
- 				tqe->status = 1;
- 				if (tqe->tx_complete_func)
- 					tqe->tx_complete_func(tqe->priv,
-@@ -335,7 +332,6 @@ static int wilc_wlan_txq_filter_dup_tcp_ack(struct net_device *dev)
- 
- 	return 1;
- }
--#endif
- 
- static bool enabled = false;
- 
-@@ -344,12 +340,10 @@ void wilc_enable_tcp_ack_filter(bool value)
- 	enabled = value;
- }
- 
--#ifdef TCP_ACK_FILTER
- static bool is_tcp_ack_filter_enabled(void)
- {
- 	return enabled;
- }
--#endif
- 
- static int wilc_wlan_txq_add_cfg_pkt(struct wilc *wilc, u8 *buffer, u32 buffer_size)
- {
-@@ -373,9 +367,7 @@ static int wilc_wlan_txq_add_cfg_pkt(struct wilc *wilc, u8 *buffer, u32 buffer_s
- 	tqe->buffer_size = buffer_size;
- 	tqe->tx_complete_func = NULL;
- 	tqe->priv = NULL;
--#ifdef TCP_ACK_FILTER
- 	tqe->tcp_pending_ack_idx = NOT_TCP_ACK;
--#endif
- 	PRINT_D(TX_DBG, "Adding the config packet at the Queue tail\n");
- 
- 	if (wilc_wlan_txq_add_to_head(wilc, tqe))
-@@ -406,11 +398,9 @@ int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 	tqe->priv = priv;
- 
- 	PRINT_D(TX_DBG, "Adding mgmt packet at the Queue tail\n");
--#ifdef TCP_ACK_FILTER
- 	tqe->tcp_pending_ack_idx = NOT_TCP_ACK;
- 	if (is_tcp_ack_filter_enabled())
- 		tcp_process(dev, tqe);
--#endif
- 	wilc_wlan_txq_add_to_tail(dev, tqe);
- 	return wilc->txq_entries;
- }
-@@ -436,9 +426,7 @@ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
- 	tqe->buffer_size = buffer_size;
- 	tqe->tx_complete_func = func;
- 	tqe->priv = priv;
--#ifdef TCP_ACK_FILTER
- 	tqe->tcp_pending_ack_idx = NOT_TCP_ACK;
--#endif
- 	PRINT_D(TX_DBG, "Adding Network packet at the Queue tail\n");
- 	wilc_wlan_txq_add_to_tail(dev, tqe);
- 	return 1;
-@@ -643,9 +631,7 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 
- 		wilc_lock_timeout(wilc, &wilc->txq_add_to_head_cs,
- 					CFG_PKTS_TIMEOUT);
--#ifdef	TCP_ACK_FILTER
- 		wilc_wlan_txq_filter_dup_tcp_ack(dev);
--#endif
- 		PRINT_D(TX_DBG, "Getting the head of the TxQ\n");
- 		tqe = wilc_wlan_txq_get_first(wilc);
- 		i = 0;
-@@ -829,10 +815,8 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 				if (tqe->tx_complete_func)
- 					tqe->tx_complete_func(tqe->priv,
- 							      tqe->status);
--				#ifdef TCP_ACK_FILTER
- 				if (tqe->tcp_pending_ack_idx != NOT_TCP_ACK)
- 					pending_acks_info[tqe->tcp_pending_ack_idx].txqe = NULL;
--				#endif
- 				kfree(tqe);
- 			} else {
- 				break;
-@@ -1564,9 +1548,7 @@ int wilc_wlan_init(struct net_device *dev)
- 		ret = -EIO;
- 		goto _fail_;
- 	}
--#ifdef	TCP_ACK_FILTER
- 	init_tcp_tracking();
--#endif
- 
- 	return 1;
- 
--- 
-1.9.1
+I tested this by checking if the MT_TXWI_PKTID_PROBE flag in the pktid
+field (in FIFO_EXT) corresponds to a different rate being selected.
 
+My test results pretty much confirm your findings, so I've committed and
+pushed a fix.
+
+Thanks,
+
+- Felix
