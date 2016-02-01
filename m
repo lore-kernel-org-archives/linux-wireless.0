@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60544 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753462AbcBZIKQ (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:33112 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932143AbcBAM1Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 03:10:16 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH 01/13] ath9k: Update QCA953x initvals
-Date: Fri, 26 Feb 2016 16:08:31 +0800
-Message-Id: <1456474123-10520-2-git-send-email-miaoqing@codeaurora.org> (sfid-20160226_091021_252520_3897EA48)
-In-Reply-To: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
-References: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
+	Mon, 1 Feb 2016 07:27:25 -0500
+Received: by mail-pf0-f193.google.com with SMTP id x125so7540787pfb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 04:27:25 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 09/11] staging: wilc1000: linux_mon: fix coding style of kmalloc usage
+Date: Mon,  1 Feb 2016 21:26:45 +0900
+Message-Id: <1454329607-9486-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20160201_132731_133098_FFAF23A8)
+In-Reply-To: <1454329607-9486-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1454329607-9486-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+This patch fixes coding style of kmalloc usage found by checkpatch.pl
+CHECK: Prefer kmalloc(sizeof(*mgmt_tx)...) over kmalloc(sizeof(struct
+tx_complete_mon_data)...)
 
-commit 14c5932805eb ("ath9k: Update QCA953x initvals")
-disabled HW peak detect calibartion on QCA953x 1.0, which
-should also be applied on 2.0.
-
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/ar953x_initvals.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/linux_mon.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar953x_initvals.h b/drivers/net/wireless/ath/ath9k/ar953x_initvals.h
-index 6fc0d07..eb42fb2 100644
---- a/drivers/net/wireless/ath/ath9k/ar953x_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar953x_initvals.h
-@@ -923,7 +923,7 @@ static const u32 qca953x_2p0_baseband_postamble[][5] = {
- 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
- 	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
- 	{0x00009e2c, 0x0000001c, 0x0000001c, 0x00000021, 0x00000021},
--	{0x00009e3c, 0xcfa10820, 0xcfa10820, 0xcf946222, 0xcf946222},
-+	{0x00009e3c, 0xcfa10820, 0xcfa10820, 0xcf946220, 0xcf946220},
- 	{0x00009e44, 0xfe321e27, 0xfe321e27, 0xfe291e27, 0xfe291e27},
- 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
- 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
-@@ -943,7 +943,7 @@ static const u32 qca953x_2p0_baseband_postamble[][5] = {
- 	{0x0000a284, 0x00000000, 0x00000000, 0x00000010, 0x00000010},
- 	{0x0000a288, 0x00000110, 0x00000110, 0x00000110, 0x00000110},
- 	{0x0000a28c, 0x00022222, 0x00022222, 0x00022222, 0x00022222},
--	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
-+	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00058d18, 0x00058d18},
- 	{0x0000a2cc, 0x18c50033, 0x18c43433, 0x18c41033, 0x18c44c33},
- 	{0x0000a2d0, 0x00041982, 0x00041982, 0x00041982, 0x00041982},
- 	{0x0000a2d8, 0x7999a83b, 0x7999a83b, 0x7999a83b, 0x7999a83b},
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 255383c..a19755e 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -163,7 +163,7 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
+ 	}
+ 
+ 	netif_stop_queue(dev);
+-	mgmt_tx = kmalloc(sizeof(struct tx_complete_mon_data), GFP_ATOMIC);
++	mgmt_tx = kmalloc(sizeof(*mgmt_tx), GFP_ATOMIC);
+ 	if (!mgmt_tx) {
+ 		PRINT_ER("Failed to allocate memory for mgmt_tx structure\n");
+ 		return -EFAULT;
 -- 
-1.9.1
+2.7.0
 
