@@ -1,43 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33423 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752800AbcB2WFy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:54 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 033/113] rtl8xxxu: Do not overwrite rtl8xxxu_debug for untested chips
-Date: Mon, 29 Feb 2016 17:04:31 -0500
-Message-Id: <1456783551-28315-34-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230614_779479_2CD8D39D)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:33081 "EHLO
+	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751827AbcBAEZ5 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 31 Jan 2016 23:25:57 -0500
+Date: Mon, 1 Feb 2016 09:55:48 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: fix memory leak
+Message-ID: <20160201042548.GA4072@sudip-pc> (sfid-20160201_052709_278995_6650DDCA)
+References: <1454060944-11320-1-git-send-email-sudipm.mukherjee@gmail.com>
+ <CAGRGNgXc9PtYY=hb8nNRt4T5YGm2vexcJ01Z1fCCcb=57WRZ3g@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGRGNgXc9PtYY=hb8nNRt4T5YGm2vexcJ01Z1fCCcb=57WRZ3g@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On Mon, Feb 01, 2016 at 11:03:35AM +1100, Julian Calaby wrote:
+> Hi Sudip,
+> 
+> On Fri, Jan 29, 2016 at 8:49 PM, Sudip Mukherjee
+> <sudipm.mukherjee@gmail.com> wrote:
+> > On error we jumped to the error label and returned the error code but we
+> > missed releasing sinfo.
+> >
+> > Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+> 
+> Should the From: and Signed-off-by: email addresses be the same?
 
-Fix a silly bug where the debug level was overwritten rather than
-amended for untested chips.
+I think 2 years back I had a long discussion with Greg about this and
+since then I al submitting patches like this. A small summayg of the
+problem from that discussion:
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+"we have strict DMARC check for the corporate mail server. DMARC =
+domain based message authentication.
+So the mail i sent reached all the list subscriber from a different
+server than our designated server, and as a result it is marked as spam
+in many places and I have already received a few complaints regarding
+that."
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 3829687..ac47b77 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -6391,7 +6391,7 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
- 	}
- 
- 	if (untested) {
--		rtl8xxxu_debug = RTL8XXXU_DEBUG_EFUSE;
-+		rtl8xxxu_debug |= RTL8XXXU_DEBUG_EFUSE;
- 		dev_info(&udev->dev,
- 			 "This Realtek USB WiFi dongle (0x%04x:0x%04x) is untested!\n",
- 			 id->idVendor, id->idProduct);
--- 
-2.5.0
+> 
+> > ---
+> >  net/mac80211/sta_info.c | 1 +
+> >  1 file changed, 1 insertion(+)
+> >
+> > diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+> > index 6c198e6..36e75c4 100644
+> > --- a/net/mac80211/sta_info.c
+> > +++ b/net/mac80211/sta_info.c
+> > @@ -561,6 +561,7 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
+> >         __cleanup_single_sta(sta);
+> >   out_err:
+> >         mutex_unlock(&local->sta_mtx);
+> > +       kfree(sinfo);
+> >         rcu_read_lock();
+> >         return err;
+> >  }
+> 
+> Looks sane to me. I must note that the bug this is fixing is only in
+> the mac80211-next tree.
+> 
+> Fixes: 5fe74014172d ("mac80211: avoid excessive stack usage in sta_info")
+> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 
+thanks
+
+regards
+sudip
