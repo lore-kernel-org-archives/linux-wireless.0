@@ -1,231 +1,129 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bias.opendreams.net ([107.191.118.74]:56165 "EHLO
-	bias.opendreams.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932209AbcBQKF0 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:47479 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933526AbcBACOI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2016 05:05:26 -0500
-Subject: Re: wpa_supplicant bridging problems
-To: Simon Malthieu <simon.malthieu@luceor.com>,
-	linux-wireless@vger.kernel.org
-References: <56C3E95A.7080104@jmomo.net> <56C4340D.9000508@luceor.com>
-From: J Mo <jmomo@jmomo.net>
-Message-ID: <56C445E2.1050904@jmomo.net> (sfid-20160217_110535_127017_E6734EC4)
-Date: Wed, 17 Feb 2016 02:05:22 -0800
+	Sun, 31 Jan 2016 21:14:08 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 4/7] staging: wilc1000: linux_mon.c: replaces PRINT_ER with netdev_err
+Date: Mon, 1 Feb 2016 11:11:22 +0900
+Message-ID: <1454292685-12294-4-git-send-email-leo.kim@atmel.com> (sfid-20160201_031417_956194_BA804149)
+In-Reply-To: <1454292685-12294-1-git-send-email-leo.kim@atmel.com>
+References: <1454292685-12294-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <56C4340D.9000508@luceor.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patches replaces PRINT_ER with netdev_err.
+Removes unnecessary debug logs as well.
 
-I will go look and verify the order of operations for the Debian 
-networking system, but I am under the impression that it brings up the 
-wlan interface (via bridge_ports), does all bridging, and then processes 
-the wpa-* commands.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_mon.c | 38 ++++++++++++------------------------
+ 1 file changed, 12 insertions(+), 26 deletions(-)
 
-In other words, it's already doing what you suggested.
-
-Also, wpa_supplicant gives errors if either the 802.11 interface (-i 
-wlan0) or bridge interface (-b br0) wasn't up at the time it was 
-launched, so I don't think it's even possible to get the order wrong 
-without obvious signs. I just don't think that's the issue here.
-
-Still, I'll take your advice and double check. I think I can debug the 
-ifup/down scripts a little more than what I've already done, but I don't 
-think order of operation is an issue.
-
-One thing to note is that if I bridge the wlan0 interface and let an 
-AP-reauth fail and then take the bridge off, wpa_supplicant starts 
-working again. Put the bridge back on and it breaks again, etc. I can do 
-this live with brctl without restarting wpa_supplicant and it will start 
-and stop working.
-
-I don't even understand why wpa_supplicant needs to know about the 
-bridge in this situation, but whatever!
-
-FYI By "official method", I mean the ideal config setup with an 
-"interfaces" config like this:
-
-allow-auto wlan0
-iface wlan0 inet manual
-
-allow-auto br0
-iface br0 inet dhcp
-     bridge_ports wlan0
-     bridge_stp off
-     bridge_waitport 5
-     bridge_fd 0
-     wpa-ssid POTATONET
-     wpa-psk xxxxxxx
-     wpa-iface wlan0
-     wpa-bridge br0
-     pre-up iw dev wlan0 set 4addr on
-     pre-up iw dev wlan0 set power_save off
-
-
-
-On 2/17/16 00:49, Simon Malthieu wrote:
-> Hi,
->
-> Have you tried to add wlan0 to the bridge **before**
-> wpa_supplicant (with the -b option) is launched ?
->
-> wpa_supplicant opens a socket to listen to EAPOL frames
-> in the bridge, and it does not seem to work if the interface
-> is not in the bridge at start.
->
-> Regards,
-> Simon
->
->
-> On 17/02/2016 04:30, J Mo wrote:
->>
->> Hello everyone
->>
->> I am having a very difficult time with a wireless bridging problem.
->>
->> My objective is to use a Debian GNU/Linux host as a wireless ethernet 
->> bridge between itself, some hosts connected through a switch on it's 
->> eth0 port, and an OpenWRT router.
->>
->> I have a test setup consisting of a laptop, a small PC (802.11 
->> client), and the OpenWRT AP/router.
->>
->> The wifi client system is an amd64(intel) with one 802.11 interface 
->> and a 1000BASE-T interface. The 802.11 hardware here is an Intel 
->> 3160. The OS is Debian GNU/Linux unstable with kernel 4.3.0-1-amd64 
->> and wpasupplicant package version 2.3-2.3.
->>
->> The 802.11 AP is a TP-Link TL-WR710N which is based off the Atheros 
->> ar9331.
->>
->>
->>
->> My problem is the moment I bridge the wlan0 interface on the 802.11 
->> PC client, wpa_supplicant stops doing it's job. It stops responding 
->> to any EAPOL frames from the AP, even though it seems to be receiving 
->> them.
->>
->> It is noteworthy that the bridging works. I am able to get a DHCP 
->> lease on the laptop from the OpenWRT AP/router via bridging though 
->> the PC. Traffic passes both way and everything works great until the 
->> next WPA rekey event comes along (every 10 minutes by default for 
->> OpenWRT), and then the client gets deauth'ed from the AP because it 
->> fails to respond.
->>
->> The only way I can get this to work is to first bring up my wlan0 
->> interface on the PC so that wpa_supplicant authenticates itself 
->> correctly. Once the 802.11 layer 2 is up, I manually use brctl to 
->> bridge in the eth0 and wlan0 ports on the PC. Everything works fine 
->> until the AP wants to rekey or the client needs to re-auth for some 
->> reason.
->>
->>
->>
->> Here is what my setup looks like:
->>
->> The OpenWRT device setup is pretty standard. The only thing required 
->> for the bridging is the addition of the "option wds 1" parameter 
->> under the wifi-iface in the "wireless" config file. The wds parameter 
->> enables 4-address frames to allow the bridging. In case it's 
->> relevant, I'm doing WPA2 PSK AES/CCMP.
->>
->> My PC/client /etc/network/interfaces file looks kind of like this:
->>
->> allow-hotplug eth0
->> iface eth0 inet manual
->>
->> auto wlan0
->> iface wlan0 inet manual
->>     wpa-debug-level 2
->>     wpa-ssid POTATONET
->>     wpa-psk XXXXXXXXX
->>     pre-up iw dev wlan0 set 4addr on
->>     pre-up iw dev wlan0 set power_save off
->>
->> allow-auto br0
->> # iface br0 inet dhcp
->> iface br0 inet manual
->>     # bridge_ports wlan0
->>     bridge_ports none
->>     bridge_stp off
->>     bridge_waitport 0
->>     bridge_fd 0
->>     # wpa-iface wlan0
->>     # wpa-bridge br0
->>
->>
->> I bring up wlan0 and br0:
->>
->> sudo ifup wlan0
->> sudo ifup br0
->>
->> At this point, the wlan0 port should be associated to the AP, even 
->> though I don't have any layer 3 interfaces on the PC yet. If I force 
->> a re-authentication from the AP it works fine. WPA rekey works fine.
->>
->> I do this to bridge up the interfaces:
->>     sudo brctl addif br0 eth0
->>     sudo brctl addif br0 wlan0
->>
->> From this point on, wpa_supplicant stops working correctly. However, 
->> the bridge works and ethernet frames are being passed between the 
->> laptop off of PC port eth0 and the OpenWRT AP. Everything is fine 
->> until the WPA rekey happens and then the wlan0 interface goes down 
->> and stops working.
->>
->> I did a tcpdump to find out what was going on and discovered that 
->> once the AP asked for re-authentication from the client, no traffic 
->> was going out of the wlan0 interface on the client PC. This was 
->> supported by ifconfig TX counters. wpa_supplicant stops replying to 
->> the AP on the wlan0 interface.
->>
->> It should be noted at this point that I am aware wpa_supplicant is 
->> supposed to need the "-b" argument in this kind of setup, which is 
->> what the commented-out "wpa-bridge" parameter in the "interfaces" 
->> file above is for, but it didn't work. I verified the arguments given 
->> to wpa_supplicant were correct via ps:
->>
->> /sbin/wpa_supplicant -s -B -P /run/wpa_supplicant.wlan0.pid -i wlan0 
->> -b br0 -D nl80211,wext -C /run/wpa_supplicant
->>
->>
->>
->> Additional notes and observations:
->>
->> Just to be clear, I have inspected the macaddr and arp tables on both 
->> the OpenWRT AP and the laptop and the MACs are correct. The wireless 
->> bridging is definitely working as expected. Let me know if you want 
->> output from these commands, but I don't think they are relevant.
->>
->> The default WPA rekey timer is every 10 minutes on OpenWRT, but I can 
->> force the AP to re-authenticate the client by doing this:
->> ubus call hostapd.wlan0 del_client '{"addr":"34:de:1a:zz:zz:zz", 
->> "reason":1, "deauth":true, "ban_time":0}'
->>
->>
->>
->> Finally, here is some debugging output (wpa_supplicant -ddd) from the 
->> client PC during a failed re-auth with the AP.
->>
->> http://jmomo.net/files/wpa_probs.txt
->>
->>
->>
->> What do?
->>
->> If additional debugging is needed, let me know what to do. If this is 
->> a Debian package problem, let me know and I'll go open a bug there.
->>
->> -- 
->> To unsubscribe from this list: send the line "unsubscribe 
->> linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at http://vger.kernel.org/majordomo-info.html
->
-> -- 
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index e550027..99f4ba3b 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -169,24 +169,18 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
+ {
+ 	struct tx_complete_mon_data *mgmt_tx = NULL;
+ 
+-	if (dev == NULL) {
+-		PRINT_D(HOSTAPD_DBG, "ERROR: dev == NULL\n");
++	if (!dev)
+ 		return -EFAULT;
+-	}
+ 
+ 	netif_stop_queue(dev);
+ 	mgmt_tx = kmalloc(sizeof(struct tx_complete_mon_data), GFP_ATOMIC);
+-	if (mgmt_tx == NULL) {
+-		PRINT_ER("Failed to allocate memory for mgmt_tx structure\n");
++	if (!mgmt_tx)
+ 		return -EFAULT;
+-	}
+ 
+ 	mgmt_tx->buff = kmalloc(len, GFP_ATOMIC);
+-	if (mgmt_tx->buff == NULL) {
+-		PRINT_ER("Failed to allocate memory for mgmt_tx buff\n");
++	if (!mgmt_tx->buff) {
+ 		kfree(mgmt_tx);
+ 		return -EFAULT;
+-
+ 	}
+ 
+ 	mgmt_tx->size = len;
+@@ -221,18 +215,13 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+ 		return -EFAULT;
+ 
+ 	mon_priv = netdev_priv(wilc_wfi_mon);
+-
+-	if (mon_priv == NULL) {
+-		PRINT_ER("Monitor interface private structure is NULL\n");
++	if (!mon_priv)
+ 		return -EFAULT;
+-	}
+-
+ 
+ 	rtap_len = ieee80211_get_radiotap_len(skb->data);
+-	if (skb->len < rtap_len) {
+-		PRINT_ER("Error in radiotap header\n");
++	if (skb->len < rtap_len)
+ 		return -1;
+-	}
++
+ 	/* skip the radiotap header */
+ 	PRINT_INFO(HOSTAPD_DBG, "Radiotap len: %d\n", rtap_len);
+ 
+@@ -292,7 +281,9 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+ 	/* if source address and bssid fields are equal>>Mac header */
+ 	/*send it to mgmt frames handler */
+ 	if (!(memcmp(srcAdd, bssid, 6))) {
+-		mon_mgmt_tx(mon_priv->real_ndev, skb->data, skb->len);
++		ret = mon_mgmt_tx(mon_priv->real_ndev, skb->data, skb->len);
++		if (ret)
++			netdev_err(dev, "fail to mgmt tx\n");
+ 		dev_kfree_skb(skb);
+ 	} else
+ 		ret = wilc_mac_xmit(skb, mon_priv->real_ndev);
+@@ -327,12 +318,9 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
+ 	}
+ 
+ 	wilc_wfi_mon = alloc_etherdev(sizeof(struct WILC_WFI_mon_priv));
+-	if (!wilc_wfi_mon) {
+-		PRINT_ER("failed to allocate memory\n");
++	if (!wilc_wfi_mon)
+ 		return NULL;
+ 
+-	}
+-
+ 	wilc_wfi_mon->type = ARPHRD_IEEE80211_RADIOTAP;
+ 	strncpy(wilc_wfi_mon->name, name, IFNAMSIZ);
+ 	wilc_wfi_mon->name[IFNAMSIZ - 1] = 0;
+@@ -340,14 +328,12 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
+ 
+ 	ret = register_netdevice(wilc_wfi_mon);
+ 	if (ret) {
+-		PRINT_ER(" register_netdevice failed (%d)\n", ret);
++		netdev_err(real_dev, "register_netdevice failed\n");
+ 		return NULL;
+ 	}
+ 	priv = netdev_priv(wilc_wfi_mon);
+-	if (priv == NULL) {
+-		PRINT_ER("private structure is NULL\n");
++	if (!priv)
+ 		return NULL;
+-	}
+ 
+ 	priv->real_ndev = real_dev;
+ 
+-- 
+1.9.1
 
