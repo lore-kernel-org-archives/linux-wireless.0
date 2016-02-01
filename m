@@ -1,87 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:32842 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753139AbcBZR7b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 12:59:31 -0500
-Date: Fri, 26 Feb 2016 19:59:25 +0200
-From: Jouni Malinen <j@w1.fi>
-To: =?utf-8?B?Sm/Do28=?= Paulo Rechi Vita <jprvita@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux@endlessm.com,
-	=?utf-8?B?Sm/Do28=?= Paulo Rechi Vita <jprvita@endlessm.com>
-Subject: Re: [PATCHv2 08/10] rfkill: Use switch to demux userspace operations
-Message-ID: <20160226175925.GA9331@w1.fi> (sfid-20160226_185934_763194_D15F0423)
-References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
- <1456159001-20307-9-git-send-email-jprvita@endlessm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:50801 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932715AbcBAPCh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Feb 2016 10:02:37 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Joe Perches <joe@perches.com>
+Cc: Rakhi Sharma <rakhish1994@gmail.com>, Larry.Finger@lwfinger.net,
+	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org
+Subject: Re: [PATCH 3/3] Staging: rtl8723au: core: rtw_ieee80211: Fixed space and brace coding style issue.
+References: <1454246643-24049-1-git-send-email-rakhish1994@gmail.com>
+	<wrfjy4b5zuhl.fsf@redhat.com> <1454261145.7329.58.camel@perches.com>
+	<wrfjio287gwy.fsf@redhat.com> <1454336901.7329.63.camel@perches.com>
+Date: Mon, 01 Feb 2016 10:02:36 -0500
+In-Reply-To: <1454336901.7329.63.camel@perches.com> (Joe Perches's message of
+	"Mon, 01 Feb 2016 06:28:21 -0800")
+Message-ID: <wrfja8nk79tf.fsf@redhat.com> (sfid-20160201_160241_494941_79917F57)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1456159001-20307-9-git-send-email-jprvita@endlessm.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 22, 2016 at 11:36:39AM -0500, João Paulo Rechi Vita wrote:
-> Using a switch to handle different ev.op values in rfkill_fop_write()
-> makes the code easier to extend, as out-of-range values can always be
-> handled by the default case.
+Joe Perches <joe@perches.com> writes:
+> On Mon, 2016-02-01 at 07:29 -0500, Jes Sorensen wrote:
+>> Joe Perches <joe@perches.com> writes:
+> []
+>> > so this could be transformed into something like:
+>> > 
+>> > int rtw_get_bit_value_from_ieee_value23a(u8 val)
+>> > {
+>> > 	int i;
+>> > 	static const u8 dot11_rate_table[] = {
+>> > 		2, 4, 11, 22, 12, 18, 24, 36, 48, 72, 96, 108
+>> > 	};
+>> 
+>> and per my previous email, the above is worse than than the original.
+>> The cleaner way to list it would be:
+>> 
+>> 	static const char dot11_rate_table[] =
+>> 		{ 2, 4, 11, 22, 12, 18, 24, 36, 48, 72, 96, 108 };
+>
+> Either style is OK, but the style I used is slightly
+> more common in the kernel overall, about 2:1.
 
-This breaks rfkill.. There are automated test scripts for testing this
-area (and most of Wi-Fi for that matter. It would be nice if these were
-used for changes before they get contributed upstream..
+It wastes a line for now reason and having the open bracket on a line by
+itself is slightly more obfuscating.
 
-http://buildbot.w1.fi/hwsim/
+> The type should ideally be u8 and not char.
 
-This specific commit broke all the rfkill_* test cases because of
-following:
+u8 or char is not a big deal for me here, I'm fine with either.
 
-> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-> @@ -1199,29 +1200,32 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
-> -	list_for_each_entry(rfkill, &rfkill_list, node) {
-> -		if (rfkill->idx != ev.idx && ev.op != RFKILL_OP_CHANGE_ALL)
-> -			continue;
-> -
-> -		if (rfkill->type != ev.type && ev.type != RFKILL_TYPE_ALL)
-> -			continue;
-
-Note that RFKILL_TYPE_ALL here..
-
-> +		list_for_each_entry(rfkill, &rfkill_list, node)
-> +			if (rfkill->type == ev.type ||
-> +			    ev.type == RFKILL_TYPE_ALL)
-> +				rfkill_set_block(rfkill, ev.soft);
-
-It was included for RFKILL_OP_CHANGE_ALL.
-
-> +	case RFKILL_OP_CHANGE:
-> +		list_for_each_entry(rfkill, &rfkill_list, node)
-> +			if (rfkill->idx == ev.idx && rfkill->type == ev.type)
-> +				rfkill_set_block(rfkill, ev.soft);
-
-but not for RFKILL_OP_CHANGE..
-
-This needs following to work:
-
-
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index 59ff92d..c4bbd19 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -1239,7 +1239,9 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
- 		break;
- 	case RFKILL_OP_CHANGE:
- 		list_for_each_entry(rfkill, &rfkill_list, node)
--			if (rfkill->idx == ev.idx && rfkill->type == ev.type)
-+			if (rfkill->idx == ev.idx &&
-+			    (rfkill->type == ev.type ||
-+			     ev.type == RFKILL_TYPE_ALL))
- 				rfkill_set_block(rfkill, ev.soft);
- 		ret = 0;
- 		break;
- 
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Jes
