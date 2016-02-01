@@ -1,93 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:52303 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753409AbcBINoW convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2016 08:44:22 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Nishant Sarmukadam" <nishants@marvell.com>,
-	"wnhuang@chromium.com" <wnhuang@chromium.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Xinming Hu <huxm@marvell.com>, Cathy Luo <cluo@marvell.com>
-Subject: RE: [PATCH v3 1/3] mwifiex: register platform specific driver
-Date: Tue, 9 Feb 2016 13:44:16 +0000
-Message-ID: <5ef981436ee64f67beef7ca1e2470c69@SC-EXCH04.marvell.com> (sfid-20160209_144426_301503_9CDAB405)
-References: <1454926528-17480-1-git-send-email-akarwar@marvell.com>
- <8264177.UI5sMC7XWi@wuerfel>
-In-Reply-To: <8264177.UI5sMC7XWi@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:33729 "EHLO
+	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753265AbcBAMYY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Feb 2016 07:24:24 -0500
+Received: by mail-wm0-f50.google.com with SMTP id l66so67671044wml.0
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 04:24:23 -0800 (PST)
+From: Sven Eckelmann <sven@open-mesh.com>
+To: linux-wireless@vger.kernel.org
+Cc: thomas@net.t-labs.tu-berlin.de, antonio@open-mesh.com,
+	nbd@nbd.name, johannes@sipsolutions.net,
+	Sven Eckelmann <sven@open-mesh.com>
+Subject: [PATCH] mac80211: minstrel: Scale expected_throughput by 10
+Date: Mon,  1 Feb 2016 13:24:10 +0100
+Message-Id: <1454329450-31527-1-git-send-email-sven@open-mesh.com> (sfid-20160201_132429_424750_8B5B02B5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arnd,
+The change from cur_tp to the function
+minstrel_get_tp_avg/minstrel_ht_get_tp_avg changed the unit used for the
+current throughtput. For example in minstrel_ht the correct
+conversion between them would be:
 
-Thanks for your review.
+    mrs->cur_tp / 10 == minstrel_ht_get_tp_avg(..).
 
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> owner@vger.kernel.org] On Behalf Of Arnd Bergmann
-> Sent: Monday, February 08, 2016 5:40 PM
-> To: Amitkumar Karwar
-> Cc: linux-wireless@vger.kernel.org; Nishant Sarmukadam;
-> wnhuang@chromium.com; devicetree@vger.kernel.org; Xinming Hu
-> Subject: Re: [PATCH v3 1/3] mwifiex: register platform specific driver
-> 
-> On Monday 08 February 2016 02:15:26 Amitkumar Karwar wrote:
-> > diff --git a/Documentation/devicetree/bindings/mwifiex.txt
-> > b/Documentation/devicetree/bindings/mwifiex.txt
-> > new file mode 100644
-> > index 0000000..39b6a74
-> > --- /dev/null
-> > +++ b/Documentation/devicetree/bindings/mwifiex.txt
-> > @@ -0,0 +1,29 @@
-> > +mwifiex
-> > +------
-> > +
-> > +Required properties:
-> > +
-> > +  - name : must be "mwifiex"
-> 
-> This is a very unusual requirement.
-> 
-> Can you use one of the standard device names instead?
-> 
+This factor 10 must also be included in the calculation of
+minstrel_get_expected_throughput and minstrel_ht_get_expected_throughput to
+get similar results as before the change.
 
-We will make use of marvell-sd8xxx in updated version as per Rob Herring's suggestions.
-It includes vendor name and a chipset/device name.
+Fixes: 6a27b2c40b48 ("mac80211: restructure per-rate throughput calculation into function")
+Signed-off-by: Sven Eckelmann <sven@open-mesh.com>
+---
+ net/mac80211/rc80211_minstrel.c    | 2 +-
+ net/mac80211/rc80211_minstrel_ht.c | 3 ++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
-
-> > +  - compatible : must be "marvell,mwifiex"
-> > +
-> > +Optional properties:
-> > +
-> > +  - mwifiex,caldata* : A series of properties with marvell,caldata
-> prefix,
-> > +                     represent Calibration data downloaded to the
-> device during
-> > +                     initialization. This is an array of unsigned
-> values.
-> > +
-> > +
-> > +Example:
-> > +
-> > +Tx power limit calibration data is configured in below example.
-> > +The calibration data is an array of unsigned values, the length can
-> > +vary between hw versions.
-> > +
-> > +mwifiex {
-> > +       compatible = "marvell,mwifiex";
-> > +
-> > +       mwifiex,caldata_00_txpwrlimit_2g_cfg_set = /bits/ 8 <
-> > +0x01 0x00 0x06 0x00 0x08 0x02 0x89 0x01 ...>;
-> > +
-> > +};
-> 
-> Should we list the mac-address here as well, or is there always an
-> eeprom for that but not the calibration data?
-
-Yes. we do get MAC address along with other info from EEPROM.
-
-Regards,
-Amitkumar Karwar
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 3ece7d1..b54f398 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -711,7 +711,7 @@ static u32 minstrel_get_expected_throughput(void *priv_sta)
+ 	 * computing cur_tp
+ 	 */
+ 	tmp_mrs = &mi->r[idx].stats;
+-	tmp_cur_tp = minstrel_get_tp_avg(&mi->r[idx], tmp_mrs->prob_ewma);
++	tmp_cur_tp = minstrel_get_tp_avg(&mi->r[idx], tmp_mrs->prob_ewma) * 10;
+ 	tmp_cur_tp = tmp_cur_tp * 1200 * 8 / 1024;
+ 
+ 	return tmp_cur_tp;
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 3928dbd..8928151 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -1334,7 +1334,8 @@ static u32 minstrel_ht_get_expected_throughput(void *priv_sta)
+ 	prob = mi->groups[i].rates[j].prob_ewma;
+ 
+ 	/* convert tp_avg from pkt per second in kbps */
+-	tp_avg = minstrel_ht_get_tp_avg(mi, i, j, prob) * AVG_PKT_SIZE * 8 / 1024;
++	tp_avg = minstrel_ht_get_tp_avg(mi, i, j, prob) * 10;
++	tp_avg *= AVG_PKT_SIZE * 8 / 1024;
+ 
+ 	return tp_avg;
+ }
