@@ -1,72 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:33980 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754163AbcBYBOV (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59464 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932418AbcBAOcT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2016 20:14:21 -0500
-Received: by mail-ig0-f172.google.com with SMTP id g6so3779338igt.1
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 17:14:21 -0800 (PST)
+	Mon, 1 Feb 2016 09:32:19 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Luca Coelho <luciano.coelho@intel.com>
+Subject: Re: [PATCH 04/31] iwlwifi: pcie: add initial RTPM support for PCI
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+	<1454238386-27032-4-git-send-email-emmanuel.grumbach@intel.com>
+Date: Mon, 01 Feb 2016 16:32:15 +0200
+In-Reply-To: <1454238386-27032-4-git-send-email-emmanuel.grumbach@intel.com>
+	(Emmanuel Grumbach's message of "Sun, 31 Jan 2016 13:05:59 +0200")
+Message-ID: <87y4b4sdqo.fsf@purkki.adurom.net> (sfid-20160201_153222_774227_E26C4252)
 MIME-Version: 1.0
-In-Reply-To: <1456358932-23114-7-git-send-email-afenkart@gmail.com>
-References: <1456358932-23114-1-git-send-email-afenkart@gmail.com> <1456358932-23114-7-git-send-email-afenkart@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 25 Feb 2016 12:14:00 +1100
-Message-ID: <CAGRGNgW7S8xru6KVBdQMLN3+=N-uzMf18rwfDWW6uNzCv7eaWg@mail.gmail.com> (sfid-20160225_021425_381473_6642CB43)
-Subject: Re: [PATCH 6/7] mwifiex: factor out mwifiex_cancel_pending_scan_cmd
-To: Andreas Fenkart <afenkart@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andreas,
+Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
 
-On Thu, Feb 25, 2016 at 11:08 AM, Andreas Fenkart <afenkart@gmail.com> wrote:
-> releasing the scan_pending lock in mwifiex_check_next_scan_command
-> is valid, since the lock is taken again, and all nodes removed
-> from the scan_pending queue.
+> From: Luca Coelho <luciano.coelho@intel.com>
 >
-> Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
-> ---
->  drivers/net/wireless/marvell/mwifiex/cmdevt.c      | 43 ++++++++++------------
->  drivers/net/wireless/marvell/mwifiex/main.h        |  1 +
->  drivers/net/wireless/marvell/mwifiex/scan.c        | 23 +++---------
->  drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 13 +------
->  4 files changed, 27 insertions(+), 53 deletions(-)
+> Add an initial implementation of runtime power management (RTPM) for
+> PCI devices.  With this patch, RTPM is only used when wifi is off
+> (i.e. the wifi interface is down).  This implementation is behind a
+> new Kconfig flag, IWLWIFI_PCIE_RTPM.
 >
-> diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-> index 6ddc98b..490d0d1 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/scan.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-> @@ -1920,13 +1910,10 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
->                 }
->         } else if ((priv->scan_aborting && !priv->scan_request) ||
->                    priv->scan_block) {
-> -               list_for_each_entry_safe(cmd_node, tmp_node,
-> -                                        &adapter->scan_pending_q, list) {
-> -                       list_del(&cmd_node->list);
-> -                       mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
-> -               }
->                 spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
->
-> +               mwifiex_cancel_pending_scan_cmd(adapter);
+> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+
+[...]
+
+> --- a/drivers/net/wireless/intel/iwlwifi/Kconfig
+> +++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
+> @@ -99,6 +99,18 @@ config IWLWIFI_UAPSD
+>  
+>  	  If unsure, say N.
+>  
+> +config IWLWIFI_PCIE_RTPM
+> +       bool "Enable runtime power management mode for PCIe devices"
+> +       depends on IWLMVM && IWLWIFI_PCIE && PM
+> +       default false
+> +       help
+> +         Say Y here to enable runtime power management for PCIe
+> +         devices.  If enabled, the device will go into low power mode
+> +         when idle for a short period of time, allowing for improved
+> +         power saving during runtime.
 > +
+> +	 If unsure, say N.
 
-This is creating a "short" window where &adapter->scan_pending_q_lock
-is unlocked here. Is that safe?
-
-You might want to write mwifiex_cancel_pending_scan_cmd() as two
-functions, one which takes the spinlock and calls the other and one
-which does all the work so you can call the latter here without that
-window where ..._q_lock is unlocked.
-
-Thanks,
+I didn't see the new option in menuconfig and then noticed that I can't
+find IWLWIFI_PCIE anywhere. Is that correct?
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Kalle Valo
