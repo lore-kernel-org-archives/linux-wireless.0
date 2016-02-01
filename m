@@ -1,109 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f176.google.com ([209.85.220.176]:36296 "EHLO
-	mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752423AbcBVQhD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 11:37:03 -0500
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux@endlessm.com,
-	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
-Subject: [PATCHv2 04/10] rfkill: Move "state" sysfs file back to stable
-Date: Mon, 22 Feb 2016 11:36:35 -0500
-Message-Id: <1456159001-20307-5-git-send-email-jprvita@endlessm.com> (sfid-20160222_174225_953695_71FA17EF)
-In-Reply-To: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
-References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+Received: from mga14.intel.com ([192.55.52.115]:39368 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753671AbcBAMc2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Feb 2016 07:32:28 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Nikolay Martynov <mar.kolya@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"julian.calaby@gmail.com" <julian.calaby@gmail.com>
+Subject: RE: [PATCH v2] iwldvm: fix chain gain calibration when firmware
+ return zero values
+Date: Mon, 1 Feb 2016 12:32:24 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E9F5FAF@hasmsx107.ger.corp.intel.com> (sfid-20160201_133231_373945_2731E73C)
+References: <1453527309-23881-1-git-send-email-mar.kolya@gmail.com>
+	<1453760341-30008-1-git-send-email-mar.kolya@gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB32E9D2EC6@hasmsx109.ger.corp.intel.com>
+	<CALGY4fv5t7k9Xcw1iysL3gyLih7S4z2Y7ShXTJiXWc5aDVVM_A@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB32E9E3F16@hasmsx107.ger.corp.intel.com>
+	<CALGY4fsx3uPox8+=S13thXarW0yGLK+8BSqzjwqRtubrAG1ybQ@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB32E9ED4FD@hasmsx107.ger.corp.intel.com>
+ <CALGY4ftjhwJjDsgwwfL7NoCnpdqEATL4tsUAPM9yhdsm7ZChqg@mail.gmail.com>
+In-Reply-To: <CALGY4ftjhwJjDsgwwfL7NoCnpdqEATL4tsUAPM9yhdsm7ZChqg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is still quite a bit of code using this interface, so we can't
-just remove it. Hopefully it will be possible in the future, but since
-its scheduled removal date is past 2 years already, we are better having
-the documentation reflecting the current state of things.
-
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
----
- Documentation/ABI/obsolete/sysfs-class-rfkill | 20 --------------------
- Documentation/ABI/stable/sysfs-class-rfkill   | 25 ++++++++++++++++++++++---
- 2 files changed, 22 insertions(+), 23 deletions(-)
- delete mode 100644 Documentation/ABI/obsolete/sysfs-class-rfkill
-
-diff --git a/Documentation/ABI/obsolete/sysfs-class-rfkill b/Documentation/ABI/obsolete/sysfs-class-rfkill
-deleted file mode 100644
-index e736d14..0000000
---- a/Documentation/ABI/obsolete/sysfs-class-rfkill
-+++ /dev/null
-@@ -1,20 +0,0 @@
--rfkill - radio frequency (RF) connector kill switch support
--
--For details to this subsystem look at Documentation/rfkill.txt.
--
--What:		/sys/class/rfkill/rfkill[0-9]+/state
--Date:		09-Jul-2007
--KernelVersion	v2.6.22
--Contact:	linux-wireless@vger.kernel.org
--Description: 	Current state of the transmitter.
--		This file is deprecated and scheduled to be removed in 2014,
--		because its not possible to express the 'soft and hard block'
--		state of the rfkill driver.
--Values: 	A numeric value.
--		0: RFKILL_STATE_SOFT_BLOCKED
--			transmitter is turned off by software
--		1: RFKILL_STATE_UNBLOCKED
--			transmitter is (potentially) active
--		2: RFKILL_STATE_HARD_BLOCKED
--			transmitter is forced off by something outside of
--			the driver's control.
-diff --git a/Documentation/ABI/stable/sysfs-class-rfkill b/Documentation/ABI/stable/sysfs-class-rfkill
-index e51571e..e1ba4a1 100644
---- a/Documentation/ABI/stable/sysfs-class-rfkill
-+++ b/Documentation/ABI/stable/sysfs-class-rfkill
-@@ -5,9 +5,6 @@ For details to this subsystem look at Documentation/rfkill.txt.
- For the deprecated /sys/class/rfkill/*/claim knobs of this interface look in
- Documentation/ABI/removed/sysfs-class-rfkill.
- 
--For the deprecated /sys/class/rfkill/*/state knobs of this interface look in
--Documentation/ABI/obsolete/sysfs-class-rfkill.
--
- What: 		/sys/class/rfkill
- Date:		09-Jul-2007
- KernelVersion:	v2.6.22
-@@ -44,6 +41,28 @@ Values: 	A numeric value.
- 		1: true
- 
- 
-+What:		/sys/class/rfkill/rfkill[0-9]+/state
-+Date:		09-Jul-2007
-+KernelVersion	v2.6.22
-+Contact:	linux-wireless@vger.kernel.org
-+Description: 	Current state of the transmitter.
-+		This file was scheduled to be removed in 2014, but due to its
-+		large number of users it will be sticking around for a bit
-+		longer. Despite it being marked as stabe, the newer "hard" and
-+		"soft" interfaces should be preffered, since it is not possible
-+		to express the 'soft and hard block' state of the rfkill driver
-+		through this interface. There will likely be another attempt to
-+		remove it in the future.
-+Values: 	A numeric value.
-+		0: RFKILL_STATE_SOFT_BLOCKED
-+			transmitter is turned off by software
-+		1: RFKILL_STATE_UNBLOCKED
-+			transmitter is (potentially) active
-+		2: RFKILL_STATE_HARD_BLOCKED
-+			transmitter is forced off by something outside of
-+			the driver's control.
-+
-+
- What:		/sys/class/rfkill/rfkill[0-9]+/hard
- Date:		12-March-2010
- KernelVersion	v2.6.34
--- 
-2.5.0
-
+WyBzbmlwIF0NCg0KPiA+Pg0KPiA+DQo+ID4gQXJlIHlvdSBzdXJlIHRoYXQgdGhlIGFudGVubmEg
+dGhhdCByZXBvcnRlZCAwICJyZWNvdmVycyIgYW5kIHJlcG9ydHMgZ29vZA0KPiB2YWx1ZXMgbGF0
+ZXI/DQo+IA0KPiBJbiBmYWN0IGl0IGRvZXMsIGJ1dCBhcHBhcmVudGx5IHRoYXQncyBub3QgdGhl
+IHByb2JsZW0gKEkndmUgY2hlY2tlZCB3aXRoDQo+IG1vbml0b3IgZGV2aWNlIGFuZCBhZnRlciBz
+ZWVpbmcgemVyb3MgZHVyaW5nIGNhbGlicmF0aW9uIEkgc2VlIHBhY2tldHMgYW5kDQo+IG1heCBy
+YXRlIGNvbWluZyBpbiBmcm9tIEFQKS4NCj4gDQo+IEkndmUgZG9uZSBzb21lIG1vcmUgdGVzdGlu
+ZyBhbmQgaXQgdHVybnMgb3V0IHRoYXQgb3JpZ2luYWwgcHJvYmxlbSBvZiBvbmUNCj4gYW50ZW5u
+YSBiZWluZyBkaXNhYmxlZCBpcyBjYXVzZWQgYnkgcG93ZXJfc2F2ZSBwYXJhbWV0ZXIgYmVpbmcg
+c2V0IHRvDQo+IHRydWUuIEkgY2Fubm90IHJlcHJvZHVjZSB0aGUgcHJvYmxlbSB3aXRoIHRoYXQg
+cGFyYW1ldGVyIGJlaW5nIHNldCB0byBmYWxzZS4NCj4gDQo+IEkgZ3Vlc3MgZmlybXdhcmUgdHVy
+bnMgb2ZmIHNvbWUgcmVjZWl2aW5nIGFudGVubmFzIHRvIGNvbnNlcnZlIHBvd2VyIGFuZA0KPiBy
+ZXBvcnRzIHRoYXQgc3RhdCBhcyB6ZXJvLg0KPiANCj4gSSBzZWUgdGhlcmUgaXMgc29tZSBsb2dp
+YyB0byBwcmV2ZW50IHBvd2VyIHNhdmluZyBmcm9tIGFmZmVjdGluZyB0aGlzDQo+IGNhbGlicmF0
+aW9uIGJ1dCBpdCBsb29rcyBsaWtlIGl0IGRvZXNuJ3Qgd29yayBwcm9wZXJseSB3aGVuIHBvd2Vy
+X3NhdmU9dHJ1ZQ0KPiBhbmQgdW5mb3J0dW5hdGVseSBJIGNvdWxkIG5vdCBpbW1lZGlhdGVseSBm
+aWd1cmUgb3V0IHdoeS4NCj4gDQo+IFBsZWFzZSBkaXNyZWdhcmQgdGhpcyBwYXRjaCBiZWNhdXNl
+IG9yaWdpbmFsIHByb2JsZW0gaXMgY2F1c2UgYnkgcG93ZXINCj4gc2F2aW5nLCBub3QgYnkgZmly
+bXdhcmUgaXNzdWUgKGF0IGxlYXN0IGFzIGZhciBhcyBJIGNvdWxkIHJlcHJvZHVjZSkuDQo+IA0K
+PiBTb3JyeSBmb3Igbm90IHRlc3RpbmcgaXQgbW9yZSB0aG9yb3VnaGx5IGJlZm9yZSBzZW5kaW5n
+IHRoZSBwYXRjaCBhbmQgdGhhbmtzDQo+IGZvciBraW5kbHkgcmV2aWV3aW5nIGl0IGFuZCBwcm92
+aWRpbmcgY29tbWVudHMhDQo+IA0KDQpObyB3b3JyaWVzLCByZWFsbHkgOikNCg0K
