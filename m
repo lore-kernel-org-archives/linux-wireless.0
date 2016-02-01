@@ -1,43 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:34001 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750901AbcBXTTd (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:56751 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932645AbcBAOnR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2016 14:19:33 -0500
-Received: by mail-pa0-f44.google.com with SMTP id fy10so17578419pac.1
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 11:19:33 -0800 (PST)
-From: UJJAL ROY <royujjal@gmail.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	WiFi Mailing List <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/3] mwifiex: Fixed incorrect indentation issue
-Date: Thu, 25 Feb 2016 00:49:23 +0530
-Message-Id: <1456341563-375-1-git-send-email-royujjal@gmail.com> (sfid-20160224_201937_626445_5F80AAB4)
+	Mon, 1 Feb 2016 09:43:17 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Coelho, Luciano" <luciano.coelho@intel.com>
+Subject: Re: [PATCH 04/31] iwlwifi: pcie: add initial RTPM support for PCI
+Date: Mon, 1 Feb 2016 14:43:09 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E9F687B@hasmsx107.ger.corp.intel.com> (sfid-20160201_154327_378919_8FD7B454)
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+ <1454238386-27032-4-git-send-email-emmanuel.grumbach@intel.com>
+ <87y4b4sdqo.fsf@purkki.adurom.net>
+ <0BA3FCBA62E2DC44AF3030971E174FB32E9F682B@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the incorrect indentation of the case label.
 
-Signed-off-by: UJJAL ROY <royujjal@gmail.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index e7adef7..cb0cf03 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -676,7 +676,7 @@ mwifiex_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
- 		}
- 		break;
+On 02/01/2016 04:38 PM, Grumbach, Emmanuel wrote:
+>
+> On 02/01/2016 04:32 PM, Kalle Valo wrote:
+>> Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
+>>
+>>> From: Luca Coelho <luciano.coelho@intel.com>
+>>>
+>>> Add an initial implementation of runtime power management (RTPM) for
+>>> PCI devices.  With this patch, RTPM is only used when wifi is off
+>>> (i.e. the wifi interface is down).  This implementation is behind a
+>>> new Kconfig flag, IWLWIFI_PCIE_RTPM.
+>>>
+>>> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+>>> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+>> [...]
+>>
+>>> --- a/drivers/net/wireless/intel/iwlwifi/Kconfig
+>>> +++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
+>>> @@ -99,6 +99,18 @@ config IWLWIFI_UAPSD
+>>>  
+>>>  	  If unsure, say N.
+>>>  
+>>> +config IWLWIFI_PCIE_RTPM
+>>> +       bool "Enable runtime power management mode for PCIe devices"
+>>> +       depends on IWLMVM && IWLWIFI_PCIE && PM
+>>> +       default false
+>>> +       help
+>>> +         Say Y here to enable runtime power management for PCIe
+>>> +         devices.  If enabled, the device will go into low power mode
+>>> +         when idle for a short period of time, allowing for improved
+>>> +         power saving during runtime.
+>>> +
+>>> +	 If unsure, say N.
+>> I didn't see the new option in menuconfig and then noticed that I can't
+>> find IWLWIFI_PCIE anywhere. Is that correct?
+>>
+> Right... This option is not upstreamed yet...
+> I'll respin. Sorry...
+>
 
--		case MWIFIEX_BSS_ROLE_STA:
-+	case MWIFIEX_BSS_ROLE_STA:
- 		if (priv->media_connected) {
- 			mwifiex_dbg(adapter, ERROR,
- 				    "cannot change wiphy params when connected");
---
-1.9.1
+Next tag: iwlwifi-next-for-kalle-2016-01-31_2
+
+$ git diff
+iwlwifi-next-for-kalle-2016-01-31..iwlwifi-next-for-kalle-2016-01-31_2
+diff --git a/drivers/net/wireless/intel/iwlwifi/Kconfig
+b/drivers/net/wireless/intel/iwlwifi/Kconfig
+index acaaf69..11932d5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/Kconfig
++++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
+@@ -101,7 +101,7 @@ config IWLWIFI_UAPSD
+ 
+ config IWLWIFI_PCIE_RTPM
+        bool "Enable runtime power management mode for PCIe devices"
+-       depends on IWLMVM && IWLWIFI_PCIE && PM
++       depends on IWLMVM && PM
+        default false
+        help
+          Say Y here to enable runtime power management for PCIe
 
