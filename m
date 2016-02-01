@@ -1,107 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f178.google.com ([209.85.220.178]:33992 "EHLO
-	mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752502AbcBVQhD (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35550 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753866AbcBAMwC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 11:37:03 -0500
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux@endlessm.com,
-	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
-Subject: [PATCHv2 05/10] rfkill: Factor rfkill_global_states[].cur assignments
-Date: Mon, 22 Feb 2016 11:36:36 -0500
-Message-Id: <1456159001-20307-6-git-send-email-jprvita@endlessm.com> (sfid-20160222_174322_470195_7BC6825C)
-In-Reply-To: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
-References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Mon, 1 Feb 2016 07:52:02 -0500
+Received: by mail-pf0-f194.google.com with SMTP id 66so7075451pfe.2
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 04:52:01 -0800 (PST)
+From: Rakhi Sharma <rakhish1994@gmail.com>
+To: Jes.Sorensen@redhat.com, gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Rakhi Sharma <rakhish1994@gmail.com>
+Subject: [PATCH 4/4] Staging: rtl8723au: core: rtw_ieee80211: Fixed a coding style Warning.
+Date: Mon,  1 Feb 2016 18:21:44 +0530
+Message-Id: <1454331104-16835-1-git-send-email-rakhish1994@gmail.com> (sfid-20160201_135206_578686_E7D7C0FC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Factor all assignments to rfkill_global_states[].cur into a single
-function rfkill_update_global_state().
+Fixed a braces style warning.
+Warning: braces {} are not necessary for single statement blocks.
 
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+Signed-off-by: Rakhi Sharma <rakhish1994@gmail.com>
 ---
- net/rfkill/core.c | 38 +++++++++++++++++---------------------
- 1 file changed, 17 insertions(+), 21 deletions(-)
+ drivers/staging/rtl8723au/core/rtw_ieee80211.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index 56d79cb..8b96869 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -302,6 +302,19 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
- 		rfkill_event(rfkill);
- }
+diff --git a/drivers/staging/rtl8723au/core/rtw_ieee80211.c b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+index 0c933e4..365f780 100644
+--- a/drivers/staging/rtl8723au/core/rtw_ieee80211.c
++++ b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+@@ -176,11 +176,9 @@ u8 *rtw_get_ie23a(u8 *pbuf, int index, int *len, int limit)
+ 	int tmp, i;
+ 	u8 *p;
  
-+static void rfkill_update_global_state(enum rfkill_type type, bool blocked)
-+{
-+	int i;
-+
-+	if (type != RFKILL_TYPE_ALL) {
-+		rfkill_global_states[type].cur = blocked;
-+		return;
-+	}
-+
-+	for (i = 0; i < NUM_RFKILL_TYPES; i++)
-+		rfkill_global_states[i].cur = blocked;
-+}
-+
- #ifdef CONFIG_RFKILL_INPUT
- static atomic_t rfkill_input_disabled = ATOMIC_INIT(0);
+-	if (limit < 1) {
++	if (limit < 1)
  
-@@ -319,15 +332,7 @@ static void __rfkill_switch_all(const enum rfkill_type type, bool blocked)
- {
- 	struct rfkill *rfkill;
- 
--	if (type == RFKILL_TYPE_ALL) {
--		int i;
--
--		for (i = 0; i < NUM_RFKILL_TYPES; i++)
--			rfkill_global_states[i].cur = blocked;
--	} else {
--		rfkill_global_states[type].cur = blocked;
+ 		return NULL;
 -	}
 -
-+	rfkill_update_global_state(type, blocked);
- 	list_for_each_entry(rfkill, &rfkill_list, node) {
- 		if (rfkill->type != type && type != RFKILL_TYPE_ALL)
- 			continue;
-@@ -1164,15 +1169,8 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
- 
- 	mutex_lock(&rfkill_global_mutex);
- 
--	if (ev.op == RFKILL_OP_CHANGE_ALL) {
--		if (ev.type == RFKILL_TYPE_ALL) {
--			enum rfkill_type i;
--			for (i = 0; i < NUM_RFKILL_TYPES; i++)
--				rfkill_global_states[i].cur = ev.soft;
--		} else {
--			rfkill_global_states[ev.type].cur = ev.soft;
--		}
--	}
-+	if (ev.op == RFKILL_OP_CHANGE_ALL)
-+		rfkill_update_global_state(ev.type, ev.soft);
- 
- 	list_for_each_entry(rfkill, &rfkill_list, node) {
- 		if (rfkill->idx != ev.idx && ev.op != RFKILL_OP_CHANGE_ALL)
-@@ -1261,10 +1259,8 @@ static struct miscdevice rfkill_miscdev = {
- static int __init rfkill_init(void)
- {
- 	int error;
--	int i;
- 
--	for (i = 0; i < NUM_RFKILL_TYPES; i++)
--		rfkill_global_states[i].cur = !rfkill_default_state;
-+	rfkill_update_global_state(RFKILL_TYPE_ALL, !rfkill_default_state);
- 
- 	error = class_register(&rfkill_class);
- 	if (error)
+ 	p = pbuf;
+ 	i = 0;
+ 	*len = 0;
 -- 
-2.5.0
+1.9.1
 
