@@ -1,54 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:36104 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750729AbcB2W30 (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:33046 "EHLO
+	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932143AbcBAM1A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:29:26 -0500
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mac80211: Fix Public Action frame RX in AP mode
-Date: Tue, 1 Mar 2016 00:29:00 +0200
-Message-ID: <1456784940-32328-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20160229_232931_764929_4378A85E)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 1 Feb 2016 07:27:00 -0500
+Received: by mail-pf0-f196.google.com with SMTP id x125so7540154pfb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 04:27:00 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 01/11] staging: wilc1000: linux_mon: use __packed instead of __attribute__((packed))
+Date: Mon,  1 Feb 2016 21:26:37 +0900
+Message-Id: <1454329607-9486-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160201_132705_452557_985710C4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Public Action frames use special rules for how the BSSID field (Address
-3) is set. A wildcard BSSID is used in cases where the transmitter and
-recipient are not members of the same BSS. As such, we need to accept
-Public Action frames with wildcard BSSID.
+This patch fixes the following checkpatch warning:
+WARNING: __packed is preferred over __attribute__((packed))
 
-Commit db8e17324553 ("mac80211: ignore frames between TDLS peers when
-operating as AP") added a rule that drops Action frames to TDLS-peers
-based on an Action frame having different DA (Address 1) and BSSID
-(Address 3) values. This is not correct since it misses the possibility
-of BSSID being a wildcard BSSID in which case the Address 1 would not
-necessarily match.
-
-Fix this by allowing mac80211 to accept wildcard BSSID in an Action
-frame when in AP mode.
-
-Fixes: db8e17324553 ("mac80211: ignore frames between TDLS peers when operating as AP")
-Cc: stable@vger.kernel.org
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- net/mac80211/rx.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/staging/wilc1000/linux_mon.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 9127957..25803e7 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3473,6 +3473,7 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
- 				return false;
- 			/* ignore action frames to TDLS-peers */
- 			if (ieee80211_is_action(hdr->frame_control) &&
-+			    !is_broadcast_ether_addr(bssid) &&
- 			    !ether_addr_equal(bssid, hdr->addr1))
- 				return false;
- 		}
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index e550027..284dfb0 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -15,14 +15,14 @@
+ struct wilc_wfi_radiotap_hdr {
+ 	struct ieee80211_radiotap_header hdr;
+ 	u8 rate;
+-} __attribute__((packed));
++} __packed;
+ 
+ struct wilc_wfi_radiotap_cb_hdr {
+ 	struct ieee80211_radiotap_header hdr;
+ 	u8 rate;
+ 	u8 dump;
+ 	u16 tx_flags;
+-} __attribute__((packed));
++} __packed;
+ 
+ static struct net_device *wilc_wfi_mon; /* global monitor netdev */
+ 
 -- 
-1.9.1
+2.7.0
 
