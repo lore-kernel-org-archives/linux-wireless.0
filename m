@@ -1,141 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out05.msg.oleane.net ([62.161.7.3]:43376 "EHLO
-	smtp-out05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753449AbcBESko (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:36334 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932143AbcBAM1N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2016 13:40:44 -0500
-From: Cedric DEBARGE <cedric.debarge@acksys.fr>
-To: johannes@sipsolutions.net
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	linux-api@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, Cedric DEBARGE <cedric.debarge@acksys.fr>
-Subject: [RFC 2/2] nl80211: add nl attribute to set ht_caps mcs rxmask override
-Date: Fri,  5 Feb 2016 16:42:00 +0100
-Message-Id: <ac5a5448d9afba8a13a6b04294d1bca00eec0757.1454685673.git.cedric.debarge@acksys.fr> (sfid-20160205_194104_649852_CE365D79)
-In-Reply-To: <cover.1454685673.git.cedric.debarge@acksys.fr>
-References: <cover.1454685673.git.cedric.debarge@acksys.fr>
-In-Reply-To: <cover.1454685673.git.cedric.debarge@acksys.fr>
-References: <cover.1454685673.git.cedric.debarge@acksys.fr>
+	Mon, 1 Feb 2016 07:27:13 -0500
+Received: by mail-pf0-f193.google.com with SMTP id n128so7472373pfn.3
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 04:27:13 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 05/11] staging: wilc1000: linux_mon: fix NULL comparison style
+Date: Mon,  1 Feb 2016 21:26:41 +0900
+Message-Id: <1454329607-9486-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20160201_132718_043553_3C10FE6E)
+In-Reply-To: <1454329607-9486-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1454329607-9486-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds the NL80211_ATTR_WIPHY_HTCAP_RXMASK attribute to
-NL80211_CMD_SET_WIPHY in order for the user to specify the ht_caps mcs
-rxmask.
+This patch fixes NULL comparsion style found by checkpatch.pl
 
-Signed-off-by: Cedric Debarge <cedric.debarge@acksys.fr>
+CHECK: Comparison to NULL could be written "!wilc_wfi_mon"
+CHECK: Comparison to NULL could be written "!skb"
+CHECK: Comparison to NULL could be written "!skb"
+CHECK: Comparison to NULL could be written "!dev"
+CHECK: Comparison to NULL could be written "!mgmt_tx"
+CHECK: Comparison to NULL could be written "!mgmt_tx->buff"
+CHECK: Comparison to NULL could be written "!wilc_wfi_mon"
+CHECK: Comparison to NULL could be written "!mon_priv"
+CHECK: Comparison to NULL could be written "!priv"
+CHECK: Comparison to NULL could be written "wilc_wfi_mon"
+
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- include/uapi/linux/nl80211.h |  5 +++++
- net/wireless/nl80211.c       | 18 ++++++++++++++++++
- net/wireless/rdev-ops.h      | 11 +++++++++++
- net/wireless/trace.h         | 15 +++++++++++++++
- 4 files changed, 49 insertions(+)
+ drivers/staging/wilc1000/linux_mon.c | 20 ++++++++++----------
+ 1 file changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 7758969..50a53d8 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1794,6 +1794,9 @@ enum nl80211_commands {
-  *	connecting to a PCP, and in %NL80211_CMD_START_AP to start
-  *	a PCP instead of AP. Relevant for DMG networks only.
-  *
-+ * @NL80211_ATTR_WIPHY_HTCAP_RXMASK: Override hardware capabilities for ht_caps
-+ *	mcs rxmask.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2170,6 +2173,8 @@ enum nl80211_attrs {
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 398fdea..7b9cc02 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -54,7 +54,7 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
  
- 	NL80211_ATTR_PBSS,
+ 	PRINT_INFO(HOSTAPD_DBG, "In monitor interface receive function\n");
  
-+	NL80211_ATTR_WIPHY_HTCAP_RXMASK,
-+
- 	/* add attributes here, update the policy in nl80211.c */
+-	if (wilc_wfi_mon == NULL)
++	if (!wilc_wfi_mon)
+ 		return;
  
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 268cb49..ef5ec8b 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -402,6 +402,9 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
- 	[NL80211_ATTR_SCHED_SCAN_DELAY] = { .type = NLA_U32 },
- 	[NL80211_ATTR_REG_INDOOR] = { .type = NLA_FLAG },
- 	[NL80211_ATTR_PBSS] = { .type = NLA_FLAG },
-+	[NL80211_ATTR_WIPHY_HTCAP_RXMASK] = { .type = NLA_BINARY,
-+					      .len = IEEE80211_HT_MCS_MASK_LEN
-+	},
- };
+ 	if (!netif_running(wilc_wfi_mon)) {
+@@ -73,7 +73,7 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
+ 		/* hostapd callback mgmt frame */
  
- /* policy for the key attributes */
-@@ -2243,6 +2246,21 @@ static int nl80211_set_wiphy(struct sk_buff *skb, struct genl_info *info)
- 			return result;
+ 		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_cb_hdr));
+-		if (skb == NULL) {
++		if (!skb) {
+ 			PRINT_INFO(HOSTAPD_DBG, "Monitor if : No memory to allocate skb");
+ 			return;
+ 		}
+@@ -103,7 +103,7 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
+ 	} else {
+ 		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_hdr));
+ 
+-		if (skb == NULL) {
++		if (!skb) {
+ 			PRINT_INFO(HOSTAPD_DBG, "Monitor if : No memory to allocate skb");
+ 			return;
+ 		}
+@@ -156,20 +156,20 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
+ {
+ 	struct tx_complete_mon_data *mgmt_tx = NULL;
+ 
+-	if (dev == NULL) {
++	if (!dev) {
+ 		PRINT_D(HOSTAPD_DBG, "ERROR: dev == NULL\n");
+ 		return -EFAULT;
  	}
  
-+	if (info->attrs[NL80211_ATTR_WIPHY_HTCAP_RXMASK]) {
-+		u8 rxmask[IEEE80211_HT_MCS_MASK_LEN];
-+
-+		if (wdev)
-+			return -EOPNOTSUPP;
-+
-+		memcpy(rxmask,
-+		       nla_data(info->attrs[NL80211_ATTR_WIPHY_HTCAP_RXMASK]),
-+		       IEEE80211_HT_MCS_MASK_LEN);
-+
-+		result = rdev_set_htcap_rxmask(rdev, rxmask);
-+		if (result)
-+			return result;
-+	}
-+
- 	changed = 0;
+ 	netif_stop_queue(dev);
+ 	mgmt_tx = kmalloc(sizeof(struct tx_complete_mon_data), GFP_ATOMIC);
+-	if (mgmt_tx == NULL) {
++	if (!mgmt_tx) {
+ 		PRINT_ER("Failed to allocate memory for mgmt_tx structure\n");
+ 		return -EFAULT;
+ 	}
  
- 	if (info->attrs[NL80211_ATTR_WIPHY_RETRY_SHORT]) {
-diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
-index 8ae0c04..488adb9 100644
---- a/net/wireless/rdev-ops.h
-+++ b/net/wireless/rdev-ops.h
-@@ -1071,4 +1071,15 @@ rdev_set_coalesce(struct cfg80211_registered_device *rdev,
- 	trace_rdev_return_int(&rdev->wiphy, ret);
- 	return ret;
- }
-+
-+static inline int
-+rdev_set_htcap_rxmask(struct cfg80211_registered_device *rdev, uint8_t *rxmask)
-+{
-+	int ret;
-+
-+	trace_rdev_set_htcap_rxmask(&rdev->wiphy, rxmask);
-+	ret = rdev->ops->set_htcap_rxmask(&rdev->wiphy, rxmask);
-+	trace_rdev_return_int(&rdev->wiphy, ret);
-+	return ret;
-+}
- #endif /* __CFG80211_RDEV_OPS */
-diff --git a/net/wireless/trace.h b/net/wireless/trace.h
-index 09b242b..d7c8c3c 100644
---- a/net/wireless/trace.h
-+++ b/net/wireless/trace.h
-@@ -2120,6 +2120,21 @@ TRACE_EVENT(rdev_tdls_cancel_channel_switch,
- 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(addr))
- );
+ 	mgmt_tx->buff = kmalloc(len, GFP_ATOMIC);
+-	if (mgmt_tx->buff == NULL) {
++	if (!mgmt_tx->buff) {
+ 		PRINT_ER("Failed to allocate memory for mgmt_tx buff\n");
+ 		kfree(mgmt_tx);
+ 		return -EFAULT;
+@@ -203,12 +203,12 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+ 	struct sk_buff *skb2;
+ 	struct wilc_wfi_radiotap_cb_hdr *cb_hdr;
  
-+TRACE_EVENT(rdev_set_htcap_rxmask,
-+	TP_PROTO(struct wiphy *wiphy, uint8_t *rxmask),
-+	TP_ARGS(wiphy, rxmask),
-+	TP_STRUCT__entry(
-+		WIPHY_ENTRY
-+		__array(uint8_t, rxmask, IEEE80211_HT_MCS_MASK_LEN)
-+	),
-+	TP_fast_assign(
-+		WIPHY_ASSIGN;
-+		memcpy(__entry->rxmask, rxmask, IEEE80211_HT_MCS_MASK_LEN);
-+	),
-+	TP_printk(WIPHY_PR_FMT ", %*ph",
-+		  WIPHY_PR_ARG, IEEE80211_HT_MCS_MASK_LEN, &__entry->rxmask[0])
-+);
-+
- /*************************************************************
-  *	     cfg80211 exported functions traces		     *
-  *************************************************************/
+-	if (wilc_wfi_mon == NULL)
++	if (!wilc_wfi_mon)
+ 		return -EFAULT;
+ 
+ 	mon_priv = netdev_priv(wilc_wfi_mon);
+ 
+-	if (mon_priv == NULL) {
++	if (!mon_priv) {
+ 		PRINT_ER("Monitor interface private structure is NULL\n");
+ 		return -EFAULT;
+ 	}
+@@ -324,7 +324,7 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
+ 		return NULL;
+ 	}
+ 	priv = netdev_priv(wilc_wfi_mon);
+-	if (priv == NULL) {
++	if (!priv) {
+ 		PRINT_ER("private structure is NULL\n");
+ 		return NULL;
+ 	}
+@@ -347,7 +347,7 @@ int WILC_WFI_deinit_mon_interface(void)
+ {
+ 	bool rollback_lock = false;
+ 
+-	if (wilc_wfi_mon != NULL) {
++	if (wilc_wfi_mon) {
+ 		PRINT_D(HOSTAPD_DBG, "In Deinit monitor interface\n");
+ 		PRINT_D(HOSTAPD_DBG, "RTNL is being locked\n");
+ 		if (rtnl_is_locked()) {
 -- 
-1.9.1
+2.7.0
 
