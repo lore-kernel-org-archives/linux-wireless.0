@@ -1,35 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:33729 "EHLO
-	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753265AbcBAMYY (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:38704 "EHLO
+	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932285AbcBAWAc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2016 07:24:24 -0500
-Received: by mail-wm0-f50.google.com with SMTP id l66so67671044wml.0
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 04:24:23 -0800 (PST)
+	Mon, 1 Feb 2016 17:00:32 -0500
+Received: by mail-wm0-f52.google.com with SMTP id p63so92040427wmp.1
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 14:00:31 -0800 (PST)
 From: Sven Eckelmann <sven@open-mesh.com>
 To: linux-wireless@vger.kernel.org
 Cc: thomas@net.t-labs.tu-berlin.de, antonio@open-mesh.com,
 	nbd@nbd.name, johannes@sipsolutions.net,
 	Sven Eckelmann <sven@open-mesh.com>
-Subject: [PATCH] mac80211: minstrel: Scale expected_throughput by 10
-Date: Mon,  1 Feb 2016 13:24:10 +0100
-Message-Id: <1454329450-31527-1-git-send-email-sven@open-mesh.com> (sfid-20160201_132429_424750_8B5B02B5)
+Subject: [PATCHv3] mac80211: minstrel: Change expected throughput unit back to Kbps
+Date: Mon,  1 Feb 2016 23:00:16 +0100
+Message-Id: <1454364016-3234-1-git-send-email-sven@open-mesh.com> (sfid-20160201_230034_566551_3B8085E4)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 The change from cur_tp to the function
 minstrel_get_tp_avg/minstrel_ht_get_tp_avg changed the unit used for the
-current throughtput. For example in minstrel_ht the correct
+current throughput. For example in minstrel_ht the correct
 conversion between them would be:
 
     mrs->cur_tp / 10 == minstrel_ht_get_tp_avg(..).
 
 This factor 10 must also be included in the calculation of
 minstrel_get_expected_throughput and minstrel_ht_get_expected_throughput to
-get similar results as before the change.
+return values with the unit [Kbps] instead of [10Kbps]. Otherwise routing
+algorithms like B.A.T.M.A.N. V will make incorrect decision based on these
+values. Its kernel based implementation expects expected_throughput always
+to have the unit [Kbps] and not sometimes [10Kbps] and sometimes [Kbps].
+
+The same requirement has iw or olsrdv2's nl80211 based statistics module
+which retrieve the same data via NL80211_STA_INFO_TX_BITRATE.
 
 Fixes: 6a27b2c40b48 ("mac80211: restructure per-rate throughput calculation into function")
 Signed-off-by: Sven Eckelmann <sven@open-mesh.com>
+---
+v3:
+- fix typo in title
+- extend description to better explain why this is important
+v2:
+- Modified PATCH title
 ---
  net/mac80211/rc80211_minstrel.c    | 2 +-
  net/mac80211/rc80211_minstrel_ht.c | 3 ++-
@@ -62,3 +74,6 @@ index 3928dbd..8928151 100644
  
  	return tp_avg;
  }
+-- 
+2.7.0
+
