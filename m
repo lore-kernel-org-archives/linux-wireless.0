@@ -1,42 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:50939 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753689AbcBALo2 (ORCPT
+Received: from mail-lf0-f44.google.com ([209.85.215.44]:34838 "EHLO
+	mail-lf0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932100AbcBAM5M (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2016 06:44:28 -0500
-Date: Mon, 1 Feb 2016 12:44:23 +0100
-From: Peter Zijlstra <peterz@infradead.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Baozeng <sploving1@gmail.com>, mingo@redhat.com,
-	linux-kernel@vger.kernel.org, syzkaller@googlegroups.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: sched/core: WARNING in __might_sleep
-Message-ID: <20160201114423.GS6357@twins.programming.kicks-ass.net> (sfid-20160201_124443_032791_F7828F0C)
-References: <CAP=GMUGr=qHO4uh9v=ZmEhGu1GTBGzmuZNQ+_Ds38yRXq1ZXPA@mail.gmail.com>
- <20160201111313.GQ6357@twins.programming.kicks-ass.net>
- <1454325966.3211.1.camel@sipsolutions.net>
+	Mon, 1 Feb 2016 07:57:12 -0500
+Received: by mail-lf0-f44.google.com with SMTP id l143so28480683lfe.2
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 04:57:12 -0800 (PST)
+Subject: Re: [PATCH] mac80211: fix memory leak
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+References: <1454060944-11320-1-git-send-email-sudipm.mukherjee@gmail.com>
+ <CAGRGNgXc9PtYY=hb8nNRt4T5YGm2vexcJ01Z1fCCcb=57WRZ3g@mail.gmail.com>
+ <20160201042548.GA4072@sudip-pc> <878u34u6d6.fsf@purkki.adurom.net>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <56AF5625.5030701@cogentembedded.com> (sfid-20160201_135733_917683_21605CB8)
+Date: Mon, 1 Feb 2016 15:57:09 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1454325966.3211.1.camel@sipsolutions.net>
+In-Reply-To: <878u34u6d6.fsf@purkki.adurom.net>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 01, 2016 at 12:26:06PM +0100, Johannes Berg wrote:
-> On Mon, 2016-02-01 at 12:13 +0100, Peter Zijlstra wrote:
-> > 
-> > Yeah, from the rfkill code, which you failed to CC.
-> 
-> Thanks Peter :)
-> 
-> > In any case, this is a fail in the rfkill code, which should be
-> > sorted
-> > with the below patch (but the rfkill people should double check), and
-> > ideally they'd use list_empty_careful() instead of the mutex, but I
-> > don't know their code well enough to say if that's safe or not.
-> 
-> Even list_empty() is fine in this case since we go and recheck it
-> anyway in the calling loop, while the mutex is held.
-> 
-> I have commit 6736fde9672f on its way to mainline.
+Hello.
 
-OK, that looks good. Thanks!
+On 2/1/2016 12:28 PM, Kalle Valo wrote:
+
+>> On Mon, Feb 01, 2016 at 11:03:35AM +1100, Julian Calaby wrote:
+>>> Hi Sudip,
+>>>
+>>> On Fri, Jan 29, 2016 at 8:49 PM, Sudip Mukherjee
+>>> <sudipm.mukherjee@gmail.com> wrote:
+>>>> On error we jumped to the error label and returned the error code but we
+>>>> missed releasing sinfo.
+>>>>
+>>>> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+>>>
+>>> Should the From: and Signed-off-by: email addresses be the same?
+>>
+>> I think 2 years back I had a long discussion with Greg about this and
+>> since then I al submitting patches like this. A small summayg of the
+>> problem from that discussion:
+>>
+>> "we have strict DMARC check for the corporate mail server. DMARC =
+>> domain based message authentication.
+>> So the mail i sent reached all the list subscriber from a different
+>> server than our designated server, and as a result it is marked as spam
+>> in many places and I have already received a few complaints regarding
+>> that."
+>
+> You can add a separate "From:" line to the beginning of the commit log
+> and git will use it then commiting the patch. I didn't find any
+> documention but it's easy to do and should solve this.
+
+    Documentation/SubmittingPatches, clause 14.
+
+MBR, Sergei
+
