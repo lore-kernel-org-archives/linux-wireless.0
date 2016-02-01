@@ -1,27 +1,27 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f48.google.com ([209.85.218.48]:33883 "EHLO
-	mail-oi0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750720AbcBEGW6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2016 01:22:58 -0500
-Received: by mail-oi0-f48.google.com with SMTP id w5so35458777oie.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 22:22:57 -0800 (PST)
-MIME-Version: 1.0
-Date: Thu, 4 Feb 2016 22:22:57 -0800
-Message-ID: <CAD_1dL31XZeZBgtiESJMGLK8Jn5hDxjoi4F4ViuRHABGowoadw@mail.gmail.com> (sfid-20160205_072301_348061_8663A60A)
-Subject: Finer grained control than ap_isolate
-From: brian demsky <bdemsky2@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:56931 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751973AbcBAWDN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 1 Feb 2016 17:03:13 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Cc: Jakub Sitnicki <jsitnicki@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: rtl8xxxu updates - inital rtl8723bu/rtl8192eu support
+Date: Mon, 01 Feb 2016 17:03:12 -0500
+Message-ID: <wrfj4mds3x7j.fsf@redhat.com> (sfid-20160201_230316_563829_FDF1B712)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Is there a mechanism that can be used to allow some clients/ports on a
-given SSID and AP to communicate, but to block others from
-communicating?
+Hi,
 
-In other words, can I implement something like firewall rules between
-clients on the same SSID/AP?
+For anyone interested in the rtl8xxxu driver, then I just pushed code
+which can handle rtl8723bu and rtl8192eu into the repository. In
+particular the rtl8192eu support is still very experimental.
 
-Thanks,
-Brian
+It's all in the rtl8xxxu-nextgen branch for now.
+
+Cheers,
+Jes
