@@ -1,113 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:35979 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752639AbcBWOni (ORCPT
+Received: from mail-pa0-f68.google.com ([209.85.220.68]:34560 "EHLO
+	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932188AbcBAM1c (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 09:43:38 -0500
-Received: by mail-wm0-f54.google.com with SMTP id g62so225694729wme.1
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2016 06:43:37 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCHv2] mac80211: parse VHT info in injected frames
-Date: Tue, 23 Feb 2016 15:43:35 +0100
-Message-Id: <1456238615-832-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20160223_154341_461350_7DA5AD8E)
+	Mon, 1 Feb 2016 07:27:32 -0500
+Received: by mail-pa0-f68.google.com with SMTP id yy13so7151388pab.1
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 04:27:31 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 11/11] staging: wilc1000: linux_mon: remove debug message of kmalloc failure
+Date: Mon,  1 Feb 2016 21:26:47 +0900
+Message-Id: <1454329607-9486-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20160201_132736_416187_B7E69217)
+In-Reply-To: <1454329607-9486-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1454329607-9486-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add VHT radiotap parsing support to ieee80211_parse_tx_radiotap().
-That capability has been tested using a d-link dir-860l rev b1 running
-OpenWrt trunk and mt76 driver
+There is no need to print debug message when kmalloc is failed.
+This message is redundant. The code already show us that kmalloc is
+failed. The braces of first if statement is remove as well because if
+statement has a single statement.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
-v2:
-- fix mac80211-injection documentation
----
- Documentation/networking/mac80211-injection.txt | 13 +++++++++++
- net/mac80211/tx.c                               | 31 +++++++++++++++++++++++++
- 2 files changed, 44 insertions(+)
+ drivers/staging/wilc1000/linux_mon.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/Documentation/networking/mac80211-injection.txt b/Documentation/networking/mac80211-injection.txt
-index ec8f934..e0efcaf 100644
---- a/Documentation/networking/mac80211-injection.txt
-+++ b/Documentation/networking/mac80211-injection.txt
-@@ -45,6 +45,19 @@ radiotap headers and used to control injection:
-    number of retries when either IEEE80211_RADIOTAP_RATE or
-    IEEE80211_RADIOTAP_MCS was used
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 1443a23..e9bb0ec 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -164,14 +164,11 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
  
-+ * IEEE80211_RADIOTAP_VHT
-+
-+   VHT mcs and number of streams used in the transmission (only for devices
-+   without own rate control). Also other fields are parsed
-+
-+   flags field
-+   IEEE80211_RADIOTAP_VHT_FLAG_SGI: use short guard interval
-+
-+   bandwidth field
-+   1: send using 40MHz channel width
-+   4: send using 80MHz channel width
-+   11: send using 160MHz channel width
-+
- The injection code can also skip all other currently defined radiotap fields
- facilitating replay of captured radiotap headers directly.
+ 	netif_stop_queue(dev);
+ 	mgmt_tx = kmalloc(sizeof(*mgmt_tx), GFP_ATOMIC);
+-	if (!mgmt_tx) {
+-		PRINT_ER("Failed to allocate memory for mgmt_tx structure\n");
++	if (!mgmt_tx)
+ 		return -ENOMEM;
+-	}
  
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7bb67fa..17db889 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1692,6 +1692,8 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
- 	u8 rate_retries = 0;
- 	u16 rate_flags = 0;
- 	u8 mcs_known, mcs_flags;
-+	u16 vht_known;
-+	u8 vht_mcs = 0, vht_nss = 0;
- 	int i;
- 
- 	info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT |
-@@ -1772,6 +1774,32 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
- 				rate_flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
- 			break;
- 
-+		case IEEE80211_RADIOTAP_VHT:
-+			vht_known = get_unaligned_le16(iterator.this_arg);
-+			rate_found = true;
-+
-+			rate_flags = IEEE80211_TX_RC_VHT_MCS;
-+			if ((vht_known & IEEE80211_RADIOTAP_VHT_KNOWN_GI) &&
-+			    (iterator.this_arg[2] &
-+			     IEEE80211_RADIOTAP_VHT_FLAG_SGI))
-+				rate_flags |= IEEE80211_TX_RC_SHORT_GI;
-+			if (vht_known &
-+			    IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH) {
-+				if (iterator.this_arg[3] == 1)
-+					rate_flags |=
-+						IEEE80211_TX_RC_40_MHZ_WIDTH;
-+				else if (iterator.this_arg[3] == 4)
-+					rate_flags |=
-+						IEEE80211_TX_RC_80_MHZ_WIDTH;
-+				else if (iterator.this_arg[3] == 11)
-+					rate_flags |=
-+						IEEE80211_TX_RC_160_MHZ_WIDTH;
-+			}
-+
-+			vht_mcs = iterator.this_arg[4] >> 4;
-+			vht_nss = iterator.this_arg[4] & 0xF;
-+			break;
-+
- 		/*
- 		 * Please update the file
- 		 * Documentation/networking/mac80211-injection.txt
-@@ -1797,6 +1825,9 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
- 
- 		if (rate_flags & IEEE80211_TX_RC_MCS) {
- 			info->control.rates[0].idx = rate;
-+		} else if (rate_flags & IEEE80211_TX_RC_VHT_MCS) {
-+			ieee80211_rate_set_vht(info->control.rates, vht_mcs,
-+					       vht_nss);
- 		} else {
- 			for (i = 0; i < sband->n_bitrates; i++) {
- 				if (rate * 5 != sband->bitrates[i].bitrate)
+ 	mgmt_tx->buff = kmalloc(len, GFP_ATOMIC);
+ 	if (!mgmt_tx->buff) {
+-		PRINT_ER("Failed to allocate memory for mgmt_tx buff\n");
+ 		kfree(mgmt_tx);
+ 		return -ENOMEM;
+ 	}
 -- 
-2.5.0
+2.7.0
 
