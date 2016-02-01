@@ -1,46 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f42.google.com ([209.85.192.42]:36088 "EHLO
-	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751432AbcBNV6G (ORCPT
+Received: from mail-ig0-f171.google.com ([209.85.213.171]:33078 "EHLO
+	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932646AbcBAAD4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Feb 2016 16:58:06 -0500
-Received: by mail-qg0-f42.google.com with SMTP id y9so100074165qgd.3
-        for <linux-wireless@vger.kernel.org>; Sun, 14 Feb 2016 13:58:05 -0800 (PST)
-From: Fabio Estevam <festevam@gmail.com>
-To: kvalo@codeaurora.org
-Cc: arend@broadcom.com, linux-wireless@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@nxp.com>
-Subject: [PATCH] brcmfmac: of: Include "of.h" header file
-Date: Sun, 14 Feb 2016 19:57:49 -0200
-Message-Id: <1455487069-2721-1-git-send-email-festevam@gmail.com> (sfid-20160214_225842_106945_BBDCBF0E)
+	Sun, 31 Jan 2016 19:03:56 -0500
+MIME-Version: 1.0
+In-Reply-To: <1454060944-11320-1-git-send-email-sudipm.mukherjee@gmail.com>
+References: <1454060944-11320-1-git-send-email-sudipm.mukherjee@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 1 Feb 2016 11:03:35 +1100
+Message-ID: <CAGRGNgXc9PtYY=hb8nNRt4T5YGm2vexcJ01Z1fCCcb=57WRZ3g@mail.gmail.com> (sfid-20160201_010455_022116_1B65B254)
+Subject: Re: [PATCH] mac80211: fix memory leak
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Fabio Estevam <fabio.estevam@nxp.com>
+Hi Sudip,
 
-Include "of.h" header file to fix the following sparse warning:
+On Fri, Jan 29, 2016 at 8:49 PM, Sudip Mukherjee
+<sudipm.mukherjee@gmail.com> wrote:
+> On error we jumped to the error label and returned the error code but we
+> missed releasing sinfo.
+>
+> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
 
-drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c:27:6: warning: symbol 'brcmf_of_probe' was not declared. Should it be static?
+Should the From: and Signed-off-by: email addresses be the same?
 
-Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
----
-Resending to linux-wireless@vger.kernel.org
+> ---
+>  net/mac80211/sta_info.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+> index 6c198e6..36e75c4 100644
+> --- a/net/mac80211/sta_info.c
+> +++ b/net/mac80211/sta_info.c
+> @@ -561,6 +561,7 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
+>         __cleanup_single_sta(sta);
+>   out_err:
+>         mutex_unlock(&local->sta_mtx);
+> +       kfree(sinfo);
+>         rcu_read_lock();
+>         return err;
+>  }
 
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c | 1 +
- 1 file changed, 1 insertion(+)
+Looks sane to me. I must note that the bug this is fixing is only in
+the mac80211-next tree.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-index 03f35e0..6231b36 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-@@ -23,6 +23,7 @@
- #include <defs.h>
- #include "debug.h"
- #include "sdio.h"
-+#include "of.h"
- 
- void brcmf_of_probe(struct brcmf_sdio_dev *sdiodev)
- {
+Fixes: 5fe74014172d ("mac80211: avoid excessive stack usage in sta_info")
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
+Thanks,
+
 -- 
-1.9.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
