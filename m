@@ -1,31 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:50692 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756610AbcBCXfN (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:36359 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932143AbcBAM1W (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 18:35:13 -0500
-Date: Wed, 3 Feb 2016 15:35:12 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Leo Kim <leo.kim@atmel.com>
-Cc: devel@driverdev.osuosl.org, Chris.Park@atmel.com,
-	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
-	Nicolas.FERRE@atmel.com, tony.cho@atmel.com,
-	adham.abozaeid@atmel.com
-Subject: Re: [PATCH 01/26] staging: wilc1000: removes function
- 'wilc_dealloc_network_info()'
-Message-ID: <20160203233512.GA29506@kroah.com> (sfid-20160204_003522_437739_FF4BC08D)
-References: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
+	Mon, 1 Feb 2016 07:27:22 -0500
+Received: by mail-pf0-f195.google.com with SMTP id n128so7472620pfn.3
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 04:27:22 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 08/11] staging: wilc1000: linux_mon: add braces on all arms of if statement
+Date: Mon,  1 Feb 2016 21:26:44 +0900
+Message-Id: <1454329607-9486-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20160201_132728_088527_3811D4A5)
+In-Reply-To: <1454329607-9486-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1454329607-9486-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 02, 2016 at 09:02:11PM +0900, Leo Kim wrote:
-> This patch removes function 'wilc_dealloc_network_info()'.
-> Does not need this function which only free memory.
-> Therefore, this function is removed and changed directly with kfree.
-> 
-> Signed-off-by: Leo Kim <leo.kim@atmel.com>
+This patch adds braces on all arms of if statement found by
+checkpatch.pl
+CHECK: braces {} should be used on all arms of this statement
 
-This series didn't apply either :(
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/linux_mon.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 53d0caf..255383c 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -278,8 +278,9 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+ 	if (!(memcmp(srcAdd, bssid, 6))) {
+ 		mon_mgmt_tx(mon_priv->real_ndev, skb->data, skb->len);
+ 		dev_kfree_skb(skb);
+-	} else
++	} else {
+ 		ret = wilc_mac_xmit(skb, mon_priv->real_ndev);
++	}
+ 
+ 	return ret;
+ }
+-- 
+2.7.0
+
