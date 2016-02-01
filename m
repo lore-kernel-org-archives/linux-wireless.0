@@ -1,121 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:58999 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:47514 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932974AbcBDJdQ (ORCPT
+	with ESMTP id S933526AbcBACOU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:33:16 -0500
-From: Glen Lee <glen.lee@atmel.com>
+	Sun, 31 Jan 2016 21:14:20 -0500
+From: Leo Kim <leo.kim@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 57/70] staging: wilc1000: renames u8channel of connect_resp_info structure
-Date: Thu, 4 Feb 2016 18:24:18 +0900
-Message-ID: <1454577871-667-18-git-send-email-glen.lee@atmel.com> (sfid-20160204_103329_267411_CC567348)
-In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH 5/7] staging: wilc1000: remove unused log message using the CORECONFIG_DBG tag
+Date: Mon, 1 Feb 2016 11:11:23 +0900
+Message-ID: <1454292685-12294-5-git-send-email-leo.kim@atmel.com> (sfid-20160201_031423_620091_7D070E7F)
+In-Reply-To: <1454292685-12294-1-git-send-email-leo.kim@atmel.com>
+References: <1454292685-12294-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Chris Park <chris.park@atmel.com>
 
-This patch renames u8channel variable to ch.
+This patch remove unused log messages using the CORECONFIG_DBG tag
 
+Signed-off-by: Chris Park <chris.park@atmel.com>
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c       |  2 +-
- drivers/staging/wilc1000/coreconfigurator.h       |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++++-------
- 3 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c       |  1 -
+ drivers/staging/wilc1000/linux_wlan_common.h      |  2 --
+ drivers/staging/wilc1000/wilc_debugfs.c           |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 20 +-------------------
+ 4 files changed, 2 insertions(+), 23 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index ce3bc29..6c748aa 100644
+index a0b80bf..11e3ce0 100644
 --- a/drivers/staging/wilc1000/coreconfigurator.c
 +++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -325,7 +325,7 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
- 		get_ssid(msa, network_info->ssid, &network_info->ssid_len);
- 		get_BSSID(msa, network_info->bssid);
+@@ -315,7 +315,6 @@ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
+ 		rx_len = wid_len - 1;
+ 		network_info->u16CapInfo = get_cap_info(msa);
+ 		network_info->u32Tsf = get_beacon_timestamp_lo(msa);
+-		PRINT_D(CORECONFIG_DBG, "TSF :%x\n", network_info->u32Tsf);
  
--		network_info->u8channel = get_current_channel_802_11n(msa,
-+		network_info->ch = get_current_channel_802_11n(msa,
- 							rx_len + FCS_LEN);
+ 		tsf_lo = get_beacon_timestamp_lo(msa);
+ 		tsf_hi = get_beacon_timestamp_hi(msa);
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index 5d40f05..5e1d3ad 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -6,7 +6,6 @@ enum debug_region {
+ 	Hostapd_debug,
+ 	Hostinf_debug,
+ 	CFG80211_debug,
+-	Coreconfig_debug,
+ 	Interrupt_debug,
+ 	TX_debug,
+ 	RX_debug,
+@@ -24,7 +23,6 @@ enum debug_region {
+ #define GENERIC_DBG             (1 << Generic_debug)
+ #define HOSTAPD_DBG             (1 << Hostapd_debug)
+ #define HOSTINF_DBG             (1 << Hostinf_debug)
+-#define CORECONFIG_DBG          (1 << Coreconfig_debug)
+ #define CFG80211_DBG            (1 << CFG80211_debug)
+ #define INT_DBG                 (1 << Interrupt_debug)
+ #define TX_DBG                  (1 << TX_debug)
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index 27c653a..8d665d9 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -24,7 +24,7 @@ static struct dentry *wilc_dir;
+  * --------------------------------------------------------------------------------
+  */
  
- 		index = MAC_HDR_LEN + TIME_STAMP_LEN;
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index bbc4b0e..2f030a9 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -84,7 +84,7 @@ struct network_info {
- 	u8 bssid[6];
- 	u16 beacon_period;
- 	u8 dtim_period;
--	u8 u8channel;
-+	u8 ch;
- 	unsigned long u32TimeRcvdInScanCached;
- 	unsigned long u32TimeRcvdInScan;
- 	bool bNewNetwork;
+-#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | HOSTINF_DBG | CORECONFIG_DBG | CFG80211_DBG | INT_DBG | TX_DBG | RX_DBG | LOCK_DBG | INIT_DBG | BUS_DBG | MEM_DBG)
++#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | HOSTINF_DBG | CFG80211_DBG | INT_DBG | TX_DBG | RX_DBG | LOCK_DBG | INIT_DBG | BUS_DBG | MEM_DBG)
+ #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+ atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | GENERIC_DBG | CFG80211_DBG | FIRM_DBG | HOSTAPD_DBG);
+ EXPORT_SYMBOL_GPL(WILC_REGION);
 diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 16b2798..362fe1b 100644
+index 8e15534..07e50ccb 100644
 --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
 +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -240,7 +240,7 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
- 			struct ieee80211_channel *channel;
+@@ -192,7 +192,6 @@ static void clear_shadow_scan(void)
  
- 			if (network_info) {
--				freq = ieee80211_channel_to_frequency((s32)network_info->u8channel, IEEE80211_BAND_2GHZ);
-+				freq = ieee80211_channel_to_frequency((s32)network_info->ch, IEEE80211_BAND_2GHZ);
- 				channel = ieee80211_get_channel(wiphy, freq);
+ 	if (op_ifcs == 0) {
+ 		del_timer_sync(&hAgingTimer);
+-		PRINT_INFO(CORECONFIG_DBG, "destroy aging timer\n");
  
- 				rssi = get_rssi_avg(network_info);
-@@ -375,7 +375,7 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
- 	       pstrNetworkInfo->bssid, ETH_ALEN);
- 	last_scanned_shadow[ap_index].beacon_period = pstrNetworkInfo->beacon_period;
- 	last_scanned_shadow[ap_index].dtim_period = pstrNetworkInfo->dtim_period;
--	last_scanned_shadow[ap_index].u8channel = pstrNetworkInfo->u8channel;
-+	last_scanned_shadow[ap_index].ch = pstrNetworkInfo->ch;
- 	last_scanned_shadow[ap_index].u16IEsLen = pstrNetworkInfo->u16IEsLen;
- 	last_scanned_shadow[ap_index].u64Tsf = pstrNetworkInfo->u64Tsf;
- 	if (ap_found != -1)
-@@ -417,7 +417,7 @@ static void CfgScanResult(enum scan_event scan_event,
- 				return;
+ 		for (i = 0; i < last_scanned_cnt; i++) {
+ 			if (last_scanned_shadow[last_scanned_cnt].pu8IEs) {
+@@ -424,8 +423,6 @@ static void CfgScanResult(enum scan_event scan_event,
+ 						PRINT_D(CFG80211_DBG, "Network %s found\n", network_info->au8ssid);
+ 						priv->u32RcvdChCount++;
  
- 			if (network_info) {
--				s32Freq = ieee80211_channel_to_frequency((s32)network_info->u8channel, IEEE80211_BAND_2GHZ);
-+				s32Freq = ieee80211_channel_to_frequency((s32)network_info->ch, IEEE80211_BAND_2GHZ);
- 				channel = ieee80211_get_channel(wiphy, s32Freq);
+-						if (!join_params)
+-							PRINT_INFO(CORECONFIG_DBG, ">> Something really bad happened\n");
+ 						add_network_to_shadow(network_info, priv, join_params);
  
- 				if (!channel)
-@@ -895,15 +895,15 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 						if (!(memcmp("DIRECT-", network_info->au8ssid, 7))) {
+@@ -762,24 +759,14 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	PRINT_INFO(CFG80211_DBG, "sme->crypto.n_ciphers_pairwise=%d\n", sme->crypto.n_ciphers_pairwise);
+ 
+-	if (INFO) {
+-		for (i = 0; i < sme->crypto.n_ciphers_pairwise; i++)
+-			PRINT_D(CORECONFIG_DBG, "sme->crypto.ciphers_pairwise[%d]=%x\n", i, sme->crypto.ciphers_pairwise[i]);
+-	}
+-
+ 	if (sme->crypto.cipher_group != NO_ENCRYPT) {
+ 		pcwpa_version = "Default";
+-		PRINT_D(CORECONFIG_DBG, ">> sme->crypto.wpa_versions: %x\n", sme->crypto.wpa_versions);
+ 		if (sme->crypto.cipher_group == WLAN_CIPHER_SUITE_WEP40) {
+ 			u8security = ENCRYPT_ENABLED | WEP;
+ 			pcgroup_encrypt_val = "WEP40";
+ 			pccipher_group = "WLAN_CIPHER_SUITE_WEP40";
+ 			PRINT_INFO(CFG80211_DBG, "WEP Default Key Idx = %d\n", sme->key_idx);
+ 
+-			if (INFO) {
+-				for (i = 0; i < sme->key_len; i++)
+-					PRINT_D(CORECONFIG_DBG, "WEP Key Value[%d] = %d\n", i, sme->key[i]);
+-			}
+ 			priv->WILC_WFI_wep_key_len[sme->key_idx] = sme->key_len;
+ 			memcpy(priv->WILC_WFI_wep_key[sme->key_idx], sme->key, sme->key_len);
+ 
+@@ -1386,9 +1373,6 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
+ 			wilc_enable_tcp_ack_filter(true);
+ 		else if (strStatistics.link_speed != DEFAULT_LINK_SPEED)
+ 			wilc_enable_tcp_ack_filter(false);
+-
+-		PRINT_D(CORECONFIG_DBG, "*** stats[%d][%d][%d][%d][%d]\n", sinfo->signal, sinfo->rx_packets, sinfo->tx_packets,
+-			sinfo->tx_failed, sinfo->txrate.legacy);
  	}
+ 	return 0;
+ }
+@@ -2716,10 +2700,8 @@ int wilc_deinit_host_int(struct net_device *net)
+ 	s32Error = wilc_deinit(vif);
  
+ 	clear_shadow_scan();
+-	if (op_ifcs == 0) {
+-		PRINT_D(CORECONFIG_DBG, "destroy during ip\n");
++	if (op_ifcs == 0)
+ 		del_timer_sync(&wilc_during_ip_timer);
+-	}
  
--	PRINT_INFO(CFG80211_DBG, "Required Channel = %d\n", pstrNetworkInfo->u8channel);
-+	PRINT_INFO(CFG80211_DBG, "Required Ch = %d\n", pstrNetworkInfo->ch);
- 
- 	PRINT_INFO(CFG80211_DBG, "Group encryption value = %s\n Cipher Group = %s\n WPA version = %s\n",
- 		   pcgroup_encrypt_val, pccipher_group, pcwpa_version);
- 
--	curr_channel = pstrNetworkInfo->u8channel;
-+	curr_channel = pstrNetworkInfo->ch;
- 
- 	if (!pstrWFIDrv->p2p_connect)
--		wlan_channel = pstrNetworkInfo->u8channel;
-+		wlan_channel = pstrNetworkInfo->ch;
- 
- 	wilc_wlan_set_bssid(dev, pstrNetworkInfo->bssid, STATION_MODE);
- 
-@@ -911,7 +911,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 				     sme->ssid_len, sme->ie, sme->ie_len,
- 				     CfgConnectResult, (void *)priv,
- 				     u8security, tenuAuth_type,
--				     pstrNetworkInfo->u8channel,
-+				     pstrNetworkInfo->ch,
- 				     pstrNetworkInfo->pJoinParams);
- 	if (s32Error != 0) {
- 		netdev_err(dev, "wilc_set_join_req(): Error\n");
+ 	if (s32Error)
+ 		netdev_err(net, "Error while deintializing host interface\n");
 -- 
 1.9.1
 
