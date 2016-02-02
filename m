@@ -1,148 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:9154 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755164AbcBBMFg (ORCPT
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:36155 "EHLO
+	mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750920AbcBBQTP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 07:05:36 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 07/26] staging: wilc1000: renames u16CapInfo of connect_resp_info structure
-Date: Tue, 2 Feb 2016 21:02:17 +0900
-Message-ID: <1454414556-9822-7-git-send-email-leo.kim@atmel.com> (sfid-20160202_130539_205611_09C1CFE2)
-In-Reply-To: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
-References: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
+	Tue, 2 Feb 2016 11:19:15 -0500
+Date: Tue, 2 Feb 2016 21:48:59 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: Paul Mcquade <paulmcquad@gmail.com>
+Cc: kvalo@codeaurora.org, zajec5@gmail.com, johannes.berg@intel.com,
+	davem@davemloft.net, joe@perches.com, m@bues.ch,
+	mike.looijmans@topic.nl, cengelma@gmx.at, khoroshilov@ispras.ru,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [1/3] net: wireless: rsi: Coding Spaces
+Message-ID: <20160202161859.GB8235@sudip-laptop> (sfid-20160202_171935_782507_752E8F4A)
+References: <1445122898-5810-1-git-send-email-paulmcquad@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445122898-5810-1-git-send-email-paulmcquad@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames u16CapInfo variable to cap_info.
+On Sun, Oct 18, 2015 at 12:01:36AM +0100, Paul Mcquade wrote:
+> Removed space before that ','
+> 
+> Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/coreconfigurator.c       |  2 +-
- drivers/staging/wilc1000/coreconfigurator.h       |  2 +-
- drivers/staging/wilc1000/host_interface.c         |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 42 +++++++++++++++++------
- 4 files changed, 35 insertions(+), 13 deletions(-)
+The From: name and Signed-off-by: name should be same else some of the
+stats generating tools will break. It should be Paul McQuade, not
+Paul Mcquade. Maybe you have modified your .gitconfig recently.
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 1e8c56b..6c40d36 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -314,7 +314,7 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
- 		msa = &wid_val[1];
- 
- 		rx_len = wid_len - 1;
--		network_info->u16CapInfo = get_cap_info(msa);
-+		network_info->cap_info = get_cap_info(msa);
- 		network_info->u32Tsf = get_beacon_timestamp_lo(msa);
- 
- 		tsf_lo = get_beacon_timestamp_lo(msa);
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index e386e85..ace50d8 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -78,7 +78,7 @@ typedef struct {
- 
- struct network_info {
- 	s8 rssi;
--	u16 u16CapInfo;
-+	u16 cap_info;
- 	u8 au8ssid[MAX_SSID_LEN];
- 	u8 u8SsidLen;
- 	u8 au8bssid[6];
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 96f7f94..e4abc4b 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4278,7 +4278,7 @@ static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo)
- 	if (pNewJoinBssParam) {
- 		pNewJoinBssParam->dtim_period = ptstrNetworkInfo->u8DtimPeriod;
- 		pNewJoinBssParam->beacon_period = ptstrNetworkInfo->u16BeaconPeriod;
--		pNewJoinBssParam->cap_info = ptstrNetworkInfo->u16CapInfo;
-+		pNewJoinBssParam->cap_info = ptstrNetworkInfo->cap_info;
- 		memcpy(pNewJoinBssParam->au8bssid, ptstrNetworkInfo->au8bssid, 6);
- 		memcpy((u8 *)pNewJoinBssParam->ssid, ptstrNetworkInfo->au8ssid, ptstrNetworkInfo->u8SsidLen + 1);
- 		pNewJoinBssParam->ssid_len = ptstrNetworkInfo->u8SsidLen;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 048e6df..4d50dd7 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -246,9 +246,17 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
- 				rssi = get_rssi_avg(network_info);
- 				if (memcmp("DIRECT-", network_info->au8ssid, 7) ||
- 				    direct_scan) {
--					bss = cfg80211_inform_bss(wiphy, channel, CFG80211_BSS_FTYPE_UNKNOWN, network_info->au8bssid, network_info->u64Tsf, network_info->u16CapInfo,
--								  network_info->u16BeaconPeriod, (const u8 *)network_info->pu8IEs,
--								  (size_t)network_info->u16IEsLen, (((s32)rssi) * 100), GFP_KERNEL);
-+					bss = cfg80211_inform_bss(wiphy,
-+								  channel,
-+								  CFG80211_BSS_FTYPE_UNKNOWN,
-+								  network_info->au8bssid,
-+								  network_info->u64Tsf,
-+								  network_info->cap_info,
-+								  network_info->u16BeaconPeriod,
-+								  (const u8 *)network_info->pu8IEs,
-+								  (size_t)network_info->u16IEsLen,
-+								  (s32)rssi * 100,
-+								  GFP_KERNEL);
- 					cfg80211_put_bss(wiphy, bss);
- 				}
- 			}
-@@ -358,7 +366,7 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
- 	}
- 	last_scanned_shadow[ap_index].strRssi.u8Index = rssi_index;
- 	last_scanned_shadow[ap_index].rssi = pstrNetworkInfo->rssi;
--	last_scanned_shadow[ap_index].u16CapInfo = pstrNetworkInfo->u16CapInfo;
-+	last_scanned_shadow[ap_index].cap_info = pstrNetworkInfo->cap_info;
- 	last_scanned_shadow[ap_index].u8SsidLen = pstrNetworkInfo->u8SsidLen;
- 	memcpy(last_scanned_shadow[ap_index].au8ssid,
- 	       pstrNetworkInfo->au8ssid, pstrNetworkInfo->u8SsidLen);
-@@ -414,9 +422,15 @@ static void CfgScanResult(enum scan_event scan_event,
- 				if (!channel)
- 					return;
- 
--				PRINT_INFO(CFG80211_DBG, "Network Info:: CHANNEL Frequency: %d, RSSI: %d, CapabilityInfo: %d,"
--					   "BeaconPeriod: %d\n", channel->center_freq, (((s32)network_info->rssi) * 100),
--					   network_info->u16CapInfo, network_info->u16BeaconPeriod);
-+				PRINT_INFO(CFG80211_DBG, "Network Info::"
-+					   "CHANNEL Frequency: %d,"
-+					   "RSSI: %d,"
-+					   "Capability Info: %d,"
-+					   "Beacon Period: %d\n",
-+					   channel->center_freq,
-+					   (s32)network_info->rssi * 100,
-+					   network_info->cap_info,
-+					   network_info->u16BeaconPeriod);
- 
- 				if (network_info->bNewNetwork) {
- 					if (priv->u32RcvdChCount < MAX_NUM_SCANNED_NETWORKS) {
-@@ -426,9 +440,17 @@ static void CfgScanResult(enum scan_event scan_event,
- 						add_network_to_shadow(network_info, priv, join_params);
- 
- 						if (!(memcmp("DIRECT-", network_info->au8ssid, 7))) {
--							bss = cfg80211_inform_bss(wiphy, channel, CFG80211_BSS_FTYPE_UNKNOWN,  network_info->au8bssid, network_info->u64Tsf, network_info->u16CapInfo,
--										  network_info->u16BeaconPeriod, (const u8 *)network_info->pu8IEs,
--										  (size_t)network_info->u16IEsLen, (((s32)network_info->rssi) * 100), GFP_KERNEL);
-+							bss = cfg80211_inform_bss(wiphy,
-+										  channel,
-+										  CFG80211_BSS_FTYPE_UNKNOWN,
-+										  network_info->au8bssid,
-+										  network_info->u64Tsf,
-+										  network_info->cap_info,
-+										  network_info->u16BeaconPeriod,
-+										  (const u8 *)network_info->pu8IEs,
-+										  (size_t)network_info->u16IEsLen,
-+										  (s32)network_info->rssi * 100,
-+										  GFP_KERNEL);
- 							cfg80211_put_bss(wiphy, bss);
- 						}
- 					}
--- 
-1.9.1
+And in the subject net: wireless: is not required.
+Can you please send v2..
 
+regards
+sudip
