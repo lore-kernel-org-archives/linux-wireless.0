@@ -1,252 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:34649 "EHLO
-	mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752971AbcBDXB4 (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:33974 "EHLO
+	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750913AbcBBHMc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 18:01:56 -0500
-Received: by mail-io0-f176.google.com with SMTP id 9so110815192iom.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 15:01:55 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAHp75VcJjm4xSdon1AWo=0QL1mmgttoL9Q_R=7DRmgFWkhzKWg@mail.gmail.com>
-References: <1454619643-14444-1-git-send-email-keescook@chromium.org>
-	<1454619643-14444-3-git-send-email-keescook@chromium.org>
-	<CAHp75VcJjm4xSdon1AWo=0QL1mmgttoL9Q_R=7DRmgFWkhzKWg@mail.gmail.com>
-Date: Thu, 4 Feb 2016 15:01:55 -0800
-Message-ID: <CAGXu5jKAivzpyq5qN2zLj0bcM-mswv=r83X65_MrBLVk8bedbA@mail.gmail.com> (sfid-20160205_000228_189775_817F4DBD)
-Subject: Re: [PATCH v2 2/4] lib: update single-char callers of strtobool
-From: Kees Cook <keescook@chromium.org>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Steve French <sfrench@samba.org>, linux-cifs@vger.kernel.org,
-	Joe Perches <joe@perches.com>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 2 Feb 2016 02:12:32 -0500
+Received: by mail-wm0-f44.google.com with SMTP id 128so103707439wmz.1
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 23:12:32 -0800 (PST)
+From: Sven Eckelmann <sven.eckelmann@open-mesh.com>
+To: linux-wireless@vger.kernel.org
+Cc: thomas@net.t-labs.tu-berlin.de, antonio@open-mesh.com,
+	nbd@nbd.name, johannes@sipsolutions.net,
+	Sven Eckelmann <sven@open-mesh.com>
+Subject: [PATCH v4] mac80211: minstrel: Change expected throughput unit back to Kbps
+Date: Tue,  2 Feb 2016 08:12:26 +0100
+Message-Id: <1454397146-2884-1-git-send-email-sven@open-mesh.com> (sfid-20160202_081236_103867_1A551ECE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 4, 2016 at 2:59 PM, Andy Shevchenko
-<andy.shevchenko@gmail.com> wrote:
-> On Thu, Feb 4, 2016 at 11:00 PM, Kees Cook <keescook@chromium.org> wrote:
->> Some callers of strtobool were passing a pointer to unterminated strings.
->> In preparation of adding multi-character processing to kstrtobool, update
->> the callers to not pass single-character pointers, and switch to using the
->> new kstrtobool_from_user helper where possible.
->
-> Looks much better now!
-> My comment below.
->
->>
->> Signed-off-by: Kees Cook <keescook@chromium.org>
->> Cc: Amitkumar Karwar <akarwar@marvell.com>
->> Cc: Nishant Sarmukadam <nishants@marvell.com>
->> Cc: Kalle Valo <kvalo@codeaurora.org>
->> Cc: Steve French <sfrench@samba.org>
->> Cc: linux-cifs@vger.kernel.org
->> ---
->>  drivers/net/wireless/marvell/mwifiex/debugfs.c | 10 ++---
->>  fs/cifs/cifs_debug.c                           | 58 +++++++-------------------
->>  fs/cifs/cifs_debug.h                           |  2 +-
->>  fs/cifs/cifsfs.c                               |  6 +--
->>  fs/cifs/cifsglob.h                             |  4 +-
->>  5 files changed, 26 insertions(+), 54 deletions(-)
->>
->> diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c b/drivers/net/wireless/marvell/mwifiex/debugfs.c
->> index 0b9c580af988..bd061b02bc04 100644
->> --- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
->> +++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
->> @@ -880,14 +880,12 @@ mwifiex_reset_write(struct file *file,
->>  {
->>         struct mwifiex_private *priv = file->private_data;
->>         struct mwifiex_adapter *adapter = priv->adapter;
->> -       char cmd;
->>         bool result;
->> +       int rc;
->>
->> -       if (copy_from_user(&cmd, ubuf, sizeof(cmd)))
->> -               return -EFAULT;
->> -
->> -       if (strtobool(&cmd, &result))
->> -               return -EINVAL;
->> +       rc = kstrtobool_from_user(ubuf, count, 0, &result);
->> +       if (rc)
->> +               return rc;
->>
->>         if (!result)
->>                 return -EINVAL;
->> diff --git a/fs/cifs/cifs_debug.c b/fs/cifs/cifs_debug.c
->> index 50b268483302..6ee59abcb69b 100644
->> --- a/fs/cifs/cifs_debug.c
->> +++ b/fs/cifs/cifs_debug.c
->> @@ -255,7 +255,6 @@ static const struct file_operations cifs_debug_data_proc_fops = {
->>  static ssize_t cifs_stats_proc_write(struct file *file,
->>                 const char __user *buffer, size_t count, loff_t *ppos)
->>  {
->> -       char c;
->>         bool bv;
->>         int rc;
->>         struct list_head *tmp1, *tmp2, *tmp3;
->> @@ -263,11 +262,8 @@ static ssize_t cifs_stats_proc_write(struct file *file,
->>         struct cifs_ses *ses;
->>         struct cifs_tcon *tcon;
->>
->> -       rc = get_user(c, buffer);
->> -       if (rc)
->> -               return rc;
->> -
->> -       if (strtobool(&c, &bv) == 0) {
->> +       rc = kstrtobool_from_user(buffer, count, 0, &bv);
->> +       if (rc == 0) {
->>  #ifdef CONFIG_CIFS_STATS2
->>                 atomic_set(&totBufAllocCount, 0);
->>                 atomic_set(&totSmBufAllocCount, 0);
->> @@ -290,6 +286,8 @@ static ssize_t cifs_stats_proc_write(struct file *file,
->>                         }
->>                 }
->>                 spin_unlock(&cifs_tcp_ses_lock);
->> +       } else {
->> +               return rc;
->>         }
->>
->>         return count;
->> @@ -433,17 +431,17 @@ static int cifsFYI_proc_open(struct inode *inode, struct file *file)
->>  static ssize_t cifsFYI_proc_write(struct file *file, const char __user *buffer,
->>                 size_t count, loff_t *ppos)
->>  {
->> -       char c;
->> +       char c[2] = { '\0' };
->>         bool bv;
->>         int rc;
->>
->> -       rc = get_user(c, buffer);
->> +       rc = get_user(c[0], buffer);
->
->>         if (rc)
->>                 return rc;
->> -       if (strtobool(&c, &bv) == 0)
->> +       if (strtobool(c, &bv) == 0)
->>                 cifsFYI = bv;
->> -       else if ((c > '1') && (c <= '9'))
->> -               cifsFYI = (int) (c - '0'); /* see cifs_debug.h for meanings */
->> +       else if ((c[0] > '1') && (c[0] <= '9'))
->> +               cifsFYI = (int) (c[0] - '0'); /* see cifs_debug.h for meanings */
->>
->>         return count;
->>  }
->> @@ -471,20 +469,12 @@ static int cifs_linux_ext_proc_open(struct inode *inode, struct file *file)
->>  static ssize_t cifs_linux_ext_proc_write(struct file *file,
->>                 const char __user *buffer, size_t count, loff_t *ppos)
->>  {
->> -       char c;
->> -       bool bv;
->>         int rc;
->>
->> -       rc = get_user(c, buffer);
->> +       rc = kstrtobool_from_user(buffer, count, 0, &linuxExtEnabled);
->>         if (rc)
->>                 return rc;
->>
->> -       rc = strtobool(&c, &bv);
->> -       if (rc)
->> -               return rc;
->> -
->> -       linuxExtEnabled = bv;
->> -
->>         return count;
->>  }
->>
->> @@ -511,20 +501,12 @@ static int cifs_lookup_cache_proc_open(struct inode *inode, struct file *file)
->>  static ssize_t cifs_lookup_cache_proc_write(struct file *file,
->>                 const char __user *buffer, size_t count, loff_t *ppos)
->>  {
->> -       char c;
->> -       bool bv;
->>         int rc;
->>
->> -       rc = get_user(c, buffer);
->> +       rc = kstrtobool_from_user(buffer, count, 0, &lookupCacheEnabled);
->>         if (rc)
->>                 return rc;
->>
->> -       rc = strtobool(&c, &bv);
->> -       if (rc)
->> -               return rc;
->> -
->> -       lookupCacheEnabled = bv;
->> -
->>         return count;
->>  }
->>
->> @@ -551,20 +533,12 @@ static int traceSMB_proc_open(struct inode *inode, struct file *file)
->>  static ssize_t traceSMB_proc_write(struct file *file, const char __user *buffer,
->>                 size_t count, loff_t *ppos)
->>  {
->> -       char c;
->> -       bool bv;
->>         int rc;
->>
->> -       rc = get_user(c, buffer);
->> +       rc = kstrtobool_from_user(buffer, count, 0, &traceSMB);
->>         if (rc)
->>                 return rc;
->>
->> -       rc = strtobool(&c, &bv);
->> -       if (rc)
->> -               return rc;
->> -
->> -       traceSMB = bv;
->> -
->>         return count;
->>  }
->>
->> @@ -622,7 +596,7 @@ static ssize_t cifs_security_flags_proc_write(struct file *file,
->>         int rc;
->>         unsigned int flags;
->>         char flags_string[12];
->> -       char c;
->> +       char c[2] = { '\0' };
->
-> Can we use flag_string directly here?
->
->>         bool bv;
->>
->>         if ((count < 1) || (count > 11))
->> @@ -635,11 +609,11 @@ static ssize_t cifs_security_flags_proc_write(struct file *file,
->>
->>         if (count < 3) {
->>                 /* single char or single char followed by null */
->> -               c = flags_string[0];
->> -               if (strtobool(&c, &bv) == 0) {
->> +               c[0] = flags_string[0];
->
->> +               if (strtobool(c, &bv) == 0) {
->
->
->>                         global_secflags = bv ? CIFSSEC_MAX : CIFSSEC_DEF;
->>                         return count;
->> -               } else if (!isdigit(c)) {
->> +               } else if (!isdigit(c[0])) {
->>                         cifs_dbg(VFS, "Invalid SecurityFlags: %s\n",
->>                                         flags_string);
->>                         return -EINVAL;
+The change from cur_tp to the function
+minstrel_get_tp_avg/minstrel_ht_get_tp_avg changed the unit used for the
+current throughput. For example in minstrel_ht the correct
+conversion between them would be:
 
-Hah, yes, durrr. I will send a fix-up for akpm. Thanks!
+    mrs->cur_tp / 10 == minstrel_ht_get_tp_avg(..).
 
--Kees
+This factor 10 must also be included in the calculation of
+minstrel_get_expected_throughput and minstrel_ht_get_expected_throughput to
+return values with the unit [Kbps] instead of [10Kbps]. Otherwise routing
+algorithms like B.A.T.M.A.N. V will make incorrect decision based on these
+values. Its kernel based implementation expects expected_throughput always
+to have the unit [Kbps] and not sometimes [10Kbps] and sometimes [Kbps].
 
+The same requirement has iw or olsrdv2's nl80211 based statistics module
+which retrieve the same data via NL80211_STA_INFO_TX_BITRATE.
 
+Fixes: 6a27b2c40b48 ("mac80211: restructure per-rate throughput calculation into function")
+Signed-off-by: Sven Eckelmann <sven@open-mesh.com>
+---
+v4:
+- unify way how multiplication/division is done in
+  minstrel_get_expected_throughput and minstrel_ht_get_expected_throughput
+v3:
+- fix typo in title
+- extend description to better explain why this is important
+v2:
+- Modified PATCH title
+---
+ net/mac80211/rc80211_minstrel.c    | 2 +-
+ net/mac80211/rc80211_minstrel_ht.c | 3 ++-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
+index 3ece7d1..b54f398 100644
+--- a/net/mac80211/rc80211_minstrel.c
++++ b/net/mac80211/rc80211_minstrel.c
+@@ -711,7 +711,7 @@ static u32 minstrel_get_expected_throughput(void *priv_sta)
+ 	 * computing cur_tp
+ 	 */
+ 	tmp_mrs = &mi->r[idx].stats;
+-	tmp_cur_tp = minstrel_get_tp_avg(&mi->r[idx], tmp_mrs->prob_ewma);
++	tmp_cur_tp = minstrel_get_tp_avg(&mi->r[idx], tmp_mrs->prob_ewma) * 10;
+ 	tmp_cur_tp = tmp_cur_tp * 1200 * 8 / 1024;
+ 
+ 	return tmp_cur_tp;
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 3928dbd..f3e9ba4 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -1334,7 +1334,8 @@ static u32 minstrel_ht_get_expected_throughput(void *priv_sta)
+ 	prob = mi->groups[i].rates[j].prob_ewma;
+ 
+ 	/* convert tp_avg from pkt per second in kbps */
+-	tp_avg = minstrel_ht_get_tp_avg(mi, i, j, prob) * AVG_PKT_SIZE * 8 / 1024;
++	tp_avg = minstrel_ht_get_tp_avg(mi, i, j, prob) * 10;
++	tp_avg = tp_avg * AVG_PKT_SIZE * 8 / 1024;
+ 
+ 	return tp_avg;
+ }
 -- 
-Kees Cook
-Chrome OS & Brillo Security
+2.7.0
+
