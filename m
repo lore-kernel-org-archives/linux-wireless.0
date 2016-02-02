@@ -1,99 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:34290 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751670AbcBEQsd (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:41890 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754258AbcBBKAp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2016 11:48:33 -0500
-Subject: Re: [RFC v2] iwlwifi: pcie: transmit queue auto-sizing
-To: Michal Kazior <michal.kazior@tieto.com>
-References: <1454616764-19841-1-git-send-email-emmanuel.grumbach@intel.com>
- <1454616988-21901-1-git-send-email-emmanuel.grumbach@intel.com>
- <56B3B885.1050409@candelatech.com>
- <0BA3FCBA62E2DC44AF3030971E174FB32EA02656@hasmsx107.ger.corp.intel.com>
- <56B3BF25.8080509@candelatech.com>
- <CA+BoTQm+xTU6o7CMbCHr=bSgp7WE5btE4pMki5XJWiXaOG4SdA@mail.gmail.com>
-Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Stephen Hemminger <stephen@networkplumber.org>,
-	Dave Taht <dave.taht@gmail.com>,
-	Jonathan Corbet <corbet@lwn.net>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <56B4D260.2000501@candelatech.com> (sfid-20160205_174840_483768_E0012084)
-Date: Fri, 5 Feb 2016 08:48:32 -0800
+	Tue, 2 Feb 2016 05:00:45 -0500
+Date: Tue, 2 Feb 2016 13:00:34 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: huxm@marvell.com
+Cc: linux-wireless@vger.kernel.org
+Subject: re: mwifiex: enable pcie MSIx interrupt mode support
+Message-ID: <20160202100034.GB3040@mwanda> (sfid-20160202_110049_967951_95AEC76C)
 MIME-Version: 1.0
-In-Reply-To: <CA+BoTQm+xTU6o7CMbCHr=bSgp7WE5btE4pMki5XJWiXaOG4SdA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/05/2016 12:44 AM, Michal Kazior wrote:
+Hello Xinming Hu,
 
-> Per-station queues sound tricky if you consider bufferbloat.
->
-> To maximize use of airtime (i.e. txop) you need to send big
-> aggregates. Since aggregates are per station-tid to maximize
-> multi-station performance (in AP mode) you'll need to queue a lot of
-> frames, per each station, depending on the chosen tx rate.
->
-> A bursted txop can be as big as 5-10ms. If you consider you want to
-> queue 5-10ms worth of data for *each* station at any given time you
-> obviously introduce a lot of lag. If you have 10 stations you might
-> end up with service period at 10*10ms = 100ms. This gets even worse if
-> you consider MU-MIMO because you need to do an expensive sounding
-> procedure before transmitting. So while SU aggregation can probably
-> still work reasonably well with shorter bursts (1-2ms) MU needs at
-> least 3ms to get *any* gain when compared to SU (which obviously means
-> you want more to actually make MU pay off). The rule of thumb is the
-> longer you wait the bigger capacity you can get.
->
-> Apparently there's interest in maximizing throughput but it stands in
-> direct opposition of keeping the latency down so I've been thinking
-> how to satisfy both.
+This is a semi-automatic email about new static checker warnings.
 
-I really think this should be tunable.  For instance, someone making an AP
-that is mostly for letting lots of users stream movies would care a lot more
-about throughput than someone making an AP that is mainly for browsing the
-web and doing more latency-sensitive activities.
+The patch 99074fc1e67b: "mwifiex: enable pcie MSIx interrupt mode 
+support" from Jan 11, 2016, leads to the following Smatch complaint:
 
+drivers/net/wireless/marvell/mwifiex/pcie.c:2780 mwifiex_unregister_dev()
+	 warn: variable dereferenced before check 'card' (see line 2777)
 
-> The current approach ath10k is taking (patches in review [1][2]) is to
-> use mac80211 software queues for per-station queuing, exposing queue
-> state to firmware (it decides where frames should be dequeued from)
-> and making it possible to stop/wake per-station tx subqueue with fake
-> netdev queues. I'm starting to think this is not the right way though
-> because it's inherently hard to control latency and there's a huge
-> memory overhead associated with the fake netdev queues. Also fq_codel
-> is a less effective with this kind of setup.
->
-> My current thinking is that the entire problem should be solved via
-> (per-AC) qdiscs, e.g. fq_codel. I guess one could use
-> limit/target/interval/quantum knobs to tune it for higher latency of
-> aggregation-oriented Wi-Fi links where long service time (think
-> 100-200ms) is acceptable. However fq_codel is oblivious to how Wi-Fi
-> works in the first place, i.e. Wi-Fi gets better throughput if you
-> deliver bursts of packets destined to the same station. Moreover this
-> gets even more complicated with MU-MIMO where you may want to consider
-> spatial location (which influences signal quality when grouped) of
-> each station when you decide which set of stations you're going to
-> aggregate to in parallel. Since drivers have a finite tx ring this it
-> is important to deliver bursts that can actually be aggregated
-> efficiently. This means driver would need to be able to tell qdisc
-> about per-flow conditions to influence the RR scheme in some way
-> (assuming a qdiscs even understands flows; do we need a unified way of
-> talking about flows between qdiscs and drivers?).
+drivers/net/wireless/marvell/mwifiex/pcie.c
+  2776		const struct mwifiex_pcie_card_reg *reg;
+  2777		struct pci_dev *pdev = card->dev;
+                                       ^^^^^^^^^
+New dereference.
 
-I wonder if it would work better if we removed most of the
-tid handling and aggregation logic in the firmware.  Maybe just have the mgt Q and best
-effort (and skip VO/VI).  Let the OS tell (or suggest to) the firmware when aggregation
-starts and stops.  That might at least cut the number of queues in half,
-saving memory and latency up and down the stack.
+  2778		int i;
+  2779	
+  2780		if (card) {
+                    ^^^^
+Old check.
 
-Thanks,
-Ben
+  2781			if (card->msix_enable) {
+  2782				for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
 
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+regards,
+dan carpenter
