@@ -1,62 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33247 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750791AbcBSLSE (ORCPT
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:36490 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751196AbcBBA23 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2016 06:18:04 -0500
-Received: by mail-wm0-f68.google.com with SMTP id c200so7405486wme.0
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Feb 2016 03:18:04 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Sven Eckelmann <sven@narfation.org>, nbd@openwrt.org
-Subject: [PATCH v2] mac80211: fix wiphy supported_band access
-Date: Fri, 19 Feb 2016 12:18:01 +0100
-Message-Id: <1455880681-6194-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20160219_121809_304949_97AE7B69)
+	Mon, 1 Feb 2016 19:28:29 -0500
+Received: by mail-pa0-f66.google.com with SMTP id ho8so629208pac.3
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 16:28:28 -0800 (PST)
+From: Rakhi Sharma <rakhish1994@gmail.com>
+To: joe@perches.com, Jes.Sorensen@redhat.com
+Cc: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	Rakhi Sharma <rakhish1994@gmail.com>
+Subject: [PATCH v2 5/5] Staging: rtl8723au: core: rtw_ieee80211: Fixed a coding style Warning.
+Date: Tue,  2 Feb 2016 05:58:12 +0530
+Message-Id: <1454372892-4962-1-git-send-email-rakhish1994@gmail.com> (sfid-20160202_012832_066894_79D3AB1D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix wiphy supported_band access in tx radiotap parsing introduced
-in commit 5ec3aed9ba4c ("mac80211: Parse legacy and HT rate in
-injected frames"). In particular, info->band is always set to 0
-(IEEE80211_BAND_2GHZ) since it has not assigned yet.
-This cause a kernel crash on 5GHz only devices.
-Move ieee80211_parse_tx_radiotap() after info->band assignment
+Fixed a braces style warning.
+Warning: braces {} are not necessary for single statement blocks.
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Signed-off-by: Rakhi Sharma <rakhish1994@gmail.com>
 ---
-v2:
-- improved the commit message
+Changes in v2:
+  - remove a blank line. To make it readable.
 ---
- net/mac80211/tx.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/staging/rtl8723au/core/rtw_ieee80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7bb67fa..b07d037 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1892,10 +1892,6 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 	info->flags = IEEE80211_TX_CTL_REQ_TX_STATUS |
- 		      IEEE80211_TX_CTL_INJECTED;
+diff --git a/drivers/staging/rtl8723au/core/rtw_ieee80211.c b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+index 365f780..55a5078 100644
+--- a/drivers/staging/rtl8723au/core/rtw_ieee80211.c
++++ b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+@@ -177,8 +177,8 @@ u8 *rtw_get_ie23a(u8 *pbuf, int index, int *len, int limit)
+ 	u8 *p;
  
--	/* process and remove the injection radiotap header */
--	if (!ieee80211_parse_tx_radiotap(local, skb))
--		goto fail;
+ 	if (limit < 1)
 -
- 	rcu_read_lock();
- 
- 	/*
-@@ -1957,6 +1953,10 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
- 		goto fail_rcu;
- 
- 	info->band = chandef->chan->band;
-+	/* process and remove the injection radiotap header */
-+	if (!ieee80211_parse_tx_radiotap(local, skb))
-+		goto fail_rcu;
+ 		return NULL;
 +
- 	ieee80211_xmit(sdata, NULL, skb);
- 	rcu_read_unlock();
- 
+ 	p = pbuf;
+ 	i = 0;
+ 	*len = 0;
 -- 
-2.5.0
+1.9.1
 
