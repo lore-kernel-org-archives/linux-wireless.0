@@ -1,42 +1,131 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40047 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965908AbcBCSkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 13:40:03 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 12/28] rtl8xxxu: Add mbox extension register definitions for 8723B
-Date: Wed,  3 Feb 2016 13:39:46 -0500
-Message-Id: <1454524802-26763-13-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_201502_362468_5458B9C4)
-In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:9797 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755177AbcBBMIG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Feb 2016 07:08:06 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH 23/26] staging: wilc1000: remove unused log message using the RX_DBG tag
+Date: Tue, 2 Feb 2016 21:02:33 +0900
+Message-ID: <1454414556-9822-23-git-send-email-leo.kim@atmel.com> (sfid-20160202_131501_766286_9E486209)
+In-Reply-To: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
+References: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Chris Park <chris.park@atmel.com>
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+This patch remove unused log message using the RX_DBG tag
+
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/staging/wilc1000/linux_wlan_common.h | 2 --
+ drivers/staging/wilc1000/wilc_debugfs.c      | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.c         | 5 -----
+ drivers/staging/wilc1000/wilc_wlan_cfg.c     | 5 -----
+ 4 files changed, 1 insertion(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-index 997a857..991b366 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-@@ -341,6 +341,11 @@
- #define REG_BB_ACCEESS_CTRL		0x01e8
- #define REG_BB_ACCESS_DATA		0x01ec
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index 617bc53..63d0ec5 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -6,7 +6,6 @@ enum debug_region {
+ 	Hostapd_debug,
+ 	CFG80211_debug,
+ 	Interrupt_debug,
+-	RX_debug,
+ 	Lock_debug,
+ 	Tcp_enhance,
+ 	Spin_debug,
+@@ -22,7 +21,6 @@ enum debug_region {
+ #define HOSTAPD_DBG             (1 << Hostapd_debug)
+ #define CFG80211_DBG            (1 << CFG80211_debug)
+ #define INT_DBG                 (1 << Interrupt_debug)
+-#define RX_DBG                  (1 << RX_debug)
+ #define LOCK_DBG                (1 << Lock_debug)
+ #define TCP_ENH                 (1 << Tcp_enhance)
+ #define SPIN_DEBUG              (1 << Spin_debug)
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index fd0e58f..63b66b2 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -24,7 +24,7 @@ static struct dentry *wilc_dir;
+  * --------------------------------------------------------------------------------
+  */
  
-+#define REG_HMBOX_EXT0_8723B		0x01f0
-+#define REG_HMBOX_EXT1_8723B		0x01f4
-+#define REG_HMBOX_EXT2_8723B		0x01f8
-+#define REG_HMBOX_EXT3_8723B		0x01fc
-+
- /* 0x0200 ~ 0x027F	TXDMA Configuration */
- #define REG_RQPN			0x0200
- #define  RQPN_HI_PQ_SHIFT		0
+-#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | CFG80211_DBG | INT_DBG | RX_DBG | LOCK_DBG | INIT_DBG | BUS_DBG | MEM_DBG)
++#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | CFG80211_DBG | INT_DBG | LOCK_DBG | INIT_DBG | BUS_DBG | MEM_DBG)
+ #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+ atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | GENERIC_DBG | CFG80211_DBG | FIRM_DBG | HOSTAPD_DBG);
+ EXPORT_SYMBOL_GPL(WILC_REGION);
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 10a0937..fc0f772 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -835,11 +835,8 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ 			u32 pkt_len, pkt_offset, tp_len;
+ 			int is_cfg_packet;
+ 
+-			PRINT_D(RX_DBG, "In the 2nd do-while\n");
+ 			memcpy(&header, &buffer[offset], 4);
+ 			header = cpu_to_le32(header);
+-			PRINT_D(RX_DBG, "Header = %04x - Offset = %d\n",
+-				header, offset);
+ 
+ 			is_cfg_packet = (header >> 31) & 0x1;
+ 			pkt_offset = (header >> 22) & 0x1ff;
+@@ -890,7 +887,6 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
+ 	} while (1);
+ 
+ 	wilc->rxq_exit = 1;
+-	PRINT_D(RX_DBG, "THREAD: Exiting RX thread\n");
+ }
+ 
+ static void wilc_unknown_isr_ext(struct wilc *wilc)
+@@ -958,7 +954,6 @@ _end_:
+ 			if (rqe) {
+ 				rqe->buffer = buffer;
+ 				rqe->buffer_size = size;
+-				PRINT_D(RX_DBG, "rxq entery Size= %d - Address = %p\n", rqe->buffer_size, rqe->buffer);
+ 				wilc_wlan_rxq_add(wilc, rqe);
+ 			}
+ 		}
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+index b72c77b..3b3065b 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+@@ -522,7 +522,6 @@ int wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
+ 		rsp->type = wilc_wlan_parse_info_frame(frame, size);
+ 		rsp->seq_no = msg_id;
+ 		/*call host interface info parse as well*/
+-		PRINT_INFO(RX_DBG, "Info message received\n");
+ 		wilc_gnrl_async_info_received(wilc, frame - 4, size + 4);
+ 		break;
+ 
+@@ -532,14 +531,10 @@ int wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
+ 		break;
+ 
+ 	case 'S':
+-		PRINT_INFO(RX_DBG, "Scan Notification Received\n");
+ 		wilc_scan_complete_received(wilc, frame - 4, size + 4);
+ 		break;
+ 
+ 	default:
+-		PRINT_INFO(RX_DBG, "Receive unknown message type[%d-%d-%d-%d-%d-%d-%d-%d]\n",
+-			   frame[0], frame[1], frame[2], frame[3], frame[4],
+-			   frame[5], frame[6], frame[7]);
+ 		rsp->type = 0;
+ 		rsp->seq_no = msg_id;
+ 		ret = 0;
 -- 
-2.5.0
+1.9.1
 
