@@ -1,112 +1,176 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:29759 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752909AbcBVEQY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2016 23:16:24 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V3 11/24] staging: wilc1000: host_interface.c: removes unnecessary log messages
-Date: Mon, 22 Feb 2016 13:11:56 +0900
-Message-ID: <1456114329-7036-12-git-send-email-leo.kim@atmel.com> (sfid-20160222_052949_417615_35061AD8)
-In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
-References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:35717 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751204AbcBBNjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Feb 2016 08:39:17 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 3/3] cfg80211: add support for non-linear skbs in ieee80211_amsdu_to_8023s
+Date: Tue,  2 Feb 2016 14:39:10 +0100
+Message-Id: <1454420350-8313-3-git-send-email-nbd@openwrt.org> (sfid-20160202_143920_312142_CF91506C)
+In-Reply-To: <1454420350-8313-1-git-send-email-nbd@openwrt.org>
+References: <1454420350-8313-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
-
-This patch removes unnecessary log message and relate variables.
-
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/staging/wilc1000/host_interface.c | 31 ++++---------------------------
- 1 file changed, 4 insertions(+), 27 deletions(-)
+ net/wireless/util.c | 100 +++++++++++++++++++++++++---------------------------
+ 1 file changed, 49 insertions(+), 51 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 035f6f5..eddc0d6 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2095,8 +2095,6 @@ static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
- 	stamac = wid.val;
- 	memcpy(stamac, strHostIfStaInactiveT->mac, ETH_ALEN);
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index f75f601..e0cf5ae 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -644,73 +644,75 @@ int ieee80211_data_from_8023(struct sk_buff *skb, const u8 *addr,
+ }
+ EXPORT_SYMBOL(ieee80211_data_from_8023);
  
--	PRINT_D(CFG80211_DBG, "SETING STA inactive time\n");
--
- 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
- 				      wilc_get_vif_idx(vif));
- 
-@@ -2118,8 +2116,6 @@ static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
- 		return -EFAULT;
- 	}
- 
--	PRINT_D(CFG80211_DBG, "Getting inactive time : %d\n", inactive_time);
--
- 	up(&hif_drv->sem_inactive_time);
- 
- 	return result;
-@@ -3037,7 +3033,6 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
- 	struct host_if_msg msg;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
- 	u8 key_len = ptk_key_len;
--	int i;
- 
- 	if (!hif_drv) {
- 		PRINT_ER("driver is null\n");
-@@ -3065,20 +3060,11 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
- 	if (!msg.body.key_info.attr.wpa.key)
- 		return -ENOMEM;
- 
--	if (rx_mic) {
-+	if (rx_mic)
- 		memcpy(msg.body.key_info.attr.wpa.key + 16, rx_mic, RX_MIC_KEY_LEN);
--		if (INFO) {
--			for (i = 0; i < RX_MIC_KEY_LEN; i++)
--				PRINT_INFO(CFG80211_DBG, "PairwiseRx[%d] = %x\n", i, rx_mic[i]);
--		}
--	}
--	if (tx_mic) {
++static struct sk_buff *
++__ieee80211_amsdu_copy(struct sk_buff *skb, unsigned int hlen,
++		       int offset, int len)
++{
++	struct sk_buff *frame;
 +
-+	if (tx_mic)
- 		memcpy(msg.body.key_info.attr.wpa.key + 24, tx_mic, TX_MIC_KEY_LEN);
--		if (INFO) {
--			for (i = 0; i < TX_MIC_KEY_LEN; i++)
--				PRINT_INFO(CFG80211_DBG, "PairwiseTx[%d] = %x\n", i, tx_mic[i]);
--		}
--	}
++	if (skb->len - offset < len)
++		return NULL;
++
++	/*
++	 * Allocate and reserve two bytes more for payload
++	 * alignment since sizeof(struct ethhdr) is 14.
++	 */
++	frame = dev_alloc_skb(hlen + sizeof(struct ethhdr) + 2 + len);
++
++	skb_reserve(frame, hlen + sizeof(struct ethhdr) + 2);
++	skb_copy_bits(skb, offset, skb_put(frame, len), len);
++
++	return frame;
++}
  
- 	msg.body.key_info.attr.wpa.key_len = key_len;
- 	msg.body.key_info.attr.wpa.mac_addr = mac_addr;
-@@ -4083,20 +4069,11 @@ int wilc_del_allstation(struct wilc_vif *vif, u8 mac_addr[][ETH_ALEN])
- 	for (i = 0; i < MAX_NUM_STA; i++) {
- 		if (memcmp(mac_addr[i], zero_addr, ETH_ALEN)) {
- 			memcpy(del_all_sta_info->del_all_sta[i], mac_addr[i], ETH_ALEN);
--			PRINT_D(CFG80211_DBG, "BSSID = %x%x%x%x%x%x\n",
--				del_all_sta_info->del_all_sta[i][0],
--				del_all_sta_info->del_all_sta[i][1],
--				del_all_sta_info->del_all_sta[i][2],
--				del_all_sta_info->del_all_sta[i][3],
--				del_all_sta_info->del_all_sta[i][4],
--				del_all_sta_info->del_all_sta[i][5]);
- 			assoc_sta++;
- 		}
+ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
+ 			      const u8 *addr, enum nl80211_iftype iftype,
+ 			      const unsigned int extra_headroom,
+ 			      bool has_80211_header)
+ {
++	unsigned int hlen = ALIGN(extra_headroom, 4);
+ 	struct sk_buff *frame = NULL;
+ 	u16 ethertype;
+ 	u8 *payload;
+-	const struct ethhdr *eth;
+-	int remaining, err;
+-	u8 dst[ETH_ALEN], src[ETH_ALEN];
+-
+-	if (skb_linearize(skb))
+-		goto out;
++	int offset = 0, remaining, err;
++	struct ethhdr eth;
++	bool reuse_skb = true;
++	bool last = false;
+ 
+ 	if (has_80211_header) {
+-		err = ieee80211_data_to_8023(skb, addr, iftype);
++		err = __ieee80211_data_to_8023(skb, &eth, addr, iftype);
+ 		if (err)
+ 			goto out;
+-
+-		/* skip the wrapping header */
+-		eth = (struct ethhdr *) skb_pull(skb, sizeof(struct ethhdr));
+-		if (!eth)
+-			goto out;
+-	} else {
+-		eth = (struct ethhdr *) skb->data;
  	}
--	if (!assoc_sta) {
--		PRINT_D(CFG80211_DBG, "NO ASSOCIATED STAS\n");
-+	if (!assoc_sta)
- 		return result;
--	}
  
- 	del_all_sta_info->assoc_sta = assoc_sta;
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-	while (skb != frame) {
++	while (!last) {
++		unsigned int subframe_len;
++		int len;
+ 		u8 padding;
+-		__be16 len = eth->h_proto;
+-		unsigned int subframe_len = sizeof(struct ethhdr) + ntohs(len);
+-
+-		remaining = skb->len;
+-		memcpy(dst, eth->h_dest, ETH_ALEN);
+-		memcpy(src, eth->h_source, ETH_ALEN);
+ 
++		skb_copy_bits(skb, offset, &eth, sizeof(eth));
++		len = ntohs(eth.h_proto);
++		subframe_len = sizeof(struct ethhdr) + len;
+ 		padding = (4 - subframe_len) & 0x3;
++
+ 		/* the last MSDU has no padding */
++		remaining = skb->len - offset;
+ 		if (subframe_len > remaining)
+ 			goto purge;
+ 
+-		skb_pull(skb, sizeof(struct ethhdr));
++		offset += sizeof(struct ethhdr);
+ 		/* reuse skb for the last subframe */
+-		if (remaining <= subframe_len + padding)
++		last = remaining <= subframe_len + padding;
++		if (!skb_is_nonlinear(skb) && last) {
++			skb_pull(skb, offset);
+ 			frame = skb;
+-		else {
+-			unsigned int hlen = ALIGN(extra_headroom, 4);
+-			/*
+-			 * Allocate and reserve two bytes more for payload
+-			 * alignment since sizeof(struct ethhdr) is 14.
+-			 */
+-			frame = dev_alloc_skb(hlen + subframe_len + 2);
++			reuse_skb = true;
++		} else {
++			frame = __ieee80211_amsdu_copy(skb, hlen, offset, len);
+ 			if (!frame)
+ 				goto purge;
+ 
+-			skb_reserve(frame, hlen + sizeof(struct ethhdr) + 2);
+-			memcpy(skb_put(frame, ntohs(len)), skb->data,
+-				ntohs(len));
+-
+-			eth = (struct ethhdr *)skb_pull(skb, ntohs(len) +
+-							padding);
+-			if (!eth) {
+-				dev_kfree_skb(frame);
+-				goto purge;
+-			}
++			offset += len + padding;
+ 		}
+ 
+ 		skb_reset_network_header(frame);
+@@ -719,24 +721,20 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
+ 
+ 		payload = frame->data;
+ 		ethertype = (payload[6] << 8) | payload[7];
+-
+ 		if (likely((ether_addr_equal(payload, rfc1042_header) &&
+ 			    ethertype != ETH_P_AARP && ethertype != ETH_P_IPX) ||
+ 			   ether_addr_equal(payload, bridge_tunnel_header))) {
+-			/* remove RFC1042 or Bridge-Tunnel
+-			 * encapsulation and replace EtherType */
+-			skb_pull(frame, 6);
+-			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
+-			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
+-		} else {
+-			memcpy(skb_push(frame, sizeof(__be16)), &len,
+-				sizeof(__be16));
+-			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
+-			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
++			eth.h_proto = htons(ethertype);
++			skb_pull(frame, ETH_ALEN + 2);
+ 		}
++
++		memcpy(skb_push(frame, sizeof(eth)), &eth, sizeof(eth));
+ 		__skb_queue_tail(list, frame);
+ 	}
+ 
++	if (!reuse_skb)
++	    dev_kfree_skb(skb);
++
+ 	return;
+ 
+  purge:
 -- 
-1.9.1
+2.2.2
 
