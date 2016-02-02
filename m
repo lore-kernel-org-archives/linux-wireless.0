@@ -1,96 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33076 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753499AbcBWOUr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 09:20:47 -0500
-Message-ID: <1456237245.9910.16.camel@sipsolutions.net> (sfid-20160223_152101_207715_D1223397)
-Subject: Re: [PATCH V7 1/2] nl80211: add feature for BSS selection support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 23 Feb 2016 15:20:45 +0100
-In-Reply-To: <1455706070-11915-1-git-send-email-arend@broadcom.com>
-References: <1455706070-11915-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:35271 "EHLO
+	mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755755AbcBBQZb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Feb 2016 11:25:31 -0500
+Date: Tue, 2 Feb 2016 21:55:19 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: Paul Mcquade <paulmcquad@gmail.com>
+Cc: kvalo@codeaurora.org, zajec5@gmail.com, davem@davemloft.net,
+	joe@perches.com, johannes.berg@intel.com, sd@queasysnail.net,
+	m@bues.ch, mike.looijmans@topic.nl, khoroshilov@ispras.ru,
+	cengelma@gmx.at, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [v2,2/3] net: wireless: b43: Coding Style
+Message-ID: <20160202162519.GC8235@sudip-laptop> (sfid-20160202_172552_058824_89DF55A1)
+References: <1445270543-2209-3-git-send-email-paulmcquad@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445270543-2209-3-git-send-email-paulmcquad@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-02-17 at 11:47 +0100, Arend van Spriel wrote:
-> 
-> + * @NL80211_ATTR_BSS_SELECT: nested attribute for driver supporting the
-> + *	BSS selection feature. When used with %NL80211_CMD_GET_WIPHY it contains
-> + *	NLA_FLAG type according &enum nl80211_bss_select_attr to indicate what
-> + *	BSS selection behaviours are supported. When used with %NL80211_CMD_CONNECT
-> + *	it contains the behaviour and parameters for BSS selection to be done by
-> + *	driver and/or firmware.
+On Mon, Oct 19, 2015 at 05:02:22PM +0100, Paul Mcquade wrote:
+> Fixed Pointer Coding Style
+> 
+> Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
+> Acked-by: Michael Buesch <m@bues.ch>
 
-Maybe we should be less specific here regarding the NLA_FLAG and say
-that it will contain attributes for each, indicating which behaviours
-are supported, and say there's behaviour-dependent data inside each of
-those attributes?
+Please fix the From: name like i just replied in another of your patch
+and this patch will not apply anymore as the driver has moved to a new
+location drivers/net/wireless/broadcom/b43/
 
-It seems entirely plausible that future behaviours would require their
-own sub-capabilities; perhaps that's even the case today for having an
-adjustment range for example, not that I think it's really necessary
-now.
+can you please rebase it against the current tree and send.
 
-> @@ -3617,6 +3624,7 @@ enum nl80211_band {
->  	NL80211_BAND_2GHZ,
->  	NL80211_BAND_5GHZ,
->  	NL80211_BAND_60GHZ,
-> +	NUM_NL80211_BAND,
-
-You should use IEEE80211_NUM_BANDS and remove this.
-
-> +static bool is_band_valid(struct wiphy *wiphy, enum nl80211_band b)
-> +{
-> +	return b < NUM_NL80211_BAND && wiphy->bands[b];
-> +}
-
-Here.
-
-> +static int parse_bss_select(struct nlattr *nla, struct wiphy *wiphy,
-> +			    struct cfg80211_bss_selection
-> *bss_select)
-> +{
-> +	struct nlattr *attr[NL80211_BSS_SELECT_ATTR_MAX + 1];
-> +	struct nlattr *nest;
-> +	int err;
-> +	bool found = false;
-> +	int i;
-> +
-> +	/* only process one nested attribute */
-> +	nest = nla_data(nla);
-> +	if (!nla_ok(nest, nla_len(nest)))
-> +		return -EBADF;
-
-This isn't quite clear to me. Shouldn't you do this by declaring it
-NLA_TESTED in the nl80211_policy?
-
-Actually, not really? you use nla_ok() on the inner (without having
-checked at all that it's even long enough btw, since you didn't do the
-policy change), but that would already be done by nla_parse() below?
-
-What are you trying to do here?
-
-Regardless of that, EBADF seems like a bad error number.
-
-> +	err = nla_parse(attr, NL80211_BSS_SELECT_ATTR_MAX,
-> nla_data(nest),
-> +			nla_len(nest), nl80211_bss_select_policy);
-> +	if (err)
-> +		return err;
-> +
-> +	/* only one attribute may be given */
-> +	for (i = 0; i <= NL80211_BSS_SELECT_ATTR_MAX; i++)
-> +		if (attr[i]) {
-> +			if (found)
-> +				return -EINVAL;
-> +			found = true;
-> +		}
-
-I'd kinda prefer braces, but maybe that's just me. Surely not a
-blocking issue :)
-
-johannes
+regards
+sudip
