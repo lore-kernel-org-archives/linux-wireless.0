@@ -1,47 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:36640 "EHLO
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:36780 "EHLO
 	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932438AbcBWGib (ORCPT
+	with ESMTP id S933093AbcBBP77 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 01:38:31 -0500
-Received: by mail-pf0-f174.google.com with SMTP id e127so107004974pfe.3
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2016 22:38:30 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 7/7] staging: wilc1000: handle_cfg_param: remove unnecessary whitespace
-Date: Tue, 23 Feb 2016 15:38:03 +0900
-Message-Id: <1456209483-20345-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20160223_073847_203624_176DAD90)
-In-Reply-To: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 2 Feb 2016 10:59:59 -0500
+Date: Tue, 2 Feb 2016 21:29:44 +0530
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: Paul Mcquade <paulmcquad@gmail.com>
+Cc: sgruszka@redhat.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: net: wireless: rt2x00: Fixed Spacing issues
+Message-ID: <20160202155944.GA8235@sudip-laptop> (sfid-20160202_170030_791190_46BE1BC8)
+References: <1445112279-27796-1-git-send-email-paulmcquad@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1445112279-27796-1-git-send-email-paulmcquad@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unnecessary whitespace before a quoted newline found
-by checkpatch
-WARNING: unnecessary whitespace before a quoted newline
+On Sat, Oct 17, 2015 at 09:04:39PM +0100, Paul Mcquade wrote:
+> Removed empty spaces before/after parenthesis
+> 
+> Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
+> Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> 
+> ---
+> drivers/net/wireless/rt2x00/rt61pci.h | 20 ++++++++++----------
+>  1 file changed, 10 insertions(+), 10 deletions(-)
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This patch and your other patches related to rt2x00 will not apply
+anymore as the driver has moved to drivers/net/wireless/ralink/rt2x00
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index fb809a4..2ace069 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -501,7 +501,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
- 			wid_list[i].size = sizeof(char);
- 			hif_drv->cfg_values.auth_type = (u8)cfg_param_attr->auth_type;
- 		} else {
--			netdev_err(vif->ndev, "Impossible value \n");
-+			netdev_err(vif->ndev, "Impossible value\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--- 
-2.7.1
+can you please send them again after rebasing against current tree..
 
+regards
+sudip
