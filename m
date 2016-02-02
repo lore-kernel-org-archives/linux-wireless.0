@@ -1,68 +1,203 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52332 "EHLO mx1.redhat.com"
+Received: from nbd.name ([46.4.11.11]:35711 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753559AbcB2WGE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:06:04 -0500
-From: Jes.Sorensen@redhat.com
+	id S1750953AbcBBNjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Feb 2016 08:39:17 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 096/113] rtl8xxxu: TX RTS rate is word 4 for 8723a
-Date: Mon, 29 Feb 2016 17:05:34 -0500
-Message-Id: <1456783551-28315-97-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230638_405072_F213246E)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 2/3] cfg80211: add function for 802.3 conversion with separate output buffer
+Date: Tue,  2 Feb 2016 14:39:09 +0100
+Message-Id: <1454420350-8313-2-git-send-email-nbd@openwrt.org> (sfid-20160202_143923_287905_5A7F86C3)
+In-Reply-To: <1454420350-8313-1-git-send-email-nbd@openwrt.org>
+References: <1454420350-8313-1-git-send-email-nbd@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Use skb_copy_bits in preparation for allowing fragmented skbs
 
-Correct the setting of TX RTS for 8723a generation chips. In addition
-update documentation to match that this is part of data word 4, note
-data word 5.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 3 ++-
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 4 ++--
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ net/wireless/util.c | 106 ++++++++++++++++++++++++++--------------------------
+ 1 file changed, 53 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 9a1b4ee..10714e6 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -7084,7 +7084,8 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 6a40769..f75f601 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -393,9 +393,9 @@ unsigned int ieee80211_get_hdrlen_from_skb(const struct sk_buff *skb)
+ }
+ EXPORT_SYMBOL(ieee80211_get_hdrlen_from_skb);
  
- 	if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS) {
- 		/* Use RTS rate 24M - does the mac80211 tell us which to use? */
--		tx_desc->txdw4 |= cpu_to_le32(DESC_RATE_24M);
-+		tx_desc->txdw4 |= cpu_to_le32(DESC_RATE_24M <<
-+					      TXDESC_RTS_RATE_SHIFT_8723A);
- 		tx_desc->txdw4 |= cpu_to_le32(TXDESC_RTS_CTS_ENABLE_8723A);
- 		tx_desc->txdw4 |= cpu_to_le32(TXDESC_HW_RTS_ENABLE_8723A);
+-unsigned int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
++static unsigned int __ieee80211_get_mesh_hdrlen(u8 flags)
+ {
+-	int ae = meshhdr->flags & MESH_FLAGS_AE;
++	int ae = flags & MESH_FLAGS_AE;
+ 	/* 802.11-2012, 8.2.4.7.3 */
+ 	switch (ae) {
+ 	default:
+@@ -407,21 +407,31 @@ unsigned int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
+ 		return 18;
  	}
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 5f60f19..b015c75 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -475,6 +475,8 @@ struct rtl8723bu_tx_desc {
- #define TXDESC_SEQ_MASK_8723A		0x0fff0000
+ }
++
++unsigned int ieee80211_get_mesh_hdrlen(struct ieee80211s_hdr *meshhdr)
++{
++	return __ieee80211_get_mesh_hdrlen(meshhdr->flags);
++}
+ EXPORT_SYMBOL(ieee80211_get_mesh_hdrlen);
  
- /* Word 4 */
-+#define TXDESC_RTS_RATE_SHIFT_8723A	0
-+#define TXDESC_RTS_RATE_MASK_8723A	0x3f
- #define TXDESC_QOS			BIT(6)
- #define TXDESC_HW_SEQ_ENABLE_8723A	BIT(7)
- #define TXDESC_USE_DRIVER_RATE_8723A	BIT(8)
-@@ -496,8 +498,6 @@ struct rtl8723bu_tx_desc {
- #define TXDESC_RTS_RATE_MASK_8723B	0x3f000000
+-int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+-			   enum nl80211_iftype iftype)
++static int __ieee80211_data_to_8023(struct sk_buff *skb, struct ethhdr *ehdr,
++				    const u8 *addr, enum nl80211_iftype iftype)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	u16 hdrlen, ethertype;
+-	u8 *payload;
+-	u8 dst[ETH_ALEN];
+-	u8 src[ETH_ALEN] __aligned(2);
++	struct {
++		u8 hdr[ETH_ALEN] __aligned(2);
++		__be16 proto;
++	} payload;
++	struct ethhdr tmp;
++	u16 hdrlen;
++	u8 mesh_flags = 0;
  
- /* Word 5 */
--#define TXDESC_RTS_RATE_SHIFT_8723A	0
--#define TXDESC_RTS_RATE_MASK_8723A	0x3f
- #define TXDESC_SHORT_GI			BIT(6)
- #define TXDESC_CCX_TAG			BIT(7)
- #define TXDESC_RETRY_LIMIT_ENABLE_8723A	BIT(17)
+ 	if (unlikely(!ieee80211_is_data_present(hdr->frame_control)))
+ 		return -1;
+ 
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
++	if (skb->len < hdrlen + 8)
++		return -1;
+ 
+ 	/* convert IEEE 802.11 header + possible LLC headers into Ethernet
+ 	 * header
+@@ -432,8 +442,11 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+ 	 *   1     0   BSSID SA    DA    n/a
+ 	 *   1     1   RA    TA    DA    SA
+ 	 */
+-	memcpy(dst, ieee80211_get_DA(hdr), ETH_ALEN);
+-	memcpy(src, ieee80211_get_SA(hdr), ETH_ALEN);
++	memcpy(tmp.h_dest, ieee80211_get_DA(hdr), ETH_ALEN);
++	memcpy(tmp.h_source, ieee80211_get_SA(hdr), ETH_ALEN);
++
++	if (iftype == NL80211_IFTYPE_MESH_POINT)
++		skb_copy_bits(skb, hdrlen, &mesh_flags, 1);
+ 
+ 	switch (hdr->frame_control &
+ 		cpu_to_le16(IEEE80211_FCTL_TODS | IEEE80211_FCTL_FROMDS)) {
+@@ -450,44 +463,31 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+ 			     iftype != NL80211_IFTYPE_STATION))
+ 			return -1;
+ 		if (iftype == NL80211_IFTYPE_MESH_POINT) {
+-			struct ieee80211s_hdr *meshdr =
+-				(struct ieee80211s_hdr *) (skb->data + hdrlen);
+-			/* make sure meshdr->flags is on the linear part */
+-			if (!pskb_may_pull(skb, hdrlen + 1))
+-				return -1;
+-			if (meshdr->flags & MESH_FLAGS_AE_A4)
++			if (mesh_flags & MESH_FLAGS_AE_A4)
+ 				return -1;
+-			if (meshdr->flags & MESH_FLAGS_AE_A5_A6) {
++			if (mesh_flags & MESH_FLAGS_AE_A5_A6) {
+ 				skb_copy_bits(skb, hdrlen +
+ 					offsetof(struct ieee80211s_hdr, eaddr1),
+-				       	dst, ETH_ALEN);
+-				skb_copy_bits(skb, hdrlen +
+-					offsetof(struct ieee80211s_hdr, eaddr2),
+-				        src, ETH_ALEN);
++					tmp.h_dest, 2 * ETH_ALEN);
+ 			}
+-			hdrlen += ieee80211_get_mesh_hdrlen(meshdr);
++			hdrlen += __ieee80211_get_mesh_hdrlen(mesh_flags);
+ 		}
+ 		break;
+ 	case cpu_to_le16(IEEE80211_FCTL_FROMDS):
+ 		if ((iftype != NL80211_IFTYPE_STATION &&
+ 		     iftype != NL80211_IFTYPE_P2P_CLIENT &&
+ 		     iftype != NL80211_IFTYPE_MESH_POINT) ||
+-		    (is_multicast_ether_addr(dst) &&
+-		     ether_addr_equal(src, addr)))
++		    (is_multicast_ether_addr(tmp.h_dest) &&
++		     ether_addr_equal(tmp.h_source, addr)))
+ 			return -1;
+ 		if (iftype == NL80211_IFTYPE_MESH_POINT) {
+-			struct ieee80211s_hdr *meshdr =
+-				(struct ieee80211s_hdr *) (skb->data + hdrlen);
+-			/* make sure meshdr->flags is on the linear part */
+-			if (!pskb_may_pull(skb, hdrlen + 1))
++			if (mesh_flags & MESH_FLAGS_AE_A5_A6)
+ 				return -1;
+-			if (meshdr->flags & MESH_FLAGS_AE_A5_A6)
+-				return -1;
+-			if (meshdr->flags & MESH_FLAGS_AE_A4)
++			if (mesh_flags & MESH_FLAGS_AE_A4)
+ 				skb_copy_bits(skb, hdrlen +
+ 					offsetof(struct ieee80211s_hdr, eaddr1),
+-					src, ETH_ALEN);
+-			hdrlen += ieee80211_get_mesh_hdrlen(meshdr);
++					tmp.h_source, ETH_ALEN);
++			hdrlen += __ieee80211_get_mesh_hdrlen(mesh_flags);
+ 		}
+ 		break;
+ 	case cpu_to_le16(0):
+@@ -498,33 +498,33 @@ int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
+ 		break;
+ 	}
+ 
+-	if (!pskb_may_pull(skb, hdrlen + 8))
+-		return -1;
+-
+-	payload = skb->data + hdrlen;
+-	ethertype = (payload[6] << 8) | payload[7];
++	skb_copy_bits(skb, hdrlen, &payload, sizeof(payload));
++	tmp.h_proto = payload.proto;
+ 
+-	if (likely((ether_addr_equal(payload, rfc1042_header) &&
+-		    ethertype != ETH_P_AARP && ethertype != ETH_P_IPX) ||
+-		   ether_addr_equal(payload, bridge_tunnel_header))) {
++	if (likely((ether_addr_equal(payload.hdr, rfc1042_header) &&
++		    tmp.h_proto != htons(ETH_P_AARP) &&
++		    tmp.h_proto != htons(ETH_P_IPX)) ||
++		   ether_addr_equal(payload.hdr, bridge_tunnel_header)))
+ 		/* remove RFC1042 or Bridge-Tunnel encapsulation and
+ 		 * replace EtherType */
+-		skb_pull(skb, hdrlen + 6);
+-		memcpy(skb_push(skb, ETH_ALEN), src, ETH_ALEN);
+-		memcpy(skb_push(skb, ETH_ALEN), dst, ETH_ALEN);
+-	} else {
+-		struct ethhdr *ehdr;
+-		__be16 len;
++		hdrlen += ETH_ALEN + 2;
++	else
++		tmp.h_proto = htons(skb->len);
++
++	pskb_pull(skb, hdrlen);
+ 
+-		skb_pull(skb, hdrlen);
+-		len = htons(skb->len);
++	if (!ehdr)
+ 		ehdr = (struct ethhdr *) skb_push(skb, sizeof(struct ethhdr));
+-		memcpy(ehdr->h_dest, dst, ETH_ALEN);
+-		memcpy(ehdr->h_source, src, ETH_ALEN);
+-		ehdr->h_proto = len;
+-	}
++	memcpy(ehdr, &tmp, sizeof(tmp));
++
+ 	return 0;
+ }
++
++int ieee80211_data_to_8023(struct sk_buff *skb, const u8 *addr,
++			   enum nl80211_iftype iftype)
++{
++	return __ieee80211_data_to_8023(skb, NULL, addr, iftype);
++}
+ EXPORT_SYMBOL(ieee80211_data_to_8023);
+ 
+ int ieee80211_data_from_8023(struct sk_buff *skb, const u8 *addr,
 -- 
-2.5.0
+2.2.2
 
