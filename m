@@ -1,52 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f182.google.com ([209.85.161.182]:36253 "EHLO
-	mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751364AbcBVQLb convert rfc822-to-8bit (ORCPT
+Received: from mail-ig0-f177.google.com ([209.85.213.177]:38412 "EHLO
+	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750793AbcBBWPY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 11:11:31 -0500
+	Tue, 2 Feb 2016 17:15:24 -0500
 MIME-Version: 1.0
-In-Reply-To: <1455826121.2084.17.camel@sipsolutions.net>
-References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
- <1454946096-9752-8-git-send-email-jprvita@endlessm.com> <1455826121.2084.17.camel@sipsolutions.net>
-From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Date: Mon, 22 Feb 2016 11:10:50 -0500
-Message-ID: <CA+A7VXUJNUftsQjEAGtOmQbCMF1WzRJVAMqF2NDPYoitmXTrrQ@mail.gmail.com> (sfid-20160222_171151_910847_817C0209)
-Subject: Re: [PATCH 7/9] rfkill: Create "rfkill-airplane_mode" LED trigger
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
+In-Reply-To: <20160202154855.GA8990@gmail.com>
+References: <20160202154855.GA8990@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 3 Feb 2016 09:15:04 +1100
+Message-ID: <CAGRGNgVHEsA693tQxf0Mv_4wSu-4wG7sphhRRB0gbU6o9nzZ_Q@mail.gmail.com> (sfid-20160202_231544_817165_E51A9D89)
+Subject: Re: [PATCH] rtlwifi: Fix reusable codes in core.c
+To: Byeoungwook Kim <quddnr145@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux@endlessm.com,
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18 February 2016 at 15:08, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2016-02-08 at 10:41 -0500, João Paulo Rechi Vita wrote:
->> This creates a new LED trigger to be used by platform drivers as a
->> default trigger for airplane-mode indicator LEDs.
->>
->> By default this trigger will fire when RFKILL_OP_CHANGE_ALL is called
->> for all types (RFKILL_TYPE_ALL), setting the LED brightness to
->> LED_FULL
->> when the changing the state to blocked, and to LED_OFF when the
->> changing
->> the state to unblocked. In the future there will be a mechanism for
->> userspace to override the default policy, so it can implement its
->> own.
->>
->> This trigger will be used by the asus-wireless x86 platform driver.
->
-> Just one comment - I think you should be consistent with the _ vs - and
-> just use "rfkill-airplane-mode" as the name.
->
+Hi Byeoungwook,
 
-Ok, no problem. I'll change for the next version.
+On Wed, Feb 3, 2016 at 2:48 AM, Byeoungwook Kim <quddnr145@gmail.com> wrote:
+> rtl_*_delay() functions were reused same codes about addr variable.
+> So i have converted to rtl_addr_delay() from code about addr variable.
+>
+> Conditional codes in rtl_addr_delay() were improved in readability and
+> performance by using switch codes.
+>
+> Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
+> ---
+>  drivers/net/wireless/realtek/rtlwifi/core.c | 48 +++++++++++------------------
+>  1 file changed, 18 insertions(+), 30 deletions(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+> index 4ae421e..c1193d1 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/core.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+> @@ -37,36 +37,34 @@
+>
+>  void rtl_addr_delay(u32 addr)
+>  {
+> -       if (addr == 0xfe)
+> +       switch (addr) {
+> +       case 0xfe:
+>                 mdelay(50);
+> -       else if (addr == 0xfd)
+> +               break;
+> +       case 0xfd:
+>                 mdelay(5);
+> -       else if (addr == 0xfc)
+> +               break;
+> +       case 0xfc:
+>                 mdelay(1);
+> -       else if (addr == 0xfb)
+> +               break;
+> +       case 0xfb:
+>                 udelay(50);
+> -       else if (addr == 0xfa)
+> +               break;
+> +       case 0xfa:
+>                 udelay(5);
+> -       else if (addr == 0xf9)
+> +               break;
+> +       case 0xf9:
+>                 udelay(1);
+> +               break;
+> +       };
 
---
-João Paulo Rechi Vita
-http://about.me/jprvita
+As you're introducing a case statement here, you could consolidate the
+addresses that have the same delays, i.e.
+
+case 0xfe:
+case 0xfb:
+    mdelay(50);
+    break;
+
+also, you should arguably be doing this cleanup in a separate patch, i.e.
+
+1. Convert open coded instances to use this function (i.e. the changes
+below this comment)
+2. Improve the function
+
+>  }
+>  EXPORT_SYMBOL(rtl_addr_delay);
+>
+>  void rtl_rfreg_delay(struct ieee80211_hw *hw, enum radio_path rfpath, u32 addr,
+>                      u32 mask, u32 data)
+>  {
+> -       if (addr == 0xfe) {
+> -               mdelay(50);
+> -       } else if (addr == 0xfd) {
+> -               mdelay(5);
+> -       } else if (addr == 0xfc) {
+> -               mdelay(1);
+> -       } else if (addr == 0xfb) {
+> -               udelay(50);
+> -       } else if (addr == 0xfa) {
+> -               udelay(5);
+> -       } else if (addr == 0xf9) {
+> -               udelay(1);
+> +       if (addr >= 0xf9 && addr <= 0xfe) {
+> +               rtl_addr_delay(addr);
+>         } else {
+>                 rtl_set_rfreg(hw, rfpath, addr, mask, data);
+>                 udelay(1);
+> @@ -76,18 +74,8 @@ EXPORT_SYMBOL(rtl_rfreg_delay);
+>
+>  void rtl_bb_delay(struct ieee80211_hw *hw, u32 addr, u32 data)
+>  {
+> -       if (addr == 0xfe) {
+> -               mdelay(50);
+> -       } else if (addr == 0xfd) {
+> -               mdelay(5);
+> -       } else if (addr == 0xfc) {
+> -               mdelay(1);
+> -       } else if (addr == 0xfb) {
+> -               udelay(50);
+> -       } else if (addr == 0xfa) {
+> -               udelay(5);
+> -       } else if (addr == 0xf9) {
+> -               udelay(1);
+> +       if (addr >= 0xf9 && addr <= 0xfe) {
+> +               rtl_addr_delay(addr);
+>         } else {
+>                 rtl_set_bbreg(hw, addr, MASKDWORD, data);
+>                 udelay(1);
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
