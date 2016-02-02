@@ -1,130 +1,167 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:36472 "EHLO
-	mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756240AbcBHWlK convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:9612 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755144AbcBBMH0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 17:41:10 -0500
+	Tue, 2 Feb 2016 07:07:26 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 18/26] staging: wilc1000: renames struct connect_resp_info variables
+Date: Tue, 2 Feb 2016 21:02:28 +0900
+Message-ID: <1454414556-9822-18-git-send-email-leo.kim@atmel.com> (sfid-20160202_130730_191079_81E72E7E)
+In-Reply-To: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
+References: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1454946096-9752-6-git-send-email-jprvita@endlessm.com>
-References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com> <1454946096-9752-6-git-send-email-jprvita@endlessm.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 9 Feb 2016 09:40:49 +1100
-Message-ID: <CAGRGNgV0fFDnL25SYQv-F8oYqX3THD-PSCVs3puSX6a1vhD+fg@mail.gmail.com> (sfid-20160208_234131_246412_F7CDA65C)
-Subject: Re: [PATCH 5/9] rfkill: Factor rfkill_global_states[].cur assignments
-To: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux@endlessm.com,
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi João,
+This patch renames to avoid camelcase changes follow are:
+ - pu8IEs to ies
+ - u16IEsLen to ies_len
 
-On Tue, Feb 9, 2016 at 2:41 AM, João Paulo Rechi Vita <jprvita@gmail.com> wrote:
-> Factor all assignments to rfkill_global_states[].cur into a single
-> function rfkill_update_global_state().
->
-> Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c       |  7 +++---
+ drivers/staging/wilc1000/coreconfigurator.h       |  4 +--
+ drivers/staging/wilc1000/host_interface.c         |  6 ++---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 30 +++++++++++------------
+ 4 files changed, 23 insertions(+), 24 deletions(-)
 
-Looks sane to me.
-
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-> ---
->  net/rfkill/core.c | 38 +++++++++++++++++---------------------
->  1 file changed, 17 insertions(+), 21 deletions(-)
->
-> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-> index 56d79cb..8b96869 100644
-> --- a/net/rfkill/core.c
-> +++ b/net/rfkill/core.c
-> @@ -302,6 +302,19 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
->                 rfkill_event(rfkill);
->  }
->
-> +static void rfkill_update_global_state(enum rfkill_type type, bool blocked)
-> +{
-> +       int i;
-> +
-> +       if (type != RFKILL_TYPE_ALL) {
-> +               rfkill_global_states[type].cur = blocked;
-> +               return;
-> +       }
-> +
-> +       for (i = 0; i < NUM_RFKILL_TYPES; i++)
-> +               rfkill_global_states[i].cur = blocked;
-> +}
-> +
->  #ifdef CONFIG_RFKILL_INPUT
->  static atomic_t rfkill_input_disabled = ATOMIC_INIT(0);
->
-> @@ -319,15 +332,7 @@ static void __rfkill_switch_all(const enum rfkill_type type, bool blocked)
->  {
->         struct rfkill *rfkill;
->
-> -       if (type == RFKILL_TYPE_ALL) {
-> -               int i;
-> -
-> -               for (i = 0; i < NUM_RFKILL_TYPES; i++)
-> -                       rfkill_global_states[i].cur = blocked;
-> -       } else {
-> -               rfkill_global_states[type].cur = blocked;
-> -       }
-> -
-> +       rfkill_update_global_state(type, blocked);
->         list_for_each_entry(rfkill, &rfkill_list, node) {
->                 if (rfkill->type != type && type != RFKILL_TYPE_ALL)
->                         continue;
-> @@ -1164,15 +1169,8 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
->
->         mutex_lock(&rfkill_global_mutex);
->
-> -       if (ev.op == RFKILL_OP_CHANGE_ALL) {
-> -               if (ev.type == RFKILL_TYPE_ALL) {
-> -                       enum rfkill_type i;
-> -                       for (i = 0; i < NUM_RFKILL_TYPES; i++)
-> -                               rfkill_global_states[i].cur = ev.soft;
-> -               } else {
-> -                       rfkill_global_states[ev.type].cur = ev.soft;
-> -               }
-> -       }
-> +       if (ev.op == RFKILL_OP_CHANGE_ALL)
-> +               rfkill_update_global_state(ev.type, ev.soft);
->
->         list_for_each_entry(rfkill, &rfkill_list, node) {
->                 if (rfkill->idx != ev.idx && ev.op != RFKILL_OP_CHANGE_ALL)
-> @@ -1261,10 +1259,8 @@ static struct miscdevice rfkill_miscdev = {
->  static int __init rfkill_init(void)
->  {
->         int error;
-> -       int i;
->
-> -       for (i = 0; i < NUM_RFKILL_TYPES; i++)
-> -               rfkill_global_states[i].cur = !rfkill_default_state;
-> +       rfkill_update_global_state(RFKILL_TYPE_ALL, !rfkill_default_state);
->
->         error = class_register(&rfkill_class);
->         if (error)
-> --
-> 2.5.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 3e1e1f5..cbca6a0 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -341,12 +341,11 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
+ 		ies_len = rx_len - (MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN);
+ 
+ 		if (ies_len > 0) {
+-			network_info->pu8IEs = kmemdup(ies, ies_len,
+-						       GFP_KERNEL);
+-			if (!network_info->pu8IEs)
++			network_info->ies = kmemdup(ies, ies_len, GFP_KERNEL);
++			if (!network_info->ies)
+ 				return -ENOMEM;
+ 		}
+-		network_info->u16IEsLen = ies_len;
++		network_info->ies_len = ies_len;
+ 	}
+ 
+ 	*ret_network_info = network_info;
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 07a2ef0..3dca840 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -90,8 +90,8 @@ struct network_info {
+ 	bool new_network;
+ 	u8 found;
+ 	u32 tsf_lo;
+-	u8 *pu8IEs;
+-	u16 u16IEsLen;
++	u8 *ies;
++	u16 ies_len;
+ 	void *pJoinParams;
+ 	tstrRSSI strRssi;
+ 	u64 u64Tsf;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ac71453..017a357 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1414,7 +1414,7 @@ done:
+ 	pstrRcvdNetworkInfo->buffer = NULL;
+ 
+ 	if (pstrNetworkInfo) {
+-		kfree(pstrNetworkInfo->pu8IEs);
++		kfree(pstrNetworkInfo->ies);
+ 		kfree(pstrNetworkInfo);
+ 	}
+ 
+@@ -4271,8 +4271,8 @@ static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo)
+ 	u8 authTotalCount = 0;
+ 	u8 i, j;
+ 
+-	pu8IEs = ptstrNetworkInfo->pu8IEs;
+-	u16IEsLen = ptstrNetworkInfo->u16IEsLen;
++	pu8IEs = ptstrNetworkInfo->ies;
++	u16IEsLen = ptstrNetworkInfo->ies_len;
+ 
+ 	pNewJoinBssParam = kzalloc(sizeof(struct join_bss_param), GFP_KERNEL);
+ 	if (pNewJoinBssParam) {
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index c09cc9d..fafe63c 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -194,9 +194,9 @@ static void clear_shadow_scan(void)
+ 		del_timer_sync(&hAgingTimer);
+ 
+ 		for (i = 0; i < last_scanned_cnt; i++) {
+-			if (last_scanned_shadow[last_scanned_cnt].pu8IEs) {
+-				kfree(last_scanned_shadow[i].pu8IEs);
+-				last_scanned_shadow[last_scanned_cnt].pu8IEs = NULL;
++			if (last_scanned_shadow[last_scanned_cnt].ies) {
++				kfree(last_scanned_shadow[i].ies);
++				last_scanned_shadow[last_scanned_cnt].ies = NULL;
+ 			}
+ 
+ 			wilc_free_join_params(last_scanned_shadow[i].pJoinParams);
+@@ -253,8 +253,8 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
+ 								  network_info->u64Tsf,
+ 								  network_info->cap_info,
+ 								  network_info->beacon_period,
+-								  (const u8 *)network_info->pu8IEs,
+-								  (size_t)network_info->u16IEsLen,
++								  (const u8 *)network_info->ies,
++								  (size_t)network_info->ies_len,
+ 								  (s32)rssi * 100,
+ 								  GFP_KERNEL);
+ 					cfg80211_put_bss(wiphy, bss);
+@@ -292,8 +292,8 @@ static void remove_network_from_shadow(unsigned long arg)
+ 			PRINT_D(CFG80211_DBG, "Network expired ScanShadow:%s\n",
+ 				last_scanned_shadow[i].ssid);
+ 
+-			kfree(last_scanned_shadow[i].pu8IEs);
+-			last_scanned_shadow[i].pu8IEs = NULL;
++			kfree(last_scanned_shadow[i].ies);
++			last_scanned_shadow[i].ies = NULL;
+ 
+ 			wilc_free_join_params(last_scanned_shadow[i].pJoinParams);
+ 
+@@ -377,14 +377,14 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
+ 	last_scanned_shadow[ap_index].beacon_period = pstrNetworkInfo->beacon_period;
+ 	last_scanned_shadow[ap_index].dtim_period = pstrNetworkInfo->dtim_period;
+ 	last_scanned_shadow[ap_index].ch = pstrNetworkInfo->ch;
+-	last_scanned_shadow[ap_index].u16IEsLen = pstrNetworkInfo->u16IEsLen;
++	last_scanned_shadow[ap_index].ies_len = pstrNetworkInfo->ies_len;
+ 	last_scanned_shadow[ap_index].u64Tsf = pstrNetworkInfo->u64Tsf;
+ 	if (ap_found != -1)
+-		kfree(last_scanned_shadow[ap_index].pu8IEs);
+-	last_scanned_shadow[ap_index].pu8IEs =
+-		kmalloc(pstrNetworkInfo->u16IEsLen, GFP_KERNEL);
+-	memcpy(last_scanned_shadow[ap_index].pu8IEs,
+-	       pstrNetworkInfo->pu8IEs, pstrNetworkInfo->u16IEsLen);
++		kfree(last_scanned_shadow[ap_index].ies);
++	last_scanned_shadow[ap_index].ies = kmalloc(pstrNetworkInfo->ies_len,
++						    GFP_KERNEL);
++	memcpy(last_scanned_shadow[ap_index].ies,
++	       pstrNetworkInfo->ies, pstrNetworkInfo->ies_len);
+ 	last_scanned_shadow[ap_index].time_scan = jiffies;
+ 	last_scanned_shadow[ap_index].time_scan_cached = jiffies;
+ 	last_scanned_shadow[ap_index].found = 1;
+@@ -451,8 +451,8 @@ static void CfgScanResult(enum scan_event scan_event,
+ 										  network_info->u64Tsf,
+ 										  network_info->cap_info,
+ 										  network_info->beacon_period,
+-										  (const u8 *)network_info->pu8IEs,
+-										  (size_t)network_info->u16IEsLen,
++										  (const u8 *)network_info->ies,
++										  (size_t)network_info->ies_len,
+ 										  (s32)network_info->rssi * 100,
+ 										  GFP_KERNEL);
+ 							cfg80211_put_bss(wiphy, bss);
 -- 
-Julian Calaby
+1.9.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
