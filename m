@@ -1,67 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.131]:49778 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751183AbcBHMJy (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:8985 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754542AbcBBMFA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 07:09:54 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	wnhuang@chromium.com, devicetree@vger.kernel.org,
-	Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH v3 1/3] mwifiex: register platform specific driver
-Date: Mon, 08 Feb 2016 13:09:45 +0100
-Message-ID: <8264177.UI5sMC7XWi@wuerfel> (sfid-20160208_130959_019896_15C38AED)
-In-Reply-To: <1454926528-17480-1-git-send-email-akarwar@marvell.com>
-References: <1454926528-17480-1-git-send-email-akarwar@marvell.com>
+	Tue, 2 Feb 2016 07:05:00 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 01/26] staging: wilc1000: removes function 'wilc_dealloc_network_info()'
+Date: Tue, 2 Feb 2016 21:02:11 +0900
+Message-ID: <1454414556-9822-1-git-send-email-leo.kim@atmel.com> (sfid-20160202_130503_530541_1DA2F43A)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday 08 February 2016 02:15:26 Amitkumar Karwar wrote:
-> diff --git a/Documentation/devicetree/bindings/mwifiex.txt b/Documentation/devicetree/bindings/mwifiex.txt
-> new file mode 100644
-> index 0000000..39b6a74
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/mwifiex.txt
-> @@ -0,0 +1,29 @@
-> +mwifiex
-> +------
-> +
-> +Required properties:
-> +
-> +  - name : must be "mwifiex"
+This patch removes function 'wilc_dealloc_network_info()'.
+Does not need this function which only free memory.
+Therefore, this function is removed and changed directly with kfree.
 
-This is a very unusual requirement.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 22 ----------------------
+ drivers/staging/wilc1000/coreconfigurator.h |  1 -
+ drivers/staging/wilc1000/host_interface.c   |  4 ++--
+ 3 files changed, 2 insertions(+), 25 deletions(-)
 
-Can you use one of the standard device names instead?
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 11e3ce0..81dd22e 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -353,28 +353,6 @@ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
+ 	return 0;
+ }
+ 
+-s32 wilc_dealloc_network_info(tstrNetworkInfo *network_info)
+-{
+-	s32 result = 0;
+-
+-	if (network_info) {
+-		if (network_info->pu8IEs) {
+-			kfree(network_info->pu8IEs);
+-			network_info->pu8IEs = NULL;
+-		} else {
+-			result = -EFAULT;
+-		}
+-
+-		kfree(network_info);
+-		network_info = NULL;
+-
+-	} else {
+-		result = -EFAULT;
+-	}
+-
+-	return result;
+-}
+-
+ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
+ 			       tstrConnectRespInfo **ret_connect_resp_info)
+ {
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index d801e58..23775e4 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -121,7 +121,6 @@ typedef struct {
+ } tstrDisconnectNotifInfo;
+ 
+ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info);
+-s32 wilc_dealloc_network_info(tstrNetworkInfo *network_info);
+ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
+ 			       tstrConnectRespInfo **ret_connect_resp_info);
+ s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *connect_resp_info);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index e6a6a03..3ce3a7c 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1414,8 +1414,8 @@ done:
+ 	pstrRcvdNetworkInfo->buffer = NULL;
+ 
+ 	if (pstrNetworkInfo) {
+-		wilc_dealloc_network_info(pstrNetworkInfo);
+-		pstrNetworkInfo = NULL;
++		kfree(pstrNetworkInfo->pu8IEs);
++		kfree(pstrNetworkInfo);
+ 	}
+ 
+ 	return result;
+-- 
+1.9.1
 
-> +  - compatible : must be "marvell,mwifiex"
-> +
-> +Optional properties:
-> +
-> +  - mwifiex,caldata* : A series of properties with marvell,caldata prefix,
-> +                     represent Calibration data downloaded to the device during
-> +                     initialization. This is an array of unsigned values.
-> +
-> +
-> +Example:
-> +
-> +Tx power limit calibration data is configured in below example.
-> +The calibration data is an array of unsigned values, the length
-> +can vary between hw versions.
-> +
-> +mwifiex {
-> +       compatible = "marvell,mwifiex";
-> +
-> +       mwifiex,caldata_00_txpwrlimit_2g_cfg_set = /bits/ 8 <
-> +0x01 0x00 0x06 0x00 0x08 0x02 0x89 0x01 ...>;
-> +
-> +};
-
-Should we list the mac-address here as well, or is there always an eeprom
-for that but not the calibration data?
-
-	Arnd
