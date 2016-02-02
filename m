@@ -1,190 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:39479 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751956AbcBHKTW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 05:19:22 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>, <wnhuang@chromium.com>,
-	<devicetree@vger.kernel.org>, Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v3 3/3] mwifiex: parse host wakeup configuration from device tree
-Date: Mon, 8 Feb 2016 02:15:28 -0800
-Message-ID: <1454926528-17480-3-git-send-email-akarwar@marvell.com> (sfid-20160208_111927_298556_7B0B6C23)
-In-Reply-To: <1454926528-17480-1-git-send-email-akarwar@marvell.com>
-References: <1454926528-17480-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:35710 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751410AbcBBNjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Feb 2016 08:39:17 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH 1/3] mac80211: move A-MSDU skb_linearize call to ieee80211_amsdu_to_8023s
+Date: Tue,  2 Feb 2016 14:39:08 +0100
+Message-Id: <1454420350-8313-1-git-send-email-nbd@openwrt.org> (sfid-20160202_143921_803617_4223FB8E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Prepararation for zero-copy A-MSDU support with page fragment SKBs
 
-This patch implement a framework for board specific wakeup.
-driver parse irq/gpio number from device tree, corresponding
-resources will be allocated, and used for host suspend/resume.
-driver private binding file is also updated in the patch.
-
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
-v2: Guarded ".pm = mwifiex_plt_pm_ops" line with CONFIG_PM_SLEEP
----
- Documentation/devicetree/bindings/mwifiex.txt      | 10 +++
- .../net/wireless/marvell/mwifiex/platform_drv.c    | 95 ++++++++++++++++++++++
- 2 files changed, 105 insertions(+)
+ net/mac80211/rx.c   | 3 ---
+ net/wireless/util.c | 3 +++
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/mwifiex.txt b/Documentation/devicetree/bindings/mwifiex.txt
-index 367c97e..68919c7 100644
---- a/Documentation/devicetree/bindings/mwifiex.txt
-+++ b/Documentation/devicetree/bindings/mwifiex.txt
-@@ -14,6 +14,11 @@ Optional properties:
-   - mwifiex,chip-gpio : Chip's wakeup gpio pin number. This needs to be downloaded
- 			to to firmware. Chip notifies wifi wakeup signal to SOC
- 			through this pin.
-+  - interrupt-parent: phandle of the parent interrupt controller
-+  - interrupts : interrupt number to the cpu
-+  - gpios: specify SOC's wakeup GPIO
-+  - pinctrl-names : a pinctrl state named "default" must be defined
-+  - pinctrl-0 : pin control group to be used for this controller
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 664e886..1e9308e 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2203,9 +2203,6 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
+ 	skb->dev = dev;
+ 	__skb_queue_head_init(&frame_list);
  
- Example:
+-	if (skb_linearize(skb))
+-		return RX_DROP_UNUSABLE;
+-
+ 	ieee80211_amsdu_to_8023s(skb, &frame_list, dev->dev_addr,
+ 				 rx->sdata->vif.type,
+ 				 rx->local->hw.extra_tx_headroom, true);
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 9277042..6a40769 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -657,6 +657,9 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
+ 	int remaining, err;
+ 	u8 dst[ETH_ALEN], src[ETH_ALEN];
  
-@@ -27,5 +32,10 @@ mwifiex {
- 	mwifiex,caldata_00_txpwrlimit_2g_cfg_set = /bits/ 8 <
- 0x01 0x00 0x06 0x00 0x08 0x02 0x89 0x01 ...>;
- 	mwifiex,chip-gpio = <3>;
-+	interrupt-parent = <&pio>;
-+	interrupts = <38 IRQ_TYPE_LEVEL_LOW>;
-+	gpios = <&pio 38 GPIO_ACTIVE_HIGH>;
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&wake_pins>;
- };
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/platform_drv.c b/drivers/net/wireless/marvell/mwifiex/platform_drv.c
-index f64a12a..2eb813c 100644
---- a/drivers/net/wireless/marvell/mwifiex/platform_drv.c
-+++ b/drivers/net/wireless/marvell/mwifiex/platform_drv.c
-@@ -18,9 +18,63 @@
- 
- struct platform_device *mwifiex_plt_dev;
- 
-+struct mwifiex_wake_dev {
-+	struct device	*dev;
-+	int		irq_wifi;
-+	bool		wake_by_wifi;
-+};
++	if (skb_linearize(skb))
++		goto out;
 +
-+static irqreturn_t mwifiex_wake_irq_wifi(int irq, void *priv)
-+{
-+	struct mwifiex_wake_dev *ctx = priv;
-+
-+	if (ctx->irq_wifi >= 0) {
-+		ctx->wake_by_wifi = true;
-+		disable_irq_nosync(ctx->irq_wifi);
-+	}
-+
-+	return IRQ_HANDLED;
-+}
-+
- static int mwifiex_plt_probe(struct platform_device *pdev)
- {
-+	int ret;
-+	struct mwifiex_wake_dev *ctx;
-+	int gpio;
-+
- 	mwifiex_plt_dev = pdev;
-+
-+	ctx = devm_kzalloc(&pdev->dev, sizeof(*ctx), GFP_KERNEL);
-+	if (!ctx)
-+		return -ENOMEM;
-+
-+	ctx->dev = &pdev->dev;
-+	ctx->irq_wifi = platform_get_irq(pdev, 0);
-+	if (ctx->irq_wifi < 0)
-+		dev_err(&pdev->dev, "Failed to get irq_wifi\n");
-+
-+	gpio = of_get_gpio(pdev->dev.of_node, 0);
-+	if (gpio_is_valid(gpio))
-+		gpio_direction_input(gpio);
-+	else
-+		dev_err(&pdev->dev, "gpio wifi is invalid\n");
-+
-+	if (ctx->irq_wifi >= 0) {
-+		ret = devm_request_irq(&pdev->dev, ctx->irq_wifi,
-+				       mwifiex_wake_irq_wifi,
-+				       IRQF_TRIGGER_LOW,
-+				       "wifi_wake", ctx);
-+		if (ret) {
-+			dev_err(&pdev->dev,
-+				"Failed to request irq_wifi %d (%d)\n",
-+				ctx->irq_wifi, ret);
-+			return -EINVAL;
-+		}
-+		disable_irq(ctx->irq_wifi);
-+	}
-+
-+	platform_set_drvdata(pdev, ctx);
-+
- 	return 0;
- }
- 
-@@ -30,6 +84,44 @@ static int mwifiex_plt_remove(struct platform_device *pdev)
- 	return 0;
- }
- 
-+#ifdef CONFIG_PM_SLEEP
-+static int mwifiex_plt_suspend(struct device *dev)
-+{
-+	struct mwifiex_wake_dev *ctx = dev_get_drvdata(dev);
-+	int ret;
-+
-+	if (ctx->irq_wifi >= 0) {
-+		ctx->wake_by_wifi = false;
-+		enable_irq(ctx->irq_wifi);
-+		ret = enable_irq_wake(ctx->irq_wifi);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static int mwifiex_plt_resume(struct device *dev)
-+{
-+	struct mwifiex_wake_dev *ctx = dev_get_drvdata(dev);
-+	int ret;
-+
-+	if (ctx->irq_wifi >= 0) {
-+		ret = disable_irq_wake(ctx->irq_wifi);
-+		if (!ctx->wake_by_wifi)
-+			disable_irq(ctx->irq_wifi);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static const struct dev_pm_ops mwifiex_plt_pm_ops = {
-+	SET_SYSTEM_SLEEP_PM_OPS(mwifiex_plt_suspend, mwifiex_plt_resume)
-+};
-+#endif /* CONFIG_PM_SLEEP */
-+
- static const struct of_device_id mwifiex_dt_match[] = {
- 	{
- 		.compatible = "marvell,mwifiex",
-@@ -45,6 +137,9 @@ static struct platform_driver mwifiex_platform_driver = {
- 	.driver = {
- 		.name	= "mwifiex_plt",
- 		.of_match_table = mwifiex_dt_match,
-+#ifdef CONFIG_PM_SLEEP
-+		.pm             = &mwifiex_plt_pm_ops,
-+#endif
- 	}
- };
- 
+ 	if (has_80211_header) {
+ 		err = ieee80211_data_to_8023(skb, addr, iftype);
+ 		if (err)
 -- 
-1.8.1.4
+2.2.2
 
