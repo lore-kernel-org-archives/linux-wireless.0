@@ -1,344 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:36844 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751385AbcBHJ0d (ORCPT
+Received: from mail-lb0-f171.google.com ([209.85.217.171]:34893 "EHLO
+	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750959AbcBBFlP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 04:26:33 -0500
-Received: by mail-lb0-f179.google.com with SMTP id dx2so79379273lbd.3
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2016 01:26:33 -0800 (PST)
+	Tue, 2 Feb 2016 00:41:15 -0500
 MIME-Version: 1.0
-In-Reply-To: <1454920723-48071-1-git-send-email-nbd@openwrt.org>
-References: <1454920723-48071-1-git-send-email-nbd@openwrt.org>
-Date: Mon, 8 Feb 2016 11:26:32 +0200
-Message-ID: <CANUX_P2qQmCPvFV4SqWxGQb_JzVqQ+_nT6LFtcYb37s5KfEfdw@mail.gmail.com> (sfid-20160208_102639_730050_E23D4AD5)
-Subject: Re: [RFC v4] mac80211: add A-MSDU tx support
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
+In-Reply-To: <20160202043448.GA9514@earth>
+References: <CANfgCY2nHh+vZ=JOimJdKKKs2JgM-c7m+3ePZtS3XhqyXNkDUQ@mail.gmail.com>
+	<CANfgCY2zVXrLGv=YDpNvqhhoj5U2kgqZ_VV1EBPVK78grra84Q@mail.gmail.com>
+	<20160202043448.GA9514@earth>
+Date: Tue, 2 Feb 2016 16:41:13 +1100
+Message-ID: <CANfgCY21zzinD48DOHaZdkGdDWpuAtJN1T8ofmdwM=P4f-7=Yw@mail.gmail.com> (sfid-20160202_064133_444021_D143355B)
+Subject: Re: linux-4.5-rc1 TI pandboard-es wifi wlcore locks and reset
+From: Ross Green <rgkernel@gmail.com>
+To: Sebastian Reichel <sre@kernel.org>
+Cc: linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 8, 2016 at 10:38 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> Requires software tx queueing support. frag_list support (for zero-copy)
-> is optional.
->
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
+I have not tried a bisect yet, but I can confirm 4.4 and 4.4.1 work.
+4.5-rc1 and 4.5-rc2 don't work.
 
+It appears the tx to device times out and then just goes into reset of
+the device to try and recover. A tx to device seems not to work.
+although somehow firmware has been loaded to the device. So some types
+of tx might work. Strange!
 
-Ok - looks fine, but... and here comes the hard stuff.
-The frame size in the PLCP is limited in a way that you can't - from a
-spec POV - enable A-MSDU for low rates. Of course, you don't want to
-do that for low rates at all regardless of the spec.
-Since you build the A-MSDU in the mac80211 Tx queue which is not aware
-of the link quality, how do we prevent A-MSDU if the rate is low /
-dropping.
-I'd even argue that when the rates get lower, you'll  have more
-packets piling up in the software queue and ... even more chance to
-get A-MSDU in the exact case where you really want to avoid it?
+There were quite a few omap and omap4 plus patches that have come
+along recently. so the culprit is in there somewhere. These machines
+have been rock solid for quite some time.
 
+If I get time, this evening, I'll see if I can give a bisect a try.
 
->  include/net/mac80211.h     |  13 ++++
->  net/mac80211/agg-tx.c      |   5 ++
->  net/mac80211/debugfs.c     |   2 +
->  net/mac80211/ieee80211_i.h |   1 +
->  net/mac80211/tx.c          | 160 +++++++++++++++++++++++++++++++++++++++++++++
->  5 files changed, 181 insertions(+)
+Regards,
+
+Ross Green
+
+On Tue, Feb 2, 2016 at 3:34 PM, Sebastian Reichel <sre@kernel.org> wrote:
+> Hi,
 >
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 5714774..8c28210 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -709,6 +709,7 @@ enum mac80211_tx_info_flags {
->   * @IEEE80211_TX_CTRL_PS_RESPONSE: This frame is a response to a poll
->   *     frame (PS-Poll or uAPSD).
->   * @IEEE80211_TX_CTRL_RATE_INJECT: This frame is injected with rate information
-> + * @IEEE80211_TX_CTRL_AMSDU: This frame is an A-MSDU frame
->   *
->   * These flags are used in tx_info->control.flags.
->   */
-> @@ -716,6 +717,7 @@ enum mac80211_tx_control_flags {
->         IEEE80211_TX_CTRL_PORT_CTRL_PROTO       = BIT(0),
->         IEEE80211_TX_CTRL_PS_RESPONSE           = BIT(1),
->         IEEE80211_TX_CTRL_RATE_INJECT           = BIT(2),
-> +       IEEE80211_TX_CTRL_AMSDU                 = BIT(3),
->  };
+> On Mon, Feb 01, 2016 at 11:38:38PM +1100, Ross Green wrote:
+>> On Mon, Jan 25, 2016 at 11:47 PM, Ross Green <rgkernel@gmail.com> wrote:
+>> > Just tried the new kernel release on faithful pandaboard es with the
+>> > new 4.5-rc1 release.
+>> >
+>> > There is a problem with the wifi modules once the modules are loaded.
+>> > Looks like the wifi firmware gets loaded put no response after that
+>> > causing recovery action.
+>> >
+>> > the kernel 4.4 works quite happily with this board.
+>> >
+>> > Here is a dmesg dump in the attachment.
+>> >
+>> > Anyone have any ideas here?
+>>
+>> Just updated to the latest linux-4.5-rc2 and same result as rc1.
+>>
+>> The wireless module loads firmware and then stalls causing a reset of
+>> the device and then continues to go through a stall and reset cycle.
+>>
+>> please find enclosed a copy of the dmesg output.
+>>
+>> Is there anyone else testing a pandaboard with linux-4.5-rc2?
+>>
+>> Just for completeness also tested the latest linux-4.4.1 kernel and
+>> found no problems with the wireless modules.
 >
->  /*
-> @@ -1964,6 +1966,12 @@ struct ieee80211_txq {
->   *     order and does not need to manage its own reorder buffer or BA session
->   *     timeout.
->   *
-> + * @IEEE80211_HW_TX_AMSDU: Hardware (or driver) supports software aggregated
-> + *     A-MSDU frames. Requires software tx queueing support.
-> + *
-> + * @IEEE80211_HW_TX_FRAG_LIST: Hardware (or driver) supports sending frag_list
-> + *     skbs, needed for zero-copy software A-MSDU.
-> + *
->   * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
->   */
->  enum ieee80211_hw_flags {
-> @@ -2001,6 +2009,8 @@ enum ieee80211_hw_flags {
->         IEEE80211_HW_BEACON_TX_STATUS,
->         IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR,
->         IEEE80211_HW_SUPPORTS_REORDERING_BUFFER,
-> +       IEEE80211_HW_TX_AMSDU,
-> +       IEEE80211_HW_TX_FRAG_LIST,
+> I can see the same problem with Nokia N950 (which uses spi connected
+> wl1271). v4.4 + wl12xx spi DT patches from Uri Mashiach worked, v4.5
+>  + the same patches does not work. I currently suspect 133b7326e960
+> or 3719c17e1816 to be the culprit. I have not yet verified it, though.
 >
->         /* keep last, obviously */
->         NUM_IEEE80211_HW_FLAGS
-> @@ -2073,6 +2083,8 @@ enum ieee80211_hw_flags {
->   *     size is smaller (an example is LinkSys WRT120N with FW v1.0.07
->   *     build 002 Jun 18 2012).
->   *
-> + * @max_tx_fragments: maximum fragments per (A-)MSDU.
-> + *
->   * @offchannel_tx_hw_queue: HW queue ID to use for offchannel TX
->   *     (if %IEEE80211_HW_QUEUE_CONTROL is set)
->   *
-> @@ -2127,6 +2139,7 @@ struct ieee80211_hw {
->         u8 max_rate_tries;
->         u8 max_rx_aggregation_subframes;
->         u8 max_tx_aggregation_subframes;
-> +       u8 max_tx_fragments;
->         u8 offchannel_tx_hw_queue;
->         u8 radiotap_mcs_details;
->         u16 radiotap_vht_details;
-> diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
-> index 4932e9f..42fa810 100644
-> --- a/net/mac80211/agg-tx.c
-> +++ b/net/mac80211/agg-tx.c
-> @@ -935,6 +935,7 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
->                                   size_t len)
->  {
->         struct tid_ampdu_tx *tid_tx;
-> +       struct ieee80211_txq *txq;
->         u16 capab, tid;
->         u8 buf_size;
->         bool amsdu;
-> @@ -945,6 +946,10 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
->         buf_size = (capab & IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK) >> 6;
->         buf_size = min(buf_size, local->hw.max_tx_aggregation_subframes);
+> Have you tried to bisect the problem?
 >
-> +       txq = sta->sta.txq[tid];
-> +       if (!amsdu && txq)
-> +               set_bit(IEEE80211_TXQ_NO_AMSDU, &to_txq_info(txq)->flags);
-> +
->         mutex_lock(&sta->ampdu_mlme.mtx);
->
->         tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
-> diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-> index e433d0c..847779d 100644
-> --- a/net/mac80211/debugfs.c
-> +++ b/net/mac80211/debugfs.c
-> @@ -127,6 +127,8 @@ static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS + 1] = {
->         FLAG(BEACON_TX_STATUS),
->         FLAG(NEEDS_UNIQUE_STA_ADDR),
->         FLAG(SUPPORTS_REORDERING_BUFFER),
-> +       FLAG(TX_AMSDU),
-> +       FLAG(TX_FRAG_LIST),
->
->         /* keep last for the build bug below */
->         (void *)0x1
-> diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-> index a49c103..e68d8db 100644
-> --- a/net/mac80211/ieee80211_i.h
-> +++ b/net/mac80211/ieee80211_i.h
-> @@ -799,6 +799,7 @@ struct mac80211_qos_map {
->  enum txq_info_flags {
->         IEEE80211_TXQ_STOP,
->         IEEE80211_TXQ_AMPDU,
-> +       IEEE80211_TXQ_NO_AMSDU,
->  };
->
->  struct txq_info {
-> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-> index 7bb67fa9..0c9cc6b 100644
-> --- a/net/mac80211/tx.c
-> +++ b/net/mac80211/tx.c
-> @@ -1324,6 +1324,10 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
->  out:
->         spin_unlock_bh(&txqi->queue.lock);
->
-> +       if (skb && skb_has_frag_list(skb) &&
-> +           !ieee80211_hw_check(&local->hw, TX_FRAG_LIST))
-> +               skb_linearize(skb);
-> +
->         return skb;
->  }
->  EXPORT_SYMBOL(ieee80211_tx_dequeue);
-> @@ -2766,6 +2770,158 @@ void ieee80211_clear_fast_xmit(struct sta_info *sta)
->                 kfree_rcu(fast_tx, rcu_head);
->  }
->
-> +static int ieee80211_amsdu_pad(struct sk_buff *skb, int subframe_len)
-> +{
-> +       int amsdu_len = subframe_len + sizeof(struct ethhdr);
-> +       int padding = (4 - amsdu_len) & 3;
-> +
-> +       if (padding)
-> +               memset(skb_put(skb, padding), 0, padding);
-> +
-> +       return padding;
-> +}
-> +
-> +static bool ieee80211_amsdu_prepare_head(struct ieee80211_sub_if_data *sdata,
-> +                                        struct ieee80211_fast_tx *fast_tx,
-> +                                        struct sk_buff *skb)
-> +{
-> +       struct ieee80211_local *local = sdata->local;
-> +       struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
-> +       struct ieee80211_hdr *hdr;
-> +       struct ethhdr amsdu_hdr;
-> +       int hdr_len = fast_tx->hdr_len - sizeof(rfc1042_header);
-> +       int subframe_len = skb->len - hdr_len;
-> +       void *data;
-> +       u8 *qc;
-> +
-> +       if (info->control.flags & IEEE80211_TX_CTRL_AMSDU)
-> +               return true;
-> +
-> +       if (skb_headroom(skb) < sizeof(amsdu_hdr) || skb_tailroom(skb) < 3) {
-> +               I802_DEBUG_INC(local->tx_expand_skb_head);
-> +
-> +               if (pskb_expand_head(skb, sizeof(amsdu_hdr), 3, GFP_ATOMIC)) {
-> +                       wiphy_debug(local->hw.wiphy,
-> +                                   "failed to reallocate TX buffer\n");
-> +                       return false;
-> +               }
-> +       }
-> +
-> +       subframe_len += ieee80211_amsdu_pad(skb, subframe_len);
-> +
-> +       amsdu_hdr.h_proto = cpu_to_be16(subframe_len);
-> +       memcpy(amsdu_hdr.h_source, skb->data + fast_tx->sa_offs, ETH_ALEN);
-> +       memcpy(amsdu_hdr.h_dest, skb->data + fast_tx->da_offs, ETH_ALEN);
-> +
-> +       data = skb_push(skb, sizeof(amsdu_hdr));
-> +       memmove(data, data + sizeof(amsdu_hdr), hdr_len);
-> +       memcpy(data + hdr_len, &amsdu_hdr, sizeof(amsdu_hdr));
-> +
-> +       hdr = data;
-> +       qc = ieee80211_get_qos_ctl(hdr);
-> +       *qc |= IEEE80211_QOS_CTL_A_MSDU_PRESENT;
-> +
-> +       info->control.flags |= IEEE80211_TX_CTRL_AMSDU;
-> +
-> +       return true;
-> +}
-> +
-> +static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
-> +                                     struct sta_info *sta,
-> +                                     struct ieee80211_fast_tx *fast_tx,
-> +                                     struct sk_buff *skb)
-> +{
-> +       struct ieee80211_local *local = sdata->local;
-> +       u8 tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
-> +       struct ieee80211_txq *txq = sta->sta.txq[tid];
-> +       struct txq_info *txqi;
-> +       struct sk_buff **frag_tail, *head;
-> +       int subframe_len = skb->len - ETH_ALEN;
-> +       u8 max_subframes = sta->sta.max_amsdu_subframes;
-> +       int max_frags = local->hw.max_tx_fragments;
-> +       int max_amsdu_len;
-> +       __be16 len;
-> +       void *data;
-> +       bool ret = false;
-> +       int n = 1, nfrags;
-> +
-> +       if (!ieee80211_hw_check(&local->hw, TX_AMSDU))
-> +               return false;
-> +
-> +       if (!txq)
-> +               return false;
-> +
-> +       txqi = to_txq_info(txq);
-> +       if (test_bit(IEEE80211_TXQ_NO_AMSDU, &txqi->flags))
-> +               return false;
-> +
-> +       spin_lock_bh(&txqi->queue.lock);
-> +
-> +       head = skb_peek_tail(&txqi->queue);
-> +       if (!head)
-> +               goto out;
-> +
-> +       if (skb->len + head->len > max_amsdu_len)
-> +               goto out;
-> +
-> +       /*
-> +        * HT A-MPDU limits maximum MPDU size to 4095 bytes. Since aggregation
-> +        * sessions are started/stopped without txq flush, use the limit here
-> +        * to avoid having to de-aggregate later.
-> +        */
-> +       if (skb->len + head->len > 4095 &&
-> +           !sta->sta.vht_cap.vht_supported)
-> +               goto out;
-> +
-> +       if (!ieee80211_amsdu_prepare_head(sdata, fast_tx, head))
-> +               goto out;
-> +
-> +       nfrags = 1 + skb_shinfo(skb)->nr_frags;
-> +       nfrags += 1 + skb_shinfo(head)->nr_frags;
-> +       frag_tail = &skb_shinfo(head)->frag_list;
-> +       while (*frag_tail) {
-> +               nfrags += 1 + skb_shinfo(*frag_tail)->nr_frags;
-> +               frag_tail = &(*frag_tail)->next;
-> +               n++;
-> +       }
-> +
-> +       if (max_subframes && n > max_subframes)
-> +               goto out;
-> +
-> +       if (max_frags && nfrags > max_frags)
-> +               goto out;
-> +
-> +       if (skb_headroom(skb) < 8 || skb_tailroom(skb) < 3) {
-> +               I802_DEBUG_INC(local->tx_expand_skb_head);
-> +
-> +               if (pskb_expand_head(skb, 8, 3, GFP_ATOMIC)) {
-> +                       wiphy_debug(local->hw.wiphy,
-> +                                   "failed to reallocate TX buffer\n");
-> +                       goto out;
-> +               }
-> +       }
-> +
-> +       subframe_len += ieee80211_amsdu_pad(skb, subframe_len);
-> +
-> +       ret = true;
-> +       data = skb_push(skb, ETH_ALEN + 2);
-> +       memmove(data, data + ETH_ALEN + 2, 2 * ETH_ALEN);
-> +
-> +       data += 2 * ETH_ALEN;
-> +       len = cpu_to_be16(subframe_len);
-> +       memcpy(data, &len, 2);
-> +       memcpy(data + 2, rfc1042_header, ETH_ALEN);
-> +
-> +       head->len += skb->len;
-> +       head->data_len += skb->len;
-> +       *frag_tail = skb;
-> +
-> +out:
-> +       spin_unlock_bh(&txqi->queue.lock);
-> +
-> +       return ret;
-> +}
-> +
->  static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
->                                 struct net_device *dev, struct sta_info *sta,
->                                 struct ieee80211_fast_tx *fast_tx,
-> @@ -2820,6 +2976,10 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
->
->         ieee80211_tx_stats(dev, skb->len + extra_head);
->
-> +       if ((hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) &&
-> +           ieee80211_amsdu_aggregate(sdata, sta, fast_tx, skb))
-> +               return true;
-> +
->         /* will not be crypto-handled beyond what we do here, so use false
->          * as the may-encrypt argument for the resize to not account for
->          * more room than we already have in 'extra_head'
-> --
-> 2.2.2
->
+> -- Sebastian
