@@ -1,160 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:9439 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:9070 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750774AbcBDJX7 (ORCPT
+	with ESMTP id S1755129AbcBBMFS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:23:59 -0500
-From: Glen Lee <glen.lee@atmel.com>
+	Tue, 2 Feb 2016 07:05:18 -0500
+From: Leo Kim <leo.kim@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 11/70] staging: wilc1000: fix WEP security bug
-Date: Thu, 4 Feb 2016 18:15:28 +0900
-Message-ID: <1454577387-509-12-git-send-email-glen.lee@atmel.com> (sfid-20160204_104501_519467_729EC8D1)
-In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH 04/26] staging: wilc1000: renames struct connect_resp_info variables
+Date: Tue, 2 Feb 2016 21:02:14 +0900
+Message-ID: <1454414556-9822-4-git-send-email-leo.kim@atmel.com> (sfid-20160202_130522_812574_0E585F3F)
+In-Reply-To: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
+References: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Station cannot connect to soft AP mode wilc when it is configured for WEP
-security. This patch fixes it by setting the key index within the key value and
-change the last else condition with DEFAULTKEY action case, and also do not use
-WILC_WFI_wep_default index to set wep key id.
+This patch renames to avoid camelcase and remove prefix names,
+changes follow are:
+ - u16capability to capability
+ - u16ConnectStatus to status
+ - u16AssocID to assoc_id
+ - pu8RespIEs to ies
+ - u16RespIEsLen to ies_len
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c         | 27 +++++++++++------------
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  9 +-------
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  1 -
- 3 files changed, 14 insertions(+), 23 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 14 +++++++-------
+ drivers/staging/wilc1000/coreconfigurator.h | 10 +++++-----
+ drivers/staging/wilc1000/host_interface.c   | 14 +++++++-------
+ 3 files changed, 19 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 4b1d92c..67bcf88 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1737,14 +1737,7 @@ static int Handle_Key(struct wilc_vif *vif,
- 			strWIDList[1].size = sizeof(char);
- 			strWIDList[1].val = (s8 *)&pstrHostIFkeyAttr->attr.wep.auth_type;
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index c456a32..e9f6262 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -367,19 +367,19 @@ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
  
--			strWIDList[2].id = (u16)WID_KEY_ID;
--			strWIDList[2].type = WID_CHAR;
--
--			strWIDList[2].val = (s8 *)&pstrHostIFkeyAttr->attr.wep.index;
--			strWIDList[2].size = sizeof(char);
--
--			pu8keybuf = kmemdup(pstrHostIFkeyAttr->attr.wep.key,
--					    pstrHostIFkeyAttr->attr.wep.key_len,
-+			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2,
- 					    GFP_KERNEL);
+ 	assoc_resp_len = (u16)buffer_len;
  
- 			if (pu8keybuf == NULL) {
-@@ -1752,15 +1745,21 @@ static int Handle_Key(struct wilc_vif *vif,
- 				return -ENOMEM;
- 			}
+-	connect_resp_info->u16ConnectStatus = get_asoc_status(buffer);
+-	if (connect_resp_info->u16ConnectStatus == SUCCESSFUL_STATUSCODE) {
+-		connect_resp_info->u16capability = get_assoc_resp_cap_info(buffer);
+-		connect_resp_info->u16AssocID = get_asoc_id(buffer);
++	connect_resp_info->status = get_asoc_status(buffer);
++	if (connect_resp_info->status == SUCCESSFUL_STATUSCODE) {
++		connect_resp_info->capability = get_assoc_resp_cap_info(buffer);
++		connect_resp_info->assoc_id = get_asoc_id(buffer);
  
-+			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
-+			pu8keybuf[1] = pstrHostIFkeyAttr->attr.wep.key_len;
-+
-+			memcpy(&pu8keybuf[2], pstrHostIFkeyAttr->attr.wep.key,
-+			       pstrHostIFkeyAttr->attr.wep.key_len);
-+
- 			kfree(pstrHostIFkeyAttr->attr.wep.key);
+ 		ies = &buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
+ 		ies_len = assoc_resp_len - (CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN);
  
--			strWIDList[3].id = (u16)WID_WEP_KEY_VALUE;
--			strWIDList[3].type = WID_STR;
--			strWIDList[3].size = pstrHostIFkeyAttr->attr.wep.key_len;
--			strWIDList[3].val = (s8 *)pu8keybuf;
-+			strWIDList[2].id = (u16)WID_WEP_KEY_VALUE;
-+			strWIDList[2].type = WID_STR;
-+			strWIDList[2].size = pstrHostIFkeyAttr->attr.wep.key_len + 2;
-+			strWIDList[2].val = (s8 *)pu8keybuf;
+-		connect_resp_info->pu8RespIEs = kmemdup(ies, ies_len, GFP_KERNEL);
+-		if (!connect_resp_info->pu8RespIEs)
++		connect_resp_info->ies = kmemdup(ies, ies_len, GFP_KERNEL);
++		if (!connect_resp_info->ies)
+ 			return -ENOMEM;
  
- 			result = wilc_send_config_pkt(vif->wilc, SET_CFG,
--						      strWIDList, 4,
-+						      strWIDList, 3,
- 						      wilc_get_vif_idx(vif));
- 			kfree(pu8keybuf);
- 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
-@@ -1797,7 +1796,7 @@ static int Handle_Key(struct wilc_vif *vif,
- 			result = wilc_send_config_pkt(vif->wilc, SET_CFG,
- 						      &wid, 1,
- 						      wilc_get_vif_idx(vif));
--		} else {
-+		} else if (pstrHostIFkeyAttr->action & DEFAULTKEY) {
- 			wid.id = (u16)WID_KEY_ID;
- 			wid.type = WID_CHAR;
- 			wid.val = (s8 *)&pstrHostIFkeyAttr->attr.wep.index;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index e6133fd..1907331 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -761,7 +761,6 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 		return s32Error;
+-		connect_resp_info->u16RespIEsLen = ies_len;
++		connect_resp_info->ies_len = ies_len;
  	}
  
--	priv->WILC_WFI_wep_default = 0;
- 	memset(priv->WILC_WFI_wep_key, 0, sizeof(priv->WILC_WFI_wep_key));
- 	memset(priv->WILC_WFI_wep_key_len, 0, sizeof(priv->WILC_WFI_wep_key_len));
+ 	*ret_connect_resp_info = connect_resp_info;
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 611486b..aa9aee6 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -98,11 +98,11 @@ typedef struct {
+ } tstrNetworkInfo;
  
-@@ -788,7 +787,6 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 				for (i = 0; i < sme->key_len; i++)
- 					PRINT_D(CORECONFIG_DBG, "WEP Key Value[%d] = %d\n", i, sme->key[i]);
- 			}
--			priv->WILC_WFI_wep_default = sme->key_idx;
- 			priv->WILC_WFI_wep_key_len[sme->key_idx] = sme->key_len;
- 			memcpy(priv->WILC_WFI_wep_key[sme->key_idx], sme->key, sme->key_len);
+ struct connect_resp_info {
+-	u16 u16capability;
+-	u16 u16ConnectStatus;
+-	u16 u16AssocID;
+-	u8 *pu8RespIEs;
+-	u16 u16RespIEsLen;
++	u16 capability;
++	u16 status;
++	u16 assoc_id;
++	u8 *ies;
++	u16 ies_len;
+ };
  
-@@ -806,7 +804,6 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 			pcgroup_encrypt_val = "WEP104";
- 			pccipher_group = "WLAN_CIPHER_SUITE_WEP104";
+ typedef struct {
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index a5042bb..f8dc657 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1493,19 +1493,19 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 					if (s32Err) {
+ 						PRINT_ER("wilc_parse_assoc_resp_info() returned error %d\n", s32Err);
+ 					} else {
+-						strConnectInfo.u16ConnectStatus = pstrConnectRespInfo->u16ConnectStatus;
++						strConnectInfo.u16ConnectStatus = pstrConnectRespInfo->status;
  
--			priv->WILC_WFI_wep_default = sme->key_idx;
- 			priv->WILC_WFI_wep_key_len[sme->key_idx] = sme->key_len;
- 			memcpy(priv->WILC_WFI_wep_key[sme->key_idx], sme->key, sme->key_len);
+ 						if (strConnectInfo.u16ConnectStatus == SUCCESSFUL_STATUSCODE) {
+-							if (pstrConnectRespInfo->pu8RespIEs) {
+-								strConnectInfo.u16RespIEsLen = pstrConnectRespInfo->u16RespIEsLen;
+-								strConnectInfo.pu8RespIEs = kmalloc(pstrConnectRespInfo->u16RespIEsLen, GFP_KERNEL);
+-								memcpy(strConnectInfo.pu8RespIEs, pstrConnectRespInfo->pu8RespIEs,
+-									    pstrConnectRespInfo->u16RespIEsLen);
++							if (pstrConnectRespInfo->ies) {
++								strConnectInfo.u16RespIEsLen = pstrConnectRespInfo->ies_len;
++								strConnectInfo.pu8RespIEs = kmalloc(pstrConnectRespInfo->ies_len, GFP_KERNEL);
++								memcpy(strConnectInfo.pu8RespIEs, pstrConnectRespInfo->ies,
++								       pstrConnectRespInfo->ies_len);
+ 							}
+ 						}
  
-@@ -986,7 +983,6 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 	case WLAN_CIPHER_SUITE_WEP40:
- 	case WLAN_CIPHER_SUITE_WEP104:
- 		if (priv->wdev->iftype == NL80211_IFTYPE_AP) {
--			priv->WILC_WFI_wep_default = key_index;
- 			priv->WILC_WFI_wep_key_len[key_index] = params->key_len;
- 			memcpy(priv->WILC_WFI_wep_key[key_index], params->key, params->key_len);
- 
-@@ -1009,7 +1005,6 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
- 			break;
- 		}
- 		if (memcmp(params->key, priv->WILC_WFI_wep_key[key_index], params->key_len)) {
--			priv->WILC_WFI_wep_default = key_index;
- 			priv->WILC_WFI_wep_key_len[key_index] = params->key_len;
- 			memcpy(priv->WILC_WFI_wep_key[key_index], params->key, params->key_len);
- 
-@@ -1336,9 +1331,7 @@ static int set_default_key(struct wiphy *wiphy, struct net_device *netdev, u8 ke
- 
- 	PRINT_D(CFG80211_DBG, "Setting default key with idx = %d\n", key_index);
- 
--	if (key_index != priv->WILC_WFI_wep_default) {
--		wilc_set_wep_default_keyid(vif, key_index);
--	}
-+	wilc_set_wep_default_keyid(vif, key_index);
- 
- 	return 0;
- }
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 9f8c79e..07eda4d 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -124,7 +124,6 @@ struct wilc_priv {
- 	struct host_if_drv *hWILCWFIDrv;
- 	struct host_if_pmkid_attr pmkid_list;
- 	struct WILC_WFI_stats netstats;
--	u8 WILC_WFI_wep_default;
- 	u8 WILC_WFI_wep_key[4][WLAN_KEY_LEN_WEP104];
- 	u8 WILC_WFI_wep_key_len[4];
- 	/* The real interface that the monitor is on */
+ 						if (pstrConnectRespInfo) {
+-							kfree(pstrConnectRespInfo->pu8RespIEs);
++							kfree(pstrConnectRespInfo->ies);
+ 							kfree(pstrConnectRespInfo);
+ 						}
+ 					}
 -- 
 1.9.1
 
