@@ -1,130 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f47.google.com ([209.85.220.47]:33193 "EHLO
-	mail-pa0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751373AbcBYAQG (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54425 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753111AbcBBIPj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2016 19:16:06 -0500
-Received: by mail-pa0-f47.google.com with SMTP id fl4so21505211pad.0
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 16:16:06 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 3/9] staging: wilc1000: rename pu8ReqIEs in struct connect_info
-Date: Thu, 25 Feb 2016 09:15:44 +0900
-Message-Id: <1456359350-17118-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20160225_011610_617138_4090AD9D)
-In-Reply-To: <1456359350-17118-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1456359350-17118-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 2 Feb 2016 03:15:39 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Stable <stable@vger.kernel.org>
+Subject: Re: [PATCH] rtlwifi: Fix warning from ieee80211_get_tx_rates() when using 5G
+References: <1454353134-29939-1-git-send-email-Larry.Finger@lwfinger.net>
+Date: Tue, 02 Feb 2016 10:15:31 +0200
+In-Reply-To: <1454353134-29939-1-git-send-email-Larry.Finger@lwfinger.net>
+	(Larry Finger's message of "Mon, 1 Feb 2016 12:58:54 -0600")
+Message-ID: <87zivjh6jg.fsf@kamboji.qca.qualcomm.com> (sfid-20160202_091545_083670_9B93B5E6)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames pu8ReqIEs to req_ies to avoid camelcase.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/coreconfigurator.h       |  2 +-
- drivers/staging/wilc1000/host_interface.c         | 24 +++++++++++------------
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  2 +-
- 3 files changed, 14 insertions(+), 14 deletions(-)
+> When using a 5G-capable device with VHT rates enabled, the following
+> warning results:
+>
+> WARNING: CPU: 3 PID: 2253 at net/mac80211/rate.c:625 ieee80211_get_tx_rates+0x22e/0x620 [mac80211]()
+> Modules linked in: rtl8821ae btcoexist rtl_pci rtlwifi fuse drbg ansi_cprng ctr ccm bnep bluetooth af_packet nfs fscache vboxpci(O) vboxnetadp(O) vboxne
+> tflt(O) vboxdrv(O) arc4 snd_hda_codec_generic x86_pkg_temp_thermal rtsx_pci_sdmmc mmc_core rtsx_pci_ms kvm_intel memstick iwlmvm kvm mac80211 snd_hda_intel snd_hda_cod
+> ec snd_hwdep snd_hda_core irqbypass snd_pcm iwlwifi crct10dif_pclmul crc32_pclmul crc32c_intel ghash_clmulni_intel aesni_intel aes_x86_64 snd_timer lrw gf128mul glue_h
+> elper ablk_helper cryptd snd cfg80211 pcspkr serio_raw e1000e rtsx_pci lpc_ich ptp xhci_pci mfd_core pps_core xhci_hcd soundcore toshiba_acpi thermal sparse_keymap wmi
+>  toshiba_bluetooth rfkill acpi_cpufreq battery ac processor dm_mod i915 i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops
+> drm sr_mod cdrom video button sg autofs4 [last unloaded: rtlwifi]
+> CPU: 3 PID: 2253 Comm: Timer Tainted: G        W  O    4.5.0-rc1-wl+ #79
+> Hardware name: TOSHIBA TECRA A50-A/TECRA A50-A, BIOS Version 4.20   04/17/2014
+>   ffffffffa05c4be6 ffff8802262036d8 ffffffff813d7912 0000000000000000
+>   ffff880226203710 ffffffff8106bcb6 ffff8800c6831300 ffff8800c6831330
+>   0000000000000000 ffff8800c683133c ffff880065923638 ffff880226203720
+> Call Trace:
+>   <IRQ>  [<ffffffff813d7912>] dump_stack+0x4b/0x79
+>   [<ffffffff8106bcb6>] warn_slowpath_common+0x86/0xc0
+>   [<ffffffff8106bdaa>] warn_slowpath_null+0x1a/0x20
+>   [<ffffffffa05511ee>] ieee80211_get_tx_rates+0x22e/0x620 [mac80211]
+>   [<ffffffffa0782232>] ? rtl_is_special_data+0x32/0x240 [rtlwifi]
+>   [<ffffffffa055209e>] ? rate_control_get_rate+0xce/0x150 [mac80211]
+>   [<ffffffff810bfc7d>] ? trace_hardirqs_on+0xd/0x10
+>   [<ffffffff81071cc5>] ? __local_bh_enable_ip+0x65/0xd0
+> --- traceback terminated here ---
+>
+> The problem is that IEEE80211_TX_RC_VHT_MCS is not set in the rate flags.
+>
+> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+> Tested-by: Linus Torvalds <torvalds@linux-foundation.org>
+> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org>
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index a32f466..5ef4fd1 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -107,7 +107,7 @@ struct connect_resp_info {
- 
- struct connect_info {
- 	u8 bssid[6];
--	u8 *pu8ReqIEs;
-+	u8 *req_ies;
- 	size_t ReqIEsLen;
- 	u8 *pu8RespIEs;
- 	u16 u16RespIEsLen;
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 4a1bad8..55ed96e 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1159,8 +1159,8 @@ ERRORHANDLER:
- 
- 			if (pstrHostIFconnectAttr->ies) {
- 				strConnectInfo.ReqIEsLen = pstrHostIFconnectAttr->ies_len;
--				strConnectInfo.pu8ReqIEs = kmalloc(pstrHostIFconnectAttr->ies_len, GFP_KERNEL);
--				memcpy(strConnectInfo.pu8ReqIEs,
-+				strConnectInfo.req_ies = kmalloc(pstrHostIFconnectAttr->ies_len, GFP_KERNEL);
-+				memcpy(strConnectInfo.req_ies,
- 				       pstrHostIFconnectAttr->ies,
- 				       pstrHostIFconnectAttr->ies_len);
- 			}
-@@ -1171,8 +1171,8 @@ ERRORHANDLER:
- 							       NULL,
- 							       pstrHostIFconnectAttr->arg);
- 			hif_drv->hif_state = HOST_IF_IDLE;
--			kfree(strConnectInfo.pu8ReqIEs);
--			strConnectInfo.pu8ReqIEs = NULL;
-+			kfree(strConnectInfo.req_ies);
-+			strConnectInfo.req_ies = NULL;
- 
- 		} else {
- 			netdev_err(vif->ndev, "Connect callback is NULL\n");
-@@ -1266,8 +1266,8 @@ static s32 Handle_ConnectTimeout(struct wilc_vif *vif)
- 
- 		if (hif_drv->usr_conn_req.ies) {
- 			strConnectInfo.ReqIEsLen = hif_drv->usr_conn_req.ies_len;
--			strConnectInfo.pu8ReqIEs = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
--			memcpy(strConnectInfo.pu8ReqIEs,
-+			strConnectInfo.req_ies = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
-+			memcpy(strConnectInfo.req_ies,
- 			       hif_drv->usr_conn_req.ies,
- 			       hif_drv->usr_conn_req.ies_len);
- 		}
-@@ -1278,8 +1278,8 @@ static s32 Handle_ConnectTimeout(struct wilc_vif *vif)
- 						  NULL,
- 						  hif_drv->usr_conn_req.arg);
- 
--		kfree(strConnectInfo.pu8ReqIEs);
--		strConnectInfo.pu8ReqIEs = NULL;
-+		kfree(strConnectInfo.req_ies);
-+		strConnectInfo.req_ies = NULL;
- 	} else {
- 		netdev_err(vif->ndev, "Connect callback is NULL\n");
- 	}
-@@ -1503,8 +1503,8 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
- 
- 			if (hif_drv->usr_conn_req.ies) {
- 				strConnectInfo.ReqIEsLen = hif_drv->usr_conn_req.ies_len;
--				strConnectInfo.pu8ReqIEs = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
--				memcpy(strConnectInfo.pu8ReqIEs,
-+				strConnectInfo.req_ies = kmalloc(hif_drv->usr_conn_req.ies_len, GFP_KERNEL);
-+				memcpy(strConnectInfo.req_ies,
- 				       hif_drv->usr_conn_req.ies,
- 				       hif_drv->usr_conn_req.ies_len);
- 			}
-@@ -1533,8 +1533,8 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
- 			kfree(strConnectInfo.pu8RespIEs);
- 			strConnectInfo.pu8RespIEs = NULL;
- 
--			kfree(strConnectInfo.pu8ReqIEs);
--			strConnectInfo.pu8ReqIEs = NULL;
-+			kfree(strConnectInfo.req_ies);
-+			strConnectInfo.req_ies = NULL;
- 			hif_drv->usr_conn_req.ssid_len = 0;
- 			kfree(hif_drv->usr_conn_req.ssid);
- 			hif_drv->usr_conn_req.ssid = NULL;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 1605199..7260f1d 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -544,7 +544,7 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
- 		}
- 
- 		cfg80211_connect_result(dev, pstrConnectInfo->bssid,
--					pstrConnectInfo->pu8ReqIEs, pstrConnectInfo->ReqIEsLen,
-+					pstrConnectInfo->req_ies, pstrConnectInfo->ReqIEsLen,
- 					pstrConnectInfo->pu8RespIEs, pstrConnectInfo->u16RespIEsLen,
- 					u16ConnectStatus, GFP_KERNEL);
- 	} else if (enuConnDisconnEvent == CONN_DISCONN_EVENT_DISCONN_NOTIF)    {
+Isn't the commit log somewhat misleading as VHT was completely _broken_?
+Do you mind if I change the commit log to this:
+
+----------------------------------------------------------------------
+rtlwifi: fix broken VHT support
+
+When using a 5G-capable device with VHT (802.11ac) rates enabled was not
+working (packets were not delivered) and the following mac80211 warning
+was printed:
+
+...
+----------------------------------------------------------------------
+
 -- 
-2.7.1
-
+Kalle Valo
