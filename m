@@ -1,67 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f171.google.com ([209.85.213.171]:37551 "EHLO
-	mail-ig0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753954AbcBBW0V (ORCPT
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:34308 "EHLO
+	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933093AbcBBPtB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 17:26:21 -0500
-Received: by mail-ig0-f171.google.com with SMTP id 5so22685100igt.0
-        for <linux-wireless@vger.kernel.org>; Tue, 02 Feb 2016 14:26:20 -0800 (PST)
+	Tue, 2 Feb 2016 10:49:01 -0500
+Date: Wed, 3 Feb 2016 00:48:55 +0900
+From: Byeoungwook Kim <quddnr145@gmail.com>
+To: kvalo@codeaurora.org
+Cc: Larry.Finger@lwfinger.net, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] rtlwifi: Fix reusable codes in core.c
+Message-ID: <20160202154855.GA8990@gmail.com> (sfid-20160202_164930_124944_407C5529)
 MIME-Version: 1.0
-In-Reply-To: <1454416992-7400-1-git-send-email-rakhish1994@gmail.com>
-References: <1454416992-7400-1-git-send-email-rakhish1994@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 3 Feb 2016 09:26:01 +1100
-Message-ID: <CAGRGNgV7zFMLXfGU=azT6J2jo10MXH==qQJw+kRz8a5GOVjGig@mail.gmail.com> (sfid-20160202_232624_457184_CFACED8E)
-Subject: Re: [PATCH] Staging: rtl8723au: core: rtw_ieee80211: Fixed a coding
- style Warning.
-To: Rakhi Sharma <rakhish1994@gmail.com>
-Cc: Joe Perches <joe@perches.com>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Rakhi,
+rtl_*_delay() functions were reused same codes about addr variable.
+So i have converted to rtl_addr_delay() from code about addr variable.
 
-On Tue, Feb 2, 2016 at 11:43 PM, Rakhi Sharma <rakhish1994@gmail.com> wrote:
-> Fixed a braces style warning.
-> Warning: braces {} are not necessary for single statement blocks.
->
-> Signed-off-by: Rakhi Sharma <rakhish1994@gmail.com>
+Conditional codes in rtl_addr_delay() were improved in readability and
+performance by using switch codes.
 
-Looks good.
+Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/core.c | 48 +++++++++++------------------
+ 1 file changed, 18 insertions(+), 30 deletions(-)
 
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-> ---
->  drivers/staging/rtl8723au/core/rtw_ieee80211.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
->
-> diff --git a/drivers/staging/rtl8723au/core/rtw_ieee80211.c b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
-> index 07a6490..5089ae8 100644
-> --- a/drivers/staging/rtl8723au/core/rtw_ieee80211.c
-> +++ b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
-> @@ -176,10 +176,8 @@ u8 *rtw_get_ie23a(u8 *pbuf, int index, int *len, int limit)
->         int tmp, i;
->         u8 *p;
->
-> -       if (limit < 1) {
-> -
-> +       if (limit < 1)
->                 return NULL;
-> -       }
->
->         p = pbuf;
->         i = 0;
-> --
-> 1.9.1
->
-
-
-
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index 4ae421e..c1193d1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -37,36 +37,34 @@
+ 
+ void rtl_addr_delay(u32 addr)
+ {
+-	if (addr == 0xfe)
++	switch (addr) {
++	case 0xfe:
+ 		mdelay(50);
+-	else if (addr == 0xfd)
++		break;
++	case 0xfd:
+ 		mdelay(5);
+-	else if (addr == 0xfc)
++		break;
++	case 0xfc:
+ 		mdelay(1);
+-	else if (addr == 0xfb)
++		break;
++	case 0xfb:
+ 		udelay(50);
+-	else if (addr == 0xfa)
++		break;
++	case 0xfa:
+ 		udelay(5);
+-	else if (addr == 0xf9)
++		break;
++	case 0xf9:
+ 		udelay(1);
++		break;
++	};
+ }
+ EXPORT_SYMBOL(rtl_addr_delay);
+ 
+ void rtl_rfreg_delay(struct ieee80211_hw *hw, enum radio_path rfpath, u32 addr,
+ 		     u32 mask, u32 data)
+ {
+-	if (addr == 0xfe) {
+-		mdelay(50);
+-	} else if (addr == 0xfd) {
+-		mdelay(5);
+-	} else if (addr == 0xfc) {
+-		mdelay(1);
+-	} else if (addr == 0xfb) {
+-		udelay(50);
+-	} else if (addr == 0xfa) {
+-		udelay(5);
+-	} else if (addr == 0xf9) {
+-		udelay(1);
++	if (addr >= 0xf9 && addr <= 0xfe) {
++		rtl_addr_delay(addr);
+ 	} else {
+ 		rtl_set_rfreg(hw, rfpath, addr, mask, data);
+ 		udelay(1);
+@@ -76,18 +74,8 @@ EXPORT_SYMBOL(rtl_rfreg_delay);
+ 
+ void rtl_bb_delay(struct ieee80211_hw *hw, u32 addr, u32 data)
+ {
+-	if (addr == 0xfe) {
+-		mdelay(50);
+-	} else if (addr == 0xfd) {
+-		mdelay(5);
+-	} else if (addr == 0xfc) {
+-		mdelay(1);
+-	} else if (addr == 0xfb) {
+-		udelay(50);
+-	} else if (addr == 0xfa) {
+-		udelay(5);
+-	} else if (addr == 0xf9) {
+-		udelay(1);
++	if (addr >= 0xf9 && addr <= 0xfe) {
++		rtl_addr_delay(addr);
+ 	} else {
+ 		rtl_set_bbreg(hw, addr, MASKDWORD, data);
+ 		udelay(1);
 -- 
-Julian Calaby
+2.5.0
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
