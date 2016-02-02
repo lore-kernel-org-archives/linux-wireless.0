@@ -1,70 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f174.google.com ([209.85.217.174]:32838 "EHLO
-	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965115AbcBQQuX (ORCPT
+Received: from mail-io0-f193.google.com ([209.85.223.193]:35000 "EHLO
+	mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750973AbcBBCWQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2016 11:50:23 -0500
-Received: by mail-lb0-f174.google.com with SMTP id x4so13233422lbm.0
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2016 08:50:23 -0800 (PST)
-Date: Wed, 17 Feb 2016 11:50:23 -0500
-From: German <gentgerman@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Wrong wireless nick card name loaded on reboot
-Message-ID: <20160217115023.1e0d0908@libertarian.asterius.net> (sfid-20160217_175028_442353_B30F2C41)
-In-Reply-To: <56C499E0.3070909@lwfinger.net>
-References: <20160217060909.694a9aff@libertarian.asterius.net>
-	<56C499E0.3070909@lwfinger.net>
+	Mon, 1 Feb 2016 21:22:16 -0500
+Received: by mail-io0-f193.google.com with SMTP id m139so87763ioe.2
+        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 18:22:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <1454372892-4962-1-git-send-email-rakhish1994@gmail.com>
+References: <1454372892-4962-1-git-send-email-rakhish1994@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 2 Feb 2016 13:21:56 +1100
+Message-ID: <CAGRGNgUEX2mJWBywwcqE21xiHZubmf=eER6DNHLgeYpB-At+aw@mail.gmail.com> (sfid-20160202_032219_563640_B2FFD186)
+Subject: Re: [PATCH v2 5/5] Staging: rtl8723au: core: rtw_ieee80211: Fixed a
+ coding style Warning.
+To: Rakhi Sharma <rakhish1994@gmail.com>
+Cc: Joe Perches <joe@perches.com>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 17 Feb 2016 10:03:44 -0600
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+Hi Rakhi,
 
-> On 02/17/2016 05:09 AM, German wrote:
-> > Hi list,
-> >
-> > A couple of days ago I asked why my pc changes the wireless card
-> > name. It switches between AR9285 ( right) and AR5008 ( wrong).
-> > Someone suggested  that this is because another kernel module is
-> > loaded by mistake. Well, it is not the case. When system identified
-> > with AR9285, it loads ath9k and I can connect to the router. When
-> > system identifies my card as AR5008, no kernel module is present at
-> > all ( lspci -k). The wrong card name occurs only when system
-> > rebooted. If I gracefully shut down the system, it always comes up
-> > with a right name for the card ( AR9285). So, how to force the
-> > system identify my card right no matter if I reboot or shut down?
-> > Thank you.
-> 
-> I would like to help you, but I do not remember your earlier message.
-> Why did you not reply to the earlier one so that everything would be
-> in the same thread? That would have made searching the archives
-> easier. As a result, I may be duplicating some previous information.
+On Tue, Feb 2, 2016 at 11:28 AM, Rakhi Sharma <rakhish1994@gmail.com> wrote:
+> Fixed a braces style warning.
+> Warning: braces {} are not necessary for single statement blocks.
+>
+> Signed-off-by: Rakhi Sharma <rakhish1994@gmail.com>
+> ---
+> Changes in v2:
+>   - remove a blank line. To make it readable.
+> ---
+>  drivers/staging/rtl8723au/core/rtw_ieee80211.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_ieee80211.c b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+> index 365f780..55a5078 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_ieee80211.c
+> @@ -177,8 +177,8 @@ u8 *rtw_get_ie23a(u8 *pbuf, int index, int *len, int limit)
+>         u8 *p;
+>
+>         if (limit < 1)
+> -
+>                 return NULL;
+> +
 
-Sorry Larry, this was my repost of Debian user mailing list. My
-apologies for the confusion.
+This looks line an incremental patch on top of your original one.
 
+You need to resubmit the original patch with this change incorporated.
 
-> 
-> The selection of a driver for a given device comes from the PCI ID.
-> If your system is showing the wrong device, then you may have
-> hardware problems such that the PCI ID is reported incorrectly. To
-> test this, please provide the output of the command
-> 
-> lspci -nn | grep Network
-> 
-> for the "good" and "bad" case.
-> 
-> Larry
-> 
-> 
+Thanks,
 
-This is the "good" case:
+-- 
+Julian Calaby
 
-lspci -nn | grep Network
-01:00.0 Network controller [0280]: Qualcomm Atheros AR9285 Wireless
-Network Adapter (PCI-Express) [168c:002b] (rev 01)
-
-I will reboot now to "bad" case and post the output. Thank you Larry!
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
