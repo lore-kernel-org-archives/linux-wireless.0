@@ -1,89 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:9846 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755243AbcBBMIR (ORCPT
+Received: from mail-ig0-f195.google.com ([209.85.213.195]:33688 "EHLO
+	mail-ig0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753530AbcBBXNJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 07:08:17 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH 24/26] staging: wilc1000: remove unused debug tag
-Date: Tue, 2 Feb 2016 21:02:34 +0900
-Message-ID: <1454414556-9822-24-git-send-email-leo.kim@atmel.com> (sfid-20160202_130820_916307_F9E9CDFF)
-In-Reply-To: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
-References: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
+	Tue, 2 Feb 2016 18:13:09 -0500
+Received: by mail-ig0-f195.google.com with SMTP id ks5so1576628igb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 02 Feb 2016 15:13:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1454414556-9822-2-git-send-email-leo.kim@atmel.com>
+References: <1454414556-9822-1-git-send-email-leo.kim@atmel.com> <1454414556-9822-2-git-send-email-leo.kim@atmel.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 3 Feb 2016 10:12:49 +1100
+Message-ID: <CAGRGNgXsB+hqX=u74vSTazc6jDdR50Kf+H-gT4au3og7kWD_Wg@mail.gmail.com> (sfid-20160203_001313_932648_199B6E4E)
+Subject: Re: [PATCH 02/26] staging: wilc1000: removes function 'wilc_dealloc_assoc_resp_info()'
+To: Leo Kim <leo.kim@atmel.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <Chris.Park@atmel.com>,
+	"Abozaeid, Adham" <adham.abozaeid@atmel.com>,
+	"Ferre, Nicolas" <Nicolas.FERRE@atmel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+Hi Leo,
 
-This patch remove unused debug tag INT_DBG, LOCK_DBG, BUS_DBG,
-MEM_DBG and FIRM_DBG
+On Tue, Feb 2, 2016 at 11:02 PM, Leo Kim <leo.kim@atmel.com> wrote:
+> This patch removes function wilc_dealloc_assoc_resp_info()'.
+> Does not need this function which only free memory.
+> Therefore, this function is removed and changed directly with kfree.
+>
+> Signed-off-by: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan_common.h | 15 ---------------
- drivers/staging/wilc1000/wilc_debugfs.c      |  5 +++--
- 2 files changed, 3 insertions(+), 17 deletions(-)
+Nice work!
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index 63d0ec5..758633e 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -5,29 +5,14 @@ enum debug_region {
- 	Generic_debug = 0,
- 	Hostapd_debug,
- 	CFG80211_debug,
--	Interrupt_debug,
--	Lock_debug,
--	Tcp_enhance,
--	Spin_debug,
--
- 	Init_debug,
--	Bus_debug,
--	Mem_debug,
--	Firmware_debug,
- 	COMP = 0xFFFFFFFF,
- };
- 
- #define GENERIC_DBG             (1 << Generic_debug)
- #define HOSTAPD_DBG             (1 << Hostapd_debug)
- #define CFG80211_DBG            (1 << CFG80211_debug)
--#define INT_DBG                 (1 << Interrupt_debug)
--#define LOCK_DBG                (1 << Lock_debug)
--#define TCP_ENH                 (1 << Tcp_enhance)
--#define SPIN_DEBUG              (1 << Spin_debug)
- #define INIT_DBG                (1 << Init_debug)
--#define BUS_DBG                 (1 << Bus_debug)
--#define MEM_DBG                 (1 << Mem_debug)
--#define FIRM_DBG                (1 << Firmware_debug)
- 
- #if defined (WILC_DEBUGFS)
- extern atomic_t WILC_REGION;
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index 63b66b2..13330c9 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -24,9 +24,10 @@ static struct dentry *wilc_dir;
-  * --------------------------------------------------------------------------------
-  */
- 
--#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | CFG80211_DBG | INT_DBG | LOCK_DBG | INIT_DBG | BUS_DBG | MEM_DBG)
-+#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | CFG80211_DBG | INIT_DBG)
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
--atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | GENERIC_DBG | CFG80211_DBG | FIRM_DBG | HOSTAPD_DBG);
-+atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | GENERIC_DBG | CFG80211_DBG |
-+				   HOSTAPD_DBG);
- EXPORT_SYMBOL_GPL(WILC_REGION);
- atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
- EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
+> ---
+>  drivers/staging/wilc1000/coreconfigurator.c | 22 ----------------------
+>  drivers/staging/wilc1000/coreconfigurator.h |  1 -
+>  drivers/staging/wilc1000/host_interface.c   |  4 ++--
+>  3 files changed, 2 insertions(+), 25 deletions(-)
+>
+> diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+> index 81dd22e..c86278d 100644
+> --- a/drivers/staging/wilc1000/coreconfigurator.c
+> +++ b/drivers/staging/wilc1000/coreconfigurator.c
+> @@ -386,25 +386,3 @@ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
+>
+>         return 0;
+>  }
+> -
+> -s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *connect_resp_info)
+> -{
+> -       s32 result = 0;
+> -
+> -       if (connect_resp_info) {
+> -               if (connect_resp_info->pu8RespIEs) {
+> -                       kfree(connect_resp_info->pu8RespIEs);
+> -                       connect_resp_info->pu8RespIEs = NULL;
+> -               } else {
+> -                       result = -EFAULT;
+> -               }
+> -
+> -               kfree(connect_resp_info);
+> -               connect_resp_info = NULL;
+> -
+> -       } else {
+> -               result = -EFAULT;
+> -       }
+> -
+> -       return result;
+> -}
+> diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+> index 23775e4..d42f47c 100644
+> --- a/drivers/staging/wilc1000/coreconfigurator.h
+> +++ b/drivers/staging/wilc1000/coreconfigurator.h
+> @@ -123,7 +123,6 @@ typedef struct {
+>  s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info);
+>  s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
+>                                tstrConnectRespInfo **ret_connect_resp_info);
+> -s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *connect_resp_info);
+>  void wilc_scan_complete_received(struct wilc *wilc, u8 *pu8Buffer,
+>                                  u32 u32Length);
+>  void wilc_network_info_received(struct wilc *wilc, u8 *pu8Buffer,
+> diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+> index 3ce3a7c..15c266b 100644
+> --- a/drivers/staging/wilc1000/host_interface.c
+> +++ b/drivers/staging/wilc1000/host_interface.c
+> @@ -1505,8 +1505,8 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+>                                                 }
+>
+>                                                 if (pstrConnectRespInfo) {
+> -                                                       wilc_dealloc_assoc_resp_info(pstrConnectRespInfo);
+> -                                                       pstrConnectRespInfo = NULL;
+> +                                                       kfree(pstrConnectRespInfo->pu8RespIEs);
+> +                                                       kfree(pstrConnectRespInfo);
+>                                                 }
+>                                         }
+>                                 }
+> --
+> 1.9.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-1.9.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
