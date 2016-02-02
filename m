@@ -1,33 +1,22 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:29248 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751814AbcBXNwZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2016 08:52:25 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Mani, Raja" <rmani@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/2] add hw param and wmi changes for qca4019
-Date: Wed, 24 Feb 2016 13:51:47 +0000
-Message-ID: <87fuwii5ce.fsf@kamboji.qca.qualcomm.com> (sfid-20160224_145228_146381_21CBD27C)
-References: <1454065512-8238-1-git-send-email-rmani@qti.qualcomm.com>
-In-Reply-To: <1454065512-8238-1-git-send-email-rmani@qti.qualcomm.com> (Raja
-	Mani's message of "Fri, 29 Jan 2016 16:35:10 +0530")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:32920 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932526AbcBBPSR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Feb 2016 10:18:17 -0500
+Message-ID: <1454426294.2926.12.camel@sipsolutions.net> (sfid-20160202_161820_431303_800EB425)
+Subject: Re: [PATCH 1/3] mac80211: move A-MSDU skb_linearize call to
+ ieee80211_amsdu_to_8023s
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Date: Tue, 02 Feb 2016 16:18:14 +0100
+In-Reply-To: <1454420350-8313-1-git-send-email-nbd@openwrt.org>
+References: <1454420350-8313-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Raja Mani <rmani@qti.qualcomm.com> writes:
+all three applied, I fixed some whitespace damage (bad indent) on the
+last patch
 
-> This patch series includes hw param and wmi changes needed for qca4019.
->
-> Raja Mani (2):
->   ath10k: add qca4019 hw params
->   ath10k: populate qca4019 fw specific wmi init params
-
-Both applied, thanks.
-
--- 
-Kalle Valo
+johannes
