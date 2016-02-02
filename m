@@ -1,153 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39916 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752710AbcB2WFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:53 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 017/113] rtl8xxxu: Add rtl8723bu_radioa_1t_init_table
-Date: Mon, 29 Feb 2016 17:04:15 -0500
-Message-Id: <1456783551-28315-18-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230602_965806_8FD2C0D2)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:9428 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755083AbcBBMGq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Feb 2016 07:06:46 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 11/26] staging: wilc1000: renames u16BeaconPeriod of connect_resp_info structure
+Date: Tue, 2 Feb 2016 21:02:21 +0900
+Message-ID: <1454414556-9822-11-git-send-email-leo.kim@atmel.com> (sfid-20160202_130649_646231_8D6FD39D)
+In-Reply-To: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
+References: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+This patch renames u16BeaconPeriod variable to beacon_period.
 
-Add 8723bu 1T radio init table. The vendor driver indicates that some
-registers need special treatment for TFBGA90, TFBGA80, and TFBGA79
-packaging. However the vendor driver never actually checks the package
-type, so just stick to default values here.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 78 ++++++++++++++++++++++++
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |  6 +-
- 2 files changed, 82 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c       | 2 +-
+ drivers/staging/wilc1000/coreconfigurator.h       | 2 +-
+ drivers/staging/wilc1000/host_interface.c         | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 4 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 88af2e8..2979a5e 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -792,6 +792,75 @@ static struct rtl8xxxu_rfregval rtl8723au_radioa_1t_init_table[] = {
- 	{0xff, 0xffffffff}
- };
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 4a82576..b4f7ec3 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -330,7 +330,7 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
  
-+static struct rtl8xxxu_rfregval rtl8723bu_radioa_1t_init_table[] = {
-+	{0x00, 0x00010000}, {0xb0, 0x000dffe0},
-+	{0xfe, 0x00000000}, {0xfe, 0x00000000},
-+	{0xfe, 0x00000000}, {0xb1, 0x00000018},
-+	{0xfe, 0x00000000}, {0xfe, 0x00000000},
-+	{0xfe, 0x00000000}, {0xb2, 0x00084c00},
-+	{0xb5, 0x0000d2cc}, {0xb6, 0x000925aa},
-+	{0xb7, 0x00000010}, {0xb8, 0x0000907f},
-+	{0x5c, 0x00000002}, {0x7c, 0x00000002},
-+	{0x7e, 0x00000005}, {0x8b, 0x0006fc00},
-+	{0xb0, 0x000ff9f0}, {0x1c, 0x000739d2},
-+	{0x1e, 0x00000000}, {0xdf, 0x00000780},
-+	{0x50, 0x00067435},
-+	/*
-+	 * The 8723bu vendor driver indicates that bit 8 should be set in
-+	 * 0x51 for package types TFBGA90, TFBGA80, and TFBGA79. However
-+	 * they never actually check the package type - and just default
-+	 * to not setting it.
-+	 */
-+	{0x51, 0x0006b04e},
-+	{0x52, 0x000007d2}, {0x53, 0x00000000},
-+	{0x54, 0x00050400}, {0x55, 0x0004026e},
-+	{0xdd, 0x0000004c}, {0x70, 0x00067435},
-+	/*
-+	 * 0x71 has same package type condition as for register 0x51
-+	 */
-+	{0x71, 0x0006b04e},
-+	{0x72, 0x000007d2}, {0x73, 0x00000000},
-+	{0x74, 0x00050400}, {0x75, 0x0004026e},
-+	{0xef, 0x00000100}, {0x34, 0x0000add7},
-+	{0x35, 0x00005c00}, {0x34, 0x00009dd4},
-+	{0x35, 0x00005000}, {0x34, 0x00008dd1},
-+	{0x35, 0x00004400}, {0x34, 0x00007dce},
-+	{0x35, 0x00003800}, {0x34, 0x00006cd1},
-+	{0x35, 0x00004400}, {0x34, 0x00005cce},
-+	{0x35, 0x00003800}, {0x34, 0x000048ce},
-+	{0x35, 0x00004400}, {0x34, 0x000034ce},
-+	{0x35, 0x00003800}, {0x34, 0x00002451},
-+	{0x35, 0x00004400}, {0x34, 0x0000144e},
-+	{0x35, 0x00003800}, {0x34, 0x00000051},
-+	{0x35, 0x00004400}, {0xef, 0x00000000},
-+	{0xef, 0x00000100}, {0xed, 0x00000010},
-+	{0x44, 0x0000add7}, {0x44, 0x00009dd4},
-+	{0x44, 0x00008dd1}, {0x44, 0x00007dce},
-+	{0x44, 0x00006cc1}, {0x44, 0x00005cce},
-+	{0x44, 0x000044d1}, {0x44, 0x000034ce},
-+	{0x44, 0x00002451}, {0x44, 0x0000144e},
-+	{0x44, 0x00000051}, {0xef, 0x00000000},
-+	{0xed, 0x00000000}, {0x7f, 0x00020080},
-+	{0xef, 0x00002000}, {0x3b, 0x000380ef},
-+	{0x3b, 0x000302fe}, {0x3b, 0x00028ce6},
-+	{0x3b, 0x000200bc}, {0x3b, 0x000188a5},
-+	{0x3b, 0x00010fbc}, {0x3b, 0x00008f71},
-+	{0x3b, 0x00000900}, {0xef, 0x00000000},
-+	{0xed, 0x00000001}, {0x40, 0x000380ef},
-+	{0x40, 0x000302fe}, {0x40, 0x00028ce6},
-+	{0x40, 0x000200bc}, {0x40, 0x000188a5},
-+	{0x40, 0x00010fbc}, {0x40, 0x00008f71},
-+	{0x40, 0x00000900}, {0xed, 0x00000000},
-+	{0x82, 0x00080000}, {0x83, 0x00008000},
-+	{0x84, 0x00048d80}, {0x85, 0x00068000},
-+	{0xa2, 0x00080000}, {0xa3, 0x00008000},
-+	{0xa4, 0x00048d80}, {0xa5, 0x00068000},
-+	{0xed, 0x00000002}, {0xef, 0x00000002},
-+	{0x56, 0x00000032}, {0x76, 0x00000032},
-+	{0x01, 0x00000780},
-+	{0xff, 0xffffffff}
-+};
-+
- static struct rtl8xxxu_rfregval rtl8192cu_radioa_2t_init_table[] = {
- 	{0x00, 0x00030159}, {0x01, 0x00031284},
- 	{0x02, 0x00098000}, {0x03, 0x00018c63},
-@@ -1270,6 +1339,11 @@ static u32 rtl8xxxu_read_rfreg(struct rtl8xxxu_priv *priv,
- 	return retval;
- }
+ 		index = MAC_HDR_LEN + TIME_STAMP_LEN;
  
-+/*
-+ * The RTL8723BU driver indicates that registers 0xb2 and 0xb6 can
-+ * have write issues in high temperature conditions. We may have to
-+ * retry writing them.
-+ */
- static int rtl8xxxu_write_rfreg(struct rtl8xxxu_priv *priv,
- 				enum rtl8xxxu_rfpath path, u8 reg, u32 data)
- {
-@@ -4562,6 +4636,10 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 		rftable = rtl8723au_radioa_1t_init_table;
- 		ret = rtl8xxxu_init_phy_rf(priv, rftable, RF_A);
- 		break;
-+	case 0x8723b:
-+		rftable = rtl8723bu_radioa_1t_init_table;
-+		ret = rtl8xxxu_init_phy_rf(priv, rftable, RF_A);
-+		break;
- 	case 0x8188c:
- 		if (priv->hi_pa)
- 			rftable = rtl8188ru_radioa_1t_highpa_table;
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 2055048..326fda5 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -537,8 +537,10 @@ struct rtl8723bu_efuse {
- 	u8 res9[2];
- 	u8 vendor_name[0x07];
- 	u8 res10[2];
--	u8 device_name[0x14];		/* 0xe8 */
--	u8 res11[0xd4];
-+	u8 device_name[0x14];
-+	u8 res11[0xcf];
-+	u8 package_type;		/* 0x1fb */
-+	u8 res12[0x4];
- };
+-		network_info->u16BeaconPeriod = get_beacon_period(msa + index);
++		network_info->beacon_period = get_beacon_period(msa + index);
  
- struct rtl8192eu_efuse {
+ 		index += BEACON_INTERVAL_LEN + CAP_INFO_LEN;
+ 
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 5404162..2fbffe8 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -82,7 +82,7 @@ struct network_info {
+ 	u8 ssid[MAX_SSID_LEN];
+ 	u8 ssid_len;
+ 	u8 bssid[6];
+-	u16 u16BeaconPeriod;
++	u16 beacon_period;
+ 	u8 u8DtimPeriod;
+ 	u8 u8channel;
+ 	unsigned long u32TimeRcvdInScanCached;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index b465e9e..99bc890 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4277,7 +4277,7 @@ static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo)
+ 	pNewJoinBssParam = kzalloc(sizeof(struct join_bss_param), GFP_KERNEL);
+ 	if (pNewJoinBssParam) {
+ 		pNewJoinBssParam->dtim_period = ptstrNetworkInfo->u8DtimPeriod;
+-		pNewJoinBssParam->beacon_period = ptstrNetworkInfo->u16BeaconPeriod;
++		pNewJoinBssParam->beacon_period = ptstrNetworkInfo->beacon_period;
+ 		pNewJoinBssParam->cap_info = ptstrNetworkInfo->cap_info;
+ 		memcpy(pNewJoinBssParam->au8bssid, ptstrNetworkInfo->bssid, 6);
+ 		memcpy((u8 *)pNewJoinBssParam->ssid, ptstrNetworkInfo->ssid,
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index c8b9a97..086ec07 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -252,7 +252,7 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
+ 								  network_info->bssid,
+ 								  network_info->u64Tsf,
+ 								  network_info->cap_info,
+-								  network_info->u16BeaconPeriod,
++								  network_info->beacon_period,
+ 								  (const u8 *)network_info->pu8IEs,
+ 								  (size_t)network_info->u16IEsLen,
+ 								  (s32)rssi * 100,
+@@ -373,7 +373,7 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
+ 	       pstrNetworkInfo->ssid, pstrNetworkInfo->ssid_len);
+ 	memcpy(last_scanned_shadow[ap_index].bssid,
+ 	       pstrNetworkInfo->bssid, ETH_ALEN);
+-	last_scanned_shadow[ap_index].u16BeaconPeriod = pstrNetworkInfo->u16BeaconPeriod;
++	last_scanned_shadow[ap_index].beacon_period = pstrNetworkInfo->beacon_period;
+ 	last_scanned_shadow[ap_index].u8DtimPeriod = pstrNetworkInfo->u8DtimPeriod;
+ 	last_scanned_shadow[ap_index].u8channel = pstrNetworkInfo->u8channel;
+ 	last_scanned_shadow[ap_index].u16IEsLen = pstrNetworkInfo->u16IEsLen;
+@@ -431,7 +431,7 @@ static void CfgScanResult(enum scan_event scan_event,
+ 					   channel->center_freq,
+ 					   (s32)network_info->rssi * 100,
+ 					   network_info->cap_info,
+-					   network_info->u16BeaconPeriod);
++					   network_info->beacon_period);
+ 
+ 				if (network_info->bNewNetwork) {
+ 					if (priv->u32RcvdChCount < MAX_NUM_SCANNED_NETWORKS) {
+@@ -449,7 +449,7 @@ static void CfgScanResult(enum scan_event scan_event,
+ 										  network_info->bssid,
+ 										  network_info->u64Tsf,
+ 										  network_info->cap_info,
+-										  network_info->u16BeaconPeriod,
++										  network_info->beacon_period,
+ 										  (const u8 *)network_info->pu8IEs,
+ 										  (size_t)network_info->u16IEsLen,
+ 										  (s32)network_info->rssi * 100,
 -- 
-2.5.0
+1.9.1
 
