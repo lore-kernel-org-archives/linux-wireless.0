@@ -1,97 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f175.google.com ([209.85.223.175]:36042 "EHLO
-	mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756956AbcBDXLf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 18:11:35 -0500
-Received: by mail-io0-f175.google.com with SMTP id g73so110774902ioe.3
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 15:11:35 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAHp75VfEi4umnfQoDdySn2X6ZEyL1_szzdwvjBgKy=-Uz9KbOg@mail.gmail.com>
-References: <1454619643-14444-1-git-send-email-keescook@chromium.org>
-	<1454619643-14444-4-git-send-email-keescook@chromium.org>
-	<CAHp75VfEi4umnfQoDdySn2X6ZEyL1_szzdwvjBgKy=-Uz9KbOg@mail.gmail.com>
-Date: Thu, 4 Feb 2016 15:11:34 -0800
-Message-ID: <CAGXu5jKox2cJv7OX=qkO8js0eot_+6PkNPh7gy6ZuEeqjp97xg@mail.gmail.com> (sfid-20160205_001157_667323_4B7FF75A)
-Subject: Re: [PATCH v2 3/4] lib: add "on"/"off" support to kstrtobool
-From: Kees Cook <keescook@chromium.org>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Joe Perches <joe@perches.com>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Steve French <sfrench@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, linux-cifs@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:32803 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932526AbcBBPKm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Feb 2016 10:10:42 -0500
+Message-ID: <1454425840.2926.8.camel@sipsolutions.net> (sfid-20160202_161045_903638_60C6EC1B)
+Subject: Re: [PATCH v2] cfg80211: basic support for PBSS network type
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lior David <liord@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org,
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Dedy Lansky <dlansky@codeaurora.org>,
+	Maya Erez <merez@codeaurora.org>,
+	Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Date: Tue, 02 Feb 2016 16:10:40 +0100
+In-Reply-To: <1454425741.2926.7.camel@sipsolutions.net> (sfid-20160202_160909_821108_CDA961D3)
+References: <56961335.4040801@codeaurora.org>
+	 <1453807346.2759.29.camel@sipsolutions.net>
+	 <56A767E4.7090906@codeaurora.org>
+	 <1453812869.2759.38.camel@sipsolutions.net>
+	 <56A9D831.7070909@codeaurora.org>
+	 <1454425741.2926.7.camel@sipsolutions.net>
+	 (sfid-20160202_160909_821108_CDA961D3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 4, 2016 at 3:00 PM, Andy Shevchenko
-<andy.shevchenko@gmail.com> wrote:
-> On Thu, Feb 4, 2016 at 11:00 PM, Kees Cook <keescook@chromium.org> wrote:
->> Add support for "on" and "off" when converting to boolean.
->>
->> Signed-off-by: Kees Cook <keescook@chromium.org>
->> ---
->>  lib/kstrtox.c | 14 ++++++++++++++
->>  1 file changed, 14 insertions(+)
->>
->> diff --git a/lib/kstrtox.c b/lib/kstrtox.c
->> index e18f088704d7..09e83a19a96d 100644
->> --- a/lib/kstrtox.c
->> +++ b/lib/kstrtox.c
->> @@ -347,6 +347,20 @@ int kstrtobool(const char *s, unsigned int base, bool *res)
->
-> Forgot update description?
+On Tue, 2016-02-02 at 16:09 +0100, Johannes Berg wrote:
+> On Thu, 2016-01-28 at 10:58 +0200, Lior David wrote:
+> > PBSS (Personal Basic Service Set) is a new BSS type for DMG
+> > networks. It is similar to infrastructure BSS, having an AP-like
+> > entity called PCP (PBSS Control Point), but it has few differences.
+> > PBSS support is mandatory for 11ad devices.
+> > 
+> > Add support for PBSS by introducing a new PBSS flag attribute.
+> > The PBSS flag is used in the START_AP command to request starting
+> > a PCP instead of an AP, and in the CONNECT command to request
+> > connecting to a PCP instead of an AP.
+> > 
+> Applied.
+> 
 
-Argh, thank you. Good eye. Sent another update.
+Actually, one more question: Why does the kernel have to know at
+*connect* time that it should be a PBSS? It could tell that from the
+scan results, by looking for PBSS if it can't find AP in there, no?
 
--Kees
-
->
->>         case '0':
->>                 *res = false;
->>                 return 0;
->> +       case 'o':
->> +       case 'O':
->> +               switch (s[1]) {
->> +               case 'n':
->> +               case 'N':
->> +                       *res = true;
->> +                       return 0;
->> +               case 'f':
->> +               case 'F':
->> +                       *res = false;
->> +                       return 0;
->> +               default:
->> +                       break;
->> +               }
->>         default:
->>                 break;
->>         }
->> --
->> 2.6.3
->>
->
->
->
-> --
-> With Best Regards,
-> Andy Shevchenko
-
-
-
--- 
-Kees Cook
-Chrome OS & Brillo Security
+johannes
