@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:6842 "EHLO mga03.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:60955 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759551AbcBYHnp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2016 02:43:45 -0500
-Date: Thu, 25 Feb 2016 08:43:44 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Cong Wang <xiyou.wangcong@gmail.com>
-Cc: netdev@vger.kernel.org, dvyukov@google.com,
-	linux-wireless@vger.kernel.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Subject: Re: [PATCH v2 net] nfc: close a race condition in llcp_sock_getname()
-Message-ID: <20160225074344.GB9068@zurbaran.home> (sfid-20160225_084403_964937_CEDF5649)
-References: <1454096260-20396-1-git-send-email-xiyou.wangcong@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1454096260-20396-1-git-send-email-xiyou.wangcong@gmail.com>
+	id S932667AbcBBO6Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 2 Feb 2016 09:58:25 -0500
+Message-ID: <1454425100.2926.3.camel@sipsolutions.net> (sfid-20160202_155837_455736_F3AE9C22)
+Subject: Re: [PATCH v4] mac80211: minstrel: Change expected throughput unit
+ back to Kbps
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Sven Eckelmann <sven.eckelmann@open-mesh.com>,
+	linux-wireless@vger.kernel.org
+Cc: thomas@net.t-labs.tu-berlin.de, antonio@open-mesh.com,
+	nbd@nbd.name, Sven Eckelmann <sven@open-mesh.com>
+Date: Tue, 02 Feb 2016 15:58:20 +0100
+In-Reply-To: <1454397146-2884-1-git-send-email-sven@open-mesh.com> (sfid-20160202_081232_977019_5B1D36A5)
+References: <1454397146-2884-1-git-send-email-sven@open-mesh.com>
+	 (sfid-20160202_081232_977019_5B1D36A5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Cong,
-
-On Fri, Jan 29, 2016 at 11:37:40AM -0800, Cong Wang wrote:
-> llcp_sock_getname() checks llcp_sock->dev to make sure
-> llcp_sock is already connected or bound, however, we could
-> be in the middle of llcp_sock_bind() where llcp_sock->dev
-> is bound and llcp_sock->service_name_len is set,
-> but llcp_sock->service_name is not, in this case we would
-> lead to copy some bytes from a NULL pointer.
+On Tue, 2016-02-02 at 08:12 +0100, Sven Eckelmann wrote:
+> The change from cur_tp to the function
+> minstrel_get_tp_avg/minstrel_ht_get_tp_avg changed the unit used for
+> the
+> current throughput. For example in minstrel_ht the correct
+> conversion between them would be:
 > 
-> Just lock the sock since this is not a hot path anyway.
+>     mrs->cur_tp / 10 == minstrel_ht_get_tp_avg(..).
 > 
-> Reported-by: Dmitry Vyukov <dvyukov@google.com>
-> Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
-> Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-> Cc: Samuel Ortiz <sameo@linux.intel.com>
-> Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
-> ---
->  net/nfc/llcp_sock.c | 6 ++++++
->  1 file changed, 6 insertions(+)
-Applied as well, thanks.
+> This factor 10 must also be included in the calculation of
+> minstrel_get_expected_throughput and
+> minstrel_ht_get_expected_throughput to
+> return values with the unit [Kbps] instead of [10Kbps]. Otherwise
+> routing
+> algorithms like B.A.T.M.A.N. V will make incorrect decision based on
+> these
+> values. Its kernel based implementation expects expected_throughput
+> always
+> to have the unit [Kbps] and not sometimes [10Kbps] and sometimes
+> [Kbps].
+> 
+Applied; also added Cc stable.
 
-Cheers,
-Samuel.
+johannes
