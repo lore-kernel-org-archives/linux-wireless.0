@@ -1,216 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:33830 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934371AbcBDWs6 (ORCPT
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:33277 "EHLO
+	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933217AbcBBPgr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 17:48:58 -0500
-Received: by mail-ig0-f179.google.com with SMTP id ik10so27299150igb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 14:48:58 -0800 (PST)
+	Tue, 2 Feb 2016 10:36:47 -0500
+Subject: Re: [PATCH] rtlwifi: Fix warning from ieee80211_get_tx_rates() when
+ using 5G
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <1454353134-29939-1-git-send-email-Larry.Finger@lwfinger.net>
+ <87zivjh6jg.fsf@kamboji.qca.qualcomm.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Stable <stable@vger.kernel.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <56B0CD0C.9010702@lwfinger.net> (sfid-20160202_163652_724960_B638309A)
+Date: Tue, 2 Feb 2016 09:36:44 -0600
 MIME-Version: 1.0
-In-Reply-To: <CAHp75Vc37Q6GtReEZwbiYUeZqVh7iwDr8dk6Xg4kq0sKWi=41Q@mail.gmail.com>
-References: <1454619643-14444-1-git-send-email-keescook@chromium.org>
-	<1454619643-14444-2-git-send-email-keescook@chromium.org>
-	<CAHp75Vc37Q6GtReEZwbiYUeZqVh7iwDr8dk6Xg4kq0sKWi=41Q@mail.gmail.com>
-Date: Thu, 4 Feb 2016 14:48:57 -0800
-Message-ID: <CAGXu5jJXekvEy8BjqzGG1Jk7oGFzkap=ivOZ6+kFyiqbTeuzJw@mail.gmail.com> (sfid-20160204_235044_070850_413F8027)
-Subject: Re: [PATCH v2 1/4] lib: move strtobool to kstrtobool
-From: Kees Cook <keescook@chromium.org>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Joe Perches <joe@perches.com>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Steve French <sfrench@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, linux-cifs@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <87zivjh6jg.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 4, 2016 at 2:43 PM, Andy Shevchenko
-<andy.shevchenko@gmail.com> wrote:
-> On Thu, Feb 4, 2016 at 11:00 PM, Kees Cook <keescook@chromium.org> wrote:
->> Create the kstrtobool_from_user helper and moves strtobool logic into
->> the new kstrtobool (matching all the other kstrto* functions). Provides
->> an inline wrapper for existing strtobool callers.
+On 02/02/2016 02:15 AM, Kalle Valo wrote:
+> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>
+>> When using a 5G-capable device with VHT rates enabled, the following
+>> warning results:
 >>
->> Signed-off-by: Kees Cook <keescook@chromium.org>
+>> WARNING: CPU: 3 PID: 2253 at net/mac80211/rate.c:625 ieee80211_get_tx_rates+0x22e/0x620 [mac80211]()
+>> Modules linked in: rtl8821ae btcoexist rtl_pci rtlwifi fuse drbg ansi_cprng ctr ccm bnep bluetooth af_packet nfs fscache vboxpci(O) vboxnetadp(O) vboxne
+>> tflt(O) vboxdrv(O) arc4 snd_hda_codec_generic x86_pkg_temp_thermal rtsx_pci_sdmmc mmc_core rtsx_pci_ms kvm_intel memstick iwlmvm kvm mac80211 snd_hda_intel snd_hda_cod
+>> ec snd_hwdep snd_hda_core irqbypass snd_pcm iwlwifi crct10dif_pclmul crc32_pclmul crc32c_intel ghash_clmulni_intel aesni_intel aes_x86_64 snd_timer lrw gf128mul glue_h
+>> elper ablk_helper cryptd snd cfg80211 pcspkr serio_raw e1000e rtsx_pci lpc_ich ptp xhci_pci mfd_core pps_core xhci_hcd soundcore toshiba_acpi thermal sparse_keymap wmi
+>>   toshiba_bluetooth rfkill acpi_cpufreq battery ac processor dm_mod i915 i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops
+>> drm sr_mod cdrom video button sg autofs4 [last unloaded: rtlwifi]
+>> CPU: 3 PID: 2253 Comm: Timer Tainted: G        W  O    4.5.0-rc1-wl+ #79
+>> Hardware name: TOSHIBA TECRA A50-A/TECRA A50-A, BIOS Version 4.20   04/17/2014
+>>    ffffffffa05c4be6 ffff8802262036d8 ffffffff813d7912 0000000000000000
+>>    ffff880226203710 ffffffff8106bcb6 ffff8800c6831300 ffff8800c6831330
+>>    0000000000000000 ffff8800c683133c ffff880065923638 ffff880226203720
+>> Call Trace:
+>>    <IRQ>  [<ffffffff813d7912>] dump_stack+0x4b/0x79
+>>    [<ffffffff8106bcb6>] warn_slowpath_common+0x86/0xc0
+>>    [<ffffffff8106bdaa>] warn_slowpath_null+0x1a/0x20
+>>    [<ffffffffa05511ee>] ieee80211_get_tx_rates+0x22e/0x620 [mac80211]
+>>    [<ffffffffa0782232>] ? rtl_is_special_data+0x32/0x240 [rtlwifi]
+>>    [<ffffffffa055209e>] ? rate_control_get_rate+0xce/0x150 [mac80211]
+>>    [<ffffffff810bfc7d>] ? trace_hardirqs_on+0xd/0x10
+>>    [<ffffffff81071cc5>] ? __local_bh_enable_ip+0x65/0xd0
+>> --- traceback terminated here ---
+>>
+>> The problem is that IEEE80211_TX_RC_VHT_MCS is not set in the rate flags.
+>>
+>> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
+>> Tested-by: Linus Torvalds <torvalds@linux-foundation.org>
+>> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> Cc: Stable <stable@vger.kernel.org>
 >
-> Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+> Isn't the commit log somewhat misleading as VHT was completely _broken_?
+> Do you mind if I change the commit log to this:
 >
-> One minor below.
+> ----------------------------------------------------------------------
+> rtlwifi: fix broken VHT support
+>
+> When using a 5G-capable device with VHT (802.11ac) rates enabled was not
+> working (packets were not delivered) and the following mac80211 warning
+> was printed:
 
-Thanks!
+That change is fine.
 
->
->> ---
->>  include/linux/kernel.h |  3 +++
->>  include/linux/string.h |  6 +++++-
->>  lib/kstrtox.c          | 35 +++++++++++++++++++++++++++++++++++
->>  lib/string.c           | 29 -----------------------------
->>  4 files changed, 43 insertions(+), 30 deletions(-)
->>
->> diff --git a/include/linux/kernel.h b/include/linux/kernel.h
->> index f31638c6e873..cdc25f47a23f 100644
->> --- a/include/linux/kernel.h
->> +++ b/include/linux/kernel.h
->> @@ -357,6 +357,7 @@ int __must_check kstrtou16(const char *s, unsigned int base, u16 *res);
->>  int __must_check kstrtos16(const char *s, unsigned int base, s16 *res);
->>  int __must_check kstrtou8(const char *s, unsigned int base, u8 *res);
->>  int __must_check kstrtos8(const char *s, unsigned int base, s8 *res);
->> +int __must_check kstrtobool(const char *s, unsigned int base, bool *res);
->>
->>  int __must_check kstrtoull_from_user(const char __user *s, size_t count, unsigned int base, unsigned long long *res);
->>  int __must_check kstrtoll_from_user(const char __user *s, size_t count, unsigned int base, long long *res);
->> @@ -368,6 +369,8 @@ int __must_check kstrtou16_from_user(const char __user *s, size_t count, unsigne
->>  int __must_check kstrtos16_from_user(const char __user *s, size_t count, unsigned int base, s16 *res);
->>  int __must_check kstrtou8_from_user(const char __user *s, size_t count, unsigned int base, u8 *res);
->>  int __must_check kstrtos8_from_user(const char __user *s, size_t count, unsigned int base, s8 *res);
->
->> +int __must_check kstrtobool_from_user(const char __user *s, size_t count,
->> +                                     unsigned int base, bool *res);
->
-> We already are using long lines here, perhaps do the same?
-
-I went back and forth on that, and decided that between checkpatch
-yelling at me, and trying to be an agent of less entropy, I wrapped
-the definition. I am fine either way, though.
-
--Kees
-
->
->>
->>  static inline int __must_check kstrtou64_from_user(const char __user *s, size_t count, unsigned int base, u64 *res)
->>  {
->> diff --git a/include/linux/string.h b/include/linux/string.h
->> index 9eebc66d957a..d2fb21b1081d 100644
->> --- a/include/linux/string.h
->> +++ b/include/linux/string.h
->> @@ -128,7 +128,11 @@ extern char **argv_split(gfp_t gfp, const char *str, int *argcp);
->>  extern void argv_free(char **argv);
->>
->>  extern bool sysfs_streq(const char *s1, const char *s2);
->> -extern int strtobool(const char *s, bool *res);
->> +extern int kstrtobool(const char *s, unsigned int base, bool *res);
->> +static inline int strtobool(const char *s, bool *res)
->> +{
->> +       return kstrtobool(s, 0, res);
->> +}
->>
->>  #ifdef CONFIG_BINARY_PRINTF
->>  int vbin_printf(u32 *bin_buf, size_t size, const char *fmt, va_list args);
->> diff --git a/lib/kstrtox.c b/lib/kstrtox.c
->> index 94be244e8441..e18f088704d7 100644
->> --- a/lib/kstrtox.c
->> +++ b/lib/kstrtox.c
->> @@ -321,6 +321,40 @@ int kstrtos8(const char *s, unsigned int base, s8 *res)
->>  }
->>  EXPORT_SYMBOL(kstrtos8);
->>
->> +/**
->> + * kstrtobool - convert common user inputs into boolean values
->> + * @s: input string
->> + * @base: ignored
->> + * @res: result
->> + *
->> + * This routine returns 0 iff the first character is one of 'Yy1Nn0'.
->> + * Otherwise it will return -EINVAL.  Value pointed to by res is
->> + * updated upon finding a match.
->> + */
->> +int kstrtobool(const char *s, unsigned int base, bool *res)
->> +{
->> +       if (!s)
->> +               return -EINVAL;
->> +
->> +       switch (s[0]) {
->> +       case 'y':
->> +       case 'Y':
->> +       case '1':
->> +               *res = true;
->> +               return 0;
->> +       case 'n':
->> +       case 'N':
->> +       case '0':
->> +               *res = false;
->> +               return 0;
->> +       default:
->> +               break;
->> +       }
->> +
->> +       return -EINVAL;
->> +}
->> +EXPORT_SYMBOL(kstrtobool);
->> +
->>  #define kstrto_from_user(f, g, type)                                   \
->>  int f(const char __user *s, size_t count, unsigned int base, type *res)        \
->>  {                                                                      \
->> @@ -345,3 +379,4 @@ kstrto_from_user(kstrtou16_from_user,       kstrtou16,      u16);
->>  kstrto_from_user(kstrtos16_from_user,  kstrtos16,      s16);
->>  kstrto_from_user(kstrtou8_from_user,   kstrtou8,       u8);
->>  kstrto_from_user(kstrtos8_from_user,   kstrtos8,       s8);
->> +kstrto_from_user(kstrtobool_from_user, kstrtobool,     bool);
->> diff --git a/lib/string.c b/lib/string.c
->> index 0323c0d5629a..1a90db9bc6e1 100644
->> --- a/lib/string.c
->> +++ b/lib/string.c
->> @@ -630,35 +630,6 @@ bool sysfs_streq(const char *s1, const char *s2)
->>  }
->>  EXPORT_SYMBOL(sysfs_streq);
->>
->> -/**
->> - * strtobool - convert common user inputs into boolean values
->> - * @s: input string
->> - * @res: result
->> - *
->> - * This routine returns 0 iff the first character is one of 'Yy1Nn0'.
->> - * Otherwise it will return -EINVAL.  Value pointed to by res is
->> - * updated upon finding a match.
->> - */
->> -int strtobool(const char *s, bool *res)
->> -{
->> -       switch (s[0]) {
->> -       case 'y':
->> -       case 'Y':
->> -       case '1':
->> -               *res = true;
->> -               break;
->> -       case 'n':
->> -       case 'N':
->> -       case '0':
->> -               *res = false;
->> -               break;
->> -       default:
->> -               return -EINVAL;
->> -       }
->> -       return 0;
->> -}
->> -EXPORT_SYMBOL(strtobool);
->> -
->>  #ifndef __HAVE_ARCH_MEMSET
->>  /**
->>   * memset - Fill a region of memory with the given value
->> --
->> 2.6.3
->>
->
->
->
-> --
-> With Best Regards,
-> Andy Shevchenko
+Larry
 
 
-
--- 
-Kees Cook
-Chrome OS & Brillo Security
