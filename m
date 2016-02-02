@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40514 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030335AbcBRHcZ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:3767 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754458AbcBBLTN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 02:32:25 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH 15/24] staging: wilc1000: coreconfigurator.c: removes unnecessary log messages
-Date: Thu, 18 Feb 2016 16:27:26 +0900
-Message-ID: <1455780455-21365-15-git-send-email-leo.kim@atmel.com> (sfid-20160218_083232_863110_C5DB9641)
-In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+	Tue, 2 Feb 2016 06:19:13 -0500
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/5] ath10k: add basic hostq support
+References: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
+	<1453382007-24622-1-git-send-email-michal.kazior@tieto.com>
+Date: Tue, 2 Feb 2016 13:19:03 +0200
+In-Reply-To: <1453382007-24622-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Thu, 21 Jan 2016 14:13:22 +0100")
+Message-ID: <87r3gvgy1k.fsf@kamboji.qca.qualcomm.com> (sfid-20160202_121916_131962_AA98E50F)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-This patch removes unnecessary log messages.
+> There's a new firmware feature which uses a shared
+> DMA memory so host can share it's per-sta per-tid
+> queue size which is then subsequently used for
+> firmware to assist in deciding which frames to put
+> on the intermediate host-device tx queue.
+>
+> This patchset adds only basic support to make
+> the firmware supporting the feature happy and
+> running at all. Without it firmware would freeze
+> shortly after booting.
+>
+> More patches will follow some time later to add
+> the "new data path" logic.
+>
+>
+> v2:
+>  * fix gfp allocation [Ben]
+>
+>
+> Michal Kazior (5):
+>   ath10k: rename some HTT events
+>   ath10k: add new htt definitions
+>   ath10k: add new FW_FEATURE_PEER_FLOW_CONTROL
+>   ath10k: clean up cont frag desc init code
+>   ath10k: implement basic support for new tx path firmware
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Applied, thanks.
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 3a76586..25dc108 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -284,10 +284,8 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
- 
- 	msg_type = msg_buffer[0];
- 
--	if ('N' != msg_type) {
--		PRINT_ER("Received Message format incorrect.\n");
-+	if ('N' != msg_type)
- 		return -EFAULT;
--	}
- 
- 	msg_id = msg_buffer[1];
- 	msg_len = MAKE_WORD16(msg_buffer[2], msg_buffer[3]);
 -- 
-1.9.1
-
+Kalle Valo
