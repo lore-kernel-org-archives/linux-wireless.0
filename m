@@ -1,150 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:58838 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:9095 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933075AbcBDJch (ORCPT
+	with ESMTP id S1755129AbcBBMFY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:32:37 -0500
-From: Glen Lee <glen.lee@atmel.com>
+	Tue, 2 Feb 2016 07:05:24 -0500
+From: Leo Kim <leo.kim@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 51/70] staging: wilc1000: renames u16CapInfo of connect_resp_info structure
-Date: Thu, 4 Feb 2016 18:24:12 +0900
-Message-ID: <1454577871-667-12-git-send-email-glen.lee@atmel.com> (sfid-20160204_103242_783084_7F67E948)
-In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH 05/26] staging: wilc1000: remove typedef from pstrNetworkInfo
+Date: Tue, 2 Feb 2016 21:02:15 +0900
+Message-ID: <1454414556-9822-5-git-send-email-leo.kim@atmel.com> (sfid-20160202_130528_489193_44CA7213)
+In-Reply-To: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
+References: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
-
-This patch renames u16CapInfo variable to cap_info.
+This patch removes typedef from the struct pstrNetworkInfo and
+renames it to network_info.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c       |  2 +-
- drivers/staging/wilc1000/coreconfigurator.h       |  2 +-
- drivers/staging/wilc1000/host_interface.c         |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 42 +++++++++++++++++------
- 4 files changed, 35 insertions(+), 13 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c       |  7 ++++---
+ drivers/staging/wilc1000/coreconfigurator.h       |  7 ++++---
+ drivers/staging/wilc1000/host_interface.c         |  6 +++---
+ drivers/staging/wilc1000/host_interface.h         |  4 ++--
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++++-------
+ 5 files changed, 20 insertions(+), 18 deletions(-)
 
 diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 1e8c56b..6c40d36 100644
+index e9f6262..0d0a4ec 100644
 --- a/drivers/staging/wilc1000/coreconfigurator.c
 +++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -314,7 +314,7 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
- 		msa = &wid_val[1];
+@@ -270,9 +270,10 @@ static u8 get_current_channel_802_11n(u8 *pu8msa, u16 rx_len)
+ 	return 0;
+ }
  
- 		rx_len = wid_len - 1;
--		network_info->u16CapInfo = get_cap_info(msa);
-+		network_info->cap_info = get_cap_info(msa);
- 		network_info->u32Tsf = get_beacon_timestamp_lo(msa);
+-s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
++s32 wilc_parse_network_info(u8 *msg_buffer,
++			    struct network_info **ret_network_info)
+ {
+-	tstrNetworkInfo *network_info = NULL;
++	struct network_info *network_info = NULL;
+ 	u8 msg_type = 0;
+ 	u8 msg_id = 0;
+ 	u16 msg_len = 0;
+@@ -304,7 +305,7 @@ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
+ 		u32 tsf_lo;
+ 		u32 tsf_hi;
  
- 		tsf_lo = get_beacon_timestamp_lo(msa);
+-		network_info = kzalloc(sizeof(tstrNetworkInfo), GFP_KERNEL);
++		network_info = kzalloc(sizeof(*network_info), GFP_KERNEL);
+ 		if (!network_info)
+ 			return -ENOMEM;
+ 
 diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index e386e85..ace50d8 100644
+index aa9aee6..214b43b 100644
 --- a/drivers/staging/wilc1000/coreconfigurator.h
 +++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -78,7 +78,7 @@ typedef struct {
+@@ -76,7 +76,7 @@ typedef struct {
+ 	s8 as8RSSI[NUM_RSSI];
+ } tstrRSSI;
  
- struct network_info {
- 	s8 rssi;
--	u16 u16CapInfo;
-+	u16 cap_info;
+-typedef struct {
++struct network_info {
+ 	s8 s8rssi;
+ 	u16 u16CapInfo;
  	u8 au8ssid[MAX_SSID_LEN];
- 	u8 u8SsidLen;
- 	u8 au8bssid[6];
+@@ -95,7 +95,7 @@ typedef struct {
+ 	void *pJoinParams;
+ 	tstrRSSI strRssi;
+ 	u64 u64Tsf;
+-} tstrNetworkInfo;
++};
+ 
+ struct connect_resp_info {
+ 	u16 capability;
+@@ -120,7 +120,8 @@ typedef struct {
+ 	size_t ie_len;
+ } tstrDisconnectNotifInfo;
+ 
+-s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info);
++s32 wilc_parse_network_info(u8 *msg_buffer,
++			    struct network_info **ret_network_info);
+ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
+ 			       struct connect_resp_info **ret_connect_resp_info);
+ void wilc_scan_complete_received(struct wilc *wilc, u8 *pu8Buffer,
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index f40b5a7..d56a33c 100644
+index f8dc657..355bee7 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4277,7 +4277,7 @@ static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo)
- 	if (pNewJoinBssParam) {
- 		pNewJoinBssParam->dtim_period = ptstrNetworkInfo->u8DtimPeriod;
- 		pNewJoinBssParam->beacon_period = ptstrNetworkInfo->u16BeaconPeriod;
--		pNewJoinBssParam->cap_info = ptstrNetworkInfo->u16CapInfo;
-+		pNewJoinBssParam->cap_info = ptstrNetworkInfo->cap_info;
- 		memcpy(pNewJoinBssParam->au8bssid, ptstrNetworkInfo->au8bssid, 6);
- 		memcpy((u8 *)pNewJoinBssParam->ssid, ptstrNetworkInfo->au8ssid, ptstrNetworkInfo->u8SsidLen + 1);
- 		pNewJoinBssParam->ssid_len = ptstrNetworkInfo->u8SsidLen;
+@@ -272,7 +272,7 @@ static struct wilc_vif *join_req_vif;
+ #define FLUSHED_JOIN_REQ 1
+ #define FLUSHED_BYTE_POS 79
+ 
+-static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo);
++static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo);
+ 
+ /* The u8IfIdx starts from 0 to NUM_CONCURRENT_IFC -1, but 0 index used as
+  * special purpose in wilc device, so we add 1 to the index to starts from 1.
+@@ -1352,7 +1352,7 @@ static s32 Handle_RcvdNtwrkInfo(struct wilc_vif *vif,
+ 	u32 i;
+ 	bool bNewNtwrkFound;
+ 	s32 result = 0;
+-	tstrNetworkInfo *pstrNetworkInfo = NULL;
++	struct network_info *pstrNetworkInfo = NULL;
+ 	void *pJoinParams = NULL;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+@@ -4256,7 +4256,7 @@ s32 wilc_setup_multicast_filter(struct wilc_vif *vif, bool bIsEnabled,
+ 	return result;
+ }
+ 
+-static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
++static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo)
+ {
+ 	struct join_bss_param *pNewJoinBssParam = NULL;
+ 	u8 *pu8IEs;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 7724ade..6fae371 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -168,8 +168,8 @@ enum KEY_TYPE {
+ 	PMKSA,
+ };
+ 
+-typedef void (*wilc_scan_result)(enum scan_event, tstrNetworkInfo *,
+-				  void *, void *);
++typedef void (*wilc_scan_result)(enum scan_event, struct network_info *,
++				 void *, void *);
+ 
+ typedef void (*wilc_connect_result)(enum conn_event,
+ 				     tstrConnectInfo *,
 diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index f0c6c9f..578a3f2 100644
+index 4310abe..8a007743 100644
 --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
 +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -246,9 +246,17 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
- 				rssi = get_rssi_avg(network_info);
- 				if (memcmp("DIRECT-", network_info->au8ssid, 7) ||
- 				    direct_scan) {
--					bss = cfg80211_inform_bss(wiphy, channel, CFG80211_BSS_FTYPE_UNKNOWN, network_info->au8bssid, network_info->u64Tsf, network_info->u16CapInfo,
--								  network_info->u16BeaconPeriod, (const u8 *)network_info->pu8IEs,
--								  (size_t)network_info->u16IEsLen, (((s32)rssi) * 100), GFP_KERNEL);
-+					bss = cfg80211_inform_bss(wiphy,
-+								  channel,
-+								  CFG80211_BSS_FTYPE_UNKNOWN,
-+								  network_info->au8bssid,
-+								  network_info->u64Tsf,
-+								  network_info->cap_info,
-+								  network_info->u16BeaconPeriod,
-+								  (const u8 *)network_info->pu8IEs,
-+								  (size_t)network_info->u16IEsLen,
-+								  (s32)rssi * 100,
-+								  GFP_KERNEL);
- 					cfg80211_put_bss(wiphy, bss);
- 				}
- 			}
-@@ -358,7 +366,7 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
+@@ -93,7 +93,7 @@ static const struct wiphy_wowlan_support wowlan_support = {
+ extern int wilc_mac_open(struct net_device *ndev);
+ extern int wilc_mac_close(struct net_device *ndev);
+ 
+-static tstrNetworkInfo last_scanned_shadow[MAX_NUM_SCANNED_NETWORKS_SHADOW];
++static struct network_info last_scanned_shadow[MAX_NUM_SCANNED_NETWORKS_SHADOW];
+ static u32 last_scanned_cnt;
+ struct timer_list wilc_during_ip_timer;
+ static struct timer_list hAgingTimer;
+@@ -206,7 +206,7 @@ static void clear_shadow_scan(void)
  	}
- 	last_scanned_shadow[ap_index].strRssi.u8Index = rssi_index;
- 	last_scanned_shadow[ap_index].rssi = pstrNetworkInfo->rssi;
--	last_scanned_shadow[ap_index].u16CapInfo = pstrNetworkInfo->u16CapInfo;
-+	last_scanned_shadow[ap_index].cap_info = pstrNetworkInfo->cap_info;
- 	last_scanned_shadow[ap_index].u8SsidLen = pstrNetworkInfo->u8SsidLen;
- 	memcpy(last_scanned_shadow[ap_index].au8ssid,
- 	       pstrNetworkInfo->au8ssid, pstrNetworkInfo->u8SsidLen);
-@@ -414,9 +422,15 @@ static void CfgScanResult(enum scan_event scan_event,
- 				if (!channel)
- 					return;
+ }
  
--				PRINT_INFO(CFG80211_DBG, "Network Info:: CHANNEL Frequency: %d, RSSI: %d, CapabilityInfo: %d,"
--					   "BeaconPeriod: %d\n", channel->center_freq, (((s32)network_info->rssi) * 100),
--					   network_info->u16CapInfo, network_info->u16BeaconPeriod);
-+				PRINT_INFO(CFG80211_DBG, "Network Info::"
-+					   "CHANNEL Frequency: %d,"
-+					   "RSSI: %d,"
-+					   "Capability Info: %d,"
-+					   "Beacon Period: %d\n",
-+					   channel->center_freq,
-+					   (s32)network_info->rssi * 100,
-+					   network_info->cap_info,
-+					   network_info->u16BeaconPeriod);
+-static u32 get_rssi_avg(tstrNetworkInfo *network_info)
++static u32 get_rssi_avg(struct network_info *network_info)
+ {
+ 	u8 i;
+ 	int rssi_v = 0;
+@@ -231,7 +231,7 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
+ 	wiphy = priv->dev->ieee80211_ptr->wiphy;
  
- 				if (network_info->bNewNetwork) {
- 					if (priv->u32RcvdChCount < MAX_NUM_SCANNED_NETWORKS) {
-@@ -426,9 +440,17 @@ static void CfgScanResult(enum scan_event scan_event,
- 						add_network_to_shadow(network_info, priv, join_params);
+ 	for (i = 0; i < last_scanned_cnt; i++) {
+-		tstrNetworkInfo *network_info;
++		struct network_info *network_info;
  
- 						if (!(memcmp("DIRECT-", network_info->au8ssid, 7))) {
--							bss = cfg80211_inform_bss(wiphy, channel, CFG80211_BSS_FTYPE_UNKNOWN,  network_info->au8bssid, network_info->u64Tsf, network_info->u16CapInfo,
--										  network_info->u16BeaconPeriod, (const u8 *)network_info->pu8IEs,
--										  (size_t)network_info->u16IEsLen, (((s32)network_info->rssi) * 100), GFP_KERNEL);
-+							bss = cfg80211_inform_bss(wiphy,
-+										  channel,
-+										  CFG80211_BSS_FTYPE_UNKNOWN,
-+										  network_info->au8bssid,
-+										  network_info->u64Tsf,
-+										  network_info->cap_info,
-+										  network_info->u16BeaconPeriod,
-+										  (const u8 *)network_info->pu8IEs,
-+										  (size_t)network_info->u16IEsLen,
-+										  (s32)network_info->rssi * 100,
-+										  GFP_KERNEL);
- 							cfg80211_put_bss(wiphy, bss);
- 						}
- 					}
+ 		network_info = &last_scanned_shadow[i];
+ 
+@@ -310,7 +310,7 @@ static void clear_duringIP(unsigned long arg)
+ 	wilc_optaining_ip = false;
+ }
+ 
+-static int is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo,
++static int is_network_in_shadow(struct network_info *pstrNetworkInfo,
+ 				void *user_void)
+ {
+ 	int state = -1;
+@@ -333,7 +333,7 @@ static int is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo,
+ 	return state;
+ }
+ 
+-static void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo,
++static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
+ 				  void *user_void, void *pJoinParams)
+ {
+ 	int ap_found = is_network_in_shadow(pstrNetworkInfo, user_void);
+@@ -384,7 +384,7 @@ static void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo,
+ }
+ 
+ static void CfgScanResult(enum scan_event scan_event,
+-			  tstrNetworkInfo *network_info,
++			  struct network_info *network_info,
+ 			  void *user_void,
+ 			  void *join_params)
+ {
+@@ -693,7 +693,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	struct wilc_priv *priv;
+ 	struct host_if_drv *pstrWFIDrv;
+-	tstrNetworkInfo *pstrNetworkInfo = NULL;
++	struct network_info *pstrNetworkInfo = NULL;
+ 	struct wilc_vif *vif;
+ 
+ 	wilc_connecting = 1;
 -- 
 1.9.1
 
