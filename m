@@ -1,104 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:34809 "EHLO
-	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754548AbcB1TDN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Feb 2016 14:03:13 -0500
-Received: by mail-wm0-f65.google.com with SMTP id p65so6613059wmp.1
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2016 11:03:12 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+Received: from s3.sipsolutions.net ([5.9.151.49]:39083 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756154AbcBCPkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2016 10:40:04 -0500
+Message-ID: <1454513999.3083.7.camel@sipsolutions.net> (sfid-20160203_164013_682678_9F78F70F)
+Subject: Re: [PATCH v2] cfg80211: basic support for PBSS network type
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lior David <liord@codeaurora.org>
 Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 3/4] staging: vt6655: replace VNSvInPortD dwData reads with ioread32
-Date: Sun, 28 Feb 2016 19:02:56 +0000
-Message-Id: <1456686177-3167-3-git-send-email-tvboxspy@gmail.com> (sfid-20160228_200320_109911_BFCC6FFF)
-In-Reply-To: <1456686177-3167-1-git-send-email-tvboxspy@gmail.com>
-References: <1456686177-3167-1-git-send-email-tvboxspy@gmail.com>
+	Jouni Malinen <jouni@qca.qualcomm.com>,
+	Dedy Lansky <dlansky@codeaurora.org>,
+	Maya Erez <merez@codeaurora.org>,
+	Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Date: Wed, 03 Feb 2016 16:39:59 +0100
+In-Reply-To: <56B1C740.9020604@codeaurora.org>
+References: <56961335.4040801@codeaurora.org>
+	 <1453807346.2759.29.camel@sipsolutions.net>
+	 <56A767E4.7090906@codeaurora.org>
+	 <1453812869.2759.38.camel@sipsolutions.net>
+	 <56A9D831.7070909@codeaurora.org>
+	 <1454425741.2926.7.camel@sipsolutions.net>
+	 <1454425840.2926.8.camel@sipsolutions.net>
+	 <56B1C740.9020604@codeaurora.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing dwData variable altogether.
+On Wed, 2016-02-03 at 11:24 +0200, Lior David wrote:
+> 
+> On 2/2/2016 5:10 PM, Johannes Berg wrote:
+> ......
+> > Actually, one more question: Why does the kernel have to know at
+> > *connect* time that it should be a PBSS? It could tell that from
+> > the
+> > scan results, by looking for PBSS if it can't find AP in there, no?
+> > 
+> Yes it can be implemented that way. However we wanted user space to
+> be able
+> to specify exactly whether to connect to an AP or PCP. Since PBSS is
+> a separate
+> network type and we don't want clients to get an unexpected
+> connection to
+> a PCP. We also don't want to support roaming between a PCP and AP (it
+> is not
+> covered by the spec at this time)
+> 
 
-The reads are always 32 bit insize.
+ok, fair enough.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/mac.c | 18 +++++-------------
- 1 file changed, 5 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
-index 893fc52..c935922 100644
---- a/drivers/staging/vt6655/mac.c
-+++ b/drivers/staging/vt6655/mac.c
-@@ -117,10 +117,8 @@ bool MACbIsRegBitsOff(struct vnt_private *priv, unsigned char byRegOfs,
- bool MACbIsIntDisable(struct vnt_private *priv)
- {
- 	void __iomem *io_base = priv->PortOffset;
--	unsigned long dwData;
- 
--	VNSvInPortD(io_base + MAC_REG_IMR, &dwData);
--	if (dwData != 0)
-+	if (ioread32(io_base + MAC_REG_IMR))
- 		return false;
- 
- 	return true;
-@@ -363,7 +361,6 @@ bool MACbSafeRxOff(struct vnt_private *priv)
- {
- 	void __iomem *io_base = priv->PortOffset;
- 	unsigned short ww;
--	unsigned long dwData;
- 
- 	/* turn off wow temp for turn off Rx safely */
- 
-@@ -371,8 +368,7 @@ bool MACbSafeRxOff(struct vnt_private *priv)
- 	VNSvOutPortD(io_base + MAC_REG_RXDMACTL0, DMACTL_CLRRUN);
- 	VNSvOutPortD(io_base + MAC_REG_RXDMACTL1, DMACTL_CLRRUN);
- 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
--		VNSvInPortD(io_base + MAC_REG_RXDMACTL0, &dwData);
--		if (!(dwData & DMACTL_RUN))
-+		if (!(ioread32(io_base + MAC_REG_RXDMACTL0) & DMACTL_RUN))
- 			break;
- 	}
- 	if (ww == W_MAX_TIMEOUT) {
-@@ -380,8 +376,7 @@ bool MACbSafeRxOff(struct vnt_private *priv)
- 		return false;
- 	}
- 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
--		VNSvInPortD(io_base + MAC_REG_RXDMACTL1, &dwData);
--		if (!(dwData & DMACTL_RUN))
-+		if (!(ioread32(io_base + MAC_REG_RXDMACTL1) & DMACTL_RUN))
- 			break;
- 	}
- 	if (ww == W_MAX_TIMEOUT) {
-@@ -420,7 +415,6 @@ bool MACbSafeTxOff(struct vnt_private *priv)
- {
- 	void __iomem *io_base = priv->PortOffset;
- 	unsigned short ww;
--	unsigned long dwData;
- 
- 	/* Clear TX DMA */
- 	/* Tx0 */
-@@ -429,8 +423,7 @@ bool MACbSafeTxOff(struct vnt_private *priv)
- 	VNSvOutPortD(io_base + MAC_REG_AC0DMACTL, DMACTL_CLRRUN);
- 
- 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
--		VNSvInPortD(io_base + MAC_REG_TXDMACTL0, &dwData);
--		if (!(dwData & DMACTL_RUN))
-+		if (!(ioread32(io_base + MAC_REG_TXDMACTL0) & DMACTL_RUN))
- 			break;
- 	}
- 	if (ww == W_MAX_TIMEOUT) {
-@@ -438,8 +431,7 @@ bool MACbSafeTxOff(struct vnt_private *priv)
- 		return false;
- 	}
- 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
--		VNSvInPortD(io_base + MAC_REG_AC0DMACTL, &dwData);
--		if (!(dwData & DMACTL_RUN))
-+		if (!(ioread32(io_base + MAC_REG_AC0DMACTL) & DMACTL_RUN))
- 			break;
- 	}
- 	if (ww == W_MAX_TIMEOUT) {
--- 
-2.7.0
-
+johannes
