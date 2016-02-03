@@ -1,60 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:26071 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932634AbcBAOiG convert rfc822-to-8bit (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:64110 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753028AbcBCGKJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2016 09:38:06 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Coelho, Luciano" <luciano.coelho@intel.com>
-Subject: Re: [PATCH 04/31] iwlwifi: pcie: add initial RTPM support for PCI
-Date: Mon, 1 Feb 2016 14:38:02 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E9F682B@hasmsx107.ger.corp.intel.com> (sfid-20160201_153811_569449_F2BE5A37)
-References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
- <1454238386-27032-4-git-send-email-emmanuel.grumbach@intel.com>
- <87y4b4sdqo.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 3 Feb 2016 01:10:09 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u136A8Tf002542
+	for <linux-wireless@vger.kernel.org>; Tue, 2 Feb 2016 22:10:08 -0800
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+	by mx0b-0016f401.pphosted.com with ESMTP id 20sw0hqnd7-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Feb 2016 22:10:08 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/8] mwifiex: process pcie io memory read failure case
+Date: Tue, 2 Feb 2016 22:05:03 -0800
+Message-ID: <1454479509-27129-3-git-send-email-akarwar@marvell.com> (sfid-20160203_071015_480233_B58ADD95)
+In-Reply-To: <1454479509-27129-1-git-send-email-akarwar@marvell.com>
+References: <1454479509-27129-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Xinming Hu <huxm@marvell.com>
 
+It is observed that ioread32 may fail to read pcie register
+in certain scenarios, this patch handles these cases.
 
-On 02/01/2016 04:32 PM, Kalle Valo wrote:
-> Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
->
->> From: Luca Coelho <luciano.coelho@intel.com>
->>
->> Add an initial implementation of runtime power management (RTPM) for
->> PCI devices.  With this patch, RTPM is only used when wifi is off
->> (i.e. the wifi interface is down).  This implementation is behind a
->> new Kconfig flag, IWLWIFI_PCIE_RTPM.
->>
->> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
->> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> [...]
->
->> --- a/drivers/net/wireless/intel/iwlwifi/Kconfig
->> +++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
->> @@ -99,6 +99,18 @@ config IWLWIFI_UAPSD
->>  
->>  	  If unsure, say N.
->>  
->> +config IWLWIFI_PCIE_RTPM
->> +       bool "Enable runtime power management mode for PCIe devices"
->> +       depends on IWLMVM && IWLWIFI_PCIE && PM
->> +       default false
->> +       help
->> +         Say Y here to enable runtime power management for PCIe
->> +         devices.  If enabled, the device will go into low power mode
->> +         when idle for a short period of time, allowing for improved
->> +         power saving during runtime.
->> +
->> +	 If unsure, say N.
-> I didn't see the new option in menuconfig and then noticed that I can't
-> find IWLWIFI_PCIE anywhere. Is that correct?
->
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Right... This option is not upstreamed yet...
-I'll respin. Sorry...
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 918e049..b9fe181 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -323,6 +323,8 @@ static int mwifiex_read_reg(struct mwifiex_adapter *adapter, int reg, u32 *data)
+ 	struct pcie_service_card *card = adapter->card;
+ 
+ 	*data = ioread32(card->pci_mmap1 + reg);
++	if (*data == 0xffffffff)
++		return 0xffffffff;
+ 
+ 	return 0;
+ }
+-- 
+1.8.1.4
+
