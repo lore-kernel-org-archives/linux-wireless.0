@@ -1,72 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f68.google.com ([209.85.192.68]:35309 "EHLO
-	mail-qg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755022AbcBHPlt (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:13313 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755982AbcBCPiZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 10:41:49 -0500
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux@endlessm.com,
-	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
-Subject: [PATCH 9/9] rfkill: Notify userspace of airplane-mode state changes
-Date: Mon,  8 Feb 2016 10:41:36 -0500
-Message-Id: <1454946096-9752-10-git-send-email-jprvita@endlessm.com> (sfid-20160208_164234_780853_798B5812)
-In-Reply-To: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
-References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
+	Wed, 3 Feb 2016 10:38:25 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Subject: [PATCH 1/2] ath10k: Fix updating peer stats rx duration
+Date: Wed, 3 Feb 2016 21:07:42 +0530
+Message-ID: <1454513863-2703-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160203_163830_015835_DD31C385)
+In-Reply-To: <1454513863-2703-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1454513863-2703-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
----
- Documentation/rfkill.txt |  3 +++
- net/rfkill/core.c        | 13 +++++++++++++
- 2 files changed, 16 insertions(+)
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
-index aa6e014..5248812 100644
---- a/Documentation/rfkill.txt
-+++ b/Documentation/rfkill.txt
-@@ -133,5 +133,8 @@ it available for other applications to take control. Changes to the
- airplane-mode indicator state can be made using RFKILL_OP_AIRPLANE_MODE_CHANGE,
- passing the new value in the 'soft' field of 'struct rfkill_event'.
+We are not updating peer stats rx_duration periodically
+unless the user one polls for fw_stats, this is because
+we discard the update event since pdev list is empty. Fix
+this by updating rx duration periodically irrepective of checks
+for pdev list (irrespective of ping-pong response)
+
+Fixes: 856e7c3 ("ath10k: add debugfs support for Per STA total rx duration")
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/debug.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+index 8d4148a..d80a44e 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.c
++++ b/drivers/net/wireless/ath/ath10k/debug.c
+@@ -348,6 +348,9 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+ 	 */
  
-+This same API is also used to provide userspace with notifications of changes
-+to airplane-mode indicator state.
+ 	peer_stats_svc = test_bit(WMI_SERVICE_PEER_STATS, ar->wmi.svc_map);
++	if (peer_stats_svc)
++		ath10k_sta_update_rx_duration(ar, &stats.peers);
 +
+ 	if (ar->debug.fw_stats_done && !peer_stats_svc) {
+ 		ath10k_warn(ar, "received unsolicited stats update event\n");
+ 		goto free;
+@@ -384,9 +387,6 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+ 			goto free;
+ 		}
  
- For further details consult Documentation/ABI/stable/sysfs-class-rfkill.
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index 8067701..abbb8f7 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -131,7 +131,20 @@ static struct led_trigger rfkill_apm_led_trigger;
- 
- static void rfkill_apm_led_trigger_event(bool state)
- {
-+	struct rfkill_data *data;
-+	struct rfkill_int_event *ev;
-+
- 	led_trigger_event(&rfkill_apm_led_trigger, state ? LED_FULL : LED_OFF);
-+
-+	list_for_each_entry(data, &rfkill_fds, list) {
-+		ev = kzalloc(sizeof(*ev), GFP_KERNEL);
-+		if (!ev)
-+			continue;
-+		ev->ev.op = RFKILL_OP_AIRPLANE_MODE_CHANGE;
-+		ev->ev.soft = state;
-+		list_add_tail(&ev->list, &data->events);
-+		wake_up_interruptible(&data->read_wait);
-+	}
- }
- 
- static void rfkill_apm_led_trigger_activate(struct led_classdev *led)
+-		if (peer_stats_svc)
+-			ath10k_sta_update_rx_duration(ar, &stats.peers);
+-
+ 		list_splice_tail_init(&stats.peers, &ar->debug.fw_stats.peers);
+ 		list_splice_tail_init(&stats.vdevs, &ar->debug.fw_stats.vdevs);
+ 	}
 -- 
-2.5.0
+1.7.9.5
 
