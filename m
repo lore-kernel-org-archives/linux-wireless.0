@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:18944 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:51765 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752733AbcBOL7L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Feb 2016 06:59:11 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+	id S933658AbcBCSkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2016 13:40:04 -0500
+From: Jes.Sorensen@redhat.com
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/5] iwlwifi: dvm: remove a wrong dependency on m
-Date: Mon, 15 Feb 2016 13:59:03 +0200
-Message-Id: <1455537546-22157-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160215_181515_014009_05BE31EE)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA13D1A@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA13D1A@hasmsx107.ger.corp.intel.com>
+Cc: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 20/28] rtl8xxxu: Fix 80 character per line issue
+Date: Wed,  3 Feb 2016 13:39:54 -0500
+Message-Id: <1454524802-26763-21-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_194804_046149_2A787271)
+In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This was wronly added when the dependency on IWLWIFI was
-removed.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=112201
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/net/wireless/intel/iwlwifi/Kconfig | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/Kconfig b/drivers/net/wireless/intel/iwlwifi/Kconfig
-index 8660677..7438fbe 100644
---- a/drivers/net/wireless/intel/iwlwifi/Kconfig
-+++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
-@@ -53,7 +53,6 @@ config IWLWIFI_LEDS
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 78683b5..9f89f62 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -5355,8 +5355,9 @@ static void rtl8xxxu_configure_filter(struct ieee80211_hw *hw,
  
- config IWLDVM
- 	tristate "Intel Wireless WiFi DVM Firmware support"
--	depends on m
- 	help
- 	  This is the driver that supports the DVM firmware. The list
- 	  of the devices that use this firmware is available here:
+ 	rtl8xxxu_write32(priv, REG_RCR, rcr);
+ 
+-	*total_flags &= (FIF_ALLMULTI | FIF_FCSFAIL | FIF_BCN_PRBRESP_PROMISC | \
+-			 FIF_CONTROL | FIF_OTHER_BSS | FIF_PSPOLL | FIF_PROBE_REQ);
++	*total_flags &= (FIF_ALLMULTI | FIF_FCSFAIL | FIF_BCN_PRBRESP_PROMISC |
++			 FIF_CONTROL | FIF_OTHER_BSS | FIF_PSPOLL |
++			 FIF_PROBE_REQ);
+ }
+ 
+ static int rtl8xxxu_set_rts_threshold(struct ieee80211_hw *hw, u32 rts)
 -- 
 2.5.0
 
