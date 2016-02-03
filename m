@@ -1,72 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:55183 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750726AbcBHLXq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 06:23:46 -0500
-Subject: Re: [RFC v4] mac80211: add A-MSDU tx support
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-References: <1454920723-48071-1-git-send-email-nbd@openwrt.org>
- <CANUX_P2qQmCPvFV4SqWxGQb_JzVqQ+_nT6LFtcYb37s5KfEfdw@mail.gmail.com>
- <CABPxzY+dgMWDeQ=_c0xyFq0g7HcP459b5Ypy3OoUwjDi+eooMA@mail.gmail.com>
- <56B87625.6040206@openwrt.org>
- <CABPxzY+ub1Qtwawzge2XCo67OPba1Rgd6HZTm6bhjzfOuNtFEw@mail.gmail.com>
-Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <56B87ABA.5000307@openwrt.org> (sfid-20160208_122349_625832_DC6D20DB)
-Date: Mon, 8 Feb 2016 12:23:38 +0100
-MIME-Version: 1.0
-In-Reply-To: <CABPxzY+ub1Qtwawzge2XCo67OPba1Rgd6HZTm6bhjzfOuNtFEw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:37285 "EHLO
+	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754496AbcBCM6t (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2016 07:58:49 -0500
+Received: by mail-wm0-f44.google.com with SMTP id l66so69082150wml.0
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Feb 2016 04:58:48 -0800 (PST)
+From: Henning Rogge <hrogge@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Henning Rogge <hrogge@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+Subject: [PATCH v3 2/3] mac80211: let unused MPP table entries timeout
+Date: Wed,  3 Feb 2016 13:58:37 +0100
+Message-Id: <1454504318-24988-3-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20160203_135853_390501_CF87BF05)
+In-Reply-To: <1454504318-24988-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+References: <1454504318-24988-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-02-08 12:06, Krishna Chaitanya wrote:
-> On Mon, Feb 8, 2016 at 4:34 PM, Felix Fietkau <nbd@openwrt.org> wrote:
->> On 2016-02-08 10:54, Krishna Chaitanya wrote:
->>> On Mon, Feb 8, 2016 at 2:56 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
->>>> On Mon, Feb 8, 2016 at 10:38 AM, Felix Fietkau <nbd@openwrt.org> wrote:
->>>>> Requires software tx queueing support. frag_list support (for zero-copy)
->>>>> is optional.
->>>>>
->>>>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
->>>>> ---
->>>>
->>>>
->>>> Ok - looks fine, but... and here comes the hard stuff.
->>>> The frame size in the PLCP is limited in a way that you can't - from a
->>>> spec POV - enable A-MSDU for low rates. Of course, you don't want to
->>>> do that for low rates at all regardless of the spec.
->>>> Since you build the A-MSDU in the mac80211 Tx queue which is not aware
->>>> of the link quality, how do we prevent A-MSDU if the rate is low /
->>>> dropping.
->>>> I'd even argue that when the rates get lower, you'll  have more
->>>> packets piling up in the software queue and ... even more chance to
->>>> get A-MSDU in the exact case where you really want to avoid it?
->>>
->>> Similar to triggering AMPDU setup, we should put this control
->>> in RC (minstrel) to start/stop AMSDU based on link quality/if the rates
->>> drop below a pre-defined MCS (or) only for best-throughput rates.
->> I think starting/stopping A-MSDU based on the rate is a bad idea.
->> Even with low rates, using A-MSDU can be a good thing (especially for
->> TCP ACKs), it just needs different size limits.
-> 
-> By low rates, i was referring to bad channel conditions (more
-> retries/crc errors)
-> so using AMSDU might trigger more TCP level retries and for case
-> of TCP ACK's its still worse in that it triggers TCP data retires from the
-> peer.
-Based on the research and data from the Bufferbloat project, I'd say
-that in this case the latency due to queue buildup is a lot more harmful
-than lost packets.
-With unmanaged queues, the latency will cause unnecessary
-retransmissions anyway.
-With managed queues, packet drops start increasing with latency until
-TCP starts behaving properly.
-In both cases you have extra TCP retransmissions...
+Remember the last time when a mpp table entry is used for
+rx or tx and remove them after MESH_PATH_EXPIRE time.
 
-With bad conditions you also get a strong increase in per-TXOP latency.
-With A-MSDU you need fewer TXOPs for the same amount of data in the queue.
+Signed-off-by: Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+---
+ net/mac80211/mesh_pathtbl.c | 51 +++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/rx.c           |  1 +
+ net/mac80211/tx.c           |  5 ++++-
+ 3 files changed, 56 insertions(+), 1 deletion(-)
 
-- Felix
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index d9424ea..0ab862a 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -942,6 +942,46 @@ enddel:
+ }
+ 
+ /**
++ * mpp_path_del - delete a mesh proxy path from the table
++ *
++ * @addr: addr address (ETH_ALEN length)
++ * @sdata: local subif
++ *
++ * Returns: 0 if successful
++ */
++static int mpp_path_del(struct ieee80211_sub_if_data *sdata, const u8 *addr)
++{
++	struct mesh_table *tbl;
++	struct mesh_path *mpath;
++	struct mpath_node *node;
++	struct hlist_head *bucket;
++	int hash_idx;
++	int err = 0;
++
++	read_lock_bh(&pathtbl_resize_lock);
++	tbl = resize_dereference_mpp_paths();
++	hash_idx = mesh_table_hash(addr, sdata, tbl);
++	bucket = &tbl->hash_buckets[hash_idx];
++
++	spin_lock(&tbl->hashwlock[hash_idx]);
++	hlist_for_each_entry(node, bucket, list) {
++		mpath = node->mpath;
++		if (mpath->sdata == sdata &&
++		    ether_addr_equal(addr, mpath->dst)) {
++			__mesh_path_del(tbl, node);
++			goto enddel;
++		}
++	}
++
++	err = -ENXIO;
++enddel:
++	mesh_paths_generation++;
++	spin_unlock(&tbl->hashwlock[hash_idx]);
++	read_unlock_bh(&pathtbl_resize_lock);
++	return err;
++}
++
++/**
+  * mesh_path_tx_pending - sends pending frames in a mesh path queue
+  *
+  * @mpath: mesh path to activate
+@@ -1157,6 +1197,17 @@ void mesh_path_expire(struct ieee80211_sub_if_data *sdata)
+ 		     time_after(jiffies, mpath->exp_time + MESH_PATH_EXPIRE))
+ 			mesh_path_del(mpath->sdata, mpath->dst);
+ 	}
++
++	tbl = rcu_dereference(mpp_paths);
++	for_each_mesh_entry(tbl, node, i) {
++		if (node->mpath->sdata != sdata)
++			continue;
++		mpath = node->mpath;
++		if ((!(mpath->flags & MESH_PATH_FIXED)) &&
++		    time_after(jiffies, mpath->exp_time + MESH_PATH_EXPIRE))
++			mpp_path_del(mpath->sdata, mpath->dst);
++	}
++
+ 	rcu_read_unlock();
+ }
+ 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index bc08185..d028581 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2290,6 +2290,7 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
+ 			spin_lock_bh(&mppath->state_lock);
+ 			if (!ether_addr_equal(mppath->mpp, mpp_addr))
+ 				memcpy(mppath->mpp, mpp_addr, ETH_ALEN);
++			mppath->exp_time = jiffies;
+ 			spin_unlock_bh(&mppath->state_lock);
+ 		}
+ 		rcu_read_unlock();
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 3311ce0..932309e 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -2099,8 +2099,11 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 					mpp_lookup = true;
+ 			}
+ 
+-			if (mpp_lookup)
++			if (mpp_lookup) {
+ 				mppath = mpp_path_lookup(sdata, skb->data);
++				if (mppath)
++					mppath->exp_time = jiffies;
++			}
+ 
+ 			if (mppath && mpath)
+ 				mesh_path_del(mpath->sdata, mpath->dst);
+-- 
+2.5.0
+
