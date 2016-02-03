@@ -1,41 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f176.google.com ([209.85.192.176]:33267 "EHLO
-	mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965632AbcBRMer (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 07:34:47 -0500
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, netdev@vger.kernel.org
-Subject: [PATCH] b43: fix memory leak
-Date: Thu, 18 Feb 2016 18:04:36 +0530
-Message-Id: <1455798876-32186-1-git-send-email-sudipm.mukherjee@gmail.com> (sfid-20160218_133512_160177_5A4FD7C1)
+Received: from mx1.redhat.com ([209.132.183.28]:44243 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965909AbcBCSkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2016 13:40:03 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 13/28] rtl8xxxu: Add REG_OFDM0_RX_D_SYNC_PATH definitions
+Date: Wed,  3 Feb 2016 13:39:47 -0500
+Message-Id: <1454524802-26763-14-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_194813_731682_1FDF81CE)
+In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sudip Mukherjee <sudip@vectorindia.org>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-On error we jumped to the label bcma_out and returned the error code but
-we missed freeing dev.
-
-Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/net/wireless/broadcom/b43/main.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
-index c279211..78f670a 100644
---- a/drivers/net/wireless/broadcom/b43/main.c
-+++ b/drivers/net/wireless/broadcom/b43/main.c
-@@ -5671,6 +5671,7 @@ static int b43_bcma_probe(struct bcma_device *core)
- 	wl = b43_wireless_init(dev);
- 	if (IS_ERR(wl)) {
- 		err = PTR_ERR(wl);
-+		kfree(dev);
- 		goto bcma_out;
- 	}
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+index 991b366..d2995f8a3 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+@@ -793,6 +793,9 @@
  
+ #define REG_OFDM0_ENERGY_CCA_THRES	0x0c4c
+ 
++#define REG_OFDM0_RX_D_SYNC_PATH	0x0c40
++#define  OFDM0_SYNC_PATH_NOTCH_FILTER	BIT(1)
++
+ #define REG_OFDM0_XA_AGC_CORE1		0x0c50
+ #define REG_OFDM0_XA_AGC_CORE2		0x0c54
+ #define REG_OFDM0_XB_AGC_CORE1		0x0c58
 -- 
-1.9.1
+2.5.0
 
