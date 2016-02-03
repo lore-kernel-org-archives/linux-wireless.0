@@ -1,64 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:35140 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751572AbcBETZl convert rfc822-to-8bit (ORCPT
+Received: from mail-ig0-f194.google.com ([209.85.213.194]:35336 "EHLO
+	mail-ig0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754270AbcBCCH3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2016 14:25:41 -0500
-Received: by mail-wm0-f53.google.com with SMTP id r129so40518272wmr.0
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2016 11:25:40 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Eric Hillary <eric.hillary-1@nasa.gov>
-Cc: linux-wireless@vger.kernel.org
-Subject: [RESEND] Re: carl9170 client RTS/CTS option being overridden by WAP's WMM option
-Date: Fri, 05 Feb 2016 20:25:37 +0100
-Message-ID: <2823949.eMyd5ddxzU@debian64> (sfid-20160205_202544_593617_F29B80BA)
-In-Reply-To: <loom.20160205T170355-618@post.gmane.org>
-References: <loom.20160205T170355-618@post.gmane.org>
+	Tue, 2 Feb 2016 21:07:29 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <20160203015953.GA13562@gmail.com>
+References: <20160203015953.GA13562@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 3 Feb 2016 13:07:09 +1100
+Message-ID: <CAGRGNgUJGLG_1fWbYLyET-OQeFFxohXqoApcm2E-Jv+W+-FwcQ@mail.gmail.com> (sfid-20160203_030736_266095_C4ED8FF0)
+Subject: Re: [PATCH 1/2] rtlwifi: Fix improve function 'rtl_addr_delay()' in core.c
+To: Byeoungwook Kim <quddnr145@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Friday, February 05, 2016 04:07:22 PM Eric Hillary wrote:
-> Has anyone experienced that RTS/CTS handshaking stops occurring at the
-> client if the the access point enables WMM?
-yes, the 802.11-draftn device has problems (rx and tx become stuck) with
-802.11n and proper WMM (and with RTS/CTS). Sadly, I don't know of any
-workaround that works for all the configurations I tested, other than 
-going for a ath9k_htc device. 
- 
-> Using the carl9170 driver with RTS/CTS handshaking enabled on a USB 
-> Ubiquiti SR71-USB (Atheros AR9170 based wireless adapter).  RTS/CTS will 
-> stop working when WMM is enabled on the WAP.  
-You can overwrite carl9170's behavior (per device). You need to have 
-DEBUGFS enabled for the driver (CONFIG_CARL9170_DEBUGFS). There is a
-control setting in: /sys/kernel/debug/ieee80211/phyX/carl9170/erp
+Hi Byeounwook,
 
-1 - Automatic (default)
-2 - Set by mac80211
-3 - Force off
-4 - Force CTS
-5 - Force RTS
+On Wed, Feb 3, 2016 at 12:59 PM, Byeoungwook Kim <quddnr145@gmail.com> wrote:
+> Conditional codes in rtl_addr_delay() were improved in readability and
+> performance by using switch codes.
+>
+> Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
+> Reported-by: Julian Calaby <julian.calaby@gmail.com>
 
-You can try echo 2 > erp. And check the setting with cat erp
-> The network is running in 802.11n C-band (5GHz) channels in 
-> Infrastructure mode with an Atheros AR9370 based Access Point.  We are 
-> using RTS/CTS handshaking to reduce “Hidden Node” effects.  Other 
-> clients in the network require WMM to be enabled.  For reasons cited in 
-> http://www.smallnetbuilder.com/wireless/wireless-features/30938-dont-
-> mess-with-wmm, WMM should be enabled to support 802.11e, 
-> required for 802.11n to use HT (High Throughput) link rates.
-> 
-> With the WMM turned OFF at the AP and RTS value = 256 at the Ubiquiti 
-> client, the RTS/CTS handshake functions normally.  With WMM turned ON at 
-> the AP and RTS value = 256 still on at the client no RTS/CTS handshake 
-> occurs.  The carl9170 client stops sending the RTS, and the carl1970 
-> client ignoring the CTS messages transmitted by the AP, causing 
-> collisions because of my “Hidden Node” condition.
-> 
-> Had to get scope plots of the RF network traffic between the AP and 
-> client to observe this happening.
-scope plots from a real analyzer? I would love to have a look at those :).
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 
-Regards,
-Christian
+Thanks,
+
+Julian Calaby
+
+
+> ---
+>  drivers/net/wireless/realtek/rtlwifi/core.c | 20 ++++++++++++++------
+>  1 file changed, 14 insertions(+), 6 deletions(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+> index 4ae421e..05f432c 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/core.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+> @@ -37,18 +37,26 @@
+>
+>  void rtl_addr_delay(u32 addr)
+>  {
+> -       if (addr == 0xfe)
+> +       switch (addr) {
+> +       case 0xfe:
+>                 mdelay(50);
+> -       else if (addr == 0xfd)
+> +               break;
+> +       case 0xfd:
+>                 mdelay(5);
+> -       else if (addr == 0xfc)
+> +               break;
+> +       case 0xfc:
+>                 mdelay(1);
+> -       else if (addr == 0xfb)
+> +               break;
+> +       case 0xfb:
+>                 udelay(50);
+> -       else if (addr == 0xfa)
+> +               break;
+> +       case 0xfa:
+>                 udelay(5);
+> -       else if (addr == 0xf9)
+> +               break;
+> +       case 0xf9:
+>                 udelay(1);
+> +               break;
+> +       };
+>  }
+>  EXPORT_SYMBOL(rtl_addr_delay);
+>
+> --
+> 2.5.0
+>
+
+
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
