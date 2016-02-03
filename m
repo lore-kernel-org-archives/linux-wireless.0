@@ -1,46 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f178.google.com ([209.85.192.178]:32807 "EHLO
-	mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753985AbcBPIkH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2016 03:40:07 -0500
-Received: by mail-pf0-f178.google.com with SMTP id q63so101366072pfb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2016 00:40:07 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 2/7] staging: wilc1000: handle_set_mac_address: fix kmalloc return error code
-Date: Tue, 16 Feb 2016 17:39:50 +0900
-Message-Id: <1455611995-28773-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20160216_094013_337155_DB4DACA9)
-In-Reply-To: <1455611995-28773-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1455611995-28773-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:43513 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933802AbcBCSkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2016 13:40:04 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 19/28] rtl8xxxu: Remove duplicate USB ID
+Date: Wed,  3 Feb 2016 13:39:53 -0500
+Message-Id: <1454524802-26763-20-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_194458_461084_4CF52F99)
+In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fix return error code of kmalloc as -ENOMEM instead of
--EFAULT.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Reported-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 579b90a..4d50b38 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -432,7 +432,7 @@ static s32 handle_set_mac_address(struct wilc_vif *vif,
- 	u8 *mac_buf = kmalloc(ETH_ALEN, GFP_KERNEL);
- 
- 	if (!mac_buf)
--		return -EFAULT;
-+		return -ENOMEM;
- 
- 	memcpy(mac_buf, set_mac_addr->mac_addr, ETH_ALEN);
- 
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index b58a60f..78683b5 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -5959,8 +5959,6 @@ static struct usb_device_id dev_table[] = {
+ 	.driver_info = (unsigned long)&rtl8192cu_fops},
+ {USB_DEVICE_AND_INTERFACE_INFO(0xcdab, 0x8010, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192cu_fops},
+-{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x317f, 0xff, 0xff, 0xff),
+-	.driver_info = (unsigned long)&rtl8192cu_fops}, /* Netcore 8188RU */
+ {USB_DEVICE_AND_INTERFACE_INFO(0x04f2, 0xaff7, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192cu_fops},
+ {USB_DEVICE_AND_INTERFACE_INFO(0x04f2, 0xaff9, 0xff, 0xff, 0xff),
 -- 
-2.7.1
+2.5.0
 
