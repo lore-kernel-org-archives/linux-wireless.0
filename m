@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56622 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752175AbcBZHSJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 02:18:09 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-arm-kernel@lists.infradead.org, Michael Buesch <m@bues.ch>,
-	linux-wireless@vger.kernel.org,
-	=?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH, RESEND] ssb: host_soc depends on sprom
-References: <1456433869-3919332-1-git-send-email-arnd@arndb.de>
-Date: Fri, 26 Feb 2016 09:18:04 +0200
-In-Reply-To: <1456433869-3919332-1-git-send-email-arnd@arndb.de> (Arnd
-	Bergmann's message of "Thu, 25 Feb 2016 21:57:43 +0100")
-Message-ID: <87twkwlz2r.fsf@purkki.adurom.net> (sfid-20160226_081827_159684_E148D2D5)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:44241 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965910AbcBCSkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2016 13:40:03 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Tobias Klauser <tklauser@distanz.ch>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 09/28] rtl8xxxu: Check return value of kmemdup()
+Date: Wed,  3 Feb 2016 13:39:43 -0500
+Message-Id: <1454524802-26763-10-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_201501_709337_DD510DC1)
+In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+From: Tobias Klauser <tklauser@distanz.ch>
 
-> Drivers that use the SSB sprom functionality typically 'select SSB_SPROM'
-> from Kconfig, but CONFIG_SSB_HOST_SOC misses this, which results in
-> a build failure unless at least one of the other drivers that selects
-> it is enabled:
->
-> drivers/built-in.o: In function `ssb_host_soc_get_invariants':
-> (.text+0x459494): undefined reference to `ssb_fill_sprom_with_fallback'
->
-> This adds the same select statement that is used elsewhere.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 541c9a84cd85 ("ssb: pick SoC invariants code from MIPS BCM47xx arch")
+In rtl8xxxu_load_firmware() check the return value of kmemdup() and
+error out with -ENOMEM in case of NULL to prevent a NULL pointer
+dereference.
 
-I'm planning to queue this to 4.5.
+Signed-off-by: Tobias Klauser <tklauser@distanz.ch>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index e98e053..08d8e1f 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2197,6 +2197,10 @@ static int rtl8xxxu_load_firmware(struct rtl8xxxu_priv *priv, char *fw_name)
+ 	}
+ 
+ 	priv->fw_data = kmemdup(fw->data, fw->size, GFP_KERNEL);
++	if (!priv->fw_data) {
++		ret = -ENOMEM;
++		goto exit;
++	}
+ 	priv->fw_size = fw->size - sizeof(struct rtl8xxxu_firmware_header);
+ 
+ 	signature = le16_to_cpu(priv->fw_data->signature);
 -- 
-Kalle Valo
+2.5.0
+
