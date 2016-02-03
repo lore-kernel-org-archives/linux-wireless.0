@@ -1,31 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from comal.ext.ti.com ([198.47.26.152]:51130 "EHLO comal.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41917 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753182AbcBINcI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2016 08:32:08 -0500
-From: "Mishol, Guy" <guym@ti.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"wireless-regdb@lists.infradead.org"
-	<wireless-regdb@lists.infradead.org>
-CC: "Seth Forshee (seth.forshee@canonical.com)"
-	<seth.forshee@canonical.com>
-Subject: FCC will disallow 802.11d after January 01, 2015
-Date: Tue, 9 Feb 2016 13:31:43 +0000
-Message-ID: <97207D90F0289D498537011312FCAD11264F3170@DFRE01.ent.ti.com> (sfid-20160209_143227_444243_AF63A5D4)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S933800AbcBCSkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2016 13:40:04 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 16/28] rtl8xxxu: Fix cosmetics to quiet down checkpatch police
+Date: Wed,  3 Feb 2016 13:39:50 -0500
+Message-Id: <1454524802-26763-17-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_194138_794059_21E5A4C9)
+In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Recently I ran into this FCC new rule:
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-FCC will disallow 802.11d after January 01, 2015
-After January 01, 2015, the FCC will not allow the use of 802.11d. The client cannot rely on the Access Point to ensure compliance to the FCC certified frequency bands. For example today, a non-U.S. AP can be used in the US, which will allow transmitting on channels 12 & 13 with unapproved power output in the 2.4 GHz band, or channels 120, 124 & 128 which are prohibited in the 5 GHz band. This will not be the case once FCC enforces the new rule
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 94d3d84..ac4c211 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -4415,7 +4415,7 @@ static void rtl8xxxu_cam_write(struct rtl8xxxu_priv *priv,
+ }
+ 
+ static void rtl8xxxu_sw_scan_start(struct ieee80211_hw *hw,
+-				   struct ieee80211_vif *vif, const u8* mac)
++				   struct ieee80211_vif *vif, const u8 *mac)
+ {
+ 	struct rtl8xxxu_priv *priv = hw->priv;
+ 	u8 val8;
+-- 
+2.5.0
 
-Does anyone know if there was any work done to support this?
-
-BR,
-Guy Mishol
