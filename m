@@ -1,85 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:19893 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933123AbcBQB0k (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2016 20:26:40 -0500
-Subject: Re: drivers/staging/wilc1000/wilc_spi.c won't compile ?
-To: David Binderman <dcb314@hotmail.com>,
-	"Kim, Leo" <leo.kim@atmel.com>,
-	"Shin, Austin" <austin.shin@atmel.com>,
-	"Park, Chris" <chris.park@atmel.com>,
-	"Lee, Glen" <glen.lee@atmel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <DUB128-W49FB60890BF7AB1D0892979CD50@phx.gbl>
- <74F3875218FC364C9618AB19CB60E90580048375@penmbx02.corp.atmel.com>
- <DUB128-W339411DA3C1CF69214E4CB9CAD0@phx.gbl>
-From: Tony Cho <tony.cho@atmel.com>
-Message-ID: <56C3CBE3.9090408@atmel.com> (sfid-20160217_022659_539390_A03DDDD9)
-Date: Wed, 17 Feb 2016 10:24:51 +0900
-MIME-Version: 1.0
-In-Reply-To: <DUB128-W339411DA3C1CF69214E4CB9CAD0@phx.gbl>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:43501 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965906AbcBCSkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2016 13:40:03 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 01/28] rtl8xxxu: Minor cleanup to rtl8xxxu_download_firmware()
+Date: Wed,  3 Feb 2016 13:39:35 -0500
+Message-Id: <1454524802-26763-2-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_194817_198810_05CD3F99)
+In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi David,
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Please check the latest update from the https://git.kernel.org/cgit/linux/kernel/git/gregkh/staging.git/?h=staging-testing.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-The tree is not updated yet with the latest.
-
-Thanks,
-
-Tony.
-
-
-
-On 2016년 02월 16일 20:33, David Binderman wrote:
-> Hello there,
->
-> ----------------------------------------
->> You're had old wilc1000 source.
->> Remove the wilc1000_ops structure.
->> (Branch) staging-testing
->> (SHA) ce7b516f3f9e11fe4ee06fad0d7e853bb6e8f160
->> Please receive the latest source.
->>
-> I checked the Torvalds source for 4.5-rc4
->
-> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/staging/wilc1000/wilc_spi.c?id=refs/tags/v4.5-rc4
->
-> and the problem still seems to exist.
->
-> Maybe your recent changes aren't getting from staging into the Torvalds tree ?
->
->
-> Regards
->
-> David Binderman
->
->>   Thanks, BR
->>   Leo
->>
->> -----Original Message-----
->> From: David Binderman [mailto:dcb314@hotmail.com]
->> Sent: Monday, February 08, 2016 9:18 PM
->> To: Kim, Johnny <johnny.kim@atmel.com>; Shin, Austin <Austin.Shin@atmel.com>; Park, Chris <Chris.Park@atmel.com>; Cho, Tony <Tony.Cho@atmel.com>; Lee, Glen <Glen.Lee@atmel.com>; Kim, Leo <Leo.Kim@atmel.com>; linux-wireless@vger.kernel.org
->> Subject: drivers/staging/wilc1000/wilc_spi.c won't compile ?
->>
->> Hello there,
->>
->> drivers/staging/wilc1000/wilc_spi.c:123:34: error: storage size of 'wilc1000_spi_ops' isn't known
->>   static const struct wilc1000_ops wilc1000_spi_ops;
->>                                    ^~~~~~~~~~~~~~~~
->> drivers/staging/wilc1000/wilc_spi.c:123:34: warning: 'wilc1000_spi_ops' defined but not used [-Wunused-const-variable]
->>
->> Suggest remove.
->>
->> Regards
->>
->> David Binderman
->>
->>
->   		 	   		
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 6aed923..6b39e4d 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2100,7 +2100,8 @@ static int rtl8xxxu_download_firmware(struct rtl8xxxu_priv *priv)
+ 
+ 	/* 8051 enable */
+ 	val16 = rtl8xxxu_read16(priv, REG_SYS_FUNC);
+-	rtl8xxxu_write16(priv, REG_SYS_FUNC, val16 | SYS_FUNC_CPU_ENABLE);
++	val16 |= SYS_FUNC_CPU_ENABLE;
++	rtl8xxxu_write16(priv, REG_SYS_FUNC, val16);
+ 
+ 	/* MCU firmware download enable */
+ 	val8 = rtl8xxxu_read8(priv, REG_MCU_FW_DL);
+-- 
+2.5.0
 
