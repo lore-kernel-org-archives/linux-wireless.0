@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0151.hostedemail.com ([216.40.44.151]:54217 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754885AbcBBOdK (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:13313 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754892AbcBCPiZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 09:33:10 -0500
-Message-ID: <1454423585.7291.16.camel@perches.com> (sfid-20160202_153317_858200_6EB577EA)
-Subject: Re: [patch] mwifiex: fix a reversed condition
-From: Joe Perches <joe@perches.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	chunfan chen <jeffc@marvell.com>
-Cc: Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
-Date: Tue, 02 Feb 2016 06:33:05 -0800
-In-Reply-To: <20160202100005.GA3040@mwanda>
-References: <20160202100005.GA3040@mwanda>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Wed, 3 Feb 2016 10:38:25 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>,
+	<linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Subject: [PATCH 0/2] Peer Stats fixes for rx duration
+Date: Wed, 3 Feb 2016 21:07:41 +0530
+Message-ID: <1454513863-2703-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160203_163828_714741_09E685D5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-02-02 at 13:00 +0300, Dan Carpenter wrote:
-> The NULL test here is reversed.
-[]
-> diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-[]
-> @@ -2196,7 +2196,7 @@ int mwifiex_ret_802_11_scan(struct mwifiex_private *priv,
->  
->  			pmatch = adapter->nd_info->matches[idx];
->  
-> -			if (!pmatch) {
-> +			if (pmatch) {
->  				memset(pmatch, 0, sizeof(*pmatch));
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-As it's just been kzalloc'ed,
-this memset seems unnecessary as well.
+This is a small patchset that fixes:
+
+1. Updating rx duration per station (part of mac80211 STA debugfs)
+irrespective user does a cat fw_stats in ath10k debugfs
+
+2. Remove updating peer stats list (which is completely useless)
+when we recieve periodic update of peer stats for updating rx_duration
+
+Mohammed Shafi Shajakhan (2):
+  ath10k: Fix updating peer stats rx duration
+  ath10k: Fix pointless update of peer stats list
+
+ drivers/net/wireless/ath/ath10k/debug.c |   12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+-- 
+1.7.9.5
 
