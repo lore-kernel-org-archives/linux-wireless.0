@@ -1,131 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:9797 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755177AbcBBMIG (ORCPT
+Received: from smtp-out4.electric.net ([192.162.216.183]:50045 "EHLO
+	smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757406AbcBCP5h convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 07:08:06 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH 23/26] staging: wilc1000: remove unused log message using the RX_DBG tag
-Date: Tue, 2 Feb 2016 21:02:33 +0900
-Message-ID: <1454414556-9822-23-git-send-email-leo.kim@atmel.com> (sfid-20160202_131501_766286_9E486209)
-In-Reply-To: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
-References: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
+	Wed, 3 Feb 2016 10:57:37 -0500
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Byeoungwook Kim' <quddnr145@gmail.com>,
+	"Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>
+CC: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 1/2] rtlwifi: Fix improve function 'rtl_addr_delay()' in
+ core.c
+Date: Wed, 3 Feb 2016 14:41:26 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1CCD5486@AcuExch.aculab.com> (sfid-20160203_165742_575028_77C70A94)
+References: <20160203015953.GA13562@gmail.com>
+In-Reply-To: <20160203015953.GA13562@gmail.com>
+Content-Type: text/plain; charset="Windows-1252"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+From: Byeoungwook Kim
+> Sent: 03 February 2016 02:00
+> Conditional codes in rtl_addr_delay() were improved in readability and
+> performance by using switch codes.
 
-This patch remove unused log message using the RX_DBG tag
+I'd like to see the performance data :-)
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan_common.h | 2 --
- drivers/staging/wilc1000/wilc_debugfs.c      | 2 +-
- drivers/staging/wilc1000/wilc_wlan.c         | 5 -----
- drivers/staging/wilc1000/wilc_wlan_cfg.c     | 5 -----
- 4 files changed, 1 insertion(+), 13 deletions(-)
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+> index 4ae421e..05f432c 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/core.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+> @@ -37,18 +37,26 @@
+> 
+>  void rtl_addr_delay(u32 addr)
+>  {
+> -	if (addr == 0xfe)
+> +	switch (addr) {
+> +	case 0xfe:
+>  		mdelay(50);
+> -	else if (addr == 0xfd)
+> +		break;
+> +	case 0xfd:
+>  		mdelay(5);
+> -	else if (addr == 0xfc)
+> +		break;
+> +	case 0xfc:
+>  		mdelay(1);
+> -	else if (addr == 0xfb)
+> +		break;
+> +	case 0xfb:
+>  		udelay(50);
+> -	else if (addr == 0xfa)
+> +		break;
+> +	case 0xfa:
+>  		udelay(5);
+> -	else if (addr == 0xf9)
+> +		break;
+> +	case 0xf9:
+>  		udelay(1);
+> +		break;
+> +	};
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index 617bc53..63d0ec5 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -6,7 +6,6 @@ enum debug_region {
- 	Hostapd_debug,
- 	CFG80211_debug,
- 	Interrupt_debug,
--	RX_debug,
- 	Lock_debug,
- 	Tcp_enhance,
- 	Spin_debug,
-@@ -22,7 +21,6 @@ enum debug_region {
- #define HOSTAPD_DBG             (1 << Hostapd_debug)
- #define CFG80211_DBG            (1 << CFG80211_debug)
- #define INT_DBG                 (1 << Interrupt_debug)
--#define RX_DBG                  (1 << RX_debug)
- #define LOCK_DBG                (1 << Lock_debug)
- #define TCP_ENH                 (1 << Tcp_enhance)
- #define SPIN_DEBUG              (1 << Spin_debug)
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index fd0e58f..63b66b2 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -24,7 +24,7 @@ static struct dentry *wilc_dir;
-  * --------------------------------------------------------------------------------
-  */
- 
--#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | CFG80211_DBG | INT_DBG | RX_DBG | LOCK_DBG | INIT_DBG | BUS_DBG | MEM_DBG)
-+#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | CFG80211_DBG | INT_DBG | LOCK_DBG | INIT_DBG | BUS_DBG | MEM_DBG)
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
- atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | GENERIC_DBG | CFG80211_DBG | FIRM_DBG | HOSTAPD_DBG);
- EXPORT_SYMBOL_GPL(WILC_REGION);
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 10a0937..fc0f772 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -835,11 +835,8 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- 			u32 pkt_len, pkt_offset, tp_len;
- 			int is_cfg_packet;
- 
--			PRINT_D(RX_DBG, "In the 2nd do-while\n");
- 			memcpy(&header, &buffer[offset], 4);
- 			header = cpu_to_le32(header);
--			PRINT_D(RX_DBG, "Header = %04x - Offset = %d\n",
--				header, offset);
- 
- 			is_cfg_packet = (header >> 31) & 0x1;
- 			pkt_offset = (header >> 22) & 0x1ff;
-@@ -890,7 +887,6 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- 	} while (1);
- 
- 	wilc->rxq_exit = 1;
--	PRINT_D(RX_DBG, "THREAD: Exiting RX thread\n");
- }
- 
- static void wilc_unknown_isr_ext(struct wilc *wilc)
-@@ -958,7 +954,6 @@ _end_:
- 			if (rqe) {
- 				rqe->buffer = buffer;
- 				rqe->buffer_size = size;
--				PRINT_D(RX_DBG, "rxq entery Size= %d - Address = %p\n", rqe->buffer_size, rqe->buffer);
- 				wilc_wlan_rxq_add(wilc, rqe);
- 			}
- 		}
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index b72c77b..3b3065b 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -522,7 +522,6 @@ int wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
- 		rsp->type = wilc_wlan_parse_info_frame(frame, size);
- 		rsp->seq_no = msg_id;
- 		/*call host interface info parse as well*/
--		PRINT_INFO(RX_DBG, "Info message received\n");
- 		wilc_gnrl_async_info_received(wilc, frame - 4, size + 4);
- 		break;
- 
-@@ -532,14 +531,10 @@ int wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
- 		break;
- 
- 	case 'S':
--		PRINT_INFO(RX_DBG, "Scan Notification Received\n");
- 		wilc_scan_complete_received(wilc, frame - 4, size + 4);
- 		break;
- 
- 	default:
--		PRINT_INFO(RX_DBG, "Receive unknown message type[%d-%d-%d-%d-%d-%d-%d-%d]\n",
--			   frame[0], frame[1], frame[2], frame[3], frame[4],
--			   frame[5], frame[6], frame[7]);
- 		rsp->type = 0;
- 		rsp->seq_no = msg_id;
- 		ret = 0;
--- 
-1.9.1
+Straight 'performance' can't matter here, not with mdelay(50)!
+The most likely effect is from speeding up the 'don't delay' path
+and reducing the number of conditionals (and hence accuracy of) udelay(1).
+Reversing the if-chain might be better still.
+
+	David
 
