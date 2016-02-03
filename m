@@ -1,107 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:59020 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932974AbcBDJdV (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:5951 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753284AbcBCGKP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:33:21 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 58/70] staging: wilc1000: renames struct connect_resp_info variables
-Date: Thu, 4 Feb 2016 18:24:19 +0900
-Message-ID: <1454577871-667-19-git-send-email-glen.lee@atmel.com> (sfid-20160204_103327_056694_62B74FBB)
-In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+	Wed, 3 Feb 2016 01:10:15 -0500
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u136A8Th002542
+	for <linux-wireless@vger.kernel.org>; Tue, 2 Feb 2016 22:10:15 -0800
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+	by mx0b-0016f401.pphosted.com with ESMTP id 20sw0hqndg-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Feb 2016 22:10:15 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 5/8] mwifiex: use an extensible framework for firmware dump solution
+Date: Tue, 2 Feb 2016 22:05:06 -0800
+Message-ID: <1454479509-27129-6-git-send-email-akarwar@marvell.com> (sfid-20160203_071029_913578_2679BF34)
+In-Reply-To: <1454479509-27129-1-git-send-email-akarwar@marvell.com>
+References: <1454479509-27129-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Xinming Hu <huxm@marvell.com>
 
-This patch renames to avoid camelcase changes follow are:
- - u32TimeRcvdInScanCached to time_scan_cached
- - u32TimeRcvdInScan to time_scan
+This patch apply an extensible firmware dump framework,
+so that other chipset can be easily added as needed.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.h       |  4 ++--
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 15 ++++++++-------
- 2 files changed, 10 insertions(+), 9 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 35 ++++++++++++-----------------
+ drivers/net/wireless/marvell/mwifiex/pcie.h | 19 ++++++++++++++++
+ 2 files changed, 33 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 2f030a9..0e10c75 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -85,8 +85,8 @@ struct network_info {
- 	u16 beacon_period;
- 	u8 dtim_period;
- 	u8 ch;
--	unsigned long u32TimeRcvdInScanCached;
--	unsigned long u32TimeRcvdInScan;
-+	unsigned long time_scan_cached;
-+	unsigned long time_scan;
- 	bool bNewNetwork;
- 	u8 u8Found;
- 	u32 u32Tsf;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 362fe1b..44d1855 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -277,7 +277,7 @@ static void update_scan_time(void)
- 	int i;
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index a18d944..c94d31e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -37,17 +37,6 @@ static struct mwifiex_if_ops pcie_ops;
  
- 	for (i = 0; i < last_scanned_cnt; i++)
--		last_scanned_shadow[i].u32TimeRcvdInScan = jiffies;
-+		last_scanned_shadow[i].time_scan = jiffies;
- }
+ static struct semaphore add_remove_card_sem;
  
- static void remove_network_from_shadow(unsigned long arg)
-@@ -287,7 +287,8 @@ static void remove_network_from_shadow(unsigned long arg)
+-static struct memory_type_mapping mem_type_mapping_tbl[] = {
+-	{"ITCM", NULL, 0, 0xF0},
+-	{"DTCM", NULL, 0, 0xF1},
+-	{"SQRAM", NULL, 0, 0xF2},
+-	{"IRAM", NULL, 0, 0xF3},
+-	{"APU", NULL, 0, 0xF4},
+-	{"CIU", NULL, 0, 0xF5},
+-	{"ICU", NULL, 0, 0xF6},
+-	{"MAC", NULL, 0, 0xF7},
+-};
+-
+ static int
+ mwifiex_map_pci_memory(struct mwifiex_adapter *adapter, struct sk_buff *skb,
+ 		       size_t size, int flags)
+@@ -206,6 +195,8 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
+ 		card->pcie.blksz_fw_dl = data->blksz_fw_dl;
+ 		card->pcie.tx_buf_size = data->tx_buf_size;
+ 		card->pcie.can_dump_fw = data->can_dump_fw;
++		card->pcie.mem_type_mapping_tbl = data->mem_type_mapping_tbl;
++		card->pcie.num_mem_types = data->num_mem_types;
+ 		card->pcie.can_ext_scan = data->can_ext_scan;
+ 	}
  
+@@ -2373,7 +2364,8 @@ mwifiex_pcie_rdwr_firmware(struct mwifiex_adapter *adapter, u8 doneflag)
+ 	if (mwifiex_read_reg(adapter, reg->fw_status, &fw_status))
+ 		return RDWR_STATUS_FAILURE;
  
- 	for (i = 0; i < last_scanned_cnt; i++) {
--		if (time_after(now, last_scanned_shadow[i].u32TimeRcvdInScan + (unsigned long)(SCAN_RESULT_EXPIRE))) {
-+		if (time_after(now, last_scanned_shadow[i].time_scan +
-+			       (unsigned long)(SCAN_RESULT_EXPIRE))) {
- 			PRINT_D(CFG80211_DBG, "Network expired ScanShadow:%s\n",
- 				last_scanned_shadow[i].ssid);
+-	ret = mwifiex_write_reg(adapter, reg->fw_dump_ctrl, FW_DUMP_HOST_READY);
++	ret = mwifiex_write_reg(adapter, reg->fw_dump_ctrl,
++				reg->fw_dump_host_ready);
+ 	if (ret) {
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "PCIE write err\n");
+@@ -2386,11 +2378,11 @@ mwifiex_pcie_rdwr_firmware(struct mwifiex_adapter *adapter, u8 doneflag)
+ 			return RDWR_STATUS_SUCCESS;
+ 		if (doneflag && ctrl_data == doneflag)
+ 			return RDWR_STATUS_DONE;
+-		if (ctrl_data != FW_DUMP_HOST_READY) {
++		if (ctrl_data != reg->fw_dump_host_ready) {
+ 			mwifiex_dbg(adapter, WARN,
+ 				    "The ctrl reg was changed, re-try again!\n");
+ 			ret = mwifiex_write_reg(adapter, reg->fw_dump_ctrl,
+-						FW_DUMP_HOST_READY);
++						reg->fw_dump_host_ready);
+ 			if (ret) {
+ 				mwifiex_dbg(adapter, ERROR,
+ 					    "PCIE write err\n");
+@@ -2418,8 +2410,9 @@ static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
+ 	if (!card->pcie.can_dump_fw)
+ 		return;
  
-@@ -384,8 +385,8 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
- 		kmalloc(pstrNetworkInfo->u16IEsLen, GFP_KERNEL);
- 	memcpy(last_scanned_shadow[ap_index].pu8IEs,
- 	       pstrNetworkInfo->pu8IEs, pstrNetworkInfo->u16IEsLen);
--	last_scanned_shadow[ap_index].u32TimeRcvdInScan = jiffies;
--	last_scanned_shadow[ap_index].u32TimeRcvdInScanCached = jiffies;
-+	last_scanned_shadow[ap_index].time_scan = jiffies;
-+	last_scanned_shadow[ap_index].time_scan_cached = jiffies;
- 	last_scanned_shadow[ap_index].u8Found = 1;
- 	if (ap_found != -1)
- 		kfree(last_scanned_shadow[ap_index].pJoinParams);
-@@ -465,7 +466,7 @@ static void CfgScanResult(enum scan_event scan_event,
- 							PRINT_D(CFG80211_DBG, "Update RSSI of %s\n", last_scanned_shadow[i].ssid);
+-	for (idx = 0; idx < ARRAY_SIZE(mem_type_mapping_tbl); idx++) {
+-		struct memory_type_mapping *entry = &mem_type_mapping_tbl[idx];
++	for (idx = 0; idx < adapter->num_mem_types; idx++) {
++		struct memory_type_mapping *entry =
++				&adapter->mem_type_mapping_tbl[idx];
  
- 							last_scanned_shadow[i].rssi = network_info->rssi;
--							last_scanned_shadow[i].u32TimeRcvdInScan = jiffies;
-+							last_scanned_shadow[i].time_scan = jiffies;
- 							break;
- 						}
- 					}
-@@ -566,9 +567,9 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
- 					unsigned long now = jiffies;
+ 		if (entry->mem_ptr) {
+ 			vfree(entry->mem_ptr);
+@@ -2440,8 +2433,8 @@ static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
  
- 					if (time_after(now,
--						       last_scanned_shadow[i].u32TimeRcvdInScanCached + (unsigned long)(nl80211_SCAN_RESULT_EXPIRE - (1 * HZ)))) {
-+						       last_scanned_shadow[i].time_scan_cached +
-+						       (unsigned long)(nl80211_SCAN_RESULT_EXPIRE - (1 * HZ))))
- 						bNeedScanRefresh = true;
--					}
+ 	/* Read the length of every memory which will dump */
+ 	for (idx = 0; idx < dump_num; idx++) {
+-		struct memory_type_mapping *entry = &mem_type_mapping_tbl[idx];
+-
++		struct memory_type_mapping *entry =
++				&adapter->mem_type_mapping_tbl[idx];
+ 		stat = mwifiex_pcie_rdwr_firmware(adapter, doneflag);
+ 		if (stat == RDWR_STATUS_FAILURE)
+ 			return;
+@@ -2457,7 +2450,7 @@ static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
+ 		if (memory_size == 0) {
+ 			mwifiex_dbg(adapter, MSG, "Firmware dump Finished!\n");
+ 			ret = mwifiex_write_reg(adapter, creg->fw_dump_ctrl,
+-						FW_DUMP_READ_DONE);
++						creg->fw_dump_read_done);
+ 			if (ret) {
+ 				mwifiex_dbg(adapter, ERROR, "PCIE write err\n");
+ 				return;
+@@ -2762,8 +2755,8 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
+ 		return -1;
  
- 					break;
- 				}
+ 	adapter->tx_buf_size = card->pcie.tx_buf_size;
+-	adapter->mem_type_mapping_tbl = mem_type_mapping_tbl;
+-	adapter->num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl);
++	adapter->mem_type_mapping_tbl = card->pcie.mem_type_mapping_tbl;
++	adapter->num_mem_types = card->pcie.num_mem_types;
+ 	strcpy(adapter->fw_name, card->pcie.firmware);
+ 	adapter->ext_scan = card->pcie.can_ext_scan;
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
+index 8f190c4..8bc4390 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.h
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+@@ -136,6 +136,8 @@ struct mwifiex_pcie_card_reg {
+ 	u16 fw_dump_ctrl;
+ 	u16 fw_dump_start;
+ 	u16 fw_dump_end;
++	u8 fw_dump_host_ready;
++	u8 fw_dump_read_done;
+ 	u8 msix_support;
+ };
+ 
+@@ -203,6 +205,8 @@ static const struct mwifiex_pcie_card_reg mwifiex_reg_8897 = {
+ 	.fw_dump_ctrl = 0xcf4,
+ 	.fw_dump_start = 0xcf8,
+ 	.fw_dump_end = 0xcff,
++	.fw_dump_host_ready = 0xee,
++	.fw_dump_read_done = 0xfe,
+ 	.msix_support = 0,
+ };
+ 
+@@ -238,12 +242,25 @@ static const struct mwifiex_pcie_card_reg mwifiex_reg_8997 = {
+ 	.msix_support = 1,
+ };
+ 
++static struct memory_type_mapping mem_type_mapping_tbl_w8897[] = {
++	{"ITCM", NULL, 0, 0xF0},
++	{"DTCM", NULL, 0, 0xF1},
++	{"SQRAM", NULL, 0, 0xF2},
++	{"IRAM", NULL, 0, 0xF3},
++	{"APU", NULL, 0, 0xF4},
++	{"CIU", NULL, 0, 0xF5},
++	{"ICU", NULL, 0, 0xF6},
++	{"MAC", NULL, 0, 0xF7},
++};
++
+ struct mwifiex_pcie_device {
+ 	const char *firmware;
+ 	const struct mwifiex_pcie_card_reg *reg;
+ 	u16 blksz_fw_dl;
+ 	u16 tx_buf_size;
+ 	bool can_dump_fw;
++	struct memory_type_mapping *mem_type_mapping_tbl;
++	u8 num_mem_types;
+ 	bool can_ext_scan;
+ };
+ 
+@@ -262,6 +279,8 @@ static const struct mwifiex_pcie_device mwifiex_pcie8897 = {
+ 	.blksz_fw_dl = MWIFIEX_PCIE_BLOCK_SIZE_FW_DNLD,
+ 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
+ 	.can_dump_fw = true,
++	.mem_type_mapping_tbl = mem_type_mapping_tbl_w8897,
++	.num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl_w8897),
+ 	.can_ext_scan = true,
+ };
+ 
 -- 
-1.9.1
+1.8.1.4
 
