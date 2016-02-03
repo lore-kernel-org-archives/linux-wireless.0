@@ -1,73 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m50-132.163.com ([123.125.50.132]:45306 "EHLO m50-132.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1425356AbcBROUd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 09:20:33 -0500
-From: Geliang Tang <geliangtang@163.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Julian Calaby <julian.calaby@gmail.com>
-Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
+Received: from mail.linuxfoundation.org ([140.211.169.12]:48343 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754607AbcBCXJH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2016 18:09:07 -0500
+Date: Wed, 3 Feb 2016 15:09:07 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Ivan Safonov <insafonov@gmail.com>
+Cc: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
 	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 2/3] staging: rtl8723au: core: rtw_recv: remove useless codes
-Date: Thu, 18 Feb 2016 22:19:30 +0800
-Message-Id: <30e1fa83bf812ef6f56221165a278560064150d7.1455804404.git.geliangtang@163.com> (sfid-20160218_152040_610396_0EEC9377)
-In-Reply-To: <cover.1455804404.git.geliangtang@163.com>
-References: <cover.1455804404.git.geliangtang@163.com>
-In-Reply-To: <b11787ff9cdc31b4335a654d88affd2dd229bc14.1455804404.git.geliangtang@163.com>
-References: <cover.1455804404.git.geliangtang@163.com> <b11787ff9cdc31b4335a654d88affd2dd229bc14.1455804404.git.geliangtang@163.com>
+Subject: Re: [PATCH 2/2] staging: wilc1000: wilc_parse_network_info
+ refactoring
+Message-ID: <20160203230907.GA15732@kroah.com> (sfid-20160204_001014_983058_BA314154)
+References: <20151227165957.GA22276@alpha.sfu-kras.ru>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20151227165957.GA22276@alpha.sfu-kras.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There are some useless codes in rtw_free_recvframe23a_queue() and
-recvframe_defrag(), so remove them.
+On Sun, Dec 27, 2015 at 11:59:57PM +0700, Ivan Safonov wrote:
+> 1) Return value of this function does not used;
+> 2) wilc_parse_network_info has no reasons to return an error;
+> 3) kfree does not free memory if argument is NULL.
+> 
+> Signed-off-by: Ivan Safonov <insafonov@gmail.com>
+> ---
+>  drivers/staging/wilc1000/coreconfigurator.c | 27 +++++----------------------
+>  drivers/staging/wilc1000/coreconfigurator.h |  2 +-
+>  2 files changed, 6 insertions(+), 23 deletions(-)
 
-Signed-off-by: Geliang Tang <geliangtang@163.com>
-Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/staging/rtl8723au/core/rtw_recv.c | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+You sent 3 different copies of this same patch, so I don't know which to
+apply :(
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_recv.c b/drivers/staging/rtl8723au/core/rtw_recv.c
-index 0b4593c..d1e0f65 100644
---- a/drivers/staging/rtl8723au/core/rtw_recv.c
-+++ b/drivers/staging/rtl8723au/core/rtw_recv.c
-@@ -195,12 +195,11 @@ using spinlock to protect
- static void rtw_free_recvframe23a_queue(struct rtw_queue *pframequeue)
- {
- 	struct recv_frame *hdr, *ptmp;
--	struct list_head *plist, *phead;
-+	struct list_head *phead;
- 
- 	spin_lock(&pframequeue->lock);
- 
- 	phead = get_list_head(pframequeue);
--	plist = phead->next;
- 
- 	list_for_each_entry_safe(hdr, ptmp, phead, list)
- 		rtw_free_recvframe23a(hdr);
-@@ -1547,7 +1546,7 @@ struct recv_frame *recvframe_defrag(struct rtw_adapter *adapter,
- 				    struct rtw_queue *defrag_q)
- {
- 	struct list_head *plist, *phead;
--	u8	*data, wlanhdr_offset;
-+	u8	wlanhdr_offset;
- 	u8	curfragnum;
- 	struct recv_frame *pnfhdr, *ptmp;
- 	struct recv_frame *prframe, *pnextrframe;
-@@ -1576,10 +1575,6 @@ struct recv_frame *recvframe_defrag(struct rtw_adapter *adapter,
- 
- 	curfragnum++;
- 
--	phead = get_list_head(defrag_q);
--
--	data = prframe->pkt->data;
--
- 	list_for_each_entry_safe(pnfhdr, ptmp, phead, list) {
- 		pnextrframe = (struct recv_frame *)pnfhdr;
- 		/* check the fragment sequence  (2nd ~n fragment frame) */
--- 
-2.5.0
+Please fix up and resend the series properly...
 
+thanks,
 
+greg k-h
