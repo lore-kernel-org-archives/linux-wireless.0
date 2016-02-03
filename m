@@ -1,59 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37680 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933225AbcBYSyt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2016 13:54:49 -0500
-Message-ID: <56CF4DA3.8030803@codeaurora.org> (sfid-20160225_195453_422217_FDBDB447)
-Date: Thu, 25 Feb 2016 10:53:23 -0800
-From: Peter Oh <poh@codeaurora.org>
-MIME-Version: 1.0
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"Oh, Peter" <poh@qca.qualcomm.com>
-CC: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org
-Subject: Re: [PATCH v3] ath10k: set MAC timestamp in management Rx frame
-References: <4c705dc7a2c0aa857da4e6eaf6e8ed47c354b9ea.1456351768.git.poh@qca.qualcomm.com> <87k2lsd9zv.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87k2lsd9zv.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from plane.gmane.org ([80.91.229.3]:58712 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750828AbcBCXPJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2016 18:15:09 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1aR6dd-0004Ud-3y
+	for linux-wireless@vger.kernel.org; Thu, 04 Feb 2016 00:15:05 +0100
+Received: from c-98-235-92-116.hsd1.pa.comcast.net ([98.235.92.116])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 00:15:05 +0100
+Received: from andrew by c-98-235-92-116.hsd1.pa.comcast.net with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 00:15:05 +0100
+To: linux-wireless@vger.kernel.org
+From: Andrew Boyce <andrew@idvector.net>
+Subject: wilc1000 staging driver initialization failure
+Date: Wed, 3 Feb 2016 18:09:18 -0500
+Message-ID: <n8u1av$hqv$1@ger.gmane.org> (sfid-20160204_001522_295888_0E080528)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+I've been working to build and test the staging wilc1000-sdio driver and 
+have run into a problem.
 
-On 02/25/2016 08:34 AM, Valo, Kalle wrote:
-> Peter Oh <poh@qca.qualcomm.com> writes:
->
->> Check and set Rx MAC timestamp when firmware indicates it.
->> Firmware adds it in Rx beacon frame only at this moment.
->> Driver and mac80211 may utilize it to detect such clockdrift
->> or beacon collision and use the result for beacon collision
->> avoidance.
->>
->> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
->> ---
->>
->> v2:
->> 	- fix kbuild test robot warning, left shift count >= width of
-> type,
->> 	at __le32_to_cpu(arg.ext_info.rx_mac_timestamp_u32) << 32
->> v3:
->> 	- correct ext_info to start 4-byte aligned
->> 	- make struct wmi_mgmt_rx_ext_info 4-byte aligned to comply FW's
-> intention.
->
-> I see new warnings:
->
-> drivers/net/wireless/ath/ath10k/wmi.c:2199:16: warning: restricted __le32
-> degrades to integer
-> drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: restricted __le32
-> degrades to integer
-> drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: cast to restricted
-> __le32
-> drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: restricted __le32
-> degrades to integer
->
-Do I have a way to run this check before submitting a patch such as 
-checkpatch.pl?
+I've built a kernel from Greg KH's staging-testing branch and loaded it 
+onto our device. When I try to bring the interface up, I get the following:
 
-Thanks,
-Peter
+root@test:~# ifconfig wlan0 up
+kernel: [ 3510.400000] DBG [wilc_mac_open: 1014]MAC OPEN[cef20000]
+kernel: [ 3510.400000] DBG [wilc_init_host_int: 
+2835]Host[cef20000][cd0df1c0]
+kernel: [ 3510.400000] DBG [wilc_mac_open: 1023]*** re-init ***
+kernel: [ 3510.400000] DBG [wlan_init_locks: 803]Initializing Locks ...
+kernel: [ 3510.400000] DBG [wilc_wlan_init: 1589]Initializing WILC_Wlan ...
+kernel: [ 3510.400000] DBG [wlan_deinit_locks: 829]De-Initializing Locks
+SIOCSIFFLAGS: Input/output error
+kernel: [ 3512.400000] [Sendconfigpkt]Set Timed out
+kernel: [ 3512.400000] DBG [hostIFthread: 2793]THREAD: Exiting HostIfThread
+
+Any ideas?
+
+I understand that this driver is under active development. Hopefully I 
+can get some of the bugs resolved.
+
+Thanks!
+  --Andrew
+
+P.S. I apologize if this is the wrong forum for this type of bug report.
+
