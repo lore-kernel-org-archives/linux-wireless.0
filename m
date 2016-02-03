@@ -1,78 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:36550 "EHLO
-	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754270AbcBCCQX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 21:16:23 -0500
-Date: Wed, 3 Feb 2016 11:16:17 +0900
-From: Byeoungwook Kim <quddnr145@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: kvalo@codeaurora.org, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/2] rtlwifi: Fix reusable codes in core.c
-Message-ID: <20160203021617.GA13759@gmail.com> (sfid-20160203_031642_831706_521618D9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:40040 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965903AbcBCSkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2016 13:40:03 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 02/28] rtl8xxxu: rtl8xxxu_download_firmware(): Cosmetic cleanups
+Date: Wed,  3 Feb 2016 13:39:36 -0500
+Message-Id: <1454524802-26763-3-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_201501_835211_AA81DA88)
+In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-rtl_*_delay() functions were reused same codes about addr variable.
-So i have converted to rtl_addr_delay() from code about addr variable.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
-V2 split in separate patchs.
- drivers/net/wireless/realtek/rtlwifi/core.c | 28 ++++------------------------
- 1 file changed, 4 insertions(+), 24 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index 05f432c..c1193d1 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -63,18 +63,8 @@ EXPORT_SYMBOL(rtl_addr_delay);
- void rtl_rfreg_delay(struct ieee80211_hw *hw, enum radio_path rfpath, u32 addr,
- 		     u32 mask, u32 data)
- {
--	if (addr == 0xfe) {
--		mdelay(50);
--	} else if (addr == 0xfd) {
--		mdelay(5);
--	} else if (addr == 0xfc) {
--		mdelay(1);
--	} else if (addr == 0xfb) {
--		udelay(50);
--	} else if (addr == 0xfa) {
--		udelay(5);
--	} else if (addr == 0xf9) {
--		udelay(1);
-+	if (addr >= 0xf9 && addr <= 0xfe) {
-+		rtl_addr_delay(addr);
- 	} else {
- 		rtl_set_rfreg(hw, rfpath, addr, mask, data);
- 		udelay(1);
-@@ -84,18 +74,8 @@ EXPORT_SYMBOL(rtl_rfreg_delay);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 6b39e4d..b6a264b 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2105,15 +2105,18 @@ static int rtl8xxxu_download_firmware(struct rtl8xxxu_priv *priv)
  
- void rtl_bb_delay(struct ieee80211_hw *hw, u32 addr, u32 data)
- {
--	if (addr == 0xfe) {
--		mdelay(50);
--	} else if (addr == 0xfd) {
--		mdelay(5);
--	} else if (addr == 0xfc) {
--		mdelay(1);
--	} else if (addr == 0xfb) {
--		udelay(50);
--	} else if (addr == 0xfa) {
--		udelay(5);
--	} else if (addr == 0xf9) {
--		udelay(1);
-+	if (addr >= 0xf9 && addr <= 0xfe) {
-+		rtl_addr_delay(addr);
- 	} else {
- 		rtl_set_bbreg(hw, addr, MASKDWORD, data);
- 		udelay(1);
+ 	/* MCU firmware download enable */
+ 	val8 = rtl8xxxu_read8(priv, REG_MCU_FW_DL);
+-	rtl8xxxu_write8(priv, REG_MCU_FW_DL, val8 | MCU_FW_DL_ENABLE);
++	val8 |= MCU_FW_DL_ENABLE;
++	rtl8xxxu_write8(priv, REG_MCU_FW_DL, val8);
+ 
+ 	/* 8051 reset */
+ 	val32 = rtl8xxxu_read32(priv, REG_MCU_FW_DL);
+-	rtl8xxxu_write32(priv, REG_MCU_FW_DL, val32 & ~BIT(19));
++	val32 &= ~BIT(19);
++	rtl8xxxu_write32(priv, REG_MCU_FW_DL, val32);
+ 
+ 	/* Reset firmware download checksum */
+ 	val8 = rtl8xxxu_read8(priv, REG_MCU_FW_DL);
+-	rtl8xxxu_write8(priv, REG_MCU_FW_DL, val8 | MCU_FW_DL_CSUM_REPORT);
++	val8 |= MCU_FW_DL_CSUM_REPORT;
++	rtl8xxxu_write8(priv, REG_MCU_FW_DL, val8);
+ 
+ 	pages = priv->fw_size / RTL_FW_PAGE_SIZE;
+ 	remainder = priv->fw_size % RTL_FW_PAGE_SIZE;
+@@ -2122,7 +2125,8 @@ static int rtl8xxxu_download_firmware(struct rtl8xxxu_priv *priv)
+ 
+ 	for (i = 0; i < pages; i++) {
+ 		val8 = rtl8xxxu_read8(priv, REG_MCU_FW_DL + 2) & 0xF8;
+-		rtl8xxxu_write8(priv, REG_MCU_FW_DL + 2, val8 | i);
++		val8 |= i;
++		rtl8xxxu_write8(priv, REG_MCU_FW_DL + 2, val8);
+ 
+ 		ret = rtl8xxxu_writeN(priv, REG_FW_START_ADDRESS,
+ 				      fwptr, RTL_FW_PAGE_SIZE);
+@@ -2136,7 +2140,8 @@ static int rtl8xxxu_download_firmware(struct rtl8xxxu_priv *priv)
+ 
+ 	if (remainder) {
+ 		val8 = rtl8xxxu_read8(priv, REG_MCU_FW_DL + 2) & 0xF8;
+-		rtl8xxxu_write8(priv, REG_MCU_FW_DL + 2, val8 | i);
++		val8 |= i;
++		rtl8xxxu_write8(priv, REG_MCU_FW_DL + 2, val8);
+ 		ret = rtl8xxxu_writeN(priv, REG_FW_START_ADDRESS,
+ 				      fwptr, remainder);
+ 		if (ret != remainder) {
+@@ -2149,8 +2154,8 @@ static int rtl8xxxu_download_firmware(struct rtl8xxxu_priv *priv)
+ fw_abort:
+ 	/* MCU firmware download disable */
+ 	val16 = rtl8xxxu_read16(priv, REG_MCU_FW_DL);
+-	rtl8xxxu_write16(priv, REG_MCU_FW_DL,
+-			 val16 & (~MCU_FW_DL_ENABLE & 0xff));
++	val16 &= ~MCU_FW_DL_ENABLE;
++	rtl8xxxu_write16(priv, REG_MCU_FW_DL, val16);
+ 
+ 	return ret;
+ }
 -- 
 2.5.0
 
