@@ -1,210 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:58780 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755960AbcBDJcX (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:25215 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752251AbcBCGKN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:32:23 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 49/70] staging: wilc1000: remove typedef from pstrNetworkInfo
-Date: Thu, 4 Feb 2016 18:24:10 +0900
-Message-ID: <1454577871-667-10-git-send-email-glen.lee@atmel.com> (sfid-20160204_103234_321934_0830D83C)
-In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+	Wed, 3 Feb 2016 01:10:13 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u1369UdB011932
+	for <linux-wireless@vger.kernel.org>; Tue, 2 Feb 2016 22:10:12 -0800
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+	by mx0a-0016f401.pphosted.com with ESMTP id 20svyv7n1f-2
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Feb 2016 22:10:12 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 4/8] mwifiex: keep original structure in decl header file
+Date: Tue, 2 Feb 2016 22:05:05 -0800
+Message-ID: <1454479509-27129-5-git-send-email-akarwar@marvell.com> (sfid-20160203_071027_436258_D0F6E550)
+In-Reply-To: <1454479509-27129-1-git-send-email-akarwar@marvell.com>
+References: <1454479509-27129-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Xinming Hu <huxm@marvell.com>
 
-This patch removes typedef from the struct pstrNetworkInfo and
-renames it to network_info.
+memory_type_mapping strucuture did not refer to other mwifiex
+specific strture. A better software design method would keep
+it in decl header file, which does not include other mwifiex
+header file.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c       |  7 ++++---
- drivers/staging/wilc1000/coreconfigurator.h       |  7 ++++---
- drivers/staging/wilc1000/host_interface.c         |  6 +++---
- drivers/staging/wilc1000/host_interface.h         |  4 ++--
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++++-------
- 5 files changed, 20 insertions(+), 18 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/decl.h | 21 +++++++++++++++++++++
+ drivers/net/wireless/marvell/mwifiex/main.h | 20 --------------------
+ drivers/net/wireless/marvell/mwifiex/pcie.h |  1 +
+ 3 files changed, 22 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index e9f6262..0d0a4ec 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -270,9 +270,10 @@ static u8 get_current_channel_802_11n(u8 *pu8msa, u16 rx_len)
- 	return 0;
- }
- 
--s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
-+s32 wilc_parse_network_info(u8 *msg_buffer,
-+			    struct network_info **ret_network_info)
- {
--	tstrNetworkInfo *network_info = NULL;
-+	struct network_info *network_info = NULL;
- 	u8 msg_type = 0;
- 	u8 msg_id = 0;
- 	u16 msg_len = 0;
-@@ -304,7 +305,7 @@ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
- 		u32 tsf_lo;
- 		u32 tsf_hi;
- 
--		network_info = kzalloc(sizeof(tstrNetworkInfo), GFP_KERNEL);
-+		network_info = kzalloc(sizeof(*network_info), GFP_KERNEL);
- 		if (!network_info)
- 			return -ENOMEM;
- 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index aa9aee6..214b43b 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -76,7 +76,7 @@ typedef struct {
- 	s8 as8RSSI[NUM_RSSI];
- } tstrRSSI;
- 
--typedef struct {
-+struct network_info {
- 	s8 s8rssi;
- 	u16 u16CapInfo;
- 	u8 au8ssid[MAX_SSID_LEN];
-@@ -95,7 +95,7 @@ typedef struct {
- 	void *pJoinParams;
- 	tstrRSSI strRssi;
- 	u64 u64Tsf;
--} tstrNetworkInfo;
+diff --git a/drivers/net/wireless/marvell/mwifiex/decl.h b/drivers/net/wireless/marvell/mwifiex/decl.h
+index d9c15cd..c744a70 100644
+--- a/drivers/net/wireless/marvell/mwifiex/decl.h
++++ b/drivers/net/wireless/marvell/mwifiex/decl.h
+@@ -270,4 +270,25 @@ struct mwifiex_11h_intf_state {
+ 	bool is_11h_enabled;
+ 	bool is_11h_active;
+ } __packed;
++
++#define MWIFIEX_FW_DUMP_IDX		0xff
++#define MWIFIEX_DRV_INFO_IDX		20
++#define FW_DUMP_MAX_NAME_LEN		8
++#define FW_DUMP_HOST_READY      0xEE
++#define FW_DUMP_DONE			0xFF
++#define FW_DUMP_READ_DONE		0xFE
++
++struct memory_type_mapping {
++	u8 mem_name[FW_DUMP_MAX_NAME_LEN];
++	u8 *mem_ptr;
++	u32 mem_size;
++	u8 done_flag;
 +};
- 
- struct connect_resp_info {
- 	u16 capability;
-@@ -120,7 +120,8 @@ typedef struct {
- 	size_t ie_len;
- } tstrDisconnectNotifInfo;
- 
--s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info);
-+s32 wilc_parse_network_info(u8 *msg_buffer,
-+			    struct network_info **ret_network_info);
- s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
- 			       struct connect_resp_info **ret_connect_resp_info);
- void wilc_scan_complete_received(struct wilc *wilc, u8 *pu8Buffer,
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 992008b..c0b4f7b 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -272,7 +272,7 @@ static struct wilc_vif *join_req_vif;
- #define FLUSHED_JOIN_REQ 1
- #define FLUSHED_BYTE_POS 79
- 
--static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo);
-+static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo);
- static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
- 
- /* The u8IfIdx starts from 0 to NUM_CONCURRENT_IFC -1, but 0 index used as
-@@ -1348,7 +1348,7 @@ static s32 Handle_RcvdNtwrkInfo(struct wilc_vif *vif,
- 	u32 i;
- 	bool bNewNtwrkFound;
- 	s32 result = 0;
--	tstrNetworkInfo *pstrNetworkInfo = NULL;
-+	struct network_info *pstrNetworkInfo = NULL;
- 	void *pJoinParams = NULL;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
- 
-@@ -4255,7 +4255,7 @@ int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
- 	return result;
- }
- 
--static void *host_int_ParseJoinBssParam(tstrNetworkInfo *ptstrNetworkInfo)
-+static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo)
- {
- 	struct join_bss_param *pNewJoinBssParam = NULL;
- 	u8 *pu8IEs;
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 69c36a7..c73a5c3 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -168,8 +168,8 @@ enum KEY_TYPE {
- 	PMKSA,
++
++enum rdwr_status {
++	RDWR_STATUS_SUCCESS = 0,
++	RDWR_STATUS_FAILURE = 1,
++	RDWR_STATUS_DONE = 2
++};
++
+ #endif /* !_MWIFIEX_DECL_H_ */
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 0433977..aea7aee 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -489,26 +489,6 @@ struct mwifiex_roc_cfg {
+ 	struct ieee80211_channel chan;
  };
  
--typedef void (*wilc_scan_result)(enum scan_event, tstrNetworkInfo *,
--				  void *, void *);
-+typedef void (*wilc_scan_result)(enum scan_event, struct network_info *,
-+				 void *, void *);
+-#define MWIFIEX_FW_DUMP_IDX		0xff
+-#define MWIFIEX_DRV_INFO_IDX		20
+-#define FW_DUMP_MAX_NAME_LEN		8
+-#define FW_DUMP_HOST_READY		0xEE
+-#define FW_DUMP_DONE			0xFF
+-#define FW_DUMP_READ_DONE		0xFE
+-
+-struct memory_type_mapping {
+-	u8 mem_name[FW_DUMP_MAX_NAME_LEN];
+-	u8 *mem_ptr;
+-	u32 mem_size;
+-	u8 done_flag;
+-};
+-
+-enum rdwr_status {
+-	RDWR_STATUS_SUCCESS = 0,
+-	RDWR_STATUS_FAILURE = 1,
+-	RDWR_STATUS_DONE = 2
+-};
+-
+ enum mwifiex_iface_work_flags {
+ 	MWIFIEX_IFACE_WORK_DEVICE_DUMP,
+ 	MWIFIEX_IFACE_WORK_CARD_RESET,
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
+index 9700ac3..8f190c4 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.h
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+@@ -26,6 +26,7 @@
+ #include    <linux/pcieport_if.h>
+ #include    <linux/interrupt.h>
  
- typedef void (*wilc_connect_result)(enum conn_event,
- 				     tstrConnectInfo *,
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 8d922e6..b22a48a 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -93,7 +93,7 @@ static const struct wiphy_wowlan_support wowlan_support = {
- extern int wilc_mac_open(struct net_device *ndev);
- extern int wilc_mac_close(struct net_device *ndev);
++#include    "decl.h"
+ #include    "main.h"
  
--static tstrNetworkInfo last_scanned_shadow[MAX_NUM_SCANNED_NETWORKS_SHADOW];
-+static struct network_info last_scanned_shadow[MAX_NUM_SCANNED_NETWORKS_SHADOW];
- static u32 last_scanned_cnt;
- struct timer_list wilc_during_ip_timer;
- static struct timer_list hAgingTimer;
-@@ -206,7 +206,7 @@ static void clear_shadow_scan(void)
- 	}
- }
- 
--static u32 get_rssi_avg(tstrNetworkInfo *network_info)
-+static u32 get_rssi_avg(struct network_info *network_info)
- {
- 	u8 i;
- 	int rssi_v = 0;
-@@ -231,7 +231,7 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
- 	wiphy = priv->dev->ieee80211_ptr->wiphy;
- 
- 	for (i = 0; i < last_scanned_cnt; i++) {
--		tstrNetworkInfo *network_info;
-+		struct network_info *network_info;
- 
- 		network_info = &last_scanned_shadow[i];
- 
-@@ -310,7 +310,7 @@ static void clear_duringIP(unsigned long arg)
- 	wilc_optaining_ip = false;
- }
- 
--static int is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo,
-+static int is_network_in_shadow(struct network_info *pstrNetworkInfo,
- 				void *user_void)
- {
- 	int state = -1;
-@@ -333,7 +333,7 @@ static int is_network_in_shadow(tstrNetworkInfo *pstrNetworkInfo,
- 	return state;
- }
- 
--static void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo,
-+static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
- 				  void *user_void, void *pJoinParams)
- {
- 	int ap_found = is_network_in_shadow(pstrNetworkInfo, user_void);
-@@ -384,7 +384,7 @@ static void add_network_to_shadow(tstrNetworkInfo *pstrNetworkInfo,
- }
- 
- static void CfgScanResult(enum scan_event scan_event,
--			  tstrNetworkInfo *network_info,
-+			  struct network_info *network_info,
- 			  void *user_void,
- 			  void *join_params)
- {
-@@ -693,7 +693,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 
- 	struct wilc_priv *priv;
- 	struct host_if_drv *pstrWFIDrv;
--	tstrNetworkInfo *pstrNetworkInfo = NULL;
-+	struct network_info *pstrNetworkInfo = NULL;
- 	struct wilc_vif *vif;
- 
- 	wilc_connecting = 1;
+ #define PCIE8766_DEFAULT_FW_NAME "mrvl/pcie8766_uapsta.bin"
 -- 
-1.9.1
+1.8.1.4
 
