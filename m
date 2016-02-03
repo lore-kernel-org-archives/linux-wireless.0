@@ -1,150 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f172.google.com ([209.85.213.172]:33357 "EHLO
-	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161028AbcBRATZ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2016 19:19:25 -0500
-Received: by mail-ig0-f172.google.com with SMTP id y8so2071581igp.0
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2016 16:19:25 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAFqt6zYnvcoeiV5rF9kpY2u5K8cj+SCxjcHBFPikhEe+VpP97A@mail.gmail.com>
-References: <20160215190451.19883.12408.stgit@localhost.localdomain>
- <CAFqt6zb6Qb46n=U=3owVrU+OfSL=qC_w0eQeSmJ91BfRBQkiSw@mail.gmail.com>
- <CAGRGNgVxB6rRxkz=eR30rbZsfH3irZXy0q3hu43AJC04YEfd7A@mail.gmail.com> <CAFqt6zYnvcoeiV5rF9kpY2u5K8cj+SCxjcHBFPikhEe+VpP97A@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 18 Feb 2016 11:19:05 +1100
-Message-ID: <CAGRGNgVgz7pmDym-c2k6kcmKjLfORcsBJ+eomddp8q3zEfPHSQ@mail.gmail.com> (sfid-20160218_011929_453750_AB0E324E)
-Subject: Re: [PATCH] rt2x00: unterminated strlen of user data
-To: Souptick Joarder <jrdr.linux@gmail.com>
-Cc: Alan <gnomes@lxorguk.ukuu.org.uk>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:40045 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965729AbcBCSkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2016 13:40:03 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 07/28] rtl8xxxu: Add more RCR bits
+Date: Wed,  3 Feb 2016 13:39:41 -0500
+Message-Id: <1454524802-26763-8-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_194818_793086_CBA261A2)
+In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Souptick,
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-On Thu, Feb 18, 2016 at 12:49 AM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
-> Hi Julian,
->
-> On Wed, Feb 17, 2016 at 5:38 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
->> Hi Souptick,
->>
->> On Tue, Feb 16, 2016 at 5:36 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
->>> On Tue, Feb 16, 2016 at 12:34 AM, Alan <gnomes@lxorguk.ukuu.org.uk> wrote:
->>>> The buffer needs to be zero terminated in case the user data is not.
->>>> Otherwise we run off the end of the buffer.
->>>>
->>>> Signed-off-by: Alan Cox <alan@linux.intel.com>
->>>> ---
->>>>  drivers/net/wireless/ralink/rt2x00/rt2x00debug.c |    5 +++--
->>>>  1 file changed, 3 insertions(+), 2 deletions(-)
->>>>
->>>> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c b/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
->>>> index 25ee3cb..72ae530 100644
->>>> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
->>>> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
->>>> @@ -478,7 +478,7 @@ static ssize_t rt2x00debug_write_##__name(struct file *file,        \
->>>>  {                                                              \
->>>>         struct rt2x00debug_intf *intf = file->private_data;     \
->>>>         const struct rt2x00debug *debug = intf->debug;          \
->>>> -       char line[16];                                          \
->>>> +       char line[17];                                          \
->>>>         size_t size;                                            \
->>>>         unsigned int index = intf->offset_##__name;             \
->>>>         __type value;                                           \
->>>> @@ -494,7 +494,8 @@ static ssize_t rt2x00debug_write_##__name(struct file *file,        \
->>>>                                                                 \
->>>>         if (copy_from_user(line, buf, length))                  \
->>>>                 return -EFAULT;                                 \
->>>> -                                                               \
->>>> +       line[16] = 0;
->>>
->>>             line[length] = '\0';
->>>             correct me if I am wrong.                          \
->>
->> I believe that in this case the data in buf will already be null
->> terminated, so ensuring that line is null terminated is only needed if
->> there are exactly 16 bytes in buf. IMHO
->>
->> line[16] = 0;
->
-> I think, if there are 16 bytes in buf, we end up loosing 1 byte data.
-> If there are 15 bytes in buf, buf is already be null terminated.
-> So is this really required?
-> Correct me if I am wrong.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-Counting in C starts at 0.
-
-We started out with line being a 16 character string, so it initially
-looked like this:
-
-0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 <- index
-_ _ _ _ _ _ _ _ _ _ __ __ __ __ __ __ <- data, i.e. line[index]
-
-If we are given a 4 byte null terminated string, we end up with:
-
-0 1 2 3  4 5 6 7 8 9 10 11 12 13 14 15
-a b c d \0 _ _ _ _ _ __ __ __ __ __ __
-
-If we are given a 15 byte null terminated string, we end up with:
-
-0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
-a b c d e f g h i j  k  l  m  n  o \0
-
-If we are given a 16 byte null terminated string, we end up with:
-
-0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
-a b c d e f g h i j  k  l  m  n  o  p
-
-Note that it is not null terminated. The call to strlen() will now run
-off into memory that doesn't belong to line and potentially cause a
-crash. This is a bug.
-
-Alan fixed this by adding another character to the string, so it's now
-17 characters long and line[16] will always be set to 0 after
-copy_from_user() is called. So now line initially looks like:
-
-0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
-_ _ _ _ _ _ _ _ _ _ __ __ __ __ __ __ __
-
-If we are given a 4 byte null terminated string, we end up with:
-
-0 1 2 3  4 5 6 7 8 9 10 11 12 13 14 15 16
-a b c d \0 _ _ _ _ _ __ __ __ __ __ __ \0
-
-If we are given a 15 byte null terminated string, we end up with:
-
-0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
-a b c d e f g h i j  k  l  m  n  o \0 \0
-
-If we are given a 16 byte null terminated string, we end up with:
-
-0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16
-a b c d e f g h i j  k  l  m  n  o  p \0
-
-Note that the final null terminator is set by the line[16] = 0; line,
-not copy_from_user().
-
-As line is now null terminated, strlen() will behave correctly and
-there is no bug.
-
-There are a few different ways to fix this bug. All of them will
-involve increasing the size of line to 17, and the exact details of
-how we ensure the null terminator is set can vary. Alan has chosen
-what is likely to be the smallest option in compiled code size, the
-fastest, and one of the most obvious options.
-
-Understanding how arrays and strings work in C is essential knowledge
-if you're going to submit or review patches for the Linux kernel.
-Could you please refresh your knowledge on those topics before
-submitting or reviewing any more patches?
-
-Thanks,
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+index 89547b6..f752602 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+@@ -568,9 +568,18 @@
+ #define  RCR_ACCEPT_CTRL_FRAME		BIT(12)
+ #define  RCR_ACCEPT_MGMT_FRAME		BIT(13)
+ #define  RCR_HTC_LOC_CTRL		BIT(14) /* MFC<--HTC=1 MFC-->HTC=0 */
++#define  RCR_UC_DATA_PKT_INT_ENABLE	BIT(16) /* Enable unicast data packet
++						   interrupt */
++#define  RCR_BM_DATA_PKT_INT_ENABLE	BIT(17) /* Enable broadcast data packet
++						   interrupt */
++#define  RCR_TIM_PARSER_ENABLE		BIT(18) /* Enable RX beacon TIM parser*/
+ #define  RCR_MFBEN			BIT(22)
+-#define  RCR_LSIGEN			BIT(23)
++#define  RCR_LSIG_ENABLE		BIT(23) /* Enable LSIG TXOP Protection
++						   function. Search KEYCAM for
++						   each rx packet to check if
++						   LSIGEN bit is set. */
+ #define  RCR_MULTI_BSSID_ENABLE		BIT(24) /* Enable Multiple BssId */
++#define  RCR_FORCE_ACK			BIT(26)
+ #define  RCR_ACCEPT_BA_SSN		BIT(27) /* Accept BA SSN */
+ #define  RCR_APPEND_PHYSTAT		BIT(28)
+ #define  RCR_APPEND_ICV			BIT(29)
 -- 
-Julian Calaby
+2.5.0
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
