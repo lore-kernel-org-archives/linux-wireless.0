@@ -1,55 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37087 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751809AbcBVOor (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:49298 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933050AbcBCXTv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 09:44:47 -0500
-Date: Mon, 22 Feb 2016 17:44:25 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: "Kim, Leo" <Leo.Kim@atmel.com>
-Cc: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+	Wed, 3 Feb 2016 18:19:51 -0500
+Date: Wed, 3 Feb 2016 15:19:50 -0800
+From: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>
+To: "Gujulan Elango, Hari Prasath (H.)" <hgujulan@visteon.com>
+Cc: "johnny.kim@atmel.com" <johnny.kim@atmel.com>,
+	"austin.shin@atmel.com" <austin.shin@atmel.com>,
+	"chris.park@atmel.com" <chris.park@atmel.com>,
+	"tony.cho@atmel.com" <tony.cho@atmel.com>,
+	"glen.lee@atmel.com" <glen.lee@atmel.com>,
+	"leo.kim@atmel.com" <leo.kim@atmel.com>,
 	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"Park, Chris" <Chris.Park@atmel.com>,
-	"Shin, Austin" <Austin.Shin@atmel.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Ferre, Nicolas" <Nicolas.FERRE@atmel.com>,
-	"Cho, Tony" <Tony.Cho@atmel.com>,
-	"Abozaeid, Adham" <Adham.Abozaeid@atmel.com>
-Subject: Re: [PATCH RESEND 04/10] staging: wilc1000: removes unnecessary
- wilc_debug print log
-Message-ID: <20160222144424.GD5273@mwanda> (sfid-20160222_154506_133503_4C229BA3)
-References: <1456116079-7161-1-git-send-email-leo.kim@atmel.com>
- <1456116079-7161-4-git-send-email-leo.kim@atmel.com>
- <20160222104519.GR32153@mwanda>
- <74F3875218FC364C9618AB19CB60E9058004B81C@penmbx02.corp.atmel.com>
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] staging: wilc1000: Move Macro definition
+Message-ID: <20160203231950.GA6765@kroah.com> (sfid-20160204_002024_767458_66D246F9)
+References: <20160118134339.GA16263@IND12F0122>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <74F3875218FC364C9618AB19CB60E9058004B81C@penmbx02.corp.atmel.com>
+In-Reply-To: <20160118134339.GA16263@IND12F0122>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 22, 2016 at 11:42:42AM +0000, Kim, Leo wrote:
-> Dear Dan,
+On Mon, Jan 18, 2016 at 01:42:35PM +0000, Gujulan Elango, Hari Prasath (H.) wrote:
+> From: Hari Prasath Gujulan Elango <hgujulan@visteon.com>
 > 
-> This patch is subject "removes unnecessary wilc_debug print log".
+> This patch move's a macro defined in the middle of a structure
+> definition to make it more readable.
+> 
+> Signed-off-by: Hari Prasath Gujulan Elango <hgujulan@visteon.com>
+> ---
+>  drivers/staging/wilc1000/wilc_sdio.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/staging/wilc1000/wilc_sdio.c b/drivers/staging/wilc1000/wilc_sdio.c
+> index e961b50..875ea68 100644
+> --- a/drivers/staging/wilc1000/wilc_sdio.c
+> +++ b/drivers/staging/wilc1000/wilc_sdio.c
+> @@ -29,12 +29,12 @@ static const struct sdio_device_id wilc_sdio_ids[] = {
+>  };
+>  
+>  #define WILC_SDIO_BLOCK_SIZE 512
+> +#define MAX_NUN_INT_THRPT_ENH2 (5) /* Max num interrupts allowed in registers 0xf7, 0xf8 */
+>  
+>  typedef struct {
+>  	bool irq_gpio;
+>  	u32 block_size;
+>  	int nint;
+> -#define MAX_NUN_INT_THRPT_ENH2 (5) /* Max num interrupts allowed in registers 0xf7, 0xf8 */
 
-I'm fine with you fixing it up in a later patch, but you should not be defending
-this patch as valid way to do things.
+No, this is a very common way to show that this define is for this field
+in the structure, please don't change that.
 
-The rule is "do one thing at a time", not "do half a thing at a time."
-In the original code the if statement was required because it was
-determining when to print, but now it is a confusing unneeded line of
-code.  I'm not asking for an additional unrelated cleanup for something that was
-already there in the original code.  It was this patch which introduced
-the problem (the stray unneeded line of code).
+sorry,
 
-Also I had already asked you to redo this on Feb 19.
-
-Part of the reason that we like people to "do one thing per patch" is that
-people promise they will clean things up in the future but they get distracted
-and forget.
-
-regards,
-dan carpenter
-
-
+greg k-h
