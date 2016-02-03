@@ -1,60 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34864 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751913AbcBPPYX (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:21699 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751668AbcBCGKG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2016 10:24:23 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Ross Green <rgkernel@gmail.com>
-Cc: Emil Goode <emil.fsw@goode.io>, Shahar Patury <shaharp@ti.com>,
-	Guy Mishol <guym@ti.com>,
-	Igor Grinberg <grinberg@compulab.co.il>,
-	Uri Mashiach <uri.mashiach@compulab.co.il>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: wlcore: Fix regression in wlcore_set_partition()
-References: <20160210012216.GA18819@lianli>
-	<20160212094526.EC572611CE@smtp.codeaurora.org>
-	<CANfgCY02_AkRi2EMNZsneK8UdwLvAWxF_X0ts6WZbaM0=5c63A@mail.gmail.com>
-Date: Tue, 16 Feb 2016 17:24:15 +0200
-In-Reply-To: <CANfgCY02_AkRi2EMNZsneK8UdwLvAWxF_X0ts6WZbaM0=5c63A@mail.gmail.com>
-	(Ross Green's message of "Mon, 15 Feb 2016 15:01:49 +1100")
-Message-ID: <87bn7gu19c.fsf@kamboji.qca.qualcomm.com> (sfid-20160216_162444_335335_89FCB557)
+	Wed, 3 Feb 2016 01:10:06 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u136A61r012757
+	for <linux-wireless@vger.kernel.org>; Tue, 2 Feb 2016 22:10:06 -0800
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+	by mx0a-0016f401.pphosted.com with ESMTP id 20svyv7n1b-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 02 Feb 2016 22:10:06 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/8] mwifiex: display right transmit packet delay
+Date: Tue, 2 Feb 2016 22:05:02 -0800
+Message-ID: <1454479509-27129-2-git-send-email-akarwar@marvell.com> (sfid-20160203_071012_062199_5B127161)
+In-Reply-To: <1454479509-27129-1-git-send-email-akarwar@marvell.com>
+References: <1454479509-27129-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ross Green <rgkernel@gmail.com> writes:
+From: Xinming Hu <huxm@marvell.com>
 
-> On Fri, Feb 12, 2016 at 8:45 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->>
->>> The commit 3719c17e1816 ("wlcore/wl18xx: fw logger over sdio") introduced a
->>> regression causing the wlcore to time out and go into recovery. Reverting the
->>> changes regarding write of the last partition size brings the module back to
->>> it's functional state.
->>>
->>> Fixes: 3719c17e1816 ("wlcore/wl18xx: fw logger over sdio")
->>> Reported-by: Ross Green <rgkernel@gmail.com>
->>> Signed-off-by: Emil Goode <emil.fsw@goode.io>
->>> [kvalo@codeaurora.org: improved commit log]
->>
->> Thanks, applied to wireless-drivers.git.
->>
->> Kalle Valo
->
-> I just tested linux-4.5-rc4 it appears the above fix missed the release for rc4!
-> So the behaviour of firmware reset being called after the access of
-> the last partition timesout.
->
-> Again tested patch with the new release - 4.5-rc4 and found everything
-> to work as expected again.
->
-> So Hopefully for rc5 - Please!
+drv_pkt_delay_max should be assigned non-zero value, so that
+packet delay can be accumulate in the right way.
 
-It takes some time to get patches into Linus' tree. And being in a
-conference and then getting sick is not really helping. I'm not sure if
-this patch makes to rc5 on time, but I'll try.
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/main.h | 1 +
+ drivers/net/wireless/marvell/mwifiex/wmm.c  | 1 +
+ 2 files changed, 2 insertions(+)
 
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 89a1576..0433977 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -298,6 +298,7 @@ struct mwifiex_tid_tbl {
+ #define WMM_HIGHEST_PRIORITY		7
+ #define HIGH_PRIO_TID				7
+ #define LOW_PRIO_TID				0
++#define MWIFIEX_WMM_DRV_DELAY_MAX 510
+ 
+ struct mwifiex_wmm_desc {
+ 	struct mwifiex_tid_tbl tid_tbl_ptr[MAX_NUM_TID];
+diff --git a/drivers/net/wireless/marvell/mwifiex/wmm.c b/drivers/net/wireless/marvell/mwifiex/wmm.c
+index 499e5a7..0eb2465 100644
+--- a/drivers/net/wireless/marvell/mwifiex/wmm.c
++++ b/drivers/net/wireless/marvell/mwifiex/wmm.c
+@@ -438,6 +438,7 @@ mwifiex_wmm_init(struct mwifiex_adapter *adapter)
+ 		mwifiex_set_ba_params(priv);
+ 		mwifiex_reset_11n_rx_seq_num(priv);
+ 
++		priv->wmm.drv_pkt_delay_max = MWIFIEX_WMM_DRV_DELAY_MAX;
+ 		atomic_set(&priv->wmm.tx_pkts_queued, 0);
+ 		atomic_set(&priv->wmm.highest_queued_prio, HIGH_PRIO_TID);
+ 	}
 -- 
-Kalle Valo
+1.8.1.4
+
