@@ -1,50 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:41156 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752221AbcBYXYb (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36550 "EHLO
+	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754270AbcBCCQX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2016 18:24:31 -0500
-From: Colin King <colin.king@canonical.com>
-To: Jakub Kicinski <kubakici@wp.pl>, Kalle Valo <kvalo@codeaurora.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
+	Tue, 2 Feb 2016 21:16:23 -0500
+Date: Wed, 3 Feb 2016 11:16:17 +0900
+From: Byeoungwook Kim <quddnr145@gmail.com>
+To: Larry.Finger@lwfinger.net
+Cc: kvalo@codeaurora.org, chaoming_li@realsil.com.cn,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH][V3] mt7601u: do not free dma_buf when ivp allocation fails
-Date: Thu, 25 Feb 2016 23:24:27 +0000
-Message-Id: <1456442667-19751-1-git-send-email-colin.king@canonical.com> (sfid-20160226_002452_688086_6F6A23B7)
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 2/2] rtlwifi: Fix reusable codes in core.c
+Message-ID: <20160203021617.GA13759@gmail.com> (sfid-20160203_031642_831706_521618D9)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+rtl_*_delay() functions were reused same codes about addr variable.
+So i have converted to rtl_addr_delay() from code about addr variable.
 
-If the allocation of ivp fails the error handling attempts to
-free an uninitialized dma_buf; this data structure just contains
-garbage on the stack, so the freeing will cause issues when the
-urb, buf and dma fields are free'd. Fix this by not free'ing the
-dma_buf if the ivp allocation fails.
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 ---
- drivers/net/wireless/mediatek/mt7601u/mcu.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+V2 split in separate patchs.
+ drivers/net/wireless/realtek/rtlwifi/core.c | 28 ++++------------------------
+ 1 file changed, 4 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/mcu.c b/drivers/net/wireless/mediatek/mt7601u/mcu.c
-index fbb1986..91c4b34 100644
---- a/drivers/net/wireless/mediatek/mt7601u/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
-@@ -362,7 +362,9 @@ mt7601u_upload_firmware(struct mt7601u_dev *dev, const struct mt76_fw *fw)
- 	int i, ret;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index 05f432c..c1193d1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -63,18 +63,8 @@ EXPORT_SYMBOL(rtl_addr_delay);
+ void rtl_rfreg_delay(struct ieee80211_hw *hw, enum radio_path rfpath, u32 addr,
+ 		     u32 mask, u32 data)
+ {
+-	if (addr == 0xfe) {
+-		mdelay(50);
+-	} else if (addr == 0xfd) {
+-		mdelay(5);
+-	} else if (addr == 0xfc) {
+-		mdelay(1);
+-	} else if (addr == 0xfb) {
+-		udelay(50);
+-	} else if (addr == 0xfa) {
+-		udelay(5);
+-	} else if (addr == 0xf9) {
+-		udelay(1);
++	if (addr >= 0xf9 && addr <= 0xfe) {
++		rtl_addr_delay(addr);
+ 	} else {
+ 		rtl_set_rfreg(hw, rfpath, addr, mask, data);
+ 		udelay(1);
+@@ -84,18 +74,8 @@ EXPORT_SYMBOL(rtl_rfreg_delay);
  
- 	ivb = kmemdup(fw->ivb, sizeof(fw->ivb), GFP_KERNEL);
--	if (!ivb || mt7601u_usb_alloc_buf(dev, MCU_FW_URB_SIZE, &dma_buf)) {
-+	if (!ivb)
-+		return -ENOMEM;
-+	if (mt7601u_usb_alloc_buf(dev, MCU_FW_URB_SIZE, &dma_buf)) {
- 		ret = -ENOMEM;
- 		goto error;
- 	}
+ void rtl_bb_delay(struct ieee80211_hw *hw, u32 addr, u32 data)
+ {
+-	if (addr == 0xfe) {
+-		mdelay(50);
+-	} else if (addr == 0xfd) {
+-		mdelay(5);
+-	} else if (addr == 0xfc) {
+-		mdelay(1);
+-	} else if (addr == 0xfb) {
+-		udelay(50);
+-	} else if (addr == 0xfa) {
+-		udelay(5);
+-	} else if (addr == 0xf9) {
+-		udelay(1);
++	if (addr >= 0xf9 && addr <= 0xfe) {
++		rtl_addr_delay(addr);
+ 	} else {
+ 		rtl_set_bbreg(hw, addr, MASKDWORD, data);
+ 		udelay(1);
 -- 
-2.7.0
+2.5.0
 
