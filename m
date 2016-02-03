@@ -1,53 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59368 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:42069 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752790AbcBWKzQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 05:55:16 -0500
-Message-ID: <1456224914.2041.22.camel@sipsolutions.net> (sfid-20160223_115535_044389_8D20BF31)
-Subject: Re: [PATCH v2 2/2] mac80211: parse VHT info in injected frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 23 Feb 2016 11:55:14 +0100
-In-Reply-To: <CAA2SeN+dN8dMs-RjmdRUzTZSVjerwtowpqJ54ZUcK14z7vu7Cg@mail.gmail.com> (sfid-20160223_114911_165286_E79FB770)
-References: <1455878585-5525-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	 <1455878585-5525-3-git-send-email-lorenzo.bianconi83@gmail.com>
-	 <1456222250.2041.8.camel@sipsolutions.net>
-	 <CAA2SeNLB+oL00Mx1BCccA4eOx6nghLUofruPSepW70VWRS8EQQ@mail.gmail.com>
-	 <1456224168.2041.21.camel@sipsolutions.net>
-	 <CAA2SeN+dN8dMs-RjmdRUzTZSVjerwtowpqJ54ZUcK14z7vu7Cg@mail.gmail.com>
-	 (sfid-20160223_114911_165286_E79FB770)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S933799AbcBCSkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2016 13:40:04 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 25/28] rtl8xxxu: Remove unused len/cnt variables from rtl8xxxu_rx_complete()
+Date: Wed,  3 Feb 2016 13:39:59 -0500
+Message-Id: <1454524802-26763-26-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_194134_738154_1D537DF6)
+In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-02-23 at 11:49 +0100, Lorenzo Bianconi wrote:
-> > On Tue, 2016-02-23 at 11:29 +0100, Lorenzo Bianconi wrote:
-> > > I used the previous commit scheme (mac80211: Parse legacy and HT
-> > > rate
-> > > in injected frames).
-> > 
-> > Oh, I merged something similar there? My mistake.
-> > 
-> 
-> No worries :)
-> 
-> > > I will rewrite the documentation. Should I send v3 or a different
-> > > patch?
-> > > 
-> > 
-> > Please resend, I didn't apply this. Perhaps you can (separately?)
-> > fix
-> > the HT documentation as well then?
-> > 
-> 
-> Should I resend just 2/2 or the first one as well? Ok, I will fix the
-> documentation in another patch
-> 
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-I applied the first one, no need to resend that.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Thanks!
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 1201836..a6c8dab 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -5034,13 +5034,11 @@ static void rtl8xxxu_rx_complete(struct urb *urb)
+ 	struct device *dev = &priv->udev->dev;
+ 	__le32 *_rx_desc_le = (__le32 *)skb->data;
+ 	u32 *_rx_desc = (u32 *)skb->data;
+-	int cnt, len, drvinfo_sz, desc_shift, i;
++	int drvinfo_sz, desc_shift, i;
+ 
+ 	for (i = 0; i < (sizeof(struct rtl8xxxu_rx_desc) / sizeof(u32)); i++)
+ 		_rx_desc[i] = le32_to_cpu(_rx_desc_le[i]);
+ 
+-	cnt = rx_desc->frag;
+-	len = rx_desc->pktlen;
+ 	drvinfo_sz = rx_desc->drvinfo_sz * 8;
+ 	desc_shift = rx_desc->shift;
+ 	skb_put(skb, urb->actual_length);
+-- 
+2.5.0
 
-johannes
