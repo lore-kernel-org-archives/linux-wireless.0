@@ -1,50 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:33132 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750757AbcBKGhN convert rfc822-to-8bit (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:50633 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933305AbcBCXeG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2016 01:37:13 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Anton Protopopov <a.s.protopopov@gmail.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Eran Harary <eran.harary@intel.com>
-CC: linuxwifi <linuxwifi@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] iwlwifi: fix erroneous return value
-Date: Thu, 11 Feb 2016 06:36:33 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA0DC45@hasmsx107.ger.corp.intel.com> (sfid-20160211_073830_253191_CEA80D30)
-References: <1455124113-27024-1-git-send-email-a.s.protopopov@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 3 Feb 2016 18:34:06 -0500
+Date: Wed, 3 Feb 2016 15:34:06 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Leo Kim <leo.kim@atmel.com>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	tony.cho@atmel.com, glen.lee@atmel.com, austin.shin@atmel.com,
+	Chris.Park@atmel.com, adham.abozaeid@atmel.com,
+	Nicolas.FERRE@atmel.com
+Subject: Re: [PATCH 1/7] staging: wilc1000: wilc_wfi_cfgoperations.c:
+ replaces PRINT_ER with netdev_err
+Message-ID: <20160203233406.GA20695@kroah.com> (sfid-20160204_003413_153613_2F4E4895)
+References: <1454292685-12294-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1454292685-12294-1-git-send-email-leo.kim@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 02/10/2016 07:10 PM, Anton Protopopov wrote:
-> The iwl_trans_pcie_start_fw() function may return the positive value EIO
-> instead of -EIO in case of error.
->
-> Signed-off-by: Anton Protopopov <a.s.protopopov@gmail.com>
+On Mon, Feb 01, 2016 at 11:11:19AM +0900, Leo Kim wrote:
+> This patches replaces PRINT_ER with netdev_err.
+> Removes unnecessary debug logs as well.
+> 
+> Signed-off-by: Leo Kim <leo.kim@atmel.com>
 > ---
->  drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-> index d60a467..920ea9d 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-> @@ -1034,7 +1034,7 @@ static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
->  	if (trans_pcie->is_down) {
->  		IWL_WARN(trans,
->  			 "Can't start_fw since the HW hasn't been started\n");
-> -		ret = EIO;
-> +		ret = -EIO;
->  		goto out;
->  	}
->  
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 86 ++++++++---------------
+>  1 file changed, 31 insertions(+), 55 deletions(-)
 
-applied - thanks.
+This series didn't apply either :(
