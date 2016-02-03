@@ -1,38 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:36780 "EHLO
-	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933093AbcBBP77 (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:47951 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755534AbcBCXEa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 10:59:59 -0500
-Date: Tue, 2 Feb 2016 21:29:44 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Paul Mcquade <paulmcquad@gmail.com>
-Cc: sgruszka@redhat.com, kvalo@codeaurora.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: net: wireless: rt2x00: Fixed Spacing issues
-Message-ID: <20160202155944.GA8235@sudip-laptop> (sfid-20160202_170030_791190_46BE1BC8)
-References: <1445112279-27796-1-git-send-email-paulmcquad@gmail.com>
+	Wed, 3 Feb 2016 18:04:30 -0500
+Date: Wed, 3 Feb 2016 15:04:29 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Cc: Johnny Kim <johnny.kim@atmel.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	ldv-project@linuxtesting.org
+Subject: Re: [PATCH v3] staging: wilc1000: fix double mutex_unlock on failure
+ path in wilc_wlan_cleanup()
+Message-ID: <20160203230429.GA17828@kroah.com> (sfid-20160204_000449_141306_46DF19B4)
+References: <20151221212202.GA11670@kroah.com>
+ <1450805966-9193-1-git-send-email-khoroshilov@ispras.ru>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445112279-27796-1-git-send-email-paulmcquad@gmail.com>
+In-Reply-To: <1450805966-9193-1-git-send-email-khoroshilov@ispras.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 17, 2015 at 09:04:39PM +0100, Paul Mcquade wrote:
-> Removed empty spaces before/after parenthesis
+On Tue, Dec 22, 2015 at 08:39:26PM +0300, Alexey Khoroshilov wrote:
+> If hif_read_reg() or hif_write_reg() fail in wilc_wlan_cleanup(),
+> it calls release_bus() and continues execution. But it leads to double
+> release_bus() call that means double unlock of g_linux_wlan->hif_cs mutex.
 > 
-> Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
-> Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> Found by Linux Driver Verification project (linuxtesting.org).
 > 
+> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
 > ---
-> drivers/net/wireless/rt2x00/rt61pci.h | 20 ++++++++++----------
->  1 file changed, 10 insertions(+), 10 deletions(-)
+>  drivers/staging/wilc1000/wilc_wlan.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
 
-This patch and your other patches related to rt2x00 will not apply
-anymore as the driver has moved to drivers/net/wireless/ralink/rt2x00
+Why is this 'v3'?  What changed from the other versions?  Please always
+document it below the --- line so that we have a chance when reviewing
+them.
 
-can you please send them again after rebasing against current tree..
+Please fix up and resend with that information.
 
-regards
-sudip
+thanks,
+
+greg k-h
