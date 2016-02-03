@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:29698 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753243AbcBVEPu (ORCPT
+Received: from mail-ob0-f193.google.com ([209.85.214.193]:35306 "EHLO
+	mail-ob0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751108AbcBCJSJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2016 23:15:50 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V3 08/24] staging: wilc1000: linux_mon.c: removes comments
-Date: Mon, 22 Feb 2016 13:11:53 +0900
-Message-ID: <1456114329-7036-9-git-send-email-leo.kim@atmel.com> (sfid-20160222_051553_068238_00885081)
-In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
-References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+	Wed, 3 Feb 2016 04:18:09 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <20160203085603.GA9640@sudip-pc>
+References: <20160203052146.GA15711@gmail.com>
+	<20160203085603.GA9640@sudip-pc>
+Date: Wed, 3 Feb 2016 18:18:08 +0900
+Message-ID: <CAOxTRzos-iFb5DCKzyz0y_XZgtsLi4uxhxH_3m_vaKrtLBZzjw@mail.gmail.com> (sfid-20160203_101844_426861_0803B9B1)
+Subject: Re: [PATCH v3] rtlwifi: Fix improve function 'rtl_addr_delay()' in core.c
+From: ByeoungWook Kim <quddnr145@gmail.com>
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, linux-kernel@vger.kernel.org,
+	kbuild test robot <lkp@intel.com>,
+	Julian Calaby <julian.calaby@gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+Hi Sudip,
 
-This patch removes unnecessary comments.
+This patch is exsisted depencency like next.
+http://marc.info/?l=linux-wireless&m=145447963305712&w=2
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_mon.c | 4 ----
- 1 file changed, 4 deletions(-)
+I wrote review and the followup patch.
+but i seem to that don't write a Cc document.
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index f6349e5..6347471 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -191,8 +191,6 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 	if (skb->len < rtap_len)
- 		return -1;
- 
--	/* skip the radiotap header */
--	/* Skip the ratio tap header */
- 	skb_pull(skb, rtap_len);
- 
- 	if (skb->data[0] == 0xc0 && (!(memcmp(broadcast, &skb->data[4], 6)))) {
-@@ -227,8 +225,6 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 	}
- 	skb->dev = mon_priv->real_ndev;
- 
--	/* actual deliver of data is device-specific, and not shown here */
--
- 	/* Identify if Ethernet or MAC header (data or mgmt) */
- 	memcpy(srcAdd, &skb->data[10], 6);
- 	memcpy(bssid, &skb->data[16], 6);
--- 
-1.9.1
+Sorry for your confused.
 
+Regards,
+Byeoungwook.
+
+2016-02-03 17:56 GMT+09:00 Sudip Mukherjee <sudipm.mukherjee@gmail.com>:
+> On Wed, Feb 03, 2016 at 02:21:46PM +0900, Byeoungwook Kim wrote:
+>> Conditional codes in rtl_addr_delay() were improved in readability and
+>> performance by using switch codes.
+>>
+>> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+>> Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
+>> Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+>
+> How you are using Signed-off-by: of Fengguang Wu?
+>
+> did i missed seeing any mail from Fengguang in your previous versions?
+>
+> regards
+> sudip
