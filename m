@@ -1,73 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f177.google.com ([209.85.223.177]:36010 "EHLO
-	mail-io0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753549AbcBAKXW (ORCPT
+Received: from mail-vk0-f54.google.com ([209.85.213.54]:35538 "EHLO
+	mail-vk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753721AbcBCPYo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2016 05:23:22 -0500
+	Wed, 3 Feb 2016 10:24:44 -0500
 MIME-Version: 1.0
-In-Reply-To: <20160201093346.GA10500@sudip-pc>
-References: <1454060944-11320-1-git-send-email-sudipm.mukherjee@gmail.com>
- <CAGRGNgXc9PtYY=hb8nNRt4T5YGm2vexcJ01Z1fCCcb=57WRZ3g@mail.gmail.com>
- <20160201042548.GA4072@sudip-pc> <878u34u6d6.fsf@purkki.adurom.net> <20160201093346.GA10500@sudip-pc>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 1 Feb 2016 21:23:02 +1100
-Message-ID: <CAGRGNgU7dg0rcCH2Le=Z_ExUBdPBbGzFp_tnFvA0CzuHpe+etQ@mail.gmail.com> (sfid-20160201_112407_986126_918541FD)
-Subject: Re: [PATCH] mac80211: fix memory leak
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
+Date: Wed, 3 Feb 2016 10:24:43 -0500
+Message-ID: <CA+5PVA4HVjsEw+j+HMDzO0gnQb4xTRwbAu4H2do3MU41QWvOvw@mail.gmail.com> (sfid-20160203_162500_377499_232BD012)
+Subject: ibss.c backtrace when batman-adv adds wireless interface
+From: Josh Boyer <jwboyer@fedoraproject.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Marek Lindner <mareklindner@neomailbox.ch>,
+	Simon Wunderlich <sw@simonwunderlich.de>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, b.a.t.m.a.n@lists.open-mesh.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sudip,
+Hi All,
 
-On Mon, Feb 1, 2016 at 8:33 PM, Sudip Mukherjee
-<sudipm.mukherjee@gmail.com> wrote:
-> On Mon, Feb 01, 2016 at 11:28:37AM +0200, Kalle Valo wrote:
->> Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
->>
->> > On Mon, Feb 01, 2016 at 11:03:35AM +1100, Julian Calaby wrote:
->> >> Hi Sudip,
->> >>
->> >> On Fri, Jan 29, 2016 at 8:49 PM, Sudip Mukherjee
->> >> <sudipm.mukherjee@gmail.com> wrote:
->> >> > On error we jumped to the error label and returned the error code but we
->> >> > missed releasing sinfo.
->> >> >
->> >> > Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
->> >>
->> >> Should the From: and Signed-off-by: email addresses be the same?
->> >
->> > I think 2 years back I had a long discussion with Greg about this and
->> > since then I al submitting patches like this. A small summayg of the
->> > problem from that discussion:
->> >
->> > "we have strict DMARC check for the corporate mail server. DMARC =
->> > domain based message authentication.
->> > So the mail i sent reached all the list subscriber from a different
->> > server than our designated server, and as a result it is marked as spam
->> > in many places and I have already received a few complaints regarding
->> > that."
->>
->> You can add a separate "From:" line to the beginning of the commit log
->> and git will use it then commiting the patch. I didn't find any
->> documention but it's easy to do and should solve this.
->
-> Documentation is not needed. :)
-> I have done that couple of time.
-> I will resend this patch with the extra From: line.
+We've had a user report the backtrace below when loading batman-adv on
+his machine.  It looks like the cfg80211 layer is complaining about a
+null bss returned, but I cannot tell if the rtlwifi driver or
+batman-adv is in error here.
 
-Don't forget to include the Fixes: tag.
+Thoughts?
 
-Thanks,
+josh
 
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Jan 28 22:29:21 melissa.gathman.org kernel: batman_adv: B.A.T.M.A.N.
+advanced 2015.2 (compatibility version 15) loaded
+Jan 28 22:29:21 melissa.gathman.org kernel: wlp0s26u1u4: Selected IBSS
+BSSID 02:1a:a0:3a:a6:ff based on configured SSID
+Jan 28 22:29:21 melissa.gathman.org kernel: ------------[ cut here ]------------
+Jan 28 22:29:21 melissa.gathman.org kernel: WARNING: CPU: 1 PID: 111
+at net/wireless/ibss.c:35 __cfg80211_ibss_joined+0x166/0x190
+[cfg80211]()
+Jan 28 22:29:21 melissa.gathman.org kernel: Modules linked in:
+batman_adv libcrc32c xt_CHECKSUM ipt_MASQUERADE nf_nat_masquerade_ipv4
+nf_conntrack_netbios_ns nf_conntrack_broadcast ip6t_rpfilter
+ip6t_REJECT nf_reject_ipv6 xt_conntrack tun ebtable_filter ebtable_nat
+ebtable_broute bridge stp llc ebtables ip6table_mangle ip6table_nat
+nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_raw
+ip6table_security ip6table_filter ip6_tables iptable_mangle
+iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat
+nf_conntrack iptable_raw iptable_security arc4 rtl8192cu rtl_usb
+rtl8192c_common rtlwifi mac80211 cfg80211 rfkill uvcvideo
+videobuf2_vmalloc videobuf2_core videobuf2_memops v4l2_common
+intel_rapl snd_hda_codec_hdmi snd_usb_audio joydev snd_usbmidi_lib
+snd_hda_codec_realtek iosf_mbi x86_pkg_temp_thermal videodev coretemp
+kvm_intel
+Jan 28 22:29:21 melissa.gathman.org kernel:  media snd_rawmidi cm109
+snd_hda_codec_generic kvm snd_hda_intel iTCO_wdt snd_hda_codec
+iTCO_vendor_support crct10dif_pclmul snd_hda_core ppdev snd_hwdep
+snd_seq snd_seq_device snd_pcm crc32_pclmul crc32c_intel snd_timer snd
+dcdbas lpc_ich mei_me parport_pc parport shpchp i2c_i801 mei tpm_tis
+tpm soundcore nfsd auth_rpcgss nfs_acl lockd grace sunrpc
+hid_microsoft i915 i2c_algo_bit drm_kms_helper drm e1000e serio_raw
+ptp pps_core fjes video
+Jan 28 22:29:21 melissa.gathman.org kernel: CPU: 1 PID: 111 Comm:
+kworker/u32:5 Not tainted 4.3.3-301.fc23.x86_64 #1
+Jan 28 22:29:21 melissa.gathman.org kernel: Hardware name: Dell Inc.
+OptiPlex 790/0HY9JP, BIOS A06 07/25/2011
+Jan 28 22:29:21 melissa.gathman.org kernel: Workqueue: cfg80211
+cfg80211_event_work [cfg80211]
+Jan 28 22:29:21 melissa.gathman.org kernel:  0000000000000000
+000000008beeeb5f ffff8800368bfce0 ffffffff813a626f
+Jan 28 22:29:21 melissa.gathman.org kernel:  0000000000000000
+ffff8800368bfd18 ffffffff810a07c2 ffff8800c2bc8850
+Jan 28 22:29:21 melissa.gathman.org kernel:  ffff8800c2bc8000
+ffff8801275bd558 0000000000000000 0000000000000286
+Jan 28 22:29:21 melissa.gathman.org kernel: Call Trace:
+Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff813a626f>]
+dump_stack+0x44/0x55
+Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff810a07c2>]
+warn_slowpath_common+0x82/0xc0
+Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff810a090a>]
+warn_slowpath_null+0x1a/0x20
+Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffffa05dfcd6>]
+__cfg80211_ibss_joined+0x166/0x190 [cfg80211]
+Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffffa05bb02c>]
+cfg80211_process_wdev_events+0x8c/0x190 [cfg80211]
+Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffffa05bb162>]
+cfg80211_process_rdev_events+0x32/0x70 [cfg80211]
+Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffffa05b601e>]
+cfg80211_event_work+0x1e/0x30 [cfg80211]
+Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff810b8cde>]
+process_one_work+0x19e/0x3f0
+Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff810b8f7e>]
+worker_thread+0x4e/0x450
+Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff810b8f30>] ?
+process_one_work+0x3f0/0x3f0
+Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff810bede8>]
+kthread+0xd8/0xf0
+Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff810bed10>] ?
+kthread_worker_fn+0x160/0x160
+Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff8178195f>]
+ret_from_fork+0x3f/0x70
+Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff810bed10>] ?
+kthread_worker_fn+0x160/0x160
+Jan 28 22:29:21 melissa.gathman.org kernel: ---[ end trace 04ee7067960ce525 ]---
+Jan 28 22:29:21 melissa.gathman.org kernel: batman_adv: bat0: Adding
+interface: wlp0s26u1u4
