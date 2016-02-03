@@ -1,54 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:10959 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751781AbcBWNU1 (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:36371 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754669AbcBCM6r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 08:20:27 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u1NDKGDx030316
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2016 05:20:27 -0800
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0a-0016f401.pphosted.com with ESMTP id 218m5mgrtd-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2016 05:20:27 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 2/4] mwifiex: fix corner case association failure
-Date: Tue, 23 Feb 2016 05:16:17 -0800
-Message-ID: <1456233379-12099-2-git-send-email-akarwar@marvell.com> (sfid-20160223_142031_349723_E4AD7A47)
-In-Reply-To: <1456233379-12099-1-git-send-email-akarwar@marvell.com>
-References: <1456233379-12099-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 3 Feb 2016 07:58:47 -0500
+Received: by mail-wm0-f47.google.com with SMTP id p63so163892552wmp.1
+        for <linux-wireless@vger.kernel.org>; Wed, 03 Feb 2016 04:58:46 -0800 (PST)
+From: Henning Rogge <hrogge@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Henning Rogge <hrogge@gmail.com>,
+	Bob Copeland <me@bobcopeland.com>,
+	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
+Subject: [PATCH v3 1/3] mac80211: Remove MPP table entries with MPath
+Date: Wed,  3 Feb 2016 13:58:36 +0100
+Message-Id: <1454504318-24988-2-git-send-email-henning.rogge@fkie.fraunhofer.de> (sfid-20160203_135850_691232_517D92C0)
+In-Reply-To: <1454504318-24988-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
+References: <1454504318-24988-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch corrects the error case in association path by returning
--1. Earlier "media_connected" used to remain on in this error case
-causing failure for further association attempts.
+Make the mesh_path_del() function remove all mpp table entries
+that are proxied by the removed mesh path.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-Fixes: b887664d882ee4 ('mwifiex: channel switch handling for station')
-Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Henning Rogge <henning.rogge@fkie.fraunhofer.de>
 ---
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 1 +
- 1 file changed, 1 insertion(+)
+ net/mac80211/mesh_pathtbl.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-index 5cbee58..d5c56eb 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -314,6 +314,7 @@ int mwifiex_bss_start(struct mwifiex_private *priv, struct cfg80211_bss *bss,
- 			mwifiex_dbg(adapter, ERROR,
- 				    "Attempt to reconnect on csa closed chan(%d)\n",
- 				    bss_desc->channel);
-+			ret = -1;
- 			goto done;
- 		}
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index dadf8dc..d9424ea 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -835,6 +835,29 @@ void mesh_path_flush_by_nexthop(struct sta_info *sta)
+ 	rcu_read_unlock();
+ }
  
++static void mpp_flush_by_proxy(struct ieee80211_sub_if_data *sdata,
++			       const u8 *proxy)
++{
++	struct mesh_table *tbl;
++	struct mesh_path *mpp;
++	struct mpath_node *node;
++	int i;
++
++	rcu_read_lock();
++	read_lock_bh(&pathtbl_resize_lock);
++	tbl = resize_dereference_mpp_paths();
++	for_each_mesh_entry(tbl, node, i) {
++		mpp = node->mpath;
++		if (ether_addr_equal(mpp->mpp, proxy)) {
++			spin_lock(&tbl->hashwlock[i]);
++			__mesh_path_del(tbl, node);
++			spin_unlock(&tbl->hashwlock[i]);
++		}
++	}
++	read_unlock_bh(&pathtbl_resize_lock);
++	rcu_read_unlock();
++}
++
+ static void table_flush_by_iface(struct mesh_table *tbl,
+ 				 struct ieee80211_sub_if_data *sdata)
+ {
+@@ -892,6 +915,9 @@ int mesh_path_del(struct ieee80211_sub_if_data *sdata, const u8 *addr)
+ 	int hash_idx;
+ 	int err = 0;
+ 
++	/* flush relevant mpp entries first */
++	mpp_flush_by_proxy(sdata, addr);
++
+ 	read_lock_bh(&pathtbl_resize_lock);
+ 	tbl = resize_dereference_mesh_paths();
+ 	hash_idx = mesh_table_hash(addr, sdata, tbl);
 -- 
-1.8.1.4
+2.5.0
 
