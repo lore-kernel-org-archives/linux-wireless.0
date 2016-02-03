@@ -1,83 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41995 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49950 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754274AbcB2M2d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 07:28:33 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: dsadsa sadsad <natserver2@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: alfa awus036nhr v2 and module rtl8xxxu
-References: <loom.20160128T003525-188@post.gmane.org>
-	<wrfjd1sco25f.fsf@redhat.com> <56B38CDF.9010806@lwfinger.net>
-	<wrfjd1scmkz6.fsf@redhat.com> <wrfj60xxd2f5.fsf@redhat.com>
-	<56BA8E5D.5090402@lwfinger.net> <wrfjlh6tb9zt.fsf@redhat.com>
-	<CAOhKHAXH-PCyWQSpuuZ=-6BnE0PeDks-4p9A3G_86OHLfEdU=w@mail.gmail.com>
-	<56BB5C16.8070206@lwfinger.net> <wrfjk2lomobj.fsf@redhat.com>
-	<56D3EBCF.7000206@lwfinger.net>
-Date: Mon, 29 Feb 2016 07:28:31 -0500
-In-Reply-To: <56D3EBCF.7000206@lwfinger.net> (Larry Finger's message of "Mon,
-	29 Feb 2016 00:57:19 -0600")
-Message-ID: <wrfj7fhnn1jk.fsf@redhat.com> (sfid-20160229_132836_632247_97D622E8)
-MIME-Version: 1.0
-Content-Type: text/plain
+	id S933813AbcBCSkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2016 13:40:04 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Bruno Randolf <br1@einfach.org>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 17/28] rtl8xxxu: Enable monitor mode by handling filters
+Date: Wed,  3 Feb 2016 13:39:51 -0500
+Message-Id: <1454524802-26763-18-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_194730_110675_6F1676A2)
+In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-> On 02/28/2016 05:01 PM, Jes Sorensen wrote:
->> Larry Finger <Larry.Finger@lwfinger.net> writes:
->>> On 02/10/2016 06:01 AM, dsadsa sadsad wrote:
->>>> So do i have to patch and recompile or not?
->>>
->>> It will not change a thing for the AWUS036NHR. It will fix a bug in
->>> 1T2R devices.
->>
->> After pulling my hairs out over this one for days (if not weeks), I
->> think I finally figured it out.
->>
->> I just pushed a patch into the rtl8xxxu-nextgen repository which makes
->> the AWUS036NHR v2 work for me.
->
-> Jes,
->
-> On my unit, which seems to be V1, things are worse. The logged output is
->
-> [   31.833290] usb 3-6: New USB device strings: Mfr=1, Product=2, SerialNumber=3
-> [   31.833292] usb 3-6: Product: ALFA  AWUS036NHR
-> [   31.833294] usb 3-6: SerialNumber: 00e04c000001
-> [   32.066835] fuse init (API version 7.24)
-> [   33.201094] usb 3-6: Vendor: ^R^CALFA
-> [   33.201097] usb 3-6: Product: US036NHR
-> [   33.201099] usb 3-6: rtl8192cu_parse_efuse: dumping efuse (0x80 bytes):
-> [   33.201101] usb 3-6: 00: 29 81 00 74 cd 00 00 00
-> [   33.201102] usb 3-6: 08: ff 00 da 0b 7f 81 03 41
-> [   33.201103] usb 3-6: 10: 32 00 85 62 9e ad 00 c0
-> [   33.201105] usb 3-6: 18: ca 52 c3 c9 02 03 12 03
-> [   33.201106] usb 3-6: 20: 41 4c 46 41 20 20 41 57
-> [   33.201107] usb 3-6: 28: 55 53 30 33 36 4e 48 52
-> [   33.201108] usb 3-6: 30: 00 00 00 00 00 00 00 00
-> [   33.201110] usb 3-6: 38: 00 00 00 00 00 00 00 00
-> [   33.201111] usb 3-6: 40: 00 00 00 00 00 00 00 00
-> [   33.201112] usb 3-6: 48: 00 00 00 00 00 00 00 00
-> [   33.201113] usb 3-6: 50: 00 00 00 00 00 00 00 00
-> [   33.201114] usb 3-6: 58: 06 00 19 19 19 00 00 00
-> [   33.201116] usb 3-6: 60: 27 26 25 00 00 00 00 00
-> [   33.201117] usb 3-6: 68: 00 00 00 00 00 00 00 00
-> [   33.201118] usb 3-6: 70: 00 00 00 00 00 0a 40 00
-> [   33.201119] usb 3-6: 78: 0e 20 00 00 36 00 04 00
-> [   33.201121] usb 3-6: RTL8188RU rev A (TSMC) 1T1R, TX queues 2,
-> WiFi=1, BT=0, GPS=0, HI PA=1
-> [   33.201122] usb 3-6: RTL8188RU MAC: 00:c0:ca:52:c3:c9
-> [   33.201124] usb 3-6: rtl8xxxu: Loading firmware rtlwifi/rtl8192cufw_TMSC.bin
-> [   33.203491] usb 3-6: Firmware revision 80.0 (signature 0x88c1)
-> [   33.348885] usb 3-6: Failed to initialize RF
-> [   33.661460] usbcore: registered new interface driver rtl8xxxu
-> [   33.675077] rtl8xxxu 3-6:1.0 wlp0s20u6: renamed from wlan0
-> [   33.749780] usb 3-6: rtl8xxxu_int_complete: Error -71
+From: Bruno Randolf <br1@einfach.org>
 
-That one I have never seen before - could you try and insert some debug
-prints to see where the RF initialization fails?
+Monitor mode is enabled by handling the filter flags we get from mac80211 in
+rtl8xxxu_configure_filter() and writing them to the RCR register.
 
-Cheers,
-Jes
+By handling the filters, we can also stop setting the BSSID filters in the
+association event.
+
+Signed-off-by: Bruno Randolf <br1@einfach.org>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 56 +++++++++++++++++++-----
+ 1 file changed, 45 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index ac4c211..b58a60f 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -4199,7 +4199,6 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 	 * Configure initial WMAC settings
+ 	 */
+ 	val32 = RCR_ACCEPT_PHYS_MATCH | RCR_ACCEPT_MCAST | RCR_ACCEPT_BCAST |
+-		/* RCR_CHECK_BSSID_MATCH | RCR_CHECK_BSSID_BEACON | */
+ 		RCR_ACCEPT_MGMT_FRAME | RCR_HTC_LOC_CTRL |
+ 		RCR_APPEND_PHYSTAT | RCR_APPEND_ICV | RCR_APPEND_MIC;
+ 	rtl8xxxu_write32(priv, REG_RCR, val32);
+@@ -4522,10 +4521,6 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 
+ 			rtl8xxxu_update_rate_mask(priv, ramask, sgi);
+ 
+-			val32 = rtl8xxxu_read32(priv, REG_RCR);
+-			val32 |= RCR_CHECK_BSSID_MATCH | RCR_CHECK_BSSID_BEACON;
+-			rtl8xxxu_write32(priv, REG_RCR, val32);
+-
+ 			/* Enable RX of data frames */
+ 			rtl8xxxu_write16(priv, REG_RXFLTMAP2, 0xffff);
+ 
+@@ -4539,11 +4534,6 @@ rtl8xxxu_bss_info_changed(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 
+ 			h2c.joinbss.data = H2C_JOIN_BSS_CONNECT;
+ 		} else {
+-			val32 = rtl8xxxu_read32(priv, REG_RCR);
+-			val32 &= ~(RCR_CHECK_BSSID_MATCH |
+-				   RCR_CHECK_BSSID_BEACON);
+-			rtl8xxxu_write32(priv, REG_RCR, val32);
+-
+ 			val8 = rtl8xxxu_read8(priv, REG_BEACON_CTRL);
+ 			val8 |= BEACON_DISABLE_TSF_UPDATE;
+ 			rtl8xxxu_write8(priv, REG_BEACON_CTRL, val8);
+@@ -5318,11 +5308,55 @@ static void rtl8xxxu_configure_filter(struct ieee80211_hw *hw,
+ 				      unsigned int *total_flags, u64 multicast)
+ {
+ 	struct rtl8xxxu_priv *priv = hw->priv;
++	u32 rcr = rtl8xxxu_read32(priv, REG_RCR);
+ 
+ 	dev_dbg(&priv->udev->dev, "%s: changed_flags %08x, total_flags %08x\n",
+ 		__func__, changed_flags, *total_flags);
+ 
+-	*total_flags &= (FIF_ALLMULTI | FIF_CONTROL | FIF_BCN_PRBRESP_PROMISC);
++	/*
++	 * FIF_ALLMULTI ignored as all multicast frames are accepted (REG_MAR)
++	 */
++
++	if (*total_flags & FIF_FCSFAIL)
++		rcr |= RCR_ACCEPT_CRC32;
++	else
++		rcr &= ~RCR_ACCEPT_CRC32;
++
++	/*
++	 * FIF_PLCPFAIL not supported?
++	 */
++
++	if (*total_flags & FIF_BCN_PRBRESP_PROMISC)
++		rcr &= ~RCR_CHECK_BSSID_BEACON;
++	else
++		rcr |= RCR_CHECK_BSSID_BEACON;
++
++	if (*total_flags & FIF_CONTROL)
++		rcr |= RCR_ACCEPT_CTRL_FRAME;
++	else
++		rcr &= ~RCR_ACCEPT_CTRL_FRAME;
++
++	if (*total_flags & FIF_OTHER_BSS) {
++		rcr |= RCR_ACCEPT_AP;
++		rcr &= ~RCR_CHECK_BSSID_MATCH;
++	} else {
++		rcr &= ~RCR_ACCEPT_AP;
++		rcr |= RCR_CHECK_BSSID_MATCH;
++	}
++
++	if (*total_flags & FIF_PSPOLL)
++		rcr |= RCR_ACCEPT_PM;
++	else
++		rcr &= ~RCR_ACCEPT_PM;
++
++	/*
++	 * FIF_PROBE_REQ ignored as probe requests always seem to be accepted
++	 */
++
++	rtl8xxxu_write32(priv, REG_RCR, rcr);
++
++	*total_flags &= (FIF_ALLMULTI | FIF_FCSFAIL | FIF_BCN_PRBRESP_PROMISC | \
++			 FIF_CONTROL | FIF_OTHER_BSS | FIF_PSPOLL | FIF_PROBE_REQ);
+ }
+ 
+ static int rtl8xxxu_set_rts_threshold(struct ieee80211_hw *hw, u32 rts)
+-- 
+2.5.0
+
