@@ -1,73 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54425 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753111AbcBBIPj (ORCPT
+Received: from mail-ob0-f195.google.com ([209.85.214.195]:35745 "EHLO
+	mail-ob0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755289AbcBCCbt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 03:15:39 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Stable <stable@vger.kernel.org>
-Subject: Re: [PATCH] rtlwifi: Fix warning from ieee80211_get_tx_rates() when using 5G
-References: <1454353134-29939-1-git-send-email-Larry.Finger@lwfinger.net>
-Date: Tue, 02 Feb 2016 10:15:31 +0200
-In-Reply-To: <1454353134-29939-1-git-send-email-Larry.Finger@lwfinger.net>
-	(Larry Finger's message of "Mon, 1 Feb 2016 12:58:54 -0600")
-Message-ID: <87zivjh6jg.fsf@kamboji.qca.qualcomm.com> (sfid-20160202_091545_083670_9B93B5E6)
+	Tue, 2 Feb 2016 21:31:49 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAGRGNgWKt3aqas5ZYaYVCLYkB5DOY0uojwO6tcSjTrQ-iytesw@mail.gmail.com>
+References: <20160203020139.GA13619@gmail.com>
+	<CAGRGNgWKt3aqas5ZYaYVCLYkB5DOY0uojwO6tcSjTrQ-iytesw@mail.gmail.com>
+Date: Wed, 3 Feb 2016 11:31:49 +0900
+Message-ID: <CAOxTRzojbg7qYK4rPf2ppkVvzpKQC-3yNiNVMgTGaP0i3ncW8g@mail.gmail.com> (sfid-20160203_033217_441974_62B4301B)
+Subject: Re: [PATCH 2/2] rtlwifi: Fix reusable codes in core.c
+From: ByeoungWook Kim <quddnr145@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
+Hi Julian,
 
-> When using a 5G-capable device with VHT rates enabled, the following
-> warning results:
+I sent to modify the patch again.
+Thanks for your assists!
+
+Regards,
+Byeoungwook
+
+2016-02-03 11:06 GMT+09:00 Julian Calaby <julian.calaby@gmail.com>:
+> Hi Byeoungwook,
 >
-> WARNING: CPU: 3 PID: 2253 at net/mac80211/rate.c:625 ieee80211_get_tx_rates+0x22e/0x620 [mac80211]()
-> Modules linked in: rtl8821ae btcoexist rtl_pci rtlwifi fuse drbg ansi_cprng ctr ccm bnep bluetooth af_packet nfs fscache vboxpci(O) vboxnetadp(O) vboxne
-> tflt(O) vboxdrv(O) arc4 snd_hda_codec_generic x86_pkg_temp_thermal rtsx_pci_sdmmc mmc_core rtsx_pci_ms kvm_intel memstick iwlmvm kvm mac80211 snd_hda_intel snd_hda_cod
-> ec snd_hwdep snd_hda_core irqbypass snd_pcm iwlwifi crct10dif_pclmul crc32_pclmul crc32c_intel ghash_clmulni_intel aesni_intel aes_x86_64 snd_timer lrw gf128mul glue_h
-> elper ablk_helper cryptd snd cfg80211 pcspkr serio_raw e1000e rtsx_pci lpc_ich ptp xhci_pci mfd_core pps_core xhci_hcd soundcore toshiba_acpi thermal sparse_keymap wmi
->  toshiba_bluetooth rfkill acpi_cpufreq battery ac processor dm_mod i915 i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops
-> drm sr_mod cdrom video button sg autofs4 [last unloaded: rtlwifi]
-> CPU: 3 PID: 2253 Comm: Timer Tainted: G        W  O    4.5.0-rc1-wl+ #79
-> Hardware name: TOSHIBA TECRA A50-A/TECRA A50-A, BIOS Version 4.20   04/17/2014
->   ffffffffa05c4be6 ffff8802262036d8 ffffffff813d7912 0000000000000000
->   ffff880226203710 ffffffff8106bcb6 ffff8800c6831300 ffff8800c6831330
->   0000000000000000 ffff8800c683133c ffff880065923638 ffff880226203720
-> Call Trace:
->   <IRQ>  [<ffffffff813d7912>] dump_stack+0x4b/0x79
->   [<ffffffff8106bcb6>] warn_slowpath_common+0x86/0xc0
->   [<ffffffff8106bdaa>] warn_slowpath_null+0x1a/0x20
->   [<ffffffffa05511ee>] ieee80211_get_tx_rates+0x22e/0x620 [mac80211]
->   [<ffffffffa0782232>] ? rtl_is_special_data+0x32/0x240 [rtlwifi]
->   [<ffffffffa055209e>] ? rate_control_get_rate+0xce/0x150 [mac80211]
->   [<ffffffff810bfc7d>] ? trace_hardirqs_on+0xd/0x10
->   [<ffffffff81071cc5>] ? __local_bh_enable_ip+0x65/0xd0
-> --- traceback terminated here ---
+> On Wed, Feb 3, 2016 at 1:01 PM, Byeoungwook Kim <quddnr145@gmail.com> wrote:
+>> rtl_*_delay() functions were reused same codes about addr variable.
+>> So i have converted to rtl_addr_delay() from code about addr variable.
+>>
+>> Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
+>> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 >
-> The problem is that IEEE80211_TX_RC_VHT_MCS is not set in the rate flags.
+> Just a note for the future, you have to explicitly be given a
+> reviewed-by, you can't just assume that someone who has made comments
+> on a patch has reviewed it.
 >
-> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
-> Tested-by: Linus Torvalds <torvalds@linux-foundation.org>
-> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org>
-
-Isn't the commit log somewhat misleading as VHT was completely _broken_?
-Do you mind if I change the commit log to this:
-
-----------------------------------------------------------------------
-rtlwifi: fix broken VHT support
-
-When using a 5G-capable device with VHT (802.11ac) rates enabled was not
-working (packets were not delivered) and the following mac80211 warning
-was printed:
-
-...
-----------------------------------------------------------------------
-
--- 
-Kalle Valo
+> In this case, I have reviewed it, so formally:
+>
+> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+>
+> Thanks,
+>
+> Julian Calaby
+>
+>
+>> ---
+>>  drivers/net/wireless/realtek/rtlwifi/core.c | 28 ++++------------------------
+>>  1 file changed, 4 insertions(+), 24 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+>> index 05f432c..c1193d1 100644
+>> --- a/drivers/net/wireless/realtek/rtlwifi/core.c
+>> +++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+>> @@ -63,18 +63,8 @@ EXPORT_SYMBOL(rtl_addr_delay);
+>>  void rtl_rfreg_delay(struct ieee80211_hw *hw, enum radio_path rfpath, u32 addr,
+>>                      u32 mask, u32 data)
+>>  {
+>> -       if (addr == 0xfe) {
+>> -               mdelay(50);
+>> -       } else if (addr == 0xfd) {
+>> -               mdelay(5);
+>> -       } else if (addr == 0xfc) {
+>> -               mdelay(1);
+>> -       } else if (addr == 0xfb) {
+>> -               udelay(50);
+>> -       } else if (addr == 0xfa) {
+>> -               udelay(5);
+>> -       } else if (addr == 0xf9) {
+>> -               udelay(1);
+>> +       if (addr >= 0xf9 && addr <= 0xfe) {
+>> +               rtl_addr_delay(addr);
+>>         } else {
+>>                 rtl_set_rfreg(hw, rfpath, addr, mask, data);
+>>                 udelay(1);
+>> @@ -84,18 +74,8 @@ EXPORT_SYMBOL(rtl_rfreg_delay);
+>>
+>>  void rtl_bb_delay(struct ieee80211_hw *hw, u32 addr, u32 data)
+>>  {
+>> -       if (addr == 0xfe) {
+>> -               mdelay(50);
+>> -       } else if (addr == 0xfd) {
+>> -               mdelay(5);
+>> -       } else if (addr == 0xfc) {
+>> -               mdelay(1);
+>> -       } else if (addr == 0xfb) {
+>> -               udelay(50);
+>> -       } else if (addr == 0xfa) {
+>> -               udelay(5);
+>> -       } else if (addr == 0xf9) {
+>> -               udelay(1);
+>> +       if (addr >= 0xf9 && addr <= 0xfe) {
+>> +               rtl_addr_delay(addr);
+>>         } else {
+>>                 rtl_set_bbreg(hw, addr, MASKDWORD, data);
+>>                 udelay(1);
+>> --
+>> 2.5.0
+>>
+>
+>
+>
+> --
+> Julian Calaby
+>
+> Email: julian.calaby@gmail.com
+> Profile: http://www.google.com/profiles/julian.calaby/
