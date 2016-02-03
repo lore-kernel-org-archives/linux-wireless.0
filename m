@@ -1,54 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60643 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753734AbcBZIKa (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:49461 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933031AbcBCXWw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 03:10:30 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH 04/13] ath9k: Update AR9340 initvals
-Date: Fri, 26 Feb 2016 16:08:34 +0800
-Message-Id: <1456474123-10520-5-git-send-email-miaoqing@codeaurora.org> (sfid-20160226_091033_236078_DCB0669B)
-In-Reply-To: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
-References: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
+	Wed, 3 Feb 2016 18:22:52 -0500
+Date: Wed, 3 Feb 2016 15:22:51 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Glen Lee <glen.lee@atmel.com>
+Cc: devel@driverdev.osuosl.org, austin.shin@atmel.com,
+	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
+	tony.cho@atmel.com, leo.kim@atmel.com, adham.abozaeid@atmel.com
+Subject: Re: [PATCH 1/2] staging: wilc1000: move wilc_send_config_pkt to
+ wilc_wlan.c
+Message-ID: <20160203232251.GA31910@kroah.com> (sfid-20160204_002259_346006_05DBAA43)
+References: <1453448170-26040-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1453448170-26040-1-git-send-email-glen.lee@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+On Fri, Jan 22, 2016 at 04:36:09PM +0900, Glen Lee wrote:
+> This patch moves the function wilc_send_config_pkt to wilc_wlan.c which
+> handles transport since the purpose of the function is sending/getting of
+> config information. coreconfiguator.[ch] will be rename with frame.[ch] later.
+> The print codes of the function is removed also and they will be implemented
+> with netdev_xx print format later.
+> struct wid need to be moved to wilc_wlan_if.h which defines configure
+> informations.
 
-HW peak detect calibration would fail for AR9300 chips and
-we went for implementing the SW way of doing it instead of
-HW doing the peak detect calibration.
+This series does not apply, please refresh against my staging-testing
+branch and resend.
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/ar9340_initvals.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+thanks,
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-index b995ffe..2eb163f 100644
---- a/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9340_initvals.h
-@@ -245,7 +245,7 @@ static const u32 ar9340_1p0_baseband_postamble[][5] = {
- 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
- 	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
- 	{0x00009e2c, 0x0000001c, 0x0000001c, 0x00000021, 0x00000021},
--	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcf946222, 0xcf946222},
-+	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcf946220, 0xcf946220},
- 	{0x00009e44, 0x02321e27, 0x02321e27, 0x02291e27, 0x02291e27},
- 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
- 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
-@@ -265,7 +265,7 @@ static const u32 ar9340_1p0_baseband_postamble[][5] = {
- 	{0x0000a284, 0x00000000, 0x00000000, 0x00000150, 0x00000150},
- 	{0x0000a288, 0x00000220, 0x00000220, 0x00000110, 0x00000110},
- 	{0x0000a28c, 0x00011111, 0x00011111, 0x00022222, 0x00022222},
--	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
-+	{0x0000a2c4, 0x00058d18, 0x00058d18, 0x00058d18, 0x00058d18},
- 	{0x0000a2d0, 0x00041983, 0x00041983, 0x00041982, 0x00041982},
- 	{0x0000a2d8, 0x7999a83a, 0x7999a83a, 0x7999a83a, 0x7999a83a},
- 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--- 
-1.9.1
-
+greg k-h
