@@ -1,39 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:39281 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1948676AbcBTBHN (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:34182 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750864AbcBCFVy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2016 20:07:13 -0500
-Date: Fri, 19 Feb 2016 17:07:13 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Leo Kim <leo.kim@atmel.com>
-Cc: devel@driverdev.osuosl.org, Chris Park <chris.park@atmel.com>,
-	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
-	Nicolas.FERRE@atmel.com, tony.cho@atmel.com,
-	adham.abozaeid@atmel.com
-Subject: Re: [PATCH 1/4] staging: wilc1000: move WILC_MULTICAST_TABLE_SIZE
- define to wilc_wlan_if.h file
-Message-ID: <20160220010713.GB3109@kroah.com> (sfid-20160220_020718_472150_E956496D)
-References: <1455875865-15505-1-git-send-email-leo.kim@atmel.com>
+	Wed, 3 Feb 2016 00:21:54 -0500
+Date: Wed, 3 Feb 2016 14:21:46 +0900
+From: Byeoungwook Kim <quddnr145@gmail.com>
+To: Larry.Finger@lwfinger.net
+Cc: kvalo@codeaurora.org, chaoming_li@realsil.com.cn,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, lkp@intel.com,
+	julian.calaby@gmail.com
+Subject: [PATCH v3] rtlwifi: Fix improve function 'rtl_addr_delay()' in core.c
+Message-ID: <20160203052146.GA15711@gmail.com> (sfid-20160203_062218_458263_3A7270A9)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1455875865-15505-1-git-send-email-leo.kim@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 19, 2016 at 06:57:42PM +0900, Leo Kim wrote:
-> From: Chris Park <chris.park@atmel.com>
-> 
-> This patch moves WILC_MULTICAST_TABLE_SIZE define to wilc_wlan_if.h file.
-> This define is used to three files(host_interface.c,host_interface.h,
-> linux_wlan.c) these files already include wilc_wlan_if.h file in common.
-> 
-> Signed-off-by: Chris Park <chris.park@atmel.com>
-> Signed-off-by: Leo Kim <leo.kim@atmel.com>
-> ---
->  drivers/staging/wilc1000/linux_wlan_common.h | 2 --
->  drivers/staging/wilc1000/wilc_wlan_if.h      | 2 +-
->  2 files changed, 1 insertion(+), 3 deletions(-)
+Conditional codes in rtl_addr_delay() were improved in readability and
+performance by using switch codes.
 
-Series doesn't apply :(
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
+Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+---
+V3 remove unneeded semicolon.
+V2 split in separate patchs.
+ drivers/net/wireless/realtek/rtlwifi/core.c | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index 4ae421e..63cda78 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -37,18 +37,26 @@
+ 
+ void rtl_addr_delay(u32 addr)
+ {
+-	if (addr == 0xfe)
++	switch (addr) {
++	case 0xfe:
+ 		mdelay(50);
+-	else if (addr == 0xfd)
++		break;
++	case 0xfd:
+ 		mdelay(5);
+-	else if (addr == 0xfc)
++		break;
++	case 0xfc:
+ 		mdelay(1);
+-	else if (addr == 0xfb)
++		break;
++	case 0xfb:
+ 		udelay(50);
+-	else if (addr == 0xfa)
++		break;
++	case 0xfa:
+ 		udelay(5);
+-	else if (addr == 0xf9)
++		break;
++	case 0xf9:
+ 		udelay(1);
++		break;
++	}
+ }
+ EXPORT_SYMBOL(rtl_addr_delay);
+ 
+-- 
+2.5.0
 
