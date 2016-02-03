@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:37324 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752295AbcBPCWl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Feb 2016 21:22:41 -0500
-Date: Mon, 15 Feb 2016 18:22:40 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Colin King <colin.king@canonical.com>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: wilc1000: remove wilc1000_spi_ops as it is not
- used
-Message-ID: <20160216022240.GA31825@kroah.com> (sfid-20160216_032258_101011_BC89D018)
-References: <1455549507-25553-1-git-send-email-colin.king@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <1455549507-25553-1-git-send-email-colin.king@canonical.com>
+Received: from mx1.redhat.com ([209.132.183.28]:41922 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933818AbcBCSkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2016 13:40:04 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 24/28] rtl8xxxu: Remove unused mgmt variable from rtl8xxxu_rx_complete()
+Date: Wed,  3 Feb 2016 13:39:58 -0500
+Message-Id: <1454524802-26763-25-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_194750_809355_FCE9A879)
+In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 15, 2016 at 03:18:27PM +0000, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> building with gcc 6 I hit a build failure:
-> 
->   CC      drivers/staging/wilc1000/wilc_spi.o
-> drivers/staging/wilc1000/wilc_spi.c:123:34: error: storage size of
->  ‘wilc1000_spi_ops’ isn’t known
->  static const struct wilc1000_ops wilc1000_spi_ops;
->                                   ^~~~~~~~~~~~~~~~
-> drivers/staging/wilc1000/wilc_spi.c:123:34: warning: ‘wilc1000_spi_ops’
->   defined but not used [-Wunused-const-variable]
-> 
-> Since wilc1000_spi_ops is not used, remove it and the driver builds.
-> 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/staging/wilc1000/wilc_spi.c | 2 --
->  1 file changed, 2 deletions(-)
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Doesn't apply to my tree at all, are you sure you are using linux-next
-for this?
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-thanks,
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 460145c..1201836 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -5031,7 +5031,6 @@ static void rtl8xxxu_rx_complete(struct urb *urb)
+ 	struct rtl8xxxu_rx_desc *rx_desc = (struct rtl8xxxu_rx_desc *)skb->data;
+ 	struct rtl8723au_phy_stats *phy_stats;
+ 	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
+-	struct ieee80211_mgmt *mgmt;
+ 	struct device *dev = &priv->udev->dev;
+ 	__le32 *_rx_desc_le = (__le32 *)skb->data;
+ 	u32 *_rx_desc = (u32 *)skb->data;
+@@ -5052,8 +5051,6 @@ static void rtl8xxxu_rx_complete(struct urb *urb)
+ 
+ 		skb_pull(skb, drvinfo_sz + desc_shift);
+ 
+-		mgmt = (struct ieee80211_mgmt *)skb->data;
+-
+ 		memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
+ 
+ 		if (rx_desc->phy_stats)
+-- 
+2.5.0
 
-greg k-h
