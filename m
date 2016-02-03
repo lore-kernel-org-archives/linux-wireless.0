@@ -1,164 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:18944 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:42066 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752733AbcBOL7K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Feb 2016 06:59:10 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+	id S965914AbcBCSkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2016 13:40:03 -0500
+From: Jes.Sorensen@redhat.com
 To: linux-wireless@vger.kernel.org
-Cc: Oren Givon <oren.givon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/5] iwlwifi: fix name of ucode loaded for 8265 series
-Date: Mon, 15 Feb 2016 13:59:02 +0200
-Message-Id: <1455537546-22157-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160215_181514_904813_7E647838)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA13D1A@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA13D1A@hasmsx107.ger.corp.intel.com>
+Cc: kvalo@codeaurora.org, Jakub Sitnicki <jsitnicki@gmail.com>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 15/28] rtl8xxxu: Use REG_EFUSE_TEST register only on multifunctional devices
+Date: Wed,  3 Feb 2016 13:39:49 -0500
+Message-Id: <1454524802-26763-16-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_194801_236370_926A45D3)
+In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Oren Givon <oren.givon@intel.com>
+From: Jakub Sitnicki <jsitnicki@gmail.com>
 
-Fix the name of the ucode being loaded for 8265 series
-to be: iwlwifi-8265-XX.ucode
+rtl8192cu driver doesn't read/write the REG_EFUSE_TEST register.
+Neither does the rtl8188eu driver.  Do it only for multifunc devices
+RTL8723AU/RTL8723BU.
 
-Signed-off-by: Oren Givon <oren.givon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-8000.c | 42 +++++++++++++++++++++------
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  6 ++--
- 2 files changed, 37 insertions(+), 11 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 9 ++++++---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 1 +
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-index c84a029..bce9b3420 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
-@@ -7,6 +7,7 @@
-  *
-  * Copyright(c) 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2014 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -70,12 +71,15 @@
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 4a6939f..94d3d84 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -1704,6 +1704,7 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
+ 			priv->has_bluetooth = 1;
+ 		if (val32 & MULTI_GPS_FUNC_EN)
+ 			priv->has_gps = 1;
++		priv->is_multi_func = 1;
+ 	} else if (val32 & SYS_CFG_TYPE_ID) {
+ 		bonding = rtl8xxxu_read32(priv, REG_HPON_FSM);
+ 		bonding &= HPON_FSM_BONDING_MASK;
+@@ -1938,9 +1939,11 @@ static int rtl8xxxu_read_efuse(struct rtl8xxxu_priv *priv)
+ 	if (val16 & EEPROM_BOOT)
+ 		priv->boot_eeprom = 1;
  
- /* Highest firmware API version supported */
- #define IWL8000_UCODE_API_MAX	20
-+#define IWL8265_UCODE_API_MAX	20
+-	val32 = rtl8xxxu_read32(priv, REG_EFUSE_TEST);
+-	val32 = (val32 & ~EFUSE_SELECT_MASK) | EFUSE_WIFI_SELECT;
+-	rtl8xxxu_write32(priv, REG_EFUSE_TEST, val32);
++	if (priv->is_multi_func) {
++		val32 = rtl8xxxu_read32(priv, REG_EFUSE_TEST);
++		val32 = (val32 & ~EFUSE_SELECT_MASK) | EFUSE_WIFI_SELECT;
++		rtl8xxxu_write32(priv, REG_EFUSE_TEST, val32);
++	}
  
- /* Oldest version we won't warn about */
- #define IWL8000_UCODE_API_OK	13
-+#define IWL8265_UCODE_API_OK	20
- 
- /* Lowest firmware API version supported */
- #define IWL8000_UCODE_API_MIN	13
-+#define IWL8265_UCODE_API_MIN	20
- 
- /* NVM versions */
- #define IWL8000_NVM_VERSION		0x0a1d
-@@ -93,6 +97,10 @@
- #define IWL8000_MODULE_FIRMWARE(api) \
- 	IWL8000_FW_PRE "-" __stringify(api) ".ucode"
- 
-+#define IWL8265_FW_PRE "iwlwifi-8265-"
-+#define IWL8265_MODULE_FIRMWARE(api) \
-+	IWL8265_FW_PRE __stringify(api) ".ucode"
-+
- #define NVM_HW_SECTION_NUM_FAMILY_8000		10
- #define DEFAULT_NVM_FILE_FAMILY_8000B		"nvmData-8000B"
- #define DEFAULT_NVM_FILE_FAMILY_8000C		"nvmData-8000C"
-@@ -144,10 +152,7 @@ static const struct iwl_tt_params iwl8000_tt_params = {
- 	.support_tx_backoff = true,
- };
- 
--#define IWL_DEVICE_8000							\
--	.ucode_api_max = IWL8000_UCODE_API_MAX,				\
--	.ucode_api_ok = IWL8000_UCODE_API_OK,				\
--	.ucode_api_min = IWL8000_UCODE_API_MIN,				\
-+#define IWL_DEVICE_8000_COMMON						\
- 	.device_family = IWL_DEVICE_FAMILY_8000,			\
- 	.max_inst_size = IWL60_RTC_INST_SIZE,				\
- 	.max_data_size = IWL60_RTC_DATA_SIZE,				\
-@@ -167,10 +172,28 @@ static const struct iwl_tt_params iwl8000_tt_params = {
- 	.thermal_params = &iwl8000_tt_params,				\
- 	.apmg_not_supported = true
- 
-+#define IWL_DEVICE_8000							\
-+	IWL_DEVICE_8000_COMMON,						\
-+	.ucode_api_max = IWL8000_UCODE_API_MAX,				\
-+	.ucode_api_ok = IWL8000_UCODE_API_OK,				\
-+	.ucode_api_min = IWL8000_UCODE_API_MIN				\
-+
-+#define IWL_DEVICE_8260							\
-+	IWL_DEVICE_8000_COMMON,						\
-+	.ucode_api_max = IWL8000_UCODE_API_MAX,				\
-+	.ucode_api_ok = IWL8000_UCODE_API_OK,				\
-+	.ucode_api_min = IWL8000_UCODE_API_MIN				\
-+
-+#define IWL_DEVICE_8265							\
-+	IWL_DEVICE_8000_COMMON,						\
-+	.ucode_api_max = IWL8265_UCODE_API_MAX,				\
-+	.ucode_api_ok = IWL8265_UCODE_API_OK,				\
-+	.ucode_api_min = IWL8265_UCODE_API_MIN				\
-+
- const struct iwl_cfg iwl8260_2n_cfg = {
- 	.name = "Intel(R) Dual Band Wireless N 8260",
- 	.fw_name_pre = IWL8000_FW_PRE,
--	IWL_DEVICE_8000,
-+	IWL_DEVICE_8260,
- 	.ht_params = &iwl8000_ht_params,
- 	.nvm_ver = IWL8000_NVM_VERSION,
- 	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
-@@ -179,7 +202,7 @@ const struct iwl_cfg iwl8260_2n_cfg = {
- const struct iwl_cfg iwl8260_2ac_cfg = {
- 	.name = "Intel(R) Dual Band Wireless AC 8260",
- 	.fw_name_pre = IWL8000_FW_PRE,
--	IWL_DEVICE_8000,
-+	IWL_DEVICE_8260,
- 	.ht_params = &iwl8000_ht_params,
- 	.nvm_ver = IWL8000_NVM_VERSION,
- 	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
-@@ -188,8 +211,8 @@ const struct iwl_cfg iwl8260_2ac_cfg = {
- 
- const struct iwl_cfg iwl8265_2ac_cfg = {
- 	.name = "Intel(R) Dual Band Wireless AC 8265",
--	.fw_name_pre = IWL8000_FW_PRE,
--	IWL_DEVICE_8000,
-+	.fw_name_pre = IWL8265_FW_PRE,
-+	IWL_DEVICE_8265,
- 	.ht_params = &iwl8000_ht_params,
- 	.nvm_ver = IWL8000_NVM_VERSION,
- 	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
-@@ -209,7 +232,7 @@ const struct iwl_cfg iwl4165_2ac_cfg = {
- const struct iwl_cfg iwl8260_2ac_sdio_cfg = {
- 	.name = "Intel(R) Dual Band Wireless-AC 8260",
- 	.fw_name_pre = IWL8000_FW_PRE,
--	IWL_DEVICE_8000,
-+	IWL_DEVICE_8260,
- 	.ht_params = &iwl8000_ht_params,
- 	.nvm_ver = IWL8000_NVM_VERSION,
- 	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
-@@ -236,3 +259,4 @@ const struct iwl_cfg iwl4165_2ac_sdio_cfg = {
- };
- 
- MODULE_FIRMWARE(IWL8000_MODULE_FIRMWARE(IWL8000_UCODE_API_OK));
-+MODULE_FIRMWARE(IWL8265_MODULE_FIRMWARE(IWL8265_UCODE_API_OK));
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 7acb490..ab4c2a0 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -243,8 +243,10 @@ static int iwl_request_firmware(struct iwl_drv *drv, bool first)
- 	if (drv->trans->cfg->device_family == IWL_DEVICE_FAMILY_8000) {
- 		char rev_step = 'A' + CSR_HW_REV_STEP(drv->trans->hw_rev);
- 
--		snprintf(drv->firmware_name, sizeof(drv->firmware_name),
--			 "%s%c-%s.ucode", name_pre, rev_step, tag);
-+		if (rev_step != 'A')
-+			snprintf(drv->firmware_name,
-+				 sizeof(drv->firmware_name), "%s%c-%s.ucode",
-+				 name_pre, rev_step, tag);
- 	}
- 
- 	IWL_DEBUG_INFO(drv, "attempting to load firmware %s'%s'\n",
+ 	dev_dbg(dev, "Booting from %s\n",
+ 		priv->boot_eeprom ? "EEPROM" : "EFUSE");
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index f71fb8d..bbd0f6b 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -597,6 +597,7 @@ struct rtl8xxxu_priv {
+ 	struct rtl8723au_idx ht20_max_power_offset[3];
+ 	u32 chip_cut:4;
+ 	u32 rom_rev:4;
++	u32 is_multi_func:1;
+ 	u32 has_wifi:1;
+ 	u32 has_bluetooth:1;
+ 	u32 enable_bluetooth:1;
 -- 
 2.5.0
 
