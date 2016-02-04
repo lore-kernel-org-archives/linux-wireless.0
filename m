@@ -1,37 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:36678 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750848AbcBCI4O (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:59058 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753990AbcBDJdd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 03:56:14 -0500
-Date: Wed, 3 Feb 2016 14:26:03 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Byeoungwook Kim <quddnr145@gmail.com>
-Cc: Larry.Finger@lwfinger.net, kvalo@codeaurora.org,
-	chaoming_li@realsil.com.cn, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	lkp@intel.com, julian.calaby@gmail.com
-Subject: Re: [PATCH v3] rtlwifi: Fix improve function 'rtl_addr_delay()' in
- core.c
-Message-ID: <20160203085603.GA9640@sudip-pc> (sfid-20160203_095629_647210_7BB739F5)
-References: <20160203052146.GA15711@gmail.com>
+	Thu, 4 Feb 2016 04:33:33 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 60/70] staging: wilc1000: renames u8Found of connect_resp_info structure
+Date: Thu, 4 Feb 2016 18:24:21 +0900
+Message-ID: <1454577871-667-21-git-send-email-glen.lee@atmel.com> (sfid-20160204_103342_625189_D3E1BFE4)
+In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160203052146.GA15711@gmail.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 03, 2016 at 02:21:46PM +0900, Byeoungwook Kim wrote:
-> Conditional codes in rtl_addr_delay() were improved in readability and
-> performance by using switch codes.
-> 
-> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-> Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
-> Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-How you are using Signed-off-by: of Fengguang Wu?
+This patch renames u8Found variable to found.
 
-did i missed seeing any mail from Fengguang in your previous versions?
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.h       | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-regards
-sudip
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index fd3b5d4..27c35d7 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -88,7 +88,7 @@ struct network_info {
+ 	unsigned long time_scan_cached;
+ 	unsigned long time_scan;
+ 	bool new_network;
+-	u8 u8Found;
++	u8 found;
+ 	u32 u32Tsf;
+ 	u8 *pu8IEs;
+ 	u16 u16IEsLen;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index ab3390c..2d3a2d3 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -235,7 +235,7 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
+ 
+ 		network_info = &last_scanned_shadow[i];
+ 
+-		if (!network_info->u8Found || all) {
++		if (!network_info->found || all) {
+ 			s32 freq;
+ 			struct ieee80211_channel *channel;
+ 
+@@ -269,7 +269,7 @@ static void reset_shadow_found(void)
+ 	int i;
+ 
+ 	for (i = 0; i < last_scanned_cnt; i++)
+-		last_scanned_shadow[i].u8Found = 0;
++		last_scanned_shadow[i].found = 0;
+ }
+ 
+ static void update_scan_time(void)
+@@ -387,7 +387,7 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
+ 	       pstrNetworkInfo->pu8IEs, pstrNetworkInfo->u16IEsLen);
+ 	last_scanned_shadow[ap_index].time_scan = jiffies;
+ 	last_scanned_shadow[ap_index].time_scan_cached = jiffies;
+-	last_scanned_shadow[ap_index].u8Found = 1;
++	last_scanned_shadow[ap_index].found = 1;
+ 	if (ap_found != -1)
+ 		kfree(last_scanned_shadow[ap_index].pJoinParams);
+ 	last_scanned_shadow[ap_index].pJoinParams = pJoinParams;
+-- 
+1.9.1
+
