@@ -1,80 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:50216 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964938AbcBDVOO (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:59143 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933304AbcBDJdz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 16:14:14 -0500
-Subject: Re: [RFC v2] iwlwifi: pcie: transmit queue auto-sizing
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <1454616764-19841-1-git-send-email-emmanuel.grumbach@intel.com>
- <1454616988-21901-1-git-send-email-emmanuel.grumbach@intel.com>
- <56B3B885.1050409@candelatech.com>
- <0BA3FCBA62E2DC44AF3030971E174FB32EA02656@hasmsx107.ger.corp.intel.com>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Stephen Hemminger <stephen@networkplumber.org>,
-	Dave Taht <dave.taht@gmail.com>,
-	Jonathan Corbet <corbet@lwn.net>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <56B3BF25.8080509@candelatech.com> (sfid-20160204_221421_811544_5C65FC58)
-Date: Thu, 4 Feb 2016 13:14:13 -0800
+	Thu, 4 Feb 2016 04:33:55 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 64/70] staging: wilc1000: renames strRssi of connect_resp_info structure
+Date: Thu, 4 Feb 2016 18:24:25 +0900
+Message-ID: <1454577871-667-25-git-send-email-glen.lee@atmel.com> (sfid-20160204_103401_322428_9E3A3E5C)
+In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA02656@hasmsx107.ger.corp.intel.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/04/2016 12:56 PM, Grumbach, Emmanuel wrote:
->
->
-> On 02/04/2016 10:46 PM, Ben Greear wrote:
->> On 02/04/2016 12:16 PM, Emmanuel Grumbach wrote:
->>> As many (all?) WiFi devices, Intel WiFi devices have
->>> transmit queues which have 256 transmit descriptors
->>> each and each descriptor corresponds to an MPDU.
->>> This means that when it is full, the queue contains
->>> 256 * ~1500 bytes to be transmitted (if we don't have
->>> A-MSDUs). The purpose of those queues is to have enough
->>> packets to be ready for transmission so that when the device
->>> gets an opportunity to transmit (TxOP), it can take as many
->>> packets as the spec allows and aggregate them into one
->>> A-MPDU or even several A-MPDUs if we are using bursts.
->> I guess this is only really usable if you have exactly one
->> peer connected (ie, in station mode)?
->>
->> Otherwise, you could have one slow peer and one fast one,
->> and then I suspect this would not work so well?
->
-> Yes. I guess this one (big) limitation. I guess that what would happen
-> in this case is that the the latency would constantly jitter. But I also
-> noticed that I could reduce the transmit queue to 130 descriptors
-> (instead of 256) and still reach maximal throughput because we can
-> refill the queues quickly enough.
-> In iwlwifi, we have plans to have one queue for each peer.
-> This is under development. Not sure when it'll be ready. It also requires
-> firmware change obviously.
+From: Leo Kim <leo.kim@atmel.com>
 
-Per-peer queues will probably be nice, especially if we can keep the
-buffer bloat manageable.
+This patch renames strRssi variable to str_rssi.
 
->> For reference, ath10k has around 1400 tx descriptors, though
->> in practice not all are usable, and in stock firmware, I'm guessing
->> the NIC will never be able to actually fill up it's tx descriptors
->> and stop traffic.  Instead, it just allows the stack to try to
->> TX, then drops the frame...
->
-> 1400 descriptors, ok... but they are not organised in queues?
-> (forgive my ignorance of athX drivers)
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.h       |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 13 +++++++------
+ 2 files changed, 8 insertions(+), 7 deletions(-)
 
-I think all the details are in the firmware, at least for now.
-
-The firmware details are probably not something I should go into, but suffice it to say
-its complex and varies between firmware versions in non-trivial ways.
-
-Thanks,
-Ben
-
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index f154e39..18c785b 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -93,7 +93,7 @@ struct network_info {
+ 	u8 *ies;
+ 	u16 ies_len;
+ 	void *join_params;
+-	tstrRSSI strRssi;
++	tstrRSSI str_rssi;
+ 	u64 u64Tsf;
+ };
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 6ebf268..6750700 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -210,10 +210,11 @@ static u32 get_rssi_avg(struct network_info *network_info)
+ {
+ 	u8 i;
+ 	int rssi_v = 0;
+-	u8 num_rssi = (network_info->strRssi.u8Full) ? NUM_RSSI : (network_info->strRssi.u8Index);
++	u8 num_rssi = (network_info->str_rssi.u8Full) ?
++		       NUM_RSSI : (network_info->str_rssi.u8Index);
+ 
+ 	for (i = 0; i < num_rssi; i++)
+-		rssi_v += network_info->strRssi.as8RSSI[i];
++		rssi_v += network_info->str_rssi.as8RSSI[i];
+ 
+ 	rssi_v /= num_rssi;
+ 	return rssi_v;
+@@ -360,13 +361,13 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
+ 	} else {
+ 		ap_index = ap_found;
+ 	}
+-	rssi_index = last_scanned_shadow[ap_index].strRssi.u8Index;
+-	last_scanned_shadow[ap_index].strRssi.as8RSSI[rssi_index++] = pstrNetworkInfo->rssi;
++	rssi_index = last_scanned_shadow[ap_index].str_rssi.u8Index;
++	last_scanned_shadow[ap_index].str_rssi.as8RSSI[rssi_index++] = pstrNetworkInfo->rssi;
+ 	if (rssi_index == NUM_RSSI) {
+ 		rssi_index = 0;
+-		last_scanned_shadow[ap_index].strRssi.u8Full = 1;
++		last_scanned_shadow[ap_index].str_rssi.u8Full = 1;
+ 	}
+-	last_scanned_shadow[ap_index].strRssi.u8Index = rssi_index;
++	last_scanned_shadow[ap_index].str_rssi.u8Index = rssi_index;
+ 	last_scanned_shadow[ap_index].rssi = pstrNetworkInfo->rssi;
+ 	last_scanned_shadow[ap_index].cap_info = pstrNetworkInfo->cap_info;
+ 	last_scanned_shadow[ap_index].ssid_len = pstrNetworkInfo->ssid_len;
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
