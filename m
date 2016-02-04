@@ -1,41 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f54.google.com ([209.85.192.54]:33569 "EHLO
-	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753096AbcBJQ7O (ORCPT
+Received: from smtp-out4.electric.net ([192.162.216.194]:63640 "EHLO
+	smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756374AbcBDQFe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Feb 2016 11:59:14 -0500
-From: Anton Protopopov <a.s.protopopov@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Anton Protopopov <a.s.protopopov@gmail.com>
-Subject: [PATCH] ath10k: fix erroneous return value
-Date: Wed, 10 Feb 2016 11:58:55 -0500
-Message-Id: <1455123535-26751-1-git-send-email-a.s.protopopov@gmail.com> (sfid-20160210_180059_169983_2BA3C5DF)
+	Thu, 4 Feb 2016 11:05:34 -0500
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Larry Finger' <Larry.Finger@lwfinger.net>,
+	ByeoungWook Kim <quddnr145@gmail.com>
+CC: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH 1/2] rtlwifi: Fix improve function 'rtl_addr_delay()' in
+ core.c
+Date: Thu, 4 Feb 2016 16:02:01 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1CCD6823@AcuExch.aculab.com> (sfid-20160204_170554_653377_76052C44)
+References: <20160203015953.GA13562@gmail.com>
+ <063D6719AE5E284EB5DD2968C1650D6D1CCD5486@AcuExch.aculab.com>
+ <CAOxTRzpO4mx361GqA+W39bxSfbOCaiLw320S-aph1v1OGJ0FYw@mail.gmail.com>
+ <56B258B2.6090802@lwfinger.net>
+ <063D6719AE5E284EB5DD2968C1650D6D1CCD61C8@AcuExch.aculab.com>
+ <56B371BE.1060805@lwfinger.net>
+In-Reply-To: <56B371BE.1060805@lwfinger.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The ath10k_pci_hif_exchange_bmi_msg() function may return the positive
-value EIO instead of -EIO in case of error.
-
-Signed-off-by: Anton Protopopov <a.s.protopopov@gmail.com>
----
- drivers/net/wireless/ath/ath10k/pci.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index ee925c6..526acde 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -1756,7 +1756,7 @@ static int ath10k_pci_hif_exchange_bmi_msg(struct ath10k *ar,
- 					    DMA_FROM_DEVICE);
- 		ret = dma_mapping_error(ar->dev, resp_paddr);
- 		if (ret) {
--			ret = EIO;
-+			ret = -EIO;
- 			goto err_req;
- 		}
- 
--- 
-2.6.5
-
+RnJvbTogTGFycnkgRmluZ2VyDQo+IFNlbnQ6IDA0IEZlYnJ1YXJ5IDIwMTYgMTU6NDQNCj4gT24g
+MDIvMDQvMjAxNiAwMzo0OCBBTSwgRGF2aWQgTGFpZ2h0IHdyb3RlOg0KPiA+IEZyb206IExhcnJ5
+IEZpbmdlcg0KPiA+PiBTZW50OiAwMyBGZWJydWFyeSAyMDE2IDE5OjQ1DQo+ID4gLi4uDQo+ID4+
+IFRoZSBwZXJmb3JtYW5jZSB3aWxsIGRlcGVuZCBvbiB3aGVyZSB5b3Ugc2F0aXNmeSB0aGUgY29u
+ZGl0aW9uLiBBbGwgc3dpdGNoIGNhc2VzDQo+ID4+IGhhdmUgdGhlIHNhbWUgZXhlY3V0aW9uIHRp
+bWUsIGJ1dCBpbiB0aGUgaWYgLi4gZWxzZSBpZiAuLiBlbHNlIGZvcm0sIHRoZSBlYXJsaWVyDQo+
+ID4+IHRlc3RzIGV4ZWN1dGUgbW9yZSBxdWlja2x5LiBJJ20gbm90IHN1cmUgdGhhdCBvbmUgY2Fu
+IG1ha2UgYW55IGJsYW5rZXQgc3RhdGVtZW50DQo+ID4+IGFib3V0IHBlcmZvcm1hbmNlLiBDZXJ0
+YWlubHksIHRoZSBzd2l0Y2ggdmVyc2lvbiB3aWxsIGJlIGxhcmdlci4gRm9yIGEgc3dpdGNoDQo+
+ID4+IHdpdGggOCBjYXNlcyBwbHVzIGRlZmF1bHQsIHRoZSBvYmplY3QgY29kZSBpZiA0MyBieXRl
+cyBsYXJnZXIgdGhhbiB0aGUgbmVzdGVkDQo+ID4+IGlmcyBpbiBhIHRlc3QgcHJvZ3JhbSB0aGF0
+IEkgY3JlYXRlZC4gVGhhdCBpcyBhIHNpZ25pZmljYW50IHBlbmFsdHkuDQo+ID4NCj4gPiBUaGVy
+ZSBpcyBhbHNvIHRoZSBwZW5hbHR5IG9mIHRoZSAobGlrZWx5KSBkYXRhIGNhY2hlIG1pc3MgcmVh
+ZGluZyB0aGUganVtcCB0YWJsZS4NCj4gPiBCdXQgZ2l2ZW4gdGhpcyBjb2RlIGlzIGFsbCBhYm91
+dCBnZW5lcmF0aW5nIGEgdmFyaWFibGUgZGVsYXkgdGhlIGV4ZWN1dGlvbg0KPiA+IHNwZWVkIGlz
+IHByb2JhYmx5IGlycmVsZXZhbnQuDQo+ID4NCj4gPiBJdCB3b3VsZCBiZSBtdWNoIG1vcmUgaW50
+ZXJlc3RpbmcgaWYgdGhlIGRlbGF5IGNvdWxkIGJlIGNoYW5nZWQgZm9yIHNsZWVwcy4NCj4gDQo+
+IFVuZm9ydHVuYXRlbHksIHNsZWVwaW5nIGlzIG5vdCBwb3NzaWJsZSBmb3IgdGhlIHJvdXRpbmVz
+IHRoYXQgY2FsbCBydGxfYWRkcl9kZWxheSgpLg0KDQpJIGhvcGUgbm9uZSBvZiBteSBzeXN0ZW1z
+IGV2ZXIgYnVzeS1kZWxheSBmb3IgNTBtcy4NCg0KQWN0dWFsbHkgcG9zc2libHkganVzdCBhcyB0
+cm91Ymxlc29tZSBpcyB1ZGVsYXkoMSkuDQoNCkkgcHJlc3VtZSB0aGlzIGlzIHVzZWQgYWZ0ZXIg
+YSAnaGFyZHdhcmUnIHdyaXRlIGluIG9yZGVyIHRvIG1lZXQgYSBtaW5pbXVtDQpwdWxzZSB3aWR0
+aCAob3IgYW4gaW50ZXItY3ljbGUgcmVjb3ZlcnkgdGltZSkuDQoNClVuZm9ydHVuYXRlbHkgdGhl
+IGluaXRpYWwgd3JpdGUgY3ljbGUgd2lsbCBhbG1vc3QgY2VydGFpbmx5IGJlICdwb3N0ZWQnIHNv
+DQptYXkgbm90IGFjdHVhbGx5IGJlIHNlZW4gYnkgdGhlIHRhcmdldCB1bnRpbCBzb21lIHRpbWUg
+bGF0ZXIuDQoNClRoaXMgbWVhbnMgdGhhdCBhbHRob3VnaCB0aGUgY3B1IGRlbGF5ZWQgMXVzLCB0
+aGUgdGFyZ2V0IGhhcmR3YXJlIG1pZ2h0DQpzZWUgdGhlIHNlY29uZCBhY2Nlc3MgYmFjayB0byBi
+YWNrIHdpdGggdGhlIGZpcnN0IG9uZS4NCg0KRm9yY2luZyB0aGUgcG9zdGVkIHdyaXRlIHRvIGNv
+bXBsZXRlIGFsbW9zdCBjZXJ0YWlubHkgaW52b2x2ZXMgcmVhZGluZw0KYmFjayBmcm9tIGV4YWN0
+bHkgdGhlIHNhbWUgcGh5c2ljYWwgYWRkcmVzcyAocG9zc2libHkgYWZ0ZXIgc29tZSBzeW5jDQpp
+bnN0cnVjdGlvbihzKSkuDQoNCglEYXZpZA0KDQo=
