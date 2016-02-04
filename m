@@ -1,47 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f180.google.com ([209.85.192.180]:35604 "EHLO
-	mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932438AbcBWGi2 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:10482 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966103AbcBDJ1J (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 01:38:28 -0500
-Received: by mail-pf0-f180.google.com with SMTP id c10so110312426pfc.2
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2016 22:38:27 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 6/7] staging: wilc1000: handle_cfg_param: fix line over 80 characters
-Date: Tue, 23 Feb 2016 15:38:02 +0900
-Message-Id: <1456209483-20345-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20160223_073830_892712_DB7C2A5D)
-In-Reply-To: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 4 Feb 2016 04:27:09 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH RESEND 35/70] staging: wilc1000: remove unnecessary braces
+Date: Thu, 4 Feb 2016 18:15:52 +0900
+Message-ID: <1454577387-509-36-git-send-email-glen.lee@atmel.com> (sfid-20160204_102716_139785_0E0FD5B7)
+In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes line over 80 characters found by checkpatch
-WARNING: line over 80 characters
+From: Chris Park <chris.park@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch remove warnings reported by checkpatch.pl
+for unnecessary braces
+
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 7d36d50..fb809a4 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -735,7 +735,8 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
- 		    curr_tx_rate == MBPS_11 || curr_tx_rate == MBPS_6 ||
- 		    curr_tx_rate == MBPS_9 || curr_tx_rate == MBPS_12 ||
- 		    curr_tx_rate == MBPS_18 || curr_tx_rate == MBPS_24 ||
--		    curr_tx_rate == MBPS_36 || curr_tx_rate == MBPS_48 || curr_tx_rate == MBPS_54) {
-+		    curr_tx_rate == MBPS_36 || curr_tx_rate == MBPS_48 ||
-+		    curr_tx_rate == MBPS_54) {
- 			wid_list[i].id = WID_CURRENT_TX_RATE;
- 			wid_list[i].val = (s8 *)&curr_tx_rate;
- 			wid_list[i].type = WID_SHORT;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 8618e27..e2c84db 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -984,15 +984,15 @@ void wilc_handle_isr(struct wilc *wilc)
+ 	if (int_status & PLL_INT_EXT)
+ 		wilc_pllupdate_isr_ext(wilc, int_status);
+ 
+-	if (int_status & DATA_INT_EXT) {
++	if (int_status & DATA_INT_EXT)
+ 		wilc_wlan_handle_isr_ext(wilc, int_status);
+-	}
++
+ 	if (int_status & SLEEP_INT_EXT)
+ 		wilc_sleeptimer_isr_ext(wilc, int_status);
+ 
+-	if (!(int_status & (ALL_INT_EXT))) {
++	if (!(int_status & (ALL_INT_EXT)))
+ 		wilc_unknown_isr_ext(wilc);
+-	}
++
+ 	release_bus(wilc, RELEASE_ALLOW_SLEEP);
+ }
+ EXPORT_SYMBOL_GPL(wilc_handle_isr);
 -- 
-2.7.1
+1.9.1
 
