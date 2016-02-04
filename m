@@ -1,103 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:48074 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754640AbcBWSSh (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 13:18:37 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath10k: set MAC timestamp in management Rx frame
-Date: Tue, 23 Feb 2016 10:17:19 -0800
-Message-ID: <1456251439-14720-1-git-send-email-poh@qca.qualcomm.com> (sfid-20160223_191841_877323_B0CD82E0)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:46076 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751796AbcBDMb2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2016 07:31:28 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Julian Anastasov <ja@ssi.bg>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v3 1/4] ipv4: add option to drop unicast encapsulated in L2 multicast
+Date: Thu,  4 Feb 2016 13:31:17 +0100
+Message-Id: <1454589080-21354-1-git-send-email-johannes@sipsolutions.net> (sfid-20160204_133150_836777_77346518)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: poh <poh@qca.qualcomm.com>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Check and set Rx MAC timestamp when firmware indicates it.
-Firmware adds it in Rx beacon frame only at this moment.
-Driver and mac80211 may utilize it to detect such clockdrift
-or beacon collision and use the result for beacon collision
-avoidance.
+In order to solve a problem with 802.11, the so-called hole-196 attack,
+add an option (sysctl) called "drop_unicast_in_l2_multicast" which, if
+enabled, causes the stack to drop IPv4 unicast packets encapsulated in
+link-layer multi- or broadcast frames. Such frames can (as an attack)
+be created by any member of the same wireless network and transmitted
+as valid encrypted frames since the symmetric key for broadcast frames
+is shared between all stations.
 
-Signed-off-by: poh <poh@qca.qualcomm.com>
+Additionally, enabling this option provides compliance with a SHOULD
+clause of RFC 1122.
+
+Reviewed-by: Julian Anastasov <ja@ssi.bg>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c | 13 +++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h |  8 ++++++++
- 2 files changed, 21 insertions(+)
+ Documentation/networking/ip-sysctl.txt |  7 +++++++
+ include/uapi/linux/ip.h                |  1 +
+ net/ipv4/devinet.c                     |  2 ++
+ net/ipv4/ip_input.c                    | 25 ++++++++++++++++++++++++-
+ 4 files changed, 34 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 0f01a8d..fc7b468 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2167,6 +2167,7 @@ static int ath10k_wmi_op_pull_mgmt_rx_ev(struct ath10k *ar, struct sk_buff *skb,
- 	struct wmi_mgmt_rx_event_v1 *ev_v1;
- 	struct wmi_mgmt_rx_event_v2 *ev_v2;
- 	struct wmi_mgmt_rx_hdr_v1 *ev_hdr;
-+	struct wmi_mgmt_rx_ext_info *ext_info;
- 	size_t pull_len;
- 	u32 msdu_len;
+diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
+index 05915be86235..35c4c43dd8de 100644
+--- a/Documentation/networking/ip-sysctl.txt
++++ b/Documentation/networking/ip-sysctl.txt
+@@ -1208,6 +1208,13 @@ promote_secondaries - BOOLEAN
+ 	promote a corresponding secondary IP address instead of
+ 	removing all the corresponding secondary IP addresses.
  
-@@ -2195,6 +2196,12 @@ static int ath10k_wmi_op_pull_mgmt_rx_ev(struct ath10k *ar, struct sk_buff *skb,
- 	if (skb->len < msdu_len)
- 		return -EPROTO;
- 
-+	if (arg->status & WMI_RX_STATUS_EXT_INFO) {
-+		ext_info = (struct wmi_mgmt_rx_ext_info *)
-+			   (skb->data + arg->buf_len);
-+		memcpy(&arg->ext_info, ext_info,
-+		       sizeof(struct wmi_mgmt_rx_ext_info));
-+	}
- 	/* the WMI buffer might've ended up being padded to 4 bytes due to HTC
- 	 * trailer with credit update. Trim the excess garbage.
- 	 */
-@@ -2281,6 +2288,12 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 	if (rx_status & WMI_RX_STATUS_ERR_MIC)
- 		status->flag |= RX_FLAG_MMIC_ERROR;
- 
-+	if (rx_status & WMI_RX_STATUS_EXT_INFO) {
-+		status->mactime =
-+			__le32_to_cpu(arg.ext_info.rx_mac_timestamp_u32) << 32 |
-+			__le32_to_cpu(arg.ext_info.rx_mac_timestamp_l32);
-+		status->flag |= RX_FLAG_MACTIME_END;
-+	}
- 	/* Hardware can Rx CCK rates on 5GHz. In that case phy_mode is set to
- 	 * MODE_11B. This means phy_mode is not a reliable source for the band
- 	 * of mgmt rx.
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 806d4bb..8667a6b 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -3025,11 +3025,18 @@ struct wmi_10_4_mgmt_rx_event {
- 	u8 buf[0];
- } __packed;
- 
-+struct wmi_mgmt_rx_ext_info {
-+	__le32 rx_mac_timestamp_l32;
-+	__le32 rx_mac_timestamp_u32;
-+} __packed;
++drop_unicast_in_l2_multicast - BOOLEAN
++	Drop any unicast IP packets that are received in link-layer
++	multicast (or broadcast) frames.
++	This behavior (for multicast) is actually a SHOULD in RFC
++	1122, but is disabled by default for compatibility reasons.
++	Default: off (0)
 +
- #define WMI_RX_STATUS_OK			0x00
- #define WMI_RX_STATUS_ERR_CRC			0x01
- #define WMI_RX_STATUS_ERR_DECRYPT		0x08
- #define WMI_RX_STATUS_ERR_MIC			0x10
- #define WMI_RX_STATUS_ERR_KEY_CACHE_MISS	0x20
-+/* Extension data at the end of mgmt frame */
-+#define WMI_RX_STATUS_EXT_INFO		0x40
  
- #define PHY_ERROR_GEN_SPECTRAL_SCAN		0x26
- #define PHY_ERROR_GEN_FALSE_RADAR_EXT		0x24
-@@ -6076,6 +6083,7 @@ struct wmi_mgmt_rx_ev_arg {
- 	__le32 phy_mode;
- 	__le32 buf_len;
- 	__le32 status; /* %WMI_RX_STATUS_ */
-+	struct wmi_mgmt_rx_ext_info ext_info;
+ tag - INTEGER
+ 	Allows you to write a number, which can be used as required.
+diff --git a/include/uapi/linux/ip.h b/include/uapi/linux/ip.h
+index 08f894d2ddbd..584834f7e95c 100644
+--- a/include/uapi/linux/ip.h
++++ b/include/uapi/linux/ip.h
+@@ -165,6 +165,7 @@ enum
+ 	IPV4_DEVCONF_IGMPV2_UNSOLICITED_REPORT_INTERVAL,
+ 	IPV4_DEVCONF_IGMPV3_UNSOLICITED_REPORT_INTERVAL,
+ 	IPV4_DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN,
++	IPV4_DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
+ 	__IPV4_DEVCONF_MAX
  };
  
- struct wmi_ch_info_ev_arg {
+diff --git a/net/ipv4/devinet.c b/net/ipv4/devinet.c
+index cebd9d31e65a..dbbab28a52a4 100644
+--- a/net/ipv4/devinet.c
++++ b/net/ipv4/devinet.c
+@@ -2192,6 +2192,8 @@ static struct devinet_sysctl_table {
+ 					      "promote_secondaries"),
+ 		DEVINET_SYSCTL_FLUSHING_ENTRY(ROUTE_LOCALNET,
+ 					      "route_localnet"),
++		DEVINET_SYSCTL_FLUSHING_ENTRY(DROP_UNICAST_IN_L2_MULTICAST,
++					      "drop_unicast_in_l2_multicast"),
+ 	},
+ };
+ 
+diff --git a/net/ipv4/ip_input.c b/net/ipv4/ip_input.c
+index b1209b63381f..997ef64a1c0b 100644
+--- a/net/ipv4/ip_input.c
++++ b/net/ipv4/ip_input.c
+@@ -359,8 +359,31 @@ static int ip_rcv_finish(struct net *net, struct sock *sk, struct sk_buff *skb)
+ 	rt = skb_rtable(skb);
+ 	if (rt->rt_type == RTN_MULTICAST) {
+ 		IP_UPD_PO_STATS_BH(net, IPSTATS_MIB_INMCAST, skb->len);
+-	} else if (rt->rt_type == RTN_BROADCAST)
++	} else if (rt->rt_type == RTN_BROADCAST) {
+ 		IP_UPD_PO_STATS_BH(net, IPSTATS_MIB_INBCAST, skb->len);
++	} else if (skb->pkt_type == PACKET_BROADCAST ||
++		   skb->pkt_type == PACKET_MULTICAST) {
++		struct in_device *in_dev = __in_dev_get_rcu(skb->dev);
++
++		/* RFC 1122 3.3.6:
++		 *
++		 *   When a host sends a datagram to a link-layer broadcast
++		 *   address, the IP destination address MUST be a legal IP
++		 *   broadcast or IP multicast address.
++		 *
++		 *   A host SHOULD silently discard a datagram that is received
++		 *   via a link-layer broadcast (see Section 2.4) but does not
++		 *   specify an IP multicast or broadcast destination address.
++		 *
++		 * This doesn't explicitly say L2 *broadcast*, but broadcast is
++		 * in a way a form of multicast and the most common use case for
++		 * this is 802.11 protecting against cross-station spoofing (the
++		 * so-called "hole-196" attack) so do it for both.
++		 */
++		if (in_dev &&
++		    IN_DEV_ORCONF(in_dev, DROP_UNICAST_IN_L2_MULTICAST))
++			goto drop;
++	}
+ 
+ 	return dst_input(skb);
+ 
 -- 
-1.9.1
+2.7.0
 
