@@ -1,109 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:32887 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751057AbcBJQbW (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:10549 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966103AbcBDJ1b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Feb 2016 11:31:22 -0500
-Received: by mail-wm0-f53.google.com with SMTP id g62so34403854wme.0
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Feb 2016 08:31:22 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [RFC 2/2] mac80211: parse VHT info in injected frames
-Date: Wed, 10 Feb 2016 17:31:17 +0100
-Message-Id: <1455121877-7238-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20160210_173127_998927_0B3112E6)
-In-Reply-To: <1455121877-7238-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1455121877-7238-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Thu, 4 Feb 2016 04:27:31 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH RESEND 37/70] staging: wilc1000: Optimize code of wilc_get_chipid function
+Date: Thu, 4 Feb 2016 18:15:54 +0900
+Message-ID: <1454577387-509-38-git-send-email-glen.lee@atmel.com> (sfid-20160204_102738_285257_B1FA07E6)
+In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add VHT radiotap parsing support to ieee80211_parse_tx_radiotap().
-That capability has been tested on d-link dir-860l rev b1 running
-OpenWrt trunk and mt76 driver
+From: Chris Park <chris.park@atmel.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+This patch optimize code of wilc_get_chipid function.
+u8 type changed to boolean type and removed unnecessary if statement.
+
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- Documentation/networking/mac80211-injection.txt | 10 ++++++++
- net/mac80211/tx.c                               | 31 +++++++++++++++++++++++++
- 2 files changed, 41 insertions(+)
+ drivers/staging/wilc1000/linux_wlan.c   |  4 ++--
+ drivers/staging/wilc1000/wilc_wlan.c    | 19 +++++++------------
+ drivers/staging/wilc1000/wilc_wlan_if.h |  2 +-
+ 3 files changed, 10 insertions(+), 15 deletions(-)
 
-diff --git a/Documentation/networking/mac80211-injection.txt b/Documentation/networking/mac80211-injection.txt
-index ec8f934..ef57cc0 100644
---- a/Documentation/networking/mac80211-injection.txt
-+++ b/Documentation/networking/mac80211-injection.txt
-@@ -45,6 +45,16 @@ radiotap headers and used to control injection:
-    number of retries when either IEEE80211_RADIOTAP_RATE or
-    IEEE80211_RADIOTAP_MCS was used
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 22a2f98..9e5dea4 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -388,7 +388,7 @@ int wilc_wlan_get_firmware(struct net_device *dev)
+ 	vif = netdev_priv(dev);
+ 	wilc = vif->wilc;
  
-+ * IEEE80211_RADIOTAP_VHT
-+
-+   VHT rate for the transmission (only for devices without own rate control).
-+   Also some flags are parsed
-+
-+   IEEE80211_TX_RC_SHORT_GI: use short guard interval
-+   IEEE80211_TX_RC_40_MHZ_WIDTH: send in HT40 mode
-+   IEEE80211_TX_RC_80_MHZ_WIDTH: send in HT80 mode
-+   IEEE80211_TX_RC_160_MHZ_WIDTH: send in HT160 mode
-+
- The injection code can also skip all other currently defined radiotap fields
- facilitating replay of captured radiotap headers directly.
+-	chip_id = wilc_get_chipid(wilc, 0);
++	chip_id = wilc_get_chipid(wilc, false);
  
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7bb67fa..17db889 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1692,6 +1692,8 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
- 	u8 rate_retries = 0;
- 	u16 rate_flags = 0;
- 	u8 mcs_known, mcs_flags;
-+	u16 vht_known;
-+	u8 vht_mcs = 0, vht_nss = 0;
- 	int i;
+ 	if (chip_id < 0x1003a0)
+ 		firmware = FIRMWARE_1002;
+@@ -475,7 +475,7 @@ static int linux_wlan_init_test_config(struct net_device *dev,
+ 	wilc_get_mac_address(vif, mac_add);
  
- 	info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT |
-@@ -1772,6 +1774,32 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
- 				rate_flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
- 			break;
+ 	netdev_dbg(dev, "MAC address is : %pM\n", mac_add);
+-	wilc_get_chipid(wilc, 0);
++	wilc_get_chipid(wilc, false);
  
-+		case IEEE80211_RADIOTAP_VHT:
-+			vht_known = get_unaligned_le16(iterator.this_arg);
-+			rate_found = true;
-+
-+			rate_flags = IEEE80211_TX_RC_VHT_MCS;
-+			if ((vht_known & IEEE80211_RADIOTAP_VHT_KNOWN_GI) &&
-+			    (iterator.this_arg[2] &
-+			     IEEE80211_RADIOTAP_VHT_FLAG_SGI))
-+				rate_flags |= IEEE80211_TX_RC_SHORT_GI;
-+			if (vht_known &
-+			    IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH) {
-+				if (iterator.this_arg[3] == 1)
-+					rate_flags |=
-+						IEEE80211_TX_RC_40_MHZ_WIDTH;
-+				else if (iterator.this_arg[3] == 4)
-+					rate_flags |=
-+						IEEE80211_TX_RC_80_MHZ_WIDTH;
-+				else if (iterator.this_arg[3] == 11)
-+					rate_flags |=
-+						IEEE80211_TX_RC_160_MHZ_WIDTH;
-+			}
-+
-+			vht_mcs = iterator.this_arg[4] >> 4;
-+			vht_nss = iterator.this_arg[4] & 0xF;
-+			break;
-+
- 		/*
- 		 * Please update the file
- 		 * Documentation/networking/mac80211-injection.txt
-@@ -1797,6 +1825,9 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
+ 	*(int *)c_val = 1;
  
- 		if (rate_flags & IEEE80211_TX_RC_MCS) {
- 			info->control.rates[0].idx = rate;
-+		} else if (rate_flags & IEEE80211_TX_RC_VHT_MCS) {
-+			ieee80211_rate_set_vht(info->control.rates, vht_mcs,
-+					       vht_nss);
- 		} else {
- 			for (i = 0; i < sband->n_bitrates; i++) {
- 				if (rate * 5 != sband->bitrates[i].bitrate)
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index dc26322..46087e2 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1441,36 +1441,31 @@ static u32 init_chip(struct net_device *dev)
+ 	return ret;
+ }
+ 
+-u32 wilc_get_chipid(struct wilc *wilc, u8 update)
++u32 wilc_get_chipid(struct wilc *wilc, bool update)
+ {
+ 	static u32 chipid;
+ 	u32 tempchipid = 0;
+-	u32 rfrevid;
++	u32 rfrevid = 0;
+ 
+-	if (chipid == 0 || update != 0) {
++	if (chipid == 0 || update) {
+ 		wilc->hif_func->hif_read_reg(wilc, 0x1000, &tempchipid);
+ 		wilc->hif_func->hif_read_reg(wilc, 0x13f4, &rfrevid);
+ 		if (!ISWILC1000(tempchipid)) {
+ 			chipid = 0;
+-			goto _fail_;
++			return chipid;
+ 		}
+ 		if (tempchipid == 0x1002a0) {
+-			if (rfrevid == 0x1) {
+-			} else {
++			if (rfrevid != 0x1)
+ 				tempchipid = 0x1002a1;
+-			}
+ 		} else if (tempchipid == 0x1002b0) {
+-			if (rfrevid == 3) {
+-			} else if (rfrevid == 4) {
++			if (rfrevid == 0x4)
+ 				tempchipid = 0x1002b1;
+-			} else {
++			else if (rfrevid != 0x3)
+ 				tempchipid = 0x1002b2;
+-			}
+ 		}
+ 
+ 		chipid = tempchipid;
+ 	}
+-_fail_:
+ 	return chipid;
+ }
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 294552d..269c56e 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -921,6 +921,6 @@ struct wilc;
+ int wilc_wlan_init(struct net_device *dev);
+ void wilc_bus_set_max_speed(void);
+ void wilc_bus_set_default_speed(void);
+-u32 wilc_get_chipid(struct wilc *wilc, u8 update);
++u32 wilc_get_chipid(struct wilc *wilc, bool update);
+ 
+ #endif
 -- 
-2.5.0
+1.9.1
 
