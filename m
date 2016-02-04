@@ -1,60 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:38556 "EHLO
-	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750737AbcB1M1y (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:49794 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753161AbcBDUp6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Feb 2016 07:27:54 -0500
-Received: by mail-wm0-f44.google.com with SMTP id l68so26283603wml.1
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2016 04:27:54 -0800 (PST)
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: alexander nekrasov <i.sinister@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: carl1970: stops working at random periods on Ubuntu 15.05
-Date: Sun, 28 Feb 2016 13:27:50 +0100
-Message-ID: <42847572.gSex6kjQ2f@debian64> (sfid-20160228_132801_680580_C40EB283)
-In-Reply-To: <CAG4k0fCqB1KNLyHV5--pi1nSoDPnV3qM-yTB0T2jmgbnjmqvww@mail.gmail.com>
-References: <CAG4k0fCqB1KNLyHV5--pi1nSoDPnV3qM-yTB0T2jmgbnjmqvww@mail.gmail.com>
+	Thu, 4 Feb 2016 15:45:58 -0500
+Subject: Re: [RFC v2] iwlwifi: pcie: transmit queue auto-sizing
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	linux-wireless@vger.kernel.org
+References: <1454616764-19841-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1454616988-21901-1-git-send-email-emmanuel.grumbach@intel.com>
+Cc: netdev@vger.kernel.org,
+	Stephen Hemminger <stephen@networkplumber.org>,
+	Dave Taht <dave.taht@gmail.com>,
+	Jonathan Corbet <corbet@lwn.net>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <56B3B885.1050409@candelatech.com> (sfid-20160204_214606_462899_6868E11A)
+Date: Thu, 4 Feb 2016 12:45:57 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+In-Reply-To: <1454616988-21901-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 02/04/2016 12:16 PM, Emmanuel Grumbach wrote:
+> As many (all?) WiFi devices, Intel WiFi devices have
+> transmit queues which have 256 transmit descriptors
+> each and each descriptor corresponds to an MPDU.
+> This means that when it is full, the queue contains
+> 256 * ~1500 bytes to be transmitted (if we don't have
+> A-MSDUs). The purpose of those queues is to have enough
+> packets to be ready for transmission so that when the device
+> gets an opportunity to transmit (TxOP), it can take as many
+> packets as the spec allows and aggregate them into one
+> A-MPDU or even several A-MPDUs if we are using bursts.
 
-On Sunday, February 28, 2016 03:06:35 AM alexander nekrasov wrote:
-> I'm using TP-LINK TL-WN821N and encountering very annoying behaviour -
-> adapter 'hangs' at random period of time - sometimes it is 1 hour,
-> sometimes 2. After it hangs Network manager does not see any wireless
-> networks and the only way to make it work is to reboot system (also
-> tried unplugging/plugging adapter and removing/adding module but it
-> did not work)
-Did it get hot? Or Have you tried unloading/reloading the ohci/ehci/xhci?
-The used USB-PHY FUSB200 (in the AR9170) is known to misbehave. If you
-want to read more about the implications and possible solution, you can
-visit the ath9k_htc firmware community. They have written a wiki entry
-which describes the issues in detail [0].
- 
-> Heres lsusb -v:
-> Bus 004 Device 004: ID 0cf3:1002 Atheros Communications, Inc. TP-Link
-> TL-WN821N v2 / TL-WN822N v1 802.11n [Atheros AR9170]
-> 
-> And here what i have in syslog right before the hang:
-> Following messages are also relevant to adapter failure but i guess it
-> will be to long to post it here.
-> 
-> Feb 28 01:46:53 evren kernel: [ 4978.753087] usb 4-1.4: no command
-> feedback received (-90).
-> Feb 28 01:46:53 evren kernel: [ 4978.753098] usb 4-1.4: restart device (6)
-> Feb 28 01:46:54 evren kernel: [ 4979.891093] usb 4-1.4: device
-> restarted successfully.
-> Feb 28 01:46:54 evren kernel: [ 4979.899273] ieee80211 phy1: Hardware
-> restart was requested
-Commands are issued on the devices end point #4.... And the response the
-driver is waiting for doesn't get through. If you want to debug this, 
-you'll need to look at the usb data stream and check which party (host
-controller (ehci/ohci), device (AR9170) or cable?) is at fault. 
+I guess this is only really usable if you have exactly one
+peer connected (ie, in station mode)?
 
-Regards,
-Christian
+Otherwise, you could have one slow peer and one fast one,
+and then I suspect this would not work so well?
 
-[0] <https://github.com/qca/open-ath9k-htc-firmware/wiki/usb-related-issues>
+For reference, ath10k has around 1400 tx descriptors, though
+in practice not all are usable, and in stock firmware, I'm guessing
+the NIC will never be able to actually fill up it's tx descriptors
+and stop traffic.  Instead, it just allows the stack to try to
+TX, then drops the frame...
+
+Thanks,
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
