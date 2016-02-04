@@ -1,51 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:34401 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751132AbcBKQ41 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:9703 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965764AbcBDJYn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2016 11:56:27 -0500
-Received: by mail-ob0-f180.google.com with SMTP id wb13so83150794obb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Feb 2016 08:56:27 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH] rtlwifi: rtl8821ae: Silence useless log output
-Date: Thu, 11 Feb 2016 10:56:22 -0600
-Message-Id: <1455209782-12985-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160211_175633_387939_6C5229D2)
+	Thu, 4 Feb 2016 04:24:43 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 18/70] staging: wilc1000: remove warnings line over 80 characters
+Date: Thu, 4 Feb 2016 18:15:35 +0900
+Message-ID: <1454577387-509-19-git-send-email-glen.lee@atmel.com> (sfid-20160204_104504_758006_206F331B)
+In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When driver rtl8821ae is loaded but not connected to any AP, it logs
-a "firmware not ready to run" message roughly once a minute. To
-eliminate logging this massage under normal debug conditions, the
-degug level needed to print this message is increased.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+This patch removes the warnings reported by checkpatch.pl
+for line over 80 characters.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
+ drivers/staging/wilc1000/linux_wlan.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Kalle,
-
-This patch is intended for kernel 4.6.
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-index 525eb23..a4fc70e 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/fw.c
-@@ -271,7 +271,7 @@ int rtl8821ae_download_fw(struct ieee80211_hw *hw, bool buse_wake_on_wlan_fw)
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index f5f787e..1446b19 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -25,7 +25,8 @@
  
- 	err = _rtl8821ae_fw_free_to_go(hw);
- 	if (err) {
--		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
-+		RT_TRACE(rtlpriv, COMP_ERR, DBG_DMESG,
- 			 "Firmware is not ready to run!\n");
- 	} else {
- 		RT_TRACE(rtlpriv, COMP_FW, DBG_LOUD,
+ #include <linux/semaphore.h>
+ 
+-static int dev_state_ev_handler(struct notifier_block *this, unsigned long event, void *ptr);
++static int dev_state_ev_handler(struct notifier_block *this,
++				unsigned long event, void *ptr);
+ 
+ static struct notifier_block g_dev_notifier = {
+ 	.notifier_call = dev_state_ev_handler
+@@ -57,7 +58,8 @@ static const struct net_device_ops wilc_netdev_ops = {
+ 
+ };
+ 
+-static int dev_state_ev_handler(struct notifier_block *this, unsigned long event, void *ptr)
++static int dev_state_ev_handler(struct notifier_block *this,
++				unsigned long event, void *ptr)
+ {
+ 	struct in_ifaddr *dev_iface = (struct in_ifaddr *)ptr;
+ 	struct wilc_priv *priv;
 -- 
-2.1.4
+1.9.1
 
