@@ -1,175 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f52.google.com ([209.85.220.52]:36279 "EHLO
-	mail-pa0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965559AbcBDVBT (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:58954 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933078AbcBDJdB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 16:01:19 -0500
-Received: by mail-pa0-f52.google.com with SMTP id yy13so21366336pab.3
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 13:01:19 -0800 (PST)
-From: Kees Cook <keescook@chromium.org>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Kees Cook <keescook@chromium.org>, Joe Perches <joe@perches.com>,
-	Andy Shevchenko <andy.shevchenko@gmail.com>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Steve French <sfrench@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>, x86@kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-cifs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/4] lib: move strtobool to kstrtobool
-Date: Thu,  4 Feb 2016 13:00:40 -0800
-Message-Id: <1454619643-14444-2-git-send-email-keescook@chromium.org> (sfid-20160204_220213_481451_CD4201B1)
-In-Reply-To: <1454619643-14444-1-git-send-email-keescook@chromium.org>
-References: <1454619643-14444-1-git-send-email-keescook@chromium.org>
+	Thu, 4 Feb 2016 04:33:01 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 55/70] staging: wilc1000: renames u16BeaconPeriod of connect_resp_info structure
+Date: Thu, 4 Feb 2016 18:24:16 +0900
+Message-ID: <1454577871-667-16-git-send-email-glen.lee@atmel.com> (sfid-20160204_103320_453136_6387D9EE)
+In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Create the kstrtobool_from_user helper and moves strtobool logic into
-the new kstrtobool (matching all the other kstrto* functions). Provides
-an inline wrapper for existing strtobool callers.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
+This patch renames u16BeaconPeriod variable to beacon_period.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- include/linux/kernel.h |  3 +++
- include/linux/string.h |  6 +++++-
- lib/kstrtox.c          | 35 +++++++++++++++++++++++++++++++++++
- lib/string.c           | 29 -----------------------------
- 4 files changed, 43 insertions(+), 30 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c       | 2 +-
+ drivers/staging/wilc1000/coreconfigurator.h       | 2 +-
+ drivers/staging/wilc1000/host_interface.c         | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
+ 4 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/include/linux/kernel.h b/include/linux/kernel.h
-index f31638c6e873..cdc25f47a23f 100644
---- a/include/linux/kernel.h
-+++ b/include/linux/kernel.h
-@@ -357,6 +357,7 @@ int __must_check kstrtou16(const char *s, unsigned int base, u16 *res);
- int __must_check kstrtos16(const char *s, unsigned int base, s16 *res);
- int __must_check kstrtou8(const char *s, unsigned int base, u8 *res);
- int __must_check kstrtos8(const char *s, unsigned int base, s8 *res);
-+int __must_check kstrtobool(const char *s, unsigned int base, bool *res);
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 4a82576..b4f7ec3 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -330,7 +330,7 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
  
- int __must_check kstrtoull_from_user(const char __user *s, size_t count, unsigned int base, unsigned long long *res);
- int __must_check kstrtoll_from_user(const char __user *s, size_t count, unsigned int base, long long *res);
-@@ -368,6 +369,8 @@ int __must_check kstrtou16_from_user(const char __user *s, size_t count, unsigne
- int __must_check kstrtos16_from_user(const char __user *s, size_t count, unsigned int base, s16 *res);
- int __must_check kstrtou8_from_user(const char __user *s, size_t count, unsigned int base, u8 *res);
- int __must_check kstrtos8_from_user(const char __user *s, size_t count, unsigned int base, s8 *res);
-+int __must_check kstrtobool_from_user(const char __user *s, size_t count,
-+				      unsigned int base, bool *res);
+ 		index = MAC_HDR_LEN + TIME_STAMP_LEN;
  
- static inline int __must_check kstrtou64_from_user(const char __user *s, size_t count, unsigned int base, u64 *res)
- {
-diff --git a/include/linux/string.h b/include/linux/string.h
-index 9eebc66d957a..d2fb21b1081d 100644
---- a/include/linux/string.h
-+++ b/include/linux/string.h
-@@ -128,7 +128,11 @@ extern char **argv_split(gfp_t gfp, const char *str, int *argcp);
- extern void argv_free(char **argv);
+-		network_info->u16BeaconPeriod = get_beacon_period(msa + index);
++		network_info->beacon_period = get_beacon_period(msa + index);
  
- extern bool sysfs_streq(const char *s1, const char *s2);
--extern int strtobool(const char *s, bool *res);
-+extern int kstrtobool(const char *s, unsigned int base, bool *res);
-+static inline int strtobool(const char *s, bool *res)
-+{
-+	return kstrtobool(s, 0, res);
-+}
+ 		index += BEACON_INTERVAL_LEN + CAP_INFO_LEN;
  
- #ifdef CONFIG_BINARY_PRINTF
- int vbin_printf(u32 *bin_buf, size_t size, const char *fmt, va_list args);
-diff --git a/lib/kstrtox.c b/lib/kstrtox.c
-index 94be244e8441..e18f088704d7 100644
---- a/lib/kstrtox.c
-+++ b/lib/kstrtox.c
-@@ -321,6 +321,40 @@ int kstrtos8(const char *s, unsigned int base, s8 *res)
- }
- EXPORT_SYMBOL(kstrtos8);
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 5404162..2fbffe8 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -82,7 +82,7 @@ struct network_info {
+ 	u8 ssid[MAX_SSID_LEN];
+ 	u8 ssid_len;
+ 	u8 bssid[6];
+-	u16 u16BeaconPeriod;
++	u16 beacon_period;
+ 	u8 u8DtimPeriod;
+ 	u8 u8channel;
+ 	unsigned long u32TimeRcvdInScanCached;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 2534c9a..0ba248b 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -4276,7 +4276,7 @@ static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo)
+ 	pNewJoinBssParam = kzalloc(sizeof(struct join_bss_param), GFP_KERNEL);
+ 	if (pNewJoinBssParam) {
+ 		pNewJoinBssParam->dtim_period = ptstrNetworkInfo->u8DtimPeriod;
+-		pNewJoinBssParam->beacon_period = ptstrNetworkInfo->u16BeaconPeriod;
++		pNewJoinBssParam->beacon_period = ptstrNetworkInfo->beacon_period;
+ 		pNewJoinBssParam->cap_info = ptstrNetworkInfo->cap_info;
+ 		memcpy(pNewJoinBssParam->au8bssid, ptstrNetworkInfo->bssid, 6);
+ 		memcpy((u8 *)pNewJoinBssParam->ssid, ptstrNetworkInfo->ssid,
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 80f46d7..9424776 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -252,7 +252,7 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
+ 								  network_info->bssid,
+ 								  network_info->u64Tsf,
+ 								  network_info->cap_info,
+-								  network_info->u16BeaconPeriod,
++								  network_info->beacon_period,
+ 								  (const u8 *)network_info->pu8IEs,
+ 								  (size_t)network_info->u16IEsLen,
+ 								  (s32)rssi * 100,
+@@ -373,7 +373,7 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
+ 	       pstrNetworkInfo->ssid, pstrNetworkInfo->ssid_len);
+ 	memcpy(last_scanned_shadow[ap_index].bssid,
+ 	       pstrNetworkInfo->bssid, ETH_ALEN);
+-	last_scanned_shadow[ap_index].u16BeaconPeriod = pstrNetworkInfo->u16BeaconPeriod;
++	last_scanned_shadow[ap_index].beacon_period = pstrNetworkInfo->beacon_period;
+ 	last_scanned_shadow[ap_index].u8DtimPeriod = pstrNetworkInfo->u8DtimPeriod;
+ 	last_scanned_shadow[ap_index].u8channel = pstrNetworkInfo->u8channel;
+ 	last_scanned_shadow[ap_index].u16IEsLen = pstrNetworkInfo->u16IEsLen;
+@@ -431,7 +431,7 @@ static void CfgScanResult(enum scan_event scan_event,
+ 					   channel->center_freq,
+ 					   (s32)network_info->rssi * 100,
+ 					   network_info->cap_info,
+-					   network_info->u16BeaconPeriod);
++					   network_info->beacon_period);
  
-+/**
-+ * kstrtobool - convert common user inputs into boolean values
-+ * @s: input string
-+ * @base: ignored
-+ * @res: result
-+ *
-+ * This routine returns 0 iff the first character is one of 'Yy1Nn0'.
-+ * Otherwise it will return -EINVAL.  Value pointed to by res is
-+ * updated upon finding a match.
-+ */
-+int kstrtobool(const char *s, unsigned int base, bool *res)
-+{
-+	if (!s)
-+		return -EINVAL;
-+
-+	switch (s[0]) {
-+	case 'y':
-+	case 'Y':
-+	case '1':
-+		*res = true;
-+		return 0;
-+	case 'n':
-+	case 'N':
-+	case '0':
-+		*res = false;
-+		return 0;
-+	default:
-+		break;
-+	}
-+
-+	return -EINVAL;
-+}
-+EXPORT_SYMBOL(kstrtobool);
-+
- #define kstrto_from_user(f, g, type)					\
- int f(const char __user *s, size_t count, unsigned int base, type *res)	\
- {									\
-@@ -345,3 +379,4 @@ kstrto_from_user(kstrtou16_from_user,	kstrtou16,	u16);
- kstrto_from_user(kstrtos16_from_user,	kstrtos16,	s16);
- kstrto_from_user(kstrtou8_from_user,	kstrtou8,	u8);
- kstrto_from_user(kstrtos8_from_user,	kstrtos8,	s8);
-+kstrto_from_user(kstrtobool_from_user,	kstrtobool,	bool);
-diff --git a/lib/string.c b/lib/string.c
-index 0323c0d5629a..1a90db9bc6e1 100644
---- a/lib/string.c
-+++ b/lib/string.c
-@@ -630,35 +630,6 @@ bool sysfs_streq(const char *s1, const char *s2)
- }
- EXPORT_SYMBOL(sysfs_streq);
- 
--/**
-- * strtobool - convert common user inputs into boolean values
-- * @s: input string
-- * @res: result
-- *
-- * This routine returns 0 iff the first character is one of 'Yy1Nn0'.
-- * Otherwise it will return -EINVAL.  Value pointed to by res is
-- * updated upon finding a match.
-- */
--int strtobool(const char *s, bool *res)
--{
--	switch (s[0]) {
--	case 'y':
--	case 'Y':
--	case '1':
--		*res = true;
--		break;
--	case 'n':
--	case 'N':
--	case '0':
--		*res = false;
--		break;
--	default:
--		return -EINVAL;
--	}
--	return 0;
--}
--EXPORT_SYMBOL(strtobool);
--
- #ifndef __HAVE_ARCH_MEMSET
- /**
-  * memset - Fill a region of memory with the given value
+ 				if (network_info->bNewNetwork) {
+ 					if (priv->u32RcvdChCount < MAX_NUM_SCANNED_NETWORKS) {
+@@ -449,7 +449,7 @@ static void CfgScanResult(enum scan_event scan_event,
+ 										  network_info->bssid,
+ 										  network_info->u64Tsf,
+ 										  network_info->cap_info,
+-										  network_info->u16BeaconPeriod,
++										  network_info->beacon_period,
+ 										  (const u8 *)network_info->pu8IEs,
+ 										  (size_t)network_info->u16IEsLen,
+ 										  (s32)network_info->rssi * 100,
 -- 
-2.6.3
+1.9.1
 
