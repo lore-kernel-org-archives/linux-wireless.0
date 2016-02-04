@@ -1,95 +1,181 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f179.google.com ([209.85.213.179]:38902 "EHLO
-	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965753AbcBRAz4 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:9575 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965764AbcBDJYY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2016 19:55:56 -0500
+	Thu, 4 Feb 2016 04:24:24 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 15/70] staging: wilc1000: rename hWILCWFIDrv of wilc_priv structure
+Date: Thu, 4 Feb 2016 18:15:32 +0900
+Message-ID: <1454577387-509-16-git-send-email-glen.lee@atmel.com> (sfid-20160204_104504_465413_06216F1B)
+In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160217123336.GA30230@amitoj-Inspiron-3542>
-References: <20160217123336.GA30230@amitoj-Inspiron-3542>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 18 Feb 2016 11:55:36 +1100
-Message-ID: <CAGRGNgXSuYSGAdY1XxA6d0ro0doDWvgJmNpD15ASGXDTxCmVEA@mail.gmail.com> (sfid-20160218_015621_880682_B4CF9514)
-Subject: Re: [PATCH] mwifiex: Use to_delayed_work()
-To: Amitoj Kaur Chawla <amitoj1606@gmail.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Julia Lawall <julia.lawall@lip6.fr>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+From: Leo Kim <leo.kim@atmel.com>
 
-On Wed, Feb 17, 2016 at 11:33 PM, Amitoj Kaur Chawla
-<amitoj1606@gmail.com> wrote:
-> Introduce the use of to_delayed_work() helper function instead of open
-> coding it with container_of()
->
-> A simplified version of the Coccinelle semantic patch used to make
-> this change is:
->
-> //<smpl>
-> @@
-> expression a;
-> symbol work;
-> @@
-> - container_of(a, struct delayed_work, work)
-> + to_delayed_work(a)
-> //</smpl>
->
-> Signed-off-by: Amitoj Kaur Chawla <amitoj1606@gmail.com>
+This patch renames hWILCWFIDrv pointer variable of wilc_priv structure
+to hif_drv to avoid camelcase.
 
-Looks right to me.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c             |  8 ++++----
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 22 ++++++++++++----------
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     |  2 +-
+ 3 files changed, 17 insertions(+), 15 deletions(-)
 
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-Thanks,
-
-> ---
->  drivers/net/wireless/marvell/mwifiex/11h.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
->
-> diff --git a/drivers/net/wireless/marvell/mwifiex/11h.c b/drivers/net/wireless/marvell/mwifiex/11h.c
-> index 71a1b58..81c60d0 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/11h.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/11h.c
-> @@ -123,8 +123,7 @@ void mwifiex_11h_process_join(struct mwifiex_private *priv, u8 **buffer,
->  void mwifiex_dfs_cac_work_queue(struct work_struct *work)
->  {
->         struct cfg80211_chan_def chandef;
-> -       struct delayed_work *delayed_work =
-> -                       container_of(work, struct delayed_work, work);
-> +       struct delayed_work *delayed_work = to_delayed_work(work);
->         struct mwifiex_private *priv =
->                         container_of(delayed_work, struct mwifiex_private,
->                                      dfs_cac_work);
-> @@ -289,8 +288,7 @@ int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
->  void mwifiex_dfs_chan_sw_work_queue(struct work_struct *work)
->  {
->         struct mwifiex_uap_bss_param *bss_cfg;
-> -       struct delayed_work *delayed_work =
-> -                       container_of(work, struct delayed_work, work);
-> +       struct delayed_work *delayed_work = to_delayed_work(work);
->         struct mwifiex_private *priv =
->                         container_of(delayed_work, struct mwifiex_private,
->                                      dfs_chan_sw_work);
-> --
-> 1.9.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index a3b4939..06c79dd 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -89,7 +89,7 @@ static int dev_state_ev_handler(struct notifier_block *this, unsigned long event
+ 		PRINT_D(GENERIC_DBG, "No Wireless Priv\n");
+ 		return NOTIFY_DONE;
+ 	}
+-	hif_drv = (struct host_if_drv *)priv->hWILCWFIDrv;
++	hif_drv = (struct host_if_drv *)priv->hif_drv;
+ 	vif = netdev_priv(dev);
+ 	if (!vif || !hif_drv) {
+ 		PRINT_D(GENERIC_DBG, "No Wireless Priv\n");
+@@ -515,7 +515,7 @@ static int linux_wlan_init_test_config(struct net_device *dev,
+ 
+ 	PRINT_D(TX_DBG, "Start configuring Firmware\n");
+ 	priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
+-	hif_drv = (struct host_if_drv *)priv->hWILCWFIDrv;
++	hif_drv = (struct host_if_drv *)priv->hif_drv;
+ 	PRINT_D(INIT_DBG, "Host = %p\n", hif_drv);
+ 	wilc_get_mac_address(vif, mac_add);
+ 
+@@ -1089,7 +1089,7 @@ static void wilc_set_multicast_list(struct net_device *dev)
+ 
+ 	priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
+ 	vif = netdev_priv(dev);
+-	hif_drv = (struct host_if_drv *)priv->hWILCWFIDrv;
++	hif_drv = (struct host_if_drv *)priv->hif_drv;
+ 
+ 	if (!dev)
+ 		return;
+@@ -1228,7 +1228,7 @@ int wilc_mac_close(struct net_device *ndev)
+ 		return 0;
+ 	}
+ 
+-	hif_drv = (struct host_if_drv *)priv->hWILCWFIDrv;
++	hif_drv = (struct host_if_drv *)priv->hif_drv;
+ 
+ 	PRINT_D(GENERIC_DBG, "Mac close\n");
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 1907331..d1cb0b2 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -512,7 +512,7 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
+ 	dev = priv->dev;
+ 	vif = netdev_priv(dev);
+ 	wl = vif->wilc;
+-	pstrWFIDrv = (struct host_if_drv *)priv->hWILCWFIDrv;
++	pstrWFIDrv = (struct host_if_drv *)priv->hif_drv;
+ 
+ 	if (enuConnDisconnEvent == CONN_DISCONN_EVENT_CONN_RESP) {
+ 		u16 u16ConnectStatus;
+@@ -711,9 +711,11 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	wilc_connecting = 1;
+ 	priv = wiphy_priv(wiphy);
+ 	vif = netdev_priv(priv->dev);
+-	pstrWFIDrv = (struct host_if_drv *)(priv->hWILCWFIDrv);
++	pstrWFIDrv = (struct host_if_drv *)priv->hif_drv;
+ 
+-	PRINT_D(CFG80211_DBG, "Connecting to SSID [%s] on netdev [%p] host if [%p]\n", sme->ssid, dev, priv->hWILCWFIDrv);
++	PRINT_D(CFG80211_DBG,
++		"Connecting to SSID [%s] on netdev [%p] host if [%p]\n",
++		sme->ssid, dev, priv->hif_drv);
+ 	if (!(strncmp(sme->ssid, "DIRECT-", 7))) {
+ 		PRINT_D(CFG80211_DBG, "Connected to Direct network,OBSS disabled\n");
+ 		pstrWFIDrv->p2p_connect = 1;
+@@ -928,7 +930,7 @@ static int disconnect(struct wiphy *wiphy, struct net_device *dev, u16 reason_co
+ 	priv = wiphy_priv(wiphy);
+ 	vif = netdev_priv(priv->dev);
+ 
+-	pstrWFIDrv = (struct host_if_drv *)priv->hWILCWFIDrv;
++	pstrWFIDrv = (struct host_if_drv *)priv->hif_drv;
+ 	if (!pstrWFIDrv->p2p_connect)
+ 		wlan_channel = INVALID_CHANNEL;
+ 	wilc_wlan_set_bssid(priv->dev, NullBssid, STATION_MODE);
+@@ -1276,7 +1278,7 @@ static int del_key(struct wiphy *wiphy, struct net_device *netdev,
+ 		wilc_remove_wep_key(vif, key_index);
+ 	} else {
+ 		PRINT_D(CFG80211_DBG, "Removing all installed keys\n");
+-		wilc_remove_key(priv->hWILCWFIDrv, mac_addr);
++		wilc_remove_key(priv->hif_drv, mac_addr);
+ 	}
+ 
+ 	return 0;
+@@ -1632,7 +1634,7 @@ void WILC_WFI_p2p_rx (struct net_device *dev, u8 *buff, u32 size)
+ 	s32 s32Freq;
+ 
+ 	priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
+-	pstrWFIDrv = (struct host_if_drv *)priv->hWILCWFIDrv;
++	pstrWFIDrv = (struct host_if_drv *)priv->hif_drv;
+ 
+ 	memcpy(&header, (buff - HOST_HDR_OFFSET), HOST_HDR_OFFSET);
+ 
+@@ -1844,7 +1846,7 @@ static int mgmt_tx(struct wiphy *wiphy,
+ 
+ 	vif = netdev_priv(wdev->netdev);
+ 	priv = wiphy_priv(wiphy);
+-	pstrWFIDrv = (struct host_if_drv *)priv->hWILCWFIDrv;
++	pstrWFIDrv = (struct host_if_drv *)priv->hif_drv;
+ 
+ 	*cookie = (unsigned long)buf;
+ 	priv->u64tx_cookie = *cookie;
+@@ -1970,7 +1972,7 @@ static int mgmt_tx_cancel_wait(struct wiphy *wiphy,
+ 	struct host_if_drv *pstrWFIDrv;
+ 
+ 	priv = wiphy_priv(wiphy);
+-	pstrWFIDrv = (struct host_if_drv *)priv->hWILCWFIDrv;
++	pstrWFIDrv = (struct host_if_drv *)priv->hif_drv;
+ 
+ 
+ 	PRINT_D(GENERIC_DBG, "Tx Cancel wait :%lu\n", jiffies);
+@@ -2070,7 +2072,7 @@ static int set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	priv = wiphy_priv(wiphy);
+ 	vif = netdev_priv(priv->dev);
+-	if (!priv->hWILCWFIDrv) {
++	if (!priv->hif_drv) {
+ 		PRINT_ER("Driver is NULL\n");
+ 		return -EIO;
+ 	}
+@@ -2713,7 +2715,7 @@ int wilc_init_host_int(struct net_device *net)
+ 	priv->bInP2PlistenState = false;
+ 
+ 	sema_init(&(priv->hSemScanReq), 1);
+-	s32Error = wilc_init(net, &priv->hWILCWFIDrv);
++	s32Error = wilc_init(net, &priv->hif_drv);
+ 	if (s32Error)
+ 		PRINT_ER("Error while initializing hostinterface\n");
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 07eda4d..64fcb77 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -121,7 +121,7 @@ struct wilc_priv {
+ 	spinlock_t lock;
+ 	struct net_device *dev;
+ 	struct napi_struct napi;
+-	struct host_if_drv *hWILCWFIDrv;
++	struct host_if_drv *hif_drv;
+ 	struct host_if_pmkid_attr pmkid_list;
+ 	struct WILC_WFI_stats netstats;
+ 	u8 WILC_WFI_wep_key[4][WLAN_KEY_LEN_WEP104];
 -- 
-Julian Calaby
+1.9.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
