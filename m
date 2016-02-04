@@ -1,48 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40039 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933423AbcBRHa2 (ORCPT
+Received: from mail-yw0-f177.google.com ([209.85.161.177]:35720 "EHLO
+	mail-yw0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754133AbcBDL17 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 02:30:28 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 04/24] staging: wilc1000: linux_mon.c: add to check routine
-Date: Thu, 18 Feb 2016 16:27:15 +0900
-Message-ID: <1455780455-21365-4-git-send-email-leo.kim@atmel.com> (sfid-20160218_083037_444495_B0CEB1C4)
-In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+	Thu, 4 Feb 2016 06:27:59 -0500
+Received: by mail-yw0-f177.google.com with SMTP id g127so24695907ywf.2
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 03:27:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Thu, 4 Feb 2016 16:52:25 +0530
+Message-ID: <CABPxzY+HpP=NTrAaUEzV5nFm=LK93m=kxPV14-cdftt+VPsWNw@mail.gmail.com> (sfid-20160204_122805_666177_9914C15E)
+Subject: mac80211_hwsim + iperf + netns
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the return value which needs the check and
-prints the error message when it fails.
+Hi All,
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_mon.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+I am trying to run some iperf tests using mac80211_hwsim b/w AP and STA.
+Even after tweaking the routing table, the packets are still not going through
+mac80211_hwsim instead they are just looping back.
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index 3048e88..dbb98bf 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -266,7 +266,9 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 	/* if source address and bssid fields are equal>>Mac header */
- 	/*send it to mgmt frames handler */
- 	if (!(memcmp(srcAdd, bssid, 6))) {
--		mon_mgmt_tx(mon_priv->real_ndev, skb->data, skb->len);
-+		ret = mon_mgmt_tx(mon_priv->real_ndev, skb->data, skb->len);
-+		if (ret)
-+			netdev_err(dev, "fail to mgmt tx\n");
- 		dev_kfree_skb(skb);
- 	} else {
- 		ret = wilc_mac_xmit(skb, mon_priv->real_ndev);
+After a quick search i found that we should use different network namespaces.
+Can anyone tell me the exact procedure for this? I have found a procedure
+in the below link, but i dont have the lxc-unshare for my embedded box.
+Is there any alternate way for this.
+
+https://github.com/bcopeland/wmediumd
+
+
 -- 
-1.9.1
-
+Thanks,
+Regards,
+Chaitanya T K.
