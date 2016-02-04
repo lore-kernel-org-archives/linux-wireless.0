@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f67.google.com ([209.85.192.67]:33961 "EHLO
-	mail-qg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754947AbcBHPlq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 10:41:46 -0500
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux@endlessm.com,
-	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
-Subject: [PATCH 6/9] rfkill: Add documentation about LED triggers
-Date: Mon,  8 Feb 2016 10:41:33 -0500
-Message-Id: <1454946096-9752-7-git-send-email-jprvita@endlessm.com> (sfid-20160208_164417_031809_8667AEE8)
-In-Reply-To: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
-References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:52796 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932140AbcBDQpR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2016 11:45:17 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Drunk Cat <natserver2@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: alfa awus036nhr v2 and module rtl8xxxu
+References: <loom.20160128T003525-188@post.gmane.org>
+Date: Thu, 04 Feb 2016 11:45:16 -0500
+In-Reply-To: <loom.20160128T003525-188@post.gmane.org> (Drunk Cat's message of
+	"Wed, 27 Jan 2016 23:36:13 +0000 (UTC)")
+Message-ID: <wrfjd1sco25f.fsf@redhat.com> (sfid-20160204_174523_902118_4D865D26)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
----
- Documentation/rfkill.txt | 2 ++
- 1 file changed, 2 insertions(+)
+Drunk Cat <natserver2@gmail.com> writes:
+> problem: it does not connect to any wifi network you can see the time out on 
+> dmesg
+>
+>
+>>lsusb
+>
+> Bus 002 Device 007: ID 0bda:817f Realtek Semiconductor Corp. RTL8188RU 
+> 802.11n WLAN Adapter
+>
+>>iwconfig
+> wlp0s20u1  IEEE 802.11bgn  ESSID:off/any  
+>           Mode:Managed  Access Point: Not-Associated   Tx-Power=20 dBm   
+>           Retry short limit:7   RTS thr=2347 B   Fragment thr:off
+>           Power Management:off
+>>dmesg
 
-diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
-index 2ee6ef9..1f0c270 100644
---- a/Documentation/rfkill.txt
-+++ b/Documentation/rfkill.txt
-@@ -83,6 +83,8 @@ rfkill drivers that control devices that can be hard-blocked unless they also
- assign the poll_hw_block() callback (then the rfkill core will poll the
- device). Don't do this unless you cannot get the event in any other way.
- 
-+RFKill provides per-switch LED triggers, which can be used to drive LEDs
-+according to the switch state (LED_FULL when blocked, LED_OFF otherwise).
- 
- 
- 5. Userspace support
--- 
-2.5.0
+Not sure what distribution you are running, but I am seeing problems
+with NetworkManager in recent Fedora.
 
+Could you try the following:
+1) Unplug the WiFi dongle
+2) (Re)load the driver (rmmod rtl8xxxu ; insmod rtl8xxxu)
+3) Restart NetworkManager 'systemctl restart NetworkManager'
+4) Plug in the WiFi dongle
+
+Thanks,
+Jes
