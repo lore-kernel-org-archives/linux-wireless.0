@@ -1,51 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:35897 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754412AbcBPIkK (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:9821 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965764AbcBDJZD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2016 03:40:10 -0500
-Received: by mail-pa0-f54.google.com with SMTP id yy13so99577415pab.3
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2016 00:40:10 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 3/7] staging: wilc1000: handle_set_mac_address: use kmemdup
-Date: Tue, 16 Feb 2016 17:39:51 +0900
-Message-Id: <1455611995-28773-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20160216_094016_960369_9F87099C)
-In-Reply-To: <1455611995-28773-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1455611995-28773-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 4 Feb 2016 04:25:03 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 21/70] staging: wilc1000: removes void function return
+Date: Thu, 4 Feb 2016 18:15:38 +0900
+Message-ID: <1454577387-509-22-git-send-email-glen.lee@atmel.com> (sfid-20160204_104502_383963_F98357B7)
+In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces kmalloc followed by memcpy with kmemdup.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+This patch removes the warning reported by checkpatch.pl
+for void function return statements are not generally useful.
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 4d50b38..65d2393 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -429,13 +429,11 @@ static s32 handle_set_mac_address(struct wilc_vif *vif,
- {
- 	s32 result = 0;
- 	struct wid wid;
--	u8 *mac_buf = kmalloc(ETH_ALEN, GFP_KERNEL);
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index c16cc40..5c87105 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1047,8 +1047,6 @@ static void wilc_set_multicast_list(struct net_device *dev)
+ 	}
  
-+	u8 *mac_buf = kmemdup(set_mac_addr->mac_addr, ETH_ALEN, GFP_KERNEL);
- 	if (!mac_buf)
- 		return -ENOMEM;
- 
--	memcpy(mac_buf, set_mac_addr->mac_addr, ETH_ALEN);
+ 	wilc_setup_multicast_filter(vif, true, (dev->mc.count));
 -
- 	wid.id = (u16)WID_MAC_ADDR;
- 	wid.type = WID_STR;
- 	wid.val = mac_buf;
+-	return;
+ }
+ 
+ static void linux_wlan_tx_complete(void *priv, int status)
 -- 
-2.7.1
+1.9.1
 
