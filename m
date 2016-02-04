@@ -1,89 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:30328 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1425347AbcBRLf2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 06:35:28 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V2 16/24] staging: wilc1000: host_interface.c: removes unnecessary log messages
-Date: Thu, 18 Feb 2016 20:30:16 +0900
-Message-ID: <1455795024-26978-16-git-send-email-leo.kim@atmel.com> (sfid-20160218_123532_898770_54245B01)
-In-Reply-To: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
-References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
+Received: from mail.us.es ([193.147.175.20]:54511 "EHLO mail.us.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751681AbcBDAHv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 3 Feb 2016 19:07:51 -0500
+Received: from antivirus1-rhel7.int (unknown [192.168.2.11])
+	by mail.us.es (Postfix) with ESMTP id 1320F303D00
+	for <linux-wireless@vger.kernel.org>; Thu,  4 Feb 2016 01:07:50 +0100 (CET)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+	by antivirus1-rhel7.int (Postfix) with ESMTP id 04760DA801
+	for <linux-wireless@vger.kernel.org>; Thu,  4 Feb 2016 01:07:50 +0100 (CET)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+	by antivirus1-rhel7.int (Postfix) with ESMTP id C26D3DA7FF
+	for <linux-wireless@vger.kernel.org>; Thu,  4 Feb 2016 01:07:47 +0100 (CET)
+Date: Thu, 4 Feb 2016 01:07:42 +0100
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+To: netfilter-devel@vger.kernel.org, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org
+Cc: lwn@lwn.net, info@netdevconf.org
+Subject: [ANNOUNCE] NetDev 1.1 schedule is out
+Message-ID: <20160204000742.GA1203@salvia> (sfid-20160204_010800_208536_7287B1B0)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+Hi!
 
-This patch removes unnecessary log messages.
+We're happy to release the NetDev 1.1 schedule today:
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+        http://www.netdevconf.org/1.1/schedule.html
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ee45103..60678aa 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1643,11 +1643,8 @@ static int Handle_Key(struct wilc_vif *vif,
- 
- 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2,
- 					    GFP_KERNEL);
--
--			if (pu8keybuf == NULL) {
--				PRINT_ER("No buffer to send Key\n");
-+			if (!pu8keybuf)
- 				return -ENOMEM;
--			}
- 
- 			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
- 			pu8keybuf[1] = pstrHostIFkeyAttr->attr.wep.key_len;
-@@ -1668,10 +1665,8 @@ static int Handle_Key(struct wilc_vif *vif,
- 			kfree(pu8keybuf);
- 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
- 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2, GFP_KERNEL);
--			if (!pu8keybuf) {
--				PRINT_ER("No buffer to send Key\n");
-+			if (!pu8keybuf)
- 				return -ENOMEM;
--			}
- 			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
- 			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->attr.wep.key_len, 1);
- 			memcpy(pu8keybuf + 2, pstrHostIFkeyAttr->attr.wep.key,
-@@ -1715,7 +1710,6 @@ static int Handle_Key(struct wilc_vif *vif,
- 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
- 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
- 			if (!pu8keybuf) {
--				PRINT_ER("No buffer to send RxGTK Key\n");
- 				ret = -ENOMEM;
- 				goto _WPARxGtk_end_case_;
- 			}
-@@ -1747,7 +1741,6 @@ static int Handle_Key(struct wilc_vif *vif,
- 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
- 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
- 			if (pu8keybuf == NULL) {
--				PRINT_ER("No buffer to send RxGTK Key\n");
- 				ret = -ENOMEM;
- 				goto _WPARxGtk_end_case_;
- 			}
-@@ -1787,7 +1780,6 @@ _WPARxGtk_end_case_:
- 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
- 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN + 1, GFP_KERNEL);
- 			if (!pu8keybuf) {
--				PRINT_ER("No buffer to send PTK Key\n");
- 				ret = -ENOMEM;
- 				goto _WPAPtk_end_case_;
- 			}
--- 
-1.9.1
+We have three days ahead of interesting talks, tutorials, BoFs and
+keynotes! And... you still have a chance to join us:
+
+        https://www.netdevconf.org/1.1/registration.html
+
+             ________________________________
+            / Yay! An old school tech driven \
+            | community event by developers, |
+            | for developers! I can't miss   |
+            \ this chance!                   /
+             --------------------------------
+                            \ (__)
+                              (oo)
+                        /------\/
+                       / |    ||
+                      *  /\---/\
+                         ~~   ~~
+
+We have also scheduled two social events, one Flamenco [1] + Paella [2]
++ Local wine tasting workshop on Thu 11th; and the gala dinner at the
+Río Grande restaurant next to the Guadalquivir river.
+
+We would also like to thank those that already confirmed sponsorship:
+Cumulus Networks, Verizon, Facebook, VmWare, Google, Cisco, ARM,
+Linkedin, Mellanox, Sophos, Mojatatu Networks, OISF/Suricata,
+Zen Load Balancer, Telefonica and our media sponsor LWN.net. Thank you a lot!
+
+See you at NetDev 1.1 in Sevilla, Spain, February 10-12, 2016!
+
+[1] https://en.wikipedia.org/wiki/Flamenco
+[2] https://en.wikipedia.org/wiki/Paella
 
