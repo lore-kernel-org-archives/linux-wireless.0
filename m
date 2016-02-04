@@ -1,102 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44513 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752339AbcB2VdW (ORCPT
+Received: from mail-yk0-f173.google.com ([209.85.160.173]:33716 "EHLO
+	mail-yk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966099AbcBDW7N (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 16:33:22 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH 14/15] wil6210: pass is_go flag to firmware
-Date: Mon, 29 Feb 2016 23:32:49 +0200
-Message-Id: <1456781570-16552-15-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160229_223333_200832_01F443A9)
-In-Reply-To: <1456781570-16552-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1456781570-16552-1-git-send-email-qca_merez@qca.qualcomm.com>
+	Thu, 4 Feb 2016 17:59:13 -0500
+MIME-Version: 1.0
+In-Reply-To: <1454619643-14444-3-git-send-email-keescook@chromium.org>
+References: <1454619643-14444-1-git-send-email-keescook@chromium.org>
+	<1454619643-14444-3-git-send-email-keescook@chromium.org>
+Date: Fri, 5 Feb 2016 00:59:11 +0200
+Message-ID: <CAHp75VcJjm4xSdon1AWo=0QL1mmgttoL9Q_R=7DRmgFWkhzKWg@mail.gmail.com> (sfid-20160204_235940_656300_5599FB02)
+Subject: Re: [PATCH v2 2/4] lib: update single-char callers of strtobool
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+To: Kees Cook <keescook@chromium.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Steve French <sfrench@samba.org>, linux-cifs@vger.kernel.org,
+	Joe Perches <joe@perches.com>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>,
+	"x86@kernel.org" <x86@kernel.org>, linuxppc-dev@lists.ozlabs.org,
+	linux-s390@vger.kernel.org,
+	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+On Thu, Feb 4, 2016 at 11:00 PM, Kees Cook <keescook@chromium.org> wrote:
+> Some callers of strtobool were passing a pointer to unterminated strings.
+> In preparation of adding multi-character processing to kstrtobool, update
+> the callers to not pass single-character pointers, and switch to using the
+> new kstrtobool_from_user helper where possible.
 
-When starting a PCP, pass the is_go flag to firmware in
-wmi_pcp_start. This flag indicates whether we started
-a PCP which is also a GO(P2P group owner) or just a regular
-PCP.
+Looks much better now!
+My comment below.
 
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/cfg80211.c | 9 ++++++++-
- drivers/net/wireless/ath/wil6210/wil6210.h  | 2 +-
- drivers/net/wireless/ath/wil6210/wmi.c      | 3 ++-
- 3 files changed, 11 insertions(+), 3 deletions(-)
+>
+> Signed-off-by: Kees Cook <keescook@chromium.org>
+> Cc: Amitkumar Karwar <akarwar@marvell.com>
+> Cc: Nishant Sarmukadam <nishants@marvell.com>
+> Cc: Kalle Valo <kvalo@codeaurora.org>
+> Cc: Steve French <sfrench@samba.org>
+> Cc: linux-cifs@vger.kernel.org
+> ---
+>  drivers/net/wireless/marvell/mwifiex/debugfs.c | 10 ++---
+>  fs/cifs/cifs_debug.c                           | 58 +++++++-------------------
+>  fs/cifs/cifs_debug.h                           |  2 +-
+>  fs/cifs/cifsfs.c                               |  6 +--
+>  fs/cifs/cifsglob.h                             |  4 +-
+>  5 files changed, 26 insertions(+), 54 deletions(-)
+>
+> diff --git a/drivers/net/wireless/marvell/mwifiex/debugfs.c b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+> index 0b9c580af988..bd061b02bc04 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/debugfs.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/debugfs.c
+> @@ -880,14 +880,12 @@ mwifiex_reset_write(struct file *file,
+>  {
+>         struct mwifiex_private *priv = file->private_data;
+>         struct mwifiex_adapter *adapter = priv->adapter;
+> -       char cmd;
+>         bool result;
+> +       int rc;
+>
+> -       if (copy_from_user(&cmd, ubuf, sizeof(cmd)))
+> -               return -EFAULT;
+> -
+> -       if (strtobool(&cmd, &result))
+> -               return -EINVAL;
+> +       rc = kstrtobool_from_user(ubuf, count, 0, &result);
+> +       if (rc)
+> +               return rc;
+>
+>         if (!result)
+>                 return -EINVAL;
+> diff --git a/fs/cifs/cifs_debug.c b/fs/cifs/cifs_debug.c
+> index 50b268483302..6ee59abcb69b 100644
+> --- a/fs/cifs/cifs_debug.c
+> +++ b/fs/cifs/cifs_debug.c
+> @@ -255,7 +255,6 @@ static const struct file_operations cifs_debug_data_proc_fops = {
+>  static ssize_t cifs_stats_proc_write(struct file *file,
+>                 const char __user *buffer, size_t count, loff_t *ppos)
+>  {
+> -       char c;
+>         bool bv;
+>         int rc;
+>         struct list_head *tmp1, *tmp2, *tmp3;
+> @@ -263,11 +262,8 @@ static ssize_t cifs_stats_proc_write(struct file *file,
+>         struct cifs_ses *ses;
+>         struct cifs_tcon *tcon;
+>
+> -       rc = get_user(c, buffer);
+> -       if (rc)
+> -               return rc;
+> -
+> -       if (strtobool(&c, &bv) == 0) {
+> +       rc = kstrtobool_from_user(buffer, count, 0, &bv);
+> +       if (rc == 0) {
+>  #ifdef CONFIG_CIFS_STATS2
+>                 atomic_set(&totBufAllocCount, 0);
+>                 atomic_set(&totSmBufAllocCount, 0);
+> @@ -290,6 +286,8 @@ static ssize_t cifs_stats_proc_write(struct file *file,
+>                         }
+>                 }
+>                 spin_unlock(&cifs_tcp_ses_lock);
+> +       } else {
+> +               return rc;
+>         }
+>
+>         return count;
+> @@ -433,17 +431,17 @@ static int cifsFYI_proc_open(struct inode *inode, struct file *file)
+>  static ssize_t cifsFYI_proc_write(struct file *file, const char __user *buffer,
+>                 size_t count, loff_t *ppos)
+>  {
+> -       char c;
+> +       char c[2] = { '\0' };
+>         bool bv;
+>         int rc;
+>
+> -       rc = get_user(c, buffer);
+> +       rc = get_user(c[0], buffer);
 
-diff --git a/drivers/net/wireless/ath/wil6210/cfg80211.c b/drivers/net/wireless/ath/wil6210/cfg80211.c
-index 33e5451..12cae3c 100644
---- a/drivers/net/wireless/ath/wil6210/cfg80211.c
-+++ b/drivers/net/wireless/ath/wil6210/cfg80211.c
-@@ -1055,10 +1055,17 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
- 	int rc;
- 	struct wireless_dev *wdev = ndev->ieee80211_ptr;
- 	u8 wmi_nettype = wil_iftype_nl2wmi(wdev->iftype);
-+	u8 is_go = (wdev->iftype == NL80211_IFTYPE_P2P_GO);
- 
- 	if (pbss)
- 		wmi_nettype = WMI_NETTYPE_P2P;
- 
-+	wil_dbg_misc(wil, "%s: is_go=%d\n", __func__, is_go);
-+	if (is_go && !pbss) {
-+		wil_err(wil, "%s: P2P GO must be in PBSS\n", __func__);
-+		return -ENOTSUPP;
-+	}
-+
- 	wil_set_recovery_state(wil, fw_recovery_idle);
- 
- 	mutex_lock(&wil->mutex);
-@@ -1083,7 +1090,7 @@ static int _wil_cfg80211_start_ap(struct wiphy *wiphy,
- 
- 	netif_carrier_on(ndev);
- 
--	rc = wmi_pcp_start(wil, bi, wmi_nettype, chan, hidden_ssid);
-+	rc = wmi_pcp_start(wil, bi, wmi_nettype, chan, hidden_ssid, is_go);
- 	if (rc)
- 		goto err_pcp_start;
- 
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index a23dcee..d18c448 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -802,7 +802,7 @@ void wil_p2p_wdev_free(struct wil6210_priv *wil);
- 
- int wmi_set_mac_address(struct wil6210_priv *wil, void *addr);
- int wmi_pcp_start(struct wil6210_priv *wil, int bi, u8 wmi_nettype,
--		  u8 chan, u8 hidden_ssid);
-+		  u8 chan, u8 hidden_ssid, u8 is_go);
- int wmi_pcp_stop(struct wil6210_priv *wil);
- void wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
- 			u16 reason_code, bool from_event);
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index f076175..3cc4462 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -962,7 +962,7 @@ int wmi_set_mac_address(struct wil6210_priv *wil, void *addr)
- }
- 
- int wmi_pcp_start(struct wil6210_priv *wil, int bi, u8 wmi_nettype,
--		  u8 chan, u8 hidden_ssid)
-+		  u8 chan, u8 hidden_ssid, u8 is_go)
- {
- 	int rc;
- 
-@@ -973,6 +973,7 @@ int wmi_pcp_start(struct wil6210_priv *wil, int bi, u8 wmi_nettype,
- 		.channel = chan - 1,
- 		.pcp_max_assoc_sta = max_assoc_sta,
- 		.hidden_ssid = hidden_ssid,
-+		.is_go = is_go,
- 	};
- 	struct {
- 		struct wmi_cmd_hdr wmi;
+>         if (rc)
+>                 return rc;
+> -       if (strtobool(&c, &bv) == 0)
+> +       if (strtobool(c, &bv) == 0)
+>                 cifsFYI = bv;
+> -       else if ((c > '1') && (c <= '9'))
+> -               cifsFYI = (int) (c - '0'); /* see cifs_debug.h for meanings */
+> +       else if ((c[0] > '1') && (c[0] <= '9'))
+> +               cifsFYI = (int) (c[0] - '0'); /* see cifs_debug.h for meanings */
+>
+>         return count;
+>  }
+> @@ -471,20 +469,12 @@ static int cifs_linux_ext_proc_open(struct inode *inode, struct file *file)
+>  static ssize_t cifs_linux_ext_proc_write(struct file *file,
+>                 const char __user *buffer, size_t count, loff_t *ppos)
+>  {
+> -       char c;
+> -       bool bv;
+>         int rc;
+>
+> -       rc = get_user(c, buffer);
+> +       rc = kstrtobool_from_user(buffer, count, 0, &linuxExtEnabled);
+>         if (rc)
+>                 return rc;
+>
+> -       rc = strtobool(&c, &bv);
+> -       if (rc)
+> -               return rc;
+> -
+> -       linuxExtEnabled = bv;
+> -
+>         return count;
+>  }
+>
+> @@ -511,20 +501,12 @@ static int cifs_lookup_cache_proc_open(struct inode *inode, struct file *file)
+>  static ssize_t cifs_lookup_cache_proc_write(struct file *file,
+>                 const char __user *buffer, size_t count, loff_t *ppos)
+>  {
+> -       char c;
+> -       bool bv;
+>         int rc;
+>
+> -       rc = get_user(c, buffer);
+> +       rc = kstrtobool_from_user(buffer, count, 0, &lookupCacheEnabled);
+>         if (rc)
+>                 return rc;
+>
+> -       rc = strtobool(&c, &bv);
+> -       if (rc)
+> -               return rc;
+> -
+> -       lookupCacheEnabled = bv;
+> -
+>         return count;
+>  }
+>
+> @@ -551,20 +533,12 @@ static int traceSMB_proc_open(struct inode *inode, struct file *file)
+>  static ssize_t traceSMB_proc_write(struct file *file, const char __user *buffer,
+>                 size_t count, loff_t *ppos)
+>  {
+> -       char c;
+> -       bool bv;
+>         int rc;
+>
+> -       rc = get_user(c, buffer);
+> +       rc = kstrtobool_from_user(buffer, count, 0, &traceSMB);
+>         if (rc)
+>                 return rc;
+>
+> -       rc = strtobool(&c, &bv);
+> -       if (rc)
+> -               return rc;
+> -
+> -       traceSMB = bv;
+> -
+>         return count;
+>  }
+>
+> @@ -622,7 +596,7 @@ static ssize_t cifs_security_flags_proc_write(struct file *file,
+>         int rc;
+>         unsigned int flags;
+>         char flags_string[12];
+> -       char c;
+> +       char c[2] = { '\0' };
+
+Can we use flag_string directly here?
+
+>         bool bv;
+>
+>         if ((count < 1) || (count > 11))
+> @@ -635,11 +609,11 @@ static ssize_t cifs_security_flags_proc_write(struct file *file,
+>
+>         if (count < 3) {
+>                 /* single char or single char followed by null */
+> -               c = flags_string[0];
+> -               if (strtobool(&c, &bv) == 0) {
+> +               c[0] = flags_string[0];
+
+> +               if (strtobool(c, &bv) == 0) {
+
+
+>                         global_secflags = bv ? CIFSSEC_MAX : CIFSSEC_DEF;
+>                         return count;
+> -               } else if (!isdigit(c)) {
+> +               } else if (!isdigit(c[0])) {
+>                         cifs_dbg(VFS, "Invalid SecurityFlags: %s\n",
+>                                         flags_string);
+>                         return -EINVAL;
+> diff --git a/fs/cifs/cifs_debug.h b/fs/cifs/cifs_debug.h
+> index 66cf0f9fff89..c611ca2339d7 100644
+> --- a/fs/cifs/cifs_debug.h
+> +++ b/fs/cifs/cifs_debug.h
+> @@ -25,7 +25,7 @@
+>  void cifs_dump_mem(char *label, void *data, int length);
+>  void cifs_dump_detail(void *);
+>  void cifs_dump_mids(struct TCP_Server_Info *);
+> -extern int traceSMB;           /* flag which enables the function below */
+> +extern bool traceSMB;          /* flag which enables the function below */
+>  void dump_smb(void *, int);
+>  #define CIFS_INFO      0x01
+>  #define CIFS_RC                0x02
+> diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
+> index c48ca13673e3..931b446f2a44 100644
+> --- a/fs/cifs/cifsfs.c
+> +++ b/fs/cifs/cifsfs.c
+> @@ -54,10 +54,10 @@
+>  #endif
+>
+>  int cifsFYI = 0;
+> -int traceSMB = 0;
+> +bool traceSMB;
+>  bool enable_oplocks = true;
+> -unsigned int linuxExtEnabled = 1;
+> -unsigned int lookupCacheEnabled = 1;
+> +bool linuxExtEnabled = true;
+> +bool lookupCacheEnabled = true;
+>  unsigned int global_secflags = CIFSSEC_DEF;
+>  /* unsigned int ntlmv2_support = 0; */
+>  unsigned int sign_CIFS_PDUs = 1;
+> diff --git a/fs/cifs/cifsglob.h b/fs/cifs/cifsglob.h
+> index a25b2513f146..d21da9f05bae 100644
+> --- a/fs/cifs/cifsglob.h
+> +++ b/fs/cifs/cifsglob.h
+> @@ -1596,11 +1596,11 @@ GLOBAL_EXTERN atomic_t midCount;
+>
+>  /* Misc globals */
+>  GLOBAL_EXTERN bool enable_oplocks; /* enable or disable oplocks */
+> -GLOBAL_EXTERN unsigned int lookupCacheEnabled;
+> +GLOBAL_EXTERN bool lookupCacheEnabled;
+>  GLOBAL_EXTERN unsigned int global_secflags;    /* if on, session setup sent
+>                                 with more secure ntlmssp2 challenge/resp */
+>  GLOBAL_EXTERN unsigned int sign_CIFS_PDUs;  /* enable smb packet signing */
+> -GLOBAL_EXTERN unsigned int linuxExtEnabled;/*enable Linux/Unix CIFS extensions*/
+> +GLOBAL_EXTERN bool linuxExtEnabled;/*enable Linux/Unix CIFS extensions*/
+>  GLOBAL_EXTERN unsigned int CIFSMaxBufSize;  /* max size not including hdr */
+>  GLOBAL_EXTERN unsigned int cifs_min_rcv;    /* min size of big ntwrk buf pool */
+>  GLOBAL_EXTERN unsigned int cifs_min_small;  /* min size of small buf pool */
+> --
+> 2.6.3
+>
+
+
+
 -- 
-1.8.5.2
-
+With Best Regards,
+Andy Shevchenko
