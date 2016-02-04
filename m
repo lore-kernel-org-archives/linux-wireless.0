@@ -1,120 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:34618 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758184AbcBDXzO (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:10067 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965859AbcBDJZp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 18:55:14 -0500
-Received: by mail-wm0-f46.google.com with SMTP id 128so49707726wmz.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 15:55:13 -0800 (PST)
-From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-To: Kees Cook <keescook@chromium.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Joe Perches <joe@perches.com>,
-	Andy Shevchenko <andy.shevchenko@gmail.com>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Steve French <sfrench@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>, x86@kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-cifs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/4] lib: move strtobool to kstrtobool
-References: <1454619643-14444-1-git-send-email-keescook@chromium.org>
-	<1454619643-14444-2-git-send-email-keescook@chromium.org>
-Date: Fri, 05 Feb 2016 00:55:11 +0100
-In-Reply-To: <1454619643-14444-2-git-send-email-keescook@chromium.org> (Kees
-	Cook's message of "Thu, 4 Feb 2016 13:00:40 -0800")
-Message-ID: <8737t8ni8w.fsf@rasmusvillemoes.dk> (sfid-20160205_005541_979120_F844C3A6)
+	Thu, 4 Feb 2016 04:25:45 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 26/70] staging: wilc1000: wilc_parse_network_info(): renames local inner variables
+Date: Thu, 4 Feb 2016 18:15:43 +0900
+Message-ID: <1454577387-509-27-git-send-email-glen.lee@atmel.com> (sfid-20160204_102949_411476_7B4820E5)
+In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 04 2016, Kees Cook <keescook@chromium.org> wrote:
+From: Leo Kim <leo.kim@atmel.com>
 
-> Create the kstrtobool_from_user helper and moves strtobool logic into
-> the new kstrtobool (matching all the other kstrto* functions). Provides
-> an inline wrapper for existing strtobool callers.
->
-> Signed-off-by: Kees Cook <keescook@chromium.org>
-> ---
->  include/linux/kernel.h |  3 +++
->  include/linux/string.h |  6 +++++-
->  lib/kstrtox.c          | 35 +++++++++++++++++++++++++++++++++++
->  lib/string.c           | 29 -----------------------------
->  4 files changed, 43 insertions(+), 30 deletions(-)
->
-> diff --git a/include/linux/kernel.h b/include/linux/kernel.h
-> index f31638c6e873..cdc25f47a23f 100644
-> --- a/include/linux/kernel.h
-> +++ b/include/linux/kernel.h
-> @@ -357,6 +357,7 @@ int __must_check kstrtou16(const char *s, unsigned int base, u16 *res);
->  int __must_check kstrtos16(const char *s, unsigned int base, s16 *res);
->  int __must_check kstrtou8(const char *s, unsigned int base, u8 *res);
->  int __must_check kstrtos8(const char *s, unsigned int base, s8 *res);
-> +int __must_check kstrtobool(const char *s, unsigned int base, bool *res);
->  
->  int __must_check kstrtoull_from_user(const char __user *s, size_t count, unsigned int base, unsigned long long *res);
->  int __must_check kstrtoll_from_user(const char __user *s, size_t count, unsigned int base, long long *res);
-> @@ -368,6 +369,8 @@ int __must_check kstrtou16_from_user(const char __user *s, size_t count, unsigne
->  int __must_check kstrtos16_from_user(const char __user *s, size_t count, unsigned int base, s16 *res);
->  int __must_check kstrtou8_from_user(const char __user *s, size_t count, unsigned int base, u8 *res);
->  int __must_check kstrtos8_from_user(const char __user *s, size_t count, unsigned int base, s8 *res);
-> +int __must_check kstrtobool_from_user(const char __user *s, size_t count,
-> +				      unsigned int base, bool *res);
->  
->  static inline int __must_check kstrtou64_from_user(const char __user *s, size_t count, unsigned int base, u64 *res)
->  {
-> diff --git a/include/linux/string.h b/include/linux/string.h
-> index 9eebc66d957a..d2fb21b1081d 100644
-> --- a/include/linux/string.h
-> +++ b/include/linux/string.h
-> @@ -128,7 +128,11 @@ extern char **argv_split(gfp_t gfp, const char *str, int *argcp);
->  extern void argv_free(char **argv);
->  
->  extern bool sysfs_streq(const char *s1, const char *s2);
-> -extern int strtobool(const char *s, bool *res);
-> +extern int kstrtobool(const char *s, unsigned int base, bool *res);
-> +static inline int strtobool(const char *s, bool *res)
-> +{
-> +	return kstrtobool(s, 0, res);
-> +}
->  
->  #ifdef CONFIG_BINARY_PRINTF
->  int vbin_printf(u32 *bin_buf, size_t size, const char *fmt, va_list args);
-> diff --git a/lib/kstrtox.c b/lib/kstrtox.c
-> index 94be244e8441..e18f088704d7 100644
-> --- a/lib/kstrtox.c
-> +++ b/lib/kstrtox.c
-> @@ -321,6 +321,40 @@ int kstrtos8(const char *s, unsigned int base, s8 *res)
->  }
->  EXPORT_SYMBOL(kstrtos8);
->  
-> +/**
-> + * kstrtobool - convert common user inputs into boolean values
-> + * @s: input string
-> + * @base: ignored
-> + * @res: result
-> + *
-> + * This routine returns 0 iff the first character is one of 'Yy1Nn0'.
-> + * Otherwise it will return -EINVAL.  Value pointed to by res is
-> + * updated upon finding a match.
-> + */
-> +int kstrtobool(const char *s, unsigned int base, bool *res)
-> +{
+This patch renames to avoid camelcase, changes follow are:
+ - pu8TimElm to tim_elm
+ - pu8IEs to ies
+ - u16IEsLen to ies_len
+ - u32Tsf_Lo to tsf_lo
+ - u32Tsf_Hi to tsf_hi
 
-Being able to create the kstrtobool_from_user with a single macro
-invocation is convenient, but I don't think that justifies the ugliness
-of having an unused parameter. People reading this code or trying to use
-the interface will wonder what it's doing there, and it will generate
-slightly larger code for all the users of strtobool.
+And, remove the prefix variable defined name, below are:
+ - u8index to index
+ - pu8msa to msa
 
-So I'd just make a separate explicit definition of kstrtobool_from_user
-(the stack buffer sizing doesn't apply to the strings we want to parse
-anyway, though 11 is of course plenty).
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 54 ++++++++++++++---------------
+ 1 file changed, 27 insertions(+), 27 deletions(-)
 
-Rasmus
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 24afeb8..2a4e324 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -295,14 +295,14 @@ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
+ 	wid_val = &msg_buffer[8];
+ 
+ 	{
+-		u8  *pu8msa = NULL;
++		u8 *msa = NULL;
+ 		u16 rx_len = 0;
+-		u8 *pu8TimElm = NULL;
+-		u8 *pu8IEs = NULL;
+-		u16 u16IEsLen = 0;
+-		u8 u8index = 0;
+-		u32 u32Tsf_Lo;
+-		u32 u32Tsf_Hi;
++		u8 *tim_elm = NULL;
++		u8 *ies = NULL;
++		u16 ies_len = 0;
++		u8 index = 0;
++		u32 tsf_lo;
++		u32 tsf_hi;
+ 
+ 		network_info = kzalloc(sizeof(tstrNetworkInfo), GFP_KERNEL);
+ 		if (!network_info)
+@@ -310,43 +310,43 @@ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
+ 
+ 		network_info->s8rssi = wid_val[0];
+ 
+-		pu8msa = &wid_val[1];
++		msa = &wid_val[1];
+ 
+ 		rx_len = wid_len - 1;
+-		network_info->u16CapInfo = get_cap_info(pu8msa);
+-		network_info->u32Tsf = get_beacon_timestamp_lo(pu8msa);
++		network_info->u16CapInfo = get_cap_info(msa);
++		network_info->u32Tsf = get_beacon_timestamp_lo(msa);
+ 		PRINT_D(CORECONFIG_DBG, "TSF :%x\n", network_info->u32Tsf);
+ 
+-		u32Tsf_Lo = get_beacon_timestamp_lo(pu8msa);
+-		u32Tsf_Hi = get_beacon_timestamp_hi(pu8msa);
++		tsf_lo = get_beacon_timestamp_lo(msa);
++		tsf_hi = get_beacon_timestamp_hi(msa);
+ 
+-		network_info->u64Tsf = u32Tsf_Lo | ((u64)u32Tsf_Hi << 32);
++		network_info->u64Tsf = tsf_lo | ((u64)tsf_hi << 32);
+ 
+-		get_ssid(pu8msa, network_info->au8ssid, &network_info->u8SsidLen);
+-		get_BSSID(pu8msa, network_info->au8bssid);
++		get_ssid(msa, network_info->au8ssid, &network_info->u8SsidLen);
++		get_BSSID(msa, network_info->au8bssid);
+ 
+-		network_info->u8channel = get_current_channel_802_11n(pu8msa,
++		network_info->u8channel = get_current_channel_802_11n(msa,
+ 							rx_len + FCS_LEN);
+ 
+-		u8index = MAC_HDR_LEN + TIME_STAMP_LEN;
++		index = MAC_HDR_LEN + TIME_STAMP_LEN;
+ 
+-		network_info->u16BeaconPeriod = get_beacon_period(pu8msa + u8index);
++		network_info->u16BeaconPeriod = get_beacon_period(msa + index);
+ 
+-		u8index += BEACON_INTERVAL_LEN + CAP_INFO_LEN;
++		index += BEACON_INTERVAL_LEN + CAP_INFO_LEN;
+ 
+-		pu8TimElm = get_tim_elm(pu8msa, rx_len + FCS_LEN, u8index);
+-		if (pu8TimElm)
+-			network_info->u8DtimPeriod = pu8TimElm[3];
+-		pu8IEs = &pu8msa[MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN];
+-		u16IEsLen = rx_len - (MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN);
++		tim_elm = get_tim_elm(msa, rx_len + FCS_LEN, index);
++		if (tim_elm)
++			network_info->u8DtimPeriod = tim_elm[3];
++		ies = &msa[MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN];
++		ies_len = rx_len - (MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN);
+ 
+-		if (u16IEsLen > 0) {
+-			network_info->pu8IEs = kmemdup(pu8IEs, u16IEsLen,
++		if (ies_len > 0) {
++			network_info->pu8IEs = kmemdup(ies, ies_len,
+ 						       GFP_KERNEL);
+ 			if (!network_info->pu8IEs)
+ 				return -ENOMEM;
+ 		}
+-		network_info->u16IEsLen = u16IEsLen;
++		network_info->u16IEsLen = ies_len;
+ 	}
+ 
+ 	*ret_network_info = network_info;
+-- 
+1.9.1
+
