@@ -1,45 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:29833 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424769AbcBRLdK (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:50216 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964938AbcBDVOO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 06:33:10 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V2 03/24] staging: wilc1000: linux_mon.c: replaces PRINT_ER with netdev_err
-Date: Thu, 18 Feb 2016 20:30:03 +0900
-Message-ID: <1455795024-26978-3-git-send-email-leo.kim@atmel.com> (sfid-20160218_123314_645642_B802F28B)
-In-Reply-To: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
-References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
+	Thu, 4 Feb 2016 16:14:14 -0500
+Subject: Re: [RFC v2] iwlwifi: pcie: transmit queue auto-sizing
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <1454616764-19841-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1454616988-21901-1-git-send-email-emmanuel.grumbach@intel.com>
+ <56B3B885.1050409@candelatech.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB32EA02656@hasmsx107.ger.corp.intel.com>
+Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Stephen Hemminger <stephen@networkplumber.org>,
+	Dave Taht <dave.taht@gmail.com>,
+	Jonathan Corbet <corbet@lwn.net>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <56B3BF25.8080509@candelatech.com> (sfid-20160204_221421_811544_5C65FC58)
+Date: Thu, 4 Feb 2016 13:14:13 -0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA02656@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patches replaces PRINT_ER with netdev_err.
+On 02/04/2016 12:56 PM, Grumbach, Emmanuel wrote:
+>
+>
+> On 02/04/2016 10:46 PM, Ben Greear wrote:
+>> On 02/04/2016 12:16 PM, Emmanuel Grumbach wrote:
+>>> As many (all?) WiFi devices, Intel WiFi devices have
+>>> transmit queues which have 256 transmit descriptors
+>>> each and each descriptor corresponds to an MPDU.
+>>> This means that when it is full, the queue contains
+>>> 256 * ~1500 bytes to be transmitted (if we don't have
+>>> A-MSDUs). The purpose of those queues is to have enough
+>>> packets to be ready for transmission so that when the device
+>>> gets an opportunity to transmit (TxOP), it can take as many
+>>> packets as the spec allows and aggregate them into one
+>>> A-MPDU or even several A-MPDUs if we are using bursts.
+>> I guess this is only really usable if you have exactly one
+>> peer connected (ie, in station mode)?
+>>
+>> Otherwise, you could have one slow peer and one fast one,
+>> and then I suspect this would not work so well?
+>
+> Yes. I guess this one (big) limitation. I guess that what would happen
+> in this case is that the the latency would constantly jitter. But I also
+> noticed that I could reduce the transmit queue to 130 descriptors
+> (instead of 256) and still reach maximal throughput because we can
+> refill the queues quickly enough.
+> In iwlwifi, we have plans to have one queue for each peer.
+> This is under development. Not sure when it'll be ready. It also requires
+> firmware change obviously.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_mon.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Per-peer queues will probably be nice, especially if we can keep the
+buffer bloat manageable.
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index 9edc6e9..3048e88 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -308,7 +308,7 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
- 
- 	ret = register_netdevice(wilc_wfi_mon);
- 	if (ret) {
--		PRINT_ER(" register_netdevice failed (%d)\n", ret);
-+		netdev_err(real_dev, "register_netdevice failed\n");
- 		return NULL;
- 	}
- 	priv = netdev_priv(wilc_wfi_mon);
+>> For reference, ath10k has around 1400 tx descriptors, though
+>> in practice not all are usable, and in stock firmware, I'm guessing
+>> the NIC will never be able to actually fill up it's tx descriptors
+>> and stop traffic.  Instead, it just allows the stack to try to
+>> TX, then drops the frame...
+>
+> 1400 descriptors, ok... but they are not organised in queues?
+> (forgive my ignorance of athX drivers)
+
+I think all the details are in the firmware, at least for now.
+
+The firmware details are probably not something I should go into, but suffice it to say
+its complex and varies between firmware versions in non-trivial ways.
+
+Thanks,
+Ben
+
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
