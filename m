@@ -1,112 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43350 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752761AbcB2WFy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:54 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 015/113] rtl8xxxu: Only setup USB interrupts for parts which support it
-Date: Mon, 29 Feb 2016 17:04:13 -0500
-Message-Id: <1456783551-28315-16-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232949_852992_3E859A12)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:10163 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966026AbcBDJ0E (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2016 04:26:04 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 29/70] staging: wilc1000: wilc_parse_assoc_resp_info(): renames local variables
+Date: Thu, 4 Feb 2016 18:15:46 +0900
+Message-ID: <1454577387-509-30-git-send-email-glen.lee@atmel.com> (sfid-20160204_102802_286480_1A313B6A)
+In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-Only 1st generation chips do provide USB interrupts, so do not try to
-setup interrupts for newer chips (8192eu and 8723bu).
+This patch renames to avoid camelcase, changes follow are:
+ - pstrConnectRespInfo to connect_resp_info
+ - u16AssocRespLen to assoc_resp_len
+ - pu8IEs to ies
+ - u16IEsLen to ies_len
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 18 +++++++++++++-----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |  1 +
- 2 files changed, 14 insertions(+), 5 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 34 ++++++++++++++---------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 66a0c17..b3fd5c2 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -1707,6 +1707,7 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
- 			priv->rtlchip = 0x8723b;
- 		} else {
- 			sprintf(priv->chip_name, "8723AU");
-+			priv->usb_interrupts = 1;
- 			priv->rtlchip = 0x8723a;
- 		}
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 48c8573..c0be33d 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -379,33 +379,33 @@ s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo)
+ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
+ 			       tstrConnectRespInfo **ret_connect_resp_info)
+ {
+-	tstrConnectRespInfo *pstrConnectRespInfo = NULL;
+-	u16 u16AssocRespLen = 0;
+-	u8 *pu8IEs = NULL;
+-	u16 u16IEsLen = 0;
++	tstrConnectRespInfo *connect_resp_info = NULL;
++	u16 assoc_resp_len = 0;
++	u8 *ies = NULL;
++	u16 ies_len = 0;
  
-@@ -1744,12 +1745,14 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
- 			priv->rf_paths = 2;
- 			priv->rx_paths = 2;
- 			priv->tx_paths = 1;
-+			priv->usb_interrupts = 1;
- 			priv->rtlchip = 0x8191c;
- 		} else {
- 			sprintf(priv->chip_name, "8192CU");
- 			priv->rf_paths = 2;
- 			priv->rx_paths = 2;
- 			priv->tx_paths = 2;
-+			priv->usb_interrupts = 1;
- 			priv->rtlchip = 0x8192c;
- 		}
- 		priv->has_wifi = 1;
-@@ -1759,6 +1762,7 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
- 		priv->rx_paths = 1;
- 		priv->tx_paths = 1;
- 		priv->rtlchip = 0x8188c;
-+		priv->usb_interrupts = 1;
- 		priv->has_wifi = 1;
+-	pstrConnectRespInfo = kzalloc(sizeof(tstrConnectRespInfo), GFP_KERNEL);
+-	if (!pstrConnectRespInfo)
++	connect_resp_info = kzalloc(sizeof(tstrConnectRespInfo), GFP_KERNEL);
++	if (!connect_resp_info)
+ 		return -ENOMEM;
+ 
+-	u16AssocRespLen = (u16)buffer_len;
++	assoc_resp_len = (u16)buffer_len;
+ 
+-	pstrConnectRespInfo->u16ConnectStatus = get_asoc_status(buffer);
+-	if (pstrConnectRespInfo->u16ConnectStatus == SUCCESSFUL_STATUSCODE) {
+-		pstrConnectRespInfo->u16capability = get_assoc_resp_cap_info(buffer);
+-		pstrConnectRespInfo->u16AssocID = get_asoc_id(buffer);
++	connect_resp_info->u16ConnectStatus = get_asoc_status(buffer);
++	if (connect_resp_info->u16ConnectStatus == SUCCESSFUL_STATUSCODE) {
++		connect_resp_info->u16capability = get_assoc_resp_cap_info(buffer);
++		connect_resp_info->u16AssocID = get_asoc_id(buffer);
+ 
+-		pu8IEs = &buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
+-		u16IEsLen = u16AssocRespLen - (CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN);
++		ies = &buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
++		ies_len = assoc_resp_len - (CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN);
+ 
+-		pstrConnectRespInfo->pu8RespIEs = kmemdup(pu8IEs, u16IEsLen, GFP_KERNEL);
+-		if (!pstrConnectRespInfo->pu8RespIEs)
++		connect_resp_info->pu8RespIEs = kmemdup(ies, ies_len, GFP_KERNEL);
++		if (!connect_resp_info->pu8RespIEs)
+ 			return -ENOMEM;
+ 
+-		pstrConnectRespInfo->u16RespIEsLen = u16IEsLen;
++		connect_resp_info->u16RespIEsLen = ies_len;
  	}
  
-@@ -5825,9 +5829,11 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
- 	init_usb_anchor(&priv->int_anchor);
+-	*ret_connect_resp_info = pstrConnectRespInfo;
++	*ret_connect_resp_info = connect_resp_info;
  
- 	rtl8723a_enable_rf(priv);
--	ret = rtl8xxxu_submit_int_urb(hw);
--	if (ret)
--		goto exit;
-+	if (priv->usb_interrupts) {
-+		ret = rtl8xxxu_submit_int_urb(hw);
-+		if (ret)
-+			goto exit;
-+	}
- 
- 	for (i = 0; i < RTL8XXXU_TX_URBS; i++) {
- 		tx_urb = kmalloc(sizeof(struct rtl8xxxu_tx_urb), GFP_KERNEL);
-@@ -5902,14 +5908,16 @@ static void rtl8xxxu_stop(struct ieee80211_hw *hw)
- 
- 	usb_kill_anchored_urbs(&priv->rx_anchor);
- 	usb_kill_anchored_urbs(&priv->tx_anchor);
--	usb_kill_anchored_urbs(&priv->int_anchor);
-+	if (priv->usb_interrupts)
-+		usb_kill_anchored_urbs(&priv->int_anchor);
- 
- 	rtl8723a_disable_rf(priv);
- 
- 	/*
- 	 * Disable interrupts
- 	 */
--	rtl8xxxu_write32(priv, REG_USB_HIMR, 0);
-+	if (priv->usb_interrupts)
-+		rtl8xxxu_write32(priv, REG_USB_HIMR, 0);
- 
- 	rtl8xxxu_free_rx_resources(priv);
- 	rtl8xxxu_free_tx_resources(priv);
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index bf424db..2055048 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -693,6 +693,7 @@ struct rtl8xxxu_priv {
- 	u32 has_polarity_ctrl:1;
- 	u32 has_eeprom:1;
- 	u32 boot_eeprom:1;
-+	u32 usb_interrupts:1;
- 	u32 ep_tx_high_queue:1;
- 	u32 ep_tx_normal_queue:1;
- 	u32 ep_tx_low_queue:1;
+ 	return 0;
+ }
 -- 
-2.5.0
+1.9.1
 
