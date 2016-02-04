@@ -1,80 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:19901 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:10429 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753824AbcBVKRH (ORCPT
+	with ESMTP id S966103AbcBDJ06 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 05:17:07 -0500
-From: Leo Kim <leo.kim@atmel.com>
+	Thu, 4 Feb 2016 04:26:58 -0500
+From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V4 00/24] staging: wilc1000: Resend V4
-Date: Mon, 22 Feb 2016 19:14:07 +0900
-Message-ID: <1456136071-10502-1-git-send-email-leo.kim@atmel.com> (sfid-20160222_111711_684584_6DE718A5)
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH RESEND 34/70] staging: wilc1000: remove useless function
+Date: Thu, 4 Feb 2016 18:15:51 +0900
+Message-ID: <1454577387-509-35-git-send-email-glen.lee@atmel.com> (sfid-20160204_102706_687489_BC1E1896)
+In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Greg
+From: Chris Park <chris.park@atmel.com>
 
-This is the 4th fix patch about the mistake merging.
-Mistake merging is revert the below commit when rebase V3 patches.
-(already applied commit) - 6c2ab2398b88 ("staging: wilc1000: remove spaces around '->'")
-(V3 mistake patch) - [PATCH V3 09/24] staging: wilc1000: wilc_wfi_cfgoperations.c: removes unnecessary log messages
+This patch remove useless function remove_TCP_related
+in wilc_wlan.c file
 
-I'll resend 4th patches after modified this mistake.
-We apologize for the inconvenience.
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 9 ---------
+ 1 file changed, 9 deletions(-)
 
-Thank you and Best Regards.
-Leo
-
-Chris Park (19):
-  staging: wilc1000: host_interface.c: removes unnecessary log message
-  staging: wilc1000: linux_mon.c: removes unnecessary log message
-  staging: wilc1000: linux_mon.c: removes comments
-  staging: wilc1000: wilc_wfi_cfgoperations.c: removes unnecessary log
-    messages
-  staging: wilc1000: removes unused HOSTAPD_DBG tag
-  staging: wilc1000: host_interface.c: removes unnecessary log messages
-  staging: wilc1000: wilc_wfi_cfgoperations.c: removes unnecessary log
-    messages
-  staging: wilc1000: wilc_wfi_cfgoperations.c: removes unnecessary log
-    messages
-  staging: wilc1000: removes unused CFG80211_DBG tag
-  staging: wilc1000: coreconfigurator.c: removes unnecessary log
-    messages
-  staging: wilc1000: host_interface.c: removes unnecessary log messages
-  staging: wilc1000: host_interface.c: replace PRINT_ER with netdev_err
-  staging: wilc1000: linux_wlan.c: removes unnecessary log messages
-  staging: wilc1000: wilc_wfi_cfgoperations.c: removes unnecessary log
-    messages
-  staging: wilc1000: wilc_wlan.c: removes unnecessary log messages
-  staging: wilc1000: removes unused region feature
-  staging: wilc1000: removes usused PRINT_XX(region...)
-  staging: wilc1000: moves to define values
-  staging: wilc1000: moves LINUX_RX_SIZE, LINUX_TX_SIZE
-
-Leo Kim (5):
-  staging: wilc1000: wilc_wlan.c: removes PRINT_ER
-  staging: wilc1000: linux_mon.c: removes debug logs
-  staging: wilc1000: linux_mon.c: replaces PRINT_ER with netdev_err
-  staging: wilc1000: linux_mon.c: add to check routine
-  staging: wilc1000: removes potential null dereference
-
- drivers/staging/wilc1000/coreconfigurator.c       |   4 +-
- drivers/staging/wilc1000/host_interface.c         | 332 ++++++++++-----------
- drivers/staging/wilc1000/linux_mon.c              |  74 +----
- drivers/staging/wilc1000/linux_wlan.c             |   1 -
- drivers/staging/wilc1000/linux_wlan_common.h      |  99 -------
- drivers/staging/wilc1000/wilc_debugfs.c           |  47 +--
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 339 ++--------------------
- drivers/staging/wilc1000/wilc_wlan.c              |   5 -
- drivers/staging/wilc1000/wilc_wlan.h              |   3 +
- 9 files changed, 187 insertions(+), 717 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 400d311..8618e27 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -206,15 +206,6 @@ static inline int add_tcp_pending_ack(u32 ack, u32 session_index,
+ 	}
+ 	return 0;
+ }
+-static inline int remove_TCP_related(struct wilc *wilc)
+-{
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&wilc->txq_spinlock, flags);
+-
+-	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
+-	return 0;
+-}
+ 
+ static inline int tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
+ {
 -- 
 1.9.1
 
