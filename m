@@ -1,18 +1,18 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:59143 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:58668 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933304AbcBDJdz (ORCPT
+	with ESMTP id S1753963AbcBDJb7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:33:55 -0500
+	Thu, 4 Feb 2016 04:31:59 -0500
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 64/70] staging: wilc1000: renames strRssi of connect_resp_info structure
-Date: Thu, 4 Feb 2016 18:24:25 +0900
-Message-ID: <1454577871-667-25-git-send-email-glen.lee@atmel.com> (sfid-20160204_103401_322428_9E3A3E5C)
+Subject: [PATCH RESEND 45/70] staging: wilc1000: removes function 'wilc_dealloc_network_info()'
+Date: Thu, 4 Feb 2016 18:24:06 +0900
+Message-ID: <1454577871-667-6-git-send-email-glen.lee@atmel.com> (sfid-20160204_103213_532759_9C4E8DE9)
 In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
 References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
@@ -22,63 +22,77 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames strRssi variable to str_rssi.
+This patch removes function 'wilc_dealloc_network_info()'.
+Does not need this function which only free memory.
+Therefore, this function is removed and changed directly with kfree.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.h       |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 13 +++++++------
- 2 files changed, 8 insertions(+), 7 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 22 ----------------------
+ drivers/staging/wilc1000/coreconfigurator.h |  1 -
+ drivers/staging/wilc1000/host_interface.c   |  4 ++--
+ 3 files changed, 2 insertions(+), 25 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 11e3ce0..81dd22e 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -353,28 +353,6 @@ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
+ 	return 0;
+ }
+ 
+-s32 wilc_dealloc_network_info(tstrNetworkInfo *network_info)
+-{
+-	s32 result = 0;
+-
+-	if (network_info) {
+-		if (network_info->pu8IEs) {
+-			kfree(network_info->pu8IEs);
+-			network_info->pu8IEs = NULL;
+-		} else {
+-			result = -EFAULT;
+-		}
+-
+-		kfree(network_info);
+-		network_info = NULL;
+-
+-	} else {
+-		result = -EFAULT;
+-	}
+-
+-	return result;
+-}
+-
+ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
+ 			       tstrConnectRespInfo **ret_connect_resp_info)
+ {
 diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index f154e39..18c785b 100644
+index d801e58..23775e4 100644
 --- a/drivers/staging/wilc1000/coreconfigurator.h
 +++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -93,7 +93,7 @@ struct network_info {
- 	u8 *ies;
- 	u16 ies_len;
- 	void *join_params;
--	tstrRSSI strRssi;
-+	tstrRSSI str_rssi;
- 	u64 u64Tsf;
- };
+@@ -121,7 +121,6 @@ typedef struct {
+ } tstrDisconnectNotifInfo;
  
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 6ebf268..6750700 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -210,10 +210,11 @@ static u32 get_rssi_avg(struct network_info *network_info)
- {
- 	u8 i;
- 	int rssi_v = 0;
--	u8 num_rssi = (network_info->strRssi.u8Full) ? NUM_RSSI : (network_info->strRssi.u8Index);
-+	u8 num_rssi = (network_info->str_rssi.u8Full) ?
-+		       NUM_RSSI : (network_info->str_rssi.u8Index);
+ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info);
+-s32 wilc_dealloc_network_info(tstrNetworkInfo *network_info);
+ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
+ 			       tstrConnectRespInfo **ret_connect_resp_info);
+ s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *connect_resp_info);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 6e0a426..2a1d7e9 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1410,8 +1410,8 @@ done:
+ 	pstrRcvdNetworkInfo->buffer = NULL;
  
- 	for (i = 0; i < num_rssi; i++)
--		rssi_v += network_info->strRssi.as8RSSI[i];
-+		rssi_v += network_info->str_rssi.as8RSSI[i];
- 
- 	rssi_v /= num_rssi;
- 	return rssi_v;
-@@ -360,13 +361,13 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
- 	} else {
- 		ap_index = ap_found;
+ 	if (pstrNetworkInfo) {
+-		wilc_dealloc_network_info(pstrNetworkInfo);
+-		pstrNetworkInfo = NULL;
++		kfree(pstrNetworkInfo->pu8IEs);
++		kfree(pstrNetworkInfo);
  	}
--	rssi_index = last_scanned_shadow[ap_index].strRssi.u8Index;
--	last_scanned_shadow[ap_index].strRssi.as8RSSI[rssi_index++] = pstrNetworkInfo->rssi;
-+	rssi_index = last_scanned_shadow[ap_index].str_rssi.u8Index;
-+	last_scanned_shadow[ap_index].str_rssi.as8RSSI[rssi_index++] = pstrNetworkInfo->rssi;
- 	if (rssi_index == NUM_RSSI) {
- 		rssi_index = 0;
--		last_scanned_shadow[ap_index].strRssi.u8Full = 1;
-+		last_scanned_shadow[ap_index].str_rssi.u8Full = 1;
- 	}
--	last_scanned_shadow[ap_index].strRssi.u8Index = rssi_index;
-+	last_scanned_shadow[ap_index].str_rssi.u8Index = rssi_index;
- 	last_scanned_shadow[ap_index].rssi = pstrNetworkInfo->rssi;
- 	last_scanned_shadow[ap_index].cap_info = pstrNetworkInfo->cap_info;
- 	last_scanned_shadow[ap_index].ssid_len = pstrNetworkInfo->ssid_len;
+ 
+ 	return result;
 -- 
 1.9.1
 
