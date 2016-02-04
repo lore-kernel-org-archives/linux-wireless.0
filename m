@@ -1,109 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35874 "EHLO
-	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992786AbcBSKnM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2016 05:43:12 -0500
-Received: by mail-wm0-f67.google.com with SMTP id a4so7277155wme.3
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Feb 2016 02:43:11 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v2 2/2] mac80211: parse VHT info in injected frames
-Date: Fri, 19 Feb 2016 11:43:05 +0100
-Message-Id: <1455878585-5525-3-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20160219_114322_272738_128CFC12)
-In-Reply-To: <1455878585-5525-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1455878585-5525-1-git-send-email-lorenzo.bianconi83@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:46078 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752187AbcBDMb3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2016 07:31:29 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Julian Anastasov <ja@ssi.bg>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v3 2/4] ipv4: add option to drop gratuitous ARP packets
+Date: Thu,  4 Feb 2016 13:31:18 +0100
+Message-Id: <1454589080-21354-2-git-send-email-johannes@sipsolutions.net> (sfid-20160204_133138_698123_9C24304D)
+In-Reply-To: <1454589080-21354-1-git-send-email-johannes@sipsolutions.net>
+References: <1454589080-21354-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add VHT radiotap parsing support to ieee80211_parse_tx_radiotap().
-That capability has been tested using a d-link dir-860l rev b1 running
-OpenWrt trunk and mt76 driver
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+In certain 802.11 wireless deployments, there will be ARP proxies
+that use knowledge of the network to correctly answer requests.
+To prevent gratuitous ARP frames on the shared medium from being
+a problem, on such deployments wireless needs to drop them.
+
+Enable this by providing an option called "drop_gratuitous_arp".
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- Documentation/networking/mac80211-injection.txt | 10 ++++++++
- net/mac80211/tx.c                               | 31 +++++++++++++++++++++++++
- 2 files changed, 41 insertions(+)
+ Documentation/networking/ip-sysctl.txt | 6 ++++++
+ include/uapi/linux/ip.h                | 1 +
+ net/ipv4/arp.c                         | 8 ++++++++
+ net/ipv4/devinet.c                     | 2 ++
+ 4 files changed, 17 insertions(+)
 
-diff --git a/Documentation/networking/mac80211-injection.txt b/Documentation/networking/mac80211-injection.txt
-index ec8f934..ef57cc0 100644
---- a/Documentation/networking/mac80211-injection.txt
-+++ b/Documentation/networking/mac80211-injection.txt
-@@ -45,6 +45,16 @@ radiotap headers and used to control injection:
-    number of retries when either IEEE80211_RADIOTAP_RATE or
-    IEEE80211_RADIOTAP_MCS was used
+diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
+index 35c4c43dd8de..56bb6dd881bd 100644
+--- a/Documentation/networking/ip-sysctl.txt
++++ b/Documentation/networking/ip-sysctl.txt
+@@ -1215,6 +1215,12 @@ drop_unicast_in_l2_multicast - BOOLEAN
+ 	1122, but is disabled by default for compatibility reasons.
+ 	Default: off (0)
  
-+ * IEEE80211_RADIOTAP_VHT
++drop_gratuitous_arp - BOOLEAN
++	Drop all gratuitous ARP frames, for example if there's a known
++	good ARP proxy on the network and such frames need not be used
++	(or in the case of 802.11, must not be used to prevent attacks.)
++	Default: off (0)
 +
-+   VHT rate for the transmission (only for devices without own rate control).
-+   Also some flags are parsed
-+
-+   IEEE80211_TX_RC_SHORT_GI: use short guard interval
-+   IEEE80211_TX_RC_40_MHZ_WIDTH: send in HT40 mode
-+   IEEE80211_TX_RC_80_MHZ_WIDTH: send in HT80 mode
-+   IEEE80211_TX_RC_160_MHZ_WIDTH: send in HT160 mode
-+
- The injection code can also skip all other currently defined radiotap fields
- facilitating replay of captured radiotap headers directly.
  
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 7bb67fa..17db889 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1692,6 +1692,8 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
- 	u8 rate_retries = 0;
- 	u16 rate_flags = 0;
- 	u8 mcs_known, mcs_flags;
-+	u16 vht_known;
-+	u8 vht_mcs = 0, vht_nss = 0;
- 	int i;
+ tag - INTEGER
+ 	Allows you to write a number, which can be used as required.
+diff --git a/include/uapi/linux/ip.h b/include/uapi/linux/ip.h
+index 584834f7e95c..f291569768dd 100644
+--- a/include/uapi/linux/ip.h
++++ b/include/uapi/linux/ip.h
+@@ -166,6 +166,7 @@ enum
+ 	IPV4_DEVCONF_IGMPV3_UNSOLICITED_REPORT_INTERVAL,
+ 	IPV4_DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN,
+ 	IPV4_DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
++	IPV4_DEVCONF_DROP_GRATUITOUS_ARP,
+ 	__IPV4_DEVCONF_MAX
+ };
  
- 	info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT |
-@@ -1772,6 +1774,32 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
- 				rate_flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
- 			break;
+diff --git a/net/ipv4/arp.c b/net/ipv4/arp.c
+index 59b3e0e8fd51..c102eb5ac55c 100644
+--- a/net/ipv4/arp.c
++++ b/net/ipv4/arp.c
+@@ -735,6 +735,14 @@ static int arp_process(struct net *net, struct sock *sk, struct sk_buff *skb)
+ 	    (!IN_DEV_ROUTE_LOCALNET(in_dev) && ipv4_is_loopback(tip)))
+ 		goto out;
  
-+		case IEEE80211_RADIOTAP_VHT:
-+			vht_known = get_unaligned_le16(iterator.this_arg);
-+			rate_found = true;
++ /*
++  *	For some 802.11 wireless deployments (and possibly other networks),
++  *	there will be an ARP proxy and gratuitous ARP frames are attacks
++  *	and thus should not be accepted.
++  */
++	if (sip == tip && IN_DEV_ORCONF(in_dev, DROP_GRATUITOUS_ARP))
++		goto out;
 +
-+			rate_flags = IEEE80211_TX_RC_VHT_MCS;
-+			if ((vht_known & IEEE80211_RADIOTAP_VHT_KNOWN_GI) &&
-+			    (iterator.this_arg[2] &
-+			     IEEE80211_RADIOTAP_VHT_FLAG_SGI))
-+				rate_flags |= IEEE80211_TX_RC_SHORT_GI;
-+			if (vht_known &
-+			    IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH) {
-+				if (iterator.this_arg[3] == 1)
-+					rate_flags |=
-+						IEEE80211_TX_RC_40_MHZ_WIDTH;
-+				else if (iterator.this_arg[3] == 4)
-+					rate_flags |=
-+						IEEE80211_TX_RC_80_MHZ_WIDTH;
-+				else if (iterator.this_arg[3] == 11)
-+					rate_flags |=
-+						IEEE80211_TX_RC_160_MHZ_WIDTH;
-+			}
-+
-+			vht_mcs = iterator.this_arg[4] >> 4;
-+			vht_nss = iterator.this_arg[4] & 0xF;
-+			break;
-+
- 		/*
- 		 * Please update the file
- 		 * Documentation/networking/mac80211-injection.txt
-@@ -1797,6 +1825,9 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
+ /*
+  *     Special case: We must set Frame Relay source Q.922 address
+  */
+diff --git a/net/ipv4/devinet.c b/net/ipv4/devinet.c
+index dbbab28a52a4..3d835313575e 100644
+--- a/net/ipv4/devinet.c
++++ b/net/ipv4/devinet.c
+@@ -2185,6 +2185,8 @@ static struct devinet_sysctl_table {
+ 					"igmpv3_unsolicited_report_interval"),
+ 		DEVINET_SYSCTL_RW_ENTRY(IGNORE_ROUTES_WITH_LINKDOWN,
+ 					"ignore_routes_with_linkdown"),
++		DEVINET_SYSCTL_RW_ENTRY(DROP_GRATUITOUS_ARP,
++					"drop_gratuitous_arp"),
  
- 		if (rate_flags & IEEE80211_TX_RC_MCS) {
- 			info->control.rates[0].idx = rate;
-+		} else if (rate_flags & IEEE80211_TX_RC_VHT_MCS) {
-+			ieee80211_rate_set_vht(info->control.rates, vht_mcs,
-+					       vht_nss);
- 		} else {
- 			for (i = 0; i < sband->n_bitrates; i++) {
- 				if (rate * 5 != sband->bitrates[i].bitrate)
+ 		DEVINET_SYSCTL_FLUSHING_ENTRY(NOXFRM, "disable_xfrm"),
+ 		DEVINET_SYSCTL_FLUSHING_ENTRY(NOPOLICY, "disable_policy"),
 -- 
-2.5.0
+2.7.0
 
