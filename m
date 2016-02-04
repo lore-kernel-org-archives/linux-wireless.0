@@ -1,366 +1,513 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:41124 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753157AbcB2NZq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 08:25:46 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, QH <qiumin.hu@gmail.com>,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-	Etan Cohen <etancohen@google.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 11/12] iwlwifi: mvm: Add support for NAN interface type
-Date: Mon, 29 Feb 2016 15:25:12 +0200
-Message-Id: <1456752313-5792-12-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160229_142949_537464_14E028A5)
-In-Reply-To: <1456752313-5792-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1456752313-5792-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:9737 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965764AbcBDJYt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2016 04:24:49 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 19/70] staging: wilc1000: removes unnecessary debug logs
+Date: Thu, 4 Feb 2016 18:15:36 +0900
+Message-ID: <1454577387-509-20-git-send-email-glen.lee@atmel.com> (sfid-20160204_104502_112358_9B66D59F)
+In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+From: Leo Kim <leo.kim@atmel.com>
 
-Declare support NL80211_IFTYPE_NAN and add dummy nan_start/stop
-functions to the driver. NAN interface is a virtual interface, which
-doesn't have a MAC context. Currently no TX/RX is required, so no
-queues are allocated for NAN device.
-NAN interface type is supported only when the FW has
-IWL_UCODE_TLV_CAPA_NAN_SUPPORT. Like P2P device interface, it
-is allowed to have only one NAN interface and it can co-exist
-with other interface types.
+This patch removes unnecessary debug logs.
 
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h   |  4 ++
- .../net/wireless/intel/iwlwifi/mvm/debugfs-vif.c   |  6 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  | 22 +++++-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  | 80 ++++++++++++++++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/power.c     |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/quota.c     |  1 +
- drivers/net/wireless/intel/iwlwifi/mvm/sf.c        |  6 +-
- 7 files changed, 111 insertions(+), 9 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 154 ++++++----------------------------
+ 1 file changed, 24 insertions(+), 130 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-index 84f8aeb..e57c0f6 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-@@ -308,6 +308,7 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_capa_t;
-  *	is supported.
-  * @IWL_UCODE_TLV_CAPA_BT_COEX_RRC: supports BT Coex RRC
-  * @IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT: supports gscan
-+ * @IWL_UCODE_TLV_CAPA_NAN_SUPPORT: supports NAN
-  * @IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE: extended DTS measurement
-  * @IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS: supports short PM timeouts
-  * @IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT: supports bt-coex Multi-priority LUT
-@@ -338,6 +339,7 @@ enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_LAR_MULTI_MCC		= (__force iwl_ucode_tlv_capa_t)29,
- 	IWL_UCODE_TLV_CAPA_BT_COEX_RRC			= (__force iwl_ucode_tlv_capa_t)30,
- 	IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT		= (__force iwl_ucode_tlv_capa_t)31,
-+	IWL_UCODE_TLV_CAPA_NAN_SUPPORT			= (__force iwl_ucode_tlv_capa_t)34,
- 	IWL_UCODE_TLV_CAPA_EXTENDED_DTS_MEASURE		= (__force iwl_ucode_tlv_capa_t)64,
- 	IWL_UCODE_TLV_CAPA_SHORT_PM_TIMEOUTS		= (__force iwl_ucode_tlv_capa_t)65,
- 	IWL_UCODE_TLV_CAPA_BT_MPLUT_SUPPORT		= (__force iwl_ucode_tlv_capa_t)67,
-@@ -532,6 +534,7 @@ enum iwl_fw_dbg_trigger_mode {
-  * @IWL_FW_DBG_CONF_VIF_P2P_CLIENT: P2P Client mode
-  * @IWL_FW_DBG_CONF_VIF_P2P_GO: P2P GO mode
-  * @IWL_FW_DBG_CONF_VIF_P2P_DEVICE: P2P device
-+ * @IWL_FW_DBG_CONF_VIF_NAN: NAN device
-  */
- enum iwl_fw_dbg_trigger_vif_type {
- 	IWL_FW_DBG_CONF_VIF_ANY = NL80211_IFTYPE_UNSPECIFIED,
-@@ -541,6 +544,7 @@ enum iwl_fw_dbg_trigger_vif_type {
- 	IWL_FW_DBG_CONF_VIF_P2P_CLIENT = NL80211_IFTYPE_P2P_CLIENT,
- 	IWL_FW_DBG_CONF_VIF_P2P_GO = NL80211_IFTYPE_P2P_GO,
- 	IWL_FW_DBG_CONF_VIF_P2P_DEVICE = NL80211_IFTYPE_P2P_DEVICE,
-+	IWL_FW_DBG_CONF_VIF_NAN = NL80211_IFTYPE_NAN,
- };
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 1446b19..13c6cb2 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -70,47 +70,32 @@ static int dev_state_ev_handler(struct notifier_block *this,
+ 	u8 null_ip[4] = {0};
+ 	char wlan_dev_name[5] = "wlan0";
  
- /**
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-index 9e0d463..7ae631e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.c
-@@ -259,6 +259,9 @@ static ssize_t iwl_dbgfs_mac_params_read(struct file *file,
- 	case NL80211_IFTYPE_P2P_DEVICE:
- 		pos += scnprintf(buf+pos, bufsz-pos, "type: p2p dev\n");
+-	if (!dev_iface || !dev_iface->ifa_dev || !dev_iface->ifa_dev->dev) {
+-		PRINT_D(GENERIC_DBG, "dev_iface = NULL\n");
++	if (!dev_iface || !dev_iface->ifa_dev || !dev_iface->ifa_dev->dev)
+ 		return NOTIFY_DONE;
+-	}
+ 
+ 	if (memcmp(dev_iface->ifa_label, "wlan0", 5) &&
+-	    memcmp(dev_iface->ifa_label, "p2p0", 4)) {
+-		PRINT_D(GENERIC_DBG, "Interface is neither WLAN0 nor P2P0\n");
++	    memcmp(dev_iface->ifa_label, "p2p0", 4))
+ 		return NOTIFY_DONE;
+-	}
+ 
+ 	dev  = (struct net_device *)dev_iface->ifa_dev->dev;
+-	if (!dev->ieee80211_ptr || !dev->ieee80211_ptr->wiphy) {
+-		PRINT_D(GENERIC_DBG, "No Wireless registerd\n");
++	if (!dev->ieee80211_ptr || !dev->ieee80211_ptr->wiphy)
+ 		return NOTIFY_DONE;
+-	}
++
+ 	priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
+-	if (!priv) {
+-		PRINT_D(GENERIC_DBG, "No Wireless Priv\n");
++	if (!priv)
+ 		return NOTIFY_DONE;
+-	}
++
+ 	hif_drv = (struct host_if_drv *)priv->hif_drv;
+ 	vif = netdev_priv(dev);
+-	if (!vif || !hif_drv) {
+-		PRINT_D(GENERIC_DBG, "No Wireless Priv\n");
++	if (!vif || !hif_drv)
+ 		return NOTIFY_DONE;
+-	}
+-
+-	PRINT_INFO(GENERIC_DBG, "dev_state_ev_handler +++\n");
+ 
+ 	switch (event) {
+ 	case NETDEV_UP:
+-		PRINT_D(GENERIC_DBG, "dev_state_ev_handler event=NETDEV_UP %p\n", dev);
+-
+-		PRINT_INFO(GENERIC_DBG, "\n ============== IP Address Obtained ===============\n\n");
+-
+ 		if (vif->iftype == STATION_MODE || vif->iftype == CLIENT_MODE) {
+ 			hif_drv->IFC_UP = 1;
+ 			wilc_optaining_ip = false;
+ 			del_timer(&wilc_during_ip_timer);
+-			PRINT_D(GENERIC_DBG, "IP obtained , enable scan\n");
+ 		}
+ 
+ 		if (wilc_enable_ps)
+@@ -127,9 +112,6 @@ static int dev_state_ev_handler(struct notifier_block *this,
  		break;
-+	case NL80211_IFTYPE_NAN:
-+		pos += scnprintf(buf+pos, bufsz-pos, "type: NAN\n");
-+		break;
+ 
+ 	case NETDEV_DOWN:
+-		PRINT_D(GENERIC_DBG, "dev_state_ev_handler event=NETDEV_DOWN %p\n", dev);
+-
+-		PRINT_INFO(GENERIC_DBG, "\n ============== IP Address Released ===============\n\n");
+ 		if (vif->iftype == STATION_MODE || vif->iftype == CLIENT_MODE) {
+ 			hif_drv->IFC_UP = 0;
+ 			wilc_optaining_ip = false;
+@@ -152,9 +134,6 @@ static int dev_state_ev_handler(struct notifier_block *this,
+ 		break;
+ 
  	default:
+-		PRINT_INFO(GENERIC_DBG, "dev_state_ev_handler event=default\n");
+-		PRINT_INFO(GENERIC_DBG, "[%s] unknown dev event: %lu\n", dev_iface->ifa_label, event);
+-
  		break;
  	}
-@@ -1430,7 +1433,8 @@ void iwl_mvm_vif_dbgfs_register(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 					 S_IRUSR | S_IWUSR);
  
- 	if (fw_has_capa(&mvm->fw->ucode_capa, IWL_UCODE_TLV_CAPA_TOF_SUPPORT) &&
--	    !vif->p2p && (vif->type != NL80211_IFTYPE_P2P_DEVICE)) {
-+	    !vif->p2p && (vif->type != NL80211_IFTYPE_P2P_DEVICE) &&
-+	    (vif->type != NL80211_IFTYPE_NAN)) {
- 		if (IWL_MVM_TOF_IS_RESPONDER && vif->type == NL80211_IFTYPE_AP)
- 			MVM_DEBUGFS_ADD_FILE_VIF(tof_responder_params,
- 						 mvmvif->dbgfs_dir,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index bf1e5eb..8d3522e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -211,6 +211,10 @@ u32 iwl_mvm_mac_get_queues_mask(struct ieee80211_vif *vif)
- 	if (vif->type == NL80211_IFTYPE_P2P_DEVICE)
- 		return BIT(IWL_MVM_OFFCHANNEL_QUEUE);
+@@ -169,7 +148,6 @@ static irqreturn_t isr_uh_routine(int irq, void *user_data)
  
-+	/* Currently NAN doesn't use queues */
-+	if (vif->type == NL80211_IFTYPE_NAN)
-+		return 0;
-+
- 	for (ac = 0; ac < IEEE80211_NUM_ACS; ac++) {
- 		if (vif->hw_queue[ac] != IEEE80211_INVAL_HW_QUEUE)
- 			qmask |= BIT(vif->hw_queue[ac]);
-@@ -417,8 +421,9 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
- 	INIT_LIST_HEAD(&mvmvif->time_event_data.list);
- 	mvmvif->time_event_data.id = TE_MAX;
+ 	vif = netdev_priv(dev);
+ 	wilc = vif->wilc;
+-	PRINT_D(INT_DBG, "Interrupt received UH\n");
  
--	/* No need to allocate data queues to P2P Device MAC.*/
--	if (vif->type == NL80211_IFTYPE_P2P_DEVICE) {
-+	/* No need to allocate data queues to P2P Device MAC and NAN.*/
-+	if (vif->type == NL80211_IFTYPE_P2P_DEVICE ||
-+	    vif->type == NL80211_IFTYPE_NAN) {
- 		for (ac = 0; ac < IEEE80211_NUM_ACS; ac++)
- 			vif->hw_queue[ac] = IEEE80211_INVAL_HW_QUEUE;
- 
-@@ -490,6 +495,8 @@ int iwl_mvm_mac_ctxt_init(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 				      IWL_MVM_OFFCHANNEL_QUEUE,
- 				      IWL_MVM_TX_FIFO_VO, 0, wdg_timeout);
- 		break;
-+	case NL80211_IFTYPE_NAN:
-+		break;
- 	case NL80211_IFTYPE_AP:
- 		iwl_mvm_enable_ac_txq(mvm, vif->cab_queue, vif->cab_queue,
- 				      IWL_MVM_TX_FIFO_MCAST, 0, wdg_timeout);
-@@ -518,6 +525,8 @@ void iwl_mvm_mac_ctxt_release(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 				    IWL_MVM_OFFCHANNEL_QUEUE, IWL_MAX_TID_COUNT,
- 				    0);
- 		break;
-+	case NL80211_IFTYPE_NAN:
-+		break;
- 	case NL80211_IFTYPE_AP:
- 		iwl_mvm_disable_txq(mvm, vif->cab_queue, vif->cab_queue,
- 				    IWL_MAX_TID_COUNT, 0);
-@@ -1244,6 +1253,9 @@ int iwl_mvm_mac_ctxt_add(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 	int ret;
- 
-+	if (WARN_ON_ONCE(vif->type == NL80211_IFTYPE_NAN))
-+		return -EOPNOTSUPP;
-+
- 	if (WARN_ONCE(mvmvif->uploaded, "Adding active MAC %pM/%d\n",
- 		      vif->addr, ieee80211_vif_type_p2p(vif)))
- 		return -EIO;
-@@ -1265,6 +1277,9 @@ int iwl_mvm_mac_ctxt_changed(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- {
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
- 
-+	if (WARN_ON_ONCE(vif->type == NL80211_IFTYPE_NAN))
-+		return -EOPNOTSUPP;
-+
- 	if (WARN_ONCE(!mvmvif->uploaded, "Changing inactive MAC %pM/%d\n",
- 		      vif->addr, ieee80211_vif_type_p2p(vif)))
- 		return -EIO;
-@@ -1279,6 +1294,9 @@ int iwl_mvm_mac_ctxt_remove(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
- 	struct iwl_mac_ctx_cmd cmd;
- 	int ret;
- 
-+	if (WARN_ON_ONCE(vif->type == NL80211_IFTYPE_NAN))
-+		return -EOPNOTSUPP;
-+
- 	if (WARN_ONCE(!mvmvif->uploaded, "Removing inactive MAC %pM/%d\n",
- 		      vif->addr, ieee80211_vif_type_p2p(vif)))
- 		return -EIO;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 2b53292..dde74ad 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -115,6 +115,37 @@ static const struct ieee80211_iface_combination iwl_mvm_iface_combinations[] = {
- 	},
- };
- 
-+static const struct ieee80211_iface_limit iwl_mvm_limits_nan[] = {
-+	{
-+		.max = 1,
-+		.types = BIT(NL80211_IFTYPE_STATION),
-+	},
-+	{
-+		.max = 1,
-+		.types = BIT(NL80211_IFTYPE_AP) |
-+			BIT(NL80211_IFTYPE_P2P_CLIENT) |
-+			BIT(NL80211_IFTYPE_P2P_GO),
-+	},
-+	{
-+		.max = 1,
-+		.types = BIT(NL80211_IFTYPE_P2P_DEVICE),
-+	},
-+	{
-+		.max = 1,
-+		.types = BIT(NL80211_IFTYPE_NAN),
-+	},
-+};
-+
-+static const struct ieee80211_iface_combination
-+iwl_mvm_iface_combinations_nan[] = {
-+	{
-+		.num_different_channels = 2,
-+		.max_interfaces = 4,
-+		.limits = iwl_mvm_limits_nan,
-+		.n_limits = ARRAY_SIZE(iwl_mvm_limits_nan),
-+	},
-+};
-+
- #ifdef CONFIG_PM_SLEEP
- static const struct nl80211_wowlan_tcp_data_token_feature
- iwl_mvm_wowlan_tcp_token_feature = {
-@@ -511,9 +542,17 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 
- 	hw->wiphy->flags |= WIPHY_FLAG_HAS_CHANNEL_SWITCH;
- 
--	hw->wiphy->iface_combinations = iwl_mvm_iface_combinations;
--	hw->wiphy->n_iface_combinations =
--		ARRAY_SIZE(iwl_mvm_iface_combinations);
-+	if (fw_has_capa(&mvm->fw->ucode_capa,
-+			IWL_UCODE_TLV_CAPA_NAN_SUPPORT)) {
-+		hw->wiphy->interface_modes |= BIT(NL80211_IFTYPE_NAN);
-+		hw->wiphy->iface_combinations = iwl_mvm_iface_combinations_nan;
-+		hw->wiphy->n_iface_combinations =
-+			ARRAY_SIZE(iwl_mvm_iface_combinations_nan);
-+	} else {
-+		hw->wiphy->iface_combinations = iwl_mvm_iface_combinations;
-+		hw->wiphy->n_iface_combinations =
-+			ARRAY_SIZE(iwl_mvm_iface_combinations);
-+	}
- 
- 	hw->wiphy->max_remain_on_channel_duration = 10000;
- 	hw->max_listen_interval = IWL_CONN_MAX_LISTEN_INTERVAL;
-@@ -1263,6 +1302,10 @@ static int iwl_mvm_mac_add_interface(struct ieee80211_hw *hw,
- 	if (ret)
- 		goto out_unlock;
- 
-+	/* Currently not much to do for NAN */
-+	if (vif->type == NL80211_IFTYPE_NAN)
-+		goto out_unlock;
-+
- 	/* Counting number of interfaces is needed for legacy PM */
- 	if (vif->type != NL80211_IFTYPE_P2P_DEVICE)
- 		mvm->vif_count++;
-@@ -1410,7 +1453,7 @@ static void iwl_mvm_prepare_mac_removal(struct iwl_mvm *mvm,
- 		 * queue are sent in ROC session.
- 		 */
- 		flush_work(&mvm->roc_done_wk);
--	} else {
-+	} else if (vif->type != NL80211_IFTYPE_NAN) {
- 		/*
- 		 * By now, all the AC queues are empty. The AGG queues are
- 		 * empty too. We already got all the Tx responses for all the
-@@ -1421,6 +1464,14 @@ static void iwl_mvm_prepare_mac_removal(struct iwl_mvm *mvm,
+ 	if (wilc->close) {
+ 		PRINT_ER("Driver is CLOSING: Can't handle UH interrupt\n");
+@@ -191,7 +169,6 @@ static irqreturn_t isr_bh_routine(int irq, void *userdata)
+ 		return IRQ_HANDLED;
  	}
+ 
+-	PRINT_D(INT_DBG, "Interrupt received BH\n");
+ 	wilc_handle_isr(wilc);
+ 
+ 	return IRQ_HANDLED;
+@@ -255,12 +232,9 @@ int wilc_lock_timeout(struct wilc *nic, void *vp, u32 timeout)
+ 	/* FIXME: replace with mutex_lock or wait_for_completion */
+ 	int error = -1;
+ 
+-	PRINT_D(LOCK_DBG, "Locking %p\n", vp);
+ 	if (vp)
+ 		error = down_timeout((struct semaphore *)vp,
+ 				     msecs_to_jiffies(timeout));
+-	else
+-		PRINT_ER("Failed, mutex is NULL\n");
+ 	return error;
  }
  
-+static int iwl_mvm_stop_nan(struct ieee80211_hw *hw,
-+			    struct ieee80211_vif *vif)
-+{
-+	IWL_DEBUG_MAC80211(IWL_MAC80211_GET_MVM(hw), "Stop NAN\n");
-+
-+	return 0;
-+}
-+
- static void iwl_mvm_mac_remove_interface(struct ieee80211_hw *hw,
- 					 struct ieee80211_vif *vif)
- {
-@@ -1429,6 +1480,15 @@ static void iwl_mvm_mac_remove_interface(struct ieee80211_hw *hw,
+@@ -358,28 +332,21 @@ static int linux_wlan_txq_task(void *vp)
  
- 	iwl_mvm_prepare_mac_removal(mvm, vif);
+ 	up(&wl->txq_thread_started);
+ 	while (1) {
+-		PRINT_D(TX_DBG, "txq_task Taking a nap :)\n");
+ 		down(&wl->txq_event);
+-		PRINT_D(TX_DBG, "txq_task Who waked me up :$\n");
  
-+	if (vif->type == NL80211_IFTYPE_NAN) {
-+		struct wireless_dev *wdev = ieee80211_vif_to_wdev(vif);
-+		/* cfg80211 should stop nan before interface removal */
-+		if (wdev && WARN_ON(wdev->nan_started))
-+			iwl_mvm_stop_nan(hw, vif);
-+
-+		return;
-+	}
-+
- 	mutex_lock(&mvm->mutex);
+ 		if (wl->close) {
+ 			up(&wl->txq_thread_started);
  
- 	if (mvm->bf_allowed_vif == mvmvif) {
-@@ -3908,6 +3968,15 @@ static void iwl_mvm_mac_event_callback(struct ieee80211_hw *hw,
- 	}
- }
- 
-+static int iwl_mvm_start_nan(struct ieee80211_hw *hw,
-+			     struct ieee80211_vif *vif,
-+			     struct cfg80211_nan_conf *conf)
-+{
-+	IWL_DEBUG_MAC80211(IWL_MAC80211_GET_MVM(hw), "Start NAN\n");
-+
-+	return 0;
-+}
-+
- const struct ieee80211_ops iwl_mvm_hw_ops = {
- 	.tx = iwl_mvm_mac_tx,
- 	.ampdu_action = iwl_mvm_mac_ampdu_action,
-@@ -3979,4 +4048,7 @@ const struct ieee80211_ops iwl_mvm_hw_ops = {
- #endif
- 	.get_survey = iwl_mvm_mac_get_survey,
- 	.sta_statistics = iwl_mvm_mac_sta_statistics,
-+
-+	.start_nan = iwl_mvm_start_nan,
-+	.stop_nan = iwl_mvm_stop_nan,
- };
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/power.c b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-index 9de159f..58dda1d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/power.c
-@@ -582,6 +582,7 @@ static void iwl_mvm_power_get_vifs_iterator(void *_data, u8 *mac,
- 
- 	switch (ieee80211_vif_type_p2p(vif)) {
- 	case NL80211_IFTYPE_P2P_DEVICE:
-+	case NL80211_IFTYPE_NAN:
- 		break;
- 
- 	case NL80211_IFTYPE_P2P_GO:
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/quota.c b/drivers/net/wireless/intel/iwlwifi/mvm/quota.c
-index 0b762b4..48a103f 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/quota.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/quota.c
-@@ -116,6 +116,7 @@ static void iwl_mvm_quota_iterator(void *_data, u8 *mac,
+ 			while (!kthread_should_stop())
+ 				schedule();
+-
+-			PRINT_D(TX_DBG, "TX thread stopped\n");
  			break;
- 		return;
- 	case NL80211_IFTYPE_P2P_DEVICE:
-+	case NL80211_IFTYPE_NAN:
- 		return;
- 	default:
- 		WARN_ON_ONCE(1);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sf.c b/drivers/net/wireless/intel/iwlwifi/mvm/sf.c
-index c2def12..c4f9f44 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sf.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sf.c
-@@ -83,7 +83,8 @@ static void iwl_mvm_bound_iface_iterator(void *_data, u8 *mac,
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+ 		}
+-		PRINT_D(TX_DBG, "txq_task handle the sending packet and let me go to sleep.\n");
+ #if !defined USE_TX_BACKOFF_DELAY_IF_NO_BUFFERS
+ 		ret = wilc_wlan_handle_txq(dev, &txq_count);
+ #else
+ 		do {
+ 			ret = wilc_wlan_handle_txq(dev, &txq_count);
+ 			if (txq_count < FLOW_CONTROL_LOWER_THRESHOLD) {
+-				PRINT_D(TX_DBG, "Waking up queue\n");
+-
+ 				if (netif_queue_stopped(wl->vif[0]->ndev))
+ 					netif_wake_queue(wl->vif[0]->ndev);
+ 				if (netif_queue_stopped(wl->vif[1]->ndev))
+@@ -428,15 +395,11 @@ int wilc_wlan_get_firmware(struct net_device *dev)
  
- 	if (vif == data->ignore_vif || !mvmvif->phy_ctxt ||
--	    vif->type == NL80211_IFTYPE_P2P_DEVICE)
-+	    vif->type == NL80211_IFTYPE_P2P_DEVICE ||
-+	    vif->type == NL80211_IFTYPE_NAN)
+ 	netdev_info(dev, "loading firmware %s\n", firmware);
+ 
+-	if (!vif) {
+-		PRINT_ER("vif is NULL\n");
++	if (!vif)
+ 		goto _fail_;
+-	}
+ 
+-	if (!(&vif->ndev->dev)) {
+-		PRINT_ER("&vif->ndev->dev  is NULL\n");
++	if (!(&vif->ndev->dev))
+ 		goto _fail_;
+-	}
+ 
+ 	if (request_firmware(&wilc_firmware, firmware, wilc->dev) != 0) {
+ 		PRINT_ER("%s - firmare not available\n", firmware);
+@@ -459,20 +422,13 @@ static int linux_wlan_start_firmware(struct net_device *dev)
+ 	vif = netdev_priv(dev);
+ 	wilc = vif->wilc;
+ 
+-	PRINT_D(INIT_DBG, "Starting Firmware ...\n");
+ 	ret = wilc_wlan_start(wilc);
+-	if (ret < 0) {
+-		PRINT_ER("Failed to start Firmware\n");
++	if (ret < 0)
+ 		return ret;
+-	}
+ 
+-	PRINT_D(INIT_DBG, "Waiting for Firmware to get ready ...\n");
+ 	ret = wilc_lock_timeout(wilc, &wilc->sync_event, 5000);
+-	if (ret) {
+-		PRINT_D(INIT_DBG, "Firmware start timed out");
++	if (ret)
+ 		return ret;
+-	}
+-	PRINT_D(INIT_DBG, "Firmware successfully started\n");
+ 
+ 	return 0;
+ }
+@@ -490,14 +446,12 @@ static int wilc1000_firmware_download(struct net_device *dev)
+ 		PRINT_ER("Firmware buffer is NULL\n");
+ 		return -ENOBUFS;
+ 	}
+-	PRINT_D(INIT_DBG, "Downloading Firmware ...\n");
++
+ 	ret = wilc_wlan_firmware_download(wilc, wilc->firmware->data,
+ 					  wilc->firmware->size);
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	PRINT_D(INIT_DBG, "Freeing FW buffer ...\n");
+-	PRINT_D(INIT_DBG, "Releasing firmware\n");
+ 	release_firmware(wilc->firmware);
+ 	wilc->firmware = NULL;
+ 
+@@ -740,7 +694,6 @@ void wilc1000_wlan_deinit(struct net_device *dev)
+ 	if (wl->initialized)	{
+ 		netdev_info(dev, "Deinitializing wilc1000...\n");
+ 
+-		PRINT_D(INIT_DBG, "Disabling IRQ\n");
+ 		if (!wl->dev_irq_num &&
+ 		    wl->hif_func->disable_interrupt) {
+ 			mutex_lock(&wl->hif_cs);
+@@ -750,29 +703,19 @@ void wilc1000_wlan_deinit(struct net_device *dev)
+ 		if (&wl->txq_event)
+ 			up(&wl->txq_event);
+ 
+-		PRINT_D(INIT_DBG, "Deinitializing Threads\n");
+ 		wlan_deinitialize_threads(dev);
+-
+-		PRINT_D(INIT_DBG, "Deinitializing IRQ\n");
+ 		deinit_irq(dev);
+ 
+ 		wilc_wlan_stop(wl);
+-
+-		PRINT_D(INIT_DBG, "Deinitializing WILC Wlan\n");
+ 		wilc_wlan_cleanup(dev);
+ #if defined(PLAT_ALLWINNER_A20) || defined(PLAT_ALLWINNER_A23) || defined(PLAT_ALLWINNER_A31)
+ 		if (!wl->dev_irq_num &&
+ 		    wl->hif_func->disable_interrupt) {
+-
+-			PRINT_D(INIT_DBG, "Disabling IRQ 2\n");
+-
+ 			mutex_lock(&wl->hif_cs);
+ 			wl->hif_func->disable_interrupt(wl);
+ 			mutex_unlock(&wl->hif_cs);
+ 		}
+ #endif
+-
+-		PRINT_D(INIT_DBG, "Deinitializing Locks\n");
+ 		wlan_deinit_locks(dev);
+ 
+ 		wl->initialized = false;
+@@ -792,8 +735,6 @@ static int wlan_init_locks(struct net_device *dev)
+ 	vif = netdev_priv(dev);
+ 	wl = vif->wilc;
+ 
+-	PRINT_D(INIT_DBG, "Initializing Locks ...\n");
+-
+ 	mutex_init(&wl->hif_cs);
+ 	mutex_init(&wl->rxq_cs);
+ 
+@@ -818,8 +759,6 @@ static int wlan_deinit_locks(struct net_device *dev)
+ 	vif = netdev_priv(dev);
+ 	wilc = vif->wilc;
+ 
+-	PRINT_D(INIT_DBG, "De-Initializing Locks\n");
+-
+ 	if (&wilc->hif_cs)
+ 		mutex_destroy(&wilc->hif_cs);
+ 
+@@ -837,8 +776,6 @@ static int wlan_initialize_threads(struct net_device *dev)
+ 	vif = netdev_priv(dev);
+ 	wilc = vif->wilc;
+ 
+-	PRINT_D(INIT_DBG, "Initializing Threads ...\n");
+-	PRINT_D(INIT_DBG, "Creating kthread for transmission\n");
+ 	wilc->txq_thread = kthread_run(linux_wlan_txq_task, (void *)dev,
+ 				     "K_TXQ_TASK");
+ 	if (!wilc->txq_thread) {
+@@ -860,7 +797,6 @@ static void wlan_deinitialize_threads(struct net_device *dev)
+ 	wl = vif->wilc;
+ 
+ 	wl->close = 1;
+-	PRINT_D(INIT_DBG, "Deinitializing Threads\n");
+ 
+ 	if (&wl->txq_event)
+ 		up(&wl->txq_event);
+@@ -884,20 +820,17 @@ int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif)
+ 
+ 		ret = wilc_wlan_init(dev);
+ 		if (ret < 0) {
+-			PRINT_ER("Initializing WILC_Wlan FAILED\n");
+ 			ret = -EIO;
+ 			goto _fail_locks_;
+ 		}
+ 
+ 		if (wl->gpio >= 0 && init_irq(dev)) {
+-			PRINT_ER("couldn't initialize IRQ\n");
+ 			ret = -EIO;
+ 			goto _fail_locks_;
+ 		}
+ 
+ 		ret = wlan_initialize_threads(dev);
+ 		if (ret < 0) {
+-			PRINT_ER("Initializing Threads FAILED\n");
+ 			ret = -EIO;
+ 			goto _fail_wilc_wlan_;
+ 		}
+@@ -905,27 +838,23 @@ int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif)
+ 		if (!wl->dev_irq_num &&
+ 		    wl->hif_func->enable_interrupt &&
+ 		    wl->hif_func->enable_interrupt(wl)) {
+-			PRINT_ER("couldn't initialize IRQ\n");
+ 			ret = -EIO;
+ 			goto _fail_irq_init_;
+ 		}
+ 
+ 		if (wilc_wlan_get_firmware(dev)) {
+-			PRINT_ER("Can't get firmware\n");
+ 			ret = -EIO;
+ 			goto _fail_irq_enable_;
+ 		}
+ 
+ 		ret = wilc1000_firmware_download(dev);
+ 		if (ret < 0) {
+-			PRINT_ER("Failed to download firmware\n");
+ 			ret = -EIO;
+ 			goto _fail_irq_enable_;
+ 		}
+ 
+ 		ret = linux_wlan_start_firmware(dev);
+ 		if (ret < 0) {
+-			PRINT_ER("Failed to start firmware\n");
+ 			ret = -EIO;
+ 			goto _fail_irq_enable_;
+ 		}
+@@ -1007,16 +936,11 @@ int wilc_mac_open(struct net_device *ndev)
+ 	PRINT_D(INIT_DBG, "MAC OPEN[%p]\n", ndev);
+ 
+ 	ret = wilc_init_host_int(ndev);
+-	if (ret < 0) {
+-		PRINT_ER("Failed to initialize host interface\n");
+-
++	if (ret < 0)
+ 		return ret;
+-	}
+ 
+-	PRINT_D(INIT_DBG, "*** re-init ***\n");
+ 	ret = wilc1000_wlan_init(ndev, vif);
+ 	if (ret < 0) {
+-		PRINT_ER("Failed to initialize wilc1000\n");
+ 		wilc_deinit_host_int(ndev);
+ 		return ret;
+ 	}
+@@ -1097,23 +1021,16 @@ static void wilc_set_multicast_list(struct net_device *dev)
+ 	if (!dev)
  		return;
  
- 	data->num_active_macs++;
-@@ -293,7 +294,8 @@ int iwl_mvm_sf_update(struct iwl_mvm *mvm, struct ieee80211_vif *changed_vif,
- 	 * vif is a p2p device.
- 	 */
- 	if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status) ||
--	    (changed_vif && changed_vif->type == NL80211_IFTYPE_P2P_DEVICE))
-+	    (changed_vif && (changed_vif->type == NL80211_IFTYPE_P2P_DEVICE ||
-+			     changed_vif->type == NL80211_IFTYPE_NAN)))
+-	PRINT_D(INIT_DBG, "Setting Multicast List with count = %d.\n",
+-		dev->mc.count);
+-
+-	if (dev->flags & IFF_PROMISC) {
+-		PRINT_D(INIT_DBG, "Set promiscuous mode ON, retrive all packets\n");
++	if (dev->flags & IFF_PROMISC)
+ 		return;
+-	}
+ 
+ 	if ((dev->flags & IFF_ALLMULTI) ||
+ 	    (dev->mc.count) > WILC_MULTICAST_TABLE_SIZE) {
+-		PRINT_D(INIT_DBG, "Disable multicast filter, retrive all multicast packets\n");
+ 		wilc_setup_multicast_filter(vif, false, 0);
+ 		return;
+ 	}
+ 
+ 	if ((dev->mc.count) == 0) {
+-		PRINT_D(INIT_DBG, "Enable multicast filter, retrive directed packets only.\n");
+ 		wilc_setup_multicast_filter(vif, true, 0);
+ 		return;
+ 	}
+@@ -1160,8 +1077,6 @@ int wilc_mac_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 	vif = netdev_priv(ndev);
+ 	wilc = vif->wilc;
+ 
+-	PRINT_D(TX_DBG, "Sending packet just received from TCP/IP\n");
+-
+ 	if (skb->dev != ndev) {
+ 		PRINT_ER("Packet not destined to this device\n");
  		return 0;
+@@ -1169,7 +1084,6 @@ int wilc_mac_xmit(struct sk_buff *skb, struct net_device *ndev)
  
- 	ieee80211_iterate_active_interfaces_atomic(mvm->hw,
+ 	tx_data = kmalloc(sizeof(*tx_data), GFP_ATOMIC);
+ 	if (!tx_data) {
+-		PRINT_ER("Failed to allocate memory for tx_data structure\n");
+ 		dev_kfree_skb(skb);
+ 		netif_wake_queue(ndev);
+ 		return 0;
+@@ -1191,8 +1105,6 @@ int wilc_mac_xmit(struct sk_buff *skb, struct net_device *ndev)
+ 		PRINT_D(GENERIC_DBG, "DHCP Message transmitted, type:%x %x %x\n",
+ 			udp_buf[248], udp_buf[249], udp_buf[250]);
+ 
+-	PRINT_D(TX_DBG, "Sending packet - Size = %d - Address = %p - SKB = %p\n", tx_data->size, tx_data->buff, tx_data->skb);
+-	PRINT_D(TX_DBG, "Adding tx packet to TX Queue\n");
+ 	vif->netstats.tx_packets++;
+ 	vif->netstats.tx_bytes += tx_data->size;
+ 	tx_data->bssid = wilc->vif[vif->u8IfIdx]->bssid;
+@@ -1218,39 +1130,29 @@ int wilc_mac_close(struct net_device *ndev)
+ 	vif = netdev_priv(ndev);
+ 
+ 	if (!vif || !vif->ndev || !vif->ndev->ieee80211_ptr ||
+-	    !vif->ndev->ieee80211_ptr->wiphy) {
+-		PRINT_ER("vif = NULL\n");
++	    !vif->ndev->ieee80211_ptr->wiphy)
+ 		return 0;
+-	}
+ 
+ 	priv = wiphy_priv(vif->ndev->ieee80211_ptr->wiphy);
+ 	wl = vif->wilc;
+ 
+-	if (!priv) {
+-		PRINT_ER("priv = NULL\n");
++	if (!priv)
+ 		return 0;
+-	}
+ 
+ 	hif_drv = (struct host_if_drv *)priv->hif_drv;
+ 
+ 	PRINT_D(GENERIC_DBG, "Mac close\n");
+ 
+-	if (!wl) {
+-		PRINT_ER("wl = NULL\n");
++	if (!wl)
+ 		return 0;
+-	}
+ 
+-	if (!hif_drv) {
+-		PRINT_ER("hif_drv = NULL\n");
++	if (!hif_drv)
+ 		return 0;
+-	}
+ 
+-	if ((wl->open_ifcs) > 0) {
++	if ((wl->open_ifcs) > 0)
+ 		wl->open_ifcs--;
+-	} else {
+-		PRINT_ER("ERROR: MAC close called while number of opened interfaces is zero\n");
++	else
+ 		return 0;
+-	}
+ 
+ 	if (vif->ndev) {
+ 		netif_stop_queue(vif->ndev);
+@@ -1303,8 +1205,6 @@ static int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
+ 			if (strncasecmp(buff, "RSSI", length) == 0) {
+ 				priv = wiphy_priv(vif->ndev->ieee80211_ptr->wiphy);
+ 				ret = wilc_get_rssi(vif, &rssi);
+-				if (ret)
+-					PRINT_ER("Failed to send get rssi param's message queue ");
+ 				PRINT_INFO(GENERIC_DBG, "RSSI :%d\n", rssi);
+ 
+ 				rssi += 5;
+@@ -1360,10 +1260,9 @@ void wilc_frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset)
+ 		buff_to_send = buff;
+ 
+ 		skb = dev_alloc_skb(frame_len);
+-		if (!skb) {
+-			PRINT_ER("Low memory - packet droped\n");
++		if (!skb)
+ 			return;
+-		}
++
+ 		skb->dev = wilc_netdev;
+ 
+ 		memcpy(skb_put(skb, frame_len), buff_to_send, frame_len);
+@@ -1453,10 +1352,8 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 
+ 	for (i = 0; i < NUM_CONCURRENT_IFC; i++) {
+ 		ndev = alloc_etherdev(sizeof(struct wilc_vif));
+-		if (!ndev) {
+-			PRINT_ER("Failed to allocate ethernet dev\n");
++		if (!ndev)
+ 			return -1;
+-		}
+ 
+ 		vif = netdev_priv(ndev);
+ 		memset(vif, 0, sizeof(struct wilc_vif));
+@@ -1495,11 +1392,8 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
+ 			vif->netstats.tx_bytes = 0;
+ 		}
+ 
+-		if (register_netdev(ndev)) {
+-			PRINT_ER("Device couldn't be registered - %s\n",
+-				 ndev->name);
++		if (register_netdev(ndev))
+ 			return -1;
+-		}
+ 
+ 		vif->iftype = STATION_MODE;
+ 		vif->mac_opened = 0;
 -- 
-2.5.0
+1.9.1
 
