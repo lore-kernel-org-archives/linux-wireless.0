@@ -1,20 +1,20 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:9935 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:59127 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965823AbcBDJZV (ORCPT
+	with ESMTP id S1754211AbcBDJdu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:25:21 -0500
+	Thu, 4 Feb 2016 04:33:50 -0500
 From: Glen Lee <glen.lee@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 24/70] staging: wilc1000: wilc_parse_network_info(): renames function variables
-Date: Thu, 4 Feb 2016 18:15:41 +0900
-Message-ID: <1454577387-509-25-git-send-email-glen.lee@atmel.com> (sfid-20160204_103015_164476_3F249B0A)
-In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+Subject: [PATCH RESEND 63/70] staging: wilc1000: renames pJoinParams of connect_resp_info structure
+Date: Thu, 4 Feb 2016 18:24:24 +0900
+Message-ID: <1454577871-667-24-git-send-email-glen.lee@atmel.com> (sfid-20160204_103357_074507_4401AE13)
+In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -22,76 +22,71 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Leo Kim <leo.kim@atmel.com>
 
-This patch renames to avoid camelcase, changes follow are:
- - pu8MsgBuffer to msg_buffer
- - ppstrNetworkInfo to ret_network_info
+This patch renames pJoinParams variable to join_params.
 
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c | 16 ++++++++--------
- drivers/staging/wilc1000/coreconfigurator.h |  2 +-
- 2 files changed, 9 insertions(+), 9 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.h       |  2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 12 ++++++------
+ 2 files changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 6f17e2b..43f0a29 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -270,7 +270,7 @@ static u8 get_current_channel_802_11n(u8 *pu8msa, u16 rx_len)
- 	return 0;
- }
- 
--s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo)
-+s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
- {
- 	tstrNetworkInfo *pstrNetworkInfo = NULL;
- 	u8 u8MsgType = 0;
-@@ -281,18 +281,18 @@ s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo
- 	u16 u16WidLen  = 0;
- 	u8  *pu8WidVal = NULL;
- 
--	u8MsgType = pu8MsgBuffer[0];
-+	u8MsgType = msg_buffer[0];
- 
- 	if ('N' != u8MsgType) {
- 		PRINT_ER("Received Message format incorrect.\n");
- 		return -EFAULT;
- 	}
- 
--	u8MsgID = pu8MsgBuffer[1];
--	u16MsgLen = MAKE_WORD16(pu8MsgBuffer[2], pu8MsgBuffer[3]);
--	u16WidID = MAKE_WORD16(pu8MsgBuffer[4], pu8MsgBuffer[5]);
--	u16WidLen = MAKE_WORD16(pu8MsgBuffer[6], pu8MsgBuffer[7]);
--	pu8WidVal  = &pu8MsgBuffer[8];
-+	u8MsgID = msg_buffer[1];
-+	u16MsgLen = MAKE_WORD16(msg_buffer[2], msg_buffer[3]);
-+	u16WidID = MAKE_WORD16(msg_buffer[4], msg_buffer[5]);
-+	u16WidLen = MAKE_WORD16(msg_buffer[6], msg_buffer[7]);
-+	pu8WidVal = &msg_buffer[8];
- 
- 	{
- 		u8  *pu8msa = NULL;
-@@ -350,7 +350,7 @@ s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo
- 
- 	}
- 
--	*ppstrNetworkInfo = pstrNetworkInfo;
-+	*ret_network_info = pstrNetworkInfo;
- 
- 	return 0;
- }
 diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index ee107ac..aec0779 100644
+index 3dca840..f154e39 100644
 --- a/drivers/staging/wilc1000/coreconfigurator.h
 +++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -120,7 +120,7 @@ typedef struct {
- 	size_t ie_len;
- } tstrDisconnectNotifInfo;
+@@ -92,7 +92,7 @@ struct network_info {
+ 	u32 tsf_lo;
+ 	u8 *ies;
+ 	u16 ies_len;
+-	void *pJoinParams;
++	void *join_params;
+ 	tstrRSSI strRssi;
+ 	u64 u64Tsf;
+ };
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index c9acacc..6ebf268 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -199,8 +199,8 @@ static void clear_shadow_scan(void)
+ 				last_scanned_shadow[last_scanned_cnt].ies = NULL;
+ 			}
  
--s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo);
-+s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info);
- s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo);
+-			kfree(last_scanned_shadow[i].pJoinParams);
+-			last_scanned_shadow[i].pJoinParams = NULL;
++			kfree(last_scanned_shadow[i].join_params);
++			last_scanned_shadow[i].join_params = NULL;
+ 		}
+ 		last_scanned_cnt = 0;
+ 	}
+@@ -295,7 +295,7 @@ static void remove_network_from_shadow(unsigned long arg)
+ 			kfree(last_scanned_shadow[i].ies);
+ 			last_scanned_shadow[i].ies = NULL;
  
- s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
+-			kfree(last_scanned_shadow[i].pJoinParams);
++			kfree(last_scanned_shadow[i].join_params);
+ 
+ 			for (j = i; (j < last_scanned_cnt - 1); j++)
+ 				last_scanned_shadow[j] = last_scanned_shadow[j + 1];
+@@ -389,8 +389,8 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
+ 	last_scanned_shadow[ap_index].time_scan_cached = jiffies;
+ 	last_scanned_shadow[ap_index].found = 1;
+ 	if (ap_found != -1)
+-		kfree(last_scanned_shadow[ap_index].pJoinParams);
+-	last_scanned_shadow[ap_index].pJoinParams = pJoinParams;
++		kfree(last_scanned_shadow[ap_index].join_params);
++	last_scanned_shadow[ap_index].join_params = pJoinParams;
+ }
+ 
+ static void CfgScanResult(enum scan_event scan_event,
+@@ -913,7 +913,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 				     CfgConnectResult, (void *)priv,
+ 				     u8security, tenuAuth_type,
+ 				     pstrNetworkInfo->ch,
+-				     pstrNetworkInfo->pJoinParams);
++				     pstrNetworkInfo->join_params);
+ 	if (s32Error != 0) {
+ 		netdev_err(dev, "wilc_set_join_req(): Error\n");
+ 		s32Error = -ENOENT;
 -- 
 1.9.1
 
