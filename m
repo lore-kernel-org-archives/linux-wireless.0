@@ -1,86 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:33325 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751363AbcBKQJh (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48105 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932708AbcBDJ2S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2016 11:09:37 -0500
-MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA0E809@hasmsx107.ger.corp.intel.com>
-References: <1455199701-25767-1-git-send-email-emmanuel.grumbach@intel.com>
-	<1455201038.19473.12.camel@edumazet-glaptop2.roam.corp.google.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32EA0E6FD@hasmsx107.ger.corp.intel.com>
-	<1455203555.19473.14.camel@edumazet-glaptop2.roam.corp.google.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32EA0E809@hasmsx107.ger.corp.intel.com>
-Date: Thu, 11 Feb 2016 08:09:34 -0800
-Message-ID: <CAA93jw5=6zxg8P77VkgDEZFM+u+5zHBuW5ODoWqFV59PoSWtgQ@mail.gmail.com> (sfid-20160211_170955_266820_F397AA0B)
-Subject: Re: [PATCH] codel: add forgotten inline to functions in header file
-From: Dave Taht <dave.taht@gmail.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Eric Dumazet <eric.dumazet@gmail.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 4 Feb 2016 04:28:18 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH] ath9k: make NF load complete quickly and reliably
+Date: Thu,  4 Feb 2016 17:27:53 +0800
+Message-Id: <1454578073-325-1-git-send-email-miaoqing@codeaurora.org> (sfid-20160204_102832_765413_3223439E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 11, 2016 at 7:29 AM, Grumbach, Emmanuel
-<emmanuel.grumbach@intel.com> wrote:
->
->
-> On 02/11/2016 05:12 PM, Eric Dumazet wrote:
->> On Thu, 2016-02-11 at 15:05 +0000, Grumbach, Emmanuel wrote:
->>
->>
->>> Yeah :) codel_should_drop seemed very long indeed... I wanted to use the
->>> codel_get_time and associated utils (_before, _after) in iwlwifi.
->>> They're better than jiffies... So maybe I can just copy that code to
->>> iwlwifi.
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-Definately better than jiffies.
+Make NF load complete quickly and reliably. NF load execution
+is delayed by HW to end of frame if frame Rx or Tx is ongoing.
+Increasing timeout to max frame duration. If NF cal is ongoing
+before NF load, stop it before load, and restart it afterwards.
 
->>
->> You certainly can submit a patch adding the inline, but not on all
->> functions present in this file ;)
->>
->> Thanks !
->>
->
-> Actually... All I need *has* the inline, but if I include codel.h,
-> codel_dequeue is defined but not used and you definitely don't want to
-> inline that one. So I guess the only other option I have is to split
-> that header file which I don't think is really worth it. So, unless you
-> object it, I'll just copy the code.
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/calib.c | 35 ++++++++++++++++++++++++++++------
+ 1 file changed, 29 insertions(+), 6 deletions(-)
 
-I think it is best to start with another base implementation of codel
-for wifi, yes.
+diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
+index 3e2e24e..46347df 100644
+--- a/drivers/net/wireless/ath/ath9k/calib.c
++++ b/drivers/net/wireless/ath/ath9k/calib.c
+@@ -241,6 +241,7 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	u8 chainmask = (ah->rxchainmask << 3) | ah->rxchainmask;
+ 	struct ath_common *common = ath9k_hw_common(ah);
+ 	s16 default_nf = ath9k_hw_get_default_nf(ah, chan);
++	u32 bb_agc_ctl = REG_READ(ah, AR_PHY_AGC_CONTROL);
+ 
+ 	if (ah->caldata)
+ 		h = ah->caldata->nfCalHist;
+@@ -264,6 +265,13 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	}
+ 
+ 	/*
++	 * stop NF cal if ongoing to ensure NF load completes immediately
++	 * (or after end rx/tx frame if ongoing)
++	 */
++	if (bb_agc_ctl & AR_PHY_AGC_CONTROL_NF)
++		REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
++
++	/*
+ 	 * Load software filtered NF value into baseband internal minCCApwr
+ 	 * variable.
+ 	 */
+@@ -276,18 +284,33 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 
+ 	/*
+ 	 * Wait for load to complete, should be fast, a few 10s of us.
+-	 * The max delay was changed from an original 250us to 10000us
+-	 * since 250us often results in NF load timeout and causes deaf
+-	 * condition during stress testing 12/12/2009
++	 * The max delay was changed from an original 250us to 22.2 msec.
++	 * This would increase timeout to the longest possible frame
++	 * (11n max length 22.1 msec)
+ 	 */
+-	for (j = 0; j < 10000; j++) {
++	for (j = 0; j < 22200; j++) {
+ 		if ((REG_READ(ah, AR_PHY_AGC_CONTROL) &
+-		     AR_PHY_AGC_CONTROL_NF) == 0)
++			      AR_PHY_AGC_CONTROL_NF) == 0)
+ 			break;
+ 		udelay(10);
+ 	}
+ 
+ 	/*
++	 * Restart NF so it can continue.
++	 */
++	if (bb_agc_ctl & AR_PHY_AGC_CONTROL_NF) {
++		ENABLE_REG_RMW_BUFFER(ah);
++		if (bb_agc_ctl & AR_PHY_AGC_CONTROL_ENABLE_NF)
++			REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
++				    AR_PHY_AGC_CONTROL_ENABLE_NF);
++		if (bb_agc_ctl & AR_PHY_AGC_CONTROL_NO_UPDATE_NF)
++			REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
++				    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
++		REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
++		REG_RMW_BUFFER_FLUSH(ah);
++	}
++
++	/*
+ 	 * We timed out waiting for the noisefloor to load, probably due to an
+ 	 * in-progress rx. Simply return here and allow the load plenty of time
+ 	 * to complete before the next calibration interval.  We need to avoid
+@@ -296,7 +319,7 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 	 * here, the baseband nf cal will just be capped by our present
+ 	 * noisefloor until the next calibration timer.
+ 	 */
+-	if (j == 10000) {
++	if (j == 22200) {
+ 		ath_dbg(common, ANY,
+ 			"Timeout while waiting for nf to load: AR_PHY_AGC_CONTROL=0x%x\n",
+ 			REG_READ(ah, AR_PHY_AGC_CONTROL));
+-- 
+1.9.1
 
-What I think is the currently best performing codel implementation (on
-the wire, for ethernet) we have is in:
-
-https://github.com/dtaht/bcake/codel5.h
-
-which has a few differences from eric's implementation (64 bit
-timestamps, inlining, not a lot of cpu profiling on it - still aiming
-for algorithmic correctness here, it is closer to the original
-paper... We'd used a different means of injecting the callback in it,
-too)
-
-The one currently in the main cake had issues in the last test round
-but has been updated since. (sch_cake is also on github).
-
-In neither case it is the right thing for wifi either.
-
-the "starting plan" such as it was was to get to "one aggregate in the
-hardware, one in the driver, one ready to be formed on the completion
-interrupt", and pull a smoothed service time from start to completion
-interrupt to dynamically modify the codel target. (other headaches,
-like multicast, abound).
-
-(It's the per station queue + fq as close to the hardware as possible
-that matters most, IMHO.)
-
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
