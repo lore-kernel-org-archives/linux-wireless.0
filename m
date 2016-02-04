@@ -1,59 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:36576 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752749AbcB2Sd7 convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:58620 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754033AbcBDJbu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 13:33:59 -0500
-Received: by mail-wm0-f49.google.com with SMTP id n186so2029407wmn.1
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Feb 2016 10:33:58 -0800 (PST)
+	Thu, 4 Feb 2016 04:31:50 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH RESEND 44/70] staging: wilc1000: remove unused log message using the TX_DBG tag
+Date: Thu, 4 Feb 2016 18:24:05 +0900
+Message-ID: <1454577871-667-5-git-send-email-glen.lee@atmel.com> (sfid-20160204_103407_474769_CD65BBD0)
+In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <5bc6ba3b4d5743dc641b85c2c4233631f5b3319a.1456513260.git.poh@qca.qualcomm.com>
-References: <5bc6ba3b4d5743dc641b85c2c4233631f5b3319a.1456513260.git.poh@qca.qualcomm.com>
-Date: Mon, 29 Feb 2016 19:33:57 +0100
-Message-ID: <CA+BoTQkCwSkARQKWcjkJri9xS6GGiHq4NwjOoewqtHOetjevGw@mail.gmail.com> (sfid-20160229_193402_351650_C4D135FA)
-Subject: Re: [PATCH v5] ath10k: set MAC timestamp in management Rx frame
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Peter Oh <poh@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 February 2016 at 20:03, Peter Oh <poh@qca.qualcomm.com> wrote:
-> Check and set Rx MAC timestamp when firmware indicates it.
-> Firmware adds it in Rx beacon frame only at this moment.
-> Driver and mac80211 may utilize it to detect such clockdrift
-> or beacon collision and use the result for beacon collision
-> avoidance.
->
-> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
-> ---
-[...]
-> +       if (rx_status & WMI_RX_STATUS_EXT_INFO) {
-> +               status->mactime =
-> +                       __le32_to_cpu(arg.ext_info.rx_mac_timestamp_l32) |
-> +                       (u64)__le32_to_cpu(arg.ext_info.rx_mac_timestamp_u32)
-> +                       << 32;
-> +               status->flag |= RX_FLAG_MACTIME_END;
-> +       }
->         /* Hardware can Rx CCK rates on 5GHz. In that case phy_mode is set to
->          * MODE_11B. This means phy_mode is not a reliable source for the band
->          * of mgmt rx.
-> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-> index 4d3cbc4..f209d51 100644
-> --- a/drivers/net/wireless/ath/ath10k/wmi.h
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
-> @@ -3037,11 +3037,18 @@ struct wmi_10_4_mgmt_rx_event {
->         u8 buf[0];
->  } __packed;
->
-> +struct wmi_mgmt_rx_ext_info {
-> +       __le32 rx_mac_timestamp_l32;
-> +       __le32 rx_mac_timestamp_u32;
+From: Chris Park <chris.park@atmel.com>
 
-Oh.. I feel bad for noticing this so late. I think this can be
-represented with a mere __le64 and then accessed via le64_to_cpu().
+This patch remove unused log message using the TX_DBG tag
 
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c        | 4 ----
+ drivers/staging/wilc1000/linux_wlan_common.h | 2 --
+ drivers/staging/wilc1000/wilc_debugfs.c      | 2 +-
+ drivers/staging/wilc1000/wilc_wlan.c         | 9 +++------
+ 4 files changed, 4 insertions(+), 13 deletions(-)
 
-Michał
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 9e5dea4..202be15 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1047,10 +1047,6 @@ static void linux_wlan_tx_complete(void *priv, int status)
+ {
+ 	struct tx_complete_data *pv_data = (struct tx_complete_data *)priv;
+ 
+-	if (status == 1)
+-		PRINT_D(TX_DBG, "Packet sent successfully - Size = %d - Address = %p - SKB = %p\n", pv_data->size, pv_data->buff, pv_data->skb);
+-	else
+-		PRINT_D(TX_DBG, "Couldn't send packet - Size = %d - Address = %p - SKB = %p\n", pv_data->size, pv_data->buff, pv_data->skb);
+ 	dev_kfree_skb(pv_data->skb);
+ 	kfree(pv_data);
+ }
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index 5374f36..617bc53 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -6,7 +6,6 @@ enum debug_region {
+ 	Hostapd_debug,
+ 	CFG80211_debug,
+ 	Interrupt_debug,
+-	TX_debug,
+ 	RX_debug,
+ 	Lock_debug,
+ 	Tcp_enhance,
+@@ -23,7 +22,6 @@ enum debug_region {
+ #define HOSTAPD_DBG             (1 << Hostapd_debug)
+ #define CFG80211_DBG            (1 << CFG80211_debug)
+ #define INT_DBG                 (1 << Interrupt_debug)
+-#define TX_DBG                  (1 << TX_debug)
+ #define RX_DBG                  (1 << RX_debug)
+ #define LOCK_DBG                (1 << Lock_debug)
+ #define TCP_ENH                 (1 << Tcp_enhance)
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index 4b38c37..a3d274b 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -24,7 +24,7 @@ static struct dentry *wilc_dir;
+  * --------------------------------------------------------------------------------
+  */
+ 
+-#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | CFG80211_DBG | INT_DBG | TX_DBG | RX_DBG | LOCK_DBG | INIT_DBG | BUS_DBG | MEM_DBG)
++#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | CFG80211_DBG | INT_DBG | RX_DBG | LOCK_DBG | INIT_DBG | BUS_DBG | MEM_DBG)
+ #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+ atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | GENERIC_DBG | CFG80211_DBG | FIRM_DBG | HOSTAPD_DBG);
+ EXPORT_SYMBOL_GPL(WILC_REGION);
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index ec111d8..d7f14a9 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -652,13 +652,11 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
+ 			}
+ 		} while (1);
+ 
+-		if (i == 0) {
+-			PRINT_D(TX_DBG, "Nothing in TX-Q\n");
++		if (i == 0)
+ 			break;
+-		} else {
+-			PRINT_D(TX_DBG, "Mark the last entry in VMM table - number of previous entries = %d\n", i);
++		else
+ 			vmm_table[i] = 0x0;
+-		}
++
+ 		acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
+ 		counter = 0;
+ 		do {
+@@ -807,7 +805,6 @@ _end_:
+ 	up(&wilc->txq_add_to_head_cs);
+ 
+ 	wilc->txq_exit = 1;
+-	PRINT_D(TX_DBG, "THREAD: Exiting txq\n");
+ 	*txq_count = wilc->txq_entries;
+ 	return ret;
+ }
+-- 
+1.9.1
+
