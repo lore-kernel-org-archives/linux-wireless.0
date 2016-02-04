@@ -1,56 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f182.google.com ([209.85.220.182]:34139 "EHLO
-	mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750953AbcBPLhg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2016 06:37:36 -0500
-Received: by mail-qk0-f182.google.com with SMTP id x1so65029627qkc.1
-        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2016 03:37:36 -0800 (PST)
-Date: Tue, 16 Feb 2016 11:36:52 -0500
-From: Janani Ravichandran <janani.rvchndrn@gmail.com>
-To: outreachy-kernel@googlegroups.com
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
-Subject: [PATCH] staging: wilc1000: Remove trailing whitespace errors
-Message-ID: <20160216163652.GA10221@janani-Inspiron-3521> (sfid-20160216_123740_065140_AAF395C1)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:46201 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754223AbcBDMvb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2016 07:51:31 -0500
+Message-ID: <1454590287.2564.9.camel@sipsolutions.net> (sfid-20160204_135147_252014_6986FE79)
+Subject: Re: mac80211_hwsim + iperf + netns
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Date: Thu, 04 Feb 2016 13:51:27 +0100
+In-Reply-To: <CABPxzY+N=3cuMB4Z7q6gqPkhh1GoiCrpG6G3E2bHLB96oqZfyw@mail.gmail.com> (sfid-20160204_134343_938123_4EC6FB6C)
+References: <CABPxzY+HpP=NTrAaUEzV5nFm=LK93m=kxPV14-cdftt+VPsWNw@mail.gmail.com>
+	 <CA+BoTQ=s_SMgs9zkgYjKOHKDwRORWk-Re7XZ=AiKiHCuNc0L8A@mail.gmail.com>
+	 <1454588396.2564.7.camel@sipsolutions.net>
+	 <CABPxzYL3mGHyoKE0tkL4yg_4NL+U41+15Bm3f=JPq2vfD+Xnkg@mail.gmail.com>
+	 <1454589301.2564.8.camel@sipsolutions.net>
+	 <CABPxzY+N=3cuMB4Z7q6gqPkhh1GoiCrpG6G3E2bHLB96oqZfyw@mail.gmail.com>
+	 (sfid-20160204_134343_938123_4EC6FB6C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove trailing whitespace checkpatch errors.
+On Thu, 2016-02-04 at 18:13 +0530, Krishna Chaitanya wrote:
+> On Thu, Feb 4, 2016 at 6:05 PM, Johannes Berg <johannes@sipsolutions.
+> net> wrote:
+> > On Thu, 2016-02-04 at 17:58 +0530, Krishna Chaitanya wrote:
+> > > On Thu, Feb 4, 2016 at 5:49 PM, Johannes Berg <johannes@sipsoluti
+> > > ons.
+> > > net> wrote:
+> > > > On Thu, 2016-02-04 at 12:32 +0100, Michal Kazior wrote:
+> > > > > 
+> > > > >  ip netns add ns1
+> > > > >  ip netns exec ns1 bash # get the PID in the session and
+> > > > > don't
+> > > > > close
+> > > > > it
+> > > > >  iw phy phyX set netns $pid_of_that_shell
+> > > > > 
+> > > > 
+> > > > If you also have a recent enough iw version, you can use
+> > > > 
+> > > > iw phy phyX set netns name ns1
+> > > > 
+> > > My iw has this option, but it throws an error.
+> > > Does this command have any prerequisites?
+> > > 
+> > > # iw phy phy1 set netns name ns1
+> > > Invalid parameter: nsname(name)
+> > > 
+> > 
+> > This happens if the ns1 doesn't exist.
+> ok, so we need latest iprotue2 to create the
+> namespace?
 
-Signed-off-by: Janani Ravichandran <janani.rvchndrn@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- drivers/staging/wilc1000/linux_mon.c      | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+for this way to work, yes. you could hack your own C program to do the
+required unshare() call and exec bash and then use the PID ... I used
+to have one but can't find it now.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d1eedfb..04337c7 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3352,7 +3352,7 @@ static s32 host_int_get_assoc_res_info(struct wilc_vif *vif,
- 		PRINT_ER("Failed to send association response config packet\n");
- 		return -EINVAL;
- 	}
--	
-+
- 	*pu32RcvdAssocRespInfoLen = wid.size;
- 	return result;
- }
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index 21f35d7..9fcb497 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -302,7 +302,7 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
- 	struct WILC_WFI_mon_priv *priv;
- 
- 	/*If monitor interface is already initialized, return it*/
--	if (wilc_wfi_mon) 
-+	if (wilc_wfi_mon)
- 		return wilc_wfi_mon;
- 
- 	wilc_wfi_mon = alloc_etherdev(sizeof(struct WILC_WFI_mon_priv));
--- 
-2.5.0
-
+johannes
