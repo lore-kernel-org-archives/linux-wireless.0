@@ -1,75 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:33277 "EHLO
-	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933217AbcBBPgr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 10:36:47 -0500
-Subject: Re: [PATCH] rtlwifi: Fix warning from ieee80211_get_tx_rates() when
- using 5G
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <1454353134-29939-1-git-send-email-Larry.Finger@lwfinger.net>
- <87zivjh6jg.fsf@kamboji.qca.qualcomm.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Stable <stable@vger.kernel.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <56B0CD0C.9010702@lwfinger.net> (sfid-20160202_163652_724960_B638309A)
-Date: Tue, 2 Feb 2016 09:36:44 -0600
-MIME-Version: 1.0
-In-Reply-To: <87zivjh6jg.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:46082 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752655AbcBDMba (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2016 07:31:30 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: Julian Anastasov <ja@ssi.bg>,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH v3 4/4] ipv6: add option to drop unsolicited neighbor advertisements
+Date: Thu,  4 Feb 2016 13:31:20 +0100
+Message-Id: <1454589080-21354-4-git-send-email-johannes@sipsolutions.net> (sfid-20160204_133143_247705_9EFD3EF6)
+In-Reply-To: <1454589080-21354-1-git-send-email-johannes@sipsolutions.net>
+References: <1454589080-21354-1-git-send-email-johannes@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/02/2016 02:15 AM, Kalle Valo wrote:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->
->> When using a 5G-capable device with VHT rates enabled, the following
->> warning results:
->>
->> WARNING: CPU: 3 PID: 2253 at net/mac80211/rate.c:625 ieee80211_get_tx_rates+0x22e/0x620 [mac80211]()
->> Modules linked in: rtl8821ae btcoexist rtl_pci rtlwifi fuse drbg ansi_cprng ctr ccm bnep bluetooth af_packet nfs fscache vboxpci(O) vboxnetadp(O) vboxne
->> tflt(O) vboxdrv(O) arc4 snd_hda_codec_generic x86_pkg_temp_thermal rtsx_pci_sdmmc mmc_core rtsx_pci_ms kvm_intel memstick iwlmvm kvm mac80211 snd_hda_intel snd_hda_cod
->> ec snd_hwdep snd_hda_core irqbypass snd_pcm iwlwifi crct10dif_pclmul crc32_pclmul crc32c_intel ghash_clmulni_intel aesni_intel aes_x86_64 snd_timer lrw gf128mul glue_h
->> elper ablk_helper cryptd snd cfg80211 pcspkr serio_raw e1000e rtsx_pci lpc_ich ptp xhci_pci mfd_core pps_core xhci_hcd soundcore toshiba_acpi thermal sparse_keymap wmi
->>   toshiba_bluetooth rfkill acpi_cpufreq battery ac processor dm_mod i915 i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops
->> drm sr_mod cdrom video button sg autofs4 [last unloaded: rtlwifi]
->> CPU: 3 PID: 2253 Comm: Timer Tainted: G        W  O    4.5.0-rc1-wl+ #79
->> Hardware name: TOSHIBA TECRA A50-A/TECRA A50-A, BIOS Version 4.20   04/17/2014
->>    ffffffffa05c4be6 ffff8802262036d8 ffffffff813d7912 0000000000000000
->>    ffff880226203710 ffffffff8106bcb6 ffff8800c6831300 ffff8800c6831330
->>    0000000000000000 ffff8800c683133c ffff880065923638 ffff880226203720
->> Call Trace:
->>    <IRQ>  [<ffffffff813d7912>] dump_stack+0x4b/0x79
->>    [<ffffffff8106bcb6>] warn_slowpath_common+0x86/0xc0
->>    [<ffffffff8106bdaa>] warn_slowpath_null+0x1a/0x20
->>    [<ffffffffa05511ee>] ieee80211_get_tx_rates+0x22e/0x620 [mac80211]
->>    [<ffffffffa0782232>] ? rtl_is_special_data+0x32/0x240 [rtlwifi]
->>    [<ffffffffa055209e>] ? rate_control_get_rate+0xce/0x150 [mac80211]
->>    [<ffffffff810bfc7d>] ? trace_hardirqs_on+0xd/0x10
->>    [<ffffffff81071cc5>] ? __local_bh_enable_ip+0x65/0xd0
->> --- traceback terminated here ---
->>
->> The problem is that IEEE80211_TX_RC_VHT_MCS is not set in the rate flags.
->>
->> Reported-by: Linus Torvalds <torvalds@linux-foundation.org>
->> Tested-by: Linus Torvalds <torvalds@linux-foundation.org>
->> Signed-off-by: Johannes Berg <johannes@sipsolutions.net>
->> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
->> Cc: Stable <stable@vger.kernel.org>
->
-> Isn't the commit log somewhat misleading as VHT was completely _broken_?
-> Do you mind if I change the commit log to this:
->
-> ----------------------------------------------------------------------
-> rtlwifi: fix broken VHT support
->
-> When using a 5G-capable device with VHT (802.11ac) rates enabled was not
-> working (packets were not delivered) and the following mac80211 warning
-> was printed:
+From: Johannes Berg <johannes.berg@intel.com>
 
-That change is fine.
+In certain 802.11 wireless deployments, there will be NA proxies
+that use knowledge of the network to correctly answer requests.
+To prevent unsolicitd advertisements on the shared medium from
+being a problem, on such deployments wireless needs to drop them.
 
-Larry
+Enable this by providing an option called "drop_unsolicited_na".
 
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ Documentation/networking/ip-sysctl.txt | 7 +++++++
+ include/linux/ipv6.h                   | 1 +
+ include/uapi/linux/ipv6.h              | 1 +
+ net/ipv6/addrconf.c                    | 8 ++++++++
+ net/ipv6/ndisc.c                       | 9 +++++++++
+ 5 files changed, 26 insertions(+)
+
+diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
+index 428fb48a19fc..77992f1173c3 100644
+--- a/Documentation/networking/ip-sysctl.txt
++++ b/Documentation/networking/ip-sysctl.txt
+@@ -1672,6 +1672,13 @@ drop_unicast_in_l2_multicast - BOOLEAN
+ 
+ 	By default this is turned off.
+ 
++drop_unsolicited_na - BOOLEAN
++	Drop all unsolicited neighbor advertisements, for example if there's
++	a known good NA proxy on the network and such frames need not be used
++	(or in the case of 802.11, must not be used to prevent attacks.)
++
++	By default this is turned off.
++
+ icmp/*:
+ ratelimit - INTEGER
+ 	Limit the maximal rates for sending ICMPv6 packets.
+diff --git a/include/linux/ipv6.h b/include/linux/ipv6.h
+index 34317cb6a6fc..9231bfdc7c92 100644
+--- a/include/linux/ipv6.h
++++ b/include/linux/ipv6.h
+@@ -56,6 +56,7 @@ struct ipv6_devconf {
+ 	__s32           ndisc_notify;
+ 	__s32		suppress_frag_ndisc;
+ 	__s32		accept_ra_mtu;
++	__s32		drop_unsolicited_na;
+ 	struct ipv6_stable_secret {
+ 		bool initialized;
+ 		struct in6_addr secret;
+diff --git a/include/uapi/linux/ipv6.h b/include/uapi/linux/ipv6.h
+index 4c413570efe8..ec117b65d5a5 100644
+--- a/include/uapi/linux/ipv6.h
++++ b/include/uapi/linux/ipv6.h
+@@ -175,6 +175,7 @@ enum {
+ 	DEVCONF_ACCEPT_RA_MIN_HOP_LIMIT,
+ 	DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN,
+ 	DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
++	DEVCONF_DROP_UNSOLICITED_NA,
+ 	DEVCONF_MAX
+ };
+ 
+diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
+index 35f880bcf626..e7dd0a0c5126 100644
+--- a/net/ipv6/addrconf.c
++++ b/net/ipv6/addrconf.c
+@@ -4673,6 +4673,7 @@ static inline void ipv6_store_devconf(struct ipv6_devconf *cnf,
+ 	/* we omit DEVCONF_STABLE_SECRET for now */
+ 	array[DEVCONF_USE_OIF_ADDRS_ONLY] = cnf->use_oif_addrs_only;
+ 	array[DEVCONF_DROP_UNICAST_IN_L2_MULTICAST] = cnf->drop_unicast_in_l2_multicast;
++	array[DEVCONF_DROP_UNSOLICITED_NA] = cnf->drop_unsolicited_na;
+ }
+ 
+ static inline size_t inet6_ifla6_size(void)
+@@ -5742,6 +5743,13 @@ static struct addrconf_sysctl_table
+ 			.proc_handler	= proc_dointvec,
+ 		},
+ 		{
++			.procname	= "drop_unsolicited_na",
++			.data		= &ipv6_devconf.drop_unsolicited_na,
++			.maxlen		= sizeof(int),
++			.mode		= 0644,
++			.proc_handler	= proc_dointvec,
++		},
++		{
+ 			/* sentinel */
+ 		}
+ 	},
+diff --git a/net/ipv6/ndisc.c b/net/ipv6/ndisc.c
+index 3e0f855e1bea..12c84a53df4f 100644
+--- a/net/ipv6/ndisc.c
++++ b/net/ipv6/ndisc.c
+@@ -887,6 +887,7 @@ static void ndisc_recv_na(struct sk_buff *skb)
+ 				    offsetof(struct nd_msg, opt));
+ 	struct ndisc_options ndopts;
+ 	struct net_device *dev = skb->dev;
++	struct inet6_dev *idev = __in6_dev_get(dev);
+ 	struct inet6_ifaddr *ifp;
+ 	struct neighbour *neigh;
+ 
+@@ -906,6 +907,14 @@ static void ndisc_recv_na(struct sk_buff *skb)
+ 		return;
+ 	}
+ 
++	/* For some 802.11 wireless deployments (and possibly other networks),
++	 * there will be a NA proxy and unsolicitd packets are attacks
++	 * and thus should not be accepted.
++	 */
++	if (!msg->icmph.icmp6_solicited && idev &&
++	    idev->cnf.drop_unsolicited_na)
++		return;
++
+ 	if (!ndisc_parse_options(msg->opt, ndoptlen, &ndopts)) {
+ 		ND_PRINTK(2, warn, "NS: invalid ND option\n");
+ 		return;
+-- 
+2.7.0
 
