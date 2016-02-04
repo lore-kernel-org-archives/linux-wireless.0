@@ -1,48 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:32953 "EHLO
-	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752160AbcBKGrU (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:10130 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965958AbcBDJZ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2016 01:47:20 -0500
-Received: by mail-pf0-f193.google.com with SMTP id c10so2103247pfc.0
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Feb 2016 22:47:19 -0800 (PST)
-From: Ujjal Roy <royujjal@gmail.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	WiFi Mailing List <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] mwifiex: Added missing spaces around brackets
-Date: Thu, 11 Feb 2016 12:17:09 +0530
-Message-Id: <1455173229-6383-3-git-send-email-royujjal@gmail.com> (sfid-20160211_074726_748090_C24263AD)
-In-Reply-To: <1455173229-6383-1-git-send-email-royujjal@gmail.com>
-References: <1455173229-6383-1-git-send-email-royujjal@gmail.com>
+	Thu, 4 Feb 2016 04:25:57 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 28/70] staging: wilc1000: wilc_parse_assoc_resp_info(): renames function variables
+Date: Thu, 4 Feb 2016 18:15:45 +0900
+Message-ID: <1454577387-509-29-git-send-email-glen.lee@atmel.com> (sfid-20160204_102859_243750_EF8CC36A)
+In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the missing spaces issue in coding style.
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+This patch renames to avoid camelcase, changes follow are:
+ - pu8Buffer to buffer
+ - u32BufferLen to buffer_len
+ - ppstrConnectRespInfo to ret_connect_resp_info
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/usb.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 16 ++++++++--------
+ drivers/staging/wilc1000/coreconfigurator.h |  5 ++---
+ 2 files changed, 10 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index e43aff9..0510861 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -244,9 +244,9 @@ setup_for_next:
- 	if (card->rx_cmd_ep == context->ep) {
- 		mwifiex_usb_submit_rx_urb(context, size);
- 	} else {
--		if (atomic_read(&adapter->rx_pending) <= HIGH_RX_PENDING){
-+		if (atomic_read(&adapter->rx_pending) <= HIGH_RX_PENDING) {
- 			mwifiex_usb_submit_rx_urb(context, size);
--		}else{
-+		} else {
- 			context->skb = NULL;
- 		}
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 88e5661..48c8573 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -376,8 +376,8 @@ s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo)
+ 	return result;
+ }
+ 
+-s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
+-			       tstrConnectRespInfo **ppstrConnectRespInfo)
++s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
++			       tstrConnectRespInfo **ret_connect_resp_info)
+ {
+ 	tstrConnectRespInfo *pstrConnectRespInfo = NULL;
+ 	u16 u16AssocRespLen = 0;
+@@ -388,14 +388,14 @@ s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
+ 	if (!pstrConnectRespInfo)
+ 		return -ENOMEM;
+ 
+-	u16AssocRespLen = (u16)u32BufferLen;
++	u16AssocRespLen = (u16)buffer_len;
+ 
+-	pstrConnectRespInfo->u16ConnectStatus = get_asoc_status(pu8Buffer);
++	pstrConnectRespInfo->u16ConnectStatus = get_asoc_status(buffer);
+ 	if (pstrConnectRespInfo->u16ConnectStatus == SUCCESSFUL_STATUSCODE) {
+-		pstrConnectRespInfo->u16capability = get_assoc_resp_cap_info(pu8Buffer);
+-		pstrConnectRespInfo->u16AssocID = get_asoc_id(pu8Buffer);
++		pstrConnectRespInfo->u16capability = get_assoc_resp_cap_info(buffer);
++		pstrConnectRespInfo->u16AssocID = get_asoc_id(buffer);
+ 
+-		pu8IEs = &pu8Buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
++		pu8IEs = &buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
+ 		u16IEsLen = u16AssocRespLen - (CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN);
+ 
+ 		pstrConnectRespInfo->pu8RespIEs = kmemdup(pu8IEs, u16IEsLen, GFP_KERNEL);
+@@ -405,7 +405,7 @@ s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
+ 		pstrConnectRespInfo->u16RespIEsLen = u16IEsLen;
  	}
---
+ 
+-	*ppstrConnectRespInfo = pstrConnectRespInfo;
++	*ret_connect_resp_info = pstrConnectRespInfo;
+ 
+ 	return 0;
+ }
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index aec0779..6a2c323 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -122,9 +122,8 @@ typedef struct {
+ 
+ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info);
+ s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo);
+-
+-s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
+-		       tstrConnectRespInfo **ppstrConnectRespInfo);
++s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
++			       tstrConnectRespInfo **ret_connect_resp_info);
+ s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo);
+ void wilc_scan_complete_received(struct wilc *wilc, u8 *pu8Buffer,
+ 				 u32 u32Length);
+-- 
 1.9.1
 
