@@ -1,43 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39695 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753257AbcB2WF5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:57 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 047/113] rtl8xxxu: Set the right type for ps tdma on 8723bu
-Date: Mon, 29 Feb 2016 17:04:45 -0500
-Message-Id: <1456783551-28315-48-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230754_737136_DC78C393)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:9242 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750957AbcBDJXR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2016 04:23:17 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 04/70] staging: wilc1000: handle connecting error
+Date: Thu, 4 Feb 2016 18:15:21 +0900
+Message-ID: <1454577387-509-5-git-send-email-glen.lee@atmel.com> (sfid-20160204_102322_342420_3ED2DBBF)
+In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+If connection fails, wilc1000_connecting needs to be set false also and return
+immediately because goto lable 'done' doesn't do anything. Remove lable 'done'
+as well.
 
-Use the correct type when setting PS TDMA for 8723bu. This matches the
-vendor driver.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 24c3157..6aa908e 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -5712,7 +5712,7 @@ static void rtl8723bu_init_bt(struct rtl8xxxu_priv *priv)
- 	/*
- 	 * Software control, antenna at WiFi side
- 	 */
--	rtl8723bu_set_ps_tdma(priv, 0x00, 0x00, 0x00, 0x00, 0x00);
-+	rtl8723bu_set_ps_tdma(priv, 0x08, 0x00, 0x00, 0x00, 0x00);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index b0350da..4d63282 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -757,8 +757,8 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 			PRINT_D(CFG80211_DBG, "No Scan results yet\n");
+ 		else
+ 			PRINT_D(CFG80211_DBG, "Required bss not in scan results: Error(%d)\n", s32Error);
+-
+-		goto done;
++		wilc_connecting = 0;
++		return s32Error;
+ 	}
  
- 	rtl8xxxu_write32(priv, REG_BT_COEX_TABLE1, 0x55555555);
- 	rtl8xxxu_write32(priv, REG_BT_COEX_TABLE2, 0x5a5a5a5a);
+ 	priv->WILC_WFI_wep_default = 0;
+@@ -845,8 +845,8 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 		} else {
+ 			s32Error = -ENOTSUPP;
+ 			PRINT_ER("Not supported cipher: Error(%d)\n", s32Error);
+-
+-			goto done;
++			wilc_connecting = 0;
++			return s32Error;
+ 		}
+ 	}
+ 
+@@ -912,11 +912,10 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ 	if (s32Error != 0) {
+ 		PRINT_ER("wilc_set_join_req(): Error(%d)\n", s32Error);
+ 		s32Error = -ENOENT;
+-		goto done;
++		wilc_connecting = 0;
++		return s32Error;
+ 	}
+ 
+-done:
+-
+ 	return s32Error;
+ }
+ 
 -- 
-2.5.0
+1.9.1
 
