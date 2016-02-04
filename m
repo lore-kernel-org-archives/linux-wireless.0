@@ -1,54 +1,215 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:36378 "EHLO
-	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932210AbcBAM13 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:9512 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965764AbcBDJYK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2016 07:27:29 -0500
-Received: by mail-pf0-f193.google.com with SMTP id n128so7472838pfn.3
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 04:27:28 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 10/11] staging: wilc1000: linux_mon: fix error code of kmalloc
-Date: Mon,  1 Feb 2016 21:26:46 +0900
-Message-Id: <1454329607-9486-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20160201_132735_278941_3FF66DB5)
-In-Reply-To: <1454329607-9486-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1454329607-9486-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 4 Feb 2016 04:24:10 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 13/70] staging: wilc1000: move wilc_send_config_pkt to wilc_wlan.c
+Date: Thu, 4 Feb 2016 18:15:30 +0900
+Message-ID: <1454577387-509-14-git-send-email-glen.lee@atmel.com> (sfid-20160204_104503_460825_097100F2)
+In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes error codes as -ENOMEM instead of using -EFAULT if
-kmalloc is failed.
+This patch moves the function wilc_send_config_pkt to wilc_wlan.c which
+handles transport since the purpose of the function is sending/getting of
+config information. coreconfiguator.[ch] will be rename with frame.[ch] later.
+The print codes of the function is removed also and they will be implemented
+with netdev_xx print format later.
+struct wid need to be moved to wilc_wlan_if.h which defines configure
+informations.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Glen Lee <glen.lee@atmel.com>
 ---
- drivers/staging/wilc1000/linux_mon.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 59 -----------------------------
+ drivers/staging/wilc1000/coreconfigurator.h |  9 -----
+ drivers/staging/wilc1000/wilc_wlan.c        | 39 +++++++++++++++++++
+ drivers/staging/wilc1000/wilc_wlan.h        |  2 +
+ drivers/staging/wilc1000/wilc_wlan_if.h     |  7 ++++
+ 5 files changed, 48 insertions(+), 68 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index a19755e..1443a23 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -166,14 +166,14 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
- 	mgmt_tx = kmalloc(sizeof(*mgmt_tx), GFP_ATOMIC);
- 	if (!mgmt_tx) {
- 		PRINT_ER("Failed to allocate memory for mgmt_tx structure\n");
--		return -EFAULT;
-+		return -ENOMEM;
- 	}
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 49ae9b1..6f17e2b 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -433,62 +433,3 @@ s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo)
  
- 	mgmt_tx->buff = kmalloc(len, GFP_ATOMIC);
- 	if (!mgmt_tx->buff) {
- 		PRINT_ER("Failed to allocate memory for mgmt_tx buff\n");
- 		kfree(mgmt_tx);
--		return -EFAULT;
-+		return -ENOMEM;
- 	}
+ 	return s32Error;
+ }
+-
+-/**
+- *  @brief              sends certain Configuration Packet based on the input WIDs pstrWIDs
+- *  using driver config layer
+- *
+- *  @details
+- *  @param[in]  pstrWIDs WIDs to be sent in the configuration packet
+- *  @param[in]  u32WIDsCount number of WIDs to be sent in the configuration packet
+- *  @param[out]         pu8RxResp The received Packet Response
+- *  @param[out]         ps32RxRespLen Length of the received Packet Response
+- *  @return     Error code indicating success/failure
+- *  @note
+- *  @author	mabubakr
+- *  @date		1 Mar 2012
+- *  @version	1.0
+- */
+-s32 wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
+-			 u32 count, u32 drv)
+-{
+-	s32 counter = 0, ret = 0;
+-
+-	if (mode == GET_CFG) {
+-		for (counter = 0; counter < count; counter++) {
+-			PRINT_INFO(CORECONFIG_DBG, "Sending CFG packet [%d][%d]\n", !counter,
+-				   (counter == count - 1));
+-			if (!wilc_wlan_cfg_get(wilc, !counter,
+-					       wids[counter].id,
+-					       (counter == count - 1),
+-					       drv)) {
+-				ret = -ETIMEDOUT;
+-				printk("[Sendconfigpkt]Get Timed out\n");
+-				break;
+-			}
+-		}
+-		counter = 0;
+-		for (counter = 0; counter < count; counter++) {
+-			wids[counter].size = wilc_wlan_cfg_get_val(
+-					wids[counter].id,
+-					wids[counter].val,
+-					wids[counter].size);
+-		}
+-	} else if (mode == SET_CFG) {
+-		for (counter = 0; counter < count; counter++) {
+-			PRINT_D(CORECONFIG_DBG, "Sending config SET PACKET WID:%x\n", wids[counter].id);
+-			if (!wilc_wlan_cfg_set(wilc, !counter,
+-					       wids[counter].id,
+-					       wids[counter].val,
+-					       wids[counter].size,
+-					       (counter == count - 1),
+-					       drv)) {
+-				ret = -ETIMEDOUT;
+-				printk("[Sendconfigpkt]Set Timed out\n");
+-				break;
+-			}
+-		}
+-	}
+-
+-	return ret;
+-}
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index fc43d04..ee107ac 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -70,13 +70,6 @@ typedef enum {
+ 	CONNECT_STS_FORCE_16_BIT = 0xFFFF
+ } tenuConnectSts;
  
- 	mgmt_tx->size = len;
+-struct wid {
+-	u16 id;
+-	enum wid_type type;
+-	s32 size;
+-	s8 *val;
+-};
+-
+ typedef struct {
+ 	u8 u8Full;
+ 	u8 u8Index;
+@@ -127,8 +120,6 @@ typedef struct {
+ 	size_t ie_len;
+ } tstrDisconnectNotifInfo;
+ 
+-s32 wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
+-			 u32 count, u32 drv);
+ s32 wilc_parse_network_info(u8 *pu8MsgBuffer, tstrNetworkInfo **ppstrNetworkInfo);
+ s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo);
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 04d4c92..265ddfe 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1439,6 +1439,45 @@ int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size)
+ 	return ret;
+ }
+ 
++s32 wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
++			 u32 count, u32 drv)
++{
++	s32 counter = 0, ret = 0;
++
++	if (mode == GET_CFG) {
++		for (counter = 0; counter < count; counter++) {
++			if (!wilc_wlan_cfg_get(wilc, !counter,
++					       wids[counter].id,
++					       (counter == count - 1),
++					       drv)) {
++				ret = -ETIMEDOUT;
++				break;
++			}
++		}
++		counter = 0;
++		for (counter = 0; counter < count; counter++) {
++			wids[counter].size = wilc_wlan_cfg_get_val(
++					wids[counter].id,
++					wids[counter].val,
++					wids[counter].size);
++		}
++	} else if (mode == SET_CFG) {
++		for (counter = 0; counter < count; counter++) {
++			if (!wilc_wlan_cfg_set(wilc, !counter,
++					       wids[counter].id,
++					       wids[counter].val,
++					       wids[counter].size,
++					       (counter == count - 1),
++					       drv)) {
++				ret = -ETIMEDOUT;
++				break;
++			}
++		}
++	}
++
++	return ret;
++}
++
+ static u32 init_chip(struct net_device *dev)
+ {
+ 	u32 chipid;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 7f04653..3ebaf0e 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -299,4 +299,6 @@ void host_sleep_notify(struct wilc *wilc);
+ extern bool wilc_enable_ps;
+ void chip_allow_sleep(struct wilc *wilc);
+ void chip_wakeup(struct wilc *wilc);
++s32 wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
++			 u32 count, u32 drv);
+ #endif
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index c446af6..455a98f 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -300,6 +300,13 @@ enum wid_type {
+ 	WID_TYPE_FORCE_32BIT	= 0xFFFFFFFF
+ };
+ 
++struct wid {
++	u16 id;
++	enum wid_type type;
++	s32 size;
++	s8 *val;
++};
++
+ typedef enum {
+ 	WID_NIL				= 0xffff,
+ 
 -- 
-2.7.0
+1.9.1
 
