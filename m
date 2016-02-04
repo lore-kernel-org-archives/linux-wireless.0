@@ -1,85 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m50-133.163.com ([123.125.50.133]:50596 "EHLO m50-133.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946176AbcBROUs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 09:20:48 -0500
-From: Geliang Tang <geliangtang@163.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Julian Calaby <julian.calaby@gmail.com>
-Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v5 0/3] staging: rtl8723au: use list_for_each_entry*() and cleaning
-Date: Thu, 18 Feb 2016 22:19:28 +0800
-Message-Id: <cover.1455804404.git.geliangtang@163.com> (sfid-20160218_152129_917342_ADF4EE28)
-In-Reply-To: <wrfjtwl76ybi.fsf@redhat.com>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:59020 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932974AbcBDJdV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2016 04:33:21 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 58/70] staging: wilc1000: renames struct connect_resp_info variables
+Date: Thu, 4 Feb 2016 18:24:19 +0900
+Message-ID: <1454577871-667-19-git-send-email-glen.lee@atmel.com> (sfid-20160204_103327_056694_62B74FBB)
+In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 17, 2016 at 12:28:33PM -0500, Jes Sorensen wrote:
-> kbuild test robot <lkp@intel.com> writes:
-> > Hi Geliang,
-> >
-> > [auto build test ERROR on staging/staging-testing]
-> > [also build test ERROR on v4.5-rc4 next-20160217]
-> > [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
-> >
-> > url:    https://github.com/0day-ci/linux/commits/Geliang-Tang/staging-rtl8723au-use-list_for_each_entry/20160217-220638
-> > config: i386-randconfig-s1-201607 (attached as .config)
-> > reproduce:
-> >         # save the attached .config to linux build tree
-> >         make ARCH=i386 
-> >
-> > Note: the linux-review/Geliang-Tang/staging-rtl8723au-use-list_for_each_entry/20160217-220638 HEAD 495811a52aba181af76c3baf57da3d81a79c2fe8 builds fine.
-> >       It only hurts bisectibility.
-> >
-> > All errors (new ones prefixed by >>):
-> >
-> >    drivers/staging/rtl8723au/core/rtw_recv.c: In function 'rtw_free_recvframe23a_queue':
-> >>> drivers/staging/rtl8723au/core/rtw_recv.c:203:2: error: 'plist' undeclared (first use in this function)
-> >      plist = phead->next;
-> >      ^
-> 
-> This doesn't work, you cannot break interim builds. Your patch 2 needs
-> to go before patch 1, and you must always check that they compile for
-> each patch you apply.
-> 
-> NACK
+From: Leo Kim <leo.kim@atmel.com>
 
-Sorry for the trouble caused. I updated my patchs to fix this problem.
+This patch renames to avoid camelcase changes follow are:
+ - u32TimeRcvdInScanCached to time_scan_cached
+ - u32TimeRcvdInScan to time_scan
 
-- Geliang
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.h       |  4 ++--
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 15 ++++++++-------
+ 2 files changed, 10 insertions(+), 9 deletions(-)
 
-This patch set uses list_for_each_entry*() instead of
-list_for_each*(), removes useless codes, and cleans
-whitespaces and blank lines.
-
-Changes in v5:
- - fix build error.
-Changes in v4:
- - revise the patchs as Jes suggested.
-Changes in v3:
- - split it into three patches.
-Changes in v2:
- - drop the coding style fixing in v1.
-
-Geliang Tang (3):
-  staging: rtl8723au: use list_for_each_entry*()
-  staging: rtl8723au: core: rtw_recv: remove useless codes
-  staging: rtl8723au: whitespace and blank line cleaning
-
- drivers/staging/rtl8723au/core/rtw_ap.c           | 92 ++++++-----------------
- drivers/staging/rtl8723au/core/rtw_mlme.c         | 38 +++-------
- drivers/staging/rtl8723au/core/rtw_mlme_ext.c     | 13 ++--
- drivers/staging/rtl8723au/core/rtw_recv.c         | 42 ++++-------
- drivers/staging/rtl8723au/core/rtw_sta_mgt.c      | 36 +++------
- drivers/staging/rtl8723au/core/rtw_xmit.c         | 90 ++++++++--------------
- drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c | 22 ++----
- drivers/staging/rtl8723au/os_dep/usb_ops_linux.c  |  9 +--
- 8 files changed, 106 insertions(+), 236 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 2f030a9..0e10c75 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -85,8 +85,8 @@ struct network_info {
+ 	u16 beacon_period;
+ 	u8 dtim_period;
+ 	u8 ch;
+-	unsigned long u32TimeRcvdInScanCached;
+-	unsigned long u32TimeRcvdInScan;
++	unsigned long time_scan_cached;
++	unsigned long time_scan;
+ 	bool bNewNetwork;
+ 	u8 u8Found;
+ 	u32 u32Tsf;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 362fe1b..44d1855 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -277,7 +277,7 @@ static void update_scan_time(void)
+ 	int i;
+ 
+ 	for (i = 0; i < last_scanned_cnt; i++)
+-		last_scanned_shadow[i].u32TimeRcvdInScan = jiffies;
++		last_scanned_shadow[i].time_scan = jiffies;
+ }
+ 
+ static void remove_network_from_shadow(unsigned long arg)
+@@ -287,7 +287,8 @@ static void remove_network_from_shadow(unsigned long arg)
+ 
+ 
+ 	for (i = 0; i < last_scanned_cnt; i++) {
+-		if (time_after(now, last_scanned_shadow[i].u32TimeRcvdInScan + (unsigned long)(SCAN_RESULT_EXPIRE))) {
++		if (time_after(now, last_scanned_shadow[i].time_scan +
++			       (unsigned long)(SCAN_RESULT_EXPIRE))) {
+ 			PRINT_D(CFG80211_DBG, "Network expired ScanShadow:%s\n",
+ 				last_scanned_shadow[i].ssid);
+ 
+@@ -384,8 +385,8 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
+ 		kmalloc(pstrNetworkInfo->u16IEsLen, GFP_KERNEL);
+ 	memcpy(last_scanned_shadow[ap_index].pu8IEs,
+ 	       pstrNetworkInfo->pu8IEs, pstrNetworkInfo->u16IEsLen);
+-	last_scanned_shadow[ap_index].u32TimeRcvdInScan = jiffies;
+-	last_scanned_shadow[ap_index].u32TimeRcvdInScanCached = jiffies;
++	last_scanned_shadow[ap_index].time_scan = jiffies;
++	last_scanned_shadow[ap_index].time_scan_cached = jiffies;
+ 	last_scanned_shadow[ap_index].u8Found = 1;
+ 	if (ap_found != -1)
+ 		kfree(last_scanned_shadow[ap_index].pJoinParams);
+@@ -465,7 +466,7 @@ static void CfgScanResult(enum scan_event scan_event,
+ 							PRINT_D(CFG80211_DBG, "Update RSSI of %s\n", last_scanned_shadow[i].ssid);
+ 
+ 							last_scanned_shadow[i].rssi = network_info->rssi;
+-							last_scanned_shadow[i].u32TimeRcvdInScan = jiffies;
++							last_scanned_shadow[i].time_scan = jiffies;
+ 							break;
+ 						}
+ 					}
+@@ -566,9 +567,9 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
+ 					unsigned long now = jiffies;
+ 
+ 					if (time_after(now,
+-						       last_scanned_shadow[i].u32TimeRcvdInScanCached + (unsigned long)(nl80211_SCAN_RESULT_EXPIRE - (1 * HZ)))) {
++						       last_scanned_shadow[i].time_scan_cached +
++						       (unsigned long)(nl80211_SCAN_RESULT_EXPIRE - (1 * HZ))))
+ 						bNeedScanRefresh = true;
+-					}
+ 
+ 					break;
+ 				}
 -- 
-2.5.0
-
+1.9.1
 
