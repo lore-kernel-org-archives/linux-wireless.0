@@ -1,117 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f195.google.com ([209.85.214.195]:35745 "EHLO
-	mail-ob0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755289AbcBCCbt (ORCPT
+Received: from mail-pa0-f41.google.com ([209.85.220.41]:36024 "EHLO
+	mail-pa0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754558AbcBDVAu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 21:31:49 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAGRGNgWKt3aqas5ZYaYVCLYkB5DOY0uojwO6tcSjTrQ-iytesw@mail.gmail.com>
-References: <20160203020139.GA13619@gmail.com>
-	<CAGRGNgWKt3aqas5ZYaYVCLYkB5DOY0uojwO6tcSjTrQ-iytesw@mail.gmail.com>
-Date: Wed, 3 Feb 2016 11:31:49 +0900
-Message-ID: <CAOxTRzojbg7qYK4rPf2ppkVvzpKQC-3yNiNVMgTGaP0i3ncW8g@mail.gmail.com> (sfid-20160203_033217_441974_62B4301B)
-Subject: Re: [PATCH 2/2] rtlwifi: Fix reusable codes in core.c
-From: ByeoungWook Kim <quddnr145@gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Thu, 4 Feb 2016 16:00:50 -0500
+Received: by mail-pa0-f41.google.com with SMTP id yy13so21359030pab.3
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 13:00:50 -0800 (PST)
+From: Kees Cook <keescook@chromium.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Kees Cook <keescook@chromium.org>, Joe Perches <joe@perches.com>,
+	Andy Shevchenko <andy.shevchenko@gmail.com>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
 	Kalle Valo <kvalo@codeaurora.org>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Steve French <sfrench@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>, x86@kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-cifs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 3/4] lib: add "on"/"off" support to kstrtobool
+Date: Thu,  4 Feb 2016 13:00:42 -0800
+Message-Id: <1454619643-14444-4-git-send-email-keescook@chromium.org> (sfid-20160204_220056_540685_B3C09178)
+In-Reply-To: <1454619643-14444-1-git-send-email-keescook@chromium.org>
+References: <1454619643-14444-1-git-send-email-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julian,
+Add support for "on" and "off" when converting to boolean.
 
-I sent to modify the patch again.
-Thanks for your assists!
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+ lib/kstrtox.c | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
-Regards,
-Byeoungwook
+diff --git a/lib/kstrtox.c b/lib/kstrtox.c
+index e18f088704d7..09e83a19a96d 100644
+--- a/lib/kstrtox.c
++++ b/lib/kstrtox.c
+@@ -347,6 +347,20 @@ int kstrtobool(const char *s, unsigned int base, bool *res)
+ 	case '0':
+ 		*res = false;
+ 		return 0;
++	case 'o':
++	case 'O':
++		switch (s[1]) {
++		case 'n':
++		case 'N':
++			*res = true;
++			return 0;
++		case 'f':
++		case 'F':
++			*res = false;
++			return 0;
++		default:
++			break;
++		}
+ 	default:
+ 		break;
+ 	}
+-- 
+2.6.3
 
-2016-02-03 11:06 GMT+09:00 Julian Calaby <julian.calaby@gmail.com>:
-> Hi Byeoungwook,
->
-> On Wed, Feb 3, 2016 at 1:01 PM, Byeoungwook Kim <quddnr145@gmail.com> wrote:
->> rtl_*_delay() functions were reused same codes about addr variable.
->> So i have converted to rtl_addr_delay() from code about addr variable.
->>
->> Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
->> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
->
-> Just a note for the future, you have to explicitly be given a
-> reviewed-by, you can't just assume that someone who has made comments
-> on a patch has reviewed it.
->
-> In this case, I have reviewed it, so formally:
->
-> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
->
-> Thanks,
->
-> Julian Calaby
->
->
->> ---
->>  drivers/net/wireless/realtek/rtlwifi/core.c | 28 ++++------------------------
->>  1 file changed, 4 insertions(+), 24 deletions(-)
->>
->> diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
->> index 05f432c..c1193d1 100644
->> --- a/drivers/net/wireless/realtek/rtlwifi/core.c
->> +++ b/drivers/net/wireless/realtek/rtlwifi/core.c
->> @@ -63,18 +63,8 @@ EXPORT_SYMBOL(rtl_addr_delay);
->>  void rtl_rfreg_delay(struct ieee80211_hw *hw, enum radio_path rfpath, u32 addr,
->>                      u32 mask, u32 data)
->>  {
->> -       if (addr == 0xfe) {
->> -               mdelay(50);
->> -       } else if (addr == 0xfd) {
->> -               mdelay(5);
->> -       } else if (addr == 0xfc) {
->> -               mdelay(1);
->> -       } else if (addr == 0xfb) {
->> -               udelay(50);
->> -       } else if (addr == 0xfa) {
->> -               udelay(5);
->> -       } else if (addr == 0xf9) {
->> -               udelay(1);
->> +       if (addr >= 0xf9 && addr <= 0xfe) {
->> +               rtl_addr_delay(addr);
->>         } else {
->>                 rtl_set_rfreg(hw, rfpath, addr, mask, data);
->>                 udelay(1);
->> @@ -84,18 +74,8 @@ EXPORT_SYMBOL(rtl_rfreg_delay);
->>
->>  void rtl_bb_delay(struct ieee80211_hw *hw, u32 addr, u32 data)
->>  {
->> -       if (addr == 0xfe) {
->> -               mdelay(50);
->> -       } else if (addr == 0xfd) {
->> -               mdelay(5);
->> -       } else if (addr == 0xfc) {
->> -               mdelay(1);
->> -       } else if (addr == 0xfb) {
->> -               udelay(50);
->> -       } else if (addr == 0xfa) {
->> -               udelay(5);
->> -       } else if (addr == 0xf9) {
->> -               udelay(1);
->> +       if (addr >= 0xf9 && addr <= 0xfe) {
->> +               rtl_addr_delay(addr);
->>         } else {
->>                 rtl_set_bbreg(hw, addr, MASKDWORD, data);
->>                 udelay(1);
->> --
->> 2.5.0
->>
->
->
->
-> --
-> Julian Calaby
->
-> Email: julian.calaby@gmail.com
-> Profile: http://www.google.com/profiles/julian.calaby/
