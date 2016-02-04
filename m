@@ -1,47 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55435 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756097AbcBJCAI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2016 21:00:08 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Drunk Cat <natserver2@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: alfa awus036nhr v2 and module rtl8xxxu
-References: <loom.20160128T003525-188@post.gmane.org>
-	<wrfjd1sco25f.fsf@redhat.com> <56B38CDF.9010806@lwfinger.net>
-	<wrfjd1scmkz6.fsf@redhat.com> <wrfj60xxd2f5.fsf@redhat.com>
-	<56BA8E5D.5090402@lwfinger.net>
-Date: Tue, 09 Feb 2016 21:00:06 -0500
-In-Reply-To: <56BA8E5D.5090402@lwfinger.net> (Larry Finger's message of "Tue,
-	9 Feb 2016 19:11:57 -0600")
-Message-ID: <wrfjlh6tb9zt.fsf@redhat.com> (sfid-20160210_030012_386049_4A0E149E)
+Received: from eusmtp01.atmel.com ([212.144.249.242]:59393 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755548AbcBDJfP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2016 04:35:15 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 70/70] staging: wilc1000: remove warnings line over 80 characters
+Date: Thu, 4 Feb 2016 18:24:31 +0900
+Message-ID: <1454577871-667-31-git-send-email-glen.lee@atmel.com> (sfid-20160204_103602_333703_C2D57700)
+In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-> On 02/09/2016 03:00 PM, Jes Sorensen wrote:
->> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
->>> Larry Finger <Larry.Finger@lwfinger.net> writes:
->>>> I can confirm what Drunk Cat sees. There is something different about
->>>> the RTL8192RU as using the iwconfig utility shows no APs in the
->>>> scan. I hope to get to debugging the problem soon.
->>>
->>> OK - thats unfortunate. Most likely the wrong antenna path is being
->>> enabled for it, or something like that.
->>>
->>> Once I finish up the 8723bu/8192eu patchset, I'll try to find some time
->>> to look at it, if you don't nail it before.
->>
->> One more time with the actual patch ...
->
-> No help. The name of the patch makes it sound as if it is for a 1T2R
-> device. The RTL8188RU is 1x1.
+From: Leo Kim <leo.kim@atmel.com>
 
-Darn, I didn't have an 8188RU near me when I discovered that bug and so
-I wasn't sure if it was 1T2R or 1T1R. All my other 1T1R parts work
-fine with the current code.
+This patch removes the warnings reported by checkpatch.pl
+for line over 80 characters.
 
-Cheers,
-Jes
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index d481719..3a76586 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -4,7 +4,7 @@
+ #include <linux/errno.h>
+ #include <linux/slab.h>
+ #define TAG_PARAM_OFFSET	(MAC_HDR_LEN + TIME_STAMP_LEN + \
+-							BEACON_INTERVAL_LEN + CAP_INFO_LEN)
++				 BEACON_INTERVAL_LEN + CAP_INFO_LEN)
+ 
+ enum basic_frame_type {
+ 	FRAME_TYPE_CONTROL     = 0x04,
+@@ -337,8 +337,10 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
+ 		tim_elm = get_tim_elm(msa, rx_len + FCS_LEN, index);
+ 		if (tim_elm)
+ 			network_info->dtim_period = tim_elm[3];
+-		ies = &msa[MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN];
+-		ies_len = rx_len - (MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN);
++		ies = &msa[MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN +
++			   CAP_INFO_LEN];
++		ies_len = rx_len - (MAC_HDR_LEN + TIME_STAMP_LEN +
++				    BEACON_INTERVAL_LEN + CAP_INFO_LEN);
+ 
+ 		if (ies_len > 0) {
+ 			network_info->ies = kmemdup(ies, ies_len, GFP_KERNEL);
+@@ -373,7 +375,8 @@ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
+ 		connect_resp_info->assoc_id = get_asoc_id(buffer);
+ 
+ 		ies = &buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
+-		ies_len = assoc_resp_len - (CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN);
++		ies_len = assoc_resp_len - (CAP_INFO_LEN + STATUS_CODE_LEN +
++					    AID_LEN);
+ 
+ 		connect_resp_info->ies = kmemdup(ies, ies_len, GFP_KERNEL);
+ 		if (!connect_resp_info->ies)
+-- 
+1.9.1
+
