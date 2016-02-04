@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49043 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753204AbcB2WF5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:57 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 087/113] rtl8xxxu: Set the correct thermal meter register for 8723bu
-Date: Mon, 29 Feb 2016 17:05:25 -0500
-Message-Id: <1456783551-28315-88-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230800_216523_9F6C4F83)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-ob0-f194.google.com ([209.85.214.194]:34760 "EHLO
+	mail-ob0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964943AbcBDPoD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2016 10:44:03 -0500
+Subject: Re: [PATCH 1/2] rtlwifi: Fix improve function 'rtl_addr_delay()' in
+ core.c
+To: David Laight <David.Laight@ACULAB.COM>,
+	ByeoungWook Kim <quddnr145@gmail.com>
+References: <20160203015953.GA13562@gmail.com>
+ <063D6719AE5E284EB5DD2968C1650D6D1CCD5486@AcuExch.aculab.com>
+ <CAOxTRzpO4mx361GqA+W39bxSfbOCaiLw320S-aph1v1OGJ0FYw@mail.gmail.com>
+ <56B258B2.6090802@lwfinger.net>
+ <063D6719AE5E284EB5DD2968C1650D6D1CCD61C8@AcuExch.aculab.com>
+Cc: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <56B371BE.1060805@lwfinger.net> (sfid-20160204_164432_482722_AAD7BBA5)
+Date: Thu, 4 Feb 2016 09:43:58 -0600
+MIME-Version: 1.0
+In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D1CCD61C8@AcuExch.aculab.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On 02/04/2016 03:48 AM, David Laight wrote:
+> From: Larry Finger
+>> Sent: 03 February 2016 19:45
+> ...
+>> The performance will depend on where you satisfy the condition. All switch cases
+>> have the same execution time, but in the if .. else if .. else form, the earlier
+>> tests execute more quickly. I'm not sure that one can make any blanket statement
+>> about performance. Certainly, the switch version will be larger. For a switch
+>> with 8 cases plus default, the object code if 43 bytes larger than the nested
+>> ifs in a test program that I created. That is a significant penalty.
+>
+> There is also the penalty of the (likely) data cache miss reading the jump table.
+> But given this code is all about generating a variable delay the execution
+> speed is probably irrelevant.
+>
+> It would be much more interesting if the delay could be changed for sleeps.
 
-Older chips use RF register 0x24 to set the thermal meter. Newer chips
-use register 0x42.
+Unfortunately, sleeping is not possible for the routines that call rtl_addr_delay().
 
-This change makes sure to set the correct thermal meter register
-depending on the chip.
+Larry
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index cca3b92..6825351 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -6502,7 +6502,11 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 	/*
- 	 * This should enable thermal meter
- 	 */
--	rtl8xxxu_write_rfreg(priv, RF_A, RF6052_REG_T_METER, 0x60);
-+	if (priv->fops->has_s0s1)
-+		rtl8xxxu_write_rfreg(priv,
-+				     RF_A, RF6052_REG_T_METER_8723B, 0x37cf8);
-+	else
-+		rtl8xxxu_write_rfreg(priv, RF_A, RF6052_REG_T_METER, 0x60);
- 
- 	/* Init BT hw config. */
- 	if (priv->fops->init_bt)
--- 
-2.5.0
 
