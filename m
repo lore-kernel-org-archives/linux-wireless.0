@@ -1,116 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:47597 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933599AbcBACOn (ORCPT
+Received: from mail-yw0-f171.google.com ([209.85.161.171]:34529 "EHLO
+	mail-yw0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757349AbcBDNih (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2016 21:14:43 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH 7/7] staging: wilc1000: remove unused log message using the TX_DBG tag
-Date: Mon, 1 Feb 2016 11:11:25 +0900
-Message-ID: <1454292685-12294-7-git-send-email-leo.kim@atmel.com> (sfid-20160201_031459_048864_222132BF)
-In-Reply-To: <1454292685-12294-1-git-send-email-leo.kim@atmel.com>
-References: <1454292685-12294-1-git-send-email-leo.kim@atmel.com>
+	Thu, 4 Feb 2016 08:38:37 -0500
+Received: by mail-yw0-f171.google.com with SMTP id h129so26841717ywb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 05:38:37 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CA+BoTQkEonFDujoVYOJ+ByeRK3w1pCgbfL+Z4FOVt5TK1PcM5g@mail.gmail.com>
+References: <CABPxzY+HpP=NTrAaUEzV5nFm=LK93m=kxPV14-cdftt+VPsWNw@mail.gmail.com>
+ <CA+BoTQ=s_SMgs9zkgYjKOHKDwRORWk-Re7XZ=AiKiHCuNc0L8A@mail.gmail.com>
+ <CABPxzYJRS8fLzxPiy1J4jKRvgVaS-OCKK08_bjP2Amo_V54pPA@mail.gmail.com>
+ <CA+BoTQ=Dg11cP+TJ2_ZkMnjqma62we-JKNWMx8RHJX7ORnvc1A@mail.gmail.com>
+ <CABPxzYKuja-X4DHqgcRkK=bRR0aUAyFz1LvB57-64pdcbqHUyQ@mail.gmail.com>
+ <CABPxzYK5oHJOzX=s0=VzGRqX+M7kvfVHtQOPTRyD_TFtnKFruw@mail.gmail.com> <CA+BoTQkEonFDujoVYOJ+ByeRK3w1pCgbfL+Z4FOVt5TK1PcM5g@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Thu, 4 Feb 2016 19:08:17 +0530
+Message-ID: <CABPxzYKQasAN9pDJt-1Dcfzr-HG8rLPqvKieg7u9ObmXSVaSBw@mail.gmail.com> (sfid-20160204_143841_124355_25D6315D)
+Subject: Re: mac80211_hwsim + iperf + netns
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
-
-This patch remove unused log message using the TX_DBG tag
-
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c        | 4 ----
- drivers/staging/wilc1000/linux_wlan_common.h | 2 --
- drivers/staging/wilc1000/wilc_debugfs.c      | 2 +-
- drivers/staging/wilc1000/wilc_wlan.c         | 9 +++------
- 4 files changed, 4 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 9e5dea4..202be15 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1047,10 +1047,6 @@ static void linux_wlan_tx_complete(void *priv, int status)
- {
- 	struct tx_complete_data *pv_data = (struct tx_complete_data *)priv;
- 
--	if (status == 1)
--		PRINT_D(TX_DBG, "Packet sent successfully - Size = %d - Address = %p - SKB = %p\n", pv_data->size, pv_data->buff, pv_data->skb);
--	else
--		PRINT_D(TX_DBG, "Couldn't send packet - Size = %d - Address = %p - SKB = %p\n", pv_data->size, pv_data->buff, pv_data->skb);
- 	dev_kfree_skb(pv_data->skb);
- 	kfree(pv_data);
- }
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index 5374f36..617bc53 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -6,7 +6,6 @@ enum debug_region {
- 	Hostapd_debug,
- 	CFG80211_debug,
- 	Interrupt_debug,
--	TX_debug,
- 	RX_debug,
- 	Lock_debug,
- 	Tcp_enhance,
-@@ -23,7 +22,6 @@ enum debug_region {
- #define HOSTAPD_DBG             (1 << Hostapd_debug)
- #define CFG80211_DBG            (1 << CFG80211_debug)
- #define INT_DBG                 (1 << Interrupt_debug)
--#define TX_DBG                  (1 << TX_debug)
- #define RX_DBG                  (1 << RX_debug)
- #define LOCK_DBG                (1 << Lock_debug)
- #define TCP_ENH                 (1 << Tcp_enhance)
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index 1e38d1b..fd0e58f 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -24,7 +24,7 @@ static struct dentry *wilc_dir;
-  * --------------------------------------------------------------------------------
-  */
- 
--#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | CFG80211_DBG | INT_DBG | TX_DBG | RX_DBG | LOCK_DBG | INIT_DBG | BUS_DBG | MEM_DBG)
-+#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | CFG80211_DBG | INT_DBG | RX_DBG | LOCK_DBG | INIT_DBG | BUS_DBG | MEM_DBG)
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
- atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | GENERIC_DBG | CFG80211_DBG | FIRM_DBG | HOSTAPD_DBG);
- EXPORT_SYMBOL_GPL(WILC_REGION);
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index c19ae00..01c5857 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -652,13 +652,11 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 			}
- 		} while (1);
- 
--		if (i == 0) {
--			PRINT_D(TX_DBG, "Nothing in TX-Q\n");
-+		if (i == 0)
- 			break;
--		} else {
--			PRINT_D(TX_DBG, "Mark the last entry in VMM table - number of previous entries = %d\n", i);
-+		else
- 			vmm_table[i] = 0x0;
--		}
-+
- 		acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
- 		counter = 0;
- 		do {
-@@ -807,7 +805,6 @@ _end_:
- 	up(&wilc->txq_add_to_head_cs);
- 
- 	wilc->txq_exit = 1;
--	PRINT_D(TX_DBG, "THREAD: Exiting txq\n");
- 	*txq_count = wilc->txq_entries;
- 	return ret;
- }
--- 
-1.9.1
-
+On Thu, Feb 4, 2016 at 6:21 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> On 4 February 2016 at 13:46, Krishna Chaitanya <chaitanya.mgit@gmail.com> wrote:
+>> On Thu, Feb 4, 2016 at 5:57 PM, Krishna Chaitanya
+>> <chaitanya.mgit@gmail.com> wrote:
+>>> On Thu, Feb 4, 2016 at 5:23 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>>>> On 4 February 2016 at 12:49, Krishna Chaitanya <chaitanya.mgit@gmail.com> wrote:
+>>>>> On Thu, Feb 4, 2016 at 5:02 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+>>>>>> On 4 February 2016 at 12:22, Krishna Chaitanya <chaitanya.mgit@gmail.com> wrote:
+>>>>>>> Hi All,
+>>>>>>>
+>>>>>>> I am trying to run some iperf tests using mac80211_hwsim b/w AP and STA.
+>>>>>>> Even after tweaking the routing table, the packets are still not going through
+>>>>>>> mac80211_hwsim instead they are just looping back.
+>>>>>>>
+>>>>>>> After a quick search i found that we should use different network namespaces.
+>>>>>>> Can anyone tell me the exact procedure for this? I have found a procedure
+>>>>>>> in the below link, but i dont have the lxc-unshare for my embedded box.
+>>>>>>> Is there any alternate way for this.
+>>>>>>
+>>>>>> If you have a recent enough iproute2 package you can use:
+>>>>> Unfortunately i dont, will try to get the latest.
+>>>>>>  ip netns add ns1
+>>>>>>  ip netns exec ns1 bash # get the PID in the session and don't close it
+>>>>>>  iw phy phyX set netns $pid_of_that_shell
+>>>>>>  # you can close the bash now; phyX will remain in ns1
+>>>>>>
+>>>>>> Or you could try using ipv6 link-local addresses which will not
+>>>>>> require you to use namespaces at all.
+>>>>> Tried this but still not able to excite mac80211_hwsim TX path.
+>>>>> below are commands and config.
+>>>>>
+>>>>> wlan0     Link encap:Ethernet  HWaddr 02:00:00:00:00:00
+>>>>>           inet addr:10.0.0.1  Bcast:10.255.255.255  Mask:255.0.0.0
+>>>>>           inet6 addr: fe80::ff:fe00:0/64 Scope:Link
+>>>>>           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+>>>>>           RX packets:8 errors:0 dropped:1 overruns:0 frame:0
+>>>>>           TX packets:38 errors:0 dropped:0 overruns:0 carrier:0
+>>>>>           collisions:0 txqueuelen:1000
+>>>>>           RX bytes:648 (648.0 B)  TX bytes:3680 (3.5 KiB)
+>>>>>
+>>>>> wlan1     Link encap:Ethernet  HWaddr 02:00:00:00:01:00
+>>>>>           inet addr:20.0.0.1  Bcast:20.255.255.255  Mask:255.0.0.0
+>>>>>           inet6 addr: fe80::ff:fe00:100/64 Scope:Link
+>>>>>           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+>>>>>           RX packets:3 errors:0 dropped:0 overruns:0 frame:0
+>>>>>           TX packets:8 errors:0 dropped:0 overruns:0 carrier:0
+>>>>>           collisions:0 txqueuelen:1000
+>>>>>           RX bytes:126 (126.0 B)  TX bytes:808 (808.0 B)
+>>>>>
+>>>>> iperf -s  -B fe80::ff:fe00:0 &
+>>>>> iperf -c fe80::ff:fe00:0 -B fe80::ff:fe00:100 -t 60 -i 1
+>>>>>
+>>>>> Something wrong?
+>>>>
+>>>> For link-local addresses you must specify interface you want to use them.
+>>>>
+>>>> Also, there's an iperf switch to understand ipv6 "-V".
+>>>>
+>>>>  iperf -V -i1 -s
+>>>>  iperf -V -i1 -c fe80::ff:fe00:0%wlan1
+>>>>  iperf -V -i1 -c fe80::ff:fe00:100%wlan0
+>>>>
+>>> Thanks a lot Michal. It worked like a charm.
+>> Whenever i use the iperf -c, it starts a bi-directional stream,
+>> How do i limit it to only for single direction?
+>>
+>> #  iperf -V -i1 -c fe80::ff:fe00:0%wlan1
+>> ------------------------------------------------------------
+>> Client connecting to fe80::ff:fe00:0%wlan1, TCP port 5001
+>> TCP window size: 43.8 KByte (default)
+>> ------------------------------------------------------------
+>> [  3] local fe80::ff:fe00:100 port 34808 connected with
+>> fe80::ff:fe00:0 port 5001
+>> [  5] local fe80::ff:fe00:0 port 5001 connected with fe80::ff:fe00:100
+>> port 34808
+>
+> Hmm.. Are you perhaps running `iperf -V -i1 -s &` (i.e. in the
+> background) with the same stdout as the client :-) You're probably
+> just seeing both the server and the client saying a connection has
+> established at their ends.
+>
+Ok i understand. Thanks.
