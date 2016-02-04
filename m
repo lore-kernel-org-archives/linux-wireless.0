@@ -1,42 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33245 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992784AbcBSKnL (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:10214 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965857AbcBDJ0P (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2016 05:43:11 -0500
-Received: by mail-wm0-f68.google.com with SMTP id c200so7295418wme.0
-        for <linux-wireless@vger.kernel.org>; Fri, 19 Feb 2016 02:43:09 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [PATCH v2 1/2] cfg80211: add radiotap VHT info to rtap_namespace_sizes
-Date: Fri, 19 Feb 2016 11:43:04 +0100
-Message-Id: <1455878585-5525-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20160219_114328_247307_F5A2F43E)
-In-Reply-To: <1455878585-5525-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1455878585-5525-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Thu, 4 Feb 2016 04:26:15 -0500
+From: Glen Lee <glen.lee@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 30/70] staging: wilc1000: wilc_dealloc_assoc_resp_info(): renames function variables
+Date: Thu, 4 Feb 2016 18:15:47 +0900
+Message-ID: <1454577387-509-31-git-send-email-glen.lee@atmel.com> (sfid-20160204_102641_475895_18809769)
+In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add IEEE80211_RADIOTAP_VHT entry to rtap_namespace_sizes array in order to
-define alignment and size of VHT info in tx radiotap
+From: Leo Kim <leo.kim@atmel.com>
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+This patch renames to avoid camelcase, changes follow are:
+ - pstrConnectRespInfo to connect_resp_info
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- net/wireless/radiotap.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/staging/wilc1000/coreconfigurator.c | 14 +++++++-------
+ drivers/staging/wilc1000/coreconfigurator.h |  2 +-
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/net/wireless/radiotap.c b/net/wireless/radiotap.c
-index 722da61..6582d15 100644
---- a/net/wireless/radiotap.c
-+++ b/net/wireless/radiotap.c
-@@ -43,6 +43,7 @@ static const struct radiotap_align_size rtap_namespace_sizes[] = {
- 	[IEEE80211_RADIOTAP_DATA_RETRIES] = { .align = 1, .size = 1, },
- 	[IEEE80211_RADIOTAP_MCS] = { .align = 1, .size = 3, },
- 	[IEEE80211_RADIOTAP_AMPDU_STATUS] = { .align = 4, .size = 8, },
-+	[IEEE80211_RADIOTAP_VHT] = { .align = 2, .size = 12, },
- 	/*
- 	 * add more here as they are defined in radiotap.h
- 	 */
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index c0be33d..c78da2c 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -410,20 +410,20 @@ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
+ 	return 0;
+ }
+ 
+-s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo)
++s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *connect_resp_info)
+ {
+ 	s32 result = 0;
+ 
+-	if (pstrConnectRespInfo) {
+-		if (pstrConnectRespInfo->pu8RespIEs) {
+-			kfree(pstrConnectRespInfo->pu8RespIEs);
+-			pstrConnectRespInfo->pu8RespIEs = NULL;
++	if (connect_resp_info) {
++		if (connect_resp_info->pu8RespIEs) {
++			kfree(connect_resp_info->pu8RespIEs);
++			connect_resp_info->pu8RespIEs = NULL;
+ 		} else {
+ 			result = -EFAULT;
+ 		}
+ 
+-		kfree(pstrConnectRespInfo);
+-		pstrConnectRespInfo = NULL;
++		kfree(connect_resp_info);
++		connect_resp_info = NULL;
+ 
+ 	} else {
+ 		result = -EFAULT;
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 6a2c323..ec810b5 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -124,7 +124,7 @@ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info);
+ s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo);
+ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
+ 			       tstrConnectRespInfo **ret_connect_resp_info);
+-s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo);
++s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *connect_resp_info);
+ void wilc_scan_complete_received(struct wilc *wilc, u8 *pu8Buffer,
+ 				 u32 u32Length);
+ void wilc_network_info_received(struct wilc *wilc, u8 *pu8Buffer,
 -- 
-2.5.0
+1.9.1
 
