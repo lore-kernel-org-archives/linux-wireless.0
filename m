@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:41424 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932587AbcBWIZ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 03:25:26 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: intel7260 - iface up sometimes failed
-Date: Tue, 23 Feb 2016 08:25:21 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA24535@hasmsx107.ger.corp.intel.com> (sfid-20160223_092533_315498_D109EFAA)
-References: <CALhHN=r5Wthk5ru6Eb_8AD3xYsUsk4a02kP7MEK4jc5cmKUSdw@mail.gmail.com>
-In-Reply-To: <CALhHN=r5Wthk5ru6Eb_8AD3xYsUsk4a02kP7MEK4jc5cmKUSdw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:34598 "EHLO
+	mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756788AbcBDVAv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2016 16:00:51 -0500
+Received: by mail-pf0-f178.google.com with SMTP id o185so55779854pfb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 13:00:51 -0800 (PST)
+From: Kees Cook <keescook@chromium.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Kees Cook <keescook@chromium.org>, Joe Perches <joe@perches.com>,
+	Andy Shevchenko <andy.shevchenko@gmail.com>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Steve French <sfrench@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>, x86@kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-cifs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 0/4] lib: add "on" and "off" to strtobool
+Date: Thu,  4 Feb 2016 13:00:39 -0800
+Message-Id: <1454619643-14444-1-git-send-email-keescook@chromium.org> (sfid-20160204_220247_482633_659286A6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSmFudXN6LA0KDQo+IA0KPiBIZWxsbywNCj4gDQo+IEkgaGF2ZSBpbnRlbDcyNjAgY29ubmVj
-dGVkIHZpYSBleHRlcm5hbCBQQ0llICsgREVMTCBsYXRpdHVkZSBlNjQzMC4NCj4gDQo+IFsgNTE5
-OS44MDU0MTddIGl3bHdpZmkgMDAwMDowNDowMC4wOiBlbmFibGluZyBkZXZpY2UgKDAxMDAgLT4g
-MDEwMikgWw0KPiA1MTk5LjgwOTIyMl0gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IGxvYWRlZCBmaXJt
-d2FyZSB2ZXJzaW9uDQo+IDE3LjI3NTc3Mi4wIG9wX21vZGUgaXdsbXZtDQo+IFsgNTE5OS44MTk1
-NDhdIGl3bHdpZmkgMDAwMDowNDowMC4wOiBEZXRlY3RlZCBJbnRlbChSKSBEdWFsIEJhbmQgV2ly
-ZWxlc3MgQUMNCj4gNzI2MCwgUkVWPTB4MTQ0IFsgNTE5OS44MTk2NThdIGl3bHdpZmkgMDAwMDow
-NDowMC4wOiBMMSBFbmFibGVkIC0gTFRSDQo+IERpc2FibGVkIFsgNTE5OS44MjAwMThdIGl3bHdp
-ZmkgMDAwMDowNDowMC4wOiBMMSBFbmFibGVkIC0gTFRSIERpc2FibGVkIFsNCj4gNTIwMC4wMTI3
-ODZdIGllZWU4MDIxMSBwaHkwOiBTZWxlY3RlZCByYXRlIGNvbnRyb2wgYWxnb3JpdGhtICdpd2wt
-bXZtLXJzJw0KPiBbIDUyMDAuMDIwMTQ4XSBpd2x3aWZpIDAwMDA6MDQ6MDAuMCB3bGFuMzogcmVu
-YW1lZCBmcm9tIHdsYW4wDQo+IA0KPiBbIDUyODIuNzQzOTg3XSBpd2x3aWZpIDAwMDA6MDQ6MDAu
-MDogTDEgRW5hYmxlZCAtIExUUiBEaXNhYmxlZCBbIDUyODIuNzgxODEyXSAtLQ0KPiAtLS0tLS0t
-LS0tWyBjdXQgaGVyZSBdLS0tLS0tLS0tLS0tIFsgNTI4Mi43ODE4MjNdIFdBUk5JTkc6IENQVTog
-MyBQSUQ6IDM3NjAgYXQNCj4gZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9wY2ll
-L3RyYW5zLmM6MTU2MQ0KPiBpd2xfdHJhbnNfcGNpZV9ncmFiX25pY19hY2Nlc3MrMHhlNi8weGYw
-IFtpd2x3aWZpXSgpIFsgNTI4Mi43ODE4MjRdDQo+IFRpbWVvdXQgd2FpdGluZyBmb3IgaGFyZHdh
-cmUgYWNjZXNzIChDU1JfR1BfQ05UUkwgMHhmZmZmZmZmZikgWw0KDQpXZWxsLi4uIHlvdSBhcmUg
-bm90IHRoZSBvbmx5IG9uZSB0byBjb21wbGFpbiBhYm91dCB0aGlzIGlzc3VlIGFuZCB1bmZvcnR1
-bmF0ZWx5LCB0aGVyZSBpc24ndCBtdWNoIEkgY2FuIGRvLiBXaGF0IGl0IG1lYW5zIGlzIHRoYXQg
-dGhlIGRldmljZSBpcyByZW1vdmVkIGZyb20gdGhlIGJ1cyBieSB0aGUgUENJZSBjb250cm9sbGVy
-LiBUaGlzIGhhcHBlbnMgZHVlIHRvIGFuIGVsZWN0cmljYWwgcHJvYmxlbSB3aGljaCBJIGNhbid0
-IHJlYWxseSBoZWxwIHdpdGguIFRoaXMgY2FuIGJlIGNhdXNlZCBieSBkaWZmZXJlbnQgdHlwZXMg
-b2Ygdm9vZG9vcywgbGlrZSBpbnRlcmZlcmVuY2Ugb24gdGhlIFBDSWUgbGluZXMgYW5kIG90aGVy
-IHRoaW5ncyB0aGF0IGNhbid0IHJlYWxseSBiZSByb290IGNhdXNlZCB3aXRob3V0IHRha2luZyB0
-aGUgc3lzdGVtIGludG8gdGhlIGxhYiBhbmQgYWRkaW5nIFBDSWUgYW5hbHl6ZXIgcHJvYmVzLg0K
-SSBhbSBhZnJhaWQgSSBjYW4ndCByZWFsbHkgaGVscC4NCkFzIGEgd29ya2Fyb3VuZCwgeW91IGNh
-biB1bmJpbmQgdGhlIGRldmljZSBmcm9tIHRoZSBidXMgYW5kIHJlLWVudW1lcmF0ZS4gVGhpcyB3
-aWxsIGJyaW5nIHRoZSBkZXZpY2UgYmFjay4uLiB1bnRpbCB0aGUgbmV4dCBmYWlsdXJlLg0K
+This consolidates logic for handling "on"/"off" parsing for bools into
+the strtobool function, by way of moving it into kstrtobool (with helpers),
+and updating various callers.
+
+ arch/powerpc/kernel/rtasd.c                    |    9 ---
+ arch/powerpc/platforms/pseries/hotplug-cpu.c   |   10 ----
+ arch/s390/kernel/time.c                        |    8 ---
+ arch/s390/kernel/topology.c                    |    7 ---
+ arch/x86/kernel/aperture_64.c                  |   12 -----
+ drivers/net/wireless/marvell/mwifiex/debugfs.c |   10 +---
+ fs/cifs/cifs_debug.c                           |   58 ++++++-------------------
+ fs/cifs/cifs_debug.h                           |    2 
+ fs/cifs/cifsfs.c                               |    6 +-
+ fs/cifs/cifsglob.h                             |    4 -
+ include/linux/kernel.h                         |    3 +
+ include/linux/string.h                         |    6 ++
+ include/linux/tick.h                           |    2 
+ kernel/time/hrtimer.c                          |   10 ----
+ kernel/time/tick-sched.c                       |   10 ----
+ lib/kstrtox.c                                  |   49 +++++++++++++++++++++
+ lib/string.c                                   |   29 ------------
+ 17 files changed, 98 insertions(+), 137 deletions(-)
+
+-Kees
+
