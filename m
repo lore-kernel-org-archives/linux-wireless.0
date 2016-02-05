@@ -1,64 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f44.google.com ([209.85.215.44]:34838 "EHLO
-	mail-lf0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932100AbcBAM5M (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:33575 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757263AbcBEVNY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2016 07:57:12 -0500
-Received: by mail-lf0-f44.google.com with SMTP id l143so28480683lfe.2
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 04:57:12 -0800 (PST)
-Subject: Re: [PATCH] mac80211: fix memory leak
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-References: <1454060944-11320-1-git-send-email-sudipm.mukherjee@gmail.com>
- <CAGRGNgXc9PtYY=hb8nNRt4T5YGm2vexcJ01Z1fCCcb=57WRZ3g@mail.gmail.com>
- <20160201042548.GA4072@sudip-pc> <878u34u6d6.fsf@purkki.adurom.net>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
-Message-ID: <56AF5625.5030701@cogentembedded.com> (sfid-20160201_135733_917683_21605CB8)
-Date: Mon, 1 Feb 2016 15:57:09 +0300
-MIME-Version: 1.0
-In-Reply-To: <878u34u6d6.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+	Fri, 5 Feb 2016 16:13:24 -0500
+Received: by mail-pa0-f50.google.com with SMTP id cy9so40034343pac.0
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2016 13:13:24 -0800 (PST)
+From: Kees Cook <keescook@chromium.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Kees Cook <keescook@chromium.org>, Joe Perches <joe@perches.com>,
+	Andy Shevchenko <andy.shevchenko@gmail.com>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Steve French <sfrench@samba.org>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	Martin Schwidefsky <schwidefsky@de.ibm.com>, x86@kernel.org,
+	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-cifs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v3 1/4] lib: move strtobool to kstrtobool
+Date: Fri,  5 Feb 2016 13:12:46 -0800
+Message-Id: <1454706769-8729-2-git-send-email-keescook@chromium.org> (sfid-20160205_221353_330576_1A5AEB69)
+In-Reply-To: <1454706769-8729-1-git-send-email-keescook@chromium.org>
+References: <1454706769-8729-1-git-send-email-keescook@chromium.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+Create the kstrtobool_from_user helper and moves strtobool logic into
+the new kstrtobool (matching all the other kstrto* functions). Provides
+an inline wrapper for existing strtobool callers.
 
-On 2/1/2016 12:28 PM, Kalle Valo wrote:
+Signed-off-by: Kees Cook <keescook@chromium.org>
+---
+v3:
+- drop needless "base" argument, rasmus
+---
+ include/linux/kernel.h |  2 ++
+ include/linux/string.h |  6 +++++-
+ lib/kstrtox.c          | 50 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ lib/string.c           | 29 -----------------------------
+ 4 files changed, 57 insertions(+), 30 deletions(-)
 
->> On Mon, Feb 01, 2016 at 11:03:35AM +1100, Julian Calaby wrote:
->>> Hi Sudip,
->>>
->>> On Fri, Jan 29, 2016 at 8:49 PM, Sudip Mukherjee
->>> <sudipm.mukherjee@gmail.com> wrote:
->>>> On error we jumped to the error label and returned the error code but we
->>>> missed releasing sinfo.
->>>>
->>>> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
->>>
->>> Should the From: and Signed-off-by: email addresses be the same?
->>
->> I think 2 years back I had a long discussion with Greg about this and
->> since then I al submitting patches like this. A small summayg of the
->> problem from that discussion:
->>
->> "we have strict DMARC check for the corporate mail server. DMARC =
->> domain based message authentication.
->> So the mail i sent reached all the list subscriber from a different
->> server than our designated server, and as a result it is marked as spam
->> in many places and I have already received a few complaints regarding
->> that."
->
-> You can add a separate "From:" line to the beginning of the commit log
-> and git will use it then commiting the patch. I didn't find any
-> documention but it's easy to do and should solve this.
-
-    Documentation/SubmittingPatches, clause 14.
-
-MBR, Sergei
+diff --git a/include/linux/kernel.h b/include/linux/kernel.h
+index f31638c6e873..f4fa2b29c38c 100644
+--- a/include/linux/kernel.h
++++ b/include/linux/kernel.h
+@@ -357,6 +357,7 @@ int __must_check kstrtou16(const char *s, unsigned int base, u16 *res);
+ int __must_check kstrtos16(const char *s, unsigned int base, s16 *res);
+ int __must_check kstrtou8(const char *s, unsigned int base, u8 *res);
+ int __must_check kstrtos8(const char *s, unsigned int base, s8 *res);
++int __must_check kstrtobool(const char *s, bool *res);
+ 
+ int __must_check kstrtoull_from_user(const char __user *s, size_t count, unsigned int base, unsigned long long *res);
+ int __must_check kstrtoll_from_user(const char __user *s, size_t count, unsigned int base, long long *res);
+@@ -368,6 +369,7 @@ int __must_check kstrtou16_from_user(const char __user *s, size_t count, unsigne
+ int __must_check kstrtos16_from_user(const char __user *s, size_t count, unsigned int base, s16 *res);
+ int __must_check kstrtou8_from_user(const char __user *s, size_t count, unsigned int base, u8 *res);
+ int __must_check kstrtos8_from_user(const char __user *s, size_t count, unsigned int base, s8 *res);
++int __must_check kstrtobool_from_user(const char __user *s, size_t count, bool *res);
+ 
+ static inline int __must_check kstrtou64_from_user(const char __user *s, size_t count, unsigned int base, u64 *res)
+ {
+diff --git a/include/linux/string.h b/include/linux/string.h
+index 9eebc66d957a..2217224684c9 100644
+--- a/include/linux/string.h
++++ b/include/linux/string.h
+@@ -128,7 +128,11 @@ extern char **argv_split(gfp_t gfp, const char *str, int *argcp);
+ extern void argv_free(char **argv);
+ 
+ extern bool sysfs_streq(const char *s1, const char *s2);
+-extern int strtobool(const char *s, bool *res);
++extern int kstrtobool(const char *s, bool *res);
++static inline int strtobool(const char *s, bool *res)
++{
++	return kstrtobool(s, res);
++}
+ 
+ #ifdef CONFIG_BINARY_PRINTF
+ int vbin_printf(u32 *bin_buf, size_t size, const char *fmt, va_list args);
+diff --git a/lib/kstrtox.c b/lib/kstrtox.c
+index 94be244e8441..e8ba4a013e82 100644
+--- a/lib/kstrtox.c
++++ b/lib/kstrtox.c
+@@ -321,6 +321,56 @@ int kstrtos8(const char *s, unsigned int base, s8 *res)
+ }
+ EXPORT_SYMBOL(kstrtos8);
+ 
++/**
++ * kstrtobool - convert common user inputs into boolean values
++ * @s: input string
++ * @res: result
++ *
++ * This routine returns 0 iff the first character is one of 'Yy1Nn0'.
++ * Otherwise it will return -EINVAL.  Value pointed to by res is
++ * updated upon finding a match.
++ */
++int kstrtobool(const char *s, bool *res)
++{
++	if (!s)
++		return -EINVAL;
++
++	switch (s[0]) {
++	case 'y':
++	case 'Y':
++	case '1':
++		*res = true;
++		return 0;
++	case 'n':
++	case 'N':
++	case '0':
++		*res = false;
++		return 0;
++	default:
++		break;
++	}
++
++	return -EINVAL;
++}
++EXPORT_SYMBOL(kstrtobool);
++
++/*
++ * Since "base" would be a nonsense argument, this open-codes the
++ * _from_user helper instead of using the helper macro below.
++ */
++int kstrtobool_from_user(const char __user *s, size_t count, bool *res)
++{
++	/* Longest string needed to differentiate, newline, terminator */
++	char buf[4];
++
++	count = min(count, sizeof(buf) - 1);
++	if (copy_from_user(buf, s, count))
++		return -EFAULT;
++	buf[count] = '\0';
++	return kstrtobool(buf, res);
++}
++EXPORT_SYMBOL(kstrtobool_from_user);
++
+ #define kstrto_from_user(f, g, type)					\
+ int f(const char __user *s, size_t count, unsigned int base, type *res)	\
+ {									\
+diff --git a/lib/string.c b/lib/string.c
+index 0323c0d5629a..1a90db9bc6e1 100644
+--- a/lib/string.c
++++ b/lib/string.c
+@@ -630,35 +630,6 @@ bool sysfs_streq(const char *s1, const char *s2)
+ }
+ EXPORT_SYMBOL(sysfs_streq);
+ 
+-/**
+- * strtobool - convert common user inputs into boolean values
+- * @s: input string
+- * @res: result
+- *
+- * This routine returns 0 iff the first character is one of 'Yy1Nn0'.
+- * Otherwise it will return -EINVAL.  Value pointed to by res is
+- * updated upon finding a match.
+- */
+-int strtobool(const char *s, bool *res)
+-{
+-	switch (s[0]) {
+-	case 'y':
+-	case 'Y':
+-	case '1':
+-		*res = true;
+-		break;
+-	case 'n':
+-	case 'N':
+-	case '0':
+-		*res = false;
+-		break;
+-	default:
+-		return -EINVAL;
+-	}
+-	return 0;
+-}
+-EXPORT_SYMBOL(strtobool);
+-
+ #ifndef __HAVE_ARCH_MEMSET
+ /**
+  * memset - Fill a region of memory with the given value
+-- 
+2.6.3
 
