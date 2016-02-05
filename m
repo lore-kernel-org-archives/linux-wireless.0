@@ -1,79 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60185 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946295AbcBRUNd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 15:13:33 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, egrumbach@gmail.com
-Subject: [PATCH 2/2] mac80211: minstrel_ht: set A-MSDU tx limits based on selected max_prob_rate
-Date: Thu, 18 Feb 2016 19:39:22 +0100
-Message-Id: <1455820762-22876-2-git-send-email-nbd@openwrt.org> (sfid-20160218_211341_142391_BBA2DCDD)
-In-Reply-To: <1455820762-22876-1-git-send-email-nbd@openwrt.org>
-References: <1455820762-22876-1-git-send-email-nbd@openwrt.org>
+Received: from smtp-out4.electric.net ([192.162.216.182]:51771 "EHLO
+	smtp-out4.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751926AbcBEKtx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Feb 2016 05:49:53 -0500
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Kees Cook' <keescook@chromium.org>,
+	Andrew Morton <akpm@linux-foundation.org>
+CC: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Steve French <sfrench@samba.org>,
+	"linux-cifs@vger.kernel.org" <linux-cifs@vger.kernel.org>,
+	Joe Perches <joe@perches.com>,
+	Andy Shevchenko <andy.shevchenko@gmail.com>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Daniel Borkmann <daniel@iogearbox.net>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Heiko Carstens <heiko.carstens@de.ibm.com>,
+	"Martin Schwidefsky" <schwidefsky@de.ibm.com>,
+	"x86@kernel.org" <x86@kernel.org>,
+	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v2 2/4] lib: update single-char callers of strtobool
+Date: Fri, 5 Feb 2016 10:46:19 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D1CCD6FE5@AcuExch.aculab.com> (sfid-20160205_114959_583359_C362C52A)
+References: <1454619643-14444-1-git-send-email-keescook@chromium.org>
+ <1454619643-14444-3-git-send-email-keescook@chromium.org>
+In-Reply-To: <1454619643-14444-3-git-send-email-keescook@chromium.org>
+Content-Type: text/plain; charset="Windows-1252"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prevents excessive A-MSDU aggregation at low data rates or bad
-conditions.
+From: Kees Cook
+> Sent: 04 February 2016 21:01
+> Some callers of strtobool were passing a pointer to unterminated strings.
+> In preparation of adding multi-character processing to kstrtobool, update
+> the callers to not pass single-character pointers, and switch to using the
+> new kstrtobool_from_user helper where possible.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/rc80211_minstrel_ht.c | 34 ++++++++++++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+Personally I think you should change the name of the function so that the
+compiler (and linker) will pick up places that have not been changed.
+Relying on people to make the required changes will cause problems.
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 3928dbd..ad8859c 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -882,6 +882,39 @@ minstrel_ht_set_rate(struct minstrel_priv *mp, struct minstrel_ht_sta *mi,
- 	ratetbl->rate[offset].flags = flags;
- }
- 
-+static int
-+minstrel_ht_get_max_amsdu_len(struct minstrel_ht_sta *mi)
-+{
-+	int group = mi->max_prob_rate / MCS_GROUP_RATES;
-+	const struct mcs_group *g = &minstrel_mcs_groups[group];
-+	int rate = mi->max_prob_rate % MCS_GROUP_RATES;
-+
-+	/* Disable A-MSDU if max_prob_rate is bad */
-+	if (mi->groups[group].rates[rate].prob_ewma < MINSTREL_FRAC(50, 100))
-+		return 1;
-+
-+	/* If the rate is slower than single-stream MCS1, make A-MSDU limit small */
-+	if (g->duration[rate] > MCS_DURATION(1, 0, 52))
-+		return 500;
-+
-+	/*
-+	 * If the rate is slower than single-stream MCS4, limit A-MSDU to usual
-+	 * data packet size
-+	 */
-+	if (g->duration[rate] > MCS_DURATION(1, 0, 104))
-+		return 1500;
-+
-+	/*
-+	 * If the rate is slower than single-stream MCS7, limit A-MSDU to twice
-+	 * the usual data packet size
-+	 */
-+	if (g->duration[rate] > MCS_DURATION(1, 0, 260))
-+		return 3000;
-+
-+	/* unlimited */
-+	return 0;
-+}
-+
- static void
- minstrel_ht_update_rates(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- {
-@@ -906,6 +939,7 @@ minstrel_ht_update_rates(struct minstrel_priv *mp, struct minstrel_ht_sta *mi)
- 		minstrel_ht_set_rate(mp, mi, rates, i++, mi->max_prob_rate);
- 	}
- 
-+	mi->sta->max_rc_amsdu_len = minstrel_ht_get_max_amsdu_len(mi);
- 	rates->rate[i].idx = -1;
- 	rate_control_set_rates(mp->hw, mi->sta, rates);
- }
--- 
-2.2.2
+The current code (presumably) treats "no", "nyet" and "nkjkkrkjrkjterkj" as false.
+Changing that behaviour will break things.
+
+If you want to support "on" and "off", then maybe check for the supplied string
+starting with the character sequences "on\0" and "off\0" (as well as any others).
+This doesn't need the input string be '\0' terminated - since you match y and n
+without looking at the 2nd byte.
+You'd have to be extremely unlucky to get a page fault in the 3 bytes
+following an 'o' if the caller supplied a single byte buffer.
+
+	David
 
