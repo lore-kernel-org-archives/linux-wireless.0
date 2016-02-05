@@ -1,48 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:29897 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753184AbcBVERo (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:33528 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761AbcBEBft (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2016 23:17:44 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V3 18/24] staging: wilc1000: linux_wlan.c: removes unnecessary log messages
-Date: Mon, 22 Feb 2016 13:12:03 +0900
-Message-ID: <1456114329-7036-19-git-send-email-leo.kim@atmel.com> (sfid-20160222_051746_591429_B778EA3B)
-In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
-References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 4 Feb 2016 20:35:49 -0500
+Received: by mail-pa0-f54.google.com with SMTP id cy9so25035684pac.0
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 17:35:49 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 5/8] staging: wilc1000: fix return type of wilc_send_config_pkt
+Date: Fri,  5 Feb 2016 10:35:15 +0900
+Message-Id: <1454636118-9943-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20160205_023552_909362_673DA224)
+In-Reply-To: <1454636118-9943-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1454636118-9943-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+wilc_send_config_pkt is returned 0 or -ETIMEDOUT according to return
+value of wilc_wlan_cfg_get or wilc_wlan_cfg_set.
+It is better to use int type to represent linux standard error code.
 
-This patch removes unnecessary log messages.
-
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 274f468..749dfc74 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -226,7 +226,6 @@ static void deinit_irq(struct net_device *dev)
- 
- void wilc_dbg(u8 *buff)
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 49ae9b1..323a0cd 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -449,10 +449,11 @@ s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo)
+  *  @date		1 Mar 2012
+  *  @version	1.0
+  */
+-s32 wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
++int wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
+ 			 u32 count, u32 drv)
  {
--	PRINT_D(INIT_DBG, "%d\n", *buff);
- }
+-	s32 counter = 0, ret = 0;
++	s32 counter = 0;
++	int ret = 0;
  
- int wilc_lock_timeout(struct wilc *nic, void *vp, u32 timeout)
+ 	if (mode == GET_CFG) {
+ 		for (counter = 0; counter < count; counter++) {
 -- 
-1.9.1
+2.7.0
 
