@@ -1,208 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:49309 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964938AbcBDUQk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 15:16:40 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: netdev@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+Received: from mail2.candelatech.com ([208.74.158.173]:34290 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751670AbcBEQsd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Feb 2016 11:48:33 -0500
+Subject: Re: [RFC v2] iwlwifi: pcie: transmit queue auto-sizing
+To: Michal Kazior <michal.kazior@tieto.com>
+References: <1454616764-19841-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1454616988-21901-1-git-send-email-emmanuel.grumbach@intel.com>
+ <56B3B885.1050409@candelatech.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB32EA02656@hasmsx107.ger.corp.intel.com>
+ <56B3BF25.8080509@candelatech.com>
+ <CA+BoTQm+xTU6o7CMbCHr=bSgp7WE5btE4pMki5XJWiXaOG4SdA@mail.gmail.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
 	Stephen Hemminger <stephen@networkplumber.org>,
 	Dave Taht <dave.taht@gmail.com>,
 	Jonathan Corbet <corbet@lwn.net>
-Subject: [RFC v2] iwlwifi: pcie: transmit queue auto-sizing
-Date: Thu,  4 Feb 2016 22:16:28 +0200
-Message-Id: <1454616988-21901-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160204_211647_741059_C97711CF)
-In-Reply-To: <1454616764-19841-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1454616764-19841-1-git-send-email-emmanuel.grumbach@intel.com>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <56B4D260.2000501@candelatech.com> (sfid-20160205_174840_483768_E0012084)
+Date: Fri, 5 Feb 2016 08:48:32 -0800
+MIME-Version: 1.0
+In-Reply-To: <CA+BoTQm+xTU6o7CMbCHr=bSgp7WE5btE4pMki5XJWiXaOG4SdA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As many (all?) WiFi devices, Intel WiFi devices have
-transmit queues which have 256 transmit descriptors
-each and each descriptor corresponds to an MPDU.
-This means that when it is full, the queue contains
-256 * ~1500 bytes to be transmitted (if we don't have
-A-MSDUs). The purpose of those queues is to have enough
-packets to be ready for transmission so that when the device
-gets an opportunity to transmit (TxOP), it can take as many
-packets as the spec allows and aggregate them into one
-A-MPDU or even several A-MPDUs if we are using bursts.
+On 02/05/2016 12:44 AM, Michal Kazior wrote:
 
-The problem is that the packets that are in these queues are
-already out of control of the Qdisc and can stay in those
-queues for a fairly long time when the link condition is
-not good. This leads to the well known bufferbloat problem.
+> Per-station queues sound tricky if you consider bufferbloat.
+>
+> To maximize use of airtime (i.e. txop) you need to send big
+> aggregates. Since aggregates are per station-tid to maximize
+> multi-station performance (in AP mode) you'll need to queue a lot of
+> frames, per each station, depending on the chosen tx rate.
+>
+> A bursted txop can be as big as 5-10ms. If you consider you want to
+> queue 5-10ms worth of data for *each* station at any given time you
+> obviously introduce a lot of lag. If you have 10 stations you might
+> end up with service period at 10*10ms = 100ms. This gets even worse if
+> you consider MU-MIMO because you need to do an expensive sounding
+> procedure before transmitting. So while SU aggregation can probably
+> still work reasonably well with shorter bursts (1-2ms) MU needs at
+> least 3ms to get *any* gain when compared to SU (which obviously means
+> you want more to actually make MU pay off). The rule of thumb is the
+> longer you wait the bigger capacity you can get.
+>
+> Apparently there's interest in maximizing throughput but it stands in
+> direct opposition of keeping the latency down so I've been thinking
+> how to satisfy both.
 
-This patch adds a way to tune the size of the transmit queue
-so that it won't cause excessive latency. When the link
-condition is good, the packets will flow smoothly and the
-transmit queue will grow quickly allowing A-MPDUs and
-maximal throughput. When the link is not optimal, we will
-have retransmissions, lower transmit rates or signal
-detection (CCA) which will cause a delay in the packet
-transmission. The driver will sense this higher latency
-and will reduce the size of the transmit queue.
-This means that the packets that continue to arrive
-will pile up in the Qdisc rather than in the device
-queues. The major advantage of this approach is that
-codel can now do its work.
+I really think this should be tunable.  For instance, someone making an AP
+that is mostly for letting lots of users stream movies would care a lot more
+about throughput than someone making an AP that is mainly for browsing the
+web and doing more latency-sensitive activities.
 
-The algorithm is really (too?) simple:
-every 5 seconds, starts from a short queue again.
-If a packet has been in the queue for less than 10ms,
-allow 10 more MPDUs in.
-If a packet has been in the queue for more than 20ms,
-reduce by 10 the size of the transmit queue.
 
-The implementation is really naive and way too simple:
- * reading jiffies for every Tx / Tx status is not a
-   good idead.
- * jiffies are not fine-grained enough on all platforms
- * the constants chosen are really arbitrary and can't be
-   tuned.
- * This may be implemented in mac80211 probably and help
-   other drivers.
- * etc...
+> The current approach ath10k is taking (patches in review [1][2]) is to
+> use mac80211 software queues for per-station queuing, exposing queue
+> state to firmware (it decides where frames should be dequeued from)
+> and making it possible to stop/wake per-station tx subqueue with fake
+> netdev queues. I'm starting to think this is not the right way though
+> because it's inherently hard to control latency and there's a huge
+> memory overhead associated with the fake netdev queues. Also fq_codel
+> is a less effective with this kind of setup.
+>
+> My current thinking is that the entire problem should be solved via
+> (per-AC) qdiscs, e.g. fq_codel. I guess one could use
+> limit/target/interval/quantum knobs to tune it for higher latency of
+> aggregation-oriented Wi-Fi links where long service time (think
+> 100-200ms) is acceptable. However fq_codel is oblivious to how Wi-Fi
+> works in the first place, i.e. Wi-Fi gets better throughput if you
+> deliver bursts of packets destined to the same station. Moreover this
+> gets even more complicated with MU-MIMO where you may want to consider
+> spatial location (which influences signal quality when grouped) of
+> each station when you decide which set of stations you're going to
+> aggregate to in parallel. Since drivers have a finite tx ring this it
+> is important to deliver bursts that can actually be aggregated
+> efficiently. This means driver would need to be able to tell qdisc
+> about per-flow conditions to influence the RR scheme in some way
+> (assuming a qdiscs even understands flows; do we need a unified way of
+> talking about flows between qdiscs and drivers?).
 
-But already this gives nice results. I ran a very simple
-experiment: I put the device in a controlled environment
-and ran traffic while running default sized ping in the
-background. In this configuration, our device quickly
-raises its transmission rate to the best rate.
-Then, I force the device to use the lowest rate (6Mbps).
-Of course, the throughput collapses, but the ping RTT
-shoots up.
-Using codel helps, but the latency is still high. Codel
-with this patch gives much better results:
+I wonder if it would work better if we removed most of the
+tid handling and aggregation logic in the firmware.  Maybe just have the mgt Q and best
+effort (and skip VO/VI).  Let the OS tell (or suggest to) the firmware when aggregation
+starts and stops.  That might at least cut the number of queues in half,
+saving memory and latency up and down the stack.
 
-pfifo_fast:
-rtt min/avg/max/mdev = 1932.616/2393.284/2833.407/315.941 ms, pipe 3, ipg/ewma 2215.707/2446.884 ms
+Thanks,
+Ben
 
-fq_codel + Tx queue auto-sizing:
-rtt min/avg/max/mdev = 13.541/32.396/54.791/9.610 ms, ipg/ewma 200.685/32.202 ms
 
-fq_codel without Tx queue auto-sizing:
-rtt min/avg/max/mdev = 140.821/257.303/331.889/31.074 ms, pipe 2, ipg/ewma 258.147/252.847 ms
-
-Clearly, there is more work to do to be able to merge this,
-but it seems that the wireless problems mentioned in
-https://lwn.net/Articles/616241/ may have a solution.
-
-Cc: Stephen Hemminger <stephen@networkplumber.org>
-Cc: Dave Taht <dave.taht@gmail.com>
-Cc: Jonathan Corbet <corbet@lwn.net>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
-Fix Dave's email address
----
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |  6 ++++
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c       | 32 ++++++++++++++++++++--
- 2 files changed, 35 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index 2f95916..d83eb56 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -192,6 +192,11 @@ struct iwl_cmd_meta {
- 	u32 flags;
- };
- 
-+struct iwl_txq_auto_size {
-+	int min_space;
-+	unsigned long reset_ts;
-+};
-+
- /*
-  * Generic queue structure
-  *
-@@ -293,6 +298,7 @@ struct iwl_txq {
- 	bool block;
- 	unsigned long wd_timeout;
- 	struct sk_buff_head overflow_q;
-+	struct iwl_txq_auto_size auto_sz;
- };
- 
- static inline dma_addr_t
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index 837a7d5..4d1dee6 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -572,6 +572,8 @@ static int iwl_pcie_txq_init(struct iwl_trans *trans, struct iwl_txq *txq,
- 
- 	spin_lock_init(&txq->lock);
- 	__skb_queue_head_init(&txq->overflow_q);
-+	txq->auto_sz.min_space = 240;
-+	txq->auto_sz.reset_ts = jiffies;
- 
- 	/*
- 	 * Tell nic where to find circular buffer of Tx Frame Descriptors for
-@@ -1043,10 +1045,14 @@ void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
- 	     q->read_ptr != tfd_num;
- 	     q->read_ptr = iwl_queue_inc_wrap(q->read_ptr)) {
- 		struct sk_buff *skb = txq->entries[txq->q.read_ptr].skb;
-+		struct ieee80211_tx_info *info;
-+		unsigned long tx_time;
- 
- 		if (WARN_ON_ONCE(!skb))
- 			continue;
- 
-+		info = IEEE80211_SKB_CB(skb);
-+
- 		iwl_pcie_free_tso_page(skb);
- 
- 		__skb_queue_tail(skbs, skb);
-@@ -1056,6 +1062,18 @@ void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
- 		iwl_pcie_txq_inval_byte_cnt_tbl(trans, txq);
- 
- 		iwl_pcie_txq_free_tfd(trans, txq);
-+
-+		tx_time = (uintptr_t)info->driver_data[IWL_TRANS_FIRST_DRIVER_DATA + 2];
-+		if (time_before(jiffies, tx_time + msecs_to_jiffies(10))) {
-+			txq->auto_sz.min_space -= 10;
-+			txq->auto_sz.min_space =
-+				max(txq->auto_sz.min_space, txq->q.high_mark);
-+		} else if (time_after(jiffies,
-+				      tx_time + msecs_to_jiffies(20))) {
-+			txq->auto_sz.min_space += 10;
-+			txq->auto_sz.min_space =
-+				min(txq->auto_sz.min_space, 252);
-+		}
- 	}
- 
- 	iwl_pcie_txq_progress(txq);
-@@ -2185,6 +2203,7 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 		      struct iwl_device_cmd *dev_cmd, int txq_id)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_hdr *hdr;
- 	struct iwl_tx_cmd *tx_cmd = (struct iwl_tx_cmd *)dev_cmd->payload;
- 	struct iwl_cmd_meta *out_meta;
-@@ -2234,13 +2253,20 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 
- 	spin_lock(&txq->lock);
- 
--	if (iwl_queue_space(q) < q->high_mark) {
-+	info->driver_data[IWL_TRANS_FIRST_DRIVER_DATA + 2] =
-+		(void *)(uintptr_t)jiffies;
-+
-+	if (time_after(jiffies,
-+		       txq->auto_sz.reset_ts + msecs_to_jiffies(5000))) {
-+		txq->auto_sz.min_space = 240;
-+		txq->auto_sz.reset_ts = jiffies;
-+	}
-+
-+	if (iwl_queue_space(q) < txq->auto_sz.min_space) {
- 		iwl_stop_queue(trans, txq);
- 
- 		/* don't put the packet on the ring, if there is no room */
- 		if (unlikely(iwl_queue_space(q) < 3)) {
--			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
--
- 			info->driver_data[IWL_TRANS_FIRST_DRIVER_DATA + 1] =
- 				dev_cmd;
- 			__skb_queue_tail(&txq->overflow_q, skb);
 -- 
-2.5.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
