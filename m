@@ -1,163 +1,247 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:41124 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752709AbcB2NZe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 08:25:34 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Received: from smtp-out05.msg.oleane.net ([62.161.7.3]:38412 "EHLO
+	smtp-out05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752258AbcBESbH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Feb 2016 13:31:07 -0500
+From: Cedric DEBARGE <cedric.debarge@acksys.fr>
 To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, QH <qiumin.hu@gmail.com>,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
-	Etan Cohen <etancohen@google.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/12] cfg80211: Provide an API to report NAN function termination
-Date: Mon, 29 Feb 2016 15:25:07 +0200
-Message-Id: <1456752313-5792-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160229_142536_793419_C2DA8940)
-In-Reply-To: <1456752313-5792-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1456752313-5792-1-git-send-email-emmanuel.grumbach@intel.com>
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	linux-api@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, Cedric DEBARGE <cedric.debarge@acksys.fr>
+Subject: [RFC 1/2] cfg80211: add support for ht_caps mcs rxmask override
+Date: Fri,  5 Feb 2016 16:41:59 +0100
+Message-Id: <790ecd44db382115b7af01bf89d72500c4de1741.1454685673.git.cedric.debarge@acksys.fr> (sfid-20160205_193224_193290_7BC24E56)
+In-Reply-To: <cover.1454685673.git.cedric.debarge@acksys.fr>
+References: <cover.1454685673.git.cedric.debarge@acksys.fr>
+In-Reply-To: <cover.1454685673.git.cedric.debarge@acksys.fr>
+References: <cover.1454685673.git.cedric.debarge@acksys.fr>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Allows the ht_caps mcs rxmask to be defined on the fly.
+In this implementation, the given rxmask is applied to
+every band available.
+This is only applicable for radio cards without internal rc.
 
-Provide a function that reports NAN DE function termination. The function
-may be terminated due to one of the following reasons: user request,
-ttl expiration or failure.
-
-Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Cedric Debarge <cedric.debarge@acksys.fr>
 ---
- include/net/cfg80211.h       | 16 +++++++++++++++
- include/uapi/linux/nl80211.h | 18 +++++++++++++++++
- net/wireless/nl80211.c       | 46 ++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 80 insertions(+)
+ include/net/cfg80211.h |  7 +++++++
+ net/mac80211/cfg.c     | 48 +++++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/main.c    | 53 ++++++++++++++++++++++++++++++++++++++++++--------
+ 3 files changed, 100 insertions(+), 8 deletions(-)
 
 diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 11d8aaf..a016abc 100644
+index 9e1b24c..257404b 100644
 --- a/include/net/cfg80211.h
 +++ b/include/net/cfg80211.h
-@@ -5494,6 +5494,22 @@ struct cfg80211_nan_match_params {
- void cfg80211_nan_match(struct wireless_dev *wdev,
- 			struct cfg80211_nan_match_params *match, gfp_t gfp);
- 
-+/**
-+ * cfg80211_nan_func_terminated - notify about NAN function termination.
+@@ -2500,6 +2500,8 @@ struct cfg80211_qos_map {
+  *	and returning to the base channel for communication with the AP.
+  * @tdls_cancel_channel_switch: Stop channel-switching with a TDLS peer. Both
+  *	peers must be on the base channel when the call completes.
 + *
-+ * @wdev: the wireless device reporting the match
-+ * @inst_id: the local instance id
-+ * @reason: termination reason (one of the NL80211_NAN_FUNC_TERM_REASON_*)
-+ * @cookie: user defined cookie
-+ * @gfp: allocation flags
-+ *
-+ * This function reports that the a NAN function is terminated.
-+ */
-+void cfg80211_nan_func_terminated(struct wireless_dev *wdev,
-+				  u8 inst_id,
-+				  enum nl80211_nan_func_term_reason reason,
-+				  u64 cookie, gfp_t gfp);
++ * @set_htcap_rxmask: Override hardware capabilities for ht_caps mcs rxmask.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -2765,6 +2767,8 @@ struct cfg80211_ops {
+ 	void	(*tdls_cancel_channel_switch)(struct wiphy *wiphy,
+ 					      struct net_device *dev,
+ 					      const u8 *addr);
 +
- /* ethtool helper */
- void cfg80211_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info);
- 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index d25c85a..3c0b71f 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1853,6 +1853,8 @@ enum nl80211_commands {
-  *	Its type is u8 and it cannot be 0.
-  * @NL80211_ATTR_NAN_MATCH: used to report a match. This is a nested attribute.
-  *	See &enum nl80211_nan_match_attributes.
-+ * @NL80211_ATTR_NAN_FUNC_TERM_REASON: NAN function termination reason.
-+ *	See &enum nl80211_nan_func_term_reason.
-  *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-@@ -2235,6 +2237,7 @@ enum nl80211_attrs {
- 	NL80211_ATTR_NAN_FUNC,
- 	NL80211_ATTR_NAN_FUNC_INST_ID,
- 	NL80211_ATTR_NAN_MATCH,
-+	NL80211_ATTR_NAN_FUNC_TERM_REASON,
- 
- 	/* add attributes here, update the policy in nl80211.c */
- 
-@@ -4783,6 +4786,21 @@ enum nl80211_nan_publish_type {
- 	NL80211_NAN_UNSOLICITED_PUBLISH = 1 << 1,
++	int (*set_htcap_rxmask)(struct wiphy *wiphy, uint8_t *rxmask);
  };
  
-+/**
-+ * enum nl80211_nan_func_term_reason - NAN functions termination reason
+ /*
+@@ -3121,6 +3125,8 @@ struct wiphy_vendor_command {
+  *	wiphy is theirs, e.g. in global notifiers
+  * @bands: information about bands/channels supported by this device
+  *
++ * @init_bands: save of the originals information about bands.
 + *
-+ * Defines termination reasons of a NAN function
-+ *
-+ * @NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST: requested by user
-+ * @NL80211_NAN_FUNC_TERM_REASON_TTL_EXPIRED: timeout
-+ * @NL80211_NAN_FUNC_TERM_REASON_ERROR: errored
-+ */
-+enum nl80211_nan_func_term_reason {
-+	NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST,
-+	NL80211_NAN_FUNC_TERM_REASON_TTL_EXPIRED,
-+	NL80211_NAN_FUNC_TERM_REASON_ERROR,
-+};
-+
- #define NL80211_NAN_FUNC_SERVICE_ID_LEN 6
- #define NL80211_NAN_FUNC_SERVICE_SPEC_INFO_MAX_LEN 0xff
- #define NL80211_NAN_FUNC_SRF_MAX_LEN 0xff
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 6015c58..9470d36 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -10474,6 +10474,52 @@ nla_put_failure:
- }
- EXPORT_SYMBOL(cfg80211_nan_match);
+  * @mgmt_stypes: bitmasks of frame subtypes that can be subscribed to or
+  *	transmitted through nl80211, points to an array indexed by interface
+  *	type
+@@ -3266,6 +3272,7 @@ struct wiphy {
+ 	const void *privid;
  
-+void cfg80211_nan_func_terminated(struct wireless_dev *wdev,
-+				  u8 inst_id,
-+				  enum nl80211_nan_func_term_reason reason,
-+				  u64 cookie, gfp_t gfp)
+ 	struct ieee80211_supported_band *bands[IEEE80211_NUM_BANDS];
++	struct ieee80211_supported_band *init_bands[IEEE80211_NUM_BANDS];
+ 
+ 	/* Lets us get back the wiphy on the callback */
+ 	void (*reg_notifier)(struct wiphy *wiphy,
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 66d22de..daa415b 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3350,6 +3350,53 @@ static int ieee80211_del_tx_ts(struct wiphy *wiphy, struct net_device *dev,
+ 	return -ENOENT;
+ }
+ 
++static int ieee80211_set_htcap_rxmask(struct wiphy *wiphy, uint8_t *rxmask)
 +{
-+	struct wiphy *wiphy = wdev->wiphy;
-+	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
-+	struct sk_buff *msg;
-+	void *hdr;
++	struct ieee80211_local *local = wiphy_priv(wiphy);
++	struct ieee80211_supported_band *sband;
++	struct ieee80211_supported_band *iband;
++	int blank = 1;
++	int empty;
++	int i;
 +
-+	if (WARN_ON(!inst_id))
-+		return;
++	if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL))
++		return -EINVAL;
 +
-+	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, gfp);
-+	if (!msg)
-+		return;
++	mutex_lock(&local->iflist_mtx);
++	empty = list_empty(&local->interfaces);
++	mutex_unlock(&local->iflist_mtx);
 +
-+	hdr = nl80211hdr_put(msg, 0, 0, 0, NL80211_CMD_RM_NAN_FUNCTION);
-+	if (!hdr) {
-+		nlmsg_free(msg);
-+		return;
++	if (!empty)
++		return -EBUSY;
++
++	for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
++		if (rxmask[i]) {
++			blank = 0;
++			break;
++		}
++
++	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
++		int j;
++
++		sband = wiphy->bands[i];
++		iband = wiphy->init_bands[i];
++
++		if (!iband)
++			continue;
++
++		for (j = 0; j < IEEE80211_HT_MCS_MASK_LEN; j++) {
++			if (blank)
++				sband->ht_cap.mcs.rx_mask[j] =
++						iband->ht_cap.mcs.rx_mask[j];
++			else
++				sband->ht_cap.mcs.rx_mask[j] = rxmask[j] &
++						iband->ht_cap.mcs.rx_mask[j];
++		}
 +	}
 +
-+	if (nla_put_u32(msg, NL80211_ATTR_WIPHY, rdev->wiphy_idx) ||
-+	    (wdev->netdev && nla_put_u32(msg, NL80211_ATTR_IFINDEX,
-+					 wdev->netdev->ifindex)) ||
-+	    nla_put_u64(msg, NL80211_ATTR_WDEV, wdev_id(wdev)))
-+		goto nla_put_failure;
-+
-+	if (nla_put_u8(msg, NL80211_ATTR_NAN_FUNC_INST_ID, inst_id) ||
-+	    nla_put_u8(msg, NL80211_ATTR_NAN_FUNC_TERM_REASON, reason) ||
-+	    nla_put_u64(msg, NL80211_ATTR_COOKIE, cookie))
-+		goto nla_put_failure;
-+
-+	genlmsg_end(msg, hdr);
-+
-+	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
-+				NL80211_MCGRP_NAN, gfp);
-+	return;
-+
-+nla_put_failure:
-+	genlmsg_cancel(msg, hdr);
-+	nlmsg_free(msg);
++	return 0;
 +}
-+EXPORT_SYMBOL(cfg80211_nan_func_terminated);
 +
- static int nl80211_get_protocol_features(struct sk_buff *skb,
- 					 struct genl_info *info)
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+@@ -3435,4 +3482,5 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
+ 	.add_tx_ts = ieee80211_add_tx_ts,
+ 	.del_tx_ts = ieee80211_del_tx_ts,
++	.set_htcap_rxmask = ieee80211_set_htcap_rxmask,
+ };
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 6bcf0fa..138f1e4 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -789,15 +789,37 @@ static int ieee80211_init_cipher_suites(struct ieee80211_local *local)
+ 	return 0;
+ }
+ 
++static int ieee80211_alloc_init_bands(struct wiphy *wiphy)
++{
++	int i;
++
++	memset(wiphy->init_bands, 0, IEEE80211_NUM_BANDS);
++	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
++		if (!wiphy->bands[i])
++			continue;
++
++		wiphy->init_bands[i] = kzalloc(sizeof(*wiphy->init_bands[i]),
++					       GFP_KERNEL);
++		if (!wiphy->init_bands[i])
++			return -ENOMEM;
++
++		memcpy(wiphy->init_bands[i], wiphy->bands[i],
++		       sizeof(struct ieee80211_supported_band));
++	}
++
++	return 0;
++}
++
+ int ieee80211_register_hw(struct ieee80211_hw *hw)
  {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+-	int result, i;
+-	enum ieee80211_band band;
++	struct cfg80211_chan_def dflt_chandef = {};
++	netdev_features_t feature_whitelist;
+ 	int channels, max_bitrates;
++	enum ieee80211_band band;
+ 	bool supp_ht, supp_vht;
+-	netdev_features_t feature_whitelist;
+-	struct cfg80211_chan_def dflt_chandef = {};
++	int result = 0;
++	int i;
+ 
+ 	if (ieee80211_hw_check(hw, QUEUE_CONTROL) &&
+ 	    (local->hw.offchannel_tx_hw_queue == IEEE80211_INVAL_HW_QUEUE ||
+@@ -857,6 +879,11 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 
+ 	local->rx_chains = 1;
+ 
++	if (ieee80211_alloc_init_bands(hw->wiphy)) {
++		result = -ENOMEM;
++		goto fail_sband_init;
++	}
++
+ 	/*
+ 	 * generic code guarantees at least one band,
+ 	 * set this very early because much code assumes
+@@ -919,14 +946,18 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 
+ 		for (j = 0; j < c->n_limits; j++)
+ 			if ((c->limits[j].types & BIT(NL80211_IFTYPE_ADHOC)) &&
+-			    c->limits[j].max > 1)
+-				return -EINVAL;
++			    c->limits[j].max > 1) {
++				result = -EINVAL;
++				goto fail_sband_init;
++			}
+ 	}
+ 
+ 	local->int_scan_req = kzalloc(sizeof(*local->int_scan_req) +
+ 				      sizeof(void *) * channels, GFP_KERNEL);
+-	if (!local->int_scan_req)
+-		return -ENOMEM;
++	if (!local->int_scan_req) {
++		result = -ENOMEM;
++		goto fail_sband_init;
++	}
+ 
+ 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
+ 		if (!local->hw.wiphy->bands[band])
+@@ -1120,6 +1151,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	if (local->wiphy_ciphers_allocated)
+ 		kfree(local->hw.wiphy->cipher_suites);
+ 	kfree(local->int_scan_req);
++ fail_sband_init:
++	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
++		kfree(hw->wiphy->init_bands[i]);
+ 	return result;
+ }
+ EXPORT_SYMBOL(ieee80211_register_hw);
+@@ -1127,6 +1161,7 @@ EXPORT_SYMBOL(ieee80211_register_hw);
+ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
++	int i;
+ 
+ 	tasklet_kill(&local->tx_pending_tasklet);
+ 	tasklet_kill(&local->tasklet);
+@@ -1170,6 +1205,8 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
+ 	ieee80211_wep_free(local);
+ 	ieee80211_led_exit(local);
+ 	kfree(local->int_scan_req);
++	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
++		kfree(hw->wiphy->init_bands[i]);
+ }
+ EXPORT_SYMBOL(ieee80211_unregister_hw);
+ 
 -- 
-2.5.0
+1.9.1
 
