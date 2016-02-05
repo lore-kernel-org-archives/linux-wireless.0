@@ -1,111 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:31726 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752811AbcBVEpI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2016 23:45:08 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH RESEND 10/10] staging: wilc1000: removes linux_wlan_common.h file
-Date: Mon, 22 Feb 2016 13:41:19 +0900
-Message-ID: <1456116079-7161-10-git-send-email-leo.kim@atmel.com> (sfid-20160222_054512_051020_807CF7C3)
-In-Reply-To: <1456116079-7161-1-git-send-email-leo.kim@atmel.com>
-References: <1456116079-7161-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from plane.gmane.org ([80.91.229.3]:36876 "EHLO plane.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754710AbcBESUH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Feb 2016 13:20:07 -0500
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
+	id 1aRkzE-00048j-Gw
+	for linux-wireless@vger.kernel.org; Fri, 05 Feb 2016 19:20:05 +0100
+Received: from jsc-id-wp46.jsc.nasa.gov ([128.157.160.13])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2016 19:20:04 +0100
+Received: from eric.hillary-1 by jsc-id-wp46.jsc.nasa.gov with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2016 19:20:04 +0100
+To: linux-wireless@vger.kernel.org
+From: Eric Hillary <eric.hillary-1@nasa.gov>
+Subject: carl9170 client RTS/CTS option being overridden by WAP's WMM option
+Date: Fri, 5 Feb 2016 16:07:22 +0000 (UTC)
+Message-ID: <loom.20160205T170355-618@post.gmane.org> (sfid-20160205_192012_121773_31150808)
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
-
-This patch removes linux_wlan_common.h file and also removes the following
-preprocessor at files that include it:
- - #include 'linux_wlan_common.h'
-
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_mon.c         | 1 -
- drivers/staging/wilc1000/linux_wlan.c        | 1 -
- drivers/staging/wilc1000/linux_wlan_common.h | 3 ---
- drivers/staging/wilc1000/wilc_msgqueue.c     | 1 -
- drivers/staging/wilc1000/wilc_spi.c          | 1 -
- drivers/staging/wilc1000/wilc_wlan_if.h      | 1 -
- 6 files changed, 8 deletions(-)
- delete mode 100644 drivers/staging/wilc1000/linux_wlan_common.h
-
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index 6347471..7d9e5de 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -7,7 +7,6 @@
-  *  @version	1.0
-  */
- #include "wilc_wfi_cfgoperations.h"
--#include "linux_wlan_common.h"
- #include "wilc_wlan_if.h"
- #include "wilc_wlan.h"
- 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 912e8ec..eafde6f 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1,5 +1,4 @@
- #include "wilc_wfi_cfgoperations.h"
--#include "linux_wlan_common.h"
- #include "wilc_wlan_if.h"
- #include "wilc_wlan.h"
- 
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-deleted file mode 100644
-index 18d902b..0000000
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ /dev/null
-@@ -1,3 +0,0 @@
--#ifndef LINUX_WLAN_COMMON_H
--#define LINUX_WLAN_COMMON_H
--#endif
-diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
-index 780ddd3..6cb894e 100644
---- a/drivers/staging/wilc1000/wilc_msgqueue.c
-+++ b/drivers/staging/wilc1000/wilc_msgqueue.c
-@@ -1,7 +1,6 @@
- 
- #include "wilc_msgqueue.h"
- #include <linux/spinlock.h>
--#include "linux_wlan_common.h"
- #include <linux/errno.h>
- #include <linux/slab.h>
- 
-diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
-index b55a0c3f..eb1e76d 100644
---- a/drivers/staging/wilc1000/wilc_spi.c
-+++ b/drivers/staging/wilc1000/wilc_spi.c
-@@ -18,7 +18,6 @@
- #include <linux/spi/spi.h>
- #include <linux/of_gpio.h>
- 
--#include "linux_wlan_common.h"
- #include <linux/string.h>
- #include "wilc_wlan_if.h"
- #include "wilc_wlan.h"
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index c33f7a6..fbe34eb 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -11,7 +11,6 @@
- #define WILC_WLAN_IF_H
- 
- #include <linux/semaphore.h>
--#include "linux_wlan_common.h"
- #include <linux/netdevice.h>
- 
- /********************************************
--- 
-1.9.1
+SGFzIGFueW9uZSBleHBlcmllbmNlZCB0aGF0IFJUUy9DVFMgaGFuZHNoYWtpbmcgc3RvcHMgb2NjdXJyaW5nIGF0IHRoZQpjbGllbnQgaWYgdGhlIHRoZSBhY2Nlc3MgcG9pbnQgZW5hYmxlcyBXTU0/CgoKVXNpbmcgdGhlIGNhcmw5MTcwIGRyaXZlciB3aXRoIFJUUy9DVFMgaGFuZHNoYWtpbmcgZW5hYmxlZCBvbiBhIFVTQiAKVWJpcXVpdGkgU1I3MS1VU0IgKEF0aGVyb3MgQVI5MTcwIGJhc2VkIHdpcmVsZXNzIGFkYXB0ZXIpLiAgUlRTL0NUUyB3aWxsIApzdG9wIHdvcmtpbmcgd2hlbiBXTU0gaXMgZW5hYmxlZCBvbiB0aGUgV0FQLiAgCgpUaGUgbmV0d29yayBpcyBydW5uaW5nIGluIDgwMi4xMW4gQy1iYW5kICg1R0h6KSBjaGFubmVscyBpbiAKSW5mcmFzdHJ1Y3R1cmUgbW9kZSB3aXRoIGFuIEF0aGVyb3MgQVI5MzcwIGJhc2VkIEFjY2VzcyBQb2ludC4gIFdlIGFyZSAKdXNpbmcgUlRTL0NUUyBoYW5kc2hha2luZyB0byByZWR1Y2Ug4oCcSGlkZGVuIE5vZGXigJ0gZWZmZWN0cy4gIE90aGVyIApjbGllbnRzIGluIHRoZSBuZXR3b3JrIHJlcXVpcmUgV01NIHRvIGJlIGVuYWJsZWQuICBGb3IgcmVhc29ucyBjaXRlZCBpbiAKaHR0cDovL3d3dy5zbWFsbG5ldGJ1aWxkZXIuY29tL3dpcmVsZXNzL3dpcmVsZXNzLWZlYXR1cmVzLzMwOTM4LWRvbnQtCm1lc3Mtd2l0aC13bW0sIFdNTSBzaG91bGQgYmUgZW5hYmxlZCB0byBzdXBwb3J0IDgwMi4xMWUsIApyZXF1aXJlZCBmb3IgODAyLjExbiB0byB1c2UgSFQgKEhpZ2ggVGhyb3VnaHB1dCkgbGluayByYXRlcy4KCldpdGggdGhlIFdNTSB0dXJuZWQgT0ZGIGF0IHRoZSBBUCBhbmQgUlRTIHZhbHVlID0gMjU2IGF0IHRoZSBVYmlxdWl0aSAKY2xpZW50LCB0aGUgUlRTL0NUUyBoYW5kc2hha2UgZnVuY3Rpb25zIG5vcm1hbGx5LiAgV2l0aCBXTU0gdHVybmVkIE9OIGF0IAp0aGUgQVAgYW5kIFJUUyB2YWx1ZSA9IDI1NiBzdGlsbCBvbiBhdCB0aGUgY2xpZW50IG5vIFJUUy9DVFMgaGFuZHNoYWtlIApvY2N1cnMuICBUaGUgY2FybDkxNzAgY2xpZW50IHN0b3BzIHNlbmRpbmcgdGhlIFJUUywgYW5kIHRoZSBjYXJsMTk3MCAKY2xpZW50IGlnbm9yaW5nIHRoZSBDVFMgbWVzc2FnZXMgdHJhbnNtaXR0ZWQgYnkgdGhlIEFQLCBjYXVzaW5nIApjb2xsaXNpb25zIGJlY2F1c2Ugb2YgbXkg4oCcSGlkZGVuIE5vZGXigJ0gY29uZGl0aW9uLgoKSGFkIHRvIGdldCBzY29wZSBwbG90cyBvZiB0aGUgUkYgbmV0d29yayB0cmFmZmljIGJldHdlZW4gdGhlIEFQIGFuZCAKY2xpZW50IHRvIG9ic2VydmUgdGhpcyBoYXBwZW5pbmcuCgoKdGhhbmtzLApFcmlj
 
