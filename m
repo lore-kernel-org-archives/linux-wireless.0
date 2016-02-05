@@ -1,46 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34732 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753425AbcBWUFw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 15:05:52 -0500
-Message-ID: <1456257946.9910.23.camel@sipsolutions.net> (sfid-20160223_210555_985826_EE9718EA)
-Subject: Re: [PATCH] mac80211: debugfs var for the default aggregation
- timeout.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Avery Pennarun <apenwarr@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@nbd.name>
-Date: Tue, 23 Feb 2016 21:05:46 +0100
-In-Reply-To: <CAHqTa-1CkJ-Pm6o7-pxcek4h+hmq6EtA0u12zGGraOUjDjeXSQ@mail.gmail.com> (sfid-20160223_194354_293486_AB1DEE76)
-References: <CAHqTa-22NpabO6B7nL=O26fnuGQHFOzpagWtsfQz4_BfrO6nTw@mail.gmail.com>
-	 <1455658091-28262-1-git-send-email-apenwarr@gmail.com>
-	 <1455658091-28262-2-git-send-email-apenwarr@gmail.com>
-	 <1456222441.2041.10.camel@sipsolutions.net>
-	 <CAHqTa-1CkJ-Pm6o7-pxcek4h+hmq6EtA0u12zGGraOUjDjeXSQ@mail.gmail.com>
-	 (sfid-20160223_194354_293486_AB1DEE76)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:35140 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751572AbcBETZl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Feb 2016 14:25:41 -0500
+Received: by mail-wm0-f53.google.com with SMTP id r129so40518272wmr.0
+        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2016 11:25:40 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Eric Hillary <eric.hillary-1@nasa.gov>
+Cc: linux-wireless@vger.kernel.org
+Subject: [RESEND] Re: carl9170 client RTS/CTS option being overridden by WAP's WMM option
+Date: Fri, 05 Feb 2016 20:25:37 +0100
+Message-ID: <2823949.eMyd5ddxzU@debian64> (sfid-20160205_202544_593617_F29B80BA)
+In-Reply-To: <loom.20160205T170355-618@post.gmane.org>
+References: <loom.20160205T170355-618@post.gmane.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-02-23 at 13:43 -0500, Avery Pennarun wrote:
+On Friday, February 05, 2016 04:07:22 PM Eric Hillary wrote:
+> Has anyone experienced that RTS/CTS handshaking stops occurring at the
+> client if the the access point enables WMM?
+yes, the 802.11-draftn device has problems (rx and tx become stuck) with
+802.11n and proper WMM (and with RTS/CTS). Sadly, I don't know of any
+workaround that works for all the configurations I tested, other than 
+going for a ath9k_htc device. 
+ 
+> Using the carl9170 driver with RTS/CTS handshaking enabled on a USB 
+> Ubiquiti SR71-USB (Atheros AR9170 based wireless adapter).  RTS/CTS will 
+> stop working when WMM is enabled on the WAP.  
+You can overwrite carl9170's behavior (per device). You need to have 
+DEBUGFS enabled for the driver (CONFIG_CARL9170_DEBUGFS). There is a
+control setting in: /sys/kernel/debug/ieee80211/phyX/carl9170/erp
 
-> We're putting my version of the patch into our devices in order to be
-> able to try different values and see how it changes the percentage of
-> devices with nonzero 'pending' field in agg_status.  I'm hoping using
-> zero here will result in total elimination of the pending problem,
-> but we'll see.
+1 - Automatic (default)
+2 - Set by mac80211
+3 - Force off
+4 - Force CTS
+5 - Force RTS
 
-:)
-I for one would be interested in the result. And, if you find mac80211
-is at fault, knowing what happens there.
-
-> If people think this is important, I can respin the patch, otherwise
-> feel free to discard.
+You can try echo 2 > erp. And check the setting with cat erp
+> The network is running in 802.11n C-band (5GHz) channels in 
+> Infrastructure mode with an Atheros AR9370 based Access Point.  We are 
+> using RTS/CTS handshaking to reduce “Hidden Node” effects.  Other 
+> clients in the network require WMM to be enabled.  For reasons cited in 
+> http://www.smallnetbuilder.com/wireless/wireless-features/30938-dont-
+> mess-with-wmm, WMM should be enabled to support 802.11e, 
+> required for 802.11n to use HT (High Throughput) link rates.
 > 
+> With the WMM turned OFF at the AP and RTS value = 256 at the Ubiquiti 
+> client, the RTS/CTS handshake functions normally.  With WMM turned ON at 
+> the AP and RTS value = 256 still on at the client no RTS/CTS handshake 
+> occurs.  The carl9170 client stops sending the RTS, and the carl1970 
+> client ignoring the CTS messages transmitted by the AP, causing 
+> collisions because of my “Hidden Node” condition.
+> 
+> Had to get scope plots of the RF network traffic between the AP and 
+> client to observe this happening.
+scope plots from a real analyzer? I would love to have a look at those :).
 
-Up to you. I've discarded it for now with "changes requested", if you
-never resend I'll not worry about it. Clearly we haven't had a need for
-it so far.
-
-johannes
+Regards,
+Christian
