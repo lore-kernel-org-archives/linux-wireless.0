@@ -1,95 +1,280 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f180.google.com ([209.85.192.180]:34711 "EHLO
-	mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761AbcBEBf7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 20:35:59 -0500
-Received: by mail-pf0-f180.google.com with SMTP id o185so59360077pfb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 17:35:58 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 8/8] staging: wilc1000: rename counter in wilc_send_config_pkt
-Date: Fri,  5 Feb 2016 10:35:18 +0900
-Message-Id: <1454636118-9943-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20160205_023605_615528_70877F71)
-In-Reply-To: <1454636118-9943-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1454636118-9943-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from nbd.name ([46.4.11.11]:35482 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750843AbcBEAkt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 4 Feb 2016 19:40:49 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [RFC] mac80211: add A-MSDU tx support
+Date: Fri,  5 Feb 2016 01:40:43 +0100
+Message-Id: <1454632843-74700-1-git-send-email-nbd@openwrt.org> (sfid-20160205_014053_285492_FCCE9368)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-counter is used as for-loop control variable and indicating index of
-struct wid array. It is to improve readability by changing counter
-variable name as i because wilc_send_config_pkt has a similar argument
-name as count.
+Requires software tx queueing support. frag_list support (for zero-copy)
+is optional.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/staging/wilc1000/coreconfigurator.c | 38 ++++++++++++++---------------
- 1 file changed, 19 insertions(+), 19 deletions(-)
+ include/net/mac80211.h     |  10 ++++
+ net/mac80211/agg-tx.c      |   5 ++
+ net/mac80211/debugfs.c     |   2 +
+ net/mac80211/ieee80211_i.h |   1 +
+ net/mac80211/tx.c          | 136 +++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 154 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index dda81ee..00081bc 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -452,36 +452,36 @@ s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo)
- int wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
- 			 u32 count, u32 drv)
- {
--	int counter;
-+	int i;
- 	int ret = 0;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5714774..c221220 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -709,6 +709,7 @@ enum mac80211_tx_info_flags {
+  * @IEEE80211_TX_CTRL_PS_RESPONSE: This frame is a response to a poll
+  *	frame (PS-Poll or uAPSD).
+  * @IEEE80211_TX_CTRL_RATE_INJECT: This frame is injected with rate information
++ * @IEEE80211_TX_CTRL_AMSDU: This frame is an A-MSDU frame
+  *
+  * These flags are used in tx_info->control.flags.
+  */
+@@ -716,6 +717,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTRL_PORT_CTRL_PROTO	= BIT(0),
+ 	IEEE80211_TX_CTRL_PS_RESPONSE		= BIT(1),
+ 	IEEE80211_TX_CTRL_RATE_INJECT		= BIT(2),
++	IEEE80211_TX_CTRL_AMSDU			= BIT(3),
+ };
  
- 	if (mode == GET_CFG) {
--		for (counter = 0; counter < count; counter++) {
--			PRINT_INFO(CORECONFIG_DBG, "Sending CFG packet [%d][%d]\n", !counter,
--				   (counter == count - 1));
--			if (!wilc_wlan_cfg_get(wilc, !counter,
--					       wids[counter].id,
--					       (counter == count - 1),
-+		for (i = 0; i < count; i++) {
-+			PRINT_INFO(CORECONFIG_DBG, "Sending CFG packet [%d][%d]\n", !i,
-+				   (i == count - 1));
-+			if (!wilc_wlan_cfg_get(wilc, !i,
-+					       wids[i].id,
-+					       (i == count - 1),
- 					       drv)) {
- 				ret = -ETIMEDOUT;
- 				printk("[Sendconfigpkt]Get Timed out\n");
- 				break;
- 			}
- 		}
--		for (counter = 0; counter < count; counter++) {
--			wids[counter].size = wilc_wlan_cfg_get_val(
--					wids[counter].id,
--					wids[counter].val,
--					wids[counter].size);
-+		for (i = 0; i < count; i++) {
-+			wids[i].size = wilc_wlan_cfg_get_val(
-+					wids[i].id,
-+					wids[i].val,
-+					wids[i].size);
- 		}
- 	} else if (mode == SET_CFG) {
--		for (counter = 0; counter < count; counter++) {
--			PRINT_D(CORECONFIG_DBG, "Sending config SET PACKET WID:%x\n", wids[counter].id);
--			if (!wilc_wlan_cfg_set(wilc, !counter,
--					       wids[counter].id,
--					       wids[counter].val,
--					       wids[counter].size,
--					       (counter == count - 1),
-+		for (i = 0; i < count; i++) {
-+			PRINT_D(CORECONFIG_DBG, "Sending config SET PACKET WID:%x\n", wids[i].id);
-+			if (!wilc_wlan_cfg_set(wilc, !i,
-+					       wids[i].id,
-+					       wids[i].val,
-+					       wids[i].size,
-+					       (i == count - 1),
- 					       drv)) {
- 				ret = -ETIMEDOUT;
- 				printk("[Sendconfigpkt]Set Timed out\n");
+ /*
+@@ -1964,6 +1966,12 @@ struct ieee80211_txq {
+  *	order and does not need to manage its own reorder buffer or BA session
+  *	timeout.
+  *
++ * @IEEE80211_HW_TX_AMSDU: Hardware (or driver) supports software aggregated
++ *	A-MSDU frames. Requires software tx queueing support.
++ *
++ * @IEEE80211_HW_TX_FRAG_LIST: Hardware (or driver) supports sending frag_list
++ *	skbs, needed for zero-copy software A-MSDU.
++ *
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+@@ -2001,6 +2009,8 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_BEACON_TX_STATUS,
+ 	IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR,
+ 	IEEE80211_HW_SUPPORTS_REORDERING_BUFFER,
++	IEEE80211_HW_TX_AMSDU,
++	IEEE80211_HW_TX_FRAG_LIST,
+ 
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 4932e9f..42fa810 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -935,6 +935,7 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+ 				  size_t len)
+ {
+ 	struct tid_ampdu_tx *tid_tx;
++	struct ieee80211_txq *txq;
+ 	u16 capab, tid;
+ 	u8 buf_size;
+ 	bool amsdu;
+@@ -945,6 +946,10 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+ 	buf_size = (capab & IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK) >> 6;
+ 	buf_size = min(buf_size, local->hw.max_tx_aggregation_subframes);
+ 
++	txq = sta->sta.txq[tid];
++	if (!amsdu && txq)
++		set_bit(IEEE80211_TXQ_NO_AMSDU, &to_txq_info(txq)->flags);
++
+ 	mutex_lock(&sta->ampdu_mlme.mtx);
+ 
+ 	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index e433d0c..847779d 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -127,6 +127,8 @@ static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS + 1] = {
+ 	FLAG(BEACON_TX_STATUS),
+ 	FLAG(NEEDS_UNIQUE_STA_ADDR),
+ 	FLAG(SUPPORTS_REORDERING_BUFFER),
++	FLAG(TX_AMSDU),
++	FLAG(TX_FRAG_LIST),
+ 
+ 	/* keep last for the build bug below */
+ 	(void *)0x1
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index a49c103..e68d8db 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -799,6 +799,7 @@ struct mac80211_qos_map {
+ enum txq_info_flags {
+ 	IEEE80211_TXQ_STOP,
+ 	IEEE80211_TXQ_AMPDU,
++	IEEE80211_TXQ_NO_AMSDU,
+ };
+ 
+ struct txq_info {
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index a5aa275..a4fe5bb 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1324,6 +1324,10 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ out:
+ 	spin_unlock_bh(&txqi->queue.lock);
+ 
++	if (skb && skb_has_frag_list(skb) &&
++	    !ieee80211_hw_check(&local->hw, TX_FRAG_LIST))
++		skb_linearize(skb);
++
+ 	return skb;
+ }
+ EXPORT_SYMBOL(ieee80211_tx_dequeue);
+@@ -2763,6 +2767,134 @@ void ieee80211_clear_fast_xmit(struct sta_info *sta)
+ 		kfree_rcu(fast_tx, rcu_head);
+ }
+ 
++static int ieee80211_amsdu_pad(struct sk_buff *skb, int subframe_len)
++{
++	int amsdu_len = subframe_len + sizeof(struct ethhdr);
++	int padding = (4 - amsdu_len) & 3;
++
++	if (padding)
++		memset(skb_put(skb, padding), 0, padding);
++
++	return padding;
++}
++
++static bool ieee80211_amsdu_prepare_head(struct ieee80211_sub_if_data *sdata,
++					 struct ieee80211_fast_tx *fast_tx,
++					 struct sk_buff *skb)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_hdr *hdr;
++	struct ethhdr amsdu_hdr;
++	int hdr_len = fast_tx->hdr_len - sizeof(rfc1042_header);
++	int subframe_len = skb->len - hdr_len;
++	void *data;
++	u8 *qc;
++
++	if (info->control.flags & IEEE80211_TX_CTRL_AMSDU)
++		return true;
++
++	if (skb_headroom(skb) < sizeof(amsdu_hdr) || skb_tailroom(skb) < 3) {
++		I802_DEBUG_INC(local->tx_expand_skb_head);
++
++		if (pskb_expand_head(skb, sizeof(amsdu_hdr), 3, GFP_ATOMIC)) {
++			wiphy_debug(local->hw.wiphy,
++				    "failed to reallocate TX buffer\n");
++			return false;
++		}
++	}
++
++	subframe_len += ieee80211_amsdu_pad(skb, subframe_len);
++
++	amsdu_hdr.h_proto = cpu_to_be16(subframe_len);
++	memcpy(amsdu_hdr.h_source, skb->data + fast_tx->sa_offs, ETH_ALEN);
++	memcpy(amsdu_hdr.h_dest, skb->data + fast_tx->da_offs, ETH_ALEN);
++
++	data = skb_push(skb, sizeof(amsdu_hdr));
++	memmove(data, data + sizeof(amsdu_hdr), hdr_len);
++	memcpy(data + hdr_len, &amsdu_hdr, sizeof(amsdu_hdr));
++
++	hdr = data;
++	qc = ieee80211_get_qos_ctl(hdr);
++	*qc |= IEEE80211_QOS_CTL_A_MSDU_PRESENT;
++
++	info->control.flags |= IEEE80211_TX_CTRL_AMSDU;
++
++	return true;
++}
++
++static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
++				      struct sta_info *sta,
++				      struct ieee80211_fast_tx *fast_tx,
++				      struct sk_buff *skb)
++{
++	struct ieee80211_local *local = sdata->local;
++	u8 tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
++	struct ieee80211_txq *txq = sta->sta.txq[tid];
++	struct txq_info *txqi;
++	struct sk_buff **frag_tail, *head;
++	int subframe_len = skb->len - ETH_ALEN;
++	__be16 len;
++	void *data;
++	bool ret = false;
++
++	if (!ieee80211_hw_check(&local->hw, TX_AMSDU))
++		return false;
++
++	if (!txq)
++		return false;
++
++	txqi = to_txq_info(txq);
++	if (test_bit(IEEE80211_TXQ_NO_AMSDU, &txqi->flags))
++		return false;
++
++	spin_lock_bh(&txqi->queue.lock);
++
++	head = skb_peek_tail(&txqi->queue);
++	if (!head)
++		goto out;
++
++	if (skb->len + head->len > sta->sta.max_amsdu_len)
++		goto out;
++
++	if (!ieee80211_amsdu_prepare_head(sdata, fast_tx, head))
++		goto out;
++
++	if (skb_headroom(skb) < 8 || skb_tailroom(skb) < 3) {
++		I802_DEBUG_INC(local->tx_expand_skb_head);
++
++		if (pskb_expand_head(skb, 8, 3, GFP_ATOMIC)) {
++			wiphy_debug(local->hw.wiphy,
++				    "failed to reallocate TX buffer\n");
++			return false;
++		}
++	}
++
++	subframe_len += ieee80211_amsdu_pad(skb, subframe_len);
++
++	ret = true;
++	data = skb_push(skb, ETH_ALEN + 2);
++	memmove(data, data + ETH_ALEN + 2, 2 * ETH_ALEN);
++
++	data += 2 * ETH_ALEN;
++	len = cpu_to_be16(subframe_len);
++	memcpy(data, &len, 2);
++	memcpy(data + 2, rfc1042_header, ETH_ALEN);
++
++	frag_tail = &skb_shinfo(head)->frag_list;
++	while (*frag_tail)
++	     frag_tail = &(*frag_tail)->next;
++
++	head->len += skb->len;
++	head->data_len += skb->len;
++	*frag_tail = skb;
++
++out:
++	spin_unlock_bh(&txqi->queue.lock);
++
++	return ret;
++}
++
+ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 				struct net_device *dev, struct sta_info *sta,
+ 				struct ieee80211_fast_tx *fast_tx,
+@@ -2817,6 +2949,10 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ieee80211_tx_stats(dev, skb->len + extra_head);
+ 
++	if ((hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) &&
++	    ieee80211_amsdu_aggregate(sdata, sta, fast_tx, skb))
++		return true;
++
+ 	/* will not be crypto-handled beyond what we do here, so use false
+ 	 * as the may-encrypt argument for the resize to not account for
+ 	 * more room than we already have in 'extra_head'
 -- 
-2.7.0
+2.2.2
 
