@@ -1,76 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:29985 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753172AbcBVESk (ORCPT
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:36682 "EHLO
+	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751761AbcBEBfw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2016 23:18:40 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V3 23/24] staging: wilc1000: moves to define values
-Date: Mon, 22 Feb 2016 13:12:08 +0900
-Message-ID: <1456114329-7036-24-git-send-email-leo.kim@atmel.com> (sfid-20160222_051842_757335_E3B3E3CA)
-In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
-References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 4 Feb 2016 20:35:52 -0500
+Received: by mail-pf0-f175.google.com with SMTP id n128so59015248pfn.3
+        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 17:35:52 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 6/8] staging: wilc1000: use int type for counter variable
+Date: Fri,  5 Feb 2016 10:35:16 +0900
+Message-Id: <1454636118-9943-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20160205_023556_027288_FC2BFD9E)
+In-Reply-To: <1454636118-9943-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1454636118-9943-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+counter is used as for-loop control variable and indicating index of
+struct wid array so that it is better to use int type.
+There is no need to set to 0 when it is declared at the top of this
+function. It is initialized as 0 in for-loop statement.
 
-This patch moves DEBUG, INFO, WRN and ERR values to wilc_debugfs.c file
-because this is only used to wilc_debugfs.c file.
-And, removes unnecessary WILC_DEBUGFS and else-case variables.
-
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/linux_wlan_common.h | 11 -----------
- drivers/staging/wilc1000/wilc_debugfs.c      |  4 ++++
- 2 files changed, 4 insertions(+), 11 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index 2e2109c..51601aa 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -1,17 +1,6 @@
- #ifndef LINUX_WLAN_COMMON_H
- #define LINUX_WLAN_COMMON_H
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 323a0cd..4008872 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -452,7 +452,7 @@ s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo)
+ int wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
+ 			 u32 count, u32 drv)
+ {
+-	s32 counter = 0;
++	int counter;
+ 	int ret = 0;
  
--#if defined(WILC_DEBUGFS)
--#define DEBUG           BIT(0)
--#define INFO            BIT(1)
--#define WRN             BIT(2)
--#define ERR             BIT(3)
--#else
--#define DEBUG       1
--#define INFO        0
--#define WRN         0
--#endif
--
- #define LINUX_RX_SIZE	(96 * 1024)
- #define LINUX_TX_SIZE	(64 * 1024)
- 
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index 215e2f0..fcbc95d 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -23,6 +23,10 @@ static struct dentry *wilc_dir;
- /*
-  * --------------------------------------------------------------------------------
-  */
-+#define DEBUG           BIT(0)
-+#define INFO            BIT(1)
-+#define WRN             BIT(2)
-+#define ERR             BIT(3)
- 
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
- atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
+ 	if (mode == GET_CFG) {
 -- 
-1.9.1
+2.7.0
 
