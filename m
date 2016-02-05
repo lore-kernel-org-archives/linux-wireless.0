@@ -1,51 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:39098 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756172AbcBCPll (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 10:41:41 -0500
-Message-ID: <1454514090.3083.8.camel@sipsolutions.net> (sfid-20160203_164148_950693_9A8CEDBC)
-Subject: Re: ibss.c backtrace when batman-adv adds wireless interface
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Josh Boyer <jwboyer@fedoraproject.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Marek Lindner <mareklindner@neomailbox.ch>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, b.a.t.m.a.n@lists.open-mesh.org
-Date: Wed, 03 Feb 2016 16:41:30 +0100
-In-Reply-To: <CA+5PVA55MSh-kKCLGcUV2uMkx+SqwuXY0WbONS8Q0mxh4+_gcw@mail.gmail.com> (sfid-20160203_162659_997136_8B4E5DC7)
-References: <CA+5PVA4HVjsEw+j+HMDzO0gnQb4xTRwbAu4H2do3MU41QWvOvw@mail.gmail.com>
-	 <CA+5PVA55MSh-kKCLGcUV2uMkx+SqwuXY0WbONS8Q0mxh4+_gcw@mail.gmail.com>
-	 (sfid-20160203_162659_997136_8B4E5DC7)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp-out05.msg.oleane.net ([62.161.7.3]:42580 "EHLO
+	smtp-out05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753833AbcBESLr (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 5 Feb 2016 13:11:47 -0500
+From: Cedric DEBARGE <cedric.debarge@acksys.fr>
+To: johannes@sipsolutions.net
+Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	linux-api@vger.kernel.org, linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org, Cedric DEBARGE <cedric.debarge@acksys.fr>
+Subject: [RFC 0/2] mac80211: add support for ht_caps mcs rxmask override
+Date: Fri,  5 Feb 2016 16:41:58 +0100
+Message-Id: <cover.1454685673.git.cedric.debarge@acksys.fr> (sfid-20160205_191213_148178_7036837A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-02-03 at 10:26 -0500, Josh Boyer wrote:
-> On Wed, Feb 3, 2016 at 10:24 AM, Josh Boyer <jwboyer@fedoraproject.or
-> g> wrote:
-> > Hi All,
-> > 
-> > We've had a user report the backtrace below when loading batman-adv 
-> > on
-> > his machine.  It looks like the cfg80211 layer is complaining about
-> > a
-> > null bss returned, but I cannot tell if the rtlwifi driver or
-> > batman-adv is in error here.
-> > 
-> > Thoughts?
-> 
-> Sorry, forgot to include the link to the actual bug report:
-> 
-> https://bugzilla.redhat.com/show_bug.cgi?id=1304428
-> 
-> Reporter says this is new with 4.3.y and did not happen on e.g.
-> 4.2.8.
-> 
+This patchset allows the ht_caps mcs rxmask to be defined on the fly.
+It applies the given rxmask to all available bands.
 
-AFAICT this should be a driver (or perhaps mac80211) issue, but I don't
-see any information about the driver used.
+This is actually limited to radio cards without internal rc.
 
-johannes
+Cedric DEBARGE (2):
+  cfg80211: add support for ht_caps mcs rxmask override
+  nl80211: add nl attribute to set ht_caps mcs rxmask override
+
+ include/net/cfg80211.h       |  7 ++++++
+ include/uapi/linux/nl80211.h |  5 +++++
+ net/mac80211/cfg.c           | 48 +++++++++++++++++++++++++++++++++++++++
+ net/mac80211/main.c          | 53 +++++++++++++++++++++++++++++++++++++-------
+ net/wireless/nl80211.c       | 18 +++++++++++++++
+ net/wireless/rdev-ops.h      | 11 +++++++++
+ net/wireless/trace.h         | 15 +++++++++++++
+ 7 files changed, 149 insertions(+), 8 deletions(-)
+
+-- 
+1.9.1
+
