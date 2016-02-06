@@ -1,59 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:29646 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753243AbcBVEP2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53188 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751448AbcBFLnt convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2016 23:15:28 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V3 06/24] staging: wilc1000: host_interface.c: removes unnecessary log message
-Date: Mon, 22 Feb 2016 13:11:51 +0900
-Message-ID: <1456114329-7036-7-git-send-email-leo.kim@atmel.com> (sfid-20160222_051530_378392_9132CAD7)
-In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
-References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+	Sat, 6 Feb 2016 06:43:49 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
+Subject: Re: [PATCH] brcmfmac: fix setting primary channel for 80 MHz width
+References: <1453304764-11895-1-git-send-email-zajec5@gmail.com>
+Date: Sat, 06 Feb 2016 13:43:42 +0200
+In-Reply-To: <1453304764-11895-1-git-send-email-zajec5@gmail.com>
+ (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Wed, 20 Jan 2016
+ 16:46:04 +0100")
+Message-ID: <874mdmvzbl.fsf@kamboji.qca.qualcomm.com> (sfid-20160206_124420_539641_2504776B)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-This patch removes unnecessary log message and relate variables.
+> First of all it changes the way we calculate primary channel offset. If
+> we use e.g. 80 MHz channel with primary frequency 5180 MHz (which means
+> center frequency is 5210 MHz) it makes sense to calculate primary offset
+> as -30 MHz.
+> Then it fixes values we compare primary_offset with. We were comparing
+> offset in MHz against -2 or 2 which was resulting in picking a wrong
+> primary channel.
+>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 5 -----
- 1 file changed, 5 deletions(-)
+Manually applied to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 3de4f99..035f6f5 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2999,7 +2999,6 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
- 	int result = 0;
- 	struct host_if_msg msg;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
--	int i;
- 
- 	if (!hif_drv) {
- 		PRINT_ER("driver is null\n");
-@@ -3008,10 +3007,6 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
- 
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
--	if (INFO) {
--		for (i = 0; i < len; i++)
--			PRINT_INFO(HOSTAPD_DBG, "KEY is %x\n", key[i]);
--	}
- 	msg.id = HOST_IF_MSG_KEY;
- 	msg.body.key_info.type = WEP;
- 	msg.body.key_info.action = ADDKEY_AP;
 -- 
-1.9.1
-
+Kalle Valo
