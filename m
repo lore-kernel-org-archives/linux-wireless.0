@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41917 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933800AbcBCSkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 13:40:04 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 16/28] rtl8xxxu: Fix cosmetics to quiet down checkpatch police
-Date: Wed,  3 Feb 2016 13:39:50 -0500
-Message-Id: <1454524802-26763-17-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_194138_794059_21E5A4C9)
-In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:52126 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751441AbcBFLGy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 6 Feb 2016 06:06:54 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi-next 2016-01-31
+References: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+Date: Sat, 06 Feb 2016 13:06:49 +0200
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32E9F363A@hasmsx107.ger.corp.intel.com>
+	(Emmanuel Grumbach's message of "Sun, 31 Jan 2016 11:05:38 +0000")
+Message-ID: <87bn7uxfli.fsf@kamboji.qca.qualcomm.com> (sfid-20160206_120706_914691_EDFB030D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> Hi Kalle,
+>
+> This is a pull request for 4.6. Please pull. Thanks!
+>
+> The following changes since commit aee3bfa3307cd0da2126bdc0ea359dabea5ee8f7:
+>
+>   Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net-next (2016-01-12 18:57:02 -0800)
+>
+> are available in the git repository at:
+>
+>   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2016-01-31
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 94d3d84..ac4c211 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -4415,7 +4415,7 @@ static void rtl8xxxu_cam_write(struct rtl8xxxu_priv *priv,
- }
- 
- static void rtl8xxxu_sw_scan_start(struct ieee80211_hw *hw,
--				   struct ieee80211_vif *vif, const u8* mac)
-+				   struct ieee80211_vif *vif, const u8 *mac)
- {
- 	struct rtl8xxxu_priv *priv = hw->priv;
- 	u8 val8;
+Pulled iwlwifi-next-for-kalle-2016-01-31_2 as discussed in patch 4,
+thanks.
+
 -- 
-2.5.0
-
+Kalle Valo
