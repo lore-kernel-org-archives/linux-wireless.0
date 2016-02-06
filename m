@@ -1,91 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:37847 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753429AbcBYBPX (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53749 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751986AbcBFMBm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2016 20:15:23 -0500
-Received: by mail-ig0-f173.google.com with SMTP id z8so3542777ige.0
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 17:15:22 -0800 (PST)
+	Sat, 6 Feb 2016 07:01:42 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1456358932-23114-8-git-send-email-afenkart@gmail.com>
-References: <1456358932-23114-1-git-send-email-afenkart@gmail.com> <1456358932-23114-8-git-send-email-afenkart@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 25 Feb 2016 12:15:02 +1100
-Message-ID: <CAGRGNgXcpo+g_WFeJpk-e4ig+6DQm9Mf4ma5WqVaA3bajyugGg@mail.gmail.com> (sfid-20160225_021525_672597_95E5FD3A)
-Subject: Re: [PATCH 7/7] mwifiex: make mwifiex_insert_cmd_to_free_q local static
-To: Andreas Fenkart <afenkart@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
+Subject: Re: mwifiex: fix a reversed condition
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20160202100005.GA3040@mwanda>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	chunfan chen <jeffc@marvell.com>,
 	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Message-Id: <20160206120141.65A2B60445@smtp.codeaurora.org> (sfid-20160206_130145_748080_CB2207EC)
+Date: Sat,  6 Feb 2016 12:01:41 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andreas,
 
-On Thu, Feb 25, 2016 at 11:08 AM, Andreas Fenkart <afenkart@gmail.com> wrote:
-> after factoring out mwifiex_cancel_pending_scan_cmd
-> the function is noc called outside of cmdevt file
->
-> Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
-> ---
->  drivers/net/wireless/marvell/mwifiex/cmdevt.c | 6 +++++-
->  drivers/net/wireless/marvell/mwifiex/main.h   | 2 --
->  2 files changed, 5 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-> index 61426b3..4b0f44d 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-> @@ -26,6 +26,10 @@
->  #include "11n.h"
->  #include "11ac.h"
->
-> +static void
-> +mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
-> +                            struct cmd_ctrl_node *cmd_node);
-> +
+> The NULL test here is reversed.
+> 
+> Fixes: 7d7f07d8c5d3 ('mwifiex: add wowlan net-detect support')
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-Why not just move the function definition above where it's needed?
+Thanks, applied to wireless-drivers-next.git.
 
->  /*
->   * This function initializes a command node.
->   *
-> @@ -619,7 +623,7 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
->   * The function also calls the completion callback if required, before
->   * cleaning the command node and re-inserting it into the free queue.
->   */
-> -void
-> +static void
->  mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
->                              struct cmd_ctrl_node *cmd_node)
->  {
-> diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-> index f71f894..840e5d4 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/main.h
-> +++ b/drivers/net/wireless/marvell/mwifiex/main.h
-> @@ -1045,8 +1045,6 @@ void mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter);
->  void mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter);
->  void mwifiex_cancel_pending_scan_cmd(struct mwifiex_adapter *adapter);
->
-> -void mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
-> -                                 struct cmd_ctrl_node *cmd_node);
->  void mwifiex_recycle_cmd_node(struct mwifiex_adapter *adapter,
->                               struct cmd_ctrl_node *cmd_node);
->
-> --
-> 2.7.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Kalle Valo
