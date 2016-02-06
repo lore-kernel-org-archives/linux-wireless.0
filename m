@@ -1,56 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:9625 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965764AbcBDJYb (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53108 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751448AbcBFLfV convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:24:31 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 16/70] staging: wilc1000: fixes missing a blank line after declarations
-Date: Thu, 4 Feb 2016 18:15:33 +0900
-Message-ID: <1454577387-509-17-git-send-email-glen.lee@atmel.com> (sfid-20160204_104503_714992_ECA00CB8)
-In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+	Sat, 6 Feb 2016 06:35:21 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: [PATCH 1/2] bcma: identify bus cores (devices) found on BCM47189
+References: <1452901733-22271-1-git-send-email-zajec5@gmail.com>
+Date: Sat, 06 Feb 2016 13:35:14 +0200
+In-Reply-To: <1452901733-22271-1-git-send-email-zajec5@gmail.com>
+ (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Sat, 16 Jan 2016
+ 00:48:52 +0100")
+Message-ID: <87d1savzpp.fsf@kamboji.qca.qualcomm.com> (sfid-20160206_123524_180166_78B56F11)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-This patch fixes the warnings reported by checkpatch.pl
-for Missing a blank line after declarations.
+> Add missing defines and print proper names.
+>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 2 ++
- 1 file changed, 2 insertions(+)
+Manually applied both patches to wireless-drivers-next.git, thanks.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 06c79dd..5992478 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -853,6 +853,7 @@ static void wlan_deinitialize_threads(struct net_device *dev)
- {
- 	struct wilc_vif *vif;
- 	struct wilc *wl;
-+
- 	vif = netdev_priv(dev);
- 	wl = vif->wilc;
- 
-@@ -1472,6 +1473,7 @@ int wilc_netdev_init(struct wilc **wilc, struct device *dev, int io_type,
- 
- 		{
- 			struct wireless_dev *wdev;
-+
- 			wdev = wilc_create_wiphy(ndev, dev);
- 
- 			if (dev)
 -- 
-1.9.1
-
+Kalle Valo
