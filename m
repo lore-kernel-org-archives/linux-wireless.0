@@ -1,108 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:10101 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965877AbcBDJZv (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:25:51 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 27/70] staging: wilc1000: rename variable s32Error
-Date: Thu, 4 Feb 2016 18:15:44 +0900
-Message-ID: <1454577387-509-28-git-send-email-glen.lee@atmel.com> (sfid-20160204_102955_667189_3FD0BC26)
-In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:37020 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750777AbcBGKtB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Feb 2016 05:49:01 -0500
+Subject: Re: [RFC v2] mac80211: add A-MSDU tx support
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+References: <1454668864-31777-1-git-send-email-nbd@openwrt.org>
+ <CANUX_P3xJBopdHcNjwJ2UcXLPZcNHJtE+mC2=3i8b4p=J8kjXQ@mail.gmail.com>
+ <56B70978.3030900@openwrt.org>
+ <CANUX_P0VWG78s8fs5Y58n-JwK+bamkLQV=M9aYroDGWrhrrR0g@mail.gmail.com>
+ <CANUX_P0QkRhSpdxrd9jAobCX9E=TED55=YaTOJ6QwwuJQHfTqA@mail.gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+From: Felix Fietkau <nbd@openwrt.org>
+Message-ID: <56B72115.10709@openwrt.org> (sfid-20160207_114913_302462_F98E79C1)
+Date: Sun, 7 Feb 2016 11:48:53 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CANUX_P0QkRhSpdxrd9jAobCX9E=TED55=YaTOJ6QwwuJQHfTqA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On 2016-02-07 11:22, Emmanuel Grumbach wrote:
+> On Sun, Feb 7, 2016 at 12:06 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>> On Sun, Feb 7, 2016 at 11:08 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>> On 2016-02-07 08:25, Emmanuel Grumbach wrote:
+>>>> On Fri, Feb 5, 2016 at 12:41 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>>>> Requires software tx queueing support. frag_list support (for zero-copy)
+>>>>> is optional.
+>>>>>
+>>>>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>>>>
+>>>> Looks nice!
+>>>> This would allow us to create aggregates of TCP Acks, the problem is
+>>>> that when you are mostly receiving data, the hardware queues are
+>>>> pretty much empty (nothing besides the TCP Acks which should go out
+>>>> quickly) so that packets don't pile up in the software queues and
+>>>> hence you don't have enough material to build an A-MSDU.
+>>>> I guess that for AP oriented devices, this is ideal solution since you
+>>>> can't rely on TSO (packets are not locally generated) and this allows
+>>>> to build an A-MSDU without adding more latency since you build an
+>>>> A-MSDU with packets that are already in the queue waiting instead of
+>>>> delaying transmission of the first packet.
+>>>> IIRC, the latter was the approach chose by the new Marvell driver
+>>>> posted a few weeks ago. This approach is better in my eyes.
+>>>> For iwlwifi which is much more station oriented (of GO which is
+>>>> basically an AP with locally generated traffic), I took the TSO
+>>>> approach. I guess we could try to change iwlwifi to use your tx
+>>>> queues, and check how that works. This would allow us to have A-MSDU
+>>>> on bridged traffic as well, although this use case is much less common
+>>>> for Intel devices.
+>>
+>>
+>>> Can the iwlwifi firmware maintain per-sta per-tid queues? Because that
+>>> way you would get the most benefits from using that tx queueing
+>>> infrastructure.
+>>
+>> Well... iwlwifi and athXk are very different. iwlwifi really has the
+>> concept of queues and not flat descriptors.
+>> Any Tx descriptor lives in the context of a Tx queue which is
+>> per-sta-per tid when A-MPDUs is enabled.
+>> We are now moving to a scheme in which we will have per-sta-per-tid
+>> queue regardless of the A-MPDU state which will make much sense to tie
+>> to the tx queueing infrastructure.
+>> Thing is that in that case I am afraid we will not have enough packets
+>> in the software tx queue to get A-MSDUs from your code. with TSO, it
+>> is easier :) Still worth trying to work with this instead of TSO and
+>> see how it goes. That won't happen anytime soon though.
+>>
+>>>
+>>>>> +
+>>>>> +static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
+>>>>> +                                     struct sta_info *sta,
+>>>>> +                                     struct ieee80211_fast_tx *fast_tx,
+>>>>> +                                     struct sk_buff *skb)
+>>>>> +{
+>>>>> +       struct ieee80211_local *local = sdata->local;
+>>>>> +       u8 tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+>>>>> +       struct ieee80211_txq *txq = sta->sta.txq[tid];
+>>>>> +       struct txq_info *txqi;
+>>>>> +       struct sk_buff **frag_tail, *head;
+>>>>> +       int subframe_len = skb->len - ETH_ALEN;
+>>>>> +       int max_amsdu_len;
+>>>>> +       __be16 len;
+>>>>> +       void *data;
+>>>>> +       bool ret = false;
+>>>>> +       int n = 1;
+>>>>> +
+>>>>> +       if (!ieee80211_hw_check(&local->hw, TX_AMSDU))
+>>>>> +               return false;
+>>>>> +
+>>>>> +       if (!txq)
+>>>>> +               return false;
+>>>>> +
+>>>>> +       txqi = to_txq_info(txq);
+>>>>> +       if (test_bit(IEEE80211_TXQ_NO_AMSDU, &txqi->flags))
+>>>>> +               return false;
+>>>>> +
+>>>>> +       /*
+>>>>> +        * A-MPDU limits maximum MPDU size to 4095 bytes. Since aggregation
+>>>>> +        * sessions are started/stopped without txq flush, use the limit here
+>>>>> +        * to avoid having to de-aggregate later.
+>>>>> +        */
+>>>>> +       max_amsdu_len = min_t(int, sta->sta.max_amsdu_len, 4095);
+>>>>
+>>>> So you can't get 10K A-MSDUs? I don't see where you check that you
+>>>> have an A-MPDU session here. You seem to be applying the 4095 limit
+>>>> also for streams that are not an A-MPDU?
+>>>> I guess you could check if the sta is a VHT peer, in that case, no
+>>>> limit applies.
+>>> The explanation for the missing A-MPDU change is in that comment -
+>>> checking for an active A-MPDU session would make it unnecessarily complex.
+>>> Good point about checking for VHT capabilities to remove this limit, I
+>>> will add that.
+> 
+> Yes - I read the comment, but it seemed very sub-optimal to limit all
+> the A-MSDUs to 4K. With TSO I can get up to 10K and it really helps
+> TPT.
+This was built with the assumption that most scenarios use A-MPDU anyway
+and thus don't need really large A-MSDUs.
 
-This patch renames variable s32Error to result
-to avoid CamelCase naming convention.
-Also, remove the unused variable s32Error and replace with direct return.
+> One more point. In VHT, there may be a limit on the numbers of
+> subframes in the A-MSDU. I don't see you handle that. Maybe I missed
+> it?
+I haven't looked at that much yet. Right now the driver can only specify
+a limit for the number of subframes.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 19 +++++++++----------
- 1 file changed, 9 insertions(+), 10 deletions(-)
+> And... in case the driver doesn't handle frag_list, you linearize the
+> skb which is pretty much the only thing you can do at this stage. But,
+> when you'll lift the 4095 bytes limit, you'll get 11K A-MSDU,
+> linarizing such a long packet is really putting the memory manager
+> under pressure. 
+I added no-frag_list support primarily for debugging purposes, it's not
+supposed to perform well.
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 2a4e324..88e5661 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -356,30 +356,29 @@ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
- 
- s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo)
- {
--	s32 s32Error = 0;
-+	s32 result = 0;
- 
- 	if (pstrNetworkInfo) {
- 		if (pstrNetworkInfo->pu8IEs) {
- 			kfree(pstrNetworkInfo->pu8IEs);
- 			pstrNetworkInfo->pu8IEs = NULL;
- 		} else {
--			s32Error = -EFAULT;
-+			result = -EFAULT;
- 		}
- 
- 		kfree(pstrNetworkInfo);
- 		pstrNetworkInfo = NULL;
- 
- 	} else {
--		s32Error = -EFAULT;
-+		result = -EFAULT;
- 	}
- 
--	return s32Error;
-+	return result;
- }
- 
- s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
- 			       tstrConnectRespInfo **ppstrConnectRespInfo)
- {
--	s32 s32Error = 0;
- 	tstrConnectRespInfo *pstrConnectRespInfo = NULL;
- 	u16 u16AssocRespLen = 0;
- 	u8 *pu8IEs = NULL;
-@@ -408,27 +407,27 @@ s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
- 
- 	*ppstrConnectRespInfo = pstrConnectRespInfo;
- 
--	return s32Error;
-+	return 0;
- }
- 
- s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo)
- {
--	s32 s32Error = 0;
-+	s32 result = 0;
- 
- 	if (pstrConnectRespInfo) {
- 		if (pstrConnectRespInfo->pu8RespIEs) {
- 			kfree(pstrConnectRespInfo->pu8RespIEs);
- 			pstrConnectRespInfo->pu8RespIEs = NULL;
- 		} else {
--			s32Error = -EFAULT;
-+			result = -EFAULT;
- 		}
- 
- 		kfree(pstrConnectRespInfo);
- 		pstrConnectRespInfo = NULL;
- 
- 	} else {
--		s32Error = -EFAULT;
-+		result = -EFAULT;
- 	}
- 
--	return s32Error;
-+	return result;
- }
--- 
-1.9.1
+> This is an order 4 allocation, for each A-MSDU. Note
+> that iwlwifi (and probably other drivers) can handle gather DMA in Tx,
+> but they have a limited number of frags they can handle. iwlwifi e.g.
+> can handle up to 20 frags, but 3 are taken for "paperwork". You'll
+> have 2 frags per subframe at least (assuming that each subframe's
+> payload is nicely contiguous and not on a page boundary). I think that
+> it may be worthwhile to ask the driver how many frags it is supposed
+> to handle. I can't promise iwlwifi will use it, but I guess it will be
+> useful for someone.
+You mean an extra frag limit in addition to the driver subframe limit,
+in case individual subframes are fragmented as well?
 
+- Felix
