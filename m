@@ -1,44 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:31138 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752370AbcBXKDc (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40877 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752066AbcBGHKk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2016 05:03:32 -0500
-From: Tony Cho <tony.cho@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <chris.park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 2/2] staging: wilc1000: wilc_wlan.c: remove multiple blank line
-Date: Wed, 24 Feb 2016 19:01:38 +0900
-Message-ID: <1456308098-30049-2-git-send-email-tony.cho@atmel.com> (sfid-20160224_110340_344664_78A9828B)
-In-Reply-To: <1456308098-30049-1-git-send-email-tony.cho@atmel.com>
-References: <1456308098-30049-1-git-send-email-tony.cho@atmel.com>
+	Sun, 7 Feb 2016 02:10:40 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: net: wireless: rt2x00: Fixed Spacing issues
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1445112279-27796-1-git-send-email-paulmcquad@gmail.com>
+To: Paul Mcquade <paulmcquad@gmail.com>
+Cc: paulmcquad@gmail.com, sgruszka@redhat.com,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Message-Id: <20160207071039.A40926047C@smtp.codeaurora.org> (sfid-20160207_081109_425613_3A6A4181)
+Date: Sun,  7 Feb 2016 07:10:39 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes the multiple blank line reported by checkpatch.pl.
 
-Signed-off-by: Tony Cho <tony.cho@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 1 -
- 1 file changed, 1 deletion(-)
+> Removed empty spaces before/after parenthesis
+> 
+> Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
+> Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index f142e61..17e39cc 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -139,7 +139,6 @@ struct pending_acks_info {
- 	struct txq_entry_t  *txqe;
- };
- 
--
- #define NOT_TCP_ACK			(-1)
- 
- #define MAX_TCP_SESSION		25
--- 
-1.9.1
+Thanks, applied to wireless-drivers-next.git.
 
+Kalle Valo
