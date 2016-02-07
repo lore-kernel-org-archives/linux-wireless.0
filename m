@@ -1,139 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:38412 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750793AbcBBWPY (ORCPT
+Received: from mail-lb0-f180.google.com ([209.85.217.180]:34624 "EHLO
+	mail-lb0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753669AbcBGKGw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 17:15:24 -0500
+	Sun, 7 Feb 2016 05:06:52 -0500
+Received: by mail-lb0-f180.google.com with SMTP id cw1so69710238lbb.1
+        for <linux-wireless@vger.kernel.org>; Sun, 07 Feb 2016 02:06:51 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <20160202154855.GA8990@gmail.com>
-References: <20160202154855.GA8990@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 3 Feb 2016 09:15:04 +1100
-Message-ID: <CAGRGNgVHEsA693tQxf0Mv_4wSu-4wG7sphhRRB0gbU6o9nzZ_Q@mail.gmail.com> (sfid-20160202_231544_817165_E51A9D89)
-Subject: Re: [PATCH] rtlwifi: Fix reusable codes in core.c
-To: Byeoungwook Kim <quddnr145@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <56B70978.3030900@openwrt.org>
+References: <1454668864-31777-1-git-send-email-nbd@openwrt.org>
+	<CANUX_P3xJBopdHcNjwJ2UcXLPZcNHJtE+mC2=3i8b4p=J8kjXQ@mail.gmail.com>
+	<56B70978.3030900@openwrt.org>
+Date: Sun, 7 Feb 2016 12:06:50 +0200
+Message-ID: <CANUX_P0VWG78s8fs5Y58n-JwK+bamkLQV=M9aYroDGWrhrrR0g@mail.gmail.com> (sfid-20160207_110657_515550_1B029876)
+Subject: Re: [RFC v2] mac80211: add A-MSDU tx support
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Byeoungwook,
+On Sun, Feb 7, 2016 at 11:08 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> On 2016-02-07 08:25, Emmanuel Grumbach wrote:
+>> On Fri, Feb 5, 2016 at 12:41 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>> Requires software tx queueing support. frag_list support (for zero-copy)
+>>> is optional.
+>>>
+>>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>>
+>> Looks nice!
+>> This would allow us to create aggregates of TCP Acks, the problem is
+>> that when you are mostly receiving data, the hardware queues are
+>> pretty much empty (nothing besides the TCP Acks which should go out
+>> quickly) so that packets don't pile up in the software queues and
+>> hence you don't have enough material to build an A-MSDU.
+>> I guess that for AP oriented devices, this is ideal solution since you
+>> can't rely on TSO (packets are not locally generated) and this allows
+>> to build an A-MSDU without adding more latency since you build an
+>> A-MSDU with packets that are already in the queue waiting instead of
+>> delaying transmission of the first packet.
+>> IIRC, the latter was the approach chose by the new Marvell driver
+>> posted a few weeks ago. This approach is better in my eyes.
+>> For iwlwifi which is much more station oriented (of GO which is
+>> basically an AP with locally generated traffic), I took the TSO
+>> approach. I guess we could try to change iwlwifi to use your tx
+>> queues, and check how that works. This would allow us to have A-MSDU
+>> on bridged traffic as well, although this use case is much less common
+>> for Intel devices.
 
-On Wed, Feb 3, 2016 at 2:48 AM, Byeoungwook Kim <quddnr145@gmail.com> wrote:
-> rtl_*_delay() functions were reused same codes about addr variable.
-> So i have converted to rtl_addr_delay() from code about addr variable.
+
+> Can the iwlwifi firmware maintain per-sta per-tid queues? Because that
+> way you would get the most benefits from using that tx queueing
+> infrastructure.
+
+Well... iwlwifi and athXk are very different. iwlwifi really has the
+concept of queues and not flat descriptors.
+Any Tx descriptor lives in the context of a Tx queue which is
+per-sta-per tid when A-MPDUs is enabled.
+We are now moving to a scheme in which we will have per-sta-per-tid
+queue regardless of the A-MPDU state which will make much sense to tie
+to the tx queueing infrastructure.
+Thing is that in that case I am afraid we will not have enough packets
+in the software tx queue to get A-MSDUs from your code. with TSO, it
+is easier :) Still worth trying to work with this instead of TSO and
+see how it goes. That won't happen anytime soon though.
+
 >
-> Conditional codes in rtl_addr_delay() were improved in readability and
-> performance by using switch codes.
+>>> +
+>>> +static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
+>>> +                                     struct sta_info *sta,
+>>> +                                     struct ieee80211_fast_tx *fast_tx,
+>>> +                                     struct sk_buff *skb)
+>>> +{
+>>> +       struct ieee80211_local *local = sdata->local;
+>>> +       u8 tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
+>>> +       struct ieee80211_txq *txq = sta->sta.txq[tid];
+>>> +       struct txq_info *txqi;
+>>> +       struct sk_buff **frag_tail, *head;
+>>> +       int subframe_len = skb->len - ETH_ALEN;
+>>> +       int max_amsdu_len;
+>>> +       __be16 len;
+>>> +       void *data;
+>>> +       bool ret = false;
+>>> +       int n = 1;
+>>> +
+>>> +       if (!ieee80211_hw_check(&local->hw, TX_AMSDU))
+>>> +               return false;
+>>> +
+>>> +       if (!txq)
+>>> +               return false;
+>>> +
+>>> +       txqi = to_txq_info(txq);
+>>> +       if (test_bit(IEEE80211_TXQ_NO_AMSDU, &txqi->flags))
+>>> +               return false;
+>>> +
+>>> +       /*
+>>> +        * A-MPDU limits maximum MPDU size to 4095 bytes. Since aggregation
+>>> +        * sessions are started/stopped without txq flush, use the limit here
+>>> +        * to avoid having to de-aggregate later.
+>>> +        */
+>>> +       max_amsdu_len = min_t(int, sta->sta.max_amsdu_len, 4095);
+>>
+>> So you can't get 10K A-MSDUs? I don't see where you check that you
+>> have an A-MPDU session here. You seem to be applying the 4095 limit
+>> also for streams that are not an A-MPDU?
+>> I guess you could check if the sta is a VHT peer, in that case, no
+>> limit applies.
+> The explanation for the missing A-MPDU change is in that comment -
+> checking for an active A-MPDU session would make it unnecessarily complex.
+> Good point about checking for VHT capabilities to remove this limit, I
+> will add that.
 >
-> Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
-> ---
->  drivers/net/wireless/realtek/rtlwifi/core.c | 48 +++++++++++------------------
->  1 file changed, 18 insertions(+), 30 deletions(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-> index 4ae421e..c1193d1 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/core.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-> @@ -37,36 +37,34 @@
->
->  void rtl_addr_delay(u32 addr)
->  {
-> -       if (addr == 0xfe)
-> +       switch (addr) {
-> +       case 0xfe:
->                 mdelay(50);
-> -       else if (addr == 0xfd)
-> +               break;
-> +       case 0xfd:
->                 mdelay(5);
-> -       else if (addr == 0xfc)
-> +               break;
-> +       case 0xfc:
->                 mdelay(1);
-> -       else if (addr == 0xfb)
-> +               break;
-> +       case 0xfb:
->                 udelay(50);
-> -       else if (addr == 0xfa)
-> +               break;
-> +       case 0xfa:
->                 udelay(5);
-> -       else if (addr == 0xf9)
-> +               break;
-> +       case 0xf9:
->                 udelay(1);
-> +               break;
-> +       };
-
-As you're introducing a case statement here, you could consolidate the
-addresses that have the same delays, i.e.
-
-case 0xfe:
-case 0xfb:
-    mdelay(50);
-    break;
-
-also, you should arguably be doing this cleanup in a separate patch, i.e.
-
-1. Convert open coded instances to use this function (i.e. the changes
-below this comment)
-2. Improve the function
-
->  }
->  EXPORT_SYMBOL(rtl_addr_delay);
->
->  void rtl_rfreg_delay(struct ieee80211_hw *hw, enum radio_path rfpath, u32 addr,
->                      u32 mask, u32 data)
->  {
-> -       if (addr == 0xfe) {
-> -               mdelay(50);
-> -       } else if (addr == 0xfd) {
-> -               mdelay(5);
-> -       } else if (addr == 0xfc) {
-> -               mdelay(1);
-> -       } else if (addr == 0xfb) {
-> -               udelay(50);
-> -       } else if (addr == 0xfa) {
-> -               udelay(5);
-> -       } else if (addr == 0xf9) {
-> -               udelay(1);
-> +       if (addr >= 0xf9 && addr <= 0xfe) {
-> +               rtl_addr_delay(addr);
->         } else {
->                 rtl_set_rfreg(hw, rfpath, addr, mask, data);
->                 udelay(1);
-> @@ -76,18 +74,8 @@ EXPORT_SYMBOL(rtl_rfreg_delay);
->
->  void rtl_bb_delay(struct ieee80211_hw *hw, u32 addr, u32 data)
->  {
-> -       if (addr == 0xfe) {
-> -               mdelay(50);
-> -       } else if (addr == 0xfd) {
-> -               mdelay(5);
-> -       } else if (addr == 0xfc) {
-> -               mdelay(1);
-> -       } else if (addr == 0xfb) {
-> -               udelay(50);
-> -       } else if (addr == 0xfa) {
-> -               udelay(5);
-> -       } else if (addr == 0xf9) {
-> -               udelay(1);
-> +       if (addr >= 0xf9 && addr <= 0xfe) {
-> +               rtl_addr_delay(addr);
->         } else {
->                 rtl_set_bbreg(hw, addr, MASKDWORD, data);
->                 udelay(1);
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+> - Felix
