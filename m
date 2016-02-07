@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:36594 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754640AbcBXOZm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2016 09:25:42 -0500
-Received: by mail-wm0-f48.google.com with SMTP id g62so274144813wme.1
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 06:25:42 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <56CDB213.8060004@candelatech.com>
-References: <1456180974-21062-1-git-send-email-greearb@candelatech.com>
- <CA+XVXffpNDf0-5a6cPz0aUrrRfHgKQeu09zDt5eSe1K87m__pw@mail.gmail.com>
- <56CC62BC.308@candelatech.com> <CA+XVXffxWtZgfZS=EZGYng6vWMxqnhTdhgxagYXRbKq1iYj0Sg@mail.gmail.com>
- <56CDAEF6.1080606@candelatech.com> <CA+XVXfceVud0OfB5P=s45DCES1D2VGnbtotZvKX2s8FeFh8N0A@mail.gmail.com>
- <56CDB213.8060004@candelatech.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 24 Feb 2016 16:25:27 +0200
-Message-ID: <CA+XVXfd1x3xDAOCgsNqvF0p8_T-S02ed0Crv2bictPrAsYjnMg@mail.gmail.com> (sfid-20160224_152546_239957_B0D40E46)
-Subject: Re: [PATCH] mac80211: Let VHT work on 2.4Ghz
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+Received: from arrakis.dune.hu ([78.24.191.176]:42029 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753829AbcBGNVy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Feb 2016 08:21:54 -0500
+Subject: Re: [RFC v2] mac80211: add A-MSDU tx support
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+References: <1454668864-31777-1-git-send-email-nbd@openwrt.org>
+ <CANUX_P3xJBopdHcNjwJ2UcXLPZcNHJtE+mC2=3i8b4p=J8kjXQ@mail.gmail.com>
+ <56B70978.3030900@openwrt.org>
+ <CANUX_P0VWG78s8fs5Y58n-JwK+bamkLQV=M9aYroDGWrhrrR0g@mail.gmail.com>
+ <CANUX_P0QkRhSpdxrd9jAobCX9E=TED55=YaTOJ6QwwuJQHfTqA@mail.gmail.com>
+ <56B72115.10709@openwrt.org>
+ <CANUX_P3kt90a2xiW=KtS7eA2movyne49OwG2XmJY6vrH7Oy12g@mail.gmail.com>
+ <56B72F3E.9090708@openwrt.org>
+ <CANUX_P2PG1Syik6jekU0Qif4gxZparoTJ124W15_oMWcu=ZCRw@mail.gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
 	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+From: Felix Fietkau <nbd@openwrt.org>
+Message-ID: <56B744EC.7090803@openwrt.org> (sfid-20160207_142209_087602_62F98B5F)
+Date: Sun, 7 Feb 2016 14:21:48 +0100
+MIME-Version: 1.0
+In-Reply-To: <CANUX_P2PG1Syik6jekU0Qif4gxZparoTJ124W15_oMWcu=ZCRw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Feb 24, 2016 at 3:37 PM, Ben Greear <greearb@candelatech.com> wrote:
->
->
-> On 02/24/2016 05:32 AM, Arik Nemtsov wrote:
->>
->> On Wed, Feb 24, 2016 at 3:24 PM, Ben Greear <greearb@candelatech.com>
->> wrote:
->>>>
->>>> Also it's pretty easy to just leave the code there and condition the
->>>> check on the 5GHz band. There's no need to remove it.
->>>
->>>
->>>
->>> Ok, so I can enable VHT on any band as long as the 5Ghz band exists and
->>> allows 80Mhz?
->>>
->>
->> No idea about that. I'm not sure how/if rate modulation is regulated
->> on 2GHz. The ISM band itself is supposed to be open (microwave heating
->> etc.) so it seems fine to me.
->> But don't take me up on that. This is lawyer domain.
->
->
-> I'm trying to understand your suggestion.
->
-> Maybe you mean I change my patch to only disable VHT if band == 5Ghz AND
-> 80Mhz is not available?
+On 2016-02-07 12:56, Emmanuel Grumbach wrote:
+>>> well.. Yes, you can't assume that you'll have one descriptor for one
+>>> MSDU payload  (unless the driver doesn't advertise SG to the
+>>> netstack).
+>> Okay, please make a suggestion describing the exact kinds of limits you
+>> would need for iwlwifi.
+> 
+> Are athX devices able to handle MPDUs with any number of frags? Say if
+> you have 30 different physically contiguous fragments, the DMA would
+> be able to load all these into one single packet and send it to the
+> air?
+I think athX devices have no limitations there. I'm not testing this
+with atheros devices though - ath9k does not have mac80211
+per-sta-per-tid queueing support yet. I'm working with MediaTek MT76x2
+chipsets with my mt76 driver, which I will upstream soon.
 
-Yes. But I'm not saying you can enable 2.4GHz VHT in that case. I
-don't know about that.
+> iwlwifi currently has the limitation of 20 Transmit Buffers (BTs)
+> which I mentioned earlier. I guess it'd be nice if the driver would be
+> able to advertise how many fragments it can handle. Then, you'd need
+> to stop the A-MSDU building if you'd cross this boundary?
+> 
+> You can look at skb_shinfo(skb)->nr_frags to know how many frags you
+> have for each skb. On top of that, you need 1 frag for each subframe
+> (subframe header).
+I implemented all of your suggestions in RFC v3, let me know if
+anything's missing.
+
+- Felix
