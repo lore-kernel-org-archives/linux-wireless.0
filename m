@@ -1,49 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53882 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932065AbcBAM54 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2016 07:57:56 -0500
-Message-ID: <1454331473.3211.3.camel@sipsolutions.net> (sfid-20160201_135759_289209_D42E28A4)
-Subject: Re: [PATCH] mac80211: minstrel: Scale expected_throughput by 10
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sven Eckelmann <sven@open-mesh.com>
-Cc: linux-wireless@vger.kernel.org, thomas@net.t-labs.tu-berlin.de,
-	antonio@open-mesh.com, nbd@nbd.name
-Date: Mon, 01 Feb 2016 13:57:53 +0100
-In-Reply-To: <7460390.ua0GvOE4DE@bentobox> (sfid-20160201_135611_528149_53AC3A85)
-References: <1454329450-31527-1-git-send-email-sven@open-mesh.com>
-	 <1454329837.3211.2.camel@sipsolutions.net> <7460390.ua0GvOE4DE@bentobox>
-	 (sfid-20160201_135611_528149_53AC3A85)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.linuxfoundation.org ([140.211.169.12]:53909 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751066AbcBGGDz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 7 Feb 2016 01:03:55 -0500
+Date: Sat, 6 Feb 2016 22:03:54 -0800
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Glen Lee <glen.lee@atmel.com>, devel@driverdev.osuosl.org,
+	Chris Park <chris.park@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	linux-wireless@vger.kernel.org, Johnny Kim <johnny.kim@atmel.com>,
+	linux-kernel@vger.kernel.org, Tony Cho <tony.cho@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] staging: wilc1000: fix compilation without CONFIG_PM
+Message-ID: <20160207060354.GA2714@kroah.com> (sfid-20160207_070415_844262_BC7302BA)
+References: <1454685729-3663377-1-git-send-email-arnd@arndb.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1454685729-3663377-1-git-send-email-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-02-01 at 13:56 +0100, Sven Eckelmann wrote:
-> On Monday 01 February 2016 13:30:37 Johannes Berg wrote:
-> > On Mon, 2016-02-01 at 13:24 +0100, Sven Eckelmann wrote:
-> > > The change from cur_tp to the function
-> > > minstrel_get_tp_avg/minstrel_ht_get_tp_avg changed the unit used
-> > > for
-> > > the
-> > > current throughtput. For example in minstrel_ht the correct
-> > > conversion between them would be:
-> > > 
-> > >     mrs->cur_tp / 10 == minstrel_ht_get_tp_avg(..).
-> > > 
-> > > This factor 10 must also be included in the calculation of
-> > > minstrel_get_expected_throughput and
-> > > minstrel_ht_get_expected_throughput to
-> > > get similar results as before the change.
-> > > 
-> > 
-> > 10 is a pretty expensive factor, perhaps that should use 16
-> > instead?
+On Fri, Feb 05, 2016 at 04:21:50PM +0100, Arnd Bergmann wrote:
+> After the addition of the wakeup code in wilc1000, it no longer
+> builds when CONFIG_PM is disabled:
 > 
-> Not really funny but I will change the title.
+> drivers/staging/wilc1000/wilc_wfi_cfgoperations.c: In function 'wilc_create_wiphy':
+> drivers/staging/wilc1000/wilc_wfi_cfgoperations.c:2632:13: error: 'struct wiphy' has no member named 'wowlan'
+>   wdev->wiphy->wowlan = &wowlan_support;
+> 
+> This marks the wowlan_support variable as __maybe_unused and hides
+> the reference when CONFIG_PM is disabled to avoid the build error.
+> 
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Fixes: 73584a40d748 ("staging: wilc1000: add ops resuem/suspend/wakeup in cfg80211")
+> ---
+>  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
 
-Huh? Not sure what you mean. I really meant to change 10 to 16 overall
-as far as the factor is concerned, since division by/multiplication
-with 16 is far easier in base 2 than by/with 10.
+A different patch was sent just before yours.  Actually 2 different
+ones...
 
-johannes
+thanks,
+
+greg k-h
