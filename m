@@ -1,73 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:31577 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752539AbcBVEnz (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40852 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751499AbcBGHJG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2016 23:43:55 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 01/10] staging: wilc1000: removes wilc_dbg()
-Date: Mon, 22 Feb 2016 13:41:10 +0900
-Message-ID: <1456116079-7161-1-git-send-email-leo.kim@atmel.com> (sfid-20160222_054358_955272_4CCA03CF)
+	Sun, 7 Feb 2016 02:09:06 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Nikolay Martynov <mar.kolya@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: Monitor interface TX performance boost
+References: <CALGY4fuC7CHHFtp3VYtEZe_UFb_frHWK+_C+LWQVrC+0fzn4Kg@mail.gmail.com>
+Date: Sun, 07 Feb 2016 09:09:00 +0200
+In-Reply-To: <CALGY4fuC7CHHFtp3VYtEZe_UFb_frHWK+_C+LWQVrC+0fzn4Kg@mail.gmail.com>
+	(Nikolay Martynov's message of "Sat, 6 Feb 2016 23:21:45 -0500")
+Message-ID: <87k2mhro8j.fsf@purkki.adurom.net> (sfid-20160207_080910_872596_981AF150)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes wilc_dbg function because it's not any more.
+Nikolay Martynov <mar.kolya@gmail.com> writes:
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c         | 4 ----
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 2 --
- drivers/staging/wilc1000/wilc_wlan.c          | 2 --
- 3 files changed, 8 deletions(-)
+>   I'm seeing strange behavior on my intel 6300 card.
+>
+>   If I measure TX performance just after boot (iperf in tcp mode), I get this:
+>
+> [  3]  0.0-10.1 sec  11.2 MBytes  9.32 Mbits/sec
+>
+>   But if create and enable monitor interface (with command like 'sudo
+> iw phy phy0 interface add moni0 type monitor && sudo ifconfig moni0
+> up') I get this:
+>
+> [  3]  0.0-10.1 sec  34.8 MBytes  29.0 Mbits/sec
+>
+> That's about three times boost in throughput by just creating an
+> interface (without even using it).
+> Doing 'ifconfig moni0 down' bring performance back to 10Mbits range.
+>
+> Experiments are done with laptop being ~5m from router and not moving.
+> These results are repeatable, i.e. not caused by random things like
+> other stations transmitting, or channel being busy.
+>
+> Is this something expected? Is there any reason performance can be as
+> good without monitor interface existing?
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 749dfc74..912e8ec 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -224,10 +224,6 @@ static void deinit_irq(struct net_device *dev)
- 	}
- }
- 
--void wilc_dbg(u8 *buff)
--{
--}
--
- int wilc_lock_timeout(struct wilc *nic, void *vp, u32 timeout)
- {
- 	/* FIXME: replace with mutex_lock or wait_for_completion */
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 3077f5d4..786f5fd 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -228,8 +228,6 @@ int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif);
- 
- void wilc_frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
- void wilc_mac_indicate(struct wilc *wilc, int flag);
--void wilc_dbg(u8 *buff);
--
- int wilc_lock_timeout(struct wilc *wilc, void *, u32 timeout);
- void wilc_netdev_cleanup(struct wilc *wilc);
- int wilc_netdev_init(struct wilc **wilc, struct device *, int io_type, int gpio,
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index e7ae359..90b6528 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -15,8 +15,6 @@ static void wilc_debug(u32 flag, char *fmt, ...)
- 		va_start(args, fmt);
- 		vsprintf(buf, fmt, args);
- 		va_end(args);
--
--		wilc_dbg(buf);
- 	}
- }
- 
+Maybe the monitor mode disables power save automatically?
+
 -- 
-1.9.1
-
+Kalle Valo
