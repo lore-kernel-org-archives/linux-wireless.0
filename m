@@ -1,39 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:49715 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751788AbcBKJ2H (ORCPT
+Received: from mail.linuxfoundation.org ([140.211.169.12]:53265 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755336AbcBGVnV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2016 04:28:07 -0500
-Date: Thu, 11 Feb 2016 04:28:03 -0500 (EST)
-Message-Id: <20160211.042803.1404242456426060095.davem@davemloft.net> (sfid-20160211_102826_950421_AE1087C1)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org, ja@ssi.bg,
-	johannes.berg@intel.com
-Subject: Re: [PATCH v3 3/4] ipv6: add option to drop unicast encapsulated
- in L2 multicast
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1454589080-21354-3-git-send-email-johannes@sipsolutions.net>
-References: <1454589080-21354-1-git-send-email-johannes@sipsolutions.net>
-	<1454589080-21354-3-git-send-email-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sun, 7 Feb 2016 16:43:21 -0500
+Date: Sun, 7 Feb 2016 13:43:20 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Glen Lee <glen.lee@atmel.com>
+Cc: devel@driverdev.osuosl.org, Chris.Park@atmel.com,
+	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
+	Nicolas.FERRE@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
+	adham.abozaeid@atmel.com
+Subject: Re: [PATCH RESEND 40/70] staging: wilc1000: wilc_wlan.c: replaces
+ PRINT_ER with netdev_err
+Message-ID: <20160207214320.GA31172@kroah.com> (sfid-20160207_224327_037670_31A8CA0B)
+References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu,  4 Feb 2016 13:31:19 +0100
-
-> From: Johannes Berg <johannes.berg@intel.com>
+On Thu, Feb 04, 2016 at 06:24:01PM +0900, Glen Lee wrote:
+> From: Leo Kim <leo.kim@atmel.com>
 > 
-> In order to solve a problem with 802.11, the so-called hole-196 attack,
-> add an option (sysctl) called "drop_unicast_in_l2_multicast" which, if
-> enabled, causes the stack to drop IPv6 unicast packets encapsulated in
-> link-layer multi- or broadcast frames. Such frames can (as an attack)
-> be created by any member of the same wireless network and transmitted
-> as valid encrypted frames since the symmetric key for broadcast frames
-> is shared between all stations.
-> 
-> Reviewed-by: Julian Anastasov <ja@ssi.bg>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+> This patches replaces PRINT_ER with netdev_err.
 
-Applied.
+No, that's not what this patch does :(
+
+> Removes unnecessary debug logs as well.
+
+That's what this patch does.
+
+Please be more careful.
+
+I'm not going to apply this patch.
+
+greg k-h
