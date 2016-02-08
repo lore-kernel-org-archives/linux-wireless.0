@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:45761 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751495AbcBWNxy (ORCPT
+Received: from mail-qg0-f66.google.com ([209.85.192.66]:36427 "EHLO
+	mail-qg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754620AbcBHPlm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 08:53:54 -0500
-Message-ID: <56CC6471.8050204@candelatech.com> (sfid-20160223_145357_371772_A4F93510)
-Date: Tue, 23 Feb 2016 05:53:53 -0800
-From: Ben Greear <greearb@candelatech.com>
+	Mon, 8 Feb 2016 10:41:42 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [PATCH 1/9] rfkill: Improve documentation language
+Date: Mon,  8 Feb 2016 10:41:28 -0500
+Message-Id: <1454946096-9752-2-git-send-email-jprvita@endlessm.com> (sfid-20160208_164352_147228_E4C4FE73)
+In-Reply-To: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
+References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
 MIME-Version: 1.0
-To: akolli@qti.qualcomm.com, ath10k@lists.infradead.org
-CC: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: Reduce number of peers to support peer stats
- feature
-References: <1456210197-27892-1-git-send-email-akolli@qti.qualcomm.com>
-In-Reply-To: <1456210197-27892-1-git-send-email-akolli@qti.qualcomm.com>
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+---
+ net/rfkill/core.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-
-On 02/22/2016 10:49 PM, akolli@qti.qualcomm.com wrote:
-> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
->
-> To enable per peer stats feature we are reducing the number of peers.
-> Firmware has introduced tx stats feature. We have memory limitation in
-> firmware to add these additional bytes.
-
-Maybe this is OK for defaults, but we should also give the user the ability
-to configure various things, including disabling pktlog, setting number
-of vdevs, peers, tids, etc.  Maybe something like the parseable config file
-patch I linked too earlier?
-
-http://dmz2.candelatech.com/?p=linux-4.4.dev.y/.git;a=commit;h=6708e4047d91edf234239943332bc2f0d124d009
-
-You can also save a lot of RAM in your firmware if you naturally pack your structs
-better, and remove un-used members from various structures, etc.
-
-Thanks,
-Ben
-
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index a805831..ffbc375 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -282,8 +282,8 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
+ 	spin_lock_irqsave(&rfkill->lock, flags);
+ 	if (err) {
+ 		/*
+-		 * Failed -- reset status to _prev, this may be different
+-		 * from what set set _PREV to earlier in this function
++		 * Failed -- reset status to _PREV, which may be different
++		 * from what we have set _PREV to earlier in this function
+ 		 * if rfkill_set_sw_state was invoked.
+ 		 */
+ 		if (rfkill->state & RFKILL_BLOCK_SW_PREV)
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.5.0
+
