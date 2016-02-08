@@ -1,75 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:37162 "EHLO
-	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752262AbcBAIqH (ORCPT
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35219 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756433AbcBHVoy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2016 03:46:07 -0500
-From: Hante Meuleman <meuleman@broadcom.com>
-To: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Arend van Spriel <aspriel@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	brcm80211-dev-list <brcm80211-dev-list@broadcom.com>
-Subject: RE: [PATCH FIX?] brcmfmac: fix possible overflows in flowrings code
- by bumping u8 to u16
-Date: Mon, 1 Feb 2016 08:46:04 +0000
-Message-ID: <F51492713EF10846800D8C0ED37A7DCE019CC2D8@SJEXCHMB15.corp.ad.broadcom.com> (sfid-20160201_094612_068658_C130E64B)
-References: <1454198830-13971-1-git-send-email-zajec5@gmail.com>
-	<56ADDA44.90707@gmail.com>
- <CACna6rzMQ2St4HUiccp37Ki3-K5_f_cLddi-m4dk0iyzq-_rYA@mail.gmail.com>
-In-Reply-To: <CACna6rzMQ2St4HUiccp37Ki3-K5_f_cLddi-m4dk0iyzq-_rYA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Mon, 8 Feb 2016 16:44:54 -0500
+Received: by mail-oi0-f66.google.com with SMTP id x194so150856oia.2
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2016 13:44:54 -0800 (PST)
+Subject: Re: [PATCH 2/2] rtlwifi: Remove unnecessary synchronize_irq() before
+ free_irq()
+To: Lars-Peter Clausen <lars@metafoo.de>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <1454964073-25108-1-git-send-email-lars@metafoo.de>
+ <1454964073-25108-2-git-send-email-lars@metafoo.de>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <56B90C53.3070204@lwfinger.net> (sfid-20160208_224458_928682_AC461B58)
+Date: Mon, 8 Feb 2016 15:44:51 -0600
 MIME-Version: 1.0
+In-Reply-To: <1454964073-25108-2-git-send-email-lars@metafoo.de>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGksDQoNCkRpZG7igJl0IGtub3cgdGhhdCB0aGF0IHBhdGNoIGdvdCByZXZlcnRlZC4gT3VyIGlu
-dGVybmFsIHJlcG9zaXRvcnkgc3RpbGwgaGFzIHRoYXQgcGF0Y2ggYW5kIHdlIGhhdmUgaGFkIG5v
-IHByb2JsZW1zIHdoYXRzb2V2ZXIgZm9yIHRoZSBsYXN0IDcgKGp1bmUgMjYgdGhpcyBnb3Qgc3Vi
-bWl0dGVkIGludGVybmFsbHkpIG1vbnRocyBvbiBhbnkgcGNpZSB0YXJnZXQgKGFsc28gdXNlZCBp
-dCBvbiByODAwMCBvcGVud3J0KS4gUmFmYWwncyBwYXRjaCBpcyBvdmVyZG9uZS4gSWYgeW91IGRv
-buKAmXQgdXAgdGhlIGhhc2hzaXplIHNwYWNlIHRoZW4gdGhlcmUgaXMgcmVhbGx5IG5vIHVzZSB0
-byBzd2l0Y2ggdG8gdTE2LiBZb3UgY2FuIHNpbXBseSBsaW1pdCB0aGUgbnIgb2YgZmxvd3Jpbmdz
-IHRvIDI1NSBpbiBicmNtZl9wcm90b19tc2didWZfYXR0YWNoIG9yIGFwcGx5IHRoZSBwYXRjaCBJ
-IG9yaWdpbmFsbHkgc3VibWl0dGVkLg0KDQpSZWdhcmRzLA0KSGFudGUNCg0KLS0tLS1PcmlnaW5h
-bCBNZXNzYWdlLS0tLS0NCkZyb206IFJhZmHFgiBNacWCZWNraSBbbWFpbHRvOnphamVjNUBnbWFp
-bC5jb21dIA0KU2VudDogU3VuZGF5LCBKYW51YXJ5IDMxLCAyMDE2IDEyOjQ0IFBNDQpUbzogQXJl
-bmQgdmFuIFNwcmllbA0KQ2M6IEthbGxlIFZhbG87IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVs
-Lm9yZzsgQnJldHQgUnVkbGV5OyBBcmVuZCBWYW4gU3ByaWVsOyBGcmFua3kgKFpoZW5odWkpIExp
-bjsgSGFudGUgTWV1bGVtYW47IGJyY204MDIxMS1kZXYtbGlzdA0KU3ViamVjdDogUmU6IFtQQVRD
-SCBGSVg/XSBicmNtZm1hYzogZml4IHBvc3NpYmxlIG92ZXJmbG93cyBpbiBmbG93cmluZ3MgY29k
-ZSBieSBidW1waW5nIHU4IHRvIHUxNg0KDQpPbiAzMSBKYW51YXJ5IDIwMTYgYXQgMTA6NTYsIEFy
-ZW5kIHZhbiBTcHJpZWwgPGFzcHJpZWxAZ21haWwuY29tPiB3cm90ZToNCj4gT24gMzEtMDEtMTYg
-MDE6MDcsIFJhZmHFgiBNacWCZWNraSB3cm90ZToNCj4+IFNvbWUgZGV2aWNlcyBtYXkgdXNlIG1v
-cmUgdGhhbiAyNTUgZmxvd2luZ3MsIGJlbG93IGlzIGxvZyBmcm9tIEJDTTQzNjY6DQo+PiBbICAx
-OTQuNjA2MjQ1XSBicmNtZm1hYzogYnJjbWZfcGNpZV9pbml0X3JpbmdidWZmZXJzIE5yIG9mIGZs
-b3dyaW5ncyBpcyAyNjQNCj4+DQo+PiBBdCB2YXJpb3VzIHBsYWNlcyB3ZSB3ZXJlIHVzaW5nIHU4
-IHdoaWNoIGNvdWxkIGxlYWQgdG8gc3RvcmluZyB3cm9uZw0KPj4gbnVtYmVyIG9yIGluZmluaXRl
-IGxvb3BzIHdoZW4gaW5kZXhpbmcgaW5jb3JyZWN0bHkuIEluaXRpYWxseSB0aGlzDQo+PiBpc3N1
-ZSB3YXMgc3BvdHRlZCBhcyBpbmZpbml0ZSBsb29wIGluIGJyY21mX2Zsb3dyaW5nX2RldGFjaC4N
-Cj4NCj4gVGhlcmUgaGFzIGFscmVhZHkgYmVlbiBhIHBhdGNoIHN1Ym1pdHRlZCBmb3IgdGhpcyBb
-MV0uIEhvd2V2ZXIsIGJlY2F1c2UNCj4geW91IHJlcG9ydGVkIGlzc3VlcyB3aXRoIGl0IG9uIHlv
-dXIgZGV2aWNlIChub3Qgc3VyZSB3aGljaCBvbmUpLiBEaWQgeW91DQo+IHRlc3QgdGhpcyBwYXRj
-aCBvbiB0aGF0IHBhcnRpY3VsYXIgZGV2aWNlLg0KDQpJIHdhc24ndCBhd2FyZSBIYW50ZSdzIHBh
-dGNoIGNvbnRhaW5lZCBjaGFuZ2VzIGZyb20gdGhpcyBwYXRjaC4gQW55d2F5DQp0aGUgbWFpbiBk
-aWZmZXJlbmNlIGlzIHRoYXQgbXkgcGF0Y2ggZG9lc24ndCB0b3VjaA0KQlJDTUZfRkxPV1JJTkdf
-SEFTSFNJWkUuDQoNClNvIG15IHBhdGNoOg0KMSkgRml4ZXMgcG9zc2libGUgb3ZlcmZsb3dzIGlu
-IGZsb3dyaW5ncw0KDQpIYW50ZSdzIHBhdGNoOg0KMSkgRml4ZXMgcG9zc2libGUgb3ZlcmZsb3dz
-IGluIGZsb3dyaW5ncw0KMikgQnVtcHMgQlJDTUZfRkxPV1JJTkdfSEFTSFNJWkUNCg0KSXQgd2Fz
-IGJ1bXBpbmcgQlJDTUZfRkxPV1JJTkdfSEFTSFNJWkUgdGhhdCBjYXVzZWQgcHJvYmxlbXMgb24g
-bXkNCkJDTTQzNjAyIGRldmljZSBiYWNrIHRoZW4uIFBsZWFzZSBub3RlIEJDTTQzNjAyIHdhc24n
-dCBhZmZlY3RlZCBieQ0KZmxvd2luZ3Mgb3ZlcmZsb3dzIGJlY2F1c2UgaXQgd2Fzbid0IHVzaW5n
-IG1vcmUgdGhhbiAyNTUgb2YgdGhlbToNCmJyY21mbWFjOiBicmNtZl9wY2llX2luaXRfcmluZ2J1
-ZmZlcnMgTnIgb2YgZmxvd3JpbmdzIGlzIDEzMg0KDQpUaGUgc3RvcnkgaXMgZGlmZmVyZW50IHdp
-dGggbXkgQkNNNDM2Ni4gSSBkaWRuJ3QgdHJ5IGl0IHdpdGggYnVtcGluZw0KQlJDTUZfRkxPV1JJ
-TkdfSEFTSFNJWkUgYnV0IGl0IHN1ZmZlcnMgZnJvbSBvdmVyZmxvd3MgaW4gZmxvd3JpbmdzIGFz
-DQppdCBzZWVtcyB0byBiZSBpbmRlcGVuZGVudCBpc3N1ZS4gSXQncyBjcnVjaWFsIHRoYXQgQkNN
-NDM2NiB1c2VzIG1vcmUNCnRoYW4gMjU1IGZsb3dyaW5nczoNCmJyY21mbWFjOiBicmNtZl9wY2ll
-X2luaXRfcmluZ2J1ZmZlcnMgTnIgb2YgZmxvd3JpbmdzIGlzIDI2NA0KDQoNCj4gSSB3YW50IEhh
-bnRlIHRvIHJldmlldyB5b3VyIHBhdGNoLCBidXQgaW5kZWVkIHRoaXMgd291bGQgYmUgNC41IG1h
-dGVyaWFsDQo+IGFuZCBwcm9iYWJseSBzdGFibGUuDQoNCkkganVzdCByZWFsaXplZCBCQ000MzY2
-IHN1cHBvcnQgd2VudCBpbnRvIDQuNCBub3QgNC41LCBzbyBDYy1pbmcNCnN0YWJsZSBmb3IgNC40
-KyBpcyBwcm9iYWJseSBhIGdvb2QgaWRlYS4NCg0K
+On 02/08/2016 02:41 PM, Lars-Peter Clausen wrote:
+> Calling synchronize_irq() right before free_irq() is quite useless. On one
+> hand the IRQ can easily fire again before free_irq() is entered, on the
+> other hand free_irq() itself calls synchronize_irq() internally (in a race
+> condition free way), before any state associated with the IRQ is freed.
+>
+> Patch was generated using the following semantic patch:
+> // <smpl>
+> @@
+> expression irq;
+> @@
+> -synchronize_irq(irq);
+>   free_irq(irq, ...);
+> // </smpl>
+>
+> Signed-off-by: Lars-Peter Clausen <lars@metafoo.de>
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/pci.c | 1 -
+>   1 file changed, 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+> index 7f471bf..140d254 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/pci.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+> @@ -2392,7 +2392,6 @@ void rtl_pci_disconnect(struct pci_dev *pdev)
+>   	rtlpriv->cfg->ops->deinit_sw_vars(hw);
+>
+>   	if (rtlpci->irq_alloc) {
+> -		synchronize_irq(rtlpci->pdev->irq);
+>   		free_irq(rtlpci->pdev->irq, hw);
+>   		rtlpci->irq_alloc = 0;
+>   	}
+>
+
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+
+Makes sense to me.
+
+Thanks,
+
+Larry
+
