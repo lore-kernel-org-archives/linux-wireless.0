@@ -1,160 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20112 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753311AbcBVKR7 (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:35707 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751433AbcBHKAU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 05:17:59 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V4 07/24] staging: wilc1000: linux_mon.c: removes unnecessary log message
-Date: Mon, 22 Feb 2016 19:14:14 +0900
-Message-ID: <1456136071-10502-8-git-send-email-leo.kim@atmel.com> (sfid-20160222_111802_948818_BFD3BF24)
-In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
-References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+	Mon, 8 Feb 2016 05:00:20 -0500
+Received: by mail-wm0-f51.google.com with SMTP id c200so7350393wme.0
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2016 02:00:19 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAA93jw7M3j8WYPTGx=V6yQKa_hpcg435GV4O4ZbfxiR8S9VVuQ@mail.gmail.com>
+References: <1454616764-19841-1-git-send-email-emmanuel.grumbach@intel.com>
+	<1454616988-21901-1-git-send-email-emmanuel.grumbach@intel.com>
+	<56B3B885.1050409@candelatech.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB32EA02656@hasmsx107.ger.corp.intel.com>
+	<56B3BF25.8080509@candelatech.com>
+	<CA+BoTQm+xTU6o7CMbCHr=bSgp7WE5btE4pMki5XJWiXaOG4SdA@mail.gmail.com>
+	<CAA93jw7M3j8WYPTGx=V6yQKa_hpcg435GV4O4ZbfxiR8S9VVuQ@mail.gmail.com>
+Date: Mon, 8 Feb 2016 11:00:18 +0100
+Message-ID: <CA+BoTQ=BMsXHEcg0LTEcsVLVUBYLmQ2F_oRghFPLty1XD-L9wQ@mail.gmail.com> (sfid-20160208_110039_617344_F80C6CFA)
+Subject: Re: [RFC v2] iwlwifi: pcie: transmit queue auto-sizing
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Dave Taht <dave.taht@gmail.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Stephen Hemminger <stephen@networkplumber.org>,
+	Jonathan Corbet <corbet@lwn.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+On 5 February 2016 at 17:47, Dave Taht <dave.taht@gmail.com> wrote:
+>> A bursted txop can be as big as 5-10ms. If you consider you want to
+>> queue 5-10ms worth of data for *each* station at any given time you
+>> obviously introduce a lot of lag. If you have 10 stations you might
+>> end up with service period at 10*10ms = 100ms. This gets even worse if
+>> you consider MU-MIMO because you need to do an expensive sounding
+>> procedure before transmitting. So while SU aggregation can probably
+>> still work reasonably well with shorter bursts (1-2ms) MU needs at
+>> least 3ms to get *any* gain when compared to SU (which obviously means
+>> you want more to actually make MU pay off).
+>
+> I am not sure where you get these numbers. Got a spreadsheet?
 
-This patch removes unnecessary log message and relate variables.
+Here's a nice summary on some of it:
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_mon.c | 42 ++++--------------------------------
- 1 file changed, 4 insertions(+), 38 deletions(-)
+  http://chimera.labs.oreilly.com/books/1234000001739/ch03.html#figure-mac-ampdu
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index dd9e4b2..f6349e5 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -52,15 +52,11 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
- 	struct wilc_wfi_radiotap_hdr *hdr;
- 	struct wilc_wfi_radiotap_cb_hdr *cb_hdr;
- 
--	PRINT_INFO(HOSTAPD_DBG, "In monitor interface receive function\n");
--
- 	if (!wilc_wfi_mon)
- 		return;
- 
--	if (!netif_running(wilc_wfi_mon)) {
--		PRINT_INFO(HOSTAPD_DBG, "Monitor interface already RUNNING\n");
-+	if (!netif_running(wilc_wfi_mon))
- 		return;
--	}
- 
- 	/* Get WILC header */
- 	memcpy(&header, (buff - HOST_HDR_OFFSET), HOST_HDR_OFFSET);
-@@ -73,10 +69,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
- 		/* hostapd callback mgmt frame */
- 
- 		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_cb_hdr));
--		if (!skb) {
--			PRINT_INFO(HOSTAPD_DBG, "Monitor if : No memory to allocate skb");
-+		if (!skb)
- 			return;
--		}
- 
- 		memcpy(skb_put(skb, size), buff, size);
- 
-@@ -103,20 +97,16 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
- 	} else {
- 		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_hdr));
- 
--		if (!skb) {
--			PRINT_INFO(HOSTAPD_DBG, "Monitor if : No memory to allocate skb");
-+		if (!skb)
- 			return;
--		}
- 
- 		memcpy(skb_put(skb, size), buff, size);
- 		hdr = (struct wilc_wfi_radiotap_hdr *)skb_push(skb, sizeof(*hdr));
- 		memset(hdr, 0, sizeof(struct wilc_wfi_radiotap_hdr));
- 		hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
- 		hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_hdr));
--		PRINT_INFO(HOSTAPD_DBG, "Radiotap len %d\n", hdr->hdr.it_len);
- 		hdr->hdr.it_present = cpu_to_le32
- 				(1 << IEEE80211_RADIOTAP_RATE);                   /* | */
--		PRINT_INFO(HOSTAPD_DBG, "Presentflags %d\n", hdr->hdr.it_present);
- 		hdr->rate = 5; /* txrate->bitrate / 5; */
- 	}
- 
-@@ -138,14 +128,6 @@ struct tx_complete_mon_data {
- static void mgmt_tx_complete(void *priv, int status)
- {
- 	struct tx_complete_mon_data *pv_data = priv;
--	u8 *buf =  pv_data->buff;
--
--	if (status == 1) {
--		if (INFO || buf[0] == 0x10 || buf[0] == 0xb0)
--			PRINT_INFO(HOSTAPD_DBG, "Packet sent successfully - Size = %d - Address = %p.\n", pv_data->size, pv_data->buff);
--	} else {
--		PRINT_INFO(HOSTAPD_DBG, "Couldn't send packet - Size = %d - Address = %p.\n", pv_data->size, pv_data->buff);
--	}
- 
- 	/* incase of fully hosting mode, the freeing will be done in response to the cfg packet */
- 	kfree(pv_data->buff);
-@@ -193,7 +175,7 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
- static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 				     struct net_device *dev)
- {
--	u32 rtap_len, i, ret = 0;
-+	u32 rtap_len, ret = 0;
- 	struct WILC_WFI_mon_priv  *mon_priv;
- 
- 	struct sk_buff *skb2;
-@@ -210,18 +192,9 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 		return -1;
- 
- 	/* skip the radiotap header */
--	PRINT_INFO(HOSTAPD_DBG, "Radiotap len: %d\n", rtap_len);
--
--	if (INFO) {
--		for (i = 0; i < rtap_len; i++)
--			PRINT_INFO(HOSTAPD_DBG, "Radiotap_hdr[%d] %02x\n", i, skb->data[i]);
--	}
- 	/* Skip the ratio tap header */
- 	skb_pull(skb, rtap_len);
- 
--	if (skb->data[0] == 0xc0)
--		PRINT_INFO(HOSTAPD_DBG, "%x:%x:%x:%x:%x%x\n", skb->data[4], skb->data[5], skb->data[6], skb->data[7], skb->data[8], skb->data[9]);
--
- 	if (skb->data[0] == 0xc0 && (!(memcmp(broadcast, &skb->data[4], 6)))) {
- 		skb2 = dev_alloc_skb(skb->len + sizeof(struct wilc_wfi_radiotap_cb_hdr));
- 
-@@ -254,11 +227,7 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 	}
- 	skb->dev = mon_priv->real_ndev;
- 
--	PRINT_INFO(HOSTAPD_DBG, "Skipping the radiotap header\n");
--
- 	/* actual deliver of data is device-specific, and not shown here */
--	PRINT_INFO(HOSTAPD_DBG, "SKB netdevice name = %s\n", skb->dev->name);
--	PRINT_INFO(HOSTAPD_DBG, "MONITOR real dev name = %s\n", mon_priv->real_ndev->name);
- 
- 	/* Identify if Ethernet or MAC header (data or mgmt) */
- 	memcpy(srcAdd, &skb->data[10], 6);
-@@ -336,13 +305,10 @@ int WILC_WFI_deinit_mon_interface(void)
- 	bool rollback_lock = false;
- 
- 	if (wilc_wfi_mon) {
--		PRINT_D(HOSTAPD_DBG, "In Deinit monitor interface\n");
--		PRINT_D(HOSTAPD_DBG, "RTNL is being locked\n");
- 		if (rtnl_is_locked()) {
- 			rtnl_unlock();
- 			rollback_lock = true;
- 		}
--		PRINT_D(HOSTAPD_DBG, "Unregister netdev\n");
- 		unregister_netdev(wilc_wfi_mon);
- 
- 		if (rollback_lock) {
--- 
-1.9.1
+Even if your single A-MPDU can be shorter than a txop you can burst a
+few of them if my understanding is correct.
 
+The overhead associated with MU sounding is something I've been told
+only. Apparently for MU to pay off you need fairly big bursts. This
+implies that the more stations you have to service the less it makes
+sense to attempt MU if you consider latency.
+
+
+> Gradually reducing the maximum sized txop as a function of the number
+> of stations makes sense. If you have 10 stations pending delivery and
+> reduced the max txop to 1ms, you hurt bandwidth at that instant, but
+> by offering more service to more stations, in less time, they will
+> converge on a reasonable share of the bandwidth for each, faster[1].
+> And I'm sure that the person videoconferencing on a link like that
+> would appreciate getting some service inside of a 10ms interval,
+> rather than a 100ms.
+>
+> yes, there's overhead, and that's not the right number, which would
+> vary as to g,n,ac and successors.
+>
+> You will also get more opportunities to use mu-mimo with shorter
+> bursts extant and more stations being regularly serviced.
+>
+> [1] https://www.youtube.com/watch?v=Rb-UnHDw02o at about 13:50
+
+This is my thinking as well, at least for most common use cases.
+
+If you try to optimize for throughput by introducing extra induced
+latency you might end up not being able to use aggregation in practice
+anyway because you won't be able to start up connections and ask for
+enough data - or at least that's what my intuition tells me.
+
+But, like I've mentioned, there's interest in making it possible to
+maximize for throughput (regardless of latency). This surely makes
+sense for synthetic UDP benchmarks. But does it make sense for any
+real-world application? No idea.
+
+
+>> The rule of thumb is the
+>> longer you wait the bigger capacity you can get.
+>
+> This is not strictly true as the "fountain" of packets is regulated by
+> acks on the other side of the link, and ramp up or down as a function
+> of service time and loss.
+
+Yes, if you consider real world cases, i.e. TCP, web traffic, etc.
+then you're correct.
+
+
+>> Apparently there's interest in maximizing throughput but it stands in
+>> direct opposition of keeping the latency down so I've been thinking
+>> how to satisfy both.
+>>
+>> The current approach ath10k is taking (patches in review [1][2]) is to
+>> use mac80211 software queues for per-station queuing, exposing queue
+>> state to firmware (it decides where frames should be dequeued from)
+>> and making it possible to stop/wake per-station tx subqueue with fake
+>> netdev queues. I'm starting to think this is not the right way though
+>> because it's inherently hard to control latency and there's a huge
+>> memory overhead associated with the fake netdev queues.
+>
+> What is this overhead?
+
+E.g. if you want to be able to maximize throughput for 50 MU clients
+you need to be able to queue, in theory, 50*200 (roughly) frames. This
+translates to both huge memory usage and latency *and* renders
+(fq_)codel qdisc rather.. moot.
+
+
+> Applying things  like codel tend to dramatically shorten the amount of
+> skbs extant...
+
+> modern 802.11ac capable hardware has tons more
+> memory...
+
+I don't think it does. QCA988x is able to handle "only" 1424 tx
+descriptors (IOW 1500-byte long MSDUs) in the driver-to-firmware tx
+queue (it's a flat queue). QCA99x0 is able to handle 2500 if asked
+politely.
+
+This is still not enough to satisfy the insane "maximize the
+capacity/throughput" expectations though.
+
+You could actually argue it's too much from the bufferbloat problem
+point of view anyway and Emmanuel's patch proves it is beneficial to
+buffer less in driver depending on the sojourn packet time.
+
+
+>> Also fq_codel
+>> is a less effective with this kind of setup.
+>
+> fq_codel's principal problems with working with wifi are long and
+> documented in the talk above.
+>
+>> My current thinking is that the entire problem should be solved via
+>> (per-AC) qdiscs, e.g. fq_codel. I guess one could use
+>> limit/target/interval/quantum knobs to tune it for higher latency of
+>> aggregation-oriented Wi-Fi links where long service time (think
+>> 100-200ms) is acceptable. However fq_codel is oblivious to how Wi-Fi
+>> works in the first place, i.e. Wi-Fi gets better throughput if you
+>> deliver bursts of packets destined to the same station. Moreover this
+>> gets even more complicated with MU-MIMO where you may want to consider
+>> spatial location (which influences signal quality when grouped) of
+>> each station when you decide which set of stations you're going to
+>> aggregate to in parallel. Since drivers have a finite tx ring this it
+>> is important to deliver bursts that can actually be aggregated
+>> efficiently. This means driver would need to be able to tell qdisc
+>> about per-flow conditions to influence the RR scheme in some way
+>> (assuming a qdiscs even understands flows; do we need a unified way of
+>> talking about flows between qdiscs and drivers?).
+>
+> This is a very good summary of the problems in layering fq_codel as it
+> exists today on top of wifi as it exists today. :/ Our conclusion
+> several years ago was that as the information needed to do things more
+> right was in the mac80211 layer that we could not evolve the qdisc
+> layer to suit, and needed to move the core ideas into the mac80211
+> layer.
+>
+> Things have evolved since, but I still think we can't get enough info
+> up to the qdisc layer (locks and so on) to use it sanely.
+
+The current per-station queue implementation in mac80211 doesn't seem
+sufficient. Each of these queues use a simple flat fifo queue
+(sk_buff_head) limited by packet count only with somewhat broken
+behavior when packet limit is reached as you end up with unfairly
+populated queues a lot. They need to have codel applied on them
+somehow. You'll eventually end up re-inventing fq_codel in mac80211
+making the qdisc redundant.
+
+Moreover these queues aren't per-station only. They are
+per-station-per-tid giving 16 queues per station. This is important
+because you can't aggregate traffic going out on different tids.
+
+Even without explicit air conditions feedback from mac80211 to
+fq_codel I suspect it'd be still beneficial if fq_codel was able to
+group (sub-)flows into per-station-tid and burst them out them in
+subsequent dequeue() calls so the chance they get aggregated is
+higher.
+
+
+Michał
