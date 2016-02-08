@@ -1,93 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:59169 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933211AbcBDJeB (ORCPT
+Received: from mail-yw0-f181.google.com ([209.85.161.181]:32861 "EHLO
+	mail-yw0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750829AbcBHLKL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:34:01 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 65/70] staging: wilc1000: renames u64Tsf of connect_resp_info structure
-Date: Thu, 4 Feb 2016 18:24:26 +0900
-Message-ID: <1454577871-667-26-git-send-email-glen.lee@atmel.com> (sfid-20160204_103410_885230_9D0C0B7E)
-In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+	Mon, 8 Feb 2016 06:10:11 -0500
+Received: by mail-yw0-f181.google.com with SMTP id u200so20589563ywf.0
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2016 03:10:11 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CANUX_P1+okCC7xhJtbb-tF0a+=jyDYdVguadF9-zdYrBjEYajQ@mail.gmail.com>
+References: <1454920723-48071-1-git-send-email-nbd@openwrt.org>
+ <CANUX_P2qQmCPvFV4SqWxGQb_JzVqQ+_nT6LFtcYb37s5KfEfdw@mail.gmail.com>
+ <CABPxzY+dgMWDeQ=_c0xyFq0g7HcP459b5Ypy3OoUwjDi+eooMA@mail.gmail.com> <CANUX_P1+okCC7xhJtbb-tF0a+=jyDYdVguadF9-zdYrBjEYajQ@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Mon, 8 Feb 2016 16:39:51 +0530
+Message-ID: <CABPxzYJJfEG8AnU2KEefg5Cm=QBTv+Xt1nb0-Cdqy--k0X0SMw@mail.gmail.com> (sfid-20160208_121016_311579_CA05B466)
+Subject: Re: [RFC v4] mac80211: add A-MSDU tx support
+To: Emmanuel Grumbach <egrumbach@gmail.com>
+Cc: Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Mon, Feb 8, 2016 at 3:56 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+> On Mon, Feb 8, 2016 at 11:54 AM, Krishna Chaitanya
+> <chaitanya.mgit@gmail.com> wrote:
+>> On Mon, Feb 8, 2016 at 2:56 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>> On Mon, Feb 8, 2016 at 10:38 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>>> Requires software tx queueing support. frag_list support (for zero-copy)
+>>>> is optional.
+>>>>
+>>>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>>>> ---
+>>>
+>>>
+>>> Ok - looks fine, but... and here comes the hard stuff.
+>>> The frame size in the PLCP is limited in a way that you can't - from a
+>>> spec POV - enable A-MSDU for low rates. Of course, you don't want to
+>>> do that for low rates at all regardless of the spec.
+>>> Since you build the A-MSDU in the mac80211 Tx queue which is not aware
+>>> of the link quality, how do we prevent A-MSDU if the rate is low /
+>>> dropping.
+>>> I'd even argue that when the rates get lower, you'll  have more
+>>> packets piling up in the software queue and ... even more chance to
+>>> get A-MSDU in the exact case where you really want to avoid it?
+>>
+>> Similar to triggering AMPDU setup, we should put this control
+>> in RC (minstrel) to start/stop AMSDU based on link quality/if the rates
+>> drop below a pre-defined MCS (or) only for best-throughput rates.
+>
+> Ok - but the size of A-MPDU is determined in the firmware / hardware
+> typically (at least for Intel devices and I have to admit my ignorance
+> about other designs...). So that if you get bad link conditions, the
+> firmware can play for that size. A-MSDU built in the host is a
+> different story. I remember that athXk devices attach the rate on the
+> Tx packet itself so that the rate control is serialized with the data
+> path.
+> iwlwifi works differently: we have a map of rates in the firmware.
+> This map is maintained in the driver updated based on the feedback we
+> get from the device. When an update is needed, iwlwifi sends a command
+> to the firmware and that command bypasses all the Tx packets currently
+> queue so that a packet that is already waiting in the queue will be
+> sent with the updated map. This allows iwlwifi to react downgrade
+> faster when needed.
+> So - for athXk (and maybe the MediaTek devices Felix is working on),
+> this may not be a big problem: you'd need to add another input to the
+> A-MSDU building code coming from the rate control.
+> FWIW: in iwlwifi I simply decided to be on the safe side and allowed
+> the driver to build A-MSDUs only if the rate is fairly high and we are
+> not downgrading. But you saw (and commented on) that patch already I
+> think :)
 
-This patch renames u64Tsf variable to tsf_hi.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/coreconfigurator.c       | 2 +-
- drivers/staging/wilc1000/coreconfigurator.h       | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 3 files changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index cbca6a0..d481719 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -320,7 +320,7 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
- 		tsf_lo = get_beacon_timestamp_lo(msa);
- 		tsf_hi = get_beacon_timestamp_hi(msa);
- 
--		network_info->u64Tsf = tsf_lo | ((u64)tsf_hi << 32);
-+		network_info->tsf_hi = tsf_lo | ((u64)tsf_hi << 32);
- 
- 		get_ssid(msa, network_info->ssid, &network_info->ssid_len);
- 		get_BSSID(msa, network_info->bssid);
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 18c785b..748199d 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -94,7 +94,7 @@ struct network_info {
- 	u16 ies_len;
- 	void *join_params;
- 	tstrRSSI str_rssi;
--	u64 u64Tsf;
-+	u64 tsf_hi;
- };
- 
- struct connect_resp_info {
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 6750700..f3b4a98 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -251,7 +251,7 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
- 								  channel,
- 								  CFG80211_BSS_FTYPE_UNKNOWN,
- 								  network_info->bssid,
--								  network_info->u64Tsf,
-+								  network_info->tsf_hi,
- 								  network_info->cap_info,
- 								  network_info->beacon_period,
- 								  (const u8 *)network_info->ies,
-@@ -379,7 +379,7 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
- 	last_scanned_shadow[ap_index].dtim_period = pstrNetworkInfo->dtim_period;
- 	last_scanned_shadow[ap_index].ch = pstrNetworkInfo->ch;
- 	last_scanned_shadow[ap_index].ies_len = pstrNetworkInfo->ies_len;
--	last_scanned_shadow[ap_index].u64Tsf = pstrNetworkInfo->u64Tsf;
-+	last_scanned_shadow[ap_index].tsf_hi = pstrNetworkInfo->tsf_hi;
- 	if (ap_found != -1)
- 		kfree(last_scanned_shadow[ap_index].ies);
- 	last_scanned_shadow[ap_index].ies = kmalloc(pstrNetworkInfo->ies_len,
-@@ -449,7 +449,7 @@ static void CfgScanResult(enum scan_event scan_event,
- 										  channel,
- 										  CFG80211_BSS_FTYPE_UNKNOWN,
- 										  network_info->bssid,
--										  network_info->u64Tsf,
-+										  network_info->tsf_hi,
- 										  network_info->cap_info,
- 										  network_info->beacon_period,
- 										  (const u8 *)network_info->ies,
--- 
-1.9.1
-
+Yes, this approach is going to be tough for those devices with HW RC.
+We might need something like amsdu_action to get some feedback from
+device about using of amsdu?
