@@ -1,73 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:42207 "EHLO v3-1039.vlinux.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933620AbcBYTch (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2016 14:32:37 -0500
-From: Sven Eckelmann <sven@narfation.org>
-To: Peter Oh <poh@codeaurora.org>
-Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"Oh, Peter" <poh@qca.qualcomm.com>, linux-wireless@vger.kernel.org,
-	ath10k@lists.infradead.org
-Subject: Re: [PATCH v3] ath10k: set MAC timestamp in management Rx frame
-Date: Thu, 25 Feb 2016 20:32:33 +0100
-Message-ID: <12890529.ZzYcJYx9dF@sven-edge> (sfid-20160225_203242_718763_E6248BC9)
-In-Reply-To: <56CF4DA3.8030803@codeaurora.org>
-References: <4c705dc7a2c0aa857da4e6eaf6e8ed47c354b9ea.1456351768.git.poh@qca.qualcomm.com> <87k2lsd9zv.fsf@kamboji.qca.qualcomm.com> <56CF4DA3.8030803@codeaurora.org>
+Received: from mail-qg0-f67.google.com ([209.85.192.67]:32879 "EHLO
+	mail-qg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754932AbcBHPlp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Feb 2016 10:41:45 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [PATCH 5/9] rfkill: Factor rfkill_global_states[].cur assignments
+Date: Mon,  8 Feb 2016 10:41:32 -0500
+Message-Id: <1454946096-9752-6-git-send-email-jprvita@endlessm.com> (sfid-20160208_164737_297915_02E683EA)
+In-Reply-To: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
+References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart2016203.862zcHdUiS"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart2016203.862zcHdUiS
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+Factor all assignments to rfkill_global_states[].cur into a single
+function rfkill_update_global_state().
 
-On Thursday 25 February 2016 10:53:23 Peter Oh wrote:
-> > I see new warnings:
-> > 
-> > drivers/net/wireless/ath/ath10k/wmi.c:2199:16: warning: restricted __le32
-> > degrades to integer
-> > drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: restricted __le32
-> > degrades to integer
-> > drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: cast to restricted
-> > __le32
-> > drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: restricted __le32
-> > degrades to integer
-> 
-> Do I have a way to run this check before submitting a patch such as
-> checkpatch.pl?
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+---
+ net/rfkill/core.c | 38 +++++++++++++++++---------------------
+ 1 file changed, 17 insertions(+), 21 deletions(-)
 
-Looks like sparse with -D__CHECK_ENDIAN__ [1]
-
-You may also try smatch [2]
-
-Kind regards,
-	Sven
-
-[1] https://www.kernel.org/doc/Documentation/sparse.txt
-[2] http://smatch.sourceforge.net/
---nextPart2016203.862zcHdUiS
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCgAGBQJWz1bRAAoJEF2HCgfBJntGcZsQAJsPdIOJ00eLc0MbEkasaYrW
-3zyq4QuQOD8AkNqlbg9wtKLMi73zHsjx3fjSFUn7xYJ1pa8mXKuNMYAK7dBen9f6
-0FEWdh0FFERMrZv6dzToOg27pLfawMKdJX0JZ4PTQq9lhO9pcxUUOawdexZTV7BO
-n46lAG9qt83A5fGt5qgiFDNRg57EQmiy7wtY6qwQZgrdaEuruZdw0Jqq1cb4dEi+
-QkppQvTMhaKHiRmse6906KJ3Cd8dEA5Ti8KVVfuxtpE4IFujT3pbL//cO7HV7Keq
-mYTgKtqQl4M0Lqj6PZ0NxrYitInQAgRJsYAdu6507lQIFEZkXz9KOWicRYBGmkUv
-r1d8/UFwPBvmZD21ztt/4nxogzFhKHrXQQqXyHNYLNJi434RlwkM7TxUxSAJNHtH
-qjMQ35z1UuJcrmWPjJTA7cRQ6hs0gKrmDmdFgNJx/jNOPP+eM+DDjFW0ghQJMwhY
-pyIeZubh4qRXIsoHfA+/xabQTCV3KKe80xkM8E5J28oReQd6APTgYfBP8wBtyHX/
-NOiKjNrpbNOXONUI4AsFnlJuKtnqFufEKymucTkmguFplE5ltDQqE9++WtvnOS8b
-Rsjn3dMdoOU3PAnuUBN6eC9W5F5OEmlm5XDJ83zOlKLgVtzPny5G62W8BLfpOqPQ
-5bwFvVGvapHew8BzsYBh
-=HViL
------END PGP SIGNATURE-----
-
---nextPart2016203.862zcHdUiS--
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 56d79cb..8b96869 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -302,6 +302,19 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
+ 		rfkill_event(rfkill);
+ }
+ 
++static void rfkill_update_global_state(enum rfkill_type type, bool blocked)
++{
++	int i;
++
++	if (type != RFKILL_TYPE_ALL) {
++		rfkill_global_states[type].cur = blocked;
++		return;
++	}
++
++	for (i = 0; i < NUM_RFKILL_TYPES; i++)
++		rfkill_global_states[i].cur = blocked;
++}
++
+ #ifdef CONFIG_RFKILL_INPUT
+ static atomic_t rfkill_input_disabled = ATOMIC_INIT(0);
+ 
+@@ -319,15 +332,7 @@ static void __rfkill_switch_all(const enum rfkill_type type, bool blocked)
+ {
+ 	struct rfkill *rfkill;
+ 
+-	if (type == RFKILL_TYPE_ALL) {
+-		int i;
+-
+-		for (i = 0; i < NUM_RFKILL_TYPES; i++)
+-			rfkill_global_states[i].cur = blocked;
+-	} else {
+-		rfkill_global_states[type].cur = blocked;
+-	}
+-
++	rfkill_update_global_state(type, blocked);
+ 	list_for_each_entry(rfkill, &rfkill_list, node) {
+ 		if (rfkill->type != type && type != RFKILL_TYPE_ALL)
+ 			continue;
+@@ -1164,15 +1169,8 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
+ 
+ 	mutex_lock(&rfkill_global_mutex);
+ 
+-	if (ev.op == RFKILL_OP_CHANGE_ALL) {
+-		if (ev.type == RFKILL_TYPE_ALL) {
+-			enum rfkill_type i;
+-			for (i = 0; i < NUM_RFKILL_TYPES; i++)
+-				rfkill_global_states[i].cur = ev.soft;
+-		} else {
+-			rfkill_global_states[ev.type].cur = ev.soft;
+-		}
+-	}
++	if (ev.op == RFKILL_OP_CHANGE_ALL)
++		rfkill_update_global_state(ev.type, ev.soft);
+ 
+ 	list_for_each_entry(rfkill, &rfkill_list, node) {
+ 		if (rfkill->idx != ev.idx && ev.op != RFKILL_OP_CHANGE_ALL)
+@@ -1261,10 +1259,8 @@ static struct miscdevice rfkill_miscdev = {
+ static int __init rfkill_init(void)
+ {
+ 	int error;
+-	int i;
+ 
+-	for (i = 0; i < NUM_RFKILL_TYPES; i++)
+-		rfkill_global_states[i].cur = !rfkill_default_state;
++	rfkill_update_global_state(RFKILL_TYPE_ALL, !rfkill_default_state);
+ 
+ 	error = class_register(&rfkill_class);
+ 	if (error)
+-- 
+2.5.0
 
