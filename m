@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:59623 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S2992508AbcBSTsG (ORCPT
+Received: from mail-qg0-f67.google.com ([209.85.192.67]:33961 "EHLO
+	mail-qg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754947AbcBHPlq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2016 14:48:06 -0500
-Date: Fri, 19 Feb 2016 21:39:36 +0200
-From: Jouni Malinen <j@w1.fi>
-To: J Mo <jmomo@jmomo.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: wpa_supplicant bridging problems
-Message-ID: <20160219193936.GA24116@w1.fi> (sfid-20160219_204810_635188_BD6444AA)
-References: <56C3E95A.7080104@jmomo.net>
- <56C4340D.9000508@luceor.com>
- <56C445E2.1050904@jmomo.net>
- <56C545B3.2060902@jmomo.net>
- <56C567FD.7020004@jmomo.net>
- <56C69232.6080200@jmomo.net>
+	Mon, 8 Feb 2016 10:41:46 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [PATCH 6/9] rfkill: Add documentation about LED triggers
+Date: Mon,  8 Feb 2016 10:41:33 -0500
+Message-Id: <1454946096-9752-7-git-send-email-jprvita@endlessm.com> (sfid-20160208_164417_031809_8667AEE8)
+In-Reply-To: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
+References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56C69232.6080200@jmomo.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 18, 2016 at 07:55:30PM -0800, J Mo wrote:
-> This was a bug already fixed in git. The Debian wpa_supplicant is
-> old (2.3). Source right now is pre-2.6. I compiled my own and it
-> works fine.
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+---
+ Documentation/rfkill.txt | 2 ++
+ 1 file changed, 2 insertions(+)
 
-> I suspect this was fixed in git commit
-> e6dd8196e5daf39e4204ef8ecd26dd50fdca6040, but there are two other
-> commits which also look like they are related to bridging and EAPOL.
-
-That is not really a fix for the real problem.. It is only a workaround
-to avoid the quite unfortunate and already years old kernel regression..
-While that workaround covers some cases, it has a cost (more CPU use)
-and it is possible to come up with sequences that break even that
-workaround. Unfortunately, I'm not aware of any robust way of working
-around this from user space without significant CPU load increase.
-
-This thread from 2013 discusses that root issue:
-http://marc.info/?l=linux-wireless&m=136743495526905&w=2
-
-Unfortunately, there is still no fix for this in the kernel.. There is a
-proposed fix that is included in OpenWrt, but it is unclear how this
-issue could be fixed properly.
-
+diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+index 2ee6ef9..1f0c270 100644
+--- a/Documentation/rfkill.txt
++++ b/Documentation/rfkill.txt
+@@ -83,6 +83,8 @@ rfkill drivers that control devices that can be hard-blocked unless they also
+ assign the poll_hw_block() callback (then the rfkill core will poll the
+ device). Don't do this unless you cannot get the event in any other way.
+ 
++RFKill provides per-switch LED triggers, which can be used to drive LEDs
++according to the switch state (LED_FULL when blocked, LED_OFF otherwise).
+ 
+ 
+ 5. Userspace support
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+2.5.0
+
