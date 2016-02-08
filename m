@@ -1,53 +1,219 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35710 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751410AbcBBNjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 08:39:17 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 1/3] mac80211: move A-MSDU skb_linearize call to ieee80211_amsdu_to_8023s
-Date: Tue,  2 Feb 2016 14:39:08 +0100
-Message-Id: <1454420350-8313-1-git-send-email-nbd@openwrt.org> (sfid-20160202_143921_803617_4223FB8E)
+Received: from mail-lb0-f174.google.com ([209.85.217.174]:33059 "EHLO
+	mail-lb0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751734AbcBHKRI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Feb 2016 05:17:08 -0500
+MIME-Version: 1.0
+In-Reply-To: <CA+BoTQ=BMsXHEcg0LTEcsVLVUBYLmQ2F_oRghFPLty1XD-L9wQ@mail.gmail.com>
+References: <1454616764-19841-1-git-send-email-emmanuel.grumbach@intel.com>
+	<1454616988-21901-1-git-send-email-emmanuel.grumbach@intel.com>
+	<56B3B885.1050409@candelatech.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB32EA02656@hasmsx107.ger.corp.intel.com>
+	<56B3BF25.8080509@candelatech.com>
+	<CA+BoTQm+xTU6o7CMbCHr=bSgp7WE5btE4pMki5XJWiXaOG4SdA@mail.gmail.com>
+	<CAA93jw7M3j8WYPTGx=V6yQKa_hpcg435GV4O4ZbfxiR8S9VVuQ@mail.gmail.com>
+	<CA+BoTQ=BMsXHEcg0LTEcsVLVUBYLmQ2F_oRghFPLty1XD-L9wQ@mail.gmail.com>
+Date: Mon, 8 Feb 2016 12:17:06 +0200
+Message-ID: <CANUX_P17CJYQOUrrvpm2916CZxSQ8NSQahbCW1syy-Z=oa3N_g@mail.gmail.com> (sfid-20160208_111715_653966_F2379EDB)
+Subject: Re: [RFC v2] iwlwifi: pcie: transmit queue auto-sizing
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Dave Taht <dave.taht@gmail.com>,
+	Ben Greear <greearb@candelatech.com>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Stephen Hemminger <stephen@networkplumber.org>,
+	Jonathan Corbet <corbet@lwn.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Prepararation for zero-copy A-MSDU support with page fragment SKBs
+On Mon, Feb 8, 2016 at 12:00 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
+> On 5 February 2016 at 17:47, Dave Taht <dave.taht@gmail.com> wrote:
+>>> A bursted txop can be as big as 5-10ms. If you consider you want to
+>>> queue 5-10ms worth of data for *each* station at any given time you
+>>> obviously introduce a lot of lag. If you have 10 stations you might
+>>> end up with service period at 10*10ms = 100ms. This gets even worse if
+>>> you consider MU-MIMO because you need to do an expensive sounding
+>>> procedure before transmitting. So while SU aggregation can probably
+>>> still work reasonably well with shorter bursts (1-2ms) MU needs at
+>>> least 3ms to get *any* gain when compared to SU (which obviously means
+>>> you want more to actually make MU pay off).
+>>
+>> I am not sure where you get these numbers. Got a spreadsheet?
+>
+> Here's a nice summary on some of it:
+>
+>   http://chimera.labs.oreilly.com/books/1234000001739/ch03.html#figure-mac-ampdu
+>
+> Even if your single A-MPDU can be shorter than a txop you can burst a
+> few of them if my understanding is correct.
+>
+> The overhead associated with MU sounding is something I've been told
+> only. Apparently for MU to pay off you need fairly big bursts. This
+> implies that the more stations you have to service the less it makes
+> sense to attempt MU if you consider latency.
+>
+>
+>> Gradually reducing the maximum sized txop as a function of the number
+>> of stations makes sense. If you have 10 stations pending delivery and
+>> reduced the max txop to 1ms, you hurt bandwidth at that instant, but
+>> by offering more service to more stations, in less time, they will
+>> converge on a reasonable share of the bandwidth for each, faster[1].
+>> And I'm sure that the person videoconferencing on a link like that
+>> would appreciate getting some service inside of a 10ms interval,
+>> rather than a 100ms.
+>>
+>> yes, there's overhead, and that's not the right number, which would
+>> vary as to g,n,ac and successors.
+>>
+>> You will also get more opportunities to use mu-mimo with shorter
+>> bursts extant and more stations being regularly serviced.
+>>
+>> [1] https://www.youtube.com/watch?v=Rb-UnHDw02o at about 13:50
+>
+> This is my thinking as well, at least for most common use cases.
+>
+> If you try to optimize for throughput by introducing extra induced
+> latency you might end up not being able to use aggregation in practice
+> anyway because you won't be able to start up connections and ask for
+> enough data - or at least that's what my intuition tells me.
+>
+> But, like I've mentioned, there's interest in making it possible to
+> maximize for throughput (regardless of latency). This surely makes
+> sense for synthetic UDP benchmarks. But does it make sense for any
+> real-world application? No idea.
+>
+>
+>>> The rule of thumb is the
+>>> longer you wait the bigger capacity you can get.
+>>
+>> This is not strictly true as the "fountain" of packets is regulated by
+>> acks on the other side of the link, and ramp up or down as a function
+>> of service time and loss.
+>
+> Yes, if you consider real world cases, i.e. TCP, web traffic, etc.
+> then you're correct.
+>
+>
+>>> Apparently there's interest in maximizing throughput but it stands in
+>>> direct opposition of keeping the latency down so I've been thinking
+>>> how to satisfy both.
+>>>
+>>> The current approach ath10k is taking (patches in review [1][2]) is to
+>>> use mac80211 software queues for per-station queuing, exposing queue
+>>> state to firmware (it decides where frames should be dequeued from)
+>>> and making it possible to stop/wake per-station tx subqueue with fake
+>>> netdev queues. I'm starting to think this is not the right way though
+>>> because it's inherently hard to control latency and there's a huge
+>>> memory overhead associated with the fake netdev queues.
+>>
+>> What is this overhead?
+>
+> E.g. if you want to be able to maximize throughput for 50 MU clients
+> you need to be able to queue, in theory, 50*200 (roughly) frames. This
+> translates to both huge memory usage and latency *and* renders
+> (fq_)codel qdisc rather.. moot.
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/mac80211/rx.c   | 3 ---
- net/wireless/util.c | 3 +++
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Ok - now I understand. So yes the conclusion below (make fq_codel
+station aware) makes a lot sense.
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 664e886..1e9308e 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2203,9 +2203,6 @@ ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx)
- 	skb->dev = dev;
- 	__skb_queue_head_init(&frame_list);
- 
--	if (skb_linearize(skb))
--		return RX_DROP_UNUSABLE;
--
- 	ieee80211_amsdu_to_8023s(skb, &frame_list, dev->dev_addr,
- 				 rx->sdata->vif.type,
- 				 rx->local->hw.extra_tx_headroom, true);
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 9277042..6a40769 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -657,6 +657,9 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
- 	int remaining, err;
- 	u8 dst[ETH_ALEN], src[ETH_ALEN];
- 
-+	if (skb_linearize(skb))
-+		goto out;
-+
- 	if (has_80211_header) {
- 		err = ieee80211_data_to_8023(skb, addr, iftype);
- 		if (err)
--- 
-2.2.2
+>
+>
+>> Applying things  like codel tend to dramatically shorten the amount of
+>> skbs extant...
+>
+>> modern 802.11ac capable hardware has tons more
+>> memory...
+>
+> I don't think it does. QCA988x is able to handle "only" 1424 tx
+> descriptors (IOW 1500-byte long MSDUs) in the driver-to-firmware tx
+> queue (it's a flat queue). QCA99x0 is able to handle 2500 if asked
+> politely.
 
+As I said, our design is not flat which removes for the firmware to
+classify the packets by station to be able to build aggregates, but
+the downside is the number of clients you can service.
+
+>
+> This is still not enough to satisfy the insane "maximize the
+> capacity/throughput" expectations though.
+>
+> You could actually argue it's too much from the bufferbloat problem
+> point of view anyway and Emmanuel's patch proves it is beneficial to
+> buffer less in driver depending on the sojourn packet time.
+>
+
+In real life scenario, yes. But the more I read your comments the more
+I get to the conclusion we (Intel) simply haven't been able to reach
+the throughput you have which *requires* more latency to reach :)
+Note that you always talk about overall throughput (to all the
+stations at the same time) which, again, makes a lot of sense when you
+work primarily as an AP. We look at the world with different
+viewpoint.
+
+>
+>>> Also fq_codel
+>>> is a less effective with this kind of setup.
+>>
+>> fq_codel's principal problems with working with wifi are long and
+>> documented in the talk above.
+>>
+>>> My current thinking is that the entire problem should be solved via
+>>> (per-AC) qdiscs, e.g. fq_codel. I guess one could use
+>>> limit/target/interval/quantum knobs to tune it for higher latency of
+>>> aggregation-oriented Wi-Fi links where long service time (think
+>>> 100-200ms) is acceptable. However fq_codel is oblivious to how Wi-Fi
+>>> works in the first place, i.e. Wi-Fi gets better throughput if you
+>>> deliver bursts of packets destined to the same station. Moreover this
+>>> gets even more complicated with MU-MIMO where you may want to consider
+>>> spatial location (which influences signal quality when grouped) of
+>>> each station when you decide which set of stations you're going to
+>>> aggregate to in parallel. Since drivers have a finite tx ring this it
+>>> is important to deliver bursts that can actually be aggregated
+>>> efficiently. This means driver would need to be able to tell qdisc
+>>> about per-flow conditions to influence the RR scheme in some way
+>>> (assuming a qdiscs even understands flows; do we need a unified way of
+>>> talking about flows between qdiscs and drivers?).
+>>
+>> This is a very good summary of the problems in layering fq_codel as it
+>> exists today on top of wifi as it exists today. :/ Our conclusion
+>> several years ago was that as the information needed to do things more
+>> right was in the mac80211 layer that we could not evolve the qdisc
+>> layer to suit, and needed to move the core ideas into the mac80211
+>> layer.
+>>
+>> Things have evolved since, but I still think we can't get enough info
+>> up to the qdisc layer (locks and so on) to use it sanely.
+>
+> The current per-station queue implementation in mac80211 doesn't seem
+> sufficient. Each of these queues use a simple flat fifo queue
+> (sk_buff_head) limited by packet count only with somewhat broken
+> behavior when packet limit is reached as you end up with unfairly
+> populated queues a lot. They need to have codel applied on them
+> somehow. You'll eventually end up re-inventing fq_codel in mac80211
+> making the qdisc redundant.
+>
+> Moreover these queues aren't per-station only. They are
+> per-station-per-tid giving 16 queues per station. This is important
+> because you can't aggregate traffic going out on different tids.
+>
+> Even without explicit air conditions feedback from mac80211 to
+> fq_codel I suspect it'd be still beneficial if fq_codel was able to
+> group (sub-)flows into per-station-tid and burst them out them in
+> subsequent dequeue() calls so the chance they get aggregated is
+> higher.
+
+That would allow you to avoid classifying (and buffering) in HW and
+then reduce the latency. Agree.
+
+
+>
+>
+> Michał
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
