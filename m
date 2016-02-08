@@ -1,237 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:60018
-	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752007AbcB2Jo2 (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:35832 "EHLO
+	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751257AbcBHLR0 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 04:44:28 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V10 2/2] brcmfmac: add support for nl80211 BSS_SELECT feature
-Date: Mon, 29 Feb 2016 10:44:25 +0100
-Message-Id: <1456739065-470-2-git-send-email-arend@broadcom.com> (sfid-20160229_104433_773894_BA27D675)
-In-Reply-To: <1456739065-470-1-git-send-email-arend@broadcom.com>
-References: <1456739065-470-1-git-send-email-arend@broadcom.com>
+	Mon, 8 Feb 2016 06:17:26 -0500
+Received: by mail-wm0-f41.google.com with SMTP id c200so10392144wme.0
+        for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2016 03:17:25 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <CABPxzYJJfEG8AnU2KEefg5Cm=QBTv+Xt1nb0-Cdqy--k0X0SMw@mail.gmail.com>
+References: <1454920723-48071-1-git-send-email-nbd@openwrt.org>
+	<CANUX_P2qQmCPvFV4SqWxGQb_JzVqQ+_nT6LFtcYb37s5KfEfdw@mail.gmail.com>
+	<CABPxzY+dgMWDeQ=_c0xyFq0g7HcP459b5Ypy3OoUwjDi+eooMA@mail.gmail.com>
+	<CANUX_P1+okCC7xhJtbb-tF0a+=jyDYdVguadF9-zdYrBjEYajQ@mail.gmail.com>
+	<CABPxzYJJfEG8AnU2KEefg5Cm=QBTv+Xt1nb0-Cdqy--k0X0SMw@mail.gmail.com>
+Date: Mon, 8 Feb 2016 12:17:24 +0100
+Message-ID: <CA+BoTQmaVJYySQ_McOMvnYpnZnBL6a8F-Pucyr6md+FrUsWy2g@mail.gmail.com> (sfid-20160208_121730_589352_D85A7404)
+Subject: Re: [RFC v4] mac80211: add A-MSDU tx support
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Announce support for nl80211 feature BSS_SELECT and process
-BSS selection behaviour provided in .connect() callback.
+On 8 February 2016 at 12:09, Krishna Chaitanya <chaitanya.mgit@gmail.com> wrote:
+> On Mon, Feb 8, 2016 at 3:56 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>> On Mon, Feb 8, 2016 at 11:54 AM, Krishna Chaitanya
+>> <chaitanya.mgit@gmail.com> wrote:
+>>> On Mon, Feb 8, 2016 at 2:56 PM, Emmanuel Grumbach <egrumbach@gmail.com> wrote:
+>>>> On Mon, Feb 8, 2016 at 10:38 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+>>>>> Requires software tx queueing support. frag_list support (for zero-copy)
+>>>>> is optional.
+>>>>>
+>>>>> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+>>>>> ---
+>>>>
+>>>>
+>>>> Ok - looks fine, but... and here comes the hard stuff.
+>>>> The frame size in the PLCP is limited in a way that you can't - from a
+>>>> spec POV - enable A-MSDU for low rates. Of course, you don't want to
+>>>> do that for low rates at all regardless of the spec.
+>>>> Since you build the A-MSDU in the mac80211 Tx queue which is not aware
+>>>> of the link quality, how do we prevent A-MSDU if the rate is low /
+>>>> dropping.
+>>>> I'd even argue that when the rates get lower, you'll  have more
+>>>> packets piling up in the software queue and ... even more chance to
+>>>> get A-MSDU in the exact case where you really want to avoid it?
+>>>
+>>> Similar to triggering AMPDU setup, we should put this control
+>>> in RC (minstrel) to start/stop AMSDU based on link quality/if the rates
+>>> drop below a pre-defined MCS (or) only for best-throughput rates.
+>>
+>> Ok - but the size of A-MPDU is determined in the firmware / hardware
+>> typically (at least for Intel devices and I have to admit my ignorance
+>> about other designs...). So that if you get bad link conditions, the
+>> firmware can play for that size. A-MSDU built in the host is a
+>> different story. I remember that athXk devices attach the rate on the
+>> Tx packet itself so that the rate control is serialized with the data
+>> path.
+>> iwlwifi works differently: we have a map of rates in the firmware.
+>> This map is maintained in the driver updated based on the feedback we
+>> get from the device. When an update is needed, iwlwifi sends a command
+>> to the firmware and that command bypasses all the Tx packets currently
+>> queue so that a packet that is already waiting in the queue will be
+>> sent with the updated map. This allows iwlwifi to react downgrade
+>> faster when needed.
+>> So - for athXk (and maybe the MediaTek devices Felix is working on),
+>> this may not be a big problem: you'd need to add another input to the
+>> A-MSDU building code coming from the rate control.
+>> FWIW: in iwlwifi I simply decided to be on the safe side and allowed
+>> the driver to build A-MSDUs only if the rate is fairly high and we are
+>> not downgrading. But you saw (and commented on) that patch already I
+>> think :)
+>
+> Yes, this approach is going to be tough for those devices with HW RC.
+> We might need something like amsdu_action to get some feedback from
+> device about using of amsdu?
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Lei Zhang <leizh@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 70 +++++++++++++++++++++-
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  | 38 +++++++-----
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  1 +
- .../wireless/broadcom/brcm80211/brcmfmac/fwil.h    |  1 +
- 4 files changed, 92 insertions(+), 18 deletions(-)
+The HW/FW rate control still may not have sufficient knobs for driver
+to implement an amsdu_action().
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 7b01e4d..3e02168 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -238,6 +238,20 @@ struct parsed_vndr_ies {
- 	struct parsed_vndr_ie_info ie_info[VNDR_IE_PARSE_LIMIT];
- };
- 
-+static u8 nl80211_band_to_fwil(enum nl80211_band band)
-+{
-+	switch (band) {
-+	case NL80211_BAND_2GHZ:
-+		return WLC_BAND_2G;
-+	case NL80211_BAND_5GHZ:
-+		return WLC_BAND_5G;
-+	default:
-+		WARN_ON(1);
-+		break;
-+	}
-+	return 0;
-+}
-+
- static u16 chandef_to_chanspec(struct brcmu_d11inf *d11inf,
- 			       struct cfg80211_chan_def *ch)
- {
-@@ -1737,6 +1751,50 @@ enum nl80211_auth_type brcmf_war_auth_type(struct brcmf_if *ifp,
- 	return type;
- }
- 
-+static void brcmf_set_join_pref(struct brcmf_if *ifp,
-+				struct cfg80211_bss_selection *bss_select)
-+{
-+	struct brcmf_join_pref_params join_pref_params[2];
-+	enum nl80211_band band;
-+	int err, i = 0;
-+
-+	join_pref_params[i].len = 2;
-+	join_pref_params[i].rssi_gain = 0;
-+
-+	if (bss_select->behaviour != NL80211_BSS_SELECT_ATTR_BAND_PREF)
-+		brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_ASSOC_PREFER, WLC_BAND_AUTO);
-+
-+	switch (bss_select->behaviour) {
-+	case __NL80211_BSS_SELECT_ATTR_INVALID:
-+		brcmf_c_set_joinpref_default(ifp);
-+		return;
-+	case NL80211_BSS_SELECT_ATTR_BAND_PREF:
-+		join_pref_params[i].type = BRCMF_JOIN_PREF_BAND;
-+		band = bss_select->param.band_pref;
-+		join_pref_params[i].band = nl80211_band_to_fwil(band);
-+		i++;
-+		break;
-+	case NL80211_BSS_SELECT_ATTR_RSSI_ADJUST:
-+		join_pref_params[i].type = BRCMF_JOIN_PREF_RSSI_DELTA;
-+		band = bss_select->param.adjust.band;
-+		join_pref_params[i].band = nl80211_band_to_fwil(band);
-+		join_pref_params[i].rssi_gain = bss_select->param.adjust.delta;
-+		i++;
-+		break;
-+	case NL80211_BSS_SELECT_ATTR_RSSI:
-+	default:
-+		break;
-+	}
-+	join_pref_params[i].type = BRCMF_JOIN_PREF_RSSI;
-+	join_pref_params[i].len = 2;
-+	join_pref_params[i].rssi_gain = 0;
-+	join_pref_params[i].band = 0;
-+	err = brcmf_fil_iovar_data_set(ifp, "join_pref", join_pref_params,
-+				       sizeof(join_pref_params));
-+	if (err)
-+		brcmf_err("Set join_pref error (%d)\n", err);
-+}
-+
- static s32
- brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
- 		       struct cfg80211_connect_params *sme)
-@@ -1862,11 +1920,11 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
- 	ext_join_params->scan_le.scan_type = -1;
- 	ext_join_params->scan_le.home_time = cpu_to_le32(-1);
- 
--	if (sme->bssid)
-+	if (sme->bssid) {
- 		memcpy(&ext_join_params->assoc_le.bssid, sme->bssid, ETH_ALEN);
--	else
-+	} else {
- 		eth_broadcast_addr(ext_join_params->assoc_le.bssid);
--
-+	}
- 	if (cfg->channel) {
- 		ext_join_params->assoc_le.chanspec_num = cpu_to_le32(1);
- 
-@@ -1893,6 +1951,8 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
- 		ext_join_params->scan_le.nprobes = cpu_to_le32(-1);
- 	}
- 
-+	brcmf_set_join_pref(ifp, &sme->bss_select);
-+
- 	err  = brcmf_fil_bsscfg_data_set(ifp, "join", ext_join_params,
- 					 join_params_size);
- 	kfree(ext_join_params);
-@@ -6179,6 +6239,10 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
- 	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
- 	wiphy->cipher_suites = __wl_cipher_suites;
- 	wiphy->n_cipher_suites = ARRAY_SIZE(__wl_cipher_suites);
-+	wiphy->bss_select_support = BIT(NL80211_BSS_SELECT_ATTR_RSSI) |
-+				    BIT(NL80211_BSS_SELECT_ATTR_BAND_PREF) |
-+				    BIT(NL80211_BSS_SELECT_ATTR_RSSI_ADJUST);
-+
- 	wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
- 			WIPHY_FLAG_OFFCHAN_TX |
- 			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 4265b50..b9e81fb 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -32,7 +32,7 @@ const u8 ALLFFMAC[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
- #define BRCMF_DEFAULT_SCAN_CHANNEL_TIME	40
- #define BRCMF_DEFAULT_SCAN_UNASSOC_TIME	40
- 
--/* boost value for RSSI_DELTA in preferred join selection */
-+/* default boost value for RSSI_DELTA in preferred join selection */
- #define BRCMF_JOIN_PREF_RSSI_BOOST	8
- 
- #define BRCMF_DEFAULT_TXGLOM_SIZE	32  /* max tx frames in glom chain */
-@@ -76,11 +76,31 @@ MODULE_PARM_DESC(ignore_probe_fail, "always succeed probe for debugging");
- 
- struct brcmf_mp_global_t brcmf_mp_global;
- 
-+void brcmf_c_set_joinpref_default(struct brcmf_if *ifp)
-+{
-+	struct brcmf_join_pref_params join_pref_params[2];
-+	int err;
-+
-+	/* Setup join_pref to select target by RSSI (boost on 5GHz) */
-+	join_pref_params[0].type = BRCMF_JOIN_PREF_RSSI_DELTA;
-+	join_pref_params[0].len = 2;
-+	join_pref_params[0].rssi_gain = BRCMF_JOIN_PREF_RSSI_BOOST;
-+	join_pref_params[0].band = WLC_BAND_5G;
-+
-+	join_pref_params[1].type = BRCMF_JOIN_PREF_RSSI;
-+	join_pref_params[1].len = 2;
-+	join_pref_params[1].rssi_gain = 0;
-+	join_pref_params[1].band = 0;
-+	err = brcmf_fil_iovar_data_set(ifp, "join_pref", join_pref_params,
-+				       sizeof(join_pref_params));
-+	if (err)
-+		brcmf_err("Set join_pref error (%d)\n", err);
-+}
-+
- int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- {
- 	s8 eventmask[BRCMF_EVENTING_MASK_LEN];
- 	u8 buf[BRCMF_DCMD_SMLEN];
--	struct brcmf_join_pref_params join_pref_params[2];
- 	struct brcmf_rev_info_le revinfo;
- 	struct brcmf_rev_info *ri;
- 	char *ptr;
-@@ -147,19 +167,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- 		goto done;
- 	}
- 
--	/* Setup join_pref to select target by RSSI(with boost on 5GHz) */
--	join_pref_params[0].type = BRCMF_JOIN_PREF_RSSI_DELTA;
--	join_pref_params[0].len = 2;
--	join_pref_params[0].rssi_gain = BRCMF_JOIN_PREF_RSSI_BOOST;
--	join_pref_params[0].band = WLC_BAND_5G;
--	join_pref_params[1].type = BRCMF_JOIN_PREF_RSSI;
--	join_pref_params[1].len = 2;
--	join_pref_params[1].rssi_gain = 0;
--	join_pref_params[1].band = 0;
--	err = brcmf_fil_iovar_data_set(ifp, "join_pref", join_pref_params,
--				       sizeof(join_pref_params));
--	if (err)
--		brcmf_err("Set join_pref error (%d)\n", err);
-+	brcmf_c_set_joinpref_default(ifp);
- 
- 	/* Setup event_msgs, enable E_IF */
- 	err = brcmf_fil_iovar_data_get(ifp, "event_msgs", eventmask,
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-index 8f39435..c9a1a13 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-@@ -220,5 +220,6 @@ void brcmf_txflowblock_if(struct brcmf_if *ifp,
- void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success);
- void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb);
- void brcmf_net_setcarrier(struct brcmf_if *ifp, bool on);
-+void brcmf_c_set_joinpref_default(struct brcmf_if *ifp);
- 
- #endif /* BRCMFMAC_CORE_H */
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
-index 6b72df1..3a9a76d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
-@@ -78,6 +78,7 @@
- #define BRCMF_C_SET_SCAN_CHANNEL_TIME		185
- #define BRCMF_C_SET_SCAN_UNASSOC_TIME		187
- #define BRCMF_C_SCB_DEAUTHENTICATE_FOR_REASON	201
-+#define BRCMF_C_SET_ASSOC_PREFER		205
- #define BRCMF_C_GET_VALID_CHANNELS		217
- #define BRCMF_C_GET_KEY_PRIMARY			235
- #define BRCMF_C_SET_KEY_PRIMARY			236
--- 
-1.9.1
+What about if mac80211 tracked per-station-tid packet sojourn time and
+based on that derive max A-MSDU bytelimit? This could also be useful
+for the bufferbloat problem (discussed in the other thread) as well.
 
+
+Michał
