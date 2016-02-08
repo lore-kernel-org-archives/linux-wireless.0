@@ -1,53 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:41083 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751896AbcBYXKE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2016 18:10:04 -0500
-From: Colin King <colin.king@canonical.com>
-To: Jakub Kicinski <kubakici@wp.pl>, Kalle Valo <kvalo@codeaurora.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH][V2] mt7601u: do not free dma_buf when ivp allocation fails
-Date: Thu, 25 Feb 2016 23:09:59 +0000
-Message-Id: <1456441799-19266-1-git-send-email-colin.king@canonical.com> (sfid-20160226_001034_251088_110DB987)
+Received: from nbd.name ([46.4.11.11]:58484 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753155AbcBHNZa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Feb 2016 08:25:30 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH] cfg80211: fix faulty variable initialization in ieee80211_amsdu_to_8023s
+Date: Mon,  8 Feb 2016 14:25:26 +0100
+Message-Id: <1454937926-74516-1-git-send-email-nbd@openwrt.org> (sfid-20160208_142536_304919_10A76282)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+reuse_skb is set to true if the code decides to use the last segment.
+Fixes a memory leak
 
-If the allocation of ivp fails the error handling attempts to
-free an uninitialized dma_buf; this data structure just contains
-garbage on the stack, so the freeing will cause issues when the
-urb, buf and dma fields are free'd. Fix this by not free'ing the
-dma_buf if the ivp allocation fails.
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/mediatek/mt7601u/mcu.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ net/wireless/util.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mediatek/mt7601u/mcu.c b/drivers/net/wireless/mediatek/mt7601u/mcu.c
-index fbb1986..70e4b5e 100644
---- a/drivers/net/wireless/mediatek/mt7601u/mcu.c
-+++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
-@@ -362,10 +362,10 @@ mt7601u_upload_firmware(struct mt7601u_dev *dev, const struct mt76_fw *fw)
- 	int i, ret;
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 6e4eb35..9880c89 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -676,7 +676,7 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
+ 	u8 *payload;
+ 	int offset = 0, remaining, err;
+ 	struct ethhdr eth;
+-	bool reuse_skb = true;
++	bool reuse_skb = false;
+ 	bool last = false;
  
- 	ivb = kmemdup(fw->ivb, sizeof(fw->ivb), GFP_KERNEL);
--	if (!ivb || mt7601u_usb_alloc_buf(dev, MCU_FW_URB_SIZE, &dma_buf)) {
--		ret = -ENOMEM;
-+	if (!ivb)
-+		return -ENOMEM;
-+	if (mt7601u_usb_alloc_buf(dev, MCU_FW_URB_SIZE, &dma_buf))
- 		goto error;
--	}
- 
- 	ilm_len = le32_to_cpu(fw->hdr.ilm_len) - sizeof(fw->ivb);
- 	dev_dbg(dev->dev, "loading FW - ILM %u + IVB %zu\n",
+ 	if (has_80211_header) {
 -- 
-2.7.0
+2.2.2
 
