@@ -1,121 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33157 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754561AbcBZVQz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 16:16:55 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: check PN correctly for GCMP-encrypted fragmented MPDUs
-Date: Fri, 26 Feb 2016 22:16:47 +0100
-Message-Id: <1456521407-19915-1-git-send-email-johannes@sipsolutions.net> (sfid-20160226_221658_536889_F86C99E6)
+Received: from mout.kundenserver.de ([212.227.17.24]:58672 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752597AbcBHMLM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Feb 2016 07:11:12 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	wnhuang@chromium.com, devicetree@vger.kernel.org,
+	Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH v3 2/3] mwifiex: parse chip specific gpio from device tree
+Date: Mon, 08 Feb 2016 13:11:03 +0100
+Message-ID: <4072066.xhEHjcRQWo@wuerfel> (sfid-20160208_131117_926536_8DE6F562)
+In-Reply-To: <1454926528-17480-2-git-send-email-akarwar@marvell.com>
+References: <1454926528-17480-1-git-send-email-akarwar@marvell.com> <1454926528-17480-2-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Monday 08 February 2016 02:15:27 Amitkumar Karwar wrote:
+>                 if (adapter->dt_node) {
+> +                       if (of_property_read_u32(adapter->dt_node,
+> +                                                "mwifiex,chip-gpio",
+> +                                                &data) == 0) {
+> +                               mwifiex_dbg(adapter, INFO,
+> +                                           "chip_gpio = 0x%x\n", data);
+> +                               adapter->hs_cfg.gpio = data;
+> +                       }
+> +
+> 
 
-Just like for CCMP we need to check that for GCMP the fragments
-have PNs that increment by one; the spec was updated to fix this
-security issue and now has the following text:
+Please use the GPIO DT binding. Reading a number from DT is not a proper
+way to get a GPIO number, as you may have more than one GPIO controller
+in a system and it is not obvious to which controller this number belongs,
+or if you need to specify things like polarity.
 
-	The receiver shall discard MSDUs and MMPDUs whose constituent
-	MPDU PN values are not incrementing in steps of 1.
-
-Adapt the code for CCMP to work for GCMP as well, luckily the
-relevant fields already alias each other so no code duplication
-is needed (just check the aliasing with BUILD_BUG_ON.)
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/ieee80211_i.h |  2 +-
- net/mac80211/rx.c          | 36 +++++++++++++++++++++++++++---------
- 2 files changed, 28 insertions(+), 10 deletions(-)
-
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 1630975c89f1..804575ff7af5 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -92,7 +92,7 @@ struct ieee80211_fragment_entry {
- 	u16 extra_len;
- 	u16 last_frag;
- 	u8 rx_queue;
--	bool ccmp; /* Whether fragments were encrypted with CCMP */
-+	bool check_sequential_pn; /* needed for CCMP/GCMP */
- 	u8 last_pn[6]; /* PN of the last fragment if CCMP was used */
- };
- 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 91279576f4a7..853c71766241 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1777,7 +1777,7 @@ ieee80211_reassemble_add(struct ieee80211_sub_if_data *sdata,
- 	entry->seq = seq;
- 	entry->rx_queue = rx_queue;
- 	entry->last_frag = frag;
--	entry->ccmp = 0;
-+	entry->check_sequential_pn = false;
- 	entry->extra_len = 0;
- 
- 	return entry;
-@@ -1873,15 +1873,27 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
- 						 rx->seqno_idx, &(rx->skb));
- 		if (rx->key &&
- 		    (rx->key->conf.cipher == WLAN_CIPHER_SUITE_CCMP ||
--		     rx->key->conf.cipher == WLAN_CIPHER_SUITE_CCMP_256) &&
-+		     rx->key->conf.cipher == WLAN_CIPHER_SUITE_CCMP_256 ||
-+		     rx->key->conf.cipher == WLAN_CIPHER_SUITE_GCMP ||
-+		     rx->key->conf.cipher == WLAN_CIPHER_SUITE_GCMP_256) &&
- 		    ieee80211_has_protected(fc)) {
- 			int queue = rx->security_idx;
--			/* Store CCMP PN so that we can verify that the next
--			 * fragment has a sequential PN value. */
--			entry->ccmp = 1;
-+
-+			/* Store CCMP/GCMP PN so that we can verify that the
-+			 * next fragment has a sequential PN value.
-+			 */
-+			entry->check_sequential_pn = true;
- 			memcpy(entry->last_pn,
- 			       rx->key->u.ccmp.rx_pn[queue],
- 			       IEEE80211_CCMP_PN_LEN);
-+			BUILD_BUG_ON(offsetof(struct ieee80211_key,
-+					      u.ccmp.rx_pn) !=
-+				     offsetof(struct ieee80211_key,
-+					      u.gcmp.rx_pn));
-+			BUILD_BUG_ON(sizeof(rx->key->u.ccmp.rx_pn[queue]) !=
-+				     sizeof(rx->key->u.gcmp.rx_pn[queue]));
-+			BUILD_BUG_ON(IEEE80211_CCMP_PN_LEN !=
-+				     IEEE80211_GCMP_PN_LEN);
- 		}
- 		return RX_QUEUED;
- 	}
-@@ -1896,15 +1908,21 @@ ieee80211_rx_h_defragment(struct ieee80211_rx_data *rx)
- 		return RX_DROP_MONITOR;
- 	}
- 
--	/* Verify that MPDUs within one MSDU have sequential PN values.
--	 * (IEEE 802.11i, 8.3.3.4.5) */
--	if (entry->ccmp) {
-+	/* "The receiver shall discard MSDUs and MMPDUs whose constituent
-+	 *  MPDU PN values are not incrementing in steps of 1."
-+	 * see IEEE P802.11-REVmc/D5.0, 12.5.3.4.4, item d (for CCMP)
-+	 * and IEEE P802.11-REVmc/D5.0, 12.5.5.4.4, item d (for GCMP)
-+	 */
-+	if (entry->check_sequential_pn) {
- 		int i;
- 		u8 pn[IEEE80211_CCMP_PN_LEN], *rpn;
- 		int queue;
-+
- 		if (!rx->key ||
- 		    (rx->key->conf.cipher != WLAN_CIPHER_SUITE_CCMP &&
--		     rx->key->conf.cipher != WLAN_CIPHER_SUITE_CCMP_256))
-+		     rx->key->conf.cipher != WLAN_CIPHER_SUITE_CCMP_256 &&
-+		     rx->key->conf.cipher != WLAN_CIPHER_SUITE_GCMP &&
-+		     rx->key->conf.cipher != WLAN_CIPHER_SUITE_GCMP_256))
- 			return RX_DROP_UNUSABLE;
- 		memcpy(pn, entry->last_pn, IEEE80211_CCMP_PN_LEN);
- 		for (i = IEEE80211_CCMP_PN_LEN - 1; i >= 0; i--) {
--- 
-2.7.0
-
+	Arnd
