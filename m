@@ -1,124 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f65.google.com ([209.85.192.65]:34535 "EHLO
+Received: from mail-qg0-f65.google.com ([209.85.192.65]:32899 "EHLO
 	mail-qg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752020AbcB2BEI (ORCPT
+	with ESMTP id S1754952AbcBHPlr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Feb 2016 20:04:08 -0500
-Received: by mail-qg0-f65.google.com with SMTP id e61so9657236qgf.1
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2016 17:04:07 -0800 (PST)
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 3/4] mesh: factor out common mesh path allocation code
-Date: Sun, 28 Feb 2016 20:03:58 -0500
-Message-Id: <1456707839-19469-3-git-send-email-me@bobcopeland.com> (sfid-20160229_020421_083951_2264DDE6)
-In-Reply-To: <1456707839-19469-1-git-send-email-me@bobcopeland.com>
-References: <1456707839-19469-1-git-send-email-me@bobcopeland.com>
+	Mon, 8 Feb 2016 10:41:47 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [PATCH 7/9] rfkill: Create "rfkill-airplane_mode" LED trigger
+Date: Mon,  8 Feb 2016 10:41:34 -0500
+Message-Id: <1454946096-9752-8-git-send-email-jprvita@endlessm.com> (sfid-20160208_164339_735216_65BE2E8C)
+In-Reply-To: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
+References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Remove duplicate code to allocate and initialize a mesh
-path or mesh proxy path.
+This creates a new LED trigger to be used by platform drivers as a
+default trigger for airplane-mode indicator LEDs.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+By default this trigger will fire when RFKILL_OP_CHANGE_ALL is called
+for all types (RFKILL_TYPE_ALL), setting the LED brightness to LED_FULL
+when the changing the state to blocked, and to LED_OFF when the changing
+the state to unblocked. In the future there will be a mechanism for
+userspace to override the default policy, so it can implement its own.
+
+This trigger will be used by the asus-wireless x86 platform driver.
+
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
 ---
- net/mac80211/mesh_pathtbl.c | 51 +++++++++++++++++++++++++--------------------
- 1 file changed, 28 insertions(+), 23 deletions(-)
+ Documentation/rfkill.txt |  2 ++
+ net/rfkill/core.c        | 49 +++++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 50 insertions(+), 1 deletion(-)
 
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index fc3cc350df8c..4794240e8f94 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -501,6 +501,31 @@ int mesh_gate_num(struct ieee80211_sub_if_data *sdata)
- 	return sdata->u.mesh.num_gates;
- }
+diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+index 1f0c270..b13025a 100644
+--- a/Documentation/rfkill.txt
++++ b/Documentation/rfkill.txt
+@@ -85,6 +85,8 @@ device). Don't do this unless you cannot get the event in any other way.
  
-+static
-+struct mesh_path *mesh_path_new(struct ieee80211_sub_if_data *sdata,
-+				const u8 *dst, gfp_t gfp_flags)
+ RFKill provides per-switch LED triggers, which can be used to drive LEDs
+ according to the switch state (LED_FULL when blocked, LED_OFF otherwise).
++An airplane-mode indicator LED trigger is also available, which triggers
++LED_FULL when all radios known by RFKill are blocked, and LED_OFF otherwise.
+ 
+ 
+ 5. Userspace support
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 8b96869..fb11547 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -126,6 +126,30 @@ static bool rfkill_epo_lock_active;
+ 
+ 
+ #ifdef CONFIG_RFKILL_LEDS
++static struct led_trigger rfkill_apm_led_trigger;
++
++static void rfkill_apm_led_trigger_event(bool state)
 +{
-+	struct mesh_path *new_mpath;
-+
-+	new_mpath = kzalloc(sizeof(struct mesh_path), gfp_flags);
-+	if (!new_mpath)
-+		return NULL;
-+
-+	memcpy(new_mpath->dst, dst, ETH_ALEN);
-+	eth_broadcast_addr(new_mpath->rann_snd_addr);
-+	new_mpath->is_root = false;
-+	new_mpath->sdata = sdata;
-+	new_mpath->flags = 0;
-+	skb_queue_head_init(&new_mpath->frame_queue);
-+	new_mpath->timer.data = (unsigned long) new_mpath;
-+	new_mpath->timer.function = mesh_path_timer;
-+	new_mpath->exp_time = jiffies;
-+	spin_lock_init(&new_mpath->state_lock);
-+	init_timer(&new_mpath->timer);
-+
-+	return new_mpath;
++	led_trigger_event(&rfkill_apm_led_trigger, state ? LED_FULL : LED_OFF);
 +}
 +
- /**
-  * mesh_path_add - allocate and add a new path to the mesh path table
-  * @dst: destination address of the path (ETH_ALEN length)
-@@ -548,7 +573,7 @@ struct mesh_path *mesh_path_add(struct ieee80211_sub_if_data *sdata,
++static void rfkill_apm_led_trigger_activate(struct led_classdev *led)
++{
++	rfkill_apm_led_trigger_event(!rfkill_default_state);
++}
++
++static int rfkill_apm_led_trigger_register(void)
++{
++	rfkill_apm_led_trigger.name = "rfkill-airplane_mode";
++	rfkill_apm_led_trigger.activate = rfkill_apm_led_trigger_activate;
++	return led_trigger_register(&rfkill_apm_led_trigger);
++}
++
++static void rfkill_apm_led_trigger_unregister(void)
++{
++	led_trigger_unregister(&rfkill_apm_led_trigger);
++}
++
+ static void rfkill_led_trigger_event(struct rfkill *rfkill)
+ {
+ 	struct led_trigger *trigger;
+@@ -177,6 +201,19 @@ static void rfkill_led_trigger_unregister(struct rfkill *rfkill)
+ 	led_trigger_unregister(&rfkill->led_trigger);
+ }
+ #else
++static void rfkill_apm_led_trigger_event(bool state)
++{
++}
++
++static int rfkill_apm_led_trigger_register(void)
++{
++	return 0;
++}
++
++static void rfkill_apm_led_trigger_unregister(void)
++{
++}
++
+ static void rfkill_led_trigger_event(struct rfkill *rfkill)
+ {
+ }
+@@ -313,6 +350,7 @@ static void rfkill_update_global_state(enum rfkill_type type, bool blocked)
+ 
+ 	for (i = 0; i < NUM_RFKILL_TYPES; i++)
+ 		rfkill_global_states[i].cur = blocked;
++	rfkill_apm_led_trigger_event(blocked);
+ }
+ 
+ #ifdef CONFIG_RFKILL_INPUT
+@@ -1260,15 +1298,22 @@ static int __init rfkill_init(void)
+ {
+ 	int error;
+ 
++	error = rfkill_apm_led_trigger_register();
++	if (error)
++		goto out;
++
+ 	rfkill_update_global_state(RFKILL_TYPE_ALL, !rfkill_default_state);
+ 
+ 	error = class_register(&rfkill_class);
+-	if (error)
++	if (error) {
++		rfkill_apm_led_trigger_unregister();
+ 		goto out;
++	}
+ 
+ 	error = misc_register(&rfkill_miscdev);
+ 	if (error) {
+ 		class_unregister(&rfkill_class);
++		rfkill_apm_led_trigger_unregister();
+ 		goto out;
  	}
  
- 	err = -ENOMEM;
--	new_mpath = kzalloc(sizeof(struct mesh_path), GFP_ATOMIC);
-+	new_mpath = mesh_path_new(sdata, dst, GFP_ATOMIC);
- 	if (!new_mpath)
- 		goto err_path_alloc;
- 
-@@ -556,19 +581,7 @@ struct mesh_path *mesh_path_add(struct ieee80211_sub_if_data *sdata,
- 	if (!new_node)
- 		goto err_node_alloc;
- 
--	memcpy(new_mpath->dst, dst, ETH_ALEN);
--	eth_broadcast_addr(new_mpath->rann_snd_addr);
--	new_mpath->is_root = false;
--	new_mpath->sdata = sdata;
--	new_mpath->flags = 0;
--	skb_queue_head_init(&new_mpath->frame_queue);
- 	new_node->mpath = new_mpath;
--	new_mpath->timer.data = (unsigned long) new_mpath;
--	new_mpath->timer.function = mesh_path_timer;
--	new_mpath->exp_time = jiffies;
--	spin_lock_init(&new_mpath->state_lock);
--	init_timer(&new_mpath->timer);
--
- 	hlist_add_head_rcu(&new_node->list, bucket);
- 	if (atomic_inc_return(&tbl->entries) >=
- 	    MEAN_CHAIN_LEN * (tbl->hash_mask + 1))
-@@ -664,7 +677,7 @@ int mpp_path_add(struct ieee80211_sub_if_data *sdata,
- 		return -ENOTSUPP;
- 
- 	err = -ENOMEM;
--	new_mpath = kzalloc(sizeof(struct mesh_path), GFP_ATOMIC);
-+	new_mpath = mesh_path_new(sdata, dst, GFP_ATOMIC);
- 	if (!new_mpath)
- 		goto err_path_alloc;
- 
-@@ -672,17 +685,9 @@ int mpp_path_add(struct ieee80211_sub_if_data *sdata,
- 	if (!new_node)
- 		goto err_node_alloc;
- 
--	read_lock_bh(&sdata->u.mesh.pathtbl_resize_lock);
--	memcpy(new_mpath->dst, dst, ETH_ALEN);
- 	memcpy(new_mpath->mpp, mpp, ETH_ALEN);
--	new_mpath->sdata = sdata;
--	new_mpath->flags = 0;
--	skb_queue_head_init(&new_mpath->frame_queue);
- 	new_node->mpath = new_mpath;
--	init_timer(&new_mpath->timer);
--	new_mpath->exp_time = jiffies;
--	spin_lock_init(&new_mpath->state_lock);
--
-+	read_lock_bh(&sdata->u.mesh.pathtbl_resize_lock);
- 	tbl = resize_dereference_mpp_paths(sdata);
- 
- 	hash_idx = mesh_table_hash(dst, tbl);
+@@ -1277,6 +1322,7 @@ static int __init rfkill_init(void)
+ 	if (error) {
+ 		misc_deregister(&rfkill_miscdev);
+ 		class_unregister(&rfkill_class);
++		rfkill_apm_led_trigger_unregister();
+ 		goto out;
+ 	}
+ #endif
+@@ -1293,5 +1339,6 @@ static void __exit rfkill_exit(void)
+ #endif
+ 	misc_deregister(&rfkill_miscdev);
+ 	class_unregister(&rfkill_class);
++	rfkill_apm_led_trigger_unregister();
+ }
+ module_exit(rfkill_exit);
 -- 
-2.6.1
+2.5.0
 
