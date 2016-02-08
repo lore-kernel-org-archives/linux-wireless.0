@@ -1,47 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41922 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933818AbcBCSkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 13:40:04 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 24/28] rtl8xxxu: Remove unused mgmt variable from rtl8xxxu_rx_complete()
-Date: Wed,  3 Feb 2016 13:39:58 -0500
-Message-Id: <1454524802-26763-25-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_194750_809355_FCE9A879)
-In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-qg0-f68.google.com ([209.85.192.68]:35309 "EHLO
+	mail-qg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755022AbcBHPlt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Feb 2016 10:41:49 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [PATCH 9/9] rfkill: Notify userspace of airplane-mode state changes
+Date: Mon,  8 Feb 2016 10:41:36 -0500
+Message-Id: <1454946096-9752-10-git-send-email-jprvita@endlessm.com> (sfid-20160208_164234_780853_798B5812)
+In-Reply-To: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
+References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 3 ---
- 1 file changed, 3 deletions(-)
+ Documentation/rfkill.txt |  3 +++
+ net/rfkill/core.c        | 13 +++++++++++++
+ 2 files changed, 16 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 460145c..1201836 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -5031,7 +5031,6 @@ static void rtl8xxxu_rx_complete(struct urb *urb)
- 	struct rtl8xxxu_rx_desc *rx_desc = (struct rtl8xxxu_rx_desc *)skb->data;
- 	struct rtl8723au_phy_stats *phy_stats;
- 	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
--	struct ieee80211_mgmt *mgmt;
- 	struct device *dev = &priv->udev->dev;
- 	__le32 *_rx_desc_le = (__le32 *)skb->data;
- 	u32 *_rx_desc = (u32 *)skb->data;
-@@ -5052,8 +5051,6 @@ static void rtl8xxxu_rx_complete(struct urb *urb)
+diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+index aa6e014..5248812 100644
+--- a/Documentation/rfkill.txt
++++ b/Documentation/rfkill.txt
+@@ -133,5 +133,8 @@ it available for other applications to take control. Changes to the
+ airplane-mode indicator state can be made using RFKILL_OP_AIRPLANE_MODE_CHANGE,
+ passing the new value in the 'soft' field of 'struct rfkill_event'.
  
- 		skb_pull(skb, drvinfo_sz + desc_shift);
++This same API is also used to provide userspace with notifications of changes
++to airplane-mode indicator state.
++
  
--		mgmt = (struct ieee80211_mgmt *)skb->data;
--
- 		memset(rx_status, 0, sizeof(struct ieee80211_rx_status));
+ For further details consult Documentation/ABI/stable/sysfs-class-rfkill.
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 8067701..abbb8f7 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -131,7 +131,20 @@ static struct led_trigger rfkill_apm_led_trigger;
  
- 		if (rx_desc->phy_stats)
+ static void rfkill_apm_led_trigger_event(bool state)
+ {
++	struct rfkill_data *data;
++	struct rfkill_int_event *ev;
++
+ 	led_trigger_event(&rfkill_apm_led_trigger, state ? LED_FULL : LED_OFF);
++
++	list_for_each_entry(data, &rfkill_fds, list) {
++		ev = kzalloc(sizeof(*ev), GFP_KERNEL);
++		if (!ev)
++			continue;
++		ev->ev.op = RFKILL_OP_AIRPLANE_MODE_CHANGE;
++		ev->ev.soft = state;
++		list_add_tail(&ev->list, &data->events);
++		wake_up_interruptible(&data->read_wait);
++	}
+ }
+ 
+ static void rfkill_apm_led_trigger_activate(struct led_classdev *led)
 -- 
 2.5.0
 
