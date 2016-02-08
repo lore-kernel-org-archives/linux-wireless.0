@@ -1,56 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35497 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754187AbcB1TDN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Feb 2016 14:03:13 -0500
-Received: by mail-wm0-f66.google.com with SMTP id 1so1583469wmg.2
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2016 11:03:13 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 4/4] staging: vt6655: MACvSaveContext use memcpy_fromio to read context.
-Date: Sun, 28 Feb 2016 19:02:57 +0000
-Message-Id: <1456686177-3167-4-git-send-email-tvboxspy@gmail.com> (sfid-20160228_200317_875080_CAFBFA66)
-In-Reply-To: <1456686177-3167-1-git-send-email-tvboxspy@gmail.com>
-References: <1456686177-3167-1-git-send-email-tvboxspy@gmail.com>
+Received: from mail.kernel.org ([198.145.29.136]:39458 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756442AbcBHVrL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Feb 2016 16:47:11 -0500
+Date: Mon, 8 Feb 2016 15:47:07 -0600
+From: Rob Herring <robh@kernel.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	linux-wireless@vger.kernel.org,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	wnhuang@chromium.com, devicetree@vger.kernel.org,
+	Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH v3 2/3] mwifiex: parse chip specific gpio from device tree
+Message-ID: <20160208214707.GA9036@rob-hp-laptop> (sfid-20160208_224717_028780_60CB51E3)
+References: <1454926528-17480-1-git-send-email-akarwar@marvell.com>
+ <1454926528-17480-2-git-send-email-akarwar@marvell.com>
+ <4072066.xhEHjcRQWo@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <4072066.xhEHjcRQWo@wuerfel>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use memcpy_fromio to store data removing the need for local count.
+On Mon, Feb 08, 2016 at 01:11:03PM +0100, Arnd Bergmann wrote:
+> On Monday 08 February 2016 02:15:27 Amitkumar Karwar wrote:
+> >                 if (adapter->dt_node) {
+> > +                       if (of_property_read_u32(adapter->dt_node,
+> > +                                                "mwifiex,chip-gpio",
+> > +                                                &data) == 0) {
+> > +                               mwifiex_dbg(adapter, INFO,
+> > +                                           "chip_gpio = 0x%x\n", data);
+> > +                               adapter->hs_cfg.gpio = data;
+> > +                       }
+> > +
+> > 
+> 
+> Please use the GPIO DT binding. Reading a number from DT is not a proper
+> way to get a GPIO number, as you may have more than one GPIO controller
+> in a system and it is not obvious to which controller this number belongs,
+> or if you need to specify things like polarity.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/mac.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+My read of this is it is not the host SOC gpio, but the WiFi device's 
+GPIO number. The host GPIO is defined in patch 3. We could still use the 
+GPIO binding to describe it doing something like "marvell,<wifi gpio pin 
+name>-gpios". Then the assignment is based on the property name.
 
-diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
-index c935922..66ae991 100644
---- a/drivers/staging/vt6655/mac.c
-+++ b/drivers/staging/vt6655/mac.c
-@@ -210,18 +210,15 @@ void MACvSetLoopbackMode(struct vnt_private *priv, unsigned char byLoopbackMode)
- void MACvSaveContext(struct vnt_private *priv, unsigned char *pbyCxtBuf)
- {
- 	void __iomem *io_base = priv->PortOffset;
--	int         ii;
- 
- 	/* read page0 register */
--	for (ii = 0; ii < MAC_MAX_CONTEXT_SIZE_PAGE0; ii++)
--		VNSvInPortB((io_base + ii), (pbyCxtBuf + ii));
-+	memcpy_fromio(pbyCxtBuf, io_base, MAC_MAX_CONTEXT_SIZE_PAGE0);
- 
- 	MACvSelectPage1(io_base);
- 
- 	/* read page1 register */
--	for (ii = 0; ii < MAC_MAX_CONTEXT_SIZE_PAGE1; ii++)
--		VNSvInPortB((io_base + ii),
--			    (pbyCxtBuf + MAC_MAX_CONTEXT_SIZE_PAGE0 + ii));
-+	memcpy_fromio(pbyCxtBuf + MAC_MAX_CONTEXT_SIZE_PAGE0, io_base,
-+		      MAC_MAX_CONTEXT_SIZE_PAGE1);
- 
- 	MACvSelectPage0(io_base);
- }
--- 
-2.7.0
-
+Rob
