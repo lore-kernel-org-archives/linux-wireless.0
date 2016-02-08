@@ -1,160 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:29754 "EHLO mga01.intel.com"
+Received: from nbd.name ([46.4.11.11]:60830 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752204AbcBWUb1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 15:31:27 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH v2] mac80211: allow not sending MIC up from driver for HW crypto
-Date: Tue, 23 Feb 2016 22:31:14 +0200
-Message-Id: <1456259474-1370-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160223_213130_587125_2B819866)
-In-Reply-To: <1455614328-12528-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1455614328-12528-1-git-send-email-emmanuel.grumbach@intel.com>
+	id S1751762AbcBHNep (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Feb 2016 08:34:45 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net
+Subject: [PATCH] cfg80211: reuse existing page fragments in A-MSDU rx
+Date: Mon,  8 Feb 2016 14:34:42 +0100
+Message-Id: <1454938482-81027-1-git-send-email-nbd@openwrt.org> (sfid-20160208_143449_162815_D5CFBE8E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+This massively reduces data copying and thus improves rx performance
 
-When HW crypto is used, there's no need for the CCMP/GCMP MIC to
-be available to mac80211, and the hardware might have removed it
-already after checking. The MIC is also useless to have when the
-frame is already decrypted, so allow indicating that it's not
-present.
-
-Since we are running out of bits in mac80211_rx_flags, make
-the flags field a u64.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- include/net/mac80211.h |  5 ++++-
- net/mac80211/util.c    |  5 +++--
- net/mac80211/wpa.c     | 26 ++++++++++++++------------
- 3 files changed, 21 insertions(+), 15 deletions(-)
+ net/wireless/util.c | 82 +++++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 77 insertions(+), 5 deletions(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0c09da3..9cf92d0 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1034,6 +1034,8 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-  *	on this subframe
-  * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
-  *	is stored in the @ampdu_delimiter_crc field)
-+ * @RX_FLAG_MIC_STRIPPED: The mic was stripped of this packet. Decryption was
-+ *	done by the hardware
-  * @RX_FLAG_LDPC: LDPC was used
-  * @RX_FLAG_ONLY_MONITOR: Report frame only to monitor interfaces without
-  *	processing it in any regular way.
-@@ -1091,6 +1093,7 @@ enum mac80211_rx_flags {
- 	RX_FLAG_5MHZ			= BIT(29),
- 	RX_FLAG_AMSDU_MORE		= BIT(30),
- 	RX_FLAG_RADIOTAP_VENDOR_DATA	= BIT(31),
-+	RX_FLAG_MIC_STRIPPED            = BIT_ULL(32),
- };
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 9880c89..c7f6820 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -644,23 +644,93 @@ int ieee80211_data_from_8023(struct sk_buff *skb, const u8 *addr,
+ }
+ EXPORT_SYMBOL(ieee80211_data_from_8023);
  
- #define RX_FLAG_STBC_SHIFT		26
-@@ -1148,7 +1151,7 @@ struct ieee80211_rx_status {
- 	u64 mactime;
- 	u32 device_timestamp;
- 	u32 ampdu_reference;
--	u32 flag;
-+	u64 flag;
- 	u16 freq;
- 	u8 vht_flag;
- 	u8 rate_idx;
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 89f7179..743265a 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -2714,8 +2714,9 @@ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
- 
- 	rate = cfg80211_calculate_bitrate(&ri);
- 	if (WARN_ONCE(!rate,
--		      "Invalid bitrate: flags=0x%x, idx=%d, vht_nss=%d\n",
--		      status->flag, status->rate_idx, status->vht_nss))
-+		      "Invalid bitrate: flags=0x%llx, idx=%d, vht_nss=%d\n",
-+		      (unsigned long long)status->flag, status->rate_idx,
-+		      status->vht_nss))
- 		return 0;
- 
- 	/* rewind from end of MPDU */
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 1884825..7e4f265 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -504,18 +504,20 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx,
- 	    !ieee80211_is_robust_mgmt_frame(skb))
- 		return RX_CONTINUE;
- 
--	data_len = skb->len - hdrlen - IEEE80211_CCMP_HDR_LEN - mic_len;
--	if (!rx->sta || data_len < 0)
--		return RX_DROP_UNUSABLE;
--
- 	if (status->flag & RX_FLAG_DECRYPTED) {
- 		if (!pskb_may_pull(rx->skb, hdrlen + IEEE80211_CCMP_HDR_LEN))
- 			return RX_DROP_UNUSABLE;
-+		if (status->flag & RX_FLAG_MIC_STRIPPED)
-+			mic_len = 0;
- 	} else {
- 		if (skb_linearize(rx->skb))
- 			return RX_DROP_UNUSABLE;
- 	}
- 
-+	data_len = skb->len - hdrlen - IEEE80211_CCMP_HDR_LEN - mic_len;
-+	if (!rx->sta || data_len < 0)
-+		return RX_DROP_UNUSABLE;
++static void
++__frame_add_frag(struct sk_buff *skb, struct page *page,
++		 void *ptr, int len, int size)
++{
++	struct skb_shared_info *sh = skb_shinfo(skb);
++	int page_offset;
 +
- 	if (!(status->flag & RX_FLAG_PN_VALIDATED)) {
- 		ccmp_hdr2pn(pn, skb->data + hdrlen);
- 
-@@ -720,8 +722,7 @@ ieee80211_crypto_gcmp_decrypt(struct ieee80211_rx_data *rx)
- 	struct sk_buff *skb = rx->skb;
- 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
- 	u8 pn[IEEE80211_GCMP_PN_LEN];
--	int data_len;
--	int queue;
-+	int data_len, queue, mic_len = IEEE80211_GCMP_MIC_LEN;
- 
- 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
- 
-@@ -729,19 +730,20 @@ ieee80211_crypto_gcmp_decrypt(struct ieee80211_rx_data *rx)
- 	    !ieee80211_is_robust_mgmt_frame(skb))
- 		return RX_CONTINUE;
- 
--	data_len = skb->len - hdrlen - IEEE80211_GCMP_HDR_LEN -
--		   IEEE80211_GCMP_MIC_LEN;
--	if (!rx->sta || data_len < 0)
--		return RX_DROP_UNUSABLE;
--
- 	if (status->flag & RX_FLAG_DECRYPTED) {
- 		if (!pskb_may_pull(rx->skb, hdrlen + IEEE80211_GCMP_HDR_LEN))
- 			return RX_DROP_UNUSABLE;
-+		if (status->flag & RX_FLAG_MIC_STRIPPED)
-+			mic_len = 0;
- 	} else {
- 		if (skb_linearize(rx->skb))
- 			return RX_DROP_UNUSABLE;
- 	}
- 
-+	data_len = skb->len - hdrlen - IEEE80211_GCMP_HDR_LEN - mic_len;
-+	if (!rx->sta || data_len < 0)
-+		return RX_DROP_UNUSABLE;
++	atomic_inc(&page->_count);
++	page_offset = ptr - page_address(page);
++	skb_add_rx_frag(skb, sh->nr_frags, page, page_offset, len, size);
++}
 +
- 	if (!(status->flag & RX_FLAG_PN_VALIDATED)) {
- 		gcmp_hdr2pn(pn, skb->data + hdrlen);
++static void
++__ieee80211_amsdu_copy_frag(struct sk_buff *skb, struct sk_buff *frame,
++			    int offset, int len)
++{
++	struct skb_shared_info *sh = skb_shinfo(skb);
++	const skb_frag_t *frag = &sh->frags[-1];
++	struct page *frag_page;
++	void *frag_ptr;
++	int frag_len, frag_size;
++	int head_size = skb->len - skb->data_len;
++	int cur_len;
++
++	frag_page = virt_to_head_page(skb->head);
++	frag_ptr = skb->data;
++	frag_size = head_size;
++
++	while (offset >= frag_size) {
++		offset -= frag_size;
++		frag++;
++		frag_page = skb_frag_page(frag);
++		frag_ptr = skb_frag_address(frag);
++		frag_size = skb_frag_size(frag);
++	}
++
++	frag_ptr += offset;
++	frag_len = frag_size - offset;
++
++	cur_len = min(len, frag_len);
++
++	__frame_add_frag(frame, frag_page, frag_ptr, cur_len, frag_size);
++	len -= cur_len;
++
++	while (len > 0) {
++		frag++;
++		frag_len = skb_frag_size(frag);
++		cur_len = min(len, frag_len);
++		__frame_add_frag(frame, skb_frag_page(frag),
++				 skb_frag_address(frag), cur_len, frag_len);
++		len -= cur_len;
++	}
++}
++
+ static struct sk_buff *
+ __ieee80211_amsdu_copy(struct sk_buff *skb, unsigned int hlen,
+-		       int offset, int len)
++		       int offset, int len, bool reuse_frag)
+ {
+ 	struct sk_buff *frame;
++	int cur_len = len;
  
-@@ -772,7 +774,7 @@ ieee80211_crypto_gcmp_decrypt(struct ieee80211_rx_data *rx)
- 	}
+ 	if (skb->len - offset < len)
+ 		return NULL;
  
- 	/* Remove GCMP header and MIC */
--	if (pskb_trim(skb, skb->len - IEEE80211_GCMP_MIC_LEN))
-+	if (pskb_trim(skb, skb->len - mic_len))
- 		return RX_DROP_UNUSABLE;
- 	memmove(skb->data + IEEE80211_GCMP_HDR_LEN, skb->data, hdrlen);
- 	skb_pull(skb, IEEE80211_GCMP_HDR_LEN);
+ 	/*
++	 * When reusing framents, copy some data to the head to simplify
++	 * ethernet header handling and speed up protocol header processing
++	 * in the stack later.
++	 */
++	if (reuse_frag)
++		cur_len = min_t(int, len, 32);
++
++	/*
+ 	 * Allocate and reserve two bytes more for payload
+ 	 * alignment since sizeof(struct ethhdr) is 14.
+ 	 */
+-	frame = dev_alloc_skb(hlen + sizeof(struct ethhdr) + 2 + len);
++	frame = dev_alloc_skb(hlen + sizeof(struct ethhdr) + 2 + cur_len);
+ 
+ 	skb_reserve(frame, hlen + sizeof(struct ethhdr) + 2);
+-	skb_copy_bits(skb, offset, skb_put(frame, len), len);
++	skb_copy_bits(skb, offset, skb_put(frame, cur_len), cur_len);
++
++	len -= cur_len;
++	if (!len)
++		return frame;
++
++	offset += cur_len;
++	__ieee80211_amsdu_copy_frag(skb, frame, offset, len);
+ 
+ 	return frame;
+ }
+@@ -676,6 +746,7 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
+ 	u8 *payload;
+ 	int offset = 0, remaining, err;
+ 	struct ethhdr eth;
++	bool reuse_frag = skb->head_frag && !skb_has_frag_list(skb);
+ 	bool reuse_skb = false;
+ 	bool last = false;
+ 
+@@ -703,12 +774,13 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
+ 		offset += sizeof(struct ethhdr);
+ 		/* reuse skb for the last subframe */
+ 		last = remaining <= subframe_len + padding;
+-		if (!skb_is_nonlinear(skb) && last) {
++		if (!skb_is_nonlinear(skb) && !reuse_frag && last) {
+ 			skb_pull(skb, offset);
+ 			frame = skb;
+ 			reuse_skb = true;
+ 		} else {
+-			frame = __ieee80211_amsdu_copy(skb, hlen, offset, len);
++			frame = __ieee80211_amsdu_copy(skb, hlen, offset, len,
++						       reuse_frag);
+ 			if (!frame)
+ 				goto purge;
+ 
 -- 
-2.5.0
+2.2.2
 
