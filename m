@@ -1,123 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58012 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.136]:40217 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753449AbcB2WGB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:06:01 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 062/113] rtl8xxxu: Do queue init in same order as 8723bu vendor driver
-Date: Mon, 29 Feb 2016 17:05:00 -0500
-Message-Id: <1456783551-28315-63-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232953_616288_189ECDDA)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+	id S1755478AbcBHV4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 8 Feb 2016 16:56:20 -0500
+Date: Mon, 8 Feb 2016 15:56:14 -0600
+From: Rob Herring <robh@kernel.org>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	wnhuang@chromium.com, devicetree@vger.kernel.org,
+	Xinming Hu <huxm@marvell.com>
+Subject: Re: [PATCH v3 1/3] mwifiex: register platform specific driver
+Message-ID: <20160208215614.GB9036@rob-hp-laptop> (sfid-20160208_225624_785891_430EDE6C)
+References: <1454926528-17480-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1454926528-17480-1-git-send-email-akarwar@marvell.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On Mon, Feb 08, 2016 at 02:15:26AM -0800, Amitkumar Karwar wrote:
+> From: Xinming Hu <huxm@marvell.com>
+> 
+> Platform device and driver provides easy way to
+> interact with device-tree-enabled system.
+> 
+> This patch registers platform driver and reorganise
+> existing device tree specific code.
+> Corresponding device tree binding file is
+> also created.
 
-Reorganize the init sequence in order to be able to compare to the
-8723bu vendor driver's init sequence.
+Wrap you lines at 72 columns.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 68 +++++++++++++-----------
- 1 file changed, 37 insertions(+), 31 deletions(-)
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> ---
+> v3: Don't update adapter->dt_node if mwifiex_plt_dev is NULL 
+> ---
+>  Documentation/devicetree/bindings/mwifiex.txt      | 29 +++++++++++
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 8b91edc..7e525fa 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -6017,32 +6017,6 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 			val8 &= 0xf8;
- 			rtl8xxxu_write8(priv, 0xa3, val8);
- 		}
--
--		if (priv->ep_tx_normal_queue)
--			val8 = TX_PAGE_NUM_NORM_PQ;
--		else
--			val8 = 0;
--
--		rtl8xxxu_write8(priv, REG_RQPN_NPQ, val8);
--
--		val32 = (TX_PAGE_NUM_PUBQ << RQPN_NORM_PQ_SHIFT) | RQPN_LOAD;
--
--		if (priv->ep_tx_high_queue)
--			val32 |= (TX_PAGE_NUM_HI_PQ << RQPN_HI_PQ_SHIFT);
--		if (priv->ep_tx_low_queue)
--			val32 |= (TX_PAGE_NUM_LO_PQ << RQPN_LO_PQ_SHIFT);
--
--		rtl8xxxu_write32(priv, REG_RQPN, val32);
--
--		/*
--		 * Set TX buffer boundary
--		 */
--		val8 = TX_TOTAL_PAGE_NUM + 1;
--		rtl8xxxu_write8(priv, REG_TXPKTBUF_BCNQ_BDNY, val8);
--		rtl8xxxu_write8(priv, REG_TXPKTBUF_MGQ_BDNY, val8);
--		rtl8xxxu_write8(priv, REG_TXPKTBUF_WMAC_LBK_BF_HD, val8);
--		rtl8xxxu_write8(priv, REG_TRXFF_BNDY, val8);
--		rtl8xxxu_write8(priv, REG_TDECTRL + 1, val8);
- 	}
- 
- 	ret = rtl8xxxu_download_firmware(priv);
-@@ -6054,11 +6028,6 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 	if (ret)
- 		goto exit;
- 
--	ret = rtl8xxxu_init_queue_priority(priv);
--	dev_dbg(dev, "%s: init_queue_priority %i\n", __func__, ret);
--	if (ret)
--		goto exit;
--
- 	/* Fix USB interface interference issue */
- 	if (priv->rtlchip == 0x8723a) {
- 		rtl8xxxu_write8(priv, 0xfe40, 0xe0);
-@@ -6158,6 +6127,43 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 		rtl8xxxu_write32(priv, REG_AFE_PLL_CTRL, 0xf0ffff83);
- 	}
- 
-+	if (!macpower){
-+		if (priv->ep_tx_normal_queue)
-+			val8 = TX_PAGE_NUM_NORM_PQ;
-+		else
-+			val8 = 0;
-+
-+		rtl8xxxu_write8(priv, REG_RQPN_NPQ, val8);
-+
-+		val32 = (TX_PAGE_NUM_PUBQ << RQPN_NORM_PQ_SHIFT) | RQPN_LOAD;
-+
-+		if (priv->ep_tx_high_queue)
-+			val32 |= (TX_PAGE_NUM_HI_PQ << RQPN_HI_PQ_SHIFT);
-+		if (priv->ep_tx_low_queue)
-+			val32 |= (TX_PAGE_NUM_LO_PQ << RQPN_LO_PQ_SHIFT);
-+
-+		rtl8xxxu_write32(priv, REG_RQPN, val32);
-+
-+		/*
-+		 * Set TX buffer boundary
-+		 */
-+		val8 = TX_TOTAL_PAGE_NUM + 1;
-+
-+		if (priv->rtlchip == 0x8723b)
-+			val8 -= 1;
-+
-+		rtl8xxxu_write8(priv, REG_TXPKTBUF_BCNQ_BDNY, val8);
-+		rtl8xxxu_write8(priv, REG_TXPKTBUF_MGQ_BDNY, val8);
-+		rtl8xxxu_write8(priv, REG_TXPKTBUF_WMAC_LBK_BF_HD, val8);
-+		rtl8xxxu_write8(priv, REG_TRXFF_BNDY, val8);
-+		rtl8xxxu_write8(priv, REG_TDECTRL + 1, val8);
-+	}
-+
-+	ret = rtl8xxxu_init_queue_priority(priv);
-+	dev_dbg(dev, "%s: init_queue_priority %i\n", __func__, ret);
-+	if (ret)
-+		goto exit;
-+
- 	/* RFSW Control - clear bit 14 ?? */
- 	rtl8xxxu_write32(priv, REG_FPGA0_TX_INFO, 0x00000003);
- 	/* 0x07000760 */
--- 
-2.5.0
+This doesn't belong at top level of bindings. bindings/net/wireless/
 
+Also, mwifiex is a linux driver name. Name it after the chips. 
+marvell-sd8xxx?
+
+>  drivers/net/wireless/marvell/mwifiex/Makefile      |  1 +
+>  drivers/net/wireless/marvell/mwifiex/main.c        |  2 +
+>  drivers/net/wireless/marvell/mwifiex/main.h        | 14 +++++
+>  .../net/wireless/marvell/mwifiex/platform_drv.c    | 59 ++++++++++++++++++++++
+>  drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |  6 +--
+>  drivers/net/wireless/marvell/mwifiex/sta_ioctl.c   |  2 +-
+>  7 files changed, 109 insertions(+), 4 deletions(-)
+>  create mode 100644 Documentation/devicetree/bindings/mwifiex.txt
+>  create mode 100644 drivers/net/wireless/marvell/mwifiex/platform_drv.c
+> 
+> diff --git a/Documentation/devicetree/bindings/mwifiex.txt b/Documentation/devicetree/bindings/mwifiex.txt
+> new file mode 100644
+> index 0000000..39b6a74
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/mwifiex.txt
+> @@ -0,0 +1,29 @@
+> +mwifiex
+> +------
+> +
+> +Required properties:
+> +
+> +  - name : must be "mwifiex"
+> +  - compatible : must be "marvell,mwifiex"
+
+The naming should be named after the actual chip.
+
+> +
+> +Optional properties:
+> +
+> +  - mwifiex,caldata* : A series of properties with marvell,caldata prefix,
+
+mwifiex is not a vendor.
+
+> +  		      represent Calibration data downloaded to the device during
+> +		      initialization. This is an array of unsigned values.
+> +
+> +
+> +Example:
+> +
+> +Tx power limit calibration data is configured in below example.
+> +The calibration data is an array of unsigned values, the length
+> +can vary between hw versions.
+> +
+> +mwifiex {
+
+These chips are SDIO devices, right? This should be a child node of the 
+SDIO controller.
+
+> +	compatible = "marvell,mwifiex";
+> +
+> +	mwifiex,caldata_00_txpwrlimit_2g_cfg_set = /bits/ 8 <
+> +0x01 0x00 0x06 0x00 0x08 0x02 0x89 0x01 ...>;
+> +
+> +};
+> +
