@@ -1,54 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:42548 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751896AbcB2Vc7 (ORCPT
+Received: from mail-qg0-f67.google.com ([209.85.192.67]:36467 "EHLO
+	mail-qg0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753849AbcBHPls (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 16:32:59 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH 02/15] wil6210: AP: prevent connecting to already connected station
-Date: Mon, 29 Feb 2016 23:32:37 +0200
-Message-Id: <1456781570-16552-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160229_223303_542875_5376F53E)
-In-Reply-To: <1456781570-16552-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1456781570-16552-1-git-send-email-qca_merez@qca.qualcomm.com>
+	Mon, 8 Feb 2016 10:41:48 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [PATCH 8/9] rfkill: Userspace control for airplane mode
+Date: Mon,  8 Feb 2016 10:41:35 -0500
+Message-Id: <1454946096-9752-9-git-send-email-jprvita@endlessm.com> (sfid-20160208_164259_878857_6E7B8B05)
+In-Reply-To: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
+References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wmi_evt_connect doesn't check if the connect event is received for
-an already connected station.
-This can lead to memory leak as a new vring is allocated without
-freeing the previously allocated vring and to unexpected behavior
-of nl80211 layer due to unexpected notification of a new station.
+Provide an interface for the airplane-mode indicator be controlled from
+userspace. User has to first acquire the control through
+RFKILL_OP_AIRPLANE_MODE_ACQUIRE and keep the fd open for the whole time
+it wants to be in control of the indicator. Closing the fd or using
+RFKILL_OP_AIRPLANE_MODE_RELEASE restores the default policy.
 
-Add a check in wmi_evt_connect in AP mode to verify that the requested
-CID is not associated to an already connected station.
+To change state of the indicator, the RFKILL_OP_AIRPLANE_MODE_CHANGE
+operation is used, passing the value on "struct rfkill_event.soft". If
+the caller has not acquired the airplane-mode control beforehand, the
+operation fails.
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ Documentation/rfkill.txt    | 10 ++++++++++
+ include/uapi/linux/rfkill.h |  3 +++
+ net/rfkill/core.c           | 47 ++++++++++++++++++++++++++++++++++++++++++---
+ 3 files changed, 57 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 493e721..fb09035 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -487,6 +487,14 @@ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
- 			return;
- 		}
- 		del_timer_sync(&wil->connect_timer);
-+	} else if ((wdev->iftype == NL80211_IFTYPE_AP) ||
-+		   (wdev->iftype == NL80211_IFTYPE_P2P_GO)) {
-+		if (wil->sta[evt->cid].status != wil_sta_unused) {
-+			wil_err(wil, "%s: AP: Invalid status %d for CID %d\n",
-+				__func__, wil->sta[evt->cid].status, evt->cid);
-+			mutex_unlock(&wil->mutex);
-+			return;
-+		}
- 	}
+diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+index b13025a..aa6e014 100644
+--- a/Documentation/rfkill.txt
++++ b/Documentation/rfkill.txt
+@@ -87,6 +87,7 @@ RFKill provides per-switch LED triggers, which can be used to drive LEDs
+ according to the switch state (LED_FULL when blocked, LED_OFF otherwise).
+ An airplane-mode indicator LED trigger is also available, which triggers
+ LED_FULL when all radios known by RFKill are blocked, and LED_OFF otherwise.
++The airplane-mode indicator LED trigger policy can be overridden by userspace.
  
- 	/* FIXME FW can transmit only ucast frames to peer */
+ 
+ 5. Userspace support
+@@ -123,5 +124,14 @@ RFKILL_TYPE
+ The contents of these variables corresponds to the "name", "state" and
+ "type" sysfs files explained above.
+ 
++Userspace can also override the default airplane-mode indicator policy through
++/dev/rfkill. Control of the airplane mode indicator has to be acquired first,
++using RFKILL_OP_AIRPLANE_MODE_ACQUIRE, and is only available for one userspace
++application at a time. Closing the fd or using RFKILL_OP_AIRPLANE_MODE_RELEASE
++reverts the airplane-mode indicator back to the default kernel policy and makes
++it available for other applications to take control. Changes to the
++airplane-mode indicator state can be made using RFKILL_OP_AIRPLANE_MODE_CHANGE,
++passing the new value in the 'soft' field of 'struct rfkill_event'.
++
+ 
+ For further details consult Documentation/ABI/stable/sysfs-class-rfkill.
+diff --git a/include/uapi/linux/rfkill.h b/include/uapi/linux/rfkill.h
+index 2e00dce..9cb999b 100644
+--- a/include/uapi/linux/rfkill.h
++++ b/include/uapi/linux/rfkill.h
+@@ -67,6 +67,9 @@ enum rfkill_operation {
+ 	RFKILL_OP_DEL,
+ 	RFKILL_OP_CHANGE,
+ 	RFKILL_OP_CHANGE_ALL,
++	RFKILL_OP_AIRPLANE_MODE_ACQUIRE,
++	RFKILL_OP_AIRPLANE_MODE_RELEASE,
++	RFKILL_OP_AIRPLANE_MODE_CHANGE,
+ };
+ 
+ /**
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index fb11547..8067701 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -89,6 +89,7 @@ struct rfkill_data {
+ 	struct mutex		mtx;
+ 	wait_queue_head_t	read_wait;
+ 	bool			input_handler;
++	bool			is_apm_owner;
+ };
+ 
+ 
+@@ -123,7 +124,7 @@ static struct {
+ } rfkill_global_states[NUM_RFKILL_TYPES];
+ 
+ static bool rfkill_epo_lock_active;
+-
++static bool rfkill_apm_owned;
+ 
+ #ifdef CONFIG_RFKILL_LEDS
+ static struct led_trigger rfkill_apm_led_trigger;
+@@ -350,7 +351,8 @@ static void rfkill_update_global_state(enum rfkill_type type, bool blocked)
+ 
+ 	for (i = 0; i < NUM_RFKILL_TYPES; i++)
+ 		rfkill_global_states[i].cur = blocked;
+-	rfkill_apm_led_trigger_event(blocked);
++	if (!rfkill_apm_owned)
++		rfkill_apm_led_trigger_event(blocked);
+ }
+ 
+ #ifdef CONFIG_RFKILL_INPUT
+@@ -1183,6 +1185,7 @@ static ssize_t rfkill_fop_read(struct file *file, char __user *buf,
+ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
+ 				size_t count, loff_t *pos)
+ {
++	struct rfkill_data *data = file->private_data;
+ 	struct rfkill *rfkill;
+ 	struct rfkill_event ev;
+ 
+@@ -1199,7 +1202,7 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
+ 	if (copy_from_user(&ev, buf, count))
+ 		return -EFAULT;
+ 
+-	if (ev.op != RFKILL_OP_CHANGE && ev.op != RFKILL_OP_CHANGE_ALL)
++	if (ev.op < RFKILL_OP_CHANGE)
+ 		return -EINVAL;
+ 
+ 	if (ev.type >= NUM_RFKILL_TYPES)
+@@ -1207,6 +1210,34 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
+ 
+ 	mutex_lock(&rfkill_global_mutex);
+ 
++	if (ev.op == RFKILL_OP_AIRPLANE_MODE_ACQUIRE) {
++		if (rfkill_apm_owned && !data->is_apm_owner) {
++			count = -EACCES;
++		} else {
++			rfkill_apm_owned = true;
++			data->is_apm_owner = true;
++		}
++	}
++
++	if (ev.op == RFKILL_OP_AIRPLANE_MODE_RELEASE) {
++		if (rfkill_apm_owned && !data->is_apm_owner) {
++			count = -EACCES;
++		} else {
++			bool state = rfkill_global_states[RFKILL_TYPE_ALL].cur;
++
++			rfkill_apm_owned = false;
++			data->is_apm_owner = false;
++			rfkill_apm_led_trigger_event(state);
++		}
++	}
++
++	if (ev.op == RFKILL_OP_AIRPLANE_MODE_CHANGE) {
++		if (rfkill_apm_owned && data->is_apm_owner)
++			rfkill_apm_led_trigger_event(ev.soft);
++		else
++			count = -EACCES;
++	}
++
+ 	if (ev.op == RFKILL_OP_CHANGE_ALL)
+ 		rfkill_update_global_state(ev.type, ev.soft);
+ 
+@@ -1230,7 +1261,17 @@ static int rfkill_fop_release(struct inode *inode, struct file *file)
+ 	struct rfkill_int_event *ev, *tmp;
+ 
+ 	mutex_lock(&rfkill_global_mutex);
++
++	if (data->is_apm_owner) {
++		bool state = rfkill_global_states[RFKILL_TYPE_ALL].cur;
++
++		rfkill_apm_owned = false;
++		data->is_apm_owner = false;
++		rfkill_apm_led_trigger_event(state);
++	}
++
+ 	list_del(&data->list);
++
+ 	mutex_unlock(&rfkill_global_mutex);
+ 
+ 	mutex_destroy(&data->mtx);
 -- 
-1.8.5.2
+2.5.0
 
