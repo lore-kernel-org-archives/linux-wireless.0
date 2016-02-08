@@ -1,150 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f65.google.com ([209.85.192.65]:34842 "EHLO
-	mail-qg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752497AbcB2BHG (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:36127 "EHLO
+	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753770AbcBHWjd convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Feb 2016 20:07:06 -0500
-Received: by mail-qg0-f65.google.com with SMTP id p68so4974526qge.2
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2016 17:07:05 -0800 (PST)
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org
+	Mon, 8 Feb 2016 17:39:33 -0500
+MIME-Version: 1.0
+In-Reply-To: <1454946096-9752-4-git-send-email-jprvita@endlessm.com>
+References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com> <1454946096-9752-4-git-send-email-jprvita@endlessm.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 9 Feb 2016 09:39:13 +1100
+Message-ID: <CAGRGNgWg3qTCBv5xLrxkyBQksE2vLRkPkX8nf8_5bGR7uusjcQ@mail.gmail.com> (sfid-20160208_233953_496788_21C83A50)
+Subject: Re: [PATCH 3/9] rfkill: Point to the correct deprecated doc location
+To: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
 Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Bob Copeland <me@bobcopeland.com>, Thomas Graf <tgraf@suug.ch>,
-	netdev@vger.kernel.org
-Subject: [PATCH RFC 1/2] rhashtable: accept GFP flags in rhashtable_walk_init
-Date: Sun, 28 Feb 2016 20:06:52 -0500
-Message-Id: <1456708013-19590-1-git-send-email-me@bobcopeland.com> (sfid-20160229_020724_686980_1927999B)
+	"David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux@endlessm.com,
+	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In certain cases, the 802.11 mesh pathtable code wants to
-iterate over all of the entries in the forwarding table from
-the receive path, which is inside an RCU read-side critical
-section.  Enable walks inside atomic sections by allowing
-GFP_ATOMIC allocations for the walker state.
+Hi João,
 
-Change all existing callsites to pass in GFP_KERNEL.
+On Tue, Feb 9, 2016 at 2:41 AM, João Paulo Rechi Vita <jprvita@gmail.com> wrote:
+> The "claim" sysfs interface has been removed, so its documentation now
+> lives in the "removed" folder.
+>
+> Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
 
-Cc: Thomas Graf <tgraf@suug.ch>
-Cc: netdev@vger.kernel.org
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- include/linux/rhashtable.h | 3 ++-
- lib/rhashtable.c           | 6 ++++--
- net/ipv6/ila/ila_xlat.c    | 3 ++-
- net/netfilter/nft_hash.c   | 4 ++--
- net/netlink/af_netlink.c   | 3 ++-
- net/sctp/proc.c            | 3 ++-
- 6 files changed, 14 insertions(+), 8 deletions(-)
+Looks right to me.
 
-diff --git a/include/linux/rhashtable.h b/include/linux/rhashtable.h
-index 63bd7601b6de..3eef0802a0cd 100644
---- a/include/linux/rhashtable.h
-+++ b/include/linux/rhashtable.h
-@@ -346,7 +346,8 @@ struct bucket_table *rhashtable_insert_slow(struct rhashtable *ht,
- 					    struct bucket_table *old_tbl);
- int rhashtable_insert_rehash(struct rhashtable *ht, struct bucket_table *tbl);
- 
--int rhashtable_walk_init(struct rhashtable *ht, struct rhashtable_iter *iter);
-+int rhashtable_walk_init(struct rhashtable *ht, struct rhashtable_iter *iter,
-+			 gfp_t gfp);
- void rhashtable_walk_exit(struct rhashtable_iter *iter);
- int rhashtable_walk_start(struct rhashtable_iter *iter) __acquires(RCU);
- void *rhashtable_walk_next(struct rhashtable_iter *iter);
-diff --git a/lib/rhashtable.c b/lib/rhashtable.c
-index cc808707d1cf..5d845ffd7982 100644
---- a/lib/rhashtable.c
-+++ b/lib/rhashtable.c
-@@ -487,6 +487,7 @@ EXPORT_SYMBOL_GPL(rhashtable_insert_slow);
-  * rhashtable_walk_init - Initialise an iterator
-  * @ht:		Table to walk over
-  * @iter:	Hash table Iterator
-+ * @gfp:	GFP flags for allocations
-  *
-  * This function prepares a hash table walk.
-  *
-@@ -504,14 +505,15 @@ EXPORT_SYMBOL_GPL(rhashtable_insert_slow);
-  * You must call rhashtable_walk_exit if this function returns
-  * successfully.
-  */
--int rhashtable_walk_init(struct rhashtable *ht, struct rhashtable_iter *iter)
-+int rhashtable_walk_init(struct rhashtable *ht, struct rhashtable_iter *iter,
-+			 gfp_t gfp)
- {
- 	iter->ht = ht;
- 	iter->p = NULL;
- 	iter->slot = 0;
- 	iter->skip = 0;
- 
--	iter->walker = kmalloc(sizeof(*iter->walker), GFP_KERNEL);
-+	iter->walker = kmalloc(sizeof(*iter->walker), gfp);
- 	if (!iter->walker)
- 		return -ENOMEM;
- 
-diff --git a/net/ipv6/ila/ila_xlat.c b/net/ipv6/ila/ila_xlat.c
-index 295ca29a23c3..0b03533453e4 100644
---- a/net/ipv6/ila/ila_xlat.c
-+++ b/net/ipv6/ila/ila_xlat.c
-@@ -501,7 +501,8 @@ static int ila_nl_dump_start(struct netlink_callback *cb)
- 	struct ila_net *ilan = net_generic(net, ila_net_id);
- 	struct ila_dump_iter *iter = (struct ila_dump_iter *)cb->args;
- 
--	return rhashtable_walk_init(&ilan->rhash_table, &iter->rhiter);
-+	return rhashtable_walk_init(&ilan->rhash_table, &iter->rhiter,
-+				    GFP_KERNEL);
- }
- 
- static int ila_nl_dump_done(struct netlink_callback *cb)
-diff --git a/net/netfilter/nft_hash.c b/net/netfilter/nft_hash.c
-index 3f9d45d3d9b7..6fa016564f90 100644
---- a/net/netfilter/nft_hash.c
-+++ b/net/netfilter/nft_hash.c
-@@ -192,7 +192,7 @@ static void nft_hash_walk(const struct nft_ctx *ctx, const struct nft_set *set,
- 	u8 genmask = nft_genmask_cur(read_pnet(&set->pnet));
- 	int err;
- 
--	err = rhashtable_walk_init(&priv->ht, &hti);
-+	err = rhashtable_walk_init(&priv->ht, &hti, GFP_KERNEL);
- 	iter->err = err;
- 	if (err)
- 		return;
-@@ -248,7 +248,7 @@ static void nft_hash_gc(struct work_struct *work)
- 	priv = container_of(work, struct nft_hash, gc_work.work);
- 	set  = nft_set_container_of(priv);
- 
--	err = rhashtable_walk_init(&priv->ht, &hti);
-+	err = rhashtable_walk_init(&priv->ht, &hti, GFP_KERNEL);
- 	if (err)
- 		goto schedule;
- 
-diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
-index c8416792cce0..6e0cbdeb21d3 100644
---- a/net/netlink/af_netlink.c
-+++ b/net/netlink/af_netlink.c
-@@ -2335,7 +2335,8 @@ static int netlink_walk_start(struct nl_seq_iter *iter)
- {
- 	int err;
- 
--	err = rhashtable_walk_init(&nl_table[iter->link].hash, &iter->hti);
-+	err = rhashtable_walk_init(&nl_table[iter->link].hash, &iter->hti,
-+				   GFP_KERNEL);
- 	if (err) {
- 		iter->link = MAX_LINKS;
- 		return err;
-diff --git a/net/sctp/proc.c b/net/sctp/proc.c
-index cfc3c7101a38..c5991e5e5daf 100644
---- a/net/sctp/proc.c
-+++ b/net/sctp/proc.c
-@@ -319,7 +319,8 @@ static int sctp_transport_walk_start(struct seq_file *seq)
- 	struct sctp_ht_iter *iter = seq->private;
- 	int err;
- 
--	err = rhashtable_walk_init(&sctp_transport_hashtable, &iter->hti);
-+	err = rhashtable_walk_init(&sctp_transport_hashtable, &iter->hti,
-+				   GFP_KERNEL);
- 	if (err)
- 		return err;
- 
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
+> ---
+>  Documentation/ABI/stable/sysfs-class-rfkill | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+>
+> diff --git a/Documentation/ABI/stable/sysfs-class-rfkill b/Documentation/ABI/stable/sysfs-class-rfkill
+> index 097f522..e51571e 100644
+> --- a/Documentation/ABI/stable/sysfs-class-rfkill
+> +++ b/Documentation/ABI/stable/sysfs-class-rfkill
+> @@ -2,8 +2,10 @@ rfkill - radio frequency (RF) connector kill switch support
+>
+>  For details to this subsystem look at Documentation/rfkill.txt.
+>
+> -For the deprecated /sys/class/rfkill/*/state and
+> -/sys/class/rfkill/*/claim knobs of this interface look in
+> +For the deprecated /sys/class/rfkill/*/claim knobs of this interface look in
+> +Documentation/ABI/removed/sysfs-class-rfkill.
+> +
+> +For the deprecated /sys/class/rfkill/*/state knobs of this interface look in
+>  Documentation/ABI/obsolete/sysfs-class-rfkill.
+>
+>  What:          /sys/class/rfkill
+> --
+> 2.5.0
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-2.6.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
