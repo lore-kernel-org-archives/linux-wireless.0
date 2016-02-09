@@ -1,420 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:31388
-	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161097AbcBQK10 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2016 05:27:26 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 15/21] brcmfmac: move platform data retrieval code to common
-Date: Wed, 17 Feb 2016 11:27:04 +0100
-Message-Id: <1455704830-10088-16-git-send-email-arend@broadcom.com> (sfid-20160217_112835_585693_52EC4524)
-In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
-References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:52303 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753409AbcBINoW convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Feb 2016 08:44:22 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Nishant Sarmukadam" <nishants@marvell.com>,
+	"wnhuang@chromium.com" <wnhuang@chromium.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Xinming Hu <huxm@marvell.com>, Cathy Luo <cluo@marvell.com>
+Subject: RE: [PATCH v3 1/3] mwifiex: register platform specific driver
+Date: Tue, 9 Feb 2016 13:44:16 +0000
+Message-ID: <5ef981436ee64f67beef7ca1e2470c69@SC-EXCH04.marvell.com> (sfid-20160209_144426_301503_9CDAB405)
+References: <1454926528-17480-1-git-send-email-akarwar@marvell.com>
+ <8264177.UI5sMC7XWi@wuerfel>
+In-Reply-To: <8264177.UI5sMC7XWi@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+Hi Arnd,
 
-In preparation of module parameters for all devices the module
-platform data retrieval is moved from sdio to common. It is still
-only used for sdio devices.
+Thanks for your review.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 84 +++++-----------------
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  | 53 ++++++++++++--
- .../wireless/broadcom/brcm80211/brcmfmac/common.h  |  3 +
- .../net/wireless/broadcom/brcm80211/brcmfmac/of.c  | 23 +++---
- .../net/wireless/broadcom/brcm80211/brcmfmac/of.h  |  6 +-
- 5 files changed, 84 insertions(+), 85 deletions(-)
+> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
+> owner@vger.kernel.org] On Behalf Of Arnd Bergmann
+> Sent: Monday, February 08, 2016 5:40 PM
+> To: Amitkumar Karwar
+> Cc: linux-wireless@vger.kernel.org; Nishant Sarmukadam;
+> wnhuang@chromium.com; devicetree@vger.kernel.org; Xinming Hu
+> Subject: Re: [PATCH v3 1/3] mwifiex: register platform specific driver
+> 
+> On Monday 08 February 2016 02:15:26 Amitkumar Karwar wrote:
+> > diff --git a/Documentation/devicetree/bindings/mwifiex.txt
+> > b/Documentation/devicetree/bindings/mwifiex.txt
+> > new file mode 100644
+> > index 0000000..39b6a74
+> > --- /dev/null
+> > +++ b/Documentation/devicetree/bindings/mwifiex.txt
+> > @@ -0,0 +1,29 @@
+> > +mwifiex
+> > +------
+> > +
+> > +Required properties:
+> > +
+> > +  - name : must be "mwifiex"
+> 
+> This is a very unusual requirement.
+> 
+> Can you use one of the standard device names instead?
+> 
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 5363739..1922de4 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -27,8 +27,6 @@
- #include <linux/mmc/sdio_func.h>
- #include <linux/mmc/card.h>
- #include <linux/mmc/host.h>
--#include <linux/platform_device.h>
--#include <linux/platform_data/brcmfmac-sdio.h>
- #include <linux/pm_runtime.h>
- #include <linux/suspend.h>
- #include <linux/errno.h>
-@@ -46,7 +44,6 @@
- #include "bus.h"
- #include "debug.h"
- #include "sdio.h"
--#include "of.h"
- #include "core.h"
- #include "common.h"
- 
-@@ -106,18 +103,18 @@ static void brcmf_sdiod_dummy_irqhandler(struct sdio_func *func)
- 
- int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
- {
-+	struct brcmfmac_sdio_platform_data *pdata;
- 	int ret = 0;
- 	u8 data;
- 	u32 addr, gpiocontrol;
- 	unsigned long flags;
- 
--	if ((sdiodev->pdata) && (sdiodev->pdata->oob_irq_supported)) {
-+	pdata = sdiodev->pdata;
-+	if ((pdata) && (pdata->oob_irq_supported)) {
- 		brcmf_dbg(SDIO, "Enter, register OOB IRQ %d\n",
--			  sdiodev->pdata->oob_irq_nr);
--		ret = request_irq(sdiodev->pdata->oob_irq_nr,
--				  brcmf_sdiod_oob_irqhandler,
--				  sdiodev->pdata->oob_irq_flags,
--				  "brcmf_oob_intr",
-+			  pdata->oob_irq_nr);
-+		ret = request_irq(pdata->oob_irq_nr, brcmf_sdiod_oob_irqhandler,
-+				  pdata->oob_irq_flags, "brcmf_oob_intr",
- 				  &sdiodev->func[1]->dev);
- 		if (ret != 0) {
- 			brcmf_err("request_irq failed %d\n", ret);
-@@ -129,7 +126,7 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
- 		sdiodev->irq_en = true;
- 		spin_unlock_irqrestore(&sdiodev->irq_en_lock, flags);
- 
--		ret = enable_irq_wake(sdiodev->pdata->oob_irq_nr);
-+		ret = enable_irq_wake(pdata->oob_irq_nr);
- 		if (ret != 0) {
- 			brcmf_err("enable_irq_wake failed %d\n", ret);
- 			return ret;
-@@ -158,7 +155,7 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
- 
- 		/* redirect, configure and enable io for interrupt signal */
- 		data = SDIO_SEPINT_MASK | SDIO_SEPINT_OE;
--		if (sdiodev->pdata->oob_irq_flags & IRQF_TRIGGER_HIGH)
-+		if (pdata->oob_irq_flags & IRQF_TRIGGER_HIGH)
- 			data |= SDIO_SEPINT_ACT_HI;
- 		brcmf_sdiod_regwb(sdiodev, SDIO_CCCR_BRCM_SEPINT, data, &ret);
- 
-@@ -176,9 +173,12 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
- 
- int brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev)
- {
-+	struct brcmfmac_sdio_platform_data *pdata;
-+
- 	brcmf_dbg(SDIO, "Entering\n");
- 
--	if ((sdiodev->pdata) && (sdiodev->pdata->oob_irq_supported)) {
-+	pdata = sdiodev->pdata;
-+	if ((pdata) && (pdata->oob_irq_supported)) {
- 		sdio_claim_host(sdiodev->func[1]);
- 		brcmf_sdiod_regwb(sdiodev, SDIO_CCCR_BRCM_SEPINT, 0, NULL);
- 		brcmf_sdiod_regwb(sdiodev, SDIO_CCCR_IENx, 0, NULL);
-@@ -187,11 +187,10 @@ int brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev)
- 		if (sdiodev->oob_irq_requested) {
- 			sdiodev->oob_irq_requested = false;
- 			if (sdiodev->irq_wake) {
--				disable_irq_wake(sdiodev->pdata->oob_irq_nr);
-+				disable_irq_wake(pdata->oob_irq_nr);
- 				sdiodev->irq_wake = false;
- 			}
--			free_irq(sdiodev->pdata->oob_irq_nr,
--				 &sdiodev->func[1]->dev);
-+			free_irq(pdata->oob_irq_nr, &sdiodev->func[1]->dev);
- 			sdiodev->irq_en = false;
- 		}
- 	} else {
-@@ -1113,8 +1112,6 @@ static const struct sdio_device_id brcmf_sdmmc_ids[] = {
- };
- MODULE_DEVICE_TABLE(sdio, brcmf_sdmmc_ids);
- 
--static struct brcmfmac_sdio_platform_data *brcmfmac_sdio_pdata;
--
- 
- static void brcmf_sdiod_acpi_set_power_manageable(struct device *dev,
- 						  int val)
-@@ -1177,10 +1174,7 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 	dev_set_drvdata(&func->dev, bus_if);
- 	dev_set_drvdata(&sdiodev->func[1]->dev, bus_if);
- 	sdiodev->dev = &sdiodev->func[1]->dev;
--	sdiodev->pdata = brcmfmac_sdio_pdata;
--
--	if (!sdiodev->pdata)
--		brcmf_of_probe(sdiodev);
-+	sdiodev->pdata = brcmf_get_module_param(sdiodev->dev);
- 
- #ifdef CONFIG_PM_SLEEP
- 	/* wowl can be supported when KEEP_POWER is true and (WAKE_SDIO_IRQ
-@@ -1306,7 +1300,7 @@ static const struct dev_pm_ops brcmf_sdio_pm_ops = {
- static struct sdio_driver brcmf_sdmmc_driver = {
- 	.probe = brcmf_ops_sdio_probe,
- 	.remove = brcmf_ops_sdio_remove,
--	.name = BRCMFMAC_SDIO_PDATA_NAME,
-+	.name = KBUILD_MODNAME,
- 	.id_table = brcmf_sdmmc_ids,
- 	.drv = {
- 		.owner = THIS_MODULE,
-@@ -1316,37 +1310,6 @@ static struct sdio_driver brcmf_sdmmc_driver = {
- 	},
- };
- 
--static int __init brcmf_sdio_pd_probe(struct platform_device *pdev)
--{
--	brcmf_dbg(SDIO, "Enter\n");
--
--	brcmfmac_sdio_pdata = dev_get_platdata(&pdev->dev);
--
--	if (brcmfmac_sdio_pdata->power_on)
--		brcmfmac_sdio_pdata->power_on();
--
--	return 0;
--}
--
--static int brcmf_sdio_pd_remove(struct platform_device *pdev)
--{
--	brcmf_dbg(SDIO, "Enter\n");
--
--	if (brcmfmac_sdio_pdata->power_off)
--		brcmfmac_sdio_pdata->power_off();
--
--	sdio_unregister_driver(&brcmf_sdmmc_driver);
--
--	return 0;
--}
--
--static struct platform_driver brcmf_sdio_pd = {
--	.remove		= brcmf_sdio_pd_remove,
--	.driver		= {
--		.name	= BRCMFMAC_SDIO_PDATA_NAME,
--	}
--};
--
- void brcmf_sdio_register(void)
- {
- 	int ret;
-@@ -1360,19 +1323,6 @@ void brcmf_sdio_exit(void)
- {
- 	brcmf_dbg(SDIO, "Enter\n");
- 
--	if (brcmfmac_sdio_pdata)
--		platform_driver_unregister(&brcmf_sdio_pd);
--	else
--		sdio_unregister_driver(&brcmf_sdmmc_driver);
-+	sdio_unregister_driver(&brcmf_sdmmc_driver);
- }
- 
--void __init brcmf_sdio_init(void)
--{
--	int ret;
--
--	brcmf_dbg(SDIO, "Enter\n");
--
--	ret = platform_driver_probe(&brcmf_sdio_pd, brcmf_sdio_pd_probe);
--	if (ret == -ENODEV)
--		brcmf_dbg(SDIO, "No platform data available.\n");
--}
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 07eff43..8c66af1 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -26,6 +26,7 @@
- #include "fwil_types.h"
- #include "tracepoint.h"
- #include "common.h"
-+#include "of.h"
- 
- MODULE_AUTHOR("Broadcom Corporation");
- MODULE_DESCRIPTION("Broadcom 802.11 wireless LAN fullmac driver.");
-@@ -78,6 +79,7 @@ module_param_named(ignore_probe_fail, brcmf_ignore_probe_fail, int, 0);
- MODULE_PARM_DESC(ignore_probe_fail, "always succeed probe for debugging");
- #endif
- 
-+static struct brcmfmac_sdio_platform_data *brcmfmac_pdata;
- struct brcmf_mp_global_t brcmf_mp_global;
- 
- int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
-@@ -230,6 +232,13 @@ static void brcmf_mp_attach(void)
- 		BRCMF_FW_ALTPATH_LEN);
- }
- 
-+struct brcmfmac_sdio_platform_data *brcmf_get_module_param(struct device *dev)
-+{
-+	if (!brcmfmac_pdata)
-+		brcmf_of_probe(dev, &brcmfmac_pdata);
-+	return brcmfmac_pdata;
-+}
-+
- int brcmf_mp_device_attach(struct brcmf_pub *drvr)
- {
- 	drvr->settings = kzalloc(sizeof(*drvr->settings), GFP_ATOMIC);
-@@ -252,6 +261,35 @@ void brcmf_mp_device_detach(struct brcmf_pub *drvr)
- 	kfree(drvr->settings);
- }
- 
-+static int __init brcmf_common_pd_probe(struct platform_device *pdev)
-+{
-+	brcmf_dbg(INFO, "Enter\n");
-+
-+	brcmfmac_pdata = dev_get_platdata(&pdev->dev);
-+
-+	if (brcmfmac_pdata->power_on)
-+		brcmfmac_pdata->power_on();
-+
-+	return 0;
-+}
-+
-+static int brcmf_common_pd_remove(struct platform_device *pdev)
-+{
-+	brcmf_dbg(INFO, "Enter\n");
-+
-+	if (brcmfmac_pdata->power_off)
-+		brcmfmac_pdata->power_off();
-+
-+	return 0;
-+}
-+
-+static struct platform_driver brcmf_pd = {
-+	.remove		= brcmf_common_pd_remove,
-+	.driver		= {
-+		.name	= BRCMFMAC_SDIO_PDATA_NAME,
-+	}
-+};
-+
- static int __init brcmfmac_module_init(void)
- {
- 	int err;
-@@ -259,16 +297,21 @@ static int __init brcmfmac_module_init(void)
- 	/* Initialize debug system first */
- 	brcmf_debugfs_init();
- 
--#ifdef CONFIG_BRCMFMAC_SDIO
--	brcmf_sdio_init();
--#endif
-+	/* Get the platform data (if available) for our devices */
-+	err = platform_driver_probe(&brcmf_pd, brcmf_common_pd_probe);
-+	if (err == -ENODEV)
-+		brcmf_dbg(INFO, "No platform data available.\n");
-+
- 	/* Initialize global module paramaters */
- 	brcmf_mp_attach();
- 
- 	/* Continue the initialization by registering the different busses */
- 	err = brcmf_core_init();
--	if (err)
-+	if (err) {
- 		brcmf_debugfs_exit();
-+		if (brcmfmac_pdata)
-+			platform_driver_unregister(&brcmf_pd);
-+	}
- 
- 	return err;
- }
-@@ -276,6 +319,8 @@ static int __init brcmfmac_module_init(void)
- static void __exit brcmfmac_module_exit(void)
- {
- 	brcmf_core_exit();
-+	if (brcmfmac_pdata)
-+		platform_driver_unregister(&brcmf_pd);
- 	brcmf_debugfs_exit();
- }
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-index 256be1b..54a26ed 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-@@ -15,6 +15,8 @@
- #ifndef BRCMFMAC_COMMON_H
- #define BRCMFMAC_COMMON_H
- 
-+#include <linux/platform_device.h>
-+#include <linux/platform_data/brcmfmac-sdio.h>
- #include "fwil_types.h"
- 
- extern const u8 ALLFFMAC[ETH_ALEN];
-@@ -89,6 +91,7 @@ struct brcmf_mp_device {
- 	struct cc_translate *country_codes;
- };
- 
-+struct brcmfmac_sdio_platform_data *brcmf_get_module_param(struct device *dev);
- int brcmf_mp_device_attach(struct brcmf_pub *drvr);
- void brcmf_mp_device_detach(struct brcmf_pub *drvr);
- #ifdef DEBUG
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-index 03f35e0..8201d93 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-@@ -16,17 +16,16 @@
- #include <linux/init.h>
- #include <linux/of.h>
- #include <linux/of_irq.h>
--#include <linux/mmc/card.h>
--#include <linux/platform_data/brcmfmac-sdio.h>
--#include <linux/mmc/sdio_func.h>
- 
- #include <defs.h>
- #include "debug.h"
--#include "sdio.h"
-+#include "core.h"
-+#include "common.h"
-+#include "of.h"
- 
--void brcmf_of_probe(struct brcmf_sdio_dev *sdiodev)
-+void
-+brcmf_of_probe(struct device *dev, struct brcmfmac_sdio_platform_data **sdio)
- {
--	struct device *dev = sdiodev->dev;
- 	struct device_node *np = dev->of_node;
- 	int irq;
- 	u32 irqf;
-@@ -35,12 +34,12 @@ void brcmf_of_probe(struct brcmf_sdio_dev *sdiodev)
- 	if (!np || !of_device_is_compatible(np, "brcm,bcm4329-fmac"))
- 		return;
- 
--	sdiodev->pdata = devm_kzalloc(dev, sizeof(*sdiodev->pdata), GFP_KERNEL);
--	if (!sdiodev->pdata)
-+	*sdio = devm_kzalloc(dev, sizeof(*sdio), GFP_KERNEL);
-+	if (!(*sdio))
- 		return;
- 
- 	if (of_property_read_u32(np, "brcm,drive-strength", &val) == 0)
--		sdiodev->pdata->drive_strength = val;
-+		(*sdio)->drive_strength = val;
- 
- 	/* make sure there are interrupts defined in the node */
- 	if (!of_find_property(np, "interrupts", NULL))
-@@ -53,7 +52,7 @@ void brcmf_of_probe(struct brcmf_sdio_dev *sdiodev)
- 	}
- 	irqf = irqd_get_trigger_type(irq_get_irq_data(irq));
- 
--	sdiodev->pdata->oob_irq_supported = true;
--	sdiodev->pdata->oob_irq_nr = irq;
--	sdiodev->pdata->oob_irq_flags = irqf;
-+	(*sdio)->oob_irq_supported = true;
-+	(*sdio)->oob_irq_nr = irq;
-+	(*sdio)->oob_irq_flags = irqf;
- }
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.h
-index 5f7c355..84b4744 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.h
-@@ -14,9 +14,11 @@
-  * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-  */
- #ifdef CONFIG_OF
--void brcmf_of_probe(struct brcmf_sdio_dev *sdiodev);
-+void
-+brcmf_of_probe(struct device *dev, struct brcmfmac_sdio_platform_data **sdio);
- #else
--static void brcmf_of_probe(struct brcmf_sdio_dev *sdiodev)
-+static void brcmf_of_probe(struct device *dev,
-+			   struct brcmfmac_sdio_platform_data **sdio)
- {
- }
- #endif /* CONFIG_OF */
--- 
-1.9.1
+We will make use of marvell-sd8xxx in updated version as per Rob Herring's suggestions.
+It includes vendor name and a chipset/device name.
 
+
+> > +  - compatible : must be "marvell,mwifiex"
+> > +
+> > +Optional properties:
+> > +
+> > +  - mwifiex,caldata* : A series of properties with marvell,caldata
+> prefix,
+> > +                     represent Calibration data downloaded to the
+> device during
+> > +                     initialization. This is an array of unsigned
+> values.
+> > +
+> > +
+> > +Example:
+> > +
+> > +Tx power limit calibration data is configured in below example.
+> > +The calibration data is an array of unsigned values, the length can
+> > +vary between hw versions.
+> > +
+> > +mwifiex {
+> > +       compatible = "marvell,mwifiex";
+> > +
+> > +       mwifiex,caldata_00_txpwrlimit_2g_cfg_set = /bits/ 8 <
+> > +0x01 0x00 0x06 0x00 0x08 0x02 0x89 0x01 ...>;
+> > +
+> > +};
+> 
+> Should we list the mac-address here as well, or is there always an
+> eeprom for that but not the calibration data?
+
+Yes. we do get MAC address along with other info from EEPROM.
+
+Regards,
+Amitkumar Karwar
