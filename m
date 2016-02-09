@@ -1,69 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48103 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757342AbcBSHoy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2016 02:44:54 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>
-Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, b43-dev@lists.infradead.org,
-	Jia-Ju Bai <baijiaju1990@163.com>
-Subject: Re: [PATCH] b43: fix memory leak
-References: <1455798876-32186-1-git-send-email-sudipm.mukherjee@gmail.com>
-	<20160218173212.03670d97@wiggum>
-Date: Fri, 19 Feb 2016 09:44:48 +0200
-In-Reply-To: <20160218173212.03670d97@wiggum> ("Michael =?utf-8?Q?B=C3=BCs?=
- =?utf-8?Q?ch=22's?= message of
-	"Thu, 18 Feb 2016 17:32:12 +0100")
-Message-ID: <87io1lqh3j.fsf@purkki.adurom.net> (sfid-20160219_084559_108079_E8061E1F)
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:20747 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751861AbcBIO1M convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Feb 2016 09:27:12 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Nishant Sarmukadam" <nishants@marvell.com>,
+	"wnhuang@chromium.com" <wnhuang@chromium.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Xinming Hu <huxm@marvell.com>, Cathy Luo <cluo@marvell.com>
+Subject: RE: [PATCH v3 1/3] mwifiex: register platform specific driver
+Date: Tue, 9 Feb 2016 14:27:07 +0000
+Message-ID: <f6882d2b077748eba10617d114da36f2@SC-EXCH04.marvell.com> (sfid-20160209_152716_510100_BFB9898C)
+References: <1454926528-17480-1-git-send-email-akarwar@marvell.com>
+ <8264177.UI5sMC7XWi@wuerfel>
+ <5ef981436ee64f67beef7ca1e2470c69@SC-EXCH04.marvell.com>
+ <6131181.bluDODkWmt@wuerfel>
+In-Reply-To: <6131181.bluDODkWmt@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michael Büsch <m@bues.ch> writes:
+> From: Arnd Bergmann [mailto:arnd@arndb.de]
+> Sent: Tuesday, February 09, 2016 7:48 PM
+> To: Amitkumar Karwar
+> Cc: linux-wireless@vger.kernel.org; Nishant Sarmukadam;
+> wnhuang@chromium.com; devicetree@vger.kernel.org; Xinming Hu; Cathy Luo
+> Subject: Re: [PATCH v3 1/3] mwifiex: register platform specific driver
+> 
+> On Tuesday 09 February 2016 13:44:16 Amitkumar Karwar wrote:
+> > > > index 0000000..39b6a74
+> > > > --- /dev/null
+> > > > +++ b/Documentation/devicetree/bindings/mwifiex.txt
+> > > > @@ -0,0 +1,29 @@
+> > > > +mwifiex
+> > > > +------
+> > > > +
+> > > > +Required properties:
+> > > > +
+> > > > +  - name : must be "mwifiex"
+> > >
+> > > This is a very unusual requirement.
+> > >
+> > > Can you use one of the standard device names instead?
+> > >
+> >
+> > We will make use of marvell-sd8xxx in updated version as per Rob
+> Herring's suggestions.
+> > It includes vendor name and a chipset/device name.
+> 
+> I meant the node name, not the compatible string. This should be
+> something like "ethernet" or "wlan".
 
-> On Thu, 18 Feb 2016 18:04:36 +0530
-> Sudip Mukherjee <sudipm.mukherjee@gmail.com> wrote:
->
->> From: Sudip Mukherjee <sudip@vectorindia.org>
->> 
->> On error we jumped to the label bcma_out and returned the error code but
->> we missed freeing dev.
->> 
->> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
->> ---
->>  drivers/net/wireless/broadcom/b43/main.c | 1 +
->>  1 file changed, 1 insertion(+)
->> 
->> diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
->> index c279211..78f670a 100644
->> --- a/drivers/net/wireless/broadcom/b43/main.c
->> +++ b/drivers/net/wireless/broadcom/b43/main.c
->> @@ -5671,6 +5671,7 @@ static int b43_bcma_probe(struct bcma_device *core)
->>  	wl = b43_wireless_init(dev);
->>  	if (IS_ERR(wl)) {
->>  		err = PTR_ERR(wl);
->> +		kfree(dev);
->>  		goto bcma_out;
->>  	}
->>  
->
-> We recently had a patch that fixes this, among more leaks. Subject:
-> [PATCH v2 resend] b43: Fix memory leaks in b43_bus_dev_ssb_init and
-> b43_bus_dev_bcma_init
->
-> Please test that patch instead, so we can finally apply it.
->
-> It needs to be tested on both ssb and bcma. Come on. This isn't too
-> hard. :) Please somebody with any hardware test it. (I currently don't
-> have any b43 hardware)
+Thanks for clarification. I will name the node as "wlan"
 
-And the patch can be downloaded from patchwork:
-
-https://patchwork.kernel.org/patch/8049041/
-
--- 
-Kalle Valo
+Regards,
+Amitkumar Karwar
