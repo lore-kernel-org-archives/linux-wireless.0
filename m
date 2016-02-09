@@ -1,106 +1,198 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f54.google.com ([209.85.213.54]:35538 "EHLO
-	mail-vk0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753721AbcBCPYo (ORCPT
+Received: from mail-qg0-f66.google.com ([209.85.192.66]:34719 "EHLO
+	mail-qg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932708AbcBIVg6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 10:24:44 -0500
+	Tue, 9 Feb 2016 16:36:58 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [PATCH 8/9] rfkill: Userspace control for airplane mode
+Date: Tue,  9 Feb 2016 16:36:42 -0500
+Message-Id: <1455053802-13063-1-git-send-email-jprvita@endlessm.com> (sfid-20160209_223727_416047_268AA4D5)
+In-Reply-To: <CA+A7VXU9zoQZ5wM2Ranf7o9vUphGb0THkh8-TUM_1yD7aC30pQ@mail.gmail.com>
+References: <CA+A7VXU9zoQZ5wM2Ranf7o9vUphGb0THkh8-TUM_1yD7aC30pQ@mail.gmail.com>
 MIME-Version: 1.0
-Date: Wed, 3 Feb 2016 10:24:43 -0500
-Message-ID: <CA+5PVA4HVjsEw+j+HMDzO0gnQb4xTRwbAu4H2do3MU41QWvOvw@mail.gmail.com> (sfid-20160203_162500_377499_232BD012)
-Subject: ibss.c backtrace when batman-adv adds wireless interface
-From: Josh Boyer <jwboyer@fedoraproject.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Marek Lindner <mareklindner@neomailbox.ch>,
-	Simon Wunderlich <sw@simonwunderlich.de>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, b.a.t.m.a.n@lists.open-mesh.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+Provide an interface for the airplane-mode indicator be controlled from
+userspace. User has to first acquire the control through
+RFKILL_OP_AIRPLANE_MODE_ACQUIRE and keep the fd open for the whole time
+it wants to be in control of the indicator. Closing the fd or using
+RFKILL_OP_AIRPLANE_MODE_RELEASE restores the default policy.
 
-We've had a user report the backtrace below when loading batman-adv on
-his machine.  It looks like the cfg80211 layer is complaining about a
-null bss returned, but I cannot tell if the rtlwifi driver or
-batman-adv is in error here.
+To change state of the indicator, the RFKILL_OP_AIRPLANE_MODE_CHANGE
+operation is used, passing the value on "struct rfkill_event.soft". If
+the caller has not acquired the airplane-mode control beforehand, the
+operation fails.
 
-Thoughts?
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+---
+ Documentation/rfkill.txt    | 10 ++++++++++
+ include/uapi/linux/rfkill.h |  3 +++
+ net/rfkill/core.c           | 45 +++++++++++++++++++++++++++++++++++++++++----
+ 3 files changed, 54 insertions(+), 4 deletions(-)
 
-josh
+diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+index b13025a..aa6e014 100644
+--- a/Documentation/rfkill.txt
++++ b/Documentation/rfkill.txt
+@@ -87,6 +87,7 @@ RFKill provides per-switch LED triggers, which can be used to drive LEDs
+ according to the switch state (LED_FULL when blocked, LED_OFF otherwise).
+ An airplane-mode indicator LED trigger is also available, which triggers
+ LED_FULL when all radios known by RFKill are blocked, and LED_OFF otherwise.
++The airplane-mode indicator LED trigger policy can be overridden by userspace.
+ 
+ 
+ 5. Userspace support
+@@ -123,5 +124,14 @@ RFKILL_TYPE
+ The contents of these variables corresponds to the "name", "state" and
+ "type" sysfs files explained above.
+ 
++Userspace can also override the default airplane-mode indicator policy through
++/dev/rfkill. Control of the airplane mode indicator has to be acquired first,
++using RFKILL_OP_AIRPLANE_MODE_ACQUIRE, and is only available for one userspace
++application at a time. Closing the fd or using RFKILL_OP_AIRPLANE_MODE_RELEASE
++reverts the airplane-mode indicator back to the default kernel policy and makes
++it available for other applications to take control. Changes to the
++airplane-mode indicator state can be made using RFKILL_OP_AIRPLANE_MODE_CHANGE,
++passing the new value in the 'soft' field of 'struct rfkill_event'.
++
+ 
+ For further details consult Documentation/ABI/stable/sysfs-class-rfkill.
+diff --git a/include/uapi/linux/rfkill.h b/include/uapi/linux/rfkill.h
+index 2e00dce..9cb999b 100644
+--- a/include/uapi/linux/rfkill.h
++++ b/include/uapi/linux/rfkill.h
+@@ -67,6 +67,9 @@ enum rfkill_operation {
+ 	RFKILL_OP_DEL,
+ 	RFKILL_OP_CHANGE,
+ 	RFKILL_OP_CHANGE_ALL,
++	RFKILL_OP_AIRPLANE_MODE_ACQUIRE,
++	RFKILL_OP_AIRPLANE_MODE_RELEASE,
++	RFKILL_OP_AIRPLANE_MODE_CHANGE,
+ };
+ 
+ /**
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index fb11547..c0da716 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -89,6 +89,7 @@ struct rfkill_data {
+ 	struct mutex		mtx;
+ 	wait_queue_head_t	read_wait;
+ 	bool			input_handler;
++	bool			is_apm_owner;
+ };
+ 
+ 
+@@ -123,7 +124,7 @@ static struct {
+ } rfkill_global_states[NUM_RFKILL_TYPES];
+ 
+ static bool rfkill_epo_lock_active;
+-
++static bool rfkill_apm_owned;
+ 
+ #ifdef CONFIG_RFKILL_LEDS
+ static struct led_trigger rfkill_apm_led_trigger;
+@@ -350,7 +351,8 @@ static void rfkill_update_global_state(enum rfkill_type type, bool blocked)
+ 
+ 	for (i = 0; i < NUM_RFKILL_TYPES; i++)
+ 		rfkill_global_states[i].cur = blocked;
+-	rfkill_apm_led_trigger_event(blocked);
++	if (!rfkill_apm_owned)
++		rfkill_apm_led_trigger_event(blocked);
+ }
+ 
+ #ifdef CONFIG_RFKILL_INPUT
+@@ -1180,11 +1182,26 @@ static ssize_t rfkill_fop_read(struct file *file, char __user *buf,
+ 	return ret;
+ }
+ 
++static int rfkill_airplane_mode_release(struct rfkill_data *data)
++{
++	bool state = rfkill_global_states[RFKILL_TYPE_ALL].cur;
++
++	if (rfkill_apm_owned && data->is_apm_owner) {
++		rfkill_apm_owned = false;
++		data->is_apm_owner = false;
++		rfkill_apm_led_trigger_event(state);
++		return 0;
++	}
++	return -EACCES;
++}
++
+ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
+ 				size_t count, loff_t *pos)
+ {
++	struct rfkill_data *data = file->private_data;
+ 	struct rfkill *rfkill;
+ 	struct rfkill_event ev;
++	int ret = 0;
+ 
+ 	/* we don't need the 'hard' variable but accept it */
+ 	if (count < RFKILL_EVENT_SIZE_V1 - 1)
+@@ -1199,7 +1216,7 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
+ 	if (copy_from_user(&ev, buf, count))
+ 		return -EFAULT;
+ 
+-	if (ev.op != RFKILL_OP_CHANGE && ev.op != RFKILL_OP_CHANGE_ALL)
++	if (ev.op < RFKILL_OP_CHANGE)
+ 		return -EINVAL;
+ 
+ 	if (ev.type >= NUM_RFKILL_TYPES)
+@@ -1207,6 +1224,25 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
+ 
+ 	mutex_lock(&rfkill_global_mutex);
+ 
++	if (ev.op == RFKILL_OP_AIRPLANE_MODE_ACQUIRE) {
++		if (rfkill_apm_owned && !data->is_apm_owner) {
++			ret = -EACCES;
++		} else {
++			rfkill_apm_owned = true;
++			data->is_apm_owner = true;
++		}
++	}
++
++	if (ev.op == RFKILL_OP_AIRPLANE_MODE_RELEASE)
++		ret = rfkill_airplane_mode_release(data);
++
++	if (ev.op == RFKILL_OP_AIRPLANE_MODE_CHANGE) {
++		if (rfkill_apm_owned && data->is_apm_owner)
++			rfkill_apm_led_trigger_event(ev.soft);
++		else
++			ret = -EACCES;
++	}
++
+ 	if (ev.op == RFKILL_OP_CHANGE_ALL)
+ 		rfkill_update_global_state(ev.type, ev.soft);
+ 
+@@ -1221,7 +1257,7 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
+ 	}
+ 	mutex_unlock(&rfkill_global_mutex);
+ 
+-	return count;
++	return ret ? ret : count;
+ }
+ 
+ static int rfkill_fop_release(struct inode *inode, struct file *file)
+@@ -1230,6 +1266,7 @@ static int rfkill_fop_release(struct inode *inode, struct file *file)
+ 	struct rfkill_int_event *ev, *tmp;
+ 
+ 	mutex_lock(&rfkill_global_mutex);
++	rfkill_airplane_mode_release(data);
+ 	list_del(&data->list);
+ 	mutex_unlock(&rfkill_global_mutex);
+ 
+-- 
+2.5.0
 
-Jan 28 22:29:21 melissa.gathman.org kernel: batman_adv: B.A.T.M.A.N.
-advanced 2015.2 (compatibility version 15) loaded
-Jan 28 22:29:21 melissa.gathman.org kernel: wlp0s26u1u4: Selected IBSS
-BSSID 02:1a:a0:3a:a6:ff based on configured SSID
-Jan 28 22:29:21 melissa.gathman.org kernel: ------------[ cut here ]------------
-Jan 28 22:29:21 melissa.gathman.org kernel: WARNING: CPU: 1 PID: 111
-at net/wireless/ibss.c:35 __cfg80211_ibss_joined+0x166/0x190
-[cfg80211]()
-Jan 28 22:29:21 melissa.gathman.org kernel: Modules linked in:
-batman_adv libcrc32c xt_CHECKSUM ipt_MASQUERADE nf_nat_masquerade_ipv4
-nf_conntrack_netbios_ns nf_conntrack_broadcast ip6t_rpfilter
-ip6t_REJECT nf_reject_ipv6 xt_conntrack tun ebtable_filter ebtable_nat
-ebtable_broute bridge stp llc ebtables ip6table_mangle ip6table_nat
-nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_raw
-ip6table_security ip6table_filter ip6_tables iptable_mangle
-iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat
-nf_conntrack iptable_raw iptable_security arc4 rtl8192cu rtl_usb
-rtl8192c_common rtlwifi mac80211 cfg80211 rfkill uvcvideo
-videobuf2_vmalloc videobuf2_core videobuf2_memops v4l2_common
-intel_rapl snd_hda_codec_hdmi snd_usb_audio joydev snd_usbmidi_lib
-snd_hda_codec_realtek iosf_mbi x86_pkg_temp_thermal videodev coretemp
-kvm_intel
-Jan 28 22:29:21 melissa.gathman.org kernel:  media snd_rawmidi cm109
-snd_hda_codec_generic kvm snd_hda_intel iTCO_wdt snd_hda_codec
-iTCO_vendor_support crct10dif_pclmul snd_hda_core ppdev snd_hwdep
-snd_seq snd_seq_device snd_pcm crc32_pclmul crc32c_intel snd_timer snd
-dcdbas lpc_ich mei_me parport_pc parport shpchp i2c_i801 mei tpm_tis
-tpm soundcore nfsd auth_rpcgss nfs_acl lockd grace sunrpc
-hid_microsoft i915 i2c_algo_bit drm_kms_helper drm e1000e serio_raw
-ptp pps_core fjes video
-Jan 28 22:29:21 melissa.gathman.org kernel: CPU: 1 PID: 111 Comm:
-kworker/u32:5 Not tainted 4.3.3-301.fc23.x86_64 #1
-Jan 28 22:29:21 melissa.gathman.org kernel: Hardware name: Dell Inc.
-OptiPlex 790/0HY9JP, BIOS A06 07/25/2011
-Jan 28 22:29:21 melissa.gathman.org kernel: Workqueue: cfg80211
-cfg80211_event_work [cfg80211]
-Jan 28 22:29:21 melissa.gathman.org kernel:  0000000000000000
-000000008beeeb5f ffff8800368bfce0 ffffffff813a626f
-Jan 28 22:29:21 melissa.gathman.org kernel:  0000000000000000
-ffff8800368bfd18 ffffffff810a07c2 ffff8800c2bc8850
-Jan 28 22:29:21 melissa.gathman.org kernel:  ffff8800c2bc8000
-ffff8801275bd558 0000000000000000 0000000000000286
-Jan 28 22:29:21 melissa.gathman.org kernel: Call Trace:
-Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff813a626f>]
-dump_stack+0x44/0x55
-Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff810a07c2>]
-warn_slowpath_common+0x82/0xc0
-Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff810a090a>]
-warn_slowpath_null+0x1a/0x20
-Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffffa05dfcd6>]
-__cfg80211_ibss_joined+0x166/0x190 [cfg80211]
-Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffffa05bb02c>]
-cfg80211_process_wdev_events+0x8c/0x190 [cfg80211]
-Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffffa05bb162>]
-cfg80211_process_rdev_events+0x32/0x70 [cfg80211]
-Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffffa05b601e>]
-cfg80211_event_work+0x1e/0x30 [cfg80211]
-Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff810b8cde>]
-process_one_work+0x19e/0x3f0
-Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff810b8f7e>]
-worker_thread+0x4e/0x450
-Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff810b8f30>] ?
-process_one_work+0x3f0/0x3f0
-Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff810bede8>]
-kthread+0xd8/0xf0
-Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff810bed10>] ?
-kthread_worker_fn+0x160/0x160
-Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff8178195f>]
-ret_from_fork+0x3f/0x70
-Jan 28 22:29:21 melissa.gathman.org kernel:  [<ffffffff810bed10>] ?
-kthread_worker_fn+0x160/0x160
-Jan 28 22:29:21 melissa.gathman.org kernel: ---[ end trace 04ee7067960ce525 ]---
-Jan 28 22:29:21 melissa.gathman.org kernel: batman_adv: bat0: Adding
-interface: wlp0s26u1u4
