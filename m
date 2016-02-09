@@ -1,49 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46139 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932604AbcBDMfE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 07:35:04 -0500
-Message-ID: <1454589301.2564.8.camel@sipsolutions.net> (sfid-20160204_133511_774506_606C83BF)
-Subject: Re: mac80211_hwsim + iperf + netns
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 04 Feb 2016 13:35:01 +0100
-In-Reply-To: <CABPxzYL3mGHyoKE0tkL4yg_4NL+U41+15Bm3f=JPq2vfD+Xnkg@mail.gmail.com> (sfid-20160204_132919_648388_1E9DFAD5)
-References: <CABPxzY+HpP=NTrAaUEzV5nFm=LK93m=kxPV14-cdftt+VPsWNw@mail.gmail.com>
-	 <CA+BoTQ=s_SMgs9zkgYjKOHKDwRORWk-Re7XZ=AiKiHCuNc0L8A@mail.gmail.com>
-	 <1454588396.2564.7.camel@sipsolutions.net>
-	 <CABPxzYL3mGHyoKE0tkL4yg_4NL+U41+15Bm3f=JPq2vfD+Xnkg@mail.gmail.com>
-	 (sfid-20160204_132919_648388_1E9DFAD5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:24606 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752934AbcBIO0K convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Feb 2016 09:26:10 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Arnd Bergmann <arnd@arndb.de>
+CC: Rob Herring <robh@kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	"wnhuang@chromium.com" <wnhuang@chromium.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Xinming Hu <huxm@marvell.com>
+Subject: RE: [PATCH v3 2/3] mwifiex: parse chip specific gpio from device tree
+Date: Tue, 9 Feb 2016 14:26:03 +0000
+Message-ID: <95e36f0f77cb4853be1923c112794f5e@SC-EXCH04.marvell.com> (sfid-20160209_152615_586752_85160A91)
+References: <1454926528-17480-1-git-send-email-akarwar@marvell.com>
+ <20160208214707.GA9036@rob-hp-laptop>
+ <1be9cc31466a49d2b6673e09795c9497@SC-EXCH04.marvell.com>
+ <73667407.d5gJFSzxQK@wuerfel>
+In-Reply-To: <73667407.d5gJFSzxQK@wuerfel>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-02-04 at 17:58 +0530, Krishna Chaitanya wrote:
-> On Thu, Feb 4, 2016 at 5:49 PM, Johannes Berg <johannes@sipsolutions.
-> net> wrote:
-> > On Thu, 2016-02-04 at 12:32 +0100, Michal Kazior wrote:
-> > > 
-> > >  ip netns add ns1
-> > >  ip netns exec ns1 bash # get the PID in the session and don't
-> > > close
-> > > it
-> > >  iw phy phyX set netns $pid_of_that_shell
-> > > 
-> > 
-> > If you also have a recent enough iw version, you can use
-> > 
-> > iw phy phyX set netns name ns1
-> > 
-> My iw has this option, but it throws an error.
-> Does this command have any prerequisites?
+> > > > Please use the GPIO DT binding. Reading a number from DT is not a
+> > > > proper way to get a GPIO number, as you may have more than one
+> > > > GPIO controller in a system and it is not obvious to which
+> > > > controller this number belongs, or if you need to specify things
+> like polarity.
+> > >
+> > > My read of this is it is not the host SOC gpio, but the WiFi
+> > > device's GPIO number. The host GPIO is defined in patch 3. We could
+> > > still use the GPIO binding to describe it doing something like
+> > > "marvell,<wifi gpio pin
+> > > name>-gpios". Then the assignment is based on the property name.
 > 
-> # iw phy phy1 set netns name ns1
-> Invalid parameter: nsname(name)
+> I see.
+> 
+> > Yes. This is not host SOC gpio. It's wifi chip's gpio number.
+> > We will use GPIO binding for this in updated version.
+> 
+> No, if it doesn't refer to a number that is interpreted by the host but
+> is used internally in the device, then leave it as it is, as Rob
+> suggested.
 > 
 
-This happens if the ns1 doesn't exist.
+It won't be interpreted by host. I will keep it as is and just rename from "mwifiex,chip-gpio" to "marvell,wakeup-gpios"
 
-johannes
+Regards,
+Amitkumar Karwar.
