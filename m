@@ -1,49 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:39368 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753671AbcBAMc2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2016 07:32:28 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Nikolay Martynov <mar.kolya@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"julian.calaby@gmail.com" <julian.calaby@gmail.com>
-Subject: RE: [PATCH v2] iwldvm: fix chain gain calibration when firmware
- return zero values
-Date: Mon, 1 Feb 2016 12:32:24 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32E9F5FAF@hasmsx107.ger.corp.intel.com> (sfid-20160201_133231_373945_2731E73C)
-References: <1453527309-23881-1-git-send-email-mar.kolya@gmail.com>
-	<1453760341-30008-1-git-send-email-mar.kolya@gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32E9D2EC6@hasmsx109.ger.corp.intel.com>
-	<CALGY4fv5t7k9Xcw1iysL3gyLih7S4z2Y7ShXTJiXWc5aDVVM_A@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32E9E3F16@hasmsx107.ger.corp.intel.com>
-	<CALGY4fsx3uPox8+=S13thXarW0yGLK+8BSqzjwqRtubrAG1ybQ@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32E9ED4FD@hasmsx107.ger.corp.intel.com>
- <CALGY4ftjhwJjDsgwwfL7NoCnpdqEATL4tsUAPM9yhdsm7ZChqg@mail.gmail.com>
-In-Reply-To: <CALGY4ftjhwJjDsgwwfL7NoCnpdqEATL4tsUAPM9yhdsm7ZChqg@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:36136 "EHLO
+	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755214AbcBIVgA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 9 Feb 2016 16:36:00 -0500
 MIME-Version: 1.0
+In-Reply-To: <CAGRGNgVuwrh5unUoQ0P+ow55ChOQ+qsRRjfD1bb7DC6PcrCO2g@mail.gmail.com>
+References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
+ <1454946096-9752-9-git-send-email-jprvita@endlessm.com> <CAGRGNgVuwrh5unUoQ0P+ow55ChOQ+qsRRjfD1bb7DC6PcrCO2g@mail.gmail.com>
+From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
+Date: Tue, 9 Feb 2016 16:35:19 -0500
+Message-ID: <CA+A7VXU9zoQZ5wM2Ranf7o9vUphGb0THkh8-TUM_1yD7aC30pQ@mail.gmail.com> (sfid-20160209_223628_258529_780C72EE)
+Subject: Re: [PATCH 8/9] rfkill: Userspace control for airplane mode
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linux@endlessm.com,
+	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-WyBzbmlwIF0NCg0KPiA+Pg0KPiA+DQo+ID4gQXJlIHlvdSBzdXJlIHRoYXQgdGhlIGFudGVubmEg
-dGhhdCByZXBvcnRlZCAwICJyZWNvdmVycyIgYW5kIHJlcG9ydHMgZ29vZA0KPiB2YWx1ZXMgbGF0
-ZXI/DQo+IA0KPiBJbiBmYWN0IGl0IGRvZXMsIGJ1dCBhcHBhcmVudGx5IHRoYXQncyBub3QgdGhl
-IHByb2JsZW0gKEkndmUgY2hlY2tlZCB3aXRoDQo+IG1vbml0b3IgZGV2aWNlIGFuZCBhZnRlciBz
-ZWVpbmcgemVyb3MgZHVyaW5nIGNhbGlicmF0aW9uIEkgc2VlIHBhY2tldHMgYW5kDQo+IG1heCBy
-YXRlIGNvbWluZyBpbiBmcm9tIEFQKS4NCj4gDQo+IEkndmUgZG9uZSBzb21lIG1vcmUgdGVzdGlu
-ZyBhbmQgaXQgdHVybnMgb3V0IHRoYXQgb3JpZ2luYWwgcHJvYmxlbSBvZiBvbmUNCj4gYW50ZW5u
-YSBiZWluZyBkaXNhYmxlZCBpcyBjYXVzZWQgYnkgcG93ZXJfc2F2ZSBwYXJhbWV0ZXIgYmVpbmcg
-c2V0IHRvDQo+IHRydWUuIEkgY2Fubm90IHJlcHJvZHVjZSB0aGUgcHJvYmxlbSB3aXRoIHRoYXQg
-cGFyYW1ldGVyIGJlaW5nIHNldCB0byBmYWxzZS4NCj4gDQo+IEkgZ3Vlc3MgZmlybXdhcmUgdHVy
-bnMgb2ZmIHNvbWUgcmVjZWl2aW5nIGFudGVubmFzIHRvIGNvbnNlcnZlIHBvd2VyIGFuZA0KPiBy
-ZXBvcnRzIHRoYXQgc3RhdCBhcyB6ZXJvLg0KPiANCj4gSSBzZWUgdGhlcmUgaXMgc29tZSBsb2dp
-YyB0byBwcmV2ZW50IHBvd2VyIHNhdmluZyBmcm9tIGFmZmVjdGluZyB0aGlzDQo+IGNhbGlicmF0
-aW9uIGJ1dCBpdCBsb29rcyBsaWtlIGl0IGRvZXNuJ3Qgd29yayBwcm9wZXJseSB3aGVuIHBvd2Vy
-X3NhdmU9dHJ1ZQ0KPiBhbmQgdW5mb3J0dW5hdGVseSBJIGNvdWxkIG5vdCBpbW1lZGlhdGVseSBm
-aWd1cmUgb3V0IHdoeS4NCj4gDQo+IFBsZWFzZSBkaXNyZWdhcmQgdGhpcyBwYXRjaCBiZWNhdXNl
-IG9yaWdpbmFsIHByb2JsZW0gaXMgY2F1c2UgYnkgcG93ZXINCj4gc2F2aW5nLCBub3QgYnkgZmly
-bXdhcmUgaXNzdWUgKGF0IGxlYXN0IGFzIGZhciBhcyBJIGNvdWxkIHJlcHJvZHVjZSkuDQo+IA0K
-PiBTb3JyeSBmb3Igbm90IHRlc3RpbmcgaXQgbW9yZSB0aG9yb3VnaGx5IGJlZm9yZSBzZW5kaW5n
-IHRoZSBwYXRjaCBhbmQgdGhhbmtzDQo+IGZvciBraW5kbHkgcmV2aWV3aW5nIGl0IGFuZCBwcm92
-aWRpbmcgY29tbWVudHMhDQo+IA0KDQpObyB3b3JyaWVzLCByZWFsbHkgOikNCg0K
+On 8 February 2016 at 17:53, Julian Calaby <julian.calaby@gmail.com> wrote:
+
+>> +       if (ev.op == RFKILL_OP_AIRPLANE_MODE_RELEASE) {
+>> +               if (rfkill_apm_owned && !data->is_apm_owner) {
+>
+> Are you sure this is correct?
+>
+> In the case that airplane mode isn't owned, the
+> rfkill_apm_led_trigger_event() call will be a noop, so we should
+> arguably not be calling it.
+>
+
+Ok, I'm changing the check to be consistent with _CHANGE, so the call
+only succeeds if (rfkill_apm_owned && data->is_apm_owner), and return
+an error otherwise.
+
+> Also, should we just fail silently if we're not the owner? I.e. what
+> does userspace learn from this op failing and is that useful?
+>
+
+I think it is better to return an error every time userspace is trying
+to call an operation that it was not supposed to call at a certain
+state (without acquiring control of the airplane-mode indicator). If a
+program has a logic error that makes it call _RELEASE without calling
+_ACQUIRE first, it's easier for the programmer to spot the problem if
+we return an error here.
+
+>> +                       count = -EACCES;
+>> +               } else {
+>> +                       bool state = rfkill_global_states[RFKILL_TYPE_ALL].cur;
+>> +
+>> +                       rfkill_apm_owned = false;
+>> +                       data->is_apm_owner = false;
+>> +                       rfkill_apm_led_trigger_event(state);
+>> +               }
+>> +       }
+>> +
+>> +       if (ev.op == RFKILL_OP_AIRPLANE_MODE_CHANGE) {
+>> +               if (rfkill_apm_owned && data->is_apm_owner)
+>> +                       rfkill_apm_led_trigger_event(ev.soft);
+>> +               else
+>> +                       count = -EACCES;
+>> +       }
+>> +
+>>         if (ev.op == RFKILL_OP_CHANGE_ALL)
+>>                 rfkill_update_global_state(ev.type, ev.soft);
+>>
+>> @@ -1230,7 +1261,17 @@ static int rfkill_fop_release(struct inode *inode, struct file *file)
+>>         struct rfkill_int_event *ev, *tmp;
+>>
+>>         mutex_lock(&rfkill_global_mutex);
+>> +
+>> +       if (data->is_apm_owner) {
+>> +               bool state = rfkill_global_states[RFKILL_TYPE_ALL].cur;
+>> +
+>> +               rfkill_apm_owned = false;
+>> +               data->is_apm_owner = false;
+>> +               rfkill_apm_led_trigger_event(state);
+>
+> Also, this code is duplicated from the _RELEASE op above. Would it
+> make sense to factor it out into a separate function?
+>
+
+Yes, makes sense. This also made me notice I was assigning a negative
+value to a size_t variable (count).
+
+>> +       }
+>> +
+>>         list_del(&data->list);
+>> +
+>
+> (extra line)
+>
+
+After factoring out the _RELEASE code it looks better without this
+additional line.
+
+>>         mutex_unlock(&rfkill_global_mutex);
+>>
+>>         mutex_destroy(&data->mtx);
+>
+> Thanks,
+>
+
+Thanks for the review, Julian. I'm sending an updated version.
+
+--
+João Paulo Rechi Vita
+http://about.me/jprvita
