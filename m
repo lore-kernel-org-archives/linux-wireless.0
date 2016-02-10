@@ -1,42 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:6352 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760247AbcBYJY1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2016 04:24:27 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	David Spinadel <david.spinadel@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211_hwsim: Set global RRM capability
-Date: Thu, 25 Feb 2016 11:24:13 +0200
-Message-Id: <1456392253-16972-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160225_102432_915268_FE32B639)
+Received: from mail-qg0-f54.google.com ([209.85.192.54]:33569 "EHLO
+	mail-qg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753096AbcBJQ7O (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Feb 2016 11:59:14 -0500
+From: Anton Protopopov <a.s.protopopov@gmail.com>
+To: Kalle Valo <kvalo@qca.qualcomm.com>
+Cc: ath10k@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Anton Protopopov <a.s.protopopov@gmail.com>
+Subject: [PATCH] ath10k: fix erroneous return value
+Date: Wed, 10 Feb 2016 11:58:55 -0500
+Message-Id: <1455123535-26751-1-git-send-email-a.s.protopopov@gmail.com> (sfid-20160210_180059_169983_2BA3C5DF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: David Spinadel <david.spinadel@intel.com>
+The ath10k_pci_hif_exchange_bmi_msg() function may return the positive
+value EIO instead of -EIO in case of error.
 
-Allow publishing RRM capabilities for features that are not
-HW dependent.
-
-Signed-off-by: David Spinadel <david.spinadel@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Anton Protopopov <a.s.protopopov@gmail.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/ath/ath10k/pci.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index ee37af1..ff45688 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -2458,6 +2458,7 @@ static int mac80211_hwsim_new_radio(struct genl_info *info,
- 			       NL80211_FEATURE_DYNAMIC_SMPS |
- 			       NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
- 	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_VHT_IBSS);
-+	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_RRM);
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index ee925c6..526acde 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -1756,7 +1756,7 @@ static int ath10k_pci_hif_exchange_bmi_msg(struct ath10k *ar,
+ 					    DMA_FROM_DEVICE);
+ 		ret = dma_mapping_error(ar->dev, resp_paddr);
+ 		if (ret) {
+-			ret = EIO;
++			ret = -EIO;
+ 			goto err_req;
+ 		}
  
- 	/* ask mac80211 to reserve space for magic */
- 	hw->vif_data_size = sizeof(struct hwsim_vif_priv);
 -- 
-2.5.0
+2.6.5
 
