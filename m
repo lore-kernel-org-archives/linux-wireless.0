@@ -1,45 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60722 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932151AbcBZIKp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 03:10:45 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH 07/13] ath9k: Update AR955x initvals
-Date: Fri, 26 Feb 2016 16:08:37 +0800
-Message-Id: <1456474123-10520-8-git-send-email-miaoqing@codeaurora.org> (sfid-20160226_091047_968452_1670041F)
-In-Reply-To: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
-References: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
+Received: from mx1.redhat.com ([209.132.183.28]:47489 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753026AbcBJQx3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Feb 2016 11:53:29 -0500
+Message-ID: <1455123205.19821.34.camel@redhat.com> (sfid-20160210_175351_578851_9C8F9184)
+Subject: Re: [PATCH 8/9] rfkill: Userspace control for airplane mode
+From: Dan Williams <dcbw@redhat.com>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	=?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
+	<jprvita@endlessm.com>
+Date: Wed, 10 Feb 2016 10:53:25 -0600
+In-Reply-To: <1455120444.4991.1.camel@sipsolutions.net>
+References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
+	 <1454946096-9752-9-git-send-email-jprvita@endlessm.com>
+	 <1454947887.5325.8.camel@redhat.com>
+	 <1455120444.4991.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+On Wed, 2016-02-10 at 17:07 +0100, Johannes Berg wrote:
+> On Mon, 2016-02-08 at 10:11 -0600, Dan Williams wrote:
+> > I'd like to clarify a bit, so tell me if I'm correct or not.  Using
+> > RFKILL_OP_AIRPLANE_MODE_CHANGE does not actually change any device
+> > state. It's just an indicator with no relationship to any of the
+> > registered rfkill switches, right?
+> 
+> Yes. I'm not sure I'm totally happy with this userspace API.
+> 
+> > I wonder if setting RFKILL_OP_AIRPLANE_MODE_CHANGE(true) shouldn't
+> > also
+> > softblock all switches, otherwise you can set airplane mode all day
+> > long with RFKILL_OP_AIRPLANE_MODE_CHANGE and it doesn't actually
+> > enable
+> > airplane mode at all?
+> 
+> No, this is kinda the point that you could implement your policy in
+> userspace now.
 
-HW peak detect calibration would fail for AR9300 chips and
-we went for implementing the SW way of doing it instead of
-HW doing the peak detect calibration.
+Yeah, I get that now.  It's just that to me, something called
+"AIRPLANE_MODE_CHANGE" seems like it should actually change airplane
+mode on/off, which implies killing radios.  I wouldn't have had the
+problem if it was named AIRPLANE_MODE_INDICATOR_CHANGE, which makes it
+clear this is simply an indicator and has no actual effect on anything
+other than a LED.
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/ar955x_1p0_initvals.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar955x_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar955x_1p0_initvals.h
-index 148562a..67edf34 100644
---- a/drivers/net/wireless/ath/ath9k/ar955x_1p0_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar955x_1p0_initvals.h
-@@ -83,7 +83,7 @@ static const u32 ar955x_1p0_baseband_postamble[][5] = {
- 	{0x0000a284, 0x00000000, 0x00000000, 0x00000010, 0x00000010},
- 	{0x0000a288, 0x00000110, 0x00000110, 0x00000110, 0x00000110},
- 	{0x0000a28c, 0x00022222, 0x00022222, 0x00022222, 0x00022222},
--	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00058d18, 0x00058d18},
-+	{0x0000a2c4, 0x00058d18, 0x00058d18, 0x00058d18, 0x00058d18},
- 	{0x0000a2cc, 0x18c50033, 0x18c43433, 0x18c41033, 0x18c44c33},
- 	{0x0000a2d0, 0x00041982, 0x00041982, 0x00041982, 0x00041982},
- 	{0x0000a2d8, 0x7999a83b, 0x7999a83b, 0x7999a83b, 0x7999a83b},
--- 
-1.9.1
-
+Dan
