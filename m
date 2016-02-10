@@ -1,46 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:31606 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753162AbcBVEoG (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:34523 "EHLO
+	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752183AbcBJPIV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2016 23:44:06 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 03/10] staging: wilc1000: removes unnecessary wilc_debug print log
-Date: Mon, 22 Feb 2016 13:41:12 +0900
-Message-ID: <1456116079-7161-3-git-send-email-leo.kim@atmel.com> (sfid-20160222_054410_596804_08673402)
-In-Reply-To: <1456116079-7161-1-git-send-email-leo.kim@atmel.com>
-References: <1456116079-7161-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 10 Feb 2016 10:08:21 -0500
+Received: by mail-wm0-f50.google.com with SMTP id 128so30754954wmz.1
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Feb 2016 07:08:20 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Sven Eckelmann <sven@narfation.org>
+Subject: [PATCH] mac80211: fix wiphy supported_band access
+Date: Wed, 10 Feb 2016 16:08:17 +0100
+Message-Id: <1455116897-24811-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20160210_160826_933626_EB1410E5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unnecessary wilc_debug print log and the check routine.
+Fix wiphy supported_band access in tx radiotap parsing. In particular,
+info->band is always set to 0 (IEEE80211_BAND_2GHZ) since it has not
+assigned yet. This cause a kernel crash on 5GHz only devices.
+Move ieee80211_parse_tx_radiotap() after info->band assignment
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 3 ---
- 1 file changed, 3 deletions(-)
+ net/mac80211/tx.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 0843ccf..f0ac47f 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -523,9 +523,6 @@ void chip_wakeup(struct wilc *wilc)
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 7bb67fa..b07d037 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1892,10 +1892,6 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 	info->flags = IEEE80211_TX_CTL_REQ_TX_STATUS |
+ 		      IEEE80211_TX_CTL_INJECTED;
  
- 				wilc->hif_func->hif_read_reg(wilc, 0xf1,
- 							     &clk_status_reg);
+-	/* process and remove the injection radiotap header */
+-	if (!ieee80211_parse_tx_radiotap(local, skb))
+-		goto fail;
 -
--				if ((clk_status_reg & 0x1) == 0)
--					wilc_debug(N_ERR, "clocks still OFF. Wake up failed\n");
- 			}
- 			if ((clk_status_reg & 0x1) == 0) {
- 				wilc->hif_func->hif_write_reg(wilc, 0xf0,
+ 	rcu_read_lock();
+ 
+ 	/*
+@@ -1957,6 +1953,10 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 		goto fail_rcu;
+ 
+ 	info->band = chandef->chan->band;
++	/* process and remove the injection radiotap header */
++	if (!ieee80211_parse_tx_radiotap(local, skb))
++		goto fail_rcu;
++
+ 	ieee80211_xmit(sdata, NULL, skb);
+ 	rcu_read_unlock();
+ 
 -- 
-1.9.1
+2.5.0
 
