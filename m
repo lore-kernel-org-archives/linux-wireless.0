@@ -1,76 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:36127 "EHLO
-	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753770AbcBHWjd convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:34791 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753115AbcBJBMB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 17:39:33 -0500
+	Tue, 9 Feb 2016 20:12:01 -0500
+Received: by mail-ob0-f175.google.com with SMTP id wb13so7155895obb.1
+        for <linux-wireless@vger.kernel.org>; Tue, 09 Feb 2016 17:12:00 -0800 (PST)
+Subject: Re: alfa awus036nhr v2 and module rtl8xxxu
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+References: <loom.20160128T003525-188@post.gmane.org>
+ <wrfjd1sco25f.fsf@redhat.com> <56B38CDF.9010806@lwfinger.net>
+ <wrfjd1scmkz6.fsf@redhat.com> <wrfj60xxd2f5.fsf@redhat.com>
+Cc: Drunk Cat <natserver2@gmail.com>, linux-wireless@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <56BA8E5D.5090402@lwfinger.net> (sfid-20160210_021206_402539_A1F824EB)
+Date: Tue, 9 Feb 2016 19:11:57 -0600
 MIME-Version: 1.0
-In-Reply-To: <1454946096-9752-4-git-send-email-jprvita@endlessm.com>
-References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com> <1454946096-9752-4-git-send-email-jprvita@endlessm.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 9 Feb 2016 09:39:13 +1100
-Message-ID: <CAGRGNgWg3qTCBv5xLrxkyBQksE2vLRkPkX8nf8_5bGR7uusjcQ@mail.gmail.com> (sfid-20160208_233953_496788_21C83A50)
-Subject: Re: [PATCH 3/9] rfkill: Point to the correct deprecated doc location
-To: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux@endlessm.com,
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <wrfj60xxd2f5.fsf@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi João,
-
-On Tue, Feb 9, 2016 at 2:41 AM, João Paulo Rechi Vita <jprvita@gmail.com> wrote:
-> The "claim" sysfs interface has been removed, so its documentation now
-> lives in the "removed" folder.
+On 02/09/2016 03:00 PM, Jes Sorensen wrote:
+> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+>> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>>> On 02/04/2016 10:45 AM, Jes Sorensen wrote:
+>>>> Drunk Cat <natserver2@gmail.com> writes:
+>>>>> problem: it does not connect to any wifi network you can see the time out on
+>>>>> dmesg
+>>>>>
+>>>>>
+>>>>>> lsusb
+>>>>>
+>>>>> Bus 002 Device 007: ID 0bda:817f Realtek Semiconductor Corp. RTL8188RU
+>>>>> 802.11n WLAN Adapter
+>>>>>
+>>>>>> iwconfig
+>>>>> wlp0s20u1  IEEE 802.11bgn  ESSID:off/any
+>>>>>             Mode:Managed  Access Point: Not-Associated   Tx-Power=20 dBm
+>>>>>             Retry short limit:7   RTS thr=2347 B   Fragment thr:off
+>>>>>             Power Management:off
+>>>>>> dmesg
+>>>>
+>>>> Not sure what distribution you are running, but I am seeing problems
+>>>> with NetworkManager in recent Fedora.
+>>>>
+>>>> Could you try the following:
+>>>> 1) Unplug the WiFi dongle
+>>>> 2) (Re)load the driver (rmmod rtl8xxxu ; insmod rtl8xxxu)
+>>>> 3) Restart NetworkManager 'systemctl restart NetworkManager'
+>>>> 4) Plug in the WiFi dongle
+>>>
+>>> Jes,
+>>>
+>>> I can confirm what Drunk Cat sees. There is something different about
+>>> the RTL8192RU as using the iwconfig utility shows no APs in the
+>>> scan. I hope to get to debugging the problem soon.
+>>
+>> OK - thats unfortunate. Most likely the wrong antenna path is being
+>> enabled for it, or something like that.
+>>
+>> Once I finish up the 8723bu/8192eu patchset, I'll try to find some time
+>> to look at it, if you don't nail it before.
 >
-> Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+> One more time with the actual patch ...
 
-Looks right to me.
+No help. The name of the patch makes it sound as if it is for a 1T2R device. The 
+RTL8188RU is 1x1.
 
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-> ---
->  Documentation/ABI/stable/sysfs-class-rfkill | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
->
-> diff --git a/Documentation/ABI/stable/sysfs-class-rfkill b/Documentation/ABI/stable/sysfs-class-rfkill
-> index 097f522..e51571e 100644
-> --- a/Documentation/ABI/stable/sysfs-class-rfkill
-> +++ b/Documentation/ABI/stable/sysfs-class-rfkill
-> @@ -2,8 +2,10 @@ rfkill - radio frequency (RF) connector kill switch support
->
->  For details to this subsystem look at Documentation/rfkill.txt.
->
-> -For the deprecated /sys/class/rfkill/*/state and
-> -/sys/class/rfkill/*/claim knobs of this interface look in
-> +For the deprecated /sys/class/rfkill/*/claim knobs of this interface look in
-> +Documentation/ABI/removed/sysfs-class-rfkill.
-> +
-> +For the deprecated /sys/class/rfkill/*/state knobs of this interface look in
->  Documentation/ABI/obsolete/sysfs-class-rfkill.
->
->  What:          /sys/class/rfkill
-> --
-> 2.5.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Larry
 
 
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
