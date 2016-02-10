@@ -1,49 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59393 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750832AbcBWLGc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 06:06:32 -0500
-Message-ID: <1456225589.2041.24.camel@sipsolutions.net> (sfid-20160223_120635_778128_07E3CD8A)
-Subject: Re: [PATCH-v2 1/2] mac80211: Take bitrates into account when
- building IEs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 23 Feb 2016 12:06:29 +0100
-In-Reply-To: <56C63D8B.9020900@candelatech.com>
-References: <1445361858-24976-1-git-send-email-greearb@candelatech.com>
-	 <1453807009.2759.23.camel@sipsolutions.net>
-	 <56A78E8F.1080505@candelatech.com>
-	 <1454576521.2564.6.camel@sipsolutions.net> <56B38FD1.40902@candelatech.com>
-	 <1455827536.2084.35.camel@sipsolutions.net>
-	 <56C62C4E.7020600@candelatech.com>
-	 <1455828330.2084.38.camel@sipsolutions.net>
-	 <56C630B7.7020604@candelatech.com>
-	 <1455830078.2084.47.camel@sipsolutions.net>
-	 <56C63D8B.9020900@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:35602 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751436AbcBJOEJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Feb 2016 09:04:09 -0500
+Received: by mail-pf0-f193.google.com with SMTP id w128so451014pfb.2
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Feb 2016 06:04:09 -0800 (PST)
+From: Ujjal Roy <royujjal@gmail.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	WiFi Mailing List <linux-wireless@vger.kernel.org>
+Subject: [PATCH] mwifiex: Fixed coding style issues
+Date: Wed, 10 Feb 2016 19:34:01 +0530
+Message-Id: <1455113041-28226-1-git-send-email-royujjal@gmail.com> (sfid-20160210_150426_199571_FE763CAA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-02-18 at 13:54 -0800, Ben Greear wrote:
+Some indentation and basic style violations are fixed in this patch.
 
-> > Yeah, it does, at least if you assume that the capabilities can
-> > actually change. We assume they don't though, hostapd/wpa_s for
-> > example will never re-query them after startup.
-> 
-> Restarting supplicant, even if it came to that, might be less
-> of an issue than having to re-create the vdev to have it grab
-> proper new settings from the wiphy...
+Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 +-
+ drivers/net/wireless/marvell/mwifiex/pcie.c     | 2 +-
+ drivers/net/wireless/marvell/mwifiex/uap_cmd.c  | 2 +-
+ drivers/net/wireless/marvell/mwifiex/usb.c      | 4 ++--
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-> Well, it would be easy enough to make a method that updated an
-> vdev/sdata->vht from wiphy, so could just call that as needed (ie,
-> when certain things set or are changed by wiphy).
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index e7adef7..cb0cf03 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -676,7 +676,7 @@ mwifiex_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+ 		}
+ 		break;
 
-Yeah, I think we'll just have to deal with this when it comes along.
-This multi-antenna-sharing case (unfortunately I forgot who was talking
-about it) is the only thing that comes to mind where we really may have
-to deal with this.
+-		case MWIFIEX_BSS_ROLE_STA:
++	case MWIFIEX_BSS_ROLE_STA:
+ 		if (priv->media_connected) {
+ 			mwifiex_dbg(adapter, ERROR,
+ 				    "cannot change wiphy params when connected");
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 6d0dc40..4d29cce 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -1408,7 +1408,7 @@ mwifiex_pcie_send_boot_cmd(struct mwifiex_adapter *adapter, struct sk_buff *skb)
+ 		return -1;
+ 	}
 
+-	if (mwifiex_map_pci_memory(adapter, skb, skb->len , PCI_DMA_TODEVICE))
++	if (mwifiex_map_pci_memory(adapter, skb, skb->len, PCI_DMA_TODEVICE))
+ 		return -1;
 
-johannes
+ 	buf_pa = MWIFIEX_SKB_DMA_ADDR(skb);
+diff --git a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
+index e791166..16d95b2 100644
+--- a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
+@@ -192,7 +192,7 @@ mwifiex_set_ht_params(struct mwifiex_private *priv,
+ 		}
+ 		priv->ap_11n_enabled = 1;
+ 	} else {
+-		memset(&bss_cfg->ht_cap , 0, sizeof(struct ieee80211_ht_cap));
++		memset(&bss_cfg->ht_cap, 0, sizeof(struct ieee80211_ht_cap));
+ 		bss_cfg->ht_cap.cap_info = cpu_to_le16(MWIFIEX_DEF_HT_CAP);
+ 		bss_cfg->ht_cap.ampdu_params_info = MWIFIEX_DEF_AMPDU;
+ 	}
+diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+index e43aff9..0510861 100644
+--- a/drivers/net/wireless/marvell/mwifiex/usb.c
++++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+@@ -244,9 +244,9 @@ setup_for_next:
+ 	if (card->rx_cmd_ep == context->ep) {
+ 		mwifiex_usb_submit_rx_urb(context, size);
+ 	} else {
+-		if (atomic_read(&adapter->rx_pending) <= HIGH_RX_PENDING){
++		if (atomic_read(&adapter->rx_pending) <= HIGH_RX_PENDING) {
+ 			mwifiex_usb_submit_rx_urb(context, size);
+-		}else{
++		} else {
+ 			context->skb = NULL;
+ 		}
+ 	}
+--
+1.9.1
+
