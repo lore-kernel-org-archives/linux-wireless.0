@@ -1,36 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40932 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:34378 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753224AbcBGHMQ (ORCPT
+	with ESMTP id S1751974AbcBJReX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Feb 2016 02:12:16 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [1/3] net: wireless: rt2x00: Space issue
+	Wed, 10 Feb 2016 12:34:23 -0500
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1445116005-28670-1-git-send-email-paulmcquad@gmail.com>
-To: Paul Mcquade <paulmcquad@gmail.com>
-Cc: paulmcquad@gmail.com, sgruszka@redhat.com,
-	helmut.schaa@googlemail.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20160207071215.9440E6026B@smtp.codeaurora.org> (sfid-20160207_081237_738032_305B6A93)
-Date: Sun,  7 Feb 2016 07:12:15 +0000 (UTC)
+To: Emil Goode <emil.fsw@goode.io>
+Cc: Shahar Patury <shaharp@ti.com>, Guy Mishol <guym@ti.com>,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Uri Mashiach <uri.mashiach@compulab.co.il>,
+	Ross Green <rgkernel@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] wlcore: Fix regression in wlcore_set_partition()
+References: <20160210012216.GA18819@lianli>
+Date: Wed, 10 Feb 2016 19:34:16 +0200
+In-Reply-To: <20160210012216.GA18819@lianli> (Emil Goode's message of "Wed, 10
+	Feb 2016 02:22:16 +0100")
+Message-ID: <87k2mctqp3.fsf@kamboji.qca.qualcomm.com> (sfid-20160210_183445_234075_21CA58DE)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Emil Goode <emil.fsw@goode.io> writes:
 
-> Removed empty spaces before/after parenthesis
-> 
-> Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
-> Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+> The below commit introduced a regression causing the wlcore
+> to time out and go into recovery.
+>
+> commit 3719c17e1816695f415dd3b4ddcb679f7dc617c8
+> ("wlcore/wl18xx: fw logger over sdio")
+>
+> Reverting the changes regarding write of the last partition size
+> brings the module back to it's functional state.
+>
+> Reported-by: Ross Green <rgkernel@gmail.com>
+> Signed-off-by: Emil Goode <emil.fsw@goode.io>
 
-Thanks, 2 patches applied to wireless-drivers-next.git:
+A proper "Fixes:" line is good to have, but I can add it.
 
-b2cc2dd8ebb8 net: wireless: rt2x00: Space issue
-5b451715e94d net: wireless: rt2x00: Space Required
+I'm planning to queue this to 4.5.
 
-1 patches skipped:
-
-[2/3] net: wireless: rt2x00: Pointer issue
-
+-- 
 Kalle Valo
