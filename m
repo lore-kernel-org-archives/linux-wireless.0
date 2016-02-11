@@ -1,79 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:59058 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753990AbcBDJdd (ORCPT
+Received: from mail-ob0-f194.google.com ([209.85.214.194]:35953 "EHLO
+	mail-ob0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751781AbcBKQxb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:33:33 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 60/70] staging: wilc1000: renames u8Found of connect_resp_info structure
-Date: Thu, 4 Feb 2016 18:24:21 +0900
-Message-ID: <1454577871-667-21-git-send-email-glen.lee@atmel.com> (sfid-20160204_103342_625189_D3E1BFE4)
-In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 11 Feb 2016 11:53:31 -0500
+Received: by mail-ob0-f194.google.com with SMTP id wg8so6134282obc.3
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Feb 2016 08:53:31 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 3/4] rtlwifi: rtl8192ee: Convert driver to use new 5G channel tables
+Date: Thu, 11 Feb 2016 10:53:11 -0600
+Message-Id: <1455209592-12882-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160211_175338_321139_5CD7A20C)
+In-Reply-To: <1455209592-12882-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1455209592-12882-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+The driver defines its own set of channel tables for the 5G band. With
+this change, it will use those of the core.
 
-This patch renames u8Found variable to found.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/staging/wilc1000/coreconfigurator.h       | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index fd3b5d4..27c35d7 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -88,7 +88,7 @@ struct network_info {
- 	unsigned long time_scan_cached;
- 	unsigned long time_scan;
- 	bool new_network;
--	u8 u8Found;
-+	u8 found;
- 	u32 u32Tsf;
- 	u8 *pu8IEs;
- 	u16 u16IEsLen;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index ab3390c..2d3a2d3 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -235,7 +235,7 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
+Kalle,
+
+This material is for kernel 4.6.
+
+Larry
+
+ drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c | 12 ------------
+ 1 file changed, 12 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
+index 5f14308..9fd3f1b 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
+@@ -2018,18 +2018,6 @@ static void _rtl92ee_read_txpower_info_from_hwpg(struct ieee80211_hw *hw,
+ 	struct rtl_efuse *efu = rtl_efuse(rtl_priv(hw));
+ 	struct txpower_info_2g pwr2g;
+ 	struct txpower_info_5g pwr5g;
+-	u8 channel5g[CHANNEL_MAX_NUMBER_5G] = {
+-		36, 38, 40, 42, 44, 46, 48, 50, 52, 54,
+-		56, 58, 60, 62, 64, 100, 102, 104, 106,
+-		108, 110, 112, 114, 116, 118, 120, 122,
+-		124, 126, 128, 130, 132, 134, 136, 138,
+-		140, 142, 144, 149, 151, 153, 155, 157,
+-		159, 161, 163, 165, 167, 168, 169, 171,
+-		173, 175, 177
+-	};
+-	u8 channel5g_80m[CHANNEL_MAX_NUMBER_5G_80M] = {
+-		42, 58, 106, 122, 138, 155, 171
+-	};
+ 	u8 rf, idx;
+ 	u8 i;
  
- 		network_info = &last_scanned_shadow[i];
- 
--		if (!network_info->u8Found || all) {
-+		if (!network_info->found || all) {
- 			s32 freq;
- 			struct ieee80211_channel *channel;
- 
-@@ -269,7 +269,7 @@ static void reset_shadow_found(void)
- 	int i;
- 
- 	for (i = 0; i < last_scanned_cnt; i++)
--		last_scanned_shadow[i].u8Found = 0;
-+		last_scanned_shadow[i].found = 0;
- }
- 
- static void update_scan_time(void)
-@@ -387,7 +387,7 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
- 	       pstrNetworkInfo->pu8IEs, pstrNetworkInfo->u16IEsLen);
- 	last_scanned_shadow[ap_index].time_scan = jiffies;
- 	last_scanned_shadow[ap_index].time_scan_cached = jiffies;
--	last_scanned_shadow[ap_index].u8Found = 1;
-+	last_scanned_shadow[ap_index].found = 1;
- 	if (ap_found != -1)
- 		kfree(last_scanned_shadow[ap_index].pJoinParams);
- 	last_scanned_shadow[ap_index].pJoinParams = pJoinParams;
 -- 
-1.9.1
+2.1.4
 
