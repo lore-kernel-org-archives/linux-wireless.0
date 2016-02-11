@@ -1,315 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:17453
-	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161103AbcBQK1Z (ORCPT
+Received: from mail-ob0-f177.google.com ([209.85.214.177]:33325 "EHLO
+	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751363AbcBKQJh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2016 05:27:25 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 05/21] brcmfmac: Add length checks on firmware events
-Date: Wed, 17 Feb 2016 11:26:54 +0100
-Message-Id: <1455704830-10088-6-git-send-email-arend@broadcom.com> (sfid-20160217_112744_146962_C27806BA)
-In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
-References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+	Thu, 11 Feb 2016 11:09:37 -0500
+MIME-Version: 1.0
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA0E809@hasmsx107.ger.corp.intel.com>
+References: <1455199701-25767-1-git-send-email-emmanuel.grumbach@intel.com>
+	<1455201038.19473.12.camel@edumazet-glaptop2.roam.corp.google.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB32EA0E6FD@hasmsx107.ger.corp.intel.com>
+	<1455203555.19473.14.camel@edumazet-glaptop2.roam.corp.google.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB32EA0E809@hasmsx107.ger.corp.intel.com>
+Date: Thu, 11 Feb 2016 08:09:34 -0800
+Message-ID: <CAA93jw5=6zxg8P77VkgDEZFM+u+5zHBuW5ODoWqFV59PoSWtgQ@mail.gmail.com> (sfid-20160211_170955_266820_F397AA0B)
+Subject: Re: [PATCH] codel: add forgotten inline to functions in header file
+From: Dave Taht <dave.taht@gmail.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Eric Dumazet <eric.dumazet@gmail.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+On Thu, Feb 11, 2016 at 7:29 AM, Grumbach, Emmanuel
+<emmanuel.grumbach@intel.com> wrote:
+>
+>
+> On 02/11/2016 05:12 PM, Eric Dumazet wrote:
+>> On Thu, 2016-02-11 at 15:05 +0000, Grumbach, Emmanuel wrote:
+>>
+>>
+>>> Yeah :) codel_should_drop seemed very long indeed... I wanted to use the
+>>> codel_get_time and associated utils (_before, _after) in iwlwifi.
+>>> They're better than jiffies... So maybe I can just copy that code to
+>>> iwlwifi.
 
-Add additional length checks on firmware events to create more
-robust code.
+Definately better than jiffies.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Lei Zhang <leizh@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 10 ++++
- .../wireless/broadcom/brcm80211/brcmfmac/fweh.c    | 57 ++++--------------
- .../wireless/broadcom/brcm80211/brcmfmac/fweh.h    | 68 +++++++++++++++++-----
- .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 10 ++++
- 4 files changed, 87 insertions(+), 58 deletions(-)
+>>
+>> You certainly can submit a patch adding the inline, but not on all
+>> functions present in this file ;)
+>>
+>> Thanks !
+>>
+>
+> Actually... All I need *has* the inline, but if I include codel.h,
+> codel_dequeue is defined but not used and you definitely don't want to
+> inline that one. So I guess the only other option I have is to split
+> that header file which I don't think is really worth it. So, unless you
+> object it, I'll just copy the code.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 2fd18d0..6cc8fdc 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -3092,6 +3092,11 @@ brcmf_notify_sched_scan_results(struct brcmf_if *ifp,
- 
- 	brcmf_dbg(SCAN, "Enter\n");
- 
-+	if (e->datalen < (sizeof(*pfn_result) + sizeof(*netinfo))) {
-+		brcmf_dbg(SCAN, "Event data to small. Ignore\n");
-+		return 0;
-+	}
-+
- 	if (e->event_code == BRCMF_E_PFN_NET_LOST) {
- 		brcmf_dbg(SCAN, "PFN NET LOST event. Do Nothing\n");
- 		return 0;
-@@ -3415,6 +3420,11 @@ brcmf_wowl_nd_results(struct brcmf_if *ifp, const struct brcmf_event_msg *e,
- 
- 	brcmf_dbg(SCAN, "Enter\n");
- 
-+	if (e->datalen < (sizeof(*pfn_result) + sizeof(*netinfo))) {
-+		brcmf_dbg(SCAN, "Event data to small. Ignore\n");
-+		return 0;
-+	}
-+
- 	pfn_result = (struct brcmf_pno_scanresults_le *)data;
- 
- 	if (e->event_code == BRCMF_E_PFN_NET_LOST) {
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-index 7b26fb1..d414fbb 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
-@@ -26,50 +26,6 @@
- #include "fwil.h"
- 
- /**
-- * struct brcm_ethhdr - broadcom specific ether header.
-- *
-- * @subtype: subtype for this packet.
-- * @length: TODO: length of appended data.
-- * @version: version indication.
-- * @oui: OUI of this packet.
-- * @usr_subtype: subtype for this OUI.
-- */
--struct brcm_ethhdr {
--	__be16 subtype;
--	__be16 length;
--	u8 version;
--	u8 oui[3];
--	__be16 usr_subtype;
--} __packed;
--
--struct brcmf_event_msg_be {
--	__be16 version;
--	__be16 flags;
--	__be32 event_type;
--	__be32 status;
--	__be32 reason;
--	__be32 auth_type;
--	__be32 datalen;
--	u8 addr[ETH_ALEN];
--	char ifname[IFNAMSIZ];
--	u8 ifidx;
--	u8 bsscfgidx;
--} __packed;
--
--/**
-- * struct brcmf_event - contents of broadcom event packet.
-- *
-- * @eth: standard ether header.
-- * @hdr: broadcom specific ether header.
-- * @msg: common part of the actual event message.
-- */
--struct brcmf_event {
--	struct ethhdr eth;
--	struct brcm_ethhdr hdr;
--	struct brcmf_event_msg_be msg;
--} __packed;
--
--/**
-  * struct brcmf_fweh_queue_item - event item on event queue.
-  *
-  * @q: list element for queuing.
-@@ -85,6 +41,7 @@ struct brcmf_fweh_queue_item {
- 	u8 ifidx;
- 	u8 ifaddr[ETH_ALEN];
- 	struct brcmf_event_msg_be emsg;
-+	u32 datalen;
- 	u8 data[0];
- };
- 
-@@ -294,6 +251,11 @@ static void brcmf_fweh_event_worker(struct work_struct *work)
- 		brcmf_dbg_hex_dump(BRCMF_EVENT_ON(), event->data,
- 				   min_t(u32, emsg.datalen, 64),
- 				   "event payload, len=%d\n", emsg.datalen);
-+		if (emsg.datalen > event->datalen) {
-+			brcmf_err("event invalid length header=%d, msg=%d\n",
-+				  event->datalen, emsg.datalen);
-+			goto event_free;
-+		}
- 
- 		/* special handling of interface event */
- 		if (event->code == BRCMF_E_IF) {
-@@ -439,7 +401,8 @@ int brcmf_fweh_activate_events(struct brcmf_if *ifp)
-  * dispatch the event to a registered handler (using worker).
-  */
- void brcmf_fweh_process_event(struct brcmf_pub *drvr,
--			      struct brcmf_event *event_packet)
-+			      struct brcmf_event *event_packet,
-+			      u32 packet_len)
- {
- 	enum brcmf_fweh_event_code code;
- 	struct brcmf_fweh_info *fweh = &drvr->fweh;
-@@ -459,6 +422,9 @@ void brcmf_fweh_process_event(struct brcmf_pub *drvr,
- 	if (code != BRCMF_E_IF && !fweh->evt_handler[code])
- 		return;
- 
-+	if (datalen > BRCMF_DCMD_MAXLEN)
-+		return;
-+
- 	if (in_interrupt())
- 		alloc_flag = GFP_ATOMIC;
- 
-@@ -472,6 +438,7 @@ void brcmf_fweh_process_event(struct brcmf_pub *drvr,
- 	/* use memcpy to get aligned event message */
- 	memcpy(&event->emsg, &event_packet->msg, sizeof(event->emsg));
- 	memcpy(event->data, data, datalen);
-+	event->datalen = datalen;
- 	memcpy(event->ifaddr, event_packet->eth.h_dest, ETH_ALEN);
- 
- 	brcmf_fweh_queue_event(fweh, event);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
-index 5e39e2a..26ff5a9 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
-@@ -27,7 +27,6 @@
- struct brcmf_pub;
- struct brcmf_if;
- struct brcmf_cfg80211_info;
--struct brcmf_event;
- 
- /* list of firmware events */
- #define BRCMF_FWEH_EVENT_ENUM_DEFLIST \
-@@ -180,13 +179,55 @@ enum brcmf_fweh_event_code {
- /**
-  * definitions for event packet validation.
-  */
--#define BRCMF_EVENT_OUI_OFFSET		19
--#define BRCM_OUI			"\x00\x10\x18"
--#define DOT11_OUI_LEN			3
--#define BCMILCP_BCM_SUBTYPE_EVENT	1
-+#define BRCM_OUI				"\x00\x10\x18"
-+#define BCMILCP_BCM_SUBTYPE_EVENT		1
- 
- 
- /**
-+ * struct brcm_ethhdr - broadcom specific ether header.
-+ *
-+ * @subtype: subtype for this packet.
-+ * @length: TODO: length of appended data.
-+ * @version: version indication.
-+ * @oui: OUI of this packet.
-+ * @usr_subtype: subtype for this OUI.
-+ */
-+struct brcm_ethhdr {
-+	__be16 subtype;
-+	__be16 length;
-+	u8 version;
-+	u8 oui[3];
-+	__be16 usr_subtype;
-+} __packed;
-+
-+struct brcmf_event_msg_be {
-+	__be16 version;
-+	__be16 flags;
-+	__be32 event_type;
-+	__be32 status;
-+	__be32 reason;
-+	__be32 auth_type;
-+	__be32 datalen;
-+	u8 addr[ETH_ALEN];
-+	char ifname[IFNAMSIZ];
-+	u8 ifidx;
-+	u8 bsscfgidx;
-+} __packed;
-+
-+/**
-+ * struct brcmf_event - contents of broadcom event packet.
-+ *
-+ * @eth: standard ether header.
-+ * @hdr: broadcom specific ether header.
-+ * @msg: common part of the actual event message.
-+ */
-+struct brcmf_event {
-+	struct ethhdr eth;
-+	struct brcm_ethhdr hdr;
-+	struct brcmf_event_msg_be msg;
-+} __packed;
-+
-+/**
-  * struct brcmf_event_msg - firmware event message.
-  *
-  * @version: version information.
-@@ -256,34 +297,35 @@ void brcmf_fweh_unregister(struct brcmf_pub *drvr,
- 			   enum brcmf_fweh_event_code code);
- int brcmf_fweh_activate_events(struct brcmf_if *ifp);
- void brcmf_fweh_process_event(struct brcmf_pub *drvr,
--			      struct brcmf_event *event_packet);
-+			      struct brcmf_event *event_packet,
-+			      u32 packet_len);
- void brcmf_fweh_p2pdev_setup(struct brcmf_if *ifp, bool ongoing);
- 
- static inline void brcmf_fweh_process_skb(struct brcmf_pub *drvr,
- 					  struct sk_buff *skb)
- {
- 	struct brcmf_event *event_packet;
--	u8 *data;
- 	u16 usr_stype;
- 
- 	/* only process events when protocol matches */
- 	if (skb->protocol != cpu_to_be16(ETH_P_LINK_CTL))
- 		return;
- 
-+	if ((skb->len + ETH_HLEN) < sizeof(*event_packet))
-+		return;
-+
- 	/* check for BRCM oui match */
- 	event_packet = (struct brcmf_event *)skb_mac_header(skb);
--	data = (u8 *)event_packet;
--	data += BRCMF_EVENT_OUI_OFFSET;
--	if (memcmp(BRCM_OUI, data, DOT11_OUI_LEN))
-+	if (memcmp(BRCM_OUI, &event_packet->hdr.oui[0],
-+		   sizeof(event_packet->hdr.oui)))
- 		return;
- 
- 	/* final match on usr_subtype */
--	data += DOT11_OUI_LEN;
--	usr_stype = get_unaligned_be16(data);
-+	usr_stype = get_unaligned_be16(&event_packet->hdr.usr_subtype);
- 	if (usr_stype != BCMILCP_BCM_SUBTYPE_EVENT)
- 		return;
- 
--	brcmf_fweh_process_event(drvr, event_packet);
-+	brcmf_fweh_process_event(drvr, event_packet, skb->len + ETH_HLEN);
- }
- 
- #endif /* FWEH_H_ */
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-index de5892a..b5a49e5 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
-@@ -1361,6 +1361,11 @@ int brcmf_p2p_notify_action_frame_rx(struct brcmf_if *ifp,
- 	u16 mgmt_type;
- 	u8 action;
- 
-+	if (e->datalen < sizeof(*rxframe)) {
-+		brcmf_dbg(SCAN, "Event data to small. Ignore\n");
-+		return 0;
-+	}
-+
- 	ch.chspec = be16_to_cpu(rxframe->chanspec);
- 	cfg->d11inf.decchspec(&ch);
- 	/* Check if wpa_supplicant has registered for this frame */
-@@ -1858,6 +1863,11 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
- 	brcmf_dbg(INFO, "Enter: event %d reason %d\n", e->event_code,
- 		  e->reason);
- 
-+	if (e->datalen < sizeof(*rxframe)) {
-+		brcmf_dbg(SCAN, "Event data to small. Ignore\n");
-+		return 0;
-+	}
-+
- 	ch.chspec = be16_to_cpu(rxframe->chanspec);
- 	cfg->d11inf.decchspec(&ch);
- 
--- 
-1.9.1
+I think it is best to start with another base implementation of codel
+for wifi, yes.
 
+What I think is the currently best performing codel implementation (on
+the wire, for ethernet) we have is in:
+
+https://github.com/dtaht/bcake/codel5.h
+
+which has a few differences from eric's implementation (64 bit
+timestamps, inlining, not a lot of cpu profiling on it - still aiming
+for algorithmic correctness here, it is closer to the original
+paper... We'd used a different means of injecting the callback in it,
+too)
+
+The one currently in the main cake had issues in the last test round
+but has been updated since. (sch_cake is also on github).
+
+In neither case it is the right thing for wifi either.
+
+the "starting plan" such as it was was to get to "one aggregate in the
+hardware, one in the driver, one ready to be formed on the completion
+interrupt", and pull a smoothed service time from start to completion
+interrupt to dynamically modify the codel target. (other headaches,
+like multicast, abound).
+
+(It's the per station queue + fq as close to the hardware as possible
+that matters most, IMHO.)
+
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
