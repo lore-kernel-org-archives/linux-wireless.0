@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:14954 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753199AbcBINqi convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2016 08:46:38 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Nishant Sarmukadam" <nishants@marvell.com>,
-	"wnhuang@chromium.com" <wnhuang@chromium.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Xinming Hu <huxm@marvell.com>
-Subject: RE: [PATCH v3 3/3] mwifiex: parse host wakeup configuration from
- device tree
-Date: Tue, 9 Feb 2016 13:46:32 +0000
-Message-ID: <22cf216e43834751b9148f0bf86dfaf9@SC-EXCH04.marvell.com> (sfid-20160209_144643_089199_4E25C420)
-References: <1454926528-17480-1-git-send-email-akarwar@marvell.com>
- <1454926528-17480-3-git-send-email-akarwar@marvell.com>
- <2675319.xbIeWCdnho@wuerfel>
-In-Reply-To: <2675319.xbIeWCdnho@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from shards.monkeyblade.net ([149.20.54.216]:49720 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751044AbcBKJ2N (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Feb 2016 04:28:13 -0500
+Date: Thu, 11 Feb 2016 04:28:10 -0500 (EST)
+Message-Id: <20160211.042810.974143616679450202.davem@davemloft.net> (sfid-20160211_102822_411640_D199B26C)
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org, ja@ssi.bg,
+	johannes.berg@intel.com
+Subject: Re: [PATCH v3 4/4] ipv6: add option to drop unsolicited neighbor
+ advertisements
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1454589080-21354-4-git-send-email-johannes@sipsolutions.net>
+References: <1454589080-21354-1-git-send-email-johannes@sipsolutions.net>
+	<1454589080-21354-4-git-send-email-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Arnd
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Thu,  4 Feb 2016 13:31:20 +0100
 
-> mwifiex_platform_driver = {
-> >  	.driver = {
-> >  		.name	= "mwifiex_plt",
-> >  		.of_match_table = mwifiex_dt_match,
-> > +#ifdef CONFIG_PM_SLEEP
-> > +		.pm             = &mwifiex_plt_pm_ops,
-> > +#endif
-> >  	}
-> >  };
+> From: Johannes Berg <johannes.berg@intel.com>
 > 
-> Just remove the #ifdef here, and mark the functions as __maybe_unused.
+> In certain 802.11 wireless deployments, there will be NA proxies
+> that use knowledge of the network to correctly answer requests.
+> To prevent unsolicitd advertisements on the shared medium from
+> being a problem, on such deployments wireless needs to drop them.
 > 
+> Enable this by providing an option called "drop_unsolicited_na".
+> 
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Sure. I will take care of this.
-
-Regards,
-Amitkumar Karwar
+Applied.
