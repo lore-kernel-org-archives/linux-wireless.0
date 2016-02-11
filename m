@@ -1,51 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41342 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933638AbcBYTvW (ORCPT
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:37848 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752183AbcBKAMn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2016 14:51:22 -0500
-Message-ID: <56CF5AE3.70302@codeaurora.org> (sfid-20160225_205126_318586_AD177A2A)
-Date: Thu, 25 Feb 2016 11:49:55 -0800
-From: Peter Oh <poh@codeaurora.org>
+	Wed, 10 Feb 2016 19:12:43 -0500
+Received: by mail-ig0-f180.google.com with SMTP id 5so26305103igt.0
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Feb 2016 16:12:42 -0800 (PST)
 MIME-Version: 1.0
-To: Sven Eckelmann <sven@narfation.org>
-CC: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	"Oh, Peter" <poh@qca.qualcomm.com>
-Subject: Re: [PATCH v3] ath10k: set MAC timestamp in management Rx frame
-References: <4c705dc7a2c0aa857da4e6eaf6e8ed47c354b9ea.1456351768.git.poh@qca.qualcomm.com> <87k2lsd9zv.fsf@kamboji.qca.qualcomm.com> <56CF4DA3.8030803@codeaurora.org> <12890529.ZzYcJYx9dF@sven-edge>
-In-Reply-To: <12890529.ZzYcJYx9dF@sven-edge>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1455148822-13849-1-git-send-email-ola1olsson@gmail.com>
+References: <1455148822-13849-1-git-send-email-ola1olsson@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 11 Feb 2016 11:12:23 +1100
+Message-ID: <CAGRGNgWY+1Axri83WE6T-MQqcTn3bmmJNqtJBdfRk5nPKMQN2g@mail.gmail.com> (sfid-20160211_011246_642950_408BA99C)
+Subject: Re: [PATCH] nl80211: Zero out the connection keys memory when freeing them.
+To: Ola Olsson <ola1olsson@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Ola Olsson <ola.olsson@sonymobile.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thank you!
+Hi Ola,
 
-On 02/25/2016 11:32 AM, Sven Eckelmann wrote:
-> On Thursday 25 February 2016 10:53:23 Peter Oh wrote:
->>> I see new warnings:
->>>
->>> drivers/net/wireless/ath/ath10k/wmi.c:2199:16: warning: restricted
-> __le32
->>> degrades to integer
->>> drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: restricted
-> __le32
->>> degrades to integer
->>> drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: cast to
-> restricted
->>> __le32
->>> drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: restricted
-> __le32
->>> degrades to integer
->> Do I have a way to run this check before submitting a patch such as
->> checkpatch.pl?
-> Looks like sparse with -D__CHECK_ENDIAN__ [1]
+On Thu, Feb 11, 2016 at 11:00 AM, Ola Olsson <ola1olsson@gmail.com> wrote:
+> The connection keys are zeroed out in all other cases except this
+> one. Let's fix the last one as well.
 >
-> You may also try smatch [2]
->
-> Kind regards,
-> 	Sven
->
-> [1] https://www.kernel.org/doc/Documentation/sparse.txt
-> [2] http://smatch.sourceforge.net/
+> Signed-off-by: Ola Olsson <ola.olsson@sonymobile.com>
 
+Makes sense to me.
+
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
+> ---
+>  net/wireless/nl80211.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index 72de698..c1ef6ce 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -7547,7 +7547,7 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
+>
+>                 if ((ibss.chandef.width != NL80211_CHAN_WIDTH_20_NOHT) &&
+>                     no_ht) {
+> -                       kfree(connkeys);
+> +                       kzfree(connkeys);
+>                         return -EINVAL;
+>                 }
+>         }
+> --
+> 1.7.9.5
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
