@@ -1,206 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42232 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756718AbcBWCjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 21:39:17 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Geliang Tang <geliangtang@163.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Julian Calaby <julian.calaby@gmail.com>,
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:36442 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750761AbcBKEqf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Feb 2016 23:46:35 -0500
+Received: by mail-pa0-f65.google.com with SMTP id y7so628594paa.3
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Feb 2016 20:46:35 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
 	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: use list_first_entry*
-References: <d02bee6044ac90c6b2d0d08a351ba6828fbe35d8.1456187207.git.geliangtang@163.com>
-Date: Mon, 22 Feb 2016 21:39:15 -0500
-In-Reply-To: <d02bee6044ac90c6b2d0d08a351ba6828fbe35d8.1456187207.git.geliangtang@163.com>
-	(Geliang Tang's message of "Tue, 23 Feb 2016 08:38:01 +0800")
-Message-ID: <wrfjio1gp2uk.fsf@redhat.com> (sfid-20160223_033934_759825_D6E2EB41)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 1/4] staging: wilc1000: fix return type of wilc_send_config_pkt
+Date: Thu, 11 Feb 2016 13:46:22 +0900
+Message-Id: <1455165985-5509-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160211_054639_481809_FBCE17AB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Geliang Tang <geliangtang@163.com> writes:
-> Use list_first_entry*() instead of container_of() to simplify the code.
->
-> Signed-off-by: Geliang Tang <geliangtang@163.com>
-> ---
->  drivers/staging/rtl8723au/core/rtw_recv.c | 49 +++++++++----------------------
->  drivers/staging/rtl8723au/core/rtw_xmit.c | 26 +++++-----------
->  2 files changed, 22 insertions(+), 53 deletions(-)
+wilc_send_config_pkt is returned 0 or -ETIMEDOUT according to return
+value of wilc_wlan_cfg_set or wilc_wlan_cfg_set.
+It is better to use int type to represent linux standard error code.
 
-This looks fine to me. When these changes gets large, it may be better
-to break them down into multiple patches as it's easier to debug if
-there is a bug somewhere.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+v2: rebase latest staging-testing
 
+ drivers/staging/wilc1000/wilc_wlan.c | 5 +++--
+ drivers/staging/wilc1000/wilc_wlan.h | 2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 98b21d4..2bc2970 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1349,10 +1349,11 @@ int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size)
+ 	return ret;
+ }
+ 
+-s32 wilc_send_config_pkt(struct wilc_vif *vif, u8 mode, struct wid *wids,
++int wilc_send_config_pkt(struct wilc_vif *vif, u8 mode, struct wid *wids,
+ 			 u32 count, u32 drv)
+ {
+-	s32 counter = 0, ret = 0;
++	s32 counter = 0;
++	int ret = 0;
+ 
+ 	if (mode == GET_CFG) {
+ 		for (counter = 0; counter < count; counter++) {
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index d362fa8..06d02ab 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -301,6 +301,6 @@ void host_sleep_notify(struct wilc *wilc);
+ extern bool wilc_enable_ps;
+ void chip_allow_sleep(struct wilc *wilc);
+ void chip_wakeup(struct wilc *wilc);
+-s32 wilc_send_config_pkt(struct wilc_vif *vif, u8 mode, struct wid *wids,
++int wilc_send_config_pkt(struct wilc_vif *vif, u8 mode, struct wid *wids,
+ 			 u32 count, u32 drv);
+ #endif
+-- 
+2.7.1
 
->
-> diff --git a/drivers/staging/rtl8723au/core/rtw_recv.c b/drivers/staging/rtl8723au/core/rtw_recv.c
-> index 0a7741c..b095d09 100644
-> --- a/drivers/staging/rtl8723au/core/rtw_recv.c
-> +++ b/drivers/staging/rtl8723au/core/rtw_recv.c
-> @@ -104,21 +104,14 @@ void _rtw_free_recv_priv23a(struct recv_priv *precvpriv)
->  struct recv_frame *rtw_alloc_recvframe23a(struct rtw_queue *pfree_recv_queue)
->  {
->  	struct recv_frame *pframe;
-> -	struct list_head *plist, *phead;
->  	struct rtw_adapter *padapter;
->  	struct recv_priv *precvpriv;
->  
->  	spin_lock_bh(&pfree_recv_queue->lock);
->  
-> -	if (list_empty(&pfree_recv_queue->queue))
-> -		pframe = NULL;
-> -	else {
-> -		phead = get_list_head(pfree_recv_queue);
-> -
-> -		plist = phead->next;
-> -
-> -		pframe = container_of(plist, struct recv_frame, list);
-> -
-> +	pframe = list_first_entry_or_null(&pfree_recv_queue->queue,
-> +					  struct recv_frame, list);
-> +	if (pframe) {
->  		list_del_init(&pframe->list);
->  		padapter = pframe->adapter;
->  		if (padapter) {
-> @@ -243,25 +236,17 @@ int rtw_enqueue_recvbuf23a(struct recv_buf *precvbuf, struct rtw_queue *queue)
->  	return _SUCCESS;
->  }
->  
-> -struct recv_buf *rtw_dequeue_recvbuf23a (struct rtw_queue *queue)
-> +struct recv_buf *rtw_dequeue_recvbuf23a(struct rtw_queue *queue)
->  {
->  	unsigned long irqL;
->  	struct recv_buf *precvbuf;
-> -	struct list_head *plist, *phead;
->  
->  	spin_lock_irqsave(&queue->lock, irqL);
->  
-> -	if (list_empty(&queue->queue)) {
-> -		precvbuf = NULL;
-> -	} else {
-> -		phead = get_list_head(queue);
-> -
-> -		plist = phead->next;
-> -
-> -		precvbuf = container_of(plist, struct recv_buf, list);
-> -
-> +	precvbuf = list_first_entry_or_null(&queue->queue,
-> +					    struct recv_buf, list);
-> +	if (precvbuf)
->  		list_del_init(&precvbuf->list);
-> -	}
->  
->  	spin_unlock_irqrestore(&queue->lock, irqL);
->  
-> @@ -1079,22 +1064,17 @@ static int validate_recv_ctrl_frame(struct rtw_adapter *padapter,
->  
->  		if ((psta->state & WIFI_SLEEP_STATE) &&
->  		    (pstapriv->sta_dz_bitmap & CHKBIT(psta->aid))) {
-> -			struct list_head *xmitframe_plist, *xmitframe_phead;
-> +			struct list_head *xmitframe_phead;
->  			struct xmit_frame *pxmitframe;
->  			struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
->  
->  			spin_lock_bh(&pxmitpriv->lock);
->  
->  			xmitframe_phead = get_list_head(&psta->sleep_q);
-> -			xmitframe_plist = xmitframe_phead->next;
-> -
-> -			if (!list_empty(xmitframe_phead)) {
-> -				pxmitframe = container_of(xmitframe_plist,
-> -							  struct xmit_frame,
-> -							  list);
-> -
-> -				xmitframe_plist = xmitframe_plist->next;
-> -
-> +			pxmitframe = list_first_entry_or_null(xmitframe_phead,
-> +							      struct xmit_frame,
-> +							      list);
-> +			if (pxmitframe) {
->  				list_del_init(&pxmitframe->list);
->  
->  				psta->sleepq_len--;
-> @@ -1542,7 +1522,7 @@ struct recv_frame *recvframe_defrag(struct rtw_adapter *adapter,
->  struct recv_frame *recvframe_defrag(struct rtw_adapter *adapter,
->  				    struct rtw_queue *defrag_q)
->  {
-> -	struct list_head *plist, *phead;
-> +	struct list_head *phead;
->  	u8 wlanhdr_offset;
->  	u8 curfragnum;
->  	struct recv_frame *pnfhdr, *ptmp;
-> @@ -1554,8 +1534,7 @@ struct recv_frame *recvframe_defrag(struct rtw_adapter *adapter,
->  	pfree_recv_queue = &adapter->recvpriv.free_recv_queue;
->  
->  	phead = get_list_head(defrag_q);
-> -	plist = phead->next;
-> -	prframe = container_of(plist, struct recv_frame, list);
-> +	prframe = list_first_entry(phead, struct recv_frame, list);
->  	list_del_init(&prframe->list);
->  	skb = prframe->pkt;
->  
-> diff --git a/drivers/staging/rtl8723au/core/rtw_xmit.c b/drivers/staging/rtl8723au/core/rtw_xmit.c
-> index b82b182..3de40cf 100644
-> --- a/drivers/staging/rtl8723au/core/rtw_xmit.c
-> +++ b/drivers/staging/rtl8723au/core/rtw_xmit.c
-> @@ -1443,24 +1443,18 @@ Must be very very cautious...
->  */
->  static struct xmit_frame *rtw_alloc_xmitframe(struct xmit_priv *pxmitpriv)
->  {
-> -	struct xmit_frame *pxframe = NULL;
-> -	struct list_head *plist, *phead;
-> +	struct xmit_frame *pxframe;
->  	struct rtw_queue *pfree_xmit_queue = &pxmitpriv->free_xmit_queue;
->  
->  	spin_lock_bh(&pfree_xmit_queue->lock);
->  
-> -	if (list_empty(&pfree_xmit_queue->queue)) {
-> +	pxframe = list_first_entry_or_null(&pfree_xmit_queue->queue,
-> +					   struct xmit_frame, list);
-> +	if (!pxframe) {
->  		RT_TRACE(_module_rtl871x_xmit_c_, _drv_info_,
->  			 "rtw_alloc_xmitframe:%d\n",
->  			 pxmitpriv->free_xmitframe_cnt);
-> -		pxframe =  NULL;
->  	} else {
-> -		phead = get_list_head(pfree_xmit_queue);
-> -
-> -		plist = phead->next;
-> -
-> -		pxframe = container_of(plist, struct xmit_frame, list);
-> -
->  		list_del_init(&pxframe->list);
->  		pxmitpriv->free_xmitframe_cnt--;
->  		RT_TRACE(_module_rtl871x_xmit_c_, _drv_info_,
-> @@ -1477,22 +1471,18 @@ static struct xmit_frame *rtw_alloc_xmitframe(struct xmit_priv *pxmitpriv)
->  
->  struct xmit_frame *rtw_alloc_xmitframe23a_ext(struct xmit_priv *pxmitpriv)
->  {
-> -	struct xmit_frame *pxframe = NULL;
-> -	struct list_head *plist, *phead;
-> +	struct xmit_frame *pxframe;
->  	struct rtw_queue *queue = &pxmitpriv->free_xframe_ext_queue;
->  
->  	spin_lock_bh(&queue->lock);
->  
-> -	if (list_empty(&queue->queue)) {
-> +	pxframe = list_first_entry_or_null(&queue->queue,
-> +					   struct xmit_frame, list);
-> +	if (!pxframe) {
->  		RT_TRACE(_module_rtl871x_xmit_c_, _drv_info_,
->  			 "rtw_alloc_xmitframe23a_ext:%d\n",
->  			 pxmitpriv->free_xframe_ext_cnt);
-> -		pxframe =  NULL;
->  	} else {
-> -		phead = get_list_head(queue);
-> -		plist = phead->next;
-> -		pxframe = container_of(plist, struct xmit_frame, list);
-> -
->  		list_del_init(&pxframe->list);
->  		pxmitpriv->free_xframe_ext_cnt--;
->  		RT_TRACE(_module_rtl871x_xmit_c_, _drv_info_,
