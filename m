@@ -1,62 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33474 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753453AbcB2WGC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:06:02 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 046/113] rtl8xxxu: Do not ignore wlan activity on 8723bu
-Date: Mon, 29 Feb 2016 17:04:44 -0500
-Message-Id: <1456783551-28315-47-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232954_164514_42B5FA62)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from shards.monkeyblade.net ([149.20.54.216]:49715 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751788AbcBKJ2H (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 11 Feb 2016 04:28:07 -0500
+Date: Thu, 11 Feb 2016 04:28:03 -0500 (EST)
+Message-Id: <20160211.042803.1404242456426060095.davem@davemloft.net> (sfid-20160211_102826_950421_AE1087C1)
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org, ja@ssi.bg,
+	johannes.berg@intel.com
+Subject: Re: [PATCH v3 3/4] ipv6: add option to drop unicast encapsulated
+ in L2 multicast
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1454589080-21354-3-git-send-email-johannes@sipsolutions.net>
+References: <1454589080-21354-1-git-send-email-johannes@sipsolutions.net>
+	<1454589080-21354-3-git-send-email-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Thu,  4 Feb 2016 13:31:19 +0100
 
-The 8723bu is a WiFi/BT combo part. When initializing it for WiFi,
-make sure to tell it not to ignore WiFi activity.
+> From: Johannes Berg <johannes.berg@intel.com>
+> 
+> In order to solve a problem with 802.11, the so-called hole-196 attack,
+> add an option (sysctl) called "drop_unicast_in_l2_multicast" which, if
+> enabled, causes the stack to drop IPv6 unicast packets encapsulated in
+> link-layer multi- or broadcast frames. Such frames can (as an attack)
+> be created by any member of the same wireless network and transmitted
+> as valid encrypted frames since the symmetric key for broadcast frames
+> is shared between all stations.
+> 
+> Reviewed-by: Julian Anastasov <ja@ssi.bg>
+> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 5 +++++
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 4 ++++
- 2 files changed, 9 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 7dcf387..24c3157 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -5704,6 +5704,11 @@ static void rtl8723bu_init_bt(struct rtl8xxxu_priv *priv)
- 	 */
- 	rtl8xxxu_write32(priv, REG_S0S1_PATH_SWITCH, 0x00);
- 
-+	memset(&h2c, 0, sizeof(struct h2c_cmd));
-+	h2c.ignore_wlan.cmd = H2C_8723B_BT_IGNORE_WLANACT;
-+	h2c.ignore_wlan.data = 0;
-+	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.ignore_wlan));
-+
- 	/*
- 	 * Software control, antenna at WiFi side
- 	 */
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index c4c0b28..5a6b223 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -754,6 +754,10 @@ struct h2c_cmd {
- 		} __packed bt_wlan_calibration;
- 		struct {
- 			u8 cmd;
-+			u8 data;
-+		} __packed ignore_wlan;
-+		struct {
-+			u8 cmd;
- 			u8 ant_inverse;
- 			u8 int_switch_type;
- 		} __packed ant_sel_rsv;
--- 
-2.5.0
-
+Applied.
