@@ -1,89 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:37254 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423161AbcBQNt4 (ORCPT
+Received: from mail-ob0-f196.google.com ([209.85.214.196]:33733 "EHLO
+	mail-ob0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751715AbcBKQx2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2016 08:49:56 -0500
-Received: by mail-ig0-f177.google.com with SMTP id 5so15512657igt.0
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2016 05:49:55 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAGRGNgVxB6rRxkz=eR30rbZsfH3irZXy0q3hu43AJC04YEfd7A@mail.gmail.com>
-References: <20160215190451.19883.12408.stgit@localhost.localdomain>
-	<CAFqt6zb6Qb46n=U=3owVrU+OfSL=qC_w0eQeSmJ91BfRBQkiSw@mail.gmail.com>
-	<CAGRGNgVxB6rRxkz=eR30rbZsfH3irZXy0q3hu43AJC04YEfd7A@mail.gmail.com>
-Date: Wed, 17 Feb 2016 19:19:55 +0530
-Message-ID: <CAFqt6zYnvcoeiV5rF9kpY2u5K8cj+SCxjcHBFPikhEe+VpP97A@mail.gmail.com> (sfid-20160217_145008_226914_AE0A1DCB)
-Subject: Re: [PATCH] rt2x00: unterminated strlen of user data
-From: Souptick Joarder <jrdr.linux@gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Alan <gnomes@lxorguk.ukuu.org.uk>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 11 Feb 2016 11:53:28 -0500
+Received: by mail-ob0-f196.google.com with SMTP id o4so6163306obb.0
+        for <linux-wireless@vger.kernel.org>; Thu, 11 Feb 2016 08:53:27 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 1/4] rtlwifi: Prepare for reworking 5G channels
+Date: Thu, 11 Feb 2016 10:53:09 -0600
+Message-Id: <1455209592-12882-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160211_175342_574190_2F5C8331)
+In-Reply-To: <1455209592-12882-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1455209592-12882-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Julian,
+There are 3 drivers in this family that have 5G radios. Each of them
+defines local copies of the available channels. This patch adds the
+two arrays to the core driver.
 
-On Wed, Feb 17, 2016 at 5:38 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
-> Hi Souptick,
->
-> On Tue, Feb 16, 2016 at 5:36 PM, Souptick Joarder <jrdr.linux@gmail.com> wrote:
->> On Tue, Feb 16, 2016 at 12:34 AM, Alan <gnomes@lxorguk.ukuu.org.uk> wrote:
->>> The buffer needs to be zero terminated in case the user data is not.
->>> Otherwise we run off the end of the buffer.
->>>
->>> Signed-off-by: Alan Cox <alan@linux.intel.com>
->>> ---
->>>  drivers/net/wireless/ralink/rt2x00/rt2x00debug.c |    5 +++--
->>>  1 file changed, 3 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c b/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
->>> index 25ee3cb..72ae530 100644
->>> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
->>> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
->>> @@ -478,7 +478,7 @@ static ssize_t rt2x00debug_write_##__name(struct file *file,        \
->>>  {                                                              \
->>>         struct rt2x00debug_intf *intf = file->private_data;     \
->>>         const struct rt2x00debug *debug = intf->debug;          \
->>> -       char line[16];                                          \
->>> +       char line[17];                                          \
->>>         size_t size;                                            \
->>>         unsigned int index = intf->offset_##__name;             \
->>>         __type value;                                           \
->>> @@ -494,7 +494,8 @@ static ssize_t rt2x00debug_write_##__name(struct file *file,        \
->>>                                                                 \
->>>         if (copy_from_user(line, buf, length))                  \
->>>                 return -EFAULT;                                 \
->>> -                                                               \
->>> +       line[16] = 0;
->>
->>             line[length] = '\0';
->>             correct me if I am wrong.                          \
->
-> I believe that in this case the data in buf will already be null
-> terminated, so ensuring that line is null terminated is only needed if
-> there are exactly 16 bytes in buf. IMHO
->
-> line[16] = 0;
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+---
 
-I think, if there are 16 bytes in buf, we end up loosing 1 byte data.
-If there are 15 bytes in buf, buf is already be null terminated.
-So is this really required?
-Correct me if I am wrong.
->
-> is dealing with this bug much more explicitly than
->
-> line[length] = 0;
->
-> however either will work. (BTW '\0' is identical to 0.)
->
-> Thanks,
->
-> --
-> Julian Calaby
->
-> Email: julian.calaby@gmail.com
-> Profile: http://www.google.com/profiles/julian.calaby/
+Kalle,
 
--Souptick
+This material is for kernel 4.6.
+
+Larry
+
+ drivers/net/wireless/realtek/rtlwifi/core.c | 16 ++++++++++++++++
+ drivers/net/wireless/realtek/rtlwifi/wifi.h |  9 ++++-----
+ 2 files changed, 20 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index 4ae421e..02eba0e 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -35,6 +35,22 @@
+ #include <linux/export.h>
+ #include <net/cfg80211.h>
+ 
++u8 channel5g[CHANNEL_MAX_NUMBER_5G] = {
++	36, 38, 40, 42, 44, 46, 48,		/* Band 1 */
++	52, 54, 56, 58, 60, 62, 64,		/* Band 2 */
++	100, 102, 104, 106, 108, 110, 112,	/* Band 3 */
++	116, 118, 120, 122, 124, 126, 128,	/* Band 3 */
++	132, 134, 136, 138, 140, 142, 144,	/* Band 3 */
++	149, 151, 153, 155, 157, 159, 161,	/* Band 4 */
++	165, 167, 169, 171, 173, 175, 177	/* Band 4 */
++};
++EXPORT_SYMBOL(channel5g);
++
++u8 channel5g_80m[CHANNEL_MAX_NUMBER_5G_80M] = {
++	42, 58, 106, 122, 138, 155, 171
++};
++EXPORT_SYMBOL(channel5g_80m);
++
+ void rtl_addr_delay(u32 addr)
+ {
+ 	if (addr == 0xfe)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 4544752..e603819 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -122,11 +122,6 @@
+ 					    */
+ #define CHANNEL_MAX_NUMBER_5G_80M	7
+ #define CHANNEL_GROUP_MAX	(3 + 9)	/*  ch1~3, 4~9, 10~14 = three groups */
+-#define CHANNEL_MAX_NUMBER_5G		54 /* Please refer to
+-					    *"phy_GetChnlGroup8812A" and
+-					    * "Hal_ReadTxPowerInfo8812A"
+-					    */
+-#define CHANNEL_MAX_NUMBER_5G_80M	7
+ #define MAX_PG_GROUP			13
+ #define	CHANNEL_GROUP_MAX_2G		3
+ #define	CHANNEL_GROUP_IDX_5GL		3
+@@ -2904,6 +2899,10 @@ value to host byte ordering.*/
+ #define	STBC_VHT_TEST_TX_ENABLE			BIT(2)
+ #define	STBC_VHT_CAP_TX				BIT(3)
+ 
++extern u8 channel5g[CHANNEL_MAX_NUMBER_5G];
++
++extern u8 channel5g_80m[CHANNEL_MAX_NUMBER_5G_80M];
++
+ static inline u8 rtl_read_byte(struct rtl_priv *rtlpriv, u32 addr)
+ {
+ 	return rtlpriv->io.read8_sync(rtlpriv, addr);
+-- 
+2.1.4
+
