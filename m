@@ -1,45 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49023 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752977AbcB2WFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:55 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 059/113] rtl8xxxu: Another 8723bu magic register set during init
-Date: Mon, 29 Feb 2016 17:04:57 -0500
-Message-Id: <1456783551-28315-60-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_231021_587904_E4A0B4CE)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:36205 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751733AbcBKEqm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 10 Feb 2016 23:46:42 -0500
+Received: by mail-pf0-f193.google.com with SMTP id e127so1962333pfe.3
+        for <linux-wireless@vger.kernel.org>; Wed, 10 Feb 2016 20:46:42 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH V2 3/4] staging: wilc1000: remove initialization code of counter variable
+Date: Thu, 11 Feb 2016 13:46:24 +0900
+Message-Id: <1455165985-5509-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20160211_054644_952540_E20A3A06)
+In-Reply-To: <1455165985-5509-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1455165985-5509-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+There is no need to set to 0 for counter variable before entering next
+for-loop statement because counter is initialized again in for-loop
+statement, so just remove it.
 
-No indication of what register 0xa3 does anywhere in the vendor source.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 5 +++++
- 1 file changed, 5 insertions(+)
+v2: rebase latest staging-testing
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 473c910..cd5c61b 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -5996,6 +5996,11 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 			rtl8xxxu_write8(priv, REG_TX_REPORT_CTRL + 1, 0x02);
- 			/* TX report Timer. Unit: 32us */
- 			rtl8xxxu_write16(priv, REG_TX_REPORT_TIME, 0xcdf0);
-+
-+			/* tmp ps ? */
-+			val8 = rtl8xxxu_read8(priv, 0xa3);
-+			val8 &= 0xf8;
-+			rtl8xxxu_write8(priv, 0xa3, val8);
+ drivers/staging/wilc1000/wilc_wlan.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index f3140e0..c6bfec3 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1365,7 +1365,6 @@ int wilc_send_config_pkt(struct wilc_vif *vif, u8 mode, struct wid *wids,
+ 				break;
+ 			}
  		}
- 
- 		if (priv->ep_tx_normal_queue)
+-		counter = 0;
+ 		for (counter = 0; counter < count; counter++) {
+ 			wids[counter].size = wilc_wlan_cfg_get_val(
+ 					wids[counter].id,
 -- 
-2.5.0
+2.7.1
 
