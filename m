@@ -1,61 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f196.google.com ([209.85.213.196]:33296 "EHLO
-	mail-ig0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753813AbcBPF4x (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:36024 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752901AbcBLOFH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2016 00:56:53 -0500
-Received: by mail-ig0-f196.google.com with SMTP id hb3so7949404igb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Feb 2016 21:56:52 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1455173229-6383-3-git-send-email-royujjal@gmail.com>
-References: <1455173229-6383-1-git-send-email-royujjal@gmail.com>
-	<1455173229-6383-3-git-send-email-royujjal@gmail.com>
-Date: Tue, 16 Feb 2016 11:26:52 +0530
-Message-ID: <CAFqt6zbpn2-RDeKi_C0qj9xE5W-b17-OPviBZ1NYKixnKzJHAQ@mail.gmail.com> (sfid-20160216_065707_094254_387AF41B)
-Subject: Re: [PATCH 3/3] mwifiex: Added missing spaces around brackets
-From: Souptick Joarder <jrdr.linux@gmail.com>
-To: Ujjal Roy <royujjal@gmail.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	WiFi Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 12 Feb 2016 09:05:07 -0500
+Received: by mail-pf0-f194.google.com with SMTP id e127so4027790pfe.3
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Feb 2016 06:05:07 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 06/11] staging: wilc1000: rename u8security in user_conn_req
+Date: Fri, 12 Feb 2016 23:04:42 +0900
+Message-Id: <1455285887-29946-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20160212_150526_862439_2FA8D63A)
+In-Reply-To: <1455285887-29946-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1455285887-29946-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Looks fine.
+This patch renames u8security to security to remove u8 prefix in struct
+user_conn_req. There is no need to use prefix to show data type of this
+variable.
 
-On Thu, Feb 11, 2016 at 12:17 PM, Ujjal Roy <royujjal@gmail.com> wrote:
-> This patch fixes the missing spaces issue in coding style.
->
-> Signed-off-by: Ujjal Roy <royujjal@gmail.com>
-> ---
->  drivers/net/wireless/marvell/mwifiex/usb.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-> index e43aff9..0510861 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/usb.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-> @@ -244,9 +244,9 @@ setup_for_next:
->         if (card->rx_cmd_ep == context->ep) {
->                 mwifiex_usb_submit_rx_urb(context, size);
->         } else {
-> -               if (atomic_read(&adapter->rx_pending) <= HIGH_RX_PENDING){
-> +               if (atomic_read(&adapter->rx_pending) <= HIGH_RX_PENDING) {
->                         mwifiex_usb_submit_rx_urb(context, size);
-> -               }else{
-> +               } else {
->                         context->skb = NULL;
->                 }
->         }
-> --
-> 1.9.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 +++---
+ drivers/staging/wilc1000/host_interface.h | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
--Souptick
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 397ef61..a9c8b15 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -986,7 +986,7 @@ static s32 Handle_Connect(struct wilc_vif *vif,
+ 		       pstrHostIFconnectAttr->ies_len);
+ 	}
+ 
+-	hif_drv->usr_conn_req.u8security = pstrHostIFconnectAttr->security;
++	hif_drv->usr_conn_req.security = pstrHostIFconnectAttr->security;
+ 	hif_drv->usr_conn_req.auth_type = pstrHostIFconnectAttr->auth_type;
+ 	hif_drv->usr_conn_req.conn_result = pstrHostIFconnectAttr->result;
+ 	hif_drv->usr_conn_req.arg = pstrHostIFconnectAttr->arg;
+@@ -1026,11 +1026,11 @@ static s32 Handle_Connect(struct wilc_vif *vif,
+ 	strWIDList[u32WidsCount].id = (u16)WID_11I_MODE;
+ 	strWIDList[u32WidsCount].type = WID_CHAR;
+ 	strWIDList[u32WidsCount].size = sizeof(char);
+-	strWIDList[u32WidsCount].val = (s8 *)&hif_drv->usr_conn_req.u8security;
++	strWIDList[u32WidsCount].val = (s8 *)&hif_drv->usr_conn_req.security;
+ 	u32WidsCount++;
+ 
+ 	if (memcmp("DIRECT-", pstrHostIFconnectAttr->ssid, 7))
+-		mode_11i = hif_drv->usr_conn_req.u8security;
++		mode_11i = hif_drv->usr_conn_req.security;
+ 
+ 	strWIDList[u32WidsCount].id = (u16)WID_AUTH_TYPE;
+ 	strWIDList[u32WidsCount].type = WID_CHAR;
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 30acf40..5e65f2c 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -205,7 +205,7 @@ struct user_scan_req {
+ struct user_conn_req {
+ 	u8 *bssid;
+ 	u8 *ssid;
+-	u8 u8security;
++	u8 security;
+ 	enum AUTHTYPE auth_type;
+ 	size_t ssid_len;
+ 	u8 *ies;
+-- 
+2.7.1
+
