@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53312 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756074AbcBPWFc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2016 17:05:32 -0500
-Message-ID: <1455660329.2723.16.camel@sipsolutions.net> (sfid-20160216_230536_088193_26481340)
-Subject: Re: ath9k(?): AP stops sending traffic to iPhone 4S until another
- 802.11n-capable STA joins
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Avery Pennarun <apenwarr@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@vger.kernel.org, nbd@nbd.name
-Date: Tue, 16 Feb 2016 23:05:29 +0100
-In-Reply-To: <1455658091-28262-1-git-send-email-apenwarr@gmail.com> (sfid-20160216_222824_263622_E1EF34E2)
-References: <CAHqTa-22NpabO6B7nL=O26fnuGQHFOzpagWtsfQz4_BfrO6nTw@mail.gmail.com>
-	 <1455658091-28262-1-git-send-email-apenwarr@gmail.com>
-	 (sfid-20160216_222824_263622_E1EF34E2)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f67.google.com ([209.85.220.67]:34411 "EHLO
+	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752922AbcBLOFW (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 12 Feb 2016 09:05:22 -0500
+Received: by mail-pa0-f67.google.com with SMTP id yy13so3868221pab.1
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Feb 2016 06:05:22 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 11/11] staging: wilc1000: use netdev_err instead of PRINT_ER
+Date: Fri, 12 Feb 2016 23:04:47 +0900
+Message-Id: <1455285887-29946-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20160212_150551_694183_BC3A35B9)
+In-Reply-To: <1455285887-29946-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1455285887-29946-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-02-16 at 16:28 -0500, Avery Pennarun wrote:
-> 
-> Changing default_agg_timeout to zero (as it is on most non-ath9k
-> drivers) makes the problem pretty much go away.  However, I think
-> it's because I'm just dodging the code path that triggers a race
-> condition.
+This patch uses netdev_err instead of PRINT_ER that is a custom debug
+print.
 
-That does seem likely. Perhaps you could reproduce it while running
-mac80211 tracing? There should be a fair amount of information about
-aggregation and queue stops in there, though as you note queue stops
-aren't really happening, only aggregation related things. Perhaps the
-tracepoints for that aren't quite sufficient.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> Notes:
-> 
-> - I'm using exactly the same ath9k driver (currently 20150525, but
-> we've   tried newer ones with no difference) on two totally different
-> platforms: a dual-core mindspeed c2k host CPU (ARMv7) with separate
-> ath9k, and a single-core QCA9531 (MIPS) with on-chip ath9k.
-> 
-> - I've been unable to trigger the problem on the QCA9531, but I have
-> on MIPS.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 10c5e4ef..a6bc8a4 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -314,7 +314,7 @@ static void handle_set_channel(struct wilc_vif *vif,
+ 				   wilc_get_vif_idx(vif));
+ 
+ 	if (ret)
+-		PRINT_ER("Failed to set channel\n");
++		netdev_err(vif->ndev, "Failed to set channel\n");
+ }
+ 
+ static s32 handle_set_wfi_drv_handler(struct wilc_vif *vif,
+-- 
+2.7.1
 
-That's ... not what I would have expected, especially since the MIPS is
-single core. That makes the races stranger than expected.
-
-> The aggregation code is... a little hairy.  Does anyone have any
-> guesses where I might look for the race condition?  Or better still,
-> a patch I can try?
-
-I'm not aware of any race conditions in the code right now :)
-
-johannes
