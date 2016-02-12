@@ -1,52 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:42470 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754249AbcBBLtF (ORCPT
+Received: from mail-lb0-f179.google.com ([209.85.217.179]:33568 "EHLO
+	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751083AbcBLJP4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 06:49:05 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Gareth McCaughan <gareth.mccaughan@pobox.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: wpa_supplicant over-eagerly blacklisting AP sending PREV_AUTH_NOT_VALID?
-References: <56B08F03.1040802@g.local>
-Date: Tue, 02 Feb 2016 13:48:51 +0200
-In-Reply-To: <56B08F03.1040802@g.local> (Gareth McCaughan's message of "Tue, 2
-	Feb 2016 11:12:03 +0000")
-Message-ID: <87r3gvs57g.fsf@purkki.adurom.net> (sfid-20160202_124910_517084_859B056D)
+	Fri, 12 Feb 2016 04:15:56 -0500
+Received: by mail-lb0-f179.google.com with SMTP id x4so42207105lbm.0
+        for <linux-wireless@vger.kernel.org>; Fri, 12 Feb 2016 01:15:55 -0800 (PST)
+From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Cc: Hauke Mehrtens <hauke@hauke-m.de>,
+	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Subject: [PATCH 1/3] bcma: drop unneeded fields from bcma_pflash struct
+Date: Fri, 12 Feb 2016 10:15:43 +0100
+Message-Id: <1455268545-11667-1-git-send-email-zajec5@gmail.com> (sfid-20160212_101602_758077_84EF5332)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Gareth McCaughan <gareth.mccaughan@pobox.com> writes:
+Most of info stored in this struct wasn't really used anywhere as we put
+all that data in platform data & resource as well.
 
-> I have some reason to believe the following:
->
->   * Some Cisco wireless APs will regularly try to force clients
->     to reauthenticate by sending deauthorization frames
->     with reason code 2 (PREV_AUTH_NOT_VALID).
->
->   * When one of these arrives, wpa_supplicant will respond by
->     putting the AP on a blacklist and roaming to another AP
->     rather than by immediately trying to reauthenticate with
->     the same AP.
->
-> This is a Bad Thing (isn't it?) because e.g. if you have two of
-> these APs within range but one provides a much better signal
-> than the other, you'll alternate between them rather than
-> sticking with the good one. It seems like it might be better
-> for wpa_supplicant to try the original AP again immediately.
->
-> (The problem that actually sent me looking at this stuff is
-> more severe and involves machines completely falling off
-> the network after several of these transitions, but I think
-> that's a separate issue that I don't understand yet.)
->
-> Some details follow.
+Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+---
+ drivers/bcma/driver_mips.c                  | 11 ++++-------
+ include/linux/bcma/bcma_driver_chipcommon.h |  3 ---
+ 2 files changed, 4 insertions(+), 10 deletions(-)
 
-wpa_supplicant and hostapd have a dedicated list:
-
-http://lists.infradead.org/mailman/listinfo/hostap
-
+diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
+index a40a203..20c134c 100644
+--- a/drivers/bcma/driver_mips.c
++++ b/drivers/bcma/driver_mips.c
+@@ -288,18 +288,15 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
+ 	case BCMA_CC_FLASHT_PARA:
+ 		bcma_debug(bus, "Found parallel flash\n");
+ 		pflash->present = true;
+-		pflash->window = BCMA_SOC_FLASH2;
+-		pflash->window_size = BCMA_SOC_FLASH2_SZ;
+ 
+ 		if ((bcma_read32(cc->core, BCMA_CC_FLASH_CFG) &
+ 		     BCMA_CC_FLASH_CFG_DS) == 0)
+-			pflash->buswidth = 1;
++			bcma_pflash_data.width = 1;
+ 		else
+-			pflash->buswidth = 2;
++			bcma_pflash_data.width = 2;
+ 
+-		bcma_pflash_data.width = pflash->buswidth;
+-		bcma_pflash_resource.start = pflash->window;
+-		bcma_pflash_resource.end = pflash->window + pflash->window_size;
++		bcma_pflash_resource.start = BCMA_SOC_FLASH2;
++		bcma_pflash_resource.end = BCMA_SOC_FLASH2 + BCMA_SOC_FLASH2_SZ;
+ 
+ 		break;
+ 	default:
+diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
+index 700d0c6..16eaaad 100644
+--- a/include/linux/bcma/bcma_driver_chipcommon.h
++++ b/include/linux/bcma/bcma_driver_chipcommon.h
+@@ -579,9 +579,6 @@ struct bcma_chipcommon_pmu {
+ #ifdef CONFIG_BCMA_DRIVER_MIPS
+ struct bcma_pflash {
+ 	bool present;
+-	u8 buswidth;
+-	u32 window;
+-	u32 window_size;
+ };
+ 
+ #ifdef CONFIG_BCMA_SFLASH
 -- 
-Kalle Valo
+1.8.4.5
+
