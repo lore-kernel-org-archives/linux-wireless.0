@@ -1,56 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:37022 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422920AbcBZSy6 convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:20686 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750707AbcBLGL1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 13:54:58 -0500
-Received: by mail-wm0-f51.google.com with SMTP id g62so82188171wme.0
-        for <linux-wireless@vger.kernel.org>; Fri, 26 Feb 2016 10:54:57 -0800 (PST)
+	Fri, 12 Feb 2016 01:11:27 -0500
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 2/2] ath10k: process htt rx indication as batch mode
+Date: Fri, 12 Feb 2016 11:40:59 +0530
+Message-ID: <1455257459-13343-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20160212_071129_463695_22F50920)
+In-Reply-To: <1455257459-13343-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1455257459-13343-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <56D081F1.3030801@openwrt.org>
-References: <1456492163-11437-1-git-send-email-michal.kazior@tieto.com>
-	<56D081F1.3030801@openwrt.org>
-Date: Fri, 26 Feb 2016 19:54:57 +0100
-Message-ID: <CA+BoTQnYiSdzn99_xZPs9X2JO3SijXj10C2ezVr_8OEZvNCStg@mail.gmail.com> (sfid-20160226_195510_249790_641C853D)
-Subject: Re: [RFC/RFT] mac80211: implement fq_codel for software queuing
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Network Development <netdev@vger.kernel.org>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Dave Taht <dave.taht@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Tim Shepard <shep@alum.mit.edu>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 February 2016 at 17:48, Felix Fietkau <nbd@openwrt.org> wrote:
-[...]
->> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
->> index af584f7cdd63..f42f898cb8b5 100644
->> --- a/net/mac80211/tx.c
->> +++ b/net/mac80211/tx.c
->> + [...]
->> +static void ieee80211_txq_enqueue(struct ieee80211_local *local,
->> +                               struct txq_info *txqi,
->> +                               struct sk_buff *skb)
->> +{
->> +     struct ieee80211_fq *fq = &local->fq;
->> +     struct ieee80211_hw *hw = &local->hw;
->> +     struct txq_flow *flow;
->> +     struct txq_flow *i;
->> +     size_t idx = fq_hash(fq, skb);
->> +
->> +     flow = &fq->flows[idx];
->> +
->> +     if (flow->txqi)
->> +             flow = &txqi->flow;
-> I'm not sure I understand this part correctly, but shouldn't that be:
->         if (flow->txqi && flow->txqi != txqi)
+On multicore systems, it is possible that txrx tasket can run
+in parallel with pci tasklet (i.e smp affinity of ath10k irq is
+assigned to multiple CPUs). Feeding and consuming from the same
+rx completion list leads to txrx tasklet runs for longer period.
+Prevent this by processing a snapshot of rx queue by moving list
+into temporary list. Consecutive received frames will be processed
+in next batch.
 
-You're correct. Good catch, thanks!
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index bedd8c3..61d9507 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2155,22 +2155,34 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
+ 	struct ath10k_htt *htt = (struct ath10k_htt *)ptr;
+ 	struct ath10k *ar = htt->ar;
+ 	struct sk_buff_head tx_q;
++	struct sk_buff_head rx_q;
++	struct sk_buff_head rx_ind_q;
+ 	struct htt_resp *resp;
+ 	struct sk_buff *skb;
+ 	unsigned long flags;
+ 
+ 	__skb_queue_head_init(&tx_q);
++	__skb_queue_head_init(&rx_q);
++	__skb_queue_head_init(&rx_ind_q);
+ 
+ 	spin_lock_irqsave(&htt->tx_compl_q.lock, flags);
+ 	skb_queue_splice_init(&htt->tx_compl_q, &tx_q);
+ 	spin_unlock_irqrestore(&htt->tx_compl_q.lock, flags);
+ 
++	spin_lock_irqsave(&htt->rx_compl_q.lock, flags);
++	skb_queue_splice_init(&htt->rx_compl_q, &rx_q);
++	spin_unlock_irqrestore(&htt->rx_compl_q.lock, flags);
++
++	spin_lock_irqsave(&htt->rx_in_ord_compl_q.lock, flags);
++	skb_queue_splice_init(&htt->rx_in_ord_compl_q, &rx_ind_q);
++	spin_unlock_irqrestore(&htt->rx_in_ord_compl_q.lock, flags);
++
+ 	while ((skb = __skb_dequeue(&tx_q))) {
+ 		ath10k_htt_rx_frm_tx_compl(htt->ar, skb);
+ 		dev_kfree_skb_any(skb);
+ 	}
+ 
+-	while ((skb = skb_dequeue(&htt->rx_compl_q))) {
++	while ((skb = __skb_dequeue(&rx_q))) {
+ 		resp = (struct htt_resp *)skb->data;
+ 		spin_lock_bh(&htt->rx_ring.lock);
+ 		ath10k_htt_rx_handler(htt, &resp->rx_ind);
+@@ -2178,7 +2190,7 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
+ 		dev_kfree_skb_any(skb);
+ 	}
+ 
+-	while ((skb = skb_dequeue(&htt->rx_in_ord_compl_q))) {
++	while ((skb = __skb_dequeue(&rx_ind_q))) {
+ 		spin_lock_bh(&htt->rx_ring.lock);
+ 		ath10k_htt_rx_in_ord_ind(ar, skb);
+ 		spin_unlock_bh(&htt->rx_ring.lock);
+-- 
+2.7.0
 
-Michał
