@@ -1,75 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:33081 "EHLO
-	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751827AbcBAEZ5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2016 23:25:57 -0500
-Date: Mon, 1 Feb 2016 09:55:48 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: fix memory leak
-Message-ID: <20160201042548.GA4072@sudip-pc> (sfid-20160201_052709_278995_6650DDCA)
-References: <1454060944-11320-1-git-send-email-sudipm.mukherjee@gmail.com>
- <CAGRGNgXc9PtYY=hb8nNRt4T5YGm2vexcJ01Z1fCCcb=57WRZ3g@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGRGNgXc9PtYY=hb8nNRt4T5YGm2vexcJ01Z1fCCcb=57WRZ3g@mail.gmail.com>
+Received: from mga04.intel.com ([192.55.52.120]:52433 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751445AbcBNL4t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 14 Feb 2016 06:56:49 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
+	Eliad Peller <eliadx.peller@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/3] iwlwifi: mvm: move TX PN assignment for TKIP to the driver
+Date: Sun, 14 Feb 2016 13:56:36 +0200
+Message-Id: <1455450997-15409-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160214_125656_304228_9C4BF1EB)
+In-Reply-To: <1455450997-15409-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1455450997-15409-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 01, 2016 at 11:03:35AM +1100, Julian Calaby wrote:
-> Hi Sudip,
-> 
-> On Fri, Jan 29, 2016 at 8:49 PM, Sudip Mukherjee
-> <sudipm.mukherjee@gmail.com> wrote:
-> > On error we jumped to the error label and returned the error code but we
-> > missed releasing sinfo.
-> >
-> > Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
-> 
-> Should the From: and Signed-off-by: email addresses be the same?
+From: Eliad Peller <eliad@wizery.com>
 
-I think 2 years back I had a long discussion with Greg about this and
-since then I al submitting patches like this. A small summayg of the
-problem from that discussion:
+If protocol offloading is configured, the fw might generate some
+frames (e.g. arp response) on its own during d3/d0i3.
 
-"we have strict DMARC check for the corporate mail server. DMARC =
-domain based message authentication.
-So the mail i sent reached all the list subscriber from a different
-server than our designated server, and as a result it is marked as spam
-in many places and I have already received a few complaints regarding
-that."
+On d3/d0i3 exit the driver queries the updated PN (if relevant),
+and updates its keys (for the d0i3 case, this is done by
+iwl_mvm_d0i3_exit_work(), which is scheduled on d0i3 exit)
 
-> 
-> > ---
-> >  net/mac80211/sta_info.c | 1 +
-> >  1 file changed, 1 insertion(+)
-> >
-> > diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-> > index 6c198e6..36e75c4 100644
-> > --- a/net/mac80211/sta_info.c
-> > +++ b/net/mac80211/sta_info.c
-> > @@ -561,6 +561,7 @@ static int sta_info_insert_finish(struct sta_info *sta) __acquires(RCU)
-> >         __cleanup_single_sta(sta);
-> >   out_err:
-> >         mutex_unlock(&local->sta_mtx);
-> > +       kfree(sinfo);
-> >         rcu_read_lock();
-> >         return err;
-> >  }
-> 
-> Looks sane to me. I must note that the bug this is fixing is only in
-> the mac80211-next tree.
-> 
-> Fixes: 5fe74014172d ("mac80211: avoid excessive stack usage in sta_info")
-> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+While in d0i3, iwlmvm defers tx frames until d0i3 exit, and
+then continues their processing.
 
-thanks
+This is problematic with TKIP, since the frame's PN has already
+been set at this stage (in contrast to CCMP, where the PN is
+being set only later on), so both the frame's PN and the upcoming
+PN update (from d0i3 exit work) might be wrong.
 
-regards
-sudip
+Fix it by moving the TX PN assignment (for TKIP) to the driver,
+similarly to CCMP.
+
+Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+Johannes, please route this one through your tree - thanks
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c       | 15 ++++++++++-----
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c       |  2 ++
+ 3 files changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index d3e21d9..93e4958 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -249,16 +249,19 @@ static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
+ 		return;
+ 	case WLAN_CIPHER_SUITE_TKIP:
+ 		if (sta) {
++			u64 pn64;
++
+ 			tkip_sc = data->rsc_tsc->all_tsc_rsc.tkip.unicast_rsc;
+ 			tkip_tx_sc = &data->rsc_tsc->all_tsc_rsc.tkip.tsc;
+ 
+ 			rx_p1ks = data->tkip->rx_uni;
+ 
+-			ieee80211_get_key_tx_seq(key, &seq);
+-			tkip_tx_sc->iv16 = cpu_to_le16(seq.tkip.iv16);
+-			tkip_tx_sc->iv32 = cpu_to_le32(seq.tkip.iv32);
++			pn64 = atomic64_read(&key->tx_pn);
++			tkip_tx_sc->iv16 = cpu_to_le16(TKIP_PN_TO_IV16(pn64));
++			tkip_tx_sc->iv32 = cpu_to_le32(TKIP_PN_TO_IV32(pn64));
+ 
+-			ieee80211_get_tkip_p1k_iv(key, seq.tkip.iv32, p1k);
++			ieee80211_get_tkip_p1k_iv(key, TKIP_PN_TO_IV32(pn64),
++						  p1k);
+ 			iwl_mvm_convert_p1k(p1k, data->tkip->tx.p1k);
+ 
+ 			memcpy(data->tkip->mic_keys.tx,
+@@ -1601,7 +1604,9 @@ static void iwl_mvm_d3_update_keys(struct ieee80211_hw *hw,
+ 		case WLAN_CIPHER_SUITE_TKIP:
+ 			iwl_mvm_tkip_sc_to_seq(&sc->tkip.tsc, &seq);
+ 			iwl_mvm_set_tkip_rx_seq(sc->tkip.unicast_rsc, key);
+-			ieee80211_set_key_tx_seq(key, &seq);
++			atomic64_set(&key->tx_pn,
++				     (u64)seq.tkip.iv16 |
++				     ((u64)seq.tkip.iv32 << 16));
+ 			break;
+ 		}
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 1bd3f0b..2b53292 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -2585,7 +2585,7 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
+ 	switch (key->cipher) {
+ 	case WLAN_CIPHER_SUITE_TKIP:
+ 		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
+-		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
++		key->flags |= IEEE80211_KEY_FLAG_PUT_IV_SPACE;
+ 		break;
+ 	case WLAN_CIPHER_SUITE_CCMP:
+ 		key->flags |= IEEE80211_KEY_FLAG_PUT_IV_SPACE;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 8bf48a7..ca1e485 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -299,6 +299,8 @@ static void iwl_mvm_set_tx_cmd_crypto(struct iwl_mvm *mvm,
+ 
+ 	case WLAN_CIPHER_SUITE_TKIP:
+ 		tx_cmd->sec_ctl = TX_CMD_SEC_TKIP;
++		pn = atomic64_inc_return(&keyconf->tx_pn);
++		ieee80211_tkip_add_iv(crypto_hdr, keyconf, pn);
+ 		ieee80211_get_tkip_p2k(keyconf, skb_frag, tx_cmd->key);
+ 		break;
+ 
+-- 
+2.5.0
+
