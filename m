@@ -1,39 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44235 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:42727 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965901AbcBCSkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 13:40:03 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 04/28] rtl8xxxu: Add RQPN_[NE]PQ_SHIFT values
-Date: Wed,  3 Feb 2016 13:39:38 -0500
-Message-Id: <1454524802-26763-5-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_201501_507974_DF03EDA1)
-In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+	id S1751139AbcBOKOg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Feb 2016 05:14:36 -0500
+Message-ID: <1455531273.5210.2.camel@sipsolutions.net> (sfid-20160215_111439_916705_4650E97F)
+Subject: Re: [PATCH 2/3] iwlwifi: mvm: move TX PN assignment for TKIP to the
+ driver
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	Eliad Peller <eliad@wizery.com>
+Cc: Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Peller, EliadX" <eliadx.peller@intel.com>
+Date: Mon, 15 Feb 2016 11:14:33 +0100
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA1338D@hasmsx107.ger.corp.intel.com>
+References: <1455450997-15409-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1455450997-15409-2-git-send-email-emmanuel.grumbach@intel.com>
+	 <CANUX_P3Ybzowsf3Kg7TFhtpq+H4bDWMswrGHhkrvHKtnZaEVhA@mail.gmail.com>
+	 <1455477875.2564.0.camel@sipsolutions.net>
+	 <0BA3FCBA62E2DC44AF3030971E174FB32EA122F3@hasmsx107.ger.corp.intel.com>
+	 <CAB3XZEdXC1jG5FXOPu-seT2pVzKa6Sg15s_YTeMnULi7vBgL5A@mail.gmail.com>
+	 <0BA3FCBA62E2DC44AF3030971E174FB32EA1331F@hasmsx107.ger.corp.intel.com>
+	 <CAB3XZEeYfYaHUOcBjxpD5+_4YGRemm6W+YDRksPjxBqCxvTPtw@mail.gmail.com>
+	 <0BA3FCBA62E2DC44AF3030971E174FB32EA1338D@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On Mon, 2016-02-15 at 09:24 +0000, Grumbach, Emmanuel wrote:
+> 
+> It doesn't feel right to remove this function in mac80211-next.git
+> and
+> touch 3 drivers along the way, but I don't mind. Johannes, what do
+> you say?
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h | 2 ++
- 1 file changed, 2 insertions(+)
+I don't see any problem with that? I've touched far more drivers (like
+"every single one") when doing API updates :)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-index 23208f7..8b27a1c 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-@@ -352,6 +352,8 @@
- #define REG_TXDMA_OFFSET_CHK		0x020c
- #define REG_TXDMA_STATUS		0x0210
- #define REG_RQPN_NPQ			0x0214
-+#define  RQPN_NPQ_SHIFT			0
-+#define  RQPN_EPQ_SHIFT			16
- 
- /* 0x0280 ~ 0x02FF	RXDMA Configuration */
- #define REG_RXDMA_AGG_PG_TH		0x0280
--- 
-2.5.0
-
+johannes
