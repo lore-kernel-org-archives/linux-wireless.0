@@ -1,37 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:36547 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750812AbcBKPMg (ORCPT
+Received: from mail-yw0-f169.google.com ([209.85.161.169]:35857 "EHLO
+	mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751689AbcBOKQu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2016 10:12:36 -0500
-Message-ID: <1455203555.19473.14.camel@edumazet-glaptop2.roam.corp.google.com> (sfid-20160211_161245_324492_A1421FEA)
-Subject: Re: [PATCH] codel: add forgotten inline to functions in header file
-From: Eric Dumazet <eric.dumazet@gmail.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 11 Feb 2016 07:12:35 -0800
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA0E6FD@hasmsx107.ger.corp.intel.com>
-References: <1455199701-25767-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1455201038.19473.12.camel@edumazet-glaptop2.roam.corp.google.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32EA0E6FD@hasmsx107.ger.corp.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Mon, 15 Feb 2016 05:16:50 -0500
+Received: by mail-yw0-f169.google.com with SMTP id e63so16223961ywc.3
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Feb 2016 02:16:49 -0800 (PST)
+MIME-Version: 1.0
+Date: Mon, 15 Feb 2016 11:16:49 +0100
+Message-ID: <CAF7Mx6rQrsxkm1g9O6-dkzQPLgV0X3yb5TakrOU316Xy-bU1pw@mail.gmail.com> (sfid-20160215_111652_841251_4C44C816)
+Subject: wireless dependency
+From: Arend Van Spriel <arend.van@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-02-11 at 15:05 +0000, Grumbach, Emmanuel wrote:
+Hi Kalle,
 
+I am preparing a patch series for wireless-drivers-next, but there is
+a dependency with patch that was submitted to wireless-drivers [1].
+How should I handle this. Can I submit it for wireless-drivers-next as
+well?
 
-> Yeah :) codel_should_drop seemed very long indeed... I wanted to use the
-> codel_get_time and associated utils (_before, _after) in iwlwifi.
-> They're better than jiffies... So maybe I can just copy that code to
-> iwlwifi.
+Regards,
+Arend
 
-
-You certainly can submit a patch adding the inline, but not on all
-functions present in this file ;)
-
-Thanks !
-
-
+[1] https://patchwork.kernel.org/patch/8061031/
