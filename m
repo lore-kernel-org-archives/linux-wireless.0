@@ -1,73 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40120 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753496AbcB2WGD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:06:03 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 098/113] rtl8xxxu: Do not parse RX descriptor info for C2H packets
-Date: Mon, 29 Feb 2016 17:05:36 -0500
-Message-Id: <1456783551-28315-99-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232954_045406_158A4A4B)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-io0-f196.google.com ([209.85.223.196]:36719 "EHLO
+	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751791AbcBOJT3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Feb 2016 04:19:29 -0500
+Received: by mail-io0-f196.google.com with SMTP id b188so12080923iof.3
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Feb 2016 01:19:28 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA1331F@hasmsx107.ger.corp.intel.com>
+References: <1455450997-15409-1-git-send-email-emmanuel.grumbach@intel.com>
+	<1455450997-15409-2-git-send-email-emmanuel.grumbach@intel.com>
+	<CANUX_P3Ybzowsf3Kg7TFhtpq+H4bDWMswrGHhkrvHKtnZaEVhA@mail.gmail.com>
+	<1455477875.2564.0.camel@sipsolutions.net>
+	<0BA3FCBA62E2DC44AF3030971E174FB32EA122F3@hasmsx107.ger.corp.intel.com>
+	<CAB3XZEdXC1jG5FXOPu-seT2pVzKa6Sg15s_YTeMnULi7vBgL5A@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB32EA1331F@hasmsx107.ger.corp.intel.com>
+Date: Mon, 15 Feb 2016 11:19:28 +0200
+Message-ID: <CAB3XZEeYfYaHUOcBjxpD5+_4YGRemm6W+YDRksPjxBqCxvTPtw@mail.gmail.com> (sfid-20160215_101933_832585_4530EA09)
+Subject: Re: [PATCH 2/3] iwlwifi: mvm: move TX PN assignment for TKIP to the driver
+From: Eliad Peller <eliad@wizery.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Emmanuel Grumbach <egrumbach@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Peller, EliadX" <eliadx.peller@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On Mon, Feb 15, 2016 at 11:16 AM, Grumbach, Emmanuel
+<emmanuel.grumbach@intel.com> wrote:
+>
+>
+> On 02/15/2016 11:06 AM, Eliad Peller wrote:
+>> On Sun, Feb 14, 2016 at 9:37 PM, Grumbach, Emmanuel
+>> <emmanuel.grumbach@intel.com> wrote:
+>>>
+>>> On 02/14/2016 09:33 PM, Johannes Berg wrote:
+>>>> On Sun, 2016-02-14 at 19:34 +0200, Emmanuel Grumbach wrote:
+>>>>> Since the 3rd patch needs to be dropped anyway, let's route this one
+>>>>> through my tree as usual.
+>>>> It doesn't really have to be dropped, why? We can just make the same
+>>>> adjustment as for dvm in the patch.
+>>>>
+>>> But I am not sure I really want to play with drivers/staging/vt6656/rxtx.c
+>> here you go:
+>>
+>> diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
+>> index b668db6..1a2dda0 100644
+>> --- a/drivers/staging/vt6655/rxtx.c
+>> +++ b/drivers/staging/vt6655/rxtx.c
+>>
+> Want to send that patch to Greg? :)
 
-C2H events are delivered as RX packets on 8723bu/8192eu. When
-receiving a C2H event, do not parse the rest of the RX descriptor as
-the info isn't valid.
+why? can't you simply amend it to the third patch?
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index f4842aa..924b8cc 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -7324,7 +7324,6 @@ static int rtl8723bu_parse_rx_desc(struct rtl8xxxu_priv *priv,
- 		(struct rtl8723bu_rx_desc *)skb->data;
- 	struct rtl8723au_phy_stats *phy_stats;
- 	int drvinfo_sz, desc_shift;
--	int rx_type;
- 
- 	skb_pull(skb, sizeof(struct rtl8723bu_rx_desc));
- 
-@@ -7334,6 +7333,12 @@ static int rtl8723bu_parse_rx_desc(struct rtl8xxxu_priv *priv,
- 	desc_shift = rx_desc->shift;
- 	skb_pull(skb, drvinfo_sz + desc_shift);
- 
-+	if (rx_desc->rpt_sel) {
-+		struct device *dev = &priv->udev->dev;
-+		dev_dbg(dev, "%s: C2H packet\n", __func__);
-+		return RX_TYPE_C2H;
-+	}
-+
- 	rx_status->mactime = le32_to_cpu(rx_desc->tsfl);
- 	rx_status->flag |= RX_FLAG_MACTIME_START;
- 
-@@ -7351,15 +7356,7 @@ static int rtl8723bu_parse_rx_desc(struct rtl8xxxu_priv *priv,
- 		rx_status->rate_idx = rx_desc->rxmcs;
- 	}
- 
--	if (rx_desc->rpt_sel) {
--		struct device *dev = &priv->udev->dev;
--		dev_dbg(dev, "%s: C2H packet\n", __func__);
--		rx_type = RX_TYPE_C2H;
--	} else {
--		rx_type = RX_TYPE_DATA_PKT;
--	}
--
--	return rx_type;
-+	return RX_TYPE_DATA_PKT;
- }
- 
- static void rtl8723bu_handle_c2h(struct rtl8xxxu_priv *priv,
--- 
-2.5.0
-
+Eliad.
