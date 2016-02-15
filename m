@@ -1,75 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f196.google.com ([209.85.213.196]:36723 "EHLO
-	mail-ig0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759366AbcAUREI (ORCPT
+Received: from mga03.intel.com ([134.134.136.65]:42235 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752782AbcBOL6C convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Jan 2016 12:04:08 -0500
+	Mon, 15 Feb 2016 06:58:02 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "Kalle Valo <kvalo@adurom.com> Kalle Valo" <kvalo@adurom.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: pull request: iwlwifi-2016-02-16
+Date: Mon, 15 Feb 2016 11:57:38 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA13D1A@hasmsx107.ger.corp.intel.com> (sfid-20160215_181514_645568_F5C19387)
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <1445116005-28670-1-git-send-email-paulmcquad@gmail.com>
-References: <1445116005-28670-1-git-send-email-paulmcquad@gmail.com>
-Date: Thu, 21 Jan 2016 18:04:07 +0100
-Message-ID: <CAGXE3d-XH5Efi_9cypT=HmJYzYdzyGoGJxcnrXZ86EVTcDM4Fg@mail.gmail.com> (sfid-20160121_180429_317990_56321FFE)
-Subject: Re: [PATCH 1/3] net: wireless: rt2x00: Space issue
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Paul McQuade <paulmcquad@gmail.com>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>, kvalo@codeaurora.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Oct 17, 2015 at 11:06 PM, Paul McQuade <paulmcquad@gmail.com> wrote:
-> Removed empty spaces before/after parenthesis
->
-> Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
+Hi Kalle,
 
-Looks valid to me as well.
+This is a pull request for 4.5. Apart from my RF-Kill fix, the patches are
+really small. My RF-Kill patch needed to move code around to avoid adding
+a forward declaration and on the way there were a few very trivial code style
+fixes, that were needed to make checkpatch happy.
 
-Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+Let me know if you have issues, thanks!
 
-> ---
->  drivers/net/wireless/rt2x00/rt2x00.h | 24 ++++++++++++------------
->  1 file changed, 12 insertions(+), 12 deletions(-)
->
-> diff --git a/drivers/net/wireless/rt2x00/rt2x00.h b/drivers/net/wireless/rt2x00/rt2x00.h
-> index 3282ddb..6f8310a 100644
-> --- a/drivers/net/wireless/rt2x00/rt2x00.h
-> +++ b/drivers/net/wireless/rt2x00/rt2x00.h
-> @@ -107,7 +107,7 @@
->   * amount of bytes needed to move the data.
->   */
->  #define ALIGN_SIZE(__skb, __header) \
-> -       (  ((unsigned long)((__skb)->data + (__header))) & 3 )
-> +       (((unsigned long)((__skb)->data + (__header))) & 3)
->
->  /*
->   * Constants for extra TX headroom for alignment purposes.
-> @@ -128,14 +128,14 @@
->  #define SLOT_TIME              20
->  #define SHORT_SLOT_TIME                9
->  #define SIFS                   10
-> -#define PIFS                   ( SIFS + SLOT_TIME )
-> -#define SHORT_PIFS             ( SIFS + SHORT_SLOT_TIME )
-> -#define DIFS                   ( PIFS + SLOT_TIME )
-> -#define SHORT_DIFS             ( SHORT_PIFS + SHORT_SLOT_TIME )
-> -#define EIFS                   ( SIFS + DIFS + \
-> -                                 GET_DURATION(IEEE80211_HEADER + ACK_SIZE, 10) )
-> -#define SHORT_EIFS             ( SIFS + SHORT_DIFS + \
-> -                                 GET_DURATION(IEEE80211_HEADER + ACK_SIZE, 10) )
-> +#define PIFS                   (SIFS + SLOT_TIME)
-> +#define SHORT_PIFS             (SIFS + SHORT_SLOT_TIME)
-> +#define DIFS                   (PIFS + SLOT_TIME)
-> +#define SHORT_DIFS             (SHORT_PIFS + SHORT_SLOT_TIME)
-> +#define EIFS                   (SIFS + DIFS + \
-> +                                 GET_DURATION(IEEE80211_HEADER + ACK_SIZE, 10))
-> +#define SHORT_EIFS             (SIFS + SHORT_DIFS + \
-> +                                 GET_DURATION(IEEE80211_HEADER + ACK_SIZE, 10))
->
->  enum rt2x00_chip_intf {
->         RT2X00_CHIP_INTF_PCI,
->
-> --
-> 2.6.1
->
+
+The following changes since commit 69c7fda40921c125eeeef6a827f6270ac6aa1baa:
+
+  iwlwifi: mvm: rs: fix TPC statistics handling (2016-01-26 16:03:35 +0200)
+
+are available in the git repository at:
+
+  https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2016-02-15
+
+for you to fetch changes up to 20aa99bbddae74bded68338f9ba200ccae02858b:
+
+  iwlwifi: pcie: fix erroneous return value (2016-02-15 13:38:31 +0200)
+
+----------------------------------------------------------------
+These are a few fixes for the current cycle.
+3 out of the 5 patches fix a bugzilla.
+
+* fix a race that users reported when we try to load the firmware
+  and the hardware rfkill interrupt triggers at the same time.
+* Luca fixes a very visible bug in scheduled scan: our firmware
+  doesn't support scheduled scan with no profile configured and
+  the supplicant sometimes requests such scheduled scans.
+* build system fix
+* firmware name update for 8265
+* typo fix in return value
+
+----------------------------------------------------------------
+Anton Protopopov (1):
+      iwlwifi: pcie: fix erroneous return value
+
+Emmanuel Grumbach (2):
+      iwlwifi: dvm: remove a wrong dependency on m
+      iwlwifi: pcie: fix RF-Kill vs. firmware load race
+
+Luca Coelho (1):
+      iwlwifi: mvm: don't allow sched scans without matches to be started
+
+Oren Givon (1):
+      iwlwifi: fix name of ucode loaded for 8265 series
+
+ drivers/net/wireless/intel/iwlwifi/Kconfig         |   1 -
+ drivers/net/wireless/intel/iwlwifi/iwl-8000.c      |  42 ++++++++--
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c       |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c      |   4 +
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h |   9 ++
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |   8 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 188 ++++++++++++++++++++++++------------------
+ 7 files changed, 164 insertions(+), 94 deletions(-)
+
