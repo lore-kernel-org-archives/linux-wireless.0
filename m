@@ -1,67 +1,164 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:64363
-	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751431AbcBONf4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Feb 2016 08:35:56 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V5 0/3] nl80211: allow configuration of BSS selection
-Date: Mon, 15 Feb 2016 14:35:50 +0100
-Message-Id: <1455543353-20311-1-git-send-email-arend@broadcom.com> (sfid-20160215_181517_041061_6D2442CA)
+Received: from mga11.intel.com ([192.55.52.93]:18944 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752733AbcBOL7K (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Feb 2016 06:59:10 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/5] iwlwifi: fix name of ucode loaded for 8265 series
+Date: Mon, 15 Feb 2016 13:59:02 +0200
+Message-Id: <1455537546-22157-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160215_181514_904813_7E647838)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA13D1A@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA13D1A@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series adds support for configuration of BSS selection done by
-the driver and/or firmware. It allows user-space to pass selection behaviour
-with the NL80211_CMD_CONNECT using NL80211_ATTR_BSS_SELECT. When user-space
-does provide this attribute and no explicit BSSID is provided it will pass
-the BSS selection behaviour to the driver if the driver supports it.
+From: Oren Givon <oren.givon@intel.com>
 
-When multiple BSS-es are found belonging to the same ESS, ie. Infra-BSS with
-same SSID, this can be used to select a BSS. The behaviours defined are:
+Fix the name of the ucode being loaded for 8265 series
+to be: iwlwifi-8265-XX.ucode
 
-1. RSSI based selection.
-2. Band selection, RSSI based selection.
-3. RSSI adjustment in given band, RSSI based selection.
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-8000.c | 42 +++++++++++++++++++++------
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c  |  6 ++--
+ 2 files changed, 37 insertions(+), 11 deletions(-)
 
-The third patch addresses an issue observed during testing so
-not really related to the feature. This series is intended for
-v4.6 and applies to master branch of the mac80211-next repository.
-
-V2:
- - incorporate comments from Johannes Berg (may have missed some).
- - split nl80211 patch in two separate patches.
-
-V3:
- - remove enum nl80211_bss_select_primitive.
- - reword documentation of nl80211_bss_select_attr enum values.
-
-V4:
- - remove documentation reference to removed primitive.
-
-V5:
- - validate only one behaviour is passed from user-space.
- - use packed struct for RSS_ADJUST attribute.
- - validate user-space provided band value against wiphy->bands.
-
-Arend van Spriel (2):
-  nl80211: add feature for BSS selection support
-  brcmfmac: add support for nl80211 BSS_SELECT feature
-  cfg80211: stop critical protocol session upon disconnect event
-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         |  66 +++++++++++++-
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  |  38 +++++---
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   1 +
- include/net/cfg80211.h                             |  34 +++++++
- include/uapi/linux/nl80211.h                       |  52 +++++++++++
- net/wireless/core.c                                |   4 +
- net/wireless/nl80211.c                             | 101 +++++++++++++++++++++
- net/wireless/sme.c                                 |   6 ++
- 8 files changed, 284 insertions(+), 18 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+index c84a029..bce9b3420 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+@@ -7,6 +7,7 @@
+  *
+  * Copyright(c) 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2014 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -70,12 +71,15 @@
+ 
+ /* Highest firmware API version supported */
+ #define IWL8000_UCODE_API_MAX	20
++#define IWL8265_UCODE_API_MAX	20
+ 
+ /* Oldest version we won't warn about */
+ #define IWL8000_UCODE_API_OK	13
++#define IWL8265_UCODE_API_OK	20
+ 
+ /* Lowest firmware API version supported */
+ #define IWL8000_UCODE_API_MIN	13
++#define IWL8265_UCODE_API_MIN	20
+ 
+ /* NVM versions */
+ #define IWL8000_NVM_VERSION		0x0a1d
+@@ -93,6 +97,10 @@
+ #define IWL8000_MODULE_FIRMWARE(api) \
+ 	IWL8000_FW_PRE "-" __stringify(api) ".ucode"
+ 
++#define IWL8265_FW_PRE "iwlwifi-8265-"
++#define IWL8265_MODULE_FIRMWARE(api) \
++	IWL8265_FW_PRE __stringify(api) ".ucode"
++
+ #define NVM_HW_SECTION_NUM_FAMILY_8000		10
+ #define DEFAULT_NVM_FILE_FAMILY_8000B		"nvmData-8000B"
+ #define DEFAULT_NVM_FILE_FAMILY_8000C		"nvmData-8000C"
+@@ -144,10 +152,7 @@ static const struct iwl_tt_params iwl8000_tt_params = {
+ 	.support_tx_backoff = true,
+ };
+ 
+-#define IWL_DEVICE_8000							\
+-	.ucode_api_max = IWL8000_UCODE_API_MAX,				\
+-	.ucode_api_ok = IWL8000_UCODE_API_OK,				\
+-	.ucode_api_min = IWL8000_UCODE_API_MIN,				\
++#define IWL_DEVICE_8000_COMMON						\
+ 	.device_family = IWL_DEVICE_FAMILY_8000,			\
+ 	.max_inst_size = IWL60_RTC_INST_SIZE,				\
+ 	.max_data_size = IWL60_RTC_DATA_SIZE,				\
+@@ -167,10 +172,28 @@ static const struct iwl_tt_params iwl8000_tt_params = {
+ 	.thermal_params = &iwl8000_tt_params,				\
+ 	.apmg_not_supported = true
+ 
++#define IWL_DEVICE_8000							\
++	IWL_DEVICE_8000_COMMON,						\
++	.ucode_api_max = IWL8000_UCODE_API_MAX,				\
++	.ucode_api_ok = IWL8000_UCODE_API_OK,				\
++	.ucode_api_min = IWL8000_UCODE_API_MIN				\
++
++#define IWL_DEVICE_8260							\
++	IWL_DEVICE_8000_COMMON,						\
++	.ucode_api_max = IWL8000_UCODE_API_MAX,				\
++	.ucode_api_ok = IWL8000_UCODE_API_OK,				\
++	.ucode_api_min = IWL8000_UCODE_API_MIN				\
++
++#define IWL_DEVICE_8265							\
++	IWL_DEVICE_8000_COMMON,						\
++	.ucode_api_max = IWL8265_UCODE_API_MAX,				\
++	.ucode_api_ok = IWL8265_UCODE_API_OK,				\
++	.ucode_api_min = IWL8265_UCODE_API_MIN				\
++
+ const struct iwl_cfg iwl8260_2n_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless N 8260",
+ 	.fw_name_pre = IWL8000_FW_PRE,
+-	IWL_DEVICE_8000,
++	IWL_DEVICE_8260,
+ 	.ht_params = &iwl8000_ht_params,
+ 	.nvm_ver = IWL8000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
+@@ -179,7 +202,7 @@ const struct iwl_cfg iwl8260_2n_cfg = {
+ const struct iwl_cfg iwl8260_2ac_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless AC 8260",
+ 	.fw_name_pre = IWL8000_FW_PRE,
+-	IWL_DEVICE_8000,
++	IWL_DEVICE_8260,
+ 	.ht_params = &iwl8000_ht_params,
+ 	.nvm_ver = IWL8000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
+@@ -188,8 +211,8 @@ const struct iwl_cfg iwl8260_2ac_cfg = {
+ 
+ const struct iwl_cfg iwl8265_2ac_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless AC 8265",
+-	.fw_name_pre = IWL8000_FW_PRE,
+-	IWL_DEVICE_8000,
++	.fw_name_pre = IWL8265_FW_PRE,
++	IWL_DEVICE_8265,
+ 	.ht_params = &iwl8000_ht_params,
+ 	.nvm_ver = IWL8000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
+@@ -209,7 +232,7 @@ const struct iwl_cfg iwl4165_2ac_cfg = {
+ const struct iwl_cfg iwl8260_2ac_sdio_cfg = {
+ 	.name = "Intel(R) Dual Band Wireless-AC 8260",
+ 	.fw_name_pre = IWL8000_FW_PRE,
+-	IWL_DEVICE_8000,
++	IWL_DEVICE_8260,
+ 	.ht_params = &iwl8000_ht_params,
+ 	.nvm_ver = IWL8000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
+@@ -236,3 +259,4 @@ const struct iwl_cfg iwl4165_2ac_sdio_cfg = {
+ };
+ 
+ MODULE_FIRMWARE(IWL8000_MODULE_FIRMWARE(IWL8000_UCODE_API_OK));
++MODULE_FIRMWARE(IWL8265_MODULE_FIRMWARE(IWL8265_UCODE_API_OK));
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 7acb490..ab4c2a0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -243,8 +243,10 @@ static int iwl_request_firmware(struct iwl_drv *drv, bool first)
+ 	if (drv->trans->cfg->device_family == IWL_DEVICE_FAMILY_8000) {
+ 		char rev_step = 'A' + CSR_HW_REV_STEP(drv->trans->hw_rev);
+ 
+-		snprintf(drv->firmware_name, sizeof(drv->firmware_name),
+-			 "%s%c-%s.ucode", name_pre, rev_step, tag);
++		if (rev_step != 'A')
++			snprintf(drv->firmware_name,
++				 sizeof(drv->firmware_name), "%s%c-%s.ucode",
++				 name_pre, rev_step, tag);
+ 	}
+ 
+ 	IWL_DEBUG_INFO(drv, "attempting to load firmware %s'%s'\n",
 -- 
-1.9.1
+2.5.0
 
