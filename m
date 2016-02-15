@@ -1,36 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:42959 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753250AbcBWTDI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 14:03:08 -0500
-Subject: Re: [PATCH 1/2] mac80211: add A-MSDU tx support
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <1455820762-22876-1-git-send-email-nbd@openwrt.org>
- <1456226757.2041.35.camel@sipsolutions.net> <56CC4CAC.4080501@openwrt.org>
- <1456232731.9910.4.camel@sipsolutions.net>
-Cc: egrumbach@gmail.com
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <56CCACE9.5040404@openwrt.org> (sfid-20160223_200312_796889_4E53B37A)
-Date: Tue, 23 Feb 2016 20:03:05 +0100
+Received: from mail-io0-f194.google.com ([209.85.223.194]:33909 "EHLO
+	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752361AbcBOXq4 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 15 Feb 2016 18:46:56 -0500
+Received: by mail-io0-f194.google.com with SMTP id l127so13685618iof.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Feb 2016 15:46:56 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1456232731.9910.4.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1455173229-6383-3-git-send-email-royujjal@gmail.com>
+References: <1455173229-6383-1-git-send-email-royujjal@gmail.com> <1455173229-6383-3-git-send-email-royujjal@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 16 Feb 2016 10:46:36 +1100
+Message-ID: <CAGRGNgUZ_HrBv3XBsZAHS6AZb5bWp7Sjt-xmSdyJ4_MesH2w3g@mail.gmail.com> (sfid-20160216_004659_600836_E0ED658B)
+Subject: Re: [PATCH 3/3] mwifiex: Added missing spaces around brackets
+To: Ujjal Roy <royujjal@gmail.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	WiFi Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-02-23 14:05, Johannes Berg wrote:
->> Yes. If A-MSDU in A-MPDU is not supported, dealing with starting and
->> stopping of A-MPDU sessions leaves all kinds of nasty corner cases
->> (since the txq is not flushed between sessions). In that case it's
->> better to just leave it disabled from that point on.
-> 
-> Fair enough. You should be able to deal with it with the SSN, but that
-> might be difficult.
-> 
-> Actually, mac80211 on its own assigns the seqno so frames already on
-> the txq would not become part of the session, so we should be OK
-> without much effort?
-seqno is assigned on txq dequeue, not enqueue.
+Hi All,
 
-- Felix
+On Thu, Feb 11, 2016 at 5:47 PM, Ujjal Roy <royujjal@gmail.com> wrote:
+> This patch fixes the missing spaces issue in coding style.
+>
+> Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+
+Looks right to me.
+
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
+Thanks,
+
+> ---
+>  drivers/net/wireless/marvell/mwifiex/usb.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
+> index e43aff9..0510861 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/usb.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/usb.c
+> @@ -244,9 +244,9 @@ setup_for_next:
+>         if (card->rx_cmd_ep == context->ep) {
+>                 mwifiex_usb_submit_rx_urb(context, size);
+>         } else {
+> -               if (atomic_read(&adapter->rx_pending) <= HIGH_RX_PENDING){
+> +               if (atomic_read(&adapter->rx_pending) <= HIGH_RX_PENDING) {
+>                         mwifiex_usb_submit_rx_urb(context, size);
+> -               }else{
+> +               } else {
+>                         context->skb = NULL;
+>                 }
+>         }
+> --
+> 1.9.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
