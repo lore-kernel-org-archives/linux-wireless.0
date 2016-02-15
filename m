@@ -1,133 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:10067 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965859AbcBDJZp (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:32895 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752467AbcBOWMR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:25:45 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 26/70] staging: wilc1000: wilc_parse_network_info(): renames local inner variables
-Date: Thu, 4 Feb 2016 18:15:43 +0900
-Message-ID: <1454577387-509-27-git-send-email-glen.lee@atmel.com> (sfid-20160204_102949_411476_7B4820E5)
-In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 15 Feb 2016 17:12:17 -0500
+Received: by mail-ob0-f171.google.com with SMTP id jq7so46835281obb.0
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Feb 2016 14:12:17 -0800 (PST)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH] rtlwifi: Change long delays to sleeps
+Date: Mon, 15 Feb 2016 16:12:07 -0600
+Message-Id: <1455574327-2591-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160215_231221_861539_B4584DAA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+Routine rtl_addr_delay() uses delay statements in code that can
+sleep. To improve system responsiveness, the various delay statements
+are changed.
 
-This patch renames to avoid camelcase, changes follow are:
- - pu8TimElm to tim_elm
- - pu8IEs to ies
- - u16IEsLen to ies_len
- - u32Tsf_Lo to tsf_lo
- - u32Tsf_Hi to tsf_hi
+In addition, routines rtl_rfreg_delay() and rtl_bb_delay() are
+rewritten to use the code in rtl_addr_delay() for most of their
+input values.
 
-And, remove the prefix variable defined name, below are:
- - u8index to index
- - pu8msa to msa
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Suggested-by: Byeoungwook Kim <quddnr145@gmail.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/staging/wilc1000/coreconfigurator.c | 54 ++++++++++++++---------------
- 1 file changed, 27 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 24afeb8..2a4e324 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -295,14 +295,14 @@ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
- 	wid_val = &msg_buffer[8];
+Kalle,
+
+This patch will interfere with a set of 3 patches submitted by Byeoungwook Kim
+<quddnr145@gmail.com> on Feb. 3, 2016 that are currently in the deferred list
+at patchwork.
+
+Larry
+
+ drivers/net/wireless/realtek/rtlwifi/core.c | 44 ++++++++---------------------
+ 1 file changed, 12 insertions(+), 32 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+index 02eba0e..16ad0d6 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/core.c
++++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+@@ -54,59 +54,39 @@ EXPORT_SYMBOL(channel5g_80m);
+ void rtl_addr_delay(u32 addr)
+ {
+ 	if (addr == 0xfe)
+-		mdelay(50);
++		msleep(50);
+ 	else if (addr == 0xfd)
+-		mdelay(5);
++		msleep(5);
+ 	else if (addr == 0xfc)
+-		mdelay(1);
++		msleep(1);
+ 	else if (addr == 0xfb)
+-		udelay(50);
++		usleep_range(50, 100);
+ 	else if (addr == 0xfa)
+-		udelay(5);
++		usleep_range(5, 10);
+ 	else if (addr == 0xf9)
+-		udelay(1);
++		usleep_range(1, 2);
+ }
+ EXPORT_SYMBOL(rtl_addr_delay);
  
- 	{
--		u8  *pu8msa = NULL;
-+		u8 *msa = NULL;
- 		u16 rx_len = 0;
--		u8 *pu8TimElm = NULL;
--		u8 *pu8IEs = NULL;
--		u16 u16IEsLen = 0;
--		u8 u8index = 0;
--		u32 u32Tsf_Lo;
--		u32 u32Tsf_Hi;
-+		u8 *tim_elm = NULL;
-+		u8 *ies = NULL;
-+		u16 ies_len = 0;
-+		u8 index = 0;
-+		u32 tsf_lo;
-+		u32 tsf_hi;
- 
- 		network_info = kzalloc(sizeof(tstrNetworkInfo), GFP_KERNEL);
- 		if (!network_info)
-@@ -310,43 +310,43 @@ s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info)
- 
- 		network_info->s8rssi = wid_val[0];
- 
--		pu8msa = &wid_val[1];
-+		msa = &wid_val[1];
- 
- 		rx_len = wid_len - 1;
--		network_info->u16CapInfo = get_cap_info(pu8msa);
--		network_info->u32Tsf = get_beacon_timestamp_lo(pu8msa);
-+		network_info->u16CapInfo = get_cap_info(msa);
-+		network_info->u32Tsf = get_beacon_timestamp_lo(msa);
- 		PRINT_D(CORECONFIG_DBG, "TSF :%x\n", network_info->u32Tsf);
- 
--		u32Tsf_Lo = get_beacon_timestamp_lo(pu8msa);
--		u32Tsf_Hi = get_beacon_timestamp_hi(pu8msa);
-+		tsf_lo = get_beacon_timestamp_lo(msa);
-+		tsf_hi = get_beacon_timestamp_hi(msa);
- 
--		network_info->u64Tsf = u32Tsf_Lo | ((u64)u32Tsf_Hi << 32);
-+		network_info->u64Tsf = tsf_lo | ((u64)tsf_hi << 32);
- 
--		get_ssid(pu8msa, network_info->au8ssid, &network_info->u8SsidLen);
--		get_BSSID(pu8msa, network_info->au8bssid);
-+		get_ssid(msa, network_info->au8ssid, &network_info->u8SsidLen);
-+		get_BSSID(msa, network_info->au8bssid);
- 
--		network_info->u8channel = get_current_channel_802_11n(pu8msa,
-+		network_info->u8channel = get_current_channel_802_11n(msa,
- 							rx_len + FCS_LEN);
- 
--		u8index = MAC_HDR_LEN + TIME_STAMP_LEN;
-+		index = MAC_HDR_LEN + TIME_STAMP_LEN;
- 
--		network_info->u16BeaconPeriod = get_beacon_period(pu8msa + u8index);
-+		network_info->u16BeaconPeriod = get_beacon_period(msa + index);
- 
--		u8index += BEACON_INTERVAL_LEN + CAP_INFO_LEN;
-+		index += BEACON_INTERVAL_LEN + CAP_INFO_LEN;
- 
--		pu8TimElm = get_tim_elm(pu8msa, rx_len + FCS_LEN, u8index);
--		if (pu8TimElm)
--			network_info->u8DtimPeriod = pu8TimElm[3];
--		pu8IEs = &pu8msa[MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN];
--		u16IEsLen = rx_len - (MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN);
-+		tim_elm = get_tim_elm(msa, rx_len + FCS_LEN, index);
-+		if (tim_elm)
-+			network_info->u8DtimPeriod = tim_elm[3];
-+		ies = &msa[MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN];
-+		ies_len = rx_len - (MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN);
- 
--		if (u16IEsLen > 0) {
--			network_info->pu8IEs = kmemdup(pu8IEs, u16IEsLen,
-+		if (ies_len > 0) {
-+			network_info->pu8IEs = kmemdup(ies, ies_len,
- 						       GFP_KERNEL);
- 			if (!network_info->pu8IEs)
- 				return -ENOMEM;
- 		}
--		network_info->u16IEsLen = u16IEsLen;
-+		network_info->u16IEsLen = ies_len;
+ void rtl_rfreg_delay(struct ieee80211_hw *hw, enum radio_path rfpath, u32 addr,
+ 		     u32 mask, u32 data)
+ {
+-	if (addr == 0xfe) {
+-		mdelay(50);
+-	} else if (addr == 0xfd) {
+-		mdelay(5);
+-	} else if (addr == 0xfc) {
+-		mdelay(1);
+-	} else if (addr == 0xfb) {
+-		udelay(50);
+-	} else if (addr == 0xfa) {
+-		udelay(5);
+-	} else if (addr == 0xf9) {
+-		udelay(1);
++	if (addr >= 0xf9 && addr <= 0xfe) {
++		rtl_addr_delay(addr);
+ 	} else {
+ 		rtl_set_rfreg(hw, rfpath, addr, mask, data);
+-		udelay(1);
++		usleep_range(1, 2);
  	}
+ }
+ EXPORT_SYMBOL(rtl_rfreg_delay);
  
- 	*ret_network_info = network_info;
+ void rtl_bb_delay(struct ieee80211_hw *hw, u32 addr, u32 data)
+ {
+-	if (addr == 0xfe) {
+-		mdelay(50);
+-	} else if (addr == 0xfd) {
+-		mdelay(5);
+-	} else if (addr == 0xfc) {
+-		mdelay(1);
+-	} else if (addr == 0xfb) {
+-		udelay(50);
+-	} else if (addr == 0xfa) {
+-		udelay(5);
+-	} else if (addr == 0xf9) {
+-		udelay(1);
++	if (addr >= 0xf9 && addr <= 0xfe) {
++		rtl_addr_delay(addr);
+ 	} else {
+ 		rtl_set_bbreg(hw, addr, MASKDWORD, data);
+-		udelay(1);
++		usleep_range(1, 2);
+ 	}
+ }
+ EXPORT_SYMBOL(rtl_bb_delay);
 -- 
-1.9.1
+2.1.4
 
