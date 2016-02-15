@@ -1,52 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:42548 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751896AbcB2VdB (ORCPT
+Received: from mail-io0-f196.google.com ([209.85.223.196]:33848 "EHLO
+	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752361AbcBOXqf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 16:33:01 -0500
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH 03/15] wil6210: Set permanent MAC address to wiphy
-Date: Mon, 29 Feb 2016 23:32:38 +0200
-Message-Id: <1456781570-16552-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160229_223306_180073_BF46A72A)
-In-Reply-To: <1456781570-16552-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1456781570-16552-1-git-send-email-qca_merez@qca.qualcomm.com>
+	Mon, 15 Feb 2016 18:46:35 -0500
+Received: by mail-io0-f196.google.com with SMTP id l127so13685151iof.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Feb 2016 15:46:35 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1455173229-6383-2-git-send-email-royujjal@gmail.com>
+References: <1455173229-6383-1-git-send-email-royujjal@gmail.com> <1455173229-6383-2-git-send-email-royujjal@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 16 Feb 2016 10:46:15 +1100
+Message-ID: <CAGRGNgWTsvcQGxoY8iLs_CyEDNj7XTe8RhXgMWqAfZjjgx8soA@mail.gmail.com> (sfid-20160216_004639_014219_3E29928A)
+Subject: Re: [PATCH 2/3] mwifiex: Removed extra spaces before commas
+To: Ujjal Roy <royujjal@gmail.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	WiFi Mailing List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Hi All,
 
-MAC address of wil6210 was not set in wiphy
+On Thu, Feb 11, 2016 at 5:47 PM, Ujjal Roy <royujjal@gmail.com> wrote:
+> This patch fixes spaces before commas issue in coding style.
+>
+> Signed-off-by: Ujjal Roy <royujjal@gmail.com>
 
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/main.c | 2 ++
- 1 file changed, 2 insertions(+)
+Looks right to me.
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 35db994..997a740 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -627,6 +627,7 @@ void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r)
- static int wil_get_bl_info(struct wil6210_priv *wil)
- {
- 	struct net_device *ndev = wil_to_ndev(wil);
-+	struct wiphy *wiphy = wil_to_wiphy(wil);
- 	union {
- 		struct bl_dedicated_registers_v0 bl0;
- 		struct bl_dedicated_registers_v1 bl1;
-@@ -671,6 +672,7 @@ static int wil_get_bl_info(struct wil6210_priv *wil)
- 	}
- 
- 	ether_addr_copy(ndev->perm_addr, mac);
-+	ether_addr_copy(wiphy->perm_addr, mac);
- 	if (!is_valid_ether_addr(ndev->dev_addr))
- 		ether_addr_copy(ndev->dev_addr, mac);
- 
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
+Thanks,
+
+> ---
+>  drivers/net/wireless/marvell/mwifiex/pcie.c    | 2 +-
+>  drivers/net/wireless/marvell/mwifiex/uap_cmd.c | 2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> index 6d0dc40..4d29cce 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> @@ -1408,7 +1408,7 @@ mwifiex_pcie_send_boot_cmd(struct mwifiex_adapter *adapter, struct sk_buff *skb)
+>                 return -1;
+>         }
+>
+> -       if (mwifiex_map_pci_memory(adapter, skb, skb->len , PCI_DMA_TODEVICE))
+> +       if (mwifiex_map_pci_memory(adapter, skb, skb->len, PCI_DMA_TODEVICE))
+>                 return -1;
+>
+>         buf_pa = MWIFIEX_SKB_DMA_ADDR(skb);
+> diff --git a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
+> index e791166..16d95b2 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
+> @@ -192,7 +192,7 @@ mwifiex_set_ht_params(struct mwifiex_private *priv,
+>                 }
+>                 priv->ap_11n_enabled = 1;
+>         } else {
+> -               memset(&bss_cfg->ht_cap , 0, sizeof(struct ieee80211_ht_cap));
+> +               memset(&bss_cfg->ht_cap, 0, sizeof(struct ieee80211_ht_cap));
+>                 bss_cfg->ht_cap.cap_info = cpu_to_le16(MWIFIEX_DEF_HT_CAP);
+>                 bss_cfg->ht_cap.ampdu_params_info = MWIFIEX_DEF_AMPDU;
+>         }
+> --
+> 1.9.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-1.8.5.2
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
