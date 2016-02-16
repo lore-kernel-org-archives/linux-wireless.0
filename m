@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f181.google.com ([209.85.161.181]:33611 "EHLO
-	mail-yw0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752022AbcBVTgi convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:35897 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754412AbcBPIkK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 14:36:38 -0500
-MIME-Version: 1.0
-In-Reply-To: <1456160420.16083.3.camel@redhat.com>
-References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com> <1456160420.16083.3.camel@redhat.com>
-From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Date: Mon, 22 Feb 2016 14:35:57 -0500
-Message-ID: <CA+A7VXU_8e9wVqr7AXu_2z9+68BTb-4jBBJBCgdgwiXRcYWkog@mail.gmail.com> (sfid-20160222_203700_101847_90BFD339)
-Subject: Re: [PATCHv2 00/10] RFKill airplane-mode indicator
-To: Dan Williams <dcbw@redhat.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux@endlessm.com,
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 16 Feb 2016 03:40:10 -0500
+Received: by mail-pa0-f54.google.com with SMTP id yy13so99577415pab.3
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2016 00:40:10 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 3/7] staging: wilc1000: handle_set_mac_address: use kmemdup
+Date: Tue, 16 Feb 2016 17:39:51 +0900
+Message-Id: <1455611995-28773-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20160216_094016_960369_9F87099C)
+In-Reply-To: <1455611995-28773-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1455611995-28773-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 22 February 2016 at 12:00, Dan Williams <dcbw@redhat.com> wrote:
-> On Mon, 2016-02-22 at 11:36 -0500, João Paulo Rechi Vita wrote:
->> This series implements an airplane-mode indicator LED trigger, which
->> can be
->> used by platform drivers. The default policy have have airplane-mode
->> set when
->> all the radios known by RFKill are OFF, and unset otherwise. This
->> policy can be
->> overwritten by one single userspace application at a time using the
->> operations
->> _AIRPLANE_MODE_INDICATOR_ACQUIRE and _AIRPLANE_MODE_INDICATOR_CHANGE.
->>
-> Double-check your commit messages on some of these patches; they didn't
-> get updated to add INDICATOR.
->
+This patch replaces kmalloc followed by memcpy with kmemdup.
 
-Thanks for catching this, Dan. I've sent an updated version fixing
-this problem in reply to the patch where this slept through (9/10).
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
---
-João Paulo Rechi Vita
-http://about.me/jprvita
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 4d50b38..65d2393 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -429,13 +429,11 @@ static s32 handle_set_mac_address(struct wilc_vif *vif,
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+-	u8 *mac_buf = kmalloc(ETH_ALEN, GFP_KERNEL);
+ 
++	u8 *mac_buf = kmemdup(set_mac_addr->mac_addr, ETH_ALEN, GFP_KERNEL);
+ 	if (!mac_buf)
+ 		return -ENOMEM;
+ 
+-	memcpy(mac_buf, set_mac_addr->mac_addr, ETH_ALEN);
+-
+ 	wid.id = (u16)WID_MAC_ADDR;
+ 	wid.type = WID_STR;
+ 	wid.val = mac_buf;
+-- 
+2.7.1
+
