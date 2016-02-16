@@ -1,80 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:49461 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932543AbcBWH26 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 02:28:58 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Fix sanity check on enabling btcoex via debugfs
-Date: Tue, 23 Feb 2016 12:58:36 +0530
-Message-ID: <1456212516-3989-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160223_082903_426046_61A0B4A0)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga14.intel.com ([192.55.52.115]:49613 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754272AbcBPJSx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Feb 2016 04:18:53 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] mac80211: allow not sending MIC up from driver for HW crypto
+Date: Tue, 16 Feb 2016 11:18:48 +0200
+Message-Id: <1455614328-12528-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160216_102139_986837_F61584BD)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-First check for the device state before enabling / disabling
-btcoex, also return a proper error value. Enabling / disabling
-btcoex ideally does a f/w + ath10k_core_restart so the checks
-that are applicable for 'simulate_fw_crash' shall be applicable
-for this as well
+When HW crypto is used, there's no need for the CCMP/GCMP MIC to
+be available to mac80211, and the hardware might have removed it
+already after checking. The MIC is also useless to have when the
+frame is already decrypted, so allow indicating that it's not
+present.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Since we are running out of bits in mac80211_rx_flags, make
+the flags field a u64.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/debug.c |   13 +++++++++----
- 1 file changed, 9 insertions(+), 4 deletions(-)
+ include/net/mac80211.h |  7 ++++---
+ net/mac80211/util.c    |  5 +++--
+ net/mac80211/wpa.c     | 26 ++++++++++++++------------
+ 3 files changed, 21 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 628b031..e3e29fb 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -2116,6 +2116,7 @@ static ssize_t ath10k_write_btcoex(struct file *file,
- 	struct ath10k *ar = file->private_data;
- 	char buf[32];
- 	size_t buf_size;
-+	int ret = 0;
- 	bool val;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 66155d3..e765171 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1034,6 +1034,8 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  *	on this subframe
+  * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
+  *	is stored in the @ampdu_delimiter_crc field)
++ * @RX_FLAG_MIC_STRIPPED: The mic was stripped of this packet. Decryption was
++ *	done by the hardware
+  * @RX_FLAG_LDPC: LDPC was used
+  * @RX_FLAG_ONLY_MONITOR: Report frame only to monitor interfaces without
+  *	processing it in any regular way.
+@@ -1084,13 +1086,12 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_MACTIME_END		= BIT(21),
+ 	RX_FLAG_VHT			= BIT(22),
+ 	RX_FLAG_LDPC			= BIT(23),
+-	RX_FLAG_ONLY_MONITOR		= BIT(24),
+-	RX_FLAG_SKIP_MONITOR		= BIT(25),
+ 	RX_FLAG_STBC_MASK		= BIT(26) | BIT(27),
+ 	RX_FLAG_10MHZ			= BIT(28),
+ 	RX_FLAG_5MHZ			= BIT(29),
+ 	RX_FLAG_AMSDU_MORE		= BIT(30),
+ 	RX_FLAG_RADIOTAP_VENDOR_DATA	= BIT(31),
++	RX_FLAG_MIC_STRIPPED            = BIT_ULL(32),
+ };
  
- 	buf_size = min(count, (sizeof(buf) - 1));
-@@ -2129,6 +2130,12 @@ static ssize_t ath10k_write_btcoex(struct file *file,
+ #define RX_FLAG_STBC_SHIFT		26
+@@ -1148,7 +1149,7 @@ struct ieee80211_rx_status {
+ 	u64 mactime;
+ 	u32 device_timestamp;
+ 	u32 ampdu_reference;
+-	u32 flag;
++	u64 flag;
+ 	u16 freq;
+ 	u8 vht_flag;
+ 	u8 rate_idx;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index f1e5b76..52766f7 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2714,8 +2714,9 @@ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
  
- 	mutex_lock(&ar->conf_mutex);
+ 	rate = cfg80211_calculate_bitrate(&ri);
+ 	if (WARN_ONCE(!rate,
+-		      "Invalid bitrate: flags=0x%x, idx=%d, vht_nss=%d\n",
+-		      status->flag, status->rate_idx, status->vht_nss))
++		      "Invalid bitrate: flags=0x%llx, idx=%d, vht_nss=%d\n",
++		      (unsigned long long)status->flag, status->rate_idx,
++		      status->vht_nss))
+ 		return 0;
  
-+	if (ar->state != ATH10K_STATE_ON &&
-+	    ar->state != ATH10K_STATE_RESTARTED) {
-+		ret = -ENETDOWN;
-+		goto exit;
-+	}
-+
- 	if (!(test_bit(ATH10K_FLAG_BTCOEX, &ar->dev_flags) ^ val))
- 		goto exit;
+ 	/* rewind from end of MPDU */
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 1884825..7e4f265 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -504,18 +504,20 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx,
+ 	    !ieee80211_is_robust_mgmt_frame(skb))
+ 		return RX_CONTINUE;
  
-@@ -2137,17 +2144,15 @@ static ssize_t ath10k_write_btcoex(struct file *file,
- 	else
- 		clear_bit(ATH10K_FLAG_BTCOEX, &ar->dev_flags);
- 
--	if (ar->state != ATH10K_STATE_ON)
--		goto exit;
+-	data_len = skb->len - hdrlen - IEEE80211_CCMP_HDR_LEN - mic_len;
+-	if (!rx->sta || data_len < 0)
+-		return RX_DROP_UNUSABLE;
 -
- 	ath10k_info(ar, "restarting firmware due to btcoex change");
+ 	if (status->flag & RX_FLAG_DECRYPTED) {
+ 		if (!pskb_may_pull(rx->skb, hdrlen + IEEE80211_CCMP_HDR_LEN))
+ 			return RX_DROP_UNUSABLE;
++		if (status->flag & RX_FLAG_MIC_STRIPPED)
++			mic_len = 0;
+ 	} else {
+ 		if (skb_linearize(rx->skb))
+ 			return RX_DROP_UNUSABLE;
+ 	}
  
- 	queue_work(ar->workqueue, &ar->restart_work);
-+	ret = count;
++	data_len = skb->len - hdrlen - IEEE80211_CCMP_HDR_LEN - mic_len;
++	if (!rx->sta || data_len < 0)
++		return RX_DROP_UNUSABLE;
++
+ 	if (!(status->flag & RX_FLAG_PN_VALIDATED)) {
+ 		ccmp_hdr2pn(pn, skb->data + hdrlen);
  
- exit:
- 	mutex_unlock(&ar->conf_mutex);
+@@ -720,8 +722,7 @@ ieee80211_crypto_gcmp_decrypt(struct ieee80211_rx_data *rx)
+ 	struct sk_buff *skb = rx->skb;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	u8 pn[IEEE80211_GCMP_PN_LEN];
+-	int data_len;
+-	int queue;
++	int data_len, queue, mic_len = IEEE80211_GCMP_MIC_LEN;
  
--	return count;
-+	return ret;
- }
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
  
- static ssize_t ath10k_read_btcoex(struct file *file, char __user *ubuf,
+@@ -729,19 +730,20 @@ ieee80211_crypto_gcmp_decrypt(struct ieee80211_rx_data *rx)
+ 	    !ieee80211_is_robust_mgmt_frame(skb))
+ 		return RX_CONTINUE;
+ 
+-	data_len = skb->len - hdrlen - IEEE80211_GCMP_HDR_LEN -
+-		   IEEE80211_GCMP_MIC_LEN;
+-	if (!rx->sta || data_len < 0)
+-		return RX_DROP_UNUSABLE;
+-
+ 	if (status->flag & RX_FLAG_DECRYPTED) {
+ 		if (!pskb_may_pull(rx->skb, hdrlen + IEEE80211_GCMP_HDR_LEN))
+ 			return RX_DROP_UNUSABLE;
++		if (status->flag & RX_FLAG_MIC_STRIPPED)
++			mic_len = 0;
+ 	} else {
+ 		if (skb_linearize(rx->skb))
+ 			return RX_DROP_UNUSABLE;
+ 	}
+ 
++	data_len = skb->len - hdrlen - IEEE80211_GCMP_HDR_LEN - mic_len;
++	if (!rx->sta || data_len < 0)
++		return RX_DROP_UNUSABLE;
++
+ 	if (!(status->flag & RX_FLAG_PN_VALIDATED)) {
+ 		gcmp_hdr2pn(pn, skb->data + hdrlen);
+ 
+@@ -772,7 +774,7 @@ ieee80211_crypto_gcmp_decrypt(struct ieee80211_rx_data *rx)
+ 	}
+ 
+ 	/* Remove GCMP header and MIC */
+-	if (pskb_trim(skb, skb->len - IEEE80211_GCMP_MIC_LEN))
++	if (pskb_trim(skb, skb->len - mic_len))
+ 		return RX_DROP_UNUSABLE;
+ 	memmove(skb->data + IEEE80211_GCMP_HDR_LEN, skb->data, hdrlen);
+ 	skb_pull(skb, IEEE80211_GCMP_HDR_LEN);
 -- 
-1.7.9.5
+2.5.0
 
