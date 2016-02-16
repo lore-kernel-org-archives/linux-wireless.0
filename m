@@ -1,77 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60674 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753554AbcBZIKg (ORCPT
+Received: from mail-io0-f180.google.com ([209.85.223.180]:34865 "EHLO
+	mail-io0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753356AbcBPGRk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 03:10:36 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH 05/13] ath9k: Update AR9462 initvals
-Date: Fri, 26 Feb 2016 16:08:35 +0800
-Message-Id: <1456474123-10520-6-git-send-email-miaoqing@codeaurora.org> (sfid-20160226_091038_547621_DFCE4DFB)
-In-Reply-To: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
-References: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
+	Tue, 16 Feb 2016 01:17:40 -0500
+Received: by mail-io0-f180.google.com with SMTP id g203so155253654iof.2
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Feb 2016 22:17:40 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1455574327-2591-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1455574327-2591-1-git-send-email-Larry.Finger@lwfinger.net>
+Date: Tue, 16 Feb 2016 11:47:40 +0530
+Message-ID: <CAFqt6zbRK610rbWEUvsw=Ci5hXVJ6YQL3io_Rh5hF38maRWdvQ@mail.gmail.com> (sfid-20160216_071744_698331_E9A216C1)
+Subject: Re: [PATCH] rtlwifi: Change long delays to sleeps
+From: Souptick Joarder <jrdr.linux@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>, devel@driverdev.osuosl.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+On Tue, Feb 16, 2016 at 3:42 AM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> Routine rtl_addr_delay() uses delay statements in code that can
+> sleep. To improve system responsiveness, the various delay statements
+> are changed.
+>
+> In addition, routines rtl_rfreg_delay() and rtl_bb_delay() are
+> rewritten to use the code in rtl_addr_delay() for most of their
+> input values.
+>
+> Suggested-by: Byeoungwook Kim <quddnr145@gmail.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>
+> Kalle,
+>
+> This patch will interfere with a set of 3 patches submitted by Byeoungwook Kim
+> <quddnr145@gmail.com> on Feb. 3, 2016 that are currently in the deferred list
+> at patchwork.
+>
+> Larry
+>
+>  drivers/net/wireless/realtek/rtlwifi/core.c | 44 ++++++++---------------------
+>  1 file changed, 12 insertions(+), 32 deletions(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+> index 02eba0e..16ad0d6 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/core.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+> @@ -54,59 +54,39 @@ EXPORT_SYMBOL(channel5g_80m);
+>  void rtl_addr_delay(u32 addr)
+>  {
+>         if (addr == 0xfe)
+> -               mdelay(50);
+> +               msleep(50);
+>         else if (addr == 0xfd)
+> -               mdelay(5);
+> +               msleep(5);
+>         else if (addr == 0xfc)
+> -               mdelay(1);
+> +               msleep(1);
+>         else if (addr == 0xfb)
+> -               udelay(50);
+> +               usleep_range(50, 100);
+>         else if (addr == 0xfa)
+> -               udelay(5);
+> +               usleep_range(5, 10);
+>         else if (addr == 0xf9)
+> -               udelay(1);
+> +               usleep_range(1, 2);
 
-HW peak detect calibration would fail for AR9300 chips and
-we went for implementing the SW way of doing it instead of
-HW doing the peak detect calibration.
+         why udelay is replaced by usleep_range?
+>  }
+>  EXPORT_SYMBOL(rtl_addr_delay);
+>
+>  void rtl_rfreg_delay(struct ieee80211_hw *hw, enum radio_path rfpath, u32 addr,
+>                      u32 mask, u32 data)
+>  {
+> -       if (addr == 0xfe) {
+> -               mdelay(50);
+> -       } else if (addr == 0xfd) {
+> -               mdelay(5);
+> -       } else if (addr == 0xfc) {
+> -               mdelay(1);
+> -       } else if (addr == 0xfb) {
+> -               udelay(50);
+> -       } else if (addr == 0xfa) {
+> -               udelay(5);
+> -       } else if (addr == 0xf9) {
+> -               udelay(1);
+> +       if (addr >= 0xf9 && addr <= 0xfe) {
+> +               rtl_addr_delay(addr);
+>         } else {
+>                 rtl_set_rfreg(hw, rfpath, addr, mask, data);
+> -               udelay(1);
+> +               usleep_range(1, 2);
+>         }
+>  }
+>  EXPORT_SYMBOL(rtl_rfreg_delay);
+>
+>  void rtl_bb_delay(struct ieee80211_hw *hw, u32 addr, u32 data)
+>  {
+> -       if (addr == 0xfe) {
+> -               mdelay(50);
+> -       } else if (addr == 0xfd) {
+> -               mdelay(5);
+> -       } else if (addr == 0xfc) {
+> -               mdelay(1);
+> -       } else if (addr == 0xfb) {
+> -               udelay(50);
+> -       } else if (addr == 0xfa) {
+> -               udelay(5);
+> -       } else if (addr == 0xf9) {
+> -               udelay(1);
+> +       if (addr >= 0xf9 && addr <= 0xfe) {
+> +               rtl_addr_delay(addr);
+>         } else {
+>                 rtl_set_bbreg(hw, addr, MASKDWORD, data);
+> -               udelay(1);
+> +               usleep_range(1, 2);
+>         }
+>  }
+>  EXPORT_SYMBOL(rtl_bb_delay);
+> --
+> 2.1.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h | 4 ++--
- drivers/net/wireless/ath/ath9k/ar9462_2p1_initvals.h | 4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-index 1b6b4d0..b00dd64 100644
---- a/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9462_2p0_initvals.h
-@@ -59,7 +59,7 @@ static const u32 ar9462_2p0_baseband_postamble[][5] = {
- 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
- 	{0x00009e20, 0x000003a5, 0x000003a5, 0x000003a5, 0x000003a5},
- 	{0x00009e2c, 0x0000001c, 0x0000001c, 0x00000021, 0x00000021},
--	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcfd5c782, 0xcfd5c282},
-+	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcfd5c780, 0xcfd5c280},
- 	{0x00009e44, 0x62321e27, 0x62321e27, 0xfe291e27, 0xfe291e27},
- 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
- 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
-@@ -79,7 +79,7 @@ static const u32 ar9462_2p0_baseband_postamble[][5] = {
- 	{0x0000a284, 0x00000000, 0x00000000, 0x00000150, 0x00000150},
- 	{0x0000a288, 0x00000110, 0x00000110, 0x00000110, 0x00000110},
- 	{0x0000a28c, 0x00022222, 0x00022222, 0x00022222, 0x00022222},
--	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
-+	{0x0000a2c4, 0x00058d18, 0x00058d18, 0x00058d18, 0x00058d18},
- 	{0x0000a2d0, 0x00041981, 0x00041981, 0x00041981, 0x00041982},
- 	{0x0000a2d8, 0x7999a83b, 0x7999a83b, 0x7999a83b, 0x7999a83b},
- 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
-diff --git a/drivers/net/wireless/ath/ath9k/ar9462_2p1_initvals.h b/drivers/net/wireless/ath/ath9k/ar9462_2p1_initvals.h
-index dc3adda..0f8745e 100644
---- a/drivers/net/wireless/ath/ath9k/ar9462_2p1_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9462_2p1_initvals.h
-@@ -239,7 +239,7 @@ static const u32 ar9462_2p1_baseband_postamble[][5] = {
- 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
- 	{0x00009e20, 0x000003a5, 0x000003a5, 0x000003a5, 0x000003a5},
- 	{0x00009e2c, 0x0000001c, 0x0000001c, 0x00000021, 0x00000021},
--	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcfd5c782, 0xcfd5c282},
-+	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcfd5c780, 0xcfd5c280},
- 	{0x00009e44, 0x62321e27, 0x62321e27, 0xfe291e27, 0xfe291e27},
- 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
- 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
-@@ -259,7 +259,7 @@ static const u32 ar9462_2p1_baseband_postamble[][5] = {
- 	{0x0000a284, 0x00000000, 0x00000000, 0x00000150, 0x00000150},
- 	{0x0000a288, 0x00000110, 0x00000110, 0x00000110, 0x00000110},
- 	{0x0000a28c, 0x00022222, 0x00022222, 0x00022222, 0x00022222},
--	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
-+	{0x0000a2c4, 0x00058d18, 0x00058d18, 0x00058d18, 0x00058d18},
- 	{0x0000a2d0, 0x00041981, 0x00041981, 0x00041981, 0x00041982},
- 	{0x0000a2d8, 0x7999a83b, 0x7999a83b, 0x7999a83b, 0x7999a83b},
- 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
--- 
-1.9.1
-
+-Souptick
