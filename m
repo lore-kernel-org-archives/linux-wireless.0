@@ -1,66 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:35341 "EHLO
-	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933355AbcBQMdp (ORCPT
+Received: from mail-yw0-f169.google.com ([209.85.161.169]:34234 "EHLO
+	mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752572AbcBPDEX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2016 07:33:45 -0500
-Date: Wed, 17 Feb 2016 18:03:37 +0530
-From: Amitoj Kaur Chawla <amitoj1606@gmail.com>
-To: akarwar@marvell.com, nishants@marvell.com, kvalo@codeaurora.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: julia.lawall@lip6.fr
-Subject: [PATCH] mwifiex: Use to_delayed_work()
-Message-ID: <20160217123336.GA30230@amitoj-Inspiron-3542> (sfid-20160217_133407_757167_A4D5BA83)
+	Mon, 15 Feb 2016 22:04:23 -0500
+Received: by mail-yw0-f169.google.com with SMTP id h129so129610212ywb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Feb 2016 19:04:23 -0800 (PST)
+From: Till Kamppeter <till.kamppeter@gmail.com>
+Subject: Google Summer of Code 2016 - Backup organization administrator needed
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>,
+	dl9pf@gmx.de
+Message-ID: <56C291B3.6050409@gmail.com> (sfid-20160216_040432_097295_75984BFD)
+Date: Tue, 16 Feb 2016 01:04:19 -0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Introduce the use of to_delayed_work() helper function instead of open
-coding it with container_of()
+Hi,
 
-A simplified version of the Coccinelle semantic patch used to make
-this change is:
+I am applying for the Linux Foundation as mentoring organization for the 
+Google Summer of Code 2016.
 
-//<smpl>
-@@
-expression a;
-symbol work;
-@@
-- container_of(a, struct delayed_work, work)
-+ to_delayed_work(a)
-//</smpl>
+I need a backup administrator (a second org admin) to complete the 
+application and he needs to confirm before the deadline on Friday.
 
-Signed-off-by: Amitoj Kaur Chawla <amitoj1606@gmail.com>
----
- drivers/net/wireless/marvell/mwifiex/11h.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Note that usually the role as backup admin will not cause any work for 
+you, especially as I could find another backup admin after the deadline, 
+but it would be great if you can jump in on my behalf here and there 
+when I am not available for some reason.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/11h.c b/drivers/net/wireless/marvell/mwifiex/11h.c
-index 71a1b58..81c60d0 100644
---- a/drivers/net/wireless/marvell/mwifiex/11h.c
-+++ b/drivers/net/wireless/marvell/mwifiex/11h.c
-@@ -123,8 +123,7 @@ void mwifiex_11h_process_join(struct mwifiex_private *priv, u8 **buffer,
- void mwifiex_dfs_cac_work_queue(struct work_struct *work)
- {
- 	struct cfg80211_chan_def chandef;
--	struct delayed_work *delayed_work =
--			container_of(work, struct delayed_work, work);
-+	struct delayed_work *delayed_work = to_delayed_work(work);
- 	struct mwifiex_private *priv =
- 			container_of(delayed_work, struct mwifiex_private,
- 				     dfs_cac_work);
-@@ -289,8 +288,7 @@ int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
- void mwifiex_dfs_chan_sw_work_queue(struct work_struct *work)
- {
- 	struct mwifiex_uap_bss_param *bss_cfg;
--	struct delayed_work *delayed_work =
--			container_of(work, struct delayed_work, work);
-+	struct delayed_work *delayed_work = to_delayed_work(work);
- 	struct mwifiex_private *priv =
- 			container_of(delayed_work, struct mwifiex_private,
- 				     dfs_chan_sw_work);
--- 
-1.9.1
+So if you are willing to take this role, please tell me. I will then 
+invite you through Google's application form and you will get an e-mail 
+from Google with instructions how to accept the invitation. Please be 
+ready to receive that mail then and to follow the instructions.
+
+    Till
 
