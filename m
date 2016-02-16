@@ -1,47 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f170.google.com ([209.85.192.170]:33009 "EHLO
-	mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757093AbcBWGiS (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34864 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751913AbcBPPYX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 01:38:18 -0500
-Received: by mail-pf0-f170.google.com with SMTP id q63so106715553pfb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2016 22:38:18 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 3/7] staging: wilc1000: handle_cfg_param: change data type of wid_cnt
-Date: Tue, 23 Feb 2016 15:37:59 +0900
-Message-Id: <1456209483-20345-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20160223_073822_075064_8FC12881)
-In-Reply-To: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 16 Feb 2016 10:24:23 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Ross Green <rgkernel@gmail.com>
+Cc: Emil Goode <emil.fsw@goode.io>, Shahar Patury <shaharp@ti.com>,
+	Guy Mishol <guym@ti.com>,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Uri Mashiach <uri.mashiach@compulab.co.il>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: wlcore: Fix regression in wlcore_set_partition()
+References: <20160210012216.GA18819@lianli>
+	<20160212094526.EC572611CE@smtp.codeaurora.org>
+	<CANfgCY02_AkRi2EMNZsneK8UdwLvAWxF_X0ts6WZbaM0=5c63A@mail.gmail.com>
+Date: Tue, 16 Feb 2016 17:24:15 +0200
+In-Reply-To: <CANfgCY02_AkRi2EMNZsneK8UdwLvAWxF_X0ts6WZbaM0=5c63A@mail.gmail.com>
+	(Ross Green's message of "Mon, 15 Feb 2016 15:01:49 +1100")
+Message-ID: <87bn7gu19c.fsf@kamboji.qca.qualcomm.com> (sfid-20160216_162444_335335_89FCB557)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes data type of wid_cnt from u8 to int.
-This variable uses array index of struct wid_list so that it is better
-to use int type.
+Ross Green <rgkernel@gmail.com> writes:
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> On Fri, Feb 12, 2016 at 8:45 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>
+>>> The commit 3719c17e1816 ("wlcore/wl18xx: fw logger over sdio") introduced a
+>>> regression causing the wlcore to time out and go into recovery. Reverting the
+>>> changes regarding write of the last partition size brings the module back to
+>>> it's functional state.
+>>>
+>>> Fixes: 3719c17e1816 ("wlcore/wl18xx: fw logger over sdio")
+>>> Reported-by: Ross Green <rgkernel@gmail.com>
+>>> Signed-off-by: Emil Goode <emil.fsw@goode.io>
+>>> [kvalo@codeaurora.org: improved commit log]
+>>
+>> Thanks, applied to wireless-drivers.git.
+>>
+>> Kalle Valo
+>
+> I just tested linux-4.5-rc4 it appears the above fix missed the release for rc4!
+> So the behaviour of firmware reset being called after the access of
+> the last partition timesout.
+>
+> Again tested patch with the new release - 4.5-rc4 and found everything
+> to work as expected again.
+>
+> So Hopefully for rc5 - Please!
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index c97df27..382f946 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -473,7 +473,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
- 	s32 result = 0;
- 	struct wid wid_list[32];
- 	struct host_if_drv *hif_drv = vif->hif_drv;
--	u8 wid_cnt = 0;
-+	int wid_cnt = 0;
- 
- 	down(&hif_drv->sem_cfg_values);
- 
+It takes some time to get patches into Linus' tree. And being in a
+conference and then getting sick is not really helping. I'm not sure if
+this patch makes to rc5 on time, but I'll try.
+
 -- 
-2.7.1
-
+Kalle Valo
