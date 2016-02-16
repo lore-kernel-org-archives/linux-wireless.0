@@ -1,40 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53405 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753709AbcBAL0T (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2016 06:26:19 -0500
-Message-ID: <1454325966.3211.1.camel@sipsolutions.net> (sfid-20160201_122635_680264_51B0873A)
-Subject: Re: sched/core: WARNING in __might_sleep
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Peter Zijlstra <peterz@infradead.org>,
-	Baozeng <sploving1@gmail.com>
-Cc: mingo@redhat.com, linux-kernel@vger.kernel.org,
-	syzkaller@googlegroups.com, linux-wireless@vger.kernel.org
-Date: Mon, 01 Feb 2016 12:26:06 +0100
-In-Reply-To: <20160201111313.GQ6357@twins.programming.kicks-ass.net>
-References: <CAP=GMUGr=qHO4uh9v=ZmEhGu1GTBGzmuZNQ+_Ds38yRXq1ZXPA@mail.gmail.com>
-	 <20160201111313.GQ6357@twins.programming.kicks-ass.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f46.google.com ([209.85.220.46]:32786 "EHLO
+	mail-pa0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754470AbcBPIkN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Feb 2016 03:40:13 -0500
+Received: by mail-pa0-f46.google.com with SMTP id fl4so87812522pad.0
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2016 00:40:13 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 4/7] staging: wilc1000: handle_set_mac_address: change return type to void
+Date: Tue, 16 Feb 2016 17:39:52 +0900
+Message-Id: <1455611995-28773-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20160216_094020_791165_29B012DE)
+In-Reply-To: <1455611995-28773-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1455611995-28773-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-02-01 at 12:13 +0100, Peter Zijlstra wrote:
-> 
-> Yeah, from the rfkill code, which you failed to CC.
+When handle_set_mac_address is called in hostIFthread that is a kernel
+thread, it is not checked return type of this function. This patch
+changes return type to void and removes a brace of if statement due to
+have a single statement.
 
-Thanks Peter :)
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
 
-> In any case, this is a fail in the rfkill code, which should be
-> sorted
-> with the below patch (but the rfkill people should double check), and
-> ideally they'd use list_empty_careful() instead of the mutex, but I
-> don't know their code well enough to say if that's safe or not.
-
-Even list_empty() is fine in this case since we go and recheck it
-anyway in the calling loop, while the mutex is held.
-
-I have commit 6736fde9672f on its way to mainline.
-
-johannes
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 65d2393..c671f05 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -424,15 +424,15 @@ static s32 handle_get_ip_address(struct wilc_vif *vif, u8 idx)
+ 	return result;
+ }
+ 
+-static s32 handle_set_mac_address(struct wilc_vif *vif,
+-				  struct set_mac_addr *set_mac_addr)
++static void handle_set_mac_address(struct wilc_vif *vif,
++				   struct set_mac_addr *set_mac_addr)
+ {
+ 	s32 result = 0;
+ 	struct wid wid;
+ 
+ 	u8 *mac_buf = kmemdup(set_mac_addr->mac_addr, ETH_ALEN, GFP_KERNEL);
+ 	if (!mac_buf)
+-		return -ENOMEM;
++		return;
+ 
+ 	wid.id = (u16)WID_MAC_ADDR;
+ 	wid.type = WID_STR;
+@@ -441,13 +441,10 @@ static s32 handle_set_mac_address(struct wilc_vif *vif,
+ 
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+-	if (result) {
++	if (result)
+ 		PRINT_ER("Failed to set mac address\n");
+-		result = -EFAULT;
+-	}
+ 
+ 	kfree(mac_buf);
+-	return result;
+ }
+ 
+ static s32 handle_get_mac_address(struct wilc_vif *vif,
+-- 
+2.7.1
 
