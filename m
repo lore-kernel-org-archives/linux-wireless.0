@@ -1,159 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f169.google.com ([209.85.192.169]:36409 "EHLO
-	mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755380AbcBWUqK (ORCPT
+Received: from mail-qk0-f182.google.com ([209.85.220.182]:34139 "EHLO
+	mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750953AbcBPLhg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 15:46:10 -0500
-Received: by mail-pf0-f169.google.com with SMTP id e127so118435725pfe.3
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2016 12:46:10 -0800 (PST)
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Reply-To: arend@broadcom.com
-Subject: Re: [PATCH V7 1/2] nl80211: add feature for BSS selection support
-References: <1455706070-11915-1-git-send-email-arend@broadcom.com>
- <1456237245.9910.16.camel@sipsolutions.net>
-To: Johannes Berg <johannes@sipsolutions.net>,
-	Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Message-ID: <56CCC50E.4040300@broadcom.com> (sfid-20160223_214618_899529_73414769)
-Date: Tue, 23 Feb 2016 21:46:06 +0100
+	Tue, 16 Feb 2016 06:37:36 -0500
+Received: by mail-qk0-f182.google.com with SMTP id x1so65029627qkc.1
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2016 03:37:36 -0800 (PST)
+Date: Tue, 16 Feb 2016 11:36:52 -0500
+From: Janani Ravichandran <janani.rvchndrn@gmail.com>
+To: outreachy-kernel@googlegroups.com
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org
+Subject: [PATCH] staging: wilc1000: Remove trailing whitespace errors
+Message-ID: <20160216163652.GA10221@janani-Inspiron-3521> (sfid-20160216_123740_065140_AAF395C1)
 MIME-Version: 1.0
-In-Reply-To: <1456237245.9910.16.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Remove trailing whitespace checkpatch errors.
 
+Signed-off-by: Janani Ravichandran <janani.rvchndrn@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ drivers/staging/wilc1000/linux_mon.c      | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-On 23-2-2016 15:20, Johannes Berg wrote:
-> On Wed, 2016-02-17 at 11:47 +0100, Arend van Spriel wrote:
->>  
->> + * @NL80211_ATTR_BSS_SELECT: nested attribute for driver supporting the
->> + *	BSS selection feature. When used with %NL80211_CMD_GET_WIPHY it contains
->> + *	NLA_FLAG type according &enum nl80211_bss_select_attr to indicate what
->> + *	BSS selection behaviours are supported. When used with %NL80211_CMD_CONNECT
->> + *	it contains the behaviour and parameters for BSS selection to be done by
->> + *	driver and/or firmware.
-> 
-> Maybe we should be less specific here regarding the NLA_FLAG and say
-> that it will contain attributes for each, indicating which behaviours
-> are supported, and say there's behaviour-dependent data inside each of
-> those attributes?
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d1eedfb..04337c7 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3352,7 +3352,7 @@ static s32 host_int_get_assoc_res_info(struct wilc_vif *vif,
+ 		PRINT_ER("Failed to send association response config packet\n");
+ 		return -EINVAL;
+ 	}
+-	
++
+ 	*pu32RcvdAssocRespInfoLen = wid.size;
+ 	return result;
+ }
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 21f35d7..9fcb497 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -302,7 +302,7 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
+ 	struct WILC_WFI_mon_priv *priv;
+ 
+ 	/*If monitor interface is already initialized, return it*/
+-	if (wilc_wfi_mon) 
++	if (wilc_wfi_mon)
+ 		return wilc_wfi_mon;
+ 
+ 	wilc_wfi_mon = alloc_etherdev(sizeof(struct WILC_WFI_mon_priv));
+-- 
+2.5.0
 
-For the GET_WIPHY case there will be not behaviour dependent data.
-
-> It seems entirely plausible that future behaviours would require their
-> own sub-capabilities; perhaps that's even the case today for having an
-> adjustment range for example, not that I think it's really necessary
-> now.
-
-At least it does not harm to take that into account.
-
->> @@ -3617,6 +3624,7 @@ enum nl80211_band {
->>  	NL80211_BAND_2GHZ,
->>  	NL80211_BAND_5GHZ,
->>  	NL80211_BAND_60GHZ,
->> +	NUM_NL80211_BAND,
-> 
-> You should use IEEE80211_NUM_BANDS and remove this.
-
-Ok. missed that one.
-
->> +static bool is_band_valid(struct wiphy *wiphy, enum nl80211_band b)
->> +{
->> +	return b < NUM_NL80211_BAND && wiphy->bands[b];
->> +}
-> 
-> Here.
-
-will change it.
-
->> +static int parse_bss_select(struct nlattr *nla, struct wiphy *wiphy,
->> +			    struct cfg80211_bss_selection
->> *bss_select)
->> +{
->> +	struct nlattr *attr[NL80211_BSS_SELECT_ATTR_MAX + 1];
->> +	struct nlattr *nest;
->> +	int err;
->> +	bool found = false;
->> +	int i;
->> +
->> +	/* only process one nested attribute */
->> +	nest = nla_data(nla);
->> +	if (!nla_ok(nest, nla_len(nest)))
->> +		return -EBADF;
-> 
-> This isn't quite clear to me. Shouldn't you do this by declaring it
-> NLA_TESTED in the nl80211_policy?
-
-Guess you mean NLA_NESTED.
-
-> Actually, not really? you use nla_ok() on the inner (without having
-> checked at all that it's even long enough btw, since you didn't do the
-> policy change), but that would already be done by nla_parse() below?
-
-Because ATTR_BSS_SELECT is used in CMD_GET_WIPHY and CMD_CONNECT the
-length of the attribute is not a constant. Or do I only need to put
-length in nl80211_policy for userspace-2-kernel direction, ie. for
-ATTR_BSS_SELECT in CMD_CONNECT.
-
-> What are you trying to do here?
-
-ATTR_BSS_SELECT will have only a single nested attribute. So I looked at
-nla_for_each_nested():
-
-1233 /**
-1234  * nla_for_each_attr - iterate over a stream of attributes
-1235  * @pos: loop counter, set to current attribute
-1236  * @head: head of attribute stream
-1237  * @len: length of attribute stream
-1238  * @rem: initialized to len, holds bytes currently remaining in stream
-1239  */
-1240 #define nla_for_each_attr(pos, head, len, rem) \
-1241         for (pos = head, rem = len; \
-1242              nla_ok(pos, rem); \
-1243              pos = nla_next(pos, &(rem)))
-1244
-1245 /**
-1246  * nla_for_each_nested - iterate over nested attributes
-1247  * @pos: loop counter, set to current attribute
-1248  * @nla: attribute containing the nested attributes
-1249  * @rem: initialized to len, holds bytes currently remaining in stream
-1250  */
-1251 #define nla_for_each_nested(pos, nla, rem) \
-1252         nla_for_each_attr(pos, nla_data(nla), nla_len(nla), rem)
-
-So:
-
-  nla_for_each_nested(nest, nla, rem)
-
-becomes:
-  for(nest = nla_data(nla), rem = nla_len(nla); nla_ok(nest, rem); ...)
-
-As there is no need to iterate I just do the for loop initializer and
-the loop condition using the if(nla_ok()).
-
-> Regardless of that, EBADF seems like a bad error number.
-
-Ok. Just use EINVAL here as well?
-
->> +	err = nla_parse(attr, NL80211_BSS_SELECT_ATTR_MAX,
->> nla_data(nest),
->> +			nla_len(nest), nl80211_bss_select_policy);
->> +	if (err)
->> +		return err;
->> +
->> +	/* only one attribute may be given */
->> +	for (i = 0; i <= NL80211_BSS_SELECT_ATTR_MAX; i++)
->> +		if (attr[i]) {
->> +			if (found)
->> +				return -EINVAL;
->> +			found = true;
->> +		}
-> 
-> I'd kinda prefer braces, but maybe that's just me. Surely not a
-> blocking issue :)
-
-I don't have strong opinion about it so I can change it.
-
-Regards,
-Arend
