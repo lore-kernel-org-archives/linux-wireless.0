@@ -1,32 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53258 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751448AbcBFLr3 convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:36555 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753884AbcBPHJd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Feb 2016 06:47:29 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
-Subject: Re: [PATCH] bcma: add support for BCM47094
-References: <1453649853-11412-1-git-send-email-zajec5@gmail.com>
-Date: Sat, 06 Feb 2016 13:47:23 +0200
-In-Reply-To: <1453649853-11412-1-git-send-email-zajec5@gmail.com>
- (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Sun, 24 Jan 2016
- 16:37:33 +0100")
-Message-ID: <87vb62ukl0.fsf@kamboji.qca.qualcomm.com> (sfid-20160206_124732_226197_CB72DBDE)
+	Tue, 16 Feb 2016 02:09:33 -0500
+Subject: Re: whitespace error in some of commits
+To: <janani.rvchndrn@gmail.com>
+References: <56C2C5E4.9080006@atmel.com>
+CC: Greg KH <gregkh@linuxfoundation.org>, <glen.lee@atmel.com>,
+	<leo.kim@atmel.com>, <chris.park@atmel.com>,
+	<linux-wireless@vger.kernel.org>, <devel@driverdev.osuosl.org>
+From: Tony Cho <tony.cho@atmel.com>
+Message-ID: <56C2CAC0.5090107@atmel.com> (sfid-20160216_081013_324722_EC27B0FD)
+Date: Tue, 16 Feb 2016 16:07:44 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <56C2C5E4.9080006@atmel.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
+Hi Janani,
+Please refer to the commit numbers again in the wilc1000 driver:
+c611d48e65e25af2dc0176e9ac135116095ed03d
+24c6c29d85af3748b2d79b46f72188b335566340
 
-> It's another SoC with 32 GPIOs and simplified watchdog handling. It was
-> tested on D-Link DIR-885L.
+Thanks,
+Tony.
+
+On 2016년 02월 16일 15:47, Tony Cho wrote:
+> Hi Janani,
 >
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> I can find the whitespace errors in your commits which is already 
+> accepted in staging-testing branch.
+>
+> The commit number is c611d48e65e25af2dc0176e9ac135116095ed03d and 
+> c611d48e65e25af2dc0176e9ac135116095ed03d.
+>
+> I don't know why I couldn't find your patch emails from the community. 
+> Please cc the linux-wireless and devel.
+>
+> Would you fix these patch or I can make it if you don't mind.
+>
+>
+> Thanks,
+>
+> Tony.
+>
+>
 
-Manually applied to wireless-drivers-next.git, thanks.
-
--- 
-Kalle Valo
