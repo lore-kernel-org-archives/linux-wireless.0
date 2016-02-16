@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58023 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753501AbcB2WGD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:06:03 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 105/113] rtl8xxxu: Remove unncessary semicolon
-Date: Mon, 29 Feb 2016 17:05:43 -0500
-Message-Id: <1456783551-28315-106-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232951_688318_7084D714)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:2643 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932294AbcBPNom (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Feb 2016 08:44:42 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: "mikael@djurfeldt.com" <mikael@djurfeldt.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: mwifiex driver unstable on MS Surface Pro 4
+Date: Tue, 16 Feb 2016 13:44:33 +0000
+Message-ID: <3277e07da7f7459fbfb3f9b0683bbb3c@SC-EXCH04.marvell.com> (sfid-20160216_144446_245458_D979C3D7)
+References: <CAA2Xvw+FB4rXcEQFvaDJTeNTVo5YbY=vrGF9tq-FZcmDQhfXfA@mail.gmail.com>
+In-Reply-To: <CAA2Xvw+FB4rXcEQFvaDJTeNTVo5YbY=vrGF9tq-FZcmDQhfXfA@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-
-This removes an superfluous semicolon.
-
-Reported-by: Fengguang Wu <fengguang.wu@intel.com>
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 8cb76e2..67ea89b 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -7195,7 +7195,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- 			tx_desc->txdw3 |=
- 				cpu_to_le32(TXDESC_HW_RTS_ENABLE_8723B);
- 		}
--	};
-+	}
- 
- 	rtl8xxxu_calc_tx_desc_csum(tx_desc);
- 
--- 
-2.5.0
-
+SGkgTWlrYWVsLA0KDQo+IEZyb206IGxpbnV4LXdpcmVsZXNzLW93bmVyQHZnZXIua2VybmVsLm9y
+ZyBbbWFpbHRvOmxpbnV4LXdpcmVsZXNzLQ0KPiBvd25lckB2Z2VyLmtlcm5lbC5vcmddIE9uIEJl
+aGFsZiBPZiBNaWthZWwgRGp1cmZlbGR0DQo+IFNlbnQ6IFR1ZXNkYXksIEZlYnJ1YXJ5IDE2LCAy
+MDE2IDQ6MjYgQU0NCj4gVG86IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZw0KPiBDYzog
+TWlrYWVsIERqdXJmZWxkdA0KPiBTdWJqZWN0OiBtd2lmaWV4IGRyaXZlciB1bnN0YWJsZSBvbiBN
+UyBTdXJmYWNlIFBybyA0DQo+IA0KPiBEZWFyIGxpc3QsDQo+IA0KPiBJJ20gZXhwZXJpZW5jaW5n
+IHByb2JsZW1zIHdpdGggdGhlIG13aWZpZXhfcGNpZSBkcml2ZXIgb24gTVMgU3VyZmFjZSBQcm8N
+Cj4gNCAod2l0aCB0aGUgODhXODg5NyBjaGlwKS4NCj4gDQo+IFRoZSBzeW10b20gaXMgdGhhdCB0
+aGUgZHJpdmVyIG9ubHkgd29ya3MgZm9yIGEgZmV3IG1pbnV0ZXMgZHVyaW5nIHdoaWNoDQo+IHZh
+cmlvdXMgZXJyb3IgbWVzc2FnZXMgaXMgc2hvd24gaW4gc3lzbG9nIGFmdGVyIHdoaWNoIHRoZSBk
+ZXZpY2UgYmVjb21lcw0KPiB1bmF2YWlsYWJsZS4NCj4gDQo+IEkndmUgdHJpZWQgYSBidW5jaCBv
+ZiBrZXJuZWxzIGZyb20gNC4zIGFuZCB1cHdhcmRzLg0KPiANCj4gSSdtIGF0dGFjaGluZyBhbiBl
+eGFtcGxlIHN5c2xvZyAoZmlsdGVyZWQgZm9yIG13aWZpZXgpIGR1cmluZyBhIHJ1bg0KPiB1bmRl
+ciB0aGUgNC41LjAtcmM0IGtlcm5lbC4NCj4gDQo+IEkgc2hvdWxkIGFkZCB0aGF0IEkgaGF2ZSBw
+b3dlciBtYW5hZ2VtZW50IG9uIHRoZSBkZXZpY2UgKGFzIGRpc3BsYXllZA0KPiBieSwgZS5nLiwg
+aXdjb25maWcpIHN3aXRjaGVkIG9mZiBpbiBhbiBhdHRlbXB0IHRvIGRlbGltaXQgY2F1c2VzIG9m
+DQo+IGZhaWx1cmUuDQo+IA0KDQpUaGFua3MgZm9yIHJlcG9ydGluZyB0aGUgcHJvYmxlbS4gMHgx
+MDcgY29tbWFuZCBoYXMgZ290IHRpbWVkIG91dCBpbiB0aGUgbG9nLg0KQ291bGQgeW91IHBsZWFz
+ZSBoZWxwIGdldCB0aGUgZGV2aWNlIGR1bXAgZGF0YSB3aGVuIHByb2JsZW0gb2NjdXJzPw0KDQpJ
+c3N1ZSBiZWxvdyBjb21tYW5kIGZvciB0aGlzLg0KY2F0IC9zeXMvY2xhc3MvZGV2Y29yZWR1bXAv
+ZGV2Y2RYL2RhdGEgPiBkYXRhLnR4dA0KDQoNClJlZ2FyZHMsDQpBbWl0a3VtYXINCg==
