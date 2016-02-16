@@ -1,46 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:34276 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753232AbcBXTUF (ORCPT
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:34146 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753580AbcBPGgm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2016 14:20:05 -0500
-Received: by mail-pa0-f51.google.com with SMTP id fy10so17585611pac.1
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 11:20:05 -0800 (PST)
-From: UJJAL ROY <royujjal@gmail.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	WiFi Mailing List <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] mwifiex: Added missing spaces around brackets
-Date: Thu, 25 Feb 2016 00:49:56 +0530
-Message-Id: <1456341596-517-1-git-send-email-royujjal@gmail.com> (sfid-20160224_202010_635992_EC572905)
+	Tue, 16 Feb 2016 01:36:42 -0500
+Received: by mail-ig0-f173.google.com with SMTP id g6so24452011igt.1
+        for <linux-wireless@vger.kernel.org>; Mon, 15 Feb 2016 22:36:42 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20160215190451.19883.12408.stgit@localhost.localdomain>
+References: <20160215190451.19883.12408.stgit@localhost.localdomain>
+Date: Tue, 16 Feb 2016 12:06:41 +0530
+Message-ID: <CAFqt6zb6Qb46n=U=3owVrU+OfSL=qC_w0eQeSmJ91BfRBQkiSw@mail.gmail.com> (sfid-20160216_073646_416936_FD3244A3)
+Subject: Re: [PATCH] rt2x00: unterminated strlen of user data
+From: Souptick Joarder <jrdr.linux@gmail.com>
+To: Alan <gnomes@lxorguk.ukuu.org.uk>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the missing spaces issue in coding style.
+On Tue, Feb 16, 2016 at 12:34 AM, Alan <gnomes@lxorguk.ukuu.org.uk> wrote:
+> The buffer needs to be zero terminated in case the user data is not.
+> Otherwise we run off the end of the buffer.
+>
+> Signed-off-by: Alan Cox <alan@linux.intel.com>
+> ---
+>  drivers/net/wireless/ralink/rt2x00/rt2x00debug.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c b/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
+> index 25ee3cb..72ae530 100644
+> --- a/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
+> +++ b/drivers/net/wireless/ralink/rt2x00/rt2x00debug.c
+> @@ -478,7 +478,7 @@ static ssize_t rt2x00debug_write_##__name(struct file *file,        \
+>  {                                                              \
+>         struct rt2x00debug_intf *intf = file->private_data;     \
+>         const struct rt2x00debug *debug = intf->debug;          \
+> -       char line[16];                                          \
+> +       char line[17];                                          \
+>         size_t size;                                            \
+>         unsigned int index = intf->offset_##__name;             \
+>         __type value;                                           \
+> @@ -494,7 +494,8 @@ static ssize_t rt2x00debug_write_##__name(struct file *file,        \
+>                                                                 \
+>         if (copy_from_user(line, buf, length))                  \
+>                 return -EFAULT;                                 \
+> -                                                               \
+> +       line[16] = 0;
 
-Signed-off-by: UJJAL ROY <royujjal@gmail.com>
----
- drivers/net/wireless/marvell/mwifiex/usb.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+            line[length] = '\0';
+            correct me if I am wrong.                          \
+> +                                               \
+>         size = strlen(line);                                    \
+>         value = simple_strtoul(line, NULL, 0);                  \
+>                                                                 \
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index e43aff9..0510861 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -244,9 +244,9 @@ setup_for_next:
- 	if (card->rx_cmd_ep == context->ep) {
- 		mwifiex_usb_submit_rx_urb(context, size);
- 	} else {
--		if (atomic_read(&adapter->rx_pending) <= HIGH_RX_PENDING){
-+		if (atomic_read(&adapter->rx_pending) <= HIGH_RX_PENDING) {
- 			mwifiex_usb_submit_rx_urb(context, size);
--		}else{
-+		} else {
- 			context->skb = NULL;
- 		}
- 	}
---
-1.9.1
-
+-Souptick
