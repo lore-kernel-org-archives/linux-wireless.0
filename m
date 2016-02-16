@@ -1,60 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from [212.40.180.149] ([212.40.180.149]:37283 "EHLO
-	smtp-out-151.synserver.de" rhost-flags-FAIL-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753800AbcBHVYJ (ORCPT
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:35302 "EHLO
+	mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754153AbcBPIkE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 16:24:09 -0500
-From: Lars-Peter Clausen <lars@metafoo.de>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
-	Lars-Peter Clausen <lars@metafoo.de>
-Subject: [PATCH 1/2] b43: Remove unnecessary synchronize_irq() before free_irq()
-Date: Mon,  8 Feb 2016 21:41:12 +0100
-Message-Id: <1454964073-25108-1-git-send-email-lars@metafoo.de> (sfid-20160208_222413_572996_9180EFEE)
+	Tue, 16 Feb 2016 03:40:04 -0500
+Received: by mail-pf0-f180.google.com with SMTP id c10so103493718pfc.2
+        for <linux-wireless@vger.kernel.org>; Tue, 16 Feb 2016 00:40:04 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 1/7] staging: wilc1000: handle_set_mac_address: remove debug message of kmalloc failure
+Date: Tue, 16 Feb 2016 17:39:49 +0900
+Message-Id: <1455611995-28773-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160216_094010_918665_D9DD8509)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Calling synchronize_irq() right before free_irq() is quite useless. On one
-hand the IRQ can easily fire again before free_irq() is entered, on the
-other hand free_irq() itself calls synchronize_irq() internally (in a race
-condition free way), before any state associated with the IRQ is freed.
+There is no need to print debug message when kmalloc is failed. This
+message is redundant. The code already show us that kmalloc is failed.
+The brace of if statement is remove as well due to have a single
+statement.
 
-Patch was generated using the following semantic patch:
-// <smpl>
-@@
-expression irq;
-@@
--synchronize_irq(irq);
- free_irq(irq, ...);
-// </smpl>
-
-Signed-off-by: Lars-Peter Clausen <lars@metafoo.de>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/broadcom/b43/main.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
-index c279211..72380af 100644
---- a/drivers/net/wireless/broadcom/b43/main.c
-+++ b/drivers/net/wireless/broadcom/b43/main.c
-@@ -4375,12 +4375,10 @@ redo:
- 	/* Synchronize and free the interrupt handlers. Unlock to avoid deadlocks. */
- 	orig_dev = dev;
- 	mutex_unlock(&wl->mutex);
--	if (b43_bus_host_is_sdio(dev->dev)) {
-+	if (b43_bus_host_is_sdio(dev->dev))
- 		b43_sdio_free_irq(dev);
--	} else {
--		synchronize_irq(dev->dev->irq);
-+	else
- 		free_irq(dev->dev->irq, dev);
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d1eedfb..579b90a 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -431,10 +431,9 @@ static s32 handle_set_mac_address(struct wilc_vif *vif,
+ 	struct wid wid;
+ 	u8 *mac_buf = kmalloc(ETH_ALEN, GFP_KERNEL);
+ 
+-	if (!mac_buf) {
+-		PRINT_ER("No buffer to send mac address\n");
++	if (!mac_buf)
+ 		return -EFAULT;
 -	}
- 	mutex_lock(&wl->mutex);
- 	dev = wl->current_dev;
- 	if (!dev)
++
+ 	memcpy(mac_buf, set_mac_addr->mac_addr, ETH_ALEN);
+ 
+ 	wid.id = (u16)WID_MAC_ADDR;
 -- 
-2.1.4
+2.7.1
 
