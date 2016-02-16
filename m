@@ -1,53 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f181.google.com ([209.85.160.181]:33117 "EHLO
-	mail-yk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752057AbcBOJPv (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:40442 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755294AbcBPQCj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Feb 2016 04:15:51 -0500
-Received: by mail-yk0-f181.google.com with SMTP id z13so57843265ykd.0
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Feb 2016 01:15:51 -0800 (PST)
+	Tue, 16 Feb 2016 11:02:39 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi-2016-02-16
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA13D1A@hasmsx107.ger.corp.intel.com>
+Date: Tue, 16 Feb 2016 18:02:33 +0200
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA13D1A@hasmsx107.ger.corp.intel.com>
+	(Emmanuel Grumbach's message of "Mon, 15 Feb 2016 11:57:38 +0000")
+Message-ID: <874md8tzhi.fsf@kamboji.qca.qualcomm.com> (sfid-20160216_170242_970784_5BCC5F43)
 MIME-Version: 1.0
-In-Reply-To: <1455487069-2721-1-git-send-email-festevam@gmail.com>
-References: <1455487069-2721-1-git-send-email-festevam@gmail.com>
-Date: Mon, 15 Feb 2016 10:15:50 +0100
-Message-ID: <CAF7Mx6oiw+AdAqZU5rkZT4UeGTiTHR-DfsMN6dpsV6YFWkUOOg@mail.gmail.com> (sfid-20160215_101557_028907_83940563)
-Subject: Re: [PATCH] brcmfmac: of: Include "of.h" header file
-From: Arend Van Spriel <arend.van@broadcom.com>
-To: Fabio Estevam <festevam@gmail.com>
-Cc: kvalo@codeaurora.org, Arend Van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@nxp.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 14, 2016 at 10:57 PM, Fabio Estevam <festevam@gmail.com> wrote:
-> From: Fabio Estevam <fabio.estevam@nxp.com>
->
-> Include "of.h" header file to fix the following sparse warning:
->
-> drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c:27:6: warning: symbol 'brcmf_of_probe' was not declared. Should it be static?
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-Acked-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Fabio Estevam <fabio.estevam@nxp.com>
-> ---
-> Resending to linux-wireless@vger.kernel.org
+> This is a pull request for 4.5. Apart from my RF-Kill fix, the patches are
+> really small. My RF-Kill patch needed to move code around to avoid adding
+> a forward declaration and on the way there were a few very trivial code style
+> fixes, that were needed to make checkpatch happy.
 >
->  drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c | 1 +
->  1 file changed, 1 insertion(+)
+> Let me know if you have issues, thanks!
 >
-> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-> index 03f35e0..6231b36 100644
-> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-> @@ -23,6 +23,7 @@
->  #include <defs.h>
->  #include "debug.h"
->  #include "sdio.h"
-> +#include "of.h"
 >
->  void brcmf_of_probe(struct brcmf_sdio_dev *sdiodev)
->  {
-> --
-> 1.9.1
+> The following changes since commit 69c7fda40921c125eeeef6a827f6270ac6aa1baa:
 >
+>   iwlwifi: mvm: rs: fix TPC statistics handling (2016-01-26 16:03:35 +0200)
+>
+> are available in the git repository at:
+>
+>   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2016-02-15
+
+Pulled, thanks.
+
+-- 
+Kalle Valo
