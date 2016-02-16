@@ -1,61 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43398 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753498AbcB2WGD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:06:03 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 086/113] rtl8xxxu: Set 8723bu MCS TX power
-Date: Mon, 29 Feb 2016 17:05:24 -0500
-Message-Id: <1456783551-28315-87-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232950_728825_AF2D8735)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-qk0-f171.google.com ([209.85.220.171]:36460 "EHLO
+	mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755938AbcBPV2Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 16 Feb 2016 16:28:25 -0500
+From: "Avery Pennarun" <apenwarr@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@vger.kernel.org, johannes@sipsolutions.net,
+	nbd@nbd.name
+Cc: Avery Pennarun <apenwarr@gmail.com>
+Subject: [PATCH] mac80211: debugfs var for the default aggregation timeout.
+Date: Tue, 16 Feb 2016 16:28:11 -0500
+Message-Id: <1455658091-28262-2-git-send-email-apenwarr@gmail.com> (sfid-20160216_222829_705982_11842B9F)
+In-Reply-To: <1455658091-28262-1-git-send-email-apenwarr@gmail.com>
+References: <CAHqTa-22NpabO6B7nL=O26fnuGQHFOzpagWtsfQz4_BfrO6nTw@mail.gmail.com>
+ <1455658091-28262-1-git-send-email-apenwarr@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Since around the beginning of time, ath9k aggregates have timed out after
+5000 TU (around 5000ms) of inactivity, but nobody seems to be quite sure
+why, and this magic number seems to have migrated around from one place to
+another.  An openbsd mailing list recently had a patch to disable the
+timeout completely, which they say matches some commercial routers:
+https://www.mail-archive.com/tech@openbsd.org/msg29456.html
 
-This adds the missing support for setting MCS TX power rates on 8723bu.
+Even in Linux, several non-ath9k drivers default to no timeout already.  I
+think changing it directly to zero would be safe, but to allow a more
+structured investigation, let's make it configurable for now.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Avery Pennarun <apenwarr@gmail.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ net/mac80211/debugfs_netdev.c      | 4 ++++
+ net/mac80211/rc80211_minstrel_ht.c | 4 +++-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+ 
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index daea712..cca3b92 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -2062,8 +2062,8 @@ rtl8723a_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
- static void
- rtl8723b_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 37ea30e..5ae160b 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -715,6 +715,8 @@ static void add_mesh_config(struct ieee80211_sub_if_data *sdata)
+ }
+ #endif
+ 
++u32 default_agg_timeout = 5000;
++
+ static void add_files(struct ieee80211_sub_if_data *sdata)
  {
--	u32 val32, ofdm;
--	u8 cck, ofdmbase;
-+	u32 val32, ofdm, mcs;
-+	u8 cck, ofdmbase, mcsbase;
- 	int group, tx_idx;
+ 	if (!sdata->vif.debugfs_dir)
+@@ -725,6 +727,8 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
+ 	DEBUGFS_ADD(txpower);
+ 	DEBUGFS_ADD(user_power_level);
+ 	DEBUGFS_ADD(ap_power_level);
++	debugfs_create_u32("default_agg_timeout", 0600, sdata->vif.debugfs_dir,
++		&default_agg_timeout);
  
- 	tx_idx = 0;
-@@ -2086,6 +2086,16 @@ rtl8723b_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
- 
- 	rtl8xxxu_write32(priv, REG_TX_AGC_A_RATE18_06, ofdm);
- 	rtl8xxxu_write32(priv, REG_TX_AGC_A_RATE54_24, ofdm);
-+
-+	mcsbase = priv->ht40_1s_tx_power_index_B[group];
-+	if (ht40)
-+		mcsbase += priv->ht40_tx_power_diff[tx_idx++].b;
-+	else
-+		mcsbase += priv->ht20_tx_power_diff[tx_idx++].b;
-+	mcs = mcsbase | mcsbase << 8 | mcsbase << 16 | mcsbase << 24;
-+
-+	rtl8xxxu_write32(priv, REG_TX_AGC_A_MCS03_MCS00, mcs);
-+	rtl8xxxu_write32(priv, REG_TX_AGC_A_MCS07_MCS04, mcs);
+ 	if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
+ 		add_common_files(sdata);
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 3928dbd..028d9d4 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -671,6 +671,8 @@ minstrel_downgrade_rate(struct minstrel_ht_sta *mi, u16 *idx, bool primary)
+ 	}
  }
  
- static void rtl8xxxu_set_linktype(struct rtl8xxxu_priv *priv,
++extern u32 default_agg_timeout;
++
+ static void
+ minstrel_aggr_check(struct ieee80211_sta *pubsta, struct sk_buff *skb)
+ {
+@@ -691,7 +693,7 @@ minstrel_aggr_check(struct ieee80211_sta *pubsta, struct sk_buff *skb)
+ 	if (likely(sta->ampdu_mlme.tid_tx[tid]))
+ 		return;
+ 
+-	ieee80211_start_tx_ba_session(pubsta, tid, 5000);
++	ieee80211_start_tx_ba_session(pubsta, tid, default_agg_timeout);
+ }
+ 
+ static void
 -- 
-2.5.0
+2.7.0.rc3.207.g0ac5344
 
