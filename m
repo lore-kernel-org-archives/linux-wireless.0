@@ -1,42 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:33642 "EHLO
-	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751725AbcBKACL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Feb 2016 19:02:11 -0500
-Received: by mail-wm0-f42.google.com with SMTP id g62so930461wme.0
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Feb 2016 16:02:11 -0800 (PST)
-From: Ola Olsson <ola1olsson@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ola Olsson <ola1olsson@gmail.com>,
-	Ola Olsson <ola.olsson@sonymobile.com>
-Subject: [PATCH] nl80211: Zero out the connection keys memory when freeing them.
-Date: Thu, 11 Feb 2016 01:00:22 +0100
-Message-Id: <1455148822-13849-1-git-send-email-ola1olsson@gmail.com> (sfid-20160211_010301_984531_86D251C7)
+Received: from mx1.redhat.com ([209.132.183.28]:57275 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750740AbcBQR2e (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2016 12:28:34 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Geliang Tang <geliangtang@163.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4 1/3] staging: rtl8723au: use list_for_each_entry*()
+References: <201602172303.ReBGrDL1%fengguang.wu@intel.com>
+Date: Wed, 17 Feb 2016 12:28:33 -0500
+In-Reply-To: <201602172303.ReBGrDL1%fengguang.wu@intel.com> (kbuild test
+	robot's message of "Wed, 17 Feb 2016 23:16:34 +0800")
+Message-ID: <wrfjtwl76ybi.fsf@redhat.com> (sfid-20160217_182855_000197_E9DC67E3)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The connection keys are zeroed out in all other cases except this
-one. Let's fix the last one as well.
+kbuild test robot <lkp@intel.com> writes:
+> Hi Geliang,
+>
+> [auto build test ERROR on staging/staging-testing]
+> [also build test ERROR on v4.5-rc4 next-20160217]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
+>
+> url:    https://github.com/0day-ci/linux/commits/Geliang-Tang/staging-rtl8723au-use-list_for_each_entry/20160217-220638
+> config: i386-randconfig-s1-201607 (attached as .config)
+> reproduce:
+>         # save the attached .config to linux build tree
+>         make ARCH=i386 
+>
+> Note: the linux-review/Geliang-Tang/staging-rtl8723au-use-list_for_each_entry/20160217-220638 HEAD 495811a52aba181af76c3baf57da3d81a79c2fe8 builds fine.
+>       It only hurts bisectibility.
+>
+> All errors (new ones prefixed by >>):
+>
+>    drivers/staging/rtl8723au/core/rtw_recv.c: In function 'rtw_free_recvframe23a_queue':
+>>> drivers/staging/rtl8723au/core/rtw_recv.c:203:2: error: 'plist' undeclared (first use in this function)
+>      plist = phead->next;
+>      ^
 
-Signed-off-by: Ola Olsson <ola.olsson@sonymobile.com>
----
- net/wireless/nl80211.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This doesn't work, you cannot break interim builds. Your patch 2 needs
+to go before patch 1, and you must always check that they compile for
+each patch you apply.
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 72de698..c1ef6ce 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -7547,7 +7547,7 @@ static int nl80211_join_ibss(struct sk_buff *skb, struct genl_info *info)
- 
- 		if ((ibss.chandef.width != NL80211_CHAN_WIDTH_20_NOHT) &&
- 		    no_ht) {
--			kfree(connkeys);
-+			kzfree(connkeys);
- 			return -EINVAL;
- 		}
- 	}
--- 
-1.7.9.5
+NACK
 
+Jes
