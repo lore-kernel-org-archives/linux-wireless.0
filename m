@@ -1,191 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:35707 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751433AbcBHKAU convert rfc822-to-8bit (ORCPT
+Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:29319
+	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161113AbcBQK11 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 05:00:20 -0500
-Received: by mail-wm0-f51.google.com with SMTP id c200so7350393wme.0
-        for <linux-wireless@vger.kernel.org>; Mon, 08 Feb 2016 02:00:19 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CAA93jw7M3j8WYPTGx=V6yQKa_hpcg435GV4O4ZbfxiR8S9VVuQ@mail.gmail.com>
-References: <1454616764-19841-1-git-send-email-emmanuel.grumbach@intel.com>
-	<1454616988-21901-1-git-send-email-emmanuel.grumbach@intel.com>
-	<56B3B885.1050409@candelatech.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32EA02656@hasmsx107.ger.corp.intel.com>
-	<56B3BF25.8080509@candelatech.com>
-	<CA+BoTQm+xTU6o7CMbCHr=bSgp7WE5btE4pMki5XJWiXaOG4SdA@mail.gmail.com>
-	<CAA93jw7M3j8WYPTGx=V6yQKa_hpcg435GV4O4ZbfxiR8S9VVuQ@mail.gmail.com>
-Date: Mon, 8 Feb 2016 11:00:18 +0100
-Message-ID: <CA+BoTQ=BMsXHEcg0LTEcsVLVUBYLmQ2F_oRghFPLty1XD-L9wQ@mail.gmail.com> (sfid-20160208_110039_617344_F80C6CFA)
-Subject: Re: [RFC v2] iwlwifi: pcie: transmit queue auto-sizing
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Dave Taht <dave.taht@gmail.com>
-Cc: Ben Greear <greearb@candelatech.com>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Stephen Hemminger <stephen@networkplumber.org>,
-	Jonathan Corbet <corbet@lwn.net>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 17 Feb 2016 05:27:27 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 16/21] brcmfmac: keep ARP and ND offload enabled during WOWL
+Date: Wed, 17 Feb 2016 11:27:05 +0100
+Message-Id: <1455704830-10088-17-git-send-email-arend@broadcom.com> (sfid-20160217_112835_197073_2B762ABE)
+In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 5 February 2016 at 17:47, Dave Taht <dave.taht@gmail.com> wrote:
->> A bursted txop can be as big as 5-10ms. If you consider you want to
->> queue 5-10ms worth of data for *each* station at any given time you
->> obviously introduce a lot of lag. If you have 10 stations you might
->> end up with service period at 10*10ms = 100ms. This gets even worse if
->> you consider MU-MIMO because you need to do an expensive sounding
->> procedure before transmitting. So while SU aggregation can probably
->> still work reasonably well with shorter bursts (1-2ms) MU needs at
->> least 3ms to get *any* gain when compared to SU (which obviously means
->> you want more to actually make MU pay off).
->
-> I am not sure where you get these numbers. Got a spreadsheet?
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Here's a nice summary on some of it:
+Currently ARP and ND (IPv6 Neigbor Discovery) offload get disabled
+on entering suspend. However when firmwares support the wowl_cap
+iovar then these offload routines can be kept enabled as they
+will work during WOWL as well.
 
-  http://chimera.labs.oreilly.com/books/1234000001739/ch03.html#figure-mac-ampdu
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 6 ++++--
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c  | 1 +
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h  | 4 +++-
+ 3 files changed, 8 insertions(+), 3 deletions(-)
 
-Even if your single A-MPDU can be shorter than a txop you can burst a
-few of them if my understanding is correct.
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 6d849bb..5609a79 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -3556,7 +3556,8 @@ static s32 brcmf_cfg80211_resume(struct wiphy *wiphy)
+ 		brcmf_report_wowl_wakeind(wiphy, ifp);
+ 		brcmf_fil_iovar_int_set(ifp, "wowl_clear", 0);
+ 		brcmf_config_wowl_pattern(ifp, "clr", NULL, 0, NULL, 0);
+-		brcmf_configure_arp_nd_offload(ifp, true);
++		if (!brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL_ARP_ND))
++			brcmf_configure_arp_nd_offload(ifp, true);
+ 		brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PM,
+ 				      cfg->wowl.pre_pmmode);
+ 		cfg->wowl.active = false;
+@@ -3580,7 +3581,8 @@ static void brcmf_configure_wowl(struct brcmf_cfg80211_info *cfg,
+ 
+ 	brcmf_dbg(TRACE, "Suspend, wowl config.\n");
+ 
+-	brcmf_configure_arp_nd_offload(ifp, false);
++	if (!brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL_ARP_ND))
++		brcmf_configure_arp_nd_offload(ifp, false);
+ 	brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_PM, &cfg->wowl.pre_pmmode);
+ 	brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PM, PM_MAX);
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+index 098732a..bfa19bb 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+@@ -147,6 +147,7 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+ 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL)) {
+ 		err = brcmf_fil_iovar_int_get(ifp, "wowl_cap", &wowl_cap);
+ 		if (!err) {
++			ifp->drvr->feat_flags |= BIT(BRCMF_FEAT_WOWL_ARP_ND);
+ 			if (wowl_cap & BRCMF_WOWL_PFN_FOUND)
+ 				ifp->drvr->feat_flags |=
+ 					BIT(BRCMF_FEAT_WOWL_ND);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+index f940c29..a3efa35 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+@@ -29,6 +29,7 @@
+  * SCAN_RANDOM_MAC: Random MAC during (net detect) scheduled scan.
+  * WOWL_ND: WOWL net detect (PNO)
+  * WOWL_GTK: (WOWL) GTK rekeying offload
++ * WOWL_ARP_ND: ARP and Neighbor Discovery offload support during WOWL.
+  */
+ #define BRCMF_FEAT_LIST \
+ 	BRCMF_FEAT_DEF(MBSS) \
+@@ -40,7 +41,8 @@
+ 	BRCMF_FEAT_DEF(TDLS) \
+ 	BRCMF_FEAT_DEF(SCAN_RANDOM_MAC) \
+ 	BRCMF_FEAT_DEF(WOWL_ND) \
+-	BRCMF_FEAT_DEF(WOWL_GTK)
++	BRCMF_FEAT_DEF(WOWL_GTK) \
++	BRCMF_FEAT_DEF(WOWL_ARP_ND)
+ 
+ /*
+  * Quirks:
+-- 
+1.9.1
 
-The overhead associated with MU sounding is something I've been told
-only. Apparently for MU to pay off you need fairly big bursts. This
-implies that the more stations you have to service the less it makes
-sense to attempt MU if you consider latency.
-
-
-> Gradually reducing the maximum sized txop as a function of the number
-> of stations makes sense. If you have 10 stations pending delivery and
-> reduced the max txop to 1ms, you hurt bandwidth at that instant, but
-> by offering more service to more stations, in less time, they will
-> converge on a reasonable share of the bandwidth for each, faster[1].
-> And I'm sure that the person videoconferencing on a link like that
-> would appreciate getting some service inside of a 10ms interval,
-> rather than a 100ms.
->
-> yes, there's overhead, and that's not the right number, which would
-> vary as to g,n,ac and successors.
->
-> You will also get more opportunities to use mu-mimo with shorter
-> bursts extant and more stations being regularly serviced.
->
-> [1] https://www.youtube.com/watch?v=Rb-UnHDw02o at about 13:50
-
-This is my thinking as well, at least for most common use cases.
-
-If you try to optimize for throughput by introducing extra induced
-latency you might end up not being able to use aggregation in practice
-anyway because you won't be able to start up connections and ask for
-enough data - or at least that's what my intuition tells me.
-
-But, like I've mentioned, there's interest in making it possible to
-maximize for throughput (regardless of latency). This surely makes
-sense for synthetic UDP benchmarks. But does it make sense for any
-real-world application? No idea.
-
-
->> The rule of thumb is the
->> longer you wait the bigger capacity you can get.
->
-> This is not strictly true as the "fountain" of packets is regulated by
-> acks on the other side of the link, and ramp up or down as a function
-> of service time and loss.
-
-Yes, if you consider real world cases, i.e. TCP, web traffic, etc.
-then you're correct.
-
-
->> Apparently there's interest in maximizing throughput but it stands in
->> direct opposition of keeping the latency down so I've been thinking
->> how to satisfy both.
->>
->> The current approach ath10k is taking (patches in review [1][2]) is to
->> use mac80211 software queues for per-station queuing, exposing queue
->> state to firmware (it decides where frames should be dequeued from)
->> and making it possible to stop/wake per-station tx subqueue with fake
->> netdev queues. I'm starting to think this is not the right way though
->> because it's inherently hard to control latency and there's a huge
->> memory overhead associated with the fake netdev queues.
->
-> What is this overhead?
-
-E.g. if you want to be able to maximize throughput for 50 MU clients
-you need to be able to queue, in theory, 50*200 (roughly) frames. This
-translates to both huge memory usage and latency *and* renders
-(fq_)codel qdisc rather.. moot.
-
-
-> Applying things  like codel tend to dramatically shorten the amount of
-> skbs extant...
-
-> modern 802.11ac capable hardware has tons more
-> memory...
-
-I don't think it does. QCA988x is able to handle "only" 1424 tx
-descriptors (IOW 1500-byte long MSDUs) in the driver-to-firmware tx
-queue (it's a flat queue). QCA99x0 is able to handle 2500 if asked
-politely.
-
-This is still not enough to satisfy the insane "maximize the
-capacity/throughput" expectations though.
-
-You could actually argue it's too much from the bufferbloat problem
-point of view anyway and Emmanuel's patch proves it is beneficial to
-buffer less in driver depending on the sojourn packet time.
-
-
->> Also fq_codel
->> is a less effective with this kind of setup.
->
-> fq_codel's principal problems with working with wifi are long and
-> documented in the talk above.
->
->> My current thinking is that the entire problem should be solved via
->> (per-AC) qdiscs, e.g. fq_codel. I guess one could use
->> limit/target/interval/quantum knobs to tune it for higher latency of
->> aggregation-oriented Wi-Fi links where long service time (think
->> 100-200ms) is acceptable. However fq_codel is oblivious to how Wi-Fi
->> works in the first place, i.e. Wi-Fi gets better throughput if you
->> deliver bursts of packets destined to the same station. Moreover this
->> gets even more complicated with MU-MIMO where you may want to consider
->> spatial location (which influences signal quality when grouped) of
->> each station when you decide which set of stations you're going to
->> aggregate to in parallel. Since drivers have a finite tx ring this it
->> is important to deliver bursts that can actually be aggregated
->> efficiently. This means driver would need to be able to tell qdisc
->> about per-flow conditions to influence the RR scheme in some way
->> (assuming a qdiscs even understands flows; do we need a unified way of
->> talking about flows between qdiscs and drivers?).
->
-> This is a very good summary of the problems in layering fq_codel as it
-> exists today on top of wifi as it exists today. :/ Our conclusion
-> several years ago was that as the information needed to do things more
-> right was in the mac80211 layer that we could not evolve the qdisc
-> layer to suit, and needed to move the core ideas into the mac80211
-> layer.
->
-> Things have evolved since, but I still think we can't get enough info
-> up to the qdisc layer (locks and so on) to use it sanely.
-
-The current per-station queue implementation in mac80211 doesn't seem
-sufficient. Each of these queues use a simple flat fifo queue
-(sk_buff_head) limited by packet count only with somewhat broken
-behavior when packet limit is reached as you end up with unfairly
-populated queues a lot. They need to have codel applied on them
-somehow. You'll eventually end up re-inventing fq_codel in mac80211
-making the qdisc redundant.
-
-Moreover these queues aren't per-station only. They are
-per-station-per-tid giving 16 queues per station. This is important
-because you can't aggregate traffic going out on different tids.
-
-Even without explicit air conditions feedback from mac80211 to
-fq_codel I suspect it'd be still beneficial if fq_codel was able to
-group (sub-)flows into per-station-tid and burst them out them in
-subsequent dequeue() calls so the chance they get aggregated is
-higher.
-
-
-Michał
