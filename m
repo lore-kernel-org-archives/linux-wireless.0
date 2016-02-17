@@ -1,60 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:47365 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755810AbcBDRwS (ORCPT
+Received: from mail-lf0-f50.google.com ([209.85.215.50]:35866 "EHLO
+	mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756460AbcBQFes (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 12:52:18 -0500
-Subject: Re: [PATCH-v2 1/2] mac80211: Take bitrates into account when building
- IEs.
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <1445361858-24976-1-git-send-email-greearb@candelatech.com>
- <1453807009.2759.23.camel@sipsolutions.net>
- <56A78E8F.1080505@candelatech.com> <1454576521.2564.6.camel@sipsolutions.net>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <56B38FD1.40902@candelatech.com> (sfid-20160204_185221_783353_26152837)
-Date: Thu, 4 Feb 2016 09:52:17 -0800
+	Wed, 17 Feb 2016 00:34:48 -0500
 MIME-Version: 1.0
-In-Reply-To: <1454576521.2564.6.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <87bn7gu19c.fsf@kamboji.qca.qualcomm.com>
+References: <20160210012216.GA18819@lianli>
+	<20160212094526.EC572611CE@smtp.codeaurora.org>
+	<CANfgCY02_AkRi2EMNZsneK8UdwLvAWxF_X0ts6WZbaM0=5c63A@mail.gmail.com>
+	<87bn7gu19c.fsf@kamboji.qca.qualcomm.com>
+Date: Wed, 17 Feb 2016 16:34:46 +1100
+Message-ID: <CANfgCY0zHtE8Z8knNPsTgnZS-fumdeioU45F1E2KtvpLBckQDg@mail.gmail.com> (sfid-20160217_063632_327368_9223F606)
+Subject: Re: wlcore: Fix regression in wlcore_set_partition()
+From: Ross Green <rgkernel@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Emil Goode <emil.fsw@goode.io>, Shahar Patury <shaharp@ti.com>,
+	Guy Mishol <guym@ti.com>,
+	Igor Grinberg <grinberg@compulab.co.il>,
+	Uri Mashiach <uri.mashiach@compulab.co.il>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/04/2016 01:02 AM, Johannes Berg wrote:
-> On Tue, 2016-01-26 at 07:19 -0800, Ben Greear wrote:
+Appreciate your efforts!
+
+Just trying to make sure it does not get lost.
+Introduced in rc1, not fixed by ... rc4.
+
+Anyway, I will continue to test, lots of other things still to chase
+even in rc4!
+
+Regards,
+
+Ross Green
+
+On Wed, Feb 17, 2016 at 2:24 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Ross Green <rgkernel@gmail.com> writes:
 >
->> As far as I can tell, that will not work, because I want to have
->> multiple station devices per radio, and have each of them be able to
->> use a different configuration.  So, one station may be /g, and
->> another /n and another /AC.  Same with APs.  In addition, some
->> stations may want to use all available rates for their mode, and
->> others may want to use a fixed rate or subset of available rates.
+>> On Fri, Feb 12, 2016 at 8:45 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>>
+>>>> The commit 3719c17e1816 ("wlcore/wl18xx: fw logger over sdio") introduced a
+>>>> regression causing the wlcore to time out and go into recovery. Reverting the
+>>>> changes regarding write of the last partition size brings the module back to
+>>>> it's functional state.
+>>>>
+>>>> Fixes: 3719c17e1816 ("wlcore/wl18xx: fw logger over sdio")
+>>>> Reported-by: Ross Green <rgkernel@gmail.com>
+>>>> Signed-off-by: Emil Goode <emil.fsw@goode.io>
+>>>> [kvalo@codeaurora.org: improved commit log]
+>>>
+>>> Thanks, applied to wireless-drivers.git.
+>>>
+>>> Kalle Valo
+>>
+>> I just tested linux-4.5-rc4 it appears the above fix missed the release for rc4!
+>> So the behaviour of firmware reset being called after the access of
+>> the last partition timesout.
+>>
+>> Again tested patch with the new release - 4.5-rc4 and found everything
+>> to work as expected again.
+>>
+>> So Hopefully for rc5 - Please!
 >
-> So let's agree that we're splitting the *used* rates (which we have
-> today) and the *advertised* rates/modes/...
-
-Yes, I think that will work well, and unless I mis-understand, that
-is basically what I implemented so far.
-
-> Even if we can't modify the wiphy capabilities, perhaps we could still
-> handle it more consistently at mac80211 level, e.g. by introducing and
-> using "sdata->capa.bands" (and similar for all the other wiphy
-> capabilities you want to manipulate), and then allowing that to point
-> to something modified?
-
-Copied state might be tricky.  I think if we hold any copies of capabilities data in
-the sdata, then it should be logically compared with a mask and then treated as an AND with whatever the wiphy
-has.  I'm reluctant to propose any serious mac80211 change at this point, though perhaps
-as more of this type of features are added, then it will become more obvious how
-to nicely consolidate things in mac80211.
-
-To be honest, I thought my -v2 patches were fairly non-invasive compared to my
-normal hackings :)
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+> It takes some time to get patches into Linus' tree. And being in a
+> conference and then getting sick is not really helping. I'm not sure if
+> this patch makes to rc5 on time, but I'll try.
+>
+> --
+> Kalle Valo
