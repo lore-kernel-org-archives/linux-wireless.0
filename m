@@ -1,98 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:10130 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965958AbcBDJZ5 (ORCPT
+Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:54602
+	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161115AbcBQK11 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:25:57 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 28/70] staging: wilc1000: wilc_parse_assoc_resp_info(): renames function variables
-Date: Thu, 4 Feb 2016 18:15:45 +0900
-Message-ID: <1454577387-509-29-git-send-email-glen.lee@atmel.com> (sfid-20160204_102859_243750_EF8CC36A)
-In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 17 Feb 2016 05:27:27 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 09/21] brcmfmac: use bar1 window size as provided by pci subsystem
+Date: Wed, 17 Feb 2016 11:26:58 +0100
+Message-Id: <1455704830-10088-10-git-send-email-arend@broadcom.com> (sfid-20160217_112835_727508_37A7E38A)
+In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-This patch renames to avoid camelcase, changes follow are:
- - pu8Buffer to buffer
- - u32BufferLen to buffer_len
- - ppstrConnectRespInfo to ret_connect_resp_info
+The PCIE bar1 window size is specified by chip. Currently the
+ioremap of bar1 was using a define which always matched the size
+of bar1, but newer chips can have a different bar1 sizes. With
+this patch the ioremap will be called with the by chip provided
+window size.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c | 16 ++++++++--------
- drivers/staging/wilc1000/coreconfigurator.h |  5 ++---
- 2 files changed, 10 insertions(+), 11 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 88e5661..48c8573 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -376,8 +376,8 @@ s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo)
- 	return result;
- }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index d89212b..3fd4e3b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -72,7 +72,6 @@ static struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
  
--s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
--			       tstrConnectRespInfo **ppstrConnectRespInfo)
-+s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
-+			       tstrConnectRespInfo **ret_connect_resp_info)
- {
- 	tstrConnectRespInfo *pstrConnectRespInfo = NULL;
- 	u16 u16AssocRespLen = 0;
-@@ -388,14 +388,14 @@ s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
- 	if (!pstrConnectRespInfo)
- 		return -ENOMEM;
+ #define BRCMF_PCIE_FW_UP_TIMEOUT		2000 /* msec */
  
--	u16AssocRespLen = (u16)u32BufferLen;
-+	u16AssocRespLen = (u16)buffer_len;
+-#define BRCMF_PCIE_TCM_MAP_SIZE			(4096 * 1024)
+ #define BRCMF_PCIE_REG_MAP_SIZE			(32 * 1024)
  
--	pstrConnectRespInfo->u16ConnectStatus = get_asoc_status(pu8Buffer);
-+	pstrConnectRespInfo->u16ConnectStatus = get_asoc_status(buffer);
- 	if (pstrConnectRespInfo->u16ConnectStatus == SUCCESSFUL_STATUSCODE) {
--		pstrConnectRespInfo->u16capability = get_assoc_resp_cap_info(pu8Buffer);
--		pstrConnectRespInfo->u16AssocID = get_asoc_id(pu8Buffer);
-+		pstrConnectRespInfo->u16capability = get_assoc_resp_cap_info(buffer);
-+		pstrConnectRespInfo->u16AssocID = get_asoc_id(buffer);
- 
--		pu8IEs = &pu8Buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
-+		pu8IEs = &buffer[CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN];
- 		u16IEsLen = u16AssocRespLen - (CAP_INFO_LEN + STATUS_CODE_LEN + AID_LEN);
- 
- 		pstrConnectRespInfo->pu8RespIEs = kmemdup(pu8IEs, u16IEsLen, GFP_KERNEL);
-@@ -405,7 +405,7 @@ s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
- 		pstrConnectRespInfo->u16RespIEsLen = u16IEsLen;
+ /* backplane addres space accessed by BAR0 */
+@@ -252,7 +251,6 @@ struct brcmf_pciedev_info {
+ 	char nvram_name[BRCMF_FW_NAME_LEN];
+ 	void __iomem *regs;
+ 	void __iomem *tcm;
+-	u32 tcm_size;
+ 	u32 ram_base;
+ 	u32 ram_size;
+ 	struct brcmf_chip *ci;
+@@ -1592,8 +1590,7 @@ static int brcmf_pcie_get_resource(struct brcmf_pciedev_info *devinfo)
  	}
  
--	*ppstrConnectRespInfo = pstrConnectRespInfo;
-+	*ret_connect_resp_info = pstrConnectRespInfo;
+ 	devinfo->regs = ioremap_nocache(bar0_addr, BRCMF_PCIE_REG_MAP_SIZE);
+-	devinfo->tcm = ioremap_nocache(bar1_addr, BRCMF_PCIE_TCM_MAP_SIZE);
+-	devinfo->tcm_size = BRCMF_PCIE_TCM_MAP_SIZE;
++	devinfo->tcm = ioremap_nocache(bar1_addr, bar1_size);
+ 
+ 	if (!devinfo->regs || !devinfo->tcm) {
+ 		brcmf_err("ioremap() failed (%p,%p)\n", devinfo->regs,
+@@ -1602,8 +1599,9 @@ static int brcmf_pcie_get_resource(struct brcmf_pciedev_info *devinfo)
+ 	}
+ 	brcmf_dbg(PCIE, "Phys addr : reg space = %p base addr %#016llx\n",
+ 		  devinfo->regs, (unsigned long long)bar0_addr);
+-	brcmf_dbg(PCIE, "Phys addr : mem space = %p base addr %#016llx\n",
+-		  devinfo->tcm, (unsigned long long)bar1_addr);
++	brcmf_dbg(PCIE, "Phys addr : mem space = %p base addr %#016llx size 0x%x\n",
++		  devinfo->tcm, (unsigned long long)bar1_addr,
++		  (unsigned int)bar1_size);
  
  	return 0;
  }
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index aec0779..6a2c323 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -122,9 +122,8 @@ typedef struct {
- 
- s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info);
- s32 wilc_dealloc_network_info(tstrNetworkInfo *pstrNetworkInfo);
--
--s32 wilc_parse_assoc_resp_info(u8 *pu8Buffer, u32 u32BufferLen,
--		       tstrConnectRespInfo **ppstrConnectRespInfo);
-+s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
-+			       tstrConnectRespInfo **ret_connect_resp_info);
- s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo);
- void wilc_scan_complete_received(struct wilc *wilc, u8 *pu8Buffer,
- 				 u32 u32Length);
 -- 
 1.9.1
 
