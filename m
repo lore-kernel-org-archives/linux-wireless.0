@@ -1,119 +1,361 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:9493 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754542AbcBBMG6 (ORCPT
+Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:6314 "EHLO
+	mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161105AbcBQK10 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 07:06:58 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 13/26] staging: wilc1000: renames u8channel of connect_resp_info structure
-Date: Tue, 2 Feb 2016 21:02:23 +0900
-Message-ID: <1454414556-9822-13-git-send-email-leo.kim@atmel.com> (sfid-20160202_130700_669695_DB3D9034)
-In-Reply-To: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
-References: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 17 Feb 2016 05:27:26 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Franky Lin <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 06/21] brcmfmac: add neighbor discovery offload ip address table configuration
+Date: Wed, 17 Feb 2016 11:26:55 +0100
+Message-Id: <1455704830-10088-7-git-send-email-arend@broadcom.com> (sfid-20160217_112735_882807_7E2A21E1)
+In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames u8channel variable to ch.
+From: Franky Lin <frankyl@broadcom.com>
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Configure ipv6 address for neighbor discovery offload ip table in
+firmware obtained through ipv6 address notification callback.
+
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c       |  2 +-
- drivers/staging/wilc1000/coreconfigurator.h       |  2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++++++-------
- 3 files changed, 9 insertions(+), 9 deletions(-)
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         |  23 ++--
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 138 ++++++++++++++++++---
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   7 ++
+ 3 files changed, 141 insertions(+), 27 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index ce3bc29..6c748aa 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -325,7 +325,7 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
- 		get_ssid(msa, network_info->ssid, &network_info->ssid_len);
- 		get_BSSID(msa, network_info->bssid);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 6cc8fdc..71f1fdf 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -456,7 +456,7 @@ send_key_to_dongle(struct brcmf_if *ifp, struct brcmf_wsec_key *key)
+ }
  
--		network_info->u8channel = get_current_channel_802_11n(msa,
-+		network_info->ch = get_current_channel_802_11n(msa,
- 							rx_len + FCS_LEN);
- 
- 		index = MAC_HDR_LEN + TIME_STAMP_LEN;
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index bbc4b0e..2f030a9 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -84,7 +84,7 @@ struct network_info {
- 	u8 bssid[6];
- 	u16 beacon_period;
- 	u8 dtim_period;
--	u8 u8channel;
-+	u8 ch;
- 	unsigned long u32TimeRcvdInScanCached;
- 	unsigned long u32TimeRcvdInScan;
- 	bool bNewNetwork;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index cfd6892..1773587 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -240,7 +240,7 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
- 			struct ieee80211_channel *channel;
- 
- 			if (network_info) {
--				freq = ieee80211_channel_to_frequency((s32)network_info->u8channel, IEEE80211_BAND_2GHZ);
-+				freq = ieee80211_channel_to_frequency((s32)network_info->ch, IEEE80211_BAND_2GHZ);
- 				channel = ieee80211_get_channel(wiphy, freq);
- 
- 				rssi = get_rssi_avg(network_info);
-@@ -375,7 +375,7 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
- 	       pstrNetworkInfo->bssid, ETH_ALEN);
- 	last_scanned_shadow[ap_index].beacon_period = pstrNetworkInfo->beacon_period;
- 	last_scanned_shadow[ap_index].dtim_period = pstrNetworkInfo->dtim_period;
--	last_scanned_shadow[ap_index].u8channel = pstrNetworkInfo->u8channel;
-+	last_scanned_shadow[ap_index].ch = pstrNetworkInfo->ch;
- 	last_scanned_shadow[ap_index].u16IEsLen = pstrNetworkInfo->u16IEsLen;
- 	last_scanned_shadow[ap_index].u64Tsf = pstrNetworkInfo->u64Tsf;
- 	if (ap_found != -1)
-@@ -417,7 +417,7 @@ static void CfgScanResult(enum scan_event scan_event,
- 				return;
- 
- 			if (network_info) {
--				s32Freq = ieee80211_channel_to_frequency((s32)network_info->u8channel, IEEE80211_BAND_2GHZ);
-+				s32Freq = ieee80211_channel_to_frequency((s32)network_info->ch, IEEE80211_BAND_2GHZ);
- 				channel = ieee80211_get_channel(wiphy, s32Freq);
- 
- 				if (!channel)
-@@ -895,15 +895,15 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
+ static s32
+-brcmf_configure_arp_offload(struct brcmf_if *ifp, bool enable)
++brcmf_configure_arp_nd_offload(struct brcmf_if *ifp, bool enable)
+ {
+ 	s32 err;
+ 	u32 mode;
+@@ -484,6 +484,15 @@ brcmf_configure_arp_offload(struct brcmf_if *ifp, bool enable)
+ 				  enable, mode);
  	}
  
++	err = brcmf_fil_iovar_int_set(ifp, "ndoe", enable);
++	if (err) {
++		brcmf_dbg(TRACE, "failed to configure (%d) ND offload err = %d\n",
++			  enable, err);
++		err = 0;
++	} else
++		brcmf_dbg(TRACE, "successfully configured (%d) ND offload to 0x%x\n",
++			  enable, mode);
++
+ 	return err;
+ }
  
--	PRINT_INFO(CFG80211_DBG, "Required Channel = %d\n", pstrNetworkInfo->u8channel);
-+	PRINT_INFO(CFG80211_DBG, "Required Ch = %d\n", pstrNetworkInfo->ch);
+@@ -3543,7 +3552,7 @@ static s32 brcmf_cfg80211_resume(struct wiphy *wiphy)
+ 		brcmf_report_wowl_wakeind(wiphy, ifp);
+ 		brcmf_fil_iovar_int_set(ifp, "wowl_clear", 0);
+ 		brcmf_config_wowl_pattern(ifp, "clr", NULL, 0, NULL, 0);
+-		brcmf_configure_arp_offload(ifp, true);
++		brcmf_configure_arp_nd_offload(ifp, true);
+ 		brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PM,
+ 				      cfg->wowl.pre_pmmode);
+ 		cfg->wowl.active = false;
+@@ -3567,7 +3576,7 @@ static void brcmf_configure_wowl(struct brcmf_cfg80211_info *cfg,
  
- 	PRINT_INFO(CFG80211_DBG, "Group encryption value = %s\n Cipher Group = %s\n WPA version = %s\n",
- 		   pcgroup_encrypt_val, pccipher_group, pcwpa_version);
+ 	brcmf_dbg(TRACE, "Suspend, wowl config.\n");
  
--	curr_channel = pstrNetworkInfo->u8channel;
-+	curr_channel = pstrNetworkInfo->ch;
+-	brcmf_configure_arp_offload(ifp, false);
++	brcmf_configure_arp_nd_offload(ifp, false);
+ 	brcmf_fil_cmd_int_get(ifp, BRCMF_C_GET_PM, &cfg->wowl.pre_pmmode);
+ 	brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_PM, PM_MAX);
  
- 	if (!pstrWFIDrv->p2p_connect)
--		wlan_channel = pstrNetworkInfo->u8channel;
-+		wlan_channel = pstrNetworkInfo->ch;
+@@ -4336,7 +4345,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
  
- 	wilc_wlan_set_bssid(dev, pstrNetworkInfo->bssid, STATION_MODE);
+ 	if (!mbss) {
+ 		brcmf_set_mpc(ifp, 0);
+-		brcmf_configure_arp_offload(ifp, false);
++		brcmf_configure_arp_nd_offload(ifp, false);
+ 	}
  
-@@ -911,7 +911,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 				     sme->ssid_len, sme->ie, sme->ie_len,
- 				     CfgConnectResult, (void *)priv,
- 				     u8security, tenuAuth_type,
--				     pstrNetworkInfo->u8channel,
-+				     pstrNetworkInfo->ch,
- 				     pstrNetworkInfo->pJoinParams);
- 	if (s32Error != 0) {
- 		netdev_err(dev, "wilc_set_join_req(): Error\n");
+ 	/* find the RSN_IE */
+@@ -4482,7 +4491,7 @@ brcmf_cfg80211_start_ap(struct wiphy *wiphy, struct net_device *ndev,
+ exit:
+ 	if ((err) && (!mbss)) {
+ 		brcmf_set_mpc(ifp, 1);
+-		brcmf_configure_arp_offload(ifp, true);
++		brcmf_configure_arp_nd_offload(ifp, true);
+ 	}
+ 	return err;
+ }
+@@ -4540,7 +4549,7 @@ static int brcmf_cfg80211_stop_ap(struct wiphy *wiphy, struct net_device *ndev)
+ 			brcmf_err("bss_enable config failed %d\n", err);
+ 	}
+ 	brcmf_set_mpc(ifp, 1);
+-	brcmf_configure_arp_offload(ifp, true);
++	brcmf_configure_arp_nd_offload(ifp, true);
+ 	clear_bit(BRCMF_VIF_STATUS_AP_CREATED, &ifp->vif->sme_state);
+ 	brcmf_net_setcarrier(ifp, false);
+ 
+@@ -6287,7 +6296,7 @@ static s32 brcmf_config_dongle(struct brcmf_cfg80211_info *cfg)
+ 	if (err)
+ 		goto default_conf_out;
+ 
+-	brcmf_configure_arp_offload(ifp, true);
++	brcmf_configure_arp_nd_offload(ifp, true);
+ 
+ 	cfg->dongle_up = true;
+ default_conf_out:
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index ed9998b..9507cc9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -20,6 +20,8 @@
+ #include <linux/inetdevice.h>
+ #include <net/cfg80211.h>
+ #include <net/rtnetlink.h>
++#include <net/addrconf.h>
++#include <net/ipv6.h>
+ #include <brcmu_utils.h>
+ #include <brcmu_wifi.h>
+ 
+@@ -172,6 +174,35 @@ _brcmf_set_mac_address(struct work_struct *work)
+ 	}
+ }
+ 
++#if IS_ENABLED(CONFIG_IPV6)
++static void _brcmf_update_ndtable(struct work_struct *work)
++{
++	struct brcmf_if *ifp;
++	int i, ret;
++
++	ifp = container_of(work, struct brcmf_if, ndoffload_work);
++
++	/* clear the table in firmware */
++	ret = brcmf_fil_iovar_data_set(ifp, "nd_hostip_clear", NULL, 0);
++	if (ret) {
++		brcmf_dbg(TRACE, "fail to clear nd ip table err:%d\n", ret);
++		return;
++	}
++
++	for (i = 0; i < ifp->ipv6addr_idx; i++) {
++		ret = brcmf_fil_iovar_data_set(ifp, "nd_hostip",
++					       &ifp->ipv6_addr_tbl[i],
++					       sizeof(struct in6_addr));
++		if (ret)
++			brcmf_err("add nd ip err %d\n", ret);
++	}
++}
++#else
++static void _brcmf_update_ndtable(struct work_struct *work)
++{
++}
++#endif
++
+ static int brcmf_netdev_set_mac_address(struct net_device *ndev, void *addr)
+ {
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+@@ -685,6 +716,7 @@ int brcmf_net_attach(struct brcmf_if *ifp, bool rtnl_locked)
+ 
+ 	INIT_WORK(&ifp->setmacaddr_work, _brcmf_set_mac_address);
+ 	INIT_WORK(&ifp->multicast_work, _brcmf_set_multicast_list);
++	INIT_WORK(&ifp->ndoffload_work, _brcmf_update_ndtable);
+ 
+ 	if (rtnl_locked)
+ 		err = register_netdevice(ndev);
+@@ -884,6 +916,7 @@ static void brcmf_del_if(struct brcmf_pub *drvr, s32 bsscfgidx)
+ 		if (ifp->ndev->netdev_ops == &brcmf_netdev_ops_pri) {
+ 			cancel_work_sync(&ifp->setmacaddr_work);
+ 			cancel_work_sync(&ifp->multicast_work);
++			cancel_work_sync(&ifp->ndoffload_work);
+ 		}
+ 		brcmf_net_detach(ifp->ndev);
+ 	} else {
+@@ -1025,6 +1058,56 @@ static int brcmf_inetaddr_changed(struct notifier_block *nb,
+ }
+ #endif
+ 
++#if IS_ENABLED(CONFIG_IPV6)
++static int brcmf_inet6addr_changed(struct notifier_block *nb,
++				   unsigned long action, void *data)
++{
++	struct brcmf_pub *drvr = container_of(nb, struct brcmf_pub,
++					      inet6addr_notifier);
++	struct inet6_ifaddr *ifa = data;
++	struct brcmf_if *ifp;
++	int i;
++	struct in6_addr *table;
++
++	/* Only handle primary interface */
++	ifp = drvr->iflist[0];
++	if (!ifp)
++		return NOTIFY_DONE;
++	if (ifp->ndev != ifa->idev->dev)
++		return NOTIFY_DONE;
++
++	table = ifp->ipv6_addr_tbl;
++	for (i = 0; i < NDOL_MAX_ENTRIES; i++)
++		if (ipv6_addr_equal(&ifa->addr, &table[i]))
++			break;
++
++	switch (action) {
++	case NETDEV_UP:
++		if (i == NDOL_MAX_ENTRIES) {
++			if (ifp->ipv6addr_idx < NDOL_MAX_ENTRIES) {
++				table[ifp->ipv6addr_idx++] = ifa->addr;
++			} else {
++				for (i = 0; i < NDOL_MAX_ENTRIES - 1; i++)
++					table[i] = table[i + 1];
++				table[NDOL_MAX_ENTRIES - 1] = ifa->addr;
++			}
++		}
++		break;
++	case NETDEV_DOWN:
++		if (i < NDOL_MAX_ENTRIES)
++			for (; i < ifp->ipv6addr_idx; i++)
++				table[i] = table[i + 1];
++		break;
++	default:
++		break;
++	}
++
++	schedule_work(&ifp->ndoffload_work);
++
++	return NOTIFY_OK;
++}
++#endif
++
+ int brcmf_attach(struct device *dev)
+ {
+ 	struct brcmf_pub *drvr = NULL;
+@@ -1164,30 +1247,41 @@ int brcmf_bus_start(struct device *dev)
+ #ifdef CONFIG_INET
+ 	drvr->inetaddr_notifier.notifier_call = brcmf_inetaddr_changed;
+ 	ret = register_inetaddr_notifier(&drvr->inetaddr_notifier);
++	if (ret)
++		goto fail;
++
++#if IS_ENABLED(CONFIG_IPV6)
++	drvr->inet6addr_notifier.notifier_call = brcmf_inet6addr_changed;
++	ret = register_inet6addr_notifier(&drvr->inet6addr_notifier);
++	if (ret) {
++		unregister_inetaddr_notifier(&drvr->inetaddr_notifier);
++		goto fail;
++	}
+ #endif
++#endif /* CONFIG_INET */
++
++	return 0;
+ 
+ fail:
+-	if (ret < 0) {
+-		brcmf_err("failed: %d\n", ret);
+-		if (drvr->config) {
+-			brcmf_cfg80211_detach(drvr->config);
+-			drvr->config = NULL;
+-		}
+-		if (drvr->fws) {
+-			brcmf_fws_del_interface(ifp);
+-			brcmf_fws_deinit(drvr);
+-		}
+-		if (ifp)
+-			brcmf_net_detach(ifp->ndev);
+-		if (p2p_ifp)
+-			brcmf_net_detach(p2p_ifp->ndev);
+-		drvr->iflist[0] = NULL;
+-		drvr->iflist[1] = NULL;
+-		if (brcmf_ignoring_probe_fail(drvr))
+-			ret = 0;
+-		return ret;
++	brcmf_err("failed: %d\n", ret);
++	if (drvr->config) {
++		brcmf_cfg80211_detach(drvr->config);
++		drvr->config = NULL;
+ 	}
+-	return 0;
++	if (drvr->fws) {
++		brcmf_fws_del_interface(ifp);
++		brcmf_fws_deinit(drvr);
++	}
++	if (ifp)
++		brcmf_net_detach(ifp->ndev);
++	if (p2p_ifp)
++		brcmf_net_detach(p2p_ifp->ndev);
++	drvr->iflist[0] = NULL;
++	drvr->iflist[1] = NULL;
++	if (brcmf_ignoring_probe_fail(drvr))
++		ret = 0;
++
++	return ret;
+ }
+ 
+ void brcmf_bus_add_txhdrlen(struct device *dev, uint len)
+@@ -1237,6 +1331,10 @@ void brcmf_detach(struct device *dev)
+ 	unregister_inetaddr_notifier(&drvr->inetaddr_notifier);
+ #endif
+ 
++#if IS_ENABLED(CONFIG_IPV6)
++	unregister_inet6addr_notifier(&drvr->inet6addr_notifier);
++#endif
++
+ 	/* stop firmware event handling */
+ 	brcmf_fweh_detach(drvr);
+ 	if (drvr->config)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index 8f39435..500dac6 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -48,6 +48,8 @@
+  */
+ #define BRCMF_DRIVER_FIRMWARE_VERSION_LEN	32
+ 
++#define NDOL_MAX_ENTRIES	8
++
+ /**
+  * struct brcmf_ampdu_rx_reorder - AMPDU receive reorder info
+  *
+@@ -143,6 +145,7 @@ struct brcmf_pub {
+ #endif
+ 
+ 	struct notifier_block inetaddr_notifier;
++	struct notifier_block inet6addr_notifier;
+ 	struct brcmf_mp_device *settings;
+ };
+ 
+@@ -175,6 +178,7 @@ enum brcmf_netif_stop_reason {
+  * @stats: interface specific network statistics.
+  * @setmacaddr_work: worker object for setting mac address.
+  * @multicast_work: worker object for multicast provisioning.
++ * @ndoffload_work: worker object for neighbor discovery offload configuration.
+  * @fws_desc: interface specific firmware-signalling descriptor.
+  * @ifidx: interface index in device firmware.
+  * @bsscfgidx: index of bss associated with this interface.
+@@ -191,6 +195,7 @@ struct brcmf_if {
+ 	struct net_device_stats stats;
+ 	struct work_struct setmacaddr_work;
+ 	struct work_struct multicast_work;
++	struct work_struct ndoffload_work;
+ 	struct brcmf_fws_mac_descriptor *fws_desc;
+ 	int ifidx;
+ 	s32 bsscfgidx;
+@@ -199,6 +204,8 @@ struct brcmf_if {
+ 	spinlock_t netif_stop_lock;
+ 	atomic_t pend_8021x_cnt;
+ 	wait_queue_head_t pend_8021x_wait;
++	struct in6_addr ipv6_addr_tbl[NDOL_MAX_ENTRIES];
++	u8 ipv6addr_idx;
+ };
+ 
+ struct brcmf_skb_reorder_data {
 -- 
 1.9.1
 
