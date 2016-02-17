@@ -1,787 +1,547 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:39289
+Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:30014
 	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161112AbcBQK11 (ORCPT
+	by vger.kernel.org with ESMTP id S1161110AbcBQK11 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
 	Wed, 17 Feb 2016 05:27:27 -0500
 From: Arend van Spriel <arend@broadcom.com>
 To: Kalle Valo <kvalo@codeaurora.org>
 Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
+	Hante Meuleman <hante.meuleman@broadcom.com>,
 	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 18/21] brcmfmac: switch to new platform data
-Date: Wed, 17 Feb 2016 11:27:07 +0100
-Message-Id: <1455704830-10088-19-git-send-email-arend@broadcom.com> (sfid-20160217_112834_795218_F9346E02)
+Subject: [PATCH 21/21] brcmfmac: add 802.11w management frame protection support
+Date: Wed, 17 Feb 2016 11:27:10 +0100
+Message-Id: <1455704830-10088-22-git-send-email-arend@broadcom.com> (sfid-20160217_112834_357666_A435513C)
 In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
 References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+From: Hante Meuleman <hante.meuleman@broadcom.com>
 
-Platform data is only available for sdio. With this patch a new
-platform data structure is being used which allows for platform
-data for any device and configurable per device. This patch only
-switches to the new structure and adds support for SDIO devices.
+Add full support for both AP and STA for management frame protection.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Arend Van Spriel <arend.van@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <franky.lin@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Signed-off-by: Hante Meuleman <hante.meuleman@broadcom.com>
 Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  |  15 +-
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         |   4 +-
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  |  43 ++++-
- .../wireless/broadcom/brcm80211/brcmfmac/common.h  |  35 +---
- .../net/wireless/broadcom/brcm80211/brcmfmac/of.c  |   3 +-
- .../net/wireless/broadcom/brcm80211/brcmfmac/of.h  |   5 +-
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  77 +++++----
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |   2 +-
- include/linux/platform_data/brcmfmac-sdio.h        | 135 ---------------
- include/linux/platform_data/brcmfmac.h             | 185 +++++++++++++++++++++
- 10 files changed, 282 insertions(+), 222 deletions(-)
- delete mode 100644 include/linux/platform_data/brcmfmac-sdio.h
- create mode 100644 include/linux/platform_data/brcmfmac.h
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 272 +++++++++++++++------
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         |   3 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c |   1 +
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.h |   4 +-
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       |   4 +
+ .../broadcom/brcm80211/include/brcmu_wifi.h        |   2 +
+ 6 files changed, 211 insertions(+), 75 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 25cd712..bb4aece 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -103,7 +103,7 @@ static void brcmf_sdiod_dummy_irqhandler(struct sdio_func *func)
- 
- int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
- {
--	struct brcmfmac_sdio_platform_data *pdata;
-+	struct brcmfmac_sdio_pd *pdata;
- 	int ret = 0;
- 	u8 data;
- 	u32 addr, gpiocontrol;
-@@ -173,7 +173,7 @@ int brcmf_sdiod_intr_register(struct brcmf_sdio_dev *sdiodev)
- 
- int brcmf_sdiod_intr_unregister(struct brcmf_sdio_dev *sdiodev)
- {
--	struct brcmfmac_sdio_platform_data *pdata;
-+	struct brcmfmac_sdio_pd *pdata;
- 
- 	brcmf_dbg(SDIO, "Entering\n");
- 
-@@ -1164,17 +1164,6 @@ static int brcmf_ops_sdio_probe(struct sdio_func *func,
- 	dev_set_drvdata(&func->dev, bus_if);
- 	dev_set_drvdata(&sdiodev->func[1]->dev, bus_if);
- 	sdiodev->dev = &sdiodev->func[1]->dev;
--	sdiodev->pdata = brcmf_get_module_param(sdiodev->dev);
--
--#ifdef CONFIG_PM_SLEEP
--	/* wowl can be supported when KEEP_POWER is true and (WAKE_SDIO_IRQ
--	 * is true or when platform data OOB irq is true).
--	 */
--	if ((sdio_get_host_pm_caps(sdiodev->func[1]) & MMC_PM_KEEP_POWER) &&
--	    ((sdio_get_host_pm_caps(sdiodev->func[1]) & MMC_PM_WAKE_SDIO_IRQ) ||
--	     (sdiodev->pdata && sdiodev->pdata->oob_irq_supported)))
--		bus_if->wowl_supported = true;
--#endif
- 
- 	brcmf_sdiod_change_state(sdiodev, BRCMF_SDIOD_DOWN);
- 
 diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 5609a79..5e3acac 100644
+index 5203d8f..d5c2a27 100644
 --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
 +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -6459,8 +6459,8 @@ int brcmf_cfg80211_wait_vif_event(struct brcmf_cfg80211_info *cfg,
- static s32 brcmf_translate_country_code(struct brcmf_pub *drvr, char alpha2[2],
- 					struct brcmf_fil_country_le *ccreq)
+@@ -72,8 +72,13 @@
+ #define RSN_AKM_NONE			0	/* None (IBSS) */
+ #define RSN_AKM_UNSPECIFIED		1	/* Over 802.1x */
+ #define RSN_AKM_PSK			2	/* Pre-shared Key */
++#define RSN_AKM_SHA256_1X		5	/* SHA256, 802.1X */
++#define RSN_AKM_SHA256_PSK		6	/* SHA256, Pre-shared Key */
+ #define RSN_CAP_LEN			2	/* Length of RSN capabilities */
+-#define RSN_CAP_PTK_REPLAY_CNTR_MASK	0x000C
++#define RSN_CAP_PTK_REPLAY_CNTR_MASK	(BIT(2) | BIT(3))
++#define RSN_CAP_MFPR_MASK		BIT(6)
++#define RSN_CAP_MFPC_MASK		BIT(7)
++#define RSN_PMKID_COUNT_LEN		2
+ 
+ #define VNDR_IE_CMD_LEN			4	/* length of the set command
+ 						 * string :"add", "del" (+ NUL)
+@@ -211,12 +216,19 @@ static const struct ieee80211_regdomain brcmf_regdom = {
+ 		REG_RULE(5470-10, 5850+10, 80, 6, 20, 0), }
+ };
+ 
+-static const u32 __wl_cipher_suites[] = {
++/* Note: brcmf_cipher_suites is an array of int defining which cipher suites
++ * are supported. A pointer to this array and the number of entries is passed
++ * on to upper layers. AES_CMAC defines whether or not the driver supports MFP.
++ * So the cipher suite AES_CMAC has to be the last one in the array, and when
++ * device does not support MFP then the number of suites will be decreased by 1
++ */
++static const u32 brcmf_cipher_suites[] = {
+ 	WLAN_CIPHER_SUITE_WEP40,
+ 	WLAN_CIPHER_SUITE_WEP104,
+ 	WLAN_CIPHER_SUITE_TKIP,
+ 	WLAN_CIPHER_SUITE_CCMP,
+-	WLAN_CIPHER_SUITE_AES_CMAC,
++	/* Keep as last entry: */
++	WLAN_CIPHER_SUITE_AES_CMAC
+ };
+ 
+ /* Vendor specific ie. id = 221, oui and type defines exact ie */
+@@ -1533,7 +1545,7 @@ static s32 brcmf_set_auth_type(struct net_device *ndev,
+ 
+ static s32
+ brcmf_set_wsec_mode(struct net_device *ndev,
+-		     struct cfg80211_connect_params *sme, bool mfp)
++		    struct cfg80211_connect_params *sme)
  {
--	struct cc_translate *country_codes;
--	struct cc_entry *cc;
-+	struct brcmfmac_pd_cc *country_codes;
-+	struct brcmfmac_pd_cc_entry *cc;
- 	s32 found_index;
- 	int i;
+ 	struct brcmf_cfg80211_profile *profile = ndev_to_prof(ndev);
+ 	struct brcmf_cfg80211_security *sec;
+@@ -1592,10 +1604,7 @@ brcmf_set_wsec_mode(struct net_device *ndev,
+ 	    sme->privacy)
+ 		pval = AES_ENABLED;
  
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 8c66af1..8f2c68a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -79,7 +79,7 @@ module_param_named(ignore_probe_fail, brcmf_ignore_probe_fail, int, 0);
- MODULE_PARM_DESC(ignore_probe_fail, "always succeed probe for debugging");
- #endif
- 
--static struct brcmfmac_sdio_platform_data *brcmfmac_pdata;
-+static struct brcmfmac_platform_data *brcmfmac_pdata;
- struct brcmf_mp_global_t brcmf_mp_global;
- 
- int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
-@@ -228,15 +228,46 @@ void __brcmf_dbg(u32 level, const char *func, const char *fmt, ...)
- 
- static void brcmf_mp_attach(void)
+-	if (mfp)
+-		wsec = pval | gval | MFP_CAPABLE;
+-	else
+-		wsec = pval | gval;
++	wsec = pval | gval;
+ 	err = brcmf_fil_bsscfg_int_set(netdev_priv(ndev), "wsec", wsec);
+ 	if (err) {
+ 		brcmf_err("error (%d)\n", err);
+@@ -1612,56 +1621,100 @@ brcmf_set_wsec_mode(struct net_device *ndev,
+ static s32
+ brcmf_set_key_mgmt(struct net_device *ndev, struct cfg80211_connect_params *sme)
  {
-+	/* If module param firmware path is set then this will always be used,
-+	 * if not set then if available use the platform data version. To make
-+	 * sure it gets initialized at all, always copy the module param version
-+	 */
- 	strlcpy(brcmf_mp_global.firmware_path, brcmf_firmware_path,
- 		BRCMF_FW_ALTPATH_LEN);
-+	if ((brcmfmac_pdata) && (brcmfmac_pdata->fw_alternative_path) &&
-+	    (brcmf_mp_global.firmware_path[0] == '\0')) {
-+		strlcpy(brcmf_mp_global.firmware_path,
-+			brcmfmac_pdata->fw_alternative_path,
-+			BRCMF_FW_ALTPATH_LEN);
+-	struct brcmf_cfg80211_profile *profile = ndev_to_prof(ndev);
+-	struct brcmf_cfg80211_security *sec;
+-	s32 val = 0;
+-	s32 err = 0;
++	struct brcmf_if *ifp = netdev_priv(ndev);
++	s32 val;
++	s32 err;
++	const struct brcmf_tlv *rsn_ie;
++	const u8 *ie;
++	u32 ie_len;
++	u32 offset;
++	u16 rsn_cap;
++	u32 mfp;
++	u16 count;
+ 
+-	if (sme->crypto.n_akm_suites) {
+-		err = brcmf_fil_bsscfg_int_get(netdev_priv(ndev),
+-					       "wpa_auth", &val);
+-		if (err) {
+-			brcmf_err("could not get wpa_auth (%d)\n", err);
+-			return err;
++	if (!sme->crypto.n_akm_suites)
++		return 0;
++
++	err = brcmf_fil_bsscfg_int_get(netdev_priv(ndev), "wpa_auth", &val);
++	if (err) {
++		brcmf_err("could not get wpa_auth (%d)\n", err);
++		return err;
 +	}
++	if (val & (WPA_AUTH_PSK | WPA_AUTH_UNSPECIFIED)) {
++		switch (sme->crypto.akm_suites[0]) {
++		case WLAN_AKM_SUITE_8021X:
++			val = WPA_AUTH_UNSPECIFIED;
++			break;
++		case WLAN_AKM_SUITE_PSK:
++			val = WPA_AUTH_PSK;
++			break;
++		default:
++			brcmf_err("invalid cipher group (%d)\n",
++				  sme->crypto.cipher_group);
++			return -EINVAL;
+ 		}
+-		if (val & (WPA_AUTH_PSK | WPA_AUTH_UNSPECIFIED)) {
+-			switch (sme->crypto.akm_suites[0]) {
+-			case WLAN_AKM_SUITE_8021X:
+-				val = WPA_AUTH_UNSPECIFIED;
+-				break;
+-			case WLAN_AKM_SUITE_PSK:
+-				val = WPA_AUTH_PSK;
+-				break;
+-			default:
+-				brcmf_err("invalid cipher group (%d)\n",
+-					  sme->crypto.cipher_group);
+-				return -EINVAL;
+-			}
+-		} else if (val & (WPA2_AUTH_PSK | WPA2_AUTH_UNSPECIFIED)) {
+-			switch (sme->crypto.akm_suites[0]) {
+-			case WLAN_AKM_SUITE_8021X:
+-				val = WPA2_AUTH_UNSPECIFIED;
+-				break;
+-			case WLAN_AKM_SUITE_PSK:
+-				val = WPA2_AUTH_PSK;
+-				break;
+-			default:
+-				brcmf_err("invalid cipher group (%d)\n",
+-					  sme->crypto.cipher_group);
+-				return -EINVAL;
+-			}
++	} else if (val & (WPA2_AUTH_PSK | WPA2_AUTH_UNSPECIFIED)) {
++		switch (sme->crypto.akm_suites[0]) {
++		case WLAN_AKM_SUITE_8021X:
++			val = WPA2_AUTH_UNSPECIFIED;
++			break;
++		case WLAN_AKM_SUITE_8021X_SHA256:
++			val = WPA2_AUTH_1X_SHA256;
++			break;
++		case WLAN_AKM_SUITE_PSK_SHA256:
++			val = WPA2_AUTH_PSK_SHA256;
++			break;
++		case WLAN_AKM_SUITE_PSK:
++			val = WPA2_AUTH_PSK;
++			break;
++		default:
++			brcmf_err("invalid cipher group (%d)\n",
++				  sme->crypto.cipher_group);
++			return -EINVAL;
+ 		}
++	}
+ 
+-		brcmf_dbg(CONN, "setting wpa_auth to %d\n", val);
+-		err = brcmf_fil_bsscfg_int_set(netdev_priv(ndev),
+-					       "wpa_auth", val);
+-		if (err) {
+-			brcmf_err("could not set wpa_auth (%d)\n", err);
+-			return err;
+-		}
++	if (!brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MFP))
++		goto skip_mfp_config;
++	/* The MFP mode (1 or 2) needs to be determined, parse IEs. The
++	 * IE will not be verified, just a quick search for MFP config
++	 */
++	rsn_ie = brcmf_parse_tlvs((const u8 *)sme->ie, sme->ie_len,
++				  WLAN_EID_RSN);
++	if (!rsn_ie)
++		goto skip_mfp_config;
++	ie = (const u8 *)rsn_ie;
++	ie_len = rsn_ie->len + TLV_HDR_LEN;
++	/* Skip unicast suite */
++	offset = TLV_HDR_LEN + WPA_IE_VERSION_LEN + WPA_IE_MIN_OUI_LEN;
++	if (offset + WPA_IE_SUITE_COUNT_LEN >= ie_len)
++		goto skip_mfp_config;
++	/* Skip multicast suite */
++	count = ie[offset] + (ie[offset + 1] << 8);
++	offset += WPA_IE_SUITE_COUNT_LEN + (count * WPA_IE_MIN_OUI_LEN);
++	if (offset + WPA_IE_SUITE_COUNT_LEN >= ie_len)
++		goto skip_mfp_config;
++	/* Skip auth key management suite(s) */
++	count = ie[offset] + (ie[offset + 1] << 8);
++	offset += WPA_IE_SUITE_COUNT_LEN + (count * WPA_IE_MIN_OUI_LEN);
++	if (offset + WPA_IE_SUITE_COUNT_LEN > ie_len)
++		goto skip_mfp_config;
++	/* Ready to read capabilities */
++	mfp = BRCMF_MFP_NONE;
++	rsn_cap = ie[offset] + (ie[offset + 1] << 8);
++	if (rsn_cap & RSN_CAP_MFPR_MASK)
++		mfp = BRCMF_MFP_REQUIRED;
++	else if (rsn_cap & RSN_CAP_MFPC_MASK)
++		mfp = BRCMF_MFP_CAPABLE;
++	brcmf_fil_bsscfg_int_set(netdev_priv(ndev), "mfp", mfp);
++
++skip_mfp_config:
++	brcmf_dbg(CONN, "setting wpa_auth to %d\n", val);
++	err = brcmf_fil_bsscfg_int_set(netdev_priv(ndev), "wpa_auth", val);
++	if (err) {
++		brcmf_err("could not set wpa_auth (%d)\n", err);
++		return err;
+ 	}
+-	sec = &profile->sec;
+-	sec->wpa_auth = sme->crypto.akm_suites[0];
+ 
+ 	return err;
+ }
+@@ -1827,7 +1880,7 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
+ 		goto done;
+ 	}
+ 
+-	err = brcmf_set_wsec_mode(ndev, sme, sme->mfp == NL80211_MFP_REQUIRED);
++	err = brcmf_set_wsec_mode(ndev, sme);
+ 	if (err) {
+ 		brcmf_err("wl_set_set_cipher failed (%d)\n", err);
+ 		goto done;
+@@ -2077,10 +2130,12 @@ brcmf_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
+ 		       u8 key_idx, bool pairwise, const u8 *mac_addr)
+ {
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+-	struct brcmf_wsec_key key;
+-	s32 err = 0;
++	struct brcmf_wsec_key *key;
++	s32 err;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
++	brcmf_dbg(CONN, "key index (%d)\n", key_idx);
++
+ 	if (!check_vif_up(ifp->vif))
+ 		return -EIO;
+ 
+@@ -2089,16 +2144,19 @@ brcmf_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
+ 		return -EINVAL;
+ 	}
+ 
+-	memset(&key, 0, sizeof(key));
++	key = &ifp->vif->profile.key[key_idx];
+ 
+-	key.index = (u32)key_idx;
+-	key.flags = BRCMF_PRIMARY_KEY;
+-	key.algo = CRYPTO_ALGO_OFF;
++	if (key->algo == CRYPTO_ALGO_OFF) {
++		brcmf_dbg(CONN, "Ignore clearing of (never configured) key\n");
++		return -EINVAL;
++	}
+ 
+-	brcmf_dbg(CONN, "key index (%d)\n", key_idx);
++	memset(key, 0, sizeof(*key));
++	key->index = (u32)key_idx;
++	key->flags = BRCMF_PRIMARY_KEY;
+ 
+-	/* Set the new key/index */
+-	err = send_key_to_dongle(ifp, &key);
++	/* Clear the key/index */
++	err = send_key_to_dongle(ifp, key);
+ 
+ 	brcmf_dbg(TRACE, "Exit\n");
+ 	return err;
+@@ -2106,8 +2164,8 @@ brcmf_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
+ 
+ static s32
+ brcmf_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+-		    u8 key_idx, bool pairwise, const u8 *mac_addr,
+-		    struct key_params *params)
++		       u8 key_idx, bool pairwise, const u8 *mac_addr,
++		       struct key_params *params)
+ {
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	struct brcmf_wsec_key *key;
+@@ -2214,9 +2272,10 @@ done:
  }
  
--struct brcmfmac_sdio_platform_data *brcmf_get_module_param(struct device *dev)
-+struct brcmfmac_sdio_pd *brcmf_get_module_param(struct device *dev,
-+						enum brcmf_bus_type bus_type,
-+						u32 chip, u32 chiprev)
+ static s32
+-brcmf_cfg80211_get_key(struct wiphy *wiphy, struct net_device *ndev,
+-		    u8 key_idx, bool pairwise, const u8 *mac_addr, void *cookie,
+-		    void (*callback) (void *cookie, struct key_params * params))
++brcmf_cfg80211_get_key(struct wiphy *wiphy, struct net_device *ndev, u8 key_idx,
++		       bool pairwise, const u8 *mac_addr, void *cookie,
++		       void (*callback)(void *cookie,
++					struct key_params *params))
  {
--	if (!brcmfmac_pdata)
--		brcmf_of_probe(dev, &brcmfmac_pdata);
--	return brcmfmac_pdata;
-+	struct brcmfmac_sdio_pd *pdata;
-+	struct brcmfmac_pd_device *device_pd;
-+	int i;
+ 	struct key_params params;
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+@@ -2268,8 +2327,15 @@ done:
+ 
+ static s32
+ brcmf_cfg80211_config_default_mgmt_key(struct wiphy *wiphy,
+-				    struct net_device *ndev, u8 key_idx)
++				       struct net_device *ndev, u8 key_idx)
+ {
++	struct brcmf_if *ifp = netdev_priv(ndev);
 +
-+	if (brcmfmac_pdata) {
-+		for (i = 0; i < brcmfmac_pdata->device_count; i++) {
-+			device_pd = &brcmfmac_pdata->devices[i];
-+			if ((device_pd->bus_type == bus_type) &&
-+			    (device_pd->id == chip) &&
-+			    ((device_pd->rev == chiprev) ||
-+			     (device_pd->rev == -1))) {
-+				brcmf_dbg(INFO, "Platform data for device found\n");
-+				if (device_pd->bus_type == BRCMF_BUSTYPE_SDIO)
-+					return &device_pd->bus.sdio;
-+				break;
++	brcmf_dbg(TRACE, "Enter key_idx %d\n", key_idx);
++
++	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MFP))
++		return 0;
++
+ 	brcmf_dbg(INFO, "Not supported\n");
+ 
+ 	return -EOPNOTSUPP;
+@@ -3769,7 +3835,7 @@ brcmf_configure_wpaie(struct brcmf_if *ifp,
+ 	u32 auth = 0; /* d11 open authentication */
+ 	u16 count;
+ 	s32 err = 0;
+-	s32 len = 0;
++	s32 len;
+ 	u32 i;
+ 	u32 wsec;
+ 	u32 pval = 0;
+@@ -3779,6 +3845,7 @@ brcmf_configure_wpaie(struct brcmf_if *ifp,
+ 	u8 *data;
+ 	u16 rsn_cap;
+ 	u32 wme_bss_disable;
++	u32 mfp;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 	if (wpa_ie == NULL)
+@@ -3893,19 +3960,53 @@ brcmf_configure_wpaie(struct brcmf_if *ifp,
+ 			is_rsn_ie ? (wpa_auth |= WPA2_AUTH_PSK) :
+ 				    (wpa_auth |= WPA_AUTH_PSK);
+ 			break;
++		case RSN_AKM_SHA256_PSK:
++			brcmf_dbg(TRACE, "RSN_AKM_MFP_PSK\n");
++			wpa_auth |= WPA2_AUTH_PSK_SHA256;
++			break;
++		case RSN_AKM_SHA256_1X:
++			brcmf_dbg(TRACE, "RSN_AKM_MFP_1X\n");
++			wpa_auth |= WPA2_AUTH_1X_SHA256;
++			break;
+ 		default:
+ 			brcmf_err("Ivalid key mgmt info\n");
+ 		}
+ 		offset++;
+ 	}
+ 
++	mfp = BRCMF_MFP_NONE;
+ 	if (is_rsn_ie) {
+ 		wme_bss_disable = 1;
+ 		if ((offset + RSN_CAP_LEN) <= len) {
+ 			rsn_cap = data[offset] + (data[offset + 1] << 8);
+ 			if (rsn_cap & RSN_CAP_PTK_REPLAY_CNTR_MASK)
+ 				wme_bss_disable = 0;
++			if (rsn_cap & RSN_CAP_MFPR_MASK) {
++				brcmf_dbg(TRACE, "MFP Required\n");
++				mfp = BRCMF_MFP_REQUIRED;
++				/* Firmware only supports mfp required in
++				 * combination with WPA2_AUTH_PSK_SHA256 or
++				 * WPA2_AUTH_1X_SHA256.
++				 */
++				if (!(wpa_auth & (WPA2_AUTH_PSK_SHA256 |
++						  WPA2_AUTH_1X_SHA256))) {
++					err = -EINVAL;
++					goto exit;
++				}
++				/* Firmware has requirement that WPA2_AUTH_PSK/
++				 * WPA2_AUTH_UNSPECIFIED be set, if SHA256 OUI
++				 * is to be included in the rsn ie.
++				 */
++				if (wpa_auth & WPA2_AUTH_PSK_SHA256)
++					wpa_auth |= WPA2_AUTH_PSK;
++				else if (wpa_auth & WPA2_AUTH_1X_SHA256)
++					wpa_auth |= WPA2_AUTH_UNSPECIFIED;
++			} else if (rsn_cap & RSN_CAP_MFPC_MASK) {
++				brcmf_dbg(TRACE, "MFP Capable\n");
++				mfp = BRCMF_MFP_CAPABLE;
++			}
+ 		}
++		offset += RSN_CAP_LEN;
+ 		/* set wme_bss_disable to sync RSN Capabilities */
+ 		err = brcmf_fil_bsscfg_int_set(ifp, "wme_bss_disable",
+ 					       wme_bss_disable);
+@@ -3913,6 +4014,21 @@ brcmf_configure_wpaie(struct brcmf_if *ifp,
+ 			brcmf_err("wme_bss_disable error %d\n", err);
+ 			goto exit;
+ 		}
++
++		/* Skip PMKID cnt as it is know to be 0 for AP. */
++		offset += RSN_PMKID_COUNT_LEN;
++
++		/* See if there is BIP wpa suite left for MFP */
++		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MFP) &&
++		    ((offset + WPA_IE_MIN_OUI_LEN) <= len)) {
++			err = brcmf_fil_bsscfg_data_set(ifp, "bip",
++							&data[offset],
++							WPA_IE_MIN_OUI_LEN);
++			if (err < 0) {
++				brcmf_err("bip error %d\n", err);
++				goto exit;
 +			}
 +		}
-+	}
-+	pdata = NULL;
-+	brcmf_of_probe(dev, &pdata);
-+
-+	return pdata;
- }
- 
- int brcmf_mp_device_attach(struct brcmf_pub *drvr)
-@@ -286,7 +317,7 @@ static int brcmf_common_pd_remove(struct platform_device *pdev)
- static struct platform_driver brcmf_pd = {
- 	.remove		= brcmf_common_pd_remove,
- 	.driver		= {
--		.name	= BRCMFMAC_SDIO_PDATA_NAME,
-+		.name	= BRCMFMAC_PDATA_NAME,
  	}
+ 	/* FOR WPS , set SES_OW_ENABLED */
+ 	wsec = (pval | gval | SES_OW_ENABLED);
+@@ -3929,6 +4045,16 @@ brcmf_configure_wpaie(struct brcmf_if *ifp,
+ 		brcmf_err("wsec error %d\n", err);
+ 		goto exit;
+ 	}
++	/* Configure MFP, this needs to go after wsec otherwise the wsec command
++	 * will overwrite the values set by MFP
++	 */
++	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MFP)) {
++		err = brcmf_fil_bsscfg_int_set(ifp, "mfp", mfp);
++		if (err < 0) {
++			brcmf_err("mfp error %d\n", err);
++			goto exit;
++		}
++	}
+ 	/* set upper-layer auth */
+ 	err = brcmf_fil_bsscfg_int_set(ifp, "wpa_auth", wpa_auth);
+ 	if (err < 0) {
+@@ -6149,8 +6275,10 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 	wiphy->n_addresses = i;
+ 
+ 	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
+-	wiphy->cipher_suites = __wl_cipher_suites;
+-	wiphy->n_cipher_suites = ARRAY_SIZE(__wl_cipher_suites);
++	wiphy->cipher_suites = brcmf_cipher_suites;
++	wiphy->n_cipher_suites = ARRAY_SIZE(brcmf_cipher_suites);
++	if (!brcmf_feat_is_enabled(ifp, BRCMF_FEAT_MFP))
++		wiphy->n_cipher_suites--;
+ 	wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
+ 			WIPHY_FLAG_OFFCHAN_TX |
+ 			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index e4c1d43..95e35bc 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -72,7 +72,7 @@
+ 
+ #define BRCMF_VNDR_IE_P2PAF_SHIFT	12
+ 
+-#define BRCMF_MAX_DEFAULT_KEYS		4
++#define BRCMF_MAX_DEFAULT_KEYS		6
+ 
+ /* beacon loss timeout defaults */
+ #define BRCMF_DEFAULT_BCN_TIMEOUT_ROAM_ON	2
+@@ -107,7 +107,6 @@ struct brcmf_cfg80211_security {
+ 	u32 auth_type;
+ 	u32 cipher_pairwise;
+ 	u32 cipher_group;
+-	u32 wpa_auth;
  };
- 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-index 54a26ed..a64e40e 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-@@ -16,7 +16,7 @@
- #define BRCMFMAC_COMMON_H
- 
- #include <linux/platform_device.h>
--#include <linux/platform_data/brcmfmac-sdio.h>
-+#include <linux/platform_data/brcmfmac.h>
- #include "fwil_types.h"
- 
- extern const u8 ALLFFMAC[ETH_ALEN];
-@@ -43,33 +43,6 @@ struct brcmf_mp_global_t {
- extern struct brcmf_mp_global_t brcmf_mp_global;
  
  /**
-- * struct cc_entry - Struct for translating user space country code (iso3166) to
-- *		     firmware country code and revision.
-- *
-- * @iso3166: iso3166 alpha 2 country code string.
-- * @cc: firmware country code string.
-- * @rev: firmware country code revision.
-- */
--struct cc_entry {
--	char	iso3166[BRCMF_COUNTRY_BUF_SZ];
--	char	cc[BRCMF_COUNTRY_BUF_SZ];
--	s32	rev;
--};
--
--/**
-- * struct cc_translate - Struct for translating country codes as set by user
-- *			 space to a country code and rev which can be used by
-- *			 firmware.
-- *
-- * @table_size: number of entries in table (> 0)
-- * @table: dynamic array of 1 or more elements with translation information.
-- */
--struct cc_translate {
--	int	table_size;
--	struct cc_entry table[0];
--};
--
--/**
-  * struct brcmf_mp_device - Device module paramaters.
-  *
-  * @sdiod_txglomsz: SDIO txglom size.
-@@ -88,10 +61,12 @@ struct brcmf_mp_device {
- 	int	fcmode;
- 	bool	roamoff;
- 	bool	ignore_probe_fail;
--	struct cc_translate *country_codes;
-+	struct brcmfmac_pd_cc *country_codes;
- };
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+index bfa19bb..62985f2 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+@@ -161,6 +161,7 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+ 		ifp->drvr->feat_flags &= ~BIT(BRCMF_FEAT_MBSS);
+ 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_RSDB, "rsdb_mode");
+ 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_TDLS, "tdls_enable");
++	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_MFP, "mfp");
  
--struct brcmfmac_sdio_platform_data *brcmf_get_module_param(struct device *dev);
-+struct brcmfmac_sdio_pd *brcmf_get_module_param(struct device *dev,
-+						enum brcmf_bus_type bus_type,
-+						u32 chip, u32 chiprev);
- int brcmf_mp_device_attach(struct brcmf_pub *drvr);
- void brcmf_mp_device_detach(struct brcmf_pub *drvr);
- #ifdef DEBUG
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-index 8201d93..ece0b65 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.c
-@@ -23,8 +23,7 @@
- #include "common.h"
- #include "of.h"
- 
--void
--brcmf_of_probe(struct device *dev, struct brcmfmac_sdio_platform_data **sdio)
-+void brcmf_of_probe(struct device *dev, struct brcmfmac_sdio_pd **sdio)
- {
- 	struct device_node *np = dev->of_node;
- 	int irq;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.h
-index 84b4744..1ba951f 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/of.h
-@@ -15,10 +15,9 @@
+ 	pfn_mac.version = BRCMF_PFN_MACADDR_CFG_VER;
+ 	err = brcmf_fil_iovar_data_get(ifp, "pfn_macaddr", &pfn_mac,
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+index a3efa35..db4733a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+@@ -30,6 +30,7 @@
+  * WOWL_ND: WOWL net detect (PNO)
+  * WOWL_GTK: (WOWL) GTK rekeying offload
+  * WOWL_ARP_ND: ARP and Neighbor Discovery offload support during WOWL.
++ * MFP: 802.11w Management Frame Protection.
   */
- #ifdef CONFIG_OF
- void
--brcmf_of_probe(struct device *dev, struct brcmfmac_sdio_platform_data **sdio);
-+brcmf_of_probe(struct device *dev, struct brcmfmac_sdio_pd **sdio);
- #else
--static void brcmf_of_probe(struct device *dev,
--			   struct brcmfmac_sdio_platform_data **sdio)
-+static void brcmf_of_probe(struct device *dev, struct brcmfmac_sdio_pd **sdio)
- {
- }
- #endif /* CONFIG_OF */
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index c790fa8..6e36704 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -33,8 +33,6 @@
- #include <linux/bcma/bcma.h>
- #include <linux/debugfs.h>
- #include <linux/vmalloc.h>
--#include <linux/platform_data/brcmfmac-sdio.h>
--#include <linux/moduleparam.h>
- #include <asm/unaligned.h>
- #include <defs.h>
- #include <brcmu_wifi.h>
-@@ -44,6 +42,8 @@
- #include "sdio.h"
- #include "chip.h"
- #include "firmware.h"
-+#include "core.h"
-+#include "common.h"
+ #define BRCMF_FEAT_LIST \
+ 	BRCMF_FEAT_DEF(MBSS) \
+@@ -42,7 +43,8 @@
+ 	BRCMF_FEAT_DEF(SCAN_RANDOM_MAC) \
+ 	BRCMF_FEAT_DEF(WOWL_ND) \
+ 	BRCMF_FEAT_DEF(WOWL_GTK) \
+-	BRCMF_FEAT_DEF(WOWL_ARP_ND)
++	BRCMF_FEAT_DEF(WOWL_ARP_ND) \
++	BRCMF_FEAT_DEF(MFP)
  
- #define DCMD_RESP_TIMEOUT	msecs_to_jiffies(2500)
- #define CTL_DONE_TIMEOUT	msecs_to_jiffies(2500)
-@@ -3775,26 +3775,28 @@ static const struct brcmf_buscore_ops brcmf_sdio_buscore_ops = {
- static bool
- brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
- {
-+	struct brcmf_sdio_dev *sdiodev;
- 	u8 clkctl = 0;
- 	int err = 0;
- 	int reg_addr;
- 	u32 reg_val;
- 	u32 drivestrength;
+ /*
+  * Quirks:
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+index 6d41ae3..a4118c0 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+@@ -142,6 +142,10 @@
+ #define BRCMF_RSN_KEK_LENGTH		16
+ #define BRCMF_RSN_REPLAY_LEN		8
  
--	sdio_claim_host(bus->sdiodev->func[1]);
-+	sdiodev = bus->sdiodev;
-+	sdio_claim_host(sdiodev->func[1]);
- 
- 	pr_debug("F1 signature read @0x18000000=0x%4x\n",
--		 brcmf_sdiod_regrl(bus->sdiodev, SI_ENUM_BASE, NULL));
-+		 brcmf_sdiod_regrl(sdiodev, SI_ENUM_BASE, NULL));
- 
- 	/*
- 	 * Force PLL off until brcmf_chip_attach()
- 	 * programs PLL control regs
- 	 */
- 
--	brcmf_sdiod_regwb(bus->sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
-+	brcmf_sdiod_regwb(sdiodev, SBSDIO_FUNC1_CHIPCLKCSR,
- 			  BRCMF_INIT_CLKCTL1, &err);
- 	if (!err)
--		clkctl = brcmf_sdiod_regrb(bus->sdiodev,
-+		clkctl = brcmf_sdiod_regrb(sdiodev,
- 					   SBSDIO_FUNC1_CHIPCLKCSR, &err);
- 
- 	if (err || ((clkctl & ~SBSDIO_AVBITS) != BRCMF_INIT_CLKCTL1)) {
-@@ -3803,50 +3805,77 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
- 		goto fail;
- 	}
- 
--	bus->ci = brcmf_chip_attach(bus->sdiodev, &brcmf_sdio_buscore_ops);
-+	bus->ci = brcmf_chip_attach(sdiodev, &brcmf_sdio_buscore_ops);
- 	if (IS_ERR(bus->ci)) {
- 		brcmf_err("brcmf_chip_attach failed!\n");
- 		bus->ci = NULL;
- 		goto fail;
- 	}
-+	sdiodev->pdata = brcmf_get_module_param(sdiodev->dev,
-+						   BRCMF_BUSTYPE_SDIO,
-+						   bus->ci->chip,
-+						   bus->ci->chiprev);
-+	/* platform specific configuration:
-+	 *   alignments must be at least 4 bytes for ADMA
-+	 */
-+	bus->head_align = ALIGNMENT;
-+	bus->sgentry_align = ALIGNMENT;
-+	if (sdiodev->pdata) {
-+		if (sdiodev->pdata->sd_head_align > ALIGNMENT)
-+			bus->head_align = sdiodev->pdata->sd_head_align;
-+		if (sdiodev->pdata->sd_sgentry_align > ALIGNMENT)
-+			bus->sgentry_align = sdiodev->pdata->sd_sgentry_align;
-+	}
-+	/* allocate scatter-gather table. sg support
-+	 * will be disabled upon allocation failure.
-+	 */
-+	brcmf_sdiod_sgtable_alloc(sdiodev);
++#define BRCMF_MFP_NONE			0
++#define BRCMF_MFP_CAPABLE		1
++#define BRCMF_MFP_REQUIRED		2
 +
-+#ifdef CONFIG_PM_SLEEP
-+	/* wowl can be supported when KEEP_POWER is true and (WAKE_SDIO_IRQ
-+	 * is true or when platform data OOB irq is true).
-+	 */
-+	if ((sdio_get_host_pm_caps(sdiodev->func[1]) & MMC_PM_KEEP_POWER) &&
-+	    ((sdio_get_host_pm_caps(sdiodev->func[1]) & MMC_PM_WAKE_SDIO_IRQ) ||
-+	     (sdiodev->pdata && sdiodev->pdata->oob_irq_supported)))
-+		sdiodev->bus_if->wowl_supported = true;
-+#endif
+ /* join preference types for join_pref iovar */
+ enum brcmf_join_pref_types {
+ 	BRCMF_JOIN_PREF_RSSI = 1,
+diff --git a/drivers/net/wireless/broadcom/brcm80211/include/brcmu_wifi.h b/drivers/net/wireless/broadcom/brcm80211/include/brcmu_wifi.h
+index 3f68dd5..7b9a779 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/include/brcmu_wifi.h
++++ b/drivers/net/wireless/broadcom/brcm80211/include/brcmu_wifi.h
+@@ -236,6 +236,8 @@ static inline bool ac_bitmap_tst(u8 bitmap, int prec)
+ #define WPA2_AUTH_RESERVED3	0x0200
+ #define WPA2_AUTH_RESERVED4	0x0400
+ #define WPA2_AUTH_RESERVED5	0x0800
++#define WPA2_AUTH_1X_SHA256	0x1000  /* 1X with SHA256 key derivation */
++#define WPA2_AUTH_PSK_SHA256	0x8000	/* PSK with SHA256 key derivation */
  
- 	if (brcmf_sdio_kso_init(bus)) {
- 		brcmf_err("error enabling KSO\n");
- 		goto fail;
- 	}
- 
--	if ((bus->sdiodev->pdata) && (bus->sdiodev->pdata->drive_strength))
--		drivestrength = bus->sdiodev->pdata->drive_strength;
-+	if ((sdiodev->pdata) && (sdiodev->pdata->drive_strength))
-+		drivestrength = sdiodev->pdata->drive_strength;
- 	else
- 		drivestrength = DEFAULT_SDIO_DRIVE_STRENGTH;
--	brcmf_sdio_drivestrengthinit(bus->sdiodev, bus->ci, drivestrength);
-+	brcmf_sdio_drivestrengthinit(sdiodev, bus->ci, drivestrength);
- 
- 	/* Set card control so an SDIO card reset does a WLAN backplane reset */
--	reg_val = brcmf_sdiod_regrb(bus->sdiodev,
--				    SDIO_CCCR_BRCM_CARDCTRL, &err);
-+	reg_val = brcmf_sdiod_regrb(sdiodev, SDIO_CCCR_BRCM_CARDCTRL, &err);
- 	if (err)
- 		goto fail;
- 
- 	reg_val |= SDIO_CCCR_BRCM_CARDCTRL_WLANRESET;
- 
--	brcmf_sdiod_regwb(bus->sdiodev,
--			  SDIO_CCCR_BRCM_CARDCTRL, reg_val, &err);
-+	brcmf_sdiod_regwb(sdiodev, SDIO_CCCR_BRCM_CARDCTRL, reg_val, &err);
- 	if (err)
- 		goto fail;
- 
- 	/* set PMUControl so a backplane reset does PMU state reload */
- 	reg_addr = CORE_CC_REG(brcmf_chip_get_pmu(bus->ci)->base, pmucontrol);
--	reg_val = brcmf_sdiod_regrl(bus->sdiodev, reg_addr, &err);
-+	reg_val = brcmf_sdiod_regrl(sdiodev, reg_addr, &err);
- 	if (err)
- 		goto fail;
- 
- 	reg_val |= (BCMA_CC_PMU_CTL_RES_RELOAD << BCMA_CC_PMU_CTL_RES_SHIFT);
- 
--	brcmf_sdiod_regwl(bus->sdiodev, reg_addr, reg_val, &err);
-+	brcmf_sdiod_regwl(sdiodev, reg_addr, reg_val, &err);
- 	if (err)
- 		goto fail;
- 
--	sdio_release_host(bus->sdiodev->func[1]);
-+	sdio_release_host(sdiodev->func[1]);
- 
- 	brcmu_pktq_init(&bus->txq, (PRIOMASK + 1), TXQLEN);
- 
-@@ -3867,7 +3896,7 @@ brcmf_sdio_probe_attach(struct brcmf_sdio *bus)
- 	return true;
- 
- fail:
--	sdio_release_host(bus->sdiodev->func[1]);
-+	sdio_release_host(sdiodev->func[1]);
- 	return false;
- }
- 
-@@ -4045,18 +4074,6 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
- 	bus->txminmax = BRCMF_TXMINMAX;
- 	bus->tx_seq = SDPCM_SEQ_WRAP - 1;
- 
--	/* platform specific configuration:
--	 *   alignments must be at least 4 bytes for ADMA
--	 */
--	bus->head_align = ALIGNMENT;
--	bus->sgentry_align = ALIGNMENT;
--	if (sdiodev->pdata) {
--		if (sdiodev->pdata->sd_head_align > ALIGNMENT)
--			bus->head_align = sdiodev->pdata->sd_head_align;
--		if (sdiodev->pdata->sd_sgentry_align > ALIGNMENT)
--			bus->sgentry_align = sdiodev->pdata->sd_sgentry_align;
--	}
--
- 	/* single-threaded workqueue */
- 	wq = alloc_ordered_workqueue("brcmf_wq/%s", WQ_MEM_RECLAIM,
- 				     dev_name(&sdiodev->func[1]->dev));
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index 23f2231..50df9cb 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -184,7 +184,7 @@ struct brcmf_sdio_dev {
- 	struct brcmf_sdio *bus;
- 	struct device *dev;
- 	struct brcmf_bus *bus_if;
--	struct brcmfmac_sdio_platform_data *pdata;
-+	struct brcmfmac_sdio_pd *pdata;
- 	bool oob_irq_requested;
- 	bool irq_en;			/* irq enable flags */
- 	spinlock_t irq_en_lock;
-diff --git a/include/linux/platform_data/brcmfmac-sdio.h b/include/linux/platform_data/brcmfmac-sdio.h
-deleted file mode 100644
-index e75dcbf..0000000
---- a/include/linux/platform_data/brcmfmac-sdio.h
-+++ /dev/null
-@@ -1,135 +0,0 @@
--/*
-- * Copyright (c) 2013 Broadcom Corporation
-- *
-- * Permission to use, copy, modify, and/or distribute this software for any
-- * purpose with or without fee is hereby granted, provided that the above
-- * copyright notice and this permission notice appear in all copies.
-- *
-- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-- * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-- * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-- * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-- */
--
--#ifndef _LINUX_BRCMFMAC_PLATFORM_H
--#define _LINUX_BRCMFMAC_PLATFORM_H
--
--/*
-- * Platform specific driver functions and data. Through the platform specific
-- * device data functions can be provided to help the brcmfmac driver to
-- * operate with the device in combination with the used platform.
-- *
-- * Use the platform data in the following (similar) way:
-- *
-- *
--#include <brcmfmac_platform.h>
--
--
--static void brcmfmac_power_on(void)
--{
--}
--
--static void brcmfmac_power_off(void)
--{
--}
--
--static void brcmfmac_reset(void)
--{
--}
--
--static struct brcmfmac_sdio_platform_data brcmfmac_sdio_pdata = {
--	.power_on		= brcmfmac_power_on,
--	.power_off		= brcmfmac_power_off,
--	.reset			= brcmfmac_reset
--};
--
--static struct platform_device brcmfmac_device = {
--	.name			= BRCMFMAC_SDIO_PDATA_NAME,
--	.id			= PLATFORM_DEVID_NONE,
--	.dev.platform_data	= &brcmfmac_sdio_pdata
--};
--
--void __init brcmfmac_init_pdata(void)
--{
--	brcmfmac_sdio_pdata.oob_irq_supported = true;
--	brcmfmac_sdio_pdata.oob_irq_nr = gpio_to_irq(GPIO_BRCMF_SDIO_OOB);
--	brcmfmac_sdio_pdata.oob_irq_flags = IORESOURCE_IRQ |
--					    IORESOURCE_IRQ_HIGHLEVEL;
--	platform_device_register(&brcmfmac_device);
--}
-- *
-- *
-- * Note: the brcmfmac can be loaded as module or be statically built-in into
-- * the kernel. If built-in then do note that it uses module_init (and
-- * module_exit) routines which equal device_initcall. So if you intend to
-- * create a module with the platform specific data for the brcmfmac and have
-- * it built-in to the kernel then use a higher initcall then device_initcall
-- * (see init.h). If this is not done then brcmfmac will load without problems
-- * but will not pickup the platform data.
-- *
-- * When the driver does not "detect" platform driver data then it will continue
-- * without reporting anything and just assume there is no data needed. Which is
-- * probably true for most platforms.
-- *
-- * Explanation of the platform_data fields:
-- *
-- * drive_strength: is the preferred drive_strength to be used for the SDIO
-- * pins. If 0 then a default value will be used. This is the target drive
-- * strength, the exact drive strength which will be used depends on the
-- * capabilities of the device.
-- *
-- * oob_irq_supported: does the board have support for OOB interrupts. SDIO
-- * in-band interrupts are relatively slow and for having less overhead on
-- * interrupt processing an out of band interrupt can be used. If the HW
-- * supports this then enable this by setting this field to true and configure
-- * the oob related fields.
-- *
-- * oob_irq_nr, oob_irq_flags: the OOB interrupt information. The values are
-- * used for registering the irq using request_irq function.
-- *
-- * broken_sg_support: flag for broken sg list support of SDIO host controller.
-- * Set this to true if the SDIO host controller has higher align requirement
-- * than 32 bytes for each scatterlist item.
-- *
-- * sd_head_align: alignment requirement for start of data buffer
-- *
-- * sd_sgentry_align: length alignment requirement for each sg entry
-- *
-- * power_on: This function is called by the brcmfmac when the module gets
-- * loaded. This can be particularly useful for low power devices. The platform
-- * spcific routine may for example decide to power up the complete device.
-- * If there is no use-case for this function then provide NULL.
-- *
-- * power_off: This function is called by the brcmfmac when the module gets
-- * unloaded. At this point the device can be powered down or otherwise be reset.
-- * So if an actual power_off is not supported but reset is then reset the device
-- * when this function gets called. This can be particularly useful for low power
-- * devices. If there is no use-case for this function (either power-down or
-- * reset) then provide NULL.
-- *
-- * reset: This function can get called if the device communication broke down.
-- * This functionality is particularly useful in case of SDIO type devices. It is
-- * possible to reset a dongle via sdio data interface, but it requires that
-- * this is fully functional. This function is chip/module specific and this
-- * function should return only after the complete reset has completed.
-- */
--
--#define BRCMFMAC_SDIO_PDATA_NAME	"brcmfmac_sdio"
--
--struct brcmfmac_sdio_platform_data {
--	unsigned int drive_strength;
--	bool oob_irq_supported;
--	unsigned int oob_irq_nr;
--	unsigned long oob_irq_flags;
--	bool broken_sg_support;
--	unsigned short sd_head_align;
--	unsigned short sd_sgentry_align;
--	void (*power_on)(void);
--	void (*power_off)(void);
--	void (*reset)(void);
--};
--
--#endif /* _LINUX_BRCMFMAC_PLATFORM_H */
-diff --git a/include/linux/platform_data/brcmfmac.h b/include/linux/platform_data/brcmfmac.h
-new file mode 100644
-index 0000000..1d30bf2
---- /dev/null
-+++ b/include/linux/platform_data/brcmfmac.h
-@@ -0,0 +1,185 @@
-+/*
-+ * Copyright (c) 201 Broadcom Corporation
-+ *
-+ * Permission to use, copy, modify, and/or distribute this software for any
-+ * purpose with or without fee is hereby granted, provided that the above
-+ * copyright notice and this permission notice appear in all copies.
-+ *
-+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-+ * SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION
-+ * OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
-+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-+ */
-+
-+#ifndef _LINUX_BRCMFMAC_PLATFORM_H
-+#define _LINUX_BRCMFMAC_PLATFORM_H
-+
-+
-+#define BRCMFMAC_PDATA_NAME		"brcmfmac"
-+
-+#define BRCMFMAC_COUNTRY_BUF_SZ		4
-+
-+
-+/*
-+ * Platform specific driver functions and data. Through the platform specific
-+ * device data functions and data can be provided to help the brcmfmac driver to
-+ * operate with the device in combination with the used platform.
-+ */
-+
-+
-+/**
-+ * Note: the brcmfmac can be loaded as module or be statically built-in into
-+ * the kernel. If built-in then do note that it uses module_init (and
-+ * module_exit) routines which equal device_initcall. So if you intend to
-+ * create a module with the platform specific data for the brcmfmac and have
-+ * it built-in to the kernel then use a higher initcall then device_initcall
-+ * (see init.h). If this is not done then brcmfmac will load without problems
-+ * but will not pickup the platform data.
-+ *
-+ * When the driver does not "detect" platform driver data then it will continue
-+ * without reporting anything and just assume there is no data needed. Which is
-+ * probably true for most platforms.
-+ */
-+
-+/**
-+ * enum brcmf_bus_type - Bus type identifier. Currently SDIO, USB and PCIE are
-+ *			 supported.
-+ */
-+enum brcmf_bus_type {
-+	BRCMF_BUSTYPE_SDIO,
-+	BRCMF_BUSTYPE_USB,
-+	BRCMF_BUSTYPE_PCIE
-+};
-+
-+
-+/**
-+ * struct brcmfmac_sdio_pd - SDIO Device specific platform data.
-+ *
-+ * @txglomsz:		SDIO txglom size. Use 0 if default of driver is to be
-+ *			used.
-+ * @drive_strength:	is the preferred drive_strength to be used for the SDIO
-+ *			pins. If 0 then a default value will be used. This is
-+ *			the target drive strength, the exact drive strength
-+ *			which will be used depends on the capabilities of the
-+ *			device.
-+ * @oob_irq_supported:	does the board have support for OOB interrupts. SDIO
-+ *			in-band interrupts are relatively slow and for having
-+ *			less overhead on interrupt processing an out of band
-+ *			interrupt can be used. If the HW supports this then
-+ *			enable this by setting this field to true and configure
-+ *			the oob related fields.
-+ * @oob_irq_nr,
-+ * @oob_irq_flags:	the OOB interrupt information. The values are used for
-+ *			registering the irq using request_irq function.
-+ * @broken_sg_support:	flag for broken sg list support of SDIO host controller.
-+ *			Set this to true if the SDIO host controller has higher
-+ *			align requirement than 32 bytes for each scatterlist
-+ *			item.
-+ * @sd_head_align:	alignment requirement for start of data buffer.
-+ * @sd_sgentry_align:	length alignment requirement for each sg entry.
-+ * @reset:		This function can get called if the device communication
-+ *			broke down. This functionality is particularly useful in
-+ *			case of SDIO type devices. It is possible to reset a
-+ *			dongle via sdio data interface, but it requires that
-+ *			this is fully functional. This function is chip/module
-+ *			specific and this function should return only after the
-+ *			complete reset has completed.
-+ */
-+struct brcmfmac_sdio_pd {
-+	int		txglomsz;
-+	unsigned int	drive_strength;
-+	bool		oob_irq_supported;
-+	unsigned int	oob_irq_nr;
-+	unsigned long	oob_irq_flags;
-+	bool		broken_sg_support;
-+	unsigned short	sd_head_align;
-+	unsigned short	sd_sgentry_align;
-+	void		(*reset)(void);
-+};
-+
-+/**
-+ * struct brcmfmac_pd_cc_entry - Struct for translating user space country code
-+ *				 (iso3166) to firmware country code and
-+ *				 revision.
-+ *
-+ * @iso3166:	iso3166 alpha 2 country code string.
-+ * @cc:		firmware country code string.
-+ * @rev:	firmware country code revision.
-+ */
-+struct brcmfmac_pd_cc_entry {
-+	char	iso3166[BRCMFMAC_COUNTRY_BUF_SZ];
-+	char	cc[BRCMFMAC_COUNTRY_BUF_SZ];
-+	s32	rev;
-+};
-+
-+/**
-+ * struct brcmfmac_pd_cc - Struct for translating country codes as set by user
-+ *			   space to a country code and rev which can be used by
-+ *			   firmware.
-+ *
-+ * @table_size:	number of entries in table (> 0)
-+ * @table:	array of 1 or more elements with translation information.
-+ */
-+struct brcmfmac_pd_cc {
-+	int				table_size;
-+	struct brcmfmac_pd_cc_entry	table[0];
-+};
-+
-+/**
-+ * struct brcmfmac_pd_device - Device specific platform data. (id/rev/bus_type)
-+ *			       is the unique identifier of the device.
-+ *
-+ * @id:			ID of the device for which this data is. In case of SDIO
-+ *			or PCIE this is the chipid as identified by chip.c In
-+ *			case of USB this is the chipid as identified by the
-+ *			device query.
-+ * @rev:		chip revision, see id.
-+ * @bus_type:		The type of bus. Some chipid/rev exist for different bus
-+ *			types. Each bus type has its own set of settings.
-+ * @feature_disable:	Bitmask of features to disable (override), See feature.c
-+ *			in brcmfmac for details.
-+ * @country_codes:	If available, pointer to struct for translating country
-+ *			codes.
-+ * @bus:		Bus specific (union) device settings. Currently only
-+ *			SDIO.
-+ */
-+struct brcmfmac_pd_device {
-+	unsigned int		id;
-+	unsigned int		rev;
-+	enum brcmf_bus_type	bus_type;
-+	unsigned int		feature_disable;
-+	struct brcmfmac_pd_cc	*country_codes;
-+	union {
-+		struct brcmfmac_sdio_pd sdio;
-+	} bus;
-+};
-+
-+/**
-+ * struct brcmfmac_platform_data - BRCMFMAC specific platform data.
-+ *
-+ * @power_on:	This function is called by the brcmfmac driver when the module
-+ *		gets loaded. This can be particularly useful for low power
-+ *		devices. The platform spcific routine may for example decide to
-+ *		power up the complete device. If there is no use-case for this
-+ *		function then provide NULL.
-+ * @power_off:	This function is called by the brcmfmac when the module gets
-+ *		unloaded. At this point the devices can be powered down or
-+ *		otherwise be reset. So if an actual power_off is not supported
-+ *		but reset is supported by the devices then reset the devices
-+ *		when this function gets called. This can be particularly useful
-+ *		for low power devices. If there is no use-case for this
-+ *		function then provide NULL.
-+ */
-+struct brcmfmac_platform_data {
-+	void	(*power_on)(void);
-+	void	(*power_off)(void);
-+	char	*fw_alternative_path;
-+	int	device_count;
-+	struct brcmfmac_pd_device devices[0];
-+};
-+
-+
-+#endif /* _LINUX_BRCMFMAC_PLATFORM_H */
+ #define DOT11_DEFAULT_RTS_LEN		2347
+ #define DOT11_DEFAULT_FRAG_LEN		2346
 -- 
 1.9.1
 
