@@ -1,79 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44513 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752339AbcB2VdS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 16:33:18 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH 12/15] wil6210: clean ioctl debug message
-Date: Mon, 29 Feb 2016 23:32:47 +0200
-Message-Id: <1456781570-16552-13-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160229_225949_572319_E45FC492)
-In-Reply-To: <1456781570-16552-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1456781570-16552-1-git-send-email-qca_merez@qca.qualcomm.com>
+Received: from mga14.intel.com ([192.55.52.115]:35691 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933149AbcBQSaP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2016 13:30:15 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Beni Lev <beni.lev@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH] cfg80211: Add global RRM capability
+Date: Wed, 17 Feb 2016 20:30:00 +0200
+Message-Id: <1455733800-13230-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160217_193023_166442_22A3818D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+From: Beni Lev <beni.lev@intel.com>
 
-Fix a debug message related to IOCTL that was incorrectly logged
-with the MISC category, and move it inside wil_ioctl so it will
-always be logged even if we call wil_ioctl from other places.
+Today, the supplicant will add the RRM capabilities
+Information Element in the association request only if
+Quiet period is supported (NL80211_FEATURE_QUIET).
 
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Quiet is one of many RRM features, and there are other RRM
+features that are not related to Quiet (e.g. neighbor
+report). Therefore, requiring Quiet to enable RRM is too
+restrictive.
+Some of the features, like neighbor report, can be
+supported by user space without any help from the kernel.
+Hence adding the RRM capabilities IE to association request
+should be the sole user space's decision.
+Removing the RRM dependency on Quiet in the driver solves
+this problem, but using an old driver with a user space
+tool that would not require Quiet feature would be
+problematic: the user space would add NL80211_ATTR_USE_RRM
+in the association request even if the kernel doesn't
+advertize NL80211_FEATURE_QUIET and the association would
+be denied by the kernel.
+
+This solution adds a global RRM capability, that tells user
+space that it can request RRM capabilities IE publishment
+without any specific feature support in the kernel.
+
+Signed-off-by: Beni Lev <beni.lev@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/wil6210/ioctl.c  | 11 +++++++++--
- drivers/net/wireless/ath/wil6210/netdev.c |  6 +-----
- 2 files changed, 10 insertions(+), 7 deletions(-)
+ include/uapi/linux/nl80211.h |  8 ++++++++
+ net/wireless/nl80211.c       | 18 +++++++++++-------
+ 2 files changed, 19 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/ioctl.c b/drivers/net/wireless/ath/wil6210/ioctl.c
-index f7f9486..6303800 100644
---- a/drivers/net/wireless/ath/wil6210/ioctl.c
-+++ b/drivers/net/wireless/ath/wil6210/ioctl.c
-@@ -161,13 +161,20 @@ out_free:
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 7758969..5a30a75 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1727,6 +1727,8 @@ enum nl80211_commands {
+  *	underlying device supports these minimal RRM features:
+  *		%NL80211_FEATURE_DS_PARAM_SET_IE_IN_PROBES,
+  *		%NL80211_FEATURE_QUIET,
++ *	Or, if global RRM is supported, see:
++ *		%NL80211_EXT_FEATURE_RRM
+  *	If this flag is used, driver must add the Power Capabilities IE to the
+  *	association request. In addition, it must also set the RRM capability
+  *	flag in the association request's Capability Info field.
+@@ -4402,12 +4404,18 @@ enum nl80211_feature_flags {
+ /**
+  * enum nl80211_ext_feature_index - bit index of extended features.
+  * @NL80211_EXT_FEATURE_VHT_IBSS: This driver supports IBSS with VHT datarates.
++ * @NL80211_EXT_FEATURE_RRM: This driver supports RRM. When featured, user can
++ *	can request to use RRM (see %NL80211_ATTR_USE_RRM) with
++ *	%NL80211_CMD_ASSOCIATE and %NL80211_CMD_CONNECT requests, which will set
++ *	the ASSOC_REQ_USE_RRM flag in the association request even if
++ *	NL80211_FEATURE_QUIET is not advertized.
+  *
+  * @NUM_NL80211_EXT_FEATURES: number of extended features.
+  * @MAX_NL80211_EXT_FEATURES: highest extended feature index.
+  */
+ enum nl80211_ext_feature_index {
+ 	NL80211_EXT_FEATURE_VHT_IBSS,
++	NL80211_EXT_FEATURE_RRM,
  
- int wil_ioctl(struct wil6210_priv *wil, void __user *data, int cmd)
- {
-+	int ret;
-+
- 	switch (cmd) {
- 	case WIL_IOCTL_MEMIO:
--		return wil_ioc_memio_dword(wil, data);
-+		ret = wil_ioc_memio_dword(wil, data);
-+		break;
- 	case WIL_IOCTL_MEMIO_BLOCK:
--		return wil_ioc_memio_block(wil, data);
-+		ret = wil_ioc_memio_block(wil, data);
-+		break;
- 	default:
- 		wil_dbg_ioctl(wil, "Unsupported IOCTL 0x%04x\n", cmd);
- 		return -ENOIOCTLCMD;
+ 	/* add new features before the definition below */
+ 	NUM_NL80211_EXT_FEATURES,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 268cb49..90890f1 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3,7 +3,7 @@
+  *
+  * Copyright 2006-2010	Johannes Berg <johannes@sipsolutions.net>
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+- * Copyright 2015	Intel Deutschland GmbH
++ * Copyright 2015-2016	Intel Deutschland GmbH
+  */
+ 
+ #include <linux/if.h>
+@@ -7286,9 +7286,11 @@ static int nl80211_associate(struct sk_buff *skb, struct genl_info *info)
  	}
-+
-+	wil_dbg_ioctl(wil, "ioctl(0x%04x) -> %d\n", cmd, ret);
-+	return ret;
- }
-diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
-index d4ec5b2..3bc0e26 100644
---- a/drivers/net/wireless/ath/wil6210/netdev.c
-+++ b/drivers/net/wireless/ath/wil6210/netdev.c
-@@ -60,11 +60,7 @@ static int wil_do_ioctl(struct net_device *ndev, struct ifreq *ifr, int cmd)
- {
- 	struct wil6210_priv *wil = ndev_to_wil(ndev);
  
--	int ret = wil_ioctl(wil, ifr->ifr_data, cmd);
--
--	wil_dbg_misc(wil, "ioctl(0x%04x) -> %d\n", cmd, ret);
--
--	return ret;
-+	return wil_ioctl(wil, ifr->ifr_data, cmd);
- }
+ 	if (nla_get_flag(info->attrs[NL80211_ATTR_USE_RRM])) {
+-		if (!(rdev->wiphy.features &
+-		      NL80211_FEATURE_DS_PARAM_SET_IE_IN_PROBES) ||
+-		    !(rdev->wiphy.features & NL80211_FEATURE_QUIET))
++		if (!((rdev->wiphy.features &
++			NL80211_FEATURE_DS_PARAM_SET_IE_IN_PROBES) &&
++		       (rdev->wiphy.features & NL80211_FEATURE_QUIET)) &&
++		    !wiphy_ext_feature_isset(&rdev->wiphy,
++					     NL80211_EXT_FEATURE_RRM))
+ 			return -EINVAL;
+ 		req.flags |= ASSOC_REQ_USE_RRM;
+ 	}
+@@ -7976,9 +7978,11 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 	}
  
- static const struct net_device_ops wil_netdev_ops = {
+ 	if (nla_get_flag(info->attrs[NL80211_ATTR_USE_RRM])) {
+-		if (!(rdev->wiphy.features &
+-		      NL80211_FEATURE_DS_PARAM_SET_IE_IN_PROBES) ||
+-		    !(rdev->wiphy.features & NL80211_FEATURE_QUIET)) {
++		if (!((rdev->wiphy.features &
++			NL80211_FEATURE_DS_PARAM_SET_IE_IN_PROBES) &&
++		       (rdev->wiphy.features & NL80211_FEATURE_QUIET)) &&
++		    !wiphy_ext_feature_isset(&rdev->wiphy,
++					     NL80211_EXT_FEATURE_RRM)) {
+ 			kzfree(connkeys);
+ 			return -EINVAL;
+ 		}
 -- 
-1.8.5.2
+2.5.0
 
