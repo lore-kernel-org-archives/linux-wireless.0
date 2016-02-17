@@ -1,101 +1,315 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:40217 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755478AbcBHV4U (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 16:56:20 -0500
-Date: Mon, 8 Feb 2016 15:56:14 -0600
-From: Rob Herring <robh@kernel.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: linux-wireless@vger.kernel.org,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	wnhuang@chromium.com, devicetree@vger.kernel.org,
-	Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH v3 1/3] mwifiex: register platform specific driver
-Message-ID: <20160208215614.GB9036@rob-hp-laptop> (sfid-20160208_225624_785891_430EDE6C)
-References: <1454926528-17480-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1454926528-17480-1-git-send-email-akarwar@marvell.com>
+Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:17453
+	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161103AbcBQK1Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2016 05:27:25 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 05/21] brcmfmac: Add length checks on firmware events
+Date: Wed, 17 Feb 2016 11:26:54 +0100
+Message-Id: <1455704830-10088-6-git-send-email-arend@broadcom.com> (sfid-20160217_112744_146962_C27806BA)
+In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 08, 2016 at 02:15:26AM -0800, Amitkumar Karwar wrote:
-> From: Xinming Hu <huxm@marvell.com>
-> 
-> Platform device and driver provides easy way to
-> interact with device-tree-enabled system.
-> 
-> This patch registers platform driver and reorganise
-> existing device tree specific code.
-> Corresponding device tree binding file is
-> also created.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Wrap you lines at 72 columns.
+Add additional length checks on firmware events to create more
+robust code.
 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> ---
-> v3: Don't update adapter->dt_node if mwifiex_plt_dev is NULL 
-> ---
->  Documentation/devicetree/bindings/mwifiex.txt      | 29 +++++++++++
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Lei Zhang <leizh@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 10 ++++
+ .../wireless/broadcom/brcm80211/brcmfmac/fweh.c    | 57 ++++--------------
+ .../wireless/broadcom/brcm80211/brcmfmac/fweh.h    | 68 +++++++++++++++++-----
+ .../net/wireless/broadcom/brcm80211/brcmfmac/p2p.c | 10 ++++
+ 4 files changed, 87 insertions(+), 58 deletions(-)
 
-This doesn't belong at top level of bindings. bindings/net/wireless/
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 2fd18d0..6cc8fdc 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -3092,6 +3092,11 @@ brcmf_notify_sched_scan_results(struct brcmf_if *ifp,
+ 
+ 	brcmf_dbg(SCAN, "Enter\n");
+ 
++	if (e->datalen < (sizeof(*pfn_result) + sizeof(*netinfo))) {
++		brcmf_dbg(SCAN, "Event data to small. Ignore\n");
++		return 0;
++	}
++
+ 	if (e->event_code == BRCMF_E_PFN_NET_LOST) {
+ 		brcmf_dbg(SCAN, "PFN NET LOST event. Do Nothing\n");
+ 		return 0;
+@@ -3415,6 +3420,11 @@ brcmf_wowl_nd_results(struct brcmf_if *ifp, const struct brcmf_event_msg *e,
+ 
+ 	brcmf_dbg(SCAN, "Enter\n");
+ 
++	if (e->datalen < (sizeof(*pfn_result) + sizeof(*netinfo))) {
++		brcmf_dbg(SCAN, "Event data to small. Ignore\n");
++		return 0;
++	}
++
+ 	pfn_result = (struct brcmf_pno_scanresults_le *)data;
+ 
+ 	if (e->event_code == BRCMF_E_PFN_NET_LOST) {
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+index 7b26fb1..d414fbb 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.c
+@@ -26,50 +26,6 @@
+ #include "fwil.h"
+ 
+ /**
+- * struct brcm_ethhdr - broadcom specific ether header.
+- *
+- * @subtype: subtype for this packet.
+- * @length: TODO: length of appended data.
+- * @version: version indication.
+- * @oui: OUI of this packet.
+- * @usr_subtype: subtype for this OUI.
+- */
+-struct brcm_ethhdr {
+-	__be16 subtype;
+-	__be16 length;
+-	u8 version;
+-	u8 oui[3];
+-	__be16 usr_subtype;
+-} __packed;
+-
+-struct brcmf_event_msg_be {
+-	__be16 version;
+-	__be16 flags;
+-	__be32 event_type;
+-	__be32 status;
+-	__be32 reason;
+-	__be32 auth_type;
+-	__be32 datalen;
+-	u8 addr[ETH_ALEN];
+-	char ifname[IFNAMSIZ];
+-	u8 ifidx;
+-	u8 bsscfgidx;
+-} __packed;
+-
+-/**
+- * struct brcmf_event - contents of broadcom event packet.
+- *
+- * @eth: standard ether header.
+- * @hdr: broadcom specific ether header.
+- * @msg: common part of the actual event message.
+- */
+-struct brcmf_event {
+-	struct ethhdr eth;
+-	struct brcm_ethhdr hdr;
+-	struct brcmf_event_msg_be msg;
+-} __packed;
+-
+-/**
+  * struct brcmf_fweh_queue_item - event item on event queue.
+  *
+  * @q: list element for queuing.
+@@ -85,6 +41,7 @@ struct brcmf_fweh_queue_item {
+ 	u8 ifidx;
+ 	u8 ifaddr[ETH_ALEN];
+ 	struct brcmf_event_msg_be emsg;
++	u32 datalen;
+ 	u8 data[0];
+ };
+ 
+@@ -294,6 +251,11 @@ static void brcmf_fweh_event_worker(struct work_struct *work)
+ 		brcmf_dbg_hex_dump(BRCMF_EVENT_ON(), event->data,
+ 				   min_t(u32, emsg.datalen, 64),
+ 				   "event payload, len=%d\n", emsg.datalen);
++		if (emsg.datalen > event->datalen) {
++			brcmf_err("event invalid length header=%d, msg=%d\n",
++				  event->datalen, emsg.datalen);
++			goto event_free;
++		}
+ 
+ 		/* special handling of interface event */
+ 		if (event->code == BRCMF_E_IF) {
+@@ -439,7 +401,8 @@ int brcmf_fweh_activate_events(struct brcmf_if *ifp)
+  * dispatch the event to a registered handler (using worker).
+  */
+ void brcmf_fweh_process_event(struct brcmf_pub *drvr,
+-			      struct brcmf_event *event_packet)
++			      struct brcmf_event *event_packet,
++			      u32 packet_len)
+ {
+ 	enum brcmf_fweh_event_code code;
+ 	struct brcmf_fweh_info *fweh = &drvr->fweh;
+@@ -459,6 +422,9 @@ void brcmf_fweh_process_event(struct brcmf_pub *drvr,
+ 	if (code != BRCMF_E_IF && !fweh->evt_handler[code])
+ 		return;
+ 
++	if (datalen > BRCMF_DCMD_MAXLEN)
++		return;
++
+ 	if (in_interrupt())
+ 		alloc_flag = GFP_ATOMIC;
+ 
+@@ -472,6 +438,7 @@ void brcmf_fweh_process_event(struct brcmf_pub *drvr,
+ 	/* use memcpy to get aligned event message */
+ 	memcpy(&event->emsg, &event_packet->msg, sizeof(event->emsg));
+ 	memcpy(event->data, data, datalen);
++	event->datalen = datalen;
+ 	memcpy(event->ifaddr, event_packet->eth.h_dest, ETH_ALEN);
+ 
+ 	brcmf_fweh_queue_event(fweh, event);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
+index 5e39e2a..26ff5a9 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fweh.h
+@@ -27,7 +27,6 @@
+ struct brcmf_pub;
+ struct brcmf_if;
+ struct brcmf_cfg80211_info;
+-struct brcmf_event;
+ 
+ /* list of firmware events */
+ #define BRCMF_FWEH_EVENT_ENUM_DEFLIST \
+@@ -180,13 +179,55 @@ enum brcmf_fweh_event_code {
+ /**
+  * definitions for event packet validation.
+  */
+-#define BRCMF_EVENT_OUI_OFFSET		19
+-#define BRCM_OUI			"\x00\x10\x18"
+-#define DOT11_OUI_LEN			3
+-#define BCMILCP_BCM_SUBTYPE_EVENT	1
++#define BRCM_OUI				"\x00\x10\x18"
++#define BCMILCP_BCM_SUBTYPE_EVENT		1
+ 
+ 
+ /**
++ * struct brcm_ethhdr - broadcom specific ether header.
++ *
++ * @subtype: subtype for this packet.
++ * @length: TODO: length of appended data.
++ * @version: version indication.
++ * @oui: OUI of this packet.
++ * @usr_subtype: subtype for this OUI.
++ */
++struct brcm_ethhdr {
++	__be16 subtype;
++	__be16 length;
++	u8 version;
++	u8 oui[3];
++	__be16 usr_subtype;
++} __packed;
++
++struct brcmf_event_msg_be {
++	__be16 version;
++	__be16 flags;
++	__be32 event_type;
++	__be32 status;
++	__be32 reason;
++	__be32 auth_type;
++	__be32 datalen;
++	u8 addr[ETH_ALEN];
++	char ifname[IFNAMSIZ];
++	u8 ifidx;
++	u8 bsscfgidx;
++} __packed;
++
++/**
++ * struct brcmf_event - contents of broadcom event packet.
++ *
++ * @eth: standard ether header.
++ * @hdr: broadcom specific ether header.
++ * @msg: common part of the actual event message.
++ */
++struct brcmf_event {
++	struct ethhdr eth;
++	struct brcm_ethhdr hdr;
++	struct brcmf_event_msg_be msg;
++} __packed;
++
++/**
+  * struct brcmf_event_msg - firmware event message.
+  *
+  * @version: version information.
+@@ -256,34 +297,35 @@ void brcmf_fweh_unregister(struct brcmf_pub *drvr,
+ 			   enum brcmf_fweh_event_code code);
+ int brcmf_fweh_activate_events(struct brcmf_if *ifp);
+ void brcmf_fweh_process_event(struct brcmf_pub *drvr,
+-			      struct brcmf_event *event_packet);
++			      struct brcmf_event *event_packet,
++			      u32 packet_len);
+ void brcmf_fweh_p2pdev_setup(struct brcmf_if *ifp, bool ongoing);
+ 
+ static inline void brcmf_fweh_process_skb(struct brcmf_pub *drvr,
+ 					  struct sk_buff *skb)
+ {
+ 	struct brcmf_event *event_packet;
+-	u8 *data;
+ 	u16 usr_stype;
+ 
+ 	/* only process events when protocol matches */
+ 	if (skb->protocol != cpu_to_be16(ETH_P_LINK_CTL))
+ 		return;
+ 
++	if ((skb->len + ETH_HLEN) < sizeof(*event_packet))
++		return;
++
+ 	/* check for BRCM oui match */
+ 	event_packet = (struct brcmf_event *)skb_mac_header(skb);
+-	data = (u8 *)event_packet;
+-	data += BRCMF_EVENT_OUI_OFFSET;
+-	if (memcmp(BRCM_OUI, data, DOT11_OUI_LEN))
++	if (memcmp(BRCM_OUI, &event_packet->hdr.oui[0],
++		   sizeof(event_packet->hdr.oui)))
+ 		return;
+ 
+ 	/* final match on usr_subtype */
+-	data += DOT11_OUI_LEN;
+-	usr_stype = get_unaligned_be16(data);
++	usr_stype = get_unaligned_be16(&event_packet->hdr.usr_subtype);
+ 	if (usr_stype != BCMILCP_BCM_SUBTYPE_EVENT)
+ 		return;
+ 
+-	brcmf_fweh_process_event(drvr, event_packet);
++	brcmf_fweh_process_event(drvr, event_packet, skb->len + ETH_HLEN);
+ }
+ 
+ #endif /* FWEH_H_ */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+index de5892a..b5a49e5 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/p2p.c
+@@ -1361,6 +1361,11 @@ int brcmf_p2p_notify_action_frame_rx(struct brcmf_if *ifp,
+ 	u16 mgmt_type;
+ 	u8 action;
+ 
++	if (e->datalen < sizeof(*rxframe)) {
++		brcmf_dbg(SCAN, "Event data to small. Ignore\n");
++		return 0;
++	}
++
+ 	ch.chspec = be16_to_cpu(rxframe->chanspec);
+ 	cfg->d11inf.decchspec(&ch);
+ 	/* Check if wpa_supplicant has registered for this frame */
+@@ -1858,6 +1863,11 @@ s32 brcmf_p2p_notify_rx_mgmt_p2p_probereq(struct brcmf_if *ifp,
+ 	brcmf_dbg(INFO, "Enter: event %d reason %d\n", e->event_code,
+ 		  e->reason);
+ 
++	if (e->datalen < sizeof(*rxframe)) {
++		brcmf_dbg(SCAN, "Event data to small. Ignore\n");
++		return 0;
++	}
++
+ 	ch.chspec = be16_to_cpu(rxframe->chanspec);
+ 	cfg->d11inf.decchspec(&ch);
+ 
+-- 
+1.9.1
 
-Also, mwifiex is a linux driver name. Name it after the chips. 
-marvell-sd8xxx?
-
->  drivers/net/wireless/marvell/mwifiex/Makefile      |  1 +
->  drivers/net/wireless/marvell/mwifiex/main.c        |  2 +
->  drivers/net/wireless/marvell/mwifiex/main.h        | 14 +++++
->  .../net/wireless/marvell/mwifiex/platform_drv.c    | 59 ++++++++++++++++++++++
->  drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |  6 +--
->  drivers/net/wireless/marvell/mwifiex/sta_ioctl.c   |  2 +-
->  7 files changed, 109 insertions(+), 4 deletions(-)
->  create mode 100644 Documentation/devicetree/bindings/mwifiex.txt
->  create mode 100644 drivers/net/wireless/marvell/mwifiex/platform_drv.c
-> 
-> diff --git a/Documentation/devicetree/bindings/mwifiex.txt b/Documentation/devicetree/bindings/mwifiex.txt
-> new file mode 100644
-> index 0000000..39b6a74
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/mwifiex.txt
-> @@ -0,0 +1,29 @@
-> +mwifiex
-> +------
-> +
-> +Required properties:
-> +
-> +  - name : must be "mwifiex"
-> +  - compatible : must be "marvell,mwifiex"
-
-The naming should be named after the actual chip.
-
-> +
-> +Optional properties:
-> +
-> +  - mwifiex,caldata* : A series of properties with marvell,caldata prefix,
-
-mwifiex is not a vendor.
-
-> +  		      represent Calibration data downloaded to the device during
-> +		      initialization. This is an array of unsigned values.
-> +
-> +
-> +Example:
-> +
-> +Tx power limit calibration data is configured in below example.
-> +The calibration data is an array of unsigned values, the length
-> +can vary between hw versions.
-> +
-> +mwifiex {
-
-These chips are SDIO devices, right? This should be a child node of the 
-SDIO controller.
-
-> +	compatible = "marvell,mwifiex";
-> +
-> +	mwifiex,caldata_00_txpwrlimit_2g_cfg_set = /bits/ 8 <
-> +0x01 0x00 0x06 0x00 0x08 0x02 0x89 0x01 ...>;
-> +
-> +};
-> +
