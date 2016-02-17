@@ -1,61 +1,295 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.135]:56496 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751110AbcBWKPm (ORCPT
+Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:10090
+	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161114AbcBQK11 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 05:15:42 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Thierry Reding <thierry.reding@gmail.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Marc Dietrich <marvin24@gmx.de>
-Subject: Re: [PATCHv2 3/4] ARM: tegra: use build-in device properties with rfkill_gpio
-Date: Tue, 23 Feb 2016 11:15:31 +0100
-Message-ID: <5438459.Mb6Ga2Xhyq@wuerfel> (sfid-20160223_111610_131087_24A2182C)
-In-Reply-To: <1455825889.2084.16.camel@sipsolutions.net>
-References: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com> <1453797724.2759.4.camel@sipsolutions.net> <1455825889.2084.16.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 17 Feb 2016 05:27:27 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 14/21] brcmfmac: add wowl gtk rekeying offload support
+Date: Wed, 17 Feb 2016 11:27:03 +0100
+Message-Id: <1455704830-10088-15-git-send-email-arend@broadcom.com> (sfid-20160217_112835_837600_7CB78513)
+In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 18 February 2016 21:04:49 Johannes Berg wrote:
-> On Tue, 2016-01-26 at 09:42 +0100, Johannes Berg wrote:
-> > On Mon, 2016-01-25 at 13:18 +0100, Thierry Reding wrote:
-> > >  
-> > > Johannes, I assume that you'll want to take this through your tree
-> > > because of the dependency? In that case:
-> > > 
-> > > Acked-by: Thierry Reding <treding@nvidia.com>
-> > 
-> > I can, but I don't really care - perhaps you'd rather take the entire
-> > series through your tree to get it into one place for Marc?
-> > 
-> > In which case, you have my
-> > 
-> > Acked-by: Johannes Berg <johannes@sipsolutions.net>
-> > 
-> > for the other 3 patches.
-> > 
-> > Let me know which you prefer.
-> > 
-> Did these patches get applied anywhere? Otherwise I'm willing to pick
-> them up.
-> 
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Fine with me too:
+This patch adds support for gtk rekeying offload and for gtk
+rekeying failure during wowl mode.
 
-Acked-by: Arnd Bergmann <arnd@arndb.de>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 65 ++++++++++++++++++----
+ .../broadcom/brcm80211/brcmfmac/cfg80211.h         |  2 +
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.c | 12 ++++
+ .../wireless/broadcom/brcm80211/brcmfmac/feature.h |  6 +-
+ .../broadcom/brcm80211/brcmfmac/fwil_types.h       | 21 ++++++-
+ 5 files changed, 93 insertions(+), 13 deletions(-)
 
-Just for my curiosity: what is the difference between a rfkill-gpio
-device and a gpio-keys device with a KEY_RFKILL code?
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 71f1fdf..6d849bb 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -3526,6 +3526,10 @@ static void brcmf_report_wowl_wakeind(struct wiphy *wiphy, struct brcmf_if *ifp)
+ 			else
+ 				wakeup_data.net_detect = cfg->wowl.nd_info;
+ 		}
++		if (wakeind & BRCMF_WOWL_GTK_FAILURE) {
++			brcmf_dbg(INFO, "WOWL Wake indicator: BRCMF_WOWL_GTK_FAILURE\n");
++			wakeup_data.gtk_rekey_failure = true;
++		}
+ 	} else {
+ 		wakeup = NULL;
+ 	}
+@@ -3607,6 +3611,8 @@ static void brcmf_configure_wowl(struct brcmf_cfg80211_info *cfg,
+ 		brcmf_fweh_register(cfg->pub, BRCMF_E_PFN_NET_FOUND,
+ 				    brcmf_wowl_nd_results);
+ 	}
++	if (wowl->gtk_rekey_failure)
++		wowl_config |= BRCMF_WOWL_GTK_FAILURE;
+ 	if (!test_bit(BRCMF_VIF_STATUS_CONNECTED, &ifp->vif->sme_state))
+ 		wowl_config |= BRCMF_WOWL_UNASSOC;
+ 
+@@ -4874,7 +4880,32 @@ static int brcmf_cfg80211_tdls_oper(struct wiphy *wiphy,
+ 	return ret;
+ }
+ 
+-static struct cfg80211_ops wl_cfg80211_ops = {
++#ifdef CONFIG_PM
++static int
++brcmf_cfg80211_set_rekey_data(struct wiphy *wiphy, struct net_device *ndev,
++			      struct cfg80211_gtk_rekey_data *gtk)
++{
++	struct brcmf_if *ifp = netdev_priv(ndev);
++	struct brcmf_gtk_keyinfo_le gtk_le;
++	int ret;
++
++	brcmf_dbg(TRACE, "Enter, bssidx=%d\n", ifp->bsscfgidx);
++
++	memcpy(gtk_le.kck, gtk->kck, sizeof(gtk_le.kck));
++	memcpy(gtk_le.kek, gtk->kek, sizeof(gtk_le.kek));
++	memcpy(gtk_le.replay_counter, gtk->replay_ctr,
++	       sizeof(gtk_le.replay_counter));
++
++	ret = brcmf_fil_iovar_data_set(ifp, "gtk_key_info", &gtk_le,
++				       sizeof(gtk_le));
++	if (ret < 0)
++		brcmf_err("gtk_key_info iovar failed: ret=%d\n", ret);
++
++	return ret;
++}
++#endif
++
++static struct cfg80211_ops brcmf_cfg80211_ops = {
+ 	.add_virtual_intf = brcmf_cfg80211_add_iface,
+ 	.del_virtual_intf = brcmf_cfg80211_del_iface,
+ 	.change_virtual_intf = brcmf_cfg80211_change_iface,
+@@ -6139,19 +6170,18 @@ static void brcmf_wiphy_wowl_params(struct wiphy *wiphy, struct brcmf_if *ifp)
+ {
+ #ifdef CONFIG_PM
+ 	struct brcmf_cfg80211_info *cfg = wiphy_to_cfg(wiphy);
+-	s32 err;
+-	u32 wowl_cap;
+ 
+ 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_PNO)) {
+-		err = brcmf_fil_iovar_int_get(ifp, "wowl_cap", &wowl_cap);
+-		if (!err) {
+-			if (wowl_cap & BRCMF_WOWL_PFN_FOUND) {
+-				brcmf_wowlan_support.flags |=
+-							WIPHY_WOWLAN_NET_DETECT;
+-				init_waitqueue_head(&cfg->wowl.nd_data_wait);
+-			}
++		if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL_ND)) {
++			brcmf_wowlan_support.flags |= WIPHY_WOWLAN_NET_DETECT;
++			init_waitqueue_head(&cfg->wowl.nd_data_wait);
+ 		}
+ 	}
++	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL_GTK)) {
++		brcmf_wowlan_support.flags |= WIPHY_WOWLAN_SUPPORTS_GTK_REKEY;
++		brcmf_wowlan_support.flags |= WIPHY_WOWLAN_GTK_REKEY_FAILURE;
++	}
++
+ 	wiphy->wowlan = &brcmf_wowlan_support;
+ #endif
+ }
+@@ -6538,6 +6568,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 	struct net_device *ndev = brcmf_get_ifp(drvr, 0)->ndev;
+ 	struct brcmf_cfg80211_info *cfg;
+ 	struct wiphy *wiphy;
++	struct cfg80211_ops *ops;
+ 	struct brcmf_cfg80211_vif *vif;
+ 	struct brcmf_if *ifp;
+ 	s32 err = 0;
+@@ -6549,8 +6580,17 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 		return NULL;
+ 	}
+ 
++	ops = kzalloc(sizeof(*ops), GFP_KERNEL);
++	if (!ops)
++		return NULL;
++
++	memcpy(ops, &brcmf_cfg80211_ops, sizeof(*ops));
+ 	ifp = netdev_priv(ndev);
+-	wiphy = wiphy_new(&wl_cfg80211_ops, sizeof(struct brcmf_cfg80211_info));
++#ifdef CONFIG_PM
++	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL_GTK))
++		ops->set_rekey_data = brcmf_cfg80211_set_rekey_data;
++#endif
++	wiphy = wiphy_new(ops, sizeof(struct brcmf_cfg80211_info));
+ 	if (!wiphy) {
+ 		brcmf_err("Could not allocate wiphy device\n");
+ 		return NULL;
+@@ -6560,6 +6600,7 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 
+ 	cfg = wiphy_priv(wiphy);
+ 	cfg->wiphy = wiphy;
++	cfg->ops = ops;
+ 	cfg->pub = drvr;
+ 	init_vif_event(&cfg->vif_event);
+ 	INIT_LIST_HEAD(&cfg->vif_list);
+@@ -6686,6 +6727,7 @@ priv_out:
+ 	ifp->vif = NULL;
+ wiphy_out:
+ 	brcmf_free_wiphy(wiphy);
++	kfree(ops);
+ 	return NULL;
+ }
+ 
+@@ -6696,6 +6738,7 @@ void brcmf_cfg80211_detach(struct brcmf_cfg80211_info *cfg)
+ 
+ 	brcmf_btcoex_detach(cfg);
+ 	wiphy_unregister(cfg->wiphy);
++	kfree(cfg->ops);
+ 	wl_deinit_priv(cfg);
+ 	brcmf_free_wiphy(cfg->wiphy);
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+index 01f096f..e4c1d43 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.h
+@@ -256,6 +256,7 @@ struct brcmf_cfg80211_wowl {
+  * struct brcmf_cfg80211_info - dongle private data of cfg80211 interface
+  *
+  * @wiphy: wiphy object for cfg80211 interface.
++ * @ops: pointer to copy of ops as registered with wiphy object.
+  * @conf: dongle configuration.
+  * @p2p: peer-to-peer specific information.
+  * @btcoex: Bluetooth coexistence information.
+@@ -288,6 +289,7 @@ struct brcmf_cfg80211_wowl {
+  */
+ struct brcmf_cfg80211_info {
+ 	struct wiphy *wiphy;
++	struct cfg80211_ops *ops;
+ 	struct brcmf_cfg80211_conf *conf;
+ 	struct brcmf_p2p_info p2p;
+ 	struct brcmf_btcoex_info *btcoex;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+index 1ffa95f..098732a 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.c
+@@ -136,6 +136,7 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+ {
+ 	struct brcmf_if *ifp = brcmf_get_ifp(drvr, 0);
+ 	struct brcmf_pno_macaddr_le pfn_mac;
++	u32 wowl_cap;
+ 	s32 err;
+ 
+ 	brcmf_feat_firmware_capabilities(ifp);
+@@ -143,6 +144,17 @@ void brcmf_feat_attach(struct brcmf_pub *drvr)
+ 	brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_PNO, "pfn");
+ 	if (drvr->bus_if->wowl_supported)
+ 		brcmf_feat_iovar_int_get(ifp, BRCMF_FEAT_WOWL, "wowl");
++	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_WOWL)) {
++		err = brcmf_fil_iovar_int_get(ifp, "wowl_cap", &wowl_cap);
++		if (!err) {
++			if (wowl_cap & BRCMF_WOWL_PFN_FOUND)
++				ifp->drvr->feat_flags |=
++					BIT(BRCMF_FEAT_WOWL_ND);
++			if (wowl_cap & BRCMF_WOWL_GTK_FAILURE)
++				ifp->drvr->feat_flags |=
++					BIT(BRCMF_FEAT_WOWL_GTK);
++		}
++	}
+ 	/* MBSS does not work for 43362 */
+ 	if (drvr->bus_if->chip == BRCM_CC_43362_CHIP_ID)
+ 		ifp->drvr->feat_flags &= ~BIT(BRCMF_FEAT_MBSS);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+index 2e2479d..f940c29 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/feature.h
+@@ -27,6 +27,8 @@
+  * RSDB: Real Simultaneous Dual Band
+  * TDLS: Tunneled Direct Link Setup
+  * SCAN_RANDOM_MAC: Random MAC during (net detect) scheduled scan.
++ * WOWL_ND: WOWL net detect (PNO)
++ * WOWL_GTK: (WOWL) GTK rekeying offload
+  */
+ #define BRCMF_FEAT_LIST \
+ 	BRCMF_FEAT_DEF(MBSS) \
+@@ -36,7 +38,9 @@
+ 	BRCMF_FEAT_DEF(P2P) \
+ 	BRCMF_FEAT_DEF(RSDB) \
+ 	BRCMF_FEAT_DEF(TDLS) \
+-	BRCMF_FEAT_DEF(SCAN_RANDOM_MAC)
++	BRCMF_FEAT_DEF(SCAN_RANDOM_MAC) \
++	BRCMF_FEAT_DEF(WOWL_ND) \
++	BRCMF_FEAT_DEF(WOWL_GTK)
+ 
+ /*
+  * Quirks:
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+index e9e177d..6d41ae3 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
+@@ -111,7 +111,9 @@
+ /* Wakeup if received matched secured pattern: */
+ #define BRCMF_WOWL_SECURE		(1 << 25)
+ /* Wakeup on finding preferred network */
+-#define BRCMF_WOWL_PFN_FOUND		(1 << 26)
++#define BRCMF_WOWL_PFN_FOUND		(1 << 27)
++/* Wakeup on receiving pairwise key EAP packets: */
++#define WIPHY_WOWL_EAP_PK		(1 << 28)
+ /* Link Down indication in WoWL mode: */
+ #define BRCMF_WOWL_LINKDOWN		(1 << 31)
+ 
+@@ -136,6 +138,10 @@
+ 
+ #define BRCMF_MCSSET_LEN		16
+ 
++#define BRCMF_RSN_KCK_LENGTH		16
++#define BRCMF_RSN_KEK_LENGTH		16
++#define BRCMF_RSN_REPLAY_LEN		8
++
+ /* join preference types for join_pref iovar */
+ enum brcmf_join_pref_types {
+ 	BRCMF_JOIN_PREF_RSSI = 1,
+@@ -789,4 +795,17 @@ struct brcmf_pktcnt_le {
+ 	__le32 rx_ocast_good_pkt;
+ };
+ 
++/**
++ * struct brcmf_gtk_keyinfo_le - GTP rekey data
++ *
++ * @kck: key confirmation key.
++ * @kek: key encryption key.
++ * @replay_counter: replay counter.
++ */
++struct brcmf_gtk_keyinfo_le {
++	u8 kck[BRCMF_RSN_KCK_LENGTH];
++	u8 kek[BRCMF_RSN_KEK_LENGTH];
++	u8 replay_counter[BRCMF_RSN_REPLAY_LEN];
++};
++
+ #endif /* FWIL_TYPES_H_ */
+-- 
+1.9.1
 
-arch/arm/boot/dts/bcm4708-netgear-r6250.dts and others seem to
-do the second approach in DT so they don't need to create the
-platform device.
-
-	Arnd
