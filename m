@@ -1,62 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46201 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754223AbcBDMvb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 07:51:31 -0500
-Message-ID: <1454590287.2564.9.camel@sipsolutions.net> (sfid-20160204_135147_252014_6986FE79)
-Subject: Re: mac80211_hwsim + iperf + netns
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 04 Feb 2016 13:51:27 +0100
-In-Reply-To: <CABPxzY+N=3cuMB4Z7q6gqPkhh1GoiCrpG6G3E2bHLB96oqZfyw@mail.gmail.com> (sfid-20160204_134343_938123_4EC6FB6C)
-References: <CABPxzY+HpP=NTrAaUEzV5nFm=LK93m=kxPV14-cdftt+VPsWNw@mail.gmail.com>
-	 <CA+BoTQ=s_SMgs9zkgYjKOHKDwRORWk-Re7XZ=AiKiHCuNc0L8A@mail.gmail.com>
-	 <1454588396.2564.7.camel@sipsolutions.net>
-	 <CABPxzYL3mGHyoKE0tkL4yg_4NL+U41+15Bm3f=JPq2vfD+Xnkg@mail.gmail.com>
-	 <1454589301.2564.8.camel@sipsolutions.net>
-	 <CABPxzY+N=3cuMB4Z7q6gqPkhh1GoiCrpG6G3E2bHLB96oqZfyw@mail.gmail.com>
-	 (sfid-20160204_134343_938123_4EC6FB6C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:10090
+	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161102AbcBQK1Z (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2016 05:27:25 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Franky Lin <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 07/21] brcmfmac: check return for ARP ip setting iovar
+Date: Wed, 17 Feb 2016 11:26:56 +0100
+Message-Id: <1455704830-10088-8-git-send-email-arend@broadcom.com> (sfid-20160217_112743_077507_E4031138)
+In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-02-04 at 18:13 +0530, Krishna Chaitanya wrote:
-> On Thu, Feb 4, 2016 at 6:05 PM, Johannes Berg <johannes@sipsolutions.
-> net> wrote:
-> > On Thu, 2016-02-04 at 17:58 +0530, Krishna Chaitanya wrote:
-> > > On Thu, Feb 4, 2016 at 5:49 PM, Johannes Berg <johannes@sipsoluti
-> > > ons.
-> > > net> wrote:
-> > > > On Thu, 2016-02-04 at 12:32 +0100, Michal Kazior wrote:
-> > > > > 
-> > > > >  ip netns add ns1
-> > > > >  ip netns exec ns1 bash # get the PID in the session and
-> > > > > don't
-> > > > > close
-> > > > > it
-> > > > >  iw phy phyX set netns $pid_of_that_shell
-> > > > > 
-> > > > 
-> > > > If you also have a recent enough iw version, you can use
-> > > > 
-> > > > iw phy phyX set netns name ns1
-> > > > 
-> > > My iw has this option, but it throws an error.
-> > > Does this command have any prerequisites?
-> > > 
-> > > # iw phy phy1 set netns name ns1
-> > > Invalid parameter: nsname(name)
-> > > 
-> > 
-> > This happens if the ns1 doesn't exist.
-> ok, so we need latest iprotue2 to create the
-> namespace?
+From: Franky Lin <frankyl@broadcom.com>
 
-for this way to work, yes. you could hack your own C program to do the
-required unshare() call and exec bash and then use the PID ... I used
-to have one but can't find it now.
+The return value of iovar set function should be saved and checked.
 
-johannes
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 9507cc9..dcf9393 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -1039,14 +1039,14 @@ static int brcmf_inetaddr_changed(struct notifier_block *nb,
+ 				return NOTIFY_OK;
+ 			}
+ 			for (i = 0; i < ARPOL_MAX_ENTRIES; i++) {
+-				if (addr_table[i] != 0) {
+-					brcmf_fil_iovar_data_set(ifp,
+-						"arp_hostip", &addr_table[i],
+-						sizeof(addr_table[i]));
+-					if (ret)
+-						brcmf_err("add arp ip err %d\n",
+-							  ret);
+-				}
++				if (addr_table[i] == 0)
++					continue;
++				ret = brcmf_fil_iovar_data_set(ifp, "arp_hostip",
++							       &addr_table[i],
++							       sizeof(addr_table[i]));
++				if (ret)
++					brcmf_err("add arp ip err %d\n",
++						  ret);
+ 			}
+ 		}
+ 		break;
+-- 
+1.9.1
+
