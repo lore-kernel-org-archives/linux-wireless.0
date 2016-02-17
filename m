@@ -1,58 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:31593 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:19893 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753162AbcBVEoB (ORCPT
+	with ESMTP id S933123AbcBQB0k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2016 23:44:01 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 02/10] staging: wilc1000: replaces wilc_debug with netdev_err
-Date: Mon, 22 Feb 2016 13:41:11 +0900
-Message-ID: <1456116079-7161-2-git-send-email-leo.kim@atmel.com> (sfid-20160222_054405_068976_27B3FAEA)
-In-Reply-To: <1456116079-7161-1-git-send-email-leo.kim@atmel.com>
-References: <1456116079-7161-1-git-send-email-leo.kim@atmel.com>
+	Tue, 16 Feb 2016 20:26:40 -0500
+Subject: Re: drivers/staging/wilc1000/wilc_spi.c won't compile ?
+To: David Binderman <dcb314@hotmail.com>,
+	"Kim, Leo" <leo.kim@atmel.com>,
+	"Shin, Austin" <austin.shin@atmel.com>,
+	"Park, Chris" <chris.park@atmel.com>,
+	"Lee, Glen" <glen.lee@atmel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+References: <DUB128-W49FB60890BF7AB1D0892979CD50@phx.gbl>
+ <74F3875218FC364C9618AB19CB60E90580048375@penmbx02.corp.atmel.com>
+ <DUB128-W339411DA3C1CF69214E4CB9CAD0@phx.gbl>
+From: Tony Cho <tony.cho@atmel.com>
+Message-ID: <56C3CBE3.9090408@atmel.com> (sfid-20160217_022659_539390_A03DDDD9)
+Date: Wed, 17 Feb 2016 10:24:51 +0900
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <DUB128-W339411DA3C1CF69214E4CB9CAD0@phx.gbl>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patches replaces wilc_debug with netdev_err.
+Hi David,
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Please check the latest update from the https://git.kernel.org/cgit/linux/kernel/git/gregkh/staging.git/?h=staging-testing.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 90b6528..0843ccf 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1389,18 +1389,18 @@ static u32 init_chip(struct net_device *dev)
- 	if ((chipid & 0xfff) != 0xa0) {
- 		ret = wilc->hif_func->hif_read_reg(wilc, 0x1118, &reg);
- 		if (!ret) {
--			wilc_debug(N_ERR, "[wilc start]: fail read reg 0x1118 ...\n");
-+			netdev_err(dev, "fail read reg 0x1118\n");
- 			return ret;
- 		}
- 		reg |= BIT(0);
- 		ret = wilc->hif_func->hif_write_reg(wilc, 0x1118, reg);
- 		if (!ret) {
--			wilc_debug(N_ERR, "[wilc start]: fail write reg 0x1118 ...\n");
-+			netdev_err(dev, "fail write reg 0x1118\n");
- 			return ret;
- 		}
- 		ret = wilc->hif_func->hif_write_reg(wilc, 0xc0000, 0x71);
- 		if (!ret) {
--			wilc_debug(N_ERR, "[wilc start]: fail write reg 0xc0000 ...\n");
-+			netdev_err(dev, "fail write reg 0xc0000\n");
- 			return ret;
- 		}
- 	}
--- 
-1.9.1
+The tree is not updated yet with the latest.
+
+Thanks,
+
+Tony.
+
+
+
+On 2016년 02월 16일 20:33, David Binderman wrote:
+> Hello there,
+>
+> ----------------------------------------
+>> You're had old wilc1000 source.
+>> Remove the wilc1000_ops structure.
+>> (Branch) staging-testing
+>> (SHA) ce7b516f3f9e11fe4ee06fad0d7e853bb6e8f160
+>> Please receive the latest source.
+>>
+> I checked the Torvalds source for 4.5-rc4
+>
+> https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/drivers/staging/wilc1000/wilc_spi.c?id=refs/tags/v4.5-rc4
+>
+> and the problem still seems to exist.
+>
+> Maybe your recent changes aren't getting from staging into the Torvalds tree ?
+>
+>
+> Regards
+>
+> David Binderman
+>
+>>   Thanks, BR
+>>   Leo
+>>
+>> -----Original Message-----
+>> From: David Binderman [mailto:dcb314@hotmail.com]
+>> Sent: Monday, February 08, 2016 9:18 PM
+>> To: Kim, Johnny <johnny.kim@atmel.com>; Shin, Austin <Austin.Shin@atmel.com>; Park, Chris <Chris.Park@atmel.com>; Cho, Tony <Tony.Cho@atmel.com>; Lee, Glen <Glen.Lee@atmel.com>; Kim, Leo <Leo.Kim@atmel.com>; linux-wireless@vger.kernel.org
+>> Subject: drivers/staging/wilc1000/wilc_spi.c won't compile ?
+>>
+>> Hello there,
+>>
+>> drivers/staging/wilc1000/wilc_spi.c:123:34: error: storage size of 'wilc1000_spi_ops' isn't known
+>>   static const struct wilc1000_ops wilc1000_spi_ops;
+>>                                    ^~~~~~~~~~~~~~~~
+>> drivers/staging/wilc1000/wilc_spi.c:123:34: warning: 'wilc1000_spi_ops' defined but not used [-Wunused-const-variable]
+>>
+>> Suggest remove.
+>>
+>> Regards
+>>
+>> David Binderman
+>>
+>>
+>   		 	   		
 
