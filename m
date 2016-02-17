@@ -1,147 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49011 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752644AbcB2WFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:53 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 012/113] rtl8xxxu: Initial rtl8723bu chip identification
-Date: Mon, 29 Feb 2016 17:04:10 -0500
-Message-Id: <1456783551-28315-13-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232949_542315_7980E2F5)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:16135
+	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161104AbcBQK10 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2016 05:27:26 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 08/21] brcmfmac: use device memsize config from fw if defined
+Date: Wed, 17 Feb 2016 11:26:57 +0100
+Message-Id: <1455704830-10088-9-git-send-email-arend@broadcom.com> (sfid-20160217_112737_510306_C167440B)
+In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-This provides initial detection of 8723bu devices, and selects the
-correct firmware image to load.
+Newer type pcie devices have memory which get shared between fw and
+hw. The division of this memory is done firmware compile time. As a
+result the ramsize as used by driver needs to be adjusted for this.
+This is done by reading the memory size from the firmware.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 40 ++++++++++++++++++++++--
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |  2 +-
- 2 files changed, 38 insertions(+), 4 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 33 ++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index b6c20e3..cd0c84a 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -55,6 +55,8 @@ MODULE_FIRMWARE("rtlwifi/rtl8192cufw_A.bin");
- MODULE_FIRMWARE("rtlwifi/rtl8192cufw_B.bin");
- MODULE_FIRMWARE("rtlwifi/rtl8192cufw_TMSC.bin");
- MODULE_FIRMWARE("rtlwifi/rtl8192eu_nic.bin");
-+MODULE_FIRMWARE("rtlwifi/rtl8723bu_nic.bin");
-+MODULE_FIRMWARE("rtlwifi/rtl8723bu_bt.bin");
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index d5f9ef4..d89212b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -207,6 +207,10 @@ static struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
+ #define BRCMF_PCIE_CFGREG_REG_BAR3_CONFIG	0x4F4
+ #define BRCMF_PCIE_LINK_STATUS_CTRL_ASPM_ENAB	3
  
- module_param_named(debug, rtl8xxxu_debug, int, 0600);
- MODULE_PARM_DESC(debug, "Set debug mask");
-@@ -1700,11 +1702,17 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
- 	}
- 
- 	if (val32 & SYS_CFG_BT_FUNC) {
--		sprintf(priv->chip_name, "8723AU");
-+		if (priv->chip_cut >= 3) {
-+			sprintf(priv->chip_name, "8723BU");
-+			priv->rtlchip = 0x8723b;
-+		} else {
-+			sprintf(priv->chip_name, "8723AU");
-+			priv->rtlchip = 0x8723a;
-+		}
++/* Magic number at a magic location to find RAM size */
++#define BRCMF_RAMSIZE_MAGIC			0x534d4152	/* SMAR */
++#define BRCMF_RAMSIZE_OFFSET			0x6c
 +
- 		priv->rf_paths = 1;
- 		priv->rx_paths = 1;
- 		priv->tx_paths = 1;
--		priv->rtlchip = 0x8723a;
  
- 		val32 = rtl8xxxu_read32(priv, REG_MULTI_FUNC_CTRL);
- 		if (val32 & MULTI_WIFI_FUNC_EN)
-@@ -1807,6 +1815,7 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
- 	 */
- 	if (!priv->ep_tx_count) {
- 		switch (priv->nr_out_eps) {
-+		case 4:
- 		case 3:
- 			priv->ep_tx_low_queue = 1;
- 			priv->ep_tx_count++;
-@@ -2321,6 +2330,7 @@ static int rtl8xxxu_load_firmware(struct rtl8xxxu_priv *priv, char *fw_name)
- 	case 0x92e0:
- 	case 0x92c0:
- 	case 0x88c0:
-+	case 0x5300:
- 	case 0x2300:
- 		break;
- 	default:
-@@ -2362,6 +2372,20 @@ static int rtl8723au_load_firmware(struct rtl8xxxu_priv *priv)
- 	return ret;
- }
- 
-+static int rtl8723bu_load_firmware(struct rtl8xxxu_priv *priv)
-+{
-+	char *fw_name;
-+	int ret;
-+
-+	if (priv->enable_bluetooth)
-+		fw_name = "rtlwifi/rtl8723bu_bt.bin";
-+	else
-+		fw_name = "rtlwifi/rtl8723bu_nic.bin";
-+
-+	ret = rtl8xxxu_load_firmware(priv, fw_name);
-+	return ret;
-+}
-+
- #ifdef CONFIG_RTL8XXXU_UNTESTED
- 
- static int rtl8192cu_load_firmware(struct rtl8xxxu_priv *priv)
-@@ -2587,7 +2611,7 @@ static int rtl8xxxu_init_phy_bb(struct rtl8xxxu_priv *priv)
- 	else
- 		rtl8xxxu_init_phy_regs(priv, rtl8xxx_agc_standard_table);
- 
--	if (priv->rtlchip == 0x8723a &&
-+	if ((priv->rtlchip == 0x8723a || priv->rtlchip == 0x8723b) &&
- 	    priv->efuse_wifi.efuse8723.version >= 0x01) {
- 		val32 = rtl8xxxu_read32(priv, REG_MAC_PHY_CTRL);
- 
-@@ -6117,6 +6141,14 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
- 	.writeN_block_size = 1024,
+ struct brcmf_pcie_console {
+ 	u32 base_addr;
+@@ -1412,6 +1416,28 @@ static const struct brcmf_bus_ops brcmf_pcie_bus_ops = {
  };
  
-+static struct rtl8xxxu_fileops rtl8723bu_fops = {
-+	.parse_efuse = rtl8723au_parse_efuse,
-+	.load_firmware = rtl8723bu_load_firmware,
-+	.power_on = rtl8723au_power_on,
-+	.llt_init = rtl8xxxu_auto_llt_table,
-+	.writeN_block_size = 128,
-+};
+ 
++static void
++brcmf_pcie_adjust_ramsize(struct brcmf_pciedev_info *devinfo, u8 *data,
++			  u32 data_len)
++{
++	__le32 *field;
++	u32 newsize;
 +
- #ifdef CONFIG_RTL8XXXU_UNTESTED
++	if (data_len < BRCMF_RAMSIZE_OFFSET + 8)
++		return;
++
++	field = (__le32 *)&data[BRCMF_RAMSIZE_OFFSET];
++	if (le32_to_cpup(field) != BRCMF_RAMSIZE_MAGIC)
++		return;
++	field++;
++	newsize = le32_to_cpup(field);
++
++	brcmf_dbg(PCIE, "Found ramsize info in FW, adjusting to 0x%x\n",
++		  newsize);
++	devinfo->ci->ramsize = newsize;
++}
++
++
+ static int
+ brcmf_pcie_init_share_ram_info(struct brcmf_pciedev_info *devinfo,
+ 			       u32 sharedram_addr)
+@@ -1694,6 +1720,13 @@ static void brcmf_pcie_setup(struct device *dev, const struct firmware *fw,
  
- static struct rtl8xxxu_fileops rtl8192cu_fops = {
-@@ -6146,6 +6178,8 @@ static struct usb_device_id dev_table[] = {
- 	.driver_info = (unsigned long)&rtl8723au_fops},
- {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x818b, 0xff, 0xff, 0xff),
- 	.driver_info = (unsigned long)&rtl8192eu_fops},
-+{USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0xb720, 0xff, 0xff, 0xff),
-+	.driver_info = (unsigned long)&rtl8723bu_fops},
- #ifdef CONFIG_RTL8XXXU_UNTESTED
- /* Still supported by rtlwifi */
- {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x8176, 0xff, 0xff, 0xff),
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 56c4e0a..dd4c563 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -34,7 +34,7 @@
- #define RTL8XXXU_MAX_REG_POLL		500
- #define	USB_INTR_CONTENT_LENGTH		56
+ 	brcmf_pcie_attach(devinfo);
  
--#define RTL8XXXU_OUT_ENDPOINTS		3
-+#define RTL8XXXU_OUT_ENDPOINTS		4
- 
- #define REALTEK_USB_READ		0xc0
- #define REALTEK_USB_WRITE		0x40
++	/* Some of the firmwares have the size of the memory of the device
++	 * defined inside the firmware. This is because part of the memory in
++	 * the device is shared and the devision is determined by FW. Parse
++	 * the firmware and adjust the chip memory size now.
++	 */
++	brcmf_pcie_adjust_ramsize(devinfo, (u8 *)fw->data, fw->size);
++
+ 	ret = brcmf_pcie_download_fw_nvram(devinfo, fw, nvram, nvram_len);
+ 	if (ret)
+ 		goto fail;
 -- 
-2.5.0
+1.9.1
 
