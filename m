@@ -1,85 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:20686 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750707AbcBLGL1 (ORCPT
+Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:16135
+	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161118AbcBQK13 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Feb 2016 01:11:27 -0500
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 2/2] ath10k: process htt rx indication as batch mode
-Date: Fri, 12 Feb 2016 11:40:59 +0530
-Message-ID: <1455257459-13343-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20160212_071129_463695_22F50920)
-In-Reply-To: <1455257459-13343-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1455257459-13343-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 17 Feb 2016 05:27:29 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 10/21] brcmfmac: add support for the PCIE 4366c0 chip
+Date: Wed, 17 Feb 2016 11:26:59 +0100
+Message-Id: <1455704830-10088-11-git-send-email-arend@broadcom.com> (sfid-20160217_112751_213147_B073E971)
+In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On multicore systems, it is possible that txrx tasket can run
-in parallel with pci tasklet (i.e smp affinity of ath10k irq is
-assigned to multiple CPUs). Feeding and consuming from the same
-rx completion list leads to txrx tasklet runs for longer period.
-Prevent this by processing a snapshot of rx queue by moving list
-into temporary list. Consecutive received frames will be processed
-in next batch.
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+A newer version of the 4366 PCIE chip has been released. Add
+support for this version of the chip.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index bedd8c3..61d9507 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2155,22 +2155,34 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
- 	struct ath10k_htt *htt = (struct ath10k_htt *)ptr;
- 	struct ath10k *ar = htt->ar;
- 	struct sk_buff_head tx_q;
-+	struct sk_buff_head rx_q;
-+	struct sk_buff_head rx_ind_q;
- 	struct htt_resp *resp;
- 	struct sk_buff *skb;
- 	unsigned long flags;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 3fd4e3b..3cb32b7 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -53,6 +53,7 @@ BRCMF_FW_NVRAM_DEF(4358, "brcmfmac4358-pcie.bin", "brcmfmac4358-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4359, "brcmfmac4359-pcie.bin", "brcmfmac4359-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4365B, "brcmfmac4365b-pcie.bin", "brcmfmac4365b-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4366B, "brcmfmac4366b-pcie.bin", "brcmfmac4366b-pcie.txt");
++BRCMF_FW_NVRAM_DEF(4366C, "brcmfmac4366c-pcie.bin", "brcmfmac4366c-pcie.txt");
+ BRCMF_FW_NVRAM_DEF(4371, "brcmfmac4371-pcie.bin", "brcmfmac4371-pcie.txt");
  
- 	__skb_queue_head_init(&tx_q);
-+	__skb_queue_head_init(&rx_q);
-+	__skb_queue_head_init(&rx_ind_q);
+ static struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
+@@ -66,7 +67,8 @@ static struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4358_CHIP_ID, 0xFFFFFFFF, 4358),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4359_CHIP_ID, 0xFFFFFFFF, 4359),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4365_CHIP_ID, 0xFFFFFFFF, 4365B),
+-	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4366_CHIP_ID, 0xFFFFFFFF, 4366B),
++	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4366_CHIP_ID, 0x0000000F, 4366B),
++	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4366_CHIP_ID, 0xFFFFFFF0, 4366C),
+ 	BRCMF_FW_NVRAM_ENTRY(BRCM_CC_4371_CHIP_ID, 0xFFFFFFFF, 4371),
+ };
  
- 	spin_lock_irqsave(&htt->tx_compl_q.lock, flags);
- 	skb_queue_splice_init(&htt->tx_compl_q, &tx_q);
- 	spin_unlock_irqrestore(&htt->tx_compl_q.lock, flags);
- 
-+	spin_lock_irqsave(&htt->rx_compl_q.lock, flags);
-+	skb_queue_splice_init(&htt->rx_compl_q, &rx_q);
-+	spin_unlock_irqrestore(&htt->rx_compl_q.lock, flags);
-+
-+	spin_lock_irqsave(&htt->rx_in_ord_compl_q.lock, flags);
-+	skb_queue_splice_init(&htt->rx_in_ord_compl_q, &rx_ind_q);
-+	spin_unlock_irqrestore(&htt->rx_in_ord_compl_q.lock, flags);
-+
- 	while ((skb = __skb_dequeue(&tx_q))) {
- 		ath10k_htt_rx_frm_tx_compl(htt->ar, skb);
- 		dev_kfree_skb_any(skb);
- 	}
- 
--	while ((skb = skb_dequeue(&htt->rx_compl_q))) {
-+	while ((skb = __skb_dequeue(&rx_q))) {
- 		resp = (struct htt_resp *)skb->data;
- 		spin_lock_bh(&htt->rx_ring.lock);
- 		ath10k_htt_rx_handler(htt, &resp->rx_ind);
-@@ -2178,7 +2190,7 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
- 		dev_kfree_skb_any(skb);
- 	}
- 
--	while ((skb = skb_dequeue(&htt->rx_in_ord_compl_q))) {
-+	while ((skb = __skb_dequeue(&rx_ind_q))) {
- 		spin_lock_bh(&htt->rx_ring.lock);
- 		ath10k_htt_rx_in_ord_ind(ar, skb);
- 		spin_unlock_bh(&htt->rx_ring.lock);
 -- 
-2.7.0
+1.9.1
 
