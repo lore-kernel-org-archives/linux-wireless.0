@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40025 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933423AbcBRHaW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 02:30:22 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 03/24] staging: wilc1000: linux_mon.c: replaces PRINT_ER with netdev_err
-Date: Thu, 18 Feb 2016 16:27:14 +0900
-Message-ID: <1455780455-21365-3-git-send-email-leo.kim@atmel.com> (sfid-20160218_083033_013939_837648D1)
-In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+Received: from arrakis.dune.hu ([78.24.191.176]:37922 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965115AbcBQQzV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2016 11:55:21 -0500
+Subject: Re: [RFC] mac80211: add extap functionality
+To: Grzegorz Bajorski <grzegorz.bajorski@tieto.com>,
+	linux-wireless@vger.kernel.org
+References: <1455710131-9967-1-git-send-email-grzegorz.bajorski@tieto.com>
+Cc: johannes@sipsolutions.net
+From: Felix Fietkau <nbd@openwrt.org>
+Message-ID: <56C4A5ED.4060802@openwrt.org> (sfid-20160217_175526_997445_C092C091)
+Date: Wed, 17 Feb 2016 17:55:09 +0100
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1455710131-9967-1-git-send-email-grzegorz.bajorski@tieto.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patches replaces PRINT_ER with netdev_err.
+On 2016-02-17 12:55, Grzegorz Bajorski wrote:
+> Client interface briding was only possible when 4addr frames were used with
+> a 4addr/WDS aware AP. It was not possible to do it otherwise due to 3addr
+> frame limitation.
+> 
+> The extap logic introduces a smart MAC address masking/translation
+> (including modyfing packets beyond SA/DA, e.g. DHCP broadcast flag is set).
+> 
+> There are still some unsolved problems and bugs:
+>  - due to bridge port routing and sk_buff payload sharing skb_copy() is
+>    performed; this ideally should be reworked
+>  - ipv6 support is still not finished
+>  - extap is enabled by default currently; it should be configurable via
+>    nl80211 the same way 4addr is
+> 
+> There's also an idea to move this as a generic link driver (just like
+> macvlan, et al) which would allow unmodified cfg80211 drivers to enjoy the
+> extap functionality. Thoughts?
+> 
+> Note: This changes cfg80211 file in this single patch only for reviewing
+> convienence.
+> 
+> This is an early draft to solicit comments on the design.
+> 
+> Signed-off-by: Grzegorz Bajorski <grzegorz.bajorski@tieto.com>
+You can get a lot of the same effect (sharing the same subnet between
+hosts behind multiple interfaces and having forwarding between them)
+without any changes to mac80211.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_mon.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+OpenWrt uses a daemon called 'relayd' which I wrote some years ago. It
+does ARP translation, DHCP packet mangling and sets up policy routing to
+forward packets between multiple interfaces.
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index 9edc6e9..3048e88 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -308,7 +308,7 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
- 
- 	ret = register_netdevice(wilc_wfi_mon);
- 	if (ret) {
--		PRINT_ER(" register_netdevice failed (%d)\n", ret);
-+		netdev_err(real_dev, "register_netdevice failed\n");
- 		return NULL;
- 	}
- 	priv = netdev_priv(wilc_wfi_mon);
--- 
-1.9.1
+You can find it here:
+http://git.openwrt.org/?p=project/relayd.git;a=summary
+git://git.openwrt.org/project/relayd.git
 
+Since you can cover the same use cases with user space code, I don't
+think it's a good idea to put bridge emulation hacks in the kernel's
+wireless stack.
+
+- Felix
