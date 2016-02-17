@@ -1,156 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20899 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754387AbcBVKUk (ORCPT
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:35341 "EHLO
+	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933355AbcBQMdp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 05:20:40 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V4 21/24] staging: wilc1000: removes unused region feature
-Date: Mon, 22 Feb 2016 19:14:28 +0900
-Message-ID: <1456136071-10502-22-git-send-email-leo.kim@atmel.com> (sfid-20160222_112046_000066_73183BED)
-In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
-References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+	Wed, 17 Feb 2016 07:33:45 -0500
+Date: Wed, 17 Feb 2016 18:03:37 +0530
+From: Amitoj Kaur Chawla <amitoj1606@gmail.com>
+To: akarwar@marvell.com, nishants@marvell.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: julia.lawall@lip6.fr
+Subject: [PATCH] mwifiex: Use to_delayed_work()
+Message-ID: <20160217123336.GA30230@amitoj-Inspiron-3542> (sfid-20160217_133407_757167_A4D5BA83)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+Introduce the use of to_delayed_work() helper function instead of open
+coding it with container_of()
 
-This patch removes unused region feature on debug message.
-Also, removes the functions of related in this feature.
+A simplified version of the Coccinelle semantic patch used to make
+this change is:
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+//<smpl>
+@@
+expression a;
+symbol work;
+@@
+- container_of(a, struct delayed_work, work)
++ to_delayed_work(a)
+//</smpl>
+
+Signed-off-by: Amitoj Kaur Chawla <amitoj1606@gmail.com>
 ---
- drivers/staging/wilc1000/linux_wlan_common.h | 17 ++---------
- drivers/staging/wilc1000/wilc_debugfs.c      | 42 ----------------------------
- 2 files changed, 3 insertions(+), 56 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/11h.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index e408631..57d3901 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -1,15 +1,7 @@
- #ifndef LINUX_WLAN_COMMON_H
- #define LINUX_WLAN_COMMON_H
- 
--enum debug_region {
--	Init_debug = 0,
--	COMP = 0xFFFFFFFF,
--};
--
--#define INIT_DBG                (1 << Init_debug)
--
- #if defined(WILC_DEBUGFS)
--extern atomic_t WILC_REGION;
- extern atomic_t WILC_DEBUG_LEVEL;
- 
- #define DEBUG           BIT(0)
-@@ -19,8 +11,7 @@ extern atomic_t WILC_DEBUG_LEVEL;
- 
- #define PRINT_D(region, ...)						\
- 	do {								\
--		if ((atomic_read(&WILC_DEBUG_LEVEL) & DEBUG) &&	\
--		   ((atomic_read(&WILC_REGION)) & (region))) {	\
-+		if ((atomic_read(&WILC_DEBUG_LEVEL) & DEBUG)) {	\
- 			printk("DBG [%s: %d]", __func__, __LINE__);	\
- 			printk(__VA_ARGS__);				\
- 		}							\
-@@ -28,8 +19,7 @@ extern atomic_t WILC_DEBUG_LEVEL;
- 
- #define PRINT_INFO(region, ...)						\
- 	do {								\
--		if ((atomic_read(&WILC_DEBUG_LEVEL) & INFO) &&	\
--		   ((atomic_read(&WILC_REGION)) & (region))) {	\
-+		if ((atomic_read(&WILC_DEBUG_LEVEL) & INFO)) {	\
- 			printk("INFO [%s]", __func__);			\
- 			printk(__VA_ARGS__);				\
- 		}							\
-@@ -37,8 +27,7 @@ extern atomic_t WILC_DEBUG_LEVEL;
- 
- #define PRINT_WRN(region, ...)						\
- 	do {								\
--		if ((atomic_read(&WILC_DEBUG_LEVEL) & WRN) &&	\
--		   ((atomic_read(&WILC_REGION)) & (region))) {	\
-+		if ((atomic_read(&WILC_DEBUG_LEVEL) & WRN)) {	\
- 			printk("WRN [%s: %d]", __func__, __LINE__);	\
- 			printk(__VA_ARGS__);				\
- 		}							\
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index 266d96b..215e2f0 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -24,10 +24,7 @@ static struct dentry *wilc_dir;
-  * --------------------------------------------------------------------------------
-  */
- 
--#define DBG_REGION_ALL	(INIT_DBG)
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
--atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG);
--EXPORT_SYMBOL_GPL(WILC_REGION);
- atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
- EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
- 
-@@ -75,44 +72,6 @@ static ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
- 	return count;
- }
- 
--static ssize_t wilc_debug_region_read(struct file *file, char __user *userbuf, size_t count, loff_t *ppos)
--{
--	char buf[128];
--	int res = 0;
--
--	/* only allow read from start */
--	if (*ppos > 0)
--		return 0;
--
--	res = scnprintf(buf, sizeof(buf), "Debug region: %x\n", atomic_read(&WILC_REGION));
--
--	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
--}
--
--static ssize_t wilc_debug_region_write(struct file *filp, const char __user *buf, size_t count, loff_t *ppos)
--{
--	char buffer[128] = {};
--	int flag;
--
--	if (count > sizeof(buffer))
--		return -EINVAL;
--
--	if (copy_from_user(buffer, buf, count))
--		return -EFAULT;
--
--	flag = buffer[0] - '0';
--
--	if (flag > DBG_REGION_ALL) {
--		printk("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n", __func__, flag, atomic_read(&WILC_REGION));
--		return -EFAULT;
--	}
--
--	atomic_set(&WILC_REGION, (int)flag);
--	printk("new debug-region is %x\n", atomic_read(&WILC_REGION));
--
--	return count;
--}
--
- /*
-  * --------------------------------------------------------------------------------
-  */
-@@ -134,7 +93,6 @@ struct wilc_debugfs_info_t {
- 
- static struct wilc_debugfs_info_t debugfs_info[] = {
- 	{ "wilc_debug_level",	0666,	(DEBUG | ERR), FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write, NULL), },
--	{ "wilc_debug_region",	0666,	(INIT_DBG), FOPS(NULL, wilc_debug_region_read, wilc_debug_region_write, NULL), },
- };
- 
- static int __init wilc_debugfs_init(void)
+diff --git a/drivers/net/wireless/marvell/mwifiex/11h.c b/drivers/net/wireless/marvell/mwifiex/11h.c
+index 71a1b58..81c60d0 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11h.c
++++ b/drivers/net/wireless/marvell/mwifiex/11h.c
+@@ -123,8 +123,7 @@ void mwifiex_11h_process_join(struct mwifiex_private *priv, u8 **buffer,
+ void mwifiex_dfs_cac_work_queue(struct work_struct *work)
+ {
+ 	struct cfg80211_chan_def chandef;
+-	struct delayed_work *delayed_work =
+-			container_of(work, struct delayed_work, work);
++	struct delayed_work *delayed_work = to_delayed_work(work);
+ 	struct mwifiex_private *priv =
+ 			container_of(delayed_work, struct mwifiex_private,
+ 				     dfs_cac_work);
+@@ -289,8 +288,7 @@ int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
+ void mwifiex_dfs_chan_sw_work_queue(struct work_struct *work)
+ {
+ 	struct mwifiex_uap_bss_param *bss_cfg;
+-	struct delayed_work *delayed_work =
+-			container_of(work, struct delayed_work, work);
++	struct delayed_work *delayed_work = to_delayed_work(work);
+ 	struct mwifiex_private *priv =
+ 			container_of(delayed_work, struct mwifiex_private,
+ 				     dfs_chan_sw_work);
 -- 
 1.9.1
 
