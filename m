@@ -1,144 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:9196 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755135AbcBBMFm (ORCPT
+Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:60898
+	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161098AbcBQK1Y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 07:05:42 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 08/26] staging: wilc1000: renames au8ssid of connect_resp_info structure
-Date: Tue, 2 Feb 2016 21:02:18 +0900
-Message-ID: <1454414556-9822-8-git-send-email-leo.kim@atmel.com> (sfid-20160202_130544_894087_F0A94192)
-In-Reply-To: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
-References: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 17 Feb 2016 05:27:24 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Franky Lin <frankyl@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 03/21] brcmfmac: check for wowl support before enumerating feature flag
+Date: Wed, 17 Feb 2016 11:26:52 +0100
+Message-Id: <1455704830-10088-4-git-send-email-arend@broadcom.com> (sfid-20160217_112835_307006_044EB9BB)
+In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames au8ssid variable to ssid.
+From: Franky Lin <frankyl@broadcom.com>
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+In some cases wiphy->wowlan could be NULL if firmware doesn't have the
+support. Driver should check for support before walking down the feature
+flags.
+
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Franky Lin <frankyl@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c       |  2 +-
- drivers/staging/wilc1000/coreconfigurator.h       |  2 +-
- drivers/staging/wilc1000/host_interface.c         |  3 ++-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 19 +++++++++++--------
- 4 files changed, 15 insertions(+), 11 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 6c40d36..4dd7c8a 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -322,7 +322,7 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
- 
- 		network_info->u64Tsf = tsf_lo | ((u64)tsf_hi << 32);
- 
--		get_ssid(msa, network_info->au8ssid, &network_info->u8SsidLen);
-+		get_ssid(msa, network_info->ssid, &network_info->u8SsidLen);
- 		get_BSSID(msa, network_info->au8bssid);
- 
- 		network_info->u8channel = get_current_channel_802_11n(msa,
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index ace50d8..781a65f 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -79,7 +79,7 @@ typedef struct {
- struct network_info {
- 	s8 rssi;
- 	u16 cap_info;
--	u8 au8ssid[MAX_SSID_LEN];
-+	u8 ssid[MAX_SSID_LEN];
- 	u8 u8SsidLen;
- 	u8 au8bssid[6];
- 	u16 u16BeaconPeriod;
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index e4abc4b..7752af2 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4280,7 +4280,8 @@ static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo)
- 		pNewJoinBssParam->beacon_period = ptstrNetworkInfo->u16BeaconPeriod;
- 		pNewJoinBssParam->cap_info = ptstrNetworkInfo->cap_info;
- 		memcpy(pNewJoinBssParam->au8bssid, ptstrNetworkInfo->au8bssid, 6);
--		memcpy((u8 *)pNewJoinBssParam->ssid, ptstrNetworkInfo->au8ssid, ptstrNetworkInfo->u8SsidLen + 1);
-+		memcpy((u8 *)pNewJoinBssParam->ssid, ptstrNetworkInfo->ssid,
-+		       ptstrNetworkInfo->u8SsidLen + 1);
- 		pNewJoinBssParam->ssid_len = ptstrNetworkInfo->u8SsidLen;
- 		memset(pNewJoinBssParam->rsn_pcip_policy, 0xFF, 3);
- 		memset(pNewJoinBssParam->rsn_auth_policy, 0xFF, 3);
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 4d50dd7..3b3411f 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -244,7 +244,7 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
- 				channel = ieee80211_get_channel(wiphy, freq);
- 
- 				rssi = get_rssi_avg(network_info);
--				if (memcmp("DIRECT-", network_info->au8ssid, 7) ||
-+				if (memcmp("DIRECT-", network_info->ssid, 7) ||
- 				    direct_scan) {
- 					bss = cfg80211_inform_bss(wiphy,
- 								  channel,
-@@ -288,7 +288,8 @@ static void remove_network_from_shadow(unsigned long arg)
- 
- 	for (i = 0; i < last_scanned_cnt; i++) {
- 		if (time_after(now, last_scanned_shadow[i].u32TimeRcvdInScan + (unsigned long)(SCAN_RESULT_EXPIRE))) {
--			PRINT_D(CFG80211_DBG, "Network expired in ScanShadow: %s\n", last_scanned_shadow[i].au8ssid);
-+			PRINT_D(CFG80211_DBG, "Network expired ScanShadow:%s\n",
-+				last_scanned_shadow[i].ssid);
- 
- 			kfree(last_scanned_shadow[i].pu8IEs);
- 			last_scanned_shadow[i].pu8IEs = NULL;
-@@ -368,8 +369,8 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
- 	last_scanned_shadow[ap_index].rssi = pstrNetworkInfo->rssi;
- 	last_scanned_shadow[ap_index].cap_info = pstrNetworkInfo->cap_info;
- 	last_scanned_shadow[ap_index].u8SsidLen = pstrNetworkInfo->u8SsidLen;
--	memcpy(last_scanned_shadow[ap_index].au8ssid,
--	       pstrNetworkInfo->au8ssid, pstrNetworkInfo->u8SsidLen);
-+	memcpy(last_scanned_shadow[ap_index].ssid,
-+	       pstrNetworkInfo->ssid, pstrNetworkInfo->u8SsidLen);
- 	memcpy(last_scanned_shadow[ap_index].au8bssid,
- 	       pstrNetworkInfo->au8bssid, ETH_ALEN);
- 	last_scanned_shadow[ap_index].u16BeaconPeriod = pstrNetworkInfo->u16BeaconPeriod;
-@@ -434,12 +435,14 @@ static void CfgScanResult(enum scan_event scan_event,
- 
- 				if (network_info->bNewNetwork) {
- 					if (priv->u32RcvdChCount < MAX_NUM_SCANNED_NETWORKS) {
--						PRINT_D(CFG80211_DBG, "Network %s found\n", network_info->au8ssid);
-+						PRINT_D(CFG80211_DBG,
-+							"Network %s found\n",
-+							network_info->ssid);
- 						priv->u32RcvdChCount++;
- 
- 						add_network_to_shadow(network_info, priv, join_params);
- 
--						if (!(memcmp("DIRECT-", network_info->au8ssid, 7))) {
-+						if (!(memcmp("DIRECT-", network_info->ssid, 7))) {
- 							bss = cfg80211_inform_bss(wiphy,
- 										  channel,
- 										  CFG80211_BSS_FTYPE_UNKNOWN,
-@@ -459,7 +462,7 @@ static void CfgScanResult(enum scan_event scan_event,
- 
- 					for (i = 0; i < priv->u32RcvdChCount; i++) {
- 						if (memcmp(last_scanned_shadow[i].au8bssid, network_info->au8bssid, 6) == 0) {
--							PRINT_D(CFG80211_DBG, "Update RSSI of %s\n", last_scanned_shadow[i].au8ssid);
-+							PRINT_D(CFG80211_DBG, "Update RSSI of %s\n", last_scanned_shadow[i].ssid);
- 
- 							last_scanned_shadow[i].rssi = network_info->rssi;
- 							last_scanned_shadow[i].u32TimeRcvdInScan = jiffies;
-@@ -736,7 +739,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 
- 	for (i = 0; i < last_scanned_cnt; i++) {
- 		if ((sme->ssid_len == last_scanned_shadow[i].u8SsidLen) &&
--		    memcmp(last_scanned_shadow[i].au8ssid,
-+		    memcmp(last_scanned_shadow[i].ssid,
- 			   sme->ssid,
- 			   sme->ssid_len) == 0) {
- 			PRINT_INFO(CFG80211_DBG, "Network with required SSID is found %s\n", sme->ssid);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 5478128..d66f08f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -6594,7 +6594,8 @@ struct brcmf_cfg80211_info *brcmf_cfg80211_attach(struct brcmf_pub *drvr,
+ 	if (brcmf_feat_is_enabled(ifp, BRCMF_FEAT_SCAN_RANDOM_MAC)) {
+ 		wiphy->features |= NL80211_FEATURE_SCHED_SCAN_RANDOM_MAC_ADDR;
+ #ifdef CONFIG_PM
+-		if (wiphy->wowlan->flags & WIPHY_WOWLAN_NET_DETECT)
++		if (wiphy->wowlan &&
++		    wiphy->wowlan->flags & WIPHY_WOWLAN_NET_DETECT)
+ 			wiphy->features |= NL80211_FEATURE_ND_RANDOM_MAC_ADDR;
+ #endif
+ 	}
 -- 
 1.9.1
 
