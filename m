@@ -1,85 +1,250 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46708 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752722AbcB2WFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:53 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 019/113] rtl8xxxu: Add rtl8723b_mac_init_table
-Date: Mon, 29 Feb 2016 17:04:17 -0500
-Message-Id: <1456783551-28315-20-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_231114_921741_533BBBF1)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:28493
+	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1161119AbcBQK13 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2016 05:27:29 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <hante.meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 20/21] brcmfmac: integrate add_keyext in add_key
+Date: Wed, 17 Feb 2016 11:27:09 +0100
+Message-Id: <1455704830-10088-21-git-send-email-arend@broadcom.com> (sfid-20160217_112749_299537_64FD7B08)
+In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Hante Meuleman <hante.meuleman@broadcom.com>
 
-Newer chips seem to have some different mac registers, requiring
-a different init table.
+brcmf_add_keyext is called when a key is configured for a specific
+mac address. This function is very similar to the calling function
+brcmf_add_key. Integrate this function and also use existing del_key
+function in case key is to be cleared.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Reviewed-by: Arend Van Spriel <arend.van@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <franky.lin@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Signed-off-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 37 +++++++++++++++++++++++-
- 1 file changed, 36 insertions(+), 1 deletion(-)
+ .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 154 ++++++---------------
+ 1 file changed, 39 insertions(+), 115 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 13d3b5e..8a6947f 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -153,6 +153,37 @@ static struct rtl8xxxu_reg8val rtl8723a_mac_init_table[] = {
- 	{0x70a, 0x65}, {0x70b, 0x87}, {0xffff, 0xff},
- };
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+index 5e3acac..5203d8f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
+@@ -2073,84 +2073,34 @@ done:
+ }
  
-+static struct rtl8xxxu_reg8val rtl8723b_mac_init_table[] = {
-+	{0x02f, 0x30}, {0x035, 0x00}, {0x039, 0x08}, {0x04e, 0xe0},
-+	{0x064, 0x00}, {0x067, 0x20}, {0x428, 0x0a}, {0x429, 0x10},
-+	{0x430, 0x00}, {0x431, 0x00},
-+	{0x432, 0x00}, {0x433, 0x01}, {0x434, 0x04}, {0x435, 0x05},
-+	{0x436, 0x07}, {0x437, 0x08}, {0x43c, 0x04}, {0x43d, 0x05},
-+	{0x43e, 0x07}, {0x43f, 0x08}, {0x440, 0x5d}, {0x441, 0x01},
-+	{0x442, 0x00}, {0x444, 0x10}, {0x445, 0x00}, {0x446, 0x00},
-+	{0x447, 0x00}, {0x448, 0x00}, {0x449, 0xf0}, {0x44a, 0x0f},
-+	{0x44b, 0x3e}, {0x44c, 0x10}, {0x44d, 0x00}, {0x44e, 0x00},
-+	{0x44f, 0x00}, {0x450, 0x00}, {0x451, 0xf0}, {0x452, 0x0f},
-+	{0x453, 0x00}, {0x456, 0x5e}, {0x460, 0x66}, {0x461, 0x66},
-+	{0x4c8, 0xff}, {0x4c9, 0x08}, {0x4cc, 0xff},
-+	{0x4cd, 0xff}, {0x4ce, 0x01}, {0x500, 0x26}, {0x501, 0xa2},
-+	{0x502, 0x2f}, {0x503, 0x00}, {0x504, 0x28}, {0x505, 0xa3},
-+	{0x506, 0x5e}, {0x507, 0x00}, {0x508, 0x2b}, {0x509, 0xa4},
-+	{0x50a, 0x5e}, {0x50b, 0x00}, {0x50c, 0x4f}, {0x50d, 0xa4},
-+	{0x50e, 0x00}, {0x50f, 0x00}, {0x512, 0x1c}, {0x514, 0x0a},
-+	{0x516, 0x0a}, {0x525, 0x4f},
-+	{0x550, 0x10}, {0x551, 0x10}, {0x559, 0x02}, {0x55c, 0x50},
-+	{0x55d, 0xff}, {0x605, 0x30}, {0x608, 0x0e}, {0x609, 0x2a},
-+	{0x620, 0xff}, {0x621, 0xff}, {0x622, 0xff}, {0x623, 0xff},
-+	{0x624, 0xff}, {0x625, 0xff}, {0x626, 0xff}, {0x627, 0xff},
-+	{0x638, 0x50}, {0x63c, 0x0a}, {0x63d, 0x0a}, {0x63e, 0x0e},
-+	{0x63f, 0x0e}, {0x640, 0x40}, {0x642, 0x40}, {0x643, 0x00},
-+	{0x652, 0xc8}, {0x66e, 0x05}, {0x700, 0x21}, {0x701, 0x43},
-+	{0x702, 0x65}, {0x703, 0x87}, {0x708, 0x21}, {0x709, 0x43},
-+	{0x70a, 0x65}, {0x70b, 0x87}, {0x765, 0x18}, {0x76e, 0x04},
-+	{0xffff, 0xff},
-+};
+ static s32
+-brcmf_add_keyext(struct wiphy *wiphy, struct net_device *ndev,
+-	      u8 key_idx, const u8 *mac_addr, struct key_params *params)
++brcmf_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
++		       u8 key_idx, bool pairwise, const u8 *mac_addr)
+ {
+ 	struct brcmf_if *ifp = netdev_priv(ndev);
+ 	struct brcmf_wsec_key key;
+ 	s32 err = 0;
+-	u8 keybuf[8];
 +
- static struct rtl8xxxu_reg32val rtl8723a_phy_1t_init_table[] = {
- 	{0x800, 0x80040000}, {0x804, 0x00000003},
- 	{0x808, 0x0000fc00}, {0x80c, 0x0000000a},
-@@ -4656,7 +4687,11 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 	if (priv->fops->phy_init_antenna_selection)
- 		priv->fops->phy_init_antenna_selection(priv);
++	brcmf_dbg(TRACE, "Enter\n");
++	if (!check_vif_up(ifp->vif))
++		return -EIO;
++
++	if (key_idx >= BRCMF_MAX_DEFAULT_KEYS) {
++		/* we ignore this key index in this case */
++		return -EINVAL;
++	}
  
--	ret = rtl8xxxu_init_mac(priv, rtl8723a_mac_init_table);
-+	if (priv->rtlchip == 0x8723b)
-+		ret = rtl8xxxu_init_mac(priv, rtl8723b_mac_init_table);
-+	else
-+		ret = rtl8xxxu_init_mac(priv, rtl8723a_mac_init_table);
+ 	memset(&key, 0, sizeof(key));
+-	key.index = (u32) key_idx;
+-	/* Instead of bcast for ea address for default wep keys,
+-		 driver needs it to be Null */
+-	if (!is_multicast_ether_addr(mac_addr))
+-		memcpy((char *)&key.ea, (void *)mac_addr, ETH_ALEN);
+-	key.len = (u32) params->key_len;
+-	/* check for key index change */
+-	if (key.len == 0) {
+-		/* key delete */
+-		err = send_key_to_dongle(ifp, &key);
+-		if (err)
+-			brcmf_err("key delete error (%d)\n", err);
+-	} else {
+-		if (key.len > sizeof(key.data)) {
+-			brcmf_err("Invalid key length (%d)\n", key.len);
+-			return -EINVAL;
+-		}
+ 
+-		brcmf_dbg(CONN, "Setting the key index %d\n", key.index);
+-		memcpy(key.data, params->key, key.len);
++	key.index = (u32)key_idx;
++	key.flags = BRCMF_PRIMARY_KEY;
++	key.algo = CRYPTO_ALGO_OFF;
+ 
+-		if (!brcmf_is_apmode(ifp->vif) &&
+-		    (params->cipher == WLAN_CIPHER_SUITE_TKIP)) {
+-			brcmf_dbg(CONN, "Swapping RX/TX MIC key\n");
+-			memcpy(keybuf, &key.data[24], sizeof(keybuf));
+-			memcpy(&key.data[24], &key.data[16], sizeof(keybuf));
+-			memcpy(&key.data[16], keybuf, sizeof(keybuf));
+-		}
++	brcmf_dbg(CONN, "key index (%d)\n", key_idx);
+ 
+-		/* if IW_ENCODE_EXT_RX_SEQ_VALID set */
+-		if (params->seq && params->seq_len == 6) {
+-			/* rx iv */
+-			u8 *ivptr;
+-			ivptr = (u8 *) params->seq;
+-			key.rxiv.hi = (ivptr[5] << 24) | (ivptr[4] << 16) |
+-			    (ivptr[3] << 8) | ivptr[2];
+-			key.rxiv.lo = (ivptr[1] << 8) | ivptr[0];
+-			key.iv_initialized = true;
+-		}
++	/* Set the new key/index */
++	err = send_key_to_dongle(ifp, &key);
+ 
+-		switch (params->cipher) {
+-		case WLAN_CIPHER_SUITE_WEP40:
+-			key.algo = CRYPTO_ALGO_WEP1;
+-			brcmf_dbg(CONN, "WLAN_CIPHER_SUITE_WEP40\n");
+-			break;
+-		case WLAN_CIPHER_SUITE_WEP104:
+-			key.algo = CRYPTO_ALGO_WEP128;
+-			brcmf_dbg(CONN, "WLAN_CIPHER_SUITE_WEP104\n");
+-			break;
+-		case WLAN_CIPHER_SUITE_TKIP:
+-			key.algo = CRYPTO_ALGO_TKIP;
+-			brcmf_dbg(CONN, "WLAN_CIPHER_SUITE_TKIP\n");
+-			break;
+-		case WLAN_CIPHER_SUITE_AES_CMAC:
+-			key.algo = CRYPTO_ALGO_AES_CCM;
+-			brcmf_dbg(CONN, "WLAN_CIPHER_SUITE_AES_CMAC\n");
+-			break;
+-		case WLAN_CIPHER_SUITE_CCMP:
+-			key.algo = CRYPTO_ALGO_AES_CCM;
+-			brcmf_dbg(CONN, "WLAN_CIPHER_SUITE_CCMP\n");
+-			break;
+-		default:
+-			brcmf_err("Invalid cipher (0x%x)\n", params->cipher);
+-			return -EINVAL;
+-		}
+-		err = send_key_to_dongle(ifp, &key);
+-		if (err)
+-			brcmf_err("wsec_key error (%d)\n", err);
+-	}
++	brcmf_dbg(TRACE, "Exit\n");
+ 	return err;
+ }
+ 
+@@ -2163,8 +2113,9 @@ brcmf_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 	struct brcmf_wsec_key *key;
+ 	s32 val;
+ 	s32 wsec;
+-	s32 err = 0;
++	s32 err;
+ 	u8 keybuf[8];
++	bool ext_key;
+ 
+ 	brcmf_dbg(TRACE, "Enter\n");
+ 	brcmf_dbg(CONN, "key index (%d)\n", key_idx);
+@@ -2177,27 +2128,32 @@ brcmf_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 		return -EINVAL;
+ 	}
+ 
+-	if (mac_addr &&
+-		(params->cipher != WLAN_CIPHER_SUITE_WEP40) &&
+-		(params->cipher != WLAN_CIPHER_SUITE_WEP104)) {
+-		brcmf_dbg(TRACE, "Exit");
+-		return brcmf_add_keyext(wiphy, ndev, key_idx, mac_addr, params);
+-	}
+-
+-	key = &ifp->vif->profile.key[key_idx];
+-	memset(key, 0, sizeof(*key));
++	if (params->key_len == 0)
++		return brcmf_cfg80211_del_key(wiphy, ndev, key_idx, pairwise,
++					      mac_addr);
+ 
+ 	if (params->key_len > sizeof(key->data)) {
+ 		brcmf_err("Too long key length (%u)\n", params->key_len);
+-		err = -EINVAL;
+-		goto done;
++		return -EINVAL;
+ 	}
 +
- 	dev_dbg(dev, "%s: init_mac %i\n", __func__, ret);
- 	if (ret)
- 		goto exit;
++	ext_key = false;
++	if (mac_addr && (params->cipher != WLAN_CIPHER_SUITE_WEP40) &&
++	    (params->cipher != WLAN_CIPHER_SUITE_WEP104)) {
++		brcmf_dbg(TRACE, "Ext key, mac %pM", mac_addr);
++		ext_key = true;
++	}
++
++	key = &ifp->vif->profile.key[key_idx];
++	memset(key, 0, sizeof(*key));
++	if ((ext_key) && (!is_multicast_ether_addr(mac_addr)))
++		memcpy((char *)&key->ea, (void *)mac_addr, ETH_ALEN);
+ 	key->len = params->key_len;
+ 	key->index = key_idx;
+-
+ 	memcpy(key->data, params->key, key->len);
++	if (!ext_key)
++		key->flags = BRCMF_PRIMARY_KEY;
+ 
+-	key->flags = BRCMF_PRIMARY_KEY;
+ 	switch (params->cipher) {
+ 	case WLAN_CIPHER_SUITE_WEP40:
+ 		key->algo = CRYPTO_ALGO_WEP1;
+@@ -2237,7 +2193,7 @@ brcmf_cfg80211_add_key(struct wiphy *wiphy, struct net_device *ndev,
+ 	}
+ 
+ 	err = send_key_to_dongle(ifp, key);
+-	if (err)
++	if (ext_key || err)
+ 		goto done;
+ 
+ 	err = brcmf_fil_bsscfg_int_get(ifp, "wsec", &wsec);
+@@ -2258,38 +2214,6 @@ done:
+ }
+ 
+ static s32
+-brcmf_cfg80211_del_key(struct wiphy *wiphy, struct net_device *ndev,
+-		    u8 key_idx, bool pairwise, const u8 *mac_addr)
+-{
+-	struct brcmf_if *ifp = netdev_priv(ndev);
+-	struct brcmf_wsec_key key;
+-	s32 err = 0;
+-
+-	brcmf_dbg(TRACE, "Enter\n");
+-	if (!check_vif_up(ifp->vif))
+-		return -EIO;
+-
+-	if (key_idx >= BRCMF_MAX_DEFAULT_KEYS) {
+-		/* we ignore this key index in this case */
+-		return -EINVAL;
+-	}
+-
+-	memset(&key, 0, sizeof(key));
+-
+-	key.index = (u32) key_idx;
+-	key.flags = BRCMF_PRIMARY_KEY;
+-	key.algo = CRYPTO_ALGO_OFF;
+-
+-	brcmf_dbg(CONN, "key index (%d)\n", key_idx);
+-
+-	/* Set the new key/index */
+-	err = send_key_to_dongle(ifp, &key);
+-
+-	brcmf_dbg(TRACE, "Exit\n");
+-	return err;
+-}
+-
+-static s32
+ brcmf_cfg80211_get_key(struct wiphy *wiphy, struct net_device *ndev,
+ 		    u8 key_idx, bool pairwise, const u8 *mac_addr, void *cookie,
+ 		    void (*callback) (void *cookie, struct key_params * params))
 -- 
-2.5.0
+1.9.1
 
