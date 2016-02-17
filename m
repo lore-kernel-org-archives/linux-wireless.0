@@ -1,75 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42075 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933817AbcBCSkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 13:40:04 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Bruno Randolf <br1@einfach.org>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 18/28] rtl8xxxu: Document REG_RXFLTMAP registers
-Date: Wed,  3 Feb 2016 13:39:52 -0500
-Message-Id: <1454524802-26763-19-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_194129_116215_9977D81D)
-In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:7737 "EHLO
+	mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1161109AbcBQK10 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2016 05:27:26 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 12/21] brcmfmac: increase timeout for tx eapol
+Date: Wed, 17 Feb 2016 11:27:01 +0100
+Message-Id: <1455704830-10088-13-git-send-email-arend@broadcom.com> (sfid-20160217_112745_789828_88CA5390)
+In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bruno Randolf <br1@einfach.org>
+From: Hante Meuleman <meuleman@broadcom.com>
 
-Add comments describing how REG_RXFLTMAP0, REG_RXFLTMAP1 and REG_RXFLTMAP2
-work.
+When keys get set and updated this has to happen after eapol got
+transmitted (without key or old key) before the key can be updated.
+To make sure the order of sending eapol and configuring key is done
+correctly a timeout for tx of eapol is applied. This timeout is set
+to 50 msec, which is not always enough. Especially in AP mode and
+key updates the timeout may need to be much longer because client(s)
+can be in powersave. Increase the timeout from 50 to 950 msec.
 
-Signed-off-by: Bruno Randolf <br1@einfach.org>
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  | 26 +++++++++++++++++-----
- 1 file changed, 20 insertions(+), 6 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-index d2995f8a3..d089edd 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-@@ -569,9 +569,12 @@
- 						 (Rx beacon, probe rsp) */
- #define  RCR_ACCEPT_CRC32		BIT(8)  /* Accept CRC32 error packet */
- #define  RCR_ACCEPT_ICV			BIT(9)  /* Accept ICV error packet */
--#define  RCR_ACCEPT_DATA_FRAME		BIT(11)
--#define  RCR_ACCEPT_CTRL_FRAME		BIT(12)
--#define  RCR_ACCEPT_MGMT_FRAME		BIT(13)
-+#define  RCR_ACCEPT_DATA_FRAME		BIT(11) /* Accept all data pkt or use
-+						   REG_RXFLTMAP2 */
-+#define  RCR_ACCEPT_CTRL_FRAME		BIT(12) /* Accept all control pkt or use
-+						   REG_RXFLTMAP1 */
-+#define  RCR_ACCEPT_MGMT_FRAME		BIT(13) /* Accept all mgmt pkt or use
-+						   REG_RXFLTMAP0 */
- #define  RCR_HTC_LOC_CTRL		BIT(14) /* MFC<--HTC=1 MFC-->HTC=0 */
- #define  RCR_UC_DATA_PKT_INT_ENABLE	BIT(16) /* Enable unicast data packet
- 						   interrupt */
-@@ -651,9 +654,20 @@
- #define REG_LPNAV_CTRL			0x0694
- #define REG_WKFMCAM_CMD			0x0698
- #define REG_WKFMCAM_RWD			0x069c
--#define REG_RXFLTMAP0			0x06a0
--#define REG_RXFLTMAP1			0x06a2
--#define REG_RXFLTMAP2			0x06a4
-+
-+/*
-+ * RX Filters: each bit corresponds to the numerical value of the subtype.
-+ * If it is set the subtype frame type is passed. The filter is only used when
-+ * the RCR_ACCEPT_DATA_FRAME, RCR_ACCEPT_CTRL_FRAME, RCR_ACCEPT_MGMT_FRAME bit
-+ * in the RCR are low.
-+ *
-+ * Example: Beacon subtype is binary 1000 which is decimal 8 so we have to set
-+ * bit 8 (0x100) in REG_RXFLTMAP0 to enable reception.
-+ */
-+#define REG_RXFLTMAP0			0x06a0	/* Management frames */
-+#define REG_RXFLTMAP1			0x06a2	/* Control frames */
-+#define REG_RXFLTMAP2			0x06a4	/* Data frames */
-+
- #define REG_BCN_PSR_RPT			0x06a8
- #define REG_CALB32K_CTRL		0x06ac
- #define REG_PKT_MON_CTRL		0x06b4
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index dcf9393..3087d10 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -42,7 +42,7 @@ MODULE_AUTHOR("Broadcom Corporation");
+ MODULE_DESCRIPTION("Broadcom 802.11 wireless LAN fullmac driver.");
+ MODULE_LICENSE("Dual BSD/GPL");
+ 
+-#define MAX_WAIT_FOR_8021X_TX			msecs_to_jiffies(50)
++#define MAX_WAIT_FOR_8021X_TX			msecs_to_jiffies(950)
+ 
+ /* AMPDU rx reordering definitions */
+ #define BRCMF_RXREORDER_FLOWID_OFFSET		0
 -- 
-2.5.0
+1.9.1
 
