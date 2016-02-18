@@ -1,76 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20825 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:40069 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754353AbcBVKUR (ORCPT
+	with ESMTP id S933423AbcBRHae (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 05:20:17 -0500
+	Thu, 18 Feb 2016 02:30:34 -0500
 From: Leo Kim <leo.kim@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V4 19/24] staging: wilc1000: wilc_wfi_cfgoperations.c: removes unnecessary log messages
-Date: Mon, 22 Feb 2016 19:14:26 +0900
-Message-ID: <1456136071-10502-20-git-send-email-leo.kim@atmel.com> (sfid-20160222_112100_936231_ACBAF04A)
-In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
-References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 05/24] staging: wilc1000: removes potential null dereference
+Date: Thu, 18 Feb 2016 16:27:16 +0900
+Message-ID: <1455780455-21365-5-git-send-email-leo.kim@atmel.com> (sfid-20160218_083042_700047_B9B574BC)
+In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+This patch removes the error reported by smatch.
+ - wilc_wfi_cfgoperations.c:674 scan() error:
+   potential null dereference 'strHiddenNetwork.net_info'.  (kmalloc returns null)
+ - wilc_wfi_cfgoperations.c:1164 add_key() error:
+   potential null dereference 'g_key_gtk_params.key'.  (kmalloc returns null)
+ - wilc_wfi_cfgoperations.c:1201 add_key() error:
+   potential null dereference 'g_key_ptk_params.key'.  (kmalloc returns null)
 
-This patch removes unnecessary log messages.
-
-Signed-off-by: Chris Park <chris.park@atmel.com>
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++-----------
- 1 file changed, 3 insertions(+), 11 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
 diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index a8107f1..0fd3a1e 100644
+index d4705b7..ce3d0f7 100644
 --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
 +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2315,7 +2315,6 @@ int wilc_init_host_int(struct net_device *net)
+@@ -665,6 +665,8 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
  
- 	struct wilc_priv *priv;
+ 		if (request->n_ssids >= 1) {
+ 			strHiddenNetwork.net_info = kmalloc(request->n_ssids * sizeof(struct hidden_network), GFP_KERNEL);
++			if (!strHiddenNetwork.net_info)
++				return -ENOMEM;
+ 			strHiddenNetwork.n_ssids = request->n_ssids;
  
--	PRINT_D(INIT_DBG, "Host[%p][%p]\n", net, net->ieee80211_ptr);
- 	priv = wdev_priv(net->ieee80211_ptr);
- 	if (op_ifcs == 0) {
- 		setup_timer(&hAgingTimer, remove_network_from_shadow, 0);
-@@ -2364,24 +2363,17 @@ int wilc_deinit_host_int(struct net_device *net)
  
- void wilc_free_wiphy(struct net_device *net)
- {
--	if (!net) {
--		PRINT_D(INIT_DBG, "net_device is NULL\n");
-+	if (!net)
- 		return;
--	}
- 
--	if (!net->ieee80211_ptr) {
--		PRINT_D(INIT_DBG, "ieee80211_ptr is NULL\n");
-+	if (!net->ieee80211_ptr)
- 		return;
--	}
- 
--	if (!net->ieee80211_ptr->wiphy) {
--		PRINT_D(INIT_DBG, "wiphy is NULL\n");
-+	if (!net->ieee80211_ptr->wiphy)
- 		return;
--	}
- 
- 	wiphy_unregister(net->ieee80211_ptr->wiphy);
- 
--	PRINT_D(INIT_DBG, "Freeing wiphy\n");
- 	wiphy_free(net->ieee80211_ptr->wiphy);
- 	kfree(net->ieee80211_ptr);
- }
+@@ -1154,6 +1156,8 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 					g_key_gtk_params.key_len = params->key_len;
+ 					g_key_gtk_params.seq_len = params->seq_len;
+ 					g_key_gtk_params.key =  kmalloc(params->key_len, GFP_KERNEL);
++					if (!g_key_gtk_params.key)
++						return -ENOMEM;
+ 					memcpy(g_key_gtk_params.key, params->key, params->key_len);
+ 					if (params->seq_len > 0) {
+ 						g_key_gtk_params.seq =  kmalloc(params->seq_len, GFP_KERNEL);
+@@ -1191,6 +1195,8 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 					g_key_ptk_params.key_len = params->key_len;
+ 					g_key_ptk_params.seq_len = params->seq_len;
+ 					g_key_ptk_params.key =  kmalloc(params->key_len, GFP_KERNEL);
++					if (!g_key_ptk_params.key)
++						return -ENOMEM;
+ 					memcpy(g_key_ptk_params.key, params->key, params->key_len);
+ 					if (params->seq_len > 0) {
+ 						g_key_ptk_params.seq =  kmalloc(params->seq_len, GFP_KERNEL);
 -- 
 1.9.1
 
