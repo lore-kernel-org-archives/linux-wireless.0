@@ -1,77 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:9557 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755207AbcBBMHP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 07:07:15 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 16/26] staging: wilc1000: renames u8Found of connect_resp_info structure
-Date: Tue, 2 Feb 2016 21:02:26 +0900
-Message-ID: <1454414556-9822-16-git-send-email-leo.kim@atmel.com> (sfid-20160202_130719_434229_0D281ED1)
-In-Reply-To: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
-References: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:32901 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1947506AbcBRUSP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Feb 2016 15:18:15 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, apenwarr@gmail.com
+Subject: [PATCH] mac80211: minstrel_ht: set default tx aggregation timeout to 0
+Date: Thu, 18 Feb 2016 19:49:18 +0100
+Message-Id: <1455821358-37534-1-git-send-email-nbd@openwrt.org> (sfid-20160218_211821_907564_F7379B63)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames u8Found variable to found.
+The value 5000 was put here with the addition of the timeout field to
+ieee80211_start_tx_ba_session. It was originally added in mac80211 to
+save resources for drivers like iwlwifi, which only supports a limited
+number of concurrent aggregation sessions.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Since iwlwifi does not use minstrel_ht and other drivers don't need
+this, 0 is a better default - especially since there have been
+recent reports of aggregation setup related issues reproduced with
+ath9k. This should improve stability without causing any adverse
+effects.
+
+Cc: stable@vger.kernel.org
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/staging/wilc1000/coreconfigurator.h       | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ net/mac80211/rc80211_minstrel_ht.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index fd3b5d4..27c35d7 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -88,7 +88,7 @@ struct network_info {
- 	unsigned long time_scan_cached;
- 	unsigned long time_scan;
- 	bool new_network;
--	u8 u8Found;
-+	u8 found;
- 	u32 u32Tsf;
- 	u8 *pu8IEs;
- 	u16 u16IEsLen;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index b5c19ed..c09cc9d 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -235,7 +235,7 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
+diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+index 3928dbd..a7d9227 100644
+--- a/net/mac80211/rc80211_minstrel_ht.c
++++ b/net/mac80211/rc80211_minstrel_ht.c
+@@ -691,7 +691,7 @@ minstrel_aggr_check(struct ieee80211_sta *pubsta, struct sk_buff *skb)
+ 	if (likely(sta->ampdu_mlme.tid_tx[tid]))
+ 		return;
  
- 		network_info = &last_scanned_shadow[i];
- 
--		if (!network_info->u8Found || all) {
-+		if (!network_info->found || all) {
- 			s32 freq;
- 			struct ieee80211_channel *channel;
- 
-@@ -269,7 +269,7 @@ static void reset_shadow_found(void)
- 	int i;
- 
- 	for (i = 0; i < last_scanned_cnt; i++)
--		last_scanned_shadow[i].u8Found = 0;
-+		last_scanned_shadow[i].found = 0;
+-	ieee80211_start_tx_ba_session(pubsta, tid, 5000);
++	ieee80211_start_tx_ba_session(pubsta, tid, 0);
  }
  
- static void update_scan_time(void)
-@@ -387,7 +387,7 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
- 	       pstrNetworkInfo->pu8IEs, pstrNetworkInfo->u16IEsLen);
- 	last_scanned_shadow[ap_index].time_scan = jiffies;
- 	last_scanned_shadow[ap_index].time_scan_cached = jiffies;
--	last_scanned_shadow[ap_index].u8Found = 1;
-+	last_scanned_shadow[ap_index].found = 1;
- 	if (ap_found != -1)
- 		wilc_free_join_params(last_scanned_shadow[ap_index].pJoinParams);
- 	last_scanned_shadow[ap_index].pJoinParams = pJoinParams;
+ static void
 -- 
-1.9.1
+2.2.2
 
