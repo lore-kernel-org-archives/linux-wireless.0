@@ -1,58 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:53644 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751364AbcBZTHG (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:29801 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751361AbcBRLdE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 14:07:06 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] ath10k: parse Rx MAC timestamp in mgmt frame for FW 10.4
-Date: Fri, 26 Feb 2016 11:05:31 -0800
-Message-ID: <1456513531-14528-1-git-send-email-poh@qca.qualcomm.com> (sfid-20160226_200711_234394_F3BC59A5)
+	Thu, 18 Feb 2016 06:33:04 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 02/24] staging: wilc1000: linux_mon.c: removes debug logs
+Date: Thu, 18 Feb 2016 20:30:02 +0900
+Message-ID: <1455795024-26978-2-git-send-email-leo.kim@atmel.com> (sfid-20160218_123309_419960_75C49F57)
+In-Reply-To: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
+References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check and parse Rx MAC timestamp when firmware sets its flag
-to status variable.
-10.4 firmware adds it in Rx beacon frame only at this moment.
-Drivers and mac80211 may utilize it to detect such clockdrift
-or beacon collision and use the result for beacon collision
-avoidance.
+This patches removes unnecessary debug logs.
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/net/wireless/ath/ath10k/wmi.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/staging/wilc1000/linux_mon.c | 24 ++++++------------------
+ 1 file changed, 6 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 1ce6742..94968d6 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2211,6 +2211,8 @@ static int ath10k_wmi_10_4_op_pull_mgmt_rx_ev(struct ath10k *ar,
- 	struct wmi_10_4_mgmt_rx_hdr *ev_hdr;
- 	size_t pull_len;
- 	u32 msdu_len;
-+	struct wmi_mgmt_rx_ext_info *ext_info;
-+	u32 len;
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 21f35d7..9edc6e9 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -157,10 +157,8 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
+ {
+ 	struct tx_complete_mon_data *mgmt_tx = NULL;
  
- 	ev = (struct wmi_10_4_mgmt_rx_event *)skb->data;
- 	ev_hdr = &ev->hdr;
-@@ -2231,6 +2233,13 @@ static int ath10k_wmi_10_4_op_pull_mgmt_rx_ev(struct ath10k *ar,
- 	if (skb->len < msdu_len)
- 		return -EPROTO;
+-	if (!dev) {
+-		PRINT_D(HOSTAPD_DBG, "ERROR: dev == NULL\n");
++	if (!dev)
+ 		return -EFAULT;
+-	}
  
-+	if (le32_to_cpu(arg->status) & WMI_RX_STATUS_EXT_INFO) {
-+		len = ALIGN(le32_to_cpu(arg->buf_len), 4);
-+		ext_info = (struct wmi_mgmt_rx_ext_info *)(skb->data + len);
-+		memcpy(&arg->ext_info, ext_info,
-+		       sizeof(struct wmi_mgmt_rx_ext_info));
-+	}
+ 	netif_stop_queue(dev);
+ 	mgmt_tx = kmalloc(sizeof(*mgmt_tx), GFP_ATOMIC);
+@@ -205,17 +203,12 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+ 		return -EFAULT;
+ 
+ 	mon_priv = netdev_priv(wilc_wfi_mon);
+-
+-	if (!mon_priv) {
+-		PRINT_ER("Monitor interface private structure is NULL\n");
++	if (!mon_priv)
+ 		return -EFAULT;
+-	}
+-
+ 	rtap_len = ieee80211_get_radiotap_len(skb->data);
+-	if (skb->len < rtap_len) {
+-		PRINT_ER("Error in radiotap header\n");
++	if (skb->len < rtap_len)
+ 		return -1;
+-	}
 +
- 	/* Make sure bytes added for padding are removed. */
- 	skb_trim(skb, msdu_len);
+ 	/* skip the radiotap header */
+ 	PRINT_INFO(HOSTAPD_DBG, "Radiotap len: %d\n", rtap_len);
+ 
+@@ -306,11 +299,8 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
+ 		return wilc_wfi_mon;
+ 
+ 	wilc_wfi_mon = alloc_etherdev(sizeof(struct WILC_WFI_mon_priv));
+-	if (!wilc_wfi_mon) {
+-		PRINT_ER("failed to allocate memory\n");
++	if (!wilc_wfi_mon)
+ 		return NULL;
+-	}
+-
+ 	wilc_wfi_mon->type = ARPHRD_IEEE80211_RADIOTAP;
+ 	strncpy(wilc_wfi_mon->name, name, IFNAMSIZ);
+ 	wilc_wfi_mon->name[IFNAMSIZ - 1] = 0;
+@@ -322,10 +312,8 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
+ 		return NULL;
+ 	}
+ 	priv = netdev_priv(wilc_wfi_mon);
+-	if (!priv) {
+-		PRINT_ER("private structure is NULL\n");
++	if (!priv)
+ 		return NULL;
+-	}
+ 
+ 	priv->real_ndev = real_dev;
  
 -- 
 1.9.1
