@@ -1,88 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:44513 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752239AbcB2VdY (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:40111 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933489AbcBRHap (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 16:33:24 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH 15/15] wil6210: add oob_mode module parameter
-Date: Mon, 29 Feb 2016 23:32:50 +0200
-Message-Id: <1456781570-16552-16-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160229_225949_762288_1D9F5C56)
-In-Reply-To: <1456781570-16552-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1456781570-16552-1-git-send-email-qca_merez@qca.qualcomm.com>
+	Thu, 18 Feb 2016 02:30:45 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH 06/24] staging: wilc1000: host_interface.c: removes unnecessary log message
+Date: Thu, 18 Feb 2016 16:27:17 +0900
+Message-ID: <1455780455-21365-6-git-send-email-leo.kim@atmel.com> (sfid-20160218_083048_430024_2C07C8DF)
+In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+From: Chris Park <chris.park@atmel.com>
 
-Add module parameter oob_mode. Takes effect the next time
-the interface is brought up and FW is loaded. Puts the FW
-in special "out of the box" (OOB) mode which is used for
-diagnostics and certification.
+This patch removes unnecessary log message and relate variables.
 
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c    | 15 +++++++++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h |  1 +
- 2 files changed, 16 insertions(+)
+ drivers/staging/wilc1000/host_interface.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index c2a0a66..9bf9fe2 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -27,6 +27,10 @@ bool debug_fw; /* = false; */
- module_param(debug_fw, bool, S_IRUGO);
- MODULE_PARM_DESC(debug_fw, " do not perform card reset. For FW debug");
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d1eedfb..7b9dbc0 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3010,7 +3010,6 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
+ 	int result = 0;
+ 	struct host_if_msg msg;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+-	int i;
  
-+static bool oob_mode;
-+module_param(oob_mode, bool, S_IRUGO);
-+MODULE_PARM_DESC(oob_mode, " enable OOB mode in FW");
-+
- bool no_fw_recovery;
- module_param(no_fw_recovery, bool, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(no_fw_recovery, " disable automatic FW error recovery");
-@@ -547,6 +551,16 @@ static inline void wil_release_cpu(struct wil6210_priv *wil)
- 	wil_w(wil, RGF_USER_USER_CPU_0, 1);
- }
+ 	if (!hif_drv) {
+ 		PRINT_ER("driver is null\n");
+@@ -3019,10 +3018,6 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
  
-+static void wil_set_oob_mode(struct wil6210_priv *wil, bool enable)
-+{
-+	wil_info(wil, "%s: enable=%d\n", __func__, enable);
-+	if (enable) {
-+		wil_s(wil, RGF_USER_USAGE_6, BIT_USER_OOB_MODE);
-+	} else {
-+		wil_c(wil, RGF_USER_USAGE_6, BIT_USER_OOB_MODE);
-+	}
-+}
-+
- static int wil_target_reset(struct wil6210_priv *wil)
- {
- 	int delay = 0;
-@@ -823,6 +837,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 	if (rc)
- 		return rc;
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
  
-+	wil_set_oob_mode(wil, oob_mode);
- 	if (load_fw) {
- 		wil_info(wil, "Use firmware <%s> + board <%s>\n", WIL_FW_NAME,
- 			 WIL_FW2_NAME);
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index d18c448..4d699ea4 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -132,6 +132,7 @@ struct RGF_ICR {
- /* registers - FW addresses */
- #define RGF_USER_USAGE_1		(0x880004)
- #define RGF_USER_USAGE_6		(0x880018)
-+	#define BIT_USER_OOB_MODE		BIT(31)
- #define RGF_USER_HW_MACHINE_STATE	(0x8801dc)
- 	#define HW_MACHINE_BOOT_DONE	(0x3fffffd)
- #define RGF_USER_USER_CPU_0		(0x8801e0)
+-	if (INFO) {
+-		for (i = 0; i < len; i++)
+-			PRINT_INFO(HOSTAPD_DBG, "KEY is %x\n", key[i]);
+-	}
+ 	msg.id = HOST_IF_MSG_KEY;
+ 	msg.body.key_info.type = WEP;
+ 	msg.body.key_info.action = ADDKEY_AP;
 -- 
-1.8.5.2
+1.9.1
 
