@@ -1,88 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:36260 "EHLO
-	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750828AbcBCTq6 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:29964 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1425347AbcBRLdp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 14:46:58 -0500
-Subject: Re: [PATCH v2 2/2] rtlwifi: Fix reusable codes in core.c
-To: Byeoungwook Kim <quddnr145@gmail.com>
-References: <20160203021617.GA13759@gmail.com>
-Cc: kvalo@codeaurora.org, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <56B25930.4070803@lwfinger.net> (sfid-20160203_204702_009534_F49DDF0D)
-Date: Wed, 3 Feb 2016 13:46:56 -0600
+	Thu, 18 Feb 2016 06:33:45 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V2 07/24] staging: wilc1000: linux_mon.c: removes unnecessary log message
+Date: Thu, 18 Feb 2016 20:30:07 +0900
+Message-ID: <1455795024-26978-7-git-send-email-leo.kim@atmel.com> (sfid-20160218_123350_254222_B8364081)
+In-Reply-To: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
+References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160203021617.GA13759@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/02/2016 08:16 PM, Byeoungwook Kim wrote:
-> rtl_*_delay() functions were reused same codes about addr variable.
-> So i have converted to rtl_addr_delay() from code about addr variable.
->
-> Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
-> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-> ---
-> V2 split in separate patchs.
->   drivers/net/wireless/realtek/rtlwifi/core.c | 28 ++++------------------------
->   1 file changed, 4 insertions(+), 24 deletions(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-> index 05f432c..c1193d1 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/core.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-> @@ -63,18 +63,8 @@ EXPORT_SYMBOL(rtl_addr_delay);
->   void rtl_rfreg_delay(struct ieee80211_hw *hw, enum radio_path rfpath, u32 addr,
->   		     u32 mask, u32 data)
->   {
-> -	if (addr == 0xfe) {
-> -		mdelay(50);
-> -	} else if (addr == 0xfd) {
-> -		mdelay(5);
-> -	} else if (addr == 0xfc) {
-> -		mdelay(1);
-> -	} else if (addr == 0xfb) {
-> -		udelay(50);
-> -	} else if (addr == 0xfa) {
-> -		udelay(5);
-> -	} else if (addr == 0xf9) {
-> -		udelay(1);
-> +	if (addr >= 0xf9 && addr <= 0xfe) {
-> +		rtl_addr_delay(addr);
->   	} else {
->   		rtl_set_rfreg(hw, rfpath, addr, mask, data);
->   		udelay(1);
-> @@ -84,18 +74,8 @@ EXPORT_SYMBOL(rtl_rfreg_delay);
->
->   void rtl_bb_delay(struct ieee80211_hw *hw, u32 addr, u32 data)
->   {
-> -	if (addr == 0xfe) {
-> -		mdelay(50);
-> -	} else if (addr == 0xfd) {
-> -		mdelay(5);
-> -	} else if (addr == 0xfc) {
-> -		mdelay(1);
-> -	} else if (addr == 0xfb) {
-> -		udelay(50);
-> -	} else if (addr == 0xfa) {
-> -		udelay(5);
-> -	} else if (addr == 0xf9) {
-> -		udelay(1);
-> +	if (addr >= 0xf9 && addr <= 0xfe) {
-> +		rtl_addr_delay(addr);
->   	} else {
->   		rtl_set_bbreg(hw, addr, MASKDWORD, data);
->   		udelay(1);
->
+From: Chris Park <chris.park@atmel.com>
 
-Unlike patch 1 of 2, this one makes changes that are good. Thus
+This patch removes unnecessary log message and relate variables.
 
-Acked-by: Larry Finger <Larry.finger@lwfinger.net>
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_mon.c | 42 ++++--------------------------------
+ 1 file changed, 4 insertions(+), 38 deletions(-)
 
-Thanks,
-
-Larry
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index dbb98bf..7e7cff4 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -52,15 +52,11 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
+ 	struct wilc_wfi_radiotap_hdr *hdr;
+ 	struct wilc_wfi_radiotap_cb_hdr *cb_hdr;
+ 
+-	PRINT_INFO(HOSTAPD_DBG, "In monitor interface receive function\n");
+-
+ 	if (!wilc_wfi_mon)
+ 		return;
+ 
+-	if (!netif_running(wilc_wfi_mon)) {
+-		PRINT_INFO(HOSTAPD_DBG, "Monitor interface already RUNNING\n");
++	if (!netif_running(wilc_wfi_mon))
+ 		return;
+-	}
+ 
+ 	/* Get WILC header */
+ 	memcpy(&header, (buff - HOST_HDR_OFFSET), HOST_HDR_OFFSET);
+@@ -73,10 +69,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
+ 		/* hostapd callback mgmt frame */
+ 
+ 		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_cb_hdr));
+-		if (!skb) {
+-			PRINT_INFO(HOSTAPD_DBG, "Monitor if : No memory to allocate skb");
++		if (!skb)
+ 			return;
+-		}
+ 
+ 		memcpy(skb_put(skb, size), buff, size);
+ 
+@@ -103,20 +97,16 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
+ 	} else {
+ 		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_hdr));
+ 
+-		if (!skb) {
+-			PRINT_INFO(HOSTAPD_DBG, "Monitor if : No memory to allocate skb");
++		if (!skb)
+ 			return;
+-		}
+ 
+ 		memcpy(skb_put(skb, size), buff, size);
+ 		hdr = (struct wilc_wfi_radiotap_hdr *)skb_push(skb, sizeof(*hdr));
+ 		memset(hdr, 0, sizeof(struct wilc_wfi_radiotap_hdr));
+ 		hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
+ 		hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_hdr));
+-		PRINT_INFO(HOSTAPD_DBG, "Radiotap len %d\n", hdr->hdr.it_len);
+ 		hdr->hdr.it_present = cpu_to_le32
+ 				(1 << IEEE80211_RADIOTAP_RATE);                   /* | */
+-		PRINT_INFO(HOSTAPD_DBG, "Presentflags %d\n", hdr->hdr.it_present);
+ 		hdr->rate = 5; /* txrate->bitrate / 5; */
+ 	}
+ 
+@@ -138,14 +128,6 @@ struct tx_complete_mon_data {
+ static void mgmt_tx_complete(void *priv, int status)
+ {
+ 	struct tx_complete_mon_data *pv_data = priv;
+-	u8 *buf =  pv_data->buff;
+-
+-	if (status == 1) {
+-		if (INFO || buf[0] == 0x10 || buf[0] == 0xb0)
+-			PRINT_INFO(HOSTAPD_DBG, "Packet sent successfully - Size = %d - Address = %p.\n", pv_data->size, pv_data->buff);
+-	} else {
+-		PRINT_INFO(HOSTAPD_DBG, "Couldn't send packet - Size = %d - Address = %p.\n", pv_data->size, pv_data->buff);
+-	}
+ 
+ 	/* incase of fully hosting mode, the freeing will be done in response to the cfg packet */
+ 	kfree(pv_data->buff);
+@@ -193,7 +175,7 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
+ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+ 				     struct net_device *dev)
+ {
+-	u32 rtap_len, i, ret = 0;
++	u32 rtap_len, ret = 0;
+ 	struct WILC_WFI_mon_priv  *mon_priv;
+ 
+ 	struct sk_buff *skb2;
+@@ -210,18 +192,9 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+ 		return -1;
+ 
+ 	/* skip the radiotap header */
+-	PRINT_INFO(HOSTAPD_DBG, "Radiotap len: %d\n", rtap_len);
+-
+-	if (INFO) {
+-		for (i = 0; i < rtap_len; i++)
+-			PRINT_INFO(HOSTAPD_DBG, "Radiotap_hdr[%d] %02x\n", i, skb->data[i]);
+-	}
+ 	/* Skip the ratio tap header */
+ 	skb_pull(skb, rtap_len);
+ 
+-	if (skb->data[0] == 0xc0)
+-		PRINT_INFO(HOSTAPD_DBG, "%x:%x:%x:%x:%x%x\n", skb->data[4], skb->data[5], skb->data[6], skb->data[7], skb->data[8], skb->data[9]);
+-
+ 	if (skb->data[0] == 0xc0 && (!(memcmp(broadcast, &skb->data[4], 6)))) {
+ 		skb2 = dev_alloc_skb(skb->len + sizeof(struct wilc_wfi_radiotap_cb_hdr));
+ 
+@@ -254,11 +227,7 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+ 	}
+ 	skb->dev = mon_priv->real_ndev;
+ 
+-	PRINT_INFO(HOSTAPD_DBG, "Skipping the radiotap header\n");
+-
+ 	/* actual deliver of data is device-specific, and not shown here */
+-	PRINT_INFO(HOSTAPD_DBG, "SKB netdevice name = %s\n", skb->dev->name);
+-	PRINT_INFO(HOSTAPD_DBG, "MONITOR real dev name = %s\n", mon_priv->real_ndev->name);
+ 
+ 	/* Identify if Ethernet or MAC header (data or mgmt) */
+ 	memcpy(srcAdd, &skb->data[10], 6);
+@@ -336,13 +305,10 @@ int WILC_WFI_deinit_mon_interface(void)
+ 	bool rollback_lock = false;
+ 
+ 	if (wilc_wfi_mon) {
+-		PRINT_D(HOSTAPD_DBG, "In Deinit monitor interface\n");
+-		PRINT_D(HOSTAPD_DBG, "RTNL is being locked\n");
+ 		if (rtnl_is_locked()) {
+ 			rtnl_unlock();
+ 			rollback_lock = true;
+ 		}
+-		PRINT_D(HOSTAPD_DBG, "Unregister netdev\n");
+ 		unregister_netdev(wilc_wfi_mon);
+ 
+ 		if (rollback_lock) {
+-- 
+1.9.1
 
