@@ -1,40 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.fing.edu.uy ([164.73.32.175]:60896 "EHLO smtp.fing.edu.uy"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752863AbcBWQk5 convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:40039 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933423AbcBRHa2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 11:40:57 -0500
-Date: Tue, 23 Feb 2016 16:27:03 +0001
-From: Matias Richart <mrichart@fing.edu.uy>
-Subject: mac80211: Possible bug in minstrel_ht when enabling RTS/CTS
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Message-Id: <1456244763.30962.0@smtp.fing.edu.uy> (sfid-20160223_174100_454145_90CECA61)
+	Thu, 18 Feb 2016 02:30:28 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 04/24] staging: wilc1000: linux_mon.c: add to check routine
+Date: Thu, 18 Feb 2016 16:27:15 +0900
+Message-ID: <1455780455-21365-4-git-send-email-leo.kim@atmel.com> (sfid-20160218_083037_444495_B0CEB1C4)
+In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello.
+This patch adds the return value which needs the check and
+prints the error message when it fails.
 
-I think there might be a bug in the following code of minstrel_ht when 
-deciding if RTS/CTS should be enabled:
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_mon.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-    /* enable RTS/CTS if needed:
-     * - if station is in dynamic SMPS (and streams > 1)
-     * - for fallback rates, to increase chances of getting through
-     */
-    if (offset > 0 &&
-        (mi->sta->smps_mode == IEEE80211_SMPS_DYNAMIC &&
-         group->streams > 1)) {
-        ratetbl->rate[offset].count = ratetbl->rate[offset].count_rts;
-        flags |= IEEE80211_TX_RC_USE_RTS_CTS;
-    }
-
-The code does not match what it is said in the comment. RTS/CTS is not 
-enabled for fallback rates when not in dynamic SMPS.
-
-Regards.
-
-Matías
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 3048e88..dbb98bf 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -266,7 +266,9 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+ 	/* if source address and bssid fields are equal>>Mac header */
+ 	/*send it to mgmt frames handler */
+ 	if (!(memcmp(srcAdd, bssid, 6))) {
+-		mon_mgmt_tx(mon_priv->real_ndev, skb->data, skb->len);
++		ret = mon_mgmt_tx(mon_priv->real_ndev, skb->data, skb->len);
++		if (ret)
++			netdev_err(dev, "fail to mgmt tx\n");
+ 		dev_kfree_skb(skb);
+ 	} else {
+ 		ret = wilc_mac_xmit(skb, mon_priv->real_ndev);
+-- 
+1.9.1
 
