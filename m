@@ -1,245 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:19844
-	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161100AbcBQK1Y (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:40668 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1424646AbcBRHdV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2016 05:27:24 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 04/21] brcmfmac: Configure country code using device specific settings
-Date: Wed, 17 Feb 2016 11:26:53 +0100
-Message-Id: <1455704830-10088-5-git-send-email-arend@broadcom.com> (sfid-20160217_112739_521697_0A5D0FF7)
-In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
-References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+	Thu, 18 Feb 2016 02:33:21 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH 20/24] staging: wilc1000: wilc_wlan.c: removes unnecessary log messages
+Date: Thu, 18 Feb 2016 16:27:31 +0900
+Message-ID: <1455780455-21365-20-git-send-email-leo.kim@atmel.com> (sfid-20160218_083324_997001_BB8BDC73)
+In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+From: Chris Park <chris.park@atmel.com>
 
-Country code configuration in a device is a device specific
-operation. For this the country code as specified by reg notifier
-(iso3166 alpha2) needs to be translated to a device specific
-country locale and revision number. This patch adds this
-translation and puts a placeholder in the device specific settings
-where the translation table can be stored. Additional patches will
-be needed to read these tables from for example device platform
-data.
+This patch removes unnecessary log messages.
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 75 +++++++++++++++++++---
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  |  4 +-
- .../wireless/broadcom/brcm80211/brcmfmac/common.h  | 31 +++++++++
- .../broadcom/brcm80211/brcmfmac/fwil_types.h       |  4 +-
- 4 files changed, 101 insertions(+), 13 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index d66f08f..2fd18d0 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -6405,28 +6405,85 @@ int brcmf_cfg80211_wait_vif_event(struct brcmf_cfg80211_info *cfg,
- 				  vif_event_equals(event, action), timeout);
- }
- 
-+static s32 brcmf_translate_country_code(struct brcmf_pub *drvr, char alpha2[2],
-+					struct brcmf_fil_country_le *ccreq)
-+{
-+	struct cc_translate *country_codes;
-+	struct cc_entry *cc;
-+	s32 found_index;
-+	int i;
-+
-+	country_codes = drvr->settings->country_codes;
-+	if (!country_codes) {
-+		brcmf_dbg(TRACE, "No country codes configured for device\n");
-+		return -EINVAL;
-+	}
-+
-+	if ((alpha2[0] == ccreq->country_abbrev[0]) &&
-+	    (alpha2[1] == ccreq->country_abbrev[1])) {
-+		brcmf_dbg(TRACE, "Country code already set\n");
-+		return -EAGAIN;
-+	}
-+
-+	found_index = -1;
-+	for (i = 0; i < country_codes->table_size; i++) {
-+		cc = &country_codes->table[i];
-+		if ((cc->iso3166[0] == '\0') && (found_index == -1))
-+			found_index = i;
-+		if ((cc->iso3166[0] == alpha2[0]) &&
-+		    (cc->iso3166[1] == alpha2[1])) {
-+			found_index = i;
-+			break;
-+		}
-+	}
-+	if (found_index == -1) {
-+		brcmf_dbg(TRACE, "No country code match found\n");
-+		return -EINVAL;
-+	}
-+	memset(ccreq, 0, sizeof(*ccreq));
-+	ccreq->rev = cpu_to_le32(country_codes->table[found_index].rev);
-+	memcpy(ccreq->ccode, country_codes->table[found_index].cc,
-+	       BRCMF_COUNTRY_BUF_SZ);
-+	ccreq->country_abbrev[0] = alpha2[0];
-+	ccreq->country_abbrev[1] = alpha2[1];
-+	ccreq->country_abbrev[2] = 0;
-+
-+	return 0;
-+}
-+
- static void brcmf_cfg80211_reg_notifier(struct wiphy *wiphy,
- 					struct regulatory_request *req)
- {
- 	struct brcmf_cfg80211_info *cfg = wiphy_priv(wiphy);
- 	struct brcmf_if *ifp = netdev_priv(cfg_to_ndev(cfg));
- 	struct brcmf_fil_country_le ccreq;
-+	s32 err;
- 	int i;
- 
--	brcmf_dbg(TRACE, "enter: initiator=%d, alpha=%c%c\n", req->initiator,
--		  req->alpha2[0], req->alpha2[1]);
--
- 	/* ignore non-ISO3166 country codes */
- 	for (i = 0; i < sizeof(req->alpha2); i++)
- 		if (req->alpha2[i] < 'A' || req->alpha2[i] > 'Z') {
--			brcmf_err("not a ISO3166 code\n");
-+			brcmf_err("not a ISO3166 code (0x%02x 0x%02x)\n",
-+				  req->alpha2[0], req->alpha2[1]);
- 			return;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 50f85ac..0cd3ed8 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1028,7 +1028,6 @@ int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
+ 			ret = -EIO;
+ 			goto _fail_;
  		}
--	memset(&ccreq, 0, sizeof(ccreq));
--	ccreq.rev = cpu_to_le32(-1);
--	memcpy(ccreq.ccode, req->alpha2, sizeof(req->alpha2));
--	if (brcmf_fil_iovar_data_set(ifp, "country", &ccreq, sizeof(ccreq))) {
--		brcmf_err("firmware rejected country setting\n");
-+
-+	brcmf_dbg(TRACE, "Enter: initiator=%d, alpha=%c%c\n", req->initiator,
-+		  req->alpha2[0], req->alpha2[1]);
-+
-+	err = brcmf_fil_iovar_data_get(ifp, "country", &ccreq, sizeof(ccreq));
-+	if (err) {
-+		brcmf_err("Country code iovar returned err = %d\n", err);
-+		return;
-+	}
-+
-+	err = brcmf_translate_country_code(ifp->drvr, req->alpha2, &ccreq);
-+	if (err)
-+		return;
-+
-+	err = brcmf_fil_iovar_data_set(ifp, "country", &ccreq, sizeof(ccreq));
-+	if (err) {
-+		brcmf_err("Firmware rejected country setting\n");
- 		return;
- 	}
- 	brcmf_setup_wiphybands(wiphy);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 4265b50..52b355a 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -229,10 +229,8 @@ void brcmf_mp_attach(void)
- int brcmf_mp_device_attach(struct brcmf_pub *drvr)
- {
- 	drvr->settings = kzalloc(sizeof(*drvr->settings), GFP_ATOMIC);
--	if (!drvr->settings) {
--		brcmf_err("Failed to alloca storage space for settings\n");
-+	if (!drvr->settings)
- 		return -ENOMEM;
--	}
+-		PRINT_D(INIT_DBG, "Offset = %d\n", offset);
+ 	} while (offset < buffer_size);
  
- 	drvr->settings->sdiod_txglomsz = brcmf_sdiod_txglomsz;
- 	drvr->settings->p2p_enable = !!brcmf_p2p_enable;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-index 3b0a63b..b678b2d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.h
-@@ -15,6 +15,8 @@
- #ifndef BRCMFMAC_COMMON_H
- #define BRCMFMAC_COMMON_H
+ _fail_:
+@@ -1461,8 +1460,6 @@ int wilc_wlan_init(struct net_device *dev)
  
-+#include "fwil_types.h"
-+
- extern const u8 ALLFFMAC[ETH_ALEN];
+ 	wilc = vif->wilc;
  
- #define BRCMF_FW_ALTPATH_LEN			256
-@@ -39,6 +41,33 @@ struct brcmf_mp_global_t {
- extern struct brcmf_mp_global_t brcmf_mp_global;
+-	PRINT_D(INIT_DBG, "Initializing WILC_Wlan ...\n");
+-
+ 	wilc->quit = 0;
  
- /**
-+ * struct cc_entry - Struct for translating user space country code (iso3166) to
-+ *		     firmware country code and revision.
-+ *
-+ * @iso3166: iso3166 alpha 2 country code string.
-+ * @cc: firmware country code string.
-+ * @rev: firmware country code revision.
-+ */
-+struct cc_entry {
-+	char	iso3166[BRCMF_COUNTRY_BUF_SZ];
-+	char	cc[BRCMF_COUNTRY_BUF_SZ];
-+	s32	rev;
-+};
-+
-+/**
-+ * struct cc_translate - Struct for translating country codes as set by user
-+ *			 space to a country code and rev which can be used by
-+ *			 firmware.
-+ *
-+ * @table_size: number of entries in table (> 0)
-+ * @table: dynamic array of 1 or more elements with translation information.
-+ */
-+struct cc_translate {
-+	int	table_size;
-+	struct cc_entry table[0];
-+};
-+
-+/**
-  * struct brcmf_mp_device - Device module paramaters.
-  *
-  * @sdiod_txglomsz: SDIO txglom size.
-@@ -47,6 +76,7 @@ extern struct brcmf_mp_global_t brcmf_mp_global;
-  * @feature_disable: Feature_disable bitmask.
-  * @fcmode: FWS flow control.
-  * @roamoff: Firmware roaming off?
-+ * @country_codes: If available, pointer to struct for translating country codes
-  */
- struct brcmf_mp_device {
- 	int	sdiod_txglomsz;
-@@ -56,6 +86,7 @@ struct brcmf_mp_device {
- 	int	fcmode;
- 	bool	roamoff;
- 	bool	ignore_probe_fail;
-+	struct cc_translate *country_codes;
- };
- 
- void brcmf_mp_attach(void);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-index 1afc2ad..e9e177d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil_types.h
-@@ -134,6 +134,8 @@
- #define BRCMF_PFN_MAC_OUI_ONLY		BIT(0)
- #define BRCMF_PFN_SET_MAC_UNASSOC	BIT(1)
- 
-+#define BRCMF_MCSSET_LEN		16
-+
- /* join preference types for join_pref iovar */
- enum brcmf_join_pref_types {
- 	BRCMF_JOIN_PREF_RSSI = 1,
-@@ -279,7 +281,7 @@ struct brcmf_bss_info_le {
- 	__le32 reserved32[1];	/* Reserved for expansion of BSS properties */
- 	u8 flags;		/* flags */
- 	u8 reserved[3];	/* Reserved for expansion of BSS properties */
--	u8 basic_mcs[MCSSET_LEN];	/* 802.11N BSS required MCS set */
-+	u8 basic_mcs[BRCMF_MCSSET_LEN];	/* 802.11N BSS required MCS set */
- 
- 	__le16 ie_offset;	/* offset at which IEs start, from beginning */
- 	__le32 ie_length;	/* byte length of Information Elements */
+ 	if (!wilc->hif_func->hif_init(wilc, false)) {
 -- 
 1.9.1
 
