@@ -1,73 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60641 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751355AbcBWNFe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 08:05:34 -0500
-Message-ID: <1456232731.9910.4.camel@sipsolutions.net> (sfid-20160223_140537_074868_5BB59917)
-Subject: Re: [PATCH 1/2] mac80211: add A-MSDU tx support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Cc: egrumbach@gmail.com
-Date: Tue, 23 Feb 2016 14:05:31 +0100
-In-Reply-To: <56CC4CAC.4080501@openwrt.org>
-References: <1455820762-22876-1-git-send-email-nbd@openwrt.org>
-	 <1456226757.2041.35.camel@sipsolutions.net> <56CC4CAC.4080501@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.243]:40785 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1424646AbcBRHdx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Feb 2016 02:33:53 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH 23/24] staging: wilc1000: moves to define values
+Date: Thu, 18 Feb 2016 16:27:34 +0900
+Message-ID: <1455780455-21365-23-git-send-email-leo.kim@atmel.com> (sfid-20160218_083357_089310_7116A328)
+In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-02-23 at 13:12 +0100, Felix Fietkau wrote:
-> 
-> It's initialized to 0 by default, in which case it does not limit the
-> A-MSDU size. The driver does not need to set it, but it really
-> should.
+From: Chris Park <chris.park@atmel.com>
 
-Right, but this is problematic as Emmanuel had pointed out, when
-scaling down you run into problems. Not sure we want that as the
-default when the driver doesn't do anything?
+This patch moves DEBUG, INFO, WRN and ERR values to wilc_debugfs.c file
+because this is only used to wilc_debugfs.c file.
+And, removes unnecessary WILC_DEBUGFS and else-case variables.
 
-Documenting it as we discussed should be good enough though I guess.
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan_common.h | 11 -----------
+ drivers/staging/wilc1000/wilc_debugfs.c      |  4 ++++
+ 2 files changed, 4 insertions(+), 11 deletions(-)
 
-> > Apart from that, I'm not sure that having a field here that works
-> > like
-> > this is a good idea at all - all the other fields in the vicinity
-> > kinda
-> > go from mac80211 to the driver, where here you have something that
-> > potentially goes from the driver to mac80211. Perhaps we can find a
-> > better way of doing this?
-> Didn't find a better place to put it. Got any ideas?
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index 2e2109c..51601aa 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -1,17 +1,6 @@
+ #ifndef LINUX_WLAN_COMMON_H
+ #define LINUX_WLAN_COMMON_H
+ 
+-#if defined(WILC_DEBUGFS)
+-#define DEBUG           BIT(0)
+-#define INFO            BIT(1)
+-#define WRN             BIT(2)
+-#define ERR             BIT(3)
+-#else
+-#define DEBUG       1
+-#define INFO        0
+-#define WRN         0
+-#endif
+-
+ #define LINUX_RX_SIZE	(96 * 1024)
+ #define LINUX_TX_SIZE	(64 * 1024)
+ 
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index 215e2f0..fcbc95d 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -23,6 +23,10 @@ static struct dentry *wilc_dir;
+ /*
+  * --------------------------------------------------------------------------------
+  */
++#define DEBUG           BIT(0)
++#define INFO            BIT(1)
++#define WRN             BIT(2)
++#define ERR             BIT(3)
+ 
+ #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+ atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
+-- 
+1.9.1
 
-Not off the top of my head, sorry.
-
-> > > + * @max_tx_fragments: maximum fragments per (A-)MSDU.
-> > 
-> > "fragments" is a bit unclear - I guess this should refer to
-> > fraglist
-> > length only? Or is it meant to apply as a limit to the sum of
-> > pieces in
-> > the fraglist? I think that should be clarified.
-> Sum of 1 (head) + n_frags for each skb in the fraglist.
-
-Clarify the comment? :)
-
-> Yes. If A-MSDU in A-MPDU is not supported, dealing with starting and
-> stopping of A-MPDU sessions leaves all kinds of nasty corner cases
-> (since the txq is not flushed between sessions). In that case it's
-> better to just leave it disabled from that point on.
-
-Fair enough. You should be able to deal with it with the SSN, but that
-might be difficult.
-
-Actually, mac80211 on its own assigns the seqno so frames already on
-the txq would not become part of the session, so we should be OK
-without much effort?
-
-> Yes. I'm relying on fast_tx fields to simplify dealing with headers
-> and to avoid adding extra checks for all kinds of stuff like no
-> software crypto, which ieee80211_check_fast_xmit already handles.
-> 
-
-Ok, makes sense.
-
-johannes
