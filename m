@@ -1,60 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f172.google.com ([209.85.161.172]:35494 "EHLO
-	mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751435AbcBHR3s convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:40025 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933423AbcBRHaW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 12:29:48 -0500
+	Thu, 18 Feb 2016 02:30:22 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 03/24] staging: wilc1000: linux_mon.c: replaces PRINT_ER with netdev_err
+Date: Thu, 18 Feb 2016 16:27:14 +0900
+Message-ID: <1455780455-21365-3-git-send-email-leo.kim@atmel.com> (sfid-20160218_083033_013939_837648D1)
+In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <F8D31DB3-94AF-47CC-8091-7B6478983B53@holtmann.org>
-References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
- <1454946096-9752-9-git-send-email-jprvita@endlessm.com> <F8D31DB3-94AF-47CC-8091-7B6478983B53@holtmann.org>
-From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Date: Mon, 8 Feb 2016 12:22:36 -0500
-Message-ID: <CA+A7VXWLjAffBMYXLXZafayz6N-w8BHhrPg_f-oSLX+Bv_Ss6Q@mail.gmail.com> (sfid-20160208_183038_756421_AE228685)
-Subject: Re: [PATCH 8/9] rfkill: Userspace control for airplane mode
-To: Marcel Holtmann <marcel@holtmann.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	linux@endlessm.com,
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello Marcel,
+This patches replaces PRINT_ER with netdev_err.
 
-On 8 February 2016 at 11:20, Marcel Holtmann <marcel@holtmann.org> wrote:
-> Hi Joa Paulo,
->
->> Provide an interface for the airplane-mode indicator be controlled from
->> userspace. User has to first acquire the control through
->> RFKILL_OP_AIRPLANE_MODE_ACQUIRE and keep the fd open for the whole time
->> it wants to be in control of the indicator. Closing the fd or using
->> RFKILL_OP_AIRPLANE_MODE_RELEASE restores the default policy.
->>
->> To change state of the indicator, the RFKILL_OP_AIRPLANE_MODE_CHANGE
->> operation is used, passing the value on "struct rfkill_event.soft". If
->> the caller has not acquired the airplane-mode control beforehand, the
->> operation fails.
->
-> as explained in an earlier response, the concept Airplane Mode seems to be imposing policy into the kernel. Do we really want have this as a kernel exposed API.
->
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_mon.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-On that very same thread we decided to keep using the "airplane mode"
-name both for when having the default policy of "set it when all
-radios are off" or when allowing userspace to override the default.
-Please see the following message from Johannes
-http://www.spinics.net/lists/linux-wireless/msg146069.html and let me
-know if that covers your concern.
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 9edc6e9..3048e88 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -308,7 +308,7 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
+ 
+ 	ret = register_netdevice(wilc_wfi_mon);
+ 	if (ret) {
+-		PRINT_ER(" register_netdevice failed (%d)\n", ret);
++		netdev_err(real_dev, "register_netdevice failed\n");
+ 		return NULL;
+ 	}
+ 	priv = netdev_priv(wilc_wfi_mon);
+-- 
+1.9.1
 
-Thanks!
-
---
-João Paulo Rechi Vita
-http://about.me/jprvita
