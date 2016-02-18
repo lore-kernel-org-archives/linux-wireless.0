@@ -1,87 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:35602 "EHLO
-	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751436AbcBJOEJ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Feb 2016 09:04:09 -0500
-Received: by mail-pf0-f193.google.com with SMTP id w128so451014pfb.2
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Feb 2016 06:04:09 -0800 (PST)
-From: Ujjal Roy <royujjal@gmail.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	WiFi Mailing List <linux-wireless@vger.kernel.org>
-Subject: [PATCH] mwifiex: Fixed coding style issues
-Date: Wed, 10 Feb 2016 19:34:01 +0530
-Message-Id: <1455113041-28226-1-git-send-email-royujjal@gmail.com> (sfid-20160210_150426_199571_FE763CAA)
+Received: from s3.sipsolutions.net ([5.9.151.49]:45401 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1425560AbcBRUpe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Feb 2016 15:45:34 -0500
+Message-ID: <1455828330.2084.38.camel@sipsolutions.net> (sfid-20160218_214538_603546_D1AF5CEB)
+Subject: Re: [PATCH-v2 1/2] mac80211: Take bitrates into account when
+ building IEs.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 18 Feb 2016 21:45:30 +0100
+In-Reply-To: <56C62C4E.7020600@candelatech.com>
+References: <1445361858-24976-1-git-send-email-greearb@candelatech.com>
+	 <1453807009.2759.23.camel@sipsolutions.net>
+	 <56A78E8F.1080505@candelatech.com>
+	 <1454576521.2564.6.camel@sipsolutions.net> <56B38FD1.40902@candelatech.com>
+	 <1455827536.2084.35.camel@sipsolutions.net>
+	 <56C62C4E.7020600@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some indentation and basic style violations are fixed in this patch.
+On Thu, 2016-02-18 at 12:40 -0800, Ben Greear wrote:
 
-Signed-off-by: Ujjal Roy <royujjal@gmail.com>
----
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 +-
- drivers/net/wireless/marvell/mwifiex/pcie.c     | 2 +-
- drivers/net/wireless/marvell/mwifiex/uap_cmd.c  | 2 +-
- drivers/net/wireless/marvell/mwifiex/usb.c      | 4 ++--
- 4 files changed, 5 insertions(+), 5 deletions(-)
+> > 1) sdata->sband[5GHZ].vht = wiphy->sband[5GHZ].vht & user-config
+> >     (semantically, not implementation of course)
+> > 2) sdata->sband[5GHZ].vht = wiphy->sband[5GHZ].vht
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index e7adef7..cb0cf03 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -676,7 +676,7 @@ mwifiex_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
- 		}
- 		break;
+> I think option 1 might be better.  For option 2, I'd be worried about
+> someone changing the wiphy somehow and vdevs getting out of sync.
 
--		case MWIFIEX_BSS_ROLE_STA:
-+	case MWIFIEX_BSS_ROLE_STA:
- 		if (priv->media_connected) {
- 			mwifiex_dbg(adapter, ERROR,
- 				    "cannot change wiphy params when connected");
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index 6d0dc40..4d29cce 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -1408,7 +1408,7 @@ mwifiex_pcie_send_boot_cmd(struct mwifiex_adapter *adapter, struct sk_buff *skb)
- 		return -1;
- 	}
+Huh? I'm confused. Those two options above weren't meant as options,
+they were meant as two sides of an "if (have-user-config)" branch :)
 
--	if (mwifiex_map_pci_memory(adapter, skb, skb->len , PCI_DMA_TODEVICE))
-+	if (mwifiex_map_pci_memory(adapter, skb, skb->len, PCI_DMA_TODEVICE))
- 		return -1;
+> Any opinions on the lifetime for the sdata->sband_user_config data?
+> 
+> For instance, could be cleared when station dis-associates,
+> or we could make it persist until changed or until vdev goes away?
 
- 	buf_pa = MWIFIEX_SKB_DMA_ADDR(skb);
-diff --git a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-index e791166..16d95b2 100644
---- a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-@@ -192,7 +192,7 @@ mwifiex_set_ht_params(struct mwifiex_private *priv,
- 		}
- 		priv->ap_11n_enabled = 1;
- 	} else {
--		memset(&bss_cfg->ht_cap , 0, sizeof(struct ieee80211_ht_cap));
-+		memset(&bss_cfg->ht_cap, 0, sizeof(struct ieee80211_ht_cap));
- 		bss_cfg->ht_cap.cap_info = cpu_to_le16(MWIFIEX_DEF_HT_CAP);
- 		bss_cfg->ht_cap.ampdu_params_info = MWIFIEX_DEF_AMPDU;
- 	}
-diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-index e43aff9..0510861 100644
---- a/drivers/net/wireless/marvell/mwifiex/usb.c
-+++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-@@ -244,9 +244,9 @@ setup_for_next:
- 	if (card->rx_cmd_ep == context->ep) {
- 		mwifiex_usb_submit_rx_urb(context, size);
- 	} else {
--		if (atomic_read(&adapter->rx_pending) <= HIGH_RX_PENDING){
-+		if (atomic_read(&adapter->rx_pending) <= HIGH_RX_PENDING) {
- 			mwifiex_usb_submit_rx_urb(context, size);
--		}else{
-+		} else {
- 			context->skb = NULL;
- 		}
- 	}
---
-1.9.1
+Should probably persist.
 
+> And, while this would take care of some of the issues (3x3 vs 2x2?),
+> it still wouldn't let someone have full control over the advertised
+> rates vs configured-rates and such, would it?
+
+Why not? The sband also contains the rates list. I was just using VHT
+as an example.
+
+
+johannes
