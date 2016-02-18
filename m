@@ -1,167 +1,1320 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:9612 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:30357 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755144AbcBBMH0 (ORCPT
+	with ESMTP id S1425347AbcBRLfk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 07:07:26 -0500
+	Thu, 18 Feb 2016 06:35:40 -0500
 From: Leo Kim <leo.kim@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 18/26] staging: wilc1000: renames struct connect_resp_info variables
-Date: Tue, 2 Feb 2016 21:02:28 +0900
-Message-ID: <1454414556-9822-18-git-send-email-leo.kim@atmel.com> (sfid-20160202_130730_191079_81E72E7E)
-In-Reply-To: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
-References: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V2 17/24] staging: wilc1000: host_interface.c: replace PRINT_ER with netdev_err
+Date: Thu, 18 Feb 2016 20:30:17 +0900
+Message-ID: <1455795024-26978-17-git-send-email-leo.kim@atmel.com> (sfid-20160218_123544_857639_D8328507)
+In-Reply-To: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
+References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames to avoid camelcase changes follow are:
- - pu8IEs to ies
- - u16IEsLen to ies_len
+From: Chris Park <chris.park@atmel.com>
 
+This patch replaces PRINT_ER with netdev_err.
+
+Signed-off-by: Chris Park <chris.park@atmel.com>
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c       |  7 +++---
- drivers/staging/wilc1000/coreconfigurator.h       |  4 +--
- drivers/staging/wilc1000/host_interface.c         |  6 ++---
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 30 +++++++++++------------
- 4 files changed, 23 insertions(+), 24 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 288 +++++++++++++++---------------
+ 1 file changed, 144 insertions(+), 144 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 3e1e1f5..cbca6a0 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -341,12 +341,11 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
- 		ies_len = rx_len - (MAC_HDR_LEN + TIME_STAMP_LEN + BEACON_INTERVAL_LEN + CAP_INFO_LEN);
- 
- 		if (ies_len > 0) {
--			network_info->pu8IEs = kmemdup(ies, ies_len,
--						       GFP_KERNEL);
--			if (!network_info->pu8IEs)
-+			network_info->ies = kmemdup(ies, ies_len, GFP_KERNEL);
-+			if (!network_info->ies)
- 				return -ENOMEM;
- 		}
--		network_info->u16IEsLen = ies_len;
-+		network_info->ies_len = ies_len;
- 	}
- 
- 	*ret_network_info = network_info;
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 07a2ef0..3dca840 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -90,8 +90,8 @@ struct network_info {
- 	bool new_network;
- 	u8 found;
- 	u32 tsf_lo;
--	u8 *pu8IEs;
--	u16 u16IEsLen;
-+	u8 *ies;
-+	u16 ies_len;
- 	void *pJoinParams;
- 	tstrRSSI strRssi;
- 	u64 u64Tsf;
 diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ac71453..017a357 100644
+index 60678aa..1d33153 100644
 --- a/drivers/staging/wilc1000/host_interface.c
 +++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1414,7 +1414,7 @@ done:
- 	pstrRcvdNetworkInfo->buffer = NULL;
+@@ -335,7 +335,7 @@ static s32 handle_set_wfi_drv_handler(struct wilc_vif *vif,
+ 		up(&hif_sema_driver);
  
- 	if (pstrNetworkInfo) {
--		kfree(pstrNetworkInfo->pu8IEs);
-+		kfree(pstrNetworkInfo->ies);
- 		kfree(pstrNetworkInfo);
+ 	if (result) {
+-		PRINT_ER("Failed to set driver handler\n");
++		netdev_err(vif->ndev, "Failed to set driver handler\n");
+ 		return -EINVAL;
  	}
  
-@@ -4271,8 +4271,8 @@ static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo)
- 	u8 authTotalCount = 0;
- 	u8 i, j;
+@@ -360,7 +360,7 @@ static s32 handle_set_operation_mode(struct wilc_vif *vif,
+ 		up(&hif_sema_driver);
  
--	pu8IEs = ptstrNetworkInfo->pu8IEs;
--	u16IEsLen = ptstrNetworkInfo->u16IEsLen;
-+	pu8IEs = ptstrNetworkInfo->ies;
-+	u16IEsLen = ptstrNetworkInfo->ies_len;
+ 	if (result) {
+-		PRINT_ER("Failed to set driver handler\n");
++		netdev_err(vif->ndev, "Failed to set driver handler\n");
+ 		return -EINVAL;
+ 	}
  
- 	pNewJoinBssParam = kzalloc(sizeof(struct join_bss_param), GFP_KERNEL);
- 	if (pNewJoinBssParam) {
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index c09cc9d..fafe63c 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -194,9 +194,9 @@ static void clear_shadow_scan(void)
- 		del_timer_sync(&hAgingTimer);
+@@ -389,7 +389,7 @@ static s32 handle_set_ip_address(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
+ 	host_int_get_ipaddress(vif, firmware_ip_addr, idx);
  
- 		for (i = 0; i < last_scanned_cnt; i++) {
--			if (last_scanned_shadow[last_scanned_cnt].pu8IEs) {
--				kfree(last_scanned_shadow[i].pu8IEs);
--				last_scanned_shadow[last_scanned_cnt].pu8IEs = NULL;
-+			if (last_scanned_shadow[last_scanned_cnt].ies) {
-+				kfree(last_scanned_shadow[i].ies);
-+				last_scanned_shadow[last_scanned_cnt].ies = NULL;
+ 	if (result) {
+-		PRINT_ER("Failed to set IP address\n");
++		netdev_err(vif->ndev, "Failed to set IP address\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -417,7 +417,7 @@ static s32 handle_get_ip_address(struct wilc_vif *vif, u8 idx)
+ 		wilc_setup_ipaddress(vif, set_ip[idx], idx);
+ 
+ 	if (result != 0) {
+-		PRINT_ER("Failed to get IP address\n");
++		netdev_err(vif->ndev, "Failed to get IP address\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -432,7 +432,7 @@ static s32 handle_set_mac_address(struct wilc_vif *vif,
+ 	u8 *mac_buf = kmalloc(ETH_ALEN, GFP_KERNEL);
+ 
+ 	if (!mac_buf) {
+-		PRINT_ER("No buffer to send mac address\n");
++		netdev_err(vif->ndev, "No buffer to send mac address\n");
+ 		return -EFAULT;
+ 	}
+ 	memcpy(mac_buf, set_mac_addr->mac_addr, ETH_ALEN);
+@@ -445,7 +445,7 @@ static s32 handle_set_mac_address(struct wilc_vif *vif,
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result) {
+-		PRINT_ER("Failed to set mac address\n");
++		netdev_err(vif->ndev, "Failed to set mac address\n");
+ 		result = -EFAULT;
+ 	}
+ 
+@@ -468,7 +468,7 @@ static s32 handle_get_mac_address(struct wilc_vif *vif,
+ 				      wilc_get_vif_idx(vif));
+ 
+ 	if (result) {
+-		PRINT_ER("Failed to get mac address\n");
++		netdev_err(vif->ndev, "Failed to get mac address\n");
+ 		result = -EFAULT;
+ 	}
+ 	up(&hif_sema_wait_response);
+@@ -494,7 +494,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(char);
+ 			hif_drv->cfg_values.bss_type = (u8)cfg_param_attr->cfg_attr_info.bss_type;
+ 		} else {
+-			PRINT_ER("check value 6 over\n");
++			netdev_err(vif->ndev, "check value 6 over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -510,7 +510,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(char);
+ 			hif_drv->cfg_values.auth_type = (u8)cfg_param_attr->cfg_attr_info.auth_type;
+ 		} else {
+-			PRINT_ER("Impossible value \n");
++			netdev_err(vif->ndev, "Impossible value \n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -525,7 +525,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(u16);
+ 			hif_drv->cfg_values.auth_timeout = cfg_param_attr->cfg_attr_info.auth_timeout;
+ 		} else {
+-			PRINT_ER("Range(1 ~ 65535) over\n");
++			netdev_err(vif->ndev, "Range(1 ~ 65535) over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -539,7 +539,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(char);
+ 			hif_drv->cfg_values.power_mgmt_mode = (u8)cfg_param_attr->cfg_attr_info.power_mgmt_mode;
+ 		} else {
+-			PRINT_ER("Invalid power mode\n");
++			netdev_err(vif->ndev, "Invalid power mode\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -554,7 +554,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(u16);
+ 			hif_drv->cfg_values.short_retry_limit = cfg_param_attr->cfg_attr_info.short_retry_limit;
+ 		} else {
+-			PRINT_ER("Range(1~256) over\n");
++			netdev_err(vif->ndev, "Range(1~256) over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -569,7 +569,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(u16);
+ 			hif_drv->cfg_values.long_retry_limit = cfg_param_attr->cfg_attr_info.long_retry_limit;
+ 		} else {
+-			PRINT_ER("Range(1~256) over\n");
++			netdev_err(vif->ndev, "Range(1~256) over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -584,7 +584,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(u16);
+ 			hif_drv->cfg_values.frag_threshold = cfg_param_attr->cfg_attr_info.frag_threshold;
+ 		} else {
+-			PRINT_ER("Threshold Range fail\n");
++			netdev_err(vif->ndev, "Threshold Range fail\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -599,7 +599,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(u16);
+ 			hif_drv->cfg_values.rts_threshold = cfg_param_attr->cfg_attr_info.rts_threshold;
+ 		} else {
+-			PRINT_ER("Threshold Range fail\n");
++			netdev_err(vif->ndev, "Threshold Range fail\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -613,7 +613,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(char);
+ 			hif_drv->cfg_values.preamble_type = cfg_param_attr->cfg_attr_info.preamble_type;
+ 		} else {
+-			PRINT_ER("Preamle Range(0~2) over\n");
++			netdev_err(vif->ndev, "Preamle Range(0~2) over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -627,7 +627,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(char);
+ 			hif_drv->cfg_values.short_slot_allowed = (u8)cfg_param_attr->cfg_attr_info.short_slot_allowed;
+ 		} else {
+-			PRINT_ER("Short slot(2) over\n");
++			netdev_err(vif->ndev, "Short slot(2) over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -641,7 +641,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(char);
+ 			hif_drv->cfg_values.txop_prot_disabled = (u8)cfg_param_attr->cfg_attr_info.txop_prot_disabled;
+ 		} else {
+-			PRINT_ER("TXOP prot disable\n");
++			netdev_err(vif->ndev, "TXOP prot disable\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -656,7 +656,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(u16);
+ 			hif_drv->cfg_values.beacon_interval = cfg_param_attr->cfg_attr_info.beacon_interval;
+ 		} else {
+-			PRINT_ER("Beacon interval(1~65535) fail\n");
++			netdev_err(vif->ndev, "Beacon interval(1~65535)fail\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -671,7 +671,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(char);
+ 			hif_drv->cfg_values.dtim_period = cfg_param_attr->cfg_attr_info.dtim_period;
+ 		} else {
+-			PRINT_ER("DTIM range(1~255) fail\n");
++			netdev_err(vif->ndev, "DTIM range(1~255) fail\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -685,7 +685,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(char);
+ 			hif_drv->cfg_values.site_survey_enabled = (u8)cfg_param_attr->cfg_attr_info.site_survey_enabled;
+ 		} else {
+-			PRINT_ER("Site survey disable\n");
++			netdev_err(vif->ndev, "Site survey disable\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -700,7 +700,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(u16);
+ 			hif_drv->cfg_values.site_survey_scan_time = cfg_param_attr->cfg_attr_info.site_survey_scan_time;
+ 		} else {
+-			PRINT_ER("Site survey scan time(1~65535) over\n");
++			netdev_err(vif->ndev, "Site scan time(1~65535) over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -715,7 +715,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(u16);
+ 			hif_drv->cfg_values.active_scan_time = cfg_param_attr->cfg_attr_info.active_scan_time;
+ 		} else {
+-			PRINT_ER("Active scan time(1~65535) over\n");
++			netdev_err(vif->ndev, "Active time(1~65535) over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -730,7 +730,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(u16);
+ 			hif_drv->cfg_values.passive_scan_time = cfg_param_attr->cfg_attr_info.passive_scan_time;
+ 		} else {
+-			PRINT_ER("Passive scan time(1~65535) over\n");
++			netdev_err(vif->ndev, "Passive time(1~65535) over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -751,7 +751,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[wid_cnt].size = sizeof(u16);
+ 			hif_drv->cfg_values.curr_tx_rate = (u8)curr_tx_rate;
+ 		} else {
+-			PRINT_ER("out of TX rate\n");
++			netdev_err(vif->ndev, "out of TX rate\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+@@ -762,7 +762,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 				      wid_cnt, wilc_get_vif_idx(vif));
+ 
+ 	if (result)
+-		PRINT_ER("Error in setting CFG params\n");
++		netdev_err(vif->ndev, "Error in setting CFG params\n");
+ 
+ ERRORHANDLER:
+ 	up(&hif_drv->sem_cfg_values);
+@@ -795,13 +795,13 @@ static s32 Handle_Scan(struct wilc_vif *vif,
+ 
+ 	if ((hif_drv->hif_state >= HOST_IF_SCANNING) &&
+ 	    (hif_drv->hif_state < HOST_IF_CONNECTED)) {
+-		PRINT_ER("Already scan\n");
++		netdev_err(vif->ndev, "Already scan\n");
+ 		result = -EBUSY;
+ 		goto ERRORHANDLER;
+ 	}
+ 
+ 	if (wilc_optaining_ip || wilc_connecting) {
+-		PRINT_ER("Don't do obss scan\n");
++		netdev_err(vif->ndev, "Don't do obss scan\n");
+ 		result = -EBUSY;
+ 		goto ERRORHANDLER;
+ 	}
+@@ -877,7 +877,7 @@ static s32 Handle_Scan(struct wilc_vif *vif,
+ 				      wilc_get_vif_idx(vif));
+ 
+ 	if (result)
+-		PRINT_ER("Failed to send scan parameters config packet\n");
++		netdev_err(vif->ndev, "Failed to send scan parameters\n");
+ 
+ ERRORHANDLER:
+ 	if (result) {
+@@ -917,13 +917,13 @@ static s32 Handle_ScanDone(struct wilc_vif *vif,
+ 					      wilc_get_vif_idx(vif));
+ 
+ 		if (result) {
+-			PRINT_ER("Failed to set abort running scan\n");
++			netdev_err(vif->ndev, "Failed to set abort running\n");
+ 			result = -EFAULT;
+ 		}
+ 	}
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("Driver handler is NULL\n");
++		netdev_err(vif->ndev, "Driver handler is NULL\n");
+ 		return result;
+ 	}
+ 
+@@ -949,13 +949,13 @@ static s32 Handle_Connect(struct wilc_vif *vif,
+ 
+ 	if (memcmp(pstrHostIFconnectAttr->bssid, wilc_connected_ssid, ETH_ALEN) == 0) {
+ 		result = 0;
+-		PRINT_ER("Trying to connect to an already connected AP, Discard connect request\n");
++		netdev_err(vif->ndev, "Discard connect request\n");
+ 		return result;
+ 	}
+ 
+ 	ptstrJoinBssParam = pstrHostIFconnectAttr->params;
+ 	if (!ptstrJoinBssParam) {
+-		PRINT_ER("Required BSSID not found\n");
++		netdev_err(vif->ndev, "Required BSSID not found\n");
+ 		result = -ENOENT;
+ 		goto ERRORHANDLER;
+ 	}
+@@ -1063,7 +1063,7 @@ static s32 Handle_Connect(struct wilc_vif *vif,
+ 	if ((pstrHostIFconnectAttr->ch >= 1) && (pstrHostIFconnectAttr->ch <= 14)) {
+ 		*(pu8CurrByte++) = pstrHostIFconnectAttr->ch;
+ 	} else {
+-		PRINT_ER("Channel out of range\n");
++		netdev_err(vif->ndev, "Channel out of range\n");
+ 		*(pu8CurrByte++) = 0xFF;
+ 	}
+ 	*(pu8CurrByte++)  = (ptstrJoinBssParam->cap_info) & 0xFF;
+@@ -1146,7 +1146,7 @@ static s32 Handle_Connect(struct wilc_vif *vif,
+ 				      u32WidsCount,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result) {
+-		PRINT_ER("failed to send config packet\n");
++		netdev_err(vif->ndev, "failed to send config packet\n");
+ 		result = -EFAULT;
+ 		goto ERRORHANDLER;
+ 	} else {
+@@ -1183,7 +1183,7 @@ ERRORHANDLER:
+ 			strConnectInfo.pu8ReqIEs = NULL;
+ 
+ 		} else {
+-			PRINT_ER("Connect callback function pointer is NULL\n");
++			netdev_err(vif->ndev, "Connect callback is NULL\n");
+ 		}
+ 	}
+ 
+@@ -1240,7 +1240,7 @@ static s32 Handle_FlushConnect(struct wilc_vif *vif)
+ 				      u32WidsCount,
+ 				      wilc_get_vif_idx(join_req_vif));
+ 	if (result) {
+-		PRINT_ER("failed to send config packet\n");
++		netdev_err(vif->ndev, "failed to send config packet\n");
+ 		result = -EINVAL;
+ 	}
+ 
+@@ -1256,7 +1256,7 @@ static s32 Handle_ConnectTimeout(struct wilc_vif *vif)
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("Driver handler is NULL\n");
++		netdev_err(vif->ndev, "Driver handler is NULL\n");
+ 		return result;
+ 	}
+ 
+@@ -1289,7 +1289,7 @@ static s32 Handle_ConnectTimeout(struct wilc_vif *vif)
+ 		kfree(strConnectInfo.pu8ReqIEs);
+ 		strConnectInfo.pu8ReqIEs = NULL;
+ 	} else {
+-		PRINT_ER("Connect callback function pointer is NULL\n");
++		netdev_err(vif->ndev, "Connect callback is NULL\n");
+ 	}
+ 
+ 	wid.id = (u16)WID_DISCONNECT;
+@@ -1300,7 +1300,7 @@ static s32 Handle_ConnectTimeout(struct wilc_vif *vif)
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result)
+-		PRINT_ER("Failed to send dissconect config packet\n");
++		netdev_err(vif->ndev, "Failed to send dissconect\n");
+ 
+ 	hif_drv->usr_conn_req.ssid_len = 0;
+ 	kfree(hif_drv->usr_conn_req.ssid);
+@@ -1342,7 +1342,7 @@ static s32 Handle_RcvdNtwrkInfo(struct wilc_vif *vif,
+ 		wilc_parse_network_info(pstrRcvdNetworkInfo->buffer, &pstrNetworkInfo);
+ 		if ((!pstrNetworkInfo) ||
+ 		    (!hif_drv->usr_scan_req.scan_result)) {
+-			PRINT_ER("driver is null\n");
++			netdev_err(vif->ndev, "driver is null\n");
+ 			result = -EINVAL;
+ 			goto done;
+ 		}
+@@ -1424,7 +1424,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("Driver handler is NULL\n");
++		netdev_err(vif->ndev, "Driver handler is NULL\n");
+ 		return -ENODEV;
+ 	}
+ 
+@@ -1433,14 +1433,14 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 	    hif_drv->usr_scan_req.scan_result) {
+ 		if (!pstrRcvdGnrlAsyncInfo->buffer ||
+ 		    !hif_drv->usr_conn_req.conn_result) {
+-			PRINT_ER("driver is null\n");
++			netdev_err(vif->ndev, "driver is null\n");
+ 			return -EINVAL;
+ 		}
+ 
+ 		u8MsgType = pstrRcvdGnrlAsyncInfo->buffer[0];
+ 
+ 		if ('I' != u8MsgType) {
+-			PRINT_ER("Received Message format incorrect.\n");
++			netdev_err(vif->ndev, "Received Message incorrect.\n");
+ 			return -EFAULT;
+ 		}
+ 
+@@ -1469,7 +1469,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 					s32Err = wilc_parse_assoc_resp_info(rcv_assoc_resp, u32RcvdAssocRespInfoLen,
+ 								    &pstrConnectRespInfo);
+ 					if (s32Err) {
+-						PRINT_ER("wilc_parse_assoc_resp_info() returned error %d\n", s32Err);
++						netdev_err(vif->ndev, "wilc_parse_assoc_resp_info() returned error %d\n", s32Err);
+ 					} else {
+ 						strConnectInfo.u16ConnectStatus = pstrConnectRespInfo->status;
+ 
+@@ -1492,10 +1492,10 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 
+ 			if ((u8MacStatus == MAC_CONNECTED) &&
+ 			    (strConnectInfo.u16ConnectStatus != SUCCESSFUL_STATUSCODE))	{
+-				PRINT_ER("Received MAC status is MAC_CONNECTED while the received status code in Asoc Resp is not SUCCESSFUL_STATUSCODE\n");
++				netdev_err(vif->ndev, "Received MAC status is MAC_CONNECTED while the received status code in Asoc Resp is not SUCCESSFUL_STATUSCODE\n");
+ 				eth_zero_addr(wilc_connected_ssid);
+ 			} else if (u8MacStatus == MAC_DISCONNECTED)    {
+-				PRINT_ER("Received MAC status is MAC_DISCONNECTED\n");
++				netdev_err(vif->ndev, "Received MAC status is MAC_DISCONNECTED\n");
+ 				eth_zero_addr(wilc_connected_ssid);
  			}
  
- 			wilc_free_join_params(last_scanned_shadow[i].pJoinParams);
-@@ -253,8 +253,8 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
- 								  network_info->u64Tsf,
- 								  network_info->cap_info,
- 								  network_info->beacon_period,
--								  (const u8 *)network_info->pu8IEs,
--								  (size_t)network_info->u16IEsLen,
-+								  (const u8 *)network_info->ies,
-+								  (size_t)network_info->ies_len,
- 								  (s32)rssi * 100,
- 								  GFP_KERNEL);
- 					cfg80211_put_bss(wiphy, bss);
-@@ -292,8 +292,8 @@ static void remove_network_from_shadow(unsigned long arg)
- 			PRINT_D(CFG80211_DBG, "Network expired ScanShadow:%s\n",
- 				last_scanned_shadow[i].ssid);
+@@ -1574,7 +1574,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 								  &strDisconnectNotifInfo,
+ 								  hif_drv->usr_conn_req.arg);
+ 			} else {
+-				PRINT_ER("Connect result callback function is NULL\n");
++				netdev_err(vif->ndev, "Connect result NULL\n");
+ 			}
  
--			kfree(last_scanned_shadow[i].pu8IEs);
--			last_scanned_shadow[i].pu8IEs = NULL;
-+			kfree(last_scanned_shadow[i].ies);
-+			last_scanned_shadow[i].ies = NULL;
+ 			eth_zero_addr(hif_drv->assoc_bssid);
+@@ -1748,7 +1748,7 @@ static int Handle_Key(struct wilc_vif *vif,
+ 			if (hif_drv->hif_state == HOST_IF_CONNECTED)
+ 				memcpy(pu8keybuf, hif_drv->assoc_bssid, ETH_ALEN);
+ 			else
+-				PRINT_ER("Couldn't handle WPARxGtk while state is not HOST_IF_CONNECTED\n");
++				netdev_err(vif->ndev, "Couldn't handle\n");
  
- 			wilc_free_join_params(last_scanned_shadow[i].pJoinParams);
+ 			memcpy(pu8keybuf + 6, pstrHostIFkeyAttr->attr.wpa.seq, 8);
+ 			memcpy(pu8keybuf + 14, &pstrHostIFkeyAttr->attr.wpa.index, 1);
+@@ -1808,7 +1808,7 @@ _WPARxGtk_end_case_:
+ 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
+ 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN, GFP_KERNEL);
+ 			if (!pu8keybuf) {
+-				PRINT_ER("No buffer to send PTK Key\n");
++				netdev_err(vif->ndev, "No buffer send PTK\n");
+ 				ret = -ENOMEM;
+ 				goto _WPAPtk_end_case_;
+ 			}
+@@ -1840,7 +1840,7 @@ _WPAPtk_end_case_:
+ 	case PMKSA:
+ 		pu8keybuf = kmalloc((pstrHostIFkeyAttr->attr.pmkid.numpmkid * PMKSA_KEY_LEN) + 1, GFP_KERNEL);
+ 		if (!pu8keybuf) {
+-			PRINT_ER("No buffer to send PMKSA Key\n");
++			netdev_err(vif->ndev, "No buffer to send PMKSA Key\n");
+ 			return -ENOMEM;
+ 		}
  
-@@ -377,14 +377,14 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
- 	last_scanned_shadow[ap_index].beacon_period = pstrNetworkInfo->beacon_period;
- 	last_scanned_shadow[ap_index].dtim_period = pstrNetworkInfo->dtim_period;
- 	last_scanned_shadow[ap_index].ch = pstrNetworkInfo->ch;
--	last_scanned_shadow[ap_index].u16IEsLen = pstrNetworkInfo->u16IEsLen;
-+	last_scanned_shadow[ap_index].ies_len = pstrNetworkInfo->ies_len;
- 	last_scanned_shadow[ap_index].u64Tsf = pstrNetworkInfo->u64Tsf;
- 	if (ap_found != -1)
--		kfree(last_scanned_shadow[ap_index].pu8IEs);
--	last_scanned_shadow[ap_index].pu8IEs =
--		kmalloc(pstrNetworkInfo->u16IEsLen, GFP_KERNEL);
--	memcpy(last_scanned_shadow[ap_index].pu8IEs,
--	       pstrNetworkInfo->pu8IEs, pstrNetworkInfo->u16IEsLen);
-+		kfree(last_scanned_shadow[ap_index].ies);
-+	last_scanned_shadow[ap_index].ies = kmalloc(pstrNetworkInfo->ies_len,
-+						    GFP_KERNEL);
-+	memcpy(last_scanned_shadow[ap_index].ies,
-+	       pstrNetworkInfo->ies, pstrNetworkInfo->ies_len);
- 	last_scanned_shadow[ap_index].time_scan = jiffies;
- 	last_scanned_shadow[ap_index].time_scan_cached = jiffies;
- 	last_scanned_shadow[ap_index].found = 1;
-@@ -451,8 +451,8 @@ static void CfgScanResult(enum scan_event scan_event,
- 										  network_info->u64Tsf,
- 										  network_info->cap_info,
- 										  network_info->beacon_period,
--										  (const u8 *)network_info->pu8IEs,
--										  (size_t)network_info->u16IEsLen,
-+										  (const u8 *)network_info->ies,
-+										  (size_t)network_info->ies_len,
- 										  (s32)network_info->rssi * 100,
- 										  GFP_KERNEL);
- 							cfg80211_put_bss(wiphy, bss);
+@@ -1864,7 +1864,7 @@ _WPAPtk_end_case_:
+ 	}
+ 
+ 	if (result)
+-		PRINT_ER("Failed to send key config packet\n");
++		netdev_err(vif->ndev, "Failed to send key config packet\n");
+ 
+ 	return result;
+ }
+@@ -1891,7 +1891,7 @@ static void Handle_Disconnect(struct wilc_vif *vif)
+ 				      wilc_get_vif_idx(vif));
+ 
+ 	if (result) {
+-		PRINT_ER("Failed to send dissconect config packet\n");
++		netdev_err(vif->ndev, "Failed to send dissconect\n");
+ 	} else {
+ 		tstrDisconnectNotifInfo strDisconnectNotifInfo;
+ 
+@@ -1920,7 +1920,7 @@ static void Handle_Disconnect(struct wilc_vif *vif)
+ 							  &strDisconnectNotifInfo,
+ 							  hif_drv->usr_conn_req.arg);
+ 		} else {
+-			PRINT_ER("usr_conn_req.conn_result = NULL\n");
++			netdev_err(vif->ndev, "conn_result = NULL\n");
+ 		}
+ 
+ 		scan_while_connected = false;
+@@ -1976,7 +1976,7 @@ static s32 Handle_GetChnl(struct wilc_vif *vif)
+ 				      wilc_get_vif_idx(vif));
+ 
+ 	if (result) {
+-		PRINT_ER("Failed to get channel number\n");
++		netdev_err(vif->ndev, "Failed to get channel number\n");
+ 		result = -EFAULT;
+ 	}
+ 
+@@ -1998,7 +1998,7 @@ static void Handle_GetRssi(struct wilc_vif *vif)
+ 	result = wilc_send_config_pkt(vif, GET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result) {
+-		PRINT_ER("Failed to get RSSI value\n");
++		netdev_err(vif->ndev, "Failed to get RSSI value\n");
+ 		result = -EFAULT;
+ 	}
+ 
+@@ -2021,7 +2021,7 @@ static void Handle_GetLinkspeed(struct wilc_vif *vif)
+ 	result = wilc_send_config_pkt(vif, GET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result) {
+-		PRINT_ER("Failed to get LINKSPEED value\n");
++		netdev_err(vif->ndev, "Failed to get LINKSPEED value\n");
+ 		result = -EFAULT;
+ 	}
+ 
+@@ -2069,7 +2069,7 @@ static s32 Handle_GetStatistics(struct wilc_vif *vif,
+ 				      wilc_get_vif_idx(vif));
+ 
+ 	if (result)
+-		PRINT_ER("Failed to send scan parameters config packet\n");
++		netdev_err(vif->ndev, "Failed to send scan parameters\n");
+ 
+ 	if (pstrStatistics->link_speed > TCP_ACK_FILTER_LINK_SPEED_THRESH &&
+ 	    pstrStatistics->link_speed != DEFAULT_LINK_SPEED)
+@@ -2102,7 +2102,7 @@ static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
+ 				      wilc_get_vif_idx(vif));
+ 
+ 	if (result) {
+-		PRINT_ER("Failed to SET incative time\n");
++		netdev_err(vif->ndev, "Failed to SET incative time\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -2115,7 +2115,7 @@ static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
+ 				      wilc_get_vif_idx(vif));
+ 
+ 	if (result) {
+-		PRINT_ER("Failed to get incative time\n");
++		netdev_err(vif->ndev, "Failed to get incative time\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -2169,7 +2169,7 @@ static void Handle_AddBeacon(struct wilc_vif *vif,
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result)
+-		PRINT_ER("Failed to send add beacon config packet\n");
++		netdev_err(vif->ndev, "Failed to send add beacon\n");
+ 
+ ERRORHANDLER:
+ 	kfree(wid.val);
+@@ -2196,7 +2196,7 @@ static void Handle_DelBeacon(struct wilc_vif *vif)
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result)
+-		PRINT_ER("Failed to send delete beacon config packet\n");
++		netdev_err(vif->ndev, "Failed to send delete beacon\n");
+ }
+ 
+ static u32 WILC_HostIf_PackStaParam(u8 *pu8Buffer,
+@@ -2267,7 +2267,7 @@ static void Handle_AddStation(struct wilc_vif *vif,
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result != 0)
+-		PRINT_ER("Failed to send add station config packet\n");
++		netdev_err(vif->ndev, "Failed to send add station\n");
+ 
+ ERRORHANDLER:
+ 	kfree(pstrStationParam->rates);
+@@ -2307,7 +2307,7 @@ static void Handle_DelAllSta(struct wilc_vif *vif,
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result)
+-		PRINT_ER("Failed to send add station config packet\n");
++		netdev_err(vif->ndev, "Failed to send add station\n");
+ 
+ ERRORHANDLER:
+ 	kfree(wid.val);
+@@ -2337,7 +2337,7 @@ static void Handle_DelStation(struct wilc_vif *vif,
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result)
+-		PRINT_ER("Failed to send add station config packet\n");
++		netdev_err(vif->ndev, "Failed to send add station\n");
+ 
+ ERRORHANDLER:
+ 	kfree(wid.val);
+@@ -2364,7 +2364,7 @@ static void Handle_EditStation(struct wilc_vif *vif,
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result)
+-		PRINT_ER("Failed to send edit station config packet\n");
++		netdev_err(vif->ndev, "Failed to send edit station\n");
+ 
+ ERRORHANDLER:
+ 	kfree(pstrStationParam->rates);
+@@ -2420,7 +2420,7 @@ static int Handle_RemainOnChan(struct wilc_vif *vif,
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result != 0)
+-		PRINT_ER("Failed to set remain on channel\n");
++		netdev_err(vif->ndev, "Failed to set remain on channel\n");
+ 
+ ERRORHANDLER:
+ 	{
+@@ -2464,7 +2464,7 @@ static int Handle_RegisterFrame(struct wilc_vif *vif,
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result) {
+-		PRINT_ER("Failed to frame register config packet\n");
++		netdev_err(vif->ndev, "Failed to frame register\n");
+ 		result = -EINVAL;
+ 	}
+ 
+@@ -2487,7 +2487,7 @@ static u32 Handle_ListenStateExpired(struct wilc_vif *vif,
+ 		wid.val = kmalloc(wid.size, GFP_KERNEL);
+ 
+ 		if (!wid.val) {
+-			PRINT_ER("Failed to allocate memory\n");
++			netdev_err(vif->ndev, "Failed to allocate memory\n");
+ 			return -ENOMEM;
+ 		}
+ 
+@@ -2497,7 +2497,7 @@ static u32 Handle_ListenStateExpired(struct wilc_vif *vif,
+ 		result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 					      wilc_get_vif_idx(vif));
+ 		if (result != 0) {
+-			PRINT_ER("Failed to set remain on channel\n");
++			netdev_err(vif->ndev, "Failed to set remain channel\n");
+ 			goto _done_;
+ 		}
+ 
+@@ -2530,7 +2530,7 @@ static void ListenTimerCB(unsigned long arg)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("wilc_mq_send fail\n");
++		netdev_err(vif->ndev, "wilc_mq_send fail\n");
+ }
+ 
+ static void Handle_PowerManagement(struct wilc_vif *vif,
+@@ -2553,7 +2553,7 @@ static void Handle_PowerManagement(struct wilc_vif *vif,
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result)
+-		PRINT_ER("Failed to send power management config packet\n");
++		netdev_err(vif->ndev, "Failed to send power management\n");
+ }
+ 
+ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
+@@ -2588,7 +2588,7 @@ static void Handle_SetMulticastFilter(struct wilc_vif *vif,
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result)
+-		PRINT_ER("Failed to send setup multicast config packet\n");
++		netdev_err(vif->ndev, "Failed to send setup multicast\n");
+ 
+ ERRORHANDLER:
+ 	kfree(wid.val);
+@@ -2858,7 +2858,7 @@ static int hostIFthread(void *pvArg)
+ 			handle_get_tx_pwr(msg.vif, &msg.body.tx_power.tx_pwr);
+ 			break;
+ 		default:
+-			PRINT_ER("[Host Interface] undefined Received Msg ID\n");
++			netdev_err(vif->ndev, "[Host Interface] undefined\n");
+ 			break;
+ 		}
+ 	}
+@@ -2911,7 +2911,7 @@ int wilc_remove_wep_key(struct wilc_vif *vif, u8 index)
+ 
+ 	if (!hif_drv) {
+ 		result = -EFAULT;
+-		PRINT_ER("Failed to send setup multicast config packet\n");
++		netdev_err(vif->ndev, "Failed to send setup multicast\n");
+ 		return result;
+ 	}
+ 
+@@ -2925,7 +2925,7 @@ int wilc_remove_wep_key(struct wilc_vif *vif, u8 index)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("Error in sending message queue : Request to remove WEP key\n");
++		netdev_err(vif->ndev, "Request to remove WEP key\n");
+ 	down(&hif_drv->sem_test_key_block);
+ 
+ 	return result;
+@@ -2939,7 +2939,7 @@ int wilc_set_wep_default_keyid(struct wilc_vif *vif, u8 index)
+ 
+ 	if (!hif_drv) {
+ 		result = -EFAULT;
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return result;
+ 	}
+ 
+@@ -2953,7 +2953,7 @@ int wilc_set_wep_default_keyid(struct wilc_vif *vif, u8 index)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("Error in sending message queue : Default key index\n");
++		netdev_err(vif->ndev, "Default key index\n");
+ 	down(&hif_drv->sem_test_key_block);
+ 
+ 	return result;
+@@ -2967,7 +2967,7 @@ int wilc_add_wep_key_bss_sta(struct wilc_vif *vif, const u8 *key, u8 len,
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -2986,7 +2986,7 @@ int wilc_add_wep_key_bss_sta(struct wilc_vif *vif, const u8 *key, u8 len,
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("Error in sending message queue :WEP Key\n");
++		netdev_err(vif->ndev, "STA - WEP Key\n");
+ 	down(&hif_drv->sem_test_key_block);
+ 
+ 	return result;
+@@ -3000,7 +3000,7 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3022,7 +3022,7 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 
+ 	if (result)
+-		PRINT_ER("Error in sending message queue :WEP Key\n");
++		netdev_err(vif->ndev, "AP - WEP Key\n");
+ 	down(&hif_drv->sem_test_key_block);
+ 
+ 	return result;
+@@ -3038,7 +3038,7 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
+ 	u8 key_len = ptk_key_len;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3077,7 +3077,7 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 
+ 	if (result)
+-		PRINT_ER("Error in sending message queue:  PTK Key\n");
++		netdev_err(vif->ndev, "PTK Key\n");
+ 
+ 	down(&hif_drv->sem_test_key_block);
+ 
+@@ -3095,7 +3095,7 @@ int wilc_add_rx_gtk(struct wilc_vif *vif, const u8 *rx_gtk, u8 gtk_key_len,
+ 	u8 key_len = gtk_key_len;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+@@ -3145,7 +3145,7 @@ int wilc_add_rx_gtk(struct wilc_vif *vif, const u8 *rx_gtk, u8 gtk_key_len,
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("Error in sending message queue:  RX GTK\n");
++		netdev_err(vif->ndev, "RX GTK\n");
+ 
+ 	down(&hif_drv->sem_test_key_block);
+ 
+@@ -3161,7 +3161,7 @@ int wilc_set_pmkid_info(struct wilc_vif *vif,
+ 	int i;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3181,7 +3181,7 @@ int wilc_set_pmkid_info(struct wilc_vif *vif,
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER(" Error in sending messagequeue: PMKID Info\n");
++		netdev_err(vif->ndev, "PMKID Info\n");
+ 
+ 	return result;
+ }
+@@ -3199,7 +3199,7 @@ int wilc_get_mac_address(struct wilc_vif *vif, u8 *mac_addr)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result) {
+-		PRINT_ER("Failed to send get mac address\n");
++		netdev_err(vif->ndev, "Failed to send get mac address\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3218,12 +3218,12 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv || !connect_result) {
+-		PRINT_ER("Driver is null\n");
++		netdev_err(vif->ndev, "Driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+ 	if (!join_params) {
+-		PRINT_ER("Unable to Join - JoinParams is NULL\n");
++		netdev_err(vif->ndev, "Unable to Join - JoinParams is NULL\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3263,7 +3263,7 @@ int wilc_set_join_req(struct wilc_vif *vif, u8 *bssid, const u8 *ssid,
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result) {
+-		PRINT_ER("Failed to send message queue: Set join request\n");
++		netdev_err(vif->ndev, "send message: Set join request\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3281,7 +3281,7 @@ int wilc_disconnect(struct wilc_vif *vif, u16 reason_code)
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("Driver is null\n");
++		netdev_err(vif->ndev, "Driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3292,7 +3292,7 @@ int wilc_disconnect(struct wilc_vif *vif, u16 reason_code)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("Failed to send message queue: disconnect\n");
++		netdev_err(vif->ndev, "Failed to send message: disconnect\n");
+ 
+ 	down(&hif_drv->sem_test_disconn_block);
+ 
+@@ -3309,7 +3309,7 @@ static s32 host_int_get_assoc_res_info(struct wilc_vif *vif,
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("Driver is null\n");
++		netdev_err(vif->ndev, "Driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3322,7 +3322,7 @@ static s32 host_int_get_assoc_res_info(struct wilc_vif *vif,
+ 				      wilc_get_vif_idx(vif));
+ 	if (result) {
+ 		*pu32RcvdAssocRespInfoLen = 0;
+-		PRINT_ER("Failed to send association response config packet\n");
++		netdev_err(vif->ndev, "Failed to send association response\n");
+ 		return -EINVAL;
+ 	}
+ 	
+@@ -3337,7 +3337,7 @@ int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel)
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3348,7 +3348,7 @@ int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result) {
+-		PRINT_ER("wilc mq send fail\n");
++		netdev_err(vif->ndev, "wilc mq send fail\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -3368,7 +3368,7 @@ int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mac_idx)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result) {
+-		PRINT_ER("wilc mq send fail\n");
++		netdev_err(vif->ndev, "wilc mq send fail\n");
+ 		result = -EINVAL;
+ 	}
+ 
+@@ -3387,7 +3387,7 @@ int wilc_set_operation_mode(struct wilc_vif *vif, u32 mode)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result) {
+-		PRINT_ER("wilc mq send fail\n");
++		netdev_err(vif->ndev, "wilc mq send fail\n");
+ 		result = -EINVAL;
+ 	}
+ 
+@@ -3402,7 +3402,7 @@ s32 wilc_get_inactive_time(struct wilc_vif *vif, const u8 *mac,
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3414,7 +3414,7 @@ s32 wilc_get_inactive_time(struct wilc_vif *vif, const u8 *mac,
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("Failed to send get host channel param's message queue ");
++		netdev_err(vif->ndev, "Failed to send get host ch param\n");
+ 
+ 	down(&hif_drv->sem_inactive_time);
+ 
+@@ -3435,14 +3435,14 @@ int wilc_get_rssi(struct wilc_vif *vif, s8 *rssi_level)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result) {
+-		PRINT_ER("Failed to send get host channel param's message queue ");
++		netdev_err(vif->ndev, "Failed to send get host ch param\n");
+ 		return -EFAULT;
+ 	}
+ 
+ 	down(&hif_drv->sem_get_rssi);
+ 
+ 	if (!rssi_level) {
+-		PRINT_ER("RSS pointer value is null");
++		netdev_err(vif->ndev, "RSS pointer value is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3463,7 +3463,7 @@ int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *stats)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result) {
+-		PRINT_ER("Failed to send get host channel param's message queue ");
++		netdev_err(vif->ndev, "Failed to send get host channel\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3483,7 +3483,7 @@ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv || !scan_result) {
+-		PRINT_ER("hif_drv or scan_result = NULL\n");
++		netdev_err(vif->ndev, "hif_drv or scan_result = NULL\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3516,7 +3516,7 @@ int wilc_scan(struct wilc_vif *vif, u8 scan_source, u8 scan_type,
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result) {
+-		PRINT_ER("Error in sending message queue\n");
++		netdev_err(vif->ndev, "Error in sending message queue\n");
+ 		return -EINVAL;
+ 	}
+ 
+@@ -3535,7 +3535,7 @@ int wilc_hif_set_cfg(struct wilc_vif *vif,
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("hif_drv NULL\n");
++		netdev_err(vif->ndev, "hif_drv NULL\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3554,7 +3554,7 @@ static void GetPeriodicRSSI(unsigned long arg)
+ 	struct wilc_vif *vif = (struct wilc_vif *)arg;
+ 
+ 	if (!vif->hif_drv) {
+-		PRINT_ER("Driver handler is NULL\n");
++		netdev_err(vif->ndev, "Driver handler is NULL\n");
+ 		return;
+ 	}
+ 
+@@ -3611,7 +3611,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 		result = wilc_mq_create(&hif_msg_q);
+ 
+ 		if (result < 0) {
+-			PRINT_ER("Failed to creat MQ\n");
++			netdev_err(vif->ndev, "Failed to creat MQ\n");
+ 			goto _fail_;
+ 		}
+ 
+@@ -3619,7 +3619,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 						 "WILC_kthread");
+ 
+ 		if (IS_ERR(hif_thread_handler)) {
+-			PRINT_ER("Failed to creat Thread\n");
++			netdev_err(vif->ndev, "Failed to creat Thread\n");
+ 			result = -EFAULT;
+ 			goto _fail_mq_;
+ 		}
+@@ -3663,7 +3663,7 @@ int wilc_deinit(struct wilc_vif *vif)
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv)	{
+-		PRINT_ER("hif_drv = NULL\n");
++		netdev_err(vif->ndev, "hif_drv = NULL\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3698,7 +3698,7 @@ int wilc_deinit(struct wilc_vif *vif)
+ 
+ 		result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 		if (result != 0)
+-			PRINT_ER("Error in sending deinit's message queue message function: Error(%d)\n", result);
++			netdev_err(vif->ndev, "deinit : Error(%d)\n", result);
+ 
+ 		down(&hif_sema_thread);
+ 
+@@ -3729,7 +3729,7 @@ void wilc_network_info_received(struct wilc *wilc, u8 *pu8Buffer,
+ 	hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv || hif_drv == terminated_handle)	{
+-		PRINT_ER("NetworkInfo received but driver not init[%p]\n", hif_drv);
++		netdev_err(vif->ndev, "driver not init[%p]\n", hif_drv);
+ 		return;
+ 	}
+ 
+@@ -3744,7 +3744,7 @@ void wilc_network_info_received(struct wilc *wilc, u8 *pu8Buffer,
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("Error in sending network info message queue message parameters: Error(%d)\n", result);
++		netdev_err(vif->ndev, "message parameters (%d)\n", result);
+ }
+ 
+ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *pu8Buffer,
+@@ -3773,7 +3773,7 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *pu8Buffer,
+ 	}
+ 
+ 	if (!hif_drv->usr_conn_req.conn_result) {
+-		PRINT_ER("Received mac status is not needed when there is no current Connect Reques\n");
++		netdev_err(vif->ndev, "there is no current Connect Request\n");
+ 		up(&hif_sema_deinit);
+ 		return;
+ 	}
+@@ -3789,7 +3789,7 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *pu8Buffer,
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("Error in sending message queue asynchronous message info: Error(%d)\n", result);
++		netdev_err(vif->ndev, "synchronous info (%d)\n", result);
+ 
+ 	up(&hif_sema_deinit);
+ }
+@@ -3820,7 +3820,7 @@ void wilc_scan_complete_received(struct wilc *wilc, u8 *pu8Buffer,
+ 
+ 		result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 		if (result)
+-			PRINT_ER("Error in sending message queue scan complete parameters: Error(%d)\n", result);
++			netdev_err(vif->ndev, "complete param (%d)\n", result);
+ 	}
+ }
+ 
+@@ -3835,7 +3835,7 @@ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3852,7 +3852,7 @@ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("wilc mq send fail\n");
++		netdev_err(vif->ndev, "wilc mq send fail\n");
+ 
+ 	return result;
+ }
+@@ -3864,7 +3864,7 @@ int wilc_listen_state_expired(struct wilc_vif *vif, u32 session_id)
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3877,7 +3877,7 @@ int wilc_listen_state_expired(struct wilc_vif *vif, u32 session_id)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("wilc mq send fail\n");
++		netdev_err(vif->ndev, "wilc mq send fail\n");
+ 
+ 	return result;
+ }
+@@ -3889,7 +3889,7 @@ int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg)
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3914,7 +3914,7 @@ int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("wilc mq send fail\n");
++		netdev_err(vif->ndev, "wilc mq send fail\n");
+ 
+ 	return result;
+ }
+@@ -3928,7 +3928,7 @@ int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 dtim_period,
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3958,7 +3958,7 @@ int wilc_add_beacon(struct wilc_vif *vif, u32 interval, u32 dtim_period,
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("wilc mq send fail\n");
++		netdev_err(vif->ndev, "wilc mq send fail\n");
+ 
+ ERRORHANDLER:
+ 	if (result) {
+@@ -3977,7 +3977,7 @@ int wilc_del_beacon(struct wilc_vif *vif)
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -3986,7 +3986,7 @@ int wilc_del_beacon(struct wilc_vif *vif)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("wilc_mq_send fail\n");
++		netdev_err(vif->ndev, "wilc_mq_send fail\n");
+ 
+ 	return result;
+ }
+@@ -3999,7 +3999,7 @@ int wilc_add_station(struct wilc_vif *vif, struct add_sta_param *sta_param)
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -4019,7 +4019,7 @@ int wilc_add_station(struct wilc_vif *vif, struct add_sta_param *sta_param)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("wilc_mq_send fail\n");
++		netdev_err(vif->ndev, "wilc_mq_send fail\n");
+ 	return result;
+ }
+ 
+@@ -4031,7 +4031,7 @@ int wilc_del_station(struct wilc_vif *vif, const u8 *mac_addr)
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -4047,7 +4047,7 @@ int wilc_del_station(struct wilc_vif *vif, const u8 *mac_addr)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("wilc_mq_send fail\n");
++		netdev_err(vif->ndev, "wilc_mq_send fail\n");
+ 	return result;
+ }
+ 
+@@ -4062,7 +4062,7 @@ int wilc_del_allstation(struct wilc_vif *vif, u8 mac_addr[][ETH_ALEN])
+ 	u8 assoc_sta = 0;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -4084,7 +4084,7 @@ int wilc_del_allstation(struct wilc_vif *vif, u8 mac_addr[][ETH_ALEN])
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 
+ 	if (result)
+-		PRINT_ER("wilc_mq_send fail\n");
++		netdev_err(vif->ndev, "wilc_mq_send fail\n");
+ 
+ 	down(&hif_sema_wait_response);
+ 
+@@ -4100,7 +4100,7 @@ int wilc_edit_station(struct wilc_vif *vif,
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -4120,7 +4120,7 @@ int wilc_edit_station(struct wilc_vif *vif,
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("wilc_mq_send fail\n");
++		netdev_err(vif->ndev, "wilc_mq_send fail\n");
+ 
+ 	return result;
+ }
+@@ -4133,7 +4133,7 @@ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout)
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -4150,7 +4150,7 @@ int wilc_set_power_mgmt(struct wilc_vif *vif, bool enabled, u32 timeout)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("wilc_mq_send fail\n");
++		netdev_err(vif->ndev, "wilc_mq_send fail\n");
+ 	return result;
+ }
+ 
+@@ -4163,7 +4163,7 @@ int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -4177,7 +4177,7 @@ int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("wilc_mq_send fail\n");
++		netdev_err(vif->ndev, "wilc_mq_send fail\n");
+ 	return result;
+ }
+ 
+@@ -4342,7 +4342,7 @@ int wilc_setup_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -4356,7 +4356,7 @@ int wilc_setup_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("wilc_mq_send fail\n");
++		netdev_err(vif->ndev, "wilc_mq_send fail\n");
+ 
+ 	return result;
+ }
+@@ -4368,7 +4368,7 @@ static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv) {
+-		PRINT_ER("driver is null\n");
++		netdev_err(vif->ndev, "driver is null\n");
+ 		return -EFAULT;
+ 	}
+ 
+@@ -4382,7 +4382,7 @@ static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx)
+ 
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+-		PRINT_ER("wilc_mq_send fail\n");
++		netdev_err(vif->ndev, "wilc_mq_send fail\n");
+ 
+ 	return result;
+ }
 -- 
 1.9.1
 
