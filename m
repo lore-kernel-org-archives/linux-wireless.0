@@ -1,42 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40442 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755294AbcBPQCj (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:30328 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1425347AbcBRLf2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2016 11:02:39 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi-2016-02-16
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA13D1A@hasmsx107.ger.corp.intel.com>
-Date: Tue, 16 Feb 2016 18:02:33 +0200
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA13D1A@hasmsx107.ger.corp.intel.com>
-	(Emmanuel Grumbach's message of "Mon, 15 Feb 2016 11:57:38 +0000")
-Message-ID: <874md8tzhi.fsf@kamboji.qca.qualcomm.com> (sfid-20160216_170242_970784_5BCC5F43)
+	Thu, 18 Feb 2016 06:35:28 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V2 16/24] staging: wilc1000: host_interface.c: removes unnecessary log messages
+Date: Thu, 18 Feb 2016 20:30:16 +0900
+Message-ID: <1455795024-26978-16-git-send-email-leo.kim@atmel.com> (sfid-20160218_123532_898770_54245B01)
+In-Reply-To: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
+References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+From: Chris Park <chris.park@atmel.com>
 
-> This is a pull request for 4.5. Apart from my RF-Kill fix, the patches are
-> really small. My RF-Kill patch needed to move code around to avoid adding
-> a forward declaration and on the way there were a few very trivial code style
-> fixes, that were needed to make checkpatch happy.
->
-> Let me know if you have issues, thanks!
->
->
-> The following changes since commit 69c7fda40921c125eeeef6a827f6270ac6aa1baa:
->
->   iwlwifi: mvm: rs: fix TPC statistics handling (2016-01-26 16:03:35 +0200)
->
-> are available in the git repository at:
->
->   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2016-02-15
+This patch removes unnecessary log messages.
 
-Pulled, thanks.
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ee45103..60678aa 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1643,11 +1643,8 @@ static int Handle_Key(struct wilc_vif *vif,
+ 
+ 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2,
+ 					    GFP_KERNEL);
+-
+-			if (pu8keybuf == NULL) {
+-				PRINT_ER("No buffer to send Key\n");
++			if (!pu8keybuf)
+ 				return -ENOMEM;
+-			}
+ 
+ 			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
+ 			pu8keybuf[1] = pstrHostIFkeyAttr->attr.wep.key_len;
+@@ -1668,10 +1665,8 @@ static int Handle_Key(struct wilc_vif *vif,
+ 			kfree(pu8keybuf);
+ 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
+ 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2, GFP_KERNEL);
+-			if (!pu8keybuf) {
+-				PRINT_ER("No buffer to send Key\n");
++			if (!pu8keybuf)
+ 				return -ENOMEM;
+-			}
+ 			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
+ 			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->attr.wep.key_len, 1);
+ 			memcpy(pu8keybuf + 2, pstrHostIFkeyAttr->attr.wep.key,
+@@ -1715,7 +1710,6 @@ static int Handle_Key(struct wilc_vif *vif,
+ 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
+ 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
+ 			if (!pu8keybuf) {
+-				PRINT_ER("No buffer to send RxGTK Key\n");
+ 				ret = -ENOMEM;
+ 				goto _WPARxGtk_end_case_;
+ 			}
+@@ -1747,7 +1741,6 @@ static int Handle_Key(struct wilc_vif *vif,
+ 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
+ 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
+ 			if (pu8keybuf == NULL) {
+-				PRINT_ER("No buffer to send RxGTK Key\n");
+ 				ret = -ENOMEM;
+ 				goto _WPARxGtk_end_case_;
+ 			}
+@@ -1787,7 +1780,6 @@ _WPARxGtk_end_case_:
+ 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
+ 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN + 1, GFP_KERNEL);
+ 			if (!pu8keybuf) {
+-				PRINT_ER("No buffer to send PTK Key\n");
+ 				ret = -ENOMEM;
+ 				goto _WPAPtk_end_case_;
+ 			}
 -- 
-Kalle Valo
+1.9.1
+
