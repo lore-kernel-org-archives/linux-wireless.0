@@ -1,68 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f195.google.com ([209.85.213.195]:34461 "EHLO
-	mail-ig0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753590AbcBHWi0 convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:40241 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933423AbcBRHb3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 17:38:26 -0500
+	Thu, 18 Feb 2016 02:31:29 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH 10/24] staging: wilc1000: removes unused HOSTAPD_DBG tag
+Date: Thu, 18 Feb 2016 16:27:21 +0900
+Message-ID: <1455780455-21365-10-git-send-email-leo.kim@atmel.com> (sfid-20160218_083133_365366_2AA96686)
+In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1454946096-9752-3-git-send-email-jprvita@endlessm.com>
-References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com> <1454946096-9752-3-git-send-email-jprvita@endlessm.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 9 Feb 2016 09:38:06 +1100
-Message-ID: <CAGRGNgXd-sPP-omQ-Vnkfgw7AGWa=8EaRQwL_jkTPnxKfdTSDQ@mail.gmail.com> (sfid-20160208_233847_005000_CC062B1F)
-Subject: Re: [PATCH 2/9] rfkill: Remove extra blank line
-To: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux@endlessm.com,
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi João,
+From: Chris Park <chris.park@atmel.com>
 
-On Tue, Feb 9, 2016 at 2:41 AM, João Paulo Rechi Vita <jprvita@gmail.com> wrote:
-> Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+This patch removes unused HOSTAPD_DBG tag.
 
-Looks sane to me.
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan_common.h | 4 +---
+ drivers/staging/wilc1000/wilc_debugfs.c      | 5 ++---
+ 2 files changed, 3 insertions(+), 6 deletions(-)
 
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-> ---
->  net/rfkill/core.c | 1 -
->  1 file changed, 1 deletion(-)
->
-> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-> index ffbc375..56d79cb 100644
-> --- a/net/rfkill/core.c
-> +++ b/net/rfkill/core.c
-> @@ -455,7 +455,6 @@ bool rfkill_get_global_sw_state(const enum rfkill_type type)
->  }
->  #endif
->
-> -
->  bool rfkill_set_hw_state(struct rfkill *rfkill, bool blocked)
->  {
->         unsigned long flags;
-> --
-> 2.5.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index 0d9a71f..1f7d806 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -2,13 +2,11 @@
+ #define LINUX_WLAN_COMMON_H
+ 
+ enum debug_region {
+-	Hostapd_debug = 0,
+-	CFG80211_debug,
++	CFG80211_debug = 0,
+ 	Init_debug,
+ 	COMP = 0xFFFFFFFF,
+ };
+ 
+-#define HOSTAPD_DBG             (1 << Hostapd_debug)
+ #define CFG80211_DBG            (1 << CFG80211_debug)
+ #define INIT_DBG                (1 << Init_debug)
+ 
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index a27b077..fafe7cc 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -24,10 +24,9 @@ static struct dentry *wilc_dir;
+  * --------------------------------------------------------------------------------
+  */
+ 
+-#define DBG_REGION_ALL	(HOSTAPD_DBG | CFG80211_DBG | INIT_DBG)
++#define DBG_REGION_ALL	(CFG80211_DBG | INIT_DBG)
+ #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+-atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | CFG80211_DBG |
+-				   HOSTAPD_DBG);
++atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | CFG80211_DBG);
+ EXPORT_SYMBOL_GPL(WILC_REGION);
+ atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
+ EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
 -- 
-Julian Calaby
+1.9.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
