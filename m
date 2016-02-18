@@ -1,51 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f194.google.com ([209.85.214.194]:34760 "EHLO
-	mail-ob0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964943AbcBDPoD (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:40477 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933574AbcBRHcO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 10:44:03 -0500
-Subject: Re: [PATCH 1/2] rtlwifi: Fix improve function 'rtl_addr_delay()' in
- core.c
-To: David Laight <David.Laight@ACULAB.COM>,
-	ByeoungWook Kim <quddnr145@gmail.com>
-References: <20160203015953.GA13562@gmail.com>
- <063D6719AE5E284EB5DD2968C1650D6D1CCD5486@AcuExch.aculab.com>
- <CAOxTRzpO4mx361GqA+W39bxSfbOCaiLw320S-aph1v1OGJ0FYw@mail.gmail.com>
- <56B258B2.6090802@lwfinger.net>
- <063D6719AE5E284EB5DD2968C1650D6D1CCD61C8@AcuExch.aculab.com>
-Cc: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <56B371BE.1060805@lwfinger.net> (sfid-20160204_164432_482722_AAD7BBA5)
-Date: Thu, 4 Feb 2016 09:43:58 -0600
+	Thu, 18 Feb 2016 02:32:14 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH 14/24] staging: wilc1000: removes unused CFG80211_DBG tag
+Date: Thu, 18 Feb 2016 16:27:25 +0900
+Message-ID: <1455780455-21365-14-git-send-email-leo.kim@atmel.com> (sfid-20160218_083229_029646_2525E0BA)
+In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D1CCD61C8@AcuExch.aculab.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/04/2016 03:48 AM, David Laight wrote:
-> From: Larry Finger
->> Sent: 03 February 2016 19:45
-> ...
->> The performance will depend on where you satisfy the condition. All switch cases
->> have the same execution time, but in the if .. else if .. else form, the earlier
->> tests execute more quickly. I'm not sure that one can make any blanket statement
->> about performance. Certainly, the switch version will be larger. For a switch
->> with 8 cases plus default, the object code if 43 bytes larger than the nested
->> ifs in a test program that I created. That is a significant penalty.
->
-> There is also the penalty of the (likely) data cache miss reading the jump table.
-> But given this code is all about generating a variable delay the execution
-> speed is probably irrelevant.
->
-> It would be much more interesting if the delay could be changed for sleeps.
+From: Chris Park <chris.park@atmel.com>
 
-Unfortunately, sleeping is not possible for the routines that call rtl_addr_delay().
+This patch removes unused CFG80211_DBG tag.
 
-Larry
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan_common.h | 4 +---
+ drivers/staging/wilc1000/wilc_debugfs.c      | 6 +++---
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index 1f7d806..e408631 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -2,12 +2,10 @@
+ #define LINUX_WLAN_COMMON_H
+ 
+ enum debug_region {
+-	CFG80211_debug = 0,
+-	Init_debug,
++	Init_debug = 0,
+ 	COMP = 0xFFFFFFFF,
+ };
+ 
+-#define CFG80211_DBG            (1 << CFG80211_debug)
+ #define INIT_DBG                (1 << Init_debug)
+ 
+ #if defined(WILC_DEBUGFS)
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index fafe7cc..266d96b 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -24,9 +24,9 @@ static struct dentry *wilc_dir;
+  * --------------------------------------------------------------------------------
+  */
+ 
+-#define DBG_REGION_ALL	(CFG80211_DBG | INIT_DBG)
++#define DBG_REGION_ALL	(INIT_DBG)
+ #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+-atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | CFG80211_DBG);
++atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG);
+ EXPORT_SYMBOL_GPL(WILC_REGION);
+ atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
+ EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
+@@ -134,7 +134,7 @@ struct wilc_debugfs_info_t {
+ 
+ static struct wilc_debugfs_info_t debugfs_info[] = {
+ 	{ "wilc_debug_level",	0666,	(DEBUG | ERR), FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write, NULL), },
+-	{ "wilc_debug_region",	0666,	(INIT_DBG | CFG80211_DBG), FOPS(NULL, wilc_debug_region_read, wilc_debug_region_write, NULL), },
++	{ "wilc_debug_region",	0666,	(INIT_DBG), FOPS(NULL, wilc_debug_region_read, wilc_debug_region_write, NULL), },
+ };
+ 
+ static int __init wilc_debugfs_init(void)
+-- 
+1.9.1
 
