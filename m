@@ -1,63 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f174.google.com ([209.85.223.174]:33601 "EHLO
-	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755584AbcBQEdA (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:40649 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1424672AbcBRHdK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2016 23:33:00 -0500
+	Thu, 18 Feb 2016 02:33:10 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH 19/24] staging: wilc1000: wilc_wfi_cfgoperations.c: removes unnecessary log messages
+Date: Thu, 18 Feb 2016 16:27:30 +0900
+Message-ID: <1455780455-21365-19-git-send-email-leo.kim@atmel.com> (sfid-20160218_083314_870126_D8EA9FCD)
+In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1455660329.2723.16.camel@sipsolutions.net>
-References: <CAHqTa-22NpabO6B7nL=O26fnuGQHFOzpagWtsfQz4_BfrO6nTw@mail.gmail.com>
- <1455658091-28262-1-git-send-email-apenwarr@gmail.com> <1455660329.2723.16.camel@sipsolutions.net>
-From: Avery Pennarun <apenwarr@gmail.com>
-Date: Tue, 16 Feb 2016 23:32:40 -0500
-Message-ID: <CAHqTa-1kBz3WouxUyNBMemY-Gp0y5v8CR6G_6K2hf8nRB9r7Fg@mail.gmail.com> (sfid-20160217_053306_480735_1706BD87)
-Subject: Re: ath9k(?): AP stops sending traffic to iPhone 4S until another
- 802.11n-capable STA joins
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 16, 2016 at 5:05 PM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2016-02-16 at 16:28 -0500, Avery Pennarun wrote:
->> Changing default_agg_timeout to zero (as it is on most non-ath9k
->> drivers) makes the problem pretty much go away.  However, I think
->> it's because I'm just dodging the code path that triggers a race
->> condition.
->
-> That does seem likely. Perhaps you could reproduce it while running
-> mac80211 tracing? There should be a fair amount of information about
-> aggregation and queue stops in there, though as you note queue stops
-> aren't really happening, only aggregation related things. Perhaps the
-> tracepoints for that aren't quite sufficient.
+From: Chris Park <chris.park@atmel.com>
 
-So far that hasn't seemed to help, although maybe you can read traces
-better than I can.  The big problem is that the actual queue doesn't
-seem to have stopped; it might be an ath9k bug.
+This patch removes unnecessary log messages.
 
->> Notes:
->>
->> - I'm using exactly the same ath9k driver (currently 20150525, but
->> we've   tried newer ones with no difference) on two totally different
->> platforms: a dual-core mindspeed c2k host CPU (ARMv7) with separate
->> ath9k, and a single-core QCA9531 (MIPS) with on-chip ath9k.
->>
->> - I've been unable to trigger the problem on the QCA9531, but I have
->> on MIPS.
->
-> That's ... not what I would have expected, especially since the MIPS is
-> single core. That makes the races stranger than expected.
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
 
-Oops, typo.  The QCA9531 *is* MIPS.  The one where it triggers is the
-dual-core ARM.
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 030566e..d90ffbd 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2345,7 +2345,6 @@ int wilc_init_host_int(struct net_device *net)
+ 
+ 	struct wilc_priv *priv;
+ 
+-	PRINT_D(INIT_DBG, "Host[%p][%p]\n", net, net->ieee80211_ptr);
+ 	priv = wdev_priv(net->ieee80211_ptr);
+ 	if (op_ifcs == 0) {
+ 		setup_timer(&hAgingTimer, remove_network_from_shadow, 0);
+@@ -2394,24 +2393,17 @@ int wilc_deinit_host_int(struct net_device *net)
+ 
+ void wilc_free_wiphy(struct net_device *net)
+ {
+-	if (!net) {
+-		PRINT_D(INIT_DBG, "net_device is NULL\n");
++	if (!net)
+ 		return;
+-	}
+ 
+-	if (!net->ieee80211_ptr) {
+-		PRINT_D(INIT_DBG, "ieee80211_ptr is NULL\n");
++	if (!net->ieee80211_ptr)
+ 		return;
+-	}
+ 
+-	if (!net->ieee80211_ptr->wiphy) {
+-		PRINT_D(INIT_DBG, "wiphy is NULL\n");
++	if (!net->ieee80211_ptr->wiphy)
+ 		return;
+-	}
+ 
+ 	wiphy_unregister(net->ieee80211_ptr->wiphy);
+ 
+-	PRINT_D(INIT_DBG, "Freeing wiphy\n");
+ 	wiphy_free(net->ieee80211_ptr->wiphy);
+ 	kfree(net->ieee80211_ptr);
+ }
+-- 
+1.9.1
 
->> The aggregation code is... a little hairy.  Does anyone have any
->> guesses where I might look for the race condition?  Or better still,
->> a patch I can try?
->
-> I'm not aware of any race conditions in the code right now :)
-
-Aw.  That would have made it a lot easier!
