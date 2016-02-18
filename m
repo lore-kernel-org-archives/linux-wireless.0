@@ -1,136 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f175.google.com ([209.85.160.175]:36589 "EHLO
-	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751161AbcBVQMF convert rfc822-to-8bit (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:37641 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1425347AbcBRGkB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 11:12:05 -0500
+	Thu, 18 Feb 2016 01:40:01 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: "mikael@djurfeldt.com" <mikael@djurfeldt.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Nitesh Moundekar" <mnitesh@marvell.com>
+Subject: RE: mwifiex driver unstable on MS Surface Pro 4
+Date: Thu, 18 Feb 2016 06:39:55 +0000
+Message-ID: <ffd7618d06c240e5b899e6a823ccb0d8@SC-EXCH04.marvell.com> (sfid-20160218_074021_054543_9D1A5829)
+References: <CAA2XvwJsB25poJA0sEpWyoX4HDVh5g26VkMjCdiu8nrJ5jWnLQ@mail.gmail.com>
+In-Reply-To: <CAA2XvwJsB25poJA0sEpWyoX4HDVh5g26VkMjCdiu8nrJ5jWnLQ@mail.gmail.com>
+Content-Type: multipart/mixed;
+	boundary="_002_ffd7618d06c240e5b899e6a823ccb0d8SCEXCH04marvellcom_"
 MIME-Version: 1.0
-In-Reply-To: <1455826364.2084.22.camel@sipsolutions.net>
-References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
- <1454946096-9752-9-git-send-email-jprvita@endlessm.com> <1455826364.2084.22.camel@sipsolutions.net>
-From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Date: Mon, 22 Feb 2016 11:11:25 -0500
-Message-ID: <CA+A7VXVj4rx4GHRd4ojpGmLOt0=Vg7nHNUxTdN2tgHd2Ma6szg@mail.gmail.com> (sfid-20160222_171231_860375_C7A69C1B)
-Subject: Re: [PATCH 8/9] rfkill: Userspace control for airplane mode
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux@endlessm.com,
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18 February 2016 at 15:12, Johannes Berg <johannes@sipsolutions.net> wrote:
-> Hi,
->
-> Sorry for the delay reviewing this.
->
+--_002_ffd7618d06c240e5b899e6a823ccb0d8SCEXCH04marvellcom_
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 
-No problems!
+SGkgTWlrYWVsLA0KDQo+IEZyb206IG1kanVyZmVsZHRAZ21haWwuY29tIFttYWlsdG86bWRqdXJm
+ZWxkdEBnbWFpbC5jb21dIE9uIEJlaGFsZiBPZg0KPiBNaWthZWwgRGp1cmZlbGR0DQo+IFNlbnQ6
+IFR1ZXNkYXksIEZlYnJ1YXJ5IDE2LCAyMDE2IDk6MTUgUE0NCj4gVG86IEFtaXRrdW1hciBLYXJ3
+YXINCj4gQ2M6IGxpbnV4LXdpcmVsZXNzQHZnZXIua2VybmVsLm9yZzsgTWlrYWVsIERqdXJmZWxk
+dA0KPiBTdWJqZWN0OiBtd2lmaWV4IGRyaXZlciB1bnN0YWJsZSBvbiBNUyBTdXJmYWNlIFBybyA0
+DQo+IA0KPiBbUmVzZW5kaW5nIHdpdGhvdXQgSFRNTC5dDQo+IA0KPiBEZWFyIEFtaXRrdW1hciwN
+Cj4gDQo+IFBsZWFzZSBmaW5kIGEgbmV3IGxvZyArIGRhdGEudHh0IGF0dGFjaGVkLg0KPiANCg0K
+ImludmFsaWQgY21kIHJlc3AiIG1lc3NhZ2UgaW4gdGhlIGxvZyBsb29rcyBzdXNwaWNpb3VzLg0K
+DQpDb3VsZCB5b3UgYXBwbHkgYXR0YWNoZWQgY2hhbmdlLCBlbmFibGUgZHJpdmVyIGRlYnVnIGFu
+ZCBjb2xsZWN0IGRtZXNnIGxvZyBmb3IgdGhpcyBpc3N1ZT8NCg0KQ29tbWFuZCB0byBlbmFibGUg
+ZHJpdmVyIGRlYnVnOiBlY2hvIDB4ZmZmZmZmZmYgPiAvc3lzL2tlcm5lbC9kZWJ1Zy9td2lmaWV4
+L21sYW4wL2RlYnVnX21hc2sNCg0KUmVnYXJkcywNCkFtaXRrdW1hcg0K
 
->
-> On Mon, 2016-02-08 at 10:41 -0500, João Paulo Rechi Vita wrote:
->> Provide an interface for the airplane-mode indicator be controlled
->> from
->> userspace. User has to first acquire the control through
->> RFKILL_OP_AIRPLANE_MODE_ACQUIRE and keep the fd open for the whole
->> time
->> it wants to be in control of the indicator. Closing the fd or using
->> RFKILL_OP_AIRPLANE_MODE_RELEASE restores the default policy.
->
-> I've come to the conclusion that the new ops are probably the best
-> thing to do here.
->
+--_002_ffd7618d06c240e5b899e6a823ccb0d8SCEXCH04marvellcom_
+Content-Type: application/octet-stream; name="CMD_CMDRESP_hexdump_v2.diff"
+Content-Description: CMD_CMDRESP_hexdump_v2.diff
+Content-Disposition: attachment; filename="CMD_CMDRESP_hexdump_v2.diff";
+	size=1039; creation-date="Thu, 18 Feb 2016 06:39:09 GMT";
+	modification-date="Thu, 18 Feb 2016 06:32:20 GMT"
+Content-Transfer-Encoding: base64
 
-Nice.
+ZGlmZiAtLWdpdCBhL2NtZGV2dC5jIGIvY21kZXZ0LmMKaW5kZXggNDVhZTM4ZS4uMGE1YjdhOSAx
+MDA2NDQKLS0tIGEvY21kZXZ0LmMKKysrIGIvY21kZXZ0LmMKQEAgLTIwNSw2ICsyMDUsOSBAQCBz
+dGF0aWMgaW50IG13aWZpZXhfZG5sZF9jbWRfdG9fZncoc3RydWN0IG13aWZpZXhfcHJpdmF0ZSAq
+cHJpdiwKIAkJICAgIGNtZF9zaXplLCBsZTE2X3RvX2NwdShob3N0X2NtZC0+c2VxX251bSkpOwog
+CW13aWZpZXhfZGJnX2R1bXAoYWRhcHRlciwgQ01EX0QsICJjbWQgYnVmZmVyOiIsIGhvc3RfY21k
+LCBjbWRfc2l6ZSk7CiAKKwlwcmludF9oZXhfZHVtcChLRVJOX0RFQlVHLCAiQ01EOiIsIERVTVBf
+UFJFRklYX09GRlNFVCwgMTYsIDEsIGNtZF9ub2RlLT5jbWRfc2tiLT5kYXRhLCBjbWRfbm9kZS0+
+Y21kX3NrYi0+bGVuLCBmYWxzZSk7CisJcHJpbnRrKCJcbiIpOworCiAJaWYgKGFkYXB0ZXItPmlm
+YWNlX3R5cGUgPT0gTVdJRklFWF9VU0IpIHsKIAkJdG1wID0gY3B1X3RvX2xlMzIoTVdJRklFWF9V
+U0JfVFlQRV9DTUQpOwogCQlza2JfcHVzaChjbWRfbm9kZS0+Y21kX3NrYiwgTVdJRklFWF9UWVBF
+X0xFTik7CkBAIC04MDcsNiArODEwLDggQEAgaW50IG13aWZpZXhfcHJvY2Vzc19jbWRyZXNwKHN0
+cnVjdCBtd2lmaWV4X2FkYXB0ZXIgKmFkYXB0ZXIpCiAJYWRhcHRlci0+aXNfY21kX3RpbWVkb3V0
+ID0gMDsKIAogCXJlc3AgPSAoc3RydWN0IGhvc3RfY21kX2RzX2NvbW1hbmQgKikgYWRhcHRlci0+
+Y3Vycl9jbWQtPnJlc3Bfc2tiLT5kYXRhOworCXByaW50X2hleF9kdW1wKEtFUk5fREVCVUcsICJD
+TURSRVNQOiIsIERVTVBfUFJFRklYX09GRlNFVCwgMTYsIDEsIHJlc3AsIGxlMTZfdG9fY3B1KHJl
+c3AtPnNpemUpLCBmYWxzZSk7CisJcHJpbnRrKCJcbiIpOwogCWlmIChhZGFwdGVyLT5jdXJyX2Nt
+ZC0+Y21kX2ZsYWcgJiBDTURfRl9IT1NUQ01EKSB7CiAJCS8qIENvcHkgb3JpZ2luYWwgcmVzcG9u
+c2UgYmFjayB0byByZXNwb25zZSBidWZmZXIgKi8KIAkJc3RydWN0IG13aWZpZXhfZHNfbWlzY19j
+bWQgKmhvc3RjbWQ7Cg==
 
->> +Userspace can also override the default airplane-mode indicator
->> policy through
->> +/dev/rfkill. Control of the airplane mode indicator has to be
->> acquired first,
->> +using RFKILL_OP_AIRPLANE_MODE_ACQUIRE, and is only available for one
->> userspace
->> +application at a time. Closing the fd or using
->> RFKILL_OP_AIRPLANE_MODE_RELEASE
->> +reverts the airplane-mode indicator back to the default kernel
->> policy and makes
->> +it available for other applications to take control. Changes to the
->> +airplane-mode indicator state can be made using
->> RFKILL_OP_AIRPLANE_MODE_CHANGE,
->> +passing the new value in the 'soft' field of 'struct rfkill_event'.
->
-> I don't really see any value in _RELEASE, since an application can just
-> close the fd? I'd prefer not having the duplicate functionality
-> and force us to exercise the single code path every time.
->
-
-I actually added this op only for completion, I couldn't think of a
-use-case where simply closing the fd wouldn't be enough. I'll remove
-it for the next revision.
-
->>  For further details consult Documentation/ABI/stable/sysfs-class-
->> rfkill.
->> diff --git a/include/uapi/linux/rfkill.h
->> b/include/uapi/linux/rfkill.h
->> index 2e00dce..9cb999b 100644
->> --- a/include/uapi/linux/rfkill.h
->> +++ b/include/uapi/linux/rfkill.h
->> @@ -67,6 +67,9 @@ enum rfkill_operation {
->>       RFKILL_OP_DEL,
->>       RFKILL_OP_CHANGE,
->>       RFKILL_OP_CHANGE_ALL,
->> +     RFKILL_OP_AIRPLANE_MODE_ACQUIRE,
->> +     RFKILL_OP_AIRPLANE_MODE_RELEASE,
->> +     RFKILL_OP_AIRPLANE_MODE_CHANGE,
->>  };
->
->> @@ -1199,7 +1202,7 @@ static ssize_t rfkill_fop_write(struct file
->> *file, const char __user *buf,
->>       if (copy_from_user(&ev, buf, count))
->>               return -EFAULT;
->>
->> -     if (ev.op != RFKILL_OP_CHANGE && ev.op !=
->> RFKILL_OP_CHANGE_ALL)
->> +     if (ev.op < RFKILL_OP_CHANGE)
->>               return -EINVAL;
->
-> You need to also reject invalid high values, like 27.
->
-
-Yes, sorry for missing this.
-
->>       mutex_lock(&rfkill_global_mutex);
->>
->> +     if (ev.op == RFKILL_OP_AIRPLANE_MODE_ACQUIRE) {
->> +             if (rfkill_apm_owned && !data->is_apm_owner) {
->> +                     count = -EACCES;
->> +             } else {
->> +                     rfkill_apm_owned = true;
->> +                     data->is_apm_owner = true;
->> +             }
->> +     }
->> +
->> +     if (ev.op == RFKILL_OP_AIRPLANE_MODE_RELEASE) {
->
-> It would probably be better to simply use "switch (ev.op)" and make the
-> default case do a reject.
->
-
-Sounds better indeed.
-
->>       if (ev.op == RFKILL_OP_CHANGE_ALL)
->>               rfkill_update_global_state(ev.type, ev.soft);
->
-> Also moving the existing code inside the switch, of course.
->
-
-Sure.
-
---
-João Paulo Rechi Vita
-http://about.me/jprvita
+--_002_ffd7618d06c240e5b899e6a823ccb0d8SCEXCH04marvellcom_--
