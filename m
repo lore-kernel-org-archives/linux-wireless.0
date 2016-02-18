@@ -1,48 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20015 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:30076 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753824AbcBVKRb (ORCPT
+	with ESMTP id S1425347AbcBRLeU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 05:17:31 -0500
+	Thu, 18 Feb 2016 06:34:20 -0500
 From: Leo Kim <leo.kim@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V4 04/24] staging: wilc1000: linux_mon.c: add to check routine
-Date: Mon, 22 Feb 2016 19:14:11 +0900
-Message-ID: <1456136071-10502-5-git-send-email-leo.kim@atmel.com> (sfid-20160222_111733_923698_A238201D)
-In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
-References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V2 10/24] staging: wilc1000: removes unused HOSTAPD_DBG tag
+Date: Thu, 18 Feb 2016 20:30:10 +0900
+Message-ID: <1455795024-26978-10-git-send-email-leo.kim@atmel.com> (sfid-20160218_123423_412005_D6E3A238)
+In-Reply-To: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
+References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds the return value which needs the check and
-prints the error message when it fails.
+From: Chris Park <chris.park@atmel.com>
 
+This patch removes unused HOSTAPD_DBG tag.
+
+Signed-off-by: Chris Park <chris.park@atmel.com>
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/staging/wilc1000/linux_mon.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/linux_wlan_common.h | 4 +---
+ drivers/staging/wilc1000/wilc_debugfs.c      | 5 ++---
+ 2 files changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index 2b575d1..dd9e4b2 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -266,7 +266,9 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 	/* if source address and bssid fields are equal>>Mac header */
- 	/*send it to mgmt frames handler */
- 	if (!(memcmp(srcAdd, bssid, 6))) {
--		mon_mgmt_tx(mon_priv->real_ndev, skb->data, skb->len);
-+		ret = mon_mgmt_tx(mon_priv->real_ndev, skb->data, skb->len);
-+		if (ret)
-+			netdev_err(dev, "fail to mgmt tx\n");
- 		dev_kfree_skb(skb);
- 	} else {
- 		ret = wilc_mac_xmit(skb, mon_priv->real_ndev);
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index 0d9a71f..1f7d806 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -2,13 +2,11 @@
+ #define LINUX_WLAN_COMMON_H
+ 
+ enum debug_region {
+-	Hostapd_debug = 0,
+-	CFG80211_debug,
++	CFG80211_debug = 0,
+ 	Init_debug,
+ 	COMP = 0xFFFFFFFF,
+ };
+ 
+-#define HOSTAPD_DBG             (1 << Hostapd_debug)
+ #define CFG80211_DBG            (1 << CFG80211_debug)
+ #define INIT_DBG                (1 << Init_debug)
+ 
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index a27b077..fafe7cc 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -24,10 +24,9 @@ static struct dentry *wilc_dir;
+  * --------------------------------------------------------------------------------
+  */
+ 
+-#define DBG_REGION_ALL	(HOSTAPD_DBG | CFG80211_DBG | INIT_DBG)
++#define DBG_REGION_ALL	(CFG80211_DBG | INIT_DBG)
+ #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+-atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | CFG80211_DBG |
+-				   HOSTAPD_DBG);
++atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | CFG80211_DBG);
+ EXPORT_SYMBOL_GPL(WILC_REGION);
+ atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
+ EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
 -- 
 1.9.1
 
