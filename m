@@ -1,42 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51765 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933658AbcBCSkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 13:40:04 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 20/28] rtl8xxxu: Fix 80 character per line issue
-Date: Wed,  3 Feb 2016 13:39:54 -0500
-Message-Id: <1454524802-26763-21-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_194804_046149_2A787271)
-In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:35303 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946543AbcBRTCb (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Feb 2016 14:02:31 -0500
+Received: by mail-ob0-f171.google.com with SMTP id xk3so82797123obc.2
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Feb 2016 11:02:31 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1455821358-37534-1-git-send-email-nbd@openwrt.org>
+References: <1455821358-37534-1-git-send-email-nbd@openwrt.org>
+From: Avery Pennarun <apenwarr@gmail.com>
+Date: Thu, 18 Feb 2016 14:02:11 -0500
+Message-ID: <CAHqTa-1-zXNfBeAb33xFzEZEnYeSVZ8whNXOWFByenJfa7QOXg@mail.gmail.com> (sfid-20160218_200238_867795_7AF5B1C8)
+Subject: Re: [PATCH] mac80211: minstrel_ht: set default tx aggregation timeout
+ to 0
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Acked-by: Avery Pennarun <apenwarr@gmail.com>
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+This fixes serious problems on our platform, especially with iPhone 4
+generation devices.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 78683b5..9f89f62 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -5355,8 +5355,9 @@ static void rtl8xxxu_configure_filter(struct ieee80211_hw *hw,
- 
- 	rtl8xxxu_write32(priv, REG_RCR, rcr);
- 
--	*total_flags &= (FIF_ALLMULTI | FIF_FCSFAIL | FIF_BCN_PRBRESP_PROMISC | \
--			 FIF_CONTROL | FIF_OTHER_BSS | FIF_PSPOLL | FIF_PROBE_REQ);
-+	*total_flags &= (FIF_ALLMULTI | FIF_FCSFAIL | FIF_BCN_PRBRESP_PROMISC |
-+			 FIF_CONTROL | FIF_OTHER_BSS | FIF_PSPOLL |
-+			 FIF_PROBE_REQ);
- }
- 
- static int rtl8xxxu_set_rts_threshold(struct ieee80211_hw *hw, u32 rts)
--- 
-2.5.0
 
+On Thu, Feb 18, 2016 at 1:49 PM, Felix Fietkau <nbd@openwrt.org> wrote:
+> The value 5000 was put here with the addition of the timeout field to
+> ieee80211_start_tx_ba_session. It was originally added in mac80211 to
+> save resources for drivers like iwlwifi, which only supports a limited
+> number of concurrent aggregation sessions.
+>
+> Since iwlwifi does not use minstrel_ht and other drivers don't need
+> this, 0 is a better default - especially since there have been
+> recent reports of aggregation setup related issues reproduced with
+> ath9k. This should improve stability without causing any adverse
+> effects.
+>
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>  net/mac80211/rc80211_minstrel_ht.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
+> index 3928dbd..a7d9227 100644
+> --- a/net/mac80211/rc80211_minstrel_ht.c
+> +++ b/net/mac80211/rc80211_minstrel_ht.c
+> @@ -691,7 +691,7 @@ minstrel_aggr_check(struct ieee80211_sta *pubsta, struct sk_buff *skb)
+>         if (likely(sta->ampdu_mlme.tid_tx[tid]))
+>                 return;
+>
+> -       ieee80211_start_tx_ba_session(pubsta, tid, 5000);
+> +       ieee80211_start_tx_ba_session(pubsta, tid, 0);
+>  }
+>
+>  static void
+> --
+> 2.2.2
+>
