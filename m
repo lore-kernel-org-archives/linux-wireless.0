@@ -1,88 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:55666 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1425080AbcBRQcn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 11:32:43 -0500
-Date: Thu, 18 Feb 2016 17:32:12 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	b43-dev@lists.infradead.org, Jia-Ju Bai <baijiaju1990@163.com>
-Subject: Re: [PATCH] b43: fix memory leak
-Message-ID: <20160218173212.03670d97@wiggum> (sfid-20160218_173325_369628_43AE3BA9)
-In-Reply-To: <1455798876-32186-1-git-send-email-sudipm.mukherjee@gmail.com>
-References: <1455798876-32186-1-git-send-email-sudipm.mukherjee@gmail.com>
+Received: from mail-ob0-f175.google.com ([209.85.214.175]:36118 "EHLO
+	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423690AbcBRDVk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2016 22:21:40 -0500
+Received: by mail-ob0-f175.google.com with SMTP id gc3so46498585obb.3
+        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2016 19:21:40 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/N+AMpw_YurTwNNl3eaDOEP0"; protocol="application/pgp-signature"
+Date: Wed, 17 Feb 2016 19:21:39 -0800
+Message-ID: <CAArymCmTUhHgTb9UUsNmMQm0b+BJUCKKppZCLRjQDgzoPCzBOA@mail.gmail.com> (sfid-20160218_042144_751047_91BE5FB8)
+Subject: HTC documentation
+From: bruce m beach <brucembeach@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/N+AMpw_YurTwNNl3eaDOEP0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hello Everybody
 
-On Thu, 18 Feb 2016 18:04:36 +0530
-Sudip Mukherjee <sudipm.mukherjee@gmail.com> wrote:
+Does anybody have any documentation at all for the
+Atheros usb HTC protocol? Also I'm looking for a
+reference design spec for the ar9271 ( I already have the data sheets )
+for the antenna impedance network.
 
-> From: Sudip Mukherjee <sudip@vectorindia.org>
->=20
-> On error we jumped to the label bcma_out and returned the error code but
-> we missed freeing dev.
->=20
-> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
-> ---
->  drivers/net/wireless/broadcom/b43/main.c | 1 +
->  1 file changed, 1 insertion(+)
->=20
-> diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wirel=
-ess/broadcom/b43/main.c
-> index c279211..78f670a 100644
-> --- a/drivers/net/wireless/broadcom/b43/main.c
-> +++ b/drivers/net/wireless/broadcom/b43/main.c
-> @@ -5671,6 +5671,7 @@ static int b43_bcma_probe(struct bcma_device *core)
->  	wl =3D b43_wireless_init(dev);
->  	if (IS_ERR(wl)) {
->  		err =3D PTR_ERR(wl);
-> +		kfree(dev);
->  		goto bcma_out;
->  	}
-> =20
-
-We recently had a patch that fixes this, among more leaks. Subject:
-[PATCH v2 resend] b43: Fix memory leaks in b43_bus_dev_ssb_init and
-b43_bus_dev_bcma_init
-
-Please test that patch instead, so we can finally apply it.
-
-It needs to be tested on both ssb and bcma. Come on. This isn't too
-hard. :) Please somebody with any hardware test it. (I currently don't
-have any b43 hardware)
-
---=20
-Michael
-
---Sig_/N+AMpw_YurTwNNl3eaDOEP0
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJWxfIMAAoJEPUyvh2QjYsOnjoQAJi1ySB/xUc+f1kQXy4LjfjZ
-A4GSt/U3ZQzZyZORq6zqCdUTZRUZXq1KerEdeTox9KGu1T13XtKc59PI2b2kYK3C
-PwxgtPhpZ2woJ/hnMtDyDNBy8uUTET3zyr2FQ8s8kXeqSrm4Aaj6OVv/t5csmrQd
-xlHQ2XuAFc8rzWaJWOqF+T/+sunv9hj2juPCrcI2Onn7MalcHaxPQRzIIuvN9POB
-E7ABC9doWzNfI3vJheH9EUoCkDPJua5+J8XVW2ogTsaC2Ao/1J5mhAo3WyTebUyV
-40S0ZeyzK8l+6+uhW+NJ2tasMwofK2jRg21BCRwMORbSgRZsjn9eIhqT3k3JwuB4
-UGmUz2m6xgQiKX+Wi5wF7CQMTZk4EDC+MVWSM8evgolZPrbNenYO1Bs32ViUSIn7
-Hf7+gsMOoJFYNEyzZaANDcfwnoOiumxy/0llAn1bCXuMSd2mlIISFfwb2x2IhqUm
-t41k0l65h6t8z/xgh5MVQfDkVI13bmSMGLnfc5qbZF8bUTygsu3bNwR73vZ/wqH4
-i3axYq01l3bJ7qlIJhu87H6kl1t18xeQT1VJQt9daoXMnQuTA4YNBBLhBayVsrom
-UuvWDGwZh4hBA0u/I/9lh5bvW8DbzIgbSiQ3fRQBcfA9rDafLWkLXuZl3l1xB1bt
-bBSqA8EYqZOw8W2CIHum
-=Ll4K
------END PGP SIGNATURE-----
-
---Sig_/N+AMpw_YurTwNNl3eaDOEP0--
+Thanks Bruce
