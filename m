@@ -1,251 +1,303 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33175 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752429AbcBWOqD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 09:46:03 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211-next 2016-02-23
-Date: Tue, 23 Feb 2016 15:45:55 +0100
-Message-Id: <1456238756-9818-1-git-send-email-johannes@sipsolutions.net> (sfid-20160223_154614_784292_F20AE242)
+Received: from bias.opendreams.net ([107.191.118.74]:46003 "EHLO
+	bias.opendreams.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1424337AbcBREQx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 17 Feb 2016 23:16:53 -0500
+Subject: Re: wpa_supplicant bridging problems
+To: linux-wireless@vger.kernel.org
+References: <56C3E95A.7080104@jmomo.net> <56C4340D.9000508@luceor.com>
+ <56C445E2.1050904@jmomo.net>
+From: J Mo <jmomo@jmomo.net>
+Message-ID: <56C545B3.2060902@jmomo.net> (sfid-20160218_051658_879974_03762AAB)
+Date: Wed, 17 Feb 2016 20:16:51 -0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <56C445E2.1050904@jmomo.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
 
-Here's a (first, even? I didn't have much until before the conference...)
-pull request for net-next.
+I decided to grab another 802.11 adapter and test with it. This time a 
+rtl8192cu (ALFA AWUS036NHR). Same behavior. No change.
 
-There's nothing out of the ordinary, I think, except that I have an ARM
-Tegra patch in here. It's part of an rfkill series and needed to be merged
-with those patches, it also has the relevant ACKs from Thierry and Arnd.
+Here is what happens when I run the Debian ifup script in verbose mode:
 
-Let me know if there's any problem.
+user@host-->sudo ifup -v br0
+Configuring interface br0=br0 (inet)
+iw dev wlan0 set 4addr on
+iw dev wlan0 set power_save off
+/bin/run-parts --exit-on-error --verbose /etc/network/if-pre-up.d
+run-parts: executing /etc/network/if-pre-up.d/bridge
 
-Thanks,
-johannes
+Waiting for a max of 5 seconds for wlan0 to become available.
+
+Waiting for br0 to get ready (MAXWAIT is 2 seconds).
+run-parts: executing /etc/network/if-pre-up.d/ethtool
+run-parts: executing /etc/network/if-pre-up.d/vlan
+run-parts: executing /etc/network/if-pre-up.d/wireless-tools
+run-parts: executing /etc/network/if-pre-up.d/wpasupplicant
+wpa_supplicant: wpa-bridge br0
+wpa_supplicant: wpa-driver nl80211,wext (default)
+wpa_supplicant: /sbin/wpa_supplicant -s -B -P 
+/run/wpa_supplicant.wlan0.pid -i wlan0 -b br0 -D nl80211,wext -C 
+/run/wpa_supplicant
+Starting /sbin/wpa_supplicant...
+wpa_supplicant: creating sendsigs omission pidfile: 
+/run/sendsigs.omit.d/wpasupplicant.wpa_supplicant.wlan0.pid
+wpa_supplicant: ctrl_interface socket located at /run/wpa_supplicant/wlan0
+wpa_supplicant: configuring network block -- 0
+wpa_supplicant: wpa-ssid "POTATONET" -- OK
+wpa_supplicant: wpa-psk ***** -- OK
+wpa_supplicant: enabling network block 0 -- OK
+/bin/ip addr add 192.168.130.251/255.255.255.0 broadcast 192.168.130.255 
+       dev br0 label br0
+/bin/ip link set dev br0   up
+
+/bin/run-parts --exit-on-error --verbose /etc/network/if-up.d
+run-parts: executing /etc/network/if-up.d/000resolvconf
+run-parts: executing /etc/network/if-up.d/arping
+run-parts: executing /etc/network/if-up.d/avahi-autoipd
+run-parts: executing /etc/network/if-up.d/clamav-freshclam-ifupdown
+run-parts: executing /etc/network/if-up.d/ethtool
+run-parts: executing /etc/network/if-up.d/ip
+run-parts: executing /etc/network/if-up.d/mountnfs
+run-parts: executing /etc/network/if-up.d/openssh-server
+run-parts: executing /etc/network/if-up.d/upstart
+run-parts: executing /etc/network/if-up.d/wpasupplicant
 
 
 
-The following changes since commit 725da8dee445662beea77d3f42c3f4c79f7a7a0e:
+It is notable that if I remove the "pre-up iw dev wlan0 set 4addr on" 
+parameter from the interfaces config file under br0, I get this error 
+when attempting to bring the interface up:
 
-  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2016-01-13 00:22:13 -0500)
+Waiting for a max of 0 seconds for wlan0 to become available.
+can't add wlan0 to bridge br0: Operation not supported
 
-are available in the git repository at:
+So that's the point where the wlan0 interface gets bridged onto br0. 
+This indicates that the bridge is definitely exists and wlan0 is a 
+member prior to wpa_supplicant being invoked.
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2016-02-23
 
-for you to fetch changes up to c4b29719e095c1aa42e1dec691d6178611c1096f:
 
-  rfkill: Notify userspace of airplane-mode state changes (2016-02-23 11:53:56 +0100)
+On 2/17/16 02:05, J Mo wrote:
+>
+> I will go look and verify the order of operations for the Debian 
+> networking system, but I am under the impression that it brings up the 
+> wlan interface (via bridge_ports), does all bridging, and then 
+> processes the wpa-* commands.
+>
+> In other words, it's already doing what you suggested.
+>
+> Also, wpa_supplicant gives errors if either the 802.11 interface (-i 
+> wlan0) or bridge interface (-b br0) wasn't up at the time it was 
+> launched, so I don't think it's even possible to get the order wrong 
+> without obvious signs. I just don't think that's the issue here.
+>
+> Still, I'll take your advice and double check. I think I can debug the 
+> ifup/down scripts a little more than what I've already done, but I 
+> don't think order of operation is an issue.
+>
+> One thing to note is that if I bridge the wlan0 interface and let an 
+> AP-reauth fail and then take the bridge off, wpa_supplicant starts 
+> working again. Put the bridge back on and it breaks again, etc. I can 
+> do this live with brctl without restarting wpa_supplicant and it will 
+> start and stop working.
+>
+> I don't even understand why wpa_supplicant needs to know about the 
+> bridge in this situation, but whatever!
+>
+> FYI By "official method", I mean the ideal config setup with an 
+> "interfaces" config like this:
+>
+> allow-auto wlan0
+> iface wlan0 inet manual
+>
+> allow-auto br0
+> iface br0 inet dhcp
+>     bridge_ports wlan0
+>     bridge_stp off
+>     bridge_waitport 5
+>     bridge_fd 0
+>     wpa-ssid POTATONET
+>     wpa-psk xxxxxxx
+>     wpa-iface wlan0
+>     wpa-bridge br0
+>     pre-up iw dev wlan0 set 4addr on
+>     pre-up iw dev wlan0 set power_save off
+>
+>
+>
+> On 2/17/16 00:49, Simon Malthieu wrote:
+>> Hi,
+>>
+>> Have you tried to add wlan0 to the bridge **before**
+>> wpa_supplicant (with the -b option) is launched ?
+>>
+>> wpa_supplicant opens a socket to listen to EAPOL frames
+>> in the bridge, and it does not seem to work if the interface
+>> is not in the bridge at start.
+>>
+>> Regards,
+>> Simon
+>>
+>>
+>> On 17/02/2016 04:30, J Mo wrote:
+>>>
+>>> Hello everyone
+>>>
+>>> I am having a very difficult time with a wireless bridging problem.
+>>>
+>>> My objective is to use a Debian GNU/Linux host as a wireless 
+>>> ethernet bridge between itself, some hosts connected through a 
+>>> switch on it's eth0 port, and an OpenWRT router.
+>>>
+>>> I have a test setup consisting of a laptop, a small PC (802.11 
+>>> client), and the OpenWRT AP/router.
+>>>
+>>> The wifi client system is an amd64(intel) with one 802.11 interface 
+>>> and a 1000BASE-T interface. The 802.11 hardware here is an Intel 
+>>> 3160. The OS is Debian GNU/Linux unstable with kernel 4.3.0-1-amd64 
+>>> and wpasupplicant package version 2.3-2.3.
+>>>
+>>> The 802.11 AP is a TP-Link TL-WR710N which is based off the Atheros 
+>>> ar9331.
+>>>
+>>>
+>>>
+>>> My problem is the moment I bridge the wlan0 interface on the 802.11 
+>>> PC client, wpa_supplicant stops doing it's job. It stops responding 
+>>> to any EAPOL frames from the AP, even though it seems to be 
+>>> receiving them.
+>>>
+>>> It is noteworthy that the bridging works. I am able to get a DHCP 
+>>> lease on the laptop from the OpenWRT AP/router via bridging though 
+>>> the PC. Traffic passes both way and everything works great until the 
+>>> next WPA rekey event comes along (every 10 minutes by default for 
+>>> OpenWRT), and then the client gets deauth'ed from the AP because it 
+>>> fails to respond.
+>>>
+>>> The only way I can get this to work is to first bring up my wlan0 
+>>> interface on the PC so that wpa_supplicant authenticates itself 
+>>> correctly. Once the 802.11 layer 2 is up, I manually use brctl to 
+>>> bridge in the eth0 and wlan0 ports on the PC. Everything works fine 
+>>> until the AP wants to rekey or the client needs to re-auth for some 
+>>> reason.
+>>>
+>>>
+>>>
+>>> Here is what my setup looks like:
+>>>
+>>> The OpenWRT device setup is pretty standard. The only thing required 
+>>> for the bridging is the addition of the "option wds 1" parameter 
+>>> under the wifi-iface in the "wireless" config file. The wds 
+>>> parameter enables 4-address frames to allow the bridging. In case 
+>>> it's relevant, I'm doing WPA2 PSK AES/CCMP.
+>>>
+>>> My PC/client /etc/network/interfaces file looks kind of like this:
+>>>
+>>> allow-hotplug eth0
+>>> iface eth0 inet manual
+>>>
+>>> auto wlan0
+>>> iface wlan0 inet manual
+>>>     wpa-debug-level 2
+>>>     wpa-ssid POTATONET
+>>>     wpa-psk XXXXXXXXX
+>>>     pre-up iw dev wlan0 set 4addr on
+>>>     pre-up iw dev wlan0 set power_save off
+>>>
+>>> allow-auto br0
+>>> # iface br0 inet dhcp
+>>> iface br0 inet manual
+>>>     # bridge_ports wlan0
+>>>     bridge_ports none
+>>>     bridge_stp off
+>>>     bridge_waitport 0
+>>>     bridge_fd 0
+>>>     # wpa-iface wlan0
+>>>     # wpa-bridge br0
+>>>
+>>>
+>>> I bring up wlan0 and br0:
+>>>
+>>> sudo ifup wlan0
+>>> sudo ifup br0
+>>>
+>>> At this point, the wlan0 port should be associated to the AP, even 
+>>> though I don't have any layer 3 interfaces on the PC yet. If I force 
+>>> a re-authentication from the AP it works fine. WPA rekey works fine.
+>>>
+>>> I do this to bridge up the interfaces:
+>>>     sudo brctl addif br0 eth0
+>>>     sudo brctl addif br0 wlan0
+>>>
+>>> From this point on, wpa_supplicant stops working correctly. However, 
+>>> the bridge works and ethernet frames are being passed between the 
+>>> laptop off of PC port eth0 and the OpenWRT AP. Everything is fine 
+>>> until the WPA rekey happens and then the wlan0 interface goes down 
+>>> and stops working.
+>>>
+>>> I did a tcpdump to find out what was going on and discovered that 
+>>> once the AP asked for re-authentication from the client, no traffic 
+>>> was going out of the wlan0 interface on the client PC. This was 
+>>> supported by ifconfig TX counters. wpa_supplicant stops replying to 
+>>> the AP on the wlan0 interface.
+>>>
+>>> It should be noted at this point that I am aware wpa_supplicant is 
+>>> supposed to need the "-b" argument in this kind of setup, which is 
+>>> what the commented-out "wpa-bridge" parameter in the "interfaces" 
+>>> file above is for, but it didn't work. I verified the arguments 
+>>> given to wpa_supplicant were correct via ps:
+>>>
+>>> /sbin/wpa_supplicant -s -B -P /run/wpa_supplicant.wlan0.pid -i wlan0 
+>>> -b br0 -D nl80211,wext -C /run/wpa_supplicant
+>>>
+>>>
+>>>
+>>> Additional notes and observations:
+>>>
+>>> Just to be clear, I have inspected the macaddr and arp tables on 
+>>> both the OpenWRT AP and the laptop and the MACs are correct. The 
+>>> wireless bridging is definitely working as expected. Let me know if 
+>>> you want output from these commands, but I don't think they are 
+>>> relevant.
+>>>
+>>> The default WPA rekey timer is every 10 minutes on OpenWRT, but I 
+>>> can force the AP to re-authenticate the client by doing this:
+>>> ubus call hostapd.wlan0 del_client '{"addr":"34:de:1a:zz:zz:zz", 
+>>> "reason":1, "deauth":true, "ban_time":0}'
+>>>
+>>>
+>>>
+>>> Finally, here is some debugging output (wpa_supplicant -ddd) from 
+>>> the client PC during a failed re-auth with the AP.
+>>>
+>>> http://jmomo.net/files/wpa_probs.txt
+>>>
+>>>
+>>>
+>>> What do?
+>>>
+>>> If additional debugging is needed, let me know what to do. If this 
+>>> is a Debian package problem, let me know and I'll go open a bug there.
+>>>
+>>> -- 
+>>> To unsubscribe from this list: send the line "unsubscribe 
+>>> linux-wireless" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>>
+>> -- 
+>> To unsubscribe from this list: send the line "unsubscribe 
+>> linux-wireless" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at http://vger.kernel.org/majordomo-info.html
+>
+> -- 
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-----------------------------------------------------------------
-Here's another round of updates for -next:
- * big A-MSDU RX performance improvement (avoid linearize of paged RX)
- * big rfkill changes: airplane mode indicator and cleanups
- * basic PBSS support in cfg80211
- * MU-MIMO action frame processing support
- * BlockAck reordering & duplicate detection offload support
- * various cleanups & little fixes
-
-----------------------------------------------------------------
-Arnd Bergmann (1):
-      mac80211: avoid excessive stack usage in sta_info
-
-Beni Lev (1):
-      cfg80211: Add global RRM capability
-
-Bjorn Andersson (1):
-      mac80211: Make addr const in SET_IEEE80211_PERM_ADDR()
-
-Bob Copeland (1):
-      mac80211: mesh: drop constant field mean_chain_len
-
-Eliad Peller (3):
-      mac80211: move TKIP TX IVs to public part of key struct
-      iwlwifi: mvm: move TX PN assignment for TKIP to the driver
-      mac80211: remove ieee80211_get_key_tx_seq/ieee80211_set_key_tx_seq
-
-Emmanuel Grumbach (1):
-      mac80211: limit the A-MSDU Tx based on peer's capabilities
-
-Felix Fietkau (5):
-      mac80211: move A-MSDU skb_linearize call to ieee80211_amsdu_to_8023s
-      cfg80211: add function for 802.3 conversion with separate output buffer
-      cfg80211: add support for non-linear skbs in ieee80211_amsdu_to_8023s
-      cfg80211: fix faulty variable initialization in ieee80211_amsdu_to_8023s
-      cfg80211: reuse existing page fragments in A-MSDU rx
-
-Geliang Tang (1):
-      cfg80211/mac80211: use to_delayed_work
-
-Grzegorz Bajorski (1):
-      mac80211: allow drivers to report (non-)monitor frames
-
-Heikki Krogerus (4):
-      net: rfkill: add rfkill_find_type function
-      net: rfkill: gpio: get the name and type from device property
-      ARM: tegra: use build-in device properties with rfkill_gpio
-      net: rfkill: gpio: remove rfkill_gpio_platform_data
-
-Henning Rogge (3):
-      mac80211: Remove MPP table entries with MPath
-      mac80211: let unused MPP table entries timeout
-      mac80211: Unify mesh and mpp path removal function
-
-Ilan Peer (1):
-      mac80211: Recalc min chandef when station is associated
-
-Johannes Berg (8):
-      cfg80211: remove CFG80211_REG_DEBUG
-      mac80211: document status.freq restrictions
-      mac80211: refactor HT/VHT to chandef code
-      mac80211_hwsim: remove shadowing variable
-      rfkill: disentangle polling pause and suspend
-      mac80211: add RX_FLAG_MACTIME_PLCP_START
-      mac80211: always print a message when disconnecting
-      mac80211: change ieee80211_rx_reorder_ready() arguments
-
-Jouni Malinen (1):
-      mac80211: Interoperability workaround for 80+80 and 160 MHz channels
-
-João Paulo Rechi Vita (14):
-      rfkill: use variable instead of duplicating the expression
-      rfkill: remove/inline __rfkill_set_hw_state
-      rfkill: Remove obsolete "claim" sysfs interface
-      rfkill: Update userspace API documentation
-      rfkill: Improve documentation language
-      rfkill: Remove extra blank line
-      rfkill: Point to the correct deprecated doc location
-      rfkill: Move "state" sysfs file back to stable
-      rfkill: Factor rfkill_global_states[].cur assignments
-      rfkill: Add documentation about LED triggers
-      rfkill: Create "rfkill-airplane-mode" LED trigger
-      rfkill: Use switch to demux userspace operations
-      rfkill: Userspace control for airplane mode
-      rfkill: Notify userspace of airplane-mode state changes
-
-Lior David (1):
-      cfg80211: basic support for PBSS network type
-
-Lorenzo Bianconi (2):
-      mac80211: fix wiphy supported_band access
-      cfg80211: add radiotap VHT info to rtap_namespace_sizes
-
-Michal Kazior (3):
-      mac80211: fix txq queue related crashes
-      mac80211: fix unnecessary frame drops in mesh fwding
-      mac80211: expose txq queue depth and size to drivers
-
-Ola Olsson (2):
-      cfg80211: add more warnings for inconsistent ops
-      cfg80211: Fix some linguistics in Kconfig
-
-Sara Sharon (10):
-      mac80211: process and save VHT MU-MIMO group frame
-      mac80211: add flag for duplication check
-      mac80211: pass RX aggregation window size to driver
-      mac80211: pass block ack session timeout to to driver
-      mac80211: support hw managing reorder logic
-      mac80211: fix ibss scan parameters
-      mac80211: add API to allow filtering frames in BA sessions
-      mac80211: fix VHT MU-MIMO frame processing
-      mac80211: provide interface to driver to set VHT MU-MIMO data
-      mac80211: move MU_MIMO_OWNER flag to ieee80211_vif
-
-Sudip Mukherjee (1):
-      mac80211: fix memory leak
-
-Sunil Shahu (1):
-      mac80211: mesh_plink: remove redundant sta_info check
-
-Sven Eckelmann (1):
-      mac80211: Parse legacy and HT rate in injected frames
-
- Documentation/ABI/obsolete/sysfs-class-rfkill      |  29 --
- Documentation/ABI/removed/sysfs-class-rfkill       |  13 +
- Documentation/ABI/stable/sysfs-class-rfkill        |  27 +-
- Documentation/networking/mac80211-injection.txt    |  17 ++
- Documentation/rfkill.txt                           |  17 ++
- arch/arm/mach-tegra/board-paz00.c                  |  17 +-
- drivers/net/wireless/ath/ath10k/mac.c              |   7 +-
- drivers/net/wireless/ath/ath9k/htc_drv_main.c      |   7 +-
- drivers/net/wireless/ath/ath9k/main.c              |   8 +-
- drivers/net/wireless/ath/carl9170/main.c           |   8 +-
- drivers/net/wireless/ath/wcn36xx/main.c            |   8 +-
- drivers/net/wireless/ath/wil6210/cfg80211.c        |  10 +
- .../broadcom/brcm80211/brcmsmac/mac80211_if.c      |   8 +-
- drivers/net/wireless/intel/iwlegacy/4965-mac.c     |   8 +-
- drivers/net/wireless/intel/iwlegacy/4965.h         |   4 +-
- drivers/net/wireless/intel/iwlwifi/dvm/lib.c       |  20 +-
- drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c  |   9 +-
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c        |  15 +-
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  11 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |   2 +
- drivers/net/wireless/mac80211_hwsim.c              |  12 +-
- drivers/net/wireless/marvell/mwl8k.c               |  10 +-
- drivers/net/wireless/mediatek/mt7601u/main.c       |   8 +-
- drivers/net/wireless/ralink/rt2x00/rt2800lib.c     |   7 +-
- drivers/net/wireless/ralink/rt2x00/rt2800lib.h     |   4 +-
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c   |   6 +-
- drivers/net/wireless/realtek/rtlwifi/core.c        |   8 +-
- drivers/net/wireless/rsi/rsi_91x_mac80211.c        |  19 +-
- drivers/net/wireless/st/cw1200/sta.c               |   4 +-
- drivers/net/wireless/st/cw1200/sta.h               |   4 +-
- drivers/net/wireless/ti/wlcore/main.c              |   8 +-
- drivers/staging/vt6655/rxtx.c                      |  12 +-
- drivers/staging/vt6656/rxtx.c                      |  12 +-
- include/linux/ieee80211.h                          |  26 ++
- include/linux/rfkill-gpio.h                        |  37 ---
- include/linux/rfkill.h                             |  18 +-
- include/net/cfg80211.h                             |   8 +
- include/net/mac80211.h                             | 198 ++++++++++----
- include/uapi/linux/nl80211.h                       |  14 +
- include/uapi/linux/rfkill.h                        |   8 +
- net/mac80211/agg-rx.c                              |  50 +++-
- net/mac80211/agg-tx.c                              |  53 ++--
- net/mac80211/cfg.c                                 |  34 ++-
- net/mac80211/chan.c                                |   2 +-
- net/mac80211/debugfs.c                             |   1 +
- net/mac80211/debugfs_key.c                         |   5 +-
- net/mac80211/driver-ops.c                          |  10 +-
- net/mac80211/driver-ops.h                          |   4 +-
- net/mac80211/ht.c                                  |   5 +
- net/mac80211/ibss.c                                |  32 ++-
- net/mac80211/ieee80211_i.h                         |  37 +--
- net/mac80211/iface.c                               |  14 +
- net/mac80211/key.c                                 |  86 ------
- net/mac80211/key.h                                 |  10 +-
- net/mac80211/mesh.c                                |   9 +-
- net/mac80211/mesh.h                                |   3 -
- net/mac80211/mesh_pathtbl.c                        | 111 ++++++--
- net/mac80211/mesh_plink.c                          |  10 +-
- net/mac80211/mlme.c                                |  79 +++---
- net/mac80211/rx.c                                  | 139 ++++++++--
- net/mac80211/sta_info.c                            |  35 ++-
- net/mac80211/sta_info.h                            |  24 +-
- net/mac80211/tkip.c                                |  36 +--
- net/mac80211/tkip.h                                |   2 -
- net/mac80211/trace.h                               |  43 +--
- net/mac80211/tx.c                                  |  92 ++++++-
- net/mac80211/util.c                                | 116 ++++++--
- net/mac80211/vht.c                                 |  57 ++++
- net/mac80211/wpa.c                                 |  11 +-
- net/rfkill/Kconfig                                 |   3 +-
- net/rfkill/core.c                                  | 297 ++++++++++++++-------
- net/rfkill/rfkill-gpio.c                           |  24 +-
- net/wireless/Kconfig                               |  25 +-
- net/wireless/core.c                                |  10 +
- net/wireless/mlme.c                                |   3 +-
- net/wireless/nl80211.c                             |  29 +-
- net/wireless/radiotap.c                            |   1 +
- net/wireless/reg.c                                 | 122 +++------
- net/wireless/sme.c                                 |   9 +-
- net/wireless/util.c                                | 275 ++++++++++++-------
- 80 files changed, 1652 insertions(+), 924 deletions(-)
- delete mode 100644 Documentation/ABI/obsolete/sysfs-class-rfkill
- create mode 100644 Documentation/ABI/removed/sysfs-class-rfkill
- delete mode 100644 include/linux/rfkill-gpio.h
