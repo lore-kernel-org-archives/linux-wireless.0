@@ -1,51 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:54436 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755328AbcBWVPS (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:29833 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1424769AbcBRLdK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 16:15:18 -0500
-Subject: Re: [PATCH] mac80211: Let VHT work on 2.4Ghz
-To: Jouni Malinen <j@w1.fi>, Johannes Berg <johannes@sipsolutions.net>
-References: <1456180974-21062-1-git-send-email-greearb@candelatech.com>
- <1456236627.9910.10.camel@sipsolutions.net> <20160223210821.GA8062@w1.fi>
-Cc: linux-wireless@vger.kernel.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <56CCCBE5.5040700@candelatech.com> (sfid-20160223_221522_804965_1BA52202)
-Date: Tue, 23 Feb 2016 13:15:17 -0800
+	Thu, 18 Feb 2016 06:33:10 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V2 03/24] staging: wilc1000: linux_mon.c: replaces PRINT_ER with netdev_err
+Date: Thu, 18 Feb 2016 20:30:03 +0900
+Message-ID: <1455795024-26978-3-git-send-email-leo.kim@atmel.com> (sfid-20160218_123314_645642_B802F28B)
+In-Reply-To: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
+References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160223210821.GA8062@w1.fi>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/23/2016 01:08 PM, Jouni Malinen wrote:
-> On Tue, Feb 23, 2016 at 03:10:27PM +0100, Johannes Berg wrote:
->> What you really "want" is to use VHT modulations, mostly for the
->> dubious purpose of marketing benchmarks to reach 256-QAM modulations.
->>
->> I think the de-facto standard for this would be to use IEs similar to
->> VHT ones, encapsulated in some (Broadcom?) vendor IE. We may have to
->> work with that, but that's not what this patch does. Jouni had some
->> better idea how this worked, I think.
->
-> hostapd has code to negotiate this using the vendor specific element. I
-> think we ended up getting this working with AP side (i.e., ath10k on the
-> AP) and if I've understood correctly, this does not need any additional
-> changes on top of what is available in upstream kernel and hostapd.
->
-> Station mode is something that may have been left open since this issue
-> of what and how to advertise as capabilities came up and there was not
-> strong enough push at the time to get more than AP side functional..
+This patches replaces PRINT_ER with netdev_err.
 
-Hostapd and supplicant did not need any changes in my testing.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_mon.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-But, you *have* to modify the kernel or it will disable VHT no matter
-what supplicant says...
-
-Thanks,
-Ben
-
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 9edc6e9..3048e88 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -308,7 +308,7 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
+ 
+ 	ret = register_netdevice(wilc_wfi_mon);
+ 	if (ret) {
+-		PRINT_ER(" register_netdevice failed (%d)\n", ret);
++		netdev_err(real_dev, "register_netdevice failed\n");
+ 		return NULL;
+ 	}
+ 	priv = netdev_priv(wilc_wfi_mon);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+1.9.1
 
