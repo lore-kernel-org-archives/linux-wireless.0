@@ -1,51 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:35910 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424168AbcBQQDu (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:30262 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1425347AbcBRLfG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2016 11:03:50 -0500
-Received: by mail-ob0-f177.google.com with SMTP id gc3so20356822obb.3
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2016 08:03:50 -0800 (PST)
-Subject: Re: Wrong wireless nick card name loaded on reboot
-To: German <gentgerman@gmail.com>, linux-wireless@vger.kernel.org
-References: <20160217060909.694a9aff@libertarian.asterius.net>
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <56C499E0.3070909@lwfinger.net> (sfid-20160217_170354_855344_57F0905A)
-Date: Wed, 17 Feb 2016 10:03:44 -0600
+	Thu, 18 Feb 2016 06:35:06 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V2 14/24] staging: wilc1000: removes unused CFG80211_DBG tag
+Date: Thu, 18 Feb 2016 20:30:14 +0900
+Message-ID: <1455795024-26978-14-git-send-email-leo.kim@atmel.com> (sfid-20160218_123514_670674_75BC2136)
+In-Reply-To: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
+References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160217060909.694a9aff@libertarian.asterius.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 02/17/2016 05:09 AM, German wrote:
-> Hi list,
->
-> A couple of days ago I asked why my pc changes the wireless card name.
-> It switches between AR9285 ( right) and AR5008 ( wrong). Someone
-> suggested  that this is because another kernel module is loaded by
-> mistake. Well, it is not the case. When system identified with AR9285,
-> it loads ath9k and I can connect to the router. When system identifies
-> my card as AR5008, no kernel module is present at all ( lspci -k). The
-> wrong card name occurs only when system rebooted. If I gracefully shut
-> down the system, it always comes up with a right name for the card
-> ( AR9285). So, how to force the system identify my card right no matter
-> if I reboot or shut down? Thank you.
+From: Chris Park <chris.park@atmel.com>
 
-I would like to help you, but I do not remember your earlier message. Why did 
-you not reply to the earlier one so that everything would be in the same thread? 
-That would have made searching the archives easier. As a result, I may be 
-duplicating some previous information.
+This patch removes unused CFG80211_DBG tag.
 
-The selection of a driver for a given device comes from the PCI ID. If your 
-system is showing the wrong device, then you may have hardware problems such 
-that the PCI ID is reported incorrectly. To test this, please provide the output 
-of the command
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan_common.h | 4 +---
+ drivers/staging/wilc1000/wilc_debugfs.c      | 6 +++---
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
-lspci -nn | grep Network
-
-for the "good" and "bad" case.
-
-Larry
-
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index 1f7d806..e408631 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -2,12 +2,10 @@
+ #define LINUX_WLAN_COMMON_H
+ 
+ enum debug_region {
+-	CFG80211_debug = 0,
+-	Init_debug,
++	Init_debug = 0,
+ 	COMP = 0xFFFFFFFF,
+ };
+ 
+-#define CFG80211_DBG            (1 << CFG80211_debug)
+ #define INIT_DBG                (1 << Init_debug)
+ 
+ #if defined(WILC_DEBUGFS)
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index fafe7cc..266d96b 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -24,9 +24,9 @@ static struct dentry *wilc_dir;
+  * --------------------------------------------------------------------------------
+  */
+ 
+-#define DBG_REGION_ALL	(CFG80211_DBG | INIT_DBG)
++#define DBG_REGION_ALL	(INIT_DBG)
+ #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+-atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | CFG80211_DBG);
++atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG);
+ EXPORT_SYMBOL_GPL(WILC_REGION);
+ atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
+ EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
+@@ -134,7 +134,7 @@ struct wilc_debugfs_info_t {
+ 
+ static struct wilc_debugfs_info_t debugfs_info[] = {
+ 	{ "wilc_debug_level",	0666,	(DEBUG | ERR), FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write, NULL), },
+-	{ "wilc_debug_region",	0666,	(INIT_DBG | CFG80211_DBG), FOPS(NULL, wilc_debug_region_read, wilc_debug_region_write, NULL), },
++	{ "wilc_debug_region",	0666,	(INIT_DBG), FOPS(NULL, wilc_debug_region_read, wilc_debug_region_write, NULL), },
+ };
+ 
+ static int __init wilc_debugfs_init(void)
+-- 
+1.9.1
 
