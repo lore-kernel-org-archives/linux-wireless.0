@@ -1,59 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nasmtp01.atmel.com ([192.199.1.246]:25932 "EHLO
-	DVREDG02.corp.atmel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1426618AbcBSBrt (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:55107 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1948070AbcBRUkr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 20:47:49 -0500
-From: "Kim, Leo" <Leo.Kim@atmel.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: Greg KH <gregkh@linuxfoundation.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Cho, Tony" <Tony.Cho@atmel.com>, "Lee, Glen" <Glen.Lee@atmel.com>,
-	"Shin, Austin" <Austin.Shin@atmel.com>,
-	"Park, Chris" <Chris.Park@atmel.com>,
-	"Abozaeid, Adham" <Adham.Abozaeid@atmel.com>,
-	"Ferre, Nicolas" <Nicolas.FERRE@atmel.com>
-Subject: RE: [PATCH V2 18/24] staging: wilc1000: linux_wlan.c: removes
- unnecessary log messages
-Date: Fri, 19 Feb 2016 01:47:02 +0000
-Message-ID: <74F3875218FC364C9618AB19CB60E90580049A75@penmbx02.corp.atmel.com> (sfid-20160219_024754_628275_94C2C0A4)
-References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
- <1455795024-26978-18-git-send-email-leo.kim@atmel.com>
- <CAGRGNgXJD1Cu1CdmYZfhqf=Up_v0pA2zw+GthDtJPaVwuV99JQ@mail.gmail.com>
-In-Reply-To: <CAGRGNgXJD1Cu1CdmYZfhqf=Up_v0pA2zw+GthDtJPaVwuV99JQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Thu, 18 Feb 2016 15:40:47 -0500
+Subject: Re: [PATCH-v2 1/2] mac80211: Take bitrates into account when building
+ IEs.
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <1445361858-24976-1-git-send-email-greearb@candelatech.com>
+ <1453807009.2759.23.camel@sipsolutions.net>
+ <56A78E8F.1080505@candelatech.com> <1454576521.2564.6.camel@sipsolutions.net>
+ <56B38FD1.40902@candelatech.com> <1455827536.2084.35.camel@sipsolutions.net>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <56C62C4E.7020600@candelatech.com> (sfid-20160218_214054_539508_50A79B47)
+Date: Thu, 18 Feb 2016 12:40:46 -0800
 MIME-Version: 1.0
+In-Reply-To: <1455827536.2084.35.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgSnVsaWFuLA0KDQpZZXMsIG9uZ29pbmcgcmVtb3ZlIHRoaXMgZnVuY3Rpb24uDQpJIHdpbGwg
-YmUgcmVtb3ZpbmcgdGhpcyBmdW5jdGlvbiBmb3IgbmV4dCBwYXRjaC4NClRoYW5rIHlvdSBpbiB5
-b3VyIGFkdmljZS4NCg0KwqBUaGFua3MsIEJSDQrCoExlbw0KDQotLS0tLU9yaWdpbmFsIE1lc3Nh
-Z2UtLS0tLQ0KRnJvbTogSnVsaWFuIENhbGFieSBbbWFpbHRvOmp1bGlhbi5jYWxhYnlAZ21haWwu
-Y29tXSANClNlbnQ6IEZyaWRheSwgRmVicnVhcnkgMTksIDIwMTYgOTo0MSBBTQ0KVG86IEtpbSwg
-TGVvIDxMZW8uS2ltQGF0bWVsLmNvbT4NCkNjOiBHcmVnIEtIIDxncmVna2hAbGludXhmb3VuZGF0
-aW9uLm9yZz47IGRldmVsQGRyaXZlcmRldi5vc3Vvc2wub3JnOyBsaW51eC13aXJlbGVzcyA8bGlu
-dXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnPjsgQ2hvLCBUb255IDxUb255LkNob0BhdG1lbC5j
-b20+OyBMZWUsIEdsZW4gPEdsZW4uTGVlQGF0bWVsLmNvbT47IFNoaW4sIEF1c3RpbiA8QXVzdGlu
-LlNoaW5AYXRtZWwuY29tPjsgUGFyaywgQ2hyaXMgPENocmlzLlBhcmtAYXRtZWwuY29tPjsgQWJv
-emFlaWQsIEFkaGFtIDxBZGhhbS5BYm96YWVpZEBhdG1lbC5jb20+OyBGZXJyZSwgTmljb2xhcyA8
-Tmljb2xhcy5GRVJSRUBhdG1lbC5jb20+DQpTdWJqZWN0OiBSZTogW1BBVENIIFYyIDE4LzI0XSBz
-dGFnaW5nOiB3aWxjMTAwMDogbGludXhfd2xhbi5jOiByZW1vdmVzIHVubmVjZXNzYXJ5IGxvZyBt
-ZXNzYWdlcw0KDQpIaSBMZW8sDQoNCk9uIFRodSwgRmViIDE4LCAyMDE2IGF0IDEwOjMwIFBNLCBM
-ZW8gS2ltIDxsZW8ua2ltQGF0bWVsLmNvbT4gd3JvdGU6DQo+IEZyb206IENocmlzIFBhcmsgPGNo
-cmlzLnBhcmtAYXRtZWwuY29tPg0KPg0KPiBUaGlzIHBhdGNoIHJlbW92ZXMgdW5uZWNlc3Nhcnkg
-bG9nIG1lc3NhZ2VzLg0KPg0KPiBTaWduZWQtb2ZmLWJ5OiBDaHJpcyBQYXJrIDxjaHJpcy5wYXJr
-QGF0bWVsLmNvbT4NCj4gU2lnbmVkLW9mZi1ieTogTGVvIEtpbSA8bGVvLmtpbUBhdG1lbC5jb20+
-DQo+IC0tLQ0KPiAgZHJpdmVycy9zdGFnaW5nL3dpbGMxMDAwL2xpbnV4X3dsYW4uYyB8IDEgLQ0K
-PiAgMSBmaWxlIGNoYW5nZWQsIDEgZGVsZXRpb24oLSkNCj4NCj4gZGlmZiAtLWdpdCBhL2RyaXZl
-cnMvc3RhZ2luZy93aWxjMTAwMC9saW51eF93bGFuLmMgYi9kcml2ZXJzL3N0YWdpbmcvd2lsYzEw
-MDAvbGludXhfd2xhbi5jDQo+IGluZGV4IGE3MzFiNDYuLjY2MGJmNjMgMTAwNjQ0DQo+IC0tLSBh
-L2RyaXZlcnMvc3RhZ2luZy93aWxjMTAwMC9saW51eF93bGFuLmMNCj4gKysrIGIvZHJpdmVycy9z
-dGFnaW5nL3dpbGMxMDAwL2xpbnV4X3dsYW4uYw0KPiBAQCAtMjI2LDcgKzIyNiw2IEBAIHN0YXRp
-YyB2b2lkIGRlaW5pdF9pcnEoc3RydWN0IG5ldF9kZXZpY2UgKmRldikNCj4NCj4gIHZvaWQgd2ls
-Y19kYmcodTggKmJ1ZmYpDQo+ICB7DQo+IC0gICAgICAgUFJJTlRfRChJTklUX0RCRywgIiVkXG4i
-LCAqYnVmZik7DQo+ICB9DQoNCkFyZSB5b3Ugc3VyZSB0aGlzIGlzIHJpZ2h0PyBJZiBzbywgd2h5
-IG5vdCBqdXN0IHJlbW92ZSB0aGlzIGZ1bmN0aW9uIGVudGlyZWx5Pw0KDQpUaGFua3MsDQoNCi0t
-IA0KSnVsaWFuIENhbGFieQ0KDQpFbWFpbDoganVsaWFuLmNhbGFieUBnbWFpbC5jb20NClByb2Zp
-bGU6IGh0dHA6Ly93d3cuZ29vZ2xlLmNvbS9wcm9maWxlcy9qdWxpYW4uY2FsYWJ5Lw0K
+On 02/18/2016 12:32 PM, Johannes Berg wrote:
+> On Thu, 2016-02-04 at 09:52 -0800, Ben Greear wrote:
+>> On 02/04/2016 01:02 AM, Johannes Berg wrote:
+>>> On Tue, 2016-01-26 at 07:19 -0800, Ben Greear wrote:
+>>>
+>>>> As far as I can tell, that will not work, because I want to have
+>>>> multiple station devices per radio, and have each of them be able
+>>>> to
+>>>> use a different configuration.  So, one station may be /g, and
+>>>> another /n and another /AC.  Same with APs.  In addition, some
+>>>> stations may want to use all available rates for their mode, and
+>>>> others may want to use a fixed rate or subset of available rates.
+>>>
+>>> So let's agree that we're splitting the *used* rates (which we have
+>>> today) and the *advertised* rates/modes/...
+>>
+>> Yes, I think that will work well, and unless I mis-understand, that
+>> is basically what I implemented so far.
+>
+> Yes.
+>
+>> Copied state might be tricky.  I think if we hold any copies of
+>> capabilities data in the sdata, then it should be logically compared
+>> with a mask and then treated as an AND with whatever the wiphy has.
+>
+> Not sure what you're saying here. I was thinking we'd simply do one of
+> these two:
+>
+> 1) sdata->sband[5GHZ].vht = wiphy->sband[5GHZ].vht & user-config
+>     (semantically, not implementation of course)
+> 2) sdata->sband[5GHZ].vht = wiphy->sband[5GHZ].vht
+>
+> and change mac80211 to use sdata->sband instead of wiphy->sband
+> wherever the latter is used today. That way, we can avoid touching all
+> these things.
+>
+> I think, for example, that you missed TDLS in your changes. Changing
+> everything throughout would mean that grepping for "wiphy->sband" would
+> immediately show such bugs, making it far easier to maintain.
+
+
+I think option 1 might be better.  For option 2, I'd be worried about
+someone changing the wiphy somehow and vdevs getting out of sync.
+
+Any opinions on the lifetime for the sdata->sband_user_config data?
+
+For instance, could be cleared when station dis-associates,
+or we could make it persist until changed or until vdev goes away?
+
+And, while this would take care of some of the issues (3x3 vs 2x2?), it still wouldn't
+let someone have full control over the advertised rates vs configured-rates
+and such, would it?
+
+So, your proposal is in addition to allowing advertised-rates to be configured?
+
+Thanks,
+Ben
+
+>>    I'm reluctant to propose any serious mac80211 change at this point,
+>> though perhaps as more of this type of features are added, then it
+>> will become more obvious how to nicely consolidate things in
+>> mac80211.
+>
+> I don't really think this would be a "serious" change? It's basically
+> pointering changes, you could (and perhaps should, to catch it all) use
+> an spatch to make the initial change.
+>
+>> To be honest, I thought my -v2 patches were fairly non-invasive
+>> compared to my normal hackings :)
+>>
+>
+> :)
+>
+> johannes
+>
+
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
