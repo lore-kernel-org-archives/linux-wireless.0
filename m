@@ -1,94 +1,344 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:29585 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753162AbcBVEO7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2016 23:14:59 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH V3 02/24] staging: wilc1000: linux_mon.c: removes debug logs
-Date: Mon, 22 Feb 2016 13:11:47 +0900
-Message-ID: <1456114329-7036-3-git-send-email-leo.kim@atmel.com> (sfid-20160222_051501_682322_CECEE4A5)
-In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
-References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:32818 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1947555AbcBRUSB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Feb 2016 15:18:01 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, egrumbach@gmail.com
+Subject: [PATCH 1/2] mac80211: add A-MSDU tx support
+Date: Thu, 18 Feb 2016 19:39:21 +0100
+Message-Id: <1455820762-22876-1-git-send-email-nbd@openwrt.org> (sfid-20160218_212037_356657_E24E9177)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patches removes unnecessary debug logs.
+Requires software tx queueing support. frag_list support (for zero-copy)
+is optional.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/staging/wilc1000/linux_mon.c | 24 ++++++------------------
- 1 file changed, 6 insertions(+), 18 deletions(-)
+ include/net/mac80211.h     |  15 ++++
+ net/mac80211/agg-tx.c      |   5 ++
+ net/mac80211/debugfs.c     |   2 +
+ net/mac80211/ieee80211_i.h |   1 +
+ net/mac80211/tx.c          | 167 +++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 190 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index 9fcb497..558fb50 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -157,10 +157,8 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 5714774..720ccb0 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -709,6 +709,7 @@ enum mac80211_tx_info_flags {
+  * @IEEE80211_TX_CTRL_PS_RESPONSE: This frame is a response to a poll
+  *	frame (PS-Poll or uAPSD).
+  * @IEEE80211_TX_CTRL_RATE_INJECT: This frame is injected with rate information
++ * @IEEE80211_TX_CTRL_AMSDU: This frame is an A-MSDU frame
+  *
+  * These flags are used in tx_info->control.flags.
+  */
+@@ -716,6 +717,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTRL_PORT_CTRL_PROTO	= BIT(0),
+ 	IEEE80211_TX_CTRL_PS_RESPONSE		= BIT(1),
+ 	IEEE80211_TX_CTRL_RATE_INJECT		= BIT(2),
++	IEEE80211_TX_CTRL_AMSDU			= BIT(3),
+ };
+ 
+ /*
+@@ -1731,6 +1733,7 @@ struct ieee80211_sta_rates {
+  *		  size is min(max_amsdu_len, 7935) bytes.
+  *	Both additional HT limits must be enforced by the low level driver.
+  *	This is defined by the spec (IEEE 802.11-2012 section 8.3.2.2 NOTE 2).
++ * @max_rc_amsdu_len: Maximum A-MSDU size in bytes recommended by rate control.
+  * @txq: per-TID data TX queues (if driver uses the TXQ abstraction)
+  */
+ struct ieee80211_sta {
+@@ -1751,6 +1754,7 @@ struct ieee80211_sta {
+ 	bool mfp;
+ 	u8 max_amsdu_subframes;
+ 	u16 max_amsdu_len;
++	u16 max_rc_amsdu_len;
+ 
+ 	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS];
+ 
+@@ -1964,6 +1968,12 @@ struct ieee80211_txq {
+  *	order and does not need to manage its own reorder buffer or BA session
+  *	timeout.
+  *
++ * @IEEE80211_HW_TX_AMSDU: Hardware (or driver) supports software aggregated
++ *	A-MSDU frames. Requires software tx queueing support.
++ *
++ * @IEEE80211_HW_TX_FRAG_LIST: Hardware (or driver) supports sending frag_list
++ *	skbs, needed for zero-copy software A-MSDU.
++ *
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+@@ -2001,6 +2011,8 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_BEACON_TX_STATUS,
+ 	IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR,
+ 	IEEE80211_HW_SUPPORTS_REORDERING_BUFFER,
++	IEEE80211_HW_TX_AMSDU,
++	IEEE80211_HW_TX_FRAG_LIST,
+ 
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+@@ -2073,6 +2085,8 @@ enum ieee80211_hw_flags {
+  *	size is smaller (an example is LinkSys WRT120N with FW v1.0.07
+  *	build 002 Jun 18 2012).
+  *
++ * @max_tx_fragments: maximum fragments per (A-)MSDU.
++ *
+  * @offchannel_tx_hw_queue: HW queue ID to use for offchannel TX
+  *	(if %IEEE80211_HW_QUEUE_CONTROL is set)
+  *
+@@ -2127,6 +2141,7 @@ struct ieee80211_hw {
+ 	u8 max_rate_tries;
+ 	u8 max_rx_aggregation_subframes;
+ 	u8 max_tx_aggregation_subframes;
++	u8 max_tx_fragments;
+ 	u8 offchannel_tx_hw_queue;
+ 	u8 radiotap_mcs_details;
+ 	u16 radiotap_vht_details;
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 4932e9f..42fa810 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -935,6 +935,7 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+ 				  size_t len)
  {
- 	struct tx_complete_mon_data *mgmt_tx = NULL;
+ 	struct tid_ampdu_tx *tid_tx;
++	struct ieee80211_txq *txq;
+ 	u16 capab, tid;
+ 	u8 buf_size;
+ 	bool amsdu;
+@@ -945,6 +946,10 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+ 	buf_size = (capab & IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK) >> 6;
+ 	buf_size = min(buf_size, local->hw.max_tx_aggregation_subframes);
  
--	if (!dev) {
--		PRINT_D(HOSTAPD_DBG, "ERROR: dev == NULL\n");
-+	if (!dev)
- 		return -EFAULT;
--	}
- 
- 	netif_stop_queue(dev);
- 	mgmt_tx = kmalloc(sizeof(*mgmt_tx), GFP_ATOMIC);
-@@ -205,17 +203,12 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 		return -EFAULT;
- 
- 	mon_priv = netdev_priv(wilc_wfi_mon);
--
--	if (!mon_priv) {
--		PRINT_ER("Monitor interface private structure is NULL\n");
-+	if (!mon_priv)
- 		return -EFAULT;
--	}
--
- 	rtap_len = ieee80211_get_radiotap_len(skb->data);
--	if (skb->len < rtap_len) {
--		PRINT_ER("Error in radiotap header\n");
-+	if (skb->len < rtap_len)
- 		return -1;
--	}
++	txq = sta->sta.txq[tid];
++	if (!amsdu && txq)
++		set_bit(IEEE80211_TXQ_NO_AMSDU, &to_txq_info(txq)->flags);
 +
- 	/* skip the radiotap header */
- 	PRINT_INFO(HOSTAPD_DBG, "Radiotap len: %d\n", rtap_len);
+ 	mutex_lock(&sta->ampdu_mlme.mtx);
  
-@@ -306,11 +299,8 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
- 		return wilc_wfi_mon;
+ 	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index e433d0c..847779d 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -127,6 +127,8 @@ static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS + 1] = {
+ 	FLAG(BEACON_TX_STATUS),
+ 	FLAG(NEEDS_UNIQUE_STA_ADDR),
+ 	FLAG(SUPPORTS_REORDERING_BUFFER),
++	FLAG(TX_AMSDU),
++	FLAG(TX_FRAG_LIST),
  
- 	wilc_wfi_mon = alloc_etherdev(sizeof(struct WILC_WFI_mon_priv));
--	if (!wilc_wfi_mon) {
--		PRINT_ER("failed to allocate memory\n");
-+	if (!wilc_wfi_mon)
- 		return NULL;
--	}
--
- 	wilc_wfi_mon->type = ARPHRD_IEEE80211_RADIOTAP;
- 	strncpy(wilc_wfi_mon->name, name, IFNAMSIZ);
- 	wilc_wfi_mon->name[IFNAMSIZ - 1] = 0;
-@@ -322,10 +312,8 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
- 		return NULL;
- 	}
- 	priv = netdev_priv(wilc_wfi_mon);
--	if (!priv) {
--		PRINT_ER("private structure is NULL\n");
-+	if (!priv)
- 		return NULL;
--	}
+ 	/* keep last for the build bug below */
+ 	(void *)0x1
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index a49c103..e68d8db 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -799,6 +799,7 @@ struct mac80211_qos_map {
+ enum txq_info_flags {
+ 	IEEE80211_TXQ_STOP,
+ 	IEEE80211_TXQ_AMPDU,
++	IEEE80211_TXQ_NO_AMSDU,
+ };
  
- 	priv->real_ndev = real_dev;
+ struct txq_info {
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 7bb67fa9..a4108b7 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1324,6 +1324,10 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ out:
+ 	spin_unlock_bh(&txqi->queue.lock);
  
++	if (skb && skb_has_frag_list(skb) &&
++	    !ieee80211_hw_check(&local->hw, TX_FRAG_LIST))
++		skb_linearize(skb);
++
+ 	return skb;
+ }
+ EXPORT_SYMBOL(ieee80211_tx_dequeue);
+@@ -2766,6 +2770,165 @@ void ieee80211_clear_fast_xmit(struct sta_info *sta)
+ 		kfree_rcu(fast_tx, rcu_head);
+ }
+ 
++static int ieee80211_amsdu_pad(struct sk_buff *skb, int subframe_len)
++{
++	int amsdu_len = subframe_len + sizeof(struct ethhdr);
++	int padding = (4 - amsdu_len) & 3;
++
++	if (padding)
++		memset(skb_put(skb, padding), 0, padding);
++
++	return padding;
++}
++
++static bool ieee80211_amsdu_prepare_head(struct ieee80211_sub_if_data *sdata,
++					 struct ieee80211_fast_tx *fast_tx,
++					 struct sk_buff *skb)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_hdr *hdr;
++	struct ethhdr amsdu_hdr;
++	int hdr_len = fast_tx->hdr_len - sizeof(rfc1042_header);
++	int subframe_len = skb->len - hdr_len;
++	void *data;
++	u8 *qc;
++
++	if (info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)
++		return false;
++
++	if (info->control.flags & IEEE80211_TX_CTRL_AMSDU)
++		return true;
++
++	if (skb_headroom(skb) < sizeof(amsdu_hdr) || skb_tailroom(skb) < 3) {
++		I802_DEBUG_INC(local->tx_expand_skb_head);
++
++		if (pskb_expand_head(skb, sizeof(amsdu_hdr), 3, GFP_ATOMIC)) {
++			wiphy_debug(local->hw.wiphy,
++				    "failed to reallocate TX buffer\n");
++			return false;
++		}
++	}
++
++	subframe_len += ieee80211_amsdu_pad(skb, subframe_len);
++
++	amsdu_hdr.h_proto = cpu_to_be16(subframe_len);
++	memcpy(amsdu_hdr.h_source, skb->data + fast_tx->sa_offs, ETH_ALEN);
++	memcpy(amsdu_hdr.h_dest, skb->data + fast_tx->da_offs, ETH_ALEN);
++
++	data = skb_push(skb, sizeof(amsdu_hdr));
++	memmove(data, data + sizeof(amsdu_hdr), hdr_len);
++	memcpy(data + hdr_len, &amsdu_hdr, sizeof(amsdu_hdr));
++
++	hdr = data;
++	qc = ieee80211_get_qos_ctl(hdr);
++	*qc |= IEEE80211_QOS_CTL_A_MSDU_PRESENT;
++
++	info->control.flags |= IEEE80211_TX_CTRL_AMSDU;
++
++	return true;
++}
++
++static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
++				      struct sta_info *sta,
++				      struct ieee80211_fast_tx *fast_tx,
++				      struct sk_buff *skb)
++{
++	struct ieee80211_local *local = sdata->local;
++	u8 tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
++	struct ieee80211_txq *txq = sta->sta.txq[tid];
++	struct txq_info *txqi;
++	struct sk_buff **frag_tail, *head;
++	int subframe_len = skb->len - ETH_ALEN;
++	u8 max_subframes = sta->sta.max_amsdu_subframes;
++	int max_frags = local->hw.max_tx_fragments;
++	int max_amsdu_len = sta->sta.max_amsdu_len;
++	__be16 len;
++	void *data;
++	bool ret = false;
++	int n = 1, nfrags;
++
++	if (!ieee80211_hw_check(&local->hw, TX_AMSDU))
++		return false;
++
++	if (!txq)
++		return false;
++
++	txqi = to_txq_info(txq);
++	if (test_bit(IEEE80211_TXQ_NO_AMSDU, &txqi->flags))
++		return false;
++
++	if (sta->sta.max_rc_amsdu_len)
++		max_amsdu_len = min_t(int, max_amsdu_len,
++				      sta->sta.max_rc_amsdu_len);
++
++	spin_lock_bh(&txqi->queue.lock);
++
++	head = skb_peek_tail(&txqi->queue);
++	if (!head)
++		goto out;
++
++	if (skb->len + head->len > max_amsdu_len)
++		goto out;
++
++	/*
++	 * HT A-MPDU limits maximum MPDU size to 4095 bytes. Since aggregation
++	 * sessions are started/stopped without txq flush, use the limit here
++	 * to avoid having to de-aggregate later.
++	 */
++	if (skb->len + head->len > 4095 &&
++	    !sta->sta.vht_cap.vht_supported)
++		goto out;
++
++	if (!ieee80211_amsdu_prepare_head(sdata, fast_tx, head))
++		goto out;
++
++	nfrags = 1 + skb_shinfo(skb)->nr_frags;
++	nfrags += 1 + skb_shinfo(head)->nr_frags;
++	frag_tail = &skb_shinfo(head)->frag_list;
++	while (*frag_tail) {
++		nfrags += 1 + skb_shinfo(*frag_tail)->nr_frags;
++		frag_tail = &(*frag_tail)->next;
++		n++;
++	}
++
++	if (max_subframes && n > max_subframes)
++		goto out;
++
++	if (max_frags && nfrags > max_frags)
++		goto out;
++
++	if (skb_headroom(skb) < 8 || skb_tailroom(skb) < 3) {
++		I802_DEBUG_INC(local->tx_expand_skb_head);
++
++		if (pskb_expand_head(skb, 8, 3, GFP_ATOMIC)) {
++			wiphy_debug(local->hw.wiphy,
++				    "failed to reallocate TX buffer\n");
++			goto out;
++		}
++	}
++
++	subframe_len += ieee80211_amsdu_pad(skb, subframe_len);
++
++	ret = true;
++	data = skb_push(skb, ETH_ALEN + 2);
++	memmove(data, data + ETH_ALEN + 2, 2 * ETH_ALEN);
++
++	data += 2 * ETH_ALEN;
++	len = cpu_to_be16(subframe_len);
++	memcpy(data, &len, 2);
++	memcpy(data + 2, rfc1042_header, ETH_ALEN);
++
++	head->len += skb->len;
++	head->data_len += skb->len;
++	*frag_tail = skb;
++
++out:
++	spin_unlock_bh(&txqi->queue.lock);
++
++	return ret;
++}
++
+ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 				struct net_device *dev, struct sta_info *sta,
+ 				struct ieee80211_fast_tx *fast_tx,
+@@ -2820,6 +2983,10 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ieee80211_tx_stats(dev, skb->len + extra_head);
+ 
++	if ((hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) &&
++	    ieee80211_amsdu_aggregate(sdata, sta, fast_tx, skb))
++		return true;
++
+ 	/* will not be crypto-handled beyond what we do here, so use false
+ 	 * as the may-encrypt argument for the resize to not account for
+ 	 * more room than we already have in 'extra_head'
 -- 
-1.9.1
+2.2.2
 
