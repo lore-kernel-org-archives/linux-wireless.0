@@ -1,43 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37683 "EHLO mx1.redhat.com"
+Received: from bues.ch ([80.190.117.144]:55666 "EHLO bues.ch"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750973AbcB2WFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:53 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 003/113] rtl8xxxu: Use 1024 byte block loads for 8192eu firmware
-Date: Mon, 29 Feb 2016 17:04:01 -0500
-Message-Id: <1456783551-28315-4-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230557_198004_15574669)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+	id S1425080AbcBRQcn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Feb 2016 11:32:43 -0500
+Date: Thu, 18 Feb 2016 17:32:12 +0100
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	b43-dev@lists.infradead.org, Jia-Ju Bai <baijiaju1990@163.com>
+Subject: Re: [PATCH] b43: fix memory leak
+Message-ID: <20160218173212.03670d97@wiggum> (sfid-20160218_173325_369628_43AE3BA9)
+In-Reply-To: <1455798876-32186-1-git-send-email-sudipm.mukherjee@gmail.com>
+References: <1455798876-32186-1-git-send-email-sudipm.mukherjee@gmail.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/N+AMpw_YurTwNNl3eaDOEP0"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+--Sig_/N+AMpw_YurTwNNl3eaDOEP0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-The rtl8192eu can handle 1024 byte block writes, unlike it's
-predecessors (8192cu/8188cu).
+On Thu, 18 Feb 2016 18:04:36 +0530
+Sudip Mukherjee <sudipm.mukherjee@gmail.com> wrote:
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> From: Sudip Mukherjee <sudip@vectorindia.org>
+>=20
+> On error we jumped to the label bcma_out and returned the error code but
+> we missed freeing dev.
+>=20
+> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+> ---
+>  drivers/net/wireless/broadcom/b43/main.c | 1 +
+>  1 file changed, 1 insertion(+)
+>=20
+> diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wirel=
+ess/broadcom/b43/main.c
+> index c279211..78f670a 100644
+> --- a/drivers/net/wireless/broadcom/b43/main.c
+> +++ b/drivers/net/wireless/broadcom/b43/main.c
+> @@ -5671,6 +5671,7 @@ static int b43_bcma_probe(struct bcma_device *core)
+>  	wl =3D b43_wireless_init(dev);
+>  	if (IS_ERR(wl)) {
+>  		err =3D PTR_ERR(wl);
+> +		kfree(dev);
+>  		goto bcma_out;
+>  	}
+> =20
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 2db2d21..8ef72e3 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -5975,7 +5975,7 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
- 	.parse_efuse = rtl8192eu_parse_efuse,
- 	.load_firmware = rtl8192eu_load_firmware,
- 	.power_on = rtl8192cu_power_on,
--	.writeN_block_size = 128,
-+	.writeN_block_size = 1024,
- };
- 
- static struct usb_device_id dev_table[] = {
--- 
-2.5.0
+We recently had a patch that fixes this, among more leaks. Subject:
+[PATCH v2 resend] b43: Fix memory leaks in b43_bus_dev_ssb_init and
+b43_bus_dev_bcma_init
 
+Please test that patch instead, so we can finally apply it.
+
+It needs to be tested on both ssb and bcma. Come on. This isn't too
+hard. :) Please somebody with any hardware test it. (I currently don't
+have any b43 hardware)
+
+--=20
+Michael
+
+--Sig_/N+AMpw_YurTwNNl3eaDOEP0
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJWxfIMAAoJEPUyvh2QjYsOnjoQAJi1ySB/xUc+f1kQXy4LjfjZ
+A4GSt/U3ZQzZyZORq6zqCdUTZRUZXq1KerEdeTox9KGu1T13XtKc59PI2b2kYK3C
+PwxgtPhpZ2woJ/hnMtDyDNBy8uUTET3zyr2FQ8s8kXeqSrm4Aaj6OVv/t5csmrQd
+xlHQ2XuAFc8rzWaJWOqF+T/+sunv9hj2juPCrcI2Onn7MalcHaxPQRzIIuvN9POB
+E7ABC9doWzNfI3vJheH9EUoCkDPJua5+J8XVW2ogTsaC2Ao/1J5mhAo3WyTebUyV
+40S0ZeyzK8l+6+uhW+NJ2tasMwofK2jRg21BCRwMORbSgRZsjn9eIhqT3k3JwuB4
+UGmUz2m6xgQiKX+Wi5wF7CQMTZk4EDC+MVWSM8evgolZPrbNenYO1Bs32ViUSIn7
+Hf7+gsMOoJFYNEyzZaANDcfwnoOiumxy/0llAn1bCXuMSd2mlIISFfwb2x2IhqUm
+t41k0l65h6t8z/xgh5MVQfDkVI13bmSMGLnfc5qbZF8bUTygsu3bNwR73vZ/wqH4
+i3axYq01l3bJ7qlIJhu87H6kl1t18xeQT1VJQt9daoXMnQuTA4YNBBLhBayVsrom
+UuvWDGwZh4hBA0u/I/9lh5bvW8DbzIgbSiQ3fRQBcfA9rDafLWkLXuZl3l1xB1bt
+bBSqA8EYqZOw8W2CIHum
+=Ll4K
+-----END PGP SIGNATURE-----
+
+--Sig_/N+AMpw_YurTwNNl3eaDOEP0--
