@@ -1,92 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f194.google.com ([209.85.213.194]:35336 "EHLO
-	mail-ig0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754270AbcBCCH3 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:30615 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1425886AbcBRLg5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 21:07:29 -0500
+	Thu, 18 Feb 2016 06:36:57 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V2 24/24] staging: wilc1000: moves LINUX_RX_SIZE, LINUX_TX_SIZE
+Date: Thu, 18 Feb 2016 20:30:24 +0900
+Message-ID: <1455795024-26978-24-git-send-email-leo.kim@atmel.com> (sfid-20160218_125806_667072_D9C12D2A)
+In-Reply-To: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
+References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <20160203015953.GA13562@gmail.com>
-References: <20160203015953.GA13562@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 3 Feb 2016 13:07:09 +1100
-Message-ID: <CAGRGNgUJGLG_1fWbYLyET-OQeFFxohXqoApcm2E-Jv+W+-FwcQ@mail.gmail.com> (sfid-20160203_030736_266095_C4ED8FF0)
-Subject: Re: [PATCH 1/2] rtlwifi: Fix improve function 'rtl_addr_delay()' in core.c
-To: Byeoungwook Kim <quddnr145@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Byeounwook,
+From: Chris Park <chris.park@atmel.com>
 
-On Wed, Feb 3, 2016 at 12:59 PM, Byeoungwook Kim <quddnr145@gmail.com> wrote:
-> Conditional codes in rtl_addr_delay() were improved in readability and
-> performance by using switch codes.
->
-> Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
-> Reported-by: Julian Calaby <julian.calaby@gmail.com>
+This patch moves LINUX_RX_SIZE and LINUX_TX_SIZE to wilc_wlan.h file
+because there are only used to wilc_wlan.c file.
 
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan_common.h | 4 ----
+ drivers/staging/wilc1000/wilc_wlan.h         | 3 +++
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-Thanks,
-
-Julian Calaby
-
-
-> ---
->  drivers/net/wireless/realtek/rtlwifi/core.c | 20 ++++++++++++++------
->  1 file changed, 14 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-> index 4ae421e..05f432c 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/core.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-> @@ -37,18 +37,26 @@
->
->  void rtl_addr_delay(u32 addr)
->  {
-> -       if (addr == 0xfe)
-> +       switch (addr) {
-> +       case 0xfe:
->                 mdelay(50);
-> -       else if (addr == 0xfd)
-> +               break;
-> +       case 0xfd:
->                 mdelay(5);
-> -       else if (addr == 0xfc)
-> +               break;
-> +       case 0xfc:
->                 mdelay(1);
-> -       else if (addr == 0xfb)
-> +               break;
-> +       case 0xfb:
->                 udelay(50);
-> -       else if (addr == 0xfa)
-> +               break;
-> +       case 0xfa:
->                 udelay(5);
-> -       else if (addr == 0xf9)
-> +               break;
-> +       case 0xf9:
->                 udelay(1);
-> +               break;
-> +       };
->  }
->  EXPORT_SYMBOL(rtl_addr_delay);
->
-> --
-> 2.5.0
->
-
-
-
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index 51601aa..aa2c026 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -1,10 +1,6 @@
+ #ifndef LINUX_WLAN_COMMON_H
+ #define LINUX_WLAN_COMMON_H
+ 
+-#define LINUX_RX_SIZE	(96 * 1024)
+-#define LINUX_TX_SIZE	(64 * 1024)
+-
+-
+ #define WILC_MULTICAST_TABLE_SIZE	8
+ 
+ #if defined(BEAGLE_BOARD)
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 06d02ab..792d338 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -128,6 +128,9 @@
+ #define WILC_PLL_TO_SPI		2
+ #define ABORT_INT		BIT(31)
+ 
++#define LINUX_RX_SIZE		(96 * 1024)
++#define LINUX_TX_SIZE		(64 * 1024)
++
+ /*******************************************/
+ /*        E0 and later Interrupt flags.    */
+ /*******************************************/
 -- 
-Julian Calaby
+1.9.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
