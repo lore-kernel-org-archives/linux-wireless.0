@@ -1,34 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:33848 "EHLO
-	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752361AbcBOXqf (ORCPT
+Received: from mail-ig0-f179.google.com ([209.85.213.179]:38902 "EHLO
+	mail-ig0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965753AbcBRAz4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Feb 2016 18:46:35 -0500
-Received: by mail-io0-f196.google.com with SMTP id l127so13685151iof.1
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Feb 2016 15:46:35 -0800 (PST)
+	Wed, 17 Feb 2016 19:55:56 -0500
 MIME-Version: 1.0
-In-Reply-To: <1455173229-6383-2-git-send-email-royujjal@gmail.com>
-References: <1455173229-6383-1-git-send-email-royujjal@gmail.com> <1455173229-6383-2-git-send-email-royujjal@gmail.com>
+In-Reply-To: <20160217123336.GA30230@amitoj-Inspiron-3542>
+References: <20160217123336.GA30230@amitoj-Inspiron-3542>
 From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 16 Feb 2016 10:46:15 +1100
-Message-ID: <CAGRGNgWTsvcQGxoY8iLs_CyEDNj7XTe8RhXgMWqAfZjjgx8soA@mail.gmail.com> (sfid-20160216_004639_014219_3E29928A)
-Subject: Re: [PATCH 2/3] mwifiex: Removed extra spaces before commas
-To: Ujjal Roy <royujjal@gmail.com>
+Date: Thu, 18 Feb 2016 11:55:36 +1100
+Message-ID: <CAGRGNgXSuYSGAdY1XxA6d0ro0doDWvgJmNpD15ASGXDTxCmVEA@mail.gmail.com> (sfid-20160218_015621_880682_B4CF9514)
+Subject: Re: [PATCH] mwifiex: Use to_delayed_work()
+To: Amitoj Kaur Chawla <amitoj1606@gmail.com>
 Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>,
 	Nishant Sarmukadam <nishants@marvell.com>,
 	Kalle Valo <kvalo@codeaurora.org>,
-	WiFi Mailing List <linux-wireless@vger.kernel.org>
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	Julia Lawall <julia.lawall@lip6.fr>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 Hi All,
 
-On Thu, Feb 11, 2016 at 5:47 PM, Ujjal Roy <royujjal@gmail.com> wrote:
-> This patch fixes spaces before commas issue in coding style.
+On Wed, Feb 17, 2016 at 11:33 PM, Amitoj Kaur Chawla
+<amitoj1606@gmail.com> wrote:
+> Introduce the use of to_delayed_work() helper function instead of open
+> coding it with container_of()
 >
-> Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+> A simplified version of the Coccinelle semantic patch used to make
+> this change is:
+>
+> //<smpl>
+> @@
+> expression a;
+> symbol work;
+> @@
+> - container_of(a, struct delayed_work, work)
+> + to_delayed_work(a)
+> //</smpl>
+>
+> Signed-off-by: Amitoj Kaur Chawla <amitoj1606@gmail.com>
 
 Looks right to me.
 
@@ -37,36 +51,33 @@ Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 Thanks,
 
 > ---
->  drivers/net/wireless/marvell/mwifiex/pcie.c    | 2 +-
->  drivers/net/wireless/marvell/mwifiex/uap_cmd.c | 2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
+>  drivers/net/wireless/marvell/mwifiex/11h.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
 >
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index 6d0dc40..4d29cce 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -1408,7 +1408,7 @@ mwifiex_pcie_send_boot_cmd(struct mwifiex_adapter *adapter, struct sk_buff *skb)
->                 return -1;
->         }
->
-> -       if (mwifiex_map_pci_memory(adapter, skb, skb->len , PCI_DMA_TODEVICE))
-> +       if (mwifiex_map_pci_memory(adapter, skb, skb->len, PCI_DMA_TODEVICE))
->                 return -1;
->
->         buf_pa = MWIFIEX_SKB_DMA_ADDR(skb);
-> diff --git a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-> index e791166..16d95b2 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-> @@ -192,7 +192,7 @@ mwifiex_set_ht_params(struct mwifiex_private *priv,
->                 }
->                 priv->ap_11n_enabled = 1;
->         } else {
-> -               memset(&bss_cfg->ht_cap , 0, sizeof(struct ieee80211_ht_cap));
-> +               memset(&bss_cfg->ht_cap, 0, sizeof(struct ieee80211_ht_cap));
->                 bss_cfg->ht_cap.cap_info = cpu_to_le16(MWIFIEX_DEF_HT_CAP);
->                 bss_cfg->ht_cap.ampdu_params_info = MWIFIEX_DEF_AMPDU;
->         }
+> diff --git a/drivers/net/wireless/marvell/mwifiex/11h.c b/drivers/net/wireless/marvell/mwifiex/11h.c
+> index 71a1b58..81c60d0 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/11h.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/11h.c
+> @@ -123,8 +123,7 @@ void mwifiex_11h_process_join(struct mwifiex_private *priv, u8 **buffer,
+>  void mwifiex_dfs_cac_work_queue(struct work_struct *work)
+>  {
+>         struct cfg80211_chan_def chandef;
+> -       struct delayed_work *delayed_work =
+> -                       container_of(work, struct delayed_work, work);
+> +       struct delayed_work *delayed_work = to_delayed_work(work);
+>         struct mwifiex_private *priv =
+>                         container_of(delayed_work, struct mwifiex_private,
+>                                      dfs_cac_work);
+> @@ -289,8 +288,7 @@ int mwifiex_11h_handle_radar_detected(struct mwifiex_private *priv,
+>  void mwifiex_dfs_chan_sw_work_queue(struct work_struct *work)
+>  {
+>         struct mwifiex_uap_bss_param *bss_cfg;
+> -       struct delayed_work *delayed_work =
+> -                       container_of(work, struct delayed_work, work);
+> +       struct delayed_work *delayed_work = to_delayed_work(work);
+>         struct mwifiex_private *priv =
+>                         container_of(delayed_work, struct mwifiex_private,
+>                                      dfs_chan_sw_work);
 > --
 > 1.9.1
 >
