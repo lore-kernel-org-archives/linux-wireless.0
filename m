@@ -1,37 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43178 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946042AbcBRNTO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 08:19:14 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend Van Spriel <arend.van@broadcom.com>
-Cc: Fabio Estevam <festevam@gmail.com>,
-	Arend Van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org,
-	Fabio Estevam <fabio.estevam@nxp.com>
-Subject: Re: [PATCH] brcmfmac: of: Include "of.h" header file
-References: <1455487069-2721-1-git-send-email-festevam@gmail.com>
-	<CAF7Mx6oiw+AdAqZU5rkZT4UeGTiTHR-DfsMN6dpsV6YFWkUOOg@mail.gmail.com>
-	<CAF7Mx6oFonTs-idWrprEk9pHZ98TOwX9tE=rLgSJ8cmjm1Aizg@mail.gmail.com>
-Date: Thu, 18 Feb 2016 15:19:07 +0200
-In-Reply-To: <CAF7Mx6oFonTs-idWrprEk9pHZ98TOwX9tE=rLgSJ8cmjm1Aizg@mail.gmail.com>
-	(Arend Van Spriel's message of "Mon, 15 Feb 2016 11:03:03 +0100")
-Message-ID: <87io1mrwac.fsf@kamboji.qca.qualcomm.com> (sfid-20160218_141919_768883_71CEB2F3)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from m50-133.163.com ([123.125.50.133]:50596 "EHLO m50-133.163.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946176AbcBROUs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Feb 2016 09:20:48 -0500
+From: Geliang Tang <geliangtang@163.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Julian Calaby <julian.calaby@gmail.com>
+Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v5 0/3] staging: rtl8723au: use list_for_each_entry*() and cleaning
+Date: Thu, 18 Feb 2016 22:19:28 +0800
+Message-Id: <cover.1455804404.git.geliangtang@163.com> (sfid-20160218_152129_917342_ADF4EE28)
+In-Reply-To: <wrfjtwl76ybi.fsf@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend Van Spriel <arend.van@broadcom.com> writes:
+On Wed, Feb 17, 2016 at 12:28:33PM -0500, Jes Sorensen wrote:
+> kbuild test robot <lkp@intel.com> writes:
+> > Hi Geliang,
+> >
+> > [auto build test ERROR on staging/staging-testing]
+> > [also build test ERROR on v4.5-rc4 next-20160217]
+> > [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
+> >
+> > url:    https://github.com/0day-ci/linux/commits/Geliang-Tang/staging-rtl8723au-use-list_for_each_entry/20160217-220638
+> > config: i386-randconfig-s1-201607 (attached as .config)
+> > reproduce:
+> >         # save the attached .config to linux build tree
+> >         make ARCH=i386 
+> >
+> > Note: the linux-review/Geliang-Tang/staging-rtl8723au-use-list_for_each_entry/20160217-220638 HEAD 495811a52aba181af76c3baf57da3d81a79c2fe8 builds fine.
+> >       It only hurts bisectibility.
+> >
+> > All errors (new ones prefixed by >>):
+> >
+> >    drivers/staging/rtl8723au/core/rtw_recv.c: In function 'rtw_free_recvframe23a_queue':
+> >>> drivers/staging/rtl8723au/core/rtw_recv.c:203:2: error: 'plist' undeclared (first use in this function)
+> >      plist = phead->next;
+> >      ^
+> 
+> This doesn't work, you cannot break interim builds. Your patch 2 needs
+> to go before patch 1, and you must always check that they compile for
+> each patch you apply.
+> 
+> NACK
 
-> I am actually preparing a patch series and found that this change is
-> incorporated in that series. As that involves other changes it is
-> probably better to drop this patch. I thought I could change the
-> patchwork state for it, but no luck.
+Sorry for the trouble caused. I updated my patchs to fix this problem.
 
-I think you can only change states of patches which you have submitted.
-But I dropped this now.
+- Geliang
+
+This patch set uses list_for_each_entry*() instead of
+list_for_each*(), removes useless codes, and cleans
+whitespaces and blank lines.
+
+Changes in v5:
+ - fix build error.
+Changes in v4:
+ - revise the patchs as Jes suggested.
+Changes in v3:
+ - split it into three patches.
+Changes in v2:
+ - drop the coding style fixing in v1.
+
+Geliang Tang (3):
+  staging: rtl8723au: use list_for_each_entry*()
+  staging: rtl8723au: core: rtw_recv: remove useless codes
+  staging: rtl8723au: whitespace and blank line cleaning
+
+ drivers/staging/rtl8723au/core/rtw_ap.c           | 92 ++++++-----------------
+ drivers/staging/rtl8723au/core/rtw_mlme.c         | 38 +++-------
+ drivers/staging/rtl8723au/core/rtw_mlme_ext.c     | 13 ++--
+ drivers/staging/rtl8723au/core/rtw_recv.c         | 42 ++++-------
+ drivers/staging/rtl8723au/core/rtw_sta_mgt.c      | 36 +++------
+ drivers/staging/rtl8723au/core/rtw_xmit.c         | 90 ++++++++--------------
+ drivers/staging/rtl8723au/os_dep/ioctl_cfg80211.c | 22 ++----
+ drivers/staging/rtl8723au/os_dep/usb_ops_linux.c  |  9 +--
+ 8 files changed, 106 insertions(+), 236 deletions(-)
 
 -- 
-Kalle Valo
+2.5.0
+
+
