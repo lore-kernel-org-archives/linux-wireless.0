@@ -1,41 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43511 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933807AbcBCSkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 13:40:04 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 26/28] rtl8xxxu: Do not mask RF registers to 6 bits
-Date: Wed,  3 Feb 2016 13:40:00 -0500
-Message-Id: <1454524802-26763-27-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_194132_012447_0D66005C)
-In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:29925 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1425621AbcBRLdd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Feb 2016 06:33:33 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V2 06/24] staging: wilc1000: host_interface.c: removes unnecessary log message
+Date: Thu, 18 Feb 2016 20:30:06 +0900
+Message-ID: <1455795024-26978-6-git-send-email-leo.kim@atmel.com> (sfid-20160218_123344_154606_904C3283)
+In-Reply-To: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
+References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Chris Park <chris.park@atmel.com>
 
-Newer chips have RF registers beyond the original 0x3f address.
+This patch removes unnecessary log message and relate variables.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 5 -----
+ 1 file changed, 5 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index a6c8dab..af17ae7 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -2536,8 +2536,6 @@ static int rtl8xxxu_init_rf_regs(struct rtl8xxxu_priv *priv,
- 			continue;
- 		}
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d1eedfb..7b9dbc0 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3010,7 +3010,6 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
+ 	int result = 0;
+ 	struct host_if_msg msg;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+-	int i;
  
--		reg &= 0x3f;
--
- 		ret = rtl8xxxu_write_rfreg(priv, path, reg, val);
- 		if (ret) {
- 			dev_warn(&priv->udev->dev,
+ 	if (!hif_drv) {
+ 		PRINT_ER("driver is null\n");
+@@ -3019,10 +3018,6 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 
+-	if (INFO) {
+-		for (i = 0; i < len; i++)
+-			PRINT_INFO(HOSTAPD_DBG, "KEY is %x\n", key[i]);
+-	}
+ 	msg.id = HOST_IF_MSG_KEY;
+ 	msg.body.key_info.type = WEP;
+ 	msg.body.key_info.action = ADDKEY_AP;
 -- 
-2.5.0
+1.9.1
 
