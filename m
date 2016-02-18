@@ -1,107 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f196.google.com ([209.85.213.196]:33422 "EHLO
-	mail-ig0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754614AbcBCCGz (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43178 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946042AbcBRNTO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 21:06:55 -0500
+	Thu, 18 Feb 2016 08:19:14 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend Van Spriel <arend.van@broadcom.com>
+Cc: Fabio Estevam <festevam@gmail.com>,
+	Arend Van Spriel <arend@broadcom.com>,
+	linux-wireless@vger.kernel.org,
+	Fabio Estevam <fabio.estevam@nxp.com>
+Subject: Re: [PATCH] brcmfmac: of: Include "of.h" header file
+References: <1455487069-2721-1-git-send-email-festevam@gmail.com>
+	<CAF7Mx6oiw+AdAqZU5rkZT4UeGTiTHR-DfsMN6dpsV6YFWkUOOg@mail.gmail.com>
+	<CAF7Mx6oFonTs-idWrprEk9pHZ98TOwX9tE=rLgSJ8cmjm1Aizg@mail.gmail.com>
+Date: Thu, 18 Feb 2016 15:19:07 +0200
+In-Reply-To: <CAF7Mx6oFonTs-idWrprEk9pHZ98TOwX9tE=rLgSJ8cmjm1Aizg@mail.gmail.com>
+	(Arend Van Spriel's message of "Mon, 15 Feb 2016 11:03:03 +0100")
+Message-ID: <87io1mrwac.fsf@kamboji.qca.qualcomm.com> (sfid-20160218_141919_768883_71CEB2F3)
 MIME-Version: 1.0
-In-Reply-To: <20160203020139.GA13619@gmail.com>
-References: <20160203020139.GA13619@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 3 Feb 2016 13:06:34 +1100
-Message-ID: <CAGRGNgWKt3aqas5ZYaYVCLYkB5DOY0uojwO6tcSjTrQ-iytesw@mail.gmail.com> (sfid-20160203_030800_241511_9EDFE5D3)
-Subject: Re: [PATCH 2/2] rtlwifi: Fix reusable codes in core.c
-To: Byeoungwook Kim <quddnr145@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Byeoungwook,
+Arend Van Spriel <arend.van@broadcom.com> writes:
 
-On Wed, Feb 3, 2016 at 1:01 PM, Byeoungwook Kim <quddnr145@gmail.com> wrote:
-> rtl_*_delay() functions were reused same codes about addr variable.
-> So i have converted to rtl_addr_delay() from code about addr variable.
->
-> Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
-> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+> I am actually preparing a patch series and found that this change is
+> incorporated in that series. As that involves other changes it is
+> probably better to drop this patch. I thought I could change the
+> patchwork state for it, but no luck.
 
-Just a note for the future, you have to explicitly be given a
-reviewed-by, you can't just assume that someone who has made comments
-on a patch has reviewed it.
-
-In this case, I have reviewed it, so formally:
-
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-Thanks,
-
-Julian Calaby
-
-
-> ---
->  drivers/net/wireless/realtek/rtlwifi/core.c | 28 ++++------------------------
->  1 file changed, 4 insertions(+), 24 deletions(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-> index 05f432c..c1193d1 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/core.c
-> +++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-> @@ -63,18 +63,8 @@ EXPORT_SYMBOL(rtl_addr_delay);
->  void rtl_rfreg_delay(struct ieee80211_hw *hw, enum radio_path rfpath, u32 addr,
->                      u32 mask, u32 data)
->  {
-> -       if (addr == 0xfe) {
-> -               mdelay(50);
-> -       } else if (addr == 0xfd) {
-> -               mdelay(5);
-> -       } else if (addr == 0xfc) {
-> -               mdelay(1);
-> -       } else if (addr == 0xfb) {
-> -               udelay(50);
-> -       } else if (addr == 0xfa) {
-> -               udelay(5);
-> -       } else if (addr == 0xf9) {
-> -               udelay(1);
-> +       if (addr >= 0xf9 && addr <= 0xfe) {
-> +               rtl_addr_delay(addr);
->         } else {
->                 rtl_set_rfreg(hw, rfpath, addr, mask, data);
->                 udelay(1);
-> @@ -84,18 +74,8 @@ EXPORT_SYMBOL(rtl_rfreg_delay);
->
->  void rtl_bb_delay(struct ieee80211_hw *hw, u32 addr, u32 data)
->  {
-> -       if (addr == 0xfe) {
-> -               mdelay(50);
-> -       } else if (addr == 0xfd) {
-> -               mdelay(5);
-> -       } else if (addr == 0xfc) {
-> -               mdelay(1);
-> -       } else if (addr == 0xfb) {
-> -               udelay(50);
-> -       } else if (addr == 0xfa) {
-> -               udelay(5);
-> -       } else if (addr == 0xf9) {
-> -               udelay(1);
-> +       if (addr >= 0xf9 && addr <= 0xfe) {
-> +               rtl_addr_delay(addr);
->         } else {
->                 rtl_set_bbreg(hw, addr, MASKDWORD, data);
->                 udelay(1);
-> --
-> 2.5.0
->
-
-
+I think you can only change states of patches which you have submitted.
+But I dropped this now.
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Kalle Valo
