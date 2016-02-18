@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:30615 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:40556 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1425886AbcBRLg5 (ORCPT
+	with ESMTP id S1030335AbcBRHcg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 06:36:57 -0500
+	Thu, 18 Feb 2016 02:32:36 -0500
 From: Leo Kim <leo.kim@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
@@ -11,11 +11,11 @@ CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
 	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V2 24/24] staging: wilc1000: moves LINUX_RX_SIZE, LINUX_TX_SIZE
-Date: Thu, 18 Feb 2016 20:30:24 +0900
-Message-ID: <1455795024-26978-24-git-send-email-leo.kim@atmel.com> (sfid-20160218_125806_667072_D9C12D2A)
-In-Reply-To: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
-References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
+Subject: [PATCH 16/24] staging: wilc1000: host_interface.c: removes unnecessary log messages
+Date: Thu, 18 Feb 2016 16:27:27 +0900
+Message-ID: <1455780455-21365-16-git-send-email-leo.kim@atmel.com> (sfid-20160218_083240_010273_36C8A6A8)
+In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -23,45 +23,67 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Chris Park <chris.park@atmel.com>
 
-This patch moves LINUX_RX_SIZE and LINUX_TX_SIZE to wilc_wlan.h file
-because there are only used to wilc_wlan.c file.
+This patch removes unnecessary log messages.
 
 Signed-off-by: Chris Park <chris.park@atmel.com>
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/staging/wilc1000/linux_wlan_common.h | 4 ----
- drivers/staging/wilc1000/wilc_wlan.h         | 3 +++
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index 51601aa..aa2c026 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -1,10 +1,6 @@
- #ifndef LINUX_WLAN_COMMON_H
- #define LINUX_WLAN_COMMON_H
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index ee45103..60678aa 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1643,11 +1643,8 @@ static int Handle_Key(struct wilc_vif *vif,
  
--#define LINUX_RX_SIZE	(96 * 1024)
--#define LINUX_TX_SIZE	(64 * 1024)
+ 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2,
+ 					    GFP_KERNEL);
 -
--
- #define WILC_MULTICAST_TABLE_SIZE	8
+-			if (pu8keybuf == NULL) {
+-				PRINT_ER("No buffer to send Key\n");
++			if (!pu8keybuf)
+ 				return -ENOMEM;
+-			}
  
- #if defined(BEAGLE_BOARD)
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 06d02ab..792d338 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -128,6 +128,9 @@
- #define WILC_PLL_TO_SPI		2
- #define ABORT_INT		BIT(31)
- 
-+#define LINUX_RX_SIZE		(96 * 1024)
-+#define LINUX_TX_SIZE		(64 * 1024)
-+
- /*******************************************/
- /*        E0 and later Interrupt flags.    */
- /*******************************************/
+ 			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
+ 			pu8keybuf[1] = pstrHostIFkeyAttr->attr.wep.key_len;
+@@ -1668,10 +1665,8 @@ static int Handle_Key(struct wilc_vif *vif,
+ 			kfree(pu8keybuf);
+ 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
+ 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2, GFP_KERNEL);
+-			if (!pu8keybuf) {
+-				PRINT_ER("No buffer to send Key\n");
++			if (!pu8keybuf)
+ 				return -ENOMEM;
+-			}
+ 			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
+ 			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->attr.wep.key_len, 1);
+ 			memcpy(pu8keybuf + 2, pstrHostIFkeyAttr->attr.wep.key,
+@@ -1715,7 +1710,6 @@ static int Handle_Key(struct wilc_vif *vif,
+ 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
+ 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
+ 			if (!pu8keybuf) {
+-				PRINT_ER("No buffer to send RxGTK Key\n");
+ 				ret = -ENOMEM;
+ 				goto _WPARxGtk_end_case_;
+ 			}
+@@ -1747,7 +1741,6 @@ static int Handle_Key(struct wilc_vif *vif,
+ 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
+ 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
+ 			if (pu8keybuf == NULL) {
+-				PRINT_ER("No buffer to send RxGTK Key\n");
+ 				ret = -ENOMEM;
+ 				goto _WPARxGtk_end_case_;
+ 			}
+@@ -1787,7 +1780,6 @@ _WPARxGtk_end_case_:
+ 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
+ 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN + 1, GFP_KERNEL);
+ 			if (!pu8keybuf) {
+-				PRINT_ER("No buffer to send PTK Key\n");
+ 				ret = -ENOMEM;
+ 				goto _WPAPtk_end_case_;
+ 			}
 -- 
 1.9.1
 
