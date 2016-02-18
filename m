@@ -1,37 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:49720 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751044AbcBKJ2N (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:40514 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030335AbcBRHcZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2016 04:28:13 -0500
-Date: Thu, 11 Feb 2016 04:28:10 -0500 (EST)
-Message-Id: <20160211.042810.974143616679450202.davem@davemloft.net> (sfid-20160211_102822_411640_D199B26C)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org, ja@ssi.bg,
-	johannes.berg@intel.com
-Subject: Re: [PATCH v3 4/4] ipv6: add option to drop unsolicited neighbor
- advertisements
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1454589080-21354-4-git-send-email-johannes@sipsolutions.net>
-References: <1454589080-21354-1-git-send-email-johannes@sipsolutions.net>
-	<1454589080-21354-4-git-send-email-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 18 Feb 2016 02:32:25 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH 15/24] staging: wilc1000: coreconfigurator.c: removes unnecessary log messages
+Date: Thu, 18 Feb 2016 16:27:26 +0900
+Message-ID: <1455780455-21365-15-git-send-email-leo.kim@atmel.com> (sfid-20160218_083232_863110_C5DB9641)
+In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu,  4 Feb 2016 13:31:20 +0100
+From: Chris Park <chris.park@atmel.com>
 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> In certain 802.11 wireless deployments, there will be NA proxies
-> that use knowledge of the network to correctly answer requests.
-> To prevent unsolicitd advertisements on the shared medium from
-> being a problem, on such deployments wireless needs to drop them.
-> 
-> Enable this by providing an option called "drop_unsolicited_na".
-> 
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+This patch removes unnecessary log messages.
 
-Applied.
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
+index 3a76586..25dc108 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.c
++++ b/drivers/staging/wilc1000/coreconfigurator.c
+@@ -284,10 +284,8 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
+ 
+ 	msg_type = msg_buffer[0];
+ 
+-	if ('N' != msg_type) {
+-		PRINT_ER("Received Message format incorrect.\n");
++	if ('N' != msg_type)
+ 		return -EFAULT;
+-	}
+ 
+ 	msg_id = msg_buffer[1];
+ 	msg_len = MAKE_WORD16(msg_buffer[2], msg_buffer[3]);
+-- 
+1.9.1
+
