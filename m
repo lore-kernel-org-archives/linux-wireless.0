@@ -1,92 +1,84 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f42.google.com ([209.85.215.42]:33537 "EHLO
-	mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1423707AbcBQWg5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2016 17:36:57 -0500
-Received: by mail-lf0-f42.google.com with SMTP id m1so21009698lfg.0
-        for <linux-wireless@vger.kernel.org>; Wed, 17 Feb 2016 14:36:56 -0800 (PST)
-Date: Wed, 17 Feb 2016 17:36:57 -0500
-From: German <gentgerman@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: Wrong wireless nick card name loaded on reboot
-Message-ID: <20160217173657.7d2d1dc6@libertarian.asterius.net> (sfid-20160217_233701_614316_C8862621)
-In-Reply-To: <56C4E955.8080008@lwfinger.net>
-References: <20160217060909.694a9aff@libertarian.asterius.net>
-	<56C499E0.3070909@lwfinger.net>
-	<20160217115746.6e2edbcf@libertarian.asterius.net>
-	<56C4E955.8080008@lwfinger.net>
+Received: from arrakis.dune.hu ([78.24.191.176]:37301 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1423419AbcBSQYk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Feb 2016 11:24:40 -0500
+Subject: Re: [RFC] mac80211: add extap functionality
+To: Grzegorz Bajorski <grzegorz.bajorski@tieto.com>
+References: <1455710131-9967-1-git-send-email-grzegorz.bajorski@tieto.com>
+ <56C4A5ED.4060802@openwrt.org>
+ <CAPGg_YC4Scq_s4bR5qMjJgRErFODhVm1MUy0SyvFAwzxA0U2Nw@mail.gmail.com>
+ <56C5D066.8010405@openwrt.org>
+ <CAPGg_YBiL+sx4qXcu63nL5rGcV2kKy4MY_wX0Yr0d_8pVsgoSQ@mail.gmail.com>
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes@sipsolutions.net>
+From: Felix Fietkau <nbd@openwrt.org>
+Message-ID: <56C741C0.90002@openwrt.org> (sfid-20160219_172445_120767_E63584DB)
+Date: Fri, 19 Feb 2016 17:24:32 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+In-Reply-To: <CAPGg_YBiL+sx4qXcu63nL5rGcV2kKy4MY_wX0Yr0d_8pVsgoSQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 17 Feb 2016 15:42:45 -0600
-Larry Finger <Larry.Finger@lwfinger.net> wrote:
+On 2016-02-19 13:05, Grzegorz Bajorski wrote:
+> 2016-02-18 15:08 GMT+01:00 Felix Fietkau <nbd@openwrt.org>:
+>> On 2016-02-18 14:36, Grzegorz Bajorski wrote:
+>>> 2016-02-17 17:55 GMT+01:00 Felix Fietkau <nbd@openwrt.org>:
+>>>> On 2016-02-17 12:55, Grzegorz Bajorski wrote:
+>>>>> Client interface briding was only possible when 4addr frames were used with
+>>>>> a 4addr/WDS aware AP. It was not possible to do it otherwise due to 3addr
+>>>>> frame limitation.
+>>>>>
+>>>>> The extap logic introduces a smart MAC address masking/translation
+>>>>> (including modyfing packets beyond SA/DA, e.g. DHCP broadcast flag is set).
+>>>>>
+>>>>> There are still some unsolved problems and bugs:
+>>>>>  - due to bridge port routing and sk_buff payload sharing skb_copy() is
+>>>>>    performed; this ideally should be reworked
+>>>>>  - ipv6 support is still not finished
+>>>>>  - extap is enabled by default currently; it should be configurable via
+>>>>>    nl80211 the same way 4addr is
+>>>>>
+>>>>> There's also an idea to move this as a generic link driver (just like
+>>>>> macvlan, et al) which would allow unmodified cfg80211 drivers to enjoy the
+>>>>> extap functionality. Thoughts?
+>>>>>
+>>>>> Note: This changes cfg80211 file in this single patch only for reviewing
+>>>>> convienence.
+>>>>>
+>>>>> This is an early draft to solicit comments on the design.
+>>>>>
+>>>>> Signed-off-by: Grzegorz Bajorski <grzegorz.bajorski@tieto.com>
+>>>> You can get a lot of the same effect (sharing the same subnet between
+>>>> hosts behind multiple interfaces and having forwarding between them)
+>>>> without any changes to mac80211.
+>>>>
+>>>> OpenWrt uses a daemon called 'relayd' which I wrote some years ago. It
+>>>> does ARP translation, DHCP packet mangling and sets up policy routing to
+>>>> forward packets between multiple interfaces.
+>>>>
+>>>> You can find it here:
+>>>> http://git.openwrt.org/?p=project/relayd.git;a=summary
+>>>> git://git.openwrt.org/project/relayd.git
+>>>>
+>>>> Since you can cover the same use cases with user space code, I don't
+>>>> think it's a good idea to put bridge emulation hacks in the kernel's
+>>>> wireless stack.
+>>>
+>>> What about performance? Quick test show that is slow ~ 100-120 mbps
+>>> (UDP tests) and procesor is overloaded. Am I missing something? I
+>>> would expect it to be greater. (4 x 4 antena setup VHT80)
+>> What platform are you testing it on, and what kind of UDP test are you
+>> running?
+> 
+> My setup it is as follows:
+> [laptop1] --eth-- [EA6500 AP] ~~rf~~ [AP148 STA w/ QCA99X0] --eth--
+> [laptop2]. I run UDP traffic between Laptop1 and Laptop2 using iperf.
+> Laptop1: iperf -s -i1 -u
+> Laptop2: iperf -i1 -c 192.168.1.108 -b 200M -t100 -u -P5 (without -P5,
+> I got similar results)
+So what kind of kernel are you running? Maybe you should use perf to
+figure out why routing is so slow.
 
-> On 02/17/2016 10:57 AM, German wrote:
-> > On Wed, 17 Feb 2016 10:03:44 -0600
-> > Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> >
-> >> On 02/17/2016 05:09 AM, German wrote:
-> >>> Hi list,
-> >>>
-> >>> A couple of days ago I asked why my pc changes the wireless card
-> >>> name. It switches between AR9285 ( right) and AR5008 ( wrong).
-> >>> Someone suggested  that this is because another kernel module is
-> >>> loaded by mistake. Well, it is not the case. When system
-> >>> identified with AR9285, it loads ath9k and I can connect to the
-> >>> router. When system identifies my card as AR5008, no kernel
-> >>> module is present at all ( lspci -k). The wrong card name occurs
-> >>> only when system rebooted. If I gracefully shut down the system,
-> >>> it always comes up with a right name for the card ( AR9285). So,
-> >>> how to force the system identify my card right no matter if I
-> >>> reboot or shut down? Thank you.
-> >>
-> >> I would like to help you, but I do not remember your earlier
-> >> message. Why did you not reply to the earlier one so that
-> >> everything would be in the same thread? That would have made
-> >> searching the archives easier. As a result, I may be duplicating
-> >> some previous information.
-> >>
-> >> The selection of a driver for a given device comes from the PCI ID.
-> >> If your system is showing the wrong device, then you may have
-> >> hardware problems such that the PCI ID is reported incorrectly. To
-> >> test this, please provide the output of the command
-> >>
-> >> lspci -nn | grep Network
-> >>
-> >> for the "good" and "bad" case.
-> >>
-> >> Larry
-> >>
-> >>
-> >
-> > Larry, here is the "bad" case:
-> >
-> > lspci -nn | grep Network
-> > 01:00.0 Ethernet controller [0200]: Qualcomm Atheros AR5008
-> > Wireless Network Adapter [168c:ff1c] (rev 01)
-> >
-> 
-> The kernel scans the various PCI buses to gather the ID information
-> from the various cards. Sometimes your device returns [168c:ff1c] and
-> other times it returns [168c:002b]. The lable, i.e. the stuff from
-> "Qualcomm" to "Adapter" does not come from the card. That info is in
-> a file on your computer, and is based on the PCI ID read from the
-> card.
-> 
-> There is some kind of hardware problem causing two different IDs to
-> be read. Assuming that everything else is working correctly, it is
-> likely the wifi card at fault. If you can get to the card on your
-> machine, I suggest reseating it in its socket just in case it is a
-> contact problem. Otherwise, I have no suggestions.
-> 
-> Larry
-> 
-> 
-> I'm not
-> 
-
-Thanks for the reply Larry, I'll try what you suggest.
+- Felix
