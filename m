@@ -1,32 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sig21.net ([80.244.240.74]:55942 "EHLO mail.sig21.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754318AbcBAWxa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2016 17:53:30 -0500
-Date: Mon, 1 Feb 2016 23:53:20 +0100
-From: Johannes Stezenbach <js@sig21.net>
-To: Sven Eckelmann <sven@open-mesh.com>
-Cc: linux-wireless@vger.kernel.org, thomas@net.t-labs.tu-berlin.de,
-	antonio@open-mesh.com, nbd@nbd.name, johannes@sipsolutions.net
-Subject: Re: [PATCHv3] mac80211: minstrel: Change expected throughput unit
- back to Kbps
-Message-ID: <20160201225320.GB6507@sig21.net> (sfid-20160201_235336_119520_B13465A9)
-References: <1454364016-3234-1-git-send-email-sven@open-mesh.com>
+Received: from eusmtp01.atmel.com ([212.144.249.243]:47935 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1947157AbcBSIkF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 19 Feb 2016 03:40:05 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 4/6] staging: wilc1000: removes unnecessary wilc_debug print log
+Date: Fri, 19 Feb 2016 17:37:10 +0900
+Message-ID: <1455871032-7625-4-git-send-email-leo.kim@atmel.com> (sfid-20160219_094017_110520_5F0E836D)
+In-Reply-To: <1455871032-7625-1-git-send-email-leo.kim@atmel.com>
+References: <1455871032-7625-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1454364016-3234-1-git-send-email-sven@open-mesh.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Sven,
+This patch removes unnecessary wilc_debug print log.
+The print log was written when if condition fail.
+The condition is chip-id check function.
+Also, replaces this condition with normal function.
 
-On Mon, Feb 01, 2016 at 11:00:16PM +0100, Sven Eckelmann wrote:
-> -	tp_avg = minstrel_ht_get_tp_avg(mi, i, j, prob) * AVG_PKT_SIZE * 8 / 1024;
-> +	tp_avg = minstrel_ht_get_tp_avg(mi, i, j, prob) * 10;
-> +	tp_avg *= AVG_PKT_SIZE * 8 / 1024;
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-This doesn't look right, in integer arithmetics there is a big
-difference between (a * b) / c and a * ( b / c).
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index a51c66b..4873106 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -508,9 +508,7 @@ void chip_wakeup(struct wilc *wilc)
+ 
+ 			do {
+ 				usleep_range(2 * 1000, 2 * 1000);
+-				if ((wilc_get_chipid(wilc, true) == 0))
+-					wilc_debug(N_ERR, "Couldn't read chip id. Wake up failed\n");
+-
++				wilc_get_chipid(wilc, true);
+ 			} while ((wilc_get_chipid(wilc, true) == 0) && ((++trials % 3) == 0));
+ 
+ 		} while (wilc_get_chipid(wilc, true) == 0);
+-- 
+1.9.1
 
-
-Johannes
