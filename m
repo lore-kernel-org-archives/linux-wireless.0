@@ -1,43 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:33043 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932611AbcBZOGj (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48103 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757342AbcBSHoy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 09:06:39 -0500
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/3] mac80211: Support a scan request for a specific BSSID
-Date: Fri, 26 Feb 2016 16:06:05 +0200
-Message-ID: <1456495566-14272-2-git-send-email-jouni@qca.qualcomm.com> (sfid-20160226_150653_386944_CE897C6C)
-In-Reply-To: <1456495566-14272-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1456495566-14272-1-git-send-email-jouni@qca.qualcomm.com>
+	Fri, 19 Feb 2016 02:44:54 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>
+Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+	netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, b43-dev@lists.infradead.org,
+	Jia-Ju Bai <baijiaju1990@163.com>
+Subject: Re: [PATCH] b43: fix memory leak
+References: <1455798876-32186-1-git-send-email-sudipm.mukherjee@gmail.com>
+	<20160218173212.03670d97@wiggum>
+Date: Fri, 19 Feb 2016 09:44:48 +0200
+In-Reply-To: <20160218173212.03670d97@wiggum> ("Michael =?utf-8?Q?B=C3=BCs?=
+ =?utf-8?Q?ch=22's?= message of
+	"Thu, 18 Feb 2016 17:32:12 +0100")
+Message-ID: <87io1lqh3j.fsf@purkki.adurom.net> (sfid-20160219_084559_108079_E8061E1F)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the cfg80211 scan trigger operation specifies a single BSSID, use
-that value instead of the wildcard BSSID in the Probe Request frames.
+Michael Büsch <m@bues.ch> writes:
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- net/mac80211/scan.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> On Thu, 18 Feb 2016 18:04:36 +0530
+> Sudip Mukherjee <sudipm.mukherjee@gmail.com> wrote:
+>
+>> From: Sudip Mukherjee <sudip@vectorindia.org>
+>> 
+>> On error we jumped to the label bcma_out and returned the error code but
+>> we missed freeing dev.
+>> 
+>> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+>> ---
+>>  drivers/net/wireless/broadcom/b43/main.c | 1 +
+>>  1 file changed, 1 insertion(+)
+>> 
+>> diff --git a/drivers/net/wireless/broadcom/b43/main.c b/drivers/net/wireless/broadcom/b43/main.c
+>> index c279211..78f670a 100644
+>> --- a/drivers/net/wireless/broadcom/b43/main.c
+>> +++ b/drivers/net/wireless/broadcom/b43/main.c
+>> @@ -5671,6 +5671,7 @@ static int b43_bcma_probe(struct bcma_device *core)
+>>  	wl = b43_wireless_init(dev);
+>>  	if (IS_ERR(wl)) {
+>>  		err = PTR_ERR(wl);
+>> +		kfree(dev);
+>>  		goto bcma_out;
+>>  	}
+>>  
+>
+> We recently had a patch that fixes this, among more leaks. Subject:
+> [PATCH v2 resend] b43: Fix memory leaks in b43_bus_dev_ssb_init and
+> b43_bus_dev_bcma_init
+>
+> Please test that patch instead, so we can finally apply it.
+>
+> It needs to be tested on both ssb and bcma. Come on. This isn't too
+> hard. :) Please somebody with any hardware test it. (I currently don't
+> have any b43 hardware)
 
-diff --git a/net/mac80211/scan.c b/net/mac80211/scan.c
-index ae980ce..b025a82 100644
---- a/net/mac80211/scan.c
-+++ b/net/mac80211/scan.c
-@@ -497,7 +497,7 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
- 
- 	for (i = 0; i < scan_req->n_ssids; i++)
- 		ieee80211_send_probe_req(
--			sdata, local->scan_addr, NULL,
-+			sdata, local->scan_addr, scan_req->bssid,
- 			scan_req->ssids[i].ssid, scan_req->ssids[i].ssid_len,
- 			scan_req->ie, scan_req->ie_len,
- 			scan_req->rates[band], false,
+And the patch can be downloaded from patchwork:
+
+https://patchwork.kernel.org/patch/8049041/
+
 -- 
-1.9.1
-
+Kalle Valo
