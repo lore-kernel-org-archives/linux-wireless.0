@@ -1,89 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40556 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030335AbcBRHcg (ORCPT
+Received: from nasmtp01.atmel.com ([192.199.1.246]:25932 "EHLO
+	DVREDG02.corp.atmel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1426618AbcBSBrt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 02:32:36 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH 16/24] staging: wilc1000: host_interface.c: removes unnecessary log messages
-Date: Thu, 18 Feb 2016 16:27:27 +0900
-Message-ID: <1455780455-21365-16-git-send-email-leo.kim@atmel.com> (sfid-20160218_083240_010273_36C8A6A8)
-In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+	Thu, 18 Feb 2016 20:47:49 -0500
+From: "Kim, Leo" <Leo.Kim@atmel.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: Greg KH <gregkh@linuxfoundation.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"Cho, Tony" <Tony.Cho@atmel.com>, "Lee, Glen" <Glen.Lee@atmel.com>,
+	"Shin, Austin" <Austin.Shin@atmel.com>,
+	"Park, Chris" <Chris.Park@atmel.com>,
+	"Abozaeid, Adham" <Adham.Abozaeid@atmel.com>,
+	"Ferre, Nicolas" <Nicolas.FERRE@atmel.com>
+Subject: RE: [PATCH V2 18/24] staging: wilc1000: linux_wlan.c: removes
+ unnecessary log messages
+Date: Fri, 19 Feb 2016 01:47:02 +0000
+Message-ID: <74F3875218FC364C9618AB19CB60E90580049A75@penmbx02.corp.atmel.com> (sfid-20160219_024754_628275_94C2C0A4)
+References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
+ <1455795024-26978-18-git-send-email-leo.kim@atmel.com>
+ <CAGRGNgXJD1Cu1CdmYZfhqf=Up_v0pA2zw+GthDtJPaVwuV99JQ@mail.gmail.com>
+In-Reply-To: <CAGRGNgXJD1Cu1CdmYZfhqf=Up_v0pA2zw+GthDtJPaVwuV99JQ@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
-
-This patch removes unnecessary log messages.
-
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index ee45103..60678aa 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1643,11 +1643,8 @@ static int Handle_Key(struct wilc_vif *vif,
- 
- 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2,
- 					    GFP_KERNEL);
--
--			if (pu8keybuf == NULL) {
--				PRINT_ER("No buffer to send Key\n");
-+			if (!pu8keybuf)
- 				return -ENOMEM;
--			}
- 
- 			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
- 			pu8keybuf[1] = pstrHostIFkeyAttr->attr.wep.key_len;
-@@ -1668,10 +1665,8 @@ static int Handle_Key(struct wilc_vif *vif,
- 			kfree(pu8keybuf);
- 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
- 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2, GFP_KERNEL);
--			if (!pu8keybuf) {
--				PRINT_ER("No buffer to send Key\n");
-+			if (!pu8keybuf)
- 				return -ENOMEM;
--			}
- 			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
- 			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->attr.wep.key_len, 1);
- 			memcpy(pu8keybuf + 2, pstrHostIFkeyAttr->attr.wep.key,
-@@ -1715,7 +1710,6 @@ static int Handle_Key(struct wilc_vif *vif,
- 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
- 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
- 			if (!pu8keybuf) {
--				PRINT_ER("No buffer to send RxGTK Key\n");
- 				ret = -ENOMEM;
- 				goto _WPARxGtk_end_case_;
- 			}
-@@ -1747,7 +1741,6 @@ static int Handle_Key(struct wilc_vif *vif,
- 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
- 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
- 			if (pu8keybuf == NULL) {
--				PRINT_ER("No buffer to send RxGTK Key\n");
- 				ret = -ENOMEM;
- 				goto _WPARxGtk_end_case_;
- 			}
-@@ -1787,7 +1780,6 @@ _WPARxGtk_end_case_:
- 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
- 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN + 1, GFP_KERNEL);
- 			if (!pu8keybuf) {
--				PRINT_ER("No buffer to send PTK Key\n");
- 				ret = -ENOMEM;
- 				goto _WPAPtk_end_case_;
- 			}
--- 
-1.9.1
-
+SGkgSnVsaWFuLA0KDQpZZXMsIG9uZ29pbmcgcmVtb3ZlIHRoaXMgZnVuY3Rpb24uDQpJIHdpbGwg
+YmUgcmVtb3ZpbmcgdGhpcyBmdW5jdGlvbiBmb3IgbmV4dCBwYXRjaC4NClRoYW5rIHlvdSBpbiB5
+b3VyIGFkdmljZS4NCg0KwqBUaGFua3MsIEJSDQrCoExlbw0KDQotLS0tLU9yaWdpbmFsIE1lc3Nh
+Z2UtLS0tLQ0KRnJvbTogSnVsaWFuIENhbGFieSBbbWFpbHRvOmp1bGlhbi5jYWxhYnlAZ21haWwu
+Y29tXSANClNlbnQ6IEZyaWRheSwgRmVicnVhcnkgMTksIDIwMTYgOTo0MSBBTQ0KVG86IEtpbSwg
+TGVvIDxMZW8uS2ltQGF0bWVsLmNvbT4NCkNjOiBHcmVnIEtIIDxncmVna2hAbGludXhmb3VuZGF0
+aW9uLm9yZz47IGRldmVsQGRyaXZlcmRldi5vc3Vvc2wub3JnOyBsaW51eC13aXJlbGVzcyA8bGlu
+dXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnPjsgQ2hvLCBUb255IDxUb255LkNob0BhdG1lbC5j
+b20+OyBMZWUsIEdsZW4gPEdsZW4uTGVlQGF0bWVsLmNvbT47IFNoaW4sIEF1c3RpbiA8QXVzdGlu
+LlNoaW5AYXRtZWwuY29tPjsgUGFyaywgQ2hyaXMgPENocmlzLlBhcmtAYXRtZWwuY29tPjsgQWJv
+emFlaWQsIEFkaGFtIDxBZGhhbS5BYm96YWVpZEBhdG1lbC5jb20+OyBGZXJyZSwgTmljb2xhcyA8
+Tmljb2xhcy5GRVJSRUBhdG1lbC5jb20+DQpTdWJqZWN0OiBSZTogW1BBVENIIFYyIDE4LzI0XSBz
+dGFnaW5nOiB3aWxjMTAwMDogbGludXhfd2xhbi5jOiByZW1vdmVzIHVubmVjZXNzYXJ5IGxvZyBt
+ZXNzYWdlcw0KDQpIaSBMZW8sDQoNCk9uIFRodSwgRmViIDE4LCAyMDE2IGF0IDEwOjMwIFBNLCBM
+ZW8gS2ltIDxsZW8ua2ltQGF0bWVsLmNvbT4gd3JvdGU6DQo+IEZyb206IENocmlzIFBhcmsgPGNo
+cmlzLnBhcmtAYXRtZWwuY29tPg0KPg0KPiBUaGlzIHBhdGNoIHJlbW92ZXMgdW5uZWNlc3Nhcnkg
+bG9nIG1lc3NhZ2VzLg0KPg0KPiBTaWduZWQtb2ZmLWJ5OiBDaHJpcyBQYXJrIDxjaHJpcy5wYXJr
+QGF0bWVsLmNvbT4NCj4gU2lnbmVkLW9mZi1ieTogTGVvIEtpbSA8bGVvLmtpbUBhdG1lbC5jb20+
+DQo+IC0tLQ0KPiAgZHJpdmVycy9zdGFnaW5nL3dpbGMxMDAwL2xpbnV4X3dsYW4uYyB8IDEgLQ0K
+PiAgMSBmaWxlIGNoYW5nZWQsIDEgZGVsZXRpb24oLSkNCj4NCj4gZGlmZiAtLWdpdCBhL2RyaXZl
+cnMvc3RhZ2luZy93aWxjMTAwMC9saW51eF93bGFuLmMgYi9kcml2ZXJzL3N0YWdpbmcvd2lsYzEw
+MDAvbGludXhfd2xhbi5jDQo+IGluZGV4IGE3MzFiNDYuLjY2MGJmNjMgMTAwNjQ0DQo+IC0tLSBh
+L2RyaXZlcnMvc3RhZ2luZy93aWxjMTAwMC9saW51eF93bGFuLmMNCj4gKysrIGIvZHJpdmVycy9z
+dGFnaW5nL3dpbGMxMDAwL2xpbnV4X3dsYW4uYw0KPiBAQCAtMjI2LDcgKzIyNiw2IEBAIHN0YXRp
+YyB2b2lkIGRlaW5pdF9pcnEoc3RydWN0IG5ldF9kZXZpY2UgKmRldikNCj4NCj4gIHZvaWQgd2ls
+Y19kYmcodTggKmJ1ZmYpDQo+ICB7DQo+IC0gICAgICAgUFJJTlRfRChJTklUX0RCRywgIiVkXG4i
+LCAqYnVmZik7DQo+ICB9DQoNCkFyZSB5b3Ugc3VyZSB0aGlzIGlzIHJpZ2h0PyBJZiBzbywgd2h5
+IG5vdCBqdXN0IHJlbW92ZSB0aGlzIGZ1bmN0aW9uIGVudGlyZWx5Pw0KDQpUaGFua3MsDQoNCi0t
+IA0KSnVsaWFuIENhbGFieQ0KDQpFbWFpbDoganVsaWFuLmNhbGFieUBnbWFpbC5jb20NClByb2Zp
+bGU6IGh0dHA6Ly93d3cuZ29vZ2xlLmNvbS9wcm9maWxlcy9qdWxpYW4uY2FsYWJ5Lw0K
