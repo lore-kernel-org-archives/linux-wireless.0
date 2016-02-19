@@ -1,67 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:21050 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754427AbcBVKVN (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33245 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992784AbcBSKnL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 05:21:13 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V4 24/24] staging: wilc1000: moves LINUX_RX_SIZE, LINUX_TX_SIZE
-Date: Mon, 22 Feb 2016 19:14:31 +0900
-Message-ID: <1456136071-10502-25-git-send-email-leo.kim@atmel.com> (sfid-20160222_112117_641147_02CA68B1)
-In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
-References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 19 Feb 2016 05:43:11 -0500
+Received: by mail-wm0-f68.google.com with SMTP id c200so7295418wme.0
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Feb 2016 02:43:09 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH v2 1/2] cfg80211: add radiotap VHT info to rtap_namespace_sizes
+Date: Fri, 19 Feb 2016 11:43:04 +0100
+Message-Id: <1455878585-5525-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20160219_114328_247307_F5A2F43E)
+In-Reply-To: <1455878585-5525-1-git-send-email-lorenzo.bianconi83@gmail.com>
+References: <1455878585-5525-1-git-send-email-lorenzo.bianconi83@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+Add IEEE80211_RADIOTAP_VHT entry to rtap_namespace_sizes array in order to
+define alignment and size of VHT info in tx radiotap
 
-This patch moves LINUX_RX_SIZE and LINUX_TX_SIZE to wilc_wlan.h file
-because there are only used to wilc_wlan.c file.
-
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/staging/wilc1000/linux_wlan_common.h | 4 ----
- drivers/staging/wilc1000/wilc_wlan.h         | 3 +++
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ net/wireless/radiotap.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index 51601aa..aa2c026 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -1,10 +1,6 @@
- #ifndef LINUX_WLAN_COMMON_H
- #define LINUX_WLAN_COMMON_H
- 
--#define LINUX_RX_SIZE	(96 * 1024)
--#define LINUX_TX_SIZE	(64 * 1024)
--
--
- #define WILC_MULTICAST_TABLE_SIZE	8
- 
- #if defined(BEAGLE_BOARD)
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 06d02ab..792d338 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -128,6 +128,9 @@
- #define WILC_PLL_TO_SPI		2
- #define ABORT_INT		BIT(31)
- 
-+#define LINUX_RX_SIZE		(96 * 1024)
-+#define LINUX_TX_SIZE		(64 * 1024)
-+
- /*******************************************/
- /*        E0 and later Interrupt flags.    */
- /*******************************************/
+diff --git a/net/wireless/radiotap.c b/net/wireless/radiotap.c
+index 722da61..6582d15 100644
+--- a/net/wireless/radiotap.c
++++ b/net/wireless/radiotap.c
+@@ -43,6 +43,7 @@ static const struct radiotap_align_size rtap_namespace_sizes[] = {
+ 	[IEEE80211_RADIOTAP_DATA_RETRIES] = { .align = 1, .size = 1, },
+ 	[IEEE80211_RADIOTAP_MCS] = { .align = 1, .size = 3, },
+ 	[IEEE80211_RADIOTAP_AMPDU_STATUS] = { .align = 4, .size = 8, },
++	[IEEE80211_RADIOTAP_VHT] = { .align = 2, .size = 12, },
+ 	/*
+ 	 * add more here as they are defined in radiotap.h
+ 	 */
 -- 
-1.9.1
+2.5.0
 
