@@ -1,62 +1,278 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:34087 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752719AbcBAElt (ORCPT
+Received: from mail-lb0-f176.google.com ([209.85.217.176]:35503 "EHLO
+	mail-lb0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1426398AbcBSKCO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 31 Jan 2016 23:41:49 -0500
-Date: Mon, 1 Feb 2016 10:11:42 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	kbuild test robot <lkp@intel.com>,
-	kernel-janitors <kernel-janitors@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: wireless-drivers: random cleanup patches piling up
-Message-ID: <20160201044142.GC4072@sudip-pc> (sfid-20160201_054224_821714_0923A50A)
-References: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com>
- <1453423965.3856.22.camel@perches.com>
- <87k2n1x0sf.fsf@kamboji.qca.qualcomm.com>
- <20160122151211.GB1500@tuxdriver.com>
- <87si1pvcd7.fsf@kamboji.qca.qualcomm.com>
- <20160126052823.GA2053@sudip-laptop>
- <87bn84kdu0.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87bn84kdu0.fsf@kamboji.qca.qualcomm.com>
+	Fri, 19 Feb 2016 05:02:14 -0500
+Received: by mail-lb0-f176.google.com with SMTP id bc4so44082605lbc.2
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Feb 2016 02:02:14 -0800 (PST)
+From: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net,
+	Janusz Dziedzic <janusz.dziedzic@tieto.com>
+Subject: [PATCH 2/2] mac80211: add NEED_ALIGNED4_SKBS hw flag
+Date: Fri, 19 Feb 2016 11:01:50 +0100
+Message-Id: <1455876110-12758-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20160219_110223_464971_D77642C3)
+In-Reply-To: <1455876110-12758-1-git-send-email-janusz.dziedzic@tieto.com>
+References: <1455876110-12758-1-git-send-email-janusz.dziedzic@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Jan 29, 2016 at 10:08:23AM +0200, Kalle Valo wrote:
-> Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
-> 
-> >> >> That's also my experience from maintaining wireless-drivers for a year,
-> >> >> this seems to be a "hit and run" type of phenomenon.
-> >> >
-> >> > Should we be looking for someone to run a "wireless-driver-cleanups"
-> >> > tree?  They could handle the cleanups and trivial stuff, and send
-> >> > you a pull request a couple of times per release...?
-> >> 
-> >> Not a bad idea! But I don't think we need a separate tree as applying
-> >> patches from patchwork is easy. It should be doable that we add an
-> >> account to patchwork and whenever I see a this type of trivial cleanup
-> >> patch I'll assign it to the cleanup maintainer and whenever he/she
-> >> thinks it's ready he assigns the patch back to me and I'll apply it.
-> >> 
-> >> The only difficult part is finding a victim/volunteer to
-> >> do that ;)
-> >
-> > I can be a volunteer (victim?). Though i donot know much about
-> > wireless-drivers, but I do know a little about cleanup patches.
-> > And maybe, in the process I will start knowing wireless-drivers.
-> 
-> I think it's better that you have prior experience with linux-wireless
-> before doing something like this. You can start by reviewing patches and
-> providing Reviewed-by tags.
+HW/driver should set NEED_ALIGNED4_SKBS flag in case
+require aligned skbs to four-byte boundaries.
+This affect only TX direction.
 
-Sure, I am starting that way. I checked in patchwork and I do not see
-any checkpatch related patch pending (except staging, which Greg will
-handle). I think you must have cleared all of them.
+Padding is added after ieee80211_hdr, before IV/LLC.
 
-regards
-sudip
+Before we have to do memmove(hdrlen) twice in the
+dirver. Once before we pass this to HW and next
+in tx completion (to be sure monitor will report
+this tx frame correctly).
+
+With this patch we can skip this memmove() and save CPU.
+
+Currently this was tested with ath9k, both hw/sw crypt for
+wep/tkip/ccmp.
+
+Signed-off-by: Janusz Dziedzic <janusz.dziedzic@tieto.com>
+---
+ include/net/mac80211.h     |  3 +++
+ net/mac80211/debugfs.c     |  1 +
+ net/mac80211/ieee80211_i.h | 23 +++++++++++++++++++++++
+ net/mac80211/sta_info.h    |  2 +-
+ net/mac80211/status.c      | 13 +++++++++++++
+ net/mac80211/tkip.c        |  4 +++-
+ net/mac80211/tx.c          | 21 +++++++++++++++------
+ net/mac80211/util.c        |  3 ++-
+ 8 files changed, 61 insertions(+), 9 deletions(-)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 31337f8..561605c 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1961,6 +1961,8 @@ struct ieee80211_txq {
+  *	reordering buffer internally, guaranteeing mac80211 receives frames in
+  *	order and does not need to manage its own reorder buffer or BA session
+  *	timeout.
++ * @IEEE80211_HW_NEEDS_ALIGNED4_SKBS: Driver need aligned skbs to four-byte.
++ *	Padding will be added after ieee80211_hdr, before IV/LLC.
+  *
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+@@ -1999,6 +2001,7 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_BEACON_TX_STATUS,
+ 	IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR,
+ 	IEEE80211_HW_SUPPORTS_REORDERING_BUFFER,
++	IEEE80211_HW_NEEDS_ALIGNED4_SKBS,
+ 
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 4ab5c52..c48905e 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -127,6 +127,7 @@ static const char *hw_flag_names[] = {
+ 	FLAG(BEACON_TX_STATUS),
+ 	FLAG(NEEDS_UNIQUE_STA_ADDR),
+ 	FLAG(SUPPORTS_REORDERING_BUFFER),
++	FLAG(NEEDS_ALIGNED4_SKBS),
+ #undef FLAG
+ };
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 81a476a..0687f94 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1476,6 +1476,29 @@ ieee80211_have_rx_timestamp(struct ieee80211_rx_status *status)
+ 	return false;
+ }
+ 
++static inline unsigned int
++ieee80211_hdr_padsize(struct ieee80211_hw *hw, unsigned int hdrlen)
++{
++	/*
++	 * While hdrlen is already aligned to two-byte boundaries,
++	 * simple check with & 2 will return correct padsize.
++	 */
++	if (ieee80211_hw_check(hw, NEEDS_ALIGNED4_SKBS))
++		return hdrlen & 2;
++	return 0;
++}
++
++static inline unsigned int
++ieee80211_padded_hdrlen(struct ieee80211_hw *hw, __le16 fc)
++{
++	unsigned int hdrlen;
++
++	hdrlen = ieee80211_hdrlen(fc);
++	hdrlen += ieee80211_hdr_padsize(hw, hdrlen);
++
++	return hdrlen;
++}
++
+ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
+ 				     struct ieee80211_rx_status *status,
+ 				     unsigned int mpdu_len,
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index f4d3899..c432f4a 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -271,7 +271,7 @@ struct ieee80211_fast_tx {
+ 	u8 hdr_len;
+ 	u8 sa_offs, da_offs, pn_offs;
+ 	u8 band;
+-	u8 hdr[30 + 2 + IEEE80211_FAST_XMIT_MAX_IV +
++	u8 hdr[30 + 2 + 2 + IEEE80211_FAST_XMIT_MAX_IV +
+ 	       sizeof(rfc1042_header)];
+ 
+ 	struct rcu_head rcu_head;
+diff --git a/net/mac80211/status.c b/net/mac80211/status.c
+index 6101deb..d2b0273 100644
+--- a/net/mac80211/status.c
++++ b/net/mac80211/status.c
+@@ -683,9 +683,22 @@ void ieee80211_tx_monitor(struct ieee80211_local *local, struct sk_buff *skb,
+ 	struct sk_buff *skb2;
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	struct net_device *prev_dev = NULL;
++	unsigned int hdrlen, padsize;
+ 	int rtap_len;
+ 
++	/* Remove padding if was added */
++	if (ieee80211_hw_check(&local->hw, NEEDS_ALIGNED4_SKBS)) {
++		hdrlen = ieee80211_hdrlen(hdr->frame_control);
++		padsize = ieee80211_hdr_padsize(&local->hw, hdrlen);
++
++		if (padsize && skb->len > hdrlen + padsize) {
++			memmove(skb->data + padsize, skb->data, hdrlen);
++			skb_pull(skb, padsize);
++		}
++	}
++
+ 	/* send frame to monitor interfaces now */
+ 	rtap_len = ieee80211_tx_radiotap_len(info);
+ 	if (WARN_ON_ONCE(skb_headroom(skb) < rtap_len)) {
+diff --git a/net/mac80211/tkip.c b/net/mac80211/tkip.c
+index 0ae2077..b3ab779 100644
+--- a/net/mac80211/tkip.c
++++ b/net/mac80211/tkip.c
+@@ -201,10 +201,12 @@ void ieee80211_get_tkip_p2k(struct ieee80211_key_conf *keyconf,
+ {
+ 	struct ieee80211_key *key = (struct ieee80211_key *)
+ 			container_of(keyconf, struct ieee80211_key, conf);
++	struct ieee80211_hw *hw = &key->local->hw;
+ 	const u8 *tk = &key->conf.key[NL80211_TKIP_DATA_OFFSET_ENCR_KEY];
+ 	struct tkip_ctx *ctx = &key->u.tkip.tx;
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+-	const u8 *data = (u8 *)hdr + ieee80211_hdrlen(hdr->frame_control);
++	const u8 *data = (u8 *)hdr + ieee80211_padded_hdrlen(hw,
++							hdr->frame_control);
+ 	u32 iv32 = get_unaligned_le32(&data[4]);
+ 	u16 iv16 = data[2] | (data[0] << 8);
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index cd4c361..3c2fad3 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1162,8 +1162,7 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 	info->flags &= ~IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+ 
+ 	hdr = (struct ieee80211_hdr *) skb->data;
+-
+-	tx->hdrlen = ieee80211_hdrlen(hdr->frame_control);
++	tx->hdrlen = ieee80211_padded_hdrlen(&local->hw, hdr->frame_control);
+ 
+ 	if (likely(sta)) {
+ 		if (!IS_ERR(sta))
+@@ -1795,7 +1794,7 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 		goto fail;
+ 
+ 	hdr = (struct ieee80211_hdr *)(skb->data + len_rthdr);
+-	hdrlen = ieee80211_hdrlen(hdr->frame_control);
++	hdrlen = ieee80211_padded_hdrlen(&local->hw, hdr->frame_control);
+ 
+ 	if (skb->len < len_rthdr + hdrlen)
+ 		goto fail;
+@@ -2020,7 +2019,7 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_chanctx_conf *chanctx_conf;
+ 	struct ieee80211_sub_if_data *ap_sdata;
+ 	enum ieee80211_band band;
+-	int ret;
++	int padsize, ret;
+ 
+ 	if (IS_ERR(sta))
+ 		sta = NULL;
+@@ -2237,6 +2236,9 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 		hdrlen += 2;
+ 	}
+ 
++	/* Check aligned4 skb required */
++	padsize = ieee80211_hdr_padsize(&sdata->local->hw, hdrlen);
++
+ 	/*
+ 	 * Drop unicast frames to unauthorised stations unless they are
+ 	 * EAPOL frames from the local station.
+@@ -2323,6 +2325,7 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 	h_pos -= skip_header_bytes;
+ 
+ 	head_need = hdrlen + encaps_len + meshhdrlen - skb_headroom(skb);
++	head_need += padsize;
+ 
+ 	/*
+ 	 * So we need to modify the skb header and hence need a copy of
+@@ -2361,6 +2364,9 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 	}
+ #endif
+ 
++	if (padsize)
++		memset(skb_push(skb, padsize), 0, padsize);
++
+ 	if (ieee80211_is_data_qos(fc)) {
+ 		__le16 *qos_control;
+ 
+@@ -2374,8 +2380,8 @@ static struct sk_buff *ieee80211_build_hdr(struct ieee80211_sub_if_data *sdata,
+ 	} else
+ 		memcpy(skb_push(skb, hdrlen), &hdr, hdrlen);
+ 
+-	nh_pos += hdrlen;
+-	h_pos += hdrlen;
++	nh_pos += hdrlen + padsize;
++	h_pos += hdrlen + padsize;
+ 
+ 	/* Update skb pointers to various headers since this modified frame
+ 	 * is going to go through Linux networking code that may potentially
+@@ -2544,6 +2550,9 @@ void ieee80211_check_fast_xmit(struct sta_info *sta)
+ 		fc |= cpu_to_le16(IEEE80211_STYPE_QOS_DATA);
+ 	}
+ 
++	/* Check aligned4 skb required */
++	build.hdr_len += ieee80211_hdr_padsize(&local->hw, build.hdr_len);
++
+ 	/* We store the key here so there's no point in using rcu_dereference()
+ 	 * but that's fine because the code that changes the pointers will call
+ 	 * this function after doing so. For a single CPU that would be enough,
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index b3c6515..6e39835 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1223,6 +1223,7 @@ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 			 u32 tx_flags)
+ {
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_hw *hw = &local->hw;
+ 	struct sk_buff *skb;
+ 	struct ieee80211_mgmt *mgmt;
+ 	unsigned int hdrlen;
+@@ -1250,7 +1251,7 @@ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 		memcpy(skb_put(skb, extra_len), extra, extra_len);
+ 
+ 	if (auth_alg == WLAN_AUTH_SHARED_KEY && transaction == 3) {
+-		hdrlen = ieee80211_hdrlen(mgmt->frame_control);
++		hdrlen = ieee80211_padded_hdrlen(hw, mgmt->frame_control);
+ 		mgmt->frame_control |= cpu_to_le16(IEEE80211_FCTL_PROTECTED);
+ 		err = ieee80211_wep_encrypt(local, skb, hdrlen, key,
+ 					    key_len, key_idx);
+-- 
+1.9.1
+
