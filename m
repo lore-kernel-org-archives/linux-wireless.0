@@ -1,37 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43258 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932087AbcBZKqm (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:47900 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1947159AbcBSIj6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 05:46:42 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi 2016-02-25
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA41983@hasmsx107.ger.corp.intel.com>
-Date: Fri, 26 Feb 2016 12:46:37 +0200
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA41983@hasmsx107.ger.corp.intel.com>
-	(Emmanuel Grumbach's message of "Thu, 25 Feb 2016 20:56:07 +0000")
-Message-ID: <87povjbvg2.fsf@kamboji.qca.qualcomm.com> (sfid-20160226_114717_246996_A0D90CE2)
+	Fri, 19 Feb 2016 03:39:58 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 3/6] staging: wilc1000: removes unnecessary wilc_debug print log
+Date: Fri, 19 Feb 2016 17:37:09 +0900
+Message-ID: <1455871032-7625-3-git-send-email-leo.kim@atmel.com> (sfid-20160219_094034_971834_74F11ECC)
+In-Reply-To: <1455871032-7625-1-git-send-email-leo.kim@atmel.com>
+References: <1455871032-7625-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+This patch removes unnecessary wilc_debug print log and the check routine.
 
-> This is a pull request for 4.5 still. Two small fixes. One of them has a really visible impact when we remove stations.
-> Let me know if you have issues! Thanks.
->
-> The following changes since commit 20aa99bbddae74bded68338f9ba200ccae02858b:
->
->   iwlwifi: pcie: fix erroneous return value (2016-02-15 13:38:31 +0200)
->
-> are available in the git repository at:
->
->   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes.git tags/iwlwifi-for-kalle-2016-02-25
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-Pulled, thanks.
-
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 2719c3d..a51c66b 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -529,9 +529,6 @@ void chip_wakeup(struct wilc *wilc)
+ 
+ 				wilc->hif_func->hif_read_reg(wilc, 0xf1,
+ 							     &clk_status_reg);
+-
+-				if ((clk_status_reg & 0x1) == 0)
+-					wilc_debug(N_ERR, "clocks still OFF. Wake up failed\n");
+ 			}
+ 			if ((clk_status_reg & 0x1) == 0) {
+ 				wilc->hif_func->hif_write_reg(wilc, 0xf0,
 -- 
-Kalle Valo
+1.9.1
+
