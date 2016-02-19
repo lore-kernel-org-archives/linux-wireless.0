@@ -1,77 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:53230 "EHLO
-	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755682AbcBWVpG (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33247 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750791AbcBSLSE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 16:45:06 -0500
-Date: Tue, 23 Feb 2016 22:45:02 +0100
-From: Pavel Machek <pavel@ucw.cz>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: =?iso-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux@endlessm.com,
-	=?iso-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
-	<jprvita@endlessm.com>
-Subject: Re: [PATCHv2 09/10] rfkill: Userspace control for airplane mode
-Message-ID: <20160223214501.GA22501@amd> (sfid-20160223_224543_529221_CC54E17D)
-References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
- <1456159001-20307-10-git-send-email-jprvita@endlessm.com>
- <20160223204525.GC16961@amd>
- <1456260914.9910.34.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1456260914.9910.34.camel@sipsolutions.net>
+	Fri, 19 Feb 2016 06:18:04 -0500
+Received: by mail-wm0-f68.google.com with SMTP id c200so7405486wme.0
+        for <linux-wireless@vger.kernel.org>; Fri, 19 Feb 2016 03:18:04 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Sven Eckelmann <sven@narfation.org>, nbd@openwrt.org
+Subject: [PATCH v2] mac80211: fix wiphy supported_band access
+Date: Fri, 19 Feb 2016 12:18:01 +0100
+Message-Id: <1455880681-6194-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20160219_121809_304949_97AE7B69)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue 2016-02-23 21:55:14, Johannes Berg wrote:
-> On Tue, 2016-02-23 at 21:45 +0100, Pavel Machek wrote:
-> 
-> > So... you add LED trigger to display the state of the airplane
-> > mode. Ok, why not.
-> 
-> Yes. However, consider that "the airplane mode" isn't a well-defined
-> concept; some systems may want to light up that LED even when wifi is
-> still enabled, since you're nowadays quite likely to be allowed to use
-> wifi (but not enable e.g. LTE) while in-flight.
+Fix wiphy supported_band access in tx radiotap parsing introduced
+in commit 5ec3aed9ba4c ("mac80211: Parse legacy and HT rate in
+injected frames"). In particular, info->band is always set to 0
+(IEEE80211_BAND_2GHZ) since it has not assigned yet.
+This cause a kernel crash on 5GHz only devices.
+Move ieee80211_parse_tx_radiotap() after info->band assignment
 
-Well "the airplane mode" is well defined. It means no intentional
-transmitting at radio frequencies.
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+---
+v2:
+- improved the commit message
+---
+ net/mac80211/tx.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-The fact that you are allowed to use WIFI on certain flights does not
-change anything.
-
-> > But now you add an way to override it? Why? If someone wants to
-> > change
-> > the led state, he can just change trigger to none, and then control
-> > the LED manually...
-> 
-> Yes, but now you've forced every application that wants to deal with
-> this to know about every single LED that might be used with this
-> trigger... that won't work for some generic userland tool that might
-> want to implement an "airplane-mode policy".
-
-I see that "airplane mode" trigger might be a tiny bit
-useful... dunno, for a LED near the airplane mode switch, when vendor
-replaced hardware toggle with a key. But policy should have nothing to
-do with that. If you argue additional "policy daemon" is needed for
-that... forget it, that's overdesigned.
-
-(Besides, finding all LEDs with given trigger is trivial
-operation. Besides... there should never be more than one).
-
-> > BTW what happens when the device contains both radios controlled by
-> > kernel (wifi, bluetooth) and radios controlled by userspace (GSM
-> > modem)?
-> 
-> You'd better have the userspace to control the LED :)
-
-Yes, so lets forget that and no additional triggers? Good ;-).
-									Pavel
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 7bb67fa..b07d037 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1892,10 +1892,6 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 	info->flags = IEEE80211_TX_CTL_REQ_TX_STATUS |
+ 		      IEEE80211_TX_CTL_INJECTED;
+ 
+-	/* process and remove the injection radiotap header */
+-	if (!ieee80211_parse_tx_radiotap(local, skb))
+-		goto fail;
+-
+ 	rcu_read_lock();
+ 
+ 	/*
+@@ -1957,6 +1953,10 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
+ 		goto fail_rcu;
+ 
+ 	info->band = chandef->chan->band;
++	/* process and remove the injection radiotap header */
++	if (!ieee80211_parse_tx_radiotap(local, skb))
++		goto fail_rcu;
++
+ 	ieee80211_xmit(sdata, NULL, skb);
+ 	rcu_read_unlock();
+ 
 -- 
-(english) http://www.livejournal.com/~pavelmachek
-(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
+2.5.0
+
