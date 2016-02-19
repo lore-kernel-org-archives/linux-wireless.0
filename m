@@ -1,149 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:60830 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751762AbcBHNep (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 08:34:45 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH] cfg80211: reuse existing page fragments in A-MSDU rx
-Date: Mon,  8 Feb 2016 14:34:42 +0100
-Message-Id: <1454938482-81027-1-git-send-email-nbd@openwrt.org> (sfid-20160208_143449_162815_D5CFBE8E)
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:35644 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992562AbcBSAlI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 18 Feb 2016 19:41:08 -0500
+Received: by mail-ig0-f173.google.com with SMTP id hb3so24993585igb.0
+        for <linux-wireless@vger.kernel.org>; Thu, 18 Feb 2016 16:41:06 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1455795024-26978-18-git-send-email-leo.kim@atmel.com>
+References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com> <1455795024-26978-18-git-send-email-leo.kim@atmel.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 19 Feb 2016 11:40:47 +1100
+Message-ID: <CAGRGNgXJD1Cu1CdmYZfhqf=Up_v0pA2zw+GthDtJPaVwuV99JQ@mail.gmail.com> (sfid-20160219_014114_193892_74664BA4)
+Subject: Re: [PATCH V2 18/24] staging: wilc1000: linux_wlan.c: removes
+ unnecessary log messages
+To: Leo Kim <leo.kim@atmel.com>
+Cc: Greg KH <gregkh@linuxfoundation.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <Chris.Park@atmel.com>,
+	"Abozaeid, Adham" <adham.abozaeid@atmel.com>,
+	"Ferre, Nicolas" <Nicolas.FERRE@atmel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This massively reduces data copying and thus improves rx performance
+Hi Leo,
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/wireless/util.c | 82 +++++++++++++++++++++++++++++++++++++++++++++++++----
- 1 file changed, 77 insertions(+), 5 deletions(-)
+On Thu, Feb 18, 2016 at 10:30 PM, Leo Kim <leo.kim@atmel.com> wrote:
+> From: Chris Park <chris.park@atmel.com>
+>
+> This patch removes unnecessary log messages.
+>
+> Signed-off-by: Chris Park <chris.park@atmel.com>
+> Signed-off-by: Leo Kim <leo.kim@atmel.com>
+> ---
+>  drivers/staging/wilc1000/linux_wlan.c | 1 -
+>  1 file changed, 1 deletion(-)
+>
+> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+> index a731b46..660bf63 100644
+> --- a/drivers/staging/wilc1000/linux_wlan.c
+> +++ b/drivers/staging/wilc1000/linux_wlan.c
+> @@ -226,7 +226,6 @@ static void deinit_irq(struct net_device *dev)
+>
+>  void wilc_dbg(u8 *buff)
+>  {
+> -       PRINT_D(INIT_DBG, "%d\n", *buff);
+>  }
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index 9880c89..c7f6820 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -644,23 +644,93 @@ int ieee80211_data_from_8023(struct sk_buff *skb, const u8 *addr,
- }
- EXPORT_SYMBOL(ieee80211_data_from_8023);
- 
-+static void
-+__frame_add_frag(struct sk_buff *skb, struct page *page,
-+		 void *ptr, int len, int size)
-+{
-+	struct skb_shared_info *sh = skb_shinfo(skb);
-+	int page_offset;
-+
-+	atomic_inc(&page->_count);
-+	page_offset = ptr - page_address(page);
-+	skb_add_rx_frag(skb, sh->nr_frags, page, page_offset, len, size);
-+}
-+
-+static void
-+__ieee80211_amsdu_copy_frag(struct sk_buff *skb, struct sk_buff *frame,
-+			    int offset, int len)
-+{
-+	struct skb_shared_info *sh = skb_shinfo(skb);
-+	const skb_frag_t *frag = &sh->frags[-1];
-+	struct page *frag_page;
-+	void *frag_ptr;
-+	int frag_len, frag_size;
-+	int head_size = skb->len - skb->data_len;
-+	int cur_len;
-+
-+	frag_page = virt_to_head_page(skb->head);
-+	frag_ptr = skb->data;
-+	frag_size = head_size;
-+
-+	while (offset >= frag_size) {
-+		offset -= frag_size;
-+		frag++;
-+		frag_page = skb_frag_page(frag);
-+		frag_ptr = skb_frag_address(frag);
-+		frag_size = skb_frag_size(frag);
-+	}
-+
-+	frag_ptr += offset;
-+	frag_len = frag_size - offset;
-+
-+	cur_len = min(len, frag_len);
-+
-+	__frame_add_frag(frame, frag_page, frag_ptr, cur_len, frag_size);
-+	len -= cur_len;
-+
-+	while (len > 0) {
-+		frag++;
-+		frag_len = skb_frag_size(frag);
-+		cur_len = min(len, frag_len);
-+		__frame_add_frag(frame, skb_frag_page(frag),
-+				 skb_frag_address(frag), cur_len, frag_len);
-+		len -= cur_len;
-+	}
-+}
-+
- static struct sk_buff *
- __ieee80211_amsdu_copy(struct sk_buff *skb, unsigned int hlen,
--		       int offset, int len)
-+		       int offset, int len, bool reuse_frag)
- {
- 	struct sk_buff *frame;
-+	int cur_len = len;
- 
- 	if (skb->len - offset < len)
- 		return NULL;
- 
- 	/*
-+	 * When reusing framents, copy some data to the head to simplify
-+	 * ethernet header handling and speed up protocol header processing
-+	 * in the stack later.
-+	 */
-+	if (reuse_frag)
-+		cur_len = min_t(int, len, 32);
-+
-+	/*
- 	 * Allocate and reserve two bytes more for payload
- 	 * alignment since sizeof(struct ethhdr) is 14.
- 	 */
--	frame = dev_alloc_skb(hlen + sizeof(struct ethhdr) + 2 + len);
-+	frame = dev_alloc_skb(hlen + sizeof(struct ethhdr) + 2 + cur_len);
- 
- 	skb_reserve(frame, hlen + sizeof(struct ethhdr) + 2);
--	skb_copy_bits(skb, offset, skb_put(frame, len), len);
-+	skb_copy_bits(skb, offset, skb_put(frame, cur_len), cur_len);
-+
-+	len -= cur_len;
-+	if (!len)
-+		return frame;
-+
-+	offset += cur_len;
-+	__ieee80211_amsdu_copy_frag(skb, frame, offset, len);
- 
- 	return frame;
- }
-@@ -676,6 +746,7 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
- 	u8 *payload;
- 	int offset = 0, remaining, err;
- 	struct ethhdr eth;
-+	bool reuse_frag = skb->head_frag && !skb_has_frag_list(skb);
- 	bool reuse_skb = false;
- 	bool last = false;
- 
-@@ -703,12 +774,13 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
- 		offset += sizeof(struct ethhdr);
- 		/* reuse skb for the last subframe */
- 		last = remaining <= subframe_len + padding;
--		if (!skb_is_nonlinear(skb) && last) {
-+		if (!skb_is_nonlinear(skb) && !reuse_frag && last) {
- 			skb_pull(skb, offset);
- 			frame = skb;
- 			reuse_skb = true;
- 		} else {
--			frame = __ieee80211_amsdu_copy(skb, hlen, offset, len);
-+			frame = __ieee80211_amsdu_copy(skb, hlen, offset, len,
-+						       reuse_frag);
- 			if (!frame)
- 				goto purge;
- 
+Are you sure this is right? If so, why not just remove this function entirely?
+
+Thanks,
+
 -- 
-2.2.2
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
