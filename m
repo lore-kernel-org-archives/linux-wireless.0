@@ -1,49 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:10503 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753213AbcBDJ1U (ORCPT
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:36655 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753301AbcBTO3K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:27:20 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH RESEND 36/70] staging: wilc1000: remove warnings missing a blank line after declarations
-Date: Thu, 4 Feb 2016 18:15:53 +0900
-Message-ID: <1454577387-509-37-git-send-email-glen.lee@atmel.com> (sfid-20160204_102729_216088_08BE67E8)
-In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+	Sat, 20 Feb 2016 09:29:10 -0500
+Received: by mail-oi0-f43.google.com with SMTP id w5so30139525oie.3
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Feb 2016 06:29:10 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <56C87303.6070203@lwfinger.net>
+References: <1455574327-2591-1-git-send-email-Larry.Finger@lwfinger.net>
+	<CAOxTRzpvnQdb8Wf4M=y4eBM+X-Ey0Y4u=o9X_MMyzTkWQpS=TQ@mail.gmail.com>
+	<56C87303.6070203@lwfinger.net>
+Date: Sat, 20 Feb 2016 23:29:09 +0900
+Message-ID: <CAOxTRzrQO6QYq9iZgK07E1uODtvK3oVzm_DkDCD1LV9_k3kT5w@mail.gmail.com> (sfid-20160220_152931_644731_E0B24837)
+Subject: Re: [PATCH] rtlwifi: Change long delays to sleeps
+From: ByeoungWook Kim <quddnr145@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>, devel@driverdev.osuosl.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+2016-02-20 23:06 GMT+09:00 Larry Finger <Larry.Finger@lwfinger.net>:
+> On 02/19/2016 11:48 PM, ByeoungWook Kim wrote:
+>>
+>> 2016-02-16 7:12 GMT+09:00 Larry Finger <Larry.Finger@lwfinger.net>:
+>>>
+>>> Routine rtl_addr_delay() uses delay statements in code that can
+>>> sleep. To improve system responsiveness, the various delay statements
+>>> are changed.
+>>>
+>>> In addition, routines rtl_rfreg_delay() and rtl_bb_delay() are
+>>> rewritten to use the code in rtl_addr_delay() for most of their
+>>> input values.
+>>>
+>>> Suggested-by: Byeoungwook Kim <quddnr145@gmail.com>
+>>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>>> ---
+>>
+>>
+>> Why you are using 'Suggested-by:' of me?
+>> I think to that your commit was included a part of my
+>> commit(https://patchwork.kernel.org/patch/8197071/).
+>
+>
+> Your commit was placed in the deferred list of patches. It did lead me to
+> look at that section and realize that using delays there was a bug, and that
+> it should be fixed as quickly as possible. That argues against waiting for
+> your patches to be implemented. I did use some of your changes. How do you
+> think I should have referenced your material?
+>
+> Larry
+>
+>
 
-This patch remove warnings reported by checkpatch.pl
-for missing a blank line after declarations
+I'm understood your mail.
+Only, I wondered why 'Suggested-by' was used.
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 1 +
- 1 file changed, 1 insertion(+)
+Thank for your answer.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index e2c84db..dc26322 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1143,6 +1143,7 @@ int wilc_wlan_stop(struct wilc *wilc)
- 	u32 reg = 0;
- 	int ret;
- 	u8 timeout = 10;
-+
- 	acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
- 
- 	ret = wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0, &reg);
--- 
-1.9.1
-
+Regards,
+Byeoungwook
