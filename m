@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33027 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752318AbcBWOKc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 09:10:32 -0500
-Message-ID: <1456236627.9910.10.camel@sipsolutions.net> (sfid-20160223_151035_550818_A9A1D71F)
-Subject: Re: [PATCH] mac80211:  Let VHT work on 2.4Ghz
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com, linux-wireless@vger.kernel.org
-Cc: Jouni Malinen <j@w1.fi>
-Date: Tue, 23 Feb 2016 15:10:27 +0100
-In-Reply-To: <1456180974-21062-1-git-send-email-greearb@candelatech.com>
-References: <1456180974-21062-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:34488 "EHLO
+	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753205AbcBTOHC (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Feb 2016 09:07:02 -0500
+Received: by mail-oi0-f53.google.com with SMTP id m82so29955499oif.1
+        for <linux-wireless@vger.kernel.org>; Sat, 20 Feb 2016 06:07:02 -0800 (PST)
+Subject: Re: [PATCH] rtlwifi: Change long delays to sleeps
+To: ByeoungWook Kim <quddnr145@gmail.com>
+References: <1455574327-2591-1-git-send-email-Larry.Finger@lwfinger.net>
+ <CAOxTRzpvnQdb8Wf4M=y4eBM+X-Ey0Y4u=o9X_MMyzTkWQpS=TQ@mail.gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, devel@driverdev.osuosl.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <56C87303.6070203@lwfinger.net> (sfid-20160220_150716_170454_E4F80B3E)
+Date: Sat, 20 Feb 2016 08:06:59 -0600
+MIME-Version: 1.0
+In-Reply-To: <CAOxTRzpvnQdb8Wf4M=y4eBM+X-Ey0Y4u=o9X_MMyzTkWQpS=TQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-02-22 at 14:42 -0800, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> ath10k supports VHT on 2.4Ghz band.
+On 02/19/2016 11:48 PM, ByeoungWook Kim wrote:
+> 2016-02-16 7:12 GMT+09:00 Larry Finger <Larry.Finger@lwfinger.net>:
+>> Routine rtl_addr_delay() uses delay statements in code that can
+>> sleep. To improve system responsiveness, the various delay statements
+>> are changed.
+>>
+>> In addition, routines rtl_rfreg_delay() and rtl_bb_delay() are
+>> rewritten to use the code in rtl_addr_delay() for most of their
+>> input values.
+>>
+>> Suggested-by: Byeoungwook Kim <quddnr145@gmail.com>
+>> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+>> ---
+>
+> Why you are using 'Suggested-by:' of me?
+> I think to that your commit was included a part of my
+> commit(https://patchwork.kernel.org/patch/8197071/).
 
-It can't. At least not formally, as this sentence is written, since VHT
-per the spec requires operating on the 5 GHz band, and it also requires
-80 MHz bandwidth which isn't even available in 2.4 GHz in many
-countries.
+Your commit was placed in the deferred list of patches. It did lead me to look 
+at that section and realize that using delays there was a bug, and that it 
+should be fixed as quickly as possible. That argues against waiting for your 
+patches to be implemented. I did use some of your changes. How do you think I 
+should have referenced your material?
 
-What you really "want" is to use VHT modulations, mostly for the
-dubious purpose of marketing benchmarks to reach 256-QAM modulations.
+Larry
 
-I think the de-facto standard for this would be to use IEs similar to
-VHT ones, encapsulated in some (Broadcom?) vendor IE. We may have to
-work with that, but that's not what this patch does. Jouni had some
-better idea how this worked, I think.
 
-Also, as written, this patch has practically no effect because no
-driver can or should advertise real VHT support on 2.4 GHz band, even
-if the code structure were to allow that.
-
-johannes
