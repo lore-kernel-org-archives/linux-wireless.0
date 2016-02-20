@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41107 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751135AbcBGHQS (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Feb 2016 02:16:18 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [1/8] mwifiex: display right transmit packet delay
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1454479509-27129-2-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20160207071617.E49BF6047C@smtp.codeaurora.org> (sfid-20160207_081621_541884_F9F6FCA1)
-Date: Sun,  7 Feb 2016 07:16:17 +0000 (UTC)
+Received: from mail.ispras.ru ([83.149.199.45]:58301 "EHLO mail.ispras.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1947588AbcBTWbE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 20 Feb 2016 17:31:04 -0500
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	Andrea Merello <andrea.merello@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	ldv-project@linuxtesting.org
+Subject: [PATCH] at76c50x-usb: avoid double usb_put_dev() after downloading internal firmware in at76_probe()
+Date: Sun, 21 Feb 2016 01:30:29 +0300
+Message-Id: <1456007429-4713-2-git-send-email-khoroshilov@ispras.ru> (sfid-20160220_233144_102338_F745A8F1)
+In-Reply-To: <1456007429-4713-1-git-send-email-khoroshilov@ispras.ru>
+References: <1456007429-4713-1-git-send-email-khoroshilov@ispras.ru>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+There is no need in usb_put_dev() if at76_load_internal_fw() succeed.
 
-> From: Xinming Hu <huxm@marvell.com>
-> 
-> drv_pkt_delay_max should be assigned non-zero value, so that
-> packet delay can be accumulate in the right way.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Found by Linux Driver Verification project (linuxtesting.org).
 
-Thanks, 8 patches applied to wireless-drivers-next.git:
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/net/wireless/atmel/at76c50x-usb.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-6970cd446c25 mwifiex: display right transmit packet delay
-af05148392f5 mwifiex: process pcie io memory read failure case
-0172404d79ec mwifiex: skip firmware dump when read_regs() fails
-9a86232213b9 mwifiex: keep original structure in decl header file
-50632092dfda mwifiex: use an extensible framework for firmware dump solution
-56486026c282 mwifiex: dynamically increase preallocated firmware dump memory size
-03f0f7cdebeb mwifiex: increase the priority of firmware dump message
-11e70824e75f mwifiex: firmware dump support for w8997 chipset
+diff --git a/drivers/net/wireless/atmel/at76c50x-usb.c b/drivers/net/wireless/atmel/at76c50x-usb.c
+index dab25136214a..1efb1d66e0b7 100644
+--- a/drivers/net/wireless/atmel/at76c50x-usb.c
++++ b/drivers/net/wireless/atmel/at76c50x-usb.c
+@@ -2481,9 +2481,7 @@ static int at76_probe(struct usb_interface *interface,
+ 			dev_err(&interface->dev,
+ 				"error %d downloading internal firmware\n",
+ 				ret);
+-			goto exit;
+ 		}
+-		usb_put_dev(udev);
+ 		goto exit;
+ 	}
+ 
+-- 
+1.9.1
 
-Kalle Valo
