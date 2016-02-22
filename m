@@ -1,52 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45401 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1425560AbcBRUpe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 15:45:34 -0500
-Message-ID: <1455828330.2084.38.camel@sipsolutions.net> (sfid-20160218_214538_603546_D1AF5CEB)
-Subject: Re: [PATCH-v2 1/2] mac80211: Take bitrates into account when
- building IEs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 18 Feb 2016 21:45:30 +0100
-In-Reply-To: <56C62C4E.7020600@candelatech.com>
-References: <1445361858-24976-1-git-send-email-greearb@candelatech.com>
-	 <1453807009.2759.23.camel@sipsolutions.net>
-	 <56A78E8F.1080505@candelatech.com>
-	 <1454576521.2564.6.camel@sipsolutions.net> <56B38FD1.40902@candelatech.com>
-	 <1455827536.2084.35.camel@sipsolutions.net>
-	 <56C62C4E.7020600@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:21050 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754427AbcBVKVN (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Feb 2016 05:21:13 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V4 24/24] staging: wilc1000: moves LINUX_RX_SIZE, LINUX_TX_SIZE
+Date: Mon, 22 Feb 2016 19:14:31 +0900
+Message-ID: <1456136071-10502-25-git-send-email-leo.kim@atmel.com> (sfid-20160222_112117_641147_02CA68B1)
+In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-02-18 at 12:40 -0800, Ben Greear wrote:
+From: Chris Park <chris.park@atmel.com>
 
-> > 1) sdata->sband[5GHZ].vht = wiphy->sband[5GHZ].vht & user-config
-> >     (semantically, not implementation of course)
-> > 2) sdata->sband[5GHZ].vht = wiphy->sband[5GHZ].vht
+This patch moves LINUX_RX_SIZE and LINUX_TX_SIZE to wilc_wlan.h file
+because there are only used to wilc_wlan.c file.
 
-> I think option 1 might be better.  For option 2, I'd be worried about
-> someone changing the wiphy somehow and vdevs getting out of sync.
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan_common.h | 4 ----
+ drivers/staging/wilc1000/wilc_wlan.h         | 3 +++
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-Huh? I'm confused. Those two options above weren't meant as options,
-they were meant as two sides of an "if (have-user-config)" branch :)
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index 51601aa..aa2c026 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -1,10 +1,6 @@
+ #ifndef LINUX_WLAN_COMMON_H
+ #define LINUX_WLAN_COMMON_H
+ 
+-#define LINUX_RX_SIZE	(96 * 1024)
+-#define LINUX_TX_SIZE	(64 * 1024)
+-
+-
+ #define WILC_MULTICAST_TABLE_SIZE	8
+ 
+ #if defined(BEAGLE_BOARD)
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 06d02ab..792d338 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -128,6 +128,9 @@
+ #define WILC_PLL_TO_SPI		2
+ #define ABORT_INT		BIT(31)
+ 
++#define LINUX_RX_SIZE		(96 * 1024)
++#define LINUX_TX_SIZE		(64 * 1024)
++
+ /*******************************************/
+ /*        E0 and later Interrupt flags.    */
+ /*******************************************/
+-- 
+1.9.1
 
-> Any opinions on the lifetime for the sdata->sband_user_config data?
-> 
-> For instance, could be cleared when station dis-associates,
-> or we could make it persist until changed or until vdev goes away?
-
-Should probably persist.
-
-> And, while this would take care of some of the issues (3x3 vs 2x2?),
-> it still wouldn't let someone have full control over the advertised
-> rates vs configured-rates and such, would it?
-
-Why not? The sband also contains the rates list. I was just using VHT
-as an example.
-
-
-johannes
