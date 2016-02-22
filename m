@@ -1,40 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:36741 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751177AbcBWKrP (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:29915 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753184AbcBVERz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 05:47:15 -0500
-Received: by mail-wm0-f49.google.com with SMTP id g62so215362279wme.1
-        for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2016 02:47:15 -0800 (PST)
+	Sun, 21 Feb 2016 23:17:55 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V3 19/24] staging: wilc1000: wilc_wfi_cfgoperations.c: removes unnecessary log messages
+Date: Mon, 22 Feb 2016 13:12:04 +0900
+Message-ID: <1456114329-7036-20-git-send-email-leo.kim@atmel.com> (sfid-20160222_051757_879198_BDA7B0FB)
+In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1456180974-21062-1-git-send-email-greearb@candelatech.com>
-References: <1456180974-21062-1-git-send-email-greearb@candelatech.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Tue, 23 Feb 2016 12:47:00 +0200
-Message-ID: <CA+XVXffpNDf0-5a6cPz0aUrrRfHgKQeu09zDt5eSe1K87m__pw@mail.gmail.com> (sfid-20160223_114719_795608_6A17501F)
-Subject: Re: [PATCH] mac80211: Let VHT work on 2.4Ghz
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 23, 2016 at 12:42 AM, <greearb@candelatech.com> wrote:
->
-> From: Ben Greear <greearb@candelatech.com>
->
-> ath10k supports VHT on 2.4Ghz band.
-> If supplicant and hostapd and radio think
-> VHT should be allowed, then kernel should let them
-> try.
+From: Chris Park <chris.park@atmel.com>
 
-Removing the 80Mhz check entirely is not the right way to go IMO. The
-check is there because there are countries where VHT rates are not
-allowed, even on 20MHz channels. We use the fact these countries have
-no 80MHz-allowed ranges as a crude regulatory hint to disable VHT
-entirely. I'm not sure about the regulatory landscape in these
-countries regarding VHT in 2.4GHz, but please don't break compliance
-for the 5Ghz use-case.
+This patch removes unnecessary log messages.
 
-Arik
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 75a45df..a7aa3d2 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2315,7 +2315,6 @@ int wilc_init_host_int(struct net_device *net)
+ 
+ 	struct wilc_priv *priv;
+ 
+-	PRINT_D(INIT_DBG, "Host[%p][%p]\n", net, net->ieee80211_ptr);
+ 	priv = wdev_priv(net->ieee80211_ptr);
+ 	if (op_ifcs == 0) {
+ 		setup_timer(&hAgingTimer, remove_network_from_shadow, 0);
+@@ -2364,24 +2363,17 @@ int wilc_deinit_host_int(struct net_device *net)
+ 
+ void wilc_free_wiphy(struct net_device *net)
+ {
+-	if (!net) {
+-		PRINT_D(INIT_DBG, "net_device is NULL\n");
++	if (!net)
+ 		return;
+-	}
+ 
+-	if (!net->ieee80211_ptr) {
+-		PRINT_D(INIT_DBG, "ieee80211_ptr is NULL\n");
++	if (!net->ieee80211_ptr)
+ 		return;
+-	}
+ 
+-	if (!net->ieee80211_ptr->wiphy) {
+-		PRINT_D(INIT_DBG, "wiphy is NULL\n");
++	if (!net->ieee80211_ptr->wiphy)
+ 		return;
+-	}
+ 
+ 	wiphy_unregister(net->ieee80211_ptr->wiphy);
+ 
+-	PRINT_D(INIT_DBG, "Freeing wiphy\n");
+ 	wiphy_free(net->ieee80211_ptr->wiphy);
+ 	kfree(net->ieee80211_ptr);
+ }
+-- 
+1.9.1
+
