@@ -1,41 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:44616 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965070AbcBDIxI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 03:53:08 -0500
-Message-ID: <1454575981.2564.0.camel@sipsolutions.net> (sfid-20160204_095313_110205_424E2FBA)
-Subject: Re: [PATCH v3 0/3] mac80211: add cleanup path for MPP table entries
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Bob Copeland <me@bobcopeland.com>, Henning Rogge <hrogge@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	"David S. Miller" <davem@davemloft.net>,
-	Henning Rogge <henning.rogge@fkie.fraunhofer.de>
-Date: Thu, 04 Feb 2016 09:53:01 +0100
-In-Reply-To: <20160204033250.GA15719@localhost> (sfid-20160204_043255_042380_7C82E19A)
-References: <1454504318-24988-1-git-send-email-henning.rogge@fkie.fraunhofer.de>
-	 <20160204033250.GA15719@localhost> (sfid-20160204_043255_042380_7C82E19A)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:29567 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753050AbcBVEOw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Feb 2016 23:14:52 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V3 01/24] staging: wilc1000: wilc_wlan.c: removes PRINT_ER
+Date: Mon, 22 Feb 2016 13:11:46 +0900
+Message-ID: <1456114329-7036-2-git-send-email-leo.kim@atmel.com> (sfid-20160222_051455_767066_B537F6C0)
+In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-02-03 at 22:32 -0500, Bob Copeland wrote:
-> On Wed, Feb 03, 2016 at 01:58:35PM +0100, Henning Rogge wrote:
-> > Henning Rogge (3):
-> >   mac80211: Remove MPP table entries with MPath
-> >   mac80211: let unused MPP table entries timeout
-> >   mac80211: Unify mesh and mpp path removal function
-> > 
-> >  net/mac80211/mesh_pathtbl.c | 102
-> > +++++++++++++++++++++++++++++++++++++++-----
-> >  net/mac80211/rx.c           |   1 +
-> >  net/mac80211/tx.c           |   5 ++-
-> >  3 files changed, 97 insertions(+), 11 deletions(-)
-> 
-> Thanks for the revisions.  For what it's worth, series:
-> 
-> Acked-by: Bob Copeland <me@bobcopeland.com>
+This patches removes PRINT_ER that is unnecessary debug logs.
 
-All applied to mac80211-next, thanks.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-johannes
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index 391173b..c6d206d 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1468,7 +1468,6 @@ int wilc_wlan_init(struct net_device *dev)
+ 
+ 	if (!wilc->tx_buffer) {
+ 		ret = -ENOBUFS;
+-		PRINT_ER("Can't allocate Tx Buffer");
+ 		goto _fail_;
+ 	}
+ 
+@@ -1477,7 +1476,6 @@ int wilc_wlan_init(struct net_device *dev)
+ 
+ 	if (!wilc->rx_buffer) {
+ 		ret = -ENOBUFS;
+-		PRINT_ER("Can't allocate Rx Buffer");
+ 		goto _fail_;
+ 	}
+ 
+-- 
+1.9.1
+
