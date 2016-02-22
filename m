@@ -1,37 +1,156 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:33875 "EHLO
-	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754187AbcB1TxW convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:20899 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754387AbcBVKUk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 28 Feb 2016 14:53:22 -0500
-Received: by mail-wm0-f41.google.com with SMTP id p65so44006724wmp.1
-        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2016 11:53:21 -0800 (PST)
-Date: Sun, 28 Feb 2016 20:53:15 +0100
-From: Daniel Exner <dex@dragonslave.de>
-To: linux-wireless@vger.kernel.org
-Cc: dex@dragonslave.de
-Subject: Support P2P mode for Intel 6235 ?
-Message-ID: <20160228205315.473a66ca@dragonslave.de> (sfid-20160228_205325_375601_F92DC5CA)
+	Mon, 22 Feb 2016 05:20:40 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V4 21/24] staging: wilc1000: removes unused region feature
+Date: Mon, 22 Feb 2016 19:14:28 +0900
+Message-ID: <1456136071-10502-22-git-send-email-leo.kim@atmel.com> (sfid-20160222_112046_000066_73183BED)
+In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Chris Park <chris.park@atmel.com>
 
-(Please keep my CC as I'm currently not subscribed)
+This patch removes unused region feature on debug message.
+Also, removes the functions of related in this feature.
 
-my Ultrabook uses this chip for Wifi:
->Network controller: Intel Corporation Centrino Advanced-N 6235 (rev 24)
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan_common.h | 17 ++---------
+ drivers/staging/wilc1000/wilc_debugfs.c      | 42 ----------------------------
+ 2 files changed, 3 insertions(+), 56 deletions(-)
 
->From the specs I found it supports WiDi and thus should support P2P
-mode.
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index e408631..57d3901 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -1,15 +1,7 @@
+ #ifndef LINUX_WLAN_COMMON_H
+ #define LINUX_WLAN_COMMON_H
+ 
+-enum debug_region {
+-	Init_debug = 0,
+-	COMP = 0xFFFFFFFF,
+-};
+-
+-#define INIT_DBG                (1 << Init_debug)
+-
+ #if defined(WILC_DEBUGFS)
+-extern atomic_t WILC_REGION;
+ extern atomic_t WILC_DEBUG_LEVEL;
+ 
+ #define DEBUG           BIT(0)
+@@ -19,8 +11,7 @@ extern atomic_t WILC_DEBUG_LEVEL;
+ 
+ #define PRINT_D(region, ...)						\
+ 	do {								\
+-		if ((atomic_read(&WILC_DEBUG_LEVEL) & DEBUG) &&	\
+-		   ((atomic_read(&WILC_REGION)) & (region))) {	\
++		if ((atomic_read(&WILC_DEBUG_LEVEL) & DEBUG)) {	\
+ 			printk("DBG [%s: %d]", __func__, __LINE__);	\
+ 			printk(__VA_ARGS__);				\
+ 		}							\
+@@ -28,8 +19,7 @@ extern atomic_t WILC_DEBUG_LEVEL;
+ 
+ #define PRINT_INFO(region, ...)						\
+ 	do {								\
+-		if ((atomic_read(&WILC_DEBUG_LEVEL) & INFO) &&	\
+-		   ((atomic_read(&WILC_REGION)) & (region))) {	\
++		if ((atomic_read(&WILC_DEBUG_LEVEL) & INFO)) {	\
+ 			printk("INFO [%s]", __func__);			\
+ 			printk(__VA_ARGS__);				\
+ 		}							\
+@@ -37,8 +27,7 @@ extern atomic_t WILC_DEBUG_LEVEL;
+ 
+ #define PRINT_WRN(region, ...)						\
+ 	do {								\
+-		if ((atomic_read(&WILC_DEBUG_LEVEL) & WRN) &&	\
+-		   ((atomic_read(&WILC_REGION)) & (region))) {	\
++		if ((atomic_read(&WILC_DEBUG_LEVEL) & WRN)) {	\
+ 			printk("WRN [%s: %d]", __func__, __LINE__);	\
+ 			printk(__VA_ARGS__);				\
+ 		}							\
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index 266d96b..215e2f0 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -24,10 +24,7 @@ static struct dentry *wilc_dir;
+  * --------------------------------------------------------------------------------
+  */
+ 
+-#define DBG_REGION_ALL	(INIT_DBG)
+ #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+-atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG);
+-EXPORT_SYMBOL_GPL(WILC_REGION);
+ atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
+ EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
+ 
+@@ -75,44 +72,6 @@ static ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
+ 	return count;
+ }
+ 
+-static ssize_t wilc_debug_region_read(struct file *file, char __user *userbuf, size_t count, loff_t *ppos)
+-{
+-	char buf[128];
+-	int res = 0;
+-
+-	/* only allow read from start */
+-	if (*ppos > 0)
+-		return 0;
+-
+-	res = scnprintf(buf, sizeof(buf), "Debug region: %x\n", atomic_read(&WILC_REGION));
+-
+-	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+-}
+-
+-static ssize_t wilc_debug_region_write(struct file *filp, const char __user *buf, size_t count, loff_t *ppos)
+-{
+-	char buffer[128] = {};
+-	int flag;
+-
+-	if (count > sizeof(buffer))
+-		return -EINVAL;
+-
+-	if (copy_from_user(buffer, buf, count))
+-		return -EFAULT;
+-
+-	flag = buffer[0] - '0';
+-
+-	if (flag > DBG_REGION_ALL) {
+-		printk("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n", __func__, flag, atomic_read(&WILC_REGION));
+-		return -EFAULT;
+-	}
+-
+-	atomic_set(&WILC_REGION, (int)flag);
+-	printk("new debug-region is %x\n", atomic_read(&WILC_REGION));
+-
+-	return count;
+-}
+-
+ /*
+  * --------------------------------------------------------------------------------
+  */
+@@ -134,7 +93,6 @@ struct wilc_debugfs_info_t {
+ 
+ static struct wilc_debugfs_info_t debugfs_info[] = {
+ 	{ "wilc_debug_level",	0666,	(DEBUG | ERR), FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write, NULL), },
+-	{ "wilc_debug_region",	0666,	(INIT_DBG), FOPS(NULL, wilc_debug_region_read, wilc_debug_region_write, NULL), },
+ };
+ 
+ static int __init wilc_debugfs_init(void)
+-- 
+1.9.1
 
-Unfortunately the wireless Wiki says "P2P (on devices driven by
-iwlmvm)" and querying the device it does not advertise P2P
-capability.
-
-Is there any chance this device might gain P2P support in the future?
-
-Greetings
-Daniel
