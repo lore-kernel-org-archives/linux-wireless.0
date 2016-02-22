@@ -1,70 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:34892 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751866AbcBXIku (ORCPT
+Received: from mail-qg0-f47.google.com ([209.85.192.47]:35335 "EHLO
+	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752590AbcBVQhE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2016 03:40:50 -0500
-Received: by mail-wm0-f52.google.com with SMTP id c200so257840254wme.0
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 00:40:49 -0800 (PST)
+	Mon, 22 Feb 2016 11:37:04 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [PATCHv2 06/10] rfkill: Add documentation about LED triggers
+Date: Mon, 22 Feb 2016 11:36:37 -0500
+Message-Id: <1456159001-20307-7-git-send-email-jprvita@endlessm.com> (sfid-20160222_174124_958010_8DCE8BF3)
+In-Reply-To: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
 MIME-Version: 1.0
-In-Reply-To: <56CC62BC.308@candelatech.com>
-References: <1456180974-21062-1-git-send-email-greearb@candelatech.com>
- <CA+XVXffpNDf0-5a6cPz0aUrrRfHgKQeu09zDt5eSe1K87m__pw@mail.gmail.com> <56CC62BC.308@candelatech.com>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Wed, 24 Feb 2016 10:40:34 +0200
-Message-ID: <CA+XVXffxWtZgfZS=EZGYng6vWMxqnhTdhgxagYXRbKq1iYj0Sg@mail.gmail.com> (sfid-20160224_094054_557322_04E9250C)
-Subject: Re: [PATCH] mac80211: Let VHT work on 2.4Ghz
-To: Ben Greear <greearb@candelatech.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 23, 2016 at 3:46 PM, Ben Greear <greearb@candelatech.com> wrote:
->
->
-> On 02/23/2016 02:47 AM, Arik Nemtsov wrote:
->>
->> On Tue, Feb 23, 2016 at 12:42 AM, <greearb@candelatech.com> wrote:
->>>
->>>
->>> From: Ben Greear <greearb@candelatech.com>
->>>
->>> ath10k supports VHT on 2.4Ghz band.
->>> If supplicant and hostapd and radio think
->>> VHT should be allowed, then kernel should let them
->>> try.
->>
->>
->> Removing the 80Mhz check entirely is not the right way to go IMO. The
->> check is there because there are countries where VHT rates are not
->> allowed, even on 20MHz channels. We use the fact these countries have
->> no 80MHz-allowed ranges as a crude regulatory hint to disable VHT
->> entirely. I'm not sure about the regulatory landscape in these
->> countries regarding VHT in 2.4GHz, but please don't break compliance
->> for the 5Ghz use-case.
->
->
-> Maybe someone can fix the regulatory logic then?
->
-> Add a no-vht flag or whatever?
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+---
+ Documentation/rfkill.txt | 2 ++
+ 1 file changed, 2 insertions(+)
 
-This is more tricky that it looks at first - basically current
-regulatory "hooks" concern channel width and location, transmit power
-etc. Here regulatory compliance means never emitting the VHT IE in
-probe requests etc. So a "no vht" flag would be useless to the reg.c
-code - it currently never looks at IEs. Some cards even generate them
-at the FW level.
-All in all I think the current small bit of ugliness is justified for
-regulatory compliance.
+diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+index 2ee6ef9..1f0c270 100644
+--- a/Documentation/rfkill.txt
++++ b/Documentation/rfkill.txt
+@@ -83,6 +83,8 @@ rfkill drivers that control devices that can be hard-blocked unless they also
+ assign the poll_hw_block() callback (then the rfkill core will poll the
+ device). Don't do this unless you cannot get the event in any other way.
+ 
++RFKill provides per-switch LED triggers, which can be used to drive LEDs
++according to the switch state (LED_FULL when blocked, LED_OFF otherwise).
+ 
+ 
+ 5. Userspace support
+-- 
+2.5.0
 
-Also it's pretty easy to just leave the code there and condition the
-check on the 5GHz band. There's no need to remove it.
-
->
-> Any idea which countries this applies to?
-
-I know Russia is one such country. Not sure about others.
-
-Arik
