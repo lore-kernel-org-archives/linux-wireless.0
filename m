@@ -1,31 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59130 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751143AbcBWKF2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 05:05:28 -0500
-Message-ID: <1456221926.2041.5.camel@sipsolutions.net> (sfid-20160223_110532_901091_C27E1B5D)
-Subject: Re: [PATCH v2] mac80211: fix wiphy supported_band access
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-	linux-wireless@vger.kernel.org
-Cc: Sven Eckelmann <sven@narfation.org>, nbd@openwrt.org
-Date: Tue, 23 Feb 2016 11:05:26 +0100
-In-Reply-To: <1455880681-6194-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20160219_121803_721053_11E59082)
-References: <1455880681-6194-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	 (sfid-20160219_121803_721053_11E59082)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:29897 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753184AbcBVERo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Feb 2016 23:17:44 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V3 18/24] staging: wilc1000: linux_wlan.c: removes unnecessary log messages
+Date: Mon, 22 Feb 2016 13:12:03 +0900
+Message-ID: <1456114329-7036-19-git-send-email-leo.kim@atmel.com> (sfid-20160222_051746_591429_B778EA3B)
+In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-02-19 at 12:18 +0100, Lorenzo Bianconi wrote:
-> Fix wiphy supported_band access in tx radiotap parsing introduced
-> in commit 5ec3aed9ba4c ("mac80211: Parse legacy and HT rate in
-> injected frames"). In particular, info->band is always set to 0
-> (IEEE80211_BAND_2GHZ) since it has not assigned yet.
-> This cause a kernel crash on 5GHz only devices.
-> Move ieee80211_parse_tx_radiotap() after info->band assignment
-> 
-Applied.
+From: Chris Park <chris.park@atmel.com>
 
-johannes
+This patch removes unnecessary log messages.
+
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 274f468..749dfc74 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -226,7 +226,6 @@ static void deinit_irq(struct net_device *dev)
+ 
+ void wilc_dbg(u8 *buff)
+ {
+-	PRINT_D(INIT_DBG, "%d\n", *buff);
+ }
+ 
+ int wilc_lock_timeout(struct wilc *nic, void *vp, u32 timeout)
+-- 
+1.9.1
+
