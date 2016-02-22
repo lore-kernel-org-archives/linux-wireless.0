@@ -1,41 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:49693 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750761AbcBKJ1y (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:29759 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752909AbcBVEQY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2016 04:27:54 -0500
-Date: Thu, 11 Feb 2016 04:27:50 -0500 (EST)
-Message-Id: <20160211.042750.376596563683727607.davem@davemloft.net> (sfid-20160211_102806_065709_ED10213A)
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org, ja@ssi.bg,
-	johannes.berg@intel.com
-Subject: Re: [PATCH v3 1/4] ipv4: add option to drop unicast encapsulated
- in L2 multicast
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1454589080-21354-1-git-send-email-johannes@sipsolutions.net>
-References: <1454589080-21354-1-git-send-email-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Sun, 21 Feb 2016 23:16:24 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V3 11/24] staging: wilc1000: host_interface.c: removes unnecessary log messages
+Date: Mon, 22 Feb 2016 13:11:56 +0900
+Message-ID: <1456114329-7036-12-git-send-email-leo.kim@atmel.com> (sfid-20160222_052949_417615_35061AD8)
+In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu,  4 Feb 2016 13:31:17 +0100
+From: Chris Park <chris.park@atmel.com>
 
-> From: Johannes Berg <johannes.berg@intel.com>
-> 
-> In order to solve a problem with 802.11, the so-called hole-196 attack,
-> add an option (sysctl) called "drop_unicast_in_l2_multicast" which, if
-> enabled, causes the stack to drop IPv4 unicast packets encapsulated in
-> link-layer multi- or broadcast frames. Such frames can (as an attack)
-> be created by any member of the same wireless network and transmitted
-> as valid encrypted frames since the symmetric key for broadcast frames
-> is shared between all stations.
-> 
-> Additionally, enabling this option provides compliance with a SHOULD
-> clause of RFC 1122.
-> 
-> Reviewed-by: Julian Anastasov <ja@ssi.bg>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+This patch removes unnecessary log message and relate variables.
 
-Applied.
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 31 ++++---------------------------
+ 1 file changed, 4 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 035f6f5..eddc0d6 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2095,8 +2095,6 @@ static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
+ 	stamac = wid.val;
+ 	memcpy(stamac, strHostIfStaInactiveT->mac, ETH_ALEN);
+ 
+-	PRINT_D(CFG80211_DBG, "SETING STA inactive time\n");
+-
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 
+@@ -2118,8 +2116,6 @@ static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
+ 		return -EFAULT;
+ 	}
+ 
+-	PRINT_D(CFG80211_DBG, "Getting inactive time : %d\n", inactive_time);
+-
+ 	up(&hif_drv->sem_inactive_time);
+ 
+ 	return result;
+@@ -3037,7 +3033,6 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
+ 	struct host_if_msg msg;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 	u8 key_len = ptk_key_len;
+-	int i;
+ 
+ 	if (!hif_drv) {
+ 		PRINT_ER("driver is null\n");
+@@ -3065,20 +3060,11 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
+ 	if (!msg.body.key_info.attr.wpa.key)
+ 		return -ENOMEM;
+ 
+-	if (rx_mic) {
++	if (rx_mic)
+ 		memcpy(msg.body.key_info.attr.wpa.key + 16, rx_mic, RX_MIC_KEY_LEN);
+-		if (INFO) {
+-			for (i = 0; i < RX_MIC_KEY_LEN; i++)
+-				PRINT_INFO(CFG80211_DBG, "PairwiseRx[%d] = %x\n", i, rx_mic[i]);
+-		}
+-	}
+-	if (tx_mic) {
++
++	if (tx_mic)
+ 		memcpy(msg.body.key_info.attr.wpa.key + 24, tx_mic, TX_MIC_KEY_LEN);
+-		if (INFO) {
+-			for (i = 0; i < TX_MIC_KEY_LEN; i++)
+-				PRINT_INFO(CFG80211_DBG, "PairwiseTx[%d] = %x\n", i, tx_mic[i]);
+-		}
+-	}
+ 
+ 	msg.body.key_info.attr.wpa.key_len = key_len;
+ 	msg.body.key_info.attr.wpa.mac_addr = mac_addr;
+@@ -4083,20 +4069,11 @@ int wilc_del_allstation(struct wilc_vif *vif, u8 mac_addr[][ETH_ALEN])
+ 	for (i = 0; i < MAX_NUM_STA; i++) {
+ 		if (memcmp(mac_addr[i], zero_addr, ETH_ALEN)) {
+ 			memcpy(del_all_sta_info->del_all_sta[i], mac_addr[i], ETH_ALEN);
+-			PRINT_D(CFG80211_DBG, "BSSID = %x%x%x%x%x%x\n",
+-				del_all_sta_info->del_all_sta[i][0],
+-				del_all_sta_info->del_all_sta[i][1],
+-				del_all_sta_info->del_all_sta[i][2],
+-				del_all_sta_info->del_all_sta[i][3],
+-				del_all_sta_info->del_all_sta[i][4],
+-				del_all_sta_info->del_all_sta[i][5]);
+ 			assoc_sta++;
+ 		}
+ 	}
+-	if (!assoc_sta) {
+-		PRINT_D(CFG80211_DBG, "NO ASSOCIATED STAS\n");
++	if (!assoc_sta)
+ 		return result;
+-	}
+ 
+ 	del_all_sta_info->assoc_sta = assoc_sta;
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-- 
+1.9.1
+
