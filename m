@@ -1,57 +1,241 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:29936 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752539AbcBVESG (ORCPT
+Received: from mail-ob0-f178.google.com ([209.85.214.178]:33464 "EHLO
+	mail-ob0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751437AbcBVUNn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2016 23:18:06 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V3 20/24] staging: wilc1000: wilc_wlan.c: removes unnecessary log messages
-Date: Mon, 22 Feb 2016 13:12:05 +0900
-Message-ID: <1456114329-7036-21-git-send-email-leo.kim@atmel.com> (sfid-20160222_051810_569228_7399B60D)
-In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
-References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+	Mon, 22 Feb 2016 15:13:43 -0500
+Subject: Re: [PATCH][V2] rtlwifi: pass struct rtl_stats by reference as it is
+ more efficient
+To: Colin King <colin.king@canonical.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Priit Laes <plaes@plaes.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+References: <1456140946-12509-1-git-send-email-colin.king@canonical.com>
+Cc: linux-kernel@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <56CB6BF4.5000600@lwfinger.net> (sfid-20160222_211425_660026_39B78760)
+Date: Mon, 22 Feb 2016 14:13:40 -0600
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1456140946-12509-1-git-send-email-colin.king@canonical.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+On 02/22/2016 05:35 AM, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> passing rtl_stats by value is inefficient; the structure is over 300
+> bytes in size and generally just one field (packet_report_type)
+> is being accessed, so the pass by value is a relatively large overhead.
+> This change just affects just the rx_command_packet calls.
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-This patch removes unnecessary log messages.
+Looks good and tests OK with rtl8723be.
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/wilc_wlan.c | 3 ---
- 1 file changed, 3 deletions(-)
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index c6d206d..e7ae359 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1022,7 +1022,6 @@ int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
- 			ret = -EIO;
- 			goto _fail_;
- 		}
--		PRINT_D(INIT_DBG, "Offset = %d\n", offset);
- 	} while (offset < buffer_size);
- 
- _fail_:
-@@ -1449,8 +1448,6 @@ int wilc_wlan_init(struct net_device *dev)
- 
- 	wilc = vif->wilc;
- 
--	PRINT_D(INIT_DBG, "Initializing WILC_Wlan ...\n");
--
- 	wilc->quit = 0;
- 
- 	if (!wilc->hif_func->hif_init(wilc, false)) {
--- 
-1.9.1
+Thanks,
+
+Larry
+
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/pci.c           | 2 +-
+>   drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c | 2 +-
+>   drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h | 2 +-
+>   drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c | 6 +++---
+>   drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.h | 2 +-
+>   drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c | 2 +-
+>   drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.h | 2 +-
+>   drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c | 4 ++--
+>   drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.h | 2 +-
+>   drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c | 4 ++--
+>   drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h | 2 +-
+>   drivers/net/wireless/realtek/rtlwifi/wifi.h          | 2 +-
+>   12 files changed, 16 insertions(+), 16 deletions(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+> index 7f471bf..4153e7f 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/pci.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+> @@ -855,7 +855,7 @@ static void _rtl_pci_rx_interrupt(struct ieee80211_hw *hw)
+>   		}
+>   		/* handle command packet here */
+>   		if (rtlpriv->cfg->ops->rx_command_packet &&
+> -		    rtlpriv->cfg->ops->rx_command_packet(hw, stats, skb)) {
+> +		    rtlpriv->cfg->ops->rx_command_packet(hw, &stats, skb)) {
+>   				dev_kfree_skb_any(skb);
+>   				goto new_trx_end;
+>   		}
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
+> index 791efbe..1170106 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.c
+> @@ -851,7 +851,7 @@ void rtl88ee_tx_polling(struct ieee80211_hw *hw, u8 hw_queue)
+>   }
+>
+>   u32 rtl88ee_rx_command_packet(struct ieee80211_hw *hw,
+> -			      struct rtl_stats status,
+> +			      const struct rtl_stats *status,
+>   			      struct sk_buff *skb)
+>   {
+>   	return 0;
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h
+> index eab5ae0..5a24d19 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/trx.h
+> @@ -790,7 +790,7 @@ void rtl88ee_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
+>   			     bool firstseg, bool lastseg,
+>   			     struct sk_buff *skb);
+>   u32 rtl88ee_rx_command_packet(struct ieee80211_hw *hw,
+> -			      struct rtl_stats status,
+> +			      const struct rtl_stats *status,
+>   			      struct sk_buff *skb);
+>
+>   #endif
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+> index d39ee67..24eff8e 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.c
+> @@ -1105,13 +1105,13 @@ void rtl92ee_tx_polling(struct ieee80211_hw *hw, u8 hw_queue)
+>   }
+>
+>   u32 rtl92ee_rx_command_packet(struct ieee80211_hw *hw,
+> -			      struct rtl_stats status,
+> +			      const struct rtl_stats *status,
+>   			      struct sk_buff *skb)
+>   {
+>   	u32 result = 0;
+>   	struct rtl_priv *rtlpriv = rtl_priv(hw);
+>
+> -	switch (status.packet_report_type) {
+> +	switch (status->packet_report_type) {
+>   	case NORMAL_RX:
+>   		result = 0;
+>   		break;
+> @@ -1121,7 +1121,7 @@ u32 rtl92ee_rx_command_packet(struct ieee80211_hw *hw,
+>   		break;
+>   	default:
+>   		RT_TRACE(rtlpriv, COMP_RECV, DBG_TRACE,
+> -			 "Unknown packet type %d\n", status.packet_report_type);
+> +			 "Unknown packet type %d\n", status->packet_report_type);
+>   		break;
+>   	}
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.h
+> index 8f78ac9..a4c3834 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/trx.h
+> @@ -857,6 +857,6 @@ void rtl92ee_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
+>   			     bool firstseg, bool lastseg,
+>   			     struct sk_buff *skb);
+>   u32 rtl92ee_rx_command_packet(struct ieee80211_hw *hw,
+> -			      struct rtl_stats status,
+> +			      const struct rtl_stats *status,
+>   			      struct sk_buff *skb);
+>   #endif
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
+> index 2f7c144..7b4a9b6 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.c
+> @@ -710,7 +710,7 @@ void rtl8723e_tx_polling(struct ieee80211_hw *hw, u8 hw_queue)
+>   }
+>
+>   u32 rtl8723e_rx_command_packet(struct ieee80211_hw *hw,
+> -			       struct rtl_stats status,
+> +			       const struct rtl_stats *status,
+>   			       struct sk_buff *skb)
+>   {
+>   	return 0;
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.h
+> index 017da7e..32970bf 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/trx.h
+> @@ -716,6 +716,6 @@ void rtl8723e_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
+>   			      bool firstseg, bool lastseg,
+>   			      struct sk_buff *skb);
+>   u32 rtl8723e_rx_command_packet(struct ieee80211_hw *hw,
+> -			       struct rtl_stats status,
+> +			       const struct rtl_stats *status,
+>   			       struct sk_buff *skb);
+>   #endif
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
+> index 338ec9a..6034597 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.c
+> @@ -758,13 +758,13 @@ void rtl8723be_tx_polling(struct ieee80211_hw *hw, u8 hw_queue)
+>   }
+>
+>   u32 rtl8723be_rx_command_packet(struct ieee80211_hw *hw,
+> -				struct rtl_stats status,
+> +				const struct rtl_stats *status,
+>   				struct sk_buff *skb)
+>   {
+>   	u32 result = 0;
+>   	struct rtl_priv *rtlpriv = rtl_priv(hw);
+>
+> -	switch (status.packet_report_type) {
+> +	switch (status->packet_report_type) {
+>   	case NORMAL_RX:
+>   			result = 0;
+>   			break;
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.h
+> index 45949ac..40c36607 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/trx.h
+> @@ -620,6 +620,6 @@ void rtl8723be_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
+>   			       bool firstseg, bool lastseg,
+>   			       struct sk_buff *skb);
+>   u32 rtl8723be_rx_command_packet(struct ieee80211_hw *hw,
+> -				struct rtl_stats status,
+> +				const struct rtl_stats *status,
+>   				struct sk_buff *skb);
+>   #endif
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
+> index 174743a..41efaa1 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
+> @@ -998,13 +998,13 @@ void rtl8821ae_tx_polling(struct ieee80211_hw *hw, u8 hw_queue)
+>   }
+>
+>   u32 rtl8821ae_rx_command_packet(struct ieee80211_hw *hw,
+> -				struct rtl_stats status,
+> +				const struct rtl_stats *status,
+>   				struct sk_buff *skb)
+>   {
+>   	u32 result = 0;
+>   	struct rtl_priv *rtlpriv = rtl_priv(hw);
+>
+> -	switch (status.packet_report_type) {
+> +	switch (status->packet_report_type) {
+>   	case NORMAL_RX:
+>   		result = 0;
+>   		break;
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h
+> index 3140904..ad565be 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.h
+> @@ -615,6 +615,6 @@ void rtl8821ae_tx_fill_cmddesc(struct ieee80211_hw *hw, u8 *pdesc,
+>   			       bool firstseg, bool lastseg,
+>   			       struct sk_buff *skb);
+>   u32 rtl8821ae_rx_command_packet(struct ieee80211_hw *hw,
+> -				struct rtl_stats status,
+> +				const struct rtl_stats *status,
+>   				struct sk_buff *skb);
+>   #endif
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> index 4544752..1a79082 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> +++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+> @@ -2194,7 +2194,7 @@ struct rtl_hal_ops {
+>   	bool (*get_btc_status) (void);
+>   	bool (*is_fw_header)(struct rtlwifi_firmware_header *hdr);
+>   	u32 (*rx_command_packet)(struct ieee80211_hw *hw,
+> -				 struct rtl_stats status, struct sk_buff *skb);
+> +				 const struct rtl_stats *status, struct sk_buff *skb);
+>   	void (*add_wowlan_pattern)(struct ieee80211_hw *hw,
+>   				   struct rtl_wow_pattern *rtl_pattern,
+>   				   u8 index);
+>
 
