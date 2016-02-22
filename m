@@ -1,98 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46078 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752187AbcBDMb3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 07:31:29 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Julian Anastasov <ja@ssi.bg>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v3 2/4] ipv4: add option to drop gratuitous ARP packets
-Date: Thu,  4 Feb 2016 13:31:18 +0100
-Message-Id: <1454589080-21354-2-git-send-email-johannes@sipsolutions.net> (sfid-20160204_133138_698123_9C24304D)
-In-Reply-To: <1454589080-21354-1-git-send-email-johannes@sipsolutions.net>
-References: <1454589080-21354-1-git-send-email-johannes@sipsolutions.net>
+Received: from mail-qg0-f53.google.com ([209.85.192.53]:33506 "EHLO
+	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753148AbcBVQhI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Feb 2016 11:37:08 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [PATCHv2 10/10] rfkill: Notify userspace of airplane-mode state changes
+Date: Mon, 22 Feb 2016 11:36:41 -0500
+Message-Id: <1456159001-20307-11-git-send-email-jprvita@endlessm.com> (sfid-20160222_173826_997348_43098B73)
+In-Reply-To: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
-
-In certain 802.11 wireless deployments, there will be ARP proxies
-that use knowledge of the network to correctly answer requests.
-To prevent gratuitous ARP frames on the shared medium from being
-a problem, on such deployments wireless needs to drop them.
-
-Enable this by providing an option called "drop_gratuitous_arp".
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
 ---
- Documentation/networking/ip-sysctl.txt | 6 ++++++
- include/uapi/linux/ip.h                | 1 +
- net/ipv4/arp.c                         | 8 ++++++++
- net/ipv4/devinet.c                     | 2 ++
- 4 files changed, 17 insertions(+)
+ Documentation/rfkill.txt    |  3 +++
+ include/uapi/linux/rfkill.h |  4 ++--
+ net/rfkill/core.c           | 13 +++++++++++++
+ 3 files changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
-index 35c4c43dd8de..56bb6dd881bd 100644
---- a/Documentation/networking/ip-sysctl.txt
-+++ b/Documentation/networking/ip-sysctl.txt
-@@ -1215,6 +1215,12 @@ drop_unicast_in_l2_multicast - BOOLEAN
- 	1122, but is disabled by default for compatibility reasons.
- 	Default: off (0)
+diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
+index 9dbe3fc..588b4bf 100644
+--- a/Documentation/rfkill.txt
++++ b/Documentation/rfkill.txt
+@@ -133,5 +133,8 @@ applications to take control. Changes to the airplane-mode indicator state can
+ be made using RFKILL_OP_AIRPLANE_MODE_INDICATOR_CHANGE, passing the new value
+ in the 'soft' field of 'struct rfkill_event'.
  
-+drop_gratuitous_arp - BOOLEAN
-+	Drop all gratuitous ARP frames, for example if there's a known
-+	good ARP proxy on the network and such frames need not be used
-+	(or in the case of 802.11, must not be used to prevent attacks.)
-+	Default: off (0)
++This same API is also used to provide userspace with notifications of changes
++to airplane-mode indicator state.
 +
  
- tag - INTEGER
- 	Allows you to write a number, which can be used as required.
-diff --git a/include/uapi/linux/ip.h b/include/uapi/linux/ip.h
-index 584834f7e95c..f291569768dd 100644
---- a/include/uapi/linux/ip.h
-+++ b/include/uapi/linux/ip.h
-@@ -166,6 +166,7 @@ enum
- 	IPV4_DEVCONF_IGMPV3_UNSOLICITED_REPORT_INTERVAL,
- 	IPV4_DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN,
- 	IPV4_DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
-+	IPV4_DEVCONF_DROP_GRATUITOUS_ARP,
- 	__IPV4_DEVCONF_MAX
- };
- 
-diff --git a/net/ipv4/arp.c b/net/ipv4/arp.c
-index 59b3e0e8fd51..c102eb5ac55c 100644
---- a/net/ipv4/arp.c
-+++ b/net/ipv4/arp.c
-@@ -735,6 +735,14 @@ static int arp_process(struct net *net, struct sock *sk, struct sk_buff *skb)
- 	    (!IN_DEV_ROUTE_LOCALNET(in_dev) && ipv4_is_loopback(tip)))
- 		goto out;
- 
-+ /*
-+  *	For some 802.11 wireless deployments (and possibly other networks),
-+  *	there will be an ARP proxy and gratuitous ARP frames are attacks
-+  *	and thus should not be accepted.
-+  */
-+	if (sip == tip && IN_DEV_ORCONF(in_dev, DROP_GRATUITOUS_ARP))
-+		goto out;
-+
- /*
-  *     Special case: We must set Frame Relay source Q.922 address
+ For further details consult Documentation/ABI/stable/sysfs-class-rfkill.
+diff --git a/include/uapi/linux/rfkill.h b/include/uapi/linux/rfkill.h
+index 36e0770..2ccb02f 100644
+--- a/include/uapi/linux/rfkill.h
++++ b/include/uapi/linux/rfkill.h
+@@ -63,8 +63,8 @@ enum rfkill_type {
+  *	are hot-plugged later.
+  * @RFKILL_OP_AIRPLANE_MODE_INDICATOR_ACQUIRE: userspace acquires control of
+  * 	the airplane-mode indicator.
+- * @RFKILL_OP_AIRPLANE_MODE_INDICATOR_CHANGE: userspace changes the
+- * 	airplane-mode indicator state.
++ * @RFKILL_OP_AIRPLANE_MODE_INDICATOR_CHANGE: the airplane-mode indicator state
++ * 	changed -- userspace changes the airplane-mode indicator state.
   */
-diff --git a/net/ipv4/devinet.c b/net/ipv4/devinet.c
-index dbbab28a52a4..3d835313575e 100644
---- a/net/ipv4/devinet.c
-+++ b/net/ipv4/devinet.c
-@@ -2185,6 +2185,8 @@ static struct devinet_sysctl_table {
- 					"igmpv3_unsolicited_report_interval"),
- 		DEVINET_SYSCTL_RW_ENTRY(IGNORE_ROUTES_WITH_LINKDOWN,
- 					"ignore_routes_with_linkdown"),
-+		DEVINET_SYSCTL_RW_ENTRY(DROP_GRATUITOUS_ARP,
-+					"drop_gratuitous_arp"),
+ enum rfkill_operation {
+ 	RFKILL_OP_ADD = 0,
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 8ea8b73..c59fd1d 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -131,7 +131,20 @@ static struct led_trigger rfkill_apm_led_trigger;
  
- 		DEVINET_SYSCTL_FLUSHING_ENTRY(NOXFRM, "disable_xfrm"),
- 		DEVINET_SYSCTL_FLUSHING_ENTRY(NOPOLICY, "disable_policy"),
+ static void rfkill_apm_led_trigger_event(bool state)
+ {
++	struct rfkill_data *data;
++	struct rfkill_int_event *ev;
++
+ 	led_trigger_event(&rfkill_apm_led_trigger, state ? LED_FULL : LED_OFF);
++
++	list_for_each_entry(data, &rfkill_fds, list) {
++		ev = kzalloc(sizeof(*ev), GFP_KERNEL);
++		if (!ev)
++			continue;
++		ev->ev.op = RFKILL_OP_AIRPLANE_MODE_INDICATOR_CHANGE;
++		ev->ev.soft = state;
++		list_add_tail(&ev->list, &data->events);
++		wake_up_interruptible(&data->read_wait);
++	}
+ }
+ 
+ static void rfkill_apm_led_trigger_activate(struct led_classdev *led)
 -- 
-2.7.0
+2.5.0
 
