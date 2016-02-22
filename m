@@ -1,45 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60744 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932151AbcBZIKv (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:31577 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752539AbcBVEnz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 03:10:51 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH 08/13] ath9k: Update AR9565 initvals
-Date: Fri, 26 Feb 2016 16:08:38 +0800
-Message-Id: <1456474123-10520-9-git-send-email-miaoqing@codeaurora.org> (sfid-20160226_091053_841709_159221E5)
-In-Reply-To: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
-References: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
+	Sun, 21 Feb 2016 23:43:55 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH RESEND 01/10] staging: wilc1000: removes wilc_dbg()
+Date: Mon, 22 Feb 2016 13:41:10 +0900
+Message-ID: <1456116079-7161-1-git-send-email-leo.kim@atmel.com> (sfid-20160222_054358_955272_4CCA03CF)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+This patch removes wilc_dbg function because it's not any more.
 
-HW peak detect calibration would fail for AR9300 chips and
-we went for implementing the SW way of doing it instead of
-HW doing the peak detect calibration.
-
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/linux_wlan.c         | 4 ----
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h | 2 --
+ drivers/staging/wilc1000/wilc_wlan.c          | 2 --
+ 3 files changed, 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
-index 10d4a6c..35c1bbb 100644
---- a/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9565_1p0_initvals.h
-@@ -347,7 +347,7 @@ static const u32 ar9565_1p0_baseband_postamble[][5] = {
- 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
- 	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003a4, 0x000003a4},
- 	{0x00009e2c, 0x0000001c, 0x0000001c, 0x00000021, 0x00000021},
--	{0x00009e3c, 0xcf946222, 0xcf946222, 0xcf946220, 0xcf946220},
-+	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcf946220, 0xcf946220},
- 	{0x00009e44, 0xfe321e27, 0xfe321e27, 0xfe291e27, 0xfe291e27},
- 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
- 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 749dfc74..912e8ec 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -224,10 +224,6 @@ static void deinit_irq(struct net_device *dev)
+ 	}
+ }
+ 
+-void wilc_dbg(u8 *buff)
+-{
+-}
+-
+ int wilc_lock_timeout(struct wilc *nic, void *vp, u32 timeout)
+ {
+ 	/* FIXME: replace with mutex_lock or wait_for_completion */
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 3077f5d4..786f5fd 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -228,8 +228,6 @@ int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif);
+ 
+ void wilc_frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
+ void wilc_mac_indicate(struct wilc *wilc, int flag);
+-void wilc_dbg(u8 *buff);
+-
+ int wilc_lock_timeout(struct wilc *wilc, void *, u32 timeout);
+ void wilc_netdev_cleanup(struct wilc *wilc);
+ int wilc_netdev_init(struct wilc **wilc, struct device *, int io_type, int gpio,
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index e7ae359..90b6528 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -15,8 +15,6 @@ static void wilc_debug(u32 flag, char *fmt, ...)
+ 		va_start(args, fmt);
+ 		vsprintf(buf, fmt, args);
+ 		va_end(args);
+-
+-		wilc_dbg(buf);
+ 	}
+ }
+ 
 -- 
 1.9.1
 
