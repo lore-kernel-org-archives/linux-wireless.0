@@ -1,316 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:18944 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752939AbcBOL7Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Feb 2016 06:59:16 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 4/5] iwlwifi: pcie: fix RF-Kill vs. firmware load race
-Date: Mon, 15 Feb 2016 13:59:05 +0200
-Message-Id: <1455537546-22157-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160215_181514_955825_272CDB4A)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA13D1A@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA13D1A@hasmsx107.ger.corp.intel.com>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:20653 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753064AbcBVKTm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Feb 2016 05:19:42 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V4 16/24] staging: wilc1000: host_interface.c: removes unnecessary log messages
+Date: Mon, 22 Feb 2016 19:14:23 +0900
+Message-ID: <1456136071-10502-17-git-send-email-leo.kim@atmel.com> (sfid-20160222_111950_574212_DE9A5265)
+In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When we load the firmware, we hold trans_pcie->mutex to
-avoid nested flows. We also rely on the ISR to wake up the
-thread when the DMA has finished copying a chunk. During
-this flow, we enable the RF-Kill interrupt.
+From: Chris Park <chris.park@atmel.com>
 
-The problem is that the RF-Kill interrupt handler can take
-the mutex and bring the device down. This means that if
-we load the firmware while the RF-Kill switch is enabled
-(which will happen when we load the INIT firmware to read
-the device's capabilities and register to mac80211), we
-may get an RF-Kill interrupt immediately and the ISR will
-be waiting for the mutex held by the thread that is
-currently loading the firmware. At this stage, the ISR
-won't be able to service the DMA's interrupt needed to
-wake up the thread that load the firmware. We are in a
-deadlock situation which ends when the thread that loads
-the firmware fails on timeout and releases the mutex.
+This patch removes unnecessary log messages.
 
-To fix this, take the mutex later in the flow, disable
-the interrupts and synchronize_irq() to give a chance to
-the RF-Kill interrupt to run and complete.
-After that, mask all the interrupts besides the DMA
-interrupt and proceed with firmware load. Make sure to
-check that there was no RF-Kill interrupt when the
-interrupts were disabled.
-
-This fixes https://bugzilla.kernel.org/show_bug.cgi?id=111361
-
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/internal.h |   9 +
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c       |   8 +-
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    | 188 ++++++++++++---------
- 3 files changed, 123 insertions(+), 82 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-index cc3888e..73c9559 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
-@@ -490,6 +490,15 @@ static inline void iwl_enable_interrupts(struct iwl_trans *trans)
- 	iwl_write32(trans, CSR_INT_MASK, trans_pcie->inta_mask);
- }
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index eddc0d6..a827e06 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1637,11 +1637,8 @@ static int Handle_Key(struct wilc_vif *vif,
  
-+static inline void iwl_enable_fw_load_int(struct iwl_trans *trans)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+
-+	IWL_DEBUG_ISR(trans, "Enabling FW load interrupt\n");
-+	trans_pcie->inta_mask = CSR_INT_BIT_FH_TX;
-+	iwl_write32(trans, CSR_INT_MASK, trans_pcie->inta_mask);
-+}
-+
- static inline void iwl_enable_rfkill_int(struct iwl_trans *trans)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index ccafbd8..152cf9a 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1438,9 +1438,11 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
- 			 inta & ~trans_pcie->inta_mask);
- 	}
+ 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2,
+ 					    GFP_KERNEL);
+-
+-			if (pu8keybuf == NULL) {
+-				PRINT_ER("No buffer to send Key\n");
++			if (!pu8keybuf)
+ 				return -ENOMEM;
+-			}
  
--	/* Re-enable all interrupts */
--	/* only Re-enable if disabled by irq */
--	if (test_bit(STATUS_INT_ENABLED, &trans->status))
-+	/* we are loading the firmware, enable FH_TX interrupt only */
-+	if (handled & CSR_INT_BIT_FH_TX)
-+		iwl_enable_fw_load_int(trans);
-+	/* only Re-enable all interrupt if disabled by irq */
-+	else if (test_bit(STATUS_INT_ENABLED, &trans->status))
- 		iwl_enable_interrupts(trans);
- 	/* Re-enable RF_KILL if it occurred */
- 	else if (handled & CSR_INT_BIT_RF_KILL)
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index d60a467..5503072 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1021,82 +1021,6 @@ static int iwl_pcie_load_given_ucode_8000(struct iwl_trans *trans,
- 					       &first_ucode_section);
- }
- 
--static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
--				   const struct fw_img *fw, bool run_in_rfkill)
--{
--	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
--	bool hw_rfkill;
--	int ret;
--
--	mutex_lock(&trans_pcie->mutex);
--
--	/* Someone called stop_device, don't try to start_fw */
--	if (trans_pcie->is_down) {
--		IWL_WARN(trans,
--			 "Can't start_fw since the HW hasn't been started\n");
--		ret = EIO;
--		goto out;
--	}
--
--	/* This may fail if AMT took ownership of the device */
--	if (iwl_pcie_prepare_card_hw(trans)) {
--		IWL_WARN(trans, "Exit HW not ready\n");
--		ret = -EIO;
--		goto out;
--	}
--
--	iwl_enable_rfkill_int(trans);
--
--	/* If platform's RF_KILL switch is NOT set to KILL */
--	hw_rfkill = iwl_is_rfkill_set(trans);
--	if (hw_rfkill)
--		set_bit(STATUS_RFKILL, &trans->status);
--	else
--		clear_bit(STATUS_RFKILL, &trans->status);
--	iwl_trans_pcie_rf_kill(trans, hw_rfkill);
--	if (hw_rfkill && !run_in_rfkill) {
--		ret = -ERFKILL;
--		goto out;
--	}
--
--	iwl_write32(trans, CSR_INT, 0xFFFFFFFF);
--
--	ret = iwl_pcie_nic_init(trans);
--	if (ret) {
--		IWL_ERR(trans, "Unable to init nic\n");
--		goto out;
--	}
--
--	/* make sure rfkill handshake bits are cleared */
--	iwl_write32(trans, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
--	iwl_write32(trans, CSR_UCODE_DRV_GP1_CLR,
--		    CSR_UCODE_DRV_GP1_BIT_CMD_BLOCKED);
--
--	/* clear (again), then enable host interrupts */
--	iwl_write32(trans, CSR_INT, 0xFFFFFFFF);
--	iwl_enable_interrupts(trans);
--
--	/* really make sure rfkill handshake bits are cleared */
--	iwl_write32(trans, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
--	iwl_write32(trans, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
--
--	/* Load the given image to the HW */
--	if (trans->cfg->device_family == IWL_DEVICE_FAMILY_8000)
--		ret = iwl_pcie_load_given_ucode_8000(trans, fw);
--	else
--		ret = iwl_pcie_load_given_ucode(trans, fw);
--
--out:
--	mutex_unlock(&trans_pcie->mutex);
--	return ret;
--}
--
--static void iwl_trans_pcie_fw_alive(struct iwl_trans *trans, u32 scd_addr)
--{
--	iwl_pcie_reset_ict(trans);
--	iwl_pcie_tx_start(trans, scd_addr);
--}
--
- static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-@@ -1127,7 +1051,8 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
- 	 * already dead.
- 	 */
- 	if (test_and_clear_bit(STATUS_DEVICE_ENABLED, &trans->status)) {
--		IWL_DEBUG_INFO(trans, "DEVICE_ENABLED bit was set and is now cleared\n");
-+		IWL_DEBUG_INFO(trans,
-+			       "DEVICE_ENABLED bit was set and is now cleared\n");
- 		iwl_pcie_tx_stop(trans);
- 		iwl_pcie_rx_stop(trans);
- 
-@@ -1161,7 +1086,6 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
- 	iwl_disable_interrupts(trans);
- 	spin_unlock(&trans_pcie->irq_lock);
- 
--
- 	/* clear all status bits */
- 	clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);
- 	clear_bit(STATUS_INT_ENABLED, &trans->status);
-@@ -1194,10 +1118,116 @@ static void _iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
- 	if (hw_rfkill != was_hw_rfkill)
- 		iwl_trans_pcie_rf_kill(trans, hw_rfkill);
- 
--	/* re-take ownership to prevent other users from stealing the deivce */
-+	/* re-take ownership to prevent other users from stealing the device */
- 	iwl_pcie_prepare_card_hw(trans);
- }
- 
-+static int iwl_trans_pcie_start_fw(struct iwl_trans *trans,
-+				   const struct fw_img *fw, bool run_in_rfkill)
-+{
-+	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	bool hw_rfkill;
-+	int ret;
-+
-+	/* This may fail if AMT took ownership of the device */
-+	if (iwl_pcie_prepare_card_hw(trans)) {
-+		IWL_WARN(trans, "Exit HW not ready\n");
-+		ret = -EIO;
-+		goto out;
-+	}
-+
-+	iwl_enable_rfkill_int(trans);
-+
-+	iwl_write32(trans, CSR_INT, 0xFFFFFFFF);
-+
-+	/*
-+	 * We enabled the RF-Kill interrupt and the handler may very
-+	 * well be running. Disable the interrupts to make sure no other
-+	 * interrupt can be fired.
-+	 */
-+	iwl_disable_interrupts(trans);
-+
-+	/* Make sure it finished running */
-+	synchronize_irq(trans_pcie->pci_dev->irq);
-+
-+	mutex_lock(&trans_pcie->mutex);
-+
-+	/* If platform's RF_KILL switch is NOT set to KILL */
-+	hw_rfkill = iwl_is_rfkill_set(trans);
-+	if (hw_rfkill)
-+		set_bit(STATUS_RFKILL, &trans->status);
-+	else
-+		clear_bit(STATUS_RFKILL, &trans->status);
-+	iwl_trans_pcie_rf_kill(trans, hw_rfkill);
-+	if (hw_rfkill && !run_in_rfkill) {
-+		ret = -ERFKILL;
-+		goto out;
-+	}
-+
-+	/* Someone called stop_device, don't try to start_fw */
-+	if (trans_pcie->is_down) {
-+		IWL_WARN(trans,
-+			 "Can't start_fw since the HW hasn't been started\n");
-+		ret = EIO;
-+		goto out;
-+	}
-+
-+	/* make sure rfkill handshake bits are cleared */
-+	iwl_write32(trans, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
-+	iwl_write32(trans, CSR_UCODE_DRV_GP1_CLR,
-+		    CSR_UCODE_DRV_GP1_BIT_CMD_BLOCKED);
-+
-+	/* clear (again), then enable host interrupts */
-+	iwl_write32(trans, CSR_INT, 0xFFFFFFFF);
-+
-+	ret = iwl_pcie_nic_init(trans);
-+	if (ret) {
-+		IWL_ERR(trans, "Unable to init nic\n");
-+		goto out;
-+	}
-+
-+	/*
-+	 * Now, we load the firmware and don't want to be interrupted, even
-+	 * by the RF-Kill interrupt (hence mask all the interrupt besides the
-+	 * FH_TX interrupt which is needed to load the firmware). If the
-+	 * RF-Kill switch is toggled, we will find out after having loaded
-+	 * the firmware and return the proper value to the caller.
-+	 */
-+	iwl_enable_fw_load_int(trans);
-+
-+	/* really make sure rfkill handshake bits are cleared */
-+	iwl_write32(trans, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
-+	iwl_write32(trans, CSR_UCODE_DRV_GP1_CLR, CSR_UCODE_SW_BIT_RFKILL);
-+
-+	/* Load the given image to the HW */
-+	if (trans->cfg->device_family == IWL_DEVICE_FAMILY_8000)
-+		ret = iwl_pcie_load_given_ucode_8000(trans, fw);
-+	else
-+		ret = iwl_pcie_load_given_ucode(trans, fw);
-+	iwl_enable_interrupts(trans);
-+
-+	/* re-check RF-Kill state since we may have missed the interrupt */
-+	hw_rfkill = iwl_is_rfkill_set(trans);
-+	if (hw_rfkill)
-+		set_bit(STATUS_RFKILL, &trans->status);
-+	else
-+		clear_bit(STATUS_RFKILL, &trans->status);
-+
-+	iwl_trans_pcie_rf_kill(trans, hw_rfkill);
-+	if (hw_rfkill && !run_in_rfkill)
-+		ret = -ERFKILL;
-+
-+out:
-+	mutex_unlock(&trans_pcie->mutex);
-+	return ret;
-+}
-+
-+static void iwl_trans_pcie_fw_alive(struct iwl_trans *trans, u32 scd_addr)
-+{
-+	iwl_pcie_reset_ict(trans);
-+	iwl_pcie_tx_start(trans, scd_addr);
-+}
-+
- static void iwl_trans_pcie_stop_device(struct iwl_trans *trans, bool low_power)
- {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
+ 			pu8keybuf[1] = pstrHostIFkeyAttr->attr.wep.key_len;
+@@ -1662,10 +1659,8 @@ static int Handle_Key(struct wilc_vif *vif,
+ 			kfree(pu8keybuf);
+ 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
+ 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2, GFP_KERNEL);
+-			if (!pu8keybuf) {
+-				PRINT_ER("No buffer to send Key\n");
++			if (!pu8keybuf)
+ 				return -ENOMEM;
+-			}
+ 			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
+ 			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->attr.wep.key_len, 1);
+ 			memcpy(pu8keybuf + 2, pstrHostIFkeyAttr->attr.wep.key,
+@@ -1709,7 +1704,6 @@ static int Handle_Key(struct wilc_vif *vif,
+ 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
+ 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
+ 			if (!pu8keybuf) {
+-				PRINT_ER("No buffer to send RxGTK Key\n");
+ 				ret = -ENOMEM;
+ 				goto _WPARxGtk_end_case_;
+ 			}
+@@ -1741,7 +1735,6 @@ static int Handle_Key(struct wilc_vif *vif,
+ 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
+ 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
+ 			if (pu8keybuf == NULL) {
+-				PRINT_ER("No buffer to send RxGTK Key\n");
+ 				ret = -ENOMEM;
+ 				goto _WPARxGtk_end_case_;
+ 			}
+@@ -1781,7 +1774,6 @@ _WPARxGtk_end_case_:
+ 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
+ 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN + 1, GFP_KERNEL);
+ 			if (!pu8keybuf) {
+-				PRINT_ER("No buffer to send PTK Key\n");
+ 				ret = -ENOMEM;
+ 				goto _WPAPtk_end_case_;
+ 			}
 -- 
-2.5.0
+1.9.1
 
