@@ -1,83 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f194.google.com ([209.85.214.194]:34781 "EHLO
-	mail-ob0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751715AbcBKQxa (ORCPT
+Received: from mail-qk0-f174.google.com ([209.85.220.174]:33486 "EHLO
+	mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752811AbcBVQhF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2016 11:53:30 -0500
-Received: by mail-ob0-f194.google.com with SMTP id x5so6137825obg.1
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Feb 2016 08:53:29 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 2/4] rtlwifi: rtl8192de: Convert driver to use common 5G channels
-Date: Thu, 11 Feb 2016 10:53:10 -0600
-Message-Id: <1455209592-12882-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160211_175338_905912_00E33CD1)
-In-Reply-To: <1455209592-12882-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1455209592-12882-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 22 Feb 2016 11:37:05 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [PATCHv2 08/10] rfkill: Use switch to demux userspace operations
+Date: Mon, 22 Feb 2016 11:36:39 -0500
+Message-Id: <1456159001-20307-9-git-send-email-jprvita@endlessm.com> (sfid-20160222_174031_995539_D97785FB)
+In-Reply-To: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This driver defines its owh copy of the 5G channels. Change it to use
-the common definitions.
+Using a switch to handle different ev.op values in rfkill_fop_write()
+makes the code easier to extend, as out-of-range values can always be
+handled by the default case.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
 ---
+ net/rfkill/core.c | 32 ++++++++++++++++++--------------
+ 1 file changed, 18 insertions(+), 14 deletions(-)
 
-Kalle,
-
-This material is for kernel 4.6.
-
-Larry
-
- .../net/wireless/realtek/rtlwifi/rtl8192de/phy.c   | 23 ++++------------------
- 1 file changed, 4 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-index bb06fe8..7810fe8 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192de/phy.c
-@@ -924,19 +924,11 @@ static void _rtl92d_ccxpower_index_check(struct ieee80211_hw *hw,
- 
- static u8 _rtl92c_phy_get_rightchnlplace(u8 chnl)
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 50b538b..04d7fa1 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -1185,6 +1185,7 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
  {
--	u8 channel_5g[59] = {
--		1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
--		36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58,
--		60, 62, 64, 100, 102, 104, 106, 108, 110, 112,
--		114, 116, 118, 120, 122, 124, 126, 128,
--		130, 132, 134, 136, 138, 140, 149, 151,
--		153, 155, 157, 159, 161, 163, 165
--	};
- 	u8 place = chnl;
+ 	struct rfkill *rfkill;
+ 	struct rfkill_event ev;
++	int ret = 0;
  
- 	if (chnl > 14) {
--		for (place = 14; place < sizeof(channel_5g); place++) {
--			if (channel_5g[place] == chnl) {
-+		for (place = 14; place < sizeof(channel5g); place++) {
-+			if (channel5g[place] == chnl) {
- 				place++;
- 				break;
- 			}
-@@ -2471,16 +2463,9 @@ static bool _rtl92d_is_legal_5g_channel(struct ieee80211_hw *hw, u8 channel)
- {
+ 	/* we don't need the 'hard' variable but accept it */
+ 	if (count < RFKILL_EVENT_SIZE_V1 - 1)
+@@ -1199,29 +1200,32 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
+ 	if (copy_from_user(&ev, buf, count))
+ 		return -EFAULT;
  
- 	int i;
--	u8 channel_5g[45] = {
--		36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58,
--		60, 62, 64, 100, 102, 104, 106, 108, 110, 112,
--		114, 116, 118, 120, 122, 124, 126, 128, 130, 132,
--		134, 136, 138, 140, 149, 151, 153, 155, 157, 159,
--		161, 163, 165
--	};
+-	if (ev.op != RFKILL_OP_CHANGE && ev.op != RFKILL_OP_CHANGE_ALL)
+-		return -EINVAL;
+-
+ 	if (ev.type >= NUM_RFKILL_TYPES)
+ 		return -EINVAL;
  
--	for (i = 0; i < sizeof(channel_5g); i++)
--		if (channel == channel_5g[i])
-+	for (i = 0; i < sizeof(channel5g); i++)
-+		if (channel == channel5g[i])
- 			return true;
- 	return false;
+ 	mutex_lock(&rfkill_global_mutex);
+ 
+-	if (ev.op == RFKILL_OP_CHANGE_ALL)
++	switch (ev.op) {
++	case RFKILL_OP_CHANGE_ALL:
+ 		rfkill_update_global_state(ev.type, ev.soft);
+-
+-	list_for_each_entry(rfkill, &rfkill_list, node) {
+-		if (rfkill->idx != ev.idx && ev.op != RFKILL_OP_CHANGE_ALL)
+-			continue;
+-
+-		if (rfkill->type != ev.type && ev.type != RFKILL_TYPE_ALL)
+-			continue;
+-
+-		rfkill_set_block(rfkill, ev.soft);
++		list_for_each_entry(rfkill, &rfkill_list, node)
++			if (rfkill->type == ev.type ||
++			    ev.type == RFKILL_TYPE_ALL)
++				rfkill_set_block(rfkill, ev.soft);
++		break;
++	case RFKILL_OP_CHANGE:
++		list_for_each_entry(rfkill, &rfkill_list, node)
++			if (rfkill->idx == ev.idx && rfkill->type == ev.type)
++				rfkill_set_block(rfkill, ev.soft);
++		break;
++	default:
++		ret = -EINVAL;
++		break;
+ 	}
++
+ 	mutex_unlock(&rfkill_global_mutex);
+ 
+-	return count;
++	return ret ? ret : count;
  }
+ 
+ static int rfkill_fop_release(struct inode *inode, struct file *file)
 -- 
-2.1.4
+2.5.0
 
