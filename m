@@ -1,72 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42066 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965914AbcBCSkD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 13:40:03 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Jakub Sitnicki <jsitnicki@gmail.com>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 15/28] rtl8xxxu: Use REG_EFUSE_TEST register only on multifunctional devices
-Date: Wed,  3 Feb 2016 13:39:49 -0500
-Message-Id: <1454524802-26763-16-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_194801_236370_926A45D3)
-In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:19901 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753824AbcBVKRH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Feb 2016 05:17:07 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V4 00/24] staging: wilc1000: Resend V4
+Date: Mon, 22 Feb 2016 19:14:07 +0900
+Message-ID: <1456136071-10502-1-git-send-email-leo.kim@atmel.com> (sfid-20160222_111711_684584_6DE718A5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jakub Sitnicki <jsitnicki@gmail.com>
+Dear Greg
 
-rtl8192cu driver doesn't read/write the REG_EFUSE_TEST register.
-Neither does the rtl8188eu driver.  Do it only for multifunc devices
-RTL8723AU/RTL8723BU.
+This is the 4th fix patch about the mistake merging.
+Mistake merging is revert the below commit when rebase V3 patches.
+(already applied commit) - 6c2ab2398b88 ("staging: wilc1000: remove spaces around '->'")
+(V3 mistake patch) - [PATCH V3 09/24] staging: wilc1000: wilc_wfi_cfgoperations.c: removes unnecessary log messages
 
-Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 9 ++++++---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 1 +
- 2 files changed, 7 insertions(+), 3 deletions(-)
+I'll resend 4th patches after modified this mistake.
+We apologize for the inconvenience.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 4a6939f..94d3d84 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -1704,6 +1704,7 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
- 			priv->has_bluetooth = 1;
- 		if (val32 & MULTI_GPS_FUNC_EN)
- 			priv->has_gps = 1;
-+		priv->is_multi_func = 1;
- 	} else if (val32 & SYS_CFG_TYPE_ID) {
- 		bonding = rtl8xxxu_read32(priv, REG_HPON_FSM);
- 		bonding &= HPON_FSM_BONDING_MASK;
-@@ -1938,9 +1939,11 @@ static int rtl8xxxu_read_efuse(struct rtl8xxxu_priv *priv)
- 	if (val16 & EEPROM_BOOT)
- 		priv->boot_eeprom = 1;
- 
--	val32 = rtl8xxxu_read32(priv, REG_EFUSE_TEST);
--	val32 = (val32 & ~EFUSE_SELECT_MASK) | EFUSE_WIFI_SELECT;
--	rtl8xxxu_write32(priv, REG_EFUSE_TEST, val32);
-+	if (priv->is_multi_func) {
-+		val32 = rtl8xxxu_read32(priv, REG_EFUSE_TEST);
-+		val32 = (val32 & ~EFUSE_SELECT_MASK) | EFUSE_WIFI_SELECT;
-+		rtl8xxxu_write32(priv, REG_EFUSE_TEST, val32);
-+	}
- 
- 	dev_dbg(dev, "Booting from %s\n",
- 		priv->boot_eeprom ? "EEPROM" : "EFUSE");
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index f71fb8d..bbd0f6b 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -597,6 +597,7 @@ struct rtl8xxxu_priv {
- 	struct rtl8723au_idx ht20_max_power_offset[3];
- 	u32 chip_cut:4;
- 	u32 rom_rev:4;
-+	u32 is_multi_func:1;
- 	u32 has_wifi:1;
- 	u32 has_bluetooth:1;
- 	u32 enable_bluetooth:1;
+Thank you and Best Regards.
+Leo
+
+Chris Park (19):
+  staging: wilc1000: host_interface.c: removes unnecessary log message
+  staging: wilc1000: linux_mon.c: removes unnecessary log message
+  staging: wilc1000: linux_mon.c: removes comments
+  staging: wilc1000: wilc_wfi_cfgoperations.c: removes unnecessary log
+    messages
+  staging: wilc1000: removes unused HOSTAPD_DBG tag
+  staging: wilc1000: host_interface.c: removes unnecessary log messages
+  staging: wilc1000: wilc_wfi_cfgoperations.c: removes unnecessary log
+    messages
+  staging: wilc1000: wilc_wfi_cfgoperations.c: removes unnecessary log
+    messages
+  staging: wilc1000: removes unused CFG80211_DBG tag
+  staging: wilc1000: coreconfigurator.c: removes unnecessary log
+    messages
+  staging: wilc1000: host_interface.c: removes unnecessary log messages
+  staging: wilc1000: host_interface.c: replace PRINT_ER with netdev_err
+  staging: wilc1000: linux_wlan.c: removes unnecessary log messages
+  staging: wilc1000: wilc_wfi_cfgoperations.c: removes unnecessary log
+    messages
+  staging: wilc1000: wilc_wlan.c: removes unnecessary log messages
+  staging: wilc1000: removes unused region feature
+  staging: wilc1000: removes usused PRINT_XX(region...)
+  staging: wilc1000: moves to define values
+  staging: wilc1000: moves LINUX_RX_SIZE, LINUX_TX_SIZE
+
+Leo Kim (5):
+  staging: wilc1000: wilc_wlan.c: removes PRINT_ER
+  staging: wilc1000: linux_mon.c: removes debug logs
+  staging: wilc1000: linux_mon.c: replaces PRINT_ER with netdev_err
+  staging: wilc1000: linux_mon.c: add to check routine
+  staging: wilc1000: removes potential null dereference
+
+ drivers/staging/wilc1000/coreconfigurator.c       |   4 +-
+ drivers/staging/wilc1000/host_interface.c         | 332 ++++++++++-----------
+ drivers/staging/wilc1000/linux_mon.c              |  74 +----
+ drivers/staging/wilc1000/linux_wlan.c             |   1 -
+ drivers/staging/wilc1000/linux_wlan_common.h      |  99 -------
+ drivers/staging/wilc1000/wilc_debugfs.c           |  47 +--
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 339 ++--------------------
+ drivers/staging/wilc1000/wilc_wlan.c              |   5 -
+ drivers/staging/wilc1000/wilc_wlan.h              |   3 +
+ 9 files changed, 187 insertions(+), 717 deletions(-)
+
 -- 
-2.5.0
+1.9.1
 
