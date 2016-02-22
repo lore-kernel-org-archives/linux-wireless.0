@@ -1,184 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:9153 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:20304 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755811AbcBDJW7 (ORCPT
+	with ESMTP id S1754222AbcBVKSW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:22:59 -0500
-From: Glen Lee <glen.lee@atmel.com>
+	Mon, 22 Feb 2016 05:18:22 -0500
+From: Leo Kim <leo.kim@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
 	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 01/70] staging: wilc1000: wilc_set_wfi_drv_handler: add mac index
-Date: Thu, 4 Feb 2016 18:15:18 +0900
-Message-ID: <1454577387-509-2-git-send-email-glen.lee@atmel.com> (sfid-20160204_102304_313724_88831C5B)
-In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V4 09/24] staging: wilc1000: wilc_wfi_cfgoperations.c: removes unnecessary log messages
+Date: Mon, 22 Feb 2016 19:14:16 +0900
+Message-ID: <1456136071-10502-10-git-send-email-leo.kim@atmel.com> (sfid-20160222_111833_365360_7092B4E8)
+In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Firmware supports sta/ap concurrency so mac index will be passed to wilc.
-Remove wilc_set_wfi_drv_handler in scan and connect functions, and call
-the function in ndo_open which is wilc_mac_open.
-WID_SET_DRV_HANDLER value has been changed as well.
+From: Chris Park <chris.park@atmel.com>
 
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+This patch removes the unnecessary log messages which is used with
+the HOSTAPD_DBG tag.
+
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c         | 11 ++++++-----
- drivers/staging/wilc1000/host_interface.h         |  3 ++-
- drivers/staging/wilc1000/linux_wlan.c             | 19 +++++++++++++++++++
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c |  6 ++----
- drivers/staging/wilc1000/wilc_wlan_if.h           |  2 +-
- 5 files changed, 30 insertions(+), 11 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 88 +----------------------
+ 1 file changed, 1 insertion(+), 87 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d77e2b2..7c75d0e 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -320,9 +320,9 @@ static s32 handle_set_wfi_drv_handler(struct wilc_vif *vif,
- 	struct wid wid;
- 
- 	wid.id = (u16)WID_SET_DRV_HANDLER;
--	wid.type = WID_INT;
--	wid.val = (s8 *)&hif_drv_handler->handler;
--	wid.size = sizeof(u32);
-+	wid.type = WID_STR;
-+	wid.val = (s8 *)hif_drv_handler;
-+	wid.size = sizeof(*hif_drv_handler);
- 
- 	result = wilc_send_config_pkt(vif->wilc, SET_CFG, &wid, 1,
- 				      hif_drv_handler->handler);
-@@ -3557,7 +3557,7 @@ int wilc_wait_msg_queue_idle(void)
- 	return result;
- }
- 
--int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index)
-+int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mac_idx)
- {
- 	int result = 0;
- 	struct host_if_msg msg;
-@@ -3565,6 +3565,7 @@ int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index)
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 	msg.id = HOST_IF_MSG_SET_WFIDRV_HANDLER;
- 	msg.body.drv.handler = index;
-+	msg.body.drv.mac_idx = mac_idx;
- 	msg.vif = vif;
- 
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
-@@ -3909,7 +3910,7 @@ s32 wilc_deinit(struct wilc_vif *vif)
- 
- 	del_timer_sync(&hif_drv->remain_on_ch_timer);
- 
--	wilc_set_wfi_drv_handler(vif, 0);
-+	wilc_set_wfi_drv_handler(vif, 0, 0);
- 	down(&hif_sema_driver);
- 
- 	if (hif_drv->usr_scan_req.scan_result) {
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 4c02e6b..b828791 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -217,6 +217,7 @@ struct user_conn_req {
- 
- struct drv_handler {
- 	u32 handler;
-+	u8 mac_idx;
- };
- 
- struct op_mode {
-@@ -363,7 +364,7 @@ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
- 			   void *user_arg);
- int wilc_listen_state_expired(struct wilc_vif *vif, u32 session_id);
- int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg);
--int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index);
-+int wilc_set_wfi_drv_handler(struct wilc_vif *vif, int index, u8 mac_idx);
- int wilc_set_operation_mode(struct wilc_vif *vif, u32 mode);
- int wilc_get_statistics(struct wilc_vif *vif, struct rf_info *stats);
- void wilc_resolve_disconnect_aberration(struct wilc_vif *vif);
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index b368c2d..2fafcc4 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1024,6 +1024,25 @@ int wilc_mac_open(struct net_device *ndev)
- 	for (i = 0; i < wl->vif_num; i++) {
- 		if (ndev == wl->vif[i]->ndev) {
- 			memcpy(wl->vif[i]->src_addr, mac_add, ETH_ALEN);
-+			if (vif->iftype == AP_MODE) {
-+				wilc_set_wfi_drv_handler(vif,
-+							 wilc_get_vif_idx(vif),
-+							 0);
-+			} else if (!wilc_wlan_get_num_conn_ifcs(wilc)) {
-+				wilc_set_wfi_drv_handler(vif,
-+							 wilc_get_vif_idx(vif),
-+							 wilc->open_ifcs);
-+			} else {
-+				if (memcmp(wilc->vif[i ^ 1]->bssid,
-+					   wilc->vif[i ^ 1]->src_addr, 6))
-+					wilc_set_wfi_drv_handler(vif,
-+							 wilc_get_vif_idx(vif),
-+							 0);
-+				else
-+					wilc_set_wfi_drv_handler(vif,
-+							 wilc_get_vif_idx(vif),
-+							 1);
-+			}
- 			wilc_set_operation_mode(vif, vif->iftype);
- 			break;
- 		}
 diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 4eede2b..b0350da 100644
+index 8a3da2d..0558518 100644
 --- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
 +++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -633,7 +633,6 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+@@ -1361,10 +1361,6 @@ static int get_station(struct wiphy *wiphy, struct net_device *dev,
+ 	vif = netdev_priv(dev);
  
- 	priv->u32RcvdChCount = 0;
- 
--	wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif));
- 	reset_shadow_found();
- 
- 	priv->bCfgScanning = true;
-@@ -714,8 +713,6 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 	vif = netdev_priv(priv->dev);
- 	pstrWFIDrv = (struct host_if_drv *)(priv->hWILCWFIDrv);
- 
--	wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif));
+ 	if (vif->iftype == AP_MODE || vif->iftype == GO_MODE) {
+-		PRINT_D(HOSTAPD_DBG, "Getting station parameters\n");
 -
- 	PRINT_D(CFG80211_DBG, "Connecting to SSID [%s] on netdev [%p] host if [%p]\n", sme->ssid, dev, priv->hWILCWFIDrv);
- 	if (!(strncmp(sme->ssid, "DIRECT-", 7))) {
- 		PRINT_D(CFG80211_DBG, "Connected to Direct network,OBSS disabled\n");
-@@ -2152,7 +2149,8 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+-		PRINT_INFO(HOSTAPD_DBG, ": %x%x%x%x%x\n", mac[0], mac[1], mac[2], mac[3], mac[4]);
+-
+ 		for (i = 0; i < NUM_STA_ASSOCIATED; i++) {
+ 			if (!(memcmp(mac, priv->assoc_stainfo.au8Sta_AssociatedBss[i], ETH_ALEN))) {
+ 				associatedsta = i;
+@@ -2042,9 +2038,6 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 	vif = netdev_priv(dev);
+ 	priv = wiphy_priv(wiphy);
+ 	wl = vif->wilc;
+-
+-	PRINT_D(HOSTAPD_DBG, "In Change virtual interface function\n");
+-	PRINT_D(HOSTAPD_DBG, "Wireless interface name =%s\n", dev->name);
+ 	p2p_local_random = 0x01;
+ 	p2p_recv_random = 0x00;
+ 	wilc_ie = false;
+@@ -2054,8 +2047,6 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 	switch (type) {
+ 	case NL80211_IFTYPE_STATION:
+ 		wilc_connecting = 0;
+-		PRINT_D(HOSTAPD_DBG, "Interface type = NL80211_IFTYPE_STATION\n");
+-
+ 		dev->ieee80211_ptr->iftype = type;
+ 		priv->wdev->iftype = type;
+ 		vif->monitor_flag = 0;
+@@ -2070,8 +2061,6 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+ 		wilc_connecting = 0;
+-		PRINT_D(HOSTAPD_DBG, "Interface type = NL80211_IFTYPE_P2P_CLIENT\n");
+-
+ 		dev->ieee80211_ptr->iftype = type;
+ 		priv->wdev->iftype = type;
+ 		vif->monitor_flag = 0;
+@@ -2084,7 +2073,6 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	case NL80211_IFTYPE_AP:
+ 		wilc_enable_ps = false;
+-		PRINT_D(HOSTAPD_DBG, "Interface type = NL80211_IFTYPE_AP %d\n", type);
+ 		dev->ieee80211_ptr->iftype = type;
+ 		priv->wdev->iftype = type;
  		vif->iftype = AP_MODE;
+@@ -2101,8 +2089,6 @@ static int change_virtual_intf(struct wiphy *wiphy, struct net_device *dev,
+ 		wilc_optaining_ip = true;
+ 		mod_timer(&wilc_during_ip_timer,
+ 			  jiffies + msecs_to_jiffies(during_ip_time));
+-		PRINT_D(HOSTAPD_DBG, "Interface type = NL80211_IFTYPE_GO\n");
+-
+ 		wilc_set_operation_mode(vif, AP_MODE);
+ 		dev->ieee80211_ptr->iftype = type;
+ 		priv->wdev->iftype = type;
+@@ -2132,10 +2118,6 @@ static int start_ap(struct wiphy *wiphy, struct net_device *dev,
+ 	priv = wiphy_priv(wiphy);
+ 	vif = netdev_priv(dev);
+ 	wl = vif->wilc;
+-	PRINT_D(HOSTAPD_DBG, "Starting ap\n");
+-
+-	PRINT_D(HOSTAPD_DBG, "Interval = %d\n DTIM period = %d\n Head length = %zu Tail length = %zu\n",
+-		settings->beacon_interval, settings->dtim_period, beacon->head_len, beacon->tail_len);
  
- 		if (wl->initialized) {
--			wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif));
-+			wilc_set_wfi_drv_handler(vif, wilc_get_vif_idx(vif),
-+						 0);
- 			wilc_set_operation_mode(vif, AP_MODE);
- 			wilc_set_power_mgmt(vif, 0, 0);
+ 	s32Error = set_channel(wiphy, &settings->chandef);
+ 
+@@ -2162,8 +2144,6 @@ static int change_beacon(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 	priv = wiphy_priv(wiphy);
+ 	vif = netdev_priv(priv->dev);
+-	PRINT_D(HOSTAPD_DBG, "Setting beacon\n");
+-
+ 
+ 	s32Error = wilc_add_beacon(vif, 0, 0, beacon->head_len,
+ 				   (u8 *)beacon->head, beacon->tail_len,
+@@ -2185,8 +2165,6 @@ static int stop_ap(struct wiphy *wiphy, struct net_device *dev)
+ 	priv = wiphy_priv(wiphy);
+ 	vif = netdev_priv(priv->dev);
+ 
+-	PRINT_D(HOSTAPD_DBG, "Deleting beacon\n");
+-
+ 	wilc_wlan_set_bssid(dev, NullBssid, AP_MODE);
+ 
+ 	s32Error = wilc_del_beacon(vif);
+@@ -2222,9 +2200,6 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 
+ 		PRINT_D(CFG80211_DBG, "BSSID = %x%x%x%x%x%x\n", priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid][0], priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid][1], priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid][2], priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid][3], priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid][4],
+ 			priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid][5]);
+-		PRINT_D(HOSTAPD_DBG, "ASSOC ID = %d\n", strStaParams.aid);
+-		PRINT_D(HOSTAPD_DBG, "Number of supported rates = %d\n",
+-			strStaParams.rates_len);
+ 
+ 		if (!params->ht_capa) {
+ 			strStaParams.ht_supported = false;
+@@ -2243,23 +2218,6 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 		strStaParams.flags_mask = params->sta_flags_mask;
+ 		strStaParams.flags_set = params->sta_flags_set;
+ 
+-		PRINT_D(HOSTAPD_DBG, "IS HT supported = %d\n",
+-			strStaParams.ht_supported);
+-		PRINT_D(HOSTAPD_DBG, "Capability Info = %d\n",
+-			strStaParams.ht_capa_info);
+-		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n",
+-			strStaParams.ht_ampdu_params);
+-		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n",
+-			strStaParams.ht_ext_params);
+-		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n",
+-			strStaParams.ht_tx_bf_cap);
+-		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n",
+-			strStaParams.ht_ante_sel);
+-		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n",
+-			strStaParams.flags_mask);
+-		PRINT_D(HOSTAPD_DBG, "Flag Set = %d\n",
+-			strStaParams.flags_set);
+-
+ 		s32Error = wilc_add_station(vif, &strStaParams);
+ 		if (s32Error)
+ 			netdev_err(dev, "Host add station fail\n");
+@@ -2283,16 +2241,9 @@ static int del_station(struct wiphy *wiphy, struct net_device *dev,
+ 	vif = netdev_priv(dev);
+ 
+ 	if (vif->iftype == AP_MODE || vif->iftype == GO_MODE) {
+-		PRINT_D(HOSTAPD_DBG, "Deleting station\n");
+-
+-
+-		if (!mac) {
+-			PRINT_D(HOSTAPD_DBG, "All associated stations\n");
++		if (!mac)
+ 			s32Error = wilc_del_allstation(vif,
+ 				     priv->assoc_stainfo.au8Sta_AssociatedBss);
+-		} else {
+-			PRINT_D(HOSTAPD_DBG, "With mac address: %x%x%x%x%x%x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+-		}
+ 
+ 		s32Error = wilc_del_station(vif, mac);
+ 
+@@ -2310,9 +2261,6 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 	struct add_sta_param strStaParams = { {0} };
+ 	struct wilc_vif *vif;
+ 
+-
+-	PRINT_D(HOSTAPD_DBG, "Change station paramters\n");
+-
+ 	if (!wiphy)
+ 		return -EFAULT;
+ 
+@@ -2325,14 +2273,6 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 		strStaParams.rates_len = params->supported_rates_len;
+ 		strStaParams.rates = params->supported_rates;
+ 
+-		PRINT_D(HOSTAPD_DBG, "BSSID = %x%x%x%x%x%x\n",
+-			strStaParams.bssid[0], strStaParams.bssid[1],
+-			strStaParams.bssid[2], strStaParams.bssid[3],
+-			strStaParams.bssid[4], strStaParams.bssid[5]);
+-		PRINT_D(HOSTAPD_DBG, "ASSOC ID = %d\n", strStaParams.aid);
+-		PRINT_D(HOSTAPD_DBG, "Number of supported rates = %d\n",
+-			strStaParams.rates_len);
+-
+ 		if (!params->ht_capa) {
+ 			strStaParams.ht_supported = false;
+ 		} else {
+@@ -2350,23 +2290,6 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 		strStaParams.flags_mask = params->sta_flags_mask;
+ 		strStaParams.flags_set = params->sta_flags_set;
+ 
+-		PRINT_D(HOSTAPD_DBG, "IS HT supported = %d\n",
+-			strStaParams.ht_supported);
+-		PRINT_D(HOSTAPD_DBG, "Capability Info = %d\n",
+-			strStaParams.ht_capa_info);
+-		PRINT_D(HOSTAPD_DBG, "AMPDU Params = %d\n",
+-			strStaParams.ht_ampdu_params);
+-		PRINT_D(HOSTAPD_DBG, "HT Extended params = %d\n",
+-			strStaParams.ht_ext_params);
+-		PRINT_D(HOSTAPD_DBG, "Tx Beamforming Cap = %d\n",
+-			strStaParams.ht_tx_bf_cap);
+-		PRINT_D(HOSTAPD_DBG, "Antenna selection info = %d\n",
+-			strStaParams.ht_ante_sel);
+-		PRINT_D(HOSTAPD_DBG, "Flag Mask = %d\n",
+-			strStaParams.flags_mask);
+-		PRINT_D(HOSTAPD_DBG, "Flag Set = %d\n",
+-			strStaParams.flags_set);
+-
+ 		s32Error = wilc_edit_station(vif, &strStaParams);
+ 		if (s32Error)
+ 			netdev_err(dev, "Host edit station fail\n");
+@@ -2386,20 +2309,12 @@ static struct wireless_dev *add_virtual_intf(struct wiphy *wiphy,
+ 	struct net_device *new_ifc = NULL;
+ 
+ 	priv = wiphy_priv(wiphy);
+-
+-
+-
+-	PRINT_D(HOSTAPD_DBG, "Adding monitor interface[%p]\n", priv->wdev->netdev);
+-
+ 	vif = netdev_priv(priv->wdev->netdev);
+ 
+ 
+ 	if (type == NL80211_IFTYPE_MONITOR) {
+-		PRINT_D(HOSTAPD_DBG, "Monitor interface mode: Initializing mon interface virtual device driver\n");
+-		PRINT_D(HOSTAPD_DBG, "Adding monitor interface[%p]\n", vif->ndev);
+ 		new_ifc = WILC_WFI_init_mon_interface(name, vif->ndev);
+ 		if (new_ifc) {
+-			PRINT_D(HOSTAPD_DBG, "Setting monitor flag in private structure\n");
+ 			vif = netdev_priv(priv->wdev->netdev);
+ 			vif->monitor_flag = 1;
  		}
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 618903c..d306ec1a 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -832,7 +832,6 @@ typedef enum {
+@@ -2409,7 +2324,6 @@ static struct wireless_dev *add_virtual_intf(struct wiphy *wiphy,
  
- 	/* Custom Integer WID list */
- 	WID_GET_INACTIVE_TIME		= 0x2084,
--	WID_SET_DRV_HANDLER		= 0X2085,
- 	WID_SET_OPERATION_MODE		= 0X2086,
- 	/* EMAC String WID list */
- 	WID_SSID			= 0x3000,
-@@ -865,6 +864,7 @@ typedef enum {
- 	WID_MODEL_NAME			= 0x3027, /*Added for CAPI tool */
- 	WID_MODEL_NUM			= 0x3028, /*Added for CAPI tool */
- 	WID_DEVICE_NAME			= 0x3029, /*Added for CAPI tool */
-+	WID_SET_DRV_HANDLER		= 0x3030,
+ static int del_virtual_intf(struct wiphy *wiphy, struct wireless_dev *wdev)
+ {
+-	PRINT_D(HOSTAPD_DBG, "Deleting virtual interface\n");
+ 	return 0;
+ }
  
- 	/* NMAC String WID list */
- 	WID_11N_P_ACTION_REQ		= 0x3080,
 -- 
 1.9.1
 
