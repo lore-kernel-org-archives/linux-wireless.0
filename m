@@ -1,34 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45993 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752121AbcBDMUA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 07:20:00 -0500
-Message-ID: <1454588396.2564.7.camel@sipsolutions.net> (sfid-20160204_132005_019711_93052526)
-Subject: Re: mac80211_hwsim + iperf + netns
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>,
-	Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 04 Feb 2016 13:19:56 +0100
-In-Reply-To: <CA+BoTQ=s_SMgs9zkgYjKOHKDwRORWk-Re7XZ=AiKiHCuNc0L8A@mail.gmail.com> (sfid-20160204_123214_106573_FAAAB8D4)
-References: <CABPxzY+HpP=NTrAaUEzV5nFm=LK93m=kxPV14-cdftt+VPsWNw@mail.gmail.com>
-	 <CA+BoTQ=s_SMgs9zkgYjKOHKDwRORWk-Re7XZ=AiKiHCuNc0L8A@mail.gmail.com>
-	 (sfid-20160204_123214_106573_FAAAB8D4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from youngberry.canonical.com ([91.189.89.112]:53956 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751653AbcBVKQX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Feb 2016 05:16:23 -0500
+Subject: Re: [PATCH] rtlwifi: pass struct rtl_stats by reference as it is more
+ efficient
+To: Alexander Stein <alexander.stein@systec-electronic.com>,
+	linux-kernel@vger.kernel.org
+References: <1456006227-10709-1-git-send-email-colin.king@canonical.com>
+ <1498532.AoNxxa1Kry@ws-stein>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Priit Laes <plaes@plaes.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+From: Colin Ian King <colin.king@canonical.com>
+Message-ID: <56CADFF4.409@canonical.com> (sfid-20160222_111643_000844_4E7521BF)
+Date: Mon, 22 Feb 2016 10:16:20 +0000
+MIME-Version: 1.0
+In-Reply-To: <1498532.AoNxxa1Kry@ws-stein>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-02-04 at 12:32 +0100, Michal Kazior wrote:
-> 
->  ip netns add ns1
->  ip netns exec ns1 bash # get the PID in the session and don't close
-> it
->  iw phy phyX set netns $pid_of_that_shell
+On 22/02/16 06:51, Alexander Stein wrote:
+> On Saturday 20 February 2016 22:10:27, Colin King wrote:
+>> From: Colin Ian King <colin.king@canonical.com>
+>>
+>> passing rtl_stats by value is inefficient; the structure is over 300
+>> bytes in size and generally just one field (packet_report_type)
+>> is being accessed, so the pass by value is a relatively large overhead.
+>> This change just affects just the rx_command_packet calls.
+> 
+> Why not using a const pointer?
+
+const struct rtl_stats *const status?
+
+> 
+> Best regards,
+> Alexander
 > 
 
-If you also have a recent enough iw version, you can use 
-
-iw phy phyX set netns name ns1
-
-johannes
