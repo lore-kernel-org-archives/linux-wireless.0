@@ -1,109 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:60889 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754469AbcBWTqI (ORCPT
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:36296 "EHLO
+	mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752423AbcBVQhD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 14:46:08 -0500
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] ath10k: set MAC timestamp in management Rx frame
-Date: Tue, 23 Feb 2016 11:44:34 -0800
-Message-ID: <bed91e066a4998603c33ebcfaf507ccd2fabab5e.1456256461.git.poh@qca.qualcomm.com> (sfid-20160223_204612_139741_CFC25960)
+	Mon, 22 Feb 2016 11:37:03 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [PATCHv2 04/10] rfkill: Move "state" sysfs file back to stable
+Date: Mon, 22 Feb 2016 11:36:35 -0500
+Message-Id: <1456159001-20307-5-git-send-email-jprvita@endlessm.com> (sfid-20160222_174225_953695_71FA17EF)
+In-Reply-To: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: poh <poh@qca.qualcomm.com>
+There is still quite a bit of code using this interface, so we can't
+just remove it. Hopefully it will be possible in the future, but since
+its scheduled removal date is past 2 years already, we are better having
+the documentation reflecting the current state of things.
 
-Check and set Rx MAC timestamp when firmware indicates it.
-Firmware adds it in Rx beacon frame only at this moment.
-Driver and mac80211 may utilize it to detect such clockdrift
-or beacon collision and use the result for beacon collision
-avoidance.
-
-Signed-off-by: poh <poh@qca.qualcomm.com>
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
 ---
+ Documentation/ABI/obsolete/sysfs-class-rfkill | 20 --------------------
+ Documentation/ABI/stable/sysfs-class-rfkill   | 25 ++++++++++++++++++++++---
+ 2 files changed, 22 insertions(+), 23 deletions(-)
+ delete mode 100644 Documentation/ABI/obsolete/sysfs-class-rfkill
 
-v2:
-	- fix kbuild test robot warning, left shift count >= width of type,
-	at __le32_to_cpu(arg.ext_info.rx_mac_timestamp_u32) << 32
-
- drivers/net/wireless/ath/ath10k/wmi.c | 14 ++++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.h |  8 ++++++++
- 2 files changed, 22 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 0f01a8d..b2a4cda 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2167,6 +2167,7 @@ static int ath10k_wmi_op_pull_mgmt_rx_ev(struct ath10k *ar, struct sk_buff *skb,
- 	struct wmi_mgmt_rx_event_v1 *ev_v1;
- 	struct wmi_mgmt_rx_event_v2 *ev_v2;
- 	struct wmi_mgmt_rx_hdr_v1 *ev_hdr;
-+	struct wmi_mgmt_rx_ext_info *ext_info;
- 	size_t pull_len;
- 	u32 msdu_len;
+diff --git a/Documentation/ABI/obsolete/sysfs-class-rfkill b/Documentation/ABI/obsolete/sysfs-class-rfkill
+deleted file mode 100644
+index e736d14..0000000
+--- a/Documentation/ABI/obsolete/sysfs-class-rfkill
++++ /dev/null
+@@ -1,20 +0,0 @@
+-rfkill - radio frequency (RF) connector kill switch support
+-
+-For details to this subsystem look at Documentation/rfkill.txt.
+-
+-What:		/sys/class/rfkill/rfkill[0-9]+/state
+-Date:		09-Jul-2007
+-KernelVersion	v2.6.22
+-Contact:	linux-wireless@vger.kernel.org
+-Description: 	Current state of the transmitter.
+-		This file is deprecated and scheduled to be removed in 2014,
+-		because its not possible to express the 'soft and hard block'
+-		state of the rfkill driver.
+-Values: 	A numeric value.
+-		0: RFKILL_STATE_SOFT_BLOCKED
+-			transmitter is turned off by software
+-		1: RFKILL_STATE_UNBLOCKED
+-			transmitter is (potentially) active
+-		2: RFKILL_STATE_HARD_BLOCKED
+-			transmitter is forced off by something outside of
+-			the driver's control.
+diff --git a/Documentation/ABI/stable/sysfs-class-rfkill b/Documentation/ABI/stable/sysfs-class-rfkill
+index e51571e..e1ba4a1 100644
+--- a/Documentation/ABI/stable/sysfs-class-rfkill
++++ b/Documentation/ABI/stable/sysfs-class-rfkill
+@@ -5,9 +5,6 @@ For details to this subsystem look at Documentation/rfkill.txt.
+ For the deprecated /sys/class/rfkill/*/claim knobs of this interface look in
+ Documentation/ABI/removed/sysfs-class-rfkill.
  
-@@ -2195,6 +2196,12 @@ static int ath10k_wmi_op_pull_mgmt_rx_ev(struct ath10k *ar, struct sk_buff *skb,
- 	if (skb->len < msdu_len)
- 		return -EPROTO;
+-For the deprecated /sys/class/rfkill/*/state knobs of this interface look in
+-Documentation/ABI/obsolete/sysfs-class-rfkill.
+-
+ What: 		/sys/class/rfkill
+ Date:		09-Jul-2007
+ KernelVersion:	v2.6.22
+@@ -44,6 +41,28 @@ Values: 	A numeric value.
+ 		1: true
  
-+	if (arg->status & WMI_RX_STATUS_EXT_INFO) {
-+		ext_info = (struct wmi_mgmt_rx_ext_info *)
-+			   (skb->data + arg->buf_len);
-+		memcpy(&arg->ext_info, ext_info,
-+		       sizeof(struct wmi_mgmt_rx_ext_info));
-+	}
- 	/* the WMI buffer might've ended up being padded to 4 bytes due to HTC
- 	 * trailer with credit update. Trim the excess garbage.
- 	 */
-@@ -2281,6 +2288,13 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
- 	if (rx_status & WMI_RX_STATUS_ERR_MIC)
- 		status->flag |= RX_FLAG_MMIC_ERROR;
  
-+	if (rx_status & WMI_RX_STATUS_EXT_INFO) {
-+		status->mactime =
-+			__le32_to_cpu(arg.ext_info.rx_mac_timestamp_l32) |
-+			(u64)__le32_to_cpu(arg.ext_info.rx_mac_timestamp_u32)
-+			<< 32;
-+		status->flag |= RX_FLAG_MACTIME_END;
-+	}
- 	/* Hardware can Rx CCK rates on 5GHz. In that case phy_mode is set to
- 	 * MODE_11B. This means phy_mode is not a reliable source for the band
- 	 * of mgmt rx.
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
-index 806d4bb..8667a6b 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.h
-+++ b/drivers/net/wireless/ath/ath10k/wmi.h
-@@ -3025,11 +3025,18 @@ struct wmi_10_4_mgmt_rx_event {
- 	u8 buf[0];
- } __packed;
- 
-+struct wmi_mgmt_rx_ext_info {
-+	__le32 rx_mac_timestamp_l32;
-+	__le32 rx_mac_timestamp_u32;
-+} __packed;
++What:		/sys/class/rfkill/rfkill[0-9]+/state
++Date:		09-Jul-2007
++KernelVersion	v2.6.22
++Contact:	linux-wireless@vger.kernel.org
++Description: 	Current state of the transmitter.
++		This file was scheduled to be removed in 2014, but due to its
++		large number of users it will be sticking around for a bit
++		longer. Despite it being marked as stabe, the newer "hard" and
++		"soft" interfaces should be preffered, since it is not possible
++		to express the 'soft and hard block' state of the rfkill driver
++		through this interface. There will likely be another attempt to
++		remove it in the future.
++Values: 	A numeric value.
++		0: RFKILL_STATE_SOFT_BLOCKED
++			transmitter is turned off by software
++		1: RFKILL_STATE_UNBLOCKED
++			transmitter is (potentially) active
++		2: RFKILL_STATE_HARD_BLOCKED
++			transmitter is forced off by something outside of
++			the driver's control.
 +
- #define WMI_RX_STATUS_OK			0x00
- #define WMI_RX_STATUS_ERR_CRC			0x01
- #define WMI_RX_STATUS_ERR_DECRYPT		0x08
- #define WMI_RX_STATUS_ERR_MIC			0x10
- #define WMI_RX_STATUS_ERR_KEY_CACHE_MISS	0x20
-+/* Extension data at the end of mgmt frame */
-+#define WMI_RX_STATUS_EXT_INFO		0x40
- 
- #define PHY_ERROR_GEN_SPECTRAL_SCAN		0x26
- #define PHY_ERROR_GEN_FALSE_RADAR_EXT		0x24
-@@ -6076,6 +6083,7 @@ struct wmi_mgmt_rx_ev_arg {
- 	__le32 phy_mode;
- 	__le32 buf_len;
- 	__le32 status; /* %WMI_RX_STATUS_ */
-+	struct wmi_mgmt_rx_ext_info ext_info;
- };
- 
- struct wmi_ch_info_ev_arg {
++
+ What:		/sys/class/rfkill/rfkill[0-9]+/hard
+ Date:		12-March-2010
+ KernelVersion	v2.6.34
 -- 
-1.9.1
+2.5.0
 
