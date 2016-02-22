@@ -1,86 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59099 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751737AbcBWJwQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 04:52:16 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: pull-request: mac80211 2016-02-23
-Date: Tue, 23 Feb 2016 10:52:06 +0100
-Message-Id: <1456221127-13079-1-git-send-email-johannes@sipsolutions.net> (sfid-20160223_105231_464013_EB6B2D7A)
+Received: from eusmtp01.atmel.com ([212.144.249.242]:20549 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753463AbcBVKTT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Feb 2016 05:19:19 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V4 14/24] staging: wilc1000: removes unused CFG80211_DBG tag
+Date: Mon, 22 Feb 2016 19:14:21 +0900
+Message-ID: <1456136071-10502-15-git-send-email-leo.kim@atmel.com> (sfid-20160222_111923_954097_E90C02DD)
+In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+From: Chris Park <chris.park@atmel.com>
 
-Unfortunately I neglected to send you a pull request last week,
-so it's here now. We gave a number of fairly important fixes
-(two found by KASAN, the wext thing that for some reason people
-have started seeing issues with) so it'd be good if these can
-still go into 4.5.
+This patch removes unused CFG80211_DBG tag.
 
-Let me know if there's any problem.
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan_common.h | 4 +---
+ drivers/staging/wilc1000/wilc_debugfs.c      | 6 +++---
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
-Thanks,
-johannes
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index 1f7d806..e408631 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -2,12 +2,10 @@
+ #define LINUX_WLAN_COMMON_H
+ 
+ enum debug_region {
+-	CFG80211_debug = 0,
+-	Init_debug,
++	Init_debug = 0,
+ 	COMP = 0xFFFFFFFF,
+ };
+ 
+-#define CFG80211_DBG            (1 << CFG80211_debug)
+ #define INIT_DBG                (1 << Init_debug)
+ 
+ #if defined(WILC_DEBUGFS)
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index fafe7cc..266d96b 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -24,9 +24,9 @@ static struct dentry *wilc_dir;
+  * --------------------------------------------------------------------------------
+  */
+ 
+-#define DBG_REGION_ALL	(CFG80211_DBG | INIT_DBG)
++#define DBG_REGION_ALL	(INIT_DBG)
+ #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+-atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | CFG80211_DBG);
++atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG);
+ EXPORT_SYMBOL_GPL(WILC_REGION);
+ atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
+ EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
+@@ -134,7 +134,7 @@ struct wilc_debugfs_info_t {
+ 
+ static struct wilc_debugfs_info_t debugfs_info[] = {
+ 	{ "wilc_debug_level",	0666,	(DEBUG | ERR), FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write, NULL), },
+-	{ "wilc_debug_region",	0666,	(INIT_DBG | CFG80211_DBG), FOPS(NULL, wilc_debug_region_read, wilc_debug_region_write, NULL), },
++	{ "wilc_debug_region",	0666,	(INIT_DBG), FOPS(NULL, wilc_debug_region_read, wilc_debug_region_write, NULL), },
+ };
+ 
+ static int __init wilc_debugfs_init(void)
+-- 
+1.9.1
 
-
-
-The following changes since commit 6736fde9672ff6717ac576e9bba2fd5f3dfec822:
-
-  rfkill: fix rfkill_fop_read wait_event usage (2016-01-26 11:32:05 +0100)
-
-are available in the git repository at:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2016-02-23
-
-for you to fetch changes up to b86071528f3261ab592fad5b9b1a02aea3dcabf3:
-
-  cfg80211: stop critical protocol session upon disconnect event (2016-02-23 10:41:24 +0100)
-
-----------------------------------------------------------------
-Another small set of fixes:
- * stop critical protocol session on disconnect to avoid
-   it getting stuck
- * wext: fix two RTNL message ordering issues
- * fix an uninitialized value (found by KASAN)
- * fix an out-of-bounds access (also found by KASAN)
- * clear connection keys when freeing them in all cases
-   (IBSS, all other places already did so)
- * fix expected throughput unit to get consistent values
- * set default TX aggregation timeout to 0 in minstrel
-   to avoid (really just hide) issues and perform better
-
-----------------------------------------------------------------
-Arend van Spriel (1):
-      cfg80211: stop critical protocol session upon disconnect event
-
-Chris Bainbridge (1):
-      mac80211: fix use of uninitialised values in RX aggregation
-
-Felix Fietkau (1):
-      mac80211: minstrel_ht: set default tx aggregation timeout to 0
-
-Johannes Berg (2):
-      wext: fix message delay/ordering
-      cfg80211/wext: fix message ordering
-
-Konstantin Khlebnikov (1):
-      mac80211: minstrel_ht: fix out-of-bound in minstrel_ht_set_best_prob_rate
-
-Ola Olsson (1):
-      nl80211: Zero out the connection keys memory when freeing them.
-
-Sven Eckelmann (1):
-      mac80211: minstrel: Change expected throughput unit back to Kbps
-
- include/net/iw_handler.h           |  6 +++++
- net/mac80211/agg-rx.c              |  2 +-
- net/mac80211/rc80211_minstrel.c    |  2 +-
- net/mac80211/rc80211_minstrel_ht.c | 14 +++++-----
- net/wireless/core.c                |  2 ++
- net/wireless/nl80211.c             |  2 +-
- net/wireless/sme.c                 |  6 +++++
- net/wireless/wext-core.c           | 52 ++++++++++++++++++++++++++++++--------
- 8 files changed, 66 insertions(+), 20 deletions(-)
