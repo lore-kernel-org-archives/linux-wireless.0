@@ -1,37 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59839 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750963AbcBLJp1 (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:31665 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752909AbcBVEof (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Feb 2016 04:45:27 -0500
-Content-Type: text/plain; charset="us-ascii"
+	Sun, 21 Feb 2016 23:44:35 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH RESEND 07/10] staging: wilc1000: move WILC_MULTICAST_TABLE_SIZE define to wilc_wlan_if.h file
+Date: Mon, 22 Feb 2016 13:41:16 +0900
+Message-ID: <1456116079-7161-7-git-send-email-leo.kim@atmel.com> (sfid-20160222_054437_720325_002D3B18)
+In-Reply-To: <1456116079-7161-1-git-send-email-leo.kim@atmel.com>
+References: <1456116079-7161-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-Subject: Re: wlcore: Fix regression in wlcore_set_partition()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20160210012216.GA18819@lianli>
-To: Emil Goode <emil.fsw@goode.io>
-Cc: Shahar Patury <shaharp@ti.com>, Guy Mishol <guym@ti.com>,
-	Igor Grinberg <grinberg@compulab.co.il>,
-	Uri Mashiach <uri.mashiach@compulab.co.il>,
-	Ross Green <rgkernel@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Message-Id: <20160212094526.EC572611CE@smtp.codeaurora.org> (sfid-20160212_104556_404864_CE0AA6DC)
-Date: Fri, 12 Feb 2016 09:45:26 +0000 (UTC)
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Chris Park <chris.park@atmel.com>
 
-> The commit 3719c17e1816 ("wlcore/wl18xx: fw logger over sdio") introduced a
-> regression causing the wlcore to time out and go into recovery. Reverting the
-> changes regarding write of the last partition size brings the module back to
-> it's functional state.
-> 
-> Fixes: 3719c17e1816 ("wlcore/wl18xx: fw logger over sdio")
-> Reported-by: Ross Green <rgkernel@gmail.com>
-> Signed-off-by: Emil Goode <emil.fsw@goode.io>
-> [kvalo@codeaurora.org: improved commit log]
+This patch moves WILC_MULTICAST_TABLE_SIZE define to wilc_wlan_if.h file.
+This define is used to three files(host_interface.c,host_interface.h,
+linux_wlan.c) these files already include wilc_wlan_if.h file in common.
 
-Thanks, applied to wireless-drivers.git.
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan_common.h | 2 --
+ drivers/staging/wilc1000/wilc_wlan_if.h      | 2 +-
+ 2 files changed, 1 insertion(+), 3 deletions(-)
 
-Kalle Valo
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index aa2c026..5a53512 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -1,8 +1,6 @@
+ #ifndef LINUX_WLAN_COMMON_H
+ #define LINUX_WLAN_COMMON_H
+ 
+-#define WILC_MULTICAST_TABLE_SIZE	8
+-
+ #if defined(BEAGLE_BOARD)
+ 	#define SPI_CHANNEL	4
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 269c56e..c33f7a6 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -95,7 +95,7 @@ typedef void (*wilc_tx_complete_func_t)(void *, int);
+  *      Wlan Configuration ID
+  *
+  ********************************************/
+-
++#define WILC_MULTICAST_TABLE_SIZE	8
+ #define MAX_SSID_LEN            33
+ #define MAX_RATES_SUPPORTED     12
+ 
+-- 
+1.9.1
+
