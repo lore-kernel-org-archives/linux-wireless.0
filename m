@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20075 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:31726 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753311AbcBVKRs (ORCPT
+	with ESMTP id S1752811AbcBVEpI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 05:17:48 -0500
+	Sun, 21 Feb 2016 23:45:08 -0500
 From: Leo Kim <leo.kim@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
@@ -11,11 +11,11 @@ CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
 	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V4 06/24] staging: wilc1000: host_interface.c: removes unnecessary log message
-Date: Mon, 22 Feb 2016 19:14:13 +0900
-Message-ID: <1456136071-10502-7-git-send-email-leo.kim@atmel.com> (sfid-20160222_111751_156370_146990D6)
-In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
-References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+Subject: [PATCH RESEND 10/10] staging: wilc1000: removes linux_wlan_common.h file
+Date: Mon, 22 Feb 2016 13:41:19 +0900
+Message-ID: <1456116079-7161-10-git-send-email-leo.kim@atmel.com> (sfid-20160222_054512_051020_807CF7C3)
+In-Reply-To: <1456116079-7161-1-git-send-email-leo.kim@atmel.com>
+References: <1456116079-7161-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
@@ -23,37 +23,89 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Chris Park <chris.park@atmel.com>
 
-This patch removes unnecessary log message and relate variables.
+This patch removes linux_wlan_common.h file and also removes the following
+preprocessor at files that include it:
+ - #include 'linux_wlan_common.h'
 
 Signed-off-by: Chris Park <chris.park@atmel.com>
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/staging/wilc1000/linux_mon.c         | 1 -
+ drivers/staging/wilc1000/linux_wlan.c        | 1 -
+ drivers/staging/wilc1000/linux_wlan_common.h | 3 ---
+ drivers/staging/wilc1000/wilc_msgqueue.c     | 1 -
+ drivers/staging/wilc1000/wilc_spi.c          | 1 -
+ drivers/staging/wilc1000/wilc_wlan_if.h      | 1 -
+ 6 files changed, 8 deletions(-)
+ delete mode 100644 drivers/staging/wilc1000/linux_wlan_common.h
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 3de4f99..035f6f5 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2999,7 +2999,6 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
- 	int result = 0;
- 	struct host_if_msg msg;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
--	int i;
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index 6347471..7d9e5de 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -7,7 +7,6 @@
+  *  @version	1.0
+  */
+ #include "wilc_wfi_cfgoperations.h"
+-#include "linux_wlan_common.h"
+ #include "wilc_wlan_if.h"
+ #include "wilc_wlan.h"
  
- 	if (!hif_drv) {
- 		PRINT_ER("driver is null\n");
-@@ -3008,10 +3007,6 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 912e8ec..eafde6f 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -1,5 +1,4 @@
+ #include "wilc_wfi_cfgoperations.h"
+-#include "linux_wlan_common.h"
+ #include "wilc_wlan_if.h"
+ #include "wilc_wlan.h"
  
- 	memset(&msg, 0, sizeof(struct host_if_msg));
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+deleted file mode 100644
+index 18d902b..0000000
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ /dev/null
+@@ -1,3 +0,0 @@
+-#ifndef LINUX_WLAN_COMMON_H
+-#define LINUX_WLAN_COMMON_H
+-#endif
+diff --git a/drivers/staging/wilc1000/wilc_msgqueue.c b/drivers/staging/wilc1000/wilc_msgqueue.c
+index 780ddd3..6cb894e 100644
+--- a/drivers/staging/wilc1000/wilc_msgqueue.c
++++ b/drivers/staging/wilc1000/wilc_msgqueue.c
+@@ -1,7 +1,6 @@
  
--	if (INFO) {
--		for (i = 0; i < len; i++)
--			PRINT_INFO(HOSTAPD_DBG, "KEY is %x\n", key[i]);
--	}
- 	msg.id = HOST_IF_MSG_KEY;
- 	msg.body.key_info.type = WEP;
- 	msg.body.key_info.action = ADDKEY_AP;
+ #include "wilc_msgqueue.h"
+ #include <linux/spinlock.h>
+-#include "linux_wlan_common.h"
+ #include <linux/errno.h>
+ #include <linux/slab.h>
+ 
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index b55a0c3f..eb1e76d 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -18,7 +18,6 @@
+ #include <linux/spi/spi.h>
+ #include <linux/of_gpio.h>
+ 
+-#include "linux_wlan_common.h"
+ #include <linux/string.h>
+ #include "wilc_wlan_if.h"
+ #include "wilc_wlan.h"
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index c33f7a6..fbe34eb 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -11,7 +11,6 @@
+ #define WILC_WLAN_IF_H
+ 
+ #include <linux/semaphore.h>
+-#include "linux_wlan_common.h"
+ #include <linux/netdevice.h>
+ 
+ /********************************************
 -- 
 1.9.1
 
