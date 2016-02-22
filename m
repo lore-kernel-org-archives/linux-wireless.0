@@ -1,73 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:35825 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932101AbcBAM4M (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:29828 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752997AbcBVEQ7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2016 07:56:12 -0500
-Received: by mail-wm0-f51.google.com with SMTP id r129so69043243wmr.0
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 04:56:11 -0800 (PST)
-From: Sven Eckelmann <sven@open-mesh.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, thomas@net.t-labs.tu-berlin.de,
-	antonio@open-mesh.com, nbd@nbd.name
-Subject: Re: [PATCH] mac80211: minstrel: Scale expected_throughput by 10
-Date: Mon, 01 Feb 2016 13:56:08 +0100
-Message-ID: <7460390.ua0GvOE4DE@bentobox> (sfid-20160201_135615_944357_33A51823)
-In-Reply-To: <1454329837.3211.2.camel@sipsolutions.net>
-References: <1454329450-31527-1-git-send-email-sven@open-mesh.com> <1454329837.3211.2.camel@sipsolutions.net>
+	Sun, 21 Feb 2016 23:16:59 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V3 14/24] staging: wilc1000: removes unused CFG80211_DBG tag
+Date: Mon, 22 Feb 2016 13:11:59 +0900
+Message-ID: <1456114329-7036-15-git-send-email-leo.kim@atmel.com> (sfid-20160222_052950_064856_A70C88F3)
+In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart8557171.Dp5HkQJJtj"; micalg="pgp-sha512"; protocol="application/pgp-signature"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart8557171.Dp5HkQJJtj
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+From: Chris Park <chris.park@atmel.com>
 
-On Monday 01 February 2016 13:30:37 Johannes Berg wrote:
-> On Mon, 2016-02-01 at 13:24 +0100, Sven Eckelmann wrote:
-> > The change from cur_tp to the function
-> > minstrel_get_tp_avg/minstrel_ht_get_tp_avg changed the unit used for
-> > the
-> > current throughtput. For example in minstrel_ht the correct
-> > conversion between them would be:
-> > 
-> >     mrs->cur_tp / 10 == minstrel_ht_get_tp_avg(..).
-> > 
-> > This factor 10 must also be included in the calculation of
-> > minstrel_get_expected_throughput and
-> > minstrel_ht_get_expected_throughput to
-> > get similar results as before the change.
-> > 
-> 
-> 10 is a pretty expensive factor, perhaps that should use 16 instead?
+This patch removes unused CFG80211_DBG tag.
 
-Not really funny but I will change the title.
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan_common.h | 4 +---
+ drivers/staging/wilc1000/wilc_debugfs.c      | 6 +++---
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
-Kind regards,
-	Sven
---nextPart8557171.Dp5HkQJJtj
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAABCgAGBQJWr1XoAAoJEF2HCgfBJntGKdIP/08+n8CrtbhawuwirBoGWPJk
-RXKlu5GChV2ikKaHTy1xheIIgDzimIR5XQi5taqIfBe5B/PcDNdXJIH9QilZ6xCN
-ixLENHjhrZKlEkP7RZcTi2UpUXZnVmLv4g09LAoBjXLrVeAa0DM3n4o1lu5kva9D
-/bQ2Q9Ob7wPLlKp948y6HVHv1dZD1+ZJMKdypvybQJbwTFhTSCn03pEHcXWGYQ20
-VR2LC80TIhffbs+wFz8VmFizBCK5lYybDeZHCwUl2o7nDZGhsuov58qULP7d4Eic
-dCHPoz5G6OuIKnk7LPsS+Mu6l28HDYFmNlHceqvbZ5hmcBQ4oRMEJ+fzA6P9l7WH
-R+LtpKzIyKvrH6SknS4TGvFOfxauMXXiu2BRDcc/G4nAU4UseZDQqXs2ZPyRlGdY
-2Ys8T1iAhV1UQhbonETfEzzdkx5Smrs5rzNKfJR2rbyd/Sn9ntJ73BKUm6mq68Qo
-Se1+HYQDApxcE14zUlYg/6pvRsQqgzX6t6qqmypkolnd4th6VbWPh430DcWgMpY9
-JrDZ9kKSWAl9rfVOcEGSd/uybv5qNzyegT4axzs4xl4vvPWcGNwkanezBLJbwJo0
-J5CuqubnbYI85KamIYtqJgQjrBgAObeJhBFPBAQW6mmAFZ2l0aFOtwEjE9xmKptw
-75NYi7Z59LSSphKnkqwE
-=st2y
------END PGP SIGNATURE-----
-
---nextPart8557171.Dp5HkQJJtj--
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index 1f7d806..e408631 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -2,12 +2,10 @@
+ #define LINUX_WLAN_COMMON_H
+ 
+ enum debug_region {
+-	CFG80211_debug = 0,
+-	Init_debug,
++	Init_debug = 0,
+ 	COMP = 0xFFFFFFFF,
+ };
+ 
+-#define CFG80211_DBG            (1 << CFG80211_debug)
+ #define INIT_DBG                (1 << Init_debug)
+ 
+ #if defined(WILC_DEBUGFS)
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index fafe7cc..266d96b 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -24,9 +24,9 @@ static struct dentry *wilc_dir;
+  * --------------------------------------------------------------------------------
+  */
+ 
+-#define DBG_REGION_ALL	(CFG80211_DBG | INIT_DBG)
++#define DBG_REGION_ALL	(INIT_DBG)
+ #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+-atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | CFG80211_DBG);
++atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG);
+ EXPORT_SYMBOL_GPL(WILC_REGION);
+ atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
+ EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
+@@ -134,7 +134,7 @@ struct wilc_debugfs_info_t {
+ 
+ static struct wilc_debugfs_info_t debugfs_info[] = {
+ 	{ "wilc_debug_level",	0666,	(DEBUG | ERR), FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write, NULL), },
+-	{ "wilc_debug_region",	0666,	(INIT_DBG | CFG80211_DBG), FOPS(NULL, wilc_debug_region_read, wilc_debug_region_write, NULL), },
++	{ "wilc_debug_region",	0666,	(INIT_DBG), FOPS(NULL, wilc_debug_region_read, wilc_debug_region_write, NULL), },
+ };
+ 
+ static int __init wilc_debugfs_init(void)
+-- 
+1.9.1
 
