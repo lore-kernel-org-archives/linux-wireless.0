@@ -1,64 +1,136 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f177.google.com ([209.85.214.177]:36024 "EHLO
-	mail-ob0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754469AbcBWSnx (ORCPT
+Received: from mail-yk0-f175.google.com ([209.85.160.175]:36589 "EHLO
+	mail-yk0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751161AbcBVQMF convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 13:43:53 -0500
+	Mon, 22 Feb 2016 11:12:05 -0500
 MIME-Version: 1.0
-In-Reply-To: <1456222441.2041.10.camel@sipsolutions.net>
-References: <CAHqTa-22NpabO6B7nL=O26fnuGQHFOzpagWtsfQz4_BfrO6nTw@mail.gmail.com>
- <1455658091-28262-1-git-send-email-apenwarr@gmail.com> <1455658091-28262-2-git-send-email-apenwarr@gmail.com>
- <1456222441.2041.10.camel@sipsolutions.net>
-From: Avery Pennarun <apenwarr@gmail.com>
-Date: Tue, 23 Feb 2016 13:43:33 -0500
-Message-ID: <CAHqTa-1CkJ-Pm6o7-pxcek4h+hmq6EtA0u12zGGraOUjDjeXSQ@mail.gmail.com> (sfid-20160223_194356_287187_46B4A5B0)
-Subject: Re: [PATCH] mac80211: debugfs var for the default aggregation timeout.
+In-Reply-To: <1455826364.2084.22.camel@sipsolutions.net>
+References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
+ <1454946096-9752-9-git-send-email-jprvita@endlessm.com> <1455826364.2084.22.camel@sipsolutions.net>
+From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
+Date: Mon, 22 Feb 2016 11:11:25 -0500
+Message-ID: <CA+A7VXVj4rx4GHRd4ojpGmLOt0=Vg7nHNUxTdN2tgHd2Ma6szg@mail.gmail.com> (sfid-20160222_171231_860375_C7A69C1B)
+Subject: Re: [PATCH 8/9] rfkill: Userspace control for airplane mode
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@vger.kernel.org, Felix Fietkau <nbd@nbd.name>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux@endlessm.com,
+	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Feb 23, 2016 at 5:14 AM, Johannes Berg
-<johannes@sipsolutions.net> wrote:
-> On Tue, 2016-02-16 at 16:28 -0500, Avery Pennarun wrote:
->> Since around the beginning of time, ath9k aggregates have timed out
->> after
->> 5000 TU (around 5000ms) of inactivity, but nobody seems to be quite
->> sure
->> why, and this magic number seems to have migrated around from one
->> place to
->> another.  An openbsd mailing list recently had a patch to disable the
->> timeout completely, which they say matches some commercial routers:
->> https://www.mail-archive.com/tech@openbsd.org/msg29456.html
->>
->> Even in Linux, several non-ath9k drivers default to no timeout
->> already.  I
->> think changing it directly to zero would be safe, but to allow a more
->> structured investigation, let's make it configurable for now.
->>
-> Since we just made it zero, perhaps we don't need this?
+On 18 February 2016 at 15:12, Johannes Berg <johannes@sipsolutions.net> wrote:
+> Hi,
 >
-> Although perhaps we still want it to be able to debug it?
+> Sorry for the delay reviewing this.
+>
 
-We're putting my version of the patch into our devices in order to be
-able to try different values and see how it changes the percentage of
-devices with nonzero 'pending' field in agg_status.  I'm hoping using
-zero here will result in total elimination of the pending problem, but
-we'll see.
+No problems!
 
-It probably makes sense not to apply this upstream if the default
-value is zero now anyway.
+>
+> On Mon, 2016-02-08 at 10:41 -0500, João Paulo Rechi Vita wrote:
+>> Provide an interface for the airplane-mode indicator be controlled
+>> from
+>> userspace. User has to first acquire the control through
+>> RFKILL_OP_AIRPLANE_MODE_ACQUIRE and keep the fd open for the whole
+>> time
+>> it wants to be in control of the indicator. Closing the fd or using
+>> RFKILL_OP_AIRPLANE_MODE_RELEASE restores the default policy.
+>
+> I've come to the conclusion that the new ops are probably the best
+> thing to do here.
+>
 
-> Anyway - you shouldn't create a debugfs file and play with the extern
-> stuff etc., let minstrel create the debugfs file in minstrel_ht_alloc()
+Nice.
 
-Good point.  I had a feeling I was doing that in the wrong place :)
+>> +Userspace can also override the default airplane-mode indicator
+>> policy through
+>> +/dev/rfkill. Control of the airplane mode indicator has to be
+>> acquired first,
+>> +using RFKILL_OP_AIRPLANE_MODE_ACQUIRE, and is only available for one
+>> userspace
+>> +application at a time. Closing the fd or using
+>> RFKILL_OP_AIRPLANE_MODE_RELEASE
+>> +reverts the airplane-mode indicator back to the default kernel
+>> policy and makes
+>> +it available for other applications to take control. Changes to the
+>> +airplane-mode indicator state can be made using
+>> RFKILL_OP_AIRPLANE_MODE_CHANGE,
+>> +passing the new value in the 'soft' field of 'struct rfkill_event'.
+>
+> I don't really see any value in _RELEASE, since an application can just
+> close the fd? I'd prefer not having the duplicate functionality
+> and force us to exercise the single code path every time.
+>
 
-If people think this is important, I can respin the patch, otherwise
-feel free to discard.
+I actually added this op only for completion, I couldn't think of a
+use-case where simply closing the fd wouldn't be enough. I'll remove
+it for the next revision.
 
-Have fun,
+>>  For further details consult Documentation/ABI/stable/sysfs-class-
+>> rfkill.
+>> diff --git a/include/uapi/linux/rfkill.h
+>> b/include/uapi/linux/rfkill.h
+>> index 2e00dce..9cb999b 100644
+>> --- a/include/uapi/linux/rfkill.h
+>> +++ b/include/uapi/linux/rfkill.h
+>> @@ -67,6 +67,9 @@ enum rfkill_operation {
+>>       RFKILL_OP_DEL,
+>>       RFKILL_OP_CHANGE,
+>>       RFKILL_OP_CHANGE_ALL,
+>> +     RFKILL_OP_AIRPLANE_MODE_ACQUIRE,
+>> +     RFKILL_OP_AIRPLANE_MODE_RELEASE,
+>> +     RFKILL_OP_AIRPLANE_MODE_CHANGE,
+>>  };
+>
+>> @@ -1199,7 +1202,7 @@ static ssize_t rfkill_fop_write(struct file
+>> *file, const char __user *buf,
+>>       if (copy_from_user(&ev, buf, count))
+>>               return -EFAULT;
+>>
+>> -     if (ev.op != RFKILL_OP_CHANGE && ev.op !=
+>> RFKILL_OP_CHANGE_ALL)
+>> +     if (ev.op < RFKILL_OP_CHANGE)
+>>               return -EINVAL;
+>
+> You need to also reject invalid high values, like 27.
+>
 
-Avery
+Yes, sorry for missing this.
+
+>>       mutex_lock(&rfkill_global_mutex);
+>>
+>> +     if (ev.op == RFKILL_OP_AIRPLANE_MODE_ACQUIRE) {
+>> +             if (rfkill_apm_owned && !data->is_apm_owner) {
+>> +                     count = -EACCES;
+>> +             } else {
+>> +                     rfkill_apm_owned = true;
+>> +                     data->is_apm_owner = true;
+>> +             }
+>> +     }
+>> +
+>> +     if (ev.op == RFKILL_OP_AIRPLANE_MODE_RELEASE) {
+>
+> It would probably be better to simply use "switch (ev.op)" and make the
+> default case do a reject.
+>
+
+Sounds better indeed.
+
+>>       if (ev.op == RFKILL_OP_CHANGE_ALL)
+>>               rfkill_update_global_state(ev.type, ev.soft);
+>
+> Also moving the existing code inside the switch, of course.
+>
+
+Sure.
+
+--
+João Paulo Rechi Vita
+http://about.me/jprvita
