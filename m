@@ -1,45 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40137 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753036AbcB2WFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:55 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 064/113] rtl8xxxu: Set RX boundary for 8723bu
-Date: Mon, 29 Feb 2016 17:05:02 -0500
-Message-Id: <1456783551-28315-65-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230850_393889_1525F9EE)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail2.candelatech.com ([208.74.158.173]:35567 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756490AbcBVWzP (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Feb 2016 17:55:15 -0500
+Subject: Re: [PATCH] mac80211: Let VHT work on 2.4Ghz
+To: Julian Calaby <julian.calaby@gmail.com>
+References: <1456180974-21062-1-git-send-email-greearb@candelatech.com>
+ <CAGRGNgWPv89sWV9wtXPBpothJrebRJ+d6a8-TnDU0o-p6ZkAmA@mail.gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <56CB91D2.2080404@candelatech.com> (sfid-20160222_235525_268716_62CAB772)
+Date: Mon, 22 Feb 2016 14:55:14 -0800
+MIME-Version: 1.0
+In-Reply-To: <CAGRGNgWPv89sWV9wtXPBpothJrebRJ+d6a8-TnDU0o-p6ZkAmA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On 02/22/2016 02:48 PM, Julian Calaby wrote:
+> Hi Ben,
+>
+> On Tue, Feb 23, 2016 at 9:42 AM,  <greearb@candelatech.com> wrote:
+>> From: Ben Greear <greearb@candelatech.com>
+>>
+>> ath10k supports VHT on 2.4Ghz band.
+>> If supplicant and hostapd and radio think
+>> VHT should be allowed, then kernel should let them
+>> try.
+>>
+>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>> ---
+>>   net/mac80211/mlme.c | 16 ----------------
+>>   net/mac80211/util.c | 13 +------------
+>>   net/mac80211/vht.c  | 15 ---------------
+>>   3 files changed, 1 insertion(+), 43 deletions(-)
+>>
+>> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+>> index f8eb0f8..cabe16f 100644
+>> --- a/net/mac80211/util.c
+>> +++ b/net/mac80211/util.c
+>> @@ -1604,17 +1603,7 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_local *local,
+>>                  *offset = noffset;
+>>          }
+>>
+>> -       /* Check if any channel in this sband supports at least 80 MHz */
+>> -       for (i = 0; i < sband->n_channels; i++) {
+>> -               if (sband->channels[i].flags & (IEEE80211_CHAN_DISABLED |
+>> -                                               IEEE80211_CHAN_NO_80MHZ))
+>> -                       continue;
+>> -
+>> -               have_80mhz = true;
+>> -               break;
+>> -       }
+>> -
+>> -       if (sband->vht_cap.vht_supported && have_80mhz && !disable_vht) {
+>> +       if (sband->vht_cap.vht_supported && /*have_80mhz &&*/ !disable_vht) {
+>
+> Do you want to actually remove have_80mhz here? We do have git history
+> if this needs to be put back.
 
-Set the correct TRXFF boundary for 8723bu.
+Yes, I just missed that when cleaning up my patch.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+I'll wait for some other feedback and then do a -v2.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 3a7fd2c..835eca8 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -6182,7 +6182,10 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 	/*
- 	 * Set RX page boundary
- 	 */
--	rtl8xxxu_write16(priv, REG_TRXFF_BNDY + 2, 0x27ff);
-+	if (priv->rtlchip == 0x8723b)
-+		rtl8xxxu_write16(priv, REG_TRXFF_BNDY + 2, 0x3f7f);
-+	else
-+		rtl8xxxu_write16(priv, REG_TRXFF_BNDY + 2, 0x27ff);
- 	/*
- 	 * Transfer page size is always 128
- 	 */
+Thanks,
+Ben
+
+
 -- 
-2.5.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
