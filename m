@@ -1,9 +1,9 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:29736 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.242]:29698 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752909AbcBVEQN (ORCPT
+	with ESMTP id S1753243AbcBVEPu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2016 23:16:13 -0500
+	Sun, 21 Feb 2016 23:15:50 -0500
 From: Leo Kim <leo.kim@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
@@ -11,9 +11,9 @@ CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
 	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
 	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V3 10/24] staging: wilc1000: removes unused HOSTAPD_DBG tag
-Date: Mon, 22 Feb 2016 13:11:55 +0900
-Message-ID: <1456114329-7036-11-git-send-email-leo.kim@atmel.com> (sfid-20160222_051615_989374_B4A7169D)
+Subject: [PATCH V3 08/24] staging: wilc1000: linux_mon.c: removes comments
+Date: Mon, 22 Feb 2016 13:11:53 +0900
+Message-ID: <1456114329-7036-9-git-send-email-leo.kim@atmel.com> (sfid-20160222_051553_068238_00885081)
 In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
 References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
@@ -23,51 +23,36 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Chris Park <chris.park@atmel.com>
 
-This patch removes unused HOSTAPD_DBG tag.
+This patch removes unnecessary comments.
 
 Signed-off-by: Chris Park <chris.park@atmel.com>
 Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/staging/wilc1000/linux_wlan_common.h | 4 +---
- drivers/staging/wilc1000/wilc_debugfs.c      | 5 ++---
- 2 files changed, 3 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/linux_mon.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index 0d9a71f..1f7d806 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -2,13 +2,11 @@
- #define LINUX_WLAN_COMMON_H
+diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
+index f6349e5..6347471 100644
+--- a/drivers/staging/wilc1000/linux_mon.c
++++ b/drivers/staging/wilc1000/linux_mon.c
+@@ -191,8 +191,6 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+ 	if (skb->len < rtap_len)
+ 		return -1;
  
- enum debug_region {
--	Hostapd_debug = 0,
--	CFG80211_debug,
-+	CFG80211_debug = 0,
- 	Init_debug,
- 	COMP = 0xFFFFFFFF,
- };
+-	/* skip the radiotap header */
+-	/* Skip the ratio tap header */
+ 	skb_pull(skb, rtap_len);
  
--#define HOSTAPD_DBG             (1 << Hostapd_debug)
- #define CFG80211_DBG            (1 << CFG80211_debug)
- #define INIT_DBG                (1 << Init_debug)
+ 	if (skb->data[0] == 0xc0 && (!(memcmp(broadcast, &skb->data[4], 6)))) {
+@@ -227,8 +225,6 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
+ 	}
+ 	skb->dev = mon_priv->real_ndev;
  
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index a27b077..fafe7cc 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -24,10 +24,9 @@ static struct dentry *wilc_dir;
-  * --------------------------------------------------------------------------------
-  */
- 
--#define DBG_REGION_ALL	(HOSTAPD_DBG | CFG80211_DBG | INIT_DBG)
-+#define DBG_REGION_ALL	(CFG80211_DBG | INIT_DBG)
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
--atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | CFG80211_DBG |
--				   HOSTAPD_DBG);
-+atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | CFG80211_DBG);
- EXPORT_SYMBOL_GPL(WILC_REGION);
- atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
- EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
+-	/* actual deliver of data is device-specific, and not shown here */
+-
+ 	/* Identify if Ethernet or MAC header (data or mgmt) */
+ 	memcpy(srcAdd, &skb->data[10], 6);
+ 	memcpy(bssid, &skb->data[16], 6);
 -- 
 1.9.1
 
