@@ -1,146 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:58867 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933075AbcBDJcm (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:35393 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752980AbcBVWnA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:32:42 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 52/70] staging: wilc1000: renames au8ssid of connect_resp_info structure
-Date: Thu, 4 Feb 2016 18:24:13 +0900
-Message-ID: <1454577871-667-13-git-send-email-glen.lee@atmel.com> (sfid-20160204_103251_063740_0079FF06)
-In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 22 Feb 2016 17:43:00 -0500
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] mac80211:  Let VHT work on 2.4Ghz
+Date: Mon, 22 Feb 2016 14:42:54 -0800
+Message-Id: <1456180974-21062-1-git-send-email-greearb@candelatech.com> (sfid-20160222_234305_188814_D62222E0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Ben Greear <greearb@candelatech.com>
 
-This patch renames au8ssid variable to ssid.
+ath10k supports VHT on 2.4Ghz band.
+If supplicant and hostapd and radio think
+VHT should be allowed, then kernel should let them
+try.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c       |  2 +-
- drivers/staging/wilc1000/coreconfigurator.h       |  2 +-
- drivers/staging/wilc1000/host_interface.c         |  3 ++-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 19 +++++++++++--------
- 4 files changed, 15 insertions(+), 11 deletions(-)
+ net/mac80211/mlme.c | 16 ----------------
+ net/mac80211/util.c | 13 +------------
+ net/mac80211/vht.c  | 15 ---------------
+ 3 files changed, 1 insertion(+), 43 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 6c40d36..4dd7c8a 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -322,7 +322,7 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
+diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
+index 6f079ca..7719867 100644
+--- a/net/mac80211/mlme.c
++++ b/net/mac80211/mlme.c
+@@ -4233,8 +4233,6 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_supported_band *sband;
+ 	struct cfg80211_chan_def chandef;
+ 	int ret;
+-	u32 i;
+-	bool have_80mhz;
  
- 		network_info->u64Tsf = tsf_lo | ((u64)tsf_hi << 32);
+ 	sband = local->hw.wiphy->bands[cbss->channel->band];
  
--		get_ssid(msa, network_info->au8ssid, &network_info->u8SsidLen);
-+		get_ssid(msa, network_info->ssid, &network_info->u8SsidLen);
- 		get_BSSID(msa, network_info->au8bssid);
+@@ -4285,20 +4283,6 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
+ 		}
+ 	}
  
- 		network_info->u8channel = get_current_channel_802_11n(msa,
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index ace50d8..781a65f 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -79,7 +79,7 @@ typedef struct {
- struct network_info {
- 	s8 rssi;
- 	u16 cap_info;
--	u8 au8ssid[MAX_SSID_LEN];
-+	u8 ssid[MAX_SSID_LEN];
- 	u8 u8SsidLen;
- 	u8 au8bssid[6];
- 	u16 u16BeaconPeriod;
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d56a33c..c31f0b5 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4279,7 +4279,8 @@ static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo)
- 		pNewJoinBssParam->beacon_period = ptstrNetworkInfo->u16BeaconPeriod;
- 		pNewJoinBssParam->cap_info = ptstrNetworkInfo->cap_info;
- 		memcpy(pNewJoinBssParam->au8bssid, ptstrNetworkInfo->au8bssid, 6);
--		memcpy((u8 *)pNewJoinBssParam->ssid, ptstrNetworkInfo->au8ssid, ptstrNetworkInfo->u8SsidLen + 1);
-+		memcpy((u8 *)pNewJoinBssParam->ssid, ptstrNetworkInfo->ssid,
-+		       ptstrNetworkInfo->u8SsidLen + 1);
- 		pNewJoinBssParam->ssid_len = ptstrNetworkInfo->u8SsidLen;
- 		memset(pNewJoinBssParam->rsn_pcip_policy, 0xFF, 3);
- 		memset(pNewJoinBssParam->rsn_auth_policy, 0xFF, 3);
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 578a3f2..9aae11e 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -244,7 +244,7 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
- 				channel = ieee80211_get_channel(wiphy, freq);
+-	/* Allow VHT if at least one channel on the sband supports 80 MHz */
+-	have_80mhz = false;
+-	for (i = 0; i < sband->n_channels; i++) {
+-		if (sband->channels[i].flags & (IEEE80211_CHAN_DISABLED |
+-						IEEE80211_CHAN_NO_80MHZ))
+-			continue;
+-
+-		have_80mhz = true;
+-		break;
+-	}
+-
+-	if (!have_80mhz)
+-		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
+-
+ 	ifmgd->flags |= ieee80211_determine_chantype(sdata, sband,
+ 						     cbss->channel,
+ 						     ht_cap, ht_oper, vht_oper,
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index f8eb0f8..cabe16f 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1475,7 +1475,6 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_local *local,
+ 	int ext_rates_len;
+ 	int shift;
+ 	u32 rate_flags;
+-	bool have_80mhz = false;
  
- 				rssi = get_rssi_avg(network_info);
--				if (memcmp("DIRECT-", network_info->au8ssid, 7) ||
-+				if (memcmp("DIRECT-", network_info->ssid, 7) ||
- 				    direct_scan) {
- 					bss = cfg80211_inform_bss(wiphy,
- 								  channel,
-@@ -288,7 +288,8 @@ static void remove_network_from_shadow(unsigned long arg)
+ 	*offset = 0;
  
- 	for (i = 0; i < last_scanned_cnt; i++) {
- 		if (time_after(now, last_scanned_shadow[i].u32TimeRcvdInScan + (unsigned long)(SCAN_RESULT_EXPIRE))) {
--			PRINT_D(CFG80211_DBG, "Network expired in ScanShadow: %s\n", last_scanned_shadow[i].au8ssid);
-+			PRINT_D(CFG80211_DBG, "Network expired ScanShadow:%s\n",
-+				last_scanned_shadow[i].ssid);
+@@ -1604,17 +1603,7 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_local *local,
+ 		*offset = noffset;
+ 	}
  
- 			kfree(last_scanned_shadow[i].pu8IEs);
- 			last_scanned_shadow[i].pu8IEs = NULL;
-@@ -368,8 +369,8 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
- 	last_scanned_shadow[ap_index].rssi = pstrNetworkInfo->rssi;
- 	last_scanned_shadow[ap_index].cap_info = pstrNetworkInfo->cap_info;
- 	last_scanned_shadow[ap_index].u8SsidLen = pstrNetworkInfo->u8SsidLen;
--	memcpy(last_scanned_shadow[ap_index].au8ssid,
--	       pstrNetworkInfo->au8ssid, pstrNetworkInfo->u8SsidLen);
-+	memcpy(last_scanned_shadow[ap_index].ssid,
-+	       pstrNetworkInfo->ssid, pstrNetworkInfo->u8SsidLen);
- 	memcpy(last_scanned_shadow[ap_index].au8bssid,
- 	       pstrNetworkInfo->au8bssid, ETH_ALEN);
- 	last_scanned_shadow[ap_index].u16BeaconPeriod = pstrNetworkInfo->u16BeaconPeriod;
-@@ -434,12 +435,14 @@ static void CfgScanResult(enum scan_event scan_event,
+-	/* Check if any channel in this sband supports at least 80 MHz */
+-	for (i = 0; i < sband->n_channels; i++) {
+-		if (sband->channels[i].flags & (IEEE80211_CHAN_DISABLED |
+-						IEEE80211_CHAN_NO_80MHZ))
+-			continue;
+-
+-		have_80mhz = true;
+-		break;
+-	}
+-
+-	if (sband->vht_cap.vht_supported && have_80mhz && !disable_vht) {
++	if (sband->vht_cap.vht_supported && /*have_80mhz &&*/ !disable_vht) {
+ 		if (end - pos < 2 + sizeof(struct ieee80211_vht_cap))
+ 			goto out_err;
+ 		pos = ieee80211_ie_build_vht_cap(pos, &sband->vht_cap,
+diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
+index c38b2f0..58887b3 100644
+--- a/net/mac80211/vht.c
++++ b/net/mac80211/vht.c
+@@ -120,7 +120,6 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 	struct ieee80211_sta_vht_cap *vht_cap = &sta->sta.vht_cap;
+ 	struct ieee80211_sta_vht_cap own_cap;
+ 	u32 cap_info, i;
+-	bool have_80mhz;
  
- 				if (network_info->bNewNetwork) {
- 					if (priv->u32RcvdChCount < MAX_NUM_SCANNED_NETWORKS) {
--						PRINT_D(CFG80211_DBG, "Network %s found\n", network_info->au8ssid);
-+						PRINT_D(CFG80211_DBG,
-+							"Network %s found\n",
-+							network_info->ssid);
- 						priv->u32RcvdChCount++;
+ 	memset(vht_cap, 0, sizeof(*vht_cap));
  
- 						add_network_to_shadow(network_info, priv, join_params);
+@@ -130,20 +129,6 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
+ 	if (!vht_cap_ie || !sband->vht_cap.vht_supported)
+ 		return;
  
--						if (!(memcmp("DIRECT-", network_info->au8ssid, 7))) {
-+						if (!(memcmp("DIRECT-", network_info->ssid, 7))) {
- 							bss = cfg80211_inform_bss(wiphy,
- 										  channel,
- 										  CFG80211_BSS_FTYPE_UNKNOWN,
-@@ -459,7 +462,7 @@ static void CfgScanResult(enum scan_event scan_event,
- 
- 					for (i = 0; i < priv->u32RcvdChCount; i++) {
- 						if (memcmp(last_scanned_shadow[i].au8bssid, network_info->au8bssid, 6) == 0) {
--							PRINT_D(CFG80211_DBG, "Update RSSI of %s\n", last_scanned_shadow[i].au8ssid);
-+							PRINT_D(CFG80211_DBG, "Update RSSI of %s\n", last_scanned_shadow[i].ssid);
- 
- 							last_scanned_shadow[i].rssi = network_info->rssi;
- 							last_scanned_shadow[i].u32TimeRcvdInScan = jiffies;
-@@ -736,7 +739,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 
- 	for (i = 0; i < last_scanned_cnt; i++) {
- 		if ((sme->ssid_len == last_scanned_shadow[i].u8SsidLen) &&
--		    memcmp(last_scanned_shadow[i].au8ssid,
-+		    memcmp(last_scanned_shadow[i].ssid,
- 			   sme->ssid,
- 			   sme->ssid_len) == 0) {
- 			PRINT_INFO(CFG80211_DBG, "Network with required SSID is found %s\n", sme->ssid);
+-	/* Allow VHT if at least one channel on the sband supports 80 MHz */
+-	have_80mhz = false;
+-	for (i = 0; i < sband->n_channels; i++) {
+-		if (sband->channels[i].flags & (IEEE80211_CHAN_DISABLED |
+-						IEEE80211_CHAN_NO_80MHZ))
+-			continue;
+-
+-		have_80mhz = true;
+-		break;
+-	}
+-
+-	if (!have_80mhz)
+-		return;
+-
+ 	/*
+ 	 * A VHT STA must support 40 MHz, but if we verify that here
+ 	 * then we break a few things - some APs (e.g. Netgear R6300v2
 -- 
-1.9.1
+2.4.3
 
