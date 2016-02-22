@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f170.google.com ([209.85.161.170]:34787 "EHLO
-	mail-yw0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932966AbcBDMnn (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:29631 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753162AbcBVEPQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 07:43:43 -0500
-Received: by mail-yw0-f170.google.com with SMTP id h129so25922480ywb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 04:43:43 -0800 (PST)
+	Sun, 21 Feb 2016 23:15:16 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH V3 05/24] staging: wilc1000: removes potential null dereference
+Date: Mon, 22 Feb 2016 13:11:50 +0900
+Message-ID: <1456114329-7036-6-git-send-email-leo.kim@atmel.com> (sfid-20160222_051520_860932_01D0A01E)
+In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1454589301.2564.8.camel@sipsolutions.net>
-References: <CABPxzY+HpP=NTrAaUEzV5nFm=LK93m=kxPV14-cdftt+VPsWNw@mail.gmail.com>
- <CA+BoTQ=s_SMgs9zkgYjKOHKDwRORWk-Re7XZ=AiKiHCuNc0L8A@mail.gmail.com>
- <1454588396.2564.7.camel@sipsolutions.net> <CABPxzYL3mGHyoKE0tkL4yg_4NL+U41+15Bm3f=JPq2vfD+Xnkg@mail.gmail.com>
- <1454589301.2564.8.camel@sipsolutions.net>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Thu, 4 Feb 2016 18:13:23 +0530
-Message-ID: <CABPxzY+N=3cuMB4Z7q6gqPkhh1GoiCrpG6G3E2bHLB96oqZfyw@mail.gmail.com> (sfid-20160204_134351_606413_663C9D2F)
-Subject: Re: mac80211_hwsim + iperf + netns
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 4, 2016 at 6:05 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Thu, 2016-02-04 at 17:58 +0530, Krishna Chaitanya wrote:
->> On Thu, Feb 4, 2016 at 5:49 PM, Johannes Berg <johannes@sipsolutions.
->> net> wrote:
->> > On Thu, 2016-02-04 at 12:32 +0100, Michal Kazior wrote:
->> > >
->> > >  ip netns add ns1
->> > >  ip netns exec ns1 bash # get the PID in the session and don't
->> > > close
->> > > it
->> > >  iw phy phyX set netns $pid_of_that_shell
->> > >
->> >
->> > If you also have a recent enough iw version, you can use
->> >
->> > iw phy phyX set netns name ns1
->> >
->> My iw has this option, but it throws an error.
->> Does this command have any prerequisites?
->>
->> # iw phy phy1 set netns name ns1
->> Invalid parameter: nsname(name)
->>
->
-> This happens if the ns1 doesn't exist.
-ok, so we need latest iprotue2 to create the
-namespace?
+This patch removes the error reported by smatch.
+ - wilc_wfi_cfgoperations.c:674 scan() error:
+   potential null dereference 'strHiddenNetwork.net_info'.  (kmalloc returns null)
+
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 76f4375..8a3da2d 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -668,6 +668,8 @@ static int scan(struct wiphy *wiphy, struct cfg80211_scan_request *request)
+ 				kmalloc_array(request->n_ssids,
+ 					      sizeof(struct hidden_network),
+ 					      GFP_KERNEL);
++			if (!strHiddenNetwork.net_info)
++				return -ENOMEM;
+ 			strHiddenNetwork.n_ssids = request->n_ssids;
+ 
+ 
+-- 
+1.9.1
+
