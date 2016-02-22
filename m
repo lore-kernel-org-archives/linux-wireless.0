@@ -1,93 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57336 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1947811AbcBRVOm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 16:14:42 -0500
-Message-ID: <1455830078.2084.47.camel@sipsolutions.net> (sfid-20160218_221445_182389_6DF22D41)
-Subject: Re: [PATCH-v2 1/2] mac80211: Take bitrates into account when
- building IEs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 18 Feb 2016 22:14:38 +0100
-In-Reply-To: <56C630B7.7020604@candelatech.com> (sfid-20160218_220438_312127_10FEB80B)
-References: <1445361858-24976-1-git-send-email-greearb@candelatech.com>
-	 <1453807009.2759.23.camel@sipsolutions.net>
-	 <56A78E8F.1080505@candelatech.com>
-	 <1454576521.2564.6.camel@sipsolutions.net> <56B38FD1.40902@candelatech.com>
-	 <1455827536.2084.35.camel@sipsolutions.net>
-	 <56C62C4E.7020600@candelatech.com>
-	 <1455828330.2084.38.camel@sipsolutions.net>
-	 <56C630B7.7020604@candelatech.com> (sfid-20160218_220438_312127_10FEB80B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-qg0-f47.google.com ([209.85.192.47]:33407 "EHLO
+	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751436AbcBVQhA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Feb 2016 11:37:00 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [PATCHv2 02/10] rfkill: Remove extra blank line
+Date: Mon, 22 Feb 2016 11:36:33 -0500
+Message-Id: <1456159001-20307-3-git-send-email-jprvita@endlessm.com> (sfid-20160222_173918_655019_616ADF3C)
+In-Reply-To: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-02-18 at 12:59 -0800, Ben Greear wrote:
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+---
+ net/rfkill/core.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-> Oh.  In that case, what if this happens:
-> 
-> wiphy created and init
-> vdev created, vht copied from wiphy
-> ....
-> wiphy vht info changes?  Can this ever happen?  I'm thinking maybe
-> when
->   a user uses 'iw' to set the rx/rx chainmask on a phy?  Possibly
-> nasty debugfs hacks that have worked so far?
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index ffbc375..56d79cb 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -455,7 +455,6 @@ bool rfkill_get_global_sw_state(const enum rfkill_type type)
+ }
+ #endif
+ 
+-
+ bool rfkill_set_hw_state(struct rfkill *rfkill, bool blocked)
+ {
+ 	unsigned long flags;
+-- 
+2.5.0
 
-Ah, but I don't think this is something that's supposed to happen.
-
-Then again, there were some people talking about this last week, with a
-use case that seemed valid (shared antennas and reconfiguration or so),
-but we can require that to cause some action to propagate it. My gut
-reaction was to just re-register the entire wiphy, but that may be too
-big of a hammer.
-
-In any case, I think this isn't something we really need to consider
-too much. If there are bugs in this area then we'll fix them one way or
-another (or perhaps we'll just never find them since I don't expect
-many people to use this functionality).
-
-> So, I think it should be more like:
-> 
-> if (vdata->have-user-config) {
->    return sdata->user_config_vht & sdata->wiphy->vht;
-> }
-> else {
->    return sdata->wiphy->vht;
-> }
-> 
-> Point of the above 'code' is that we do not want to ever have
-> duplicate state (ie, a copy of wiphy->vht in sdata->vht, because then
-> they can get out of sync.  But, we can have a set of over-ride data
-> in sdata, and since we logically AND that with wiphy data, then we
-> should never exceed the capabilities of either sdata or wiphy.
-> 
-> That make sense?
-
-Yeah, it does, at least if you assume that the capabilities can
-actually change. We assume they don't though, hostapd/wpa_s for example
-will never re-query them after startup.
-
-I also don't like the whole "call a function to get the capabilities"
-not much more than what you have now in the code, since then we'll have
-to deal with allocations (or stack memory) for the data we want and it
-just generally makes the code using the capabilities much more complex
-(for a pretty fringe use case.)
-
-I'd much rather have the data structure that we can use as today
-without additional hoops to jump through, just possibly "redirecting"
-it for the use cases you have in mind.
-
-> Ok, the details of mac80211 have leaked out of my skull since the
-> start of this thread...I'll see if I can make a stab at implementing
-> this proposal.  But, likely it will be a bit, as I'm swamped with
-> other things at the moment.  If someone else is interested in trying
-> this, then of course be my guest!
-> 
-
-Looked like Cedric Debarge had a similar idea, I've pointed him to this
-thread (as you probably saw.)
-
-johannes
