@@ -1,78 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:33088
-	"EHLO snark.thyrsus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752180AbcB2Lnw (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:29736 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752909AbcBVEQN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 06:43:52 -0500
-Received: from [127.0.1.1] (localhost [127.0.0.1])
-	by snark.thyrsus.com (Postfix) with ESMTP id 518DC13A0E88
-	for <linux-wireless@vger.kernel.org>; Mon, 29 Feb 2016 06:35:27 -0500 (EST)
-Content-Type: multipart/mixed; boundary="===============1518198875096255337=="
+	Sun, 21 Feb 2016 23:16:13 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V3 10/24] staging: wilc1000: removes unused HOSTAPD_DBG tag
+Date: Mon, 22 Feb 2016 13:11:55 +0900
+Message-ID: <1456114329-7036-11-git-send-email-leo.kim@atmel.com> (sfid-20160222_051615_989374_B4A7169D)
+In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-To: linux-wireless@vger.kernel.org
-Subject: Problems in regulatory.bin.5
-Message-Id: <20160229113527.518DC13A0E88@snark.thyrsus.com> (sfid-20160229_124355_437340_E8FADC07)
-Date: Mon, 29 Feb 2016 06:35:27 -0500 (EST)
-From: esr@thyrsus.com
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---===============1518198875096255337==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+From: Chris Park <chris.park@atmel.com>
 
-This is automatically generated email about markup problems in a man
-page for which you appear to be responsible.  If you are not the right
-person or list, please tell me so I can correct my database.
+This patch removes unused HOSTAPD_DBG tag.
 
-See http://catb.org/~esr/doclifter/bugs.html for details on how and
-why these patches were generated.  Feel free to email me with any
-questions.  Note: These patches do not change the modification date of
-any manual page.  You may wish to do that by hand.
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan_common.h | 4 +---
+ drivers/staging/wilc1000/wilc_debugfs.c      | 5 ++---
+ 2 files changed, 3 insertions(+), 6 deletions(-)
 
-I apologize if this message seems spammy or impersonal. The volume of
-markup bugs I am tracking is over five hundred - there is no real
-alternative to generating bugmail from a database and template.
-
---
-                             Eric S. Raymond
-
---===============1518198875096255337==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-
-Problems with regulatory.bin.5:
-
-.SS markup in name section seriously confuses parsing, and sections
-don't follow standard naming conventions.
-
---- regulatory.bin.5-unpatched	2012-07-02 01:57:14.437776710 -0400
-+++ regulatory.bin.5	2012-07-02 01:59:11.117774528 -0400
-@@ -2,12 +2,7 @@
- .SH NAME
- regulatory.bin \- The Linux wireless regulatory database
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index 0d9a71f..1f7d806 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -2,13 +2,11 @@
+ #define LINUX_WLAN_COMMON_H
  
--.ad l
--.in +8
--.ti -8
--
--.SS
--.SH Description
-+.SH DESCRIPTION
- .B regulatory.bin
- is the file used by the Linux wireless subsystem to keep its regulatory
- database information. It is read by
-@@ -22,7 +17,7 @@
- .B regulatory.bin
- file should be updated upon regulatory changes or corrections.
+ enum debug_region {
+-	Hostapd_debug = 0,
+-	CFG80211_debug,
++	CFG80211_debug = 0,
+ 	Init_debug,
+ 	COMP = 0xFFFFFFFF,
+ };
  
--.SH Upkeeping
-+.SH UPKEEP
- The regulatory database is maintained by the community as such
- you are encouraged to send any corrections or updates to the
- linux-wireless mailing list:
-
---===============1518198875096255337==--
+-#define HOSTAPD_DBG             (1 << Hostapd_debug)
+ #define CFG80211_DBG            (1 << CFG80211_debug)
+ #define INIT_DBG                (1 << Init_debug)
+ 
+diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
+index a27b077..fafe7cc 100644
+--- a/drivers/staging/wilc1000/wilc_debugfs.c
++++ b/drivers/staging/wilc1000/wilc_debugfs.c
+@@ -24,10 +24,9 @@ static struct dentry *wilc_dir;
+  * --------------------------------------------------------------------------------
+  */
+ 
+-#define DBG_REGION_ALL	(HOSTAPD_DBG | CFG80211_DBG | INIT_DBG)
++#define DBG_REGION_ALL	(CFG80211_DBG | INIT_DBG)
+ #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
+-atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | CFG80211_DBG |
+-				   HOSTAPD_DBG);
++atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | CFG80211_DBG);
+ EXPORT_SYMBOL_GPL(WILC_REGION);
+ atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
+ EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
+-- 
+1.9.1
 
