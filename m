@@ -1,55 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f52.google.com ([209.85.215.52]:35265 "EHLO
-	mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751499AbcBGH1k (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:29864 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753162AbcBVERV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Feb 2016 02:27:40 -0500
-Received: by mail-lf0-f52.google.com with SMTP id l143so79454649lfe.2
-        for <linux-wireless@vger.kernel.org>; Sat, 06 Feb 2016 23:27:39 -0800 (PST)
+	Sun, 21 Feb 2016 23:17:21 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V3 16/24] staging: wilc1000: host_interface.c: removes unnecessary log messages
+Date: Mon, 22 Feb 2016 13:12:01 +0900
+Message-ID: <1456114329-7036-17-git-send-email-leo.kim@atmel.com> (sfid-20160222_051724_217934_3D9E1DEF)
+In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <87k2mhro8j.fsf@purkki.adurom.net>
-References: <CALGY4fuC7CHHFtp3VYtEZe_UFb_frHWK+_C+LWQVrC+0fzn4Kg@mail.gmail.com>
-	<87k2mhro8j.fsf@purkki.adurom.net>
-Date: Sun, 7 Feb 2016 09:27:38 +0200
-Message-ID: <CANUX_P3zTJnnjFRks0Bp0zG90bHLY8iGYQngxy20pRh5ky6dmA@mail.gmail.com> (sfid-20160207_082742_958340_01E42B78)
-Subject: Re: Monitor interface TX performance boost
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Nikolay Martynov <mar.kolya@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Feb 7, 2016 at 9:09 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Nikolay Martynov <mar.kolya@gmail.com> writes:
->
->>   I'm seeing strange behavior on my intel 6300 card.
->>
->>   If I measure TX performance just after boot (iperf in tcp mode), I get this:
->>
->> [  3]  0.0-10.1 sec  11.2 MBytes  9.32 Mbits/sec
->>
->>   But if create and enable monitor interface (with command like 'sudo
->> iw phy phy0 interface add moni0 type monitor && sudo ifconfig moni0
->> up') I get this:
->>
->> [  3]  0.0-10.1 sec  34.8 MBytes  29.0 Mbits/sec
->>
->> That's about three times boost in throughput by just creating an
->> interface (without even using it).
->> Doing 'ifconfig moni0 down' bring performance back to 10Mbits range.
->>
->> Experiments are done with laptop being ~5m from router and not moving.
->> These results are repeatable, i.e. not caused by random things like
->> other stations transmitting, or channel being busy.
->>
->> Is this something expected? Is there any reason performance can be as
->> good without monitor interface existing?
->
-> Maybe the monitor mode disables power save automatically?
->
+From: Chris Park <chris.park@atmel.com>
 
-That could be an option although I remember to have disabled power
-save by default (cough..).
-That happened in 3.17 IIRC.
+This patch removes unnecessary log messages.
+
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index eddc0d6..a827e06 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1637,11 +1637,8 @@ static int Handle_Key(struct wilc_vif *vif,
+ 
+ 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2,
+ 					    GFP_KERNEL);
+-
+-			if (pu8keybuf == NULL) {
+-				PRINT_ER("No buffer to send Key\n");
++			if (!pu8keybuf)
+ 				return -ENOMEM;
+-			}
+ 
+ 			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
+ 			pu8keybuf[1] = pstrHostIFkeyAttr->attr.wep.key_len;
+@@ -1662,10 +1659,8 @@ static int Handle_Key(struct wilc_vif *vif,
+ 			kfree(pu8keybuf);
+ 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
+ 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2, GFP_KERNEL);
+-			if (!pu8keybuf) {
+-				PRINT_ER("No buffer to send Key\n");
++			if (!pu8keybuf)
+ 				return -ENOMEM;
+-			}
+ 			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
+ 			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->attr.wep.key_len, 1);
+ 			memcpy(pu8keybuf + 2, pstrHostIFkeyAttr->attr.wep.key,
+@@ -1709,7 +1704,6 @@ static int Handle_Key(struct wilc_vif *vif,
+ 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
+ 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
+ 			if (!pu8keybuf) {
+-				PRINT_ER("No buffer to send RxGTK Key\n");
+ 				ret = -ENOMEM;
+ 				goto _WPARxGtk_end_case_;
+ 			}
+@@ -1741,7 +1735,6 @@ static int Handle_Key(struct wilc_vif *vif,
+ 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
+ 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
+ 			if (pu8keybuf == NULL) {
+-				PRINT_ER("No buffer to send RxGTK Key\n");
+ 				ret = -ENOMEM;
+ 				goto _WPARxGtk_end_case_;
+ 			}
+@@ -1781,7 +1774,6 @@ _WPARxGtk_end_case_:
+ 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
+ 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN + 1, GFP_KERNEL);
+ 			if (!pu8keybuf) {
+-				PRINT_ER("No buffer to send PTK Key\n");
+ 				ret = -ENOMEM;
+ 				goto _WPAPtk_end_case_;
+ 			}
+-- 
+1.9.1
+
