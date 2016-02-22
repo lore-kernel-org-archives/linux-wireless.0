@@ -1,83 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nasmtp01.atmel.com ([192.199.1.245]:36473 "EHLO
-	DVREDG01.corp.atmel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754510AbcBVLmr convert rfc822-to-8bit (ORCPT
+Received: from mail-qg0-f53.google.com ([209.85.192.53]:33970 "EHLO
+	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750910AbcBVQg7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 06:42:47 -0500
-From: "Kim, Leo" <Leo.Kim@atmel.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"Park, Chris" <Chris.Park@atmel.com>,
-	"Shin, Austin" <Austin.Shin@atmel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Ferre, Nicolas" <Nicolas.FERRE@atmel.com>,
-	"Cho, Tony" <Tony.Cho@atmel.com>,
-	"Abozaeid, Adham" <Adham.Abozaeid@atmel.com>
-Subject: RE: [PATCH RESEND 04/10] staging: wilc1000: removes unnecessary
- wilc_debug print log
-Date: Mon, 22 Feb 2016 11:42:42 +0000
-Message-ID: <74F3875218FC364C9618AB19CB60E9058004B81C@penmbx02.corp.atmel.com> (sfid-20160222_124251_181518_5FBA7328)
-References: <1456116079-7161-1-git-send-email-leo.kim@atmel.com>
- <1456116079-7161-4-git-send-email-leo.kim@atmel.com>
- <20160222104519.GR32153@mwanda>
-In-Reply-To: <20160222104519.GR32153@mwanda>
-Content-Type: text/plain; charset="iso-8859-1"
+	Mon, 22 Feb 2016 11:36:59 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [PATCHv2 01/10] rfkill: Improve documentation language
+Date: Mon, 22 Feb 2016 11:36:32 -0500
+Message-Id: <1456159001-20307-2-git-send-email-jprvita@endlessm.com> (sfid-20160222_174039_682220_FD58959B)
+In-Reply-To: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear Dan,
+Signed-off-by: Jo√£o Paulo Rechi Vita <jprvita@endlessm.com>
+---
+ net/rfkill/core.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-This patch is subject "removes unnecessary wilc_debug print log".
-Your advice are correct but in this patch is not applied.
-I'll be applied to next patch about the your good advice.
-Would be okay?
-Always appreciate your positive advice & great information.
-
-†Thanks, BR
-†Leo
-
------Original Message-----
-From: Dan Carpenter [mailto:dan.carpenter@oracle.com] 
-Sent: Monday, February 22, 2016 7:45 PM
-To: Kim, Leo <Leo.Kim@atmel.com>
-Cc: gregkh@linuxfoundation.org; devel@driverdev.osuosl.org; Park, Chris <Chris.Park@atmel.com>; Shin, Austin <Austin.Shin@atmel.com>; linux-wireless@vger.kernel.org; Ferre, Nicolas <Nicolas.FERRE@atmel.com>; Cho, Tony <Tony.Cho@atmel.com>; Abozaeid, Adham <Adham.Abozaeid@atmel.com>
-Subject: Re: [PATCH RESEND 04/10] staging: wilc1000: removes unnecessary wilc_debug print log
-
-On Mon, Feb 22, 2016 at 01:41:13PM +0900, Leo Kim wrote:
-> This patch removes unnecessary wilc_debug print log.
-> The print log was written when if condition fail.
-> The condition is chip-id check function.
-> Also, replaces this condition with normal function.
-> 
-> Signed-off-by: Leo Kim <leo.kim@atmel.com>
-> ---
->  drivers/staging/wilc1000/wilc_wlan.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wlan.c 
-> b/drivers/staging/wilc1000/wilc_wlan.c
-> index f0ac47f..34018a1 100644
-> --- a/drivers/staging/wilc1000/wilc_wlan.c
-> +++ b/drivers/staging/wilc1000/wilc_wlan.c
-> @@ -502,9 +502,7 @@ void chip_wakeup(struct wilc *wilc)
->  
->  			do {
->  				usleep_range(2 * 1000, 2 * 1000);
-> -				if ((wilc_get_chipid(wilc, true) == 0))
-> -					wilc_debug(N_ERR, "Couldn't read chip id. Wake up failed\n");
-> -
-> +				wilc_get_chipid(wilc, true);
-
-Remove this as well.  Don't leave random no-op function calls lying around.
-
->  			} while ((wilc_get_chipid(wilc, true) == 0) && ((++trials % 3) == 
-> 0));
-                                                                         ^^^^^^^^^^^^
-
-This doesn't work as intended either.
-
-regards,
-dan carpenter
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index a805831..ffbc375 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -282,8 +282,8 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
+ 	spin_lock_irqsave(&rfkill->lock, flags);
+ 	if (err) {
+ 		/*
+-		 * Failed -- reset status to _prev, this may be different
+-		 * from what set set _PREV to earlier in this function
++		 * Failed -- reset status to _PREV, which may be different
++		 * from what we have set _PREV to earlier in this function
+ 		 * if rfkill_set_sw_state was invoked.
+ 		 */
+ 		if (rfkill->state & RFKILL_BLOCK_SW_PREV)
+-- 
+2.5.0
 
