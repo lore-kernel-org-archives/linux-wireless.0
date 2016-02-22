@@ -1,32 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33571 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753959AbcBWQPH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 11:15:07 -0500
-Message-ID: <1456244101.9910.21.camel@sipsolutions.net> (sfid-20160223_171518_567734_0CFC1B55)
-Subject: Re: [PATCH 2/2] mac80211: add NEED_ALIGNED4_SKBS hw flag
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>,
-	Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 23 Feb 2016 17:15:01 +0100
-In-Reply-To: <56CC725D.1080209@openwrt.org>
-References: <1455876110-12758-1-git-send-email-janusz.dziedzic@tieto.com>
-	 <1455876110-12758-2-git-send-email-janusz.dziedzic@tieto.com>
-	 <1456237769.9910.20.camel@sipsolutions.net> <56CC725D.1080209@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:20422 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753955AbcBVKSo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Feb 2016 05:18:44 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V4 11/24] staging: wilc1000: host_interface.c: removes unnecessary log messages
+Date: Mon, 22 Feb 2016 19:14:18 +0900
+Message-ID: <1456136071-10502-12-git-send-email-leo.kim@atmel.com> (sfid-20160222_111919_559835_B17A61D1)
+In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-02-23 at 15:53 +0100, Felix Fietkau wrote:
+From: Chris Park <chris.park@atmel.com>
 
-> > Perhaps we could live with this being done only for the fast-xmit
-> > case?
-> I don't think we should pass padded vs non-padded frames depending on
-> whether fast-xmit was used. The non-fast-xmit codepath could simply
-> do the memmove at the end of the tx handlers though.
+This patch removes unnecessary log message and relate variables.
 
-I guess that's fair. Would it be sufficent though?
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 31 ++++---------------------------
+ 1 file changed, 4 insertions(+), 27 deletions(-)
 
-johannes
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 035f6f5..eddc0d6 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2095,8 +2095,6 @@ static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
+ 	stamac = wid.val;
+ 	memcpy(stamac, strHostIfStaInactiveT->mac, ETH_ALEN);
+ 
+-	PRINT_D(CFG80211_DBG, "SETING STA inactive time\n");
+-
+ 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+ 				      wilc_get_vif_idx(vif));
+ 
+@@ -2118,8 +2116,6 @@ static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
+ 		return -EFAULT;
+ 	}
+ 
+-	PRINT_D(CFG80211_DBG, "Getting inactive time : %d\n", inactive_time);
+-
+ 	up(&hif_drv->sem_inactive_time);
+ 
+ 	return result;
+@@ -3037,7 +3033,6 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
+ 	struct host_if_msg msg;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 	u8 key_len = ptk_key_len;
+-	int i;
+ 
+ 	if (!hif_drv) {
+ 		PRINT_ER("driver is null\n");
+@@ -3065,20 +3060,11 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
+ 	if (!msg.body.key_info.attr.wpa.key)
+ 		return -ENOMEM;
+ 
+-	if (rx_mic) {
++	if (rx_mic)
+ 		memcpy(msg.body.key_info.attr.wpa.key + 16, rx_mic, RX_MIC_KEY_LEN);
+-		if (INFO) {
+-			for (i = 0; i < RX_MIC_KEY_LEN; i++)
+-				PRINT_INFO(CFG80211_DBG, "PairwiseRx[%d] = %x\n", i, rx_mic[i]);
+-		}
+-	}
+-	if (tx_mic) {
++
++	if (tx_mic)
+ 		memcpy(msg.body.key_info.attr.wpa.key + 24, tx_mic, TX_MIC_KEY_LEN);
+-		if (INFO) {
+-			for (i = 0; i < TX_MIC_KEY_LEN; i++)
+-				PRINT_INFO(CFG80211_DBG, "PairwiseTx[%d] = %x\n", i, tx_mic[i]);
+-		}
+-	}
+ 
+ 	msg.body.key_info.attr.wpa.key_len = key_len;
+ 	msg.body.key_info.attr.wpa.mac_addr = mac_addr;
+@@ -4083,20 +4069,11 @@ int wilc_del_allstation(struct wilc_vif *vif, u8 mac_addr[][ETH_ALEN])
+ 	for (i = 0; i < MAX_NUM_STA; i++) {
+ 		if (memcmp(mac_addr[i], zero_addr, ETH_ALEN)) {
+ 			memcpy(del_all_sta_info->del_all_sta[i], mac_addr[i], ETH_ALEN);
+-			PRINT_D(CFG80211_DBG, "BSSID = %x%x%x%x%x%x\n",
+-				del_all_sta_info->del_all_sta[i][0],
+-				del_all_sta_info->del_all_sta[i][1],
+-				del_all_sta_info->del_all_sta[i][2],
+-				del_all_sta_info->del_all_sta[i][3],
+-				del_all_sta_info->del_all_sta[i][4],
+-				del_all_sta_info->del_all_sta[i][5]);
+ 			assoc_sta++;
+ 		}
+ 	}
+-	if (!assoc_sta) {
+-		PRINT_D(CFG80211_DBG, "NO ASSOCIATED STAS\n");
++	if (!assoc_sta)
+ 		return result;
+-	}
+ 
+ 	del_all_sta_info->assoc_sta = assoc_sta;
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+-- 
+1.9.1
+
