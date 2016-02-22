@@ -1,59 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43366 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753004AbcB2WFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:55 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 063/113] rtl8xxxu: Do not set FPGA0_TX_INFO for 8723bu and use a larger PBP page size
-Date: Mon, 29 Feb 2016 17:05:01 -0500
-Message-Id: <1456783551-28315-64-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230953_752024_373B08BB)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from eusmtp01.atmel.com ([212.144.249.242]:29996 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753172AbcBVESv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Feb 2016 23:18:51 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V3 24/24] staging: wilc1000: moves LINUX_RX_SIZE, LINUX_TX_SIZE
+Date: Mon, 22 Feb 2016 13:12:09 +0900
+Message-ID: <1456114329-7036-25-git-send-email-leo.kim@atmel.com> (sfid-20160222_051853_949855_8D3BC673)
+In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Chris Park <chris.park@atmel.com>
 
-The vendor driver does not set FPGA0_TX_INFO here. In additiona the
-8723bu can handler a larger PBP page size.
+This patch moves LINUX_RX_SIZE and LINUX_TX_SIZE to wilc_wlan.h file
+because there are only used to wilc_wlan.c file.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/linux_wlan_common.h | 4 ----
+ drivers/staging/wilc1000/wilc_wlan.h         | 3 +++
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 7e525fa..3a7fd2c 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -6165,7 +6165,8 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 		goto exit;
+diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
+index 51601aa..aa2c026 100644
+--- a/drivers/staging/wilc1000/linux_wlan_common.h
++++ b/drivers/staging/wilc1000/linux_wlan_common.h
+@@ -1,10 +1,6 @@
+ #ifndef LINUX_WLAN_COMMON_H
+ #define LINUX_WLAN_COMMON_H
  
- 	/* RFSW Control - clear bit 14 ?? */
--	rtl8xxxu_write32(priv, REG_FPGA0_TX_INFO, 0x00000003);
-+	if (priv->rtlchip != 0x8723b)
-+		rtl8xxxu_write32(priv, REG_FPGA0_TX_INFO, 0x00000003);
- 	/* 0x07000760 */
- 	val32 = FPGA0_RF_TRSW | FPGA0_RF_TRSWB | FPGA0_RF_ANTSW |
- 		FPGA0_RF_ANTSWB | FPGA0_RF_PAPE |
-@@ -6185,8 +6186,12 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 	/*
- 	 * Transfer page size is always 128
- 	 */
--	val8 = (PBP_PAGE_SIZE_128 << PBP_PAGE_SIZE_RX_SHIFT) |
--		(PBP_PAGE_SIZE_128 << PBP_PAGE_SIZE_TX_SHIFT);
-+	if (priv->rtlchip == 0x8723b)
-+		val8 = (PBP_PAGE_SIZE_256 << PBP_PAGE_SIZE_RX_SHIFT) |
-+			(PBP_PAGE_SIZE_256 << PBP_PAGE_SIZE_TX_SHIFT);
-+	else
-+		val8 = (PBP_PAGE_SIZE_128 << PBP_PAGE_SIZE_RX_SHIFT) |
-+			(PBP_PAGE_SIZE_128 << PBP_PAGE_SIZE_TX_SHIFT);
- 	rtl8xxxu_write8(priv, REG_PBP, val8);
+-#define LINUX_RX_SIZE	(96 * 1024)
+-#define LINUX_TX_SIZE	(64 * 1024)
+-
+-
+ #define WILC_MULTICAST_TABLE_SIZE	8
  
- 	/*
+ #if defined(BEAGLE_BOARD)
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index 06d02ab..792d338 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -128,6 +128,9 @@
+ #define WILC_PLL_TO_SPI		2
+ #define ABORT_INT		BIT(31)
+ 
++#define LINUX_RX_SIZE		(96 * 1024)
++#define LINUX_TX_SIZE		(64 * 1024)
++
+ /*******************************************/
+ /*        E0 and later Interrupt flags.    */
+ /*******************************************/
 -- 
-2.5.0
+1.9.1
 
