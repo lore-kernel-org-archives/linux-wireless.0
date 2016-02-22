@@ -1,89 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:59294 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754422AbcBDJen (ORCPT
+Received: from mail-qk0-f178.google.com ([209.85.220.178]:33992 "EHLO
+	mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752502AbcBVQhD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:34:43 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH RESEND 68/70] staging: wilc1000: remove unused debug tag
-Date: Thu, 4 Feb 2016 18:24:29 +0900
-Message-ID: <1454577871-667-29-git-send-email-glen.lee@atmel.com> (sfid-20160204_103558_000072_83EBE2DF)
-In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+	Mon, 22 Feb 2016 11:37:03 -0500
+From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
+Subject: [PATCHv2 05/10] rfkill: Factor rfkill_global_states[].cur assignments
+Date: Mon, 22 Feb 2016 11:36:36 -0500
+Message-Id: <1456159001-20307-6-git-send-email-jprvita@endlessm.com> (sfid-20160222_174322_470195_7BC6825C)
+In-Reply-To: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+Factor all assignments to rfkill_global_states[].cur into a single
+function rfkill_update_global_state().
 
-This patch remove unused debug tag INT_DBG, LOCK_DBG, BUS_DBG,
-MEM_DBG and FIRM_DBG
-
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
 ---
- drivers/staging/wilc1000/linux_wlan_common.h | 15 ---------------
- drivers/staging/wilc1000/wilc_debugfs.c      |  5 +++--
- 2 files changed, 3 insertions(+), 17 deletions(-)
+ net/rfkill/core.c | 38 +++++++++++++++++---------------------
+ 1 file changed, 17 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index 63d0ec5..758633e 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -5,29 +5,14 @@ enum debug_region {
- 	Generic_debug = 0,
- 	Hostapd_debug,
- 	CFG80211_debug,
--	Interrupt_debug,
--	Lock_debug,
--	Tcp_enhance,
--	Spin_debug,
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 56d79cb..8b96869 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -302,6 +302,19 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
+ 		rfkill_event(rfkill);
+ }
+ 
++static void rfkill_update_global_state(enum rfkill_type type, bool blocked)
++{
++	int i;
++
++	if (type != RFKILL_TYPE_ALL) {
++		rfkill_global_states[type].cur = blocked;
++		return;
++	}
++
++	for (i = 0; i < NUM_RFKILL_TYPES; i++)
++		rfkill_global_states[i].cur = blocked;
++}
++
+ #ifdef CONFIG_RFKILL_INPUT
+ static atomic_t rfkill_input_disabled = ATOMIC_INIT(0);
+ 
+@@ -319,15 +332,7 @@ static void __rfkill_switch_all(const enum rfkill_type type, bool blocked)
+ {
+ 	struct rfkill *rfkill;
+ 
+-	if (type == RFKILL_TYPE_ALL) {
+-		int i;
 -
- 	Init_debug,
--	Bus_debug,
--	Mem_debug,
--	Firmware_debug,
- 	COMP = 0xFFFFFFFF,
- };
+-		for (i = 0; i < NUM_RFKILL_TYPES; i++)
+-			rfkill_global_states[i].cur = blocked;
+-	} else {
+-		rfkill_global_states[type].cur = blocked;
+-	}
+-
++	rfkill_update_global_state(type, blocked);
+ 	list_for_each_entry(rfkill, &rfkill_list, node) {
+ 		if (rfkill->type != type && type != RFKILL_TYPE_ALL)
+ 			continue;
+@@ -1164,15 +1169,8 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
  
- #define GENERIC_DBG             (1 << Generic_debug)
- #define HOSTAPD_DBG             (1 << Hostapd_debug)
- #define CFG80211_DBG            (1 << CFG80211_debug)
--#define INT_DBG                 (1 << Interrupt_debug)
--#define LOCK_DBG                (1 << Lock_debug)
--#define TCP_ENH                 (1 << Tcp_enhance)
--#define SPIN_DEBUG              (1 << Spin_debug)
- #define INIT_DBG                (1 << Init_debug)
--#define BUS_DBG                 (1 << Bus_debug)
--#define MEM_DBG                 (1 << Mem_debug)
--#define FIRM_DBG                (1 << Firmware_debug)
+ 	mutex_lock(&rfkill_global_mutex);
  
- #if defined (WILC_DEBUGFS)
- extern atomic_t WILC_REGION;
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index 9c85bdd..8d08824 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -24,9 +24,10 @@ static struct dentry *wilc_dir;
-  * --------------------------------------------------------------------------------
-  */
+-	if (ev.op == RFKILL_OP_CHANGE_ALL) {
+-		if (ev.type == RFKILL_TYPE_ALL) {
+-			enum rfkill_type i;
+-			for (i = 0; i < NUM_RFKILL_TYPES; i++)
+-				rfkill_global_states[i].cur = ev.soft;
+-		} else {
+-			rfkill_global_states[ev.type].cur = ev.soft;
+-		}
+-	}
++	if (ev.op == RFKILL_OP_CHANGE_ALL)
++		rfkill_update_global_state(ev.type, ev.soft);
  
--#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | CFG80211_DBG | INT_DBG | LOCK_DBG | INIT_DBG | BUS_DBG | MEM_DBG)
-+#define DBG_REGION_ALL	(GENERIC_DBG | HOSTAPD_DBG | CFG80211_DBG | INIT_DBG)
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
--atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | GENERIC_DBG | CFG80211_DBG | FIRM_DBG | HOSTAPD_DBG);
-+atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | GENERIC_DBG | CFG80211_DBG |
-+				   HOSTAPD_DBG);
- EXPORT_SYMBOL_GPL(WILC_REGION);
- atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
- EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
+ 	list_for_each_entry(rfkill, &rfkill_list, node) {
+ 		if (rfkill->idx != ev.idx && ev.op != RFKILL_OP_CHANGE_ALL)
+@@ -1261,10 +1259,8 @@ static struct miscdevice rfkill_miscdev = {
+ static int __init rfkill_init(void)
+ {
+ 	int error;
+-	int i;
+ 
+-	for (i = 0; i < NUM_RFKILL_TYPES; i++)
+-		rfkill_global_states[i].cur = !rfkill_default_state;
++	rfkill_update_global_state(RFKILL_TYPE_ALL, !rfkill_default_state);
+ 
+ 	error = class_register(&rfkill_class);
+ 	if (error)
 -- 
-1.9.1
+2.5.0
 
