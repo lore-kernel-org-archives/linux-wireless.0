@@ -1,28 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59048 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750922AbcBWJlD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 04:41:03 -0500
-Message-ID: <1456220460.2041.1.camel@sipsolutions.net> (sfid-20160223_104108_587558_23967930)
-Subject: Re: [PATCH] nl80211: Zero out the connection keys memory when
- freeing them.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ola Olsson <ola1olsson@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Ola Olsson <ola.olsson@sonymobile.com>
-Date: Tue, 23 Feb 2016 10:41:00 +0100
-In-Reply-To: <1455148822-13849-1-git-send-email-ola1olsson@gmail.com> (sfid-20160211_010210_957740_6EF997E6)
-References: <1455148822-13849-1-git-send-email-ola1olsson@gmail.com>
-	 (sfid-20160211_010210_957740_6EF997E6)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from eusmtp01.atmel.com ([212.144.249.242]:29646 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753243AbcBVEP2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 21 Feb 2016 23:15:28 -0500
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
+	Chris Park <chris.park@atmel.com>
+Subject: [PATCH V3 06/24] staging: wilc1000: host_interface.c: removes unnecessary log message
+Date: Mon, 22 Feb 2016 13:11:51 +0900
+Message-ID: <1456114329-7036-7-git-send-email-leo.kim@atmel.com> (sfid-20160222_051530_378392_9132CAD7)
+In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-02-11 at 01:00 +0100, Ola Olsson wrote:
-> The connection keys are zeroed out in all other cases except this
-> one. Let's fix the last one as well.
-> 
-Applied.
+From: Chris Park <chris.park@atmel.com>
 
-johannes
+This patch removes unnecessary log message and relate variables.
+
+Signed-off-by: Chris Park <chris.park@atmel.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 3de4f99..035f6f5 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2999,7 +2999,6 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
+ 	int result = 0;
+ 	struct host_if_msg msg;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+-	int i;
+ 
+ 	if (!hif_drv) {
+ 		PRINT_ER("driver is null\n");
+@@ -3008,10 +3007,6 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 
+-	if (INFO) {
+-		for (i = 0; i < len; i++)
+-			PRINT_INFO(HOSTAPD_DBG, "KEY is %x\n", key[i]);
+-	}
+ 	msg.id = HOST_IF_MSG_KEY;
+ 	msg.body.key_info.type = WEP;
+ 	msg.body.key_info.action = ADDKEY_AP;
+-- 
+1.9.1
+
