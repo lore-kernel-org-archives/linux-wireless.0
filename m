@@ -1,35 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59039 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750893AbcBWJjm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 04:39:42 -0500
-Message-ID: <1456220379.2041.0.camel@sipsolutions.net> (sfid-20160223_103946_670047_9805BEA6)
-Subject: Re: [PATCH] mac80211: minstrel_ht: set default tx aggregation
- timeout to 0
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Cc: apenwarr@gmail.com
-Date: Tue, 23 Feb 2016 10:39:39 +0100
-In-Reply-To: <1455821358-37534-1-git-send-email-nbd@openwrt.org>
-References: <1455821358-37534-1-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.linuxfoundation.org ([140.211.169.12]:45523 "EHLO
+	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751437AbcBVUBv (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 22 Feb 2016 15:01:51 -0500
+Date: Mon, 22 Feb 2016 12:01:50 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Leo Kim <leo.kim@atmel.com>
+Cc: devel@driverdev.osuosl.org, Chris.Park@atmel.com,
+	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
+	Nicolas.FERRE@atmel.com, tony.cho@atmel.com,
+	adham.abozaeid@atmel.com
+Subject: Re: [PATCH V4 00/24] staging: wilc1000: Resend V4
+Message-ID: <20160222200150.GA23581@kroah.com> (sfid-20160222_210154_452108_94BB1ABF)
+References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-02-18 at 19:49 +0100, Felix Fietkau wrote:
-> The value 5000 was put here with the addition of the timeout field to
-> ieee80211_start_tx_ba_session. It was originally added in mac80211 to
-> save resources for drivers like iwlwifi, which only supports a
-> limited
-> number of concurrent aggregation sessions.
+On Mon, Feb 22, 2016 at 07:14:07PM +0900, Leo Kim wrote:
+> Dear Greg
 > 
-> Since iwlwifi does not use minstrel_ht and other drivers don't need
-> this, 0 is a better default - especially since there have been
-> recent reports of aggregation setup related issues reproduced with
-> ath9k. This should improve stability without causing any adverse
-> effects.
+> This is the 4th fix patch about the mistake merging.
+> Mistake merging is revert the below commit when rebase V3 patches.
+> (already applied commit) - 6c2ab2398b88 ("staging: wilc1000: remove spaces around '->'")
+> (V3 mistake patch) - [PATCH V3 09/24] staging: wilc1000: wilc_wfi_cfgoperations.c: removes unnecessary log messages
 > 
-Applied, thanks.
+> I'll resend 4th patches after modified this mistake.
+> We apologize for the inconvenience.
 
-johannes
+Oops, I applied the v3 series, can you just send me a "fixup patch" or
+whatever else is needed here instead?
+
+thanks,
+
+greg k-h
