@@ -1,85 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f171.google.com ([209.85.220.171]:36460 "EHLO
-	mail-qk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755938AbcBPV2Z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2016 16:28:25 -0500
-From: "Avery Pennarun" <apenwarr@gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@vger.kernel.org, johannes@sipsolutions.net,
-	nbd@nbd.name
-Cc: Avery Pennarun <apenwarr@gmail.com>
-Subject: [PATCH] mac80211: debugfs var for the default aggregation timeout.
-Date: Tue, 16 Feb 2016 16:28:11 -0500
-Message-Id: <1455658091-28262-2-git-send-email-apenwarr@gmail.com> (sfid-20160216_222829_705982_11842B9F)
-In-Reply-To: <1455658091-28262-1-git-send-email-apenwarr@gmail.com>
-References: <CAHqTa-22NpabO6B7nL=O26fnuGQHFOzpagWtsfQz4_BfrO6nTw@mail.gmail.com>
- <1455658091-28262-1-git-send-email-apenwarr@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:59393 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750832AbcBWLGc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 06:06:32 -0500
+Message-ID: <1456225589.2041.24.camel@sipsolutions.net> (sfid-20160223_120635_778128_07E3CD8A)
+Subject: Re: [PATCH-v2 1/2] mac80211: Take bitrates into account when
+ building IEs.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 23 Feb 2016 12:06:29 +0100
+In-Reply-To: <56C63D8B.9020900@candelatech.com>
+References: <1445361858-24976-1-git-send-email-greearb@candelatech.com>
+	 <1453807009.2759.23.camel@sipsolutions.net>
+	 <56A78E8F.1080505@candelatech.com>
+	 <1454576521.2564.6.camel@sipsolutions.net> <56B38FD1.40902@candelatech.com>
+	 <1455827536.2084.35.camel@sipsolutions.net>
+	 <56C62C4E.7020600@candelatech.com>
+	 <1455828330.2084.38.camel@sipsolutions.net>
+	 <56C630B7.7020604@candelatech.com>
+	 <1455830078.2084.47.camel@sipsolutions.net>
+	 <56C63D8B.9020900@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since around the beginning of time, ath9k aggregates have timed out after
-5000 TU (around 5000ms) of inactivity, but nobody seems to be quite sure
-why, and this magic number seems to have migrated around from one place to
-another.  An openbsd mailing list recently had a patch to disable the
-timeout completely, which they say matches some commercial routers:
-https://www.mail-archive.com/tech@openbsd.org/msg29456.html
+On Thu, 2016-02-18 at 13:54 -0800, Ben Greear wrote:
 
-Even in Linux, several non-ath9k drivers default to no timeout already.  I
-think changing it directly to zero would be safe, but to allow a more
-structured investigation, let's make it configurable for now.
+> > Yeah, it does, at least if you assume that the capabilities can
+> > actually change. We assume they don't though, hostapd/wpa_s for
+> > example will never re-query them after startup.
+> 
+> Restarting supplicant, even if it came to that, might be less
+> of an issue than having to re-create the vdev to have it grab
+> proper new settings from the wiphy...
 
-Signed-off-by: Avery Pennarun <apenwarr@gmail.com>
----
- net/mac80211/debugfs_netdev.c      | 4 ++++
- net/mac80211/rc80211_minstrel_ht.c | 4 +++-
- 2 files changed, 7 insertions(+), 1 deletion(-)
- 
+> Well, it would be easy enough to make a method that updated an
+> vdev/sdata->vht from wiphy, so could just call that as needed (ie,
+> when certain things set or are changed by wiphy).
 
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 37ea30e..5ae160b 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -715,6 +715,8 @@ static void add_mesh_config(struct ieee80211_sub_if_data *sdata)
- }
- #endif
- 
-+u32 default_agg_timeout = 5000;
-+
- static void add_files(struct ieee80211_sub_if_data *sdata)
- {
- 	if (!sdata->vif.debugfs_dir)
-@@ -725,6 +727,8 @@ static void add_files(struct ieee80211_sub_if_data *sdata)
- 	DEBUGFS_ADD(txpower);
- 	DEBUGFS_ADD(user_power_level);
- 	DEBUGFS_ADD(ap_power_level);
-+	debugfs_create_u32("default_agg_timeout", 0600, sdata->vif.debugfs_dir,
-+		&default_agg_timeout);
- 
- 	if (sdata->vif.type != NL80211_IFTYPE_MONITOR)
- 		add_common_files(sdata);
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 3928dbd..028d9d4 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -671,6 +671,8 @@ minstrel_downgrade_rate(struct minstrel_ht_sta *mi, u16 *idx, bool primary)
- 	}
- }
- 
-+extern u32 default_agg_timeout;
-+
- static void
- minstrel_aggr_check(struct ieee80211_sta *pubsta, struct sk_buff *skb)
- {
-@@ -691,7 +693,7 @@ minstrel_aggr_check(struct ieee80211_sta *pubsta, struct sk_buff *skb)
- 	if (likely(sta->ampdu_mlme.tid_tx[tid]))
- 		return;
- 
--	ieee80211_start_tx_ba_session(pubsta, tid, 5000);
-+	ieee80211_start_tx_ba_session(pubsta, tid, default_agg_timeout);
- }
- 
- static void
--- 
-2.7.0.rc3.207.g0ac5344
+Yeah, I think we'll just have to deal with this when it comes along.
+This multi-antenna-sharing case (unfortunately I forgot who was talking
+about it) is the only thing that comes to mind where we really may have
+to deal with this.
 
+
+johannes
