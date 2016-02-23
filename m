@@ -1,46 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:36705 "EHLO
-	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761AbcBEBfz (ORCPT
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:36640 "EHLO
+	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932438AbcBWGib (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 20:35:55 -0500
-Received: by mail-pf0-f175.google.com with SMTP id n128so59015860pfn.3
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 17:35:55 -0800 (PST)
+	Tue, 23 Feb 2016 01:38:31 -0500
+Received: by mail-pf0-f174.google.com with SMTP id e127so107004974pfe.3
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2016 22:38:30 -0800 (PST)
 From: Chaehyun Lim <chaehyun.lim@gmail.com>
 To: gregkh@linuxfoundation.org
 Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
 	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
 	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
 	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 7/8] staging: wilc1000: remove initialization code of counter variable
-Date: Fri,  5 Feb 2016 10:35:17 +0900
-Message-Id: <1454636118-9943-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20160205_023600_310530_EF22DE3B)
-In-Reply-To: <1454636118-9943-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1454636118-9943-1-git-send-email-chaehyun.lim@gmail.com>
+Subject: [PATCH 7/7] staging: wilc1000: handle_cfg_param: remove unnecessary whitespace
+Date: Tue, 23 Feb 2016 15:38:03 +0900
+Message-Id: <1456209483-20345-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20160223_073847_203624_176DAD90)
+In-Reply-To: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no need to set to 0 for counter variable before entering next
-for-loop statement because counter is initialized again in for-loop
-statement, so just remove it.
+This patch removes unnecessary whitespace before a quoted newline found
+by checkpatch
+WARNING: unnecessary whitespace before a quoted newline
 
 Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 4008872..dda81ee 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -468,7 +468,6 @@ int wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
- 				break;
- 			}
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index fb809a4..2ace069 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -501,7 +501,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 			wid_list[i].size = sizeof(char);
+ 			hif_drv->cfg_values.auth_type = (u8)cfg_param_attr->auth_type;
+ 		} else {
+-			netdev_err(vif->ndev, "Impossible value \n");
++			netdev_err(vif->ndev, "Impossible value\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
  		}
--		counter = 0;
- 		for (counter = 0; counter < count; counter++) {
- 			wids[counter].size = wilc_wlan_cfg_get_val(
- 					wids[counter].id,
 -- 
-2.7.0
+2.7.1
 
