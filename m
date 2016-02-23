@@ -1,160 +1,160 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f174.google.com ([209.85.220.174]:34005 "EHLO
-	mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752741AbcBVQhF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 11:37:05 -0500
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux@endlessm.com,
-	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
-Subject: [PATCHv2 07/10] rfkill: Create "rfkill-airplane-mode" LED trigger
-Date: Mon, 22 Feb 2016 11:36:38 -0500
-Message-Id: <1456159001-20307-8-git-send-email-jprvita@endlessm.com> (sfid-20160222_174057_515207_F49CB6AF)
-In-Reply-To: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
-References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:29754 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752204AbcBWUb1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 15:31:27 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH v2] mac80211: allow not sending MIC up from driver for HW crypto
+Date: Tue, 23 Feb 2016 22:31:14 +0200
+Message-Id: <1456259474-1370-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160223_213130_587125_2B819866)
+In-Reply-To: <1455614328-12528-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1455614328-12528-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This creates a new LED trigger to be used by platform drivers as a
-default trigger for airplane-mode indicator LEDs.
+From: Sara Sharon <sara.sharon@intel.com>
 
-By default this trigger will fire when RFKILL_OP_CHANGE_ALL is called
-for all types (RFKILL_TYPE_ALL), setting the LED brightness to LED_FULL
-when the changing the state to blocked, and to LED_OFF when the changing
-the state to unblocked. In the future there will be a mechanism for
-userspace to override the default policy, so it can implement its own.
+When HW crypto is used, there's no need for the CCMP/GCMP MIC to
+be available to mac80211, and the hardware might have removed it
+already after checking. The MIC is also useless to have when the
+frame is already decrypted, so allow indicating that it's not
+present.
 
-This trigger will be used by the asus-wireless x86 platform driver.
+Since we are running out of bits in mac80211_rx_flags, make
+the flags field a u64.
 
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- Documentation/rfkill.txt |  2 ++
- net/rfkill/core.c        | 49 +++++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 50 insertions(+), 1 deletion(-)
+ include/net/mac80211.h |  5 ++++-
+ net/mac80211/util.c    |  5 +++--
+ net/mac80211/wpa.c     | 26 ++++++++++++++------------
+ 3 files changed, 21 insertions(+), 15 deletions(-)
 
-diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
-index 1f0c270..b13025a 100644
---- a/Documentation/rfkill.txt
-+++ b/Documentation/rfkill.txt
-@@ -85,6 +85,8 @@ device). Don't do this unless you cannot get the event in any other way.
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 0c09da3..9cf92d0 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1034,6 +1034,8 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  *	on this subframe
+  * @RX_FLAG_AMPDU_DELIM_CRC_KNOWN: The delimiter CRC field is known (the CRC
+  *	is stored in the @ampdu_delimiter_crc field)
++ * @RX_FLAG_MIC_STRIPPED: The mic was stripped of this packet. Decryption was
++ *	done by the hardware
+  * @RX_FLAG_LDPC: LDPC was used
+  * @RX_FLAG_ONLY_MONITOR: Report frame only to monitor interfaces without
+  *	processing it in any regular way.
+@@ -1091,6 +1093,7 @@ enum mac80211_rx_flags {
+ 	RX_FLAG_5MHZ			= BIT(29),
+ 	RX_FLAG_AMSDU_MORE		= BIT(30),
+ 	RX_FLAG_RADIOTAP_VENDOR_DATA	= BIT(31),
++	RX_FLAG_MIC_STRIPPED            = BIT_ULL(32),
+ };
  
- RFKill provides per-switch LED triggers, which can be used to drive LEDs
- according to the switch state (LED_FULL when blocked, LED_OFF otherwise).
-+An airplane-mode indicator LED trigger is also available, which triggers
-+LED_FULL when all radios known by RFKill are blocked, and LED_OFF otherwise.
+ #define RX_FLAG_STBC_SHIFT		26
+@@ -1148,7 +1151,7 @@ struct ieee80211_rx_status {
+ 	u64 mactime;
+ 	u32 device_timestamp;
+ 	u32 ampdu_reference;
+-	u32 flag;
++	u64 flag;
+ 	u16 freq;
+ 	u8 vht_flag;
+ 	u8 rate_idx;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 89f7179..743265a 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -2714,8 +2714,9 @@ u64 ieee80211_calculate_rx_timestamp(struct ieee80211_local *local,
  
+ 	rate = cfg80211_calculate_bitrate(&ri);
+ 	if (WARN_ONCE(!rate,
+-		      "Invalid bitrate: flags=0x%x, idx=%d, vht_nss=%d\n",
+-		      status->flag, status->rate_idx, status->vht_nss))
++		      "Invalid bitrate: flags=0x%llx, idx=%d, vht_nss=%d\n",
++		      (unsigned long long)status->flag, status->rate_idx,
++		      status->vht_nss))
+ 		return 0;
  
- 5. Userspace support
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index 8b96869..50b538b 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -126,6 +126,30 @@ static bool rfkill_epo_lock_active;
+ 	/* rewind from end of MPDU */
+diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
+index 1884825..7e4f265 100644
+--- a/net/mac80211/wpa.c
++++ b/net/mac80211/wpa.c
+@@ -504,18 +504,20 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx,
+ 	    !ieee80211_is_robust_mgmt_frame(skb))
+ 		return RX_CONTINUE;
  
- 
- #ifdef CONFIG_RFKILL_LEDS
-+static struct led_trigger rfkill_apm_led_trigger;
-+
-+static void rfkill_apm_led_trigger_event(bool state)
-+{
-+	led_trigger_event(&rfkill_apm_led_trigger, state ? LED_FULL : LED_OFF);
-+}
-+
-+static void rfkill_apm_led_trigger_activate(struct led_classdev *led)
-+{
-+	rfkill_apm_led_trigger_event(!rfkill_default_state);
-+}
-+
-+static int rfkill_apm_led_trigger_register(void)
-+{
-+	rfkill_apm_led_trigger.name = "rfkill-airplane-mode";
-+	rfkill_apm_led_trigger.activate = rfkill_apm_led_trigger_activate;
-+	return led_trigger_register(&rfkill_apm_led_trigger);
-+}
-+
-+static void rfkill_apm_led_trigger_unregister(void)
-+{
-+	led_trigger_unregister(&rfkill_apm_led_trigger);
-+}
-+
- static void rfkill_led_trigger_event(struct rfkill *rfkill)
- {
- 	struct led_trigger *trigger;
-@@ -177,6 +201,19 @@ static void rfkill_led_trigger_unregister(struct rfkill *rfkill)
- 	led_trigger_unregister(&rfkill->led_trigger);
- }
- #else
-+static void rfkill_apm_led_trigger_event(bool state)
-+{
-+}
-+
-+static int rfkill_apm_led_trigger_register(void)
-+{
-+	return 0;
-+}
-+
-+static void rfkill_apm_led_trigger_unregister(void)
-+{
-+}
-+
- static void rfkill_led_trigger_event(struct rfkill *rfkill)
- {
- }
-@@ -313,6 +350,7 @@ static void rfkill_update_global_state(enum rfkill_type type, bool blocked)
- 
- 	for (i = 0; i < NUM_RFKILL_TYPES; i++)
- 		rfkill_global_states[i].cur = blocked;
-+	rfkill_apm_led_trigger_event(blocked);
- }
- 
- #ifdef CONFIG_RFKILL_INPUT
-@@ -1260,15 +1298,22 @@ static int __init rfkill_init(void)
- {
- 	int error;
- 
-+	error = rfkill_apm_led_trigger_register();
-+	if (error)
-+		goto out;
-+
- 	rfkill_update_global_state(RFKILL_TYPE_ALL, !rfkill_default_state);
- 
- 	error = class_register(&rfkill_class);
--	if (error)
-+	if (error) {
-+		rfkill_apm_led_trigger_unregister();
- 		goto out;
-+	}
- 
- 	error = misc_register(&rfkill_miscdev);
- 	if (error) {
- 		class_unregister(&rfkill_class);
-+		rfkill_apm_led_trigger_unregister();
- 		goto out;
+-	data_len = skb->len - hdrlen - IEEE80211_CCMP_HDR_LEN - mic_len;
+-	if (!rx->sta || data_len < 0)
+-		return RX_DROP_UNUSABLE;
+-
+ 	if (status->flag & RX_FLAG_DECRYPTED) {
+ 		if (!pskb_may_pull(rx->skb, hdrlen + IEEE80211_CCMP_HDR_LEN))
+ 			return RX_DROP_UNUSABLE;
++		if (status->flag & RX_FLAG_MIC_STRIPPED)
++			mic_len = 0;
+ 	} else {
+ 		if (skb_linearize(rx->skb))
+ 			return RX_DROP_UNUSABLE;
  	}
  
-@@ -1277,6 +1322,7 @@ static int __init rfkill_init(void)
- 	if (error) {
- 		misc_deregister(&rfkill_miscdev);
- 		class_unregister(&rfkill_class);
-+		rfkill_apm_led_trigger_unregister();
- 		goto out;
++	data_len = skb->len - hdrlen - IEEE80211_CCMP_HDR_LEN - mic_len;
++	if (!rx->sta || data_len < 0)
++		return RX_DROP_UNUSABLE;
++
+ 	if (!(status->flag & RX_FLAG_PN_VALIDATED)) {
+ 		ccmp_hdr2pn(pn, skb->data + hdrlen);
+ 
+@@ -720,8 +722,7 @@ ieee80211_crypto_gcmp_decrypt(struct ieee80211_rx_data *rx)
+ 	struct sk_buff *skb = rx->skb;
+ 	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+ 	u8 pn[IEEE80211_GCMP_PN_LEN];
+-	int data_len;
+-	int queue;
++	int data_len, queue, mic_len = IEEE80211_GCMP_MIC_LEN;
+ 
+ 	hdrlen = ieee80211_hdrlen(hdr->frame_control);
+ 
+@@ -729,19 +730,20 @@ ieee80211_crypto_gcmp_decrypt(struct ieee80211_rx_data *rx)
+ 	    !ieee80211_is_robust_mgmt_frame(skb))
+ 		return RX_CONTINUE;
+ 
+-	data_len = skb->len - hdrlen - IEEE80211_GCMP_HDR_LEN -
+-		   IEEE80211_GCMP_MIC_LEN;
+-	if (!rx->sta || data_len < 0)
+-		return RX_DROP_UNUSABLE;
+-
+ 	if (status->flag & RX_FLAG_DECRYPTED) {
+ 		if (!pskb_may_pull(rx->skb, hdrlen + IEEE80211_GCMP_HDR_LEN))
+ 			return RX_DROP_UNUSABLE;
++		if (status->flag & RX_FLAG_MIC_STRIPPED)
++			mic_len = 0;
+ 	} else {
+ 		if (skb_linearize(rx->skb))
+ 			return RX_DROP_UNUSABLE;
  	}
- #endif
-@@ -1293,5 +1339,6 @@ static void __exit rfkill_exit(void)
- #endif
- 	misc_deregister(&rfkill_miscdev);
- 	class_unregister(&rfkill_class);
-+	rfkill_apm_led_trigger_unregister();
- }
- module_exit(rfkill_exit);
+ 
++	data_len = skb->len - hdrlen - IEEE80211_GCMP_HDR_LEN - mic_len;
++	if (!rx->sta || data_len < 0)
++		return RX_DROP_UNUSABLE;
++
+ 	if (!(status->flag & RX_FLAG_PN_VALIDATED)) {
+ 		gcmp_hdr2pn(pn, skb->data + hdrlen);
+ 
+@@ -772,7 +774,7 @@ ieee80211_crypto_gcmp_decrypt(struct ieee80211_rx_data *rx)
+ 	}
+ 
+ 	/* Remove GCMP header and MIC */
+-	if (pskb_trim(skb, skb->len - IEEE80211_GCMP_MIC_LEN))
++	if (pskb_trim(skb, skb->len - mic_len))
+ 		return RX_DROP_UNUSABLE;
+ 	memmove(skb->data + IEEE80211_GCMP_HDR_LEN, skb->data, hdrlen);
+ 	skb_pull(skb, IEEE80211_GCMP_HDR_LEN);
 -- 
 2.5.0
 
