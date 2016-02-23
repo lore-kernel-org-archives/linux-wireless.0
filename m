@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53229 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755140AbcBPVob (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 16 Feb 2016 16:44:31 -0500
-Message-ID: <1455659067.2723.13.camel@sipsolutions.net> (sfid-20160216_224435_704657_089873A6)
-Subject: Re: [PATCH] mac80211: debugfs var for the default aggregation
- timeout.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Avery Pennarun <apenwarr@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	ath9k-devel@vger.kernel.org, nbd@nbd.name
-Date: Tue, 16 Feb 2016 22:44:27 +0100
-In-Reply-To: <1455658091-28262-2-git-send-email-apenwarr@gmail.com> (sfid-20160216_222826_373181_FA784E45)
-References: <CAHqTa-22NpabO6B7nL=O26fnuGQHFOzpagWtsfQz4_BfrO6nTw@mail.gmail.com>
-	 <1455658091-28262-1-git-send-email-apenwarr@gmail.com>
-	 <1455658091-28262-2-git-send-email-apenwarr@gmail.com>
-	 (sfid-20160216_222826_373181_FA784E45)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f180.google.com ([209.85.192.180]:35604 "EHLO
+	mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932438AbcBWGi2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 01:38:28 -0500
+Received: by mail-pf0-f180.google.com with SMTP id c10so110312426pfc.2
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2016 22:38:27 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 6/7] staging: wilc1000: handle_cfg_param: fix line over 80 characters
+Date: Tue, 23 Feb 2016 15:38:02 +0900
+Message-Id: <1456209483-20345-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20160223_073830_892712_DB7C2A5D)
+In-Reply-To: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-02-16 at 16:28 -0500, Avery Pennarun wrote:
-> Since around the beginning of time, ath9k aggregates have timed out
-> after
-> 5000 TU (around 5000ms) of inactivity, but nobody seems to be quite
-> sure
-> why, and this magic number seems to have migrated around from one
-> place to
-> another.  An openbsd mailing list recently had a patch to disable the
-> timeout completely, which they say matches some commercial routers:
-> https://www.mail-archive.com/tech@openbsd.org/msg29456.html
-> 
-> Even in Linux, several non-ath9k drivers default to no timeout
-> already.  I
-> think changing it directly to zero would be safe, but to allow a more
-> structured investigation, let's make it configurable for now.
+This patch fixes line over 80 characters found by checkpatch
+WARNING: line over 80 characters
 
-I believe the original timeout came from some ancient Intel code.
-Nobody gave it any thought at the time, and it was merged and preserved
-to this day.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-The reason for Intel specifically is that every aggregation session
-(both RX and TX), even idle ones, takes up hardware resources, so
-there's a limited need to drop completely idle sessions.
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 7d36d50..fb809a4 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -735,7 +735,8 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 		    curr_tx_rate == MBPS_11 || curr_tx_rate == MBPS_6 ||
+ 		    curr_tx_rate == MBPS_9 || curr_tx_rate == MBPS_12 ||
+ 		    curr_tx_rate == MBPS_18 || curr_tx_rate == MBPS_24 ||
+-		    curr_tx_rate == MBPS_36 || curr_tx_rate == MBPS_48 || curr_tx_rate == MBPS_54) {
++		    curr_tx_rate == MBPS_36 || curr_tx_rate == MBPS_48 ||
++		    curr_tx_rate == MBPS_54) {
+ 			wid_list[i].id = WID_CURRENT_TX_RATE;
+ 			wid_list[i].val = (s8 *)&curr_tx_rate;
+ 			wid_list[i].type = WID_SHORT;
+-- 
+2.7.1
 
-As a result, I believe that changing the default for every driver other
-than iwlegacy, iwlwifi/dvm and iwlwifi/mvm would be perfectly fine.
-
-johannes
