@@ -1,50 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:29804 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753172AbcBVEQr (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:53230 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755682AbcBWVpG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2016 23:16:47 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V3 13/24] staging: wilc1000: wilc_wfi_cfgoperations.c: removes unnecessary log messages
-Date: Mon, 22 Feb 2016 13:11:58 +0900
-Message-ID: <1456114329-7036-14-git-send-email-leo.kim@atmel.com> (sfid-20160222_052949_854416_AAC11E25)
-In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
-References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+	Tue, 23 Feb 2016 16:45:06 -0500
+Date: Tue, 23 Feb 2016 22:45:02 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: =?iso-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?iso-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
+	<jprvita@endlessm.com>
+Subject: Re: [PATCHv2 09/10] rfkill: Userspace control for airplane mode
+Message-ID: <20160223214501.GA22501@amd> (sfid-20160223_224543_529221_CC54E17D)
+References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+ <1456159001-20307-10-git-send-email-jprvita@endlessm.com>
+ <20160223204525.GC16961@amd>
+ <1456260914.9910.34.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1456260914.9910.34.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+On Tue 2016-02-23 21:55:14, Johannes Berg wrote:
+> On Tue, 2016-02-23 at 21:45 +0100, Pavel Machek wrote:
+> 
+> > So... you add LED trigger to display the state of the airplane
+> > mode. Ok, why not.
+> 
+> Yes. However, consider that "the airplane mode" isn't a well-defined
+> concept; some systems may want to light up that LED even when wifi is
+> still enabled, since you're nowadays quite likely to be allowed to use
+> wifi (but not enable e.g. LTE) while in-flight.
 
-This patch removes unnecessary log messages.
-And, it adds a 'break' statement in accordance with the switch-case rule.
+Well "the airplane mode" is well defined. It means no intentional
+transmitting at radio frequencies.
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The fact that you are allowed to use WIFI on certain flights does not
+change anything.
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index bbb64ca..75a45df 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -798,7 +798,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 		break;
- 
- 	default:
--		PRINT_D(CFG80211_DBG, "Automatic Authentation type = %d\n", sme->auth_type);
-+		break;
- 	}
- 
- 	if (sme->crypto.n_akm_suites) {
+> > But now you add an way to override it? Why? If someone wants to
+> > change
+> > the led state, he can just change trigger to none, and then control
+> > the LED manually...
+> 
+> Yes, but now you've forced every application that wants to deal with
+> this to know about every single LED that might be used with this
+> trigger... that won't work for some generic userland tool that might
+> want to implement an "airplane-mode policy".
+
+I see that "airplane mode" trigger might be a tiny bit
+useful... dunno, for a LED near the airplane mode switch, when vendor
+replaced hardware toggle with a key. But policy should have nothing to
+do with that. If you argue additional "policy daemon" is needed for
+that... forget it, that's overdesigned.
+
+(Besides, finding all LEDs with given trigger is trivial
+operation. Besides... there should never be more than one).
+
+> > BTW what happens when the device contains both radios controlled by
+> > kernel (wifi, bluetooth) and radios controlled by userspace (GSM
+> > modem)?
+> 
+> You'd better have the userspace to control the LED :)
+
+Yes, so lets forget that and no additional triggers? Good ;-).
+									Pavel
 -- 
-1.9.1
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
