@@ -1,83 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f170.google.com ([209.85.192.170]:33844 "EHLO
-	mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757339AbcBEVNY (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.135]:55284 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752098AbcBWNRe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2016 16:13:24 -0500
-Received: by mail-pf0-f170.google.com with SMTP id o185so74720899pfb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 05 Feb 2016 13:13:24 -0800 (PST)
-From: Kees Cook <keescook@chromium.org>
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Kees Cook <keescook@chromium.org>, Joe Perches <joe@perches.com>,
-	Andy Shevchenko <andy.shevchenko@gmail.com>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Steve French <sfrench@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>, x86@kernel.org,
-	linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+	Tue, 23 Feb 2016 08:17:34 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Marc Dietrich <marvin24@gmx.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-cifs@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v3 3/4] lib: add "on"/"off" support to kstrtobool
-Date: Fri,  5 Feb 2016 13:12:48 -0800
-Message-Id: <1454706769-8729-4-git-send-email-keescook@chromium.org> (sfid-20160205_221434_644431_E9321F41)
-In-Reply-To: <1454706769-8729-1-git-send-email-keescook@chromium.org>
-References: <1454706769-8729-1-git-send-email-keescook@chromium.org>
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Subject: Re: [PATCHv2 3/4] ARM: tegra: use build-in device properties with rfkill_gpio
+Date: Tue, 23 Feb 2016 14:17:17 +0100
+Message-ID: <2463567.tt0f0ingYr@wuerfel> (sfid-20160223_141755_364993_849B3C03)
+In-Reply-To: <4048115.S0MS1KQXCA@fb07-iapwap2>
+References: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com> <3086257.esvHq8Yk9N@wuerfel> <4048115.S0MS1KQXCA@fb07-iapwap2>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add support for "on" and "off" when converting to boolean.
+On Tuesday 23 February 2016 11:38:52 Marc Dietrich wrote:
+> Am Dienstag, 23. Februar 2016, 11:31:40 CET schrieb Arnd Bergmann:
+> > On Tuesday 23 February 2016 11:15:31 Arnd Bergmann wrote:
+> > > On Thursday 18 February 2016 21:04:49 Johannes Berg wrote:
+> > > > On Tue, 2016-01-26 at 09:42 +0100, Johannes Berg wrote:
+> > > Just for my curiosity: what is the difference between a rfkill-gpio
+> > > device and a gpio-keys device with a KEY_RFKILL code?
+> > > 
+> > > arch/arm/boot/dts/bcm4708-netgear-r6250.dts and others seem to
+> > > do the second approach in DT so they don't need to create the
+> > > platform device.
+> > 
+> > I found the answer now (after discussing on IRC): just
+> > for reference: KEY_RFKILL is for sending the event to the kernel
+> > when a user presses the gpio butting, this rfkill-gpio turns
+> > the devices on or off when after an RFKILL event is received.
+> 
+> yes, paz00 has no hw key. rfkill is triggered via software (rfkill) only. The 
+> problem in the past was how to describe such a device in the device tree. 
+> 
+> Strictly speaking, there is no rfkill device hardware (just an interface). The 
+> only hardware that exists is in our case is connected to a hard wired usb bus 
+> (wifi dongle), which makes it complicated to attach a DT property or subdevice 
+> to it. And a standalone device-tree entry for a non hardware device was 
+> rejected in the past.
+> 
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
-v3:
-- add dropped descripion change, andy.shevchenko
----
- lib/kstrtox.c | 20 +++++++++++++++++---
- 1 file changed, 17 insertions(+), 3 deletions(-)
+Ah, so the problem of attaching DT properties to a USB device has recently
+been solved, see subject "USB: core: let USB device know device node".
 
-diff --git a/lib/kstrtox.c b/lib/kstrtox.c
-index e8ba4a013e82..d8a5cf66c316 100644
---- a/lib/kstrtox.c
-+++ b/lib/kstrtox.c
-@@ -326,9 +326,9 @@ EXPORT_SYMBOL(kstrtos8);
-  * @s: input string
-  * @res: result
-  *
-- * This routine returns 0 iff the first character is one of 'Yy1Nn0'.
-- * Otherwise it will return -EINVAL.  Value pointed to by res is
-- * updated upon finding a match.
-+ * This routine returns 0 iff the first character is one of 'Yy1Nn0', or
-+ * [oO][NnFf] for "on" and "off". Otherwise it will return -EINVAL.  Value
-+ * pointed to by res is updated upon finding a match.
-  */
- int kstrtobool(const char *s, bool *res)
- {
-@@ -346,6 +346,20 @@ int kstrtobool(const char *s, bool *res)
- 	case '0':
- 		*res = false;
- 		return 0;
-+	case 'o':
-+	case 'O':
-+		switch (s[1]) {
-+		case 'n':
-+		case 'N':
-+			*res = true;
-+			return 0;
-+		case 'f':
-+		case 'F':
-+			*res = false;
-+			return 0;
-+		default:
-+			break;
-+		}
- 	default:
- 		break;
- 	}
--- 
-2.6.3
+Would that work for you? With this, the USB driver can simply look at
+the optional DT properties of the USB function to implement its rfkill
+callbacks.
 
+	Arnd
