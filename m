@@ -1,251 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:46202 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751511AbcBHKTR (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:42301 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757041AbcBWGu2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 05:19:17 -0500
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>, <wnhuang@chromium.com>,
-	<devicetree@vger.kernel.org>, Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v3 1/3] mwifiex: register platform specific driver
-Date: Mon, 8 Feb 2016 02:15:26 -0800
-Message-ID: <1454926528-17480-1-git-send-email-akarwar@marvell.com> (sfid-20160208_111923_470242_BB77218E)
+	Tue, 23 Feb 2016 01:50:28 -0500
+From: <akolli@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Anilkumar Kolli <akolli@qti.qualcomm.com>
+Subject: [PATCH] ath10k: Reduce number of peers to support peer stats feature
+Date: Tue, 23 Feb 2016 12:19:57 +0530
+Message-ID: <1456210197-27892-1-git-send-email-akolli@qti.qualcomm.com> (sfid-20160223_075032_024112_0F1A1594)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+From: Anilkumar Kolli <akolli@qti.qualcomm.com>
 
-Platform device and driver provides easy way to
-interact with device-tree-enabled system.
+To enable per peer stats feature we are reducing the number of peers.
+Firmware has introduced tx stats feature. We have memory limitation in
+firmware to add these additional bytes.
 
-This patch registers platform driver and reorganise
-existing device tree specific code.
-Corresponding device tree binding file is
-also created.
+These are the new variables introduced in the firmware.
+========		=======================
+Variable	      	Bytes required/per rate
+========		=======================
+TX success packets 	1
+TX failed packets	1
+Retry packets		1
+Success bytes		2
+TX failed bytes		2
+Retry bytes		2
+Tx duration		4
+Rate			1
+Bw and AMPDU flags	1
+Total			16 (because of allocation in word pattern)
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Firmware sends these tx_stats in pktlog.
+If we consider 4 feedbacks at a time, Frimware need about ~1K memory for coding
+and 8192 bytes required / per rate [ 4*16*128(peers)].
+To accommodate this firmware needs to reduce 10 peers.
+
+Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
 ---
-v3: Don't update adapter->dt_node if mwifiex_plt_dev is NULL 
----
- Documentation/devicetree/bindings/mwifiex.txt      | 29 +++++++++++
- drivers/net/wireless/marvell/mwifiex/Makefile      |  1 +
- drivers/net/wireless/marvell/mwifiex/main.c        |  2 +
- drivers/net/wireless/marvell/mwifiex/main.h        | 14 +++++
- .../net/wireless/marvell/mwifiex/platform_drv.c    | 59 ++++++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/sta_cmd.c     |  6 +--
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c   |  2 +-
- 7 files changed, 109 insertions(+), 4 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/mwifiex.txt
- create mode 100644 drivers/net/wireless/marvell/mwifiex/platform_drv.c
+ drivers/net/wireless/ath/ath10k/core.c |  9 +++++++--
+ drivers/net/wireless/ath/ath10k/hw.h   |  5 +++++
+ drivers/net/wireless/ath/ath10k/wmi.c  | 10 ++++++++--
+ 3 files changed, 20 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/mwifiex.txt b/Documentation/devicetree/bindings/mwifiex.txt
-new file mode 100644
-index 0000000..39b6a74
---- /dev/null
-+++ b/Documentation/devicetree/bindings/mwifiex.txt
-@@ -0,0 +1,29 @@
-+mwifiex
-+------
-+
-+Required properties:
-+
-+  - name : must be "mwifiex"
-+  - compatible : must be "marvell,mwifiex"
-+
-+Optional properties:
-+
-+  - mwifiex,caldata* : A series of properties with marvell,caldata prefix,
-+  		      represent Calibration data downloaded to the device during
-+		      initialization. This is an array of unsigned values.
-+
-+
-+Example:
-+
-+Tx power limit calibration data is configured in below example.
-+The calibration data is an array of unsigned values, the length
-+can vary between hw versions.
-+
-+mwifiex {
-+	compatible = "marvell,mwifiex";
-+
-+	mwifiex,caldata_00_txpwrlimit_2g_cfg_set = /bits/ 8 <
-+0x01 0x00 0x06 0x00 0x08 0x02 0x89 0x01 ...>;
-+
-+};
-+
-diff --git a/drivers/net/wireless/marvell/mwifiex/Makefile b/drivers/net/wireless/marvell/mwifiex/Makefile
-index fdfd9bf..1444fd1 100644
---- a/drivers/net/wireless/marvell/mwifiex/Makefile
-+++ b/drivers/net/wireless/marvell/mwifiex/Makefile
-@@ -42,6 +42,7 @@ mwifiex-y += cfg80211.o
- mwifiex-y += ethtool.o
- mwifiex-y += 11h.o
- mwifiex-y += tdls.o
-+mwifiex-y += platform_drv.o
- mwifiex-$(CONFIG_DEBUG_FS) += debugfs.o
- obj-$(CONFIG_MWIFIEX) += mwifiex.o
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 1f4a278..59a7b00 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1479,8 +1479,13 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
+ 	case ATH10K_FW_WMI_OP_VERSION_10_1:
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2:
+ 	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
+-		ar->max_num_peers = TARGET_10X_NUM_PEERS;
+-		ar->max_num_stations = TARGET_10X_NUM_STATIONS;
++		if (test_bit(WMI_SERVICE_PEER_STATS, ar->wmi.svc_map)) {
++			ar->max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
++			ar->max_num_stations = TARGET_10X_TX_STATS_NUM_STATIONS;
++		} else {
++			ar->max_num_peers = TARGET_10X_NUM_PEERS;
++			ar->max_num_stations = TARGET_10X_NUM_STATIONS;
++		}
+ 		ar->max_num_vdevs = TARGET_10X_NUM_VDEVS;
+ 		ar->htt.max_num_pending_tx = TARGET_10X_NUM_MSDU_DESC;
+ 		ar->fw_stats_req_mask = WMI_STAT_PEER;
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index 4217bdb..c8c86a7 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -367,14 +367,19 @@ enum ath10k_hw_4addr_pad {
+ #define TARGET_10X_MAC_AGGR_DELIM		0
+ #define TARGET_10X_AST_SKID_LIMIT		128
+ #define TARGET_10X_NUM_STATIONS			128
++#define TARGET_10X_TX_STATS_NUM_STATIONS	118
+ #define TARGET_10X_NUM_PEERS			((TARGET_10X_NUM_STATIONS) + \
+ 						 (TARGET_10X_NUM_VDEVS))
++#define TARGET_10X_TX_STATS_NUM_PEERS		((TARGET_10X_TX_STATS_NUM_STATIONS) + \
++						 (TARGET_10X_NUM_VDEVS))
+ #define TARGET_10X_NUM_OFFLOAD_PEERS		0
+ #define TARGET_10X_NUM_OFFLOAD_REORDER_BUFS	0
+ #define TARGET_10X_NUM_PEER_KEYS		2
+ #define TARGET_10X_NUM_TIDS_MAX			256
+ #define TARGET_10X_NUM_TIDS			min((TARGET_10X_NUM_TIDS_MAX), \
+ 						    (TARGET_10X_NUM_PEERS) * 2)
++#define TARGET_10X_TX_STATS_NUM_TIDS		min((TARGET_10X_NUM_TIDS_MAX), \
++						    (TARGET_10X_TX_STATS_NUM_PEERS) * 2)
+ #define TARGET_10X_TX_CHAIN_MASK		(BIT(0) | BIT(1) | BIT(2))
+ #define TARGET_10X_RX_CHAIN_MASK		(BIT(0) | BIT(1) | BIT(2))
+ #define TARGET_10X_RX_TIMEOUT_LO_PRI		100
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index b109b80..e77e60c 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -5517,9 +5517,15 @@ static struct sk_buff *ath10k_wmi_10_2_op_gen_init(struct ath10k *ar)
+ 	u32 len, val, features;
  
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
-index 3cfa946..b93ae69 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.c
-+++ b/drivers/net/wireless/marvell/mwifiex/main.c
-@@ -1538,6 +1538,7 @@ EXPORT_SYMBOL_GPL(_mwifiex_dbg);
- static int
- mwifiex_init_module(void)
- {
-+	mwifiex_platform_drv_init();
- #ifdef CONFIG_DEBUG_FS
- 	mwifiex_debugfs_init();
- #endif
-@@ -1552,6 +1553,7 @@ mwifiex_init_module(void)
- static void
- mwifiex_cleanup_module(void)
- {
-+	mwifiex_platform_drv_exit();
- #ifdef CONFIG_DEBUG_FS
- 	mwifiex_debugfs_remove();
- #endif
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index aea7aee..464d79f 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -37,6 +37,16 @@
- #include <linux/idr.h>
- #include <linux/inetdevice.h>
- #include <linux/devcoredump.h>
-+#include <linux/err.h>
-+#include <linux/gpio.h>
-+#include <linux/gfp.h>
-+#include <linux/interrupt.h>
-+#include <linux/io.h>
-+#include <linux/of_gpio.h>
-+#include <linux/of_platform.h>
-+#include <linux/platform_device.h>
-+#include <linux/pm_runtime.h>
-+#include <linux/slab.h>
- 
- #include "decl.h"
- #include "ioctl.h"
-@@ -47,6 +57,7 @@
- #include "sdio.h"
- 
- extern const char driver_version[];
-+extern struct platform_device *mwifiex_plt_dev;
- 
- struct mwifiex_adapter;
- struct mwifiex_private;
-@@ -1597,6 +1608,9 @@ void mwifiex_process_multi_chan_event(struct mwifiex_private *priv,
- 				      struct sk_buff *event_skb);
- void mwifiex_multi_chan_resync(struct mwifiex_adapter *adapter);
- 
-+int mwifiex_platform_drv_init(void);
-+void mwifiex_platform_drv_exit(void);
-+
- #ifdef CONFIG_DEBUG_FS
- void mwifiex_debugfs_init(void);
- void mwifiex_debugfs_remove(void);
-diff --git a/drivers/net/wireless/marvell/mwifiex/platform_drv.c b/drivers/net/wireless/marvell/mwifiex/platform_drv.c
-new file mode 100644
-index 0000000..f64a12a
---- /dev/null
-+++ b/drivers/net/wireless/marvell/mwifiex/platform_drv.c
-@@ -0,0 +1,59 @@
-+/* Marvell wireless LAN device driver: platform specific driver
-+ *
-+ * Copyright (C) 2015, Marvell International Ltd.
-+ *
-+ * This software file (the "File") is distributed by Marvell International
-+ * Ltd. under the terms of the GNU General Public License Version 2, June 1991
-+ * (the "License").  You may use, redistribute and/or modify this File in
-+ * accordance with the terms and conditions of the License, a copy of which
-+ * is available on the worldwide web at
-+ * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
-+ *
-+ * THE FILE IS DISTRIBUTED AS-IS, WITHOUT WARRANTY OF ANY KIND, AND THE
-+ * IMPLIED WARRANTIES OF MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE
-+ * ARE EXPRESSLY DISCLAIMED.  The License provides additional details about
-+ * this warranty disclaimer.
-+ */
-+#include "main.h"
-+
-+struct platform_device *mwifiex_plt_dev;
-+
-+static int mwifiex_plt_probe(struct platform_device *pdev)
-+{
-+	mwifiex_plt_dev = pdev;
-+	return 0;
-+}
-+
-+static int mwifiex_plt_remove(struct platform_device *pdev)
-+{
-+	mwifiex_plt_dev = NULL;
-+	return 0;
-+}
-+
-+static const struct of_device_id mwifiex_dt_match[] = {
-+	{
-+		.compatible = "marvell,mwifiex",
-+	},
-+	{},
-+};
-+
-+MODULE_DEVICE_TABLE(of, mwifiex_dt_match);
-+
-+static struct platform_driver mwifiex_platform_driver = {
-+	.probe		= mwifiex_plt_probe,
-+	.remove		= mwifiex_plt_remove,
-+	.driver = {
-+		.name	= "mwifiex_plt",
-+		.of_match_table = mwifiex_dt_match,
+ 	config.num_vdevs = __cpu_to_le32(TARGET_10X_NUM_VDEVS);
+-	config.num_peers = __cpu_to_le32(TARGET_10X_NUM_PEERS);
+ 	config.num_peer_keys = __cpu_to_le32(TARGET_10X_NUM_PEER_KEYS);
+-	config.num_tids = __cpu_to_le32(TARGET_10X_NUM_TIDS);
++	if (test_bit(WMI_SERVICE_PEER_STATS, ar->wmi.svc_map)) {
++		config.num_peers = __cpu_to_le32(TARGET_10X_TX_STATS_NUM_PEERS);
++		config.num_tids = __cpu_to_le32(TARGET_10X_TX_STATS_NUM_TIDS);
++	} else {
++		config.num_peers = __cpu_to_le32(TARGET_10X_NUM_PEERS);
++		config.num_tids = __cpu_to_le32(TARGET_10X_NUM_TIDS);
 +	}
-+};
 +
-+int mwifiex_platform_drv_init(void)
-+{
-+	return platform_driver_register(&mwifiex_platform_driver);
-+}
-+
-+void mwifiex_platform_drv_exit(void)
-+{
-+	platform_driver_unregister(&mwifiex_platform_driver);
-+}
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-index 30f1526..a8b6939 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
-@@ -2154,11 +2154,11 @@ int mwifiex_sta_init_cmd(struct mwifiex_private *priv, u8 first_sta, bool init)
- 		 * The cal-data can be read from device tree and/or
- 		 * a configuration file and downloaded to firmware.
- 		 */
--		adapter->dt_node =
--				of_find_node_by_name(NULL, "marvell_cfgdata");
-+		adapter->dt_node = mwifiex_plt_dev ?
-+				mwifiex_plt_dev->dev.of_node : NULL;
- 		if (adapter->dt_node) {
- 			ret = mwifiex_dnld_dt_cfgdata(priv, adapter->dt_node,
--						      "marvell,caldata");
-+						      "mwifiex,caldata");
- 			if (ret)
- 				return -1;
- 		}
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-index 5cbee58..c598f66 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -195,7 +195,7 @@ int mwifiex_fill_new_bss_desc(struct mwifiex_private *priv,
- void mwifiex_dnld_txpwr_table(struct mwifiex_private *priv)
- {
- 	if (priv->adapter->dt_node) {
--		char txpwr[] = {"marvell,00_txpwrlimit"};
-+		char txpwr[] = {"mwifiex,00_txpwrlimit"};
- 
- 		memcpy(&txpwr[8], priv->adapter->country_code, 2);
- 		mwifiex_dnld_dt_cfgdata(priv, priv->adapter->dt_node, txpwr);
+ 	config.ast_skid_limit = __cpu_to_le32(TARGET_10X_AST_SKID_LIMIT);
+ 	config.tx_chain_mask = __cpu_to_le32(TARGET_10X_TX_CHAIN_MASK);
+ 	config.rx_chain_mask = __cpu_to_le32(TARGET_10X_RX_CHAIN_MASK);
 -- 
-1.8.1.4
+1.9.1
 
