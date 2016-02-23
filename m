@@ -1,54 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:35072 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755960AbcBYAJE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2016 19:09:04 -0500
-Received: by mail-wm0-f54.google.com with SMTP id c200so5766340wme.0
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 16:09:04 -0800 (PST)
-From: Andreas Fenkart <afenkart@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Andreas Fenkart <afenkart@gmail.com>
-Subject: [PATCH 3/7] mwifiex: scan: simplify ternary operators using gnu extension
-Date: Thu, 25 Feb 2016 01:08:48 +0100
-Message-Id: <1456358932-23114-4-git-send-email-afenkart@gmail.com> (sfid-20160225_010943_452744_1FC39006)
-In-Reply-To: <1456358932-23114-1-git-send-email-afenkart@gmail.com>
-References: <1456358932-23114-1-git-send-email-afenkart@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:59200 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751457AbcBWKOF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 05:14:05 -0500
+Message-ID: <1456222441.2041.10.camel@sipsolutions.net> (sfid-20160223_111411_220821_6CCDE283)
+Subject: Re: [PATCH] mac80211: debugfs var for the default aggregation
+ timeout.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Avery Pennarun <apenwarr@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@vger.kernel.org, nbd@nbd.name
+Date: Tue, 23 Feb 2016 11:14:01 +0100
+In-Reply-To: <1455658091-28262-2-git-send-email-apenwarr@gmail.com> (sfid-20160216_222826_373181_FA784E45)
+References: <CAHqTa-22NpabO6B7nL=O26fnuGQHFOzpagWtsfQz4_BfrO6nTw@mail.gmail.com>
+	 <1455658091-28262-1-git-send-email-apenwarr@gmail.com>
+	 <1455658091-28262-2-git-send-email-apenwarr@gmail.com>
+	 (sfid-20160216_222826_373181_FA784E45)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"x ? x : y" can be simplified as "x ? : y"
-https://gcc.gnu.org/onlinedocs/gcc/Conditionals.html#Conditionals
+On Tue, 2016-02-16 at 16:28 -0500, Avery Pennarun wrote:
+> Since around the beginning of time, ath9k aggregates have timed out
+> after
+> 5000 TU (around 5000ms) of inactivity, but nobody seems to be quite
+> sure
+> why, and this magic number seems to have migrated around from one
+> place to
+> another.  An openbsd mailing list recently had a patch to disable the
+> timeout completely, which they say matches some commercial routers:
+> https://www.mail-archive.com/tech@openbsd.org/msg29456.html
+> 
+> Even in Linux, several non-ath9k drivers default to no timeout
+> already.  I
+> think changing it directly to zero would be safe, but to allow a more
+> structured investigation, let's make it configurable for now.
+> 
+Since we just made it zero, perhaps we don't need this?
 
-Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
----
- drivers/net/wireless/marvell/mwifiex/scan.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+Although perhaps we still want it to be able to debug it?
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index 276382e..f612c1b 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -845,14 +845,11 @@ mwifiex_config_scan(struct mwifiex_private *priv,
- 		/* Set the BSS type scan filter, use Adapter setting if
- 		   unset */
- 		scan_cfg_out->bss_mode =
--			(user_scan_in->bss_mode ? (u8) user_scan_in->
--			 bss_mode : (u8) adapter->scan_mode);
-+			(u8)(user_scan_in->bss_mode ?: adapter->scan_mode);
- 
- 		/* Set the number of probes to send, use Adapter setting
- 		   if unset */
--		num_probes =
--			(user_scan_in->num_probes ? user_scan_in->
--			 num_probes : adapter->scan_probes);
-+		num_probes = user_scan_in->num_probes ?: adapter->scan_probes;
- 
- 		/*
- 		 * Set the BSSID filter to the incoming configuration,
--- 
-2.7.0
+Anyway - you shouldn't create a debugfs file and play with the extern
+stuff etc., let minstrel create the debugfs file in minstrel_ht_alloc()
 
+johannes
