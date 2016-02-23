@@ -1,38 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out05.msg.oleane.net ([62.161.7.3]:42580 "EHLO
-	smtp-out05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753833AbcBESLr (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.187]:61756 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751791AbcBWKbw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2016 13:11:47 -0500
-From: Cedric DEBARGE <cedric.debarge@acksys.fr>
-To: johannes@sipsolutions.net
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	linux-api@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, Cedric DEBARGE <cedric.debarge@acksys.fr>
-Subject: [RFC 0/2] mac80211: add support for ht_caps mcs rxmask override
-Date: Fri,  5 Feb 2016 16:41:58 +0100
-Message-Id: <cover.1454685673.git.cedric.debarge@acksys.fr> (sfid-20160205_191213_148178_7036837A)
+	Tue, 23 Feb 2016 05:31:52 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Marc Dietrich <marvin24@gmx.de>
+Subject: Re: [PATCHv2 3/4] ARM: tegra: use build-in device properties with rfkill_gpio
+Date: Tue, 23 Feb 2016 11:31:40 +0100
+Message-ID: <3086257.esvHq8Yk9N@wuerfel> (sfid-20160223_113644_262886_0C3C6790)
+In-Reply-To: <5438459.Mb6Ga2Xhyq@wuerfel>
+References: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com> <1455825889.2084.16.camel@sipsolutions.net> <5438459.Mb6Ga2Xhyq@wuerfel>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patchset allows the ht_caps mcs rxmask to be defined on the fly.
-It applies the given rxmask to all available bands.
+On Tuesday 23 February 2016 11:15:31 Arnd Bergmann wrote:
+> On Thursday 18 February 2016 21:04:49 Johannes Berg wrote:
+> > On Tue, 2016-01-26 at 09:42 +0100, Johannes Berg wrote:
 
-This is actually limited to radio cards without internal rc.
+> Just for my curiosity: what is the difference between a rfkill-gpio
+> device and a gpio-keys device with a KEY_RFKILL code?
+> 
+> arch/arm/boot/dts/bcm4708-netgear-r6250.dts and others seem to
+> do the second approach in DT so they don't need to create the
+> platform device.
 
-Cedric DEBARGE (2):
-  cfg80211: add support for ht_caps mcs rxmask override
-  nl80211: add nl attribute to set ht_caps mcs rxmask override
+I found the answer now (after discussing on IRC): just
+for reference: KEY_RFKILL is for sending the event to the kernel
+when a user presses the gpio butting, this rfkill-gpio turns
+the devices on or off when after an RFKILL event is received.
 
- include/net/cfg80211.h       |  7 ++++++
- include/uapi/linux/nl80211.h |  5 +++++
- net/mac80211/cfg.c           | 48 +++++++++++++++++++++++++++++++++++++++
- net/mac80211/main.c          | 53 +++++++++++++++++++++++++++++++++++++-------
- net/wireless/nl80211.c       | 18 +++++++++++++++
- net/wireless/rdev-ops.h      | 11 +++++++++
- net/wireless/trace.h         | 15 +++++++++++++
- 7 files changed, 149 insertions(+), 8 deletions(-)
-
--- 
-1.9.1
-
+	Arnd
