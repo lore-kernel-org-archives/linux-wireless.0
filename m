@@ -1,40 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:32784 "EHLO sipsolutions.net"
+Received: from mout.gmx.net ([212.227.17.21]:54390 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932451AbcBBPJF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 10:09:05 -0500
-Message-ID: <1454425741.2926.7.camel@sipsolutions.net> (sfid-20160202_160909_821108_CDA961D3)
-Subject: Re: [PATCH v2] cfg80211: basic support for PBSS network type
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lior David <liord@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org,
-	Jouni Malinen <jouni@qca.qualcomm.com>,
-	Dedy Lansky <dlansky@codeaurora.org>,
-	Maya Erez <merez@codeaurora.org>,
-	Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Date: Tue, 02 Feb 2016 16:09:01 +0100
-In-Reply-To: <56A9D831.7070909@codeaurora.org>
-References: <56961335.4040801@codeaurora.org>
-	 <1453807346.2759.29.camel@sipsolutions.net>
-	 <56A767E4.7090906@codeaurora.org>
-	 <1453812869.2759.38.camel@sipsolutions.net>
-	 <56A9D831.7070909@codeaurora.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752204AbcBWNnG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 08:43:06 -0500
+From: Marc Dietrich <marvin24@gmx.de>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Subject: Re: [PATCHv2 3/4] ARM: tegra: use build-in device properties with rfkill_gpio
+Date: Tue, 23 Feb 2016 14:42:55 +0100
+Message-ID: <2927215.6IlWnjRTgT@fb07-iapwap2> (sfid-20160223_144331_594324_EF2F93F1)
+In-Reply-To: <2463567.tt0f0ingYr@wuerfel>
+References: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com> <4048115.S0MS1KQXCA@fb07-iapwap2> <2463567.tt0f0ingYr@wuerfel>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart80904992.30kfgfXpzZ"; micalg="pgp-sha256"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-01-28 at 10:58 +0200, Lior David wrote:
-> PBSS (Personal Basic Service Set) is a new BSS type for DMG
-> networks. It is similar to infrastructure BSS, having an AP-like
-> entity called PCP (PBSS Control Point), but it has few differences.
-> PBSS support is mandatory for 11ad devices.
-> 
-> Add support for PBSS by introducing a new PBSS flag attribute.
-> The PBSS flag is used in the START_AP command to request starting
-> a PCP instead of an AP, and in the CONNECT command to request
-> connecting to a PCP instead of an AP.
-> 
-Applied.
+--nextPart80904992.30kfgfXpzZ
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-johannes
+Am Dienstag, 23. Februar 2016, 14:17:17 CET schrieb Arnd Bergmann:
+> On Tuesday 23 February 2016 11:38:52 Marc Dietrich wrote:
+> > Am Dienstag, 23. Februar 2016, 11:31:40 CET schrieb Arnd Bergmann:
+> > > On Tuesday 23 February 2016 11:15:31 Arnd Bergmann wrote:
+> > > > On Thursday 18 February 2016 21:04:49 Johannes Berg wrote:
+> > > > > On Tue, 2016-01-26 at 09:42 +0100, Johannes Berg wrote:
+> > > > Just for my curiosity: what is the difference between a rfkill-gpio
+> > > > device and a gpio-keys device with a KEY_RFKILL code?
+> > > > 
+> > > > arch/arm/boot/dts/bcm4708-netgear-r6250.dts and others seem to
+> > > > do the second approach in DT so they don't need to create the
+> > > > platform device.
+> > > 
+> > > I found the answer now (after discussing on IRC): just
+> > > for reference: KEY_RFKILL is for sending the event to the kernel
+> > > when a user presses the gpio butting, this rfkill-gpio turns
+> > > the devices on or off when after an RFKILL event is received.
+> > 
+> > yes, paz00 has no hw key. rfkill is triggered via software (rfkill) only.
+> > The problem in the past was how to describe such a device in the device
+> > tree.
+> > 
+> > Strictly speaking, there is no rfkill device hardware (just an interface).
+> > The only hardware that exists is in our case is connected to a hard wired
+> > usb bus (wifi dongle), which makes it complicated to attach a DT property
+> > or subdevice to it. And a standalone device-tree entry for a non hardware
+> > device was rejected in the past.
+> 
+> Ah, so the problem of attaching DT properties to a USB device has recently
+> been solved, see subject "USB: core: let USB device know device node".
+> 
+> Would that work for you? With this, the USB driver can simply look at
+> the optional DT properties of the USB function to implement its rfkill
+> callbacks.
+
+oh, that looks indeed interesting. The question is now if rfkill is a property 
+of a device or a subdevice itself. The latter one would only require addition 
+of device-tree instantiation of rfkill, while with the former one, the (or 
+all) usb driver(s) need to be modified to accept device tree properties, 
+especially gpios. The driver would then be responsible to add an rfkill 
+"device".
+
+IMHO (and unfortunately), it's just a property (a way to specify the relevant 
+gpios), making the solution again hard to archive.
+
+Marc
+
+--nextPart80904992.30kfgfXpzZ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQEcBAABCAAGBQJWzGHfAAoJEKyeR39HFBtoe1UH/2Fdlh0TLhqjzlJZPxxCRR7l
+wKRa0DnSmn5XD8m2pker+HDU20xIE5mEP8cli1EAewo+GL34jwXvfjxqhxAcoOFT
+oWUFpMsF5WbpmeWmdbr2wG+unPigZu3nPV14QHd4sqzLdmj6WSj0IL3l3ih6GYKy
+Nus0LxYxLjy/RAW0MIu0yeD7s6Bczb6V6n/GwZD6niRbjlvsCzVCUXxpL2H58l7o
+up1Oe/Ve/+DmqUyEHoAN3vcu82f/5dTsfO8eogAEsiw+ufS4np89Jjq9m5GhDwIo
+QudHyg6NlSLN4ZO8FOJKdESHINDP1MzJ+zSNRNrhDyeNp1jDtY9DDbZZztlwNzE=
+=tBpW
+-----END PGP SIGNATURE-----
+
+--nextPart80904992.30kfgfXpzZ--
+
