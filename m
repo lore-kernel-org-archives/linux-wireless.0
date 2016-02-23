@@ -1,73 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20377 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753020AbcBVKSd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 05:18:33 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V4 10/24] staging: wilc1000: removes unused HOSTAPD_DBG tag
-Date: Mon, 22 Feb 2016 19:14:17 +0900
-Message-ID: <1456136071-10502-11-git-send-email-leo.kim@atmel.com> (sfid-20160222_111915_270238_18DAC855)
-In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
-References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+Received: from mga02.intel.com ([134.134.136.20]:15530 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750918AbcBWJ40 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 04:56:26 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: intel7260 - iface up sometimes failed
+Date: Tue, 23 Feb 2016 09:54:54 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA24BCF@hasmsx107.ger.corp.intel.com> (sfid-20160223_105631_376148_0841DC45)
+References: <CALhHN=r5Wthk5ru6Eb_8AD3xYsUsk4a02kP7MEK4jc5cmKUSdw@mail.gmail.com> 
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
-
-This patch removes unused HOSTAPD_DBG tag.
-
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan_common.h | 4 +---
- drivers/staging/wilc1000/wilc_debugfs.c      | 5 ++---
- 2 files changed, 3 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index 0d9a71f..1f7d806 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -2,13 +2,11 @@
- #define LINUX_WLAN_COMMON_H
- 
- enum debug_region {
--	Hostapd_debug = 0,
--	CFG80211_debug,
-+	CFG80211_debug = 0,
- 	Init_debug,
- 	COMP = 0xFFFFFFFF,
- };
- 
--#define HOSTAPD_DBG             (1 << Hostapd_debug)
- #define CFG80211_DBG            (1 << CFG80211_debug)
- #define INIT_DBG                (1 << Init_debug)
- 
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index a27b077..fafe7cc 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -24,10 +24,9 @@ static struct dentry *wilc_dir;
-  * --------------------------------------------------------------------------------
-  */
- 
--#define DBG_REGION_ALL	(HOSTAPD_DBG | CFG80211_DBG | INIT_DBG)
-+#define DBG_REGION_ALL	(CFG80211_DBG | INIT_DBG)
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
--atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | CFG80211_DBG |
--				   HOSTAPD_DBG);
-+atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | CFG80211_DBG);
- EXPORT_SYMBOL_GPL(WILC_REGION);
- atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
- EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
--- 
-1.9.1
-
+PiANCj4gSGkgSmFudXN6LA0KPiANCj4gPg0KPiA+IEhlbGxvLA0KPiA+DQo+ID4gSSBoYXZlIGlu
+dGVsNzI2MCBjb25uZWN0ZWQgdmlhIGV4dGVybmFsIFBDSWUgKyBERUxMIGxhdGl0dWRlIGU2NDMw
+Lg0KPiA+DQo+ID4gWyA1MTk5LjgwNTQxN10gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IGVuYWJsaW5n
+IGRldmljZSAoMDEwMCAtPiAwMTAyKSBbDQo+ID4gNTE5OS44MDkyMjJdIGl3bHdpZmkgMDAwMDow
+NDowMC4wOiBsb2FkZWQgZmlybXdhcmUgdmVyc2lvbg0KPiA+IDE3LjI3NTc3Mi4wIG9wX21vZGUg
+aXdsbXZtDQo+ID4gWyA1MTk5LjgxOTU0OF0gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IERldGVjdGVk
+IEludGVsKFIpIER1YWwgQmFuZA0KPiA+IFdpcmVsZXNzIEFDIDcyNjAsIFJFVj0weDE0NCBbIDUx
+OTkuODE5NjU4XSBpd2x3aWZpIDAwMDA6MDQ6MDAuMDogTDENCj4gPiBFbmFibGVkIC0gTFRSIERp
+c2FibGVkIFsgNTE5OS44MjAwMThdIGl3bHdpZmkgMDAwMDowNDowMC4wOiBMMSBFbmFibGVkDQo+
+ID4gLSBMVFIgRGlzYWJsZWQgWyA1MjAwLjAxMjc4Nl0gaWVlZTgwMjExIHBoeTA6IFNlbGVjdGVk
+IHJhdGUgY29udHJvbA0KPiBhbGdvcml0aG0gJ2l3bC1tdm0tcnMnDQo+ID4gWyA1MjAwLjAyMDE0
+OF0gaXdsd2lmaSAwMDAwOjA0OjAwLjAgd2xhbjM6IHJlbmFtZWQgZnJvbSB3bGFuMA0KPiA+DQo+
+ID4gWyA1MjgyLjc0Mzk4N10gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IEwxIEVuYWJsZWQgLSBMVFIg
+RGlzYWJsZWQgWw0KPiA+IDUyODIuNzgxODEyXSAtLSAtLS0tLS0tLS0tWyBjdXQgaGVyZSBdLS0t
+LS0tLS0tLS0tIFsgNTI4Mi43ODE4MjNdDQo+ID4gV0FSTklORzogQ1BVOiAzIFBJRDogMzc2MCBh
+dA0KPiA+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvcGNpZS90cmFucy5jOjE1
+NjENCj4gPiBpd2xfdHJhbnNfcGNpZV9ncmFiX25pY19hY2Nlc3MrMHhlNi8weGYwIFtpd2x3aWZp
+XSgpIFsgNTI4Mi43ODE4MjRdDQo+ID4gVGltZW91dCB3YWl0aW5nIGZvciBoYXJkd2FyZSBhY2Nl
+c3MgKENTUl9HUF9DTlRSTCAweGZmZmZmZmZmKSBbDQo+IA0KPiBXZWxsLi4uIHlvdSBhcmUgbm90
+IHRoZSBvbmx5IG9uZSB0byBjb21wbGFpbiBhYm91dCB0aGlzIGlzc3VlIGFuZA0KPiB1bmZvcnR1
+bmF0ZWx5LCB0aGVyZSBpc24ndCBtdWNoIEkgY2FuIGRvLiBXaGF0IGl0IG1lYW5zIGlzIHRoYXQg
+dGhlIGRldmljZSBpcw0KPiByZW1vdmVkIGZyb20gdGhlIGJ1cyBieSB0aGUgUENJZSBjb250cm9s
+bGVyLiBUaGlzIGhhcHBlbnMgZHVlIHRvIGFuDQo+IGVsZWN0cmljYWwgcHJvYmxlbSB3aGljaCBJ
+IGNhbid0IHJlYWxseSBoZWxwIHdpdGguIFRoaXMgY2FuIGJlIGNhdXNlZCBieQ0KPiBkaWZmZXJl
+bnQgdHlwZXMgb2Ygdm9vZG9vcywgbGlrZSBpbnRlcmZlcmVuY2Ugb24gdGhlIFBDSWUgbGluZXMg
+YW5kIG90aGVyDQo+IHRoaW5ncyB0aGF0IGNhbid0IHJlYWxseSBiZSByb290IGNhdXNlZCB3aXRo
+b3V0IHRha2luZyB0aGUgc3lzdGVtIGludG8gdGhlIGxhYg0KPiBhbmQgYWRkaW5nIFBDSWUgYW5h
+bHl6ZXIgcHJvYmVzLg0KPiBJIGFtIGFmcmFpZCBJIGNhbid0IHJlYWxseSBoZWxwLg0KPiBBcyBh
+IHdvcmthcm91bmQsIHlvdSBjYW4gdW5iaW5kIHRoZSBkZXZpY2UgZnJvbSB0aGUgYnVzIGFuZCBy
+ZS0NCj4gZW51bWVyYXRlLiBUaGlzIHdpbGwgYnJpbmcgdGhlIGRldmljZSBiYWNrLi4uIHVudGls
+IHRoZSBuZXh0IGZhaWx1cmUuDQoNCk9uZSB0aGluZyB0aGF0IGNvbWUgdGhyb3VnaCBteSBtaW5k
+IGlzIHRoYXQgeW91IGNhbiB0cnkgdG8gZGlzYWJsZSBwb3dlciBzYXZlIChwb3dlcl9zaGVtZT0x
+IGFzIGEgbW9kdWxlIHBhcmFtZXRlciB0byBpd2xtdm0pIHdoaWNoIHdpbGwgcHJldmVudCBMWCBw
+b3dlciBzdGF0ZSBlbnRyYW5jZSBhbmQgbWlnaHQgcmVkdWNlIHRoZSBub2lzZSBvbiB0aGUgUENJ
+ZSBsaW5lcy4gV29ydGggdHJ5aW5nLg0K
