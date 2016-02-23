@@ -1,76 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40785 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424646AbcBRHdx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 02:33:53 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH 23/24] staging: wilc1000: moves to define values
-Date: Thu, 18 Feb 2016 16:27:34 +0900
-Message-ID: <1455780455-21365-23-git-send-email-leo.kim@atmel.com> (sfid-20160218_083357_089310_7116A328)
-In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:59221 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750832AbcBWKSt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 05:18:49 -0500
+Message-ID: <1456222727.2041.13.camel@sipsolutions.net> (sfid-20160223_111853_891162_B64B71CE)
+Subject: Re: [PATCH v2 1/2] cfg80211: add radiotap VHT info to
+ rtap_namespace_sizes
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 23 Feb 2016 11:18:47 +0100
+In-Reply-To: <1455878585-5525-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20160219_114309_656111_55FCC207)
+References: <1455878585-5525-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	 <1455878585-5525-2-git-send-email-lorenzo.bianconi83@gmail.com>
+	 (sfid-20160219_114309_656111_55FCC207)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+On Fri, 2016-02-19 at 11:43 +0100, Lorenzo Bianconi wrote:
+> Add IEEE80211_RADIOTAP_VHT entry to rtap_namespace_sizes array in
+> order to
+> define alignment and size of VHT info in tx radiotap
+> 
+Applied this though.
 
-This patch moves DEBUG, INFO, WRN and ERR values to wilc_debugfs.c file
-because this is only used to wilc_debugfs.c file.
-And, removes unnecessary WILC_DEBUGFS and else-case variables.
-
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan_common.h | 11 -----------
- drivers/staging/wilc1000/wilc_debugfs.c      |  4 ++++
- 2 files changed, 4 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index 2e2109c..51601aa 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -1,17 +1,6 @@
- #ifndef LINUX_WLAN_COMMON_H
- #define LINUX_WLAN_COMMON_H
- 
--#if defined(WILC_DEBUGFS)
--#define DEBUG           BIT(0)
--#define INFO            BIT(1)
--#define WRN             BIT(2)
--#define ERR             BIT(3)
--#else
--#define DEBUG       1
--#define INFO        0
--#define WRN         0
--#endif
--
- #define LINUX_RX_SIZE	(96 * 1024)
- #define LINUX_TX_SIZE	(64 * 1024)
- 
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index 215e2f0..fcbc95d 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -23,6 +23,10 @@ static struct dentry *wilc_dir;
- /*
-  * --------------------------------------------------------------------------------
-  */
-+#define DEBUG           BIT(0)
-+#define INFO            BIT(1)
-+#define WRN             BIT(2)
-+#define ERR             BIT(3)
- 
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
- atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
--- 
-1.9.1
-
+johannes
