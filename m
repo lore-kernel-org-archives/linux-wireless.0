@@ -1,45 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f65.google.com ([209.85.192.65]:32870 "EHLO
-	mail-qg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754668AbcBHPlm (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.135]:56496 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751110AbcBWKPm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 10:41:42 -0500
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+	Tue, 23 Feb 2016 05:15:42 -0500
+From: Arnd Bergmann <arnd@arndb.de>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
+Cc: Thierry Reding <thierry.reding@gmail.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux@endlessm.com,
-	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
-Subject: [PATCH 2/9] rfkill: Remove extra blank line
-Date: Mon,  8 Feb 2016 10:41:29 -0500
-Message-Id: <1454946096-9752-3-git-send-email-jprvita@endlessm.com> (sfid-20160208_164238_021022_AD892C33)
-In-Reply-To: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
-References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>,
+	Marc Dietrich <marvin24@gmx.de>
+Subject: Re: [PATCHv2 3/4] ARM: tegra: use build-in device properties with rfkill_gpio
+Date: Tue, 23 Feb 2016 11:15:31 +0100
+Message-ID: <5438459.Mb6Ga2Xhyq@wuerfel> (sfid-20160223_111610_131087_24A2182C)
+In-Reply-To: <1455825889.2084.16.camel@sipsolutions.net>
+References: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com> <1453797724.2759.4.camel@sipsolutions.net> <1455825889.2084.16.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
----
- net/rfkill/core.c | 1 -
- 1 file changed, 1 deletion(-)
+On Thursday 18 February 2016 21:04:49 Johannes Berg wrote:
+> On Tue, 2016-01-26 at 09:42 +0100, Johannes Berg wrote:
+> > On Mon, 2016-01-25 at 13:18 +0100, Thierry Reding wrote:
+> > >  
+> > > Johannes, I assume that you'll want to take this through your tree
+> > > because of the dependency? In that case:
+> > > 
+> > > Acked-by: Thierry Reding <treding@nvidia.com>
+> > 
+> > I can, but I don't really care - perhaps you'd rather take the entire
+> > series through your tree to get it into one place for Marc?
+> > 
+> > In which case, you have my
+> > 
+> > Acked-by: Johannes Berg <johannes@sipsolutions.net>
+> > 
+> > for the other 3 patches.
+> > 
+> > Let me know which you prefer.
+> > 
+> Did these patches get applied anywhere? Otherwise I'm willing to pick
+> them up.
+> 
 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index ffbc375..56d79cb 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -455,7 +455,6 @@ bool rfkill_get_global_sw_state(const enum rfkill_type type)
- }
- #endif
- 
--
- bool rfkill_set_hw_state(struct rfkill *rfkill, bool blocked)
- {
- 	unsigned long flags;
--- 
-2.5.0
+Fine with me too:
 
+Acked-by: Arnd Bergmann <arnd@arndb.de>
+
+Just for my curiosity: what is the difference between a rfkill-gpio
+device and a gpio-keys device with a KEY_RFKILL code?
+
+arch/arm/boot/dts/bcm4708-netgear-r6250.dts and others seem to
+do the second approach in DT so they don't need to create the
+platform device.
+
+	Arnd
