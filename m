@@ -1,59 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:48107 "EHLO mga01.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:59285 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752218AbcBZISj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 03:18:39 -0500
-Date: Fri, 26 Feb 2016 16:18:36 +0800
-From: Fengguang Wu <lkp@intel.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>, kbuild-all@01.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	David Spinadel <david.spinadel@intel.com>,
-	"Ye, Xiaolong" <xiaolong.ye@intel.com>
-Subject: Re: [PATCH] mac80211_hwsim: Set global RRM capability
-Message-ID: <20160226081836.GA6470@wfg-t540p.sh.intel.com> (sfid-20160226_091843_333772_198C7033)
-References: <201602251751.QT2WO50c%fengguang.wu@intel.com>
- <87y4a8lz44.fsf@purkki.adurom.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87y4a8lz44.fsf@purkki.adurom.net>
+	id S1751293AbcBWKmx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 05:42:53 -0500
+Message-ID: <1456224168.2041.21.camel@sipsolutions.net> (sfid-20160223_114258_102734_00992015)
+Subject: Re: [PATCH v2 2/2] mac80211: parse VHT info in injected frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Tue, 23 Feb 2016 11:42:48 +0100
+In-Reply-To: <CAA2SeNLB+oL00Mx1BCccA4eOx6nghLUofruPSepW70VWRS8EQQ@mail.gmail.com> (sfid-20160223_112908_349476_7FF78E48)
+References: <1455878585-5525-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	 <1455878585-5525-3-git-send-email-lorenzo.bianconi83@gmail.com>
+	 <1456222250.2041.8.camel@sipsolutions.net>
+	 <CAA2SeNLB+oL00Mx1BCccA4eOx6nghLUofruPSepW70VWRS8EQQ@mail.gmail.com>
+	 (sfid-20160223_112908_349476_7FF78E48)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 26, 2016 at 09:17:15AM +0200, Kalle Valo wrote:
-> kbuild test robot <lkp@intel.com> writes:
-> 
-> > Hi David,
-> >
-> > [auto build test ERROR on wireless-drivers-next/master]
-> > [also build test ERROR on v4.5-rc5 next-20160224]
-> > [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
-> >
-> > url:    https://github.com/0day-ci/linux/commits/Emmanuel-Grumbach/mac80211_hwsim-Set-global-RRM-capability/20160225-172733
-> > base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
-> > config: sparc64-allyesconfig (attached as .config)
-> > reproduce:
-> >         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
-> >         chmod +x ~/bin/make.cross
-> >         # save the attached .config to linux build tree
-> >         make.cross ARCH=sparc64 
-> >
-> > All errors (new ones prefixed by >>):
-> >
-> >    drivers/net/wireless/mac80211_hwsim.c: In function 'mac80211_hwsim_new_radio':
-> >>> drivers/net/wireless/mac80211_hwsim.c:2462:35: error: 'NL80211_EXT_FEATURE_RRM' undeclared (first use in this function)
-> >      wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_RRM);
-> >                                       ^
-> >    drivers/net/wireless/mac80211_hwsim.c:2462:35: note: each undeclared identifier is reported only once for each function it appears in
-> 
-> I think this build failure is because mac80211_hwsim is an exception to
-> other wireless drivers and is applied via mac80211-next. Should we add
-> an entry for mac80211_hwsim to MAINTAINERS with the correct git tree? I
-> think kbuild test robot follows MAINTAINERS file nowdays (or at least I
-> understood that's the plan).
+On Tue, 2016-02-23 at 11:29 +0100, Lorenzo Bianconi wrote:
+> I used the previous commit scheme (mac80211: Parse legacy and HT rate
+> in injected frames).
 
-That's right. The robot parses MAINTAINERS when judging which tree
-to apply LKML patches to.
+Oh, I merged something similar there? My mistake.
+
+> I will rewrite the documentation. Should I send v3 or a different
+> patch?
+> 
+
+Please resend, I didn't apply this. Perhaps you can (separately?) fix
+the HT documentation as well then?
 
 Thanks,
-Fengguang
+johannes
