@@ -1,321 +1,251 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f170.google.com ([209.85.213.170]:34698 "EHLO
-	mail-ig0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752981AbcBEALi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 19:11:38 -0500
-Received: by mail-ig0-f170.google.com with SMTP id ik10so28591609igb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 16:11:38 -0800 (PST)
+Received: from s3.sipsolutions.net ([5.9.151.49]:33175 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752429AbcBWOqD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 09:46:03 -0500
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211-next 2016-02-23
+Date: Tue, 23 Feb 2016 15:45:55 +0100
+Message-Id: <1456238756-9818-1-git-send-email-johannes@sipsolutions.net> (sfid-20160223_154614_784292_F20AE242)
 MIME-Version: 1.0
-In-Reply-To: <CAHp75Vc9VXOm+TQ_Q67j45kE3dv249pLVAwAhm=NK-Ds02Jfkg@mail.gmail.com>
-References: <1454619643-14444-1-git-send-email-keescook@chromium.org>
-	<1454619643-14444-5-git-send-email-keescook@chromium.org>
-	<CAHp75Vc9VXOm+TQ_Q67j45kE3dv249pLVAwAhm=NK-Ds02Jfkg@mail.gmail.com>
-Date: Thu, 4 Feb 2016 16:11:35 -0800
-Message-ID: <CAGXu5jL-oGrp3x-EShX8i2D9cKKL1KSbVF_DtnDicRD2Xm+kYg@mail.gmail.com> (sfid-20160205_011203_079859_3900290E)
-Subject: Re: [PATCH v2 4/4] param: convert some "on"/"off" users to strtobool
-From: Kees Cook <keescook@chromium.org>
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	"x86@kernel.org" <x86@kernel.org>,
-	"linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
-	Joe Perches <joe@perches.com>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Steve French <sfrench@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, linux-cifs@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 4, 2016 at 3:04 PM, Andy Shevchenko
-<andy.shevchenko@gmail.com> wrote:
-> On Thu, Feb 4, 2016 at 11:00 PM, Kees Cook <keescook@chromium.org> wrote:
->> This changes several users of manual "on"/"off" parsing to use strtobool.
->> (Which means they will now parse y/n/1/0 meaningfully too.)
->>
->
-> I like this change, but can you carefully check the acceptance of the
-> returned value?
-> Briefly I saw 1 or 0 as okay in different places.
+Hi Dave,
 
-Maybe I missed something, but I think this is actually a bug fix. The
-two cases are early_param and __setup:
+Here's a (first, even? I didn't have much until before the conference...)
+pull request for net-next.
 
-For early_param, the functions are called when walking the command
-line in do_early_param via parse_args in parse_early_options. Any
-non-zero return values produce a warning (in do_early_param not
-parse_args). So this is a bug fix, since the function I touched would
-(almost) always return 0, even with bad values (i.e. fixes unreported
-bad arguments):
+There's nothing out of the ordinary, I think, except that I have an ARM
+Tegra patch in here. It's part of an rfkill series and needed to be merged
+with those patches, it also has the relevant ACKs from Thierry and Arnd.
 
-early_param early_parse_stp always 0
-early_param early_parse_topology always 0
-early_param parse_gart_mem always 0 unless !p (then -EINVAL)
+Let me know if there's any problem.
 
-For __setup, these are handled by obsolete_checksetup via
-unknown_bootoption via parse_args in start_kernel, as a way to merge
-__setup calls that should really be in param (i.e. non-early __setup).
-Return values are bubbled up into parse_args and hit:
-
-                default:
-                        pr_err("%s: `%s' invalid for parameter `%s'\n",
-                               doing, val ?: "", param);
-                        break;
-
-So this is also a bug fix, since these __setup functions returned inverted
-values or always failed:
-
-__setup rtasmsgs_setup always 1
-__setup setup_cede_offline 1 on success, otherwise 0
-__setup setup_hrtimer_hres 1 on success, otherwise 0
-__setup setup_tick_nohz 1 on success, otherwise 0
-
-So if you specified any of these, they would trigger a bogus "invalid
-parameter" report.
-
-I will double-check...
-
--Kees
-
->
->
->> Signed-off-by: Kees Cook <keescook@chromium.org>
->> Acked-by: Heiko Carstens <heiko.carstens@de.ibm.com>
->> Acked-by: Michael Ellerman <mpe@ellerman.id.au>
->> Cc: x86@kernel.org
->> Cc: linuxppc-dev@lists.ozlabs.org
->> Cc: linux-s390@vger.kernel.org
->> ---
->>  arch/powerpc/kernel/rtasd.c                  |  9 ++-------
->>  arch/powerpc/platforms/pseries/hotplug-cpu.c | 10 ++--------
->>  arch/s390/kernel/time.c                      |  8 ++------
->>  arch/s390/kernel/topology.c                  |  7 ++-----
->>  arch/x86/kernel/aperture_64.c                | 12 ++----------
->>  include/linux/tick.h                         |  2 +-
->>  kernel/time/hrtimer.c                        | 10 ++--------
->>  kernel/time/tick-sched.c                     | 10 ++--------
->>  8 files changed, 15 insertions(+), 53 deletions(-)
->>
->> diff --git a/arch/powerpc/kernel/rtasd.c b/arch/powerpc/kernel/rtasd.c
->> index 5a2c049c1c61..567ed5a2f43a 100644
->> --- a/arch/powerpc/kernel/rtasd.c
->> +++ b/arch/powerpc/kernel/rtasd.c
->> @@ -49,7 +49,7 @@ static unsigned int rtas_error_log_buffer_max;
->>  static unsigned int event_scan;
->>  static unsigned int rtas_event_scan_rate;
->>
->> -static int full_rtas_msgs = 0;
->> +static bool full_rtas_msgs;
->>
->>  /* Stop logging to nvram after first fatal error */
->>  static int logging_enabled; /* Until we initialize everything,
->> @@ -592,11 +592,6 @@ __setup("surveillance=", surveillance_setup);
->>
->>  static int __init rtasmsgs_setup(char *str)
->>  {
->> -       if (strcmp(str, "on") == 0)
->> -               full_rtas_msgs = 1;
->> -       else if (strcmp(str, "off") == 0)
->> -               full_rtas_msgs = 0;
->> -
->> -       return 1;
->> +       return kstrtobool(str, 0, &full_rtas_msgs);
->>  }
->>  __setup("rtasmsgs=", rtasmsgs_setup);
->> diff --git a/arch/powerpc/platforms/pseries/hotplug-cpu.c b/arch/powerpc/platforms/pseries/hotplug-cpu.c
->> index 32274f72fe3f..b9787cae4108 100644
->> --- a/arch/powerpc/platforms/pseries/hotplug-cpu.c
->> +++ b/arch/powerpc/platforms/pseries/hotplug-cpu.c
->> @@ -47,20 +47,14 @@ static DEFINE_PER_CPU(enum cpu_state_vals, current_state) = CPU_STATE_OFFLINE;
->>
->>  static enum cpu_state_vals default_offline_state = CPU_STATE_OFFLINE;
->>
->> -static int cede_offline_enabled __read_mostly = 1;
->> +static bool cede_offline_enabled __read_mostly = true;
->>
->>  /*
->>   * Enable/disable cede_offline when available.
->>   */
->>  static int __init setup_cede_offline(char *str)
->>  {
->> -       if (!strcmp(str, "off"))
->> -               cede_offline_enabled = 0;
->> -       else if (!strcmp(str, "on"))
->> -               cede_offline_enabled = 1;
->> -       else
->> -               return 0;
->> -       return 1;
->> +       return kstrtobool(str, 0, &cede_offline_enabled);
->>  }
->>
->>  __setup("cede_offline=", setup_cede_offline);
->> diff --git a/arch/s390/kernel/time.c b/arch/s390/kernel/time.c
->> index 99f84ac31307..dff6ce1b84b2 100644
->> --- a/arch/s390/kernel/time.c
->> +++ b/arch/s390/kernel/time.c
->> @@ -1433,7 +1433,7 @@ device_initcall(etr_init_sysfs);
->>  /*
->>   * Server Time Protocol (STP) code.
->>   */
->> -static int stp_online;
->> +static bool stp_online;
->>  static struct stp_sstpi stp_info;
->>  static void *stp_page;
->>
->> @@ -1444,11 +1444,7 @@ static struct timer_list stp_timer;
->>
->>  static int __init early_parse_stp(char *p)
->>  {
->> -       if (strncmp(p, "off", 3) == 0)
->> -               stp_online = 0;
->> -       else if (strncmp(p, "on", 2) == 0)
->> -               stp_online = 1;
->> -       return 0;
->> +       return kstrtobool(p, 0, &stp_online);
->>  }
->>  early_param("stp", early_parse_stp);
->>
->> diff --git a/arch/s390/kernel/topology.c b/arch/s390/kernel/topology.c
->> index 40b8102fdadb..5d8a80651f61 100644
->> --- a/arch/s390/kernel/topology.c
->> +++ b/arch/s390/kernel/topology.c
->> @@ -37,7 +37,7 @@ static void set_topology_timer(void);
->>  static void topology_work_fn(struct work_struct *work);
->>  static struct sysinfo_15_1_x *tl_info;
->>
->> -static int topology_enabled = 1;
->> +static bool topology_enabled = true;
->>  static DECLARE_WORK(topology_work, topology_work_fn);
->>
->>  /*
->> @@ -444,10 +444,7 @@ static const struct cpumask *cpu_book_mask(int cpu)
->>
->>  static int __init early_parse_topology(char *p)
->>  {
->> -       if (strncmp(p, "off", 3))
->> -               return 0;
->> -       topology_enabled = 0;
->> -       return 0;
->> +       return kstrtobool(p, 0, &topology_enabled);
->>  }
->>  early_param("topology", early_parse_topology);
->>
->> diff --git a/arch/x86/kernel/aperture_64.c b/arch/x86/kernel/aperture_64.c
->> index 6e85f713641d..6b423754083a 100644
->> --- a/arch/x86/kernel/aperture_64.c
->> +++ b/arch/x86/kernel/aperture_64.c
->> @@ -227,19 +227,11 @@ static u32 __init search_agp_bridge(u32 *order, int *valid_agp)
->>         return 0;
->>  }
->>
->> -static int gart_fix_e820 __initdata = 1;
->> +static bool gart_fix_e820 __initdata = true;
->>
->>  static int __init parse_gart_mem(char *p)
->>  {
->> -       if (!p)
->> -               return -EINVAL;
->> -
->> -       if (!strncmp(p, "off", 3))
->> -               gart_fix_e820 = 0;
->> -       else if (!strncmp(p, "on", 2))
->> -               gart_fix_e820 = 1;
->> -
->> -       return 0;
->> +       return kstrtobool(p, 0, &gart_fix_e820);
->>  }
->>  early_param("gart_fix_e820", parse_gart_mem);
->>
->> diff --git a/include/linux/tick.h b/include/linux/tick.h
->> index 97fd4e543846..0ecdf0e248f4 100644
->> --- a/include/linux/tick.h
->> +++ b/include/linux/tick.h
->> @@ -98,7 +98,7 @@ static inline void tick_broadcast_exit(void)
->>  }
->>
->>  #ifdef CONFIG_NO_HZ_COMMON
->> -extern int tick_nohz_enabled;
->> +extern bool tick_nohz_enabled;
->>  extern int tick_nohz_tick_stopped(void);
->>  extern void tick_nohz_idle_enter(void);
->>  extern void tick_nohz_idle_exit(void);
->> diff --git a/kernel/time/hrtimer.c b/kernel/time/hrtimer.c
->> index 435b8850dd80..456f066148d5 100644
->> --- a/kernel/time/hrtimer.c
->> +++ b/kernel/time/hrtimer.c
->> @@ -515,7 +515,7 @@ static inline ktime_t hrtimer_update_base(struct hrtimer_cpu_base *base)
->>  /*
->>   * High resolution timer enabled ?
->>   */
->> -static int hrtimer_hres_enabled __read_mostly  = 1;
->> +static bool hrtimer_hres_enabled __read_mostly  = true;
->>  unsigned int hrtimer_resolution __read_mostly = LOW_RES_NSEC;
->>  EXPORT_SYMBOL_GPL(hrtimer_resolution);
->>
->> @@ -524,13 +524,7 @@ EXPORT_SYMBOL_GPL(hrtimer_resolution);
->>   */
->>  static int __init setup_hrtimer_hres(char *str)
->>  {
->> -       if (!strcmp(str, "off"))
->> -               hrtimer_hres_enabled = 0;
->> -       else if (!strcmp(str, "on"))
->> -               hrtimer_hres_enabled = 1;
->> -       else
->> -               return 0;
->> -       return 1;
->> +       return kstrtobool(str, 0, &hrtimer_hres_enabled);
->>  }
->>
->>  __setup("highres=", setup_hrtimer_hres);
->> diff --git a/kernel/time/tick-sched.c b/kernel/time/tick-sched.c
->> index 9d7a053545f5..b57f822c2069 100644
->> --- a/kernel/time/tick-sched.c
->> +++ b/kernel/time/tick-sched.c
->> @@ -387,20 +387,14 @@ void __init tick_nohz_init(void)
->>  /*
->>   * NO HZ enabled ?
->>   */
->> -int tick_nohz_enabled __read_mostly = 1;
->> +bool tick_nohz_enabled __read_mostly  = true;
->>  unsigned long tick_nohz_active  __read_mostly;
->>  /*
->>   * Enable / Disable tickless mode
->>   */
->>  static int __init setup_tick_nohz(char *str)
->>  {
->> -       if (!strcmp(str, "off"))
->> -               tick_nohz_enabled = 0;
->> -       else if (!strcmp(str, "on"))
->> -               tick_nohz_enabled = 1;
->> -       else
->> -               return 0;
->> -       return 1;
->> +       return kstrtobool(str, 0, &tick_nohz_enabled);
->>  }
->>
->>  __setup("nohz=", setup_tick_nohz);
->> --
->> 2.6.3
->>
->
->
->
-> --
-> With Best Regards,
-> Andy Shevchenko
+Thanks,
+johannes
 
 
 
--- 
-Kees Cook
-Chrome OS & Brillo Security
+The following changes since commit 725da8dee445662beea77d3f42c3f4c79f7a7a0e:
+
+  Merge git://git.kernel.org/pub/scm/linux/kernel/git/davem/net (2016-01-13 00:22:13 -0500)
+
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211-next.git tags/mac80211-next-for-davem-2016-02-23
+
+for you to fetch changes up to c4b29719e095c1aa42e1dec691d6178611c1096f:
+
+  rfkill: Notify userspace of airplane-mode state changes (2016-02-23 11:53:56 +0100)
+
+----------------------------------------------------------------
+Here's another round of updates for -next:
+ * big A-MSDU RX performance improvement (avoid linearize of paged RX)
+ * big rfkill changes: airplane mode indicator and cleanups
+ * basic PBSS support in cfg80211
+ * MU-MIMO action frame processing support
+ * BlockAck reordering & duplicate detection offload support
+ * various cleanups & little fixes
+
+----------------------------------------------------------------
+Arnd Bergmann (1):
+      mac80211: avoid excessive stack usage in sta_info
+
+Beni Lev (1):
+      cfg80211: Add global RRM capability
+
+Bjorn Andersson (1):
+      mac80211: Make addr const in SET_IEEE80211_PERM_ADDR()
+
+Bob Copeland (1):
+      mac80211: mesh: drop constant field mean_chain_len
+
+Eliad Peller (3):
+      mac80211: move TKIP TX IVs to public part of key struct
+      iwlwifi: mvm: move TX PN assignment for TKIP to the driver
+      mac80211: remove ieee80211_get_key_tx_seq/ieee80211_set_key_tx_seq
+
+Emmanuel Grumbach (1):
+      mac80211: limit the A-MSDU Tx based on peer's capabilities
+
+Felix Fietkau (5):
+      mac80211: move A-MSDU skb_linearize call to ieee80211_amsdu_to_8023s
+      cfg80211: add function for 802.3 conversion with separate output buffer
+      cfg80211: add support for non-linear skbs in ieee80211_amsdu_to_8023s
+      cfg80211: fix faulty variable initialization in ieee80211_amsdu_to_8023s
+      cfg80211: reuse existing page fragments in A-MSDU rx
+
+Geliang Tang (1):
+      cfg80211/mac80211: use to_delayed_work
+
+Grzegorz Bajorski (1):
+      mac80211: allow drivers to report (non-)monitor frames
+
+Heikki Krogerus (4):
+      net: rfkill: add rfkill_find_type function
+      net: rfkill: gpio: get the name and type from device property
+      ARM: tegra: use build-in device properties with rfkill_gpio
+      net: rfkill: gpio: remove rfkill_gpio_platform_data
+
+Henning Rogge (3):
+      mac80211: Remove MPP table entries with MPath
+      mac80211: let unused MPP table entries timeout
+      mac80211: Unify mesh and mpp path removal function
+
+Ilan Peer (1):
+      mac80211: Recalc min chandef when station is associated
+
+Johannes Berg (8):
+      cfg80211: remove CFG80211_REG_DEBUG
+      mac80211: document status.freq restrictions
+      mac80211: refactor HT/VHT to chandef code
+      mac80211_hwsim: remove shadowing variable
+      rfkill: disentangle polling pause and suspend
+      mac80211: add RX_FLAG_MACTIME_PLCP_START
+      mac80211: always print a message when disconnecting
+      mac80211: change ieee80211_rx_reorder_ready() arguments
+
+Jouni Malinen (1):
+      mac80211: Interoperability workaround for 80+80 and 160 MHz channels
+
+João Paulo Rechi Vita (14):
+      rfkill: use variable instead of duplicating the expression
+      rfkill: remove/inline __rfkill_set_hw_state
+      rfkill: Remove obsolete "claim" sysfs interface
+      rfkill: Update userspace API documentation
+      rfkill: Improve documentation language
+      rfkill: Remove extra blank line
+      rfkill: Point to the correct deprecated doc location
+      rfkill: Move "state" sysfs file back to stable
+      rfkill: Factor rfkill_global_states[].cur assignments
+      rfkill: Add documentation about LED triggers
+      rfkill: Create "rfkill-airplane-mode" LED trigger
+      rfkill: Use switch to demux userspace operations
+      rfkill: Userspace control for airplane mode
+      rfkill: Notify userspace of airplane-mode state changes
+
+Lior David (1):
+      cfg80211: basic support for PBSS network type
+
+Lorenzo Bianconi (2):
+      mac80211: fix wiphy supported_band access
+      cfg80211: add radiotap VHT info to rtap_namespace_sizes
+
+Michal Kazior (3):
+      mac80211: fix txq queue related crashes
+      mac80211: fix unnecessary frame drops in mesh fwding
+      mac80211: expose txq queue depth and size to drivers
+
+Ola Olsson (2):
+      cfg80211: add more warnings for inconsistent ops
+      cfg80211: Fix some linguistics in Kconfig
+
+Sara Sharon (10):
+      mac80211: process and save VHT MU-MIMO group frame
+      mac80211: add flag for duplication check
+      mac80211: pass RX aggregation window size to driver
+      mac80211: pass block ack session timeout to to driver
+      mac80211: support hw managing reorder logic
+      mac80211: fix ibss scan parameters
+      mac80211: add API to allow filtering frames in BA sessions
+      mac80211: fix VHT MU-MIMO frame processing
+      mac80211: provide interface to driver to set VHT MU-MIMO data
+      mac80211: move MU_MIMO_OWNER flag to ieee80211_vif
+
+Sudip Mukherjee (1):
+      mac80211: fix memory leak
+
+Sunil Shahu (1):
+      mac80211: mesh_plink: remove redundant sta_info check
+
+Sven Eckelmann (1):
+      mac80211: Parse legacy and HT rate in injected frames
+
+ Documentation/ABI/obsolete/sysfs-class-rfkill      |  29 --
+ Documentation/ABI/removed/sysfs-class-rfkill       |  13 +
+ Documentation/ABI/stable/sysfs-class-rfkill        |  27 +-
+ Documentation/networking/mac80211-injection.txt    |  17 ++
+ Documentation/rfkill.txt                           |  17 ++
+ arch/arm/mach-tegra/board-paz00.c                  |  17 +-
+ drivers/net/wireless/ath/ath10k/mac.c              |   7 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_main.c      |   7 +-
+ drivers/net/wireless/ath/ath9k/main.c              |   8 +-
+ drivers/net/wireless/ath/carl9170/main.c           |   8 +-
+ drivers/net/wireless/ath/wcn36xx/main.c            |   8 +-
+ drivers/net/wireless/ath/wil6210/cfg80211.c        |  10 +
+ .../broadcom/brcm80211/brcmsmac/mac80211_if.c      |   8 +-
+ drivers/net/wireless/intel/iwlegacy/4965-mac.c     |   8 +-
+ drivers/net/wireless/intel/iwlegacy/4965.h         |   4 +-
+ drivers/net/wireless/intel/iwlwifi/dvm/lib.c       |  20 +-
+ drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c  |   9 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c        |  15 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  11 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c        |   2 +
+ drivers/net/wireless/mac80211_hwsim.c              |  12 +-
+ drivers/net/wireless/marvell/mwl8k.c               |  10 +-
+ drivers/net/wireless/mediatek/mt7601u/main.c       |   8 +-
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.c     |   7 +-
+ drivers/net/wireless/ralink/rt2x00/rt2800lib.h     |   4 +-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c   |   6 +-
+ drivers/net/wireless/realtek/rtlwifi/core.c        |   8 +-
+ drivers/net/wireless/rsi/rsi_91x_mac80211.c        |  19 +-
+ drivers/net/wireless/st/cw1200/sta.c               |   4 +-
+ drivers/net/wireless/st/cw1200/sta.h               |   4 +-
+ drivers/net/wireless/ti/wlcore/main.c              |   8 +-
+ drivers/staging/vt6655/rxtx.c                      |  12 +-
+ drivers/staging/vt6656/rxtx.c                      |  12 +-
+ include/linux/ieee80211.h                          |  26 ++
+ include/linux/rfkill-gpio.h                        |  37 ---
+ include/linux/rfkill.h                             |  18 +-
+ include/net/cfg80211.h                             |   8 +
+ include/net/mac80211.h                             | 198 ++++++++++----
+ include/uapi/linux/nl80211.h                       |  14 +
+ include/uapi/linux/rfkill.h                        |   8 +
+ net/mac80211/agg-rx.c                              |  50 +++-
+ net/mac80211/agg-tx.c                              |  53 ++--
+ net/mac80211/cfg.c                                 |  34 ++-
+ net/mac80211/chan.c                                |   2 +-
+ net/mac80211/debugfs.c                             |   1 +
+ net/mac80211/debugfs_key.c                         |   5 +-
+ net/mac80211/driver-ops.c                          |  10 +-
+ net/mac80211/driver-ops.h                          |   4 +-
+ net/mac80211/ht.c                                  |   5 +
+ net/mac80211/ibss.c                                |  32 ++-
+ net/mac80211/ieee80211_i.h                         |  37 +--
+ net/mac80211/iface.c                               |  14 +
+ net/mac80211/key.c                                 |  86 ------
+ net/mac80211/key.h                                 |  10 +-
+ net/mac80211/mesh.c                                |   9 +-
+ net/mac80211/mesh.h                                |   3 -
+ net/mac80211/mesh_pathtbl.c                        | 111 ++++++--
+ net/mac80211/mesh_plink.c                          |  10 +-
+ net/mac80211/mlme.c                                |  79 +++---
+ net/mac80211/rx.c                                  | 139 ++++++++--
+ net/mac80211/sta_info.c                            |  35 ++-
+ net/mac80211/sta_info.h                            |  24 +-
+ net/mac80211/tkip.c                                |  36 +--
+ net/mac80211/tkip.h                                |   2 -
+ net/mac80211/trace.h                               |  43 +--
+ net/mac80211/tx.c                                  |  92 ++++++-
+ net/mac80211/util.c                                | 116 ++++++--
+ net/mac80211/vht.c                                 |  57 ++++
+ net/mac80211/wpa.c                                 |  11 +-
+ net/rfkill/Kconfig                                 |   3 +-
+ net/rfkill/core.c                                  | 297 ++++++++++++++-------
+ net/rfkill/rfkill-gpio.c                           |  24 +-
+ net/wireless/Kconfig                               |  25 +-
+ net/wireless/core.c                                |  10 +
+ net/wireless/mlme.c                                |   3 +-
+ net/wireless/nl80211.c                             |  29 +-
+ net/wireless/radiotap.c                            |   1 +
+ net/wireless/reg.c                                 | 122 +++------
+ net/wireless/sme.c                                 |   9 +-
+ net/wireless/util.c                                | 275 ++++++++++++-------
+ 80 files changed, 1652 insertions(+), 924 deletions(-)
+ delete mode 100644 Documentation/ABI/obsolete/sysfs-class-rfkill
+ create mode 100644 Documentation/ABI/removed/sysfs-class-rfkill
+ delete mode 100644 include/linux/rfkill-gpio.h
