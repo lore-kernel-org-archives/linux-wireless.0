@@ -1,80 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20549 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753463AbcBVKTT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 05:19:19 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V4 14/24] staging: wilc1000: removes unused CFG80211_DBG tag
-Date: Mon, 22 Feb 2016 19:14:21 +0900
-Message-ID: <1456136071-10502-15-git-send-email-leo.kim@atmel.com> (sfid-20160222_111923_954097_E90C02DD)
-In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
-References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:59212 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750740AbcBWKPb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 05:15:31 -0500
+Message-ID: <1456222528.2041.12.camel@sipsolutions.net> (sfid-20160223_111535_116635_00FC5DCA)
+Subject: Re: [PATCH] cfg80211: Add global RRM capability
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, Beni Lev <beni.lev@intel.com>
+Date: Tue, 23 Feb 2016 11:15:28 +0100
+In-Reply-To: <1455733800-13230-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1455733800-13230-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+On Wed, 2016-02-17 at 20:30 +0200, Emmanuel Grumbach wrote:
+> From: Beni Lev <beni.lev@intel.com>
+> 
+> Today, the supplicant will add the RRM capabilities
+> Information Element in the association request only if
+> Quiet period is supported (NL80211_FEATURE_QUIET).
+> 
+Applied.
 
-This patch removes unused CFG80211_DBG tag.
-
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan_common.h | 4 +---
- drivers/staging/wilc1000/wilc_debugfs.c      | 6 +++---
- 2 files changed, 4 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index 1f7d806..e408631 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -2,12 +2,10 @@
- #define LINUX_WLAN_COMMON_H
- 
- enum debug_region {
--	CFG80211_debug = 0,
--	Init_debug,
-+	Init_debug = 0,
- 	COMP = 0xFFFFFFFF,
- };
- 
--#define CFG80211_DBG            (1 << CFG80211_debug)
- #define INIT_DBG                (1 << Init_debug)
- 
- #if defined(WILC_DEBUGFS)
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index fafe7cc..266d96b 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -24,9 +24,9 @@ static struct dentry *wilc_dir;
-  * --------------------------------------------------------------------------------
-  */
- 
--#define DBG_REGION_ALL	(CFG80211_DBG | INIT_DBG)
-+#define DBG_REGION_ALL	(INIT_DBG)
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
--atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | CFG80211_DBG);
-+atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG);
- EXPORT_SYMBOL_GPL(WILC_REGION);
- atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
- EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
-@@ -134,7 +134,7 @@ struct wilc_debugfs_info_t {
- 
- static struct wilc_debugfs_info_t debugfs_info[] = {
- 	{ "wilc_debug_level",	0666,	(DEBUG | ERR), FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write, NULL), },
--	{ "wilc_debug_region",	0666,	(INIT_DBG | CFG80211_DBG), FOPS(NULL, wilc_debug_region_read, wilc_debug_region_write, NULL), },
-+	{ "wilc_debug_region",	0666,	(INIT_DBG), FOPS(NULL, wilc_debug_region_read, wilc_debug_region_write, NULL), },
- };
- 
- static int __init wilc_debugfs_init(void)
--- 
-1.9.1
-
+johannes
