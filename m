@@ -1,72 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:34182 "EHLO
-	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750864AbcBCFVy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 00:21:54 -0500
-Date: Wed, 3 Feb 2016 14:21:46 +0900
-From: Byeoungwook Kim <quddnr145@gmail.com>
-To: Larry.Finger@lwfinger.net
-Cc: kvalo@codeaurora.org, chaoming_li@realsil.com.cn,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, lkp@intel.com,
-	julian.calaby@gmail.com
-Subject: [PATCH v3] rtlwifi: Fix improve function 'rtl_addr_delay()' in core.c
-Message-ID: <20160203052146.GA15711@gmail.com> (sfid-20160203_062218_458263_3A7270A9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:33099 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752565AbcBWO3b (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 09:29:31 -0500
+Message-ID: <1456237769.9910.20.camel@sipsolutions.net> (sfid-20160223_152935_478073_20DEC34C)
+Subject: Re: [PATCH 2/2] mac80211: add NEED_ALIGNED4_SKBS hw flag
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless@vger.kernel.org
+Date: Tue, 23 Feb 2016 15:29:29 +0100
+In-Reply-To: <1455876110-12758-2-git-send-email-janusz.dziedzic@tieto.com> (sfid-20160219_110214_050872_A1A295A7)
+References: <1455876110-12758-1-git-send-email-janusz.dziedzic@tieto.com>
+	 <1455876110-12758-2-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20160219_110214_050872_A1A295A7)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Conditional codes in rtl_addr_delay() were improved in readability and
-performance by using switch codes.
+On Fri, 2016-02-19 at 11:01 +0100, Janusz Dziedzic wrote:
+> HW/driver should set NEED_ALIGNED4_SKBS flag in case
+> require aligned skbs to four-byte boundaries.
+> This affect only TX direction.
+> 
+> Padding is added after ieee80211_hdr, before IV/LLC.
 
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
-Signed-off-by: Fengguang Wu <fengguang.wu@intel.com>
----
-V3 remove unneeded semicolon.
-V2 split in separate patchs.
- drivers/net/wireless/realtek/rtlwifi/core.c | 20 ++++++++++++++------
- 1 file changed, 14 insertions(+), 6 deletions(-)
+I'm still not super happy with how invasive these patches are.
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
-index 4ae421e..63cda78 100644
---- a/drivers/net/wireless/realtek/rtlwifi/core.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/core.c
-@@ -37,18 +37,26 @@
- 
- void rtl_addr_delay(u32 addr)
- {
--	if (addr == 0xfe)
-+	switch (addr) {
-+	case 0xfe:
- 		mdelay(50);
--	else if (addr == 0xfd)
-+		break;
-+	case 0xfd:
- 		mdelay(5);
--	else if (addr == 0xfc)
-+		break;
-+	case 0xfc:
- 		mdelay(1);
--	else if (addr == 0xfb)
-+		break;
-+	case 0xfb:
- 		udelay(50);
--	else if (addr == 0xfa)
-+		break;
-+	case 0xfa:
- 		udelay(5);
--	else if (addr == 0xf9)
-+		break;
-+	case 0xf9:
- 		udelay(1);
-+		break;
-+	}
- }
- EXPORT_SYMBOL(rtl_addr_delay);
- 
--- 
-2.5.0
+Perhaps we could live with this being done only for the fast-xmit case?
 
+johannes
