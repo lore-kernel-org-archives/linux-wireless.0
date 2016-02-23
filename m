@@ -1,39 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13313 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754892AbcBCPiZ (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:60373 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755279AbcBWVI0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 10:38:25 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>,
-	<linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Subject: [PATCH 0/2] Peer Stats fixes for rx duration
-Date: Wed, 3 Feb 2016 21:07:41 +0530
-Message-ID: <1454513863-2703-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160203_163828_714741_09E685D5)
+	Tue, 23 Feb 2016 16:08:26 -0500
+Date: Tue, 23 Feb 2016 23:08:21 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: greearb@candelatech.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] mac80211:  Let VHT work on 2.4Ghz
+Message-ID: <20160223210821.GA8062@w1.fi> (sfid-20160223_220829_299722_3AD4AA12)
+References: <1456180974-21062-1-git-send-email-greearb@candelatech.com>
+ <1456236627.9910.10.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1456236627.9910.10.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+On Tue, Feb 23, 2016 at 03:10:27PM +0100, Johannes Berg wrote:
+> What you really "want" is to use VHT modulations, mostly for the
+> dubious purpose of marketing benchmarks to reach 256-QAM modulations.
+> 
+> I think the de-facto standard for this would be to use IEs similar to
+> VHT ones, encapsulated in some (Broadcom?) vendor IE. We may have to
+> work with that, but that's not what this patch does. Jouni had some
+> better idea how this worked, I think.
 
-This is a small patchset that fixes:
+hostapd has code to negotiate this using the vendor specific element. I
+think we ended up getting this working with AP side (i.e., ath10k on the
+AP) and if I've understood correctly, this does not need any additional
+changes on top of what is available in upstream kernel and hostapd.
 
-1. Updating rx duration per station (part of mac80211 STA debugfs)
-irrespective user does a cat fw_stats in ath10k debugfs
-
-2. Remove updating peer stats list (which is completely useless)
-when we recieve periodic update of peer stats for updating rx_duration
-
-Mohammed Shafi Shajakhan (2):
-  ath10k: Fix updating peer stats rx duration
-  ath10k: Fix pointless update of peer stats list
-
- drivers/net/wireless/ath/ath10k/debug.c |   12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+Station mode is something that may have been left open since this issue
+of what and how to advertise as capabilities came up and there was not
+strong enough push at the time to get more than AP side functional..
 
 -- 
-1.7.9.5
-
+Jouni Malinen                                            PGP id EFC895FA
