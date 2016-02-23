@@ -1,70 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:37870 "EHLO
-	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932065AbcBAM7F (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:48074 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754640AbcBWSSh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2016 07:59:05 -0500
-Received: by mail-wm0-f45.google.com with SMTP id l66so69914520wml.0
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 04:59:04 -0800 (PST)
-From: Sven Eckelmann <sven@open-mesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: thomas@net.t-labs.tu-berlin.de, antonio@open-mesh.com,
-	nbd@nbd.name, johannes@sipsolutions.net,
-	Sven Eckelmann <sven@open-mesh.com>
-Subject: [PATCHv2] mac80211: minstrel: Change expected throughput back to Mbps
-Date: Mon,  1 Feb 2016 13:58:51 +0100
-Message-Id: <1454331531-2472-1-git-send-email-sven@open-mesh.com> (sfid-20160201_135909_084981_EDE045E1)
+	Tue, 23 Feb 2016 13:18:37 -0500
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath10k: set MAC timestamp in management Rx frame
+Date: Tue, 23 Feb 2016 10:17:19 -0800
+Message-ID: <1456251439-14720-1-git-send-email-poh@qca.qualcomm.com> (sfid-20160223_191841_877323_B0CD82E0)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The change from cur_tp to the function
-minstrel_get_tp_avg/minstrel_ht_get_tp_avg changed the unit used for the
-current throughtput. For example in minstrel_ht the correct
-conversion between them would be:
+From: poh <poh@qca.qualcomm.com>
 
-    mrs->cur_tp / 10 == minstrel_ht_get_tp_avg(..).
+Check and set Rx MAC timestamp when firmware indicates it.
+Firmware adds it in Rx beacon frame only at this moment.
+Driver and mac80211 may utilize it to detect such clockdrift
+or beacon collision and use the result for beacon collision
+avoidance.
 
-This factor 10 must also be included in the calculation of
-minstrel_get_expected_throughput and minstrel_ht_get_expected_throughput to
-get similar results as before the change.
-
-Fixes: 6a27b2c40b48 ("mac80211: restructure per-rate throughput calculation into function")
-Signed-off-by: Sven Eckelmann <sven@open-mesh.com>
+Signed-off-by: poh <poh@qca.qualcomm.com>
 ---
-v2:
- - Modified PATCH title
+ drivers/net/wireless/ath/ath10k/wmi.c | 13 +++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h |  8 ++++++++
+ 2 files changed, 21 insertions(+)
 
- net/mac80211/rc80211_minstrel.c    | 2 +-
- net/mac80211/rc80211_minstrel_ht.c | 3 ++-
- 2 files changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 3ece7d1..b54f398 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -711,7 +711,7 @@ static u32 minstrel_get_expected_throughput(void *priv_sta)
- 	 * computing cur_tp
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 0f01a8d..fc7b468 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2167,6 +2167,7 @@ static int ath10k_wmi_op_pull_mgmt_rx_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	struct wmi_mgmt_rx_event_v1 *ev_v1;
+ 	struct wmi_mgmt_rx_event_v2 *ev_v2;
+ 	struct wmi_mgmt_rx_hdr_v1 *ev_hdr;
++	struct wmi_mgmt_rx_ext_info *ext_info;
+ 	size_t pull_len;
+ 	u32 msdu_len;
+ 
+@@ -2195,6 +2196,12 @@ static int ath10k_wmi_op_pull_mgmt_rx_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	if (skb->len < msdu_len)
+ 		return -EPROTO;
+ 
++	if (arg->status & WMI_RX_STATUS_EXT_INFO) {
++		ext_info = (struct wmi_mgmt_rx_ext_info *)
++			   (skb->data + arg->buf_len);
++		memcpy(&arg->ext_info, ext_info,
++		       sizeof(struct wmi_mgmt_rx_ext_info));
++	}
+ 	/* the WMI buffer might've ended up being padded to 4 bytes due to HTC
+ 	 * trailer with credit update. Trim the excess garbage.
  	 */
- 	tmp_mrs = &mi->r[idx].stats;
--	tmp_cur_tp = minstrel_get_tp_avg(&mi->r[idx], tmp_mrs->prob_ewma);
-+	tmp_cur_tp = minstrel_get_tp_avg(&mi->r[idx], tmp_mrs->prob_ewma) * 10;
- 	tmp_cur_tp = tmp_cur_tp * 1200 * 8 / 1024;
+@@ -2281,6 +2288,12 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	if (rx_status & WMI_RX_STATUS_ERR_MIC)
+ 		status->flag |= RX_FLAG_MMIC_ERROR;
  
- 	return tmp_cur_tp;
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 3928dbd..8928151 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -1334,7 +1334,8 @@ static u32 minstrel_ht_get_expected_throughput(void *priv_sta)
- 	prob = mi->groups[i].rates[j].prob_ewma;
++	if (rx_status & WMI_RX_STATUS_EXT_INFO) {
++		status->mactime =
++			__le32_to_cpu(arg.ext_info.rx_mac_timestamp_u32) << 32 |
++			__le32_to_cpu(arg.ext_info.rx_mac_timestamp_l32);
++		status->flag |= RX_FLAG_MACTIME_END;
++	}
+ 	/* Hardware can Rx CCK rates on 5GHz. In that case phy_mode is set to
+ 	 * MODE_11B. This means phy_mode is not a reliable source for the band
+ 	 * of mgmt rx.
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 806d4bb..8667a6b 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -3025,11 +3025,18 @@ struct wmi_10_4_mgmt_rx_event {
+ 	u8 buf[0];
+ } __packed;
  
- 	/* convert tp_avg from pkt per second in kbps */
--	tp_avg = minstrel_ht_get_tp_avg(mi, i, j, prob) * AVG_PKT_SIZE * 8 / 1024;
-+	tp_avg = minstrel_ht_get_tp_avg(mi, i, j, prob) * 10;
-+	tp_avg *= AVG_PKT_SIZE * 8 / 1024;
++struct wmi_mgmt_rx_ext_info {
++	__le32 rx_mac_timestamp_l32;
++	__le32 rx_mac_timestamp_u32;
++} __packed;
++
+ #define WMI_RX_STATUS_OK			0x00
+ #define WMI_RX_STATUS_ERR_CRC			0x01
+ #define WMI_RX_STATUS_ERR_DECRYPT		0x08
+ #define WMI_RX_STATUS_ERR_MIC			0x10
+ #define WMI_RX_STATUS_ERR_KEY_CACHE_MISS	0x20
++/* Extension data at the end of mgmt frame */
++#define WMI_RX_STATUS_EXT_INFO		0x40
  
- 	return tp_avg;
- }
+ #define PHY_ERROR_GEN_SPECTRAL_SCAN		0x26
+ #define PHY_ERROR_GEN_FALSE_RADAR_EXT		0x24
+@@ -6076,6 +6083,7 @@ struct wmi_mgmt_rx_ev_arg {
+ 	__le32 phy_mode;
+ 	__le32 buf_len;
+ 	__le32 status; /* %WMI_RX_STATUS_ */
++	struct wmi_mgmt_rx_ext_info ext_info;
+ };
+ 
+ struct wmi_ch_info_ev_arg {
 -- 
-2.7.0
+1.9.1
 
