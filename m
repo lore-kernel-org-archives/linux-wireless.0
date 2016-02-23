@@ -1,192 +1,411 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39736 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753475AbcB2WGC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:06:02 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 089/113] rtl8xxxu: Handle 40 byte TX descriptors for rtl8723bu
-Date: Mon, 29 Feb 2016 17:05:27 -0500
-Message-Id: <1456783551-28315-90-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232950_846720_45E1C1D0)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-pa0-f53.google.com ([209.85.220.53]:33244 "EHLO
+	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932438AbcBWGiV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 01:38:21 -0500
+Received: by mail-pa0-f53.google.com with SMTP id fl4so105056015pad.0
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2016 22:38:21 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 4/7] staging: wilc1000: handle_cfg_param: rename wid_cnt
+Date: Tue, 23 Feb 2016 15:38:00 +0900
+Message-Id: <1456209483-20345-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20160223_073824_810451_8F7AE057)
+In-Reply-To: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+wid_cnt variable is used as indicating array index of struct wid_list.
+This patch renames wid_cnt to i that makes more readability.
 
-Note the descriptor checksum is still only calculated over the initial
-32 bytes of the descriptor, ignoring the last 8 bytes of the
-descriptor.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 35 ++++++++++++++++--------
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |  3 +-
- 2 files changed, 25 insertions(+), 13 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 184 +++++++++++++++---------------
+ 1 file changed, 92 insertions(+), 92 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 6825351..c69a062 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -6787,7 +6787,12 @@ static u32 rtl8xxxu_queue_select(struct ieee80211_hw *hw, struct sk_buff *skb)
- 	return queue;
- }
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 382f946..d207c5c 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -473,259 +473,259 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 	s32 result = 0;
+ 	struct wid wid_list[32];
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+-	int wid_cnt = 0;
++	int i = 0;
  
--static void rtl8xxxu_calc_tx_desc_csum(struct rtl8xxxu_tx_desc *tx_desc)
-+/*
-+ * Despite newer chips 8723b/8812/8821 having a larger TX descriptor
-+ * format. The descriptor checksum is still only calculated over the
-+ * initial 32 bytes of the descriptor!
-+ */
-+static void rtl8xxxu_calc_tx_desc_csum(struct rtl8723au_tx_desc *tx_desc)
- {
- 	__le16 *ptr = (__le16 *)tx_desc;
- 	u16 csum = 0;
-@@ -6799,7 +6804,7 @@ static void rtl8xxxu_calc_tx_desc_csum(struct rtl8xxxu_tx_desc *tx_desc)
- 	 */
- 	tx_desc->csum = cpu_to_le16(0);
+ 	down(&hif_drv->sem_cfg_values);
  
--	for (i = 0; i < (sizeof(struct rtl8xxxu_tx_desc) / sizeof(u16)); i++)
-+	for (i = 0; i < (sizeof(struct rtl8723au_tx_desc) / sizeof(u16)); i++)
- 		csum = csum ^ le16_to_cpu(ptr[i]);
- 
- 	tx_desc->csum |= cpu_to_le16(csum);
-@@ -6868,13 +6873,15 @@ static void rtl8xxxu_tx_complete(struct urb *urb)
- 	struct sk_buff *skb = (struct sk_buff *)urb->context;
- 	struct ieee80211_tx_info *tx_info;
- 	struct ieee80211_hw *hw;
-+	struct rtl8xxxu_priv *priv;
- 	struct rtl8xxxu_tx_urb *tx_urb =
- 		container_of(urb, struct rtl8xxxu_tx_urb, urb);
- 
- 	tx_info = IEEE80211_SKB_CB(skb);
- 	hw = tx_info->rate_driver_data[0];
-+	priv = hw->priv;
- 
--	skb_pull(skb, sizeof(struct rtl8xxxu_tx_desc));
-+	skb_pull(skb, priv->fops->tx_desc_size);
- 
- 	ieee80211_tx_info_clear_status(tx_info);
- 	tx_info->status.rates[0].idx = -1;
-@@ -6885,7 +6892,7 @@ static void rtl8xxxu_tx_complete(struct urb *urb)
- 
- 	ieee80211_tx_status_irqsafe(hw, skb);
- 
--	rtl8xxxu_free_tx_urb(hw->priv, tx_urb);
-+	rtl8xxxu_free_tx_urb(priv, tx_urb);
- }
- 
- static void rtl8xxxu_dump_action(struct device *dev,
-@@ -6935,7 +6942,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- 	struct ieee80211_tx_info *tx_info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_rate *tx_rate = ieee80211_get_tx_rate(hw, tx_info);
- 	struct rtl8xxxu_priv *priv = hw->priv;
--	struct rtl8xxxu_tx_desc *tx_desc;
-+	struct rtl8723au_tx_desc *tx_desc;
- 	struct rtl8xxxu_tx_urb *tx_urb;
- 	struct ieee80211_sta *sta = NULL;
- 	struct ieee80211_vif *vif = tx_info->control.vif;
-@@ -6944,16 +6951,17 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- 	u16 pktlen = skb->len;
- 	u16 seq_number;
- 	u16 rate_flag = tx_info->control.rates[0].flags;
-+	int tx_desc_size = priv->fops->tx_desc_size;
- 	int ret;
- 
--	if (skb_headroom(skb) < sizeof(struct rtl8xxxu_tx_desc)) {
-+	if (skb_headroom(skb) < tx_desc_size) {
- 		dev_warn(dev,
- 			 "%s: Not enough headroom (%i) for tx descriptor\n",
- 			 __func__, skb_headroom(skb));
- 		goto error;
+ 	if (cfg_param_attr->flag & BSS_TYPE) {
+ 		if (cfg_param_attr->bss_type < 6) {
+-			wid_list[wid_cnt].id = WID_BSS_TYPE;
+-			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->bss_type;
+-			wid_list[wid_cnt].type = WID_CHAR;
+-			wid_list[wid_cnt].size = sizeof(char);
++			wid_list[i].id = WID_BSS_TYPE;
++			wid_list[i].val = (s8 *)&cfg_param_attr->bss_type;
++			wid_list[i].type = WID_CHAR;
++			wid_list[i].size = sizeof(char);
+ 			hif_drv->cfg_values.bss_type = (u8)cfg_param_attr->bss_type;
+ 		} else {
+ 			netdev_err(vif->ndev, "check value 6 over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
+ 	}
+ 	if (cfg_param_attr->flag & AUTH_TYPE) {
+ 		if (cfg_param_attr->auth_type == 1 ||
+ 		    cfg_param_attr->auth_type == 2 ||
+ 		    cfg_param_attr->auth_type == 5) {
+-			wid_list[wid_cnt].id = WID_AUTH_TYPE;
+-			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->auth_type;
+-			wid_list[wid_cnt].type = WID_CHAR;
+-			wid_list[wid_cnt].size = sizeof(char);
++			wid_list[i].id = WID_AUTH_TYPE;
++			wid_list[i].val = (s8 *)&cfg_param_attr->auth_type;
++			wid_list[i].type = WID_CHAR;
++			wid_list[i].size = sizeof(char);
+ 			hif_drv->cfg_values.auth_type = (u8)cfg_param_attr->auth_type;
+ 		} else {
+ 			netdev_err(vif->ndev, "Impossible value \n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
+ 	}
+ 	if (cfg_param_attr->flag & AUTHEN_TIMEOUT) {
+ 		if (cfg_param_attr->auth_timeout > 0 &&
+ 		    cfg_param_attr->auth_timeout < 65536) {
+-			wid_list[wid_cnt].id = WID_AUTH_TIMEOUT;
+-			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->auth_timeout;
+-			wid_list[wid_cnt].type = WID_SHORT;
+-			wid_list[wid_cnt].size = sizeof(u16);
++			wid_list[i].id = WID_AUTH_TIMEOUT;
++			wid_list[i].val = (s8 *)&cfg_param_attr->auth_timeout;
++			wid_list[i].type = WID_SHORT;
++			wid_list[i].size = sizeof(u16);
+ 			hif_drv->cfg_values.auth_timeout = cfg_param_attr->auth_timeout;
+ 		} else {
+ 			netdev_err(vif->ndev, "Range(1 ~ 65535) over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
+ 	}
+ 	if (cfg_param_attr->flag & POWER_MANAGEMENT) {
+ 		if (cfg_param_attr->power_mgmt_mode < 5) {
+-			wid_list[wid_cnt].id = WID_POWER_MANAGEMENT;
+-			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->power_mgmt_mode;
+-			wid_list[wid_cnt].type = WID_CHAR;
+-			wid_list[wid_cnt].size = sizeof(char);
++			wid_list[i].id = WID_POWER_MANAGEMENT;
++			wid_list[i].val = (s8 *)&cfg_param_attr->power_mgmt_mode;
++			wid_list[i].type = WID_CHAR;
++			wid_list[i].size = sizeof(char);
+ 			hif_drv->cfg_values.power_mgmt_mode = (u8)cfg_param_attr->power_mgmt_mode;
+ 		} else {
+ 			netdev_err(vif->ndev, "Invalid power mode\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
+ 	}
+ 	if (cfg_param_attr->flag & RETRY_SHORT) {
+ 		if (cfg_param_attr->short_retry_limit > 0 &&
+ 		    cfg_param_attr->short_retry_limit < 256) {
+-			wid_list[wid_cnt].id = WID_SHORT_RETRY_LIMIT;
+-			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->short_retry_limit;
+-			wid_list[wid_cnt].type = WID_SHORT;
+-			wid_list[wid_cnt].size = sizeof(u16);
++			wid_list[i].id = WID_SHORT_RETRY_LIMIT;
++			wid_list[i].val = (s8 *)&cfg_param_attr->short_retry_limit;
++			wid_list[i].type = WID_SHORT;
++			wid_list[i].size = sizeof(u16);
+ 			hif_drv->cfg_values.short_retry_limit = cfg_param_attr->short_retry_limit;
+ 		} else {
+ 			netdev_err(vif->ndev, "Range(1~256) over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
+ 	}
+ 	if (cfg_param_attr->flag & RETRY_LONG) {
+ 		if (cfg_param_attr->long_retry_limit > 0 &&
+ 		    cfg_param_attr->long_retry_limit < 256) {
+-			wid_list[wid_cnt].id = WID_LONG_RETRY_LIMIT;
+-			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->long_retry_limit;
+-			wid_list[wid_cnt].type = WID_SHORT;
+-			wid_list[wid_cnt].size = sizeof(u16);
++			wid_list[i].id = WID_LONG_RETRY_LIMIT;
++			wid_list[i].val = (s8 *)&cfg_param_attr->long_retry_limit;
++			wid_list[i].type = WID_SHORT;
++			wid_list[i].size = sizeof(u16);
+ 			hif_drv->cfg_values.long_retry_limit = cfg_param_attr->long_retry_limit;
+ 		} else {
+ 			netdev_err(vif->ndev, "Range(1~256) over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
+ 	}
+ 	if (cfg_param_attr->flag & FRAG_THRESHOLD) {
+ 		if (cfg_param_attr->frag_threshold > 255 &&
+ 		    cfg_param_attr->frag_threshold < 7937) {
+-			wid_list[wid_cnt].id = WID_FRAG_THRESHOLD;
+-			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->frag_threshold;
+-			wid_list[wid_cnt].type = WID_SHORT;
+-			wid_list[wid_cnt].size = sizeof(u16);
++			wid_list[i].id = WID_FRAG_THRESHOLD;
++			wid_list[i].val = (s8 *)&cfg_param_attr->frag_threshold;
++			wid_list[i].type = WID_SHORT;
++			wid_list[i].size = sizeof(u16);
+ 			hif_drv->cfg_values.frag_threshold = cfg_param_attr->frag_threshold;
+ 		} else {
+ 			netdev_err(vif->ndev, "Threshold Range fail\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
+ 	}
+ 	if (cfg_param_attr->flag & RTS_THRESHOLD) {
+ 		if (cfg_param_attr->rts_threshold > 255 &&
+ 		    cfg_param_attr->rts_threshold < 65536) {
+-			wid_list[wid_cnt].id = WID_RTS_THRESHOLD;
+-			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->rts_threshold;
+-			wid_list[wid_cnt].type = WID_SHORT;
+-			wid_list[wid_cnt].size = sizeof(u16);
++			wid_list[i].id = WID_RTS_THRESHOLD;
++			wid_list[i].val = (s8 *)&cfg_param_attr->rts_threshold;
++			wid_list[i].type = WID_SHORT;
++			wid_list[i].size = sizeof(u16);
+ 			hif_drv->cfg_values.rts_threshold = cfg_param_attr->rts_threshold;
+ 		} else {
+ 			netdev_err(vif->ndev, "Threshold Range fail\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
+ 	}
+ 	if (cfg_param_attr->flag & PREAMBLE) {
+ 		if (cfg_param_attr->preamble_type < 3) {
+-			wid_list[wid_cnt].id = WID_PREAMBLE;
+-			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->preamble_type;
+-			wid_list[wid_cnt].type = WID_CHAR;
+-			wid_list[wid_cnt].size = sizeof(char);
++			wid_list[i].id = WID_PREAMBLE;
++			wid_list[i].val = (s8 *)&cfg_param_attr->preamble_type;
++			wid_list[i].type = WID_CHAR;
++			wid_list[i].size = sizeof(char);
+ 			hif_drv->cfg_values.preamble_type = cfg_param_attr->preamble_type;
+ 		} else {
+ 			netdev_err(vif->ndev, "Preamle Range(0~2) over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
+ 	}
+ 	if (cfg_param_attr->flag & SHORT_SLOT_ALLOWED) {
+ 		if (cfg_param_attr->short_slot_allowed < 2) {
+-			wid_list[wid_cnt].id = WID_SHORT_SLOT_ALLOWED;
+-			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->short_slot_allowed;
+-			wid_list[wid_cnt].type = WID_CHAR;
+-			wid_list[wid_cnt].size = sizeof(char);
++			wid_list[i].id = WID_SHORT_SLOT_ALLOWED;
++			wid_list[i].val = (s8 *)&cfg_param_attr->short_slot_allowed;
++			wid_list[i].type = WID_CHAR;
++			wid_list[i].size = sizeof(char);
+ 			hif_drv->cfg_values.short_slot_allowed = (u8)cfg_param_attr->short_slot_allowed;
+ 		} else {
+ 			netdev_err(vif->ndev, "Short slot(2) over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
+ 	}
+ 	if (cfg_param_attr->flag & TXOP_PROT_DISABLE) {
+ 		if (cfg_param_attr->txop_prot_disabled < 2) {
+-			wid_list[wid_cnt].id = WID_11N_TXOP_PROT_DISABLE;
+-			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->txop_prot_disabled;
+-			wid_list[wid_cnt].type = WID_CHAR;
+-			wid_list[wid_cnt].size = sizeof(char);
++			wid_list[i].id = WID_11N_TXOP_PROT_DISABLE;
++			wid_list[i].val = (s8 *)&cfg_param_attr->txop_prot_disabled;
++			wid_list[i].type = WID_CHAR;
++			wid_list[i].size = sizeof(char);
+ 			hif_drv->cfg_values.txop_prot_disabled = (u8)cfg_param_attr->txop_prot_disabled;
+ 		} else {
+ 			netdev_err(vif->ndev, "TXOP prot disable\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
+ 	}
+ 	if (cfg_param_attr->flag & BEACON_INTERVAL) {
+ 		if (cfg_param_attr->beacon_interval > 0 &&
+ 		    cfg_param_attr->beacon_interval < 65536) {
+-			wid_list[wid_cnt].id = WID_BEACON_INTERVAL;
+-			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->beacon_interval;
+-			wid_list[wid_cnt].type = WID_SHORT;
+-			wid_list[wid_cnt].size = sizeof(u16);
++			wid_list[i].id = WID_BEACON_INTERVAL;
++			wid_list[i].val = (s8 *)&cfg_param_attr->beacon_interval;
++			wid_list[i].type = WID_SHORT;
++			wid_list[i].size = sizeof(u16);
+ 			hif_drv->cfg_values.beacon_interval = cfg_param_attr->beacon_interval;
+ 		} else {
+ 			netdev_err(vif->ndev, "Beacon interval(1~65535)fail\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
+ 	}
+ 	if (cfg_param_attr->flag & DTIM_PERIOD) {
+ 		if (cfg_param_attr->dtim_period > 0 &&
+ 		    cfg_param_attr->dtim_period < 256) {
+-			wid_list[wid_cnt].id = WID_DTIM_PERIOD;
+-			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->dtim_period;
+-			wid_list[wid_cnt].type = WID_CHAR;
+-			wid_list[wid_cnt].size = sizeof(char);
++			wid_list[i].id = WID_DTIM_PERIOD;
++			wid_list[i].val = (s8 *)&cfg_param_attr->dtim_period;
++			wid_list[i].type = WID_CHAR;
++			wid_list[i].size = sizeof(char);
+ 			hif_drv->cfg_values.dtim_period = cfg_param_attr->dtim_period;
+ 		} else {
+ 			netdev_err(vif->ndev, "DTIM range(1~255) fail\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
+ 	}
+ 	if (cfg_param_attr->flag & SITE_SURVEY) {
+ 		if (cfg_param_attr->site_survey_enabled < 3) {
+-			wid_list[wid_cnt].id = WID_SITE_SURVEY;
+-			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->site_survey_enabled;
+-			wid_list[wid_cnt].type = WID_CHAR;
+-			wid_list[wid_cnt].size = sizeof(char);
++			wid_list[i].id = WID_SITE_SURVEY;
++			wid_list[i].val = (s8 *)&cfg_param_attr->site_survey_enabled;
++			wid_list[i].type = WID_CHAR;
++			wid_list[i].size = sizeof(char);
+ 			hif_drv->cfg_values.site_survey_enabled = (u8)cfg_param_attr->site_survey_enabled;
+ 		} else {
+ 			netdev_err(vif->ndev, "Site survey disable\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
+ 	}
+ 	if (cfg_param_attr->flag & SITE_SURVEY_SCAN_TIME) {
+ 		if (cfg_param_attr->site_survey_scan_time > 0 &&
+ 		    cfg_param_attr->site_survey_scan_time < 65536) {
+-			wid_list[wid_cnt].id = WID_SITE_SURVEY_SCAN_TIME;
+-			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->site_survey_scan_time;
+-			wid_list[wid_cnt].type = WID_SHORT;
+-			wid_list[wid_cnt].size = sizeof(u16);
++			wid_list[i].id = WID_SITE_SURVEY_SCAN_TIME;
++			wid_list[i].val = (s8 *)&cfg_param_attr->site_survey_scan_time;
++			wid_list[i].type = WID_SHORT;
++			wid_list[i].size = sizeof(u16);
+ 			hif_drv->cfg_values.site_survey_scan_time = cfg_param_attr->site_survey_scan_time;
+ 		} else {
+ 			netdev_err(vif->ndev, "Site scan time(1~65535) over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
+ 	}
+ 	if (cfg_param_attr->flag & ACTIVE_SCANTIME) {
+ 		if (cfg_param_attr->active_scan_time > 0 &&
+ 		    cfg_param_attr->active_scan_time < 65536) {
+-			wid_list[wid_cnt].id = WID_ACTIVE_SCAN_TIME;
+-			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->active_scan_time;
+-			wid_list[wid_cnt].type = WID_SHORT;
+-			wid_list[wid_cnt].size = sizeof(u16);
++			wid_list[i].id = WID_ACTIVE_SCAN_TIME;
++			wid_list[i].val = (s8 *)&cfg_param_attr->active_scan_time;
++			wid_list[i].type = WID_SHORT;
++			wid_list[i].size = sizeof(u16);
+ 			hif_drv->cfg_values.active_scan_time = cfg_param_attr->active_scan_time;
+ 		} else {
+ 			netdev_err(vif->ndev, "Active time(1~65535) over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
+ 	}
+ 	if (cfg_param_attr->flag & PASSIVE_SCANTIME) {
+ 		if (cfg_param_attr->passive_scan_time > 0 &&
+ 		    cfg_param_attr->passive_scan_time < 65536) {
+-			wid_list[wid_cnt].id = WID_PASSIVE_SCAN_TIME;
+-			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->passive_scan_time;
+-			wid_list[wid_cnt].type = WID_SHORT;
+-			wid_list[wid_cnt].size = sizeof(u16);
++			wid_list[i].id = WID_PASSIVE_SCAN_TIME;
++			wid_list[i].val = (s8 *)&cfg_param_attr->passive_scan_time;
++			wid_list[i].type = WID_SHORT;
++			wid_list[i].size = sizeof(u16);
+ 			hif_drv->cfg_values.passive_scan_time = cfg_param_attr->passive_scan_time;
+ 		} else {
+ 			netdev_err(vif->ndev, "Passive time(1~65535) over\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
+ 	}
+ 	if (cfg_param_attr->flag & CURRENT_TX_RATE) {
+ 		enum CURRENT_TXRATE curr_tx_rate = cfg_param_attr->curr_tx_rate;
+@@ -736,21 +736,21 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 		    || curr_tx_rate == MBPS_9 || curr_tx_rate == MBPS_12
+ 		    || curr_tx_rate == MBPS_18 || curr_tx_rate == MBPS_24
+ 		    || curr_tx_rate == MBPS_36 || curr_tx_rate == MBPS_48 || curr_tx_rate == MBPS_54) {
+-			wid_list[wid_cnt].id = WID_CURRENT_TX_RATE;
+-			wid_list[wid_cnt].val = (s8 *)&curr_tx_rate;
+-			wid_list[wid_cnt].type = WID_SHORT;
+-			wid_list[wid_cnt].size = sizeof(u16);
++			wid_list[i].id = WID_CURRENT_TX_RATE;
++			wid_list[i].val = (s8 *)&curr_tx_rate;
++			wid_list[i].type = WID_SHORT;
++			wid_list[i].size = sizeof(u16);
+ 			hif_drv->cfg_values.curr_tx_rate = (u8)curr_tx_rate;
+ 		} else {
+ 			netdev_err(vif->ndev, "out of TX rate\n");
+ 			result = -EINVAL;
+ 			goto ERRORHANDLER;
+ 		}
+-		wid_cnt++;
++		i++;
  	}
  
--	if (unlikely(skb->len > (65535 - sizeof(struct rtl8xxxu_tx_desc)))) {
-+	if (unlikely(skb->len > (65535 - tx_desc_size))) {
- 		dev_warn(dev, "%s: Trying to send over-sized skb (%i)\n",
- 			 __func__, skb->len);
- 		goto error;
-@@ -6977,12 +6985,11 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- 	if (control && control->sta)
- 		sta = control->sta;
+ 	result = wilc_send_config_pkt(vif, SET_CFG, wid_list,
+-				      wid_cnt, wilc_get_vif_idx(vif));
++				      i, wilc_get_vif_idx(vif));
  
--	tx_desc = (struct rtl8xxxu_tx_desc *)
--		skb_push(skb, sizeof(struct rtl8xxxu_tx_desc));
-+	tx_desc = (struct rtl8723au_tx_desc *)skb_push(skb, tx_desc_size);
- 
--	memset(tx_desc, 0, sizeof(struct rtl8xxxu_tx_desc));
-+	memset(tx_desc, 0, tx_desc_size);
- 	tx_desc->pkt_size = cpu_to_le16(pktlen);
--	tx_desc->pkt_offset = sizeof(struct rtl8xxxu_tx_desc);
-+	tx_desc->pkt_offset = tx_desc_size;
- 
- 	tx_desc->txdw0 =
- 		TXDESC_OWN | TXDESC_FIRST_SEGMENT | TXDESC_LAST_SEGMENT;
-@@ -8077,7 +8084,7 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
- 	SET_IEEE80211_DEV(priv->hw, &interface->dev);
- 	SET_IEEE80211_PERM_ADDR(hw, priv->mac_addr);
- 
--	hw->extra_tx_headroom = sizeof(struct rtl8xxxu_tx_desc);
-+	hw->extra_tx_headroom = priv->fops->tx_desc_size;
- 	ieee80211_hw_set(hw, SIGNAL_DBM);
- 	/*
- 	 * The firmware handles rate control
-@@ -8134,6 +8141,7 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
- 	.writeN_block_size = 1024,
- 	.mbox_ext_reg = REG_HMBOX_EXT_0,
- 	.mbox_ext_width = 2,
-+	.tx_desc_size = sizeof(struct rtl8723au_tx_desc),
- 	.adda_1t_init = 0x0b1b25a0,
- 	.adda_1t_path_on = 0x0bdb25a0,
- 	.adda_2t_path_on_a = 0x04db25a4,
-@@ -8157,6 +8165,7 @@ static struct rtl8xxxu_fileops rtl8723bu_fops = {
- 	.writeN_block_size = 1024,
- 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
- 	.mbox_ext_width = 4,
-+	.tx_desc_size = sizeof(struct rtl8723bu_tx_desc),
- 	.has_s0s1 = 1,
- 	.adda_1t_init = 0x01c00014,
- 	.adda_1t_path_on = 0x01c00014,
-@@ -8179,6 +8188,7 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
- 	.writeN_block_size = 128,
- 	.mbox_ext_reg = REG_HMBOX_EXT_0,
- 	.mbox_ext_width = 2,
-+	.tx_desc_size = sizeof(struct rtl8723au_tx_desc),
- 	.adda_1t_init = 0x0b1b25a0,
- 	.adda_1t_path_on = 0x0bdb25a0,
- 	.adda_2t_path_on_a = 0x04db25a4,
-@@ -8200,6 +8210,7 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
- 	.writeN_block_size = 128,
- 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
- 	.mbox_ext_width = 4,
-+	.tx_desc_size = sizeof(struct rtl8723au_tx_desc),
- 	.has_s0s1 = 1,
- 	.adda_1t_init = 0x0fc01616,
- 	.adda_1t_path_on = 0x0fc01616,
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index f06b88b..d53912a 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -332,7 +332,7 @@ struct rtl8723bu_rx_desc {
- 	__le32 tsfl;
- };
- 
--struct rtl8xxxu_tx_desc {
-+struct rtl8723au_tx_desc {
- 	__le16 pkt_size;
- 	u8 pkt_offset;
- 	u8 txdw0;
-@@ -1190,6 +1190,7 @@ struct rtl8xxxu_fileops {
- 	int writeN_block_size;
- 	u16 mbox_ext_reg;
- 	char mbox_ext_width;
-+	char tx_desc_size;
- 	char has_s0s1;
- 	u32 adda_1t_init;
- 	u32 adda_1t_path_on;
+ 	if (result)
+ 		netdev_err(vif->ndev, "Error in setting CFG params\n");
 -- 
-2.5.0
+2.7.1
 
