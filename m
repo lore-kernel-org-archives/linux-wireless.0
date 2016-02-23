@@ -1,237 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:41843
-	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755206AbcBZU70 (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35562 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751119AbcBWLMD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 15:59:26 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH V9 2/2] brcmfmac: add support for nl80211 BSS_SELECT feature
-Date: Fri, 26 Feb 2016 21:59:24 +0100
-Message-Id: <1456520364-6275-2-git-send-email-arend@broadcom.com> (sfid-20160226_215931_545744_D19ED05E)
-In-Reply-To: <1456520364-6275-1-git-send-email-arend@broadcom.com>
-References: <1456520364-6275-1-git-send-email-arend@broadcom.com>
+	Tue, 23 Feb 2016 06:12:03 -0500
+Received: by mail-wm0-f68.google.com with SMTP id g62so21269231wme.2
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2016 03:12:02 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCH RESEND] mac80211: parse VHT info in injected frames
+Date: Tue, 23 Feb 2016 12:11:58 +0100
+Message-Id: <1456225918-21256-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20160223_121208_576497_365B5246)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Announce support for nl80211 feature BSS_SELECT and process
-BSS selection behaviour provided in .connect() callback.
+Add VHT radiotap parsing support to ieee80211_parse_tx_radiotap().
+That capability has been tested using a d-link dir-860l rev b1 running
+OpenWrt trunk and mt76 driver
 
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Lei Zhang <leizh@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- .../broadcom/brcm80211/brcmfmac/cfg80211.c         | 70 +++++++++++++++++++++-
- .../wireless/broadcom/brcm80211/brcmfmac/common.c  | 38 +++++++-----
- .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  1 +
- .../wireless/broadcom/brcm80211/brcmfmac/fwil.h    |  1 +
- 4 files changed, 92 insertions(+), 18 deletions(-)
+ Documentation/networking/mac80211-injection.txt | 10 ++++++++
+ net/mac80211/tx.c                               | 31 +++++++++++++++++++++++++
+ 2 files changed, 41 insertions(+)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-index 7b01e4d..3e02168 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
-@@ -238,6 +238,20 @@ struct parsed_vndr_ies {
- 	struct parsed_vndr_ie_info ie_info[VNDR_IE_PARSE_LIMIT];
- };
+diff --git a/Documentation/networking/mac80211-injection.txt b/Documentation/networking/mac80211-injection.txt
+index ec8f934..ef57cc0 100644
+--- a/Documentation/networking/mac80211-injection.txt
++++ b/Documentation/networking/mac80211-injection.txt
+@@ -45,6 +45,16 @@ radiotap headers and used to control injection:
+    number of retries when either IEEE80211_RADIOTAP_RATE or
+    IEEE80211_RADIOTAP_MCS was used
  
-+static u8 nl80211_band_to_fwil(enum nl80211_band band)
-+{
-+	switch (band) {
-+	case NL80211_BAND_2GHZ:
-+		return WLC_BAND_2G;
-+	case NL80211_BAND_5GHZ:
-+		return WLC_BAND_5G;
-+	default:
-+		WARN_ON(1);
-+		break;
-+	}
-+	return 0;
-+}
++ * IEEE80211_RADIOTAP_VHT
 +
- static u16 chandef_to_chanspec(struct brcmu_d11inf *d11inf,
- 			       struct cfg80211_chan_def *ch)
- {
-@@ -1737,6 +1751,50 @@ enum nl80211_auth_type brcmf_war_auth_type(struct brcmf_if *ifp,
- 	return type;
- }
- 
-+static void brcmf_set_join_pref(struct brcmf_if *ifp,
-+				struct cfg80211_bss_selection *bss_select)
-+{
-+	struct brcmf_join_pref_params join_pref_params[2];
-+	enum nl80211_band band;
-+	int err, i = 0;
++   VHT rate for the transmission (only for devices without own rate control).
++   Also some flags are parsed
 +
-+	join_pref_params[i].len = 2;
-+	join_pref_params[i].rssi_gain = 0;
++   IEEE80211_TX_RC_SHORT_GI: use short guard interval
++   IEEE80211_TX_RC_40_MHZ_WIDTH: send in HT40 mode
++   IEEE80211_TX_RC_80_MHZ_WIDTH: send in HT80 mode
++   IEEE80211_TX_RC_160_MHZ_WIDTH: send in HT160 mode
 +
-+	if (bss_select->behaviour != NL80211_BSS_SELECT_ATTR_BAND_PREF)
-+		brcmf_fil_cmd_int_set(ifp, BRCMF_C_SET_ASSOC_PREFER, WLC_BAND_AUTO);
+ The injection code can also skip all other currently defined radiotap fields
+ facilitating replay of captured radiotap headers directly.
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 7bb67fa..17db889 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1692,6 +1692,8 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
+ 	u8 rate_retries = 0;
+ 	u16 rate_flags = 0;
+ 	u8 mcs_known, mcs_flags;
++	u16 vht_known;
++	u8 vht_mcs = 0, vht_nss = 0;
+ 	int i;
+ 
+ 	info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT |
+@@ -1772,6 +1774,32 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
+ 				rate_flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
+ 			break;
+ 
++		case IEEE80211_RADIOTAP_VHT:
++			vht_known = get_unaligned_le16(iterator.this_arg);
++			rate_found = true;
 +
-+	switch (bss_select->behaviour) {
-+	case __NL80211_BSS_SELECT_ATTR_INVALID:
-+		brcmf_c_set_joinpref_default(ifp);
-+		return;
-+	case NL80211_BSS_SELECT_ATTR_BAND_PREF:
-+		join_pref_params[i].type = BRCMF_JOIN_PREF_BAND;
-+		band = bss_select->param.band_pref;
-+		join_pref_params[i].band = nl80211_band_to_fwil(band);
-+		i++;
-+		break;
-+	case NL80211_BSS_SELECT_ATTR_RSSI_ADJUST:
-+		join_pref_params[i].type = BRCMF_JOIN_PREF_RSSI_DELTA;
-+		band = bss_select->param.adjust.band;
-+		join_pref_params[i].band = nl80211_band_to_fwil(band);
-+		join_pref_params[i].rssi_gain = bss_select->param.adjust.delta;
-+		i++;
-+		break;
-+	case NL80211_BSS_SELECT_ATTR_RSSI:
-+	default:
-+		break;
-+	}
-+	join_pref_params[i].type = BRCMF_JOIN_PREF_RSSI;
-+	join_pref_params[i].len = 2;
-+	join_pref_params[i].rssi_gain = 0;
-+	join_pref_params[i].band = 0;
-+	err = brcmf_fil_iovar_data_set(ifp, "join_pref", join_pref_params,
-+				       sizeof(join_pref_params));
-+	if (err)
-+		brcmf_err("Set join_pref error (%d)\n", err);
-+}
++			rate_flags = IEEE80211_TX_RC_VHT_MCS;
++			if ((vht_known & IEEE80211_RADIOTAP_VHT_KNOWN_GI) &&
++			    (iterator.this_arg[2] &
++			     IEEE80211_RADIOTAP_VHT_FLAG_SGI))
++				rate_flags |= IEEE80211_TX_RC_SHORT_GI;
++			if (vht_known &
++			    IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH) {
++				if (iterator.this_arg[3] == 1)
++					rate_flags |=
++						IEEE80211_TX_RC_40_MHZ_WIDTH;
++				else if (iterator.this_arg[3] == 4)
++					rate_flags |=
++						IEEE80211_TX_RC_80_MHZ_WIDTH;
++				else if (iterator.this_arg[3] == 11)
++					rate_flags |=
++						IEEE80211_TX_RC_160_MHZ_WIDTH;
++			}
 +
- static s32
- brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
- 		       struct cfg80211_connect_params *sme)
-@@ -1862,11 +1920,11 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
- 	ext_join_params->scan_le.scan_type = -1;
- 	ext_join_params->scan_le.home_time = cpu_to_le32(-1);
- 
--	if (sme->bssid)
-+	if (sme->bssid) {
- 		memcpy(&ext_join_params->assoc_le.bssid, sme->bssid, ETH_ALEN);
--	else
-+	} else {
- 		eth_broadcast_addr(ext_join_params->assoc_le.bssid);
--
-+	}
- 	if (cfg->channel) {
- 		ext_join_params->assoc_le.chanspec_num = cpu_to_le32(1);
- 
-@@ -1893,6 +1951,8 @@ brcmf_cfg80211_connect(struct wiphy *wiphy, struct net_device *ndev,
- 		ext_join_params->scan_le.nprobes = cpu_to_le32(-1);
- 	}
- 
-+	brcmf_set_join_pref(ifp, &sme->bss_select);
++			vht_mcs = iterator.this_arg[4] >> 4;
++			vht_nss = iterator.this_arg[4] & 0xF;
++			break;
 +
- 	err  = brcmf_fil_bsscfg_data_set(ifp, "join", ext_join_params,
- 					 join_params_size);
- 	kfree(ext_join_params);
-@@ -6179,6 +6239,10 @@ static int brcmf_setup_wiphy(struct wiphy *wiphy, struct brcmf_if *ifp)
- 	wiphy->signal_type = CFG80211_SIGNAL_TYPE_MBM;
- 	wiphy->cipher_suites = __wl_cipher_suites;
- 	wiphy->n_cipher_suites = ARRAY_SIZE(__wl_cipher_suites);
-+	wiphy->bss_select_support = BIT(NL80211_BSS_SELECT_ATTR_RSSI) |
-+				    BIT(NL80211_BSS_SELECT_ATTR_BAND_PREF) |
-+				    BIT(NL80211_BSS_SELECT_ATTR_RSSI_ADJUST);
-+
- 	wiphy->flags |= WIPHY_FLAG_PS_ON_BY_DEFAULT |
- 			WIPHY_FLAG_OFFCHAN_TX |
- 			WIPHY_FLAG_HAS_REMAIN_ON_CHANNEL;
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-index 4265b50..b9e81fb 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
-@@ -32,7 +32,7 @@ const u8 ALLFFMAC[ETH_ALEN] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
- #define BRCMF_DEFAULT_SCAN_CHANNEL_TIME	40
- #define BRCMF_DEFAULT_SCAN_UNASSOC_TIME	40
+ 		/*
+ 		 * Please update the file
+ 		 * Documentation/networking/mac80211-injection.txt
+@@ -1797,6 +1825,9 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
  
--/* boost value for RSSI_DELTA in preferred join selection */
-+/* default boost value for RSSI_DELTA in preferred join selection */
- #define BRCMF_JOIN_PREF_RSSI_BOOST	8
- 
- #define BRCMF_DEFAULT_TXGLOM_SIZE	32  /* max tx frames in glom chain */
-@@ -76,11 +76,31 @@ MODULE_PARM_DESC(ignore_probe_fail, "always succeed probe for debugging");
- 
- struct brcmf_mp_global_t brcmf_mp_global;
- 
-+void brcmf_c_set_joinpref_default(struct brcmf_if *ifp)
-+{
-+	struct brcmf_join_pref_params join_pref_params[2];
-+	int err;
-+
-+	/* Setup join_pref to select target by RSSI (boost on 5GHz) */
-+	join_pref_params[0].type = BRCMF_JOIN_PREF_RSSI_DELTA;
-+	join_pref_params[0].len = 2;
-+	join_pref_params[0].rssi_gain = BRCMF_JOIN_PREF_RSSI_BOOST;
-+	join_pref_params[0].band = WLC_BAND_5G;
-+
-+	join_pref_params[1].type = BRCMF_JOIN_PREF_RSSI;
-+	join_pref_params[1].len = 2;
-+	join_pref_params[1].rssi_gain = 0;
-+	join_pref_params[1].band = 0;
-+	err = brcmf_fil_iovar_data_set(ifp, "join_pref", join_pref_params,
-+				       sizeof(join_pref_params));
-+	if (err)
-+		brcmf_err("Set join_pref error (%d)\n", err);
-+}
-+
- int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- {
- 	s8 eventmask[BRCMF_EVENTING_MASK_LEN];
- 	u8 buf[BRCMF_DCMD_SMLEN];
--	struct brcmf_join_pref_params join_pref_params[2];
- 	struct brcmf_rev_info_le revinfo;
- 	struct brcmf_rev_info *ri;
- 	char *ptr;
-@@ -147,19 +167,7 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
- 		goto done;
- 	}
- 
--	/* Setup join_pref to select target by RSSI(with boost on 5GHz) */
--	join_pref_params[0].type = BRCMF_JOIN_PREF_RSSI_DELTA;
--	join_pref_params[0].len = 2;
--	join_pref_params[0].rssi_gain = BRCMF_JOIN_PREF_RSSI_BOOST;
--	join_pref_params[0].band = WLC_BAND_5G;
--	join_pref_params[1].type = BRCMF_JOIN_PREF_RSSI;
--	join_pref_params[1].len = 2;
--	join_pref_params[1].rssi_gain = 0;
--	join_pref_params[1].band = 0;
--	err = brcmf_fil_iovar_data_set(ifp, "join_pref", join_pref_params,
--				       sizeof(join_pref_params));
--	if (err)
--		brcmf_err("Set join_pref error (%d)\n", err);
-+	brcmf_c_set_joinpref_default(ifp);
- 
- 	/* Setup event_msgs, enable E_IF */
- 	err = brcmf_fil_iovar_data_get(ifp, "event_msgs", eventmask,
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-index 8f39435..c9a1a13 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
-@@ -220,5 +220,6 @@ void brcmf_txflowblock_if(struct brcmf_if *ifp,
- void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success);
- void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb);
- void brcmf_net_setcarrier(struct brcmf_if *ifp, bool on);
-+void brcmf_c_set_joinpref_default(struct brcmf_if *ifp);
- 
- #endif /* BRCMFMAC_CORE_H */
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
-index 6b72df1..3a9a76d 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwil.h
-@@ -78,6 +78,7 @@
- #define BRCMF_C_SET_SCAN_CHANNEL_TIME		185
- #define BRCMF_C_SET_SCAN_UNASSOC_TIME		187
- #define BRCMF_C_SCB_DEAUTHENTICATE_FOR_REASON	201
-+#define BRCMF_C_SET_ASSOC_PREFER		205
- #define BRCMF_C_GET_VALID_CHANNELS		217
- #define BRCMF_C_GET_KEY_PRIMARY			235
- #define BRCMF_C_SET_KEY_PRIMARY			236
+ 		if (rate_flags & IEEE80211_TX_RC_MCS) {
+ 			info->control.rates[0].idx = rate;
++		} else if (rate_flags & IEEE80211_TX_RC_VHT_MCS) {
++			ieee80211_rate_set_vht(info->control.rates, vht_mcs,
++					       vht_nss);
+ 		} else {
+ 			for (i = 0; i < sband->n_bitrates; i++) {
+ 				if (rate * 5 != sband->bitrates[i].bitrate)
 -- 
-1.9.1
+2.5.0
 
