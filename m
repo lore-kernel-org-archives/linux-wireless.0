@@ -1,247 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp-out05.msg.oleane.net ([62.161.7.3]:38412 "EHLO
-	smtp-out05.msg.oleane.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752258AbcBESbH (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:58315 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751781AbcBWNU0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 5 Feb 2016 13:31:07 -0500
-From: Cedric DEBARGE <cedric.debarge@acksys.fr>
-To: johannes@sipsolutions.net
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	linux-api@vger.kernel.org, linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org, Cedric DEBARGE <cedric.debarge@acksys.fr>
-Subject: [RFC 1/2] cfg80211: add support for ht_caps mcs rxmask override
-Date: Fri,  5 Feb 2016 16:41:59 +0100
-Message-Id: <790ecd44db382115b7af01bf89d72500c4de1741.1454685673.git.cedric.debarge@acksys.fr> (sfid-20160205_193224_193290_7BC24E56)
-In-Reply-To: <cover.1454685673.git.cedric.debarge@acksys.fr>
-References: <cover.1454685673.git.cedric.debarge@acksys.fr>
-In-Reply-To: <cover.1454685673.git.cedric.debarge@acksys.fr>
-References: <cover.1454685673.git.cedric.debarge@acksys.fr>
+	Tue, 23 Feb 2016 08:20:26 -0500
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u1NDKGDw030316
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2016 05:20:24 -0800
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+	by mx0a-0016f401.pphosted.com with ESMTP id 218m5mgrta-1
+	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2016 05:20:24 -0800
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/4] mwifiex: add delay when tdls confirm frame is queued
+Date: Tue, 23 Feb 2016 05:16:16 -0800
+Message-ID: <1456233379-12099-1-git-send-email-akarwar@marvell.com> (sfid-20160223_142029_942387_F55961BE)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Allows the ht_caps mcs rxmask to be defined on the fly.
-In this implementation, the given rxmask is applied to
-every band available.
-This is only applicable for radio cards without internal rc.
+From: Xinming Hu <huxm@marvell.com>
 
-Signed-off-by: Cedric Debarge <cedric.debarge@acksys.fr>
+It is observed that driver may send the data packet to tdls peer
+before tdls peer receives tdls setup confirm frame.
+Similar race condition exists during tdls teardown procedure also.
+This patch adds 10 milliseconds delay to resolve the race.
+
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- include/net/cfg80211.h |  7 +++++++
- net/mac80211/cfg.c     | 48 +++++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/main.c    | 53 ++++++++++++++++++++++++++++++++++++++++++--------
- 3 files changed, 100 insertions(+), 8 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/tdls.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9e1b24c..257404b 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -2500,6 +2500,8 @@ struct cfg80211_qos_map {
-  *	and returning to the base channel for communication with the AP.
-  * @tdls_cancel_channel_switch: Stop channel-switching with a TDLS peer. Both
-  *	peers must be on the base channel when the call completes.
-+ *
-+ * @set_htcap_rxmask: Override hardware capabilities for ht_caps mcs rxmask.
-  */
- struct cfg80211_ops {
- 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
-@@ -2765,6 +2767,8 @@ struct cfg80211_ops {
- 	void	(*tdls_cancel_channel_switch)(struct wiphy *wiphy,
- 					      struct net_device *dev,
- 					      const u8 *addr);
-+
-+	int (*set_htcap_rxmask)(struct wiphy *wiphy, uint8_t *rxmask);
- };
+diff --git a/drivers/net/wireless/marvell/mwifiex/tdls.c b/drivers/net/wireless/marvell/mwifiex/tdls.c
+index 9275f9c..1506496 100644
+--- a/drivers/net/wireless/marvell/mwifiex/tdls.c
++++ b/drivers/net/wireless/marvell/mwifiex/tdls.c
+@@ -680,6 +680,13 @@ int mwifiex_send_tdls_data_frame(struct mwifiex_private *priv, const u8 *peer,
+ 	__net_timestamp(skb);
+ 	mwifiex_queue_tx_pkt(priv, skb);
  
- /*
-@@ -3121,6 +3125,8 @@ struct wiphy_vendor_command {
-  *	wiphy is theirs, e.g. in global notifiers
-  * @bands: information about bands/channels supported by this device
-  *
-+ * @init_bands: save of the originals information about bands.
-+ *
-  * @mgmt_stypes: bitmasks of frame subtypes that can be subscribed to or
-  *	transmitted through nl80211, points to an array indexed by interface
-  *	type
-@@ -3266,6 +3272,7 @@ struct wiphy {
- 	const void *privid;
- 
- 	struct ieee80211_supported_band *bands[IEEE80211_NUM_BANDS];
-+	struct ieee80211_supported_band *init_bands[IEEE80211_NUM_BANDS];
- 
- 	/* Lets us get back the wiphy on the callback */
- 	void (*reg_notifier)(struct wiphy *wiphy,
-diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
-index 66d22de..daa415b 100644
---- a/net/mac80211/cfg.c
-+++ b/net/mac80211/cfg.c
-@@ -3350,6 +3350,53 @@ static int ieee80211_del_tx_ts(struct wiphy *wiphy, struct net_device *dev,
- 	return -ENOENT;
- }
- 
-+static int ieee80211_set_htcap_rxmask(struct wiphy *wiphy, uint8_t *rxmask)
-+{
-+	struct ieee80211_local *local = wiphy_priv(wiphy);
-+	struct ieee80211_supported_band *sband;
-+	struct ieee80211_supported_band *iband;
-+	int blank = 1;
-+	int empty;
-+	int i;
++	/* Delay 10ms to make sure tdls setup confirm/teardown frame
++	 * is received by peer
++	*/
++	if (action_code == WLAN_TDLS_SETUP_CONFIRM ||
++	    action_code == WLAN_TDLS_TEARDOWN)
++		msleep_interruptible(10);
 +
-+	if (ieee80211_hw_check(&local->hw, HAS_RATE_CONTROL))
-+		return -EINVAL;
-+
-+	mutex_lock(&local->iflist_mtx);
-+	empty = list_empty(&local->interfaces);
-+	mutex_unlock(&local->iflist_mtx);
-+
-+	if (!empty)
-+		return -EBUSY;
-+
-+	for (i = 0; i < IEEE80211_HT_MCS_MASK_LEN; i++)
-+		if (rxmask[i]) {
-+			blank = 0;
-+			break;
-+		}
-+
-+	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
-+		int j;
-+
-+		sband = wiphy->bands[i];
-+		iband = wiphy->init_bands[i];
-+
-+		if (!iband)
-+			continue;
-+
-+		for (j = 0; j < IEEE80211_HT_MCS_MASK_LEN; j++) {
-+			if (blank)
-+				sband->ht_cap.mcs.rx_mask[j] =
-+						iband->ht_cap.mcs.rx_mask[j];
-+			else
-+				sband->ht_cap.mcs.rx_mask[j] = rxmask[j] &
-+						iband->ht_cap.mcs.rx_mask[j];
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- const struct cfg80211_ops mac80211_config_ops = {
- 	.add_virtual_intf = ieee80211_add_iface,
- 	.del_virtual_intf = ieee80211_del_iface,
-@@ -3435,4 +3482,5 @@ const struct cfg80211_ops mac80211_config_ops = {
- 	.set_ap_chanwidth = ieee80211_set_ap_chanwidth,
- 	.add_tx_ts = ieee80211_add_tx_ts,
- 	.del_tx_ts = ieee80211_del_tx_ts,
-+	.set_htcap_rxmask = ieee80211_set_htcap_rxmask,
- };
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 6bcf0fa..138f1e4 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -789,15 +789,37 @@ static int ieee80211_init_cipher_suites(struct ieee80211_local *local)
  	return 0;
  }
  
-+static int ieee80211_alloc_init_bands(struct wiphy *wiphy)
-+{
-+	int i;
-+
-+	memset(wiphy->init_bands, 0, IEEE80211_NUM_BANDS);
-+	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
-+		if (!wiphy->bands[i])
-+			continue;
-+
-+		wiphy->init_bands[i] = kzalloc(sizeof(*wiphy->init_bands[i]),
-+					       GFP_KERNEL);
-+		if (!wiphy->init_bands[i])
-+			return -ENOMEM;
-+
-+		memcpy(wiphy->init_bands[i], wiphy->bands[i],
-+		       sizeof(struct ieee80211_supported_band));
-+	}
-+
-+	return 0;
-+}
-+
- int ieee80211_register_hw(struct ieee80211_hw *hw)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
--	int result, i;
--	enum ieee80211_band band;
-+	struct cfg80211_chan_def dflt_chandef = {};
-+	netdev_features_t feature_whitelist;
- 	int channels, max_bitrates;
-+	enum ieee80211_band band;
- 	bool supp_ht, supp_vht;
--	netdev_features_t feature_whitelist;
--	struct cfg80211_chan_def dflt_chandef = {};
-+	int result = 0;
-+	int i;
- 
- 	if (ieee80211_hw_check(hw, QUEUE_CONTROL) &&
- 	    (local->hw.offchannel_tx_hw_queue == IEEE80211_INVAL_HW_QUEUE ||
-@@ -857,6 +879,11 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 
- 	local->rx_chains = 1;
- 
-+	if (ieee80211_alloc_init_bands(hw->wiphy)) {
-+		result = -ENOMEM;
-+		goto fail_sband_init;
-+	}
-+
- 	/*
- 	 * generic code guarantees at least one band,
- 	 * set this very early because much code assumes
-@@ -919,14 +946,18 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 
- 		for (j = 0; j < c->n_limits; j++)
- 			if ((c->limits[j].types & BIT(NL80211_IFTYPE_ADHOC)) &&
--			    c->limits[j].max > 1)
--				return -EINVAL;
-+			    c->limits[j].max > 1) {
-+				result = -EINVAL;
-+				goto fail_sband_init;
-+			}
- 	}
- 
- 	local->int_scan_req = kzalloc(sizeof(*local->int_scan_req) +
- 				      sizeof(void *) * channels, GFP_KERNEL);
--	if (!local->int_scan_req)
--		return -ENOMEM;
-+	if (!local->int_scan_req) {
-+		result = -ENOMEM;
-+		goto fail_sband_init;
-+	}
- 
- 	for (band = 0; band < IEEE80211_NUM_BANDS; band++) {
- 		if (!local->hw.wiphy->bands[band])
-@@ -1120,6 +1151,9 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
- 	if (local->wiphy_ciphers_allocated)
- 		kfree(local->hw.wiphy->cipher_suites);
- 	kfree(local->int_scan_req);
-+ fail_sband_init:
-+	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
-+		kfree(hw->wiphy->init_bands[i]);
- 	return result;
- }
- EXPORT_SYMBOL(ieee80211_register_hw);
-@@ -1127,6 +1161,7 @@ EXPORT_SYMBOL(ieee80211_register_hw);
- void ieee80211_unregister_hw(struct ieee80211_hw *hw)
- {
- 	struct ieee80211_local *local = hw_to_local(hw);
-+	int i;
- 
- 	tasklet_kill(&local->tx_pending_tasklet);
- 	tasklet_kill(&local->tasklet);
-@@ -1170,6 +1205,8 @@ void ieee80211_unregister_hw(struct ieee80211_hw *hw)
- 	ieee80211_wep_free(local);
- 	ieee80211_led_exit(local);
- 	kfree(local->int_scan_req);
-+	for (i = 0; i < IEEE80211_NUM_BANDS; i++)
-+		kfree(hw->wiphy->init_bands[i]);
- }
- EXPORT_SYMBOL(ieee80211_unregister_hw);
- 
 -- 
-1.9.1
+1.8.1.4
 
