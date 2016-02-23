@@ -1,82 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:36451 "EHLO
-	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753178AbcBDLxC convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 06:53:02 -0500
-Received: by mail-wm0-f50.google.com with SMTP id p63so207977671wmp.1
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 03:53:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <CABPxzYJRS8fLzxPiy1J4jKRvgVaS-OCKK08_bjP2Amo_V54pPA@mail.gmail.com>
-References: <CABPxzY+HpP=NTrAaUEzV5nFm=LK93m=kxPV14-cdftt+VPsWNw@mail.gmail.com>
-	<CA+BoTQ=s_SMgs9zkgYjKOHKDwRORWk-Re7XZ=AiKiHCuNc0L8A@mail.gmail.com>
-	<CABPxzYJRS8fLzxPiy1J4jKRvgVaS-OCKK08_bjP2Amo_V54pPA@mail.gmail.com>
-Date: Thu, 4 Feb 2016 12:53:00 +0100
-Message-ID: <CA+BoTQ=Dg11cP+TJ2_ZkMnjqma62we-JKNWMx8RHJX7ORnvc1A@mail.gmail.com> (sfid-20160204_125307_145962_4323A244)
-Subject: Re: mac80211_hwsim + iperf + netns
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:34970 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755051AbcBWUwr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 15:52:47 -0500
+Message-ID: <1456260764.9910.31.camel@sipsolutions.net> (sfid-20160223_215250_112573_27D78A1A)
+Subject: Re: [PATCH V7 1/2] nl80211: add feature for BSS selection support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: arend@broadcom.com
 Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Date: Tue, 23 Feb 2016 21:52:44 +0100
+In-Reply-To: <56CCC50E.4040300@broadcom.com> (sfid-20160223_214611_910140_8E829C65)
+References: <1455706070-11915-1-git-send-email-arend@broadcom.com>
+	 <1456237245.9910.16.camel@sipsolutions.net> <56CCC50E.4040300@broadcom.com>
+	 (sfid-20160223_214611_910140_8E829C65)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 4 February 2016 at 12:49, Krishna Chaitanya <chaitanya.mgit@gmail.com> wrote:
-> On Thu, Feb 4, 2016 at 5:02 PM, Michal Kazior <michal.kazior@tieto.com> wrote:
->> On 4 February 2016 at 12:22, Krishna Chaitanya <chaitanya.mgit@gmail.com> wrote:
->>> Hi All,
->>>
->>> I am trying to run some iperf tests using mac80211_hwsim b/w AP and STA.
->>> Even after tweaking the routing table, the packets are still not going through
->>> mac80211_hwsim instead they are just looping back.
->>>
->>> After a quick search i found that we should use different network namespaces.
->>> Can anyone tell me the exact procedure for this? I have found a procedure
->>> in the below link, but i dont have the lxc-unshare for my embedded box.
->>> Is there any alternate way for this.
->>
->> If you have a recent enough iproute2 package you can use:
-> Unfortunately i dont, will try to get the latest.
->>  ip netns add ns1
->>  ip netns exec ns1 bash # get the PID in the session and don't close it
->>  iw phy phyX set netns $pid_of_that_shell
->>  # you can close the bash now; phyX will remain in ns1
->>
->> Or you could try using ipv6 link-local addresses which will not
->> require you to use namespaces at all.
-> Tried this but still not able to excite mac80211_hwsim TX path.
-> below are commands and config.
->
-> wlan0     Link encap:Ethernet  HWaddr 02:00:00:00:00:00
->           inet addr:10.0.0.1  Bcast:10.255.255.255  Mask:255.0.0.0
->           inet6 addr: fe80::ff:fe00:0/64 Scope:Link
->           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
->           RX packets:8 errors:0 dropped:1 overruns:0 frame:0
->           TX packets:38 errors:0 dropped:0 overruns:0 carrier:0
->           collisions:0 txqueuelen:1000
->           RX bytes:648 (648.0 B)  TX bytes:3680 (3.5 KiB)
->
-> wlan1     Link encap:Ethernet  HWaddr 02:00:00:00:01:00
->           inet addr:20.0.0.1  Bcast:20.255.255.255  Mask:255.0.0.0
->           inet6 addr: fe80::ff:fe00:100/64 Scope:Link
->           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
->           RX packets:3 errors:0 dropped:0 overruns:0 frame:0
->           TX packets:8 errors:0 dropped:0 overruns:0 carrier:0
->           collisions:0 txqueuelen:1000
->           RX bytes:126 (126.0 B)  TX bytes:808 (808.0 B)
->
-> iperf -s  -B fe80::ff:fe00:0 &
-> iperf -c fe80::ff:fe00:0 -B fe80::ff:fe00:100 -t 60 -i 1
->
-> Something wrong?
+On Tue, 2016-02-23 at 21:46 +0100, Arend Van Spriel wrote:
+> 
+> > Maybe we should be less specific here regarding the NLA_FLAG and
+> > say
+> > that it will contain attributes for each, indicating which
+> > behaviours
+> > are supported, and say there's behaviour-dependent data inside each
+> > of
+> > those attributes?
+> 
+> For the GET_WIPHY case there will be not behaviour dependent data.
+> 
+> > It seems entirely plausible that future behaviours would require
+> > their
+> > own sub-capabilities; perhaps that's even the case today for having
+> > an
+> > adjustment range for example, not that I think it's really
+> > necessary
+> > now.
+> 
+> At least it does not harm to take that into account.
 
-For link-local addresses you must specify interface you want to use them.
+Right; there isn't today, but there might be later, so for the
+GET_WIPHY case it might be worth just specifying that there will be an
+attribute, not that it's NLA_FLAG?
 
-Also, there's an iperf switch to understand ipv6 "-V".
+Not that it'll matter much - only when we actually add such could
+applications possibly want to parse them :)
 
- iperf -V -i1 -s
- iperf -V -i1 -c fe80::ff:fe00:0%wlan1
- iperf -V -i1 -c fe80::ff:fe00:100%wlan0
+> > > +	/* only process one nested attribute */
+> > > +	nest = nla_data(nla);
+> > > +	if (!nla_ok(nest, nla_len(nest)))
+> > > +		return -EBADF;
+> > 
+> > This isn't quite clear to me. Shouldn't you do this by declaring it
+> > NLA_TESTED in the nl80211_policy?
+> 
+> Guess you mean NLA_NESTED.
+
+Heh, yeah.
+
+> > Actually, not really? you use nla_ok() on the inner (without having
+> > checked at all that it's even long enough btw, since you didn't do
+> > the
+> > policy change), but that would already be done by nla_parse()
+> > below?
+> 
+> Because ATTR_BSS_SELECT is used in CMD_GET_WIPHY and CMD_CONNECT the
+> length of the attribute is not a constant. Or do I only need to put
+> length in nl80211_policy for userspace-2-kernel direction, ie. for
+> ATTR_BSS_SELECT in CMD_CONNECT.
+
+Ah. kernel->userspace messages don't use the policy in any way, it's
+just for the userspace->kernel message validation, so you can put there
+what's needed for CMD_CONNECT and ignore GET_WIPHY.
 
 
-Michał
+johannes
