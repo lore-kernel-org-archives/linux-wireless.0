@@ -1,79 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f45.google.com ([74.125.82.45]:32815 "EHLO
-	mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932285AbcBAV7s (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:47089 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751059AbcBWO6O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2016 16:59:48 -0500
-Received: by mail-wm0-f45.google.com with SMTP id l66so90781318wml.0
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 13:59:48 -0800 (PST)
-From: Sven Eckelmann <sven@open-mesh.com>
-To: linux-wireless@vger.kernel.org
-Cc: thomas@net.t-labs.tu-berlin.de, antonio@open-mesh.com,
-	nbd@nbd.name, johannes@sipsolutions.net,
-	Sven Eckelmann <sven@open-mesh.com>
-Subject: [PATCH] mac80211: minstrel: Change expected throughput unit back to Kbps
-Date: Mon,  1 Feb 2016 22:59:38 +0100
-Message-Id: <1454363978-3176-1-git-send-email-sven@open-mesh.com> (sfid-20160201_225952_251675_E886E272)
+	Tue, 23 Feb 2016 09:58:14 -0500
+Message-ID: <56CC7385.5050004@candelatech.com> (sfid-20160223_155817_797301_C3663E97)
+Date: Tue, 23 Feb 2016 06:58:13 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+CC: Jouni Malinen <j@w1.fi>
+Subject: Re: [PATCH] mac80211:  Let VHT work on 2.4Ghz
+References: <1456180974-21062-1-git-send-email-greearb@candelatech.com>	 <1456236627.9910.10.camel@sipsolutions.net>	 <56CC6A35.5000900@candelatech.com> <1456237373.9910.18.camel@sipsolutions.net>
+In-Reply-To: <1456237373.9910.18.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The change from cur_tp to the function
-minstrel_get_tp_avg/minstrel_ht_get_tp_avg changed the unit used for the
-current throughput. For example in minstrel_ht the correct
-conversion between them would be:
 
-    mrs->cur_tp / 10 == minstrel_ht_get_tp_avg(..).
 
-This factor 10 must also be included in the calculation of
-minstrel_get_expected_throughput and minstrel_ht_get_expected_throughput to
-return values with the unit [Kbps] instead of [10Kbps]. Otherwise routing
-algorithms like B.A.T.M.A.N. V will make incorrect decision based on these
-values. Its kernel based implementation expects expected_throughput always
-to have the unit [Kbps] and not sometimes [10Kbps] and sometimes [Kbps].
+On 02/23/2016 06:22 AM, Johannes Berg wrote:
+> On Tue, 2016-02-23 at 06:18 -0800, Ben Greear wrote:
+>
+>> [root@ben-ota2 lanforge]# iw phy wiphy0 info
+>> Wiphy wiphy0
+>>
+>> 	Band 1:
+> [...]
+>> 		VHT Capabilities (0x338001b2):
+>> 			Max MPDU length: 11454
+>> 			Supported Channel Width: neither 160 nor 80+80
+>> 			RX LDPC
+>> 			short GI (80 MHz)
+>> 			TX STBC
+>> 			RX antenna pattern consistency
+>> 			TX antenna pattern consistency
+>> 		VHT RX MCS set:
+>> 			1 streams: MCS 0-9
+>> 			2 streams: MCS 0-9
+>> 			3 streams: MCS 0-9
+>> 			4 streams: not supported
+>> 			5 streams: not supported
+>> 			6 streams: not supported
+>> 			7 streams: not supported
+>> 			8 streams: not supported
+>> 		VHT RX highest supported: 0 Mbps
+>> 		VHT TX MCS set:
+>> 			1 streams: MCS 0-9
+>> 			2 streams: MCS 0-9
+>> 			3 streams: MCS 0-9
+>> 			4 streams: not supported
+>> 			5 streams: not supported
+>> 			6 streams: not supported
+>> 			7 streams: not supported
+>> 			8 streams: not supported
+>> 		VHT TX highest supported: 0 Mbps
+>
+>> 		Frequencies:
+>> 			* 2412 MHz [1] (30.0 dBm)
+>>
+> [...]
+>
+> Oops. Well, the driver isn't supposed to do that, this is certainly
+> non-spec behaviour.
 
-The same requirement has iw or olsrdv2's nl80211 based statistics module
-which retrieve the same data via NL80211_STA_INFO_TX_BITRATE.
+Is there any harm though?  There is at least one other AP manufacturer
+that really wants to test this feature, so I guess there will be products
+on the market soon enough that support VHT in 2.4Ghz band.
 
-Fixes: 6a27b2c40b48 ("mac80211: restructure per-rate throughput calculation into function")
-Signed-off-by: Sven Eckelmann <sven@open-mesh.com>
---
-v3:
-- fix typo in title
-- extend description to better explain why this is important
-v2:
-- Modified PATCH title
----
- net/mac80211/rc80211_minstrel.c    | 2 +-
- net/mac80211/rc80211_minstrel_ht.c | 3 ++-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+Some day soon-ish, we'll benchmark this in an isolation chamber & over-the-air to see
+how it actually performs.
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 3ece7d1..b54f398 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -711,7 +711,7 @@ static u32 minstrel_get_expected_throughput(void *priv_sta)
- 	 * computing cur_tp
- 	 */
- 	tmp_mrs = &mi->r[idx].stats;
--	tmp_cur_tp = minstrel_get_tp_avg(&mi->r[idx], tmp_mrs->prob_ewma);
-+	tmp_cur_tp = minstrel_get_tp_avg(&mi->r[idx], tmp_mrs->prob_ewma) * 10;
- 	tmp_cur_tp = tmp_cur_tp * 1200 * 8 / 1024;
- 
- 	return tmp_cur_tp;
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 3928dbd..8928151 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -1334,7 +1334,8 @@ static u32 minstrel_ht_get_expected_throughput(void *priv_sta)
- 	prob = mi->groups[i].rates[j].prob_ewma;
- 
- 	/* convert tp_avg from pkt per second in kbps */
--	tp_avg = minstrel_ht_get_tp_avg(mi, i, j, prob) * AVG_PKT_SIZE * 8 / 1024;
-+	tp_avg = minstrel_ht_get_tp_avg(mi, i, j, prob) * 10;
-+	tp_avg *= AVG_PKT_SIZE * 8 / 1024;
- 
- 	return tp_avg;
- }
+Thanks,
+Ben
+
+
 -- 
-2.7.0
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
