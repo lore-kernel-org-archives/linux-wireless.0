@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:9821 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965764AbcBDJZD (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.10]:54288 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753129AbcBWPHR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:25:03 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 21/70] staging: wilc1000: removes void function return
-Date: Thu, 4 Feb 2016 18:15:38 +0900
-Message-ID: <1454577387-509-22-git-send-email-glen.lee@atmel.com> (sfid-20160204_104502_383963_F98357B7)
-In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+	Tue, 23 Feb 2016 10:07:17 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Marc Dietrich <marvin24@gmx.de>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
+	Alexandre Courbot <gnurou@gmail.com>,
+	Stephen Warren <swarren@wwwdotorg.org>
+Subject: Re: [PATCHv2 3/4] ARM: tegra: use build-in device properties with rfkill_gpio
+Date: Tue, 23 Feb 2016 16:06:55 +0100
+Message-ID: <3466361.DVRahbqhfF@wuerfel> (sfid-20160223_160754_301465_ED07ED11)
+In-Reply-To: <2927215.6IlWnjRTgT@fb07-iapwap2>
+References: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com> <2463567.tt0f0ingYr@wuerfel> <2927215.6IlWnjRTgT@fb07-iapwap2>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+On Tuesday 23 February 2016 14:42:55 Marc Dietrich wrote:
+> Am Dienstag, 23. Februar 2016, 14:17:17 CET schrieb Arnd Bergmann:
+> > On Tuesday 23 February 2016 11:38:52 Marc Dietrich wrote:
+> > > Am Dienstag, 23. Februar 2016, 11:31:40 CET schrieb Arnd Bergmann:
+> > Ah, so the problem of attaching DT properties to a USB device has recently
+> > been solved, see subject "USB: core: let USB device know device node".
+> > 
+> > Would that work for you? With this, the USB driver can simply look at
+> > the optional DT properties of the USB function to implement its rfkill
+> > callbacks.
+> 
+> oh, that looks indeed interesting. The question is now if rfkill is a property 
+> of a device or a subdevice itself. The latter one would only require addition 
+> of device-tree instantiation of rfkill, while with the former one, the (or 
+> all) usb driver(s) need to be modified to accept device tree properties, 
+> especially gpios. The driver would then be responsible to add an rfkill 
+> "device".
+> 
+> IMHO (and unfortunately), it's just a property (a way to specify the relevant 
+> gpios), making the solution again hard to archive.
 
-This patch removes the warning reported by checkpatch.pl
-for void function return statements are not generally useful.
+Does rfkill always have a separate device in the Linux driver model?
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c | 2 --
- 1 file changed, 2 deletions(-)
+I would say that if we standardize on the property names, we can
+have some generic helper code that does everything with one or
+two function calls, similar to how we can read a mac address from
+a DT node from ROM-less USB ethernet devices.
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index c16cc40..5c87105 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -1047,8 +1047,6 @@ static void wilc_set_multicast_list(struct net_device *dev)
- 	}
- 
- 	wilc_setup_multicast_filter(vif, true, (dev->mc.count));
--
--	return;
- }
- 
- static void linux_wlan_tx_complete(void *priv, int status)
--- 
-1.9.1
-
+	Arnd
