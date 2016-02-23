@@ -1,68 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56027 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932360AbcBIU7Y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 9 Feb 2016 15:59:24 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Drunk Cat <natserver2@gmail.com>, linux-wireless@vger.kernel.org
-Subject: Re: alfa awus036nhr v2 and module rtl8xxxu
-References: <loom.20160128T003525-188@post.gmane.org>
-	<wrfjd1sco25f.fsf@redhat.com> <56B38CDF.9010806@lwfinger.net>
-	<wrfjd1scmkz6.fsf@redhat.com>
-Date: Tue, 09 Feb 2016 15:59:23 -0500
-In-Reply-To: <wrfjd1scmkz6.fsf@redhat.com> (Jes Sorensen's message of "Thu, 04
-	Feb 2016 12:41:33 -0500")
-Message-ID: <wrfja8n9d2hg.fsf@redhat.com> (sfid-20160209_215927_783717_C79583FF)
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:35509 "EHLO
+	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752204AbcBWK3J (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 05:29:09 -0500
+Received: by mail-wm0-f65.google.com with SMTP id g62so21136612wme.2
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2016 02:29:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1456222250.2041.8.camel@sipsolutions.net>
+References: <1455878585-5525-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1455878585-5525-3-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1456222250.2041.8.camel@sipsolutions.net>
+Date: Tue, 23 Feb 2016 11:29:07 +0100
+Message-ID: <CAA2SeNLB+oL00Mx1BCccA4eOx6nghLUofruPSepW70VWRS8EQQ@mail.gmail.com> (sfid-20160223_112947_445866_7D163393)
+Subject: Re: [PATCH v2 2/2] mac80211: parse VHT info in injected frames
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes Sorensen <Jes.Sorensen@redhat.com> writes:
-> Larry Finger <Larry.Finger@lwfinger.net> writes:
->> On 02/04/2016 10:45 AM, Jes Sorensen wrote:
->>> Drunk Cat <natserver2@gmail.com> writes:
->>>> problem: it does not connect to any wifi network you can see the time out on
->>>> dmesg
->>>>
->>>>
->>>>> lsusb
->>>>
->>>> Bus 002 Device 007: ID 0bda:817f Realtek Semiconductor Corp. RTL8188RU
->>>> 802.11n WLAN Adapter
->>>>
->>>>> iwconfig
->>>> wlp0s20u1  IEEE 802.11bgn  ESSID:off/any
->>>>            Mode:Managed  Access Point: Not-Associated   Tx-Power=20 dBm
->>>>            Retry short limit:7   RTS thr=2347 B   Fragment thr:off
->>>>            Power Management:off
->>>>> dmesg
->>>
->>> Not sure what distribution you are running, but I am seeing problems
->>> with NetworkManager in recent Fedora.
->>>
->>> Could you try the following:
->>> 1) Unplug the WiFi dongle
->>> 2) (Re)load the driver (rmmod rtl8xxxu ; insmod rtl8xxxu)
->>> 3) Restart NetworkManager 'systemctl restart NetworkManager'
->>> 4) Plug in the WiFi dongle
+I used the previous commit scheme (mac80211: Parse legacy and HT rate
+in injected frames).
+I will rewrite the documentation. Should I send v3 or a different patch?
+
+Regards,
+Lorenzo
+
+On Tue, Feb 23, 2016 at 11:10 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> On Fri, 2016-02-19 at 11:43 +0100, Lorenzo Bianconi wrote:
+>> Add VHT radiotap parsing support to ieee80211_parse_tx_radiotap().
+>> That capability has been tested using a d-link dir-860l rev b1
+>> running
+>> OpenWrt trunk and mt76 driver
 >>
->> Jes,
+>> Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+>> ---
+>>  Documentation/networking/mac80211-injection.txt | 10 ++++++++
+>>  net/mac80211/tx.c                               | 31
+>> +++++++++++++++++++++++++
+>>  2 files changed, 41 insertions(+)
 >>
->> I can confirm what Drunk Cat sees. There is something different about
->> the RTL8192RU as using the iwconfig utility shows no APs in the
->> scan. I hope to get to debugging the problem soon.
+>> diff --git a/Documentation/networking/mac80211-injection.txt
+>> b/Documentation/networking/mac80211-injection.txt
+>> index ec8f934..ef57cc0 100644
+>> --- a/Documentation/networking/mac80211-injection.txt
+>> +++ b/Documentation/networking/mac80211-injection.txt
+>> @@ -45,6 +45,16 @@ radiotap headers and used to control injection:
+>>     number of retries when either IEEE80211_RADIOTAP_RATE or
+>>     IEEE80211_RADIOTAP_MCS was used
+>>
+>> + * IEEE80211_RADIOTAP_VHT
+>> +
+>> +   VHT rate for the transmission (only for devices without own rate
+>> control).
+>> +   Also some flags are parsed
+>> +
+>> +   IEEE80211_TX_RC_SHORT_GI: use short guard interval
+>> +   IEEE80211_TX_RC_40_MHZ_WIDTH: send in HT40 mode
+>> +   IEEE80211_TX_RC_80_MHZ_WIDTH: send in HT80 mode
+>> +   IEEE80211_TX_RC_160_MHZ_WIDTH: send in HT160 mode
+>>
+> This makes no sense, those are mac80211 internal flags, should document
+> the radiotap flags here, not what they map to internally.
 >
-> OK - thats unfortunate. Most likely the wrong antenna path is being
-> enabled for it, or something like that.
->
-> Once I finish up the 8723bu/8192eu patchset, I'll try to find some time
-> to look at it, if you don't nail it before.
+> johannes
 
-Larry,
 
-Does this patch make any difference?
 
-Cheers,
-Jes
+-- 
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
