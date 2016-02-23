@@ -1,53 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f68.google.com ([209.85.192.68]:33939 "EHLO
-	mail-qg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754731AbcBHPln (ORCPT
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:51590 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755313AbcBWUp2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 10:41:43 -0500
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
+	Tue, 23 Feb 2016 15:45:28 -0500
+Date: Tue, 23 Feb 2016 21:45:26 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: =?iso-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
 	Darren Hart <dvhart@infradead.org>,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
 	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux@endlessm.com,
-	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
-Subject: [PATCH 3/9] rfkill: Point to the correct deprecated doc location
-Date: Mon,  8 Feb 2016 10:41:30 -0500
-Message-Id: <1454946096-9752-4-git-send-email-jprvita@endlessm.com> (sfid-20160208_164819_870995_601AD74D)
-In-Reply-To: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
-References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
+	=?iso-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
+	<jprvita@endlessm.com>
+Subject: Re: [PATCHv2 09/10] rfkill: Userspace control for airplane mode
+Message-ID: <20160223204525.GC16961@amd> (sfid-20160223_214606_675468_47DE4C28)
+References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+ <1456159001-20307-10-git-send-email-jprvita@endlessm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1456159001-20307-10-git-send-email-jprvita@endlessm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The "claim" sysfs interface has been removed, so its documentation now
-lives in the "removed" folder.
+Hi!
 
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
----
- Documentation/ABI/stable/sysfs-class-rfkill | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+[BTW you should probably Cc people responsible for LED subsystem...]
 
-diff --git a/Documentation/ABI/stable/sysfs-class-rfkill b/Documentation/ABI/stable/sysfs-class-rfkill
-index 097f522..e51571e 100644
---- a/Documentation/ABI/stable/sysfs-class-rfkill
-+++ b/Documentation/ABI/stable/sysfs-class-rfkill
-@@ -2,8 +2,10 @@ rfkill - radio frequency (RF) connector kill switch support
- 
- For details to this subsystem look at Documentation/rfkill.txt.
- 
--For the deprecated /sys/class/rfkill/*/state and
--/sys/class/rfkill/*/claim knobs of this interface look in
-+For the deprecated /sys/class/rfkill/*/claim knobs of this interface look in
-+Documentation/ABI/removed/sysfs-class-rfkill.
-+
-+For the deprecated /sys/class/rfkill/*/state knobs of this interface look in
- Documentation/ABI/obsolete/sysfs-class-rfkill.
- 
- What: 		/sys/class/rfkill
+> Provide an interface for the airplane-mode indicator be controlled from
+> userspace. User has to first acquire the control through
+> RFKILL_OP_AIRPLANE_MODE_ACQUIRE and keep the fd open for the whole time
+> it wants to be in control of the indicator. Closing the fd or using
+> RFKILL_OP_AIRPLANE_MODE_RELEASE restores the default policy.
+> 
+> To change state of the indicator, the RFKILL_OP_AIRPLANE_MODE_CHANGE
+> operation is used, passing the value on "struct rfkill_event.soft". If
+> the caller has not acquired the airplane-mode control beforehand, the
+> operation fails.
+
+So... you add LED trigger to display the state of the airplane
+mode. Ok, why not.
+
+But now you add an way to override it? Why? If someone wants to change
+the led state, he can just change trigger to none, and then control
+the LED manually...
+
+BTW what happens when the device contains both radios controlled by
+kernel (wifi, bluetooth) and radios controlled by userspace (GSM
+modem)?
+
+Best regards,
+									Pavel
 -- 
-2.5.0
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
