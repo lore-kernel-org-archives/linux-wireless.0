@@ -1,42 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:32863 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751920AbcBJQbV (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:33271 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932438AbcBWGiZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Feb 2016 11:31:21 -0500
-Received: by mail-wm0-f46.google.com with SMTP id g62so34403017wme.0
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Feb 2016 08:31:20 -0800 (PST)
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes@sipsolutions.net>
-Subject: [RFC 1/2] cfg80211: add radiotap VHT info to rtap_namespace_sizes
-Date: Wed, 10 Feb 2016 17:31:16 +0100
-Message-Id: <1455121877-7238-2-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20160210_173125_940419_6F5DBBD6)
-In-Reply-To: <1455121877-7238-1-git-send-email-lorenzo.bianconi83@gmail.com>
-References: <1455121877-7238-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	Tue, 23 Feb 2016 01:38:25 -0500
+Received: by mail-pa0-f43.google.com with SMTP id fl4so105056767pad.0
+        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2016 22:38:24 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 5/7] staging: wilc1000: handle_cfg_param: fix logical continuations
+Date: Tue, 23 Feb 2016 15:38:01 +0900
+Message-Id: <1456209483-20345-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20160223_073827_789642_F04E1F24)
+In-Reply-To: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add IEEE80211_RADIOTAP_VHT entry to rtap_namespace_sizes array in order to
-define alignment and size of VHT info in tx radiotap
+This patch fixes logical continuations found by checkpatch
+CHECK: Logical continuations should be on the previous line
 
-Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- net/wireless/radiotap.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/staging/wilc1000/host_interface.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/net/wireless/radiotap.c b/net/wireless/radiotap.c
-index 722da61..6582d15 100644
---- a/net/wireless/radiotap.c
-+++ b/net/wireless/radiotap.c
-@@ -43,6 +43,7 @@ static const struct radiotap_align_size rtap_namespace_sizes[] = {
- 	[IEEE80211_RADIOTAP_DATA_RETRIES] = { .align = 1, .size = 1, },
- 	[IEEE80211_RADIOTAP_MCS] = { .align = 1, .size = 3, },
- 	[IEEE80211_RADIOTAP_AMPDU_STATUS] = { .align = 4, .size = 8, },
-+	[IEEE80211_RADIOTAP_VHT] = { .align = 2, .size = 12, },
- 	/*
- 	 * add more here as they are defined in radiotap.h
- 	 */
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index d207c5c..7d36d50 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -730,12 +730,12 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 	if (cfg_param_attr->flag & CURRENT_TX_RATE) {
+ 		enum CURRENT_TXRATE curr_tx_rate = cfg_param_attr->curr_tx_rate;
+ 
+-		if (curr_tx_rate == AUTORATE || curr_tx_rate == MBPS_1
+-		    || curr_tx_rate == MBPS_2 || curr_tx_rate == MBPS_5_5
+-		    || curr_tx_rate == MBPS_11 || curr_tx_rate == MBPS_6
+-		    || curr_tx_rate == MBPS_9 || curr_tx_rate == MBPS_12
+-		    || curr_tx_rate == MBPS_18 || curr_tx_rate == MBPS_24
+-		    || curr_tx_rate == MBPS_36 || curr_tx_rate == MBPS_48 || curr_tx_rate == MBPS_54) {
++		if (curr_tx_rate == AUTORATE || curr_tx_rate == MBPS_1 ||
++		    curr_tx_rate == MBPS_2 || curr_tx_rate == MBPS_5_5 ||
++		    curr_tx_rate == MBPS_11 || curr_tx_rate == MBPS_6 ||
++		    curr_tx_rate == MBPS_9 || curr_tx_rate == MBPS_12 ||
++		    curr_tx_rate == MBPS_18 || curr_tx_rate == MBPS_24 ||
++		    curr_tx_rate == MBPS_36 || curr_tx_rate == MBPS_48 || curr_tx_rate == MBPS_54) {
+ 			wid_list[i].id = WID_CURRENT_TX_RATE;
+ 			wid_list[i].val = (s8 *)&curr_tx_rate;
+ 			wid_list[i].type = WID_SHORT;
 -- 
-2.5.0
+2.7.1
 
