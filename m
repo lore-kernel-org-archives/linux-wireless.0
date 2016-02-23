@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:29845 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752997AbcBVERK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2016 23:17:10 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V3 15/24] staging: wilc1000: coreconfigurator.c: removes unnecessary log messages
-Date: Mon, 22 Feb 2016 13:12:00 +0900
-Message-ID: <1456114329-7036-16-git-send-email-leo.kim@atmel.com> (sfid-20160222_051714_830336_5E27D98A)
-In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
-References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:34983 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755162AbcBWUzW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 15:55:22 -0500
+Message-ID: <1456260914.9910.34.camel@sipsolutions.net> (sfid-20160223_215554_623381_8BAD6A19)
+Subject: Re: [PATCHv2 09/10] rfkill: Userspace control for airplane mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Machek <pavel@ucw.cz>,
+	=?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
+	<jprvita@endlessm.com>
+Date: Tue, 23 Feb 2016 21:55:14 +0100
+In-Reply-To: <20160223204525.GC16961@amd>
+References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+	 <1456159001-20307-10-git-send-email-jprvita@endlessm.com>
+	 <20160223204525.GC16961@amd>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+On Tue, 2016-02-23 at 21:45 +0100, Pavel Machek wrote:
 
-This patch removes unnecessary log messages.
+> So... you add LED trigger to display the state of the airplane
+> mode. Ok, why not.
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Yes. However, consider that "the airplane mode" isn't a well-defined
+concept; some systems may want to light up that LED even when wifi is
+still enabled, since you're nowadays quite likely to be allowed to use
+wifi (but not enable e.g. LTE) while in-flight.
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 3a76586..25dc108 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -284,10 +284,8 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
- 
- 	msg_type = msg_buffer[0];
- 
--	if ('N' != msg_type) {
--		PRINT_ER("Received Message format incorrect.\n");
-+	if ('N' != msg_type)
- 		return -EFAULT;
--	}
- 
- 	msg_id = msg_buffer[1];
- 	msg_len = MAKE_WORD16(msg_buffer[2], msg_buffer[3]);
--- 
-1.9.1
+> But now you add an way to override it? Why? If someone wants to
+> change
+> the led state, he can just change trigger to none, and then control
+> the LED manually...
 
+Yes, but now you've forced every application that wants to deal with
+this to know about every single LED that might be used with this
+trigger... that won't work for some generic userland tool that might
+want to implement an "airplane-mode policy".
+
+> BTW what happens when the device contains both radios controlled by
+> kernel (wifi, bluetooth) and radios controlled by userspace (GSM
+> modem)?
+
+You'd better have the userspace to control the LED :)
+
+johannes
