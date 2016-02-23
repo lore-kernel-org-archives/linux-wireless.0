@@ -1,70 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f195.google.com ([209.85.223.195]:36594 "EHLO
-	mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752361AbcBOXqL (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:17399 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751880AbcBWNXn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Feb 2016 18:46:11 -0500
-Received: by mail-io0-f195.google.com with SMTP id b188so13722906iof.3
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Feb 2016 15:46:10 -0800 (PST)
+	Tue, 23 Feb 2016 08:23:43 -0500
+From: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
+To: "janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/4] ath10k: remove supported chain mask
+Date: Tue, 23 Feb 2016 13:23:33 +0000
+Message-ID: <1456233812853.59898@qti.qualcomm.com> (sfid-20160223_142346_311369_630F6FA3)
+References: <1445948474-16738-1-git-send-email-rmanohar@qti.qualcomm.com>
+	<87fv0uq6p7.fsf@kamboji.qca.qualcomm.com>,<CALhHN=orRg2mkjcJ1TGssjEocNrRWEhhDV=SKGYANQ-c+YEyzA@mail.gmail.com>
+In-Reply-To: <CALhHN=orRg2mkjcJ1TGssjEocNrRWEhhDV=SKGYANQ-c+YEyzA@mail.gmail.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-In-Reply-To: <1455173229-6383-1-git-send-email-royujjal@gmail.com>
-References: <1455173229-6383-1-git-send-email-royujjal@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 16 Feb 2016 10:45:51 +1100
-Message-ID: <CAGRGNgU3WcrwBquYx-wVgq=c3fQ1CaPeapKbVt3ZnXOWfpQowA@mail.gmail.com> (sfid-20160216_004616_067683_C3282F60)
-Subject: Re: [PATCH 1/3] mwifiex: Fixed incorrect indentation issue
-To: Ujjal Roy <royujjal@gmail.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	WiFi Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
-
-On Thu, Feb 11, 2016 at 5:47 PM, Ujjal Roy <royujjal@gmail.com> wrote:
-> This patch fixes the incorrect indentation of the case label.
+>>> Removing supported chainmask fields as it can be always derived
+>>> from num_rf_chains.
+>>>
+>>> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+>>
+> Hello,
 >
-> Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+> This one break monitor mode for qca988x and 10.x firmware:
+> After Revert "ath10k: remove supported chain mask" - works correctly.
+> 
+Janusz,
 
-Looks right to me.
+Thanks for reporting. Will send out patch asap.
 
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-Thanks,
-
-> ---
->  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> index e7adef7..cb0cf03 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> @@ -676,7 +676,7 @@ mwifiex_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
->                 }
->                 break;
->
-> -               case MWIFIEX_BSS_ROLE_STA:
-> +       case MWIFIEX_BSS_ROLE_STA:
->                 if (priv->media_connected) {
->                         mwifiex_dbg(adapter, ERROR,
->                                     "cannot change wiphy params when connected");
-> --
-> 1.9.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+-Rajkumar
