@@ -1,126 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20945 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754176AbcBVKUu (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 05:20:50 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V4 22/24] staging: wilc1000: removes usused PRINT_XX(region...)
-Date: Mon, 22 Feb 2016 19:14:29 +0900
-Message-ID: <1456136071-10502-23-git-send-email-leo.kim@atmel.com> (sfid-20160222_112101_482962_917709F2)
-In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
-References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:59480 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752476AbcBWL0A (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 06:26:00 -0500
+Message-ID: <1456226757.2041.35.camel@sipsolutions.net> (sfid-20160223_122604_423612_56256AA0)
+Subject: Re: [PATCH 1/2] mac80211: add A-MSDU tx support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Cc: egrumbach@gmail.com
+Date: Tue, 23 Feb 2016 12:25:57 +0100
+In-Reply-To: <1455820762-22876-1-git-send-email-nbd@openwrt.org>
+References: <1455820762-22876-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+On Thu, 2016-02-18 at 19:39 +0100, Felix Fietkau wrote:
+> Requires software tx queueing support. frag_list support (for zero-
+> copy) is optional.
 
-This patch removes unused PRINT_XX(region...)
-because already removed in used to region feature of whole wilc source.
-Also, removes unnecessary related region extern variable.
+"optional" ;-)
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan_common.h | 69 ----------------------------
- 1 file changed, 69 deletions(-)
+> @@ -1751,6 +1754,7 @@ struct ieee80211_sta {
+>  	bool mfp;
+>  	u8 max_amsdu_subframes;
+>  	u16 max_amsdu_len;
+> +	u16 max_rc_amsdu_len;
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index 57d3901..2e2109c 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -2,83 +2,14 @@
- #define LINUX_WLAN_COMMON_H
- 
- #if defined(WILC_DEBUGFS)
--extern atomic_t WILC_DEBUG_LEVEL;
--
- #define DEBUG           BIT(0)
- #define INFO            BIT(1)
- #define WRN             BIT(2)
- #define ERR             BIT(3)
--
--#define PRINT_D(region, ...)						\
--	do {								\
--		if ((atomic_read(&WILC_DEBUG_LEVEL) & DEBUG)) {	\
--			printk("DBG [%s: %d]", __func__, __LINE__);	\
--			printk(__VA_ARGS__);				\
--		}							\
--	} while (0)
--
--#define PRINT_INFO(region, ...)						\
--	do {								\
--		if ((atomic_read(&WILC_DEBUG_LEVEL) & INFO)) {	\
--			printk("INFO [%s]", __func__);			\
--			printk(__VA_ARGS__);				\
--		}							\
--	} while (0)
--
--#define PRINT_WRN(region, ...)						\
--	do {								\
--		if ((atomic_read(&WILC_DEBUG_LEVEL) & WRN)) {	\
--			printk("WRN [%s: %d]", __func__, __LINE__);	\
--			printk(__VA_ARGS__);				\
--		}							\
--	} while (0)
--
--#define PRINT_ER(...)							\
--	do {								\
--		if ((atomic_read(&WILC_DEBUG_LEVEL) & ERR)) {	\
--			printk("ERR [%s: %d]", __func__, __LINE__);	\
--			printk(__VA_ARGS__);				\
--		}							\
--	} while (0)
--
- #else
--
--#define REGION  (INIT_DBG | GENERIC_DBG | CFG80211_DBG | FIRM_DBG | HOSTAPD_DBG)
--
- #define DEBUG       1
- #define INFO        0
- #define WRN         0
--
--#define PRINT_D(region, ...)						\
--	do {								\
--		if (DEBUG == 1 && ((REGION)&(region))) {		\
--			printk("DBG [%s: %d]", __func__, __LINE__);	\
--			printk(__VA_ARGS__);				\
--		}							\
--	} while (0)
--
--#define PRINT_INFO(region, ...)						\
--	do {								\
--		if (INFO == 1 && ((REGION)&(region))) {			\
--			printk("INFO [%s]", __func__);			\
--			printk(__VA_ARGS__);				\
--		}							\
--	} while (0)
--
--#define PRINT_WRN(region, ...)						\
--	do {								\
--		if (WRN == 1 && ((REGION)&(region))) {			\
--			printk("WRN [%s: %d]", __func__, __LINE__);	\
--			printk(__VA_ARGS__);				\
--		}							\
--	} while (0)
--
--#define PRINT_ER(...)							\
--	do {								\
--		printk("ERR [%s: %d]", __func__, __LINE__);		\
--		printk(__VA_ARGS__);					\
--	} while (0)
--
- #endif
- 
- #define LINUX_RX_SIZE	(96 * 1024)
--- 
-1.9.1
+I may have missed this, but I didn't see you initialize this to
+something. I think that's probably a bad idea, since you've now created
+a situation in which a driver wanting to use txq support needs to also
+use minstrel or update this field...
 
+Apart from that, I'm not sure that having a field here that works like
+this is a good idea at all - all the other fields in the vicinity kinda
+go from mac80211 to the driver, where here you have something that
+potentially goes from the driver to mac80211. Perhaps we can find a
+better way of doing this?
+
+> + * @IEEE80211_HW_TX_AMSDU: Hardware (or driver) supports software
+> aggregated
+> + *	A-MSDU frames. Requires software tx queueing support.
+
+Or at least document that it also requires integration with the
+max_rc_amsdu_len thing.
+
+> + * @max_tx_fragments: maximum fragments per (A-)MSDU.
+
+"fragments" is a bit unclear - I guess this should refer to fraglist
+length only? Or is it meant to apply as a limit to the sum of pieces in
+the fraglist? I think that should be clarified.
+
+> +	txq = sta->sta.txq[tid];
+> +	if (!amsdu && txq)
+> +		set_bit(IEEE80211_TXQ_NO_AMSDU, &to_txq_info(txq)-
+> >flags);
+
+Did you intentionally not clear this on aggregation stop?
+
+> +	if (skb_headroom(skb) < sizeof(amsdu_hdr) ||
+> skb_tailroom(skb) < 3) {
+> +		I802_DEBUG_INC(local->tx_expand_skb_head);
+> +
+> +		if (pskb_expand_head(skb, sizeof(amsdu_hdr), 3,
+> GFP_ATOMIC)) {
+
+You should be able to precalculate the amount of padding needed based
+on the length of the skb, so why statically use 3 here?
+
+> +	if (skb_headroom(skb) < 8 || skb_tailroom(skb) < 3) {
+> +		I802_DEBUG_INC(local->tx_expand_skb_head);
+> +
+> +		if (pskb_expand_head(skb, 8, 3, GFP_ATOMIC)) {
+
+similarly here? Where does the 8 come from?
+
+> @@ -2820,6 +2983,10 @@ static bool ieee80211_xmit_fast(struct
+> ieee80211_sub_if_data *sdata,
+>  
+>  	ieee80211_tx_stats(dev, skb->len + extra_head);
+>  
+> +	if ((hdr->frame_control &
+> cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) &&
+> +	    ieee80211_amsdu_aggregate(sdata, sta, fast_tx, skb))
+> +		return true;
+
+Only on xmit_fast?
+
+johannes
