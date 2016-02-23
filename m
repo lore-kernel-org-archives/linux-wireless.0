@@ -1,86 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:48635 "EHLO plane.gmane.org"
+Received: from s3.sipsolutions.net ([5.9.151.49]:34732 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965603AbcBDEHH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 23:07:07 -0500
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1aRBCA-0002BJ-IQ
-	for linux-wireless@vger.kernel.org; Thu, 04 Feb 2016 05:07:03 +0100
-Received: from abts-north-dynamic-242.62.161.122.airtelbroadband.in ([abts-north-dynamic-242.62.161.122.airtelbroadband.in])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 05:07:02 +0100
-Received: from neelansh by abts-north-dynamic-242.62.161.122.airtelbroadband.in with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 05:07:02 +0100
-To: linux-wireless@vger.kernel.org
-From: Neelansh Mittal <neelansh@gmail.com>
-Subject: Re: =?utf-8?b?QWRqdXN0aW5nX3RidHQ=?= in mesh capability
-Date: Thu, 4 Feb 2016 04:06:56 +0000 (UTC)
-Message-ID: <loom.20160204T044620-134@post.gmane.org> (sfid-20160204_050718_719316_3F22AFEA)
-References: <loom.20160203T210737-307@post.gmane.org> <56B291A8.4000701@codeaurora.org>
+	id S1753425AbcBWUFw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 15:05:52 -0500
+Message-ID: <1456257946.9910.23.camel@sipsolutions.net> (sfid-20160223_210555_985826_EE9718EA)
+Subject: Re: [PATCH] mac80211: debugfs var for the default aggregation
+ timeout.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Avery Pennarun <apenwarr@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@nbd.name>
+Date: Tue, 23 Feb 2016 21:05:46 +0100
+In-Reply-To: <CAHqTa-1CkJ-Pm6o7-pxcek4h+hmq6EtA0u12zGGraOUjDjeXSQ@mail.gmail.com> (sfid-20160223_194354_293486_AB1DEE76)
+References: <CAHqTa-22NpabO6B7nL=O26fnuGQHFOzpagWtsfQz4_BfrO6nTw@mail.gmail.com>
+	 <1455658091-28262-1-git-send-email-apenwarr@gmail.com>
+	 <1455658091-28262-2-git-send-email-apenwarr@gmail.com>
+	 <1456222441.2041.10.camel@sipsolutions.net>
+	 <CAHqTa-1CkJ-Pm6o7-pxcek4h+hmq6EtA0u12zGGraOUjDjeXSQ@mail.gmail.com>
+	 (sfid-20160223_194354_293486_AB1DEE76)
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> I guess it's to prevent mesh peers from running TBTT adjustment?
-That's correct.
+On Tue, 2016-02-23 at 13:43 -0500, Avery Pennarun wrote:
 
-But in this scenario(Synchronization) , the beacon would be delayed , 
-and the peers running faster than me, would see this as drift and should 
-delay their TSFs too.(which they would do if the bit is unset)
+> We're putting my version of the patch into our devices in order to be
+> able to try different values and see how it changes the percentage of
+> devices with nonzero 'pending' field in agg_status.  I'm hoping using
+> zero here will result in total elimination of the pending problem,
+> but we'll see.
 
-On the contrary ,If the adjusting_tbtt bit is set, the faster peers 
-would ignore this beacon and hence the "drift due to change in TSF". 
-Therefore, every time a node adjusts it's TSF, there would be a TBTT 
-drift as seen by the faster mesh nodes.This drift would keep on getting 
-added(every time a faster node 'delays' it's TSF).
+:)
+I for one would be interested in the result. And, if you find mac80211
+is at fault, knowing what happens there.
 
-Peter Oh <poh@...> writes:
-
-> 
-> 
-> On 02/03/2016 12:18 PM, Neelansh Mittal wrote:
-> > Currently, for a mesh node ,the mac80211
-> > sync implementation sets the tbtt
-> > adjustment bit , when it is adjusting it's
-> > tsf as part of Neighbour offset
-> > Synchronization(Function:mesh_sync_offset_
-> > adjust_tbtt())
-> > According to ieee80211s specification,
-> > this bit should(only) be set when tbtt
-> > adjustment procedure(as part of tbtt
-> > selection/mbca) is ongoing.
-> > So why does mac80211 set it as part of
-> > Offset syncronization, ie , what is
-> > advantage the when a mesh node announces
-> > that "my tbtt will be delayed" to it's
-> > peers?
-> I guess it's to prevent mesh peers from running TBTT adjustment?
-> Setting TBTT adjustment bit is good idea although the standard is 
-> addressing TBTT adjustment bit during MBCA/TBTT selection procedure,
-> since the key idea of setting the bit is to run TBTT adjustment by 
-only 
-> one mesh point at a time IMO.
-> >
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-
-wireless"
-> > in
-> > the body of a message to majordomo@...
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-
-wireless" in
-> the body of a message to majordomo@...
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> If people think this is important, I can respin the patch, otherwise
+> feel free to discard.
 > 
 
+Up to you. I've discarded it for now with "changes requested", if you
+never resend I'll not worry about it. Clearly we haven't had a need for
+it so far.
 
-
-
+johannes
