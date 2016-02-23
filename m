@@ -1,42 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:40598 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751814AbcBXNv0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2016 08:51:26 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Oh, Peter" <poh@qca.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+Received: from mga14.intel.com ([192.55.52.115]:41424 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932587AbcBWIZ0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 23 Feb 2016 03:25:26 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 0/4] ath10k: rename mesh and add abstraction layer
-Date: Wed, 24 Feb 2016 13:51:22 +0000
-Message-ID: <87k2lui5d7.fsf@kamboji.qca.qualcomm.com> (sfid-20160224_145129_526951_AD26BDC1)
-References: <cover.1454015989.git.poh@qca.qualcomm.com>
-In-Reply-To: <cover.1454015989.git.poh@qca.qualcomm.com> (Peter Oh's message
-	of "Thu, 28 Jan 2016 13:54:06 -0800")
-Content-Type: text/plain; charset="us-ascii"
+Subject: RE: intel7260 - iface up sometimes failed
+Date: Tue, 23 Feb 2016 08:25:21 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA24535@hasmsx107.ger.corp.intel.com> (sfid-20160223_092533_315498_D109EFAA)
+References: <CALhHN=r5Wthk5ru6Eb_8AD3xYsUsk4a02kP7MEK4jc5cmKUSdw@mail.gmail.com>
+In-Reply-To: <CALhHN=r5Wthk5ru6Eb_8AD3xYsUsk4a02kP7MEK4jc5cmKUSdw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Peter Oh <poh@qca.qualcomm.com> writes:
-
-> Split Mesh service to 11s Mesh and non-11s Mesh according to
-> firmware service bit to help users distinguish 11s Mesh from
-> non 11s Mesh.
-> And add abstraction layer for vdev subtype to solve subtype mismatch
-> and to give flexible compatibility among different firmware revisions.
->
-> v2:
->  * Rebased. No code changes.
->
-> Peter Oh (4):
->   ath10k: rename Mesh related service names
->   ath10k: update 10.4 WMI service map
->   ath10k: use vif->type and vif->p2p for P2P_GO check
->   ath10k: add abstraction layer for vdev subtype
-
-All applied, thanks.
-
--- 
-Kalle Valo
+SGkgSmFudXN6LA0KDQo+IA0KPiBIZWxsbywNCj4gDQo+IEkgaGF2ZSBpbnRlbDcyNjAgY29ubmVj
+dGVkIHZpYSBleHRlcm5hbCBQQ0llICsgREVMTCBsYXRpdHVkZSBlNjQzMC4NCj4gDQo+IFsgNTE5
+OS44MDU0MTddIGl3bHdpZmkgMDAwMDowNDowMC4wOiBlbmFibGluZyBkZXZpY2UgKDAxMDAgLT4g
+MDEwMikgWw0KPiA1MTk5LjgwOTIyMl0gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IGxvYWRlZCBmaXJt
+d2FyZSB2ZXJzaW9uDQo+IDE3LjI3NTc3Mi4wIG9wX21vZGUgaXdsbXZtDQo+IFsgNTE5OS44MTk1
+NDhdIGl3bHdpZmkgMDAwMDowNDowMC4wOiBEZXRlY3RlZCBJbnRlbChSKSBEdWFsIEJhbmQgV2ly
+ZWxlc3MgQUMNCj4gNzI2MCwgUkVWPTB4MTQ0IFsgNTE5OS44MTk2NThdIGl3bHdpZmkgMDAwMDow
+NDowMC4wOiBMMSBFbmFibGVkIC0gTFRSDQo+IERpc2FibGVkIFsgNTE5OS44MjAwMThdIGl3bHdp
+ZmkgMDAwMDowNDowMC4wOiBMMSBFbmFibGVkIC0gTFRSIERpc2FibGVkIFsNCj4gNTIwMC4wMTI3
+ODZdIGllZWU4MDIxMSBwaHkwOiBTZWxlY3RlZCByYXRlIGNvbnRyb2wgYWxnb3JpdGhtICdpd2wt
+bXZtLXJzJw0KPiBbIDUyMDAuMDIwMTQ4XSBpd2x3aWZpIDAwMDA6MDQ6MDAuMCB3bGFuMzogcmVu
+YW1lZCBmcm9tIHdsYW4wDQo+IA0KPiBbIDUyODIuNzQzOTg3XSBpd2x3aWZpIDAwMDA6MDQ6MDAu
+MDogTDEgRW5hYmxlZCAtIExUUiBEaXNhYmxlZCBbIDUyODIuNzgxODEyXSAtLQ0KPiAtLS0tLS0t
+LS0tWyBjdXQgaGVyZSBdLS0tLS0tLS0tLS0tIFsgNTI4Mi43ODE4MjNdIFdBUk5JTkc6IENQVTog
+MyBQSUQ6IDM3NjAgYXQNCj4gZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9wY2ll
+L3RyYW5zLmM6MTU2MQ0KPiBpd2xfdHJhbnNfcGNpZV9ncmFiX25pY19hY2Nlc3MrMHhlNi8weGYw
+IFtpd2x3aWZpXSgpIFsgNTI4Mi43ODE4MjRdDQo+IFRpbWVvdXQgd2FpdGluZyBmb3IgaGFyZHdh
+cmUgYWNjZXNzIChDU1JfR1BfQ05UUkwgMHhmZmZmZmZmZikgWw0KDQpXZWxsLi4uIHlvdSBhcmUg
+bm90IHRoZSBvbmx5IG9uZSB0byBjb21wbGFpbiBhYm91dCB0aGlzIGlzc3VlIGFuZCB1bmZvcnR1
+bmF0ZWx5LCB0aGVyZSBpc24ndCBtdWNoIEkgY2FuIGRvLiBXaGF0IGl0IG1lYW5zIGlzIHRoYXQg
+dGhlIGRldmljZSBpcyByZW1vdmVkIGZyb20gdGhlIGJ1cyBieSB0aGUgUENJZSBjb250cm9sbGVy
+LiBUaGlzIGhhcHBlbnMgZHVlIHRvIGFuIGVsZWN0cmljYWwgcHJvYmxlbSB3aGljaCBJIGNhbid0
+IHJlYWxseSBoZWxwIHdpdGguIFRoaXMgY2FuIGJlIGNhdXNlZCBieSBkaWZmZXJlbnQgdHlwZXMg
+b2Ygdm9vZG9vcywgbGlrZSBpbnRlcmZlcmVuY2Ugb24gdGhlIFBDSWUgbGluZXMgYW5kIG90aGVy
+IHRoaW5ncyB0aGF0IGNhbid0IHJlYWxseSBiZSByb290IGNhdXNlZCB3aXRob3V0IHRha2luZyB0
+aGUgc3lzdGVtIGludG8gdGhlIGxhYiBhbmQgYWRkaW5nIFBDSWUgYW5hbHl6ZXIgcHJvYmVzLg0K
+SSBhbSBhZnJhaWQgSSBjYW4ndCByZWFsbHkgaGVscC4NCkFzIGEgd29ya2Fyb3VuZCwgeW91IGNh
+biB1bmJpbmQgdGhlIGRldmljZSBmcm9tIHRoZSBidXMgYW5kIHJlLWVudW1lcmF0ZS4gVGhpcyB3
+aWxsIGJyaW5nIHRoZSBkZXZpY2UgYmFjay4uLiB1bnRpbCB0aGUgbmV4dCBmYWlsdXJlLg0K
