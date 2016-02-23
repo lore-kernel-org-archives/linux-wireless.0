@@ -1,121 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:25215 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752251AbcBCGKN (ORCPT
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:35979 "EHLO
+	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752639AbcBWOni (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 01:10:13 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u1369UdB011932
-	for <linux-wireless@vger.kernel.org>; Tue, 2 Feb 2016 22:10:12 -0800
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0a-0016f401.pphosted.com with ESMTP id 20svyv7n1f-2
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 02 Feb 2016 22:10:12 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 4/8] mwifiex: keep original structure in decl header file
-Date: Tue, 2 Feb 2016 22:05:05 -0800
-Message-ID: <1454479509-27129-5-git-send-email-akarwar@marvell.com> (sfid-20160203_071027_436258_D0F6E550)
-In-Reply-To: <1454479509-27129-1-git-send-email-akarwar@marvell.com>
-References: <1454479509-27129-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 23 Feb 2016 09:43:38 -0500
+Received: by mail-wm0-f54.google.com with SMTP id g62so225694729wme.1
+        for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2016 06:43:37 -0800 (PST)
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Subject: [PATCHv2] mac80211: parse VHT info in injected frames
+Date: Tue, 23 Feb 2016 15:43:35 +0100
+Message-Id: <1456238615-832-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20160223_154341_461350_7DA5AD8E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Add VHT radiotap parsing support to ieee80211_parse_tx_radiotap().
+That capability has been tested using a d-link dir-860l rev b1 running
+OpenWrt trunk and mt76 driver
 
-memory_type_mapping strucuture did not refer to other mwifiex
-specific strture. A better software design method would keep
-it in decl header file, which does not include other mwifiex
-header file.
-
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
 ---
- drivers/net/wireless/marvell/mwifiex/decl.h | 21 +++++++++++++++++++++
- drivers/net/wireless/marvell/mwifiex/main.h | 20 --------------------
- drivers/net/wireless/marvell/mwifiex/pcie.h |  1 +
- 3 files changed, 22 insertions(+), 20 deletions(-)
+v2:
+- fix mac80211-injection documentation
+---
+ Documentation/networking/mac80211-injection.txt | 13 +++++++++++
+ net/mac80211/tx.c                               | 31 +++++++++++++++++++++++++
+ 2 files changed, 44 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/decl.h b/drivers/net/wireless/marvell/mwifiex/decl.h
-index d9c15cd..c744a70 100644
---- a/drivers/net/wireless/marvell/mwifiex/decl.h
-+++ b/drivers/net/wireless/marvell/mwifiex/decl.h
-@@ -270,4 +270,25 @@ struct mwifiex_11h_intf_state {
- 	bool is_11h_enabled;
- 	bool is_11h_active;
- } __packed;
-+
-+#define MWIFIEX_FW_DUMP_IDX		0xff
-+#define MWIFIEX_DRV_INFO_IDX		20
-+#define FW_DUMP_MAX_NAME_LEN		8
-+#define FW_DUMP_HOST_READY      0xEE
-+#define FW_DUMP_DONE			0xFF
-+#define FW_DUMP_READ_DONE		0xFE
-+
-+struct memory_type_mapping {
-+	u8 mem_name[FW_DUMP_MAX_NAME_LEN];
-+	u8 *mem_ptr;
-+	u32 mem_size;
-+	u8 done_flag;
-+};
-+
-+enum rdwr_status {
-+	RDWR_STATUS_SUCCESS = 0,
-+	RDWR_STATUS_FAILURE = 1,
-+	RDWR_STATUS_DONE = 2
-+};
-+
- #endif /* !_MWIFIEX_DECL_H_ */
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index 0433977..aea7aee 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -489,26 +489,6 @@ struct mwifiex_roc_cfg {
- 	struct ieee80211_channel chan;
- };
+diff --git a/Documentation/networking/mac80211-injection.txt b/Documentation/networking/mac80211-injection.txt
+index ec8f934..e0efcaf 100644
+--- a/Documentation/networking/mac80211-injection.txt
++++ b/Documentation/networking/mac80211-injection.txt
+@@ -45,6 +45,19 @@ radiotap headers and used to control injection:
+    number of retries when either IEEE80211_RADIOTAP_RATE or
+    IEEE80211_RADIOTAP_MCS was used
  
--#define MWIFIEX_FW_DUMP_IDX		0xff
--#define MWIFIEX_DRV_INFO_IDX		20
--#define FW_DUMP_MAX_NAME_LEN		8
--#define FW_DUMP_HOST_READY		0xEE
--#define FW_DUMP_DONE			0xFF
--#define FW_DUMP_READ_DONE		0xFE
--
--struct memory_type_mapping {
--	u8 mem_name[FW_DUMP_MAX_NAME_LEN];
--	u8 *mem_ptr;
--	u32 mem_size;
--	u8 done_flag;
--};
--
--enum rdwr_status {
--	RDWR_STATUS_SUCCESS = 0,
--	RDWR_STATUS_FAILURE = 1,
--	RDWR_STATUS_DONE = 2
--};
--
- enum mwifiex_iface_work_flags {
- 	MWIFIEX_IFACE_WORK_DEVICE_DUMP,
- 	MWIFIEX_IFACE_WORK_CARD_RESET,
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
-index 9700ac3..8f190c4 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.h
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
-@@ -26,6 +26,7 @@
- #include    <linux/pcieport_if.h>
- #include    <linux/interrupt.h>
++ * IEEE80211_RADIOTAP_VHT
++
++   VHT mcs and number of streams used in the transmission (only for devices
++   without own rate control). Also other fields are parsed
++
++   flags field
++   IEEE80211_RADIOTAP_VHT_FLAG_SGI: use short guard interval
++
++   bandwidth field
++   1: send using 40MHz channel width
++   4: send using 80MHz channel width
++   11: send using 160MHz channel width
++
+ The injection code can also skip all other currently defined radiotap fields
+ facilitating replay of captured radiotap headers directly.
  
-+#include    "decl.h"
- #include    "main.h"
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 7bb67fa..17db889 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1692,6 +1692,8 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
+ 	u8 rate_retries = 0;
+ 	u16 rate_flags = 0;
+ 	u8 mcs_known, mcs_flags;
++	u16 vht_known;
++	u8 vht_mcs = 0, vht_nss = 0;
+ 	int i;
  
- #define PCIE8766_DEFAULT_FW_NAME "mrvl/pcie8766_uapsta.bin"
+ 	info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT |
+@@ -1772,6 +1774,32 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
+ 				rate_flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
+ 			break;
+ 
++		case IEEE80211_RADIOTAP_VHT:
++			vht_known = get_unaligned_le16(iterator.this_arg);
++			rate_found = true;
++
++			rate_flags = IEEE80211_TX_RC_VHT_MCS;
++			if ((vht_known & IEEE80211_RADIOTAP_VHT_KNOWN_GI) &&
++			    (iterator.this_arg[2] &
++			     IEEE80211_RADIOTAP_VHT_FLAG_SGI))
++				rate_flags |= IEEE80211_TX_RC_SHORT_GI;
++			if (vht_known &
++			    IEEE80211_RADIOTAP_VHT_KNOWN_BANDWIDTH) {
++				if (iterator.this_arg[3] == 1)
++					rate_flags |=
++						IEEE80211_TX_RC_40_MHZ_WIDTH;
++				else if (iterator.this_arg[3] == 4)
++					rate_flags |=
++						IEEE80211_TX_RC_80_MHZ_WIDTH;
++				else if (iterator.this_arg[3] == 11)
++					rate_flags |=
++						IEEE80211_TX_RC_160_MHZ_WIDTH;
++			}
++
++			vht_mcs = iterator.this_arg[4] >> 4;
++			vht_nss = iterator.this_arg[4] & 0xF;
++			break;
++
+ 		/*
+ 		 * Please update the file
+ 		 * Documentation/networking/mac80211-injection.txt
+@@ -1797,6 +1825,9 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
+ 
+ 		if (rate_flags & IEEE80211_TX_RC_MCS) {
+ 			info->control.rates[0].idx = rate;
++		} else if (rate_flags & IEEE80211_TX_RC_VHT_MCS) {
++			ieee80211_rate_set_vht(info->control.rates, vht_mcs,
++					       vht_nss);
+ 		} else {
+ 			for (i = 0; i < sband->n_bitrates; i++) {
+ 				if (rate * 5 != sband->bitrates[i].bitrate)
 -- 
-1.8.1.4
+2.5.0
 
