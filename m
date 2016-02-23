@@ -1,49 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f169.google.com ([209.85.161.169]:33124 "EHLO
-	mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751946AbcBKPCe (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:54436 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755328AbcBWVPS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2016 10:02:34 -0500
-Received: by mail-yw0-f169.google.com with SMTP id u200so40931862ywf.0
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Feb 2016 07:02:33 -0800 (PST)
+	Tue, 23 Feb 2016 16:15:18 -0500
+Subject: Re: [PATCH] mac80211: Let VHT work on 2.4Ghz
+To: Jouni Malinen <j@w1.fi>, Johannes Berg <johannes@sipsolutions.net>
+References: <1456180974-21062-1-git-send-email-greearb@candelatech.com>
+ <1456236627.9910.10.camel@sipsolutions.net> <20160223210821.GA8062@w1.fi>
+Cc: linux-wireless@vger.kernel.org
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <56CCCBE5.5040700@candelatech.com> (sfid-20160223_221522_804965_1BA52202)
+Date: Tue, 23 Feb 2016 13:15:17 -0800
 MIME-Version: 1.0
-In-Reply-To: <87a8n7si6t.fsf@purkki.adurom.net>
-References: <1455173229-6383-1-git-send-email-royujjal@gmail.com>
-	<87a8n7si6t.fsf@purkki.adurom.net>
-Date: Thu, 11 Feb 2016 20:32:33 +0530
-Message-ID: <CAE2MWkmgJR6=3qc3CvoRry=6a34ziqxS2v8ckyh=rQ+zVSZ5MA@mail.gmail.com> (sfid-20160211_160241_938941_DA643C5A)
-Subject: Re: [PATCH 1/3] mwifiex: Fixed incorrect indentation issue
-From: Ujjal Roy <royujjal@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	WiFi Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <20160223210821.GA8062@w1.fi>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 11, 2016 at 3:05 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Ujjal Roy <royujjal@gmail.com> writes:
->
->> This patch fixes the incorrect indentation of the case label.
+On 02/23/2016 01:08 PM, Jouni Malinen wrote:
+> On Tue, Feb 23, 2016 at 03:10:27PM +0100, Johannes Berg wrote:
+>> What you really "want" is to use VHT modulations, mostly for the
+>> dubious purpose of marketing benchmarks to reach 256-QAM modulations.
 >>
->> Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+>> I think the de-facto standard for this would be to use IEs similar to
+>> VHT ones, encapsulated in some (Broadcom?) vendor IE. We may have to
+>> work with that, but that's not what this patch does. Jouni had some
+>> better idea how this worked, I think.
 >
-> A changelog is always recommended to have. Also for some reason your
-> name in patchwork is all caps:
+> hostapd has code to negotiate this using the vendor specific element. I
+> think we ended up getting this working with AP side (i.e., ath10k on the
+> AP) and if I've understood correctly, this does not need any additional
+> changes on top of what is available in upstream kernel and hostapd.
 >
-> Submitter       UJJAL ROY
->
-> https://patchwork.kernel.org/patch/8276851/
->
-> Please try to fix that, but I don't know if that's even possible.
->
-> --
-> Kalle Valo
+> Station mode is something that may have been left open since this issue
+> of what and how to advertise as capabilities came up and there was not
+> strong enough push at the time to get more than AP side functional..
 
-I checked that and unable to change the name. If you have any
-suggestion please share with me.
+Hostapd and supplicant did not need any changes in my testing.
+
+But, you *have* to modify the kernel or it will disable VHT no matter
+what supplicant says...
 
 Thanks,
-UjjaL Roy
+Ben
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
+
