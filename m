@@ -1,52 +1,33 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:15530 "EHLO mga02.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:38904 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750918AbcBWJ40 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 04:56:26 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: intel7260 - iface up sometimes failed
-Date: Tue, 23 Feb 2016 09:54:54 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA24BCF@hasmsx107.ger.corp.intel.com> (sfid-20160223_105631_376148_0841DC45)
-References: <CALhHN=r5Wthk5ru6Eb_8AD3xYsUsk4a02kP7MEK4jc5cmKUSdw@mail.gmail.com> 
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S1753371AbcBXKhZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Feb 2016 05:37:25 -0500
+Message-ID: <1456310242.2050.17.camel@sipsolutions.net> (sfid-20160224_113845_414606_90085170)
+Subject: Re: [PATCH V7 1/2] nl80211: add feature for BSS selection support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: arend@broadcom.com
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Date: Wed, 24 Feb 2016 11:37:22 +0100
+In-Reply-To: <56CD8039.9060407@broadcom.com> (sfid-20160224_110446_447810_ED4ACCA5)
+References: <1455706070-11915-1-git-send-email-arend@broadcom.com>
+	 <1456237245.9910.16.camel@sipsolutions.net> <56CCC50E.4040300@broadcom.com>
+	 <1456260764.9910.31.camel@sipsolutions.net> <56CD8039.9060407@broadcom.com>
+	 (sfid-20160224_110446_447810_ED4ACCA5)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gSGkgSmFudXN6LA0KPiANCj4gPg0KPiA+IEhlbGxvLA0KPiA+DQo+ID4gSSBoYXZlIGlu
-dGVsNzI2MCBjb25uZWN0ZWQgdmlhIGV4dGVybmFsIFBDSWUgKyBERUxMIGxhdGl0dWRlIGU2NDMw
-Lg0KPiA+DQo+ID4gWyA1MTk5LjgwNTQxN10gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IGVuYWJsaW5n
-IGRldmljZSAoMDEwMCAtPiAwMTAyKSBbDQo+ID4gNTE5OS44MDkyMjJdIGl3bHdpZmkgMDAwMDow
-NDowMC4wOiBsb2FkZWQgZmlybXdhcmUgdmVyc2lvbg0KPiA+IDE3LjI3NTc3Mi4wIG9wX21vZGUg
-aXdsbXZtDQo+ID4gWyA1MTk5LjgxOTU0OF0gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IERldGVjdGVk
-IEludGVsKFIpIER1YWwgQmFuZA0KPiA+IFdpcmVsZXNzIEFDIDcyNjAsIFJFVj0weDE0NCBbIDUx
-OTkuODE5NjU4XSBpd2x3aWZpIDAwMDA6MDQ6MDAuMDogTDENCj4gPiBFbmFibGVkIC0gTFRSIERp
-c2FibGVkIFsgNTE5OS44MjAwMThdIGl3bHdpZmkgMDAwMDowNDowMC4wOiBMMSBFbmFibGVkDQo+
-ID4gLSBMVFIgRGlzYWJsZWQgWyA1MjAwLjAxMjc4Nl0gaWVlZTgwMjExIHBoeTA6IFNlbGVjdGVk
-IHJhdGUgY29udHJvbA0KPiBhbGdvcml0aG0gJ2l3bC1tdm0tcnMnDQo+ID4gWyA1MjAwLjAyMDE0
-OF0gaXdsd2lmaSAwMDAwOjA0OjAwLjAgd2xhbjM6IHJlbmFtZWQgZnJvbSB3bGFuMA0KPiA+DQo+
-ID4gWyA1MjgyLjc0Mzk4N10gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IEwxIEVuYWJsZWQgLSBMVFIg
-RGlzYWJsZWQgWw0KPiA+IDUyODIuNzgxODEyXSAtLSAtLS0tLS0tLS0tWyBjdXQgaGVyZSBdLS0t
-LS0tLS0tLS0tIFsgNTI4Mi43ODE4MjNdDQo+ID4gV0FSTklORzogQ1BVOiAzIFBJRDogMzc2MCBh
-dA0KPiA+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvcGNpZS90cmFucy5jOjE1
-NjENCj4gPiBpd2xfdHJhbnNfcGNpZV9ncmFiX25pY19hY2Nlc3MrMHhlNi8weGYwIFtpd2x3aWZp
-XSgpIFsgNTI4Mi43ODE4MjRdDQo+ID4gVGltZW91dCB3YWl0aW5nIGZvciBoYXJkd2FyZSBhY2Nl
-c3MgKENTUl9HUF9DTlRSTCAweGZmZmZmZmZmKSBbDQo+IA0KPiBXZWxsLi4uIHlvdSBhcmUgbm90
-IHRoZSBvbmx5IG9uZSB0byBjb21wbGFpbiBhYm91dCB0aGlzIGlzc3VlIGFuZA0KPiB1bmZvcnR1
-bmF0ZWx5LCB0aGVyZSBpc24ndCBtdWNoIEkgY2FuIGRvLiBXaGF0IGl0IG1lYW5zIGlzIHRoYXQg
-dGhlIGRldmljZSBpcw0KPiByZW1vdmVkIGZyb20gdGhlIGJ1cyBieSB0aGUgUENJZSBjb250cm9s
-bGVyLiBUaGlzIGhhcHBlbnMgZHVlIHRvIGFuDQo+IGVsZWN0cmljYWwgcHJvYmxlbSB3aGljaCBJ
-IGNhbid0IHJlYWxseSBoZWxwIHdpdGguIFRoaXMgY2FuIGJlIGNhdXNlZCBieQ0KPiBkaWZmZXJl
-bnQgdHlwZXMgb2Ygdm9vZG9vcywgbGlrZSBpbnRlcmZlcmVuY2Ugb24gdGhlIFBDSWUgbGluZXMg
-YW5kIG90aGVyDQo+IHRoaW5ncyB0aGF0IGNhbid0IHJlYWxseSBiZSByb290IGNhdXNlZCB3aXRo
-b3V0IHRha2luZyB0aGUgc3lzdGVtIGludG8gdGhlIGxhYg0KPiBhbmQgYWRkaW5nIFBDSWUgYW5h
-bHl6ZXIgcHJvYmVzLg0KPiBJIGFtIGFmcmFpZCBJIGNhbid0IHJlYWxseSBoZWxwLg0KPiBBcyBh
-IHdvcmthcm91bmQsIHlvdSBjYW4gdW5iaW5kIHRoZSBkZXZpY2UgZnJvbSB0aGUgYnVzIGFuZCBy
-ZS0NCj4gZW51bWVyYXRlLiBUaGlzIHdpbGwgYnJpbmcgdGhlIGRldmljZSBiYWNrLi4uIHVudGls
-IHRoZSBuZXh0IGZhaWx1cmUuDQoNCk9uZSB0aGluZyB0aGF0IGNvbWUgdGhyb3VnaCBteSBtaW5k
-IGlzIHRoYXQgeW91IGNhbiB0cnkgdG8gZGlzYWJsZSBwb3dlciBzYXZlIChwb3dlcl9zaGVtZT0x
-IGFzIGEgbW9kdWxlIHBhcmFtZXRlciB0byBpd2xtdm0pIHdoaWNoIHdpbGwgcHJldmVudCBMWCBw
-b3dlciBzdGF0ZSBlbnRyYW5jZSBhbmQgbWlnaHQgcmVkdWNlIHRoZSBub2lzZSBvbiB0aGUgUENJ
-ZSBsaW5lcy4gV29ydGggdHJ5aW5nLg0K
+On Wed, 2016-02-24 at 11:04 +0100, Arend Van Spriel wrote:
+
+> I actually do not see any NLA_NESTED attributes with an explicit
+> length. As you mentioned the nla_parse() of the nested attribute will
+> validate the length of the stream so no need to put that in the
+> policy.
+
+Right, I think what you want can be achieved by just using NLA_NESTED
+to make sure it's long enough for nesting anything, and then nla_parse.
+I'm pretty sure we do the same in other places, no?
+
+johannes
