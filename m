@@ -1,44 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53531 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751442AbcBFL4R convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:38304 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752947AbcBXNYH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Feb 2016 06:56:17 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH] brcmfmac: treat NULL character in NVRAM as separator
-References: <1454238874-20118-1-git-send-email-zajec5@gmail.com>
-Date: Sat, 06 Feb 2016 13:56:09 +0200
-In-Reply-To: <1454238874-20118-1-git-send-email-zajec5@gmail.com>
- (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Sun, 31 Jan 2016
- 12:14:34 +0100")
-Message-ID: <87io22uk6e.fsf@kamboji.qca.qualcomm.com> (sfid-20160206_125619_956288_7CB4EE02)
+	Wed, 24 Feb 2016 08:24:07 -0500
+Message-ID: <56CDAEF6.1080606@candelatech.com> (sfid-20160224_142411_503349_E6E13FF3)
+Date: Wed, 24 Feb 2016 05:24:06 -0800
+From: Ben Greear <greearb@candelatech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+To: Arik Nemtsov <arik@wizery.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH] mac80211: Let VHT work on 2.4Ghz
+References: <1456180974-21062-1-git-send-email-greearb@candelatech.com> <CA+XVXffpNDf0-5a6cPz0aUrrRfHgKQeu09zDt5eSe1K87m__pw@mail.gmail.com> <56CC62BC.308@candelatech.com> <CA+XVXffxWtZgfZS=EZGYng6vWMxqnhTdhgxagYXRbKq1iYj0Sg@mail.gmail.com>
+In-Reply-To: <CA+XVXffxWtZgfZS=EZGYng6vWMxqnhTdhgxagYXRbKq1iYj0Sg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
 
-> Platform NVRAM (stored on a flash partition) has entries separated by a
-> NULL (\0) char. Our parsing code switches from VALUE state to IDLE
-> whenever it meets a NULL (\0). When that happens our IDLE handler should
-> simply consume it and analyze whatever is placed ahead.
->
-> This fixes harmless warnings spamming debugging output:
-> [  155.165624] brcmfmac: brcmf_nvram_handle_idle warning: ln=1:col=20: ignoring invalid character
-> [  155.180806] brcmfmac: brcmf_nvram_handle_idle warning: ln=1:col=44: ignoring invalid character
-> [  155.195971] brcmfmac: brcmf_nvram_handle_idle warning: ln=1:col=63: ignoring invalid character
->
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-Manually applied to wireless-drivers-next.git, thanks.
+On 02/24/2016 12:40 AM, Arik Nemtsov wrote:
+> On Tue, Feb 23, 2016 at 3:46 PM, Ben Greear <greearb@candelatech.com> wrote:
+>>
+>>
+>> On 02/23/2016 02:47 AM, Arik Nemtsov wrote:
+>>>
+>>> On Tue, Feb 23, 2016 at 12:42 AM, <greearb@candelatech.com> wrote:
+>>>>
+>>>>
+>>>> From: Ben Greear <greearb@candelatech.com>
+>>>>
+>>>> ath10k supports VHT on 2.4Ghz band.
+>>>> If supplicant and hostapd and radio think
+>>>> VHT should be allowed, then kernel should let them
+>>>> try.
+>>>
+>>>
+>>> Removing the 80Mhz check entirely is not the right way to go IMO. The
+>>> check is there because there are countries where VHT rates are not
+>>> allowed, even on 20MHz channels. We use the fact these countries have
+>>> no 80MHz-allowed ranges as a crude regulatory hint to disable VHT
+>>> entirely. I'm not sure about the regulatory landscape in these
+>>> countries regarding VHT in 2.4GHz, but please don't break compliance
+>>> for the 5Ghz use-case.
+>>
+>>
+>> Maybe someone can fix the regulatory logic then?
+>>
+>> Add a no-vht flag or whatever?
+>
+> This is more tricky that it looks at first - basically current
+> regulatory "hooks" concern channel width and location, transmit power
+> etc. Here regulatory compliance means never emitting the VHT IE in
+> probe requests etc. So a "no vht" flag would be useless to the reg.c
+> code - it currently never looks at IEs. Some cards even generate them
+> at the FW level.
+> All in all I think the current small bit of ugliness is justified for
+> regulatory compliance.
+>
+> Also it's pretty easy to just leave the code there and condition the
+> check on the 5GHz band. There's no need to remove it.
+
+Ok, so I can enable VHT on any band as long as the 5Ghz band exists and
+allows 80Mhz?
+
+Thanks,
+Ben
+
+>
+>>
+>> Any idea which countries this applies to?
+>
+> I know Russia is one such country. Not sure about others.
+>
+> Arik
+>
 
 -- 
-Kalle Valo
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
