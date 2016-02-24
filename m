@@ -1,46 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60955 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932667AbcBBO6Z (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 09:58:25 -0500
-Message-ID: <1454425100.2926.3.camel@sipsolutions.net> (sfid-20160202_155837_455736_F3AE9C22)
-Subject: Re: [PATCH v4] mac80211: minstrel: Change expected throughput unit
- back to Kbps
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Sven Eckelmann <sven.eckelmann@open-mesh.com>,
-	linux-wireless@vger.kernel.org
-Cc: thomas@net.t-labs.tu-berlin.de, antonio@open-mesh.com,
-	nbd@nbd.name, Sven Eckelmann <sven@open-mesh.com>
-Date: Tue, 02 Feb 2016 15:58:20 +0100
-In-Reply-To: <1454397146-2884-1-git-send-email-sven@open-mesh.com> (sfid-20160202_081232_977019_5B1D36A5)
-References: <1454397146-2884-1-git-send-email-sven@open-mesh.com>
-	 (sfid-20160202_081232_977019_5B1D36A5)
-Content-Type: text/plain; charset="UTF-8"
+Received: from shards.monkeyblade.net ([149.20.54.216]:55762 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753192AbcBXSpY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Feb 2016 13:45:24 -0500
+Date: Wed, 24 Feb 2016 13:45:21 -0500 (EST)
+Message-Id: <20160224.134521.961009575129127582.davem@davemloft.net> (sfid-20160224_194534_316569_59049A93)
+To: xiyou.wangcong@gmail.com
+Cc: netdev@vger.kernel.org, dvyukov@google.com,
+	linux-wireless@vger.kernel.org, julian.calaby@gmail.com,
+	eric.dumazet@gmail.com, lauro.venancio@openbossa.org,
+	aloisio.almeida@openbossa.org, sameo@linux.intel.com
+Subject: Re: [PATCH v2 net] nfc: use GFP_USER for user-controlled kmalloc
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <CAM_iQpX3X6YoFeMw2KYjJM8yBHi9=3iapo0+a9Cqtc0cxM_QNA@mail.gmail.com>
+References: <1454095465-16685-1-git-send-email-xiyou.wangcong@gmail.com>
+	<CAM_iQpX3X6YoFeMw2KYjJM8yBHi9=3iapo0+a9Cqtc0cxM_QNA@mail.gmail.com>
 Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-02-02 at 08:12 +0100, Sven Eckelmann wrote:
-> The change from cur_tp to the function
-> minstrel_get_tp_avg/minstrel_ht_get_tp_avg changed the unit used for
-> the
-> current throughput. For example in minstrel_ht the correct
-> conversion between them would be:
-> 
->     mrs->cur_tp / 10 == minstrel_ht_get_tp_avg(..).
-> 
-> This factor 10 must also be included in the calculation of
-> minstrel_get_expected_throughput and
-> minstrel_ht_get_expected_throughput to
-> return values with the unit [Kbps] instead of [10Kbps]. Otherwise
-> routing
-> algorithms like B.A.T.M.A.N. V will make incorrect decision based on
-> these
-> values. Its kernel based implementation expects expected_throughput
-> always
-> to have the unit [Kbps] and not sometimes [10Kbps] and sometimes
-> [Kbps].
-> 
-Applied; also added Cc stable.
+From: Cong Wang <xiyou.wangcong@gmail.com>
+Date: Wed, 24 Feb 2016 10:41:29 -0800
 
-johannes
+> On Fri, Jan 29, 2016 at 11:24 AM, Cong Wang <xiyou.wangcong@gmail.com> wrote:
+>> These two functions are called in sendmsg path, and the
+>> 'len' is passed from user-space, so we should not allow
+>> malicious users to OOM kernel on purpose.
+>>
+>> Reported-by: Dmitry Vyukov <dvyukov@google.com>
+>> Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+>> Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+>> Cc: Samuel Ortiz <sameo@linux.intel.com>
+>> Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
+> 
+> Ping...
+> 
+> David, this patch seems still not applied, I guess you expect NFC
+> maintainer to take it, but this doesn't happen. Could you take it?
+
+The NFC maintainer needs to take this, ping them explicitly if
+you have to.
+
+Thanks.
