@@ -1,64 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:34173 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752898AbcBLOFN (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:47136 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757861AbcBXWUQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Feb 2016 09:05:13 -0500
-Received: by mail-pf0-f195.google.com with SMTP id 71so4033611pfv.1
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Feb 2016 06:05:13 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 08/11] staging: wilc1000: change handle_set_channel's return type to void
-Date: Fri, 12 Feb 2016 23:04:44 +0900
-Message-Id: <1455285887-29946-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20160212_150522_547096_534941BA)
-In-Reply-To: <1455285887-29946-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1455285887-29946-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 24 Feb 2016 17:20:16 -0500
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v3] ath10k: set MAC timestamp in management Rx frame
+Date: Wed, 24 Feb 2016 14:18:51 -0800
+Message-ID: <4c705dc7a2c0aa857da4e6eaf6e8ed47c354b9ea.1456351768.git.poh@qca.qualcomm.com> (sfid-20160224_232021_080504_C59E2765)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When handle_set_channel is called in hostIFthread that is a kernel
-thread, it is not checked return type of this function. This patch
-changes return type to void and removes braces if statement due
-to have a single statement.
+Check and set Rx MAC timestamp when firmware indicates it.
+Firmware adds it in Rx beacon frame only at this moment.
+Driver and mac80211 may utilize it to detect such clockdrift
+or beacon collision and use the result for beacon collision
+avoidance.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 10 +++-------
- 1 file changed, 3 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index e9a6aa7..eecd697 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -299,8 +299,8 @@ static struct wilc_vif *wilc_get_vif_from_idx(struct wilc *wilc, int idx)
- 	return wilc->vif[index];
- }
+v2:
+	- fix kbuild test robot warning, left shift count >= width of type,
+	at __le32_to_cpu(arg.ext_info.rx_mac_timestamp_u32) << 32
+v3:
+	- correct ext_info to start 4-byte aligned
+	- make struct wmi_mgmt_rx_ext_info 4-byte aligned to comply FW's intention.
+
+ drivers/net/wireless/ath/ath10k/wmi.c | 14 ++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h |  8 ++++++++
+ 2 files changed, 22 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 0f01a8d..c1ed015 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2167,6 +2167,7 @@ static int ath10k_wmi_op_pull_mgmt_rx_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	struct wmi_mgmt_rx_event_v1 *ev_v1;
+ 	struct wmi_mgmt_rx_event_v2 *ev_v2;
+ 	struct wmi_mgmt_rx_hdr_v1 *ev_hdr;
++	struct wmi_mgmt_rx_ext_info *ext_info;
+ 	size_t pull_len;
+ 	u32 msdu_len;
  
--static s32 handle_set_channel(struct wilc_vif *vif,
--			      struct channel_attr *hif_set_ch)
-+static void handle_set_channel(struct wilc_vif *vif,
-+			       struct channel_attr *hif_set_ch)
- {
- 	s32 result = 0;
- 	struct wid wid;
-@@ -313,12 +313,8 @@ static s32 handle_set_channel(struct wilc_vif *vif,
- 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
- 				      wilc_get_vif_idx(vif));
+@@ -2195,6 +2196,12 @@ static int ath10k_wmi_op_pull_mgmt_rx_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	if (skb->len < msdu_len)
+ 		return -EPROTO;
  
--	if (result) {
-+	if (result)
- 		PRINT_ER("Failed to set channel\n");
--		return -EINVAL;
--	}
--
--	return result;
- }
++	if (arg->status & WMI_RX_STATUS_EXT_INFO) {
++		ext_info = (struct wmi_mgmt_rx_ext_info *)
++			   (skb->data + round_up(arg->buf_len, sizeof(u32)));
++		memcpy(&arg->ext_info, ext_info,
++		       sizeof(struct wmi_mgmt_rx_ext_info));
++	}
+ 	/* the WMI buffer might've ended up being padded to 4 bytes due to HTC
+ 	 * trailer with credit update. Trim the excess garbage.
+ 	 */
+@@ -2281,6 +2288,13 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	if (rx_status & WMI_RX_STATUS_ERR_MIC)
+ 		status->flag |= RX_FLAG_MMIC_ERROR;
  
- static s32 handle_set_wfi_drv_handler(struct wilc_vif *vif,
++	if (rx_status & WMI_RX_STATUS_EXT_INFO) {
++		status->mactime =
++			__le32_to_cpu(arg.ext_info.rx_mac_timestamp_l32) |
++			(u64)__le32_to_cpu(arg.ext_info.rx_mac_timestamp_u32)
++			<< 32;
++		status->flag |= RX_FLAG_MACTIME_END;
++	}
+ 	/* Hardware can Rx CCK rates on 5GHz. In that case phy_mode is set to
+ 	 * MODE_11B. This means phy_mode is not a reliable source for the band
+ 	 * of mgmt rx.
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 806d4bb..6595ce9 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -3025,11 +3025,18 @@ struct wmi_10_4_mgmt_rx_event {
+ 	u8 buf[0];
+ } __packed;
+ 
++struct wmi_mgmt_rx_ext_info {
++	__le32 rx_mac_timestamp_l32;
++	__le32 rx_mac_timestamp_u32;
++} __packed __aligned(4);
++
+ #define WMI_RX_STATUS_OK			0x00
+ #define WMI_RX_STATUS_ERR_CRC			0x01
+ #define WMI_RX_STATUS_ERR_DECRYPT		0x08
+ #define WMI_RX_STATUS_ERR_MIC			0x10
+ #define WMI_RX_STATUS_ERR_KEY_CACHE_MISS	0x20
++/* Extension data at the end of mgmt frame */
++#define WMI_RX_STATUS_EXT_INFO		0x40
+ 
+ #define PHY_ERROR_GEN_SPECTRAL_SCAN		0x26
+ #define PHY_ERROR_GEN_FALSE_RADAR_EXT		0x24
+@@ -6076,6 +6083,7 @@ struct wmi_mgmt_rx_ev_arg {
+ 	__le32 phy_mode;
+ 	__le32 buf_len;
+ 	__le32 status; /* %WMI_RX_STATUS_ */
++	struct wmi_mgmt_rx_ext_info ext_info;
+ };
+ 
+ struct wmi_ch_info_ev_arg {
 -- 
-2.7.1
+1.9.1
 
