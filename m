@@ -1,120 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46076 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751796AbcBDMb2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 07:31:28 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Julian Anastasov <ja@ssi.bg>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v3 1/4] ipv4: add option to drop unicast encapsulated in L2 multicast
-Date: Thu,  4 Feb 2016 13:31:17 +0100
-Message-Id: <1454589080-21354-1-git-send-email-johannes@sipsolutions.net> (sfid-20160204_133150_836777_77346518)
+Received: from mail-yw0-f181.google.com ([209.85.161.181]:35775 "EHLO
+	mail-yw0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750901AbcBXSyh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Feb 2016 13:54:37 -0500
+MIME-Version: 1.0
+In-Reply-To: <1454096260-20396-1-git-send-email-xiyou.wangcong@gmail.com>
+References: <1454096260-20396-1-git-send-email-xiyou.wangcong@gmail.com>
+Date: Wed, 24 Feb 2016 10:54:37 -0800
+Message-ID: <CAM_iQpWyVswsMn7nHAF3F_EtRnG1Gs5AiYD24ZQn6693pMdyZQ@mail.gmail.com> (sfid-20160224_195445_427125_30E5DC6B)
+Subject: Re: [PATCH v2 net] nfc: close a race condition in llcp_sock_getname()
+From: Cong Wang <xiyou.wangcong@gmail.com>
+To: Linux Kernel Network Developers <netdev@vger.kernel.org>
+Cc: Dmitry Vyukov <dvyukov@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Cong Wang <xiyou.wangcong@gmail.com>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Fri, Jan 29, 2016 at 11:37 AM, Cong Wang <xiyou.wangcong@gmail.com> wrote:
+> llcp_sock_getname() checks llcp_sock->dev to make sure
+> llcp_sock is already connected or bound, however, we could
+> be in the middle of llcp_sock_bind() where llcp_sock->dev
+> is bound and llcp_sock->service_name_len is set,
+> but llcp_sock->service_name is not, in this case we would
+> lead to copy some bytes from a NULL pointer.
+>
+> Just lock the sock since this is not a hot path anyway.
+>
+> Reported-by: Dmitry Vyukov <dvyukov@google.com>
+> Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+> Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+> Cc: Samuel Ortiz <sameo@linux.intel.com>
+> Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
 
-In order to solve a problem with 802.11, the so-called hole-196 attack,
-add an option (sysctl) called "drop_unicast_in_l2_multicast" which, if
-enabled, causes the stack to drop IPv4 unicast packets encapsulated in
-link-layer multi- or broadcast frames. Such frames can (as an attack)
-be created by any member of the same wireless network and transmitted
-as valid encrypted frames since the symmetric key for broadcast frames
-is shared between all stations.
 
-Additionally, enabling this option provides compliance with a SHOULD
-clause of RFC 1122.
+Samuel, please take a look at this one too.
 
-Reviewed-by: Julian Anastasov <ja@ssi.bg>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- Documentation/networking/ip-sysctl.txt |  7 +++++++
- include/uapi/linux/ip.h                |  1 +
- net/ipv4/devinet.c                     |  2 ++
- net/ipv4/ip_input.c                    | 25 ++++++++++++++++++++++++-
- 4 files changed, 34 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
-index 05915be86235..35c4c43dd8de 100644
---- a/Documentation/networking/ip-sysctl.txt
-+++ b/Documentation/networking/ip-sysctl.txt
-@@ -1208,6 +1208,13 @@ promote_secondaries - BOOLEAN
- 	promote a corresponding secondary IP address instead of
- 	removing all the corresponding secondary IP addresses.
- 
-+drop_unicast_in_l2_multicast - BOOLEAN
-+	Drop any unicast IP packets that are received in link-layer
-+	multicast (or broadcast) frames.
-+	This behavior (for multicast) is actually a SHOULD in RFC
-+	1122, but is disabled by default for compatibility reasons.
-+	Default: off (0)
-+
- 
- tag - INTEGER
- 	Allows you to write a number, which can be used as required.
-diff --git a/include/uapi/linux/ip.h b/include/uapi/linux/ip.h
-index 08f894d2ddbd..584834f7e95c 100644
---- a/include/uapi/linux/ip.h
-+++ b/include/uapi/linux/ip.h
-@@ -165,6 +165,7 @@ enum
- 	IPV4_DEVCONF_IGMPV2_UNSOLICITED_REPORT_INTERVAL,
- 	IPV4_DEVCONF_IGMPV3_UNSOLICITED_REPORT_INTERVAL,
- 	IPV4_DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN,
-+	IPV4_DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
- 	__IPV4_DEVCONF_MAX
- };
- 
-diff --git a/net/ipv4/devinet.c b/net/ipv4/devinet.c
-index cebd9d31e65a..dbbab28a52a4 100644
---- a/net/ipv4/devinet.c
-+++ b/net/ipv4/devinet.c
-@@ -2192,6 +2192,8 @@ static struct devinet_sysctl_table {
- 					      "promote_secondaries"),
- 		DEVINET_SYSCTL_FLUSHING_ENTRY(ROUTE_LOCALNET,
- 					      "route_localnet"),
-+		DEVINET_SYSCTL_FLUSHING_ENTRY(DROP_UNICAST_IN_L2_MULTICAST,
-+					      "drop_unicast_in_l2_multicast"),
- 	},
- };
- 
-diff --git a/net/ipv4/ip_input.c b/net/ipv4/ip_input.c
-index b1209b63381f..997ef64a1c0b 100644
---- a/net/ipv4/ip_input.c
-+++ b/net/ipv4/ip_input.c
-@@ -359,8 +359,31 @@ static int ip_rcv_finish(struct net *net, struct sock *sk, struct sk_buff *skb)
- 	rt = skb_rtable(skb);
- 	if (rt->rt_type == RTN_MULTICAST) {
- 		IP_UPD_PO_STATS_BH(net, IPSTATS_MIB_INMCAST, skb->len);
--	} else if (rt->rt_type == RTN_BROADCAST)
-+	} else if (rt->rt_type == RTN_BROADCAST) {
- 		IP_UPD_PO_STATS_BH(net, IPSTATS_MIB_INBCAST, skb->len);
-+	} else if (skb->pkt_type == PACKET_BROADCAST ||
-+		   skb->pkt_type == PACKET_MULTICAST) {
-+		struct in_device *in_dev = __in_dev_get_rcu(skb->dev);
-+
-+		/* RFC 1122 3.3.6:
-+		 *
-+		 *   When a host sends a datagram to a link-layer broadcast
-+		 *   address, the IP destination address MUST be a legal IP
-+		 *   broadcast or IP multicast address.
-+		 *
-+		 *   A host SHOULD silently discard a datagram that is received
-+		 *   via a link-layer broadcast (see Section 2.4) but does not
-+		 *   specify an IP multicast or broadcast destination address.
-+		 *
-+		 * This doesn't explicitly say L2 *broadcast*, but broadcast is
-+		 * in a way a form of multicast and the most common use case for
-+		 * this is 802.11 protecting against cross-station spoofing (the
-+		 * so-called "hole-196" attack) so do it for both.
-+		 */
-+		if (in_dev &&
-+		    IN_DEV_ORCONF(in_dev, DROP_UNICAST_IN_L2_MULTICAST))
-+			goto drop;
-+	}
- 
- 	return dst_input(skb);
- 
--- 
-2.7.0
-
+> ---
+>  net/nfc/llcp_sock.c | 6 ++++++
+>  1 file changed, 6 insertions(+)
+>
+> diff --git a/net/nfc/llcp_sock.c b/net/nfc/llcp_sock.c
+> index ecf0a01..b9edf5f 100644
+> --- a/net/nfc/llcp_sock.c
+> +++ b/net/nfc/llcp_sock.c
+> @@ -509,6 +509,11 @@ static int llcp_sock_getname(struct socket *sock, struct sockaddr *uaddr,
+>         memset(llcp_addr, 0, sizeof(*llcp_addr));
+>         *len = sizeof(struct sockaddr_nfc_llcp);
+>
+> +       lock_sock(sk);
+> +       if (!llcp_sock->dev) {
+> +               release_sock(sk);
+> +               return -EBADFD;
+> +       }
+>         llcp_addr->sa_family = AF_NFC;
+>         llcp_addr->dev_idx = llcp_sock->dev->idx;
+>         llcp_addr->target_idx = llcp_sock->target_idx;
+> @@ -518,6 +523,7 @@ static int llcp_sock_getname(struct socket *sock, struct sockaddr *uaddr,
+>         llcp_addr->service_name_len = llcp_sock->service_name_len;
+>         memcpy(llcp_addr->service_name, llcp_sock->service_name,
+>                llcp_addr->service_name_len);
+> +       release_sock(sk);
+>
+>         return 0;
+>  }
+> --
+> 1.8.3.1
+>
