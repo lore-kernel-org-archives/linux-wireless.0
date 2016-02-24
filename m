@@ -1,62 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:58315 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751781AbcBWNU0 (ORCPT
+Received: from mail-yk0-f179.google.com ([209.85.160.179]:36712 "EHLO
+	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756983AbcBXSla (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 08:20:26 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u1NDKGDw030316
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2016 05:20:24 -0800
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-	by mx0a-0016f401.pphosted.com with ESMTP id 218m5mgrta-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 23 Feb 2016 05:20:24 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 1/4] mwifiex: add delay when tdls confirm frame is queued
-Date: Tue, 23 Feb 2016 05:16:16 -0800
-Message-ID: <1456233379-12099-1-git-send-email-akarwar@marvell.com> (sfid-20160223_142029_942387_F55961BE)
+	Wed, 24 Feb 2016 13:41:30 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1454095465-16685-1-git-send-email-xiyou.wangcong@gmail.com>
+References: <1454095465-16685-1-git-send-email-xiyou.wangcong@gmail.com>
+Date: Wed, 24 Feb 2016 10:41:29 -0800
+Message-ID: <CAM_iQpX3X6YoFeMw2KYjJM8yBHi9=3iapo0+a9Cqtc0cxM_QNA@mail.gmail.com> (sfid-20160224_194139_686418_6F2E3986)
+Subject: Re: [PATCH v2 net] nfc: use GFP_USER for user-controlled kmalloc
+From: Cong Wang <xiyou.wangcong@gmail.com>
+To: Linux Kernel Network Developers <netdev@vger.kernel.org>,
+	David Miller <davem@davemloft.net>
+Cc: Dmitry Vyukov <dvyukov@google.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Cong Wang <xiyou.wangcong@gmail.com>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On Fri, Jan 29, 2016 at 11:24 AM, Cong Wang <xiyou.wangcong@gmail.com> wrote:
+> These two functions are called in sendmsg path, and the
+> 'len' is passed from user-space, so we should not allow
+> malicious users to OOM kernel on purpose.
+>
+> Reported-by: Dmitry Vyukov <dvyukov@google.com>
+> Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+> Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+> Cc: Samuel Ortiz <sameo@linux.intel.com>
+> Signed-off-by: Cong Wang <xiyou.wangcong@gmail.com>
 
-It is observed that driver may send the data packet to tdls peer
-before tdls peer receives tdls setup confirm frame.
-Similar race condition exists during tdls teardown procedure also.
-This patch adds 10 milliseconds delay to resolve the race.
+Ping...
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/tdls.c | 7 +++++++
- 1 file changed, 7 insertions(+)
+David, this patch seems still not applied, I guess you expect NFC
+maintainer to take it, but this doesn't happen. Could you take it?
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/tdls.c b/drivers/net/wireless/marvell/mwifiex/tdls.c
-index 9275f9c..1506496 100644
---- a/drivers/net/wireless/marvell/mwifiex/tdls.c
-+++ b/drivers/net/wireless/marvell/mwifiex/tdls.c
-@@ -680,6 +680,13 @@ int mwifiex_send_tdls_data_frame(struct mwifiex_private *priv, const u8 *peer,
- 	__net_timestamp(skb);
- 	mwifiex_queue_tx_pkt(priv, skb);
- 
-+	/* Delay 10ms to make sure tdls setup confirm/teardown frame
-+	 * is received by peer
-+	*/
-+	if (action_code == WLAN_TDLS_SETUP_CONFIRM ||
-+	    action_code == WLAN_TDLS_TEARDOWN)
-+		msleep_interruptible(10);
-+
- 	return 0;
- }
- 
--- 
-1.8.1.4
+(I can resend it if you need.)
 
+Thanks!
+
+> ---
+>  net/nfc/llcp_commands.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>
+> diff --git a/net/nfc/llcp_commands.c b/net/nfc/llcp_commands.c
+> index 3621a90..3425532 100644
+> --- a/net/nfc/llcp_commands.c
+> +++ b/net/nfc/llcp_commands.c
+> @@ -663,7 +663,7 @@ int nfc_llcp_send_i_frame(struct nfc_llcp_sock *sock,
+>                 return -ENOBUFS;
+>         }
+>
+> -       msg_data = kzalloc(len, GFP_KERNEL);
+> +       msg_data = kmalloc(len, GFP_USER | __GFP_NOWARN);
+>         if (msg_data == NULL)
+>                 return -ENOMEM;
+>
+> @@ -729,7 +729,7 @@ int nfc_llcp_send_ui_frame(struct nfc_llcp_sock *sock, u8 ssap, u8 dsap,
+>         if (local == NULL)
+>                 return -ENODEV;
+>
+> -       msg_data = kzalloc(len, GFP_KERNEL);
+> +       msg_data = kmalloc(len, GFP_USER | __GFP_NOWARN);
+>         if (msg_data == NULL)
+>                 return -ENOMEM;
+>
+> --
+> 1.8.3.1
+>
