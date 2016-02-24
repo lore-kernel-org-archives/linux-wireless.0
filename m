@@ -1,59 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:29925 "EHLO
+Received: from eusmtp01.atmel.com ([212.144.249.243]:31100 "EHLO
 	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1425621AbcBRLdd (ORCPT
+	with ESMTP id S1752372AbcBXKD0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 06:33:33 -0500
-From: Leo Kim <leo.kim@atmel.com>
+	Wed, 24 Feb 2016 05:03:26 -0500
+From: Tony Cho <tony.cho@atmel.com>
 To: <gregkh@linuxfoundation.org>
 CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
 	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V2 06/24] staging: wilc1000: host_interface.c: removes unnecessary log message
-Date: Thu, 18 Feb 2016 20:30:06 +0900
-Message-ID: <1455795024-26978-6-git-send-email-leo.kim@atmel.com> (sfid-20160218_123344_154606_904C3283)
-In-Reply-To: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
-References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
+	<austin.shin@atmel.com>, <chris.park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 1/2] staging: wilc1000: wilc_wlan.c: remove unnecessary blank lines
+Date: Wed, 24 Feb 2016 19:01:37 +0900
+Message-ID: <1456308098-30049-1-git-send-email-tony.cho@atmel.com> (sfid-20160224_110337_695072_4D2F83C0)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+This patch removes unnecessary blank lines found by checkpatch.pl.
 
-This patch removes unnecessary log message and relate variables.
-
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 4 ----
+ 1 file changed, 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d1eedfb..7b9dbc0 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3010,7 +3010,6 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
- 	int result = 0;
- 	struct host_if_msg msg;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
--	int i;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index d50ddc6..f142e61 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -21,7 +21,6 @@ static inline void release_bus(struct wilc *wilc, BUS_RELEASE_T release)
  
- 	if (!hif_drv) {
- 		PRINT_ER("driver is null\n");
-@@ -3019,10 +3018,6 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
+ static void wilc_wlan_txq_remove(struct wilc *wilc, struct txq_entry_t *tqe)
+ {
+-
+ 	if (tqe == wilc->txq_head) {
+ 		wilc->txq_head = tqe->next;
+ 		if (wilc->txq_head)
+@@ -248,7 +247,6 @@ static inline void tcp_process(struct net_device *dev, struct txq_entry_t *tqe)
  
- 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 				add_tcp_pending_ack(ack_no, i, tqe);
+ 			}
+-
+ 		}
+ 	}
+ 	spin_unlock_irqrestore(&wilc->txq_spinlock, flags);
+@@ -429,7 +427,6 @@ static struct txq_entry_t *wilc_wlan_txq_get_next(struct wilc *wilc,
  
--	if (INFO) {
--		for (i = 0; i < len; i++)
--			PRINT_INFO(HOSTAPD_DBG, "KEY is %x\n", key[i]);
--	}
- 	msg.id = HOST_IF_MSG_KEY;
- 	msg.body.key_info.type = WEP;
- 	msg.body.key_info.action = ADDKEY_AP;
+ static int wilc_wlan_rxq_add(struct wilc *wilc, struct rxq_entry_t *rqe)
+ {
+-
+ 	if (wilc->quit)
+ 		return 0;
+ 
+@@ -450,7 +447,6 @@ static int wilc_wlan_rxq_add(struct wilc *wilc, struct rxq_entry_t *rqe)
+ 
+ static struct rxq_entry_t *wilc_wlan_rxq_remove(struct wilc *wilc)
+ {
+-
+ 	if (wilc->rxq_head) {
+ 		struct rxq_entry_t *rqe;
+ 
 -- 
 1.9.1
 
