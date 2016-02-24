@@ -1,48 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:36682 "EHLO
-	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751761AbcBEBfw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 20:35:52 -0500
-Received: by mail-pf0-f175.google.com with SMTP id n128so59015248pfn.3
-        for <linux-wireless@vger.kernel.org>; Thu, 04 Feb 2016 17:35:52 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 6/8] staging: wilc1000: use int type for counter variable
-Date: Fri,  5 Feb 2016 10:35:16 +0900
-Message-Id: <1454636118-9943-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20160205_023556_027288_FC2BFD9E)
-In-Reply-To: <1454636118-9943-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1454636118-9943-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from narfation.org ([79.140.41.39]:41111 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751351AbcBXP0g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Feb 2016 10:26:36 -0500
+From: Sven Eckelmann <sven@narfation.org>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Sven Eckelmann <sven@narfation.org>
+Subject: [PATCH 1/2] mac80211: document only injected *_RADIOTAP_* flags
+Date: Wed, 24 Feb 2016 16:25:48 +0100
+Message-Id: <1456327549-31765-1-git-send-email-sven@narfation.org> (sfid-20160224_162639_469267_873E32A3)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-counter is used as for-loop control variable and indicating index of
-struct wid array so that it is better to use int type.
-There is no need to set to 0 when it is declared at the top of this
-function. It is initialized as 0 in for-loop statement.
+Not the internal flags but the radiotap flags are parsed when the monitor
+injected frames are prepared for transmission. Thus the documentation
+should only document these.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Reported-by: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+Reported-by: Johannes Berg <johannes@sipsolutions.net>
+Fixes: 5ec3aed9ba4c ("mac80211: Parse legacy and HT rate in injected frames")
+Signed-off-by: Sven Eckelmann <sven@narfation.org>
 ---
- drivers/staging/wilc1000/coreconfigurator.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ Documentation/networking/mac80211-injection.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 323a0cd..4008872 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -452,7 +452,7 @@ s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *pstrConnectRespInfo)
- int wilc_send_config_pkt(struct wilc *wilc, u8 mode, struct wid *wids,
- 			 u32 count, u32 drv)
- {
--	s32 counter = 0;
-+	int counter;
- 	int ret = 0;
+diff --git a/Documentation/networking/mac80211-injection.txt b/Documentation/networking/mac80211-injection.txt
+index ec8f934..0a459e4 100644
+--- a/Documentation/networking/mac80211-injection.txt
++++ b/Documentation/networking/mac80211-injection.txt
+@@ -37,8 +37,8 @@ radiotap headers and used to control injection:
+    HT rate for the transmission (only for devices without own rate control).
+    Also some flags are parsed
  
- 	if (mode == GET_CFG) {
+-   IEEE80211_TX_RC_SHORT_GI: use short guard interval
+-   IEEE80211_TX_RC_40_MHZ_WIDTH: send in HT40 mode
++   IEEE80211_RADIOTAP_MCS_SGI: use short guard interval
++   IEEE80211_RADIOTAP_MCS_BW_40: send in HT40 mode
+ 
+  * IEEE80211_RADIOTAP_DATA_RETRIES
+ 
 -- 
 2.7.0
 
