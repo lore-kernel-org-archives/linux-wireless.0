@@ -1,156 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40721 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424646AbcBRHdb (ORCPT
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:33789 "EHLO
+	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932772AbcBXNcq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 02:33:31 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH 21/24] staging: wilc1000: removes unused region feature
-Date: Thu, 18 Feb 2016 16:27:32 +0900
-Message-ID: <1455780455-21365-21-git-send-email-leo.kim@atmel.com> (sfid-20160218_083334_855649_ED2D6021)
-In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+	Wed, 24 Feb 2016 08:32:46 -0500
+Received: by mail-wm0-f43.google.com with SMTP id g62so4907320wme.0
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 05:32:45 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <56CDAEF6.1080606@candelatech.com>
+References: <1456180974-21062-1-git-send-email-greearb@candelatech.com>
+ <CA+XVXffpNDf0-5a6cPz0aUrrRfHgKQeu09zDt5eSe1K87m__pw@mail.gmail.com>
+ <56CC62BC.308@candelatech.com> <CA+XVXffxWtZgfZS=EZGYng6vWMxqnhTdhgxagYXRbKq1iYj0Sg@mail.gmail.com>
+ <56CDAEF6.1080606@candelatech.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Wed, 24 Feb 2016 15:32:30 +0200
+Message-ID: <CA+XVXfceVud0OfB5P=s45DCES1D2VGnbtotZvKX2s8FeFh8N0A@mail.gmail.com> (sfid-20160224_143607_038855_49C70861)
+Subject: Re: [PATCH] mac80211: Let VHT work on 2.4Ghz
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+On Wed, Feb 24, 2016 at 3:24 PM, Ben Greear <greearb@candelatech.com> wrote:
+>> Also it's pretty easy to just leave the code there and condition the
+>> check on the 5GHz band. There's no need to remove it.
+>
+>
+> Ok, so I can enable VHT on any band as long as the 5Ghz band exists and
+> allows 80Mhz?
+>
 
-This patch removes unused region feature on debug message.
-Also, removes the functions of related in this feature.
+No idea about that. I'm not sure how/if rate modulation is regulated
+on 2GHz. The ISM band itself is supposed to be open (microwave heating
+etc.) so it seems fine to me.
+But don't take me up on that. This is lawyer domain.
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan_common.h | 17 ++---------
- drivers/staging/wilc1000/wilc_debugfs.c      | 42 ----------------------------
- 2 files changed, 3 insertions(+), 56 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index e408631..57d3901 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -1,15 +1,7 @@
- #ifndef LINUX_WLAN_COMMON_H
- #define LINUX_WLAN_COMMON_H
- 
--enum debug_region {
--	Init_debug = 0,
--	COMP = 0xFFFFFFFF,
--};
--
--#define INIT_DBG                (1 << Init_debug)
--
- #if defined(WILC_DEBUGFS)
--extern atomic_t WILC_REGION;
- extern atomic_t WILC_DEBUG_LEVEL;
- 
- #define DEBUG           BIT(0)
-@@ -19,8 +11,7 @@ extern atomic_t WILC_DEBUG_LEVEL;
- 
- #define PRINT_D(region, ...)						\
- 	do {								\
--		if ((atomic_read(&WILC_DEBUG_LEVEL) & DEBUG) &&	\
--		   ((atomic_read(&WILC_REGION)) & (region))) {	\
-+		if ((atomic_read(&WILC_DEBUG_LEVEL) & DEBUG)) {	\
- 			printk("DBG [%s: %d]", __func__, __LINE__);	\
- 			printk(__VA_ARGS__);				\
- 		}							\
-@@ -28,8 +19,7 @@ extern atomic_t WILC_DEBUG_LEVEL;
- 
- #define PRINT_INFO(region, ...)						\
- 	do {								\
--		if ((atomic_read(&WILC_DEBUG_LEVEL) & INFO) &&	\
--		   ((atomic_read(&WILC_REGION)) & (region))) {	\
-+		if ((atomic_read(&WILC_DEBUG_LEVEL) & INFO)) {	\
- 			printk("INFO [%s]", __func__);			\
- 			printk(__VA_ARGS__);				\
- 		}							\
-@@ -37,8 +27,7 @@ extern atomic_t WILC_DEBUG_LEVEL;
- 
- #define PRINT_WRN(region, ...)						\
- 	do {								\
--		if ((atomic_read(&WILC_DEBUG_LEVEL) & WRN) &&	\
--		   ((atomic_read(&WILC_REGION)) & (region))) {	\
-+		if ((atomic_read(&WILC_DEBUG_LEVEL) & WRN)) {	\
- 			printk("WRN [%s: %d]", __func__, __LINE__);	\
- 			printk(__VA_ARGS__);				\
- 		}							\
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index 266d96b..215e2f0 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -24,10 +24,7 @@ static struct dentry *wilc_dir;
-  * --------------------------------------------------------------------------------
-  */
- 
--#define DBG_REGION_ALL	(INIT_DBG)
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
--atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG);
--EXPORT_SYMBOL_GPL(WILC_REGION);
- atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
- EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
- 
-@@ -75,44 +72,6 @@ static ssize_t wilc_debug_level_write(struct file *filp, const char __user *buf,
- 	return count;
- }
- 
--static ssize_t wilc_debug_region_read(struct file *file, char __user *userbuf, size_t count, loff_t *ppos)
--{
--	char buf[128];
--	int res = 0;
--
--	/* only allow read from start */
--	if (*ppos > 0)
--		return 0;
--
--	res = scnprintf(buf, sizeof(buf), "Debug region: %x\n", atomic_read(&WILC_REGION));
--
--	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
--}
--
--static ssize_t wilc_debug_region_write(struct file *filp, const char __user *buf, size_t count, loff_t *ppos)
--{
--	char buffer[128] = {};
--	int flag;
--
--	if (count > sizeof(buffer))
--		return -EINVAL;
--
--	if (copy_from_user(buffer, buf, count))
--		return -EFAULT;
--
--	flag = buffer[0] - '0';
--
--	if (flag > DBG_REGION_ALL) {
--		printk("%s, value (0x%08x) is out of range, stay previous flag (0x%08x)\n", __func__, flag, atomic_read(&WILC_REGION));
--		return -EFAULT;
--	}
--
--	atomic_set(&WILC_REGION, (int)flag);
--	printk("new debug-region is %x\n", atomic_read(&WILC_REGION));
--
--	return count;
--}
--
- /*
-  * --------------------------------------------------------------------------------
-  */
-@@ -134,7 +93,6 @@ struct wilc_debugfs_info_t {
- 
- static struct wilc_debugfs_info_t debugfs_info[] = {
- 	{ "wilc_debug_level",	0666,	(DEBUG | ERR), FOPS(NULL, wilc_debug_level_read, wilc_debug_level_write, NULL), },
--	{ "wilc_debug_region",	0666,	(INIT_DBG), FOPS(NULL, wilc_debug_region_read, wilc_debug_region_write, NULL), },
- };
- 
- static int __init wilc_debugfs_init(void)
--- 
-1.9.1
-
+Arik
