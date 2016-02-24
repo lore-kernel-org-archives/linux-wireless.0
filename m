@@ -1,34 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54533 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751434AbcBYJhB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2016 04:37:01 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jes.Sorensen@redhat.com
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH 03/28] rtl8xxxu: If fw running in RAM, reset the 8051 before trying to download a new one
-References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1454524802-26763-4-git-send-email-Jes.Sorensen@redhat.com>
-Date: Thu, 25 Feb 2016 11:36:54 +0200
-In-Reply-To: <1454524802-26763-4-git-send-email-Jes.Sorensen@redhat.com> (Jes
-	Sorensen's message of "Wed, 3 Feb 2016 13:39:37 -0500")
-Message-ID: <87a8mpf7wp.fsf@kamboji.qca.qualcomm.com> (sfid-20160225_103708_335613_53D1234E)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:38999 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754530AbcBXLBs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Feb 2016 06:01:48 -0500
+Message-ID: <1456311697.2050.23.camel@sipsolutions.net> (sfid-20160224_120319_560170_992A317C)
+Subject: Re: custom ioctl-based interface to control LED in networking (was
+ Re: [PATCHv2 09/10] rfkill: Userspace control for airplane mode)
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Pavel Machek <pavel@ucw.cz>, rpurdie@rpsys.net,
+	j.anaszewski@samsung.com, linux-leds@vger.kernel.org
+Cc: =?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
+	<jprvita@endlessm.com>
+Date: Wed, 24 Feb 2016 12:01:37 +0100
+In-Reply-To: <20160224104611.GB31302@amd>
+References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+	 <1456159001-20307-10-git-send-email-jprvita@endlessm.com>
+	 <20160223204525.GC16961@amd> <1456260914.9910.34.camel@sipsolutions.net>
+	 <20160223214501.GA22501@amd> <1456304509.2050.15.camel@sipsolutions.net>
+	 <20160224104611.GB31302@amd>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes.Sorensen@redhat.com writes:
+On Wed, 2016-02-24 at 11:46 +0100, Pavel Machek wrote:
 
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> If you want different trigger, implement different trigger. If you
+> want to indicate all but wifi, implement all but wifi, and then
+> userspace can select it by writing trigger name. 
 
-No empty commit logs, please. And this patch even has a too long title
-which really should be the actual commit log.
+This is still mostly a strawman, since userspace cannot have a database
+of LEDs that indicate airplane mode.
 
-I can take this now but in the future please write one.
+I'm sure you'd also not like to see 2**7 triggers implemented in rfkill
+to cover all the possibilities.
 
--- 
-Kalle Valo
+> If you want complete
+> userspace control, fine, but we have standard interface and it is not
+> ioctl.
+
+The "standard interface" is usable if you really just want to driver a
+single LED and you know which one.
+
+I think you're looking at this the wrong way, focusing too much on the
+LED aspect.
+
+Really what you have here is a concept of "airplane mode", and that
+concept is specific to the rfkill subsystem. This happens to affect
+mostly an LED trigger, today, but as a concept it's something that
+*should* be managed within the rfkill subsystem.
+
+> Besides, the series really should have been Cc-ed to LED
+> people, too.
+
+That's simply unreasonable, you're essentially saying that any user of
+any kernel infrastructure should be Cc'ed to the implementer of that
+infrastructure... 9/10 patches in this series aren't even LED specific,
+only the *previous* patch, the one that tied the "airplane mode"
+concept to an LED trigger in a very standard way had anything to do
+with LED triggers at all.
+
+johannes
