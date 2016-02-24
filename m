@@ -1,60 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:9703 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965764AbcBDJYn (ORCPT
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:34926 "EHLO
+	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752316AbcBXTTx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:24:43 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 18/70] staging: wilc1000: remove warnings line over 80 characters
-Date: Thu, 4 Feb 2016 18:15:35 +0900
-Message-ID: <1454577387-509-19-git-send-email-glen.lee@atmel.com> (sfid-20160204_104504_758006_206F331B)
-In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 24 Feb 2016 14:19:53 -0500
+Received: by mail-pf0-f173.google.com with SMTP id c10so18637918pfc.2
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 11:19:53 -0800 (PST)
+From: UJJAL ROY <royujjal@gmail.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	WiFi Mailing List <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/3] mwifiex: Removed extra spaces before commas
+Date: Thu, 25 Feb 2016 00:49:43 +0530
+Message-Id: <1456341583-446-1-git-send-email-royujjal@gmail.com> (sfid-20160224_201956_752368_F5C64570)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+This patch fixes spaces before commas issue in coding style.
 
-This patch removes the warnings reported by checkpatch.pl
-for line over 80 characters.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: UJJAL ROY <royujjal@gmail.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/pcie.c    | 2 +-
+ drivers/net/wireless/marvell/mwifiex/uap_cmd.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index f5f787e..1446b19 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -25,7 +25,8 @@
- 
- #include <linux/semaphore.h>
- 
--static int dev_state_ev_handler(struct notifier_block *this, unsigned long event, void *ptr);
-+static int dev_state_ev_handler(struct notifier_block *this,
-+				unsigned long event, void *ptr);
- 
- static struct notifier_block g_dev_notifier = {
- 	.notifier_call = dev_state_ev_handler
-@@ -57,7 +58,8 @@ static const struct net_device_ops wilc_netdev_ops = {
- 
- };
- 
--static int dev_state_ev_handler(struct notifier_block *this, unsigned long event, void *ptr)
-+static int dev_state_ev_handler(struct notifier_block *this,
-+				unsigned long event, void *ptr)
- {
- 	struct in_ifaddr *dev_iface = (struct in_ifaddr *)ptr;
- 	struct wilc_priv *priv;
--- 
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 6d0dc40..4d29cce 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -1408,7 +1408,7 @@ mwifiex_pcie_send_boot_cmd(struct mwifiex_adapter *adapter, struct sk_buff *skb)
+ 		return -1;
+ 	}
+
+-	if (mwifiex_map_pci_memory(adapter, skb, skb->len , PCI_DMA_TODEVICE))
++	if (mwifiex_map_pci_memory(adapter, skb, skb->len, PCI_DMA_TODEVICE))
+ 		return -1;
+
+ 	buf_pa = MWIFIEX_SKB_DMA_ADDR(skb);
+diff --git a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
+index e791166..16d95b2 100644
+--- a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
+@@ -192,7 +192,7 @@ mwifiex_set_ht_params(struct mwifiex_private *priv,
+ 		}
+ 		priv->ap_11n_enabled = 1;
+ 	} else {
+-		memset(&bss_cfg->ht_cap , 0, sizeof(struct ieee80211_ht_cap));
++		memset(&bss_cfg->ht_cap, 0, sizeof(struct ieee80211_ht_cap));
+ 		bss_cfg->ht_cap.cap_info = cpu_to_le16(MWIFIEX_DEF_HT_CAP);
+ 		bss_cfg->ht_cap.ampdu_params_info = MWIFIEX_DEF_AMPDU;
+ 	}
+--
 1.9.1
 
