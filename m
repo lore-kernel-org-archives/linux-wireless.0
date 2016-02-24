@@ -1,200 +1,352 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:5951 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753284AbcBCGKP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 01:10:15 -0500
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u136A8Th002542
-	for <linux-wireless@vger.kernel.org>; Tue, 2 Feb 2016 22:10:15 -0800
-Received: from sc-exch02.marvell.com ([199.233.58.182])
-	by mx0b-0016f401.pphosted.com with ESMTP id 20sw0hqndg-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 02 Feb 2016 22:10:15 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 5/8] mwifiex: use an extensible framework for firmware dump solution
-Date: Tue, 2 Feb 2016 22:05:06 -0800
-Message-ID: <1454479509-27129-6-git-send-email-akarwar@marvell.com> (sfid-20160203_071029_913578_2679BF34)
-In-Reply-To: <1454479509-27129-1-git-send-email-akarwar@marvell.com>
-References: <1454479509-27129-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from nbd.name ([46.4.11.11]:46804 "EHLO nbd.name"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756334AbcBXVYR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Feb 2016 16:24:17 -0500
+From: Felix Fietkau <nbd@openwrt.org>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, egrumbach@gmail.com
+Subject: [PATCH v2 1/2] mac80211: add A-MSDU tx support
+Date: Wed, 24 Feb 2016 10:28:59 +0100
+Message-Id: <1456306140-78485-1-git-send-email-nbd@openwrt.org> (sfid-20160224_222420_630856_09CB1513)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+Requires software tx queueing and fast-xmit support. For good
+performance, drivers need frag_list support as well. This avoids the
+need for copying data of aggregated frames. Running without it is only
+supported for debugging purposes.
 
-This patch apply an extensible firmware dump framework,
-so that other chipset can be easily added as needed.
+To avoid performance and packet size issues, the rate control module or
+driver needs to limit the maximum A-MSDU size by setting
+max_rc_amsdu_len in struct ieee80211_sta.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/marvell/mwifiex/pcie.c | 35 ++++++++++++-----------------
- drivers/net/wireless/marvell/mwifiex/pcie.h | 19 ++++++++++++++++
- 2 files changed, 33 insertions(+), 21 deletions(-)
+ include/net/mac80211.h     |  19 ++++++
+ net/mac80211/agg-tx.c      |   5 ++
+ net/mac80211/debugfs.c     |   2 +
+ net/mac80211/ieee80211_i.h |   1 +
+ net/mac80211/tx.c          | 165 +++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 192 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-index a18d944..c94d31e 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-@@ -37,17 +37,6 @@ static struct mwifiex_if_ops pcie_ops;
- 
- static struct semaphore add_remove_card_sem;
- 
--static struct memory_type_mapping mem_type_mapping_tbl[] = {
--	{"ITCM", NULL, 0, 0xF0},
--	{"DTCM", NULL, 0, 0xF1},
--	{"SQRAM", NULL, 0, 0xF2},
--	{"IRAM", NULL, 0, 0xF3},
--	{"APU", NULL, 0, 0xF4},
--	{"CIU", NULL, 0, 0xF5},
--	{"ICU", NULL, 0, 0xF6},
--	{"MAC", NULL, 0, 0xF7},
--};
--
- static int
- mwifiex_map_pci_memory(struct mwifiex_adapter *adapter, struct sk_buff *skb,
- 		       size_t size, int flags)
-@@ -206,6 +195,8 @@ static int mwifiex_pcie_probe(struct pci_dev *pdev,
- 		card->pcie.blksz_fw_dl = data->blksz_fw_dl;
- 		card->pcie.tx_buf_size = data->tx_buf_size;
- 		card->pcie.can_dump_fw = data->can_dump_fw;
-+		card->pcie.mem_type_mapping_tbl = data->mem_type_mapping_tbl;
-+		card->pcie.num_mem_types = data->num_mem_types;
- 		card->pcie.can_ext_scan = data->can_ext_scan;
- 	}
- 
-@@ -2373,7 +2364,8 @@ mwifiex_pcie_rdwr_firmware(struct mwifiex_adapter *adapter, u8 doneflag)
- 	if (mwifiex_read_reg(adapter, reg->fw_status, &fw_status))
- 		return RDWR_STATUS_FAILURE;
- 
--	ret = mwifiex_write_reg(adapter, reg->fw_dump_ctrl, FW_DUMP_HOST_READY);
-+	ret = mwifiex_write_reg(adapter, reg->fw_dump_ctrl,
-+				reg->fw_dump_host_ready);
- 	if (ret) {
- 		mwifiex_dbg(adapter, ERROR,
- 			    "PCIE write err\n");
-@@ -2386,11 +2378,11 @@ mwifiex_pcie_rdwr_firmware(struct mwifiex_adapter *adapter, u8 doneflag)
- 			return RDWR_STATUS_SUCCESS;
- 		if (doneflag && ctrl_data == doneflag)
- 			return RDWR_STATUS_DONE;
--		if (ctrl_data != FW_DUMP_HOST_READY) {
-+		if (ctrl_data != reg->fw_dump_host_ready) {
- 			mwifiex_dbg(adapter, WARN,
- 				    "The ctrl reg was changed, re-try again!\n");
- 			ret = mwifiex_write_reg(adapter, reg->fw_dump_ctrl,
--						FW_DUMP_HOST_READY);
-+						reg->fw_dump_host_ready);
- 			if (ret) {
- 				mwifiex_dbg(adapter, ERROR,
- 					    "PCIE write err\n");
-@@ -2418,8 +2410,9 @@ static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
- 	if (!card->pcie.can_dump_fw)
- 		return;
- 
--	for (idx = 0; idx < ARRAY_SIZE(mem_type_mapping_tbl); idx++) {
--		struct memory_type_mapping *entry = &mem_type_mapping_tbl[idx];
-+	for (idx = 0; idx < adapter->num_mem_types; idx++) {
-+		struct memory_type_mapping *entry =
-+				&adapter->mem_type_mapping_tbl[idx];
- 
- 		if (entry->mem_ptr) {
- 			vfree(entry->mem_ptr);
-@@ -2440,8 +2433,8 @@ static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
- 
- 	/* Read the length of every memory which will dump */
- 	for (idx = 0; idx < dump_num; idx++) {
--		struct memory_type_mapping *entry = &mem_type_mapping_tbl[idx];
--
-+		struct memory_type_mapping *entry =
-+				&adapter->mem_type_mapping_tbl[idx];
- 		stat = mwifiex_pcie_rdwr_firmware(adapter, doneflag);
- 		if (stat == RDWR_STATUS_FAILURE)
- 			return;
-@@ -2457,7 +2450,7 @@ static void mwifiex_pcie_fw_dump(struct mwifiex_adapter *adapter)
- 		if (memory_size == 0) {
- 			mwifiex_dbg(adapter, MSG, "Firmware dump Finished!\n");
- 			ret = mwifiex_write_reg(adapter, creg->fw_dump_ctrl,
--						FW_DUMP_READ_DONE);
-+						creg->fw_dump_read_done);
- 			if (ret) {
- 				mwifiex_dbg(adapter, ERROR, "PCIE write err\n");
- 				return;
-@@ -2762,8 +2755,8 @@ static int mwifiex_register_dev(struct mwifiex_adapter *adapter)
- 		return -1;
- 
- 	adapter->tx_buf_size = card->pcie.tx_buf_size;
--	adapter->mem_type_mapping_tbl = mem_type_mapping_tbl;
--	adapter->num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl);
-+	adapter->mem_type_mapping_tbl = card->pcie.mem_type_mapping_tbl;
-+	adapter->num_mem_types = card->pcie.num_mem_types;
- 	strcpy(adapter->fw_name, card->pcie.firmware);
- 	adapter->ext_scan = card->pcie.can_ext_scan;
- 
-diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
-index 8f190c4..8bc4390 100644
---- a/drivers/net/wireless/marvell/mwifiex/pcie.h
-+++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
-@@ -136,6 +136,8 @@ struct mwifiex_pcie_card_reg {
- 	u16 fw_dump_ctrl;
- 	u16 fw_dump_start;
- 	u16 fw_dump_end;
-+	u8 fw_dump_host_ready;
-+	u8 fw_dump_read_done;
- 	u8 msix_support;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 0c09da3..da03bb9 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -709,6 +709,7 @@ enum mac80211_tx_info_flags {
+  * @IEEE80211_TX_CTRL_PS_RESPONSE: This frame is a response to a poll
+  *	frame (PS-Poll or uAPSD).
+  * @IEEE80211_TX_CTRL_RATE_INJECT: This frame is injected with rate information
++ * @IEEE80211_TX_CTRL_AMSDU: This frame is an A-MSDU frame
+  *
+  * These flags are used in tx_info->control.flags.
+  */
+@@ -716,6 +717,7 @@ enum mac80211_tx_control_flags {
+ 	IEEE80211_TX_CTRL_PORT_CTRL_PROTO	= BIT(0),
+ 	IEEE80211_TX_CTRL_PS_RESPONSE		= BIT(1),
+ 	IEEE80211_TX_CTRL_RATE_INJECT		= BIT(2),
++	IEEE80211_TX_CTRL_AMSDU			= BIT(3),
  };
  
-@@ -203,6 +205,8 @@ static const struct mwifiex_pcie_card_reg mwifiex_reg_8897 = {
- 	.fw_dump_ctrl = 0xcf4,
- 	.fw_dump_start = 0xcf8,
- 	.fw_dump_end = 0xcff,
-+	.fw_dump_host_ready = 0xee,
-+	.fw_dump_read_done = 0xfe,
- 	.msix_support = 0,
- };
+ /*
+@@ -1735,6 +1737,7 @@ struct ieee80211_sta_rates {
+  *		  size is min(max_amsdu_len, 7935) bytes.
+  *	Both additional HT limits must be enforced by the low level driver.
+  *	This is defined by the spec (IEEE 802.11-2012 section 8.3.2.2 NOTE 2).
++ * @max_rc_amsdu_len: Maximum A-MSDU size in bytes recommended by rate control.
+  * @txq: per-TID data TX queues (if driver uses the TXQ abstraction)
+  */
+ struct ieee80211_sta {
+@@ -1755,6 +1758,7 @@ struct ieee80211_sta {
+ 	bool mfp;
+ 	u8 max_amsdu_subframes;
+ 	u16 max_amsdu_len;
++	u16 max_rc_amsdu_len;
  
-@@ -238,12 +242,25 @@ static const struct mwifiex_pcie_card_reg mwifiex_reg_8997 = {
- 	.msix_support = 1,
- };
+ 	struct ieee80211_txq *txq[IEEE80211_NUM_TIDS];
  
-+static struct memory_type_mapping mem_type_mapping_tbl_w8897[] = {
-+	{"ITCM", NULL, 0, 0xF0},
-+	{"DTCM", NULL, 0, 0xF1},
-+	{"SQRAM", NULL, 0, 0xF2},
-+	{"IRAM", NULL, 0, 0xF3},
-+	{"APU", NULL, 0, 0xF4},
-+	{"CIU", NULL, 0, 0xF5},
-+	{"ICU", NULL, 0, 0xF6},
-+	{"MAC", NULL, 0, 0xF7},
-+};
+@@ -1968,6 +1972,15 @@ struct ieee80211_txq {
+  *	order and does not need to manage its own reorder buffer or BA session
+  *	timeout.
+  *
++ * @IEEE80211_HW_TX_AMSDU: Hardware (or driver) supports software aggregated
++ *	A-MSDU frames. Requires software tx queueing and fast-xmit support.
++ *	When not using minstrel/minstrel_ht rate control, the driver should
++ *	limit the maximum A-MSDU size based on the current tx rate by setting
++ *	max_rc_amsdu_len in struct ieee80211_sta.
++ *
++ * @IEEE80211_HW_TX_FRAG_LIST: Hardware (or driver) supports sending frag_list
++ *	skbs, needed for zero-copy software A-MSDU.
++ *
+  * @NUM_IEEE80211_HW_FLAGS: number of hardware flags, used for sizing arrays
+  */
+ enum ieee80211_hw_flags {
+@@ -2005,6 +2018,8 @@ enum ieee80211_hw_flags {
+ 	IEEE80211_HW_BEACON_TX_STATUS,
+ 	IEEE80211_HW_NEEDS_UNIQUE_STA_ADDR,
+ 	IEEE80211_HW_SUPPORTS_REORDERING_BUFFER,
++	IEEE80211_HW_TX_AMSDU,
++	IEEE80211_HW_TX_FRAG_LIST,
+ 
+ 	/* keep last, obviously */
+ 	NUM_IEEE80211_HW_FLAGS
+@@ -2077,6 +2092,9 @@ enum ieee80211_hw_flags {
+  *	size is smaller (an example is LinkSys WRT120N with FW v1.0.07
+  *	build 002 Jun 18 2012).
+  *
++ * @max_tx_fragments: maximum number of tx buffers per (A)-MSDU, sum
++ *	of 1 + skb_shinfo(skb)->nr_frags for each skb in the frag_list.
++ *
+  * @offchannel_tx_hw_queue: HW queue ID to use for offchannel TX
+  *	(if %IEEE80211_HW_QUEUE_CONTROL is set)
+  *
+@@ -2131,6 +2149,7 @@ struct ieee80211_hw {
+ 	u8 max_rate_tries;
+ 	u8 max_rx_aggregation_subframes;
+ 	u8 max_tx_aggregation_subframes;
++	u8 max_tx_fragments;
+ 	u8 offchannel_tx_hw_queue;
+ 	u8 radiotap_mcs_details;
+ 	u16 radiotap_vht_details;
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 4932e9f..42fa810 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -935,6 +935,7 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+ 				  size_t len)
+ {
+ 	struct tid_ampdu_tx *tid_tx;
++	struct ieee80211_txq *txq;
+ 	u16 capab, tid;
+ 	u8 buf_size;
+ 	bool amsdu;
+@@ -945,6 +946,10 @@ void ieee80211_process_addba_resp(struct ieee80211_local *local,
+ 	buf_size = (capab & IEEE80211_ADDBA_PARAM_BUF_SIZE_MASK) >> 6;
+ 	buf_size = min(buf_size, local->hw.max_tx_aggregation_subframes);
+ 
++	txq = sta->sta.txq[tid];
++	if (!amsdu && txq)
++		set_bit(IEEE80211_TXQ_NO_AMSDU, &to_txq_info(txq)->flags);
 +
- struct mwifiex_pcie_device {
- 	const char *firmware;
- 	const struct mwifiex_pcie_card_reg *reg;
- 	u16 blksz_fw_dl;
- 	u16 tx_buf_size;
- 	bool can_dump_fw;
-+	struct memory_type_mapping *mem_type_mapping_tbl;
-+	u8 num_mem_types;
- 	bool can_ext_scan;
+ 	mutex_lock(&sta->ampdu_mlme.mtx);
+ 
+ 	tid_tx = rcu_dereference_protected_tid_tx(sta, tid);
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index e433d0c..847779d 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -127,6 +127,8 @@ static const char *hw_flag_names[NUM_IEEE80211_HW_FLAGS + 1] = {
+ 	FLAG(BEACON_TX_STATUS),
+ 	FLAG(NEEDS_UNIQUE_STA_ADDR),
+ 	FLAG(SUPPORTS_REORDERING_BUFFER),
++	FLAG(TX_AMSDU),
++	FLAG(TX_FRAG_LIST),
+ 
+ 	/* keep last for the build bug below */
+ 	(void *)0x1
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 1630975..554ad0b 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -797,6 +797,7 @@ struct mac80211_qos_map {
+ enum txq_info_flags {
+ 	IEEE80211_TXQ_STOP,
+ 	IEEE80211_TXQ_AMPDU,
++	IEEE80211_TXQ_NO_AMSDU,
  };
  
-@@ -262,6 +279,8 @@ static const struct mwifiex_pcie_device mwifiex_pcie8897 = {
- 	.blksz_fw_dl = MWIFIEX_PCIE_BLOCK_SIZE_FW_DNLD,
- 	.tx_buf_size = MWIFIEX_TX_DATA_BUF_SIZE_4K,
- 	.can_dump_fw = true,
-+	.mem_type_mapping_tbl = mem_type_mapping_tbl_w8897,
-+	.num_mem_types = ARRAY_SIZE(mem_type_mapping_tbl_w8897),
- 	.can_ext_scan = true,
- };
+ struct txq_info {
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 3a7475f..5def9d0 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1324,6 +1324,10 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ out:
+ 	spin_unlock_bh(&txqi->queue.lock);
  
++	if (skb && skb_has_frag_list(skb) &&
++	    !ieee80211_hw_check(&local->hw, TX_FRAG_LIST))
++		skb_linearize(skb);
++
+ 	return skb;
+ }
+ EXPORT_SYMBOL(ieee80211_tx_dequeue);
+@@ -2767,6 +2771,163 @@ void ieee80211_clear_fast_xmit(struct sta_info *sta)
+ 		kfree_rcu(fast_tx, rcu_head);
+ }
+ 
++static bool ieee80211_amsdu_realloc_pad(struct ieee80211_local *local,
++					struct sk_buff *skb, int headroom,
++					int *subframe_len)
++{
++	int amsdu_len = *subframe_len + sizeof(struct ethhdr);
++	int padding = (4 - amsdu_len) & 3;
++
++	if (skb_headroom(skb) < headroom || skb_tailroom(skb) < padding) {
++		I802_DEBUG_INC(local->tx_expand_skb_head);
++
++		if (pskb_expand_head(skb, headroom, padding, GFP_ATOMIC)) {
++			wiphy_debug(local->hw.wiphy,
++				    "failed to reallocate TX buffer\n");
++			return false;
++		}
++	}
++
++	if (padding) {
++		*subframe_len += padding;
++		memset(skb_put(skb, padding), 0, padding);
++	}
++
++	return true;
++}
++
++static bool ieee80211_amsdu_prepare_head(struct ieee80211_sub_if_data *sdata,
++					 struct ieee80211_fast_tx *fast_tx,
++					 struct sk_buff *skb)
++{
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_hdr *hdr;
++	struct ethhdr amsdu_hdr;
++	int hdr_len = fast_tx->hdr_len - sizeof(rfc1042_header);
++	int subframe_len = skb->len - hdr_len;
++	void *data;
++	u8 *qc;
++
++	if (info->flags & IEEE80211_TX_CTL_RATE_CTRL_PROBE)
++		return false;
++
++	if (info->control.flags & IEEE80211_TX_CTRL_AMSDU)
++		return true;
++
++	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(amsdu_hdr),
++					 &subframe_len))
++		return false;
++
++	amsdu_hdr.h_proto = cpu_to_be16(subframe_len);
++	memcpy(amsdu_hdr.h_source, skb->data + fast_tx->sa_offs, ETH_ALEN);
++	memcpy(amsdu_hdr.h_dest, skb->data + fast_tx->da_offs, ETH_ALEN);
++
++	data = skb_push(skb, sizeof(amsdu_hdr));
++	memmove(data, data + sizeof(amsdu_hdr), hdr_len);
++	memcpy(data + hdr_len, &amsdu_hdr, sizeof(amsdu_hdr));
++
++	hdr = data;
++	qc = ieee80211_get_qos_ctl(hdr);
++	*qc |= IEEE80211_QOS_CTL_A_MSDU_PRESENT;
++
++	info->control.flags |= IEEE80211_TX_CTRL_AMSDU;
++
++	return true;
++}
++
++static bool ieee80211_amsdu_aggregate(struct ieee80211_sub_if_data *sdata,
++				      struct sta_info *sta,
++				      struct ieee80211_fast_tx *fast_tx,
++				      struct sk_buff *skb)
++{
++	struct ieee80211_local *local = sdata->local;
++	u8 tid = skb->priority & IEEE80211_QOS_CTL_TAG1D_MASK;
++	struct ieee80211_txq *txq = sta->sta.txq[tid];
++	struct txq_info *txqi;
++	struct sk_buff **frag_tail, *head;
++	int subframe_len = skb->len - ETH_ALEN;
++	u8 max_subframes = sta->sta.max_amsdu_subframes;
++	int max_frags = local->hw.max_tx_fragments;
++	int max_amsdu_len = sta->sta.max_amsdu_len;
++	__be16 len;
++	void *data;
++	bool ret = false;
++	int n = 1, nfrags;
++
++	if (!ieee80211_hw_check(&local->hw, TX_AMSDU))
++		return false;
++
++	if (!txq)
++		return false;
++
++	txqi = to_txq_info(txq);
++	if (test_bit(IEEE80211_TXQ_NO_AMSDU, &txqi->flags))
++		return false;
++
++	if (sta->sta.max_rc_amsdu_len)
++		max_amsdu_len = min_t(int, max_amsdu_len,
++				      sta->sta.max_rc_amsdu_len);
++
++	spin_lock_bh(&txqi->queue.lock);
++
++	head = skb_peek_tail(&txqi->queue);
++	if (!head)
++		goto out;
++
++	if (skb->len + head->len > max_amsdu_len)
++		goto out;
++
++	/*
++	 * HT A-MPDU limits maximum MPDU size to 4095 bytes. Since aggregation
++	 * sessions are started/stopped without txq flush, use the limit here
++	 * to avoid having to de-aggregate later.
++	 */
++	if (skb->len + head->len > 4095 &&
++	    !sta->sta.vht_cap.vht_supported)
++		goto out;
++
++	if (!ieee80211_amsdu_prepare_head(sdata, fast_tx, head))
++		goto out;
++
++	nfrags = 1 + skb_shinfo(skb)->nr_frags;
++	nfrags += 1 + skb_shinfo(head)->nr_frags;
++	frag_tail = &skb_shinfo(head)->frag_list;
++	while (*frag_tail) {
++		nfrags += 1 + skb_shinfo(*frag_tail)->nr_frags;
++		frag_tail = &(*frag_tail)->next;
++		n++;
++	}
++
++	if (max_subframes && n > max_subframes)
++		goto out;
++
++	if (max_frags && nfrags > max_frags)
++		goto out;
++
++	if (!ieee80211_amsdu_realloc_pad(local, skb, sizeof(rfc1042_header) + 2,
++					 &subframe_len))
++		return false;
++
++	ret = true;
++	data = skb_push(skb, ETH_ALEN + 2);
++	memmove(data, data + ETH_ALEN + 2, 2 * ETH_ALEN);
++
++	data += 2 * ETH_ALEN;
++	len = cpu_to_be16(subframe_len);
++	memcpy(data, &len, 2);
++	memcpy(data + 2, rfc1042_header, sizeof(rfc1042_header));
++
++	head->len += skb->len;
++	head->data_len += skb->len;
++	*frag_tail = skb;
++
++out:
++	spin_unlock_bh(&txqi->queue.lock);
++
++	return ret;
++}
++
+ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 				struct net_device *dev, struct sta_info *sta,
+ 				struct ieee80211_fast_tx *fast_tx,
+@@ -2821,6 +2982,10 @@ static bool ieee80211_xmit_fast(struct ieee80211_sub_if_data *sdata,
+ 
+ 	ieee80211_tx_stats(dev, skb->len + extra_head);
+ 
++	if ((hdr->frame_control & cpu_to_le16(IEEE80211_STYPE_QOS_DATA)) &&
++	    ieee80211_amsdu_aggregate(sdata, sta, fast_tx, skb))
++		return true;
++
+ 	/* will not be crypto-handled beyond what we do here, so use false
+ 	 * as the may-encrypt argument for the resize to not account for
+ 	 * more room than we already have in 'extra_head'
 -- 
-1.8.1.4
+2.2.2
 
