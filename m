@@ -1,95 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:58709 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932967AbcBDJcF (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:19911 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933052AbcBYRjR convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:32:05 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 46/70] staging: wilc1000: removes function 'wilc_dealloc_assoc_resp_info()'
-Date: Thu, 4 Feb 2016 18:24:07 +0900
-Message-ID: <1454577871-667-7-git-send-email-glen.lee@atmel.com> (sfid-20160204_103214_390238_351EF4E5)
-In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+	Thu, 25 Feb 2016 12:39:17 -0500
+From: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
+To: "janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"greearb@candelatech.com" <greearb@candelatech.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/4] ath10k: remove supported chain mask
+Date: Thu, 25 Feb 2016 17:39:08 +0000
+Message-ID: <1456421947524.85405@qti.qualcomm.com> (sfid-20160225_183927_657018_0C2D514F)
+References: <1445948474-16738-1-git-send-email-rmanohar@qti.qualcomm.com>
+	<87fv0uq6p7.fsf@kamboji.qca.qualcomm.com>,<CALhHN=orRg2mkjcJ1TGssjEocNrRWEhhDV=SKGYANQ-c+YEyzA@mail.gmail.com>,<1456233812853.59898@qti.qualcomm.com>
+In-Reply-To: <1456233812853.59898@qti.qualcomm.com>
+Content-Type: text/plain; charset=US-ASCII
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+>>>> Removing supported chainmask fields as it can be always derived
+>>>> from num_rf_chains.
+>>>>
+>>>> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+>>>
+>> Hello,
+>>
+>> This one break monitor mode for qca988x and 10.x firmware:
+>> After Revert "ath10k: remove supported chain mask" - works correctly.
+>>
+>Janusz,
+>
+> Thanks for reporting. Will send out patch asap.
+>
 
-This patch removes function wilc_dealloc_assoc_resp_info()'.
-Does not need this function which only free memory.
-Therefore, this function is removed and changed directly with kfree.
+Janusz,
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 22 ----------------------
- drivers/staging/wilc1000/coreconfigurator.h |  1 -
- drivers/staging/wilc1000/host_interface.c   |  4 ++--
- 3 files changed, 2 insertions(+), 25 deletions(-)
+It seems the change ("ath10k: remove supported chain mask") just exposed an
+hidden problem. The same target assert can be reproduced by below sequence
+even after reverting the commit.
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 81dd22e..c86278d 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -386,25 +386,3 @@ s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
- 
- 	return 0;
- }
--
--s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *connect_resp_info)
--{
--	s32 result = 0;
--
--	if (connect_resp_info) {
--		if (connect_resp_info->pu8RespIEs) {
--			kfree(connect_resp_info->pu8RespIEs);
--			connect_resp_info->pu8RespIEs = NULL;
--		} else {
--			result = -EFAULT;
--		}
--
--		kfree(connect_resp_info);
--		connect_resp_info = NULL;
--
--	} else {
--		result = -EFAULT;
--	}
--
--	return result;
--}
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 23775e4..d42f47c 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -123,7 +123,6 @@ typedef struct {
- s32 wilc_parse_network_info(u8 *msg_buffer, tstrNetworkInfo **ret_network_info);
- s32 wilc_parse_assoc_resp_info(u8 *buffer, u32 buffer_len,
- 			       tstrConnectRespInfo **ret_connect_resp_info);
--s32 wilc_dealloc_assoc_resp_info(tstrConnectRespInfo *connect_resp_info);
- void wilc_scan_complete_received(struct wilc *wilc, u8 *pu8Buffer,
- 				 u32 u32Length);
- void wilc_network_info_received(struct wilc *wilc, u8 *pu8Buffer,
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 2a1d7e9..30b93d0 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1501,8 +1501,8 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
- 						}
- 
- 						if (pstrConnectRespInfo) {
--							wilc_dealloc_assoc_resp_info(pstrConnectRespInfo);
--							pstrConnectRespInfo = NULL;
-+							kfree(pstrConnectRespInfo->pu8RespIEs);
-+							kfree(pstrConnectRespInfo);
- 						}
- 					}
- 				}
--- 
-1.9.1
+ifconfig wlan0 down
+iw wlan0 set type monitor
+iw phy0 set antenna 7
+ifconfig wlan0 up
 
+The actual cause of target assert is below commit.
+
+commit 5572a95b4b5768187652a346356e39e7542ca6e0
+Author: Ben Greear <greearb@candelatech.com>
+Date:   Mon Nov 24 16:22:10 2014 +0200
+
+    ath10k: apply chainmask settings to vdev on creation
+
+Configuring NSS vdev param on interface addition is causing the target assert in 10.1 firmware.
+Just creating monitor interface is causing assert with qca_main firmware.
+
+
+-Rajkumar
