@@ -1,112 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20422 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753955AbcBVKSo (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41342 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933638AbcBYTvW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 05:18:44 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V4 11/24] staging: wilc1000: host_interface.c: removes unnecessary log messages
-Date: Mon, 22 Feb 2016 19:14:18 +0900
-Message-ID: <1456136071-10502-12-git-send-email-leo.kim@atmel.com> (sfid-20160222_111919_559835_B17A61D1)
-In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
-References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
+	Thu, 25 Feb 2016 14:51:22 -0500
+Message-ID: <56CF5AE3.70302@codeaurora.org> (sfid-20160225_205126_318586_AD177A2A)
+Date: Thu, 25 Feb 2016 11:49:55 -0800
+From: Peter Oh <poh@codeaurora.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+To: Sven Eckelmann <sven@narfation.org>
+CC: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	"Oh, Peter" <poh@qca.qualcomm.com>
+Subject: Re: [PATCH v3] ath10k: set MAC timestamp in management Rx frame
+References: <4c705dc7a2c0aa857da4e6eaf6e8ed47c354b9ea.1456351768.git.poh@qca.qualcomm.com> <87k2lsd9zv.fsf@kamboji.qca.qualcomm.com> <56CF4DA3.8030803@codeaurora.org> <12890529.ZzYcJYx9dF@sven-edge>
+In-Reply-To: <12890529.ZzYcJYx9dF@sven-edge>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+Thank you!
 
-This patch removes unnecessary log message and relate variables.
-
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 31 ++++---------------------------
- 1 file changed, 4 insertions(+), 27 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 035f6f5..eddc0d6 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2095,8 +2095,6 @@ static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
- 	stamac = wid.val;
- 	memcpy(stamac, strHostIfStaInactiveT->mac, ETH_ALEN);
- 
--	PRINT_D(CFG80211_DBG, "SETING STA inactive time\n");
--
- 	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
- 				      wilc_get_vif_idx(vif));
- 
-@@ -2118,8 +2116,6 @@ static s32 Handle_Get_InActiveTime(struct wilc_vif *vif,
- 		return -EFAULT;
- 	}
- 
--	PRINT_D(CFG80211_DBG, "Getting inactive time : %d\n", inactive_time);
--
- 	up(&hif_drv->sem_inactive_time);
- 
- 	return result;
-@@ -3037,7 +3033,6 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
- 	struct host_if_msg msg;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
- 	u8 key_len = ptk_key_len;
--	int i;
- 
- 	if (!hif_drv) {
- 		PRINT_ER("driver is null\n");
-@@ -3065,20 +3060,11 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
- 	if (!msg.body.key_info.attr.wpa.key)
- 		return -ENOMEM;
- 
--	if (rx_mic) {
-+	if (rx_mic)
- 		memcpy(msg.body.key_info.attr.wpa.key + 16, rx_mic, RX_MIC_KEY_LEN);
--		if (INFO) {
--			for (i = 0; i < RX_MIC_KEY_LEN; i++)
--				PRINT_INFO(CFG80211_DBG, "PairwiseRx[%d] = %x\n", i, rx_mic[i]);
--		}
--	}
--	if (tx_mic) {
-+
-+	if (tx_mic)
- 		memcpy(msg.body.key_info.attr.wpa.key + 24, tx_mic, TX_MIC_KEY_LEN);
--		if (INFO) {
--			for (i = 0; i < TX_MIC_KEY_LEN; i++)
--				PRINT_INFO(CFG80211_DBG, "PairwiseTx[%d] = %x\n", i, tx_mic[i]);
--		}
--	}
- 
- 	msg.body.key_info.attr.wpa.key_len = key_len;
- 	msg.body.key_info.attr.wpa.mac_addr = mac_addr;
-@@ -4083,20 +4069,11 @@ int wilc_del_allstation(struct wilc_vif *vif, u8 mac_addr[][ETH_ALEN])
- 	for (i = 0; i < MAX_NUM_STA; i++) {
- 		if (memcmp(mac_addr[i], zero_addr, ETH_ALEN)) {
- 			memcpy(del_all_sta_info->del_all_sta[i], mac_addr[i], ETH_ALEN);
--			PRINT_D(CFG80211_DBG, "BSSID = %x%x%x%x%x%x\n",
--				del_all_sta_info->del_all_sta[i][0],
--				del_all_sta_info->del_all_sta[i][1],
--				del_all_sta_info->del_all_sta[i][2],
--				del_all_sta_info->del_all_sta[i][3],
--				del_all_sta_info->del_all_sta[i][4],
--				del_all_sta_info->del_all_sta[i][5]);
- 			assoc_sta++;
- 		}
- 	}
--	if (!assoc_sta) {
--		PRINT_D(CFG80211_DBG, "NO ASSOCIATED STAS\n");
-+	if (!assoc_sta)
- 		return result;
--	}
- 
- 	del_all_sta_info->assoc_sta = assoc_sta;
- 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
--- 
-1.9.1
+On 02/25/2016 11:32 AM, Sven Eckelmann wrote:
+> On Thursday 25 February 2016 10:53:23 Peter Oh wrote:
+>>> I see new warnings:
+>>>
+>>> drivers/net/wireless/ath/ath10k/wmi.c:2199:16: warning: restricted
+> __le32
+>>> degrades to integer
+>>> drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: restricted
+> __le32
+>>> degrades to integer
+>>> drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: cast to
+> restricted
+>>> __le32
+>>> drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: restricted
+> __le32
+>>> degrades to integer
+>> Do I have a way to run this check before submitting a patch such as
+>> checkpatch.pl?
+> Looks like sparse with -D__CHECK_ENDIAN__ [1]
+>
+> You may also try smatch [2]
+>
+> Kind regards,
+> 	Sven
+>
+> [1] https://www.kernel.org/doc/Documentation/sparse.txt
+> [2] http://smatch.sourceforge.net/
 
