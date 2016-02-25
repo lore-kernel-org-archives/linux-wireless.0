@@ -1,113 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:58454 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753742AbcBDJa7 (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:37999 "EHLO
+	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754407AbcBYAJD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:30:59 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 41/70] staging: wilc1000: linux_mon.c: replaces PRINT_ER with netdev_err
-Date: Thu, 4 Feb 2016 18:24:02 +0900
-Message-ID: <1454577871-667-2-git-send-email-glen.lee@atmel.com> (sfid-20160204_103106_510797_7698E2A7)
-In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 24 Feb 2016 19:09:03 -0500
+Received: by mail-wm0-f44.google.com with SMTP id a4so5514458wme.1
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 16:09:01 -0800 (PST)
+From: Andreas Fenkart <afenkart@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Andreas Fenkart <afenkart@gmail.com>
+Subject: [PATCH 2/7] mwifiex: scan: factor out has_ieee_hdr/has_vendor_hdr
+Date: Thu, 25 Feb 2016 01:08:47 +0100
+Message-Id: <1456358932-23114-3-git-send-email-afenkart@gmail.com> (sfid-20160225_010906_928122_0D340E71)
+In-Reply-To: <1456358932-23114-1-git-send-email-afenkart@gmail.com>
+References: <1456358932-23114-1-git-send-email-afenkart@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
-
-This patches replaces PRINT_ER with netdev_err.
-Removes unnecessary debug logs as well.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
 ---
- drivers/staging/wilc1000/linux_mon.c | 30 ++++++++++--------------------
- 1 file changed, 10 insertions(+), 20 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/scan.c | 52 +++++++++++++----------------
+ 1 file changed, 23 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index e9bb0ec..f0a94e5 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -157,10 +157,8 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
- {
- 	struct tx_complete_mon_data *mgmt_tx = NULL;
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 43d7a92..276382e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -76,6 +76,18 @@ static u8 mwifiex_rsn_oui[CIPHER_SUITE_MAX][4] = {
+ 	{ 0x00, 0x0f, 0xac, 0x04 },	/* AES  */
+ };
  
--	if (!dev) {
--		PRINT_D(HOSTAPD_DBG, "ERROR: dev == NULL\n");
-+	if (!dev)
- 		return -EFAULT;
--	}
- 
- 	netif_stop_queue(dev);
- 	mgmt_tx = kmalloc(sizeof(*mgmt_tx), GFP_ATOMIC);
-@@ -205,17 +203,12 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 		return -EFAULT;
- 
- 	mon_priv = netdev_priv(wilc_wfi_mon);
--
--	if (!mon_priv) {
--		PRINT_ER("Monitor interface private structure is NULL\n");
-+	if (!mon_priv)
- 		return -EFAULT;
--	}
--
- 	rtap_len = ieee80211_get_radiotap_len(skb->data);
--	if (skb->len < rtap_len) {
--		PRINT_ER("Error in radiotap header\n");
-+	if (skb->len < rtap_len)
- 		return -1;
--	}
++static bool
++has_ieee_hdr(struct ieee_types_generic *ie, u8 key)
++{
++	return (ie && (ie->ieee_hdr.element_id == key));
++}
 +
- 	/* skip the radiotap header */
- 	PRINT_INFO(HOSTAPD_DBG, "Radiotap len: %d\n", rtap_len);
++static bool
++has_vendor_hdr(struct ieee_types_vendor_specific *ie, u8 key)
++{
++	return (ie && (ie->vend_hdr.element_id == key));
++}
++
+ /*
+  * This function parses a given IE for a given OUI.
+  *
+@@ -121,8 +133,7 @@ mwifiex_is_rsn_oui_present(struct mwifiex_bssdescriptor *bss_desc, u32 cipher)
+ 	struct ie_body *iebody;
+ 	u8 ret = MWIFIEX_OUI_NOT_PRESENT;
  
-@@ -273,7 +266,9 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 	/* if source address and bssid fields are equal>>Mac header */
- 	/*send it to mgmt frames handler */
- 	if (!(memcmp(srcAdd, bssid, 6))) {
--		mon_mgmt_tx(mon_priv->real_ndev, skb->data, skb->len);
-+		ret = mon_mgmt_tx(mon_priv->real_ndev, skb->data, skb->len);
-+		if (ret)
-+			netdev_err(dev, "fail to mgmt tx\n");
- 		dev_kfree_skb(skb);
- 	} else {
- 		ret = wilc_mac_xmit(skb, mon_priv->real_ndev);
-@@ -307,11 +302,8 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
- 	}
+-	if (bss_desc->bcn_rsn_ie &&
+-	    (bss_desc->bcn_rsn_ie->ieee_hdr.element_id == WLAN_EID_RSN)) {
++	if (has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN)) {
+ 		iebody = (struct ie_body *)
+ 			 (((u8 *) bss_desc->bcn_rsn_ie->data) +
+ 			  RSN_GTK_OUI_OFFSET);
+@@ -148,9 +159,7 @@ mwifiex_is_wpa_oui_present(struct mwifiex_bssdescriptor *bss_desc, u32 cipher)
+ 	struct ie_body *iebody;
+ 	u8 ret = MWIFIEX_OUI_NOT_PRESENT;
  
- 	wilc_wfi_mon = alloc_etherdev(sizeof(struct WILC_WFI_mon_priv));
--	if (!wilc_wfi_mon) {
--		PRINT_ER("failed to allocate memory\n");
-+	if (!wilc_wfi_mon)
- 		return NULL;
+-	if (bss_desc->bcn_wpa_ie &&
+-	    (bss_desc->bcn_wpa_ie->vend_hdr.element_id ==
+-	     WLAN_EID_VENDOR_SPECIFIC)) {
++	if (has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC)) {
+ 		iebody = (struct ie_body *) bss_desc->bcn_wpa_ie->data;
+ 		oui = &mwifiex_wpa_oui[cipher][0];
+ 		ret = mwifiex_search_oui_in_ie(iebody, oui);
+@@ -180,11 +189,8 @@ mwifiex_is_bss_wapi(struct mwifiex_private *priv,
+ 		    struct mwifiex_bssdescriptor *bss_desc)
+ {
+ 	if (priv->sec_info.wapi_enabled &&
+-	    (bss_desc->bcn_wapi_ie &&
+-	     (bss_desc->bcn_wapi_ie->ieee_hdr.element_id ==
+-	      WLAN_EID_BSS_AC_ACCESS_DELAY))) {
++	    has_ieee_hdr(bss_desc->bcn_wapi_ie, WLAN_EID_BSS_AC_ACCESS_DELAY))
+ 		return true;
 -	}
--
- 	wilc_wfi_mon->type = ARPHRD_IEEE80211_RADIOTAP;
- 	strncpy(wilc_wfi_mon->name, name, IFNAMSIZ);
- 	wilc_wfi_mon->name[IFNAMSIZ - 1] = 0;
-@@ -319,14 +311,12 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
+ 	return false;
+ }
  
- 	ret = register_netdevice(wilc_wfi_mon);
- 	if (ret) {
--		PRINT_ER(" register_netdevice failed (%d)\n", ret);
-+		netdev_err(real_dev, "register_netdevice failed\n");
- 		return NULL;
+@@ -198,11 +204,8 @@ mwifiex_is_bss_no_sec(struct mwifiex_private *priv,
+ {
+ 	if (!priv->sec_info.wep_enabled && !priv->sec_info.wpa_enabled &&
+ 	    !priv->sec_info.wpa2_enabled &&
+-	    (!bss_desc->bcn_wpa_ie ||
+-		(bss_desc->bcn_wpa_ie->vend_hdr.element_id !=
+-		 WLAN_EID_VENDOR_SPECIFIC)) &&
+-	    (!bss_desc->bcn_rsn_ie ||
+-		(bss_desc->bcn_rsn_ie->ieee_hdr.element_id != WLAN_EID_RSN)) &&
++	    !has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC) &&
++	    !has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN) &&
+ 	    !priv->sec_info.encryption_mode && !bss_desc->privacy) {
+ 		return true;
  	}
- 	priv = netdev_priv(wilc_wfi_mon);
--	if (!priv) {
--		PRINT_ER("private structure is NULL\n");
-+	if (!priv)
- 		return NULL;
--	}
- 
- 	priv->real_ndev = real_dev;
- 
+@@ -234,9 +237,7 @@ mwifiex_is_bss_wpa(struct mwifiex_private *priv,
+ {
+ 	if (!priv->sec_info.wep_enabled && priv->sec_info.wpa_enabled &&
+ 	    !priv->sec_info.wpa2_enabled &&
+-	    (bss_desc->bcn_wpa_ie &&
+-	     (bss_desc->bcn_wpa_ie->vend_hdr.element_id ==
+-	      WLAN_EID_VENDOR_SPECIFIC))
++	    has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC)
+ 	   /*
+ 	    * Privacy bit may NOT be set in some APs like
+ 	    * LinkSys WRT54G && bss_desc->privacy
+@@ -270,8 +271,7 @@ mwifiex_is_bss_wpa2(struct mwifiex_private *priv,
+ {
+ 	if (!priv->sec_info.wep_enabled && !priv->sec_info.wpa_enabled &&
+ 	    priv->sec_info.wpa2_enabled &&
+-	    (bss_desc->bcn_rsn_ie &&
+-	     (bss_desc->bcn_rsn_ie->ieee_hdr.element_id == WLAN_EID_RSN))) {
++	    has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN)) {
+ 		/*
+ 		 * Privacy bit may NOT be set in some APs like
+ 		 * LinkSys WRT54G && bss_desc->privacy
+@@ -304,11 +304,8 @@ mwifiex_is_bss_adhoc_aes(struct mwifiex_private *priv,
+ {
+ 	if (!priv->sec_info.wep_enabled && !priv->sec_info.wpa_enabled &&
+ 	    !priv->sec_info.wpa2_enabled &&
+-	    (!bss_desc->bcn_wpa_ie ||
+-	     (bss_desc->bcn_wpa_ie->vend_hdr.element_id !=
+-	      WLAN_EID_VENDOR_SPECIFIC)) &&
+-	    (!bss_desc->bcn_rsn_ie ||
+-	     (bss_desc->bcn_rsn_ie->ieee_hdr.element_id != WLAN_EID_RSN)) &&
++	    !has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC) &&
++	    !has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN) &&
+ 	    !priv->sec_info.encryption_mode && bss_desc->privacy) {
+ 		return true;
+ 	}
+@@ -325,11 +322,8 @@ mwifiex_is_bss_dynamic_wep(struct mwifiex_private *priv,
+ {
+ 	if (!priv->sec_info.wep_enabled && !priv->sec_info.wpa_enabled &&
+ 	    !priv->sec_info.wpa2_enabled &&
+-	    (!bss_desc->bcn_wpa_ie ||
+-	     (bss_desc->bcn_wpa_ie->vend_hdr.element_id !=
+-	      WLAN_EID_VENDOR_SPECIFIC)) &&
+-	    (!bss_desc->bcn_rsn_ie ||
+-	     (bss_desc->bcn_rsn_ie->ieee_hdr.element_id != WLAN_EID_RSN)) &&
++	    !has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC) &&
++	    !has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN) &&
+ 	    priv->sec_info.encryption_mode && bss_desc->privacy) {
+ 		mwifiex_dbg(priv->adapter, INFO,
+ 			    "info: %s: dynamic\t"
 -- 
-1.9.1
+2.7.0
 
