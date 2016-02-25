@@ -1,58 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:36719 "EHLO
-	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751791AbcBOJT3 (ORCPT
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:35072 "EHLO
+	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755960AbcBYAJE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Feb 2016 04:19:29 -0500
-Received: by mail-io0-f196.google.com with SMTP id b188so12080923iof.3
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Feb 2016 01:19:28 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA1331F@hasmsx107.ger.corp.intel.com>
-References: <1455450997-15409-1-git-send-email-emmanuel.grumbach@intel.com>
-	<1455450997-15409-2-git-send-email-emmanuel.grumbach@intel.com>
-	<CANUX_P3Ybzowsf3Kg7TFhtpq+H4bDWMswrGHhkrvHKtnZaEVhA@mail.gmail.com>
-	<1455477875.2564.0.camel@sipsolutions.net>
-	<0BA3FCBA62E2DC44AF3030971E174FB32EA122F3@hasmsx107.ger.corp.intel.com>
-	<CAB3XZEdXC1jG5FXOPu-seT2pVzKa6Sg15s_YTeMnULi7vBgL5A@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32EA1331F@hasmsx107.ger.corp.intel.com>
-Date: Mon, 15 Feb 2016 11:19:28 +0200
-Message-ID: <CAB3XZEeYfYaHUOcBjxpD5+_4YGRemm6W+YDRksPjxBqCxvTPtw@mail.gmail.com> (sfid-20160215_101933_832585_4530EA09)
-Subject: Re: [PATCH 2/3] iwlwifi: mvm: move TX PN assignment for TKIP to the driver
-From: Eliad Peller <eliad@wizery.com>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Emmanuel Grumbach <egrumbach@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"Peller, EliadX" <eliadx.peller@intel.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 24 Feb 2016 19:09:04 -0500
+Received: by mail-wm0-f54.google.com with SMTP id c200so5766340wme.0
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 16:09:04 -0800 (PST)
+From: Andreas Fenkart <afenkart@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Andreas Fenkart <afenkart@gmail.com>
+Subject: [PATCH 3/7] mwifiex: scan: simplify ternary operators using gnu extension
+Date: Thu, 25 Feb 2016 01:08:48 +0100
+Message-Id: <1456358932-23114-4-git-send-email-afenkart@gmail.com> (sfid-20160225_010943_452744_1FC39006)
+In-Reply-To: <1456358932-23114-1-git-send-email-afenkart@gmail.com>
+References: <1456358932-23114-1-git-send-email-afenkart@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 15, 2016 at 11:16 AM, Grumbach, Emmanuel
-<emmanuel.grumbach@intel.com> wrote:
->
->
-> On 02/15/2016 11:06 AM, Eliad Peller wrote:
->> On Sun, Feb 14, 2016 at 9:37 PM, Grumbach, Emmanuel
->> <emmanuel.grumbach@intel.com> wrote:
->>>
->>> On 02/14/2016 09:33 PM, Johannes Berg wrote:
->>>> On Sun, 2016-02-14 at 19:34 +0200, Emmanuel Grumbach wrote:
->>>>> Since the 3rd patch needs to be dropped anyway, let's route this one
->>>>> through my tree as usual.
->>>> It doesn't really have to be dropped, why? We can just make the same
->>>> adjustment as for dvm in the patch.
->>>>
->>> But I am not sure I really want to play with drivers/staging/vt6656/rxtx.c
->> here you go:
->>
->> diff --git a/drivers/staging/vt6655/rxtx.c b/drivers/staging/vt6655/rxtx.c
->> index b668db6..1a2dda0 100644
->> --- a/drivers/staging/vt6655/rxtx.c
->> +++ b/drivers/staging/vt6655/rxtx.c
->>
-> Want to send that patch to Greg? :)
+"x ? x : y" can be simplified as "x ? : y"
+https://gcc.gnu.org/onlinedocs/gcc/Conditionals.html#Conditionals
 
-why? can't you simply amend it to the third patch?
+Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
+---
+ drivers/net/wireless/marvell/mwifiex/scan.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-Eliad.
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 276382e..f612c1b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -845,14 +845,11 @@ mwifiex_config_scan(struct mwifiex_private *priv,
+ 		/* Set the BSS type scan filter, use Adapter setting if
+ 		   unset */
+ 		scan_cfg_out->bss_mode =
+-			(user_scan_in->bss_mode ? (u8) user_scan_in->
+-			 bss_mode : (u8) adapter->scan_mode);
++			(u8)(user_scan_in->bss_mode ?: adapter->scan_mode);
+ 
+ 		/* Set the number of probes to send, use Adapter setting
+ 		   if unset */
+-		num_probes =
+-			(user_scan_in->num_probes ? user_scan_in->
+-			 num_probes : adapter->scan_probes);
++		num_probes = user_scan_in->num_probes ?: adapter->scan_probes;
+ 
+ 		/*
+ 		 * Set the BSSID filter to the incoming configuration,
+-- 
+2.7.0
+
