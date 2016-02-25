@@ -1,61 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:10090
-	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161102AbcBQK1Z (ORCPT
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:35054 "EHLO
+	mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757428AbcBYAQM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2016 05:27:25 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Franky Lin <frankyl@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 07/21] brcmfmac: check return for ARP ip setting iovar
-Date: Wed, 17 Feb 2016 11:26:56 +0100
-Message-Id: <1455704830-10088-8-git-send-email-arend@broadcom.com> (sfid-20160217_112743_077507_E4031138)
-In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
-References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+	Wed, 24 Feb 2016 19:16:12 -0500
+Received: by mail-pf0-f178.google.com with SMTP id c10so22701689pfc.2
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 16:16:12 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 5/9] staging: wilc1000: rename pu8RespIEs in struct connect_info
+Date: Thu, 25 Feb 2016 09:15:46 +0900
+Message-Id: <1456359350-17118-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20160225_011616_457566_7D2DC6BE)
+In-Reply-To: <1456359350-17118-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1456359350-17118-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Franky Lin <frankyl@broadcom.com>
+This patch renames pu8RespIEs to resp_ies to avoid camelcase.
 
-The return value of iovar set function should be saved and checked.
-
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Franky Lin <frankyl@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.h       | 2 +-
+ drivers/staging/wilc1000/host_interface.c         | 8 ++++----
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 9507cc9..dcf9393 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -1039,14 +1039,14 @@ static int brcmf_inetaddr_changed(struct notifier_block *nb,
- 				return NOTIFY_OK;
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index d26e597..bb4c256 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -109,7 +109,7 @@ struct connect_info {
+ 	u8 bssid[6];
+ 	u8 *req_ies;
+ 	size_t req_ies_len;
+-	u8 *pu8RespIEs;
++	u8 *resp_ies;
+ 	u16 u16RespIEsLen;
+ 	u16 u16ConnectStatus;
+ };
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index dec3d08..c273935 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1468,8 +1468,8 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 						if (strConnectInfo.u16ConnectStatus == SUCCESSFUL_STATUSCODE) {
+ 							if (pstrConnectRespInfo->ies) {
+ 								strConnectInfo.u16RespIEsLen = pstrConnectRespInfo->ies_len;
+-								strConnectInfo.pu8RespIEs = kmalloc(pstrConnectRespInfo->ies_len, GFP_KERNEL);
+-								memcpy(strConnectInfo.pu8RespIEs, pstrConnectRespInfo->ies,
++								strConnectInfo.resp_ies = kmalloc(pstrConnectRespInfo->ies_len, GFP_KERNEL);
++								memcpy(strConnectInfo.resp_ies, pstrConnectRespInfo->ies,
+ 								       pstrConnectRespInfo->ies_len);
+ 							}
+ 						}
+@@ -1530,8 +1530,8 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
+ 				scan_while_connected = false;
  			}
- 			for (i = 0; i < ARPOL_MAX_ENTRIES; i++) {
--				if (addr_table[i] != 0) {
--					brcmf_fil_iovar_data_set(ifp,
--						"arp_hostip", &addr_table[i],
--						sizeof(addr_table[i]));
--					if (ret)
--						brcmf_err("add arp ip err %d\n",
--							  ret);
--				}
-+				if (addr_table[i] == 0)
-+					continue;
-+				ret = brcmf_fil_iovar_data_set(ifp, "arp_hostip",
-+							       &addr_table[i],
-+							       sizeof(addr_table[i]));
-+				if (ret)
-+					brcmf_err("add arp ip err %d\n",
-+						  ret);
- 			}
- 		}
- 		break;
+ 
+-			kfree(strConnectInfo.pu8RespIEs);
+-			strConnectInfo.pu8RespIEs = NULL;
++			kfree(strConnectInfo.resp_ies);
++			strConnectInfo.resp_ies = NULL;
+ 
+ 			kfree(strConnectInfo.req_ies);
+ 			strConnectInfo.req_ies = NULL;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index f8cd128..7e10d34 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -545,7 +545,7 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
+ 
+ 		cfg80211_connect_result(dev, pstrConnectInfo->bssid,
+ 					pstrConnectInfo->req_ies, pstrConnectInfo->req_ies_len,
+-					pstrConnectInfo->pu8RespIEs, pstrConnectInfo->u16RespIEsLen,
++					pstrConnectInfo->resp_ies, pstrConnectInfo->u16RespIEsLen,
+ 					u16ConnectStatus, GFP_KERNEL);
+ 	} else if (enuConnDisconnEvent == CONN_DISCONN_EVENT_DISCONN_NOTIF)    {
+ 		wilc_optaining_ip = false;
 -- 
-1.9.1
+2.7.1
 
