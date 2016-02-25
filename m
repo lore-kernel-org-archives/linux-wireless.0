@@ -1,116 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:52433 "EHLO mga04.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751445AbcBNL4t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 14 Feb 2016 06:56:49 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Eliad Peller <eliad@wizery.com>,
-	Eliad Peller <eliadx.peller@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/3] iwlwifi: mvm: move TX PN assignment for TKIP to the driver
-Date: Sun, 14 Feb 2016 13:56:36 +0200
-Message-Id: <1455450997-15409-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160214_125656_304228_9C4BF1EB)
-In-Reply-To: <1455450997-15409-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1455450997-15409-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from atrey.karlin.mff.cuni.cz ([195.113.26.193]:43273 "EHLO
+	atrey.karlin.mff.cuni.cz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759289AbcBYJGl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Feb 2016 04:06:41 -0500
+Date: Thu, 25 Feb 2016 10:06:36 +0100
+From: Pavel Machek <pavel@ucw.cz>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: rpurdie@rpsys.net, j.anaszewski@samsung.com,
+	linux-leds@vger.kernel.org,
+	=?iso-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?iso-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
+	<jprvita@endlessm.com>
+Subject: Re: custom ioctl-based interface to control LED in networking (was
+ Re: [PATCHv2 09/10] rfkill: Userspace control for airplane mode)
+Message-ID: <20160225090636.GA32652@amd> (sfid-20160225_100719_009009_E2D5D99B)
+References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+ <1456159001-20307-10-git-send-email-jprvita@endlessm.com>
+ <20160223204525.GC16961@amd>
+ <1456260914.9910.34.camel@sipsolutions.net>
+ <20160223214501.GA22501@amd>
+ <1456304509.2050.15.camel@sipsolutions.net>
+ <20160224104611.GB31302@amd>
+ <1456311697.2050.23.camel@sipsolutions.net>
+ <20160224121420.GA5627@amd>
+ <1456320693.2050.30.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1456320693.2050.30.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Eliad Peller <eliad@wizery.com>
+On Wed 2016-02-24 14:31:33, Johannes Berg wrote:
+> On Wed, 2016-02-24 at 13:14 +0100, Pavel Machek wrote:
+> > 
+> > Why would it need to? It could look at default triggers for the led
+> > if it really wanted to.
+> 
+> And then it needs to change them; if anything goes wrong error recovery
+> is practically impossible since the trigger information is lost
+> forever.
 
-If protocol offloading is configured, the fw might generate some
-frames (e.g. arp response) on its own during d3/d0i3.
+Well, conventional way to solve this is to simply name the led
+"acer::airplane"... that way it is persistent. We already do that for
+display/keyboard backlights.
 
-On d3/d0i3 exit the driver queries the updated PN (if relevant),
-and updates its keys (for the d0i3 case, this is done by
-iwl_mvm_d0i3_exit_work(), which is scheduled on d0i3 exit)
+> It's not my position to decide which combinations some system
+> integrator or userspace developer might find useful.
+> 
+> Even when we add parameters to a trigger (I don't see a generic way to
+> do that, but please do enlighten me), you're now ignoring the issue of
+> the userspace controlled GSM modem...
 
-While in d0i3, iwlmvm defers tx frames until d0i3 exit, and
-then continues their processing.
+Take a look at the blinking triggers.
 
-This is problematic with TKIP, since the frame's PN has already
-been set at this stage (in contrast to CCMP, where the PN is
-being set only later on), so both the frame's PN and the upcoming
-PN update (from d0i3 exit work) might be wrong.
+> > > Really what you have here is a concept of "airplane mode", and that
+> > > concept is specific to the rfkill subsystem. This happens to affect
+> > > mostly an LED trigger, today, but as a concept it's something that
+> > > *should* be managed within the rfkill subsystem.
+> > 
+> > How is that concept used outside the LEDs? What semantics does
+> > "airplane mode" have? You tried to explain "airplane mode" is not
+> > well defined up in this thread...
+> 
+> I'd say it's well-defined for any given set of system software, so if
+> e.g. NetworkManager decides to define it one way, and connman another
+> way, there's a definition but the kernel need not interfere with it.
 
-Fix it by moving the TX PN assignment (for TKIP) to the driver,
-similarly to CCMP.
+So... the LED changes meaning during boot? That's surely not a nice
+solution.
 
-Signed-off-by: Eliad Peller <eliadx.peller@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
-Johannes, please route this one through your tree - thanks
----
- drivers/net/wireless/intel/iwlwifi/mvm/d3.c       | 15 ++++++++++-----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c |  2 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c       |  2 ++
- 3 files changed, 13 insertions(+), 6 deletions(-)
+So... you rather store bit in a kernel with unclear semantics,
+explaining "oh I need to leave the flexibility to userland"? Sorry,
+that's just ugly.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-index d3e21d9..93e4958 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
-@@ -249,16 +249,19 @@ static void iwl_mvm_wowlan_program_keys(struct ieee80211_hw *hw,
- 		return;
- 	case WLAN_CIPHER_SUITE_TKIP:
- 		if (sta) {
-+			u64 pn64;
-+
- 			tkip_sc = data->rsc_tsc->all_tsc_rsc.tkip.unicast_rsc;
- 			tkip_tx_sc = &data->rsc_tsc->all_tsc_rsc.tkip.tsc;
- 
- 			rx_p1ks = data->tkip->rx_uni;
- 
--			ieee80211_get_key_tx_seq(key, &seq);
--			tkip_tx_sc->iv16 = cpu_to_le16(seq.tkip.iv16);
--			tkip_tx_sc->iv32 = cpu_to_le32(seq.tkip.iv32);
-+			pn64 = atomic64_read(&key->tx_pn);
-+			tkip_tx_sc->iv16 = cpu_to_le16(TKIP_PN_TO_IV16(pn64));
-+			tkip_tx_sc->iv32 = cpu_to_le32(TKIP_PN_TO_IV32(pn64));
- 
--			ieee80211_get_tkip_p1k_iv(key, seq.tkip.iv32, p1k);
-+			ieee80211_get_tkip_p1k_iv(key, TKIP_PN_TO_IV32(pn64),
-+						  p1k);
- 			iwl_mvm_convert_p1k(p1k, data->tkip->tx.p1k);
- 
- 			memcpy(data->tkip->mic_keys.tx,
-@@ -1601,7 +1604,9 @@ static void iwl_mvm_d3_update_keys(struct ieee80211_hw *hw,
- 		case WLAN_CIPHER_SUITE_TKIP:
- 			iwl_mvm_tkip_sc_to_seq(&sc->tkip.tsc, &seq);
- 			iwl_mvm_set_tkip_rx_seq(sc->tkip.unicast_rsc, key);
--			ieee80211_set_key_tx_seq(key, &seq);
-+			atomic64_set(&key->tx_pn,
-+				     (u64)seq.tkip.iv16 |
-+				     ((u64)seq.tkip.iv32 << 16));
- 			break;
- 		}
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 1bd3f0b..2b53292 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2585,7 +2585,7 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 	switch (key->cipher) {
- 	case WLAN_CIPHER_SUITE_TKIP:
- 		key->flags |= IEEE80211_KEY_FLAG_GENERATE_MMIC;
--		key->flags |= IEEE80211_KEY_FLAG_GENERATE_IV;
-+		key->flags |= IEEE80211_KEY_FLAG_PUT_IV_SPACE;
- 		break;
- 	case WLAN_CIPHER_SUITE_CCMP:
- 		key->flags |= IEEE80211_KEY_FLAG_PUT_IV_SPACE;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 8bf48a7..ca1e485 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -299,6 +299,8 @@ static void iwl_mvm_set_tx_cmd_crypto(struct iwl_mvm *mvm,
- 
- 	case WLAN_CIPHER_SUITE_TKIP:
- 		tx_cmd->sec_ctl = TX_CMD_SEC_TKIP;
-+		pn = atomic64_inc_return(&keyconf->tx_pn);
-+		ieee80211_tkip_add_iv(crypto_hdr, keyconf, pn);
- 		ieee80211_get_tkip_p2k(keyconf, skb_frag, tx_cmd->key);
- 		break;
- 
+> > I'm not saying that. I'm saying that LED maintainers should be Cced,
+> > to keep the interfaces consistent.
+> 
+> I pretty much have to read it that way, since the LED API is in no way
+> impacted by these changes. Here's a new trigger, with some magic inner
+> working. No impact on the LED API.
+
+New LED trigger and new ioctl for LED control... not matching how LEDs
+are normally controlled.
+
+Best regards,
+									Pavel
 -- 
-2.5.0
-
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
