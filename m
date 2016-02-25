@@ -1,100 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:59204 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751873AbcBDJeN (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:38043 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933406AbcBYSkY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:34:13 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH RESEND 66/70] staging: wilc1000: remove unnecessary wilc_rx_complete function
-Date: Thu, 4 Feb 2016 18:24:27 +0900
-Message-ID: <1454577871-667-27-git-send-email-glen.lee@atmel.com> (sfid-20160204_103418_422398_111BC596)
-In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
+	Thu, 25 Feb 2016 13:40:24 -0500
+Subject: Re: [PATCH 1/4] ath10k: remove supported chain mask
+To: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
+	"janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>,
+	"Valo, Kalle" <kvalo@qca.qualcomm.com>
+References: <1445948474-16738-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <87fv0uq6p7.fsf@kamboji.qca.qualcomm.com>
+ <CALhHN=orRg2mkjcJ1TGssjEocNrRWEhhDV=SKGYANQ-c+YEyzA@mail.gmail.com>
+ <1456233812853.59898@qti.qualcomm.com> <1456421947524.85405@qti.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <56CF4A96.3080105@candelatech.com> (sfid-20160225_194034_361882_1C320BD9)
+Date: Thu, 25 Feb 2016 10:40:22 -0800
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1456421947524.85405@qti.qualcomm.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+On 02/25/2016 09:39 AM, Manoharan, Rajkumar wrote:
+>>>>> Removing supported chainmask fields as it can be always derived
+>>>>> from num_rf_chains.
+>>>>>
+>>>>> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+>>>>
+>>> Hello,
+>>>
+>>> This one break monitor mode for qca988x and 10.x firmware:
+>>> After Revert "ath10k: remove supported chain mask" - works correctly.
+>>>
+>> Janusz,
+>>
+>> Thanks for reporting. Will send out patch asap.
+>>
+>
+> Janusz,
+>
+> It seems the change ("ath10k: remove supported chain mask") just exposed an
+> hidden problem. The same target assert can be reproduced by below sequence
+> even after reverting the commit.
+>
+> ifconfig wlan0 down
+> iw wlan0 set type monitor
+> iw phy0 set antenna 7
+> ifconfig wlan0 up
+>
+> The actual cause of target assert is below commit.
+>
+> commit 5572a95b4b5768187652a346356e39e7542ca6e0
+> Author: Ben Greear <greearb@candelatech.com>
+> Date:   Mon Nov 24 16:22:10 2014 +0200
+>
+>      ath10k: apply chainmask settings to vdev on creation
+>
+> Configuring NSS vdev param on interface addition is causing the target assert in 10.1 firmware.
+> Just creating monitor interface is causing assert with qca_main firmware.
 
-This patch remove unnecessary wilc_rx_complete function
-because this function only print unused log message.
-remove unused has_packet variable nomore.
+Maybe change that patch so that it does not attempt to set nss just for monitor interfaces?
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_wlan.c         | 5 -----
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 -
- drivers/staging/wilc1000/wilc_wlan.c          | 7 +------
- 3 files changed, 1 insertion(+), 12 deletions(-)
+Thanks,
+Ben
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 202be15..e702020 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -372,11 +372,6 @@ static int linux_wlan_txq_task(void *vp)
- 	return 0;
- }
- 
--void wilc_rx_complete(struct wilc *nic)
--{
--	PRINT_D(RX_DBG, "RX completed\n");
--}
--
- int wilc_wlan_get_firmware(struct net_device *dev)
- {
- 	struct wilc_vif *vif;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 07a4ff1..3077f5d4 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -228,7 +228,6 @@ int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif);
- 
- void wilc_frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
- void wilc_mac_indicate(struct wilc *wilc, int flag);
--void wilc_rx_complete(struct wilc *wilc);
- void wilc_dbg(u8 *buff);
- 
- int wilc_lock_timeout(struct wilc *wilc, void *, u32 timeout);
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index d7f14a9..8cb1ef6 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -811,7 +811,7 @@ _end_:
- 
- static void wilc_wlan_handle_rxq(struct wilc *wilc)
- {
--	int offset = 0, size, has_packet = 0;
-+	int offset = 0, size;
- 	u8 *buffer;
- 	struct rxq_entry_t *rqe;
- 
-@@ -866,7 +866,6 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- 							      &buffer[offset],
- 							      pkt_len,
- 							      pkt_offset);
--						has_packet = 1;
- 					}
- 				} else {
- 					struct wilc_cfg_rsp rsp;
-@@ -888,10 +887,6 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- 				break;
- 		} while (1);
- 		kfree(rqe);
--
--		if (has_packet)
--			wilc_rx_complete(wilc);
--
- 	} while (1);
- 
- 	wilc->rxq_exit = 1;
+>
+>
+> -Rajkumar
+>
+
+
 -- 
-1.9.1
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
