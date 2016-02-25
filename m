@@ -1,105 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48105 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932708AbcBDJ2S (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:37123 "EHLO
+	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757428AbcBYAJJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:28:18 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH] ath9k: make NF load complete quickly and reliably
-Date: Thu,  4 Feb 2016 17:27:53 +0800
-Message-Id: <1454578073-325-1-git-send-email-miaoqing@codeaurora.org> (sfid-20160204_102832_765413_3223439E)
+	Wed, 24 Feb 2016 19:09:09 -0500
+Received: by mail-wm0-f41.google.com with SMTP id g62so5579160wme.0
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 16:09:08 -0800 (PST)
+From: Andreas Fenkart <afenkart@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Andreas Fenkart <afenkart@gmail.com>
+Subject: [PATCH 5/7] mwifiex: scan: replace pointer arithmetic with array access
+Date: Thu, 25 Feb 2016 01:08:50 +0100
+Message-Id: <1456358932-23114-6-git-send-email-afenkart@gmail.com> (sfid-20160225_010915_257618_F97132C9)
+In-Reply-To: <1456358932-23114-1-git-send-email-afenkart@gmail.com>
+References: <1456358932-23114-1-git-send-email-afenkart@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+improves readability
 
-Make NF load complete quickly and reliably. NF load execution
-is delayed by HW to end of frame if frame Rx or Tx is ongoing.
-Increasing timeout to max frame duration. If NF cal is ongoing
-before NF load, stop it before load, and restart it afterwards.
-
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/calib.c | 35 ++++++++++++++++++++++++++++------
- 1 file changed, 29 insertions(+), 6 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/scan.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/calib.c b/drivers/net/wireless/ath/ath9k/calib.c
-index 3e2e24e..46347df 100644
---- a/drivers/net/wireless/ath/ath9k/calib.c
-+++ b/drivers/net/wireless/ath/ath9k/calib.c
-@@ -241,6 +241,7 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- 	u8 chainmask = (ah->rxchainmask << 3) | ah->rxchainmask;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 	s16 default_nf = ath9k_hw_get_default_nf(ah, chan);
-+	u32 bb_agc_ctl = REG_READ(ah, AR_PHY_AGC_CONTROL);
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 5588750..6ddc98b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -999,27 +999,24 @@ mwifiex_config_scan(struct mwifiex_private *priv,
+ 		     chan_idx++) {
  
- 	if (ah->caldata)
- 		h = ah->caldata->nfCalHist;
-@@ -264,6 +265,13 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- 	}
+ 			channel = user_scan_in->chan_list[chan_idx].chan_number;
+-			(scan_chan_list + chan_idx)->chan_number = channel;
++			scan_chan_list[chan_idx].chan_number = channel;
  
- 	/*
-+	 * stop NF cal if ongoing to ensure NF load completes immediately
-+	 * (or after end rx/tx frame if ongoing)
-+	 */
-+	if (bb_agc_ctl & AR_PHY_AGC_CONTROL_NF)
-+		REG_CLR_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
-+
-+	/*
- 	 * Load software filtered NF value into baseband internal minCCApwr
- 	 * variable.
- 	 */
-@@ -276,18 +284,33 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
+ 			radio_type =
+ 				user_scan_in->chan_list[chan_idx].radio_type;
+-			(scan_chan_list + chan_idx)->radio_type = radio_type;
++			scan_chan_list[chan_idx].radio_type = radio_type;
  
- 	/*
- 	 * Wait for load to complete, should be fast, a few 10s of us.
--	 * The max delay was changed from an original 250us to 10000us
--	 * since 250us often results in NF load timeout and causes deaf
--	 * condition during stress testing 12/12/2009
-+	 * The max delay was changed from an original 250us to 22.2 msec.
-+	 * This would increase timeout to the longest possible frame
-+	 * (11n max length 22.1 msec)
- 	 */
--	for (j = 0; j < 10000; j++) {
-+	for (j = 0; j < 22200; j++) {
- 		if ((REG_READ(ah, AR_PHY_AGC_CONTROL) &
--		     AR_PHY_AGC_CONTROL_NF) == 0)
-+			      AR_PHY_AGC_CONTROL_NF) == 0)
- 			break;
- 		udelay(10);
- 	}
+ 			scan_type = user_scan_in->chan_list[chan_idx].scan_type;
  
- 	/*
-+	 * Restart NF so it can continue.
-+	 */
-+	if (bb_agc_ctl & AR_PHY_AGC_CONTROL_NF) {
-+		ENABLE_REG_RMW_BUFFER(ah);
-+		if (bb_agc_ctl & AR_PHY_AGC_CONTROL_ENABLE_NF)
-+			REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
-+				    AR_PHY_AGC_CONTROL_ENABLE_NF);
-+		if (bb_agc_ctl & AR_PHY_AGC_CONTROL_NO_UPDATE_NF)
-+			REG_SET_BIT(ah, AR_PHY_AGC_CONTROL,
-+				    AR_PHY_AGC_CONTROL_NO_UPDATE_NF);
-+		REG_SET_BIT(ah, AR_PHY_AGC_CONTROL, AR_PHY_AGC_CONTROL_NF);
-+		REG_RMW_BUFFER_FLUSH(ah);
-+	}
-+
-+	/*
- 	 * We timed out waiting for the noisefloor to load, probably due to an
- 	 * in-progress rx. Simply return here and allow the load plenty of time
- 	 * to complete before the next calibration interval.  We need to avoid
-@@ -296,7 +319,7 @@ int ath9k_hw_loadnf(struct ath_hw *ah, struct ath9k_channel *chan)
- 	 * here, the baseband nf cal will just be capped by our present
- 	 * noisefloor until the next calibration timer.
- 	 */
--	if (j == 10000) {
-+	if (j == 22200) {
- 		ath_dbg(common, ANY,
- 			"Timeout while waiting for nf to load: AR_PHY_AGC_CONTROL=0x%x\n",
- 			REG_READ(ah, AR_PHY_AGC_CONTROL));
+ 			if (scan_type == MWIFIEX_SCAN_TYPE_PASSIVE)
+-				(scan_chan_list +
+-				 chan_idx)->chan_scan_mode_bitmap
++				scan_chan_list[chan_idx].chan_scan_mode_bitmap
+ 					|= (MWIFIEX_PASSIVE_SCAN |
+ 					    MWIFIEX_HIDDEN_SSID_REPORT);
+ 			else
+-				(scan_chan_list +
+-				 chan_idx)->chan_scan_mode_bitmap
++				scan_chan_list[chan_idx].chan_scan_mode_bitmap
+ 					&= ~MWIFIEX_PASSIVE_SCAN;
+ 
+ 			if (*filtered_scan)
+-				(scan_chan_list +
+-				 chan_idx)->chan_scan_mode_bitmap
++				scan_chan_list[chan_idx].chan_scan_mode_bitmap
+ 					|= MWIFIEX_DISABLE_CHAN_FILT;
+ 
+ 			if (user_scan_in->chan_list[chan_idx].scan_time) {
+@@ -1034,9 +1031,9 @@ mwifiex_config_scan(struct mwifiex_private *priv,
+ 					scan_dur = adapter->active_scan_time;
+ 			}
+ 
+-			(scan_chan_list + chan_idx)->min_scan_time =
++			scan_chan_list[chan_idx].min_scan_time =
+ 				cpu_to_le16(scan_dur);
+-			(scan_chan_list + chan_idx)->max_scan_time =
++			scan_chan_list[chan_idx].max_scan_time =
+ 				cpu_to_le16(scan_dur);
+ 		}
+ 
 -- 
-1.9.1
+2.7.0
 
