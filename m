@@ -1,70 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38999 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754530AbcBXLBs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2016 06:01:48 -0500
-Message-ID: <1456311697.2050.23.camel@sipsolutions.net> (sfid-20160224_120319_560170_992A317C)
-Subject: Re: custom ioctl-based interface to control LED in networking (was
- Re: [PATCHv2 09/10] rfkill: Userspace control for airplane mode)
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Pavel Machek <pavel@ucw.cz>, rpurdie@rpsys.net,
-	j.anaszewski@samsung.com, linux-leds@vger.kernel.org
-Cc: =?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux@endlessm.com,
-	=?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
-	<jprvita@endlessm.com>
-Date: Wed, 24 Feb 2016 12:01:37 +0100
-In-Reply-To: <20160224104611.GB31302@amd>
-References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
-	 <1456159001-20307-10-git-send-email-jprvita@endlessm.com>
-	 <20160223204525.GC16961@amd> <1456260914.9910.34.camel@sipsolutions.net>
-	 <20160223214501.GA22501@amd> <1456304509.2050.15.camel@sipsolutions.net>
-	 <20160224104611.GB31302@amd>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ig0-f172.google.com ([209.85.213.172]:33980 "EHLO
+	mail-ig0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754163AbcBYBOV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 24 Feb 2016 20:14:21 -0500
+Received: by mail-ig0-f172.google.com with SMTP id g6so3779338igt.1
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 17:14:21 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1456358932-23114-7-git-send-email-afenkart@gmail.com>
+References: <1456358932-23114-1-git-send-email-afenkart@gmail.com> <1456358932-23114-7-git-send-email-afenkart@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 25 Feb 2016 12:14:00 +1100
+Message-ID: <CAGRGNgW7S8xru6KVBdQMLN3+=N-uzMf18rwfDWW6uNzCv7eaWg@mail.gmail.com> (sfid-20160225_021425_381473_6642CB43)
+Subject: Re: [PATCH 6/7] mwifiex: factor out mwifiex_cancel_pending_scan_cmd
+To: Andreas Fenkart <afenkart@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-02-24 at 11:46 +0100, Pavel Machek wrote:
+Hi Andreas,
 
-> If you want different trigger, implement different trigger. If you
-> want to indicate all but wifi, implement all but wifi, and then
-> userspace can select it by writing trigger name. 
+On Thu, Feb 25, 2016 at 11:08 AM, Andreas Fenkart <afenkart@gmail.com> wrote:
+> releasing the scan_pending lock in mwifiex_check_next_scan_command
+> is valid, since the lock is taken again, and all nodes removed
+> from the scan_pending queue.
+>
+> Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/cmdevt.c      | 43 ++++++++++------------
+>  drivers/net/wireless/marvell/mwifiex/main.h        |  1 +
+>  drivers/net/wireless/marvell/mwifiex/scan.c        | 23 +++---------
+>  drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 13 +------
+>  4 files changed, 27 insertions(+), 53 deletions(-)
+>
+> diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+> index 6ddc98b..490d0d1 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/scan.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+> @@ -1920,13 +1910,10 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
+>                 }
+>         } else if ((priv->scan_aborting && !priv->scan_request) ||
+>                    priv->scan_block) {
+> -               list_for_each_entry_safe(cmd_node, tmp_node,
+> -                                        &adapter->scan_pending_q, list) {
+> -                       list_del(&cmd_node->list);
+> -                       mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
+> -               }
+>                 spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
+>
+> +               mwifiex_cancel_pending_scan_cmd(adapter);
+> +
 
-This is still mostly a strawman, since userspace cannot have a database
-of LEDs that indicate airplane mode.
+This is creating a "short" window where &adapter->scan_pending_q_lock
+is unlocked here. Is that safe?
 
-I'm sure you'd also not like to see 2**7 triggers implemented in rfkill
-to cover all the possibilities.
+You might want to write mwifiex_cancel_pending_scan_cmd() as two
+functions, one which takes the spinlock and calls the other and one
+which does all the work so you can call the latter here without that
+window where ..._q_lock is unlocked.
 
-> If you want complete
-> userspace control, fine, but we have standard interface and it is not
-> ioctl.
+Thanks,
 
-The "standard interface" is usable if you really just want to driver a
-single LED and you know which one.
+-- 
+Julian Calaby
 
-I think you're looking at this the wrong way, focusing too much on the
-LED aspect.
-
-Really what you have here is a concept of "airplane mode", and that
-concept is specific to the rfkill subsystem. This happens to affect
-mostly an LED trigger, today, but as a concept it's something that
-*should* be managed within the rfkill subsystem.
-
-> Besides, the series really should have been Cc-ed to LED
-> people, too.
-
-That's simply unreasonable, you're essentially saying that any user of
-any kernel infrastructure should be Cc'ed to the implementer of that
-infrastructure... 9/10 patches in this series aren't even LED specific,
-only the *previous* patch, the one that tied the "airplane mode"
-concept to an LED trigger in a very standard way had anything to do
-with LED triggers at all.
-
-johannes
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
