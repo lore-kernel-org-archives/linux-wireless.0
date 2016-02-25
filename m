@@ -1,45 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:36674 "EHLO
-	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756657AbcB0S2o (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:35189 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753585AbcBYAJN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 27 Feb 2016 13:28:44 -0500
-Date: Sat, 27 Feb 2016 10:28:41 -0800
-From: Edward Lipinsky <ellipinsky@gmail.com>
-To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
-	gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: rtl8723au: Fix line longer than 80 columns.
-Message-ID: <20160227182841.GA3387@gmail.com> (sfid-20160227_192903_578994_F04E0E3D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Wed, 24 Feb 2016 19:09:13 -0500
+Received: by mail-wm0-f51.google.com with SMTP id c200so5769742wme.0
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 16:09:12 -0800 (PST)
+From: Andreas Fenkart <afenkart@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Andreas Fenkart <afenkart@gmail.com>
+Subject: [PATCH 7/7] mwifiex: make mwifiex_insert_cmd_to_free_q local static
+Date: Thu, 25 Feb 2016 01:08:52 +0100
+Message-Id: <1456358932-23114-8-git-send-email-afenkart@gmail.com> (sfid-20160225_010918_335619_225792BF)
+In-Reply-To: <1456358932-23114-1-git-send-email-afenkart@gmail.com>
+References: <1456358932-23114-1-git-send-email-afenkart@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the checkpatch.pl warning:
+after factoring out mwifiex_cancel_pending_scan_cmd
+the function is noc called outside of cmdevt file
 
-WARNING: line over 80 characters
-
-Signed-off-by: Edward Lipinsky <ellipinsky@gmail.com>
+Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
 ---
- drivers/staging/rtl8723au/core/rtw_ap.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c | 6 +++++-
+ drivers/net/wireless/marvell/mwifiex/main.h   | 2 --
+ 2 files changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_ap.c b/drivers/staging/rtl8723au/core/rtw_ap.c
-index ce4b589..03202df 100644
---- a/drivers/staging/rtl8723au/core/rtw_ap.c
-+++ b/drivers/staging/rtl8723au/core/rtw_ap.c
-@@ -1834,7 +1834,8 @@ void stop_ap_mode23a(struct rtw_adapter *padapter)
- 	}
- 	spin_unlock_bh(&pacl_node_q->lock);
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+index 61426b3..4b0f44d 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -26,6 +26,10 @@
+ #include "11n.h"
+ #include "11ac.h"
  
--	DBG_8723A("%s, free acl_node_queue, num =%d\n", __func__, pacl_list->num);
-+	DBG_8723A("%s, free acl_node_queue, num =%d\n", __func__,
-+		  pacl_list->num);
++static void
++mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
++			     struct cmd_ctrl_node *cmd_node);
++
+ /*
+  * This function initializes a command node.
+  *
+@@ -619,7 +623,7 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
+  * The function also calls the completion callback if required, before
+  * cleaning the command node and re-inserting it into the free queue.
+  */
+-void
++static void
+ mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
+ 			     struct cmd_ctrl_node *cmd_node)
+ {
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index f71f894..840e5d4 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1045,8 +1045,6 @@ void mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter);
+ void mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter);
+ void mwifiex_cancel_pending_scan_cmd(struct mwifiex_adapter *adapter);
  
- 	rtw_sta_flush23a(padapter);
+-void mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
+-				  struct cmd_ctrl_node *cmd_node);
+ void mwifiex_recycle_cmd_node(struct mwifiex_adapter *adapter,
+ 			      struct cmd_ctrl_node *cmd_node);
  
 -- 
-1.7.9.5
+2.7.0
 
