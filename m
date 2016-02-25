@@ -1,62 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:19911 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933052AbcBYRjR convert rfc822-to-8bit (ORCPT
+Received: from mail-io0-f172.google.com ([209.85.223.172]:36349 "EHLO
+	mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752606AbcBYXb0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2016 12:39:17 -0500
-From: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
-To: "janusz.dziedzic@tieto.com" <janusz.dziedzic@tieto.com>,
-	"Valo, Kalle" <kvalo@qca.qualcomm.com>,
-	"greearb@candelatech.com" <greearb@candelatech.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/4] ath10k: remove supported chain mask
-Date: Thu, 25 Feb 2016 17:39:08 +0000
-Message-ID: <1456421947524.85405@qti.qualcomm.com> (sfid-20160225_183927_657018_0C2D514F)
-References: <1445948474-16738-1-git-send-email-rmanohar@qti.qualcomm.com>
-	<87fv0uq6p7.fsf@kamboji.qca.qualcomm.com>,<CALhHN=orRg2mkjcJ1TGssjEocNrRWEhhDV=SKGYANQ-c+YEyzA@mail.gmail.com>,<1456233812853.59898@qti.qualcomm.com>
-In-Reply-To: <1456233812853.59898@qti.qualcomm.com>
-Content-Type: text/plain; charset=US-ASCII
+	Thu, 25 Feb 2016 18:31:26 -0500
 MIME-Version: 1.0
+In-Reply-To: <1456442667-19751-1-git-send-email-colin.king@canonical.com>
+References: <1456442667-19751-1-git-send-email-colin.king@canonical.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 26 Feb 2016 10:31:06 +1100
+Message-ID: <CAGRGNgUq_YTi1h_FBxGSFGLUhHoz3xQguDU_5ZFhSyUKAruW1w@mail.gmail.com> (sfid-20160226_003150_244772_B5117AC2)
+Subject: Re: [PATCH][V3] mt7601u: do not free dma_buf when ivp allocation fails
+To: Colin King <colin.king@canonical.com>
+Cc: Jakub Kicinski <kubakici@wp.pl>, Kalle Valo <kvalo@codeaurora.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"Mailing List, Arm" <linux-arm-kernel@lists.infradead.org>,
+	linux-mediatek@lists.infradead.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
->>>> Removing supported chainmask fields as it can be always derived
->>>> from num_rf_chains.
->>>>
->>>> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
->>>
->> Hello,
->>
->> This one break monitor mode for qca988x and 10.x firmware:
->> After Revert "ath10k: remove supported chain mask" - works correctly.
->>
->Janusz,
+Hi,
+
+On Fri, Feb 26, 2016 at 10:24 AM, Colin King <colin.king@canonical.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 >
-> Thanks for reporting. Will send out patch asap.
+> If the allocation of ivp fails the error handling attempts to
+> free an uninitialized dma_buf; this data structure just contains
+> garbage on the stack, so the freeing will cause issues when the
+> urb, buf and dma fields are free'd. Fix this by not free'ing the
+> dma_buf if the ivp allocation fails.
 >
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Janusz,
+Looks right to me.
 
-It seems the change ("ath10k: remove supported chain mask") just exposed an
-hidden problem. The same target assert can be reproduced by below sequence
-even after reverting the commit.
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
 
-ifconfig wlan0 down
-iw wlan0 set type monitor
-iw phy0 set antenna 7
-ifconfig wlan0 up
+> ---
+>  drivers/net/wireless/mediatek/mt7601u/mcu.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/mediatek/mt7601u/mcu.c b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+> index fbb1986..91c4b34 100644
+> --- a/drivers/net/wireless/mediatek/mt7601u/mcu.c
+> +++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+> @@ -362,7 +362,9 @@ mt7601u_upload_firmware(struct mt7601u_dev *dev, const struct mt76_fw *fw)
+>         int i, ret;
+>
+>         ivb = kmemdup(fw->ivb, sizeof(fw->ivb), GFP_KERNEL);
+> -       if (!ivb || mt7601u_usb_alloc_buf(dev, MCU_FW_URB_SIZE, &dma_buf)) {
+> +       if (!ivb)
+> +               return -ENOMEM;
+> +       if (mt7601u_usb_alloc_buf(dev, MCU_FW_URB_SIZE, &dma_buf)) {
+>                 ret = -ENOMEM;
+>                 goto error;
+>         }
+> --
+> 2.7.0
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-The actual cause of target assert is below commit.
+Thanks,
 
-commit 5572a95b4b5768187652a346356e39e7542ca6e0
-Author: Ben Greear <greearb@candelatech.com>
-Date:   Mon Nov 24 16:22:10 2014 +0200
+-- 
+Julian Calaby
 
-    ath10k: apply chainmask settings to vdev on creation
-
-Configuring NSS vdev param on interface addition is causing the target assert in 10.1 firmware.
-Just creating monitor interface is causing assert with qca_main firmware.
-
-
--Rajkumar
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
