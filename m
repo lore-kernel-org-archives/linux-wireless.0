@@ -1,243 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:49642 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751929AbcBLL5Q (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56895 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760104AbcBYJ5K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Feb 2016 06:57:16 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
-	ath9k-devel@lists.ath9k.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] ath9k: reduce stack usage in ar9003_aic_cal_post_process
-Date: Fri, 12 Feb 2016 12:55:21 +0100
-Message-Id: <1455278130-1831694-1-git-send-email-arnd@arndb.de> (sfid-20160212_125805_820422_800B2FEF)
+	Thu, 25 Feb 2016 04:57:10 -0500
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [01/28] rtl8xxxu: Minor cleanup to rtl8xxxu_download_firmware()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1454524802-26763-2-git-send-email-Jes.Sorensen@redhat.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Message-Id: <20160225095710.2FCD1603D8@smtp.codeaurora.org> (sfid-20160225_105738_634724_49DD30F4)
+Date: Thu, 25 Feb 2016 09:57:10 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some configurations, this function uses more than the warning limit
-of 1024 bytes:
 
-drivers/net/wireless/ath/ath9k/ar9003_aic.c: In function 'ar9003_aic_cal_post_process':
-drivers/net/wireless/ath/ath9k/ar9003_aic.c:434:1: error: the frame size of 1040 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> 
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-It turns out that there are two large arrays on the stack here, but
-almost all the data in them is never used outside of the loop in
-which it gets written, so we can replace the array with a single
-instance.
+Thanks, 28 patches applied to wireless-drivers-next.git:
 
-The .valid flag is used later, so I'm replacing the array of structures
-with an array of bools. An obvious follow-up optimization would be
-to replace it with a bitmask and set_bit()/find_first_bit()/
-find_last_bit()/... operations. However, I have not tested this patch,
-so I sticked to the simpler transformation that does the job of
-reducing the stack usage to a harmless level.
+43154f6fd46b rtl8xxxu: Minor cleanup to rtl8xxxu_download_firmware()
+ef1c0499316b rtl8xxxu: rtl8xxxu_download_firmware(): Cosmetic cleanups
+216202ae20ea rtl8xxxu: If fw running in RAM, reset the 8051 before trying to download a new one
+0635f8cede15 rtl8xxxu: Add RQPN_[NE]PQ_SHIFT values
+f076977537d9 rtl8xxxu: Define SYS_CFG_SW_OFFLOAD_EN
+cecfd3cb29f8 rtl8xxxu: Add REG_TX_REPORT_* defines
+22229fcb487a rtl8xxxu: Add more RCR bits
+c1edece3c22b rtl8xxxu: Fix typo in Kconfig help text
+98e27cbd9453 rtl8xxxu: Check return value of kmemdup()
+d48fe60e06f4 rtl8xxxu: Implement rtl8xxxu_reset_8051()
+af9e4d6d9d07 rtl8xxxu: Add definitions for antenna selection registers for 8723BU
+29c2139cd04a rtl8xxxu: Add mbox extension register definitions for 8723B
+ce6f2e366954 rtl8xxxu: Add REG_OFDM0_RX_D_SYNC_PATH definitions
+e5c447ccf8e5 rtl8xxxu: Remove unused clutter for handling recursive calls to rtl8xxxu_init_device()
+38451998fb8a rtl8xxxu: Use REG_EFUSE_TEST register only on multifunctional devices
+56e4374a5e08 rtl8xxxu: Fix cosmetics to quiet down checkpatch police
+3bed4bfa51f2 rtl8xxxu: Enable monitor mode by handling filters
+b40027ba8db1 rtl8xxxu: Document REG_RXFLTMAP registers
+124bc63c995d rtl8xxxu: Remove duplicate USB ID
+755bda116e8a rtl8xxxu: Fix 80 character per line issue
+c85ea1156d78 rtl8xxxu: Enable data frame reception in rtl8xxxu_start
+a26703f39d2f rtl8xxxu: rtl8xxxu_set_linktype(): Be consistent aboutregister size REG_MSR
+53b381c4d72a rtl8xxxu: Set correct bit to reset MCU IO wrapper
+796c554257b1 rtl8xxxu: Remove unused mgmt variable from rtl8xxxu_rx_complete()
+a9ffa615aa4c rtl8xxxu: Remove unused len/cnt variables from rtl8xxxu_rx_complete()
+dc254ca41134 rtl8xxxu: Do not mask RF registers to 6 bits
+4042e61735ce rtl8xxxu: Make device_init kludge 8723au only
+5b22a111aa15 rtl8xxxu: Add missing bit define for REG_APS_FSMCO
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/ath/ath9k/ar9003_aic.c | 79 +++++++++++++++--------------
- drivers/net/wireless/ath/ath9k/ar9003_aic.h |  1 -
- 2 files changed, 40 insertions(+), 40 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.c b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-index 1db119d77783..547cd46da260 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.c
-@@ -53,19 +53,19 @@ static bool ar9003_hw_is_aic_enabled(struct ath_hw *ah)
- 	return true;
- }
- 
--static int16_t ar9003_aic_find_valid(struct ath_aic_sram_info *cal_sram,
-+static int16_t ar9003_aic_find_valid(bool *cal_sram_valid,
- 				     bool dir, u8 index)
- {
- 	int16_t i;
- 
- 	if (dir) {
- 		for (i = index + 1; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
--			if (cal_sram[i].valid)
-+			if (cal_sram_valid[i])
- 				break;
- 		}
- 	} else {
- 		for (i = index - 1; i >= 0; i--) {
--			if (cal_sram[i].valid)
-+			if (cal_sram_valid[i])
- 				break;
- 		}
- 	}
-@@ -264,7 +264,7 @@ static u8 ar9003_aic_cal_start(struct ath_hw *ah, u8 min_valid_count)
- static bool ar9003_aic_cal_post_process(struct ath_hw *ah)
- {
- 	struct ath9k_hw_aic *aic = &ah->btcoex_hw.aic;
--	struct ath_aic_sram_info cal_sram[ATH_AIC_MAX_BT_CHANNEL];
-+	bool cal_sram_valid[ATH_AIC_MAX_BT_CHANNEL];
- 	struct ath_aic_out_info aic_sram[ATH_AIC_MAX_BT_CHANNEL];
- 	u32 dir_path_gain_idx, quad_path_gain_idx, value;
- 	u32 fixed_com_att_db;
-@@ -272,33 +272,34 @@ static bool ar9003_aic_cal_post_process(struct ath_hw *ah)
- 	int16_t i;
- 	bool ret = true;
- 
--	memset(&cal_sram, 0, sizeof(cal_sram));
-+	memset(&cal_sram_valid, 0, sizeof(cal_sram_valid));
- 	memset(&aic_sram, 0, sizeof(aic_sram));
- 
- 	for (i = 0; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
-+		struct ath_aic_sram_info sram;
- 		value = aic->aic_sram[i];
- 
--		cal_sram[i].valid =
-+		cal_sram_valid[i] = sram.valid =
- 			MS(value, AR_PHY_AIC_SRAM_VALID);
--		cal_sram[i].rot_quad_att_db =
-+		sram.rot_quad_att_db =
- 			MS(value, AR_PHY_AIC_SRAM_ROT_QUAD_ATT_DB);
--		cal_sram[i].vga_quad_sign =
-+		sram.vga_quad_sign =
- 			MS(value, AR_PHY_AIC_SRAM_VGA_QUAD_SIGN);
--		cal_sram[i].rot_dir_att_db =
-+		sram.rot_dir_att_db =
- 			MS(value, AR_PHY_AIC_SRAM_ROT_DIR_ATT_DB);
--		cal_sram[i].vga_dir_sign =
-+		sram.vga_dir_sign =
- 			MS(value, AR_PHY_AIC_SRAM_VGA_DIR_SIGN);
--		cal_sram[i].com_att_6db =
-+		sram.com_att_6db =
- 			MS(value, AR_PHY_AIC_SRAM_COM_ATT_6DB);
- 
--		if (cal_sram[i].valid) {
--			dir_path_gain_idx = cal_sram[i].rot_dir_att_db +
--				com_att_db_table[cal_sram[i].com_att_6db];
--			quad_path_gain_idx = cal_sram[i].rot_quad_att_db +
--				com_att_db_table[cal_sram[i].com_att_6db];
-+		if (sram.valid) {
-+			dir_path_gain_idx = sram.rot_dir_att_db +
-+				com_att_db_table[sram.com_att_6db];
-+			quad_path_gain_idx = sram.rot_quad_att_db +
-+				com_att_db_table[sram.com_att_6db];
- 
--			dir_path_sign = (cal_sram[i].vga_dir_sign) ? 1 : -1;
--			quad_path_sign = (cal_sram[i].vga_quad_sign) ? 1 : -1;
-+			dir_path_sign = (sram.vga_dir_sign) ? 1 : -1;
-+			quad_path_sign = (sram.vga_quad_sign) ? 1 : -1;
- 
- 			aic_sram[i].dir_path_gain_lin = dir_path_sign *
- 				aic_lin_table[dir_path_gain_idx];
-@@ -310,16 +311,16 @@ static bool ar9003_aic_cal_post_process(struct ath_hw *ah)
- 	for (i = 0; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
- 		int16_t start_idx, end_idx;
- 
--		if (cal_sram[i].valid)
-+		if (cal_sram_valid[i])
- 			continue;
- 
--		start_idx = ar9003_aic_find_valid(cal_sram, 0, i);
--		end_idx = ar9003_aic_find_valid(cal_sram, 1, i);
-+		start_idx = ar9003_aic_find_valid(cal_sram_valid, 0, i);
-+		end_idx = ar9003_aic_find_valid(cal_sram_valid, 1, i);
- 
- 		if (start_idx < 0) {
- 			/* extrapolation */
- 			start_idx = end_idx;
--			end_idx = ar9003_aic_find_valid(cal_sram, 1, start_idx);
-+			end_idx = ar9003_aic_find_valid(cal_sram_valid, 1, start_idx);
- 
- 			if (end_idx < 0) {
- 				ret = false;
-@@ -342,7 +343,7 @@ static bool ar9003_aic_cal_post_process(struct ath_hw *ah)
- 
- 		if (end_idx < 0) {
- 			/* extrapolation */
--			end_idx = ar9003_aic_find_valid(cal_sram, 0, start_idx);
-+			end_idx = ar9003_aic_find_valid(cal_sram_valid, 0, start_idx);
- 
- 			if (end_idx < 0) {
- 				ret = false;
-@@ -378,19 +379,21 @@ static bool ar9003_aic_cal_post_process(struct ath_hw *ah)
- 	}
- 
- 	/* From dir/quad_path_gain_lin to sram. */
--	i = ar9003_aic_find_valid(cal_sram, 1, 0);
-+	i = ar9003_aic_find_valid(cal_sram_valid, 1, 0);
- 	if (i < 0) {
- 		i = 0;
- 		ret = false;
- 	}
--	fixed_com_att_db = com_att_db_table[cal_sram[i].com_att_6db];
-+	fixed_com_att_db = com_att_db_table[MS(aic->aic_sram[i],
-+					    AR_PHY_AIC_SRAM_COM_ATT_6DB)];
- 
- 	for (i = 0; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
- 		int16_t rot_dir_path_att_db, rot_quad_path_att_db;
-+		struct ath_aic_sram_info sram;
- 
--		aic_sram[i].sram.vga_dir_sign =
-+		sram.vga_dir_sign =
- 			(aic_sram[i].dir_path_gain_lin >= 0) ? 1 : 0;
--		aic_sram[i].sram.vga_quad_sign=
-+		sram.vga_quad_sign =
- 			(aic_sram[i].quad_path_gain_lin >= 0) ? 1 : 0;
- 
- 		rot_dir_path_att_db =
-@@ -400,33 +403,31 @@ static bool ar9003_aic_cal_post_process(struct ath_hw *ah)
- 			ar9003_aic_find_index(0, abs(aic_sram[i].quad_path_gain_lin)) -
- 			fixed_com_att_db;
- 
--		aic_sram[i].sram.com_att_6db =
-+		sram.com_att_6db =
- 			ar9003_aic_find_index(1, fixed_com_att_db);
- 
--		aic_sram[i].sram.valid = 1;
-+		sram.valid = 1;
- 
--		aic_sram[i].sram.rot_dir_att_db =
-+		sram.rot_dir_att_db =
- 			min(max(rot_dir_path_att_db,
- 				(int16_t)ATH_AIC_MIN_ROT_DIR_ATT_DB),
- 			    ATH_AIC_MAX_ROT_DIR_ATT_DB);
--		aic_sram[i].sram.rot_quad_att_db =
-+		sram.rot_quad_att_db =
- 			min(max(rot_quad_path_att_db,
- 				(int16_t)ATH_AIC_MIN_ROT_QUAD_ATT_DB),
- 			    ATH_AIC_MAX_ROT_QUAD_ATT_DB);
--	}
- 
--	for (i = 0; i < ATH_AIC_MAX_BT_CHANNEL; i++) {
--		aic->aic_sram[i] = (SM(aic_sram[i].sram.vga_dir_sign,
-+		aic->aic_sram[i] = (SM(sram.vga_dir_sign,
- 				       AR_PHY_AIC_SRAM_VGA_DIR_SIGN) |
--				    SM(aic_sram[i].sram.vga_quad_sign,
-+				    SM(sram.vga_quad_sign,
- 				       AR_PHY_AIC_SRAM_VGA_QUAD_SIGN) |
--				    SM(aic_sram[i].sram.com_att_6db,
-+				    SM(sram.com_att_6db,
- 				       AR_PHY_AIC_SRAM_COM_ATT_6DB) |
--				    SM(aic_sram[i].sram.valid,
-+				    SM(sram.valid,
- 				       AR_PHY_AIC_SRAM_VALID) |
--				    SM(aic_sram[i].sram.rot_dir_att_db,
-+				    SM(sram.rot_dir_att_db,
- 				       AR_PHY_AIC_SRAM_ROT_DIR_ATT_DB) |
--				    SM(aic_sram[i].sram.rot_quad_att_db,
-+				    SM(sram.rot_quad_att_db,
- 				       AR_PHY_AIC_SRAM_ROT_QUAD_ATT_DB));
- 	}
- 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_aic.h b/drivers/net/wireless/ath/ath9k/ar9003_aic.h
-index 86f40644be43..9512c63799f2 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_aic.h
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_aic.h
-@@ -50,7 +50,6 @@ struct ath_aic_sram_info {
- struct ath_aic_out_info {
- 	int16_t dir_path_gain_lin;
- 	int16_t quad_path_gain_lin;
--	struct ath_aic_sram_info sram;
- };
- 
- u8 ar9003_aic_calibration(struct ath_hw *ah);
--- 
-2.7.0
-
+Kalle Valo
