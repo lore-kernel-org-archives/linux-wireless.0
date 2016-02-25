@@ -1,61 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f194.google.com ([209.85.214.194]:35953 "EHLO
-	mail-ob0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751781AbcBKQxb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2016 11:53:31 -0500
-Received: by mail-ob0-f194.google.com with SMTP id wg8so6134282obc.3
-        for <linux-wireless@vger.kernel.org>; Thu, 11 Feb 2016 08:53:31 -0800 (PST)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 3/4] rtlwifi: rtl8192ee: Convert driver to use new 5G channel tables
-Date: Thu, 11 Feb 2016 10:53:11 -0600
-Message-Id: <1455209592-12882-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160211_175338_321139_5CD7A20C)
-In-Reply-To: <1455209592-12882-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1455209592-12882-1-git-send-email-Larry.Finger@lwfinger.net>
+Received: from narfation.org ([79.140.41.39]:42207 "EHLO v3-1039.vlinux.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933620AbcBYTch (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Feb 2016 14:32:37 -0500
+From: Sven Eckelmann <sven@narfation.org>
+To: Peter Oh <poh@codeaurora.org>
+Cc: "Valo, Kalle" <kvalo@qca.qualcomm.com>,
+	"Oh, Peter" <poh@qca.qualcomm.com>, linux-wireless@vger.kernel.org,
+	ath10k@lists.infradead.org
+Subject: Re: [PATCH v3] ath10k: set MAC timestamp in management Rx frame
+Date: Thu, 25 Feb 2016 20:32:33 +0100
+Message-ID: <12890529.ZzYcJYx9dF@sven-edge> (sfid-20160225_203242_718763_E6248BC9)
+In-Reply-To: <56CF4DA3.8030803@codeaurora.org>
+References: <4c705dc7a2c0aa857da4e6eaf6e8ed47c354b9ea.1456351768.git.poh@qca.qualcomm.com> <87k2lsd9zv.fsf@kamboji.qca.qualcomm.com> <56CF4DA3.8030803@codeaurora.org>
+MIME-Version: 1.0
+Content-Type: multipart/signed; boundary="nextPart2016203.862zcHdUiS"; micalg="pgp-sha512"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The driver defines its own set of channel tables for the 5G band. With
-this change, it will use those of the core.
+--nextPart2016203.862zcHdUiS
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
+On Thursday 25 February 2016 10:53:23 Peter Oh wrote:
+> > I see new warnings:
+> > 
+> > drivers/net/wireless/ath/ath10k/wmi.c:2199:16: warning: restricted __le32
+> > degrades to integer
+> > drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: restricted __le32
+> > degrades to integer
+> > drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: cast to restricted
+> > __le32
+> > drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: restricted __le32
+> > degrades to integer
+> 
+> Do I have a way to run this check before submitting a patch such as
+> checkpatch.pl?
 
-Kalle,
+Looks like sparse with -D__CHECK_ENDIAN__ [1]
 
-This material is for kernel 4.6.
+You may also try smatch [2]
 
-Larry
+Kind regards,
+	Sven
 
- drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c | 12 ------------
- 1 file changed, 12 deletions(-)
+[1] https://www.kernel.org/doc/Documentation/sparse.txt
+[2] http://smatch.sourceforge.net/
+--nextPart2016203.862zcHdUiS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+Content-Transfer-Encoding: 7Bit
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-index 5f14308..9fd3f1b 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192ee/hw.c
-@@ -2018,18 +2018,6 @@ static void _rtl92ee_read_txpower_info_from_hwpg(struct ieee80211_hw *hw,
- 	struct rtl_efuse *efu = rtl_efuse(rtl_priv(hw));
- 	struct txpower_info_2g pwr2g;
- 	struct txpower_info_5g pwr5g;
--	u8 channel5g[CHANNEL_MAX_NUMBER_5G] = {
--		36, 38, 40, 42, 44, 46, 48, 50, 52, 54,
--		56, 58, 60, 62, 64, 100, 102, 104, 106,
--		108, 110, 112, 114, 116, 118, 120, 122,
--		124, 126, 128, 130, 132, 134, 136, 138,
--		140, 142, 144, 149, 151, 153, 155, 157,
--		159, 161, 163, 165, 167, 168, 169, 171,
--		173, 175, 177
--	};
--	u8 channel5g_80m[CHANNEL_MAX_NUMBER_5G_80M] = {
--		42, 58, 106, 122, 138, 155, 171
--	};
- 	u8 rf, idx;
- 	u8 i;
- 
--- 
-2.1.4
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAABCgAGBQJWz1bRAAoJEF2HCgfBJntGcZsQAJsPdIOJ00eLc0MbEkasaYrW
+3zyq4QuQOD8AkNqlbg9wtKLMi73zHsjx3fjSFUn7xYJ1pa8mXKuNMYAK7dBen9f6
+0FEWdh0FFERMrZv6dzToOg27pLfawMKdJX0JZ4PTQq9lhO9pcxUUOawdexZTV7BO
+n46lAG9qt83A5fGt5qgiFDNRg57EQmiy7wtY6qwQZgrdaEuruZdw0Jqq1cb4dEi+
+QkppQvTMhaKHiRmse6906KJ3Cd8dEA5Ti8KVVfuxtpE4IFujT3pbL//cO7HV7Keq
+mYTgKtqQl4M0Lqj6PZ0NxrYitInQAgRJsYAdu6507lQIFEZkXz9KOWicRYBGmkUv
+r1d8/UFwPBvmZD21ztt/4nxogzFhKHrXQQqXyHNYLNJi434RlwkM7TxUxSAJNHtH
+qjMQ35z1UuJcrmWPjJTA7cRQ6hs0gKrmDmdFgNJx/jNOPP+eM+DDjFW0ghQJMwhY
+pyIeZubh4qRXIsoHfA+/xabQTCV3KKe80xkM8E5J28oReQd6APTgYfBP8wBtyHX/
+NOiKjNrpbNOXONUI4AsFnlJuKtnqFufEKymucTkmguFplE5ltDQqE9++WtvnOS8b
+Rsjn3dMdoOU3PAnuUBN6eC9W5F5OEmlm5XDJ83zOlKLgVtzPny5G62W8BLfpOqPQ
+5bwFvVGvapHew8BzsYBh
+=HViL
+-----END PGP SIGNATURE-----
+
+--nextPart2016203.862zcHdUiS--
 
