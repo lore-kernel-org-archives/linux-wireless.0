@@ -1,96 +1,218 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:47990 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946272AbcBSIkQ (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:35160 "EHLO
+	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756666AbcBYAJL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2016 03:40:16 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 6/6] staging: wilc1000: wilc_wlan_cfg_init: changes unused argument
-Date: Fri, 19 Feb 2016 17:37:12 +0900
-Message-ID: <1455871032-7625-6-git-send-email-leo.kim@atmel.com> (sfid-20160219_094024_284345_B8DEC5BB)
-In-Reply-To: <1455871032-7625-1-git-send-email-leo.kim@atmel.com>
-References: <1455871032-7625-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 24 Feb 2016 19:09:11 -0500
+Received: by mail-wm0-f50.google.com with SMTP id c200so5768923wme.0
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 16:09:10 -0800 (PST)
+From: Andreas Fenkart <afenkart@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Andreas Fenkart <afenkart@gmail.com>
+Subject: [PATCH 6/7] mwifiex: factor out mwifiex_cancel_pending_scan_cmd
+Date: Thu, 25 Feb 2016 01:08:51 +0100
+Message-Id: <1456358932-23114-7-git-send-email-afenkart@gmail.com> (sfid-20160225_010916_696395_C64DDF8E)
+In-Reply-To: <1456358932-23114-1-git-send-email-afenkart@gmail.com>
+References: <1456358932-23114-1-git-send-email-afenkart@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch changes the argument of the wilc_wlan_cfg_init function,
-wilc_debug to void type because wilc_debug function is not used any more.
-In addition, finally removes wilc_debug and related variables.
+releasing the scan_pending lock in mwifiex_check_next_scan_command
+is valid, since the lock is taken again, and all nodes removed
+from the scan_pending queue.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c     | 17 +----------------
- drivers/staging/wilc1000/wilc_wlan_cfg.c |  2 +-
- drivers/staging/wilc1000/wilc_wlan_cfg.h |  2 +-
- 3 files changed, 3 insertions(+), 18 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/cmdevt.c      | 43 ++++++++++------------
+ drivers/net/wireless/marvell/mwifiex/main.h        |  1 +
+ drivers/net/wireless/marvell/mwifiex/scan.c        | 23 +++---------
+ drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 13 +------
+ 4 files changed, 27 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 4873106..461abfc 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -3,21 +3,6 @@
- #include "wilc_wfi_netdevice.h"
- #include "wilc_wlan_cfg.h"
- 
--static u32 dbgflag = N_INIT | N_ERR | N_INTR | N_TXQ | N_RXQ;
--
--/* FIXME: replace with dev_debug() */
--static void wilc_debug(u32 flag, char *fmt, ...)
--{
--	char buf[256];
--	va_list args;
--
--	if (flag & dbgflag) {
--		va_start(args, fmt);
--		vsprintf(buf, fmt, args);
--		va_end(args);
--	}
--}
--
- static CHIP_PS_STATE_T chip_ps_state = CHIP_WAKEDUP;
- 
- static inline void acquire_bus(struct wilc *wilc, BUS_ACQUIRE_T acquire)
-@@ -1460,7 +1445,7 @@ int wilc_wlan_init(struct net_device *dev)
- 		goto _fail_;
- 	}
- 
--	if (!wilc_wlan_cfg_init(wilc_debug)) {
-+	if (!wilc_wlan_cfg_init()) {
- 		ret = -ENOBUFS;
- 		goto _fail_;
- 	}
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index e73381d..631bbf1 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -531,7 +531,7 @@ int wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
- 	return ret;
+diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+index cb25aa7..61426b3 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
++++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
+@@ -991,6 +991,23 @@ mwifiex_cmd_timeout_func(unsigned long function_context)
+ 		adapter->if_ops.card_reset(adapter);
  }
  
--int wilc_wlan_cfg_init(wilc_debug_func func)
-+int wilc_wlan_cfg_init(void)
- {
- 	memset((void *)&g_mac, 0, sizeof(wilc_mac_cfg_t));
- 	return 1;
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.h b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-index 5f74eb8..00e5dd5 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.h
-@@ -36,6 +36,6 @@ int wilc_wlan_cfg_get_wid(u8 *frame, u32 offset, u16 id);
- int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size);
- int wilc_wlan_cfg_indicate_rx(struct wilc *wilc, u8 *frame, int size,
- 			      struct wilc_cfg_rsp *rsp);
--int wilc_wlan_cfg_init(wilc_debug_func func);
-+int wilc_wlan_cfg_init(void);
++void
++mwifiex_cancel_pending_scan_cmd(struct mwifiex_adapter *adapter)
++{
++	struct cmd_ctrl_node *cmd_node = NULL, *tmp_node;
++	unsigned long flags;
++
++	/* Cancel all pending scan command */
++	spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
++	list_for_each_entry_safe(cmd_node, tmp_node,
++				 &adapter->scan_pending_q, list) {
++		list_del(&cmd_node->list);
++		cmd_node->wait_q_enabled = false;
++		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
++	}
++	spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
++}
++
+ /*
+  * This function cancels all the pending commands.
+  *
+@@ -1029,16 +1046,7 @@ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter)
+ 	spin_unlock_irqrestore(&adapter->cmd_pending_q_lock, flags);
+ 	spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, cmd_flags);
  
- #endif
+-	/* Cancel all pending scan command */
+-	spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
+-	list_for_each_entry_safe(cmd_node, tmp_node,
+-				 &adapter->scan_pending_q, list) {
+-		list_del(&cmd_node->list);
+-
+-		cmd_node->wait_q_enabled = false;
+-		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
+-	}
+-	spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
++	mwifiex_cancel_pending_scan_cmd(adapter);
+ 
+ 	if (adapter->scan_processing) {
+ 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, cmd_flags);
+@@ -1070,9 +1078,8 @@ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter)
+ void
+ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
+ {
+-	struct cmd_ctrl_node *cmd_node = NULL, *tmp_node = NULL;
++	struct cmd_ctrl_node *cmd_node = NULL;
+ 	unsigned long cmd_flags;
+-	unsigned long scan_pending_q_flags;
+ 	struct mwifiex_private *priv;
+ 	int i;
+ 
+@@ -1094,17 +1101,7 @@ mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter)
+ 		mwifiex_recycle_cmd_node(adapter, cmd_node);
+ 	}
+ 
+-	/* Cancel all pending scan command */
+-	spin_lock_irqsave(&adapter->scan_pending_q_lock,
+-			  scan_pending_q_flags);
+-	list_for_each_entry_safe(cmd_node, tmp_node,
+-				 &adapter->scan_pending_q, list) {
+-		list_del(&cmd_node->list);
+-		cmd_node->wait_q_enabled = false;
+-		mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
+-	}
+-	spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
+-			       scan_pending_q_flags);
++	mwifiex_cancel_pending_scan_cmd(adapter);
+ 
+ 	if (adapter->scan_processing) {
+ 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, cmd_flags);
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index 2f7f478..f71f894 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1043,6 +1043,7 @@ int mwifiex_alloc_cmd_buffer(struct mwifiex_adapter *adapter);
+ int mwifiex_free_cmd_buffer(struct mwifiex_adapter *adapter);
+ void mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter);
+ void mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter);
++void mwifiex_cancel_pending_scan_cmd(struct mwifiex_adapter *adapter);
+ 
+ void mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
+ 				  struct cmd_ctrl_node *cmd_node);
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index 6ddc98b..490d0d1 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -563,8 +563,6 @@ mwifiex_scan_channel_list(struct mwifiex_private *priv,
+ 	int ret = 0;
+ 	struct mwifiex_chan_scan_param_set *tmp_chan_list;
+ 	struct mwifiex_chan_scan_param_set *start_chan;
+-	struct cmd_ctrl_node *cmd_node, *tmp_node;
+-	unsigned long flags;
+ 	u32 tlv_idx, rates_size, cmd_no;
+ 	u32 total_scan_time;
+ 	u32 done_early;
+@@ -721,16 +719,7 @@ mwifiex_scan_channel_list(struct mwifiex_private *priv,
+ 			    sizeof(struct mwifiex_ie_types_header) + rates_size;
+ 
+ 		if (ret) {
+-			spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
+-			list_for_each_entry_safe(cmd_node, tmp_node,
+-						 &adapter->scan_pending_q,
+-						 list) {
+-				list_del(&cmd_node->list);
+-				cmd_node->wait_q_enabled = false;
+-				mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
+-			}
+-			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
+-					       flags);
++			mwifiex_cancel_pending_scan_cmd(adapter);
+ 			break;
+ 		}
+ 	}
+@@ -1893,12 +1882,13 @@ mwifiex_active_scan_req_for_passive_chan(struct mwifiex_private *priv)
+ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
+ {
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+-	struct cmd_ctrl_node *cmd_node, *tmp_node;
++	struct cmd_ctrl_node *cmd_node;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
+ 	if (list_empty(&adapter->scan_pending_q)) {
+ 		spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
++
+ 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+ 		adapter->scan_processing = false;
+ 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
+@@ -1920,13 +1910,10 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
+ 		}
+ 	} else if ((priv->scan_aborting && !priv->scan_request) ||
+ 		   priv->scan_block) {
+-		list_for_each_entry_safe(cmd_node, tmp_node,
+-					 &adapter->scan_pending_q, list) {
+-			list_del(&cmd_node->list);
+-			mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
+-		}
+ 		spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
+ 
++		mwifiex_cancel_pending_scan_cmd(adapter);
++
+ 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+ 		adapter->scan_processing = false;
+ 		spin_unlock_irqrestore(&adapter->mwifiex_cmd_lock, flags);
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+index 9ac7aa2..81e23d8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+@@ -44,7 +44,6 @@ static void
+ mwifiex_process_cmdresp_error(struct mwifiex_private *priv,
+ 			      struct host_cmd_ds_command *resp)
+ {
+-	struct cmd_ctrl_node *cmd_node = NULL, *tmp_node;
+ 	struct mwifiex_adapter *adapter = priv->adapter;
+ 	struct host_cmd_ds_802_11_ps_mode_enh *pm;
+ 	unsigned long flags;
+@@ -71,17 +70,7 @@ mwifiex_process_cmdresp_error(struct mwifiex_private *priv,
+ 		break;
+ 	case HostCmd_CMD_802_11_SCAN:
+ 	case HostCmd_CMD_802_11_SCAN_EXT:
+-		/* Cancel all pending scan command */
+-		spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
+-		list_for_each_entry_safe(cmd_node, tmp_node,
+-					 &adapter->scan_pending_q, list) {
+-			list_del(&cmd_node->list);
+-			spin_unlock_irqrestore(&adapter->scan_pending_q_lock,
+-					       flags);
+-			mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
+-			spin_lock_irqsave(&adapter->scan_pending_q_lock, flags);
+-		}
+-		spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
++		mwifiex_cancel_pending_scan_cmd(adapter);
+ 
+ 		spin_lock_irqsave(&adapter->mwifiex_cmd_lock, flags);
+ 		adapter->scan_processing = false;
 -- 
-1.9.1
+2.7.0
 
