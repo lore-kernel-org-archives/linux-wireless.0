@@ -1,116 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:58954 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933078AbcBDJdB (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:41156 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752221AbcBYXYb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:33:01 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 55/70] staging: wilc1000: renames u16BeaconPeriod of connect_resp_info structure
-Date: Thu, 4 Feb 2016 18:24:16 +0900
-Message-ID: <1454577871-667-16-git-send-email-glen.lee@atmel.com> (sfid-20160204_103320_453136_6387D9EE)
-In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 25 Feb 2016 18:24:31 -0500
+From: Colin King <colin.king@canonical.com>
+To: Jakub Kicinski <kubakici@wp.pl>, Kalle Valo <kvalo@codeaurora.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH][V3] mt7601u: do not free dma_buf when ivp allocation fails
+Date: Thu, 25 Feb 2016 23:24:27 +0000
+Message-Id: <1456442667-19751-1-git-send-email-colin.king@canonical.com> (sfid-20160226_002452_688086_6F6A23B7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Colin Ian King <colin.king@canonical.com>
 
-This patch renames u16BeaconPeriod variable to beacon_period.
+If the allocation of ivp fails the error handling attempts to
+free an uninitialized dma_buf; this data structure just contains
+garbage on the stack, so the freeing will cause issues when the
+urb, buf and dma fields are free'd. Fix this by not free'ing the
+dma_buf if the ivp allocation fails.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.c       | 2 +-
- drivers/staging/wilc1000/coreconfigurator.h       | 2 +-
- drivers/staging/wilc1000/host_interface.c         | 2 +-
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 8 ++++----
- 4 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/net/wireless/mediatek/mt7601u/mcu.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 4a82576..b4f7ec3 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -330,7 +330,7 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
+diff --git a/drivers/net/wireless/mediatek/mt7601u/mcu.c b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+index fbb1986..91c4b34 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/mcu.c
++++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+@@ -362,7 +362,9 @@ mt7601u_upload_firmware(struct mt7601u_dev *dev, const struct mt76_fw *fw)
+ 	int i, ret;
  
- 		index = MAC_HDR_LEN + TIME_STAMP_LEN;
- 
--		network_info->u16BeaconPeriod = get_beacon_period(msa + index);
-+		network_info->beacon_period = get_beacon_period(msa + index);
- 
- 		index += BEACON_INTERVAL_LEN + CAP_INFO_LEN;
- 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 5404162..2fbffe8 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -82,7 +82,7 @@ struct network_info {
- 	u8 ssid[MAX_SSID_LEN];
- 	u8 ssid_len;
- 	u8 bssid[6];
--	u16 u16BeaconPeriod;
-+	u16 beacon_period;
- 	u8 u8DtimPeriod;
- 	u8 u8channel;
- 	unsigned long u32TimeRcvdInScanCached;
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 2534c9a..0ba248b 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -4276,7 +4276,7 @@ static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo)
- 	pNewJoinBssParam = kzalloc(sizeof(struct join_bss_param), GFP_KERNEL);
- 	if (pNewJoinBssParam) {
- 		pNewJoinBssParam->dtim_period = ptstrNetworkInfo->u8DtimPeriod;
--		pNewJoinBssParam->beacon_period = ptstrNetworkInfo->u16BeaconPeriod;
-+		pNewJoinBssParam->beacon_period = ptstrNetworkInfo->beacon_period;
- 		pNewJoinBssParam->cap_info = ptstrNetworkInfo->cap_info;
- 		memcpy(pNewJoinBssParam->au8bssid, ptstrNetworkInfo->bssid, 6);
- 		memcpy((u8 *)pNewJoinBssParam->ssid, ptstrNetworkInfo->ssid,
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 80f46d7..9424776 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -252,7 +252,7 @@ static void refresh_scan(void *user_void, u8 all, bool direct_scan)
- 								  network_info->bssid,
- 								  network_info->u64Tsf,
- 								  network_info->cap_info,
--								  network_info->u16BeaconPeriod,
-+								  network_info->beacon_period,
- 								  (const u8 *)network_info->pu8IEs,
- 								  (size_t)network_info->u16IEsLen,
- 								  (s32)rssi * 100,
-@@ -373,7 +373,7 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
- 	       pstrNetworkInfo->ssid, pstrNetworkInfo->ssid_len);
- 	memcpy(last_scanned_shadow[ap_index].bssid,
- 	       pstrNetworkInfo->bssid, ETH_ALEN);
--	last_scanned_shadow[ap_index].u16BeaconPeriod = pstrNetworkInfo->u16BeaconPeriod;
-+	last_scanned_shadow[ap_index].beacon_period = pstrNetworkInfo->beacon_period;
- 	last_scanned_shadow[ap_index].u8DtimPeriod = pstrNetworkInfo->u8DtimPeriod;
- 	last_scanned_shadow[ap_index].u8channel = pstrNetworkInfo->u8channel;
- 	last_scanned_shadow[ap_index].u16IEsLen = pstrNetworkInfo->u16IEsLen;
-@@ -431,7 +431,7 @@ static void CfgScanResult(enum scan_event scan_event,
- 					   channel->center_freq,
- 					   (s32)network_info->rssi * 100,
- 					   network_info->cap_info,
--					   network_info->u16BeaconPeriod);
-+					   network_info->beacon_period);
- 
- 				if (network_info->bNewNetwork) {
- 					if (priv->u32RcvdChCount < MAX_NUM_SCANNED_NETWORKS) {
-@@ -449,7 +449,7 @@ static void CfgScanResult(enum scan_event scan_event,
- 										  network_info->bssid,
- 										  network_info->u64Tsf,
- 										  network_info->cap_info,
--										  network_info->u16BeaconPeriod,
-+										  network_info->beacon_period,
- 										  (const u8 *)network_info->pu8IEs,
- 										  (size_t)network_info->u16IEsLen,
- 										  (s32)network_info->rssi * 100,
+ 	ivb = kmemdup(fw->ivb, sizeof(fw->ivb), GFP_KERNEL);
+-	if (!ivb || mt7601u_usb_alloc_buf(dev, MCU_FW_URB_SIZE, &dma_buf)) {
++	if (!ivb)
++		return -ENOMEM;
++	if (mt7601u_usb_alloc_buf(dev, MCU_FW_URB_SIZE, &dma_buf)) {
+ 		ret = -ENOMEM;
+ 		goto error;
+ 	}
 -- 
-1.9.1
+2.7.0
 
