@@ -1,37 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:53897 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:41852 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932065AbcBANBm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2016 08:01:42 -0500
-Message-ID: <1454331700.3211.4.camel@sipsolutions.net> (sfid-20160201_140145_157343_18D83EEB)
-Subject: Re: [PATCH] mac80211: minstrel: Scale expected_throughput by 10
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Antonio Quartulli <antonio@open-mesh.com>
-Cc: Sven Eckelmann <sven@open-mesh.com>,
-	linux-wireless@vger.kernel.org, thomas@net.t-labs.tu-berlin.de,
-	nbd@nbd.name
-Date: Mon, 01 Feb 2016 14:01:40 +0100
-In-Reply-To: <20160201125853.GA12011@prodigo> (sfid-20160201_140055_590809_FBCE6C74)
-References: <1454329450-31527-1-git-send-email-sven@open-mesh.com>
-	 <1454329837.3211.2.camel@sipsolutions.net> <7460390.ua0GvOE4DE@bentobox>
-	 <1454331473.3211.3.camel@sipsolutions.net> <20160201125853.GA12011@prodigo>
-	 (sfid-20160201_140055_590809_FBCE6C74)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1759993AbcBYPDA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Feb 2016 10:03:00 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 03/28] rtl8xxxu: If fw running in RAM, reset the 8051 before trying to download a new one
+References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1454524802-26763-4-git-send-email-Jes.Sorensen@redhat.com>
+	<87a8mpf7wp.fsf@kamboji.qca.qualcomm.com>
+Date: Thu, 25 Feb 2016 10:02:59 -0500
+In-Reply-To: <87a8mpf7wp.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+	of "Thu, 25 Feb 2016 11:36:54 +0200")
+Message-ID: <wrfj7fhs3k9o.fsf@redhat.com> (sfid-20160225_160304_314975_D44D52AD)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-02-01 at 20:58 +0800, Antonio Quartulli wrote:
-> 
-> Should we first fix the bug introduced by 6a27b2c40b48 and then (with
-> another
-> patch) improve this by changing the factor from 10 to 16 ?
-> The latter is going to be a bigger change because we need to make
-> sure that the
-> value exported via station_info gets still scaled to kbps.
-> 
+Kalle Valo <kvalo@codeaurora.org> writes:
+> Jes.Sorensen@redhat.com writes:
+>
+>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>
+>> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+>
+> No empty commit logs, please. And this patch even has a too long title
+> which really should be the actual commit log.
+>
+> I can take this now but in the future please write one.
 
-Ok, I guess that makes sense.
+It does, the $Subject is the commit log. But I'll try and break it down
+on more lines if there is something to add.
 
-johannes
-
+Jes
