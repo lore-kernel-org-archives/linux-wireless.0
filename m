@@ -1,47 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:32901 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1947506AbcBRUSP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 15:18:15 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, apenwarr@gmail.com
-Subject: [PATCH] mac80211: minstrel_ht: set default tx aggregation timeout to 0
-Date: Thu, 18 Feb 2016 19:49:18 +0100
-Message-Id: <1455821358-37534-1-git-send-email-nbd@openwrt.org> (sfid-20160218_211821_907564_F7379B63)
+Received: from youngberry.canonical.com ([91.189.89.112]:40862 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750790AbcBYW3F (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Feb 2016 17:29:05 -0500
+From: Colin King <colin.king@canonical.com>
+To: Jakub Kicinski <kubakici@wp.pl>, Kalle Valo <kvalo@codeaurora.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] mt7601u: do not free dma_buf when ivp allocation fails
+Date: Thu, 25 Feb 2016 22:28:59 +0000
+Message-Id: <1456439339-18458-1-git-send-email-colin.king@canonical.com> (sfid-20160225_232928_436347_6562094D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The value 5000 was put here with the addition of the timeout field to
-ieee80211_start_tx_ba_session. It was originally added in mac80211 to
-save resources for drivers like iwlwifi, which only supports a limited
-number of concurrent aggregation sessions.
+From: Colin Ian King <colin.king@canonical.com>
 
-Since iwlwifi does not use minstrel_ht and other drivers don't need
-this, 0 is a better default - especially since there have been
-recent reports of aggregation setup related issues reproduced with
-ath9k. This should improve stability without causing any adverse
-effects.
+If the allocation of ivp fails the error handling attempts to
+free an uninitialized dma_buf; this data structure just contains
+garbage on the stack, so the freeing will cause issues when the
+urb, buf and dma fields are cleaned. Fix this by handling the
+ivp check and
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- net/mac80211/rc80211_minstrel_ht.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/mediatek/mt7601u/mcu.c | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 3928dbd..a7d9227 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -691,7 +691,7 @@ minstrel_aggr_check(struct ieee80211_sta *pubsta, struct sk_buff *skb)
- 	if (likely(sta->ampdu_mlme.tid_tx[tid]))
- 		return;
+diff --git a/drivers/net/wireless/mediatek/mt7601u/mcu.c b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+index fbb1986..06ac657 100644
+--- a/drivers/net/wireless/mediatek/mt7601u/mcu.c
++++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+@@ -359,13 +359,13 @@ mt7601u_upload_firmware(struct mt7601u_dev *dev, const struct mt76_fw *fw)
+ 	struct mt7601u_dma_buf dma_buf;
+ 	void *ivb;
+ 	u32 ilm_len, dlm_len;
+-	int i, ret;
++	int i, ret = -ENOMEM;
  
--	ieee80211_start_tx_ba_session(pubsta, tid, 5000);
-+	ieee80211_start_tx_ba_session(pubsta, tid, 0);
+ 	ivb = kmemdup(fw->ivb, sizeof(fw->ivb), GFP_KERNEL);
+-	if (!ivb || mt7601u_usb_alloc_buf(dev, MCU_FW_URB_SIZE, &dma_buf)) {
+-		ret = -ENOMEM;
++	if (!ivb)
++		goto error_ivb;
++	if (mt7601u_usb_alloc_buf(dev, MCU_FW_URB_SIZE, &dma_buf))
+ 		goto error;
+-	}
+ 
+ 	ilm_len = le32_to_cpu(fw->hdr.ilm_len) - sizeof(fw->ivb);
+ 	dev_dbg(dev->dev, "loading FW - ILM %u + IVB %zu\n",
+@@ -396,8 +396,9 @@ mt7601u_upload_firmware(struct mt7601u_dev *dev, const struct mt76_fw *fw)
+ 
+ 	dev_dbg(dev->dev, "Firmware running!\n");
+ error:
+-	kfree(ivb);
+ 	mt7601u_usb_free_buf(dev, &dma_buf);
++error_ivb:
++	kfree(ivb);
+ 
+ 	return ret;
  }
- 
- static void
 -- 
-2.2.2
+2.7.0
 
