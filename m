@@ -1,142 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:10324 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966103AbcBDJ0d (ORCPT
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:35082 "EHLO
+	mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757428AbcBYAQP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:26:33 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH RESEND 32/70] staging: wilc1000: fix warnings for line over 80 characters
-Date: Thu, 4 Feb 2016 18:15:49 +0900
-Message-ID: <1454577387-509-33-git-send-email-glen.lee@atmel.com> (sfid-20160204_102646_065458_F9465671)
-In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 24 Feb 2016 19:16:15 -0500
+Received: by mail-pf0-f171.google.com with SMTP id c10so22702368pfc.2
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 16:16:15 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 6/9] staging: wilc1000: rename u16RespIEsLen in struct connect_info
+Date: Thu, 25 Feb 2016 09:15:47 +0900
+Message-Id: <1456359350-17118-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20160225_011622_036865_9E5B6AAF)
+In-Reply-To: <1456359350-17118-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1456359350-17118-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+This patch renames u16RespIEsLen to resp_ies_len to avoid camelcase.
 
-This patch fixes warnings reported by checkpatch.pl
-for line over 80 characters
-
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/wilc1000/wilc_wlan.c | 33 ++++++++++++++++++++-------------
- drivers/staging/wilc1000/wilc_wlan.h |  3 ++-
- 2 files changed, 22 insertions(+), 14 deletions(-)
+ drivers/staging/wilc1000/coreconfigurator.h       | 2 +-
+ drivers/staging/wilc1000/host_interface.c         | 2 +-
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index ebf38a5..a6f4e15 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -113,7 +113,8 @@ static void wilc_wlan_txq_add_to_tail(struct net_device *dev,
- 	up(&wilc->txq_event);
- }
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index bb4c256..408031f 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -110,7 +110,7 @@ struct connect_info {
+ 	u8 *req_ies;
+ 	size_t req_ies_len;
+ 	u8 *resp_ies;
+-	u16 u16RespIEsLen;
++	u16 resp_ies_len;
+ 	u16 u16ConnectStatus;
+ };
  
--static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif, struct txq_entry_t *tqe)
-+static int wilc_wlan_txq_add_to_head(struct wilc_vif *vif,
-+				     struct txq_entry_t *tqe)
- {
- 	unsigned long flags;
- 	struct wilc *wilc = vif->wilc;
-@@ -695,8 +696,9 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 		acquire_bus(wilc, ACQUIRE_AND_WAKEUP);
- 		counter = 0;
- 		do {
--			ret = wilc->hif_func->hif_read_reg(wilc, WILC_HOST_TX_CTRL,
--						       &reg);
-+			ret = wilc->hif_func->hif_read_reg(wilc,
-+							   WILC_HOST_TX_CTRL,
-+							   &reg);
- 			if (!ret) {
- 				wilc_debug(N_ERR, "[wilc txq]: fail can't read reg vmm_tbl_entry..\n");
- 				break;
-@@ -728,8 +730,9 @@ int wilc_wlan_handle_txq(struct net_device *dev, u32 *txq_count)
- 				break;
- 			}
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index c273935..58902bf 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -1467,7 +1467,7 @@ static s32 Handle_RcvdGnrlAsyncInfo(struct wilc_vif *vif,
  
--			ret = wilc->hif_func->hif_write_reg(wilc, WILC_HOST_VMM_CTL,
--							0x2);
-+			ret = wilc->hif_func->hif_write_reg(wilc,
-+							    WILC_HOST_VMM_CTL,
-+							    0x2);
- 			if (!ret) {
- 				wilc_debug(N_ERR, "[wilc txq]: fail can't write reg host_vmm_ctl..\n");
- 				break;
-@@ -1063,7 +1066,8 @@ void wilc_handle_isr(struct wilc *wilc)
- }
- EXPORT_SYMBOL_GPL(wilc_handle_isr);
+ 						if (strConnectInfo.u16ConnectStatus == SUCCESSFUL_STATUSCODE) {
+ 							if (pstrConnectRespInfo->ies) {
+-								strConnectInfo.u16RespIEsLen = pstrConnectRespInfo->ies_len;
++								strConnectInfo.resp_ies_len = pstrConnectRespInfo->ies_len;
+ 								strConnectInfo.resp_ies = kmalloc(pstrConnectRespInfo->ies_len, GFP_KERNEL);
+ 								memcpy(strConnectInfo.resp_ies, pstrConnectRespInfo->ies,
+ 								       pstrConnectRespInfo->ies_len);
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 7e10d34..1dbeca5 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -545,7 +545,7 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
  
--int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer, u32 buffer_size)
-+int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
-+				u32 buffer_size)
- {
- 	u32 offset;
- 	u32 addr, size, size2, blksz;
-@@ -1096,8 +1100,8 @@ int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer, u32 buffer_
- 				size2 = blksz;
- 
- 			memcpy(dma_buffer, &buffer[offset], size2);
--			ret = wilc->hif_func->hif_block_tx(wilc, addr, dma_buffer,
--						       size2);
-+			ret = wilc->hif_func->hif_block_tx(wilc, addr,
-+							   dma_buffer, size2);
- 			if (!ret)
- 				break;
- 
-@@ -1233,7 +1237,8 @@ int wilc_wlan_stop(struct wilc *wilc)
- 	}
- 
- 	do {
--		ret = wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0, &reg);
-+		ret = wilc->hif_func->hif_read_reg(wilc,
-+						   WILC_GLB_RESET_0, &reg);
- 		if (!ret) {
- 			PRINT_ER("Error while reading reg\n");
- 			release_bus(wilc, RELEASE_ALLOW_SLEEP);
-@@ -1246,14 +1251,16 @@ int wilc_wlan_stop(struct wilc *wilc)
- 			PRINT_D(GENERIC_DBG, "Bit 10 not reset : Retry %d\n",
- 				timeout);
- 			reg &= ~BIT(10);
--			ret = wilc->hif_func->hif_write_reg(wilc, WILC_GLB_RESET_0,
--							reg);
-+			ret = wilc->hif_func->hif_write_reg(wilc,
-+							    WILC_GLB_RESET_0,
-+							    reg);
- 			timeout--;
- 		} else {
- 			PRINT_D(GENERIC_DBG, "Bit 10 reset after : Retry %d\n",
- 				timeout);
--			ret = wilc->hif_func->hif_read_reg(wilc, WILC_GLB_RESET_0,
--						       &reg);
-+			ret = wilc->hif_func->hif_read_reg(wilc,
-+							   WILC_GLB_RESET_0,
-+							   &reg);
- 			if (!ret) {
- 				PRINT_ER("Error while reading reg\n");
- 				release_bus(wilc, RELEASE_ALLOW_SLEEP);
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index e913ae7..d362fa8 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -270,7 +270,8 @@ struct wilc_cfg_rsp {
- struct wilc;
- struct wilc_vif;
- 
--int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer, u32 buffer_size);
-+int wilc_wlan_firmware_download(struct wilc *wilc, const u8 *buffer,
-+				u32 buffer_size);
- int wilc_wlan_start(struct wilc *);
- int wilc_wlan_stop(struct wilc *);
- int wilc_wlan_txq_add_net_pkt(struct net_device *dev, void *priv, u8 *buffer,
+ 		cfg80211_connect_result(dev, pstrConnectInfo->bssid,
+ 					pstrConnectInfo->req_ies, pstrConnectInfo->req_ies_len,
+-					pstrConnectInfo->resp_ies, pstrConnectInfo->u16RespIEsLen,
++					pstrConnectInfo->resp_ies, pstrConnectInfo->resp_ies_len,
+ 					u16ConnectStatus, GFP_KERNEL);
+ 	} else if (enuConnDisconnEvent == CONN_DISCONN_EVENT_DISCONN_NOTIF)    {
+ 		wilc_optaining_ip = false;
 -- 
-1.9.1
+2.7.1
 
