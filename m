@@ -1,42 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33429 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752870AbcB2WFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:55 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 044/113] rtl8xxxu: Remove unused variable
-Date: Mon, 29 Feb 2016 17:04:42 -0500
-Message-Id: <1456783551-28315-45-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_231029_893601_399211F4)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-io0-f175.google.com ([209.85.223.175]:35793 "EHLO
+	mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752188AbcBYXPT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Feb 2016 18:15:19 -0500
+MIME-Version: 1.0
+In-Reply-To: <1456441799-19266-1-git-send-email-colin.king@canonical.com>
+References: <1456441799-19266-1-git-send-email-colin.king@canonical.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 26 Feb 2016 10:14:59 +1100
+Message-ID: <CAGRGNgX0323K81mi_7yyUu18-CB6=GTrMM0J72iuYPBv9JD88g@mail.gmail.com> (sfid-20160226_001558_878511_46C5CD62)
+Subject: Re: [PATCH][V2] mt7601u: do not free dma_buf when ivp allocation fails
+To: Colin King <colin.king@canonical.com>
+Cc: Jakub Kicinski <kubakici@wp.pl>, Kalle Valo <kvalo@codeaurora.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"Mailing List, Arm" <linux-arm-kernel@lists.infradead.org>,
+	linux-mediatek@lists.infradead.org,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Hi Colin,
 
-Remove an unused variable to make the compiler happy.
+On Fri, Feb 26, 2016 at 10:09 AM, Colin King <colin.king@canonical.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> If the allocation of ivp fails the error handling attempts to
+> free an uninitialized dma_buf; this data structure just contains
+> garbage on the stack, so the freeing will cause issues when the
+> urb, buf and dma fields are free'd. Fix this by not free'ing the
+> dma_buf if the ivp allocation fails.
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/net/wireless/mediatek/mt7601u/mcu.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/mediatek/mt7601u/mcu.c b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+> index fbb1986..70e4b5e 100644
+> --- a/drivers/net/wireless/mediatek/mt7601u/mcu.c
+> +++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
+> @@ -362,10 +362,10 @@ mt7601u_upload_firmware(struct mt7601u_dev *dev, const struct mt76_fw *fw)
+>         int i, ret;
+>
+>         ivb = kmemdup(fw->ivb, sizeof(fw->ivb), GFP_KERNEL);
+> -       if (!ivb || mt7601u_usb_alloc_buf(dev, MCU_FW_URB_SIZE, &dma_buf)) {
+> -               ret = -ENOMEM;
+> +       if (!ivb)
+> +               return -ENOMEM;
+> +       if (mt7601u_usb_alloc_buf(dev, MCU_FW_URB_SIZE, &dma_buf))
+>                 goto error;
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Are you sure this is right? Isn't ret unset here and consequently
+returned at the end of the error label?
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 937b495..0db6b3f 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -1781,7 +1781,7 @@ static void rtl8723bu_config_channel(struct ieee80211_hw *hw)
- {
- 	struct rtl8xxxu_priv *priv = hw->priv;
- 	u32 val32, rsr;
--	u8 val8, opmode, subchannel;
-+	u8 val8, subchannel;
- 	u16 rf_mode_bw;
- 	bool ht = true;
- 	int sec_ch_above, channel;
+Thanks,
+
 -- 
-2.5.0
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
