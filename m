@@ -1,89 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:29864 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753162AbcBVERV (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:40315 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933268AbcBYQew convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 21 Feb 2016 23:17:21 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V3 16/24] staging: wilc1000: host_interface.c: removes unnecessary log messages
-Date: Mon, 22 Feb 2016 13:12:01 +0900
-Message-ID: <1456114329-7036-17-git-send-email-leo.kim@atmel.com> (sfid-20160222_051724_217934_3D9E1DEF)
-In-Reply-To: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
-References: <1456114329-7036-1-git-send-email-leo.kim@atmel.com>
+	Thu, 25 Feb 2016 11:34:52 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Oh, Peter" <poh@qca.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3] ath10k: set MAC timestamp in management Rx frame
+Date: Thu, 25 Feb 2016 16:34:45 +0000
+Message-ID: <87k2lsd9zv.fsf@kamboji.qca.qualcomm.com> (sfid-20160225_173456_780343_80DCBAA2)
+References: <4c705dc7a2c0aa857da4e6eaf6e8ed47c354b9ea.1456351768.git.poh@qca.qualcomm.com>
+In-Reply-To: <4c705dc7a2c0aa857da4e6eaf6e8ed47c354b9ea.1456351768.git.poh@qca.qualcomm.com>
+	(Peter Oh's message of "Wed, 24 Feb 2016 14:18:51 -0800")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+Peter Oh <poh@qca.qualcomm.com> writes:
 
-This patch removes unnecessary log messages.
+> Check and set Rx MAC timestamp when firmware indicates it.
+> Firmware adds it in Rx beacon frame only at this moment.
+> Driver and mac80211 may utilize it to detect such clockdrift
+> or beacon collision and use the result for beacon collision
+> avoidance.
+>
+> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+> ---
+>
+> v2:
+> 	- fix kbuild test robot warning, left shift count >= width of type,
+> 	at __le32_to_cpu(arg.ext_info.rx_mac_timestamp_u32) << 32
+> v3:
+> 	- correct ext_info to start 4-byte aligned
+> 	- make struct wmi_mgmt_rx_ext_info 4-byte aligned to comply FW's intention.
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/host_interface.c | 12 ++----------
- 1 file changed, 2 insertions(+), 10 deletions(-)
+I see new warnings:
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index eddc0d6..a827e06 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1637,11 +1637,8 @@ static int Handle_Key(struct wilc_vif *vif,
- 
- 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2,
- 					    GFP_KERNEL);
--
--			if (pu8keybuf == NULL) {
--				PRINT_ER("No buffer to send Key\n");
-+			if (!pu8keybuf)
- 				return -ENOMEM;
--			}
- 
- 			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
- 			pu8keybuf[1] = pstrHostIFkeyAttr->attr.wep.key_len;
-@@ -1662,10 +1659,8 @@ static int Handle_Key(struct wilc_vif *vif,
- 			kfree(pu8keybuf);
- 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
- 			pu8keybuf = kmalloc(pstrHostIFkeyAttr->attr.wep.key_len + 2, GFP_KERNEL);
--			if (!pu8keybuf) {
--				PRINT_ER("No buffer to send Key\n");
-+			if (!pu8keybuf)
- 				return -ENOMEM;
--			}
- 			pu8keybuf[0] = pstrHostIFkeyAttr->attr.wep.index;
- 			memcpy(pu8keybuf + 1, &pstrHostIFkeyAttr->attr.wep.key_len, 1);
- 			memcpy(pu8keybuf + 2, pstrHostIFkeyAttr->attr.wep.key,
-@@ -1709,7 +1704,6 @@ static int Handle_Key(struct wilc_vif *vif,
- 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
- 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
- 			if (!pu8keybuf) {
--				PRINT_ER("No buffer to send RxGTK Key\n");
- 				ret = -ENOMEM;
- 				goto _WPARxGtk_end_case_;
- 			}
-@@ -1741,7 +1735,6 @@ static int Handle_Key(struct wilc_vif *vif,
- 		} else if (pstrHostIFkeyAttr->action & ADDKEY) {
- 			pu8keybuf = kzalloc(RX_MIC_KEY_MSG_LEN, GFP_KERNEL);
- 			if (pu8keybuf == NULL) {
--				PRINT_ER("No buffer to send RxGTK Key\n");
- 				ret = -ENOMEM;
- 				goto _WPARxGtk_end_case_;
- 			}
-@@ -1781,7 +1774,6 @@ _WPARxGtk_end_case_:
- 		if (pstrHostIFkeyAttr->action & ADDKEY_AP) {
- 			pu8keybuf = kmalloc(PTK_KEY_MSG_LEN + 1, GFP_KERNEL);
- 			if (!pu8keybuf) {
--				PRINT_ER("No buffer to send PTK Key\n");
- 				ret = -ENOMEM;
- 				goto _WPAPtk_end_case_;
- 			}
+drivers/net/wireless/ath/ath10k/wmi.c:2199:16: warning: restricted __le32 degrades to integer
+drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: restricted __le32 degrades to integer
+drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: cast to restricted __le32
+drivers/net/wireless/ath/ath10k/wmi.c:2201:41: warning: restricted __le32 degrades to integer
+
 -- 
-1.9.1
-
+Kalle Valo
