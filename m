@@ -1,48 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:36205 "EHLO
-	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751733AbcBKEqm (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57282 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759644AbcBYKBW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Feb 2016 23:46:42 -0500
-Received: by mail-pf0-f193.google.com with SMTP id e127so1962333pfe.3
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Feb 2016 20:46:42 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH V2 3/4] staging: wilc1000: remove initialization code of counter variable
-Date: Thu, 11 Feb 2016 13:46:24 +0900
-Message-Id: <1455165985-5509-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20160211_054644_952540_E20A3A06)
-In-Reply-To: <1455165985-5509-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1455165985-5509-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 25 Feb 2016 05:01:22 -0500
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: mwifiex: fix an indenting mistake
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <20160209111536.GC23998@mwanda>
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	linux-wireless@vger.kernel.org, kernel-janitors@vger.kernel.org
+Message-Id: <20160225100121.B9C60603D8@smtp.codeaurora.org> (sfid-20160225_110142_340748_B76E16C8)
+Date: Thu, 25 Feb 2016 10:01:21 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There is no need to set to 0 for counter variable before entering next
-for-loop statement because counter is initialized again in for-loop
-statement, so just remove it.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
-v2: rebase latest staging-testing
+> We recently added an indent level here but missed this line.  It needs
+> another tab.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
- drivers/staging/wilc1000/wilc_wlan.c | 1 -
- 1 file changed, 1 deletion(-)
+Thanks, applied to wireless-drivers-next.git.
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index f3140e0..c6bfec3 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1365,7 +1365,6 @@ int wilc_send_config_pkt(struct wilc_vif *vif, u8 mode, struct wid *wids,
- 				break;
- 			}
- 		}
--		counter = 0;
- 		for (counter = 0; counter < count; counter++) {
- 			wids[counter].size = wilc_wlan_cfg_get_val(
- 					wids[counter].id,
--- 
-2.7.1
-
+Kalle Valo
