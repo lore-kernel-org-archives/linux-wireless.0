@@ -1,52 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:30289 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1425347AbcBRLfR (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:33588 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751837AbcBYDlU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 06:35:17 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V2 15/24] staging: wilc1000: coreconfigurator.c: removes unnecessary log messages
-Date: Thu, 18 Feb 2016 20:30:15 +0900
-Message-ID: <1455795024-26978-15-git-send-email-leo.kim@atmel.com> (sfid-20160218_123524_326079_CCB6EE28)
-In-Reply-To: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
-References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 24 Feb 2016 22:41:20 -0500
+Date: Wed, 24 Feb 2016 22:41:14 -0500 (EST)
+Message-Id: <20160224.224114.23404179034979347.davem@davemloft.net> (sfid-20160225_044130_724177_C92FBCF7)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211 2016-02-23
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1456221127-13079-1-git-send-email-johannes@sipsolutions.net>
+References: <1456221127-13079-1-git-send-email-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Tue, 23 Feb 2016 10:52:06 +0100
 
-This patch removes unnecessary log messages.
+> Unfortunately I neglected to send you a pull request last week,
+> so it's here now. We gave a number of fairly important fixes
+> (two found by KASAN, the wext thing that for some reason people
+> have started seeing issues with) so it'd be good if these can
+> still go into 4.5.
+> 
+> Let me know if there's any problem.
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/coreconfigurator.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/coreconfigurator.c b/drivers/staging/wilc1000/coreconfigurator.c
-index 3a76586..25dc108 100644
---- a/drivers/staging/wilc1000/coreconfigurator.c
-+++ b/drivers/staging/wilc1000/coreconfigurator.c
-@@ -284,10 +284,8 @@ s32 wilc_parse_network_info(u8 *msg_buffer,
- 
- 	msg_type = msg_buffer[0];
- 
--	if ('N' != msg_type) {
--		PRINT_ER("Received Message format incorrect.\n");
-+	if ('N' != msg_type)
- 		return -EFAULT;
--	}
- 
- 	msg_id = msg_buffer[1];
- 	msg_len = MAKE_WORD16(msg_buffer[2], msg_buffer[3]);
--- 
-1.9.1
-
+Pulled, thanks Johannes.
