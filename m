@@ -1,84 +1,144 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:59038 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754923AbcBDJd1 (ORCPT
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:34169 "EHLO
+	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756664AbcBYAJH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:33:27 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 59/70] staging: wilc1000: renames bNewNetwork of connect_resp_info structure
-Date: Thu, 4 Feb 2016 18:24:20 +0900
-Message-ID: <1454577871-667-20-git-send-email-glen.lee@atmel.com> (sfid-20160204_103338_816851_EBB108D9)
-In-Reply-To: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 24 Feb 2016 19:09:07 -0500
+Received: by mail-wm0-f49.google.com with SMTP id b205so10857035wmb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 16:09:06 -0800 (PST)
+From: Andreas Fenkart <afenkart@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Andreas Fenkart <afenkart@gmail.com>
+Subject: [PATCH 4/7] mwifiex: scan: factor out dbg_security_flags
+Date: Thu, 25 Feb 2016 01:08:49 +0100
+Message-Id: <1456358932-23114-5-git-send-email-afenkart@gmail.com> (sfid-20160225_010913_593367_0415CB73)
+In-Reply-To: <1456358932-23114-1-git-send-email-afenkart@gmail.com>
+References: <1456358932-23114-1-git-send-email-afenkart@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+merge copy/paste code
 
-This patch renames bNewNetwork variable to new_network.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
 ---
- drivers/staging/wilc1000/coreconfigurator.h       | 2 +-
- drivers/staging/wilc1000/host_interface.c         | 4 ++--
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/marvell/mwifiex/scan.c | 73 ++++++++++-------------------
+ 1 file changed, 24 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 0e10c75..fd3b5d4 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -87,7 +87,7 @@ struct network_info {
- 	u8 ch;
- 	unsigned long time_scan_cached;
- 	unsigned long time_scan;
--	bool bNewNetwork;
-+	bool new_network;
- 	u8 u8Found;
- 	u32 u32Tsf;
- 	u8 *pu8IEs;
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index df33197..c0171f9 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -1390,7 +1390,7 @@ static s32 Handle_RcvdNtwrkInfo(struct wilc_vif *vif,
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index f612c1b..5588750 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -76,6 +76,26 @@ static u8 mwifiex_rsn_oui[CIPHER_SUITE_MAX][4] = {
+ 	{ 0x00, 0x0f, 0xac, 0x04 },	/* AES  */
+ };
  
- 					hif_drv->usr_scan_req.rcvd_ch_cnt++;
- 
--					pstrNetworkInfo->bNewNetwork = true;
-+					pstrNetworkInfo->new_network = true;
- 					pJoinParams = host_int_ParseJoinBssParam(pstrNetworkInfo);
- 
- 					hif_drv->usr_scan_req.scan_result(SCAN_EVENT_NETWORK_FOUND, pstrNetworkInfo,
-@@ -1399,7 +1399,7 @@ static s32 Handle_RcvdNtwrkInfo(struct wilc_vif *vif,
- 				}
- 			}
- 		} else {
--			pstrNetworkInfo->bNewNetwork = false;
-+			pstrNetworkInfo->new_network = false;
- 			hif_drv->usr_scan_req.scan_result(SCAN_EVENT_NETWORK_FOUND, pstrNetworkInfo,
- 							  hif_drv->usr_scan_req.arg, NULL);
++static void
++_dbg_security_flags(int log_level, struct mwifiex_private *priv,
++		    struct mwifiex_bssdescriptor *bss_desc)
++{
++	_mwifiex_dbg(priv->adapter, log_level,
++		     "info: %s: WPA:\twpa_ie=%#x wpa2_ie=%#x WEP=%s WPA=%s WPA2=%s\tEncMode=%#x privacy=%#x\n",
++		     __func__,
++		     bss_desc->bcn_wpa_ie ?
++		     bss_desc->bcn_wpa_ie->vend_hdr.element_id : 0,
++		     bss_desc->bcn_rsn_ie ?
++		     bss_desc->bcn_rsn_ie->ieee_hdr.element_id : 0,
++		     priv->sec_info.wep_enabled ? "e" : "d",
++		     priv->sec_info.wpa_enabled ? "e" : "d",
++		     priv->sec_info.wpa2_enabled ? "e" : "d",
++		     priv->sec_info.encryption_mode,
++		     bss_desc->privacy);
++}
++#define dbg_security_flags(mask, priv, bss_desc) \
++	_dbg_security_flags(MWIFIEX_DBG_##mask, priv, bss_desc)
++
+ static bool
+ has_ieee_hdr(struct ieee_types_generic *ie, u8 key)
+ {
+@@ -243,19 +263,7 @@ mwifiex_is_bss_wpa(struct mwifiex_private *priv,
+ 	    * LinkSys WRT54G && bss_desc->privacy
+ 	    */
+ 	 ) {
+-		mwifiex_dbg(priv->adapter, INFO,
+-			    "info: %s: WPA:\t"
+-			    "wpa_ie=%#x wpa2_ie=%#x WEP=%s WPA=%s WPA2=%s\t"
+-			    "EncMode=%#x privacy=%#x\n", __func__,
+-			    bss_desc->bcn_wpa_ie ?
+-			    bss_desc->bcn_wpa_ie->vend_hdr.element_id : 0,
+-			    bss_desc->bcn_rsn_ie ?
+-			    bss_desc->bcn_rsn_ie->ieee_hdr.element_id : 0,
+-			    (priv->sec_info.wep_enabled) ? "e" : "d",
+-			    (priv->sec_info.wpa_enabled) ? "e" : "d",
+-			    (priv->sec_info.wpa2_enabled) ? "e" : "d",
+-			    priv->sec_info.encryption_mode,
+-			    bss_desc->privacy);
++		dbg_security_flags(INFO, priv, bss_desc);
+ 		return true;
+ 	}
+ 	return false;
+@@ -276,19 +284,7 @@ mwifiex_is_bss_wpa2(struct mwifiex_private *priv,
+ 		 * Privacy bit may NOT be set in some APs like
+ 		 * LinkSys WRT54G && bss_desc->privacy
+ 		 */
+-		mwifiex_dbg(priv->adapter, INFO,
+-			    "info: %s: WPA2:\t"
+-			    "wpa_ie=%#x wpa2_ie=%#x WEP=%s WPA=%s WPA2=%s\t"
+-			    "EncMode=%#x privacy=%#x\n", __func__,
+-			    bss_desc->bcn_wpa_ie ?
+-			    bss_desc->bcn_wpa_ie->vend_hdr.element_id : 0,
+-			    bss_desc->bcn_rsn_ie ?
+-			    bss_desc->bcn_rsn_ie->ieee_hdr.element_id : 0,
+-			    (priv->sec_info.wep_enabled) ? "e" : "d",
+-			    (priv->sec_info.wpa_enabled) ? "e" : "d",
+-			    (priv->sec_info.wpa2_enabled) ? "e" : "d",
+-			    priv->sec_info.encryption_mode,
+-			    bss_desc->privacy);
++		dbg_security_flags(INFO, priv, bss_desc);
+ 		return true;
+ 	}
+ 	return false;
+@@ -325,17 +321,7 @@ mwifiex_is_bss_dynamic_wep(struct mwifiex_private *priv,
+ 	    !has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC) &&
+ 	    !has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN) &&
+ 	    priv->sec_info.encryption_mode && bss_desc->privacy) {
+-		mwifiex_dbg(priv->adapter, INFO,
+-			    "info: %s: dynamic\t"
+-			    "WEP: wpa_ie=%#x wpa2_ie=%#x\t"
+-			    "EncMode=%#x privacy=%#x\n",
+-			    __func__,
+-			    bss_desc->bcn_wpa_ie ?
+-			    bss_desc->bcn_wpa_ie->vend_hdr.element_id : 0,
+-			    bss_desc->bcn_rsn_ie ?
+-			    bss_desc->bcn_rsn_ie->ieee_hdr.element_id : 0,
+-			    priv->sec_info.encryption_mode,
+-			    bss_desc->privacy);
++		dbg_security_flags(INFO, priv, bss_desc);
+ 		return true;
+ 	}
+ 	return false;
+@@ -448,18 +434,7 @@ mwifiex_is_network_compatible(struct mwifiex_private *priv,
  		}
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 44d1855..ab3390c 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -434,7 +434,7 @@ static void CfgScanResult(enum scan_event scan_event,
- 					   network_info->cap_info,
- 					   network_info->beacon_period);
  
--				if (network_info->bNewNetwork) {
-+				if (network_info->new_network) {
- 					if (priv->u32RcvdChCount < MAX_NUM_SCANNED_NETWORKS) {
- 						PRINT_D(CFG80211_DBG,
- 							"Network %s found\n",
+ 		/* Security doesn't match */
+-		mwifiex_dbg(adapter, ERROR,
+-			    "info: %s: failed: wpa_ie=%#x wpa2_ie=%#x WEP=%s\t"
+-			    "WPA=%s WPA2=%s EncMode=%#x privacy=%#x\n",
+-			    __func__,
+-			    bss_desc->bcn_wpa_ie ?
+-			    bss_desc->bcn_wpa_ie->vend_hdr.element_id : 0,
+-			    bss_desc->bcn_rsn_ie ?
+-			    bss_desc->bcn_rsn_ie->ieee_hdr.element_id : 0,
+-			    (priv->sec_info.wep_enabled) ? "e" : "d",
+-			    (priv->sec_info.wpa_enabled) ? "e" : "d",
+-			    (priv->sec_info.wpa2_enabled) ? "e" : "d",
+-			    priv->sec_info.encryption_mode, bss_desc->privacy);
++		dbg_security_flags(ERROR, priv, bss_desc);
+ 		return -1;
+ 	}
+ 
 -- 
-1.9.1
+2.7.0
 
