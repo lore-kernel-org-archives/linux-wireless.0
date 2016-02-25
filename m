@@ -1,73 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39678 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752781AbcB2WFy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:54 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 030/113] rtl8xxxu: rtl8723bu_parse_efuse(): Use a pointer to the struct rtl8723bu_efuse
-Date: Mon, 29 Feb 2016 17:04:28 -0500
-Message-Id: <1456783551-28315-31-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_231039_084614_8DF22C95)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-ig0-f173.google.com ([209.85.213.173]:37843 "EHLO
+	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751030AbcBYW0X (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 25 Feb 2016 17:26:23 -0500
+Received: by mail-ig0-f173.google.com with SMTP id z8so23897420ige.0
+        for <linux-wireless@vger.kernel.org>; Thu, 25 Feb 2016 14:26:22 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+Date: Thu, 25 Feb 2016 23:26:22 +0100
+Message-ID: <CACna6rwHtLhDtd-qZ4nfEhXsGjJaHNa-eePCn99eonff1Q0SQw@mail.gmail.com> (sfid-20160225_232627_152709_E70094A4)
+Subject: Re: [PATCH 00/21] brcmfmac: driver setting concept and other changes
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On 17 February 2016 at 11:26, Arend van Spriel <arend@broadcom.com> wrote:
+> This series contain various changes for the brcmfmac driver. Here
+> the list of highlights:
+>
+> * IPv6 Neighbor discovery offload.
+> * driver settings that can be populated from different sources.
+> * country code setting in firmware.
+> * length checks to validate firmware events.
+> * new way to determine device memory size needed for BCM4366.
+> * various offloads during wowl.
+> * full MFP support.
+>
+> This series is intended for v4.6 and applies to the master branch
+> of the wireless-drivers-next repository. Patch #17 is already in
+> wireless-drivers repo. The other patches apply without it, but it
+> is needed to compile test the remainder of the series.
 
-Likewise for 8723bu, use a pointer to the efuse.
+I tried this patchset on
+1) SmartRG SR400ac (BCM4708 + 2 x BCM43602)
+2) D-Link DIR-885L (BCM47094 + 2 x BCM4366)
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 24 ++++++++++--------------
- 1 file changed, 10 insertions(+), 14 deletions(-)
+BCM43602 still works correctly as expected. No obvious regressions. Nice.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index d25536a..d100a99 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -2171,29 +2171,25 @@ static int rtl8723au_parse_efuse(struct rtl8xxxu_priv *priv)
- 
- static int rtl8723bu_parse_efuse(struct rtl8xxxu_priv *priv)
- {
--	if (priv->efuse_wifi.efuse8723bu.rtl_id != cpu_to_le16(0x8129))
-+	struct rtl8723bu_efuse *efuse = &priv->efuse_wifi.efuse8723bu;
-+
-+	if (efuse->rtl_id != cpu_to_le16(0x8129))
- 		return -EINVAL;
- 
--	ether_addr_copy(priv->mac_addr, priv->efuse_wifi.efuse8723bu.mac_addr);
-+	ether_addr_copy(priv->mac_addr, efuse->mac_addr);
- 
--	memcpy(priv->cck_tx_power_index_A,
--	       priv->efuse_wifi.efuse8723bu.cck_tx_power_index_A,
-+	memcpy(priv->cck_tx_power_index_A, efuse->cck_tx_power_index_A,
- 	       sizeof(priv->cck_tx_power_index_A));
--	memcpy(priv->cck_tx_power_index_B,
--	       priv->efuse_wifi.efuse8723bu.cck_tx_power_index_B,
-+	memcpy(priv->cck_tx_power_index_B, efuse->cck_tx_power_index_B,
- 	       sizeof(priv->cck_tx_power_index_B));
- 
--	memcpy(priv->ht40_1s_tx_power_index_A,
--	       priv->efuse_wifi.efuse8723bu.ht40_1s_tx_power_index_A,
-+	memcpy(priv->ht40_1s_tx_power_index_A, efuse->ht40_1s_tx_power_index_A,
- 	       sizeof(priv->ht40_1s_tx_power_index_A));
--	memcpy(priv->ht40_1s_tx_power_index_B,
--	       priv->efuse_wifi.efuse8723bu.ht40_1s_tx_power_index_B,
-+	memcpy(priv->ht40_1s_tx_power_index_B, efuse->ht40_1s_tx_power_index_B,
- 	       sizeof(priv->ht40_1s_tx_power_index_B));
- 
--	dev_info(&priv->udev->dev, "Vendor: %.7s\n",
--		 priv->efuse_wifi.efuse8723bu.vendor_name);
--	dev_info(&priv->udev->dev, "Product: %.41s\n",
--		 priv->efuse_wifi.efuse8723bu.device_name);
-+	dev_info(&priv->udev->dev, "Vendor: %.7s\n", efuse->vendor_name);
-+	dev_info(&priv->udev->dev, "Product: %.41s\n", efuse->device_name);
- 
- 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_EFUSE) {
- 		int i;
--- 
-2.5.0
+BCM4366s in my DIR-885L were unusable so far due to the following
+errors (one per wireless card):
+[   13.249195] brcmfmac: brcmf_pcie_download_fw_nvram: FW failed to initialize
+[   18.209196] brcmfmac: brcmf_pcie_download_fw_nvram: FW failed to initialize
 
+With this patchset my first BCM4366 card works correctly:
+brcmfmac: brcmf_c_preinit_dcmds: Firmware version = wl0: Jan  8 2016
+12:54:07 version 10.10.69.3309 (r610991) FWID 01-c47a91a4
+
+Unfortunately second one - while doing a bit better - still fails:
+brcmfmac: brcmf_msgbuf_query_dcmd: Timeout on response for query command
+brcmfmac: brcmf_c_preinit_dcmds: Retreiving cur_etheraddr failed, -5
+brcmfmac: brcmf_bus_start: failed: -5
+brcmfmac: brcmf_pcie_attach_bus: dongle is not responding
+
+We were already discussing this privately a bit and AFAIR Hante said
+he suspects something about PCIe BAR. I was hoping that maybe
+[PATCH] brcmfmac: use bar1 window size as provided by pci subsystem
+will fix this problem, but apparently it doesn't.
+
+Did you guys try brcmfmac on any router with 2 x BCM4366? Did you have
+any more luck?
+Any other ideas about what may be stopping 2nd BCM4366 card from
+working correctly?
+
+Whatever it missing to support 2nd BCM4366 in my DIR-885L, this
+patchset is a nice improvement anyway, thank you!
