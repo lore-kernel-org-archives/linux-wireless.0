@@ -1,88 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f53.google.com ([209.85.192.53]:33506 "EHLO
-	mail-qg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753148AbcBVQhI (ORCPT
+Received: from mail-io0-f173.google.com ([209.85.223.173]:36710 "EHLO
+	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751448AbcBYBAw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 11:37:08 -0500
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux@endlessm.com,
-	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
-Subject: [PATCHv2 10/10] rfkill: Notify userspace of airplane-mode state changes
-Date: Mon, 22 Feb 2016 11:36:41 -0500
-Message-Id: <1456159001-20307-11-git-send-email-jprvita@endlessm.com> (sfid-20160222_173826_997348_43098B73)
-In-Reply-To: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
-References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+	Wed, 24 Feb 2016 20:00:52 -0500
+Received: by mail-io0-f173.google.com with SMTP id l127so72294076iof.3
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 17:00:51 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <1456358932-23114-3-git-send-email-afenkart@gmail.com>
+References: <1456358932-23114-1-git-send-email-afenkart@gmail.com> <1456358932-23114-3-git-send-email-afenkart@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 25 Feb 2016 12:00:31 +1100
+Message-ID: <CAGRGNgVTC7KvXi==oZo-yRF5sJDjVwvWRwEb4hCx9hHbY5LkOw@mail.gmail.com> (sfid-20160225_020054_966258_02E2C9EC)
+Subject: Re: [PATCH 2/7] mwifiex: scan: factor out has_ieee_hdr/has_vendor_hdr
+To: Andreas Fenkart <afenkart@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
----
- Documentation/rfkill.txt    |  3 +++
- include/uapi/linux/rfkill.h |  4 ++--
- net/rfkill/core.c           | 13 +++++++++++++
- 3 files changed, 18 insertions(+), 2 deletions(-)
+Hi Andreas,
 
-diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
-index 9dbe3fc..588b4bf 100644
---- a/Documentation/rfkill.txt
-+++ b/Documentation/rfkill.txt
-@@ -133,5 +133,8 @@ applications to take control. Changes to the airplane-mode indicator state can
- be made using RFKILL_OP_AIRPLANE_MODE_INDICATOR_CHANGE, passing the new value
- in the 'soft' field of 'struct rfkill_event'.
- 
-+This same API is also used to provide userspace with notifications of changes
-+to airplane-mode indicator state.
-+
- 
- For further details consult Documentation/ABI/stable/sysfs-class-rfkill.
-diff --git a/include/uapi/linux/rfkill.h b/include/uapi/linux/rfkill.h
-index 36e0770..2ccb02f 100644
---- a/include/uapi/linux/rfkill.h
-+++ b/include/uapi/linux/rfkill.h
-@@ -63,8 +63,8 @@ enum rfkill_type {
-  *	are hot-plugged later.
-  * @RFKILL_OP_AIRPLANE_MODE_INDICATOR_ACQUIRE: userspace acquires control of
-  * 	the airplane-mode indicator.
-- * @RFKILL_OP_AIRPLANE_MODE_INDICATOR_CHANGE: userspace changes the
-- * 	airplane-mode indicator state.
-+ * @RFKILL_OP_AIRPLANE_MODE_INDICATOR_CHANGE: the airplane-mode indicator state
-+ * 	changed -- userspace changes the airplane-mode indicator state.
-  */
- enum rfkill_operation {
- 	RFKILL_OP_ADD = 0,
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index 8ea8b73..c59fd1d 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -131,7 +131,20 @@ static struct led_trigger rfkill_apm_led_trigger;
- 
- static void rfkill_apm_led_trigger_event(bool state)
- {
-+	struct rfkill_data *data;
-+	struct rfkill_int_event *ev;
-+
- 	led_trigger_event(&rfkill_apm_led_trigger, state ? LED_FULL : LED_OFF);
-+
-+	list_for_each_entry(data, &rfkill_fds, list) {
-+		ev = kzalloc(sizeof(*ev), GFP_KERNEL);
-+		if (!ev)
-+			continue;
-+		ev->ev.op = RFKILL_OP_AIRPLANE_MODE_INDICATOR_CHANGE;
-+		ev->ev.soft = state;
-+		list_add_tail(&ev->list, &data->events);
-+		wake_up_interruptible(&data->read_wait);
-+	}
- }
- 
- static void rfkill_apm_led_trigger_activate(struct led_classdev *led)
+On Thu, Feb 25, 2016 at 11:08 AM, Andreas Fenkart <afenkart@gmail.com> wrote:
+> Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/scan.c | 52 +++++++++++++----------------
+>  1 file changed, 23 insertions(+), 29 deletions(-)
+>
+> diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+> index 43d7a92..276382e 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/scan.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+> @@ -76,6 +76,18 @@ static u8 mwifiex_rsn_oui[CIPHER_SUITE_MAX][4] = {
+>         { 0x00, 0x0f, 0xac, 0x04 },     /* AES  */
+>  };
+>
+> +static bool
+> +has_ieee_hdr(struct ieee_types_generic *ie, u8 key)
+> +{
+> +       return (ie && (ie->ieee_hdr.element_id == key));
+
+Please remove all the parentheses in this line as they're all unnecessary.
+
+> +}
+> +
+> +static bool
+> +has_vendor_hdr(struct ieee_types_vendor_specific *ie, u8 key)
+> +{
+> +       return (ie && (ie->vend_hdr.element_id == key));
+
+Here too.
+
+> +}
+> +
+>  /*
+>   * This function parses a given IE for a given OUI.
+>   *
+
+Thanks,
+
 -- 
-2.5.0
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
