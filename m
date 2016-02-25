@@ -1,56 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f43.google.com ([209.85.220.43]:33271 "EHLO
-	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932438AbcBWGiZ (ORCPT
+Received: from mail-ig0-f180.google.com ([209.85.213.180]:35952 "EHLO
+	mail-ig0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751802AbcBYBCM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 01:38:25 -0500
-Received: by mail-pa0-f43.google.com with SMTP id fl4so105056767pad.0
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2016 22:38:24 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 5/7] staging: wilc1000: handle_cfg_param: fix logical continuations
-Date: Tue, 23 Feb 2016 15:38:01 +0900
-Message-Id: <1456209483-20345-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20160223_073827_789642_F04E1F24)
-In-Reply-To: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
+	Wed, 24 Feb 2016 20:02:12 -0500
+Received: by mail-ig0-f180.google.com with SMTP id xg9so3256435igb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 17:02:11 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1456358932-23114-4-git-send-email-afenkart@gmail.com>
+References: <1456358932-23114-1-git-send-email-afenkart@gmail.com> <1456358932-23114-4-git-send-email-afenkart@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 25 Feb 2016 12:01:51 +1100
+Message-ID: <CAGRGNgVSvbETDnEAs2ZMPRuRVU-BG=hyymg+qpP_hJJD2T7GgA@mail.gmail.com> (sfid-20160225_020215_938078_FA49304E)
+Subject: Re: [PATCH 3/7] mwifiex: scan: simplify ternary operators using gnu extension
+To: Andreas Fenkart <afenkart@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes logical continuations found by checkpatch
-CHECK: Logical continuations should be on the previous line
+Hi Andreas,
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+On Thu, Feb 25, 2016 at 11:08 AM, Andreas Fenkart <afenkart@gmail.com> wrote:
+> "x ? x : y" can be simplified as "x ? : y"
+> https://gcc.gnu.org/onlinedocs/gcc/Conditionals.html#Conditionals
+>
+> Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d207c5c..7d36d50 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -730,12 +730,12 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
- 	if (cfg_param_attr->flag & CURRENT_TX_RATE) {
- 		enum CURRENT_TXRATE curr_tx_rate = cfg_param_attr->curr_tx_rate;
- 
--		if (curr_tx_rate == AUTORATE || curr_tx_rate == MBPS_1
--		    || curr_tx_rate == MBPS_2 || curr_tx_rate == MBPS_5_5
--		    || curr_tx_rate == MBPS_11 || curr_tx_rate == MBPS_6
--		    || curr_tx_rate == MBPS_9 || curr_tx_rate == MBPS_12
--		    || curr_tx_rate == MBPS_18 || curr_tx_rate == MBPS_24
--		    || curr_tx_rate == MBPS_36 || curr_tx_rate == MBPS_48 || curr_tx_rate == MBPS_54) {
-+		if (curr_tx_rate == AUTORATE || curr_tx_rate == MBPS_1 ||
-+		    curr_tx_rate == MBPS_2 || curr_tx_rate == MBPS_5_5 ||
-+		    curr_tx_rate == MBPS_11 || curr_tx_rate == MBPS_6 ||
-+		    curr_tx_rate == MBPS_9 || curr_tx_rate == MBPS_12 ||
-+		    curr_tx_rate == MBPS_18 || curr_tx_rate == MBPS_24 ||
-+		    curr_tx_rate == MBPS_36 || curr_tx_rate == MBPS_48 || curr_tx_rate == MBPS_54) {
- 			wid_list[i].id = WID_CURRENT_TX_RATE;
- 			wid_list[i].val = (s8 *)&curr_tx_rate;
- 			wid_list[i].type = WID_SHORT;
+I'm not sure people are 100% happy with changes like these, however
+they are correct, so
+
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
+> ---
+>  drivers/net/wireless/marvell/mwifiex/scan.c | 7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+> index 276382e..f612c1b 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/scan.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+> @@ -845,14 +845,11 @@ mwifiex_config_scan(struct mwifiex_private *priv,
+>                 /* Set the BSS type scan filter, use Adapter setting if
+>                    unset */
+>                 scan_cfg_out->bss_mode =
+> -                       (user_scan_in->bss_mode ? (u8) user_scan_in->
+> -                        bss_mode : (u8) adapter->scan_mode);
+> +                       (u8)(user_scan_in->bss_mode ?: adapter->scan_mode);
+>
+>                 /* Set the number of probes to send, use Adapter setting
+>                    if unset */
+> -               num_probes =
+> -                       (user_scan_in->num_probes ? user_scan_in->
+> -                        num_probes : adapter->scan_probes);
+> +               num_probes = user_scan_in->num_probes ?: adapter->scan_probes;
+>
+>                 /*
+>                  * Set the BSSID filter to the incoming configuration,
+> --
+> 2.7.0
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Thanks,
+
 -- 
-2.7.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
