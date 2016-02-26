@@ -1,48 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f66.google.com ([209.85.192.66]:36427 "EHLO
-	mail-qg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754620AbcBHPlm (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:49892 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932880AbcBZUN0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 10:41:42 -0500
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
+	Fri, 26 Feb 2016 15:13:26 -0500
+From: Jouni Malinen <jouni@qca.qualcomm.com>
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux@endlessm.com,
-	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
-Subject: [PATCH 1/9] rfkill: Improve documentation language
-Date: Mon,  8 Feb 2016 10:41:28 -0500
-Message-Id: <1454946096-9752-2-git-send-email-jprvita@endlessm.com> (sfid-20160208_164352_147228_E4C4FE73)
-In-Reply-To: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
-References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 3/3] mac80211_hwsim: Support a hw scan request for a specific BSSID
+Date: Fri, 26 Feb 2016 22:12:49 +0200
+Message-ID: <1456517569-27235-3-git-send-email-jouni@qca.qualcomm.com> (sfid-20160226_211335_280829_39A791AA)
+In-Reply-To: <1456517569-27235-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1456517569-27235-1-git-send-email-jouni@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
----
- net/rfkill/core.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+If the hw scan request specifies a single BSSID, use that value instead
+of the wildcard BSSID in the Probe Request frames.
 
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index a805831..ffbc375 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -282,8 +282,8 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
- 	spin_lock_irqsave(&rfkill->lock, flags);
- 	if (err) {
- 		/*
--		 * Failed -- reset status to _prev, this may be different
--		 * from what set set _PREV to earlier in this function
-+		 * Failed -- reset status to _PREV, which may be different
-+		 * from what we have set _PREV to earlier in this function
- 		 * if rfkill_set_sw_state was invoked.
- 		 */
- 		if (rfkill->state & RFKILL_BLOCK_SW_PREV)
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ drivers/net/wireless/mac80211_hwsim.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
+index a723a85..281c6b7 100644
+--- a/drivers/net/wireless/mac80211_hwsim.c
++++ b/drivers/net/wireless/mac80211_hwsim.c
+@@ -1909,6 +1909,7 @@ static void hw_scan_work(struct work_struct *work)
+ 		/* send probes */
+ 		for (i = 0; i < req->n_ssids; i++) {
+ 			struct sk_buff *probe;
++			struct ieee80211_mgmt *mgmt;
+ 
+ 			probe = ieee80211_probereq_get(hwsim->hw,
+ 						       hwsim->scan_addr,
+@@ -1918,6 +1919,10 @@ static void hw_scan_work(struct work_struct *work)
+ 			if (!probe)
+ 				continue;
+ 
++			mgmt = (struct ieee80211_mgmt *) probe->data;
++			memcpy(mgmt->da, req->bssid, ETH_ALEN);
++			memcpy(mgmt->bssid, req->bssid, ETH_ALEN);
++
+ 			if (req->ie_len)
+ 				memcpy(skb_put(probe, req->ie_len), req->ie,
+ 				       req->ie_len);
 -- 
-2.5.0
+1.9.1
 
