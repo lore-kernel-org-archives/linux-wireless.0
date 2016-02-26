@@ -1,176 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:35717 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751204AbcBBNjR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 08:39:17 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH 3/3] cfg80211: add support for non-linear skbs in ieee80211_amsdu_to_8023s
-Date: Tue,  2 Feb 2016 14:39:10 +0100
-Message-Id: <1454420350-8313-3-git-send-email-nbd@openwrt.org> (sfid-20160202_143920_312142_CF91506C)
-In-Reply-To: <1454420350-8313-1-git-send-email-nbd@openwrt.org>
-References: <1454420350-8313-1-git-send-email-nbd@openwrt.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60694 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753438AbcBZIKk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Feb 2016 03:10:40 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 06/13] ath9k: Update AR9485 initvals
+Date: Fri, 26 Feb 2016 16:08:36 +0800
+Message-Id: <1456474123-10520-7-git-send-email-miaoqing@codeaurora.org> (sfid-20160226_091043_302132_DE81705B)
+In-Reply-To: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
+References: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
----
- net/wireless/util.c | 100 +++++++++++++++++++++++++---------------------------
- 1 file changed, 49 insertions(+), 51 deletions(-)
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-diff --git a/net/wireless/util.c b/net/wireless/util.c
-index f75f601..e0cf5ae 100644
---- a/net/wireless/util.c
-+++ b/net/wireless/util.c
-@@ -644,73 +644,75 @@ int ieee80211_data_from_8023(struct sk_buff *skb, const u8 *addr,
- }
- EXPORT_SYMBOL(ieee80211_data_from_8023);
- 
-+static struct sk_buff *
-+__ieee80211_amsdu_copy(struct sk_buff *skb, unsigned int hlen,
-+		       int offset, int len)
-+{
-+	struct sk_buff *frame;
-+
-+	if (skb->len - offset < len)
-+		return NULL;
-+
-+	/*
-+	 * Allocate and reserve two bytes more for payload
-+	 * alignment since sizeof(struct ethhdr) is 14.
-+	 */
-+	frame = dev_alloc_skb(hlen + sizeof(struct ethhdr) + 2 + len);
-+
-+	skb_reserve(frame, hlen + sizeof(struct ethhdr) + 2);
-+	skb_copy_bits(skb, offset, skb_put(frame, len), len);
-+
-+	return frame;
-+}
- 
- void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
- 			      const u8 *addr, enum nl80211_iftype iftype,
- 			      const unsigned int extra_headroom,
- 			      bool has_80211_header)
- {
-+	unsigned int hlen = ALIGN(extra_headroom, 4);
- 	struct sk_buff *frame = NULL;
- 	u16 ethertype;
- 	u8 *payload;
--	const struct ethhdr *eth;
--	int remaining, err;
--	u8 dst[ETH_ALEN], src[ETH_ALEN];
--
--	if (skb_linearize(skb))
--		goto out;
-+	int offset = 0, remaining, err;
-+	struct ethhdr eth;
-+	bool reuse_skb = true;
-+	bool last = false;
- 
- 	if (has_80211_header) {
--		err = ieee80211_data_to_8023(skb, addr, iftype);
-+		err = __ieee80211_data_to_8023(skb, &eth, addr, iftype);
- 		if (err)
- 			goto out;
--
--		/* skip the wrapping header */
--		eth = (struct ethhdr *) skb_pull(skb, sizeof(struct ethhdr));
--		if (!eth)
--			goto out;
--	} else {
--		eth = (struct ethhdr *) skb->data;
- 	}
- 
--	while (skb != frame) {
-+	while (!last) {
-+		unsigned int subframe_len;
-+		int len;
- 		u8 padding;
--		__be16 len = eth->h_proto;
--		unsigned int subframe_len = sizeof(struct ethhdr) + ntohs(len);
--
--		remaining = skb->len;
--		memcpy(dst, eth->h_dest, ETH_ALEN);
--		memcpy(src, eth->h_source, ETH_ALEN);
- 
-+		skb_copy_bits(skb, offset, &eth, sizeof(eth));
-+		len = ntohs(eth.h_proto);
-+		subframe_len = sizeof(struct ethhdr) + len;
- 		padding = (4 - subframe_len) & 0x3;
-+
- 		/* the last MSDU has no padding */
-+		remaining = skb->len - offset;
- 		if (subframe_len > remaining)
- 			goto purge;
- 
--		skb_pull(skb, sizeof(struct ethhdr));
-+		offset += sizeof(struct ethhdr);
- 		/* reuse skb for the last subframe */
--		if (remaining <= subframe_len + padding)
-+		last = remaining <= subframe_len + padding;
-+		if (!skb_is_nonlinear(skb) && last) {
-+			skb_pull(skb, offset);
- 			frame = skb;
--		else {
--			unsigned int hlen = ALIGN(extra_headroom, 4);
--			/*
--			 * Allocate and reserve two bytes more for payload
--			 * alignment since sizeof(struct ethhdr) is 14.
--			 */
--			frame = dev_alloc_skb(hlen + subframe_len + 2);
-+			reuse_skb = true;
-+		} else {
-+			frame = __ieee80211_amsdu_copy(skb, hlen, offset, len);
- 			if (!frame)
- 				goto purge;
- 
--			skb_reserve(frame, hlen + sizeof(struct ethhdr) + 2);
--			memcpy(skb_put(frame, ntohs(len)), skb->data,
--				ntohs(len));
--
--			eth = (struct ethhdr *)skb_pull(skb, ntohs(len) +
--							padding);
--			if (!eth) {
--				dev_kfree_skb(frame);
--				goto purge;
--			}
-+			offset += len + padding;
- 		}
- 
- 		skb_reset_network_header(frame);
-@@ -719,24 +721,20 @@ void ieee80211_amsdu_to_8023s(struct sk_buff *skb, struct sk_buff_head *list,
- 
- 		payload = frame->data;
- 		ethertype = (payload[6] << 8) | payload[7];
--
- 		if (likely((ether_addr_equal(payload, rfc1042_header) &&
- 			    ethertype != ETH_P_AARP && ethertype != ETH_P_IPX) ||
- 			   ether_addr_equal(payload, bridge_tunnel_header))) {
--			/* remove RFC1042 or Bridge-Tunnel
--			 * encapsulation and replace EtherType */
--			skb_pull(frame, 6);
--			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
--			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
--		} else {
--			memcpy(skb_push(frame, sizeof(__be16)), &len,
--				sizeof(__be16));
--			memcpy(skb_push(frame, ETH_ALEN), src, ETH_ALEN);
--			memcpy(skb_push(frame, ETH_ALEN), dst, ETH_ALEN);
-+			eth.h_proto = htons(ethertype);
-+			skb_pull(frame, ETH_ALEN + 2);
- 		}
-+
-+		memcpy(skb_push(frame, sizeof(eth)), &eth, sizeof(eth));
- 		__skb_queue_tail(list, frame);
- 	}
- 
-+	if (!reuse_skb)
-+	    dev_kfree_skb(skb);
-+
- 	return;
- 
-  purge:
+HW peak detect calibration would fail for AR9300 chips and
+we went for implementing the SW way of doing it instead of
+HW doing the peak detect calibration.
+
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9485_initvals.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar9485_initvals.h b/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
+index ce83ce4..bdf6f10 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9485_initvals.h
+@@ -1026,7 +1026,7 @@ static const u32 ar9485_1_1_baseband_postamble[][5] = {
+ 	{0x00009e10, 0x7ec88d2e, 0x7ec88d2e, 0x7ec80d2e, 0x7ec80d2e},
+ 	{0x00009e14, 0x31395d53, 0x31396053, 0x312e6053, 0x312e5d53},
+ 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
+-	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcf946222, 0xcf946222},
++	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcf946220, 0xcf946220},
+ 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302010, 0x50302010},
+ 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
+ 	{0x0000a204, 0x01303fc0, 0x01303fc4, 0x01303fc4, 0x01303fc0},
+@@ -1044,7 +1044,7 @@ static const u32 ar9485_1_1_baseband_postamble[][5] = {
+ 	{0x0000a284, 0x00000000, 0x00000000, 0x000002a0, 0x000002a0},
+ 	{0x0000a288, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+ 	{0x0000a28c, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
+-	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
++	{0x0000a2c4, 0x00058d18, 0x00058d18, 0x00058d18, 0x00058d18},
+ 	{0x0000a2d0, 0x00071981, 0x00071981, 0x00071982, 0x00071982},
+ 	{0x0000a2d8, 0xf999a83a, 0xf999a83a, 0xf999a83a, 0xf999a83a},
+ 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
 -- 
-2.2.2
+1.9.1
 
