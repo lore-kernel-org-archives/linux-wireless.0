@@ -1,61 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from arrakis.dune.hu ([78.24.191.176]:37922 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965115AbcBQQzV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2016 11:55:21 -0500
-Subject: Re: [RFC] mac80211: add extap functionality
-To: Grzegorz Bajorski <grzegorz.bajorski@tieto.com>,
-	linux-wireless@vger.kernel.org
-References: <1455710131-9967-1-git-send-email-grzegorz.bajorski@tieto.com>
-Cc: johannes@sipsolutions.net
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <56C4A5ED.4060802@openwrt.org> (sfid-20160217_175526_997445_C092C091)
-Date: Wed, 17 Feb 2016 17:55:09 +0100
-MIME-Version: 1.0
-In-Reply-To: <1455710131-9967-1-git-send-email-grzegorz.bajorski@tieto.com>
-Content-Type: text/plain; charset=utf-8
+Received: from smtp.codeaurora.org ([198.145.29.96]:60848 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932334AbcBZILQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Feb 2016 03:11:16 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 13/13] ath9k: set correct peak detect threshold
+Date: Fri, 26 Feb 2016 16:08:43 +0800
+Message-Id: <1456474123-10520-14-git-send-email-miaoqing@codeaurora.org> (sfid-20160226_091119_875380_8BCAC832)
+In-Reply-To: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
+References: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-02-17 12:55, Grzegorz Bajorski wrote:
-> Client interface briding was only possible when 4addr frames were used with
-> a 4addr/WDS aware AP. It was not possible to do it otherwise due to 3addr
-> frame limitation.
-> 
-> The extap logic introduces a smart MAC address masking/translation
-> (including modyfing packets beyond SA/DA, e.g. DHCP broadcast flag is set).
-> 
-> There are still some unsolved problems and bugs:
->  - due to bridge port routing and sk_buff payload sharing skb_copy() is
->    performed; this ideally should be reworked
->  - ipv6 support is still not finished
->  - extap is enabled by default currently; it should be configurable via
->    nl80211 the same way 4addr is
-> 
-> There's also an idea to move this as a generic link driver (just like
-> macvlan, et al) which would allow unmodified cfg80211 drivers to enjoy the
-> extap functionality. Thoughts?
-> 
-> Note: This changes cfg80211 file in this single patch only for reviewing
-> convienence.
-> 
-> This is an early draft to solicit comments on the design.
-> 
-> Signed-off-by: Grzegorz Bajorski <grzegorz.bajorski@tieto.com>
-You can get a lot of the same effect (sharing the same subnet between
-hosts behind multiple interfaces and having forwarding between them)
-without any changes to mac80211.
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-OpenWrt uses a daemon called 'relayd' which I wrote some years ago. It
-does ARP translation, DHCP packet mangling and sets up policy routing to
-forward packets between multiple interfaces.
+Set QCA9561 peak detect threshold to 11.
 
-You can find it here:
-http://git.openwrt.org/?p=project/relayd.git;a=summary
-git://git.openwrt.org/project/relayd.git
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 25 +++++++++++--------------
+ 1 file changed, 11 insertions(+), 14 deletions(-)
 
-Since you can cover the same use cases with user space code, I don't
-think it's a good idea to put bridge emulation hacks in the kernel's
-wireless stack.
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index e1573ab..518e649 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -1203,12 +1203,12 @@ static void ar9003_hw_tx_iq_cal_reload(struct ath_hw *ah)
+ static void ar9003_hw_manual_peak_cal(struct ath_hw *ah, u8 chain, bool is_2g)
+ {
+ 	int offset[8] = {0}, total = 0, test;
+-	int agc_out, i, peak_detect_threshold;
++	int agc_out, i, peak_detect_threshold = 0;
+ 
+ 	if (AR_SREV_9550(ah) || AR_SREV_9531(ah))
+ 		peak_detect_threshold = 8;
+-	else
+-		peak_detect_threshold = 0;
++	else if (AR_SREV_9561(ah))
++		peak_detect_threshold = 11;
+ 
+ 	/*
+ 	 * Turn off LNA/SW.
+@@ -1249,17 +1249,14 @@ static void ar9003_hw_manual_peak_cal(struct ath_hw *ah, u8 chain, bool is_2g)
+ 		REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
+ 			      AR_PHY_65NM_RXRF_AGC_AGC2G_CALDAC_OVR, 0x0);
+ 
+-	if (AR_SREV_9003_PCOEM(ah) || AR_SREV_9550(ah) || AR_SREV_9531(ah) ||
+-	    AR_SREV_9561(ah)) {
+-		if (is_2g)
+-			REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
+-				      AR_PHY_65NM_RXRF_AGC_AGC2G_DBDAC_OVR,
+-				      peak_detect_threshold);
+-		else
+-			REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
+-				      AR_PHY_65NM_RXRF_AGC_AGC5G_DBDAC_OVR,
+-				      peak_detect_threshold);
+-	}
++	if (is_2g)
++		REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
++			      AR_PHY_65NM_RXRF_AGC_AGC2G_DBDAC_OVR,
++			      peak_detect_threshold);
++	else
++		REG_RMW_FIELD(ah, AR_PHY_65NM_RXRF_AGC(chain),
++			      AR_PHY_65NM_RXRF_AGC_AGC5G_DBDAC_OVR,
++			      peak_detect_threshold);
+ 
+ 	for (i = 6; i > 0; i--) {
+ 		offset[i] = BIT(i - 1);
+-- 
+1.9.1
 
-- Felix
