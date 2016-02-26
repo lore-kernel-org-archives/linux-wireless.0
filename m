@@ -1,102 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33488 "EHLO mx1.redhat.com"
+Received: from nbd.name ([46.4.11.11]:41128 "EHLO nbd.name"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753607AbcB2WGG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:06:06 -0500
-From: Jes.Sorensen@redhat.com
+	id S1755278AbcBZVOp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Feb 2016 16:14:45 -0500
+From: Felix Fietkau <nbd@openwrt.org>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 110/113] rtl8xxxu: Flush FIFO before powering down devices
-Date: Mon, 29 Feb 2016 17:05:48 -0500
-Message-Id: <1456783551-28315-111-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230628_709023_0699AA83)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Cc: johannes@sipsolutions.net
+Subject: [PATCH] mac80211: remove wdev/vif conversion functions
+Date: Fri, 26 Feb 2016 22:14:42 +0100
+Message-Id: <1456521282-69932-1-git-send-email-nbd@openwrt.org> (sfid-20160226_221502_348665_87B4AFC1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Nothing uses them
 
-This should help when reloading the driver for 8723bu devices
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Felix Fietkau <nbd@openwrt.org>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c   | 34 ++++++++++++++++++++++
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  |  2 ++
- 2 files changed, 36 insertions(+)
+ include/net/mac80211.h | 26 --------------------------
+ net/mac80211/util.c    | 28 ----------------------------
+ 2 files changed, 54 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 7f68b61..c594afa 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -5687,6 +5687,36 @@ static int rtl8xxxu_emu_to_disabled(struct rtl8xxxu_priv *priv)
- 	return 0;
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 0c09da3..e11d751 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1439,32 +1439,6 @@ static inline bool ieee80211_vif_is_mesh(struct ieee80211_vif *vif)
  }
  
-+static int rtl8xxxu_flush_fifo(struct rtl8xxxu_priv *priv)
-+{
-+	u32 val32;
-+	int retry, retval;
-+
-+	rtl8xxxu_write8(priv, REG_TXPAUSE, 0xff);
-+
-+	val32 = rtl8xxxu_read32(priv, REG_RXPKT_NUM);
-+	val32 |= RXPKT_NUM_RW_RELEASE_EN;
-+	rtl8xxxu_write32(priv, REG_RXPKT_NUM, val32);
-+
-+	retry = 100;
-+	retval = -EBUSY;
-+
-+	do {
-+		val32 = rtl8xxxu_read32(priv, REG_RXPKT_NUM);
-+		if (val32 & RXPKT_NUM_RXDMA_IDLE) {
-+			retval = 0;
-+			break;
-+		}
-+	} while (retry--);
-+
-+	rtl8xxxu_write16(priv, REG_RQPN_NPQ, 0);
-+	rtl8xxxu_write32(priv, REG_RQPN, 0x80000000);
-+	mdelay(2);
-+	pr_info("%s: retry %i\n", __func__, retry);
-+
-+	return retval;
-+}
-+
- static int rtl8723au_power_on(struct rtl8xxxu_priv *priv)
- {
- 	u8 val8;
-@@ -5957,6 +5987,8 @@ static void rtl8xxxu_power_off(struct rtl8xxxu_priv *priv)
- 		rtl8xxxu_write32(priv, REG_FPGA0_XCD_RF_PARM, val32);
- 	}
+ /**
+- * wdev_to_ieee80211_vif - return a vif struct from a wdev
+- * @wdev: the wdev to get the vif for
+- *
+- * This can be used by mac80211 drivers with direct cfg80211 APIs
+- * (like the vendor commands) that get a wdev.
+- *
+- * Note that this function may return %NULL if the given wdev isn't
+- * associated with a vif that the driver knows about (e.g. monitor
+- * or AP_VLAN interfaces.)
+- */
+-struct ieee80211_vif *wdev_to_ieee80211_vif(struct wireless_dev *wdev);
+-
+-/**
+- * ieee80211_vif_to_wdev - return a wdev struct from a vif
+- * @vif: the vif to get the wdev for
+- *
+- * This can be used by mac80211 drivers with direct cfg80211 APIs
+- * (like the vendor commands) that needs to get the wdev for a vif.
+- *
+- * Note that this function may return %NULL if the given wdev isn't
+- * associated with a vif that the driver knows about (e.g. monitor
+- * or AP_VLAN interfaces.)
+- */
+-struct wireless_dev *ieee80211_vif_to_wdev(struct ieee80211_vif *vif);
+-
+-/**
+  * enum ieee80211_key_flags - key flags
+  *
+  * These flags are used for communication about keys between the driver
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 89f7179..4482625 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -694,34 +694,6 @@ void ieee80211_iterate_stations_atomic(struct ieee80211_hw *hw,
+ }
+ EXPORT_SYMBOL_GPL(ieee80211_iterate_stations_atomic);
  
-+	rtl8xxxu_flush_fifo(priv);
-+
- 	rtl8xxxu_active_to_lps(priv);
- 
- 	/* Turn off RF */
-@@ -5995,6 +6027,8 @@ static void rtl8723bu_power_off(struct rtl8xxxu_priv *priv)
- 	u8 val8;
- 	u16 val16;
- 
-+	rtl8xxxu_flush_fifo(priv);
-+
- 	/*
- 	 * Disable TX report timer
- 	 */
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-index a8d5c9f..e545e84 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-@@ -404,6 +404,8 @@
- #define REG_RXDMA_AGG_PG_TH		0x0280
- #define  RXDMA_USB_AGG_ENABLE		BIT(31)
- #define REG_RXPKT_NUM			0x0284
-+#define  RXPKT_NUM_RXDMA_IDLE		BIT(17)
-+#define  RXPKT_NUM_RW_RELEASE_EN	BIT(18)
- #define REG_RXDMA_STATUS		0x0288
- 
- /* Presumably only found on newer chips such as 8723bu */
+-struct ieee80211_vif *wdev_to_ieee80211_vif(struct wireless_dev *wdev)
+-{
+-	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+-
+-	if (!ieee80211_sdata_running(sdata) ||
+-	    !(sdata->flags & IEEE80211_SDATA_IN_DRIVER))
+-		return NULL;
+-	return &sdata->vif;
+-}
+-EXPORT_SYMBOL_GPL(wdev_to_ieee80211_vif);
+-
+-struct wireless_dev *ieee80211_vif_to_wdev(struct ieee80211_vif *vif)
+-{
+-	struct ieee80211_sub_if_data *sdata;
+-
+-	if (!vif)
+-		return NULL;
+-
+-	sdata = vif_to_sdata(vif);
+-
+-	if (!ieee80211_sdata_running(sdata) ||
+-	    !(sdata->flags & IEEE80211_SDATA_IN_DRIVER))
+-		return NULL;
+-
+-	return &sdata->wdev;
+-}
+-EXPORT_SYMBOL_GPL(ieee80211_vif_to_wdev);
+-
+ /*
+  * Nothing should have been stuffed into the workqueue during
+  * the suspend->resume cycle. Since we can't check each caller
 -- 
-2.5.0
+2.2.2
 
