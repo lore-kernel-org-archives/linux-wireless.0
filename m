@@ -1,71 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:34194 "EHLO
-	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752774AbcBHWhx convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60722 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932151AbcBZIKp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 8 Feb 2016 17:37:53 -0500
-MIME-Version: 1.0
-In-Reply-To: <1454946096-9752-2-git-send-email-jprvita@endlessm.com>
-References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com> <1454946096-9752-2-git-send-email-jprvita@endlessm.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 9 Feb 2016 09:37:32 +1100
-Message-ID: <CAGRGNgX7ANq_dTSkRCqnU2H5DQsLCf5Ni7M-n7Z_RSieOf=mOw@mail.gmail.com> (sfid-20160208_233813_006851_2B7F0CFF)
-Subject: Re: [PATCH 1/9] rfkill: Improve documentation language
-To: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux@endlessm.com,
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 26 Feb 2016 03:10:45 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 07/13] ath9k: Update AR955x initvals
+Date: Fri, 26 Feb 2016 16:08:37 +0800
+Message-Id: <1456474123-10520-8-git-send-email-miaoqing@codeaurora.org> (sfid-20160226_091047_968452_1670041F)
+In-Reply-To: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
+References: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi João,
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-On Tue, Feb 9, 2016 at 2:41 AM, João Paulo Rechi Vita <jprvita@gmail.com> wrote:
-> Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+HW peak detect calibration would fail for AR9300 chips and
+we went for implementing the SW way of doing it instead of
+HW doing the peak detect calibration.
 
-Looks right to me.
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/ar955x_1p0_initvals.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-> ---
->  net/rfkill/core.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-> index a805831..ffbc375 100644
-> --- a/net/rfkill/core.c
-> +++ b/net/rfkill/core.c
-> @@ -282,8 +282,8 @@ static void rfkill_set_block(struct rfkill *rfkill, bool blocked)
->         spin_lock_irqsave(&rfkill->lock, flags);
->         if (err) {
->                 /*
-> -                * Failed -- reset status to _prev, this may be different
-> -                * from what set set _PREV to earlier in this function
-> +                * Failed -- reset status to _PREV, which may be different
-> +                * from what we have set _PREV to earlier in this function
->                  * if rfkill_set_sw_state was invoked.
->                  */
->                 if (rfkill->state & RFKILL_BLOCK_SW_PREV)
-> --
-> 2.5.0
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar955x_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar955x_1p0_initvals.h
+index 148562a..67edf34 100644
+--- a/drivers/net/wireless/ath/ath9k/ar955x_1p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar955x_1p0_initvals.h
+@@ -83,7 +83,7 @@ static const u32 ar955x_1p0_baseband_postamble[][5] = {
+ 	{0x0000a284, 0x00000000, 0x00000000, 0x00000010, 0x00000010},
+ 	{0x0000a288, 0x00000110, 0x00000110, 0x00000110, 0x00000110},
+ 	{0x0000a28c, 0x00022222, 0x00022222, 0x00022222, 0x00022222},
+-	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00058d18, 0x00058d18},
++	{0x0000a2c4, 0x00058d18, 0x00058d18, 0x00058d18, 0x00058d18},
+ 	{0x0000a2cc, 0x18c50033, 0x18c43433, 0x18c41033, 0x18c44c33},
+ 	{0x0000a2d0, 0x00041982, 0x00041982, 0x00041982, 0x00041982},
+ 	{0x0000a2d8, 0x7999a83b, 0x7999a83b, 0x7999a83b, 0x7999a83b},
 -- 
-Julian Calaby
+1.9.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
