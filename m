@@ -1,94 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.21]:54390 "EHLO mout.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752204AbcBWNnG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 08:43:06 -0500
-From: Marc Dietrich <marvin24@gmx.de>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>
-Subject: Re: [PATCHv2 3/4] ARM: tegra: use build-in device properties with rfkill_gpio
-Date: Tue, 23 Feb 2016 14:42:55 +0100
-Message-ID: <2927215.6IlWnjRTgT@fb07-iapwap2> (sfid-20160223_144331_594324_EF2F93F1)
-In-Reply-To: <2463567.tt0f0ingYr@wuerfel>
-References: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com> <4048115.S0MS1KQXCA@fb07-iapwap2> <2463567.tt0f0ingYr@wuerfel>
-MIME-Version: 1.0
-Content-Type: multipart/signed; boundary="nextPart80904992.30kfgfXpzZ"; micalg="pgp-sha256"; protocol="application/pgp-signature"
+Received: from smtp.codeaurora.org ([198.145.29.96]:60544 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753462AbcBZIKQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Feb 2016 03:10:16 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 01/13] ath9k: Update QCA953x initvals
+Date: Fri, 26 Feb 2016 16:08:31 +0800
+Message-Id: <1456474123-10520-2-git-send-email-miaoqing@codeaurora.org> (sfid-20160226_091021_252520_3897EA48)
+In-Reply-To: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
+References: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart80904992.30kfgfXpzZ
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="us-ascii"
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-Am Dienstag, 23. Februar 2016, 14:17:17 CET schrieb Arnd Bergmann:
-> On Tuesday 23 February 2016 11:38:52 Marc Dietrich wrote:
-> > Am Dienstag, 23. Februar 2016, 11:31:40 CET schrieb Arnd Bergmann:
-> > > On Tuesday 23 February 2016 11:15:31 Arnd Bergmann wrote:
-> > > > On Thursday 18 February 2016 21:04:49 Johannes Berg wrote:
-> > > > > On Tue, 2016-01-26 at 09:42 +0100, Johannes Berg wrote:
-> > > > Just for my curiosity: what is the difference between a rfkill-gpio
-> > > > device and a gpio-keys device with a KEY_RFKILL code?
-> > > > 
-> > > > arch/arm/boot/dts/bcm4708-netgear-r6250.dts and others seem to
-> > > > do the second approach in DT so they don't need to create the
-> > > > platform device.
-> > > 
-> > > I found the answer now (after discussing on IRC): just
-> > > for reference: KEY_RFKILL is for sending the event to the kernel
-> > > when a user presses the gpio butting, this rfkill-gpio turns
-> > > the devices on or off when after an RFKILL event is received.
-> > 
-> > yes, paz00 has no hw key. rfkill is triggered via software (rfkill) only.
-> > The problem in the past was how to describe such a device in the device
-> > tree.
-> > 
-> > Strictly speaking, there is no rfkill device hardware (just an interface).
-> > The only hardware that exists is in our case is connected to a hard wired
-> > usb bus (wifi dongle), which makes it complicated to attach a DT property
-> > or subdevice to it. And a standalone device-tree entry for a non hardware
-> > device was rejected in the past.
-> 
-> Ah, so the problem of attaching DT properties to a USB device has recently
-> been solved, see subject "USB: core: let USB device know device node".
-> 
-> Would that work for you? With this, the USB driver can simply look at
-> the optional DT properties of the USB function to implement its rfkill
-> callbacks.
+commit 14c5932805eb ("ath9k: Update QCA953x initvals")
+disabled HW peak detect calibartion on QCA953x 1.0, which
+should also be applied on 2.0.
 
-oh, that looks indeed interesting. The question is now if rfkill is a property 
-of a device or a subdevice itself. The latter one would only require addition 
-of device-tree instantiation of rfkill, while with the former one, the (or 
-all) usb driver(s) need to be modified to accept device tree properties, 
-especially gpios. The driver would then be responsible to add an rfkill 
-"device".
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/ar953x_initvals.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-IMHO (and unfortunately), it's just a property (a way to specify the relevant 
-gpios), making the solution again hard to archive.
-
-Marc
-
---nextPart80904992.30kfgfXpzZ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-Content-Transfer-Encoding: 7Bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAABCAAGBQJWzGHfAAoJEKyeR39HFBtoe1UH/2Fdlh0TLhqjzlJZPxxCRR7l
-wKRa0DnSmn5XD8m2pker+HDU20xIE5mEP8cli1EAewo+GL34jwXvfjxqhxAcoOFT
-oWUFpMsF5WbpmeWmdbr2wG+unPigZu3nPV14QHd4sqzLdmj6WSj0IL3l3ih6GYKy
-Nus0LxYxLjy/RAW0MIu0yeD7s6Bczb6V6n/GwZD6niRbjlvsCzVCUXxpL2H58l7o
-up1Oe/Ve/+DmqUyEHoAN3vcu82f/5dTsfO8eogAEsiw+ufS4np89Jjq9m5GhDwIo
-QudHyg6NlSLN4ZO8FOJKdESHINDP1MzJ+zSNRNrhDyeNp1jDtY9DDbZZztlwNzE=
-=tBpW
------END PGP SIGNATURE-----
-
---nextPart80904992.30kfgfXpzZ--
+diff --git a/drivers/net/wireless/ath/ath9k/ar953x_initvals.h b/drivers/net/wireless/ath/ath9k/ar953x_initvals.h
+index 6fc0d07..eb42fb2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar953x_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar953x_initvals.h
+@@ -923,7 +923,7 @@ static const u32 qca953x_2p0_baseband_postamble[][5] = {
+ 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
+ 	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
+ 	{0x00009e2c, 0x0000001c, 0x0000001c, 0x00000021, 0x00000021},
+-	{0x00009e3c, 0xcfa10820, 0xcfa10820, 0xcf946222, 0xcf946222},
++	{0x00009e3c, 0xcfa10820, 0xcfa10820, 0xcf946220, 0xcf946220},
+ 	{0x00009e44, 0xfe321e27, 0xfe321e27, 0xfe291e27, 0xfe291e27},
+ 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
+ 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
+@@ -943,7 +943,7 @@ static const u32 qca953x_2p0_baseband_postamble[][5] = {
+ 	{0x0000a284, 0x00000000, 0x00000000, 0x00000010, 0x00000010},
+ 	{0x0000a288, 0x00000110, 0x00000110, 0x00000110, 0x00000110},
+ 	{0x0000a28c, 0x00022222, 0x00022222, 0x00022222, 0x00022222},
+-	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
++	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00058d18, 0x00058d18},
+ 	{0x0000a2cc, 0x18c50033, 0x18c43433, 0x18c41033, 0x18c44c33},
+ 	{0x0000a2d0, 0x00041982, 0x00041982, 0x00041982, 0x00041982},
+ 	{0x0000a2d8, 0x7999a83b, 0x7999a83b, 0x7999a83b, 0x7999a83b},
+-- 
+1.9.1
 
