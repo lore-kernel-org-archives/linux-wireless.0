@@ -1,117 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:38599 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750865AbcBKAHp (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:2914 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1422850AbcBZTFO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 10 Feb 2016 19:07:45 -0500
-Received: by mail-ig0-f174.google.com with SMTP id mw1so25923715igb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Feb 2016 16:07:45 -0800 (PST)
+	Fri, 26 Feb 2016 14:05:14 -0500
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v5] ath10k: set MAC timestamp in management Rx frame
+Date: Fri, 26 Feb 2016 11:03:38 -0800
+Message-ID: <5bc6ba3b4d5743dc641b85c2c4233631f5b3319a.1456513260.git.poh@qca.qualcomm.com> (sfid-20160226_200519_129716_289E234E)
 MIME-Version: 1.0
-In-Reply-To: <1455113041-28226-1-git-send-email-royujjal@gmail.com>
-References: <1455113041-28226-1-git-send-email-royujjal@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 11 Feb 2016 11:07:25 +1100
-Message-ID: <CAGRGNgWxcLi2fd+vzxzxmC7rkxV--Or0orK88PNthpFZmwYNAw@mail.gmail.com> (sfid-20160211_010749_029016_CE4D2564)
-Subject: Re: [PATCH] mwifiex: Fixed coding style issues
-To: Ujjal Roy <royujjal@gmail.com>
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	WiFi Mailing List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ujjal,
+Check and set Rx MAC timestamp when firmware indicates it.
+Firmware adds it in Rx beacon frame only at this moment.
+Driver and mac80211 may utilize it to detect such clockdrift
+or beacon collision and use the result for beacon collision
+avoidance.
 
-You should probably split this up into patches for each style
-violation you're fixing, i.e. one for the incorrect indentation of the
-case label, one for the spaces before commas, and one for the missing
-spaces around brackets.
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+---
 
-On Thu, Feb 11, 2016 at 1:04 AM, Ujjal Roy <royujjal@gmail.com> wrote:
-> Some indentation and basic style violations are fixed in this patch.
->
-> Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+v2:
+ - fix kbuild test robot warning, left shift count >= width of type,
+   at __le32_to_cpu(arg.ext_info.rx_mac_timestamp_u32) << 32
+v3:
+ - correct ext_info to start 4-byte aligned
+ - make struct wmi_mgmt_rx_ext_info 4-byte aligned to comply FW's intention
+v4:
+ - fix endianness warnings, restricted __le32 degrades to integer
+v5:
+ - use ALIGN for better read
 
-Either way, this looks sane to me,
+ drivers/net/wireless/ath/ath10k/wmi.c | 15 +++++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h |  8 ++++++++
+ 2 files changed, 23 insertions(+)
 
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-> ---
->  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 +-
->  drivers/net/wireless/marvell/mwifiex/pcie.c     | 2 +-
->  drivers/net/wireless/marvell/mwifiex/uap_cmd.c  | 2 +-
->  drivers/net/wireless/marvell/mwifiex/usb.c      | 4 ++--
->  4 files changed, 5 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> index e7adef7..cb0cf03 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> @@ -676,7 +676,7 @@ mwifiex_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
->                 }
->                 break;
->
-> -               case MWIFIEX_BSS_ROLE_STA:
-> +       case MWIFIEX_BSS_ROLE_STA:
->                 if (priv->media_connected) {
->                         mwifiex_dbg(adapter, ERROR,
->                                     "cannot change wiphy params when connected");
-> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> index 6d0dc40..4d29cce 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
-> @@ -1408,7 +1408,7 @@ mwifiex_pcie_send_boot_cmd(struct mwifiex_adapter *adapter, struct sk_buff *skb)
->                 return -1;
->         }
->
-> -       if (mwifiex_map_pci_memory(adapter, skb, skb->len , PCI_DMA_TODEVICE))
-> +       if (mwifiex_map_pci_memory(adapter, skb, skb->len, PCI_DMA_TODEVICE))
->                 return -1;
->
->         buf_pa = MWIFIEX_SKB_DMA_ADDR(skb);
-> diff --git a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-> index e791166..16d95b2 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-> @@ -192,7 +192,7 @@ mwifiex_set_ht_params(struct mwifiex_private *priv,
->                 }
->                 priv->ap_11n_enabled = 1;
->         } else {
-> -               memset(&bss_cfg->ht_cap , 0, sizeof(struct ieee80211_ht_cap));
-> +               memset(&bss_cfg->ht_cap, 0, sizeof(struct ieee80211_ht_cap));
->                 bss_cfg->ht_cap.cap_info = cpu_to_le16(MWIFIEX_DEF_HT_CAP);
->                 bss_cfg->ht_cap.ampdu_params_info = MWIFIEX_DEF_AMPDU;
->         }
-> diff --git a/drivers/net/wireless/marvell/mwifiex/usb.c b/drivers/net/wireless/marvell/mwifiex/usb.c
-> index e43aff9..0510861 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/usb.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/usb.c
-> @@ -244,9 +244,9 @@ setup_for_next:
->         if (card->rx_cmd_ep == context->ep) {
->                 mwifiex_usb_submit_rx_urb(context, size);
->         } else {
-> -               if (atomic_read(&adapter->rx_pending) <= HIGH_RX_PENDING){
-> +               if (atomic_read(&adapter->rx_pending) <= HIGH_RX_PENDING) {
->                         mwifiex_usb_submit_rx_urb(context, size);
-> -               }else{
-> +               } else {
->                         context->skb = NULL;
->                 }
->         }
-> --
-> 1.9.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 1ce6742..a343e74 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2167,8 +2167,10 @@ static int ath10k_wmi_op_pull_mgmt_rx_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	struct wmi_mgmt_rx_event_v1 *ev_v1;
+ 	struct wmi_mgmt_rx_event_v2 *ev_v2;
+ 	struct wmi_mgmt_rx_hdr_v1 *ev_hdr;
++	struct wmi_mgmt_rx_ext_info *ext_info;
+ 	size_t pull_len;
+ 	u32 msdu_len;
++	u32 len;
+ 
+ 	if (test_bit(ATH10K_FW_FEATURE_EXT_WMI_MGMT_RX, ar->fw_features)) {
+ 		ev_v2 = (struct wmi_mgmt_rx_event_v2 *)skb->data;
+@@ -2195,6 +2197,12 @@ static int ath10k_wmi_op_pull_mgmt_rx_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	if (skb->len < msdu_len)
+ 		return -EPROTO;
+ 
++	if (le32_to_cpu(arg->status) & WMI_RX_STATUS_EXT_INFO) {
++		len = ALIGN(le32_to_cpu(arg->buf_len), 4);
++		ext_info = (struct wmi_mgmt_rx_ext_info *)(skb->data + len);
++		memcpy(&arg->ext_info, ext_info,
++		       sizeof(struct wmi_mgmt_rx_ext_info));
++	}
+ 	/* the WMI buffer might've ended up being padded to 4 bytes due to HTC
+ 	 * trailer with credit update. Trim the excess garbage.
+ 	 */
+@@ -2281,6 +2289,13 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	if (rx_status & WMI_RX_STATUS_ERR_MIC)
+ 		status->flag |= RX_FLAG_MMIC_ERROR;
+ 
++	if (rx_status & WMI_RX_STATUS_EXT_INFO) {
++		status->mactime =
++			__le32_to_cpu(arg.ext_info.rx_mac_timestamp_l32) |
++			(u64)__le32_to_cpu(arg.ext_info.rx_mac_timestamp_u32)
++			<< 32;
++		status->flag |= RX_FLAG_MACTIME_END;
++	}
+ 	/* Hardware can Rx CCK rates on 5GHz. In that case phy_mode is set to
+ 	 * MODE_11B. This means phy_mode is not a reliable source for the band
+ 	 * of mgmt rx.
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 4d3cbc4..f209d51 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -3037,11 +3037,18 @@ struct wmi_10_4_mgmt_rx_event {
+ 	u8 buf[0];
+ } __packed;
+ 
++struct wmi_mgmt_rx_ext_info {
++	__le32 rx_mac_timestamp_l32;
++	__le32 rx_mac_timestamp_u32;
++} __packed __aligned(4);
++
+ #define WMI_RX_STATUS_OK			0x00
+ #define WMI_RX_STATUS_ERR_CRC			0x01
+ #define WMI_RX_STATUS_ERR_DECRYPT		0x08
+ #define WMI_RX_STATUS_ERR_MIC			0x10
+ #define WMI_RX_STATUS_ERR_KEY_CACHE_MISS	0x20
++/* Extension data at the end of mgmt frame */
++#define WMI_RX_STATUS_EXT_INFO		0x40
+ 
+ #define PHY_ERROR_GEN_SPECTRAL_SCAN		0x26
+ #define PHY_ERROR_GEN_FALSE_RADAR_EXT		0x24
+@@ -6116,6 +6123,7 @@ struct wmi_mgmt_rx_ev_arg {
+ 	__le32 phy_mode;
+ 	__le32 buf_len;
+ 	__le32 status; /* %WMI_RX_STATUS_ */
++	struct wmi_mgmt_rx_ext_info ext_info;
+ };
+ 
+ struct wmi_ch_info_ev_arg {
 -- 
-Julian Calaby
+1.9.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
