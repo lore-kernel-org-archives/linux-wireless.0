@@ -1,22 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:32920 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:57161 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932526AbcBBPSR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 10:18:17 -0500
-Message-ID: <1454426294.2926.12.camel@sipsolutions.net> (sfid-20160202_161820_431303_800EB425)
-Subject: Re: [PATCH 1/3] mac80211: move A-MSDU skb_linearize call to
- ieee80211_amsdu_to_8023s
+	id S1752365AbcBZJsB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Feb 2016 04:48:01 -0500
+Message-ID: <1456480074.5284.0.camel@sipsolutions.net> (sfid-20160226_104810_817396_0D7D9C5D)
+Subject: Re: [PATCH] mac80211_hwsim: Set global RRM capability
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Date: Tue, 02 Feb 2016 16:18:14 +0100
-In-Reply-To: <1454420350-8313-1-git-send-email-nbd@openwrt.org>
-References: <1454420350-8313-1-git-send-email-nbd@openwrt.org>
+To: Fengguang Wu <lkp@intel.com>, Kalle Valo <kvalo@codeaurora.org>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>, kbuild-all@01.org,
+	linux-wireless@vger.kernel.org,
+	David Spinadel <david.spinadel@intel.com>,
+	"Ye, Xiaolong" <xiaolong.ye@intel.com>
+Date: Fri, 26 Feb 2016 10:47:54 +0100
+In-Reply-To: <20160226081836.GA6470@wfg-t540p.sh.intel.com>
+References: <201602251751.QT2WO50c%fengguang.wu@intel.com>
+	 <87y4a8lz44.fsf@purkki.adurom.net>
+	 <20160226081836.GA6470@wfg-t540p.sh.intel.com>
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-all three applied, I fixed some whitespace damage (bad indent) on the
-last patch
+On Fri, 2016-02-26 at 16:18 +0800, Fengguang Wu wrote:
+> 
+> > I think this build failure is because mac80211_hwsim is an
+> > exception to
+> > other wireless drivers and is applied via mac80211-next. Should we
+> > add
+> > an entry for mac80211_hwsim to MAINTAINERS with the correct git
+> > tree? I
+> > think kbuild test robot follows MAINTAINERS file nowdays (or at
+> > least I
+> > understood that's the plan).
+> 
+> That's right. The robot parses MAINTAINERS when judging which tree
+> to apply LKML patches to.
+> 
+
+Great. I'll add a commit to make mac80211_hwsim just part of the
+MAC80211 entry.
 
 johannes
