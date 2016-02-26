@@ -1,66 +1,161 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57181 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759164AbcBYJ77 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2016 04:59:59 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: linux-wireless@vger.kernel.org,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	brcm80211-dev-list@broadcom.com, <stable@vger.kernel.org>
-Subject: Re: [PATCH] brcmfmac: Increase nr of supported flowrings.
-References: <1454886030-16406-1-git-send-email-zajec5@gmail.com>
-Date: Thu, 25 Feb 2016 11:59:53 +0200
-In-Reply-To: <1454886030-16406-1-git-send-email-zajec5@gmail.com>
- (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Mon, 8 Feb 2016
- 00:00:30 +0100")
-Message-ID: <871t81f6ue.fsf@kamboji.qca.qualcomm.com> (sfid-20160225_110006_740890_2FBD6031)
+Received: from arrakis.dune.hu ([78.24.191.176]:44547 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1422745AbcBZQs6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Feb 2016 11:48:58 -0500
+Subject: Re: [RFC/RFT] mac80211: implement fq_codel for software queuing
+To: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless@vger.kernel.org
+References: <1456492163-11437-1-git-send-email-michal.kazior@tieto.com>
+Cc: johannes@sipsolutions.net, netdev@vger.kernel.org,
+	eric.dumazet@gmail.com, dave.taht@gmail.com,
+	emmanuel.grumbach@intel.com, Tim Shepard <shep@alum.mit.edu>
+From: Felix Fietkau <nbd@openwrt.org>
+Message-ID: <56D081F1.3030801@openwrt.org> (sfid-20160226_175110_135318_FA5004C8)
+Date: Fri, 26 Feb 2016 17:48:49 +0100
 MIME-Version: 1.0
+In-Reply-To: <1456492163-11437-1-git-send-email-michal.kazior@tieto.com>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
+On 2016-02-26 14:09, Michal Kazior wrote:
+> Since 11n aggregation become important to get the
+> best out of txops. However aggregation inherently
+> requires buffering and queuing. Once variable
+> medium conditions to different associated stations
+> is considered it became apparent that bufferbloat
+> can't be simply fought with qdiscs for wireless
+> drivers. 11ac with MU-MIMO makes the problem
+> worse because the bandwidth-delay product becomes
+> even greater.
+> 
+> This bases on codel5 and sch_fq_codel.c. It may
+> not be the Right Thing yet but it should at least
+> provide a framework for more improvements.
+Nice work!
 
-> From: Hante Meuleman <meuleman@broadcom.com>
->
-> New generation devices have firmware which has more than 256 flowrings.
-> E.g. following debugging message comes from 14e4:4365 BCM4366:
-> [  194.606245] brcmfmac: brcmf_pcie_init_ringbuffers Nr of flowrings is 264
->
-> At various code places (related to flowrings) we were using u8 which
-> could lead to storing wrong number or infinite loops when indexing with
-> this type. This issue was quite easy to spot in brcmf_flowring_detach
-> where it led to infinite loop e.g. on failed initialization.
->
-> This patch switches code to proper types and increases the maximum
-> number of supported flowrings to 512.
->
-> Originally this change was sent in September 2015, but back it was
-> causing a regression on BCM43602 resulting in:
-> Unable to handle kernel NULL pointer dereference at virtual address ...
->
-> The reason for this regression was missing update (s/u8/u16) of struct
-> brcmf_flowring_ring. This problem was handled in 9f64df9 ("brcmfmac: Fix
-> bug in flowring management."). Starting with that it's safe to apply
-> this original patch as it doesn't cause a regression anymore.
->
-> This patch fixes an infinite loop on BCM4366 which is supported since
-> 4.4 so it makes sense to apply it to stable 4.4+.
->
-> Cc: <stable@vger.kernel.org> # 4.4+
-> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+> I guess dropping rate could factor in per-station
+> rate control info but I don't know how this should
+> exactly be done. HW rate control drivers would
+> need extra work to take advantage of this.
+> 
+> This obviously works only with drivers that use
+> wake_tx_queue op.
+> 
+> Note: This uses IFF_NO_QUEUE to get rid of qdiscs
+> for wireless drivers that use mac80211 and
+> implement wake_tx_queue op.
+> 
+> Moreover the current txq_limit and latency setting
+> might need tweaking. Either from userspace or be
+> dynamically scaled with regard to, e.g. number of
+> associated stations.
+> 
+> FWIW This already works nicely with ath10k's (not
+> yey merged) pull-push congestion control for
+> MU-MIMO as far as throughput is concerned.
+> 
+> Evaluating latency improvements is a little tricky
+> at this point if a driver is using more queue
+> layering and/or its firmware controls tx
+> scheduling - hence I don't have any solid data on
+> this. I'm open for suggestions though.
+> 
+> It might also be a good idea to do the following
+> in the future:
+> 
+>  - make generic tx scheduling which does some RR
+>    over per-sta-tid queues and dequeues bursts of
+>    packets to form a PPDU to fit into designated
+>    txop timeframe and bytelimit
+> 
+>    This could in theory be shared and used by
+>    ath9k and (future) mt76.
+> 
+>    Moreover tx scheduling could factor in rate
+>    control info and keep per-station number of
+>    queued packets at a sufficient low threshold to
+>    avoid queue buildup for slow stations. Emmanuel
+>    already did similar experiment for iwlwifi's
+>    station mode and got promising results.
+> 
+>  - make software queueing default internally in
+>    mac80211. This could help other drivers to get
+>    at least some benefit from mac80211 smarter
+>    queueing.
+> 
+> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> ---
+>  include/net/mac80211.h     |  36 ++++-
+>  net/mac80211/agg-tx.c      |   8 +-
+>  net/mac80211/codel.h       | 260 +++++++++++++++++++++++++++++++
+>  net/mac80211/codel_i.h     |  89 +++++++++++
+>  net/mac80211/ieee80211_i.h |  27 +++-
+>  net/mac80211/iface.c       |  25 ++-
+>  net/mac80211/main.c        |   9 +-
+>  net/mac80211/rx.c          |   2 +-
+>  net/mac80211/sta_info.c    |  10 +-
+>  net/mac80211/sta_info.h    |  27 ++++
+>  net/mac80211/tx.c          | 370 ++++++++++++++++++++++++++++++++++++++++-----
+>  net/mac80211/util.c        |  20 ++-
+>  12 files changed, 805 insertions(+), 78 deletions(-)
+>  create mode 100644 net/mac80211/codel.h
+>  create mode 100644 net/mac80211/codel_i.h
+> 
 
-Applied manually, thanks.
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index af584f7cdd63..f42f898cb8b5 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> + [...]
+> +static void ieee80211_txq_enqueue(struct ieee80211_local *local,
+> +				  struct txq_info *txqi,
+> +				  struct sk_buff *skb)
+> +{
+> +	struct ieee80211_fq *fq = &local->fq;
+> +	struct ieee80211_hw *hw = &local->hw;
+> +	struct txq_flow *flow;
+> +	struct txq_flow *i;
+> +	size_t idx = fq_hash(fq, skb);
+> +
+> +	flow = &fq->flows[idx];
+> +
+> +	if (flow->txqi)
+> +		flow = &txqi->flow;
+I'm not sure I understand this part correctly, but shouldn't that be:
+	if (flow->txqi && flow->txqi != txqi)
 
--- 
-Kalle Valo
+> +
+> +	/* The following overwrites `vif` pointer effectively. It is later
+> +	 * restored using txq structure.
+> +	 */
+> +	IEEE80211_SKB_CB(skb)->control.enqueue_time = codel_get_time();
+> +
+> +	flow->txqi = txqi;
+> +	flow->backlog += skb->len;
+> +	txqi->backlog_bytes += skb->len;
+> +	txqi->backlog_packets++;
+> +	fq->backlog++;
+> +
+> +	if (list_empty(&flow->backlogchain))
+> +		i = list_last_entry(&fq->backlogs, struct txq_flow, backlogchain);
+> +	else
+> +		i = flow;
+> +
+> +	list_for_each_entry_continue_reverse(i, &fq->backlogs, backlogchain)
+> +		if (i->backlog > flow->backlog)
+> +			break;
+> +
+> +	list_move(&flow->backlogchain, &i->backlogchain);
+> +
+> +	if (list_empty(&flow->flowchain)) {
+> +		flow->deficit = fq->quantum;
+> +		list_add_tail(&flow->flowchain, &txqi->new_flows);
+> +	}
+> +
+> +	__skb_queue_tail(&flow->queue, skb);
+> +
+> +	if (fq->backlog > hw->txq_limit)
+> +		fq_drop(local);
+> +}
