@@ -1,49 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f172.google.com ([209.85.223.172]:33141 "EHLO
-	mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752906AbcBCAy7 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60825 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932334AbcBZILK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 19:54:59 -0500
-MIME-Version: 1.0
-In-Reply-To: <CAOxTRzoGkNUy2FRUQLg_01D5p6Bjxfs+w8iEJJrkM2pTdkdC5Q@mail.gmail.com>
-References: <20160202154855.GA8990@gmail.com> <CAGRGNgVHEsA693tQxf0Mv_4wSu-4wG7sphhRRB0gbU6o9nzZ_Q@mail.gmail.com>
- <CAOxTRzoGkNUy2FRUQLg_01D5p6Bjxfs+w8iEJJrkM2pTdkdC5Q@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 3 Feb 2016 11:54:38 +1100
-Message-ID: <CAGRGNgXuCfpRVuM7Dxt9QT9TGW1zt9Qh+pqSPJ_X5zHq3A4v4w@mail.gmail.com> (sfid-20160203_015534_707068_C9082465)
-Subject: Re: [PATCH] rtlwifi: Fix reusable codes in core.c
-To: ByeoungWook Kim <quddnr145@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 26 Feb 2016 03:11:10 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 12/13] ath9k: use AR_SREV_9003_PCOEM to identify PCOEM chips
+Date: Fri, 26 Feb 2016 16:08:42 +0800
+Message-Id: <1456474123-10520-13-git-send-email-miaoqing@codeaurora.org> (sfid-20160226_091116_696408_2EC38D8F)
+In-Reply-To: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
+References: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi ByeoungWook,
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-On Wed, Feb 3, 2016 at 11:52 AM, ByeoungWook Kim <quddnr145@gmail.com> wrote:
-> Hi Julian,
->
-> 0xfe and 0xfb was not same codes.
-> 0xfe is udelay(50). and 0xfb is mdelay(50).
-> It same code like udelay((n) * 1000).
+commit f49c90db4d23 ("ath9k: Add a macro to identify PCOEM chips")
+defined AR_SREV_9003_PCOEM macro, its more clear to use the macro
+instead of checking one by one. Also removed PCOEM chips checking
+in the callback of ar9003_hw_do_pcoem_manual_peak_cal() which only
+for PCOEM chips.
 
-I'm clearly blind! Sorry about that!
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-> but i agree with your answers of some parts. I think that i should divide
-> into separate patch.
-> Thanks for your assists!
-
-Not a problem!
-
-Thanks,
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_calib.c b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+index 99bc1a6..e1573ab 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_calib.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_calib.c
+@@ -1311,9 +1311,6 @@ static void ar9003_hw_do_pcoem_manual_peak_cal(struct ath_hw *ah,
+ 	struct ath9k_hw_cal_data *caldata = ah->caldata;
+ 	int i;
+ 
+-	if (!AR_SREV_9462(ah) && !AR_SREV_9565(ah) && !AR_SREV_9485(ah))
+-		return;
+-
+ 	if ((ah->caps.hw_caps & ATH9K_HW_CAP_RTT) && !run_rtt_cal)
+ 		return;
+ 
+@@ -1707,7 +1704,7 @@ void ar9003_hw_attach_calib_ops(struct ath_hw *ah)
+ 	struct ath_hw_private_ops *priv_ops = ath9k_hw_private_ops(ah);
+ 	struct ath_hw_ops *ops = ath9k_hw_ops(ah);
+ 
+-	if (AR_SREV_9485(ah) || AR_SREV_9462(ah) || AR_SREV_9565(ah))
++	if (AR_SREV_9003_PCOEM(ah))
+ 		priv_ops->init_cal = ar9003_hw_init_cal_pcoem;
+ 	else
+ 		priv_ops->init_cal = ar9003_hw_init_cal_soc;
 -- 
-Julian Calaby
+1.9.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
