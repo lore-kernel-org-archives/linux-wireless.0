@@ -1,44 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:47951 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755534AbcBCXEa (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:60515 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753462AbcBZIKK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 18:04:30 -0500
-Date: Wed, 3 Feb 2016 15:04:29 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Cc: Johnny Kim <johnny.kim@atmel.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-	ldv-project@linuxtesting.org
-Subject: Re: [PATCH v3] staging: wilc1000: fix double mutex_unlock on failure
- path in wilc_wlan_cleanup()
-Message-ID: <20160203230429.GA17828@kroah.com> (sfid-20160204_000449_141306_46DF19B4)
-References: <20151221212202.GA11670@kroah.com>
- <1450805966-9193-1-git-send-email-khoroshilov@ispras.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1450805966-9193-1-git-send-email-khoroshilov@ispras.ru>
+	Fri, 26 Feb 2016 03:10:10 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 00/13] disable hw peak cal for all ar9300 chips
+Date: Fri, 26 Feb 2016 16:08:30 +0800
+Message-Id: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org> (sfid-20160226_091015_672931_927FA66A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Dec 22, 2015 at 08:39:26PM +0300, Alexey Khoroshilov wrote:
-> If hif_read_reg() or hif_write_reg() fail in wilc_wlan_cleanup(),
-> it calls release_bus() and continues execution. But it leads to double
-> release_bus() call that means double unlock of g_linux_wlan->hif_cs mutex.
-> 
-> Found by Linux Driver Verification project (linuxtesting.org).
-> 
-> Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
-> ---
->  drivers/staging/wilc1000/wilc_wlan.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-Why is this 'v3'?  What changed from the other versions?  Please always
-document it below the --- line so that we have a chance when reviewing
-them.
+HW peak detect calibration would fail for AR9300 chips and
+we went for implementing the SW way of doing it instead of
+HW doing the peak detect calibration.
 
-Please fix up and resend with that information.
+Miaoqing Pan (13):
+  ath9k: Update QCA953x initvals
+  ath9k: Update AR9003 2.2 initvals
+  ath9k: Update AR933x initvals
+  ath9k: Update AR9340 initvals
+  ath9k: Update AR9462 initvals
+  ath9k: Update AR9485 initvals
+  ath9k: Update AR955x initvals
+  ath9k: Update AR9565 initvals
+  ath9k: Update QCA956x initvals
+  ath9k: Update AR9580 initvals
+  ath9k: enable manual peak cal for all ar9300 chips
+  ath9k: use AR_SREV_9003_PCOEM to identify PCOEM chips
+  ath9k: set correct peak detect threshold
 
-thanks,
+ .../net/wireless/ath/ath9k/ar9003_2p2_initvals.h   |  4 +-
+ drivers/net/wireless/ath/ath9k/ar9003_calib.c      | 44 +++++++++-------------
+ .../net/wireless/ath/ath9k/ar9330_1p1_initvals.h   |  4 +-
+ .../net/wireless/ath/ath9k/ar9330_1p2_initvals.h   |  4 +-
+ drivers/net/wireless/ath/ath9k/ar9340_initvals.h   |  4 +-
+ .../net/wireless/ath/ath9k/ar9462_2p0_initvals.h   |  4 +-
+ .../net/wireless/ath/ath9k/ar9462_2p1_initvals.h   |  4 +-
+ drivers/net/wireless/ath/ath9k/ar9485_initvals.h   |  4 +-
+ drivers/net/wireless/ath/ath9k/ar953x_initvals.h   |  4 +-
+ .../net/wireless/ath/ath9k/ar955x_1p0_initvals.h   |  2 +-
+ .../net/wireless/ath/ath9k/ar9565_1p0_initvals.h   |  2 +-
+ drivers/net/wireless/ath/ath9k/ar956x_initvals.h   |  2 +-
+ .../net/wireless/ath/ath9k/ar9580_1p0_initvals.h   |  4 +-
+ 13 files changed, 39 insertions(+), 47 deletions(-)
 
-greg k-h
+-- 
+1.9.1
+
