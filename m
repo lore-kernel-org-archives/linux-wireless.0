@@ -1,121 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:10549 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966103AbcBDJ1b (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:53644 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751364AbcBZTHG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:27:31 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH RESEND 37/70] staging: wilc1000: Optimize code of wilc_get_chipid function
-Date: Thu, 4 Feb 2016 18:15:54 +0900
-Message-ID: <1454577387-509-38-git-send-email-glen.lee@atmel.com> (sfid-20160204_102738_285257_B1FA07E6)
-In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
+	Fri, 26 Feb 2016 14:07:06 -0500
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH] ath10k: parse Rx MAC timestamp in mgmt frame for FW 10.4
+Date: Fri, 26 Feb 2016 11:05:31 -0800
+Message-ID: <1456513531-14528-1-git-send-email-poh@qca.qualcomm.com> (sfid-20160226_200711_234394_F3BC59A5)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+Check and parse Rx MAC timestamp when firmware sets its flag
+to status variable.
+10.4 firmware adds it in Rx beacon frame only at this moment.
+Drivers and mac80211 may utilize it to detect such clockdrift
+or beacon collision and use the result for beacon collision
+avoidance.
 
-This patch optimize code of wilc_get_chipid function.
-u8 type changed to boolean type and removed unnecessary if statement.
-
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c   |  4 ++--
- drivers/staging/wilc1000/wilc_wlan.c    | 19 +++++++------------
- drivers/staging/wilc1000/wilc_wlan_if.h |  2 +-
- 3 files changed, 10 insertions(+), 15 deletions(-)
+ drivers/net/wireless/ath/ath10k/wmi.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 22a2f98..9e5dea4 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -388,7 +388,7 @@ int wilc_wlan_get_firmware(struct net_device *dev)
- 	vif = netdev_priv(dev);
- 	wilc = vif->wilc;
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 1ce6742..94968d6 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2211,6 +2211,8 @@ static int ath10k_wmi_10_4_op_pull_mgmt_rx_ev(struct ath10k *ar,
+ 	struct wmi_10_4_mgmt_rx_hdr *ev_hdr;
+ 	size_t pull_len;
+ 	u32 msdu_len;
++	struct wmi_mgmt_rx_ext_info *ext_info;
++	u32 len;
  
--	chip_id = wilc_get_chipid(wilc, 0);
-+	chip_id = wilc_get_chipid(wilc, false);
+ 	ev = (struct wmi_10_4_mgmt_rx_event *)skb->data;
+ 	ev_hdr = &ev->hdr;
+@@ -2231,6 +2233,13 @@ static int ath10k_wmi_10_4_op_pull_mgmt_rx_ev(struct ath10k *ar,
+ 	if (skb->len < msdu_len)
+ 		return -EPROTO;
  
- 	if (chip_id < 0x1003a0)
- 		firmware = FIRMWARE_1002;
-@@ -475,7 +475,7 @@ static int linux_wlan_init_test_config(struct net_device *dev,
- 	wilc_get_mac_address(vif, mac_add);
++	if (le32_to_cpu(arg->status) & WMI_RX_STATUS_EXT_INFO) {
++		len = ALIGN(le32_to_cpu(arg->buf_len), 4);
++		ext_info = (struct wmi_mgmt_rx_ext_info *)(skb->data + len);
++		memcpy(&arg->ext_info, ext_info,
++		       sizeof(struct wmi_mgmt_rx_ext_info));
++	}
++
+ 	/* Make sure bytes added for padding are removed. */
+ 	skb_trim(skb, msdu_len);
  
- 	netdev_dbg(dev, "MAC address is : %pM\n", mac_add);
--	wilc_get_chipid(wilc, 0);
-+	wilc_get_chipid(wilc, false);
- 
- 	*(int *)c_val = 1;
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index dc26322..46087e2 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -1441,36 +1441,31 @@ static u32 init_chip(struct net_device *dev)
- 	return ret;
- }
- 
--u32 wilc_get_chipid(struct wilc *wilc, u8 update)
-+u32 wilc_get_chipid(struct wilc *wilc, bool update)
- {
- 	static u32 chipid;
- 	u32 tempchipid = 0;
--	u32 rfrevid;
-+	u32 rfrevid = 0;
- 
--	if (chipid == 0 || update != 0) {
-+	if (chipid == 0 || update) {
- 		wilc->hif_func->hif_read_reg(wilc, 0x1000, &tempchipid);
- 		wilc->hif_func->hif_read_reg(wilc, 0x13f4, &rfrevid);
- 		if (!ISWILC1000(tempchipid)) {
- 			chipid = 0;
--			goto _fail_;
-+			return chipid;
- 		}
- 		if (tempchipid == 0x1002a0) {
--			if (rfrevid == 0x1) {
--			} else {
-+			if (rfrevid != 0x1)
- 				tempchipid = 0x1002a1;
--			}
- 		} else if (tempchipid == 0x1002b0) {
--			if (rfrevid == 3) {
--			} else if (rfrevid == 4) {
-+			if (rfrevid == 0x4)
- 				tempchipid = 0x1002b1;
--			} else {
-+			else if (rfrevid != 0x3)
- 				tempchipid = 0x1002b2;
--			}
- 		}
- 
- 		chipid = tempchipid;
- 	}
--_fail_:
- 	return chipid;
- }
- 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 294552d..269c56e 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -921,6 +921,6 @@ struct wilc;
- int wilc_wlan_init(struct net_device *dev);
- void wilc_bus_set_max_speed(void);
- void wilc_bus_set_default_speed(void);
--u32 wilc_get_chipid(struct wilc *wilc, u8 update);
-+u32 wilc_get_chipid(struct wilc *wilc, bool update);
- 
- #endif
 -- 
 1.9.1
 
