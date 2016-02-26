@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26306 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933479AbcBSLFA (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:56423 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752036AbcBZHRT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 19 Feb 2016 06:05:00 -0500
-Date: Fri, 19 Feb 2016 14:04:33 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Leo Kim <leo.kim@atmel.com>
-Cc: gregkh@linuxfoundation.org, devel@driverdev.osuosl.org,
-	Chris.Park@atmel.com, austin.shin@atmel.com,
-	linux-wireless@vger.kernel.org, Nicolas.FERRE@atmel.com,
-	tony.cho@atmel.com, adham.abozaeid@atmel.com
-Subject: Re: [PATCH 4/6] staging: wilc1000: removes unnecessary wilc_debug
- print log
-Message-ID: <20160219110433.GQ32153@mwanda> (sfid-20160219_120505_726048_2FF6D2D8)
-References: <1455871032-7625-1-git-send-email-leo.kim@atmel.com>
- <1455871032-7625-4-git-send-email-leo.kim@atmel.com>
+	Fri, 26 Feb 2016 02:17:19 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: kbuild test robot <lkp@intel.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>, kbuild-all@01.org,
+	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
+	David Spinadel <david.spinadel@intel.com>
+Subject: Re: [PATCH] mac80211_hwsim: Set global RRM capability
+References: <201602251751.QT2WO50c%fengguang.wu@intel.com>
+Date: Fri, 26 Feb 2016 09:17:15 +0200
+In-Reply-To: <201602251751.QT2WO50c%fengguang.wu@intel.com> (kbuild test
+	robot's message of "Thu, 25 Feb 2016 18:01:41 +0800")
+Message-ID: <87y4a8lz44.fsf@purkki.adurom.net> (sfid-20160226_081724_038232_35D5DD0F)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1455871032-7625-4-git-send-email-leo.kim@atmel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 19, 2016 at 05:37:10PM +0900, Leo Kim wrote:
-> This patch removes unnecessary wilc_debug print log.
-> The print log was written when if condition fail.
-> The condition is chip-id check function.
-> Also, replaces this condition with normal function.
-> 
-> Signed-off-by: Leo Kim <leo.kim@atmel.com>
-> ---
->  drivers/staging/wilc1000/wilc_wlan.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-> index a51c66b..4873106 100644
-> --- a/drivers/staging/wilc1000/wilc_wlan.c
-> +++ b/drivers/staging/wilc1000/wilc_wlan.c
-> @@ -508,9 +508,7 @@ void chip_wakeup(struct wilc *wilc)
->  
->  			do {
->  				usleep_range(2 * 1000, 2 * 1000);
-> -				if ((wilc_get_chipid(wilc, true) == 0))
-> -					wilc_debug(N_ERR, "Couldn't read chip id. Wake up failed\n");
-> -
-> +				wilc_get_chipid(wilc, true);
+kbuild test robot <lkp@intel.com> writes:
 
-Why do we need this function when we call it again on the next line?
+> Hi David,
+>
+> [auto build test ERROR on wireless-drivers-next/master]
+> [also build test ERROR on v4.5-rc5 next-20160224]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
+>
+> url:    https://github.com/0day-ci/linux/commits/Emmanuel-Grumbach/mac80211_hwsim-Set-global-RRM-capability/20160225-172733
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
+> config: sparc64-allyesconfig (attached as .config)
+> reproduce:
+>         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         # save the attached .config to linux build tree
+>         make.cross ARCH=sparc64 
+>
+> All errors (new ones prefixed by >>):
+>
+>    drivers/net/wireless/mac80211_hwsim.c: In function 'mac80211_hwsim_new_radio':
+>>> drivers/net/wireless/mac80211_hwsim.c:2462:35: error: 'NL80211_EXT_FEATURE_RRM' undeclared (first use in this function)
+>      wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_RRM);
+>                                       ^
+>    drivers/net/wireless/mac80211_hwsim.c:2462:35: note: each undeclared identifier is reported only once for each function it appears in
 
->  			} while ((wilc_get_chipid(wilc, true) == 0) && ((++trials % 3) == 0));
-                                  ^^^^^^^^^^^^^^^
+I think this build failure is because mac80211_hwsim is an exception to
+other wireless drivers and is applied via mac80211-next. Should we add
+an entry for mac80211_hwsim to MAINTAINERS with the correct git tree? I
+think kbuild test robot follows MAINTAINERS file nowdays (or at least I
+understood that's the plan).
 
-Also what the heck is ((++trials % 3) == 0))???  It looks like we are
-supposed to retry 3 times but actually we don't retry at all.  :P
-
-regards,
-dan carpenter
-
+-- 
+Kalle Valo
