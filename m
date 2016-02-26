@@ -1,81 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46719 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751203AbcB2WFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:55 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 038/113] rtl8xxxu: Handle S0S1 register in lc_calibrate()
-Date: Mon, 29 Feb 2016 17:04:36 -0500
-Message-Id: <1456783551-28315-39-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_231001_257753_5A478A30)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:16422 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755035AbcBZUNM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Feb 2016 15:13:12 -0500
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v2 1/3] cfg80211: Allow a scan request for a specific BSSID
+Date: Fri, 26 Feb 2016 22:12:47 +0200
+Message-ID: <1456517569-27235-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20160226_211325_986179_E24E1F24)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+This allows scans for a specific BSSID to be optimized by the user space
+application by requesting the driver to set the Probe Request frame
+BSSID field (Address 3) to the specified BSSID instead of the wildcard
+BSSID. This prevents other APs from replying which reduces airtime need
+and latency in getting the response from the target AP through.
 
-Newer chips (8723bu/8192eu) has S0S1 settings which needs to be dealt
-with during LC calibration.
+This is an optimization and as such, it is acceptable for some of the
+drivers not to support the mechanism. If not supported, the wildcard
+BSSID will be used and more responses may be received.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 7 +++++++
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 1 +
- 2 files changed, 8 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index b2aa723..c990a09 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -4835,12 +4835,17 @@ static void rtl8723a_phy_lc_calibrate(struct rtl8xxxu_priv *priv)
- 	}
+Notes:
+    v2: Updated two forgotten rdev_scan() callers
+
+ include/net/cfg80211.h       | 2 ++
+ include/uapi/linux/nl80211.h | 4 +++-
+ net/wireless/nl80211.c       | 6 ++++++
+ net/wireless/scan.c          | 2 ++
+ net/wireless/sme.c           | 2 ++
+ 5 files changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9e1b24c..14c0c43 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1455,6 +1455,7 @@ struct cfg80211_ssid {
+  * @mac_addr_mask: MAC address mask used with randomisation, bits that
+  *	are 0 in the mask should be randomised, bits that are 1 should
+  *	be taken from the @mac_addr
++ * @bssid: BSSID to scan for (most commonly, the wildcard BSSID)
+  */
+ struct cfg80211_scan_request {
+ 	struct cfg80211_ssid *ssids;
+@@ -1471,6 +1472,7 @@ struct cfg80211_scan_request {
  
- 	/* Start LC calibration */
-+	if (priv->fops->has_s0s1)
-+		rtl8xxxu_write_rfreg(priv, RF_A, RF6052_REG_S0S1, 0xdfbe0);
- 	val32 = rtl8xxxu_read_rfreg(priv, RF_A, RF6052_REG_MODE_AG);
- 	val32 |= 0x08000;
- 	rtl8xxxu_write_rfreg(priv, RF_A, RF6052_REG_MODE_AG, val32);
+ 	u8 mac_addr[ETH_ALEN] __aligned(2);
+ 	u8 mac_addr_mask[ETH_ALEN] __aligned(2);
++	u8 bssid[ETH_ALEN] __aligned(2);
  
- 	msleep(100);
+ 	/* internal */
+ 	struct wiphy *wiphy;
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 5a30a75..23bf066 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -322,7 +322,9 @@
+  * @NL80211_CMD_GET_SCAN: get scan results
+  * @NL80211_CMD_TRIGGER_SCAN: trigger a new scan with the given parameters
+  *	%NL80211_ATTR_TX_NO_CCK_RATE is used to decide whether to send the
+- *	probe requests at CCK rate or not.
++ *	probe requests at CCK rate or not. %NL80211_ATTR_MAC can be used to
++ *	specify a BSSID to scan for; if not included, the wildcard BSSID will
++ *	be used.
+  * @NL80211_CMD_NEW_SCAN_RESULTS: scan notification (as a reply to
+  *	NL80211_CMD_GET_SCAN and on the "scan" multicast group)
+  * @NL80211_CMD_SCAN_ABORTED: scan was aborted, for unspecified reasons,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 98c9242..1b43f78 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -5996,6 +5996,12 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 	request->no_cck =
+ 		nla_get_flag(info->attrs[NL80211_ATTR_TX_NO_CCK_RATE]);
  
-+	if (priv->fops->has_s0s1)
-+		rtl8xxxu_write_rfreg(priv, RF_A, RF6052_REG_S0S1, 0xdffe0);
++	if (info->attrs[NL80211_ATTR_MAC])
++		memcpy(request->bssid, nla_data(info->attrs[NL80211_ATTR_MAC]),
++		       ETH_ALEN);
++	else
++		eth_broadcast_addr(request->bssid);
 +
- 	/* Restore original parameters */
- 	if (lstf & OFDM_LSTF_MASK) {
- 		/* Path-A */
-@@ -7359,6 +7364,7 @@ static struct rtl8xxxu_fileops rtl8723bu_fops = {
- 	.writeN_block_size = 1024,
- 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
- 	.mbox_ext_width = 4,
-+	.has_s0s1 = 1,
- 	.adda_1t_init = 0x01c00014,
- 	.adda_1t_path_on = 0x01c00014,
- 	.adda_2t_path_on_a = 0x01c00014,
-@@ -7393,6 +7399,7 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
- 	.writeN_block_size = 128,
- 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
- 	.mbox_ext_width = 4,
-+	.has_s0s1 = 1,
- 	.adda_1t_init = 0x0fc01616,
- 	.adda_1t_path_on = 0x0fc01616,
- 	.adda_2t_path_on_a = 0x0fc01616,
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 76398de..4a974a6 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -855,6 +855,7 @@ struct rtl8xxxu_fileops {
- 	int writeN_block_size;
- 	u16 mbox_ext_reg;
- 	char mbox_ext_width;
-+	char has_s0s1;
- 	u32 adda_1t_init;
- 	u32 adda_1t_path_on;
- 	u32 adda_2t_path_on_a;
+ 	request->wdev = wdev;
+ 	request->wiphy = &rdev->wiphy;
+ 	request->scan_start = jiffies;
+diff --git a/net/wireless/scan.c b/net/wireless/scan.c
+index 14d5369..50ea8e3 100644
+--- a/net/wireless/scan.c
++++ b/net/wireless/scan.c
+@@ -1293,6 +1293,8 @@ int cfg80211_wext_siwscan(struct net_device *dev,
+ 		if (wiphy->bands[i])
+ 			creq->rates[i] = (1 << wiphy->bands[i]->n_bitrates) - 1;
+ 
++	eth_broadcast_addr(creq->bssid);
++
+ 	rdev->scan_req = creq;
+ 	err = rdev_scan(rdev, creq);
+ 	if (err) {
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 5445581..65882d2 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -119,6 +119,8 @@ static int cfg80211_conn_scan(struct wireless_dev *wdev)
+ 		wdev->conn->params.ssid_len);
+ 	request->ssids[0].ssid_len = wdev->conn->params.ssid_len;
+ 
++	eth_broadcast_addr(request->bssid);
++
+ 	request->wdev = wdev;
+ 	request->wiphy = &rdev->wiphy;
+ 	request->scan_start = jiffies;
 -- 
-2.5.0
+1.9.1
 
