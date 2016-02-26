@@ -1,166 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52264 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752900AbcB2WFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:55 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 048/113] rtl8xxxu: Add rtl8723bu (nextgen) rx descriptor definition
-Date: Mon, 29 Feb 2016 17:04:46 -0500
-Message-Id: <1456783551-28315-49-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_231000_673248_0D7B8BC7)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60782 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932334AbcBZILA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Feb 2016 03:11:00 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 10/13] ath9k: Update AR9580 initvals
+Date: Fri, 26 Feb 2016 16:08:40 +0800
+Message-Id: <1456474123-10520-11-git-send-email-miaoqing@codeaurora.org> (sfid-20160226_091103_770402_067BCCBC)
+In-Reply-To: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
+References: <1456474123-10520-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-The nextgen chips use a slightly different RX descriptor format. This
-adds support for the new format.
+HW peak detect calibration would fail for AR9300 chips and
+we went for implementing the SW way of doing it instead of
+HW doing the peak detect calibration.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 125 +++++++++++++++++++++++
- 1 file changed, 125 insertions(+)
+ drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 5a6b223..a8a4f2b 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -197,6 +197,131 @@ struct rtl8xxxu_rx_desc {
- #endif
- };
- 
-+struct rtl8723bu_rx_desc {
-+#ifdef __LITTLE_ENDIAN
-+	u32 pktlen:14;
-+	u32 crc32:1;
-+	u32 icverr:1;
-+	u32 drvinfo_sz:4;
-+	u32 security:3;
-+	u32 qos:1;
-+	u32 shift:2;
-+	u32 phy_stats:1;
-+	u32 swdec:1;
-+	u32 ls:1;
-+	u32 fs:1;
-+	u32 eor:1;
-+	u32 own:1;
-+
-+	u32 macid:7;
-+	u32 dummy1_0:1;
-+	u32 tid:4;
-+	u32 dummy1_1:1;
-+	u32 amsdu:1;
-+	u32 rxid_match:1;
-+	u32 paggr:1;
-+	u32 a1fit:4;	/* 16 */
-+	u32 chkerr:1;
-+	u32 ipver:1;
-+	u32 tcpudp:1;
-+	u32 chkvld:1;
-+	u32 pam:1;
-+	u32 pwr:1;
-+	u32 more_data:1;
-+	u32 more_frag:1;
-+	u32 type:2;
-+	u32 mc:1;
-+	u32 bc:1;
-+
-+	u32 seq:12;
-+	u32 frag:4;
-+	u32 rx_is_qos:1;	/* 16 */
-+	u32 dummy2_0:1;
-+	u32 wlanhd_iv_len:6;
-+	u32 dummy2_1:4;
-+	u32 rpt_sel:1;
-+	u32 dummy2_2:3;
-+
-+	u32 rxmcs:7;
-+	u32 dummy3_0:3;
-+	u32 htc:1;
-+	u32 eosp:1;
-+	u32 bssidfit:2;
-+	u32 dummy3_1:2;
-+	u32 usb_agg_pktnum:8;	/* 16 */
-+	u32 dummy3_2:5;
-+	u32 pattern_match:1;
-+	u32 unicast_match:1;
-+	u32 magic_match:1;
-+
-+	u32 splcp:1;
-+	u32 ldcp:1;
-+	u32 stbc:1;
-+	u32 dummy4_0:1;
-+	u32 bw:2;
-+	u32 dummy4_1:26;
-+#else
-+	u32 own:1;
-+	u32 eor:1;
-+	u32 fs:1;
-+	u32 ls:1;
-+	u32 swdec:1;
-+	u32 phy_stats:1;
-+	u32 shift:2;
-+	u32 qos:1;
-+	u32 security:3;
-+	u32 drvinfo_sz:4;
-+	u32 icverr:1;
-+	u32 crc32:1;
-+	u32 pktlen:14;
-+
-+	u32 bc:1;
-+	u32 mc:1;
-+	u32 type:2;
-+	u32 mf:1;
-+	u32 md:1;
-+	u32 pwr:1;
-+	u32 pam:1;
-+	u32 a2fit:4;
-+	u32 a1fit:4;
-+	u32 faggr:1;
-+	u32 paggr:1;
-+	u32 amsdu:1;
-+	u32 hwrsvd:4;
-+	u32 tid:4;
-+	u32 macid:5;
-+
-+	u32 dummy2_2:3;
-+	u32 rpt_sel:1;
-+	u32 dummy2_1:4;
-+	u32 wlanhd_iv_len:6;
-+	u32 dummy2_0:1;
-+	u32 rx_is_qos:1;
-+	u32 frag:4;		/* 16 */
-+	u32 seq:12;
-+
-+	u32 magic_match:1;
-+	u32 unicast_match:1;
-+	u32 pattern_match:1;
-+	u32 dummy3_2:5;
-+	u32 usb_agg_pktnum:8;
-+	u32 dummy3_1:2;		/* 16 */
-+	u32 bssidfit:2;
-+	u32 eosp:1;
-+	u32 htc:1;
-+	u32 dummy3_0:3;
-+	u32 rxmcs:7;
-+
-+	u32 dumm4_1:26;
-+	u32 bw:2;
-+	u32 dummy4_0:1;
-+	u32 stbc:1;
-+	u32 ldcp:1;
-+	u32 splcp:1;
-+#endif
-+	__le32 tsfl;
-+};
-+
- struct rtl8xxxu_tx_desc {
- 	__le16 pkt_size;
- 	u8 pkt_offset;
+diff --git a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
+index 5d4629f..f4c9bef 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
++++ b/drivers/net/wireless/ath/ath9k/ar9580_1p0_initvals.h
+@@ -1290,7 +1290,7 @@ static const u32 ar9580_1p0_baseband_postamble[][5] = {
+ 	{0x00009e1c, 0x0001cf9c, 0x0001cf9c, 0x00021f9c, 0x00021f9c},
+ 	{0x00009e20, 0x000003b5, 0x000003b5, 0x000003ce, 0x000003ce},
+ 	{0x00009e2c, 0x0000001c, 0x0000001c, 0x00000021, 0x00000021},
+-	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcf946222, 0xcf946222},
++	{0x00009e3c, 0xcf946220, 0xcf946220, 0xcf946220, 0xcf946220},
+ 	{0x00009e44, 0x02321e27, 0x02321e27, 0x02291e27, 0x02291e27},
+ 	{0x00009e48, 0x5030201a, 0x5030201a, 0x50302012, 0x50302012},
+ 	{0x00009fc8, 0x0003f000, 0x0003f000, 0x0001a000, 0x0001a000},
+@@ -1310,7 +1310,7 @@ static const u32 ar9580_1p0_baseband_postamble[][5] = {
+ 	{0x0000a284, 0x00000000, 0x00000000, 0x00000150, 0x00000150},
+ 	{0x0000a288, 0x00000110, 0x00000110, 0x00000110, 0x00000110},
+ 	{0x0000a28c, 0x00022222, 0x00022222, 0x00022222, 0x00022222},
+-	{0x0000a2c4, 0x00158d18, 0x00158d18, 0x00158d18, 0x00158d18},
++	{0x0000a2c4, 0x00058d18, 0x00058d18, 0x00058d18, 0x00058d18},
+ 	{0x0000a2d0, 0x00041983, 0x00041983, 0x00041981, 0x00041982},
+ 	{0x0000a2d8, 0x7999a83b, 0x7999a83b, 0x7999a83b, 0x7999a83b},
+ 	{0x0000a358, 0x00000000, 0x00000000, 0x00000000, 0x00000000},
 -- 
-2.5.0
+1.9.1
 
