@@ -1,70 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f178.google.com ([209.85.223.178]:36753 "EHLO
-	mail-io0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752199AbcBVWsu (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:32842 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753139AbcBZR7b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 17:48:50 -0500
-Received: by mail-io0-f178.google.com with SMTP id l127so193897760iof.3
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2016 14:48:50 -0800 (PST)
+	Fri, 26 Feb 2016 12:59:31 -0500
+Date: Fri, 26 Feb 2016 19:59:25 +0200
+From: Jouni Malinen <j@w1.fi>
+To: =?utf-8?B?Sm/Do28=?= Paulo Rechi Vita <jprvita@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux@endlessm.com,
+	=?utf-8?B?Sm/Do28=?= Paulo Rechi Vita <jprvita@endlessm.com>
+Subject: Re: [PATCHv2 08/10] rfkill: Use switch to demux userspace operations
+Message-ID: <20160226175925.GA9331@w1.fi> (sfid-20160226_185934_763194_D15F0423)
+References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+ <1456159001-20307-9-git-send-email-jprvita@endlessm.com>
 MIME-Version: 1.0
-In-Reply-To: <1456180974-21062-1-git-send-email-greearb@candelatech.com>
-References: <1456180974-21062-1-git-send-email-greearb@candelatech.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 23 Feb 2016 09:48:30 +1100
-Message-ID: <CAGRGNgWPv89sWV9wtXPBpothJrebRJ+d6a8-TnDU0o-p6ZkAmA@mail.gmail.com> (sfid-20160222_234854_183195_E091A88F)
-Subject: Re: [PATCH] mac80211: Let VHT work on 2.4Ghz
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <1456159001-20307-9-git-send-email-jprvita@endlessm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+On Mon, Feb 22, 2016 at 11:36:39AM -0500, João Paulo Rechi Vita wrote:
+> Using a switch to handle different ev.op values in rfkill_fop_write()
+> makes the code easier to extend, as out-of-range values can always be
+> handled by the default case.
 
-On Tue, Feb 23, 2016 at 9:42 AM,  <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
->
-> ath10k supports VHT on 2.4Ghz band.
-> If supplicant and hostapd and radio think
-> VHT should be allowed, then kernel should let them
-> try.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  net/mac80211/mlme.c | 16 ----------------
->  net/mac80211/util.c | 13 +------------
->  net/mac80211/vht.c  | 15 ---------------
->  3 files changed, 1 insertion(+), 43 deletions(-)
->
-> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-> index f8eb0f8..cabe16f 100644
-> --- a/net/mac80211/util.c
-> +++ b/net/mac80211/util.c
-> @@ -1604,17 +1603,7 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_local *local,
->                 *offset = noffset;
->         }
->
-> -       /* Check if any channel in this sband supports at least 80 MHz */
-> -       for (i = 0; i < sband->n_channels; i++) {
-> -               if (sband->channels[i].flags & (IEEE80211_CHAN_DISABLED |
-> -                                               IEEE80211_CHAN_NO_80MHZ))
-> -                       continue;
+This breaks rfkill.. There are automated test scripts for testing this
+area (and most of Wi-Fi for that matter. It would be nice if these were
+used for changes before they get contributed upstream..
+
+http://buildbot.w1.fi/hwsim/
+
+This specific commit broke all the rfkill_* test cases because of
+following:
+
+> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+> @@ -1199,29 +1200,32 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
+> -	list_for_each_entry(rfkill, &rfkill_list, node) {
+> -		if (rfkill->idx != ev.idx && ev.op != RFKILL_OP_CHANGE_ALL)
+> -			continue;
 > -
-> -               have_80mhz = true;
-> -               break;
-> -       }
-> -
-> -       if (sband->vht_cap.vht_supported && have_80mhz && !disable_vht) {
-> +       if (sband->vht_cap.vht_supported && /*have_80mhz &&*/ !disable_vht) {
+> -		if (rfkill->type != ev.type && ev.type != RFKILL_TYPE_ALL)
+> -			continue;
 
-Do you want to actually remove have_80mhz here? We do have git history
-if this needs to be put back.
+Note that RFKILL_TYPE_ALL here..
 
-Thanks,
+> +		list_for_each_entry(rfkill, &rfkill_list, node)
+> +			if (rfkill->type == ev.type ||
+> +			    ev.type == RFKILL_TYPE_ALL)
+> +				rfkill_set_block(rfkill, ev.soft);
 
+It was included for RFKILL_OP_CHANGE_ALL.
+
+> +	case RFKILL_OP_CHANGE:
+> +		list_for_each_entry(rfkill, &rfkill_list, node)
+> +			if (rfkill->idx == ev.idx && rfkill->type == ev.type)
+> +				rfkill_set_block(rfkill, ev.soft);
+
+but not for RFKILL_OP_CHANGE..
+
+This needs following to work:
+
+
+diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+index 59ff92d..c4bbd19 100644
+--- a/net/rfkill/core.c
++++ b/net/rfkill/core.c
+@@ -1239,7 +1239,9 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
+ 		break;
+ 	case RFKILL_OP_CHANGE:
+ 		list_for_each_entry(rfkill, &rfkill_list, node)
+-			if (rfkill->idx == ev.idx && rfkill->type == ev.type)
++			if (rfkill->idx == ev.idx &&
++			    (rfkill->type == ev.type ||
++			     ev.type == RFKILL_TYPE_ALL))
+ 				rfkill_set_block(rfkill, ev.soft);
+ 		ret = 0;
+ 		break;
+ 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Jouni Malinen                                            PGP id EFC895FA
