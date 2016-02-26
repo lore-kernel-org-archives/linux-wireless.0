@@ -1,84 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:14143 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750989AbcBYU5Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2016 15:57:16 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Matti Gottlieb <matti.gottlieb@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/2] iwlwifi: mvm: Fix paging memory leak
-Date: Thu, 25 Feb 2016 22:57:09 +0200
-Message-Id: <1456433829-20285-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160225_215719_453975_792A6314)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA41983@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA41983@hasmsx107.ger.corp.intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:56622 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752175AbcBZHSJ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 26 Feb 2016 02:18:09 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: linux-arm-kernel@lists.infradead.org, Michael Buesch <m@bues.ch>,
+	linux-wireless@vger.kernel.org,
+	=?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH, RESEND] ssb: host_soc depends on sprom
+References: <1456433869-3919332-1-git-send-email-arnd@arndb.de>
+Date: Fri, 26 Feb 2016 09:18:04 +0200
+In-Reply-To: <1456433869-3919332-1-git-send-email-arnd@arndb.de> (Arnd
+	Bergmann's message of "Thu, 25 Feb 2016 21:57:43 +0100")
+Message-ID: <87twkwlz2r.fsf@purkki.adurom.net> (sfid-20160226_081827_159684_E148D2D5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matti Gottlieb <matti.gottlieb@intel.com>
+Arnd Bergmann <arnd@arndb.de> writes:
 
-If the opmode is stopped and started again we did not free
-the paging buffers. Fix that.
-In addition when freeing the firmware's paging download
-buffer, set the pointer to NULL.
+> Drivers that use the SSB sprom functionality typically 'select SSB_SPROM'
+> from Kconfig, but CONFIG_SSB_HOST_SOC misses this, which results in
+> a build failure unless at least one of the other drivers that selects
+> it is enabled:
+>
+> drivers/built-in.o: In function `ssb_host_soc_get_invariants':
+> (.text+0x459494): undefined reference to `ssb_fill_sprom_with_fallback'
+>
+> This adds the same select statement that is used elsewhere.
+>
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Fixes: 541c9a84cd85 ("ssb: pick SoC invariants code from MIPS BCM47xx arch")
 
-Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c  | 4 +++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 3 +++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 2 ++
- 3 files changed, 8 insertions(+), 1 deletion(-)
+I'm planning to queue this to 4.5.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 4ed5180..0ccc697 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -107,7 +107,7 @@ static int iwl_send_tx_ant_cfg(struct iwl_mvm *mvm, u8 valid_tx_ant)
- 				    sizeof(tx_ant_cmd), &tx_ant_cmd);
- }
- 
--static void iwl_free_fw_paging(struct iwl_mvm *mvm)
-+void iwl_free_fw_paging(struct iwl_mvm *mvm)
- {
- 	int i;
- 
-@@ -127,6 +127,8 @@ static void iwl_free_fw_paging(struct iwl_mvm *mvm)
- 			     get_order(mvm->fw_paging_db[i].fw_paging_size));
- 	}
- 	kfree(mvm->trans->paging_download_buf);
-+	mvm->trans->paging_download_buf = NULL;
-+
- 	memset(mvm->fw_paging_db, 0, sizeof(mvm->fw_paging_db));
- }
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 5f3ac8c..ff7c6df 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -1225,6 +1225,9 @@ void iwl_mvm_rx_umac_scan_complete_notif(struct iwl_mvm *mvm,
- void iwl_mvm_rx_umac_scan_iter_complete_notif(struct iwl_mvm *mvm,
- 					      struct iwl_rx_cmd_buffer *rxb);
- 
-+/* Paging */
-+void iwl_free_fw_paging(struct iwl_mvm *mvm);
-+
- /* MVM debugfs */
- #ifdef CONFIG_IWLWIFI_DEBUGFS
- int iwl_mvm_dbgfs_register(struct iwl_mvm *mvm, struct dentry *dbgfs_dir);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 89ea70d..e80be9a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -684,6 +684,8 @@ static void iwl_op_mode_mvm_stop(struct iwl_op_mode *op_mode)
- 	for (i = 0; i < NVM_MAX_NUM_SECTIONS; i++)
- 		kfree(mvm->nvm_sections[i].data);
- 
-+	iwl_free_fw_paging(mvm);
-+
- 	iwl_mvm_tof_clean(mvm);
- 
- 	ieee80211_free_hw(mvm->hw);
 -- 
-2.5.0
-
+Kalle Valo
