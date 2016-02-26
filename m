@@ -1,41 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53188 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751448AbcBFLnt convert rfc822-to-8bit (ORCPT
+Received: from mail.w1.fi ([212.71.239.96]:32850 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754493AbcBZS1K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 6 Feb 2016 06:43:49 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky \(Zhenhui\) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
-Subject: Re: [PATCH] brcmfmac: fix setting primary channel for 80 MHz width
-References: <1453304764-11895-1-git-send-email-zajec5@gmail.com>
-Date: Sat, 06 Feb 2016 13:43:42 +0200
-In-Reply-To: <1453304764-11895-1-git-send-email-zajec5@gmail.com>
- (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Wed, 20 Jan 2016
- 16:46:04 +0100")
-Message-ID: <874mdmvzbl.fsf@kamboji.qca.qualcomm.com> (sfid-20160206_124420_539641_2504776B)
+	Fri, 26 Feb 2016 13:27:10 -0500
+Date: Fri, 26 Feb 2016 20:27:06 +0200
+From: Jouni Malinen <j@w1.fi>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 1/3] cfg80211: Allow a scan request for a specific BSSID
+Message-ID: <20160226182706.GA22680@w1.fi> (sfid-20160226_192714_573944_7A4EA135)
+References: <1456495566-14272-1-git-send-email-jouni@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1456495566-14272-1-git-send-email-jouni@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rafał Miłecki <zajec5@gmail.com> writes:
+On Fri, Feb 26, 2016 at 04:06:04PM +0200, Jouni Malinen wrote:
+> This allows scans for a specific BSSID to be optimized by the user space
+> application by requesting the driver to set the Probe Request frame
+> BSSID field (Address 3) to the specified BSSID instead of the wildcard
+> BSSID. This prevents other APs from replying which reduces airtime need
+> and latency in getting the response from the target AP through.
+> 
+> This is an optimization and as such, it is acceptable for some of the
+> drivers not to support the mechanism. If not supported, the wildcard
+> BSSID will be used and more responses may be received.
 
-> First of all it changes the way we calculate primary channel offset. If
-> we use e.g. 80 MHz channel with primary frequency 5180 MHz (which means
-> center frequency is 5210 MHz) it makes sense to calculate primary offset
-> as -30 MHz.
-> Then it fixes values we compare primary_offset with. We were comparing
-> offset in MHz against -2 or 2 which was resulting in picking a wrong
-> primary channel.
->
-> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+>  include/net/cfg80211.h       | 2 ++
+>  include/uapi/linux/nl80211.h | 4 +++-
+>  net/wireless/nl80211.c       | 6 ++++++
 
-Manually applied to wireless-drivers-next.git, thanks.
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> @@ -1471,6 +1472,7 @@ struct cfg80211_scan_request {
+> +	u8 bssid[ETH_ALEN] __aligned(2);
+
+
+You should know better to run all hwsim test cases before sending
+patches out.. nl80211 one is not enough when we have WEXT. :)
+
+Johannes, please drop this. I'll need to talk to myself to get a fixed
+version with the two other rdev_scan() callers updated to fill in the
+bssid field.
 
 -- 
-Kalle Valo
+Jouni Malinen                                            PGP id EFC895FA
