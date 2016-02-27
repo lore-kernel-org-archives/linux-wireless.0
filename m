@@ -1,101 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nbd.name ([46.4.11.11]:41128 "EHLO nbd.name"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755278AbcBZVOp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 16:14:45 -0500
-From: Felix Fietkau <nbd@openwrt.org>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net
-Subject: [PATCH] mac80211: remove wdev/vif conversion functions
-Date: Fri, 26 Feb 2016 22:14:42 +0100
-Message-Id: <1456521282-69932-1-git-send-email-nbd@openwrt.org> (sfid-20160226_221502_348665_87B4AFC1)
+Received: from mail-pa0-f51.google.com ([209.85.220.51]:36674 "EHLO
+	mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756657AbcB0S2o (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Feb 2016 13:28:44 -0500
+Date: Sat, 27 Feb 2016 10:28:41 -0800
+From: Edward Lipinsky <ellipinsky@gmail.com>
+To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
+	gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: rtl8723au: Fix line longer than 80 columns.
+Message-ID: <20160227182841.GA3387@gmail.com> (sfid-20160227_192903_578994_F04E0E3D)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Nothing uses them
+This patch fixes the checkpatch.pl warning:
 
-Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+WARNING: line over 80 characters
+
+Signed-off-by: Edward Lipinsky <ellipinsky@gmail.com>
 ---
- include/net/mac80211.h | 26 --------------------------
- net/mac80211/util.c    | 28 ----------------------------
- 2 files changed, 54 deletions(-)
+ drivers/staging/rtl8723au/core/rtw_ap.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index 0c09da3..e11d751 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1439,32 +1439,6 @@ static inline bool ieee80211_vif_is_mesh(struct ieee80211_vif *vif)
- }
+diff --git a/drivers/staging/rtl8723au/core/rtw_ap.c b/drivers/staging/rtl8723au/core/rtw_ap.c
+index ce4b589..03202df 100644
+--- a/drivers/staging/rtl8723au/core/rtw_ap.c
++++ b/drivers/staging/rtl8723au/core/rtw_ap.c
+@@ -1834,7 +1834,8 @@ void stop_ap_mode23a(struct rtw_adapter *padapter)
+ 	}
+ 	spin_unlock_bh(&pacl_node_q->lock);
  
- /**
-- * wdev_to_ieee80211_vif - return a vif struct from a wdev
-- * @wdev: the wdev to get the vif for
-- *
-- * This can be used by mac80211 drivers with direct cfg80211 APIs
-- * (like the vendor commands) that get a wdev.
-- *
-- * Note that this function may return %NULL if the given wdev isn't
-- * associated with a vif that the driver knows about (e.g. monitor
-- * or AP_VLAN interfaces.)
-- */
--struct ieee80211_vif *wdev_to_ieee80211_vif(struct wireless_dev *wdev);
--
--/**
-- * ieee80211_vif_to_wdev - return a wdev struct from a vif
-- * @vif: the vif to get the wdev for
-- *
-- * This can be used by mac80211 drivers with direct cfg80211 APIs
-- * (like the vendor commands) that needs to get the wdev for a vif.
-- *
-- * Note that this function may return %NULL if the given wdev isn't
-- * associated with a vif that the driver knows about (e.g. monitor
-- * or AP_VLAN interfaces.)
-- */
--struct wireless_dev *ieee80211_vif_to_wdev(struct ieee80211_vif *vif);
--
--/**
-  * enum ieee80211_key_flags - key flags
-  *
-  * These flags are used for communication about keys between the driver
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 89f7179..4482625 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -694,34 +694,6 @@ void ieee80211_iterate_stations_atomic(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL_GPL(ieee80211_iterate_stations_atomic);
+-	DBG_8723A("%s, free acl_node_queue, num =%d\n", __func__, pacl_list->num);
++	DBG_8723A("%s, free acl_node_queue, num =%d\n", __func__,
++		  pacl_list->num);
  
--struct ieee80211_vif *wdev_to_ieee80211_vif(struct wireless_dev *wdev)
--{
--	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
--
--	if (!ieee80211_sdata_running(sdata) ||
--	    !(sdata->flags & IEEE80211_SDATA_IN_DRIVER))
--		return NULL;
--	return &sdata->vif;
--}
--EXPORT_SYMBOL_GPL(wdev_to_ieee80211_vif);
--
--struct wireless_dev *ieee80211_vif_to_wdev(struct ieee80211_vif *vif)
--{
--	struct ieee80211_sub_if_data *sdata;
--
--	if (!vif)
--		return NULL;
--
--	sdata = vif_to_sdata(vif);
--
--	if (!ieee80211_sdata_running(sdata) ||
--	    !(sdata->flags & IEEE80211_SDATA_IN_DRIVER))
--		return NULL;
--
--	return &sdata->wdev;
--}
--EXPORT_SYMBOL_GPL(ieee80211_vif_to_wdev);
--
- /*
-  * Nothing should have been stuffed into the workqueue during
-  * the suspend->resume cycle. Since we can't check each caller
+ 	rtw_sta_flush23a(padapter);
+ 
 -- 
-2.2.2
+1.7.9.5
 
