@@ -1,44 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60568 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751473AbcBAIV4 (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:38556 "EHLO
+	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750737AbcB1M1y (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2016 03:21:56 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: "John W. Linville" <linville@tuxdriver.com>,
-	Joe Perches <joe@perches.com>, linux-wireless@vger.kernel.org,
-	kbuild test robot <lkp@intel.com>,
-	kernel-janitors <kernel-janitors@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: wireless-drivers: random cleanup patches piling up
-References: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com>
-	<1453423965.3856.22.camel@perches.com>
-	<87k2n1x0sf.fsf@kamboji.qca.qualcomm.com>
-	<20160122151211.GB1500@tuxdriver.com>
-	<87si1pvcd7.fsf@kamboji.qca.qualcomm.com>
-	<20160126052823.GA2053@sudip-laptop>
-	<87bn84kdu0.fsf@kamboji.qca.qualcomm.com>
-	<20160201044142.GC4072@sudip-pc>
-Date: Mon, 01 Feb 2016 10:21:48 +0200
-In-Reply-To: <20160201044142.GC4072@sudip-pc> (Sudip Mukherjee's message of
-	"Mon, 1 Feb 2016 10:11:42 +0530")
-Message-ID: <878u34j0wz.fsf@kamboji.qca.qualcomm.com> (sfid-20160201_092253_629316_0471483E)
+	Sun, 28 Feb 2016 07:27:54 -0500
+Received: by mail-wm0-f44.google.com with SMTP id l68so26283603wml.1
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2016 04:27:54 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: alexander nekrasov <i.sinister@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: carl1970: stops working at random periods on Ubuntu 15.05
+Date: Sun, 28 Feb 2016 13:27:50 +0100
+Message-ID: <42847572.gSex6kjQ2f@debian64> (sfid-20160228_132801_680580_C40EB283)
+In-Reply-To: <CAG4k0fCqB1KNLyHV5--pi1nSoDPnV3qM-yTB0T2jmgbnjmqvww@mail.gmail.com>
+References: <CAG4k0fCqB1KNLyHV5--pi1nSoDPnV3qM-yTB0T2jmgbnjmqvww@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
+Hello,
 
-> Sure, I am starting that way. I checked in patchwork and I do not see
-> any checkpatch related patch pending (except staging, which Greg will
-> handle). I think you must have cleared all of them.
+On Sunday, February 28, 2016 03:06:35 AM alexander nekrasov wrote:
+> I'm using TP-LINK TL-WN821N and encountering very annoying behaviour -
+> adapter 'hangs' at random period of time - sometimes it is 1 hour,
+> sometimes 2. After it hangs Network manager does not see any wireless
+> networks and the only way to make it work is to reboot system (also
+> tried unplugging/plugging adapter and removing/adding module but it
+> did not work)
+Did it get hot? Or Have you tried unloading/reloading the ohci/ehci/xhci?
+The used USB-PHY FUSB200 (in the AR9170) is known to misbehave. If you
+want to read more about the implications and possible solution, you can
+visit the ath9k_htc firmware community. They have written a wiki entry
+which describes the issues in detail [0].
+ 
+> Heres lsusb -v:
+> Bus 004 Device 004: ID 0cf3:1002 Atheros Communications, Inc. TP-Link
+> TL-WN821N v2 / TL-WN822N v1 802.11n [Atheros AR9170]
+> 
+> And here what i have in syslog right before the hang:
+> Following messages are also relevant to adapter failure but i guess it
+> will be to long to post it here.
+> 
+> Feb 28 01:46:53 evren kernel: [ 4978.753087] usb 4-1.4: no command
+> feedback received (-90).
+> Feb 28 01:46:53 evren kernel: [ 4978.753098] usb 4-1.4: restart device (6)
+> Feb 28 01:46:54 evren kernel: [ 4979.891093] usb 4-1.4: device
+> restarted successfully.
+> Feb 28 01:46:54 evren kernel: [ 4979.899273] ieee80211 phy1: Hardware
+> restart was requested
+Commands are issued on the devices end point #4.... And the response the
+driver is waiting for doesn't get through. If you want to debug this, 
+you'll need to look at the usb data stream and check which party (host
+controller (ehci/ohci), device (AR9170) or cable?) is at fault. 
 
-They are in deferred state. The search functionality in patchwork is not
-that intuitive and they are not easy to find so here's a direct link:
+Regards,
+Christian
 
-https://patchwork.kernel.org/project/linux-wireless/list/?state=10&order=date
-
--- 
-Kalle Valo
+[0] <https://github.com/qca/open-ath9k-htc-firmware/wiki/usb-related-issues>
