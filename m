@@ -1,81 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:54602
-	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161115AbcBQK11 (ORCPT
+Received: from mail-io0-f195.google.com ([209.85.223.195]:33433 "EHLO
+	mail-io0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757218AbcB1Lf5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2016 05:27:27 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 09/21] brcmfmac: use bar1 window size as provided by pci subsystem
-Date: Wed, 17 Feb 2016 11:26:58 +0100
-Message-Id: <1455704830-10088-10-git-send-email-arend@broadcom.com> (sfid-20160217_112835_727508_37A7E38A)
-In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
-References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+	Sun, 28 Feb 2016 06:35:57 -0500
+Received: by mail-io0-f195.google.com with SMTP id g203so11774150iof.0
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2016 03:35:56 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1456520364-6275-1-git-send-email-arend@broadcom.com>
+References: <1456520364-6275-1-git-send-email-arend@broadcom.com>
+Date: Sun, 28 Feb 2016 13:35:56 +0200
+Message-ID: <CAB3XZEfO2RvN-YDN8Sf18AK2EvV=rYdVndhUYwnkni3Gp0Ok2A@mail.gmail.com> (sfid-20160228_123608_516793_CA4961E3)
+Subject: Re: [PATCH V9 1/2] nl80211: add feature for BSS selection support
+From: Eliad Peller <eliad@wizery.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+hi Arend,
 
-The PCIE bar1 window size is specified by chip. Currently the
-ioremap of bar1 was using a define which always matched the size
-of bar1, but newer chips can have a different bar1 sizes. With
-this patch the ioremap will be called with the by chip provided
-window size.
+On Fri, Feb 26, 2016 at 10:59 PM, Arend van Spriel <arend@broadcom.com> wrote:
+> Introducing a new feature that the driver can use to
+> indicate the driver/firmware supports configuration of BSS
+> selection criteria upon CONNECT command. This can be useful
+> when multiple BSS-es are found belonging to the same ESS,
+> ie. Infra-BSS with same SSID. The criteria can then be used to
+> offload selection of a preferred BSS.
+>
+[...]
 
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+>
+> +/**
+> + * struct nl80211_bss_select_rssi_adjust - RSSI adjustment parameters.
+> + *
+> + * @band: band of BSS that must match for RSSI value adjustment.
+> + * @delta: value used to adjust the RSSI value of matching BSS.
+> + */
+> +struct nl80211_bss_select_rssi_adjust {
+> +       enum nl80211_band band;
+> +       __s8 delta;
+> +} __attribute__((packed));
+> +
+i think enum can't be considered as fixed-size field, so better use u8 or so.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index d89212b..3fd4e3b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -72,7 +72,6 @@ static struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
- 
- #define BRCMF_PCIE_FW_UP_TIMEOUT		2000 /* msec */
- 
--#define BRCMF_PCIE_TCM_MAP_SIZE			(4096 * 1024)
- #define BRCMF_PCIE_REG_MAP_SIZE			(32 * 1024)
- 
- /* backplane addres space accessed by BAR0 */
-@@ -252,7 +251,6 @@ struct brcmf_pciedev_info {
- 	char nvram_name[BRCMF_FW_NAME_LEN];
- 	void __iomem *regs;
- 	void __iomem *tcm;
--	u32 tcm_size;
- 	u32 ram_base;
- 	u32 ram_size;
- 	struct brcmf_chip *ci;
-@@ -1592,8 +1590,7 @@ static int brcmf_pcie_get_resource(struct brcmf_pciedev_info *devinfo)
- 	}
- 
- 	devinfo->regs = ioremap_nocache(bar0_addr, BRCMF_PCIE_REG_MAP_SIZE);
--	devinfo->tcm = ioremap_nocache(bar1_addr, BRCMF_PCIE_TCM_MAP_SIZE);
--	devinfo->tcm_size = BRCMF_PCIE_TCM_MAP_SIZE;
-+	devinfo->tcm = ioremap_nocache(bar1_addr, bar1_size);
- 
- 	if (!devinfo->regs || !devinfo->tcm) {
- 		brcmf_err("ioremap() failed (%p,%p)\n", devinfo->regs,
-@@ -1602,8 +1599,9 @@ static int brcmf_pcie_get_resource(struct brcmf_pciedev_info *devinfo)
- 	}
- 	brcmf_dbg(PCIE, "Phys addr : reg space = %p base addr %#016llx\n",
- 		  devinfo->regs, (unsigned long long)bar0_addr);
--	brcmf_dbg(PCIE, "Phys addr : mem space = %p base addr %#016llx\n",
--		  devinfo->tcm, (unsigned long long)bar1_addr);
-+	brcmf_dbg(PCIE, "Phys addr : mem space = %p base addr %#016llx size 0x%x\n",
-+		  devinfo->tcm, (unsigned long long)bar1_addr,
-+		  (unsigned int)bar1_size);
- 
- 	return 0;
- }
--- 
-1.9.1
+> @@ -626,6 +626,10 @@ int wiphy_register(struct wiphy *wiphy)
+>                      !rdev->ops->set_mac_acl)))
+>                 return -EINVAL;
+>
+> +       if (WARN_ON(wiphy->bss_select_support &&
+> +                   (wiphy->bss_select_support & ~(BIT(__NL80211_BSS_SELECT_ATTR_AFTER_LAST) - 2))))
+> +               return -EINVAL;
+> +
+worth noting that the "-2" counts for the invalid enum value (at least
+it wasn't clear to me)
 
+> @@ -7995,6 +8086,21 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+>                 return -EOPNOTSUPP;
+>         }
+>
+> +       /* only do bss selection when no BSSID is specified. */
+> +       if (!connect.bssid && wiphy->bss_select_support &&
+> +           info->attrs[NL80211_ATTR_BSS_SELECT]) {
+
+you don't have to check wiphy->bss_select_support here - we actually
+want to fail if NL80211_ATTR_BSS_SELECT was given although the driver
+doesn't support it.
+
+> +               err = parse_bss_select(info->attrs[NL80211_ATTR_BSS_SELECT],
+> +                                      wiphy, &connect.bss_select);
+> +               if (err) {
+> +                       kzfree(connkeys);
+> +                       return err;
+> +               }
+> +               if (!(wiphy->bss_select_support & BIT(connect.bss_select.behaviour))) {
+
+(it will fail here instead)
+
+Eliad.
