@@ -1,68 +1,183 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx4.wp.pl ([212.77.101.11]:52939 "EHLO mx4.wp.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752120AbcBYXDQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2016 18:03:16 -0500
-In-Reply-To: <1456439339-18458-1-git-send-email-colin.king@canonical.com>
-References: <1456439339-18458-1-git-send-email-colin.king@canonical.com>
-MIME-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Subject: Re: [PATCH] mt7601u: do not free dma_buf when ivp allocation fails
-From: Kuba Kicinski <kubakici@wp.pl>
-Date: Thu, 25 Feb 2016 17:56:26 -0500
-To: Colin King <colin.king@canonical.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-mediatek@lists.infradead.org
-Message-ID: <63E1009A-F983-4D81-82AE-B4C6E4D060B5@wp.pl> (sfid-20160226_000320_965356_A16D387E)
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35477 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754213AbcB1TDM (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 28 Feb 2016 14:03:12 -0500
+Received: by mail-wm0-f66.google.com with SMTP id 1so1583343wmg.2
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2016 11:03:11 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 2/4] staging: vt6655: mac.c Replace VNSvInPortB byData reads with ioread8.
+Date: Sun, 28 Feb 2016 19:02:55 +0000
+Message-Id: <1456686177-3167-2-git-send-email-tvboxspy@gmail.com> (sfid-20160228_200317_305307_E319E8AE)
+In-Reply-To: <1456686177-3167-1-git-send-email-tvboxspy@gmail.com>
+References: <1456686177-3167-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 25 February 2016 17:28:59 GMT-05:00, Colin King <colin.king@canonical.com> wrote:
->From: Colin Ian King <colin.king@canonical.com>
->
->If the allocation of ivp fails the error handling attempts to
->free an uninitialized dma_buf; this data structure just contains
->garbage on the stack, so the freeing will cause issues when the
->urb, buf and dma fields are cleaned. Fix this by handling the
->ivp check and
+Removing byData variable altogether.
 
-Commit message looks truncated?
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/mac.c | 36 +++++++++---------------------------
+ 1 file changed, 9 insertions(+), 27 deletions(-)
 
->Signed-off-by: Colin Ian King <colin.king@canonical.com>
->---
-> drivers/net/wireless/mediatek/mt7601u/mcu.c | 11 ++++++-----
-> 1 file changed, 6 insertions(+), 5 deletions(-)
->
->diff --git a/drivers/net/wireless/mediatek/mt7601u/mcu.c
->b/drivers/net/wireless/mediatek/mt7601u/mcu.c
->index fbb1986..06ac657 100644
->--- a/drivers/net/wireless/mediatek/mt7601u/mcu.c
->+++ b/drivers/net/wireless/mediatek/mt7601u/mcu.c
->@@ -359,13 +359,13 @@ mt7601u_upload_firmware(struct mt7601u_dev *dev,
->const struct mt76_fw *fw)
-> 	struct mt7601u_dma_buf dma_buf;
-> 	void *ivb;
-> 	u32 ilm_len, dlm_len;
->-	int i, ret;
->+	int i, ret = -ENOMEM;
+diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
+index 5a4fc3b..893fc52 100644
+--- a/drivers/staging/vt6655/mac.c
++++ b/drivers/staging/vt6655/mac.c
+@@ -74,10 +74,8 @@ bool MACbIsRegBitsOn(struct vnt_private *priv, unsigned char byRegOfs,
+ 		     unsigned char byTestBits)
+ {
+ 	void __iomem *io_base = priv->PortOffset;
+-	unsigned char byData;
+ 
+-	VNSvInPortB(io_base + byRegOfs, &byData);
+-	return (byData & byTestBits) == byTestBits;
++	return (ioread8(io_base + byRegOfs) & byTestBits) == byTestBits;
+ }
+ 
+ /*
+@@ -99,10 +97,8 @@ bool MACbIsRegBitsOff(struct vnt_private *priv, unsigned char byRegOfs,
+ 		      unsigned char byTestBits)
+ {
+ 	void __iomem *io_base = priv->PortOffset;
+-	unsigned char byData;
+ 
+-	VNSvInPortB(io_base + byRegOfs, &byData);
+-	return !(byData & byTestBits);
++	return !(ioread8(io_base + byRegOfs) & byTestBits);
+ }
+ 
+ /*
+@@ -304,15 +300,13 @@ void MACvRestoreContext(struct vnt_private *priv, unsigned char *pbyCxtBuf)
+ bool MACbSoftwareReset(struct vnt_private *priv)
+ {
+ 	void __iomem *io_base = priv->PortOffset;
+-	unsigned char byData;
+ 	unsigned short ww;
+ 
+ 	/* turn on HOSTCR_SOFTRST, just write 0x01 to reset */
+ 	VNSvOutPortB(io_base + MAC_REG_HOSTCR, 0x01);
+ 
+ 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
+-		VNSvInPortB(io_base + MAC_REG_HOSTCR, &byData);
+-		if (!(byData & HOSTCR_SOFTRST))
++		if (!(ioread8(io_base + MAC_REG_HOSTCR) & HOSTCR_SOFTRST))
+ 			break;
+ 	}
+ 	if (ww == W_MAX_TIMEOUT)
+@@ -370,7 +364,6 @@ bool MACbSafeRxOff(struct vnt_private *priv)
+ 	void __iomem *io_base = priv->PortOffset;
+ 	unsigned short ww;
+ 	unsigned long dwData;
+-	unsigned char byData;
+ 
+ 	/* turn off wow temp for turn off Rx safely */
+ 
+@@ -400,8 +393,7 @@ bool MACbSafeRxOff(struct vnt_private *priv)
+ 	MACvRegBitsOff(io_base, MAC_REG_HOSTCR, HOSTCR_RXON);
+ 	/* W_MAX_TIMEOUT is the timeout period */
+ 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
+-		VNSvInPortB(io_base + MAC_REG_HOSTCR, &byData);
+-		if (!(byData & HOSTCR_RXONST))
++		if (!(ioread8(io_base + MAC_REG_HOSTCR) & HOSTCR_RXONST))
+ 			break;
+ 	}
+ 	if (ww == W_MAX_TIMEOUT) {
+@@ -429,7 +421,6 @@ bool MACbSafeTxOff(struct vnt_private *priv)
+ 	void __iomem *io_base = priv->PortOffset;
+ 	unsigned short ww;
+ 	unsigned long dwData;
+-	unsigned char byData;
+ 
+ 	/* Clear TX DMA */
+ 	/* Tx0 */
+@@ -461,8 +452,7 @@ bool MACbSafeTxOff(struct vnt_private *priv)
+ 
+ 	/* W_MAX_TIMEOUT is the timeout period */
+ 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
+-		VNSvInPortB(io_base + MAC_REG_HOSTCR, &byData);
+-		if (!(byData & HOSTCR_TXONST))
++		if (!(ioread8(io_base + MAC_REG_HOSTCR) & HOSTCR_TXONST))
+ 			break;
+ 	}
+ 	if (ww == W_MAX_TIMEOUT) {
+@@ -584,7 +574,6 @@ void MACvSetCurrRx0DescAddr(struct vnt_private *priv, unsigned long dwCurrDescAd
+ {
+ 	void __iomem *io_base = priv->PortOffset;
+ 	unsigned short ww;
+-	unsigned char byData;
+ 	unsigned char byOrgDMACtl;
+ 
+ 	VNSvInPortB(io_base + MAC_REG_RXDMACTL0, &byOrgDMACtl);
+@@ -592,8 +581,7 @@ void MACvSetCurrRx0DescAddr(struct vnt_private *priv, unsigned long dwCurrDescAd
+ 		VNSvOutPortB(io_base + MAC_REG_RXDMACTL0+2, DMACTL_RUN);
+ 
+ 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
+-		VNSvInPortB(io_base + MAC_REG_RXDMACTL0, &byData);
+-		if (!(byData & DMACTL_RUN))
++		if (!(ioread8(io_base + MAC_REG_RXDMACTL0) & DMACTL_RUN))
+ 			break;
+ 	}
+ 
+@@ -620,7 +608,6 @@ void MACvSetCurrRx1DescAddr(struct vnt_private *priv, unsigned long dwCurrDescAd
+ {
+ 	void __iomem *io_base = priv->PortOffset;
+ 	unsigned short ww;
+-	unsigned char byData;
+ 	unsigned char byOrgDMACtl;
+ 
+ 	VNSvInPortB(io_base + MAC_REG_RXDMACTL1, &byOrgDMACtl);
+@@ -628,8 +615,7 @@ void MACvSetCurrRx1DescAddr(struct vnt_private *priv, unsigned long dwCurrDescAd
+ 		VNSvOutPortB(io_base + MAC_REG_RXDMACTL1+2, DMACTL_RUN);
+ 
+ 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
+-		VNSvInPortB(io_base + MAC_REG_RXDMACTL1, &byData);
+-		if (!(byData & DMACTL_RUN))
++		if (!(ioread8(io_base + MAC_REG_RXDMACTL1) & DMACTL_RUN))
+ 			break;
+ 	}
+ 
+@@ -658,7 +644,6 @@ void MACvSetCurrTx0DescAddrEx(struct vnt_private *priv,
+ {
+ 	void __iomem *io_base = priv->PortOffset;
+ 	unsigned short ww;
+-	unsigned char byData;
+ 	unsigned char byOrgDMACtl;
+ 
+ 	VNSvInPortB(io_base + MAC_REG_TXDMACTL0, &byOrgDMACtl);
+@@ -666,8 +651,7 @@ void MACvSetCurrTx0DescAddrEx(struct vnt_private *priv,
+ 		VNSvOutPortB(io_base + MAC_REG_TXDMACTL0+2, DMACTL_RUN);
+ 
+ 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
+-		VNSvInPortB(io_base + MAC_REG_TXDMACTL0, &byData);
+-		if (!(byData & DMACTL_RUN))
++		if (!(ioread8(io_base + MAC_REG_TXDMACTL0) & DMACTL_RUN))
+ 			break;
+ 	}
+ 
+@@ -696,7 +680,6 @@ void MACvSetCurrAC0DescAddrEx(struct vnt_private *priv,
+ {
+ 	void __iomem *io_base = priv->PortOffset;
+ 	unsigned short ww;
+-	unsigned char byData;
+ 	unsigned char byOrgDMACtl;
+ 
+ 	VNSvInPortB(io_base + MAC_REG_AC0DMACTL, &byOrgDMACtl);
+@@ -704,8 +687,7 @@ void MACvSetCurrAC0DescAddrEx(struct vnt_private *priv,
+ 		VNSvOutPortB(io_base + MAC_REG_AC0DMACTL+2, DMACTL_RUN);
+ 
+ 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
+-		VNSvInPortB(io_base + MAC_REG_AC0DMACTL, &byData);
+-		if (!(byData & DMACTL_RUN))
++		if (!(ioread8(io_base + MAC_REG_AC0DMACTL) & DMACTL_RUN))
+ 			break;
+ 	}
+ 	if (ww == W_MAX_TIMEOUT)
+-- 
+2.7.0
 
-No need...
-
-> 
-> 	ivb = kmemdup(fw->ivb, sizeof(fw->ivb), GFP_KERNEL);
->-	if (!ivb || mt7601u_usb_alloc_buf(dev, MCU_FW_URB_SIZE, &dma_buf)) {
->-		ret = -ENOMEM;
->+	if (!ivb)
->+		goto error_ivb;
-
-...just return -ENOMEM here, because...
-
->+error_ivb:
->+	kfree(ivb);
-
-...calling kfree on a null pointer is redundant.
-
-Thanks!!
-[trimming To/CC a bit]
