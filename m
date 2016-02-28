@@ -1,50 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40437 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933574AbcBRHcD (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:36112 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753465AbcB1RfW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 02:32:03 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH 13/24] staging: wilc1000: wilc_wfi_cfgoperations.c: removes unnecessary log messages
-Date: Thu, 18 Feb 2016 16:27:24 +0900
-Message-ID: <1455780455-21365-13-git-send-email-leo.kim@atmel.com> (sfid-20160218_083228_431873_036E85C0)
-In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
+	Sun, 28 Feb 2016 12:35:22 -0500
+Received: by mail-ob0-f174.google.com with SMTP id s6so66150882obg.3
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2016 09:35:21 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1456669193-56860-1-git-send-email-nbd@openwrt.org>
+References: <1456669193-56860-1-git-send-email-nbd@openwrt.org>
+Date: Sun, 28 Feb 2016 09:35:21 -0800
+Message-ID: <CAA93jw5Vk1-1AcawzQxNT1Re9EsMPUK220A5WsxS6MhX3VJQBQ@mail.gmail.com> (sfid-20160228_183525_818672_9F6E6DB8)
+Subject: Re: [PATCH] mac80211: fix AP buffered multicast frames with queue
+ control and txq
+From: Dave Taht <dave.taht@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+On Sun, Feb 28, 2016 at 6:19 AM, Felix Fietkau <nbd@openwrt.org> wrote:
+> Buffered multicast frames must be passed to the driver directly via
+> drv_tx instead of going through the txq, otherwise they cannot easily be
+> scheduled to be sent after DTIM.
+>
+> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
+> ---
+>  net/mac80211/tx.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index 3a7475f..b294820 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -1247,7 +1247,8 @@ static void ieee80211_drv_tx(struct ieee80211_local *local,
+>         struct txq_info *txqi;
+>         u8 ac;
+>
+> -       if (info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE)
+> +       if ((info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) ||
+> +           (info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE))
+>                 goto tx_normal;
+>
+>         if (!ieee80211_is_data(hdr->frame_control))
+> --
+> 2.2.2
 
-This patch removes unnecessary log messages.
-And, it adds a 'break' statement in accordance with the switch-case rule.
+I would like hooks to emerge to be able to keep the level of multicast
+at a dull roar, relative to other traffic, and the impact of a
+multicast bursts measureable (stat exposed to userspace, something
+reporting back to the main tx queues that one just happened and how
+long it took). On receive, too.....
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 9c46c6b..030566e 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -795,7 +795,7 @@ static int connect(struct wiphy *wiphy, struct net_device *dev,
- 		break;
- 
- 	default:
--		PRINT_D(CFG80211_DBG, "Automatic Authentation type = %d\n", sme->auth_type);
-+		break;
- 	}
- 
- 	if (sme->crypto.n_akm_suites) {
--- 
-1.9.1
-
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
