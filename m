@@ -1,155 +1,178 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46705 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752650AbcB2WFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:53 -0500
-From: Jes.Sorensen@redhat.com
+Received: from mail-yw0-f179.google.com ([209.85.161.179]:32889 "EHLO
+	mail-yw0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756791AbcB1BGg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 27 Feb 2016 20:06:36 -0500
+Received: by mail-yw0-f179.google.com with SMTP id u200so96692156ywf.0
+        for <linux-wireless@vger.kernel.org>; Sat, 27 Feb 2016 17:06:35 -0800 (PST)
+MIME-Version: 1.0
+Date: Sun, 28 Feb 2016 03:06:35 +0200
+Message-ID: <CAG4k0fCqB1KNLyHV5--pi1nSoDPnV3qM-yTB0T2jmgbnjmqvww@mail.gmail.com> (sfid-20160228_020648_603350_302A7DBC)
+Subject: carl1970: stops working at random periods on Ubuntu 15.05
+From: alexander nekrasov <i.sinister@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 013/113] rtl8xxxu: Add rtl8723bu_parse_efuse() and 8723bu efuse definition
-Date: Mon, 29 Feb 2016 17:04:11 -0500
-Message-Id: <1456783551-28315-14-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_231123_358059_CD27F060)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+I'm using TP-LINK TL-WN821N and encountering very annoying behaviour -
+adapter 'hangs' at random period of time - sometimes it is 1 hour,
+sometimes 2. After it hangs Network manager does not see any wireless
+networks and the only way to make it work is to reboot system (also
+tried unplugging/plugging adapter and removing/adding module but it
+did not work)
 
-Implement first stab at parsing the 8723bu's efuse.
+Heres lsusb -v:
+Bus 004 Device 004: ID 0cf3:1002 Atheros Communications, Inc. TP-Link
+TL-WN821N v2 / TL-WN822N v1 802.11n [Atheros AR9170]
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 47 +++++++++++++++++++++++-
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 42 +++++++++++++++++++++
- 2 files changed, 88 insertions(+), 1 deletion(-)
+And here what i have in syslog right before the hang:
+Feb 28 01:23:45 evren kernel: [ 3590.458890] ------------[ cut here
+]------------
+Feb 28 01:23:45 evren kernel: [ 3590.458919] WARNING: CPU: 0 PID: 3749
+at /build/linux-PoTihC/linux-4.2.0/drivers/net/wireless/ath/carl9170/main.c:1012
+carl9170_op_configure_filter+0x191/0x1a0 [carl9170]()
+Feb 28 01:23:45 evren kernel: [ 3590.458925] Modules linked in: drbg
+ansi_cprng ctr ccm binfmt_misc fglrx(POE) arc4 snd_hda_codec_realtek
+snd_hda_codec_generic snd_hda_codec_hdmi carl9170 snd_hda_intel
+snd_hda_codec snd_hda_core ath mac80211 snd_hwdep snd_pcm snd_seq_midi
+snd_seq_midi_event cfg80211 kvm_amd kvm snd_rawmidi snd_seq input_leds
+joydev snd_seq_device snd_timer edac_core serio_raw edac_mce_amd snd
+soundcore k10temp asus_atk0110 amd_iommu_v2 8250_fintek i2c_piix4
+shpchp mac_hid cuse parport_pc ppdev lp parport autofs4 pata_acpi
+hid_generic usbhid hid r8169 psmouse pata_jmicron firewire_ohci mii
+firewire_core pata_atiixp crc_itu_t ahci libahci wmi
+Feb 28 01:23:45 evren kernel: [ 3590.459018] CPU: 0 PID: 3749 Comm:
+kworker/u16:0 Tainted: P        W  OE   4.2.0-30-generic #36-Ubuntu
+Feb 28 01:23:45 evren kernel: [ 3590.459024] Hardware name: System
+manufacturer System Product Name/M4A89GTD-PRO/USB3, BIOS 3029
+07/05/2012
+Feb 28 01:23:45 evren kernel: [ 3590.459063] Workqueue: phy1
+ieee80211_reconfig_filter [mac80211]
+Feb 28 01:23:45 evren kernel: [ 3590.459068]  0000000000000000
+00000000d9cf9215 ffff8800b240fce8 ffffffff817ebf13
+Feb 28 01:23:45 evren kernel: [ 3590.459075]  0000000000000000
+0000000000000000 ffff8800b240fd28 ffffffff8107b9d6
+Feb 28 01:23:45 evren kernel: [ 3590.459082]  8000000000000001
+ffff8800c88b5440 ffff8800b240fdac 8000000000000001
+Feb 28 01:23:45 evren kernel: [ 3590.459089] Call Trace:
+Feb 28 01:23:45 evren kernel: [ 3590.459102]  [<ffffffff817ebf13>]
+dump_stack+0x45/0x57
+Feb 28 01:23:45 evren kernel: [ 3590.459112]  [<ffffffff8107b9d6>]
+warn_slowpath_common+0x86/0xc0
+Feb 28 01:23:45 evren kernel: [ 3590.459120]  [<ffffffff8107bb0a>]
+warn_slowpath_null+0x1a/0x20
+Feb 28 01:23:45 evren kernel: [ 3590.459130]  [<ffffffffc0426c71>]
+carl9170_op_configure_filter+0x191/0x1a0 [carl9170]
+Feb 28 01:23:45 evren kernel: [ 3590.459163]  [<ffffffffc0373939>]
+ieee80211_configure_filter+0x149/0x2a0 [mac80211]
+Feb 28 01:23:45 evren kernel: [ 3590.459196]  [<ffffffffc0373aa5>]
+ieee80211_reconfig_filter+0x15/0x20 [mac80211]
+Feb 28 01:23:45 evren kernel: [ 3590.459205]  [<ffffffff810947aa>]
+process_one_work+0x1aa/0x440
+Feb 28 01:23:45 evren kernel: [ 3590.459213]  [<ffffffff81094a8b>]
+worker_thread+0x4b/0x4c0
+Feb 28 01:23:45 evren kernel: [ 3590.459221]  [<ffffffff81094a40>] ?
+process_one_work+0x440/0x440
+Feb 28 01:23:45 evren kernel: [ 3590.459228]  [<ffffffff8109ae28>]
+kthread+0xd8/0xf0
+Feb 28 01:23:45 evren kernel: [ 3590.459236]  [<ffffffff8109ad50>] ?
+kthread_create_on_node+0x1f0/0x1f0
+Feb 28 01:23:45 evren kernel: [ 3590.459243]  [<ffffffff817f319f>]
+ret_from_fork+0x3f/0x70
+Feb 28 01:23:45 evren kernel: [ 3590.459249]  [<ffffffff8109ad50>] ?
+kthread_create_on_node+0x1f0/0x1f0
+Feb 28 01:23:45 evren kernel: [ 3590.459255] ---[ end trace
+fe0c60ee5cb8db9a ]---
+Feb 28 01:23:46 evren kernel: [ 3591.459129] ------------[ cut here
+]------------
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index cd0c84a..b6068da 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -1877,6 +1877,51 @@ static int rtl8723au_parse_efuse(struct rtl8xxxu_priv *priv)
- 	return 0;
- }
- 
-+static int rtl8723bu_parse_efuse(struct rtl8xxxu_priv *priv)
-+{
-+	if (priv->efuse_wifi.efuse8723bu.rtl_id != cpu_to_le16(0x8129))
-+		return -EINVAL;
-+
-+	ether_addr_copy(priv->mac_addr, priv->efuse_wifi.efuse8723bu.mac_addr);
-+
-+	memcpy(priv->cck_tx_power_index_A,
-+	       priv->efuse_wifi.efuse8723bu.cck_tx_power_index_A,
-+	       sizeof(priv->cck_tx_power_index_A));
-+	memcpy(priv->cck_tx_power_index_B,
-+	       priv->efuse_wifi.efuse8723bu.cck_tx_power_index_B,
-+	       sizeof(priv->cck_tx_power_index_B));
-+
-+	memcpy(priv->ht40_1s_tx_power_index_A,
-+	       priv->efuse_wifi.efuse8723bu.ht40_1s_tx_power_index_A,
-+	       sizeof(priv->ht40_1s_tx_power_index_A));
-+	memcpy(priv->ht40_1s_tx_power_index_B,
-+	       priv->efuse_wifi.efuse8723bu.ht40_1s_tx_power_index_B,
-+	       sizeof(priv->ht40_1s_tx_power_index_B));
-+
-+	dev_info(&priv->udev->dev, "Vendor: %.7s\n",
-+		 priv->efuse_wifi.efuse8723bu.vendor_name);
-+	dev_info(&priv->udev->dev, "Product: %.41s\n",
-+		 priv->efuse_wifi.efuse8723bu.device_name);
-+
-+	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_EFUSE) {
-+		int i;
-+		unsigned char *raw = priv->efuse_wifi.raw;
-+
-+		dev_info(&priv->udev->dev,
-+			 "%s: dumping efuse (0x%02zx bytes):\n",
-+			 __func__, sizeof(struct rtl8723bu_efuse));
-+		for (i = 0; i < sizeof(struct rtl8723bu_efuse); i += 8) {
-+			dev_info(&priv->udev->dev, "%02x: "
-+				 "%02x %02x %02x %02x %02x %02x %02x %02x\n", i,
-+				 raw[i], raw[i + 1], raw[i + 2],
-+				 raw[i + 3], raw[i + 4], raw[i + 5],
-+				 raw[i + 6], raw[i + 7]);
-+		}
-+	}
-+
-+	return 0;
-+}
-+
- #ifdef CONFIG_RTL8XXXU_UNTESTED
- 
- static int rtl8192cu_parse_efuse(struct rtl8xxxu_priv *priv)
-@@ -6142,7 +6187,7 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
- };
- 
- static struct rtl8xxxu_fileops rtl8723bu_fops = {
--	.parse_efuse = rtl8723au_parse_efuse,
-+	.parse_efuse = rtl8723bu_parse_efuse,
- 	.load_firmware = rtl8723bu_load_firmware,
- 	.power_on = rtl8723au_power_on,
- 	.llt_init = rtl8xxxu_auto_llt_table,
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index dd4c563..bf424db 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -500,6 +500,47 @@ struct rtl8192cu_efuse {
- 	u8 customer_id;
- };
- 
-+struct rtl8723bu_efuse {
-+	__le16 rtl_id;
-+	u8 res0[0x0e];
-+	u8 cck_tx_power_index_A[3];	/* 0x10 */
-+	u8 cck_tx_power_index_B[3];
-+	u8 ht40_1s_tx_power_index_A[3];	/* 0x16 */
-+	u8 ht40_1s_tx_power_index_B[3];
-+	u8 res1[0x9c];
-+	u8 channel_plan;		/* 0xb8 */
-+	u8 xtal_k;
-+	u8 thermal_meter;
-+	u8 iqk_lck;
-+	u8 pa_type;			/* 0xbc */
-+	u8 lna_type_2g;			/* 0xbd */
-+	u8 res2[3];
-+	u8 rf_board_option;
-+	u8 rf_feature_option;
-+	u8 rf_bt_setting;
-+	u8 eeprom_version;
-+	u8 eeprom_customer_id;
-+	u8 res3[2];
-+	u8 tx_pwr_calibrate_rate;
-+	u8 rf_antenna_option;		/* 0xc9 */
-+	u8 rfe_option;
-+	u8 res4[9];
-+	u8 usb_optional_function;
-+	u8 res5[0x1e];
-+	u8 res6[2];
-+	u8 serial[0x0b];		/* 0xf5 */
-+	u8 vid;				/* 0x100 */
-+	u8 res7;
-+	u8 pid;
-+	u8 res8[4];
-+	u8 mac_addr[ETH_ALEN];		/* 0x107 */
-+	u8 res9[2];
-+	u8 vendor_name[0x07];
-+	u8 res10[2];
-+	u8 device_name[0x14];		/* 0xe8 */
-+	u8 res11[0xd4];
-+};
-+
- struct rtl8192eu_efuse {
- 	__le16 rtl_id;
- 	u8 res0[0x0e];
-@@ -690,6 +731,7 @@ struct rtl8xxxu_priv {
- 	union {
- 		u8 raw[EFUSE_MAP_LEN];
- 		struct rtl8723au_efuse efuse8723;
-+		struct rtl8723bu_efuse efuse8723bu;
- 		struct rtl8192cu_efuse efuse8192;
- 		struct rtl8192eu_efuse efuse8192eu;
- 	} efuse_wifi;
--- 
-2.5.0
+Following messages are also relevant to adapter failure but i guess it
+will be to long to post it here.
 
+Also after unplugging/pluggin i see following:
+Feb 28 01:46:44 evren kernel: [ 4970.256337] usb 4-1.4: USB
+disconnect, device number 13
+Feb 28 01:46:52 evren kernel: [ 4977.878803] usb 4-1.4: new high-speed
+USB device number 14 using ehci-pci
+Feb 28 01:46:52 evren kernel: [ 4978.023152] usb 4-1.4: New USB device
+found, idVendor=0cf3, idProduct=1002
+Feb 28 01:46:52 evren kernel: [ 4978.023166] usb 4-1.4: New USB device
+strings: Mfr=16, Product=32, SerialNumber=48
+Feb 28 01:46:52 evren kernel: [ 4978.023173] usb 4-1.4: Product: USB2.0 WLAN
+Feb 28 01:46:52 evren kernel: [ 4978.023179] usb 4-1.4: Manufacturer: ATHER
+Feb 28 01:46:52 evren kernel: [ 4978.023185] usb 4-1.4: SerialNumber: 12345
+Feb 28 01:46:52 evren kernel: [ 4978.098854] usb 4-1.4: reset
+high-speed USB device number 14 using ehci-pci
+Feb 28 01:46:52 evren kernel: [ 4978.232174] usb 4-1.4: driver   API:
+1.9.7 2012-12-15 [1-1]
+Feb 28 01:46:52 evren kernel: [ 4978.232187] usb 4-1.4: firmware API:
+1.9.6 2012-07-07
+Feb 28 01:46:52 evren kernel: [ 4978.569953] ath: EEPROM regdomain: 0x809c
+Feb 28 01:46:52 evren kernel: [ 4978.569962] ath: EEPROM indicates we
+should expect a country code
+Feb 28 01:46:52 evren kernel: [ 4978.569967] ath: doing EEPROM
+country->regdmn map search
+Feb 28 01:46:52 evren kernel: [ 4978.569971] ath: country maps to
+regdmn code: 0x52
+Feb 28 01:46:52 evren kernel: [ 4978.569975] ath: Country alpha2 being used: CN
+Feb 28 01:46:52 evren kernel: [ 4978.569980] ath: Regpair used: 0x52
+Feb 28 01:46:52 evren kernel: [ 4978.570407] ieee80211 phy1: Selected
+rate control algorithm 'minstrel_ht'
+Feb 28 01:46:25 evren wpa_supplicant[835]: message repeated 3 times: [
+wlan0: CTRL-EVENT-SCAN-FAILED ret=-19 retry=1]
+Feb 28 01:46:52 evren NetworkManager[691]: <info>  (wlan0): using
+nl80211 for WiFi device control
+Feb 28 01:46:52 evren NetworkManager[691]: <info>  (wlan0): driver
+supports Access Point (AP) mode
+Feb 28 01:46:52 evren kernel: [ 4978.576459] input: phy1 WPS Button as
+/devices/pci0000:00/0000:00:13.2/usb4/4-1/4-1.4/4-1.4:1.0/ieee80211/phy1/input31
+Feb 28 01:46:52 evren NetworkManager[691]: <info>  rfkill8: found WiFi
+radio killswitch (at
+/sys/devices/pci0000:00/0000:00:13.2/usb4/4-1/4-1.4/4-1.4:1.0/ieee80211/phy1/rfkill8)
+(driver carl9170)
+Feb 28 01:46:52 evren systemd[1]: Starting Load/Save RF Kill Switch
+Status of rfkill8...
+Feb 28 01:46:52 evren systemd[1]: Started Load/Save RF Kill Switch
+Status of rfkill8.
+Feb 28 01:46:53 evren kernel: [ 4978.752536] IPv6:
+ADDRCONF(NETDEV_UP): wlan0: link is not ready
+Feb 28 01:46:53 evren kernel: [ 4978.753087] usb 4-1.4: no command
+feedback received (-90).
+Feb 28 01:46:53 evren kernel: [ 4978.753098] usb 4-1.4: restart device (6)
+Feb 28 01:46:53 evren NetworkManager[691]: <info>  devices added
+(path: /sys/devices/pci0000:00/0000:00:13.2/usb4/4-1/4-1.4/4-1.4:1.0/net/wlan0,
+iface: wlan0)
+Feb 28 01:46:53 evren NetworkManager[691]: <info>  device added (path:
+/sys/devices/pci0000:00/0000:00:13.2/usb4/4-1/4-1.4/4-1.4:1.0/net/wlan0,
+iface: wlan0): no ifupdown configuration found.
+Feb 28 01:46:53 evren wpa_supplicant[835]: wlan0:
+CTRL-EVENT-REGDOM-CHANGE init=DRIVER type=COUNTRY alpha2=CN
+Feb 28 01:46:53 evren NetworkManager[691]: <info>  (wlan0): supplicant
+interface state: disabled -> inactive
+Feb 28 01:46:54 evren kernel: [ 4979.891093] usb 4-1.4: device
+restarted successfully.
+Feb 28 01:46:54 evren kernel: [ 4979.899273] ieee80211 phy1: Hardware
+restart was requested
+Feb 28 01:46:54 evren avahi-daemon[681]: Withdrawing workstation
+service for wlan0.
+Feb 28 01:46:54 evren ModemManager[642]: <info>  (net/wlan0): released
+by modem /sys/devices/pci0000:00/0000:00:13.2/usb4/4-1/4-1.4
+Feb 28 01:46:54 evren NetworkManager[691]: <info>  devices removed
+(path: /sys/devices/pci0000:00/0000:00:13.2/usb4/4-1/4-1.4/4-1.4:1.0/net/wlan0,
+iface: wlan0)
+Feb 28 01:46:54 evren NetworkManager[691]: <info>  radio killswitch
+/sys/devices/pci0000:00/0000:00:13.2/usb4/4-1/4-1.4/4-1.4:1.0/ieee80211/phy1/rfkill8
+disappeared
+Feb 28 01:46:54 evren systemd[1]: Stopping Load/Save RF Kill Switch
+Status of rfkill8...
+Feb 28 01:46:54 evren NetworkManager[691]: <info>  (wlan0): supplicant
+interface state: inactive -> disabled
+Feb 28 01:46:54 evren systemd[1]: Stopped Load/Save RF Kill Switch
+Status of rfkill8.
+Feb 28 01:46:55 evren ModemManager[642]: <info>  Couldn't find support
+for device at '/sys/devices/pci0000:00/0000:00:13.2/usb4/4-1/4-1.4':
+not supported by any plugin
+
+Cab smb help me to solve this issue?
