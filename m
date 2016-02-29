@@ -1,53 +1,220 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:3767 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754458AbcBBLTN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 06:19:13 -0500
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: Michal Kazior <michal.kazior@tieto.com>
-CC: <ath10k@lists.infradead.org>, <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/5] ath10k: add basic hostq support
-References: <1452693668-30030-1-git-send-email-michal.kazior@tieto.com>
-	<1453382007-24622-1-git-send-email-michal.kazior@tieto.com>
-Date: Tue, 2 Feb 2016 13:19:03 +0200
-In-Reply-To: <1453382007-24622-1-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 21 Jan 2016 14:13:22 +0100")
-Message-ID: <87r3gvgy1k.fsf@kamboji.qca.qualcomm.com> (sfid-20160202_121916_131962_AA98E50F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga14.intel.com ([192.55.52.115]:41124 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752709AbcB2NZi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 08:25:38 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, QH <qiumin.hu@gmail.com>,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+	Etan Cohen <etancohen@google.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 08/12] mac80211: implement nan_change_conf
+Date: Mon, 29 Feb 2016 15:25:09 +0200
+Message-Id: <1456752313-5792-9-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160229_142541_115193_F11739C6)
+In-Reply-To: <1456752313-5792-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1456752313-5792-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-> There's a new firmware feature which uses a shared
-> DMA memory so host can share it's per-sta per-tid
-> queue size which is then subsequently used for
-> firmware to assist in deciding which frames to put
-> on the intermediate host-device tx queue.
->
-> This patchset adds only basic support to make
-> the firmware supporting the feature happy and
-> running at all. Without it firmware would freeze
-> shortly after booting.
->
-> More patches will follow some time later to add
-> the "new data path" logic.
->
->
-> v2:
->  * fix gfp allocation [Ben]
->
->
-> Michal Kazior (5):
->   ath10k: rename some HTT events
->   ath10k: add new htt definitions
->   ath10k: add new FW_FEATURE_PEER_FLOW_CONTROL
->   ath10k: clean up cont frag desc init code
->   ath10k: implement basic support for new tx path firmware
+Implement nan_change_conf callback which allows to change current
+nan configuration (master preference and dual band operation).
+Store the current nan configuration in sdata, so it can be used
+both to provide the driver the updated configuration with changes
+and also it will be used in hw reconfig flows in next patches.
 
-Applied, thanks.
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ include/net/mac80211.h     |  6 ++++++
+ net/mac80211/cfg.c         | 33 +++++++++++++++++++++++++++++++++
+ net/mac80211/driver-ops.h  | 21 +++++++++++++++++++++
+ net/mac80211/ieee80211_i.h | 10 ++++++++++
+ net/mac80211/trace.h       | 31 +++++++++++++++++++++++++++++++
+ 5 files changed, 101 insertions(+)
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index 157e342..e7f4e20 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -3351,6 +3351,9 @@ enum ieee80211_reconfig_type {
+  *
+  * @start_nan: join an existing nan cluster, or create a new one.
+  * @stop_nan: leave the nan cluster.
++ * @nan_change_conf: change nan configuration. The data in cfg80211_nan_conf
++ *	contains full new configuration and changes specify which parameters
++ *	are changed with respect to the last nan config.
+  */
+ struct ieee80211_ops {
+ 	void (*tx)(struct ieee80211_hw *hw,
+@@ -3594,6 +3597,9 @@ struct ieee80211_ops {
+ 			 struct cfg80211_nan_conf *conf);
+ 	int (*stop_nan)(struct ieee80211_hw *hw,
+ 			struct ieee80211_vif *vif);
++	int (*nan_change_conf)(struct ieee80211_hw *hw,
++			       struct ieee80211_vif *vif,
++			       struct cfg80211_nan_conf *conf, u8 changes);
+ };
+ 
+ /**
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 460ef76..31cd861 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -150,6 +150,8 @@ static int ieee80211_start_nan(struct wiphy *wiphy,
+ 	if (ret)
+ 		ieee80211_sdata_stop(sdata);
+ 
++	memcpy(&sdata->u.nan.nan_conf, conf, sizeof(sdata->u.nan.nan_conf));
++
+ 	return ret;
+ }
+ 
+@@ -162,6 +164,36 @@ static void ieee80211_stop_nan(struct wiphy *wiphy,
+ 	ieee80211_sdata_stop(sdata);
+ }
+ 
++static int ieee80211_nan_change_conf(struct wiphy *wiphy,
++				     struct wireless_dev *wdev,
++				     struct cfg80211_nan_conf *conf,
++				     u32 changes)
++{
++	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
++	struct cfg80211_nan_conf new_conf;
++	int ret = 0;
++
++	if (sdata->vif.type != NL80211_IFTYPE_NAN)
++		return -EOPNOTSUPP;
++
++	if (!ieee80211_sdata_running(sdata))
++		return -ENETDOWN;
++
++	memcpy(&new_conf, &sdata->u.nan.nan_conf, sizeof(new_conf));
++	if (changes & CFG80211_NAN_CONF_CHANGED_PREF)
++		new_conf.master_pref = conf->master_pref;
++
++	if (changes & CFG80211_NAN_CONF_CHANGED_DUAL)
++		new_conf.dual = conf->dual;
++
++	ret = drv_nan_change_conf(sdata->local, sdata, &new_conf, changes);
++	if (!ret)
++		memcpy(&sdata->u.nan.nan_conf, &new_conf,
++		       sizeof(sdata->u.nan.nan_conf));
++
++	return ret;
++}
++
+ static int ieee80211_set_noack_map(struct wiphy *wiphy,
+ 				  struct net_device *dev,
+ 				  u16 noack_map)
+@@ -3473,4 +3505,5 @@ const struct cfg80211_ops mac80211_config_ops = {
+ 	.del_tx_ts = ieee80211_del_tx_ts,
+ 	.start_nan = ieee80211_start_nan,
+ 	.stop_nan = ieee80211_stop_nan,
++	.nan_change_conf = ieee80211_nan_change_conf,
+ };
+diff --git a/net/mac80211/driver-ops.h b/net/mac80211/driver-ops.h
+index c4fe13f..c46778f 100644
+--- a/net/mac80211/driver-ops.h
++++ b/net/mac80211/driver-ops.h
+@@ -1191,4 +1191,25 @@ static inline void drv_stop_nan(struct ieee80211_local *local,
+ 	trace_drv_return_void(local);
+ }
+ 
++static inline int drv_nan_change_conf(struct ieee80211_local *local,
++				       struct ieee80211_sub_if_data *sdata,
++				       struct cfg80211_nan_conf *conf,
++				       u32 changes)
++{
++	int ret;
++
++	might_sleep();
++	check_sdata_in_driver(sdata);
++
++	if (!local->ops->nan_change_conf)
++		return -EOPNOTSUPP;
++
++	trace_drv_nan_change_conf(local, sdata, conf, changes);
++	ret = local->ops->nan_change_conf(&local->hw, &sdata->vif, conf,
++					  changes);
++	trace_drv_return_int(local, ret);
++
++	return ret;
++}
++
+ #endif /* __MAC80211_DRIVER_OPS */
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 1630975..39e2623 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -808,6 +808,15 @@ struct txq_info {
+ 	struct ieee80211_txq txq;
+ };
+ 
++/**
++ * struct ieee80211_if_nan - NAN state
++ *
++ * @nan_conf: current nan configuration
++ */
++struct ieee80211_if_nan {
++	struct cfg80211_nan_conf nan_conf;
++};
++
+ struct ieee80211_sub_if_data {
+ 	struct list_head list;
+ 
+@@ -907,6 +916,7 @@ struct ieee80211_sub_if_data {
+ 		struct ieee80211_if_mesh mesh;
+ 		struct ieee80211_if_ocb ocb;
+ 		u32 mntr_flags;
++		struct ieee80211_if_nan nan;
+ 	} u;
+ 
+ #ifdef CONFIG_MAC80211_DEBUGFS
+diff --git a/net/mac80211/trace.h b/net/mac80211/trace.h
+index 121d7fe..f2463a5 100644
+--- a/net/mac80211/trace.h
++++ b/net/mac80211/trace.h
+@@ -1738,6 +1738,37 @@ TRACE_EVENT(drv_stop_nan,
+ 	)
+ );
+ 
++TRACE_EVENT(drv_nan_change_conf,
++	TP_PROTO(struct ieee80211_local *local,
++		 struct ieee80211_sub_if_data *sdata,
++		 struct cfg80211_nan_conf *conf,
++		 u32 changes),
++
++	TP_ARGS(local, sdata, conf, changes),
++	TP_STRUCT__entry(
++		LOCAL_ENTRY
++		VIF_ENTRY
++		__field(u8, master_pref)
++		__field(u8, dual)
++		__field(u32, changes)
++	),
++
++	TP_fast_assign(
++		LOCAL_ASSIGN;
++		VIF_ASSIGN;
++		__entry->master_pref = conf->master_pref;
++		__entry->dual = conf->dual;
++		__entry->changes = changes;
++	),
++
++	TP_printk(
++		LOCAL_PR_FMT  VIF_PR_FMT
++		", master preference: %u, dual: %d, changes: 0x%x",
++		LOCAL_PR_ARG, VIF_PR_ARG, __entry->master_pref,
++		__entry->dual, __entry->changes
++	)
++);
++
+ /*
+  * Tracing for API calls that drivers call.
+  */
 -- 
-Kalle Valo
+2.5.0
+
