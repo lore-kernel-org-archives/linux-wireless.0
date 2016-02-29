@@ -1,44 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f169.google.com ([209.85.161.169]:34234 "EHLO
-	mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752572AbcBPDEX (ORCPT
+Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:33088
+	"EHLO snark.thyrsus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752180AbcB2Lnw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 15 Feb 2016 22:04:23 -0500
-Received: by mail-yw0-f169.google.com with SMTP id h129so129610212ywb.1
-        for <linux-wireless@vger.kernel.org>; Mon, 15 Feb 2016 19:04:23 -0800 (PST)
-From: Till Kamppeter <till.kamppeter@gmail.com>
-Subject: Google Summer of Code 2016 - Backup organization administrator needed
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>,
-	dl9pf@gmx.de
-Message-ID: <56C291B3.6050409@gmail.com> (sfid-20160216_040432_097295_75984BFD)
-Date: Tue, 16 Feb 2016 01:04:19 -0200
+	Mon, 29 Feb 2016 06:43:52 -0500
+Received: from [127.0.1.1] (localhost [127.0.0.1])
+	by snark.thyrsus.com (Postfix) with ESMTP id 518DC13A0E88
+	for <linux-wireless@vger.kernel.org>; Mon, 29 Feb 2016 06:35:27 -0500 (EST)
+Content-Type: multipart/mixed; boundary="===============1518198875096255337=="
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+To: linux-wireless@vger.kernel.org
+Subject: Problems in regulatory.bin.5
+Message-Id: <20160229113527.518DC13A0E88@snark.thyrsus.com> (sfid-20160229_124355_437340_E8FADC07)
+Date: Mon, 29 Feb 2016 06:35:27 -0500 (EST)
+From: esr@thyrsus.com
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+--===============1518198875096255337==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 
-I am applying for the Linux Foundation as mentoring organization for the 
-Google Summer of Code 2016.
+This is automatically generated email about markup problems in a man
+page for which you appear to be responsible.  If you are not the right
+person or list, please tell me so I can correct my database.
 
-I need a backup administrator (a second org admin) to complete the 
-application and he needs to confirm before the deadline on Friday.
+See http://catb.org/~esr/doclifter/bugs.html for details on how and
+why these patches were generated.  Feel free to email me with any
+questions.  Note: These patches do not change the modification date of
+any manual page.  You may wish to do that by hand.
 
-Note that usually the role as backup admin will not cause any work for 
-you, especially as I could find another backup admin after the deadline, 
-but it would be great if you can jump in on my behalf here and there 
-when I am not available for some reason.
+I apologize if this message seems spammy or impersonal. The volume of
+markup bugs I am tracking is over five hundred - there is no real
+alternative to generating bugmail from a database and template.
 
-So if you are willing to take this role, please tell me. I will then 
-invite you through Google's application form and you will get an e-mail 
-from Google with instructions how to accept the invitation. Please be 
-ready to receive that mail then and to follow the instructions.
+--
+                             Eric S. Raymond
 
-    Till
+--===============1518198875096255337==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+Problems with regulatory.bin.5:
+
+.SS markup in name section seriously confuses parsing, and sections
+don't follow standard naming conventions.
+
+--- regulatory.bin.5-unpatched	2012-07-02 01:57:14.437776710 -0400
++++ regulatory.bin.5	2012-07-02 01:59:11.117774528 -0400
+@@ -2,12 +2,7 @@
+ .SH NAME
+ regulatory.bin \- The Linux wireless regulatory database
+ 
+-.ad l
+-.in +8
+-.ti -8
+-
+-.SS
+-.SH Description
++.SH DESCRIPTION
+ .B regulatory.bin
+ is the file used by the Linux wireless subsystem to keep its regulatory
+ database information. It is read by
+@@ -22,7 +17,7 @@
+ .B regulatory.bin
+ file should be updated upon regulatory changes or corrections.
+ 
+-.SH Upkeeping
++.SH UPKEEP
+ The regulatory database is maintained by the community as such
+ you are encouraged to send any corrections or updates to the
+ linux-wireless mailing list:
+
+--===============1518198875096255337==--
 
