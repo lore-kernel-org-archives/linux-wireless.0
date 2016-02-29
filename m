@@ -1,43 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:32935 "EHLO
-	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751169AbcBKGrP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2016 01:47:15 -0500
-Received: by mail-pf0-f194.google.com with SMTP id c10so2103132pfc.0
-        for <linux-wireless@vger.kernel.org>; Wed, 10 Feb 2016 22:47:14 -0800 (PST)
-From: Ujjal Roy <royujjal@gmail.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	WiFi Mailing List <linux-wireless@vger.kernel.org>
-Subject: [PATCH 1/3] mwifiex: Fixed incorrect indentation issue
-Date: Thu, 11 Feb 2016 12:17:07 +0530
-Message-Id: <1455173229-6383-1-git-send-email-royujjal@gmail.com> (sfid-20160211_074725_535456_73EF4E8A)
+Received: from mx1.redhat.com ([209.132.183.28]:39961 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753340AbcB2WF6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:58 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 113/113] rtl8xxxu: Temporarily disable 8192eu device init
+Date: Mon, 29 Feb 2016 17:05:51 -0500
+Message-Id: <1456783551-28315-114-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232950_089419_7624E50E)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the incorrect indentation of the case label.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Signed-off-by: Ujjal Roy <royujjal@gmail.com>
+To reduce the patch volume, temporariliy disable 8192eu device init.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index e7adef7..cb0cf03 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -676,7 +676,7 @@ mwifiex_cfg80211_set_wiphy_params(struct wiphy *wiphy, u32 changed)
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 1c5a6ef..8b3523d 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2562,6 +2562,10 @@ static int rtl8192eu_parse_efuse(struct rtl8xxxu_priv *priv)
+ 				 raw[i + 6], raw[i + 7]);
  		}
- 		break;
-
--		case MWIFIEX_BSS_ROLE_STA:
-+	case MWIFIEX_BSS_ROLE_STA:
- 		if (priv->media_connected) {
- 			mwifiex_dbg(adapter, ERROR,
- 				    "cannot change wiphy params when connected");
---
-1.9.1
+ 	}
++	/*
++	 * Temporarily disable 8192eu support
++	 */
++	return -EINVAL;
+ 	return 0;
+ }
+ 
+-- 
+2.5.0
 
