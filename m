@@ -1,56 +1,106 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from narfation.org ([79.140.41.39]:41114 "EHLO v3-1039.vlinux.de"
+Received: from mx1.redhat.com ([209.132.183.28]:11222 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751351AbcBXP0h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2016 10:26:37 -0500
-From: Sven Eckelmann <sven@narfation.org>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Cc: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Sven Eckelmann <sven@narfation.org>
-Subject: [PATCH 2/2] mac80211: fix parsing of 40Mhz in injected radiotap header
-Date: Wed, 24 Feb 2016 16:25:49 +0100
-Message-Id: <1456327549-31765-2-git-send-email-sven@narfation.org> (sfid-20160224_162641_155345_22D27D33)
-In-Reply-To: <1456327549-31765-1-git-send-email-sven@narfation.org>
-References: <1456327549-31765-1-git-send-email-sven@narfation.org>
+	id S1753540AbcB2WGE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:06:04 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 092/113] rtl8xxxu: Add more 40 byte TX desc bit definitions
+Date: Mon, 29 Feb 2016 17:05:30 -0500
+Message-Id: <1456783551-28315-93-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230637_504041_4F1584EA)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The MCS bandwidth part of the radiotap header is 2 bits wide. The full 2
-bit have to compared against IEEE80211_RADIOTAP_MCS_BW_40 and not only if
-the first bit is set. Otherwise IEEE80211_RADIOTAP_MCS_BW_40 can be
-confused with IEEE80211_RADIOTAP_MCS_BW_20U.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Fixes: 5ec3aed9ba4c ("mac80211: Parse legacy and HT rate in injected frames")
-Signed-off-by: Sven Eckelmann <sven@narfation.org>
+Add additional bit definitions for 40 byte TX descriptors, and rename
+bits for 32 byte descriptors that are located differently in the 40
+byte descriptor format.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- net/mac80211/tx.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c |  7 +++---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 27 +++++++++++++++++++++---
+ 2 files changed, 28 insertions(+), 6 deletions(-)
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 3a7475f..60c26a5 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1691,7 +1691,7 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
- 	bool rate_found = false;
- 	u8 rate_retries = 0;
- 	u16 rate_flags = 0;
--	u8 mcs_known, mcs_flags;
-+	u8 mcs_known, mcs_flags, mcs_bw;
- 	int i;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index d137915c..62ed6af 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -7035,11 +7035,12 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 			ampdu = (u32)sta->ht_cap.ampdu_density;
+ 			val32 = ampdu << TXDESC_AMPDU_DENSITY_SHIFT;
+ 			tx_desc->txdw2 |= cpu_to_le32(val32);
+-			tx_desc->txdw1 |= cpu_to_le32(TXDESC_AGG_ENABLE);
++
++			tx_desc->txdw1 |= cpu_to_le32(TXDESC_AGG_ENABLE_8723A);
+ 		} else
+-			tx_desc->txdw1 |= cpu_to_le32(TXDESC_BK);
++			tx_desc->txdw1 |= cpu_to_le32(TXDESC_AGG_BREAK_8723A);
+ 	} else
+-		tx_desc->txdw1 |= cpu_to_le32(TXDESC_BK);
++		tx_desc->txdw1 |= cpu_to_le32(TXDESC_AGG_BREAK_8723A);
  
- 	info->flags |= IEEE80211_TX_INTFL_DONT_ENCRYPT |
-@@ -1767,8 +1767,9 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
- 			    mcs_flags & IEEE80211_RADIOTAP_MCS_SGI)
- 				rate_flags |= IEEE80211_TX_RC_SHORT_GI;
+ 	if (ieee80211_is_data_qos(hdr->frame_control))
+ 		tx_desc->txdw4 |= cpu_to_le32(TXDESC_QOS);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 9364a31..6ba12ab 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -417,9 +417,15 @@ struct rtl8723bu_tx_desc {
+ #endif
  
-+			mcs_bw = mcs_flags & IEEE80211_RADIOTAP_MCS_BW_MASK;
- 			if (mcs_known & IEEE80211_RADIOTAP_MCS_HAVE_BW &&
--			    mcs_flags & IEEE80211_RADIOTAP_MCS_BW_40)
-+			    mcs_bw == IEEE80211_RADIOTAP_MCS_BW_40)
- 				rate_flags |= IEEE80211_TX_RC_40_MHZ_WIDTH;
- 			break;
+ /* Word 1 */
++/*
++ * Bits 0-7 differ dependent on chip generation. For 8723au bits 5/6 are
++ * aggregation enable and break respectively. For 8723bu, bits 0-7 are macid.
++ */
+ #define TXDESC_PKT_OFFSET_SZ		0
+-#define TXDESC_AGG_ENABLE		BIT(5)
+-#define TXDESC_BK			BIT(6)
++#define TXDESC_AGG_ENABLE_8723A		BIT(5)
++#define TXDESC_AGG_BREAK_8723A		BIT(6)
++#define TXDESC_MACID_SHIFT_8723B	0
++#define TXDESC_MACID_MASK_8723B		0x00f0
+ #define TXDESC_QUEUE_SHIFT		8
+ #define TXDESC_QUEUE_MASK		0x1f00
+ #define TXDESC_QUEUE_BK			0x2
+@@ -431,6 +437,9 @@ struct rtl8723bu_tx_desc {
+ #define TXDESC_QUEUE_MGNT		0x12
+ #define TXDESC_QUEUE_CMD		0x13
+ #define TXDESC_QUEUE_MAX		(TXDESC_QUEUE_CMD + 1)
++#define TXDESC_RDG_NAV_EXT_8723B	BIT(13)
++#define TXDESC_LSIG_TXOP_ENABLE_8723B	BIT(14)
++#define TXDESC_PIFS_8723B		BIT(15)
  
+ #define DESC_RATE_ID_SHIFT		16
+ #define DESC_RATE_ID_MASK		0xf
+@@ -442,8 +451,20 @@ struct rtl8723bu_tx_desc {
+ #define TXDESC_HWPC			BIT(31)
+ 
+ /* Word 2 */
+-#define TXDESC_ACK_REPORT		BIT(19)
++#define TXDESC_PAID_SHIFT_8723B		0
++#define TXDESC_PAID_MASK_8723B		0x1ff
++#define TXDESC_CCA_RTS_SHIFT_8723B	10
++#define TXDESC_CCA_RTS_MASK_8723B	0xc00
++#define TXDESC_AGG_ENABLE_8723B		BIT(12)
++#define TXDESC_RDG_ENABLE_8723B		BIT(13)
++#define TXDESC_AGG_BREAK_8723B		BIT(16)
++#define TXDESC_MORE_FRAG_8723B		BIT(17)
++#define TXDESC_RAW_8723B		BIT(18)
++#define TXDESC_ACK_REPORT_8723A		BIT(19)
++#define TXDESC_SPE_RPT_8723B		BIT(19)
+ #define TXDESC_AMPDU_DENSITY_SHIFT	20
++#define TXDESC_BT_INT_8723B		BIT(23)
++#define TXDESC_GID_8723B		BIT(24)
+ 
+ /* Word 3 */
+ #define TXDESC_SEQ_SHIFT		16
 -- 
-2.7.0
+2.5.0
 
