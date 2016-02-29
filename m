@@ -1,196 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m50-133.163.com ([123.125.50.133]:37148 "EHLO m50-133.163.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49015 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752254AbcBWAjI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 19:39:08 -0500
-From: Geliang Tang <geliangtang@163.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Julian Calaby <julian.calaby@gmail.com>
-Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: rtl8723au: use list_first_entry*
-Date: Tue, 23 Feb 2016 08:38:01 +0800
-Message-Id: <d02bee6044ac90c6b2d0d08a351ba6828fbe35d8.1456187207.git.geliangtang@163.com> (sfid-20160223_013914_020914_9F47F8EA)
+	id S1752031AbcB2WFy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:54 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 035/113] rtl8xxxu: Make rtl8xxxu_add_path_on() use device specific init values
+Date: Mon, 29 Feb 2016 17:04:33 -0500
+Message-Id: <1456783551-28315-36-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230611_630291_CFD81907)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use list_first_entry*() instead of container_of() to simplify the code.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Signed-off-by: Geliang Tang <geliangtang@163.com>
+rtl8192cu/rtl8188cu/rtl8723au use the same values, but 8723bu and
+8192eu have their own.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/staging/rtl8723au/core/rtw_recv.c | 49 +++++++++----------------------
- drivers/staging/rtl8723au/core/rtw_xmit.c | 26 +++++-----------
- 2 files changed, 22 insertions(+), 53 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 24 +++++++++++++++++++++---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |  4 ++++
+ 2 files changed, 25 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_recv.c b/drivers/staging/rtl8723au/core/rtw_recv.c
-index 0a7741c..b095d09 100644
---- a/drivers/staging/rtl8723au/core/rtw_recv.c
-+++ b/drivers/staging/rtl8723au/core/rtw_recv.c
-@@ -104,21 +104,14 @@ void _rtw_free_recv_priv23a(struct recv_priv *precvpriv)
- struct recv_frame *rtw_alloc_recvframe23a(struct rtw_queue *pfree_recv_queue)
- {
- 	struct recv_frame *pframe;
--	struct list_head *plist, *phead;
- 	struct rtw_adapter *padapter;
- 	struct recv_priv *precvpriv;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 9d8b69a..e543a26 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -3557,11 +3557,13 @@ static void rtl8xxxu_path_adda_on(struct rtl8xxxu_priv *priv, const u32 *regs,
+ 	u32 path_on;
+ 	int i;
  
- 	spin_lock_bh(&pfree_recv_queue->lock);
- 
--	if (list_empty(&pfree_recv_queue->queue))
--		pframe = NULL;
--	else {
--		phead = get_list_head(pfree_recv_queue);
--
--		plist = phead->next;
--
--		pframe = container_of(plist, struct recv_frame, list);
--
-+	pframe = list_first_entry_or_null(&pfree_recv_queue->queue,
-+					  struct recv_frame, list);
-+	if (pframe) {
- 		list_del_init(&pframe->list);
- 		padapter = pframe->adapter;
- 		if (padapter) {
-@@ -243,25 +236,17 @@ int rtw_enqueue_recvbuf23a(struct recv_buf *precvbuf, struct rtw_queue *queue)
- 	return _SUCCESS;
- }
- 
--struct recv_buf *rtw_dequeue_recvbuf23a (struct rtw_queue *queue)
-+struct recv_buf *rtw_dequeue_recvbuf23a(struct rtw_queue *queue)
- {
- 	unsigned long irqL;
- 	struct recv_buf *precvbuf;
--	struct list_head *plist, *phead;
- 
- 	spin_lock_irqsave(&queue->lock, irqL);
- 
--	if (list_empty(&queue->queue)) {
--		precvbuf = NULL;
--	} else {
--		phead = get_list_head(queue);
--
--		plist = phead->next;
--
--		precvbuf = container_of(plist, struct recv_buf, list);
--
-+	precvbuf = list_first_entry_or_null(&queue->queue,
-+					    struct recv_buf, list);
-+	if (precvbuf)
- 		list_del_init(&precvbuf->list);
--	}
- 
- 	spin_unlock_irqrestore(&queue->lock, irqL);
- 
-@@ -1079,22 +1064,17 @@ static int validate_recv_ctrl_frame(struct rtw_adapter *padapter,
- 
- 		if ((psta->state & WIFI_SLEEP_STATE) &&
- 		    (pstapriv->sta_dz_bitmap & CHKBIT(psta->aid))) {
--			struct list_head *xmitframe_plist, *xmitframe_phead;
-+			struct list_head *xmitframe_phead;
- 			struct xmit_frame *pxmitframe;
- 			struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
- 
- 			spin_lock_bh(&pxmitpriv->lock);
- 
- 			xmitframe_phead = get_list_head(&psta->sleep_q);
--			xmitframe_plist = xmitframe_phead->next;
--
--			if (!list_empty(xmitframe_phead)) {
--				pxmitframe = container_of(xmitframe_plist,
--							  struct xmit_frame,
--							  list);
--
--				xmitframe_plist = xmitframe_plist->next;
--
-+			pxmitframe = list_first_entry_or_null(xmitframe_phead,
-+							      struct xmit_frame,
-+							      list);
-+			if (pxmitframe) {
- 				list_del_init(&pxmitframe->list);
- 
- 				psta->sleepq_len--;
-@@ -1542,7 +1522,7 @@ struct recv_frame *recvframe_defrag(struct rtw_adapter *adapter,
- struct recv_frame *recvframe_defrag(struct rtw_adapter *adapter,
- 				    struct rtw_queue *defrag_q)
- {
--	struct list_head *plist, *phead;
-+	struct list_head *phead;
- 	u8 wlanhdr_offset;
- 	u8 curfragnum;
- 	struct recv_frame *pnfhdr, *ptmp;
-@@ -1554,8 +1534,7 @@ struct recv_frame *recvframe_defrag(struct rtw_adapter *adapter,
- 	pfree_recv_queue = &adapter->recvpriv.free_recv_queue;
- 
- 	phead = get_list_head(defrag_q);
--	plist = phead->next;
--	prframe = container_of(plist, struct recv_frame, list);
-+	prframe = list_first_entry(phead, struct recv_frame, list);
- 	list_del_init(&prframe->list);
- 	skb = prframe->pkt;
- 
-diff --git a/drivers/staging/rtl8723au/core/rtw_xmit.c b/drivers/staging/rtl8723au/core/rtw_xmit.c
-index b82b182..3de40cf 100644
---- a/drivers/staging/rtl8723au/core/rtw_xmit.c
-+++ b/drivers/staging/rtl8723au/core/rtw_xmit.c
-@@ -1443,24 +1443,18 @@ Must be very very cautious...
- */
- static struct xmit_frame *rtw_alloc_xmitframe(struct xmit_priv *pxmitpriv)
- {
--	struct xmit_frame *pxframe = NULL;
--	struct list_head *plist, *phead;
-+	struct xmit_frame *pxframe;
- 	struct rtw_queue *pfree_xmit_queue = &pxmitpriv->free_xmit_queue;
- 
- 	spin_lock_bh(&pfree_xmit_queue->lock);
- 
--	if (list_empty(&pfree_xmit_queue->queue)) {
-+	pxframe = list_first_entry_or_null(&pfree_xmit_queue->queue,
-+					   struct xmit_frame, list);
-+	if (!pxframe) {
- 		RT_TRACE(_module_rtl871x_xmit_c_, _drv_info_,
- 			 "rtw_alloc_xmitframe:%d\n",
- 			 pxmitpriv->free_xmitframe_cnt);
--		pxframe =  NULL;
+-	path_on = path_a_on ? 0x04db25a4 : 0x0b1b25a4;
+ 	if (priv->tx_paths == 1) {
+-		path_on = 0x0bdb25a0;
+-		rtl8xxxu_write32(priv, regs[0], 0x0b1b25a0);
++		path_on = priv->fops->adda_1t_path_on;
++		rtl8xxxu_write32(priv, regs[0], priv->fops->adda_1t_init);
  	} else {
--		phead = get_list_head(pfree_xmit_queue);
--
--		plist = phead->next;
--
--		pxframe = container_of(plist, struct xmit_frame, list);
--
- 		list_del_init(&pxframe->list);
- 		pxmitpriv->free_xmitframe_cnt--;
- 		RT_TRACE(_module_rtl871x_xmit_c_, _drv_info_,
-@@ -1477,22 +1471,18 @@ static struct xmit_frame *rtw_alloc_xmitframe(struct xmit_priv *pxmitpriv)
++		path_on = path_a_on ? priv->fops->adda_2t_path_on_a :
++			priv->fops->adda_2t_path_on_b;
++
+ 		rtl8xxxu_write32(priv, regs[0], path_on);
+ 	}
  
- struct xmit_frame *rtw_alloc_xmitframe23a_ext(struct xmit_priv *pxmitpriv)
- {
--	struct xmit_frame *pxframe = NULL;
--	struct list_head *plist, *phead;
-+	struct xmit_frame *pxframe;
- 	struct rtw_queue *queue = &pxmitpriv->free_xframe_ext_queue;
+@@ -6537,6 +6539,10 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
+ 	.writeN_block_size = 1024,
+ 	.mbox_ext_reg = REG_HMBOX_EXT_0,
+ 	.mbox_ext_width = 2,
++	.adda_1t_init = 0x0b1b25a0,
++	.adda_1t_path_on = 0x0bdb25a0,
++	.adda_2t_path_on_a = 0x04db25a4,
++	.adda_2t_path_on_b = 0x0b1b25a4,
+ };
  
- 	spin_lock_bh(&queue->lock);
+ static struct rtl8xxxu_fileops rtl8723bu_fops = {
+@@ -6548,6 +6554,10 @@ static struct rtl8xxxu_fileops rtl8723bu_fops = {
+ 	.writeN_block_size = 1024,
+ 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
+ 	.mbox_ext_width = 4,
++	.adda_1t_init = 0x01c00014,
++	.adda_1t_path_on = 0x01c00014,
++	.adda_2t_path_on_a = 0x01c00014,
++	.adda_2t_path_on_b = 0x01c00014,
+ };
  
--	if (list_empty(&queue->queue)) {
-+	pxframe = list_first_entry_or_null(&queue->queue,
-+					   struct xmit_frame, list);
-+	if (!pxframe) {
- 		RT_TRACE(_module_rtl871x_xmit_c_, _drv_info_,
- 			 "rtw_alloc_xmitframe23a_ext:%d\n",
- 			 pxmitpriv->free_xframe_ext_cnt);
--		pxframe =  NULL;
- 	} else {
--		phead = get_list_head(queue);
--		plist = phead->next;
--		pxframe = container_of(plist, struct xmit_frame, list);
--
- 		list_del_init(&pxframe->list);
- 		pxmitpriv->free_xframe_ext_cnt--;
- 		RT_TRACE(_module_rtl871x_xmit_c_, _drv_info_,
+ #ifdef CONFIG_RTL8XXXU_UNTESTED
+@@ -6560,6 +6570,10 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
+ 	.writeN_block_size = 128,
+ 	.mbox_ext_reg = REG_HMBOX_EXT_0,
+ 	.mbox_ext_width = 2,
++	.adda_1t_init = 0x0b1b25a0,
++	.adda_1t_path_on = 0x0bdb25a0,
++	.adda_2t_path_on_a = 0x04db25a4,
++	.adda_2t_path_on_b = 0x0b1b25a4,
+ };
+ 
+ #endif
+@@ -6572,6 +6586,10 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
+ 	.writeN_block_size = 128,
+ 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
+ 	.mbox_ext_width = 4,
++	.adda_1t_init = 0x0fc01616,
++	.adda_1t_path_on = 0x0fc01616,
++	.adda_2t_path_on_a = 0x0fc01616,
++	.adda_2t_path_on_b = 0x0fc01616,
+ };
+ 
+ static struct usb_device_id dev_table[] = {
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 07533ac..4b8431d 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -854,4 +854,8 @@ struct rtl8xxxu_fileops {
+ 	int writeN_block_size;
+ 	u16 mbox_ext_reg;
+ 	char mbox_ext_width;
++	u32 adda_1t_init;
++	u32 adda_1t_path_on;
++	u32 adda_2t_path_on_a;
++	u32 adda_2t_path_on_b;
+ };
 -- 
 2.5.0
-
 
