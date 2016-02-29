@@ -1,112 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40140 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41995 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753028AbcB2WFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:05:55 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 065/113] rtl8xxxu: Initialize burst parameters for 8723bu
-Date: Mon, 29 Feb 2016 17:05:03 -0500
-Message-Id: <1456783551-28315-66-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230849_552365_056B1FB3)
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+	id S1754274AbcB2M2d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 07:28:33 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: dsadsa sadsad <natserver2@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: alfa awus036nhr v2 and module rtl8xxxu
+References: <loom.20160128T003525-188@post.gmane.org>
+	<wrfjd1sco25f.fsf@redhat.com> <56B38CDF.9010806@lwfinger.net>
+	<wrfjd1scmkz6.fsf@redhat.com> <wrfj60xxd2f5.fsf@redhat.com>
+	<56BA8E5D.5090402@lwfinger.net> <wrfjlh6tb9zt.fsf@redhat.com>
+	<CAOhKHAXH-PCyWQSpuuZ=-6BnE0PeDks-4p9A3G_86OHLfEdU=w@mail.gmail.com>
+	<56BB5C16.8070206@lwfinger.net> <wrfjk2lomobj.fsf@redhat.com>
+	<56D3EBCF.7000206@lwfinger.net>
+Date: Mon, 29 Feb 2016 07:28:31 -0500
+In-Reply-To: <56D3EBCF.7000206@lwfinger.net> (Larry Finger's message of "Mon,
+	29 Feb 2016 00:57:19 -0600")
+Message-ID: <wrfj7fhnn1jk.fsf@redhat.com> (sfid-20160229_132836_632247_97D622E8)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Larry Finger <Larry.Finger@lwfinger.net> writes:
+> On 02/28/2016 05:01 PM, Jes Sorensen wrote:
+>> Larry Finger <Larry.Finger@lwfinger.net> writes:
+>>> On 02/10/2016 06:01 AM, dsadsa sadsad wrote:
+>>>> So do i have to patch and recompile or not?
+>>>
+>>> It will not change a thing for the AWUS036NHR. It will fix a bug in
+>>> 1T2R devices.
+>>
+>> After pulling my hairs out over this one for days (if not weeks), I
+>> think I finally figured it out.
+>>
+>> I just pushed a patch into the rtl8xxxu-nextgen repository which makes
+>> the AWUS036NHR v2 work for me.
+>
+> Jes,
+>
+> On my unit, which seems to be V1, things are worse. The logged output is
+>
+> [   31.833290] usb 3-6: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+> [   31.833292] usb 3-6: Product: ALFA  AWUS036NHR
+> [   31.833294] usb 3-6: SerialNumber: 00e04c000001
+> [   32.066835] fuse init (API version 7.24)
+> [   33.201094] usb 3-6: Vendor: ^R^CALFA
+> [   33.201097] usb 3-6: Product: US036NHR
+> [   33.201099] usb 3-6: rtl8192cu_parse_efuse: dumping efuse (0x80 bytes):
+> [   33.201101] usb 3-6: 00: 29 81 00 74 cd 00 00 00
+> [   33.201102] usb 3-6: 08: ff 00 da 0b 7f 81 03 41
+> [   33.201103] usb 3-6: 10: 32 00 85 62 9e ad 00 c0
+> [   33.201105] usb 3-6: 18: ca 52 c3 c9 02 03 12 03
+> [   33.201106] usb 3-6: 20: 41 4c 46 41 20 20 41 57
+> [   33.201107] usb 3-6: 28: 55 53 30 33 36 4e 48 52
+> [   33.201108] usb 3-6: 30: 00 00 00 00 00 00 00 00
+> [   33.201110] usb 3-6: 38: 00 00 00 00 00 00 00 00
+> [   33.201111] usb 3-6: 40: 00 00 00 00 00 00 00 00
+> [   33.201112] usb 3-6: 48: 00 00 00 00 00 00 00 00
+> [   33.201113] usb 3-6: 50: 00 00 00 00 00 00 00 00
+> [   33.201114] usb 3-6: 58: 06 00 19 19 19 00 00 00
+> [   33.201116] usb 3-6: 60: 27 26 25 00 00 00 00 00
+> [   33.201117] usb 3-6: 68: 00 00 00 00 00 00 00 00
+> [   33.201118] usb 3-6: 70: 00 00 00 00 00 0a 40 00
+> [   33.201119] usb 3-6: 78: 0e 20 00 00 36 00 04 00
+> [   33.201121] usb 3-6: RTL8188RU rev A (TSMC) 1T1R, TX queues 2,
+> WiFi=1, BT=0, GPS=0, HI PA=1
+> [   33.201122] usb 3-6: RTL8188RU MAC: 00:c0:ca:52:c3:c9
+> [   33.201124] usb 3-6: rtl8xxxu: Loading firmware rtlwifi/rtl8192cufw_TMSC.bin
+> [   33.203491] usb 3-6: Firmware revision 80.0 (signature 0x88c1)
+> [   33.348885] usb 3-6: Failed to initialize RF
+> [   33.661460] usbcore: registered new interface driver rtl8xxxu
+> [   33.675077] rtl8xxxu 3-6:1.0 wlp0s20u6: renamed from wlan0
+> [   33.749780] usb 3-6: rtl8xxxu_int_complete: Error -71
 
-Implement burst parameter sequence for 8723bu parts. Eventually this
-should be moved into device specific sections.
+That one I have never seen before - could you try and insert some debug
+prints to see where the RF initialization fails?
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c   | 33 ++++++++++++++++++++++
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  |  5 +++-
- 2 files changed, 37 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 835eca8..ecd0f59 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -6279,6 +6279,39 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 	rtl8xxxu_write16(priv, REG_BEACON_TCFG, 0x660F);
- 
- 	/*
-+	 * Initialize burst parameters
-+	 */
-+	if (priv->rtlchip == 0x8723b) {
-+		/*
-+		 * For USB high speed set 512B packets
-+		 */
-+		val8 = rtl8xxxu_read8(priv, REG_RXDMA_PRO_8723B);
-+		val8 &= ~(BIT(4) | BIT(5));
-+		val8 |= BIT(4);
-+		val8 |= BIT(1) | BIT(2) | BIT(3);
-+		rtl8xxxu_write8(priv, REG_RXDMA_PRO_8723B, val8);
-+
-+		/*
-+		 * For USB high speed set 512B packets
-+		 */
-+		val8 = rtl8xxxu_read8(priv, REG_HT_SINGLE_AMPDU_8723B);
-+		val8 |= BIT(7);
-+		rtl8xxxu_write8(priv, REG_HT_SINGLE_AMPDU_8723B, val8);
-+
-+		rtl8xxxu_write16(priv, REG_MAX_AGGR_NUM, 0x0c14);
-+		rtl8xxxu_write8(priv, REG_AMPDU_MAX_TIME_8723B, 0x5e);
-+		rtl8xxxu_write32(priv, REG_AGGLEN_LMT, 0xffffffff);
-+		rtl8xxxu_write8(priv, REG_RX_PKT_LIMIT, 0x18);
-+		rtl8xxxu_write8(priv, REG_PIFS, 0x00);
-+		rtl8xxxu_write8(priv, REG_USTIME_TSF_8723B, 0x50);
-+		rtl8xxxu_write8(priv, REG_USTIME_EDCA, 0x50);
-+
-+		val8 = rtl8xxxu_read8(priv, REG_RSV_CTRL);
-+		val8 |= BIT(5) | BIT(6);
-+		rtl8xxxu_write8(priv, REG_RSV_CTRL, val8);
-+	}
-+
-+	/*
- 	 * Enable CCK and OFDM block
- 	 */
- 	val32 = rtl8xxxu_read32(priv, REG_FPGA0_RF_MODE);
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-index 5250388..8209830 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-@@ -405,7 +405,7 @@
- 
- /* Presumably only found on newer chips such as 8723bu */
- #define REG_RX_DMA_CTRL_8723B		0x0286
--#define REG_RX_DMA_MODE_CTRL_8723B	0x0290
-+#define REG_RXDMA_PRO_8723B		0x0290
- 
- #define REG_RF_BB_CMD_ADDR		0x02c0
- #define REG_RF_BB_CMD_DATA		0x02c4
-@@ -478,6 +478,7 @@
- #define REG_ARFR1			0x0448
- #define REG_ARFR2			0x044c
- #define REG_ARFR3			0x0450
-+#define REG_AMPDU_MAX_TIME_8723B	0x0456
- #define REG_AGGLEN_LMT			0x0458
- #define REG_AMPDU_MIN_SPACE		0x045c
- #define REG_TXPKTBUF_WMAC_LBK_BF_HD	0x045d
-@@ -496,6 +497,7 @@
- #define REG_PKT_VO_VI_LIFE_TIME		0x04c0
- #define REG_PKT_BE_BK_LIFE_TIME		0x04c2
- #define REG_STBC_SETTING		0x04c4
-+#define REG_HT_SINGLE_AMPDU_8723B	0x04c7
- #define REG_PROT_MODE_CTRL		0x04c8
- #define REG_MAX_AGGR_NUM		0x04ca
- #define REG_RTS_MAX_AGGR_NUM		0x04cb
-@@ -560,6 +562,7 @@
- #define  BEACON_DMA_ATIME_INT_TIME	2
- 
- #define REG_ATIMWND			0x055a
-+#define REG_USTIME_TSF_8723B		0x055c
- #define REG_BCN_MAX_ERR			0x055d
- #define REG_RXTSF_OFFSET_CCK		0x055e
- #define REG_RXTSF_OFFSET_OFDM		0x055f
--- 
-2.5.0
-
+Cheers,
+Jes
