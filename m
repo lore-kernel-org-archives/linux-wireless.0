@@ -1,73 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:30076 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1425347AbcBRLeU (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 06:34:20 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V2 10/24] staging: wilc1000: removes unused HOSTAPD_DBG tag
-Date: Thu, 18 Feb 2016 20:30:10 +0900
-Message-ID: <1455795024-26978-10-git-send-email-leo.kim@atmel.com> (sfid-20160218_123423_412005_D6E3A238)
-In-Reply-To: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
-References: <1455795024-26978-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:40112 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751203AbcB2WFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:53 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 004/113] rtl8xxxu: Add rtl8192eu_nic.bin to the MODULE_FIRMWARE list
+Date: Mon, 29 Feb 2016 17:04:02 -0500
+Message-Id: <1456783551-28315-5-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230557_787177_A82D1998)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-This patch removes unused HOSTAPD_DBG tag.
-
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/staging/wilc1000/linux_wlan_common.h | 4 +---
- drivers/staging/wilc1000/wilc_debugfs.c      | 5 ++---
- 2 files changed, 3 insertions(+), 6 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index 0d9a71f..1f7d806 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -2,13 +2,11 @@
- #define LINUX_WLAN_COMMON_H
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 8ef72e3..5413e35 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -54,6 +54,7 @@ MODULE_FIRMWARE("rtlwifi/rtl8723aufw_B_NoBT.bin");
+ MODULE_FIRMWARE("rtlwifi/rtl8192cufw_A.bin");
+ MODULE_FIRMWARE("rtlwifi/rtl8192cufw_B.bin");
+ MODULE_FIRMWARE("rtlwifi/rtl8192cufw_TMSC.bin");
++MODULE_FIRMWARE("rtlwifi/rtl8192eu_nic.bin");
  
- enum debug_region {
--	Hostapd_debug = 0,
--	CFG80211_debug,
-+	CFG80211_debug = 0,
- 	Init_debug,
- 	COMP = 0xFFFFFFFF,
- };
- 
--#define HOSTAPD_DBG             (1 << Hostapd_debug)
- #define CFG80211_DBG            (1 << CFG80211_debug)
- #define INIT_DBG                (1 << Init_debug)
- 
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index a27b077..fafe7cc 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -24,10 +24,9 @@ static struct dentry *wilc_dir;
-  * --------------------------------------------------------------------------------
-  */
- 
--#define DBG_REGION_ALL	(HOSTAPD_DBG | CFG80211_DBG | INIT_DBG)
-+#define DBG_REGION_ALL	(CFG80211_DBG | INIT_DBG)
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
--atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | CFG80211_DBG |
--				   HOSTAPD_DBG);
-+atomic_t WILC_REGION = ATOMIC_INIT(INIT_DBG | CFG80211_DBG);
- EXPORT_SYMBOL_GPL(WILC_REGION);
- atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
- EXPORT_SYMBOL_GPL(WILC_DEBUG_LEVEL);
+ module_param_named(debug, rtl8xxxu_debug, int, 0600);
+ MODULE_PARM_DESC(debug, "Set debug mask");
 -- 
-1.9.1
+2.5.0
 
