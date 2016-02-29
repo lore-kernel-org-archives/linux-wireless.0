@@ -1,53 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:42826 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932371AbcBZOGn (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.243]:19374 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752868AbcB2JE2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 09:06:43 -0500
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 3/3] mac80211_hwsim: Support a hw scan request for a specific BSSID
-Date: Fri, 26 Feb 2016 16:06:06 +0200
-Message-ID: <1456495566-14272-3-git-send-email-jouni@qca.qualcomm.com> (sfid-20160226_150653_965928_D6FA9057)
-In-Reply-To: <1456495566-14272-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1456495566-14272-1-git-send-email-jouni@qca.qualcomm.com>
+	Mon, 29 Feb 2016 04:04:28 -0500
+From: Tony Cho <tony.cho@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <chris.park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH] staging: wilc1000: wilc_wlan_if.h: remove unused functions
+Date: Mon, 29 Feb 2016 18:02:39 +0900
+Message-ID: <1456736559-661-1-git-send-email-tony.cho@atmel.com> (sfid-20160229_100442_871763_FF8A8029)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the hw scan request specifies a single BSSID, use that value instead
-of the wildcard BSSID in the Probe Request frames.
+This patch removes the unused functions anymore related to the configuration
+of the bus interface clock speed.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Tony Cho <tony.cho@atmel.com>
 ---
- drivers/net/wireless/mac80211_hwsim.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/staging/wilc1000/wilc_wlan_if.h | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/mac80211_hwsim.c b/drivers/net/wireless/mac80211_hwsim.c
-index a723a85..281c6b7 100644
---- a/drivers/net/wireless/mac80211_hwsim.c
-+++ b/drivers/net/wireless/mac80211_hwsim.c
-@@ -1909,6 +1909,7 @@ static void hw_scan_work(struct work_struct *work)
- 		/* send probes */
- 		for (i = 0; i < req->n_ssids; i++) {
- 			struct sk_buff *probe;
-+			struct ieee80211_mgmt *mgmt;
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index fbe34eb..f19ecb5 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -918,8 +918,6 @@ typedef enum {
  
- 			probe = ieee80211_probereq_get(hwsim->hw,
- 						       hwsim->scan_addr,
-@@ -1918,6 +1919,10 @@ static void hw_scan_work(struct work_struct *work)
- 			if (!probe)
- 				continue;
+ struct wilc;
+ int wilc_wlan_init(struct net_device *dev);
+-void wilc_bus_set_max_speed(void);
+-void wilc_bus_set_default_speed(void);
+ u32 wilc_get_chipid(struct wilc *wilc, bool update);
  
-+			mgmt = (struct ieee80211_mgmt *) probe->data;
-+			memcpy(mgmt->da, req->bssid, ETH_ALEN);
-+			memcpy(mgmt->bssid, req->bssid, ETH_ALEN);
-+
- 			if (req->ie_len)
- 				memcpy(skb_put(probe, req->ie_len), req->ie,
- 				       req->ie_len);
+ #endif
 -- 
 1.9.1
 
