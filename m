@@ -1,15 +1,15 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40173 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46732 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753500AbcB2WGD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 17:06:03 -0500
+	id S1753211AbcB2WF5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:57 -0500
 From: Jes.Sorensen@redhat.com
 To: linux-wireless@vger.kernel.org
 Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
 	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 093/113] rtl8xxxu: Set the correct TX descriptor bits for agg and break on 8723b
-Date: Mon, 29 Feb 2016 17:05:31 -0500
-Message-Id: <1456783551-28315-94-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232950_491197_C4AB8250)
+Subject: [PATCH 079/113] rtl8xxxu: Do not use hard-wired RF enable settings for 8723bu
+Date: Mon, 29 Feb 2016 17:05:17 -0500
+Message-Id: <1456783551-28315-80-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230801_176297_A0575008)
 In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
@@ -17,67 +17,86 @@ List-ID: <linux-wireless.vger.kernel.org>
 
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Fixup victim of the relocated bits for AGG_ENABLE/AGG_BREAK in the 40
-byte TX descriptor
+These settings simply block the 8723bu, for now leave an empty
+function.
+
+With this change we can finally communicate with aliens using the
+8723bu!
 
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 19 ++++++++++++++++---
- 1 file changed, 16 insertions(+), 3 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 10 +++++++++-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |  1 +
+ 2 files changed, 10 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 62ed6af..48a669e 100644
+index 7fb9830..9caee4dc 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -6953,6 +6953,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- 	u16 rate_flag = tx_info->control.rates[0].flags;
- 	int tx_desc_size = priv->fops->tx_desc_size;
- 	int ret;
-+	bool txdesc40, ampdu_enable;
+@@ -1596,6 +1596,10 @@ static void rtl8723a_enable_rf(struct rtl8xxxu_priv *priv)
+ 	rtl8xxxu_write8(priv, REG_TXPAUSE, 0x00);
+ }
  
- 	if (skb_headroom(skb) < tx_desc_size) {
- 		dev_warn(dev,
-@@ -6980,6 +6981,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- 	if (ieee80211_is_action(hdr->frame_control))
- 		rtl8xxxu_dump_action(dev, hdr);
- 
-+	txdesc40 = (tx_desc_size == 40);
- 	tx_info->rate_driver_data[0] = hw;
- 
- 	if (control && control->sta)
-@@ -7028,6 +7030,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- 		tx_desc->txdw5 |= cpu_to_le32(0x0001ff00);
- 
- 	/* (tx_info->flags & IEEE80211_TX_CTL_AMPDU) && */
-+	ampdu_enable = false;
- 	if (ieee80211_is_data_qos(hdr->frame_control) && sta) {
- 		if (sta->ht_cap.ht_supported) {
- 			u32 ampdu, val32;
-@@ -7036,11 +7039,21 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
- 			val32 = ampdu << TXDESC_AMPDU_DENSITY_SHIFT;
- 			tx_desc->txdw2 |= cpu_to_le32(val32);
- 
-+			ampdu_enable = true;
-+		}
-+	}
++static void rtl8723b_enable_rf(struct rtl8xxxu_priv *priv)
++{
++}
 +
-+	if (!txdesc40) {
-+		if (ampdu_enable)
- 			tx_desc->txdw1 |= cpu_to_le32(TXDESC_AGG_ENABLE_8723A);
--		} else
-+		else
- 			tx_desc->txdw1 |= cpu_to_le32(TXDESC_AGG_BREAK_8723A);
--	} else
--		tx_desc->txdw1 |= cpu_to_le32(TXDESC_AGG_BREAK_8723A);
-+	} else {
-+		if (ampdu_enable)
-+			tx_desc->txdw2 |= cpu_to_le32(TXDESC_AGG_ENABLE_8723B);
-+		else
-+			tx_desc->txdw2 |= cpu_to_le32(TXDESC_AGG_BREAK_8723B);
-+	};
+ static void rtl8723a_disable_rf(struct rtl8xxxu_priv *priv)
+ {
+ 	u8 sps0;
+@@ -7665,7 +7669,7 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
+ 	init_usb_anchor(&priv->tx_anchor);
+ 	init_usb_anchor(&priv->int_anchor);
  
- 	if (ieee80211_is_data_qos(hdr->frame_control))
- 		tx_desc->txdw4 |= cpu_to_le32(TXDESC_QOS);
+-	rtl8723a_enable_rf(priv);
++	priv->fops->enable_rf(priv);
+ 	if (priv->usb_interrupts) {
+ 		ret = rtl8xxxu_submit_int_urb(hw);
+ 		if (ret)
+@@ -8031,6 +8035,7 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
+ 	.phy_iq_calibrate = rtl8723au_phy_iq_calibrate,
+ 	.config_channel = rtl8723au_config_channel,
+ 	.parse_rx_desc = rtl8723au_parse_rx_desc,
++	.enable_rf = rtl8723a_enable_rf,
+ 	.writeN_block_size = 1024,
+ 	.mbox_ext_reg = REG_HMBOX_EXT_0,
+ 	.mbox_ext_width = 2,
+@@ -8052,6 +8057,7 @@ static struct rtl8xxxu_fileops rtl8723bu_fops = {
+ 	.parse_rx_desc = rtl8723bu_parse_rx_desc,
+ 	.init_aggregation = rtl8723bu_init_aggregation,
+ 	.init_statistics = rtl8723bu_init_statistics,
++	.enable_rf = rtl8723b_enable_rf,
+ 	.writeN_block_size = 1024,
+ 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
+ 	.mbox_ext_width = 4,
+@@ -8072,6 +8078,7 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
+ 	.phy_iq_calibrate = rtl8723au_phy_iq_calibrate,
+ 	.config_channel = rtl8723au_config_channel,
+ 	.parse_rx_desc = rtl8723au_parse_rx_desc,
++	.enable_rf = rtl8723a_enable_rf,
+ 	.writeN_block_size = 128,
+ 	.mbox_ext_reg = REG_HMBOX_EXT_0,
+ 	.mbox_ext_width = 2,
+@@ -8091,6 +8098,7 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
+ 	.phy_iq_calibrate = rtl8723bu_phy_iq_calibrate,
+ 	.config_channel = rtl8723bu_config_channel,
+ 	.parse_rx_desc = rtl8723bu_parse_rx_desc,
++	.enable_rf = rtl8723b_enable_rf,
+ 	.writeN_block_size = 128,
+ 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
+ 	.mbox_ext_width = 4,
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index b75678b..ac8f47f 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1135,6 +1135,7 @@ struct rtl8xxxu_fileops {
+ 			      struct ieee80211_rx_status *rx_status);
+ 	void (*init_aggregation) (struct rtl8xxxu_priv *priv);
+ 	void (*init_statistics) (struct rtl8xxxu_priv *priv);
++	void (*enable_rf) (struct rtl8xxxu_priv *priv);
+ 	int writeN_block_size;
+ 	u16 mbox_ext_reg;
+ 	char mbox_ext_width;
 -- 
 2.5.0
 
