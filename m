@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45130 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:58023 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1425796AbcBRUIr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 15:08:47 -0500
-Message-ID: <1455826121.2084.17.camel@sipsolutions.net> (sfid-20160218_210909_946479_89E66720)
-Subject: Re: [PATCH 7/9] rfkill: Create "rfkill-airplane_mode" LED trigger
-From: Johannes Berg <johannes@sipsolutions.net>
-To: =?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux@endlessm.com,
-	=?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
-	<jprvita@endlessm.com>
-Date: Thu, 18 Feb 2016 21:08:41 +0100
-In-Reply-To: <1454946096-9752-8-git-send-email-jprvita@endlessm.com> (sfid-20160208_164147_435264_67EE08E5)
-References: <1454946096-9752-1-git-send-email-jprvita@endlessm.com>
-	 <1454946096-9752-8-git-send-email-jprvita@endlessm.com>
-	 (sfid-20160208_164147_435264_67EE08E5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1753501AbcB2WGD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:06:03 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 105/113] rtl8xxxu: Remove unncessary semicolon
+Date: Mon, 29 Feb 2016 17:05:43 -0500
+Message-Id: <1456783551-28315-106-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232951_688318_7084D714)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-02-08 at 10:41 -0500, João Paulo Rechi Vita wrote:
-> This creates a new LED trigger to be used by platform drivers as a
-> default trigger for airplane-mode indicator LEDs.
-> 
-> By default this trigger will fire when RFKILL_OP_CHANGE_ALL is called
-> for all types (RFKILL_TYPE_ALL), setting the LED brightness to
-> LED_FULL
-> when the changing the state to blocked, and to LED_OFF when the
-> changing
-> the state to unblocked. In the future there will be a mechanism for
-> userspace to override the default policy, so it can implement its
-> own.
-> 
-> This trigger will be used by the asus-wireless x86 platform driver.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Just one comment - I think you should be consistent with the _ vs - and
-just use "rfkill-airplane-mode" as the name.
+This removes an superfluous semicolon.
 
-johannes
+Reported-by: Fengguang Wu <fengguang.wu@intel.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 8cb76e2..67ea89b 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -7195,7 +7195,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 			tx_desc->txdw3 |=
+ 				cpu_to_le32(TXDESC_HW_RTS_ENABLE_8723B);
+ 		}
+-	};
++	}
+ 
+ 	rtl8xxxu_calc_tx_desc_csum(tx_desc);
+ 
+-- 
+2.5.0
+
