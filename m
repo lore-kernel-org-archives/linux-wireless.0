@@ -1,52 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:44240 "EHLO mga02.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49030 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750977AbcBCTw1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 14:52:27 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: fix VHT MU-MIMO frame processing
-Date: Wed,  3 Feb 2016 21:52:23 +0200
-Message-Id: <1454529143-9299-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160203_205231_194829_031A29BE)
+	id S1753109AbcB2WF4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:56 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 075/113] rtl8xxxu: 8723bu: REG_BT_COEX_TABLE4 is only 8 bits
+Date: Mon, 29 Feb 2016 17:05:13 -0500
+Message-Id: <1456783551-28315-76-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232953_399585_9AD67716)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-The source and destintation addresses in the memcpy arguments
-are flipped. Fix that.
+The BT_COEX_TABLE register list contains 3 32 bit registers and one 8
+bit register. Hence, use rtl8xxxu_write8() when writing the 8 bit
+register.
 
-Fixes: 23a1f8d44c0b("mac80211: process and save VHT MU-MIMO group frame")
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- net/mac80211/vht.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index 204cf9a..341d192 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -459,10 +459,12 @@ void ieee80211_process_mu_groups(struct ieee80211_sub_if_data *sdata,
- 		    bss_conf->mu_group.membership, WLAN_MEMBERSHIP_LEN))
- 		return;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index b4660c6..690e31d 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -5954,7 +5954,7 @@ static void rtl8723bu_init_bt(struct rtl8xxxu_priv *priv)
+ 	rtl8xxxu_write32(priv, REG_BT_COEX_TABLE1, 0x55555555);
+ 	rtl8xxxu_write32(priv, REG_BT_COEX_TABLE2, 0x5a5a5a5a);
+ 	rtl8xxxu_write32(priv, REG_BT_COEX_TABLE3, 0x00ffffff);
+-	rtl8xxxu_write32(priv, REG_BT_COEX_TABLE4, 0x00000003);
++	rtl8xxxu_write8(priv, REG_BT_COEX_TABLE4, 0x03);
  
--	memcpy(mgmt->u.action.u.vht_group_notif.membership,
--	       bss_conf->mu_group.membership, WLAN_MEMBERSHIP_LEN);
--	memcpy(mgmt->u.action.u.vht_group_notif.position,
--	       bss_conf->mu_group.position, WLAN_USER_POSITION_LEN);
-+	memcpy(bss_conf->mu_group.membership,
-+	       mgmt->u.action.u.vht_group_notif.membership,
-+	       WLAN_MEMBERSHIP_LEN);
-+	memcpy(bss_conf->mu_group.position,
-+	       mgmt->u.action.u.vht_group_notif.position,
-+	       WLAN_USER_POSITION_LEN);
- 
- 	ieee80211_bss_info_change_notify(sdata, BSS_CHANGED_MU_GROUPS);
- }
+ 	memset(&h2c, 0, sizeof(struct h2c_cmd));
+ 	h2c.ignore_wlan.cmd = H2C_8723B_BT_IGNORE_WLANACT;
 -- 
 2.5.0
 
