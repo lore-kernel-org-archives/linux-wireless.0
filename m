@@ -1,144 +1,242 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:34169 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756664AbcBYAJH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 24 Feb 2016 19:09:07 -0500
-Received: by mail-wm0-f49.google.com with SMTP id b205so10857035wmb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 24 Feb 2016 16:09:06 -0800 (PST)
-From: Andreas Fenkart <afenkart@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46702 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752483AbcB2WFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:53 -0500
+From: Jes.Sorensen@redhat.com
 To: linux-wireless@vger.kernel.org
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Andreas Fenkart <afenkart@gmail.com>
-Subject: [PATCH 4/7] mwifiex: scan: factor out dbg_security_flags
-Date: Thu, 25 Feb 2016 01:08:49 +0100
-Message-Id: <1456358932-23114-5-git-send-email-afenkart@gmail.com> (sfid-20160225_010913_593367_0415CB73)
-In-Reply-To: <1456358932-23114-1-git-send-email-afenkart@gmail.com>
-References: <1456358932-23114-1-git-send-email-afenkart@gmail.com>
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 005/113] rtl8xxxu: Implment rtl8192eu_power_on()
+Date: Mon, 29 Feb 2016 17:04:03 -0500
+Message-Id: <1456783551-28315-6-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_231124_885714_0D55D1BB)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-merge copy/paste code
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
+This implements the rtl8192eu power on sequence, and splits it off
+from the rtl8192cu/rtl8723au power on sequence.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/net/wireless/marvell/mwifiex/scan.c | 73 ++++++++++-------------------
- 1 file changed, 24 insertions(+), 49 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c   | 133 ++++++++++++++++++++-
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  |   6 +
+ 2 files changed, 133 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index f612c1b..5588750 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -76,6 +76,26 @@ static u8 mwifiex_rsn_oui[CIPHER_SUITE_MAX][4] = {
- 	{ 0x00, 0x0f, 0xac, 0x04 },	/* AES  */
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 5413e35..5f30ae9 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -3791,7 +3791,7 @@ exit:
+ 	return ret;
+ }
+ 
+-static void rtl8xxxu_disabled_to_emu(struct rtl8xxxu_priv *priv)
++static void rtl8723a_disabled_to_emu(struct rtl8xxxu_priv *priv)
+ {
+ 	u8 val8;
+ 
+@@ -3811,7 +3811,82 @@ static void rtl8xxxu_disabled_to_emu(struct rtl8xxxu_priv *priv)
+ 	rtl8xxxu_write8(priv, REG_APS_FSMCO + 1, val8);
+ }
+ 
+-static int rtl8xxxu_emu_to_active(struct rtl8xxxu_priv *priv)
++static void rtl8192e_disabled_to_emu(struct rtl8xxxu_priv *priv)
++{
++	u8 val8;
++
++	/* Clear suspend enable and power down enable*/
++	val8 = rtl8xxxu_read8(priv, REG_APS_FSMCO + 1);
++	val8 &= ~(BIT(3) | BIT(4));
++	rtl8xxxu_write8(priv, REG_APS_FSMCO + 1, val8);
++}
++
++static int rtl8192e_emu_to_active(struct rtl8xxxu_priv *priv)
++{
++	u8 val8;
++	u32 val32;
++	int count, ret = 0;
++
++	/* disable HWPDN 0x04[15]=0*/
++	val8 = rtl8xxxu_read8(priv, REG_APS_FSMCO + 1);
++	val8 &= ~BIT(7);
++	rtl8xxxu_write8(priv, REG_APS_FSMCO + 1, val8);
++
++	/* disable SW LPS 0x04[10]= 0 */
++	val8 = rtl8xxxu_read8(priv, REG_APS_FSMCO + 1);
++	val8 &= ~BIT(2);
++	rtl8xxxu_write8(priv, REG_APS_FSMCO + 1, val8);
++
++	/* disable WL suspend*/
++	val8 = rtl8xxxu_read8(priv, REG_APS_FSMCO + 1);
++	val8 &= ~(BIT(3) | BIT(4));
++	rtl8xxxu_write8(priv, REG_APS_FSMCO + 1, val8);
++
++	/* wait till 0x04[17] = 1 power ready*/
++	for (count = RTL8XXXU_MAX_REG_POLL; count; count--) {
++		val32 = rtl8xxxu_read32(priv, REG_APS_FSMCO);
++		if (val32 & BIT(17))
++			break;
++
++		udelay(10);
++	}
++
++	if (!count) {
++		ret = -EBUSY;
++		goto exit;
++	}
++
++	/* We should be able to optimize the following three entries into one */
++
++	/* release WLON reset 0x04[16]= 1*/
++	val8 = rtl8xxxu_read8(priv, REG_APS_FSMCO + 2);
++	val8 |= BIT(0);
++	rtl8xxxu_write8(priv, REG_APS_FSMCO + 2, val8);
++
++	/* set, then poll until 0 */
++	val32 = rtl8xxxu_read32(priv, REG_APS_FSMCO);
++	val32 |= APS_FSMCO_MAC_ENABLE;
++	rtl8xxxu_write32(priv, REG_APS_FSMCO, val32);
++
++	for (count = RTL8XXXU_MAX_REG_POLL; count; count--) {
++		val32 = rtl8xxxu_read32(priv, REG_APS_FSMCO);
++		if ((val32 & APS_FSMCO_MAC_ENABLE) == 0) {
++			ret = 0;
++			break;
++		}
++		udelay(10);
++	}
++
++	if (!count) {
++		ret = -EBUSY;
++		goto exit;
++	}
++
++exit:
++	return ret;
++}
++
++static int rtl8723a_emu_to_active(struct rtl8xxxu_priv *priv)
+ {
+ 	u8 val8;
+ 	u32 val32;
+@@ -3940,9 +4015,9 @@ static int rtl8723au_power_on(struct rtl8xxxu_priv *priv)
+ 	 */
+ 	rtl8xxxu_write8(priv, REG_RSV_CTRL, 0x0);
+ 
+-	rtl8xxxu_disabled_to_emu(priv);
++	rtl8723a_disabled_to_emu(priv);
+ 
+-	ret = rtl8xxxu_emu_to_active(priv);
++	ret = rtl8723a_emu_to_active(priv);
+ 	if (ret)
+ 		goto exit;
+ 
+@@ -4081,6 +4156,52 @@ static int rtl8192cu_power_on(struct rtl8xxxu_priv *priv)
+ 
+ #endif
+ 
++static int rtl8192eu_power_on(struct rtl8xxxu_priv *priv)
++{
++	u16 val16;
++	u32 val32;
++	int ret;
++
++	ret = 0;
++
++	val32 = rtl8xxxu_read32(priv, REG_SYS_CFG);
++	if (val32 & SYS_CFG_SPS_LDO_SEL) {
++		rtl8xxxu_write8(priv, REG_LDO_SW_CTRL, 0xc3);
++	} else {
++		/*
++		 * Raise 1.2V voltage
++		 */
++		val32 = rtl8xxxu_read32(priv, REG_8192E_LDOV12_CTRL);
++		val32 &= 0xff0fffff;
++		val32 |= 0x00500000;
++		rtl8xxxu_write32(priv, REG_8192E_LDOV12_CTRL, val32);
++		rtl8xxxu_write8(priv, REG_LDO_SW_CTRL, 0x83);
++	}
++
++	rtl8192e_disabled_to_emu(priv);
++
++	ret = rtl8192e_emu_to_active(priv);
++	if (ret)
++		goto exit;
++
++	rtl8xxxu_write16(priv, REG_CR, 0x0000);
++
++	/*
++	 * Enable MAC DMA/WMAC/SCHEDULE/SEC block
++	 * Set CR bit10 to enable 32k calibration.
++	 */
++	val16 = rtl8xxxu_read16(priv, REG_CR);
++	val16 |= (CR_HCI_TXDMA_ENABLE | CR_HCI_RXDMA_ENABLE |
++		  CR_TXDMA_ENABLE | CR_RXDMA_ENABLE |
++		  CR_PROTOCOL_ENABLE | CR_SCHEDULE_ENABLE |
++		  CR_MAC_TX_ENABLE | CR_MAC_RX_ENABLE |
++		  CR_SECURITY_ENABLE | CR_CALTIMER_ENABLE);
++	rtl8xxxu_write16(priv, REG_CR, val16);
++
++exit:
++	return ret;
++}
++
+ static void rtl8xxxu_power_off(struct rtl8xxxu_priv *priv)
+ {
+ 	u8 val8;
+@@ -5975,8 +6096,8 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
+ static struct rtl8xxxu_fileops rtl8192eu_fops = {
+ 	.parse_efuse = rtl8192eu_parse_efuse,
+ 	.load_firmware = rtl8192eu_load_firmware,
+-	.power_on = rtl8192cu_power_on,
+-	.writeN_block_size = 1024,
++	.power_on = rtl8192eu_power_on,
++	.writeN_block_size = 128,
  };
  
-+static void
-+_dbg_security_flags(int log_level, struct mwifiex_private *priv,
-+		    struct mwifiex_bssdescriptor *bss_desc)
-+{
-+	_mwifiex_dbg(priv->adapter, log_level,
-+		     "info: %s: WPA:\twpa_ie=%#x wpa2_ie=%#x WEP=%s WPA=%s WPA2=%s\tEncMode=%#x privacy=%#x\n",
-+		     __func__,
-+		     bss_desc->bcn_wpa_ie ?
-+		     bss_desc->bcn_wpa_ie->vend_hdr.element_id : 0,
-+		     bss_desc->bcn_rsn_ie ?
-+		     bss_desc->bcn_rsn_ie->ieee_hdr.element_id : 0,
-+		     priv->sec_info.wep_enabled ? "e" : "d",
-+		     priv->sec_info.wpa_enabled ? "e" : "d",
-+		     priv->sec_info.wpa2_enabled ? "e" : "d",
-+		     priv->sec_info.encryption_mode,
-+		     bss_desc->privacy);
-+}
-+#define dbg_security_flags(mask, priv, bss_desc) \
-+	_dbg_security_flags(MWIFIEX_DBG_##mask, priv, bss_desc)
+ static struct usb_device_id dev_table[] = {
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+index a934c0d..02c7d6c 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+@@ -72,6 +72,7 @@
+ #define REG_AFE_MISC			0x0010
+ #define REG_SPS0_CTRL			0x0011
+ #define REG_SPS_OCP_CFG			0x0018
++#define REG_8192E_LDOV12_CTRL		0x0014
+ #define REG_RSV_CTRL			0x001c
+ 
+ #define REG_RF_CTRL			0x001f
+@@ -178,6 +179,8 @@
+ 						   control */
+ #define  MULTI_GPS_FUNC_EN		BIT(22)	/* GPS function enable */
+ 
++#define REG_LDO_SW_CTRL			0x007c	/* 8192eu */
 +
- static bool
- has_ieee_hdr(struct ieee_types_generic *ie, u8 key)
- {
-@@ -243,19 +263,7 @@ mwifiex_is_bss_wpa(struct mwifiex_private *priv,
- 	    * LinkSys WRT54G && bss_desc->privacy
- 	    */
- 	 ) {
--		mwifiex_dbg(priv->adapter, INFO,
--			    "info: %s: WPA:\t"
--			    "wpa_ie=%#x wpa2_ie=%#x WEP=%s WPA=%s WPA2=%s\t"
--			    "EncMode=%#x privacy=%#x\n", __func__,
--			    bss_desc->bcn_wpa_ie ?
--			    bss_desc->bcn_wpa_ie->vend_hdr.element_id : 0,
--			    bss_desc->bcn_rsn_ie ?
--			    bss_desc->bcn_rsn_ie->ieee_hdr.element_id : 0,
--			    (priv->sec_info.wep_enabled) ? "e" : "d",
--			    (priv->sec_info.wpa_enabled) ? "e" : "d",
--			    (priv->sec_info.wpa2_enabled) ? "e" : "d",
--			    priv->sec_info.encryption_mode,
--			    bss_desc->privacy);
-+		dbg_security_flags(INFO, priv, bss_desc);
- 		return true;
- 	}
- 	return false;
-@@ -276,19 +284,7 @@ mwifiex_is_bss_wpa2(struct mwifiex_private *priv,
- 		 * Privacy bit may NOT be set in some APs like
- 		 * LinkSys WRT54G && bss_desc->privacy
- 		 */
--		mwifiex_dbg(priv->adapter, INFO,
--			    "info: %s: WPA2:\t"
--			    "wpa_ie=%#x wpa2_ie=%#x WEP=%s WPA=%s WPA2=%s\t"
--			    "EncMode=%#x privacy=%#x\n", __func__,
--			    bss_desc->bcn_wpa_ie ?
--			    bss_desc->bcn_wpa_ie->vend_hdr.element_id : 0,
--			    bss_desc->bcn_rsn_ie ?
--			    bss_desc->bcn_rsn_ie->ieee_hdr.element_id : 0,
--			    (priv->sec_info.wep_enabled) ? "e" : "d",
--			    (priv->sec_info.wpa_enabled) ? "e" : "d",
--			    (priv->sec_info.wpa2_enabled) ? "e" : "d",
--			    priv->sec_info.encryption_mode,
--			    bss_desc->privacy);
-+		dbg_security_flags(INFO, priv, bss_desc);
- 		return true;
- 	}
- 	return false;
-@@ -325,17 +321,7 @@ mwifiex_is_bss_dynamic_wep(struct mwifiex_private *priv,
- 	    !has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC) &&
- 	    !has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN) &&
- 	    priv->sec_info.encryption_mode && bss_desc->privacy) {
--		mwifiex_dbg(priv->adapter, INFO,
--			    "info: %s: dynamic\t"
--			    "WEP: wpa_ie=%#x wpa2_ie=%#x\t"
--			    "EncMode=%#x privacy=%#x\n",
--			    __func__,
--			    bss_desc->bcn_wpa_ie ?
--			    bss_desc->bcn_wpa_ie->vend_hdr.element_id : 0,
--			    bss_desc->bcn_rsn_ie ?
--			    bss_desc->bcn_rsn_ie->ieee_hdr.element_id : 0,
--			    priv->sec_info.encryption_mode,
--			    bss_desc->privacy);
-+		dbg_security_flags(INFO, priv, bss_desc);
- 		return true;
- 	}
- 	return false;
-@@ -448,18 +434,7 @@ mwifiex_is_network_compatible(struct mwifiex_private *priv,
- 		}
+ #define REG_MCU_FW_DL			0x0080
+ #define  MCU_FW_DL_ENABLE		BIT(0)
+ #define  MCU_FW_DL_READY		BIT(1)
+@@ -229,6 +232,7 @@
+ #define  SYS_CFG_PAD_HWPD_IDN		BIT(22)
+ #define  SYS_CFG_TRP_VAUX_EN		BIT(23)
+ #define  SYS_CFG_TRP_BT_EN		BIT(24)
++#define  SYS_CFG_SPS_LDO_SEL		BIT(24)	/* 8192eu */
+ #define  SYS_CFG_BD_PKG_SEL		BIT(25)
+ #define  SYS_CFG_BD_HCI_SEL		BIT(26)
+ #define  SYS_CFG_TYPE_ID		BIT(27)
+@@ -261,6 +265,8 @@
+ #define  GPIO_USB_SUSEN			BIT(23)
+ #define  GPIO_RF_RL_ID			(BIT(31) | BIT(30) | BIT(29) | BIT(28))
  
- 		/* Security doesn't match */
--		mwifiex_dbg(adapter, ERROR,
--			    "info: %s: failed: wpa_ie=%#x wpa2_ie=%#x WEP=%s\t"
--			    "WPA=%s WPA2=%s EncMode=%#x privacy=%#x\n",
--			    __func__,
--			    bss_desc->bcn_wpa_ie ?
--			    bss_desc->bcn_wpa_ie->vend_hdr.element_id : 0,
--			    bss_desc->bcn_rsn_ie ?
--			    bss_desc->bcn_rsn_ie->ieee_hdr.element_id : 0,
--			    (priv->sec_info.wep_enabled) ? "e" : "d",
--			    (priv->sec_info.wpa_enabled) ? "e" : "d",
--			    (priv->sec_info.wpa2_enabled) ? "e" : "d",
--			    priv->sec_info.encryption_mode, bss_desc->privacy);
-+		dbg_security_flags(ERROR, priv, bss_desc);
- 		return -1;
- 	}
- 
++#define REG_SYS_CFG2			0x00fc	/* 8192eu */
++
+ /* 0x0100 ~ 0x01FF	MACTOP General Configuration */
+ #define REG_CR				0x0100
+ #define  CR_HCI_TXDMA_ENABLE		BIT(0)
 -- 
-2.7.0
+2.5.0
 
