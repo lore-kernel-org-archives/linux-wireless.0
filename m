@@ -1,45 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42069 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:43376 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933799AbcBCSkE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 13:40:04 -0500
+	id S1753248AbcB2WF5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:57 -0500
 From: Jes.Sorensen@redhat.com
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 25/28] rtl8xxxu: Remove unused len/cnt variables from rtl8xxxu_rx_complete()
-Date: Wed,  3 Feb 2016 13:39:59 -0500
-Message-Id: <1454524802-26763-26-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160203_194134_738154_1D537DF6)
-In-Reply-To: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1454524802-26763-1-git-send-email-Jes.Sorensen@redhat.com>
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 071/113] rtl8xxxu: Add missing blank space in front of bracket
+Date: Mon, 29 Feb 2016 17:05:09 -0500
+Message-Id: <1456783551-28315-72-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230807_419506_285BBA16)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
+Keep the automated tools happy
+
 Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 1201836..a6c8dab 100644
+index 50494e4..a0a847c 100644
 --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
 +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -5034,13 +5034,11 @@ static void rtl8xxxu_rx_complete(struct urb *urb)
- 	struct device *dev = &priv->udev->dev;
- 	__le32 *_rx_desc_le = (__le32 *)skb->data;
- 	u32 *_rx_desc = (u32 *)skb->data;
--	int cnt, len, drvinfo_sz, desc_shift, i;
-+	int drvinfo_sz, desc_shift, i;
+@@ -6155,7 +6155,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 		rtl8xxxu_write32(priv, REG_TXDMA_OFFSET_CHK, val32);
+ 	}
  
- 	for (i = 0; i < (sizeof(struct rtl8xxxu_rx_desc) / sizeof(u32)); i++)
- 		_rx_desc[i] = le32_to_cpu(_rx_desc_le[i]);
- 
--	cnt = rx_desc->frag;
--	len = rx_desc->pktlen;
- 	drvinfo_sz = rx_desc->drvinfo_sz * 8;
- 	desc_shift = rx_desc->shift;
- 	skb_put(skb, urb->actual_length);
+-	if (!macpower){
++	if (!macpower) {
+ 		if (priv->ep_tx_normal_queue)
+ 			val8 = TX_PAGE_NUM_NORM_PQ;
+ 		else
 -- 
 2.5.0
 
