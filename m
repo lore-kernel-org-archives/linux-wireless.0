@@ -1,411 +1,149 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:33244 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932438AbcBWGiV (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 01:38:21 -0500
-Received: by mail-pa0-f53.google.com with SMTP id fl4so105056015pad.0
-        for <linux-wireless@vger.kernel.org>; Mon, 22 Feb 2016 22:38:21 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 4/7] staging: wilc1000: handle_cfg_param: rename wid_cnt
-Date: Tue, 23 Feb 2016 15:38:00 +0900
-Message-Id: <1456209483-20345-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20160223_073824_810451_8F7AE057)
-In-Reply-To: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1456209483-20345-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46725 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753105AbcB2WF4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:56 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 050/113] rtl8xxxu: Initial functionality to handle C2H events for 8723bu
+Date: Mon, 29 Feb 2016 17:04:48 -0500
+Message-Id: <1456783551-28315-51-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230845_136426_F332E739)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wid_cnt variable is used as indicating array index of struct wid_list.
-This patch renames wid_cnt to i that makes more readability.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+The 64 bit mailbox commands also provide a different method for
+mailbox command responses (C2H events).
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 184 +++++++++++++++---------------
- 1 file changed, 92 insertions(+), 92 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 34 ++++++++++++++-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 54 ++++++++++++++++++++++++
+ 2 files changed, 87 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 382f946..d207c5c 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -473,259 +473,259 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
- 	s32 result = 0;
- 	struct wid wid_list[32];
- 	struct host_if_drv *hif_drv = vif->hif_drv;
--	int wid_cnt = 0;
-+	int i = 0;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index b1b3e14..35e2522 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -6815,6 +6815,36 @@ static int rtl8723bu_parse_rx_desc(struct rtl8xxxu_priv *priv,
+ 	return rx_type;
+ }
  
- 	down(&hif_drv->sem_cfg_values);
++static void rtl8723bu_handle_c2h(struct rtl8xxxu_priv *priv,
++				 struct sk_buff *skb)
++{
++	struct rtl8723bu_c2h *c2h = (struct rtl8723bu_c2h *)skb->data;
++	struct device *dev = &priv->udev->dev;
++	int len;
++
++	len = skb->len - 2;
++
++	pr_info("%s: C2H ID %02x seq %02x, len %02x %02x\n", __func__,
++		c2h->id, c2h->seq, len, c2h->bt_info.response_source);
++
++	switch(c2h->id) {
++	case C2H_8723B_BT_INFO:
++		if (c2h->bt_info.response_source >
++		    BT_INFO_SRC_8723B_BT_ACTIVE_SEND)
++			dev_info(dev, "C2H_BT_INFO WiFi only firmware\n");
++		else
++			dev_info(dev, "C2H_BT_INFO BT/WiFi coexist firmware\n");
++
++		if (c2h->bt_info.bt_has_reset)
++			dev_info(dev, "BT has been reset\n");
++
++		break;
++	default:
++		pr_info("%s: Unhandled C2H event %02x\n", __func__, c2h->id);
++		break;
++	}
++}
++
+ static void rtl8xxxu_rx_complete(struct urb *urb)
+ {
+ 	struct rtl8xxxu_rx_urb *rx_urb =
+@@ -6843,8 +6873,10 @@ static void rtl8xxxu_rx_complete(struct urb *urb)
  
- 	if (cfg_param_attr->flag & BSS_TYPE) {
- 		if (cfg_param_attr->bss_type < 6) {
--			wid_list[wid_cnt].id = WID_BSS_TYPE;
--			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->bss_type;
--			wid_list[wid_cnt].type = WID_CHAR;
--			wid_list[wid_cnt].size = sizeof(char);
-+			wid_list[i].id = WID_BSS_TYPE;
-+			wid_list[i].val = (s8 *)&cfg_param_attr->bss_type;
-+			wid_list[i].type = WID_CHAR;
-+			wid_list[i].size = sizeof(char);
- 			hif_drv->cfg_values.bss_type = (u8)cfg_param_attr->bss_type;
- 		} else {
- 			netdev_err(vif->ndev, "check value 6 over\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
- 	if (cfg_param_attr->flag & AUTH_TYPE) {
- 		if (cfg_param_attr->auth_type == 1 ||
- 		    cfg_param_attr->auth_type == 2 ||
- 		    cfg_param_attr->auth_type == 5) {
--			wid_list[wid_cnt].id = WID_AUTH_TYPE;
--			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->auth_type;
--			wid_list[wid_cnt].type = WID_CHAR;
--			wid_list[wid_cnt].size = sizeof(char);
-+			wid_list[i].id = WID_AUTH_TYPE;
-+			wid_list[i].val = (s8 *)&cfg_param_attr->auth_type;
-+			wid_list[i].type = WID_CHAR;
-+			wid_list[i].size = sizeof(char);
- 			hif_drv->cfg_values.auth_type = (u8)cfg_param_attr->auth_type;
- 		} else {
- 			netdev_err(vif->ndev, "Impossible value \n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
- 	if (cfg_param_attr->flag & AUTHEN_TIMEOUT) {
- 		if (cfg_param_attr->auth_timeout > 0 &&
- 		    cfg_param_attr->auth_timeout < 65536) {
--			wid_list[wid_cnt].id = WID_AUTH_TIMEOUT;
--			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->auth_timeout;
--			wid_list[wid_cnt].type = WID_SHORT;
--			wid_list[wid_cnt].size = sizeof(u16);
-+			wid_list[i].id = WID_AUTH_TIMEOUT;
-+			wid_list[i].val = (s8 *)&cfg_param_attr->auth_timeout;
-+			wid_list[i].type = WID_SHORT;
-+			wid_list[i].size = sizeof(u16);
- 			hif_drv->cfg_values.auth_timeout = cfg_param_attr->auth_timeout;
- 		} else {
- 			netdev_err(vif->ndev, "Range(1 ~ 65535) over\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
- 	if (cfg_param_attr->flag & POWER_MANAGEMENT) {
- 		if (cfg_param_attr->power_mgmt_mode < 5) {
--			wid_list[wid_cnt].id = WID_POWER_MANAGEMENT;
--			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->power_mgmt_mode;
--			wid_list[wid_cnt].type = WID_CHAR;
--			wid_list[wid_cnt].size = sizeof(char);
-+			wid_list[i].id = WID_POWER_MANAGEMENT;
-+			wid_list[i].val = (s8 *)&cfg_param_attr->power_mgmt_mode;
-+			wid_list[i].type = WID_CHAR;
-+			wid_list[i].size = sizeof(char);
- 			hif_drv->cfg_values.power_mgmt_mode = (u8)cfg_param_attr->power_mgmt_mode;
- 		} else {
- 			netdev_err(vif->ndev, "Invalid power mode\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
- 	if (cfg_param_attr->flag & RETRY_SHORT) {
- 		if (cfg_param_attr->short_retry_limit > 0 &&
- 		    cfg_param_attr->short_retry_limit < 256) {
--			wid_list[wid_cnt].id = WID_SHORT_RETRY_LIMIT;
--			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->short_retry_limit;
--			wid_list[wid_cnt].type = WID_SHORT;
--			wid_list[wid_cnt].size = sizeof(u16);
-+			wid_list[i].id = WID_SHORT_RETRY_LIMIT;
-+			wid_list[i].val = (s8 *)&cfg_param_attr->short_retry_limit;
-+			wid_list[i].type = WID_SHORT;
-+			wid_list[i].size = sizeof(u16);
- 			hif_drv->cfg_values.short_retry_limit = cfg_param_attr->short_retry_limit;
- 		} else {
- 			netdev_err(vif->ndev, "Range(1~256) over\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
- 	if (cfg_param_attr->flag & RETRY_LONG) {
- 		if (cfg_param_attr->long_retry_limit > 0 &&
- 		    cfg_param_attr->long_retry_limit < 256) {
--			wid_list[wid_cnt].id = WID_LONG_RETRY_LIMIT;
--			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->long_retry_limit;
--			wid_list[wid_cnt].type = WID_SHORT;
--			wid_list[wid_cnt].size = sizeof(u16);
-+			wid_list[i].id = WID_LONG_RETRY_LIMIT;
-+			wid_list[i].val = (s8 *)&cfg_param_attr->long_retry_limit;
-+			wid_list[i].type = WID_SHORT;
-+			wid_list[i].size = sizeof(u16);
- 			hif_drv->cfg_values.long_retry_limit = cfg_param_attr->long_retry_limit;
- 		} else {
- 			netdev_err(vif->ndev, "Range(1~256) over\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
- 	if (cfg_param_attr->flag & FRAG_THRESHOLD) {
- 		if (cfg_param_attr->frag_threshold > 255 &&
- 		    cfg_param_attr->frag_threshold < 7937) {
--			wid_list[wid_cnt].id = WID_FRAG_THRESHOLD;
--			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->frag_threshold;
--			wid_list[wid_cnt].type = WID_SHORT;
--			wid_list[wid_cnt].size = sizeof(u16);
-+			wid_list[i].id = WID_FRAG_THRESHOLD;
-+			wid_list[i].val = (s8 *)&cfg_param_attr->frag_threshold;
-+			wid_list[i].type = WID_SHORT;
-+			wid_list[i].size = sizeof(u16);
- 			hif_drv->cfg_values.frag_threshold = cfg_param_attr->frag_threshold;
- 		} else {
- 			netdev_err(vif->ndev, "Threshold Range fail\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
- 	if (cfg_param_attr->flag & RTS_THRESHOLD) {
- 		if (cfg_param_attr->rts_threshold > 255 &&
- 		    cfg_param_attr->rts_threshold < 65536) {
--			wid_list[wid_cnt].id = WID_RTS_THRESHOLD;
--			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->rts_threshold;
--			wid_list[wid_cnt].type = WID_SHORT;
--			wid_list[wid_cnt].size = sizeof(u16);
-+			wid_list[i].id = WID_RTS_THRESHOLD;
-+			wid_list[i].val = (s8 *)&cfg_param_attr->rts_threshold;
-+			wid_list[i].type = WID_SHORT;
-+			wid_list[i].size = sizeof(u16);
- 			hif_drv->cfg_values.rts_threshold = cfg_param_attr->rts_threshold;
- 		} else {
- 			netdev_err(vif->ndev, "Threshold Range fail\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
- 	if (cfg_param_attr->flag & PREAMBLE) {
- 		if (cfg_param_attr->preamble_type < 3) {
--			wid_list[wid_cnt].id = WID_PREAMBLE;
--			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->preamble_type;
--			wid_list[wid_cnt].type = WID_CHAR;
--			wid_list[wid_cnt].size = sizeof(char);
-+			wid_list[i].id = WID_PREAMBLE;
-+			wid_list[i].val = (s8 *)&cfg_param_attr->preamble_type;
-+			wid_list[i].type = WID_CHAR;
-+			wid_list[i].size = sizeof(char);
- 			hif_drv->cfg_values.preamble_type = cfg_param_attr->preamble_type;
- 		} else {
- 			netdev_err(vif->ndev, "Preamle Range(0~2) over\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
- 	if (cfg_param_attr->flag & SHORT_SLOT_ALLOWED) {
- 		if (cfg_param_attr->short_slot_allowed < 2) {
--			wid_list[wid_cnt].id = WID_SHORT_SLOT_ALLOWED;
--			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->short_slot_allowed;
--			wid_list[wid_cnt].type = WID_CHAR;
--			wid_list[wid_cnt].size = sizeof(char);
-+			wid_list[i].id = WID_SHORT_SLOT_ALLOWED;
-+			wid_list[i].val = (s8 *)&cfg_param_attr->short_slot_allowed;
-+			wid_list[i].type = WID_CHAR;
-+			wid_list[i].size = sizeof(char);
- 			hif_drv->cfg_values.short_slot_allowed = (u8)cfg_param_attr->short_slot_allowed;
- 		} else {
- 			netdev_err(vif->ndev, "Short slot(2) over\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
- 	if (cfg_param_attr->flag & TXOP_PROT_DISABLE) {
- 		if (cfg_param_attr->txop_prot_disabled < 2) {
--			wid_list[wid_cnt].id = WID_11N_TXOP_PROT_DISABLE;
--			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->txop_prot_disabled;
--			wid_list[wid_cnt].type = WID_CHAR;
--			wid_list[wid_cnt].size = sizeof(char);
-+			wid_list[i].id = WID_11N_TXOP_PROT_DISABLE;
-+			wid_list[i].val = (s8 *)&cfg_param_attr->txop_prot_disabled;
-+			wid_list[i].type = WID_CHAR;
-+			wid_list[i].size = sizeof(char);
- 			hif_drv->cfg_values.txop_prot_disabled = (u8)cfg_param_attr->txop_prot_disabled;
- 		} else {
- 			netdev_err(vif->ndev, "TXOP prot disable\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
- 	if (cfg_param_attr->flag & BEACON_INTERVAL) {
- 		if (cfg_param_attr->beacon_interval > 0 &&
- 		    cfg_param_attr->beacon_interval < 65536) {
--			wid_list[wid_cnt].id = WID_BEACON_INTERVAL;
--			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->beacon_interval;
--			wid_list[wid_cnt].type = WID_SHORT;
--			wid_list[wid_cnt].size = sizeof(u16);
-+			wid_list[i].id = WID_BEACON_INTERVAL;
-+			wid_list[i].val = (s8 *)&cfg_param_attr->beacon_interval;
-+			wid_list[i].type = WID_SHORT;
-+			wid_list[i].size = sizeof(u16);
- 			hif_drv->cfg_values.beacon_interval = cfg_param_attr->beacon_interval;
- 		} else {
- 			netdev_err(vif->ndev, "Beacon interval(1~65535)fail\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
- 	if (cfg_param_attr->flag & DTIM_PERIOD) {
- 		if (cfg_param_attr->dtim_period > 0 &&
- 		    cfg_param_attr->dtim_period < 256) {
--			wid_list[wid_cnt].id = WID_DTIM_PERIOD;
--			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->dtim_period;
--			wid_list[wid_cnt].type = WID_CHAR;
--			wid_list[wid_cnt].size = sizeof(char);
-+			wid_list[i].id = WID_DTIM_PERIOD;
-+			wid_list[i].val = (s8 *)&cfg_param_attr->dtim_period;
-+			wid_list[i].type = WID_CHAR;
-+			wid_list[i].size = sizeof(char);
- 			hif_drv->cfg_values.dtim_period = cfg_param_attr->dtim_period;
- 		} else {
- 			netdev_err(vif->ndev, "DTIM range(1~255) fail\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
- 	if (cfg_param_attr->flag & SITE_SURVEY) {
- 		if (cfg_param_attr->site_survey_enabled < 3) {
--			wid_list[wid_cnt].id = WID_SITE_SURVEY;
--			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->site_survey_enabled;
--			wid_list[wid_cnt].type = WID_CHAR;
--			wid_list[wid_cnt].size = sizeof(char);
-+			wid_list[i].id = WID_SITE_SURVEY;
-+			wid_list[i].val = (s8 *)&cfg_param_attr->site_survey_enabled;
-+			wid_list[i].type = WID_CHAR;
-+			wid_list[i].size = sizeof(char);
- 			hif_drv->cfg_values.site_survey_enabled = (u8)cfg_param_attr->site_survey_enabled;
- 		} else {
- 			netdev_err(vif->ndev, "Site survey disable\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
- 	if (cfg_param_attr->flag & SITE_SURVEY_SCAN_TIME) {
- 		if (cfg_param_attr->site_survey_scan_time > 0 &&
- 		    cfg_param_attr->site_survey_scan_time < 65536) {
--			wid_list[wid_cnt].id = WID_SITE_SURVEY_SCAN_TIME;
--			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->site_survey_scan_time;
--			wid_list[wid_cnt].type = WID_SHORT;
--			wid_list[wid_cnt].size = sizeof(u16);
-+			wid_list[i].id = WID_SITE_SURVEY_SCAN_TIME;
-+			wid_list[i].val = (s8 *)&cfg_param_attr->site_survey_scan_time;
-+			wid_list[i].type = WID_SHORT;
-+			wid_list[i].size = sizeof(u16);
- 			hif_drv->cfg_values.site_survey_scan_time = cfg_param_attr->site_survey_scan_time;
- 		} else {
- 			netdev_err(vif->ndev, "Site scan time(1~65535) over\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
- 	if (cfg_param_attr->flag & ACTIVE_SCANTIME) {
- 		if (cfg_param_attr->active_scan_time > 0 &&
- 		    cfg_param_attr->active_scan_time < 65536) {
--			wid_list[wid_cnt].id = WID_ACTIVE_SCAN_TIME;
--			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->active_scan_time;
--			wid_list[wid_cnt].type = WID_SHORT;
--			wid_list[wid_cnt].size = sizeof(u16);
-+			wid_list[i].id = WID_ACTIVE_SCAN_TIME;
-+			wid_list[i].val = (s8 *)&cfg_param_attr->active_scan_time;
-+			wid_list[i].type = WID_SHORT;
-+			wid_list[i].size = sizeof(u16);
- 			hif_drv->cfg_values.active_scan_time = cfg_param_attr->active_scan_time;
- 		} else {
- 			netdev_err(vif->ndev, "Active time(1~65535) over\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
- 	if (cfg_param_attr->flag & PASSIVE_SCANTIME) {
- 		if (cfg_param_attr->passive_scan_time > 0 &&
- 		    cfg_param_attr->passive_scan_time < 65536) {
--			wid_list[wid_cnt].id = WID_PASSIVE_SCAN_TIME;
--			wid_list[wid_cnt].val = (s8 *)&cfg_param_attr->passive_scan_time;
--			wid_list[wid_cnt].type = WID_SHORT;
--			wid_list[wid_cnt].size = sizeof(u16);
-+			wid_list[i].id = WID_PASSIVE_SCAN_TIME;
-+			wid_list[i].val = (s8 *)&cfg_param_attr->passive_scan_time;
-+			wid_list[i].type = WID_SHORT;
-+			wid_list[i].size = sizeof(u16);
- 			hif_drv->cfg_values.passive_scan_time = cfg_param_attr->passive_scan_time;
- 		} else {
- 			netdev_err(vif->ndev, "Passive time(1~65535) over\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
- 	if (cfg_param_attr->flag & CURRENT_TX_RATE) {
- 		enum CURRENT_TXRATE curr_tx_rate = cfg_param_attr->curr_tx_rate;
-@@ -736,21 +736,21 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
- 		    || curr_tx_rate == MBPS_9 || curr_tx_rate == MBPS_12
- 		    || curr_tx_rate == MBPS_18 || curr_tx_rate == MBPS_24
- 		    || curr_tx_rate == MBPS_36 || curr_tx_rate == MBPS_48 || curr_tx_rate == MBPS_54) {
--			wid_list[wid_cnt].id = WID_CURRENT_TX_RATE;
--			wid_list[wid_cnt].val = (s8 *)&curr_tx_rate;
--			wid_list[wid_cnt].type = WID_SHORT;
--			wid_list[wid_cnt].size = sizeof(u16);
-+			wid_list[i].id = WID_CURRENT_TX_RATE;
-+			wid_list[i].val = (s8 *)&curr_tx_rate;
-+			wid_list[i].type = WID_SHORT;
-+			wid_list[i].size = sizeof(u16);
- 			hif_drv->cfg_values.curr_tx_rate = (u8)curr_tx_rate;
- 		} else {
- 			netdev_err(vif->ndev, "out of TX rate\n");
- 			result = -EINVAL;
- 			goto ERRORHANDLER;
- 		}
--		wid_cnt++;
-+		i++;
- 	}
+ 		if (rx_type == RX_TYPE_DATA_PKT)
+ 			ieee80211_rx_irqsafe(hw, skb);
+-		else
++		else {
++			rtl8723bu_handle_c2h(priv, skb);
+ 			dev_kfree_skb(skb);
++		}
  
- 	result = wilc_send_config_pkt(vif, SET_CFG, wid_list,
--				      wid_cnt, wilc_get_vif_idx(vif));
-+				      i, wilc_get_vif_idx(vif));
+ 		skb = NULL;
+ 		rx_urb->urb.context = NULL;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 4a3afe3..e4d5c4b 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -899,6 +899,60 @@ struct h2c_cmd {
+ 	};
+ };
  
- 	if (result)
- 		netdev_err(vif->ndev, "Error in setting CFG params\n");
++enum c2h_evt_8723b {
++	C2H_8723B_DEBUG = 0,
++	C2H_8723B_TSF = 1,
++	C2H_8723B_AP_RPT_RSP = 2,
++	C2H_8723B_CCX_TX_RPT = 3,
++	C2H_8723B_BT_RSSI = 4,
++	C2H_8723B_BT_OP_MODE = 5,
++	C2H_8723B_EXT_RA_RPT = 6,
++	C2H_8723B_BT_INFO = 9,
++	C2H_8723B_HW_INFO_EXCH = 10,
++	C2H_8723B_BT_MP_INFO = 11,
++	C2H_8723B_FW_DEBUG = 0xff,
++};
++
++enum bt_info_src_8723b {
++	BT_INFO_SRC_8723B_WIFI_FW = 0x0,
++        BT_INFO_SRC_8723B_BT_RSP = 0x1,
++        BT_INFO_SRC_8723B_BT_ACTIVE_SEND = 0x2,
++};
++
++struct rtl8723bu_c2h {
++	u8 id;
++	u8 seq;
++	union {
++		struct {
++			u8 payload[0];
++		} __packed raw;
++		struct {
++			u8 response_source:4;
++			u8 dummy0_0:4;
++
++			u8 bt_info;
++
++			u8 retry_count:4;
++			u8 dummy2_0:1;
++			u8 bt_page:1;
++			u8 tx_rx_mask:1;
++			u8 dummy2_2:1;
++
++			u8 rssi;
++
++			u8 basic_rate:1;
++			u8 bt_has_reset:1;
++			u8 dummy4_1:1;;
++			u8 ignore_wlan:1;
++			u8 auto_report:1;
++			u8 dummy4_2:3;
++
++			u8 a4;
++			u8 a5;
++		} __packed bt_info;
++	};
++};
++
+ struct rtl8xxxu_fileops;
+ 
+ struct rtl8xxxu_priv {
 -- 
-2.7.1
+2.5.0
 
