@@ -1,146 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:6314 "EHLO
-	mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1161120AbcBQK1a (ORCPT
+Received: from mail-yw0-f169.google.com ([209.85.161.169]:36846 "EHLO
+	mail-yw0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750819AbcB2WbB convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2016 05:27:30 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 17/21] brcmfmac: fix sdio sg table alloc crash
-Date: Wed, 17 Feb 2016 11:27:06 +0100
-Message-Id: <1455704830-10088-18-git-send-email-arend@broadcom.com> (sfid-20160217_112835_062804_8398BA97)
-In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
-References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+	Mon, 29 Feb 2016 17:31:01 -0500
+MIME-Version: 1.0
+In-Reply-To: <20160226175925.GA9331@w1.fi>
+References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+ <1456159001-20307-9-git-send-email-jprvita@endlessm.com> <20160226175925.GA9331@w1.fi>
+From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
+Date: Mon, 29 Feb 2016 17:30:20 -0500
+Message-ID: <CA+A7VXUY=qVDQ-OqT+QJK8haN6AFX4Br=OPXi-6RCxpvH3=QRg@mail.gmail.com> (sfid-20160229_233135_420796_5FF1A81D)
+Subject: Re: [PATCHv2 08/10] rfkill: Use switch to demux userspace operations
+To: Jouni Malinen <j@w1.fi>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux@endlessm.com,
+	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+Hello Jouni,
 
-With commit 7d34b0560567 ("brcmfmac: Move all module parameters to
-one place") a bug was introduced causing a null pointer exception.
-This patch fixes the bug by initializing the sg table till after
-the settings have been initialized.
+On 26 February 2016 at 12:59, Jouni Malinen <j@w1.fi> wrote:
+> On Mon, Feb 22, 2016 at 11:36:39AM -0500, João Paulo Rechi Vita wrote:
+>> Using a switch to handle different ev.op values in rfkill_fop_write()
+>> makes the code easier to extend, as out-of-range values can always be
+>> handled by the default case.
+>
+> This breaks rfkill.. There are automated test scripts for testing this
+> area (and most of Wi-Fi for that matter. It would be nice if these were
+> used for changes before they get contributed upstream..
+>
+> http://buildbot.w1.fi/hwsim/
+>
 
-Reported-by: Marc Zyngier <marc.zyngier@arm.com>
-Tested-by: Marc Zyngier <marc.zyngier@arm.com>
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c  | 40 ++++++++--------------
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.c    |  5 +++
- .../wireless/broadcom/brcm80211/brcmfmac/sdio.h    |  1 +
- 3 files changed, 21 insertions(+), 25 deletions(-)
+Thanks for pointing that out, I haven't heard of this tool before.
+I'll give it a try before my next submission.
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-index 1922de4..25cd712 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c
-@@ -878,11 +878,24 @@ int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn)
- 	return 0;
- }
- 
--static void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
-+void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev)
- {
-+	struct sdio_func *func;
-+	struct mmc_host *host;
-+	uint max_blocks;
- 	uint nents;
- 	int err;
- 
-+	func = sdiodev->func[2];
-+	host = func->card->host;
-+	sdiodev->sg_support = host->max_segs > 1;
-+	max_blocks = min_t(uint, host->max_blk_count, 511u);
-+	sdiodev->max_request_size = min_t(uint, host->max_req_size,
-+					  max_blocks * func->cur_blksize);
-+	sdiodev->max_segment_count = min_t(uint, host->max_segs,
-+					   SG_MAX_SINGLE_ALLOC);
-+	sdiodev->max_segment_size = host->max_seg_size;
-+
- 	if (!sdiodev->sg_support)
- 		return;
- 
-@@ -1020,9 +1033,6 @@ static void brcmf_sdiod_host_fixup(struct mmc_host *host)
- 
- static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
- {
--	struct sdio_func *func;
--	struct mmc_host *host;
--	uint max_blocks;
- 	int ret = 0;
- 
- 	sdiodev->num_funcs = 2;
-@@ -1053,26 +1063,6 @@ static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
- 		goto out;
- 	}
- 
--	/*
--	 * determine host related variables after brcmf_sdiod_probe()
--	 * as func->cur_blksize is properly set and F2 init has been
--	 * completed successfully.
--	 */
--	func = sdiodev->func[2];
--	host = func->card->host;
--	sdiodev->sg_support = host->max_segs > 1;
--	max_blocks = min_t(uint, host->max_blk_count, 511u);
--	sdiodev->max_request_size = min_t(uint, host->max_req_size,
--					  max_blocks * func->cur_blksize);
--	sdiodev->max_segment_count = min_t(uint, host->max_segs,
--					   SG_MAX_SINGLE_ALLOC);
--	sdiodev->max_segment_size = host->max_seg_size;
--
--	/* allocate scatter-gather table. sg support
--	 * will be disabled upon allocation failure.
--	 */
--	brcmf_sdiod_sgtable_alloc(sdiodev);
--
- 	ret = brcmf_sdiod_freezer_attach(sdiodev);
- 	if (ret)
- 		goto out;
-@@ -1083,7 +1073,7 @@ static int brcmf_sdiod_probe(struct brcmf_sdio_dev *sdiodev)
- 		ret = -ENODEV;
- 		goto out;
- 	}
--	brcmf_sdiod_host_fixup(host);
-+	brcmf_sdiod_host_fixup(sdiodev->func[2]->card->host);
- out:
- 	if (ret)
- 		brcmf_sdiod_remove(sdiodev);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 6776e45..c790fa8 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -4113,6 +4113,11 @@ struct brcmf_sdio *brcmf_sdio_probe(struct brcmf_sdio_dev *sdiodev)
- 		goto fail;
- 	}
- 
-+	/* allocate scatter-gather table. sg support
-+	 * will be disabled upon allocation failure.
-+	 */
-+	brcmf_sdiod_sgtable_alloc(bus->sdiodev);
-+
- 	/* Query the F2 block size, set roundup accordingly */
- 	bus->blocksize = bus->sdiodev->func[2]->cur_blksize;
- 	bus->roundup = min(max_roundup, bus->blocksize);
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-index 5ec7a6d..23f2231 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.h
-@@ -342,6 +342,7 @@ int brcmf_sdiod_ramrw(struct brcmf_sdio_dev *sdiodev, bool write, u32 address,
- 
- /* Issue an abort to the specified function */
- int brcmf_sdiod_abort(struct brcmf_sdio_dev *sdiodev, uint fn);
-+void brcmf_sdiod_sgtable_alloc(struct brcmf_sdio_dev *sdiodev);
- void brcmf_sdiod_change_state(struct brcmf_sdio_dev *sdiodev,
- 			      enum brcmf_sdiod_state state);
- #ifdef CONFIG_PM_SLEEP
--- 
-1.9.1
+> This specific commit broke all the rfkill_* test cases because of
+> following:
+>
+>> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+>> @@ -1199,29 +1200,32 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
+>> -     list_for_each_entry(rfkill, &rfkill_list, node) {
+>> -             if (rfkill->idx != ev.idx && ev.op != RFKILL_OP_CHANGE_ALL)
+>> -                     continue;
+>> -
+>> -             if (rfkill->type != ev.type && ev.type != RFKILL_TYPE_ALL)
+>> -                     continue;
+>
+> Note that RFKILL_TYPE_ALL here..
+>
+>> +             list_for_each_entry(rfkill, &rfkill_list, node)
+>> +                     if (rfkill->type == ev.type ||
+>> +                         ev.type == RFKILL_TYPE_ALL)
+>> +                             rfkill_set_block(rfkill, ev.soft);
+>
+> It was included for RFKILL_OP_CHANGE_ALL.
+>
+>> +     case RFKILL_OP_CHANGE:
+>> +             list_for_each_entry(rfkill, &rfkill_list, node)
+>> +                     if (rfkill->idx == ev.idx && rfkill->type == ev.type)
+>> +                             rfkill_set_block(rfkill, ev.soft);
+>
+> but not for RFKILL_OP_CHANGE..
+>
+> This needs following to work:
+>
+>
+> diff --git a/net/rfkill/core.c b/net/rfkill/core.c
+> index 59ff92d..c4bbd19 100644
+> --- a/net/rfkill/core.c
+> +++ b/net/rfkill/core.c
+> @@ -1239,7 +1239,9 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
+>                 break;
+>         case RFKILL_OP_CHANGE:
+>                 list_for_each_entry(rfkill, &rfkill_list, node)
+> -                       if (rfkill->idx == ev.idx && rfkill->type == ev.type)
+> +                       if (rfkill->idx == ev.idx &&
+> +                           (rfkill->type == ev.type ||
+> +                            ev.type == RFKILL_TYPE_ALL))
+>                                 rfkill_set_block(rfkill, ev.soft);
+>                 ret = 0;
+>                 break;
+>
 
+I agree there is a difference in the logic here, thanks for taking the
+time to point it out so clearly, and sorry for missing this. But AFAIU
+userspace should not call RFKILL_OP_CHANGE with ev.type ==
+RFKILL_TYPE_ALL, as RFKILL_OP_CHANGE is intended to be used to
+block/unblock one RFKill switch, and it is not possible to create a
+RFKill switch with type == RFKILL_TYPE_ALL (rfkill_alloc() would
+return NULL).
+
+I tried to look into the source code of the test suite you pointed,
+but couldn't easily figure out how it ends up with that combination.
+Could you please explain (or point me in the code) how is that a valid
+operation? If I'm not missing anything, we should probably return
+EINVAL in this case.
+
+Regards,
+
+--
+João Paulo Rechi Vita
+http://about.me/jprvita
