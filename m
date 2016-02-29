@@ -1,38 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:35271 "EHLO
-	mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755755AbcBBQZb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 11:25:31 -0500
-Date: Tue, 2 Feb 2016 21:55:19 +0530
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Paul Mcquade <paulmcquad@gmail.com>
-Cc: kvalo@codeaurora.org, zajec5@gmail.com, davem@davemloft.net,
-	joe@perches.com, johannes.berg@intel.com, sd@queasysnail.net,
-	m@bues.ch, mike.looijmans@topic.nl, khoroshilov@ispras.ru,
-	cengelma@gmx.at, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [v2,2/3] net: wireless: b43: Coding Style
-Message-ID: <20160202162519.GC8235@sudip-laptop> (sfid-20160202_172552_058824_89DF55A1)
-References: <1445270543-2209-3-git-send-email-paulmcquad@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1445270543-2209-3-git-send-email-paulmcquad@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:46733 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753221AbcB2WF5 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:57 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 074/113] rtl8xxxu: Set WLAN_ACT_CONTROL per vendor driver setting
+Date: Mon, 29 Feb 2016 17:05:12 -0500
+Message-Id: <1456783551-28315-75-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230804_435606_3AA957F9)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Oct 19, 2015 at 05:02:22PM +0100, Paul Mcquade wrote:
-> Fixed Pointer Coding Style
-> 
-> Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
-> Acked-by: Michael Buesch <m@bues.ch>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Please fix the From: name like i just replied in another of your patch
-and this patch will not apply anymore as the driver has moved to a new
-location drivers/net/wireless/broadcom/b43/
+The initial code set the wrong setting in WLAN_ACT_CONTROL for the
+8723bu.
 
-can you please rebase it against the current tree and send.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-regards
-sudip
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index e586f53..b4660c6 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -5894,7 +5894,7 @@ static void rtl8723bu_init_bt(struct rtl8xxxu_priv *priv)
+ 	/*
+ 	 * WLAN action by PTA
+ 	 */
+-	rtl8xxxu_write8(priv, REG_WLAN_ACT_CONTROL_8723B, 0x0c);
++	rtl8xxxu_write8(priv, REG_WLAN_ACT_CONTROL_8723B, 0x04);
+ 
+ 	/*
+ 	 * BT select S0/S1 controlled by WiFi
+-- 
+2.5.0
+
