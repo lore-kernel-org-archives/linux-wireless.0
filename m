@@ -1,100 +1,150 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:9741 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755231AbcBBMHy (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 07:07:54 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH 22/26] staging: wilc1000: remove unnecessary wilc_rx_complete function
-Date: Tue, 2 Feb 2016 21:02:32 +0900
-Message-ID: <1454414556-9822-22-git-send-email-leo.kim@atmel.com> (sfid-20160202_131501_483901_B2DE0CE9)
-In-Reply-To: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
-References: <1454414556-9822-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:39666 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752721AbcB2WFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:53 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 016/113] rtl8xxxu: Add rtl8723b_phy_1t_init_table
+Date: Mon, 29 Feb 2016 17:04:14 -0500
+Message-Id: <1456783551-28315-17-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_231120_384221_53DCFA96)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-This patch remove unnecessary wilc_rx_complete function
-because this function only print unused log message.
-remove unused has_packet variable nomore.
+This adds the 8723bu PHY 1T init table.
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c         | 5 -----
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 1 -
- drivers/staging/wilc1000/wilc_wlan.c          | 7 +------
- 3 files changed, 1 insertion(+), 12 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 103 +++++++++++++++++++++++
+ 1 file changed, 103 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 202be15..e702020 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -372,11 +372,6 @@ static int linux_wlan_txq_task(void *vp)
- 	return 0;
- }
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index b3fd5c2..88af2e8 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -251,6 +251,107 @@ static struct rtl8xxxu_reg32val rtl8723a_phy_1t_init_table[] = {
+ 	{0xffff, 0xffffffff},
+ };
  
--void wilc_rx_complete(struct wilc *nic)
--{
--	PRINT_D(RX_DBG, "RX completed\n");
--}
--
- int wilc_wlan_get_firmware(struct net_device *dev)
- {
- 	struct wilc_vif *vif;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 07a4ff1..3077f5d4 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -228,7 +228,6 @@ int wilc1000_wlan_init(struct net_device *dev, struct wilc_vif *vif);
++static struct rtl8xxxu_reg32val rtl8723b_phy_1t_init_table[] = {
++	{0x800, 0x80040000}, {0x804, 0x00000003},
++	{0x808, 0x0000fc00}, {0x80c, 0x0000000a},
++	{0x810, 0x10001331}, {0x814, 0x020c3d10},
++	{0x818, 0x02200385}, {0x81c, 0x00000000},
++	{0x820, 0x01000100}, {0x824, 0x00190204},
++	{0x828, 0x00000000}, {0x82c, 0x00000000},
++	{0x830, 0x00000000}, {0x834, 0x00000000},
++	{0x838, 0x00000000}, {0x83c, 0x00000000},
++	{0x840, 0x00010000}, {0x844, 0x00000000},
++	{0x848, 0x00000000}, {0x84c, 0x00000000},
++	{0x850, 0x00000000}, {0x854, 0x00000000},
++	{0x858, 0x569a11a9}, {0x85c, 0x01000014},
++	{0x860, 0x66f60110}, {0x864, 0x061f0649},
++	{0x868, 0x00000000}, {0x86c, 0x27272700},
++	{0x870, 0x07000760}, {0x874, 0x25004000},
++	{0x878, 0x00000808}, {0x87c, 0x00000000},
++	{0x880, 0xb0000c1c}, {0x884, 0x00000001},
++	{0x888, 0x00000000}, {0x88c, 0xccc000c0},
++	{0x890, 0x00000800}, {0x894, 0xfffffffe},
++	{0x898, 0x40302010}, {0x89c, 0x00706050},
++	{0x900, 0x00000000}, {0x904, 0x00000023},
++	{0x908, 0x00000000}, {0x90c, 0x81121111},
++	{0x910, 0x00000002}, {0x914, 0x00000201},
++	{0xa00, 0x00d047c8}, {0xa04, 0x80ff800c},
++	{0xa08, 0x8c838300}, {0xa0c, 0x2e7f120f},
++	{0xa10, 0x9500bb78}, {0xa14, 0x1114d028},
++	{0xa18, 0x00881117}, {0xa1c, 0x89140f00},
++	{0xa20, 0x1a1b0000}, {0xa24, 0x090e1317},
++	{0xa28, 0x00000204}, {0xa2c, 0x00d30000},
++	{0xa70, 0x101fbf00}, {0xa74, 0x00000007},
++	{0xa78, 0x00000900}, {0xa7c, 0x225b0606},
++	{0xa80, 0x21806490}, {0xb2c, 0x00000000},
++	{0xc00, 0x48071d40}, {0xc04, 0x03a05611},
++	{0xc08, 0x000000e4}, {0xc0c, 0x6c6c6c6c},
++	{0xc10, 0x08800000}, {0xc14, 0x40000100},
++	{0xc18, 0x08800000}, {0xc1c, 0x40000100},
++	{0xc20, 0x00000000}, {0xc24, 0x00000000},
++	{0xc28, 0x00000000}, {0xc2c, 0x00000000},
++	{0xc30, 0x69e9ac44}, {0xc34, 0x469652af},
++	{0xc38, 0x49795994}, {0xc3c, 0x0a97971c},
++	{0xc40, 0x1f7c403f}, {0xc44, 0x000100b7},
++	{0xc48, 0xec020107}, {0xc4c, 0x007f037f},
++	{0xc50, 0x69553420}, {0xc54, 0x43bc0094},
++	{0xc58, 0x00013149}, {0xc5c, 0x00250492},
++	{0xc60, 0x00000000}, {0xc64, 0x7112848b},
++	{0xc68, 0x47c00bff}, {0xc6c, 0x00000036},
++	{0xc70, 0x2c7f000d}, {0xc74, 0x020610db},
++	{0xc78, 0x0000001f}, {0xc7c, 0x00b91612},
++	{0xc80, 0x390000e4}, {0xc84, 0x20f60000},
++	{0xc88, 0x40000100}, {0xc8c, 0x20200000},
++	{0xc90, 0x00020e1a}, {0xc94, 0x00000000},
++	{0xc98, 0x00020e1a}, {0xc9c, 0x00007f7f},
++	{0xca0, 0x00000000}, {0xca4, 0x000300a0},
++	{0xca8, 0x00000000}, {0xcac, 0x00000000},
++	{0xcb0, 0x00000000}, {0xcb4, 0x00000000},
++	{0xcb8, 0x00000000}, {0xcbc, 0x28000000},
++	{0xcc0, 0x00000000}, {0xcc4, 0x00000000},
++	{0xcc8, 0x00000000}, {0xccc, 0x00000000},
++	{0xcd0, 0x00000000}, {0xcd4, 0x00000000},
++	{0xcd8, 0x64b22427}, {0xcdc, 0x00766932},
++	{0xce0, 0x00222222}, {0xce4, 0x00000000},
++	{0xce8, 0x37644302}, {0xcec, 0x2f97d40c},
++	{0xd00, 0x00000740}, {0xd04, 0x40020401},
++	{0xd08, 0x0000907f}, {0xd0c, 0x20010201},
++	{0xd10, 0xa0633333}, {0xd14, 0x3333bc53},
++	{0xd18, 0x7a8f5b6f}, {0xd2c, 0xcc979975},
++	{0xd30, 0x00000000}, {0xd34, 0x80608000},
++	{0xd38, 0x00000000}, {0xd3c, 0x00127353},
++	{0xd40, 0x00000000}, {0xd44, 0x00000000},
++	{0xd48, 0x00000000}, {0xd4c, 0x00000000},
++	{0xd50, 0x6437140a}, {0xd54, 0x00000000},
++	{0xd58, 0x00000282}, {0xd5c, 0x30032064},
++	{0xd60, 0x4653de68}, {0xd64, 0x04518a3c},
++	{0xd68, 0x00002101}, {0xd6c, 0x2a201c16},
++	{0xd70, 0x1812362e}, {0xd74, 0x322c2220},
++	{0xd78, 0x000e3c24}, {0xe00, 0x2d2d2d2d},
++	{0xe04, 0x2d2d2d2d}, {0xe08, 0x0390272d},
++	{0xe10, 0x2d2d2d2d}, {0xe14, 0x2d2d2d2d},
++	{0xe18, 0x2d2d2d2d}, {0xe1c, 0x2d2d2d2d},
++	{0xe28, 0x00000000}, {0xe30, 0x1000dc1f},
++	{0xe34, 0x10008c1f}, {0xe38, 0x02140102},
++	{0xe3c, 0x681604c2}, {0xe40, 0x01007c00},
++	{0xe44, 0x01004800}, {0xe48, 0xfb000000},
++	{0xe4c, 0x000028d1}, {0xe50, 0x1000dc1f},
++	{0xe54, 0x10008c1f}, {0xe58, 0x02140102},
++	{0xe5c, 0x28160d05}, {0xe60, 0x00000008},
++	{0xe68, 0x001b2556}, {0xe6c, 0x00c00096},
++	{0xe70, 0x00c00096}, {0xe74, 0x01000056},
++	{0xe78, 0x01000014}, {0xe7c, 0x01000056},
++	{0xe80, 0x01000014}, {0xe84, 0x00c00096},
++	{0xe88, 0x01000056}, {0xe8c, 0x00c00096},
++	{0xed0, 0x00c00096}, {0xed4, 0x00c00096},
++	{0xed8, 0x00c00096}, {0xedc, 0x000000d6},
++	{0xee0, 0x000000d6}, {0xeec, 0x01c00016},
++	{0xf14, 0x00000003}, {0xf4c, 0x00000000},
++	{0xf00, 0x00000300},
++	{0x820, 0x01000100}, {0x800, 0x83040000},
++	{0xffff, 0xffffffff},
++};
++
+ static struct rtl8xxxu_reg32val rtl8192cu_phy_2t_init_table[] = {
+ 	{0x024, 0x0011800f}, {0x028, 0x00ffdb83},
+ 	{0x800, 0x80040002}, {0x804, 0x00000003},
+@@ -2589,6 +2690,8 @@ static int rtl8xxxu_init_phy_bb(struct rtl8xxxu_priv *priv)
+ 		rtl8xxxu_init_phy_regs(priv, rtl8188ru_phy_1t_highpa_table);
+ 	else if (priv->tx_paths == 2)
+ 		rtl8xxxu_init_phy_regs(priv, rtl8192cu_phy_2t_init_table);
++	else if (priv->rtlchip == 0x8723b)
++		rtl8xxxu_init_phy_regs(priv, rtl8723b_phy_1t_init_table);
+ 	else
+ 		rtl8xxxu_init_phy_regs(priv, rtl8723a_phy_1t_init_table);
  
- void wilc_frmw_to_linux(struct wilc *wilc, u8 *buff, u32 size, u32 pkt_offset);
- void wilc_mac_indicate(struct wilc *wilc, int flag);
--void wilc_rx_complete(struct wilc *wilc);
- void wilc_dbg(u8 *buff);
- 
- int wilc_lock_timeout(struct wilc *wilc, void *, u32 timeout);
-diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
-index 01c5857..10a0937 100644
---- a/drivers/staging/wilc1000/wilc_wlan.c
-+++ b/drivers/staging/wilc1000/wilc_wlan.c
-@@ -811,7 +811,7 @@ _end_:
- 
- static void wilc_wlan_handle_rxq(struct wilc *wilc)
- {
--	int offset = 0, size, has_packet = 0;
-+	int offset = 0, size;
- 	u8 *buffer;
- 	struct rxq_entry_t *rqe;
- 
-@@ -866,7 +866,6 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- 							      &buffer[offset],
- 							      pkt_len,
- 							      pkt_offset);
--						has_packet = 1;
- 					}
- 				} else {
- 					struct wilc_cfg_rsp rsp;
-@@ -888,10 +887,6 @@ static void wilc_wlan_handle_rxq(struct wilc *wilc)
- 				break;
- 		} while (1);
- 		kfree(rqe);
--
--		if (has_packet)
--			wilc_rx_complete(wilc);
--
- 	} while (1);
- 
- 	wilc->rxq_exit = 1;
 -- 
-1.9.1
+2.5.0
 
