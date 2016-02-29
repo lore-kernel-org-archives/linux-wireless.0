@@ -1,94 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:39989 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933397AbcBRHaQ (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 02:30:16 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 02/24] staging: wilc1000: linux_mon.c: removes debug logs
-Date: Thu, 18 Feb 2016 16:27:13 +0900
-Message-ID: <1455780455-21365-2-git-send-email-leo.kim@atmel.com> (sfid-20160218_083029_546513_51BAC5C6)
-In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:52253 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752771AbcB2WFy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:54 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jakub Sitnicki <jsitnicki@gmail.com>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 028/113] rtl8xxxu: rtl8192cu: Introduce a pointer to efuse
+Date: Mon, 29 Feb 2016 17:04:26 -0500
+Message-Id: <1456783551-28315-29-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_231036_714563_8302D93B)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patches removes unnecessary debug logs.
+From: Jakub Sitnicki <jsitnicki@gmail.com>
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/staging/wilc1000/linux_mon.c | 24 ++++++------------------
- 1 file changed, 6 insertions(+), 18 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 29 ++++++++++++------------
+ 1 file changed, 15 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index 21f35d7..9edc6e9 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -157,10 +157,8 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 4591330..2ca99d0 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2218,50 +2218,51 @@ static int rtl8723bu_parse_efuse(struct rtl8xxxu_priv *priv)
+ 
+ static int rtl8192cu_parse_efuse(struct rtl8xxxu_priv *priv)
  {
- 	struct tx_complete_mon_data *mgmt_tx = NULL;
++	struct rtl8192cu_efuse *efuse = &priv->efuse_wifi.efuse8192;
+ 	int i;
  
--	if (!dev) {
--		PRINT_D(HOSTAPD_DBG, "ERROR: dev == NULL\n");
-+	if (!dev)
- 		return -EFAULT;
--	}
+-	if (priv->efuse_wifi.efuse8192.rtl_id != cpu_to_le16(0x8129))
++	if (efuse->rtl_id != cpu_to_le16(0x8129))
+ 		return -EINVAL;
  
- 	netif_stop_queue(dev);
- 	mgmt_tx = kmalloc(sizeof(*mgmt_tx), GFP_ATOMIC);
-@@ -205,17 +203,12 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 		return -EFAULT;
+-	ether_addr_copy(priv->mac_addr, priv->efuse_wifi.efuse8192.mac_addr);
++	ether_addr_copy(priv->mac_addr, efuse->mac_addr);
  
- 	mon_priv = netdev_priv(wilc_wfi_mon);
--
--	if (!mon_priv) {
--		PRINT_ER("Monitor interface private structure is NULL\n");
-+	if (!mon_priv)
- 		return -EFAULT;
--	}
--
- 	rtap_len = ieee80211_get_radiotap_len(skb->data);
--	if (skb->len < rtap_len) {
--		PRINT_ER("Error in radiotap header\n");
-+	if (skb->len < rtap_len)
- 		return -1;
--	}
-+
- 	/* skip the radiotap header */
- 	PRINT_INFO(HOSTAPD_DBG, "Radiotap len: %d\n", rtap_len);
+ 	memcpy(priv->cck_tx_power_index_A,
+-	       priv->efuse_wifi.efuse8192.cck_tx_power_index_A,
++	       efuse->cck_tx_power_index_A,
+ 	       sizeof(priv->cck_tx_power_index_A));
+ 	memcpy(priv->cck_tx_power_index_B,
+-	       priv->efuse_wifi.efuse8192.cck_tx_power_index_B,
++	       efuse->cck_tx_power_index_B,
+ 	       sizeof(priv->cck_tx_power_index_B));
  
-@@ -306,11 +299,8 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
- 		return wilc_wfi_mon;
+ 	memcpy(priv->ht40_1s_tx_power_index_A,
+-	       priv->efuse_wifi.efuse8192.ht40_1s_tx_power_index_A,
++	       efuse->ht40_1s_tx_power_index_A,
+ 	       sizeof(priv->ht40_1s_tx_power_index_A));
+ 	memcpy(priv->ht40_1s_tx_power_index_B,
+-	       priv->efuse_wifi.efuse8192.ht40_1s_tx_power_index_B,
++	       efuse->ht40_1s_tx_power_index_B,
+ 	       sizeof(priv->ht40_1s_tx_power_index_B));
+ 	memcpy(priv->ht40_2s_tx_power_index_diff,
+-	       priv->efuse_wifi.efuse8192.ht40_2s_tx_power_index_diff,
++	       efuse->ht40_2s_tx_power_index_diff,
+ 	       sizeof(priv->ht40_2s_tx_power_index_diff));
  
- 	wilc_wfi_mon = alloc_etherdev(sizeof(struct WILC_WFI_mon_priv));
--	if (!wilc_wfi_mon) {
--		PRINT_ER("failed to allocate memory\n");
-+	if (!wilc_wfi_mon)
- 		return NULL;
--	}
--
- 	wilc_wfi_mon->type = ARPHRD_IEEE80211_RADIOTAP;
- 	strncpy(wilc_wfi_mon->name, name, IFNAMSIZ);
- 	wilc_wfi_mon->name[IFNAMSIZ - 1] = 0;
-@@ -322,10 +312,8 @@ struct net_device *WILC_WFI_init_mon_interface(const char *name, struct net_devi
- 		return NULL;
+ 	memcpy(priv->ht20_tx_power_index_diff,
+-	       priv->efuse_wifi.efuse8192.ht20_tx_power_index_diff,
++	       efuse->ht20_tx_power_index_diff,
+ 	       sizeof(priv->ht20_tx_power_index_diff));
+ 	memcpy(priv->ofdm_tx_power_index_diff,
+-	       priv->efuse_wifi.efuse8192.ofdm_tx_power_index_diff,
++	       efuse->ofdm_tx_power_index_diff,
+ 	       sizeof(priv->ofdm_tx_power_index_diff));
+ 
+ 	memcpy(priv->ht40_max_power_offset,
+-	       priv->efuse_wifi.efuse8192.ht40_max_power_offset,
++	       efuse->ht40_max_power_offset,
+ 	       sizeof(priv->ht40_max_power_offset));
+ 	memcpy(priv->ht20_max_power_offset,
+-	       priv->efuse_wifi.efuse8192.ht20_max_power_offset,
++	       efuse->ht20_max_power_offset,
+ 	       sizeof(priv->ht20_max_power_offset));
+ 
+ 	dev_info(&priv->udev->dev, "Vendor: %.7s\n",
+-		 priv->efuse_wifi.efuse8192.vendor_name);
++		 efuse->vendor_name);
+ 	dev_info(&priv->udev->dev, "Product: %.20s\n",
+-		 priv->efuse_wifi.efuse8192.device_name);
++		 efuse->device_name);
+ 
+-	if (priv->efuse_wifi.efuse8192.rf_regulatory & 0x20) {
++	if (efuse->rf_regulatory & 0x20) {
+ 		sprintf(priv->chip_name, "8188RU");
+ 		priv->hi_pa = 1;
  	}
- 	priv = netdev_priv(wilc_wfi_mon);
--	if (!priv) {
--		PRINT_ER("private structure is NULL\n");
-+	if (!priv)
- 		return NULL;
--	}
- 
- 	priv->real_ndev = real_dev;
- 
 -- 
-1.9.1
+2.5.0
 
