@@ -1,64 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:9900 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965764AbcBDJZP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 04:25:15 -0500
-From: Glen Lee <glen.lee@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH RESEND 23/70] staging: wilc1000: fixes variable dereferenced before check
-Date: Thu, 4 Feb 2016 18:15:40 +0900
-Message-ID: <1454577387-509-24-git-send-email-glen.lee@atmel.com> (sfid-20160204_103028_088319_E5D3DFEA)
-In-Reply-To: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-References: <1454577387-509-1-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:57950 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752769AbcB2WFy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:54 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jakub Sitnicki <jsitnicki@gmail.com>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 027/113] rtl8xxxu: rtl8723au: Introduce a pointer to efuse
+Date: Mon, 29 Feb 2016 17:04:25 -0500
+Message-Id: <1456783551-28315-28-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232951_803448_33C58540)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Leo Kim <leo.kim@atmel.com>
+From: Jakub Sitnicki <jsitnicki@gmail.com>
 
-This patch fixes the warning reported by smatch.
- - wilc_wlan_get_firmware() warn: variable dereferenced before check 'vif'
- - wilc_set_multicast_list() warn: variable dereferenced before check 'dev'
-
-Just delete them and no need add null check since they are net_device from
-ndo_set_rx_mode of net_device_ops and vif of netdev_priv.
-
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
-Signed-off-by: Glen Lee <glen.lee@atmel.com>
+Signed-off-by: Jakub Sitnicki <jsitnicki@gmail.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 26 +++++++++++++-----------
+ 1 file changed, 14 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 9ca33536..22a2f98 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -397,9 +397,6 @@ int wilc_wlan_get_firmware(struct net_device *dev)
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 2b9664e..4591330 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2127,43 +2127,45 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
  
- 	netdev_info(dev, "loading firmware %s\n", firmware);
+ static int rtl8723au_parse_efuse(struct rtl8xxxu_priv *priv)
+ {
+-	if (priv->efuse_wifi.efuse8723.rtl_id != cpu_to_le16(0x8129))
++	struct rtl8723au_efuse *efuse = &priv->efuse_wifi.efuse8723;
++
++	if (efuse->rtl_id != cpu_to_le16(0x8129))
+ 		return -EINVAL;
  
--	if (!vif)
--		goto _fail_;
--
- 	if (!(&vif->ndev->dev))
- 		goto _fail_;
+-	ether_addr_copy(priv->mac_addr, priv->efuse_wifi.efuse8723.mac_addr);
++	ether_addr_copy(priv->mac_addr, efuse->mac_addr);
  
-@@ -1017,9 +1014,6 @@ static void wilc_set_multicast_list(struct net_device *dev)
- 	vif = netdev_priv(dev);
- 	hif_drv = (struct host_if_drv *)priv->hif_drv;
+ 	memcpy(priv->cck_tx_power_index_A,
+-	       priv->efuse_wifi.efuse8723.cck_tx_power_index_A,
++	       efuse->cck_tx_power_index_A,
+ 	       sizeof(priv->cck_tx_power_index_A));
+ 	memcpy(priv->cck_tx_power_index_B,
+-	       priv->efuse_wifi.efuse8723.cck_tx_power_index_B,
++	       efuse->cck_tx_power_index_B,
+ 	       sizeof(priv->cck_tx_power_index_B));
  
--	if (!dev)
--		return;
--
- 	if (dev->flags & IFF_PROMISC)
- 		return;
+ 	memcpy(priv->ht40_1s_tx_power_index_A,
+-	       priv->efuse_wifi.efuse8723.ht40_1s_tx_power_index_A,
++	       efuse->ht40_1s_tx_power_index_A,
+ 	       sizeof(priv->ht40_1s_tx_power_index_A));
+ 	memcpy(priv->ht40_1s_tx_power_index_B,
+-	       priv->efuse_wifi.efuse8723.ht40_1s_tx_power_index_B,
++	       efuse->ht40_1s_tx_power_index_B,
+ 	       sizeof(priv->ht40_1s_tx_power_index_B));
+ 
+ 	memcpy(priv->ht20_tx_power_index_diff,
+-	       priv->efuse_wifi.efuse8723.ht20_tx_power_index_diff,
++	       efuse->ht20_tx_power_index_diff,
+ 	       sizeof(priv->ht20_tx_power_index_diff));
+ 	memcpy(priv->ofdm_tx_power_index_diff,
+-	       priv->efuse_wifi.efuse8723.ofdm_tx_power_index_diff,
++	       efuse->ofdm_tx_power_index_diff,
+ 	       sizeof(priv->ofdm_tx_power_index_diff));
+ 
+ 	memcpy(priv->ht40_max_power_offset,
+-	       priv->efuse_wifi.efuse8723.ht40_max_power_offset,
++	       efuse->ht40_max_power_offset,
+ 	       sizeof(priv->ht40_max_power_offset));
+ 	memcpy(priv->ht20_max_power_offset,
+-	       priv->efuse_wifi.efuse8723.ht20_max_power_offset,
++	       efuse->ht20_max_power_offset,
+ 	       sizeof(priv->ht20_max_power_offset));
+ 
+ 	dev_info(&priv->udev->dev, "Vendor: %.7s\n",
+-		 priv->efuse_wifi.efuse8723.vendor_name);
++		 efuse->vendor_name);
+ 	dev_info(&priv->udev->dev, "Product: %.41s\n",
+-		 priv->efuse_wifi.efuse8723.device_name);
++		 efuse->device_name);
+ 	return 0;
+ }
  
 -- 
-1.9.1
+2.5.0
 
