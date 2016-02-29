@@ -1,194 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f170.google.com ([209.85.161.170]:34453 "EHLO
-	mail-yw0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756524AbcBDXNt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 18:13:49 -0500
-MIME-Version: 1.0
-In-Reply-To: <1454619643-14444-2-git-send-email-keescook@chromium.org>
-References: <1454619643-14444-1-git-send-email-keescook@chromium.org>
-	<1454619643-14444-2-git-send-email-keescook@chromium.org>
-Date: Fri, 5 Feb 2016 00:43:52 +0200
-Message-ID: <CAHp75Vc37Q6GtReEZwbiYUeZqVh7iwDr8dk6Xg4kq0sKWi=41Q@mail.gmail.com> (sfid-20160205_001356_152348_9DC9E3CE)
-Subject: Re: [PATCH v2 1/4] lib: move strtobool to kstrtobool
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: Kees Cook <keescook@chromium.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>,
-	Joe Perches <joe@perches.com>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Daniel Borkmann <daniel@iogearbox.net>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Steve French <sfrench@samba.org>,
-	Michael Ellerman <mpe@ellerman.id.au>,
-	Heiko Carstens <heiko.carstens@de.ibm.com>,
-	Martin Schwidefsky <schwidefsky@de.ibm.com>,
-	"x86@kernel.org" <x86@kernel.org>, linuxppc-dev@lists.ozlabs.org,
-	linux-s390@vger.kernel.org,
-	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, linux-cifs@vger.kernel.org,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:52328 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753524AbcB2WGD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:06:03 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 085/113] rtl8xxxu: Set 8723bu TX power for CCK and OFDM rates
+Date: Mon, 29 Feb 2016 17:05:23 -0500
+Message-Id: <1456783551-28315-86-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232951_467690_547E672F)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 4, 2016 at 11:00 PM, Kees Cook <keescook@chromium.org> wrote:
-> Create the kstrtobool_from_user helper and moves strtobool logic into
-> the new kstrtobool (matching all the other kstrto* functions). Provides
-> an inline wrapper for existing strtobool callers.
->
-> Signed-off-by: Kees Cook <keescook@chromium.org>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+This implements support for setting TX power for CCK and OFDM rates on
+8723bu. MCS rates is still pending.
 
-One minor below.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
 
-> ---
->  include/linux/kernel.h |  3 +++
->  include/linux/string.h |  6 +++++-
->  lib/kstrtox.c          | 35 +++++++++++++++++++++++++++++++++++
->  lib/string.c           | 29 -----------------------------
->  4 files changed, 43 insertions(+), 30 deletions(-)
->
-> diff --git a/include/linux/kernel.h b/include/linux/kernel.h
-> index f31638c6e873..cdc25f47a23f 100644
-> --- a/include/linux/kernel.h
-> +++ b/include/linux/kernel.h
-> @@ -357,6 +357,7 @@ int __must_check kstrtou16(const char *s, unsigned int base, u16 *res);
->  int __must_check kstrtos16(const char *s, unsigned int base, s16 *res);
->  int __must_check kstrtou8(const char *s, unsigned int base, u8 *res);
->  int __must_check kstrtos8(const char *s, unsigned int base, s8 *res);
-> +int __must_check kstrtobool(const char *s, unsigned int base, bool *res);
->
->  int __must_check kstrtoull_from_user(const char __user *s, size_t count, unsigned int base, unsigned long long *res);
->  int __must_check kstrtoll_from_user(const char __user *s, size_t count, unsigned int base, long long *res);
-> @@ -368,6 +369,8 @@ int __must_check kstrtou16_from_user(const char __user *s, size_t count, unsigne
->  int __must_check kstrtos16_from_user(const char __user *s, size_t count, unsigned int base, s16 *res);
->  int __must_check kstrtou8_from_user(const char __user *s, size_t count, unsigned int base, u8 *res);
->  int __must_check kstrtos8_from_user(const char __user *s, size_t count, unsigned int base, s8 *res);
-
-> +int __must_check kstrtobool_from_user(const char __user *s, size_t count,
-> +                                     unsigned int base, bool *res);
-
-We already are using long lines here, perhaps do the same?
-
->
->  static inline int __must_check kstrtou64_from_user(const char __user *s, size_t count, unsigned int base, u64 *res)
->  {
-> diff --git a/include/linux/string.h b/include/linux/string.h
-> index 9eebc66d957a..d2fb21b1081d 100644
-> --- a/include/linux/string.h
-> +++ b/include/linux/string.h
-> @@ -128,7 +128,11 @@ extern char **argv_split(gfp_t gfp, const char *str, int *argcp);
->  extern void argv_free(char **argv);
->
->  extern bool sysfs_streq(const char *s1, const char *s2);
-> -extern int strtobool(const char *s, bool *res);
-> +extern int kstrtobool(const char *s, unsigned int base, bool *res);
-> +static inline int strtobool(const char *s, bool *res)
-> +{
-> +       return kstrtobool(s, 0, res);
-> +}
->
->  #ifdef CONFIG_BINARY_PRINTF
->  int vbin_printf(u32 *bin_buf, size_t size, const char *fmt, va_list args);
-> diff --git a/lib/kstrtox.c b/lib/kstrtox.c
-> index 94be244e8441..e18f088704d7 100644
-> --- a/lib/kstrtox.c
-> +++ b/lib/kstrtox.c
-> @@ -321,6 +321,40 @@ int kstrtos8(const char *s, unsigned int base, s8 *res)
->  }
->  EXPORT_SYMBOL(kstrtos8);
->
-> +/**
-> + * kstrtobool - convert common user inputs into boolean values
-> + * @s: input string
-> + * @base: ignored
-> + * @res: result
-> + *
-> + * This routine returns 0 iff the first character is one of 'Yy1Nn0'.
-> + * Otherwise it will return -EINVAL.  Value pointed to by res is
-> + * updated upon finding a match.
-> + */
-> +int kstrtobool(const char *s, unsigned int base, bool *res)
-> +{
-> +       if (!s)
-> +               return -EINVAL;
-> +
-> +       switch (s[0]) {
-> +       case 'y':
-> +       case 'Y':
-> +       case '1':
-> +               *res = true;
-> +               return 0;
-> +       case 'n':
-> +       case 'N':
-> +       case '0':
-> +               *res = false;
-> +               return 0;
-> +       default:
-> +               break;
-> +       }
-> +
-> +       return -EINVAL;
-> +}
-> +EXPORT_SYMBOL(kstrtobool);
-> +
->  #define kstrto_from_user(f, g, type)                                   \
->  int f(const char __user *s, size_t count, unsigned int base, type *res)        \
->  {                                                                      \
-> @@ -345,3 +379,4 @@ kstrto_from_user(kstrtou16_from_user,       kstrtou16,      u16);
->  kstrto_from_user(kstrtos16_from_user,  kstrtos16,      s16);
->  kstrto_from_user(kstrtou8_from_user,   kstrtou8,       u8);
->  kstrto_from_user(kstrtos8_from_user,   kstrtos8,       s8);
-> +kstrto_from_user(kstrtobool_from_user, kstrtobool,     bool);
-> diff --git a/lib/string.c b/lib/string.c
-> index 0323c0d5629a..1a90db9bc6e1 100644
-> --- a/lib/string.c
-> +++ b/lib/string.c
-> @@ -630,35 +630,6 @@ bool sysfs_streq(const char *s1, const char *s2)
->  }
->  EXPORT_SYMBOL(sysfs_streq);
->
-> -/**
-> - * strtobool - convert common user inputs into boolean values
-> - * @s: input string
-> - * @res: result
-> - *
-> - * This routine returns 0 iff the first character is one of 'Yy1Nn0'.
-> - * Otherwise it will return -EINVAL.  Value pointed to by res is
-> - * updated upon finding a match.
-> - */
-> -int strtobool(const char *s, bool *res)
-> -{
-> -       switch (s[0]) {
-> -       case 'y':
-> -       case 'Y':
-> -       case '1':
-> -               *res = true;
-> -               break;
-> -       case 'n':
-> -       case 'N':
-> -       case '0':
-> -               *res = false;
-> -               break;
-> -       default:
-> -               return -EINVAL;
-> -       }
-> -       return 0;
-> -}
-> -EXPORT_SYMBOL(strtobool);
-> -
->  #ifndef __HAVE_ARCH_MEMSET
->  /**
->   * memset - Fill a region of memory with the given value
-> --
-> 2.6.3
->
-
-
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 970f0ec..daea712 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2062,9 +2062,30 @@ rtl8723a_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
+ static void
+ rtl8723b_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
+ {
+-	int group;
++	u32 val32, ofdm;
++	u8 cck, ofdmbase;
++	int group, tx_idx;
+ 
++	tx_idx = 0;
+ 	group = rtl8723b_channel_to_group(channel);
++
++	cck = priv->cck_tx_power_index_B[group];
++	val32 = rtl8xxxu_read32(priv, REG_TX_AGC_A_CCK1_MCS32);
++	val32 &= 0xffff00ff;
++	val32 |= (cck << 8);
++	rtl8xxxu_write32(priv, REG_TX_AGC_A_CCK1_MCS32, val32);
++
++	val32 = rtl8xxxu_read32(priv, REG_TX_AGC_B_CCK11_A_CCK2_11);
++	val32 &= 0xff;
++	val32 |= ((cck << 8) | (cck << 16) | (cck << 24));
++	rtl8xxxu_write32(priv, REG_TX_AGC_B_CCK11_A_CCK2_11, val32);
++
++	ofdmbase = priv->ht40_1s_tx_power_index_B[group];
++	ofdmbase += priv->ofdm_tx_power_diff[tx_idx].b;
++	ofdm = ofdmbase | ofdmbase << 8 | ofdmbase << 16 | ofdmbase << 24;
++
++	rtl8xxxu_write32(priv, REG_TX_AGC_A_RATE18_06, ofdm);
++	rtl8xxxu_write32(priv, REG_TX_AGC_A_RATE54_24, ofdm);
+ }
+ 
+ static void rtl8xxxu_set_linktype(struct rtl8xxxu_priv *priv,
 -- 
-With Best Regards,
-Andy Shevchenko
+2.5.0
+
