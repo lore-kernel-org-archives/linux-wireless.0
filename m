@@ -1,128 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:46080 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:39960 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752504AbcBDMb3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 4 Feb 2016 07:31:29 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: Julian Anastasov <ja@ssi.bg>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH v3 3/4] ipv6: add option to drop unicast encapsulated in L2 multicast
-Date: Thu,  4 Feb 2016 13:31:19 +0100
-Message-Id: <1454589080-21354-3-git-send-email-johannes@sipsolutions.net> (sfid-20160204_133155_905269_77170C05)
-In-Reply-To: <1454589080-21354-1-git-send-email-johannes@sipsolutions.net>
-References: <1454589080-21354-1-git-send-email-johannes@sipsolutions.net>
+	id S1753319AbcB2WF6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:58 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 103/113] rtl8xxxu: Process C2H RA_REPORT events for 8723bu
+Date: Mon, 29 Feb 2016 17:05:41 -0500
+Message-Id: <1456783551-28315-104-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232949_969809_E68CBF75)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-In order to solve a problem with 802.11, the so-called hole-196 attack,
-add an option (sysctl) called "drop_unicast_in_l2_multicast" which, if
-enabled, causes the stack to drop IPv6 unicast packets encapsulated in
-link-layer multi- or broadcast frames. Such frames can (as an attack)
-be created by any member of the same wireless network and transmitted
-as valid encrypted frames since the symmetric key for broadcast frames
-is shared between all stations.
+Handle RA_REPORTS events for 8723bu to not have them show up as
+unhandled.
 
-Reviewed-by: Julian Anastasov <ja@ssi.bg>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- Documentation/networking/ip-sysctl.txt |  6 ++++++
- include/linux/ipv6.h                   |  1 +
- include/uapi/linux/ipv6.h              |  1 +
- net/ipv6/addrconf.c                    |  8 ++++++++
- net/ipv6/ip6_input.c                   | 10 ++++++++++
- 5 files changed, 26 insertions(+)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c |  6 ++++++
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 11 +++++++++++
+ 2 files changed, 17 insertions(+)
 
-diff --git a/Documentation/networking/ip-sysctl.txt b/Documentation/networking/ip-sysctl.txt
-index 56bb6dd881bd..428fb48a19fc 100644
---- a/Documentation/networking/ip-sysctl.txt
-+++ b/Documentation/networking/ip-sysctl.txt
-@@ -1666,6 +1666,12 @@ stable_secret - IPv6 address
- 
- 	By default the stable secret is unset.
- 
-+drop_unicast_in_l2_multicast - BOOLEAN
-+	Drop any unicast IPv6 packets that are received in link-layer
-+	multicast (or broadcast) frames.
-+
-+	By default this is turned off.
-+
- icmp/*:
- ratelimit - INTEGER
- 	Limit the maximal rates for sending ICMPv6 packets.
-diff --git a/include/linux/ipv6.h b/include/linux/ipv6.h
-index 0ef2a97ccdb5..34317cb6a6fc 100644
---- a/include/linux/ipv6.h
-+++ b/include/linux/ipv6.h
-@@ -50,6 +50,7 @@ struct ipv6_devconf {
- 	__s32		mc_forwarding;
- #endif
- 	__s32		disable_ipv6;
-+	__s32		drop_unicast_in_l2_multicast;
- 	__s32		accept_dad;
- 	__s32		force_tllao;
- 	__s32           ndisc_notify;
-diff --git a/include/uapi/linux/ipv6.h b/include/uapi/linux/ipv6.h
-index 38b4fef20219..4c413570efe8 100644
---- a/include/uapi/linux/ipv6.h
-+++ b/include/uapi/linux/ipv6.h
-@@ -174,6 +174,7 @@ enum {
- 	DEVCONF_USE_OIF_ADDRS_ONLY,
- 	DEVCONF_ACCEPT_RA_MIN_HOP_LIMIT,
- 	DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN,
-+	DEVCONF_DROP_UNICAST_IN_L2_MULTICAST,
- 	DEVCONF_MAX
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 3985903..253de87 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -7445,6 +7445,12 @@ static void rtl8723bu_handle_c2h(struct rtl8xxxu_priv *priv,
+ 		dev_dbg(dev, "C2H_MP_INFO ext ID %02x, status %02x\n",
+ 			c2h->bt_mp_info.ext_id, c2h->bt_mp_info.status);
+ 		break;
++	case C2H_8723B_RA_REPORT:
++		dev_dbg(dev,
++			"C2H RA RPT: rate %02x, unk %i, macid %02x, noise %i\n",
++			c2h->ra_report.rate, c2h->ra_report.dummy0_0,
++			c2h->ra_report.macid, c2h->ra_report.noisy_state);
++		break;
+ 	default:
+ 		dev_info(dev, "Unhandled C2H event %02x seq %02x\n",
+ 			 c2h->id, c2h->seq);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 2191b6b..b44cb59 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1033,6 +1033,7 @@ enum c2h_evt_8723b {
+ 	C2H_8723B_BT_INFO = 9,
+ 	C2H_8723B_HW_INFO_EXCH = 0x0a,
+ 	C2H_8723B_BT_MP_INFO = 0x0b,
++	C2H_8723B_RA_REPORT = 0x0c,
+ 	C2H_8723B_FW_DEBUG = 0xff,
  };
  
-diff --git a/net/ipv6/addrconf.c b/net/ipv6/addrconf.c
-index d72fa90d6feb..35f880bcf626 100644
---- a/net/ipv6/addrconf.c
-+++ b/net/ipv6/addrconf.c
-@@ -4672,6 +4672,7 @@ static inline void ipv6_store_devconf(struct ipv6_devconf *cnf,
- 	array[DEVCONF_IGNORE_ROUTES_WITH_LINKDOWN] = cnf->ignore_routes_with_linkdown;
- 	/* we omit DEVCONF_STABLE_SECRET for now */
- 	array[DEVCONF_USE_OIF_ADDRS_ONLY] = cnf->use_oif_addrs_only;
-+	array[DEVCONF_DROP_UNICAST_IN_L2_MULTICAST] = cnf->drop_unicast_in_l2_multicast;
- }
+@@ -1121,6 +1122,16 @@ struct rtl8723bu_c2h {
+ 			u8 a4;
+ 			u8 a5;
+ 		} __packed bt_info;
++		struct {
++			u8 rate:7;
++			u8 dummy0_0:1;
++			u8 macid;
++			u8 ldpc:1;
++			u8 txbf:1;
++			u8 noisy_state:1;
++			u8 dummy2_0:5;
++			u8 dummy3_0;
++		} __packed ra_report;
+ 	};
+ };
  
- static inline size_t inet6_ifla6_size(void)
-@@ -5734,6 +5735,13 @@ static struct addrconf_sysctl_table
- 			.proc_handler	= addrconf_sysctl_ignore_routes_with_linkdown,
- 		},
- 		{
-+			.procname	= "drop_unicast_in_l2_multicast",
-+			.data		= &ipv6_devconf.drop_unicast_in_l2_multicast,
-+			.maxlen		= sizeof(int),
-+			.mode		= 0644,
-+			.proc_handler	= proc_dointvec,
-+		},
-+		{
- 			/* sentinel */
- 		}
- 	},
-diff --git a/net/ipv6/ip6_input.c b/net/ipv6/ip6_input.c
-index 9075acf081dd..31ac3c56da4b 100644
---- a/net/ipv6/ip6_input.c
-+++ b/net/ipv6/ip6_input.c
-@@ -134,6 +134,16 @@ int ipv6_rcv(struct sk_buff *skb, struct net_device *dev, struct packet_type *pt
- 	    IPV6_ADDR_MC_SCOPE(&hdr->daddr) == 1)
- 		goto err;
- 
-+	/* If enabled, drop unicast packets that were encapsulated in link-layer
-+	 * multicast or broadcast to protected against the so-called "hole-196"
-+	 * attack in 802.11 wireless.
-+	 */
-+	if (!ipv6_addr_is_multicast(&hdr->daddr) &&
-+	    (skb->pkt_type == PACKET_BROADCAST ||
-+	     skb->pkt_type == PACKET_MULTICAST) &&
-+	    idev->cnf.drop_unicast_in_l2_multicast)
-+		goto err;
-+
- 	/* RFC4291 2.7
- 	 * Nodes must not originate a packet to a multicast address whose scope
- 	 * field contains the reserved value 0; if such a packet is received, it
 -- 
-2.7.0
+2.5.0
 
