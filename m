@@ -1,62 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59254 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750832AbcBWKbe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 23 Feb 2016 05:31:34 -0500
-Message-ID: <1456223487.2041.14.camel@sipsolutions.net> (sfid-20160223_113139_319658_D0118C98)
-Subject: Re: [PATCHv2 3/4] ARM: tegra: use build-in device properties with
- rfkill_gpio
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thierry Reding <thierry.reding@gmail.com>
-Cc: Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Marc Dietrich <marvin24@gmx.de>
-Date: Tue, 23 Feb 2016 11:31:27 +0100
-In-Reply-To: <20160219180354.GA9911@ulmo> (sfid-20160219_190356_007406_5ADCBA2F)
-References: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com>
-	 <1453712629-143317-4-git-send-email-heikki.krogerus@linux.intel.com>
-	 <20160125121840.GA20452@ulmo.nvidia.com>
-	 <1453797724.2759.4.camel@sipsolutions.net>
-	 <1455825889.2084.16.camel@sipsolutions.net> <20160219180354.GA9911@ulmo>
-	 (sfid-20160219_190356_007406_5ADCBA2F)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail.w1.fi ([212.71.239.96]:33510 "EHLO
+	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750924AbcB2WjY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:39:24 -0500
+Date: Tue, 1 Mar 2016 00:39:18 +0200
+From: Jouni Malinen <j@w1.fi>
+To: =?utf-8?B?Sm/Do28=?= Paulo Rechi Vita <jprvita@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux@endlessm.com,
+	=?utf-8?B?Sm/Do28=?= Paulo Rechi Vita <jprvita@endlessm.com>
+Subject: Re: [PATCHv2 08/10] rfkill: Use switch to demux userspace operations
+Message-ID: <20160229223918.GA32464@w1.fi> (sfid-20160229_233949_019358_68CBA088)
+References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+ <1456159001-20307-9-git-send-email-jprvita@endlessm.com>
+ <20160226175925.GA9331@w1.fi>
+ <CA+A7VXUY=qVDQ-OqT+QJK8haN6AFX4Br=OPXi-6RCxpvH3=QRg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <CA+A7VXUY=qVDQ-OqT+QJK8haN6AFX4Br=OPXi-6RCxpvH3=QRg@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-02-19 at 19:03 +0100, Thierry Reding wrote:
-> On Thu, Feb 18, 2016 at 09:04:49PM +0100, Johannes Berg wrote:
-> > On Tue, 2016-01-26 at 09:42 +0100, Johannes Berg wrote:
-> > > On Mon, 2016-01-25 at 13:18 +0100, Thierry Reding wrote:
-> > > >  
-> > > > Johannes, I assume that you'll want to take this through your
-> > > > tree
-> > > > because of the dependency? In that case:
-> > > > 
-> > > > Acked-by: Thierry Reding <treding@nvidia.com>
-> > > 
-> > > I can, but I don't really care - perhaps you'd rather take the
-> > > entire
-> > > series through your tree to get it into one place for Marc?
-> > > 
-> > > In which case, you have my
-> > > 
-> > > Acked-by: Johannes Berg <johannes@sipsolutions.net>
-> > > 
-> > > for the other 3 patches.
-> > > 
-> > > Let me know which you prefer.
-> > > 
-> > Did these patches get applied anywhere? Otherwise I'm willing to
-> > pick
-> > them up.
-> 
-> Might be easier for everyone if you took this one patch. My earlier
-> Acked-by still stands:
-> 
-Yep, done. I've applied all 4 patches now.
+On Mon, Feb 29, 2016 at 05:30:20PM -0500, João Paulo Rechi Vita wrote:
 
-johannes
+> I agree there is a difference in the logic here, thanks for taking the
+> time to point it out so clearly, and sorry for missing this. But AFAIU
+> userspace should not call RFKILL_OP_CHANGE with ev.type ==
+> RFKILL_TYPE_ALL, as RFKILL_OP_CHANGE is intended to be used to
+> block/unblock one RFKill switch, and it is not possible to create a
+> RFKill switch with type == RFKILL_TYPE_ALL (rfkill_alloc() would
+> return NULL).
+
+Interesting. Maybe Johannes can comment on that part since I think he
+wrote the code that interacts with kernel for the rfkill test cases.
+
+> I tried to look into the source code of the test suite you pointed,
+> but couldn't easily figure out how it ends up with that combination.
+> Could you please explain (or point me in the code) how is that a valid
+> operation? If I'm not missing anything, we should probably return
+> EINVAL in this case.
+
+These specific failures were shown for the test cases in this file:
+http://w1.fi/cgit/hostap/tree/tests/hwsim/test_rfkill.py
+
+The interaction with kernel is done using this code:
+http://w1.fi/cgit/hostap/tree/tests/hwsim/rfkill.py
+
+It does indeed look like TYPE_ALL is used here (the block() and
+unblock() implementations). If this is incorrect, we can certainly
+change the script since I'd assume this is not used for anything else
+than the hwsim test cases (or well who knows, it is available out there,
+so if someone needs python code to do rfkill operations..).
+ 
+-- 
+Jouni Malinen                                            PGP id EFC895FA
