@@ -1,76 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:20984 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754416AbcBVKVC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 05:21:02 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH V4 23/24] staging: wilc1000: moves to define values
-Date: Mon, 22 Feb 2016 19:14:30 +0900
-Message-ID: <1456136071-10502-24-git-send-email-leo.kim@atmel.com> (sfid-20160222_112106_412498_C8F3D57D)
-In-Reply-To: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
-References: <1456136071-10502-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:52257 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752803AbcB2WFy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:54 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 034/113] rtl8xxxu: Use correct formatting type to print sizeof()
+Date: Mon, 29 Feb 2016 17:04:32 -0500
+Message-Id: <1456783551-28315-35-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230616_931359_AC745D82)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-This patch moves DEBUG, INFO, WRN and ERR values to wilc_debugfs.c file
-because this is only used to wilc_debugfs.c file.
-And, removes unnecessary WILC_DEBUGFS and else-case variables.
+Usual gcc i386 issue reported by kbuildbot
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/staging/wilc1000/linux_wlan_common.h | 11 -----------
- drivers/staging/wilc1000/wilc_debugfs.c      |  4 ++++
- 2 files changed, 4 insertions(+), 11 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index 2e2109c..51601aa 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -1,17 +1,6 @@
- #ifndef LINUX_WLAN_COMMON_H
- #define LINUX_WLAN_COMMON_H
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index ac47b77..9d8b69a 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -5129,7 +5129,7 @@ static void rtl8xxxu_update_rate_mask(struct rtl8xxxu_priv *priv,
+ 	if (sgi)
+ 		h2c.ramask.arg |= 0x20;
  
--#if defined(WILC_DEBUGFS)
--#define DEBUG           BIT(0)
--#define INFO            BIT(1)
--#define WRN             BIT(2)
--#define ERR             BIT(3)
--#else
--#define DEBUG       1
--#define INFO        0
--#define WRN         0
--#endif
--
- #define LINUX_RX_SIZE	(96 * 1024)
- #define LINUX_TX_SIZE	(64 * 1024)
- 
-diff --git a/drivers/staging/wilc1000/wilc_debugfs.c b/drivers/staging/wilc1000/wilc_debugfs.c
-index 215e2f0..fcbc95d 100644
---- a/drivers/staging/wilc1000/wilc_debugfs.c
-+++ b/drivers/staging/wilc1000/wilc_debugfs.c
-@@ -23,6 +23,10 @@ static struct dentry *wilc_dir;
- /*
-  * --------------------------------------------------------------------------------
-  */
-+#define DEBUG           BIT(0)
-+#define INFO            BIT(1)
-+#define WRN             BIT(2)
-+#define ERR             BIT(3)
- 
- #define DBG_LEVEL_ALL	(DEBUG | INFO | WRN | ERR)
- atomic_t WILC_DEBUG_LEVEL = ATOMIC_INIT(ERR);
+-	dev_dbg(&priv->udev->dev, "%s: rate mask %08x, arg %02x, size %li\n",
++	dev_dbg(&priv->udev->dev, "%s: rate mask %08x, arg %02x, size %zi\n",
+ 		__func__, ramask, h2c.ramask.arg, sizeof(h2c.ramask));
+ 	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.ramask));
+ }
 -- 
-1.9.1
+2.5.0
 
