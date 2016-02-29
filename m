@@ -1,33 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:50633 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933305AbcBCXeG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 18:34:06 -0500
-Date: Wed, 3 Feb 2016 15:34:06 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Leo Kim <leo.kim@atmel.com>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	tony.cho@atmel.com, glen.lee@atmel.com, austin.shin@atmel.com,
-	Chris.Park@atmel.com, adham.abozaeid@atmel.com,
-	Nicolas.FERRE@atmel.com
-Subject: Re: [PATCH 1/7] staging: wilc1000: wilc_wfi_cfgoperations.c:
- replaces PRINT_ER with netdev_err
-Message-ID: <20160203233406.GA20695@kroah.com> (sfid-20160204_003413_153613_2F4E4895)
-References: <1454292685-12294-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1454292685-12294-1-git-send-email-leo.kim@atmel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:49034 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753110AbcB2WF4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:56 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 076/113] rtl8xxxu: Use name for REG_RFE_BUFFER rather than hard coded value
+Date: Mon, 29 Feb 2016 17:05:14 -0500
+Message-Id: <1456783551-28315-77-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232952_866134_7E397005)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 01, 2016 at 11:11:19AM +0900, Leo Kim wrote:
-> This patches replaces PRINT_ER with netdev_err.
-> Removes unnecessary debug logs as well.
-> 
-> Signed-off-by: Leo Kim <leo.kim@atmel.com>
-> ---
->  drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 86 ++++++++---------------
->  1 file changed, 31 insertions(+), 55 deletions(-)
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-This series didn't apply either :(
+Register 0x0944 is REG_RFE_BUFFER. Use the name rather than hard coded
+value when accessing it.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 690e31d..25a8ca5b 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2946,9 +2946,9 @@ static void rtl8723bu_phy_init_antenna_selection(struct rtl8xxxu_priv *priv)
+ 	val32 &= ~BIT(23);
+ 	rtl8xxxu_write32(priv, REG_LEDCFG0, val32);
+ 
+-	val32 = rtl8xxxu_read32(priv, 0x0944);
++	val32 = rtl8xxxu_read32(priv, REG_RFE_BUFFER);
+ 	val32 |= (BIT(0) | BIT(1));
+-	rtl8xxxu_write32(priv, 0x0944, val32);
++	rtl8xxxu_write32(priv, REG_RFE_BUFFER, val32);
+ 
+ 	val32 = rtl8xxxu_read32(priv, 0x0930);
+ 	val32 &= 0xffffff00;
+@@ -5912,9 +5912,9 @@ static void rtl8723bu_init_bt(struct rtl8xxxu_priv *priv)
+ 	 */
+ 	rtl8xxxu_write8(priv, 0x0974, 0xff);
+ 
+-	val32 = rtl8xxxu_read32(priv, 0x0944);
++	val32 = rtl8xxxu_read32(priv, REG_RFE_BUFFER);
+ 	val32 |= (BIT(0) | BIT(1));
+-	rtl8xxxu_write32(priv, 0x0944, val32);
++	rtl8xxxu_write32(priv, REG_RFE_BUFFER, val32);
+ 
+ 	rtl8xxxu_write8(priv, REG_RFE_CTRL_ANTA_SRC, 0x77);
+ 
+-- 
+2.5.0
+
