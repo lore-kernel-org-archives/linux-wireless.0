@@ -1,45 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:50037 "EHLO mga14.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:43350 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750980AbcBKP3q convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 11 Feb 2016 10:29:46 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Eric Dumazet <eric.dumazet@gmail.com>
-CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] codel: add forgotten inline to functions in header file
-Date: Thu, 11 Feb 2016 15:29:41 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA0E809@hasmsx107.ger.corp.intel.com> (sfid-20160211_162958_321090_00C770D2)
-References: <1455199701-25767-1-git-send-email-emmanuel.grumbach@intel.com>
- <1455201038.19473.12.camel@edumazet-glaptop2.roam.corp.google.com>
- <0BA3FCBA62E2DC44AF3030971E174FB32EA0E6FD@hasmsx107.ger.corp.intel.com>
- <1455203555.19473.14.camel@edumazet-glaptop2.roam.corp.google.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	id S1752761AbcB2WFy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:54 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 015/113] rtl8xxxu: Only setup USB interrupts for parts which support it
+Date: Mon, 29 Feb 2016 17:04:13 -0500
+Message-Id: <1456783551-28315-16-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232949_852992_3E859A12)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
+Only 1st generation chips do provide USB interrupts, so do not try to
+setup interrupts for newer chips (8192eu and 8723bu).
 
-On 02/11/2016 05:12 PM, Eric Dumazet wrote:
-> On Thu, 2016-02-11 at 15:05 +0000, Grumbach, Emmanuel wrote:
->
->
->> Yeah :) codel_should_drop seemed very long indeed... I wanted to use the
->> codel_get_time and associated utils (_before, _after) in iwlwifi.
->> They're better than jiffies... So maybe I can just copy that code to
->> iwlwifi.
->
-> You certainly can submit a patch adding the inline, but not on all
-> functions present in this file ;)
->
-> Thanks !
->
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 18 +++++++++++++-----
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |  1 +
+ 2 files changed, 14 insertions(+), 5 deletions(-)
 
-Actually... All I need *has* the inline, but if I include codel.h,
-codel_dequeue is defined but not used and you definitely don't want to
-inline that one. So I guess the only other option I have is to split
-that header file which I don't think is really worth it. So, unless you
-object it, I'll just copy the code.
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 66a0c17..b3fd5c2 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -1707,6 +1707,7 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
+ 			priv->rtlchip = 0x8723b;
+ 		} else {
+ 			sprintf(priv->chip_name, "8723AU");
++			priv->usb_interrupts = 1;
+ 			priv->rtlchip = 0x8723a;
+ 		}
+ 
+@@ -1744,12 +1745,14 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
+ 			priv->rf_paths = 2;
+ 			priv->rx_paths = 2;
+ 			priv->tx_paths = 1;
++			priv->usb_interrupts = 1;
+ 			priv->rtlchip = 0x8191c;
+ 		} else {
+ 			sprintf(priv->chip_name, "8192CU");
+ 			priv->rf_paths = 2;
+ 			priv->rx_paths = 2;
+ 			priv->tx_paths = 2;
++			priv->usb_interrupts = 1;
+ 			priv->rtlchip = 0x8192c;
+ 		}
+ 		priv->has_wifi = 1;
+@@ -1759,6 +1762,7 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
+ 		priv->rx_paths = 1;
+ 		priv->tx_paths = 1;
+ 		priv->rtlchip = 0x8188c;
++		priv->usb_interrupts = 1;
+ 		priv->has_wifi = 1;
+ 	}
+ 
+@@ -5825,9 +5829,11 @@ static int rtl8xxxu_start(struct ieee80211_hw *hw)
+ 	init_usb_anchor(&priv->int_anchor);
+ 
+ 	rtl8723a_enable_rf(priv);
+-	ret = rtl8xxxu_submit_int_urb(hw);
+-	if (ret)
+-		goto exit;
++	if (priv->usb_interrupts) {
++		ret = rtl8xxxu_submit_int_urb(hw);
++		if (ret)
++			goto exit;
++	}
+ 
+ 	for (i = 0; i < RTL8XXXU_TX_URBS; i++) {
+ 		tx_urb = kmalloc(sizeof(struct rtl8xxxu_tx_urb), GFP_KERNEL);
+@@ -5902,14 +5908,16 @@ static void rtl8xxxu_stop(struct ieee80211_hw *hw)
+ 
+ 	usb_kill_anchored_urbs(&priv->rx_anchor);
+ 	usb_kill_anchored_urbs(&priv->tx_anchor);
+-	usb_kill_anchored_urbs(&priv->int_anchor);
++	if (priv->usb_interrupts)
++		usb_kill_anchored_urbs(&priv->int_anchor);
+ 
+ 	rtl8723a_disable_rf(priv);
+ 
+ 	/*
+ 	 * Disable interrupts
+ 	 */
+-	rtl8xxxu_write32(priv, REG_USB_HIMR, 0);
++	if (priv->usb_interrupts)
++		rtl8xxxu_write32(priv, REG_USB_HIMR, 0);
+ 
+ 	rtl8xxxu_free_rx_resources(priv);
+ 	rtl8xxxu_free_tx_resources(priv);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index bf424db..2055048 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -693,6 +693,7 @@ struct rtl8xxxu_priv {
+ 	u32 has_polarity_ctrl:1;
+ 	u32 has_eeprom:1;
+ 	u32 boot_eeprom:1;
++	u32 usb_interrupts:1;
+ 	u32 ep_tx_high_queue:1;
+ 	u32 ep_tx_normal_queue:1;
+ 	u32 ep_tx_low_queue:1;
+-- 
+2.5.0
 
