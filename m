@@ -1,59 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40111 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933489AbcBRHap (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 02:30:45 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH 06/24] staging: wilc1000: host_interface.c: removes unnecessary log message
-Date: Thu, 18 Feb 2016 16:27:17 +0900
-Message-ID: <1455780455-21365-6-git-send-email-leo.kim@atmel.com> (sfid-20160218_083048_430024_2C07C8DF)
-In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:52250 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752640AbcB2WFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:53 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 009/113] rtl8xxxu: Fix incorrect test for auto LLT failure
+Date: Mon, 29 Feb 2016 17:04:07 -0500
+Message-Id: <1456783551-28315-10-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232950_620982_60E58D68)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-This patch removes unnecessary log message and relate variables.
+The logic for testing auto load failure in rtl8xxxu_auto_llt_table()
+was inverted.
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 5 -----
- 1 file changed, 5 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d1eedfb..7b9dbc0 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3010,7 +3010,6 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
- 	int result = 0;
- 	struct host_if_msg msg;
- 	struct host_if_drv *hif_drv = vif->hif_drv;
--	int i;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index a817208..45f787c 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2781,7 +2781,6 @@ static int rtl8xxxu_auto_llt_table(struct rtl8xxxu_priv *priv, u8 last_tx_page)
+ 	int i;
  
- 	if (!hif_drv) {
- 		PRINT_ER("driver is null\n");
-@@ -3019,10 +3018,6 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
+ 	val32 = rtl8xxxu_read32(priv, REG_AUTO_LLT);
+-	pr_info("AUTO_LLT = %08x\n", val32);
+ 	val32 |= AUTO_LLT_INIT_LLT;
+ 	rtl8xxxu_write32(priv, REG_AUTO_LLT, val32);
  
- 	memset(&msg, 0, sizeof(struct host_if_msg));
+@@ -2792,12 +2791,10 @@ static int rtl8xxxu_auto_llt_table(struct rtl8xxxu_priv *priv, u8 last_tx_page)
+ 		usleep_range(2, 4);
+ 	}
  
--	if (INFO) {
--		for (i = 0; i < len; i++)
--			PRINT_INFO(HOSTAPD_DBG, "KEY is %x\n", key[i]);
--	}
- 	msg.id = HOST_IF_MSG_KEY;
- 	msg.body.key_info.type = WEP;
- 	msg.body.key_info.action = ADDKEY_AP;
+-	if (i) {
++	if (!i) {
+ 		ret = -EBUSY;
+ 		dev_warn(&priv->udev->dev, "LLT table init failed\n");
+ 	}
+-	else
+-		dev_warn(&priv->udev->dev, "LLT table init success\n");
+ 
+ 	return ret;
+ }
 -- 
-1.9.1
+2.5.0
 
