@@ -1,30 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40992 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753227AbcBGHN6 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Feb 2016 02:13:58 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [2/3] net: wireless: rt2x00: Pointer issue
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1445116005-28670-2-git-send-email-paulmcquad@gmail.com>
-To: Paul Mcquade <paulmcquad@gmail.com>
-Cc: paulmcquad@gmail.com, sgruszka@redhat.com,
-	helmut.schaa@googlemail.com, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <20160207071357.9D49C60499@smtp.codeaurora.org> (sfid-20160207_081423_139671_68105475)
-Date: Sun,  7 Feb 2016 07:13:57 +0000 (UTC)
+Received: from mx1.redhat.com ([209.132.183.28]:57961 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752925AbcB2WFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:55 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 053/113] rtl8xxxu: Do not set REG_AFE_XTAL_CTRL on 8723bu
+Date: Mon, 29 Feb 2016 17:04:51 -0500
+Message-Id: <1456783551-28315-54-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230957_486597_41C0CC62)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> Code Style: pointer is declared wrong
-> 
-> Signed-off-by: Paul McQuade <paulmcquad@gmail.com>
-> Acked-by: Helmut Schaa <helmut.schaa@googlemail.com>
+The 8723bu does not like REG_AFE_XTAL_CTRL being set, so skip this for
+now, to match the vendor driver.
 
-This patch didn't apply, so please resend.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
-Kalle
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index bb2ad9b..7f17e69 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2998,6 +2998,7 @@ static int rtl8xxxu_init_phy_regs(struct rtl8xxxu_priv *priv,
+ static int rtl8xxxu_init_phy_bb(struct rtl8xxxu_priv *priv)
+ {
+ 	u8 val8, ldoa15, ldov12d, lpldo, ldohci12;
++	u16 val16;
+ 	u32 val32;
+ 
+ 	/*
+@@ -3018,16 +3019,18 @@ static int rtl8xxxu_init_phy_bb(struct rtl8xxxu_priv *priv)
+ 		udelay(2);
+ 	}
+ 
+-	val8 = rtl8xxxu_read8(priv, REG_SYS_FUNC);
+-	val8 |= SYS_FUNC_BB_GLB_RSTN | SYS_FUNC_BBRSTB;
+-	rtl8xxxu_write8(priv, REG_SYS_FUNC, val8);
++	val16 = rtl8xxxu_read16(priv, REG_SYS_FUNC);
++	val16 |= SYS_FUNC_BB_GLB_RSTN | SYS_FUNC_BBRSTB;
++	rtl8xxxu_write16(priv, REG_SYS_FUNC, val16);
+ 
+-	/* AFE_XTAL_RF_GATE (bit 14) if addressing as 32 bit register */
+-	val32 = rtl8xxxu_read32(priv, REG_AFE_XTAL_CTRL);
+-	val32 &= ~AFE_XTAL_RF_GATE;
+-	if (priv->has_bluetooth)
+-		val32 &= ~AFE_XTAL_BT_GATE;
+-	rtl8xxxu_write32(priv, REG_AFE_XTAL_CTRL, val32);
++	if (priv->rtlchip != 0x8723b) {
++		/* AFE_XTAL_RF_GATE (bit 14) if addressing as 32 bit register */
++		val32 = rtl8xxxu_read32(priv, REG_AFE_XTAL_CTRL);
++		val32 &= ~AFE_XTAL_RF_GATE;
++		if (priv->has_bluetooth)
++			val32 &= ~AFE_XTAL_BT_GATE;
++		rtl8xxxu_write32(priv, REG_AFE_XTAL_CTRL, val32);
++	}
+ 
+ 	/* 6. 0x1f[7:0] = 0x07 */
+ 	val8 = RF_ENABLE | RF_RSTB | RF_SDMRSTB;
+-- 
+2.5.0
 
