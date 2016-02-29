@@ -1,160 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40139 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933423AbcBRHa4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 02:30:56 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH 07/24] staging: wilc1000: linux_mon.c: removes unnecessary log message
-Date: Thu, 18 Feb 2016 16:27:18 +0900
-Message-ID: <1455780455-21365-7-git-send-email-leo.kim@atmel.com> (sfid-20160218_083059_809931_7B7592CA)
-In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga14.intel.com ([192.55.52.115]:41124 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750796AbcB2NZV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 08:25:21 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, QH <qiumin.hu@gmail.com>,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+	Etan Cohen <etancohen@google.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 00/12] Add support for Neighbor Awareness Networking
+Date: Mon, 29 Feb 2016 15:25:01 +0200
+Message-Id: <1456752313-5792-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160229_142524_779503_7FBA1DB7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+[Resending with the ML in CC this time]
 
-This patch removes unnecessary log message and relate variables.
+These patches were partly posted a few times as RFC.
+They are now ready for a PATCH version.
+NAN was described in the original post:
+http://comments.gmane.org/gmane.linux.kernel.wireless.general/142109
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/linux_mon.c | 42 ++++--------------------------------
- 1 file changed, 4 insertions(+), 38 deletions(-)
+Since then we changed a few things:
+ * NL80211_CMD_ADD_NAN_FUNCTION now returns a cookie to the user space
+ * and the user space passes the cookie instead of the instance id.
+   This helps solving a few race conditions with the user space.
+ * Any NAN related notification is sent to a Mutlicast Group
+   (NL80211_MCGRP_NAN) unless NL80211_ATTR_SOCKET_OWNER was set
+   upon creation of the interface. Adding
+   NL80211_ATTR_SOCKET_OWNER during the creation of the socket
+   allows the user space to prevent any other nl80211 socket
+   to create functions, and instructs the kernel to send the
+   NAN related notifications in unicast to socket that created
+   the NAN interface.
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index dbb98bf..7e7cff4 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -52,15 +52,11 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
- 	struct wilc_wfi_radiotap_hdr *hdr;
- 	struct wilc_wfi_radiotap_cb_hdr *cb_hdr;
- 
--	PRINT_INFO(HOSTAPD_DBG, "In monitor interface receive function\n");
--
- 	if (!wilc_wfi_mon)
- 		return;
- 
--	if (!netif_running(wilc_wfi_mon)) {
--		PRINT_INFO(HOSTAPD_DBG, "Monitor interface already RUNNING\n");
-+	if (!netif_running(wilc_wfi_mon))
- 		return;
--	}
- 
- 	/* Get WILC header */
- 	memcpy(&header, (buff - HOST_HDR_OFFSET), HOST_HDR_OFFSET);
-@@ -73,10 +69,8 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
- 		/* hostapd callback mgmt frame */
- 
- 		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_cb_hdr));
--		if (!skb) {
--			PRINT_INFO(HOSTAPD_DBG, "Monitor if : No memory to allocate skb");
-+		if (!skb)
- 			return;
--		}
- 
- 		memcpy(skb_put(skb, size), buff, size);
- 
-@@ -103,20 +97,16 @@ void WILC_WFI_monitor_rx(u8 *buff, u32 size)
- 	} else {
- 		skb = dev_alloc_skb(size + sizeof(struct wilc_wfi_radiotap_hdr));
- 
--		if (!skb) {
--			PRINT_INFO(HOSTAPD_DBG, "Monitor if : No memory to allocate skb");
-+		if (!skb)
- 			return;
--		}
- 
- 		memcpy(skb_put(skb, size), buff, size);
- 		hdr = (struct wilc_wfi_radiotap_hdr *)skb_push(skb, sizeof(*hdr));
- 		memset(hdr, 0, sizeof(struct wilc_wfi_radiotap_hdr));
- 		hdr->hdr.it_version = 0; /* PKTHDR_RADIOTAP_VERSION; */
- 		hdr->hdr.it_len = cpu_to_le16(sizeof(struct wilc_wfi_radiotap_hdr));
--		PRINT_INFO(HOSTAPD_DBG, "Radiotap len %d\n", hdr->hdr.it_len);
- 		hdr->hdr.it_present = cpu_to_le32
- 				(1 << IEEE80211_RADIOTAP_RATE);                   /* | */
--		PRINT_INFO(HOSTAPD_DBG, "Presentflags %d\n", hdr->hdr.it_present);
- 		hdr->rate = 5; /* txrate->bitrate / 5; */
- 	}
- 
-@@ -138,14 +128,6 @@ struct tx_complete_mon_data {
- static void mgmt_tx_complete(void *priv, int status)
- {
- 	struct tx_complete_mon_data *pv_data = priv;
--	u8 *buf =  pv_data->buff;
--
--	if (status == 1) {
--		if (INFO || buf[0] == 0x10 || buf[0] == 0xb0)
--			PRINT_INFO(HOSTAPD_DBG, "Packet sent successfully - Size = %d - Address = %p.\n", pv_data->size, pv_data->buff);
--	} else {
--		PRINT_INFO(HOSTAPD_DBG, "Couldn't send packet - Size = %d - Address = %p.\n", pv_data->size, pv_data->buff);
--	}
- 
- 	/* incase of fully hosting mode, the freeing will be done in response to the cfg packet */
- 	kfree(pv_data->buff);
-@@ -193,7 +175,7 @@ static int mon_mgmt_tx(struct net_device *dev, const u8 *buf, size_t len)
- static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 				     struct net_device *dev)
- {
--	u32 rtap_len, i, ret = 0;
-+	u32 rtap_len, ret = 0;
- 	struct WILC_WFI_mon_priv  *mon_priv;
- 
- 	struct sk_buff *skb2;
-@@ -210,18 +192,9 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 		return -1;
- 
- 	/* skip the radiotap header */
--	PRINT_INFO(HOSTAPD_DBG, "Radiotap len: %d\n", rtap_len);
--
--	if (INFO) {
--		for (i = 0; i < rtap_len; i++)
--			PRINT_INFO(HOSTAPD_DBG, "Radiotap_hdr[%d] %02x\n", i, skb->data[i]);
--	}
- 	/* Skip the ratio tap header */
- 	skb_pull(skb, rtap_len);
- 
--	if (skb->data[0] == 0xc0)
--		PRINT_INFO(HOSTAPD_DBG, "%x:%x:%x:%x:%x%x\n", skb->data[4], skb->data[5], skb->data[6], skb->data[7], skb->data[8], skb->data[9]);
--
- 	if (skb->data[0] == 0xc0 && (!(memcmp(broadcast, &skb->data[4], 6)))) {
- 		skb2 = dev_alloc_skb(skb->len + sizeof(struct wilc_wfi_radiotap_cb_hdr));
- 
-@@ -254,11 +227,7 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 	}
- 	skb->dev = mon_priv->real_ndev;
- 
--	PRINT_INFO(HOSTAPD_DBG, "Skipping the radiotap header\n");
--
- 	/* actual deliver of data is device-specific, and not shown here */
--	PRINT_INFO(HOSTAPD_DBG, "SKB netdevice name = %s\n", skb->dev->name);
--	PRINT_INFO(HOSTAPD_DBG, "MONITOR real dev name = %s\n", mon_priv->real_ndev->name);
- 
- 	/* Identify if Ethernet or MAC header (data or mgmt) */
- 	memcpy(srcAdd, &skb->data[10], 6);
-@@ -336,13 +305,10 @@ int WILC_WFI_deinit_mon_interface(void)
- 	bool rollback_lock = false;
- 
- 	if (wilc_wfi_mon) {
--		PRINT_D(HOSTAPD_DBG, "In Deinit monitor interface\n");
--		PRINT_D(HOSTAPD_DBG, "RTNL is being locked\n");
- 		if (rtnl_is_locked()) {
- 			rtnl_unlock();
- 			rollback_lock = true;
- 		}
--		PRINT_D(HOSTAPD_DBG, "Unregister netdev\n");
- 		unregister_netdev(wilc_wfi_mon);
- 
- 		if (rollback_lock) {
+The last patch is intended to show of iwlwifi intends to use the
+new API and should not be applied on mac80211-next.
+
+Andrei Otcheretianski (6):
+  cfg80211: Provide an API to report NAN function termination
+  cfg80211: add utility functions to clone and free nan_func
+  mac80211: implement nan_change_conf
+  mac80211: Implement add_nan_func and rm_nan_func
+  mac80211: Add API to report nan function match
+  iwlwifi: mvm: Add support for NAN interface type
+
+Emmanuel Grumbach (6):
+  cfg80211: add start / stop NAN commands
+  mac80211: add boilerplate code for start / stop NAN
+  cfg80211: add add_nan_func / rm_nan_func
+  cfg80211: allow the user space to change current NAN configuration
+  cfg80211: provide a function to report a match for NAN
+  cfg80211: allow to tie the NAN instance to the owner
+
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h   |   4 +
+ .../net/wireless/intel/iwlwifi/mvm/debugfs-vif.c   |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c  |  22 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |  80 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/power.c     |   1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/quota.c     |   1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/sf.c        |   6 +-
+ include/net/cfg80211.h                             | 193 ++++++-
+ include/net/mac80211.h                             |  60 +++
+ include/uapi/linux/nl80211.h                       | 268 +++++++++-
+ net/mac80211/cfg.c                                 | 245 +++++++++
+ net/mac80211/chan.c                                |   6 +
+ net/mac80211/driver-ops.h                          |  82 ++-
+ net/mac80211/ieee80211_i.h                         |  25 +
+ net/mac80211/iface.c                               |  29 +-
+ net/mac80211/main.c                                |   8 +
+ net/mac80211/offchannel.c                          |   4 +-
+ net/mac80211/rx.c                                  |   3 +
+ net/mac80211/trace.h                               | 134 +++++
+ net/mac80211/util.c                                |  57 +-
+ net/wireless/chan.c                                |   2 +
+ net/wireless/core.c                                |  35 ++
+ net/wireless/core.h                                |   3 +
+ net/wireless/mlme.c                                |   1 +
+ net/wireless/nl80211.c                             | 580 ++++++++++++++++++++-
+ net/wireless/rdev-ops.h                            |  58 +++
+ net/wireless/trace.h                               |  91 ++++
+ net/wireless/util.c                                | 118 ++++-
+ 28 files changed, 2100 insertions(+), 22 deletions(-)
+
 -- 
-1.9.1
+2.5.0
 
