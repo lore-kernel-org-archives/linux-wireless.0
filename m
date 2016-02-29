@@ -1,51 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:24766 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752568AbcBCGIy (ORCPT
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:34356 "EHLO
+	mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752619AbcB2BIY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 01:08:54 -0500
-Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
-	by mx0a-0016f401.pphosted.com (8.15.0.59/8.15.0.59) with SMTP id u13651xv009235
-	for <linux-wireless@vger.kernel.org>; Tue, 2 Feb 2016 22:08:53 -0800
-Received: from sc-exch04.marvell.com ([199.233.58.184])
-	by mx0a-0016f401.pphosted.com with ESMTP id 20svyv7mxj-1
-	(version=TLSv1/SSLv3 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 02 Feb 2016 22:08:53 -0800
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 0/8] mwifiex enhancements
-Date: Tue, 2 Feb 2016 22:05:01 -0800
-Message-ID: <1454479509-27129-1-git-send-email-akarwar@marvell.com> (sfid-20160203_070857_458818_7EA782A7)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 28 Feb 2016 20:08:24 -0500
+Received: by mail-qk0-f194.google.com with SMTP id u128so4851341qkh.1
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2016 17:08:24 -0800 (PST)
+Received: from hash ([2001:470:1d:6db:230:48ff:fe9d:9c89])
+        by smtp.gmail.com with ESMTPSA id e11sm9977607qkb.39.2016.02.28.17.08.22
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 28 Feb 2016 17:08:22 -0800 (PST)
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Cc: Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 2/3] ath9k: fix a misleading indentation
+Date: Sun, 28 Feb 2016 20:07:56 -0500
+Message-Id: <1456708077-19652-2-git-send-email-me@bobcopeland.com> (sfid-20160229_020830_107044_6B74C25C)
+In-Reply-To: <1456708077-19652-1-git-send-email-me@bobcopeland.com>
+References: <1456708077-19652-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch series incrementally improves existing firmware
-dump code and adds firmware dump support for 8997 chipset
+These lines belong inside the if-statement above, not in the
+main body of the switch.
 
-Amitkumar Karwar (1):
-  mwifiex: increase the priority of firmware dump message
+Found by smatch.
 
-Xinming Hu (7):
-  mwifiex: display right transmit packet delay
-  mwifiex: process pcie io memory read failure case
-  mwifiex: skip firmware dump when read_regs() fails
-  mwifiex: keep original structure in decl header file
-  mwifiex: use an extensible framework for firmware dump solution
-  mwifiex: dynamically increase preallocated firmware dump memory size
-  mwifiex: firmware dump support for w8997 chipset
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath9k/ar9003_phy.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
- drivers/net/wireless/marvell/mwifiex/decl.h | 24 ++++++++
- drivers/net/wireless/marvell/mwifiex/main.h | 21 +------
- drivers/net/wireless/marvell/mwifiex/pcie.c | 94 +++++++++++++++++------------
- drivers/net/wireless/marvell/mwifiex/pcie.h | 33 +++++++++-
- drivers/net/wireless/marvell/mwifiex/wmm.c  |  1 +
- 5 files changed, 115 insertions(+), 58 deletions(-)
-
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+index 201425e7f9cb..3e011f84211f 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
+@@ -1332,11 +1332,11 @@ skip_ws_det:
+ 				chan->channel,
+ 				aniState->mrcCCK ? "on" : "off",
+ 				is_on ? "on" : "off");
+-		if (is_on)
+-			ah->stats.ast_ani_ccklow++;
+-		else
+-			ah->stats.ast_ani_cckhigh++;
+-		aniState->mrcCCK = is_on;
++			if (is_on)
++				ah->stats.ast_ani_ccklow++;
++			else
++				ah->stats.ast_ani_cckhigh++;
++			aniState->mrcCCK = is_on;
+ 		}
+ 	break;
+ 	}
 -- 
-1.8.1.4
+2.6.1
 
