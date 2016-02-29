@@ -1,61 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:14143 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750989AbcBYU5O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 25 Feb 2016 15:57:14 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>, <stable@vger.kernel.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 1/2] iwlwifi: mvm: inc pending frames counter also when txing non-sta
-Date: Thu, 25 Feb 2016 22:57:08 +0200
-Message-Id: <1456433829-20285-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160225_215717_993051_6E159925)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA41983@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA41983@hasmsx107.ger.corp.intel.com>
+Received: from mail-pa0-f42.google.com ([209.85.220.42]:33492 "EHLO
+	mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752034AbcB2IiQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 03:38:16 -0500
+Received: by mail-pa0-f42.google.com with SMTP id fl4so88510618pad.0
+        for <linux-wireless@vger.kernel.org>; Mon, 29 Feb 2016 00:38:16 -0800 (PST)
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Reply-To: arend@broadcom.com
+Subject: Re: [PATCH V9 1/2] nl80211: add feature for BSS selection support
+References: <1456520364-6275-1-git-send-email-arend@broadcom.com>
+ <CAB3XZEfO2RvN-YDN8Sf18AK2EvV=rYdVndhUYwnkni3Gp0Ok2A@mail.gmail.com>
+To: Eliad Peller <eliad@wizery.com>,
+	Arend van Spriel <arend@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Message-ID: <56D40373.2040502@broadcom.com> (sfid-20160229_093820_191211_5C777C26)
+Date: Mon, 29 Feb 2016 09:38:11 +0100
+MIME-Version: 1.0
+In-Reply-To: <CAB3XZEfO2RvN-YDN8Sf18AK2EvV=rYdVndhUYwnkni3Gp0Ok2A@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
 
-Until this patch, when TXing non-sta the pending_frames counter
-wasn't increased, but it WAS decreased in
-iwl_mvm_rx_tx_cmd_single(), what makes it negative in certain
-conditions. This in turn caused much trouble when we need to
-remove the station since we won't be waiting forever until
-pending_frames gets 0. In certain cases, we were exhausting
-the station table even in BSS mode, because we had a lot of
-stale stations.
 
-Increase the counter also in iwl_mvm_tx_skb_non_sta() after a
-successful TX to avoid this outcome.
+On 28-2-2016 12:35, Eliad Peller wrote:
+> hi Arend,
+> 
+> On Fri, Feb 26, 2016 at 10:59 PM, Arend van Spriel <arend@broadcom.com> wrote:
+>> Introducing a new feature that the driver can use to
+>> indicate the driver/firmware supports configuration of BSS
+>> selection criteria upon CONNECT command. This can be useful
+>> when multiple BSS-es are found belonging to the same ESS,
+>> ie. Infra-BSS with same SSID. The criteria can then be used to
+>> offload selection of a preferred BSS.
+>>
+> [...]
+> 
+>>
+>> +/**
+>> + * struct nl80211_bss_select_rssi_adjust - RSSI adjustment parameters.
+>> + *
+>> + * @band: band of BSS that must match for RSSI value adjustment.
+>> + * @delta: value used to adjust the RSSI value of matching BSS.
+>> + */
+>> +struct nl80211_bss_select_rssi_adjust {
+>> +       enum nl80211_band band;
+>> +       __s8 delta;
+>> +} __attribute__((packed));
+>> +
+> i think enum can't be considered as fixed-size field, so better use u8 or so.
 
-CC: <stable@vger.kernel.org> [3.18+]
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
+Yeah. I was wondering about that as it may be affected by compiler
+option. Will change it to u8.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-index 0914ec2..a040edc 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
-@@ -423,6 +423,15 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
- 		return -1;
- 	}
- 
-+	/*
-+	 * Increase the pending frames counter, so that later when a reply comes
-+	 * in and the counter is decreased - we don't start getting negative
-+	 * values.
-+	 * Note that we don't need to make sure it isn't agg'd, since we're
-+	 * TXing non-sta
-+	 */
-+	atomic_inc(&mvm->pending_frames[sta_id]);
-+
- 	return 0;
- }
- 
--- 
-2.5.0
+>> @@ -626,6 +626,10 @@ int wiphy_register(struct wiphy *wiphy)
+>>                      !rdev->ops->set_mac_acl)))
+>>                 return -EINVAL;
+>>
+>> +       if (WARN_ON(wiphy->bss_select_support &&
+>> +                   (wiphy->bss_select_support & ~(BIT(__NL80211_BSS_SELECT_ATTR_AFTER_LAST) - 2))))
+>> +               return -EINVAL;
+>> +
+> worth noting that the "-2" counts for the invalid enum value (at least
+> it wasn't clear to me)
 
+I did have a comment in here in an earlier patch set or it was just a
+thought ;-) Will add a remark here.
+
+>> @@ -7995,6 +8086,21 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+>>                 return -EOPNOTSUPP;
+>>         }
+>>
+>> +       /* only do bss selection when no BSSID is specified. */
+>> +       if (!connect.bssid && wiphy->bss_select_support &&
+>> +           info->attrs[NL80211_ATTR_BSS_SELECT]) {
+> 
+> you don't have to check wiphy->bss_select_support here - we actually
+> want to fail if NL80211_ATTR_BSS_SELECT was given although the driver
+> doesn't support it.
+
+I agree failing would be better than silently ignoring. Will remove it.
+
+>> +               err = parse_bss_select(info->attrs[NL80211_ATTR_BSS_SELECT],
+>> +                                      wiphy, &connect.bss_select);
+>> +               if (err) {
+>> +                       kzfree(connkeys);
+>> +                       return err;
+>> +               }
+>> +               if (!(wiphy->bss_select_support & BIT(connect.bss_select.behaviour))) {
+> 
+> (it will fail here instead)
+
+Yup.
+
+Thanks for the review.
+
+Regards,
+Arend
