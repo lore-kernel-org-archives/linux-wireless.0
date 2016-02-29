@@ -1,58 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37112 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751513AbcBAJ2o (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 1 Feb 2016 04:28:44 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: Julian Calaby <julian.calaby@gmail.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"David S. Miller" <davem@davemloft.net>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: fix memory leak
-References: <1454060944-11320-1-git-send-email-sudipm.mukherjee@gmail.com>
-	<CAGRGNgXc9PtYY=hb8nNRt4T5YGm2vexcJ01Z1fCCcb=57WRZ3g@mail.gmail.com>
-	<20160201042548.GA4072@sudip-pc>
-Date: Mon, 01 Feb 2016 11:28:37 +0200
-In-Reply-To: <20160201042548.GA4072@sudip-pc> (Sudip Mukherjee's message of
-	"Mon, 1 Feb 2016 09:55:48 +0530")
-Message-ID: <878u34u6d6.fsf@purkki.adurom.net> (sfid-20160201_102924_177159_5539F665)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:58024 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753504AbcB2WGD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:06:03 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 082/113] rtl8xxxu: Use size of source pointer when copying efuse data
+Date: Mon, 29 Feb 2016 17:05:20 -0500
+Message-Id: <1456783551-28315-83-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232952_234078_271154A8)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> On Mon, Feb 01, 2016 at 11:03:35AM +1100, Julian Calaby wrote:
->> Hi Sudip,
->> 
->> On Fri, Jan 29, 2016 at 8:49 PM, Sudip Mukherjee
->> <sudipm.mukherjee@gmail.com> wrote:
->> > On error we jumped to the error label and returned the error code but we
->> > missed releasing sinfo.
->> >
->> > Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
->> 
->> Should the From: and Signed-off-by: email addresses be the same?
->
-> I think 2 years back I had a long discussion with Greg about this and
-> since then I al submitting patches like this. A small summayg of the
-> problem from that discussion:
->
-> "we have strict DMARC check for the corporate mail server. DMARC =
-> domain based message authentication.
-> So the mail i sent reached all the list subscriber from a different
-> server than our designated server, and as a result it is marked as spam
-> in many places and I have already received a few complaints regarding
-> that."
+Some newer chips have more channel groups in their efuse parameter
+tables, so use the size of the source, rather than the destination
+when copying them out. This avoids copying garbage when increasing the
+common array sizes.
 
-You can add a separate "From:" line to the beginning of the commit log
-and git will use it then commiting the patch. I didn't find any
-documention but it's easy to do and should solve this.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 34 ++++++++++++------------
+ 1 file changed, 17 insertions(+), 17 deletions(-)
 
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index f640306..39c6322 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2318,31 +2318,31 @@ static int rtl8723au_parse_efuse(struct rtl8xxxu_priv *priv)
+ 
+ 	memcpy(priv->cck_tx_power_index_A,
+ 	       efuse->cck_tx_power_index_A,
+-	       sizeof(priv->cck_tx_power_index_A));
++	       sizeof(efuse->cck_tx_power_index_A));
+ 	memcpy(priv->cck_tx_power_index_B,
+ 	       efuse->cck_tx_power_index_B,
+-	       sizeof(priv->cck_tx_power_index_B));
++	       sizeof(efuse->cck_tx_power_index_B));
+ 
+ 	memcpy(priv->ht40_1s_tx_power_index_A,
+ 	       efuse->ht40_1s_tx_power_index_A,
+-	       sizeof(priv->ht40_1s_tx_power_index_A));
++	       sizeof(efuse->ht40_1s_tx_power_index_A));
+ 	memcpy(priv->ht40_1s_tx_power_index_B,
+ 	       efuse->ht40_1s_tx_power_index_B,
+-	       sizeof(priv->ht40_1s_tx_power_index_B));
++	       sizeof(efuse->ht40_1s_tx_power_index_B));
+ 
+ 	memcpy(priv->ht20_tx_power_index_diff,
+ 	       efuse->ht20_tx_power_index_diff,
+-	       sizeof(priv->ht20_tx_power_index_diff));
++	       sizeof(efuse->ht20_tx_power_index_diff));
+ 	memcpy(priv->ofdm_tx_power_index_diff,
+ 	       efuse->ofdm_tx_power_index_diff,
+-	       sizeof(priv->ofdm_tx_power_index_diff));
++	       sizeof(efuse->ofdm_tx_power_index_diff));
+ 
+ 	memcpy(priv->ht40_max_power_offset,
+ 	       efuse->ht40_max_power_offset,
+-	       sizeof(priv->ht40_max_power_offset));
++	       sizeof(efuse->ht40_max_power_offset));
+ 	memcpy(priv->ht20_max_power_offset,
+ 	       efuse->ht20_max_power_offset,
+-	       sizeof(priv->ht20_max_power_offset));
++	       sizeof(efuse->ht20_max_power_offset));
+ 
+ 	if (priv->efuse_wifi.efuse8723.version >= 0x01) {
+ 		priv->has_xtalk = 1;
+@@ -2403,34 +2403,34 @@ static int rtl8192cu_parse_efuse(struct rtl8xxxu_priv *priv)
+ 
+ 	memcpy(priv->cck_tx_power_index_A,
+ 	       efuse->cck_tx_power_index_A,
+-	       sizeof(priv->cck_tx_power_index_A));
++	       sizeof(efuse->cck_tx_power_index_A));
+ 	memcpy(priv->cck_tx_power_index_B,
+ 	       efuse->cck_tx_power_index_B,
+-	       sizeof(priv->cck_tx_power_index_B));
++	       sizeof(efuse->cck_tx_power_index_B));
+ 
+ 	memcpy(priv->ht40_1s_tx_power_index_A,
+ 	       efuse->ht40_1s_tx_power_index_A,
+-	       sizeof(priv->ht40_1s_tx_power_index_A));
++	       sizeof(efuse->ht40_1s_tx_power_index_A));
+ 	memcpy(priv->ht40_1s_tx_power_index_B,
+ 	       efuse->ht40_1s_tx_power_index_B,
+-	       sizeof(priv->ht40_1s_tx_power_index_B));
++	       sizeof(efuse->ht40_1s_tx_power_index_B));
+ 	memcpy(priv->ht40_2s_tx_power_index_diff,
+ 	       efuse->ht40_2s_tx_power_index_diff,
+-	       sizeof(priv->ht40_2s_tx_power_index_diff));
++	       sizeof(efuse->ht40_2s_tx_power_index_diff));
+ 
+ 	memcpy(priv->ht20_tx_power_index_diff,
+ 	       efuse->ht20_tx_power_index_diff,
+-	       sizeof(priv->ht20_tx_power_index_diff));
++	       sizeof(efuse->ht20_tx_power_index_diff));
+ 	memcpy(priv->ofdm_tx_power_index_diff,
+ 	       efuse->ofdm_tx_power_index_diff,
+-	       sizeof(priv->ofdm_tx_power_index_diff));
++	       sizeof(efuse->ofdm_tx_power_index_diff));
+ 
+ 	memcpy(priv->ht40_max_power_offset,
+ 	       efuse->ht40_max_power_offset,
+-	       sizeof(priv->ht40_max_power_offset));
++	       sizeof(efuse->ht40_max_power_offset));
+ 	memcpy(priv->ht20_max_power_offset,
+ 	       efuse->ht20_max_power_offset,
+-	       sizeof(priv->ht20_max_power_offset));
++	       sizeof(efuse->ht20_max_power_offset));
+ 
+ 	dev_info(&priv->udev->dev, "Vendor: %.7s\n",
+ 		 efuse->vendor_name);
 -- 
-Kalle Valo
+2.5.0
+
