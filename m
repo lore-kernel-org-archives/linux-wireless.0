@@ -1,63 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:35303 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946543AbcBRTCb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 14:02:31 -0500
-Received: by mail-ob0-f171.google.com with SMTP id xk3so82797123obc.2
-        for <linux-wireless@vger.kernel.org>; Thu, 18 Feb 2016 11:02:31 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1455821358-37534-1-git-send-email-nbd@openwrt.org>
-References: <1455821358-37534-1-git-send-email-nbd@openwrt.org>
-From: Avery Pennarun <apenwarr@gmail.com>
-Date: Thu, 18 Feb 2016 14:02:11 -0500
-Message-ID: <CAHqTa-1-zXNfBeAb33xFzEZEnYeSVZ8whNXOWFByenJfa7QOXg@mail.gmail.com> (sfid-20160218_200238_867795_7AF5B1C8)
-Subject: Re: [PATCH] mac80211: minstrel_ht: set default tx aggregation timeout
- to 0
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:46708 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752722AbcB2WFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:53 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 019/113] rtl8xxxu: Add rtl8723b_mac_init_table
+Date: Mon, 29 Feb 2016 17:04:17 -0500
+Message-Id: <1456783551-28315-20-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_231114_921741_533BBBF1)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Acked-by: Avery Pennarun <apenwarr@gmail.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-This fixes serious problems on our platform, especially with iPhone 4
-generation devices.
+Newer chips seem to have some different mac registers, requiring
+a different init table.
 
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 37 +++++++++++++++++++++++-
+ 1 file changed, 36 insertions(+), 1 deletion(-)
 
-On Thu, Feb 18, 2016 at 1:49 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> The value 5000 was put here with the addition of the timeout field to
-> ieee80211_start_tx_ba_session. It was originally added in mac80211 to
-> save resources for drivers like iwlwifi, which only supports a limited
-> number of concurrent aggregation sessions.
->
-> Since iwlwifi does not use minstrel_ht and other drivers don't need
-> this, 0 is a better default - especially since there have been
-> recent reports of aggregation setup related issues reproduced with
-> ath9k. This should improve stability without causing any adverse
-> effects.
->
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  net/mac80211/rc80211_minstrel_ht.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-> index 3928dbd..a7d9227 100644
-> --- a/net/mac80211/rc80211_minstrel_ht.c
-> +++ b/net/mac80211/rc80211_minstrel_ht.c
-> @@ -691,7 +691,7 @@ minstrel_aggr_check(struct ieee80211_sta *pubsta, struct sk_buff *skb)
->         if (likely(sta->ampdu_mlme.tid_tx[tid]))
->                 return;
->
-> -       ieee80211_start_tx_ba_session(pubsta, tid, 5000);
-> +       ieee80211_start_tx_ba_session(pubsta, tid, 0);
->  }
->
->  static void
-> --
-> 2.2.2
->
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 13d3b5e..8a6947f 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -153,6 +153,37 @@ static struct rtl8xxxu_reg8val rtl8723a_mac_init_table[] = {
+ 	{0x70a, 0x65}, {0x70b, 0x87}, {0xffff, 0xff},
+ };
+ 
++static struct rtl8xxxu_reg8val rtl8723b_mac_init_table[] = {
++	{0x02f, 0x30}, {0x035, 0x00}, {0x039, 0x08}, {0x04e, 0xe0},
++	{0x064, 0x00}, {0x067, 0x20}, {0x428, 0x0a}, {0x429, 0x10},
++	{0x430, 0x00}, {0x431, 0x00},
++	{0x432, 0x00}, {0x433, 0x01}, {0x434, 0x04}, {0x435, 0x05},
++	{0x436, 0x07}, {0x437, 0x08}, {0x43c, 0x04}, {0x43d, 0x05},
++	{0x43e, 0x07}, {0x43f, 0x08}, {0x440, 0x5d}, {0x441, 0x01},
++	{0x442, 0x00}, {0x444, 0x10}, {0x445, 0x00}, {0x446, 0x00},
++	{0x447, 0x00}, {0x448, 0x00}, {0x449, 0xf0}, {0x44a, 0x0f},
++	{0x44b, 0x3e}, {0x44c, 0x10}, {0x44d, 0x00}, {0x44e, 0x00},
++	{0x44f, 0x00}, {0x450, 0x00}, {0x451, 0xf0}, {0x452, 0x0f},
++	{0x453, 0x00}, {0x456, 0x5e}, {0x460, 0x66}, {0x461, 0x66},
++	{0x4c8, 0xff}, {0x4c9, 0x08}, {0x4cc, 0xff},
++	{0x4cd, 0xff}, {0x4ce, 0x01}, {0x500, 0x26}, {0x501, 0xa2},
++	{0x502, 0x2f}, {0x503, 0x00}, {0x504, 0x28}, {0x505, 0xa3},
++	{0x506, 0x5e}, {0x507, 0x00}, {0x508, 0x2b}, {0x509, 0xa4},
++	{0x50a, 0x5e}, {0x50b, 0x00}, {0x50c, 0x4f}, {0x50d, 0xa4},
++	{0x50e, 0x00}, {0x50f, 0x00}, {0x512, 0x1c}, {0x514, 0x0a},
++	{0x516, 0x0a}, {0x525, 0x4f},
++	{0x550, 0x10}, {0x551, 0x10}, {0x559, 0x02}, {0x55c, 0x50},
++	{0x55d, 0xff}, {0x605, 0x30}, {0x608, 0x0e}, {0x609, 0x2a},
++	{0x620, 0xff}, {0x621, 0xff}, {0x622, 0xff}, {0x623, 0xff},
++	{0x624, 0xff}, {0x625, 0xff}, {0x626, 0xff}, {0x627, 0xff},
++	{0x638, 0x50}, {0x63c, 0x0a}, {0x63d, 0x0a}, {0x63e, 0x0e},
++	{0x63f, 0x0e}, {0x640, 0x40}, {0x642, 0x40}, {0x643, 0x00},
++	{0x652, 0xc8}, {0x66e, 0x05}, {0x700, 0x21}, {0x701, 0x43},
++	{0x702, 0x65}, {0x703, 0x87}, {0x708, 0x21}, {0x709, 0x43},
++	{0x70a, 0x65}, {0x70b, 0x87}, {0x765, 0x18}, {0x76e, 0x04},
++	{0xffff, 0xff},
++};
++
+ static struct rtl8xxxu_reg32val rtl8723a_phy_1t_init_table[] = {
+ 	{0x800, 0x80040000}, {0x804, 0x00000003},
+ 	{0x808, 0x0000fc00}, {0x80c, 0x0000000a},
+@@ -4656,7 +4687,11 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 	if (priv->fops->phy_init_antenna_selection)
+ 		priv->fops->phy_init_antenna_selection(priv);
+ 
+-	ret = rtl8xxxu_init_mac(priv, rtl8723a_mac_init_table);
++	if (priv->rtlchip == 0x8723b)
++		ret = rtl8xxxu_init_mac(priv, rtl8723b_mac_init_table);
++	else
++		ret = rtl8xxxu_init_mac(priv, rtl8723a_mac_init_table);
++
+ 	dev_dbg(dev, "%s: init_mac %i\n", __func__, ret);
+ 	if (ret)
+ 		goto exit;
+-- 
+2.5.0
+
