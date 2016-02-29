@@ -1,73 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:33568 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751083AbcBLJP4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 12 Feb 2016 04:15:56 -0500
-Received: by mail-lb0-f179.google.com with SMTP id x4so42207105lbm.0
-        for <linux-wireless@vger.kernel.org>; Fri, 12 Feb 2016 01:15:55 -0800 (PST)
-From: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-Cc: Hauke Mehrtens <hauke@hauke-m.de>,
-	=?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
-Subject: [PATCH 1/3] bcma: drop unneeded fields from bcma_pflash struct
-Date: Fri, 12 Feb 2016 10:15:43 +0100
-Message-Id: <1455268545-11667-1-git-send-email-zajec5@gmail.com> (sfid-20160212_101602_758077_84EF5332)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:39678 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752781AbcB2WFy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:54 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 030/113] rtl8xxxu: rtl8723bu_parse_efuse(): Use a pointer to the struct rtl8723bu_efuse
+Date: Mon, 29 Feb 2016 17:04:28 -0500
+Message-Id: <1456783551-28315-31-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_231039_084614_8DF22C95)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Most of info stored in this struct wasn't really used anywhere as we put
-all that data in platform data & resource as well.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
+Likewise for 8723bu, use a pointer to the efuse.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/bcma/driver_mips.c                  | 11 ++++-------
- include/linux/bcma/bcma_driver_chipcommon.h |  3 ---
- 2 files changed, 4 insertions(+), 10 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 24 ++++++++++--------------
+ 1 file changed, 10 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/bcma/driver_mips.c b/drivers/bcma/driver_mips.c
-index a40a203..20c134c 100644
---- a/drivers/bcma/driver_mips.c
-+++ b/drivers/bcma/driver_mips.c
-@@ -288,18 +288,15 @@ static void bcma_core_mips_flash_detect(struct bcma_drv_mips *mcore)
- 	case BCMA_CC_FLASHT_PARA:
- 		bcma_debug(bus, "Found parallel flash\n");
- 		pflash->present = true;
--		pflash->window = BCMA_SOC_FLASH2;
--		pflash->window_size = BCMA_SOC_FLASH2_SZ;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index d25536a..d100a99 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2171,29 +2171,25 @@ static int rtl8723au_parse_efuse(struct rtl8xxxu_priv *priv)
  
- 		if ((bcma_read32(cc->core, BCMA_CC_FLASH_CFG) &
- 		     BCMA_CC_FLASH_CFG_DS) == 0)
--			pflash->buswidth = 1;
-+			bcma_pflash_data.width = 1;
- 		else
--			pflash->buswidth = 2;
-+			bcma_pflash_data.width = 2;
+ static int rtl8723bu_parse_efuse(struct rtl8xxxu_priv *priv)
+ {
+-	if (priv->efuse_wifi.efuse8723bu.rtl_id != cpu_to_le16(0x8129))
++	struct rtl8723bu_efuse *efuse = &priv->efuse_wifi.efuse8723bu;
++
++	if (efuse->rtl_id != cpu_to_le16(0x8129))
+ 		return -EINVAL;
  
--		bcma_pflash_data.width = pflash->buswidth;
--		bcma_pflash_resource.start = pflash->window;
--		bcma_pflash_resource.end = pflash->window + pflash->window_size;
-+		bcma_pflash_resource.start = BCMA_SOC_FLASH2;
-+		bcma_pflash_resource.end = BCMA_SOC_FLASH2 + BCMA_SOC_FLASH2_SZ;
+-	ether_addr_copy(priv->mac_addr, priv->efuse_wifi.efuse8723bu.mac_addr);
++	ether_addr_copy(priv->mac_addr, efuse->mac_addr);
  
- 		break;
- 	default:
-diff --git a/include/linux/bcma/bcma_driver_chipcommon.h b/include/linux/bcma/bcma_driver_chipcommon.h
-index 700d0c6..16eaaad 100644
---- a/include/linux/bcma/bcma_driver_chipcommon.h
-+++ b/include/linux/bcma/bcma_driver_chipcommon.h
-@@ -579,9 +579,6 @@ struct bcma_chipcommon_pmu {
- #ifdef CONFIG_BCMA_DRIVER_MIPS
- struct bcma_pflash {
- 	bool present;
--	u8 buswidth;
--	u32 window;
--	u32 window_size;
- };
+-	memcpy(priv->cck_tx_power_index_A,
+-	       priv->efuse_wifi.efuse8723bu.cck_tx_power_index_A,
++	memcpy(priv->cck_tx_power_index_A, efuse->cck_tx_power_index_A,
+ 	       sizeof(priv->cck_tx_power_index_A));
+-	memcpy(priv->cck_tx_power_index_B,
+-	       priv->efuse_wifi.efuse8723bu.cck_tx_power_index_B,
++	memcpy(priv->cck_tx_power_index_B, efuse->cck_tx_power_index_B,
+ 	       sizeof(priv->cck_tx_power_index_B));
  
- #ifdef CONFIG_BCMA_SFLASH
+-	memcpy(priv->ht40_1s_tx_power_index_A,
+-	       priv->efuse_wifi.efuse8723bu.ht40_1s_tx_power_index_A,
++	memcpy(priv->ht40_1s_tx_power_index_A, efuse->ht40_1s_tx_power_index_A,
+ 	       sizeof(priv->ht40_1s_tx_power_index_A));
+-	memcpy(priv->ht40_1s_tx_power_index_B,
+-	       priv->efuse_wifi.efuse8723bu.ht40_1s_tx_power_index_B,
++	memcpy(priv->ht40_1s_tx_power_index_B, efuse->ht40_1s_tx_power_index_B,
+ 	       sizeof(priv->ht40_1s_tx_power_index_B));
+ 
+-	dev_info(&priv->udev->dev, "Vendor: %.7s\n",
+-		 priv->efuse_wifi.efuse8723bu.vendor_name);
+-	dev_info(&priv->udev->dev, "Product: %.41s\n",
+-		 priv->efuse_wifi.efuse8723bu.device_name);
++	dev_info(&priv->udev->dev, "Vendor: %.7s\n", efuse->vendor_name);
++	dev_info(&priv->udev->dev, "Product: %.41s\n", efuse->device_name);
+ 
+ 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_EFUSE) {
+ 		int i;
 -- 
-1.8.4.5
+2.5.0
 
