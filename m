@@ -1,55 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56423 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752036AbcBZHRT (ORCPT
+Received: from mail-qg0-f66.google.com ([209.85.192.66]:33476 "EHLO
+	mail-qg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752027AbcB2BIX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 02:17:19 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: kbuild test robot <lkp@intel.com>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>, kbuild-all@01.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	David Spinadel <david.spinadel@intel.com>
-Subject: Re: [PATCH] mac80211_hwsim: Set global RRM capability
-References: <201602251751.QT2WO50c%fengguang.wu@intel.com>
-Date: Fri, 26 Feb 2016 09:17:15 +0200
-In-Reply-To: <201602251751.QT2WO50c%fengguang.wu@intel.com> (kbuild test
-	robot's message of "Thu, 25 Feb 2016 18:01:41 +0800")
-Message-ID: <87y4a8lz44.fsf@purkki.adurom.net> (sfid-20160226_081724_038232_35D5DD0F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 28 Feb 2016 20:08:23 -0500
+Received: by mail-qg0-f66.google.com with SMTP id y89so9657919qge.0
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2016 17:08:23 -0800 (PST)
+Received: from hash ([2001:470:1d:6db:230:48ff:fe9d:9c89])
+        by smtp.gmail.com with ESMTPSA id c60sm9942482qga.20.2016.02.28.17.08.22
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 28 Feb 2016 17:08:22 -0800 (PST)
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Cc: Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 1/3] ath5k: fix incorrect indentation
+Date: Sun, 28 Feb 2016 20:07:55 -0500
+Message-Id: <1456708077-19652-1-git-send-email-me@bobcopeland.com> (sfid-20160229_020827_337654_F5CC4B25)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kbuild test robot <lkp@intel.com> writes:
+smatch said:
 
-> Hi David,
->
-> [auto build test ERROR on wireless-drivers-next/master]
-> [also build test ERROR on v4.5-rc5 next-20160224]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
->
-> url:    https://github.com/0day-ci/linux/commits/Emmanuel-Grumbach/mac80211_hwsim-Set-global-RRM-capability/20160225-172733
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
-> config: sparc64-allyesconfig (attached as .config)
-> reproduce:
->         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # save the attached .config to linux build tree
->         make.cross ARCH=sparc64 
->
-> All errors (new ones prefixed by >>):
->
->    drivers/net/wireless/mac80211_hwsim.c: In function 'mac80211_hwsim_new_radio':
->>> drivers/net/wireless/mac80211_hwsim.c:2462:35: error: 'NL80211_EXT_FEATURE_RRM' undeclared (first use in this function)
->      wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_RRM);
->                                       ^
->    drivers/net/wireless/mac80211_hwsim.c:2462:35: note: each undeclared identifier is reported only once for each function it appears in
+drivers/net/wireless/ath/ath5k/phy.c:1449 ath5k_hw_channel() warn: inconsistent indenting
+drivers/net/wireless/ath/ath5k/reset.c:637 ath5k_hw_on_hold() warn: inconsistent indenting
+drivers/net/wireless/ath/ath5k/reset.c:702 ath5k_hw_nic_wakeup() warn: inconsistent indenting
 
-I think this build failure is because mac80211_hwsim is an exception to
-other wireless drivers and is applied via mac80211-next. Should we add
-an entry for mac80211_hwsim to MAINTAINERS with the correct git tree? I
-think kbuild test robot follows MAINTAINERS file nowdays (or at least I
-understood that's the plan).
+All of these lines were indented a tabstop too far.
 
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+---
+ drivers/net/wireless/ath/ath5k/phy.c   | 2 +-
+ drivers/net/wireless/ath/ath5k/reset.c | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath5k/phy.c b/drivers/net/wireless/ath/ath5k/phy.c
+index 0fce1c76638e..98ee85456321 100644
+--- a/drivers/net/wireless/ath/ath5k/phy.c
++++ b/drivers/net/wireless/ath/ath5k/phy.c
+@@ -1446,7 +1446,7 @@ ath5k_hw_channel(struct ath5k_hw *ah,
+ 			"channel frequency (%u MHz) out of supported "
+ 			"band range\n",
+ 			channel->center_freq);
+-			return -EINVAL;
++		return -EINVAL;
+ 	}
+ 
+ 	/*
+diff --git a/drivers/net/wireless/ath/ath5k/reset.c b/drivers/net/wireless/ath/ath5k/reset.c
+index 99e62f99a182..4b1c87fa15ac 100644
+--- a/drivers/net/wireless/ath/ath5k/reset.c
++++ b/drivers/net/wireless/ath/ath5k/reset.c
+@@ -634,7 +634,7 @@ ath5k_hw_on_hold(struct ath5k_hw *ah)
+ 		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
+ 			AR5K_RESET_CTL_MAC | AR5K_RESET_CTL_DMA |
+ 			AR5K_RESET_CTL_PHY | AR5K_RESET_CTL_PCI);
+-			usleep_range(2000, 2500);
++		usleep_range(2000, 2500);
+ 	} else {
+ 		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
+ 			AR5K_RESET_CTL_BASEBAND | bus_flags);
+@@ -699,7 +699,7 @@ ath5k_hw_nic_wakeup(struct ath5k_hw *ah, struct ieee80211_channel *channel)
+ 		ret = ath5k_hw_nic_reset(ah, AR5K_RESET_CTL_PCU |
+ 			AR5K_RESET_CTL_MAC | AR5K_RESET_CTL_DMA |
+ 			AR5K_RESET_CTL_PHY | AR5K_RESET_CTL_PCI);
+-			usleep_range(2000, 2500);
++		usleep_range(2000, 2500);
+ 	} else {
+ 		if (ath5k_get_bus_type(ah) == ATH_AHB)
+ 			ret = ath5k_hw_wisoc_reset(ah, AR5K_RESET_CTL_PCU |
 -- 
-Kalle Valo
+2.6.1
+
