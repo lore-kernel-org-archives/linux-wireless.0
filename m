@@ -1,82 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:33974 "EHLO
-	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750913AbcBBHMc (ORCPT
+Received: from mail-qg0-f65.google.com ([209.85.192.65]:34535 "EHLO
+	mail-qg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752020AbcB2BEI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 2 Feb 2016 02:12:32 -0500
-Received: by mail-wm0-f44.google.com with SMTP id 128so103707439wmz.1
-        for <linux-wireless@vger.kernel.org>; Mon, 01 Feb 2016 23:12:32 -0800 (PST)
-From: Sven Eckelmann <sven.eckelmann@open-mesh.com>
+	Sun, 28 Feb 2016 20:04:08 -0500
+Received: by mail-qg0-f65.google.com with SMTP id e61so9657236qgf.1
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2016 17:04:07 -0800 (PST)
+From: Bob Copeland <me@bobcopeland.com>
 To: linux-wireless@vger.kernel.org
-Cc: thomas@net.t-labs.tu-berlin.de, antonio@open-mesh.com,
-	nbd@nbd.name, johannes@sipsolutions.net,
-	Sven Eckelmann <sven@open-mesh.com>
-Subject: [PATCH v4] mac80211: minstrel: Change expected throughput unit back to Kbps
-Date: Tue,  2 Feb 2016 08:12:26 +0100
-Message-Id: <1454397146-2884-1-git-send-email-sven@open-mesh.com> (sfid-20160202_081236_103867_1A551ECE)
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 3/4] mesh: factor out common mesh path allocation code
+Date: Sun, 28 Feb 2016 20:03:58 -0500
+Message-Id: <1456707839-19469-3-git-send-email-me@bobcopeland.com> (sfid-20160229_020421_083951_2264DDE6)
+In-Reply-To: <1456707839-19469-1-git-send-email-me@bobcopeland.com>
+References: <1456707839-19469-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The change from cur_tp to the function
-minstrel_get_tp_avg/minstrel_ht_get_tp_avg changed the unit used for the
-current throughput. For example in minstrel_ht the correct
-conversion between them would be:
+Remove duplicate code to allocate and initialize a mesh
+path or mesh proxy path.
 
-    mrs->cur_tp / 10 == minstrel_ht_get_tp_avg(..).
-
-This factor 10 must also be included in the calculation of
-minstrel_get_expected_throughput and minstrel_ht_get_expected_throughput to
-return values with the unit [Kbps] instead of [10Kbps]. Otherwise routing
-algorithms like B.A.T.M.A.N. V will make incorrect decision based on these
-values. Its kernel based implementation expects expected_throughput always
-to have the unit [Kbps] and not sometimes [10Kbps] and sometimes [Kbps].
-
-The same requirement has iw or olsrdv2's nl80211 based statistics module
-which retrieve the same data via NL80211_STA_INFO_TX_BITRATE.
-
-Fixes: 6a27b2c40b48 ("mac80211: restructure per-rate throughput calculation into function")
-Signed-off-by: Sven Eckelmann <sven@open-mesh.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
-v4:
-- unify way how multiplication/division is done in
-  minstrel_get_expected_throughput and minstrel_ht_get_expected_throughput
-v3:
-- fix typo in title
-- extend description to better explain why this is important
-v2:
-- Modified PATCH title
----
- net/mac80211/rc80211_minstrel.c    | 2 +-
- net/mac80211/rc80211_minstrel_ht.c | 3 ++-
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ net/mac80211/mesh_pathtbl.c | 51 +++++++++++++++++++++++++--------------------
+ 1 file changed, 28 insertions(+), 23 deletions(-)
 
-diff --git a/net/mac80211/rc80211_minstrel.c b/net/mac80211/rc80211_minstrel.c
-index 3ece7d1..b54f398 100644
---- a/net/mac80211/rc80211_minstrel.c
-+++ b/net/mac80211/rc80211_minstrel.c
-@@ -711,7 +711,7 @@ static u32 minstrel_get_expected_throughput(void *priv_sta)
- 	 * computing cur_tp
- 	 */
- 	tmp_mrs = &mi->r[idx].stats;
--	tmp_cur_tp = minstrel_get_tp_avg(&mi->r[idx], tmp_mrs->prob_ewma);
-+	tmp_cur_tp = minstrel_get_tp_avg(&mi->r[idx], tmp_mrs->prob_ewma) * 10;
- 	tmp_cur_tp = tmp_cur_tp * 1200 * 8 / 1024;
- 
- 	return tmp_cur_tp;
-diff --git a/net/mac80211/rc80211_minstrel_ht.c b/net/mac80211/rc80211_minstrel_ht.c
-index 3928dbd..f3e9ba4 100644
---- a/net/mac80211/rc80211_minstrel_ht.c
-+++ b/net/mac80211/rc80211_minstrel_ht.c
-@@ -1334,7 +1334,8 @@ static u32 minstrel_ht_get_expected_throughput(void *priv_sta)
- 	prob = mi->groups[i].rates[j].prob_ewma;
- 
- 	/* convert tp_avg from pkt per second in kbps */
--	tp_avg = minstrel_ht_get_tp_avg(mi, i, j, prob) * AVG_PKT_SIZE * 8 / 1024;
-+	tp_avg = minstrel_ht_get_tp_avg(mi, i, j, prob) * 10;
-+	tp_avg = tp_avg * AVG_PKT_SIZE * 8 / 1024;
- 
- 	return tp_avg;
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index fc3cc350df8c..4794240e8f94 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -501,6 +501,31 @@ int mesh_gate_num(struct ieee80211_sub_if_data *sdata)
+ 	return sdata->u.mesh.num_gates;
  }
+ 
++static
++struct mesh_path *mesh_path_new(struct ieee80211_sub_if_data *sdata,
++				const u8 *dst, gfp_t gfp_flags)
++{
++	struct mesh_path *new_mpath;
++
++	new_mpath = kzalloc(sizeof(struct mesh_path), gfp_flags);
++	if (!new_mpath)
++		return NULL;
++
++	memcpy(new_mpath->dst, dst, ETH_ALEN);
++	eth_broadcast_addr(new_mpath->rann_snd_addr);
++	new_mpath->is_root = false;
++	new_mpath->sdata = sdata;
++	new_mpath->flags = 0;
++	skb_queue_head_init(&new_mpath->frame_queue);
++	new_mpath->timer.data = (unsigned long) new_mpath;
++	new_mpath->timer.function = mesh_path_timer;
++	new_mpath->exp_time = jiffies;
++	spin_lock_init(&new_mpath->state_lock);
++	init_timer(&new_mpath->timer);
++
++	return new_mpath;
++}
++
+ /**
+  * mesh_path_add - allocate and add a new path to the mesh path table
+  * @dst: destination address of the path (ETH_ALEN length)
+@@ -548,7 +573,7 @@ struct mesh_path *mesh_path_add(struct ieee80211_sub_if_data *sdata,
+ 	}
+ 
+ 	err = -ENOMEM;
+-	new_mpath = kzalloc(sizeof(struct mesh_path), GFP_ATOMIC);
++	new_mpath = mesh_path_new(sdata, dst, GFP_ATOMIC);
+ 	if (!new_mpath)
+ 		goto err_path_alloc;
+ 
+@@ -556,19 +581,7 @@ struct mesh_path *mesh_path_add(struct ieee80211_sub_if_data *sdata,
+ 	if (!new_node)
+ 		goto err_node_alloc;
+ 
+-	memcpy(new_mpath->dst, dst, ETH_ALEN);
+-	eth_broadcast_addr(new_mpath->rann_snd_addr);
+-	new_mpath->is_root = false;
+-	new_mpath->sdata = sdata;
+-	new_mpath->flags = 0;
+-	skb_queue_head_init(&new_mpath->frame_queue);
+ 	new_node->mpath = new_mpath;
+-	new_mpath->timer.data = (unsigned long) new_mpath;
+-	new_mpath->timer.function = mesh_path_timer;
+-	new_mpath->exp_time = jiffies;
+-	spin_lock_init(&new_mpath->state_lock);
+-	init_timer(&new_mpath->timer);
+-
+ 	hlist_add_head_rcu(&new_node->list, bucket);
+ 	if (atomic_inc_return(&tbl->entries) >=
+ 	    MEAN_CHAIN_LEN * (tbl->hash_mask + 1))
+@@ -664,7 +677,7 @@ int mpp_path_add(struct ieee80211_sub_if_data *sdata,
+ 		return -ENOTSUPP;
+ 
+ 	err = -ENOMEM;
+-	new_mpath = kzalloc(sizeof(struct mesh_path), GFP_ATOMIC);
++	new_mpath = mesh_path_new(sdata, dst, GFP_ATOMIC);
+ 	if (!new_mpath)
+ 		goto err_path_alloc;
+ 
+@@ -672,17 +685,9 @@ int mpp_path_add(struct ieee80211_sub_if_data *sdata,
+ 	if (!new_node)
+ 		goto err_node_alloc;
+ 
+-	read_lock_bh(&sdata->u.mesh.pathtbl_resize_lock);
+-	memcpy(new_mpath->dst, dst, ETH_ALEN);
+ 	memcpy(new_mpath->mpp, mpp, ETH_ALEN);
+-	new_mpath->sdata = sdata;
+-	new_mpath->flags = 0;
+-	skb_queue_head_init(&new_mpath->frame_queue);
+ 	new_node->mpath = new_mpath;
+-	init_timer(&new_mpath->timer);
+-	new_mpath->exp_time = jiffies;
+-	spin_lock_init(&new_mpath->state_lock);
+-
++	read_lock_bh(&sdata->u.mesh.pathtbl_resize_lock);
+ 	tbl = resize_dereference_mpp_paths(sdata);
+ 
+ 	hash_idx = mesh_table_hash(dst, tbl);
 -- 
-2.7.0
+2.6.1
 
