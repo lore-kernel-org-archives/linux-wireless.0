@@ -1,44 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:53296 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754860AbcBGVoB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 7 Feb 2016 16:44:01 -0500
-Date: Sun, 7 Feb 2016 13:44:00 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Glen Lee <glen.lee@atmel.com>
-Cc: devel@driverdev.osuosl.org, Chris.Park@atmel.com,
-	austin.shin@atmel.com, linux-wireless@vger.kernel.org,
-	Nicolas.FERRE@atmel.com, tony.cho@atmel.com, leo.kim@atmel.com,
-	adham.abozaeid@atmel.com
-Subject: Re: [PATCH RESEND 41/70] staging: wilc1000: linux_mon.c: replaces
- PRINT_ER with netdev_err
-Message-ID: <20160207214400.GB31172@kroah.com> (sfid-20160207_224408_896074_83D3E363)
-References: <1454577871-667-1-git-send-email-glen.lee@atmel.com>
- <1454577871-667-2-git-send-email-glen.lee@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1454577871-667-2-git-send-email-glen.lee@atmel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:39920 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752726AbcB2WFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:53 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 020/113] rtl8xxxu: Add 8723by AGC table
+Date: Mon, 29 Feb 2016 17:04:18 -0500
+Message-Id: <1456783551-28315-21-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_231059_426425_50C9EF68)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Feb 04, 2016 at 06:24:02PM +0900, Glen Lee wrote:
-> From: Leo Kim <leo.kim@atmel.com>
-> 
-> This patches replaces PRINT_ER with netdev_err.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-It also does more than that:
+The different RF module seems to require a different AGC table as well
 
-> @@ -273,7 +266,9 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
->  	/* if source address and bssid fields are equal>>Mac header */
->  	/*send it to mgmt frames handler */
->  	if (!(memcmp(srcAdd, bssid, 6))) {
-> -		mon_mgmt_tx(mon_priv->real_ndev, skb->data, skb->len);
-> +		ret = mon_mgmt_tx(mon_priv->real_ndev, skb->data, skb->len);
-> +		if (ret)
-> +			netdev_err(dev, "fail to mgmt tx\n");
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 75 +++++++++++++++++++++++-
+ 1 file changed, 74 insertions(+), 1 deletion(-)
 
-Look, proper error checking.
-
-Which is great, but again, the changelog text was wrong :(
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 8a6947f..3c5b42c 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -748,6 +748,77 @@ static struct rtl8xxxu_reg32val rtl8xxx_agc_highpa_table[] = {
+ 	{0xffff, 0xffffffff}
+ };
+ 
++static struct rtl8xxxu_reg32val rtl8xxx_agc_8723bu_table[] = {
++	{0xc78, 0xfd000001}, {0xc78, 0xfc010001},
++	{0xc78, 0xfb020001}, {0xc78, 0xfa030001},
++	{0xc78, 0xf9040001}, {0xc78, 0xf8050001},
++	{0xc78, 0xf7060001}, {0xc78, 0xf6070001},
++	{0xc78, 0xf5080001}, {0xc78, 0xf4090001},
++	{0xc78, 0xf30a0001}, {0xc78, 0xf20b0001},
++	{0xc78, 0xf10c0001}, {0xc78, 0xf00d0001},
++	{0xc78, 0xef0e0001}, {0xc78, 0xee0f0001},
++	{0xc78, 0xed100001}, {0xc78, 0xec110001},
++	{0xc78, 0xeb120001}, {0xc78, 0xea130001},
++	{0xc78, 0xe9140001}, {0xc78, 0xe8150001},
++	{0xc78, 0xe7160001}, {0xc78, 0xe6170001},
++	{0xc78, 0xe5180001}, {0xc78, 0xe4190001},
++	{0xc78, 0xe31a0001}, {0xc78, 0xa51b0001},
++	{0xc78, 0xa41c0001}, {0xc78, 0xa31d0001},
++	{0xc78, 0x671e0001}, {0xc78, 0x661f0001},
++	{0xc78, 0x65200001}, {0xc78, 0x64210001},
++	{0xc78, 0x63220001}, {0xc78, 0x4a230001},
++	{0xc78, 0x49240001}, {0xc78, 0x48250001},
++	{0xc78, 0x47260001}, {0xc78, 0x46270001},
++	{0xc78, 0x45280001}, {0xc78, 0x44290001},
++	{0xc78, 0x432a0001}, {0xc78, 0x422b0001},
++	{0xc78, 0x292c0001}, {0xc78, 0x282d0001},
++	{0xc78, 0x272e0001}, {0xc78, 0x262f0001},
++	{0xc78, 0x0a300001}, {0xc78, 0x09310001},
++	{0xc78, 0x08320001}, {0xc78, 0x07330001},
++	{0xc78, 0x06340001}, {0xc78, 0x05350001},
++	{0xc78, 0x04360001}, {0xc78, 0x03370001},
++	{0xc78, 0x02380001}, {0xc78, 0x01390001},
++	{0xc78, 0x013a0001}, {0xc78, 0x013b0001},
++	{0xc78, 0x013c0001}, {0xc78, 0x013d0001},
++	{0xc78, 0x013e0001}, {0xc78, 0x013f0001},
++	{0xc78, 0xfc400001}, {0xc78, 0xfb410001},
++	{0xc78, 0xfa420001}, {0xc78, 0xf9430001},
++	{0xc78, 0xf8440001}, {0xc78, 0xf7450001},
++	{0xc78, 0xf6460001}, {0xc78, 0xf5470001},
++	{0xc78, 0xf4480001}, {0xc78, 0xf3490001},
++	{0xc78, 0xf24a0001}, {0xc78, 0xf14b0001},
++	{0xc78, 0xf04c0001}, {0xc78, 0xef4d0001},
++	{0xc78, 0xee4e0001}, {0xc78, 0xed4f0001},
++	{0xc78, 0xec500001}, {0xc78, 0xeb510001},
++	{0xc78, 0xea520001}, {0xc78, 0xe9530001},
++	{0xc78, 0xe8540001}, {0xc78, 0xe7550001},
++	{0xc78, 0xe6560001}, {0xc78, 0xe5570001},
++	{0xc78, 0xe4580001}, {0xc78, 0xe3590001},
++	{0xc78, 0xa65a0001}, {0xc78, 0xa55b0001},
++	{0xc78, 0xa45c0001}, {0xc78, 0xa35d0001},
++	{0xc78, 0x675e0001}, {0xc78, 0x665f0001},
++	{0xc78, 0x65600001}, {0xc78, 0x64610001},
++	{0xc78, 0x63620001}, {0xc78, 0x62630001},
++	{0xc78, 0x61640001}, {0xc78, 0x48650001},
++	{0xc78, 0x47660001}, {0xc78, 0x46670001},
++	{0xc78, 0x45680001}, {0xc78, 0x44690001},
++	{0xc78, 0x436a0001}, {0xc78, 0x426b0001},
++	{0xc78, 0x286c0001}, {0xc78, 0x276d0001},
++	{0xc78, 0x266e0001}, {0xc78, 0x256f0001},
++	{0xc78, 0x24700001}, {0xc78, 0x09710001},
++	{0xc78, 0x08720001}, {0xc78, 0x07730001},
++	{0xc78, 0x06740001}, {0xc78, 0x05750001},
++	{0xc78, 0x04760001}, {0xc78, 0x03770001},
++	{0xc78, 0x02780001}, {0xc78, 0x01790001},
++	{0xc78, 0x017a0001}, {0xc78, 0x017b0001},
++	{0xc78, 0x017c0001}, {0xc78, 0x017d0001},
++	{0xc78, 0x017e0001}, {0xc78, 0x017f0001},
++	{0xc50, 0x69553422},
++	{0xc50, 0x69553420},
++	{0x824, 0x00390204},
++	{0xffff, 0xffffffff}
++};
++
+ static struct rtl8xxxu_rfregval rtl8723au_radioa_1t_init_table[] = {
+ 	{0x00, 0x00030159}, {0x01, 0x00031284},
+ 	{0x02, 0x00098000}, {0x03, 0x00039c63},
+@@ -2895,7 +2966,9 @@ static int rtl8xxxu_init_phy_bb(struct rtl8xxxu_priv *priv)
+ 		rtl8xxxu_write32(priv, REG_TX_TO_TX, val32);
+ 	}
+ 
+-	if (priv->hi_pa)
++	if (priv->rtlchip == 0x8723b)
++		rtl8xxxu_init_phy_regs(priv, rtl8xxx_agc_8723bu_table);
++	else if (priv->hi_pa)
+ 		rtl8xxxu_init_phy_regs(priv, rtl8xxx_agc_highpa_table);
+ 	else
+ 		rtl8xxxu_init_phy_regs(priv, rtl8xxx_agc_standard_table);
+-- 
+2.5.0
 
