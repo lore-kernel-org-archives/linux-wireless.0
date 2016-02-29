@@ -1,58 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40185 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933423AbcBRHbH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 02:31:07 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH 08/24] staging: wilc1000: linux_mon.c: removes comments
-Date: Thu, 18 Feb 2016 16:27:19 +0900
-Message-ID: <1455780455-21365-8-git-send-email-leo.kim@atmel.com> (sfid-20160218_083111_329838_01E67865)
-In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:49094 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753640AbcB2WGI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:06:08 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 106/113] rtl8xxxu: convert rtl8723bu_init_bt() into rtl8723b_enable_rf()
+Date: Mon, 29 Feb 2016 17:05:44 -0500
+Message-Id: <1456783551-28315-107-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_230622_641778_0E070DCF)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-This patch removes unnecessary comments.
+rtl8723bu_init_bt() is effectively the function enabling RF, so name
+it appropriately.
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/staging/wilc1000/linux_mon.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 11 +----------
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |  1 -
+ 2 files changed, 1 insertion(+), 11 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_mon.c b/drivers/staging/wilc1000/linux_mon.c
-index 7e7cff4..28e52eb 100644
---- a/drivers/staging/wilc1000/linux_mon.c
-+++ b/drivers/staging/wilc1000/linux_mon.c
-@@ -191,8 +191,6 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 	if (skb->len < rtap_len)
- 		return -1;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 67ea89b..b5ab899 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -1596,10 +1596,6 @@ static void rtl8723a_enable_rf(struct rtl8xxxu_priv *priv)
+ 	rtl8xxxu_write8(priv, REG_TXPAUSE, 0x00);
+ }
  
--	/* skip the radiotap header */
--	/* Skip the ratio tap header */
- 	skb_pull(skb, rtap_len);
- 
- 	if (skb->data[0] == 0xc0 && (!(memcmp(broadcast, &skb->data[4], 6)))) {
-@@ -227,8 +225,6 @@ static netdev_tx_t WILC_WFI_mon_xmit(struct sk_buff *skb,
- 	}
- 	skb->dev = mon_priv->real_ndev;
- 
--	/* actual deliver of data is device-specific, and not shown here */
+-static void rtl8723b_enable_rf(struct rtl8xxxu_priv *priv)
+-{
+-}
 -
- 	/* Identify if Ethernet or MAC header (data or mgmt) */
- 	memcpy(srcAdd, &skb->data[10], 6);
- 	memcpy(bssid, &skb->data[16], 6);
+ static void rtl8723a_disable_rf(struct rtl8xxxu_priv *priv)
+ {
+ 	u8 sps0;
+@@ -5953,7 +5949,7 @@ static void rtl8723bu_set_ps_tdma(struct rtl8xxxu_priv *priv,
+ }
+ #endif
+ 
+-static void rtl8723bu_init_bt(struct rtl8xxxu_priv *priv)
++static void rtl8723b_enable_rf(struct rtl8xxxu_priv *priv)
+ {
+ 	struct h2c_cmd h2c;
+ 	u32 val32;
+@@ -6508,10 +6504,6 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 	else
+ 		rtl8xxxu_write_rfreg(priv, RF_A, RF6052_REG_T_METER, 0x60);
+ 
+-	/* Init BT hw config. */
+-	if (priv->fops->init_bt)
+-		priv->fops->init_bt(priv);
+-
+ 	/* Set NAV_UPPER to 30000us */
+ 	val8 = ((30000 + NAV_UPPER_UNIT - 1) / NAV_UPPER_UNIT);
+ 	rtl8xxxu_write8(priv, REG_NAV_UPPER, val8);
+@@ -8300,7 +8292,6 @@ static struct rtl8xxxu_fileops rtl8723bu_fops = {
+ 	.phy_init_antenna_selection = rtl8723bu_phy_init_antenna_selection,
+ 	.phy_iq_calibrate = rtl8723bu_phy_iq_calibrate,
+ 	.config_channel = rtl8723bu_config_channel,
+-	.init_bt = rtl8723bu_init_bt,
+ 	.parse_rx_desc = rtl8723bu_parse_rx_desc,
+ 	.init_aggregation = rtl8723bu_init_aggregation,
+ 	.init_statistics = rtl8723bu_init_statistics,
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index b44cb59..776fd17 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1261,7 +1261,6 @@ struct rtl8xxxu_fileops {
+ 	void (*phy_init_antenna_selection) (struct rtl8xxxu_priv *priv);
+ 	void (*phy_iq_calibrate) (struct rtl8xxxu_priv *priv);
+ 	void (*config_channel) (struct ieee80211_hw *hw);
+-	void (*init_bt) (struct rtl8xxxu_priv *priv);
+ 	int (*parse_rx_desc) (struct rtl8xxxu_priv *priv, struct sk_buff *skb,
+ 			      struct ieee80211_rx_status *rx_status);
+ 	void (*init_aggregation) (struct rtl8xxxu_priv *priv);
 -- 
-1.9.1
+2.5.0
 
