@@ -1,90 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33971 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751298AbcCFMDb convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 07:03:31 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Luca Coelho <luca@coelho.fi>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org,
-	Matti Gottlieb <matti.gottlieb@intel.com>
-Subject: Re: [PATCH 2/2] iwlwifi: mvm: Fix paging memory leak
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA41983@hasmsx107.ger.corp.intel.com>
-	<1456433829-20285-2-git-send-email-emmanuel.grumbach@intel.com>
-	<87povaw7jc.fsf@kamboji.qca.qualcomm.com>
-	<1457120732.28365.166.camel@coelho.fi>
-Date: Sun, 06 Mar 2016 14:03:22 +0200
-In-Reply-To: <1457120732.28365.166.camel@coelho.fi> (Luca Coelho's message of
-	"Fri, 04 Mar 2016 21:45:32 +0200")
-Message-ID: <878u1vx185.fsf@kamboji.qca.qualcomm.com> (sfid-20160306_130334_977991_B864E498)
+Received: from mx1.redhat.com ([209.132.183.28]:51277 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750768AbcB2X6g (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 18:58:36 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 066/113] rtl8xxxu: Call device specific _config_channel()
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1456783551-28315-67-git-send-email-Jes.Sorensen@redhat.com>
+	<CAGRGNgW+QS6dgYdvJgWQ+qKjLWHC-U1Ni7LAQUK0VXuJiQu2aA@mail.gmail.com>
+	<wrfjio17hyco.fsf@redhat.com>
+	<CAGRGNgU-Y05b1_G8pKctNEoBX3=nX+CFNi=djzO6iA6EesBUpA@mail.gmail.com>
+Date: Mon, 29 Feb 2016 18:58:33 -0500
+In-Reply-To: <CAGRGNgU-Y05b1_G8pKctNEoBX3=nX+CFNi=djzO6iA6EesBUpA@mail.gmail.com>
+	(Julian Calaby's message of "Tue, 1 Mar 2016 10:50:26 +1100")
+Message-ID: <wrfjwppngjbq.fsf@redhat.com> (sfid-20160301_005839_530923_A2CF34F7)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Luca Coelho <luca@coelho.fi> writes:
-
-> On Fri, 2016-03-04 at 18:07 +0200, Kalle Valo wrote:
->> Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
->> 
->> > From: Matti Gottlieb <matti.gottlieb@intel.com>
->> > 
->> > If the opmode is stopped and started again we did not free
->> > the paging buffers. Fix that.
->> > In addition when freeing the firmware's paging download
->> > buffer, set the pointer to NULL.
->> > 
->> > Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
->> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
->> 
->> Nitpicking while writing the pull request for Dave:
->> 
->> What does "opmode is stopped" mean? Important bug fixes should have a
->> clear bug description from user's point of view. Using driver internal
->> jargon is gibberish to most people.
+Julian Calaby <julian.calaby@gmail.com> writes:
+> Hi Jes,
 >
-> I agree that there could be a bit more high-level description here, but
-> I also think it's good to keep a bit more details about what is
-> happening internally, so that developers understand too. ;)
-
-Sure, feel free to write as much as you want and in such detail as you
-think is necessary :) Just having a clear summary without internal
-jargon helps people outside of iwlwifi.
-
-BTW, the other iwlwifi fix had a bit similar problem:
-
-https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers.git/commit/?id=fb896c44f88a75843a072cd6961b1615732f7811
-
-What does "non-sta" mean in this context? Is it the AP or what? Or
-something not part of the current BSS? I guess I might find a definition
-from the spec or from iwlwifi sources but I really should not be forced
-to do that.
-
-> Do you think it would be acceptable to keep the commit log most as it
-> is, but start with something like "Some paging buffers were not freed
-> when the driver is restarted."? I don't mean to change this commit
-> itself, but just so that we know how to please you (and users) while
-> still keeping the details as part of the commit logs... ;)
-
-That sounds good to me. What I'm after is that someone like Dave or
-Linus can understand from the commit log what kind of bug this patch is
-fixing, without looking into source or checking mailing lists. This is
-especially more important in the later stages of the cycle.
-
->> I investigated this myself and apparently "opmode" is stopped when the
->> module is unloaded or the PCI device is removed. So just say that in the
->> commit log and everyone understand much better.
+> On Tue, Mar 1, 2016 at 10:48 AM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+>> Julian Calaby <julian.calaby@gmail.com> writes:
+>>> Hi Jes,
+>>>
+>>> On Tue, Mar 1, 2016 at 9:05 AM,  <Jes.Sorensen@redhat.com> wrote:
+>>>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>>>
+>>>> Having a version for the newer chips without calling it doesn't do
+>>>> much good.....
+>>>>
+>>>> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>>
+>>> Should this be squashed into the patch that introduces the new op?
+>>
+>> I can start rewriting history, but all that comes out of that is having
+>> to fight patch conflicts rebasing things.
+>>
+>> If there was an actual functional reason for it, sure, but in this case
+>> there isn't.
 >
-> Our driver is divided roughly into two layers: the bus layer (called
-> transport) and the protocol layer (called opmode).  The name comes from
-> the difference between the two opmodes that we currently have.  One
-> supports only a single operating channel (dvm) and the other supports
-> multiple operating channels (mvm).
->
-> Hope this clarifies a bit. :)
+> Fair enough, it just looks odd to have fixes like this in a patch
+> series that almost entirely consists of introducing new stuff.
 
-It did, thanks.
+As you can see from the dates, this code was written over time, one top
+of adding already existing code.
 
--- 
-Kalle Valo
+Merging patches randomly into giant jumbo patches will make it
+completely impossible to bisect and debug in case one of these changes
+breaks something in the parts of the code that was working prior to
+introducing this set.
+
+So no, this is not at all odd, it's perfectly normal for this type of
+code.
+
+Jes
