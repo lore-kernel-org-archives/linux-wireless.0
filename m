@@ -1,42 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:57169 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:52327 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751625AbcBZJui (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 26 Feb 2016 04:50:38 -0500
-From: Johannes Berg <johannes@sipsolutions.net>
+	id S1753512AbcB2WGD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:06:03 -0500
+From: Jes.Sorensen@redhat.com
 To: linux-wireless@vger.kernel.org
-Cc: Fengguang Wu <lkp@intel.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211_hwsim: treat as part of mac80211 for MAINTAINERS
-Date: Fri, 26 Feb 2016 10:50:34 +0100
-Message-Id: <1456480234-5888-1-git-send-email-johannes@sipsolutions.net> (sfid-20160226_105111_134334_24175657)
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 073/113] rtl8xxxu: RF_T_METER is different on the newer chips
+Date: Mon, 29 Feb 2016 17:05:11 -0500
+Message-Id: <1456783551-28315-74-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_232953_928069_AC5533B1)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Since I maintain this driver as part of mac80211, add it to
-the file list for mac80211; this helps submitters send it to
-me instead of Kalle and also makes the build robot apply the
-patches for it on the right tree for build attempts.
+Provide RF_T_METER register location for nextgen chips.
 
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- MAINTAINERS | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index ded96408efe6..25bdfe6a3c0e 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6664,6 +6664,7 @@ S:	Maintained
- F:	Documentation/networking/mac80211-injection.txt
- F:	include/net/mac80211.h
- F:	net/mac80211/
-+F:	drivers/net/wireless/mac80211_hwsim.[ch]
- 
- MACVLAN DRIVER
- M:	Patrick McHardy <kaber@trash.net>
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+index d3f6fa3..a055362 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+@@ -1104,9 +1104,10 @@
+ /*
+  * NextGen regs: 8723BU
+  */
+-#define	RF6052_REG_UNKNOWN_43		0x43
+-#define	RF6052_REG_UNKNOWN_55		0x55
+-#define	RF6052_REG_S0S1			0xb0
+-#define	RF6052_REG_UNKNOWN_DF		0xdf
+-#define	RF6052_REG_UNKNOWN_ED		0xed
+-#define	RF6052_REG_WE_LUT		0xef
++#define RF6052_REG_T_METER_8723B	0x42
++#define RF6052_REG_UNKNOWN_43		0x43
++#define RF6052_REG_UNKNOWN_55		0x55
++#define RF6052_REG_S0S1			0xb0
++#define RF6052_REG_UNKNOWN_DF		0xdf
++#define RF6052_REG_UNKNOWN_ED		0xed
++#define RF6052_REG_WE_LUT		0xef
 -- 
-2.7.0
+2.5.0
 
