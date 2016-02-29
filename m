@@ -1,174 +1,90 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f195.google.com ([209.85.214.195]:36706 "EHLO
-	mail-ob0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964806AbcBCRt2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 12:49:28 -0500
-MIME-Version: 1.0
-In-Reply-To: <063D6719AE5E284EB5DD2968C1650D6D1CCD5486@AcuExch.aculab.com>
-References: <20160203015953.GA13562@gmail.com>
-	<063D6719AE5E284EB5DD2968C1650D6D1CCD5486@AcuExch.aculab.com>
-Date: Thu, 4 Feb 2016 02:49:28 +0900
-Message-ID: <CAOxTRzpO4mx361GqA+W39bxSfbOCaiLw320S-aph1v1OGJ0FYw@mail.gmail.com> (sfid-20160203_184948_414233_9FA70C08)
-Subject: Re: [PATCH 1/2] rtlwifi: Fix improve function 'rtl_addr_delay()' in core.c
-From: ByeoungWook Kim <quddnr145@gmail.com>
-To: David Laight <David.Laight@aculab.com>
-Cc: "Larry.Finger@lwfinger.net" <Larry.Finger@lwfinger.net>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"chaoming_li@realsil.com.cn" <chaoming_li@realsil.com.cn>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mx1.redhat.com ([209.132.183.28]:37700 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753002AbcB2WFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:55 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 060/113] rtl8xxxu: Init H2C command register for 8723bu
+Date: Mon, 29 Feb 2016 17:04:58 -0500
+Message-Id: <1456783551-28315-61-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_231025_331335_5FF3911D)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi David,
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-2016-02-03 23:41 GMT+09:00 David Laight <David.Laight@aculab.com>:
-> From: Byeoungwook Kim
->> Sent: 03 February 2016 02:00
->> Conditional codes in rtl_addr_delay() were improved in readability and
->> performance by using switch codes.
->> ...
->>  void rtl_addr_delay(u32 addr)
->>  {
->> -     if (addr == 0xfe)
->> +     switch (addr) {
->> +     case 0xfe:
->>               mdelay(50);
->> -     else if (addr == 0xfd)
->> +             break;
->> +     case 0xfd:
->>               mdelay(5);
->> -     else if (addr == 0xfc)
->> +             break;
->> +     case 0xfc:
->>               mdelay(1);
->> -     else if (addr == 0xfb)
->> +             break;
->> +     case 0xfb:
->>               udelay(50);
->> -     else if (addr == 0xfa)
->> +             break;
->> +     case 0xfa:
->>               udelay(5);
->> -     else if (addr == 0xf9)
->> +             break;
->> +     case 0xf9:
->>               udelay(1);
->> +             break;
->> +     };
->
-> Straight 'performance' can't matter here, not with mdelay(50)!
-> The most likely effect is from speeding up the 'don't delay' path
-> and reducing the number of conditionals (and hence accuracy of) udelay(1).
-> Reversing the if-chain might be better still.
->
+In addition make register read/write flow match closer to vendor
+driver flow. This is mainly to be able to compare the register write
+log with the vendor driver, and can be optimized later once 8723bu
+support is working.
 
-I agree with your assists about "The most likely effect is from
-speeding up the 'don't delay' path and reducing the number of
-conditionals (and hence accuracy of) udelay(1).".
-
-I converted to assembly codes like next line from conditionals.
-
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-  if (addr == 0xf9)
-00951445  cmp        dword ptr [addr],0F9h
-0095144C  jne        main+35h (0951455h)
-      a();
-0095144E  call        a (09510EBh)
-00951453  jmp        main+83h (09514A3h)
-  else if (addr == 0xfa)
-00951455  cmp        dword ptr [addr],0FAh
-0095145C  jne        main+45h (0951465h)
-      a();
-0095145E  call        a (09510EBh)
-00951463  jmp        main+83h (09514A3h)
-  else if (addr == 0xfb)
-00951465  cmp        dword ptr [addr],0FBh
-0095146C  jne        main+55h (0951475h)
-      a();
-0095146E  call        a (09510EBh)
-00951473  jmp        main+83h (09514A3h)
-  else if (addr == 0xfc)
-00951475  cmp        dword ptr [addr],0FCh
-0095147C  jne        main+65h (0951485h)
-      b();
-0095147E  call        b (09510E6h)
-00951483  jmp        main+83h (09514A3h)
-  else if (addr == 0xfd)
-00951485  cmp        dword ptr [addr],0FDh
-0095148C  jne        main+75h (0951495h)
-      b();
-0095148E  call        b (09510E6h)
-00951493  jmp        main+83h (09514A3h)
-  else if (addr == 0xfe)
-00951495  cmp        dword ptr [addr],0FEh
-0095149C  jne        main+83h (09514A3h)
-      b();
-0095149E  call        b (09510E6h)
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index cd5c61b..c253641 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2685,6 +2685,11 @@ static int rtl8xxxu_start_firmware(struct rtl8xxxu_priv *priv)
+ 		goto exit;
+ 	}
+ 
++	/*
++	 * Init H2C command
++	 */
++	if (priv->rtlchip == 0x8723b)
++		rtl8xxxu_write8(priv, REG_HMTFR, 0x0f);
+ exit:
+ 	return ret;
+ }
+@@ -2927,14 +2932,20 @@ static void rtl8723bu_phy_init_antenna_selection(struct rtl8xxxu_priv *priv)
+ 
+ 	val32 = rtl8xxxu_read32(priv, REG_GPIO_MUXCFG);
+ 	val32 &= ~BIT(4);
++	rtl8xxxu_write32(priv, REG_GPIO_MUXCFG, val32);
++
++	val32 = rtl8xxxu_read32(priv, REG_GPIO_MUXCFG);
+ 	val32 |= BIT(3);
+ 	rtl8xxxu_write32(priv, REG_GPIO_MUXCFG, val32);
+ 
+ 	val32 = rtl8xxxu_read32(priv, REG_LEDCFG0);
+-	val32 &= ~BIT(23);
+ 	val32 |= BIT(24);
+ 	rtl8xxxu_write32(priv, REG_LEDCFG0, val32);
+ 
++	val32 = rtl8xxxu_read32(priv, REG_LEDCFG0);
++	val32 &= ~BIT(23);
++	rtl8xxxu_write32(priv, REG_LEDCFG0, val32);
++
+ 	val32 = rtl8xxxu_read32(priv, 0x0944);
+ 	val32 |= (BIT(0) | BIT(1));
+ 	rtl8xxxu_write32(priv, 0x0944, val32);
+@@ -2943,6 +2954,10 @@ static void rtl8723bu_phy_init_antenna_selection(struct rtl8xxxu_priv *priv)
+ 	val32 &= 0xffffff00;
+ 	val32 |= 0x77;
+ 	rtl8xxxu_write32(priv, 0x0930, val32);
++
++	val32 = rtl8xxxu_read32(priv, REG_PWR_DATA);
++	val32 |= PWR_DATA_EEPRPAD_RFE_CTRL_EN;
++	rtl8xxxu_write32(priv, REG_PWR_DATA, val32);
+ }
+ 
+ static int
+@@ -6079,7 +6094,7 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 		rtl8xxxu_write8(priv, 0xfe42, 0x80);
+ 	}
+ 
+-	if (priv->rtlchip == 0x8192e || priv->rtlchip == 0x8723b) {
++	if (priv->rtlchip == 0x8192e) {
+ 		rtl8xxxu_write32(priv, REG_HIMR0, 0x00);
+ 		rtl8xxxu_write32(priv, REG_HIMR1, 0x00);
+ 	}
+-- 
+2.5.0
 
----
-
-if the addr value was 0xfe, Big-O-notation is O(1).
-but if the addr value was 0xf9, Big-O-notation is O(n).
-
-2016-02-03 23:41 GMT+09:00 David Laight <David.Laight@aculab.com>:
-> From: Byeoungwook Kim
->> Sent: 03 February 2016 02:00
->> Conditional codes in rtl_addr_delay() were improved in readability and
->> performance by using switch codes.
->
-> I'd like to see the performance data :-)
-
-I used switch codes to solve of this problem.
-
-If the addr variable was increment consecutive, switch codes is able
-to use branch table for optimize.
-so I converted to assembly codes like next line from same codes about my patch.
-
- switch (addr)
-011C1445  mov        eax,dword ptr [addr]
-011C1448  mov        dword ptr [ebp-0D0h],eax
-011C144E  mov        ecx,dword ptr [ebp-0D0h]
-011C1454  sub        ecx,0F9h
-011C145A  mov        dword ptr [ebp-0D0h],ecx
-011C1460  cmp        dword ptr [ebp-0D0h],5
-011C1467  ja          $LN6+28h (011C149Eh)
-011C1469  mov        edx,dword ptr [ebp-0D0h]
-011C146F  jmp        dword ptr [edx*4+11C14B4h]
-  {
-  case 0xf9: a(); break;
-011C1476  call        a (011C10EBh)
-011C147B  jmp        $LN6+28h (011C149Eh)
-  case 0xfa: a(); break;
-011C147D  call        a (011C10EBh)
-011C1482  jmp        $LN6+28h (011C149Eh)
-  case 0xfb: a(); break;
-011C1484  call        a (011C10EBh)
-011C1489  jmp        $LN6+28h (011C149Eh)
-  case 0xfc: b(); break;
-011C148B  call        b (011C10E6h)
-011C1490  jmp        $LN6+28h (011C149Eh)
-  case 0xfd: b(); break;
-011C1492  call        b (011C10E6h)
-011C1497  jmp        $LN6+28h (011C149Eh)
-  case 0xfe: b(); break;
-011C1499  call        b (011C10E6h)
-  }
-
-===[[branch table]]===
-011C14B4     011C1476h
-011C14B8     011C147Dh
-011C14BC     011C1484h
-011C14C0     011C148Bh
-011C14C4     011C1492h
-011C14C8     011C1499h
-
-So conditional codes into rtl_addr_delay() can improve to readability
-and performance that used switch codes.
-
-Regards,
-Byeoungwook.
