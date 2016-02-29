@@ -1,50 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45105 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752085AbcBRUE7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 15:04:59 -0500
-Message-ID: <1455825889.2084.16.camel@sipsolutions.net> (sfid-20160218_210533_081453_107A8E39)
-Subject: Re: [PATCHv2 3/4] ARM: tegra: use build-in device properties with
- rfkill_gpio
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Thierry Reding <thierry.reding@gmail.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-tegra@vger.kernel.org,
-	Alexandre Courbot <gnurou@gmail.com>,
-	Stephen Warren <swarren@wwwdotorg.org>,
-	Marc Dietrich <marvin24@gmx.de>
-Date: Thu, 18 Feb 2016 21:04:49 +0100
-In-Reply-To: <1453797724.2759.4.camel@sipsolutions.net>
-References: <1453712629-143317-1-git-send-email-heikki.krogerus@linux.intel.com>
-	 <1453712629-143317-4-git-send-email-heikki.krogerus@linux.intel.com>
-	 <20160125121840.GA20452@ulmo.nvidia.com>
-	 (sfid-20160125_131846_334590_41466BBA) <1453797724.2759.4.camel@sipsolutions.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:44513 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752379AbcB2VdL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 16:33:11 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH 08/15] wil6210: add support for platform specific notification events
+Date: Mon, 29 Feb 2016 23:32:43 +0200
+Message-Id: <1456781570-16552-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160229_223316_803872_BDFC75DA)
+In-Reply-To: <1456781570-16552-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1456781570-16552-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-01-26 at 09:42 +0100, Johannes Berg wrote:
-> On Mon, 2016-01-25 at 13:18 +0100, Thierry Reding wrote:
-> >  
-> > Johannes, I assume that you'll want to take this through your tree
-> > because of the dependency? In that case:
-> > 
-> > Acked-by: Thierry Reding <treding@nvidia.com>
-> 
-> I can, but I don't really care - perhaps you'd rather take the entire
-> series through your tree to get it into one place for Marc?
-> 
-> In which case, you have my
-> 
-> Acked-by: Johannes Berg <johannes@sipsolutions.net>
-> 
-> for the other 3 patches.
-> 
-> Let me know which you prefer.
-> 
-Did these patches get applied anywhere? Otherwise I'm willing to pick
-them up.
+Add the ability to notify the platform driver on different
+events, such as FW crash, pre reset and FW ready.
 
-johannes
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/interrupt.c    |  5 ++--
+ drivers/net/wireless/ath/wil6210/main.c         | 32 +++++++++++++++++++++++--
+ drivers/net/wireless/ath/wil6210/wil_platform.h |  8 ++++++-
+ 3 files changed, 40 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index 4f2ffa5..ae90295 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -394,9 +394,10 @@ static irqreturn_t wil6210_irq_misc_thread(int irq, void *cookie)
+ 		wil_fw_core_dump(wil);
+ 		wil_notify_fw_error(wil);
+ 		isr &= ~ISR_MISC_FW_ERROR;
+-		if (wil->platform_ops.notify_crash) {
++		if (wil->platform_ops.notify) {
+ 			wil_err(wil, "notify platform driver about FW crash");
+-			wil->platform_ops.notify_crash(wil->platform_handle);
++			wil->platform_ops.notify(wil->platform_handle,
++						 WIL_PLATFORM_EVT_FW_CRASH);
+ 		} else {
+ 			wil_fw_error_recovery(wil);
+ 		}
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 1fa215d..1472978 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -764,6 +764,15 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 	if (wil->hw_version == HW_VER_UNKNOWN)
+ 		return -ENODEV;
+ 
++	if (wil->platform_ops.notify) {
++		rc = wil->platform_ops.notify(wil->platform_handle,
++					      WIL_PLATFORM_EVT_PRE_RESET);
++		if (rc)
++			wil_err(wil,
++				"%s: PRE_RESET platform notify failed, rc %d\n",
++				__func__, rc);
++	}
++
+ 	set_bit(wil_status_resetting, wil->status);
+ 
+ 	cancel_work_sync(&wil->disconnect_worker);
+@@ -843,8 +852,27 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 
+ 		/* we just started MAC, wait for FW ready */
+ 		rc = wil_wait_for_fw_ready(wil);
+-		if (rc == 0) /* check FW is responsive */
+-			rc = wmi_echo(wil);
++		if (rc)
++			return rc;
++
++		/* check FW is responsive */
++		rc = wmi_echo(wil);
++		if (rc) {
++			wil_err(wil, "%s: wmi_echo failed, rc %d\n",
++				__func__, rc);
++			return rc;
++		}
++
++		if (wil->platform_ops.notify) {
++			rc = wil->platform_ops.notify(wil->platform_handle,
++						      WIL_PLATFORM_EVT_FW_RDY);
++			if (rc) {
++				wil_err(wil,
++					"%s: FW_RDY notify failed, rc %d\n",
++					__func__, rc);
++				rc = 0;
++			}
++		}
+ 	}
+ 
+ 	return rc;
+diff --git a/drivers/net/wireless/ath/wil6210/wil_platform.h b/drivers/net/wireless/ath/wil6210/wil_platform.h
+index 9a949d9..33d4a34 100644
+--- a/drivers/net/wireless/ath/wil6210/wil_platform.h
++++ b/drivers/net/wireless/ath/wil6210/wil_platform.h
+@@ -19,6 +19,12 @@
+ 
+ struct device;
+ 
++enum wil_platform_event {
++	WIL_PLATFORM_EVT_FW_CRASH = 0,
++	WIL_PLATFORM_EVT_PRE_RESET = 1,
++	WIL_PLATFORM_EVT_FW_RDY = 2,
++};
++
+ /**
+  * struct wil_platform_ops - wil platform module calls from this
+  * driver to platform driver
+@@ -28,7 +34,7 @@ struct wil_platform_ops {
+ 	int (*suspend)(void *handle);
+ 	int (*resume)(void *handle);
+ 	void (*uninit)(void *handle);
+-	int (*notify_crash)(void *handle);
++	int (*notify)(void *handle, enum wil_platform_event evt);
+ };
+ 
+ /**
+-- 
+1.8.5.2
+
