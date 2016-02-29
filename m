@@ -1,96 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:16135
-	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1161104AbcBQK10 (ORCPT
+Received: from mail-qg0-f65.google.com ([209.85.192.65]:32782 "EHLO
+	mail-qg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752115AbcB2BEI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 17 Feb 2016 05:27:26 -0500
-From: Arend van Spriel <arend@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 08/21] brcmfmac: use device memsize config from fw if defined
-Date: Wed, 17 Feb 2016 11:26:57 +0100
-Message-Id: <1455704830-10088-9-git-send-email-arend@broadcom.com> (sfid-20160217_112737_510306_C167440B)
-In-Reply-To: <1455704830-10088-1-git-send-email-arend@broadcom.com>
-References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+	Sun, 28 Feb 2016 20:04:08 -0500
+Received: by mail-qg0-f65.google.com with SMTP id y89so9652817qge.0
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2016 17:04:07 -0800 (PST)
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 2/4] mac80211: mesh: don't hash sdata in mpath tables
+Date: Sun, 28 Feb 2016 20:03:57 -0500
+Message-Id: <1456707839-19469-2-git-send-email-me@bobcopeland.com> (sfid-20160229_020421_784951_6FA3158F)
+In-Reply-To: <1456707839-19469-1-git-send-email-me@bobcopeland.com>
+References: <1456707839-19469-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hante Meuleman <meuleman@broadcom.com>
+Now that the sdata pointer is the same for all entries of a
+path table, hashing it is pointless, so hash only the address.
 
-Newer type pcie devices have memory which get shared between fw and
-hw. The division of this memory is done firmware compile time. As a
-result the ramsize as used by driver needs to be adjusted for this.
-This is done by reading the memory size from the firmware.
-
-Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- .../wireless/broadcom/brcm80211/brcmfmac/pcie.c    | 33 ++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+ net/mac80211/mesh_pathtbl.c | 18 ++++++++----------
+ 1 file changed, 8 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-index d5f9ef4..d89212b 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
-@@ -207,6 +207,10 @@ static struct brcmf_firmware_mapping brcmf_pcie_fwnames[] = {
- #define BRCMF_PCIE_CFGREG_REG_BAR3_CONFIG	0x4F4
- #define BRCMF_PCIE_LINK_STATUS_CTRL_ASPM_ENAB	3
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 0508b37b0471..fc3cc350df8c 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -177,12 +177,10 @@ errcopy:
+ 	return -ENOMEM;
+ }
  
-+/* Magic number at a magic location to find RAM size */
-+#define BRCMF_RAMSIZE_MAGIC			0x534d4152	/* SMAR */
-+#define BRCMF_RAMSIZE_OFFSET			0x6c
-+
+-static u32 mesh_table_hash(const u8 *addr, struct ieee80211_sub_if_data *sdata,
+-			   struct mesh_table *tbl)
++static u32 mesh_table_hash(const u8 *addr, struct mesh_table *tbl)
+ {
+-	/* Use last four bytes of hw addr and interface index as hash index */
+-	return jhash_2words(*(u32 *)(addr+2), sdata->dev->ifindex,
+-			    tbl->hash_rnd) & tbl->hash_mask;
++	/* Use last four bytes of hw addr as hash index */
++	return jhash_1word(*(u32 *)(addr+2), tbl->hash_rnd) & tbl->hash_mask;
+ }
  
- struct brcmf_pcie_console {
- 	u32 base_addr;
-@@ -1412,6 +1416,28 @@ static const struct brcmf_bus_ops brcmf_pcie_bus_ops = {
- };
  
+@@ -331,7 +329,7 @@ static struct mesh_path *mpath_lookup(struct mesh_table *tbl, const u8 *dst,
+ 	struct hlist_head *bucket;
+ 	struct mpath_node *node;
  
-+static void
-+brcmf_pcie_adjust_ramsize(struct brcmf_pciedev_info *devinfo, u8 *data,
-+			  u32 data_len)
-+{
-+	__le32 *field;
-+	u32 newsize;
-+
-+	if (data_len < BRCMF_RAMSIZE_OFFSET + 8)
-+		return;
-+
-+	field = (__le32 *)&data[BRCMF_RAMSIZE_OFFSET];
-+	if (le32_to_cpup(field) != BRCMF_RAMSIZE_MAGIC)
-+		return;
-+	field++;
-+	newsize = le32_to_cpup(field);
-+
-+	brcmf_dbg(PCIE, "Found ramsize info in FW, adjusting to 0x%x\n",
-+		  newsize);
-+	devinfo->ci->ramsize = newsize;
-+}
-+
-+
- static int
- brcmf_pcie_init_share_ram_info(struct brcmf_pciedev_info *devinfo,
- 			       u32 sharedram_addr)
-@@ -1694,6 +1720,13 @@ static void brcmf_pcie_setup(struct device *dev, const struct firmware *fw,
+-	bucket = &tbl->hash_buckets[mesh_table_hash(dst, sdata, tbl)];
++	bucket = &tbl->hash_buckets[mesh_table_hash(dst, tbl)];
+ 	hlist_for_each_entry_rcu(node, bucket, list) {
+ 		mpath = node->mpath;
+ 		if (ether_addr_equal(dst, mpath->dst)) {
+@@ -538,7 +536,7 @@ struct mesh_path *mesh_path_add(struct ieee80211_sub_if_data *sdata,
+ 	read_lock_bh(&sdata->u.mesh.pathtbl_resize_lock);
+ 	tbl = resize_dereference_mesh_paths(sdata);
  
- 	brcmf_pcie_attach(devinfo);
+-	hash_idx = mesh_table_hash(dst, sdata, tbl);
++	hash_idx = mesh_table_hash(dst, tbl);
+ 	bucket = &tbl->hash_buckets[hash_idx];
  
-+	/* Some of the firmwares have the size of the memory of the device
-+	 * defined inside the firmware. This is because part of the memory in
-+	 * the device is shared and the devision is determined by FW. Parse
-+	 * the firmware and adjust the chip memory size now.
-+	 */
-+	brcmf_pcie_adjust_ramsize(devinfo, (u8 *)fw->data, fw->size);
-+
- 	ret = brcmf_pcie_download_fw_nvram(devinfo, fw, nvram, nvram_len);
- 	if (ret)
- 		goto fail;
+ 	spin_lock(&tbl->hashwlock[hash_idx]);
+@@ -687,7 +685,7 @@ int mpp_path_add(struct ieee80211_sub_if_data *sdata,
+ 
+ 	tbl = resize_dereference_mpp_paths(sdata);
+ 
+-	hash_idx = mesh_table_hash(dst, sdata, tbl);
++	hash_idx = mesh_table_hash(dst, tbl);
+ 	bucket = &tbl->hash_buckets[hash_idx];
+ 
+ 	spin_lock(&tbl->hashwlock[hash_idx]);
+@@ -905,7 +903,7 @@ static int table_path_del(struct mesh_table __rcu *rcu_tbl,
+ 	int err = 0;
+ 
+ 	tbl = resize_dereference_paths(sdata, rcu_tbl);
+-	hash_idx = mesh_table_hash(addr, sdata, tbl);
++	hash_idx = mesh_table_hash(addr, tbl);
+ 	bucket = &tbl->hash_buckets[hash_idx];
+ 
+ 	spin_lock(&tbl->hashwlock[hash_idx]);
+@@ -1107,7 +1105,7 @@ static int mesh_path_node_copy(struct hlist_node *p, struct mesh_table *newtbl)
+ 	node = hlist_entry(p, struct mpath_node, list);
+ 	mpath = node->mpath;
+ 	new_node->mpath = mpath;
+-	hash_idx = mesh_table_hash(mpath->dst, mpath->sdata, newtbl);
++	hash_idx = mesh_table_hash(mpath->dst, newtbl);
+ 	hlist_add_head(&new_node->list,
+ 			&newtbl->hash_buckets[hash_idx]);
+ 	return 0;
 -- 
-1.9.1
+2.6.1
 
