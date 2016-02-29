@@ -1,44 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:48343 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754607AbcBCXJH (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 3 Feb 2016 18:09:07 -0500
-Date: Wed, 3 Feb 2016 15:09:07 -0800
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Ivan Safonov <insafonov@gmail.com>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] staging: wilc1000: wilc_parse_network_info
- refactoring
-Message-ID: <20160203230907.GA15732@kroah.com> (sfid-20160204_001014_983058_BA314154)
-References: <20151227165957.GA22276@alpha.sfu-kras.ru>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20151227165957.GA22276@alpha.sfu-kras.ru>
+Received: from mx1.redhat.com ([209.132.183.28]:33429 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752870AbcB2WFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 17:05:55 -0500
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 044/113] rtl8xxxu: Remove unused variable
+Date: Mon, 29 Feb 2016 17:04:42 -0500
+Message-Id: <1456783551-28315-45-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160229_231029_893601_399211F4)
+In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Dec 27, 2015 at 11:59:57PM +0700, Ivan Safonov wrote:
-> 1) Return value of this function does not used;
-> 2) wilc_parse_network_info has no reasons to return an error;
-> 3) kfree does not free memory if argument is NULL.
-> 
-> Signed-off-by: Ivan Safonov <insafonov@gmail.com>
-> ---
->  drivers/staging/wilc1000/coreconfigurator.c | 27 +++++----------------------
->  drivers/staging/wilc1000/coreconfigurator.h |  2 +-
->  2 files changed, 6 insertions(+), 23 deletions(-)
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-You sent 3 different copies of this same patch, so I don't know which to
-apply :(
+Remove an unused variable to make the compiler happy.
 
-Please fix up and resend the series properly...
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-thanks,
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 937b495..0db6b3f 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -1781,7 +1781,7 @@ static void rtl8723bu_config_channel(struct ieee80211_hw *hw)
+ {
+ 	struct rtl8xxxu_priv *priv = hw->priv;
+ 	u32 val32, rsr;
+-	u8 val8, opmode, subchannel;
++	u8 val8, subchannel;
+ 	u16 rf_mode_bw;
+ 	bool ht = true;
+ 	int sec_ch_above, channel;
+-- 
+2.5.0
 
-greg k-h
