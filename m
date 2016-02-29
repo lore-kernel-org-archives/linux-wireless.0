@@ -1,180 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f46.google.com ([209.85.192.46]:34073 "EHLO
-	mail-qg0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752842AbcBVQhH (ORCPT
+Received: from mail-qg0-f68.google.com ([209.85.192.68]:36606 "EHLO
+	mail-qg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752631AbcB2BIY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 22 Feb 2016 11:37:07 -0500
-From: "=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?=" <jprvita@gmail.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux@endlessm.com,
-	=?UTF-8?q?Jo=C3=A3o=20Paulo=20Rechi=20Vita?= <jprvita@endlessm.com>
-Subject: [PATCHv2 09/10] rfkill: Userspace control for airplane mode
-Date: Mon, 22 Feb 2016 11:36:40 -0500
-Message-Id: <1456159001-20307-10-git-send-email-jprvita@endlessm.com> (sfid-20160222_173939_232400_B993E104)
-In-Reply-To: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
-References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Sun, 28 Feb 2016 20:08:24 -0500
+Received: by mail-qg0-f68.google.com with SMTP id 14so9669113qgg.3
+        for <linux-wireless@vger.kernel.org>; Sun, 28 Feb 2016 17:08:24 -0800 (PST)
+Received: from hash ([2001:470:1d:6db:230:48ff:fe9d:9c89])
+        by smtp.gmail.com with ESMTPSA id s77sm1905940qkl.29.2016.02.28.17.08.22
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 28 Feb 2016 17:08:22 -0800 (PST)
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Cc: Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 3/3] ath9k_htc: fix up indents with spaces
+Date: Sun, 28 Feb 2016 20:07:57 -0500
+Message-Id: <1456708077-19652-3-git-send-email-me@bobcopeland.com> (sfid-20160229_020828_872684_E6DFA5F3)
+In-Reply-To: <1456708077-19652-1-git-send-email-me@bobcopeland.com>
+References: <1456708077-19652-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Provide an interface for the airplane-mode indicator be controlled from
-userspace. User has to first acquire the control through
-RFKILL_OP_AIRPLANE_MODE_ACQUIRE and keep the fd open for the whole time
-it wants to be in control of the indicator. Closing the fd or using
-RFKILL_OP_AIRPLANE_MODE_RELEASE restores the default policy.
+Use tabs here.  Found by smatch.
 
-To change state of the indicator, the RFKILL_OP_AIRPLANE_MODE_CHANGE
-operation is used, passing the value on "struct rfkill_event.soft". If
-the caller has not acquired the airplane-mode control beforehand, the
-operation fails.
-
-Signed-off-by: João Paulo Rechi Vita <jprvita@endlessm.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- Documentation/rfkill.txt    | 10 ++++++++++
- include/uapi/linux/rfkill.h |  6 ++++++
- net/rfkill/core.c           | 35 +++++++++++++++++++++++++++++++++--
- 3 files changed, 49 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/htc_drv_init.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/Documentation/rfkill.txt b/Documentation/rfkill.txt
-index b13025a..9dbe3fc 100644
---- a/Documentation/rfkill.txt
-+++ b/Documentation/rfkill.txt
-@@ -87,6 +87,7 @@ RFKill provides per-switch LED triggers, which can be used to drive LEDs
- according to the switch state (LED_FULL when blocked, LED_OFF otherwise).
- An airplane-mode indicator LED trigger is also available, which triggers
- LED_FULL when all radios known by RFKill are blocked, and LED_OFF otherwise.
-+The airplane-mode indicator LED trigger policy can be overridden by userspace.
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_init.c b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+index 8647ab77c019..c2249ad54085 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_init.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_init.c
+@@ -262,11 +262,11 @@ static void ath9k_multi_regread(void *hw_priv, u32 *addr,
+ 	__be32 tmpval[8];
+ 	int i, ret;
  
- 
- 5. Userspace support
-@@ -123,5 +124,14 @@ RFKILL_TYPE
- The contents of these variables corresponds to the "name", "state" and
- "type" sysfs files explained above.
- 
-+Userspace can also override the default airplane-mode indicator policy through
-+/dev/rfkill. Control of the airplane mode indicator has to be acquired first,
-+using RFKILL_OP_AIRPLANE_MODE_INDICATOR_ACQUIRE, and is only available for one
-+userspace application at a time. Closing the fd reverts the airplane-mode
-+indicator back to the default kernel policy and makes it available for other
-+applications to take control. Changes to the airplane-mode indicator state can
-+be made using RFKILL_OP_AIRPLANE_MODE_INDICATOR_CHANGE, passing the new value
-+in the 'soft' field of 'struct rfkill_event'.
-+
- 
- For further details consult Documentation/ABI/stable/sysfs-class-rfkill.
-diff --git a/include/uapi/linux/rfkill.h b/include/uapi/linux/rfkill.h
-index 2e00dce..36e0770 100644
---- a/include/uapi/linux/rfkill.h
-+++ b/include/uapi/linux/rfkill.h
-@@ -61,12 +61,18 @@ enum rfkill_type {
-  * @RFKILL_OP_CHANGE_ALL: userspace changes all devices (of a type, or all)
-  *	into a state, also updating the default state used for devices that
-  *	are hot-plugged later.
-+ * @RFKILL_OP_AIRPLANE_MODE_INDICATOR_ACQUIRE: userspace acquires control of
-+ * 	the airplane-mode indicator.
-+ * @RFKILL_OP_AIRPLANE_MODE_INDICATOR_CHANGE: userspace changes the
-+ * 	airplane-mode indicator state.
-  */
- enum rfkill_operation {
- 	RFKILL_OP_ADD = 0,
- 	RFKILL_OP_DEL,
- 	RFKILL_OP_CHANGE,
- 	RFKILL_OP_CHANGE_ALL,
-+	RFKILL_OP_AIRPLANE_MODE_INDICATOR_ACQUIRE,
-+	RFKILL_OP_AIRPLANE_MODE_INDICATOR_CHANGE,
- };
- 
- /**
-diff --git a/net/rfkill/core.c b/net/rfkill/core.c
-index 04d7fa1..8ea8b73 100644
---- a/net/rfkill/core.c
-+++ b/net/rfkill/core.c
-@@ -89,6 +89,7 @@ struct rfkill_data {
- 	struct mutex		mtx;
- 	wait_queue_head_t	read_wait;
- 	bool			input_handler;
-+	bool			is_apm_owner;
- };
- 
- 
-@@ -123,7 +124,7 @@ static struct {
- } rfkill_global_states[NUM_RFKILL_TYPES];
- 
- static bool rfkill_epo_lock_active;
--
-+static bool rfkill_apm_owned;
- 
- #ifdef CONFIG_RFKILL_LEDS
- static struct led_trigger rfkill_apm_led_trigger;
-@@ -350,7 +351,8 @@ static void rfkill_update_global_state(enum rfkill_type type, bool blocked)
- 
- 	for (i = 0; i < NUM_RFKILL_TYPES; i++)
- 		rfkill_global_states[i].cur = blocked;
--	rfkill_apm_led_trigger_event(blocked);
-+	if (!rfkill_apm_owned)
-+		rfkill_apm_led_trigger_event(blocked);
- }
- 
- #ifdef CONFIG_RFKILL_INPUT
-@@ -1180,9 +1182,23 @@ static ssize_t rfkill_fop_read(struct file *file, char __user *buf,
- 	return ret;
- }
- 
-+static int rfkill_airplane_mode_release(struct rfkill_data *data)
-+{
-+	bool state = rfkill_global_states[RFKILL_TYPE_ALL].cur;
-+
-+	if (rfkill_apm_owned && data->is_apm_owner) {
-+		rfkill_apm_owned = false;
-+		data->is_apm_owner = false;
-+		rfkill_apm_led_trigger_event(state);
-+		return 0;
+-       for (i = 0; i < count; i++) {
+-	       tmpaddr[i] = cpu_to_be32(addr[i]);
+-       }
++	for (i = 0; i < count; i++) {
++		tmpaddr[i] = cpu_to_be32(addr[i]);
 +	}
-+	return -EACCES;
-+}
-+
- static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
- 				size_t count, loff_t *pos)
- {
-+	struct rfkill_data *data = file->private_data;
- 	struct rfkill *rfkill;
- 	struct rfkill_event ev;
- 	int ret = 0;
-@@ -1218,6 +1234,20 @@ static ssize_t rfkill_fop_write(struct file *file, const char __user *buf,
- 			if (rfkill->idx == ev.idx && rfkill->type == ev.type)
- 				rfkill_set_block(rfkill, ev.soft);
- 		break;
-+	case RFKILL_OP_AIRPLANE_MODE_INDICATOR_ACQUIRE:
-+		if (rfkill_apm_owned && !data->is_apm_owner) {
-+			ret = -EACCES;
-+		} else {
-+			rfkill_apm_owned = true;
-+			data->is_apm_owner = true;
-+		}
-+		break;
-+	case RFKILL_OP_AIRPLANE_MODE_INDICATOR_CHANGE:
-+		if (rfkill_apm_owned && data->is_apm_owner)
-+			rfkill_apm_led_trigger_event(ev.soft);
-+		else
-+			ret = -EACCES;
-+		break;
- 	default:
- 		ret = -EINVAL;
- 		break;
-@@ -1234,6 +1264,7 @@ static int rfkill_fop_release(struct inode *inode, struct file *file)
- 	struct rfkill_int_event *ev, *tmp;
  
- 	mutex_lock(&rfkill_global_mutex);
-+	rfkill_airplane_mode_release(data);
- 	list_del(&data->list);
- 	mutex_unlock(&rfkill_global_mutex);
+-       ret = ath9k_wmi_cmd(priv->wmi, WMI_REG_READ_CMDID,
++	ret = ath9k_wmi_cmd(priv->wmi, WMI_REG_READ_CMDID,
+ 			   (u8 *)tmpaddr , sizeof(u32) * count,
+ 			   (u8 *)tmpval, sizeof(u32) * count,
+ 			   100);
+@@ -275,9 +275,9 @@ static void ath9k_multi_regread(void *hw_priv, u32 *addr,
+ 			"Multiple REGISTER READ FAILED (count: %d)\n", count);
+ 	}
  
+-       for (i = 0; i < count; i++) {
+-	       val[i] = be32_to_cpu(tmpval[i]);
+-       }
++	for (i = 0; i < count; i++) {
++		val[i] = be32_to_cpu(tmpval[i]);
++	}
+ }
+ 
+ static void ath9k_regwrite_multi(struct ath_common *common)
 -- 
-2.5.0
+2.6.1
 
