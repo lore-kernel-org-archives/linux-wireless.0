@@ -1,67 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.243]:40813 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1424646AbcBRHeE (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:42548 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751896AbcB2VdB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 18 Feb 2016 02:34:04 -0500
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>,
-	Chris Park <chris.park@atmel.com>
-Subject: [PATCH 24/24] staging: wilc1000: moves LINUX_RX_SIZE, LINUX_TX_SIZE
-Date: Thu, 18 Feb 2016 16:27:35 +0900
-Message-ID: <1455780455-21365-24-git-send-email-leo.kim@atmel.com> (sfid-20160218_083409_373578_A3B6303B)
-In-Reply-To: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-References: <1455780455-21365-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 29 Feb 2016 16:33:01 -0500
+Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Maya Erez <qca_merez@qca.qualcomm.com>
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Subject: [PATCH 03/15] wil6210: Set permanent MAC address to wiphy
+Date: Mon, 29 Feb 2016 23:32:38 +0200
+Message-Id: <1456781570-16552-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160229_223306_180073_BF46A72A)
+In-Reply-To: <1456781570-16552-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1456781570-16552-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chris Park <chris.park@atmel.com>
+From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
 
-This patch moves LINUX_RX_SIZE and LINUX_TX_SIZE to wilc_wlan.h file
-because there are only used to wilc_wlan.c file.
+MAC address of wil6210 was not set in wiphy
 
-Signed-off-by: Chris Park <chris.park@atmel.com>
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/linux_wlan_common.h | 4 ----
- drivers/staging/wilc1000/wilc_wlan.h         | 3 +++
- 2 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/wil6210/main.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan_common.h b/drivers/staging/wilc1000/linux_wlan_common.h
-index 51601aa..aa2c026 100644
---- a/drivers/staging/wilc1000/linux_wlan_common.h
-+++ b/drivers/staging/wilc1000/linux_wlan_common.h
-@@ -1,10 +1,6 @@
- #ifndef LINUX_WLAN_COMMON_H
- #define LINUX_WLAN_COMMON_H
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 35db994..997a740 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -627,6 +627,7 @@ void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r)
+ static int wil_get_bl_info(struct wil6210_priv *wil)
+ {
+ 	struct net_device *ndev = wil_to_ndev(wil);
++	struct wiphy *wiphy = wil_to_wiphy(wil);
+ 	union {
+ 		struct bl_dedicated_registers_v0 bl0;
+ 		struct bl_dedicated_registers_v1 bl1;
+@@ -671,6 +672,7 @@ static int wil_get_bl_info(struct wil6210_priv *wil)
+ 	}
  
--#define LINUX_RX_SIZE	(96 * 1024)
--#define LINUX_TX_SIZE	(64 * 1024)
--
--
- #define WILC_MULTICAST_TABLE_SIZE	8
+ 	ether_addr_copy(ndev->perm_addr, mac);
++	ether_addr_copy(wiphy->perm_addr, mac);
+ 	if (!is_valid_ether_addr(ndev->dev_addr))
+ 		ether_addr_copy(ndev->dev_addr, mac);
  
- #if defined(BEAGLE_BOARD)
-diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
-index 06d02ab..792d338 100644
---- a/drivers/staging/wilc1000/wilc_wlan.h
-+++ b/drivers/staging/wilc1000/wilc_wlan.h
-@@ -128,6 +128,9 @@
- #define WILC_PLL_TO_SPI		2
- #define ABORT_INT		BIT(31)
- 
-+#define LINUX_RX_SIZE		(96 * 1024)
-+#define LINUX_TX_SIZE		(64 * 1024)
-+
- /*******************************************/
- /*        E0 and later Interrupt flags.    */
- /*******************************************/
 -- 
-1.9.1
+1.8.5.2
 
