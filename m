@@ -1,52 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:37573 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751798AbcCGGER convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:58068 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753964AbcCAPIw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2016 01:04:17 -0500
-Received: by mail-wm0-f52.google.com with SMTP id p65so57398028wmp.0
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 22:04:16 -0800 (PST)
+	Tue, 1 Mar 2016 10:08:52 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: Re: [PATCH 12/15] wil6210: clean ioctl debug message
+References: <1456781570-16552-1-git-send-email-qca_merez@qca.qualcomm.com>
+	<1456781570-16552-13-git-send-email-qca_merez@qca.qualcomm.com>
+Date: Tue, 01 Mar 2016 17:08:46 +0200
+In-Reply-To: <1456781570-16552-13-git-send-email-qca_merez@qca.qualcomm.com>
+	(Maya Erez's message of "Mon, 29 Feb 2016 23:32:47 +0200")
+Message-ID: <87bn6yme0x.fsf@purkki.adurom.net> (sfid-20160301_160856_056540_70F1D179)
 MIME-Version: 1.0
-In-Reply-To: <87ziubvfzm.fsf@kamboji.qca.qualcomm.com>
-References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
-	<1456828376-2795-1-git-send-email-michal.kazior@tieto.com>
-	<1456828376-2795-8-git-send-email-michal.kazior@tieto.com>
-	<87ziubvfzm.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 7 Mar 2016 07:04:16 +0100
-Message-ID: <CA+BoTQm=vskz3WhSZjQcMLscWEs4NVoM37hpoYHMiaQb0fYyAw@mail.gmail.com> (sfid-20160307_070421_255783_FDF8AD10)
-Subject: Re: [PATCH v2 07/11] ath10k: implement wake_tx_queue
-From: Michal Kazior <michal.kazior@tieto.com>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 6 March 2016 at 15:27, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
-> Michal Kazior <michal.kazior@tieto.com> writes:
+Maya Erez <qca_merez@qca.qualcomm.com> writes:
+
+> From: Lior David <qca_liord@qca.qualcomm.com>
 >
->> This implements very basic support for software
->> queueing. It also contains some knobs that will be
->> patched later.
->>
->> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+> Fix a debug message related to IOCTL that was incorrectly logged
+> with the MISC category, and move it inside wil_ioctl so it will
+> always be logged even if we call wil_ioctl from other places.
 >
-> Oddly this patch introduces a new warning:
->
-> drivers/net/wireless/ath/ath10k/mac.c: In function ath10k_mac_op_tx:
-> drivers/net/wireless/ath/ath10k/mac.c:3949:29: warning: is_mgmt may be used uninitialized in this function [-Wuninitialized]
->
-> But I think that's just a false warning, most likely because my gcc is
-> ancient. Do you agree?
+> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 
-Yes, I agree. It must be the fact is_mgmt is set/used across two
-is_htt condition branches.
+[...]
 
+> --- a/drivers/net/wireless/ath/wil6210/ioctl.c
+> +++ b/drivers/net/wireless/ath/wil6210/ioctl.c
+> @@ -161,13 +161,20 @@ out_free:
+>  
+>  int wil_ioctl(struct wil6210_priv *wil, void __user *data, int cmd)
+>  {
+> +	int ret;
+> +
+>  	switch (cmd) {
+>  	case WIL_IOCTL_MEMIO:
+> -		return wil_ioc_memio_dword(wil, data);
+> +		ret = wil_ioc_memio_dword(wil, data);
+> +		break;
+>  	case WIL_IOCTL_MEMIO_BLOCK:
+> -		return wil_ioc_memio_block(wil, data);
+> +		ret = wil_ioc_memio_block(wil, data);
+> +		break;
+>  	default:
+>  		wil_dbg_ioctl(wil, "Unsupported IOCTL 0x%04x\n", cmd);
+>  		return -ENOIOCTLCMD;
+>  	}
+> +
+> +	wil_dbg_ioctl(wil, "ioctl(0x%04x) -> %d\n", cmd, ret);
+> +	return ret;
+>  }
 
-> gcc (Ubuntu/Linaro 4.6.3-1ubuntu5) 4.6.3
+ioctl interfaces don't belong to wireless drivers and this should be
+converted something else, like debugfs. I think there was a discussion
+about this a year ago or so. I can take this patch still but please
+replace this interface altogether.
 
-gcc (Debian 4.9.2-10) 4.9.2 -- no warning for me.
-
-
-Michał
+-- 
+Kalle Valo
