@@ -1,122 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f66.google.com ([209.85.192.66]:33481 "EHLO
-	mail-qg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754470AbcCSCLu (ORCPT
+Received: from mail-lf0-f46.google.com ([209.85.215.46]:32830 "EHLO
+	mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753080AbcCAKcW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 22:11:50 -0400
-Received: by mail-qg0-f66.google.com with SMTP id y89so8715941qge.0
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2016 19:11:49 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 2/5] mac80211: mesh: use hlist for rmc cache
-Date: Fri, 18 Mar 2016 22:11:29 -0400
-Message-Id: <1458353492-8654-3-git-send-email-me@bobcopeland.com> (sfid-20160319_031157_962544_03BEA0D6)
-In-Reply-To: <1458353492-8654-1-git-send-email-me@bobcopeland.com>
-References: <1458353492-8654-1-git-send-email-me@bobcopeland.com>
+	Tue, 1 Mar 2016 05:32:22 -0500
+Received: by mail-lf0-f46.google.com with SMTP id v124so17124231lff.0
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2016 02:32:21 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 09/11] ath10k: store txq in skb_cb
+Date: Tue,  1 Mar 2016 11:32:54 +0100
+Message-Id: <1456828376-2795-10-git-send-email-michal.kazior@tieto.com> (sfid-20160301_115949_763253_98EEBA50)
+In-Reply-To: <1456828376-2795-1-git-send-email-michal.kazior@tieto.com>
+References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
+ <1456828376-2795-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The RMC cache has 256 list heads plus a u32, which puts it at the
-unfortunate size of 4104 bytes with padding.  kmalloc() will then
-round this up to the next power-of-two, so we wind up actually
-using two pages here where most of the second is wasted.
+This will be necessary for later.
 
-Switch to hlist heads here to reduce the structure size down to
-fit within a page.
-
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- net/mac80211/mesh.c | 18 ++++++++++--------
- net/mac80211/mesh.h |  4 ++--
- 2 files changed, 12 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.h |  1 +
+ drivers/net/wireless/ath/ath10k/mac.c  | 19 +++++++++++++++++--
+ 2 files changed, 18 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
-index d0d8eeaa8129..1a2aaf461e98 100644
---- a/net/mac80211/mesh.c
-+++ b/net/mac80211/mesh.c
-@@ -174,22 +174,23 @@ int mesh_rmc_init(struct ieee80211_sub_if_data *sdata)
- 		return -ENOMEM;
- 	sdata->u.mesh.rmc->idx_mask = RMC_BUCKETS - 1;
- 	for (i = 0; i < RMC_BUCKETS; i++)
--		INIT_LIST_HEAD(&sdata->u.mesh.rmc->bucket[i]);
-+		INIT_HLIST_HEAD(&sdata->u.mesh.rmc->bucket[i]);
- 	return 0;
- }
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 7df35628ca35..89f789f3e5b4 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -98,6 +98,7 @@ struct ath10k_skb_cb {
+ 	u8 eid;
+ 	u16 msdu_id;
+ 	struct ieee80211_vif *vif;
++	struct ieee80211_txq *txq;
+ } __packed;
  
- void mesh_rmc_free(struct ieee80211_sub_if_data *sdata)
+ struct ath10k_skb_rxcb {
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 900c64b65b43..8d02d53fdc2c 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3307,6 +3307,7 @@ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar,
+ 
+ static void ath10k_mac_tx_h_fill_cb(struct ath10k *ar,
+ 				    struct ieee80211_vif *vif,
++				    struct ieee80211_txq *txq,
+ 				    struct sk_buff *skb)
  {
- 	struct mesh_rmc *rmc = sdata->u.mesh.rmc;
--	struct rmc_entry *p, *n;
-+	struct rmc_entry *p;
-+	struct hlist_node *n;
- 	int i;
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+@@ -3323,6 +3324,7 @@ static void ath10k_mac_tx_h_fill_cb(struct ath10k *ar,
+ 		cb->flags |= ATH10K_SKB_F_QOS;
  
- 	if (!sdata->u.mesh.rmc)
- 		return;
- 
- 	for (i = 0; i < RMC_BUCKETS; i++) {
--		list_for_each_entry_safe(p, n, &rmc->bucket[i], list) {
--			list_del(&p->list);
-+		hlist_for_each_entry_safe(p, n, &rmc->bucket[i], list) {
-+			hlist_del(&p->list);
- 			kmem_cache_free(rm_cache, p);
- 		}
- 	}
-@@ -218,7 +219,8 @@ int mesh_rmc_check(struct ieee80211_sub_if_data *sdata,
- 	u32 seqnum = 0;
- 	int entries = 0;
- 	u8 idx;
--	struct rmc_entry *p, *n;
-+	struct rmc_entry *p;
-+	struct hlist_node *n;
- 
- 	if (!rmc)
- 		return -1;
-@@ -226,11 +228,11 @@ int mesh_rmc_check(struct ieee80211_sub_if_data *sdata,
- 	/* Don't care about endianness since only match matters */
- 	memcpy(&seqnum, &mesh_hdr->seqnum, sizeof(mesh_hdr->seqnum));
- 	idx = le32_to_cpu(mesh_hdr->seqnum) & rmc->idx_mask;
--	list_for_each_entry_safe(p, n, &rmc->bucket[idx], list) {
-+	hlist_for_each_entry_safe(p, n, &rmc->bucket[idx], list) {
- 		++entries;
- 		if (time_after(jiffies, p->exp_time) ||
- 		    entries == RMC_QUEUE_MAX_LEN) {
--			list_del(&p->list);
-+			hlist_del(&p->list);
- 			kmem_cache_free(rm_cache, p);
- 			--entries;
- 		} else if ((seqnum == p->seqnum) && ether_addr_equal(sa, p->sa))
-@@ -244,7 +246,7 @@ int mesh_rmc_check(struct ieee80211_sub_if_data *sdata,
- 	p->seqnum = seqnum;
- 	p->exp_time = jiffies + RMC_TIMEOUT;
- 	memcpy(p->sa, sa, ETH_ALEN);
--	list_add(&p->list, &rmc->bucket[idx]);
-+	hlist_add_head(&p->list, &rmc->bucket[idx]);
- 	return 0;
+ 	cb->vif = vif;
++	cb->txq = txq;
  }
  
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index e1415c952e9c..bc3f9a32b5a4 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -158,14 +158,14 @@ struct mesh_table {
-  * that are found in the cache.
-  */
- struct rmc_entry {
--	struct list_head list;
-+	struct hlist_node list;
- 	u32 seqnum;
- 	unsigned long exp_time;
- 	u8 sa[ETH_ALEN];
- };
+ bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar)
+@@ -3633,6 +3635,9 @@ static void ath10k_mac_txq_init(struct ieee80211_txq *txq)
+ static void ath10k_mac_txq_unref(struct ath10k *ar, struct ieee80211_txq *txq)
+ {
+ 	struct ath10k_txq *artxq = (void *)txq->drv_priv;
++	struct ath10k_skb_cb *cb;
++	struct sk_buff *msdu;
++	int msdu_id;
  
- struct mesh_rmc {
--	struct list_head bucket[RMC_BUCKETS];
-+	struct hlist_head bucket[RMC_BUCKETS];
- 	u32 idx_mask;
- };
+ 	if (!txq)
+ 		return;
+@@ -3641,6 +3646,14 @@ static void ath10k_mac_txq_unref(struct ath10k *ar, struct ieee80211_txq *txq)
+ 	if (!list_empty(&artxq->list))
+ 		list_del_init(&artxq->list);
+ 	spin_unlock_bh(&ar->txqs_lock);
++
++	spin_lock_bh(&ar->htt.tx_lock);
++	idr_for_each_entry(&ar->htt.pending_tx, msdu, msdu_id) {
++		cb = ATH10K_SKB_CB(msdu);
++		if (cb->txq == txq)
++			cb->txq = NULL;
++	}
++	spin_unlock_bh(&ar->htt.tx_lock);
+ }
  
+ static bool ath10k_mac_tx_can_push(struct ieee80211_hw *hw,
+@@ -3679,7 +3692,7 @@ static int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
+ 		return -ENOENT;
+ 	}
+ 
+-	ath10k_mac_tx_h_fill_cb(ar, vif, skb);
++	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb);
+ 
+ 	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
+ 	txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
+@@ -3909,6 +3922,7 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct ieee80211_vif *vif = info->control.vif;
+ 	struct ieee80211_sta *sta = control->sta;
++	struct ieee80211_txq *txq = NULL;
+ 	struct ieee80211_hdr *hdr = (void *)skb->data;
+ 	enum ath10k_hw_txrx_mode txmode;
+ 	enum ath10k_mac_tx_path txpath;
+@@ -3917,7 +3931,7 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
+ 	bool is_presp;
+ 	int ret;
+ 
+-	ath10k_mac_tx_h_fill_cb(ar, vif, skb);
++	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb);
+ 
+ 	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
+ 	txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
+@@ -4985,6 +4999,7 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
+ 	spin_unlock_bh(&ar->data_lock);
+ 
+ 	ath10k_peer_cleanup(ar, arvif->vdev_id);
++	ath10k_mac_txq_unref(ar, vif->txq);
+ 
+ 	if (vif->type == NL80211_IFTYPE_MONITOR) {
+ 		ar->monitor_arvif = NULL;
 -- 
-2.6.1
+2.1.4
 
