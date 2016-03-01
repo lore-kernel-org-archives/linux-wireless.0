@@ -1,123 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f46.google.com ([209.85.215.46]:32830 "EHLO
-	mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753080AbcCAKcW (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31443 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752991AbcCARSv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 05:32:22 -0500
-Received: by mail-lf0-f46.google.com with SMTP id v124so17124231lff.0
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2016 02:32:21 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 09/11] ath10k: store txq in skb_cb
-Date: Tue,  1 Mar 2016 11:32:54 +0100
-Message-Id: <1456828376-2795-10-git-send-email-michal.kazior@tieto.com> (sfid-20160301_115949_763253_98EEBA50)
-In-Reply-To: <1456828376-2795-1-git-send-email-michal.kazior@tieto.com>
-References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
- <1456828376-2795-1-git-send-email-michal.kazior@tieto.com>
+	Tue, 1 Mar 2016 12:18:51 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH v2 15/15] wil6210: add oob_mode module parameter
+Date: Tue,  1 Mar 2016 19:18:18 +0200
+Message-Id: <1456852698-26808-16-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160301_181905_188279_3DCAFB18)
+In-Reply-To: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will be necessary for later.
+From: Lior David <qca_liord@qca.qualcomm.com>
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Add module parameter oob_mode. Takes effect the next time
+the interface is brought up and FW is loaded. Puts the FW
+in special "out of the box" (OOB) mode which is used for
+diagnostics and certification.
+
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h |  1 +
- drivers/net/wireless/ath/ath10k/mac.c  | 19 +++++++++++++++++--
- 2 files changed, 18 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wil6210/main.c    | 16 ++++++++++++++++
+ drivers/net/wireless/ath/wil6210/wil6210.h |  1 +
+ 2 files changed, 17 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 7df35628ca35..89f789f3e5b4 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -98,6 +98,7 @@ struct ath10k_skb_cb {
- 	u8 eid;
- 	u16 msdu_id;
- 	struct ieee80211_vif *vif;
-+	struct ieee80211_txq *txq;
- } __packed;
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index c2a0a66..8d4e884 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -27,6 +27,11 @@ bool debug_fw; /* = false; */
+ module_param(debug_fw, bool, S_IRUGO);
+ MODULE_PARM_DESC(debug_fw, " do not perform card reset. For FW debug");
  
- struct ath10k_skb_rxcb {
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 900c64b65b43..8d02d53fdc2c 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3307,6 +3307,7 @@ static void ath10k_tx_h_add_p2p_noa_ie(struct ath10k *ar,
- 
- static void ath10k_mac_tx_h_fill_cb(struct ath10k *ar,
- 				    struct ieee80211_vif *vif,
-+				    struct ieee80211_txq *txq,
- 				    struct sk_buff *skb)
- {
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
-@@ -3323,6 +3324,7 @@ static void ath10k_mac_tx_h_fill_cb(struct ath10k *ar,
- 		cb->flags |= ATH10K_SKB_F_QOS;
- 
- 	cb->vif = vif;
-+	cb->txq = txq;
- }
- 
- bool ath10k_mac_tx_frm_has_freq(struct ath10k *ar)
-@@ -3633,6 +3635,9 @@ static void ath10k_mac_txq_init(struct ieee80211_txq *txq)
- static void ath10k_mac_txq_unref(struct ath10k *ar, struct ieee80211_txq *txq)
- {
- 	struct ath10k_txq *artxq = (void *)txq->drv_priv;
-+	struct ath10k_skb_cb *cb;
-+	struct sk_buff *msdu;
-+	int msdu_id;
- 
- 	if (!txq)
- 		return;
-@@ -3641,6 +3646,14 @@ static void ath10k_mac_txq_unref(struct ath10k *ar, struct ieee80211_txq *txq)
- 	if (!list_empty(&artxq->list))
- 		list_del_init(&artxq->list);
- 	spin_unlock_bh(&ar->txqs_lock);
++static bool oob_mode;
++module_param(oob_mode, bool, S_IRUGO);
++MODULE_PARM_DESC(oob_mode,
++		 " enable out of the box (OOB) mode in FW, for diagnostics and certification");
 +
-+	spin_lock_bh(&ar->htt.tx_lock);
-+	idr_for_each_entry(&ar->htt.pending_tx, msdu, msdu_id) {
-+		cb = ATH10K_SKB_CB(msdu);
-+		if (cb->txq == txq)
-+			cb->txq = NULL;
-+	}
-+	spin_unlock_bh(&ar->htt.tx_lock);
+ bool no_fw_recovery;
+ module_param(no_fw_recovery, bool, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(no_fw_recovery, " disable automatic FW error recovery");
+@@ -547,6 +552,16 @@ static inline void wil_release_cpu(struct wil6210_priv *wil)
+ 	wil_w(wil, RGF_USER_USER_CPU_0, 1);
  }
  
- static bool ath10k_mac_tx_can_push(struct ieee80211_hw *hw,
-@@ -3679,7 +3692,7 @@ static int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
- 		return -ENOENT;
- 	}
++static void wil_set_oob_mode(struct wil6210_priv *wil, bool enable)
++{
++	wil_info(wil, "%s: enable=%d\n", __func__, enable);
++	if (enable) {
++		wil_s(wil, RGF_USER_USAGE_6, BIT_USER_OOB_MODE);
++	} else {
++		wil_c(wil, RGF_USER_USAGE_6, BIT_USER_OOB_MODE);
++	}
++}
++
+ static int wil_target_reset(struct wil6210_priv *wil)
+ {
+ 	int delay = 0;
+@@ -823,6 +838,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 	if (rc)
+ 		return rc;
  
--	ath10k_mac_tx_h_fill_cb(ar, vif, skb);
-+	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb);
- 
- 	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
- 	txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
-@@ -3909,6 +3922,7 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_vif *vif = info->control.vif;
- 	struct ieee80211_sta *sta = control->sta;
-+	struct ieee80211_txq *txq = NULL;
- 	struct ieee80211_hdr *hdr = (void *)skb->data;
- 	enum ath10k_hw_txrx_mode txmode;
- 	enum ath10k_mac_tx_path txpath;
-@@ -3917,7 +3931,7 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
- 	bool is_presp;
- 	int ret;
- 
--	ath10k_mac_tx_h_fill_cb(ar, vif, skb);
-+	ath10k_mac_tx_h_fill_cb(ar, vif, txq, skb);
- 
- 	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
- 	txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
-@@ -4985,6 +4999,7 @@ static void ath10k_remove_interface(struct ieee80211_hw *hw,
- 	spin_unlock_bh(&ar->data_lock);
- 
- 	ath10k_peer_cleanup(ar, arvif->vdev_id);
-+	ath10k_mac_txq_unref(ar, vif->txq);
- 
- 	if (vif->type == NL80211_IFTYPE_MONITOR) {
- 		ar->monitor_arvif = NULL;
++	wil_set_oob_mode(wil, oob_mode);
+ 	if (load_fw) {
+ 		wil_info(wil, "Use firmware <%s> + board <%s>\n", WIL_FW_NAME,
+ 			 WIL_FW2_NAME);
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index d18c448..4d699ea4 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -132,6 +132,7 @@ struct RGF_ICR {
+ /* registers - FW addresses */
+ #define RGF_USER_USAGE_1		(0x880004)
+ #define RGF_USER_USAGE_6		(0x880018)
++	#define BIT_USER_OOB_MODE		BIT(31)
+ #define RGF_USER_HW_MACHINE_STATE	(0x8801dc)
+ 	#define HW_MACHINE_BOOT_DONE	(0x3fffffd)
+ #define RGF_USER_USER_CPU_0		(0x8801e0)
 -- 
-2.1.4
+1.8.5.2
 
