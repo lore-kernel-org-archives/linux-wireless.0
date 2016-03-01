@@ -1,56 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f48.google.com ([209.85.215.48]:33299 "EHLO
-	mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752873AbcCBMwl (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31382 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751181AbcCARSX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 07:52:41 -0500
-Received: by mail-lf0-f48.google.com with SMTP id v124so41129776lff.0
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Mar 2016 04:52:40 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <56D6C3C4.4000702@student.tuwien.ac.at>
-References: <56D6C3C4.4000702@student.tuwien.ac.at>
-Date: Wed, 2 Mar 2016 14:52:39 +0200
-Message-ID: <CANUX_P3kW2gKGVqRfZJB+PTEZJ2K8J=1UnqTb0-G92f_VRw0bw@mail.gmail.com> (sfid-20160302_135251_806309_77D592B4)
-Subject: Re: iwlwifi support of 802.11k RRM (Radio Resource Mangament)
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Stefan Feirer <e0926020@student.tuwien.ac.at>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 1 Mar 2016 12:18:23 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v2 00/15] wil6210 patches
+Date: Tue,  1 Mar 2016 19:18:03 +0200
+Message-Id: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160301_181831_124584_E4C2B620)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 2, 2016 at 12:43 PM, Stefan Feirer
-<e0926020@student.tuwien.ac.at> wrote:
->
-> Hello,
->
-> I'm trying to make different wifi roaming tests with the 802.11 amandments 802.11k and 802.11r.
-> I use the intel wifi chipset Intel Corporation Centrino Ultimate-N 6300 and two Aerohive Access Points AP141 (with both 802.11k and 802.11r enabled).
-> With using wpa_supplicant (Version 2.5) and wpa_cli (Version 2.5) I was able to connect and roam between the APs by entering the command "roam <mac>" and actually an 802.11r roam was performed. Therefore the nl80211 and iwlwifi driver was used.
-> So fast roaming seems to work properly, but I faced troubles with Radio Resource Management (802.11k)
->
-> Transmitting the command "neighbor_rep_request" in wpa_cli failed. I checked to log files and found the following lines:
->
-> wlan0: Control interface command 'NEIGHBOR_REP_REQUEST'
-> RRM: No RRM in current connection.
->
-> and
->
-> RRM: Determining whether RRM can be used - device support: 0x0
-> RRM: Insufficient RRM support in driver - do not use RRM
->
-> Now my question would be how to enable RRM, maybe using the iw-command?
-> I could not find any documenation or examples according to RRM.
-> The tests were performed with Ubuntu and Linux Kernel 3.13.0-79.
->
+Changes in V2:
+- Fixed oob_mode module parameter description
 
-Look at  https://patchwork.kernel.org/patch/8421041/
-If the suggestion of Johannes is the direction taken (which happens
-quite often in mac8021..) then you'll get it.
+This set of patches includes:
+- wil6210 bug fixes
+- P2P support
+- switch to generated wmi.h
+- replay attack detection
 
-> I hope there is someone who can help me!
-> Thanks, Stefan Feirer
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dedy Lansky (1):
+  wil6210: p2p initial support
+
+Hamad Kadmany (1):
+  wil6210: Set permanent MAC address to wiphy
+
+Lior David (9):
+  wil6210: add support for discovery mode during scan
+  wil6210: switch to generated wmi.h
+  wil6210: basic PBSS/PCP support
+  wil6210: P2P_DEVICE virtual interface support
+  wil6210: fix race conditions in p2p listen and search
+  wil6210: clean ioctl debug message
+  wil6210: fix no_fw_recovery mode with change_virtual_intf
+  wil6210: pass is_go flag to firmware
+  wil6210: add oob_mode module parameter
+
+Maya Erez (3):
+  wil6210: remove BACK RX and TX workers
+  wil6210: AP: prevent connecting to already connected station
+  wil6210: add support for platform specific notification events
+
+Vladimir Kondratiev (1):
+  wil6210: replay attack detection
+
+ drivers/net/wireless/ath/wil6210/Makefile       |    1 +
+ drivers/net/wireless/ath/wil6210/cfg80211.c     |  332 +++++-
+ drivers/net/wireless/ath/wil6210/debugfs.c      |   55 +-
+ drivers/net/wireless/ath/wil6210/interrupt.c    |    6 +-
+ drivers/net/wireless/ath/wil6210/ioctl.c        |   11 +-
+ drivers/net/wireless/ath/wil6210/main.c         |   81 +-
+ drivers/net/wireless/ath/wil6210/netdev.c       |    7 +-
+ drivers/net/wireless/ath/wil6210/p2p.c          |  253 +++++
+ drivers/net/wireless/ath/wil6210/pcie_bus.c     |    1 +
+ drivers/net/wireless/ath/wil6210/rx_reorder.c   |  204 +---
+ drivers/net/wireless/ath/wil6210/trace.h        |   19 +-
+ drivers/net/wireless/ath/wil6210/txrx.c         |   67 +-
+ drivers/net/wireless/ath/wil6210/txrx.h         |   12 +-
+ drivers/net/wireless/ath/wil6210/wil6210.h      |  110 +-
+ drivers/net/wireless/ath/wil6210/wil_platform.h |    8 +-
+ drivers/net/wireless/ath/wil6210/wmi.c          |  134 ++-
+ drivers/net/wireless/ath/wil6210/wmi.h          | 1264 +++++++++++------------
+ 17 files changed, 1594 insertions(+), 971 deletions(-)
+ create mode 100644 drivers/net/wireless/ath/wil6210/p2p.c
+
+-- 
+1.8.5.2
+
