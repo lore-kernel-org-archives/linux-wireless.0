@@ -1,129 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:33165 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752059AbcCVWQT (ORCPT
+Received: from mail-io0-f170.google.com ([209.85.223.170]:33342 "EHLO
+	mail-io0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751209AbcCAImQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2016 18:16:19 -0400
-Date: Tue, 22 Mar 2016 15:16:15 -0700
-From: Tina Ruchandani <ruchandani.tina@gmail.com>
-To: y2038@lists.linaro.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	arnd@arndb.de, linux-kernel@vger.kernel.org,
-	Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v2] prism54: isl_38xx: Replace 'struct timeval'
-Message-ID: <20160322221615.GA55727@localhost> (sfid-20160322_231648_062788_1B3B46EB)
+	Tue, 1 Mar 2016 03:42:16 -0500
+Received: by mail-io0-f170.google.com with SMTP id n190so12062107iof.0
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2016 00:42:16 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1456739065-470-1-git-send-email-arend@broadcom.com>
+References: <1456739065-470-1-git-send-email-arend@broadcom.com>
+Date: Tue, 1 Mar 2016 10:42:15 +0200
+Message-ID: <CAB3XZEehKfMzRgfbDkwWieKrzAAXwBcNbAMNGfhn6qBRAktGdA@mail.gmail.com> (sfid-20160301_094219_833498_D90406F3)
+Subject: Re: [PATCH V10 1/2] nl80211: add feature for BSS selection support
+From: Eliad Peller <eliad@wizery.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-'struct timeval' uses a 32-bit seconds field which will overflow in
-year 2038 and beyond. This patch is part of a larger effort to remove
-all instances of 'struct timeval' from the kernel and replace them
-with 64-bit timekeeping variables.
-The correctness of the code isn't affected by this patch - the seconds
-value being printed would earlier be wrong due to overflow in timeval,
-and now it gets truncated to 32-bit due to the 'long' cast used on
-tv.sec field to prevent compiler warnings. Truly fixing this would
-require changing the debug print to print more than 8 digits and
-use a different specifier from %li.
-The patch was build-tested / debugged by removing the
-"if VERBOSE > SHOW_ERROR_MESSAGES" guards.
+On Mon, Feb 29, 2016 at 11:44 AM, Arend van Spriel <arend@broadcom.com> wrote:
+> Introducing a new feature that the driver can use to
+> indicate the driver/firmware supports configuration of BSS
+> selection criteria upon CONNECT command. This can be useful
+> when multiple BSS-es are found belonging to the same ESS,
+> ie. Infra-BSS with same SSID. The criteria can then be used to
+> offload selection of a preferred BSS.
+>
+[...]
 
-Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
-Suggested-by: Arnd Bergmann <arnd@arndb.de>
---
-Changes in v2:
-- Changed printf specifier as suggested by Arnd Bergmann to
-avoid truncation.
----
- drivers/net/wireless/intersil/prism54/isl_38xx.c | 35 ++++++++++++------------
- 1 file changed, 18 insertions(+), 17 deletions(-)
+> +       /* only do bss selection when no BSSID is specified. */
+> +       if (!connect.bssid && info->attrs[NL80211_ATTR_BSS_SELECT]) {
+> +               if (connect.bssid) {
 
-diff --git a/drivers/net/wireless/intersil/prism54/isl_38xx.c b/drivers/net/wireless/intersil/prism54/isl_38xx.c
-index 333c1a2..6700387 100644
---- a/drivers/net/wireless/intersil/prism54/isl_38xx.c
-+++ b/drivers/net/wireless/intersil/prism54/isl_38xx.c
-@@ -19,6 +19,7 @@
- #include <linux/module.h>
- #include <linux/types.h>
- #include <linux/delay.h>
-+#include <linux/ktime.h>
+i guess you wanted to remove the !connect.bssid condition in the outer if :)
+other than that, looks go to me.
 
- #include <asm/uaccess.h>
- #include <asm/io.h>
-@@ -113,7 +114,7 @@ isl38xx_trigger_device(int asleep, void __iomem *device_base)
-
- #if VERBOSE > SHOW_ERROR_MESSAGES
- 	u32 counter = 0;
--	struct timeval current_time;
-+	struct timespec64 current_ts64;
- 	DEBUG(SHOW_FUNCTION_CALLS, "isl38xx trigger device\n");
- #endif
-
-@@ -121,22 +122,22 @@ isl38xx_trigger_device(int asleep, void __iomem *device_base)
- 	if (asleep) {
- 		/* device is in powersave, trigger the device for wakeup */
- #if VERBOSE > SHOW_ERROR_MESSAGES
--		do_gettimeofday(&current_time);
--		DEBUG(SHOW_TRACING, "%08li.%08li Device wakeup triggered\n",
--		      current_time.tv_sec, (long)current_time.tv_usec);
-+		ktime_get_real_ts64(&current_ts64);
-+		DEBUG(SHOW_TRACING, "%lld.%09ld Device wakeup triggered\n",
-+		      (s64)current_ts64.tv_sec, current_ts64.tv_nsec);
-
--		DEBUG(SHOW_TRACING, "%08li.%08li Device register read %08x\n",
--		      current_time.tv_sec, (long)current_time.tv_usec,
-+		DEBUG(SHOW_TRACING, "%lld.%09ld Device register read %08x\n",
-+		      (s64)current_ts64.tv_sec, current_ts64.tv_nsec,
- 		      readl(device_base + ISL38XX_CTRL_STAT_REG));
- #endif
-
- 		reg = readl(device_base + ISL38XX_INT_IDENT_REG);
- 		if (reg == 0xabadface) {
- #if VERBOSE > SHOW_ERROR_MESSAGES
--			do_gettimeofday(&current_time);
-+			ktime_get_real_ts64(&current_ts64);
- 			DEBUG(SHOW_TRACING,
--			      "%08li.%08li Device register abadface\n",
--			      current_time.tv_sec, (long)current_time.tv_usec);
-+			      "%lld.%09ld Device register abadface\n",
-+			      (s64)current_ts64.tv_sec, current_ts64.tv_nsec);
- #endif
- 			/* read the Device Status Register until Sleepmode bit is set */
- 			while (reg = readl(device_base + ISL38XX_CTRL_STAT_REG),
-@@ -149,13 +150,13 @@ isl38xx_trigger_device(int asleep, void __iomem *device_base)
-
- #if VERBOSE > SHOW_ERROR_MESSAGES
- 			DEBUG(SHOW_TRACING,
--			      "%08li.%08li Device register read %08x\n",
--			      current_time.tv_sec, (long)current_time.tv_usec,
-+			      "%lld.%09ld Device register read %08x\n",
-+			      (s64)current_ts64.tv_sec, current_ts64.tv_nsec,
- 			      readl(device_base + ISL38XX_CTRL_STAT_REG));
--			do_gettimeofday(&current_time);
-+			ktime_get_real_ts64(&current_ts64);
- 			DEBUG(SHOW_TRACING,
--			      "%08li.%08li Device asleep counter %i\n",
--			      current_time.tv_sec, (long)current_time.tv_usec,
-+			      "%lld.%09ld Device asleep counter %i\n",
-+			      (s64)current_ts64.tv_sec, current_ts64.tv_nsec,
- 			      counter);
- #endif
- 		}
-@@ -168,9 +169,9 @@ isl38xx_trigger_device(int asleep, void __iomem *device_base)
-
- 		/* perform another read on the Device Status Register */
- 		reg = readl(device_base + ISL38XX_CTRL_STAT_REG);
--		do_gettimeofday(&current_time);
--		DEBUG(SHOW_TRACING, "%08li.%08li Device register read %08x\n",
--		      current_time.tv_sec, (long)current_time.tv_usec, reg);
-+		ktime_get_real_ts64(&current_ts64);
-+		DEBUG(SHOW_TRACING, "%lld.%00ld Device register read %08x\n",
-+		      (s64)current_ts64.tv_sec, current_ts64.tv_nsec, reg);
- #endif
- 	} else {
- 		/* device is (still) awake  */
---
-2.8.0.rc3.226.g39d4020
-
+Eliad.
