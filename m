@@ -1,50 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:30993 "EHLO mga09.intel.com"
+Received: from m50-135.163.com ([123.125.50.135]:39828 "EHLO m50-135.163.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751821AbcCBV2u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 16:28:50 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 3/3] mac80211: recalc min_def chanctx even when chandef is identical
-Date: Wed,  2 Mar 2016 23:28:33 +0200
-Message-Id: <1456954113-4682-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_222853_585848_B0964FB9)
-In-Reply-To: <1456954113-4682-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1456954113-4682-1-git-send-email-emmanuel.grumbach@intel.com>
+	id S1754327AbcCAPX4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Mar 2016 10:23:56 -0500
+From: Geliang Tang <geliangtang@163.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] staging: rtl8723au: fix static checker warning
+Date: Tue,  1 Mar 2016 23:22:23 +0800
+Message-Id: <1e3c203b20c01a12078506469807a79ae6013955.1456845195.git.geliangtang@163.com> (sfid-20160301_162414_788197_8232AC2F)
+In-Reply-To: <20160223050421.GA19763@mwanda>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Arik Nemtsov <arik@wizery.com>
+Fix the following static checker warning:
 
-The min_def chanctx is affected not only by the current chandef, but
-sometimes also by other stations on the vif. There's a valid scenario
-where a TDLS peer can widen its BW, thereby causing the min_def
-to increase.
+ drivers/staging/rtl8723au/core/rtw_sta_mgt.c:365 rtw_get_stainfo23a()
+ error: potential NULL dereference 'psta'.
 
-Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Fixes: e280d71("staging: rtl8723au: use list_for_each_entry*()")
+Signed-off-by: Geliang Tang <geliangtang@163.com>
 ---
- net/mac80211/chan.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/staging/rtl8723au/core/rtw_sta_mgt.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
-index 2839811..74142d0 100644
---- a/net/mac80211/chan.c
-+++ b/net/mac80211/chan.c
-@@ -343,8 +343,10 @@ static void ieee80211_change_chanctx(struct ieee80211_local *local,
- 				     struct ieee80211_chanctx *ctx,
- 				     const struct cfg80211_chan_def *chandef)
+diff --git a/drivers/staging/rtl8723au/core/rtw_sta_mgt.c b/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
+index 22d857b..5f85ee0 100644
+--- a/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
++++ b/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
+@@ -346,7 +346,7 @@ void rtw_free_all_stainfo23a(struct rtw_adapter *padapter)
+ struct sta_info *rtw_get_stainfo23a(struct sta_priv *pstapriv, const u8 *hwaddr)
  {
--	if (cfg80211_chandef_identical(&ctx->conf.def, chandef))
-+	if (cfg80211_chandef_identical(&ctx->conf.def, chandef)) {
-+		ieee80211_recalc_chanctx_min_def(local, ctx);
- 		return;
-+	}
+ 	struct list_head *phead;
+-	struct sta_info *psta = NULL;
++	struct sta_info *pos, *psta = NULL;
+ 	u32 index;
+ 	const u8 *addr;
  
- 	WARN_ON(!cfg80211_chandef_compatible(&ctx->conf.def, chandef));
+@@ -362,7 +362,9 @@ struct sta_info *rtw_get_stainfo23a(struct sta_priv *pstapriv, const u8 *hwaddr)
  
+ 	spin_lock_bh(&pstapriv->sta_hash_lock);
+ 	phead = &pstapriv->sta_hash[index];
+-	list_for_each_entry(psta, phead, hash_list) {
++	list_for_each_entry(pos, phead, hash_list) {
++		psta = pos;
++
+ 		/*  if found the matched address */
+ 		if (ether_addr_equal(psta->hwaddr, addr))
+ 			break;
 -- 
 2.5.0
+
 
