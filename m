@@ -1,62 +1,409 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:50557 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759059AbcCDJP7 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31382 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751181AbcCARSY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 04:15:59 -0500
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-To: Luca Coelho <luca@coelho.fi>
-CC: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 1/3] cfg80211: Allow a scan request for a specific
- BSSID
-Date: Fri, 4 Mar 2016 09:15:30 +0000
-Message-ID: <20160304091528.GA3666@jouni.qca.qualcomm.com> (sfid-20160304_101616_919270_2BB65C90)
-References: <1456517569-27235-1-git-send-email-jouni@qca.qualcomm.com>
- <1457078876.28365.124.camel@coelho.fi>
-In-Reply-To: <1457078876.28365.124.camel@coelho.fi>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Tue, 1 Mar 2016 12:18:24 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v2 01/15] wil6210: remove BACK RX and TX workers
+Date: Tue,  1 Mar 2016 19:18:04 +0200
+Message-Id: <1456852698-26808-2-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160301_181918_351695_3A2C0B26)
+In-Reply-To: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCBNYXIgMDQsIDIwMTYgYXQgMTA6MDc6NTZBTSArMDIwMCwgTHVjYSBDb2VsaG8gd3Jv
-dGU6DQo+IE9uIEZyaSwgMjAxNi0wMi0yNiBhdCAyMjoxMiArMDIwMCwgSm91bmkgTWFsaW5lbiB3
-cm90ZToNCj4gPiBUaGlzIGlzIGFuIG9wdGltaXphdGlvbiBhbmQgYXMgc3VjaCwgaXQgaXMgYWNj
-ZXB0YWJsZSBmb3Igc29tZSBvZiB0aGUNCj4gPiBkcml2ZXJzIG5vdCB0byBzdXBwb3J0IHRoZSBt
-ZWNoYW5pc20uIElmIG5vdCBzdXBwb3J0ZWQsIHRoZSB3aWxkY2FyZA0KPiA+IEJTU0lEIHdpbGwg
-YmUgdXNlZCBhbmQgbW9yZSByZXNwb25zZXMgbWF5IGJlIHJlY2VpdmVkLg0KPiANCj4gUmVjZWl2
-aW5nIG1vcmUgcmVzcG9uc2VzIHRoYW4gd2hhdCB3ZSBhc2tlZCBmb3IgaXMgYWx3YXlzIHBvc3Np
-YmxlLA0KPiBiZWNhdXNlIHdlIGRvbid0IGZpbHRlciBvdXQgb3RoZXIgdGhpbmdzIHdlIG1heSBy
-ZWNlaXZlIGF0IHRoZSBzYW1lDQo+IHRpbWUuIMKgSXQncyBsaWtlIHJlcXVlc3RpbmcgZm9yIGEg
-c3BlY2lmaWMgU1NJRCwgaXQganVzdCBtZWFucyB0aGF0IHRoZQ0KPiBTU0lEIHdpbGwgYmUgdXNl
-ZCBpbiB0aGUgcHJvYmUgcmVxdWVzdHMsIGJ1dCBpdCBkb2Vzbid0IGd1YXJhbnRlZSB0aGF0DQo+
-IG90aGVyIHJlc3VsdHMgd2lsbCBub3QgYmUgcmV0dXJuZWQuDQoNClN1cmUuIFRoaXMgIm1vcmUg
-cmVzcG9uc2VzIiBpcyByZWZlcnJpbmcgdG8gbm90IGJlaW5nIGFibGUgdG8gZ2V0IHRoZQ0KYmVu
-ZWZpdCBmcm9tIHNhdmVkIGFpcnRpbWU7IG5vdCBvbiB3aGF0IHdlIG1pZ2h0IGFkZCBpbnRvIHRo
-ZSBjZmc4MDIxMQ0KQlNTIHRhYmxlLiBXZSBkb24ndCBldmVuIGhhdmUgYW4gZXhwbGljaXQgbWVj
-aGFuaXNtIGZvciByZXBvcnRpbmcNCnJlc3VsdHMgZnJvbSBhIHNpbmdsZSBzY2FuIGl0ZXJhdGlv
-bi4NCg0KPiA+IGRpZmYgLS1naXQgYS9pbmNsdWRlL3VhcGkvbGludXgvbmw4MDIxMS5oIGIvaW5j
-bHVkZS91YXBpL2xpbnV4L25sODAyMTEuaA0KPiA+IEBAIC0zMjIsNyArMzIyLDkgQEANCj4gPiDC
-oCAqIEBOTDgwMjExX0NNRF9HRVRfU0NBTjogZ2V0IHNjYW4gcmVzdWx0cw0KPiA+IMKgICogQE5M
-ODAyMTFfQ01EX1RSSUdHRVJfU0NBTjogdHJpZ2dlciBhIG5ldyBzY2FuIHdpdGggdGhlIGdpdmVu
-IHBhcmFtZXRlcnMNCj4gPiDCoCAqCSVOTDgwMjExX0FUVFJfVFhfTk9fQ0NLX1JBVEUgaXMgdXNl
-ZCB0byBkZWNpZGUgd2hldGhlciB0byBzZW5kIHRoZQ0KPiA+IC0gKglwcm9iZSByZXF1ZXN0cyBh
-dCBDQ0sgcmF0ZSBvciBub3QuDQo+ID4gKyAqCXByb2JlIHJlcXVlc3RzIGF0IENDSyByYXRlIG9y
-IG5vdC4gJU5MODAyMTFfQVRUUl9NQUMgY2FuIGJlIHVzZWQgdG8NCj4gPiArICoJc3BlY2lmeSBh
-IEJTU0lEIHRvIHNjYW4gZm9yOyBpZiBub3QgaW5jbHVkZWQsIHRoZSB3aWxkY2FyZCBCU1NJRCB3
-aWxsDQo+ID4gKyAqCWJlIHVzZWQuDQo+IA0KPiBNYXliZSB5b3UgY291bGQgYmUgZXhwbGljaXQg
-aGVyZSBhYm91dCB0aGUgcG9zc2liaWxpdHkgb2YgcmVjZWl2aW5nDQo+IG1vcmUgcmVzdWx0cyB0
-aGFuIHJlcXVlc3RlZD8NCg0KV2hpY2ggInJlY2VpdmluZyIgYXJlIHlvdSByZWZlcnJpbmcgdG8g
-aGVyZT8gSSBkb24ndCBzZWUgbXVjaCBwb2ludCBpbg0KZG9jdW1lbnRpbmcgdGhlIGFpcnRpbWUg
-b3B0aW1pemF0aW9uIGhlcmUgYW5kIGFzIGZhciBhcyByZWNlaXZpbmcNCnJlc3VsdHMgdGhyb3Vn
-aCBubDgwMjExIGlzIGNvbmNlcm5lZCwgdGhlIG9ubHkgb3B0aW9uIGZvciBpdCB0b2RheSBpcyB0
-bw0KdXNlIE5MODAyMTFfQ01EX0dFVF9TQ0FOIGFuZCB0aGF0IHJldHVybnMgdGhlIGN1cnJlbnQg
-Y29udGVudHMgb2YgdGhlDQpCU1MgdGFibGUgcmF0aGVyIHRoYW4gcmV0dXJucyBmcm9tIGFueSBz
-cGVjaWZpYyBzY2FuLCBzbyBJJ20gbm90IHN1cmUNCndoYXQgZXhhY3RseSB5b3Ugd291bGQgbGlr
-ZSB0byBhZGQgaGVyZS4NCg0KSSB3YXMgZ29pbmcgdG8gbm90ZSB0aGF0IHRoaXMgaXMgc2ltaWxh
-ciB0byBob3cgTkw4MDIxMV9BVFRSX1NDQU5fU1NJRFMNCmlzIGRvY3VtZW50ZWQsIGJ1dCBhY3R1
-YWxseSwgdGhhdCBvbmUgaXMgbm90IG1lbnRpb25lZCBhdCBhbGwgd2l0aA0KTkw4MDIxMV9DTURf
-VFJJR0dFUl9TQ0FOIGN1cnJlbnRseS4uIE5vciBpcyB0aGUgZGV0YWlscyBvZiB3aGF0DQpOTDgw
-MjExX0NNRF9HRVRfU0NBTiByZXR1cm5zLg0KIA0KLS0gDQpKb3VuaSBNYWxpbmVuICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBQR1AgaWQgRUZDODk1RkE=
+WMI synchronous handling has changed and WMI calls that provide
+a buffer for the reply are completed in the WMI interrupt context.
+This allows sending the RX and TX BACK commands from the WMI event
+handler without the need for the worker thread.
+This is a better approach as it can decrease the handshake time
+in the connect flow and prevent race conditions in case of fast
+disconnects. An example for such a race is handling of wil_back_rx_handle
+during a disconnect event, as wil_back_rx_handle is not protected by
+the wil mutex and a disconnect can be handled after sta->status is
+verified as connected.
+
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/main.c       |  10 --
+ drivers/net/wireless/ath/wil6210/rx_reorder.c | 204 ++++++--------------------
+ drivers/net/wireless/ath/wil6210/wil6210.h    |  29 ----
+ 3 files changed, 41 insertions(+), 202 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 78ba6e0..35db994 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -440,8 +440,6 @@ int wil_priv_init(struct wil6210_priv *wil)
+ 
+ 	mutex_init(&wil->mutex);
+ 	mutex_init(&wil->wmi_mutex);
+-	mutex_init(&wil->back_rx_mutex);
+-	mutex_init(&wil->back_tx_mutex);
+ 	mutex_init(&wil->probe_client_mutex);
+ 
+ 	init_completion(&wil->wmi_ready);
+@@ -454,13 +452,9 @@ int wil_priv_init(struct wil6210_priv *wil)
+ 	INIT_WORK(&wil->disconnect_worker, wil_disconnect_worker);
+ 	INIT_WORK(&wil->wmi_event_worker, wmi_event_worker);
+ 	INIT_WORK(&wil->fw_error_worker, wil_fw_error_worker);
+-	INIT_WORK(&wil->back_rx_worker, wil_back_rx_worker);
+-	INIT_WORK(&wil->back_tx_worker, wil_back_tx_worker);
+ 	INIT_WORK(&wil->probe_client_worker, wil_probe_client_worker);
+ 
+ 	INIT_LIST_HEAD(&wil->pending_wmi_ev);
+-	INIT_LIST_HEAD(&wil->back_rx_pending);
+-	INIT_LIST_HEAD(&wil->back_tx_pending);
+ 	INIT_LIST_HEAD(&wil->probe_client_pending);
+ 	spin_lock_init(&wil->wmi_ev_lock);
+ 	init_waitqueue_head(&wil->wq);
+@@ -520,10 +514,6 @@ void wil_priv_deinit(struct wil6210_priv *wil)
+ 	wil6210_disconnect(wil, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
+ 	mutex_unlock(&wil->mutex);
+ 	wmi_event_flush(wil);
+-	wil_back_rx_flush(wil);
+-	cancel_work_sync(&wil->back_rx_worker);
+-	wil_back_tx_flush(wil);
+-	cancel_work_sync(&wil->back_tx_worker);
+ 	wil_probe_client_flush(wil);
+ 	cancel_work_sync(&wil->probe_client_worker);
+ 	destroy_workqueue(wil->wq_service);
+diff --git a/drivers/net/wireless/ath/wil6210/rx_reorder.c b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+index 32031e7..19ed127 100644
+--- a/drivers/net/wireless/ath/wil6210/rx_reorder.c
++++ b/drivers/net/wireless/ath/wil6210/rx_reorder.c
+@@ -1,5 +1,5 @@
+ /*
+- * Copyright (c) 2014-2015 Qualcomm Atheros, Inc.
++ * Copyright (c) 2014-2016 Qualcomm Atheros, Inc.
+  *
+  * Permission to use, copy, modify, and/or distribute this software for any
+  * purpose with or without fee is hereby granted, provided that the above
+@@ -291,35 +291,15 @@ static u16 wil_agg_size(struct wil6210_priv *wil, u16 req_agg_wsize)
+ 	return min(max_agg_size, req_agg_wsize);
+ }
+ 
+-/* Block Ack - Rx side (recipient */
++/* Block Ack - Rx side (recipient) */
+ int wil_addba_rx_request(struct wil6210_priv *wil, u8 cidxtid,
+ 			 u8 dialog_token, __le16 ba_param_set,
+ 			 __le16 ba_timeout, __le16 ba_seq_ctrl)
+-{
+-	struct wil_back_rx *req = kzalloc(sizeof(*req), GFP_KERNEL);
+-
+-	if (!req)
+-		return -ENOMEM;
+-
+-	req->cidxtid = cidxtid;
+-	req->dialog_token = dialog_token;
+-	req->ba_param_set = le16_to_cpu(ba_param_set);
+-	req->ba_timeout = le16_to_cpu(ba_timeout);
+-	req->ba_seq_ctrl = le16_to_cpu(ba_seq_ctrl);
+-
+-	mutex_lock(&wil->back_rx_mutex);
+-	list_add_tail(&req->list, &wil->back_rx_pending);
+-	mutex_unlock(&wil->back_rx_mutex);
+-
+-	queue_work(wil->wq_service, &wil->back_rx_worker);
+-
+-	return 0;
+-}
+-
+-static void wil_back_rx_handle(struct wil6210_priv *wil,
+-			       struct wil_back_rx *req)
+ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
+ {
++	u16 param_set = le16_to_cpu(ba_param_set);
++	u16 agg_timeout = le16_to_cpu(ba_timeout);
++	u16 seq_ctrl = le16_to_cpu(ba_seq_ctrl);
+ 	struct wil_sta_info *sta;
+ 	u8 cid, tid;
+ 	u16 agg_wsize = 0;
+@@ -328,34 +308,35 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
+ 	 * bits 2..5: TID
+ 	 * bits 6..15: buffer size
+ 	 */
+-	u16 req_agg_wsize = WIL_GET_BITS(req->ba_param_set, 6, 15);
+-	bool agg_amsdu = !!(req->ba_param_set & BIT(0));
+-	int ba_policy = req->ba_param_set & BIT(1);
+-	u16 agg_timeout = req->ba_timeout;
++	u16 req_agg_wsize = WIL_GET_BITS(param_set, 6, 15);
++	bool agg_amsdu = !!(param_set & BIT(0));
++	int ba_policy = param_set & BIT(1);
+ 	u16 status = WLAN_STATUS_SUCCESS;
+-	u16 ssn = req->ba_seq_ctrl >> 4;
++	u16 ssn = seq_ctrl >> 4;
+ 	struct wil_tid_ampdu_rx *r;
+-	int rc;
++	int rc = 0;
+ 
+ 	might_sleep();
+-	parse_cidxtid(req->cidxtid, &cid, &tid);
++	parse_cidxtid(cidxtid, &cid, &tid);
+ 
+ 	/* sanity checks */
+ 	if (cid >= WIL6210_MAX_CID) {
+ 		wil_err(wil, "BACK: invalid CID %d\n", cid);
+-		return;
++		rc = -EINVAL;
++		goto out;
+ 	}
+ 
+ 	sta = &wil->sta[cid];
+ 	if (sta->status != wil_sta_connected) {
+ 		wil_err(wil, "BACK: CID %d not connected\n", cid);
+-		return;
++		rc = -EINVAL;
++		goto out;
+ 	}
+ 
+ 	wil_dbg_wmi(wil,
+ 		    "ADDBA request for CID %d %pM TID %d size %d timeout %d AMSDU%s policy %d token %d SSN 0x%03x\n",
+-		    cid, sta->addr, tid, req_agg_wsize, req->ba_timeout,
+-		    agg_amsdu ? "+" : "-", !!ba_policy, req->dialog_token, ssn);
++		    cid, sta->addr, tid, req_agg_wsize, agg_timeout,
++		    agg_amsdu ? "+" : "-", !!ba_policy, dialog_token, ssn);
+ 
+ 	/* apply policies */
+ 	if (ba_policy) {
+@@ -365,10 +346,13 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
+ 	if (status == WLAN_STATUS_SUCCESS)
+ 		agg_wsize = wil_agg_size(wil, req_agg_wsize);
+ 
+-	rc = wmi_addba_rx_resp(wil, cid, tid, req->dialog_token, status,
++	rc = wmi_addba_rx_resp(wil, cid, tid, dialog_token, status,
+ 			       agg_amsdu, agg_wsize, agg_timeout);
+-	if (rc || (status != WLAN_STATUS_SUCCESS))
+-		return;
++	if (rc || (status != WLAN_STATUS_SUCCESS)) {
++		wil_err(wil, "%s: do not apply ba, rc(%d), status(%d)\n",
++			__func__, rc, status);
++		goto out;
++	}
+ 
+ 	/* apply */
+ 	r = wil_tid_ampdu_rx_alloc(wil, agg_wsize, ssn);
+@@ -376,143 +360,37 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
+ 	wil_tid_ampdu_rx_free(wil, sta->tid_rx[tid]);
+ 	sta->tid_rx[tid] = r;
+ 	spin_unlock_bh(&sta->tid_rx_lock);
+-}
+-
+-void wil_back_rx_flush(struct wil6210_priv *wil)
+-{
+-	struct wil_back_rx *evt, *t;
+ 
+-	wil_dbg_misc(wil, "%s()\n", __func__);
+-
+-	mutex_lock(&wil->back_rx_mutex);
+-
+-	list_for_each_entry_safe(evt, t, &wil->back_rx_pending, list) {
+-		list_del(&evt->list);
+-		kfree(evt);
+-	}
+-
+-	mutex_unlock(&wil->back_rx_mutex);
+-}
+-
+-/* Retrieve next ADDBA request from the pending list */
+-static struct list_head *next_back_rx(struct wil6210_priv *wil)
+-{
+-	struct list_head *ret = NULL;
+-
+-	mutex_lock(&wil->back_rx_mutex);
+-
+-	if (!list_empty(&wil->back_rx_pending)) {
+-		ret = wil->back_rx_pending.next;
+-		list_del(ret);
+-	}
+-
+-	mutex_unlock(&wil->back_rx_mutex);
+-
+-	return ret;
+-}
+-
+-void wil_back_rx_worker(struct work_struct *work)
+-{
+-	struct wil6210_priv *wil = container_of(work, struct wil6210_priv,
+-						back_rx_worker);
+-	struct wil_back_rx *evt;
+-	struct list_head *lh;
+-
+-	while ((lh = next_back_rx(wil)) != NULL) {
+-		evt = list_entry(lh, struct wil_back_rx, list);
+-
+-		wil_back_rx_handle(wil, evt);
+-		kfree(evt);
+-	}
++out:
++	return rc;
+ }
+ 
+-/* BACK - Tx (originator) side */
+-static void wil_back_tx_handle(struct wil6210_priv *wil,
+-			       struct wil_back_tx *req)
++/* BACK - Tx side (originator) */
++int wil_addba_tx_request(struct wil6210_priv *wil, u8 ringid, u16 wsize)
+ {
+-	struct vring_tx_data *txdata = &wil->vring_tx_data[req->ringid];
+-	int rc;
++	u8 agg_wsize = wil_agg_size(wil, wsize);
++	u16 agg_timeout = 0;
++	struct vring_tx_data *txdata = &wil->vring_tx_data[ringid];
++	int rc = 0;
+ 
+ 	if (txdata->addba_in_progress) {
+ 		wil_dbg_misc(wil, "ADDBA for vring[%d] already in progress\n",
+-			     req->ringid);
+-		return;
++			     ringid);
++		goto out;
+ 	}
+ 	if (txdata->agg_wsize) {
+ 		wil_dbg_misc(wil,
+-			     "ADDBA for vring[%d] already established wsize %d\n",
+-			     req->ringid, txdata->agg_wsize);
+-		return;
++			     "ADDBA for vring[%d] already done for wsize %d\n",
++			     ringid, txdata->agg_wsize);
++		goto out;
+ 	}
+ 	txdata->addba_in_progress = true;
+-	rc = wmi_addba(wil, req->ringid, req->agg_wsize, req->agg_timeout);
+-	if (rc)
++	rc = wmi_addba(wil, ringid, agg_wsize, agg_timeout);
++	if (rc) {
++		wil_err(wil, "%s: wmi_addba failed, rc (%d)", __func__, rc);
+ 		txdata->addba_in_progress = false;
+-}
+-
+-static struct list_head *next_back_tx(struct wil6210_priv *wil)
+-{
+-	struct list_head *ret = NULL;
+-
+-	mutex_lock(&wil->back_tx_mutex);
+-
+-	if (!list_empty(&wil->back_tx_pending)) {
+-		ret = wil->back_tx_pending.next;
+-		list_del(ret);
+-	}
+-
+-	mutex_unlock(&wil->back_tx_mutex);
+-
+-	return ret;
+-}
+-
+-void wil_back_tx_worker(struct work_struct *work)
+-{
+-	struct wil6210_priv *wil = container_of(work, struct wil6210_priv,
+-						 back_tx_worker);
+-	struct wil_back_tx *evt;
+-	struct list_head *lh;
+-
+-	while ((lh = next_back_tx(wil)) != NULL) {
+-		evt = list_entry(lh, struct wil_back_tx, list);
+-
+-		wil_back_tx_handle(wil, evt);
+-		kfree(evt);
+ 	}
+-}
+-
+-void wil_back_tx_flush(struct wil6210_priv *wil)
+-{
+-	struct wil_back_tx *evt, *t;
+-
+-	wil_dbg_misc(wil, "%s()\n", __func__);
+-
+-	mutex_lock(&wil->back_tx_mutex);
+-
+-	list_for_each_entry_safe(evt, t, &wil->back_tx_pending, list) {
+-		list_del(&evt->list);
+-		kfree(evt);
+-	}
+-
+-	mutex_unlock(&wil->back_tx_mutex);
+-}
+-
+-int wil_addba_tx_request(struct wil6210_priv *wil, u8 ringid, u16 wsize)
+-{
+-	struct wil_back_tx *req = kzalloc(sizeof(*req), GFP_KERNEL);
+-
+-	if (!req)
+-		return -ENOMEM;
+ 
+-	req->ringid = ringid;
+-	req->agg_wsize = wil_agg_size(wil, wsize);
+-	req->agg_timeout = 0;
+-
+-	mutex_lock(&wil->back_tx_mutex);
+-	list_add_tail(&req->list, &wil->back_tx_pending);
+-	mutex_unlock(&wil->back_tx_mutex);
+-
+-	queue_work(wil->wq_service, &wil->back_tx_worker);
+-
+-	return 0;
++out:
++	return rc;
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 8427d68..d59c3f2 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -507,24 +507,6 @@ enum {
+ 	hw_capability_last
+ };
+ 
+-struct wil_back_rx {
+-	struct list_head list;
+-	/* request params, converted to CPU byte order - what we asked for */
+-	u8 cidxtid;
+-	u8 dialog_token;
+-	u16 ba_param_set;
+-	u16 ba_timeout;
+-	u16 ba_seq_ctrl;
+-};
+-
+-struct wil_back_tx {
+-	struct list_head list;
+-	/* request params, converted to CPU byte order - what we asked for */
+-	u8 ringid;
+-	u8 agg_wsize;
+-	u16 agg_timeout;
+-};
+-
+ struct wil_probe_client_req {
+ 	struct list_head list;
+ 	u64 cookie;
+@@ -595,13 +577,6 @@ struct wil6210_priv {
+ 	spinlock_t wmi_ev_lock;
+ 	struct napi_struct napi_rx;
+ 	struct napi_struct napi_tx;
+-	/* BACK */
+-	struct list_head back_rx_pending;
+-	struct mutex back_rx_mutex; /* protect @back_rx_pending */
+-	struct work_struct back_rx_worker;
+-	struct list_head back_tx_pending;
+-	struct mutex back_tx_mutex; /* protect @back_tx_pending */
+-	struct work_struct back_tx_worker;
+ 	/* keep alive */
+ 	struct list_head probe_client_pending;
+ 	struct mutex probe_client_mutex; /* protect @probe_client_pending */
+@@ -765,11 +740,7 @@ int wmi_addba_rx_resp(struct wil6210_priv *wil, u8 cid, u8 tid, u8 token,
+ int wil_addba_rx_request(struct wil6210_priv *wil, u8 cidxtid,
+ 			 u8 dialog_token, __le16 ba_param_set,
+ 			 __le16 ba_timeout, __le16 ba_seq_ctrl);
+-void wil_back_rx_worker(struct work_struct *work);
+-void wil_back_rx_flush(struct wil6210_priv *wil);
+ int wil_addba_tx_request(struct wil6210_priv *wil, u8 ringid, u16 wsize);
+-void wil_back_tx_worker(struct work_struct *work);
+-void wil_back_tx_flush(struct wil6210_priv *wil);
+ 
+ void wil6210_clear_irq(struct wil6210_priv *wil);
+ int wil6210_init_irq(struct wil6210_priv *wil, int irq, bool use_msi);
+-- 
+1.8.5.2
+
