@@ -1,35 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43371 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933171AbcCaU41 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 16:56:27 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 0/7] rtl8xxxu: Improve handling of new TX descriptor format
-References: <1457726254-28178-1-git-send-email-Jes.Sorensen@redhat.com>
-Date: Thu, 31 Mar 2016 16:56:26 -0400
-In-Reply-To: <1457726254-28178-1-git-send-email-Jes.Sorensen@redhat.com> (Jes
-	Sorensen's message of "Fri, 11 Mar 2016 14:57:27 -0500")
-Message-ID: <wrfjk2ki74ed.fsf@redhat.com> (sfid-20160331_225634_384126_66CEB938)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from smtp.codeaurora.org ([198.145.29.96]:55555 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750799AbcCAGaA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Mar 2016 01:30:00 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v2 0/8] ath9k GPIO & BT-Coex bug fixes
+Date: Tue,  1 Mar 2016 14:29:36 +0800
+Message-Id: <1456813784-21218-1-git-send-email-miaoqing@codeaurora.org> (sfid-20160301_073004_933108_46059541)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes.Sorensen@redhat.com writes:
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->
-> Hi,
->
-> Given the 8723bu set of patches made it into the tree, here is a much
-> smaller set which improves the handling of the gen2 40 byte TX
-> descriptor format.
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-Kalle,
+ath9k GPIO & BT-Coex bug fixes.
 
-Please ignore this set - I will send out an updated set against your 4.5
-update to wireless-drivers-next.
+Miaoqing Pan (8):
+  ath9k: define correct GPIO numbers and bits mask
+  ath9k: make GPIO API to support both of WMAC and SOC
+  ath9k: free GPIO resource for SOC GPIOs
+  ath9k: cleanup led_pin initial
+  ath9k: Allow platform override BTCoex pin
+  ath9k: add bits definition of BTCoex MODE2/3 for SOC chips
+  ath9k: fix BTCoex access invalid registers for SOC chips
+  ath9k: fix BTCoex configuration for SOC chips
 
-Cheers,
-Jes
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   4 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c    |  39 ++--
+ drivers/net/wireless/ath/ath9k/ath9k.h         |   4 -
+ drivers/net/wireless/ath/ath9k/btcoex.c        | 138 +++++++++----
+ drivers/net/wireless/ath/ath9k/btcoex.h        |   2 +
+ drivers/net/wireless/ath/ath9k/gpio.c          |  69 ++++---
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c  |   8 +-
+ drivers/net/wireless/ath/ath9k/hw.c            | 267 ++++++++++++++++---------
+ drivers/net/wireless/ath/ath9k/hw.h            |  11 +-
+ drivers/net/wireless/ath/ath9k/init.c          |   1 -
+ drivers/net/wireless/ath/ath9k/main.c          |   9 +-
+ drivers/net/wireless/ath/ath9k/reg.h           |  90 +++++++--
+ include/linux/ath9k_platform.h                 |   4 +
+ 13 files changed, 436 insertions(+), 210 deletions(-)
+
+-- 
+1.9.1
+
