@@ -1,74 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caladan.dune.hu ([78.24.191.180]:58552 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752180AbcCGMyk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2016 07:54:40 -0500
-Subject: Re: About adding support for MT76x2U to Linux kernel
-To: Johannes Stezenbach <js@sig21.net>
-References: <20150814081526.GC20192@hackpad.Elisa>
- <20150814143229.61440072@north> <20160302073210.GA31353@lakka.kapsi.fi>
- <20160307111443.GA7205@sig21.net> <56DD6B4F.2050405@openwrt.org>
- <20160307124103.GA22175@sig21.net>
-Cc: =?UTF-8?Q?Tuomas_R=c3=a4s=c3=a4nen?= <tuomasjjrasanen@tjjr.fi>,
-	=?UTF-8?Q?Jakub_Kici=c5=84ski?= <moorray3@wp.pl>,
-	linux-wireless@vger.kernel.org, tuomasjjrasanen@opinsys.fi,
-	Linus Walleij <linus.walleij@linaro.org>
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <56DD7A01.6080209@openwrt.org> (sfid-20160307_135443_645187_902AE09E)
-Date: Mon, 7 Mar 2016 13:54:25 +0100
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:57552 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751138AbcCARyq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Mar 2016 12:54:46 -0500
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH v6] ath10k: set MAC timestamp in management Rx frame
+Date: Tue, 1 Mar 2016 09:52:49 -0800
+Message-ID: <5c9a7c5d47974cf3e72cd114e140027e2a4bbdab.1456854314.git.poh@qca.qualcomm.com> (sfid-20160301_185449_902948_7711ABAF)
 MIME-Version: 1.0
-In-Reply-To: <20160307124103.GA22175@sig21.net>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-03-07 13:41, Johannes Stezenbach wrote:
-> On Mon, Mar 07, 2016 at 12:51:43PM +0100, Felix Fietkau wrote:
->> On 2016-03-07 12:14, Johannes Stezenbach wrote:
->> > FWIW, the mt7610u vendor driver
->> > doesn't support AP mode, while the mt7612u vendor driver does,
->> > but I didn't understand how their timing of sending buffered
->> > frames works.
->> Where can I find the most recent version of that vendor driver?
->> I can take a quick look at it.
-> 
-> http://www.mediatek.com/en/downloads1/downloads/
-> or more specifically
-> http://www.mediatek.com/en/downloads1/downloads/mt7612u/
-> 
->> > Another concern is the handling of the TX status since there
->> > is also no TX_STAT interrupt.  I remember from rt2800usb
->> > it was always problematic to ensure no FIFO items were lost,
->> > which is a problem for rt2800usb since it doesn't report
->> > TX status before it got it from the hardware.
->> > The mt7601u driver takes the approach to report IEEE80211_TX_STAT_ACK
->> > immediately after urb completion, and send the real
->> > status later from a delayed workqueue in mt7601u_tx_stat().
->> > Could someone enlighten me if this approach is sane
->> > wrt to minstrel rate control?
->> When I started writing mt76 I did lots of experiments with trying to map
->> TX_STAT_FIFO data to individual frames and pretty much gave up, because
->> the status register was just too unreliable. Even in cases where it was
->> reliable, mapping the status info to frames is expensive on slower
->> embedded hardware, so I pretty much gave up on that approach and
->> extended the rate control API to support submitting tx status
->> information without the corresponding skb.
->> 
->> This turned out to work quite well, and I think it might be worth using
->> to some extent even on drivers with proper skb tx status reporting,
->> since it has better cache footprint and has to run less code.
->> 
->> I think the best approach is to try to map tx status info from
->> TX_STAT_FIFO in cases where IEEE80211_TX_CTL_REQ_TX_STATUS is set, and
->> just use ieee80211_tx_status_noskb for all other frames. I did something
->> like that on my work-in-progress mt7603 code.
-> 
-> OK, I thought minstrels send some probe frames with high
-> rates to check if they go through and thus relies
-> on exact TX status for these? (IEEE80211_TX_CTL_RATE_CTRL_PROBE)
-The driver does need to provide the exact rates that were tried, but
-minstrel does not care about the skb itself. mt76 infers the probed rate
-from the status last tx rate + the number of retries (based on the
-hardcoded hardware rate fallback table).
+Check and set Rx MAC timestamp when firmware indicates it.
+Firmware adds it in Rx beacon frame only at this moment.
+Driver and mac80211 may utilize it to detect such clockdrift
+or beacon collision and use the result for beacon collision
+avoidance.
 
-- Felix
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+---
+
+v2:
+ - fix kbuild test robot warning, left shift count >= width of type,
+   at __le32_to_cpu(arg.ext_info.rx_mac_timestamp_u32) << 32
+v3:
+ - correct ext_info to start 4-byte aligned
+ - make struct wmi_mgmt_rx_ext_info 4-byte aligned to comply FW's intention
+v4:
+ - fix endianness warnings, restricted __le32 degrades to integer
+v5:
+ - use ALIGN for better read
+v6:
+ - use __le64 instead of 2 __le32 variables to simplify substitution
+
+ drivers/net/wireless/ath/ath10k/wmi.c | 13 +++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.h |  7 +++++++
+ 2 files changed, 20 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index 1ce6742..20d5e35 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -2167,8 +2167,10 @@ static int ath10k_wmi_op_pull_mgmt_rx_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	struct wmi_mgmt_rx_event_v1 *ev_v1;
+ 	struct wmi_mgmt_rx_event_v2 *ev_v2;
+ 	struct wmi_mgmt_rx_hdr_v1 *ev_hdr;
++	struct wmi_mgmt_rx_ext_info *ext_info;
+ 	size_t pull_len;
+ 	u32 msdu_len;
++	u32 len;
+ 
+ 	if (test_bit(ATH10K_FW_FEATURE_EXT_WMI_MGMT_RX, ar->fw_features)) {
+ 		ev_v2 = (struct wmi_mgmt_rx_event_v2 *)skb->data;
+@@ -2195,6 +2197,12 @@ static int ath10k_wmi_op_pull_mgmt_rx_ev(struct ath10k *ar, struct sk_buff *skb,
+ 	if (skb->len < msdu_len)
+ 		return -EPROTO;
+ 
++	if (le32_to_cpu(arg->status) & WMI_RX_STATUS_EXT_INFO) {
++		len = ALIGN(le32_to_cpu(arg->buf_len), 4);
++		ext_info = (struct wmi_mgmt_rx_ext_info *)(skb->data + len);
++		memcpy(&arg->ext_info, ext_info,
++		       sizeof(struct wmi_mgmt_rx_ext_info));
++	}
+ 	/* the WMI buffer might've ended up being padded to 4 bytes due to HTC
+ 	 * trailer with credit update. Trim the excess garbage.
+ 	 */
+@@ -2281,6 +2289,11 @@ int ath10k_wmi_event_mgmt_rx(struct ath10k *ar, struct sk_buff *skb)
+ 	if (rx_status & WMI_RX_STATUS_ERR_MIC)
+ 		status->flag |= RX_FLAG_MMIC_ERROR;
+ 
++	if (rx_status & WMI_RX_STATUS_EXT_INFO) {
++		status->mactime =
++			__le64_to_cpu(arg.ext_info.rx_mac_timestamp);
++		status->flag |= RX_FLAG_MACTIME_END;
++	}
+ 	/* Hardware can Rx CCK rates on 5GHz. In that case phy_mode is set to
+ 	 * MODE_11B. This means phy_mode is not a reliable source for the band
+ 	 * of mgmt rx.
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 4d3cbc4..bb42f7a 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -3037,11 +3037,17 @@ struct wmi_10_4_mgmt_rx_event {
+ 	u8 buf[0];
+ } __packed;
+ 
++struct wmi_mgmt_rx_ext_info {
++	__le64 rx_mac_timestamp;
++} __packed __aligned(4);
++
+ #define WMI_RX_STATUS_OK			0x00
+ #define WMI_RX_STATUS_ERR_CRC			0x01
+ #define WMI_RX_STATUS_ERR_DECRYPT		0x08
+ #define WMI_RX_STATUS_ERR_MIC			0x10
+ #define WMI_RX_STATUS_ERR_KEY_CACHE_MISS	0x20
++/* Extension data at the end of mgmt frame */
++#define WMI_RX_STATUS_EXT_INFO		0x40
+ 
+ #define PHY_ERROR_GEN_SPECTRAL_SCAN		0x26
+ #define PHY_ERROR_GEN_FALSE_RADAR_EXT		0x24
+@@ -6116,6 +6122,7 @@ struct wmi_mgmt_rx_ev_arg {
+ 	__le32 phy_mode;
+ 	__le32 buf_len;
+ 	__le32 status; /* %WMI_RX_STATUS_ */
++	struct wmi_mgmt_rx_ext_info ext_info;
+ };
+ 
+ struct wmi_ch_info_ev_arg {
+-- 
+1.9.1
+
