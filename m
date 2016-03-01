@@ -1,126 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47307 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:35658 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932485AbcCTAuo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Mar 2016 20:50:44 -0400
-Date: Sat, 19 Mar 2016 19:50:39 -0500
-From: Rob Herring <robh@kernel.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	devicetree@vger.kernel.org, Wei-Ning Huang <wnhuang@chromium.org>,
-	Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH v5 1/2] dt: bindings: add MARVELL's sd8xxx wireless device
-Message-ID: <20160320005039.GA10937@rob-hp-laptop> (sfid-20160320_015048_479375_43C9367E)
-References: <1458299032-31929-1-git-send-email-akarwar@marvell.com>
+	id S1750729AbcCAAPh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 19:15:37 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: Re: [PATCH 106/113] rtl8xxxu: convert rtl8723bu_init_bt() into rtl8723b_enable_rf()
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1456783551-28315-107-git-send-email-Jes.Sorensen@redhat.com>
+	<CAGRGNgUYaoRoXAXOcdyxwnFNhW15_D=HGDVHVd5UAVVqS+h5MQ@mail.gmail.com>
+	<wrfja8mjhy7q.fsf@redhat.com>
+	<CAGRGNgWRZFpMiVOE5Ri=uOH-+PoHApGPMQRHk=ssx=+yFWvH-w@mail.gmail.com>
+Date: Mon, 29 Feb 2016 19:15:35 -0500
+In-Reply-To: <CAGRGNgWRZFpMiVOE5Ri=uOH-+PoHApGPMQRHk=ssx=+yFWvH-w@mail.gmail.com>
+	(Julian Calaby's message of "Tue, 1 Mar 2016 11:04:39 +1100")
+Message-ID: <wrfjk2lngijc.fsf@redhat.com> (sfid-20160301_011540_906589_81BE6D5F)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1458299032-31929-1-git-send-email-akarwar@marvell.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 18, 2016 at 04:03:51AM -0700, Amitkumar Karwar wrote:
-> From: Xinming Hu <huxm@marvell.com>
-> 
-> Add device tree binding documentation for MARVELL's sd8xxx
-> (sd8897 and sd8997) wlan chip.
-> 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> ---
-> Listing changelist for both 1/2 and 2/2 patches
-> v3: Don't update adapter->dt_node if mwifiex_plt_dev is NULL
-> 
-> v4: a)Corrected the 'name' and 'compatible' property names.(Arnd Bergmann and Rob
->     Herring)
->     b)Patch description wraped in 72 columns(Rob Herring)
->     c)Moved DT binding file to bindings/net/wireless/(Rob Herring)
->     d)Renamed "mwifiex,chip-gpio" to "marvell,wakeup-gpios"(Rob Herring/
->     Arnd Bergmann)
->     e)Replaced #ifdef with __maybe_unused(Arnd Bergmann)
-> 
-> v5: a)Removed wildcards from compatible string(Arnd Bergmann)
->     b)Prepared single patch for all binding changes(Rob Herring)
->     c)Specified our node as a subnode of SDIO controller. With this approach, we
->     don't need to register new platform driver. (Rob herring)
-> ---
->  .../bindings/net/wireless/marvell-sd8xxx.txt       | 56 ++++++++++++++++++++++
->  1 file changed, 56 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-> 
-> diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-> new file mode 100644
-> index 0000000..c43d488
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-> @@ -0,0 +1,56 @@
-> +Marvell 8897/8997 (sd8897/sd8997) SDIO devices
-> +------
-> +
-> +This node provides properties for controlling the marvell sdio wireless device.
-> +The node is expected to be specified as a child node to the SDIO controller that
-> +connects the device to the system.
-> +
-> +Required properties:
-> +
-> +  - compatible : should be one of the following:
-> +	* "marvell,sd8897"
-> +	* "marvell,sd8997"
-> +
-> +Optional properties:
-> +
-> +  - marvell,caldata* : A series of properties with marvell,caldata prefix,
-> +  		      represent Calibration data downloaded to the device during
-> +		      initialization. This is an array of unsigned values.
+Julian Calaby <julian.calaby@gmail.com> writes:
+> Hi Jes,
+>
+> On Tue, Mar 1, 2016 at 10:51 AM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
+>> Julian Calaby <julian.calaby@gmail.com> writes:
+>>> Hi Jes,
+>>>
+>>> On Tue, Mar 1, 2016 at 9:05 AM,  <Jes.Sorensen@redhat.com> wrote:
+>>>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>>>
+>>>> rtl8723bu_init_bt() is effectively the function enabling RF, so name
+>>>> it appropriately.
+>>>
+>>> Should this be merged into the patches that introduce these functions?
+>>
+>> Again, this would be rewriting history and simply cause me to fight a
+>> pile of patch conflicts rebasing things, for no gain, and at the risk of
+>> introducing new errors in the process.
+>
+> Totally agree, this is definitely something that would cause conflicts.
+>
+> IMHO, history is only important if multiple people have contributed to
+> something or it's being developed in public - which, for Linux, I
+> define as it being in a maintainer's repository.
 
-You need to list out the specific property names and size of the data.
+Well I have to completely agree with you on that one. I have had
+multiple test out my development repository while I was working on
+this. I reordered some patches for an earlier submission to reduce the
+patchset.
 
-> +  - marvell,wakeup-pin : 'wakeuppin' is a wakeup pin number of wifi chip which will
-> +  		      be configured to firmware. firmware will wakeup host side use
-> +  		      the pin during suspend/resume stage.
-> +  - interrupt-parent: phandle of the parent interrupt controller
-> +  - interrupts : interrupt pin number to the cpu. driver will request an irq based on
-> +  		 this interrupt number. during system suspend, the irq will be enabled
-> +  		 as system wakeup source, so that the wifi chip can wakeup host
-> +  		 platform under certain condition. during system resume, the irq will
-> +  		 be disabled to make sure unnecessary interrupt is not received.
-> +
-> +Example:
-> +
-> +Tx power limit calibration data is configured in below example.
-> +The calibration data is an array of unsigned values, the length
-> +can vary between hw versions.
-> +IRQ pin 38 is used as system wakeup source interrupt. wakeup pin 3 is configured
-> +so that firmware can wakeup host using this device side pin.
-> +
-> +&mmc3 {
-> +	status = "okay";
-> +	vmmc-supply = <&wlan_en_reg>;
-> +	bus-width = <4>;
-> +	cap-power-off-card;
-> +	keep-power-in-suspend;
-> +
-> +	#address-cells = <1>;
-> +	#size-cells = <0>;
-> +	mwifiex: mwifiex@3 {
+> This patch set looks like you've been playing around with a bunch of
+> stuff, completed *bu support, then just thrown it all over the wall
+> without "prettying" it up for review and submission. If I were
+> developing this I'd have happily rewritten history even if all I did
+> was reduce the number of patches by squashing later fixes into earlier
+> patches.
 
-The unit address and reg value don't match. IIRC, the correct value is 
-the SDIO function number.
+Well again, prettying things up by merging a lot of patches together
+reduces the maintainability and the debug option. Patches often sit
+outside a maintainer's tree for a long time, and the sub-maintainer and
+developer may have to go back and bisect his/her way to a bug that was
+introduced in the middle.
 
-> +		compatible = "marvell,sd8897";
-> +		reg = <1>;
-> +		interrupt-parent = <&pio>;
-> +		interrupts = <38 IRQ_TYPE_LEVEL_LOW>;
-> +
-> +		marvell,caldata_00_txpwrlimit_2g_cfg_set = /bits/ 8 <
-> +	0x01 0x00 0x06 0x00 0x08 0x02 0x89 0x01>;
-> +		marvell,wakeup-pin = <3>;
-> +	};
-> +};
-> -- 
-> 1.8.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe devicetree" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Linux development is not only what happens in the official tree, it's
+also how it got there.
+
+> I can see a lot of scope for reducing the number of patches in this
+> patch set, so if you'd like me to play around with that, just ask.
+
+Unless you plan to test every single change you suggest against all the
+supported USB parts, then I'd say thanks, but no thanks.
+
+The whole point of git is to commit often, and keep the history.
+
+Jes
