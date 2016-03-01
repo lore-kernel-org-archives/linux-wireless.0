@@ -1,55 +1,26 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:25136 "EHLO mga09.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:35905 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755061AbcCBNDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 08:03:21 -0500
-From: "Peer, Ilan" <ilan.peer@intel.com>
-To: Emmanuel Grumbach <egrumbach@gmail.com>,
-	Stefan Feirer <e0926020@student.tuwien.ac.at>
-CC: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: RE: iwlwifi support of 802.11k RRM (Radio Resource Mangament)
-Date: Wed, 2 Mar 2016 13:03:13 +0000
-Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A061373A2C@hasmsx108.ger.corp.intel.com> (sfid-20160302_140343_632286_DA4ECBBA)
-References: <56D6C3C4.4000702@student.tuwien.ac.at>
- <CANUX_P3kW2gKGVqRfZJB+PTEZJ2K8J=1UnqTb0-G92f_VRw0bw@mail.gmail.com>
-In-Reply-To: <CANUX_P3kW2gKGVqRfZJB+PTEZJ2K8J=1UnqTb0-G92f_VRw0bw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S1753746AbcCAOtq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Mar 2016 09:49:46 -0500
+Message-ID: <1456843782.3926.32.camel@sipsolutions.net> (sfid-20160301_154949_999177_F69DA0CC)
+Subject: Re: [PATCH] mac80211: minstrel_ht: fix a logic error in RTS/CTS
+ handling
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Cc: mrichart@fing.edu.uy, chaitanya.mgit@gmail.com
+Date: Tue, 01 Mar 2016 15:49:42 +0100
+In-Reply-To: <1456312037-82995-1-git-send-email-nbd@openwrt.org>
+References: <1456312037-82995-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC13aXJlbGVzcy1vd25l
-ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC13aXJlbGVzcy0NCj4gb3duZXJAdmdlci5r
-ZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgRW1tYW51ZWwgR3J1bWJhY2gNCj4gU2VudDogV2VkbmVz
-ZGF5LCBNYXJjaCAwMiwgMjAxNiAxNDo1Mw0KPiBUbzogU3RlZmFuIEZlaXJlcg0KPiBDYzogbGlu
-dXgtd2lyZWxlc3MNCj4gU3ViamVjdDogUmU6IGl3bHdpZmkgc3VwcG9ydCBvZiA4MDIuMTFrIFJS
-TSAoUmFkaW8gUmVzb3VyY2UgTWFuZ2FtZW50KQ0KPiANCj4gT24gV2VkLCBNYXIgMiwgMjAxNiBh
-dCAxMjo0MyBQTSwgU3RlZmFuIEZlaXJlcg0KPiA8ZTA5MjYwMjBAc3R1ZGVudC50dXdpZW4uYWMu
-YXQ+IHdyb3RlOg0KPiA+DQo+ID4gSGVsbG8sDQo+ID4NCj4gPiBJJ20gdHJ5aW5nIHRvIG1ha2Ug
-ZGlmZmVyZW50IHdpZmkgcm9hbWluZyB0ZXN0cyB3aXRoIHRoZSA4MDIuMTEgYW1hbmRtZW50cw0K
-PiA4MDIuMTFrIGFuZCA4MDIuMTFyLg0KPiA+IEkgdXNlIHRoZSBpbnRlbCB3aWZpIGNoaXBzZXQg
-SW50ZWwgQ29ycG9yYXRpb24gQ2VudHJpbm8gVWx0aW1hdGUtTiA2MzAwIGFuZA0KPiB0d28gQWVy
-b2hpdmUgQWNjZXNzIFBvaW50cyBBUDE0MSAod2l0aCBib3RoIDgwMi4xMWsgYW5kIDgwMi4xMXIg
-ZW5hYmxlZCkuDQo+ID4gV2l0aCB1c2luZyB3cGFfc3VwcGxpY2FudCAoVmVyc2lvbiAyLjUpIGFu
-ZCB3cGFfY2xpIChWZXJzaW9uIDIuNSkgSSB3YXMgYWJsZQ0KPiB0byBjb25uZWN0IGFuZCByb2Ft
-IGJldHdlZW4gdGhlIEFQcyBieSBlbnRlcmluZyB0aGUgY29tbWFuZCAicm9hbQ0KPiA8bWFjPiIg
-YW5kIGFjdHVhbGx5IGFuIDgwMi4xMXIgcm9hbSB3YXMgcGVyZm9ybWVkLiBUaGVyZWZvcmUgdGhl
-IG5sODAyMTENCj4gYW5kIGl3bHdpZmkgZHJpdmVyIHdhcyB1c2VkLg0KPiA+IFNvIGZhc3Qgcm9h
-bWluZyBzZWVtcyB0byB3b3JrIHByb3Blcmx5LCBidXQgSSBmYWNlZCB0cm91YmxlcyB3aXRoDQo+
-ID4gUmFkaW8gUmVzb3VyY2UgTWFuYWdlbWVudCAoODAyLjExaykNCj4gPg0KPiA+IFRyYW5zbWl0
-dGluZyB0aGUgY29tbWFuZCAibmVpZ2hib3JfcmVwX3JlcXVlc3QiIGluIHdwYV9jbGkgZmFpbGVk
-LiBJDQo+IGNoZWNrZWQgdG8gbG9nIGZpbGVzIGFuZCBmb3VuZCB0aGUgZm9sbG93aW5nIGxpbmVz
-Og0KPiA+DQo+ID4gd2xhbjA6IENvbnRyb2wgaW50ZXJmYWNlIGNvbW1hbmQgJ05FSUdIQk9SX1JF
-UF9SRVFVRVNUJw0KPiA+IFJSTTogTm8gUlJNIGluIGN1cnJlbnQgY29ubmVjdGlvbi4NCj4gPg0K
-PiA+IGFuZA0KPiA+DQo+ID4gUlJNOiBEZXRlcm1pbmluZyB3aGV0aGVyIFJSTSBjYW4gYmUgdXNl
-ZCAtIGRldmljZSBzdXBwb3J0OiAweDANCj4gPiBSUk06IEluc3VmZmljaWVudCBSUk0gc3VwcG9y
-dCBpbiBkcml2ZXIgLSBkbyBub3QgdXNlIFJSTQ0KPiA+DQo+ID4gTm93IG15IHF1ZXN0aW9uIHdv
-dWxkIGJlIGhvdyB0byBlbmFibGUgUlJNLCBtYXliZSB1c2luZyB0aGUgaXctDQo+IGNvbW1hbmQ/
-DQo+ID4gSSBjb3VsZCBub3QgZmluZCBhbnkgZG9jdW1lbmF0aW9uIG9yIGV4YW1wbGVzIGFjY29y
-ZGluZyB0byBSUk0uDQo+ID4gVGhlIHRlc3RzIHdlcmUgcGVyZm9ybWVkIHdpdGggVWJ1bnR1IGFu
-ZCBMaW51eCBLZXJuZWwgMy4xMy4wLTc5Lg0KPiA+DQo+IA0KPiBMb29rIGF0ICBodHRwczovL3Bh
-dGNod29yay5rZXJuZWwub3JnL3BhdGNoLzg0MjEwNDEvDQo+IElmIHRoZSBzdWdnZXN0aW9uIG9m
-IEpvaGFubmVzIGlzIHRoZSBkaXJlY3Rpb24gdGFrZW4gKHdoaWNoIGhhcHBlbnMgcXVpdGUNCj4g
-b2Z0ZW4gaW4gbWFjODAyMS4uKSB0aGVuIHlvdSdsbCBnZXQgaXQuDQo+IA0KDQpUaGlzIHdvdWxk
-IHN0aWxsIHJlcXVpcmUgY291cGxlIG9mIGNoYW5nZXMgaW4gaG9zdGFwIHdoaWNoIEknbSBwcmVw
-YXJpbmcgZm9yIHN1Ym1pc3Npb24uDQoNClJlZ2FyZHMsDQoNCklsYW4uDQo=
+On Wed, 2016-02-24 at 12:07 +0100, Felix Fietkau wrote:
+> RTS/CTS needs to be enabled if the rate is a fallback rate *or* if
+> it's a dual-stream rate and the sta is in dynamic SMPS mode.
+> 
+Applied, thanks.
+
+johannes
