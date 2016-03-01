@@ -1,41 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50512 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752500AbcCGM1Q (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:42508 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751062AbcCAWLM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2016 07:27:16 -0500
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [1/4] mwifiex: add delay when tdls confirm frame is queued
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1456233379-12099-1-git-send-email-akarwar@marvell.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Message-Id: <20160307122715.462AB60897@smtp.codeaurora.org> (sfid-20160307_132720_296383_8569BEC6)
-Date: Mon,  7 Mar 2016 12:27:15 +0000 (UTC)
+	Tue, 1 Mar 2016 17:11:12 -0500
+Date: Tue, 01 Mar 2016 17:11:10 -0500 (EST)
+Message-Id: <20160301.171110.1945667051881874679.davem@davemloft.net> (sfid-20160301_231119_404463_F2139A03)
+To: johannes@sipsolutions.net
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: Re: pull-request: mac80211-next 2016-02-26
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <1456519067-8175-1-git-send-email-johannes@sipsolutions.net>
+References: <1456519067-8175-1-git-send-email-johannes@sipsolutions.net>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Johannes Berg <johannes@sipsolutions.net>
+Date: Fri, 26 Feb 2016 21:37:46 +0100
 
-> From: Xinming Hu <huxm@marvell.com>
+> Let's try this again. I backed out some of the rfkill changes
+> that are buggy and fixed some of that too. I also left out the
+> one that generated the big discussion, but I still think it's
+> the saner thing to do rather than requiring userspace to poke
+> around that much with sysfs when all it wants to do is tell
+> us what it thinks should be "airplane mode". Anyway, wanted to
+> get these things in before sorting that out.
 > 
-> It is observed that driver may send the data packet to tdls peer
-> before tdls peer receives tdls setup confirm frame.
-> Similar race condition exists during tdls teardown procedure also.
-> This patch adds 10 milliseconds delay to resolve the race.
+> Still the ARM patch in here - acked by the relevant people to
+> fit into the series (rfkill -> ARM -> rfkill with dependencies
+> that way); and, as Emmanuel reminded me, an iwlwifi patch that
+> has similar dependency issues and we decided to take through
+> my tree.
 > 
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Cathy Luo <cluo@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Let me know if there's any problem.
 
-Thanks, 4 patches applied to wireless-drivers-next.git:
+There was a minor merge conflict with net/mac80211/debugfs.c, take
+a look and send me any fixups necessary.
 
-de651ce3d750 mwifiex: add delay when tdls confirm frame is queued
-a6139b6271f9 mwifiex: fix corner case association failure
-8b7ef8b66eb9 mwifiex: add sdio multiport aggregation debug information
-0cb52aac4d19 mwifiex: do not set multiport flag for tx/rx single packet
-
-Kalle Valo
+Thanks!
