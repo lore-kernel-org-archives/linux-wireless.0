@@ -1,57 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m50-132.163.com ([123.125.50.132]:48217 "EHLO m50-132.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754358AbcCAPgi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 10:36:38 -0500
-From: Geliang Tang <geliangtang@163.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Julian Calaby <julian.calaby@gmail.com>
-Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 3/3] staging: rtl8723au: core: rtw_recv: use list_first_entry()
-Date: Tue,  1 Mar 2016 23:35:33 +0800
-Message-Id: <02a8be1627748f73df967fe4e55d98f6f0b01562.1456845896.git.geliangtang@163.com> (sfid-20160301_163822_946845_38487405)
-In-Reply-To: <cover.1456845896.git.geliangtang@163.com>
-References: <cover.1456845896.git.geliangtang@163.com>
-In-Reply-To: <ad37740a77700b2c0ebb5b3d8977a78af6874067.1456845896.git.geliangtang@163.com>
-References: <cover.1456845896.git.geliangtang@163.com> <f7e4ee69330e0a135625aaf9d99502e5798f0a32.1456845896.git.geliangtang@163.com> <ad37740a77700b2c0ebb5b3d8977a78af6874067.1456845896.git.geliangtang@163.com>
+Received: from mail-lb0-f169.google.com ([209.85.217.169]:34219 "EHLO
+	mail-lb0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752680AbcCAMPV (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Mar 2016 07:15:21 -0500
+Received: by mail-lb0-f169.google.com with SMTP id of3so97719231lbc.1
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2016 04:15:20 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH 1/2] ath10k: fix HTT Tx CE ring size
+Date: Tue,  1 Mar 2016 13:16:10 +0100
+Message-Id: <1456834571-9847-1-git-send-email-michal.kazior@tieto.com> (sfid-20160301_131527_823295_08CB7A4A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use list_first_entry() instead of container_of() to simplify the code.
+QCA4019 can queue up to 2500 frames at a time.
+This means it requires roughly 5000 entires on the
+ring to work properly. Otherwise random tx failure
+may occur.
 
-Signed-off-by: Geliang Tang <geliangtang@163.com>
-Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/staging/rtl8723au/core/rtw_recv.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/ce.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_recv.c b/drivers/staging/rtl8723au/core/rtw_recv.c
-index a4dacc3..ceb4a07 100644
---- a/drivers/staging/rtl8723au/core/rtw_recv.c
-+++ b/drivers/staging/rtl8723au/core/rtw_recv.c
-@@ -1522,7 +1522,7 @@ struct recv_frame *recvframe_defrag(struct rtw_adapter *adapter,
- struct recv_frame *recvframe_defrag(struct rtw_adapter *adapter,
- 				    struct rtw_queue *defrag_q)
- {
--	struct list_head *plist, *phead;
-+	struct list_head *phead;
- 	u8 wlanhdr_offset;
- 	u8 curfragnum;
- 	struct recv_frame *pnfhdr, *ptmp;
-@@ -1534,8 +1534,7 @@ struct recv_frame *recvframe_defrag(struct rtw_adapter *adapter,
- 	pfree_recv_queue = &adapter->recvpriv.free_recv_queue;
+diff --git a/drivers/net/wireless/ath/ath10k/ce.h b/drivers/net/wireless/ath/ath10k/ce.h
+index 47b734ce7ecf..dac676817532 100644
+--- a/drivers/net/wireless/ath/ath10k/ce.h
++++ b/drivers/net/wireless/ath/ath10k/ce.h
+@@ -22,7 +22,7 @@
  
- 	phead = get_list_head(defrag_q);
--	plist = phead->next;
--	prframe = container_of(plist, struct recv_frame, list);
-+	prframe = list_first_entry(phead, struct recv_frame, list);
- 	list_del_init(&prframe->list);
- 	skb = prframe->pkt;
+ /* Maximum number of Copy Engine's supported */
+ #define CE_COUNT_MAX 12
+-#define CE_HTT_H2T_MSG_SRC_NENTRIES 4096
++#define CE_HTT_H2T_MSG_SRC_NENTRIES 8192
  
+ /* Descriptor rings must be aligned to this boundary */
+ #define CE_DESC_RING_ALIGN	8
 -- 
-2.5.0
-
+2.1.4
 
