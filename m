@@ -1,316 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:59098 "EHLO mga14.intel.com"
+Received: from m50-134.163.com ([123.125.50.134]:47211 "EHLO m50-134.163.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752165AbcC3OFm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 10:05:42 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Aviya Erenfeld <aviya.erenfeld@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 05/43] iwlwifi: mvm: add LQM vendor command and notification
-Date: Wed, 30 Mar 2016 17:04:37 +0300
-Message-Id: <1459346715-7954-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160546_191238_11091B5A)
-In-Reply-To: <1459346667.4731.9.camel@intel.com>
-References: <1459346667.4731.9.camel@intel.com>
+	id S1754448AbcCAPgh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Mar 2016 10:36:37 -0500
+From: Geliang Tang <geliangtang@163.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Julian Calaby <julian.calaby@gmail.com>
+Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2 1/3] staging: rtl8723au: core: rtw_recv: use list_first_entry_or_null()
+Date: Tue,  1 Mar 2016 23:35:31 +0800
+Message-Id: <f7e4ee69330e0a135625aaf9d99502e5798f0a32.1456845896.git.geliangtang@163.com> (sfid-20160301_163758_388688_D97E97F4)
+In-Reply-To: <cover.1456845896.git.geliangtang@163.com>
+References: <cover.1456845896.git.geliangtang@163.com>
+In-Reply-To: <cover.1456845896.git.geliangtang@163.com>
+References: <cover.1456845896.git.geliangtang@163.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Aviya Erenfeld <aviya.erenfeld@intel.com>
+Use list_first_entry_or_null() instead of list_empty() + container_of()
+to simplify the code.
 
-LQM stands for Link Quality Measurement. The firmware
-will collect a defined set of statitics (see the
-notification for details) that allow to know how busy
-the medium is. The driver issues a request to the firmware
-that includes the duration of the measurement (the firmware
-needs to be on channel for that amount of time) and the
-timeout (in case the firmware has a lot of offchannel
-activities). If the timeout elapses, the firmware will
-send partial results which are still valuable.
-In case of disassociation / channel switch and alike, the
-driver is in charge of stopping the measurements and the
-firmware will reply with partial results.
-
-The user space API for now is debugfs only and will be
-implmemented in an upcoming patch.
-
-Signed-off-by: Aviya Erenfeld <aviya.erenfeld@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Geliang Tang <geliangtang@163.com>
+Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h  |  2 +
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h   | 62 ++++++++++++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 10 ++++
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h      | 12 ++++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c      |  9 +++
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c    | 71 +++++++++++++++++++++++
- 6 files changed, 166 insertions(+)
+ drivers/staging/rtl8723au/core/rtw_recv.c | 42 ++++++++-----------------------
+ 1 file changed, 11 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-index 3a72b97..c82b9416 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-@@ -326,6 +326,7 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_capa_t;
-  *	regular image.
-  * @IWL_UCODE_TLV_CAPA_EXTEND_SHARED_MEM_CFG: support getting more shared
-  *	memory addresses from the firmware.
-+ * @IWL_UCODE_TLV_CAPA_LQM_SUPPORT: supports Link Quality Measurement
-  *
-  * @NUM_IWL_UCODE_TLV_CAPA: number of bits used
-  */
-@@ -364,6 +365,7 @@ enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_CTDP_SUPPORT			= (__force iwl_ucode_tlv_capa_t)76,
- 	IWL_UCODE_TLV_CAPA_USNIFFER_UNIFIED		= (__force iwl_ucode_tlv_capa_t)77,
- 	IWL_UCODE_TLV_CAPA_EXTEND_SHARED_MEM_CFG	= (__force iwl_ucode_tlv_capa_t)80,
-+	IWL_UCODE_TLV_CAPA_LQM_SUPPORT			= (__force iwl_ucode_tlv_capa_t)81,
+diff --git a/drivers/staging/rtl8723au/core/rtw_recv.c b/drivers/staging/rtl8723au/core/rtw_recv.c
+index 0a7741c..a4dacc3 100644
+--- a/drivers/staging/rtl8723au/core/rtw_recv.c
++++ b/drivers/staging/rtl8723au/core/rtw_recv.c
+@@ -104,21 +104,14 @@ void _rtw_free_recv_priv23a(struct recv_priv *precvpriv)
+ struct recv_frame *rtw_alloc_recvframe23a(struct rtw_queue *pfree_recv_queue)
+ {
+ 	struct recv_frame *pframe;
+-	struct list_head *plist, *phead;
+ 	struct rtw_adapter *padapter;
+ 	struct recv_priv *precvpriv;
  
- 	NUM_IWL_UCODE_TLV_CAPA
- #ifdef __CHECKER__
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index 61711b1..e6bd0c8 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -279,6 +279,11 @@ enum {
- /* Please keep this enum *SORTED* by hex value.
-  * Needed for binary search, otherwise a warning will be triggered.
-  */
-+enum iwl_mac_conf_subcmd_ids {
-+	LINK_QUALITY_MEASUREMENT_CMD = 0x1,
-+	LINK_QUALITY_MEASUREMENT_COMPLETE_NOTIF = 0xFE,
-+};
-+
- enum iwl_phy_ops_subcmd_ids {
- 	CMD_DTS_MEASUREMENT_TRIGGER_WIDE = 0x0,
- 	CTDP_CONFIG_CMD = 0x03,
-@@ -307,6 +312,7 @@ enum {
- 	LEGACY_GROUP = 0x0,
- 	LONG_GROUP = 0x1,
- 	SYSTEM_GROUP = 0x2,
-+	MAC_CONF_GROUP = 0x3,
- 	PHY_OPS_GROUP = 0x4,
- 	DATA_PATH_GROUP = 0x5,
- 	PROT_OFFLOAD_GROUP = 0xb,
-@@ -2017,4 +2023,60 @@ struct iwl_stored_beacon_notif {
- 	u8 data[MAX_STORED_BEACON_SIZE];
- } __packed; /* WOWLAN_STROED_BEACON_INFO_S_VER_1 */
+ 	spin_lock_bh(&pfree_recv_queue->lock);
  
-+#define LQM_NUMBER_OF_STATIONS_IN_REPORT 16
-+
-+enum iwl_lqm_cmd_operatrions {
-+	LQM_CMD_OPERATION_START_MEASUREMENT = 0x01,
-+	LQM_CMD_OPERATION_STOP_MEASUREMENT = 0x02,
-+};
-+
-+enum iwl_lqm_status {
-+	LQM_STATUS_SUCCESS = 0,
-+	LQM_STATUS_TIMEOUT = 1,
-+	LQM_STATUS_ABORT = 2,
-+};
-+
-+/**
-+ * Link Quality Measurement command
-+ * @cmd_operatrion: command operation to be performed (start or stop)
-+ *	as defined above.
-+ * @mac_id: MAC ID the measurement applies to.
-+ * @measurement_time: time of the total measurement to be performed, in uSec.
-+ * @timeout: maximum time allowed until a response is sent, in uSec.
-+ */
-+struct iwl_link_qual_msrmnt_cmd {
-+	__le32 cmd_operation;
-+	__le32 mac_id;
-+	__le32 measurement_time;
-+	__le32 timeout;
-+} __packed /* LQM_CMD_API_S_VER_1 */;
-+
-+/**
-+ * Link Quality Measurement notification
-+ *
-+ * @frequent_stations_air_time: an array containing the total air time
-+ *	(in uSec) used by the most frequently transmitting stations.
-+ * @number_of_stations: the number of uniqe stations included in the array
-+ *	(a number between 0 to 16)
-+ * @total_air_time_other_stations: the total air time (uSec) used by all the
-+ *	stations which are not included in the above report.
-+ * @time_in_measurement_window: the total time in uSec in which a measurement
-+ *	took place.
-+ * @tx_frame_dropped: the number of TX frames dropped due to retry limit during
-+ *	measurement
-+ * @mac_id: MAC ID the measurement applies to.
-+ * @status: return status. may be one of the LQM_STATUS_* defined above.
-+ * @reserved: reserved.
-+ */
-+struct iwl_link_qual_msrmnt_notif {
-+	__le32 frequent_stations_air_time[LQM_NUMBER_OF_STATIONS_IN_REPORT];
-+	__le32 number_of_stations;
-+	__le32 total_air_time_other_stations;
-+	__le32 time_in_measurement_window;
-+	__le32 tx_frame_dropped;
-+	__le32 mac_id;
-+	__le32 status;
-+	__le32 reserved[3];
-+} __packed; /* LQM_MEASUREMENT_COMPLETE_NTF_API_S_VER1 */
-+
- #endif /* __fw_api_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 76e649c..cff9c16 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1821,6 +1821,11 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
- 	if (changes & BSS_CHANGED_ASSOC && bss_conf->assoc)
- 		iwl_mvm_mac_ctxt_recalc_tsf_id(mvm, vif);
+-	if (list_empty(&pfree_recv_queue->queue))
+-		pframe = NULL;
+-	else {
+-		phead = get_list_head(pfree_recv_queue);
+-
+-		plist = phead->next;
+-
+-		pframe = container_of(plist, struct recv_frame, list);
+-
++	pframe = list_first_entry_or_null(&pfree_recv_queue->queue,
++					  struct recv_frame, list);
++	if (pframe) {
+ 		list_del_init(&pframe->list);
+ 		padapter = pframe->adapter;
+ 		if (padapter) {
+@@ -247,21 +240,13 @@ struct recv_buf *rtw_dequeue_recvbuf23a (struct rtw_queue *queue)
+ {
+ 	unsigned long irqL;
+ 	struct recv_buf *precvbuf;
+-	struct list_head *plist, *phead;
  
-+	if (changes & BSS_CHANGED_ASSOC && !bss_conf->assoc &&
-+	    mvmvif->lqm_active)
-+		iwl_mvm_send_lqm_cmd(vif, LQM_CMD_OPERATION_STOP_MEASUREMENT,
-+				     0, 0);
-+
- 	/*
- 	 * If we're not associated yet, take the (new) BSSID before associating
- 	 * so the firmware knows. If we're already associated, then use the old
-@@ -3628,6 +3633,11 @@ static int iwl_mvm_pre_channel_switch(struct ieee80211_hw *hw,
+ 	spin_lock_irqsave(&queue->lock, irqL);
  
- 		break;
- 	case NL80211_IFTYPE_STATION:
-+		if (mvmvif->lqm_active)
-+			iwl_mvm_send_lqm_cmd(vif,
-+					     LQM_CMD_OPERATION_STOP_MEASUREMENT,
-+					     0, 0);
-+
- 		/* Schedule the time event to a bit before beacon 1,
- 		 * to make sure we're in the new channel when the
- 		 * GO/AP arrives.
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index 6c67c0f..0668601 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -453,6 +453,12 @@ struct iwl_mvm_vif {
+-	if (list_empty(&queue->queue)) {
+-		precvbuf = NULL;
+-	} else {
+-		phead = get_list_head(queue);
+-
+-		plist = phead->next;
+-
+-		precvbuf = container_of(plist, struct recv_buf, list);
+-
++	precvbuf = list_first_entry_or_null(&queue->queue,
++					    struct recv_buf, list);
++	if (precvbuf)
+ 		list_del_init(&precvbuf->list);
+-	}
  
- 	/* TCP Checksum Offload */
- 	netdev_features_t features;
-+
-+	/*
-+	 * link quality measurement - used to check whether this interface
-+	 * is in the middle of a link quality measurement
-+	 */
-+	bool lqm_active;
- };
+ 	spin_unlock_irqrestore(&queue->lock, irqL);
  
- static inline struct iwl_mvm_vif *
-@@ -1637,4 +1643,10 @@ unsigned int iwl_mvm_get_wd_timeout(struct iwl_mvm *mvm,
- void iwl_mvm_connection_loss(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 			     const char *errmsg);
+@@ -1079,22 +1064,17 @@ static int validate_recv_ctrl_frame(struct rtw_adapter *padapter,
  
-+/* Link Quality Measurement */
-+int iwl_mvm_send_lqm_cmd(struct ieee80211_vif *vif,
-+			 enum iwl_lqm_cmd_operatrions operation,
-+			 u32 duration, u32 timeout);
-+bool iwl_mvm_lqm_active(struct iwl_mvm *mvm);
-+
- #endif /* __IWL_MVM_H__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index ccf6ecd..46a22fd 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -428,6 +428,14 @@ static const struct iwl_hcmd_names iwl_mvm_system_names[] = {
- /* Please keep this array *SORTED* by hex value.
-  * Access is done through binary search
-  */
-+static const struct iwl_hcmd_names iwl_mvm_mac_conf_names[] = {
-+	HCMD_NAME(LINK_QUALITY_MEASUREMENT_CMD),
-+	HCMD_NAME(LINK_QUALITY_MEASUREMENT_COMPLETE_NOTIF),
-+};
-+
-+/* Please keep this array *SORTED* by hex value.
-+ * Access is done through binary search
-+ */
- static const struct iwl_hcmd_names iwl_mvm_phy_names[] = {
- 	HCMD_NAME(CMD_DTS_MEASUREMENT_TRIGGER_WIDE),
- 	HCMD_NAME(CTDP_CONFIG_CMD),
-@@ -457,6 +465,7 @@ static const struct iwl_hcmd_arr iwl_mvm_groups[] = {
- 	[LEGACY_GROUP] = HCMD_ARR(iwl_mvm_legacy_names),
- 	[LONG_GROUP] = HCMD_ARR(iwl_mvm_legacy_names),
- 	[SYSTEM_GROUP] = HCMD_ARR(iwl_mvm_system_names),
-+	[MAC_CONF_GROUP] = HCMD_ARR(iwl_mvm_mac_conf_names),
- 	[PHY_OPS_GROUP] = HCMD_ARR(iwl_mvm_phy_names),
- 	[DATA_PATH_GROUP] = HCMD_ARR(iwl_mvm_data_path_names),
- 	[PROT_OFFLOAD_GROUP] = HCMD_ARR(iwl_mvm_prot_offload_names),
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 53cdc57..2440248 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -1079,3 +1079,74 @@ void iwl_mvm_connection_loss(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- out:
- 	ieee80211_connection_loss(vif);
- }
-+
-+int iwl_mvm_send_lqm_cmd(struct ieee80211_vif *vif,
-+			 enum iwl_lqm_cmd_operatrions operation,
-+			 u32 duration, u32 timeout)
-+{
-+	struct iwl_mvm_vif *mvm_vif = iwl_mvm_vif_from_mac80211(vif);
-+	struct iwl_link_qual_msrmnt_cmd cmd = {
-+		.cmd_operation = cpu_to_le32(operation),
-+		.mac_id = cpu_to_le32(mvm_vif->id),
-+		.measurement_time = cpu_to_le32(duration),
-+		.timeout = cpu_to_le32(timeout),
-+	};
-+	u32 cmdid =
-+		iwl_cmd_id(LINK_QUALITY_MEASUREMENT_CMD, MAC_CONF_GROUP, 0);
-+	int ret;
-+
-+	if (!fw_has_capa(&mvm_vif->mvm->fw->ucode_capa,
-+			 IWL_UCODE_TLV_CAPA_LQM_SUPPORT))
-+		return -EOPNOTSUPP;
-+
-+	if (vif->type != NL80211_IFTYPE_STATION || vif->p2p)
-+		return -EINVAL;
-+
-+	switch (operation) {
-+	case LQM_CMD_OPERATION_START_MEASUREMENT:
-+		if (iwl_mvm_lqm_active(mvm_vif->mvm))
-+			return -EBUSY;
-+		if (!vif->bss_conf.assoc)
-+			return -EINVAL;
-+		mvm_vif->lqm_active = true;
-+		break;
-+	case LQM_CMD_OPERATION_STOP_MEASUREMENT:
-+		if (!iwl_mvm_lqm_active(mvm_vif->mvm))
-+			return -EINVAL;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+
-+	ret = iwl_mvm_send_cmd_pdu(mvm_vif->mvm, cmdid, 0, sizeof(cmd),
-+				   &cmd);
-+
-+	/* command failed - roll back lqm_active state */
-+	if (ret) {
-+		mvm_vif->lqm_active =
-+			operation == LQM_CMD_OPERATION_STOP_MEASUREMENT;
-+	}
-+
-+	return ret;
-+}
-+
-+static void iwl_mvm_lqm_active_iterator(void *_data, u8 *mac,
-+					struct ieee80211_vif *vif)
-+{
-+	struct iwl_mvm_vif *mvm_vif = iwl_mvm_vif_from_mac80211(vif);
-+	bool *lqm_active = _data;
-+
-+	*lqm_active = *lqm_active || mvm_vif->lqm_active;
-+}
-+
-+bool iwl_mvm_lqm_active(struct iwl_mvm *mvm)
-+{
-+	bool ret = false;
-+
-+	lockdep_assert_held(&mvm->mutex);
-+	ieee80211_iterate_active_interfaces_atomic(
-+		mvm->hw, IEEE80211_IFACE_ITER_NORMAL,
-+		iwl_mvm_lqm_active_iterator, &ret);
-+
-+	return ret;
-+}
+ 		if ((psta->state & WIFI_SLEEP_STATE) &&
+ 		    (pstapriv->sta_dz_bitmap & CHKBIT(psta->aid))) {
+-			struct list_head *xmitframe_plist, *xmitframe_phead;
++			struct list_head *xmitframe_phead;
+ 			struct xmit_frame *pxmitframe;
+ 			struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+ 
+ 			spin_lock_bh(&pxmitpriv->lock);
+ 
+ 			xmitframe_phead = get_list_head(&psta->sleep_q);
+-			xmitframe_plist = xmitframe_phead->next;
+-
+-			if (!list_empty(xmitframe_phead)) {
+-				pxmitframe = container_of(xmitframe_plist,
+-							  struct xmit_frame,
+-							  list);
+-
+-				xmitframe_plist = xmitframe_plist->next;
+-
++			pxmitframe = list_first_entry_or_null(xmitframe_phead,
++							      struct xmit_frame,
++							      list);
++			if (pxmitframe) {
+ 				list_del_init(&pxmitframe->list);
+ 
+ 				psta->sleepq_len--;
 -- 
 2.5.0
+
 
