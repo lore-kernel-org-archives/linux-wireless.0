@@ -1,96 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:49843 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752666AbcCYMUQ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48791 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751729AbcCAC7Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Mar 2016 08:20:16 -0400
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 05/11] staging: wilc1000: replaces frame_type with type of struct frame_reg
-Date: Fri, 25 Mar 2016 21:16:50 +0900
-Message-ID: <1458908216-12100-5-git-send-email-leo.kim@atmel.com> (sfid-20160325_132020_131382_4C427200)
-In-Reply-To: <1458908216-12100-1-git-send-email-leo.kim@atmel.com>
-References: <1458908216-12100-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Mon, 29 Feb 2016 21:59:25 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 6/8] ath9k: add bits definition of BTCoex MODE2/3 for SOC chips
+Date: Tue,  1 Mar 2016 10:58:33 +0800
+Message-Id: <1456801115-16636-7-git-send-email-miaoqing@codeaurora.org> (sfid-20160301_035928_484559_E2307AD2)
+In-Reply-To: <1456801115-16636-1-git-send-email-miaoqing@codeaurora.org>
+References: <1456801115-16636-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces frame_type with type of struct frame_reg.
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Add bits definition for AR_BT_COEX_MODE2 and AR_BT_COEX_MODE3, which
+needed by SOC chips (AR9340, AR9531, AR9550, AR9561).
+
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 ---
- drivers/staging/wilc1000/linux_wlan.c             | 8 ++++----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     | 2 +-
- 3 files changed, 7 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath9k/reg.h | 46 +++++++++++++++++++++++++++++-------
+ 1 file changed, 37 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 2f830cd..760d44d1 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -966,11 +966,11 @@ int wilc_mac_open(struct net_device *ndev)
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index f82a4ad..f8a96f6 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1890,15 +1890,33 @@ enum {
  
- 	wilc_mgmt_frame_register(vif->ndev->ieee80211_ptr->wiphy,
- 				 vif->ndev->ieee80211_ptr,
--				 vif->frame_reg[0].frame_type,
-+				 vif->frame_reg[0].type,
- 				 vif->frame_reg[0].reg);
- 	wilc_mgmt_frame_register(vif->ndev->ieee80211_ptr->wiphy,
- 				 vif->ndev->ieee80211_ptr,
--				 vif->frame_reg[1].frame_type,
-+				 vif->frame_reg[1].type,
- 				 vif->frame_reg[1].reg);
- 	netif_wake_queue(ndev);
- 	wl->open_ifcs++;
-@@ -1260,8 +1260,8 @@ void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size)
- 	}
+ #define AR9300_BT_WGHT             0xcccc4444
  
- 	vif = netdev_priv(wilc->vif[1]->ndev);
--	if ((buff[0] == vif->frame_reg[0].frame_type && vif->frame_reg[0].reg) ||
--	    (buff[0] == vif->frame_reg[1].frame_type && vif->frame_reg[1].reg))
-+	if ((buff[0] == vif->frame_reg[0].type && vif->frame_reg[0].reg) ||
-+	    (buff[0] == vif->frame_reg[1].type && vif->frame_reg[1].reg))
- 		WILC_WFI_p2p_rx(wilc->vif[1]->ndev, buff, size);
- }
+-#define AR_BT_COEX_MODE2           0x817c
+-#define AR_BT_BCN_MISS_THRESH      0x000000ff
+-#define AR_BT_BCN_MISS_THRESH_S    0
+-#define AR_BT_BCN_MISS_CNT         0x0000ff00
+-#define AR_BT_BCN_MISS_CNT_S       8
+-#define AR_BT_HOLD_RX_CLEAR        0x00010000
+-#define AR_BT_HOLD_RX_CLEAR_S      16
+-#define AR_BT_DISABLE_BT_ANT       0x00100000
+-#define AR_BT_DISABLE_BT_ANT_S     20
++#define AR_BT_COEX_MODE2		0x817c
++#define AR_BT_BCN_MISS_THRESH		0x000000ff
++#define AR_BT_BCN_MISS_THRESH_S		0
++#define AR_BT_BCN_MISS_CNT		0x0000ff00
++#define AR_BT_BCN_MISS_CNT_S		8
++#define AR_BT_HOLD_RX_CLEAR		0x00010000
++#define AR_BT_HOLD_RX_CLEAR_S		16
++#define AR_BT_PROTECT_BT_AFTER_WAKEUP	0x00080000
++#define AR_BT_PROTECT_BT_AFTER_WAKEUP_S 19
++#define AR_BT_DISABLE_BT_ANT		0x00100000
++#define AR_BT_DISABLE_BT_ANT_S		20
++#define AR_BT_QUIET_2_WIRE		0x00200000
++#define AR_BT_QUIET_2_WIRE_S		21
++#define AR_BT_WL_ACTIVE_MODE		0x00c00000
++#define AR_BT_WL_ACTIVE_MODE_S		22
++#define AR_BT_WL_TXRX_SEPARATE		0x01000000
++#define AR_BT_WL_TXRX_SEPARATE_S	24
++#define AR_BT_RS_DISCARD_EXTEND		0x02000000
++#define AR_BT_RS_DISCARD_EXTEND_S	25
++#define AR_BT_TSF_BT_ACTIVE_CTRL	0x0c000000
++#define AR_BT_TSF_BT_ACTIVE_CTRL_S	26
++#define AR_BT_TSF_BT_PRIORITY_CTRL	0x30000000
++#define AR_BT_TSF_BT_PRIORITY_CTRL_S	28
++#define AR_BT_INTERRUPT_ENABLE		0x40000000
++#define AR_BT_INTERRUPT_ENABLE_S	30
++#define AR_BT_PHY_ERR_BT_COLL_ENABLE	0x80000000
++#define AR_BT_PHY_ERR_BT_COLL_ENABLE_S	31
  
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 3e0ffee..5785dda 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -1745,14 +1745,14 @@ void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
- 	switch (frame_type) {
- 	case PROBE_REQ:
- 	{
--		vif->frame_reg[0].frame_type = frame_type;
-+		vif->frame_reg[0].type = frame_type;
- 		vif->frame_reg[0].reg = reg;
- 	}
- 	break;
+ #define AR_TXSIFS              0x81d0
+ #define AR_TXSIFS_TIME         0x000000FF
+@@ -1907,6 +1925,16 @@ enum {
+ #define AR_TXSIFS_ACK_SHIFT    0x00007000
+ #define AR_TXSIFS_ACK_SHIFT_S  12
  
- 	case ACTION:
- 	{
--		vif->frame_reg[1].frame_type = frame_type;
-+		vif->frame_reg[1].type = frame_type;
- 		vif->frame_reg[1].reg = reg;
- 	}
- 	break;
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 3abe481..debb139 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -140,7 +140,7 @@ struct wilc_priv {
- };
- 
- struct frame_reg {
--	u16 frame_type;
-+	u16 type;
- 	bool reg;
- };
++#define AR_BT_COEX_MODE3			0x81d4
++#define AR_BT_WL_ACTIVE_TIME			0x000000ff
++#define AR_BT_WL_ACTIVE_TIME_S			0
++#define AR_BT_WL_QC_TIME			0x0000ff00
++#define AR_BT_WL_QC_TIME_S			8
++#define AR_BT_ALLOW_CONCURRENT_ACCESS		0x000f0000
++#define AR_BT_ALLOW_CONCURRENT_ACCESS_S		16
++#define AR_BT_AGC_SATURATION_CNT_ENABLE		0x00100000
++#define AR_BT_AGC_SATURATION_CNT_ENABLE_S	20
++
+ #define AR_TXOP_X          0x81ec
+ #define AR_TXOP_X_VAL      0x000000FF
  
 -- 
 1.9.1
