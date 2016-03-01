@@ -1,87 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f44.google.com ([209.85.218.44]:34797 "EHLO
-	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964899AbcCIXnQ (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:31382 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752637AbcCARS0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 18:43:16 -0500
-Received: by mail-oi0-f44.google.com with SMTP id m82so48525526oif.1
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2016 15:43:15 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <56E0B21D.1010503@mleia.com>
-References: <1457565194-31533-1-git-send-email-vz@mleia.com>
- <CAGRGNgUMViiR+ruvLHnwMLHUxOK3+uW7634Hpgn9gN+djCOtbw@mail.gmail.com> <56E0B21D.1010503@mleia.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 10 Mar 2016 10:42:54 +1100
-Message-ID: <CAGRGNgVsmTPpiu4twUnvk_3GEFMiU2VuuSj5=M+4y6qJYiDZhA@mail.gmail.com> (sfid-20160310_004335_170413_E715C835)
-Subject: Re: [PATCH] staging: wilc1000: fix check of kthread_run() return value
-To: Vladimir Zapolskiy <vz@mleia.com>
-Cc: Glen Lee <glen.lee@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Leo Kim <leo.kim@atmel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 1 Mar 2016 12:18:26 -0500
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH v2 02/15] wil6210: AP: prevent connecting to already connected station
+Date: Tue,  1 Mar 2016 19:18:05 +0200
+Message-Id: <1456852698-26808-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160301_181831_715328_A7C03333)
+In-Reply-To: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Vladimir,
+wmi_evt_connect doesn't check if the connect event is received for
+an already connected station.
+This can lead to memory leak as a new vring is allocated without
+freeing the previously allocated vring and to unexpected behavior
+of nl80211 layer due to unexpected notification of a new station.
 
-On Thu, Mar 10, 2016 at 10:30 AM, Vladimir Zapolskiy <vz@mleia.com> wrote:
-> Hi Julian,
->
-> On 10.03.2016 01:27, Julian Calaby wrote:
->> Hi Vladimir,
->>
->> On Thu, Mar 10, 2016 at 10:13 AM, Vladimir Zapolskiy <vz@mleia.com> wrote:
->>> The kthread_run() function returns either a valid task_struct or
->>> ERR_PTR() value, check for NULL is invalid. The change fixes potential
->>> oops, e.g. in OOM situation.
->>>
->>> Signed-off-by: Vladimir Zapolskiy <vz@mleia.com>
->>> ---
->>>  drivers/staging/wilc1000/linux_wlan.c | 4 ++--
->>>  1 file changed, 2 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
->>> index 54fe9d7..5077c30 100644
->>> --- a/drivers/staging/wilc1000/linux_wlan.c
->>> +++ b/drivers/staging/wilc1000/linux_wlan.c
->>> @@ -849,10 +849,10 @@ static int wlan_initialize_threads(struct net_device *dev)
->>>         PRINT_D(INIT_DBG, "Creating kthread for transmission\n");
->>>         wilc->txq_thread = kthread_run(linux_wlan_txq_task, (void *)dev,
->>>                                      "K_TXQ_TASK");
->>> -       if (!wilc->txq_thread) {
->>> +       if (IS_ERR(wilc->txq_thread)) {
->>>                 PRINT_ER("couldn't create TXQ thread\n");
->>>                 wilc->close = 0;
->>> -               return -ENOBUFS;
->>> +               return PTR_ERR(wilc->txq_thread);
->>
->> Are you sure changing the error returned is correct? Do all the
->> callers of wlan_initialize_threads() handle the full range of errors
->> from kthread_run()?
->
-> Have you checked the driver?
+Add a check in wmi_evt_connect in AP mode to verify that the requested
+CID is not associated to an already connected station.
 
-I'm making sure you have. It's possible that there's a good reason why
-this returns -ENOBUFS I want to know that you've at least considered
-that possibility.
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/wmi.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-> This function is called once on initialization, the check on the upper layer
-> has "if (ret < 0) goto exit_badly;" form.
-
-And practically everything in the chain up to net_device_ops uses the
-same error handling scheme so it's probably fine.
-
-You should also document this change in the commit message.
-
-Thanks,
-
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index 493e721..fb09035 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -487,6 +487,14 @@ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
+ 			return;
+ 		}
+ 		del_timer_sync(&wil->connect_timer);
++	} else if ((wdev->iftype == NL80211_IFTYPE_AP) ||
++		   (wdev->iftype == NL80211_IFTYPE_P2P_GO)) {
++		if (wil->sta[evt->cid].status != wil_sta_unused) {
++			wil_err(wil, "%s: AP: Invalid status %d for CID %d\n",
++				__func__, wil->sta[evt->cid].status, evt->cid);
++			mutex_unlock(&wil->mutex);
++			return;
++		}
+ 	}
+ 
+ 	/* FIXME FW can transmit only ucast frames to peer */
 -- 
-Julian Calaby
+1.8.5.2
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
