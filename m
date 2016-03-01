@@ -1,45 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:34371 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759021AbcCDJNa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 04:13:30 -0500
-Message-ID: <1457082805.2333.0.camel@sipsolutions.net> (sfid-20160304_101416_998974_8C9F5453)
-Subject: Re: [PATCH V11 1/2] nl80211: add feature for BSS selection support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: arend@broadcom.com
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 04 Mar 2016 10:13:25 +0100
-In-Reply-To: <56D8A618.4050707@broadcom.com> (sfid-20160303_220118_206425_01EF95D1)
-References: <1456947439-28968-1-git-send-email-arend@broadcom.com>
-	 <1457020529.2044.31.camel@sipsolutions.net> <56D8A618.4050707@broadcom.com>
-	 (sfid-20160303_220118_206425_01EF95D1)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:48808 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751775AbcCAC7a (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 29 Feb 2016 21:59:30 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 7/8] ath9k: fix BTCoex access invalid registers for SOC chips
+Date: Tue,  1 Mar 2016 10:58:34 +0800
+Message-Id: <1456801115-16636-8-git-send-email-miaoqing@codeaurora.org> (sfid-20160301_035933_344472_31712CEC)
+In-Reply-To: <1456801115-16636-1-git-send-email-miaoqing@codeaurora.org>
+References: <1456801115-16636-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-03-03 at 22:01 +0100, Arend Van Spriel wrote:
-> 
-> On 3-3-2016 16:55, Johannes Berg wrote:
-> > On Wed, 2016-03-02 at 20:37 +0100, Arend van Spriel wrote:
-> > > Introducing a new feature that the driver can use to
-> > > indicate the driver/firmware supports configuration of BSS
-> > > selection criteria upon CONNECT command. This can be useful
-> > > when multiple BSS-es are found belonging to the same ESS,
-> > > ie. Infra-BSS with same SSID. The criteria can then be used to
-> > > offload selection of a preferred BSS.
-> > > 
-> > Applied, finally :)
-> > 
-> > I moved the wiphy supported methods check into parse_bss_select()
-> > to
-> > avoid the double error path in the caller, plus some editorial
-> > changes.
-> 
-> Do you expect Kalle to take the brcmfmac patch or can it go through
-> your tree?
-> 
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-I was expecting Kalle to apply it.
+The registers of AR_GPIO_INPUT_MUX1 and AR_GPIO_PDPU were removed
+from SOC chips, fix invalid accessing
 
-johannes
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/btcoex.c | 27 +++++++++++++++------------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index 5a9ecf7..a754f6d 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -162,9 +162,10 @@ void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah)
+ 		    AR_GPIO_INPUT_EN_VAL_BT_ACTIVE_BB);
+ 
+ 	/* Set input mux for bt_active to gpio pin */
+-	REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
+-		      AR_GPIO_INPUT_MUX1_BT_ACTIVE,
+-		      btcoex_hw->btactive_gpio);
++	if (!AR_SREV_SOC(ah))
++		REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
++			      AR_GPIO_INPUT_MUX1_BT_ACTIVE,
++			      btcoex_hw->btactive_gpio);
+ 
+ 	/* Configure the desired gpio port for input */
+ 	ath9k_hw_gpio_request_in(ah, btcoex_hw->btactive_gpio,
+@@ -183,13 +184,14 @@ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
+ 
+ 	/* Set input mux for bt_prority_async and
+ 	 *                  bt_active_async to GPIO pins */
+-	REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
+-			AR_GPIO_INPUT_MUX1_BT_ACTIVE,
+-			btcoex_hw->btactive_gpio);
+-
+-	REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
+-			AR_GPIO_INPUT_MUX1_BT_PRIORITY,
+-			btcoex_hw->btpriority_gpio);
++	if (!AR_SREV_SOC(ah)) {
++		REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
++			      AR_GPIO_INPUT_MUX1_BT_ACTIVE,
++			      btcoex_hw->btactive_gpio);
++		REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
++			      AR_GPIO_INPUT_MUX1_BT_PRIORITY,
++			      btcoex_hw->btpriority_gpio);
++	}
+ 
+ 	/* Configure the desired GPIO ports for input */
+ 	ath9k_hw_gpio_request_in(ah, btcoex_hw->btactive_gpio,
+@@ -285,13 +287,13 @@ void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
+ 				 txprio_shift[i-1]);
+ 		}
+ 	}
++
+ 	/* Last WLAN weight has to be adjusted wrt tx priority */
+ 	if (concur_tx) {
+ 		btcoex_hw->wlan_weight[i-1] &= ~(0xff << txprio_shift[i-1]);
+ 		btcoex_hw->wlan_weight[i-1] |= (btcoex_hw->tx_prio[stomp_type]
+ 						      << txprio_shift[i-1]);
+ 	}
+-
+ }
+ EXPORT_SYMBOL(ath9k_hw_btcoex_set_weight);
+ 
+@@ -375,7 +377,8 @@ void ath9k_hw_btcoex_enable(struct ath_hw *ah)
+ 		break;
+ 	}
+ 
+-	if (ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_MCI) {
++	if (ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_MCI &&
++	    !AR_SREV_SOC(ah)) {
+ 		REG_RMW(ah, AR_GPIO_PDPU,
+ 			(0x2 << (btcoex_hw->btactive_gpio * 2)),
+ 			(0x3 << (btcoex_hw->btactive_gpio * 2)));
+-- 
+1.9.1
+
