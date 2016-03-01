@@ -1,101 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.24]:61285 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932099AbcCBQAv (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48662 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750736AbcCAC6u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 11:00:51 -0500
-From: Arnd Bergmann <arnd@arndb.de>
-To: Solomon Peachy <pizza@shaftnet.org>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-arm-kernel@lists.infradead.org,
-	Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 10/14] wireless: cw1200: use __maybe_unused to hide pm functions_
-Date: Wed,  2 Mar 2016 16:59:02 +0100
-Message-Id: <1456934350-1389172-11-git-send-email-arnd@arndb.de> (sfid-20160302_170232_202330_3E23FE1B)
-In-Reply-To: <1456934350-1389172-1-git-send-email-arnd@arndb.de>
-References: <1456934350-1389172-1-git-send-email-arnd@arndb.de>
+	Mon, 29 Feb 2016 21:58:50 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 0/8] ath9k GPIO & BT-Coex bug fixes
+Date: Tue,  1 Mar 2016 10:58:27 +0800
+Message-Id: <1456801115-16636-1-git-send-email-miaoqing@codeaurora.org> (sfid-20160301_035853_583269_15444AB5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The cw1200 uses #ifdef to check for CONFIG_PM, but then
-uses SIMPLE_DEV_PM_OPS, which leaves the references out when
-CONFIG_PM_SLEEP is not defined, so we get a warning with
-PM=y && PM_SLEEP=n:
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-drivers/net/wireless/st/cw1200/cw1200_spi.c:450:12: error: 'cw1200_spi_suspend' defined but not used [-Werror=unused-function]
+ath9k GPIO & BT-Coex bug fixes.
 
-This removes the incorrect #ifdef and instead uses a __maybe_unused
-annotation to let the compiler know it can silently drop
-the function definition.
+Miaoqing Pan (8):
+  ath9k: define correct GPIO numbers and bits mask
+  ath9k: make GPIO API to support both of WMAC and SOC
+  ath9k: free GPIO resource for SOC GPIOs
+  ath9k: cleanup led_pin initial
+  ath9k: Allow platform override BTCoex pin
+  ath9k: add bits definition of BTCoex MODE2/3 for SOC chips
+  ath9k: fix BTCoex access invalid registers for SOC chips
+  ath9k: fix BTCoex configuration for SOC chips
 
-For the DEV_PM_OPS definition, we can use an IS_ENABLED() check
-to avoid defining the structure when CONFIG_PM is not set without
-the #ifdef.
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   4 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c    |  39 ++--
+ drivers/net/wireless/ath/ath9k/ath9k.h         |   4 -
+ drivers/net/wireless/ath/ath9k/btcoex.c        | 138 +++++++++----
+ drivers/net/wireless/ath/ath9k/btcoex.h        |   2 +
+ drivers/net/wireless/ath/ath9k/gpio.c          |  69 ++++---
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c  |   8 +-
+ drivers/net/wireless/ath/ath9k/hw.c            | 263 ++++++++++++++++---------
+ drivers/net/wireless/ath/ath9k/hw.h            |  11 +-
+ drivers/net/wireless/ath/ath9k/init.c          |   1 -
+ drivers/net/wireless/ath/ath9k/main.c          |   9 +-
+ drivers/net/wireless/ath/ath9k/reg.h           |  90 +++++++--
+ include/linux/ath9k_platform.h                 |   4 +
+ 13 files changed, 432 insertions(+), 210 deletions(-)
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/net/wireless/st/cw1200/cw1200_spi.c | 9 ++-------
- drivers/net/wireless/st/cw1200/pm.h         | 9 +++++++--
- 2 files changed, 9 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/net/wireless/st/cw1200/cw1200_spi.c b/drivers/net/wireless/st/cw1200/cw1200_spi.c
-index a740083634d8..63f95e9c2992 100644
---- a/drivers/net/wireless/st/cw1200/cw1200_spi.c
-+++ b/drivers/net/wireless/st/cw1200/cw1200_spi.c
-@@ -446,8 +446,7 @@ static int cw1200_spi_disconnect(struct spi_device *func)
- 	return 0;
- }
- 
--#ifdef CONFIG_PM
--static int cw1200_spi_suspend(struct device *dev)
-+static int __maybe_unused cw1200_spi_suspend(struct device *dev)
- {
- 	struct hwbus_priv *self = spi_get_drvdata(to_spi_device(dev));
- 
-@@ -460,16 +459,12 @@ static int cw1200_spi_suspend(struct device *dev)
- 
- static SIMPLE_DEV_PM_OPS(cw1200_pm_ops, cw1200_spi_suspend, NULL);
- 
--#endif
--
- static struct spi_driver spi_driver = {
- 	.probe		= cw1200_spi_probe,
- 	.remove		= cw1200_spi_disconnect,
- 	.driver = {
- 		.name		= "cw1200_wlan_spi",
--#ifdef CONFIG_PM
--		.pm		= &cw1200_pm_ops,
--#endif
-+		.pm		= IS_ENABLED(CONFIG_PM) ? &cw1200_pm_ops : NULL,
- 	},
- };
- 
-diff --git a/drivers/net/wireless/st/cw1200/pm.h b/drivers/net/wireless/st/cw1200/pm.h
-index 3ed90ff22bb8..534548470ebc 100644
---- a/drivers/net/wireless/st/cw1200/pm.h
-+++ b/drivers/net/wireless/st/cw1200/pm.h
-@@ -31,13 +31,18 @@ int cw1200_pm_init(struct cw1200_pm_state *pm,
- void cw1200_pm_deinit(struct cw1200_pm_state *pm);
- int cw1200_wow_suspend(struct ieee80211_hw *hw,
- 		       struct cfg80211_wowlan *wowlan);
--int cw1200_wow_resume(struct ieee80211_hw *hw);
- int cw1200_can_suspend(struct cw1200_common *priv);
-+int cw1200_wow_resume(struct ieee80211_hw *hw);
- void cw1200_pm_stay_awake(struct cw1200_pm_state *pm,
- 			  unsigned long tmo);
- #else
- static inline void cw1200_pm_stay_awake(struct cw1200_pm_state *pm,
--					unsigned long tmo) {
-+					unsigned long tmo)
-+{
-+}
-+static inline int cw1200_can_suspend(struct cw1200_common *priv)
-+{
-+	return 0;
- }
- #endif
- #endif
 -- 
-2.7.0
+1.9.1
 
