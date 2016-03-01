@@ -1,42 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:35309 "EHLO
-	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750712AbcB2Xsi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 18:48:38 -0500
-Received: by mail-io0-f194.google.com with SMTP id n190so103566iof.2
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Feb 2016 15:48:37 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1456783551-28315-112-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com> <1456783551-28315-112-git-send-email-Jes.Sorensen@redhat.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 1 Mar 2016 10:48:17 +1100
-Message-ID: <CAGRGNgWmnQMRbDzBTDp36DY96Svy_phVBASNHE8frp51O1S20g@mail.gmail.com> (sfid-20160301_004840_905260_5D02ED2E)
-Subject: Re: [PATCH 111/113] rtl8xxxu: Print a warning if flushing the FIFO fails
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:35134 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753734AbcCANyU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Mar 2016 08:54:20 -0500
+Message-ID: <1456840456.3926.22.camel@sipsolutions.net> (sfid-20160301_145427_200536_FF636DCC)
+Subject: Re: [PATCH RFC 1/2] rhashtable: accept GFP flags in
+ rhashtable_walk_init
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>, linux-wireless@vger.kernel.org
+Cc: Thomas Graf <tgraf@suug.ch>, netdev@vger.kernel.org
+Date: Tue, 01 Mar 2016 14:54:16 +0100
+In-Reply-To: <1456708013-19590-1-git-send-email-me@bobcopeland.com> (sfid-20160229_020706_258640_0460F6E4)
+References: <1456708013-19590-1-git-send-email-me@bobcopeland.com>
+	 (sfid-20160229_020706_258640_0460F6E4)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jes,
+On Sun, 2016-02-28 at 20:06 -0500, Bob Copeland wrote:
+> In certain cases, the 802.11 mesh pathtable code wants to
+> iterate over all of the entries in the forwarding table from
+> the receive path, which is inside an RCU read-side critical
+> section.  Enable walks inside atomic sections by allowing
+> GFP_ATOMIC allocations for the walker state.
+> 
+> Change all existing callsites to pass in GFP_KERNEL.
 
-On Tue, Mar 1, 2016 at 9:05 AM,  <Jes.Sorensen@redhat.com> wrote:
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->
-> Only print a warning if the FIFO flush fails, as opposed to printing
-> the status unconditionally.
->
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Both look fine to me.
 
-Should this be squashed into the previous patch?
+I see you have more patches for mesh, so this probably can't go through
+net-next tree directly.
 
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+johannes
