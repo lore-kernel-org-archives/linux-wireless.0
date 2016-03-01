@@ -1,63 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:1567 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965962AbcCPKVZ convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48723 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751353AbcCAC7K (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2016 06:21:25 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"mohammed@codeaurora.org" <mohammed@codeaurora.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: Re: [PATCH 1/2] ath10k: Introduce Extended Resource Config support
- for 10.4
-Date: Wed, 16 Mar 2016 10:21:10 +0000
-Message-ID: <87h9g6lo4y.fsf@kamboji.qca.qualcomm.com> (sfid-20160316_112129_536344_801C5BFD)
-References: <1458052250-2529-1-git-send-email-mohammed@qca.qualcomm.com>
-	<1458052250-2529-2-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1458052250-2529-2-git-send-email-mohammed@qca.qualcomm.com>
-	(Mohammed Shafi Shajakhan's message of "Tue, 15 Mar 2016 20:00:49	+0530")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Mon, 29 Feb 2016 21:59:10 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH 3/8] ath9k: free GPIO resource for SOC GPIOs
+Date: Tue,  1 Mar 2016 10:58:30 +0800
+Message-Id: <1456801115-16636-4-git-send-email-miaoqing@codeaurora.org> (sfid-20160301_035913_313809_F106930C)
+In-Reply-To: <1456801115-16636-1-git-send-email-miaoqing@codeaurora.org>
+References: <1456801115-16636-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-> From: Raja Mani <rmani@qti.qualcomm.com>
->
-> Add API support for Extended Resource Configuration for 10.4. This
-> is useful to enable new features like Peer Stats, LTEU etc if the
-> firmware advertises support for the service. This is also done to
-> provide backward compatibility with older firmware. Also for clarity
-> send default host platform type as 'WMI_HOST_PLATFORM_HIGH_PERF',
-> though this should not make any difference in functionality
->
-> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+For SOC GPIOs, should call ath9k_hw_gpio_free() to release
+the GPIO resource.
 
-[...]
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/btcoex.c       | 10 ++++++++++
+ drivers/net/wireless/ath/ath9k/btcoex.h       |  1 +
+ drivers/net/wireless/ath/ath9k/gpio.c         |  9 +++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |  2 ++
+ drivers/net/wireless/ath/ath9k/hw.c           |  1 +
+ 5 files changed, 23 insertions(+)
 
-> @@ -2665,7 +2666,32 @@ struct wmi_resource_config_10_4 {
->  	 * 0  - This is not qwrap
->  	 */
->  	__le32 qwrap_config;
-> -} __packed;
-> +} __packed
-
-This doesn't compile:
-
-In file included from drivers/net/wireless/ath/ath10k/core.h:32:0,
-                 from drivers/net/wireless/ath/ath10k/htt.c:22:
-drivers/net/wireless/ath/ath10k/wmi.h:2680:1: error: expected ';',
-                 identifier or '(' before 'enum'
-make[1]: *** [drivers/net/wireless/ath/ath10k/htt.o] Error 1
-In file included from drivers/net/wireless/ath/ath10k/core.h:32:0,
-                 from drivers/net/wireless/ath/ath10k/debug.c:25:
-drivers/net/wireless/ath/ath10k/wmi.h:2680:1: error: expected ';',
-                 identifier or '(' before 'enum'
-
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index 7719cb1..4737aa9 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -174,6 +174,16 @@ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath9k_hw_btcoex_init_3wire);
+ 
++void ath9k_hw_btcoex_deinit(struct ath_hw *ah)
++{
++	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
++
++	ath9k_hw_gpio_free(ah, btcoex_hw->btactive_gpio);
++	ath9k_hw_gpio_free(ah, btcoex_hw->btpriority_gpio);
++	ath9k_hw_gpio_free(ah, btcoex_hw->wlanactive_gpio);
++}
++EXPORT_SYMBOL(ath9k_hw_btcoex_deinit);
++
+ void ath9k_hw_btcoex_init_mci(struct ath_hw *ah)
+ {
+ 	ah->btcoex_hw.mci.ready = false;
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+index cd2f0a2..0f7c4e6 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+@@ -123,6 +123,7 @@ struct ath_btcoex_hw {
+ void ath9k_hw_btcoex_init_scheme(struct ath_hw *ah);
+ void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah);
+ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah);
++void ath9k_hw_btcoex_deinit(struct ath_hw *ah);
+ void ath9k_hw_btcoex_init_mci(struct ath_hw *ah);
+ void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum);
+ void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index b41dfb7..4964bb3 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -40,6 +40,8 @@ void ath_deinit_leds(struct ath_softc *sc)
+ 
+ 	ath_led_brightness(&sc->led_cdev, LED_OFF);
+ 	led_classdev_unregister(&sc->led_cdev);
++
++	ath9k_hw_gpio_free(sc->sc_ah, sc->sc_ah->led_pin);
+ }
+ 
+ void ath_init_leds(struct ath_softc *sc)
+@@ -404,6 +406,13 @@ void ath9k_deinit_btcoex(struct ath_softc *sc)
+ 
+ 	if (ath9k_hw_mci_is_enabled(ah))
+ 		ath_mci_cleanup(sc);
++	else {
++		enum ath_btcoex_scheme scheme = ath9k_hw_get_btcoex_scheme(ah);
++
++		if (scheme == ATH_BTCOEX_CFG_2WIRE ||
++		    scheme == ATH_BTCOEX_CFG_3WIRE)
++			ath9k_hw_btcoex_deinit(sc->sc_ah);
++	}
+ }
+ 
+ int ath9k_init_btcoex(struct ath_softc *sc)
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index d9b640a..ecb848b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -253,6 +253,8 @@ void ath9k_deinit_leds(struct ath9k_htc_priv *priv)
+ 	ath9k_led_brightness(&priv->led_cdev, LED_OFF);
+ 	led_classdev_unregister(&priv->led_cdev);
+ 	cancel_work_sync(&priv->led_work);
++
++	ath9k_hw_gpio_free(priv->ah, priv->ah->led_pin);
+ }
+ 
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index b99e197..ecd418c 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1575,6 +1575,7 @@ static void ath9k_hw_apply_gpio_override(struct ath_hw *ah)
+ 		ath9k_hw_gpio_request_out(ah, i, NULL,
+ 					  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 		ath9k_hw_set_gpio(ah, i, !!(ah->gpio_val & BIT(i)));
++		ath9k_hw_gpio_free(ah, i);
+ 	}
+ }
+ 
 -- 
-Kalle Valo
+1.9.1
+
