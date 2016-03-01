@@ -1,71 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51325 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965888AbcCPLQu (ORCPT
+Received: from mail-lf0-f43.google.com ([209.85.215.43]:32842 "EHLO
+	mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753086AbcCAKcX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2016 07:16:50 -0400
-Date: Wed, 16 Mar 2016 16:46:37 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: Re: [PATCH 1/2] ath10k: Introduce Extended Resource Config support
- for 10.4
-Message-ID: <20160316111637.GA5213@atheros-ThinkPad-T61> (sfid-20160316_121657_409092_95BB00BF)
-References: <1458052250-2529-1-git-send-email-mohammed@qca.qualcomm.com>
- <1458052250-2529-2-git-send-email-mohammed@qca.qualcomm.com>
- <87h9g6lo4y.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87h9g6lo4y.fsf@kamboji.qca.qualcomm.com>
+	Tue, 1 Mar 2016 05:32:23 -0500
+Received: by mail-lf0-f43.google.com with SMTP id v124so17124580lff.0
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2016 02:32:22 -0800 (PST)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCH v2 10/11] ath10k: keep track of queue depth per txq
+Date: Tue,  1 Mar 2016 11:32:55 +0100
+Message-Id: <1456828376-2795-11-git-send-email-michal.kazior@tieto.com> (sfid-20160301_115949_899013_EAA0024E)
+In-Reply-To: <1456828376-2795-1-git-send-email-michal.kazior@tieto.com>
+References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
+ <1456828376-2795-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+This will be necessary for later.
 
-On Wed, Mar 16, 2016 at 10:21:10AM +0000, Valo, Kalle wrote:
-> Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
-> 
-> > From: Raja Mani <rmani@qti.qualcomm.com>
-> >
-> > Add API support for Extended Resource Configuration for 10.4. This
-> > is useful to enable new features like Peer Stats, LTEU etc if the
-> > firmware advertises support for the service. This is also done to
-> > provide backward compatibility with older firmware. Also for clarity
-> > send default host platform type as 'WMI_HOST_PLATFORM_HIGH_PERF',
-> > though this should not make any difference in functionality
-> >
-> > Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
-> > Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> 
-> [...]
-> 
-> > @@ -2665,7 +2666,32 @@ struct wmi_resource_config_10_4 {
-> >  	 * 0  - This is not qwrap
-> >  	 */
-> >  	__le32 qwrap_config;
-> > -} __packed;
-> > +} __packed
-> 
-> This doesn't compile:
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
+ drivers/net/wireless/ath/ath10k/core.h | 1 +
+ drivers/net/wireless/ath/ath10k/mac.c  | 5 +++++
+ drivers/net/wireless/ath/ath10k/txrx.c | 7 +++++++
+ 3 files changed, 13 insertions(+)
 
-[shafi] Very sorry, made that error while rebasing one of the review comments
-:-( Will avoid this in future, once again apologies 
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index 89f789f3e5b4..926ecb2244a5 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -311,6 +311,7 @@ struct ath10k_peer {
+ 
+ struct ath10k_txq {
+ 	struct list_head list;
++	unsigned long num_fw_queued;
+ };
+ 
+ struct ath10k_sta {
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 8d02d53fdc2c..5bf614f1f75a 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3669,6 +3669,7 @@ static int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
+ 	const bool is_presp = false;
+ 	struct ath10k *ar = hw->priv;
+ 	struct ath10k_htt *htt = &ar->htt;
++	struct ath10k_txq *artxq = (void *)txq->drv_priv;
+ 	struct ieee80211_vif *vif = txq->vif;
+ 	struct ieee80211_sta *sta = txq->sta;
+ 	enum ath10k_hw_txrx_mode txmode;
+@@ -3708,6 +3709,10 @@ static int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
+ 		return ret;
+ 	}
+ 
++	spin_lock_bh(&ar->htt.tx_lock);
++	artxq->num_fw_queued++;
++	spin_unlock_bh(&ar->htt.tx_lock);
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index 202e5192235b..ea4d3000c8c3 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -55,7 +55,9 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 	struct ath10k *ar = htt->ar;
+ 	struct device *dev = ar->dev;
+ 	struct ieee80211_tx_info *info;
++	struct ieee80211_txq *txq;
+ 	struct ath10k_skb_cb *skb_cb;
++	struct ath10k_txq *artxq;
+ 	struct sk_buff *msdu;
+ 	bool limit_mgmt_desc = false;
+ 
+@@ -80,11 +82,16 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
+ 	}
+ 
+ 	skb_cb = ATH10K_SKB_CB(msdu);
++	txq = skb_cb->txq;
++	artxq = (void *)txq->drv_priv;
+ 
+ 	if (unlikely(skb_cb->flags & ATH10K_SKB_F_MGMT) &&
+ 	    ar->hw_params.max_probe_resp_desc_thres)
+ 		limit_mgmt_desc = true;
+ 
++	if (txq)
++		artxq->num_fw_queued--;
++
+ 	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
+ 	ath10k_htt_tx_dec_pending(htt, limit_mgmt_desc);
+ 	if (htt->num_pending_tx == 0)
+-- 
+2.1.4
 
-> 
-> In file included from drivers/net/wireless/ath/ath10k/core.h:32:0,
->                  from drivers/net/wireless/ath/ath10k/htt.c:22:
-> drivers/net/wireless/ath/ath10k/wmi.h:2680:1: error: expected ';',
->                  identifier or '(' before 'enum'
-> make[1]: *** [drivers/net/wireless/ath/ath10k/htt.o] Error 1
-> In file included from drivers/net/wireless/ath/ath10k/core.h:32:0,
->                  from drivers/net/wireless/ath/ath10k/debug.c:25:
-> drivers/net/wireless/ath/ath10k/wmi.h:2680:1: error: expected ';',
->                  identifier or '(' before 'enum'
-
-thanks,
-shafi
-> 
