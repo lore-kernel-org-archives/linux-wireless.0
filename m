@@ -1,65 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f178.google.com ([209.85.161.178]:35758 "EHLO
-	mail-yw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759080AbcCDUD0 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:43557 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750997AbcCAR4h (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 15:03:26 -0500
-Received: by mail-yw0-f178.google.com with SMTP id g127so53123031ywf.2
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2016 12:03:26 -0800 (PST)
+	Tue, 1 Mar 2016 12:56:37 -0500
+Message-ID: <56D5D763.5070709@codeaurora.org> (sfid-20160301_185640_718196_C879EC7B)
+Date: Tue, 01 Mar 2016 09:54:43 -0800
+From: Peter Oh <poh@codeaurora.org>
 MIME-Version: 1.0
-In-Reply-To: <87r3fql34s.fsf@purkki.adurom.net>
-References: <1456947439-28968-1-git-send-email-arend@broadcom.com>
-	<1457020529.2044.31.camel@sipsolutions.net>
-	<56D8A618.4050707@broadcom.com>
-	<1457082805.2333.0.camel@sipsolutions.net>
-	<87r3fql34s.fsf@purkki.adurom.net>
-Date: Fri, 4 Mar 2016 21:03:25 +0100
-Message-ID: <CAF7Mx6rE5sYYj48iEyb8qQmQThbqSupZ4tazR=dSe7nYTKN6jw@mail.gmail.com> (sfid-20160304_210331_156020_82147A68)
-Subject: Re: [PATCH V11 1/2] nl80211: add feature for BSS selection support
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Arend Van Spriel <arend@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+To: Michal Kazior <michal.kazior@tieto.com>,
+	Peter Oh <poh@qca.qualcomm.com>
+CC: linux-wireless <linux-wireless@vger.kernel.org>,
+	ath10k@lists.infradead.org
+Subject: Re: [PATCH v5] ath10k: set MAC timestamp in management Rx frame
+References: <5bc6ba3b4d5743dc641b85c2c4233631f5b3319a.1456513260.git.poh@qca.qualcomm.com> <CA+BoTQkCwSkARQKWcjkJri9xS6GGiHq4NwjOoewqtHOetjevGw@mail.gmail.com>
+In-Reply-To: <CA+BoTQkCwSkARQKWcjkJri9xS6GGiHq4NwjOoewqtHOetjevGw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 4, 2016 at 3:38 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
->
->> On Thu, 2016-03-03 at 22:01 +0100, Arend Van Spriel wrote:
->>>
->>> On 3-3-2016 16:55, Johannes Berg wrote:
->>> > On Wed, 2016-03-02 at 20:37 +0100, Arend van Spriel wrote:
->>> > > Introducing a new feature that the driver can use to
->>> > > indicate the driver/firmware supports configuration of BSS
->>> > > selection criteria upon CONNECT command. This can be useful
->>> > > when multiple BSS-es are found belonging to the same ESS,
->>> > > ie. Infra-BSS with same SSID. The criteria can then be used to
->>> > > offload selection of a preferred BSS.
->>> > >
->>> > Applied, finally :)
->>> >
->>> > I moved the wiphy supported methods check into parse_bss_select()
->>> > to
->>> > avoid the double error path in the caller, plus some editorial
->>> > changes.
->>>
->>> Do you expect Kalle to take the brcmfmac patch or can it go through
->>> your tree?
->>>
+
+On 02/29/2016 10:33 AM, Michal Kazior wrote:
+> On 26 February 2016 at 20:03, Peter Oh <poh@qca.qualcomm.com> wrote:
+>> Check and set Rx MAC timestamp when firmware indicates it.
+>> Firmware adds it in Rx beacon frame only at this moment.
+>> Driver and mac80211 may utilize it to detect such clockdrift
+>> or beacon collision and use the result for beacon collision
+>> avoidance.
 >>
->> I was expecting Kalle to apply it.
->
-> Ack, you assigned it to me so it's on my queue now:
->
-> https://patchwork.kernel.org/patch/8484901/
+>> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+>> ---
+> [...]
+>> +       if (rx_status & WMI_RX_STATUS_EXT_INFO) {
+>> +               status->mactime =
+>> +                       __le32_to_cpu(arg.ext_info.rx_mac_timestamp_l32) |
+>> +
+>> (u64)__le32_to_cpu(arg.ext_info.rx_mac_timestamp_u32)
+>> +                       << 32;
+>> +               status->flag |= RX_FLAG_MACTIME_END;
+>> +       }
+>>          /* Hardware can Rx CCK rates on 5GHz. In that case phy_mode is set
+>> to
+>>           * MODE_11B. This means phy_mode is not a reliable source for the
+>> band
+>>           * of mgmt rx.
+>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h
+>> b/drivers/net/wireless/ath/ath10k/wmi.h
+>> index 4d3cbc4..f209d51 100644
+>> --- a/drivers/net/wireless/ath/ath10k/wmi.h
+>> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
+>> @@ -3037,11 +3037,18 @@ struct wmi_10_4_mgmt_rx_event {
+>>          u8 buf[0];
+>>   } __packed;
+>>
+>> +struct wmi_mgmt_rx_ext_info {
+>> +       __le32 rx_mac_timestamp_l32;
+>> +       __le32 rx_mac_timestamp_u32;
+> Oh.. I feel bad for noticing this so late.
+review is always appreciated.
+>   I think this can be
+> represented with a mere __le64 and then accessed via le64_to_cpu().
+sent new patch based on your comment.
 
-Thanks for the confirmation.
-
-Regards,
-Arend
-
-> --
-> Kalle Valo
+Thanks,
+Peter
