@@ -1,188 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f68.google.com ([209.85.192.68]:36352 "EHLO
-	mail-qg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751086AbcCSCDc (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55630 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750894AbcCAGaR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 22:03:32 -0400
-Received: by mail-qg0-f68.google.com with SMTP id 14so8666972qgg.3
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2016 19:03:32 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH v2] mac80211: mesh: fix crash in mesh_path_timer
-Date: Fri, 18 Mar 2016 22:03:24 -0400
-Message-Id: <1458353004-8062-1-git-send-email-me@bobcopeland.com> (sfid-20160319_030336_513468_5C9786DF)
+	Tue, 1 Mar 2016 01:30:17 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v2 3/8] ath9k: free GPIO resource for SOC GPIOs
+Date: Tue,  1 Mar 2016 14:29:39 +0800
+Message-Id: <1456813784-21218-4-git-send-email-miaoqing@codeaurora.org> (sfid-20160301_073022_386440_6E9A1A22)
+In-Reply-To: <1456813784-21218-1-git-send-email-miaoqing@codeaurora.org>
+References: <1456813784-21218-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The mesh_path_reclaim() function, called from an rcu callback, cancels
-the mesh_path_timer associated with a mesh path.  Unfortunately, this
-call can happen much later, perhaps after the hash table itself is
-destroyed.
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-Such a situation led to the following crash in mesh_path_send_to_gates()
-when dereferencing the tbl pointer:
+For SOC GPIOs, should call ath9k_hw_gpio_free() to release
+the GPIO resource.
 
-[   23.901661] BUG: unable to handle kernel NULL pointer dereference at 0000000000000008
-[   23.905516] IP: [<ffffffff814c910b>] mesh_path_send_to_gates+0x2b/0x740
-[   23.908757] PGD 99ca067 PUD 99c4067 PMD 0
-[   23.910789] Oops: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
-[   23.913485] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.5.0-rc6-wt+ #43
-[   23.916675] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Debian-1.8.2-1 04/01/2014
-[   23.920471] task: ffffffff81685500 ti: ffffffff81678000 task.ti: ffffffff81678000
-[   23.922619] RIP: 0010:[<ffffffff814c910b>]  [<ffffffff814c910b>] mesh_path_send_to_gates+0x2b/0x740
-[   23.925237] RSP: 0018:ffff88000b403d30  EFLAGS: 00010286
-[   23.926739] RAX: 0000000000000000 RBX: ffff880009bc0d20 RCX: 0000000000000102
-[   23.928796] RDX: 000000000000002e RSI: 0000000000000001 RDI: ffff880009bc0d20
-[   23.930895] RBP: ffff88000b403e18 R08: 0000000000000001 R09: 0000000000000001
-[   23.932917] R10: 0000000000000000 R11: 0000000000000001 R12: ffff880009c20940
-[   23.936370] R13: ffff880009bc0e70 R14: ffff880009c21c40 R15: ffff880009bc0d20
-[   23.939823] FS:  0000000000000000(0000) GS:ffff88000b400000(0000) knlGS:0000000000000000
-[   23.943688] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[   23.946429] CR2: 0000000000000008 CR3: 00000000099c5000 CR4: 00000000000006b0
-[   23.949861] Stack:
-[   23.950840]  000000000000002e ffff880009c20940 ffff88000b403da8 ffffffff8109e551
-[   23.954467]  ffffffff82711be2 000000000000002e 0000000000000000 ffffffff8166a5f5
-[   23.958141]  0000000000685ce8 0000000000000246 ffff880009bc0d20 ffff880009c20940
-[   23.961801] Call Trace:
-[   23.962987]  <IRQ>
-[   23.963963]  [<ffffffff8109e551>] ? vprintk_emit+0x351/0x5e0
-[   23.966782]  [<ffffffff8109e8ff>] ? vprintk_default+0x1f/0x30
-[   23.969529]  [<ffffffff810ffa41>] ? printk+0x48/0x50
-[   23.971956]  [<ffffffff814ceef3>] mesh_path_timer+0x133/0x160
-[   23.974707]  [<ffffffff814cedc0>] ? mesh_nexthop_resolve+0x230/0x230
-[   23.977775]  [<ffffffff810b04ee>] call_timer_fn+0xce/0x330
-[   23.980448]  [<ffffffff810b0425>] ? call_timer_fn+0x5/0x330
-[   23.983126]  [<ffffffff814cedc0>] ? mesh_nexthop_resolve+0x230/0x230
-[   23.986091]  [<ffffffff810b097c>] run_timer_softirq+0x22c/0x390
-
-Instead of cancelling in the RCU callback, set a new flag to prevent the
-timer from being rearmed, and then cancel the timer synchronously when
-freeing the mesh path.  This leaves mesh_path_reclaim() doing nothing
-but kfree, so switch to kfree_rcu().
-
-Fixes: 3b302ada7f0a ("mac80211: mesh: move path tables into if_mesh")
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
-
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 ---
-v2: fix lock imbalance and remove extra forward decl
+ drivers/net/wireless/ath/ath9k/btcoex.c       | 10 ++++++++++
+ drivers/net/wireless/ath/ath9k/btcoex.h       |  1 +
+ drivers/net/wireless/ath/ath9k/gpio.c         |  9 +++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |  2 ++
+ drivers/net/wireless/ath/ath9k/hw.c           |  1 +
+ 5 files changed, 23 insertions(+)
 
- net/mac80211/mesh.h         |  3 +++
- net/mac80211/mesh_hwmp.c    |  4 ++++
- net/mac80211/mesh_pathtbl.c | 33 ++++++++++++++++++---------------
- 3 files changed, 25 insertions(+), 15 deletions(-)
-
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index cc6854db156e..e1415c952e9c 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -32,6 +32,8 @@
-  * @MESH_PATH_RESOLVED: the mesh path can has been resolved
-  * @MESH_PATH_REQ_QUEUED: there is an unsent path request for this destination
-  *	already queued up, waiting for the discovery process to start.
-+ * @MESH_PATH_DELETED: the mesh path has been deleted and should no longer
-+ *	be used
-  *
-  * MESH_PATH_RESOLVED is used by the mesh path timer to
-  * decide when to stop or cancel the mesh path discovery.
-@@ -43,6 +45,7 @@ enum mesh_path_flags {
- 	MESH_PATH_FIXED	=	BIT(3),
- 	MESH_PATH_RESOLVED =	BIT(4),
- 	MESH_PATH_REQ_QUEUED =	BIT(5),
-+	MESH_PATH_DELETED =	BIT(6),
- };
- 
- /**
-diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
-index 5b6aec1a0630..2748cf627ee3 100644
---- a/net/mac80211/mesh_hwmp.c
-+++ b/net/mac80211/mesh_hwmp.c
-@@ -1012,6 +1012,10 @@ void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata)
- 		goto enddiscovery;
- 
- 	spin_lock_bh(&mpath->state_lock);
-+	if (mpath->flags & MESH_PATH_DELETED) {
-+		spin_unlock_bh(&mpath->state_lock);
-+		goto enddiscovery;
-+	}
- 	mpath->flags &= ~MESH_PATH_REQ_QUEUED;
- 	if (preq_node->flags & PREQ_Q_F_START) {
- 		if (mpath->flags & MESH_PATH_RESOLVING) {
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 7455397f8c3b..1c9412a29ca3 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -18,6 +18,8 @@
- #include "ieee80211_i.h"
- #include "mesh.h"
- 
-+static void mesh_path_free_rcu(struct mesh_table *tbl, struct mesh_path *mpath);
-+
- static u32 mesh_table_hash(const void *addr, u32 len, u32 seed)
- {
- 	/* Use last four bytes of hw addr as hash index */
-@@ -40,18 +42,12 @@ static inline bool mpath_expired(struct mesh_path *mpath)
- 	       !(mpath->flags & MESH_PATH_FIXED);
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index 7719cb1..4737aa9 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -174,6 +174,16 @@ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
  }
+ EXPORT_SYMBOL(ath9k_hw_btcoex_init_3wire);
  
--static void mesh_path_reclaim(struct rcu_head *rp)
--{
--	struct mesh_path *mpath = container_of(rp, struct mesh_path, rcu);
--
--	del_timer_sync(&mpath->timer);
--	kfree(mpath);
--}
--
--static void mesh_path_rht_free(void *ptr, void *unused_arg)
-+static void mesh_path_rht_free(void *ptr, void *tblptr)
- {
- 	struct mesh_path *mpath = ptr;
--	call_rcu(&mpath->rcu, mesh_path_reclaim);
-+	struct mesh_table *tbl = tblptr;
-+
-+	mesh_path_free_rcu(tbl, mpath);
- }
- 
- static struct mesh_table *mesh_table_alloc(void)
-@@ -77,7 +73,7 @@ static struct mesh_table *mesh_table_alloc(void)
- static void mesh_table_free(struct mesh_table *tbl)
- {
- 	rhashtable_free_and_destroy(&tbl->rhead,
--				    mesh_path_rht_free, NULL);
-+				    mesh_path_rht_free, tbl);
- 	kfree(tbl);
- }
- 
-@@ -551,18 +547,25 @@ out:
- 	rhashtable_walk_exit(&iter);
- }
- 
--static void __mesh_path_del(struct mesh_table *tbl, struct mesh_path *mpath)
-+static void mesh_path_free_rcu(struct mesh_table *tbl,
-+			       struct mesh_path *mpath)
- {
- 	struct ieee80211_sub_if_data *sdata = mpath->sdata;
- 
--	rhashtable_remove_fast(&tbl->rhead, &mpath->rhash, mesh_rht_params);
- 	spin_lock_bh(&mpath->state_lock);
--	mpath->flags |= MESH_PATH_RESOLVING;
-+	mpath->flags |= MESH_PATH_RESOLVING | MESH_PATH_DELETED;
- 	mesh_gate_del(tbl, mpath);
--	call_rcu(&mpath->rcu, mesh_path_reclaim);
- 	spin_unlock_bh(&mpath->state_lock);
-+	del_timer_sync(&mpath->timer);
- 	atomic_dec(&sdata->u.mesh.mpaths);
- 	atomic_dec(&tbl->entries);
-+	kfree_rcu(mpath, rcu);
-+}
-+
-+static void __mesh_path_del(struct mesh_table *tbl, struct mesh_path *mpath)
++void ath9k_hw_btcoex_deinit(struct ath_hw *ah)
 +{
-+	rhashtable_remove_fast(&tbl->rhead, &mpath->rhash, mesh_rht_params);
-+	mesh_path_free_rcu(tbl, mpath);
++	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
++
++	ath9k_hw_gpio_free(ah, btcoex_hw->btactive_gpio);
++	ath9k_hw_gpio_free(ah, btcoex_hw->btpriority_gpio);
++	ath9k_hw_gpio_free(ah, btcoex_hw->wlanactive_gpio);
++}
++EXPORT_SYMBOL(ath9k_hw_btcoex_deinit);
++
+ void ath9k_hw_btcoex_init_mci(struct ath_hw *ah)
+ {
+ 	ah->btcoex_hw.mci.ready = false;
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+index cd2f0a2..0f7c4e6 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+@@ -123,6 +123,7 @@ struct ath_btcoex_hw {
+ void ath9k_hw_btcoex_init_scheme(struct ath_hw *ah);
+ void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah);
+ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah);
++void ath9k_hw_btcoex_deinit(struct ath_hw *ah);
+ void ath9k_hw_btcoex_init_mci(struct ath_hw *ah);
+ void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum);
+ void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index b41dfb7..4964bb3 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -40,6 +40,8 @@ void ath_deinit_leds(struct ath_softc *sc)
+ 
+ 	ath_led_brightness(&sc->led_cdev, LED_OFF);
+ 	led_classdev_unregister(&sc->led_cdev);
++
++	ath9k_hw_gpio_free(sc->sc_ah, sc->sc_ah->led_pin);
  }
  
- /**
+ void ath_init_leds(struct ath_softc *sc)
+@@ -404,6 +406,13 @@ void ath9k_deinit_btcoex(struct ath_softc *sc)
+ 
+ 	if (ath9k_hw_mci_is_enabled(ah))
+ 		ath_mci_cleanup(sc);
++	else {
++		enum ath_btcoex_scheme scheme = ath9k_hw_get_btcoex_scheme(ah);
++
++		if (scheme == ATH_BTCOEX_CFG_2WIRE ||
++		    scheme == ATH_BTCOEX_CFG_3WIRE)
++			ath9k_hw_btcoex_deinit(sc->sc_ah);
++	}
+ }
+ 
+ int ath9k_init_btcoex(struct ath_softc *sc)
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index d9b640a..ecb848b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -253,6 +253,8 @@ void ath9k_deinit_leds(struct ath9k_htc_priv *priv)
+ 	ath9k_led_brightness(&priv->led_cdev, LED_OFF);
+ 	led_classdev_unregister(&priv->led_cdev);
+ 	cancel_work_sync(&priv->led_work);
++
++	ath9k_hw_gpio_free(priv->ah, priv->ah->led_pin);
+ }
+ 
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 4046949..1fd6155 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1575,6 +1575,7 @@ static void ath9k_hw_apply_gpio_override(struct ath_hw *ah)
+ 		ath9k_hw_gpio_request_out(ah, i, NULL,
+ 					  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 		ath9k_hw_set_gpio(ah, i, !!(ah->gpio_val & BIT(i)));
++		ath9k_hw_gpio_free(ah, i);
+ 	}
+ }
+ 
 -- 
-2.6.1
+1.9.1
 
