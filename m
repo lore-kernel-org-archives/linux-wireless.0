@@ -1,36 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48418 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754090AbcCOOKd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2016 10:10:33 -0400
-Message-ID: <1458051029.2871.14.camel@sipsolutions.net> (sfid-20160315_151039_044855_E50082E1)
-Subject: Re: [PATCH-v2] mac80211:  Let VHT work on 2.4Ghz
-From: Johannes Berg <johannes@sipsolutions.net>
-To: greearb@candelatech.com, linux-wireless@vger.kernel.org
-Date: Tue, 15 Mar 2016 15:10:29 +0100
-In-Reply-To: <1457633336-27898-1-git-send-email-greearb@candelatech.com>
-References: <1457633336-27898-1-git-send-email-greearb@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:36779 "EHLO
+	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753884AbcCAOFY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Mar 2016 09:05:24 -0500
+Received: by mail-wm0-f42.google.com with SMTP id n186so38503487wmn.1
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2016 06:05:23 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <1456784940-32328-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1456784940-32328-1-git-send-email-jouni@qca.qualcomm.com>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Tue, 1 Mar 2016 16:05:08 +0200
+Message-ID: <CA+XVXferUH=Pa83-BoxC=b9grjpuYOgjXXzndxp1xELRzC-J-g@mail.gmail.com> (sfid-20160301_150530_602981_620445AD)
+Subject: Re: [PATCH] mac80211: Fix Public Action frame RX in AP mode
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-03-10 at 10:08 -0800, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
-> 
-> ath10k supports VHT on 2.4Ghz band.
+On Tue, Mar 1, 2016 at 12:29 AM, Jouni Malinen <jouni@qca.qualcomm.com> wrote:
+> Public Action frames use special rules for how the BSSID field (Address
+> 3) is set. A wildcard BSSID is used in cases where the transmitter and
+> recipient are not members of the same BSS. As such, we need to accept
+> Public Action frames with wildcard BSSID.
+>
+> Commit db8e17324553 ("mac80211: ignore frames between TDLS peers when
+> operating as AP") added a rule that drops Action frames to TDLS-peers
+> based on an Action frame having different DA (Address 1) and BSSID
+> (Address 3) values. This is not correct since it misses the possibility
+> of BSSID being a wildcard BSSID in which case the Address 1 would not
+> necessarily match.
+>
+> Fix this by allowing mac80211 to accept wildcard BSSID in an Action
+> frame when in AP mode.
+>
+> Fixes: db8e17324553 ("mac80211: ignore frames between TDLS peers when operating as AP")
 
-I still don't think this is the right thing to do.
+Fix looks good (I'm the author of the bug) :)
 
-Most implementations seem to use the BRCM vendor IE to advertise "VHT"
-features on 2.4 GHz, since the spec requires 5 GHz for the real ones.
-
-The combination of ath10k with mac80211 seems to be broken in that
-regard right now, since mac80211 didn't expect drivers to set the
-capabilities for 2.4 GHz band.
-
-I guess we can get away with using the regular capabilities towards
-userspace, but as far as the IEs are concerned we should probably use
-the BRCM ones.
-
-johannes
+Arik
