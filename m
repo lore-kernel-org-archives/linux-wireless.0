@@ -1,43 +1,117 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:36697 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757905AbcCCOeq (ORCPT
+Received: from mail-yk0-f176.google.com ([209.85.160.176]:33603 "EHLO
+	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750843AbcCAQQI convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 09:34:46 -0500
-Received: by mail-wm0-f52.google.com with SMTP id n186so134479378wmn.1
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2016 06:34:45 -0800 (PST)
+	Tue, 1 Mar 2016 11:16:08 -0500
 MIME-Version: 1.0
-In-Reply-To: <1457015372.2044.6.camel@sipsolutions.net>
-References: <1456238615-832-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	<1457015372.2044.6.camel@sipsolutions.net>
-Date: Thu, 3 Mar 2016 15:34:44 +0100
-Message-ID: <CAA2SeNJehrGzQCC7OE29nXk+LGKoVNG4r6=ueewYxsk08OwrvA@mail.gmail.com> (sfid-20160303_153529_266005_CCCAB884)
-Subject: Re: [PATCHv2] mac80211: parse VHT info in injected frames
-From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+In-Reply-To: <1456839787.3926.20.camel@sipsolutions.net>
+References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
+ <1456159001-20307-9-git-send-email-jprvita@endlessm.com> <20160226175925.GA9331@w1.fi>
+ <CA+A7VXUY=qVDQ-OqT+QJK8haN6AFX4Br=OPXi-6RCxpvH3=QRg@mail.gmail.com>
+ <20160229223918.GA32464@w1.fi> <1456839787.3926.20.camel@sipsolutions.net>
+From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
+Date: Tue, 1 Mar 2016 11:15:27 -0500
+Message-ID: <CA+A7VXWWQOti7pOre08QcXN9vgssQH3V1f6RjphaK0VwM27C7g@mail.gmail.com> (sfid-20160301_171629_493310_F0B28C17)
+Subject: Re: [PATCHv2 08/10] rfkill: Use switch to demux userspace operations
 To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Jouni Malinen <j@w1.fi>, "David S. Miller" <davem@davemloft.net>,
+	Darren Hart <dvhart@infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Network Development <netdev@vger.kernel.org>,
+	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
+	linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux@endlessm.com,
+	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> On Tue, 2016-02-23 at 15:43 +0100, Lorenzo Bianconi wrote:
->> Add VHT radiotap parsing support to ieee80211_parse_tx_radiotap().
->> That capability has been tested using a d-link dir-860l rev b1
->> running OpenWrt trunk and mt76 driver
->>
-> Applied. In case you didn't see, Sven sent a patch to fix the other
-> docs.
-
-Yes, I did not send the patch since I had seen the one sent by Sven :-)
-
+On 1 March 2016 at 08:43, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Tue, 2016-03-01 at 00:39 +0200, Jouni Malinen wrote:
 >
-> johannes
+>> > I agree there is a difference in the logic here,
+>
+> Gah. I thought I'd reviewed the logic and made sure there's no
+> difference ... :)
+>
+>> >  thanks for taking the
+>> > time to point it out so clearly, and sorry for missing this. But AFAIU
+>> > userspace should not call RFKILL_OP_CHANGE with ev.type ==
+>> > RFKILL_TYPE_ALL, as RFKILL_OP_CHANGE is intended to be used to
+>> > block/unblock one RFKill switch, and it is not possible to create a
+>> > RFKill switch with type == RFKILL_TYPE_ALL (rfkill_alloc() would
+>> > return NULL).
+>
+>> Interesting. Maybe Johannes can comment on that part since I think he
+>> wrote the code that interacts with kernel for the rfkill test cases.
+>
+> So first of all, it seems that this argument is invalid since we can't break the ABI/API here; although perhaps if it's only a test case ...
+>
 
-Regards,
-Lorenzo
+Yep, that's an important point (not breaking the API/ABI).
 
+> Oh. It took me a while, but I see now. The original intent (I think)
+> was that with RFKILL_OP_CHANGE, the type would be ignored entirely. It
+> seems that the (my) original intent wouldn't have been to force
+> userspace to specify *both* the index and the type, but instead do
+>
+> OP_CHANGE_ALL -> use type (possibly TYPE_ALL, ignoring idx)
+> OP_CHANGE     -> use idx (ignoring type)
+>
+>
+> The original code implemented it as follows:
+>
+>                 if (rfkill->idx != ev.idx && ev.op != RFKILL_OP_CHANGE_ALL)
+>                         continue;
+>
+> -> check the idx only for OP_CHANGE
+>
+>                 if (rfkill->type != ev.type && ev.type != RFKILL_TYPE_ALL)
+>                         continue;
+>
+> -> check the type, allowing _ALL
+>
+> Now, all userspace that I found sets the ev.type field to TYPE_ALL all
+> the time; and it had to given these checks.
+>
+> e.g. from rfkill.py:
+>
+> # idx, type, op, soft, hard
+> _event_struct = '@IBBBB'
+>
+> [...]
+>
+>     def block(self):
+>         rfk = open('/dev/rfkill', 'w')
+>         s = struct.pack(_event_struct, self.idx, TYPE_ALL, _OP_CHANGE, 1, 0)
+>         rfk.write(s)
+>         rfk.close()
+>
+>
+> This check, originally, probably should've been
+>
+>                 if (rfkill->type != ev.type && ev.type != RFKILL_TYPE_ALL &&
+>                     ev.op != RFKILL_OP_CHANGE)
+>                         continue;
+>
+> to ignore the type entirely.
+>
+> I'm fine with Jouni's change, preserving the original behaviour of
+> requiring TYPE_ALL or the correct type, but I'm tempted to simply
+> remove the type check entirely.
+>
+> Thoughts?
+>
 
--- 
-UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
-unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
-umount; make clean; sleep
+I think this patch should keep the original logic, as this is supposed
+to be a refactor only. If we decide to remove the check, we should to
+it in a separate patch, to make it clear for someone looking at the
+history later.
+
+I'm fine with removing the type check (in a separate patch), but I
+don't see much gain in doing so.
+
+--
+João Paulo Rechi Vita
+http://about.me/jprvita
