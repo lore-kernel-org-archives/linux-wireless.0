@@ -1,77 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49171 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752044AbcCJOwM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 09:52:12 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 037/113] rtl8xxxu: First stab at adding IQK calibration for 8723bu parts
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1456783551-28315-38-git-send-email-Jes.Sorensen@redhat.com>
-	<8737ryl8c4.fsf@purkki.adurom.net>
-Date: Thu, 10 Mar 2016 09:52:10 -0500
-In-Reply-To: <8737ryl8c4.fsf@purkki.adurom.net> (Kalle Valo's message of "Thu,
-	10 Mar 2016 16:24:11 +0200")
-Message-ID: <wrfjoaam2xnp.fsf@redhat.com> (sfid-20160310_155216_159151_5B989304)
+Received: from smtp.codeaurora.org ([198.145.29.96]:58359 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753513AbcCAPNK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Mar 2016 10:13:10 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Maya Erez <qca_merez@qca.qualcomm.com>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: Re: [PATCH 15/15] wil6210: add oob_mode module parameter
+References: <1456781570-16552-1-git-send-email-qca_merez@qca.qualcomm.com>
+	<1456781570-16552-16-git-send-email-qca_merez@qca.qualcomm.com>
+Date: Tue, 01 Mar 2016 17:13:05 +0200
+In-Reply-To: <1456781570-16552-16-git-send-email-qca_merez@qca.qualcomm.com>
+	(Maya Erez's message of "Mon, 29 Feb 2016 23:32:50 +0200")
+Message-ID: <877fhmmdtq.fsf@purkki.adurom.net> (sfid-20160301_161313_377309_F9AC67CE)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
-> Jes.Sorensen@redhat.com writes:
->
->> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->>
->> The 8723bu also has it's own IQK calibration process. This is similar
->> in flow, but still different enough to warrent it's own
->> implementation, at least for now.
->>
->> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
->> ---
->>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 811
->> ++++++++++++++++++++-
->>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |   1 +
->>  .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  |  17 +
->>  3 files changed, 827 insertions(+), 2 deletions(-)
->>
->
-> [...]
->
->> +#ifdef RTL8723BU_BT
->> +	/* GNT_BT = 1 */
->> +	rtl8xxxu_write32(priv, REG_BT_CONTROL_8723BU, 0x00001800);
->> +#endif
->
-> What's this about?
->
->> +#ifdef RTL8723BU_BT
->> +	/* GNT_BT = 1 */
->> +	rtl8xxxu_write32(priv, REG_BT_CONTROL_8723BU, 0x00001800);
->> +#endif
->
-> Same here.
->
->> +#ifdef RTL8723BU_PATH_B
->> +static int rtl8723bu_iqk_path_b(struct rtl8xxxu_priv *priv)
->
-> And this?
->
->> +#if 0
->> +	/* Page B init */
->> +	rtl8xxxu_write32(priv, REG_CONFIG_ANT_A, 0x0f600000);
->> +
->> +	if (priv->tx_paths > 1)
->> +		rtl8xxxu_write32(priv, REG_CONFIG_ANT_B, 0x0f600000);
->> +#endif
->
-> Like discussed before, "#if 0" is not really welcomed in upstream. Can't
-> you just keep the unimplemented parts in a private branch and submit
-> them once they are ready? That way upstream code is not cluttered with
-> these.
+Maya Erez <qca_merez@qca.qualcomm.com> writes:
 
-This is removed in a follow-on patch, so it becomes a non-issue.
-Rebasing this to remove it retroactively would create a mess.
+> From: Lior David <qca_liord@qca.qualcomm.com>
+>
+> Add module parameter oob_mode. Takes effect the next time
+> the interface is brought up and FW is loaded. Puts the FW
+> in special "out of the box" (OOB) mode which is used for
+> diagnostics and certification.
+>
+> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 
-Jes
+[...]
+
+> --- a/drivers/net/wireless/ath/wil6210/main.c
+> +++ b/drivers/net/wireless/ath/wil6210/main.c
+> @@ -27,6 +27,10 @@ bool debug_fw; /* = false; */
+>  module_param(debug_fw, bool, S_IRUGO);
+>  MODULE_PARM_DESC(debug_fw, " do not perform card reset. For FW debug");
+>  
+> +static bool oob_mode;
+> +module_param(oob_mode, bool, S_IRUGO);
+> +MODULE_PARM_DESC(oob_mode, " enable OOB mode in FW");
+
+The modparam descript doesn't really tell anything to the user, a
+parameter foo_mode with help text "enable foo" is useless :) Please add
+more informative message so that users have an idea what the parameter
+is about, without the need to check commit logs.
+
+-- 
+Kalle Valo
