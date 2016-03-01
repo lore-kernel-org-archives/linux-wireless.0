@@ -1,142 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:33188 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752186AbcCSKkM (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:36198 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750813AbcCAUE1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Mar 2016 06:40:12 -0400
-Received: by mail-wm0-f54.google.com with SMTP id l68so98752146wml.0
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Mar 2016 03:40:11 -0700 (PDT)
-From: Vishal Thanki <vishalthanki@gmail.com>
-To: sgruszka@redhat.com, helmut.schaa@googlemail.com,
-	linux-wireless@vger.kernel.org
-Cc: Vishal Thanki <vishalthanki@gmail.com>
-Subject: [PATCH v6] rt2x00usb: Use usb anchor to manage URB
-Date: Sat, 19 Mar 2016 11:41:01 +0100
-Message-Id: <1458384061-22522-1-git-send-email-vishalthanki@gmail.com> (sfid-20160319_114024_819333_4AF85597)
+	Tue, 1 Mar 2016 15:04:27 -0500
+Received: by mail-wm0-f47.google.com with SMTP id n186so54515492wmn.1
+        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2016 12:04:27 -0800 (PST)
+Reply-To: arend@broadcom.com
+Subject: Re: [PATCH V10 1/2] nl80211: add feature for BSS selection support
+References: <1456739065-470-1-git-send-email-arend@broadcom.com>
+ <CAB3XZEehKfMzRgfbDkwWieKrzAAXwBcNbAMNGfhn6qBRAktGdA@mail.gmail.com>
+To: Eliad Peller <eliad@wizery.com>,
+	Arend van Spriel <arend@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <56D5F5C7.40204@broadcom.com> (sfid-20160301_210430_808286_886FFF5F)
+Date: Tue, 1 Mar 2016 21:04:23 +0100
+MIME-Version: 1.0
+In-Reply-To: <CAB3XZEehKfMzRgfbDkwWieKrzAAXwBcNbAMNGfhn6qBRAktGdA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With current driver, it is observed that a URB is not
-completed while the USB disconnect is initiated. Due to
-that, the URB completion handler is trying to access
-the resource which was freed as a part of USB disconnect.
-Managing the URBs with anchor will make sure that all
-the URBs are handled gracefully before device gets
-disconnected.
+On 1-3-2016 9:42, Eliad Peller wrote:
+> On Mon, Feb 29, 2016 at 11:44 AM, Arend van Spriel <arend@broadcom.com> wrote:
+>> Introducing a new feature that the driver can use to
+>> indicate the driver/firmware supports configuration of BSS
+>> selection criteria upon CONNECT command. This can be useful
+>> when multiple BSS-es are found belonging to the same ESS,
+>> ie. Infra-BSS with same SSID. The criteria can then be used to
+>> offload selection of a preferred BSS.
+>>
+> [...]
+> 
+>> +       /* only do bss selection when no BSSID is specified. */
+>> +       if (!connect.bssid && info->attrs[NL80211_ATTR_BSS_SELECT]) {
+>> +               if (connect.bssid) {
+> 
+> i guess you wanted to remove the !connect.bssid condition in the outer if :)
+> other than that, looks go to me.
 
-Signed-off-by: Vishal Thanki <vishalthanki@gmail.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2x00.h    |  3 +++
- drivers/net/wireless/ralink/rt2x00/rt2x00dev.c |  3 +++
- drivers/net/wireless/ralink/rt2x00/rt2x00usb.c | 21 +++++++++++++++++++--
- 3 files changed, 25 insertions(+), 2 deletions(-)
+Good guess. Will fix that.
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-index 3282ddb..9426c75 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-@@ -38,6 +38,7 @@
- #include <linux/kfifo.h>
- #include <linux/hrtimer.h>
- #include <linux/average.h>
-+#include <linux/usb.h>
- 
- #include <net/mac80211.h>
- 
-@@ -1001,6 +1002,8 @@ struct rt2x00_dev {
- 
- 	/* Extra TX headroom required for alignment purposes. */
- 	unsigned int extra_tx_headroom;
-+
-+	struct usb_anchor *anchor;
- };
- 
- struct rt2x00_bar_list_entry {
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-index 5639ed8..b2f7c58 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00dev.c
-@@ -1422,11 +1422,14 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
- 	cancel_work_sync(&rt2x00dev->intf_work);
- 	cancel_delayed_work_sync(&rt2x00dev->autowakeup_work);
- 	cancel_work_sync(&rt2x00dev->sleep_work);
-+#ifdef CONFIG_RT2X00_LIB_USB
- 	if (rt2x00_is_usb(rt2x00dev)) {
-+		usb_kill_anchored_urbs(rt2x00dev->anchor);
- 		hrtimer_cancel(&rt2x00dev->txstatus_timer);
- 		cancel_work_sync(&rt2x00dev->rxdone_work);
- 		cancel_work_sync(&rt2x00dev->txdone_work);
- 	}
-+#endif
- 	if (rt2x00dev->workqueue)
- 		destroy_workqueue(rt2x00dev->workqueue);
- 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-index 7627af6..7cf26c6 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-@@ -171,8 +171,11 @@ static void rt2x00usb_register_read_async_cb(struct urb *urb)
- {
- 	struct rt2x00_async_read_data *rd = urb->context;
- 	if (rd->callback(rd->rt2x00dev, urb->status, le32_to_cpu(rd->reg))) {
--		if (usb_submit_urb(urb, GFP_ATOMIC) < 0)
-+		usb_anchor_urb(urb, rd->rt2x00dev->anchor);
-+		if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
-+			usb_unanchor_urb(urb);
- 			kfree(rd);
-+		}
- 	} else
- 		kfree(rd);
- }
-@@ -206,8 +209,11 @@ void rt2x00usb_register_read_async(struct rt2x00_dev *rt2x00dev,
- 	usb_fill_control_urb(urb, usb_dev, usb_rcvctrlpipe(usb_dev, 0),
- 			     (unsigned char *)(&rd->cr), &rd->reg, sizeof(rd->reg),
- 			     rt2x00usb_register_read_async_cb, rd);
--	if (usb_submit_urb(urb, GFP_ATOMIC) < 0)
-+	usb_anchor_urb(urb, rt2x00dev->anchor);
-+	if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
-+		usb_unanchor_urb(urb);
- 		kfree(rd);
-+	}
- 	usb_free_urb(urb);
- }
- EXPORT_SYMBOL_GPL(rt2x00usb_register_read_async);
-@@ -313,8 +319,10 @@ static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry, void *data)
- 			  entry->skb->data, length,
- 			  rt2x00usb_interrupt_txdone, entry);
- 
-+	usb_anchor_urb(entry_priv->urb, rt2x00dev->anchor);
- 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
- 	if (status) {
-+		usb_unanchor_urb(entry_priv->urb);
- 		if (status == -ENODEV)
- 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
-@@ -402,8 +410,10 @@ static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry, void *data)
- 			  entry->skb->data, entry->skb->len,
- 			  rt2x00usb_interrupt_rxdone, entry);
- 
-+	usb_anchor_urb(entry_priv->urb, rt2x00dev->anchor);
- 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
- 	if (status) {
-+		usb_unanchor_urb(entry_priv->urb);
- 		if (status == -ENODEV)
- 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
-@@ -818,6 +828,13 @@ int rt2x00usb_probe(struct usb_interface *usb_intf,
- 	if (retval)
- 		goto exit_free_reg;
- 
-+	rt2x00dev->anchor = devm_kmalloc(&usb_dev->dev,
-+					sizeof(struct usb_anchor),
-+					GFP_KERNEL);
-+	if (!rt2x00dev->anchor)
-+		goto exit_free_reg;
-+
-+	init_usb_anchor(rt2x00dev->anchor);
- 	return 0;
- 
- exit_free_reg:
--- 
-2.5.0
-
+Regards,
+Arend
