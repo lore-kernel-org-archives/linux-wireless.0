@@ -1,88 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44105 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965750AbcCPJW0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2016 05:22:26 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Joe Perches <joe@perches.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	kbuild test robot <lkp@intel.com>,
-	kernel-janitors <kernel-janitors@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Subject: Re: wireless-drivers: random cleanup patches piling up
-References: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com>
-	<1453423965.3856.22.camel@perches.com>
-	<87k2n1x0sf.fsf@kamboji.qca.qualcomm.com>
-	<20160122151211.GB1500@tuxdriver.com>
-	<87si1pvcd7.fsf@kamboji.qca.qualcomm.com>
-	<20160126052823.GA2053@sudip-laptop>
-	<87bn84kdu0.fsf@kamboji.qca.qualcomm.com>
-	<20160201044142.GC4072@sudip-pc>
-	<878u34j0wz.fsf@kamboji.qca.qualcomm.com>
-	<CAGRGNgWkqApcjtEq_K8PQugoHxUSBxfSGJE1Mc+3_W2H9J8GrQ@mail.gmail.com>
-Date: Wed, 16 Mar 2016 11:22:18 +0200
-In-Reply-To: <CAGRGNgWkqApcjtEq_K8PQugoHxUSBxfSGJE1Mc+3_W2H9J8GrQ@mail.gmail.com>
-	(Julian Calaby's message of "Wed, 16 Mar 2016 11:57:52 +1100")
-Message-ID: <87pouulqut.fsf@kamboji.qca.qualcomm.com> (sfid-20160316_102249_357864_2477DAE6)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:35312 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753865AbcCAOCz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 1 Mar 2016 09:02:55 -0500
+Message-ID: <1456840971.3926.29.camel@sipsolutions.net> (sfid-20160301_150311_006714_6DFA40B1)
+Subject: Re: [RFC/RFT] mac80211: implement fq_codel for software queuing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless@vger.kernel.org
+Cc: netdev@vger.kernel.org, eric.dumazet@gmail.com,
+	dave.taht@gmail.com, emmanuel.grumbach@intel.com, nbd@openwrt.org,
+	Tim Shepard <shep@alum.mit.edu>
+Date: Tue, 01 Mar 2016 15:02:51 +0100
+In-Reply-To: <1456492163-11437-1-git-send-email-michal.kazior@tieto.com> (sfid-20160226_140925_426277_05F8C3B0)
+References: <1456492163-11437-1-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20160226_140925_426277_05F8C3B0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Julian Calaby <julian.calaby@gmail.com> writes:
+On Fri, 2016-02-26 at 14:09 +0100, Michal Kazior wrote:
+> 
+> +typedef u64 codel_time_t;
 
-> Hi Kalle,
->
-> On Mon, Feb 1, 2016 at 7:21 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->> Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
->>
->>> Sure, I am starting that way. I checked in patchwork and I do not see
->>> any checkpatch related patch pending (except staging, which Greg will
->>> handle). I think you must have cleared all of them.
->>
->> They are in deferred state. The search functionality in patchwork is not
->> that intuitive and they are not easy to find so here's a direct link:
->>
->> https://patchwork.kernel.org/project/linux-wireless/list/?state=10&order=date
->
-> I'm currently going through that list and producing a bundle of
-> "applyable" patches.
+Do we really need this? And if yes, does it have to be in the public
+header file? Why a typedef anyway?
 
-Nice.
+> - * @txq_ac_max_pending: maximum number of frames per AC pending in
+> all txq
+> - *	entries for a vif.
+> + * @txq_cparams: codel parameters to control tx queueing dropping
+> behavior
+> + * @txq_limit: maximum number of frames queuesd
 
-> My criteria is:
-> 1. The change is sane.
-> 2. It's either obviously correct, I can review it, or someone else has
-> reviewed or acked it.
-> 3. No changes other than rebasing and fixing commit messages are
-> required to apply it.
+typo - queued
 
-BTW, 'git am -s -3' is the best way to apply a patch. The three way
-merge is awesome (if the submitter has sent the patch correctly).
+> @@ -2133,7 +2155,8 @@ struct ieee80211_hw {
+>  	u8 uapsd_max_sp_len;
+>  	u8 n_cipher_schemes;
+>  	const struct ieee80211_cipher_scheme *cipher_schemes;
+> -	int txq_ac_max_pending;
+> +	struct codel_params txq_cparams;
 
-> Some of these patches need work on their commit messages, some are
-> complicated enough that I feel I should be providing review notes so
-> someone else can double check my review, and all of them should be
-> rebased and compile tested. Also, some are controversial, so I'll be
-> segregating them from the main set.
->
-> How would you like me to communicate this list to you? I'm happy to
-> provide branches you can pull from or I could just post updated
-> versions to the list and give reviewed-by tags to those that don't
-> need more work.
->
-> Every patch will get an email on linux-wireless regardless.
+Should this really be a parameter the driver determines?
 
-I guess posting the patches to linux-wireless is the easiest for
-everyone? I have a script which automatically takes patches from
-patchwork so that's very easy for me. But remember to use Signed-off-by
-instead of Reviewed-by as you are resending the patches.
+> +static void ieee80211_if_setup_no_queue(struct net_device *dev)
+> +{
+> +	ieee80211_if_setup(dev);
+> +	dev->priv_flags |= IFF_NO_QUEUE;
+> +	/* Note for backporters: use dev->tx_queue_len = 0 instead
+> of IFF_ */
 
-Thanks you, your help here is very much appreciated.
+Heh. Remove that comment; we have an spatch in backports already :)
 
--- 
-Kalle Valo
+> --- a/net/mac80211/sta_info.h
+> +++ b/net/mac80211/sta_info.h
+> @@ -19,6 +19,7 @@
+>  #include <linux/etherdevice.h>
+>  #include <linux/rhashtable.h>
+>  #include "key.h"
+> +#include "codel_i.h"
+>  
+>  /**
+>   * enum ieee80211_sta_info_flags - Stations flags
+> @@ -327,6 +328,32 @@ struct mesh_sta {
+>  
+>  DECLARE_EWMA(signal, 1024, 8)
+>  
+> +struct txq_info;
+> +
+> +/**
+> + * struct txq_flow - per traffic flow queue
+> + *
+> + * This structure is used to distinguish and queue different traffic
+> flows
+> + * separately for fair queueing/AQM purposes.
+> + *
+> + * @txqi: txq_info structure it is associated at given time
+> + * @flowchain: can be linked to other flows for RR purposes
+> + * @backlogchain: can be linked to other flows for backlog sorting
+> purposes
+> + * @queue: sk_buff queue
+> + * @cvars: codel state vars
+> + * @backlog: number of bytes pending in the queue
+> + * @deficit: used for fair queueing balancing
+> + */
+> +struct txq_flow {
+> +	struct txq_info *txqi;
+> +	struct list_head flowchain;
+> +	struct list_head backlogchain;
+> +	struct sk_buff_head queue;
+> +	struct codel_vars cvars;
+> +	u32 backlog;
+> +	u32 deficit;
+> +};
+> +
+>  /**
+>   * struct sta_info - STA information
+>   *
+> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+> index af584f7cdd63..f42f898cb8b5 100644
+> --- a/net/mac80211/tx.c
+> +++ b/net/mac80211/tx.c
+> @@ -34,6 +34,7 @@
+>  #include "wpa.h"
+>  #include "wme.h"
+>  #include "rate.h"
+> +#include "codel.h"
+
+> +static inline codel_time_t
+> +custom_codel_get_enqueue_time(struct sk_buff *skb)
+
+There are a lot of inlines here - first of all, do they all need to be
+inline?
+
+And secondly, perhaps it would make some sense to move this into
+another file?
+
+johannes
