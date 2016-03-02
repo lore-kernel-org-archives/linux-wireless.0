@@ -1,53 +1,94 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:33179 "EHLO
-	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751417AbcC2IrI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 04:47:08 -0400
-Received: by mail-pf0-f172.google.com with SMTP id 4so9557611pfd.0
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2016 01:47:08 -0700 (PDT)
-Subject: Re: [V11,2/2] brcmfmac: add support for nl80211 BSS_SELECT feature
-To: Kalle Valo <kvalo@codeaurora.org>
-References: <56F65580.4060403@broadcom.com>
- <87pouhcz3a.fsf@kamboji.qca.qualcomm.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <56FA40FD.3040609@broadcom.com> (sfid-20160329_104732_581963_289FC502)
-Date: Tue, 29 Mar 2016 10:46:53 +0200
-MIME-Version: 1.0
-In-Reply-To: <87pouhcz3a.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252
+Received: from mga14.intel.com ([192.55.52.115]:34211 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753145AbcCBH5F (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 02:57:05 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 12/43] iwlwifi: mvm: enable VHT MU-MIMO for supported hardware
+Date: Wed,  2 Mar 2016 09:56:13 +0200
+Message-Id: <1456905404-14435-12-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085723_074309_FDA4D0D2)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-+ linux-wireless, Johannes
+From: Sara Sharon <sara.sharon@intel.com>
 
-On 26-3-2016 11:28, Kalle Valo wrote:
-> Arend van Spriel <arend.vanspriel@broadcom.com> writes:
-> 
->> This brcmfmac patch [1] is set to "Awaiting Upstream" as it relies on
->> nl80211 patch. However, that patch was already in linux-next before the
->> merge window so are you waiting for 4.6-rc1 or did you miss this one?
->> Just want to understand the use of this state.
->>
->> Regards,
->> Arend
->>
->> [1] https://patchwork.kernel.org/patch/8484901/
-> 
-> Commit 0a87cadbb54e is not in net-next yet, I guess Johannes didn't send
-> a pull request yet. Once it's in net-next it needs come down to
-> wireless-drivers-next before I can apply it. So I'm waiting for that.
+Incoming hardware will support VHT MU-MIMO. Declare this
+capability for relevant hardware.
 
-Ah. I figured the patch made it to the 4.6 deadline, but apparently not.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-8000.c      | 1 +
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c      | 3 ++-
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h    | 2 ++
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 3 +++
+ 4 files changed, 8 insertions(+), 1 deletion(-)
 
-> But please do remind about this, I seldomly check the "Awaiting
-> Upstream" queue so sometimes it might take way too long before I apply
-> the patch.
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+index ad8c588..97be104 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-8000.c
+@@ -217,6 +217,7 @@ const struct iwl_cfg iwl8265_2ac_cfg = {
+ 	.nvm_ver = IWL8000_NVM_VERSION,
+ 	.nvm_calib_ver = IWL8000_TX_POWER_VERSION,
+ 	.max_ht_ampdu_exponent = IEEE80211_HT_MAX_AMPDU_64K,
++	.vht_mu_mimo_supported = true,
+ };
+ 
+ const struct iwl_cfg iwl4165_2ac_cfg = {
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+index 0835906..8e32a57 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+@@ -139,7 +139,8 @@ static const struct iwl_tt_params iwl9000_tt_params = {
+ 	.smem_len = IWL9000_SMEM_LEN,					\
+ 	.thermal_params = &iwl9000_tt_params,				\
+ 	.apmg_not_supported = true,					\
+-	.mq_rx_supported = true
++	.mq_rx_supported = true,					\
++	.vht_mu_mimo_supported = true
+ 
+ const struct iwl_cfg iwl9260_2ac_cfg = {
+ 		.name = "Intel(R) Dual Band Wireless AC 9260",
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index dad5570..4f2b57e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -312,6 +312,7 @@ struct iwl_pwr_tx_backoff {
+  * @smem_offset: offset from which the SMEM begins
+  * @smem_len: the length of SMEM
+  * @mq_rx_supported: multi-queue rx support
++ * @vht_mu_mimo_supported: VHT MU-MIMO support
+  *
+  * We enable the driver to be backward compatible wrt. hardware features.
+  * API differences in uCode shouldn't be handled here but through TLVs
+@@ -364,6 +365,7 @@ struct iwl_cfg {
+ 	const struct iwl_tt_params *thermal_params;
+ 	bool apmg_not_supported;
+ 	bool mq_rx_supported;
++	bool vht_mu_mimo_supported;
+ };
+ 
+ /*
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 50f4cc6..e84cb8d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -366,6 +366,9 @@ static void iwl_init_vht_hw_capab(const struct iwl_cfg *cfg,
+ 		       max_ampdu_exponent <<
+ 		       IEEE80211_VHT_CAP_MAX_A_MPDU_LENGTH_EXPONENT_SHIFT;
+ 
++	if (cfg->vht_mu_mimo_supported)
++		vht_cap->cap |= IEEE80211_VHT_CAP_MU_BEAMFORMEE_CAPABLE;
++
+ 	if (cfg->ht_params->ldpc)
+ 		vht_cap->cap |= IEEE80211_VHT_CAP_RXLDPC;
+ 
+-- 
+2.5.0
 
-So this is another way of saying the author should keep an eye on his
-patches when it ends up in this state or in general ;-) Noted.
-
-Thanks,
-Arend
