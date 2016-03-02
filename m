@@ -1,57 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:46019 "EHLO mga11.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:34250 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754541AbcCDT5p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 14:57:45 -0500
-From: "Coelho, Luciano" <luciano.coelho@intel.com>
-To: "bjorn@mork.no" <bjorn@mork.no>,
-	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Ivgi, Chaya Rachel" <chaya.rachel.ivgi@intel.com>
-Subject: Re: [PATCH 02/43] iwlwifi: mvm: add registration to thermal zone
-Date: Fri, 4 Mar 2016 19:57:42 +0000
-Message-ID: <1457121461.28365.175.camel@intel.com> (sfid-20160304_205749_173282_66CC850F)
+	id S1752950AbcCBH47 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 02:56:59 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Eyal Shapira <eyal@wizery.com>,
+	Eyal Shapira <eyalx.shapira@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 07/43] iwlwifi: mvm: rs: fix a theoretical access to uninitialized array elements
+Date: Wed,  2 Mar 2016 09:56:08 +0200
+Message-Id: <1456905404-14435-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085702_257256_201A70DE)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
 References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
-	 <1456905404-14435-2-git-send-email-emmanuel.grumbach@intel.com>
-	 <877fhi9jes.fsf@nemi.mork.no> <8737s69irg.fsf@nemi.mork.no>
-In-Reply-To: <8737s69irg.fsf@nemi.mork.no>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gRnJpLCAyMDE2LTAzLTA0IGF0IDE5OjUzICswMTAwLCBCasO4cm4gTW9yayB3cm90ZToNCj4g
-QmrDuHJuIE1vcmsgPGJqb3JuQG1vcmsubm8+IHdyaXRlczoNCj4gDQo+ID4gPiArc3RhdGljIHZv
-aWQgaXdsX212bV90aGVybWFsX3pvbmVfdW5yZWdpc3RlcihzdHJ1Y3QgaXdsX212bSAqbXZtKQ0K
-PiA+ID4gK3sNCj4gPiA+ICsJaWYgKCFpd2xfbXZtX2lzX3R0X2luX2Z3KG12bSkpDQo+ID4gPiAr
-CQlyZXR1cm47DQo+ID4gPiArDQo+ID4gPiArCWlmIChtdm0tPnR6X2RldmljZS50em9uZSkgew0K
-PiA+ID4gKwkJSVdMX0RFQlVHX1RFTVAobXZtLCAiVGhlcm1hbCB6b25lIGRldmljZQ0KPiA+ID4g
-dW5yZWdpc3RlclxuIik7DQo+ID4gPiArCQl0aGVybWFsX3pvbmVfZGV2aWNlX3VucmVnaXN0ZXIo
-bXZtLQ0KPiA+ID4gPnR6X2RldmljZS50em9uZSk7DQo+ID4gDQo+ID4gV29uJ3QgdGhhdCBFUlJf
-UFRSIGJsb3cgdXAgd2hlbiBkZXJlZmVyZW5jZWQgYnkNCj4gPiB0aGVybWFsX3pvbmVfZGV2aWNl
-X3VucmVnaXN0ZXIoKSA/DQo+IA0KPiBUbyBhbnN3ZXIgbXlzZWxmOsKgwqBObywgaXQgd29uJ3Qu
-wqDCoEkgd2FzIHRyaWNrZWQgYnkgdGhlIG9kZGx5IHBsYWNlZA0KPiDCoCB0enAgPSB0ei0+dHpw
-Ow0KPiBsaW5lIGhlcmUsIGJ1dCB3ZSB3aWxsIHJldHVybiBiZWZvcmUgdGhhdCBiZWNvbWVzIGEg
-cHJvYmxlbToNCj4gDQo+IHZvaWQgdGhlcm1hbF96b25lX2RldmljZV91bnJlZ2lzdGVyKHN0cnVj
-dCB0aGVybWFsX3pvbmVfZGV2aWNlICp0eikNCj4gew0KPiDCoMKgwqDCoMKgwqDCoMKgaW50IGk7
-DQo+IMKgwqDCoMKgwqDCoMKgwqBjb25zdCBzdHJ1Y3QgdGhlcm1hbF96b25lX3BhcmFtcyAqdHpw
-Ow0KPiDCoMKgwqDCoMKgwqDCoMKgc3RydWN0IHRoZXJtYWxfY29vbGluZ19kZXZpY2UgKmNkZXY7
-DQo+IMKgwqDCoMKgwqDCoMKgwqBzdHJ1Y3QgdGhlcm1hbF96b25lX2RldmljZSAqcG9zID0gTlVM
-TDsNCj4gDQo+IMKgwqDCoMKgwqDCoMKgwqBpZiAoIXR6KQ0KPiDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoHJldHVybjsNCj4gDQo+IMKgwqDCoMKgwqDCoMKgwqB0enAgPSB0ei0+dHpw
-Ow0KPiANCj4gwqDCoMKgwqDCoMKgwqDCoG11dGV4X2xvY2soJnRoZXJtYWxfbGlzdF9sb2NrKTsN
-Cj4gwqDCoMKgwqDCoMKgwqDCoGxpc3RfZm9yX2VhY2hfZW50cnkocG9zLCAmdGhlcm1hbF90el9s
-aXN0LCBub2RlKQ0KPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBpZiAocG9zID09IHR6KQ0KPiDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGJyZWFrOw0KPiDCoMKgwqDCoMKgwqDCoMKg
-aWYgKHBvcyAhPSB0eikgew0KPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoC8qIHRo
-ZXJtYWwgem9uZSBkZXZpY2Ugbm90IGZvdW5kICovDQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgbXV0ZXhfdW5sb2NrKCZ0aGVybWFsX2xpc3RfbG9jayk7DQo+IMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgcmV0dXJuOw0KPiDCoMKgwqDCoMKgwqDCoMKgfQ0KPiANCj4g
-DQo+IFN0aWxsIHRoaW5rIGl0J3MgdW53aXNlIHRvIGxlYXZlIEVSUl9QVFIncyBhcm91bmQgdGhv
-dWdoLg0KDQpUaGUgbWFpbiBwb2ludCBpcyB0aGF0IHdlIGRvbid0IHdhbnQgdG8gZmFpbCB0aGUg
-ZW50aXJlIGRyaXZlciBsb2FkaW5nDQppZiB0aGUgdGhlcm1hbCB6b25lIChvciBjb29saW5nIGRl
-dmljZSkgcmVnaXN0cmF0aW9uIGZhaWxzLiDCoFdlIGhhdmUgYQ0KZmFsbGJhY2sgZm9yIHRoYXQs
-IHdoaWNoIGlzIHdoYXQgd2FzIHVzZWQgYmVmb3JlIHRoaXMgbmV3DQppbXBsZW1lbnRhdGlvbiAo
-bmFtZWx5LCB0aGUgdGhlcm1hbCB0aHJvdHRsaW5nIGNvZGUgaW4gdGhlIGRyaXZlcikuDQoNCklJ
-UkMgRW1tYW51ZWwgaGFzIGEgcGF0Y2ggaW4gdGhlIHF1ZXVlIHRvIGNsZWFuIHRoaXMgdXAgYSBi
-aXQuLi4NCg0KLS0NCkNoZWVycywNCkx1Y2Eu
+From: Eyal Shapira <eyal@wizery.com>
+
+Klocwork is unhappy as ht_vht_rates might be accessed with
+rate->index being set to values between 0 and 3 which will
+lead to accessing uninitialized array elements. Effectively this
+doesn't happen as in HT/VHT we're not using these rate indices.
+Still fix this.
+
+Signed-off-by: Eyal Shapira <eyalx.shapira@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index 6e7e78a..3dc94d2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -556,6 +556,7 @@ static char *rs_pretty_rate(const struct rs_rate *rate)
+ 	if (is_type_legacy(rate->type) && (rate->index <= IWL_RATE_54M_INDEX))
+ 		rate_str = legacy_rates[rate->index];
+ 	else if ((is_type_ht(rate->type) || is_type_vht(rate->type)) &&
++		 (rate->index >= IWL_RATE_MCS_0_INDEX) &&
+ 		 (rate->index <= IWL_RATE_MCS_9_INDEX))
+ 		rate_str = ht_vht_rates[rate->index];
+ 	else
+-- 
+2.5.0
+
