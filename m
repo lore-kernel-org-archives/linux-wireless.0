@@ -1,70 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:35398 "EHLO
-	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750871AbcCZGPE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Mar 2016 02:15:04 -0400
-From: Bhumika Goyal <bhumirks@gmail.com>
-To: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org
-Cc: Jes.Sorensen@redhat.com, joe@perches.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org, Bhumika Goyal <bhumirks@gmail.com>
-Subject: [PATCH] Staging: rtl8723au: Remove unused functions
-Date: Sat, 26 Mar 2016 11:44:52 +0530
-Message-Id: <1458972892-14169-1-git-send-email-bhumirks@gmail.com> (sfid-20160326_071531_032161_74DB40B0)
+Received: from mga11.intel.com ([192.55.52.93]:51900 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752032AbcCBH5t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 02:57:49 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 43/43] iwlwifi: mvm: support sw queue start/stop from mvm
+Date: Wed,  2 Mar 2016 09:56:44 +0200
+Message-Id: <1456905404-14435-43-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085953_349975_33525782)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The functions rtw_get_oper_bw23a and rtw_get_oper_ch23aoffset are never
-used anywhere in the kernel. So, remove their definition and prototype.
-Grepped to find occurences.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
+Add a wrapper function to allow stopping SW queues from MVM
+as well.
+
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/rtl8723au/core/rtw_wlan_util.c   | 10 ----------
- drivers/staging/rtl8723au/include/rtw_mlme_ext.h |  2 --
- 2 files changed, 12 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h |  4 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 38 ++++++++++++++++++----------
+ 2 files changed, 28 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_wlan_util.c b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
-index cc2b84b..694cf17 100644
---- a/drivers/staging/rtl8723au/core/rtw_wlan_util.c
-+++ b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
-@@ -304,21 +304,11 @@ inline void rtw_set_oper_ch23a(struct rtw_adapter *adapter, u8 ch)
- 	adapter_to_dvobj(adapter)->oper_channel = ch;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 7ea2baa..f9019c4 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1556,6 +1556,10 @@ static inline void iwl_mvm_stop_device(struct iwl_mvm *mvm)
+ 	iwl_trans_stop_device(mvm->trans);
  }
  
--inline u8 rtw_get_oper_bw23a(struct rtw_adapter *adapter)
--{
--	return adapter_to_dvobj(adapter)->oper_bwmode;
--}
--
- inline void rtw_set_oper_bw23a(struct rtw_adapter *adapter, u8 bw)
- {
- 	adapter_to_dvobj(adapter)->oper_bwmode = bw;
++/* Stop/start all mac queues in a given bitmap */
++void iwl_mvm_start_mac_queues(struct iwl_mvm *mvm, unsigned long mq);
++void iwl_mvm_stop_mac_queues(struct iwl_mvm *mvm, unsigned long mq);
++
+ /* Thermal management and CT-kill */
+ void iwl_mvm_tt_tx_backoff(struct iwl_mvm *mvm, u32 backoff);
+ void iwl_mvm_tt_temp_changed(struct iwl_mvm *mvm, u32 temp);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 3760a09..e6d0adc 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -897,24 +897,17 @@ static void iwl_mvm_rx_mq(struct iwl_op_mode *op_mode,
+ 		iwl_mvm_rx_common(mvm, rxb, pkt);
  }
  
--inline u8 rtw_get_oper_ch23aoffset(struct rtw_adapter *adapter)
--{
--	return adapter_to_dvobj(adapter)->oper_ch_offset;
--}
--
- inline void rtw_set_oper_ch23aoffset23a(struct rtw_adapter *adapter, u8 offset)
+-static void iwl_mvm_stop_sw_queue(struct iwl_op_mode *op_mode, int queue)
++void iwl_mvm_stop_mac_queues(struct iwl_mvm *mvm, unsigned long mq)
  {
- 	adapter_to_dvobj(adapter)->oper_ch_offset = offset;
-diff --git a/drivers/staging/rtl8723au/include/rtw_mlme_ext.h b/drivers/staging/rtl8723au/include/rtw_mlme_ext.h
-index ea2a6c9..0e7d3da 100644
---- a/drivers/staging/rtl8723au/include/rtw_mlme_ext.h
-+++ b/drivers/staging/rtl8723au/include/rtw_mlme_ext.h
-@@ -461,9 +461,7 @@ void Update23aTblForSoftAP(u8 *bssrateset, u32 bssratelen);
+-	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
+-	unsigned long mq;
+ 	int q;
  
- u8 rtw_get_oper_ch23a(struct rtw_adapter *adapter);
- void rtw_set_oper_ch23a(struct rtw_adapter *adapter, u8 ch);
--u8 rtw_get_oper_bw23a(struct rtw_adapter *adapter);
- void rtw_set_oper_bw23a(struct rtw_adapter *adapter, u8 bw);
--u8 rtw_get_oper_ch23aoffset(struct rtw_adapter *adapter);
- void rtw_set_oper_ch23aoffset23a(struct rtw_adapter *adapter, u8 offset);
+-	spin_lock_bh(&mvm->queue_info_lock);
+-	mq = mvm->queue_info[queue].hw_queue_to_mac80211;
+-	spin_unlock_bh(&mvm->queue_info_lock);
+-
+ 	if (WARN_ON_ONCE(!mq))
+ 		return;
  
- void set_channel_bwmode23a(struct rtw_adapter *padapter, unsigned char channel,
+ 	for_each_set_bit(q, &mq, IEEE80211_MAX_QUEUES) {
+ 		if (atomic_inc_return(&mvm->mac80211_queue_stop_count[q]) > 1) {
+ 			IWL_DEBUG_TX_QUEUES(mvm,
+-					    "queue %d (mac80211 %d) already stopped\n",
+-					    queue, q);
++					    "mac80211 %d already stopped\n", q);
+ 			continue;
+ 		}
+ 
+@@ -934,24 +927,29 @@ static void iwl_mvm_async_cb(struct iwl_op_mode *op_mode,
+ 	iwl_trans_block_txq_ptrs(mvm->trans, false);
+ }
+ 
+-static void iwl_mvm_wake_sw_queue(struct iwl_op_mode *op_mode, int queue)
++static void iwl_mvm_stop_sw_queue(struct iwl_op_mode *op_mode, int hw_queue)
+ {
+ 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
+ 	unsigned long mq;
+-	int q;
+ 
+ 	spin_lock_bh(&mvm->queue_info_lock);
+-	mq = mvm->queue_info[queue].hw_queue_to_mac80211;
++	mq = mvm->queue_info[hw_queue].hw_queue_to_mac80211;
+ 	spin_unlock_bh(&mvm->queue_info_lock);
+ 
++	iwl_mvm_stop_mac_queues(mvm, mq);
++}
++
++void iwl_mvm_start_mac_queues(struct iwl_mvm *mvm, unsigned long mq)
++{
++	int q;
++
+ 	if (WARN_ON_ONCE(!mq))
+ 		return;
+ 
+ 	for_each_set_bit(q, &mq, IEEE80211_MAX_QUEUES) {
+ 		if (atomic_dec_return(&mvm->mac80211_queue_stop_count[q]) > 0) {
+ 			IWL_DEBUG_TX_QUEUES(mvm,
+-					    "queue %d (mac80211 %d) still stopped\n",
+-					    queue, q);
++					    "mac80211 %d still stopped\n", q);
+ 			continue;
+ 		}
+ 
+@@ -959,6 +957,18 @@ static void iwl_mvm_wake_sw_queue(struct iwl_op_mode *op_mode, int queue)
+ 	}
+ }
+ 
++static void iwl_mvm_wake_sw_queue(struct iwl_op_mode *op_mode, int hw_queue)
++{
++	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
++	unsigned long mq;
++
++	spin_lock_bh(&mvm->queue_info_lock);
++	mq = mvm->queue_info[hw_queue].hw_queue_to_mac80211;
++	spin_unlock_bh(&mvm->queue_info_lock);
++
++	iwl_mvm_start_mac_queues(mvm, mq);
++}
++
+ void iwl_mvm_set_hw_ctkill_state(struct iwl_mvm *mvm, bool state)
+ {
+ 	if (state)
 -- 
-1.9.1
+2.5.0
 
