@@ -1,128 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f179.google.com ([209.85.217.179]:32771 "EHLO
-	mail-lb0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751136AbcCFGyK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 01:54:10 -0500
-Received: by mail-lb0-f179.google.com with SMTP id k15so100477572lbg.0
-        for <linux-wireless@vger.kernel.org>; Sat, 05 Mar 2016 22:54:09 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1456521282-69932-1-git-send-email-nbd@openwrt.org>
-References: <1456521282-69932-1-git-send-email-nbd@openwrt.org>
-Date: Sun, 6 Mar 2016 08:54:08 +0200
-Message-ID: <CANUX_P1dj1x9WPWuBvDs8eyFCDL5iJUJM+5+_=KR4kDLaxHXgA@mail.gmail.com> (sfid-20160306_075415_431168_A0DEBF89)
-Subject: Re: [PATCH] mac80211: remove wdev/vif conversion functions
-From: Emmanuel Grumbach <egrumbach@gmail.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([192.55.52.115]:62891 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753307AbcCBH6M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 02:58:12 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Matti Gottlieb <matti.gottlieb@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 35/43] iwlwifi: mvm: Disable beacon storing in  D3 when WOWLAN configured
+Date: Wed,  2 Mar 2016 09:56:36 +0200
+Message-Id: <1456905404-14435-35-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085952_711494_9D97A04F)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Feb 26, 2016 at 11:14 PM, Felix Fietkau <nbd@openwrt.org> wrote:
-> Nothing uses them
+From: Matti Gottlieb <matti.gottlieb@intel.com>
 
-Correction: nothing *upstream* uses them *yet*. We have code that will use them.
-wdev_to_ieee80211_vif was added by:
+Currently when entering D3 with WOWLAN configured, we enable in the
+configuration flags beacon storing, and do not disable beacon
+filtering, and do not wake up from a magic packet.
 
-commit ad7e718c9b4f717823fd920a0103f7b0fb06183f
-Author: Johannes Berg <johannes.berg@intel.com>
-Date:   Wed Nov 13 13:37:47 2013 +0100
+Having both enabled is wrong (should not have both enabled),
+and causes problems in the RX queues in the FW, causing
+the FW not to recognize the magic packet when it comes.
 
-    nl80211: vendor command support
+Disable beacon storing in wowlan configuration.
 
+Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/d3.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Which by design was meant to provide a pipe that may not be upstream
-(at least not immediately).
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+index 5214482..cf5e634 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/d3.c
+@@ -856,8 +856,7 @@ iwl_mvm_get_wowlan_config(struct iwl_mvm *mvm,
+ 	wowlan_config_cmd->is_11n_connection =
+ 					ap_sta->ht_cap.ht_supported;
+ 	wowlan_config_cmd->flags = ENABLE_L3_FILTERING |
+-		ENABLE_NBNS_FILTERING | ENABLE_DHCP_FILTERING |
+-		ENABLE_STORE_BEACON;
++		ENABLE_NBNS_FILTERING | ENABLE_DHCP_FILTERING;
+ 
+ 	/* Query the last used seqno and set it */
+ 	ret = iwl_mvm_get_last_nonqos_seq(mvm, vif);
+-- 
+2.5.0
 
->
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-> ---
->  include/net/mac80211.h | 26 --------------------------
->  net/mac80211/util.c    | 28 ----------------------------
->  2 files changed, 54 deletions(-)
->
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index 0c09da3..e11d751 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -1439,32 +1439,6 @@ static inline bool ieee80211_vif_is_mesh(struct ieee80211_vif *vif)
->  }
->
->  /**
-> - * wdev_to_ieee80211_vif - return a vif struct from a wdev
-> - * @wdev: the wdev to get the vif for
-> - *
-> - * This can be used by mac80211 drivers with direct cfg80211 APIs
-> - * (like the vendor commands) that get a wdev.
-> - *
-> - * Note that this function may return %NULL if the given wdev isn't
-> - * associated with a vif that the driver knows about (e.g. monitor
-> - * or AP_VLAN interfaces.)
-> - */
-> -struct ieee80211_vif *wdev_to_ieee80211_vif(struct wireless_dev *wdev);
-> -
-> -/**
-> - * ieee80211_vif_to_wdev - return a wdev struct from a vif
-> - * @vif: the vif to get the wdev for
-> - *
-> - * This can be used by mac80211 drivers with direct cfg80211 APIs
-> - * (like the vendor commands) that needs to get the wdev for a vif.
-> - *
-> - * Note that this function may return %NULL if the given wdev isn't
-> - * associated with a vif that the driver knows about (e.g. monitor
-> - * or AP_VLAN interfaces.)
-> - */
-> -struct wireless_dev *ieee80211_vif_to_wdev(struct ieee80211_vif *vif);
-> -
-> -/**
->   * enum ieee80211_key_flags - key flags
->   *
->   * These flags are used for communication about keys between the driver
-> diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-> index 89f7179..4482625 100644
-> --- a/net/mac80211/util.c
-> +++ b/net/mac80211/util.c
-> @@ -694,34 +694,6 @@ void ieee80211_iterate_stations_atomic(struct ieee80211_hw *hw,
->  }
->  EXPORT_SYMBOL_GPL(ieee80211_iterate_stations_atomic);
->
-> -struct ieee80211_vif *wdev_to_ieee80211_vif(struct wireless_dev *wdev)
-> -{
-> -       struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
-> -
-> -       if (!ieee80211_sdata_running(sdata) ||
-> -           !(sdata->flags & IEEE80211_SDATA_IN_DRIVER))
-> -               return NULL;
-> -       return &sdata->vif;
-> -}
-> -EXPORT_SYMBOL_GPL(wdev_to_ieee80211_vif);
-> -
-> -struct wireless_dev *ieee80211_vif_to_wdev(struct ieee80211_vif *vif)
-> -{
-> -       struct ieee80211_sub_if_data *sdata;
-> -
-> -       if (!vif)
-> -               return NULL;
-> -
-> -       sdata = vif_to_sdata(vif);
-> -
-> -       if (!ieee80211_sdata_running(sdata) ||
-> -           !(sdata->flags & IEEE80211_SDATA_IN_DRIVER))
-> -               return NULL;
-> -
-> -       return &sdata->wdev;
-> -}
-> -EXPORT_SYMBOL_GPL(ieee80211_vif_to_wdev);
-> -
->  /*
->   * Nothing should have been stuffed into the workqueue during
->   * the suspend->resume cycle. Since we can't check each caller
-> --
-> 2.2.2
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
