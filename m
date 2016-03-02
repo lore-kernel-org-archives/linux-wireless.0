@@ -1,86 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49234 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755319AbcCWP1z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2016 11:27:55 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH 2/2] wil6210: add module parameter for alternate interface name
-References: <1458590472-677-1-git-send-email-qca_merez@qca.qualcomm.com>
-	<1458590472-677-3-git-send-email-qca_merez@qca.qualcomm.com>
-Date: Wed, 23 Mar 2016 17:27:48 +0200
-In-Reply-To: <1458590472-677-3-git-send-email-qca_merez@qca.qualcomm.com>
-	(Maya Erez's message of "Mon, 21 Mar 2016 22:01:12 +0200")
-Message-ID: <87y499dxjf.fsf@kamboji.qca.qualcomm.com> (sfid-20160323_162759_683331_7FF8F4C4)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga14.intel.com ([192.55.52.115]:22360 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753307AbcCBH5k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 02:57:40 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 24/43] iwlwifi: pcie: prevent skbs shadowing in iwl_trans_pcie_reclaim
+Date: Wed,  2 Mar 2016 09:56:25 +0200
+Message-Id: <1456905404-14435-24-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085953_039087_E57B9C52)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> writes:
+The patch below introduced a variable shadowing. Fix that.
 
-> From: Lior David <qca_liord@qca.qualcomm.com>
->
-> Add a module parameter alt_ifname that when set, will name
-> the primary network interface wigig<N> instead of the default
-> wlan<N>. This helps platforms such as android where we need to
-> clearly separate the WIGIG interface from the default wireless
-> interface.
->
-> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/wil6210/netdev.c | 8 +++++++-
->  1 file changed, 7 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
-> index 3bc0e26..f78ea91 100644
-> --- a/drivers/net/wireless/ath/wil6210/netdev.c
-> +++ b/drivers/net/wireless/ath/wil6210/netdev.c
-> @@ -14,10 +14,15 @@
->   * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
->   */
->  
-> +#include <linux/moduleparam.h>
->  #include <linux/etherdevice.h>
->  #include "wil6210.h"
->  #include "txrx.h"
->  
-> +static bool alt_ifname; /* = false; */
-> +module_param(alt_ifname, bool, S_IRUGO);
-> +MODULE_PARM_DESC(alt_ifname, " use an alternate interface name wigigN instead of wlanN");
-> +
->  static int wil_open(struct net_device *ndev)
->  {
->  	struct wil6210_priv *wil = ndev_to_wil(ndev);
-> @@ -136,6 +141,7 @@ void *wil_if_alloc(struct device *dev)
->  	struct wil6210_priv *wil;
->  	struct ieee80211_channel *ch;
->  	int rc = 0;
-> +	const char *ifname = alt_ifname ? "wigig%d" : "wlan%d";
->  
->  	wdev = wil_cfg80211_init(dev);
->  	if (IS_ERR(wdev)) {
-> @@ -160,7 +166,7 @@ void *wil_if_alloc(struct device *dev)
->  	ch = wdev->wiphy->bands[IEEE80211_BAND_60GHZ]->channels;
->  	cfg80211_chandef_create(&wdev->preset_chandef, ch, NL80211_CHAN_NO_HT);
->  
-> -	ndev = alloc_netdev(0, "wlan%d", NET_NAME_UNKNOWN, wil_dev_setup);
-> +	ndev = alloc_netdev(0, ifname, NET_NAME_UNKNOWN, wil_dev_setup);
->  	if (!ndev) {
->  		dev_err(dev, "alloc_netdev_mqs failed\n");
->  		rc = -ENOMEM;
+Fixes: 3955525d5d17 ("iwlwifi: pcie: buffer packets to avoid overflowing Tx queues")
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/tx.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-To me this looks like an ugly hack and I hope there is a better way to
-handle the problem this patch is fixing. I think interface names
-shouldn't matter from functionality point of view, anything requiring
-certain naming is broken.
-
-But if the interface name is so important why not use "wigig%d" always?
-The user space can rename the interface name anyway.
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+index 837a7d5..16ad820 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
+@@ -1062,10 +1062,10 @@ void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
+ 
+ 	if (iwl_queue_space(&txq->q) > txq->q.low_mark &&
+ 	    test_bit(txq_id, trans_pcie->queue_stopped)) {
+-		struct sk_buff_head skbs;
++		struct sk_buff_head overflow_skbs;
+ 
+-		__skb_queue_head_init(&skbs);
+-		skb_queue_splice_init(&txq->overflow_q, &skbs);
++		__skb_queue_head_init(&overflow_skbs);
++		skb_queue_splice_init(&txq->overflow_q, &overflow_skbs);
+ 
+ 		/*
+ 		 * This is tricky: we are in reclaim path which is non
+@@ -1076,8 +1076,8 @@ void iwl_trans_pcie_reclaim(struct iwl_trans *trans, int txq_id, int ssn,
+ 		 */
+ 		spin_unlock_bh(&txq->lock);
+ 
+-		while (!skb_queue_empty(&skbs)) {
+-			struct sk_buff *skb = __skb_dequeue(&skbs);
++		while (!skb_queue_empty(&overflow_skbs)) {
++			struct sk_buff *skb = __skb_dequeue(&overflow_skbs);
+ 			struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 			u8 dev_cmd_idx = IWL_TRANS_FIRST_DRIVER_DATA + 1;
+ 			struct iwl_device_cmd *dev_cmd =
 -- 
-Kalle Valo
+2.5.0
+
