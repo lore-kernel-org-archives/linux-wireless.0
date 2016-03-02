@@ -1,84 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f179.google.com ([209.85.161.179]:32965 "EHLO
-	mail-yw0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932397AbcCSVDM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Mar 2016 17:03:12 -0400
-Received: by mail-yw0-f179.google.com with SMTP id h65so34391452ywe.0
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Mar 2016 14:03:12 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <3054426.yRobc0R5Xb@debian64>
-References: <CAG4k0fCqB1KNLyHV5--pi1nSoDPnV3qM-yTB0T2jmgbnjmqvww@mail.gmail.com>
-	<CAG4k0fCd7Q-0Nz+XH1U-A9jwFRdX_SbVJNO=m_qP_ZpVADQkVw@mail.gmail.com>
-	<CAG4k0fDJ6KjK14Ja5fKpy8L4aGzWVwLTOGT6EvkVEDwS9qVdhw@mail.gmail.com>
-	<3054426.yRobc0R5Xb@debian64>
-Date: Sat, 19 Mar 2016 23:03:11 +0200
-Message-ID: <CAG4k0fCd01XNNUVsGW09wy1ctiPgV6zBvu52xa9Qm_OeMGphRQ@mail.gmail.com> (sfid-20160319_220316_877638_76D968D0)
-Subject: Re: carl1970: stops working at random periods on Ubuntu 15.05
-From: alexander nekrasov <i.sinister@gmail.com>
-To: Christian Lamparter <chunkeey@googlemail.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([192.55.52.115]:1927 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753569AbcCBH6N (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 02:58:13 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Golan Ben-Ami <golan.ben.ami@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 36/43] iwlwifi: support ucode with d0 unified image - regular and usniffer
+Date: Wed,  2 Mar 2016 09:56:37 +0200
+Message-Id: <1456905404-14435-36-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085950_481601_F9D9E21B)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've tried device on another computer booting from flashdrive with
-Ubuntu 13.10 (kernel 3.8 as far as I remember) and bind/unbind work
-OK. Then i booted on my computer from the same flash and everything
-worked OK. So it seems its kernel/usb-system/driver issue. Another
-thing that makes me think so is that only reboot helps to restore
-device - if it would be device - plugging/unplugging would be enought
+From: Golan Ben-Ami <golan.ben.ami@intel.com>
 
-On 12 March 2016 at 22:59, Christian Lamparter <chunkeey@googlemail.com> wrote:
-> On Friday, March 11, 2016 09:12:40 AM alexander nekrasov wrote:
->> Thanks for an answer, Christian! Adapter is getting hot sometimes
->> indeed. Also my adapter is usb2.0 but it was on extender with another
->> usb1.1 device. I plugged it into motherboards port directly but issue
->> still continue to happens. I  also tried reload host controller but it
->> did not help.
-> In that case, this might be a problem with the host controller on your
-> motherboard. I say "might", because it could also be that the ar9170
-> device is damaged or that something else is going on. Can you test the
-> device on a different PC and test if it fails in the same way?
->
-> Other than that, there's not much you can do (easily). If you want
-> to investigate the issue further, you would need probe the FUSB200
-> in the device. The only place you can do that is within the firmware
-> as the USB subsystem is breaking down. The firmware can be downloaded
-> from [0]. The register to look at is 0x1E110C (AR9170_USB_REG_DMA_STATUS).
->
-> There are a few error bits that can be checked.
->
-> Bit 24: Error when the upstream DMA access the data bus.
-> Bit 25: Error when the upstream DMA access the command bus.
-> Bit 26: Error when the downstream DMA access the data bus.
-> Bit 27: Error when the downstream DMA access the command bus.
-> Bit 28: Error when the CPU access the data bus.
-> Bit 29: Error when the CPU access the command bus.
->
-> If any of those bits are set, it's probably time to issue a
-> firmware reboot (set fw.reboot to 1 or directly call "reboot();").
->
-> That said, I don't have high hopes. In your logs, the carl9170
-> driver is already trying to reset the device... and failing since
-> it is unable to communicate with the device.
->
->> However I discovered strange behavior. Here is my
->> scenario:
->> 1. boot system
->> 2. check device is displayed by 'lsusb' and 'lsusb -t'
->> 3. unbind and bind root hub where device is plugged into
->> 4. this time 'lsusb' does list device and 'lsusb -t' does not
->>
->> Is it ok?
->>
->> After unbind/bind device definitely is not working - there is led
->> indicator and it is off. Should I 'enable' device after binding root
->> hub with another command?
->
-> I would suggest you also contact the linux-usb mailing list [1].
-> They may be able to debug why the host controller is not responding
-> to the bind and unbind.
->
-> [0] <https://wireless.wiki.kernel.org/en/users/drivers/carl9170.fw>
-> [1] <http://www.linux-usb.org/mailing.html>
+Till today, the ucode consisted of two d0 images - regular,
+in which the usniffer wasn't enabled, and usniffer, in which the
+usniffer logs were enabled.
+Lately, the two images were unified, so there is only one d0 image,
+in which the usniffer logs are enabled.
+
+Add new TLV capability for supporting the consolidated images
+(set 2, bit 13).
+
+Signed-off-by: Golan Ben-Ami <golan.ben.ami@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c     | 3 ++-
+ drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h | 3 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c      | 4 +++-
+ 3 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index ab4c2a0..ee4ffa5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1033,7 +1033,8 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 		}
+ 	}
+ 
+-	if (usniffer_req && !*usniffer_images) {
++	if (!fw_has_capa(capa, IWL_UCODE_TLV_CAPA_USNIFFER_UNIFIED) &&
++	    usniffer_req && !*usniffer_images) {
+ 		IWL_ERR(drv,
+ 			"user selected to work with usniffer but usniffer image isn't available in ucode package\n");
+ 		return -EINVAL;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+index 63dc109..5f69bf5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
+@@ -322,6 +322,8 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_capa_t;
+  * @IWL_UCODE_TLV_CAPA_TEMP_THS_REPORT_SUPPORT: supports temperature
+  *	thresholds reporting
+  * @IWL_UCODE_TLV_CAPA_CTDP_SUPPORT: supports cTDP command
++ * @IWL_UCODE_TLV_CAPA_USNIFFER_UNIFIED: supports usniffer enabled in
++ *	regular image.
+  *
+  * @NUM_IWL_UCODE_TLV_CAPA: number of bits used
+  */
+@@ -358,6 +360,7 @@ enum iwl_ucode_tlv_capa {
+ 	IWL_UCODE_TLV_CAPA_CT_KILL_BY_FW		= (__force iwl_ucode_tlv_capa_t)74,
+ 	IWL_UCODE_TLV_CAPA_TEMP_THS_REPORT_SUPPORT	= (__force iwl_ucode_tlv_capa_t)75,
+ 	IWL_UCODE_TLV_CAPA_CTDP_SUPPORT			= (__force iwl_ucode_tlv_capa_t)76,
++	IWL_UCODE_TLV_CAPA_USNIFFER_UNIFIED		= (__force iwl_ucode_tlv_capa_t)77,
+ 
+ 	NUM_IWL_UCODE_TLV_CAPA
+ #ifdef __CHECKER__
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 05475a2..f075c36 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -537,7 +537,9 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
+ 	struct iwl_sf_region st_fwrd_space;
+ 
+ 	if (ucode_type == IWL_UCODE_REGULAR &&
+-	    iwl_fw_dbg_conf_usniffer(mvm->fw, FW_DBG_START_FROM_ALIVE))
++	    iwl_fw_dbg_conf_usniffer(mvm->fw, FW_DBG_START_FROM_ALIVE) &&
++	    !(fw_has_capa(&mvm->fw->ucode_capa,
++			  IWL_UCODE_TLV_CAPA_USNIFFER_UNIFIED)))
+ 		fw = iwl_get_ucode_image(mvm, IWL_UCODE_REGULAR_USNIFFER);
+ 	else
+ 		fw = iwl_get_ucode_image(mvm, ucode_type);
+-- 
+2.5.0
+
