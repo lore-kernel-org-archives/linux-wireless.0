@@ -1,109 +1,603 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:4874 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751316AbcCIHUp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 02:20:45 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
-	<kvalo@codeaurora.org>, <mohammed@codeaurora.org>,
-	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Subject: [PATCH v2] cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION
-Date: Wed, 9 Mar 2016 12:50:02 +0530
-Message-ID: <1457508003-16700-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160309_082048_308883_7C71FDAB)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga14.intel.com ([192.55.52.115]:34250 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752781AbcCBH4v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 02:56:51 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
+	Luca Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 02/43] iwlwifi: mvm: add registration to thermal zone
+Date: Wed,  2 Mar 2016 09:56:03 +0200
+Message-Id: <1456905404-14435-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085654_958494_F479FE26)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+From: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
 
-Add support for new netlink attribute 'NL80211_STA_INFO_RX_DURATION'
-This flag will be set when drivers can fill rx_duration (approximate
-total air time(usecs) for all the frames from a connected client) via
-'drv_sta_statistics' callback
+Register to thermal_zone interface and implement the
+thermal ops.
+The thermal handles the device throttling, and sets the
+the temperature thresholds the Thermal Manager would be
+notified of crossing.
+The thermal interface adds a new thermal zone device sensor
+under /sys/class/thermal/ folder.
 
-Also make sta_info flags 'filled' as 64 bit to accommodate for new
-per station stats. Extend 'PUT_SINFO' for supporting rx_duration
-field and any new per sta information in future
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Signed-off-by: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- include/net/cfg80211.h       |    5 ++++-
- include/uapi/linux/nl80211.h |    3 +++
- net/wireless/nl80211.c       |    3 ++-
- 3 files changed, 9 insertions(+), 2 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h |  33 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c     |  13 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h    |  31 ++-
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c    |   6 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c     | 287 +++++++++++++++++++++++-
+ 5 files changed, 353 insertions(+), 17 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9bcaaf7..7897162 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1060,11 +1060,13 @@ struct cfg80211_tid_stats {
-  * @rx_beacon: number of beacons received from this peer
-  * @rx_beacon_signal_avg: signal strength average (in dBm) for beacons received
-  *	from this peer
-+ * @rx_duration: approximate total air time(usecs) for all the frames from a
-+ *	connected client
-  * @pertid: per-TID statistics, see &struct cfg80211_tid_stats, using the last
-  *	(IEEE80211_NUM_TIDS) index for MSDUs not encapsulated in QoS-MPDUs.
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index ecbf7cb..e692098 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -279,6 +279,7 @@ enum {
   */
- struct station_info {
--	u32 filled;
-+	u64 filled;
- 	u32 connected_time;
- 	u32 inactive_time;
- 	u64 rx_bytes;
-@@ -1103,6 +1105,7 @@ struct station_info {
- 	u32 expected_throughput;
- 
- 	u64 rx_beacon;
-+	u64 rx_duration;
- 	u8 rx_beacon_signal_avg;
- 	struct cfg80211_tid_stats pertid[IEEE80211_NUM_TIDS + 1];
+ enum iwl_phy_ops_subcmd_ids {
+ 	CMD_DTS_MEASUREMENT_TRIGGER_WIDE = 0x0,
++	TEMP_REPORTING_THRESHOLDS_CMD = 0x04,
+ 	CT_KILL_NOTIFICATION = 0xFE,
+ 	DTS_MEASUREMENT_NOTIF_WIDE = 0xFF,
  };
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 5b7b5eb..3de3975 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2464,6 +2464,8 @@ enum nl80211_sta_bss_param {
-  *	TID+1 and the special TID 16 (i.e. value 17) is used for non-QoS frames;
-  *	each one of those is again nested with &enum nl80211_tid_stats
-  *	attributes carrying the actual values.
-+ * @NL80211_STA_INFO_RX_DURATION: approximate total air time(usecs) for all the
-+ *	frames from a connected client
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+@@ -1676,15 +1677,28 @@ struct iwl_ext_dts_measurement_cmd {
+ } __packed; /* XVT_FW_DTS_CONTROL_MEASUREMENT_REQUEST_API_S */
+ 
+ /**
+- * iwl_dts_measurement_notif - notification received with the measurements
++ * struct iwl_dts_measurement_notif_v1 - measurements notification
+  *
+  * @temp: the measured temperature
+  * @voltage: the measured voltage
   */
-@@ -2500,6 +2502,7 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_BEACON_RX,
- 	NL80211_STA_INFO_BEACON_SIGNAL_AVG,
- 	NL80211_STA_INFO_TID_STATS,
-+	NL80211_STA_INFO_RX_DURATION,
+-struct iwl_dts_measurement_notif {
++struct iwl_dts_measurement_notif_v1 {
+ 	__le32 temp;
+ 	__le32 voltage;
+-} __packed; /* TEMPERATURE_MEASUREMENT_TRIGGER_NTFY_S */
++} __packed; /* TEMPERATURE_MEASUREMENT_TRIGGER_NTFY_S_VER_1*/
++
++/**
++ * struct iwl_dts_measurement_notif_v2 - measurements notification
++ *
++ * @temp: the measured temperature
++ * @voltage: the measured voltage
++ * @threshold_idx: the trip index that was crossed
++ */
++struct iwl_dts_measurement_notif_v2 {
++	__le32 temp;
++	__le32 voltage;
++	__le32 threshold_idx;
++} __packed; /* TEMPERATURE_MEASUREMENT_TRIGGER_NTFY_S_VER_2 */
  
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d4786f2..a81c016 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3719,7 +3719,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 		goto nla_put_failure;
+ /**
+  * struct ct_kill_notif - CT-kill entry notification
+@@ -1697,6 +1711,19 @@ struct ct_kill_notif {
+ 	__le16 reserved;
+ } __packed; /* GRP_PHY_CT_KILL_NTF */
  
- #define PUT_SINFO(attr, memb, type) do {				\
--	if (sinfo->filled & BIT(NL80211_STA_INFO_ ## attr) &&		\
-+	if (sinfo->filled & (1ULL << NL80211_STA_INFO_ ## attr) &&	\
- 	    nla_put_ ## type(msg, NL80211_STA_INFO_ ## attr,		\
- 			     sinfo->memb))				\
- 		goto nla_put_failure;					\
-@@ -3745,6 +3745,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 	PUT_SINFO(LLID, llid, u16);
- 	PUT_SINFO(PLID, plid, u16);
- 	PUT_SINFO(PLINK_STATE, plink_state, u8);
-+	PUT_SINFO(RX_DURATION, rx_duration, u64);
++#define IWL_MAX_DTS_TRIPS	8
++
++/**
++ * struct iwl_temp_report_ths_cmd - set temperature thresholds
++ *
++ * @num_temps: number of temperature thresholds passed
++ * @thresholds: array with the thresholds to be configured
++ */
++struct temp_report_ths_cmd {
++	__le32 num_temps;
++	__le16 thresholds[IWL_MAX_DTS_TRIPS];
++} __packed; /* GRP_PHY_TEMP_REPORTING_THRESHOLDS_CMD */
++
+ /***********************************
+  * TDLS API
+  ***********************************/
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 070e2af..07f2cbd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -952,8 +952,21 @@ int iwl_mvm_up(struct iwl_mvm *mvm)
+ 			goto error;
+ 	}
  
- 	switch (rdev->wiphy.signal_type) {
- 	case CFG80211_SIGNAL_TYPE_MBM:
++#ifdef CONFIG_THERMAL
++	if (iwl_mvm_is_tt_in_fw(mvm)) {
++		/* in order to give the responsibility of ct-kill and
++		 * TX backoff to FW we need to send empty temperature reporting
++		 * cmd during init time
++		 */
++		iwl_mvm_send_temp_report_ths_cmd(mvm);
++	} else {
++		/* Initialize tx backoffs to the minimal possible */
++		iwl_mvm_tt_tx_backoff(mvm, 0);
++	}
++#else
+ 	/* Initialize tx backoffs to the minimal possible */
+ 	iwl_mvm_tt_tx_backoff(mvm, 0);
++#endif
+ 
+ 	WARN_ON(iwl_mvm_config_ltr(mvm));
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 200bbb7..87d3e28 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -73,6 +73,10 @@
+ #include <linux/leds.h>
+ #include <linux/in6.h>
+ 
++#ifdef CONFIG_THERMAL
++#include <linux/thermal.h>
++#endif
++
+ #include "iwl-op-mode.h"
+ #include "iwl-trans.h"
+ #include "iwl-notif-wait.h"
+@@ -519,6 +523,20 @@ struct iwl_mvm_tt_mgmt {
+ 	bool throttle;
+ };
+ 
++#ifdef CONFIG_THERMAL
++/**
++ *struct iwl_mvm_thermal_device - thermal zone related data
++ * @temp_trips: temperature thresholds for report
++ * @fw_trips_index: keep indexes to original array - temp_trips
++ * @tzone: thermal zone device data
++*/
++struct iwl_mvm_thermal_device {
++	s16 temp_trips[IWL_MAX_DTS_TRIPS];
++	u8 fw_trips_index[IWL_MAX_DTS_TRIPS];
++	struct thermal_zone_device *tzone;
++};
++#endif
++
+ #define IWL_MVM_NUM_LAST_FRAMES_UCODE_RATES 8
+ 
+ struct iwl_mvm_frame_stats {
+@@ -799,6 +817,10 @@ struct iwl_mvm {
+ 
+ 	/* Thermal Throttling and CTkill */
+ 	struct iwl_mvm_tt_mgmt thermal_throttle;
++#ifdef CONFIG_THERMAL
++	struct iwl_mvm_thermal_device tz_device;
++#endif
++
+ 	s32 temperature;	/* Celsius */
+ 	/*
+ 	 * Debug option to set the NIC temperature. This option makes the
+@@ -1032,6 +1054,7 @@ static inline bool iwl_mvm_has_new_rx_api(struct iwl_mvm *mvm)
+ 
+ static inline bool iwl_mvm_is_tt_in_fw(struct iwl_mvm *mvm)
+ {
++#ifdef CONFIG_THERMAL
+ 	/* these two TLV are redundant since the responsibility to CT-kill by
+ 	 * FW happens only after we send at least one command of
+ 	 * temperature THs report.
+@@ -1040,6 +1063,9 @@ static inline bool iwl_mvm_is_tt_in_fw(struct iwl_mvm *mvm)
+ 			   IWL_UCODE_TLV_CAPA_CT_KILL_BY_FW) &&
+ 	       fw_has_capa(&mvm->fw->ucode_capa,
+ 			   IWL_UCODE_TLV_CAPA_TEMP_THS_REPORT_SUPPORT);
++#else /* CONFIG_THERMAL */
++	return false;
++#endif /* CONFIG_THERMAL */
+ }
+ 
+ extern const u8 iwl_mvm_ac_to_tx_fifo[];
+@@ -1512,11 +1538,12 @@ void iwl_mvm_tt_temp_changed(struct iwl_mvm *mvm, u32 temp);
+ void iwl_mvm_temp_notif(struct iwl_mvm *mvm,
+ 			struct iwl_rx_cmd_buffer *rxb);
+ void iwl_mvm_tt_handler(struct iwl_mvm *mvm);
+-void iwl_mvm_tt_initialize(struct iwl_mvm *mvm, u32 min_backoff);
+-void iwl_mvm_tt_exit(struct iwl_mvm *mvm);
++void iwl_mvm_thermal_initialize(struct iwl_mvm *mvm, u32 min_backoff);
++void iwl_mvm_thermal_exit(struct iwl_mvm *mvm);
+ void iwl_mvm_set_hw_ctkill_state(struct iwl_mvm *mvm, bool state);
+ int iwl_mvm_get_temp(struct iwl_mvm *mvm, s32 *temp);
+ void iwl_mvm_ct_kill_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
++int iwl_mvm_send_temp_report_ths_cmd(struct iwl_mvm *mvm);
+ 
+ /* Location Aware Regulatory */
+ struct iwl_mcc_update_resp *
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index ecc371e..a7acadd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -389,6 +389,7 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
+  */
+ static const struct iwl_hcmd_names iwl_mvm_phy_names[] = {
+ 	HCMD_NAME(CMD_DTS_MEASUREMENT_TRIGGER_WIDE),
++	HCMD_NAME(TEMP_REPORTING_THRESHOLDS_CMD),
+ 	HCMD_NAME(CT_KILL_NOTIFICATION),
+ 	HCMD_NAME(DTS_MEASUREMENT_NOTIF_WIDE),
+ };
+@@ -591,7 +592,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 		 mvm->cfg->name, mvm->trans->hw_rev);
+ 
+ 	min_backoff = calc_min_backoff(trans, cfg);
+-	iwl_mvm_tt_initialize(mvm, min_backoff);
++	iwl_mvm_thermal_initialize(mvm, min_backoff);
+ 
+ 	if (iwlwifi_mod_params.nvm_file)
+ 		mvm->nvm_file_name = iwlwifi_mod_params.nvm_file;
+@@ -664,6 +665,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+  out_unregister:
+ 	ieee80211_unregister_hw(mvm->hw);
+ 	iwl_mvm_leds_exit(mvm);
++	iwl_mvm_thermal_exit(mvm);
+  out_free:
+ 	flush_delayed_work(&mvm->fw_dump_wk);
+ 	iwl_phy_db_free(mvm->phy_db);
+@@ -681,7 +683,7 @@ static void iwl_op_mode_mvm_stop(struct iwl_op_mode *op_mode)
+ 
+ 	iwl_mvm_leds_exit(mvm);
+ 
+-	iwl_mvm_tt_exit(mvm);
++	iwl_mvm_thermal_exit(mvm);
+ 
+ 	ieee80211_unregister_hw(mvm->hw);
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+index 6ba3910..466d169 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+@@ -65,6 +65,8 @@
+  *
+  *****************************************************************************/
+ 
++#include <linux/sort.h>
++
+ #include "mvm.h"
+ 
+ #define IWL_MVM_TEMP_NOTIF_WAIT_TIMEOUT	HZ
+@@ -80,8 +82,10 @@ static void iwl_mvm_enter_ctkill(struct iwl_mvm *mvm)
+ 	IWL_ERR(mvm, "Enter CT Kill\n");
+ 	iwl_mvm_set_hw_ctkill_state(mvm, true);
+ 
+-	tt->throttle = false;
+-	tt->dynamic_smps = false;
++	if (!iwl_mvm_is_tt_in_fw(mvm)) {
++		tt->throttle = false;
++		tt->dynamic_smps = false;
++	}
+ 
+ 	/* Don't schedule an exit work if we're in test mode, since
+ 	 * the temperature will not change unless we manually set it
+@@ -117,18 +121,21 @@ void iwl_mvm_tt_temp_changed(struct iwl_mvm *mvm, u32 temp)
+ static int iwl_mvm_temp_notif_parse(struct iwl_mvm *mvm,
+ 				    struct iwl_rx_packet *pkt)
+ {
+-	struct iwl_dts_measurement_notif *notif;
++	struct iwl_dts_measurement_notif_v1 *notif_v1;
+ 	int len = iwl_rx_packet_payload_len(pkt);
+ 	int temp;
+ 
+-	if (WARN_ON_ONCE(len < sizeof(*notif))) {
++	/* we can use notif_v1 only, because v2 only adds an additional
++	 * parameter, which is not used in this function.
++	*/
++	if (WARN_ON_ONCE(len < sizeof(*notif_v1))) {
+ 		IWL_ERR(mvm, "Invalid DTS_MEASUREMENT_NOTIFICATION\n");
+ 		return -EINVAL;
+ 	}
+ 
+-	notif = (void *)pkt->data;
++	notif_v1 = (void *)pkt->data;
+ 
+-	temp = le32_to_cpu(notif->temp);
++	temp = le32_to_cpu(notif_v1->temp);
+ 
+ 	/* shouldn't be negative, but since it's s32, make sure it isn't */
+ 	if (WARN_ON_ONCE(temp < 0))
+@@ -159,17 +166,56 @@ static bool iwl_mvm_temp_notif_wait(struct iwl_notif_wait_data *notif_wait,
+ void iwl_mvm_temp_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ {
+ 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
++	struct iwl_dts_measurement_notif_v2 *notif_v2;
++	int len = iwl_rx_packet_payload_len(pkt);
+ 	int temp;
++	u32 ths_crossed;
+ 
+ 	/* the notification is handled synchronously in ctkill, so skip here */
+ 	if (test_bit(IWL_MVM_STATUS_HW_CTKILL, &mvm->status))
+ 		return;
+ 
+ 	temp = iwl_mvm_temp_notif_parse(mvm, pkt);
+-	if (temp < 0)
++
++	if (!iwl_mvm_is_tt_in_fw(mvm)) {
++		if (temp >= 0)
++			iwl_mvm_tt_temp_changed(mvm, temp);
++		return;
++	}
++
++	if (WARN_ON_ONCE(len < sizeof(*notif_v2))) {
++		IWL_ERR(mvm, "Invalid DTS_MEASUREMENT_NOTIFICATION\n");
++		return;
++	}
++
++	notif_v2 = (void *)pkt->data;
++	ths_crossed = le32_to_cpu(notif_v2->threshold_idx);
++
++	/* 0xFF in ths_crossed means the notification is not related
++	 * to a trip, so we can ignore it here.
++	 */
++	if (ths_crossed == 0xFF)
++		return;
++
++	IWL_DEBUG_TEMP(mvm, "Temp = %d Threshold crossed = %d\n",
++		       temp, ths_crossed);
++
++#ifdef CONFIG_THERMAL
++	if (WARN_ON(ths_crossed >= IWL_MAX_DTS_TRIPS))
+ 		return;
+ 
+-	iwl_mvm_tt_temp_changed(mvm, temp);
++	/*
++	 * We are now handling a temperature notification from the firmware
++	 * in ASYNC and hold the mutex. thermal_notify_framework will call
++	 * us back through get_temp() which ought to send a SYNC command to
++	 * the firmware and hence to take the mutex.
++	 * Avoid the deadlock by unlocking the mutex here.
++	 */
++	mutex_unlock(&mvm->mutex);
++	thermal_notify_framework(mvm->tz_device.tzone,
++				 mvm->tz_device.fw_trips_index[ths_crossed]);
++	mutex_lock(&mvm->mutex);
++#endif /* CONFIG_THERMAL */
+ }
+ 
+ void iwl_mvm_ct_kill_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+@@ -460,7 +506,220 @@ static const struct iwl_tt_params iwl_mvm_default_tt_params = {
+ 	.support_tx_backoff = true,
+ };
+ 
+-void iwl_mvm_tt_initialize(struct iwl_mvm *mvm, u32 min_backoff)
++#ifdef CONFIG_THERMAL
++static int compare_temps(const void *a, const void *b)
++{
++	return ((s16)le16_to_cpu(*(__le16 *)a) -
++		(s16)le16_to_cpu(*(__le16 *)b));
++}
++
++int iwl_mvm_send_temp_report_ths_cmd(struct iwl_mvm *mvm)
++{
++	struct temp_report_ths_cmd cmd = {0};
++	int ret, i, j, idx = 0;
++
++	lockdep_assert_held(&mvm->mutex);
++
++	/* The driver holds array of temperature trips that are unsorted
++	 * and uncompressed, the FW should get it compressed and sorted
++	 */
++
++	/* compress temp_trips to cmd array, remove uninitialized values*/
++	for (i = 0; i < IWL_MAX_DTS_TRIPS; i++)
++		if (mvm->tz_device.temp_trips[i] != S16_MIN) {
++			cmd.thresholds[idx++] =
++				cpu_to_le16(mvm->tz_device.temp_trips[i]);
++		}
++	cmd.num_temps = cpu_to_le32(idx);
++
++	if (!idx)
++		goto send;
++
++	/*sort cmd array*/
++	sort(cmd.thresholds, idx, sizeof(s16), compare_temps, NULL);
++
++	/* we should save the indexes of trips because we sort
++	 * and compress the orginal array
++	 */
++	for (i = 0; i < idx; i++) {
++		for (j = 0; j < IWL_MAX_DTS_TRIPS; j++) {
++			if (le16_to_cpu(cmd.thresholds[i]) ==
++				mvm->tz_device.temp_trips[j])
++				mvm->tz_device.fw_trips_index[i] = j;
++		}
++	}
++
++send:
++	ret = iwl_mvm_send_cmd_pdu(mvm, WIDE_ID(PHY_OPS_GROUP,
++						TEMP_REPORTING_THRESHOLDS_CMD),
++				   0, sizeof(cmd), &cmd);
++	if (ret)
++		IWL_ERR(mvm, "TEMP_REPORT_THS_CMD command failed (err=%d)\n",
++			ret);
++
++	return ret;
++}
++
++static int iwl_mvm_tzone_get_temp(struct thermal_zone_device *device,
++				  int *temperature)
++{
++	struct iwl_mvm *mvm = (struct iwl_mvm *)device->devdata;
++	int ret;
++	int temp;
++
++	mutex_lock(&mvm->mutex);
++
++	if (!mvm->ucode_loaded || !(mvm->cur_ucode == IWL_UCODE_REGULAR)) {
++		ret = -EIO;
++		goto out;
++	}
++
++	ret = iwl_mvm_get_temp(mvm, &temp);
++	if (ret)
++		goto out;
++
++	*temperature = temp * 1000;
++
++out:
++	mutex_unlock(&mvm->mutex);
++	return ret;
++}
++
++static int iwl_mvm_tzone_get_trip_temp(struct thermal_zone_device *device,
++				       int trip, int *temp)
++{
++	struct iwl_mvm *mvm = (struct iwl_mvm *)device->devdata;
++
++	if (trip < 0 || trip >= IWL_MAX_DTS_TRIPS)
++		return -EINVAL;
++
++	*temp = mvm->tz_device.temp_trips[trip] * 1000;
++
++	return 0;
++}
++
++static int iwl_mvm_tzone_get_trip_type(struct thermal_zone_device *device,
++				       int trip, enum thermal_trip_type *type)
++{
++	if (trip < 0 || trip >= IWL_MAX_DTS_TRIPS)
++		return -EINVAL;
++
++	*type = THERMAL_TRIP_PASSIVE;
++
++	return 0;
++}
++
++static int iwl_mvm_tzone_set_trip_temp(struct thermal_zone_device *device,
++				       int trip, int temp)
++{
++	struct iwl_mvm *mvm = (struct iwl_mvm *)device->devdata;
++	struct iwl_mvm_thermal_device *tzone;
++	int i, ret;
++	s16 temperature;
++
++	mutex_lock(&mvm->mutex);
++
++	if (!mvm->ucode_loaded || !(mvm->cur_ucode == IWL_UCODE_REGULAR)) {
++		ret = -EIO;
++		goto out;
++	}
++
++	if (trip < 0 || trip >= IWL_MAX_DTS_TRIPS) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	if ((temp / 1000) > S16_MAX) {
++		ret = -EINVAL;
++		goto out;
++	}
++
++	temperature = (s16)(temp / 1000);
++	tzone = &mvm->tz_device;
++
++	if (!tzone) {
++		ret = -EIO;
++		goto out;
++	}
++
++	/* no updates*/
++	if (tzone->temp_trips[trip] == temperature) {
++		ret = 0;
++		goto out;
++	}
++
++	/* already existing temperature */
++	for (i = 0; i < IWL_MAX_DTS_TRIPS; i++) {
++		if (tzone->temp_trips[i] == temperature) {
++			ret = -EINVAL;
++			goto out;
++		}
++	}
++
++	tzone->temp_trips[trip] = temperature;
++
++	ret = iwl_mvm_send_temp_report_ths_cmd(mvm);
++out:
++	mutex_unlock(&mvm->mutex);
++	return ret;
++}
++
++static  struct thermal_zone_device_ops tzone_ops = {
++	.get_temp = iwl_mvm_tzone_get_temp,
++	.get_trip_temp = iwl_mvm_tzone_get_trip_temp,
++	.get_trip_type = iwl_mvm_tzone_get_trip_type,
++	.set_trip_temp = iwl_mvm_tzone_set_trip_temp,
++};
++
++/* make all trips writable */
++#define IWL_WRITABLE_TRIPS_MSK (BIT(IWL_MAX_DTS_TRIPS) - 1)
++
++static void iwl_mvm_thermal_zone_register(struct iwl_mvm *mvm)
++{
++	int i;
++	char name[] = "iwlwifi";
++
++	if (!iwl_mvm_is_tt_in_fw(mvm)) {
++		mvm->tz_device.tzone = NULL;
++
++		return;
++	}
++
++	BUILD_BUG_ON(ARRAY_SIZE(name) >= THERMAL_NAME_LENGTH);
++
++	mvm->tz_device.tzone = thermal_zone_device_register(name,
++							IWL_MAX_DTS_TRIPS,
++							IWL_WRITABLE_TRIPS_MSK,
++							mvm, &tzone_ops,
++							NULL, 0, 0);
++	if (IS_ERR(mvm->tz_device.tzone)) {
++		IWL_DEBUG_TEMP(mvm,
++			       "Failed to register to thermal zone (err = %ld)\n",
++			       PTR_ERR(mvm->tz_device.tzone));
++		return;
++	}
++
++	/* 0 is a valid temperature,
++	 * so initialize the array with S16_MIN which invalid temperature
++	 */
++	for (i = 0 ; i < IWL_MAX_DTS_TRIPS; i++)
++		mvm->tz_device.temp_trips[i] = S16_MIN;
++}
++
++static void iwl_mvm_thermal_zone_unregister(struct iwl_mvm *mvm)
++{
++	if (!iwl_mvm_is_tt_in_fw(mvm))
++		return;
++
++	if (mvm->tz_device.tzone) {
++		IWL_DEBUG_TEMP(mvm, "Thermal zone device unregister\n");
++		thermal_zone_device_unregister(mvm->tz_device.tzone);
++		mvm->tz_device.tzone = NULL;
++	}
++}
++#endif /* CONFIG_THERMAL */
++
++void iwl_mvm_thermal_initialize(struct iwl_mvm *mvm, u32 min_backoff)
+ {
+ 	struct iwl_mvm_tt_mgmt *tt = &mvm->thermal_throttle;
+ 
+@@ -475,10 +734,18 @@ void iwl_mvm_tt_initialize(struct iwl_mvm *mvm, u32 min_backoff)
+ 	tt->dynamic_smps = false;
+ 	tt->min_backoff = min_backoff;
+ 	INIT_DELAYED_WORK(&tt->ct_kill_exit, check_exit_ctkill);
++
++#ifdef CONFIG_THERMAL
++	iwl_mvm_thermal_zone_register(mvm);
++#endif
+ }
+ 
+-void iwl_mvm_tt_exit(struct iwl_mvm *mvm)
++void iwl_mvm_thermal_exit(struct iwl_mvm *mvm)
+ {
+ 	cancel_delayed_work_sync(&mvm->thermal_throttle.ct_kill_exit);
+ 	IWL_DEBUG_TEMP(mvm, "Exit Thermal Throttling\n");
++
++#ifdef CONFIG_THERMAL
++	iwl_mvm_thermal_zone_unregister(mvm);
++#endif
+ }
 -- 
-1.7.9.5
+2.5.0
 
