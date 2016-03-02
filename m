@@ -1,89 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:33829 "EHLO
-	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757960AbcC2U3V (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 16:29:21 -0400
-Received: by mail-io0-f173.google.com with SMTP id e3so40407944ioa.1
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2016 13:29:21 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <342448442.1267207.1459225345803.JavaMail.yahoo@mail.yahoo.com>
-References: <CAJ-VmokSovVud9yiUoHcCwp+fQv4rVMyAHLOVMau4Egpk3PGUQ@mail.gmail.com>
-	<342448442.1267207.1459225345803.JavaMail.yahoo@mail.yahoo.com>
-Date: Tue, 29 Mar 2016 13:29:20 -0700
-Message-ID: <CAJ-VmomakNNn2oUQ+HfPrA=d5QXkAfnLixOBF5twX9yL3bRetA@mail.gmail.com> (sfid-20160329_222936_349371_5C05E76E)
-Subject: Re: Bonjour mDNS broacast can be lost during BT-WLAN coexistence schemes?
-From: Adrian Chadd <adrian@freebsd.org>
-To: sandeep suresh <sandeep.suresh@yahoo.co.in>
-Cc: Ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([192.55.52.115]:22360 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753220AbcCBH5d (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 02:57:33 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 17/43] iwlwifi: mvm: don't enable A-MSDU when the rates are too low
+Date: Wed,  2 Mar 2016 09:56:18 +0200
+Message-Id: <1456905404-14435-17-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085737_818019_18532303)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 28 March 2016 at 21:22, sandeep suresh <sandeep.suresh@yahoo.co.in> wrote:
-> Hello Adrian,
->       Thanks for your response. Currently with 2-wire coexistence, BT has
-> higher priority when compared to WiFi. You had shared the following
-> different bitfields that can be configured with different weights:
->
-> WLAN:-
-> wait_beacon | qcu_priority | rx_clear | wlan level
->
-> BT:-
-> bt_priority | bt freq | bt_tx_rx | bt_level
->
-> I have the following queries, please help:
-> 1.  wait_beacon:- WLAN client is waiting for a beacon from AP, this bit will
-> be set. If the weights during this state is kept the highest, then even if
-> BT wants to use the medium (BT_ACTIVE = 1), WLAN will always attempt to
-> catch the beacon. Am I correct in my understanding?
+Allow A-MSDU only when we are not downscaling and the
+initial MCS is at least 5.
 
-Right. The idea is that the STA wants to hear a beacon, so if it's
-important to do this ,you want to have WLAN stomp BT.
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/rs.c  | 24 ++++++++++++++++++++++--
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h |  2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c  |  3 ++-
+ 3 files changed, 26 insertions(+), 3 deletions(-)
 
-> 2. What happens if BT wants to transmit during this time when wait_beacon =
-> TRUE; will the BT transmission be suppressed?
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+index 3dc94d2..61d0a8cd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rs.c
+@@ -1673,6 +1673,20 @@ static void rs_stay_in_table(struct iwl_lq_sta *lq_sta, bool force_search)
+ 	}
+ }
+ 
++static void rs_set_amsdu_len(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
++			     struct iwl_scale_tbl_info *tbl,
++			     enum rs_action scale_action)
++{
++	struct iwl_mvm_sta *sta_priv = iwl_mvm_sta_from_mac80211(sta);
++
++	if ((!is_vht(&tbl->rate) && !is_ht(&tbl->rate)) ||
++	    tbl->rate.index < IWL_RATE_MCS_5_INDEX ||
++	    scale_action == RS_ACTION_DOWNSCALE)
++		sta_priv->tlc_amsdu = false;
++	else
++		sta_priv->tlc_amsdu = true;
++}
++
+ /*
+  * setup rate table in uCode
+  */
+@@ -2416,6 +2430,7 @@ lq_update:
+ 		tbl->rate.index = index;
+ 		if (IWL_MVM_RS_80_20_FAR_RANGE_TWEAK)
+ 			rs_tweak_rate_tbl(mvm, sta, lq_sta, tbl, scale_action);
++		rs_set_amsdu_len(mvm, sta, tbl, scale_action);
+ 		rs_update_rate_tbl(mvm, sta, lq_sta, tbl);
+ 	}
+ 
+@@ -3099,6 +3114,7 @@ void iwl_mvm_rs_rate_init(struct iwl_mvm *mvm, struct ieee80211_sta *sta,
+ 	sband = hw->wiphy->bands[band];
+ 
+ 	lq_sta->lq.sta_id = sta_priv->sta_id;
++	sta_priv->tlc_amsdu = false;
+ 
+ 	for (j = 0; j < LQ_SIZE; j++)
+ 		rs_rate_scale_clear_tbl_windows(mvm, &lq_sta->lq_info[j]);
+@@ -3658,10 +3674,13 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 	ssize_t ret;
+ 
+ 	struct iwl_lq_sta *lq_sta = file->private_data;
++	struct iwl_mvm_sta *mvmsta =
++		container_of(lq_sta, struct iwl_mvm_sta, lq_sta);
+ 	struct iwl_mvm *mvm;
+ 	struct iwl_scale_tbl_info *tbl = &(lq_sta->lq_info[lq_sta->active_tbl]);
+ 	struct rs_rate *rate = &tbl->rate;
+ 	u32 ss_params;
++
+ 	mvm = lq_sta->pers.drv;
+ 	buff = kmalloc(2048, GFP_KERNEL);
+ 	if (!buff)
+@@ -3687,10 +3706,11 @@ static ssize_t rs_sta_dbgfs_scale_table_read(struct file *file,
+ 				(is_ht20(rate)) ? "20MHz" :
+ 				(is_ht40(rate)) ? "40MHz" :
+ 				(is_ht80(rate)) ? "80Mhz" : "BAD BW");
+-		desc += sprintf(buff + desc, " %s %s %s\n",
++		desc += sprintf(buff + desc, " %s %s %s %s\n",
+ 				(rate->sgi) ? "SGI" : "NGI",
+ 				(rate->ldpc) ? "LDPC" : "BCC",
+-				(lq_sta->is_agg) ? "AGG on" : "");
++				(lq_sta->is_agg) ? "AGG on" : "",
++				(mvmsta->tlc_amsdu) ? "AMSDU on" : "");
+ 	}
+ 	desc += sprintf(buff+desc, "last tx rate=0x%X\n",
+ 			lq_sta->last_rate_n_flags);
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+index b01650a..f95f603 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+@@ -313,6 +313,7 @@ struct iwl_mvm_key_pn {
+  * @tx_protection: reference counter for controlling the Tx protection.
+  * @tt_tx_protection: is thermal throttling enable Tx protection?
+  * @disable_tx: is tx to this STA disabled?
++ * @tlc_amsdu: true if A-MSDU is allowed
+  * @agg_tids: bitmap of tids whose status is operational aggregated (IWL_AGG_ON)
+  * @sleep_tx_count: the number of frames that we told the firmware to let out
+  *	even when that station is asleep. This is useful in case the queue
+@@ -347,6 +348,7 @@ struct iwl_mvm_sta {
+ 	bool tt_tx_protection;
+ 
+ 	bool disable_tx;
++	bool tlc_amsdu;
+ 	u8 agg_tids;
+ 	u8 sleep_tx_count;
+ };
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index a5a55da1..a73ae01 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -460,7 +460,8 @@ static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		return -EINVAL;
+ 
+ 	if (!sta->max_amsdu_len ||
+-	    !ieee80211_is_data_qos(hdr->frame_control)) {
++	    !ieee80211_is_data_qos(hdr->frame_control) ||
++	    !mvmsta->tlc_amsdu) {
+ 		num_subframes = 1;
+ 		pad = 0;
+ 		goto segment;
+-- 
+2.5.0
 
-If you set the weight appropriately then yeah, WLAN stomps BT.
-
-> 3. Regarding "bt_tx_rx". As I understand, bt_tx_rx = 1 when BT is
-> transmitting and bt_tx_rx = 0 when BT is receiving; am I correct? How can BT
-> module communicate if it will be transmitting or receiving to WLAN module?
-> Because BT_PRIORITY will only indicate High or Low priority.
-
-I thought bt_tx_rx is "bt is active", not "bt is tx'ing." I'd have to
-check the PHY docs.
-
-> 4. Currently the WLAN_ACTIVE line indicates only Tx activity from WLAN. Is
-> there any way to indicate only Rx activities (E.g. Beacon reception etc) ?
-
-On two/three-wire coex, no, I don't think so. The whole point is that
-you just need to know "is the BT wanting to do stuff", "is the wlan
-wanting to do stuff" and "who wins".
-The wlan chip is the arbiter of who wins, it has the weights
-programmed in to figure out what to do when.
-
-> 5.  Regarding your comment on dynamically changing weights. AR9287 and the
-> BT chipsets are separate and connected to a Host controller running linux.
-
-> As for different states of BT, if there is a need for different weights, I
-> do not think at runtime the weights can be changed (by sending a command
-> from BT to Host and then weight change from Host to WLAN)as we might not be
-> able to meet the short timings. WHat is your opinion on this?
-
-No, the BT doesn't get to send the host commands like that. The driver
-layer (ath9k) could be extended to include smarts about traffic
-patterns and which BT profiles are active, so you can tune the weights
-based on it.
-
-The ath9k driver can also do things to "tune" how much of the channel
-it uses - eg, by using the quiet time timers to control TX duty cycle
-so BT has more of a chance to work.
-
-The later chips (MCI?) implement a control protocol between the wlan
-side and the bt side. I haven't yet ported that functionality to
-freebsd so I don't have any operational experience with that!
-
-
--adrian
