@@ -1,122 +1,564 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout2.hostsharing.net ([83.223.90.233]:53725 "EHLO
-	mailout2.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757823AbcC2S2d (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45317 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753504AbcCBCFQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 14:28:33 -0400
-Message-Id: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de> (sfid-20160329_202837_647329_08FC8BBD)
-From: Lukas Wunner <lukas@wunner.de>
-Date: Tue, 29 Mar 2016 20:20:30 +0200
-Subject: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-To: linux-pci@vger.kernel.org
-Cc: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	b43-dev@lists.infradead.org
+	Tue, 1 Mar 2016 21:05:16 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v3 2/8] ath9k: make GPIO API to support both of WMAC and SOC
+Date: Wed,  2 Mar 2016 10:04:16 +0800
+Message-Id: <1456884262-28194-3-git-send-email-miaoqing@codeaurora.org> (sfid-20160302_030524_511183_732C5386)
+In-Reply-To: <1456884262-28194-1-git-send-email-miaoqing@codeaurora.org>
+References: <1456884262-28194-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ storm
-on boot until they are reset, causing spurious interrupts if the IRQ is
-shared. Apparently the EFI bootloader enables the device and does not
-disable it before passing control to the OS. The bootloader contains a
-driver for the wireless card which allows it to phone home to Cupertino.
-This is used for Internet Recovery (download and install OS X images)
-and probably also for Back to My Mac (remote access, RFC 6281) and to
-discover stolen hardware.
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-The issue is most pronounced on 2011 and 2012 MacBook Pros where the IRQ
-is shared with 3 other devices (Light Ridge Thunderbolt controller, SDXC
-reader, HDA card on discrete GPU). As soon as an interrupt handler is
-installed for one of these devices, the ensuing storm of spurious IRQs
-causes the kernel to disable the IRQ and switch to polling. This lasts
-until the b43 driver loads and resets the device.
+commit 61b559dea40e ("ath9k: add extra GPIO led support")
+added ath9k to support access SOC's GPIOs, but implemented
+in a separated API: ath9k_hw_request_gpio().
 
-Loading the b43 driver first is not always an option, in particular with
-the Light Ridge Thunderbolt controller: The PCI hotplug IRQ handler gets
-installed early on because it is built in, unlike b43 which is usually
-a module.
+So this patch make the APIs more common, to support both
+of WMAC and SOC GPIOs. The new APIs as below,
 
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
-Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632
-Tested-by: Lukas Wunner <lukas@wunner.de> [MacBookPro9,1]
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+void ath9k_hw_gpio_request_in();
+void ath9k_hw_gpio_request_out();
+void ath9k_hw_gpio_free();
+
+NOTE, the BSP of the SOC chips(AR9340, AR9531, AR9550, AR9561)
+should set the corresponding MUX registers correctly.
+
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 ---
- drivers/bcma/bcma_private.h |  2 --
- drivers/pci/quirks.c        | 27 +++++++++++++++++++++++++++
- include/linux/bcma/bcma.h   |  1 +
- 3 files changed, 28 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   4 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c    |  39 +++--
+ drivers/net/wireless/ath/ath9k/btcoex.c        |  27 ++--
+ drivers/net/wireless/ath/ath9k/gpio.c          |   6 +-
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c  |   6 +-
+ drivers/net/wireless/ath/ath9k/hw.c            | 196 +++++++++++++++----------
+ drivers/net/wireless/ath/ath9k/hw.h            |  10 +-
+ drivers/net/wireless/ath/ath9k/main.c          |   6 +-
+ 8 files changed, 174 insertions(+), 120 deletions(-)
 
-diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-index eda0909..f642c42 100644
---- a/drivers/bcma/bcma_private.h
-+++ b/drivers/bcma/bcma_private.h
-@@ -8,8 +8,6 @@
- #include <linux/bcma/bcma.h>
- #include <linux/delay.h>
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 8b4561e..e434869 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -3590,8 +3590,8 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+ 		else
+ 			gpio = AR9300_EXT_LNA_CTL_GPIO_AR9485;
  
--#define BCMA_CORE_SIZE		0x1000
+-		ath9k_hw_cfg_output(ah, gpio,
+-				    AR_GPIO_OUTPUT_MUX_AS_PCIE_ATTENTION_LED);
++		ath9k_hw_gpio_request_out(ah, gpio, NULL,
++					  AR_GPIO_OUTPUT_MUX_AS_PCIE_ATTENTION_LED);
+ 	}
+ 
+ 	value = ar9003_hw_ant_ctrl_common_get(ah, is2ghz);
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+index af5ee41..0fe9c83 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
+@@ -427,21 +427,34 @@ static void ar9003_mci_observation_set_up(struct ath_hw *ah)
+ 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+ 
+ 	if (mci->config & ATH_MCI_CONFIG_MCI_OBS_MCI) {
+-		ath9k_hw_cfg_output(ah, 3, AR_GPIO_OUTPUT_MUX_AS_MCI_WLAN_DATA);
+-		ath9k_hw_cfg_output(ah, 2, AR_GPIO_OUTPUT_MUX_AS_MCI_WLAN_CLK);
+-		ath9k_hw_cfg_output(ah, 1, AR_GPIO_OUTPUT_MUX_AS_MCI_BT_DATA);
+-		ath9k_hw_cfg_output(ah, 0, AR_GPIO_OUTPUT_MUX_AS_MCI_BT_CLK);
++		ath9k_hw_gpio_request_out(ah, 3, NULL,
++					  AR_GPIO_OUTPUT_MUX_AS_MCI_WLAN_DATA);
++		ath9k_hw_gpio_request_out(ah, 2, NULL,
++					  AR_GPIO_OUTPUT_MUX_AS_MCI_WLAN_CLK);
++		ath9k_hw_gpio_request_out(ah, 1, NULL,
++					  AR_GPIO_OUTPUT_MUX_AS_MCI_BT_DATA);
++		ath9k_hw_gpio_request_out(ah, 0, NULL,
++					  AR_GPIO_OUTPUT_MUX_AS_MCI_BT_CLK);
+ 	} else if (mci->config & ATH_MCI_CONFIG_MCI_OBS_TXRX) {
+-		ath9k_hw_cfg_output(ah, 3, AR_GPIO_OUTPUT_MUX_AS_WL_IN_TX);
+-		ath9k_hw_cfg_output(ah, 2, AR_GPIO_OUTPUT_MUX_AS_WL_IN_RX);
+-		ath9k_hw_cfg_output(ah, 1, AR_GPIO_OUTPUT_MUX_AS_BT_IN_TX);
+-		ath9k_hw_cfg_output(ah, 0, AR_GPIO_OUTPUT_MUX_AS_BT_IN_RX);
+-		ath9k_hw_cfg_output(ah, 5, AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
++		ath9k_hw_gpio_request_out(ah, 3, NULL,
++					  AR_GPIO_OUTPUT_MUX_AS_WL_IN_TX);
++		ath9k_hw_gpio_request_out(ah, 2, NULL,
++					  AR_GPIO_OUTPUT_MUX_AS_WL_IN_RX);
++		ath9k_hw_gpio_request_out(ah, 1, NULL,
++					  AR_GPIO_OUTPUT_MUX_AS_BT_IN_TX);
++		ath9k_hw_gpio_request_out(ah, 0, NULL,
++					  AR_GPIO_OUTPUT_MUX_AS_BT_IN_RX);
++		ath9k_hw_gpio_request_out(ah, 5, NULL,
++					  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 	} else if (mci->config & ATH_MCI_CONFIG_MCI_OBS_BT) {
+-		ath9k_hw_cfg_output(ah, 3, AR_GPIO_OUTPUT_MUX_AS_BT_IN_TX);
+-		ath9k_hw_cfg_output(ah, 2, AR_GPIO_OUTPUT_MUX_AS_BT_IN_RX);
+-		ath9k_hw_cfg_output(ah, 1, AR_GPIO_OUTPUT_MUX_AS_MCI_BT_DATA);
+-		ath9k_hw_cfg_output(ah, 0, AR_GPIO_OUTPUT_MUX_AS_MCI_BT_CLK);
++		ath9k_hw_gpio_request_out(ah, 3, NULL,
++					  AR_GPIO_OUTPUT_MUX_AS_BT_IN_TX);
++		ath9k_hw_gpio_request_out(ah, 2, NULL,
++					  AR_GPIO_OUTPUT_MUX_AS_BT_IN_RX);
++		ath9k_hw_gpio_request_out(ah, 1, NULL,
++					  AR_GPIO_OUTPUT_MUX_AS_MCI_BT_DATA);
++		ath9k_hw_gpio_request_out(ah, 0, NULL,
++					  AR_GPIO_OUTPUT_MUX_AS_MCI_BT_CLK);
+ 	} else
+ 		return;
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index 5a084d9..7719cb1 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -142,7 +142,8 @@ void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah)
+ 		      btcoex_hw->btactive_gpio);
+ 
+ 	/* Configure the desired gpio port for input */
+-	ath9k_hw_cfg_gpio_input(ah, btcoex_hw->btactive_gpio);
++	ath9k_hw_gpio_request_in(ah, btcoex_hw->btactive_gpio,
++				 "ath9k-btactive");
+ }
+ EXPORT_SYMBOL(ath9k_hw_btcoex_init_2wire);
+ 
+@@ -166,9 +167,10 @@ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
+ 			btcoex_hw->btpriority_gpio);
+ 
+ 	/* Configure the desired GPIO ports for input */
 -
- #define bcma_err(bus, fmt, ...) \
- 	pr_err("bus%d: " fmt, (bus)->num, ##__VA_ARGS__)
- #define bcma_warn(bus, fmt, ...) \
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 8e67802..d4fb5ee 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -25,6 +25,8 @@
- #include <linux/sched.h>
- #include <linux/ktime.h>
- #include <linux/mm.h>
-+#include <linux/bcma/bcma.h>
-+#include <linux/bcma/bcma_regs.h>
- #include <asm/dma.h>	/* isa_dma_bridge_buggy */
- #include "pci.h"
+-	ath9k_hw_cfg_gpio_input(ah, btcoex_hw->btactive_gpio);
+-	ath9k_hw_cfg_gpio_input(ah, btcoex_hw->btpriority_gpio);
++	ath9k_hw_gpio_request_in(ah, btcoex_hw->btactive_gpio,
++				 "ath9k-btactive");
++	ath9k_hw_gpio_request_in(ah, btcoex_hw->btpriority_gpio,
++				 "ath9k-btpriority");
+ }
+ EXPORT_SYMBOL(ath9k_hw_btcoex_init_3wire);
  
-@@ -3282,6 +3284,31 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL, 0x156d,
- 			       quirk_apple_wait_for_thunderbolt);
- #endif
+@@ -201,8 +203,9 @@ static void ath9k_hw_btcoex_enable_2wire(struct ath_hw *ah)
+ 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
  
-+/*
-+ * Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ storm
-+ * on boot until they are reset, causing spurious interrupts if the IRQ is
-+ * shared. Apparently the EFI bootloader enables the device to phone home
-+ * to Cupertino and does not disable it before passing control to the OS.
-+ */
-+static void quirk_apple_b43_reset(struct pci_dev *dev)
-+{
-+	void __iomem *mmio;
-+
-+	if (!dmi_match(DMI_BOARD_VENDOR, "Apple Inc.") || !dev->bus->self ||
-+	    pci_pcie_type(dev->bus->self) != PCI_EXP_TYPE_ROOT_PORT)
-+		return;
-+
-+	mmio = pci_iomap(dev, 0, 0);
-+	if (!mmio) {
-+		pr_err("b43 quirk: Cannot iomap device, IRQ storm ahead\n");
-+		return;
-+	}
-+	iowrite32(BCMA_RESET_CTL_RESET,
-+		  mmio + (1 * BCMA_CORE_SIZE) + BCMA_RESET_CTL);
-+	pci_iounmap(dev, mmio);
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM, 0x4331, quirk_apple_b43_reset);
-+
- static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
- 			  struct pci_fixup *end)
+ 	/* Configure the desired GPIO port for TX_FRAME output */
+-	ath9k_hw_cfg_output(ah, btcoex_hw->wlanactive_gpio,
+-			    AR_GPIO_OUTPUT_MUX_AS_TX_FRAME);
++	ath9k_hw_gpio_request_out(ah, btcoex_hw->wlanactive_gpio,
++				  "ath9k-wlanactive",
++				  AR_GPIO_OUTPUT_MUX_AS_TX_FRAME);
+ }
+ 
+ /*
+@@ -271,7 +274,6 @@ static void ath9k_hw_btcoex_enable_3wire(struct ath_hw *ah)
+ 	REG_WRITE(ah, AR_BT_COEX_MODE, btcoex->bt_coex_mode);
+ 	REG_WRITE(ah, AR_BT_COEX_MODE2, btcoex->bt_coex_mode2);
+ 
+-
+ 	if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		REG_WRITE(ah, AR_BT_COEX_WL_WEIGHTS0, btcoex->wlan_weight[0]);
+ 		REG_WRITE(ah, AR_BT_COEX_WL_WEIGHTS1, btcoex->wlan_weight[1]);
+@@ -281,8 +283,6 @@ static void ath9k_hw_btcoex_enable_3wire(struct ath_hw *ah)
+ 	} else
+ 		REG_WRITE(ah, AR_BT_COEX_WEIGHT, btcoex->bt_coex_weights);
+ 
+-
+-
+ 	if (AR_SREV_9271(ah)) {
+ 		val = REG_READ(ah, 0x50040);
+ 		val &= 0xFFFFFEFF;
+@@ -292,8 +292,9 @@ static void ath9k_hw_btcoex_enable_3wire(struct ath_hw *ah)
+ 	REG_RMW_FIELD(ah, AR_QUIET1, AR_QUIET1_QUIET_ACK_CTS_ENABLE, 1);
+ 	REG_RMW_FIELD(ah, AR_PCU_MISC, AR_PCU_BT_ANT_PREVENT_RX, 0);
+ 
+-	ath9k_hw_cfg_output(ah, btcoex->wlanactive_gpio,
+-			    AR_GPIO_OUTPUT_MUX_AS_RX_CLEAR_EXTERNAL);
++	ath9k_hw_gpio_request_out(ah, btcoex->wlanactive_gpio,
++				  "ath9k-wlanactive",
++				  AR_GPIO_OUTPUT_MUX_AS_RX_CLEAR_EXTERNAL);
+ }
+ 
+ static void ath9k_hw_btcoex_enable_mci(struct ath_hw *ah)
+@@ -364,8 +365,8 @@ void ath9k_hw_btcoex_disable(struct ath_hw *ah)
+ 	if (!AR_SREV_9300_20_OR_LATER(ah))
+ 		ath9k_hw_set_gpio(ah, btcoex_hw->wlanactive_gpio, 0);
+ 
+-	ath9k_hw_cfg_output(ah, btcoex_hw->wlanactive_gpio,
+-			AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
++	ath9k_hw_gpio_request_out(ah, btcoex_hw->wlanactive_gpio,
++				  NULL, AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 
+ 	if (btcoex_hw->scheme == ATH_BTCOEX_CFG_3WIRE) {
+ 		REG_WRITE(ah, AR_BT_COEX_MODE, AR_BT_QUIET | AR_BT_MODE);
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 2847067..b41dfb7 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -74,7 +74,8 @@ void ath_fill_led_pin(struct ath_softc *sc)
+ 
+ 	if (ah->led_pin >= 0) {
+ 		if (!((1 << ah->led_pin) & AR_GPIO_OE_OUT_MASK))
+-			ath9k_hw_request_gpio(ah, ah->led_pin, "ath9k-led");
++			ath9k_hw_gpio_request_out(ah, ah->led_pin, "ath9k-led",
++						  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 		return;
+ 	}
+ 
+@@ -90,7 +91,8 @@ void ath_fill_led_pin(struct ath_softc *sc)
+ 		ah->led_pin = ATH_LED_PIN_DEF;
+ 
+ 	/* Configure gpio 1 for output */
+-	ath9k_hw_cfg_output(ah, ah->led_pin, AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
++	ath9k_hw_gpio_request_out(ah, ah->led_pin, "ath9k-led",
++				  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 
+ 	/* LED off, active low */
+ 	ath9k_hw_set_gpio(ah, ah->led_pin, (ah->config.led_active_high) ? 0 : 1);
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index 2aabcbd..d9b640a 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -259,11 +259,11 @@ void ath9k_deinit_leds(struct ath9k_htc_priv *priv)
+ void ath9k_configure_leds(struct ath9k_htc_priv *priv)
  {
-diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-index 0367c63..5c37b58 100644
---- a/include/linux/bcma/bcma.h
-+++ b/include/linux/bcma/bcma.h
-@@ -158,6 +158,7 @@ struct bcma_host_ops {
- #define BCMA_CORE_DEFAULT		0xFFF
+ 	/* Configure gpio 1 for output */
+-	ath9k_hw_cfg_output(priv->ah, priv->ah->led_pin,
+-			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
++	ath9k_hw_gpio_request_out(priv->ah, priv->ah->led_pin,
++				  "ath9k-led",
++				  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 	/* LED off, active low */
+ 	ath9k_hw_set_gpio(priv->ah, priv->ah->led_pin, 1);
+-
+ }
  
- #define BCMA_MAX_NR_CORES		16
-+#define BCMA_CORE_SIZE			0x1000
+ void ath9k_init_leds(struct ath9k_htc_priv *priv)
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 0e80b3f..4046949 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1572,7 +1572,8 @@ static void ath9k_hw_apply_gpio_override(struct ath_hw *ah)
+ 		if (!(gpio_mask & 1))
+ 			continue;
  
- /* Chip IDs of PCIe devices */
- #define BCMA_CHIP_ID_BCM4313	0x4313
+-		ath9k_hw_cfg_output(ah, i, AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
++		ath9k_hw_gpio_request_out(ah, i, NULL,
++					  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 		ath9k_hw_set_gpio(ah, i, !!(ah->gpio_val & BIT(i)));
+ 	}
+ }
+@@ -1948,7 +1949,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	ath9k_hw_init_qos(ah);
+ 
+ 	if (ah->caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
+-		ath9k_hw_cfg_gpio_input(ah, ah->rfkill_gpio);
++		ath9k_hw_gpio_request_in(ah, ah->rfkill_gpio, "ath9k-rfkill");
+ 
+ 	ath9k_hw_init_global_settings(ah);
+ 
+@@ -2644,8 +2645,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ /* GPIO / RFKILL / Antennae */
+ /****************************/
+ 
+-static void ath9k_hw_gpio_cfg_output_mux(struct ath_hw *ah,
+-					 u32 gpio, u32 type)
++static void ath9k_hw_gpio_cfg_output_mux(struct ath_hw *ah, u32 gpio, u32 type)
+ {
+ 	int addr;
+ 	u32 gpio_shift, tmp;
+@@ -2659,8 +2659,8 @@ static void ath9k_hw_gpio_cfg_output_mux(struct ath_hw *ah,
+ 
+ 	gpio_shift = (gpio % 6) * 5;
+ 
+-	if (AR_SREV_9280_20_OR_LATER(ah)
+-	    || (addr != AR_GPIO_OUTPUT_MUX1)) {
++	if (AR_SREV_9280_20_OR_LATER(ah) ||
++	    (addr != AR_GPIO_OUTPUT_MUX1)) {
+ 		REG_RMW(ah, addr, (type << gpio_shift),
+ 			(0x1f << gpio_shift));
+ 	} else {
+@@ -2672,106 +2672,144 @@ static void ath9k_hw_gpio_cfg_output_mux(struct ath_hw *ah,
+ 	}
+ }
+ 
+-void ath9k_hw_cfg_gpio_input(struct ath_hw *ah, u32 gpio)
++/* BSP should set the corresponding MUX register correctly.
++ */
++static void ath9k_hw_gpio_cfg_soc(struct ath_hw *ah, u32 gpio, bool out,
++				  const char *label)
+ {
+-	u32 gpio_shift;
++	if (ah->caps.gpio_requested & BIT(gpio))
++		return;
+ 
+-	BUG_ON(gpio >= ah->caps.num_gpio_pins);
++	/* may be requested by BSP, free anyway */
++	gpio_free(gpio);
+ 
+-	if (AR_DEVID_7010(ah)) {
+-		gpio_shift = gpio;
+-		REG_RMW(ah, AR7010_GPIO_OE,
+-			(AR7010_GPIO_OE_AS_INPUT << gpio_shift),
+-			(AR7010_GPIO_OE_MASK << gpio_shift));
++	if (gpio_request_one(gpio, out ? GPIOF_OUT_INIT_LOW : GPIOF_IN, label))
+ 		return;
+-	}
+ 
+-	gpio_shift = gpio << 1;
+-	REG_RMW(ah,
+-		AR_GPIO_OE_OUT,
+-		(AR_GPIO_OE_OUT_DRV_NO << gpio_shift),
+-		(AR_GPIO_OE_OUT_DRV << gpio_shift));
++	ah->caps.gpio_requested |= BIT(gpio);
+ }
+-EXPORT_SYMBOL(ath9k_hw_cfg_gpio_input);
+ 
+-u32 ath9k_hw_gpio_get(struct ath_hw *ah, u32 gpio)
++static void ath9k_hw_gpio_cfg_wmac(struct ath_hw *ah, u32 gpio, bool out,
++				   u32 ah_signal_type)
+ {
+-#define MS_REG_READ(x, y) \
+-	(MS(REG_READ(ah, AR_GPIO_IN_OUT), x##_GPIO_IN_VAL) & (AR_GPIO_BIT(y)))
+-
+-	if (gpio >= ah->caps.num_gpio_pins)
+-		return 0xffffffff;
++	u32 gpio_set, gpio_shift = gpio;
+ 
+ 	if (AR_DEVID_7010(ah)) {
+-		u32 val;
+-		val = REG_READ(ah, AR7010_GPIO_IN);
+-		return (MS(val, AR7010_GPIO_IN_VAL) & AR_GPIO_BIT(gpio)) == 0;
+-	} else if (AR_SREV_9300_20_OR_LATER(ah))
+-		return (MS(REG_READ(ah, AR_GPIO_IN), AR9300_GPIO_IN_VAL) &
+-			AR_GPIO_BIT(gpio)) != 0;
+-	else if (AR_SREV_9271(ah))
+-		return MS_REG_READ(AR9271, gpio) != 0;
+-	else if (AR_SREV_9287_11_OR_LATER(ah))
+-		return MS_REG_READ(AR9287, gpio) != 0;
+-	else if (AR_SREV_9285_12_OR_LATER(ah))
+-		return MS_REG_READ(AR9285, gpio) != 0;
+-	else if (AR_SREV_9280_20_OR_LATER(ah))
+-		return MS_REG_READ(AR928X, gpio) != 0;
+-	else
+-		return MS_REG_READ(AR, gpio) != 0;
++		gpio_set = out ?
++			AR7010_GPIO_OE_AS_OUTPUT : AR7010_GPIO_OE_AS_INPUT;
++		REG_RMW(ah, AR7010_GPIO_OE, gpio_set << gpio_shift,
++			AR7010_GPIO_OE_MASK << gpio_shift);
++	} else if (AR_SREV_SOC(ah)) {
++		gpio_set = out ? 1 : 0;
++		REG_RMW(ah, AR_GPIO_OE_OUT, gpio_set << gpio_shift,
++			gpio_set << gpio_shift);
++	} else {
++		gpio_shift = gpio << 1;
++		gpio_set = out ?
++			AR_GPIO_OE_OUT_DRV_ALL : AR_GPIO_OE_OUT_DRV_NO;
++		REG_RMW(ah, AR_GPIO_OE_OUT, gpio_set << gpio_shift,
++			AR_GPIO_OE_OUT_DRV << gpio_shift);
++
++		if (out)
++			ath9k_hw_gpio_cfg_output_mux(ah, gpio, ah_signal_type);
++	}
+ }
+-EXPORT_SYMBOL(ath9k_hw_gpio_get);
+ 
+-void ath9k_hw_cfg_output(struct ath_hw *ah, u32 gpio,
+-			 u32 ah_signal_type)
++static void ath9k_hw_gpio_request(struct ath_hw *ah, u32 gpio, bool out,
++				  const char *label, u32 ah_signal_type)
+ {
+-	u32 gpio_shift;
++	WARN_ON(gpio >= ah->caps.num_gpio_pins);
+ 
+-	if (AR_DEVID_7010(ah)) {
+-		gpio_shift = gpio;
+-		REG_RMW(ah, AR7010_GPIO_OE,
+-			(AR7010_GPIO_OE_AS_OUTPUT << gpio_shift),
+-			(AR7010_GPIO_OE_MASK << gpio_shift));
+-		return;
+-	}
++	if (BIT(gpio) & ah->caps.gpio_mask)
++		ath9k_hw_gpio_cfg_wmac(ah, gpio, out, ah_signal_type);
++	else if (AR_SREV_SOC(ah))
++		ath9k_hw_gpio_cfg_soc(ah, gpio, out, label);
++	else
++		WARN_ON(1);
++}
+ 
+-	ath9k_hw_gpio_cfg_output_mux(ah, gpio, ah_signal_type);
+-	gpio_shift = 2 * gpio;
+-	REG_RMW(ah,
+-		AR_GPIO_OE_OUT,
+-		(AR_GPIO_OE_OUT_DRV_ALL << gpio_shift),
+-		(AR_GPIO_OE_OUT_DRV << gpio_shift));
++void ath9k_hw_gpio_request_in(struct ath_hw *ah, u32 gpio, const char *label)
++{
++	ath9k_hw_gpio_request(ah, gpio, false, label, 0);
+ }
+-EXPORT_SYMBOL(ath9k_hw_cfg_output);
++EXPORT_SYMBOL(ath9k_hw_gpio_request_in);
+ 
+-void ath9k_hw_set_gpio(struct ath_hw *ah, u32 gpio, u32 val)
++void ath9k_hw_gpio_request_out(struct ath_hw *ah, u32 gpio, const char *label,
++			       u32 ah_signal_type)
+ {
+-	if (AR_DEVID_7010(ah)) {
+-		val = val ? 0 : 1;
+-		REG_RMW(ah, AR7010_GPIO_OUT, ((val&1) << gpio),
+-			AR_GPIO_BIT(gpio));
++	ath9k_hw_gpio_request(ah, gpio, true, label, ah_signal_type);
++}
++EXPORT_SYMBOL(ath9k_hw_gpio_request_out);
++
++void ath9k_hw_gpio_free(struct ath_hw *ah, u32 gpio)
++{
++	if (!AR_SREV_SOC(ah))
+ 		return;
++
++	WARN_ON(gpio >= ah->caps.num_gpio_pins);
++
++	if (ah->caps.gpio_requested & BIT(gpio)) {
++		gpio_free(gpio);
++		ah->caps.gpio_requested &= ~BIT(gpio);
+ 	}
++}
++EXPORT_SYMBOL(ath9k_hw_gpio_free);
+ 
+-	if (AR_SREV_9271(ah))
+-		val = ~val;
++u32 ath9k_hw_gpio_get(struct ath_hw *ah, u32 gpio)
++{
++	u32 val = 0xffffffff;
+ 
+-	if ((1 << gpio) & AR_GPIO_OE_OUT_MASK)
+-		REG_RMW(ah, AR_GPIO_IN_OUT, ((val & 1) << gpio),
+-			AR_GPIO_BIT(gpio));
+-	else
+-		gpio_set_value(gpio, val & 1);
++#define MS_REG_READ(x, y) \
++	(MS(REG_READ(ah, AR_GPIO_IN_OUT), x##_GPIO_IN_VAL) & BIT(y))
++
++	WARN_ON(gpio >= ah->caps.num_gpio_pins);
++
++	if (BIT(gpio) & ah->caps.gpio_mask) {
++		if (AR_SREV_9271(ah))
++			val = MS_REG_READ(AR9271, gpio);
++		else if (AR_SREV_9287(ah))
++			val = MS_REG_READ(AR9287, gpio);
++		else if (AR_SREV_9285(ah))
++			val = MS_REG_READ(AR9285, gpio);
++		else if (AR_SREV_9280(ah))
++			val = MS_REG_READ(AR928X, gpio);
++		else if (AR_DEVID_7010(ah))
++			val = REG_READ(ah, AR7010_GPIO_IN) & BIT(gpio);
++		else if (AR_SREV_9300_20_OR_LATER(ah))
++			val = REG_READ(ah, AR_GPIO_IN) & BIT(gpio);
++		else
++			val = MS_REG_READ(AR, gpio);
++	} else if (BIT(gpio) & ah->caps.gpio_requested) {
++		val = gpio_get_value(gpio) & BIT(gpio);
++	} else {
++		WARN_ON(1);
++	}
++
++	return val;
+ }
+-EXPORT_SYMBOL(ath9k_hw_set_gpio);
++EXPORT_SYMBOL(ath9k_hw_gpio_get);
+ 
+-void ath9k_hw_request_gpio(struct ath_hw *ah, u32 gpio, const char *label)
++void ath9k_hw_set_gpio(struct ath_hw *ah, u32 gpio, u32 val)
+ {
+-	if (gpio >= ah->caps.num_gpio_pins)
+-		return;
++	WARN_ON(gpio >= ah->caps.num_gpio_pins);
+ 
+-	gpio_request_one(gpio, GPIOF_DIR_OUT | GPIOF_INIT_LOW, label);
++	if (AR_DEVID_7010(ah) || AR_SREV_9271(ah))
++		val = !val;
++	else
++		val = !!val;
++
++	if (BIT(gpio) & ah->caps.gpio_mask) {
++		u32 out_addr = AR_DEVID_7010(ah) ?
++			AR7010_GPIO_OUT : AR_GPIO_IN_OUT;
++
++		REG_RMW(ah, out_addr, val << gpio, BIT(gpio));
++	} else if (BIT(gpio) & ah->caps.gpio_requested) {
++		gpio_set_value(gpio, val);
++	} else {
++		WARN_ON(1);
++	}
+ }
+-EXPORT_SYMBOL(ath9k_hw_request_gpio);
++EXPORT_SYMBOL(ath9k_hw_set_gpio);
+ 
+ void ath9k_hw_setantenna(struct ath_hw *ah, u32 antenna)
+ {
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index c0740d6..9cbca12 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -160,7 +160,6 @@
+ #define AR_GPIO_OUTPUT_MUX_AS_RUCKUS_DATA        0x1e
+ 
+ #define AR_GPIOD_MASK               0x00001FFF
+-#define AR_GPIO_BIT(_gpio)          (1 << (_gpio))
+ 
+ #define BASE_ACTIVATE_DELAY         100
+ #define RTC_PLL_SETTLE_DELAY        (AR_SREV_9340(ah) ? 1000 : 100)
+@@ -302,6 +301,7 @@ struct ath9k_hw_capabilities {
+ 	u8 max_rxchains;
+ 	u8 num_gpio_pins;
+ 	u32 gpio_mask;
++	u32 gpio_requested;
+ 	u8 rx_hp_qdepth;
+ 	u8 rx_lp_qdepth;
+ 	u8 rx_status_len;
+@@ -1020,12 +1020,12 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah);
+ u32 ath9k_regd_get_ctl(struct ath_regulatory *reg, struct ath9k_channel *chan);
+ 
+ /* GPIO / RFKILL / Antennae */
+-void ath9k_hw_cfg_gpio_input(struct ath_hw *ah, u32 gpio);
++void ath9k_hw_gpio_request_in(struct ath_hw *ah, u32 gpio, const char *label);
++void ath9k_hw_gpio_request_out(struct ath_hw *ah, u32 gpio, const char *label,
++			       u32 ah_signal_type);
++void ath9k_hw_gpio_free(struct ath_hw *ah, u32 gpio);
+ u32 ath9k_hw_gpio_get(struct ath_hw *ah, u32 gpio);
+-void ath9k_hw_cfg_output(struct ath_hw *ah, u32 gpio,
+-			 u32 ah_signal_type);
+ void ath9k_hw_set_gpio(struct ath_hw *ah, u32 gpio, u32 val);
+-void ath9k_hw_request_gpio(struct ath_hw *ah, u32 gpio, const char *label);
+ void ath9k_hw_setantenna(struct ath_hw *ah, u32 antenna);
+ 
+ /* General Operation */
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index c1b33fd..95d0a53 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -719,10 +719,10 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 		ah->reset_power_on = false;
+ 
+ 	if (ah->led_pin >= 0) {
+-		ath9k_hw_cfg_output(ah, ah->led_pin,
+-				    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 		ath9k_hw_set_gpio(ah, ah->led_pin,
+ 				  (ah->config.led_active_high) ? 1 : 0);
++		ath9k_hw_gpio_request_out(ah, ah->led_pin, NULL,
++					  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 	}
+ 
+ 	/*
+@@ -870,7 +870,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 	if (ah->led_pin >= 0) {
+ 		ath9k_hw_set_gpio(ah, ah->led_pin,
+ 				  (ah->config.led_active_high) ? 0 : 1);
+-		ath9k_hw_cfg_gpio_input(ah, ah->led_pin);
++		ath9k_hw_gpio_request_in(ah, ah->led_pin, NULL);
+ 	}
+ 
+ 	ath_prepare_reset(sc);
 -- 
-2.8.0.rc3
+1.9.1
 
