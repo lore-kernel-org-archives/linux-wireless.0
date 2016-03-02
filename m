@@ -1,61 +1,121 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:36074 "EHLO
-	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751465AbcCRCQe (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 22:16:34 -0400
-Received: by mail-pf0-f173.google.com with SMTP id u190so145883717pfb.3
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 19:16:34 -0700 (PDT)
-From: Julian Calaby <julian.calaby@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Ivan Safonov <insafonov@gmail.com>,
-	Miaoqing Pan <miaoqing@codeaurora.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
-Subject: [PATCH 01/19] ath9k: Remove unnecessary ?: operator
-Date: Fri, 18 Mar 2016 13:16:26 +1100
-Message-Id: <61d140e53a590054c5981788ed12fdda9ef4c0bb.1458262312.git.julian.calaby@gmail.com> (sfid-20160318_031638_147536_C118A3C8)
-In-Reply-To: <cover.1458262312.git.julian.calaby@gmail.com>
-References: <cover.1458262312.git.julian.calaby@gmail.com>
+Received: from mga14.intel.com ([192.55.52.115]:11234 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753220AbcCBH5k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 02:57:40 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 22/43] iwlwifi: pcie: configure more RFH settings
+Date: Wed,  2 Mar 2016 09:56:23 +0200
+Message-Id: <1456905404-14435-22-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085950_315280_B8C11BCB)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ivan Safonov <insafonov@gmail.com>
+From: Sara Sharon <sara.sharon@intel.com>
 
-"(thermometer < 0) ? 0 : (thermometer == X)" is equivalent to
-"thermometer == X" for X >= 0.
+Fine tune RFH registers further:
+* Set default queue explicitly
+* Set RFH to drop frames exceeding RB size
+* Set the maximum rx transfer size to DRAM to 128 instead of 64
 
-Signed-off-by: Ivan Safonov <insafonov@gmail.com>
-[Updated commit message]
-Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-fh.h  | 24 ++++++++++++++----------
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 12 +++++++++++-
+ 2 files changed, 25 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 54ed2f7..a049f8d 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -4097,16 +4097,16 @@ static void ar9003_hw_thermometer_apply(struct ath_hw *ah)
- 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
- 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON_OVR, therm_on);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
+index 4ab6682..8af818b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-fh.h
+@@ -6,7 +6,7 @@
+  * GPL LICENSE SUMMARY
+  *
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
+- * Copyright(c) 2015 Intel Deutschland GmbH
++ * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -32,7 +32,7 @@
+  * BSD LICENSE
+  *
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
+- * Copyright(c) 2015 Intel Deutschland GmbH
++ * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -368,20 +368,24 @@ static inline unsigned int FH_MEM_CBBC_QUEUE(unsigned int chnl)
+ #define RFH_RXF_DMA_RBDCB_SIZE_512	(0x9 << RFH_RXF_DMA_RBDCB_SIZE_POS)
+ #define RFH_RXF_DMA_RBDCB_SIZE_1024	(0xA << RFH_RXF_DMA_RBDCB_SIZE_POS)
+ #define RFH_RXF_DMA_RBDCB_SIZE_2048	(0xB << RFH_RXF_DMA_RBDCB_SIZE_POS)
+-#define RFH_RXF_DMA_MIN_RB_SIZE_MASK (0x03000000) /* bit 24-25 */
++#define RFH_RXF_DMA_MIN_RB_SIZE_MASK	(0x03000000) /* bit 24-25 */
+ #define RFH_RXF_DMA_MIN_RB_SIZE_POS	24
+-#define RFH_RXF_DMA_MIN_RB_4_8	(3 << RFH_RXF_DMA_MIN_RB_SIZE_POS)
+-#define RFH_RXF_DMA_SINGLE_FRAME_MASK (0x20000000) /* bit 29 */
+-#define RFH_DMA_EN_MASK (0xC0000000) /* bits 30-31*/
+-#define RFH_DMA_EN_ENABLE_VAL BIT(31)
++#define RFH_RXF_DMA_MIN_RB_4_8		(3 << RFH_RXF_DMA_MIN_RB_SIZE_POS)
++#define RFH_RXF_DMA_DROP_TOO_LARGE_MASK	(0x04000000) /* bit 26 */
++#define RFH_RXF_DMA_SINGLE_FRAME_MASK	(0x20000000) /* bit 29 */
++#define RFH_DMA_EN_MASK			(0xC0000000) /* bits 30-31*/
++#define RFH_DMA_EN_ENABLE_VAL		BIT(31)
  
--	therm_on = (thermometer < 0) ? 0 : (thermometer == 0);
-+	therm_on = thermometer == 0;
- 	REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_RXTX4,
- 		      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
- 	if (pCap->chip_chainmask & BIT(1)) {
--		therm_on = (thermometer < 0) ? 0 : (thermometer == 1);
-+		therm_on = thermometer == 1;
- 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH1_RXTX4,
- 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
- 	}
- 	if (pCap->chip_chainmask & BIT(2)) {
--		therm_on = (thermometer < 0) ? 0 : (thermometer == 2);
-+		therm_on = thermometer == 2;
- 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
- 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
- 	}
+ #define RFH_RXF_RXQ_ACTIVE 0xA0980C
+ 
+ #define RFH_GEN_CFG	0xA09800
++#define RFH_GEN_CFG_SERVICE_DMA_SNOOP	BIT(0)
++#define RFH_GEN_CFG_RFH_DMA_SNOOP	BIT(1)
++#define RFH_GEN_CFG_RB_CHUNK_SIZE	BIT(4) /* 0 - 64B, 1- 128B */
+ #define RFH_GEN_CFG_DEFAULT_RXQ_NUM_MASK 0xF00
+-#define RFH_GEN_CFG_SERVICE_DMA_SNOOP BIT(0)
+-#define RFH_GEN_CFG_RFH_DMA_SNOOP BIT(1)
+-#define DEFAULT_RXQ_NUM 8
++#define RFH_GEN_CFG_DEFAULT_RXQ_NUM_POS 8
++
++#define DEFAULT_RXQ_NUM			0
+ 
+ /* end of 9000 rx series registers */
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index c0db681..398dd93 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -783,16 +783,26 @@ static void iwl_pcie_rx_mq_hw_init(struct iwl_trans *trans)
+ 	 * Single frame mode
+ 	 * Rx buffer size 4 or 8k or 12k
+ 	 * Min RB size 4 or 8
++	 * Drop frames that exceed RB size
+ 	 * 512 RBDs
+ 	 */
+ 	iwl_write_prph(trans, RFH_RXF_DMA_CFG,
+ 		       RFH_DMA_EN_ENABLE_VAL |
+ 		       rb_size | RFH_RXF_DMA_SINGLE_FRAME_MASK |
+ 		       RFH_RXF_DMA_MIN_RB_4_8 |
++		       RFH_RXF_DMA_DROP_TOO_LARGE_MASK |
+ 		       RFH_RXF_DMA_RBDCB_SIZE_512);
+ 
++	/*
++	 * Activate DMA snooping.
++	 * Set RX DMA chunk size to 128 bit
++	 * Default queue is 0
++	 */
+ 	iwl_write_prph(trans, RFH_GEN_CFG, RFH_GEN_CFG_RFH_DMA_SNOOP |
+-					  RFH_GEN_CFG_SERVICE_DMA_SNOOP);
++		       RFH_GEN_CFG_RB_CHUNK_SIZE |
++		       (DEFAULT_RXQ_NUM << RFH_GEN_CFG_DEFAULT_RXQ_NUM_POS) |
++		       RFH_GEN_CFG_SERVICE_DMA_SNOOP);
++	/* Enable the relevant rx queues */
+ 	iwl_write_prph(trans, RFH_RXF_RXQ_ACTIVE, enabled);
+ 
+ 	/* Set interrupt coalescing timer to default (2048 usecs) */
 -- 
-2.7.0
+2.5.0
 
