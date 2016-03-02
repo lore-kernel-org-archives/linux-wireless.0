@@ -1,202 +1,256 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48685 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751353AbcCAC65 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 21:58:57 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH 1/8] ath9k: define correct GPIO numbers and bits mask
-Date: Tue,  1 Mar 2016 10:58:28 +0800
-Message-Id: <1456801115-16636-2-git-send-email-miaoqing@codeaurora.org> (sfid-20160301_035901_080379_DF56103C)
-In-Reply-To: <1456801115-16636-1-git-send-email-miaoqing@codeaurora.org>
-References: <1456801115-16636-1-git-send-email-miaoqing@codeaurora.org>
+Received: from mga14.intel.com ([192.55.52.115]:34211 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753089AbcCBH5I (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 02:57:08 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 14/43] iwlwifi: mvm: send large SKBs to the transport
+Date: Wed,  2 Mar 2016 09:56:15 +0200
+Message-Id: <1456905404-14435-14-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085718_469398_AC8EA741)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+Now that PCIe knows how to create A-MSDUs, use this
+capability and prepare SKBs that are large enough to
+build an A-MSDU.
+Advertise TSO support towards the network stack and
+segment the packet with gso_size set to be the maximal
+A-MSDU length (after having taken the headers to be added
+into account) to make sure that the skb that is passed
+down to the transport are not longer than the maximal
+A-MSDU allowed.
 
-Define correct GPIO numbers and MASK bits to indicate the WMAC
-GPIO resource.
-
-Allow SOC chips(AR9340, AR9531, AR9550, AR9561) to access all GPIOs
-which rely on gpiolib framework. But restrict SOC AR9330 only to
-access WMAC GPIO which has the same design with the old chips.
-
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/hw.c  | 70 ++++++++++++++++++++++++++++--------
- drivers/net/wireless/ath/ath9k/hw.h  |  1 +
- drivers/net/wireless/ath/ath9k/reg.h | 42 ++++++++++++++++++++--
- 3 files changed, 96 insertions(+), 17 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 148 ++++++++++++++++++++++++++--
+ 1 file changed, 140 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 257f46e..0e80b3f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2375,6 +2375,61 @@ static bool ath9k_hw_dfs_tested(struct ath_hw *ah)
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 4fbaadd..6f67de5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -65,6 +65,7 @@
+ #include <linux/ieee80211.h>
+ #include <linux/etherdevice.h>
+ #include <linux/tcp.h>
++#include <net/ip.h>
+ 
+ #include "iwl-trans.h"
+ #include "iwl-eeprom-parse.h"
+@@ -182,7 +183,8 @@ void iwl_mvm_set_tx_cmd(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 
+ 	tx_cmd->tx_flags = cpu_to_le32(tx_flags);
+ 	/* Total # bytes to be transmitted */
+-	tx_cmd->len = cpu_to_le16((u16)skb->len);
++	tx_cmd->len = cpu_to_le16((u16)skb->len +
++		(uintptr_t)info->driver_data[0]);
+ 	tx_cmd->next_frame_len = 0;
+ 	tx_cmd->life_time = cpu_to_le32(TX_CMD_LIFE_TIME_INFINITE);
+ 	tx_cmd->sta_id = sta_id;
+@@ -372,6 +374,9 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
+ 			  info->hw_queue != info->control.vif->cab_queue)))
+ 		return -1;
+ 
++	/* This holds the amsdu headers length */
++	info->driver_data[0] = (void *)(uintptr_t)0;
++
+ 	/*
+ 	 * IWL_MVM_OFFCHANNEL_QUEUE is used for ROC packets that can be used
+ 	 * in 2 different types of vifs, P2P & STATION. P2P uses the offchannel
+@@ -428,33 +433,156 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
+ 	return 0;
  }
  
-+static void ath9k_gpio_cap_init(struct ath_hw *ah)
-+{
-+	struct ath9k_hw_capabilities *pCap = &ah->caps;
-+
-+	if (AR_SREV_9271(ah)) {
-+		pCap->num_gpio_pins = AR9271_NUM_GPIO;
-+		pCap->gpio_mask = AR9271_GPIO_MASK;
-+	} else if (AR_DEVID_7010(ah)) {
-+		pCap->num_gpio_pins = AR7010_NUM_GPIO;
-+		pCap->gpio_mask = AR7010_GPIO_MASK;
-+	} else if (AR_SREV_9287(ah)) {
-+		pCap->num_gpio_pins = AR9287_NUM_GPIO;
-+		pCap->gpio_mask = AR9287_GPIO_MASK;
-+	} else if (AR_SREV_9285(ah)) {
-+		pCap->num_gpio_pins = AR9285_NUM_GPIO;
-+		pCap->gpio_mask = AR9285_GPIO_MASK;
-+	} else if (AR_SREV_9280(ah)) {
-+		pCap->num_gpio_pins = AR9280_NUM_GPIO;
-+		pCap->gpio_mask = AR9280_GPIO_MASK;
-+	} else if (AR_SREV_9300(ah)) {
-+		pCap->num_gpio_pins = AR9300_NUM_GPIO;
-+		pCap->gpio_mask = AR9300_GPIO_MASK;
-+	} else if (AR_SREV_9330(ah)) {
-+		pCap->num_gpio_pins = AR9330_NUM_GPIO;
-+		pCap->gpio_mask = AR9330_GPIO_MASK;
-+	} else if (AR_SREV_9340(ah)) {
-+		pCap->num_gpio_pins = AR9340_NUM_GPIO;
-+		pCap->gpio_mask = AR9340_GPIO_MASK;
-+	} else if (AR_SREV_9462(ah)) {
-+		pCap->num_gpio_pins = AR9462_NUM_GPIO;
-+		pCap->gpio_mask = AR9462_GPIO_MASK;
-+	} else if (AR_SREV_9485(ah)) {
-+		pCap->num_gpio_pins = AR9485_NUM_GPIO;
-+		pCap->gpio_mask = AR9485_GPIO_MASK;
-+	} else if (AR_SREV_9531(ah)) {
-+		pCap->num_gpio_pins = AR9531_NUM_GPIO;
-+		pCap->gpio_mask = AR9531_GPIO_MASK;
-+	} else if (AR_SREV_9550(ah)) {
-+		pCap->num_gpio_pins = AR9550_NUM_GPIO;
-+		pCap->gpio_mask = AR9550_GPIO_MASK;
-+	} else if (AR_SREV_9561(ah)) {
-+		pCap->num_gpio_pins = AR9561_NUM_GPIO;
-+		pCap->gpio_mask = AR9561_GPIO_MASK;
-+	} else if (AR_SREV_9565(ah)) {
-+		pCap->num_gpio_pins = AR9565_NUM_GPIO;
-+		pCap->gpio_mask = AR9565_GPIO_MASK;
-+	} else if (AR_SREV_9580(ah)) {
-+		pCap->num_gpio_pins = AR9580_NUM_GPIO;
-+		pCap->gpio_mask = AR9580_GPIO_MASK;
-+	} else {
-+		pCap->num_gpio_pins = AR_NUM_GPIO;
-+		pCap->gpio_mask = AR_GPIO_MASK;
-+	}
-+}
-+
- int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+-static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb_gso,
++#ifdef CONFIG_INET
++static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 			  struct ieee80211_sta *sta,
+ 			  struct sk_buff_head *mpdus_skb)
  {
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
-@@ -2468,20 +2523,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	else
- 		pCap->hw_caps &= ~ATH9K_HW_CAP_HT;
- 
--	if (AR_SREV_9271(ah))
--		pCap->num_gpio_pins = AR9271_NUM_GPIO;
--	else if (AR_DEVID_7010(ah))
--		pCap->num_gpio_pins = AR7010_NUM_GPIO;
--	else if (AR_SREV_9300_20_OR_LATER(ah))
--		pCap->num_gpio_pins = AR9300_NUM_GPIO;
--	else if (AR_SREV_9287_11_OR_LATER(ah))
--		pCap->num_gpio_pins = AR9287_NUM_GPIO;
--	else if (AR_SREV_9285_12_OR_LATER(ah))
--		pCap->num_gpio_pins = AR9285_NUM_GPIO;
--	else if (AR_SREV_9280_20_OR_LATER(ah))
--		pCap->num_gpio_pins = AR928X_NUM_GPIO;
--	else
--		pCap->num_gpio_pins = AR_NUM_GPIO;
-+	ath9k_gpio_cap_init(ah);
- 
- 	if (AR_SREV_9160_10_OR_LATER(ah) || AR_SREV_9100(ah))
- 		pCap->rts_aggr_limit = ATH_AMPDU_LIMIT_MAX;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 831a544..c0740d6 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -301,6 +301,7 @@ struct ath9k_hw_capabilities {
- 	u8 max_txchains;
- 	u8 max_rxchains;
- 	u8 num_gpio_pins;
-+	u32 gpio_mask;
- 	u8 rx_hp_qdepth;
- 	u8 rx_lp_qdepth;
- 	u8 rx_status_len;
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index caba54d..8903f70 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -983,6 +983,10 @@
- #define AR_SREV_9561(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9561))
- 
-+#define AR_SREV_SOC(_ah) \
-+	(AR_SREV_9340(_ah) || AR_SREV_9531(_ah) || AR_SREV_9550(ah) || \
-+	 AR_SREV_9561(ah))
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
++	struct ieee80211_hdr *hdr = (void *)skb->data;
++	unsigned int mss = skb_shinfo(skb)->gso_size;
+ 	struct sk_buff *tmp, *next;
+-	char cb[sizeof(skb_gso->cb)];
++	char cb[sizeof(skb->cb)];
++	unsigned int num_subframes, tcp_payload_len, subf_len;
++	bool ipv4 = (skb->protocol == htons(ETH_P_IP));
++	u16 ip_base_id = ipv4 ? ntohs(ip_hdr(skb)->id) : 0;
++	u16 amsdu_add, snap_ip_tcp, pad, i = 0;
 +
- /* NOTE: When adding chips newer than Peacock, add chip check here */
- #define AR_SREV_9580_10_OR_LATER(_ah) \
- 	(AR_SREV_9580(_ah))
-@@ -1102,14 +1106,46 @@ enum {
- 
- #define AR_PCIE_PHY_REG3			 0x18c08
- 
-+/* Define correct GPIO numbers and MASK bits to indicate the WMAC
-+ * GPIO resource.
-+ * Allow SOC chips(AR9340, AR9531, AR9550, AR9561) to access all GPIOs
-+ * which rely on gpiolib framework. But restrict SOC AR9330 only to
-+ * access WMAC GPIO which has the same design with the old chips.
-+ */
- #define AR_NUM_GPIO                              14
--#define AR928X_NUM_GPIO                          10
-+#define AR9280_NUM_GPIO                          10
- #define AR9285_NUM_GPIO                          12
--#define AR9287_NUM_GPIO                          11
-+#define AR9287_NUM_GPIO                          10
- #define AR9271_NUM_GPIO                          16
--#define AR9300_NUM_GPIO                          17
-+#define AR9300_NUM_GPIO                          16
-+#define AR9330_NUM_GPIO				 16
-+#define AR9340_NUM_GPIO				 23
-+#define AR9462_NUM_GPIO				 10
-+#define AR9485_NUM_GPIO				 12
-+#define AR9531_NUM_GPIO				 18
-+#define AR9550_NUM_GPIO				 24
-+#define AR9561_NUM_GPIO				 23
-+#define AR9565_NUM_GPIO				 12
-+#define AR9580_NUM_GPIO				 16
- #define AR7010_NUM_GPIO                          16
- 
-+#define AR_GPIO_MASK				 0x00003FFF
-+#define AR9271_GPIO_MASK			 0x0000FFFF
-+#define AR9280_GPIO_MASK			 0x000003FF
-+#define AR9285_GPIO_MASK			 0x00000FFF
-+#define AR9287_GPIO_MASK			 0x000003FF
-+#define AR9300_GPIO_MASK			 0x0000F4FF
-+#define AR9330_GPIO_MASK			 0x0000F4FF
-+#define AR9340_GPIO_MASK			 0x0000000F
-+#define AR9462_GPIO_MASK			 0x000003FF
-+#define AR9485_GPIO_MASK			 0x00000FFF
-+#define AR9531_GPIO_MASK			 0x0000000F
-+#define AR9550_GPIO_MASK			 0x0000000F
-+#define AR9561_GPIO_MASK			 0x0000000F
-+#define AR9565_GPIO_MASK			 0x00000FFF
-+#define AR9580_GPIO_MASK			 0x0000F4FF
-+#define AR7010_GPIO_MASK			 0x0000FFFF
++	snap_ip_tcp = 8 + skb_transport_header(skb) - skb_network_header(skb) +
++		tcp_hdrlen(skb);
 +
- #define AR_GPIO_IN_OUT                           (AR_SREV_9340(ah) ? 0x4028 : 0x4048)
- #define AR_GPIO_IN_VAL                           0x0FFFC000
- #define AR_GPIO_IN_VAL_S                         14
++	if (!sta->max_amsdu_len ||
++	    !ieee80211_is_data_qos(hdr->frame_control)) {
++		num_subframes = 1;
++		pad = 0;
++		goto segment;
++	}
++
++	/* TODO: for now, disable A-MSDU inside AMPDU */
++	if (info->flags & IEEE80211_TX_CTL_AMPDU) {
++		num_subframes = 1;
++		pad = 0;
++		goto segment;
++	}
++
++	/* Sub frame header + SNAP + IP header + TCP header + MSS */
++	subf_len = sizeof(struct ethhdr) + snap_ip_tcp + mss;
++	pad = (4 - subf_len) & 0x3;
++
++	/*
++	 * If we have N subframes in the A-MSDU, then the A-MSDU's size is
++	 * N * subf_len + (N - 1) * pad.
++	 */
++	num_subframes = (sta->max_amsdu_len + pad) / (subf_len + pad);
++	if (num_subframes > 1) {
++		u8 *qc = ieee80211_get_qos_ctl((void *)skb->data);
++
++		*qc |= IEEE80211_QOS_CTL_A_MSDU_PRESENT;
++	}
++
++	tcp_payload_len = skb_tail_pointer(skb) - skb_transport_header(skb) -
++		tcp_hdrlen(skb) + skb->data_len;
++
++	/*
++	 * Make sure we have enough TBs for the A-MSDU:
++	 *	2 for each subframe
++	 *	1 more for each fragment
++	 *	1 more for the potential data in the header
++	 */
++	num_subframes =
++		min_t(unsigned int, num_subframes,
++		      (mvm->trans->max_skb_frags - 1 -
++		       skb_shinfo(skb)->nr_frags) / 2);
++
++	/* This skb fits in one single A-MSDU */
++	if (num_subframes * mss >= tcp_payload_len) {
++		/*
++		 * Compute the length of all the data added for the A-MSDU.
++		 * This will be used to compute the length to write in the TX
++		 * command. We have: SNAP + IP + TCP for n -1 subframes and
++		 * ETH header for n subframes. Note that the original skb
++		 * already had one set of SNAP / IP / TCP headers.
++		 */
++		num_subframes = DIV_ROUND_UP(tcp_payload_len, mss);
++		info = IEEE80211_SKB_CB(skb);
++		amsdu_add = num_subframes * sizeof(struct ethhdr) +
++			(num_subframes - 1) * (snap_ip_tcp + pad);
++		/* This holds the amsdu headers length */
++		info->driver_data[0] = (void *)(uintptr_t)amsdu_add;
++
++		__skb_queue_tail(mpdus_skb, skb);
++		return 0;
++	}
+ 
+-	memcpy(cb, skb_gso->cb, sizeof(cb));
+-	next = skb_gso_segment(skb_gso, 0);
+-	if (IS_ERR(next))
++	/*
++	 * Trick the segmentation function to make it
++	 * create SKBs that can fit into one A-MSDU.
++	 */
++segment:
++	skb_shinfo(skb)->gso_size = num_subframes * mss;
++	memcpy(cb, skb->cb, sizeof(cb));
++
++	next = skb_gso_segment(skb, NETIF_F_CSUM_MASK | NETIF_F_SG);
++	skb_shinfo(skb)->gso_size = mss;
++	if (WARN_ON_ONCE(IS_ERR(next)))
+ 		return -EINVAL;
+ 	else if (next)
+-		consume_skb(skb_gso);
++		consume_skb(skb);
+ 
+ 	while (next) {
+ 		tmp = next;
+ 		next = tmp->next;
++
+ 		memcpy(tmp->cb, cb, sizeof(tmp->cb));
++		/*
++		 * Compute the length of all the data added for the A-MSDU.
++		 * This will be used to compute the length to write in the TX
++		 * command. We have: SNAP + IP + TCP for n -1 subframes and
++		 * ETH header for n subframes.
++		 */
++		tcp_payload_len = skb_tail_pointer(tmp) -
++			skb_transport_header(tmp) -
++			tcp_hdrlen(tmp) + tmp->data_len;
++
++		if (ipv4)
++			ip_hdr(tmp)->id = htons(ip_base_id + i * num_subframes);
++
++		if (tcp_payload_len > mss) {
++			num_subframes = DIV_ROUND_UP(tcp_payload_len, mss);
++			info = IEEE80211_SKB_CB(tmp);
++			amsdu_add = num_subframes * sizeof(struct ethhdr) +
++				(num_subframes - 1) * (snap_ip_tcp + pad);
++			info->driver_data[0] = (void *)(uintptr_t)amsdu_add;
++			skb_shinfo(tmp)->gso_size = mss;
++		} else {
++			u8 *qc = ieee80211_get_qos_ctl((void *)tmp->data);
++
++			if (ipv4)
++				ip_send_check(ip_hdr(tmp));
++			*qc &= ~IEEE80211_QOS_CTL_A_MSDU_PRESENT;
++			skb_shinfo(tmp)->gso_size = 0;
++		}
+ 
+ 		tmp->prev = NULL;
+ 		tmp->next = NULL;
+ 
+ 		__skb_queue_tail(mpdus_skb, tmp);
++		i++;
+ 	}
+ 
+ 	return 0;
+ }
++#else /* CONFIG_INET */
++static int iwl_mvm_tx_tso(struct iwl_mvm *mvm, struct sk_buff *skb,
++			  struct ieee80211_sta *sta,
++			  struct sk_buff_head *mpdus_skb)
++{
++	/* Impossible to get TSO with CONFIG_INET */
++	WARN_ON(1);
++
++	return -1;
++}
++#endif
+ 
+ /*
+  * Sets the fields in the Tx cmd that are crypto related
+@@ -560,6 +688,7 @@ int iwl_mvm_tx_skb(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		   struct ieee80211_sta *sta)
+ {
+ 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
++	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+ 	struct sk_buff_head mpdus_skbs;
+ 	unsigned int payload_len;
+ 	int ret;
+@@ -570,6 +699,9 @@ int iwl_mvm_tx_skb(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 	if (WARN_ON_ONCE(mvmsta->sta_id == IWL_MVM_STATION_COUNT))
+ 		return -1;
+ 
++	/* This holds the amsdu headers length */
++	info->driver_data[0] = (void *)(uintptr_t)0;
++
+ 	if (!skb_is_gso(skb))
+ 		return iwl_mvm_tx_mpdu(mvm, skb, sta);
+ 
+@@ -589,7 +721,7 @@ int iwl_mvm_tx_skb(struct iwl_mvm *mvm, struct sk_buff *skb,
+ 		return ret;
+ 
+ 	while (!skb_queue_empty(&mpdus_skbs)) {
+-		struct sk_buff *skb = __skb_dequeue(&mpdus_skbs);
++		skb = __skb_dequeue(&mpdus_skbs);
+ 
+ 		ret = iwl_mvm_tx_mpdu(mvm, skb, sta);
+ 		if (ret) {
 -- 
-1.9.1
+2.5.0
 
