@@ -1,182 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:2318 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965658AbcCJKNa (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45334 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932707AbcCBCFU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 05:13:30 -0500
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH 2/3] ath10k: move cal data len to hw_params
-Date: Thu, 10 Mar 2016 15:42:37 +0530
-Message-ID: <1457604758-14454-3-git-send-email-rmani@qti.qualcomm.com> (sfid-20160310_111357_089939_7915EFC8)
-In-Reply-To: <1457604758-14454-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1457604758-14454-1-git-send-email-rmani@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 1 Mar 2016 21:05:20 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v3 3/8] ath9k: free GPIO resource for SOC GPIOs
+Date: Wed,  2 Mar 2016 10:04:17 +0800
+Message-Id: <1456884262-28194-4-git-send-email-miaoqing@codeaurora.org> (sfid-20160302_030527_273502_145295AB)
+In-Reply-To: <1456884262-28194-1-git-send-email-miaoqing@codeaurora.org>
+References: <1456884262-28194-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-ath10k_download_cal_dt() compares obtained cal data content length
-against QCA988X_CAL_DATA_LEN (2116 bytes). It was written by keeping
-qca988x in mind. In fact, cal data length is more chip specific.
-To make ath10k_download_cal_dt() more generic and reusable for other
-chipsets (like qca4019), cal data length is moved to hw_params.
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+For SOC GPIOs, should call ath9k_hw_gpio_free() to release
+the GPIO resource.
+
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath10k/core.c  | 11 ++++++++++-
- drivers/net/wireless/ath/ath10k/core.h  |  1 +
- drivers/net/wireless/ath/ath10k/debug.c |  7 ++++---
- drivers/net/wireless/ath/ath10k/hw.h    |  2 --
- 4 files changed, 15 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/btcoex.c       | 10 ++++++++++
+ drivers/net/wireless/ath/ath9k/btcoex.h       |  1 +
+ drivers/net/wireless/ath/ath9k/gpio.c         |  9 +++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |  2 ++
+ drivers/net/wireless/ath/ath9k/hw.c           |  1 +
+ 5 files changed, 23 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 4ec4d72..2a901c6 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -60,6 +60,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.channel_counters_freq_hz = 88000,
- 		.max_probe_resp_desc_thres = 0,
- 		.hw_4addr_pad = ATH10K_HW_4ADDR_PAD_AFTER,
-+		.cal_data_len = 2116,
- 		.fw = {
- 			.dir = QCA988X_HW_2_0_FW_DIR,
- 			.fw = QCA988X_HW_2_0_FW_FILE,
-@@ -78,6 +79,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.otp_exe_param = 0,
- 		.channel_counters_freq_hz = 88000,
- 		.max_probe_resp_desc_thres = 0,
-+		.cal_data_len = 8124,
- 		.fw = {
- 			.dir = QCA6174_HW_2_1_FW_DIR,
- 			.fw = QCA6174_HW_2_1_FW_FILE,
-@@ -97,6 +99,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.channel_counters_freq_hz = 88000,
- 		.max_probe_resp_desc_thres = 0,
- 		.hw_4addr_pad = ATH10K_HW_4ADDR_PAD_AFTER,
-+		.cal_data_len = 8124,
- 		.fw = {
- 			.dir = QCA6174_HW_2_1_FW_DIR,
- 			.fw = QCA6174_HW_2_1_FW_FILE,
-@@ -116,6 +119,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.channel_counters_freq_hz = 88000,
- 		.max_probe_resp_desc_thres = 0,
- 		.hw_4addr_pad = ATH10K_HW_4ADDR_PAD_AFTER,
-+		.cal_data_len = 8124,
- 		.fw = {
- 			.dir = QCA6174_HW_3_0_FW_DIR,
- 			.fw = QCA6174_HW_3_0_FW_FILE,
-@@ -135,6 +139,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.channel_counters_freq_hz = 88000,
- 		.max_probe_resp_desc_thres = 0,
- 		.hw_4addr_pad = ATH10K_HW_4ADDR_PAD_AFTER,
-+		.cal_data_len = 8124,
- 		.fw = {
- 			/* uses same binaries as hw3.0 */
- 			.dir = QCA6174_HW_3_0_FW_DIR,
-@@ -159,6 +164,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.tx_chain_mask = 0xf,
- 		.rx_chain_mask = 0xf,
- 		.max_spatial_stream = 4,
-+		.cal_data_len = 12064,
- 		.fw = {
- 			.dir = QCA99X0_HW_2_0_FW_DIR,
- 			.fw = QCA99X0_HW_2_0_FW_FILE,
-@@ -177,6 +183,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.otp_exe_param = 0,
- 		.channel_counters_freq_hz = 88000,
- 		.max_probe_resp_desc_thres = 0,
-+		.cal_data_len = 8124,
- 		.fw = {
- 			.dir = QCA9377_HW_1_0_FW_DIR,
- 			.fw = QCA9377_HW_1_0_FW_FILE,
-@@ -195,6 +202,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.otp_exe_param = 0,
- 		.channel_counters_freq_hz = 88000,
- 		.max_probe_resp_desc_thres = 0,
-+		.cal_data_len = 8124,
- 		.fw = {
- 			.dir = QCA9377_HW_1_0_FW_DIR,
- 			.fw = QCA9377_HW_1_0_FW_FILE,
-@@ -218,6 +226,7 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
- 		.tx_chain_mask = 0x3,
- 		.rx_chain_mask = 0x3,
- 		.max_spatial_stream = 2,
-+		.cal_data_len = 12064,
- 		.fw = {
- 			.dir = QCA4019_HW_1_0_FW_DIR,
- 			.fw = QCA4019_HW_1_0_FW_FILE,
-@@ -503,7 +512,7 @@ static int ath10k_download_cal_dt(struct ath10k *ar, const char *dt_name)
- 		return -ENOENT;
- 	}
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index 7719cb1..4737aa9 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -174,6 +174,16 @@ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath9k_hw_btcoex_init_3wire);
  
--	if (data_len != QCA988X_CAL_DATA_LEN) {
-+	if (data_len != ar->hw_params.cal_data_len) {
- 		ath10k_warn(ar, "invalid calibration data length in DT: %d\n",
- 			    data_len);
- 		ret = -EMSGSIZE;
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 23ba03f..322a9eb 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -695,6 +695,7 @@ struct ath10k {
- 		u32 tx_chain_mask;
- 		u32 rx_chain_mask;
- 		u32 max_spatial_stream;
-+		u32 cal_data_len;
- 
- 		struct ath10k_hw_params_fw {
- 			const char *dir;
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 076d29b..48f2835 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -1447,7 +1447,7 @@ static int ath10k_debug_cal_data_open(struct inode *inode, struct file *file)
- 		goto err;
- 	}
- 
--	buf = vmalloc(QCA988X_CAL_DATA_LEN);
-+	buf = vmalloc(ar->hw_params.cal_data_len);
- 	if (!buf) {
- 		ret = -ENOMEM;
- 		goto err;
-@@ -1462,7 +1462,7 @@ static int ath10k_debug_cal_data_open(struct inode *inode, struct file *file)
- 	}
- 
- 	ret = ath10k_hif_diag_read(ar, le32_to_cpu(addr), buf,
--				   QCA988X_CAL_DATA_LEN);
-+				   ar->hw_params.cal_data_len);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to read calibration data: %d\n", ret);
- 		goto err_vfree;
-@@ -1487,10 +1487,11 @@ static ssize_t ath10k_debug_cal_data_read(struct file *file,
- 					  char __user *user_buf,
- 					  size_t count, loff_t *ppos)
++void ath9k_hw_btcoex_deinit(struct ath_hw *ah)
++{
++	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
++
++	ath9k_hw_gpio_free(ah, btcoex_hw->btactive_gpio);
++	ath9k_hw_gpio_free(ah, btcoex_hw->btpriority_gpio);
++	ath9k_hw_gpio_free(ah, btcoex_hw->wlanactive_gpio);
++}
++EXPORT_SYMBOL(ath9k_hw_btcoex_deinit);
++
+ void ath9k_hw_btcoex_init_mci(struct ath_hw *ah)
  {
-+	struct ath10k *ar = file->private_data;
- 	void *buf = file->private_data;
+ 	ah->btcoex_hw.mci.ready = false;
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+index cd2f0a2..0f7c4e6 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+@@ -123,6 +123,7 @@ struct ath_btcoex_hw {
+ void ath9k_hw_btcoex_init_scheme(struct ath_hw *ah);
+ void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah);
+ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah);
++void ath9k_hw_btcoex_deinit(struct ath_hw *ah);
+ void ath9k_hw_btcoex_init_mci(struct ath_hw *ah);
+ void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum);
+ void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index b41dfb7..4964bb3 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -40,6 +40,8 @@ void ath_deinit_leds(struct ath_softc *sc)
  
- 	return simple_read_from_buffer(user_buf, count, ppos,
--				       buf, QCA988X_CAL_DATA_LEN);
-+				       buf, ar->hw_params.cal_data_len);
+ 	ath_led_brightness(&sc->led_cdev, LED_OFF);
+ 	led_classdev_unregister(&sc->led_cdev);
++
++	ath9k_hw_gpio_free(sc->sc_ah, sc->sc_ah->led_pin);
  }
  
- static int ath10k_debug_cal_data_release(struct inode *inode,
-diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
-index 1ff617b..c0179bc 100644
---- a/drivers/net/wireless/ath/ath10k/hw.h
-+++ b/drivers/net/wireless/ath/ath10k/hw.h
-@@ -134,8 +134,6 @@ enum qca9377_chip_id_rev {
+ void ath_init_leds(struct ath_softc *sc)
+@@ -404,6 +406,13 @@ void ath9k_deinit_btcoex(struct ath_softc *sc)
  
- #define REG_DUMP_COUNT_QCA988X 60
+ 	if (ath9k_hw_mci_is_enabled(ah))
+ 		ath_mci_cleanup(sc);
++	else {
++		enum ath_btcoex_scheme scheme = ath9k_hw_get_btcoex_scheme(ah);
++
++		if (scheme == ATH_BTCOEX_CFG_2WIRE ||
++		    scheme == ATH_BTCOEX_CFG_3WIRE)
++			ath9k_hw_btcoex_deinit(sc->sc_ah);
++	}
+ }
  
--#define QCA988X_CAL_DATA_LEN		2116
--
- struct ath10k_fw_ie {
- 	__le32 id;
- 	__le32 len;
+ int ath9k_init_btcoex(struct ath_softc *sc)
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index d9b640a..ecb848b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -253,6 +253,8 @@ void ath9k_deinit_leds(struct ath9k_htc_priv *priv)
+ 	ath9k_led_brightness(&priv->led_cdev, LED_OFF);
+ 	led_classdev_unregister(&priv->led_cdev);
+ 	cancel_work_sync(&priv->led_work);
++
++	ath9k_hw_gpio_free(priv->ah, priv->ah->led_pin);
+ }
+ 
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 4046949..1fd6155 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1575,6 +1575,7 @@ static void ath9k_hw_apply_gpio_override(struct ath_hw *ah)
+ 		ath9k_hw_gpio_request_out(ah, i, NULL,
+ 					  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 		ath9k_hw_set_gpio(ah, i, !!(ah->gpio_val & BIT(i)));
++		ath9k_hw_gpio_free(ah, i);
+ 	}
+ }
+ 
 -- 
-1.8.1.2
+1.9.1
 
