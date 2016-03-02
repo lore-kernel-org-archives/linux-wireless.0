@@ -1,55 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:4183 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759104AbcCDJR6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 04:17:58 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "michal.kazior@tieto.com" <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 10/13] ath10k: implement flushing of pending frames in
- txqs
-Date: Fri, 4 Mar 2016 09:17:52 +0000
-Message-ID: <87h9gmy538.fsf@kamboji.qca.qualcomm.com> (sfid-20160304_101821_913289_5F4C711D)
-References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
-	<1453384006-31907-11-git-send-email-michal.kazior@tieto.com>
-In-Reply-To: <1453384006-31907-11-git-send-email-michal.kazior@tieto.com>
-	(Michal Kazior's message of "Thu, 21 Jan 2016 14:46:43 +0100")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mga14.intel.com ([192.55.52.115]:42652 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753350AbcCBH5m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 02:57:42 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 27/43] iwlwifi: mvm: remove unused field in iwl_mvm_tid_data
+Date: Wed,  2 Mar 2016 09:56:28 +0200
+Message-Id: <1456905404-14435-27-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085953_211065_596CCA86)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Commit 69c7fda40921c125eeeef6a827f6270ac6aa1baa removed the
+users of iwl_mvm_tid_data.reduced_tpc. Due to a conflict,
+I forgot to commit the hunk that removed the field itself.
+Do this know.
 
-> Firmware supporting pull-push tx model may request
-> a switch between modes. When switching from
-> pull-push to push-only it will be necessary to
-> flush all pending frames. The code will do that
-> once other bits that actually trigger it are added.
->
-> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.h | 3 ---
+ 1 file changed, 3 deletions(-)
 
-This fails to apply:
-
-fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/htt_rx.c).
-Repository lacks necessary blobs to fall back on 3-way merge.
-Cannot fall back to three-way merge.
-Patch failed at 0010 ath10k: implement flushing of pending frames in txqs
-
-> @@ -2370,6 +2371,8 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
->  		dev_kfree_skb_any(skb);
->  	}
->  
-> +	ath10k_mac_tx_push_pending(ar);
-> +
->  	spin_lock_bh(&htt->rx_ring.lock);
->  	while ((skb = __skb_dequeue(&htt->rx_compl_q))) {
->  		resp = (struct htt_resp *)skb->data;
-
-This hunk seems to be the problem. I could try to fix it myself but the
-function has changed so I would prefer that you respin.
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+index db701ca..1a8f69a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
+@@ -258,8 +258,6 @@ enum iwl_mvm_agg_state {
+  *	This is basically (last acked packet++).
+  * @rate_n_flags: Rate at which Tx was attempted. Holds the data between the
+  *	Tx response (TX_CMD), and the block ack notification (COMPRESSED_BA).
+- * @reduced_tpc: Reduced tx power. Holds the data between the
+- *	Tx response (TX_CMD), and the block ack notification (COMPRESSED_BA).
+  * @amsdu_in_ampdu_allowed: true if A-MSDU in A-MPDU is allowed.
+  * @state: state of the BA agreement establishment / tear down.
+  * @txq_id: Tx queue used by the BA session
+@@ -274,7 +272,6 @@ struct iwl_mvm_tid_data {
+ 	u16 next_reclaimed;
+ 	/* The rest is Tx AGG related */
+ 	u32 rate_n_flags;
+-	u8 reduced_tpc;
+ 	bool amsdu_in_ampdu_allowed;
+ 	enum iwl_mvm_agg_state state;
+ 	u16 txq_id;
 -- 
-Kalle Valo
+2.5.0
+
