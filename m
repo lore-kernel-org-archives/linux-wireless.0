@@ -1,162 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:37632 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751205AbcCBHi3 convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:28987 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751671AbcCBOJP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 02:38:29 -0500
-Received: by mail-wm0-f46.google.com with SMTP id p65so65274155wmp.0
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2016 23:38:28 -0800 (PST)
+	Wed, 2 Mar 2016 09:09:15 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
+	<kvalo@codeaurora.org>, <mohammed@codeaurora.org>,
+	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Subject: [PATCH] cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION
+Date: Wed, 2 Mar 2016 19:38:30 +0530
+Message-ID: <1456927710-32073-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160302_150919_497469_9F64900B)
 MIME-Version: 1.0
-In-Reply-To: <1456840971.3926.29.camel@sipsolutions.net>
-References: <1456492163-11437-1-git-send-email-michal.kazior@tieto.com>
-	<1456840971.3926.29.camel@sipsolutions.net>
-Date: Wed, 2 Mar 2016 08:38:27 +0100
-Message-ID: <CA+BoTQkritHYYWA53zb_AcGT4sc92fytQo3CGP6GQouWRift1w@mail.gmail.com> (sfid-20160302_083839_350833_8C1E45AB)
-Subject: Re: [RFC/RFT] mac80211: implement fq_codel for software queuing
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Dave Taht <dave.taht@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Tim Shepard <shep@alum.mit.edu>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 March 2016 at 15:02, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2016-02-26 at 14:09 +0100, Michal Kazior wrote:
->>
->> +typedef u64 codel_time_t;
->
-> Do we really need this? And if yes, does it have to be in the public
-> header file? Why a typedef anyway?
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Hmm.. I don't think it's strictly necessary. I just wanted to keep as
-much from the original codel implementation as possible. I'm fine with
-using just u64.
+Add support for new netlink attribute 'NL80211_STA_INFO_RX_DURATION'
+This flag will be set when drivers can fill rx_duration ( approximate
+total air time(usecs) for unicast data/management frames from the
+connected client) via 'drv_sta_statistics' callback
 
+Also make sta_info flags 'filled' as 64 bit to accomodate for new
+per station stats. Extend 'PUT_SINFO' for supporting rx_duration
+field and any new per sta information in future
 
->> - * @txq_ac_max_pending: maximum number of frames per AC pending in
->> all txq
->> - *   entries for a vif.
->> + * @txq_cparams: codel parameters to control tx queueing dropping
->> behavior
->> + * @txq_limit: maximum number of frames queuesd
->
-> typo - queued
->
->> @@ -2133,7 +2155,8 @@ struct ieee80211_hw {
->>       u8 uapsd_max_sp_len;
->>       u8 n_cipher_schemes;
->>       const struct ieee80211_cipher_scheme *cipher_schemes;
->> -     int txq_ac_max_pending;
->> +     struct codel_params txq_cparams;
->
-> Should this really be a parameter the driver determines?
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ include/net/cfg80211.h       |    5 ++++-
+ include/uapi/linux/nl80211.h |    3 +++
+ net/wireless/nl80211.c       |    3 ++-
+ 3 files changed, 9 insertions(+), 2 deletions(-)
 
-I would think so, or at least it should be able to influence it in
-*some* way. You can have varying degree of induced latency depending
-on fw/hw tx queue depth, air conditions and possible tx rates implying
-different/varying RTT. Cake[1] even has a few RTT presets like: lan,
-internet, satellite.
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9bcaaf7..b8bf024 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1060,11 +1060,13 @@ struct cfg80211_tid_stats {
+  * @rx_beacon: number of beacons received from this peer
+  * @rx_beacon_signal_avg: signal strength average (in dBm) for beacons received
+  *	from this peer
++ * @rx_duration: approximate total air time(usecs) for unicast data/management
++ * 	frames from the connected client
+  * @pertid: per-TID statistics, see &struct cfg80211_tid_stats, using the last
+  *	(IEEE80211_NUM_TIDS) index for MSDUs not encapsulated in QoS-MPDUs.
+  */
+ struct station_info {
+-	u32 filled;
++	u64 filled;
+ 	u32 connected_time;
+ 	u32 inactive_time;
+ 	u64 rx_bytes;
+@@ -1103,6 +1105,7 @@ struct station_info {
+ 	u32 expected_throughput;
+ 
+ 	u64 rx_beacon;
++	u64 rx_duration;
+ 	u8 rx_beacon_signal_avg;
+ 	struct cfg80211_tid_stats pertid[IEEE80211_NUM_TIDS + 1];
+ };
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 5b7b5eb..1220a7b 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2464,6 +2464,8 @@ enum nl80211_sta_bss_param {
+  *	TID+1 and the special TID 16 (i.e. value 17) is used for non-QoS frames;
+  *	each one of those is again nested with &enum nl80211_tid_stats
+  *	attributes carrying the actual values.
++ * @NL80211_STA_INFO_RX_DURATION: approximate total air time(usecs) for unicast
++ * 	data/management frames from the connected client
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -2500,6 +2502,7 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_BEACON_RX,
+ 	NL80211_STA_INFO_BEACON_SIGNAL_AVG,
+ 	NL80211_STA_INFO_TID_STATS,
++	NL80211_STA_INFO_RX_DURATION,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d4786f2..a81c016 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3719,7 +3719,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
+ 		goto nla_put_failure;
+ 
+ #define PUT_SINFO(attr, memb, type) do {				\
+-	if (sinfo->filled & BIT(NL80211_STA_INFO_ ## attr) &&		\
++	if (sinfo->filled & (1ULL << NL80211_STA_INFO_ ## attr) &&	\
+ 	    nla_put_ ## type(msg, NL80211_STA_INFO_ ## attr,		\
+ 			     sinfo->memb))				\
+ 		goto nla_put_failure;					\
+@@ -3745,6 +3745,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
+ 	PUT_SINFO(LLID, llid, u16);
+ 	PUT_SINFO(PLID, plid, u16);
+ 	PUT_SINFO(PLINK_STATE, plink_state, u8);
++	PUT_SINFO(RX_DURATION, rx_duration, u64);
+ 
+ 	switch (rdev->wiphy.signal_type) {
+ 	case CFG80211_SIGNAL_TYPE_MBM:
+-- 
+1.7.9.5
 
-I don't really have a plan how exactly a driver could make use of it
-for benefit though. It might end up not being necessary after all if
-generic tx scheduling materializes in mac80211.
-
-
-[1]: http://www.bufferbloat.net/projects/codel/wiki/Cake
-
-
->> +static void ieee80211_if_setup_no_queue(struct net_device *dev)
->> +{
->> +     ieee80211_if_setup(dev);
->> +     dev->priv_flags |= IFF_NO_QUEUE;
->> +     /* Note for backporters: use dev->tx_queue_len = 0 instead
->> of IFF_ */
->
-> Heh. Remove that comment; we have an spatch in backports already :)
-
-I've put it in the RFC specifically in case anyone wants to port this
-bypassing backports, e.g. to openwrt's quilt (so when compilation
-fails, you can quickly fix it up). I'll remove it before proper
-submission obviously :)
-
-
->> --- a/net/mac80211/sta_info.h
->> +++ b/net/mac80211/sta_info.h
->> @@ -19,6 +19,7 @@
->>  #include <linux/etherdevice.h>
->>  #include <linux/rhashtable.h>
->>  #include "key.h"
->> +#include "codel_i.h"
->>
->>  /**
->>   * enum ieee80211_sta_info_flags - Stations flags
->> @@ -327,6 +328,32 @@ struct mesh_sta {
->>
->>  DECLARE_EWMA(signal, 1024, 8)
->>
->> +struct txq_info;
->> +
->> +/**
->> + * struct txq_flow - per traffic flow queue
->> + *
->> + * This structure is used to distinguish and queue different traffic
->> flows
->> + * separately for fair queueing/AQM purposes.
->> + *
->> + * @txqi: txq_info structure it is associated at given time
->> + * @flowchain: can be linked to other flows for RR purposes
->> + * @backlogchain: can be linked to other flows for backlog sorting
->> purposes
->> + * @queue: sk_buff queue
->> + * @cvars: codel state vars
->> + * @backlog: number of bytes pending in the queue
->> + * @deficit: used for fair queueing balancing
->> + */
->> +struct txq_flow {
->> +     struct txq_info *txqi;
->> +     struct list_head flowchain;
->> +     struct list_head backlogchain;
->> +     struct sk_buff_head queue;
->> +     struct codel_vars cvars;
->> +     u32 backlog;
->> +     u32 deficit;
->> +};
->> +
->>  /**
->>   * struct sta_info - STA information
->>   *
->> diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
->> index af584f7cdd63..f42f898cb8b5 100644
->> --- a/net/mac80211/tx.c
->> +++ b/net/mac80211/tx.c
->> @@ -34,6 +34,7 @@
->>  #include "wpa.h"
->>  #include "wme.h"
->>  #include "rate.h"
->> +#include "codel.h"
->
->> +static inline codel_time_t
->> +custom_codel_get_enqueue_time(struct sk_buff *skb)
->
-> There are a lot of inlines here - first of all, do they all need to be
-> inline?
-
-I just followed the style of code found in codel implementation. I
-figured there's a reason why is uses `inline` although I didn't do any
-measurements myself.
-
-
-> And secondly, perhaps it would make some sense to move this into
-> another file?
-
-I did consider it briefly but decided it'll be beneficial for the
-compiler to have tx hotpath in a single file.
-
-
-Michał
