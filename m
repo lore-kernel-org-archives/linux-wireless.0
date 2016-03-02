@@ -1,88 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:37438 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752861AbcCWCYG (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2016 22:24:06 -0400
-Subject: patch "staging: refresh TODO for rtl8712" added to staging-linus
-To: xose.vazquez@gmail.com, Joshua.Roys@gtri.gatech.edu,
-	Larry.Finger@lwfinger.net, chunkeey@googlemail.com,
-	driverdev-devel@linuxdriverproject.org,
-	florian.c.schilhabel@googlemail.com, gregkh@linuxfoundation.org,
-	linux-wireless@vger.kernel.org
-From: <gregkh@linuxfoundation.org>
-Date: Tue, 22 Mar 2016 22:24:03 -0400
-Message-ID: <145869984324580@kroah.com> (sfid-20160323_032411_684427_D20C2E4D)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=ANSI_X3.4-1968
+Received: from mga14.intel.com ([192.55.52.115]:34250 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752781AbcCBH4y (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 02:56:54 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 04/43] iwlwifi: mvm: set the correct descriptor size for tracing
+Date: Wed,  2 Mar 2016 09:56:05 +0200
+Message-Id: <1456905404-14435-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085656_822343_A914900F)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Sara Sharon <sara.sharon@intel.com>
 
-This is a note to let you know that I've just added the patch titled
+The 9000 series uses a diffrent sized descriptor. Update the
+relevant tracing field.
 
-    staging: refresh TODO for rtl8712
-
-to my staging git tree which can be found at
-    git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/staging.git
-in the staging-linus branch.
-
-The patch will show up in the next release of the linux-next tree
-(usually sometime within the next 24 hours during the week.)
-
-The patch will hopefully also be merged in Linus's tree for the
-next -rc kernel release.
-
-If you have any questions about this process, please let me know.
-
-
->From 586add48d4a627424ff996277fc47e4ee8c69126 Mon Sep 17 00:00:00 2001
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Date: Mon, 14 Mar 2016 15:50:07 +0100
-Subject: staging: refresh TODO for rtl8712
-
-People should not waste time and energy working on this staging driver.
-At least four drivers were written for this hardware:
- https://marc.info/?l=linux-wireless&m=138358275410975
-And there is a replacement using the kernel wireless stack at:
- https://github.com/chunkeey/rtl8192su
-Also a fullmac/cfg80211 driver(r92su) is available.
-
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Florian Schilhabel <florian.c.schilhabel@googlemail.com>
-Cc: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Joshua Roys <Joshua.Roys@gtri.gatech.edu>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Linux Driver Project Developer List <driverdev-devel@linuxdriverproject.org>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/rtl8712/TODO | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/rtl8712/TODO b/drivers/staging/rtl8712/TODO
-index d8dfe5bfe702..847c8c41f4f7 100644
---- a/drivers/staging/rtl8712/TODO
-+++ b/drivers/staging/rtl8712/TODO
-@@ -4,10 +4,10 @@ TODO:
- - switch to use MAC80211
- - checkpatch.pl fixes - only a few remain
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index ec36046..3661a9d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -479,8 +479,11 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
  
--Please send any patches to Greg Kroah-Hartman <greg@kroah.com>,
--Larry Finger <Larry.Finger@lwfinger.net> and
--Florian Schilhabel <florian.c.schilhabel@googlemail.com>.
--
--
--
-+A replacement for this driver with MAC80211 support is available
-+at https://github.com/chunkeey/rtl8192su
+ 	if (iwl_mvm_has_new_rx_api(mvm)) {
+ 		op_mode->ops = &iwl_mvm_ops_mq;
++		trans->rx_mpdu_cmd_hdr_size = sizeof(struct iwl_rx_mpdu_desc);
+ 	} else {
+ 		op_mode->ops = &iwl_mvm_ops;
++		trans->rx_mpdu_cmd_hdr_size =
++			sizeof(struct iwl_rx_mpdu_res_start);
  
-+Please send any patches to Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-+Larry Finger <Larry.Finger@lwfinger.net>,
-+Florian Schilhabel <florian.c.schilhabel@googlemail.com> and
-+Linux Driver Project Developer List <driverdev-devel@linuxdriverproject.org>.
+ 		if (WARN_ON(trans->num_rx_queues > 1))
+ 			goto out_free;
+@@ -572,7 +575,6 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 	iwl_trans_configure(mvm->trans, &trans_cfg);
+ 
+ 	trans->rx_mpdu_cmd = REPLY_RX_MPDU_CMD;
+-	trans->rx_mpdu_cmd_hdr_size = sizeof(struct iwl_rx_mpdu_res_start);
+ 	trans->dbg_dest_tlv = mvm->fw->dbg_dest_tlv;
+ 	trans->dbg_dest_reg_num = mvm->fw->dbg_dest_reg_num;
+ 	memcpy(trans->dbg_conf_tlv, mvm->fw->dbg_conf_tlv,
 -- 
-2.7.4
-
+2.5.0
 
