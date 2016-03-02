@@ -1,118 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:55323 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965557AbcCJKN2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 05:13:28 -0500
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>,
-	Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH 1/3] ath10k: pass cal data location as an argument to ath10k_download_cal_{file|dt}
-Date: Thu, 10 Mar 2016 15:42:36 +0530
-Message-ID: <1457604758-14454-2-git-send-email-rmani@qti.qualcomm.com> (sfid-20160310_111402_511458_3F5CC47A)
-In-Reply-To: <1457604758-14454-1-git-send-email-rmani@qti.qualcomm.com>
-References: <1457604758-14454-1-git-send-email-rmani@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:45230 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750797AbcCBN7k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 08:59:40 -0500
+Message-ID: <1456927176.2157.4.camel@sipsolutions.net> (sfid-20160302_145943_658852_1DA9DE12)
+Subject: Re: [PATCH] iw: add libnl-tiny support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dima Krasner <dima@dimakrasner.com>, linux-wireless@vger.kernel.org
+Date: Wed, 02 Mar 2016 14:59:36 +0100
+In-Reply-To: <20160223204334.4a65ab8113dbe31fbffc56ff@dimakrasner.com> (sfid-20160223_194343_135265_7B7CCCFB)
+References: <20160223204334.4a65ab8113dbe31fbffc56ff@dimakrasner.com>
+	 (sfid-20160223_194343_135265_7B7CCCFB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Both ath10k_download_cal_file() and ath10k_download_cal_dt() uses
-hard coded file pointer (ar->cal_file) and device tree entry
-(qcom,ath10k-calibration-data) respectively to get calibration
-data content.
+On Tue, 2016-02-23 at 20:43 +0200, Dima Krasner wrote:
+> 
+> +#ifdef CONFIG_LIBNL_TINY
+> +#define nl_handle nl_sock
+[...]
+>  /* libnl 1.x compatibility code */
+> -#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30)
+> +#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30) &&
+> !defined(CONFIG_LIBNL_TINY)
+>  #  define nl_sock nl_handle
+>  #endif
 
-There is a need to use those two functions in qca4019 calibration
-download sequence with different file pointer and device tree entry name.
-Modify those two functions to take cal data location as an argument.
-So that it can serve the purpose for other file pointer and device
-tree entry.
 
-This is just preparation before adding actual qca4019 calibration
-download sequence. No functional changes.
+This makes no sense. Clearly, nl_sock was intended to be the struct
+name used in the code, and it seems that nl-tiny implements the libnl
+1.1 API, so you should work with that code instead of redefining
+everything.
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 24 +++++++++++-------------
- 1 file changed, 11 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 2389c07..4ec4d72 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -462,18 +462,18 @@ exit:
- 	return ret;
- }
- 
--static int ath10k_download_cal_file(struct ath10k *ar)
-+static int ath10k_download_cal_file(struct ath10k *ar,
-+				    const struct firmware *file)
- {
- 	int ret;
- 
--	if (!ar->cal_file)
-+	if (!file)
- 		return -ENOENT;
- 
--	if (IS_ERR(ar->cal_file))
--		return PTR_ERR(ar->cal_file);
-+	if (IS_ERR(file))
-+		return PTR_ERR(file);
- 
--	ret = ath10k_download_board_data(ar, ar->cal_file->data,
--					 ar->cal_file->size);
-+	ret = ath10k_download_board_data(ar, file->data, file->size);
- 	if (ret) {
- 		ath10k_err(ar, "failed to download cal_file data: %d\n", ret);
- 		return ret;
-@@ -484,7 +484,7 @@ static int ath10k_download_cal_file(struct ath10k *ar)
- 	return 0;
- }
- 
--static int ath10k_download_cal_dt(struct ath10k *ar)
-+static int ath10k_download_cal_dt(struct ath10k *ar, const char *dt_name)
- {
- 	struct device_node *node;
- 	int data_len;
-@@ -498,8 +498,7 @@ static int ath10k_download_cal_dt(struct ath10k *ar)
- 		 */
- 		return -ENOENT;
- 
--	if (!of_get_property(node, "qcom,ath10k-calibration-data",
--			     &data_len)) {
-+	if (!of_get_property(node, dt_name, &data_len)) {
- 		/* The calibration data node is optional */
- 		return -ENOENT;
- 	}
-@@ -517,8 +516,7 @@ static int ath10k_download_cal_dt(struct ath10k *ar)
- 		goto out;
- 	}
- 
--	ret = of_property_read_u8_array(node, "qcom,ath10k-calibration-data",
--					data, data_len);
-+	ret = of_property_read_u8_array(node, dt_name, data, data_len);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to read calibration data from DT: %d\n",
- 			    ret);
-@@ -1258,7 +1256,7 @@ static int ath10k_download_cal_data(struct ath10k *ar)
- {
- 	int ret;
- 
--	ret = ath10k_download_cal_file(ar);
-+	ret = ath10k_download_cal_file(ar, ar->cal_file);
- 	if (ret == 0) {
- 		ar->cal_mode = ATH10K_CAL_MODE_FILE;
- 		goto done;
-@@ -1268,7 +1266,7 @@ static int ath10k_download_cal_data(struct ath10k *ar)
- 		   "boot did not find a calibration file, try DT next: %d\n",
- 		   ret);
- 
--	ret = ath10k_download_cal_dt(ar);
-+	ret = ath10k_download_cal_dt(ar, "qcom,ath10k-calibration-data");
- 	if (ret == 0) {
- 		ar->cal_mode = ATH10K_CAL_MODE_DT;
- 		goto done;
--- 
-1.8.1.2
-
+johannes
