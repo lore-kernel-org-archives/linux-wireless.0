@@ -1,99 +1,177 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:34250 "EHLO mga14.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:22360 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753070AbcCBH5B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 02:57:01 -0500
+	id S1753280AbcCBH5h (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 02:57:37 -0500
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 09/43] iwlwifi: pcie: aggregate Flow Handler configuration writes
-Date: Wed,  2 Mar 2016 09:56:10 +0200
-Message-Id: <1456905404-14435-9-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085707_560966_67FE10A2)
+Cc: Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 21/43] iwlwifi: mvm: support filtered frames notification
+Date: Wed,  2 Mar 2016 09:56:22 +0200
+Message-Id: <1456905404-14435-21-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085949_600401_17000457)
 In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
 References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Instead of waking up the device each time we write a
-register, wake it up once, and writes the registers
-at once.
+From: Sara Sharon <sara.sharon@intel.com>
 
+During d0i3 frames might be filtered by the FW and this may
+cause reordering buffer a delay - as the frames will not be
+received and reorder will time out.
+
+Introduce an API function to receive notification of filtered
+frames and pass the information to the mac80211.
+
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 56 ++++++++++++-------------
- 1 file changed, 28 insertions(+), 28 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h | 22 +++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h    |  2 +
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c    |  4 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/rx.c     | 49 +++++++++++++++++++++++++
+ 4 files changed, 77 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 58591ca..cda678d 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -616,38 +616,38 @@ static int iwl_pcie_load_firmware_chunk(struct iwl_trans *trans, u32 dst_addr,
- 				   dma_addr_t phy_addr, u32 byte_cnt)
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index ca7fec71..e1e1194 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -119,6 +119,8 @@ enum {
+ 	SCAN_ABORT_UMAC = 0xe,
+ 	SCAN_COMPLETE_UMAC = 0xf,
+ 
++	BA_WINDOW_STATUS_NOTIFICATION_ID = 0x13,
++
+ 	/* station table */
+ 	ADD_STA_KEY = 0x17,
+ 	ADD_STA = 0x18,
+@@ -1286,6 +1288,26 @@ struct iwl_fw_bcast_filter {
+ 	struct iwl_fw_bcast_filter_attr attrs[MAX_BCAST_FILTER_ATTRS];
+ } __packed; /* BCAST_FILTER_S_VER_1 */
+ 
++#define BA_WINDOW_STREAMS_MAX		16
++#define BA_WINDOW_STATUS_TID_MSK	0x000F
++#define BA_WINDOW_STATUS_STA_ID_POS	4
++#define BA_WINDOW_STATUS_STA_ID_MSK	0x01F0
++#define BA_WINDOW_STATUS_VALID_MSK	BIT(9)
++
++/**
++ * struct iwl_ba_window_status_notif - reordering window's status notification
++ * @bitmap: bitmap of received frames [start_seq_num + 0]..[start_seq_num + 63]
++ * @ra_tid: bit 3:0 - TID, bit 8:4 - STA_ID, bit 9 - valid
++ * @start_seq_num: the start sequence number of the bitmap
++ * @mpdu_rx_count: the number of received MPDUs since entering D0i3
++ */
++struct iwl_ba_window_status_notif {
++	__le64 bitmap[BA_WINDOW_STREAMS_MAX];
++	__le16 ra_tid[BA_WINDOW_STREAMS_MAX];
++	__le32 start_seq_num[BA_WINDOW_STREAMS_MAX];
++	__le16 mpdu_rx_count[BA_WINDOW_STREAMS_MAX];
++} __packed; /* BA_WINDOW_STATUS_NTFY_API_S_VER_1 */
++
+ /**
+  * struct iwl_fw_bcast_mac - per-mac broadcast filtering configuration.
+  * @default_discard: default action for this mac (discard (1) / pass (0)).
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 416aedb..fa987bd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -1268,6 +1268,8 @@ void iwl_mvm_rx_missed_beacons_notif(struct iwl_mvm *mvm,
+ 				     struct iwl_rx_cmd_buffer *rxb);
+ void iwl_mvm_rx_stored_beacon_notif(struct iwl_mvm *mvm,
+ 				    struct iwl_rx_cmd_buffer *rxb);
++void iwl_mvm_window_status_notif(struct iwl_mvm *mvm,
++				 struct iwl_rx_cmd_buffer *rxb);
+ void iwl_mvm_mac_ctxt_recalc_tsf_id(struct iwl_mvm *mvm,
+ 				    struct ieee80211_vif *vif);
+ unsigned long iwl_mvm_get_used_hw_queues(struct iwl_mvm *mvm,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index bfa6da1..52c73d0 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -236,6 +236,9 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
+ 	RX_HANDLER(ANTENNA_COUPLING_NOTIFICATION,
+ 		   iwl_mvm_rx_ant_coupling_notif, true),
+ 
++	RX_HANDLER(BA_WINDOW_STATUS_NOTIFICATION_ID,
++		   iwl_mvm_window_status_notif, false),
++
+ 	RX_HANDLER(TIME_EVENT_NOTIFICATION, iwl_mvm_rx_time_event_notif, false),
+ 	RX_HANDLER(MCC_CHUB_UPDATE_CMD, iwl_mvm_rx_chub_update_mcc, true),
+ 
+@@ -294,6 +297,7 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
+ 	HCMD_NAME(SCAN_COMPLETE_UMAC),
+ 	HCMD_NAME(TOF_CMD),
+ 	HCMD_NAME(TOF_NOTIFICATION),
++	HCMD_NAME(BA_WINDOW_STATUS_NOTIFICATION_ID),
+ 	HCMD_NAME(ADD_STA_KEY),
+ 	HCMD_NAME(ADD_STA),
+ 	HCMD_NAME(REMOVE_STA),
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+index ad625f0..485cfc1 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
+@@ -7,6 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -626,3 +627,51 @@ void iwl_mvm_rx_statistics(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
  {
- 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
-+	unsigned long flags;
- 	int ret;
- 
- 	trans_pcie->ucode_write_complete = false;
- 
--	iwl_write_direct32(trans,
--			   FH_TCSR_CHNL_TX_CONFIG_REG(FH_SRVC_CHNL),
--			   FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_PAUSE);
--
--	iwl_write_direct32(trans,
--			   FH_SRVC_CHNL_SRAM_ADDR_REG(FH_SRVC_CHNL),
--			   dst_addr);
--
--	iwl_write_direct32(trans,
--			   FH_TFDIB_CTRL0_REG(FH_SRVC_CHNL),
--			   phy_addr & FH_MEM_TFDIB_DRAM_ADDR_LSB_MSK);
--
--	iwl_write_direct32(trans,
--			   FH_TFDIB_CTRL1_REG(FH_SRVC_CHNL),
--			   (iwl_get_dma_hi_addr(phy_addr)
--				<< FH_MEM_TFDIB_REG1_ADDR_BITSHIFT) | byte_cnt);
--
--	iwl_write_direct32(trans,
--			   FH_TCSR_CHNL_TX_BUF_STS_REG(FH_SRVC_CHNL),
--			   1 << FH_TCSR_CHNL_TX_BUF_STS_REG_POS_TB_NUM |
--			   1 << FH_TCSR_CHNL_TX_BUF_STS_REG_POS_TB_IDX |
--			   FH_TCSR_CHNL_TX_BUF_STS_REG_VAL_TFDB_VALID);
--
--	iwl_write_direct32(trans,
--			   FH_TCSR_CHNL_TX_CONFIG_REG(FH_SRVC_CHNL),
--			   FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE	|
--			   FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_DISABLE	|
--			   FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_HOST_ENDTFD);
-+	if (!iwl_trans_grab_nic_access(trans, &flags))
-+		return -EIO;
+ 	iwl_mvm_handle_rx_statistics(mvm, rxb_addr(rxb));
+ }
 +
-+	iwl_write32(trans, FH_TCSR_CHNL_TX_CONFIG_REG(FH_SRVC_CHNL),
-+		    FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_PAUSE);
++void iwl_mvm_window_status_notif(struct iwl_mvm *mvm,
++				 struct iwl_rx_cmd_buffer *rxb)
++{
++	struct iwl_rx_packet *pkt = rxb_addr(rxb);
++	struct iwl_ba_window_status_notif *notif = (void *)pkt->data;
++	int i;
++	u32 pkt_len = iwl_rx_packet_payload_len(pkt);
 +
-+	iwl_write32(trans, FH_SRVC_CHNL_SRAM_ADDR_REG(FH_SRVC_CHNL),
-+		    dst_addr);
++	if (WARN_ONCE(pkt_len != sizeof(*notif),
++		      "Received window status notification of wrong size (%u)\n",
++		      pkt_len))
++		return;
 +
-+	iwl_write32(trans, FH_TFDIB_CTRL0_REG(FH_SRVC_CHNL),
-+		    phy_addr & FH_MEM_TFDIB_DRAM_ADDR_LSB_MSK);
++	rcu_read_lock();
++	for (i = 0; i < BA_WINDOW_STREAMS_MAX; i++) {
++		struct ieee80211_sta *sta;
++		u8 sta_id, tid;
++		u64 bitmap;
++		u32 ssn;
++		u16 ratid;
++		u16 received_mpdu;
 +
-+	iwl_write32(trans, FH_TFDIB_CTRL1_REG(FH_SRVC_CHNL),
-+		    (iwl_get_dma_hi_addr(phy_addr)
-+			<< FH_MEM_TFDIB_REG1_ADDR_BITSHIFT) | byte_cnt);
++		ratid = le16_to_cpu(notif->ra_tid[i]);
++		/* check that this TID is valid */
++		if (!(ratid & BA_WINDOW_STATUS_VALID_MSK))
++			continue;
 +
-+	iwl_write32(trans, FH_TCSR_CHNL_TX_BUF_STS_REG(FH_SRVC_CHNL),
-+		    BIT(FH_TCSR_CHNL_TX_BUF_STS_REG_POS_TB_NUM) |
-+		    BIT(FH_TCSR_CHNL_TX_BUF_STS_REG_POS_TB_IDX) |
-+		    FH_TCSR_CHNL_TX_BUF_STS_REG_VAL_TFDB_VALID);
++		received_mpdu = le16_to_cpu(notif->mpdu_rx_count[i]);
++		if (received_mpdu == 0)
++			continue;
 +
-+	iwl_write32(trans, FH_TCSR_CHNL_TX_CONFIG_REG(FH_SRVC_CHNL),
-+		    FH_TCSR_TX_CONFIG_REG_VAL_DMA_CHNL_ENABLE |
-+		    FH_TCSR_TX_CONFIG_REG_VAL_DMA_CREDIT_DISABLE |
-+		    FH_TCSR_TX_CONFIG_REG_VAL_CIRQ_HOST_ENDTFD);
++		tid = ratid & BA_WINDOW_STATUS_TID_MSK;
++		/* get the station */
++		sta_id = (ratid & BA_WINDOW_STATUS_STA_ID_MSK)
++			 >> BA_WINDOW_STATUS_STA_ID_POS;
++		sta = rcu_dereference(mvm->fw_id_to_mac_id[sta_id]);
++		if (IS_ERR_OR_NULL(sta))
++			continue;
++		bitmap = le64_to_cpu(notif->bitmap[i]);
++		ssn = le32_to_cpu(notif->start_seq_num[i]);
 +
-+	iwl_trans_release_nic_access(trans, &flags);
- 
- 	ret = wait_event_timeout(trans_pcie->ucode_write_waitq,
- 				 trans_pcie->ucode_write_complete, 5 * HZ);
++		/* update mac80211 with the bitmap for the reordering buffer */
++		ieee80211_mark_rx_ba_filtered_frames(sta, tid, ssn, bitmap,
++						     received_mpdu);
++	}
++	rcu_read_unlock();
++}
 -- 
 2.5.0
 
