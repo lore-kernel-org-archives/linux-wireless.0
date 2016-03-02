@@ -1,38 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:32893 "EHLO
-	mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751821AbcCaBm2 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45267 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752381AbcCBCFE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 21:42:28 -0400
-Received: by mail-oi0-f53.google.com with SMTP id d205so40851423oia.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2016 18:42:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1459379297-21496-1-git-send-email-greearb@candelatech.com>
-References: <1459379297-21496-1-git-send-email-greearb@candelatech.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 31 Mar 2016 12:41:54 +1100
-Message-ID: <CAGRGNgWEua3EOePQFRS_AR5BnSUPUhFrudWs2hY7YPLizxnyhQ@mail.gmail.com> (sfid-20160331_034240_457128_E719804B)
-Subject: Re: [PATCH] ath10k: Fix deadlock when peer cannot be created.
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k@lists.infradead.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 1 Mar 2016 21:05:04 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v3 0/8] ath9k GPIO & BT-Coex bug fixes
+Date: Wed,  2 Mar 2016 10:04:14 +0800
+Message-Id: <1456884262-28194-1-git-send-email-miaoqing@codeaurora.org> (sfid-20160302_030518_553430_F278260C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Ben,
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-On Thu, Mar 31, 2016 at 10:08 AM,  <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
->
-> We must not attempt to send WMI packets while dholding the data-lock,
+ath9k GPIO & BT-Coex bug fixes.
 
-s/dholding/holding/ ?
+Notes:
+    v2: fix build warning
+    v3: move changelog to cover letter
 
-Thanks,
+Miaoqing Pan (8):
+  ath9k: define correct GPIO numbers and bits mask
+  ath9k: make GPIO API to support both of WMAC and SOC
+  ath9k: free GPIO resource for SOC GPIOs
+  ath9k: cleanup led_pin initial
+  ath9k: Allow platform override BTCoex pin
+  ath9k: add bits definition of BTCoex MODE2/3 for SOC chips
+  ath9k: fix BTCoex access invalid registers for SOC chips
+  ath9k: fix BTCoex configuration for SOC chips
+
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   4 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c    |  39 ++--
+ drivers/net/wireless/ath/ath9k/ath9k.h         |   4 -
+ drivers/net/wireless/ath/ath9k/btcoex.c        | 138 +++++++++----
+ drivers/net/wireless/ath/ath9k/btcoex.h        |   2 +
+ drivers/net/wireless/ath/ath9k/gpio.c          |  69 ++++---
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c  |   8 +-
+ drivers/net/wireless/ath/ath9k/hw.c            | 267 ++++++++++++++++---------
+ drivers/net/wireless/ath/ath9k/hw.h            |  11 +-
+ drivers/net/wireless/ath/ath9k/init.c          |   1 -
+ drivers/net/wireless/ath/ath9k/main.c          |   9 +-
+ drivers/net/wireless/ath/ath9k/reg.h           |  90 +++++++--
+ include/linux/ath9k_platform.h                 |   4 +
+ 13 files changed, 436 insertions(+), 210 deletions(-)
 
 -- 
-Julian Calaby
+1.9.1
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
