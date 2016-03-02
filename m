@@ -1,122 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f176.google.com ([209.85.214.176]:35511 "EHLO
-	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751146AbcCGQ0L (ORCPT
+Received: from mail-lf0-f48.google.com ([209.85.215.48]:33299 "EHLO
+	mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752873AbcCBMwl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2016 11:26:11 -0500
+	Wed, 2 Mar 2016 07:52:41 -0500
+Received: by mail-lf0-f48.google.com with SMTP id v124so41129776lff.0
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Mar 2016 04:52:40 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <56DD99AA.8050403@openwrt.org>
-References: <1456492163-11437-1-git-send-email-michal.kazior@tieto.com>
- <E1abfnE-0000VS-00@www.xplot.org> <CA+BoTQk6J7kgdie9aX24MB+8PxN3oFUh0eVdmVrdyptW5RxQXg@mail.gmail.com>
- <CAPp0ZBYP9UzUTtPz=vivUQkE2FiGSsJjDaecQtPuK8y_d3ccqA@mail.gmail.com> <56DD99AA.8050403@openwrt.org>
-From: Avery Pennarun <apenwarr@gmail.com>
-Date: Mon, 7 Mar 2016 11:25:50 -0500
-Message-ID: <CAHqTa-2-uZ0PUdwp33E588EU2a7T6KnTYs8RWfNDEzgOLseG9g@mail.gmail.com> (sfid-20160307_172619_185901_F79EC8BD)
-Subject: Re: [RFC/RFT] mac80211: implement fq_codel for software queuing
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Michal Kazior <michal.kazior@tieto.com>,
-	Tim Shepard <shep@alum.mit.edu>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Network Development <netdev@vger.kernel.org>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Dave Taht <dave.taht@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Andrew Mcgregor <andrewmcgr@google.com>
+In-Reply-To: <56D6C3C4.4000702@student.tuwien.ac.at>
+References: <56D6C3C4.4000702@student.tuwien.ac.at>
+Date: Wed, 2 Mar 2016 14:52:39 +0200
+Message-ID: <CANUX_P3kW2gKGVqRfZJB+PTEZJ2K8J=1UnqTb0-G92f_VRw0bw@mail.gmail.com> (sfid-20160302_135251_806309_77D592B4)
+Subject: Re: iwlwifi support of 802.11k RRM (Radio Resource Mangament)
+From: Emmanuel Grumbach <egrumbach@gmail.com>
+To: Stefan Feirer <e0926020@student.tuwien.ac.at>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 7, 2016 at 10:09 AM, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2016-03-07 15:05, Avery Pennarun wrote:
->> On Fri, Mar 4, 2016 at 1:32 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
->>> On 4 March 2016 at 03:48, Tim Shepard <shep@alum.mit.edu> wrote:
->>> [...]
->>>> (I am interested in knowing what other mac80211 drivers have been
->>>>  modified to use the mac80211 intermediate software queues.   I know
->>>>  Michal mentioned he has patches for ath10k that are not yet released,
->>>>  and I know Felix is finishing up the mt76 driver which uses them.)
->>>
->>> Patches for ath10k are under review since quite some time now (but are
->>> not merged yet). The latest re-spin is:
->>>
->>>   http://lists.infradead.org/pipermail/ath10k/2016-March/006923.html
->>
->> Hi all, on Friday I had a chance to experiment with some of these
->> patches, specifically Tim's ath9k patch (to use intermediate queues),
->> plus MIchal's patch to use fq_codel with the intermediate queues.  I
->> didn't attempt any fine tuning; I just slapped them together to see
->> what happens.  (I tried applying Michal's ath10k patches too, but got
->> stuck since they seem to be applied against the upstream v4.4 kernel
->> and didn't merge cleanly with the latest mac80211 branch.  Maybe I was
->> doing something wrong.)
->>
->> Test setup:
->>    AP (ath9k) -> 2x2 strong signal -> STA1 (mwifiex)
->>         -> attenuator (-40 dB) -> 1x1 weak signal  -> STA2 (mwifiex)
->>
->> STA2 generally gets modulation levels around MCS0-2 and STA1 usually
->> gets something like MCS12-15.
->>
->> With or without this patch, results with TCP iperf were fishy - I
->> think packet loss patterns were particularly bad and caused 2-second
->> TCP retry timeouts occasionally - so I removed TCP from the test and
->> switched the UDP iperf instead.
->>
->> I ran isoping (https://gfiber.googlesource.com/vendor/google/platform/+/master/cmds/isoping.c)
->> from the AP to both stations to measure two-way latency during all
->> tests.  (I used -r2 for two packets/sec in each direction in order not
->> to affect the test results too much.)
->>
->> Overall results:
->>
->> - Running one iperf at a time, I saw ~45 Mbps to STA1 and ~7 Mbps to STA2.
->>
->> - Running both iperfs at once, without the patches, latencies got
->> extremely high (~600ms sometimes) and results were closer to
->> byte-fairness than airtime-fairness (ie. ~7 Mbps each).
->>
->> - Running both iperfs at once, with the patches, latencies were still
->> high (usually high 2-digit, sometimes low 3-digit latencies) but we
->> got closer to airtime-fairness than byte-fairness (~17 Mbps and ~2
->> Mbps).
->>
->> - With only one iperf running, without the patches, latencies were
->> high to both stations.  With the patches, latency was
->> mid-double-digits to the non-iperf station (pretty good!) while being
->> low-mid triple-digits to the busy iperf station.  This suggests that
->> we are getting per-station queuing (yay!) but does make me question
->> whether the fq_ in fq_codel was working.
+On Wed, Mar 2, 2016 at 12:43 PM, Stefan Feirer
+<e0926020@student.tuwien.ac.at> wrote:
 >
-> Please change the 'if (flow->txqi)' check in ieee80211_txq_enqueue to:
-> if (flow->txqi && flow->txqi != txqi)
-> This should hopefully fix the fq_ part ;)
+> Hello,
+>
+> I'm trying to make different wifi roaming tests with the 802.11 amandments 802.11k and 802.11r.
+> I use the intel wifi chipset Intel Corporation Centrino Ultimate-N 6300 and two Aerohive Access Points AP141 (with both 802.11k and 802.11r enabled).
+> With using wpa_supplicant (Version 2.5) and wpa_cli (Version 2.5) I was able to connect and roam between the APs by entering the command "roam <mac>" and actually an 802.11r roam was performed. Therefore the nl80211 and iwlwifi driver was used.
+> So fast roaming seems to work properly, but I faced troubles with Radio Resource Management (802.11k)
+>
+> Transmitting the command "neighbor_rep_request" in wpa_cli failed. I checked to log files and found the following lines:
+>
+> wlan0: Control interface command 'NEIGHBOR_REP_REQUEST'
+> RRM: No RRM in current connection.
+>
+> and
+>
+> RRM: Determining whether RRM can be used - device support: 0x0
+> RRM: Insufficient RRM support in driver - do not use RRM
+>
+> Now my question would be how to enable RRM, maybe using the iw-command?
+> I could not find any documenation or examples according to RRM.
+> The tests were performed with Ubuntu and Linux Kernel 3.13.0-79.
+>
 
-Oops, I saw your message about that earlier and totally forgot to
-apply the change.  But maybe that was for the best, because it doesn't
-seem to uniformly make things better.
+Look at  https://patchwork.kernel.org/patch/8421041/
+If the suggestion of Johannes is the direction taken (which happens
+quite often in mac8021..) then you'll get it.
 
-*Without* your change, I observe that my iperf3 session to STA1 (high
-speed) seems to complain about a lot of out-of-order packets.  *With*
-your change, the out-of-order complaints seem to go away, which is
-nice.  The throughput measurements look about the same both ways.
-
-However, *without* your change, isoping latency to STA1 (low speed)
-seems to be pretty stable in the ~100ms range (although it fluctuates
-a bit).  *With* your change, STA2 latency fluctuates wildly as low as
-1.x ms (yay!) but as high as 800ms (boo).  STA1 latency is fairly low
-in both cases.
-
-I have to admit, I haven't read any of this code in enough detail to
-have a guess as to why this might be. But I did switch back and forth
-between the two versions a few times to confirm that it seems to be
-repeatable.
-
-Just to compare, I went back to a version that contains only Tim's
-patch (intermediate queues) but not fq_codel.  That one seems to have
-much less variability in the isoping times (~50-100ms under load).
-The best case isn't as good, but the worst case is much less bad.
-This suggests to me that maybe codel's per-station drop rate is
-oscillating (perhaps it needs to ramp less quickly?).  I wonder if the
-competing codels between stations also confuse each other: as one
-ramps down, maybe the other one would be encouraged to ramp up?
+> I hope there is someone who can help me!
+> Thanks, Stefan Feirer
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
