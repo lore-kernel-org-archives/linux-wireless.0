@@ -1,56 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f169.google.com ([209.85.192.169]:36090 "EHLO
-	mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752676AbcCRC2l (ORCPT
+Received: from mout.kundenserver.de ([212.227.17.24]:61285 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932099AbcCBQAv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 22:28:41 -0400
-Received: by mail-pf0-f169.google.com with SMTP id u190so146281712pfb.3
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 19:28:41 -0700 (PDT)
-From: Julian Calaby <julian.calaby@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Jia-Ju Bai <baijiaju1990@163.com>,
-	Sara Sharon <sarasharon1@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH MOREWORK 17/19] iwl4965: Fix a memory leak in error handling code of __il4965_up
-Date: Fri, 18 Mar 2016 13:28:33 +1100
-Message-Id: <3aaac3629455d27b0e9c56ef1615b89873b1b8cf.1458262312.git.julian.calaby@gmail.com> (sfid-20160318_032848_304792_F40B1805)
-In-Reply-To: <cover.1458262312.git.julian.calaby@gmail.com>
-References: <cover.1458262312.git.julian.calaby@gmail.com>
+	Wed, 2 Mar 2016 11:00:51 -0500
+From: Arnd Bergmann <arnd@arndb.de>
+To: Solomon Peachy <pizza@shaftnet.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-arm-kernel@lists.infradead.org,
+	Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 10/14] wireless: cw1200: use __maybe_unused to hide pm functions_
+Date: Wed,  2 Mar 2016 16:59:02 +0100
+Message-Id: <1456934350-1389172-11-git-send-email-arnd@arndb.de> (sfid-20160302_170232_202330_3E23FE1B)
+In-Reply-To: <1456934350-1389172-1-git-send-email-arnd@arndb.de>
+References: <1456934350-1389172-1-git-send-email-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jia-Ju Bai <baijiaju1990@163.com>
+The cw1200 uses #ifdef to check for CONFIG_PM, but then
+uses SIMPLE_DEV_PM_OPS, which leaves the references out when
+CONFIG_PM_SLEEP is not defined, so we get a warning with
+PM=y && PM_SLEEP=n:
 
-When il4965_hw_nic_init in __il4965_up fails, the memory allocated by
-iwl4965_sta_alloc_lq in iwl4965_alloc_bcast_station is not freed.
+drivers/net/wireless/st/cw1200/cw1200_spi.c:450:12: error: 'cw1200_spi_suspend' defined but not used [-Werror=unused-function]
 
-This patches adds il_dealloc_bcast_stations in the error handling code of
-__il4965_up to fix this problem.
+This removes the incorrect #ifdef and instead uses a __maybe_unused
+annotation to let the compiler know it can silently drop
+the function definition.
 
-This patch has been tested in real device, and it actually fixes the bug.
+For the DEV_PM_OPS definition, we can use an IS_ENABLED() check
+to avoid defining the structure when CONFIG_PM is not set without
+the #ifdef.
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/net/wireless/intel/iwlegacy/4965-mac.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/st/cw1200/cw1200_spi.c | 9 ++-------
+ drivers/net/wireless/st/cw1200/pm.h         | 9 +++++++--
+ 2 files changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index b75f4ef..30d9dd3 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -5577,6 +5577,7 @@ __il4965_up(struct il_priv *il)
- 	ret = il4965_hw_nic_init(il);
- 	if (ret) {
- 		IL_ERR("Unable to init nic\n");
-+		il_dealloc_bcast_stations(il);
- 		return ret;
- 	}
+diff --git a/drivers/net/wireless/st/cw1200/cw1200_spi.c b/drivers/net/wireless/st/cw1200/cw1200_spi.c
+index a740083634d8..63f95e9c2992 100644
+--- a/drivers/net/wireless/st/cw1200/cw1200_spi.c
++++ b/drivers/net/wireless/st/cw1200/cw1200_spi.c
+@@ -446,8 +446,7 @@ static int cw1200_spi_disconnect(struct spi_device *func)
+ 	return 0;
+ }
  
+-#ifdef CONFIG_PM
+-static int cw1200_spi_suspend(struct device *dev)
++static int __maybe_unused cw1200_spi_suspend(struct device *dev)
+ {
+ 	struct hwbus_priv *self = spi_get_drvdata(to_spi_device(dev));
+ 
+@@ -460,16 +459,12 @@ static int cw1200_spi_suspend(struct device *dev)
+ 
+ static SIMPLE_DEV_PM_OPS(cw1200_pm_ops, cw1200_spi_suspend, NULL);
+ 
+-#endif
+-
+ static struct spi_driver spi_driver = {
+ 	.probe		= cw1200_spi_probe,
+ 	.remove		= cw1200_spi_disconnect,
+ 	.driver = {
+ 		.name		= "cw1200_wlan_spi",
+-#ifdef CONFIG_PM
+-		.pm		= &cw1200_pm_ops,
+-#endif
++		.pm		= IS_ENABLED(CONFIG_PM) ? &cw1200_pm_ops : NULL,
+ 	},
+ };
+ 
+diff --git a/drivers/net/wireless/st/cw1200/pm.h b/drivers/net/wireless/st/cw1200/pm.h
+index 3ed90ff22bb8..534548470ebc 100644
+--- a/drivers/net/wireless/st/cw1200/pm.h
++++ b/drivers/net/wireless/st/cw1200/pm.h
+@@ -31,13 +31,18 @@ int cw1200_pm_init(struct cw1200_pm_state *pm,
+ void cw1200_pm_deinit(struct cw1200_pm_state *pm);
+ int cw1200_wow_suspend(struct ieee80211_hw *hw,
+ 		       struct cfg80211_wowlan *wowlan);
+-int cw1200_wow_resume(struct ieee80211_hw *hw);
+ int cw1200_can_suspend(struct cw1200_common *priv);
++int cw1200_wow_resume(struct ieee80211_hw *hw);
+ void cw1200_pm_stay_awake(struct cw1200_pm_state *pm,
+ 			  unsigned long tmo);
+ #else
+ static inline void cw1200_pm_stay_awake(struct cw1200_pm_state *pm,
+-					unsigned long tmo) {
++					unsigned long tmo)
++{
++}
++static inline int cw1200_can_suspend(struct cw1200_common *priv)
++{
++	return 0;
+ }
+ #endif
+ #endif
 -- 
 2.7.0
 
