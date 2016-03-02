@@ -1,50 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:40209 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758550AbcCDIfG convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45396 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932772AbcCBCFf (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 03:35:06 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: ath9k-devel <ath9k-devel@qca.qualcomm.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath9k-devel@lists.ath9k.org" <ath9k-devel@lists.ath9k.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] ath9k: reduce stack usage in ar9003_aic_cal_post_process
-Date: Fri, 4 Mar 2016 08:34:55 +0000
-Message-ID: <87mvqezln6.fsf@kamboji.qca.qualcomm.com> (sfid-20160304_093527_214791_3E74F1AD)
-References: <1455278130-1831694-1-git-send-email-arnd@arndb.de>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Tue, 1 Mar 2016 21:05:35 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v3 6/8] ath9k: add bits definition of BTCoex MODE2/3 for SOC chips
+Date: Wed,  2 Mar 2016 10:04:20 +0800
+Message-Id: <1456884262-28194-7-git-send-email-miaoqing@codeaurora.org> (sfid-20160302_030540_434100_C0357BEC)
+In-Reply-To: <1456884262-28194-1-git-send-email-miaoqing@codeaurora.org>
+References: <1456884262-28194-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-> In some configurations, this function uses more than the warning limit
-> of 1024 bytes:
->
-> drivers/net/wireless/ath/ath9k/ar9003_aic.c: In function 'ar9003_aic_cal_post_process':
-> drivers/net/wireless/ath/ath9k/ar9003_aic.c:434:1: error: the frame size of 1040 bytes is larger than 1024 bytes [-Werror=frame-larger-than=]
->
-> It turns out that there are two large arrays on the stack here, but
-> almost all the data in them is never used outside of the loop in
-> which it gets written, so we can replace the array with a single
-> instance.
->
-> The .valid flag is used later, so I'm replacing the array of structures
-> with an array of bools. An obvious follow-up optimization would be
-> to replace it with a bitmask and set_bit()/find_first_bit()/
-> find_last_bit()/... operations. However, I have not tested this patch,
-> so I sticked to the simpler transformation that does the job of
-> reducing the stack usage to a harmless level.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+Add bits definition for AR_BT_COEX_MODE2 and AR_BT_COEX_MODE3, which
+needed by SOC chips (AR9340, AR9531, AR9550, AR9561).
 
-Applied to ath.git, thanks.
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/reg.h | 46 +++++++++++++++++++++++++++++-------
+ 1 file changed, 37 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index f82a4ad..f8a96f6 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1890,15 +1890,33 @@ enum {
+ 
+ #define AR9300_BT_WGHT             0xcccc4444
+ 
+-#define AR_BT_COEX_MODE2           0x817c
+-#define AR_BT_BCN_MISS_THRESH      0x000000ff
+-#define AR_BT_BCN_MISS_THRESH_S    0
+-#define AR_BT_BCN_MISS_CNT         0x0000ff00
+-#define AR_BT_BCN_MISS_CNT_S       8
+-#define AR_BT_HOLD_RX_CLEAR        0x00010000
+-#define AR_BT_HOLD_RX_CLEAR_S      16
+-#define AR_BT_DISABLE_BT_ANT       0x00100000
+-#define AR_BT_DISABLE_BT_ANT_S     20
++#define AR_BT_COEX_MODE2		0x817c
++#define AR_BT_BCN_MISS_THRESH		0x000000ff
++#define AR_BT_BCN_MISS_THRESH_S		0
++#define AR_BT_BCN_MISS_CNT		0x0000ff00
++#define AR_BT_BCN_MISS_CNT_S		8
++#define AR_BT_HOLD_RX_CLEAR		0x00010000
++#define AR_BT_HOLD_RX_CLEAR_S		16
++#define AR_BT_PROTECT_BT_AFTER_WAKEUP	0x00080000
++#define AR_BT_PROTECT_BT_AFTER_WAKEUP_S 19
++#define AR_BT_DISABLE_BT_ANT		0x00100000
++#define AR_BT_DISABLE_BT_ANT_S		20
++#define AR_BT_QUIET_2_WIRE		0x00200000
++#define AR_BT_QUIET_2_WIRE_S		21
++#define AR_BT_WL_ACTIVE_MODE		0x00c00000
++#define AR_BT_WL_ACTIVE_MODE_S		22
++#define AR_BT_WL_TXRX_SEPARATE		0x01000000
++#define AR_BT_WL_TXRX_SEPARATE_S	24
++#define AR_BT_RS_DISCARD_EXTEND		0x02000000
++#define AR_BT_RS_DISCARD_EXTEND_S	25
++#define AR_BT_TSF_BT_ACTIVE_CTRL	0x0c000000
++#define AR_BT_TSF_BT_ACTIVE_CTRL_S	26
++#define AR_BT_TSF_BT_PRIORITY_CTRL	0x30000000
++#define AR_BT_TSF_BT_PRIORITY_CTRL_S	28
++#define AR_BT_INTERRUPT_ENABLE		0x40000000
++#define AR_BT_INTERRUPT_ENABLE_S	30
++#define AR_BT_PHY_ERR_BT_COLL_ENABLE	0x80000000
++#define AR_BT_PHY_ERR_BT_COLL_ENABLE_S	31
+ 
+ #define AR_TXSIFS              0x81d0
+ #define AR_TXSIFS_TIME         0x000000FF
+@@ -1907,6 +1925,16 @@ enum {
+ #define AR_TXSIFS_ACK_SHIFT    0x00007000
+ #define AR_TXSIFS_ACK_SHIFT_S  12
+ 
++#define AR_BT_COEX_MODE3			0x81d4
++#define AR_BT_WL_ACTIVE_TIME			0x000000ff
++#define AR_BT_WL_ACTIVE_TIME_S			0
++#define AR_BT_WL_QC_TIME			0x0000ff00
++#define AR_BT_WL_QC_TIME_S			8
++#define AR_BT_ALLOW_CONCURRENT_ACCESS		0x000f0000
++#define AR_BT_ALLOW_CONCURRENT_ACCESS_S		16
++#define AR_BT_AGC_SATURATION_CNT_ENABLE		0x00100000
++#define AR_BT_AGC_SATURATION_CNT_ENABLE_S	20
++
+ #define AR_TXOP_X          0x81ec
+ #define AR_TXOP_X_VAL      0x000000FF
+ 
 -- 
-Kalle Valo
+1.9.1
+
