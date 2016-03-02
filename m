@@ -1,59 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:35939 "EHLO
-	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751407AbcC2GGg (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:10755 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751205AbcCBOJ1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 02:06:36 -0400
-Received: by mail-pf0-f175.google.com with SMTP id u190so6572236pfb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2016 23:06:36 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH 00/16] Misc wcn36xx fixes
-Date: Mon, 28 Mar 2016 23:06:17 -0700
-Message-Id: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org> (sfid-20160329_081255_809708_5D2401CA)
+	Wed, 2 Mar 2016 09:09:27 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
+	<kvalo@codeaurora.org>, <mohammed@codeaurora.org>,
+	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Subject: [PATCH] iw: Add support for NL80211_STA_INFO_RX_DURATION netlink attribute
+Date: Wed, 2 Mar 2016 19:38:57 +0530
+Message-ID: <1456927737-32111-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160302_150930_034459_4AC0FC6F)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-As I was debugging some issues with the wcn36xx driver I found a series of
-patches that exists in Eugene's github tree but not in mainline.
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Noteworthy is the long requested feature of having working ARP support.
+Enable support for parsing per station rx-duration (usecs)
+via adding support for new netlink attribute NL80211_STA_INFO_RX_DURATION
 
-Please apply these rebased and relocated patches.
+rx_duration is total air time(usecs) for unicast data/management frames
+from the connected client. This will get dumped as part ofi
+iw dev wlan#N station dump
 
-Jason Mobarak (1):
-  wcn36xx: don't pad beacons for mesh
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ nl80211.h |    3 +++
+ station.c |    5 +++++
+ 2 files changed, 8 insertions(+)
 
-Pontus Fuchs (15):
-  wcn36xx: Clean up wcn36xx_smd_send_beacon
-  wcn36xx: Pad TIM PVM if needed
-  wcn36xx: Add helper macros to cast vif to private vif and vice versa
-  wcn36xx: Use consistent name for private vif
-  wcn36xx: Use define for invalid index and fix typo
-  wcn36xx: Fetch private sta data from sta entry instead of from vif
-  wcn36xx: Add helper macros to cast sta to priv
-  wcn36xx: Remove sta pointer in private vif struct
-  wcn36xx: Parse trigger_ba response properly
-  wcn36xx: Copy all members in config_sta v1 conversion
-  wcn36xx: Use allocated self sta index instead of hard coded
-  wcn36xx: Clear encrypt_type when deleting bss key
-  wcn36xx: Track association state
-  wcn36xx: Implement multicast filtering
-  wcn36xx: Use correct command struct for EXIT_BMPS_REQ
-
- drivers/net/wireless/ath/wcn36xx/debug.c   |  12 +-
- drivers/net/wireless/ath/wcn36xx/hal.h     |  18 ++-
- drivers/net/wireless/ath/wcn36xx/main.c    |  91 +++++++++----
- drivers/net/wireless/ath/wcn36xx/pmc.c     |   4 +-
- drivers/net/wireless/ath/wcn36xx/smd.c     | 205 +++++++++++++++++++++--------
- drivers/net/wireless/ath/wcn36xx/smd.h     |   3 +
- drivers/net/wireless/ath/wcn36xx/txrx.c    |   8 +-
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  20 ++-
- 8 files changed, 257 insertions(+), 104 deletions(-)
-
+diff --git a/nl80211.h b/nl80211.h
+index 5b7b5eb..f510206 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -2464,6 +2464,8 @@ enum nl80211_sta_bss_param {
+  *	TID+1 and the special TID 16 (i.e. value 17) is used for non-QoS frames;
+  *	each one of those is again nested with &enum nl80211_tid_stats
+  *	attributes carrying the actual values.
++ * @NL80210_STA_INFO_RX_DURATION: total rx time(usecs) spent for receiving data
++ * 	frames from this peer. This is driver/firmware implementation specific
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -2500,6 +2502,7 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_BEACON_RX,
+ 	NL80211_STA_INFO_BEACON_SIGNAL_AVG,
+ 	NL80211_STA_INFO_TID_STATS,
++	NL80211_STA_INFO_RX_DURATION,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/station.c b/station.c
+index b5ccf4a..a730db1 100644
+--- a/station.c
++++ b/station.c
+@@ -147,6 +147,7 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 		[NL80211_STA_INFO_NONPEER_PM] = { .type = NLA_U32},
+ 		[NL80211_STA_INFO_CHAIN_SIGNAL] = { .type = NLA_NESTED },
+ 		[NL80211_STA_INFO_CHAIN_SIGNAL_AVG] = { .type = NLA_NESTED },
++		[NL80211_STA_INFO_RX_DURATION] = { .type = NLA_U64 },
+ 	};
+ 	char *chain;
+ 
+@@ -226,6 +227,10 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 		printf("\n\trx bitrate:\t%s", buf);
+ 	}
+ 
++	if (sinfo[NL80211_STA_INFO_RX_DURATION])
++		printf("\n\trx duration:\t%lld us",
++		       (unsigned long long)nla_get_u64(sinfo[NL80211_STA_INFO_RX_DURATION]));
++
+ 	if (sinfo[NL80211_STA_INFO_EXPECTED_THROUGHPUT]) {
+ 		uint32_t thr;
+ 
 -- 
-2.5.0
+1.7.9.5
 
