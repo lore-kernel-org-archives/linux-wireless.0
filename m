@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:37101 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751484AbcCVXRE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2016 19:17:04 -0400
-From: Colin King <colin.king@canonical.com>
-To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Robert Dolca <robert.dolca@intel.com>,
-	linux-wireless@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH] NFC: set info->ram_patch to NULL when it is released
-Date: Tue, 22 Mar 2016 23:17:00 +0000
-Message-Id: <1458688620-14219-1-git-send-email-colin.king@canonical.com> (sfid-20160323_001727_496473_1ED944A6)
+Received: from mga09.intel.com ([134.134.136.24]:30993 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750785AbcCBV2o (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 16:28:44 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org, Arik Nemtsov <arik@wizery.com>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/3] mac80211: TDLS: always downgrade invalid chandefs
+Date: Wed,  2 Mar 2016 23:28:31 +0200
+Message-Id: <1456954113-4682-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_222847_707935_10C7D14A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+From: Arik Nemtsov <arik@wizery.com>
 
-When info->ram_patch is released info->otp_patch is being set
-to NULL rather than info->ram_patch. I believe this is a cut-n-paste
-bug from almost identical code proceeding it that uses the same
-idiom for info->otp_patch.
+Even if the current chandef width is equal to the station's max-BW, it
+doesn't mean it's a valid width for TDLS. Make sure to always check
+regulatory constraints in these cases.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Fixes: dde4002 ("mac80211: upgrade BW of TDLS peers when possible")
+Signed-off-by: Arik Nemtsov <arikx.nemtsov@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/nfc/fdp/fdp.c | 2 +-
+ net/mac80211/tdls.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/nfc/fdp/fdp.c b/drivers/nfc/fdp/fdp.c
-index ccb07a1..177ac9a 100644
---- a/drivers/nfc/fdp/fdp.c
-+++ b/drivers/nfc/fdp/fdp.c
-@@ -344,7 +344,7 @@ static void fdp_nci_release_firmware(struct nci_dev *ndev)
+diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
+index c9eeb3f..43f13abe 100644
+--- a/net/mac80211/tdls.c
++++ b/net/mac80211/tdls.c
+@@ -332,7 +332,7 @@ ieee80211_tdls_chandef_vht_upgrade(struct ieee80211_sub_if_data *sdata,
+ 		return;
  
- 	if (info->ram_patch) {
- 		release_firmware(info->ram_patch);
--		info->otp_patch = NULL;
-+		info->ram_patch = NULL;
- 	}
- }
- 
+ 	/* proceed to downgrade the chandef until usable or the same */
+-	while (uc.width > max_width &&
++	while (uc.width > max_width ||
+ 	       !cfg80211_reg_can_beacon_relax(sdata->local->hw.wiphy, &uc,
+ 					      sdata->wdev.iftype))
+ 		ieee80211_chandef_downgrade(&uc);
 -- 
-2.7.3
+2.5.0
 
