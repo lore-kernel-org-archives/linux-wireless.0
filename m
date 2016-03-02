@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f47.google.com ([209.85.192.47]:35112 "EHLO
-	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753847AbcCHBCB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2016 20:02:01 -0500
-Received: by mail-qg0-f47.google.com with SMTP id y89so301114qge.2
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Mar 2016 17:02:00 -0800 (PST)
-From: Steve deRosier <derosier@gmail.com>
-To: Kalle Valo <kvalo@qca.qualcomm.com>
-Cc: ath6kl@lists.infradead.org, linux-wireless@vger.kernel.org,
-	Steve deRosier <steve.derosier@lairdtech.com>
-Subject: [PATCH] ath6kl: ignore WMI_TXE_NOTIFY_EVENTID based on fw capability flags
-Date: Mon,  7 Mar 2016 16:58:50 -0800
-Message-Id: <1457398730-31088-1-git-send-email-steve.derosier@lairdtech.com> (sfid-20160308_020235_850726_DB5E2DAD)
+Received: from mga09.intel.com ([134.134.136.24]:25136 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755061AbcCBNDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 08:03:21 -0500
+From: "Peer, Ilan" <ilan.peer@intel.com>
+To: Emmanuel Grumbach <egrumbach@gmail.com>,
+	Stefan Feirer <e0926020@student.tuwien.ac.at>
+CC: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: RE: iwlwifi support of 802.11k RRM (Radio Resource Mangament)
+Date: Wed, 2 Mar 2016 13:03:13 +0000
+Message-ID: <CB3B3D4774441E42AA3EA0E1BA8230A061373A2C@hasmsx108.ger.corp.intel.com> (sfid-20160302_140343_632286_DA4ECBBA)
+References: <56D6C3C4.4000702@student.tuwien.ac.at>
+ <CANUX_P3kW2gKGVqRfZJB+PTEZJ2K8J=1UnqTb0-G92f_VRw0bw@mail.gmail.com>
+In-Reply-To: <CANUX_P3kW2gKGVqRfZJB+PTEZJ2K8J=1UnqTb0-G92f_VRw0bw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Certain 6004 firmware releases redefine the WMI_TXE_NOTIFY_EVENTID event
-number and sends the new event frequently. However it doesn't have the
-tx-err-notify feature and thus this firmware capability flag isn't set on
-the firmware package. By guarding the processing of this event by the same
-method we guard the sending of the WMI_SET_TXE_NOTIFY_CMDID command, we
-can ignore the spurious event that we don't know how to process.
-
-Without this change we call cfg80211_cqm_txe_notify() with possibly bad
-data.
-
-Signed-off-by: Steve deRosier <steve.derosier@lairdtech.com>
----
- drivers/net/wireless/ath/ath6kl/wmi.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath6kl/wmi.c b/drivers/net/wireless/ath/ath6kl/wmi.c
-index a5e1de7..0b3e9c0 100644
---- a/drivers/net/wireless/ath/ath6kl/wmi.c
-+++ b/drivers/net/wireless/ath/ath6kl/wmi.c
-@@ -1584,6 +1584,11 @@ static int ath6kl_wmi_txe_notify_event_rx(struct wmi *wmi, u8 *datap, int len,
- 	if (len < sizeof(*ev))
- 		return -EINVAL;
- 
-+	if (vif->nw_type != INFRA_NETWORK ||
-+	    !test_bit(ATH6KL_FW_CAPABILITY_TX_ERR_NOTIFY,
-+		      vif->ar->fw_capabilities))
-+		return -EOPNOTSUPP;
-+
- 	if (vif->sme_state != SME_CONNECTED)
- 		return -ENOTCONN;
- 
--- 
-1.9.1
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC13aXJlbGVzcy1vd25l
+ckB2Z2VyLmtlcm5lbC5vcmcgW21haWx0bzpsaW51eC13aXJlbGVzcy0NCj4gb3duZXJAdmdlci5r
+ZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgRW1tYW51ZWwgR3J1bWJhY2gNCj4gU2VudDogV2VkbmVz
+ZGF5LCBNYXJjaCAwMiwgMjAxNiAxNDo1Mw0KPiBUbzogU3RlZmFuIEZlaXJlcg0KPiBDYzogbGlu
+dXgtd2lyZWxlc3MNCj4gU3ViamVjdDogUmU6IGl3bHdpZmkgc3VwcG9ydCBvZiA4MDIuMTFrIFJS
+TSAoUmFkaW8gUmVzb3VyY2UgTWFuZ2FtZW50KQ0KPiANCj4gT24gV2VkLCBNYXIgMiwgMjAxNiBh
+dCAxMjo0MyBQTSwgU3RlZmFuIEZlaXJlcg0KPiA8ZTA5MjYwMjBAc3R1ZGVudC50dXdpZW4uYWMu
+YXQ+IHdyb3RlOg0KPiA+DQo+ID4gSGVsbG8sDQo+ID4NCj4gPiBJJ20gdHJ5aW5nIHRvIG1ha2Ug
+ZGlmZmVyZW50IHdpZmkgcm9hbWluZyB0ZXN0cyB3aXRoIHRoZSA4MDIuMTEgYW1hbmRtZW50cw0K
+PiA4MDIuMTFrIGFuZCA4MDIuMTFyLg0KPiA+IEkgdXNlIHRoZSBpbnRlbCB3aWZpIGNoaXBzZXQg
+SW50ZWwgQ29ycG9yYXRpb24gQ2VudHJpbm8gVWx0aW1hdGUtTiA2MzAwIGFuZA0KPiB0d28gQWVy
+b2hpdmUgQWNjZXNzIFBvaW50cyBBUDE0MSAod2l0aCBib3RoIDgwMi4xMWsgYW5kIDgwMi4xMXIg
+ZW5hYmxlZCkuDQo+ID4gV2l0aCB1c2luZyB3cGFfc3VwcGxpY2FudCAoVmVyc2lvbiAyLjUpIGFu
+ZCB3cGFfY2xpIChWZXJzaW9uIDIuNSkgSSB3YXMgYWJsZQ0KPiB0byBjb25uZWN0IGFuZCByb2Ft
+IGJldHdlZW4gdGhlIEFQcyBieSBlbnRlcmluZyB0aGUgY29tbWFuZCAicm9hbQ0KPiA8bWFjPiIg
+YW5kIGFjdHVhbGx5IGFuIDgwMi4xMXIgcm9hbSB3YXMgcGVyZm9ybWVkLiBUaGVyZWZvcmUgdGhl
+IG5sODAyMTENCj4gYW5kIGl3bHdpZmkgZHJpdmVyIHdhcyB1c2VkLg0KPiA+IFNvIGZhc3Qgcm9h
+bWluZyBzZWVtcyB0byB3b3JrIHByb3Blcmx5LCBidXQgSSBmYWNlZCB0cm91YmxlcyB3aXRoDQo+
+ID4gUmFkaW8gUmVzb3VyY2UgTWFuYWdlbWVudCAoODAyLjExaykNCj4gPg0KPiA+IFRyYW5zbWl0
+dGluZyB0aGUgY29tbWFuZCAibmVpZ2hib3JfcmVwX3JlcXVlc3QiIGluIHdwYV9jbGkgZmFpbGVk
+LiBJDQo+IGNoZWNrZWQgdG8gbG9nIGZpbGVzIGFuZCBmb3VuZCB0aGUgZm9sbG93aW5nIGxpbmVz
+Og0KPiA+DQo+ID4gd2xhbjA6IENvbnRyb2wgaW50ZXJmYWNlIGNvbW1hbmQgJ05FSUdIQk9SX1JF
+UF9SRVFVRVNUJw0KPiA+IFJSTTogTm8gUlJNIGluIGN1cnJlbnQgY29ubmVjdGlvbi4NCj4gPg0K
+PiA+IGFuZA0KPiA+DQo+ID4gUlJNOiBEZXRlcm1pbmluZyB3aGV0aGVyIFJSTSBjYW4gYmUgdXNl
+ZCAtIGRldmljZSBzdXBwb3J0OiAweDANCj4gPiBSUk06IEluc3VmZmljaWVudCBSUk0gc3VwcG9y
+dCBpbiBkcml2ZXIgLSBkbyBub3QgdXNlIFJSTQ0KPiA+DQo+ID4gTm93IG15IHF1ZXN0aW9uIHdv
+dWxkIGJlIGhvdyB0byBlbmFibGUgUlJNLCBtYXliZSB1c2luZyB0aGUgaXctDQo+IGNvbW1hbmQ/
+DQo+ID4gSSBjb3VsZCBub3QgZmluZCBhbnkgZG9jdW1lbmF0aW9uIG9yIGV4YW1wbGVzIGFjY29y
+ZGluZyB0byBSUk0uDQo+ID4gVGhlIHRlc3RzIHdlcmUgcGVyZm9ybWVkIHdpdGggVWJ1bnR1IGFu
+ZCBMaW51eCBLZXJuZWwgMy4xMy4wLTc5Lg0KPiA+DQo+IA0KPiBMb29rIGF0ICBodHRwczovL3Bh
+dGNod29yay5rZXJuZWwub3JnL3BhdGNoLzg0MjEwNDEvDQo+IElmIHRoZSBzdWdnZXN0aW9uIG9m
+IEpvaGFubmVzIGlzIHRoZSBkaXJlY3Rpb24gdGFrZW4gKHdoaWNoIGhhcHBlbnMgcXVpdGUNCj4g
+b2Z0ZW4gaW4gbWFjODAyMS4uKSB0aGVuIHlvdSdsbCBnZXQgaXQuDQo+IA0KDQpUaGlzIHdvdWxk
+IHN0aWxsIHJlcXVpcmUgY291cGxlIG9mIGNoYW5nZXMgaW4gaG9zdGFwIHdoaWNoIEknbSBwcmVw
+YXJpbmcgZm9yIHN1Ym1pc3Npb24uDQoNClJlZ2FyZHMsDQoNCklsYW4uDQo=
