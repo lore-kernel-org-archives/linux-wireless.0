@@ -1,202 +1,367 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48750 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751353AbcCAC7P (ORCPT
+Received: from 5520-maca-inet1-outside.broadcom.com ([216.31.211.11]:30183
+	"EHLO mail-irv-18.broadcom.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752414AbcCBThX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 21:59:15 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH 4/8] ath9k: cleanup led_pin initial
-Date: Tue,  1 Mar 2016 10:58:31 +0800
-Message-Id: <1456801115-16636-5-git-send-email-miaoqing@codeaurora.org> (sfid-20160301_035918_738655_86541F0E)
-In-Reply-To: <1456801115-16636-1-git-send-email-miaoqing@codeaurora.org>
-References: <1456801115-16636-1-git-send-email-miaoqing@codeaurora.org>
+	Wed, 2 Mar 2016 14:37:23 -0500
+From: Arend van Spriel <arend@broadcom.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH V11 1/2] nl80211: add feature for BSS selection support
+Date: Wed,  2 Mar 2016 20:37:18 +0100
+Message-Id: <1456947439-28968-1-git-send-email-arend@broadcom.com> (sfid-20160302_203727_561109_3F11BA8D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+Introducing a new feature that the driver can use to
+indicate the driver/firmware supports configuration of BSS
+selection criteria upon CONNECT command. This can be useful
+when multiple BSS-es are found belonging to the same ESS,
+ie. Infra-BSS with same SSID. The criteria can then be used to
+offload selection of a preferred BSS.
 
-Make ath_init_leds() and ath_deinit_leds() pairs as the only
-API to set leds, also removed direction configuration from
-ath9k_start() and ath9k_stop(). So the initial is more clear
-now.
-
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Reviewed-by: Lei Zhang <leizh@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/ath9k/ath9k.h |  4 ---
- drivers/net/wireless/ath/ath9k/gpio.c  | 62 ++++++++++++++++------------------
- drivers/net/wireless/ath/ath9k/init.c  |  1 -
- drivers/net/wireless/ath/ath9k/main.c  |  9 ++---
- drivers/net/wireless/ath/ath9k/reg.h   |  2 --
- 5 files changed, 31 insertions(+), 47 deletions(-)
+V7:
+ - add validatioin using nla_ok().
+V8:
+ - use IEEE80211_NUM_BANDS.
+ - add NESTED policy for NL80211_ATTR_BSS_SELECT.
+ - add braces in for loop.
+V9:
+ - use ieee80211_band iso nl80211_band.
+V10:
+ - use u8 for band in packed struct.
+ - add remark with warn_on in wiphy_register.
+ - fail when ATTR_MAC and ATTR_BSS_SELECT are specified.
+ - parse ATTR_BSS_SELECT before check for driver support.
+V11:
+ - fix a stupid, stupid mistake (spot on by Eliad Peller).
+---
+ include/net/cfg80211.h       |  34 ++++++++++++++
+ include/uapi/linux/nl80211.h |  51 ++++++++++++++++++++
+ net/wireless/core.c          |   7 +++
+ net/wireless/nl80211.c       | 109 +++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 201 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
-index 5294595..93b3793 100644
---- a/drivers/net/wireless/ath/ath9k/ath9k.h
-+++ b/drivers/net/wireless/ath/ath9k/ath9k.h
-@@ -813,7 +813,6 @@ static inline int ath9k_dump_btcoex(struct ath_softc *sc, u8 *buf, u32 size)
- #ifdef CONFIG_MAC80211_LEDS
- void ath_init_leds(struct ath_softc *sc);
- void ath_deinit_leds(struct ath_softc *sc);
--void ath_fill_led_pin(struct ath_softc *sc);
- #else
- static inline void ath_init_leds(struct ath_softc *sc)
- {
-@@ -822,9 +821,6 @@ static inline void ath_init_leds(struct ath_softc *sc)
- static inline void ath_deinit_leds(struct ath_softc *sc)
- {
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9e1b24c..c6ddb69 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1857,6 +1857,33 @@ struct cfg80211_ibss_params {
+ };
+ 
+ /**
++ * struct cfg80211_bss_select_adjust - BSS selection with RSSI adjustment.
++ *
++ * @band: band of BSS which should match for RSSI level adjustment.
++ * @delta: value of RSSI level adjustment.
++ */
++struct cfg80211_bss_select_adjust {
++	enum ieee80211_band band;
++	s8 delta;
++};
++
++/**
++ * struct cfg80211_bss_selection - connection parameters for BSS selection.
++ *
++ * @behaviour: requested BSS selection behaviour.
++ * @param: parameters for requestion behaviour.
++ * @band_pref: preferred band for %NL80211_BSS_SELECT_ATTR_BAND_PREF.
++ * @adjust: parameters for %NL80211_BSS_SELECT_ATTR_RSSI_ADJUST.
++ */
++struct cfg80211_bss_selection {
++	enum nl80211_bss_select_attr behaviour;
++	union {
++		enum ieee80211_band band_pref;
++		struct cfg80211_bss_select_adjust adjust;
++	} param;
++};
++
++/**
+  * struct cfg80211_connect_params - Connection parameters
+  *
+  * This structure provides information needed to complete IEEE 802.11
+@@ -1893,6 +1920,7 @@ struct cfg80211_ibss_params {
+  * @vht_capa_mask: The bits of vht_capa which are to be used.
+  * @pbss: if set, connect to a PCP instead of AP. Valid for DMG
+  *	networks.
++ * @bss_select: criteria to be used for BSS selection.
+  */
+ struct cfg80211_connect_params {
+ 	struct ieee80211_channel *channel;
+@@ -1916,6 +1944,7 @@ struct cfg80211_connect_params {
+ 	struct ieee80211_vht_cap vht_capa;
+ 	struct ieee80211_vht_cap vht_capa_mask;
+ 	bool pbss;
++	struct cfg80211_bss_selection bss_select;
+ };
+ 
+ /**
+@@ -3184,6 +3213,9 @@ struct wiphy_vendor_command {
+  *	low rssi when a frame is heard on different channel, then it should set
+  *	this variable to the maximal offset for which it can compensate.
+  *	This value should be set in MHz.
++ * @bss_select_support: bitmask indicating the BSS selection criteria supported
++ *	by the driver in the .connect() callback. The bit position maps to the
++ *	attribute indices defined in &enum nl80211_bss_select_attr.
+  */
+ struct wiphy {
+ 	/* assign these fields before you register the wiphy */
+@@ -3306,6 +3338,8 @@ struct wiphy {
+ 	u8 max_num_csa_counters;
+ 	u8 max_adj_channel_rssi_comp;
+ 
++	u32 bss_select_support;
++
+ 	char priv[0] __aligned(NETDEV_ALIGN);
+ };
+ 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 5a30a75..429a19c 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -1795,6 +1795,12 @@ enum nl80211_commands {
+  *	in a PBSS. Specified in %NL80211_CMD_CONNECT to request
+  *	connecting to a PCP, and in %NL80211_CMD_START_AP to start
+  *	a PCP instead of AP. Relevant for DMG networks only.
++ * @NL80211_ATTR_BSS_SELECT: nested attribute for driver supporting the
++ *	BSS selection feature. When used with %NL80211_CMD_GET_WIPHY it contains
++ *	attributes according &enum nl80211_bss_select_attr to indicate what
++ *	BSS selection behaviours are supported. When used with %NL80211_CMD_CONNECT
++ *	it contains the behaviour-specific attribute containing the parameters for
++ *	BSS selection to be done by driver and/or firmware.
+  *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+@@ -2171,6 +2177,7 @@ enum nl80211_attrs {
+ 	NL80211_ATTR_SCHED_SCAN_PLANS,
+ 
+ 	NL80211_ATTR_PBSS,
++	NL80211_ATTR_BSS_SELECT,
+ 
+ 	/* add attributes here, update the policy in nl80211.c */
+ 
+@@ -4665,4 +4672,48 @@ enum nl80211_sched_scan_plan {
+ 		__NL80211_SCHED_SCAN_PLAN_AFTER_LAST - 1
+ };
+ 
++/**
++ * struct nl80211_bss_select_rssi_adjust - RSSI adjustment parameters.
++ *
++ * @band: band of BSS that must match for RSSI value adjustment.
++ * @delta: value used to adjust the RSSI value of matching BSS.
++ */
++struct nl80211_bss_select_rssi_adjust {
++	__u8 band;
++	__s8 delta;
++} __attribute__((packed));
++
++/**
++ * enum nl80211_bss_select_attr - attributes for bss selection.
++ *
++ * @__NL80211_BSS_SELECT_ATTR_INVALID: reserved.
++ * @NL80211_BSS_SELECT_ATTR_RSSI: Flag indicating only RSSI-based BSS selection
++ *	is requested.
++ * @NL80211_BSS_SELECT_ATTR_BAND_PREF: attribute indicating BSS
++ *	selection should be done such that the specified band is preferred.
++ *	When there are multiple BSS-es in the preferred band, the driver
++ *	shall use RSSI-based BSS selection as a second step. The value of
++ *	this attribute is according to &enum nl80211_band (u32).
++ * @NL80211_BSS_SELECT_ATTR_RSSI_ADJUST: When present the RSSI level for
++ *	BSS-es in the specified band is to be adjusted before doing
++ *	RSSI-based BSS selection. The attribute value is a packed structure
++ *	value as specified by &struct nl80211_bss_select_rssi_adjust.
++ * @NL80211_BSS_SELECT_ATTR_MAX: highest bss select attribute number.
++ * @__NL80211_BSS_SELECT_ATTR_AFTER_LAST: internal use.
++ *
++ * One and only one of these attributes are found within %NL80211_ATTR_BSS_SELECT
++ * for %NL80211_CMD_CONNECT. It specifies the required BSS selection behaviour
++ * which the driver shall use.
++ */
++enum nl80211_bss_select_attr {
++	__NL80211_BSS_SELECT_ATTR_INVALID,
++	NL80211_BSS_SELECT_ATTR_RSSI,
++	NL80211_BSS_SELECT_ATTR_BAND_PREF,
++	NL80211_BSS_SELECT_ATTR_RSSI_ADJUST,
++
++	/* keep last */
++	__NL80211_BSS_SELECT_ATTR_AFTER_LAST,
++	NL80211_BSS_SELECT_ATTR_MAX = __NL80211_BSS_SELECT_ATTR_AFTER_LAST - 1
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index 3a9c41b..8417fc1 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -626,6 +626,13 @@ int wiphy_register(struct wiphy *wiphy)
+ 		     !rdev->ops->set_mac_acl)))
+ 		return -EINVAL;
+ 
++	/* assure only valid behaviours are flagged by driver
++	 * hence subtract with 2 at bit 0 is invalid.
++	 */
++	if (WARN_ON(wiphy->bss_select_support &&
++		    (wiphy->bss_select_support & ~(BIT(__NL80211_BSS_SELECT_ATTR_AFTER_LAST) - 2))))
++		return -EINVAL;
++
+ 	if (wiphy->addresses)
+ 		memcpy(wiphy->perm_addr, wiphy->addresses[0].addr, ETH_ALEN);
+ 
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 90890f1..77965b1 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -402,6 +402,7 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_SCHED_SCAN_DELAY] = { .type = NLA_U32 },
+ 	[NL80211_ATTR_REG_INDOOR] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_PBSS] = { .type = NLA_FLAG },
++	[NL80211_ATTR_BSS_SELECT] = { .type = NLA_NESTED },
+ };
+ 
+ /* policy for the key attributes */
+@@ -486,6 +487,15 @@ nl80211_plan_policy[NL80211_SCHED_SCAN_PLAN_MAX + 1] = {
+ 	[NL80211_SCHED_SCAN_PLAN_ITERATIONS] = { .type = NLA_U32 },
+ };
+ 
++static const struct nla_policy
++nl80211_bss_select_policy[NL80211_BSS_SELECT_ATTR_MAX + 1] = {
++	[NL80211_BSS_SELECT_ATTR_RSSI] = { .type = NLA_FLAG },
++	[NL80211_BSS_SELECT_ATTR_BAND_PREF] = { .type = NLA_U32 },
++	[NL80211_BSS_SELECT_ATTR_RSSI_ADJUST] = {
++		.len = sizeof(struct nl80211_bss_select_rssi_adjust)
++	},
++};
++
+ static int nl80211_prepare_wdev_dump(struct sk_buff *skb,
+ 				     struct netlink_callback *cb,
+ 				     struct cfg80211_registered_device **rdev,
+@@ -1731,6 +1741,24 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
+ 			    rdev->wiphy.ext_features))
+ 			goto nla_put_failure;
+ 
++		if (rdev->wiphy.bss_select_support) {
++			struct nlattr *nested;
++			u32 bss_select_support = rdev->wiphy.bss_select_support;
++
++			nested = nla_nest_start(msg, NL80211_ATTR_BSS_SELECT);
++			if (!nested)
++				goto nla_put_failure;
++
++			i = 0;
++			while (bss_select_support) {
++				if ((bss_select_support & 1) &&
++				    nla_put_flag(msg, i))
++					goto nla_put_failure;
++				i++;
++				bss_select_support >>= 1;
++			}
++			nla_nest_end(msg, nested);
++		}
+ 		/* done */
+ 		state->split_start = 0;
+ 		break;
+@@ -5758,6 +5786,69 @@ static int validate_scan_freqs(struct nlattr *freqs)
+ 	return n_channels;
  }
--static inline void ath_fill_led_pin(struct ath_softc *sc)
--{
--}
- #endif
  
- /************************/
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 4964bb3..490f74d 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -21,6 +21,33 @@
- /********************************/
- 
- #ifdef CONFIG_MAC80211_LEDS
-+
-+void ath_fill_led_pin(struct ath_softc *sc)
++static bool is_band_valid(struct wiphy *wiphy, enum ieee80211_band b)
 +{
-+	struct ath_hw *ah = sc->sc_ah;
-+
-+	/* Set default led pin if invalid */
-+	if (ah->led_pin < 0) {
-+		if (AR_SREV_9287(ah))
-+			ah->led_pin = ATH_LED_PIN_9287;
-+		else if (AR_SREV_9485(ah))
-+			ah->led_pin = ATH_LED_PIN_9485;
-+		else if (AR_SREV_9300(ah))
-+			ah->led_pin = ATH_LED_PIN_9300;
-+		else if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
-+			ah->led_pin = ATH_LED_PIN_9462;
-+		else
-+			ah->led_pin = ATH_LED_PIN_DEF;
-+	}
-+
-+	/* Configure gpio for output */
-+	ath9k_hw_gpio_request_out(ah, ah->led_pin, "ath9k-led",
-+				  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
-+
-+	/* LED off, active low */
-+	ath9k_hw_set_gpio(ah, ah->led_pin, ah->config.led_active_high ? 0 : 1);
++	return b < IEEE80211_NUM_BANDS && wiphy->bands[b];
 +}
 +
- static void ath_led_brightness(struct led_classdev *led_cdev,
- 			       enum led_brightness brightness)
- {
-@@ -51,6 +78,8 @@ void ath_init_leds(struct ath_softc *sc)
- 	if (AR_SREV_9100(sc->sc_ah))
- 		return;
- 
-+	ath_fill_led_pin(sc);
++static int parse_bss_select(struct nlattr *nla, struct wiphy *wiphy,
++			    struct cfg80211_bss_selection *bss_select)
++{
++	struct nlattr *attr[NL80211_BSS_SELECT_ATTR_MAX + 1];
++	struct nlattr *nest;
++	int err;
++	bool found = false;
++	int i;
 +
- 	if (!ath9k_led_blink)
- 		sc->led_cdev.default_trigger =
- 			ieee80211_get_radio_led_name(sc->hw);
-@@ -66,39 +95,6 @@ void ath_init_leds(struct ath_softc *sc)
++	/* only process one nested attribute */
++	nest = nla_data(nla);
++	if (!nla_ok(nest, nla_len(nest)))
++		return -EINVAL;
++
++	err = nla_parse(attr, NL80211_BSS_SELECT_ATTR_MAX, nla_data(nest),
++			nla_len(nest), nl80211_bss_select_policy);
++	if (err)
++		return err;
++
++	/* only one attribute may be given */
++	for (i = 0; i <= NL80211_BSS_SELECT_ATTR_MAX; i++) {
++		if (attr[i]) {
++			if (found)
++				return -EINVAL;
++			found = true;
++		}
++	}
++
++	bss_select->behaviour = __NL80211_BSS_SELECT_ATTR_INVALID;
++
++	if (attr[NL80211_BSS_SELECT_ATTR_RSSI])
++		bss_select->behaviour = NL80211_BSS_SELECT_ATTR_RSSI;
++
++	if (attr[NL80211_BSS_SELECT_ATTR_BAND_PREF]) {
++		bss_select->behaviour = NL80211_BSS_SELECT_ATTR_BAND_PREF;
++		bss_select->param.band_pref =
++			nla_get_u32(attr[NL80211_BSS_SELECT_ATTR_BAND_PREF]);
++		if (!is_band_valid(wiphy, bss_select->param.band_pref))
++			return -EINVAL;
++	}
++	if (attr[NL80211_BSS_SELECT_ATTR_RSSI_ADJUST]) {
++		struct nl80211_bss_select_rssi_adjust *adj_param;
++
++		adj_param = nla_data(attr[NL80211_BSS_SELECT_ATTR_RSSI_ADJUST]);
++		bss_select->behaviour = NL80211_BSS_SELECT_ATTR_RSSI_ADJUST;
++		bss_select->param.adjust.band = adj_param->band;
++		bss_select->param.adjust.delta = adj_param->delta;
++		if (!is_band_valid(wiphy, bss_select->param.adjust.band))
++			return -EINVAL;
++	}
++
++	/* user-space did not provide behaviour attribute */
++	if (bss_select->behaviour == __NL80211_BSS_SELECT_ATTR_INVALID)
++		return -EINVAL;
++
++	return 0;
++}
++
+ static int nl80211_parse_random_mac(struct nlattr **attrs,
+ 				    u8 *mac_addr, u8 *mac_addr_mask)
+ {
+@@ -7995,6 +8086,24 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 		return -EOPNOTSUPP;
+ 	}
  
- 	sc->led_registered = true;
- }
--
--void ath_fill_led_pin(struct ath_softc *sc)
--{
--	struct ath_hw *ah = sc->sc_ah;
--
--	if (AR_SREV_9100(ah))
--		return;
--
--	if (ah->led_pin >= 0) {
--		if (!((1 << ah->led_pin) & AR_GPIO_OE_OUT_MASK))
--			ath9k_hw_gpio_request_out(ah, ah->led_pin, "ath9k-led",
--						  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
--		return;
--	}
--
--	if (AR_SREV_9287(ah))
--		ah->led_pin = ATH_LED_PIN_9287;
--	else if (AR_SREV_9485(sc->sc_ah))
--		ah->led_pin = ATH_LED_PIN_9485;
--	else if (AR_SREV_9300(sc->sc_ah))
--		ah->led_pin = ATH_LED_PIN_9300;
--	else if (AR_SREV_9462(sc->sc_ah) || AR_SREV_9565(sc->sc_ah))
--		ah->led_pin = ATH_LED_PIN_9462;
--	else
--		ah->led_pin = ATH_LED_PIN_DEF;
--
--	/* Configure gpio 1 for output */
--	ath9k_hw_gpio_request_out(ah, ah->led_pin, "ath9k-led",
--				  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
--
--	/* LED off, active low */
--	ath9k_hw_set_gpio(ah, ah->led_pin, (ah->config.led_active_high) ? 0 : 1);
--}
- #endif
- 
- /*******************/
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index 2e2b92b..95c12fd 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -660,7 +660,6 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 
- 	ath9k_cmn_init_crypto(sc->sc_ah);
- 	ath9k_init_misc(sc);
--	ath_fill_led_pin(sc);
- 	ath_chanctx_init(sc);
- 	ath9k_offchannel_init(sc);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index 95d0a53..f469a7c 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -718,12 +718,9 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 	if (!ath_complete_reset(sc, false))
- 		ah->reset_power_on = false;
- 
--	if (ah->led_pin >= 0) {
-+	if (ah->led_pin >= 0)
- 		ath9k_hw_set_gpio(ah, ah->led_pin,
- 				  (ah->config.led_active_high) ? 1 : 0);
--		ath9k_hw_gpio_request_out(ah, ah->led_pin, NULL,
--					  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
--	}
- 
- 	/*
- 	 * Reset key cache to sane defaults (all entries cleared) instead of
-@@ -867,11 +864,9 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 
- 	spin_lock_bh(&sc->sc_pcu_lock);
- 
--	if (ah->led_pin >= 0) {
-+	if (ah->led_pin >= 0)
- 		ath9k_hw_set_gpio(ah, ah->led_pin,
- 				  (ah->config.led_active_high) ? 0 : 1);
--		ath9k_hw_gpio_request_in(ah, ah->led_pin, NULL);
--	}
- 
- 	ath_prepare_reset(sc);
- 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index 8903f70..f82a4ad 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1166,8 +1166,6 @@ enum {
- 
- #define AR_GPIO_OE_OUT                           (AR_SREV_9340(ah) ? 0x4030 : \
- 						  (AR_SREV_9300_20_OR_LATER(ah) ? 0x4050 : 0x404c))
--#define AR_GPIO_OE_OUT_MASK			 (AR_SREV_9550_OR_LATER(ah) ? \
--						  0x0000000F : 0xFFFFFFFF)
- #define AR_GPIO_OE_OUT_DRV                       0x3
- #define AR_GPIO_OE_OUT_DRV_NO                    0x0
- #define AR_GPIO_OE_OUT_DRV_LOW                   0x1
++	if (info->attrs[NL80211_ATTR_BSS_SELECT]) {
++		/* bss selection makes no sense if bssid is set */
++		if (connect.bssid) {
++			kzfree(connkeys);
++			return -EINVAL;
++		}
++		err = parse_bss_select(info->attrs[NL80211_ATTR_BSS_SELECT],
++				       wiphy, &connect.bss_select);
++		if (err) {
++			kzfree(connkeys);
++			return err;
++		}
++		if (!(wiphy->bss_select_support & BIT(connect.bss_select.behaviour))) {
++			kzfree(connkeys);
++			return -EINVAL;
++		}
++	}
++
+ 	wdev_lock(dev->ieee80211_ptr);
+ 	err = cfg80211_connect(rdev, dev, &connect, connkeys, NULL);
+ 	wdev_unlock(dev->ieee80211_ptr);
 -- 
 1.9.1
 
