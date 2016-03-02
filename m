@@ -1,120 +1,119 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48497 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:45384 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752154AbcCGCjB (ORCPT
+	with ESMTP id S1754721AbcCBCFb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 21:39:01 -0500
+	Tue, 1 Mar 2016 21:05:31 -0500
 From: miaoqing@codeaurora.org
 To: linville@tuxdriver.com
 Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
 	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH v4 3/8] ath9k: free GPIO resource for SOC GPIOs
-Date: Mon,  7 Mar 2016 10:38:16 +0800
-Message-Id: <1457318301-27701-4-git-send-email-miaoqing@codeaurora.org> (sfid-20160307_033924_466131_2C0993C2)
-In-Reply-To: <1457318301-27701-1-git-send-email-miaoqing@codeaurora.org>
-References: <1457318301-27701-1-git-send-email-miaoqing@codeaurora.org>
+Subject: [PATCH v3 5/8] ath9k: Allow platform override BTCoex pin
+Date: Wed,  2 Mar 2016 10:04:19 +0800
+Message-Id: <1456884262-28194-6-git-send-email-miaoqing@codeaurora.org> (sfid-20160302_030537_033790_B7308514)
+In-Reply-To: <1456884262-28194-1-git-send-email-miaoqing@codeaurora.org>
+References: <1456884262-28194-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-For SOC GPIOs, should call ath9k_hw_gpio_free() to release
-the GPIO resource.
+Add new platform data to allow override BTCoex default pin.
 
 Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath9k/btcoex.c       | 10 ++++++++++
- drivers/net/wireless/ath/ath9k/btcoex.h       |  1 +
- drivers/net/wireless/ath/ath9k/gpio.c         |  9 +++++++++
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |  2 ++
- drivers/net/wireless/ath/ath9k/hw.c           |  1 +
- 5 files changed, 23 insertions(+)
+ drivers/net/wireless/ath/ath9k/btcoex.c | 45 +++++++++++++++++++++++++--------
+ include/linux/ath9k_platform.h          |  4 +++
+ 2 files changed, 39 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index 7719cb1..4737aa9 100644
+index 4737aa9..5a9ecf7 100644
 --- a/drivers/net/wireless/ath/ath9k/btcoex.c
 +++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -174,6 +174,16 @@ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
- }
- EXPORT_SYMBOL(ath9k_hw_btcoex_init_3wire);
+@@ -15,6 +15,8 @@
+  */
  
-+void ath9k_hw_btcoex_deinit(struct ath_hw *ah)
+ #include <linux/export.h>
++#include <linux/types.h>
++#include <linux/ath9k_platform.h>
+ #include "hw.h"
+ 
+ enum ath_bt_mode {
+@@ -90,6 +92,29 @@ void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum)
+ }
+ EXPORT_SYMBOL(ath9k_hw_init_btcoex_hw);
+ 
++static void ath9k_hw_btcoex_pin_init(struct ath_hw *ah, u8 wlanactive_gpio,
++				     u8 btactive_gpio, u8 btpriority_gpio)
 +{
 +	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
++	struct ath9k_platform_data *pdata = ah->dev->platform_data;
 +
-+	ath9k_hw_gpio_free(ah, btcoex_hw->btactive_gpio);
-+	ath9k_hw_gpio_free(ah, btcoex_hw->btpriority_gpio);
-+	ath9k_hw_gpio_free(ah, btcoex_hw->wlanactive_gpio);
-+}
-+EXPORT_SYMBOL(ath9k_hw_btcoex_deinit);
++	if (btcoex_hw->scheme != ATH_BTCOEX_CFG_2WIRE &&
++	    btcoex_hw->scheme != ATH_BTCOEX_CFG_3WIRE)
++		return;
 +
- void ath9k_hw_btcoex_init_mci(struct ath_hw *ah)
- {
- 	ah->btcoex_hw.mci.ready = false;
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
-index cd2f0a2..0f7c4e6 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.h
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.h
-@@ -123,6 +123,7 @@ struct ath_btcoex_hw {
- void ath9k_hw_btcoex_init_scheme(struct ath_hw *ah);
- void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah);
- void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah);
-+void ath9k_hw_btcoex_deinit(struct ath_hw *ah);
- void ath9k_hw_btcoex_init_mci(struct ath_hw *ah);
- void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum);
- void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index b41dfb7..4964bb3 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -40,6 +40,8 @@ void ath_deinit_leds(struct ath_softc *sc)
- 
- 	ath_led_brightness(&sc->led_cdev, LED_OFF);
- 	led_classdev_unregister(&sc->led_cdev);
-+
-+	ath9k_hw_gpio_free(sc->sc_ah, sc->sc_ah->led_pin);
- }
- 
- void ath_init_leds(struct ath_softc *sc)
-@@ -404,6 +406,13 @@ void ath9k_deinit_btcoex(struct ath_softc *sc)
- 
- 	if (ath9k_hw_mci_is_enabled(ah))
- 		ath_mci_cleanup(sc);
-+	else {
-+		enum ath_btcoex_scheme scheme = ath9k_hw_get_btcoex_scheme(ah);
-+
-+		if (scheme == ATH_BTCOEX_CFG_2WIRE ||
-+		    scheme == ATH_BTCOEX_CFG_3WIRE)
-+			ath9k_hw_btcoex_deinit(sc->sc_ah);
++	/* bt priority GPIO will be ignored by 3 wire scheme */
++	if (pdata && (pdata->bt_active_pin || pdata->bt_priority_pin ||
++		      pdata->wlan_active_pin)) {
++		btcoex_hw->btactive_gpio = pdata->bt_active_pin;
++		btcoex_hw->wlanactive_gpio = pdata->wlan_active_pin;
++		btcoex_hw->btpriority_gpio = pdata->bt_priority_pin;
++	} else {
++		btcoex_hw->btactive_gpio = btactive_gpio;
++		btcoex_hw->wlanactive_gpio = wlanactive_gpio;
++		btcoex_hw->btpriority_gpio = btpriority_gpio;
 +	}
- }
- 
- int ath9k_init_btcoex(struct ath_softc *sc)
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-index d9b640a..ecb848b 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-@@ -253,6 +253,8 @@ void ath9k_deinit_leds(struct ath9k_htc_priv *priv)
- 	ath9k_led_brightness(&priv->led_cdev, LED_OFF);
- 	led_classdev_unregister(&priv->led_cdev);
- 	cancel_work_sync(&priv->led_work);
++}
 +
-+	ath9k_hw_gpio_free(priv->ah, priv->ah->led_pin);
- }
+ void ath9k_hw_btcoex_init_scheme(struct ath_hw *ah)
+ {
+ 	struct ath_common *common = ath9k_hw_common(ah);
+@@ -107,19 +132,19 @@ void ath9k_hw_btcoex_init_scheme(struct ath_hw *ah)
+ 		btcoex_hw->scheme = ATH_BTCOEX_CFG_MCI;
+ 	} else if (AR_SREV_9300_20_OR_LATER(ah)) {
+ 		btcoex_hw->scheme = ATH_BTCOEX_CFG_3WIRE;
+-		btcoex_hw->btactive_gpio = ATH_BTACTIVE_GPIO_9300;
+-		btcoex_hw->wlanactive_gpio = ATH_WLANACTIVE_GPIO_9300;
+-		btcoex_hw->btpriority_gpio = ATH_BTPRIORITY_GPIO_9300;
+-	} else if (AR_SREV_9280_20_OR_LATER(ah)) {
+-		btcoex_hw->btactive_gpio = ATH_BTACTIVE_GPIO_9280;
+-		btcoex_hw->wlanactive_gpio = ATH_WLANACTIVE_GPIO_9280;
  
- 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 4046949..1fd6155 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1575,6 +1575,7 @@ static void ath9k_hw_apply_gpio_override(struct ath_hw *ah)
- 		ath9k_hw_gpio_request_out(ah, i, NULL,
- 					  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
- 		ath9k_hw_set_gpio(ah, i, !!(ah->gpio_val & BIT(i)));
-+		ath9k_hw_gpio_free(ah, i);
+-		if (AR_SREV_9285(ah)) {
++		ath9k_hw_btcoex_pin_init(ah, ATH_WLANACTIVE_GPIO_9300,
++					 ATH_BTACTIVE_GPIO_9300,
++					 ATH_BTPRIORITY_GPIO_9300);
++	} else if (AR_SREV_9280_20_OR_LATER(ah)) {
++		if (AR_SREV_9285(ah))
+ 			btcoex_hw->scheme = ATH_BTCOEX_CFG_3WIRE;
+-			btcoex_hw->btpriority_gpio = ATH_BTPRIORITY_GPIO_9285;
+-		} else {
++		else
+ 			btcoex_hw->scheme = ATH_BTCOEX_CFG_2WIRE;
+-		}
++
++		ath9k_hw_btcoex_pin_init(ah, ATH_WLANACTIVE_GPIO_9280,
++					 ATH_BTACTIVE_GPIO_9280,
++					 ATH_BTPRIORITY_GPIO_9285);
  	}
  }
+ EXPORT_SYMBOL(ath9k_hw_btcoex_init_scheme);
+diff --git a/include/linux/ath9k_platform.h b/include/linux/ath9k_platform.h
+index 33eb274..e66153d 100644
+--- a/include/linux/ath9k_platform.h
++++ b/include/linux/ath9k_platform.h
+@@ -31,6 +31,10 @@ struct ath9k_platform_data {
+ 	u32 gpio_mask;
+ 	u32 gpio_val;
  
++	u32 bt_active_pin;
++	u32 bt_priority_pin;
++	u32 wlan_active_pin;
++
+ 	bool endian_check;
+ 	bool is_clk_25mhz;
+ 	bool tx_gain_buffalo;
 -- 
 1.9.1
 
