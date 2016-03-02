@@ -1,40 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:44143 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753769AbcCJQaR (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:45282 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752381AbcCBCFJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 11:30:17 -0500
-Date: Thu, 10 Mar 2016 08:30:10 -0800
-From: Greg KH <gregkh@linuxfoundation.org>
-To: akolli@qti.qualcomm.com
-Cc: ath10k@lists.infradead.org, akolli@codeaurora.org,
-	stable@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: fix debugfs pktlog_filter write
-Message-ID: <20160310163010.GA29861@kroah.com> (sfid-20160310_173023_419791_4C617276)
-References: <1457601538-30751-1-git-send-email-akolli@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1457601538-30751-1-git-send-email-akolli@qti.qualcomm.com>
+	Tue, 1 Mar 2016 21:05:09 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v3 1/8] ath9k: define correct GPIO numbers and bits mask
+Date: Wed,  2 Mar 2016 10:04:15 +0800
+Message-Id: <1456884262-28194-2-git-send-email-miaoqing@codeaurora.org> (sfid-20160302_030519_187509_E0B5198C)
+In-Reply-To: <1456884262-28194-1-git-send-email-miaoqing@codeaurora.org>
+References: <1456884262-28194-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 10, 2016 at 02:48:58PM +0530, akolli@qti.qualcomm.com wrote:
-> From: Anilkumar Kolli <akolli@qti.qualcomm.com>
-> 
-> It is observed that, we are disabling the packet log if we write same
-> value to the pktlog_filter for the second time. Always enable pktlogs
-> on non zero filter.
-> 
-> Fixes: 90174455ae05 ("ath10k: add support to configure pktlog filter")
-> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
-> ---
->  drivers/net/wireless/ath/ath10k/debug.c |    7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-<formletter>
+Define correct GPIO numbers and MASK bits to indicate the WMAC
+GPIO resource.
 
-This is not the correct way to submit patches for inclusion in the
-stable kernel tree.  Please read Documentation/stable_kernel_rules.txt
-for how to do this properly.
+Allow SOC chips(AR9340, AR9531, AR9550, AR9561) to access all GPIOs
+which rely on gpiolib framework. But restrict SOC AR9330 only to
+access WMAC GPIO which has the same design with the old chips.
 
-</formletter>
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+---
+ drivers/net/wireless/ath/ath9k/hw.c  | 70 ++++++++++++++++++++++++++++--------
+ drivers/net/wireless/ath/ath9k/hw.h  |  1 +
+ drivers/net/wireless/ath/ath9k/reg.h | 42 ++++++++++++++++++++--
+ 3 files changed, 96 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 257f46e..0e80b3f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2375,6 +2375,61 @@ static bool ath9k_hw_dfs_tested(struct ath_hw *ah)
+ 	}
+ }
+ 
++static void ath9k_gpio_cap_init(struct ath_hw *ah)
++{
++	struct ath9k_hw_capabilities *pCap = &ah->caps;
++
++	if (AR_SREV_9271(ah)) {
++		pCap->num_gpio_pins = AR9271_NUM_GPIO;
++		pCap->gpio_mask = AR9271_GPIO_MASK;
++	} else if (AR_DEVID_7010(ah)) {
++		pCap->num_gpio_pins = AR7010_NUM_GPIO;
++		pCap->gpio_mask = AR7010_GPIO_MASK;
++	} else if (AR_SREV_9287(ah)) {
++		pCap->num_gpio_pins = AR9287_NUM_GPIO;
++		pCap->gpio_mask = AR9287_GPIO_MASK;
++	} else if (AR_SREV_9285(ah)) {
++		pCap->num_gpio_pins = AR9285_NUM_GPIO;
++		pCap->gpio_mask = AR9285_GPIO_MASK;
++	} else if (AR_SREV_9280(ah)) {
++		pCap->num_gpio_pins = AR9280_NUM_GPIO;
++		pCap->gpio_mask = AR9280_GPIO_MASK;
++	} else if (AR_SREV_9300(ah)) {
++		pCap->num_gpio_pins = AR9300_NUM_GPIO;
++		pCap->gpio_mask = AR9300_GPIO_MASK;
++	} else if (AR_SREV_9330(ah)) {
++		pCap->num_gpio_pins = AR9330_NUM_GPIO;
++		pCap->gpio_mask = AR9330_GPIO_MASK;
++	} else if (AR_SREV_9340(ah)) {
++		pCap->num_gpio_pins = AR9340_NUM_GPIO;
++		pCap->gpio_mask = AR9340_GPIO_MASK;
++	} else if (AR_SREV_9462(ah)) {
++		pCap->num_gpio_pins = AR9462_NUM_GPIO;
++		pCap->gpio_mask = AR9462_GPIO_MASK;
++	} else if (AR_SREV_9485(ah)) {
++		pCap->num_gpio_pins = AR9485_NUM_GPIO;
++		pCap->gpio_mask = AR9485_GPIO_MASK;
++	} else if (AR_SREV_9531(ah)) {
++		pCap->num_gpio_pins = AR9531_NUM_GPIO;
++		pCap->gpio_mask = AR9531_GPIO_MASK;
++	} else if (AR_SREV_9550(ah)) {
++		pCap->num_gpio_pins = AR9550_NUM_GPIO;
++		pCap->gpio_mask = AR9550_GPIO_MASK;
++	} else if (AR_SREV_9561(ah)) {
++		pCap->num_gpio_pins = AR9561_NUM_GPIO;
++		pCap->gpio_mask = AR9561_GPIO_MASK;
++	} else if (AR_SREV_9565(ah)) {
++		pCap->num_gpio_pins = AR9565_NUM_GPIO;
++		pCap->gpio_mask = AR9565_GPIO_MASK;
++	} else if (AR_SREV_9580(ah)) {
++		pCap->num_gpio_pins = AR9580_NUM_GPIO;
++		pCap->gpio_mask = AR9580_GPIO_MASK;
++	} else {
++		pCap->num_gpio_pins = AR_NUM_GPIO;
++		pCap->gpio_mask = AR_GPIO_MASK;
++	}
++}
++
+ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ {
+ 	struct ath9k_hw_capabilities *pCap = &ah->caps;
+@@ -2468,20 +2523,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	else
+ 		pCap->hw_caps &= ~ATH9K_HW_CAP_HT;
+ 
+-	if (AR_SREV_9271(ah))
+-		pCap->num_gpio_pins = AR9271_NUM_GPIO;
+-	else if (AR_DEVID_7010(ah))
+-		pCap->num_gpio_pins = AR7010_NUM_GPIO;
+-	else if (AR_SREV_9300_20_OR_LATER(ah))
+-		pCap->num_gpio_pins = AR9300_NUM_GPIO;
+-	else if (AR_SREV_9287_11_OR_LATER(ah))
+-		pCap->num_gpio_pins = AR9287_NUM_GPIO;
+-	else if (AR_SREV_9285_12_OR_LATER(ah))
+-		pCap->num_gpio_pins = AR9285_NUM_GPIO;
+-	else if (AR_SREV_9280_20_OR_LATER(ah))
+-		pCap->num_gpio_pins = AR928X_NUM_GPIO;
+-	else
+-		pCap->num_gpio_pins = AR_NUM_GPIO;
++	ath9k_gpio_cap_init(ah);
+ 
+ 	if (AR_SREV_9160_10_OR_LATER(ah) || AR_SREV_9100(ah))
+ 		pCap->rts_aggr_limit = ATH_AMPDU_LIMIT_MAX;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 831a544..c0740d6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -301,6 +301,7 @@ struct ath9k_hw_capabilities {
+ 	u8 max_txchains;
+ 	u8 max_rxchains;
+ 	u8 num_gpio_pins;
++	u32 gpio_mask;
+ 	u8 rx_hp_qdepth;
+ 	u8 rx_lp_qdepth;
+ 	u8 rx_status_len;
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index caba54d..8903f70 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -983,6 +983,10 @@
+ #define AR_SREV_9561(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9561))
+ 
++#define AR_SREV_SOC(_ah) \
++	(AR_SREV_9340(_ah) || AR_SREV_9531(_ah) || AR_SREV_9550(ah) || \
++	 AR_SREV_9561(ah))
++
+ /* NOTE: When adding chips newer than Peacock, add chip check here */
+ #define AR_SREV_9580_10_OR_LATER(_ah) \
+ 	(AR_SREV_9580(_ah))
+@@ -1102,14 +1106,46 @@ enum {
+ 
+ #define AR_PCIE_PHY_REG3			 0x18c08
+ 
++/* Define correct GPIO numbers and MASK bits to indicate the WMAC
++ * GPIO resource.
++ * Allow SOC chips(AR9340, AR9531, AR9550, AR9561) to access all GPIOs
++ * which rely on gpiolib framework. But restrict SOC AR9330 only to
++ * access WMAC GPIO which has the same design with the old chips.
++ */
+ #define AR_NUM_GPIO                              14
+-#define AR928X_NUM_GPIO                          10
++#define AR9280_NUM_GPIO                          10
+ #define AR9285_NUM_GPIO                          12
+-#define AR9287_NUM_GPIO                          11
++#define AR9287_NUM_GPIO                          10
+ #define AR9271_NUM_GPIO                          16
+-#define AR9300_NUM_GPIO                          17
++#define AR9300_NUM_GPIO                          16
++#define AR9330_NUM_GPIO				 16
++#define AR9340_NUM_GPIO				 23
++#define AR9462_NUM_GPIO				 10
++#define AR9485_NUM_GPIO				 12
++#define AR9531_NUM_GPIO				 18
++#define AR9550_NUM_GPIO				 24
++#define AR9561_NUM_GPIO				 23
++#define AR9565_NUM_GPIO				 12
++#define AR9580_NUM_GPIO				 16
+ #define AR7010_NUM_GPIO                          16
+ 
++#define AR_GPIO_MASK				 0x00003FFF
++#define AR9271_GPIO_MASK			 0x0000FFFF
++#define AR9280_GPIO_MASK			 0x000003FF
++#define AR9285_GPIO_MASK			 0x00000FFF
++#define AR9287_GPIO_MASK			 0x000003FF
++#define AR9300_GPIO_MASK			 0x0000F4FF
++#define AR9330_GPIO_MASK			 0x0000F4FF
++#define AR9340_GPIO_MASK			 0x0000000F
++#define AR9462_GPIO_MASK			 0x000003FF
++#define AR9485_GPIO_MASK			 0x00000FFF
++#define AR9531_GPIO_MASK			 0x0000000F
++#define AR9550_GPIO_MASK			 0x0000000F
++#define AR9561_GPIO_MASK			 0x0000000F
++#define AR9565_GPIO_MASK			 0x00000FFF
++#define AR9580_GPIO_MASK			 0x0000F4FF
++#define AR7010_GPIO_MASK			 0x0000FFFF
++
+ #define AR_GPIO_IN_OUT                           (AR_SREV_9340(ah) ? 0x4028 : 0x4048)
+ #define AR_GPIO_IN_VAL                           0x0FFFC000
+ #define AR_GPIO_IN_VAL_S                         14
+-- 
+1.9.1
+
