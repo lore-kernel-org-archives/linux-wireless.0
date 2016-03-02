@@ -1,68 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:38270 "EHLO
-	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752518AbcCWG14 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2016 02:27:56 -0400
-Received: by mail-wm0-f43.google.com with SMTP id l68so9884682wml.1
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2016 23:27:55 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <56F1E003.4000900@codeaurora.org>
-References: <201603230727.oL9ihH6E%fengguang.wu@intel.com>
-	<56F1E003.4000900@codeaurora.org>
-Date: Wed, 23 Mar 2016 07:27:54 +0100
-Message-ID: <CA+BoTQneAJJ=9L4XZYJVxxPXwbH3x_d6ExJii70tG3YJRxPicw@mail.gmail.com> (sfid-20160323_072800_266700_B8C419CF)
-Subject: Re: [PATCH v2] ath10k: parse Rx MAC timestamp in mgmt frame for FW 10.4
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Peter Oh <poh@codeaurora.org>
-Cc: kbuild test robot <lkp@intel.com>, Peter Oh <poh@qca.qualcomm.com>,
-	kbuild-all@01.org,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([192.55.52.115]:1927 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753220AbcCBH6M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 02:58:12 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Avri Altman <avri.altman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 32/43] iwlwifi: mvm: Send power command on BSS_CHANGED_BEACON_INFO if needed
+Date: Wed,  2 Mar 2016 09:56:33 +0200
+Message-Id: <1456905404-14435-32-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085952_243538_71681FB0)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 23 March 2016 at 01:14, Peter Oh <poh@codeaurora.org> wrote:
->
-> On 03/22/2016 04:14 PM, kbuild test robot wrote:
->>
->> Hi Peter,
->>
->> [auto build test WARNING on wireless-drivers-next/master]
->> [also build test WARNING on v4.5 next-20160322]
->> [if your patch is applied to the wrong git tree, please drop us a note to
->> help improving the system]
->>
->> url:
->> https://github.com/0day-ci/linux/commits/Peter-Oh/ath10k-parse-Rx-MAC-timestamp-in-mgmt-frame-for-FW-10-4/20160323-064843
->> base:
->> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git
->> master
->> config: x86_64-randconfig-x000-201612 (attached as .config)
->> reproduce:
->>          # save the attached .config to linux build tree
->>          make ARCH=x86_64
->>
->> All warnings (new ones prefixed by >>):
->>
->>     In file included from include/linux/linkage.h:4:0,
->>                      from include/linux/kernel.h:6,
->>                      from include/linux/skbuff.h:17,
->>                      from drivers/net/wireless/ath/ath10k/wmi.c:18:
->>     drivers/net/wireless/ath/ath10k/wmi.c: In function
->> 'ath10k_wmi_10_4_op_pull_mgmt_rx_ev':
->>     drivers/net/wireless/ath/ath10k/wmi.c:2236:33: error:
->> 'WMI_RX_STATUS_EXT_INFO' undeclared (first use in this function)
->
-> it seems the warning is false report. I could see WMI_RX_STATUS_EXT_INFO is
-> defined in wmi.h.
-> Moreover this check command doesn't claim any warning/error make
-> M=drivers/net/wireless/ath/ath10k C=2 CF="-D__CHECK_ENDIAN__"
+From: Avri Altman <avri.altman@intel.com>
 
-I think the problem here is buildbot tested your patch against
-wireless-drivers-next tree which doesn't include the macro yet. The
-macro is in ath.git though.
+Beacon abort (ba) is set while sending power command, but only
+after at least one beacon_filter command was successfully sent.
 
+If we heard a beacon before starting association, this order
+is maintained and ba is properly set.
 
-Michał
+However, if the first beacon is received after association,
+we send the power command upon association, configure the
+beacon filtering when the first beacon arrives, and in that case,
+beacon abort is not set.
+
+So identify this, and send a power command post the beacon_filter
+command if needed.
+
+Signed-off-by: Avri Altman <avri.altman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 86b4b9d..927b055 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1955,7 +1955,12 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, 0));
+ 	}
+ 
+-	if (changes & (BSS_CHANGED_PS | BSS_CHANGED_P2P_PS | BSS_CHANGED_QOS)) {
++	if (changes & (BSS_CHANGED_PS | BSS_CHANGED_P2P_PS | BSS_CHANGED_QOS |
++		       /*
++			* Send power command on every beacon change,
++			* because we may have not enabled beacon abort yet.
++			*/
++		       BSS_CHANGED_BEACON_INFO)) {
+ 		ret = iwl_mvm_power_update_mac(mvm);
+ 		if (ret)
+ 			IWL_ERR(mvm, "failed to update power mode\n");
+-- 
+2.5.0
+
