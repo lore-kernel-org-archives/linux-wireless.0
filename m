@@ -1,54 +1,123 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:34911 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751341AbcCFQD4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 11:03:56 -0500
-Received: by mail-wm0-f68.google.com with SMTP id 1so6764773wmg.2
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 08:03:55 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20160306155809.GA15589@w1.fi>
-References: <1456954113-4682-1-git-send-email-emmanuel.grumbach@intel.com> <20160306155809.GA15589@w1.fi>
-From: Arik Nemtsov <arik@wizery.com>
-Date: Sun, 6 Mar 2016 18:03:40 +0200
-Message-ID: <CA+XVXfdb-LueLUp1N6OSpXU+roUTisqj1R+wW98WDrqgtRvdLA@mail.gmail.com> (sfid-20160306_170400_036322_0B037D01)
-Subject: Re: [PATCH 1/3] mac80211: TDLS: always downgrade invalid chandefs
-To: Jouni Malinen <j@w1.fi>
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>,
-	"Peer, Ilan" <ilan.peer@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([192.55.52.115]:34211 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753161AbcCBH5H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 02:57:07 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 13/43] iwlwifi: mvm: update firmware of VHT MU-MIMO groups status on restart
+Date: Wed,  2 Mar 2016 09:56:14 +0200
+Message-Id: <1456905404-14435-13-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085712_599525_ABE63BF1)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sun, Mar 6, 2016 at 5:58 PM, Jouni Malinen <j@w1.fi> wrote:
->
-> On Wed, Mar 02, 2016 at 11:28:31PM +0200, Emmanuel Grumbach wrote:
-> > Even if the current chandef width is equal to the station's max-BW, it
-> > doesn't mean it's a valid width for TDLS. Make sure to always check
-> > regulatory constraints in these cases.
->
-> I'm not sure this change is the trigger for this issue, but since I
-> noticed this for the first time today and this commit went just in into
-> wireless-testing.git, it sounds quite likely that this was indeed behind
-> the busy loop I saw here:
->
-> > diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-> > @@ -332,7 +332,7 @@ ieee80211_tdls_chandef_vht_upgrade(struct ieee80211_sub_if_data *sdata,
-> >       /* proceed to downgrade the chandef until usable or the same */
-> > -     while (uc.width > max_width &&
-> > +     while (uc.width > max_width ||
-> >              !cfg80211_reg_can_beacon_relax(sdata->local->hw.wiphy, &uc,
-> >                                             sdata->wdev.iftype))
-> >               ieee80211_chandef_downgrade(&uc);
+From: Sara Sharon <sara.sharon@intel.com>
 
-Good catch :)
-We actually just noticed this as well and have a suggested fix already
-- basically the code was trying to *upgrade* a 80p80 channel to a 80
-one.
+The firmware handles the VHT MU-MIMO group data on its own.
+However, on HW restart (and future sniffer mode) the driver
+shall update the firmware on the VHT MU-MIMO group membership
+status.
 
-I guess it will be out in a couple days after some internal testing.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h   | 18 +++++++++++++++
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 28 +++++++++++++++++++++++
+ 2 files changed, 46 insertions(+)
 
-Arik
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index d5f9037..ca7fec71 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -285,6 +285,10 @@ enum iwl_phy_ops_subcmd_ids {
+ 	DTS_MEASUREMENT_NOTIF_WIDE = 0xFF,
+ };
+ 
++enum iwl_data_path_subcmd_ids {
++	UPDATE_MU_GROUPS_CMD = 0x1,
++};
++
+ enum iwl_prot_offload_subcmd_ids {
+ 	STORED_BEACON_NTF = 0xFF,
+ };
+@@ -294,6 +298,7 @@ enum {
+ 	LEGACY_GROUP = 0x0,
+ 	LONG_GROUP = 0x1,
+ 	PHY_OPS_GROUP = 0x4,
++	DATA_PATH_GROUP = 0x5,
+ 	PROT_OFFLOAD_GROUP = 0xb,
+ };
+ 
+@@ -1923,6 +1928,19 @@ struct iwl_shared_mem_cfg {
+ 	__le32 page_buff_size;
+ } __packed; /* SHARED_MEM_ALLOC_API_S_VER_1 */
+ 
++/**
++ * VHT MU-MIMO group configuration
++ *
++ * @membership_status: a bitmap of MU groups
++ * @user_position:the position of station in a group. If the station is in the
++ *	group then bits (group * 2) is the position -1
++ */
++struct iwl_mu_group_mgmt_cmd {
++	__le32 reserved;
++	__le32 membership_status[2];
++	__le32 user_position[4];
++} __packed; /* MU_GROUP_ID_MNG_TABLE_API_S_VER_1 */
++
+ #define MAX_STORED_BEACON_SIZE 600
+ 
+ /**
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 5315681..f1ed90b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -1762,6 +1762,22 @@ static inline int iwl_mvm_configure_bcast_filter(struct iwl_mvm *mvm)
+ }
+ #endif
+ 
++static int iwl_mvm_update_mu_groups(struct iwl_mvm *mvm,
++				    struct ieee80211_vif *vif)
++{
++	struct iwl_mu_group_mgmt_cmd cmd = {};
++
++	memcpy(cmd.membership_status, vif->bss_conf.mu_group.membership,
++	       WLAN_MEMBERSHIP_LEN);
++	memcpy(cmd.user_position, vif->bss_conf.mu_group.position,
++	       WLAN_USER_POSITION_LEN);
++
++	return iwl_mvm_send_cmd_pdu(mvm,
++				    WIDE_ID(DATA_PATH_GROUP,
++					    UPDATE_MU_GROUPS_CMD),
++				    0, sizeof(cmd), &cmd);
++}
++
+ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 					     struct ieee80211_vif *vif,
+ 					     struct ieee80211_bss_conf *bss_conf,
+@@ -1870,6 +1886,18 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
+ 					vif->addr);
+ 		}
+ 
++		/*
++		 * The firmware tracks the MU-MIMO group on its own.
++		 * However, on HW restart we should restore this data
++		 */
++		if (test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status) &&
++		    changes & BSS_CHANGED_MU_GROUPS) {
++			ret = iwl_mvm_update_mu_groups(mvm, vif);
++			if (ret)
++				IWL_ERR(mvm,
++					"failed to update VHT MU_MIMO groups\n");
++		}
++
+ 		iwl_mvm_recalc_multicast(mvm);
+ 		iwl_mvm_configure_bcast_filter(mvm);
+ 
+-- 
+2.5.0
+
