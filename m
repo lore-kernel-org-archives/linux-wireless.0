@@ -1,53 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f182.google.com ([209.85.223.182]:33706 "EHLO
-	mail-io0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243AbcCaSvt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 14:51:49 -0400
-MIME-Version: 1.0
-In-Reply-To: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
-References: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
-Date: Thu, 31 Mar 2016 20:51:48 +0200
-Message-ID: <CACna6ryFb=CiifKWX+VOZx=-FA3Fitsr+D4RNmcmHGT6hUiQhA@mail.gmail.com> (sfid-20160331_205152_965028_8A8E9028)
-Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Linux PCI <linux-pci@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	b43-dev <b43-dev@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga11.intel.com ([192.55.52.93]:51900 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753373AbcCBH5m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 2 Mar 2016 02:57:42 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 39/43] iwlwifi: mvm: disable DQA support
+Date: Wed,  2 Mar 2016 09:56:40 +0200
+Message-Id: <1456905404-14435-39-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085950_161835_055F3096)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 29 March 2016 at 20:20, Lukas Wunner <lukas@wunner.de> wrote:
-> Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ storm
-> on boot until they are reset, causing spurious interrupts if the IRQ is
-> shared. Apparently the EFI bootloader enables the device and does not
-> disable it before passing control to the OS. The bootloader contains a
-> driver for the wireless card which allows it to phone home to Cupertino.
-> This is used for Internet Recovery (download and install OS X images)
-> and probably also for Back to My Mac (remote access, RFC 6281) and to
-> discover stolen hardware.
->
-> The issue is most pronounced on 2011 and 2012 MacBook Pros where the IRQ
-> is shared with 3 other devices (Light Ridge Thunderbolt controller, SDXC
-> reader, HDA card on discrete GPU). As soon as an interrupt handler is
-> installed for one of these devices, the ensuing storm of spurious IRQs
-> causes the kernel to disable the IRQ and switch to polling. This lasts
-> until the b43 driver loads and resets the device.
->
-> Loading the b43 driver first is not always an option, in particular with
-> the Light Ridge Thunderbolt controller: The PCI hotplug IRQ handler gets
-> installed early on because it is built in, unlike b43 which is usually
-> a module.
->
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632
-> Tested-by: Lukas Wunner <lukas@wunner.de> [MacBookPro9,1]
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Acked-by: Rafał Miłecki <zajec5@gmail.com>
+Do not allow entrance into DQA flows until feature is
+completely ready and merged.
 
-For bcma part (I'm totally OK with moving BCMA_CORE_SIZE).
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index 6d4e487..7ea2baa 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -986,8 +986,9 @@ static inline bool iwl_mvm_is_d0i3_supported(struct iwl_mvm *mvm)
+ 
+ static inline bool iwl_mvm_is_dqa_supported(struct iwl_mvm *mvm)
+ {
+-	return fw_has_capa(&mvm->fw->ucode_capa,
+-			   IWL_UCODE_TLV_CAPA_DQA_SUPPORT);
++	/* Make sure DQA isn't allowed in driver until feature is complete */
++	return false && fw_has_capa(&mvm->fw->ucode_capa,
++				    IWL_UCODE_TLV_CAPA_DQA_SUPPORT);
+ }
+ 
+ static inline bool iwl_mvm_enter_d0i3_on_suspend(struct iwl_mvm *mvm)
+-- 
+2.5.0
+
