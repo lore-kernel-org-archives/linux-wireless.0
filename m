@@ -1,41 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51691 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932986AbcCaVIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 17:08:44 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 05/10] rtl8xxxu: 8192eu uses txdesc40
-Date: Thu, 31 Mar 2016 17:08:37 -0400
-Message-Id: <1459458522-28686-6-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160331_230903_921062_0FE8D7ED)
-In-Reply-To: <1459458522-28686-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1459458522-28686-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-io0-f179.google.com ([209.85.223.179]:36535 "EHLO
+	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756944AbcCCWhc convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2016 17:37:32 -0500
+Received: by mail-io0-f179.google.com with SMTP id l127so43929131iof.3
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2016 14:37:32 -0800 (PST)
+MIME-Version: 1.0
+Date: Thu, 3 Mar 2016 23:37:31 +0100
+Message-ID: <CACna6rzA1JcTjBsozR5nhCH9U9bKwceTNwLzeQ-Ds97NECVaeQ@mail.gmail.com> (sfid-20160303_233735_995351_C89C7240)
+Subject: Problem with brcmfmac removing extra interface
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: brcm80211 development <brcm80211-dev-list@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Hi,
 
-8192eu uses the new TX descriptor format
+brcmfmac in general is not capable of removing interfaces. If you take
+a look at brcmf_cfg80211_del_iface implementation, you'll see it
+returns -EOPNOTSUPP (except for p2p interfaces).
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+However there is problem in handling NL80211_CMD_STOP_AP (with the
+brcmf_cfg80211_stop_ap callback). Current implementation calls
+brcmf_fil_cmd_int_set(ifp, BRCMF_C_DOWN, 1)
+if mbss support is enabled/used.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 484d08f..ad280cf 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -8530,7 +8530,7 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
- 	.writeN_block_size = 128,
- 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
- 	.mbox_ext_width = 4,
--	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc32),
-+	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc40),
- 	.has_s0s1 = 1,
- 	.adda_1t_init = 0x0fc01616,
- 	.adda_1t_path_on = 0x0fc01616,
+Above call results in firmware generating BRCMF_E_LINK event. This
+event is handled with the following forward-traced functions chain:
+1) brcmf_notify_connect_status
+2) brcmf_notify_connect_status_ap
+3) brcmf_remove_interface
+4) brcmf_del_if
+5) brcmf_net_detach
+6) unregister_netdev
+
+So the result of NL80211_CMD_STOP_AP is interface being removed. The
+problem with this behavior is that interface can't be recreated after
+that:
+# iw phy phy1 interface add wlan1-1 type __ap
+[ 3602.929199] brcmfmac: brcmf_ap_add_vif: timeout occurred
+command failed: I/O error (-5)
+
+I hit this problem when trying to restart hostapd using BCM43602 and 2 BSSes.
+
+Could you analyze this problem and see if you see some way of solving
+this problem, please?
+
 -- 
-2.5.5
-
+Rafał
