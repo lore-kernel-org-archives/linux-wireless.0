@@ -1,41 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58021 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:56437 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932160AbcCKT5f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Mar 2016 14:57:35 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 3/7] rtl8xxxu: Correct txdesc40 gid definition
-Date: Fri, 11 Mar 2016 14:57:30 -0500
-Message-Id: <1457726254-28178-4-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160311_205740_366511_098305F5)
-In-Reply-To: <1457726254-28178-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1457726254-28178-1-git-send-email-Jes.Sorensen@redhat.com>
+	id S1754190AbcCCPLc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2016 10:11:32 -0500
+Message-ID: <1457017889.2044.18.camel@sipsolutions.net> (sfid-20160303_161136_409173_E7E8C936)
+Subject: Re: [PATCH v2 1/3] cfg80211: Allow a scan request for a specific
+ BSSID
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 03 Mar 2016 16:11:29 +0100
+In-Reply-To: <1456517569-27235-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1456517569-27235-1-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On Fri, 2016-02-26 at 22:12 +0200, Jouni Malinen wrote:
+> This allows scans for a specific BSSID to be optimized by the user
+> space
+> application by requesting the driver to set the Probe Request frame
+> BSSID field (Address 3) to the specified BSSID instead of the
+> wildcard
+> BSSID. This prevents other APs from replying which reduces airtime
+> need
+> and latency in getting the response from the target AP through.
+> 
+> This is an optimization and as such, it is acceptable for some of the
+> drivers not to support the mechanism. If not supported, the wildcard
+> BSSID will be used and more responses may be received.
+> 
+Applied all three.
 
-txdesc40 dword2 gid is a 6 bit field, not a single bit
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 38d4f56..af1d504 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -464,7 +464,7 @@ struct rtl8xxxu_txdesc40 {
- #define TXDESC40_SPE_RPT		BIT(19)
- #define TXDESC_AMPDU_DENSITY_SHIFT	20
- #define TXDESC40_BT_INT			BIT(23)
--#define TXDESC40_GID			BIT(24)
-+#define TXDESC40_GID_SHIFT		24
- 
- /* Word 3 */
- #define TXDESC40_USE_DRIVER_RATE	BIT(8)
--- 
-2.5.0
-
+johannes
