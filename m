@@ -1,67 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:40209 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751641AbcCGHMm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2016 02:12:42 -0500
-From: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
-Subject: [PATCH] mac80211: Allow probe response frame rx to user space in AP mode
-Date: Mon, 7 Mar 2016 12:42:11 +0530
-Message-ID: <1457334731-6456-1-git-send-email-vthiagar@qti.qualcomm.com> (sfid-20160307_081245_432511_51D98DBF)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from s3.sipsolutions.net ([5.9.151.49]:54001 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751243AbcCCJhP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2016 04:37:15 -0500
+Message-ID: <1456997824.2044.5.camel@sipsolutions.net> (sfid-20160303_103720_751794_28BA058C)
+Subject: Re: [PATCH 2/2] mac80211: mesh: convert path table to rhashtable
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>, me@bobcopeland.com
+Cc: linux-wireless@vger.kernel.org, tgraf@suug.ch,
+	netdev@vger.kernel.org
+Date: Thu, 03 Mar 2016 10:37:04 +0100
+In-Reply-To: <20160302.144359.2141637165742439224.davem@davemloft.net>
+References: <1456931360-2846-1-git-send-email-me@bobcopeland.com>
+	 <1456931360-2846-2-git-send-email-me@bobcopeland.com>
+	 <20160302.144359.2141637165742439224.davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Especially during off-channel scan user space might be interested
-in probe reponse frames along with beacon to build a list
-of preferred channel and bssid which could be sent to the stations
-around for better spectrum management. Do not drop probe response
-frame in AP mode and advertise driver's capability to receive probe
-response frame in AP mode to user space.
+On Wed, 2016-03-02 at 14:43 -0500, David Miller wrote:
+> From: Bob Copeland <me@bobcopeland.com>
+> Date: Wed,  2 Mar 2016 10:09:20 -0500
+> 
+> > In the time since the mesh path table was implemented as an
+> > RCU-traversable, dynamically growing hash table, a generic RCU
+> > hashtable implementation was added to the kernel.
+> > 
+> > Switch the mesh path table over to rhashtable to remove some code
+> > and also gain some features like automatic shrinking.
+> > 
+> > Cc: Thomas Graf <tgraf@suug.ch>
+> > Cc: netdev@vger.kernel.org
+> > Signed-off-by: Bob Copeland <me@bobcopeland.com>
+> 
+> Johannes, feel free to take both patches via your tree, thanks.
 
-Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
----
- net/mac80211/main.c | 2 ++
- net/mac80211/rx.c   | 2 ++
- 2 files changed, 4 insertions(+)
+Will do, thanks.
 
-diff --git a/net/mac80211/main.c b/net/mac80211/main.c
-index 8190bf2..c8a97da 100644
---- a/net/mac80211/main.c
-+++ b/net/mac80211/main.c
-@@ -401,6 +401,7 @@ ieee80211_default_mgmt_stypes[NUM_NL80211_IFTYPES] = {
- 		.rx = BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
- 			BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
- 			BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
-+			BIT(IEEE80211_STYPE_PROBE_RESP >> 4) |
- 			BIT(IEEE80211_STYPE_DISASSOC >> 4) |
- 			BIT(IEEE80211_STYPE_AUTH >> 4) |
- 			BIT(IEEE80211_STYPE_DEAUTH >> 4) |
-@@ -412,6 +413,7 @@ ieee80211_default_mgmt_stypes[NUM_NL80211_IFTYPES] = {
- 		.rx = BIT(IEEE80211_STYPE_ASSOC_REQ >> 4) |
- 			BIT(IEEE80211_STYPE_REASSOC_REQ >> 4) |
- 			BIT(IEEE80211_STYPE_PROBE_REQ >> 4) |
-+			BIT(IEEE80211_STYPE_PROBE_RESP >> 4) |
- 			BIT(IEEE80211_STYPE_DISASSOC >> 4) |
- 			BIT(IEEE80211_STYPE_AUTH >> 4) |
- 			BIT(IEEE80211_STYPE_DEAUTH >> 4) |
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 9127957..9d8f8ea 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -3464,6 +3464,8 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
- 				return false;
- 			if (ieee80211_is_public_action(hdr, skb->len))
- 				return true;
-+			if (ieee80211_is_probe_resp(hdr->frame_control))
-+				return true;
- 			return ieee80211_is_beacon(hdr->frame_control);
- 		}
- 
--- 
-1.9.1
-
+johannes
