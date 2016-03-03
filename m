@@ -1,59 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caladan.dune.hu ([78.24.191.180]:48176 "EHLO arrakis.dune.hu"
+Received: from caladan.dune.hu ([78.24.191.180]:38124 "EHLO arrakis.dune.hu"
 	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753689AbcCAN5v (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 08:57:51 -0500
-Subject: Re: [PATCH] ath10k: Fix mgmt tx status for 10.4.3 firmware.
-To: greearb@candelatech.com, ath10k@lists.infradead.org
-References: <1456782654-24723-1-git-send-email-greearb@candelatech.com>
-Cc: linux-wireless@vger.kernel.org
+	id S1758041AbcCCPLj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2016 10:11:39 -0500
+Subject: Re: [PATCH v2 1/2] mac80211: add A-MSDU tx support
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <1456306140-78485-1-git-send-email-nbd@openwrt.org>
+ <1457016860.2044.11.camel@sipsolutions.net>
+Cc: egrumbach@gmail.com
 From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <56D56052.2010007@openwrt.org> (sfid-20160301_145754_226064_92D3BEC4)
-Date: Tue, 1 Mar 2016 10:26:42 +0100
+Message-ID: <56D85428.6090705@openwrt.org> (sfid-20160303_161142_673562_17D02421)
+Date: Thu, 3 Mar 2016 16:11:36 +0100
 MIME-Version: 1.0
-In-Reply-To: <1456782654-24723-1-git-send-email-greearb@candelatech.com>
+In-Reply-To: <1457016860.2044.11.camel@sipsolutions.net>
 Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-02-29 22:50, greearb@candelatech.com wrote:
-> From: Ben Greear <greearb@candelatech.com>
+On 2016-03-03 15:54, Johannes Berg wrote:
+> On Wed, 2016-02-24 at 10:28 +0100, Felix Fietkau wrote:
+>> 
+>> +	/*
+>> +	 * HT A-MPDU limits maximum MPDU size to 4095 bytes. Since aggregation
+>> +	 * sessions are started/stopped without txq flush, use the limit here
+>> +	 * to avoid having to de-aggregate later.
+>> +	 */
+>> +	if (skb->len + head->len > 4095 &&
+>> +	    !sta->sta.vht_cap.vht_supported)
+>> +		goto out;
 > 
-> When testing a 10.4.3 firmware in station mode, I notice that
-> when the AP is powered down, the ath10k does not notice AP is gone
-> because mgt frames get tx status of 3, which is not handled.
+> I'm not entirely happy with this. You're silently assuming that when
+> VHT is supported, HT MCSes will never be used.
 > 
-> It appears that status 3 means something similar to failed-retry.
+> This is (I think) true for minstrel_ht, but at the very least you
+> should also document it along with the max_rc_amsdu_len then, which btw
+> I was going to reword to:
 > 
-> Treating it thus lets the station disconnect properly.
+> + * @IEEE80211_HW_TX_AMSDU: Hardware (or driver) supports software aggregated
+> + *     A-MSDU frames. Requires software tx queueing and fast-xmit support.
+> + *     When not using minstrel/minstrel_ht rate control, the driver needs to
+> + *     limit the maximum A-MSDU size based on the current tx rate by setting
+> + *     max_rc_amsdu_len in struct ieee80211_sta to avoid mac80211 building
+> + *     A-MSDUs that require too much airtime (are too long for a TXOP.)
 > 
-> Tested against a non-stock 10.4.3 firmware, but likely upstream
-> firmware acts similarly in this case.
 > 
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
-> 
-> This patch is against a heavily patched tree based on 4.4, hopefully
-> it can be applied to upstream code w/out too much trouble.
-> 
-> Someone should verify this on stock 10.4-ish firmware before applying.
-> 
->  drivers/net/wireless/ath/ath10k/htt.h    |  4 +++-
->  drivers/net/wireless/ath/ath10k/htt_rx.c | 11 +++++++++--
->  2 files changed, 12 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-> index c31a31f..de663a6 100644
-> --- a/drivers/net/wireless/ath/ath10k/htt.h
-> +++ b/drivers/net/wireless/ath/ath10k/htt.h
-> @@ -309,7 +309,9 @@ struct htt_mgmt_tx_desc {
->  enum htt_mgmt_tx_status {
->  	HTT_MGMT_TX_STATUS_OK    = 0,
->  	HTT_MGMT_TX_STATUS_RETRY = 1,
-> -	HTT_MGMT_TX_STATUS_DROP  = 2
-> +	HTT_MGMT_TX_STATUS_DROP  = 2,
-> +	HTT_MGMT_TX_STATUS_TXFILT = 3 /* Seems to be logically similar to
-> +					 RETRY failure. */
-In that case the driver should probably set IEEE80211_TX_STAT_TX_FILTERED
+> All that said, I'm not sure how much value there really is in
+> aggregating that much? I'd think the value of A-MSDU really is more for
+> lots of small frames like TCP ACKs, since the PER goes up exponentially
+> with the BER for A-MSDU (unlike A-MPDU.)
+For my own uses, I'd be perfectly fine with limiting A-MSDU size to HT
+limits even when using VHT - in fact I did that in an early RFC patch. I
+mainly relaxed the limit for VHT based on Emmanuel's feedback.
+I also have doubts about the value of A-MSDU size beyond 4095 bytes.
+
+Just let me know which way you'd like it, and I'll send v3 accordingly.
 
 - Felix
