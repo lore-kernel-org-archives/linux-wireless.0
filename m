@@ -1,70 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49637 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750819AbcCHMyP (ORCPT
+Received: from mail-qg0-f41.google.com ([209.85.192.41]:35188 "EHLO
+	mail-qg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755587AbcCCPmJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2016 07:54:15 -0500
+	Thu, 3 Mar 2016 10:42:09 -0500
+Received: by mail-qg0-f41.google.com with SMTP id y89so19844413qge.2
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2016 07:42:09 -0800 (PST)
+Date: Thu, 3 Mar 2016 10:41:52 -0500
+From: Bob Copeland <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Thomas Graf <tgraf@suug.ch>,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH 1/2] rhashtable: accept GFP flags in rhashtable_walk_init
+Message-ID: <20160303154152.GE19848@localhost> (sfid-20160303_164218_364494_0629DC87)
+References: <1456931360-2846-1-git-send-email-me@bobcopeland.com>
+ <1457018779.2044.22.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Tue, 08 Mar 2016 18:24:13 +0530
-From: Rajkumar Manoharan <rmanohar@codeaurora.org>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	ath10k@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v3] ath10k: move mgmt descriptor limit handle under
- mgmt_tx
-In-Reply-To: <CA+BoTQ=Huzf7WoXMXcyj8yrykrJOd5BMc1EnmccqZgt7M1M_uA@mail.gmail.com>
-References: <1457438096-20071-1-git-send-email-rmanohar@qti.qualcomm.com>
- <CA+BoTQ=Huzf7WoXMXcyj8yrykrJOd5BMc1EnmccqZgt7M1M_uA@mail.gmail.com>
-Message-ID: <aa44bd32c9f94d8d1a90840189ac0602@codeaurora.org> (sfid-20160308_135418_087401_DBE77A75)
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1457018779.2044.22.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On , Michal Kazior wrote:
-> On 8 March 2016 at 12:54, Rajkumar Manoharan 
-> <rmanohar@qti.qualcomm.com> wrote:
-> [...]
->> +int ath10k_htt_tx_mgmt_inc_pending(struct ath10k_htt *htt, bool 
->> is_mgmt,
->> +                                  bool is_presp)
->>  {
->>         struct ath10k *ar = htt->ar;
->> 
->>         lockdep_assert_held(&htt->tx_lock);
->> 
->> +       if (!is_mgmt)
->> +               return 0;
->> +
+On Thu, Mar 03, 2016 at 04:26:19PM +0100, Johannes Berg wrote:
+> On Wed, 2016-03-02 at 10:09 -0500, Bob Copeland wrote:
+> > In certain cases, the 802.11 mesh pathtable code wants to
+> > iterate over all of the entries in the forwarding table from
+> > the receive path, which is inside an RCU read-side critical
+> > section.  Enable walks inside atomic sections by allowing
+> > GFP_ATOMIC allocations for the walker state.
+> > 
+> > Change all existing callsites to pass in GFP_KERNEL.
 > 
->>         if (htt->num_pending_tx >= htt->max_num_pending_tx)
->>                 return -EBUSY;
-> 
-> This busy here will be hit when you use last tx slot because
-> tx_inc_pending() is called before tx_mgmt_inc_pending().
-> 
-Yeah.. now this condition is not needed as 
-ath10k_htt_tx_mgmt_inc_pending
-will be called only when tx_inc_pending succeeds. will remove this.
+> Applied both. You missed 3 callsites, I've fixed those. I hope I got
+> them all :)
 
-> 
-> [...]
->>         skb_cb = ATH10K_SKB_CB(msdu);
->>         txq = skb_cb->txq;
->>         artxq = (void *)txq->drv_priv;
->> 
->> -       if (unlikely(skb_cb->flags & ATH10K_SKB_F_MGMT) &&
->> -           ar->hw_params.max_probe_resp_desc_thres)
->> -               limit_mgmt_desc = true;
->> -
-> 
-> Oh wait.. I didn't pay attention before, but this looks rather ugly.
-> With this you will actually make the num_pending_mgmt_tx spin
-> endlessly upwards on firmware with HTT 3.0 (and uses TX_FRM for mgmt
-> tx and TX_COMPL_IND for completions), no?
-> 
-Oops.. num_pending_mgmt_tx should be incremented only for MGMT_TX. Thats
-why it is moved out of txrx_tx_unref.
+Ouch, thanks for the catch, I must've grepped only in net.
+And now I added those files to my build config. :)
 
--Rajkumar
+-- 
+Bob Copeland %% http://bobcopeland.com/
