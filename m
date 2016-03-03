@@ -1,63 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f173.google.com ([209.85.223.173]:34178 "EHLO
-	mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750702AbcCLI51 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Mar 2016 03:57:27 -0500
-Received: by mail-io0-f173.google.com with SMTP id m184so172563505iof.1
-        for <linux-wireless@vger.kernel.org>; Sat, 12 Mar 2016 00:57:26 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <56E3C548.5070000@broadcom.com>
-References: <CAOf5uwkT=Z2V3JadZeFKKU6m1sTozcC+ObEPzwR_qPuzv6X7Xw@mail.gmail.com>
-	<56E3C548.5070000@broadcom.com>
-Date: Sat, 12 Mar 2016 09:57:25 +0100
-Message-ID: <CAOf5uwniA8=nsNC=paSTLARxMKpjsnuGko1r+iLdrXgsWR5Ufg@mail.gmail.com> (sfid-20160312_095730_915951_FA874D61)
-Subject: Re: Probelm on (brcmfmac: use pre-allocated scatter-gather table for txglomming)
-From: Michael Trimarchi <michael@amarulasolutions.com>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga09.intel.com ([134.134.136.24]:46532 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757134AbcCCJ0W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2016 04:26:22 -0500
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH] nfc: pn544: Drop two useless checks in ACPI probe path
+Date: Thu,  3 Mar 2016 11:26:18 +0200
+Message-Id: <1456997178-7673-1-git-send-email-mika.westerberg@linux.intel.com> (sfid-20160303_102626_570898_2B731BF1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+When pn544_hci_i2c_acpi_request_resources() gets called we already know
+that the entries in ->acpi_match_table have matched ACPI ID of the device.
+In addition I2C client pointer cannot be NULL in any case (otherwise I2C
+core would not call ->probe() for the driver in the first place).
 
+Drop the two useless checks from the driver.
 
-On Sat, Mar 12, 2016 at 8:29 AM, Arend van Spriel
-<arend.vanspriel@broadcom.com> wrote:
->
->
-> On 11-03-16 16:23, Michael Trimarchi wrote:
->> Hi
->>
->> I have a kernel panic on the brcmf_sdiod_sgtable_alloc just because
->> the function is called before brcmf_sdio_probe.
->>
->> I think that
->>  nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE,
->>                       sdiodev->bus_if->drvr->settings->sdiod_txglomsz);
->>
->> drvr is null. Can you explain how it can work or do you have already a
->> fix for this?
->
-> What kernel version are you using? This has been fixed already in
-> 4.5-rc2 or rc3.
+Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+---
+ drivers/nfc/pn544/i2c.c | 14 +-------------
+ 1 file changed, 1 insertion(+), 13 deletions(-)
 
-Ok, I see it I was using rockchip for-next and I have seen now the fix
-in newest tree.
-
-Thank you
-Michael
-
->
-> Regards,
-> Arend
-
-
-
+diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
+index 76c318444304..45d0e667d7ae 100644
+--- a/drivers/nfc/pn544/i2c.c
++++ b/drivers/nfc/pn544/i2c.c
+@@ -877,20 +877,8 @@ exit_state_wait_secure_write_answer:
+ static int pn544_hci_i2c_acpi_request_resources(struct i2c_client *client)
+ {
+ 	struct pn544_i2c_phy *phy = i2c_get_clientdata(client);
+-	const struct acpi_device_id *id;
+ 	struct gpio_desc *gpiod_en, *gpiod_fw;
+-	struct device *dev;
+-
+-	if (!client)
+-		return -EINVAL;
+-
+-	dev = &client->dev;
+-
+-	/* Match the struct device against a given list of ACPI IDs */
+-	id = acpi_match_device(dev->driver->acpi_match_table, dev);
+-
+-	if (!id)
+-		return -ENODEV;
++	struct device *dev = &client->dev;
+ 
+ 	/* Get EN GPIO from ACPI */
+ 	gpiod_en = devm_gpiod_get_index(dev, PN544_GPIO_NAME_EN, 1,
 -- 
-| Michael Nazzareno Trimarchi                     Amarula Solutions BV |
-| COO  -  Founder                                      Cruquiuskade 47 |
-| +31(0)851119172                                 Amsterdam 1018 AM NL |
-|                  [`as] http://www.amarulasolutions.com               |
+2.7.0
+
