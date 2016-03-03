@@ -1,39 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48950 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753000AbcCRLYa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 07:24:30 -0400
-Date: Fri, 18 Mar 2016 12:22:13 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Jia-Ju Bai <baijiaju1990@163.com>,
-	Sara Sharon <sarasharon1@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH MOREWORK 17/19] iwl4965: Fix a memory leak in error
- handling code of __il4965_up
-Message-ID: <20160318112212.GF24990@redhat.com> (sfid-20160318_122434_065714_30BE8529)
-References: <cover.1458262312.git.julian.calaby@gmail.com>
- <3aaac3629455d27b0e9c56ef1615b89873b1b8cf.1458262312.git.julian.calaby@gmail.com>
- <20160318104846.GD24990@redhat.com>
- <CAGRGNgVh+-UOMVmo98HMashUi3CejdXTx4S=sTxq8VcNNrWeag@mail.gmail.com>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:36740 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751272AbcCCPli (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2016 10:41:38 -0500
+Received: by mail-wm0-f66.google.com with SMTP id l68so4726331wml.3
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2016 07:41:37 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CAGRGNgVh+-UOMVmo98HMashUi3CejdXTx4S=sTxq8VcNNrWeag@mail.gmail.com>
+In-Reply-To: <1457019637.2044.26.camel@sipsolutions.net>
+References: <1456954113-4682-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1456954113-4682-3-git-send-email-emmanuel.grumbach@intel.com> <1457019637.2044.26.camel@sipsolutions.net>
+From: Arik Nemtsov <arik@wizery.com>
+Date: Thu, 3 Mar 2016 17:41:22 +0200
+Message-ID: <CA+XVXfcYSJRcQZrY7qXok__+T-+AxBwQS8c9FqQH_Ata-OGXVA@mail.gmail.com> (sfid-20160303_164141_526191_4E6690EA)
+Subject: Re: [PATCH 3/3] mac80211: recalc min_def chanctx even when chandef is identical
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 18, 2016 at 10:12:34PM +1100, Julian Calaby wrote:
-> I don't think you're right. Looking closely at the code,
-> il->num_stations gets incremented in il_prep_station() which is called
-> unconditionally from il4965_alloc_bcast_station().
-> 
-> So I think this and the following patch are fine.
+On Thu, Mar 3, 2016 at 5:40 PM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> All three applied, but I had to fix your Fixes tag commit ID, no idea
+> what that referred to :)
 
-You have right.
+Yea I might have taken it from some internal tree :)
 
-Thanks
-Stanislaw
-
+Arik
