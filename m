@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f169.google.com ([209.85.192.169]:34957 "EHLO
-	mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752133AbcCHOSE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2016 09:18:04 -0500
-Received: by mail-pf0-f169.google.com with SMTP id x188so13929669pfb.2
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2016 06:18:04 -0800 (PST)
-From: Moroo Akira <retrage01@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Akira Moroo <retrage01@gmail.com>
-Subject: [PATCH] Fix typo in cfg80211.h
-Date: Tue,  8 Mar 2016 23:17:42 +0900
-Message-Id: <1457446662-27437-1-git-send-email-retrage01@gmail.com> (sfid-20160308_151809_867812_D2702EA5)
+Received: from s3.sipsolutions.net ([5.9.151.49]:56587 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753430AbcCCPhc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2016 10:37:32 -0500
+Message-ID: <1457019447.2044.24.camel@sipsolutions.net> (sfid-20160303_163735_151313_71D1FAD1)
+Subject: Re: [PATCH v2 1/2] mac80211: add A-MSDU tx support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Cc: egrumbach@gmail.com
+Date: Thu, 03 Mar 2016 16:37:27 +0100
+In-Reply-To: <56D85428.6090705@openwrt.org>
+References: <1456306140-78485-1-git-send-email-nbd@openwrt.org>
+	 <1457016860.2044.11.camel@sipsolutions.net> <56D85428.6090705@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Akira Moroo <retrage01@gmail.com>
+On Thu, 2016-03-03 at 16:11 +0100, Felix Fietkau wrote:
+> 
+> For my own uses, I'd be perfectly fine with limiting A-MSDU size to
+> HT limits even when using VHT - in fact I did that in an early RFC
+> patch. I mainly relaxed the limit for VHT based on Emmanuel's
+> feedback. I also have doubts about the value of A-MSDU size beyond
+> 4095 bytes.
+> 
+> Just let me know which way you'd like it, and I'll send v3
+> accordingly.
+> 
 
-This patch fix a structure name typo in cfg80211.h.
+I don't really know, I can live with both ways. I'm just a bit worried
+that we make enabling this feature so complex that nobody will get it
+right.
 
-Signed-off-by: Moroo Akira <retrage01@gmail.com>
----
- include/net/cfg80211.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Perhaps we could also just remove this, make the default
+for max_rc_amsdu_len be 4095 (or so) and leave the rest to the rate
+control? We could entirely remove this check here, and let minstrel
+only use higher values if VHT is supported (and consequently will be
+used)?
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9bcaaf7..9570ade 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1609,17 +1609,17 @@ enum cfg80211_signal_type {
- struct cfg80211_inform_bss {
- 	struct ieee80211_channel *chan;
- 	enum nl80211_bss_scan_width scan_width;
- 	s32 signal;
- 	u64 boottime_ns;
- };
- 
- /**
-- * struct cfg80211_bss_ie_data - BSS entry IE data
-+ * struct cfg80211_bss_ies - BSS entry IE data
-  * @tsf: TSF contained in the frame that carried these IEs
-  * @rcu_head: internal use, for freeing
-  * @len: length of the IEs
-  * @from_beacon: these IEs are known to come from a beacon
-  * @data: IE data
-  */
- struct cfg80211_bss_ies {
- 	u64 tsf;
--- 
-2.4.10
-
+johannes
