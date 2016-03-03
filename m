@@ -1,38 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:20554 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758716AbcCDIoF convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:36372 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752233AbcCCTTh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 03:44:05 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Fix sanity check on enabling btcoex via debugfs
-Date: Fri, 4 Mar 2016 08:43:59 +0000
-Message-ID: <87si06y6nm.fsf@kamboji.qca.qualcomm.com> (sfid-20160304_094411_379219_7321CE63)
-References: <1456212516-3989-1-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1456212516-3989-1-git-send-email-mohammed@qca.qualcomm.com>
-	(Mohammed Shafi Shajakhan's message of "Tue, 23 Feb 2016 12:58:36	+0530")
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 3 Mar 2016 14:19:37 -0500
+Received: by mail-pa0-f54.google.com with SMTP id fi3so17919274pac.3
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2016 11:19:37 -0800 (PST)
+Reply-To: arend@broadcom.com
+Subject: Re: [PATCH V11 1/2] nl80211: add feature for BSS selection support
+References: <1456947439-28968-1-git-send-email-arend@broadcom.com>
+ <1457020529.2044.31.camel@sipsolutions.net>
+To: Johannes Berg <johannes@sipsolutions.net>,
+	Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <56D88E44.5080705@broadcom.com> (sfid-20160303_201940_872553_4D04CC66)
+Date: Thu, 3 Mar 2016 20:19:32 +0100
 MIME-Version: 1.0
+In-Reply-To: <1457020529.2044.31.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
 
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
->
-> First check for the device state before enabling / disabling
-> btcoex, also return a proper error value. Enabling / disabling
-> btcoex ideally does a f/w + ath10k_core_restart so the checks
-> that are applicable for 'simulate_fw_crash' shall be applicable
-> for this as well
->
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Applied, thanks.
+On 3-3-2016 16:55, Johannes Berg wrote:
+> On Wed, 2016-03-02 at 20:37 +0100, Arend van Spriel wrote:
+>> Introducing a new feature that the driver can use to
+>> indicate the driver/firmware supports configuration of BSS
+>> selection criteria upon CONNECT command. This can be useful
+>> when multiple BSS-es are found belonging to the same ESS,
+>> ie. Infra-BSS with same SSID. The criteria can then be used to
+>> offload selection of a preferred BSS.
+>>
+> Applied, finally :)
 
--- 
-Kalle Valo
+Yeah. I was afraid it would not make it in 4.6.
+
+> I moved the wiphy supported methods check into parse_bss_select() to
+> avoid the double error path in the caller, plus some editorial changes.
+
+Looking at it
+
++       /* user-space did not provide behaviour attribute */
++       if (bss_select->behaviour == __NL80211_BSS_SELECT_ATTR_INVALID)
++               return -EINVAL;
++
++       if (!(wiphy->bss_select_support & BIT(bss_select->behaviour)))
++               return -EINVAL;
+
+the first check is (and already was) redundant.
+
+Regards,
+Arend
