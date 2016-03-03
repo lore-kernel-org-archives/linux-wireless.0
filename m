@@ -1,117 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m50-134.163.com ([123.125.50.134]:47211 "EHLO m50-134.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754448AbcCAPgh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 10:36:37 -0500
-From: Geliang Tang <geliangtang@163.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Julian Calaby <julian.calaby@gmail.com>
-Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v2 1/3] staging: rtl8723au: core: rtw_recv: use list_first_entry_or_null()
-Date: Tue,  1 Mar 2016 23:35:31 +0800
-Message-Id: <f7e4ee69330e0a135625aaf9d99502e5798f0a32.1456845896.git.geliangtang@163.com> (sfid-20160301_163758_388688_D97E97F4)
-In-Reply-To: <cover.1456845896.git.geliangtang@163.com>
-References: <cover.1456845896.git.geliangtang@163.com>
-In-Reply-To: <cover.1456845896.git.geliangtang@163.com>
-References: <cover.1456845896.git.geliangtang@163.com>
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:33662 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751010AbcCCF2l (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2016 00:28:41 -0500
+Received: by mail-pa0-f66.google.com with SMTP id gc2so55026pab.0
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Mar 2016 21:28:40 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 4/5] staging: wilc1000: remove unused define
+Date: Thu,  3 Mar 2016 14:28:23 +0900
+Message-Id: <1456982904-8063-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20160303_062859_025936_1DAAE819)
+In-Reply-To: <1456982904-8063-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1456982904-8063-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use list_first_entry_or_null() instead of list_empty() + container_of()
-to simplify the code.
+This patch removes INFINITE_SLEEP_TIME that is not used in the driver,
+so just remove it.
 
-Signed-off-by: Geliang Tang <geliangtang@163.com>
-Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/staging/rtl8723au/core/rtw_recv.c | 42 ++++++++-----------------------
- 1 file changed, 11 insertions(+), 31 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan_if.h | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_recv.c b/drivers/staging/rtl8723au/core/rtw_recv.c
-index 0a7741c..a4dacc3 100644
---- a/drivers/staging/rtl8723au/core/rtw_recv.c
-+++ b/drivers/staging/rtl8723au/core/rtw_recv.c
-@@ -104,21 +104,14 @@ void _rtw_free_recv_priv23a(struct recv_priv *precvpriv)
- struct recv_frame *rtw_alloc_recvframe23a(struct rtw_queue *pfree_recv_queue)
- {
- 	struct recv_frame *pframe;
--	struct list_head *plist, *phead;
- 	struct rtw_adapter *padapter;
- 	struct recv_priv *precvpriv;
+diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
+index 9eb123b..83cf84d 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_if.h
++++ b/drivers/staging/wilc1000/wilc_wlan_if.h
+@@ -96,8 +96,6 @@ typedef void (*wilc_tx_complete_func_t)(void *, int);
+ #define MAX_SSID_LEN            33
+ #define MAX_RATES_SUPPORTED     12
  
- 	spin_lock_bh(&pfree_recv_queue->lock);
- 
--	if (list_empty(&pfree_recv_queue->queue))
--		pframe = NULL;
--	else {
--		phead = get_list_head(pfree_recv_queue);
+-#define INFINITE_SLEEP_TIME	((u32)0xFFFFFFFF)
 -
--		plist = phead->next;
--
--		pframe = container_of(plist, struct recv_frame, list);
--
-+	pframe = list_first_entry_or_null(&pfree_recv_queue->queue,
-+					  struct recv_frame, list);
-+	if (pframe) {
- 		list_del_init(&pframe->list);
- 		padapter = pframe->adapter;
- 		if (padapter) {
-@@ -247,21 +240,13 @@ struct recv_buf *rtw_dequeue_recvbuf23a (struct rtw_queue *queue)
- {
- 	unsigned long irqL;
- 	struct recv_buf *precvbuf;
--	struct list_head *plist, *phead;
- 
- 	spin_lock_irqsave(&queue->lock, irqL);
- 
--	if (list_empty(&queue->queue)) {
--		precvbuf = NULL;
--	} else {
--		phead = get_list_head(queue);
--
--		plist = phead->next;
--
--		precvbuf = container_of(plist, struct recv_buf, list);
--
-+	precvbuf = list_first_entry_or_null(&queue->queue,
-+					    struct recv_buf, list);
-+	if (precvbuf)
- 		list_del_init(&precvbuf->list);
--	}
- 
- 	spin_unlock_irqrestore(&queue->lock, irqL);
- 
-@@ -1079,22 +1064,17 @@ static int validate_recv_ctrl_frame(struct rtw_adapter *padapter,
- 
- 		if ((psta->state & WIFI_SLEEP_STATE) &&
- 		    (pstapriv->sta_dz_bitmap & CHKBIT(psta->aid))) {
--			struct list_head *xmitframe_plist, *xmitframe_phead;
-+			struct list_head *xmitframe_phead;
- 			struct xmit_frame *pxmitframe;
- 			struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
- 
- 			spin_lock_bh(&pxmitpriv->lock);
- 
- 			xmitframe_phead = get_list_head(&psta->sleep_q);
--			xmitframe_plist = xmitframe_phead->next;
--
--			if (!list_empty(xmitframe_phead)) {
--				pxmitframe = container_of(xmitframe_plist,
--							  struct xmit_frame,
--							  list);
--
--				xmitframe_plist = xmitframe_plist->next;
--
-+			pxmitframe = list_first_entry_or_null(xmitframe_phead,
-+							      struct xmit_frame,
-+							      list);
-+			if (pxmitframe) {
- 				list_del_init(&pxmitframe->list);
- 
- 				psta->sleepq_len--;
+ typedef enum {
+ 	SUPP_RATES_IE		= 1,
+ 	EXT_SUPP_RATES_IE	= 50,
 -- 
-2.5.0
-
+2.7.1
 
