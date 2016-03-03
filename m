@@ -1,48 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55555 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750799AbcCAGaA (ORCPT
+Received: from mail-pa0-f68.google.com ([209.85.220.68]:35679 "EHLO
+	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751010AbcCCF2o (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 01:30:00 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH v2 0/8] ath9k GPIO & BT-Coex bug fixes
-Date: Tue,  1 Mar 2016 14:29:36 +0800
-Message-Id: <1456813784-21218-1-git-send-email-miaoqing@codeaurora.org> (sfid-20160301_073004_933108_46059541)
+	Thu, 3 Mar 2016 00:28:44 -0500
+Received: by mail-pa0-f68.google.com with SMTP id fl4so686936pad.2
+        for <linux-wireless@vger.kernel.org>; Wed, 02 Mar 2016 21:28:44 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 5/5] staging: wilc1000: remove typedef from enum tenuConnectSts
+Date: Thu,  3 Mar 2016 14:28:24 +0900
+Message-Id: <1456982904-8063-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20160303_062859_636329_76AE4D9B)
+In-Reply-To: <1456982904-8063-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1456982904-8063-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+This patch removes typedef from enum tenuConnectSts and renames it to
+connect_status to avoid camelcase.
 
-ath9k GPIO & BT-Coex bug fixes.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/coreconfigurator.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Miaoqing Pan (8):
-  ath9k: define correct GPIO numbers and bits mask
-  ath9k: make GPIO API to support both of WMAC and SOC
-  ath9k: free GPIO resource for SOC GPIOs
-  ath9k: cleanup led_pin initial
-  ath9k: Allow platform override BTCoex pin
-  ath9k: add bits definition of BTCoex MODE2/3 for SOC chips
-  ath9k: fix BTCoex access invalid registers for SOC chips
-  ath9k: fix BTCoex configuration for SOC chips
-
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   4 +-
- drivers/net/wireless/ath/ath9k/ar9003_mci.c    |  39 ++--
- drivers/net/wireless/ath/ath9k/ath9k.h         |   4 -
- drivers/net/wireless/ath/ath9k/btcoex.c        | 138 +++++++++----
- drivers/net/wireless/ath/ath9k/btcoex.h        |   2 +
- drivers/net/wireless/ath/ath9k/gpio.c          |  69 ++++---
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c  |   8 +-
- drivers/net/wireless/ath/ath9k/hw.c            | 267 ++++++++++++++++---------
- drivers/net/wireless/ath/ath9k/hw.h            |  11 +-
- drivers/net/wireless/ath/ath9k/init.c          |   1 -
- drivers/net/wireless/ath/ath9k/main.c          |   9 +-
- drivers/net/wireless/ath/ath9k/reg.h           |  90 +++++++--
- include/linux/ath9k_platform.h                 |   4 +
- 13 files changed, 436 insertions(+), 210 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
+index 63eca24..076e06a 100644
+--- a/drivers/staging/wilc1000/coreconfigurator.h
++++ b/drivers/staging/wilc1000/coreconfigurator.h
+@@ -50,7 +50,7 @@
+ #define MAKE_WORD16(lsb, msb) ((((u16)(msb) << 8) & 0xFF00) | (lsb))
+ #define MAKE_WORD32(lsw, msw) ((((u32)(msw) << 16) & 0xFFFF0000) | (lsw))
+ 
+-typedef enum {
++enum connect_status {
+ 	SUCCESSFUL_STATUSCODE    = 0,
+ 	UNSPEC_FAIL              = 1,
+ 	UNSUP_CAP                = 10,
+@@ -68,7 +68,7 @@ typedef enum {
+ 	SHORT_SLOT_UNSUP         = 25,
+ 	OFDM_DSSS_UNSUP          = 26,
+ 	CONNECT_STS_FORCE_16_BIT = 0xFFFF
+-} tenuConnectSts;
++};
+ 
+ typedef struct {
+ 	u8 u8Full;
 -- 
-1.9.1
+2.7.1
 
