@@ -1,26 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caladan.dune.hu ([78.24.191.180]:44412 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1757787AbcCCVOL (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 16:14:11 -0500
-Subject: Re: [PATCH 2/2] mt76: add driver code for MT76x2e
-To: linux-wireless@vger.kernel.org
-References: <1456941575-99907-1-git-send-email-nbd@openwrt.org>
- <1456941575-99907-2-git-send-email-nbd@openwrt.org>
-Cc: kvalo@codeaurora.org
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <56D8A91F.8030109@openwrt.org> (sfid-20160303_221417_744400_B4038C54)
-Date: Thu, 3 Mar 2016 22:14:07 +0100
-MIME-Version: 1.0
-In-Reply-To: <1456941575-99907-2-git-send-email-nbd@openwrt.org>
-Content-Type: text/plain; charset=utf-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:56608 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751272AbcCCPmj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2016 10:42:39 -0500
+Message-ID: <1457019756.2044.27.camel@sipsolutions.net> (sfid-20160303_164243_187665_79678783)
+Subject: Re: [PATCH 3/3] mac80211: recalc min_def chanctx even when chandef
+ is identical
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Arik Nemtsov <arik@wizery.com>
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Arik Nemtsov <arikx.nemtsov@intel.com>
+Date: Thu, 03 Mar 2016 16:42:36 +0100
+In-Reply-To: <CA+XVXfcYSJRcQZrY7qXok__+T-+AxBwQS8c9FqQH_Ata-OGXVA@mail.gmail.com> (sfid-20160303_164137_702878_0E168336)
+References: <1456954113-4682-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1456954113-4682-3-git-send-email-emmanuel.grumbach@intel.com>
+	 <1457019637.2044.26.camel@sipsolutions.net>
+	 <CA+XVXfcYSJRcQZrY7qXok__+T-+AxBwQS8c9FqQH_Ata-OGXVA@mail.gmail.com>
+	 (sfid-20160303_164137_702878_0E168336)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-03-02 18:59, Felix Fietkau wrote:
-> This is a 2x2 PCIe 802.11ac chipset by MediaTek
+On Thu, 2016-03-03 at 17:41 +0200, Arik Nemtsov wrote:
+> On Thu, Mar 3, 2016 at 5:40 PM, Johannes Berg <johannes@sipsolutions.
+> net> wrote:
+> > All three applied, but I had to fix your Fixes tag commit ID, no
+> > idea
+> > what that referred to :)
 > 
-> Signed-off-by: Felix Fietkau <nbd@openwrt.org>
-Found some minor tx queue issues. Will send a v2.
+> Yea I might have taken it from some internal tree :)
+> 
 
-- Felix
+Oh, actually what prompted me to look at all was that it was too short
+- should be 12 hex digits.
+
+johannes
