@@ -1,43 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51397 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752180AbcCGMt2 (ORCPT
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:36697 "EHLO
+	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757905AbcCCOeq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2016 07:49:28 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [01/21] brcmfmac: change function name forbrcmf_cfg80211_wait_vif_event_timeout()
-References: <20160307121950.CDA876067A@smtp.codeaurora.org>
-Date: Mon, 07 Mar 2016 14:49:20 +0200
-In-Reply-To: <20160307121950.CDA876067A@smtp.codeaurora.org> (Kalle Valo's
-	message of "Mon, 7 Mar 2016 12:19:50 +0000 (UTC)")
-Message-ID: <87egbmtpv3.fsf@kamboji.qca.qualcomm.com> (sfid-20160307_134931_362572_455C247E)
+	Thu, 3 Mar 2016 09:34:46 -0500
+Received: by mail-wm0-f52.google.com with SMTP id n186so134479378wmn.1
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2016 06:34:45 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1457015372.2044.6.camel@sipsolutions.net>
+References: <1456238615-832-1-git-send-email-lorenzo.bianconi83@gmail.com>
+	<1457015372.2044.6.camel@sipsolutions.net>
+Date: Thu, 3 Mar 2016 15:34:44 +0100
+Message-ID: <CAA2SeNJehrGzQCC7OE29nXk+LGKoVNG4r6=ueewYxsk08OwrvA@mail.gmail.com> (sfid-20160303_153529_266005_CCCAB884)
+Subject: Re: [PATCHv2] mac80211: parse VHT info in injected frames
+From: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
+> On Tue, 2016-02-23 at 15:43 +0100, Lorenzo Bianconi wrote:
+>> Add VHT radiotap parsing support to ieee80211_parse_tx_radiotap().
+>> That capability has been tested using a d-link dir-860l rev b1
+>> running OpenWrt trunk and mt76 driver
+>>
+> Applied. In case you didn't see, Sven sent a patch to fix the other
+> docs.
 
-> 1 patches skipped:
->
-> [17/21] brcmfmac: fix sdio sg table alloc crash
->
-> There was a conflict so please rebase that patch:
->
-> Applying: brcmfmac: fix sdio sg table alloc crash
-> fatal: sha1 information is lacking or useless (drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c).
-> Repository lacks necessary blobs to fall back on 3-way merge.
-> Cannot fall back to three-way merge.
-> Patch failed at 0001 brcmfmac: fix sdio sg table alloc crash
+Yes, I did not send the patch since I had seen the one sent by Sven :-)
 
-Ah, I noticed only now your comment that this patch is in
-wireless-drivers already. So no actions needed.
+>
+> johannes
 
-But in the future please don't submit the same patch twice, otherwise I
-accidentally commit it twice which is bad. Instead document the
-dependency and we can sort it out.
+Regards,
+Lorenzo
+
 
 -- 
-Kalle Valo
+UNIX is Sexy: who | grep -i blonde | talk; cd ~; wine; talk; touch;
+unzip; touch; strip; gasp; finger; gasp; mount; fsck; more; yes; gasp;
+umount; make clean; sleep
