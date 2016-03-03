@@ -1,39 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39349 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752200AbcCSJJ5 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Mar 2016 05:09:57 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Joe Perches <joe@perches.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-kernel@vger.kernel.org,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: btcoexist: Convert BTC_PRINTK to btc_<foo>_dbg
-References: <4672f9efb37df545ae504d51ca626bf34237fa63.1458258337.git.joe@perches.com>
-	<56EB6DD9.3000300@lwfinger.net> <1458272258.9556.46.camel@perches.com>
-Date: Sat, 19 Mar 2016 11:09:50 +0200
-In-Reply-To: <1458272258.9556.46.camel@perches.com> (Joe Perches's message of
-	"Thu, 17 Mar 2016 20:37:38 -0700")
-Message-ID: <87pouqhm01.fsf@kamboji.qca.qualcomm.com> (sfid-20160319_101007_892777_99EFB596)
+Received: from caladan.dune.hu ([78.24.191.180]:37858 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751067AbcCCPDx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2016 10:03:53 -0500
+Subject: Re: [PATCH v2 2/2] mac80211: minstrel_ht: set A-MSDU tx limits based
+ on selected max_prob_rate
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless@vger.kernel.org
+References: <1456306140-78485-1-git-send-email-nbd@openwrt.org>
+ <1456306140-78485-2-git-send-email-nbd@openwrt.org>
+ <1457016949.2044.12.camel@sipsolutions.net>
+Cc: egrumbach@gmail.com
+From: Felix Fietkau <nbd@openwrt.org>
+Message-ID: <56D85246.8070306@openwrt.org> (sfid-20160303_160355_936410_D5CA588F)
+Date: Thu, 3 Mar 2016 16:03:34 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1457016949.2044.12.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
+On 2016-03-03 15:55, Johannes Berg wrote:
+> On Wed, 2016-02-24 at 10:29 +0100, Felix Fietkau wrote:
+> 
+>> +	/*
+>> +	 * If the rate is slower than single-stream MCS4, limit A-MSDU to usual
+>> +	 * data packet size
+>> +	 */
+>> +	if (g->duration[rate] > MCS_DURATION(1, 0, 104))
+>> +		return 1500;
+>> +
+>> +	/*
+>> +	 * If the rate is slower than single-stream MCS7, limit A-MSDU to twice
+>> +	 * the usual data packet size
+>> +	 */
+>> +	if (g->duration[rate] > MCS_DURATION(1, 0, 260))
+>> +		return 3000;
+> 
+> This isn't *quite* right, since you have to take an 802.11 header (vs.
+> an ethernet header) into account, I think?
+It's only a rough approximation anyway to prevent very large A-MSDUs
+from being created with low rates.
 
-> On Thu, 2016-03-17 at 21:54 -0500, Larry Finger wrote:
->> On 03/17/2016 07:00 PM, Joe Perches wrote:
->> > Use a more common logging style.
->
-> [ 300K+ quote without comment ]
-
-Yeah, please try to avoid that. For example this makes the patchwork
-page for the patch really hard to read:
-
-https://patchwork.kernel.org/patch/8615131/
-
--- 
-Kalle Valo
+- Felix
