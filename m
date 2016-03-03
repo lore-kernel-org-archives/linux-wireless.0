@@ -1,132 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:33097 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751107AbcCJAY7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 19:24:59 -0500
-Received: by mail-oi0-f51.google.com with SMTP id d205so49169218oia.0
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2016 16:24:59 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <56E0B9AD.3050806@mleia.com>
-References: <1457565194-31533-1-git-send-email-vz@mleia.com>
- <CAGRGNgUMViiR+ruvLHnwMLHUxOK3+uW7634Hpgn9gN+djCOtbw@mail.gmail.com>
- <56E0B21D.1010503@mleia.com> <CAGRGNgVsmTPpiu4twUnvk_3GEFMiU2VuuSj5=M+4y6qJYiDZhA@mail.gmail.com>
- <56E0B9AD.3050806@mleia.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 10 Mar 2016 11:24:39 +1100
-Message-ID: <CAGRGNgWKUTeP-BPUX92VW-Cnm+BOA+-pivsjZECqpdnaxZbn8A@mail.gmail.com> (sfid-20160310_012503_324789_3F76560B)
-Subject: Re: [PATCH] staging: wilc1000: fix check of kthread_run() return value
-To: Vladimir Zapolskiy <vz@mleia.com>
-Cc: Glen Lee <glen.lee@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Leo Kim <leo.kim@atmel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:56355 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753440AbcCCOyY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2016 09:54:24 -0500
+Message-ID: <1457016860.2044.11.camel@sipsolutions.net> (sfid-20160303_155429_613233_590ACEF1)
+Subject: Re: [PATCH v2 1/2] mac80211: add A-MSDU tx support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
+Cc: egrumbach@gmail.com
+Date: Thu, 03 Mar 2016 15:54:20 +0100
+In-Reply-To: <1456306140-78485-1-git-send-email-nbd@openwrt.org>
+References: <1456306140-78485-1-git-send-email-nbd@openwrt.org>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Vladimir,
+On Wed, 2016-02-24 at 10:28 +0100, Felix Fietkau wrote:
+> 
+> +	/*
+> +	 * HT A-MPDU limits maximum MPDU size to 4095 bytes. Since aggregation
+> +	 * sessions are started/stopped without txq flush, use the limit here
+> +	 * to avoid having to de-aggregate later.
+> +	 */
+> +	if (skb->len + head->len > 4095 &&
+> +	    !sta->sta.vht_cap.vht_supported)
+> +		goto out;
 
-On Thu, Mar 10, 2016 at 11:02 AM, Vladimir Zapolskiy <vz@mleia.com> wrote:
-> Hi Julian,
->
-> On 10.03.2016 01:42, Julian Calaby wrote:
->> Hi Vladimir,
->>
->> On Thu, Mar 10, 2016 at 10:30 AM, Vladimir Zapolskiy <vz@mleia.com> wrote:
->>> Hi Julian,
->>>
->>> On 10.03.2016 01:27, Julian Calaby wrote:
->>>> Hi Vladimir,
->>>>
->>>> On Thu, Mar 10, 2016 at 10:13 AM, Vladimir Zapolskiy <vz@mleia.com> wrote:
->>>>> The kthread_run() function returns either a valid task_struct or
->>>>> ERR_PTR() value, check for NULL is invalid. The change fixes potential
->>>>> oops, e.g. in OOM situation.
->>>>>
->>>>> Signed-off-by: Vladimir Zapolskiy <vz@mleia.com>
->>>>> ---
->>>>>  drivers/staging/wilc1000/linux_wlan.c | 4 ++--
->>>>>  1 file changed, 2 insertions(+), 2 deletions(-)
->>>>>
->>>>> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
->>>>> index 54fe9d7..5077c30 100644
->>>>> --- a/drivers/staging/wilc1000/linux_wlan.c
->>>>> +++ b/drivers/staging/wilc1000/linux_wlan.c
->>>>> @@ -849,10 +849,10 @@ static int wlan_initialize_threads(struct net_device *dev)
->>>>>         PRINT_D(INIT_DBG, "Creating kthread for transmission\n");
->>>>>         wilc->txq_thread = kthread_run(linux_wlan_txq_task, (void *)dev,
->>>>>                                      "K_TXQ_TASK");
->>>>> -       if (!wilc->txq_thread) {
->>>>> +       if (IS_ERR(wilc->txq_thread)) {
->>>>>                 PRINT_ER("couldn't create TXQ thread\n");
->>>>>                 wilc->close = 0;
->>>>> -               return -ENOBUFS;
->>>>> +               return PTR_ERR(wilc->txq_thread);
->>>>
->>>> Are you sure changing the error returned is correct? Do all the
->>>> callers of wlan_initialize_threads() handle the full range of errors
->>>> from kthread_run()?
->>>
->>> Have you checked the driver?
->>
->> I'm making sure you have. It's possible that there's a good reason why
->> this returns -ENOBUFS I want to know that you've at least considered
->> that possibility.
->
-> You have my confirmation, I've checked the call stack before publishing
-> this fix.
+I'm not entirely happy with this. You're silently assuming that when
+VHT is supported, HT MCSes will never be used.
 
-Awesome.
+This is (I think) true for minstrel_ht, but at the very least you
+should also document it along with the max_rc_amsdu_len then, which btw
+I was going to reword to:
 
->>> This function is called once on initialization, the check on the upper layer
->>> has "if (ret < 0) goto exit_badly;" form.
->>
->> And practically everything in the chain up to net_device_ops uses the
->> same error handling scheme so it's probably fine.
->
-> dev_open()
->   __dev_open()
->     wilc_mac_open()
->       wilc1000_wlan_init()
->         wlan_initialize_threads()
->
-> Oh, why kernel threads within a driver are init'ed/destroyed on
-> each device up/down state transition?
++ * @IEEE80211_HW_TX_AMSDU: Hardware (or driver) supports software aggregated
++ *     A-MSDU frames. Requires software tx queueing and fast-xmit support.
++ *     When not using minstrel/minstrel_ht rate control, the driver needs to
++ *     limit the maximum A-MSDU size based on the current tx rate by setting
++ *     max_rc_amsdu_len in struct ieee80211_sta to avoid mac80211 building
++ *     A-MSDUs that require too much airtime (are too long for a TXOP.)
 
-You'll have to ask the driver developers. I believe this was a cross
-platform driver that is currently being Linux-ised, so I'm guessing
-this is some artefact of that.
 
->> You should also document this change in the commit message.
->
-> The change is documented in the commit message, take a look. But I didn't
-> add "I swear it does not break anything" ;)
+All that said, I'm not sure how much value there really is in
+aggregating that much? I'd think the value of A-MSDU really is more for
+lots of small frames like TCP ACKs, since the PER goes up exponentially
+with the BER for A-MSDU (unlike A-MPDU.)
 
-You
-1. corrected the test in the if statement
-2. changed the return value from -ENOBUFS
-in your patch, however you only documented the first part.
-
-I would have expected a commit message along the lines of:
-
----->8----
-
-The kthread_run() function returns either a valid task_struct or
-ERR_PTR() value, so the check for NULL is invalid.
-
-Also return the error from kthread_run() instead of -ENOBUFS.
-
-----8<----
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+johannes
