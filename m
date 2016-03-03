@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48373 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752705AbcCRQtY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 12:49:24 -0400
-Message-ID: <1458319756.13729.1.camel@sipsolutions.net> (sfid-20160318_174943_542543_A1B3F7F6)
-Subject: Re: [PATCH] mac80211: fix order of flag descriptions
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Luis de Bethencourt <luisbg@osg.samsung.com>,
-	linux-kernel@vger.kernel.org
-Cc: davem@davemloft.net, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Date: Fri, 18 Mar 2016 17:49:16 +0100
-In-Reply-To: <1458318955-32070-1-git-send-email-luisbg@osg.samsung.com>
-References: <1458317369-28185-1-git-send-email-luisbg@osg.samsung.com>
-	 <1458318955-32070-1-git-send-email-luisbg@osg.samsung.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pa0-f68.google.com ([209.85.220.68]:36748 "EHLO
+	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751247AbcCCMGT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2016 07:06:19 -0500
+Received: by mail-pa0-f68.google.com with SMTP id a7so1147916pax.3
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2016 04:06:19 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 2/6] staging: wilc1000: remove commented codes
+Date: Thu,  3 Mar 2016 21:05:18 +0900
+Message-Id: <1457006722-14400-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20160303_130622_636911_39F74E14)
+In-Reply-To: <1457006722-14400-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1457006722-14400-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-03-18 at 16:35 +0000, Luis de Bethencourt wrote:
-> Fix order of mac80211_rx_flags description to match the enum.
-> 
-> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
-> ---
-> Hi,
-> 
-> I want ahead and fixed the order of the descriptions. checkpatch.pl
-> was giving
-> a warning to my previous patch and I had a hunch it was because the
-> wrong order
-> breaks the parser. Indeed it does and with this patch below
-> checkpatch.pl does
-> not complain about this flag descriptions anymore.
-> 
-Huh. I think we should fix checkpatch.pl instead. While the current
-order isn't likely really good, I believe kernel-doc will output the
-documentation in the order it's listed, and that can be useful for the
-documentation output to group related things, even if their bits may be
-further apart.
+This patch removes commented codes in struct wilc_cfg_str.
 
-johannes
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wlan_cfg.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+index b992243..b25d772 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+@@ -136,7 +136,6 @@ static struct wilc_cfg_str g_cfg_str[] = {
+ 	{WID_BSSID, g_mac.bssid},	/* 6 bytes */
+ 	{WID_WEP_KEY_VALUE, g_mac.wep_key},	/* 27 bytes */
+ 	{WID_11I_PSK, g_mac.i_psk},	/* 65 bytes */
+-	/* {WID_11E_P_ACTION_REQ, g_mac.action_req}, */
+ 	{WID_HARDWARE_VERSION, g_mac.hardwareProductVersion},
+ 	{WID_MAC_ADDR, g_mac.mac_address},
+ 	{WID_PHY_VERSION, g_mac.phyversion},
+@@ -144,10 +143,8 @@ static struct wilc_cfg_str g_cfg_str[] = {
+ 	{WID_SUPP_PASSWORD, g_mac.supp_password},
+ 	{WID_SITE_SURVEY_RESULTS, g_mac.scan_result},
+ 	{WID_SITE_SURVEY_RESULTS, g_mac.scan_result1},
+-	/* {WID_RX_POWER_LEVEL, g_mac.channel_rssi}, */
+ 	{WID_ASSOC_REQ_INFO, g_mac.assoc_req},
+ 	{WID_ASSOC_RES_INFO, g_mac.assoc_rsp},
+-	/* {WID_11N_P_ACTION_REQ, g_mac.action_req}, */
+ 	{WID_FIRMWARE_INFO, g_mac.firmware_version},
+ 	{WID_IP_ADDRESS, g_mac.ip_address},
+ 	{WID_NIL, NULL}
+-- 
+2.7.1
+
