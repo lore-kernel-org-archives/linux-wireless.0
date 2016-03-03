@@ -1,39 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:62255 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933653AbcCIRq0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 12:46:26 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 16/21] iwlwifi: mvm: remove RRM advertisement
-Date: Wed,  9 Mar 2016 19:45:45 +0200
-Message-Id: <1457545550-30677-16-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160309_185950_942216_BA01F851)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48617 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754666AbcCCQBD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2016 11:01:03 -0500
+Date: Thu, 3 Mar 2016 21:30:48 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	kvalo@codeaurora.org
+Subject: Re: [PATCH] cfg80211/nl80211: Add support for
+ NL80211_STA_INFO_RX_DURATION
+Message-ID: <20160303160048.GA5243@atheros-ThinkPad-T61> (sfid-20160303_170122_835904_D19CB155)
+References: <1456927710-32073-1-git-send-email-mohammed@qca.qualcomm.com>
+ <1457019983.2044.29.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1457019983.2044.29.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-mac80211 advertises this feature for all its drivers.
+Hi Johannes,
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 --
- 1 file changed, 2 deletions(-)
+thanks for taking time to review this.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 3590835..39b9c38 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -610,8 +610,6 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
- 			IWL_UCODE_TLV_CAPA_WFA_TPC_REP_IE_SUPPORT))
- 		hw->wiphy->features |= NL80211_FEATURE_WFA_TPC_IE_IN_PROBES;
- 
--	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_RRM);
--
- 	mvm->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
- 
- #ifdef CONFIG_PM_SLEEP
--- 
-2.5.0
+On Thu, Mar 03, 2016 at 04:46:23PM +0100, Johannes Berg wrote:
+> On Wed, 2016-03-02 at 19:38 +0530, Mohammed Shafi Shajakhan wrote:
+> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> > 
+> > Add support for new netlink attribute 'NL80211_STA_INFO_RX_DURATION'
+> > This flag will be set when drivers can fill rx_duration ( approximate
+> > total air time(usecs) for unicast data/management frames from the
+> > connected client) via 'drv_sta_statistics' callback
+> 
+> So, what's that useful for?
+
+[shafi] This is part of the Per Station statistics requirement,
+the information from 'iw dev wlan#N station dump' which has rx_duration
+field will be used by application assesing the statistics
+/performance of various clients connected to our AP. We will plot
+a graph based on this information (assesing the rx time spent by
+AP for various clients).
+
+> 
+> Are you really sure you mean "unicast"? What if the station is the AP?
+> Why wouldn't multicast frames it transmitted be accounted for?
+
+[shafi] This is based on the implementation by the driver/firmware.
+We are focused on the AP side so unicast frames, if you are ok with this change,
+i can change the documentation to be specific (generic for all the drivers) 
+something like implementation specific (please advise)
+> 
+> > Also make sta_info flags 'filled' as 64 bit to accomodate for new
+> 
+> typo: accommodate
+
+[shafi] will fix this
+
+regards,
+shafi
 
