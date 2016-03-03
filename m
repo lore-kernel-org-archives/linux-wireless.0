@@ -1,148 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:62255 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933663AbcCIRq3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 12:46:29 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 17/21] iwlwifi: mvm: return the cooling state index instead of the budget
-Date: Wed,  9 Mar 2016 19:45:46 +0200
-Message-Id: <1457545550-30677-17-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160309_185951_245589_7B8205CC)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
+Received: from mail2.candelatech.com ([208.74.158.173]:47404 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754693AbcCCRwO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2016 12:52:14 -0500
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	ath10k <ath10k@lists.infradead.org>
+From: Ben Greear <greearb@candelatech.com>
+Subject: Proposal for per-radio configuration file.
+Message-ID: <56D879CC.3080500@candelatech.com> (sfid-20160303_185220_620922_2026FBD0)
+Date: Thu, 3 Mar 2016 09:52:12 -0800
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+Hello!
 
-iwl_mvm_tcool_get_cur_state is the function that returns the
-cooling state index to the sysfs handler. This function returns
-mvm->cooling_dev.cur_state but that variable was set to the
-budget and not the cooling state index. Fix that.
-Add a missing blank line while at it.
+While working on ath10k NICs, I found a need to have one radio be configured
+in one manner, and another in a different manner, and I need this config to happen
+before the NIC is booted in at least some cases.  The primary reason is that
+the NIC has limited resources, so there is definite need to allow the user to
+optimize for their use case.  For instance, more vdevs vs more peer objects.
 
-Signed-off-by: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h |  4 +-
- drivers/net/wireless/intel/iwlwifi/mvm/tt.c  | 56 ++++++++++++++--------------
- 2 files changed, 31 insertions(+), 29 deletions(-)
+Module parameters do not work well for this because I want different NICs with the
+same driver to have different configuration.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index b869db9..9abbc93 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -543,8 +543,8 @@ struct iwl_mvm_thermal_device {
- };
- 
- /*
-- * iwl_mvm_cooling_device
-- * @cur_state: current state in milliwatts
-+ * struct iwl_mvm_cooling_device
-+ * @cur_state: current state
-  * @cdev: struct thermal cooling device
-  */
- struct iwl_mvm_cooling_device {
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-index a396549..de3589a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-@@ -510,11 +510,35 @@ static const struct iwl_tt_params iwl_mvm_default_tt_params = {
- 	.support_tx_backoff = true,
- };
- 
--int iwl_mvm_ctdp_command(struct iwl_mvm *mvm, u32 op, u32 budget)
-+/* budget in mWatt */
-+static const u32 iwl_mvm_cdev_budgets[] = {
-+	2000,	/* cooling state 0 */
-+	1800,	/* cooling state 1 */
-+	1600,	/* cooling state 2 */
-+	1400,	/* cooling state 3 */
-+	1200,	/* cooling state 4 */
-+	1000,	/* cooling state 5 */
-+	900,	/* cooling state 6 */
-+	800,	/* cooling state 7 */
-+	700,	/* cooling state 8 */
-+	650,	/* cooling state 9 */
-+	600,	/* cooling state 10 */
-+	550,	/* cooling state 11 */
-+	500,	/* cooling state 12 */
-+	450,	/* cooling state 13 */
-+	400,	/* cooling state 14 */
-+	350,	/* cooling state 15 */
-+	300,	/* cooling state 16 */
-+	250,	/* cooling state 17 */
-+	200,	/* cooling state 18 */
-+	150,	/* cooling state 19 */
-+};
-+
-+int iwl_mvm_ctdp_command(struct iwl_mvm *mvm, u32 op, u32 state)
- {
- 	struct iwl_mvm_ctdp_cmd cmd = {
- 		.operation = cpu_to_le32(op),
--		.budget = cpu_to_le32(budget),
-+		.budget = cpu_to_le32(iwl_mvm_cdev_budgets[state]),
- 		.window_size = 0,
- 	};
- 	int ret;
-@@ -533,7 +557,7 @@ int iwl_mvm_ctdp_command(struct iwl_mvm *mvm, u32 op, u32 budget)
- 
- 	switch (op) {
- 	case CTDP_CMD_OPERATION_START:
--		mvm->cooling_dev.cur_state = budget;
-+		mvm->cooling_dev.cur_state = state;
- 		break;
- 	case CTDP_CMD_OPERATION_REPORT:
- 		IWL_DEBUG_TEMP(mvm, "cTDP avg energy in mWatt = %d\n", status);
-@@ -757,29 +781,6 @@ static void iwl_mvm_thermal_zone_register(struct iwl_mvm *mvm)
- 		mvm->tz_device.temp_trips[i] = S16_MIN;
- }
- 
--static const u32 iwl_mvm_cdev_budgets[] = {
--	2000,	/* cooling state 0 */
--	1800,	/* cooling state 1 */
--	1600,	/* cooling state 2 */
--	1400,	/* cooling state 3 */
--	1200,	/* cooling state 4 */
--	1000,	/* cooling state 5 */
--	900,	/* cooling state 6 */
--	800,	/* cooling state 7 */
--	700,	/* cooling state 8 */
--	650,	/* cooling state 9 */
--	600,	/* cooling state 10 */
--	550,	/* cooling state 11 */
--	500,	/* cooling state 12 */
--	450,	/* cooling state 13 */
--	400,	/* cooling state 14 */
--	350,	/* cooling state 15 */
--	300,	/* cooling state 16 */
--	250,	/* cooling state 17 */
--	200,	/* cooling state 18 */
--	150,	/* cooling state 19 */
--};
--
- static int iwl_mvm_tcool_get_max_state(struct thermal_cooling_device *cdev,
- 				       unsigned long *state)
- {
-@@ -797,6 +798,7 @@ static int iwl_mvm_tcool_get_cur_state(struct thermal_cooling_device *cdev,
- 		return -EBUSY;
- 
- 	*state = mvm->cooling_dev.cur_state;
-+
- 	return 0;
- }
- 
-@@ -820,7 +822,7 @@ static int iwl_mvm_tcool_set_cur_state(struct thermal_cooling_device *cdev,
- 	}
- 
- 	ret = iwl_mvm_ctdp_command(mvm, CTDP_CMD_OPERATION_START,
--				   iwl_mvm_cdev_budgets[new_state]);
-+				   new_state);
- 
- unlock:
- 	mutex_unlock(&mvm->mutex);
+For ath10k, I implemented this with a text file for each NIC that is loaded
+with the firmware-load API, parsed in the kernel, and then used to configure
+the radio on bootup.
+
+A patch I used to do this is here.  I think I ended up with a few follow-on
+patches to fix some bugs, but this has the idea:
+
+http://dmz2.candelatech.com/?p=linux-4.4.dev.y/.git;a=commitdiff;h=6708e4047d91edf234239943332bc2f0d124d009
+
+It seems to work fine in my testing, and is logically similar to loading board init
+files and so forth (which ath10k already uses).
+
+I am looking for feedback on this if anyone has any opinions....
+
+
+The config files look like this:
+
+]# ls -l /lib/firmware/ath10k/
+total 12
+-rw-r--r--  1 root root  311 Feb 23 11:27 fwcfg-pci-0000:05:00.0.txt
+-rw-r--r--  1 root root  330 Feb 23 11:18 fwcfg-pci-0000:07:00.0.txt
+rwxr-xr-x.  3 root root 4096 May 21  2015 QCA988X
+
+]# cat /lib/firmware/ath10k/fwcfg-pci-0000:05:00.0.txt
+# Configuration for radio 1
+vdevs = 64
+peers = 127
+stations = 127
+rate_ctrl_objs = 36
+regdom = 840
+fwname = firmware-2.bin
+fwver = 2
+nohwcrypt = 1
+tx_desc = 680
+#max_nss = 3
+num_tids = 256
+skid_limit = 128
+
+[root@ben-ota-1 lanforge]# cat /lib/firmware/ath10k/fwcfg-pci-0000\:07\:00.0.txt
+# Configuration for radio 2
+# Driver will pick defaults for any commented-out or missing variables.
+
+# vdevs = 8
+# peers = 64
+# stations = 64
+# rate_ctrl_objs = 10
+# regdom = 840
+# fwname = firmware-5.bin
+# fwver = 5
+# nohwcrypt = 1
+# tx_desc = 1024
+#max_nss = 3
+# num_tids = 128
+# skid_limit = 32
+
+
+
+Thanks,
+Ben
+
 -- 
-2.5.0
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
