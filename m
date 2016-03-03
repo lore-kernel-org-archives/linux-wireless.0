@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31382 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752637AbcCARS0 (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36412 "EHLO
+	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755945AbcCCMGX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 12:18:26 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH v2 02/15] wil6210: AP: prevent connecting to already connected station
-Date: Tue,  1 Mar 2016 19:18:05 +0200
-Message-Id: <1456852698-26808-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160301_181831_715328_A7C03333)
-In-Reply-To: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
+	Thu, 3 Mar 2016 07:06:23 -0500
+Received: by mail-pf0-f196.google.com with SMTP id q129so1202186pfb.3
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2016 04:06:22 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 3/6] staging: wilc1000: rename hardwareProductVersion in struct wilc_mac_cfg
+Date: Thu,  3 Mar 2016 21:05:19 +0900
+Message-Id: <1457006722-14400-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20160303_130625_739593_B7AD828A)
+In-Reply-To: <1457006722-14400-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1457006722-14400-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-wmi_evt_connect doesn't check if the connect event is received for
-an already connected station.
-This can lead to memory leak as a new vring is allocated without
-freeing the previously allocated vring and to unexpected behavior
-of nl80211 layer due to unexpected notification of a new station.
+This patch renames hardwareProductVersion to hw_product_version to avoid
+camelcase.
 
-Add a check in wmi_evt_connect in AP mode to verify that the requested
-CID is not associated to an already connected station.
-
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/ath/wil6210/wmi.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/staging/wilc1000/wilc_wlan_cfg.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
-index 493e721..fb09035 100644
---- a/drivers/net/wireless/ath/wil6210/wmi.c
-+++ b/drivers/net/wireless/ath/wil6210/wmi.c
-@@ -487,6 +487,14 @@ static void wmi_evt_connect(struct wil6210_priv *wil, int id, void *d, int len)
- 			return;
- 		}
- 		del_timer_sync(&wil->connect_timer);
-+	} else if ((wdev->iftype == NL80211_IFTYPE_AP) ||
-+		   (wdev->iftype == NL80211_IFTYPE_P2P_GO)) {
-+		if (wil->sta[evt->cid].status != wil_sta_unused) {
-+			wil_err(wil, "%s: AP: Invalid status %d for CID %d\n",
-+				__func__, wil->sta[evt->cid].status, evt->cid);
-+			mutex_unlock(&wil->mutex);
-+			return;
-+		}
- 	}
- 
- 	/* FIXME FW can transmit only ucast frames to peer */
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+index b25d772..6a33187 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+@@ -29,7 +29,7 @@ struct wilc_mac_cfg {
+ 	u8 supp_rate[24];
+ 	u8 wep_key[28];
+ 	u8 i_psk[66];
+-	u8 hardwareProductVersion[33];
++	u8 hw_product_version[33];
+ 	u8 phyversion[17];
+ 	u8 supp_username[21];
+ 	u8 supp_password[64];
+@@ -136,7 +136,7 @@ static struct wilc_cfg_str g_cfg_str[] = {
+ 	{WID_BSSID, g_mac.bssid},	/* 6 bytes */
+ 	{WID_WEP_KEY_VALUE, g_mac.wep_key},	/* 27 bytes */
+ 	{WID_11I_PSK, g_mac.i_psk},	/* 65 bytes */
+-	{WID_HARDWARE_VERSION, g_mac.hardwareProductVersion},
++	{WID_HARDWARE_VERSION, g_mac.hw_product_version},
+ 	{WID_MAC_ADDR, g_mac.mac_address},
+ 	{WID_PHY_VERSION, g_mac.phyversion},
+ 	{WID_SUPP_USERNAME, g_mac.supp_username},
 -- 
-1.8.5.2
+2.7.1
 
