@@ -1,61 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:59098 "EHLO mga14.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:56667 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753022AbcC3OFk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 10:05:40 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Matti Gottlieb <matti.gottlieb@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 02/43] iwlwifi: mvm: Decrease size of the paging download buffer
-Date: Wed, 30 Mar 2016 17:04:34 +0300
-Message-Id: <1459346715-7954-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160813_155493_1D2B012A)
-In-Reply-To: <1459346667.4731.9.camel@intel.com>
-References: <1459346667.4731.9.camel@intel.com>
+	id S1754996AbcCCPry (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2016 10:47:54 -0500
+Message-ID: <1457020070.2044.30.camel@sipsolutions.net> (sfid-20160303_164757_071016_472D961E)
+Subject: Re: [PATCH] mac80211: synchronize driver rx queues before removing
+ a station
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, Sara Sharon <sara.sharon@intel.com>
+Date: Thu, 03 Mar 2016 16:47:50 +0100
+In-Reply-To: <1456955174-5623-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1456955174-5623-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matti Gottlieb <matti.gottlieb@intel.com>
+On Wed, 2016-03-02 at 23:46 +0200, Emmanuel Grumbach wrote:
+> From: Sara Sharon <sara.sharon@intel.com>
+> 
+> Some devices, like iwlwifi, have RSS queues. This may cause a
+> situation where a disassociation is handled in control path and
+> results in station removal while there are prior RX frames
+> that were still not processed in other queues. When they will
+> be processed the station will be gone, and the frames will be
+> dropped.
+> Add a synchronization interface to avoid that. When driver returns
+> from the synchronization mac80211 may remove the station.
+> 
+Applied.
 
-Currently the driver has 2 buffers for paging:
-1. paging db - this contains all of the pages that were in the FW
-image, that the driver stores for the FW. This is allocated for each
-block separately (not contiguous).
-2. download buffer - we need to provide this empty buffer for the
-iwl_sdio_load_fw_chunk function to copy the requested pages to the shared
-memory. This is one big buffer of contiguous memory whose size is the
-size of all the blocks that the fw paging section can contain.
-
-This download buffer size is too big, and causes the allocation to fail
-sometimes. Since the driver allocates memory for each block separately,
-it is not possible for the FW to request all of the pages in one request
-(the FW gives an address and size, so blocks need to be contiguous for
-this to happen), therefore the FW is limited to request only one block.
-
-Decrease the size of the paging download buffer to be the size of a
-paging block.
-
-Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 594cd0d..ebbadcf 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -410,7 +410,9 @@ static int iwl_trans_get_paging_item(struct iwl_mvm *mvm)
- 		goto exit;
- 	}
- 
--	mvm->trans->paging_download_buf = kzalloc(MAX_PAGING_IMAGE_SIZE,
-+	/* Add an extra page for headers */
-+	mvm->trans->paging_download_buf = kzalloc(PAGING_BLOCK_SIZE +
-+						  FW_PAGING_SIZE,
- 						  GFP_KERNEL);
- 	if (!mvm->trans->paging_download_buf) {
- 		ret = -ENOMEM;
--- 
-2.5.0
-
+johannes
