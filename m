@@ -1,75 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49835 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757174AbcCCQUp (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:33117 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756170AbcCCMG0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 11:20:45 -0500
-Date: Thu, 3 Mar 2016 21:50:36 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	kvalo@codeaurora.org
-Subject: Re: [PATCH] cfg80211/nl80211: Add support for
- NL80211_STA_INFO_RX_DURATION
-Message-ID: <20160303162036.GB5243@atheros-ThinkPad-T61> (sfid-20160303_172105_083501_A1C38957)
-References: <1456927710-32073-1-git-send-email-mohammed@qca.qualcomm.com>
- <1457019983.2044.29.camel@sipsolutions.net>
- <20160303160048.GA5243@atheros-ThinkPad-T61>
- <1457021271.2044.34.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1457021271.2044.34.camel@sipsolutions.net>
+	Thu, 3 Mar 2016 07:06:26 -0500
+Received: by mail-pf0-f194.google.com with SMTP id 63so1210463pfe.0
+        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2016 04:06:26 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 4/6] staging: wilc1000: add enum cfg_type_cmd
+Date: Thu,  3 Mar 2016 21:05:20 +0900
+Message-Id: <1457006722-14400-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20160303_130629_806117_99EB2803)
+In-Reply-To: <1457006722-14400-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1457006722-14400-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi johannes,
+This patch adds a new enum cfg_type_cmd to change hard-coded command
+type.
 
-On Thu, Mar 03, 2016 at 05:07:51PM +0100, Johannes Berg wrote:
-> On Thu, 2016-03-03 at 21:30 +0530, Mohammed Shafi Shajakhan wrote:
-> 
-> > [shafi] This is part of the Per Station statistics requirement,
-> 
-> Heh. Whose requirements? :)
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wlan_cfg.c | 25 ++++++++++++++++---------
+ 1 file changed, 16 insertions(+), 9 deletions(-)
 
-[shafi] We have this as part of ath10k debugfs based on the end user (or) a
-customer requirement and i think its make more sense to have this common across all
-wifi drivers rather thank simply dumping it in ath10k debugfs. I think its
-similar to 'ieee80211_frame_duration'(?) in mac80211 but for drivers like ath10k
-where this is calculated in firmware for rx and implementation specific.
+diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+index 6a33187..9cf68b7 100644
+--- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
++++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
+@@ -18,6 +18,13 @@
+  *      Global Data
+  *
+  ********************************************/
++enum cfg_cmd_type {
++	CFG_BYTE_CMD	= 0,
++	CFG_HWORD_CMD	= 1,
++	CFG_WORD_CMD	= 2,
++	CFG_STR_CMD	= 3,
++	CFG_BIN_CMD	= 4
++};
+ 
+ struct wilc_mac_cfg {
+ 	int mac_status;
+@@ -371,18 +378,18 @@ int wilc_wlan_cfg_set_wid(u8 *frame, u32 offset, u16 id, u8 *buf, int size)
+ 	u8 type = (id >> 12) & 0xf;
+ 	int ret = 0;
+ 
+-	if (type == 0) {                                        /* byte command */
++	if (type == CFG_BYTE_CMD) {                                        /* byte command */
+ 		if (size >= 1)
+ 			ret = wilc_wlan_cfg_set_byte(frame, offset, id, *buf);
+-	} else if (type == 1) {                 /* half word command */
++	} else if (type == CFG_HWORD_CMD) {                 /* half word command */
+ 		if (size >= 2)
+ 			ret = wilc_wlan_cfg_set_hword(frame, offset, id, *((u16 *)buf));
+-	} else if (type == 2) {                 /* word command */
++	} else if (type == CFG_WORD_CMD) {                 /* word command */
+ 		if (size >= 4)
+ 			ret = wilc_wlan_cfg_set_word(frame, offset, id, *((u32 *)buf));
+-	} else if (type == 3) {                 /* string command */
++	} else if (type == CFG_STR_CMD) {                 /* string command */
+ 		ret = wilc_wlan_cfg_set_str(frame, offset, id, buf, size);
+-	} else if (type == 4) {                 /* binary command */
++	} else if (type == CFG_BIN_CMD) {                 /* binary command */
+ 		ret = wilc_wlan_cfg_set_bin(frame, offset, id, buf, size);
+ 	}
+ 
+@@ -415,7 +422,7 @@ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
+ 	}
+ 
+ 	i = 0;
+-	if (type == 0) {                                        /* byte command */
++	if (type == CFG_BYTE_CMD) {                                        /* byte command */
+ 		do {
+ 			if (g_cfg_byte[i].id == WID_NIL)
+ 				break;
+@@ -427,7 +434,7 @@ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
+ 			}
+ 			i++;
+ 		} while (1);
+-	} else if (type == 1) {                 /* half word command */
++	} else if (type == CFG_HWORD_CMD) {                 /* half word command */
+ 		do {
+ 			if (g_cfg_hword[i].id == WID_NIL)
+ 				break;
+@@ -439,7 +446,7 @@ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
+ 			}
+ 			i++;
+ 		} while (1);
+-	} else if (type == 2) {                 /* word command */
++	} else if (type == CFG_WORD_CMD) {                 /* word command */
+ 		do {
+ 			if (g_cfg_word[i].id == WID_NIL)
+ 				break;
+@@ -451,7 +458,7 @@ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
+ 			}
+ 			i++;
+ 		} while (1);
+-	} else if (type == 3) {                 /* string command */
++	} else if (type == CFG_STR_CMD) {                 /* string command */
+ 		do {
+ 			if (g_cfg_str[i].id == WID_NIL)
+ 				break;
+-- 
+2.7.1
 
-> 
-> > the information from 'iw dev wlan#N station dump' which has
-> > rx_duration
-> > field will be used by application assesing the statistics
-> > /performance of various clients connected to our AP. We will plot
-> > a graph based on this information (assesing the rx time spent by
-> > AP for various clients).
-> > 
-> > > 
-> > > Are you really sure you mean "unicast"? What if the station is the
-> > > AP? Why wouldn't multicast frames it transmitted be accounted for?
-> > 
-> > [shafi] This is based on the implementation by the driver/firmware.
-> > We are focused on the AP side so unicast frames, if you are ok with
-> > this change, i can change the documentation to be specific (generic
-> > for all the drivers)  something like implementation specific (please
-> > advise)
-> 
-> Ok, but for AP side I don't see the difference between "unicast" and
-> "all frames", since all frames from that station should be unicast?
-> Apart, perhaps, from some management frames the station might send
-> outside the BSS, but that's not likely to matter much?
-
-[shafi] exactly, I can change the documentation as you wish and
-this is implementation specific, and we have implemented like this in ath10k
-targeting AP mode.
-
-> 
-> IOW, why not specify all frames, and let this make some sense for other
-> interface modes?
->
-[shafi] Agreed.
-
-regards,
-shafi
