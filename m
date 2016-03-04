@@ -1,36 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52279 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751716AbcCJOMK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 09:12:10 -0500
-Date: Thu, 10 Mar 2016 15:09:56 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Helmut Schaa <helmut.schaa@googlemail.com>, dan.g.tob@gmail.com
-Subject: Re: New firmware for RT2870
-Message-ID: <20160310140955.GA17840@redhat.com> (sfid-20160310_151215_276519_D5A756C5)
-References: <56E08615.9060208@lwfinger.net>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:13876 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755989AbcCDPhd convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Mar 2016 10:37:33 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "michal.kazior@tieto.com" <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 10/13] ath10k: implement flushing of pending frames in
+ txqs
+Date: Fri, 4 Mar 2016 15:37:28 +0000
+Message-ID: <87twkmw8y5.fsf@kamboji.qca.qualcomm.com> (sfid-20160304_163737_033554_0C67A636)
+References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
+	<1453384006-31907-11-git-send-email-michal.kazior@tieto.com>
+	<87h9gmy538.fsf@kamboji.qca.qualcomm.com>
+	<CA+BoTQmgMBfz+Dkf-+0gDHvnhk5OA4_ZGZgwYDKXG5yP-xMRYw@mail.gmail.com>
+In-Reply-To: <CA+BoTQmgMBfz+Dkf-+0gDHvnhk5OA4_ZGZgwYDKXG5yP-xMRYw@mail.gmail.com>	(Michal
+ Kazior's message of "Fri, 4 Mar 2016 10:52:04 +0100")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56E08615.9060208@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 09, 2016 at 02:22:45PM -0600, Larry Finger wrote:
-> In https://bugzilla.kernel.org/show_bug.cgi?id=114151, the OP reports
-> improved stability and performance for an RT5370 using a newer firmware that
-> came with the driver CD. The logs show this to be version 0.36, whereas the
-> version now in linux-firmware is version 0.29.
-> 
-> I downloaded the firmware from b.k.o. It had very little effect on my
-> no-name adapter with ID 148f:3070. It still gets ping losses of 10-15%.
-> 
-> Should this new version be submitted to linux-firmware? Its provenance seems
-> to be sketchy, but submission would likely be legal.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-I do not see any reason not to update ralink firmwares in linux-firmware
-git tree, however IIRC linux-firmware maintainers prefer to firmware
-submission was performed from vendor email addresses.
+> On 4 March 2016 at 10:17, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+>> Michal Kazior <michal.kazior@tieto.com> writes:
+>>
+>>> Firmware supporting pull-push tx model may request
+>>> a switch between modes. When switching from
+>>> pull-push to push-only it will be necessary to
+>>> flush all pending frames. The code will do that
+>>> once other bits that actually trigger it are added.
+>>>
+>>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>>
+>> This fails to apply:
+>>
+>> fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/htt_rx.c).
+>> Repository lacks necessary blobs to fall back on 3-way merge.
+>> Cannot fall back to three-way merge.
+>> Patch failed at 0010 ath10k: implement flushing of pending frames in txqs
+>>
+>>> @@ -2370,6 +2371,8 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
+>>>               dev_kfree_skb_any(skb);
+>>>       }
+>>>
+>>> +     ath10k_mac_tx_push_pending(ar);
+>>> +
+>>>       spin_lock_bh(&htt->rx_ring.lock);
+>>>       while ((skb = __skb_dequeue(&htt->rx_compl_q))) {
+>>>               resp = (struct htt_resp *)skb->data;
+>>
+>> This hunk seems to be the problem. I could try to fix it myself but the
+>> function has changed so I would prefer that you respin.
+>
+> This patch is in v1. It's base included some extra patches that
+> weren't in ath.git at the time.
+>
+> The v2 patchset has this patch squashed into wake_tx_queue patch and
+> the entire v2 patchset is based solely on ath.git without any extra
+> patches in between. Did patchwork confuse these patchsets?
 
-Stanislaw
+No, it was me who got confused :) I was accidentally applying v1 instead
+of v2.
+
+But v2 also has conflicts with ath-next. I need to first update my trees
+to get latest cfg80211/mac80211 and then I'll try again.
+
+-- 
+Kalle Valo
