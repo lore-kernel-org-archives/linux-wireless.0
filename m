@@ -1,35 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f68.google.com ([209.85.192.68]:33967 "EHLO
-	mail-qg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754104AbcCSCLm (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:8512 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758803AbcCDIdK convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 22:11:42 -0400
-Received: by mail-qg0-f68.google.com with SMTP id j92so6595939qgj.1
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2016 19:11:42 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 0/5] mesh struct cleanups
-Date: Fri, 18 Mar 2016 22:11:27 -0400
-Message-Id: <1458353492-8654-1-git-send-email-me@bobcopeland.com> (sfid-20160319_031155_737280_FBFBF58A)
+	Fri, 4 Mar 2016 03:33:10 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "miaoqing@codeaurora.org" <miaoqing@codeaurora.org>
+CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>
+Subject: Re: [PATCH] ath9k: clear bb filter calibration power threshold
+Date: Fri, 4 Mar 2016 08:32:56 +0000
+Message-ID: <871t7q1w3w.fsf@kamboji.qca.qualcomm.com> (sfid-20160304_093356_110549_677FC167)
+References: <1455787202-8194-1-git-send-email-miaoqing@codeaurora.org>
+In-Reply-To: <1455787202-8194-1-git-send-email-miaoqing@codeaurora.org>
+	(miaoqing@codeaurora.org's message of "Thu, 18 Feb 2016 17:20:02	+0800")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This series makes a few minor mesh cleanups after the rhashtable
-rework -- mostly some reductions in padding and allocation waste.
+miaoqing@codeaurora.org writes:
 
-Bob Copeland (5):
-  mac80211: mesh: handle failed alloc for rmc cache
-  mac80211: mesh: use hlist for rmc cache
-  mac80211: mesh: embed gates hlist head directly
-  mac80211: mesh: reorder structure members
-  mac80211: mesh: fix mesh path kerneldoc
+> From: Miaoqing Pan <miaoqing@codeaurora.org>
+>
+> JP WiFi certification for bandwidth of channel 14 failed, the OBW
+> is lower than the requirement. Clear the bb filter calibration power
+> threshold to increase OBW(+2). The fix only for qca9531 chip now.
+>
+> Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 
- net/mac80211/mesh.c         | 21 +++++++++++++--------
- net/mac80211/mesh.h         | 31 +++++++++++++++++--------------
- net/mac80211/mesh_pathtbl.c | 18 ++++--------------
- 3 files changed, 34 insertions(+), 36 deletions(-)
+Applied to ath.git, thanks.
 
 -- 
-2.6.1
-
+Kalle Valo
