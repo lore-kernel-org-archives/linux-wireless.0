@@ -1,45 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55904 "EHLO sipsolutions.net"
+Received: from mga02.intel.com ([134.134.136.20]:64484 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933804AbcCPNbg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2016 09:31:36 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Ben Hutchings <ben@decadent.org.uk>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] wext: unregister_pernet_subsys() on notifier registration failure
-Date: Wed, 16 Mar 2016 14:31:26 +0100
-Message-Id: <1458135086-30021-1-git-send-email-johannes@sipsolutions.net> (sfid-20160316_143139_590037_8785D7E2)
+	id S1751031AbcCDFjh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Mar 2016 00:39:37 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Spinadel, David" <david.spinadel@intel.com>
+Subject: Re: [PATCH] mac80211_hwsim: Set global RRM capability
+Date: Fri, 4 Mar 2016 05:39:32 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA55BF2@hasmsx107.ger.corp.intel.com> (sfid-20160304_063940_523192_E55422FA)
+References: <1456392253-16972-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1456921458.2157.2.camel@sipsolutions.net>
+ <0BA3FCBA62E2DC44AF3030971E174FB32EA51497@hasmsx107.ger.corp.intel.com>
+ <1457019901.2044.28.camel@sipsolutions.net>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
 
-If register_netdevice_notifier() fails (which in practice it can't
-right now), we should call unregister_pernet_subsys(). Do that.
 
-Reported-by: Ben Hutchings <ben@decadent.org.uk>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/wireless/wext-core.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+On 03/03/2016 05:45 PM, Johannes Berg wrote:
+> On Wed, 2016-03-02 at 12:36 +0000, Grumbach, Emmanuel wrote:
+>>>
+>> I had the same thinking, but somehow people convinced me that a
+>> driver may prefer not to advertise this without its explicit
+>> consent.
+>
+> So ... What are the arguments? :)
+>
 
-diff --git a/net/wireless/wext-core.c b/net/wireless/wext-core.c
-index b50ee5d622e1..6250b1cfcde5 100644
---- a/net/wireless/wext-core.c
-+++ b/net/wireless/wext-core.c
-@@ -399,7 +399,10 @@ static int __init wireless_nlevent_init(void)
- 	if (err)
- 		return err;
- 
--	return register_netdevice_notifier(&wext_netdev_notifier);
-+	err = register_netdevice_notifier(&wext_netdev_notifier);
-+	if (err)
-+		unregister_pernet_subsys(&wext_pernet_ops);
-+	return err;
- }
- 
- subsys_initcall(wireless_nlevent_init);
--- 
-2.7.0
-
+Well.. a driver may not want to advertise it... Moot...
+I guess we can / should move it to mac80211.
