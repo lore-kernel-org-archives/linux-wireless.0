@@ -1,48 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60942 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752150AbcCZTVB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Mar 2016 15:21:01 -0400
-Message-ID: <1459020054.8901.8.camel@sipsolutions.net> (sfid-20160326_202107_096792_EFED5FBD)
-Subject: Re: hashing error in hacked 4.4.6+ kernel.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Sat, 26 Mar 2016 20:20:54 +0100
-In-Reply-To: <56F5DE21.9050601@candelatech.com> (sfid-20160326_015610_163402_1721825C)
-References: <56F5DE21.9050601@candelatech.com>
-	 (sfid-20160326_015610_163402_1721825C)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:23430 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758550AbcCDIev convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Mar 2016 03:34:51 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "miaoqing@codeaurora.org" <miaoqing@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	ath9k-devel <ath9k-devel@qca.qualcomm.com>
+Subject: Re: [PATCH v2] ath9k: make NF load complete quickly and reliably
+Date: Fri, 4 Mar 2016 08:34:45 +0000
+Message-ID: <87twkmzlnh.fsf@kamboji.qca.qualcomm.com> (sfid-20160304_093455_562196_62734057)
+References: <1454636750-2372-1-git-send-email-miaoqing@codeaurora.org>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-03-25 at 17:56 -0700, Ben Greear wrote:
-> 
-> Mar 25 17:02:05 ath10k.candelatech.com kernel: sta28:
-> deauthenticating from 04:f0:21:f6:85:1c by local choice (Reason:
-> 3=DEAUTH_LEAVING)
-> Mar 25 17:02:05 ath10k.candelatech.com kernel: ------------[ cut here
-> ]------------
-> Mar 25 17:02:05 ath10k.candelatech.com kernel: WARNING: CPU: 2 PID:
-> 6227 at /home/greearb/git/linux-
-> 4.4.dev.y/net/mac80211/sta_info.c:921 
-> __sta_info_destroy_part1+0x91/0x422 [mac80211]()
+miaoqing@codeaurora.org writes:
 
-In upstream, this warning goes straight to rhashtable not finding the
-entry.
+> From: Miaoqing Pan <miaoqing@codeaurora.org>
+>
+> Make NF load complete quickly and reliably. NF load execution
+> is delayed by HW to end of frame if frame Rx or Tx is ongoing.
+> Increasing timeout to max frame duration. If NF cal is ongoing
+> before NF load, stop it before load, and restart it afterwards.
+>
+> Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 
-In your code though (looking at the commit introducing it, hoping you
-didn't change it later), there's considerably more code in
-sta_info_hash_del() that can return an error. It might be interesting
-to find out *which* error is happening.
+Applied to ath.git, thanks.
 
-I'd agree though, from my brief look at the code it doesn't seem likely
-that there's a problem with the code you add.
-
-johannes
-
-PS: you should probably write "return 0" instead of "return rv"
-whenever it's clear that "rv" must be 0 :)
-
-PPS: why are you not using rhashtable for the vhash?
+-- 
+Kalle Valo
