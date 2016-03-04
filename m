@@ -1,64 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:54713 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752170AbcCRSyj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 14:54:39 -0400
-Message-ID: <56EC4EEA.8040201@osg.samsung.com> (sfid-20160318_195457_621254_B90CFE5A)
-Date: Fri, 18 Mar 2016 18:54:34 +0000
-From: Luis de Bethencourt <luisbg@osg.samsung.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:37751 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757285AbcCDGle (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Mar 2016 01:41:34 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Tim Shepard <shep@alum.mit.edu>
+Cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com,
+	johannes@sipsolutions.net, netdev@vger.kernel.org,
+	eric.dumazet@gmail.com, dave.taht@gmail.com,
+	emmanuel.grumbach@intel.com, nbd@openwrt.org,
+	andrewmcgr@google.com, apenwarr@google.com
+Subject: Re: [PATCH RFC/RFT 1/2] ath9k: rename struct ath_txq to struct ath_hwq
+References: <E1abeND-0007xj-00@www.xplot.org>
+Date: Fri, 04 Mar 2016 08:41:28 +0200
+In-Reply-To: <E1abeND-0007xj-00@www.xplot.org> (Tim Shepard's message of "Thu,
+	03 Mar 2016 20:17:43 -0500")
+Message-ID: <87vb52lp7r.fsf@purkki.adurom.net> (sfid-20160304_074158_766070_7CB3EF2B)
 MIME-Version: 1.0
-To: linux-kernel@vger.kernel.org
-CC: johannes@sipsolutions.net, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] mac80211: add doc for RX_FLAG_DUP_VALIDATED flag
-References: <1458317369-28185-1-git-send-email-luisbg@osg.samsung.com>
-In-Reply-To: <1458317369-28185-1-git-send-email-luisbg@osg.samsung.com>
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 18/03/16 16:09, Luis de Bethencourt wrote:
-> Add documentation for the flag for duplication check.
-> 
-> Fixes the following warning when running make htmldocs:
-> warning: Enum value 'RX_FLAG_DUP_VALIDATED' not described in enum 'mac80211_rx_flags'
-> 
-> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
-> ---
-> Hi,
-> 
-> While running make htmldocs I noticed a warning about RX_FLAG_DUP_VALIDATED
-> missing a description. This patch fixes this.
-> 
-> I have noticed the order of the descriptions of the mac80211_rx_flags doesn't
-> match the order in the enum. I am happy to fix this if it would be of interest.
-> 
-> Thanks,
-> Luis
-> 
->  include/net/mac80211.h | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-> index a53333c..42c8cde 100644
-> --- a/include/net/mac80211.h
-> +++ b/include/net/mac80211.h
-> @@ -1001,6 +1001,8 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
->   *	flag indicates that the PN was verified for replay protection.
->   *	Note that this flag is also currently only supported when a frame
->   *	is also decrypted (ie. @RX_FLAG_DECRYPTED must be set)
-> + * @RX_FLAG_DUP_VALIDATED: Set this flag for the driver to check for packet
-> + *	duplication by itself.
->   * @RX_FLAG_FAILED_FCS_CRC: Set this flag if the FCS check failed on
->   *	the frame.
->   * @RX_FLAG_FAILED_PLCP_CRC: Set this flag if the PCLP check failed on
-> 
+Tim Shepard <shep@alum.mit.edu> writes:
 
-Please ignore the second patch I replied to this one. It is wrong due to my
-misunderstanding.
+> Also use hwq instead of txq to refer to it throughout ath9k/*.  This
+> is prep work for using mac80211's new intermediate queues, which are
+> called txq, and it would be too confusing if both are called txq.
 
-This above patch adding RX_FLAG_DUP_VALIDATED is correct and I believe it to be
-valid.
+You should add Signed-off-by to both patches in case someone else wants
+to work with these.
 
-Thanks for the reviews,
-Luis
+-- 
+Kalle Valo
