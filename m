@@ -1,63 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2-smtp.messagingengine.com ([66.111.4.26]:58156 "EHLO
-	out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753351AbcCZREN (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:60930 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751431AbcCDTpg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Mar 2016 13:04:13 -0400
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-	by mailout.nyi.internal (Postfix) with ESMTP id 6C5B72042C
-	for <linux-wireless@vger.kernel.org>; Sat, 26 Mar 2016 13:04:12 -0400 (EDT)
-Date: Sat, 26 Mar 2016 10:04:09 -0700
-From: Greg KH <greg@kroah.com>
-To: Till Kamppeter <till.kamppeter@gmail.com>
-Cc: Evgeny Novikov <novikov@ispras.ru>,
-	Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>,
-	chris holcombe <chris.holcombe@canonical.com>,
-	Chris MacNaughton <chris.macnaughton@canonical.com>
-Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
-Message-ID: <20160326170409.GA27584@kroah.com> (sfid-20160326_180420_148096_4C0DF917)
-References: <56F4266B.4060605@gmail.com>
- <1943931458892174@web3o.yandex.ru>
- <56F5D04A.20506@gmail.com>
- <56F5D11B.7000803@gmail.com>
- <20160326001803.GB15767@kroah.com>
- <56F5DA55.6030802@gmail.com>
- <20160326141540.GA4104@kroah.com>
- <56F69BDC.7050900@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56F69BDC.7050900@gmail.com>
+	Fri, 4 Mar 2016 14:45:36 -0500
+Message-ID: <1457120732.28365.166.camel@coelho.fi> (sfid-20160304_204540_682129_2AB773BE)
+From: Luca Coelho <luca@coelho.fi>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Matti Gottlieb <matti.gottlieb@intel.com>
+Date: Fri, 04 Mar 2016 21:45:32 +0200
+In-Reply-To: <87povaw7jc.fsf@kamboji.qca.qualcomm.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA41983@hasmsx107.ger.corp.intel.com>
+	 <1456433829-20285-2-git-send-email-emmanuel.grumbach@intel.com>
+	 <87povaw7jc.fsf@kamboji.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH 2/2] iwlwifi: mvm: Fix paging memory leak
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 26, 2016 at 11:25:32AM -0300, Till Kamppeter wrote:
-> Can you give me a list of all the other proposals which you considered not
-> worthwhile (and where we do not need to wait for another mentor's opinion)
-> so that I can mark them ignored?
+Hi Kalle,
 
-Please mark these as "ignored" because they are really not even valid
-applications:
+On Fri, 2016-03-04 at 18:07 +0200, Kalle Valo wrote:
+> Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
+> 
+> > From: Matti Gottlieb <matti.gottlieb@intel.com>
+> > 
+> > If the opmode is stopped and started again we did not free
+> > the paging buffers. Fix that.
+> > In addition when freeing the firmware's paging download
+> > buffer, set the pointer to NULL.
+> > 
+> > Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
+> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> 
+> Nitpicking while writing the pull request for Dave:
+> 
+> What does "opmode is stopped" mean? Important bug fixes should have a
+> clear bug description from user's point of view. Using driver internal
+> jargon is gibberish to most people.
 
-	https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/6700817021140992/
-	https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/6384381044195328/
-	https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/5181271886004224/
-	https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/6626850369437696/
-	https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/4823798872276992/
+I agree that there could be a bit more high-level description here, but
+I also think it's good to keep a bit more details about what is
+happening internally, so that developers understand too. ;)
+
+Do you think it would be acceptable to keep the commit log most as it
+is, but start with something like "Some paging buffers were not freed
+when the driver is restarted."? I don't mean to change this commit
+itself, but just so that we know how to please you (and users) while
+still keeping the details as part of the commit logs... ;)
 
 
-That should complete all applications in the "kernel" category.  There
-are a bunch of CELF and "QEMU with Rust" applications that I know
-nothing about, and there doesn't seem to be a category for.  I'm
-assuming someone else is going to review / mentor those.
+> I investigated this myself and apparently "opmode" is stopped when the
+> module is unloaded or the PCI device is removed. So just say that in the
+> commit log and everyone understand much better.
 
-If there's anything else I need to do here, becides try to find a
-co-mentor, please let me know.
+Our driver is divided roughly into two layers: the bus layer (called
+transport) and the protocol layer (called opmode).  The name comes from
+the difference between the two opmodes that we currently have.  One
+supports only a single operating channel (dvm) and the other supports
+multiple operating channels (mvm).
 
-thanks,
+Hope this clarifies a bit. :)
 
-greg k-h
+--
+Cheers,
+Luca.
