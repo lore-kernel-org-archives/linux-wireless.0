@@ -1,111 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:33117 "EHLO
-	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756170AbcCCMG0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 07:06:26 -0500
-Received: by mail-pf0-f194.google.com with SMTP id 63so1210463pfe.0
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2016 04:06:26 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 4/6] staging: wilc1000: add enum cfg_type_cmd
-Date: Thu,  3 Mar 2016 21:05:20 +0900
-Message-Id: <1457006722-14400-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20160303_130629_806117_99EB2803)
-In-Reply-To: <1457006722-14400-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1457006722-14400-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:46019 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754541AbcCDT5p (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Mar 2016 14:57:45 -0500
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "bjorn@mork.no" <bjorn@mork.no>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Ivgi, Chaya Rachel" <chaya.rachel.ivgi@intel.com>
+Subject: Re: [PATCH 02/43] iwlwifi: mvm: add registration to thermal zone
+Date: Fri, 4 Mar 2016 19:57:42 +0000
+Message-ID: <1457121461.28365.175.camel@intel.com> (sfid-20160304_205749_173282_66CC850F)
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+	 <1456905404-14435-2-git-send-email-emmanuel.grumbach@intel.com>
+	 <877fhi9jes.fsf@nemi.mork.no> <8737s69irg.fsf@nemi.mork.no>
+In-Reply-To: <8737s69irg.fsf@nemi.mork.no>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch adds a new enum cfg_type_cmd to change hard-coded command
-type.
-
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_wlan_cfg.c | 25 ++++++++++++++++---------
- 1 file changed, 16 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index 6a33187..9cf68b7 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -18,6 +18,13 @@
-  *      Global Data
-  *
-  ********************************************/
-+enum cfg_cmd_type {
-+	CFG_BYTE_CMD	= 0,
-+	CFG_HWORD_CMD	= 1,
-+	CFG_WORD_CMD	= 2,
-+	CFG_STR_CMD	= 3,
-+	CFG_BIN_CMD	= 4
-+};
- 
- struct wilc_mac_cfg {
- 	int mac_status;
-@@ -371,18 +378,18 @@ int wilc_wlan_cfg_set_wid(u8 *frame, u32 offset, u16 id, u8 *buf, int size)
- 	u8 type = (id >> 12) & 0xf;
- 	int ret = 0;
- 
--	if (type == 0) {                                        /* byte command */
-+	if (type == CFG_BYTE_CMD) {                                        /* byte command */
- 		if (size >= 1)
- 			ret = wilc_wlan_cfg_set_byte(frame, offset, id, *buf);
--	} else if (type == 1) {                 /* half word command */
-+	} else if (type == CFG_HWORD_CMD) {                 /* half word command */
- 		if (size >= 2)
- 			ret = wilc_wlan_cfg_set_hword(frame, offset, id, *((u16 *)buf));
--	} else if (type == 2) {                 /* word command */
-+	} else if (type == CFG_WORD_CMD) {                 /* word command */
- 		if (size >= 4)
- 			ret = wilc_wlan_cfg_set_word(frame, offset, id, *((u32 *)buf));
--	} else if (type == 3) {                 /* string command */
-+	} else if (type == CFG_STR_CMD) {                 /* string command */
- 		ret = wilc_wlan_cfg_set_str(frame, offset, id, buf, size);
--	} else if (type == 4) {                 /* binary command */
-+	} else if (type == CFG_BIN_CMD) {                 /* binary command */
- 		ret = wilc_wlan_cfg_set_bin(frame, offset, id, buf, size);
- 	}
- 
-@@ -415,7 +422,7 @@ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
- 	}
- 
- 	i = 0;
--	if (type == 0) {                                        /* byte command */
-+	if (type == CFG_BYTE_CMD) {                                        /* byte command */
- 		do {
- 			if (g_cfg_byte[i].id == WID_NIL)
- 				break;
-@@ -427,7 +434,7 @@ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
- 			}
- 			i++;
- 		} while (1);
--	} else if (type == 1) {                 /* half word command */
-+	} else if (type == CFG_HWORD_CMD) {                 /* half word command */
- 		do {
- 			if (g_cfg_hword[i].id == WID_NIL)
- 				break;
-@@ -439,7 +446,7 @@ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
- 			}
- 			i++;
- 		} while (1);
--	} else if (type == 2) {                 /* word command */
-+	} else if (type == CFG_WORD_CMD) {                 /* word command */
- 		do {
- 			if (g_cfg_word[i].id == WID_NIL)
- 				break;
-@@ -451,7 +458,7 @@ int wilc_wlan_cfg_get_wid_value(u16 wid, u8 *buffer, u32 buffer_size)
- 			}
- 			i++;
- 		} while (1);
--	} else if (type == 3) {                 /* string command */
-+	} else if (type == CFG_STR_CMD) {                 /* string command */
- 		do {
- 			if (g_cfg_str[i].id == WID_NIL)
- 				break;
--- 
-2.7.1
-
+T24gRnJpLCAyMDE2LTAzLTA0IGF0IDE5OjUzICswMTAwLCBCasO4cm4gTW9yayB3cm90ZToNCj4g
+QmrDuHJuIE1vcmsgPGJqb3JuQG1vcmsubm8+IHdyaXRlczoNCj4gDQo+ID4gPiArc3RhdGljIHZv
+aWQgaXdsX212bV90aGVybWFsX3pvbmVfdW5yZWdpc3RlcihzdHJ1Y3QgaXdsX212bSAqbXZtKQ0K
+PiA+ID4gK3sNCj4gPiA+ICsJaWYgKCFpd2xfbXZtX2lzX3R0X2luX2Z3KG12bSkpDQo+ID4gPiAr
+CQlyZXR1cm47DQo+ID4gPiArDQo+ID4gPiArCWlmIChtdm0tPnR6X2RldmljZS50em9uZSkgew0K
+PiA+ID4gKwkJSVdMX0RFQlVHX1RFTVAobXZtLCAiVGhlcm1hbCB6b25lIGRldmljZQ0KPiA+ID4g
+dW5yZWdpc3RlclxuIik7DQo+ID4gPiArCQl0aGVybWFsX3pvbmVfZGV2aWNlX3VucmVnaXN0ZXIo
+bXZtLQ0KPiA+ID4gPnR6X2RldmljZS50em9uZSk7DQo+ID4gDQo+ID4gV29uJ3QgdGhhdCBFUlJf
+UFRSIGJsb3cgdXAgd2hlbiBkZXJlZmVyZW5jZWQgYnkNCj4gPiB0aGVybWFsX3pvbmVfZGV2aWNl
+X3VucmVnaXN0ZXIoKSA/DQo+IA0KPiBUbyBhbnN3ZXIgbXlzZWxmOsKgwqBObywgaXQgd29uJ3Qu
+wqDCoEkgd2FzIHRyaWNrZWQgYnkgdGhlIG9kZGx5IHBsYWNlZA0KPiDCoCB0enAgPSB0ei0+dHpw
+Ow0KPiBsaW5lIGhlcmUsIGJ1dCB3ZSB3aWxsIHJldHVybiBiZWZvcmUgdGhhdCBiZWNvbWVzIGEg
+cHJvYmxlbToNCj4gDQo+IHZvaWQgdGhlcm1hbF96b25lX2RldmljZV91bnJlZ2lzdGVyKHN0cnVj
+dCB0aGVybWFsX3pvbmVfZGV2aWNlICp0eikNCj4gew0KPiDCoMKgwqDCoMKgwqDCoMKgaW50IGk7
+DQo+IMKgwqDCoMKgwqDCoMKgwqBjb25zdCBzdHJ1Y3QgdGhlcm1hbF96b25lX3BhcmFtcyAqdHpw
+Ow0KPiDCoMKgwqDCoMKgwqDCoMKgc3RydWN0IHRoZXJtYWxfY29vbGluZ19kZXZpY2UgKmNkZXY7
+DQo+IMKgwqDCoMKgwqDCoMKgwqBzdHJ1Y3QgdGhlcm1hbF96b25lX2RldmljZSAqcG9zID0gTlVM
+TDsNCj4gDQo+IMKgwqDCoMKgwqDCoMKgwqBpZiAoIXR6KQ0KPiDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoHJldHVybjsNCj4gDQo+IMKgwqDCoMKgwqDCoMKgwqB0enAgPSB0ei0+dHpw
+Ow0KPiANCj4gwqDCoMKgwqDCoMKgwqDCoG11dGV4X2xvY2soJnRoZXJtYWxfbGlzdF9sb2NrKTsN
+Cj4gwqDCoMKgwqDCoMKgwqDCoGxpc3RfZm9yX2VhY2hfZW50cnkocG9zLCAmdGhlcm1hbF90el9s
+aXN0LCBub2RlKQ0KPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBpZiAocG9zID09IHR6KQ0KPiDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGJyZWFrOw0KPiDCoMKgwqDCoMKgwqDCoMKg
+aWYgKHBvcyAhPSB0eikgew0KPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoC8qIHRo
+ZXJtYWwgem9uZSBkZXZpY2Ugbm90IGZvdW5kICovDQo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgbXV0ZXhfdW5sb2NrKCZ0aGVybWFsX2xpc3RfbG9jayk7DQo+IMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgcmV0dXJuOw0KPiDCoMKgwqDCoMKgwqDCoMKgfQ0KPiANCj4g
+DQo+IFN0aWxsIHRoaW5rIGl0J3MgdW53aXNlIHRvIGxlYXZlIEVSUl9QVFIncyBhcm91bmQgdGhv
+dWdoLg0KDQpUaGUgbWFpbiBwb2ludCBpcyB0aGF0IHdlIGRvbid0IHdhbnQgdG8gZmFpbCB0aGUg
+ZW50aXJlIGRyaXZlciBsb2FkaW5nDQppZiB0aGUgdGhlcm1hbCB6b25lIChvciBjb29saW5nIGRl
+dmljZSkgcmVnaXN0cmF0aW9uIGZhaWxzLiDCoFdlIGhhdmUgYQ0KZmFsbGJhY2sgZm9yIHRoYXQs
+IHdoaWNoIGlzIHdoYXQgd2FzIHVzZWQgYmVmb3JlIHRoaXMgbmV3DQppbXBsZW1lbnRhdGlvbiAo
+bmFtZWx5LCB0aGUgdGhlcm1hbCB0aHJvdHRsaW5nIGNvZGUgaW4gdGhlIGRyaXZlcikuDQoNCklJ
+UkMgRW1tYW51ZWwgaGFzIGEgcGF0Y2ggaW4gdGhlIHF1ZXVlIHRvIGNsZWFuIHRoaXMgdXAgYSBi
+aXQuLi4NCg0KLS0NCkNoZWVycywNCkx1Y2Eu
