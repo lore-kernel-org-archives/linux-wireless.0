@@ -1,27 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:37669 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752265AbcC2LJ3 (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:50557 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759059AbcCDJP7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 07:09:29 -0400
-Received: by mail-ig0-f177.google.com with SMTP id l20so11550269igf.0
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2016 04:09:29 -0700 (PDT)
+	Fri, 4 Mar 2016 04:15:59 -0500
+From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+To: Luca Coelho <luca@coelho.fi>
+CC: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 1/3] cfg80211: Allow a scan request for a specific
+ BSSID
+Date: Fri, 4 Mar 2016 09:15:30 +0000
+Message-ID: <20160304091528.GA3666@jouni.qca.qualcomm.com> (sfid-20160304_101616_919270_2BB65C90)
+References: <1456517569-27235-1-git-send-email-jouni@qca.qualcomm.com>
+ <1457078876.28365.124.camel@coelho.fi>
+In-Reply-To: <1457078876.28365.124.camel@coelho.fi>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Date: Tue, 29 Mar 2016 16:39:28 +0530
-Message-ID: <CAAeNHhzywKhugKCPwLonXqTEnJJm7Td39JPof0xRxL+gOZ_xkg@mail.gmail.com> (sfid-20160329_130933_597381_C670EF6C)
-Subject: Wireless Encryption
-From: Aswin Paranji <aswin.paranji@gmail.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-I'm trying to encrypt the 802.11 data with my own encryption instead
-of WEP or WPA. Can anybody guide me on how to do that and where I need
-to change. I'm trying to do this with Raspberry PI 3 device.
-
-Appreciate if you can guide me.
-
-Regards,
-Aswin
+T24gRnJpLCBNYXIgMDQsIDIwMTYgYXQgMTA6MDc6NTZBTSArMDIwMCwgTHVjYSBDb2VsaG8gd3Jv
+dGU6DQo+IE9uIEZyaSwgMjAxNi0wMi0yNiBhdCAyMjoxMiArMDIwMCwgSm91bmkgTWFsaW5lbiB3
+cm90ZToNCj4gPiBUaGlzIGlzIGFuIG9wdGltaXphdGlvbiBhbmQgYXMgc3VjaCwgaXQgaXMgYWNj
+ZXB0YWJsZSBmb3Igc29tZSBvZiB0aGUNCj4gPiBkcml2ZXJzIG5vdCB0byBzdXBwb3J0IHRoZSBt
+ZWNoYW5pc20uIElmIG5vdCBzdXBwb3J0ZWQsIHRoZSB3aWxkY2FyZA0KPiA+IEJTU0lEIHdpbGwg
+YmUgdXNlZCBhbmQgbW9yZSByZXNwb25zZXMgbWF5IGJlIHJlY2VpdmVkLg0KPiANCj4gUmVjZWl2
+aW5nIG1vcmUgcmVzcG9uc2VzIHRoYW4gd2hhdCB3ZSBhc2tlZCBmb3IgaXMgYWx3YXlzIHBvc3Np
+YmxlLA0KPiBiZWNhdXNlIHdlIGRvbid0IGZpbHRlciBvdXQgb3RoZXIgdGhpbmdzIHdlIG1heSBy
+ZWNlaXZlIGF0IHRoZSBzYW1lDQo+IHRpbWUuIMKgSXQncyBsaWtlIHJlcXVlc3RpbmcgZm9yIGEg
+c3BlY2lmaWMgU1NJRCwgaXQganVzdCBtZWFucyB0aGF0IHRoZQ0KPiBTU0lEIHdpbGwgYmUgdXNl
+ZCBpbiB0aGUgcHJvYmUgcmVxdWVzdHMsIGJ1dCBpdCBkb2Vzbid0IGd1YXJhbnRlZSB0aGF0DQo+
+IG90aGVyIHJlc3VsdHMgd2lsbCBub3QgYmUgcmV0dXJuZWQuDQoNClN1cmUuIFRoaXMgIm1vcmUg
+cmVzcG9uc2VzIiBpcyByZWZlcnJpbmcgdG8gbm90IGJlaW5nIGFibGUgdG8gZ2V0IHRoZQ0KYmVu
+ZWZpdCBmcm9tIHNhdmVkIGFpcnRpbWU7IG5vdCBvbiB3aGF0IHdlIG1pZ2h0IGFkZCBpbnRvIHRo
+ZSBjZmc4MDIxMQ0KQlNTIHRhYmxlLiBXZSBkb24ndCBldmVuIGhhdmUgYW4gZXhwbGljaXQgbWVj
+aGFuaXNtIGZvciByZXBvcnRpbmcNCnJlc3VsdHMgZnJvbSBhIHNpbmdsZSBzY2FuIGl0ZXJhdGlv
+bi4NCg0KPiA+IGRpZmYgLS1naXQgYS9pbmNsdWRlL3VhcGkvbGludXgvbmw4MDIxMS5oIGIvaW5j
+bHVkZS91YXBpL2xpbnV4L25sODAyMTEuaA0KPiA+IEBAIC0zMjIsNyArMzIyLDkgQEANCj4gPiDC
+oCAqIEBOTDgwMjExX0NNRF9HRVRfU0NBTjogZ2V0IHNjYW4gcmVzdWx0cw0KPiA+IMKgICogQE5M
+ODAyMTFfQ01EX1RSSUdHRVJfU0NBTjogdHJpZ2dlciBhIG5ldyBzY2FuIHdpdGggdGhlIGdpdmVu
+IHBhcmFtZXRlcnMNCj4gPiDCoCAqCSVOTDgwMjExX0FUVFJfVFhfTk9fQ0NLX1JBVEUgaXMgdXNl
+ZCB0byBkZWNpZGUgd2hldGhlciB0byBzZW5kIHRoZQ0KPiA+IC0gKglwcm9iZSByZXF1ZXN0cyBh
+dCBDQ0sgcmF0ZSBvciBub3QuDQo+ID4gKyAqCXByb2JlIHJlcXVlc3RzIGF0IENDSyByYXRlIG9y
+IG5vdC4gJU5MODAyMTFfQVRUUl9NQUMgY2FuIGJlIHVzZWQgdG8NCj4gPiArICoJc3BlY2lmeSBh
+IEJTU0lEIHRvIHNjYW4gZm9yOyBpZiBub3QgaW5jbHVkZWQsIHRoZSB3aWxkY2FyZCBCU1NJRCB3
+aWxsDQo+ID4gKyAqCWJlIHVzZWQuDQo+IA0KPiBNYXliZSB5b3UgY291bGQgYmUgZXhwbGljaXQg
+aGVyZSBhYm91dCB0aGUgcG9zc2liaWxpdHkgb2YgcmVjZWl2aW5nDQo+IG1vcmUgcmVzdWx0cyB0
+aGFuIHJlcXVlc3RlZD8NCg0KV2hpY2ggInJlY2VpdmluZyIgYXJlIHlvdSByZWZlcnJpbmcgdG8g
+aGVyZT8gSSBkb24ndCBzZWUgbXVjaCBwb2ludCBpbg0KZG9jdW1lbnRpbmcgdGhlIGFpcnRpbWUg
+b3B0aW1pemF0aW9uIGhlcmUgYW5kIGFzIGZhciBhcyByZWNlaXZpbmcNCnJlc3VsdHMgdGhyb3Vn
+aCBubDgwMjExIGlzIGNvbmNlcm5lZCwgdGhlIG9ubHkgb3B0aW9uIGZvciBpdCB0b2RheSBpcyB0
+bw0KdXNlIE5MODAyMTFfQ01EX0dFVF9TQ0FOIGFuZCB0aGF0IHJldHVybnMgdGhlIGN1cnJlbnQg
+Y29udGVudHMgb2YgdGhlDQpCU1MgdGFibGUgcmF0aGVyIHRoYW4gcmV0dXJucyBmcm9tIGFueSBz
+cGVjaWZpYyBzY2FuLCBzbyBJJ20gbm90IHN1cmUNCndoYXQgZXhhY3RseSB5b3Ugd291bGQgbGlr
+ZSB0byBhZGQgaGVyZS4NCg0KSSB3YXMgZ29pbmcgdG8gbm90ZSB0aGF0IHRoaXMgaXMgc2ltaWxh
+ciB0byBob3cgTkw4MDIxMV9BVFRSX1NDQU5fU1NJRFMNCmlzIGRvY3VtZW50ZWQsIGJ1dCBhY3R1
+YWxseSwgdGhhdCBvbmUgaXMgbm90IG1lbnRpb25lZCBhdCBhbGwgd2l0aA0KTkw4MDIxMV9DTURf
+VFJJR0dFUl9TQ0FOIGN1cnJlbnRseS4uIE5vciBpcyB0aGUgZGV0YWlscyBvZiB3aGF0DQpOTDgw
+MjExX0NNRF9HRVRfU0NBTiByZXR1cm5zLg0KIA0KLS0gDQpKb3VuaSBNYWxpbmVuICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBQR1AgaWQgRUZDODk1RkE=
