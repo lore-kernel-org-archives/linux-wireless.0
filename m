@@ -1,39 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32471 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750890AbcCBN4A (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:45722 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752436AbcCDIlU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 08:56:00 -0500
-Date: Wed, 2 Mar 2016 16:55:22 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Geliang Tang <geliangtang@163.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: fix static checker warning
-Message-ID: <20160302135522.GA32153@mwanda> (sfid-20160302_145621_238184_C6DD01C0)
-References: <20160223050421.GA19763@mwanda>
- <1e3c203b20c01a12078506469807a79ae6013955.1456845195.git.geliangtang@163.com>
+	Fri, 4 Mar 2016 03:41:20 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Anton Protopopov <a.s.protopopov@gmail.com>
+CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] ath10k: fix erroneous return value
+Date: Fri, 4 Mar 2016 08:41:15 +0000
+Message-ID: <8760x2zlcn.fsf@kamboji.qca.qualcomm.com> (sfid-20160304_094148_588978_8FD67BE6)
+References: <1455123535-26751-1-git-send-email-a.s.protopopov@gmail.com>
+In-Reply-To: <1455123535-26751-1-git-send-email-a.s.protopopov@gmail.com>
+	(Anton Protopopov's message of "Wed, 10 Feb 2016 11:58:55 -0500")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1e3c203b20c01a12078506469807a79ae6013955.1456845195.git.geliangtang@163.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 01, 2016 at 11:22:23PM +0800, Geliang Tang wrote:
-> Fix the following static checker warning:
-> 
->  drivers/staging/rtl8723au/core/rtw_sta_mgt.c:365 rtw_get_stainfo23a()
->  error: potential NULL dereference 'psta'.
-> 
-> Fixes: e280d71("staging: rtl8723au: use list_for_each_entry*()")
-> Signed-off-by: Geliang Tang <geliangtang@163.com>
+Anton Protopopov <a.s.protopopov@gmail.com> writes:
 
-Looks good.  Thanks.
+> The ath10k_pci_hif_exchange_bmi_msg() function may return the positive
+> value EIO instead of -EIO in case of error.
+>
+> Signed-off-by: Anton Protopopov <a.s.protopopov@gmail.com>
 
-regards,
-dan carpenter
+Applied, thanks.
 
+-- 
+Kalle Valo
