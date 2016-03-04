@@ -1,174 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:33350 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753690AbcCJSI7 (ORCPT
+Received: from paleale.coelho.fi ([176.9.41.70]:59496 "EHLO
+	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758550AbcCDIen (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 13:08:59 -0500
-From: greearb@candelatech.com
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
-Subject: [PATCH-v2] mac80211:  Let VHT work on 2.4Ghz
-Date: Thu, 10 Mar 2016 10:08:56 -0800
-Message-Id: <1457633336-27898-1-git-send-email-greearb@candelatech.com> (sfid-20160310_190902_829467_89940599)
+	Fri, 4 Mar 2016 03:34:43 -0500
+Message-ID: <1457078876.28365.124.camel@coelho.fi> (sfid-20160304_093451_889631_E1CD9A8D)
+From: Luca Coelho <luca@coelho.fi>
+To: Jouni Malinen <jouni@qca.qualcomm.com>,
+	Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org
+Date: Fri, 04 Mar 2016 10:07:56 +0200
+In-Reply-To: <1456517569-27235-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1456517569-27235-1-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
+Subject: Re: [PATCH v2 1/3] cfg80211: Allow a scan request for a specific
+ BSSID
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+Looks good.  A couple of small comments.
 
-ath10k supports VHT on 2.4Ghz band.
-If supplicant and hostapd and radio think
-VHT should be allowed, then kernel should let them
-try, as long as at least one band can do 80Mhz.
+On Fri, 2016-02-26 at 22:12 +0200, Jouni Malinen wrote:
+> This allows scans for a specific BSSID to be optimized by the user space
+> application by requesting the driver to set the Probe Request frame
+> BSSID field (Address 3) to the specified BSSID instead of the wildcard
+> BSSID. This prevents other APs from replying which reduces airtime need
+> and latency in getting the response from the target AP through.
+> 
+> This is an optimization and as such, it is acceptable for some of the
+> drivers not to support the mechanism. If not supported, the wildcard
+> BSSID will be used and more responses may be received.
 
-If no bands can do 80Mhz, then that is an indication that
-VHT is not enabled in this regulatory domain.
+Receiving more responses than what we asked for is always possible,
+because we don't filter out other things we may receive at the same
+time.  It's like requesting for a specific SSID, it just means that the
+SSID will be used in the probe requests, but it doesn't guarantee that
+other results will not be returned.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
-v2:  Only allow VHT on 2.4 if 80Mhz is available on at least one band.
 
- net/mac80211/ieee80211_i.h |  1 +
- net/mac80211/mlme.c        | 15 +--------------
- net/mac80211/util.c        | 33 +++++++++++++++++++++++----------
- net/mac80211/vht.c         | 15 ++-------------
- 4 files changed, 27 insertions(+), 37 deletions(-)
+> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+> ---
+> 
+> Notes:
+>     v2: Updated two forgotten rdev_scan() callers
+> 
+>  include/net/cfg80211.h       | 2 ++
+>  include/uapi/linux/nl80211.h | 4 +++-
+>  net/wireless/nl80211.c       | 6 ++++++
+>  net/wireless/scan.c          | 2 ++
+>  net/wireless/sme.c           | 2 ++
+>  5 files changed, 15 insertions(+), 1 deletion(-)
+> 
+> diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+> index 9e1b24c..14c0c43 100644
+> --- a/include/net/cfg80211.h
+> +++ b/include/net/cfg80211.h
+> @@ -1455,6 +1455,7 @@ struct cfg80211_ssid {
+>   * @mac_addr_mask: MAC address mask used with randomisation, bits that
+>   *	are 0 in the mask should be randomised, bits that are 1 should
+>   *	be taken from the @mac_addr
+> + * @bssid: BSSID to scan for (most commonly, the wildcard BSSID)
+>   */
+>  struct cfg80211_scan_request {
+>  	struct cfg80211_ssid *ssids;
+> @@ -1471,6 +1472,7 @@ struct cfg80211_scan_request {
+>  
+>  	u8 mac_addr[ETH_ALEN] __aligned(2);
+>  	u8 mac_addr_mask[ETH_ALEN] __aligned(2);
+> +	u8 bssid[ETH_ALEN] __aligned(2);
+>  
+>  	/* internal */
+>  	struct wiphy *wiphy;
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+> index 5a30a75..23bf066 100644
+> --- a/include/uapi/linux/nl80211.h
+> +++ b/include/uapi/linux/nl80211.h
+> @@ -322,7 +322,9 @@
+>   * @NL80211_CMD_GET_SCAN: get scan results
+>   * @NL80211_CMD_TRIGGER_SCAN: trigger a new scan with the given parameters
+>   *	%NL80211_ATTR_TX_NO_CCK_RATE is used to decide whether to send the
+> - *	probe requests at CCK rate or not.
+> + *	probe requests at CCK rate or not. %NL80211_ATTR_MAC can be used to
+> + *	specify a BSSID to scan for; if not included, the wildcard BSSID will
+> + *	be used.
 
-diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
-index 19de36f..c0dc0e2 100644
---- a/net/mac80211/ieee80211_i.h
-+++ b/net/mac80211/ieee80211_i.h
-@@ -1800,6 +1800,7 @@ static inline int __ieee80211_resume(struct ieee80211_hw *hw)
- }
- 
- /* utility functions/constants */
-+bool ieee80211_any_band_supports_80mhz(struct ieee80211_local *local);
- extern const void *const mac80211_wiphy_privid; /* for wiphy privid */
- int ieee80211_frame_duration(enum ieee80211_band band, size_t len,
- 			     int rate, int erp, int short_preamble,
-diff --git a/net/mac80211/mlme.c b/net/mac80211/mlme.c
-index b63cd7d..d6e9bdc 100644
---- a/net/mac80211/mlme.c
-+++ b/net/mac80211/mlme.c
-@@ -4228,8 +4228,6 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_supported_band *sband;
- 	struct cfg80211_chan_def chandef;
- 	int ret;
--	u32 i;
--	bool have_80mhz;
- 
- 	sband = local->hw.wiphy->bands[cbss->channel->band];
- 
-@@ -4280,18 +4278,7 @@ static int ieee80211_prep_channel(struct ieee80211_sub_if_data *sdata,
- 		}
- 	}
- 
--	/* Allow VHT if at least one channel on the sband supports 80 MHz */
--	have_80mhz = false;
--	for (i = 0; i < sband->n_channels; i++) {
--		if (sband->channels[i].flags & (IEEE80211_CHAN_DISABLED |
--						IEEE80211_CHAN_NO_80MHZ))
--			continue;
--
--		have_80mhz = true;
--		break;
--	}
--
--	if (!have_80mhz)
-+	if (!ieee80211_any_band_supports_80mhz(local))
- 		ifmgd->flags |= IEEE80211_STA_DISABLE_VHT;
- 
- 	ifmgd->flags |= ieee80211_determine_chantype(sdata, sband,
-diff --git a/net/mac80211/util.c b/net/mac80211/util.c
-index 56b2c27..ae90c4f 100644
---- a/net/mac80211/util.c
-+++ b/net/mac80211/util.c
-@@ -762,6 +762,27 @@ void ieee80211_queue_delayed_work(struct ieee80211_hw *hw,
- }
- EXPORT_SYMBOL(ieee80211_queue_delayed_work);
- 
-+bool ieee80211_any_band_supports_80mhz(struct ieee80211_local *local)
-+{
-+	int i;
-+	struct ieee80211_supported_band *sband;
-+
-+	for (i = 0; i < IEEE80211_NUM_BANDS; i++) {
-+		int q;
-+		sband = local->hw.wiphy->bands[i];
-+		if (!sband)
-+			continue;
-+		for (q = 0; q < sband->n_channels; q++) {
-+			if (sband->channels[q].flags &
-+			    (IEEE80211_CHAN_DISABLED | IEEE80211_CHAN_NO_80MHZ))
-+				continue;
-+
-+			return true;
-+		}
-+	}
-+	return false;
-+}
-+
- u32 ieee802_11_parse_elems_crc(const u8 *start, size_t len, bool action,
- 			       struct ieee802_11_elems *elems,
- 			       u64 filter, u32 crc)
-@@ -1375,7 +1396,7 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_local *local,
- 	int ext_rates_len;
- 	int shift;
- 	u32 rate_flags;
--	bool have_80mhz = false;
-+	bool have_80mhz;
- 
- 	*offset = 0;
- 
-@@ -1504,15 +1525,7 @@ static int ieee80211_build_preq_ies_band(struct ieee80211_local *local,
- 		*offset = noffset;
- 	}
- 
--	/* Check if any channel in this sband supports at least 80 MHz */
--	for (i = 0; i < sband->n_channels; i++) {
--		if (sband->channels[i].flags & (IEEE80211_CHAN_DISABLED |
--						IEEE80211_CHAN_NO_80MHZ))
--			continue;
--
--		have_80mhz = true;
--		break;
--	}
-+	have_80mhz = ieee80211_any_band_supports_80mhz(local);
- 
- 	if (sband->vht_cap.vht_supported && have_80mhz) {
- 		if (end - pos < 2 + sizeof(struct ieee80211_vht_cap))
-diff --git a/net/mac80211/vht.c b/net/mac80211/vht.c
-index c38b2f0..a08a77f 100644
---- a/net/mac80211/vht.c
-+++ b/net/mac80211/vht.c
-@@ -120,7 +120,7 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 	struct ieee80211_sta_vht_cap *vht_cap = &sta->sta.vht_cap;
- 	struct ieee80211_sta_vht_cap own_cap;
- 	u32 cap_info, i;
--	bool have_80mhz;
-+	struct ieee80211_local *local = sdata->local;
- 
- 	memset(vht_cap, 0, sizeof(*vht_cap));
- 
-@@ -130,18 +130,7 @@ ieee80211_vht_cap_ie_to_sta_vht_cap(struct ieee80211_sub_if_data *sdata,
- 	if (!vht_cap_ie || !sband->vht_cap.vht_supported)
- 		return;
- 
--	/* Allow VHT if at least one channel on the sband supports 80 MHz */
--	have_80mhz = false;
--	for (i = 0; i < sband->n_channels; i++) {
--		if (sband->channels[i].flags & (IEEE80211_CHAN_DISABLED |
--						IEEE80211_CHAN_NO_80MHZ))
--			continue;
--
--		have_80mhz = true;
--		break;
--	}
--
--	if (!have_80mhz)
-+	if (!ieee80211_any_band_supports_80mhz(local))
- 		return;
- 
- 	/*
--- 
-2.4.3
+Maybe you could be explicit here about the possibility of receiving
+more results than requested?
 
+--
+Cheers,
+Luca.
