@@ -1,58 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f196.google.com ([209.85.217.196]:35601 "EHLO
-	mail-lb0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751606AbcCZT2W (ORCPT
+Received: from mail-yw0-f178.google.com ([209.85.161.178]:35758 "EHLO
+	mail-yw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759080AbcCDUD0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Mar 2016 15:28:22 -0400
-Received: by mail-lb0-f196.google.com with SMTP id oa3so7105481lbb.2
-        for <linux-wireless@vger.kernel.org>; Sat, 26 Mar 2016 12:28:21 -0700 (PDT)
-Message-ID: <56F6E2D2.3050704@gmail.com> (sfid-20160326_203112_426290_40FEF4C1)
-Date: Sat, 26 Mar 2016 22:28:18 +0300
-From: Denis Silakov <dsilakov@gmail.com>
+	Fri, 4 Mar 2016 15:03:26 -0500
+Received: by mail-yw0-f178.google.com with SMTP id g127so53123031ywf.2
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2016 12:03:26 -0800 (PST)
 MIME-Version: 1.0
-To: Till Kamppeter <till.kamppeter@gmail.com>,
-	Evgeny Novikov <novikov@ispras.ru>,
-	Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>,
-	chris holcombe <chris.holcombe@canonical.com>,
-	Chris MacNaughton <chris.macnaughton@canonical.com>
-Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
-References: <56F4266B.4060605@gmail.com> <1943931458892174@web3o.yandex.ru>	<56F5D04A.20506@gmail.com> <56F5D11B.7000803@gmail.com>
-In-Reply-To: <56F5D11B.7000803@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+In-Reply-To: <87r3fql34s.fsf@purkki.adurom.net>
+References: <1456947439-28968-1-git-send-email-arend@broadcom.com>
+	<1457020529.2044.31.camel@sipsolutions.net>
+	<56D8A618.4050707@broadcom.com>
+	<1457082805.2333.0.camel@sipsolutions.net>
+	<87r3fql34s.fsf@purkki.adurom.net>
+Date: Fri, 4 Mar 2016 21:03:25 +0100
+Message-ID: <CAF7Mx6rE5sYYj48iEyb8qQmQThbqSupZ4tazR=dSe7nYTKN6jw@mail.gmail.com> (sfid-20160304_210331_156020_82147A68)
+Subject: Re: [PATCH V11 1/2] nl80211: add feature for BSS selection support
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	Arend Van Spriel <arend@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I've marked this one as "want to mentor":
-
-https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/4529048004853760/
-
-26.03.2016 03:00, Till Kamppeter пишет:
-> On 03/25/2016 08:56 PM, Till Kamppeter wrote:
->> I am taking care of the 5 OpenPrinting proposals, please take care of
->> all the others, mark with IGNORE what you for sure do not want to mentor
->> and mark with a star what you want to mentor and also click "WANT TO
->> MENTOR" on the proposal page. Please try to get two mentors per student,
->> if only one is actually doing the mentoring work, the other is a backup.
+On Fri, Mar 4, 2016 at 3:38 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Johannes Berg <johannes@sipsolutions.net> writes:
+>
+>> On Thu, 2016-03-03 at 22:01 +0100, Arend Van Spriel wrote:
+>>>
+>>> On 3-3-2016 16:55, Johannes Berg wrote:
+>>> > On Wed, 2016-03-02 at 20:37 +0100, Arend van Spriel wrote:
+>>> > > Introducing a new feature that the driver can use to
+>>> > > indicate the driver/firmware supports configuration of BSS
+>>> > > selection criteria upon CONNECT command. This can be useful
+>>> > > when multiple BSS-es are found belonging to the same ESS,
+>>> > > ie. Infra-BSS with same SSID. The criteria can then be used to
+>>> > > offload selection of a preferred BSS.
+>>> > >
+>>> > Applied, finally :)
+>>> >
+>>> > I moved the wiphy supported methods check into parse_bss_select()
+>>> > to
+>>> > avoid the double error path in the caller, plus some editorial
+>>> > changes.
+>>>
+>>> Do you expect Kalle to take the brcmfmac patch or can it go through
+>>> your tree?
+>>>
 >>
+>> I was expecting Kalle to apply it.
 >
-> Sorry, seems that star and ignore can only be set by org admins. So 
-> please click "WANT TO MENTOR" if appropriate and tell me if you want 
-> to set or remove the star or if you want to set or remove an ignore.
+> Ack, you assigned it to me so it's on my queue now:
 >
->    Till
->
-> _______________________________________________
-> lsb-discuss mailing list
-> lsb-discuss@lists.linux-foundation.org
-> https://lists.linuxfoundation.org/mailman/listinfo/lsb-discuss
+> https://patchwork.kernel.org/patch/8484901/
 
+Thanks for the confirmation.
 
--- 
 Regards,
-Denis.
+Arend
 
+> --
+> Kalle Valo
