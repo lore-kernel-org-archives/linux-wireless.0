@@ -1,40 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f196.google.com ([209.85.220.196]:36518 "EHLO
-	mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753264AbcCZUA0 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:9732 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752112AbcCDIkU convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Mar 2016 16:00:26 -0400
-Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
-To: "Luis R. Rodriguez" <mcgrof@gmail.com>,
-	Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"backports@vger.kernel.org" <backports@vger.kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>
-References: <56F4266B.4060605@gmail.com> <1943931458892174@web3o.yandex.ru>
- <56F5D04A.20506@gmail.com> <56F5D11B.7000803@gmail.com>
- <56F6E651.9090200@ispras.ru>
- <CAB=NE6WL5OnJTYi99dbuOyh0cenM7NcajfKHQDnbYKYBn67owQ@mail.gmail.com>
-Cc: Evgeny Novikov <novikov@ispras.ru>, Greg KH <greg@kroah.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>,
-	chris holcombe <chris.holcombe@canonical.com>,
-	Chris MacNaughton <chris.macnaughton@canonical.com>
-From: Till Kamppeter <till.kamppeter@gmail.com>
-Message-ID: <56F6EA55.405@gmail.com> (sfid-20160326_210029_057645_55CB6479)
-Date: Sat, 26 Mar 2016 17:00:21 -0300
+	Fri, 4 Mar 2016 03:40:20 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+	<mohammed@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 0/2] Peer Stats fixes for rx duration
+Date: Fri, 4 Mar 2016 08:40:14 +0000
+Message-ID: <87egbqzleb.fsf@kamboji.qca.qualcomm.com> (sfid-20160304_094026_489558_F43CC8AE)
+References: <1454513863-2703-1-git-send-email-mohammed@qca.qualcomm.com>
+In-Reply-To: <1454513863-2703-1-git-send-email-mohammed@qca.qualcomm.com>
+	(Mohammed Shafi Shajakhan's message of "Wed, 3 Feb 2016 21:07:41	+0530")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <CAB=NE6WL5OnJTYi99dbuOyh0cenM7NcajfKHQDnbYKYBn67owQ@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/26/2016 04:49 PM, Luis R. Rodriguez wrote:
-> I just hit "want to mentor" for the backports one by Cristina-Gabriela Moraru.
->
->    Luis
->
+Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
 
-OK. I marked this with a star now.
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+>
+> This is a small patchset that fixes:
+>
+> 1. Updating rx duration per station (part of mac80211 STA debugfs)
+> irrespective user does a cat fw_stats in ath10k debugfs
+>
+> 2. Remove updating peer stats list (which is completely useless)
+> when we recieve periodic update of peer stats for updating rx_duration
+>
+> Mohammed Shafi Shajakhan (2):
+>   ath10k: Fix updating peer stats rx duration
+>   ath10k: Fix pointless update of peer stats list
 
-    Till
+Both applied, thanks.
+
+-- 
+Kalle Valo
