@@ -1,62 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:50214 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755806AbcCNOTu (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37893 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751415AbcCDOtj (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2016 10:19:50 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: "David S. Miller" <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 4/5] ath9k: fix misleading indentation
-Date: Mon, 14 Mar 2016 15:18:37 +0100
-Message-Id: <1457965120-3155420-5-git-send-email-arnd@arndb.de> (sfid-20160314_152013_113808_B8C17859)
-In-Reply-To: <1457965120-3155420-1-git-send-email-arnd@arndb.de>
-References: <1457965120-3155420-1-git-send-email-arnd@arndb.de>
+	Fri, 4 Mar 2016 09:49:39 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Hante Meuleman <meuleman@broadcom.com>
+Subject: Re: [PATCH 18/21] brcmfmac: switch to new platform data
+References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
+	<1455704830-10088-19-git-send-email-arend@broadcom.com>
+Date: Fri, 04 Mar 2016 16:49:32 +0200
+In-Reply-To: <1455704830-10088-19-git-send-email-arend@broadcom.com> (Arend
+	van Spriel's message of "Wed, 17 Feb 2016 11:27:07 +0100")
+Message-ID: <87a8mexpqb.fsf@kamboji.qca.qualcomm.com> (sfid-20160304_154942_900505_2822D5C8)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A cleanup patch in linux-3.18 moved around some code in the ath9k
-driver and left some code to be indented in a misleading way,
-made worse by the addition of some new code for p2p mode, as
-discovered by a new gcc-6 warning:
+Arend van Spriel <arend@broadcom.com> writes:
 
-drivers/net/wireless/ath/ath9k/init.c: In function 'ath9k_set_hw_capab':
-drivers/net/wireless/ath/ath9k/init.c:851:4: warning: statement is indented as if it were guarded by... [-Wmisleading-indentation]
-    hw->wiphy->iface_combinations = if_comb;
-    ^~
-drivers/net/wireless/ath/ath9k/init.c:847:3: note: ...this 'if' clause, but it is not
-   if (ath9k_is_chanctx_enabled())
-   ^~
+> From: Hante Meuleman <meuleman@broadcom.com>
+>
+> Platform data is only available for sdio. With this patch a new
+> platform data structure is being used which allows for platform
+> data for any device and configurable per device. This patch only
+> switches to the new structure and adds support for SDIO devices.
+>
+> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
+> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
 
-The code is in fact correct, but the indentation is not, so I'm
-reformatting it as it should have been after the original cleanup.
+It's more work to review patches which rename a file and adds new
+features at the same time. Splitting this to two patches, first a simple
+rename and then adding support for SDIO, would have been much nicer.
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: 499afaccf6f3 ("ath9k: Isolate ath9k_use_chanctx module parameter")
-Fixes: eb61f9f623f7 ("ath9k: advertise p2p dev support when chanctx")
----
- drivers/net/wireless/ath/ath9k/init.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+>  static void brcmf_mp_attach(void)
+>  {
+> +	/* If module param firmware path is set then this will always be used,
+> +	 * if not set then if available use the platform data version. To make
+> +	 * sure it gets initialized at all, always copy the module param version
+> +	 */
+>  	strlcpy(brcmf_mp_global.firmware_path, brcmf_firmware_path,
+>  		BRCMF_FW_ALTPATH_LEN);
+> +	if ((brcmfmac_pdata) && (brcmfmac_pdata->fw_alternative_path) &&
+> +	    (brcmf_mp_global.firmware_path[0] == '\0')) {
+> +		strlcpy(brcmf_mp_global.firmware_path,
+> +			brcmfmac_pdata->fw_alternative_path,
+> +			BRCMF_FW_ALTPATH_LEN);
+> +	}
 
-diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
-index d4e0ac946c3a..1c226d63bb03 100644
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -848,8 +848,8 @@ static void ath9k_set_hw_capab(struct ath_softc *sc, struct ieee80211_hw *hw)
- 			hw->wiphy->interface_modes |=
- 					BIT(NL80211_IFTYPE_P2P_DEVICE);
- 
--			hw->wiphy->iface_combinations = if_comb;
--			hw->wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
-+		hw->wiphy->iface_combinations = if_comb;
-+		hw->wiphy->n_iface_combinations = ARRAY_SIZE(if_comb);
- 	}
- 
- 	hw->wiphy->flags &= ~WIPHY_FLAG_PS_ON_BY_DEFAULT;
+[...]
+
+> +/**
+> + * struct brcmfmac_platform_data - BRCMFMAC specific platform data.
+> + *
+> + * @power_on:	This function is called by the brcmfmac driver when the module
+> + *		gets loaded. This can be particularly useful for low power
+> + *		devices. The platform spcific routine may for example decide to
+> + *		power up the complete device. If there is no use-case for this
+> + *		function then provide NULL.
+> + * @power_off:	This function is called by the brcmfmac when the module gets
+> + *		unloaded. At this point the devices can be powered down or
+> + *		otherwise be reset. So if an actual power_off is not supported
+> + *		but reset is supported by the devices then reset the devices
+> + *		when this function gets called. This can be particularly useful
+> + *		for low power devices. If there is no use-case for this
+> + *		function then provide NULL.
+> + */
+> +struct brcmfmac_platform_data {
+> +	void	(*power_on)(void);
+> +	void	(*power_off)(void);
+> +	char	*fw_alternative_path;
+> +	int	device_count;
+> +	struct brcmfmac_pd_device devices[0];
+> +};
+
+If I understood correctly this undocumented, and not mentioned in the
+commit log, fw_alternative_path is a new feature in platform data. I
+guess it provides a different firmware image name for the device so that
+devices can have different firmware images on the same system?
+
+It's not pretty but I guess okayish. Opinions?
+
 -- 
-2.7.0
-
+Kalle Valo
