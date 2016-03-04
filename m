@@ -1,30 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.web.de ([212.227.17.11]:60806 "EHLO mout.web.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753980AbcCSM1O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Mar 2016 08:27:14 -0400
-Subject: Re: [PATCH DETAIL 13/19] rsi: Delete unnecessary variable
- initialisation
-To: Julian Calaby <julian.calaby@gmail.com>
-References: <cover.1458262312.git.julian.calaby@gmail.com>
- <c95f816da2d5c6789004e063e1b7adc44695718e.1458262312.git.julian.calaby@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Message-ID: <56ED4595.5050007@users.sourceforge.net> (sfid-20160319_132717_596196_68776E18)
-Date: Sat, 19 Mar 2016 13:27:01 +0100
-MIME-Version: 1.0
-In-Reply-To: <c95f816da2d5c6789004e063e1b7adc44695718e.1458262312.git.julian.calaby@gmail.com>
-Content-Type: text/plain; charset=utf-8
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:35394 "EHLO
+	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751213AbcCDNnU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Mar 2016 08:43:20 -0500
+Received: by mail-wm0-f54.google.com with SMTP id l68so35481069wml.0
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2016 05:43:19 -0800 (PST)
+From: Cihangir Akturk <cakturk@gmail.com>
+To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com
+Cc: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, Cihangir Akturk <cakturk@gmail.com>
+Subject: [PATCH] drivers: staging: rtl8723au: remove unneeded null test
+Date: Fri,  4 Mar 2016 15:43:10 +0200
+Message-Id: <1457098990-8329-1-git-send-email-cakturk@gmail.com> (sfid-20160304_144334_865155_808BB0EB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> In rsi_send_data_pkt(), the following variables are assigned to
-> before they're used:
+null test on pnetwork removed, because the iterator variable
+list_for_each_entry_safe cannot be null.
 
-Thanks for your interest in this update suggestion.
-How do you think about to add the function name also to such
-a mail subject so that the potential for confusion with an other
-change can be eventually reduced around the source file "rsi_91x_pkt.c"?
+This commit fixes the following error reported by coccinelle:
 
-Regards,
-Markus
+drivers/staging/rtl8723au/core/rtw_mlme.c:1621:7-15: ERROR: iterator
+variable bound on line 1620 cannot be NULL
+
+Signed-off-by: Cihangir Akturk <cakturk@gmail.com>
+---
+ drivers/staging/rtl8723au/core/rtw_mlme.c | 13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/staging/rtl8723au/core/rtw_mlme.c b/drivers/staging/rtl8723au/core/rtw_mlme.c
+index 3adda55..a786fc4 100644
+--- a/drivers/staging/rtl8723au/core/rtw_mlme.c
++++ b/drivers/staging/rtl8723au/core/rtw_mlme.c
+@@ -1617,19 +1617,10 @@ rtw_select_candidate_from_queue(struct mlme_priv *pmlmepriv)
+ 
+ 	spin_lock_bh(&pmlmepriv->scanned_queue.lock);
+ 	phead = get_list_head(queue);
+-	list_for_each_entry_safe(pnetwork, ptmp, phead, list) {
+-		if (!pnetwork) {
+-			RT_TRACE(_module_rtl871x_mlme_c_, _drv_err_,
+-				 "%s: return _FAIL:(pnetwork == NULL)\n",
+-				 __func__);
+-			goto exit;
+-		}
+-
++	list_for_each_entry_safe(pnetwork, ptmp, phead, list)
+ 		rtw_check_join_candidate(pmlmepriv, &candidate, pnetwork);
+-	}
+-
+-exit:
+ 	spin_unlock_bh(&pmlmepriv->scanned_queue.lock);
++
+ 	return candidate;
+ }
+ 
+-- 
+2.1.4
+
