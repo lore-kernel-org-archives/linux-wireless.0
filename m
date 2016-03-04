@@ -1,58 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:46532 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757134AbcCCJ0W (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 04:26:22 -0500
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
-	Samuel Ortiz <sameo@linux.intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH] nfc: pn544: Drop two useless checks in ACPI probe path
-Date: Thu,  3 Mar 2016 11:26:18 +0200
-Message-Id: <1456997178-7673-1-git-send-email-mika.westerberg@linux.intel.com> (sfid-20160303_102626_570898_2B731BF1)
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:32880 "EHLO
+	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758882AbcCDJwF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 4 Mar 2016 04:52:05 -0500
+Received: by mail-wm0-f54.google.com with SMTP id l68so12889434wml.0
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2016 01:52:04 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <87h9gmy538.fsf@kamboji.qca.qualcomm.com>
+References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
+	<1453384006-31907-11-git-send-email-michal.kazior@tieto.com>
+	<87h9gmy538.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 4 Mar 2016 10:52:04 +0100
+Message-ID: <CA+BoTQmgMBfz+Dkf-+0gDHvnhk5OA4_ZGZgwYDKXG5yP-xMRYw@mail.gmail.com> (sfid-20160304_105214_627401_2A245800)
+Subject: Re: [PATCH 10/13] ath10k: implement flushing of pending frames in txqs
+From: Michal Kazior <michal.kazior@tieto.com>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-When pn544_hci_i2c_acpi_request_resources() gets called we already know
-that the entries in ->acpi_match_table have matched ACPI ID of the device.
-In addition I2C client pointer cannot be NULL in any case (otherwise I2C
-core would not call ->probe() for the driver in the first place).
+On 4 March 2016 at 10:17, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
+> Michal Kazior <michal.kazior@tieto.com> writes:
+>
+>> Firmware supporting pull-push tx model may request
+>> a switch between modes. When switching from
+>> pull-push to push-only it will be necessary to
+>> flush all pending frames. The code will do that
+>> once other bits that actually trigger it are added.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>
+> This fails to apply:
+>
+> fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/htt_rx.c).
+> Repository lacks necessary blobs to fall back on 3-way merge.
+> Cannot fall back to three-way merge.
+> Patch failed at 0010 ath10k: implement flushing of pending frames in txqs
+>
+>> @@ -2370,6 +2371,8 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
+>>               dev_kfree_skb_any(skb);
+>>       }
+>>
+>> +     ath10k_mac_tx_push_pending(ar);
+>> +
+>>       spin_lock_bh(&htt->rx_ring.lock);
+>>       while ((skb = __skb_dequeue(&htt->rx_compl_q))) {
+>>               resp = (struct htt_resp *)skb->data;
+>
+> This hunk seems to be the problem. I could try to fix it myself but the
+> function has changed so I would prefer that you respin.
 
-Drop the two useless checks from the driver.
+This patch is in v1. It's base included some extra patches that
+weren't in ath.git at the time.
 
-Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
----
- drivers/nfc/pn544/i2c.c | 14 +-------------
- 1 file changed, 1 insertion(+), 13 deletions(-)
+The v2 patchset has this patch squashed into wake_tx_queue patch and
+the entire v2 patchset is based solely on ath.git without any extra
+patches in between. Did patchwork confuse these patchsets?
 
-diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
-index 76c318444304..45d0e667d7ae 100644
---- a/drivers/nfc/pn544/i2c.c
-+++ b/drivers/nfc/pn544/i2c.c
-@@ -877,20 +877,8 @@ exit_state_wait_secure_write_answer:
- static int pn544_hci_i2c_acpi_request_resources(struct i2c_client *client)
- {
- 	struct pn544_i2c_phy *phy = i2c_get_clientdata(client);
--	const struct acpi_device_id *id;
- 	struct gpio_desc *gpiod_en, *gpiod_fw;
--	struct device *dev;
--
--	if (!client)
--		return -EINVAL;
--
--	dev = &client->dev;
--
--	/* Match the struct device against a given list of ACPI IDs */
--	id = acpi_match_device(dev->driver->acpi_match_table, dev);
--
--	if (!id)
--		return -ENODEV;
-+	struct device *dev = &client->dev;
- 
- 	/* Get EN GPIO from ACPI */
- 	gpiod_en = devm_gpiod_get_index(dev, PN544_GPIO_NAME_EN, 1,
--- 
-2.7.0
 
+Michał
