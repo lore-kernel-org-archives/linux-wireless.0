@@ -1,87 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f54.google.com ([209.85.220.54]:34362 "EHLO
-	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753132AbcCHBEp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2016 20:04:45 -0500
-Received: by mail-pa0-f54.google.com with SMTP id fy10so371161pac.1
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Mar 2016 17:04:45 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH] staging: wilc1000: use mutex instead of semaphore sem_cfg_values
-Date: Tue,  8 Mar 2016 10:04:32 +0900
-Message-Id: <1457399072-5646-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160308_020449_404945_F5ADBF28)
+Received: from www.xplot.org ([66.92.66.146]:35172 "EHLO www.xplot.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755617AbcCDCsb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 3 Mar 2016 21:48:31 -0500
+From: Tim Shepard <shep@alum.mit.edu>
+To: Michal Kazior <michal.kazior@tieto.com>
+cc: linux-wireless@vger.kernel.org, johannes@sipsolutions.net,
+	netdev@vger.kernel.org, eric.dumazet@gmail.com,
+	dave.taht@gmail.com, emmanuel.grumbach@intel.com, nbd@openwrt.org,
+	andrewmcgr@google.com, apenwarr@google.com
+Subject: Re: [RFC/RFT] mac80211: implement fq_codel for software queuing 
+In-reply-to: Your message of Fri, 26 Feb 2016 14:09:23 +0100.
+             <1456492163-11437-1-git-send-email-michal.kazior@tieto.com>
+Date: Thu, 03 Mar 2016 21:48:40 -0500
+Message-Id: <E1abfnE-0000VS-00@www.xplot.org> (sfid-20160304_034838_344084_C5DDE7C8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces struct semaphore sem_cfg_values with struct mutex
-cfg_values_lock. It is better to use mutex than semaphore.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 10 +++++-----
- drivers/staging/wilc1000/host_interface.h |  2 +-
- 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 854b674..0a922c7 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -443,7 +443,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
- 	struct host_if_drv *hif_drv = vif->hif_drv;
- 	int i = 0;
- 
--	down(&hif_drv->sem_cfg_values);
-+	mutex_lock(&hif_drv->cfg_values_lock);
- 
- 	if (cfg_param_attr->flag & BSS_TYPE) {
- 		if (cfg_param_attr->bss_type < 6) {
-@@ -725,7 +725,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
- 		netdev_err(vif->ndev, "Error in setting CFG params\n");
- 
- ERRORHANDLER:
--	up(&hif_drv->sem_cfg_values);
-+	mutex_unlock(&hif_drv->cfg_values_lock);
- 	return result;
- }
- 
-@@ -3434,8 +3434,8 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 	setup_timer(&hif_drv->connect_timer, TimerCB_Connect, 0);
- 	setup_timer(&hif_drv->remain_on_ch_timer, ListenTimerCB, 0);
- 
--	sema_init(&hif_drv->sem_cfg_values, 1);
--	down(&hif_drv->sem_cfg_values);
-+	mutex_init(&hif_drv->cfg_values_lock);
-+	mutex_lock(&hif_drv->cfg_values_lock);
- 
- 	hif_drv->hif_state = HOST_IF_IDLE;
- 	hif_drv->cfg_values.site_survey_enabled = SITE_SURVEY_OFF;
-@@ -3446,7 +3446,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 
- 	hif_drv->p2p_timeout = 0;
- 
--	up(&hif_drv->sem_cfg_values);
-+	mutex_unlock(&hif_drv->cfg_values_lock);
- 
- 	clients_count++;
- 
-diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
-index 795c18c..01f3222 100644
---- a/drivers/staging/wilc1000/host_interface.h
-+++ b/drivers/staging/wilc1000/host_interface.h
-@@ -274,7 +274,7 @@ struct host_if_drv {
- 	u8 assoc_bssid[ETH_ALEN];
- 	struct cfg_param_attr cfg_values;
- 
--	struct semaphore sem_cfg_values;
-+	struct mutex cfg_values_lock;
- 	struct semaphore sem_test_key_block;
- 	struct semaphore sem_test_disconn_block;
- 	struct semaphore sem_get_rssi;
--- 
-2.7.1
 
+If you want to try out Michal's patch you'll need a mac80211 driver
+that uses the new intermediate queues.
+
+I just submitted a PATCH RFC/RFT to modify ath9k to use the new
+intermediate software queues.  There are very few (zero or close to
+zero) drivers in linux which do that, and Michal's patch does not do
+anything at all unless your driver uses the new intermediate software
+queues.
+
+See If you want to try out Michal's patch you'll need a mac80211 driver
+that uses the new intermediate queues.
+
+I just submitted a PATCH RFC/RFT to modify ath9k to use the new
+intermediate software queues.  There are very few (zero or close to
+zero) drivers in linux which do that, and Michal's patch does not do
+anything at all unless your driver uses the new intermediate software
+queues.
+
+See my post from a few hours ago with subject:
+
+    [PATCH RFC/RFT 0/2] ath9k: use mac80211 intermediate software queues
+
+
+(I am interested in knowing what other mac80211 drivers have been
+ modified to use the mac80211 intermediate software queues.   I know
+ Michal mentioned he has patches for ath10k that are not yet released,
+ and I know Felix is finishing up the mt76 driver which uses them.)
+
+
+			-Tim Shepard
+			 shep@alum.mit.edu
