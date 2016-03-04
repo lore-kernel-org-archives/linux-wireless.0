@@ -1,74 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:36739 "EHLO
-	mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361AbcCRC1i (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:34567 "EHLO
+	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751251AbcCDNlu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 22:27:38 -0400
-Received: by mail-pf0-f177.google.com with SMTP id u190so146247286pfb.3
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 19:27:37 -0700 (PDT)
-From: Julian Calaby <julian.calaby@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Markus Elfring <elfring@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH MOREWORK 15/19] rsi: Move variable initialisation into error code
-Date: Fri, 18 Mar 2016 13:27:31 +1100
-Message-Id: <0a8900fc6af3452d6601c186580381b23e1a3913.1458262312.git.julian.calaby@gmail.com> (sfid-20160318_032741_617810_B0C49523)
-In-Reply-To: <cover.1458262312.git.julian.calaby@gmail.com>
-References: <cover.1458262312.git.julian.calaby@gmail.com>
+	Fri, 4 Mar 2016 08:41:50 -0500
+Received: by mail-wm0-f41.google.com with SMTP id p65so20841979wmp.1
+        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2016 05:41:49 -0800 (PST)
+Date: Fri, 4 Mar 2016 15:41:42 +0200
+From: Cihangir Akturk <cakturk@gmail.com>
+To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com
+Cc: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org
+Subject: Re: drivers: staging: rtl8723au: remove unneeded null test
+Message-ID: <20160304134142.GA7697@portege.ulakbim.gov.tr> (sfid-20160304_144153_972048_8B58FE3D)
+References: <1457096899-7421-1-git-send-email-cakturk@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1457096899-7421-1-git-send-email-cakturk@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
+On Fri, Mar 04, 2016 at 03:08:19PM +0200, Cihangir Akturk wrote:
+> null test on pnetwork removed, because the iterator variable
+> list_for_each_entry_safe cannot be null.
+> 
+> This commit fixes the following error reported by coccinelle:
+> 
+> drivers/staging/rtl8723au/core/rtw_mlme.c:1621:7-15: ERROR: iterator
+> variable bound on line 1620 cannot be NULL
+> 
+> Signed-off-by: Cihangir Akturk <cakturk@gmail.com>
+> ---
+>  drivers/staging/rtl8723au/core/rtw_mlme.c | 13 ++-----------
+>  1 file changed, 2 insertions(+), 11 deletions(-)
+> 
+> diff --git a/drivers/staging/rtl8723au/core/rtw_mlme.c b/drivers/staging/rtl8723au/core/rtw_mlme.c
+> index 3adda55..a786fc4 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_mlme.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_mlme.c
+> @@ -1617,19 +1617,10 @@ rtw_select_candidate_from_queue(struct mlme_priv *pmlmepriv)
+>  
+>  	spin_lock_bh(&pmlmepriv->scanned_queue.lock);
+>  	phead = get_list_head(queue);
+> -	list_for_each_entry_safe(pnetwork, ptmp, phead, list) {
+> -		if (!pnetwork) {
+> -			RT_TRACE(_module_rtl871x_mlme_c_, _drv_err_,
+> -				 "%s: return _FAIL:(pnetwork == NULL)\n",
+> -				 __func__);
+> -			goto exit;
+> -		}
+> -
+> +	list_for_each_entry_safe(pnetwork, ptmp, phead, list)
+>  		rtw_check_join_candidate(pmlmepriv, &candidate, pnetwork);
+> -	}
+> -
+> -exit:
+>  	spin_unlock_bh(&pmlmepriv->scanned_queue.lock);
+> +
+>  	return candidate;
+>  }
+>  
+> -- 
+> 2.1.4
+> 
 
-In rsi_send_data_pkt(), it's a little more logical to assign 'status' in
-the actual error handling code as opposed to at the top of the functon.
+Opps. It seems I've made a mistake by not adding PATCH suffix. Please
+ignore this patch, I will resend it in correct format.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-[Deleted controversial bits, rewrote commit message]
-Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
-
----
-
-I'm not fussed if this one goes in or not as the central concept of the
-patch can be argued both ways.
-
-Markus had originally added changes to move the setting of adapter down to
-just before it was used, however people rightly objected to it, so it's
-been removed from this re-send and the commit message re-written to
-reflect this.
-
-Thanks,
-
-Julian Calaby
----
- drivers/net/wireless/rsi/rsi_91x_pkt.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/rsi/rsi_91x_pkt.c b/drivers/net/wireless/rsi/rsi_91x_pkt.c
-index 4322df1..a0b31c0 100644
---- a/drivers/net/wireless/rsi/rsi_91x_pkt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_pkt.c
-@@ -31,7 +31,7 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
- 	struct ieee80211_tx_info *info;
- 	struct skb_info *tx_params;
- 	struct ieee80211_bss_conf *bss;
--	int status = -EINVAL;
-+	int status;
- 	u8 ieee80211_size = MIN_802_11_HDR_LEN;
- 	u8 extnd_size;
- 	__le16 *frame_desc;
-@@ -41,8 +41,10 @@ int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
- 	bss = &info->control.vif->bss_conf;
- 	tx_params = (struct skb_info *)info->driver_data;
- 
--	if (!bss->assoc)
-+	if (!bss->assoc) {
-+		status = -EINVAL;
- 		goto err;
-+	}
- 
- 	tmp_hdr = (struct ieee80211_hdr *)&skb->data[0];
- 	seq_num = (le16_to_cpu(tmp_hdr->seq_ctrl) >> 4);
--- 
-2.7.0
-
+Sorry for the noise.
