@@ -1,67 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47146 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751816AbcCRKvE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 06:51:04 -0400
-Date: Fri, 18 Mar 2016 11:48:47 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Jia-Ju Bai <baijiaju1990@163.com>,
-	Sara Sharon <sarasharon1@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH MOREWORK 17/19] iwl4965: Fix a memory leak in error
- handling code of __il4965_up
-Message-ID: <20160318104846.GD24990@redhat.com> (sfid-20160318_115111_525145_E4A3AD7D)
-References: <cover.1458262312.git.julian.calaby@gmail.com>
- <3aaac3629455d27b0e9c56ef1615b89873b1b8cf.1458262312.git.julian.calaby@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <3aaac3629455d27b0e9c56ef1615b89873b1b8cf.1458262312.git.julian.calaby@gmail.com>
+Received: from sender163-mail.zoho.com ([74.201.84.163]:25974 "EHLO
+	sender163-mail.zoho.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751310AbcCEPL2 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 5 Mar 2016 10:11:28 -0500
+Date: Sat, 5 Mar 2016 17:11:22 +0200
+From: Dima Krasner <dima@dimakrasner.com>
+To: linux-wireless@vger.kernel.org
+Cc: Dima Krasner <dima@dimakrasner.com>
+Subject: [PATCH] iw: add libnl-tiny support, reimplemented
+Message-Id: <20160305171122.80c2d9a224a4b9632f40585e@dimakrasner.com> (sfid-20160305_161132_233778_7EAE0343)
+In-Reply-To: <20160223204334.4a65ab8113dbe31fbffc56ff@dimakrasner.com>
+References: <20160223204334.4a65ab8113dbe31fbffc56ff@dimakrasner.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 18, 2016 at 01:28:33PM +1100, Julian Calaby wrote:
-> From: Jia-Ju Bai <baijiaju1990@163.com>
-> 
-> When il4965_hw_nic_init in __il4965_up fails, the memory allocated by
-> iwl4965_sta_alloc_lq in iwl4965_alloc_bcast_station is not freed.
-> 
-> This patches adds il_dealloc_bcast_stations in the error handling code of
-> __il4965_up to fix this problem.
-> 
-> This patch has been tested in real device, and it actually fixes the bug.
+This allows small static builds, especially when using musl libc.
 
-Could the call trace from the bug be provided ?
+Signed-off-by: Dima Krasner <dima@dimakrasner.com>
+---
+ Makefile | 8 ++++++++
+ iw.c     | 4 ++--
+ iw.h     | 2 +-
+ 3 files changed, 11 insertions(+), 3 deletions(-)
 
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
-> Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
-> Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
-> ---
->  drivers/net/wireless/intel/iwlegacy/4965-mac.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-> index b75f4ef..30d9dd3 100644
-> --- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-> +++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-> @@ -5577,6 +5577,7 @@ __il4965_up(struct il_priv *il)
->  	ret = il4965_hw_nic_init(il);
->  	if (ret) {
->  		IL_ERR("Unable to init nic\n");
-> +		il_dealloc_bcast_stations(il);
+diff --git a/Makefile b/Makefile
+index e61825e..4077020 100644
+--- a/Makefile
++++ b/Makefile
+@@ -27,6 +27,8 @@ OBJS += $(OBJS-y) $(OBJS-Y)
+ ALL = iw
+ 
+ ifeq ($(NO_PKG_CONFIG),)
++NLTINYFOUND := $(shell $(PKG_CONFIG) libnl-tiny && echo Y)
++ifneq ($(NLTINYFOUND),Y)
+ NL3xFOUND := $(shell $(PKG_CONFIG) --atleast-version=3.2 libnl-3.0 && echo Y)
+ ifneq ($(NL3xFOUND),Y)
+ NL31FOUND := $(shell $(PKG_CONFIG) --exact-version=3.1 libnl-3.1 && echo Y)
+@@ -40,6 +42,12 @@ endif
+ endif
+ endif
+ endif
++endif
++
++ifeq ($(NLTINYFOUND),Y)
++CFLAGS += -DCONFIG_LIBNL_TINY
++NLLIBNAME = libnl-tiny
++endif
+ 
+ ifeq ($(NL1FOUND),Y)
+ NLLIBNAME = libnl-1
+diff --git a/iw.c b/iw.c
+index 0f511d9..c52d7ba 100644
+--- a/iw.c
++++ b/iw.c
+@@ -24,7 +24,7 @@
+ #include "iw.h"
+ 
+ /* libnl 1.x compatibility code */
+-#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30)
++#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30) && !defined(CONFIG_LIBNL_TINY)
+ static inline struct nl_handle *nl_socket_alloc(void)
+ {
+ 	return nl_handle_alloc();
+@@ -40,7 +40,7 @@ static inline int nl_socket_set_buffer_size(struct nl_sock *sk,
+ {
+ 	return nl_set_buffer_size(sk, rxbuf, txbuf);
+ }
+-#endif /* CONFIG_LIBNL20 && CONFIG_LIBNL30 */
++#endif /* CONFIG_LIBNL20 && CONFIG_LIBNL30 && CONFIG_LIBNL_TINY */
+ 
+ int iw_debug = 0;
+ 
+diff --git a/iw.h b/iw.h
+index d91a33e..37757d4 100644
+--- a/iw.h
++++ b/iw.h
+@@ -13,7 +13,7 @@
+ 
+ #define ETH_ALEN 6
+ 
+-/* libnl 1.x compatibility code */
++/* libnl 1.x and libnl-tiny compatibility code */
+ #if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30)
+ #  define nl_sock nl_handle
+ #endif
+-- 
+2.1.4
 
-I missed that before, but now this look suspicious for me.
+-- 
+Dima Krasner <dima@dimakrasner.com>
 
-il_dealloc_bcast_stations() do:
-
-                il->num_stations--;
-                BUG_ON(il->num_stations < 0);
-
-But on il4965_alloc_bcast_station() we do not increase il->num_stations
-Hence either this BUG_ON should be removed or il->num_stations should be
-increased during allocation.
-
-Stanislaw
