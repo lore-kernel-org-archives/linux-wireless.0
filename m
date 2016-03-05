@@ -1,47 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37834 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:56311 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751342AbcC3FSx (ORCPT
+	with ESMTP id S1754415AbcCEJjH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 01:18:53 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: kbuild test robot <lkp@intel.com>, netdev@vger.kernel.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Pontus Fuchs <pontus.fuchs@gmail.com>, kbuild-all@01.org,
-	wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>
-Subject: Re: [PATCH 06/16] wcn36xx: Fetch private sta data from sta entry instead of from vif
-References: <1459231593-360-7-git-send-email-bjorn.andersson@linaro.org>
-	<201603300022.MmhimaU1%fengguang.wu@intel.com>
-	<20160329213721.GV8929@tuxbot>
-Date: Wed, 30 Mar 2016 08:18:45 +0300
-In-Reply-To: <20160329213721.GV8929@tuxbot> (Bjorn Andersson's message of
-	"Tue, 29 Mar 2016 14:37:21 -0700")
-Message-ID: <8760w4bl1m.fsf@kamboji.qca.qualcomm.com> (sfid-20160330_071915_038400_54BAE33B)
+	Sat, 5 Mar 2016 04:39:07 -0500
+Date: Sat, 5 Mar 2016 15:08:52 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	kvalo@codeaurora.org
+Subject: Re: [PATCH] cfg80211/nl80211: Add support for
+ NL80211_STA_INFO_RX_DURATION
+Message-ID: <20160305093852.GA8153@atheros-ThinkPad-T61> (sfid-20160305_103912_819388_CC0F4B95)
+References: <1456927710-32073-1-git-send-email-mohammed@qca.qualcomm.com>
+ <1457019983.2044.29.camel@sipsolutions.net>
+ <20160303160048.GA5243@atheros-ThinkPad-T61>
+ <1457021271.2044.34.camel@sipsolutions.net>
+ <20160303162036.GB5243@atheros-ThinkPad-T61>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20160303162036.GB5243@atheros-ThinkPad-T61>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Bjorn Andersson <bjorn.andersson@linaro.org> writes:
+Hi Johannes,
 
->> All error/warnings (new ones prefixed by >>):
->> 
->>    drivers/net/wireless/ath/wcn36xx/main.c: In function 'wcn36xx_set_key':
->> >> drivers/net/wireless/ath/wcn36xx/main.c:389:9: error: implicit declaration of function 'wcn36xx_sta_to_priv' [-Werror=implicit-function-declaration]
->>      struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
->>             ^
->> >> drivers/net/wireless/ath/wcn36xx/main.c:389:33: warning: initialization makes pointer from integer without a cast
->>      struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
->>                                     ^
->>    cc1: some warnings being treated as errors
->
-> This should have been reordered with patch 7, that introduces this
-> helper function. Do you want me to resend, or can you apply the patches
-> out of order?
+https://groups.google.com/a/chromium.org/forum/#!msg/chromium-os-reviews/lDzKxgl6fIE/H5GQfMcuBwAJ
 
-It's better that you resend the whole patchset as v2.
+for more information regarding the request for implementation. I will send a v2
+re-phrasing that it is implementation specific.
 
--- 
-Kalle Valo
+regards,
+shafi
+
+
+On Thu, Mar 03, 2016 at 09:50:36PM +0530, Mohammed Shafi Shajakhan wrote:
+> Hi johannes,
+> 
+> On Thu, Mar 03, 2016 at 05:07:51PM +0100, Johannes Berg wrote:
+> > On Thu, 2016-03-03 at 21:30 +0530, Mohammed Shafi Shajakhan wrote:
+> > 
+> > > [shafi] This is part of the Per Station statistics requirement,
+> > 
+> > Heh. Whose requirements? :)
+> 
+> [shafi] We have this as part of ath10k debugfs based on the end user (or) a
+> customer requirement and i think its make more sense to have this common across all
+> wifi drivers rather thank simply dumping it in ath10k debugfs. I think its
+> similar to 'ieee80211_frame_duration'(?) in mac80211 but for drivers like ath10k
+> where this is calculated in firmware for rx and implementation specific.
+> 
+> > 
+> > > the information from 'iw dev wlan#N station dump' which has
+> > > rx_duration
+> > > field will be used by application assesing the statistics
+> > > /performance of various clients connected to our AP. We will plot
+> > > a graph based on this information (assesing the rx time spent by
+> > > AP for various clients).
+> > > 
+> > > > 
+> > > > Are you really sure you mean "unicast"? What if the station is the
+> > > > AP? Why wouldn't multicast frames it transmitted be accounted for?
+> > > 
+> > > [shafi] This is based on the implementation by the driver/firmware.
+> > > We are focused on the AP side so unicast frames, if you are ok with
+> > > this change, i can change the documentation to be specific (generic
+> > > for all the drivers)  something like implementation specific (please
+> > > advise)
+> > 
+> > Ok, but for AP side I don't see the difference between "unicast" and
+> > "all frames", since all frames from that station should be unicast?
+> > Apart, perhaps, from some management frames the station might send
+> > outside the BSS, but that's not likely to matter much?
+> 
+> [shafi] exactly, I can change the documentation as you wish and
+> this is implementation specific, and we have implemented like this in ath10k
+> targeting AP mode.
+> 
+> > 
+> > IOW, why not specify all frames, and let this make some sense for other
+> > interface modes?
+> >
+> [shafi] Agreed.
+> 
+> regards,
+> shafi
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
