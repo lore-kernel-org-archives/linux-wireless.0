@@ -1,269 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:20791 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933550AbcCIRqD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 12:46:03 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 05/21] iwlwifi: refactor the code that reads the MAC address from the NVM
-Date: Wed,  9 Mar 2016 19:45:34 +0200
-Message-Id: <1457545550-30677-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160309_184609_137683_AF344130)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33797 "EHLO
+	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751581AbcCFM5h (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Mar 2016 07:57:37 -0500
+Received: by mail-wm0-f65.google.com with SMTP id p65so6295280wmp.1
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 04:57:37 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 12/13] staging: vt6655: mac.c replace wOffset with offset.
+Date: Sun,  6 Mar 2016 12:57:11 +0000
+Message-Id: <1457269032-2681-12-git-send-email-tvboxspy@gmail.com> (sfid-20160306_135949_643906_324E80D0)
+In-Reply-To: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
+References: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Removing camel case and type prefix.
 
-It makes it slightly easier to follow. Pass the pointer to
-the transport which allows to read WFMP_MAC_ADDR_X register
-only when needed and to use IWL_ERR instead of the less
-commonly used IWL_ERR_DEV logger macro.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 97 ++++++++++++----------
- drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h |  5 +-
- drivers/net/wireless/intel/iwlwifi/mvm/nvm.c       | 11 +--
- 3 files changed, 55 insertions(+), 58 deletions(-)
+ drivers/staging/vt6655/mac.c | 42 +++++++++++++++++++++---------------------
+ 1 file changed, 21 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-index 3481357..5e6b90d 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
-@@ -7,6 +7,7 @@
-  *
-  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -69,6 +70,7 @@
- #include "iwl-drv.h"
- #include "iwl-modparams.h"
- #include "iwl-nvm-parse.h"
-+#include "iwl-prph.h"
- 
- /* NVM offsets (in words) definitions */
- enum wkp_nvm_offsets {
-@@ -522,27 +524,11 @@ static void iwl_set_radio_cfg(const struct iwl_cfg *cfg,
- 	data->valid_rx_ant = NVM_RF_CFG_RX_ANT_MSK_FAMILY_8000(radio_cfg);
+diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
+index 87bec1c..e762c33 100644
+--- a/drivers/staging/vt6655/mac.c
++++ b/drivers/staging/vt6655/mac.c
+@@ -747,14 +747,14 @@ void MACvOneShotTimer1MicroSec(struct vnt_private *priv, unsigned int uDelayTime
+ 	iowrite8((TMCTL_TMD | TMCTL_TE), io_base + MAC_REG_TMCTL1);
  }
  
--static void iwl_set_hw_address(const struct iwl_cfg *cfg,
--			       struct iwl_nvm_data *data,
--			       const __le16 *nvm_sec)
--{
--	const u8 *hw_addr = (const u8 *)(nvm_sec + HW_ADDR);
--
--	/* The byte order is little endian 16 bit, meaning 214365 */
--	data->hw_addr[0] = hw_addr[1];
--	data->hw_addr[1] = hw_addr[0];
--	data->hw_addr[2] = hw_addr[3];
--	data->hw_addr[3] = hw_addr[2];
--	data->hw_addr[4] = hw_addr[5];
--	data->hw_addr[5] = hw_addr[4];
--}
--
--static void iwl_set_hw_address_family_8000(struct device *dev,
-+static void iwl_set_hw_address_family_8000(struct iwl_trans *trans,
- 					   const struct iwl_cfg *cfg,
- 					   struct iwl_nvm_data *data,
- 					   const __le16 *mac_override,
--					   const __le16 *nvm_hw,
--					   __le32 mac_addr0, __le32 mac_addr1)
-+					   const __le16 *nvm_hw)
+-void MACvSetMISCFifo(struct vnt_private *priv, unsigned short wOffset,
++void MACvSetMISCFifo(struct vnt_private *priv, unsigned short offset,
+ 		     u32 dwData)
  {
- 	const u8 *hw_addr;
+ 	void __iomem *io_base = priv->PortOffset;
  
-@@ -568,11 +554,16 @@ static void iwl_set_hw_address_family_8000(struct device *dev,
- 		    memcmp(reserved_mac, hw_addr, ETH_ALEN) != 0)
- 			return;
- 
--		IWL_ERR_DEV(dev,
--			    "mac address from nvm override section is not valid\n");
-+		IWL_ERR(trans,
-+			"mac address from nvm override section is not valid\n");
- 	}
- 
- 	if (nvm_hw) {
-+		/* read the mac address from WFMP registers */
-+		__le32 mac_addr0 = cpu_to_le32(iwl_trans_read_prph(trans,
-+						WFMP_MAC_ADDR_0));
-+		__le32 mac_addr1 = cpu_to_le32(iwl_trans_read_prph(trans,
-+						WFMP_MAC_ADDR_1));
- 		/* read the MAC address from HW resisters */
- 		hw_addr = (const u8 *)&mac_addr0;
- 		data->hw_addr[0] = hw_addr[3];
-@@ -585,28 +576,50 @@ static void iwl_set_hw_address_family_8000(struct device *dev,
- 		data->hw_addr[5] = hw_addr[0];
- 
- 		if (!is_valid_ether_addr(data->hw_addr))
--			IWL_ERR_DEV(dev,
--				    "mac address (%pM) from hw section is not valid\n",
--				    data->hw_addr);
-+			IWL_ERR(trans,
-+				"mac address (%pM) from hw section is not valid\n",
-+				data->hw_addr);
- 
+-	if (wOffset > 273)
++	if (offset > 273)
  		return;
- 	}
- 
--	IWL_ERR_DEV(dev, "mac address is not found\n");
-+	IWL_ERR(trans, "mac address is not found\n");
-+}
-+
-+static void iwl_set_hw_address(struct iwl_trans *trans,
-+			       const struct iwl_cfg *cfg,
-+			       struct iwl_nvm_data *data, const __le16 *nvm_hw,
-+			       const __le16 *mac_override)
-+{
-+	if (cfg->device_family != IWL_DEVICE_FAMILY_8000) {
-+		const u8 *hw_addr = (const u8 *)(nvm_hw + HW_ADDR);
-+
-+		/* The byte order is little endian 16 bit, meaning 214365 */
-+		data->hw_addr[0] = hw_addr[1];
-+		data->hw_addr[1] = hw_addr[0];
-+		data->hw_addr[2] = hw_addr[3];
-+		data->hw_addr[3] = hw_addr[2];
-+		data->hw_addr[4] = hw_addr[5];
-+		data->hw_addr[5] = hw_addr[4];
-+	} else {
-+		iwl_set_hw_address_family_8000(trans, cfg, data,
-+					       mac_override, nvm_hw);
-+	}
+-	iowrite16(wOffset, io_base + MAC_REG_MISCFFNDEX);
++	iowrite16(offset, io_base + MAC_REG_MISCFFNDEX);
+ 	iowrite32(dwData, io_base + MAC_REG_MISCFFDATA);
+ 	iowrite16(MISCFFCTL_WRITE, io_base + MAC_REG_MISCFFCTL);
  }
- 
- struct iwl_nvm_data *
--iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
-+iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 		   const __le16 *nvm_hw, const __le16 *nvm_sw,
- 		   const __le16 *nvm_calib, const __le16 *regulatory,
- 		   const __le16 *mac_override, const __le16 *phy_sku,
--		   u8 tx_chains, u8 rx_chains, bool lar_fw_supported,
--		   __le32 mac_addr0, __le32 mac_addr1)
-+		   u8 tx_chains, u8 rx_chains, bool lar_fw_supported)
+@@ -803,7 +803,7 @@ void MACvSetKeyEntry(struct vnt_private *priv, unsigned short wKeyCtl,
+ 		     unsigned char byLocalID)
  {
-+	struct device *dev = trans->dev;
- 	struct iwl_nvm_data *data;
--	u32 sku;
--	u32 radio_cfg;
-+	bool lar_enabled;
-+	u32 sku, radio_cfg;
- 	u16 lar_config;
-+	const __le16 *ch_section;
+ 	void __iomem *io_base = priv->PortOffset;
+-	unsigned short wOffset;
++	unsigned short offset;
+ 	u32 dwData;
+ 	int     ii;
  
- 	if (cfg->device_family != IWL_DEVICE_FAMILY_8000)
- 		data = kzalloc(sizeof(*data) +
-@@ -645,21 +658,16 @@ iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
- 	if (cfg->device_family != IWL_DEVICE_FAMILY_8000) {
- 		/* Checking for required sections */
- 		if (!nvm_calib) {
--			IWL_ERR_DEV(dev,
--				    "Can't parse empty Calib NVM sections\n");
-+			IWL_ERR(trans,
-+				"Can't parse empty Calib NVM sections\n");
- 			kfree(data);
- 			return NULL;
- 		}
- 		/* in family 8000 Xtal calibration values moved to OTP */
- 		data->xtal_calib[0] = *(nvm_calib + XTAL_CALIB);
- 		data->xtal_calib[1] = *(nvm_calib + XTAL_CALIB + 1);
--	}
--
--	if (cfg->device_family != IWL_DEVICE_FAMILY_8000) {
--		iwl_set_hw_address(cfg, data, nvm_hw);
--
--		iwl_init_sbands(dev, cfg, data, nvm_sw,
--				tx_chains, rx_chains, lar_fw_supported);
-+		lar_enabled = true;
-+		ch_section = nvm_sw;
- 	} else {
- 		u16 lar_offset = data->nvm_version < 0xE39 ?
- 				 NVM_LAR_OFFSET_FAMILY_8000_OLD :
-@@ -668,16 +676,13 @@ iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
- 		lar_config = le16_to_cpup(regulatory + lar_offset);
- 		data->lar_enabled = !!(lar_config &
- 				       NVM_LAR_ENABLED_FAMILY_8000);
--
--		/* MAC address in family 8000 */
--		iwl_set_hw_address_family_8000(dev, cfg, data, mac_override,
--					       nvm_hw, mac_addr0, mac_addr1);
--
--		iwl_init_sbands(dev, cfg, data, regulatory,
--				tx_chains, rx_chains,
--				lar_fw_supported && data->lar_enabled);
-+		lar_enabled = data->lar_enabled;
-+		ch_section = regulatory;
+@@ -811,20 +811,20 @@ void MACvSetKeyEntry(struct vnt_private *priv, unsigned short wKeyCtl,
+ 		return;
+ 
+ 	pr_debug("MACvSetKeyEntry\n");
+-	wOffset = MISCFIFO_KEYETRY0;
+-	wOffset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
++	offset = MISCFIFO_KEYETRY0;
++	offset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
+ 
+ 	dwData = 0;
+ 	dwData |= wKeyCtl;
+ 	dwData <<= 16;
+ 	dwData |= MAKEWORD(*(pbyAddr+4), *(pbyAddr+5));
+-	pr_debug("1. wOffset: %d, Data: %X, KeyCtl:%X\n",
+-		 wOffset, dwData, wKeyCtl);
++	pr_debug("1. offset: %d, Data: %X, KeyCtl:%X\n",
++		 offset, dwData, wKeyCtl);
+ 
+-	iowrite16(wOffset, io_base + MAC_REG_MISCFFNDEX);
++	iowrite16(offset, io_base + MAC_REG_MISCFFNDEX);
+ 	iowrite32(dwData, io_base + MAC_REG_MISCFFDATA);
+ 	iowrite16(MISCFFCTL_WRITE, io_base + MAC_REG_MISCFFCTL);
+-	wOffset++;
++	offset++;
+ 
+ 	dwData = 0;
+ 	dwData |= *(pbyAddr+3);
+@@ -834,19 +834,19 @@ void MACvSetKeyEntry(struct vnt_private *priv, unsigned short wKeyCtl,
+ 	dwData |= *(pbyAddr+1);
+ 	dwData <<= 8;
+ 	dwData |= *(pbyAddr+0);
+-	pr_debug("2. wOffset: %d, Data: %X\n", wOffset, dwData);
++	pr_debug("2. offset: %d, Data: %X\n", offset, dwData);
+ 
+-	iowrite16(wOffset, io_base + MAC_REG_MISCFFNDEX);
++	iowrite16(offset, io_base + MAC_REG_MISCFFNDEX);
+ 	iowrite32(dwData, io_base + MAC_REG_MISCFFDATA);
+ 	iowrite16(MISCFFCTL_WRITE, io_base + MAC_REG_MISCFFCTL);
+-	wOffset++;
++	offset++;
+ 
+-	wOffset += (uKeyIdx * 4);
++	offset += (uKeyIdx * 4);
+ 	for (ii = 0; ii < 4; ii++) {
+ 		/* always push 128 bits */
+-		pr_debug("3.(%d) wOffset: %d, Data: %X\n",
+-			 ii, wOffset+ii, *pdwKey);
+-		iowrite16(wOffset + ii, io_base + MAC_REG_MISCFFNDEX);
++		pr_debug("3.(%d) offset: %d, Data: %X\n",
++			 ii, offset + ii, *pdwKey);
++		iowrite16(offset + ii, io_base + MAC_REG_MISCFFNDEX);
+ 		iowrite32(*pdwKey++, io_base + MAC_REG_MISCFFDATA);
+ 		iowrite16(MISCFFCTL_WRITE, io_base + MAC_REG_MISCFFCTL);
  	}
+@@ -869,12 +869,12 @@ void MACvSetKeyEntry(struct vnt_private *priv, unsigned short wKeyCtl,
+ void MACvDisableKeyEntry(struct vnt_private *priv, unsigned int uEntryIdx)
+ {
+ 	void __iomem *io_base = priv->PortOffset;
+-	unsigned short wOffset;
++	unsigned short offset;
  
-+	iwl_set_hw_address(trans, cfg, data, nvm_hw, mac_override);
-+	iwl_init_sbands(dev, cfg, data, ch_section, tx_chains, rx_chains,
-+			lar_fw_supported && lar_enabled);
- 	data->calib_version = 255;
+-	wOffset = MISCFIFO_KEYETRY0;
+-	wOffset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
++	offset = MISCFIFO_KEYETRY0;
++	offset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
  
- 	return data;
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-index 4e8e0dc..d704d52 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
-@@ -74,12 +74,11 @@
-  * later with iwl_free_nvm_data().
-  */
- struct iwl_nvm_data *
--iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
-+iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 		   const __le16 *nvm_hw, const __le16 *nvm_sw,
- 		   const __le16 *nvm_calib, const __le16 *regulatory,
- 		   const __le16 *mac_override, const __le16 *phy_sku,
--		   u8 tx_chains, u8 rx_chains, bool lar_fw_supported,
--		   __le32 mac_addr0, __le32 mac_addr1);
-+		   u8 tx_chains, u8 rx_chains, bool lar_fw_supported);
- 
- /**
-  * iwl_parse_mcc_info - parse MCC (mobile country code) info coming from FW
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-index c446e0d..25a9840 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
-@@ -300,7 +300,6 @@ iwl_parse_nvm_sections(struct iwl_mvm *mvm)
- 	struct iwl_nvm_section *sections = mvm->nvm_sections;
- 	const __le16 *hw, *sw, *calib, *regulatory, *mac_override, *phy_sku;
- 	bool lar_enabled;
--	__le32 mac_addr0, mac_addr1;
- 
- 	/* Checking for required sections */
- 	if (mvm->trans->cfg->device_family != IWL_DEVICE_FAMILY_8000) {
-@@ -336,12 +335,6 @@ iwl_parse_nvm_sections(struct iwl_mvm *mvm)
- 	if (WARN_ON(!mvm->cfg))
- 		return NULL;
- 
--	/* read the mac address from WFMP registers */
--	mac_addr0 = cpu_to_le32(iwl_trans_read_prph(mvm->trans,
--						    WFMP_MAC_ADDR_0));
--	mac_addr1 = cpu_to_le32(iwl_trans_read_prph(mvm->trans,
--						    WFMP_MAC_ADDR_1));
--
- 	hw = (const __le16 *)sections[mvm->cfg->nvm_hw_section_num].data;
- 	sw = (const __le16 *)sections[NVM_SECTION_TYPE_SW].data;
- 	calib = (const __le16 *)sections[NVM_SECTION_TYPE_CALIBRATION].data;
-@@ -354,10 +347,10 @@ iwl_parse_nvm_sections(struct iwl_mvm *mvm)
- 		      fw_has_capa(&mvm->fw->ucode_capa,
- 				  IWL_UCODE_TLV_CAPA_LAR_SUPPORT);
- 
--	return iwl_parse_nvm_data(mvm->trans->dev, mvm->cfg, hw, sw, calib,
-+	return iwl_parse_nvm_data(mvm->trans, mvm->cfg, hw, sw, calib,
- 				  regulatory, mac_override, phy_sku,
- 				  mvm->fw->valid_tx_ant, mvm->fw->valid_rx_ant,
--				  lar_enabled, mac_addr0, mac_addr1);
-+				  lar_enabled);
+-	iowrite16(wOffset, io_base + MAC_REG_MISCFFNDEX);
++	iowrite16(offset, io_base + MAC_REG_MISCFFNDEX);
+ 	iowrite32(0, io_base + MAC_REG_MISCFFDATA);
+ 	iowrite16(MISCFFCTL_WRITE, io_base + MAC_REG_MISCFFCTL);
  }
- 
- #define MAX_NVM_FILE_LEN	16384
 -- 
-2.5.0
+2.7.0
 
