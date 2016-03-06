@@ -1,39 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51894 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932218AbcCWPv6 (ORCPT
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35829 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751544AbcCFM5e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2016 11:51:58 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: b43: Fix memory leaks in b43_bus_dev_ssb_init
- andb43_bus_dev_bcma_init
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1457716477-6287-1-git-send-email-sudipm.mukherjee@gmail.com>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-	Jia-Ju Bai <baijiaju1990@163.com>,
-	=?UTF-8?q?Michael=20B=C3=BCsch?= <m@bues.ch>
-Message-Id: <20160323155157.B5F0A615D8@smtp.codeaurora.org> (sfid-20160323_165220_870118_9A57E0DF)
-Date: Wed, 23 Mar 2016 15:51:57 +0000 (UTC)
+	Sun, 6 Mar 2016 07:57:34 -0500
+Received: by mail-wm0-f68.google.com with SMTP id 1so6277449wmg.2
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 04:57:33 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 08/13] staging: vt6655: MACvSetLoopbackMode replace byOrgValue with ioread8
+Date: Sun,  6 Mar 2016 12:57:07 +0000
+Message-Id: <1457269032-2681-8-git-send-email-tvboxspy@gmail.com> (sfid-20160306_135744_298200_E33ECF1B)
+In-Reply-To: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
+References: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Removing VNSvInPortB and nesting inside iowrite8.
 
-> From: Jia-Ju Bai <baijiaju1990@163.com>
-> 
-> The memory allocated by kzalloc in b43_bus_dev_ssb_init and
-> b43_bus_dev_bcma_init is not freed.
-> This patch fixes the bug by adding kfree in b43_ssb_remove,
-> b43_bcma_remove and error handling code of b43_bcma_probe.
-> 
-> Thanks Michael for his suggestion.
-> 
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
-> Acked-by: Michael Büsch <m@bues.ch>
-> Signed-off-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/mac.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-Thanks, applied to wireless-drivers.git.
+diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
+index 6499709..ece2bf0 100644
+--- a/drivers/staging/vt6655/mac.c
++++ b/drivers/staging/vt6655/mac.c
+@@ -184,14 +184,11 @@ void MACvSetLongRetryLimit(struct vnt_private *priv, unsigned char byRetryLimit)
+ void MACvSetLoopbackMode(struct vnt_private *priv, unsigned char byLoopbackMode)
+ {
+ 	void __iomem *io_base = priv->PortOffset;
+-	unsigned char byOrgValue;
+ 
+ 	byLoopbackMode <<= 6;
+ 	/* set TCR */
+-	VNSvInPortB(io_base + MAC_REG_TEST, &byOrgValue);
+-	byOrgValue = byOrgValue & 0x3F;
+-	byOrgValue = byOrgValue | byLoopbackMode;
+-	iowrite8(byOrgValue, io_base + MAC_REG_TEST);
++	iowrite8((ioread8(io_base + MAC_REG_TEST) & 0x3f) | byLoopbackMode,
++		 io_base + MAC_REG_TEST);
+ }
+ 
+ /*
+-- 
+2.7.0
 
-Kalle Valo
