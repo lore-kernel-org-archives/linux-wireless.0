@@ -1,92 +1,208 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:59830 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759212AbcCDJjJ (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:35820 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751366AbcCFM5b (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 04:39:09 -0500
-Message-ID: <1457084342.28365.140.camel@coelho.fi> (sfid-20160304_103919_519041_D6F73073)
-From: Luca Coelho <luca@coelho.fi>
-To: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Fri, 04 Mar 2016 11:39:02 +0200
-In-Reply-To: <20160304091528.GA3666@jouni.qca.qualcomm.com>
-References: <1456517569-27235-1-git-send-email-jouni@qca.qualcomm.com>
-	 <1457078876.28365.124.camel@coelho.fi>
-	 <20160304091528.GA3666@jouni.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH v2 1/3] cfg80211: Allow a scan request for a specific
- BSSID
+	Sun, 6 Mar 2016 07:57:31 -0500
+Received: by mail-wm0-f66.google.com with SMTP id 1so6277391wmg.2
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 04:57:31 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 06/13] staging: vt6655: mac.c replace VNSvOutPortB with iowrite8
+Date: Sun,  6 Mar 2016 12:57:05 +0000
+Message-Id: <1457269032-2681-6-git-send-email-tvboxspy@gmail.com> (sfid-20160306_135740_090723_6673A14E)
+In-Reply-To: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
+References: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-03-04 at 09:15 +0000, Malinen, Jouni wrote:
-> On Fri, Mar 04, 2016 at 10:07:56AM +0200, Luca Coelho wrote:
-> > On Fri, 2016-02-26 at 22:12 +0200, Jouni Malinen wrote:
-> > > This is an optimization and as such, it is acceptable for some of
-> > > the
-> > > drivers not to support the mechanism. If not supported, the
-> > > wildcard
-> > > BSSID will be used and more responses may be received.
-> > 
-> > Receiving more responses than what we asked for is always possible,
-> > because we don't filter out other things we may receive at the same
-> > time.  It's like requesting for a specific SSID, it just means that
-> > the
-> > SSID will be used in the probe requests, but it doesn't guarantee
-> > that
-> > other results will not be returned.
-> 
-> Sure. This "more responses" is referring to not being able to get the
-> benefit from saved airtime; not on what we might add into the
-> cfg80211
-> BSS table. We don't even have an explicit mechanism for reporting
-> results from a single scan iteration.
+removing macro from functions
 
-Right.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/mac.c | 44 ++++++++++++++++++++++----------------------
+ 1 file changed, 22 insertions(+), 22 deletions(-)
 
+diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
+index 43e5f66..a1be5a7 100644
+--- a/drivers/staging/vt6655/mac.c
++++ b/drivers/staging/vt6655/mac.c
+@@ -142,7 +142,7 @@ void MACvSetShortRetryLimit(struct vnt_private *priv, unsigned char byRetryLimit
+ {
+ 	void __iomem *io_base = priv->PortOffset;
+ 	/* set SRT */
+-	VNSvOutPortB(io_base + MAC_REG_SRT, byRetryLimit);
++	iowrite8(byRetryLimit, io_base + MAC_REG_SRT);
+ }
+ 
+ 
+@@ -164,7 +164,7 @@ void MACvSetLongRetryLimit(struct vnt_private *priv, unsigned char byRetryLimit)
+ {
+ 	void __iomem *io_base = priv->PortOffset;
+ 	/* set LRT */
+-	VNSvOutPortB(io_base + MAC_REG_LRT, byRetryLimit);
++	iowrite8(byRetryLimit, io_base + MAC_REG_LRT);
+ }
+ 
+ /*
+@@ -191,7 +191,7 @@ void MACvSetLoopbackMode(struct vnt_private *priv, unsigned char byLoopbackMode)
+ 	VNSvInPortB(io_base + MAC_REG_TEST, &byOrgValue);
+ 	byOrgValue = byOrgValue & 0x3F;
+ 	byOrgValue = byOrgValue | byLoopbackMode;
+-	VNSvOutPortB(io_base + MAC_REG_TEST, byOrgValue);
++	iowrite8(byOrgValue, io_base + MAC_REG_TEST);
+ }
+ 
+ /*
+@@ -256,7 +256,7 @@ void MACvRestoreContext(struct vnt_private *priv, unsigned char *cxt_buf)
+ 	memcpy_toio(io_base + MAC_REG_LRT, cxt_buf + MAC_REG_LRT,
+ 		    MAC_REG_PAGE1SEL - MAC_REG_LRT);
+ 
+-	VNSvOutPortB(io_base + MAC_REG_CFG, *(cxt_buf + MAC_REG_CFG));
++	iowrite8(*(cxt_buf + MAC_REG_CFG), io_base + MAC_REG_CFG);
+ 
+ 	/* restore PS Config. */
+ 	memcpy_toio(io_base + MAC_REG_PSCFG, cxt_buf + MAC_REG_PSCFG,
+@@ -294,7 +294,7 @@ bool MACbSoftwareReset(struct vnt_private *priv)
+ 	unsigned short ww;
+ 
+ 	/* turn on HOSTCR_SOFTRST, just write 0x01 to reset */
+-	VNSvOutPortB(io_base + MAC_REG_HOSTCR, 0x01);
++	iowrite8(0x01, io_base + MAC_REG_HOSTCR);
+ 
+ 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
+ 		if (!(ioread8(io_base + MAC_REG_HOSTCR) & HOSTCR_SOFTRST))
+@@ -529,16 +529,16 @@ void MACvInitialize(struct vnt_private *priv)
+ 	/* clear sticky bits */
+ 	MACvClearStckDS(io_base);
+ 	/* disable force PME-enable */
+-	VNSvOutPortB(io_base + MAC_REG_PMC1, PME_OVR);
++	iowrite8(PME_OVR, io_base + MAC_REG_PMC1);
+ 	/* only 3253 A */
+ 
+ 	/* do reset */
+ 	MACbSoftwareReset(priv);
+ 
+ 	/* reset TSF counter */
+-	VNSvOutPortB(io_base + MAC_REG_TFTCTL, TFTCTL_TSFCNTRST);
++	iowrite8(TFTCTL_TSFCNTRST, io_base + MAC_REG_TFTCTL);
+ 	/* enable TSF counter */
+-	VNSvOutPortB(io_base + MAC_REG_TFTCTL, TFTCTL_TSFCNTREN);
++	iowrite8(TFTCTL_TSFCNTREN, io_base + MAC_REG_TFTCTL);
+ }
+ 
+ /*
+@@ -563,7 +563,7 @@ void MACvSetCurrRx0DescAddr(struct vnt_private *priv, u32 dwCurrDescAddr)
+ 
+ 	VNSvInPortB(io_base + MAC_REG_RXDMACTL0, &byOrgDMACtl);
+ 	if (byOrgDMACtl & DMACTL_RUN)
+-		VNSvOutPortB(io_base + MAC_REG_RXDMACTL0+2, DMACTL_RUN);
++		iowrite8(DMACTL_RUN, io_base + MAC_REG_RXDMACTL0 + 2);
+ 
+ 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
+ 		if (!(ioread8(io_base + MAC_REG_RXDMACTL0) & DMACTL_RUN))
+@@ -572,7 +572,7 @@ void MACvSetCurrRx0DescAddr(struct vnt_private *priv, u32 dwCurrDescAddr)
+ 
+ 	iowrite32(dwCurrDescAddr, io_base + MAC_REG_RXDMAPTR0);
+ 	if (byOrgDMACtl & DMACTL_RUN)
+-		VNSvOutPortB(io_base + MAC_REG_RXDMACTL0, DMACTL_RUN);
++		iowrite8(DMACTL_RUN, io_base + MAC_REG_RXDMACTL0);
+ }
+ 
+ /*
+@@ -597,7 +597,7 @@ void MACvSetCurrRx1DescAddr(struct vnt_private *priv, u32 dwCurrDescAddr)
+ 
+ 	VNSvInPortB(io_base + MAC_REG_RXDMACTL1, &byOrgDMACtl);
+ 	if (byOrgDMACtl & DMACTL_RUN)
+-		VNSvOutPortB(io_base + MAC_REG_RXDMACTL1+2, DMACTL_RUN);
++		iowrite8(DMACTL_RUN, io_base + MAC_REG_RXDMACTL1 + 2);
+ 
+ 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
+ 		if (!(ioread8(io_base + MAC_REG_RXDMACTL1) & DMACTL_RUN))
+@@ -606,7 +606,7 @@ void MACvSetCurrRx1DescAddr(struct vnt_private *priv, u32 dwCurrDescAddr)
+ 
+ 	iowrite32(dwCurrDescAddr, io_base + MAC_REG_RXDMAPTR1);
+ 	if (byOrgDMACtl & DMACTL_RUN)
+-		VNSvOutPortB(io_base + MAC_REG_RXDMACTL1, DMACTL_RUN);
++		iowrite8(DMACTL_RUN, io_base + MAC_REG_RXDMACTL1);
+ 
+ }
+ 
+@@ -633,7 +633,7 @@ void MACvSetCurrTx0DescAddrEx(struct vnt_private *priv,
+ 
+ 	VNSvInPortB(io_base + MAC_REG_TXDMACTL0, &byOrgDMACtl);
+ 	if (byOrgDMACtl & DMACTL_RUN)
+-		VNSvOutPortB(io_base + MAC_REG_TXDMACTL0+2, DMACTL_RUN);
++		iowrite8(DMACTL_RUN, io_base + MAC_REG_TXDMACTL0 + 2);
+ 
+ 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
+ 		if (!(ioread8(io_base + MAC_REG_TXDMACTL0) & DMACTL_RUN))
+@@ -642,7 +642,7 @@ void MACvSetCurrTx0DescAddrEx(struct vnt_private *priv,
+ 
+ 	iowrite32(dwCurrDescAddr, io_base + MAC_REG_TXDMAPTR0);
+ 	if (byOrgDMACtl & DMACTL_RUN)
+-		VNSvOutPortB(io_base + MAC_REG_TXDMACTL0, DMACTL_RUN);
++		iowrite8(DMACTL_RUN, io_base + MAC_REG_TXDMACTL0);
+ }
+ 
+ /*
+@@ -669,7 +669,7 @@ void MACvSetCurrAC0DescAddrEx(struct vnt_private *priv,
+ 
+ 	VNSvInPortB(io_base + MAC_REG_AC0DMACTL, &byOrgDMACtl);
+ 	if (byOrgDMACtl & DMACTL_RUN)
+-		VNSvOutPortB(io_base + MAC_REG_AC0DMACTL+2, DMACTL_RUN);
++		iowrite8(DMACTL_RUN, io_base + MAC_REG_AC0DMACTL + 2);
+ 
+ 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
+ 		if (!(ioread8(io_base + MAC_REG_AC0DMACTL) & DMACTL_RUN))
+@@ -679,7 +679,7 @@ void MACvSetCurrAC0DescAddrEx(struct vnt_private *priv,
+ 		pr_debug(" DBG_PORT80(0x26)\n");
+ 	iowrite32(dwCurrDescAddr, io_base + MAC_REG_AC0DMAPTR);
+ 	if (byOrgDMACtl & DMACTL_RUN)
+-		VNSvOutPortB(io_base + MAC_REG_AC0DMACTL, DMACTL_RUN);
++		iowrite8(DMACTL_RUN, io_base + MAC_REG_AC0DMACTL);
+ }
+ 
+ void MACvSetCurrTXDescAddr(int iTxType, struct vnt_private *priv,
+@@ -711,20 +711,20 @@ void MACvTimer0MicroSDelay(struct vnt_private *priv, unsigned int uDelay)
+ 	unsigned char byValue;
+ 	unsigned int uu, ii;
+ 
+-	VNSvOutPortB(io_base + MAC_REG_TMCTL0, 0);
++	iowrite8(0, io_base + MAC_REG_TMCTL0);
+ 	iowrite32(uDelay, io_base + MAC_REG_TMDATA0);
+-	VNSvOutPortB(io_base + MAC_REG_TMCTL0, (TMCTL_TMD | TMCTL_TE));
++	iowrite8((TMCTL_TMD | TMCTL_TE), io_base + MAC_REG_TMCTL0);
+ 	for (ii = 0; ii < 66; ii++) {  /* assume max PCI clock is 66Mhz */
+ 		for (uu = 0; uu < uDelay; uu++) {
+ 			VNSvInPortB(io_base + MAC_REG_TMCTL0, &byValue);
+ 			if ((byValue == 0) ||
+ 			    (byValue & TMCTL_TSUSP)) {
+-				VNSvOutPortB(io_base + MAC_REG_TMCTL0, 0);
++				iowrite8(0, io_base + MAC_REG_TMCTL0);
+ 				return;
+ 			}
+ 		}
+ 	}
+-	VNSvOutPortB(io_base + MAC_REG_TMCTL0, 0);
++	iowrite8(0, io_base + MAC_REG_TMCTL0);
+ }
+ 
+ /*
+@@ -745,9 +745,9 @@ void MACvOneShotTimer1MicroSec(struct vnt_private *priv, unsigned int uDelayTime
+ {
+ 	void __iomem *io_base = priv->PortOffset;
+ 
+-	VNSvOutPortB(io_base + MAC_REG_TMCTL1, 0);
++	iowrite8(0, io_base + MAC_REG_TMCTL1);
+ 	iowrite32(uDelayTime, io_base + MAC_REG_TMDATA1);
+-	VNSvOutPortB(io_base + MAC_REG_TMCTL1, (TMCTL_TMD | TMCTL_TE));
++	iowrite8((TMCTL_TMD | TMCTL_TE), io_base + MAC_REG_TMCTL1);
+ }
+ 
+ void MACvSetMISCFifo(struct vnt_private *priv, unsigned short wOffset,
+-- 
+2.7.0
 
-> > > diff --git a/include/uapi/linux/nl80211.h
-> > > b/include/uapi/linux/nl80211.h
-> > > @@ -322,7 +322,9 @@
-> > >   * @NL80211_CMD_GET_SCAN: get scan results
-> > >   * @NL80211_CMD_TRIGGER_SCAN: trigger a new scan with the given
-> > > parameters
-> > >   *	%NL80211_ATTR_TX_NO_CCK_RATE is used to decide whether
-> > > to send the
-> > > - *	probe requests at CCK rate or not.
-> > > + *	probe requests at CCK rate or not. %NL80211_ATTR_MAC
-> > > can be used to
-> > > + *	specify a BSSID to scan for; if not included, the
-> > > wildcard BSSID will
-> > > + *	be used.
-> > 
-> > Maybe you could be explicit here about the possibility of receiving
-> > more results than requested?
-> 
-> Which "receiving" are you referring to here? I don't see much point
-> in
-> documenting the airtime optimization here and as far as receiving
-> results through nl80211 is concerned, the only option for it today is
-> to
-> use NL80211_CMD_GET_SCAN and that returns the current contents of the
-> BSS table rather than returns from any specific scan, so I'm not sure
-> what exactly you would like to add here.
-> 
-> I was going to note that this is similar to how
-> NL80211_ATTR_SCAN_SSIDS
-> is documented, but actually, that one is not mentioned at all with
-> NL80211_CMD_TRIGGER_SCAN currently.. Nor is the details of what
-> NL80211_CMD_GET_SCAN returns.
-
-Okay, fair enough.  It's true that understanding how the scan API works
-from the nl80211 documentation is pretty hard today.  That's what I
-wanted to address, but this should probably be another task in itself.
-;)
-
-Reviewed-by: Luca Coelho <luciano.coelho@intel.com>
-
---
-Cheers,
-Luca.
