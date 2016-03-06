@@ -1,95 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:21164 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753612AbcCJKOT (ORCPT
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:33868 "EHLO
+	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751147AbcCFRPn (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 05:14:19 -0500
-From: Raja Mani <rmani@qti.qualcomm.com>
-To: <kvalo@qca.qualcomm.com>
-CC: <devicetree@vger.kernel.org>, <ath10k@lists.infradead.org>,
-	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<robh@kernel.org>, Raja Mani <rmani@qti.qualcomm.com>
-Subject: [PATCH] dt: bindings: add new dt entry for pre calibration in qcom,ath10k.txt
-Date: Thu, 10 Mar 2016 15:42:04 +0530
-Message-ID: <1457604724-14378-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20160310_111442_762372_4048BFC1)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 6 Mar 2016 12:15:43 -0500
+Received: by mail-wm0-f66.google.com with SMTP id p65so6984023wmp.1
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 09:15:42 -0800 (PST)
+Received: from localhost.localdomain (93-172-245-144.bb.netvision.net.il. [93.172.245.144])
+        by smtp.gmail.com with ESMTPSA id 202sm9575459wmo.7.2016.03.06.09.15.40
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Sun, 06 Mar 2016 09:15:41 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH 2/2] wlcore/wl18xx: add radar_debug_mode handling
+Date: Sun,  6 Mar 2016 19:15:34 +0200
+Message-Id: <1457284534-10789-2-git-send-email-eliad@wizery.com> (sfid-20160306_181550_536191_D273CDB6)
+In-Reply-To: <1457284534-10789-1-git-send-email-eliad@wizery.com>
+References: <1457284534-10789-1-git-send-email-eliad@wizery.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-There two things done in this patch,
+Add debugfs key (under CFG80211_CERTIFICATION_ONUS
+configuration) to set/clear radar_debug_mode.
+In this mode, the driver simply ignores radar
+events (but prints them).
 
-1) Existing device tree entry 'qcom,ath10k-calibration-data' carries
-   not only calibration data, it carries board specific data too.
-   So, make appropriate update in doc.
+The fw is notified about this mode through
+a special generic_cfg_feature command.
 
-2) ipq4019 wifi needs new devie tree entry to carry calibration
-   data alone (called pre cal data, it doesn't include any other info).
-   Using 'qcom,ath10k-calibration-data' for ipq4019 would alter
-   the purpose of it. Hence, add new device tree entry called
-   'qcom,ath10k-pre-calibration-data' to carry only pre calibration data.
+This mode is relevant only for ap mode. look for
+it when initializing ap vif.
 
-Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
+ drivers/net/wireless/ti/wl18xx/debugfs.c | 66 ++++++++++++++++++++++++++++++++
+ drivers/net/wireless/ti/wl18xx/event.c   |  3 +-
+ drivers/net/wireless/ti/wlcore/init.c    |  5 +++
+ drivers/net/wireless/ti/wlcore/wlcore.h  |  1 +
+ 4 files changed, 74 insertions(+), 1 deletion(-)
 
-Below patches covers the corresponding changes in the ath10k driver.
-It's posted separately to ath10k and linux-wireless mailing list.
-
-  1) ath10k: pass cal data location as an argument to ath10k_download_cal_{file|dt}
-  2) ath10k: move cal data len to hw_params
-  3) ath10k: incorporate qca4019 cal data download sequence
-
- .../bindings/net/wireless/qcom,ath10k.txt          | 23 +++++++++++++++-------
- 1 file changed, 16 insertions(+), 7 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-index 96aae6b..74d7f0a 100644
---- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-+++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
-@@ -5,12 +5,18 @@ Required properties:
- 	* "qcom,ath10k"
- 	* "qcom,ipq4019-wifi"
- 
--PCI based devices uses compatible string "qcom,ath10k" and takes only
--calibration data via "qcom,ath10k-calibration-data". Rest of the properties
--are not applicable for PCI based devices.
-+PCI based devices uses compatible string "qcom,ath10k" and takes calibration
-+data along with board specific data via "qcom,ath10k-calibration-data".
-+Rest of the properties are not applicable for PCI based devices.
- 
- AHB based devices (i.e. ipq4019) uses compatible string "qcom,ipq4019-wifi"
--and also uses most of the properties defined in this doc.
-+and also uses most of the properties defined in this doc (except
-+"qcom,ath10k-calibration-data"). It uses "qcom,ath10k-pre-calibration-data"
-+to carry pre calibration data.
-+
-+In general, entry "qcom,ath10k-pre-calibration-data" and
-+"qcom,ath10k-calibration-data" conflict with each other and only one
-+can be provided per device.
- 
- Optional properties:
- - reg: Address and length of the register set for the device.
-@@ -35,8 +41,11 @@ Optional properties:
- - qcom,msi_addr: MSI interrupt address.
- - qcom,msi_base: Base value to add before writing MSI data into
- 		MSI address register.
--- qcom,ath10k-calibration-data : calibration data as an array, the
--				 length can vary between hw versions
-+- qcom,ath10k-calibration-data : calibration data + board specific data
-+				 as an array, the length can vary between
-+				 hw versions.
-+- qcom,ath10k-pre-calibration-data : pre calibration data as an array,
-+				     the length can vary between hw versions.
- 
- Example (to supply the calibration data alone):
- 
-@@ -105,5 +114,5 @@ wifi0: wifi@a000000 {
- 			  "legacy";
- 	qcom,msi_addr = <0x0b006040>;
- 	qcom,msi_base = <0x40>;
--	qcom,ath10k-calibration-data = [ 01 02 03 ... ];
-+	qcom,ath10k-pre-calibration-data = [ 01 02 03 ... ];
+diff --git a/drivers/net/wireless/ti/wl18xx/debugfs.c b/drivers/net/wireless/ti/wl18xx/debugfs.c
+index 4edfe28..86ccf84 100644
+--- a/drivers/net/wireless/ti/wl18xx/debugfs.c
++++ b/drivers/net/wireless/ti/wl18xx/debugfs.c
+@@ -345,6 +345,69 @@ static const struct file_operations dynamic_fw_traces_ops = {
+ 	.llseek = default_llseek,
  };
+ 
++#ifdef CONFIG_CFG80211_CERTIFICATION_ONUS
++static ssize_t radar_debug_mode_write(struct file *file,
++				      const char __user *user_buf,
++				      size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++	struct wl12xx_vif *wlvif;
++	unsigned long value;
++	int ret;
++
++	ret = kstrtoul_from_user(user_buf, count, 10, &value);
++	if (ret < 0) {
++		wl1271_warning("illegal radar_debug_mode value!");
++		return -EINVAL;
++	}
++
++	/* valid values: 0/1 */
++	if (!(value == 0 || value == 1)) {
++		wl1271_warning("value is not in valid!");
++		return -EINVAL;
++	}
++
++	mutex_lock(&wl->mutex);
++
++	wl->radar_debug_mode = value;
++
++	if (unlikely(wl->state != WLCORE_STATE_ON))
++		goto out;
++
++	ret = wl1271_ps_elp_wakeup(wl);
++	if (ret < 0)
++		goto out;
++
++	wl12xx_for_each_wlvif_ap(wl, wlvif) {
++		wlcore_cmd_generic_cfg(wl, wlvif,
++				       WLCORE_CFG_FEATURE_RADAR_DEBUG,
++				       wl->radar_debug_mode, 0);
++	}
++
++	wl1271_ps_elp_sleep(wl);
++out:
++	mutex_unlock(&wl->mutex);
++	return count;
++}
++
++static ssize_t radar_debug_mode_read(struct file *file,
++				     char __user *userbuf,
++				     size_t count, loff_t *ppos)
++{
++	struct wl1271 *wl = file->private_data;
++
++	return wl1271_format_buffer(userbuf, count, ppos,
++				    "%d\n", wl->radar_debug_mode);
++}
++
++static const struct file_operations radar_debug_mode_ops = {
++	.write = radar_debug_mode_write,
++	.read = radar_debug_mode_read,
++	.open = simple_open,
++	.llseek = default_llseek,
++};
++#endif /* CFG80211_CERTIFICATION_ONUS */
++
+ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 			     struct dentry *rootdir)
+ {
+@@ -510,6 +573,9 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
+ 
+ 	DEBUGFS_ADD(conf, moddir);
+ 	DEBUGFS_ADD(radar_detection, moddir);
++#ifdef CONFIG_CFG80211_CERTIFICATION_ONUS
++	DEBUGFS_ADD(radar_debug_mode, moddir);
++#endif
+ 	DEBUGFS_ADD(dynamic_fw_traces, moddir);
+ 
+ 	return 0;
+diff --git a/drivers/net/wireless/ti/wl18xx/event.c b/drivers/net/wireless/ti/wl18xx/event.c
+index 719907a..ff6e46d 100644
+--- a/drivers/net/wireless/ti/wl18xx/event.c
++++ b/drivers/net/wireless/ti/wl18xx/event.c
+@@ -146,7 +146,8 @@ int wl18xx_process_mailbox_events(struct wl1271 *wl)
+ 			    mbox->radar_channel,
+ 			    wl18xx_radar_type_decode(mbox->radar_type));
+ 
+-		ieee80211_radar_detected(wl->hw);
++		if (!wl->radar_debug_mode)
++			ieee80211_radar_detected(wl->hw);
+ 	}
+ 
+ 	if (vector & PERIODIC_SCAN_REPORT_EVENT_ID) {
+diff --git a/drivers/net/wireless/ti/wlcore/init.c b/drivers/net/wireless/ti/wlcore/init.c
+index e92f263..d0b7734 100644
+--- a/drivers/net/wireless/ti/wlcore/init.c
++++ b/drivers/net/wireless/ti/wlcore/init.c
+@@ -558,6 +558,11 @@ static int wl12xx_init_ap_role(struct wl1271 *wl, struct wl12xx_vif *wlvif)
+ 	if (ret < 0)
+ 		return ret;
+ 
++	if (wl->radar_debug_mode)
++		wlcore_cmd_generic_cfg(wl, wlvif,
++				       WLCORE_CFG_FEATURE_RADAR_DEBUG,
++				       wl->radar_debug_mode, 0);
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
+index dda01b1..72c31a8 100644
+--- a/drivers/net/wireless/ti/wlcore/wlcore.h
++++ b/drivers/net/wireless/ti/wlcore/wlcore.h
+@@ -463,6 +463,7 @@ struct wl1271 {
+ 
+ 	/* the current dfs region */
+ 	enum nl80211_dfs_regions dfs_region;
++	bool radar_debug_mode;
+ 
+ 	/* size of the private FW status data */
+ 	size_t fw_status_len;
 -- 
-1.8.1.2
+2.6.3
 
