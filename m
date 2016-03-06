@@ -1,57 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f65.google.com ([209.85.192.65]:35162 "EHLO
-	mail-qg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754348AbcCSCLn (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:57497 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751026AbcCFELV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 22:11:43 -0400
-Received: by mail-qg0-f65.google.com with SMTP id 51so2132780qgy.2
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2016 19:11:42 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 4/5] mac80211: mesh: reorder structure members
-Date: Fri, 18 Mar 2016 22:11:31 -0400
-Message-Id: <1458353492-8654-5-git-send-email-me@bobcopeland.com> (sfid-20160319_031156_849543_38D318F2)
-In-Reply-To: <1458353492-8654-1-git-send-email-me@bobcopeland.com>
-References: <1458353492-8654-1-git-send-email-me@bobcopeland.com>
+	Sat, 5 Mar 2016 23:11:21 -0500
+Message-ID: <56DBADE6.5060507@candelatech.com> (sfid-20160306_051125_548601_10EC0725)
+Date: Sat, 05 Mar 2016 20:11:18 -0800
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Rajkumar Manoharan <rmanohar@codeaurora.org>
+CC: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: move mgmt descriptor limit handle under mgmt_tx
+References: <1457187017-12913-1-git-send-email-rmanohar@qti.qualcomm.com> <56DAED8E.6020407@candelatech.com> <08ae455b4733d8c1607427b10acc759c@codeaurora.org>
+In-Reply-To: <08ae455b4733d8c1607427b10acc759c@codeaurora.org>
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Reduce padding waste in struct mesh_table and struct rmc_entry by
-moving the smaller fields to the end.
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
----
- net/mac80211/mesh.h | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index 46b540a25d9d..4a59c034cc6d 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -133,11 +133,10 @@ struct mesh_path {
-  * @rhash: the rhashtable containing struct mesh_paths, keyed by dest addr
-  */
- struct mesh_table {
--	atomic_t entries;		/* Up to MAX_MESH_NEIGHBOURS */
- 	struct hlist_head known_gates;
- 	spinlock_t gates_lock;
--
- 	struct rhashtable rhead;
-+	atomic_t entries;		/* Up to MAX_MESH_NEIGHBOURS */
- };
- 
- /* Recent multicast cache */
-@@ -159,8 +158,8 @@ struct mesh_table {
-  */
- struct rmc_entry {
- 	struct hlist_node list;
--	u32 seqnum;
- 	unsigned long exp_time;
-+	u32 seqnum;
- 	u8 sa[ETH_ALEN];
- };
- 
+On 03/05/2016 08:00 PM, Rajkumar Manoharan wrote:
+> On , Ben Greear wrote:
+>> On 03/05/2016 06:10 AM, Rajkumar Manoharan wrote:
+>>> Firmware reserves few descriptors for management frames transmission.
+>>> In 16 MBSSID scenario, these slots will be easy exhausted due to frequent
+>>> probe responses. So for 10.4 based solutions, probe responses are limited
+>>> by a threshold (24).
+>>
+>> Do you mean probe requests or probe responses?
+>>
+> I meant probe responses in AP mode.
+>
+>> A single hardware scan request with lots of ssids in it will utilize all
+>> firmware tx management frames (which is 5, it seems).  In my testing, the
+>> firmware would just never send probe requests for the rest of the ssids
+>> because the firmware scan state machine logic is broken.
+>>
+> Hmm... firmware expects both ssid and bssid list to be filled for multiple probe
+> requests. Better to try with different probe spacing time, repeat probe time and
+> probe delay and dwell time as these params change prob_req behavior in firmware.
+
+It was easier to just fix the firmware than to hack the
+rest of the stack.
+
+> Anyway this change is not related to scan functionality.
+>
+>> If you really do mean responses, then it sounds like it would be better to
+>> use the normal RX path for mgt frames in the firmware...
+>>
+> Let me clarify. Sending probe responses in AP mode are limited by a threshold
+> for qca99x0 ("ath10k: drop probe responses when too many are queued"). This change
+> moves probe response checks under mgmt_tx from common data path.
+
+Ok, I'll take a look at that.  I've implemented MGT frames over the completely
+normal HTT data-path transport, so probably I won't hit that in my systems
+anyway (there should be no internal mgt-frame limitation, except for locally
+created things like probe requests during scan).  But, I could be missing
+something...I'm really just getting started with 10.4...
+
+Thanks,
+Ben
+
+
+>
+> -Rajkumar
+>
+
 -- 
-2.6.1
-
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
