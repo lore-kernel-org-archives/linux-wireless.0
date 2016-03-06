@@ -1,54 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2-smtp.messagingengine.com ([66.111.4.26]:42032 "EHLO
-	out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753989AbcC1OmR (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:54731 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751031AbcCFEAQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2016 10:42:17 -0400
-Received: from compute2.internal (compute2.nyi.internal [10.202.2.42])
-	by mailout.nyi.internal (Postfix) with ESMTP id 65C2A215C1
-	for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2016 10:42:16 -0400 (EDT)
-Date: Mon, 28 Mar 2016 07:42:14 -0700
-From: Greg KH <greg@kroah.com>
-To: Till Kamppeter <till.kamppeter@gmail.com>
-Cc: Evgeny Novikov <novikov@ispras.ru>,
-	Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>,
-	chris holcombe <chris.holcombe@canonical.com>,
-	Chris MacNaughton <chris.macnaughton@canonical.com>
-Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
-Message-ID: <20160328144214.GA10444@kroah.com> (sfid-20160328_164226_867730_2EF6DF36)
-References: <56F4266B.4060605@gmail.com>
- <1943931458892174@web3o.yandex.ru>
- <56F5D04A.20506@gmail.com>
- <56F5D11B.7000803@gmail.com>
- <20160326001803.GB15767@kroah.com>
- <56F5DA55.6030802@gmail.com>
- <20160326141540.GA4104@kroah.com>
- <56F69BDC.7050900@gmail.com>
- <20160326170409.GA27584@kroah.com>
- <56F6CFD6.1020109@gmail.com>
+	Sat, 5 Mar 2016 23:00:16 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56F6CFD6.1020109@gmail.com>
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Sun, 06 Mar 2016 09:30:15 +0530
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] ath10k: move mgmt descriptor limit handle under mgmt_tx
+In-Reply-To: <56DAED8E.6020407@candelatech.com>
+References: <1457187017-12913-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <56DAED8E.6020407@candelatech.com>
+Message-ID: <08ae455b4733d8c1607427b10acc759c@codeaurora.org> (sfid-20160306_050020_679521_84757091)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Mar 26, 2016 at 03:07:18PM -0300, Till Kamppeter wrote:
-> >If there's anything else I need to do here, becides try to find a
-> >co-mentor, please let me know.
-> >
+On , Ben Greear wrote:
+> On 03/05/2016 06:10 AM, Rajkumar Manoharan wrote:
+>> Firmware reserves few descriptors for management frames transmission.
+>> In 16 MBSSID scenario, these slots will be easy exhausted due to 
+>> frequent
+>> probe responses. So for 10.4 based solutions, probe responses are 
+>> limited
+>> by a threshold (24).
 > 
-> I am grateful if you could enter as co-mentor, especially if there is any
-> kernel project now which has only one mentor.
+> Do you mean probe requests or probe responses?
+> 
+I meant probe responses in AP mode.
 
-I don't understand, we only have one kernel project with one proposed
-mentor (me) right now, are we requiring all projects to have 2 mentors
-now?  I've never done it that way in the past...
+> A single hardware scan request with lots of ssids in it will utilize 
+> all
+> firmware tx management frames (which is 5, it seems).  In my testing, 
+> the
+> firmware would just never send probe requests for the rest of the ssids
+> because the firmware scan state machine logic is broken.
+> 
+Hmm... firmware expects both ssid and bssid list to be filled for 
+multiple probe
+requests. Better to try with different probe spacing time, repeat probe 
+time and
+probe delay and dwell time as these params change prob_req behavior in 
+firmware.
 
-thanks,
+Anyway this change is not related to scan functionality.
 
-greg k-h
+> If you really do mean responses, then it sounds like it would be better 
+> to
+> use the normal RX path for mgt frames in the firmware...
+> 
+Let me clarify. Sending probe responses in AP mode are limited by a 
+threshold
+for qca99x0 ("ath10k: drop probe responses when too many are queued"). 
+This change
+moves probe response checks under mgmt_tx from common data path.
+
+-Rajkumar
