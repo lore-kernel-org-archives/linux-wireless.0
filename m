@@ -1,89 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31443 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752991AbcCARSv (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:34798 "EHLO
+	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751559AbcCFM5e (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 12:18:51 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH v2 15/15] wil6210: add oob_mode module parameter
-Date: Tue,  1 Mar 2016 19:18:18 +0200
-Message-Id: <1456852698-26808-16-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160301_181905_188279_3DCAFB18)
-In-Reply-To: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
+	Sun, 6 Mar 2016 07:57:34 -0500
+Received: by mail-wm0-f65.google.com with SMTP id p65so6295132wmp.1
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 04:57:33 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 09/13] staging: vt6655: mac.c replace VNSvInPortB with ioread8
+Date: Sun,  6 Mar 2016 12:57:08 +0000
+Message-Id: <1457269032-2681-9-git-send-email-tvboxspy@gmail.com> (sfid-20160306_135746_050072_A57ABC21)
+In-Reply-To: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
+References: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+Removing the macro from functions.
 
-Add module parameter oob_mode. Takes effect the next time
-the interface is brought up and FW is loaded. Puts the FW
-in special "out of the box" (OOB) mode which is used for
-diagnostics and certification.
-
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c    | 16 ++++++++++++++++
- drivers/net/wireless/ath/wil6210/wil6210.h |  1 +
- 2 files changed, 17 insertions(+)
+ drivers/staging/vt6655/mac.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index c2a0a66..8d4e884 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -27,6 +27,11 @@ bool debug_fw; /* = false; */
- module_param(debug_fw, bool, S_IRUGO);
- MODULE_PARM_DESC(debug_fw, " do not perform card reset. For FW debug");
+diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
+index ece2bf0..a1be62d 100644
+--- a/drivers/staging/vt6655/mac.c
++++ b/drivers/staging/vt6655/mac.c
+@@ -558,7 +558,7 @@ void MACvSetCurrRx0DescAddr(struct vnt_private *priv, u32 dwCurrDescAddr)
+ 	unsigned short ww;
+ 	unsigned char byOrgDMACtl;
  
-+static bool oob_mode;
-+module_param(oob_mode, bool, S_IRUGO);
-+MODULE_PARM_DESC(oob_mode,
-+		 " enable out of the box (OOB) mode in FW, for diagnostics and certification");
-+
- bool no_fw_recovery;
- module_param(no_fw_recovery, bool, S_IRUGO | S_IWUSR);
- MODULE_PARM_DESC(no_fw_recovery, " disable automatic FW error recovery");
-@@ -547,6 +552,16 @@ static inline void wil_release_cpu(struct wil6210_priv *wil)
- 	wil_w(wil, RGF_USER_USER_CPU_0, 1);
- }
+-	VNSvInPortB(io_base + MAC_REG_RXDMACTL0, &byOrgDMACtl);
++	byOrgDMACtl = ioread8(io_base + MAC_REG_RXDMACTL0);
+ 	if (byOrgDMACtl & DMACTL_RUN)
+ 		iowrite8(DMACTL_RUN, io_base + MAC_REG_RXDMACTL0 + 2);
  
-+static void wil_set_oob_mode(struct wil6210_priv *wil, bool enable)
-+{
-+	wil_info(wil, "%s: enable=%d\n", __func__, enable);
-+	if (enable) {
-+		wil_s(wil, RGF_USER_USAGE_6, BIT_USER_OOB_MODE);
-+	} else {
-+		wil_c(wil, RGF_USER_USAGE_6, BIT_USER_OOB_MODE);
-+	}
-+}
-+
- static int wil_target_reset(struct wil6210_priv *wil)
- {
- 	int delay = 0;
-@@ -823,6 +838,7 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 	if (rc)
- 		return rc;
+@@ -592,7 +592,7 @@ void MACvSetCurrRx1DescAddr(struct vnt_private *priv, u32 dwCurrDescAddr)
+ 	unsigned short ww;
+ 	unsigned char byOrgDMACtl;
  
-+	wil_set_oob_mode(wil, oob_mode);
- 	if (load_fw) {
- 		wil_info(wil, "Use firmware <%s> + board <%s>\n", WIL_FW_NAME,
- 			 WIL_FW2_NAME);
-diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
-index d18c448..4d699ea4 100644
---- a/drivers/net/wireless/ath/wil6210/wil6210.h
-+++ b/drivers/net/wireless/ath/wil6210/wil6210.h
-@@ -132,6 +132,7 @@ struct RGF_ICR {
- /* registers - FW addresses */
- #define RGF_USER_USAGE_1		(0x880004)
- #define RGF_USER_USAGE_6		(0x880018)
-+	#define BIT_USER_OOB_MODE		BIT(31)
- #define RGF_USER_HW_MACHINE_STATE	(0x8801dc)
- 	#define HW_MACHINE_BOOT_DONE	(0x3fffffd)
- #define RGF_USER_USER_CPU_0		(0x8801e0)
+-	VNSvInPortB(io_base + MAC_REG_RXDMACTL1, &byOrgDMACtl);
++	byOrgDMACtl = ioread8(io_base + MAC_REG_RXDMACTL1);
+ 	if (byOrgDMACtl & DMACTL_RUN)
+ 		iowrite8(DMACTL_RUN, io_base + MAC_REG_RXDMACTL1 + 2);
+ 
+@@ -628,7 +628,7 @@ void MACvSetCurrTx0DescAddrEx(struct vnt_private *priv,
+ 	unsigned short ww;
+ 	unsigned char byOrgDMACtl;
+ 
+-	VNSvInPortB(io_base + MAC_REG_TXDMACTL0, &byOrgDMACtl);
++	byOrgDMACtl = ioread8(io_base + MAC_REG_TXDMACTL0);
+ 	if (byOrgDMACtl & DMACTL_RUN)
+ 		iowrite8(DMACTL_RUN, io_base + MAC_REG_TXDMACTL0 + 2);
+ 
+@@ -664,7 +664,7 @@ void MACvSetCurrAC0DescAddrEx(struct vnt_private *priv,
+ 	unsigned short ww;
+ 	unsigned char byOrgDMACtl;
+ 
+-	VNSvInPortB(io_base + MAC_REG_AC0DMACTL, &byOrgDMACtl);
++	byOrgDMACtl = ioread8(io_base + MAC_REG_AC0DMACTL);
+ 	if (byOrgDMACtl & DMACTL_RUN)
+ 		iowrite8(DMACTL_RUN, io_base + MAC_REG_AC0DMACTL + 2);
+ 
+@@ -713,7 +713,7 @@ void MACvTimer0MicroSDelay(struct vnt_private *priv, unsigned int uDelay)
+ 	iowrite8((TMCTL_TMD | TMCTL_TE), io_base + MAC_REG_TMCTL0);
+ 	for (ii = 0; ii < 66; ii++) {  /* assume max PCI clock is 66Mhz */
+ 		for (uu = 0; uu < uDelay; uu++) {
+-			VNSvInPortB(io_base + MAC_REG_TMCTL0, &byValue);
++			byValue = ioread8(io_base + MAC_REG_TMCTL0);
+ 			if ((byValue == 0) ||
+ 			    (byValue & TMCTL_TSUSP)) {
+ 				iowrite8(0, io_base + MAC_REG_TMCTL0);
 -- 
-1.8.5.2
+2.7.0
 
