@@ -1,116 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f53.google.com ([209.85.215.53]:34745 "EHLO
-	mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751965AbcCAKcK (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:35936 "EHLO
+	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751475AbcCFW2R (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 05:32:10 -0500
-Received: by mail-lf0-f53.google.com with SMTP id j78so110091011lfb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2016 02:32:10 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 02/11] ath10k: unify txpath decision
-Date: Tue,  1 Mar 2016 11:32:47 +0100
-Message-Id: <1456828376-2795-3-git-send-email-michal.kazior@tieto.com> (sfid-20160301_113215_414184_66B01842)
-In-Reply-To: <1456828376-2795-1-git-send-email-michal.kazior@tieto.com>
-References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
- <1456828376-2795-1-git-send-email-michal.kazior@tieto.com>
+	Sun, 6 Mar 2016 17:28:17 -0500
+Received: by mail-wm0-f67.google.com with SMTP id l68so7832181wml.3
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 14:28:17 -0800 (PST)
+Received: from localhost.localdomain (93-172-245-144.bb.netvision.net.il. [93.172.245.144])
+        by smtp.gmail.com with ESMTPSA id e25sm2631678wmi.21.2016.03.06.14.28.15
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Sun, 06 Mar 2016 14:28:15 -0800 (PST)
+From: Eliad Peller <eliad@wizery.com>
+To: linux-wireless@vger.kernel.org
+Subject: [PATCH v2 1/2] wlcore: don't WARN_ON in case of existing ROC
+Date: Mon,  7 Mar 2016 00:28:08 +0200
+Message-Id: <1457303289-10401-1-git-send-email-eliad@wizery.com> (sfid-20160306_232820_179433_DB8323E1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Some future changes will need to determine final
-tx method early on. Prepare the code.
+When working with AP + P2P, it's possible to get into
+a state when the AP is in ROC (due to assiciating station)
+while trying to ROC on the P2P interface.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Replace the WARN_ON with wl1271_error to avoid warnings
+in this case.
+
+Signed-off-by: Eliad Peller <eliad@wizery.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 58 +++++++++++++++++++++++++++--------
- 1 file changed, 45 insertions(+), 13 deletions(-)
+v2: fix kbuild warning (printf format)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index b3a790addb0a..67a50a61afb4 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -2994,6 +2994,13 @@ static void ath10k_reg_notifier(struct wiphy *wiphy,
- /* TX handlers */
- /***************/
- 
-+enum ath10k_mac_tx_path {
-+	ATH10K_MAC_TX_HTT,
-+	ATH10K_MAC_TX_HTT_MGMT,
-+	ATH10K_MAC_TX_WMI_MGMT,
-+	ATH10K_MAC_TX_UNKNOWN,
-+};
-+
- void ath10k_mac_tx_lock(struct ath10k *ar, int reason)
+ drivers/net/wireless/ti/wlcore/main.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index d1109c4..5127243 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -5493,7 +5493,7 @@ static int wlcore_op_remain_on_channel(struct ieee80211_hw *hw,
  {
- 	lockdep_assert_held(&ar->htt.tx_lock);
-@@ -3326,27 +3333,52 @@ unlock:
- 	return ret;
- }
+ 	struct wl12xx_vif *wlvif = wl12xx_vif_to_data(vif);
+ 	struct wl1271 *wl = hw->priv;
+-	int channel, ret = 0;
++	int channel, active_roc, ret = 0;
  
-+static enum ath10k_mac_tx_path
-+ath10k_mac_tx_h_get_txpath(struct ath10k *ar,
-+			   struct sk_buff *skb,
-+			   enum ath10k_hw_txrx_mode txmode)
-+{
-+	switch (txmode) {
-+	case ATH10K_HW_TXRX_RAW:
-+	case ATH10K_HW_TXRX_NATIVE_WIFI:
-+	case ATH10K_HW_TXRX_ETHERNET:
-+		return ATH10K_MAC_TX_HTT;
-+	case ATH10K_HW_TXRX_MGMT:
-+		if (test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
-+			     ar->fw_features))
-+			return ATH10K_MAC_TX_WMI_MGMT;
-+		else if (ar->htt.target_version_major >= 3)
-+			return ATH10K_MAC_TX_HTT;
-+		else
-+			return ATH10K_MAC_TX_HTT_MGMT;
-+	}
-+
-+	return ATH10K_MAC_TX_UNKNOWN;
-+}
-+
- static int ath10k_mac_tx_submit(struct ath10k *ar,
- 				enum ath10k_hw_txrx_mode txmode,
- 				struct sk_buff *skb)
- {
- 	struct ath10k_htt *htt = &ar->htt;
--	int ret = 0;
-+	enum ath10k_mac_tx_path txpath;
-+	int ret;
+ 	channel = ieee80211_frequency_to_channel(chan->center_freq);
  
--	switch (txmode) {
--	case ATH10K_HW_TXRX_RAW:
--	case ATH10K_HW_TXRX_NATIVE_WIFI:
--	case ATH10K_HW_TXRX_ETHERNET:
-+	txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
-+
-+	switch (txpath) {
-+	case ATH10K_MAC_TX_HTT:
- 		ret = ath10k_htt_tx(htt, txmode, skb);
- 		break;
--	case ATH10K_HW_TXRX_MGMT:
--		if (test_bit(ATH10K_FW_FEATURE_HAS_WMI_MGMT_TX,
--			     ar->fw_features))
--			ret = ath10k_mac_tx_wmi_mgmt(ar, skb);
--		else if (ar->htt.target_version_major >= 3)
--			ret = ath10k_htt_tx(htt, txmode, skb);
--		else
--			ret = ath10k_htt_mgmt_tx(htt, skb);
-+	case ATH10K_MAC_TX_HTT_MGMT:
-+		ret = ath10k_htt_mgmt_tx(htt, skb);
-+		break;
-+	case ATH10K_MAC_TX_WMI_MGMT:
-+		ret = ath10k_mac_tx_wmi_mgmt(ar, skb);
-+		break;
-+	case ATH10K_MAC_TX_UNKNOWN:
-+		WARN_ON_ONCE(1);
-+		ret = -EINVAL;
- 		break;
+@@ -5506,9 +5506,9 @@ static int wlcore_op_remain_on_channel(struct ieee80211_hw *hw,
+ 		goto out;
+ 
+ 	/* return EBUSY if we can't ROC right now */
+-	if (WARN_ON(wl->roc_vif ||
+-		    find_first_bit(wl->roc_map,
+-				   WL12XX_MAX_ROLES) < WL12XX_MAX_ROLES)) {
++	active_roc = find_first_bit(wl->roc_map, WL12XX_MAX_ROLES);
++	if (wl->roc_vif || active_roc < WL12XX_MAX_ROLES) {
++		wl1271_warning("active roc on role %d", active_roc);
+ 		ret = -EBUSY;
+ 		goto out;
  	}
- 
 -- 
-2.1.4
+2.6.3
 
