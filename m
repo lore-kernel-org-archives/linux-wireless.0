@@ -1,40 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56550 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753766AbcCRKbr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 06:31:47 -0400
-Date: Fri, 18 Mar 2016 11:29:30 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Vishal Thanki <vishalthanki@gmail.com>
-Cc: helmut.schaa@googlemail.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v3] rt2x00usb: Use usb anchor to manage URB
-Message-ID: <20160318102929.GB24990@redhat.com> (sfid-20160318_113151_310052_84B6B3FC)
-References: <1458289836-7219-1-git-send-email-vishalthanki@gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:34571 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751560AbcCFMkD (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Mar 2016 07:40:03 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Dima Krasner <dima@dimakrasner.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] iw: add libnl-tiny support, reimplemented
+References: <20160223204334.4a65ab8113dbe31fbffc56ff@dimakrasner.com>
+	<20160305171122.80c2d9a224a4b9632f40585e@dimakrasner.com>
+Date: Sun, 06 Mar 2016 14:39:58 +0200
+In-Reply-To: <20160305171122.80c2d9a224a4b9632f40585e@dimakrasner.com> (Dima
+	Krasner's message of "Sat, 5 Mar 2016 17:11:22 +0200")
+Message-ID: <87egbnlqzl.fsf@purkki.adurom.net> (sfid-20160306_134008_515075_8BDE7891)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1458289836-7219-1-git-send-email-vishalthanki@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 18, 2016 at 09:30:36AM +0100, Vishal Thanki wrote:
-> @@ -734,6 +744,8 @@ void rt2x00usb_uninitialize(struct rt2x00_dev *rt2x00dev)
->  {
->  	struct data_queue *queue;
->  
-> +	usb_kill_anchored_urbs(rt2x00dev->anchor);
+Dima Krasner <dima@dimakrasner.com> writes:
 
-As already pointed in different email this is not good place either ...
+> This allows small static builds, especially when using musl libc.
+>
+> Signed-off-by: Dima Krasner <dima@dimakrasner.com>
 
-This should be placed in rt2x00lib_remove_dev() i.e:
+When sending a new version of the patch the standard practise is to add
+v2 to the subject, like this:
 
-       if (rt2x00_is_usb(rt2x00dev)) {
-		usb_kill_anchored_urbs(rt2x00dev->anchor);
-                hrtimer_cancel(&rt2x00dev->txstatus_timer);
-                cancel_work_sync(&rt2x00dev->rxdone_work);
-                cancel_work_sync(&rt2x00dev->txdone_work);
-       }
+Subject: [PATCH v2] iw: add libnl-tiny support
 
-Since queues are flushed, hrtimer and works will not rearm, so
-this should be enough to stop the driver properly.
-
-Stanislaw
+-- 
+Kalle Valo
