@@ -1,60 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.ispras.ru ([83.149.199.45]:47825 "EHLO mail.ispras.ru"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754021AbcCZTn3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Mar 2016 15:43:29 -0400
-Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
-To: Till Kamppeter <till.kamppeter@gmail.com>,
-	Evgeny Novikov <novikov@ispras.ru>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>,
-	chris holcombe <chris.holcombe@canonical.com>,
-	Chris MacNaughton <chris.macnaughton@canonical.com>
-References: <56F4266B.4060605@gmail.com> <1943931458892174@web3o.yandex.ru>
- <56F5D04A.20506@gmail.com> <56F5D11B.7000803@gmail.com>
-From: Alexey Khoroshilov <khoroshilov@ispras.ru>
-Message-ID: <56F6E651.9090200@ispras.ru> (sfid-20160326_204341_336414_0ED3C3F8)
-Date: Sat, 26 Mar 2016 22:43:13 +0300
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:48528 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751282AbcCFOSP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Mar 2016 09:18:15 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "michal.kazior@tieto.com" <michal.kazior@tieto.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2 00/11] ath10k: implement push-pull tx model
+Date: Sun, 6 Mar 2016 14:18:02 +0000
+Message-ID: <874mcjwv04.fsf@kamboji.qca.qualcomm.com> (sfid-20160306_151818_561606_933493F8)
+References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
+	<1456828376-2795-1-git-send-email-michal.kazior@tieto.com>
+In-Reply-To: <1456828376-2795-1-git-send-email-michal.kazior@tieto.com>
+	(Michal Kazior's message of "Tue, 1 Mar 2016 11:32:45 +0100")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <56F5D11B.7000803@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26.03.2016 03:00, Till Kamppeter wrote:
-> On 03/25/2016 08:56 PM, Till Kamppeter wrote:
->> I am taking care of the 5 OpenPrinting proposals, please take care of
->> all the others, mark with IGNORE what you for sure do not want to mentor
->> and mark with a star what you want to mentor and also click "WANT TO
->> MENTOR" on the proposal page. Please try to get two mentors per student,
->> if only one is actually doing the mentoring work, the other is a backup.
->>
+Michal Kazior <michal.kazior@tieto.com> writes:
+
+> This adds support for the new logic where host
+> tells firmware how many frames are queued for each
+> station/tid and then firmware asks host to submit
+> frames for given station/tid.
 >
-> Sorry, seems that star and ignore can only be set by org admins. So 
-> please click "WANT TO MENTOR" if appropriate and tell me if you want 
-> to set or remove the star or if you want to set or remove an ignore.
+> The patch count is a bit high but I tried
+> splitting the patches as much as possible to keep
+> them short and easy to review. Hopefully it's not
+> going to be a huge headache.
 >
->    Till
+> v2:
+>  - squashes some patches
+>  - reworked pending frame scheduling
 >
+>
+> Michal Kazior (11):
+>   ath10k: refactor tx code
+>   ath10k: unify txpath decision
+>   ath10k: refactor tx pending management
+>   ath10k: maintain peer_id for each sta and vif
+>   ath10k: add fast peer_map lookup
+>   ath10k: add new htt message generation/parsing logic
+>   ath10k: implement wake_tx_queue
+>   ath10k: implement updating shared htt txq state
+>   ath10k: store txq in skb_cb
+>   ath10k: keep track of queue depth per txq
+>   ath10k: implement push-pull tx
 
-We have got 4 good proposals in LSB category that make sense to mark 
-with STAR:
-https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/4529048004853760/
-https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/6570505653977088/
-https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/4921876094648320/
-https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/4646236401434624/
+I saw two conflicts, please double check my resolutions in the pending
+branch:
 
-The first one suggests to make improvements in LSB Navigator.
-The second proposal is to analyze if data races reported by static 
-analyzer in the kernel are feasible and to suggest fixes for them.
-The others are related to making improvements in LDV static analyzer to 
-find more bugs in kernel.
+Applying: ath10k: implement wake_tx_queue
+Using index info to reconstruct a base tree...
+Falling back to patching base and 3-way merge...
+Auto-merging drivers/net/wireless/ath/ath10k/htt_rx.c
+CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/htt_rx.c
+Auto-merging drivers/net/wireless/ath/ath10k/core.c
+Failed to merge in the changes.
+Patch failed at 0007 ath10k: implement wake_tx_queue
 
-We have marked them with "WANT TO MENTOR" flag.
+[...]
 
---
-Alexey
+Applying: ath10k: implement push-pull tx
+Using index info to reconstruct a base tree...
+Falling back to patching base and 3-way merge...
+Auto-merging drivers/net/wireless/ath/ath10k/htt_rx.c
+CONFLICT (content): Merge conflict in drivers/net/wireless/ath/ath10k/htt_rx.c
+Failed to merge in the changes.
+Patch failed at 0011 ath10k: implement push-pull tx
 
+-- 
+Kalle Valo
