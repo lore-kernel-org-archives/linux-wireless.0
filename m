@@ -1,88 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:33761 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758003AbcCVIFf convert rfc822-to-8bit (ORCPT
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:32809 "EHLO
+	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751419AbcCFM53 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2016 04:05:35 -0400
-Received: by mail-wm0-f53.google.com with SMTP id l68so180580003wml.0
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2016 01:05:34 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAA93jw5AAWua23TbQHZX47XcFLEqU6T=NpxuLqa6FiffBf91Fw@mail.gmail.com>
-References: <CAA93jw5AAWua23TbQHZX47XcFLEqU6T=NpxuLqa6FiffBf91Fw@mail.gmail.com>
-Date: Tue, 22 Mar 2016 09:05:32 +0100
-Message-ID: <CA+BoTQ=hgkm2AwMb=kinx+Ezf3vjduCKNH4LNRcV_goDWH4_Vg@mail.gmail.com> (sfid-20160322_090548_664809_C2E17077)
-Subject: Re: [RFCv2 0/3] mac80211: implement fq codel
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Dave Taht <dave.taht@gmail.com>
-Cc: Jasmine Strong <jas@eero.com>,
-	Network Development <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"codel@lists.bufferbloat.net" <codel@lists.bufferbloat.net>,
-	make-wifi-fast@lists.bufferbloat.net
-Content-Type: text/plain; charset=UTF-8
+	Sun, 6 Mar 2016 07:57:29 -0500
+Received: by mail-wm0-f67.google.com with SMTP id n186so6302450wmn.0
+        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 04:57:28 -0800 (PST)
+From: Malcolm Priestley <tvboxspy@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: linux-wireless@vger.kernel.org,
+	Malcolm Priestley <tvboxspy@gmail.com>
+Subject: [PATCH 04/13] staging: vt6655: mac.c replace VNSvOutPortD with iowrite32.
+Date: Sun,  6 Mar 2016 12:57:03 +0000
+Message-Id: <1457269032-2681-4-git-send-email-tvboxspy@gmail.com> (sfid-20160306_135736_196195_D6692242)
+In-Reply-To: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
+References: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 21 March 2016 at 18:10, Dave Taht <dave.taht@gmail.com> wrote:
-> thx.
->
-> a lot to digest.
->
-> A) quick notes on "flent-gui bursts_11e-2016-03-21T09*.gz"
->
-> 1) the new bursts_11e test *should* have stuck stuff in the VI and VO
-> queues, and there *should* have been some sort of difference shown on
-> the plots with it. There wasn't.
+Removing the macro from functions.
 
-traffic-gen generates only BE traffic. Everything else runs UDP_RR
-which doesn't generate a lot of traffic.
+Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+---
+ drivers/staging/vt6655/mac.c | 52 +++++++++++++++++++++-----------------------
+ 1 file changed, 25 insertions(+), 27 deletions(-)
 
+diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
+index c2723c1..a9ddb95 100644
+--- a/drivers/staging/vt6655/mac.c
++++ b/drivers/staging/vt6655/mac.c
+@@ -263,18 +263,16 @@ void MACvRestoreContext(struct vnt_private *priv, unsigned char *cxt_buf)
+ 		    MAC_REG_BBREGCTL - MAC_REG_PSCFG);
+ 
+ 	/* restore CURR_RX_DESC_ADDR, CURR_TX_DESC_ADDR */
+-	VNSvOutPortD(io_base + MAC_REG_TXDMAPTR0,
+-		     *(u32 *)(cxt_buf + MAC_REG_TXDMAPTR0));
+-	VNSvOutPortD(io_base + MAC_REG_AC0DMAPTR,
+-		     *(u32 *)(cxt_buf + MAC_REG_AC0DMAPTR));
+-	VNSvOutPortD(io_base + MAC_REG_BCNDMAPTR,
+-		     *(u32 *)(cxt_buf + MAC_REG_BCNDMAPTR));
+-
+-	VNSvOutPortD(io_base + MAC_REG_RXDMAPTR0,
+-		     *(u32 *)(cxt_buf + MAC_REG_RXDMAPTR0));
+-
+-	VNSvOutPortD(io_base + MAC_REG_RXDMAPTR1,
+-		     *(u32 *)(cxt_buf + MAC_REG_RXDMAPTR1));
++	iowrite32(*(u32 *)(cxt_buf + MAC_REG_TXDMAPTR0),
++		  io_base + MAC_REG_TXDMAPTR0);
++	iowrite32(*(u32 *)(cxt_buf + MAC_REG_AC0DMAPTR),
++		  io_base + MAC_REG_AC0DMAPTR);
++	iowrite32(*(u32 *)(cxt_buf + MAC_REG_BCNDMAPTR),
++		  io_base + MAC_REG_BCNDMAPTR);
++	iowrite32(*(u32 *)(cxt_buf + MAC_REG_RXDMAPTR0),
++		  io_base + MAC_REG_RXDMAPTR0);
++	iowrite32(*(u32 *)(cxt_buf + MAC_REG_RXDMAPTR1),
++		  io_base + MAC_REG_RXDMAPTR1);
+ }
+ 
+ /*
+@@ -360,8 +358,8 @@ bool MACbSafeRxOff(struct vnt_private *priv)
+ 	/* turn off wow temp for turn off Rx safely */
+ 
+ 	/* Clear RX DMA0,1 */
+-	VNSvOutPortD(io_base + MAC_REG_RXDMACTL0, DMACTL_CLRRUN);
+-	VNSvOutPortD(io_base + MAC_REG_RXDMACTL1, DMACTL_CLRRUN);
++	iowrite32(DMACTL_CLRRUN, io_base + MAC_REG_RXDMACTL0);
++	iowrite32(DMACTL_CLRRUN, io_base + MAC_REG_RXDMACTL1);
+ 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
+ 		if (!(ioread32(io_base + MAC_REG_RXDMACTL0) & DMACTL_RUN))
+ 			break;
+@@ -413,9 +411,9 @@ bool MACbSafeTxOff(struct vnt_private *priv)
+ 
+ 	/* Clear TX DMA */
+ 	/* Tx0 */
+-	VNSvOutPortD(io_base + MAC_REG_TXDMACTL0, DMACTL_CLRRUN);
++	iowrite32(DMACTL_CLRRUN, io_base + MAC_REG_TXDMACTL0);
+ 	/* AC0 */
+-	VNSvOutPortD(io_base + MAC_REG_AC0DMACTL, DMACTL_CLRRUN);
++	iowrite32(DMACTL_CLRRUN, io_base + MAC_REG_AC0DMACTL);
+ 
+ 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
+ 		if (!(ioread32(io_base + MAC_REG_TXDMACTL0) & DMACTL_RUN))
+@@ -572,7 +570,7 @@ void MACvSetCurrRx0DescAddr(struct vnt_private *priv, u32 dwCurrDescAddr)
+ 			break;
+ 	}
+ 
+-	VNSvOutPortD(io_base + MAC_REG_RXDMAPTR0, dwCurrDescAddr);
++	iowrite32(dwCurrDescAddr, io_base + MAC_REG_RXDMAPTR0);
+ 	if (byOrgDMACtl & DMACTL_RUN)
+ 		VNSvOutPortB(io_base + MAC_REG_RXDMACTL0, DMACTL_RUN);
+ }
+@@ -606,7 +604,7 @@ void MACvSetCurrRx1DescAddr(struct vnt_private *priv, u32 dwCurrDescAddr)
+ 			break;
+ 	}
+ 
+-	VNSvOutPortD(io_base + MAC_REG_RXDMAPTR1, dwCurrDescAddr);
++	iowrite32(dwCurrDescAddr, io_base + MAC_REG_RXDMAPTR1);
+ 	if (byOrgDMACtl & DMACTL_RUN)
+ 		VNSvOutPortB(io_base + MAC_REG_RXDMACTL1, DMACTL_RUN);
+ 
+@@ -642,7 +640,7 @@ void MACvSetCurrTx0DescAddrEx(struct vnt_private *priv,
+ 			break;
+ 	}
+ 
+-	VNSvOutPortD(io_base + MAC_REG_TXDMAPTR0, dwCurrDescAddr);
++	iowrite32(dwCurrDescAddr, io_base + MAC_REG_TXDMAPTR0);
+ 	if (byOrgDMACtl & DMACTL_RUN)
+ 		VNSvOutPortB(io_base + MAC_REG_TXDMACTL0, DMACTL_RUN);
+ }
+@@ -679,7 +677,7 @@ void MACvSetCurrAC0DescAddrEx(struct vnt_private *priv,
+ 	}
+ 	if (ww == W_MAX_TIMEOUT)
+ 		pr_debug(" DBG_PORT80(0x26)\n");
+-	VNSvOutPortD(io_base + MAC_REG_AC0DMAPTR, dwCurrDescAddr);
++	iowrite32(dwCurrDescAddr, io_base + MAC_REG_AC0DMAPTR);
+ 	if (byOrgDMACtl & DMACTL_RUN)
+ 		VNSvOutPortB(io_base + MAC_REG_AC0DMACTL, DMACTL_RUN);
+ }
+@@ -714,7 +712,7 @@ void MACvTimer0MicroSDelay(struct vnt_private *priv, unsigned int uDelay)
+ 	unsigned int uu, ii;
+ 
+ 	VNSvOutPortB(io_base + MAC_REG_TMCTL0, 0);
+-	VNSvOutPortD(io_base + MAC_REG_TMDATA0, uDelay);
++	iowrite32(uDelay, io_base + MAC_REG_TMDATA0);
+ 	VNSvOutPortB(io_base + MAC_REG_TMCTL0, (TMCTL_TMD | TMCTL_TE));
+ 	for (ii = 0; ii < 66; ii++) {  /* assume max PCI clock is 66Mhz */
+ 		for (uu = 0; uu < uDelay; uu++) {
+@@ -748,7 +746,7 @@ void MACvOneShotTimer1MicroSec(struct vnt_private *priv, unsigned int uDelayTime
+ 	void __iomem *io_base = priv->PortOffset;
+ 
+ 	VNSvOutPortB(io_base + MAC_REG_TMCTL1, 0);
+-	VNSvOutPortD(io_base + MAC_REG_TMDATA1, uDelayTime);
++	iowrite32(uDelayTime, io_base + MAC_REG_TMDATA1);
+ 	VNSvOutPortB(io_base + MAC_REG_TMCTL1, (TMCTL_TMD | TMCTL_TE));
+ }
+ 
+@@ -760,7 +758,7 @@ void MACvSetMISCFifo(struct vnt_private *priv, unsigned short wOffset,
+ 	if (wOffset > 273)
+ 		return;
+ 	VNSvOutPortW(io_base + MAC_REG_MISCFFNDEX, wOffset);
+-	VNSvOutPortD(io_base + MAC_REG_MISCFFDATA, dwData);
++	iowrite32(dwData, io_base + MAC_REG_MISCFFDATA);
+ 	VNSvOutPortW(io_base + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
+ }
+ 
+@@ -829,7 +827,7 @@ void MACvSetKeyEntry(struct vnt_private *priv, unsigned short wKeyCtl,
+ 		 wOffset, dwData, wKeyCtl);
+ 
+ 	VNSvOutPortW(io_base + MAC_REG_MISCFFNDEX, wOffset);
+-	VNSvOutPortD(io_base + MAC_REG_MISCFFDATA, dwData);
++	iowrite32(dwData, io_base + MAC_REG_MISCFFDATA);
+ 	VNSvOutPortW(io_base + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
+ 	wOffset++;
+ 
+@@ -844,7 +842,7 @@ void MACvSetKeyEntry(struct vnt_private *priv, unsigned short wKeyCtl,
+ 	pr_debug("2. wOffset: %d, Data: %X\n", wOffset, dwData);
+ 
+ 	VNSvOutPortW(io_base + MAC_REG_MISCFFNDEX, wOffset);
+-	VNSvOutPortD(io_base + MAC_REG_MISCFFDATA, dwData);
++	iowrite32(dwData, io_base + MAC_REG_MISCFFDATA);
+ 	VNSvOutPortW(io_base + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
+ 	wOffset++;
+ 
+@@ -854,7 +852,7 @@ void MACvSetKeyEntry(struct vnt_private *priv, unsigned short wKeyCtl,
+ 		pr_debug("3.(%d) wOffset: %d, Data: %X\n",
+ 			 ii, wOffset+ii, *pdwKey);
+ 		VNSvOutPortW(io_base + MAC_REG_MISCFFNDEX, wOffset+ii);
+-		VNSvOutPortD(io_base + MAC_REG_MISCFFDATA, *pdwKey++);
++		iowrite32(*pdwKey++, io_base + MAC_REG_MISCFFDATA);
+ 		VNSvOutPortW(io_base + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
+ 	}
+ }
+@@ -882,6 +880,6 @@ void MACvDisableKeyEntry(struct vnt_private *priv, unsigned int uEntryIdx)
+ 	wOffset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
+ 
+ 	VNSvOutPortW(io_base + MAC_REG_MISCFFNDEX, wOffset);
+-	VNSvOutPortD(io_base + MAC_REG_MISCFFDATA, 0);
++	iowrite32(0, io_base + MAC_REG_MISCFFDATA);
+ 	VNSvOutPortW(io_base + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
+ }
+-- 
+2.7.0
 
-> For diffserv markings I used BE=CS0, BK=CS1, VI=CS5, and VO=EF.
-> CS6/CS7 should also land in VO (at least with the soft mac handler
-> last I looked). Is there a way to check if you are indeed exercising
-> all four 802.11e hardware queues in this test? in ath9k it is the
-> "xmit" sysfs var....
-
-Hmm.. there are no txq stats. I guess it makes sense to have them?
-
-There is /sys/kernel/debug/ieee80211/phy*/fq which dumps state of all
-queues which will be mostly empty with UDP_RR. You can run netperf UDP
-stream with diffserv marking to see onto which tid they are mapped.
-You can see tid-AC mappings here:
-https://wireless.wiki.kernel.org/en/developers/documentation/mac80211/queues
-
-I just checked and EF ends up as tid5 which is VI. It's actually the
-same as CS5. You can use CS7 to run on tid7 which is VO.
-
-
-> 2) In all the old cases the BE UDP_RR flow died on the first burst
-> (why?), and the fullpatch preserved it.
-
-I think it's related to my setup which involves veth pairs. I use them
-to simulate bridging/AP behavior but maybe it's not doing the job
-right, hmm..
-
-
-> (I would have kind of hoped to
-> have seen the BK flow die, actually, in the fullpatch)
-
-There's no extra weight priority to BK. The difference between BE and
-BK in 802.11 is contention window access time so BK gets less txops
-statistically. Both share the same txop, which is 5.484ms in most
-cases.
-
-
-> 3) I am also confused on 802.11ac - can VO aggregate? ( can't in in 802.11n).
-
-Yes, it should be albeit VI and VO have shorter txop compared to
-BE/BK: 3.008ms and 1.504ms respectively.
-
-UDP_RR doesn't really create a lot of opportunities for aggregation.
-If you want to see how different queues behave when loaded you'll need
-to modify traffic-gen and add bursts across different ACs in the
-bursts_11e test.
-
-
-Michał
