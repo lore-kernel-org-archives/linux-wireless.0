@@ -1,47 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50897 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:49685 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752300AbcCGMis (ORCPT
+	with ESMTP id S1751146AbcCGMTv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2016 07:38:48 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rtlwifi: Fix size of wireless mode variable
-References: <1456419781-14722-1-git-send-email-Larry.Finger@lwfinger.net>
-Date: Mon, 07 Mar 2016 14:38:41 +0200
-In-Reply-To: <1456419781-14722-1-git-send-email-Larry.Finger@lwfinger.net>
-	(Larry Finger's message of "Thu, 25 Feb 2016 11:03:01 -0600")
-Message-ID: <87pov6tqcu.fsf@kamboji.qca.qualcomm.com> (sfid-20160307_133851_179594_4FCFD2A6)
+	Mon, 7 Mar 2016 07:19:51 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [01/21] brcmfmac: change function name
+ forbrcmf_cfg80211_wait_vif_event_timeout()
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1455704830-10088-2-git-send-email-arend@broadcom.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Message-Id: <20160307121950.CDA876067A@smtp.codeaurora.org> (sfid-20160307_132005_135250_9CD91C31)
+Date: Mon,  7 Mar 2016 12:19:50 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
 
-> Smatch reports the following warning:
->
->   CHECK   drivers/net/wireless/realtek/rtlwifi/rc.c
-> drivers/net/wireless/realtek/rtlwifi/rc.c:144 _rtl_rc_rate_set_series() warn: impossible condition '(wireless_mode == 256) => (0-255 == 256)'
->
-> This warning arises because commit acc6907b87a9 ("rtlwifi: Fix warning
-> from ieee80211_get_tx_rates() when using 5G") now checks the wireless
-> mode for WIRELESS_MODE_AC_ONLY (BIT(8)) in _rtl_rc_rate_set_series().
-> As a result, all quantities used to store the wireless mode must be u16.
->
-> This patch also reorders struct rtl_sta_info to save a little space.
->
-> Fixes: commit acc6907b87a9 ("rtlwifi: Fix warning from ieee80211_get_tx_rates() when using 5G")
-> Reported-by: Dan Williams <dcbw@redhat.com>
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Dropping the '_timeout' from the function name as the fact that a timeout
+> value is passed makes it obvious a timeout is used. Also helps to keep code
+> lines a bit shorter and easier to stick to 80 char boundary.
+> 
+> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
 
-I can't find commit acc6907b87a9 from any of my trees. And oddly enough
-I can't either any commits with title "rtlwifi: Fix warning from
-ieee80211_get_tx_rates() when using 5G". I can fix it before commiting
-but what should I use?
+Thanks, 20 patches applied to wireless-drivers-next.git:
 
-Also the fixes line should not have the word "commit".
+a9eb0c4b73e7 brcmfmac: change function name for brcmf_cfg80211_wait_vif_event_timeout()
+d536733442d1 brcmfmac: Limit memory allocs to <64K
+6ea09153b6cc brcmfmac: check for wowl support before enumerating feature flag
+73345fd21298 brcmfmac: Configure country code using device specific settings
+0aedbcaf6f18 brcmfmac: Add length checks on firmware events
+52f22fb21764 brcmfmac: add neighbor discovery offload ip address table configuration
+cd2bc19c61b2 brcmfmac: check return for ARP ip setting iovar
+6ac27689b01e brcmfmac: use device memsize config from fw if defined
+9300bf8610fd brcmfmac: use bar1 window size as provided by pci subsystem
+bc86fdb9ac02 brcmfmac: add support for the PCIE 4366c0 chip
+d457a44fd85c brcmfmac: remove pcie gen1 support
+e9217b4b62a7 brcmfmac: increase timeout for tx eapol
+d84d99e00777 brcmfmac: move module init and exit to common
+5c22fb85102a brcmfmac: add wowl gtk rekeying offload support
+8ea56be0869f brcmfmac: move platform data retrieval code to common
+73ef9e640e94 brcmfmac: keep ARP and ND offload enabled during WOWL
+4d7928959832 brcmfmac: switch to new platform data
+af5b5e62f72e brcmfmac: merge platform data and module paramaters
+219e0f747ad6 brcmfmac: integrate add_keyext in add_key
+240d61a9ddeb brcmfmac: add 802.11w management frame protection support
 
--- 
+1 patches skipped:
+
+[17/21] brcmfmac: fix sdio sg table alloc crash
+
+There was a conflict so please rebase that patch:
+
+Applying: brcmfmac: fix sdio sg table alloc crash
+fatal: sha1 information is lacking or useless (drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c).
+Repository lacks necessary blobs to fall back on 3-way merge.
+Cannot fall back to three-way merge.
+Patch failed at 0001 brcmfmac: fix sdio sg table alloc crash
+
 Kalle Valo
