@@ -1,30 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51520 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755956AbcC2IKA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 04:10:00 -0400
-Message-ID: <1459238994.3217.0.camel@sipsolutions.net> (sfid-20160329_101005_276738_B2A4B115)
-Subject: Re: [PATCH] mac80211: allow same PN for AMSDU sub-frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org, Sara Sharon <sara.sharon@intel.com>
-Date: Tue, 29 Mar 2016 10:09:54 +0200
-In-Reply-To: <1457515785-18795-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1457515785-18795-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:50512 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752500AbcCGM1Q (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Mar 2016 07:27:16 -0500
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [1/4] mwifiex: add delay when tdls confirm frame is queued
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1456233379-12099-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20160307122715.462AB60897@smtp.codeaurora.org> (sfid-20160307_132720_296383_8569BEC6)
+Date: Mon,  7 Mar 2016 12:27:15 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-03-09 at 11:29 +0200, Emmanuel Grumbach wrote:
-> From: Sara Sharon <sara.sharon@intel.com>
-> 
-> Some hardware (iwlwifi an example) de-aggregate AMSDUs and
-> copy the IV as is to the generated MPDUs, so the same PN
-> appears in multiple packets without being a replay attack.
-> Do not increment the PN until all the sub-frames are received
-> to accommodate to that.
-> 
-I'll drop this for now since you found an issue with it :)
 
-johannes
+> From: Xinming Hu <huxm@marvell.com>
+> 
+> It is observed that driver may send the data packet to tdls peer
+> before tdls peer receives tdls setup confirm frame.
+> Similar race condition exists during tdls teardown procedure also.
+> This patch adds 10 milliseconds delay to resolve the race.
+> 
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Cathy Luo <cluo@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+
+Thanks, 4 patches applied to wireless-drivers-next.git:
+
+de651ce3d750 mwifiex: add delay when tdls confirm frame is queued
+a6139b6271f9 mwifiex: fix corner case association failure
+8b7ef8b66eb9 mwifiex: add sdio multiport aggregation debug information
+0cb52aac4d19 mwifiex: do not set multiport flag for tx/rx single packet
+
+Kalle Valo
