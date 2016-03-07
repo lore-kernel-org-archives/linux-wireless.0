@@ -1,47 +1,113 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35686 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752097AbcCJOzH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 09:55:07 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 107/113] rtl8xxxu: Use define for REG_PWR_DATA bits
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1456783551-28315-108-git-send-email-Jes.Sorensen@redhat.com>
-	<87mvq6jsq2.fsf@purkki.adurom.net>
-Date: Thu, 10 Mar 2016 09:55:06 -0500
-In-Reply-To: <87mvq6jsq2.fsf@purkki.adurom.net> (Kalle Valo's message of "Thu,
-	10 Mar 2016 16:46:45 +0200")
-Message-ID: <wrfj8u1q2xit.fsf@redhat.com> (sfid-20160310_155511_330410_A350F165)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:32298 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751047AbcCGLEH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Mar 2016 06:04:07 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
+	<kvalo@codeaurora.org>, <mohammed@codeaurora.org>,
+	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Subject: [PATCH v1] cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION
+Date: Mon, 7 Mar 2016 16:33:33 +0530
+Message-ID: <1457348614-10584-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160307_120412_412688_4CD2264E)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
-> Jes.Sorensen@redhat.com writes:
->
->> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->>
->> Use the bit define rather than hard code the value for REG_PWR_DATA bits.
->>
->> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
->
-> [...]
->
->> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
->> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
->> @@ -135,7 +135,7 @@
->>  #define  EFUSE_ACCESS_DISABLE		0x00	/* RTL8723 only */
->>  
->>  #define REG_PWR_DATA			0x0038
->> -#define PWR_DATA_EEPRPAD_RFE_CTRL_EN	BIT(11)
->> +#define  PWR_DATA_EEPRPAD_RFE_CTRL_EN	BIT(11)
->
-> Again the two spaces. Is your editor adding them automatically or what?
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-As in the previous email, this is for bit defines, matching the
-register. The above just made it consistent with the rest of the code.
+Add support for new netlink attribute 'NL80211_STA_INFO_RX_DURATION'
+This flag will be set when drivers can fill rx_duration (vendor
+specific total air time(usecs) for data/management frames from the
+connected client) via 'drv_sta_statistics' callback
 
-Jes
+Also make sta_info flags 'filled' as 64 bit to accommodate for new
+per station stats. Extend 'PUT_SINFO' for supporting rx_duration
+field and any new per sta information in future
+
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+[v1] 
+1. Fixed typo for accommodate
+2. changed the doc for rx_duration as 'vendor specific implementation'
+
+ include/net/cfg80211.h       |    5 ++++-
+ include/uapi/linux/nl80211.h |    3 +++
+ net/wireless/nl80211.c       |    3 ++-
+ 3 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9bcaaf7..2db26a9 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1060,11 +1060,13 @@ struct cfg80211_tid_stats {
+  * @rx_beacon: number of beacons received from this peer
+  * @rx_beacon_signal_avg: signal strength average (in dBm) for beacons received
+  *	from this peer
++ * @rx_duration: vendor specific total air time(usecs) for data/management
++ *	frames from the connected client
+  * @pertid: per-TID statistics, see &struct cfg80211_tid_stats, using the last
+  *	(IEEE80211_NUM_TIDS) index for MSDUs not encapsulated in QoS-MPDUs.
+  */
+ struct station_info {
+-	u32 filled;
++	u64 filled;
+ 	u32 connected_time;
+ 	u32 inactive_time;
+ 	u64 rx_bytes;
+@@ -1103,6 +1105,7 @@ struct station_info {
+ 	u32 expected_throughput;
+ 
+ 	u64 rx_beacon;
++	u64 rx_duration;
+ 	u8 rx_beacon_signal_avg;
+ 	struct cfg80211_tid_stats pertid[IEEE80211_NUM_TIDS + 1];
+ };
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 5b7b5eb..f64a854 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2464,6 +2464,8 @@ enum nl80211_sta_bss_param {
+  *	TID+1 and the special TID 16 (i.e. value 17) is used for non-QoS frames;
+  *	each one of those is again nested with &enum nl80211_tid_stats
+  *	attributes carrying the actual values.
++ * @NL80211_STA_INFO_RX_DURATION: vendor specific total air time(usecs) for
++ *	data/management frames from the connected client
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -2500,6 +2502,7 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_BEACON_RX,
+ 	NL80211_STA_INFO_BEACON_SIGNAL_AVG,
+ 	NL80211_STA_INFO_TID_STATS,
++	NL80211_STA_INFO_RX_DURATION,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d4786f2..a81c016 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3719,7 +3719,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
+ 		goto nla_put_failure;
+ 
+ #define PUT_SINFO(attr, memb, type) do {				\
+-	if (sinfo->filled & BIT(NL80211_STA_INFO_ ## attr) &&		\
++	if (sinfo->filled & (1ULL << NL80211_STA_INFO_ ## attr) &&	\
+ 	    nla_put_ ## type(msg, NL80211_STA_INFO_ ## attr,		\
+ 			     sinfo->memb))				\
+ 		goto nla_put_failure;					\
+@@ -3745,6 +3745,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
+ 	PUT_SINFO(LLID, llid, u16);
+ 	PUT_SINFO(PLID, plid, u16);
+ 	PUT_SINFO(PLINK_STATE, plink_state, u8);
++	PUT_SINFO(RX_DURATION, rx_duration, u64);
+ 
+ 	switch (rdev->wiphy.signal_type) {
+ 	case CFG80211_SIGNAL_TYPE_MBM:
+-- 
+1.7.9.5
+
