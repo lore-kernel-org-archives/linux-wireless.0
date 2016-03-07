@@ -1,51 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:36509 "EHLO
-	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752343AbcCLTqH (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51397 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752180AbcCGMt2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Mar 2016 14:46:07 -0500
-Date: Sat, 12 Mar 2016 11:45:44 -0800
-From: Edward Lipinsky <ellipinsky@gmail.com>
-To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
-	gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCHv2] staging: rtl8723au: Fix line longer than 80 columns.
-Message-ID: <20160312194544.GA6520@gmail.com> (sfid-20160312_204623_235767_17998A6E)
-References: <20160227182841.GA3387@gmail.com>
+	Mon, 7 Mar 2016 07:49:28 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [01/21] brcmfmac: change function name forbrcmf_cfg80211_wait_vif_event_timeout()
+References: <20160307121950.CDA876067A@smtp.codeaurora.org>
+Date: Mon, 07 Mar 2016 14:49:20 +0200
+In-Reply-To: <20160307121950.CDA876067A@smtp.codeaurora.org> (Kalle Valo's
+	message of "Mon, 7 Mar 2016 12:19:50 +0000 (UTC)")
+Message-ID: <87egbmtpv3.fsf@kamboji.qca.qualcomm.com> (sfid-20160307_134931_362572_455C247E)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160227182841.GA3387@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch fixes the checkpatch.pl warning:
+Kalle Valo <kvalo@codeaurora.org> writes:
 
-WARNING: line over 80 characters
+> 1 patches skipped:
+>
+> [17/21] brcmfmac: fix sdio sg table alloc crash
+>
+> There was a conflict so please rebase that patch:
+>
+> Applying: brcmfmac: fix sdio sg table alloc crash
+> fatal: sha1 information is lacking or useless (drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c).
+> Repository lacks necessary blobs to fall back on 3-way merge.
+> Cannot fall back to three-way merge.
+> Patch failed at 0001 brcmfmac: fix sdio sg table alloc crash
 
-Signed-off-by: Edward Lipinsky <ellipinsky@gmail.com>
----
-Change in v2:
-        - Break the line after the format string, as suggested by Joe
-	  Perches <joe@perches.com>.
+Ah, I noticed only now your comment that this patch is in
+wireless-drivers already. So no actions needed.
 
- drivers/staging/rtl8723au/core/rtw_ap.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+But in the future please don't submit the same patch twice, otherwise I
+accidentally commit it twice which is bad. Instead document the
+dependency and we can sort it out.
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_ap.c b/drivers/staging/rtl8723au/core/rtw_ap.c
-index ce4b589..67c9d90 100644
---- a/drivers/staging/rtl8723au/core/rtw_ap.c
-+++ b/drivers/staging/rtl8723au/core/rtw_ap.c
-@@ -1834,7 +1834,8 @@ void stop_ap_mode23a(struct rtw_adapter *padapter)
- 	}
- 	spin_unlock_bh(&pacl_node_q->lock);
- 
--	DBG_8723A("%s, free acl_node_queue, num =%d\n", __func__, pacl_list->num);
-+	DBG_8723A("%s, free acl_node_queue, num =%d\n",
-+		  __func__, pacl_list->num);
- 
- 	rtw_sta_flush23a(padapter);
- 
 -- 
-1.7.9.5
-
+Kalle Valo
