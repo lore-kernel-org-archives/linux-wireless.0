@@ -1,84 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:17683 "EHLO mga01.intel.com"
+Received: from mail.sig21.net ([80.244.240.74]:50425 "EHLO mail.sig21.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751506AbcCQMpJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 08:45:09 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Eva Rachel Retuya <eraretuya@gmail.com>,
-	"outreachy-kernel@googlegroups.com"
-	<outreachy-kernel@googlegroups.com>
-CC: "Berg, Johannes" <johannes.berg@intel.com>,
-	linuxwifi <linuxwifi@intel.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"tj@kernel.org" <tj@kernel.org>
-Subject: RE: [PATCH] iwlwifi: dvm: convert create_singlethread_workqueue()
- to alloc_workqueue()
-Date: Thu, 17 Mar 2016 12:43:35 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA7C435@hasmsx107.ger.corp.intel.com> (sfid-20160317_134533_814532_668438DA)
-References: <1458218246-18807-1-git-send-email-eraretuya@gmail.com>
-In-Reply-To: <1458218246-18807-1-git-send-email-eraretuya@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+	id S1750836AbcCGMl7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Mar 2016 07:41:59 -0500
+Date: Mon, 7 Mar 2016 13:41:03 +0100
+From: Johannes Stezenbach <js@sig21.net>
+To: Felix Fietkau <nbd@openwrt.org>
+Cc: Tuomas =?iso-8859-1?Q?R=E4s=E4nen?= <tuomasjjrasanen@tjjr.fi>,
+	Jakub =?utf-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>,
+	linux-wireless@vger.kernel.org, tuomasjjrasanen@opinsys.fi,
+	Linus Walleij <linus.walleij@linaro.org>
+Subject: Re: About adding support for MT76x2U to Linux kernel
+Message-ID: <20160307124103.GA22175@sig21.net> (sfid-20160307_134202_678081_11838010)
+References: <20150814081526.GC20192@hackpad.Elisa>
+ <20150814143229.61440072@north>
+ <20160302073210.GA31353@lakka.kapsi.fi>
+ <20160307111443.GA7205@sig21.net>
+ <56DD6B4F.2050405@openwrt.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56DD6B4F.2050405@openwrt.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> 
-> Use alloc_workqueue() to allocate the workqueue instead of
-> create_singlethread_workqueue() since the latter is deprecated and is
-> scheduled
-> for removal.
+On Mon, Mar 07, 2016 at 12:51:43PM +0100, Felix Fietkau wrote:
+> On 2016-03-07 12:14, Johannes Stezenbach wrote:
+> > FWIW, the mt7610u vendor driver
+> > doesn't support AP mode, while the mt7612u vendor driver does,
+> > but I didn't understand how their timing of sending buffered
+> > frames works.
+> Where can I find the most recent version of that vendor driver?
+> I can take a quick look at it.
 
-I can't see any indication of that in the code of workqueue.
-Can you share details about that?
+http://www.mediatek.com/en/downloads1/downloads/
+or more specifically
+http://www.mediatek.com/en/downloads1/downloads/mt7612u/
 
+> > Another concern is the handling of the TX status since there
+> > is also no TX_STAT interrupt.  I remember from rt2800usb
+> > it was always problematic to ensure no FIFO items were lost,
+> > which is a problem for rt2800usb since it doesn't report
+> > TX status before it got it from the hardware.
+> > The mt7601u driver takes the approach to report IEEE80211_TX_STAT_ACK
+> > immediately after urb completion, and send the real
+> > status later from a delayed workqueue in mt7601u_tx_stat().
+> > Could someone enlighten me if this approach is sane
+> > wrt to minstrel rate control?
+> When I started writing mt76 I did lots of experiments with trying to map
+> TX_STAT_FIFO data to individual frames and pretty much gave up, because
+> the status register was just too unreliable. Even in cases where it was
+> reliable, mapping the status info to frames is expensive on slower
+> embedded hardware, so I pretty much gave up on that approach and
+> extended the rate control API to support submitting tx status
+> information without the corresponding skb.
+> 
+> This turned out to work quite well, and I think it might be worth using
+> to some extent even on drivers with proper skb tx status reporting,
+> since it has better cache footprint and has to run less code.
+> 
+> I think the best approach is to try to map tx status info from
+> TX_STAT_FIFO in cases where IEEE80211_TX_CTL_REQ_TX_STATUS is set, and
+> just use ieee80211_tx_status_noskb for all other frames. I did something
+> like that on my work-in-progress mt7603 code.
 
-> 
-> There are work items doing related operations that shouldn't be swapped
-> when
-> queued in a certain order hence preserve the strict execution ordering of a
-> single threaded (ST) workqueue by setting max_active to 1 and adding the
-> WQ_UNBOUND flag.
-> 
-> In addition, there are work items dealing with temperature throttling
-> (tt_work,
-> ct_enter, ct_exit). Adding the WQ_HIGHPRI flag would place the work items
-> in a
-> high priority workqueue.
-> 
-> Lastly, guarantee forward progress for work items depended upon during
-> memory
-> reclaim by the addition of the WQ_MEM_RECLAIM flag.
-> 
-> Signed-off-by: Eva Rachel Retuya <eraretuya@gmail.com>
-> ---
-> To the maintainers:
-> Just to confirm, are work items depended upon during memory reclaim? If
-> not, the WQ_MEM_RECLAIM flag will be dropped. I added it just in case since
-> create_singlethread_workqueue() also sets this flag.
-> 
->  drivers/net/wireless/intel/iwlwifi/dvm/main.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-> b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-> index f62c2d7..37fa11c 100644
-> --- a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-> +++ b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-> @@ -1071,7 +1071,8 @@ static void iwl_bg_restart(struct work_struct *data)
-> 
->  static void iwl_setup_deferred_work(struct iwl_priv *priv)
->  {
-> -	priv->workqueue = create_singlethread_workqueue(DRV_NAME);
-> +	priv->workqueue = alloc_workqueue(DRV_NAME, WQ_HIGHPRI |
-> WQ_UNBOUND |
-> +					  WQ_MEM_RECLAIM, 1);
-> 
->  	INIT_WORK(&priv->restart, iwl_bg_restart);
->  	INIT_WORK(&priv->beacon_update, iwl_bg_beacon_update);
-> --
-> 1.9.1
+OK, I thought minstrels send some probe frames with high
+rates to check if they go through and thus relies
+on exact TX status for these? (IEEE80211_TX_CTL_RATE_CTRL_PROBE)
 
+Thanks,
+Johannes
