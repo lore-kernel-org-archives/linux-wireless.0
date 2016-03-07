@@ -1,37 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mta-blr1.sasken.com ([203.200.200.72]:56677 "EHLO
-	mta-blr1.sasken.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755383AbcCaOAZ convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:53918 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752330AbcCGNu5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 10:00:25 -0400
-From: DINO MYCLE <dino.mycle@sasken.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Chayan Biswas <chayan.biswas@sasken.com>
-Subject: WL1271 Sending Tx Pkt using calibrator
-Date: Thu, 31 Mar 2016 14:00:15 +0000
-Message-ID: <e523028d-e55d-46ce-849d-fb359b6e412e@EXGHTSFZ01.sasken.com> (sfid-20160331_160028_387343_7FA242A3)
-Content-Type: text/plain; charset=US-ASCII
+	Mon, 7 Mar 2016 08:50:57 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi-next 2016-03-02
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+Date: Mon, 07 Mar 2016 15:50:49 +0200
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+	(Emmanuel Grumbach's message of "Wed, 2 Mar 2016 07:51:12 +0000")
+Message-ID: <87r3fms8g6.fsf@kamboji.qca.qualcomm.com> (sfid-20160307_145100_430819_E5CD78F3)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-Hello All,
+> This is a pull request for 4.6. It is big because a lot of patches were
+> waiting for code in mac80211-next which is now in net-next.
+> As you figured, I need you to pull Johannes's 
+> mac80211-next-for-davem-2016-02-26 before you pull this from me.
+> Of course, you can just merge net-next. This is really up to you :)
+> I also merged iwlwifi-fixes.git (twice even) to prevent conflicts upstream.
+> In the tag, I mentioned which patches need mac80211-next since you asked for it
+> last time.
+>
+> My prevent_stupid_mistakes.sh script seems to be working fairly well now,
+> in case you see an issue, let me know.
+>
+> Thanks!
+>
+>
+> The following changes since commit 50ee738d7271fe825e4024cdfa5c5301a871e2c2:
+>
+>   rfkill: Add documentation about LED triggers (2016-02-24 09:13:12 +0100)
+>
+> are available in the git repository at:
+>
+>   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2016-03-02
 
-We are trying use the calibrator for sending Tx packet for testing. Based on the wiki http://processors.wiki.ti.com/index.php/WL127x_TX_Testing
+Pulled, thanks.
 
-we want to send MCS0 - MCS7 frames, when we tried using the following commands, MCS0-MCS7 frmaes alone is not coming  with preamble set to 6/7 are we missing some configuration? can someone help me
-
-calibrator wlan0 plt power_mode on
-calibrator wlan0 plt tune_channel 0 1
-calibrator wlan0 plt tx_cont 2000 0x2000 1500  0 17000 10000 3 1 0 6 3 1 1 1 08:00:12:34:56:7a calibrator wlan0 plt tx_stop calibrator wlan0 plt power_mode off
-
-
-thanks for the support
---
-Dino Joseph Mycle
-
-________________________________
-
-SASKEN BUSINESS DISCLAIMER: This message may contain confidential, proprietary or legally privileged information. In case you are not the original intended Recipient of the message, you must not, directly or indirectly, use, disclose, distribute, print, or copy any part of this message and you are requested to delete it and inform the sender. Any views expressed in this message are those of the individual sender unless otherwise stated. Nothing contained in this message shall be construed as an offer or acceptance of any offer by Sasken Communication Technologies Limited ("Sasken") unless sent with that express intent and with due authority of Sasken. Sasken has taken enough precautions to prevent the spread of viruses. However the company accepts no liability for any damage caused by any virus transmitted by this email.
-Read Disclaimer at http://www.sasken.com/extras/mail_disclaimer.html
+-- 
+Kalle Valo
