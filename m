@@ -1,60 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:1927 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753220AbcCBH6M (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 02:58:12 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Avri Altman <avri.altman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 32/43] iwlwifi: mvm: Send power command on BSS_CHANGED_BEACON_INFO if needed
-Date: Wed,  2 Mar 2016 09:56:33 +0200
-Message-Id: <1456905404-14435-32-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085952_243538_71681FB0)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48458 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751866AbcCGCit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Mar 2016 21:38:49 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v4 1/8] ath9k: define correct GPIO numbers and bits mask
+Date: Mon,  7 Mar 2016 10:38:14 +0800
+Message-Id: <1457318301-27701-2-git-send-email-miaoqing@codeaurora.org> (sfid-20160307_033858_789197_88D218B8)
+In-Reply-To: <1457318301-27701-1-git-send-email-miaoqing@codeaurora.org>
+References: <1457318301-27701-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avri Altman <avri.altman@intel.com>
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-Beacon abort (ba) is set while sending power command, but only
-after at least one beacon_filter command was successfully sent.
+Define correct GPIO numbers and MASK bits to indicate the WMAC
+GPIO resource.
 
-If we heard a beacon before starting association, this order
-is maintained and ba is properly set.
+Allow SOC chips(AR9340, AR9531, AR9550, AR9561) to access all GPIOs
+which rely on gpiolib framework. But restrict SOC AR9330 only to
+access WMAC GPIO which has the same design with the old chips.
 
-However, if the first beacon is received after association,
-we send the power command upon association, configure the
-beacon filtering when the first beacon arrives, and in that case,
-beacon abort is not set.
-
-So identify this, and send a power command post the beacon_filter
-command if needed.
-
-Signed-off-by: Avri Altman <avri.altman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/hw.c  | 70 ++++++++++++++++++++++++++++--------
+ drivers/net/wireless/ath/ath9k/hw.h  |  1 +
+ drivers/net/wireless/ath/ath9k/reg.h | 42 ++++++++++++++++++++--
+ 3 files changed, 96 insertions(+), 17 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 86b4b9d..927b055 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -1955,7 +1955,12 @@ static void iwl_mvm_bss_info_changed_station(struct iwl_mvm *mvm,
- 		WARN_ON(iwl_mvm_enable_beacon_filter(mvm, vif, 0));
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 257f46e..0e80b3f 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2375,6 +2375,61 @@ static bool ath9k_hw_dfs_tested(struct ath_hw *ah)
  	}
+ }
  
--	if (changes & (BSS_CHANGED_PS | BSS_CHANGED_P2P_PS | BSS_CHANGED_QOS)) {
-+	if (changes & (BSS_CHANGED_PS | BSS_CHANGED_P2P_PS | BSS_CHANGED_QOS |
-+		       /*
-+			* Send power command on every beacon change,
-+			* because we may have not enabled beacon abort yet.
-+			*/
-+		       BSS_CHANGED_BEACON_INFO)) {
- 		ret = iwl_mvm_power_update_mac(mvm);
- 		if (ret)
- 			IWL_ERR(mvm, "failed to update power mode\n");
++static void ath9k_gpio_cap_init(struct ath_hw *ah)
++{
++	struct ath9k_hw_capabilities *pCap = &ah->caps;
++
++	if (AR_SREV_9271(ah)) {
++		pCap->num_gpio_pins = AR9271_NUM_GPIO;
++		pCap->gpio_mask = AR9271_GPIO_MASK;
++	} else if (AR_DEVID_7010(ah)) {
++		pCap->num_gpio_pins = AR7010_NUM_GPIO;
++		pCap->gpio_mask = AR7010_GPIO_MASK;
++	} else if (AR_SREV_9287(ah)) {
++		pCap->num_gpio_pins = AR9287_NUM_GPIO;
++		pCap->gpio_mask = AR9287_GPIO_MASK;
++	} else if (AR_SREV_9285(ah)) {
++		pCap->num_gpio_pins = AR9285_NUM_GPIO;
++		pCap->gpio_mask = AR9285_GPIO_MASK;
++	} else if (AR_SREV_9280(ah)) {
++		pCap->num_gpio_pins = AR9280_NUM_GPIO;
++		pCap->gpio_mask = AR9280_GPIO_MASK;
++	} else if (AR_SREV_9300(ah)) {
++		pCap->num_gpio_pins = AR9300_NUM_GPIO;
++		pCap->gpio_mask = AR9300_GPIO_MASK;
++	} else if (AR_SREV_9330(ah)) {
++		pCap->num_gpio_pins = AR9330_NUM_GPIO;
++		pCap->gpio_mask = AR9330_GPIO_MASK;
++	} else if (AR_SREV_9340(ah)) {
++		pCap->num_gpio_pins = AR9340_NUM_GPIO;
++		pCap->gpio_mask = AR9340_GPIO_MASK;
++	} else if (AR_SREV_9462(ah)) {
++		pCap->num_gpio_pins = AR9462_NUM_GPIO;
++		pCap->gpio_mask = AR9462_GPIO_MASK;
++	} else if (AR_SREV_9485(ah)) {
++		pCap->num_gpio_pins = AR9485_NUM_GPIO;
++		pCap->gpio_mask = AR9485_GPIO_MASK;
++	} else if (AR_SREV_9531(ah)) {
++		pCap->num_gpio_pins = AR9531_NUM_GPIO;
++		pCap->gpio_mask = AR9531_GPIO_MASK;
++	} else if (AR_SREV_9550(ah)) {
++		pCap->num_gpio_pins = AR9550_NUM_GPIO;
++		pCap->gpio_mask = AR9550_GPIO_MASK;
++	} else if (AR_SREV_9561(ah)) {
++		pCap->num_gpio_pins = AR9561_NUM_GPIO;
++		pCap->gpio_mask = AR9561_GPIO_MASK;
++	} else if (AR_SREV_9565(ah)) {
++		pCap->num_gpio_pins = AR9565_NUM_GPIO;
++		pCap->gpio_mask = AR9565_GPIO_MASK;
++	} else if (AR_SREV_9580(ah)) {
++		pCap->num_gpio_pins = AR9580_NUM_GPIO;
++		pCap->gpio_mask = AR9580_GPIO_MASK;
++	} else {
++		pCap->num_gpio_pins = AR_NUM_GPIO;
++		pCap->gpio_mask = AR_GPIO_MASK;
++	}
++}
++
+ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ {
+ 	struct ath9k_hw_capabilities *pCap = &ah->caps;
+@@ -2468,20 +2523,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
+ 	else
+ 		pCap->hw_caps &= ~ATH9K_HW_CAP_HT;
+ 
+-	if (AR_SREV_9271(ah))
+-		pCap->num_gpio_pins = AR9271_NUM_GPIO;
+-	else if (AR_DEVID_7010(ah))
+-		pCap->num_gpio_pins = AR7010_NUM_GPIO;
+-	else if (AR_SREV_9300_20_OR_LATER(ah))
+-		pCap->num_gpio_pins = AR9300_NUM_GPIO;
+-	else if (AR_SREV_9287_11_OR_LATER(ah))
+-		pCap->num_gpio_pins = AR9287_NUM_GPIO;
+-	else if (AR_SREV_9285_12_OR_LATER(ah))
+-		pCap->num_gpio_pins = AR9285_NUM_GPIO;
+-	else if (AR_SREV_9280_20_OR_LATER(ah))
+-		pCap->num_gpio_pins = AR928X_NUM_GPIO;
+-	else
+-		pCap->num_gpio_pins = AR_NUM_GPIO;
++	ath9k_gpio_cap_init(ah);
+ 
+ 	if (AR_SREV_9160_10_OR_LATER(ah) || AR_SREV_9100(ah))
+ 		pCap->rts_aggr_limit = ATH_AMPDU_LIMIT_MAX;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
+index 831a544..c0740d6 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.h
++++ b/drivers/net/wireless/ath/ath9k/hw.h
+@@ -301,6 +301,7 @@ struct ath9k_hw_capabilities {
+ 	u8 max_txchains;
+ 	u8 max_rxchains;
+ 	u8 num_gpio_pins;
++	u32 gpio_mask;
+ 	u8 rx_hp_qdepth;
+ 	u8 rx_lp_qdepth;
+ 	u8 rx_status_len;
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index caba54d..8903f70 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -983,6 +983,10 @@
+ #define AR_SREV_9561(_ah) \
+ 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9561))
+ 
++#define AR_SREV_SOC(_ah) \
++	(AR_SREV_9340(_ah) || AR_SREV_9531(_ah) || AR_SREV_9550(ah) || \
++	 AR_SREV_9561(ah))
++
+ /* NOTE: When adding chips newer than Peacock, add chip check here */
+ #define AR_SREV_9580_10_OR_LATER(_ah) \
+ 	(AR_SREV_9580(_ah))
+@@ -1102,14 +1106,46 @@ enum {
+ 
+ #define AR_PCIE_PHY_REG3			 0x18c08
+ 
++/* Define correct GPIO numbers and MASK bits to indicate the WMAC
++ * GPIO resource.
++ * Allow SOC chips(AR9340, AR9531, AR9550, AR9561) to access all GPIOs
++ * which rely on gpiolib framework. But restrict SOC AR9330 only to
++ * access WMAC GPIO which has the same design with the old chips.
++ */
+ #define AR_NUM_GPIO                              14
+-#define AR928X_NUM_GPIO                          10
++#define AR9280_NUM_GPIO                          10
+ #define AR9285_NUM_GPIO                          12
+-#define AR9287_NUM_GPIO                          11
++#define AR9287_NUM_GPIO                          10
+ #define AR9271_NUM_GPIO                          16
+-#define AR9300_NUM_GPIO                          17
++#define AR9300_NUM_GPIO                          16
++#define AR9330_NUM_GPIO				 16
++#define AR9340_NUM_GPIO				 23
++#define AR9462_NUM_GPIO				 10
++#define AR9485_NUM_GPIO				 12
++#define AR9531_NUM_GPIO				 18
++#define AR9550_NUM_GPIO				 24
++#define AR9561_NUM_GPIO				 23
++#define AR9565_NUM_GPIO				 12
++#define AR9580_NUM_GPIO				 16
+ #define AR7010_NUM_GPIO                          16
+ 
++#define AR_GPIO_MASK				 0x00003FFF
++#define AR9271_GPIO_MASK			 0x0000FFFF
++#define AR9280_GPIO_MASK			 0x000003FF
++#define AR9285_GPIO_MASK			 0x00000FFF
++#define AR9287_GPIO_MASK			 0x000003FF
++#define AR9300_GPIO_MASK			 0x0000F4FF
++#define AR9330_GPIO_MASK			 0x0000F4FF
++#define AR9340_GPIO_MASK			 0x0000000F
++#define AR9462_GPIO_MASK			 0x000003FF
++#define AR9485_GPIO_MASK			 0x00000FFF
++#define AR9531_GPIO_MASK			 0x0000000F
++#define AR9550_GPIO_MASK			 0x0000000F
++#define AR9561_GPIO_MASK			 0x0000000F
++#define AR9565_GPIO_MASK			 0x00000FFF
++#define AR9580_GPIO_MASK			 0x0000F4FF
++#define AR7010_GPIO_MASK			 0x0000FFFF
++
+ #define AR_GPIO_IN_OUT                           (AR_SREV_9340(ah) ? 0x4028 : 0x4048)
+ #define AR_GPIO_IN_VAL                           0x0FFFC000
+ #define AR_GPIO_IN_VAL_S                         14
 -- 
-2.5.0
+1.9.1
 
