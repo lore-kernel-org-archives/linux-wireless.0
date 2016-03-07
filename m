@@ -1,62 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f169.google.com ([209.85.214.169]:36314 "EHLO
-	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752418AbcCGQyu (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:51214 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752180AbcCGMmc convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2016 11:54:50 -0500
+	Mon, 7 Mar 2016 07:42:32 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: linux-wireless@vger.kernel.org, Hauke Mehrtens <hauke@hauke-m.de>
+Subject: Re: [PATCH 1/3] bcma: drop unneeded fields from bcma_pflash struct
+References: <1455268545-11667-1-git-send-email-zajec5@gmail.com>
+Date: Mon, 07 Mar 2016 14:42:24 +0200
+In-Reply-To: <1455268545-11667-1-git-send-email-zajec5@gmail.com>
+ (=?utf-8?Q?=22Rafa=C5=82=09Mi=C5=82ecki=22's?= message of "Fri, 12 Feb 2016
+ 10:15:43 +0100")
+Message-ID: <87lh5utq6n.fsf@kamboji.qca.qualcomm.com> (sfid-20160307_134235_154904_F80679D6)
 MIME-Version: 1.0
-In-Reply-To: <CAHqTa-2-uZ0PUdwp33E588EU2a7T6KnTYs8RWfNDEzgOLseG9g@mail.gmail.com>
-References: <1456492163-11437-1-git-send-email-michal.kazior@tieto.com>
-	<E1abfnE-0000VS-00@www.xplot.org>
-	<CA+BoTQk6J7kgdie9aX24MB+8PxN3oFUh0eVdmVrdyptW5RxQXg@mail.gmail.com>
-	<CAPp0ZBYP9UzUTtPz=vivUQkE2FiGSsJjDaecQtPuK8y_d3ccqA@mail.gmail.com>
-	<56DD99AA.8050403@openwrt.org>
-	<CAHqTa-2-uZ0PUdwp33E588EU2a7T6KnTYs8RWfNDEzgOLseG9g@mail.gmail.com>
-Date: Mon, 7 Mar 2016 08:54:48 -0800
-Message-ID: <CAA93jw4JG_uEZaxk1JDKndq9K0+QPwKaAmK6=gZ8e-7qNmc=Cw@mail.gmail.com> (sfid-20160307_175457_905990_69DAD6AB)
-Subject: Re: [RFC/RFT] mac80211: implement fq_codel for software queuing
-From: Dave Taht <dave.taht@gmail.com>
-To: Avery Pennarun <apenwarr@gmail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Tim Shepard <shep@alum.mit.edu>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Network Development <netdev@vger.kernel.org>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Andrew Mcgregor <andrewmcgr@google.com>,
-	=?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If I can just get a coherent patch set that I can build, I will gladly
-join you on the testing ath9k in particular... can probably do ath10k,
-too - and do a bit of code review... this week. it's very exciting
-watching all this activity...
+Rafał Miłecki <zajec5@gmail.com> writes:
 
-but I confess that I've totally lost track of what set of trees and
-patchwork I should try to pull from. wireless-drivers-next? ath10k?
-wireless-next? net-next? toke and I have a ton of x86 platforms
-available to test on....
+> Most of info stored in this struct wasn't really used anywhere as we put
+> all that data in platform data & resource as well.
+>
+> Signed-off-by: Rafał Miłecki <zajec5@gmail.com>
 
-Avery - which patches did you use??? on top of what?
+Manually applied to wireless-drivers-next, thanks.
 
-In terms of "smoothing" codel...
-
-I emphatically do not think codel in it's current form is "ready" for
-wireless, at the very least the target should not be much lower than
-20ms in your 2 station tests.  There is another bit in codel where the
-algo "turns off" with only a single MTU's worth of packets
-outstanding, which could get bumped to the ideal size of the
-aggregate. "ideal" kind of being a variable based on a ton of other
-factors...
-
-the underlying code needs to be striving successfully for per-station
-airtime fairness for this to work at all, and the driver/card
-interface nearly as tight as BQL is for the fq portion to behave
-sanely. I'd configure codel at a higher target and try to observe what
-is going on at the fq level til that got saner.
-
-There are so many other variables and things left unaccounted for, as yet.
+-- 
+Kalle Valo
