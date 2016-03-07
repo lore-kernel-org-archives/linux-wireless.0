@@ -1,30 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:60959 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752485AbcCBMgv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 07:36:51 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Spinadel, David" <david.spinadel@intel.com>
-Subject: RE: [PATCH] mac80211_hwsim: Set global RRM capability
-Date: Wed, 2 Mar 2016 12:36:29 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA51497@hasmsx107.ger.corp.intel.com> (sfid-20160302_133656_161348_D4354D98)
-References: <1456392253-16972-1-git-send-email-emmanuel.grumbach@intel.com>
- <1456921458.2157.2.camel@sipsolutions.net>
-In-Reply-To: <1456921458.2157.2.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.codeaurora.org ([198.145.29.96]:51481 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751146AbcCGMwK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Mar 2016 07:52:10 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH V11 2/2] brcmfmac: add support for nl80211 BSS_SELECT feature
+References: <1456947439-28968-1-git-send-email-arend@broadcom.com>
+	<1456947439-28968-2-git-send-email-arend@broadcom.com>
+Date: Mon, 07 Mar 2016 14:52:04 +0200
+In-Reply-To: <1456947439-28968-2-git-send-email-arend@broadcom.com> (Arend van
+	Spriel's message of "Wed, 2 Mar 2016 20:37:19 +0100")
+Message-ID: <87a8matpqj.fsf@kamboji.qca.qualcomm.com> (sfid-20160307_135214_681727_B093E4F7)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiANCj4gT24gVGh1LCAyMDE2LTAyLTI1IGF0IDExOjI0ICswMjAwLCBFbW1hbnVlbCBHcnVtYmFj
-aCB3cm90ZToNCj4gPiBGcm9tOiBEYXZpZCBTcGluYWRlbCA8ZGF2aWQuc3BpbmFkZWxAaW50ZWwu
-Y29tPg0KPiA+DQo+ID4gQWxsb3cgcHVibGlzaGluZyBSUk0gY2FwYWJpbGl0aWVzIGZvciBmZWF0
-dXJlcyB0aGF0IGFyZSBub3QgSFcNCj4gPiBkZXBlbmRlbnQuDQo+IA0KPiBBY3R1YWxseSwgY29t
-ZSB0byB0aGluayBvZiBpdCwgd2h5IGRvbid0IHdlIGRvIHRoaXMgaW4gbWFjODAyMTEgcmF0aGVy
-IHRoYW4NCj4gdGhlIGRyaXZlcnM/DQo+IA0KPiBUaGUgb25seSBjYXBhYmlsaXR5IGl0IHJlcXVp
-cmVzIGlzIGluc2VydGluZyB0aGUgSUVzLCBhbmQgdGhhdCdzIGhhbmRsZWQgaW4NCj4gbWFjODAy
-MTEuDQo+IA0KDQpJIGhhZCB0aGUgc2FtZSB0aGlua2luZywgYnV0IHNvbWVob3cgcGVvcGxlIGNv
-bnZpbmNlZCBtZSB0aGF0IGEgZHJpdmVyIG1heSBwcmVmZXIgbm90IHRvIGFkdmVydGlzZSB0aGlz
-IHdpdGhvdXQgaXRzIGV4cGxpY2l0IGNvbnNlbnQuIA0K
+Arend van Spriel <arend@broadcom.com> writes:
+
+> Announce support for nl80211 feature BSS_SELECT and process
+> BSS selection behaviour provided in .connect() callback.
+>
+> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+> Reviewed-by: Lei Zhang <leizh@broadcom.com>
+> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+
+Depends on:
+
+0a87cadbb54e nl80211: add feature for BSS selection support
+
+Is in mac80211-next currently.
+
+-- 
+Kalle Valo
