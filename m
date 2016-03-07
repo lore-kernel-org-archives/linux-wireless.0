@@ -1,66 +1,551 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([217.72.192.74]:50473 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753112AbcCXOFY (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35479 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752957AbcCGQ2i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Mar 2016 10:05:24 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [1/2] bcma: fix building without OF_IRQ
-Date: Thu, 24 Mar 2016 15:05:15 +0100
-Message-ID: <3650018.TFD3yciM4q@wuerfel> (sfid-20160324_150529_712389_F42A7B14)
-In-Reply-To: <871t70dlth.fsf@kamboji.qca.qualcomm.com>
-References: <20160323155243.D1AB4615C6@smtp.codeaurora.org> <9767564.jLc8Ig1W5l@wuerfel> <871t70dlth.fsf@kamboji.qca.qualcomm.com>
+	Mon, 7 Mar 2016 11:28:38 -0500
+Date: Mon, 7 Mar 2016 21:58:19 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	johannes@sipsolutions.net, kvalo@codeaurora.org,
+	Anilkumar Kolli <akolli@qti.qualcomm.com>
+Subject: Re: [RFC v1] mac80211: Add support for per station rx stats histogram
+Message-ID: <20160307162818.GA16706@atheros-ThinkPad-T61> (sfid-20160307_172851_365129_D6813412)
+References: <1457367809-13637-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: multipart/mixed; boundary="SLDf9lqlvOQaIe6s"
+In-Reply-To: <1457367809-13637-1-git-send-email-mohammed@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thursday 24 March 2016 15:53:14 Kalle Valo wrote:
-> Arnd Bergmann <arnd@arndb.de> writes:
+
+--SLDf9lqlvOQaIe6s
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+Hi Johannes and all,
+
+kindly share your thoughts regarding the draft change
+(I can share the test results as well and sample dump).
+
+This is an implementation of Rx statistics (histogram
+for each of the clients connected under mac80211 station
+debugfs).
+
+Attached is a sample dump, tested in Openwrt distribution
+
+regards,
+shafi
+
+
+On Mon, Mar 07, 2016 at 09:53:29PM +0530, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 > 
-> > On Wednesday 23 March 2016 15:52:43 Kalle Valo wrote:
-> >> > The bcma driver core can be built with or without DT support, but
-> >> > it fails to build when CONFIG_OF=y and CONFIG_OF_IRQ=n, which
-> >> > can happen on platforms that do not support IRQ domains.
-> >> > 
-> >> > ERROR: "irq_create_of_mapping" [drivers/bcma/bcma.ko] undefined!
-> >> > ERROR: "of_irq_parse_raw" [drivers/bcma/bcma.ko] undefined!
-> >> > ERROR: "of_irq_parse_one" [drivers/bcma/bcma.ko] undefined!
-> >> > 
-> >> > This adds another compile-time check for OF_IRQ, but also
-> >> > gets rid of now unneeded #ifdef checks: Using the simpler
-> >> > IS_ENABLED() check for OF_IRQ also covers the case of not
-> >> > having CONFIG_OF enabled. The check for CONFIG_OF_ADDRESS
-> >> > was added to allow building on architectures without
-> >> > OF_ADDRESS, but that has been addressed already in
-> >> > b1d06b60e90c ("of: Provide static inline function for
-> >> > of_translate_address if needed").
-> >> > 
-> >> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> >> 
-> >> Thanks, applied to wireless-drivers.git.
-> >> 
-> >
-> > Thanks! I see you have applied patch 1/2 but not patch 2/2.
-> >
-> > As mentioned in the comment for patch 2, it should be tested
-> > better, but I want to make sure that someone still has it
-> > on their radar.
+> Enable a provision in mac80211 'MAC80211_DEBUG_PER_STA_RX_STATS'
+> to keep track and dump per station stats.
 > 
-> Just to avoid any confusions I assume you are talking about this patch:
+> Dump rx pkts / bytes per {MCS, BW, NSS, GI} per station
+> in histogram format. Rx stats provides a history
+> of the receive stats of the stations connected to us.
+> Information such as how consistently we received the packet
+> in higher MCS index / Bandwidth is very useful to assess the
+> performance of us(AP) and the connected clients
 > 
-> [v2] bcma: use of_dma_configure() to set initial dma mask
-> https://patchwork.kernel.org/patch/8608751/
+> By default this feature is disabled though there is no impact
+> in performance (based on our test results)
+> 
+> This change is based on the design of Yanbo Li and HT packet
+> rate table fix by Anil
+> 
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
+> ---
+>  net/mac80211/Kconfig       |   12 +++
+>  net/mac80211/debugfs_sta.c |  225 ++++++++++++++++++++++++++++++++++++++++++++
+>  net/mac80211/debugfs_sta.h |    5 +
+>  net/mac80211/rx.c          |    2 +
+>  net/mac80211/sta_info.h    |   23 +++++
+>  5 files changed, 267 insertions(+)
+> 
+> diff --git a/net/mac80211/Kconfig b/net/mac80211/Kconfig
+> index 3891cbd..89fb17c 100644
+> --- a/net/mac80211/Kconfig
+> +++ b/net/mac80211/Kconfig
+> @@ -309,6 +309,18 @@ config MAC80211_DEBUG_COUNTERS
+>  
+>  	  If unsure, say N.
+>  
+> +config MAC80211_DEBUG_PER_STA_RX_STATS
+> +	bool "Per Station Receive Stats Histogram"
+> +	depends on MAC80211_DEBUG_MENU
+> +	depends on MAC80211_DEBUGFS
+> +	---help---
+> +	  Selecting this option causes mac80211 to keep track of
+> +	  per station received packets, classify them based
+> +	  on Bandwidth, Rate index (legacy, HT, VHT) and dump
+> +	  a histogram of the same
+> +
+> +	  If unsure, say N.
+> +
+>  config MAC80211_STA_HASH_MAX_SIZE
+>  	int "Station hash table maximum size" if MAC80211_DEBUG_MENU
+>  	default 0
+> diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+> index a39512f..ed095f3 100644
+> --- a/net/mac80211/debugfs_sta.c
+> +++ b/net/mac80211/debugfs_sta.c
+> @@ -289,6 +289,130 @@ static ssize_t sta_ht_capa_read(struct file *file, char __user *userbuf,
+>  }
+>  STA_OPS(ht_capa);
+>  
+> +static ssize_t sta_rx_stats_read(struct file *file, char __user *userbuf,
+> +				 size_t count, loff_t *ppos)
+> +{
+> +#ifdef CONFIG_MAC80211_DEBUG_PER_STA_RX_STATS
+> +#define RX_STATS_HIST_FMT(n) \
+> +	do { \
+> +		if ((i + 1) % n == 0) \
+> +			len += scnprintf(buf + len, size - len, "\n\t\t"); \
+> +	} while (0)
+> +	int retval = 0, len = 0;
+> +	char *buf;
+> +	const int size = 3072;
+> +	struct sta_info *sta = file->private_data;
+> +	struct ieee80211_local *local = sta->local;
+> +	int i;
+> +	char *bw_str[IEEE80211_BW_NUM] = {"20", "40", "80", "160"};
+> +	char *nss_str[IEEE80211_NSS_NUM] = {"1x1", "2x2", "3x3", "4x4"};
+> +	char *gi_str[IEEE80211_GI_NUM] = {"LGI", "SGI"};
+> +	char *legacy_str[IEEE80211_LEGACY_RATE_NUM] = {"1", "2", "5.5",
+> +						       "11", "6", "9",
+> +						       "12", "18", "24",
+> +						       "36", "48", "54"};
+> +	buf = kzalloc(size, GFP_KERNEL);
+> +	if (!buf)
+> +		return -ENOMEM;
+> +
+> +	len += scnprintf(buf + len, size - len, "VHT MCS packets: ");
+> +	for (i = 0; i < IEEE80211_VHT_MCS_NUM; i++) {
+> +		len += scnprintf(buf + len, size - len, "MCS %d: %llu, ",
+> +				 i, sta->rx_vht_pkt[i]);
+> +		RX_STATS_HIST_FMT(5);
+> +	}
+> +
+> +	len += scnprintf(buf + len, size - len, "\nHT MCS packets: ");
+> +	for (i = 0; i < IEEE80211_HT_MCS_NUM; i++) {
+> +		len += scnprintf(buf + len, size - len, "MCS %d: %llu, ",
+> +				 i, sta->rx_ht_pkt[i]);
+> +		RX_STATS_HIST_FMT(5);
+> +	}
+> +
+> +	len += scnprintf(buf + len, size - len, "\n\nBW packets: ");
+> +	for (i = 0; i < IEEE80211_BW_NUM; i++)
+> +		len += scnprintf(buf + len, size - len, "\t%sMhz: %llu",
+> +				 bw_str[i], sta->rx_bw_pkt[i]);
+> +
+> +	len += scnprintf(buf + len, size - len, "\n\nNSS packets: ");
+> +	for (i = 0; i < IEEE80211_NSS_NUM; i++)
+> +		len += scnprintf(buf + len, size - len, "\t%s: %llu",
+> +				 nss_str[i], sta->rx_nss_pkt[i]);
+> +
+> +	len += scnprintf(buf + len, size - len, "\n\nGI packets: ");
+> +	for (i = 0; i < IEEE80211_GI_NUM; i++)
+> +		len += scnprintf(buf + len, size - len, "\t%s: %llu",
+> +				 gi_str[i], sta->rx_gi_pkt[i]);
+> +
+> +	len += scnprintf(buf + len, size - len, "\n\nLegacy rate packets: ");
+> +	for (i = 0; i < IEEE80211_LEGACY_RATE_NUM; i++) {
+> +		len += scnprintf(buf + len, size - len, "\t%sMbps: %llu",
+> +				 legacy_str[i], sta->rx_legacy_pkt[i]);
+> +		RX_STATS_HIST_FMT(4);
+> +	}
+> +
+> +	len += scnprintf(buf + len, size - len, "\nRate table packets:  ");
+> +	for (i = 0; i < IEEE80211_RATE_TABLE_NUM; i++) {
+> +		len += scnprintf(buf + len, size - len, "\t%llu",
+> +				 sta->rx_rate_pkt[i]);
+> +		RX_STATS_HIST_FMT(8);
+> +	}
+> +
+> +	len += scnprintf(buf + len, size - len, "\nVHT MCS bytes: ");
+> +	for (i = 0; i < IEEE80211_VHT_MCS_NUM; i++) {
+> +		len += scnprintf(buf + len, size - len, "MCS %d: %llu, ",
+> +				 i, sta->rx_vht_byte[i]);
+> +		RX_STATS_HIST_FMT(5);
+> +	}
+> +
+> +	len += scnprintf(buf + len, size - len, "\nHT MCS bytes: ");
+> +	for (i = 0; i < IEEE80211_HT_MCS_NUM; i++) {
+> +		len += scnprintf(buf + len, size - len, "MCS %d: %llu, ",
+> +				 i, sta->rx_ht_byte[i]);
+> +		RX_STATS_HIST_FMT(5);
+> +	}
+> +
+> +	len += scnprintf(buf + len, size - len, "\n\nNSS bytes: ");
+> +	for (i = 0; i < IEEE80211_NSS_NUM; i++)
+> +		len += scnprintf(buf + len, size - len, "\t%s: %llu",
+> +				 nss_str[i], sta->rx_nss_byte[i]);
+> +
+> +	len += scnprintf(buf + len, size - len, "\n\nBW bytes: ");
+> +	for (i = 0; i < IEEE80211_BW_NUM; i++)
+> +		len += scnprintf(buf + len, size - len, "\t%sMhz: %llu",
+> +				 bw_str[i], sta->rx_bw_byte[i]);
+> +
+> +	len += scnprintf(buf + len, size - len, "\n\nGI bytes: ");
+> +	for (i = 0; i < IEEE80211_GI_NUM; i++)
+> +		len += scnprintf(buf + len, size - len, "\t%s: %llu",
+> +				 gi_str[i], sta->rx_gi_byte[i]);
+> +
+> +	len += scnprintf(buf + len, size - len, "\n\nLegacy rate bytes: ");
+> +	for (i = 0; i < IEEE80211_LEGACY_RATE_NUM; i++) {
+> +		len += scnprintf(buf + len, size - len, "\t%sMbps: %llu",
+> +				 legacy_str[i], sta->rx_legacy_byte[i]);
+> +		RX_STATS_HIST_FMT(4);
+> +	}
+> +
+> +	len += scnprintf(buf + len, size - len, "\nRate table bytes:  ");
+> +	for (i = 0; i < IEEE80211_RATE_TABLE_NUM; i++) {
+> +		len += scnprintf(buf + len, size - len, "\t%llu",
+> +				 sta->rx_rate_byte[i]);
+> +		RX_STATS_HIST_FMT(8);
+> +	}
+> +
+> +	if (len > size)
+> +		len = size;
+> +	retval = simple_read_from_buffer(userbuf, count, ppos, buf, len);
+> +	kfree(buf);
+> +
+> +#undef RX_STATS_HIST_FMT
+> +	return retval;
+> +#endif
+> +	return -EINVAL;
+> +}
+> +STA_OPS(rx_stats);
+> +
+>  static ssize_t sta_vht_capa_read(struct file *file, char __user *userbuf,
+>  				 size_t count, loff_t *ppos)
+>  {
+> @@ -332,6 +456,106 @@ STA_OPS(vht_capa);
+>  		debugfs_create_u64(#name, 0400, sta->debugfs.dir,	\
+>  			(u64 *) &sta->field);
+>  
+> +#ifdef CONFIG_MAC80211_DEBUG_PER_STA_RX_STATS
+> +static int legacy_rate_to_index(u16 rate)
+> +{
+> +	int legacy_rate[] = {10, 20, 55, 110, 60, 90, 120,
+> +			     180, 240, 360, 480, 540};
+> +	int i;
+> +
+> +	for (i = 0; i < IEEE80211_LEGACY_RATE_NUM - 1; i++)
+> +		if (rate == legacy_rate[i])
+> +			return i;
+> +	return -1;
+> +}
+> +#endif
+> +
+> +void ieee80211_rx_h_sta_stats(struct sta_info *sta, struct sk_buff *skb)
+> +{
+> +#ifdef CONFIG_MAC80211_DEBUG_PER_STA_RX_STATS
+> +	struct ieee80211_rx_status *status = IEEE80211_SKB_RXCB(skb);
+> +	unsigned int pkt_len = skb->len;
+> +	unsigned int bw_idx, gi_idx, mcs_idx = 0, nss_idx = 0, i;
+> +
+> +	/* Not support 5Mhz and 10Mhz currently  */
+> +	if (status->flag & (RX_FLAG_5MHZ | RX_FLAG_10MHZ))
+> +		goto out;
+> +
+> +	if (status->vht_flag & RX_VHT_FLAG_160MHZ)
+> +		bw_idx = 3;
+> +	else if (status->vht_flag & RX_VHT_FLAG_80MHZ)
+> +		bw_idx = 2;
+> +	else if (status->flag & RX_FLAG_40MHZ)
+> +		bw_idx = 1;
+> +	else
+> +		bw_idx = 0;
+> +
+> +	if (status->flag & RX_FLAG_HT) {
+> +		mcs_idx = status->rate_idx;
+> +		nss_idx = (mcs_idx >> 3) - 1;
+> +
+> +		if (status->rate_idx > IEEE80211_HT_MCS_NUM - 1 ||
+> +		    nss_idx > IEEE80211_NSS_NUM - 1)
+> +			goto out;
+> +
+> +		sta->rx_ht_pkt[mcs_idx]++;
+> +		sta->rx_ht_byte[mcs_idx] += pkt_len;
+> +		sta->rx_nss_pkt[nss_idx]++;
+> +		sta->rx_nss_byte[nss_idx] += pkt_len;
+> +		/* To fit into rate table for HT packets */
+> +		mcs_idx = mcs_idx % 8;
+> +	} else if (status->flag & RX_FLAG_VHT) {
+> +		mcs_idx = status->rate_idx;
+> +		nss_idx = status->vht_nss - 1;
+> +
+> +		if (nss_idx > IEEE80211_NSS_NUM - 1 ||
+> +		    mcs_idx > (IEEE80211_VHT_MCS_NUM - 1))
+> +			goto out;
+> +
+> +		sta->rx_vht_pkt[mcs_idx]++;
+> +		sta->rx_vht_byte[mcs_idx] += pkt_len;
+> +		sta->rx_nss_pkt[nss_idx]++;
+> +		sta->rx_nss_byte[nss_idx] += pkt_len;
+> +	}
+> +
+> +	gi_idx = (status->flag & RX_FLAG_SHORT_GI) ? 1 : 0;
+> +	sta->rx_gi_pkt[gi_idx]++;
+> +	sta->rx_gi_byte[gi_idx] += pkt_len;
+> +	sta->rx_bw_pkt[bw_idx]++;
+> +	sta->rx_bw_byte[bw_idx] += pkt_len;
+> +
+> +	if (status->flag & (RX_FLAG_HT | RX_FLAG_VHT)) {
+> +		/* Update Rate table based on http://mcsindex.com/ */
+> +		i = mcs_idx * 8 + 8 * 10 * nss_idx;
+> +		i += bw_idx * 2 + gi_idx;
+> +		sta->rx_rate_pkt[i]++;
+> +		sta->rx_rate_byte[i] += pkt_len;
+> +	} else {
+> +		struct ieee80211_local *local = sta->local;
+> +		struct ieee80211_sub_if_data *sdata = sta->sdata;
+> +		enum ieee80211_band band = ieee80211_get_sdata_band(sdata);
+> +		struct ieee80211_supported_band *sband;
+> +		int shift = ieee80211_vif_get_shift(&sta->sdata->vif);
+> +		u16 brate, legacy_rate;
+> +
+> +		if (status->rate_idx > IEEE80211_LEGACY_RATE_NUM - 1)
+> +			goto out;
+> +
+> +		sband = local->hw.wiphy->bands[band];
+> +		brate = sband->bitrates[status->rate_idx].bitrate;
+> +		legacy_rate = DIV_ROUND_UP(brate, 1 << shift);
+> +		i = legacy_rate_to_index(legacy_rate);
+> +		if (i < 0)
+> +			goto out;
+> +
+> +		sta->rx_legacy_pkt[i]++;
+> +		sta->rx_legacy_byte[i] += pkt_len;
+> +	}
+> +out:
+> +	return;
+> +#endif
+> +}
+> +
+>  void ieee80211_sta_debugfs_add(struct sta_info *sta)
+>  {
+>  	struct ieee80211_local *local = sta->local;
+> @@ -365,6 +589,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+>  	DEBUGFS_ADD(agg_status);
+>  	DEBUGFS_ADD(ht_capa);
+>  	DEBUGFS_ADD(vht_capa);
+> +	DEBUGFS_ADD(rx_stats);
+>  
+>  	DEBUGFS_ADD_COUNTER(rx_duplicates, rx_stats.num_duplicates);
+>  	DEBUGFS_ADD_COUNTER(rx_fragments, rx_stats.fragments);
+> diff --git a/net/mac80211/debugfs_sta.h b/net/mac80211/debugfs_sta.h
+> index 8b60890..c7a3424 100644
+> --- a/net/mac80211/debugfs_sta.h
+> +++ b/net/mac80211/debugfs_sta.h
+> @@ -6,9 +6,14 @@
+>  #ifdef CONFIG_MAC80211_DEBUGFS
+>  void ieee80211_sta_debugfs_add(struct sta_info *sta);
+>  void ieee80211_sta_debugfs_remove(struct sta_info *sta);
+> +void ieee80211_rx_h_sta_stats(struct sta_info *sta, struct sk_buff *skb);
+>  #else
+>  static inline void ieee80211_sta_debugfs_add(struct sta_info *sta) {}
+>  static inline void ieee80211_sta_debugfs_remove(struct sta_info *sta) {}
+> +static inline void ieee80211_rx_h_sta_stats(struct sta_info *sta,
+> +					    struct sk_buff *skb)
+> +{
+> +}
+>  #endif
+>  
+>  #endif /* __MAC80211_DEBUGFS_STA_H */
+> diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+> index bc08185..c5e8559 100644
+> --- a/net/mac80211/rx.c
+> +++ b/net/mac80211/rx.c
+> @@ -31,6 +31,7 @@
+>  #include "tkip.h"
+>  #include "wme.h"
+>  #include "rate.h"
+> +#include "debugfs_sta.h"
+>  
+>  static inline void ieee80211_rx_stats(struct net_device *dev, u32 len)
+>  {
+> @@ -1421,6 +1422,7 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+>  			sta->rx_stats.last_rate_flag = status->flag;
+>  			sta->rx_stats.last_rate_vht_flag = status->vht_flag;
+>  			sta->rx_stats.last_rate_vht_nss = status->vht_nss;
+> +			ieee80211_rx_h_sta_stats(sta, skb);
+>  		}
+>  	}
+>  
+> diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+> index d605162..2c0d806 100644
+> --- a/net/mac80211/sta_info.h
+> +++ b/net/mac80211/sta_info.h
+> @@ -248,6 +248,13 @@ struct sta_ampdu_mlme {
+>  
+>  #define IEEE80211_FAST_XMIT_MAX_IV	18
+>  
+> +#define IEEE80211_HT_MCS_NUM		32
+> +#define IEEE80211_VHT_MCS_NUM		10
+> +#define IEEE80211_BW_NUM		4
+> +#define IEEE80211_NSS_NUM		4
+> +#define IEEE80211_GI_NUM		2
+> +#define IEEE80211_RATE_TABLE_NUM	320
+> +#define IEEE80211_LEGACY_RATE_NUM	12
+>  /**
+>   * struct ieee80211_fast_tx - TX fastpath information
+>   * @key: key to use for hw crypto
+> @@ -495,6 +502,22 @@ struct sta_info {
+>  
+>  	struct cfg80211_chan_def tdls_chandef;
+>  
+> +#ifdef CONFIG_MAC80211_DEBUG_PER_STA_RX_STATS
+> +	u64 rx_legacy_pkt[IEEE80211_LEGACY_RATE_NUM];
+> +	u64 rx_ht_pkt[IEEE80211_HT_MCS_NUM];
+> +	u64 rx_vht_pkt[IEEE80211_VHT_MCS_NUM];
+> +	u64 rx_bw_pkt[IEEE80211_BW_NUM];
+> +	u64 rx_nss_pkt[IEEE80211_NSS_NUM];
+> +	u64 rx_gi_pkt[IEEE80211_GI_NUM];
+> +	u64 rx_rate_pkt[IEEE80211_RATE_TABLE_NUM];
+> +	u64 rx_legacy_byte[IEEE80211_LEGACY_RATE_NUM];
+> +	u64 rx_ht_byte[IEEE80211_HT_MCS_NUM];
+> +	u64 rx_vht_byte[IEEE80211_VHT_MCS_NUM];
+> +	u64 rx_bw_byte[IEEE80211_BW_NUM];
+> +	u64 rx_nss_byte[IEEE80211_NSS_NUM];
+> +	u64 rx_gi_byte[IEEE80211_GI_NUM];
+> +	u64 rx_rate_byte[IEEE80211_RATE_TABLE_NUM];
+> +#endif
+>  	/* keep last! */
+>  	struct ieee80211_sta sta;
+>  };
+> -- 
+> 1.7.9.5
+> 
 
-Correct.
+--SLDf9lqlvOQaIe6s
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename=rx_stats
 
-> It's on my patchwork queue and I'm planning to apply it to
-> wireless-drivers-next once it opens again.
+VHT MCS packets: MCS 0: 0, MCS 1: 0, MCS 2: 0, MCS 3: 0, MCS 4: 0, 
+		MCS 5: 0, MCS 6: 0, MCS 7: 0, MCS 8: 0, MCS 9: 0, 
+		
 
-Ok, sounds good.
+HT MCS packets: MCS 0: 0, MCS 1: 0, MCS 2: 0, MCS 3: 0, MCS 4: 0, 
+		MCS 5: 0, MCS 6: 0, MCS 7: 0, MCS 8: 0, MCS 9: 0, 
+		MCS 10: 0, MCS 11: 0, MCS 12: 8, MCS 13: 12, MCS 14: 33, 
+		MCS 15: 138005, MCS 16: 0, MCS 17: 0, MCS 18: 0, MCS 19: 728, 
+		MCS 20: 191, MCS 21: 1218, MCS 22: 0, MCS 23: 0, MCS 24: 0, 
+		MCS 25: 0, MCS 26: 0, MCS 27: 0, MCS 28: 0, MCS 29: 0, 
+		MCS 30: 0, MCS 31: 0, 
 
-	Arnd
+BW packets: 	20Mhz: 1157	40Mhz: 139038	80Mhz: 0	160Mhz: 0
+
+NSS packets: 	1x1: 138058	2x2: 2137	3x3: 0	4x4: 0
+
+GI packets: 	LGI: 2196	SGI: 137999
+
+Legacy rate packets: 	1Mbps: 0	2Mbps: 0	5Mbps: 0	11Mbps: 0
+			6Mbps: 0	9Mbps: 0	12Mbps: 0	18Mbps: 0
+			24Mbps: 0	36Mbps: 0	48Mbps: 0	54Mbps: 0
+		
+
+Rate table packets:  	0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			8	0	0	0	0	0	0	0
+			4	0	8	0	0	0	0	0
+			5	0	28	0	0	0	0	0
+			0	431	6	137568	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			704	0	24	0	0	0	0	0
+			5	0	186	0	0	0	0	0
+			0	0	1218	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+		
+
+VHT MCS bytes: MCS 0: 0, MCS 1: 0, MCS 2: 0, MCS 3: 0, MCS 4: 0, 
+		MCS 5: 0, MCS 6: 0, MCS 7: 0, MCS 8: 0, MCS 9: 0, 
+		
+
+HT MCS bytes: MCS 0: 0, MCS 1: 0, MCS 2: 0, MCS 3: 0, MCS 4: 0, 
+		MCS 5: 0, MCS 6: 0, MCS 7: 0, MCS 8: 0, MCS 9: 0, 
+		MCS 10: 0, MCS 11: 0, MCS 12: 836, MCS 13: 1392, MCS 14: 3894, 
+		MCS 15: 15984118, MCS 16: 0, MCS 17: 0, MCS 18: 0, MCS 19: 84279, 
+		MCS 20: 21834, MCS 21: 94708, MCS 22: 0, MCS 23: 0, MCS 24: 0, 
+		MCS 25: 0, MCS 26: 0, MCS 27: 0, MCS 28: 0, MCS 29: 0, 
+		MCS 30: 0, MCS 31: 0, 
+
+NSS bytes: 	1x1: 15990240	2x2: 200821	3x3: 0	4x4: 0
+
+BW bytes: 	20Mhz: 133490	40Mhz: 16057571	80Mhz: 0	160Mhz: 0
+
+GI bytes: 	LGI: 207599	SGI: 15983462
+
+Legacy rate bytes: 	1Mbps: 0	2Mbps: 0	5Mbps: 0	11Mbps: 0
+			6Mbps: 0	9Mbps: 0	12Mbps: 0	18Mbps: 0
+			24Mbps: 0	36Mbps: 0	48Mbps: 0	54Mbps: 0
+		
+
+Rate table bytes:  	0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			836	0	0	0	0	0	0	0
+			472	0	920	0	0	0	0	0
+			590	0	3304	0	0	0	0	0
+			0	49718	656	15933744	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			81556	0	2723	0	0	0	0	0
+			318	0	21516	0	0	0	0	0
+			0	0	94708	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	0	0	0	0
+			0	0	0	0	
+--SLDf9lqlvOQaIe6s--
