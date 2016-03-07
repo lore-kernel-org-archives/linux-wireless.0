@@ -1,89 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f178.google.com ([209.85.192.178]:36190 "EHLO
-	mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361AbcCRCYP (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48426 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751771AbcCGCin (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 22:24:15 -0400
-Received: by mail-pf0-f178.google.com with SMTP id u190so146135248pfb.3
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 19:24:14 -0700 (PDT)
-From: Julian Calaby <julian.calaby@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Markus Elfring <elfring@users.sourceforge.net>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	Jia-Ju Bai <baijiaju1990@163.com>,
-	Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org
-Subject: [PATCH 09/19] iwl4965: Fix a null pointer dereference in il_tx_queue_free and il_cmd_queue_free
-Date: Fri, 18 Mar 2016 13:24:06 +1100
-Message-Id: <81035f8a7a40653b5ec61e1e6dcb02d1a0db92a6.1458262312.git.julian.calaby@gmail.com> (sfid-20160318_032417_894417_B9C7735A)
-In-Reply-To: <cover.1458262312.git.julian.calaby@gmail.com>
-References: <cover.1458262312.git.julian.calaby@gmail.com>
+	Sun, 6 Mar 2016 21:38:43 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v4 0/8] ath9k GPIO & BT-Coex bug fixes
+Date: Mon,  7 Mar 2016 10:38:13 +0800
+Message-Id: <1457318301-27701-1-git-send-email-miaoqing@codeaurora.org> (sfid-20160307_033858_144106_F119CAAC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jia-Ju Bai <baijiaju1990@163.com>
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-If "txq->cmd = kzalloc(...)" in il_tx_queue_init fails,
-"kfree(txq->cmd[i])" in il_tx_queue_free and il_cmd_queue_free
-in iwl4965_hw_txq_ctx_free will causes a null pointer dereference,
-because txq->cmd is NULL at that time.
+ath9k GPIO & BT-Coex bug fixes.
 
-This patch fixes this problem by adding a if-check before kfree.
-To avoid double free in il_tx_queue_free and il_cmd_queue_free
-caused by the fixing, txq->meta and txq->cmd in error handling code
-of il_tx_queue_init are assigned null values.
-Otherwise, a double free will occur.
+Notes:
+    v2: fix build warning
+    v3: move changelog to cover letter
+    v4: fix [5/8] comments
 
-This patch has been tested in real device, and it actually fixes the bug.
-Thanks Stanislaw for his suggestion.
+Miaoqing Pan (8):
+  ath9k: define correct GPIO numbers and bits mask
+  ath9k: make GPIO API to support both of WMAC and SOC
+  ath9k: free GPIO resource for SOC GPIOs
+  ath9k: cleanup led_pin initial
+  ath9k: Allow platform override BTCoex pin
+  ath9k: add bits definition of BTCoex MODE2/3 for SOC chips
+  ath9k: fix BTCoex access invalid registers for SOC chips
+  ath9k: fix BTCoex configuration for SOC chips
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
-Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
----
- drivers/net/wireless/intel/iwlegacy/common.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   4 +-
+ drivers/net/wireless/ath/ath9k/ar9003_mci.c    |  39 ++--
+ drivers/net/wireless/ath/ath9k/ath9k.h         |   4 -
+ drivers/net/wireless/ath/ath9k/btcoex.c        | 138 +++++++++----
+ drivers/net/wireless/ath/ath9k/btcoex.h        |   2 +
+ drivers/net/wireless/ath/ath9k/gpio.c          |  69 ++++---
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c  |   8 +-
+ drivers/net/wireless/ath/ath9k/hw.c            | 267 ++++++++++++++++---------
+ drivers/net/wireless/ath/ath9k/hw.h            |  11 +-
+ drivers/net/wireless/ath/ath9k/init.c          |   1 -
+ drivers/net/wireless/ath/ath9k/main.c          |   9 +-
+ drivers/net/wireless/ath/ath9k/reg.h           |  90 +++++++--
+ include/linux/ath9k_platform.h                 |   4 +
+ 13 files changed, 436 insertions(+), 210 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlegacy/common.c b/drivers/net/wireless/intel/iwlegacy/common.c
-index c3afaf7..2cc3d42 100644
---- a/drivers/net/wireless/intel/iwlegacy/common.c
-+++ b/drivers/net/wireless/intel/iwlegacy/common.c
-@@ -2792,8 +2792,10 @@ il_tx_queue_free(struct il_priv *il, int txq_id)
- 	il_tx_queue_unmap(il, txq_id);
- 
- 	/* De-alloc array of command/tx buffers */
--	for (i = 0; i < TFD_TX_CMD_SLOTS; i++)
--		kfree(txq->cmd[i]);
-+	if (txq->cmd) {
-+		for (i = 0; i < TFD_TX_CMD_SLOTS; i++)
-+			kfree(txq->cmd[i]);
-+	}
- 
- 	/* De-alloc circular buffer of TFDs */
- 	if (txq->q.n_bd)
-@@ -2871,8 +2873,10 @@ il_cmd_queue_free(struct il_priv *il)
- 	il_cmd_queue_unmap(il);
- 
- 	/* De-alloc array of command/tx buffers */
--	for (i = 0; i <= TFD_CMD_SLOTS; i++)
--		kfree(txq->cmd[i]);
-+	if (txq->cmd) {
-+		for (i = 0; i <= TFD_CMD_SLOTS; i++)
-+			kfree(txq->cmd[i]);
-+	}
- 
- 	/* De-alloc circular buffer of TFDs */
- 	if (txq->q.n_bd)
-@@ -3078,7 +3082,9 @@ err:
- 		kfree(txq->cmd[i]);
- out_free_arrays:
- 	kfree(txq->meta);
-+	txq->meta = NULL;
- 	kfree(txq->cmd);
-+	txq->cmd = NULL;
- 
- 	return -ENOMEM;
- }
 -- 
-2.7.0
+1.9.1
 
