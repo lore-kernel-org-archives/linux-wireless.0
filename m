@@ -1,157 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:62255 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933653AbcCIRqb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 12:46:31 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Gregory Greenman <gregory.greenman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 18/21] iwlwifi: pcie: avoid restocks inside rx loop if not emergency
-Date: Wed,  9 Mar 2016 19:45:47 +0200
-Message-Id: <1457545550-30677-18-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160309_185951_389596_8FDC1E35)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48524 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752155AbcCGCjI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 6 Mar 2016 21:39:08 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v4 4/8] ath9k: cleanup led_pin initial
+Date: Mon,  7 Mar 2016 10:38:17 +0800
+Message-Id: <1457318301-27701-5-git-send-email-miaoqing@codeaurora.org> (sfid-20160307_033925_066942_D8F3AAFC)
+In-Reply-To: <1457318301-27701-1-git-send-email-miaoqing@codeaurora.org>
+References: <1457318301-27701-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Gregory Greenman <gregory.greenman@intel.com>
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-When trying to reach high Rx throughput of more than 500Mbps on
-a device with a relatively weak CPU (Atom x5-Z8500), CPU utilization
-may become a bottleneck. Analysis showed that we are looping in
-iwl_pcie_rx_handle for very long periods which led to starvation
-of other threads (iwl_pcie_rx_handle runs with _bh disabled).
-We were handling Rx and allocating new buffers and the new buffers
-were ready quickly enough to be available before we had finished
-handling all the buffers available in the hardware. As a
-consequence, we called iwl_pcie_rxq_restock to refill the hardware
-with the new buffers, and start again handling new buffers without
-exiting the function. Since we read the hardware pointer again when
-we goto restart, new buffers were handled immediately instead of
-exiting the function.
+Make ath_init_leds() and ath_deinit_leds() pairs as the only
+API to set leds, also removed direction configuration from
+ath9k_start() and ath9k_stop(). So the initial is more clear
+now.
 
-This patch avoids refilling RBs inside rx handling loop, unless an
-emergency situation is reached. It also doesn't read the hardware
-pointer again unless we are in an emergency (unlikely) case.
-This significantly reduce the maximal time we spend in
-iwl_pcie_rx_handle with _bh disabled.
-
-Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 59 ++++++++++++++++------------
- 1 file changed, 33 insertions(+), 26 deletions(-)
+ drivers/net/wireless/ath/ath9k/ath9k.h |  4 ---
+ drivers/net/wireless/ath/ath9k/gpio.c  | 62 ++++++++++++++++------------------
+ drivers/net/wireless/ath/ath9k/init.c  |  1 -
+ drivers/net/wireless/ath/ath9k/main.c  |  9 ++---
+ drivers/net/wireless/ath/ath9k/reg.h   |  2 --
+ 5 files changed, 31 insertions(+), 47 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 98524a0..4be3c35 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -231,6 +231,9 @@ static void iwl_pcie_rxq_check_wrptr(struct iwl_trans *trans)
- 	}
- }
- 
-+/*
-+ * iwl_pcie_rxq_mq_restock - restock implementation for multi-queue rx
-+ */
- static void iwl_pcie_rxq_mq_restock(struct iwl_trans *trans,
- 				    struct iwl_rxq *rxq)
+diff --git a/drivers/net/wireless/ath/ath9k/ath9k.h b/drivers/net/wireless/ath/ath9k/ath9k.h
+index 5294595..93b3793 100644
+--- a/drivers/net/wireless/ath/ath9k/ath9k.h
++++ b/drivers/net/wireless/ath/ath9k/ath9k.h
+@@ -813,7 +813,6 @@ static inline int ath9k_dump_btcoex(struct ath_softc *sc, u8 *buf, u32 size)
+ #ifdef CONFIG_MAC80211_LEDS
+ void ath_init_leds(struct ath_softc *sc);
+ void ath_deinit_leds(struct ath_softc *sc);
+-void ath_fill_led_pin(struct ath_softc *sc);
+ #else
+ static inline void ath_init_leds(struct ath_softc *sc)
  {
-@@ -277,17 +280,10 @@ static void iwl_pcie_rxq_mq_restock(struct iwl_trans *trans,
- }
- 
- /*
-- * iwl_pcie_rxq_restock - refill RX queue from pre-allocated pool
-- *
-- * If there are slots in the RX queue that need to be restocked,
-- * and we have free pre-allocated buffers, fill the ranks as much
-- * as we can, pulling from rx_free.
-- *
-- * This moves the 'write' index forward to catch up with 'processed', and
-- * also updates the memory address in the firmware to reference the new
-- * target buffer.
-+ * iwl_pcie_rxq_sq_restock - restock implementation for single queue rx
-  */
--static void iwl_pcie_rxq_restock(struct iwl_trans *trans, struct iwl_rxq *rxq)
-+static void iwl_pcie_rxq_sq_restock(struct iwl_trans *trans,
-+				    struct iwl_rxq *rxq)
+@@ -822,9 +821,6 @@ static inline void ath_init_leds(struct ath_softc *sc)
+ static inline void ath_deinit_leds(struct ath_softc *sc)
  {
- 	struct iwl_rx_mem_buffer *rxb;
- 
-@@ -332,6 +328,26 @@ static void iwl_pcie_rxq_restock(struct iwl_trans *trans, struct iwl_rxq *rxq)
  }
+-static inline void ath_fill_led_pin(struct ath_softc *sc)
+-{
+-}
+ #endif
  
- /*
-+ * iwl_pcie_rxq_restock - refill RX queue from pre-allocated pool
-+ *
-+ * If there are slots in the RX queue that need to be restocked,
-+ * and we have free pre-allocated buffers, fill the ranks as much
-+ * as we can, pulling from rx_free.
-+ *
-+ * This moves the 'write' index forward to catch up with 'processed', and
-+ * also updates the memory address in the firmware to reference the new
-+ * target buffer.
-+ */
-+static
-+void iwl_pcie_rxq_restock(struct iwl_trans *trans, struct iwl_rxq *rxq)
+ /************************/
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index 4964bb3..490f74d 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -21,6 +21,33 @@
+ /********************************/
+ 
+ #ifdef CONFIG_MAC80211_LEDS
++
++void ath_fill_led_pin(struct ath_softc *sc)
 +{
-+	if (trans->cfg->mq_rx_supported)
-+		iwl_pcie_rxq_mq_restock(trans, rxq);
-+	else
-+		iwl_pcie_rxq_sq_restock(trans, rxq);
++	struct ath_hw *ah = sc->sc_ah;
++
++	/* Set default led pin if invalid */
++	if (ah->led_pin < 0) {
++		if (AR_SREV_9287(ah))
++			ah->led_pin = ATH_LED_PIN_9287;
++		else if (AR_SREV_9485(ah))
++			ah->led_pin = ATH_LED_PIN_9485;
++		else if (AR_SREV_9300(ah))
++			ah->led_pin = ATH_LED_PIN_9300;
++		else if (AR_SREV_9462(ah) || AR_SREV_9565(ah))
++			ah->led_pin = ATH_LED_PIN_9462;
++		else
++			ah->led_pin = ATH_LED_PIN_DEF;
++	}
++
++	/* Configure gpio for output */
++	ath9k_hw_gpio_request_out(ah, ah->led_pin, "ath9k-led",
++				  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
++
++	/* LED off, active low */
++	ath9k_hw_set_gpio(ah, ah->led_pin, ah->config.led_active_high ? 0 : 1);
 +}
 +
-+/*
-  * iwl_pcie_rx_alloc_page - allocates and returns a page.
-  *
-  */
-@@ -907,7 +923,7 @@ int iwl_pcie_rx_init(struct iwl_trans *trans)
- 	if (trans->cfg->mq_rx_supported) {
- 		iwl_pcie_rx_mq_hw_init(trans);
- 	} else {
--		iwl_pcie_rxq_restock(trans, def_rxq);
-+		iwl_pcie_rxq_sq_restock(trans, def_rxq);
- 		iwl_pcie_rx_hw_init(trans, def_rxq);
- 	}
+ static void ath_led_brightness(struct led_classdev *led_cdev,
+ 			       enum led_brightness brightness)
+ {
+@@ -51,6 +78,8 @@ void ath_init_leds(struct ath_softc *sc)
+ 	if (AR_SREV_9100(sc->sc_ah))
+ 		return;
  
-@@ -1222,24 +1238,13 @@ restart:
- 				count = 0;
- 				if (rxq->used_count < rxq->queue_size / 3)
- 					emergency = false;
++	ath_fill_led_pin(sc);
 +
-+				rxq->read = i;
- 				spin_unlock(&rxq->lock);
- 				iwl_pcie_rxq_alloc_rbs(trans, GFP_ATOMIC, rxq);
--				spin_lock(&rxq->lock);
--			}
--		}
--		/* handle restock for three cases, can be all of them at once:
--		* - we just pulled buffers from the allocator
--		* - we have 8+ unstolen pages accumulated
--		* - we are in emergency and allocated buffers
--		 */
--		if (rxq->free_count >=  RX_CLAIM_REQ_ALLOC) {
--			rxq->read = i;
--			spin_unlock(&rxq->lock);
--			if (trans->cfg->mq_rx_supported)
--				iwl_pcie_rxq_mq_restock(trans, rxq);
--			else
- 				iwl_pcie_rxq_restock(trans, rxq);
--			goto restart;
-+				goto restart;
-+			}
- 		}
- 	}
- out:
-@@ -1264,6 +1269,8 @@ out:
+ 	if (!ath9k_led_blink)
+ 		sc->led_cdev.default_trigger =
+ 			ieee80211_get_radio_led_name(sc->hw);
+@@ -66,39 +95,6 @@ void ath_init_leds(struct ath_softc *sc)
  
- 	if (rxq->napi.poll)
- 		napi_gro_flush(&rxq->napi, false);
-+
-+	iwl_pcie_rxq_restock(trans, rxq);
+ 	sc->led_registered = true;
  }
+-
+-void ath_fill_led_pin(struct ath_softc *sc)
+-{
+-	struct ath_hw *ah = sc->sc_ah;
+-
+-	if (AR_SREV_9100(ah))
+-		return;
+-
+-	if (ah->led_pin >= 0) {
+-		if (!((1 << ah->led_pin) & AR_GPIO_OE_OUT_MASK))
+-			ath9k_hw_gpio_request_out(ah, ah->led_pin, "ath9k-led",
+-						  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+-		return;
+-	}
+-
+-	if (AR_SREV_9287(ah))
+-		ah->led_pin = ATH_LED_PIN_9287;
+-	else if (AR_SREV_9485(sc->sc_ah))
+-		ah->led_pin = ATH_LED_PIN_9485;
+-	else if (AR_SREV_9300(sc->sc_ah))
+-		ah->led_pin = ATH_LED_PIN_9300;
+-	else if (AR_SREV_9462(sc->sc_ah) || AR_SREV_9565(sc->sc_ah))
+-		ah->led_pin = ATH_LED_PIN_9462;
+-	else
+-		ah->led_pin = ATH_LED_PIN_DEF;
+-
+-	/* Configure gpio 1 for output */
+-	ath9k_hw_gpio_request_out(ah, ah->led_pin, "ath9k-led",
+-				  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+-
+-	/* LED off, active low */
+-	ath9k_hw_set_gpio(ah, ah->led_pin, (ah->config.led_active_high) ? 0 : 1);
+-}
+ #endif
  
- static struct iwl_trans_pcie *iwl_pcie_get_trans_pcie(struct msix_entry *entry)
+ /*******************/
+diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+index 2e2b92b..95c12fd 100644
+--- a/drivers/net/wireless/ath/ath9k/init.c
++++ b/drivers/net/wireless/ath/ath9k/init.c
+@@ -660,7 +660,6 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
+ 
+ 	ath9k_cmn_init_crypto(sc->sc_ah);
+ 	ath9k_init_misc(sc);
+-	ath_fill_led_pin(sc);
+ 	ath_chanctx_init(sc);
+ 	ath9k_offchannel_init(sc);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
+index 95d0a53..f469a7c 100644
+--- a/drivers/net/wireless/ath/ath9k/main.c
++++ b/drivers/net/wireless/ath/ath9k/main.c
+@@ -718,12 +718,9 @@ static int ath9k_start(struct ieee80211_hw *hw)
+ 	if (!ath_complete_reset(sc, false))
+ 		ah->reset_power_on = false;
+ 
+-	if (ah->led_pin >= 0) {
++	if (ah->led_pin >= 0)
+ 		ath9k_hw_set_gpio(ah, ah->led_pin,
+ 				  (ah->config.led_active_high) ? 1 : 0);
+-		ath9k_hw_gpio_request_out(ah, ah->led_pin, NULL,
+-					  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+-	}
+ 
+ 	/*
+ 	 * Reset key cache to sane defaults (all entries cleared) instead of
+@@ -867,11 +864,9 @@ static void ath9k_stop(struct ieee80211_hw *hw)
+ 
+ 	spin_lock_bh(&sc->sc_pcu_lock);
+ 
+-	if (ah->led_pin >= 0) {
++	if (ah->led_pin >= 0)
+ 		ath9k_hw_set_gpio(ah, ah->led_pin,
+ 				  (ah->config.led_active_high) ? 0 : 1);
+-		ath9k_hw_gpio_request_in(ah, ah->led_pin, NULL);
+-	}
+ 
+ 	ath_prepare_reset(sc);
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index 8903f70..f82a4ad 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1166,8 +1166,6 @@ enum {
+ 
+ #define AR_GPIO_OE_OUT                           (AR_SREV_9340(ah) ? 0x4030 : \
+ 						  (AR_SREV_9300_20_OR_LATER(ah) ? 0x4050 : 0x404c))
+-#define AR_GPIO_OE_OUT_MASK			 (AR_SREV_9550_OR_LATER(ah) ? \
+-						  0x0000000F : 0xFFFFFFFF)
+ #define AR_GPIO_OE_OUT_DRV                       0x3
+ #define AR_GPIO_OE_OUT_DRV_NO                    0x0
+ #define AR_GPIO_OE_OUT_DRV_LOW                   0x1
 -- 
-2.5.0
+1.9.1
 
