@@ -1,59 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:50846 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753928AbcCRLCD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 07:02:03 -0400
-Date: Fri, 18 Mar 2016 14:01:34 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Markus Elfring <elfring@users.sourceforge.net>,
-	Nicolas Pitre <nico@linaro.org>,
-	Jia-Ju Bai <baijiaju1990@163.com>,
-	Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH CONTROVERSIAL 19/19] iwlegacy: Rename label in
- il_eeprom_init()
-Message-ID: <20160318110134.GR5273@mwanda> (sfid-20160318_120208_729495_C3DC674B)
-References: <cover.1458262312.git.julian.calaby@gmail.com>
- <90fe6325e407d35a18fa8c8cb7eaa269968d6426.1458262312.git.julian.calaby@gmail.com>
+Received: from caladan.dune.hu ([78.24.191.180]:60630 "EHLO arrakis.dune.hu"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753339AbcCGVWl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Mar 2016 16:22:41 -0500
+Subject: Re: About adding support for MT76x2U to Linux kernel
+To: Johannes Stezenbach <js@sig21.net>
+References: <20150814081526.GC20192@hackpad.Elisa>
+ <20150814143229.61440072@north> <20160302073210.GA31353@lakka.kapsi.fi>
+ <20160307111443.GA7205@sig21.net> <56DD6B4F.2050405@openwrt.org>
+ <20160307124103.GA22175@sig21.net>
+Cc: =?UTF-8?Q?Tuomas_R=c3=a4s=c3=a4nen?= <tuomasjjrasanen@tjjr.fi>,
+	=?UTF-8?Q?Jakub_Kici=c5=84ski?= <moorray3@wp.pl>,
+	linux-wireless@vger.kernel.org, tuomasjjrasanen@opinsys.fi,
+	Linus Walleij <linus.walleij@linaro.org>
+From: Felix Fietkau <nbd@openwrt.org>
+Message-ID: <56DDF11E.3060102@openwrt.org> (sfid-20160307_222245_202524_03185DD8)
+Date: Mon, 7 Mar 2016 22:22:38 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <90fe6325e407d35a18fa8c8cb7eaa269968d6426.1458262312.git.julian.calaby@gmail.com>
+In-Reply-To: <20160307124103.GA22175@sig21.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 18, 2016 at 01:29:39PM +1100, Julian Calaby wrote:
-> From: Markus Elfring <elfring@users.sourceforge.net>
+On 2016-03-07 13:41, Johannes Stezenbach wrote:
+> On Mon, Mar 07, 2016 at 12:51:43PM +0100, Felix Fietkau wrote:
+>> On 2016-03-07 12:14, Johannes Stezenbach wrote:
+>> > FWIW, the mt7610u vendor driver
+>> > doesn't support AP mode, while the mt7612u vendor driver does,
+>> > but I didn't understand how their timing of sending buffered
+>> > frames works.
+>> Where can I find the most recent version of that vendor driver?
+>> I can take a quick look at it.
 > 
-> Rename a jump label according to the current Linux coding style convention.
-> 
-> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-> [Rewrote commit title]
-> Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
-> 
-> ---
-> 
-> This was controversial when introduced, however the change is obvious and
-> harmless and is, in the worst case, just churn.
-> 
-> I'm only including this as it meets my criteria for sheparding pending
-> patches: it's sane, obviously correct or reviewable by me, and doesn't
-> require any work to apply.
-> 
-> This does meet those requirements, however given how controviersial it was
-> when introduced, I'm not expecting people to be enthusiastic about
-> applying it.
-> 
-> Thanks,
+> http://www.mediatek.com/en/downloads1/downloads/
+> or more specifically
+> http://www.mediatek.com/en/downloads1/downloads/mt7612u/
+I checked, they simply use a software timer for it and stuff buffered
+multicast packets into the BE queue. I don't think the hardware offers
+any better way of doing this...
 
-It's a bad idea to mark this sort of patch as controversial.  It's
-bikeshed stuff.  Either apply it or don't but don't lets spend any more
-time thinking about it.
-
-Actual controversial patches have a long term impact.
-
-regards,
-dan carpenter
-
+- Felix
