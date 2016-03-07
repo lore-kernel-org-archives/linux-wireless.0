@@ -1,58 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:34073 "EHLO
-	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751643AbcC1E4S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2016 00:56:18 -0400
-Received: by mail-pf0-f194.google.com with SMTP id n5so19126568pfn.1
-        for <linux-wireless@vger.kernel.org>; Sun, 27 Mar 2016 21:56:18 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 4/5] staging: wilc1000: remove unused struct semaphore SemHandleUpdateStats
-Date: Mon, 28 Mar 2016 13:55:59 +0900
-Message-Id: <1459140960-10645-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20160328_065621_537241_8CCC10E0)
-In-Reply-To: <1459140960-10645-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1459140960-10645-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:55166 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753184AbcCGJzN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Mar 2016 04:55:13 -0500
+Date: Mon, 7 Mar 2016 10:53:00 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Anthony Wong <anthony.wong@ubuntu.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Subject: Re: [PATCH] rt2x00: add new rt2800usb device Buffalo WLI-UC-G450
+Message-ID: <20160307095259.GC23699@redhat.com> (sfid-20160307_105552_301147_9DB816E3)
+References: <1456240162-24118-1-git-send-email-anthony.wong@ubuntu.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1456240162-24118-1-git-send-email-anthony.wong@ubuntu.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-struct semaphore SemHandleUpdateStats is defined but never used in this
-driver, so just remove it.
-
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 1 -
- drivers/staging/wilc1000/wilc_wfi_netdevice.h     | 1 -
- 2 files changed, 2 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-index 5785dda..f6aec47 100644
---- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-+++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
-@@ -2262,7 +2262,6 @@ struct wireless_dev *wilc_create_wiphy(struct net_device *net, struct device *de
- 	}
- 
- 	priv = wdev_priv(wdev);
--	sema_init(&(priv->SemHandleUpdateStats), 1);
- 	priv->wdev = wdev;
- 	wdev->wiphy->max_scan_ssids = MAX_NUM_PROBED_SSID;
- #ifdef CONFIG_PM
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index debb139..94a41b4 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -130,7 +130,6 @@ struct wilc_priv {
- 	struct wilc_wfi_key *wilc_ptk[MAX_NUM_STA];
- 	u8 wilc_groupkey;
- 	/* semaphores */
--	struct semaphore SemHandleUpdateStats;
- 	struct semaphore hSemScanReq;
- 	/*  */
- 	bool gbAutoRateAdjusted;
--- 
-2.7.4
+On Tue, Feb 23, 2016 at 11:09:22PM +0800, Anthony Wong wrote:
+> Add USB ID 0411:01fd for Buffalo WLI-UC-G450 wireless adapter,
+> RT chipset 3593
+> 
+> Signed-off-by: Anthony Wong <anthony.wong@ubuntu.com>
+> Cc: stable@vger.kernel.org
+Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
 
