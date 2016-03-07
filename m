@@ -1,32 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51588 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751433AbcCHNcs (ORCPT
+Received: from mail-yk0-f171.google.com ([209.85.160.171]:34126 "EHLO
+	mail-yk0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932236AbcCGTqm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2016 08:32:48 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, <wnhuang@google.com>
-Subject: Re: [PATCH v2] mwifiex: Empty Tx queue during suspend
-References: <1457436317-15477-1-git-send-email-akarwar@marvell.com>
-Date: Tue, 08 Mar 2016 15:32:43 +0200
-In-Reply-To: <1457436317-15477-1-git-send-email-akarwar@marvell.com>
-	(Amitkumar Karwar's message of "Tue, 8 Mar 2016 03:25:17 -0800")
-Message-ID: <87a8m9ksck.fsf@purkki.adurom.net> (sfid-20160308_143251_484536_BF9ECC5E)
+	Mon, 7 Mar 2016 14:46:42 -0500
+Received: by mail-yk0-f171.google.com with SMTP id x17so18124449ykd.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Mar 2016 11:46:41 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87a8matpqj.fsf@kamboji.qca.qualcomm.com>
+References: <1456947439-28968-1-git-send-email-arend@broadcom.com>
+	<1456947439-28968-2-git-send-email-arend@broadcom.com>
+	<87a8matpqj.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 7 Mar 2016 20:46:35 +0100
+Message-ID: <CAF7Mx6rxKtnt7hv1pm3M6Cy-p0mPRMKVb+-Qh3m1R94=baB6Cg@mail.gmail.com> (sfid-20160307_204834_374569_95A2E96B)
+Subject: Re: [PATCH V11 2/2] brcmfmac: add support for nl80211 BSS_SELECT feature
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> writes:
-
-> In cfg80211 suspend handler, stop the netif queue and
-> wait until all the Tx queues become empty. Start the
-> queues in resume handler.
+On Mon, Mar 7, 2016 at 1:52 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Arend van Spriel <arend@broadcom.com> writes:
 >
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+>> Announce support for nl80211 feature BSS_SELECT and process
+>> BSS selection behaviour provided in .connect() callback.
+>>
+>> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
+>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+>> Reviewed-by: Lei Zhang <leizh@broadcom.com>
+>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+>
+> Depends on:
+>
+> 0a87cadbb54e nl80211: add feature for BSS selection support
+>
+> Is in mac80211-next currently.
 
-The changelog is missing, please always provide one.
+Yes.
 
--- 
-Kalle Valo
+$ git log --oneline mac80211-next/master -1 -- include/uapi/linux/nl80211.h
+0a87cad nl80211: add feature for BSS selection support
+
+Regards,
+Arend
+
+> --
+> Kalle Valo
