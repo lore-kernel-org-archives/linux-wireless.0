@@ -1,42 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:12509 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750710AbcCIFKR (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:27474 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751146AbcCGMGA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 00:10:17 -0500
-From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] mac80211: Allow probe response frame rx to user space in
- AP mode
-Date: Wed, 9 Mar 2016 05:10:06 +0000
-Message-ID: <56DFB02A.5070207@qti.qualcomm.com> (sfid-20160309_061023_626685_B3B27F12)
-References: <1457334731-6456-1-git-send-email-vthiagar@qti.qualcomm.com>
- <1457456123.24270.11.camel@sipsolutions.net>
-In-Reply-To: <1457456123.24270.11.camel@sipsolutions.net>
-Content-Type: text/plain; charset="utf-8"
+	Mon, 7 Mar 2016 07:06:00 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: qca_merez <qca_merez@qca.qualcomm.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	wil6210 <wil6210@qca.qualcomm.com>
+Subject: Re: [PATCH v2 00/15] wil6210 patches
+Date: Mon, 7 Mar 2016 12:05:54 +0000
+Message-ID: <87twkitrvu.fsf@kamboji.qca.qualcomm.com> (sfid-20160307_130605_099491_B0D32F06)
+References: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
+In-Reply-To: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
+	(Maya Erez's message of "Tue, 1 Mar 2016 19:18:03 +0200")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlc2RheSAwOCBNYXJjaCAyMDE2IDEwOjI1IFBNLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
-PiBPbiBNb24sIDIwMTYtMDMtMDcgYXQgMTI6NDIgKzA1MzAsIFZhc2FudGhha3VtYXIgVGhpYWdh
-cmFqYW4gd3JvdGU6DQo+PiBFc3BlY2lhbGx5IGR1cmluZyBvZmYtY2hhbm5lbCBzY2FuIHVzZXIg
-c3BhY2UgbWlnaHQgYmUgaW50ZXJlc3RlZA0KPj4gaW4gcHJvYmUgcmVwb25zZSBmcmFtZXMgYWxv
-bmcgd2l0aCBiZWFjb24gdG8gYnVpbGQgYSBsaXN0DQo+PiBvZiBwcmVmZXJyZWQgY2hhbm5lbCBh
-bmQgYnNzaWQgd2hpY2ggY291bGQgYmUgc2VudCB0byB0aGUgc3RhdGlvbnMNCj4+IGFyb3VuZCBm
-b3IgYmV0dGVyIHNwZWN0cnVtIG1hbmFnZW1lbnQuIERvIG5vdCBkcm9wIHByb2JlIHJlc3BvbnNl
-DQo+PiBmcmFtZSBpbiBBUCBtb2RlIGFuZCBhZHZlcnRpc2UgZHJpdmVyJ3MgY2FwYWJpbGl0eSB0
-byByZWNlaXZlIHByb2JlDQo+PiByZXNwb25zZSBmcmFtZSBpbiBBUCBtb2RlIHRvIHVzZXIgc3Bh
-Y2UuDQo+DQo+IEknbSBub3QgY29udmluY2VkIHRoYXQgdGhpcyBpcyBhIGdvb2QgaWRlYSAtIHRo
-ZXNlIGZyYW1lcyB3aWxsIHN0aWxsDQo+IHBvcHVsYXRlIHRoZSBCU1MgY2FjaGUsIGFuZCBpdCdz
-IG5vdCByZWFsbHkgcXVpdGUgd2VsbC1zcGVjaWZpZWQgd2hhdA0KPiBoYXBwZW5zIHdoZW4geW91
-IGhhdmUgYm90aCBbMV0NCj4NCj4gSSBhbHNvIGRvbid0IHVuZGVyc3RhbmQgdGhlIHVzZSBjYXNl
-OyAibWlnaHQgYmUgaW50ZXJlc3RlZCIgaXMgLi4uIHZlcnkNCj4gdmFndWUuDQoNCldoZW4gYW4g
-dXNlciBzcGFjZSB3YW50cyB0byBoYXZlIGNvbnRyb2wgb3ZlciB0aGUgZHVyYXRpb24gb2Ygb2Zm
-LWNoYW5uZWwgKHNpbmdsZSBjaGFubmVsKQ0Kc2NhbiBpdCBjb3VsZCB1c2UgcmVtYWluLW9uLWNo
-YW5uZWwgaW50ZXJmYWNlIGluc3RlYWQgb2YgdHJpZ2dlcl9zY2FuIHRvIHBlcmZvcm0gb2ZmLWNo
-YW5uZWwNCnNjYW4uIEkgZG9udCB0aGluayBCU1MgY2FjaGUgd2lsbCBiZSB1cGRhdGVkIHdpdGgg
-dGhlIEJTUyBpbmZvcm1hdGlvbiByZWNlaXZlZCBkdXJpbmcNCnJlbWFpbi1vbi1jaGFubmVsLiBJ
-biB0aGlzIGNhc2UsIHVzZXIgc3BhY2UgY291bGQgdXNlIHByb2JlIHJlc3BvbnNlIGZyYW1lcyB0
-byBidWlsZA0KQlNTIGxpc3QuDQoNClZhc2FudGgNCg==
+Maya Erez <qca_merez@qca.qualcomm.com> writes:
+
+> Changes in V2:
+> - Fixed oob_mode module parameter description
+>
+> This set of patches includes:
+> - wil6210 bug fixes
+> - P2P support
+> - switch to generated wmi.h
+> - replay attack detection
+>
+> Dedy Lansky (1):
+>   wil6210: p2p initial support
+>
+> Hamad Kadmany (1):
+>   wil6210: Set permanent MAC address to wiphy
+>
+> Lior David (9):
+>   wil6210: add support for discovery mode during scan
+>   wil6210: switch to generated wmi.h
+>   wil6210: basic PBSS/PCP support
+>   wil6210: P2P_DEVICE virtual interface support
+>   wil6210: fix race conditions in p2p listen and search
+>   wil6210: clean ioctl debug message
+>   wil6210: fix no_fw_recovery mode with change_virtual_intf
+>   wil6210: pass is_go flag to firmware
+>   wil6210: add oob_mode module parameter
+>
+> Maya Erez (3):
+>   wil6210: remove BACK RX and TX workers
+>   wil6210: AP: prevent connecting to already connected station
+>   wil6210: add support for platform specific notification events
+>
+> Vladimir Kondratiev (1):
+>   wil6210: replay attack detection
+
+All 15 applied to ath.git, thanks.
+
+-- 
+Kalle Valo
