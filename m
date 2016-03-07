@@ -1,55 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37543 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751313AbcCDOic (ORCPT
+Received: from mail-yk0-f178.google.com ([209.85.160.178]:36657 "EHLO
+	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752958AbcCGUDC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 09:38:32 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: arend@broadcom.com, linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V11 1/2] nl80211: add feature for BSS selection support
-References: <1456947439-28968-1-git-send-email-arend@broadcom.com>
-	<1457020529.2044.31.camel@sipsolutions.net>
-	<56D8A618.4050707@broadcom.com>
-	<1457082805.2333.0.camel@sipsolutions.net>
-Date: Fri, 04 Mar 2016 16:38:27 +0200
-In-Reply-To: <1457082805.2333.0.camel@sipsolutions.net> (Johannes Berg's
-	message of "Fri, 04 Mar 2016 10:13:25 +0100")
-Message-ID: <87r3fql34s.fsf@purkki.adurom.net> (sfid-20160304_153835_863067_E89C3A01)
+	Mon, 7 Mar 2016 15:03:02 -0500
+Received: by mail-yk0-f178.google.com with SMTP id 1so53583157ykg.3
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Mar 2016 12:03:01 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <87egbmtpv3.fsf@kamboji.qca.qualcomm.com>
+References: <20160307121950.CDA876067A@smtp.codeaurora.org>
+	<87egbmtpv3.fsf@kamboji.qca.qualcomm.com>
+Date: Mon, 7 Mar 2016 21:03:01 +0100
+Message-ID: <CAF7Mx6oFVK6HY3+QfEFDd9P8GvGqPbaLLdvwMn-Qi_BJQNL5QA@mail.gmail.com> (sfid-20160307_210307_272968_819085B8)
+Subject: Re: [01/21] brcmfmac: change function name forbrcmf_cfg80211_wait_vif_event_timeout()
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Arend van Spriel <arend@broadcom.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Johannes Berg <johannes@sipsolutions.net> writes:
-
-> On Thu, 2016-03-03 at 22:01 +0100, Arend Van Spriel wrote:
->> 
->> On 3-3-2016 16:55, Johannes Berg wrote:
->> > On Wed, 2016-03-02 at 20:37 +0100, Arend van Spriel wrote:
->> > > Introducing a new feature that the driver can use to
->> > > indicate the driver/firmware supports configuration of BSS
->> > > selection criteria upon CONNECT command. This can be useful
->> > > when multiple BSS-es are found belonging to the same ESS,
->> > > ie. Infra-BSS with same SSID. The criteria can then be used to
->> > > offload selection of a preferred BSS.
->> > > 
->> > Applied, finally :)
->> > 
->> > I moved the wiphy supported methods check into parse_bss_select()
->> > to
->> > avoid the double error path in the caller, plus some editorial
->> > changes.
->> 
->> Do you expect Kalle to take the brcmfmac patch or can it go through
->> your tree?
->> 
+On Mon, Mar 7, 2016 at 1:49 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Kalle Valo <kvalo@codeaurora.org> writes:
 >
-> I was expecting Kalle to apply it.
+>> 1 patches skipped:
+>>
+>> [17/21] brcmfmac: fix sdio sg table alloc crash
+>>
+>> There was a conflict so please rebase that patch:
+>>
+>> Applying: brcmfmac: fix sdio sg table alloc crash
+>> fatal: sha1 information is lacking or useless (drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c).
+>> Repository lacks necessary blobs to fall back on 3-way merge.
+>> Cannot fall back to three-way merge.
+>> Patch failed at 0001 brcmfmac: fix sdio sg table alloc crash
+>
+> Ah, I noticed only now your comment that this patch is in
+> wireless-drivers already. So no actions needed.
+>
+> But in the future please don't submit the same patch twice, otherwise I
+> accidentally commit it twice which is bad. Instead document the
+> dependency and we can sort it out.
 
-Ack, you assigned it to me so it's on my queue now:
+Yeah. We already discussed this earlier [1]. Has been noted.
 
-https://patchwork.kernel.org/patch/8484901/
+Thanks,
+Arend
 
--- 
-Kalle Valo
+[1] http://article.gmane.org/gmane.linux.kernel.wireless.general/148691
+
+> --
+> Kalle Valo
