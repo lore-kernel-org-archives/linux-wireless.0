@@ -1,52 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:22502 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935250AbcCJJRZ (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48561 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752155AbcCGCjT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 04:17:25 -0500
-From: <akolli@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <akolli@codeaurora.org>, <stable@vger.kernel.org>,
-	<linux-wireless@vger.kernel.org>,
-	Anilkumar Kolli <akolli@qti.qualcomm.com>
-Subject: [PATCH] ath10k: fix debugfs pktlog_filter write
-Date: Thu, 10 Mar 2016 14:48:58 +0530
-Message-ID: <1457601538-30751-1-git-send-email-akolli@qti.qualcomm.com> (sfid-20160310_101747_010942_E51CF19F)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 6 Mar 2016 21:39:19 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v4 6/8] ath9k: add bits definition of BTCoex MODE2/3 for SOC chips
+Date: Mon,  7 Mar 2016 10:38:19 +0800
+Message-Id: <1457318301-27701-7-git-send-email-miaoqing@codeaurora.org> (sfid-20160307_033926_246604_1ECE96F1)
+In-Reply-To: <1457318301-27701-1-git-send-email-miaoqing@codeaurora.org>
+References: <1457318301-27701-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Anilkumar Kolli <akolli@qti.qualcomm.com>
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-It is observed that, we are disabling the packet log if we write same
-value to the pktlog_filter for the second time. Always enable pktlogs
-on non zero filter.
+Add bits definition for AR_BT_COEX_MODE2 and AR_BT_COEX_MODE3, which
+needed by SOC chips (AR9340, AR9531, AR9550, AR9561).
 
-Fixes: 90174455ae05 ("ath10k: add support to configure pktlog filter")
-Signed-off-by: Anilkumar Kolli <akolli@qti.qualcomm.com>
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 ---
- drivers/net/wireless/ath/ath10k/debug.c |    7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath9k/reg.h | 46 +++++++++++++++++++++++++++++-------
+ 1 file changed, 37 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 076d29b53ddf..0f834646e6a7 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -2019,7 +2019,12 @@ static ssize_t ath10k_write_pktlog_filter(struct file *file,
- 		goto out;
- 	}
+diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
+index f82a4ad..f8a96f6 100644
+--- a/drivers/net/wireless/ath/ath9k/reg.h
++++ b/drivers/net/wireless/ath/ath9k/reg.h
+@@ -1890,15 +1890,33 @@ enum {
  
--	if (filter && (filter != ar->debug.pktlog_filter)) {
-+	if (filter == ar->debug.pktlog_filter) {
-+		ret = count;
-+		goto out;
-+	}
+ #define AR9300_BT_WGHT             0xcccc4444
+ 
+-#define AR_BT_COEX_MODE2           0x817c
+-#define AR_BT_BCN_MISS_THRESH      0x000000ff
+-#define AR_BT_BCN_MISS_THRESH_S    0
+-#define AR_BT_BCN_MISS_CNT         0x0000ff00
+-#define AR_BT_BCN_MISS_CNT_S       8
+-#define AR_BT_HOLD_RX_CLEAR        0x00010000
+-#define AR_BT_HOLD_RX_CLEAR_S      16
+-#define AR_BT_DISABLE_BT_ANT       0x00100000
+-#define AR_BT_DISABLE_BT_ANT_S     20
++#define AR_BT_COEX_MODE2		0x817c
++#define AR_BT_BCN_MISS_THRESH		0x000000ff
++#define AR_BT_BCN_MISS_THRESH_S		0
++#define AR_BT_BCN_MISS_CNT		0x0000ff00
++#define AR_BT_BCN_MISS_CNT_S		8
++#define AR_BT_HOLD_RX_CLEAR		0x00010000
++#define AR_BT_HOLD_RX_CLEAR_S		16
++#define AR_BT_PROTECT_BT_AFTER_WAKEUP	0x00080000
++#define AR_BT_PROTECT_BT_AFTER_WAKEUP_S 19
++#define AR_BT_DISABLE_BT_ANT		0x00100000
++#define AR_BT_DISABLE_BT_ANT_S		20
++#define AR_BT_QUIET_2_WIRE		0x00200000
++#define AR_BT_QUIET_2_WIRE_S		21
++#define AR_BT_WL_ACTIVE_MODE		0x00c00000
++#define AR_BT_WL_ACTIVE_MODE_S		22
++#define AR_BT_WL_TXRX_SEPARATE		0x01000000
++#define AR_BT_WL_TXRX_SEPARATE_S	24
++#define AR_BT_RS_DISCARD_EXTEND		0x02000000
++#define AR_BT_RS_DISCARD_EXTEND_S	25
++#define AR_BT_TSF_BT_ACTIVE_CTRL	0x0c000000
++#define AR_BT_TSF_BT_ACTIVE_CTRL_S	26
++#define AR_BT_TSF_BT_PRIORITY_CTRL	0x30000000
++#define AR_BT_TSF_BT_PRIORITY_CTRL_S	28
++#define AR_BT_INTERRUPT_ENABLE		0x40000000
++#define AR_BT_INTERRUPT_ENABLE_S	30
++#define AR_BT_PHY_ERR_BT_COLL_ENABLE	0x80000000
++#define AR_BT_PHY_ERR_BT_COLL_ENABLE_S	31
+ 
+ #define AR_TXSIFS              0x81d0
+ #define AR_TXSIFS_TIME         0x000000FF
+@@ -1907,6 +1925,16 @@ enum {
+ #define AR_TXSIFS_ACK_SHIFT    0x00007000
+ #define AR_TXSIFS_ACK_SHIFT_S  12
+ 
++#define AR_BT_COEX_MODE3			0x81d4
++#define AR_BT_WL_ACTIVE_TIME			0x000000ff
++#define AR_BT_WL_ACTIVE_TIME_S			0
++#define AR_BT_WL_QC_TIME			0x0000ff00
++#define AR_BT_WL_QC_TIME_S			8
++#define AR_BT_ALLOW_CONCURRENT_ACCESS		0x000f0000
++#define AR_BT_ALLOW_CONCURRENT_ACCESS_S		16
++#define AR_BT_AGC_SATURATION_CNT_ENABLE		0x00100000
++#define AR_BT_AGC_SATURATION_CNT_ENABLE_S	20
 +
-+	if (filter) {
- 		ret = ath10k_wmi_pdev_pktlog_enable(ar, filter);
- 		if (ret) {
- 			ath10k_warn(ar, "failed to enable pktlog filter %x: %d\n",
+ #define AR_TXOP_X          0x81ec
+ #define AR_TXOP_X_VAL      0x000000FF
+ 
 -- 
-1.7.9.5
+1.9.1
 
