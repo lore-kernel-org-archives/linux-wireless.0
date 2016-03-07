@@ -1,105 +1,120 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f68.google.com ([209.85.218.68]:33529 "EHLO
-	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935207AbcCPSeB (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48497 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752154AbcCGCjB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2016 14:34:01 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH 1/2] rtlwifi: rtl8723be: Add antenna select module parameter
-Date: Wed, 16 Mar 2016 13:33:34 -0500
-Message-Id: <1458153215-25602-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160316_193421_742732_B4BB2B12)
-In-Reply-To: <1458153215-25602-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1458153215-25602-1-git-send-email-Larry.Finger@lwfinger.net>
+	Sun, 6 Mar 2016 21:39:01 -0500
+From: miaoqing@codeaurora.org
+To: linville@tuxdriver.com
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
+	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
+Subject: [PATCH v4 3/8] ath9k: free GPIO resource for SOC GPIOs
+Date: Mon,  7 Mar 2016 10:38:16 +0800
+Message-Id: <1457318301-27701-4-git-send-email-miaoqing@codeaurora.org> (sfid-20160307_033924_466131_2C0993C2)
+In-Reply-To: <1457318301-27701-1-git-send-email-miaoqing@codeaurora.org>
+References: <1457318301-27701-1-git-send-email-miaoqing@codeaurora.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-A number of new laptops have been delivered with only a single antenna.
-In principle, this is OK; however, a problem arises when the on-board
-EEPROM is programmed to use the other antenna connection. The option
-of opening the computer and moving the connector is not always possible
-as it will void the warranty in some cases. In addition, this solution
-breaks the Windows driver when the box dual boots Linux and Windows.
+From: Miaoqing Pan <miaoqing@codeaurora.org>
 
-A fix involving a new module parameter has been developed.  This commit
-adds the new parameter and implements the changes needed for the driver.
+For SOC GPIOs, should call ath9k_hw_gpio_free() to release
+the GPIO resource.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org> [V4.0+]
+Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c | 5 +++++
- drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c | 3 +++
- drivers/net/wireless/realtek/rtlwifi/wifi.h         | 3 +++
- 3 files changed, 11 insertions(+)
+ drivers/net/wireless/ath/ath9k/btcoex.c       | 10 ++++++++++
+ drivers/net/wireless/ath/ath9k/btcoex.h       |  1 +
+ drivers/net/wireless/ath/ath9k/gpio.c         |  9 +++++++++
+ drivers/net/wireless/ath/ath9k/htc_drv_gpio.c |  2 ++
+ drivers/net/wireless/ath/ath9k/hw.c           |  1 +
+ 5 files changed, 23 insertions(+)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-index c983d2f..5a3df91 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
-@@ -2684,6 +2684,7 @@ void rtl8723be_read_bt_coexist_info_from_hwpg(struct ieee80211_hw *hw,
- 					      bool auto_load_fail, u8 *hwinfo)
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
+index 7719cb1..4737aa9 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.c
++++ b/drivers/net/wireless/ath/ath9k/btcoex.c
+@@ -174,6 +174,16 @@ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
+ }
+ EXPORT_SYMBOL(ath9k_hw_btcoex_init_3wire);
+ 
++void ath9k_hw_btcoex_deinit(struct ath_hw *ah)
++{
++	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
++
++	ath9k_hw_gpio_free(ah, btcoex_hw->btactive_gpio);
++	ath9k_hw_gpio_free(ah, btcoex_hw->btpriority_gpio);
++	ath9k_hw_gpio_free(ah, btcoex_hw->wlanactive_gpio);
++}
++EXPORT_SYMBOL(ath9k_hw_btcoex_deinit);
++
+ void ath9k_hw_btcoex_init_mci(struct ath_hw *ah)
  {
- 	struct rtl_priv *rtlpriv = rtl_priv(hw);
-+	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
- 	u8 value;
- 	u32 tmpu_32;
+ 	ah->btcoex_hw.mci.ready = false;
+diff --git a/drivers/net/wireless/ath/ath9k/btcoex.h b/drivers/net/wireless/ath/ath9k/btcoex.h
+index cd2f0a2..0f7c4e6 100644
+--- a/drivers/net/wireless/ath/ath9k/btcoex.h
++++ b/drivers/net/wireless/ath/ath9k/btcoex.h
+@@ -123,6 +123,7 @@ struct ath_btcoex_hw {
+ void ath9k_hw_btcoex_init_scheme(struct ath_hw *ah);
+ void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah);
+ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah);
++void ath9k_hw_btcoex_deinit(struct ath_hw *ah);
+ void ath9k_hw_btcoex_init_mci(struct ath_hw *ah);
+ void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum);
+ void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
+diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
+index b41dfb7..4964bb3 100644
+--- a/drivers/net/wireless/ath/ath9k/gpio.c
++++ b/drivers/net/wireless/ath/ath9k/gpio.c
+@@ -40,6 +40,8 @@ void ath_deinit_leds(struct ath_softc *sc)
  
-@@ -2702,6 +2703,10 @@ void rtl8723be_read_bt_coexist_info_from_hwpg(struct ieee80211_hw *hw,
- 		rtlpriv->btcoexist.btc_info.ant_num = ANT_X2;
- 	}
- 
-+	/* override ant_num / ant_path */
-+	if (mod_params->ant_sel)
-+		rtlpriv->btcoexist.btc_info.ant_num =
-+			(mod_params->ant_sel == 1 ? ANT_X2 : ANT_X1);
+ 	ath_led_brightness(&sc->led_cdev, LED_OFF);
+ 	led_classdev_unregister(&sc->led_cdev);
++
++	ath9k_hw_gpio_free(sc->sc_ah, sc->sc_ah->led_pin);
  }
  
- void rtl8723be_bt_reg_init(struct ieee80211_hw *hw)
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-index a78eaed..2101793 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
-@@ -273,6 +273,7 @@ static struct rtl_mod_params rtl8723be_mod_params = {
- 	.msi_support = false,
- 	.disable_watchdog = false,
- 	.debug = DBG_EMERG,
-+	.ant_sel = 0,
- };
+ void ath_init_leds(struct ath_softc *sc)
+@@ -404,6 +406,13 @@ void ath9k_deinit_btcoex(struct ath_softc *sc)
  
- static struct rtl_hal_cfg rtl8723be_hal_cfg = {
-@@ -394,6 +395,7 @@ module_param_named(fwlps, rtl8723be_mod_params.fwctrl_lps, bool, 0444);
- module_param_named(msi, rtl8723be_mod_params.msi_support, bool, 0444);
- module_param_named(disable_watchdog, rtl8723be_mod_params.disable_watchdog,
- 		   bool, 0444);
-+module_param_named(ant_sel, rtl8723be_mod_params.ant_sel, int, 0444);
- MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
- MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
- MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
-@@ -402,6 +404,7 @@ MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 0)\n");
- MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
- MODULE_PARM_DESC(disable_watchdog,
- 		 "Set to 1 to disable the watchdog (default 0)\n");
-+MODULE_PARM_DESC(ant_sel, "Set to 1 or 2 to force antenna number (default 0)\n");
- 
- static SIMPLE_DEV_PM_OPS(rtlwifi_pm_ops, rtl_pci_suspend, rtl_pci_resume);
- 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-index 554d814..93bd7fc 100644
---- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-@@ -2246,6 +2246,9 @@ struct rtl_mod_params {
- 
- 	/* default 0: 1 means do not disable interrupts */
- 	bool int_clear;
+ 	if (ath9k_hw_mci_is_enabled(ah))
+ 		ath_mci_cleanup(sc);
++	else {
++		enum ath_btcoex_scheme scheme = ath9k_hw_get_btcoex_scheme(ah);
 +
-+	/* select antenna */
-+	int ant_sel;
- };
++		if (scheme == ATH_BTCOEX_CFG_2WIRE ||
++		    scheme == ATH_BTCOEX_CFG_3WIRE)
++			ath9k_hw_btcoex_deinit(sc->sc_ah);
++	}
+ }
  
- struct rtl_hal_usbint_cfg {
+ int ath9k_init_btcoex(struct ath_softc *sc)
+diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+index d9b640a..ecb848b 100644
+--- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
++++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
+@@ -253,6 +253,8 @@ void ath9k_deinit_leds(struct ath9k_htc_priv *priv)
+ 	ath9k_led_brightness(&priv->led_cdev, LED_OFF);
+ 	led_classdev_unregister(&priv->led_cdev);
+ 	cancel_work_sync(&priv->led_work);
++
++	ath9k_hw_gpio_free(priv->ah, priv->ah->led_pin);
+ }
+ 
+ 
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index 4046949..1fd6155 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -1575,6 +1575,7 @@ static void ath9k_hw_apply_gpio_override(struct ath_hw *ah)
+ 		ath9k_hw_gpio_request_out(ah, i, NULL,
+ 					  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
+ 		ath9k_hw_set_gpio(ah, i, !!(ah->gpio_val & BIT(i)));
++		ath9k_hw_gpio_free(ah, i);
+ 	}
+ }
+ 
 -- 
-2.1.4
+1.9.1
 
