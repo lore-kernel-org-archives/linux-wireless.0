@@ -1,124 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31443 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752754AbcCARSi (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:42535 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932147AbcCHLNR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 12:18:38 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH v2 08/15] wil6210: add support for platform specific notification events
-Date: Tue,  1 Mar 2016 19:18:11 +0200
-Message-Id: <1456852698-26808-9-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160301_181916_465223_36EF60AF)
-In-Reply-To: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
+	Tue, 8 Mar 2016 06:13:17 -0500
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 08 Mar 2016 16:43:15 +0530
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	ath10k@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v2] ath10k: move mgmt descriptor limit handle under
+ mgmt_tx
+In-Reply-To: <CA+BoTQmnY0omFh0iddjcVBXubt3WC49DpFumUBY=NSCYs-PuHw@mail.gmail.com>
+References: <1457250469-22994-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <CA+BoTQmnY0omFh0iddjcVBXubt3WC49DpFumUBY=NSCYs-PuHw@mail.gmail.com>
+Message-ID: <f6e8455efdbf88d7f41d9889ef0e353a@codeaurora.org> (sfid-20160308_121320_600397_58E4F3BB)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add the ability to notify the platform driver on different
-events, such as FW crash, pre reset and FW ready.
+On , Michal Kazior wrote:
+> On 6 March 2016 at 08:47, Rajkumar Manoharan 
+> <rmanohar@qti.qualcomm.com> wrote:
+>> Firmware reserves few descriptors for management frames transmission.
+>> In 16 MBSSID scenario, these slots will be easy exhausted due to 
+>> frequent
+>> probe responses. So for 10.4 based solutions, probe responses are 
+>> limited
+>> by a threshold (24).
+>> 
+>> management tx path is separate for all except tlv based solutions. 
+>> Since
+>> tlv solutions (qca6174 & qca9377) do not support 16 AP interfaces, it 
+>> is
+>> safe to move management descriptor limitation check under mgmt_tx
+>> function. Though CPU improvement is negligible, unlikely conditions or
+>> never hit conditions in hot path can be avoided on data transmission.
+>> 
+>> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+>> ---
+>> v2:
+>>   - rebased on top of Michal changes
+> [...]
+>> @@ -3979,13 +3977,22 @@ static void ath10k_mac_op_tx(struct 
+>> ieee80211_hw *hw,
+>>         is_htt = (txpath == ATH10K_MAC_TX_HTT ||
+>>                   txpath == ATH10K_MAC_TX_HTT_MGMT);
+>> 
+>> -       if (is_htt) {
+>> -               spin_lock_bh(&ar->htt.tx_lock);
+>> -
+>> -               is_mgmt = ieee80211_is_mgmt(hdr->frame_control);
+>> +       is_mgmt = ieee80211_is_mgmt(hdr->frame_control);
+>> +       spin_lock_bh(&ar->htt.tx_lock);
+>> +       if (is_mgmt) {
+>>                 is_presp = 
+>> ieee80211_is_probe_resp(hdr->frame_control);
+>> 
+>> -               ret = ath10k_htt_tx_inc_pending(htt, is_mgmt, 
+>> is_presp);
+>> +               ret = ath10k_htt_tx_mgmt_inc_pending(htt, is_presp);
+>> +               if (ret) {
+>> +                       ath10k_warn(ar, "failed to increase tx mgmt 
+>> pending count: %d, dropping\n",
+>> +                                   ret);
+>> +                       spin_unlock_bh(&ar->htt.tx_lock);
+>> +                       ieee80211_free_txskb(ar->hw, skb);
+>> +                       return;
+>> +               }
+>> +       }
+>> +       if (is_htt) {
+>> +               ret = ath10k_htt_tx_inc_pending(htt);
+>>                 if (ret) {
+>>                         ath10k_warn(ar, "failed to increase tx pending 
+>> count: %d, dropping\n",
+>>                                     ret);
+> 
+> This doesn't look good.
+> 
+> You'll call ath10k_htt_tx_mgmt_inc_pending() regardless of the tx path
+> being chosen. FWIW It could be WMI on older firmware, oops.
+> 
+Good catch.. Since inc_pending is moved out of htt_tx, i missed to 
+handle it for htt alone.
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/interrupt.c    |  5 ++--
- drivers/net/wireless/ath/wil6210/main.c         | 32 +++++++++++++++++++++++--
- drivers/net/wireless/ath/wil6210/wil_platform.h |  8 ++++++-
- 3 files changed, 40 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index 4f2ffa5..ae90295 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -394,9 +394,10 @@ static irqreturn_t wil6210_irq_misc_thread(int irq, void *cookie)
- 		wil_fw_core_dump(wil);
- 		wil_notify_fw_error(wil);
- 		isr &= ~ISR_MISC_FW_ERROR;
--		if (wil->platform_ops.notify_crash) {
-+		if (wil->platform_ops.notify) {
- 			wil_err(wil, "notify platform driver about FW crash");
--			wil->platform_ops.notify_crash(wil->platform_handle);
-+			wil->platform_ops.notify(wil->platform_handle,
-+						 WIL_PLATFORM_EVT_FW_CRASH);
- 		} else {
- 			wil_fw_error_recovery(wil);
- 		}
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 1fa215d..1472978 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -764,6 +764,15 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 	if (wil->hw_version == HW_VER_UNKNOWN)
- 		return -ENODEV;
- 
-+	if (wil->platform_ops.notify) {
-+		rc = wil->platform_ops.notify(wil->platform_handle,
-+					      WIL_PLATFORM_EVT_PRE_RESET);
-+		if (rc)
-+			wil_err(wil,
-+				"%s: PRE_RESET platform notify failed, rc %d\n",
-+				__func__, rc);
-+	}
-+
- 	set_bit(wil_status_resetting, wil->status);
- 
- 	cancel_work_sync(&wil->disconnect_worker);
-@@ -843,8 +852,27 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
- 
- 		/* we just started MAC, wait for FW ready */
- 		rc = wil_wait_for_fw_ready(wil);
--		if (rc == 0) /* check FW is responsive */
--			rc = wmi_echo(wil);
-+		if (rc)
-+			return rc;
-+
-+		/* check FW is responsive */
-+		rc = wmi_echo(wil);
-+		if (rc) {
-+			wil_err(wil, "%s: wmi_echo failed, rc %d\n",
-+				__func__, rc);
-+			return rc;
-+		}
-+
-+		if (wil->platform_ops.notify) {
-+			rc = wil->platform_ops.notify(wil->platform_handle,
-+						      WIL_PLATFORM_EVT_FW_RDY);
-+			if (rc) {
-+				wil_err(wil,
-+					"%s: FW_RDY notify failed, rc %d\n",
-+					__func__, rc);
-+				rc = 0;
-+			}
-+		}
- 	}
- 
- 	return rc;
-diff --git a/drivers/net/wireless/ath/wil6210/wil_platform.h b/drivers/net/wireless/ath/wil6210/wil_platform.h
-index 9a949d9..33d4a34 100644
---- a/drivers/net/wireless/ath/wil6210/wil_platform.h
-+++ b/drivers/net/wireless/ath/wil6210/wil_platform.h
-@@ -19,6 +19,12 @@
- 
- struct device;
- 
-+enum wil_platform_event {
-+	WIL_PLATFORM_EVT_FW_CRASH = 0,
-+	WIL_PLATFORM_EVT_PRE_RESET = 1,
-+	WIL_PLATFORM_EVT_FW_RDY = 2,
-+};
-+
- /**
-  * struct wil_platform_ops - wil platform module calls from this
-  * driver to platform driver
-@@ -28,7 +34,7 @@ struct wil_platform_ops {
- 	int (*suspend)(void *handle);
- 	int (*resume)(void *handle);
- 	void (*uninit)(void *handle);
--	int (*notify_crash)(void *handle);
-+	int (*notify)(void *handle, enum wil_platform_event evt);
- };
- 
- /**
--- 
-1.8.5.2
+> Holding the lock for the entire time doesn't make much sense either, 
+> does it?
+> 
+> I think it should be more like:
+> 
+>  if (is_htt) {
+>     is_mgmt = ..;
+>     is_presp = ..;
+> 
+>     lock()
+>     ret = inc_pending(htt);
+>     if (ret) { unlock(); goto drop }
+> 
+>     ret = mgmt_inc_pending(htt, is_mgmt, is_presp);
+>     if (ret) { dec_pending(htt); unlock(); goto drop }
+> 
+>     unlock();
+>  }
+>  ...
+>  ret = mac_tx()
+>  if (ret) {
+>    if (is_htt) {
+>      lock();
+>      dec_pending();
+>      if (is_mgmt)
+>         mgmt_dec_pending()
+>      unlock();
+>  }
+> 
+> no?
+> 
+yes.. now it looks good. thanks for your comments
 
+-Rajkumar
