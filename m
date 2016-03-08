@@ -1,142 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:46426 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751826AbcC2ND6 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33572 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753635AbcCHQnL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 09:03:58 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	<linux-mmc@vger.kernel.org>, <bin9zha0@gmail.com>,
-	Cathy Luo <cluo@marvell.com>, Bing Zhao <bzhao@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH] mmc: add API for data write using scatter gather DMA
-Date: Tue, 29 Mar 2016 05:57:41 -0700
-Message-ID: <1459256261-22492-1-git-send-email-akarwar@marvell.com> (sfid-20160329_150401_812037_158C9217)
+	Tue, 8 Mar 2016 11:43:11 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 08 Mar 2016 22:13:09 +0530
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	ath10k@lists.infradead.org,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3] ath10k: move mgmt descriptor limit handle under
+ mgmt_tx
+In-Reply-To: <CA+BoTQk3i9QjF-W_1AZpMcwyceO-KDx8=R-swP0J-thqdxRcMg@mail.gmail.com>
+References: <1457438096-20071-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <CA+BoTQ=Huzf7WoXMXcyj8yrykrJOd5BMc1EnmccqZgt7M1M_uA@mail.gmail.com>
+ <aa44bd32c9f94d8d1a90840189ac0602@codeaurora.org>
+ <CA+BoTQk3i9QjF-W_1AZpMcwyceO-KDx8=R-swP0J-thqdxRcMg@mail.gmail.com>
+Message-ID: <3f8bfeb73178ec267d088f91a2f0350a@codeaurora.org> (sfid-20160308_174314_893873_59D18C13)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Bing Zhao <bzhao@marvell.com>
+On , Michal Kazior wrote:
+> On 8 March 2016 at 13:54, Rajkumar Manoharan <rmanohar@codeaurora.org> 
+> wrote:
+>> On , Michal Kazior wrote:
+>>> 
+>>> On 8 March 2016 at 12:54, Rajkumar Manoharan 
+>>> <rmanohar@qti.qualcomm.com>
+>>> wrote:
+...]
+>>>> 
+>>>>         skb_cb = ATH10K_SKB_CB(msdu);
+>>>>         txq = skb_cb->txq;
+>>>>         artxq = (void *)txq->drv_priv;
+>>>> 
+>>>> -       if (unlikely(skb_cb->flags & ATH10K_SKB_F_MGMT) &&
+>>>> -           ar->hw_params.max_probe_resp_desc_thres)
+>>>> -               limit_mgmt_desc = true;
+>>>> -
+>>> 
+>>> 
+>>> Oh wait.. I didn't pay attention before, but this looks rather ugly.
+>>> With this you will actually make the num_pending_mgmt_tx spin
+>>> endlessly upwards on firmware with HTT 3.0 (and uses TX_FRM for mgmt
+>>> tx and TX_COMPL_IND for completions), no?
+>>> 
+>> Oops.. num_pending_mgmt_tx should be incremented only for MGMT_TX. 
+>> Thats
+>> why it is moved out of txrx_tx_unref.
+> 
+> Hmm.. in that case I think you should change is_htt in mac_op_tx() to
+> compare only against TX_HTT_MGMT (instead of both TX_HTT and
+> TX_HTT_MGMT).
+> 
+> Note, the is_mgmt should stay as it is possible for the TX_HTT_MGMT to
+> be used for non-mgmt frames in some cases. This also implies you need
+> to check for ATH10K_SKB_F_MGMT on the mgmt-tx-completion event as well
+> (you might get to handle NullFunc there).
+> 
+If a frame is transmitted via MGMT_TX, the reserved descriptor slots 
+will be
+used in firmware. So irrespective of type,  num_pending_mgmt_tx should 
+count
+all frames that are transmitted via MGMT_TX to control probe resp. Here 
+mgmt_tx
+does not mean frame type but HTT tx type (HTT_H2T_MSG_TYPE_MGMT_TX).
 
-This patch adds new API for SDIO scatter gather.
+So ATH10K_SKB_F_MGMT check in tx-compl is not needed. As you pointed 
+out,
+since nullfunc also uses MGMT_TX, is_mgmt should be as below. (not frame 
+type)
 
-Existing mmc_io_rw_extended() API expects caller to pass single contiguous
-buffer. It will be split if it exceeds segment size, SG table is prepared
-and used it for reading/writing the data.
+is_mgmt = (txpath == ATH10K_MAC_TX_HTT_MGMT);
 
-Our intention for defining new API here is to facilitate caller to provide
-ready SG table(scattered buffer list). It will be useful for the drivers
-which intend to handle SDIO SG internally.
-
-Signed-off-by: Bing Zhao <bzhao@marvell.com>
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/mmc/core/sdio_ops.c   | 64 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/mmc/sdio_func.h |  5 ++++
- 2 files changed, 69 insertions(+)
-
-diff --git a/drivers/mmc/core/sdio_ops.c b/drivers/mmc/core/sdio_ops.c
-index 62508b4..6875980 100644
---- a/drivers/mmc/core/sdio_ops.c
-+++ b/drivers/mmc/core/sdio_ops.c
-@@ -204,6 +204,70 @@ int mmc_io_rw_extended(struct mmc_card *card, int write, unsigned fn,
- 	return 0;
- }
- 
-+int mmc_io_rw_extended_sg(struct mmc_card *card, int write, unsigned fn,
-+			  unsigned addr, int incr_addr,
-+			  struct sg_table *sgt, unsigned blksz)
-+{
-+	struct mmc_request mrq = {NULL};
-+	struct mmc_command cmd = {0};
-+	struct mmc_data data = {0};
-+	struct scatterlist *sg_ptr;
-+	unsigned blocks = 0;
-+	int i;
-+
-+	WARN_ON(!card || !card->host);
-+	WARN_ON(fn > 7);
-+	WARN_ON(blksz == 0);
-+	for_each_sg(sgt->sgl, sg_ptr, sgt->nents, i) {
-+		WARN_ON(sg_ptr->length > card->host->max_seg_size);
-+		blocks += DIV_ROUND_UP(sg_ptr->length, blksz);
-+	}
-+
-+	/* sanity check */
-+	if (addr & ~0x1FFFF)
-+		return -EINVAL;
-+
-+	mrq.cmd = &cmd;
-+	mrq.data = &data;
-+
-+	cmd.opcode = SD_IO_RW_EXTENDED;
-+	cmd.arg = write ? 0x80000000 : 0x00000000;
-+	cmd.arg |= fn << 28;
-+	cmd.arg |= incr_addr ? 0x04000000 : 0x00000000;
-+	cmd.arg |= addr << 9;
-+	cmd.arg |= 0x08000000 | blocks;
-+	cmd.flags = MMC_RSP_SPI_R5 | MMC_RSP_R5 | MMC_CMD_ADTC;
-+
-+	data.blksz = blksz;
-+	data.blocks = blocks;
-+	data.flags = write ? MMC_DATA_WRITE : MMC_DATA_READ;
-+
-+	data.sg = sgt->sgl;
-+	data.sg_len = sgt->nents;
-+
-+	mmc_set_data_timeout(&data, card);
-+	mmc_wait_for_req(card->host, &mrq);
-+
-+	if (cmd.error)
-+		return cmd.error;
-+	if (data.error)
-+		return data.error;
-+
-+	if (mmc_host_is_spi(card->host)) {
-+		/* host driver already reported errors */
-+	} else {
-+		if (cmd.resp[0] & R5_ERROR)
-+			return -EIO;
-+		if (cmd.resp[0] & R5_FUNCTION_NUMBER)
-+			return -EINVAL;
-+		if (cmd.resp[0] & R5_OUT_OF_RANGE)
-+			return -ERANGE;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(mmc_io_rw_extended_sg);
-+
- int sdio_reset(struct mmc_host *host)
- {
- 	int ret;
-diff --git a/include/linux/mmc/sdio_func.h b/include/linux/mmc/sdio_func.h
-index aab032a..2107e91 100644
---- a/include/linux/mmc/sdio_func.h
-+++ b/include/linux/mmc/sdio_func.h
-@@ -14,6 +14,7 @@
- 
- #include <linux/device.h>
- #include <linux/mod_devicetable.h>
-+#include <linux/scatterlist.h>
- 
- #include <linux/mmc/pm.h>
- 
-@@ -151,6 +152,10 @@ extern int sdio_memcpy_toio(struct sdio_func *func, unsigned int addr,
- extern int sdio_writesb(struct sdio_func *func, unsigned int addr,
- 	void *src, int count);
- 
-+int mmc_io_rw_extended_sg(struct mmc_card *card, int write, unsigned fn,
-+			  unsigned addr, int incr_addr,
-+			  struct sg_table *sgt, unsigned blksz);
-+
- extern unsigned char sdio_f0_readb(struct sdio_func *func,
- 	unsigned int addr, int *err_ret);
- extern void sdio_f0_writeb(struct sdio_func *func, unsigned char b,
--- 
-1.8.1.4
-
+-Rajkumar
