@@ -1,43 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:38803 "EHLO
-	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754509AbcCJIoR (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34197 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753677AbcCHIq7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 03:44:17 -0500
-Received: by mail-wm0-f43.google.com with SMTP id l68so18497861wml.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2016 00:44:16 -0800 (PST)
-From: Andreas Fenkart <afenkart@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Andreas Fenkart <afenkart@gmail.com>
-Subject: [PATCH v2 0/7] mwifiex: cleanups 
-Date: Thu, 10 Mar 2016 09:44:04 +0100
-Message-Id: <1457599451-13910-1-git-send-email-afenkart@gmail.com> (sfid-20160310_094420_902686_CEA15224)
+	Tue, 8 Mar 2016 03:46:59 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [01/21] brcmfmac: change function name forbrcmf_cfg80211_wait_vif_event_timeout()
+References: <20160307121950.CDA876067A@smtp.codeaurora.org>
+	<87egbmtpv3.fsf@kamboji.qca.qualcomm.com>
+	<CAF7Mx6oFVK6HY3+QfEFDd9P8GvGqPbaLLdvwMn-Qi_BJQNL5QA@mail.gmail.com>
+Date: Tue, 08 Mar 2016 10:46:48 +0200
+In-Reply-To: <CAF7Mx6oFVK6HY3+QfEFDd9P8GvGqPbaLLdvwMn-Qi_BJQNL5QA@mail.gmail.com>
+	(Arend Van Spriel's message of "Mon, 7 Mar 2016 21:03:01 +0100")
+Message-ID: <87mvq9s6fb.fsf@kamboji.qca.qualcomm.com> (sfid-20160308_094707_799223_466B6917)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-v2:
-- addressed issues from review
-- race-condition issue discussed in patch description
+Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
 
-Andreas Fenkart (7):
-  mwifiex: scan: simplify dereference of bss_desc fields
-  mwifiex: scan: factor out has_ieee_hdr/has_vendor_hdr
-  mwifiex: scan: simplify ternary operators using gnu extension
-  mwifiex: scan: factor out dbg_security_flags
-  mwifiex: scan: replace pointer arithmetic with array access
-  mwifiex: factor out mwifiex_cancel_pending_scan_cmd
-  mwifiex: make mwifiex_insert_cmd_to_free_q local static
+>> But in the future please don't submit the same patch twice, otherwise I
+>> accidentally commit it twice which is bad. Instead document the
+>> dependency and we can sort it out.
+>
+> Yeah. We already discussed this earlier [1]. Has been noted.
 
- drivers/net/wireless/marvell/mwifiex/cmdevt.c      | 125 +++++++-------
- drivers/net/wireless/marvell/mwifiex/main.h        |   3 +-
- drivers/net/wireless/marvell/mwifiex/scan.c        | 185 ++++++++-------------
- drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |  13 +-
- 4 files changed, 128 insertions(+), 198 deletions(-)
+Heh, sorry. I had totally forgetten that :)
 
 -- 
-2.7.0
-
+Kalle Valo
