@@ -1,85 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34471 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1030824AbcCQSCu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 14:02:50 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: rtl8xxxu 4.4.5(from f23): I get a panic adding a new device to the driver
-References: <56E89DD2.7000000@gmail.com> <wrfjfuvqr0cb.fsf@redhat.com>
-Date: Thu, 17 Mar 2016 14:02:49 -0400
-In-Reply-To: <wrfjfuvqr0cb.fsf@redhat.com> (Jes Sorensen's message of "Wed, 16
-	Mar 2016 09:58:28 -0400")
-Message-ID: <wrfja8lxnfsm.fsf@redhat.com> (sfid-20160317_190308_606645_BE8D98CD)
+Received: from smtp.codeaurora.org ([198.145.29.96]:34395 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932511AbcCHIuK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2016 03:50:10 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rtlwifi: Fix size of wireless mode variable
+References: <1456419781-14722-1-git-send-email-Larry.Finger@lwfinger.net>
+	<87pov6tqcu.fsf@kamboji.qca.qualcomm.com>
+	<56DD9472.4050308@lwfinger.net>
+Date: Tue, 08 Mar 2016 10:50:02 +0200
+In-Reply-To: <56DD9472.4050308@lwfinger.net> (Larry Finger's message of "Mon,
+	7 Mar 2016 08:47:14 -0600")
+Message-ID: <87io0xs69x.fsf@kamboji.qca.qualcomm.com> (sfid-20160308_095014_582254_02741CBB)
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes Sorensen <Jes.Sorensen@redhat.com> writes:
-> Xose Vazquez Perez <xose.vazquez@gmail.com> writes:
->> Hi,
+Larry Finger <Larry.Finger@lwfinger.net> writes:
+
+>> I can't find commit acc6907b87a9 from any of my trees. And oddly enough
+>> I can't either any commits with title "rtlwifi: Fix warning from
+>> ieee80211_get_tx_rates() when using 5G". I can fix it before commiting
+>> but what should I use?
 >>
->> If I do:
->> # echo "0bda 8176" > /sys/bus/usb/drivers/rtl8xxxu/new_id
+>> Also the fixes line should not have the word "commit".
 >
-> Hi Xose,
+> Kalle,
 >
-> Yes please don't do that. The rtl8xxxu driver relies on the .driver_info
-> field in struct use_device_id to carry information for the different
-> types of devices. If you hot add a device like above, the driver will
-> fail because that field now contains a NULL pointer.
+> I do not know where I got that commit and title. The correct reference
+> is commit d76d65fd2695 ("rtlwifi: fix broken VHT support").
 >
-> I should probably add a check for it in the probe function, but it will
-> simply be there to spit out a warning that it doesn't work to hot add a
-> device like this.
->
-> If you build it with CONFIG_RTL8XXXU_UNTESTED the 0bda:8176 should be
-> included in the device list.
->
-> Cheers,
-> Jes
+> If you would rather not fix this on commit, I can submit a new version.
 
-Hi Xose,
+No need, I can edit the commit log before I commit.
 
-I added the following patch to my tree to avoid this.
-
-Cheers,
-Jes
-
-commit 9202f4947aac1d60084ee79c9b5294eb42ba59dc
-Author: Jes Sorensen <Jes.Sorensen@redhat.com>
-Date:   Thu Mar 17 13:53:48 2016 -0400
-
-    rtl8xxxu: Fix OOPS if user tries to add device via /sys
-    
-    This driver relies on driver_info in struct usb_device_id, hence
-    adding a device via  /sys/bus/usb/drivers/rtl8xxxu/new_id would result
-    in a NULL pointer dereference.
-    
-    Instead print a message and return -ENODEV
-    
-    Reported-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-    Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 8d893f4..55fc00e 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -9671,6 +9671,15 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
- 
- 	udev = usb_get_dev(interface_to_usbdev(interface));
- 
-+	if (!id->driver_info) {
-+		dev_warn(&udev->dev,
-+			 "rtl8xxxu relies on driver_info in struct usb_device_id.\n");
-+		dev_warn(&udev->dev,
-+			 "Adding a device via /sys/bus/usb/drivers/rtl8xxxu/new_id is not supported!\n");
-+		ret = -ENODEV;
-+		goto exit;
-+	}
-+
- 	switch (id->idVendor) {
- 	case USB_VENDOR_ID_REALTEK:
- 		switch(id->idProduct) {
+-- 
+Kalle Valo
