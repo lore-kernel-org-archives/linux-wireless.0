@@ -1,38 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35704 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753856AbcCHMF4 (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:34695 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751315AbcCHMko convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2016 07:05:56 -0500
-Date: Tue, 8 Mar 2016 15:04:08 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Andreas Kemnade <andreas@kemnade.info>,
-	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: [patch] libertas: fix an error code in probe
-Message-ID: <20160308120408.GA28684@mwanda> (sfid-20160308_130601_107729_E35E5A2E)
+	Tue, 8 Mar 2016 07:40:44 -0500
+Received: by mail-wm0-f47.google.com with SMTP id p65so147951185wmp.1
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2016 04:40:43 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1457438096-20071-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1457438096-20071-1-git-send-email-rmanohar@qti.qualcomm.com>
+Date: Tue, 8 Mar 2016 13:40:41 +0100
+Message-ID: <CA+BoTQ=Huzf7WoXMXcyj8yrykrJOd5BMc1EnmccqZgt7M1M_uA@mail.gmail.com> (sfid-20160308_134152_906898_1D8443CB)
+Subject: Re: [PATCH v3] ath10k: move mgmt descriptor limit handle under mgmt_tx
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-We accidentally return success instead of a negative error code.
+On 8 March 2016 at 12:54, Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
+[...]
+> +int ath10k_htt_tx_mgmt_inc_pending(struct ath10k_htt *htt, bool is_mgmt,
+> +                                  bool is_presp)
+>  {
+>         struct ath10k *ar = htt->ar;
+>
+>         lockdep_assert_held(&htt->tx_lock);
+>
+> +       if (!is_mgmt)
+> +               return 0;
+> +
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+>         if (htt->num_pending_tx >= htt->max_num_pending_tx)
+>                 return -EBUSY;
 
-diff --git a/drivers/net/wireless/marvell/libertas/main.c b/drivers/net/wireless/marvell/libertas/main.c
-index b35b8bc..8541cbe 100644
---- a/drivers/net/wireless/marvell/libertas/main.c
-+++ b/drivers/net/wireless/marvell/libertas/main.c
-@@ -1118,7 +1118,8 @@ int lbs_start_card(struct lbs_private *priv)
- 	else
- 		pr_info("%s: mesh disabled\n", dev->name);
- 
--	if (lbs_cfg_register(priv)) {
-+	ret = lbs_cfg_register(priv);
-+	if (ret) {
- 		pr_err("cannot register device\n");
- 		goto done;
- 	}
+This busy here will be hit when you use last tx slot because
+tx_inc_pending() is called before tx_mgmt_inc_pending().
+
+
+[...]
+>         skb_cb = ATH10K_SKB_CB(msdu);
+>         txq = skb_cb->txq;
+>         artxq = (void *)txq->drv_priv;
+>
+> -       if (unlikely(skb_cb->flags & ATH10K_SKB_F_MGMT) &&
+> -           ar->hw_params.max_probe_resp_desc_thres)
+> -               limit_mgmt_desc = true;
+> -
+
+Oh wait.. I didn't pay attention before, but this looks rather ugly.
+With this you will actually make the num_pending_mgmt_tx spin
+endlessly upwards on firmware with HTT 3.0 (and uses TX_FRM for mgmt
+tx and TX_COMPL_IND for completions), no?
+
+
+Michał
