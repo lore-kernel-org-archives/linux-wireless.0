@@ -1,61 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:23612 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756419AbcCQNDV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 09:03:21 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Avraham Stern <avraham.stern@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 2/4] ieee80211: support parsing Fine Timing Measurement action frame
-Date: Thu, 17 Mar 2016 15:02:53 +0200
-Message-Id: <1458219775-24450-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160317_140325_439363_E9818ECC)
-In-Reply-To: <1458219775-24450-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1458219775-24450-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:34362 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753132AbcCHBEp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 7 Mar 2016 20:04:45 -0500
+Received: by mail-pa0-f54.google.com with SMTP id fy10so371161pac.1
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Mar 2016 17:04:45 -0800 (PST)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH] staging: wilc1000: use mutex instead of semaphore sem_cfg_values
+Date: Tue,  8 Mar 2016 10:04:32 +0900
+Message-Id: <1457399072-5646-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160308_020449_404945_F5ADBF28)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avraham Stern <avraham.stern@intel.com>
+This patch replaces struct semaphore sem_cfg_values with struct mutex
+cfg_values_lock. It is better to use mutex than semaphore.
 
-Add definition for Fine Timing Measurement (FTM) frame format
-as defined in IEEE802.11-REVmcD5.0 section 9.6.8.33
-
-Signed-off-by: Avraham Stern <avraham.stern@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- include/linux/ieee80211.h | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ drivers/staging/wilc1000/host_interface.c | 10 +++++-----
+ drivers/staging/wilc1000/host_interface.h |  2 +-
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/ieee80211.h b/include/linux/ieee80211.h
-index 3b1f6ce..bf9706c 100644
---- a/include/linux/ieee80211.h
-+++ b/include/linux/ieee80211.h
-@@ -7,6 +7,7 @@
-  * Copyright (c) 2005, Devicescape Software, Inc.
-  * Copyright (c) 2006, Michael Wu <flamingice@sourmilk.net>
-  * Copyright (c) 2013 - 2014 Intel Mobile Communications GmbH
-+ * Copyright (c) 2016 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -1011,6 +1012,16 @@ struct ieee80211_mgmt {
- 					u8 tpc_elem_length;
- 					struct ieee80211_tpc_report_ie tpc;
- 				} __packed tpc_report;
-+				struct {
-+					u8 action_code;
-+					u8 dialog_token;
-+					u8 follow_up;
-+					u8 tod[6];
-+					u8 toa[6];
-+					__le16 tod_error;
-+					__le16 toa_error;
-+					u8 variable[0];
-+				} __packed ftm;
- 			} u;
- 		} __packed action;
- 	} u;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 854b674..0a922c7 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -443,7 +443,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+ 	int i = 0;
+ 
+-	down(&hif_drv->sem_cfg_values);
++	mutex_lock(&hif_drv->cfg_values_lock);
+ 
+ 	if (cfg_param_attr->flag & BSS_TYPE) {
+ 		if (cfg_param_attr->bss_type < 6) {
+@@ -725,7 +725,7 @@ static s32 handle_cfg_param(struct wilc_vif *vif,
+ 		netdev_err(vif->ndev, "Error in setting CFG params\n");
+ 
+ ERRORHANDLER:
+-	up(&hif_drv->sem_cfg_values);
++	mutex_unlock(&hif_drv->cfg_values_lock);
+ 	return result;
+ }
+ 
+@@ -3434,8 +3434,8 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 	setup_timer(&hif_drv->connect_timer, TimerCB_Connect, 0);
+ 	setup_timer(&hif_drv->remain_on_ch_timer, ListenTimerCB, 0);
+ 
+-	sema_init(&hif_drv->sem_cfg_values, 1);
+-	down(&hif_drv->sem_cfg_values);
++	mutex_init(&hif_drv->cfg_values_lock);
++	mutex_lock(&hif_drv->cfg_values_lock);
+ 
+ 	hif_drv->hif_state = HOST_IF_IDLE;
+ 	hif_drv->cfg_values.site_survey_enabled = SITE_SURVEY_OFF;
+@@ -3446,7 +3446,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 
+ 	hif_drv->p2p_timeout = 0;
+ 
+-	up(&hif_drv->sem_cfg_values);
++	mutex_unlock(&hif_drv->cfg_values_lock);
+ 
+ 	clients_count++;
+ 
+diff --git a/drivers/staging/wilc1000/host_interface.h b/drivers/staging/wilc1000/host_interface.h
+index 795c18c..01f3222 100644
+--- a/drivers/staging/wilc1000/host_interface.h
++++ b/drivers/staging/wilc1000/host_interface.h
+@@ -274,7 +274,7 @@ struct host_if_drv {
+ 	u8 assoc_bssid[ETH_ALEN];
+ 	struct cfg_param_attr cfg_values;
+ 
+-	struct semaphore sem_cfg_values;
++	struct mutex cfg_values_lock;
+ 	struct semaphore sem_test_key_block;
+ 	struct semaphore sem_test_disconn_block;
+ 	struct semaphore sem_get_rssi;
 -- 
-2.5.0
+2.7.1
 
