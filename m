@@ -1,564 +1,565 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45317 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753504AbcCBCFQ (ORCPT
+Received: from smtprelay0177.hostedemail.com ([216.40.44.177]:53982 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S934088AbcCHAU0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 21:05:16 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH v3 2/8] ath9k: make GPIO API to support both of WMAC and SOC
-Date: Wed,  2 Mar 2016 10:04:16 +0800
-Message-Id: <1456884262-28194-3-git-send-email-miaoqing@codeaurora.org> (sfid-20160302_030524_511183_732C5386)
-In-Reply-To: <1456884262-28194-1-git-send-email-miaoqing@codeaurora.org>
-References: <1456884262-28194-1-git-send-email-miaoqing@codeaurora.org>
+	Mon, 7 Mar 2016 19:20:26 -0500
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH 3/5] ti: wl1251: Convert wl1251_warning to wiphy_warn
+Date: Mon,  7 Mar 2016 16:19:35 -0800
+Message-Id: <fd990dbaa1d88bcef0956d843fbf0bb792d3b071.1457395071.git.joe@perches.com> (sfid-20160308_012259_785985_59963B26)
+In-Reply-To: <cover.1457395071.git.joe@perches.com>
+References: <cover.1457395071.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+Use the more common logging mechanism.
 
-commit 61b559dea40e ("ath9k: add extra GPIO led support")
-added ath9k to support access SOC's GPIOs, but implemented
-in a separated API: ath9k_hw_request_gpio().
+Miscellanea:
 
-So this patch make the APIs more common, to support both
-of WMAC and SOC GPIOs. The new APIs as below,
+o Coalesce formats
+o Realign arguments
+o Reflow to fit 80 columns
 
-void ath9k_hw_gpio_request_in();
-void ath9k_hw_gpio_request_out();
-void ath9k_hw_gpio_free();
-
-NOTE, the BSP of the SOC chips(AR9340, AR9531, AR9550, AR9561)
-should set the corresponding MUX registers correctly.
-
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/net/wireless/ath/ath9k/ar9003_eeprom.c |   4 +-
- drivers/net/wireless/ath/ath9k/ar9003_mci.c    |  39 +++--
- drivers/net/wireless/ath/ath9k/btcoex.c        |  27 ++--
- drivers/net/wireless/ath/ath9k/gpio.c          |   6 +-
- drivers/net/wireless/ath/ath9k/htc_drv_gpio.c  |   6 +-
- drivers/net/wireless/ath/ath9k/hw.c            | 196 +++++++++++++++----------
- drivers/net/wireless/ath/ath9k/hw.h            |  10 +-
- drivers/net/wireless/ath/ath9k/main.c          |   6 +-
- 8 files changed, 174 insertions(+), 120 deletions(-)
+ drivers/net/wireless/ti/wl1251/acx.c    | 91 ++++++++++++++++++++-------------
+ drivers/net/wireless/ti/wl1251/cmd.c    | 10 ++--
+ drivers/net/wireless/ti/wl1251/init.c   |  4 +-
+ drivers/net/wireless/ti/wl1251/main.c   | 26 ++++++----
+ drivers/net/wireless/ti/wl1251/rx.c     |  4 +-
+ drivers/net/wireless/ti/wl1251/tx.c     |  4 +-
+ drivers/net/wireless/ti/wl1251/wl1251.h |  3 --
+ 7 files changed, 82 insertions(+), 60 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-index 8b4561e..e434869 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
-@@ -3590,8 +3590,8 @@ static void ar9003_hw_ant_ctrl_apply(struct ath_hw *ah, bool is2ghz)
+diff --git a/drivers/net/wireless/ti/wl1251/acx.c b/drivers/net/wireless/ti/wl1251/acx.c
+index 23b4882..22d3daa 100644
+--- a/drivers/net/wireless/ti/wl1251/acx.c
++++ b/drivers/net/wireless/ti/wl1251/acx.c
+@@ -103,7 +103,8 @@ int wl1251_acx_wake_up_conditions(struct wl1251 *wl, u8 wake_up_event,
+ 	ret = wl1251_cmd_configure(wl, ACX_WAKE_UP_CONDITIONS,
+ 				   wake_up, sizeof(*wake_up));
+ 	if (ret < 0) {
+-		wl1251_warning("could not set wake up conditions: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "could not set wake up conditions: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -144,7 +145,7 @@ int wl1251_acx_fw_version(struct wl1251 *wl, char *buf, size_t len)
+ 
+ 	ret = wl1251_cmd_interrogate(wl, ACX_FW_REV, rev, sizeof(*rev));
+ 	if (ret < 0) {
+-		wl1251_warning("ACX_FW_REV interrogate failed");
++		wiphy_warn(wl->hw->wiphy, "ACX_FW_REV interrogate failed\n");
+ 		goto out;
+ 	}
+ 
+@@ -181,7 +182,8 @@ int wl1251_acx_tx_power(struct wl1251 *wl, int power)
+ 
+ 	ret = wl1251_cmd_configure(wl, DOT11_CUR_TX_PWR, acx, sizeof(*acx));
+ 	if (ret < 0) {
+-		wl1251_warning("configure of tx power failed: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "configure of tx power failed: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -265,10 +267,11 @@ int wl1251_acx_data_path_params(struct wl1251 *wl,
+ 				     resp, sizeof(*resp));
+ 
+ 	if (ret < 0) {
+-		wl1251_warning("failed to read data path parameters: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to read data path parameters: %d\n",
++			   ret);
+ 		goto out;
+ 	} else if (resp->header.cmd.status != CMD_STATUS_SUCCESS) {
+-		wl1251_warning("data path parameter acx status failed");
++		wiphy_warn(wl->hw->wiphy, "data path parameter acx status failed\n");
+ 		ret = -EIO;
+ 		goto out;
+ 	}
+@@ -293,7 +296,8 @@ int wl1251_acx_rx_msdu_life_time(struct wl1251 *wl, u32 life_time)
+ 	ret = wl1251_cmd_configure(wl, DOT11_RX_MSDU_LIFE_TIME,
+ 				   acx, sizeof(*acx));
+ 	if (ret < 0) {
+-		wl1251_warning("failed to set rx msdu life time: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set rx msdu life time: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -319,7 +323,7 @@ int wl1251_acx_rx_config(struct wl1251 *wl, u32 config, u32 filter)
+ 	ret = wl1251_cmd_configure(wl, ACX_RX_CFG,
+ 				   rx_config, sizeof(*rx_config));
+ 	if (ret < 0) {
+-		wl1251_warning("failed to set rx config: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set rx config: %d\n", ret);
+ 		goto out;
+ 	}
+ 
+@@ -343,7 +347,8 @@ int wl1251_acx_pd_threshold(struct wl1251 *wl)
+ 
+ 	ret = wl1251_cmd_configure(wl, ACX_PD_THRESHOLD, pd, sizeof(*pd));
+ 	if (ret < 0) {
+-		wl1251_warning("failed to set pd threshold: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set pd threshold: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -368,7 +373,8 @@ int wl1251_acx_slot(struct wl1251 *wl, enum acx_slot_type slot_time)
+ 
+ 	ret = wl1251_cmd_configure(wl, ACX_SLOT, slot, sizeof(*slot));
+ 	if (ret < 0) {
+-		wl1251_warning("failed to set slot time: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set slot time: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -397,7 +403,8 @@ int wl1251_acx_group_address_tbl(struct wl1251 *wl, bool enable,
+ 	ret = wl1251_cmd_configure(wl, DOT11_GROUP_ADDRESS_TBL,
+ 				   acx, sizeof(*acx));
+ 	if (ret < 0) {
+-		wl1251_warning("failed to set group addr table: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set group addr table: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -423,8 +430,8 @@ int wl1251_acx_service_period_timeout(struct wl1251 *wl)
+ 	ret = wl1251_cmd_configure(wl, ACX_SERVICE_PERIOD_TIMEOUT,
+ 				   rx_timeout, sizeof(*rx_timeout));
+ 	if (ret < 0) {
+-		wl1251_warning("failed to set service period timeout: %d",
+-			       ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set service period timeout: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -448,7 +455,8 @@ int wl1251_acx_rts_threshold(struct wl1251 *wl, u16 rts_threshold)
+ 
+ 	ret = wl1251_cmd_configure(wl, DOT11_RTS_THRESHOLD, rts, sizeof(*rts));
+ 	if (ret < 0) {
+-		wl1251_warning("failed to set rts threshold: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set rts threshold: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -474,7 +482,8 @@ int wl1251_acx_beacon_filter_opt(struct wl1251 *wl, bool enable_filter)
+ 	ret = wl1251_cmd_configure(wl, ACX_BEACON_FILTER_OPT,
+ 				   beacon_filter, sizeof(*beacon_filter));
+ 	if (ret < 0) {
+-		wl1251_warning("failed to set beacon filter opt: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set beacon filter opt: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -503,7 +512,8 @@ int wl1251_acx_beacon_filter_table(struct wl1251 *wl)
+ 	ret = wl1251_cmd_configure(wl, ACX_BEACON_FILTER_TABLE,
+ 				   ie_table, sizeof(*ie_table));
+ 	if (ret < 0) {
+-		wl1251_warning("failed to set beacon filter table: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set beacon filter table: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -529,8 +539,8 @@ int wl1251_acx_conn_monit_params(struct wl1251 *wl)
+ 	ret = wl1251_cmd_configure(wl, ACX_CONN_MONIT_PARAMS,
+ 				   acx, sizeof(*acx));
+ 	if (ret < 0) {
+-		wl1251_warning("failed to set connection monitor "
+-			       "parameters: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set connection monitor parameters: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -554,7 +564,8 @@ int wl1251_acx_sg_enable(struct wl1251 *wl)
+ 
+ 	ret = wl1251_cmd_configure(wl, ACX_SG_ENABLE, pta, sizeof(*pta));
+ 	if (ret < 0) {
+-		wl1251_warning("failed to set softgemini enable: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set softgemini enable: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -606,7 +617,7 @@ int wl1251_acx_sg_cfg(struct wl1251 *wl)
+ 
+ 	ret = wl1251_cmd_configure(wl, ACX_SG_CFG, param, sizeof(*param));
+ 	if (ret < 0) {
+-		wl1251_warning("failed to set sg config: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set sg config: %d\n", ret);
+ 		goto out;
+ 	}
+ 
+@@ -632,7 +643,8 @@ int wl1251_acx_cca_threshold(struct wl1251 *wl)
+ 	ret = wl1251_cmd_configure(wl, ACX_CCA_THRESHOLD,
+ 				   detection, sizeof(*detection));
+ 	if (ret < 0)
+-		wl1251_warning("failed to set cca threshold: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set cca threshold: %d\n",
++			   ret);
+ 
+ 	kfree(detection);
+ 	return ret;
+@@ -656,7 +668,7 @@ int wl1251_acx_bcn_dtim_options(struct wl1251 *wl)
+ 
+ 	ret = wl1251_cmd_configure(wl, ACX_BCN_DTIM_OPTIONS, bb, sizeof(*bb));
+ 	if (ret < 0) {
+-		wl1251_warning("failed to set rx config: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set rx config: %d\n", ret);
+ 		goto out;
+ 	}
+ 
+@@ -680,7 +692,7 @@ int wl1251_acx_aid(struct wl1251 *wl, u16 aid)
+ 
+ 	ret = wl1251_cmd_configure(wl, ACX_AID, acx_aid, sizeof(*acx_aid));
+ 	if (ret < 0) {
+-		wl1251_warning("failed to set aid: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set aid: %d\n", ret);
+ 		goto out;
+ 	}
+ 
+@@ -708,7 +720,8 @@ int wl1251_acx_event_mbox_mask(struct wl1251 *wl, u32 event_mask)
+ 	ret = wl1251_cmd_configure(wl, ACX_EVENT_MBOX_MASK,
+ 				   mask, sizeof(*mask));
+ 	if (ret < 0) {
+-		wl1251_warning("failed to set acx_event_mbox_mask: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set acx_event_mbox_mask: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -736,7 +749,8 @@ int wl1251_acx_low_rssi(struct wl1251 *wl, s8 threshold, u8 weight,
+ 
+ 	ret = wl1251_cmd_configure(wl, ACX_LOW_RSSI, rssi, sizeof(*rssi));
+ 	if (ret < 0)
+-		wl1251_warning("failed to set low rssi threshold: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set low rssi threshold: %d\n",
++			   ret);
+ 
+ 	kfree(rssi);
+ 	return ret;
+@@ -757,7 +771,8 @@ int wl1251_acx_set_preamble(struct wl1251 *wl, enum acx_preamble_type preamble)
+ 
+ 	ret = wl1251_cmd_configure(wl, ACX_PREAMBLE_TYPE, acx, sizeof(*acx));
+ 	if (ret < 0) {
+-		wl1251_warning("Setting of preamble failed: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "Setting of preamble failed: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -782,7 +797,8 @@ int wl1251_acx_cts_protect(struct wl1251 *wl,
+ 
+ 	ret = wl1251_cmd_configure(wl, ACX_CTS_PROTECTION, acx, sizeof(*acx));
+ 	if (ret < 0) {
+-		wl1251_warning("Setting of ctsprotect failed: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "Setting of ctsprotect failed: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -803,7 +819,7 @@ int wl1251_acx_tsf_info(struct wl1251 *wl, u64 *mactime)
+ 	ret = wl1251_cmd_interrogate(wl, ACX_TSF_INFO,
+ 				     tsf_info, sizeof(*tsf_info));
+ 	if (ret < 0) {
+-		wl1251_warning("ACX_FW_REV interrogate failed");
++		wiphy_warn(wl->hw->wiphy, "ACX_FW_REV interrogate failed\n");
+ 		goto out;
+ 	}
+ 
+@@ -824,7 +840,7 @@ int wl1251_acx_statistics(struct wl1251 *wl, struct acx_statistics *stats)
+ 	ret = wl1251_cmd_interrogate(wl, ACX_STATISTICS, stats,
+ 				     sizeof(*stats));
+ 	if (ret < 0) {
+-		wl1251_warning("acx statistics failed: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "acx statistics failed: %d\n", ret);
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -857,7 +873,8 @@ int wl1251_acx_rate_policies(struct wl1251 *wl)
+ 
+ 	ret = wl1251_cmd_configure(wl, ACX_RATE_POLICY, acx, sizeof(*acx));
+ 	if (ret < 0) {
+-		wl1251_warning("Setting of rate policies failed: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "Setting of rate policies failed: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -902,7 +919,8 @@ int wl1251_acx_mem_cfg(struct wl1251 *wl)
+ 	ret = wl1251_cmd_configure(wl, ACX_MEM_CFG, mem_conf,
+ 				   sizeof(*mem_conf));
+ 	if (ret < 0) {
+-		wl1251_warning("wl1251 mem config failed: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "wl1251 mem config failed: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -928,7 +946,8 @@ int wl1251_acx_wr_tbtt_and_dtim(struct wl1251 *wl, u16 tbtt, u8 dtim)
+ 	ret = wl1251_cmd_configure(wl, ACX_WR_TBTT_AND_DTIM,
+ 				   acx, sizeof(*acx));
+ 	if (ret < 0) {
+-		wl1251_warning("failed to set tbtt and dtim: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set tbtt and dtim: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -954,7 +973,8 @@ int wl1251_acx_bet_enable(struct wl1251 *wl, enum wl1251_acx_bet_mode mode,
+ 
+ 	ret = wl1251_cmd_configure(wl, ACX_BET_ENABLE, acx, sizeof(*acx));
+ 	if (ret < 0) {
+-		wl1251_warning("wl1251 acx bet enable failed: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "wl1251 acx bet enable failed: %d\n",
++			   ret);
+ 		goto out;
+ 	}
+ 
+@@ -983,7 +1003,8 @@ int wl1251_acx_arp_ip_filter(struct wl1251 *wl, bool enable, __be32 address)
+ 	ret = wl1251_cmd_configure(wl, ACX_ARP_IP_FILTER,
+ 				   acx, sizeof(*acx));
+ 	if (ret < 0)
+-		wl1251_warning("failed to set arp ip filter: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "failed to set arp ip filter: %d\n",
++			   ret);
+ 
+ 	kfree(acx);
+ 	return ret;
+@@ -1010,7 +1031,7 @@ int wl1251_acx_ac_cfg(struct wl1251 *wl, u8 ac, u8 cw_min, u16 cw_max,
+ 
+ 	ret = wl1251_cmd_configure(wl, ACX_AC_CFG, acx, sizeof(*acx));
+ 	if (ret < 0) {
+-		wl1251_warning("acx ac cfg failed: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "acx ac cfg failed: %d\n", ret);
+ 		goto out;
+ 	}
+ 
+@@ -1043,7 +1064,7 @@ int wl1251_acx_tid_cfg(struct wl1251 *wl, u8 queue,
+ 
+ 	ret = wl1251_cmd_configure(wl, ACX_TID_CFG, acx, sizeof(*acx));
+ 	if (ret < 0) {
+-		wl1251_warning("acx tid cfg failed: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "acx tid cfg failed: %d\n", ret);
+ 		goto out;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ti/wl1251/cmd.c b/drivers/net/wireless/ti/wl1251/cmd.c
+index a2a306e..f956c63 100644
+--- a/drivers/net/wireless/ti/wl1251/cmd.c
++++ b/drivers/net/wireless/ti/wl1251/cmd.c
+@@ -74,7 +74,7 @@ int wl1251_cmd_test(struct wl1251 *wl, void *buf, size_t buf_len, u8 answer)
+ 	ret = wl1251_cmd_send(wl, CMD_TEST, buf, buf_len);
+ 
+ 	if (ret < 0) {
+-		wl1251_warning("TEST command failed");
++		wiphy_warn(wl->hw->wiphy, "TEST command failed\n");
+ 		return ret;
+ 	}
+ 
+@@ -158,7 +158,7 @@ int wl1251_cmd_configure(struct wl1251 *wl, u16 id, void *buf, size_t len)
+ 
+ 	ret = wl1251_cmd_send(wl, CMD_CONFIGURE, acx, len);
+ 	if (ret < 0) {
+-		wl1251_warning("CONFIGURE command NOK");
++		wiphy_warn(wl->hw->wiphy, "CONFIGURE command NOK\n");
+ 		return ret;
+ 	}
+ 
+@@ -182,8 +182,8 @@ int wl1251_cmd_vbm(struct wl1251 *wl, u8 identity,
+ 	/* Count and period will be filled by the target */
+ 	vbm->tim.bitmap_ctrl = bitmap_control;
+ 	if (bitmap_len > PARTIAL_VBM_MAX) {
+-		wl1251_warning("cmd vbm len is %d B, truncating to %d",
+-			       bitmap_len, PARTIAL_VBM_MAX);
++		wiphy_warn(wl->hw->wiphy, "cmd vbm len is %d B, truncating to %d\n",
++			   bitmap_len, PARTIAL_VBM_MAX);
+ 		bitmap_len = PARTIAL_VBM_MAX;
+ 	}
+ 	memcpy(vbm->tim.pvb_field, bitmap, bitmap_len);
+@@ -413,7 +413,7 @@ int wl1251_cmd_template_set(struct wl1251 *wl, u16 cmd_id,
+ 
+ 	ret = wl1251_cmd_send(wl, cmd_id, cmd, cmd_len);
+ 	if (ret < 0) {
+-		wl1251_warning("cmd set_template failed: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "cmd set_template failed: %d\n", ret);
+ 		goto out;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ti/wl1251/init.c b/drivers/net/wireless/ti/wl1251/init.c
+index b1fedb9..796ccf4 100644
+--- a/drivers/net/wireless/ti/wl1251/init.c
++++ b/drivers/net/wireless/ti/wl1251/init.c
+@@ -35,13 +35,13 @@ int wl1251_hw_init_hwenc_config(struct wl1251 *wl)
+ 
+ 	ret = wl1251_acx_feature_cfg(wl, 0);
+ 	if (ret < 0) {
+-		wl1251_warning("couldn't set feature config");
++		wiphy_warn(wl->hw->wiphy, "couldn't set feature config\n");
+ 		return ret;
+ 	}
+ 
+ 	ret = wl1251_acx_default_key(wl, wl->default_key);
+ 	if (ret < 0) {
+-		wl1251_warning("couldn't set default key");
++		wiphy_warn(wl->hw->wiphy, "couldn't set default key\n");
+ 		return ret;
+ 	}
+ 
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index 7266d66..a0576e7 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -150,7 +150,7 @@ static void wl1251_fw_wakeup(struct wl1251 *wl)
+ 	elp_reg = wl1251_read_elp(wl, HW_ACCESS_ELP_CTRL_REG_ADDR);
+ 
+ 	if (!(elp_reg & ELPCTRL_WLAN_READY))
+-		wl1251_warning("WLAN not ready");
++		wiphy_warn(wl->hw->wiphy, "WLAN not ready\n");
+ }
+ 
+ static int wl1251_chip_wakeup(struct wl1251 *wl)
+@@ -264,9 +264,9 @@ static void wl1251_irq_work(struct work_struct *work)
+ 				intr |= WL1251_ACX_INTR_RX1_DATA;
+ 				break;
+ 			default:
+-				wl1251_warning(
+-					"RX: FW and host out of sync: %d",
+-					wl->rx_counter - wl->rx_handled);
++				wiphy_warn(wl->hw->wiphy,
++					   "RX: FW and host out of sync: %d\n",
++					   wl->rx_counter - wl->rx_handled);
+ 				break;
+ 			}
+ 
+@@ -352,7 +352,7 @@ static int wl1251_join(struct wl1251 *wl, u8 bss_type, u8 channel,
+ 
+ 	ret = wl1251_event_wait(wl, JOIN_EVENT_COMPLETE_ID, 100);
+ 	if (ret < 0)
+-		wl1251_warning("join timeout");
++		wiphy_warn(wl->hw->wiphy, "join timeout\n");
+ 
+ out:
+ 	return ret;
+@@ -577,7 +577,8 @@ static int wl1251_build_null_data(struct wl1251 *wl)
+ out:
+ 	dev_kfree_skb(skb);
+ 	if (ret)
+-		wl1251_warning("cmd buld null data failed: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "cmd buld null data failed: %d\n",
++			   ret);
+ 
+ 	return ret;
+ }
+@@ -973,7 +974,7 @@ static int wl1251_op_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 
+ 	ret = wl1251_cmd_send(wl, CMD_SET_KEYS, wl_cmd, sizeof(*wl_cmd));
+ 	if (ret < 0) {
+-		wl1251_warning("could not set keys");
++		wiphy_warn(wl->hw->wiphy, "could not set keys\n");
+ 		goto out_sleep;
+ 	}
+ 
+@@ -1084,7 +1085,8 @@ static int wl1251_op_set_rts_threshold(struct ieee80211_hw *hw, u32 value)
+ 
+ 	ret = wl1251_acx_rts_threshold(wl, (u16) value);
+ 	if (ret < 0)
+-		wl1251_warning("wl1251_op_set_rts_threshold failed: %d", ret);
++		wiphy_warn(wl->hw->wiphy, "wl1251_op_set_rts_threshold failed: %d\n",
++			   ret);
+ 
+ 	wl1251_ps_elp_sleep(wl);
+ 
+@@ -1172,7 +1174,8 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
  		else
- 			gpio = AR9300_EXT_LNA_CTL_GPIO_AR9485;
+ 			ret = wl1251_acx_slot(wl, SLOT_TIME_LONG);
+ 		if (ret < 0) {
+-			wl1251_warning("Set slot time failed %d", ret);
++			wiphy_warn(wl->hw->wiphy, "Set slot time failed %d\n",
++				   ret);
+ 			goto out_sleep;
+ 		}
+ 	}
+@@ -1190,7 +1193,8 @@ static void wl1251_op_bss_info_changed(struct ieee80211_hw *hw,
+ 		else
+ 			ret = wl1251_acx_cts_protect(wl, CTSPROTECT_DISABLE);
+ 		if (ret < 0) {
+-			wl1251_warning("Set ctsprotect failed %d", ret);
++			wiphy_warn(wl->hw->wiphy, "Set ctsprotect failed %d\n",
++				   ret);
+ 			goto out_sleep;
+ 		}
+ 	}
+@@ -1436,7 +1440,7 @@ static int wl1251_read_eeprom_mac(struct wl1251 *wl)
  
--		ath9k_hw_cfg_output(ah, gpio,
--				    AR_GPIO_OUTPUT_MUX_AS_PCIE_ATTENTION_LED);
-+		ath9k_hw_gpio_request_out(ah, gpio, NULL,
-+					  AR_GPIO_OUTPUT_MUX_AS_PCIE_ATTENTION_LED);
+ 	ret = wl1251_read_eeprom(wl, 0x1c, mac, sizeof(mac));
+ 	if (ret < 0) {
+-		wl1251_warning("failed to read MAC address from EEPROM");
++		wiphy_warn(wl->hw->wiphy, "failed to read MAC address from EEPROM\n");
+ 		return ret;
  	}
  
- 	value = ar9003_hw_ant_ctrl_common_get(ah, is2ghz);
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_mci.c b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-index af5ee41..0fe9c83 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_mci.c
-@@ -427,21 +427,34 @@ static void ar9003_mci_observation_set_up(struct ath_hw *ah)
- 	struct ath9k_hw_mci *mci = &ah->btcoex_hw.mci;
+diff --git a/drivers/net/wireless/ti/wl1251/rx.c b/drivers/net/wireless/ti/wl1251/rx.c
+index 0176656..df59521 100644
+--- a/drivers/net/wireless/ti/wl1251/rx.c
++++ b/drivers/net/wireless/ti/wl1251/rx.c
+@@ -158,8 +158,8 @@ static void wl1251_rx_body(struct wl1251 *wl,
+ 	last_id_inc = (wl->rx_last_id + 1) % (RX_MAX_PACKET_ID + 1);
  
- 	if (mci->config & ATH_MCI_CONFIG_MCI_OBS_MCI) {
--		ath9k_hw_cfg_output(ah, 3, AR_GPIO_OUTPUT_MUX_AS_MCI_WLAN_DATA);
--		ath9k_hw_cfg_output(ah, 2, AR_GPIO_OUTPUT_MUX_AS_MCI_WLAN_CLK);
--		ath9k_hw_cfg_output(ah, 1, AR_GPIO_OUTPUT_MUX_AS_MCI_BT_DATA);
--		ath9k_hw_cfg_output(ah, 0, AR_GPIO_OUTPUT_MUX_AS_MCI_BT_CLK);
-+		ath9k_hw_gpio_request_out(ah, 3, NULL,
-+					  AR_GPIO_OUTPUT_MUX_AS_MCI_WLAN_DATA);
-+		ath9k_hw_gpio_request_out(ah, 2, NULL,
-+					  AR_GPIO_OUTPUT_MUX_AS_MCI_WLAN_CLK);
-+		ath9k_hw_gpio_request_out(ah, 1, NULL,
-+					  AR_GPIO_OUTPUT_MUX_AS_MCI_BT_DATA);
-+		ath9k_hw_gpio_request_out(ah, 0, NULL,
-+					  AR_GPIO_OUTPUT_MUX_AS_MCI_BT_CLK);
- 	} else if (mci->config & ATH_MCI_CONFIG_MCI_OBS_TXRX) {
--		ath9k_hw_cfg_output(ah, 3, AR_GPIO_OUTPUT_MUX_AS_WL_IN_TX);
--		ath9k_hw_cfg_output(ah, 2, AR_GPIO_OUTPUT_MUX_AS_WL_IN_RX);
--		ath9k_hw_cfg_output(ah, 1, AR_GPIO_OUTPUT_MUX_AS_BT_IN_TX);
--		ath9k_hw_cfg_output(ah, 0, AR_GPIO_OUTPUT_MUX_AS_BT_IN_RX);
--		ath9k_hw_cfg_output(ah, 5, AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
-+		ath9k_hw_gpio_request_out(ah, 3, NULL,
-+					  AR_GPIO_OUTPUT_MUX_AS_WL_IN_TX);
-+		ath9k_hw_gpio_request_out(ah, 2, NULL,
-+					  AR_GPIO_OUTPUT_MUX_AS_WL_IN_RX);
-+		ath9k_hw_gpio_request_out(ah, 1, NULL,
-+					  AR_GPIO_OUTPUT_MUX_AS_BT_IN_TX);
-+		ath9k_hw_gpio_request_out(ah, 0, NULL,
-+					  AR_GPIO_OUTPUT_MUX_AS_BT_IN_RX);
-+		ath9k_hw_gpio_request_out(ah, 5, NULL,
-+					  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
- 	} else if (mci->config & ATH_MCI_CONFIG_MCI_OBS_BT) {
--		ath9k_hw_cfg_output(ah, 3, AR_GPIO_OUTPUT_MUX_AS_BT_IN_TX);
--		ath9k_hw_cfg_output(ah, 2, AR_GPIO_OUTPUT_MUX_AS_BT_IN_RX);
--		ath9k_hw_cfg_output(ah, 1, AR_GPIO_OUTPUT_MUX_AS_MCI_BT_DATA);
--		ath9k_hw_cfg_output(ah, 0, AR_GPIO_OUTPUT_MUX_AS_MCI_BT_CLK);
-+		ath9k_hw_gpio_request_out(ah, 3, NULL,
-+					  AR_GPIO_OUTPUT_MUX_AS_BT_IN_TX);
-+		ath9k_hw_gpio_request_out(ah, 2, NULL,
-+					  AR_GPIO_OUTPUT_MUX_AS_BT_IN_RX);
-+		ath9k_hw_gpio_request_out(ah, 1, NULL,
-+					  AR_GPIO_OUTPUT_MUX_AS_MCI_BT_DATA);
-+		ath9k_hw_gpio_request_out(ah, 0, NULL,
-+					  AR_GPIO_OUTPUT_MUX_AS_MCI_BT_CLK);
- 	} else
- 		return;
- 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index 5a084d9..7719cb1 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -142,7 +142,8 @@ void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah)
- 		      btcoex_hw->btactive_gpio);
- 
- 	/* Configure the desired gpio port for input */
--	ath9k_hw_cfg_gpio_input(ah, btcoex_hw->btactive_gpio);
-+	ath9k_hw_gpio_request_in(ah, btcoex_hw->btactive_gpio,
-+				 "ath9k-btactive");
- }
- EXPORT_SYMBOL(ath9k_hw_btcoex_init_2wire);
- 
-@@ -166,9 +167,10 @@ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
- 			btcoex_hw->btpriority_gpio);
- 
- 	/* Configure the desired GPIO ports for input */
--
--	ath9k_hw_cfg_gpio_input(ah, btcoex_hw->btactive_gpio);
--	ath9k_hw_cfg_gpio_input(ah, btcoex_hw->btpriority_gpio);
-+	ath9k_hw_gpio_request_in(ah, btcoex_hw->btactive_gpio,
-+				 "ath9k-btactive");
-+	ath9k_hw_gpio_request_in(ah, btcoex_hw->btpriority_gpio,
-+				 "ath9k-btpriority");
- }
- EXPORT_SYMBOL(ath9k_hw_btcoex_init_3wire);
- 
-@@ -201,8 +203,9 @@ static void ath9k_hw_btcoex_enable_2wire(struct ath_hw *ah)
- 	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
- 
- 	/* Configure the desired GPIO port for TX_FRAME output */
--	ath9k_hw_cfg_output(ah, btcoex_hw->wlanactive_gpio,
--			    AR_GPIO_OUTPUT_MUX_AS_TX_FRAME);
-+	ath9k_hw_gpio_request_out(ah, btcoex_hw->wlanactive_gpio,
-+				  "ath9k-wlanactive",
-+				  AR_GPIO_OUTPUT_MUX_AS_TX_FRAME);
- }
- 
- /*
-@@ -271,7 +274,6 @@ static void ath9k_hw_btcoex_enable_3wire(struct ath_hw *ah)
- 	REG_WRITE(ah, AR_BT_COEX_MODE, btcoex->bt_coex_mode);
- 	REG_WRITE(ah, AR_BT_COEX_MODE2, btcoex->bt_coex_mode2);
- 
--
- 	if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		REG_WRITE(ah, AR_BT_COEX_WL_WEIGHTS0, btcoex->wlan_weight[0]);
- 		REG_WRITE(ah, AR_BT_COEX_WL_WEIGHTS1, btcoex->wlan_weight[1]);
-@@ -281,8 +283,6 @@ static void ath9k_hw_btcoex_enable_3wire(struct ath_hw *ah)
- 	} else
- 		REG_WRITE(ah, AR_BT_COEX_WEIGHT, btcoex->bt_coex_weights);
- 
--
--
- 	if (AR_SREV_9271(ah)) {
- 		val = REG_READ(ah, 0x50040);
- 		val &= 0xFFFFFEFF;
-@@ -292,8 +292,9 @@ static void ath9k_hw_btcoex_enable_3wire(struct ath_hw *ah)
- 	REG_RMW_FIELD(ah, AR_QUIET1, AR_QUIET1_QUIET_ACK_CTS_ENABLE, 1);
- 	REG_RMW_FIELD(ah, AR_PCU_MISC, AR_PCU_BT_ANT_PREVENT_RX, 0);
- 
--	ath9k_hw_cfg_output(ah, btcoex->wlanactive_gpio,
--			    AR_GPIO_OUTPUT_MUX_AS_RX_CLEAR_EXTERNAL);
-+	ath9k_hw_gpio_request_out(ah, btcoex->wlanactive_gpio,
-+				  "ath9k-wlanactive",
-+				  AR_GPIO_OUTPUT_MUX_AS_RX_CLEAR_EXTERNAL);
- }
- 
- static void ath9k_hw_btcoex_enable_mci(struct ath_hw *ah)
-@@ -364,8 +365,8 @@ void ath9k_hw_btcoex_disable(struct ath_hw *ah)
- 	if (!AR_SREV_9300_20_OR_LATER(ah))
- 		ath9k_hw_set_gpio(ah, btcoex_hw->wlanactive_gpio, 0);
- 
--	ath9k_hw_cfg_output(ah, btcoex_hw->wlanactive_gpio,
--			AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
-+	ath9k_hw_gpio_request_out(ah, btcoex_hw->wlanactive_gpio,
-+				  NULL, AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
- 
- 	if (btcoex_hw->scheme == ATH_BTCOEX_CFG_3WIRE) {
- 		REG_WRITE(ah, AR_BT_COEX_MODE, AR_BT_QUIET | AR_BT_MODE);
-diff --git a/drivers/net/wireless/ath/ath9k/gpio.c b/drivers/net/wireless/ath/ath9k/gpio.c
-index 2847067..b41dfb7 100644
---- a/drivers/net/wireless/ath/ath9k/gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/gpio.c
-@@ -74,7 +74,8 @@ void ath_fill_led_pin(struct ath_softc *sc)
- 
- 	if (ah->led_pin >= 0) {
- 		if (!((1 << ah->led_pin) & AR_GPIO_OE_OUT_MASK))
--			ath9k_hw_request_gpio(ah, ah->led_pin, "ath9k-led");
-+			ath9k_hw_gpio_request_out(ah, ah->led_pin, "ath9k-led",
-+						  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
- 		return;
- 	}
- 
-@@ -90,7 +91,8 @@ void ath_fill_led_pin(struct ath_softc *sc)
- 		ah->led_pin = ATH_LED_PIN_DEF;
- 
- 	/* Configure gpio 1 for output */
--	ath9k_hw_cfg_output(ah, ah->led_pin, AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
-+	ath9k_hw_gpio_request_out(ah, ah->led_pin, "ath9k-led",
-+				  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
- 
- 	/* LED off, active low */
- 	ath9k_hw_set_gpio(ah, ah->led_pin, (ah->config.led_active_high) ? 0 : 1);
-diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-index 2aabcbd..d9b640a 100644
---- a/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-+++ b/drivers/net/wireless/ath/ath9k/htc_drv_gpio.c
-@@ -259,11 +259,11 @@ void ath9k_deinit_leds(struct ath9k_htc_priv *priv)
- void ath9k_configure_leds(struct ath9k_htc_priv *priv)
- {
- 	/* Configure gpio 1 for output */
--	ath9k_hw_cfg_output(priv->ah, priv->ah->led_pin,
--			    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
-+	ath9k_hw_gpio_request_out(priv->ah, priv->ah->led_pin,
-+				  "ath9k-led",
-+				  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
- 	/* LED off, active low */
- 	ath9k_hw_set_gpio(priv->ah, priv->ah->led_pin, 1);
--
- }
- 
- void ath9k_init_leds(struct ath9k_htc_priv *priv)
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 0e80b3f..4046949 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -1572,7 +1572,8 @@ static void ath9k_hw_apply_gpio_override(struct ath_hw *ah)
- 		if (!(gpio_mask & 1))
- 			continue;
- 
--		ath9k_hw_cfg_output(ah, i, AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
-+		ath9k_hw_gpio_request_out(ah, i, NULL,
-+					  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
- 		ath9k_hw_set_gpio(ah, i, !!(ah->gpio_val & BIT(i)));
- 	}
- }
-@@ -1948,7 +1949,7 @@ int ath9k_hw_reset(struct ath_hw *ah, struct ath9k_channel *chan,
- 	ath9k_hw_init_qos(ah);
- 
- 	if (ah->caps.hw_caps & ATH9K_HW_CAP_RFSILENT)
--		ath9k_hw_cfg_gpio_input(ah, ah->rfkill_gpio);
-+		ath9k_hw_gpio_request_in(ah, ah->rfkill_gpio, "ath9k-rfkill");
- 
- 	ath9k_hw_init_global_settings(ah);
- 
-@@ -2644,8 +2645,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- /* GPIO / RFKILL / Antennae */
- /****************************/
- 
--static void ath9k_hw_gpio_cfg_output_mux(struct ath_hw *ah,
--					 u32 gpio, u32 type)
-+static void ath9k_hw_gpio_cfg_output_mux(struct ath_hw *ah, u32 gpio, u32 type)
- {
- 	int addr;
- 	u32 gpio_shift, tmp;
-@@ -2659,8 +2659,8 @@ static void ath9k_hw_gpio_cfg_output_mux(struct ath_hw *ah,
- 
- 	gpio_shift = (gpio % 6) * 5;
- 
--	if (AR_SREV_9280_20_OR_LATER(ah)
--	    || (addr != AR_GPIO_OUTPUT_MUX1)) {
-+	if (AR_SREV_9280_20_OR_LATER(ah) ||
-+	    (addr != AR_GPIO_OUTPUT_MUX1)) {
- 		REG_RMW(ah, addr, (type << gpio_shift),
- 			(0x1f << gpio_shift));
+ 	if (last_id_inc != curr_id) {
+-		wl1251_warning("curr ID:%d, last ID inc:%d",
+-			       curr_id, last_id_inc);
++		wiphy_warn(wl->hw->wiphy, "curr ID:%d, last ID inc:%d\n",
++			   curr_id, last_id_inc);
+ 		wl->rx_last_id = curr_id;
  	} else {
-@@ -2672,106 +2672,144 @@ static void ath9k_hw_gpio_cfg_output_mux(struct ath_hw *ah,
- 	}
- }
- 
--void ath9k_hw_cfg_gpio_input(struct ath_hw *ah, u32 gpio)
-+/* BSP should set the corresponding MUX register correctly.
-+ */
-+static void ath9k_hw_gpio_cfg_soc(struct ath_hw *ah, u32 gpio, bool out,
-+				  const char *label)
- {
--	u32 gpio_shift;
-+	if (ah->caps.gpio_requested & BIT(gpio))
-+		return;
- 
--	BUG_ON(gpio >= ah->caps.num_gpio_pins);
-+	/* may be requested by BSP, free anyway */
-+	gpio_free(gpio);
- 
--	if (AR_DEVID_7010(ah)) {
--		gpio_shift = gpio;
--		REG_RMW(ah, AR7010_GPIO_OE,
--			(AR7010_GPIO_OE_AS_INPUT << gpio_shift),
--			(AR7010_GPIO_OE_MASK << gpio_shift));
-+	if (gpio_request_one(gpio, out ? GPIOF_OUT_INIT_LOW : GPIOF_IN, label))
+ 		wl->rx_last_id = last_id_inc;
+diff --git a/drivers/net/wireless/ti/wl1251/tx.c b/drivers/net/wireless/ti/wl1251/tx.c
+index 0aa2d54..0e782f8 100644
+--- a/drivers/net/wireless/ti/wl1251/tx.c
++++ b/drivers/net/wireless/ti/wl1251/tx.c
+@@ -289,13 +289,13 @@ static void enable_tx_for_packet_injection(struct wl1251 *wl)
+ 	ret = wl1251_cmd_join(wl, BSS_TYPE_STA_BSS, wl->channel,
+ 			      wl->beacon_int, wl->dtim_period);
+ 	if (ret < 0) {
+-		wl1251_warning("join failed");
++		wiphy_warn(wl->hw->wiphy, "join failed\n");
  		return;
--	}
+ 	}
  
--	gpio_shift = gpio << 1;
--	REG_RMW(ah,
--		AR_GPIO_OE_OUT,
--		(AR_GPIO_OE_OUT_DRV_NO << gpio_shift),
--		(AR_GPIO_OE_OUT_DRV << gpio_shift));
-+	ah->caps.gpio_requested |= BIT(gpio);
- }
--EXPORT_SYMBOL(ath9k_hw_cfg_gpio_input);
+ 	ret = wl1251_event_wait(wl, JOIN_EVENT_COMPLETE_ID, 100);
+ 	if (ret < 0) {
+-		wl1251_warning("join timeout");
++		wiphy_warn(wl->hw->wiphy, "join timeout\n");
+ 		return;
+ 	}
  
--u32 ath9k_hw_gpio_get(struct ath_hw *ah, u32 gpio)
-+static void ath9k_hw_gpio_cfg_wmac(struct ath_hw *ah, u32 gpio, bool out,
-+				   u32 ah_signal_type)
- {
--#define MS_REG_READ(x, y) \
--	(MS(REG_READ(ah, AR_GPIO_IN_OUT), x##_GPIO_IN_VAL) & (AR_GPIO_BIT(y)))
+diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
+index 2fdb194..5d520d2 100644
+--- a/drivers/net/wireless/ti/wl1251/wl1251.h
++++ b/drivers/net/wireless/ti/wl1251/wl1251.h
+@@ -54,9 +54,6 @@ enum {
+ 
+ #define DEBUG_DUMP_LIMIT 1024
+ 
+-#define wl1251_warning(fmt, arg...) \
+-	printk(KERN_WARNING DRIVER_PREFIX "WARNING " fmt "\n", ##arg)
 -
--	if (gpio >= ah->caps.num_gpio_pins)
--		return 0xffffffff;
-+	u32 gpio_set, gpio_shift = gpio;
+ #define wl1251_notice(fmt, arg...) \
+ 	printk(KERN_INFO DRIVER_PREFIX fmt "\n", ##arg)
  
- 	if (AR_DEVID_7010(ah)) {
--		u32 val;
--		val = REG_READ(ah, AR7010_GPIO_IN);
--		return (MS(val, AR7010_GPIO_IN_VAL) & AR_GPIO_BIT(gpio)) == 0;
--	} else if (AR_SREV_9300_20_OR_LATER(ah))
--		return (MS(REG_READ(ah, AR_GPIO_IN), AR9300_GPIO_IN_VAL) &
--			AR_GPIO_BIT(gpio)) != 0;
--	else if (AR_SREV_9271(ah))
--		return MS_REG_READ(AR9271, gpio) != 0;
--	else if (AR_SREV_9287_11_OR_LATER(ah))
--		return MS_REG_READ(AR9287, gpio) != 0;
--	else if (AR_SREV_9285_12_OR_LATER(ah))
--		return MS_REG_READ(AR9285, gpio) != 0;
--	else if (AR_SREV_9280_20_OR_LATER(ah))
--		return MS_REG_READ(AR928X, gpio) != 0;
--	else
--		return MS_REG_READ(AR, gpio) != 0;
-+		gpio_set = out ?
-+			AR7010_GPIO_OE_AS_OUTPUT : AR7010_GPIO_OE_AS_INPUT;
-+		REG_RMW(ah, AR7010_GPIO_OE, gpio_set << gpio_shift,
-+			AR7010_GPIO_OE_MASK << gpio_shift);
-+	} else if (AR_SREV_SOC(ah)) {
-+		gpio_set = out ? 1 : 0;
-+		REG_RMW(ah, AR_GPIO_OE_OUT, gpio_set << gpio_shift,
-+			gpio_set << gpio_shift);
-+	} else {
-+		gpio_shift = gpio << 1;
-+		gpio_set = out ?
-+			AR_GPIO_OE_OUT_DRV_ALL : AR_GPIO_OE_OUT_DRV_NO;
-+		REG_RMW(ah, AR_GPIO_OE_OUT, gpio_set << gpio_shift,
-+			AR_GPIO_OE_OUT_DRV << gpio_shift);
-+
-+		if (out)
-+			ath9k_hw_gpio_cfg_output_mux(ah, gpio, ah_signal_type);
-+	}
- }
--EXPORT_SYMBOL(ath9k_hw_gpio_get);
- 
--void ath9k_hw_cfg_output(struct ath_hw *ah, u32 gpio,
--			 u32 ah_signal_type)
-+static void ath9k_hw_gpio_request(struct ath_hw *ah, u32 gpio, bool out,
-+				  const char *label, u32 ah_signal_type)
- {
--	u32 gpio_shift;
-+	WARN_ON(gpio >= ah->caps.num_gpio_pins);
- 
--	if (AR_DEVID_7010(ah)) {
--		gpio_shift = gpio;
--		REG_RMW(ah, AR7010_GPIO_OE,
--			(AR7010_GPIO_OE_AS_OUTPUT << gpio_shift),
--			(AR7010_GPIO_OE_MASK << gpio_shift));
--		return;
--	}
-+	if (BIT(gpio) & ah->caps.gpio_mask)
-+		ath9k_hw_gpio_cfg_wmac(ah, gpio, out, ah_signal_type);
-+	else if (AR_SREV_SOC(ah))
-+		ath9k_hw_gpio_cfg_soc(ah, gpio, out, label);
-+	else
-+		WARN_ON(1);
-+}
- 
--	ath9k_hw_gpio_cfg_output_mux(ah, gpio, ah_signal_type);
--	gpio_shift = 2 * gpio;
--	REG_RMW(ah,
--		AR_GPIO_OE_OUT,
--		(AR_GPIO_OE_OUT_DRV_ALL << gpio_shift),
--		(AR_GPIO_OE_OUT_DRV << gpio_shift));
-+void ath9k_hw_gpio_request_in(struct ath_hw *ah, u32 gpio, const char *label)
-+{
-+	ath9k_hw_gpio_request(ah, gpio, false, label, 0);
- }
--EXPORT_SYMBOL(ath9k_hw_cfg_output);
-+EXPORT_SYMBOL(ath9k_hw_gpio_request_in);
- 
--void ath9k_hw_set_gpio(struct ath_hw *ah, u32 gpio, u32 val)
-+void ath9k_hw_gpio_request_out(struct ath_hw *ah, u32 gpio, const char *label,
-+			       u32 ah_signal_type)
- {
--	if (AR_DEVID_7010(ah)) {
--		val = val ? 0 : 1;
--		REG_RMW(ah, AR7010_GPIO_OUT, ((val&1) << gpio),
--			AR_GPIO_BIT(gpio));
-+	ath9k_hw_gpio_request(ah, gpio, true, label, ah_signal_type);
-+}
-+EXPORT_SYMBOL(ath9k_hw_gpio_request_out);
-+
-+void ath9k_hw_gpio_free(struct ath_hw *ah, u32 gpio)
-+{
-+	if (!AR_SREV_SOC(ah))
- 		return;
-+
-+	WARN_ON(gpio >= ah->caps.num_gpio_pins);
-+
-+	if (ah->caps.gpio_requested & BIT(gpio)) {
-+		gpio_free(gpio);
-+		ah->caps.gpio_requested &= ~BIT(gpio);
- 	}
-+}
-+EXPORT_SYMBOL(ath9k_hw_gpio_free);
- 
--	if (AR_SREV_9271(ah))
--		val = ~val;
-+u32 ath9k_hw_gpio_get(struct ath_hw *ah, u32 gpio)
-+{
-+	u32 val = 0xffffffff;
- 
--	if ((1 << gpio) & AR_GPIO_OE_OUT_MASK)
--		REG_RMW(ah, AR_GPIO_IN_OUT, ((val & 1) << gpio),
--			AR_GPIO_BIT(gpio));
--	else
--		gpio_set_value(gpio, val & 1);
-+#define MS_REG_READ(x, y) \
-+	(MS(REG_READ(ah, AR_GPIO_IN_OUT), x##_GPIO_IN_VAL) & BIT(y))
-+
-+	WARN_ON(gpio >= ah->caps.num_gpio_pins);
-+
-+	if (BIT(gpio) & ah->caps.gpio_mask) {
-+		if (AR_SREV_9271(ah))
-+			val = MS_REG_READ(AR9271, gpio);
-+		else if (AR_SREV_9287(ah))
-+			val = MS_REG_READ(AR9287, gpio);
-+		else if (AR_SREV_9285(ah))
-+			val = MS_REG_READ(AR9285, gpio);
-+		else if (AR_SREV_9280(ah))
-+			val = MS_REG_READ(AR928X, gpio);
-+		else if (AR_DEVID_7010(ah))
-+			val = REG_READ(ah, AR7010_GPIO_IN) & BIT(gpio);
-+		else if (AR_SREV_9300_20_OR_LATER(ah))
-+			val = REG_READ(ah, AR_GPIO_IN) & BIT(gpio);
-+		else
-+			val = MS_REG_READ(AR, gpio);
-+	} else if (BIT(gpio) & ah->caps.gpio_requested) {
-+		val = gpio_get_value(gpio) & BIT(gpio);
-+	} else {
-+		WARN_ON(1);
-+	}
-+
-+	return val;
- }
--EXPORT_SYMBOL(ath9k_hw_set_gpio);
-+EXPORT_SYMBOL(ath9k_hw_gpio_get);
- 
--void ath9k_hw_request_gpio(struct ath_hw *ah, u32 gpio, const char *label)
-+void ath9k_hw_set_gpio(struct ath_hw *ah, u32 gpio, u32 val)
- {
--	if (gpio >= ah->caps.num_gpio_pins)
--		return;
-+	WARN_ON(gpio >= ah->caps.num_gpio_pins);
- 
--	gpio_request_one(gpio, GPIOF_DIR_OUT | GPIOF_INIT_LOW, label);
-+	if (AR_DEVID_7010(ah) || AR_SREV_9271(ah))
-+		val = !val;
-+	else
-+		val = !!val;
-+
-+	if (BIT(gpio) & ah->caps.gpio_mask) {
-+		u32 out_addr = AR_DEVID_7010(ah) ?
-+			AR7010_GPIO_OUT : AR_GPIO_IN_OUT;
-+
-+		REG_RMW(ah, out_addr, val << gpio, BIT(gpio));
-+	} else if (BIT(gpio) & ah->caps.gpio_requested) {
-+		gpio_set_value(gpio, val);
-+	} else {
-+		WARN_ON(1);
-+	}
- }
--EXPORT_SYMBOL(ath9k_hw_request_gpio);
-+EXPORT_SYMBOL(ath9k_hw_set_gpio);
- 
- void ath9k_hw_setantenna(struct ath_hw *ah, u32 antenna)
- {
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index c0740d6..9cbca12 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -160,7 +160,6 @@
- #define AR_GPIO_OUTPUT_MUX_AS_RUCKUS_DATA        0x1e
- 
- #define AR_GPIOD_MASK               0x00001FFF
--#define AR_GPIO_BIT(_gpio)          (1 << (_gpio))
- 
- #define BASE_ACTIVATE_DELAY         100
- #define RTC_PLL_SETTLE_DELAY        (AR_SREV_9340(ah) ? 1000 : 100)
-@@ -302,6 +301,7 @@ struct ath9k_hw_capabilities {
- 	u8 max_rxchains;
- 	u8 num_gpio_pins;
- 	u32 gpio_mask;
-+	u32 gpio_requested;
- 	u8 rx_hp_qdepth;
- 	u8 rx_lp_qdepth;
- 	u8 rx_status_len;
-@@ -1020,12 +1020,12 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah);
- u32 ath9k_regd_get_ctl(struct ath_regulatory *reg, struct ath9k_channel *chan);
- 
- /* GPIO / RFKILL / Antennae */
--void ath9k_hw_cfg_gpio_input(struct ath_hw *ah, u32 gpio);
-+void ath9k_hw_gpio_request_in(struct ath_hw *ah, u32 gpio, const char *label);
-+void ath9k_hw_gpio_request_out(struct ath_hw *ah, u32 gpio, const char *label,
-+			       u32 ah_signal_type);
-+void ath9k_hw_gpio_free(struct ath_hw *ah, u32 gpio);
- u32 ath9k_hw_gpio_get(struct ath_hw *ah, u32 gpio);
--void ath9k_hw_cfg_output(struct ath_hw *ah, u32 gpio,
--			 u32 ah_signal_type);
- void ath9k_hw_set_gpio(struct ath_hw *ah, u32 gpio, u32 val);
--void ath9k_hw_request_gpio(struct ath_hw *ah, u32 gpio, const char *label);
- void ath9k_hw_setantenna(struct ath_hw *ah, u32 antenna);
- 
- /* General Operation */
-diff --git a/drivers/net/wireless/ath/ath9k/main.c b/drivers/net/wireless/ath/ath9k/main.c
-index c1b33fd..95d0a53 100644
---- a/drivers/net/wireless/ath/ath9k/main.c
-+++ b/drivers/net/wireless/ath/ath9k/main.c
-@@ -719,10 +719,10 @@ static int ath9k_start(struct ieee80211_hw *hw)
- 		ah->reset_power_on = false;
- 
- 	if (ah->led_pin >= 0) {
--		ath9k_hw_cfg_output(ah, ah->led_pin,
--				    AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
- 		ath9k_hw_set_gpio(ah, ah->led_pin,
- 				  (ah->config.led_active_high) ? 1 : 0);
-+		ath9k_hw_gpio_request_out(ah, ah->led_pin, NULL,
-+					  AR_GPIO_OUTPUT_MUX_AS_OUTPUT);
- 	}
- 
- 	/*
-@@ -870,7 +870,7 @@ static void ath9k_stop(struct ieee80211_hw *hw)
- 	if (ah->led_pin >= 0) {
- 		ath9k_hw_set_gpio(ah, ah->led_pin,
- 				  (ah->config.led_active_high) ? 0 : 1);
--		ath9k_hw_cfg_gpio_input(ah, ah->led_pin);
-+		ath9k_hw_gpio_request_in(ah, ah->led_pin, NULL);
- 	}
- 
- 	ath_prepare_reset(sc);
 -- 
-1.9.1
+2.6.3.368.gf34be46
 
