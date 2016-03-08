@@ -1,67 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f175.google.com ([209.85.214.175]:34775 "EHLO
-	mail-ob0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750764AbcCVEM7 convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f169.google.com ([209.85.214.169]:36416 "EHLO
+	mail-ob0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753099AbcCHFBq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2016 00:12:59 -0400
-Received: by mail-ob0-f175.google.com with SMTP id ts10so191574618obc.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2016 21:12:59 -0700 (PDT)
+	Tue, 8 Mar 2016 00:01:46 -0500
+Received: by mail-ob0-f169.google.com with SMTP id m7so4039166obh.3
+        for <linux-wireless@vger.kernel.org>; Mon, 07 Mar 2016 21:01:46 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1458619796-7694-1-git-send-email-wnhuang@chromium.org>
-References: <1458619796-7694-1-git-send-email-wnhuang@chromium.org>
-Date: Tue, 22 Mar 2016 12:12:58 +0800
-Message-ID: <CABicQ-US2Vs6CEgOeWDjb7=ZHn8i2GthT2M_ZPbwM0vgDkZb9g@mail.gmail.com> (sfid-20160322_051324_548393_CD49E200)
-Subject: Re: [PATCH v2] mwifiex: advertise low priority scan feature
-From: Wei-Ning Huang <wnhuang@google.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	Wei-Ning Huang <wnhuang@chromium.org>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org
+Date: Mon, 7 Mar 2016 21:01:44 -0800
+Message-ID: <CAA93jw66QRd4V2Dbs8bJ_MQUkBySJNj3fU8V8-ou2B89=3o1zg@mail.gmail.com> (sfid-20160308_060159_273326_99099279)
+Subject: per sta queuing - the ath9k statistics
+From: Dave Taht <dave.taht@gmail.com>
+To: Felix Fietkau <nbd@openwrt.org>,
+	make-wifi-fast@lists.bufferbloat.net
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tested-by: Wei-Ning Huang <wnhuang@chromium.org>
+I have put together some of the patches for fq_codel and per-station
+queuing inside the mac80211 portion of the stack flying around on
+linux-wireless, to no real visible effect as yet.
 
-On Tue, Mar 22, 2016 at 12:09 PM, Wei-Ning Huang <wnhuang@chromium.org> wrote:
-> From: Amitkumar Karwar <akarwar@marvell.com>
->
-> Low priority scan handling code which delays or aborts scan
-> operation based on Tx traffic is removed recently. The reason
-> is firmware already takes care of it in our new feature scan
-> channel gap. Hence we should advertise low priority scan
-> support to cfg80211.
->
-> This patch fixes a problem in which OBSS scan request from
-> wpa_supplicant was being rejected by cfg80211.
->
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
-> ---
->  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> index bb7235e..7dafc5b 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> @@ -4086,6 +4086,7 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
->
->         wiphy->features |= NL80211_FEATURE_HT_IBSS |
->                            NL80211_FEATURE_INACTIVITY_TIMER |
-> +                          NL80211_FEATURE_LOW_PRIORITY_SCAN |
->                            NL80211_FEATURE_NEED_OBSS_SCAN;
->
->         if (ISSUPP_TDLS_ENABLED(adapter->fw_cap_info))
-> --
-> 2.8.0.rc3.226.g39d4020
->
+Mostly testing uploads at the moment, from an x86 based client. It's
+not clear if I have the code path enabled, either, nor how to check,
+from userspace. (?) Topology is
 
+x86 <-wifi-> wndr3800 <-ethernet-> pi
 
+Latency is still poor, throughput is down slightly. I will start
+printk-ing tomorrow.
 
--- 
-Wei-Ning Huang, 黃偉寧 | Software Engineer, Google Inc., Taiwan |
-wnhuang@google.com | Cell: +886 910-380678
+I do have a few puzzling things
+
+A) re the ath9k statistics
+
+At the client (ubuntu x86, 4.5-rc7 + patches, Atheros AR5418 Wireless
+Network Adapter [AR5008E ) I see
+
+http://pastebin.com/rvKJnc1y
+
+AMPDUs Queued HW:            0          0         0         0
+AMPDUs Queued SW:            0          0         0         0
+AMPDUs Completed:      1098389       7050     14967         0
+
+At the AP (cerowrt 3.10.50) I see
+
+http://pastebin.com/RTt7MNT6
+
+AMPDUs Queued SW:      3009455     364214    557331         0
+AMPDUs Completed:      2961055     363353    556982         0
+AMPDUs Retried:         115311       7833     21489         0
+
+In both cases the TX-Pkts-all is close to the  AMPDUs completed figure.
+
+B) In the regular packet captures I see no tcp losses. I can see in an
+aircap wifi retrying for every lost packet.
+
+C) I do not see any ECN marks (presumably would be generated by the
+codel implementation.)
+
+D) I do see things nicely "fq"'d on the captures but that might be by
+cerowrt rather than the ieee mac
+
+E) tc qdisc show dev wlp2s0 shows the tc layer qdisc disabled
+
+qdisc noqueue 0: root refcnt 2
+
+which does imply that at least part of the new codepath is working,
+but there are no stats out of that side yet...
+
+Ah, well, at least the patchset compiled and didn't crash the box.
+
+--
+Dave Täht
+Let's go make home routers and wifi faster! With better software!
+https://www.gofundme.com/savewifi
