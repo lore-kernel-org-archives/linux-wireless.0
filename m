@@ -1,49 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f179.google.com ([209.85.160.179]:33757 "EHLO
-	mail-yk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758743AbcCDUCh (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:39529 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932145AbcCHKcc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 15:02:37 -0500
-Received: by mail-yk0-f179.google.com with SMTP id z13so27454854ykd.0
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2016 12:02:37 -0800 (PST)
+	Tue, 8 Mar 2016 05:32:32 -0500
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <87a8mexpqb.fsf@kamboji.qca.qualcomm.com>
-References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
-	<1455704830-10088-19-git-send-email-arend@broadcom.com>
-	<87a8mexpqb.fsf@kamboji.qca.qualcomm.com>
-Date: Fri, 4 Mar 2016 21:02:36 +0100
-Message-ID: <CAF7Mx6p4NVe-fBpLbb75ywtNNBWaheD6ciZQVUBUc+iiUgKKDw@mail.gmail.com> (sfid-20160304_210240_649522_9683FFA4)
-Subject: Re: [PATCH 18/21] brcmfmac: switch to new platform data
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: rtlwifi: Fix size of wireless mode variable
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1456419781-14722-1-git-send-email-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Message-Id: <20160308103226.BDDB760897@smtp.codeaurora.org> (sfid-20160308_113640_793306_C2D57417)
+Date: Tue,  8 Mar 2016 10:32:26 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 4, 2016 at 3:49 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-[...]
->> +struct brcmfmac_platform_data {
->> +     void    (*power_on)(void);
->> +     void    (*power_off)(void);
->> +     char    *fw_alternative_path;
->> +     int     device_count;
->> +     struct brcmfmac_pd_device devices[0];
->> +};
->
-> If I understood correctly this undocumented, and not mentioned in the
-> commit log, fw_alternative_path is a new feature in platform data. I
-> guess it provides a different firmware image name for the device so that
-> devices can have different firmware images on the same system?
 
-Actually, fw_alternative_path was a module parameter, but now it can
-also be specified in platform_data. It causes the firmware names in
-request_firmware api to be absolute paths thus overriding the path
-prefixes tried in firmware_class.
+> Smatch reports the following warning:
+> 
+>   CHECK   drivers/net/wireless/realtek/rtlwifi/rc.c
+> drivers/net/wireless/realtek/rtlwifi/rc.c:144 _rtl_rc_rate_set_series() warn: impossible condition '(wireless_mode == 256) => (0-255 == 256)'
+> 
+> This warning arises because commit acc6907b87a9 ("rtlwifi: Fix warning
+> from ieee80211_get_tx_rates() when using 5G") now checks the wireless
+> mode for WIRELESS_MODE_AC_ONLY (BIT(8)) in _rtl_rc_rate_set_series().
+> As a result, all quantities used to store the wireless mode must be u16.
+> 
+> This patch also reorders struct rtl_sta_info to save a little space.
+> 
+> Fixes: d76d65fd2695 ("rtlwifi: fix broken VHT support")
+> Reported-by: Dan Williams <dcbw@redhat.com>
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 
-> It's not pretty but I guess okayish. Opinions?
->
-> --
-> Kalle Valo
+Thanks, applied to wireless-drivers-next.git.
+
+Kalle Valo
