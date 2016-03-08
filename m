@@ -1,125 +1,130 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:4175 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753797AbcC3N0U (ORCPT
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:36973 "EHLO
+	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932479AbcCHLFy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 09:26:20 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	<devicetree@vger.kernel.org>,
-	Wei-Ning Huang <wnhuang@chromium.org>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v6 1/2] dt: bindings: add MARVELL's sd8xxx wireless device
-Date: Wed, 30 Mar 2016 06:19:57 -0700
-Message-ID: <1459343998-5187-1-git-send-email-akarwar@marvell.com> (sfid-20160330_152625_860580_E5EE3225)
+	Tue, 8 Mar 2016 06:05:54 -0500
+Received: by mail-wm0-f42.google.com with SMTP id p65so22475283wmp.0
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2016 03:05:53 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1457250469-22994-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1457250469-22994-1-git-send-email-rmanohar@qti.qualcomm.com>
+Date: Tue, 8 Mar 2016 12:05:53 +0100
+Message-ID: <CA+BoTQmnY0omFh0iddjcVBXubt3WC49DpFumUBY=NSCYs-PuHw@mail.gmail.com> (sfid-20160308_120558_538839_7ACFE599)
+Subject: Re: [PATCH v2] ath10k: move mgmt descriptor limit handle under mgmt_tx
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Rajkumar Manoharan <rmanohar@codeaurora.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+On 6 March 2016 at 08:47, Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
+> Firmware reserves few descriptors for management frames transmission.
+> In 16 MBSSID scenario, these slots will be easy exhausted due to frequent
+> probe responses. So for 10.4 based solutions, probe responses are limited
+> by a threshold (24).
+>
+> management tx path is separate for all except tlv based solutions. Since
+> tlv solutions (qca6174 & qca9377) do not support 16 AP interfaces, it is
+> safe to move management descriptor limitation check under mgmt_tx
+> function. Though CPU improvement is negligible, unlikely conditions or
+> never hit conditions in hot path can be avoided on data transmission.
+>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+> ---
+> v2:
+>   - rebased on top of Michal changes
+[...]
+> @@ -3979,13 +3977,22 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
+>         is_htt = (txpath == ATH10K_MAC_TX_HTT ||
+>                   txpath == ATH10K_MAC_TX_HTT_MGMT);
+>
+> -       if (is_htt) {
+> -               spin_lock_bh(&ar->htt.tx_lock);
+> -
+> -               is_mgmt = ieee80211_is_mgmt(hdr->frame_control);
+> +       is_mgmt = ieee80211_is_mgmt(hdr->frame_control);
+> +       spin_lock_bh(&ar->htt.tx_lock);
+> +       if (is_mgmt) {
+>                 is_presp = ieee80211_is_probe_resp(hdr->frame_control);
+>
+> -               ret = ath10k_htt_tx_inc_pending(htt, is_mgmt, is_presp);
+> +               ret = ath10k_htt_tx_mgmt_inc_pending(htt, is_presp);
+> +               if (ret) {
+> +                       ath10k_warn(ar, "failed to increase tx mgmt pending count: %d, dropping\n",
+> +                                   ret);
+> +                       spin_unlock_bh(&ar->htt.tx_lock);
+> +                       ieee80211_free_txskb(ar->hw, skb);
+> +                       return;
+> +               }
+> +       }
+> +       if (is_htt) {
+> +               ret = ath10k_htt_tx_inc_pending(htt);
+>                 if (ret) {
+>                         ath10k_warn(ar, "failed to increase tx pending count: %d, dropping\n",
+>                                     ret);
 
-Add device tree binding documentation for MARVELL's sd8xxx
-(sd8897 and sd8997) wlan chip.
+This doesn't look good.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
-Listing changelist for both 1/2 and 2/2 patches
-v3: Don't update adapter->dt_node if mwifiex_plt_dev is NULL
+You'll call ath10k_htt_tx_mgmt_inc_pending() regardless of the tx path
+being chosen. FWIW It could be WMI on older firmware, oops.
 
-v4: a)Corrected the 'name' and 'compatible' property names.(Arnd Bergmann and Rob
-    Herring)
-    b)Patch description wraped in 72 columns(Rob Herring)
-    c)Moved DT binding file to bindings/net/wireless/(Rob Herring)
-    d)Renamed "mwifiex,chip-gpio" to "marvell,wakeup-gpios"(Rob Herring/
-    Arnd Bergmann)
-    e)Replaced #ifdef with __maybe_unused(Arnd Bergmann)
+Holding the lock for the entire time doesn't make much sense either, does it?
 
-v5: a)Removed wildcards from compatible string(Arnd Bergmann)
-    b)Prepared single patch for all binding changes(Rob Herring)
-    c)Specified our node as a subnode of SDIO controller. With this approach, we
-    don't need to register new platform driver. (Rob herring)
+I think it should be more like:
 
-v6: a)List out the specific property names for marvell,caldata* and size of the data(Rob Herring)
-    b)Use sdio function number for both the unit address and reg(Rob Herring)
----
- .../bindings/net/wireless/marvell-sd8xxx.txt       | 63 ++++++++++++++++++++++
- 1 file changed, 63 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
+ if (is_htt) {
+    is_mgmt = ..;
+    is_presp = ..;
 
-diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-new file mode 100644
-index 0000000..337fed4
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-@@ -0,0 +1,63 @@
-+Marvell 8897/8997 (sd8897/sd8997) SDIO devices
-+------
-+
-+This node provides properties for controlling the marvell sdio wireless device.
-+The node is expected to be specified as a child node to the SDIO controller that
-+connects the device to the system.
-+
-+Required properties:
-+
-+  - compatible : should be one of the following:
-+	* "marvell,sd8897"
-+	* "marvell,sd8997"
-+
-+Optional properties:
-+
-+  - marvell,caldata* : A series of properties with marvell,caldata prefix,
-+		      represent calibration data downloaded to the device during
-+		      initialization. This is an array of unsigned values.
-+		      the properties should follow below property name and
-+		      corresponding array length:
-+	"marvell,caldata_00_txpwrlimit_2g_cfg_set" (length = 566).
-+	"marvell,caldata_00_txpwrlimit_5g_cfg_set_sub0" (length = 502).
-+	"marvell,caldata_00_txpwrlimit_5g_cfg_set_sub1" (length = 688).
-+	"marvell,caldata_00_txpwrlimit_5g_cfg_set_sub2" (length = 750).
-+	"marvell,caldata_00_txpwrlimit_5g_cfg_set_sub3" (length = 502).
-+  - marvell,wakeup-pin : 'wakeuppin' is a wakeup pin number of wifi chip which will
-+		      be configured to firmware. firmware will wakeup host side use
-+		      the pin during suspend/resume stage.
-+  - interrupt-parent: phandle of the parent interrupt controller
-+  - interrupts : interrupt pin number to the cpu. driver will request an irq based on
-+		 this interrupt number. during system suspend, the irq will be enabled
-+		 as system wakeup source, so that the wifi chip can wakeup host
-+		 platform under certain condition. during system resume, the irq will
-+		 be disabled to make sure unnecessary interrupt is not received.
-+
-+Example:
-+
-+Tx power limit calibration data is configured in below example.
-+The calibration data is an array of unsigned values, the length
-+can vary between hw versions.
-+IRQ pin 38 is used as system wakeup source interrupt. wakeup pin 3 is configured
-+so that firmware can wakeup host using this device side pin.
-+
-+&mmc3 {
-+	status = "okay";
-+	vmmc-supply = <&wlan_en_reg>;
-+	bus-width = <4>;
-+	cap-power-off-card;
-+	keep-power-in-suspend;
-+
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	mwifiex: mwifiex@1 {
-+		compatible = "marvell,sd8897";
-+		reg = <1>;
-+		interrupt-parent = <&pio>;
-+		interrupts = <38 IRQ_TYPE_LEVEL_LOW>;
-+
-+		marvell,caldata_00_txpwrlimit_2g_cfg_set = /bits/ 8 <
-+	0x01 0x00 0x06 0x00 0x08 0x02 0x89 0x01>;
-+		marvell,wakeup-pin = <3>;
-+	};
-+};
--- 
-1.8.1.4
+    lock()
+    ret = inc_pending(htt);
+    if (ret) { unlock(); goto drop }
 
+    ret = mgmt_inc_pending(htt, is_mgmt, is_presp);
+    if (ret) { dec_pending(htt); unlock(); goto drop }
+
+    unlock();
+ }
+ ...
+ ret = mac_tx()
+ if (ret) {
+   if (is_htt) {
+     lock();
+     dec_pending();
+     if (is_mgmt)
+        mgmt_dec_pending()
+     unlock();
+ }
+
+no?
+
+
+> @@ -3993,16 +4000,17 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
+>                         ieee80211_free_txskb(ar->hw, skb);
+>                         return;
+>                 }
+> -
+> -               spin_unlock_bh(&ar->htt.tx_lock);
+>         }
+> +       spin_unlock_bh(&ar->htt.tx_lock);
+>
+>         ret = ath10k_mac_tx(ar, vif, sta, txmode, txpath, skb);
+>         if (ret) {
+>                 ath10k_warn(ar, "failed to transmit frame: %d\n", ret);
+>                 if (is_htt) {
+>                         spin_lock_bh(&ar->htt.tx_lock);
+> -                       ath10k_htt_tx_dec_pending(htt, is_mgmt);
+> +                       ath10k_htt_tx_dec_pending(htt);
+> +                       if (is_mgmt)
+> +                               ath10k_htt_tx_mgmt_dec_pending(htt);
+
+And now the mgmt_dec_pending() is unbalanced. You unconditionally (wrt
+is_htt) increase the mgmt_inc_pending but decrement only if is_htt is
+true.
+
+
+Michał
