@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51612 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751599AbcCIJjL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 04:39:11 -0500
-Date: Wed, 9 Mar 2016 15:08:45 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	kvalo@codeaurora.org
-Subject: Re: [PATCH v2] cfg80211/nl80211: Add support for
- NL80211_STA_INFO_RX_DURATION
-Message-ID: <20160309093845.GA6695@atheros-ThinkPad-T61> (sfid-20160309_103915_949953_FE204764)
-References: <1457508003-16700-1-git-send-email-mohammed@qca.qualcomm.com>
- <1457515803.2042.1.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1457515803.2042.1.camel@sipsolutions.net>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38160 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932071AbcCHRAZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2016 12:00:25 -0500
+Message-ID: <1457456420.24270.16.camel@sipsolutions.net> (sfid-20160308_180039_502798_19DDF60F)
+Subject: Re: [PATCH] iw: add libnl-tiny support
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Dima Krasner <dima@dimakrasner.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 08 Mar 2016 18:00:20 +0100
+In-Reply-To: <20160305175115.4476ee00292f15f60aad4497@dimakrasner.com>
+References: <20160223204334.4a65ab8113dbe31fbffc56ff@dimakrasner.com>
+	 <1456927176.2157.4.camel@sipsolutions.net>
+	 <20160305175115.4476ee00292f15f60aad4497@dimakrasner.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 09, 2016 at 10:30:03AM +0100, Johannes Berg wrote:
-> On Wed, 2016-03-09 at 12:50 +0530, Mohammed Shafi Shajakhan wrote:
-> >�
-> > + * @rx_duration: approximate total air time(usecs) for all the
-> > frames from a
-> > + *	connected client
-> 
-> I don't see why this should be restricted to "connected clients". The
-> same value could be used for a mesh peer. Or TDLS peer. Or the AP on a
-> managed connection. Or all the other types of STA.
+This:
 
-[shafi] Please suggest if this is ok ? I will be thankful
-if you can suggest a better one if this is not ok
+> -#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30)
+> +#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30) && !defined(CONFIG_LIBNL_TINY)
 
-* @rx_duration: approximate total air time(usecs) for all the
- frames from a peer
+> -#endif /* CONFIG_LIBNL20 && CONFIG_LIBNL30 */
+> +#endif /* CONFIG_LIBNL20 && CONFIG_LIBNL30 && CONFIG_LIBNL_TINY */
 
- regards,
- shafi
+can be handled by just defining CONFIG_LIBNL20 for libnl-tiny.
+
+> -/* libnl 1.x compatibility code */
+> +/* libnl 1.x and libnl-tiny compatibility code */
+>  #if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30)
+>  #  define nl_sock nl_handle
+>  #endif
+
+Are you sure this is needed? Elsewhere you said libnl-tiny uses libnl20
+compatible API, which is with nl_handle. If this is needed perhaps some
+code erroneously uses nl_sock instead of nl_handle?
+
+Perhaps we should also consider treating 2.0/3.x as the default API and
+use nl_handle instead of nl_sock in the code.
+
+johannes
 
