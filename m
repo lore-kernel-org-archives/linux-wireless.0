@@ -1,32 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56686 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754539AbcCCPzc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 10:55:32 -0500
-Message-ID: <1457020529.2044.31.camel@sipsolutions.net> (sfid-20160303_165551_602653_8A1D9946)
-Subject: Re: [PATCH V11 1/2] nl80211: add feature for BSS selection support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 03 Mar 2016 16:55:29 +0100
-In-Reply-To: <1456947439-28968-1-git-send-email-arend@broadcom.com>
-References: <1456947439-28968-1-git-send-email-arend@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:35234 "EHLO
+	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751706AbcCHUlK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2016 15:41:10 -0500
+Received: by mail-wm0-f54.google.com with SMTP id l68so149514692wml.0
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2016 12:41:08 -0800 (PST)
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+To: Kees Cook <keescook@chromium.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [RFC 5/7] wlcore: avoid fragile snprintf use
+Date: Tue,  8 Mar 2016 21:40:52 +0100
+Message-Id: <1457469654-17059-6-git-send-email-linux@rasmusvillemoes.dk> (sfid-20160308_214137_490888_044BD4BE)
+In-Reply-To: <1457469654-17059-1-git-send-email-linux@rasmusvillemoes.dk>
+References: <CAGXu5jJ-NApCpANjfz+bAEfwZJ8xizkM-jDHVhOPCzhxV-aqdA@mail.gmail.com>
+ <1457469654-17059-1-git-send-email-linux@rasmusvillemoes.dk>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-03-02 at 20:37 +0100, Arend van Spriel wrote:
-> Introducing a new feature that the driver can use to
-> indicate the driver/firmware supports configuration of BSS
-> selection criteria upon CONNECT command. This can be useful
-> when multiple BSS-es are found belonging to the same ESS,
-> ie. Infra-BSS with same SSID. The criteria can then be used to
-> offload selection of a preferred BSS.
-> 
-Applied, finally :)
+Appending to a buffer like this is not guaranteed to work (passing
+overlapping src and dst buffers to snprintf is undefined
+behaviour). The standard and safe idiom is to keep track of the
+current string length.
 
-I moved the wiphy supported methods check into parse_bss_select() to
-avoid the double error path in the caller, plus some editorial changes.
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+---
+ drivers/net/wireless/ti/wlcore/boot.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ti/wlcore/boot.c b/drivers/net/wireless/ti/wlcore/boot.c
+index 19b7ec7b69c2..401d75c02bf4 100644
+--- a/drivers/net/wireless/ti/wlcore/boot.c
++++ b/drivers/net/wireless/ti/wlcore/boot.c
+@@ -86,7 +86,7 @@ static int wlcore_validate_fw_ver(struct wl1271 *wl)
+ 	unsigned int *min_ver = (wl->fw_type == WL12XX_FW_TYPE_MULTI) ?
+ 		wl->min_mr_fw_ver : wl->min_sr_fw_ver;
+ 	char min_fw_str[32] = "";
+-	int i;
++	int i, len;
+ 
+ 	/* the chip must be exactly equal */
+ 	if ((min_ver[FW_VER_CHIP] != WLCORE_FW_VER_IGNORE) &&
+@@ -119,13 +119,15 @@ static int wlcore_validate_fw_ver(struct wl1271 *wl)
+ 	return 0;
+ 
+ fail:
++	len = 0;
+ 	for (i = 0; i < NUM_FW_VER; i++)
+ 		if (min_ver[i] == WLCORE_FW_VER_IGNORE)
+-			snprintf(min_fw_str, sizeof(min_fw_str),
+-				  "%s*.", min_fw_str);
++			len += scnprintf(min_fw_str + len,
++					 sizeof(min_fw_str) - len, "*.");
+ 		else
+-			snprintf(min_fw_str, sizeof(min_fw_str),
+-				  "%s%u.", min_fw_str, min_ver[i]);
++			len += scnprintf(min_fw_str + len,
++					 sizeof(min_fw_str) - len,
++					 "%u.", min_ver[i]);
+ 
+ 	wl1271_error("Your WiFi FW version (%u.%u.%u.%u.%u) is invalid.\n"
+ 		     "Please use at least FW %s\n"
+-- 
+2.1.4
+
