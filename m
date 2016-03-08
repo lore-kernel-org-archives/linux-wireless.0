@@ -1,99 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f43.google.com ([209.85.215.43]:32842 "EHLO
-	mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753086AbcCAKcX (ORCPT
+Received: from smtprelay0093.hostedemail.com ([216.40.44.93]:33143 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S933690AbcCHAUc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 05:32:23 -0500
-Received: by mail-lf0-f43.google.com with SMTP id v124so17124580lff.0
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2016 02:32:22 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 10/11] ath10k: keep track of queue depth per txq
-Date: Tue,  1 Mar 2016 11:32:55 +0100
-Message-Id: <1456828376-2795-11-git-send-email-michal.kazior@tieto.com> (sfid-20160301_115949_899013_EAA0024E)
-In-Reply-To: <1456828376-2795-1-git-send-email-michal.kazior@tieto.com>
-References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
- <1456828376-2795-1-git-send-email-michal.kazior@tieto.com>
+	Mon, 7 Mar 2016 19:20:32 -0500
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH 5/5] ti: wl1251: Convert wl1251_info to wl1251_debug
+Date: Mon,  7 Mar 2016 16:19:37 -0800
+Message-Id: <b8b1d2c63f9499fad26eda0db1b976c29d873f70.1457395071.git.joe@perches.com> (sfid-20160308_012316_229802_C5A027FB)
+In-Reply-To: <cover.1457395071.git.joe@perches.com>
+References: <cover.1457395071.git.joe@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This will be necessary for later.
+These logging messages are always emitted at KERN_DEBUG.
 
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Add a DEBUG_ALWAYS enum to the debug type enum and convert the
+macro and uses from wl1251_info( to wl1251_debug(DEBUG_ALWAYS,
+
+Miscellanea:
+
+o Remove the now unused wl1251_info macro
+
+Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/net/wireless/ath/ath10k/core.h | 1 +
- drivers/net/wireless/ath/ath10k/mac.c  | 5 +++++
- drivers/net/wireless/ath/ath10k/txrx.c | 7 +++++++
- 3 files changed, 13 insertions(+)
+ drivers/net/wireless/ti/wl1251/init.c   | 10 +++++-----
+ drivers/net/wireless/ti/wl1251/main.c   |  4 ++--
+ drivers/net/wireless/ti/wl1251/sdio.c   |  4 ++--
+ drivers/net/wireless/ti/wl1251/wl1251.h |  6 ++----
+ 4 files changed, 11 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 89f789f3e5b4..926ecb2244a5 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -311,6 +311,7 @@ struct ath10k_peer {
+diff --git a/drivers/net/wireless/ti/wl1251/init.c b/drivers/net/wireless/ti/wl1251/init.c
+index 796ccf4..29a990d 100644
+--- a/drivers/net/wireless/ti/wl1251/init.c
++++ b/drivers/net/wireless/ti/wl1251/init.c
+@@ -411,11 +411,11 @@ int wl1251_hw_init(struct wl1251 *wl)
+ 		goto out_free_data_path;
  
- struct ath10k_txq {
- 	struct list_head list;
-+	unsigned long num_fw_queued;
+ 	wl_mem_map = wl->target_mem_map;
+-	wl1251_info("%d tx blocks at 0x%x, %d rx blocks at 0x%x",
+-		    wl_mem_map->num_tx_mem_blocks,
+-		    wl->data_path->tx_control_addr,
+-		    wl_mem_map->num_rx_mem_blocks,
+-		    wl->data_path->rx_control_addr);
++	wl1251_debug(DEBUG_ALWAYS, "%d tx blocks at 0x%x, %d rx blocks at 0x%x",
++		     wl_mem_map->num_tx_mem_blocks,
++		     wl->data_path->tx_control_addr,
++		     wl_mem_map->num_rx_mem_blocks,
++		     wl->data_path->rx_control_addr);
+ 
+ 	return 0;
+ 
+diff --git a/drivers/net/wireless/ti/wl1251/main.c b/drivers/net/wireless/ti/wl1251/main.c
+index 593bed9..32b8c98 100644
+--- a/drivers/net/wireless/ti/wl1251/main.c
++++ b/drivers/net/wireless/ti/wl1251/main.c
+@@ -423,7 +423,7 @@ static int wl1251_op_start(struct ieee80211_hw *hw)
+ 
+ 	wl->state = WL1251_STATE_ON;
+ 
+-	wl1251_info("firmware booted (%s)", wl->fw_ver);
++	wl1251_debug(DEBUG_ALWAYS, "firmware booted (%s)", wl->fw_ver);
+ 
+ 	/* update hw/fw version info in wiphy struct */
+ 	wiphy->hw_version = wl->chip_id;
+@@ -442,7 +442,7 @@ static void wl1251_op_stop(struct ieee80211_hw *hw)
+ {
+ 	struct wl1251 *wl = hw->priv;
+ 
+-	wl1251_info("down");
++	wl1251_debug(DEBUG_ALWAYS, "down");
+ 
+ 	wl1251_debug(DEBUG_MAC80211, "mac80211 stop");
+ 
+diff --git a/drivers/net/wireless/ti/wl1251/sdio.c b/drivers/net/wireless/ti/wl1251/sdio.c
+index cc52a97..d2fb7d1 100644
+--- a/drivers/net/wireless/ti/wl1251/sdio.c
++++ b/drivers/net/wireless/ti/wl1251/sdio.c
+@@ -290,12 +290,12 @@ static int wl1251_sdio_probe(struct sdio_func *func,
+ 		wl1251_sdio_ops.enable_irq = wl1251_enable_line_irq;
+ 		wl1251_sdio_ops.disable_irq = wl1251_disable_line_irq;
+ 
+-		wl1251_info("using dedicated interrupt line");
++		wl1251_debug(DEBUG_ALWAYS, "using dedicated interrupt line");
+ 	} else {
+ 		wl1251_sdio_ops.enable_irq = wl1251_sdio_enable_irq;
+ 		wl1251_sdio_ops.disable_irq = wl1251_sdio_disable_irq;
+ 
+-		wl1251_info("using SDIO interrupt");
++		wl1251_debug(DEBUG_ALWAYS, "using SDIO interrupt");
+ 	}
+ 
+ 	ret = wl1251_init_ieee80211(wl);
+diff --git a/drivers/net/wireless/ti/wl1251/wl1251.h b/drivers/net/wireless/ti/wl1251/wl1251.h
+index 62a40cc..705573f 100644
+--- a/drivers/net/wireless/ti/wl1251/wl1251.h
++++ b/drivers/net/wireless/ti/wl1251/wl1251.h
+@@ -47,6 +47,7 @@ enum {
+ 	DEBUG_MAC80211	= BIT(11),
+ 	DEBUG_CMD	= BIT(12),
+ 	DEBUG_ACX	= BIT(13),
++	DEBUG_ALWAYS	= BIT(31),
+ 	DEBUG_ALL	= ~0,
  };
  
- struct ath10k_sta {
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 8d02d53fdc2c..5bf614f1f75a 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3669,6 +3669,7 @@ static int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
- 	const bool is_presp = false;
- 	struct ath10k *ar = hw->priv;
- 	struct ath10k_htt *htt = &ar->htt;
-+	struct ath10k_txq *artxq = (void *)txq->drv_priv;
- 	struct ieee80211_vif *vif = txq->vif;
- 	struct ieee80211_sta *sta = txq->sta;
- 	enum ath10k_hw_txrx_mode txmode;
-@@ -3708,6 +3709,10 @@ static int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
- 		return ret;
- 	}
+@@ -54,12 +55,9 @@ enum {
  
-+	spin_lock_bh(&ar->htt.tx_lock);
-+	artxq->num_fw_queued++;
-+	spin_unlock_bh(&ar->htt.tx_lock);
-+
- 	return 0;
- }
+ #define DEBUG_DUMP_LIMIT 1024
  
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index 202e5192235b..ea4d3000c8c3 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -55,7 +55,9 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 	struct ath10k *ar = htt->ar;
- 	struct device *dev = ar->dev;
- 	struct ieee80211_tx_info *info;
-+	struct ieee80211_txq *txq;
- 	struct ath10k_skb_cb *skb_cb;
-+	struct ath10k_txq *artxq;
- 	struct sk_buff *msdu;
- 	bool limit_mgmt_desc = false;
+-#define wl1251_info(fmt, arg...) \
+-	printk(KERN_DEBUG DRIVER_PREFIX fmt "\n", ##arg)
+-
+ #define wl1251_debug(level, fmt, arg...) \
+ 	do { \
+-		if (level & DEBUG_LEVEL) \
++		if (level == DEBUG_ALWAYS || (level & DEBUG_LEVEL))	\
+ 			printk(KERN_DEBUG DRIVER_PREFIX fmt "\n", ##arg); \
+ 	} while (0)
  
-@@ -80,11 +82,16 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 	}
- 
- 	skb_cb = ATH10K_SKB_CB(msdu);
-+	txq = skb_cb->txq;
-+	artxq = (void *)txq->drv_priv;
- 
- 	if (unlikely(skb_cb->flags & ATH10K_SKB_F_MGMT) &&
- 	    ar->hw_params.max_probe_resp_desc_thres)
- 		limit_mgmt_desc = true;
- 
-+	if (txq)
-+		artxq->num_fw_queued--;
-+
- 	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
- 	ath10k_htt_tx_dec_pending(htt, limit_mgmt_desc);
- 	if (htt->num_pending_tx == 0)
 -- 
-2.1.4
+2.6.3.368.gf34be46
 
