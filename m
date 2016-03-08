@@ -1,128 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:34014 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753687AbcCPR3G (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2016 13:29:06 -0400
-Received: by mail-wm0-f46.google.com with SMTP id p65so200237615wmp.1
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2016 10:29:05 -0700 (PDT)
-From: Vishal Thanki <vishalthanki@gmail.com>
-To: sgruszka@redhat.com, helmut.schaa@googlemail.com,
-	linux-wireless@vger.kernel.org
-Cc: Vishal Thanki <vishalthanki@gmail.com>
-Subject: [PATCH] rt2x00usb: Use usb anchors to manage URB
-Date: Wed, 16 Mar 2016 18:28:51 +0100
-Message-Id: <1458149331-2106-1-git-send-email-vishalthanki@gmail.com> (sfid-20160316_182912_297078_0A430BFA)
+Received: from mail2.tohojo.dk ([77.235.48.147]:49698 "EHLO mail2.tohojo.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932491AbcCHK1H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2016 05:27:07 -0500
+From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Dave Taht <dave.taht@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Tim Shepard <shep@alum.mit.edu>
+Subject: Re: [RFC/RFT] mac80211: implement fq_codel for software queuing
+References: <1456492163-11437-1-git-send-email-michal.kazior@tieto.com>
+	<CAA93jw4XsEnp3jTgPL7OKWTJP-83VwRaCdb+foc8nCuqxk3WZA@mail.gmail.com>
+	<CA+BoTQk+3jhwK57_fDw0scNCGzu_Edqp9-Beeppz8xj9kSQcoQ@mail.gmail.com>
+Date: Tue, 08 Mar 2016 11:19:59 +0100
+In-Reply-To: <CA+BoTQk+3jhwK57_fDw0scNCGzu_Edqp9-Beeppz8xj9kSQcoQ@mail.gmail.com>
+	(Michal Kazior's message of "Tue, 8 Mar 2016 08:12:21 +0100")
+Message-ID: <87d1r5tgog.fsf@toke.dk> (sfid-20160308_112714_291880_CAE0D44E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With current driver, it is observed that a URB is not
-completed while the USB disconnect is initiated. Due to
-that, the URB completion hanlder is trying to access
-the resource which was freed as a part of USB disconnect.
-Managing the URBs with anchors will make sure that all
-the URBs are handled gracefully before device gets
-disconnected.
+Michal Kazior <michal.kazior@tieto.com> writes:
 
-Signed-off-by: Vishal Thanki <vishalthanki@gmail.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2x00usb.c | 35 ++++++++++++++++++++++++--
- 1 file changed, 33 insertions(+), 2 deletions(-)
+>> With large values for flows_cnt, fq, dominates, for small values, aqm
+>> does. We did quite a lot of testing at 16 and 32 queues in the early
+>> days, with pretty good results, except when we didn't. Cake went whole
+>> hog with an 8 way set associative hash leading to "near perfect" fq,
+>> which, at the cost of more cpu overhead, could cut the number of
+>> queues down by a lot, also. Eric did "perfect" fq with sch_fq...
+>
+> Out of curiosity - do you have any numbers to compare against
+> fq_codel? Like hash collision probability vs number of active flows?
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-index 7627af6..a2ed3e1 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-@@ -34,6 +34,15 @@
- /*
-  * Interfacing with the HW.
-  */
-+
-+struct rt2x00usb_anchors {
-+	struct usb_anchor async_urb;
-+	struct usb_anchor tx_submitted;
-+	struct usb_anchor rx_submitted;
-+};
-+
-+static struct rt2x00usb_anchors *anchors;
-+
- int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
- 			     const u8 request, const u8 requesttype,
- 			     const u16 offset, const u16 value,
-@@ -171,8 +180,11 @@ static void rt2x00usb_register_read_async_cb(struct urb *urb)
- {
- 	struct rt2x00_async_read_data *rd = urb->context;
- 	if (rd->callback(rd->rt2x00dev, urb->status, le32_to_cpu(rd->reg))) {
--		if (usb_submit_urb(urb, GFP_ATOMIC) < 0)
-+		usb_anchor_urb(urb, &anchors->async_urb);
-+		if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
-+			usb_unanchor_urb(urb);
- 			kfree(rd);
-+		}
- 	} else
- 		kfree(rd);
- }
-@@ -206,8 +218,11 @@ void rt2x00usb_register_read_async(struct rt2x00_dev *rt2x00dev,
- 	usb_fill_control_urb(urb, usb_dev, usb_rcvctrlpipe(usb_dev, 0),
- 			     (unsigned char *)(&rd->cr), &rd->reg, sizeof(rd->reg),
- 			     rt2x00usb_register_read_async_cb, rd);
--	if (usb_submit_urb(urb, GFP_ATOMIC) < 0)
-+	usb_anchor_urb(urb, &anchors->async_urb);
-+	if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
-+		usb_unanchor_urb(urb);
- 		kfree(rd);
-+	}
- 	usb_free_urb(urb);
- }
- EXPORT_SYMBOL_GPL(rt2x00usb_register_read_async);
-@@ -313,8 +328,10 @@ static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry, void *data)
- 			  entry->skb->data, length,
- 			  rt2x00usb_interrupt_txdone, entry);
- 
-+	usb_anchor_urb(entry_priv->urb, &anchors->tx_submitted);
- 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
- 	if (status) {
-+		usb_unanchor_urb(entry_priv->urb);
- 		if (status == -ENODEV)
- 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
-@@ -402,8 +419,10 @@ static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry, void *data)
- 			  entry->skb->data, entry->skb->len,
- 			  rt2x00usb_interrupt_rxdone, entry);
- 
-+	usb_anchor_urb(entry_priv->urb, &anchors->rx_submitted);
- 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
- 	if (status) {
-+		usb_unanchor_urb(entry_priv->urb);
- 		if (status == -ENODEV)
- 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
-@@ -818,6 +837,14 @@ int rt2x00usb_probe(struct usb_interface *usb_intf,
- 	if (retval)
- 		goto exit_free_reg;
- 
-+	anchors = devm_kmalloc(&usb_dev->dev, sizeof(struct rt2x00usb_anchors),
-+			       GFP_KERNEL);
-+	if (!anchors)
-+		goto exit_free_reg;
-+
-+	init_usb_anchor(&anchors->async_urb);
-+	init_usb_anchor(&anchors->tx_submitted);
-+	init_usb_anchor(&anchors->rx_submitted);
- 	return 0;
- 
- exit_free_reg:
-@@ -840,6 +867,10 @@ void rt2x00usb_disconnect(struct usb_interface *usb_intf)
- 	struct ieee80211_hw *hw = usb_get_intfdata(usb_intf);
- 	struct rt2x00_dev *rt2x00dev = hw->priv;
- 
-+	usb_kill_anchored_urbs(&anchors->async_urb);
-+	usb_kill_anchored_urbs(&anchors->tx_submitted);
-+	usb_kill_anchored_urbs(&anchors->rx_submitted);
-+
- 	/*
- 	 * Free all allocated data.
- 	 */
--- 
-2.4.3
+Basically, the analytical expression for hash collisions is fairly
+straight forward (though I can't take credit for coming up with it
+myself):
 
+Given N bins with M items being hashed into them by a hypothetical
+perfectly uniform hash, you get:
+
+  Expected number of bins with x items = N * (1/N)^x * (1 - 1/N) ^ (M - x) * C(M, x)
+
+where C(M, x) is the combinatorial function = M! / (x! * (M-x)!).
+
+By expanding this expression for x=1 and dividing by M, you get the
+probability that one of your M items is in its own bin. Subtract this
+from 1 and you get the collision probability.
+
+I have a neat spreadsheet to compute this for arbitrary numbers; but for
+a 1024-bin FQ-Codel this gives a collision probability of just under 1%
+for 10 flows, and just over 9% for 100 flows. This is not too far off
+from actual values in a real-world hashing function.
+
+Now, to add to the confusion, you also have to take into account that an
+active flow (from an end-to-end perspective) does not necessarily
+translate into an active flow from the queue perspective. And that in
+fact the number of active flows in a router can be significantly less
+than the number of active end-to-end flows, and scales sub-linearly...
+There has been at least one paper demonstrating this, but right now I
+can't recall who wrote it.
+
+-Toke
