@@ -1,56 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:50279 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753186AbcC2Kv7 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:24111 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932642AbcCHLaJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 06:51:59 -0400
+	Tue, 8 Mar 2016 06:30:09 -0500
 From: Amitkumar Karwar <akarwar@marvell.com>
-To: Wei-Ning Huang <wnhuang@google.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-CC: Linux Wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Sameer Nanda <snanda@google.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Sonny Rao <sonnyrao@chromium.org>,
-	Douglas Anderson <dianders@chromium.org>
-Subject: RE: [PATCH] mwifiex: add __GFP_REPEAT to skb allocation call
-Date: Tue, 29 Mar 2016 10:51:50 +0000
-Message-ID: <ef69d92813da49e89d5fc3881ec13f33@SC-EXCH04.marvell.com> (sfid-20160329_125215_700224_5357A1EC)
-References: <1459226840-36287-1-git-send-email-wnhuang@chromium.org>
-	<87vb45brxc.fsf@kamboji.qca.qualcomm.com>
- <CABicQ-UJ1kniq6m86QcyVZBPznvNexfrUrTk3A_=GmZy69hvCA@mail.gmail.com>
-In-Reply-To: <CABicQ-UJ1kniq6m86QcyVZBPznvNexfrUrTk3A_=GmZy69hvCA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+To: <linux-wireless@vger.kernel.org>
+CC: <wnhuang@google.com>, Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v2] mwifiex: Empty Tx queue during suspend
+Date: Tue, 8 Mar 2016 03:25:17 -0800
+Message-ID: <1457436317-15477-1-git-send-email-akarwar@marvell.com> (sfid-20160308_123026_170292_B43B4B0D)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBGcm9tOiBXZWktTmluZyBIdWFuZyBbbWFpbHRvOnduaHVhbmdAZ29vZ2xlLmNvbV0NCj4gU2Vu
-dDogVHVlc2RheSwgTWFyY2ggMjksIDIwMTYgMjo1NyBQTQ0KPiBUbzogS2FsbGUgVmFsbw0KPiBD
-YzogTGludXggV2lyZWxlc3M7IExLTUw7IEFtaXRrdW1hciBLYXJ3YXI7IE5pc2hhbnQgU2FybXVr
-YWRhbTsgU2FtZWVyDQo+IE5hbmRhOyBuZXRkZXZAdmdlci5rZXJuZWwub3JnOyBTb25ueSBSYW87
-IERvdWdsYXMgQW5kZXJzb24NCj4gU3ViamVjdDogUmU6IFtQQVRDSF0gbXdpZmlleDogYWRkIF9f
-R0ZQX1JFUEVBVCB0byBza2IgYWxsb2NhdGlvbiBjYWxsDQo+IA0KPiBBZGRpbmcgc29tZSBjaHJv
-bWl1bSBkZXZzIHRvIHRoZSB0aHJlYWQuDQo+IA0KPiBJbiwgaHR0cDovL2x4ci5mcmVlLWVsZWN0
-cm9ucy5jb20vc291cmNlL21tL3BhZ2VfYWxsb2MuYyNMMzE1Mg0KPiANCj4gVGhlIGRlZmF1bHQg
-bW0gcmV0cnkgYWxsb2NhdGlvbiB3aGVuICdvcmRlciA8PSBQQUdFX0FMTE9DX0NPU1RMWV9PUkRF
-UicNCj4gb2YgZ2ZwX21hc2sgY29udGFpbnMgX19HRlBfUkVQRUFULg0KPiBQQUdFX0FMTE9DX0NP
-U1RMWV9PUkRFUiBpcyBkZWZpbmVkIHRvIGJlIDMuIE9uIHN5c3RlbXMgd2l0aCBwYWdlIHNpemUg
-PQ0KPiA0SywgdGhpcyBtZWFucyBtZW1vcnkgY29tcGFjdGlvbiBhbmQgcmV0cnkgaXMgb25seSBk
-b25lIHdoZW4gdGhlIHNpemUgb2YNCj4gYWxsb2NhdGlvbiBpcyA8PSAzMksgSW4gbXdpZmlleCwg
-dGhlIGFsbG9jYXRpb24gc2l6ZSBpcyA2NEsuIFdoZW4gd2UNCj4gaGF2ZSBzeXN0ZW0gd2l0aCBt
-ZW1vcnkgZnJhZ21lbnRhdGlvbiBhbmQgYWxsb2NhdGlvbiBmYWlsZWQsIHRoZXJlIHdpbGwNCj4g
-YmUgbm8gcmV0cnkuDQo+IFRoaXMgaXMgd2h5IHdlIG5lZWQgdG8gYWRkIF9fR0ZQX1JFUEVBVCBo
-ZXJlIHRvIGFsbG93IHRoZSBzeXN0ZW0gdG8NCj4gcGVyZm9ybSBtZW1vcnkgY29tcGFjdGlvbiBh
-bmQgcmV0cnkgYWxsb2NhdGlvbi4NCj4gDQo+IE1heWJlIEFtaXRAbWFydmVsbCBjYW4gY29tbWVu
-dCBvbiBpZiB0aGlzIGlzIGEgZ29vZCBmaXggb24gdGhpcyBpc3N1ZS4NCj4gSSdtIGFsc28gYXdh
-cmUgdGhhdCBtYXJ2ZWxsIGlzIHRoZSBwcm9ncmVzcyBvZiBpbXBsZW1lbnRpbmcNCj4gc2NhdHRl
-ci9nYXR0ZXIgZm9yIG13aWZpZXgsIHdoaWNoIGNhbiBhbHNvIGZpeCB0aGUgaXNzdWUuDQo+IA0K
-PiBXZWktTmluZw0KPiANCg0KVGhpcyBmaXggd291bGQgYmUgdXNlZnVsLiBXZSBoYXZlIGEgZmVh
-dHVyZSBjYWxsZWQgc2luZ2xlIHBvcnQgYWdncmVnYXRpb24gaW4gd2hpY2ggc29tZXRpbWVzIGRh
-dGEgcmVjZWl2ZWQgZnJvbSBTRElPIGludGVyZmFjZSBjYW4gYmUgPjMyayAoYnV0IGxlc3MgdGhh
-biA2NGspLiBUaGlzIGZlYXR1cmUgaW1wcm92ZXMgdGhyb3VnaHB1dCBwZXJmb3JtYW5jZS4gV2Ug
-YXJlIHByZXBhcmluZyBwYXRjaGVzIGZvciBzY2F0dGVyL2dhdGhlciBmZWF0dXJlLiBidXQgc2Nh
-dHRlci9nYXRoZXIgd29uJ3QgYmUgc3VwcG9ydGVkIGJ5IHNvbWUgcGxhdGZvcm1zLiBIZW5jZSB0
-aGlzIGZpeCB3b3VsZCBzdGlsbCBiZSBuZWVkZWQuDQoNClJlZ2FyZHMsDQpBbWl0a3VtYXINCg==
+In cfg80211 suspend handler, stop the netif queue and
+wait until all the Tx queues become empty. Start the
+queues in resume handler.
+
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 28 ++++++++++++++++++++++---
+ 1 file changed, 25 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 29b7f6e..bb7235e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -20,6 +20,7 @@
+ #include "cfg80211.h"
+ #include "main.h"
+ #include "11n.h"
++#include "wmm.h"
+ 
+ static char *reg_alpha2;
+ module_param(reg_alpha2, charp, 0);
+@@ -3259,7 +3260,7 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
+ {
+ 	struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
+ 	struct mwifiex_ds_hs_cfg hs_cfg;
+-	int i, ret = 0;
++	int i, ret = 0, retry_num = 10;
+ 	struct mwifiex_private *priv;
+ 
+ 	for (i = 0; i < adapter->priv_num; i++) {
+@@ -3269,6 +3270,21 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
+ 
+ 	mwifiex_cancel_all_pending_cmd(adapter);
+ 
++	for (i = 0; i < adapter->priv_num; i++) {
++		priv = adapter->priv[i];
++		if (priv && priv->netdev)
++			mwifiex_stop_net_dev_queue(priv->netdev, adapter);
++	}
++
++	for (i = 0; i < retry_num; i++) {
++		if (!mwifiex_wmm_lists_empty(adapter) ||
++		    !mwifiex_bypass_txlist_empty(adapter) ||
++		    !skb_queue_empty(&adapter->tx_data_q))
++			usleep_range(10000, 15000);
++		else
++			break;
++	}
++
+ 	if (!wowlan) {
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "None of the WOWLAN triggers enabled\n");
+@@ -3321,12 +3337,18 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
+ static int mwifiex_cfg80211_resume(struct wiphy *wiphy)
+ {
+ 	struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
+-	struct mwifiex_private *priv =
+-		mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
++	struct mwifiex_private *priv;
+ 	struct mwifiex_ds_wakeup_reason wakeup_reason;
+ 	struct cfg80211_wowlan_wakeup wakeup_report;
+ 	int i;
+ 
++	for (i = 0; i < adapter->priv_num; i++) {
++		priv = adapter->priv[i];
++		if (priv && priv->netdev)
++			mwifiex_wake_up_net_dev_queue(priv->netdev, adapter);
++	}
++
++	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
+ 	mwifiex_get_wakeup_reason(priv, HostCmd_ACT_GEN_GET, MWIFIEX_SYNC_CMD,
+ 				  &wakeup_reason);
+ 	memset(&wakeup_report, 0, sizeof(struct cfg80211_wowlan_wakeup));
+-- 
+1.8.1.4
+
