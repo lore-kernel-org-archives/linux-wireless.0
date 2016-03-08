@@ -1,72 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f174.google.com ([209.85.214.174]:34409 "EHLO
-	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754067AbcCPA6M (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:35704 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753856AbcCHMF4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2016 20:58:12 -0400
-MIME-Version: 1.0
-In-Reply-To: <878u34j0wz.fsf@kamboji.qca.qualcomm.com>
-References: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com> <1453423965.3856.22.camel@perches.com>
- <87k2n1x0sf.fsf@kamboji.qca.qualcomm.com> <20160122151211.GB1500@tuxdriver.com>
- <87si1pvcd7.fsf@kamboji.qca.qualcomm.com> <20160126052823.GA2053@sudip-laptop>
- <87bn84kdu0.fsf@kamboji.qca.qualcomm.com> <20160201044142.GC4072@sudip-pc> <878u34j0wz.fsf@kamboji.qca.qualcomm.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Wed, 16 Mar 2016 11:57:52 +1100
-Message-ID: <CAGRGNgWkqApcjtEq_K8PQugoHxUSBxfSGJE1Mc+3_W2H9J8GrQ@mail.gmail.com> (sfid-20160316_015832_890835_C851C47C)
-Subject: Re: wireless-drivers: random cleanup patches piling up
+	Tue, 8 Mar 2016 07:05:56 -0500
+Date: Tue, 8 Mar 2016 15:04:08 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-	"John W. Linville" <linville@tuxdriver.com>,
-	Joe Perches <joe@perches.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	kbuild test robot <lkp@intel.com>,
-	kernel-janitors <kernel-janitors@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Cc: Andreas Kemnade <andreas@kemnade.info>,
+	libertas-dev@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: [patch] libertas: fix an error code in probe
+Message-ID: <20160308120408.GA28684@mwanda> (sfid-20160308_130601_107729_E35E5A2E)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+We accidentally return success instead of a negative error code.
 
-On Mon, Feb 1, 2016 at 7:21 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
->
->> Sure, I am starting that way. I checked in patchwork and I do not see
->> any checkpatch related patch pending (except staging, which Greg will
->> handle). I think you must have cleared all of them.
->
-> They are in deferred state. The search functionality in patchwork is not
-> that intuitive and they are not easy to find so here's a direct link:
->
-> https://patchwork.kernel.org/project/linux-wireless/list/?state=10&order=date
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-I'm currently going through that list and producing a bundle of
-"applyable" patches.
-
-My criteria is:
-1. The change is sane.
-2. It's either obviously correct, I can review it, or someone else has
-reviewed or acked it.
-3. No changes other than rebasing and fixing commit messages are
-required to apply it.
-
-Some of these patches need work on their commit messages, some are
-complicated enough that I feel I should be providing review notes so
-someone else can double check my review, and all of them should be
-rebased and compile tested. Also, some are controversial, so I'll be
-segregating them from the main set.
-
-How would you like me to communicate this list to you? I'm happy to
-provide branches you can pull from or I could just post updated
-versions to the list and give reviewed-by tags to those that don't
-need more work.
-
-Every patch will get an email on linux-wireless regardless.
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+diff --git a/drivers/net/wireless/marvell/libertas/main.c b/drivers/net/wireless/marvell/libertas/main.c
+index b35b8bc..8541cbe 100644
+--- a/drivers/net/wireless/marvell/libertas/main.c
++++ b/drivers/net/wireless/marvell/libertas/main.c
+@@ -1118,7 +1118,8 @@ int lbs_start_card(struct lbs_private *priv)
+ 	else
+ 		pr_info("%s: mesh disabled\n", dev->name);
+ 
+-	if (lbs_cfg_register(priv)) {
++	ret = lbs_cfg_register(priv);
++	if (ret) {
+ 		pr_err("cannot register device\n");
+ 		goto done;
+ 	}
