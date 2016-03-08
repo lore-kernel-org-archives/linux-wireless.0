@@ -1,93 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:37636 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751008AbcC3KE3 convert rfc822-to-8bit (ORCPT
+Received: from smtprelay0041.hostedemail.com ([216.40.44.41]:33155 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S933690AbcCHAUB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 06:04:29 -0400
-Received: by mail-wm0-f53.google.com with SMTP id p65so63892732wmp.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2016 03:04:28 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAA93jw4ooS_oc___qTzwqmZ4BPbOSem0Z8V_qc0zq2hh5Qv2Rg@mail.gmail.com>
-References: <1458898743-21118-1-git-send-email-michal.kazior@tieto.com>
-	<CA+BoTQk7q7VerNC1KZK49REHn9rfo6sG5zW54P=-K3XkOL77pQ@mail.gmail.com>
-	<CAA93jw7BEsEOP8O2BQFXUibkGzkzBZuyWxBxs5XDCZmOt6D+Qg@mail.gmail.com>
-	<CA+BoTQnDtWNGQGkBNeBGSrjkjQc4dFuivQTL=0_1D+ooE-9+RQ@mail.gmail.com>
-	<CAA93jw4ooS_oc___qTzwqmZ4BPbOSem0Z8V_qc0zq2hh5Qv2Rg@mail.gmail.com>
-Date: Wed, 30 Mar 2016 12:04:27 +0200
-Message-ID: <CA+BoTQ=b+5xTraZ-D31k_9dQAYRBiWWF9_G3=VVb0SbS=Q3eFA@mail.gmail.com> (sfid-20160330_120433_577919_CA543C7D)
-Subject: Re: [RFC] ath10k: implement dql for htt tx
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Dave Taht <dave.taht@gmail.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	make-wifi-fast@lists.bufferbloat.net,
-	"codel@lists.bufferbloat.net" <codel@lists.bufferbloat.net>
-Content-Type: text/plain; charset=UTF-8
+	Mon, 7 Mar 2016 19:20:01 -0500
+From: Joe Perches <joe@perches.com>
+To: linux-kernel@vger.kernel.org
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: [PATCH 0/5] wireless: ti: Convert specialized logging macros to kernel style
+Date: Mon,  7 Mar 2016 16:19:32 -0800
+Message-Id: <cover.1457395071.git.joe@perches.com> (sfid-20160308_012046_933653_EFCF050B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 30 March 2016 at 02:57, Dave Taht <dave.taht@gmail.com> wrote:
-> As a side note of wifi ideas complementary to codel, please see:
->
-> http://blog.cerowrt.org/post/selective_unprotect/
->
-> On Tue, Mar 29, 2016 at 12:49 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
-[...]
->> On the other hand DQL will react also to host system interrupt service
->> time. On slow CPUs (typically found on routers and such) you might end
->> up grinding the CPU so much you need deeper tx queues to keep the hw
->> busy (and therefore keep performance maxed). DQL should automatically
->> adjust to that while "txop limit" might not.
->
-> Mmmm.... current multi-core generation arm routers should be fast enough.
+Using the normal kernel logging mechanisms makes this code
+a bit more like other wireless drivers.
 
-While this helps it doesn't mean you can magically un-serialize
-interrupt/txrx completion work.
+Joe Perches (5):
+  ti: Convert wl1271_<level> logging macros to dev_<level> or pr_<level>
+  ti: wl1251: Convert wl1251_error to wiphy_err/pr_err
+  ti: wl1251: Convert wl1251_warning to wiphy_warn
+  ti: wl1251: Convert wl1251_notice to wiphy_info/pr_info
+  ti: wl1251: Convert wl1251_info to wl1251_debug
 
+ drivers/net/wireless/ti/wl1251/acx.c      |  97 +++++++-----
+ drivers/net/wireless/ti/wl1251/boot.c     |  18 +--
+ drivers/net/wireless/ti/wl1251/cmd.c      |  52 ++++---
+ drivers/net/wireless/ti/wl1251/event.c    |   2 +-
+ drivers/net/wireless/ti/wl1251/init.c     |  27 ++--
+ drivers/net/wireless/ti/wl1251/io.c       |   3 +-
+ drivers/net/wireless/ti/wl1251/main.c     |  75 +++++----
+ drivers/net/wireless/ti/wl1251/ps.c       |   2 +-
+ drivers/net/wireless/ti/wl1251/rx.c       |   6 +-
+ drivers/net/wireless/ti/wl1251/sdio.c     |  25 +--
+ drivers/net/wireless/ti/wl1251/spi.c      |  19 +--
+ drivers/net/wireless/ti/wl1251/tx.c       |   9 +-
+ drivers/net/wireless/ti/wl1251/wl1251.h   |  15 +-
+ drivers/net/wireless/ti/wl12xx/acx.c      |   2 +-
+ drivers/net/wireless/ti/wl12xx/cmd.c      |  20 +--
+ drivers/net/wireless/ti/wl12xx/main.c     |  34 ++--
+ drivers/net/wireless/ti/wl12xx/scan.c     |  24 +--
+ drivers/net/wireless/ti/wl18xx/acx.c      |  25 +--
+ drivers/net/wireless/ti/wl18xx/cmd.c      |  20 +--
+ drivers/net/wireless/ti/wl18xx/debugfs.c  |   2 +-
+ drivers/net/wireless/ti/wl18xx/event.c    |   8 +-
+ drivers/net/wireless/ti/wl18xx/main.c     |  50 +++---
+ drivers/net/wireless/ti/wl18xx/scan.c     |  16 +-
+ drivers/net/wireless/ti/wl18xx/tx.c       |   8 +-
+ drivers/net/wireless/ti/wlcore/acx.c      | 132 ++++++++--------
+ drivers/net/wireless/ti/wlcore/boot.c     |  45 +++---
+ drivers/net/wireless/ti/wlcore/cmd.c      | 103 +++++++------
+ drivers/net/wireless/ti/wlcore/debug.h    |  14 +-
+ drivers/net/wireless/ti/wlcore/debugfs.c  |  54 +++----
+ drivers/net/wireless/ti/wlcore/event.c    |  14 +-
+ drivers/net/wireless/ti/wlcore/main.c     | 248 ++++++++++++++++--------------
+ drivers/net/wireless/ti/wlcore/ps.c       |  15 +-
+ drivers/net/wireless/ti/wlcore/rx.c       |  26 ++--
+ drivers/net/wireless/ti/wlcore/scan.c     |   4 +-
+ drivers/net/wireless/ti/wlcore/sysfs.c    |   8 +-
+ drivers/net/wireless/ti/wlcore/testmode.c |  14 +-
+ drivers/net/wireless/ti/wlcore/tx.c       |  14 +-
+ drivers/net/wireless/ti/wlcore/wlcore_i.h |   3 -
+ 38 files changed, 653 insertions(+), 600 deletions(-)
 
-[...]
->>>> To sum things up:
->>>>  - DQL might be able to replace the explicit txop queue limiting
->>>> (which requires rate control info)
->>>
->>> I am pessimistic. Perhaps as a fallback?
->>
->> At first I was (too) considering DQL as a nice fallback but the more I
->> think about the more it makes sense to use it as the main source of
->> deriving time slices for tx scheduling.
->
-> I don't really get how dql can be applied per station in it's current forrm.
+-- 
+2.6.3.368.gf34be46
 
-I was thinking of the following scheme:
- - disable excessive retries in fw (apparently doable via WMI pdev parameter)
- - deficit-based round-robin over stations
- - maintain DQL structure per station
- - when station gets its turn to xmit push frames to fw
- - keep doing that (with regard to per station DQL limits) until either:
-   - associated software queue becomes empty
-   - 1 timeslice for given station has elapsed
-     - i was thinking of extracting timeslices from DQL or maintaining
-it separately
- - try next station
- - do not submit packets to multiple stations at once (MU will need
-more work..), i.e. always drain tx completely before switching to next
-station
- - each station may need a different timeslice (to squeeze out max
-burst performance)
-
-
-[...]
->>>> PS. I'm not feeling comfortable attaching 1MB attachment to a mailing
->>>> list. Is this okay or should I use something else next time?
->>>
->>> I/you can slam results into the github blogcerowrt repo and then pull
->>> out stuff selectively....
->>
->> Good idea, thanks!
->
-> You got commit privs.
-
-Yep, thanks!
-
-
-Michał
