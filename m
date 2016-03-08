@@ -1,58 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:7675 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754674AbcCRIsN convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 04:48:13 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Andreas Fenkart <afenkart@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Subject: RE: [PATCH v2 0/7] mwifiex: cleanups 
-Date: Fri, 18 Mar 2016 08:48:08 +0000
-Message-ID: <b7934b465768468fa693154e21aeebd4@SC-EXCH04.marvell.com> (sfid-20160318_095051_750554_EF31304D)
-References: <1457599451-13910-1-git-send-email-afenkart@gmail.com>
-In-Reply-To: <1457599451-13910-1-git-send-email-afenkart@gmail.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:35561 "EHLO
+	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932171AbcCHK5n convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2016 05:57:43 -0500
+Received: by mail-wm0-f42.google.com with SMTP id l68so125644540wml.0
+        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2016 02:57:42 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <CAA93jw4XsEnp3jTgPL7OKWTJP-83VwRaCdb+foc8nCuqxk3WZA@mail.gmail.com>
+References: <1456492163-11437-1-git-send-email-michal.kazior@tieto.com>
+	<CAA93jw4XsEnp3jTgPL7OKWTJP-83VwRaCdb+foc8nCuqxk3WZA@mail.gmail.com>
+Date: Tue, 8 Mar 2016 11:57:41 +0100
+Message-ID: <CA+BoTQ=ASe2o7kfiC8q6YOkNp9q6DF3Yc3XZgL=scVsw9VdqrA@mail.gmail.com> (sfid-20160308_115808_935730_EC46CBD2)
+Subject: Re: [RFC/RFT] mac80211: implement fq_codel for software queuing
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Dave Taht <dave.taht@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Tim Shepard <shep@alum.mit.edu>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andreas,
+On 8 March 2016 at 00:06, Dave Taht <dave.taht@gmail.com> wrote:
+> Dear Michal:
+>
+> Going through this patchset... (while watching it compile)
+>
+>
+> +       if (!local->hw.txq_cparams.target)
+> +               local->hw.txq_cparams.target = MS2TIME(5);
+>
+> MS2TIME(20) for now and/or add something saner to this than !*backlog
+>
+> target will not be a constant in the long run.
+>
+> +       if (now - custom_codel_get_enqueue_time(skb) < p->target ||
+> +           !*backlog) {
+> +               /* went below - stay below for at least interval */
+> +               vars->first_above_time = 0;
+> +               return false;
+> +       }
+>
+>
+> *backlog < some_sane_value_for_an_aggregate_for_this_station
+>
+> Unlike regular codel *backlog should be a ptr to the queuesize for
+> this station, not the total queue.
+>
+> regular codel, by using the shared backlog for all queues, is trying
+> to get to a 1 packet depth for all queues, (see commit:
+> 865ec5523dadbedefbc5710a68969f686a28d928 ), and store the flow in the
+> network, not the queue...
+>
+> BUT in wifi's case you want to provide good service to all stations,
+> which is filling up an aggregate
+> for each... (and varying the "sane_value_for_the_aggregate" to suit
+> per sta service time requirements in a given round of all stations).
 
-> From: Andreas Fenkart [mailto:afenkart@gmail.com]
-> Sent: Thursday, March 10, 2016 2:14 PM
-> To: linux-wireless@vger.kernel.org
-> Cc: Amitkumar Karwar; Nishant Sarmukadam; Julian Calaby; Kalle Valo;
-> Andreas Fenkart
-> Subject: [PATCH v2 0/7] mwifiex: cleanups
-> 
-> v2:
-> - addressed issues from review
-> - race-condition issue discussed in patch description
-> 
-> Andreas Fenkart (7):
->   mwifiex: scan: simplify dereference of bss_desc fields
->   mwifiex: scan: factor out has_ieee_hdr/has_vendor_hdr
->   mwifiex: scan: simplify ternary operators using gnu extension
->   mwifiex: scan: factor out dbg_security_flags
->   mwifiex: scan: replace pointer arithmetic with array access
->   mwifiex: factor out mwifiex_cancel_pending_scan_cmd
->   mwifiex: make mwifiex_insert_cmd_to_free_q local static
-> 
->  drivers/net/wireless/marvell/mwifiex/cmdevt.c      | 125 +++++++-------
->  drivers/net/wireless/marvell/mwifiex/main.h        |   3 +-
->  drivers/net/wireless/marvell/mwifiex/scan.c        | 185 ++++++++------
-> -------
->  drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |  13 +-
->  4 files changed, 128 insertions(+), 198 deletions(-)
-> 
+Hmm.. This actually makes me think that:
 
-Thanks for the efforts for this cleanup work. Patches look fine to me.
+        skb = codel_dequeue(flow, &flow->backlog, &flow->cvars,
+                            &hw->txq_cparams, codel_get_time(), false);
 
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+is kind of wrong.
 
-Regards,
-Amitkumar
+If you want to maintain per-sta aggregate-long queue this probably
+needs a sta->backlog instead of flow->backlog (because you can have
+multiple flows per station) in the first place.
+
+Not quite sure about cvars though. Thoughts?
+
+
+Michał
