@@ -1,56 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f177.google.com ([209.85.192.177]:33787 "EHLO
-	mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751133AbcCAQys (ORCPT
+Received: from mga09.intel.com ([134.134.136.24]:10804 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753823AbcCHL5m convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 11:54:48 -0500
-Date: Tue, 1 Mar 2016 08:54:38 -0800
-From: Edward Lipinsky <ellipinsky@gmail.com>
-To: Joe Perches <joe@perches.com>
-Cc: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
-	gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] staging: rtl8723au: Fix line longer than 80 columns.
-Message-ID: <20160301165438.GA19890@gmail.com> (sfid-20160301_175505_995109_6C8DF27B)
-References: <20160227182841.GA3387@gmail.com>
- <1456598936.4436.6.camel@perches.com>
+	Tue, 8 Mar 2016 06:57:42 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] mac80211: Set global RRM capability
+Date: Tue, 8 Mar 2016 11:57:37 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA6004A@hasmsx107.ger.corp.intel.com> (sfid-20160308_125744_677494_88AC1621)
+References: <1457437561-19387-1-git-send-email-emmanuel.grumbach@intel.com>
+In-Reply-To: <1457437561-19387-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1456598936.4436.6.camel@perches.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, Feb 27, 2016 at 10:48:56AM -0800, Joe Perches wrote:
-> On Sat, 2016-02-27 at 10:28 -0800, Edward Lipinsky wrote:
-> > This patch fixes the checkpatch.pl warning:
-> > WARNING: line over 80 characters
-> []
-> > diff --git a/drivers/staging/rtl8723au/core/rtw_ap.c b/drivers/staging/rtl8723au/core/rtw_ap.c
-> []
-> > @@ -1834,7 +1834,8 @@ void stop_ap_mode23a(struct rtw_adapter *padapter)
-> >  	}
-> >  	spin_unlock_bh(&pacl_node_q->lock);
-> >  
-> > -	DBG_8723A("%s, free acl_node_queue, num =%d\n", __func__, pacl_list->num);
-> > +	DBG_8723A("%s, free acl_node_queue, num =%d\n", __func__,
-> > +		  pacl_list->num);
+> Subject: [PATCH] mac80211: Set global RRM capability
 > 
-> It's generally nicer to break the line at the end
-> of the format sting like:
+> Allow publishing RRM capabilities for features that are not HW dependent.
 > 
-> 	DBG_8723A("%s, free acl_node_queue, num =%d\n",
-> 		  __func__, pacl_list->num);
-> 
-> though it'd be even better to convert all of these
-> DBG_8723A uses to pr_debug
-> 
-> $ git ls-files drivers/staging/rtl8723au/ |	\
->   xargs sed -r -i				\
-> 	-e 's/\bDBG_8723A\b/pr_debug/g'		\
->  	-e 's/\bMSG|8723A\b/pr_debug/g'
-> 
+> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+> ---
 
-Thanks for the feedback.  I will submit an updated patch.
+Err... please ignore..
 
-Ed
+>  net/mac80211/main.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/net/mac80211/main.c b/net/mac80211/main.c index
+> 8190bf2..0c9b621 100644
+> --- a/net/mac80211/main.c
+> +++ b/net/mac80211/main.c
+> @@ -548,7 +548,8 @@ struct ieee80211_hw
+> *ieee80211_alloc_hw_nm(size_t priv_data_len,
+>  			   NL80211_FEATURE_VIF_TXPOWER |
+>  			   NL80211_FEATURE_MAC_ON_CREATE |
+>  			   NL80211_FEATURE_USERSPACE_MPM |
+> -			   NL80211_FEATURE_FULL_AP_CLIENT_STATE;
+> +			   NL80211_FEATURE_FULL_AP_CLIENT_STATE |
+> +			   NL80211_EXT_FEATURE_RRM;
+> 
+>  	if (!ops->hw_scan)
+>  		wiphy->features |=
+> NL80211_FEATURE_LOW_PRIORITY_SCAN |
+> --
+> 2.5.0
 
