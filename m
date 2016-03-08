@@ -1,95 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48561 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752155AbcCGCjT (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:6337 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932599AbcCHJbP convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 21:39:19 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH v4 6/8] ath9k: add bits definition of BTCoex MODE2/3 for SOC chips
-Date: Mon,  7 Mar 2016 10:38:19 +0800
-Message-Id: <1457318301-27701-7-git-send-email-miaoqing@codeaurora.org> (sfid-20160307_033926_246604_1ECE96F1)
-In-Reply-To: <1457318301-27701-1-git-send-email-miaoqing@codeaurora.org>
-References: <1457318301-27701-1-git-send-email-miaoqing@codeaurora.org>
+	Tue, 8 Mar 2016 04:31:15 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Oh, Peter" <poh@qca.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: parse Rx MAC timestamp in mgmt frame for FW 10.4
+Date: Tue, 8 Mar 2016 09:31:11 +0000
+Message-ID: <87a8m9s4dk.fsf@kamboji.qca.qualcomm.com> (sfid-20160308_103134_317913_0685D454)
+References: <1456513531-14528-1-git-send-email-poh@qca.qualcomm.com>
+In-Reply-To: <1456513531-14528-1-git-send-email-poh@qca.qualcomm.com> (Peter
+	Oh's message of "Fri, 26 Feb 2016 11:05:31 -0800")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+Peter Oh <poh@qca.qualcomm.com> writes:
 
-Add bits definition for AR_BT_COEX_MODE2 and AR_BT_COEX_MODE3, which
-needed by SOC chips (AR9340, AR9531, AR9550, AR9561).
+> Check and parse Rx MAC timestamp when firmware sets its flag
+> to status variable.
+> 10.4 firmware adds it in Rx beacon frame only at this moment.
+> Drivers and mac80211 may utilize it to detect such clockdrift
+> or beacon collision and use the result for beacon collision
+> avoidance.
+>
+> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/reg.h | 46 +++++++++++++++++++++++++++++-------
- 1 file changed, 37 insertions(+), 9 deletions(-)
+Like kbuild noticed this fails to build:
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index f82a4ad..f8a96f6 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1890,15 +1890,33 @@ enum {
- 
- #define AR9300_BT_WGHT             0xcccc4444
- 
--#define AR_BT_COEX_MODE2           0x817c
--#define AR_BT_BCN_MISS_THRESH      0x000000ff
--#define AR_BT_BCN_MISS_THRESH_S    0
--#define AR_BT_BCN_MISS_CNT         0x0000ff00
--#define AR_BT_BCN_MISS_CNT_S       8
--#define AR_BT_HOLD_RX_CLEAR        0x00010000
--#define AR_BT_HOLD_RX_CLEAR_S      16
--#define AR_BT_DISABLE_BT_ANT       0x00100000
--#define AR_BT_DISABLE_BT_ANT_S     20
-+#define AR_BT_COEX_MODE2		0x817c
-+#define AR_BT_BCN_MISS_THRESH		0x000000ff
-+#define AR_BT_BCN_MISS_THRESH_S		0
-+#define AR_BT_BCN_MISS_CNT		0x0000ff00
-+#define AR_BT_BCN_MISS_CNT_S		8
-+#define AR_BT_HOLD_RX_CLEAR		0x00010000
-+#define AR_BT_HOLD_RX_CLEAR_S		16
-+#define AR_BT_PROTECT_BT_AFTER_WAKEUP	0x00080000
-+#define AR_BT_PROTECT_BT_AFTER_WAKEUP_S 19
-+#define AR_BT_DISABLE_BT_ANT		0x00100000
-+#define AR_BT_DISABLE_BT_ANT_S		20
-+#define AR_BT_QUIET_2_WIRE		0x00200000
-+#define AR_BT_QUIET_2_WIRE_S		21
-+#define AR_BT_WL_ACTIVE_MODE		0x00c00000
-+#define AR_BT_WL_ACTIVE_MODE_S		22
-+#define AR_BT_WL_TXRX_SEPARATE		0x01000000
-+#define AR_BT_WL_TXRX_SEPARATE_S	24
-+#define AR_BT_RS_DISCARD_EXTEND		0x02000000
-+#define AR_BT_RS_DISCARD_EXTEND_S	25
-+#define AR_BT_TSF_BT_ACTIVE_CTRL	0x0c000000
-+#define AR_BT_TSF_BT_ACTIVE_CTRL_S	26
-+#define AR_BT_TSF_BT_PRIORITY_CTRL	0x30000000
-+#define AR_BT_TSF_BT_PRIORITY_CTRL_S	28
-+#define AR_BT_INTERRUPT_ENABLE		0x40000000
-+#define AR_BT_INTERRUPT_ENABLE_S	30
-+#define AR_BT_PHY_ERR_BT_COLL_ENABLE	0x80000000
-+#define AR_BT_PHY_ERR_BT_COLL_ENABLE_S	31
- 
- #define AR_TXSIFS              0x81d0
- #define AR_TXSIFS_TIME         0x000000FF
-@@ -1907,6 +1925,16 @@ enum {
- #define AR_TXSIFS_ACK_SHIFT    0x00007000
- #define AR_TXSIFS_ACK_SHIFT_S  12
- 
-+#define AR_BT_COEX_MODE3			0x81d4
-+#define AR_BT_WL_ACTIVE_TIME			0x000000ff
-+#define AR_BT_WL_ACTIVE_TIME_S			0
-+#define AR_BT_WL_QC_TIME			0x0000ff00
-+#define AR_BT_WL_QC_TIME_S			8
-+#define AR_BT_ALLOW_CONCURRENT_ACCESS		0x000f0000
-+#define AR_BT_ALLOW_CONCURRENT_ACCESS_S		16
-+#define AR_BT_AGC_SATURATION_CNT_ENABLE		0x00100000
-+#define AR_BT_AGC_SATURATION_CNT_ENABLE_S	20
-+
- #define AR_TXOP_X          0x81ec
- #define AR_TXOP_X_VAL      0x000000FF
- 
+drivers/net/wireless/ath/ath10k/wmi.c: In function 'ath10k_wmi_10_4_op_pull_mgmt_rx_ev':
+drivers/net/wireless/ath/ath10k/wmi.c:2236:40: error: 'WMI_RX_STATUS_EXT_INFO' undeclared (first use in this function)
+drivers/net/wireless/ath/ath10k/wmi.c:2236:40: note: each undeclared identifier is reported only once for each function it appears in
+drivers/net/wireless/ath/ath10k/wmi.c:2239:24: error: 'struct wmi_mgmt_rx_ev_arg' has no member named 'ext_info'
+drivers/net/wireless/ath/ath10k/wmi.c:2239:53: error: invalid application of 'sizeof' to incomplete type 'struct wmi_mgmt_rx_ext_info' 
+
+Please resend.
+
 -- 
-1.9.1
-
+Kalle Valo
