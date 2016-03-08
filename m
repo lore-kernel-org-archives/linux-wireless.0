@@ -1,132 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:36010 "EHLO
-	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755887AbcC2GGm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 02:06:42 -0400
-Received: by mail-pf0-f173.google.com with SMTP id u190so6573788pfb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2016 23:06:42 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Pontus Fuchs <pontus.fuchs@gmail.com>
-Subject: [PATCH 04/16] wcn36xx: Use consistent name for private vif
-Date: Mon, 28 Mar 2016 23:06:21 -0700
-Message-Id: <1459231593-360-5-git-send-email-bjorn.andersson@linaro.org> (sfid-20160329_081129_978859_6B06A1A6)
-In-Reply-To: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
+Received: from s3.sipsolutions.net ([5.9.151.49]:38147 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933098AbcCHQzb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 8 Mar 2016 11:55:31 -0500
+Message-ID: <1457456123.24270.11.camel@sipsolutions.net> (sfid-20160308_175543_459682_B199D46B)
+Subject: Re: [PATCH] mac80211: Allow probe response frame rx to user space
+ in AP mode
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 08 Mar 2016 17:55:23 +0100
+In-Reply-To: <1457334731-6456-1-git-send-email-vthiagar@qti.qualcomm.com>
+References: <1457334731-6456-1-git-send-email-vthiagar@qti.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+On Mon, 2016-03-07 at 12:42 +0530, Vasanthakumar Thiagarajan wrote:
+> Especially during off-channel scan user space might be interested
+> in probe reponse frames along with beacon to build a list
+> of preferred channel and bssid which could be sent to the stations
+> around for better spectrum management. Do not drop probe response
+> frame in AP mode and advertise driver's capability to receive probe
+> response frame in AP mode to user space.
 
-Some code used priv_vif and some used vif_priv. Convert all to vif_priv
-for consistency.
+I'm not convinced that this is a good idea - these frames will still
+populate the BSS cache, and it's not really quite well-specified what
+happens when you have both [1]
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/smd.c | 28 ++++++++++++++--------------
- 1 file changed, 14 insertions(+), 14 deletions(-)
+I also don't understand the use case; "might be interested" is ... very
+vague.
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index a08153eef4ae..6baf54db6241 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -191,7 +191,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
- 		struct ieee80211_sta *sta,
- 		struct wcn36xx_hal_config_sta_params *sta_params)
- {
--	struct wcn36xx_vif *priv_vif = wcn36xx_vif_to_priv(vif);
-+	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
- 	struct wcn36xx_sta *priv_sta = NULL;
- 	if (vif->type == NL80211_IFTYPE_ADHOC ||
- 	    vif->type == NL80211_IFTYPE_AP ||
-@@ -215,7 +215,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
- 	else
- 		memcpy(&sta_params->bssid, vif->addr, ETH_ALEN);
- 
--	sta_params->encrypt_type = priv_vif->encrypt_type;
-+	sta_params->encrypt_type = vif_priv->encrypt_type;
- 	sta_params->short_preamble_supported = true;
- 
- 	sta_params->rifs_mode = 0;
-@@ -224,7 +224,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
- 	sta_params->uapsd = 0;
- 	sta_params->mimo_ps = WCN36XX_HAL_HT_MIMO_PS_STATIC;
- 	sta_params->max_ampdu_duration = 0;
--	sta_params->bssid_index = priv_vif->bss_index;
-+	sta_params->bssid_index = vif_priv->bss_index;
- 	sta_params->p2p = 0;
- 
- 	if (sta) {
-@@ -726,7 +726,7 @@ static int wcn36xx_smd_add_sta_self_rsp(struct wcn36xx *wcn,
- 					size_t len)
- {
- 	struct wcn36xx_hal_add_sta_self_rsp_msg *rsp;
--	struct wcn36xx_vif *priv_vif = wcn36xx_vif_to_priv(vif);
-+	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
- 
- 	if (len < sizeof(*rsp))
- 		return -EINVAL;
-@@ -743,8 +743,8 @@ static int wcn36xx_smd_add_sta_self_rsp(struct wcn36xx *wcn,
- 		    "hal add sta self status %d self_sta_index %d dpu_index %d\n",
- 		    rsp->status, rsp->self_sta_index, rsp->dpu_index);
- 
--	priv_vif->self_sta_index = rsp->self_sta_index;
--	priv_vif->self_dpu_desc_index = rsp->dpu_index;
-+	vif_priv->self_sta_index = rsp->self_sta_index;
-+	vif_priv->self_dpu_desc_index = rsp->dpu_index;
- 
- 	return 0;
- }
-@@ -1175,7 +1175,7 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
- {
- 	struct wcn36xx_hal_config_bss_rsp_msg *rsp;
- 	struct wcn36xx_hal_config_bss_rsp_params *params;
--	struct wcn36xx_vif *priv_vif = wcn36xx_vif_to_priv(vif);
-+	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
- 
- 	if (len < sizeof(*rsp))
- 		return -EINVAL;
-@@ -1198,14 +1198,14 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
- 		    params->bss_bcast_sta_idx, params->mac,
- 		    params->tx_mgmt_power, params->ucast_dpu_signature);
- 
--	priv_vif->bss_index = params->bss_index;
-+	vif_priv->bss_index = params->bss_index;
- 
--	if (priv_vif->sta) {
--		priv_vif->sta->bss_sta_index =  params->bss_sta_index;
--		priv_vif->sta->bss_dpu_desc_index = params->dpu_desc_index;
-+	if (vif_priv->sta) {
-+		vif_priv->sta->bss_sta_index =  params->bss_sta_index;
-+		vif_priv->sta->bss_dpu_desc_index = params->dpu_desc_index;
- 	}
- 
--	priv_vif->self_ucast_dpu_sign = params->ucast_dpu_signature;
-+	vif_priv->self_ucast_dpu_sign = params->ucast_dpu_signature;
- 
- 	return 0;
- }
-@@ -1343,13 +1343,13 @@ out:
- int wcn36xx_smd_delete_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif)
- {
- 	struct wcn36xx_hal_delete_bss_req_msg msg_body;
--	struct wcn36xx_vif *priv_vif = wcn36xx_vif_to_priv(vif);
-+	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
- 	int ret = 0;
- 
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DELETE_BSS_REQ);
- 
--	msg_body.bss_index = priv_vif->bss_index;
-+	msg_body.bss_index = vif_priv->bss_index;
- 
- 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
- 
--- 
-2.5.0
+johannes
 
+[1] obviously, today you get both, but an argument could be made for
+userspace RX meaning the frame has no action taken in the kernel, like
+with action frames.
