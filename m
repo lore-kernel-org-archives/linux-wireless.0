@@ -1,54 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f178.google.com ([209.85.160.178]:36657 "EHLO
-	mail-yk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752958AbcCGUDC (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2016 15:03:02 -0500
-Received: by mail-yk0-f178.google.com with SMTP id 1so53583157ykg.3
-        for <linux-wireless@vger.kernel.org>; Mon, 07 Mar 2016 12:03:01 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <87egbmtpv3.fsf@kamboji.qca.qualcomm.com>
-References: <20160307121950.CDA876067A@smtp.codeaurora.org>
-	<87egbmtpv3.fsf@kamboji.qca.qualcomm.com>
-Date: Mon, 7 Mar 2016 21:03:01 +0100
-Message-ID: <CAF7Mx6oFVK6HY3+QfEFDd9P8GvGqPbaLLdvwMn-Qi_BJQNL5QA@mail.gmail.com> (sfid-20160307_210307_272968_819085B8)
-Subject: Re: [01/21] brcmfmac: change function name forbrcmf_cfg80211_wait_vif_event_timeout()
-From: Arend Van Spriel <arend.vanspriel@broadcom.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga01.intel.com ([192.55.52.88]:32353 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752080AbcCIL1O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2016 06:27:14 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/2] mac80211: add NETIF_F_RXCSUM to features white list
+Date: Wed,  9 Mar 2016 13:27:08 +0200
+Message-Id: <1457522829-315-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160309_122717_308343_C93FBBEE)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 7, 2016 at 1:49 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Kalle Valo <kvalo@codeaurora.org> writes:
->
->> 1 patches skipped:
->>
->> [17/21] brcmfmac: fix sdio sg table alloc crash
->>
->> There was a conflict so please rebase that patch:
->>
->> Applying: brcmfmac: fix sdio sg table alloc crash
->> fatal: sha1 information is lacking or useless (drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcmsdh.c).
->> Repository lacks necessary blobs to fall back on 3-way merge.
->> Cannot fall back to three-way merge.
->> Patch failed at 0001 brcmfmac: fix sdio sg table alloc crash
->
-> Ah, I noticed only now your comment that this patch is in
-> wireless-drivers already. So no actions needed.
->
-> But in the future please don't submit the same patch twice, otherwise I
-> accidentally commit it twice which is bad. Instead document the
-> dependency and we can sort it out.
+From: Sara Sharon <sara.sharon@intel.com>
 
-Yeah. We already discussed this earlier [1]. Has been noted.
+NETIF_F_RXCSUM is not in the white list, though some
+drivers may want to set it in order to enable seeing the
+actual RX checksum status in ethtool.
 
-Thanks,
-Arend
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-[1] http://article.gmane.org/gmane.linux.kernel.wireless.general/148691
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 8155961..33c80de 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -856,7 +856,7 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 	/* Only HW csum features are currently compatible with mac80211 */
+ 	feature_whitelist = NETIF_F_IP_CSUM | NETIF_F_IPV6_CSUM |
+ 			    NETIF_F_HW_CSUM | NETIF_F_SG | NETIF_F_HIGHDMA |
+-			    NETIF_F_GSO_SOFTWARE;
++			    NETIF_F_GSO_SOFTWARE | NETIF_F_RXCSUM;
+ 	if (WARN_ON(hw->netdev_features & ~feature_whitelist))
+ 		return -EINVAL;
+ 
+-- 
+2.5.0
 
-> --
-> Kalle Valo
