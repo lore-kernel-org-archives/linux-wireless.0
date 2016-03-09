@@ -1,117 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yk0-f176.google.com ([209.85.160.176]:33603 "EHLO
-	mail-yk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750843AbcCAQQI convert rfc822-to-8bit (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:59346 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750799AbcCIH1k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 11:16:08 -0500
-MIME-Version: 1.0
-In-Reply-To: <1456839787.3926.20.camel@sipsolutions.net>
-References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
- <1456159001-20307-9-git-send-email-jprvita@endlessm.com> <20160226175925.GA9331@w1.fi>
- <CA+A7VXUY=qVDQ-OqT+QJK8haN6AFX4Br=OPXi-6RCxpvH3=QRg@mail.gmail.com>
- <20160229223918.GA32464@w1.fi> <1456839787.3926.20.camel@sipsolutions.net>
-From: =?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@gmail.com>
-Date: Tue, 1 Mar 2016 11:15:27 -0500
-Message-ID: <CA+A7VXWWQOti7pOre08QcXN9vgssQH3V1f6RjphaK0VwM27C7g@mail.gmail.com> (sfid-20160301_171629_493310_F0B28C17)
-Subject: Re: [PATCHv2 08/10] rfkill: Use switch to demux userspace operations
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Jouni Malinen <j@w1.fi>, "David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux@endlessm.com,
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Rechi_Vita?= <jprvita@endlessm.com>
-Content-Type: text/plain; charset=UTF-8
+	Wed, 9 Mar 2016 02:27:40 -0500
+From: Hui Wang <hui.wang@canonical.com>
+To: brudley@broadcom.com, arend@broadcom.com, frankyl@broadcom.com,
+	meuleman@broadcom.com, pieterpg@broadcom.com
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
+	hui.wang@canonical.com
+Subject: [PATCH] brcmfmac: Remove waitqueue_active check
+Date: Wed,  9 Mar 2016 15:25:26 +0800
+Message-Id: <1457508326-24420-1-git-send-email-hui.wang@canonical.com> (sfid-20160309_082743_253096_D3B7F4D7)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 1 March 2016 at 08:43, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Tue, 2016-03-01 at 00:39 +0200, Jouni Malinen wrote:
->
->> > I agree there is a difference in the logic here,
->
-> Gah. I thought I'd reviewed the logic and made sure there's no
-> difference ... :)
->
->> >  thanks for taking the
->> > time to point it out so clearly, and sorry for missing this. But AFAIU
->> > userspace should not call RFKILL_OP_CHANGE with ev.type ==
->> > RFKILL_TYPE_ALL, as RFKILL_OP_CHANGE is intended to be used to
->> > block/unblock one RFKill switch, and it is not possible to create a
->> > RFKill switch with type == RFKILL_TYPE_ALL (rfkill_alloc() would
->> > return NULL).
->
->> Interesting. Maybe Johannes can comment on that part since I think he
->> wrote the code that interacts with kernel for the rfkill test cases.
->
-> So first of all, it seems that this argument is invalid since we can't break the ABI/API here; although perhaps if it's only a test case ...
->
+We met a problem of pm_suspend  when repeated closing/opening the lid
+on a Lenovo laptop (1/20 reproduce rate), below is the log:
 
-Yep, that's an important point (not breaking the API/ABI).
+[ 199.735876] PM: Entering mem sleep
+[ 199.750516] e1000e: EEE TX LPI TIMER: 00000011
+[ 199.856638] Trying to free nonexistent resource <000000000000d000-000000000000d0ff>
+[ 201.753566] brcmfmac: brcmf_pcie_suspend: Timeout on response for entering D3 substate
+[ 201.753581] pci_legacy_suspend(): brcmf_pcie_suspend+0x0/0x1f0 [brcmfmac] returns -5
+[ 201.753585] dpm_run_callback(): pci_pm_suspend+0x0/0x160 returns -5
+[ 201.753589] PM: Device 0000:04:00.0 failed to suspend async: error -5
 
-> Oh. It took me a while, but I see now. The original intent (I think)
-> was that with RFKILL_OP_CHANGE, the type would be ignored entirely. It
-> seems that the (my) original intent wouldn't have been to force
-> userspace to specify *both* the index and the type, but instead do
->
-> OP_CHANGE_ALL -> use type (possibly TYPE_ALL, ignoring idx)
-> OP_CHANGE     -> use idx (ignoring type)
->
->
-> The original code implemented it as follows:
->
->                 if (rfkill->idx != ev.idx && ev.op != RFKILL_OP_CHANGE_ALL)
->                         continue;
->
-> -> check the idx only for OP_CHANGE
->
->                 if (rfkill->type != ev.type && ev.type != RFKILL_TYPE_ALL)
->                         continue;
->
-> -> check the type, allowing _ALL
->
-> Now, all userspace that I found sets the ev.type field to TYPE_ALL all
-> the time; and it had to given these checks.
->
-> e.g. from rfkill.py:
->
-> # idx, type, op, soft, hard
-> _event_struct = '@IBBBB'
->
-> [...]
->
->     def block(self):
->         rfk = open('/dev/rfkill', 'w')
->         s = struct.pack(_event_struct, self.idx, TYPE_ALL, _OP_CHANGE, 1, 0)
->         rfk.write(s)
->         rfk.close()
->
->
-> This check, originally, probably should've been
->
->                 if (rfkill->type != ev.type && ev.type != RFKILL_TYPE_ALL &&
->                     ev.op != RFKILL_OP_CHANGE)
->                         continue;
->
-> to ignore the type entirely.
->
-> I'm fine with Jouni's change, preserving the original behaviour of
-> requiring TYPE_ALL or the correct type, but I'm tempted to simply
-> remove the type check entirely.
->
-> Thoughts?
->
+Through debugging, we found when problem happens, it is not the device
+fails to enter D3, but the signal D3_ACK comes too early to pass the
+waitqueue_active() check.
 
-I think this patch should keep the original logic, as this is supposed
-to be a refactor only. If we decide to remove the check, we should to
-it in a separate patch, to make it clear for someone looking at the
-history later.
+Just like this:
+brcmf_pcie_send_mb_data(devinfo, BRCMF_H2D_HOST_D3_INFORM);
+// signal is triggered here
+wait_event_timeout(devinfo->mbdata_resp_wait, devinfo->mbdata_completed,
+		   BRCMF_PCIE_MBDATA_TIMEOUT);
 
-I'm fine with removing the type check (in a separate patch), but I
-don't see much gain in doing so.
+So far I think it is safe to remove waitqueue_active check since there
+is only one place to trigger this signal (sending
+BRCMF_H2D_HOST_D3_INFORM). And it is not a problem calling wake_up
+event earlier than calling wait_event.
 
---
-João Paulo Rechi Vita
-http://about.me/jprvita
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Hante Meuleman <meuleman@broadcom.com>
+Cc: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Hui Wang <hui.wang@canonical.com>
+---
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 0480b70..5f12ff3 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -675,10 +675,8 @@ static void brcmf_pcie_handle_mb_data(struct brcmf_pciedev_info *devinfo)
+ 		brcmf_dbg(PCIE, "D2H_MB_DATA: DEEP SLEEP EXIT\n");
+ 	if (dtoh_mb_data & BRCMF_D2H_DEV_D3_ACK) {
+ 		brcmf_dbg(PCIE, "D2H_MB_DATA: D3 ACK\n");
+-		if (waitqueue_active(&devinfo->mbdata_resp_wait)) {
+-			devinfo->mbdata_completed = true;
+-			wake_up(&devinfo->mbdata_resp_wait);
+-		}
++		devinfo->mbdata_completed = true;
++		wake_up(&devinfo->mbdata_resp_wait);
+ 	}
+ }
+ 
+-- 
+1.9.1
+
