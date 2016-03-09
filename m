@@ -1,64 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f170.google.com ([209.85.192.170]:34524 "EHLO
-	mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361AbcCRCZT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 22:25:19 -0400
-Received: by mail-pf0-f170.google.com with SMTP id x3so145890620pfb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 19:25:19 -0700 (PDT)
-From: Julian Calaby <julian.calaby@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Markus Elfring <elfring@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH DETAIL 12/19] rsi: Delete unnecessary variable initialisation
-Date: Fri, 18 Mar 2016 13:25:13 +1100
-Message-Id: <3df80efb8bddfafb9222b6b03b088c0d85693da8.1458262312.git.julian.calaby@gmail.com> (sfid-20160318_032524_369295_60ED8CEB)
-In-Reply-To: <cover.1458262312.git.julian.calaby@gmail.com>
-References: <cover.1458262312.git.julian.calaby@gmail.com>
+Received: from mga03.intel.com ([134.134.136.65]:62255 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933653AbcCIRq0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2016 12:46:26 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 16/21] iwlwifi: mvm: remove RRM advertisement
+Date: Wed,  9 Mar 2016 19:45:45 +0200
+Message-Id: <1457545550-30677-16-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160309_185950_942216_BA01F851)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
+mac80211 advertises this feature for all its drivers.
 
-In rsi_send_mgmt_pkt(), the following variables are assigned to
-before they're used:
-
- * wh - Assigned on line 161, first used on line 180
- * bss - Assigned on line 160, first used on line 196
- * msg - Assigned on line 168, first used on line 175
- * extnd_size - Assigned on line 139, first used on line 142
-
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-[Rewrote commit message]
-Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_pkt.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_pkt.c b/drivers/net/wireless/rsi/rsi_91x_pkt.c
-index 702593f..571eaba 100644
---- a/drivers/net/wireless/rsi/rsi_91x_pkt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_pkt.c
-@@ -123,15 +123,15 @@ int rsi_send_mgmt_pkt(struct rsi_common *common,
- 		      struct sk_buff *skb)
- {
- 	struct rsi_hw *adapter = common->priv;
--	struct ieee80211_hdr *wh = NULL;
-+	struct ieee80211_hdr *wh;
- 	struct ieee80211_tx_info *info;
--	struct ieee80211_bss_conf *bss = NULL;
-+	struct ieee80211_bss_conf *bss;
- 	struct ieee80211_hw *hw = adapter->hw;
- 	struct ieee80211_conf *conf = &hw->conf;
- 	struct skb_info *tx_params;
- 	int status = -E2BIG;
--	__le16 *msg = NULL;
--	u8 extnd_size = 0;
-+	__le16 *msg;
-+	u8 extnd_size;
- 	u8 vap_id = 0;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+index 3590835..39b9c38 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
+@@ -610,8 +610,6 @@ int iwl_mvm_mac_setup_register(struct iwl_mvm *mvm)
+ 			IWL_UCODE_TLV_CAPA_WFA_TPC_REP_IE_SUPPORT))
+ 		hw->wiphy->features |= NL80211_FEATURE_WFA_TPC_IE_IN_PROBES;
  
- 	info = IEEE80211_SKB_CB(skb);
+-	wiphy_ext_feature_set(hw->wiphy, NL80211_EXT_FEATURE_RRM);
+-
+ 	mvm->rts_threshold = IEEE80211_MAX_RTS_THRESHOLD;
+ 
+ #ifdef CONFIG_PM_SLEEP
 -- 
-2.7.0
+2.5.0
 
