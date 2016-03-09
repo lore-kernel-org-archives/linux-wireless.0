@@ -1,132 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:33797 "EHLO
-	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751581AbcCFM5h (ORCPT
+Received: from mail-oi0-f44.google.com ([209.85.218.44]:34797 "EHLO
+	mail-oi0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964899AbcCIXnQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 07:57:37 -0500
-Received: by mail-wm0-f65.google.com with SMTP id p65so6295280wmp.1
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 04:57:37 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 12/13] staging: vt6655: mac.c replace wOffset with offset.
-Date: Sun,  6 Mar 2016 12:57:11 +0000
-Message-Id: <1457269032-2681-12-git-send-email-tvboxspy@gmail.com> (sfid-20160306_135949_643906_324E80D0)
-In-Reply-To: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
-References: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 9 Mar 2016 18:43:16 -0500
+Received: by mail-oi0-f44.google.com with SMTP id m82so48525526oif.1
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2016 15:43:15 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <56E0B21D.1010503@mleia.com>
+References: <1457565194-31533-1-git-send-email-vz@mleia.com>
+ <CAGRGNgUMViiR+ruvLHnwMLHUxOK3+uW7634Hpgn9gN+djCOtbw@mail.gmail.com> <56E0B21D.1010503@mleia.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Thu, 10 Mar 2016 10:42:54 +1100
+Message-ID: <CAGRGNgVsmTPpiu4twUnvk_3GEFMiU2VuuSj5=M+4y6qJYiDZhA@mail.gmail.com> (sfid-20160310_004335_170413_E715C835)
+Subject: Re: [PATCH] staging: wilc1000: fix check of kthread_run() return value
+To: Vladimir Zapolskiy <vz@mleia.com>
+Cc: Glen Lee <glen.lee@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Leo Kim <leo.kim@atmel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing camel case and type prefix.
+Hi Vladimir,
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/mac.c | 42 +++++++++++++++++++++---------------------
- 1 file changed, 21 insertions(+), 21 deletions(-)
+On Thu, Mar 10, 2016 at 10:30 AM, Vladimir Zapolskiy <vz@mleia.com> wrote:
+> Hi Julian,
+>
+> On 10.03.2016 01:27, Julian Calaby wrote:
+>> Hi Vladimir,
+>>
+>> On Thu, Mar 10, 2016 at 10:13 AM, Vladimir Zapolskiy <vz@mleia.com> wrote:
+>>> The kthread_run() function returns either a valid task_struct or
+>>> ERR_PTR() value, check for NULL is invalid. The change fixes potential
+>>> oops, e.g. in OOM situation.
+>>>
+>>> Signed-off-by: Vladimir Zapolskiy <vz@mleia.com>
+>>> ---
+>>>  drivers/staging/wilc1000/linux_wlan.c | 4 ++--
+>>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+>>> index 54fe9d7..5077c30 100644
+>>> --- a/drivers/staging/wilc1000/linux_wlan.c
+>>> +++ b/drivers/staging/wilc1000/linux_wlan.c
+>>> @@ -849,10 +849,10 @@ static int wlan_initialize_threads(struct net_device *dev)
+>>>         PRINT_D(INIT_DBG, "Creating kthread for transmission\n");
+>>>         wilc->txq_thread = kthread_run(linux_wlan_txq_task, (void *)dev,
+>>>                                      "K_TXQ_TASK");
+>>> -       if (!wilc->txq_thread) {
+>>> +       if (IS_ERR(wilc->txq_thread)) {
+>>>                 PRINT_ER("couldn't create TXQ thread\n");
+>>>                 wilc->close = 0;
+>>> -               return -ENOBUFS;
+>>> +               return PTR_ERR(wilc->txq_thread);
+>>
+>> Are you sure changing the error returned is correct? Do all the
+>> callers of wlan_initialize_threads() handle the full range of errors
+>> from kthread_run()?
+>
+> Have you checked the driver?
 
-diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
-index 87bec1c..e762c33 100644
---- a/drivers/staging/vt6655/mac.c
-+++ b/drivers/staging/vt6655/mac.c
-@@ -747,14 +747,14 @@ void MACvOneShotTimer1MicroSec(struct vnt_private *priv, unsigned int uDelayTime
- 	iowrite8((TMCTL_TMD | TMCTL_TE), io_base + MAC_REG_TMCTL1);
- }
- 
--void MACvSetMISCFifo(struct vnt_private *priv, unsigned short wOffset,
-+void MACvSetMISCFifo(struct vnt_private *priv, unsigned short offset,
- 		     u32 dwData)
- {
- 	void __iomem *io_base = priv->PortOffset;
- 
--	if (wOffset > 273)
-+	if (offset > 273)
- 		return;
--	iowrite16(wOffset, io_base + MAC_REG_MISCFFNDEX);
-+	iowrite16(offset, io_base + MAC_REG_MISCFFNDEX);
- 	iowrite32(dwData, io_base + MAC_REG_MISCFFDATA);
- 	iowrite16(MISCFFCTL_WRITE, io_base + MAC_REG_MISCFFCTL);
- }
-@@ -803,7 +803,7 @@ void MACvSetKeyEntry(struct vnt_private *priv, unsigned short wKeyCtl,
- 		     unsigned char byLocalID)
- {
- 	void __iomem *io_base = priv->PortOffset;
--	unsigned short wOffset;
-+	unsigned short offset;
- 	u32 dwData;
- 	int     ii;
- 
-@@ -811,20 +811,20 @@ void MACvSetKeyEntry(struct vnt_private *priv, unsigned short wKeyCtl,
- 		return;
- 
- 	pr_debug("MACvSetKeyEntry\n");
--	wOffset = MISCFIFO_KEYETRY0;
--	wOffset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
-+	offset = MISCFIFO_KEYETRY0;
-+	offset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
- 
- 	dwData = 0;
- 	dwData |= wKeyCtl;
- 	dwData <<= 16;
- 	dwData |= MAKEWORD(*(pbyAddr+4), *(pbyAddr+5));
--	pr_debug("1. wOffset: %d, Data: %X, KeyCtl:%X\n",
--		 wOffset, dwData, wKeyCtl);
-+	pr_debug("1. offset: %d, Data: %X, KeyCtl:%X\n",
-+		 offset, dwData, wKeyCtl);
- 
--	iowrite16(wOffset, io_base + MAC_REG_MISCFFNDEX);
-+	iowrite16(offset, io_base + MAC_REG_MISCFFNDEX);
- 	iowrite32(dwData, io_base + MAC_REG_MISCFFDATA);
- 	iowrite16(MISCFFCTL_WRITE, io_base + MAC_REG_MISCFFCTL);
--	wOffset++;
-+	offset++;
- 
- 	dwData = 0;
- 	dwData |= *(pbyAddr+3);
-@@ -834,19 +834,19 @@ void MACvSetKeyEntry(struct vnt_private *priv, unsigned short wKeyCtl,
- 	dwData |= *(pbyAddr+1);
- 	dwData <<= 8;
- 	dwData |= *(pbyAddr+0);
--	pr_debug("2. wOffset: %d, Data: %X\n", wOffset, dwData);
-+	pr_debug("2. offset: %d, Data: %X\n", offset, dwData);
- 
--	iowrite16(wOffset, io_base + MAC_REG_MISCFFNDEX);
-+	iowrite16(offset, io_base + MAC_REG_MISCFFNDEX);
- 	iowrite32(dwData, io_base + MAC_REG_MISCFFDATA);
- 	iowrite16(MISCFFCTL_WRITE, io_base + MAC_REG_MISCFFCTL);
--	wOffset++;
-+	offset++;
- 
--	wOffset += (uKeyIdx * 4);
-+	offset += (uKeyIdx * 4);
- 	for (ii = 0; ii < 4; ii++) {
- 		/* always push 128 bits */
--		pr_debug("3.(%d) wOffset: %d, Data: %X\n",
--			 ii, wOffset+ii, *pdwKey);
--		iowrite16(wOffset + ii, io_base + MAC_REG_MISCFFNDEX);
-+		pr_debug("3.(%d) offset: %d, Data: %X\n",
-+			 ii, offset + ii, *pdwKey);
-+		iowrite16(offset + ii, io_base + MAC_REG_MISCFFNDEX);
- 		iowrite32(*pdwKey++, io_base + MAC_REG_MISCFFDATA);
- 		iowrite16(MISCFFCTL_WRITE, io_base + MAC_REG_MISCFFCTL);
- 	}
-@@ -869,12 +869,12 @@ void MACvSetKeyEntry(struct vnt_private *priv, unsigned short wKeyCtl,
- void MACvDisableKeyEntry(struct vnt_private *priv, unsigned int uEntryIdx)
- {
- 	void __iomem *io_base = priv->PortOffset;
--	unsigned short wOffset;
-+	unsigned short offset;
- 
--	wOffset = MISCFIFO_KEYETRY0;
--	wOffset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
-+	offset = MISCFIFO_KEYETRY0;
-+	offset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
- 
--	iowrite16(wOffset, io_base + MAC_REG_MISCFFNDEX);
-+	iowrite16(offset, io_base + MAC_REG_MISCFFNDEX);
- 	iowrite32(0, io_base + MAC_REG_MISCFFDATA);
- 	iowrite16(MISCFFCTL_WRITE, io_base + MAC_REG_MISCFFCTL);
- }
+I'm making sure you have. It's possible that there's a good reason why
+this returns -ENOBUFS I want to know that you've at least considered
+that possibility.
+
+> This function is called once on initialization, the check on the upper layer
+> has "if (ret < 0) goto exit_badly;" form.
+
+And practically everything in the chain up to net_device_ops uses the
+same error handling scheme so it's probably fine.
+
+You should also document this change in the commit message.
+
+Thanks,
+
 -- 
-2.7.0
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
