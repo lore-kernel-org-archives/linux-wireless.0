@@ -1,56 +1,228 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
 Received: from mga03.intel.com ([134.134.136.65]:62255 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933651AbcCIRqf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 12:46:35 -0500
+	id S933669AbcCIRqd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2016 12:46:33 -0500
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 20/21] iwlwifi: mvm: don't try to offload AES-CMAC in AP/IBSS modes
-Date: Wed,  9 Mar 2016 19:45:49 +0200
-Message-Id: <1457545550-30677-20-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160309_185949_731221_DA1E0FFE)
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 19/21] iwlwifi: mvm: adapt the firmware assert log to new firmware
+Date: Wed,  9 Mar 2016 19:45:48 +0200
+Message-Id: <1457545550-30677-19-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160309_185951_685599_E570EE4E)
 In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
 References: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+Newer firmware versions put different data in the memory
+which is read by the driver upon firmware crash. Just
+change the variable names in the code and the name of the
+data in the log that we print withouth any functional
+change.
+On older firmware, there will be a mismatch between the
+names that are printed and the content itself, but that's
+harmless.
 
-The firmware/hardware only supports checking AES-CMAC on RX, not
-using it on TX. For station mode this is fine, since it's the only
-thing it will ever do. For AP mode, it never receives such frames,
-but must be able to transmit them. This is currently broken since
-we try to enable them for hardware crypto (for RX only) and then
-treat them as TX_CMD_SEC_EXT, leading to FIFO underruns during TX
-so the frames never go out to the air.
-
-To fix this, simply use software on TX in AP (and IBSS) mode.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/iwlwifi/dvm/main.c      |  8 +++----
+ .../wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h  | 27 ++++++++++-----------
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c     | 28 +++++++++++-----------
+ 3 files changed, 30 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 39b9c38..76e649c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2686,8 +2686,12 @@ static int iwl_mvm_mac_set_key(struct ieee80211_hw *hw,
- 			 * GTK on AP interface is a TX-only key, return 0;
- 			 * on IBSS they're per-station and because we're lazy
- 			 * we don't support them for RX, so do the same.
-+			 * CMAC in AP/IBSS modes must be done in software.
- 			 */
--			ret = 0;
-+			if (key->cipher == WLAN_CIPHER_SUITE_AES_CMAC)
-+				ret = -EOPNOTSUPP;
-+			else
-+				ret = 0;
- 			key->hw_key_idx = STA_KEY_IDX_INVALID;
- 			break;
- 		}
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/main.c b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+index f62c2d7..85628127 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+@@ -1652,10 +1652,10 @@ static void iwl_dump_nic_error_log(struct iwl_priv *priv)
+ 
+ 	trace_iwlwifi_dev_ucode_error(trans->dev, table.error_id, table.tsf_low,
+ 				      table.data1, table.data2, table.line,
+-				      table.blink1, table.blink2, table.ilink1,
+-				      table.ilink2, table.bcon_time, table.gp1,
+-				      table.gp2, table.gp3, table.ucode_ver,
+-				      table.hw_ver, 0, table.brd_ver);
++				      table.blink2, table.ilink1, table.ilink2,
++				      table.bcon_time, table.gp1, table.gp2,
++				      table.gp3, table.ucode_ver, table.hw_ver,
++				      0, table.brd_ver);
+ 	IWL_ERR(priv, "0x%08X | %-28s\n", table.error_id,
+ 		desc_lookup(table.error_id));
+ 	IWL_ERR(priv, "0x%08X | uPc\n", table.pc);
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h
+index 2a0703f..f02e2c8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h
+@@ -2,6 +2,7 @@
+  *
+  * Copyright(c) 2009 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016        Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify it
+  * under the terms of version 2 of the GNU General Public License as
+@@ -121,13 +122,12 @@ TRACE_EVENT(iwlwifi_dev_tx,
+ 
+ TRACE_EVENT(iwlwifi_dev_ucode_error,
+ 	TP_PROTO(const struct device *dev, u32 desc, u32 tsf_low,
+-		 u32 data1, u32 data2, u32 line, u32 blink1,
+-		 u32 blink2, u32 ilink1, u32 ilink2, u32 bcon_time,
+-		 u32 gp1, u32 gp2, u32 gp3, u32 major, u32 minor, u32 hw_ver,
+-		 u32 brd_ver),
++		 u32 data1, u32 data2, u32 line, u32 blink2, u32 ilink1,
++		 u32 ilink2, u32 bcon_time, u32 gp1, u32 gp2, u32 rev_type,
++		 u32 major, u32 minor, u32 hw_ver, u32 brd_ver),
+ 	TP_ARGS(dev, desc, tsf_low, data1, data2, line,
+-		blink1, blink2, ilink1, ilink2, bcon_time, gp1, gp2,
+-		gp3, major, minor, hw_ver, brd_ver),
++		 blink2, ilink1, ilink2, bcon_time, gp1, gp2,
++		 rev_type, major, minor, hw_ver, brd_ver),
+ 	TP_STRUCT__entry(
+ 		DEV_ENTRY
+ 		__field(u32, desc)
+@@ -135,14 +135,13 @@ TRACE_EVENT(iwlwifi_dev_ucode_error,
+ 		__field(u32, data1)
+ 		__field(u32, data2)
+ 		__field(u32, line)
+-		__field(u32, blink1)
+ 		__field(u32, blink2)
+ 		__field(u32, ilink1)
+ 		__field(u32, ilink2)
+ 		__field(u32, bcon_time)
+ 		__field(u32, gp1)
+ 		__field(u32, gp2)
+-		__field(u32, gp3)
++		__field(u32, rev_type)
+ 		__field(u32, major)
+ 		__field(u32, minor)
+ 		__field(u32, hw_ver)
+@@ -155,29 +154,27 @@ TRACE_EVENT(iwlwifi_dev_ucode_error,
+ 		__entry->data1 = data1;
+ 		__entry->data2 = data2;
+ 		__entry->line = line;
+-		__entry->blink1 = blink1;
+ 		__entry->blink2 = blink2;
+ 		__entry->ilink1 = ilink1;
+ 		__entry->ilink2 = ilink2;
+ 		__entry->bcon_time = bcon_time;
+ 		__entry->gp1 = gp1;
+ 		__entry->gp2 = gp2;
+-		__entry->gp3 = gp3;
++		__entry->rev_type = rev_type;
+ 		__entry->major = major;
+ 		__entry->minor = minor;
+ 		__entry->hw_ver = hw_ver;
+ 		__entry->brd_ver = brd_ver;
+ 	),
+ 	TP_printk("[%s] #%02d %010u data 0x%08X 0x%08X line %u, "
+-		  "blink 0x%05X 0x%05X ilink 0x%05X 0x%05X "
+-		  "bcon_tm %010u gp 0x%08X 0x%08X 0x%08X major 0x%08X "
++		  "blink2 0x%05X ilink 0x%05X 0x%05X "
++		  "bcon_tm %010u gp 0x%08X 0x%08X rev_type 0x%08X major 0x%08X "
+ 		  "minor 0x%08X hw 0x%08X brd 0x%08X",
+ 		  __get_str(dev), __entry->desc, __entry->tsf_low,
+-		  __entry->data1,
+-		  __entry->data2, __entry->line, __entry->blink1,
++		  __entry->data1, __entry->data2, __entry->line,
+ 		  __entry->blink2, __entry->ilink1, __entry->ilink2,
+ 		  __entry->bcon_time, __entry->gp1, __entry->gp2,
+-		  __entry->gp3, __entry->major, __entry->minor,
++		  __entry->rev_type, __entry->major, __entry->minor,
+ 		  __entry->hw_ver, __entry->brd_ver)
+ );
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 59453c1..53cdc57 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -376,8 +376,8 @@ struct iwl_error_event_table_v1 {
+ struct iwl_error_event_table {
+ 	u32 valid;		/* (nonzero) valid, (0) log is empty */
+ 	u32 error_id;		/* type of error */
+-	u32 pc;			/* program counter */
+-	u32 blink1;		/* branch link */
++	u32 trm_hw_status0;	/* TRM HW status */
++	u32 trm_hw_status1;	/* TRM HW status */
+ 	u32 blink2;		/* branch link */
+ 	u32 ilink1;		/* interrupt link */
+ 	u32 ilink2;		/* interrupt link */
+@@ -389,7 +389,7 @@ struct iwl_error_event_table {
+ 	u32 tsf_hi;		/* network timestamp function timer */
+ 	u32 gp1;		/* GP1 timer register */
+ 	u32 gp2;		/* GP2 timer register */
+-	u32 gp3;		/* GP3 timer register */
++	u32 fw_rev_type;	/* firmware revision type */
+ 	u32 major;		/* uCode version major */
+ 	u32 minor;		/* uCode version minor */
+ 	u32 hw_ver;		/* HW Silicon version */
+@@ -408,7 +408,7 @@ struct iwl_error_event_table {
+ 				 * time_flag */
+ 	u32 isr4;		/* isr status register LMPM_NIC_ISR4:
+ 				 * wico interrupt */
+-	u32 isr_pref;		/* isr status register LMPM_NIC_PREF_STAT */
++	u32 last_cmd_id;	/* last HCMD id handled by the firmware */
+ 	u32 wait_event;		/* wait event() caller address */
+ 	u32 l2p_control;	/* L2pControlField */
+ 	u32 l2p_duration;	/* L2pDurationField */
+@@ -419,7 +419,7 @@ struct iwl_error_event_table {
+ 	u32 u_timestamp;	/* indicate when the date and time of the
+ 				 * compilation */
+ 	u32 flow_handler;	/* FH read/write pointers, RX credit */
+-} __packed /* LOG_ERROR_TABLE_API_S_VER_2 */;
++} __packed /* LOG_ERROR_TABLE_API_S_VER_3 */;
+ 
+ /*
+  * UMAC error struct - relevant starting from family 8000 chip.
+@@ -529,9 +529,9 @@ static void iwl_mvm_dump_nic_error_log_old(struct iwl_mvm *mvm)
+ 
+ 	trace_iwlwifi_dev_ucode_error(trans->dev, table.error_id, table.tsf_low,
+ 				      table.data1, table.data2, table.data3,
+-				      table.blink1, table.blink2, table.ilink1,
+-				      table.ilink2, table.bcon_time, table.gp1,
+-				      table.gp2, table.gp3, table.ucode_ver, 0,
++				      table.blink2, table.ilink1, table.ilink2,
++				      table.bcon_time, table.gp1, table.gp2,
++				      table.gp3, table.ucode_ver, 0,
+ 				      table.hw_ver, table.brd_ver);
+ 	IWL_ERR(mvm, "0x%08X | %-28s\n", table.error_id,
+ 		desc_lookup(table.error_id));
+@@ -615,14 +615,14 @@ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
+ 
+ 	trace_iwlwifi_dev_ucode_error(trans->dev, table.error_id, table.tsf_low,
+ 				      table.data1, table.data2, table.data3,
+-				      table.blink1, table.blink2, table.ilink1,
++				      table.blink2, table.ilink1,
+ 				      table.ilink2, table.bcon_time, table.gp1,
+-				      table.gp2, table.gp3, table.major,
++				      table.gp2, table.fw_rev_type, table.major,
+ 				      table.minor, table.hw_ver, table.brd_ver);
+ 	IWL_ERR(mvm, "0x%08X | %-28s\n", table.error_id,
+ 		desc_lookup(table.error_id));
+-	IWL_ERR(mvm, "0x%08X | uPc\n", table.pc);
+-	IWL_ERR(mvm, "0x%08X | branchlink1\n", table.blink1);
++	IWL_ERR(mvm, "0x%08X | trm_hw_status0\n", table.trm_hw_status0);
++	IWL_ERR(mvm, "0x%08X | trm_hw_status1\n", table.trm_hw_status1);
+ 	IWL_ERR(mvm, "0x%08X | branchlink2\n", table.blink2);
+ 	IWL_ERR(mvm, "0x%08X | interruptlink1\n", table.ilink1);
+ 	IWL_ERR(mvm, "0x%08X | interruptlink2\n", table.ilink2);
+@@ -634,7 +634,7 @@ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
+ 	IWL_ERR(mvm, "0x%08X | tsf hi\n", table.tsf_hi);
+ 	IWL_ERR(mvm, "0x%08X | time gp1\n", table.gp1);
+ 	IWL_ERR(mvm, "0x%08X | time gp2\n", table.gp2);
+-	IWL_ERR(mvm, "0x%08X | time gp3\n", table.gp3);
++	IWL_ERR(mvm, "0x%08X | uCode revision type\n", table.fw_rev_type);
+ 	IWL_ERR(mvm, "0x%08X | uCode version major\n", table.major);
+ 	IWL_ERR(mvm, "0x%08X | uCode version minor\n", table.minor);
+ 	IWL_ERR(mvm, "0x%08X | hw version\n", table.hw_ver);
+@@ -645,7 +645,7 @@ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
+ 	IWL_ERR(mvm, "0x%08X | isr2\n", table.isr2);
+ 	IWL_ERR(mvm, "0x%08X | isr3\n", table.isr3);
+ 	IWL_ERR(mvm, "0x%08X | isr4\n", table.isr4);
+-	IWL_ERR(mvm, "0x%08X | isr_pref\n", table.isr_pref);
++	IWL_ERR(mvm, "0x%08X | last cmd Id\n", table.last_cmd_id);
+ 	IWL_ERR(mvm, "0x%08X | wait_event\n", table.wait_event);
+ 	IWL_ERR(mvm, "0x%08X | l2p_control\n", table.l2p_control);
+ 	IWL_ERR(mvm, "0x%08X | l2p_duration\n", table.l2p_duration);
 -- 
 2.5.0
 
