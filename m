@@ -1,171 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:33868 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751147AbcCFRPn (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:12509 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750710AbcCIFKR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 12:15:43 -0500
-Received: by mail-wm0-f66.google.com with SMTP id p65so6984023wmp.1
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 09:15:42 -0800 (PST)
-Received: from localhost.localdomain (93-172-245-144.bb.netvision.net.il. [93.172.245.144])
-        by smtp.gmail.com with ESMTPSA id 202sm9575459wmo.7.2016.03.06.09.15.40
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Sun, 06 Mar 2016 09:15:41 -0800 (PST)
-From: Eliad Peller <eliad@wizery.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 2/2] wlcore/wl18xx: add radar_debug_mode handling
-Date: Sun,  6 Mar 2016 19:15:34 +0200
-Message-Id: <1457284534-10789-2-git-send-email-eliad@wizery.com> (sfid-20160306_181550_536191_D273CDB6)
-In-Reply-To: <1457284534-10789-1-git-send-email-eliad@wizery.com>
-References: <1457284534-10789-1-git-send-email-eliad@wizery.com>
+	Wed, 9 Mar 2016 00:10:17 -0500
+From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: Allow probe response frame rx to user space in
+ AP mode
+Date: Wed, 9 Mar 2016 05:10:06 +0000
+Message-ID: <56DFB02A.5070207@qti.qualcomm.com> (sfid-20160309_061023_626685_B3B27F12)
+References: <1457334731-6456-1-git-send-email-vthiagar@qti.qualcomm.com>
+ <1457456123.24270.11.camel@sipsolutions.net>
+In-Reply-To: <1457456123.24270.11.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add debugfs key (under CFG80211_CERTIFICATION_ONUS
-configuration) to set/clear radar_debug_mode.
-In this mode, the driver simply ignores radar
-events (but prints them).
-
-The fw is notified about this mode through
-a special generic_cfg_feature command.
-
-This mode is relevant only for ap mode. look for
-it when initializing ap vif.
-
-Signed-off-by: Eliad Peller <eliad@wizery.com>
----
- drivers/net/wireless/ti/wl18xx/debugfs.c | 66 ++++++++++++++++++++++++++++++++
- drivers/net/wireless/ti/wl18xx/event.c   |  3 +-
- drivers/net/wireless/ti/wlcore/init.c    |  5 +++
- drivers/net/wireless/ti/wlcore/wlcore.h  |  1 +
- 4 files changed, 74 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ti/wl18xx/debugfs.c b/drivers/net/wireless/ti/wl18xx/debugfs.c
-index 4edfe28..86ccf84 100644
---- a/drivers/net/wireless/ti/wl18xx/debugfs.c
-+++ b/drivers/net/wireless/ti/wl18xx/debugfs.c
-@@ -345,6 +345,69 @@ static const struct file_operations dynamic_fw_traces_ops = {
- 	.llseek = default_llseek,
- };
- 
-+#ifdef CONFIG_CFG80211_CERTIFICATION_ONUS
-+static ssize_t radar_debug_mode_write(struct file *file,
-+				      const char __user *user_buf,
-+				      size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+	struct wl12xx_vif *wlvif;
-+	unsigned long value;
-+	int ret;
-+
-+	ret = kstrtoul_from_user(user_buf, count, 10, &value);
-+	if (ret < 0) {
-+		wl1271_warning("illegal radar_debug_mode value!");
-+		return -EINVAL;
-+	}
-+
-+	/* valid values: 0/1 */
-+	if (!(value == 0 || value == 1)) {
-+		wl1271_warning("value is not in valid!");
-+		return -EINVAL;
-+	}
-+
-+	mutex_lock(&wl->mutex);
-+
-+	wl->radar_debug_mode = value;
-+
-+	if (unlikely(wl->state != WLCORE_STATE_ON))
-+		goto out;
-+
-+	ret = wl1271_ps_elp_wakeup(wl);
-+	if (ret < 0)
-+		goto out;
-+
-+	wl12xx_for_each_wlvif_ap(wl, wlvif) {
-+		wlcore_cmd_generic_cfg(wl, wlvif,
-+				       WLCORE_CFG_FEATURE_RADAR_DEBUG,
-+				       wl->radar_debug_mode, 0);
-+	}
-+
-+	wl1271_ps_elp_sleep(wl);
-+out:
-+	mutex_unlock(&wl->mutex);
-+	return count;
-+}
-+
-+static ssize_t radar_debug_mode_read(struct file *file,
-+				     char __user *userbuf,
-+				     size_t count, loff_t *ppos)
-+{
-+	struct wl1271 *wl = file->private_data;
-+
-+	return wl1271_format_buffer(userbuf, count, ppos,
-+				    "%d\n", wl->radar_debug_mode);
-+}
-+
-+static const struct file_operations radar_debug_mode_ops = {
-+	.write = radar_debug_mode_write,
-+	.read = radar_debug_mode_read,
-+	.open = simple_open,
-+	.llseek = default_llseek,
-+};
-+#endif /* CFG80211_CERTIFICATION_ONUS */
-+
- int wl18xx_debugfs_add_files(struct wl1271 *wl,
- 			     struct dentry *rootdir)
- {
-@@ -510,6 +573,9 @@ int wl18xx_debugfs_add_files(struct wl1271 *wl,
- 
- 	DEBUGFS_ADD(conf, moddir);
- 	DEBUGFS_ADD(radar_detection, moddir);
-+#ifdef CONFIG_CFG80211_CERTIFICATION_ONUS
-+	DEBUGFS_ADD(radar_debug_mode, moddir);
-+#endif
- 	DEBUGFS_ADD(dynamic_fw_traces, moddir);
- 
- 	return 0;
-diff --git a/drivers/net/wireless/ti/wl18xx/event.c b/drivers/net/wireless/ti/wl18xx/event.c
-index 719907a..ff6e46d 100644
---- a/drivers/net/wireless/ti/wl18xx/event.c
-+++ b/drivers/net/wireless/ti/wl18xx/event.c
-@@ -146,7 +146,8 @@ int wl18xx_process_mailbox_events(struct wl1271 *wl)
- 			    mbox->radar_channel,
- 			    wl18xx_radar_type_decode(mbox->radar_type));
- 
--		ieee80211_radar_detected(wl->hw);
-+		if (!wl->radar_debug_mode)
-+			ieee80211_radar_detected(wl->hw);
- 	}
- 
- 	if (vector & PERIODIC_SCAN_REPORT_EVENT_ID) {
-diff --git a/drivers/net/wireless/ti/wlcore/init.c b/drivers/net/wireless/ti/wlcore/init.c
-index e92f263..d0b7734 100644
---- a/drivers/net/wireless/ti/wlcore/init.c
-+++ b/drivers/net/wireless/ti/wlcore/init.c
-@@ -558,6 +558,11 @@ static int wl12xx_init_ap_role(struct wl1271 *wl, struct wl12xx_vif *wlvif)
- 	if (ret < 0)
- 		return ret;
- 
-+	if (wl->radar_debug_mode)
-+		wlcore_cmd_generic_cfg(wl, wlvif,
-+				       WLCORE_CFG_FEATURE_RADAR_DEBUG,
-+				       wl->radar_debug_mode, 0);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/net/wireless/ti/wlcore/wlcore.h b/drivers/net/wireless/ti/wlcore/wlcore.h
-index dda01b1..72c31a8 100644
---- a/drivers/net/wireless/ti/wlcore/wlcore.h
-+++ b/drivers/net/wireless/ti/wlcore/wlcore.h
-@@ -463,6 +463,7 @@ struct wl1271 {
- 
- 	/* the current dfs region */
- 	enum nl80211_dfs_regions dfs_region;
-+	bool radar_debug_mode;
- 
- 	/* size of the private FW status data */
- 	size_t fw_status_len;
--- 
-2.6.3
-
+T24gVHVlc2RheSAwOCBNYXJjaCAyMDE2IDEwOjI1IFBNLCBKb2hhbm5lcyBCZXJnIHdyb3RlOg0K
+PiBPbiBNb24sIDIwMTYtMDMtMDcgYXQgMTI6NDIgKzA1MzAsIFZhc2FudGhha3VtYXIgVGhpYWdh
+cmFqYW4gd3JvdGU6DQo+PiBFc3BlY2lhbGx5IGR1cmluZyBvZmYtY2hhbm5lbCBzY2FuIHVzZXIg
+c3BhY2UgbWlnaHQgYmUgaW50ZXJlc3RlZA0KPj4gaW4gcHJvYmUgcmVwb25zZSBmcmFtZXMgYWxv
+bmcgd2l0aCBiZWFjb24gdG8gYnVpbGQgYSBsaXN0DQo+PiBvZiBwcmVmZXJyZWQgY2hhbm5lbCBh
+bmQgYnNzaWQgd2hpY2ggY291bGQgYmUgc2VudCB0byB0aGUgc3RhdGlvbnMNCj4+IGFyb3VuZCBm
+b3IgYmV0dGVyIHNwZWN0cnVtIG1hbmFnZW1lbnQuIERvIG5vdCBkcm9wIHByb2JlIHJlc3BvbnNl
+DQo+PiBmcmFtZSBpbiBBUCBtb2RlIGFuZCBhZHZlcnRpc2UgZHJpdmVyJ3MgY2FwYWJpbGl0eSB0
+byByZWNlaXZlIHByb2JlDQo+PiByZXNwb25zZSBmcmFtZSBpbiBBUCBtb2RlIHRvIHVzZXIgc3Bh
+Y2UuDQo+DQo+IEknbSBub3QgY29udmluY2VkIHRoYXQgdGhpcyBpcyBhIGdvb2QgaWRlYSAtIHRo
+ZXNlIGZyYW1lcyB3aWxsIHN0aWxsDQo+IHBvcHVsYXRlIHRoZSBCU1MgY2FjaGUsIGFuZCBpdCdz
+IG5vdCByZWFsbHkgcXVpdGUgd2VsbC1zcGVjaWZpZWQgd2hhdA0KPiBoYXBwZW5zIHdoZW4geW91
+IGhhdmUgYm90aCBbMV0NCj4NCj4gSSBhbHNvIGRvbid0IHVuZGVyc3RhbmQgdGhlIHVzZSBjYXNl
+OyAibWlnaHQgYmUgaW50ZXJlc3RlZCIgaXMgLi4uIHZlcnkNCj4gdmFndWUuDQoNCldoZW4gYW4g
+dXNlciBzcGFjZSB3YW50cyB0byBoYXZlIGNvbnRyb2wgb3ZlciB0aGUgZHVyYXRpb24gb2Ygb2Zm
+LWNoYW5uZWwgKHNpbmdsZSBjaGFubmVsKQ0Kc2NhbiBpdCBjb3VsZCB1c2UgcmVtYWluLW9uLWNo
+YW5uZWwgaW50ZXJmYWNlIGluc3RlYWQgb2YgdHJpZ2dlcl9zY2FuIHRvIHBlcmZvcm0gb2ZmLWNo
+YW5uZWwNCnNjYW4uIEkgZG9udCB0aGluayBCU1MgY2FjaGUgd2lsbCBiZSB1cGRhdGVkIHdpdGgg
+dGhlIEJTUyBpbmZvcm1hdGlvbiByZWNlaXZlZCBkdXJpbmcNCnJlbWFpbi1vbi1jaGFubmVsLiBJ
+biB0aGlzIGNhc2UsIHVzZXIgc3BhY2UgY291bGQgdXNlIHByb2JlIHJlc3BvbnNlIGZyYW1lcyB0
+byBidWlsZA0KQlNTIGxpc3QuDQoNClZhc2FudGgNCg==
