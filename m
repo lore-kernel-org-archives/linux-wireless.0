@@ -1,258 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:42998 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752648AbcCPMoI (ORCPT
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:35842 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752244AbcCIJOw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2016 08:44:08 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>, <kvalo@codeaurora.org>,
-	<mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH v1 1/3] ath10k: Enable debugfs provision to enable Peer Stats feature
-Date: Wed, 16 Mar 2016 18:13:32 +0530
-Message-ID: <1458132214-4896-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160316_134414_035519_4291AB9E)
+	Wed, 9 Mar 2016 04:14:52 -0500
+Received: by mail-oi0-f43.google.com with SMTP id r187so30735108oih.3
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2016 01:14:52 -0800 (PST)
+From: Hante Meuleman <hante.meuleman@broadcom.com>
+References: <1457508326-24420-1-git-send-email-hui.wang@canonical.com>
+In-Reply-To: <1457508326-24420-1-git-send-email-hui.wang@canonical.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Wed, 9 Mar 2016 10:14:51 +0100
+Message-ID: <6d617d09cc3f449be4c6ce593ab84cd4@mail.gmail.com> (sfid-20160309_101458_640873_FF5F57CF)
+Subject: RE: [PATCH] brcmfmac: Remove waitqueue_active check
+To: Hui Wang <hui.wang@canonical.com>, brudley@broadcom.com,
+	arend@broadcom.com, frankyl@broadcom.com, meuleman@broadcom.com,
+	pieterpg@broadcom.com
+Cc: linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Hi Hui,
 
-Provide a debugfs entry to enable/ disable Peer Stats feature.
-Peer Stats feature is for developers/users who are more interested
-in studying in Rx/Tx stats with multiple clients connected, hence
-disable this by default. Enabling this feature by default results
-in unneccessary processing of Peer Stats event for every 500ms
-and updating peer_stats list (allocating memory) and cleaning it up
-ifexceeds the higher limit and this can be an unnecessary overhead
-during long run stress testing.
+Excellent find. Looks like a perfect solution to me.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Regards,
+Hante
+
+-----Original Message-----
+From: Hui Wang [mailto:hui.wang@canonical.com]
+Sent: Wednesday, March 09, 2016 8:25 AM
+To: brudley@broadcom.com; arend@broadcom.com; frankyl@broadcom.com;
+meuleman@broadcom.com; pieterpg@broadcom.com
+Cc: linux-wireless@vger.kernel.org; brcm80211-dev-list@broadcom.com;
+hui.wang@canonical.com
+Subject: [PATCH] brcmfmac: Remove waitqueue_active check
+
+We met a problem of pm_suspend  when repeated closing/opening the lid
+on a Lenovo laptop (1/20 reproduce rate), below is the log:
+
+[ 199.735876] PM: Entering mem sleep
+[ 199.750516] e1000e: EEE TX LPI TIMER: 00000011
+[ 199.856638] Trying to free nonexistent resource
+<000000000000d000-000000000000d0ff>
+[ 201.753566] brcmfmac: brcmf_pcie_suspend: Timeout on response for
+entering D3 substate
+[ 201.753581] pci_legacy_suspend(): brcmf_pcie_suspend+0x0/0x1f0
+[brcmfmac] returns -5
+[ 201.753585] dpm_run_callback(): pci_pm_suspend+0x0/0x160 returns -5
+[ 201.753589] PM: Device 0000:04:00.0 failed to suspend async: error -5
+
+Through debugging, we found when problem happens, it is not the device
+fails to enter D3, but the signal D3_ACK comes too early to pass the
+waitqueue_active() check.
+
+Just like this:
+brcmf_pcie_send_mb_data(devinfo, BRCMF_H2D_HOST_D3_INFORM);
+// signal is triggered here
+wait_event_timeout(devinfo->mbdata_resp_wait, devinfo->mbdata_completed,
+		   BRCMF_PCIE_MBDATA_TIMEOUT);
+
+So far I think it is safe to remove waitqueue_active check since there
+is only one place to trigger this signal (sending
+BRCMF_H2D_HOST_D3_INFORM). And it is not a problem calling wake_up
+event earlier than calling wait_event.
+
+Cc: Brett Rudley <brudley@broadcom.com>
+Cc: Hante Meuleman <meuleman@broadcom.com>
+Cc: Franky (Zhenhui) Lin <frankyl@broadcom.com>
+Cc: Pieter-Paul Giesberts <pieterpg@broadcom.com>
+Cc: Arend van Spriel <arend@broadcom.com>
+Signed-off-by: Hui Wang <hui.wang@canonical.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c  |    2 +-
- drivers/net/wireless/ath/ath10k/core.h  |   12 +++++
- drivers/net/wireless/ath/ath10k/debug.c |   80 +++++++++++++++++++++++++++++--
- drivers/net/wireless/ath/ath10k/mac.c   |    2 +-
- drivers/net/wireless/ath/ath10k/wmi.c   |   12 ++---
- 5 files changed, 94 insertions(+), 14 deletions(-)
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 2389c07..02a5ce6 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -1505,7 +1505,7 @@ static int ath10k_core_init_firmware_features(struct ath10k *ar)
- 	case ATH10K_FW_WMI_OP_VERSION_10_1:
- 	case ATH10K_FW_WMI_OP_VERSION_10_2:
- 	case ATH10K_FW_WMI_OP_VERSION_10_2_4:
--		if (test_bit(WMI_SERVICE_PEER_STATS, ar->wmi.svc_map)) {
-+		if (ath10k_peer_stats_enabled(ar)) {
- 			ar->max_num_peers = TARGET_10X_TX_STATS_NUM_PEERS;
- 			ar->max_num_stations = TARGET_10X_TX_STATS_NUM_STATIONS;
- 		} else {
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index 23ba03f..6923404 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -561,6 +561,9 @@ enum ath10k_dev_flags {
- 
- 	/* Bluetooth coexistance enabled */
- 	ATH10K_FLAG_BTCOEX,
-+
-+	/* Per Station statistics service */
-+	ATH10K_FLAG_PEER_STATS,
- };
- 
- enum ath10k_cal_mode {
-@@ -890,6 +893,15 @@ struct ath10k {
- 	u8 drv_priv[0] __aligned(sizeof(void *));
- };
- 
-+static inline bool ath10k_peer_stats_enabled(struct ath10k *ar)
-+{
-+	if (test_bit(ATH10K_FLAG_PEER_STATS, &ar->dev_flags) &&
-+	    test_bit(WMI_SERVICE_PEER_STATS, ar->wmi.svc_map))
-+		return true;
-+
-+	return false;
-+}
-+
- struct ath10k *ath10k_core_create(size_t priv_size, struct device *dev,
- 				  enum ath10k_bus bus,
- 				  enum ath10k_hw_rev hw_rev,
-diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
-index 076d29b..ff77fc1 100644
---- a/drivers/net/wireless/ath/ath10k/debug.c
-+++ b/drivers/net/wireless/ath/ath10k/debug.c
-@@ -319,7 +319,7 @@ static void ath10k_debug_fw_stats_reset(struct ath10k *ar)
- void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
- {
- 	struct ath10k_fw_stats stats = {};
--	bool is_start, is_started, is_end, peer_stats_svc;
-+	bool is_start, is_started, is_end;
- 	size_t num_peers;
- 	size_t num_vdevs;
- 	int ret;
-@@ -346,13 +346,11 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
- 	 *  b) consume stat update events until another one with pdev stats is
- 	 *     delivered which is treated as end-of-data and is itself discarded
- 	 */
--
--	peer_stats_svc = test_bit(WMI_SERVICE_PEER_STATS, ar->wmi.svc_map);
--	if (peer_stats_svc)
-+	if (ath10k_peer_stats_enabled(ar))
- 		ath10k_sta_update_rx_duration(ar, &stats.peers);
- 
- 	if (ar->debug.fw_stats_done) {
--		if (!peer_stats_svc)
-+		if (!ath10k_peer_stats_enabled(ar))
- 			ath10k_warn(ar, "received unsolicited stats update event\n");
- 
- 		goto free;
-@@ -2174,6 +2172,73 @@ static const struct file_operations fops_btcoex = {
- 	.open = simple_open
- };
- 
-+static ssize_t ath10k_write_peer_stats(struct file *file,
-+				       const char __user *ubuf,
-+				       size_t count, loff_t *ppos)
-+{
-+	struct ath10k *ar = file->private_data;
-+	char buf[32];
-+	size_t buf_size;
-+	int ret = 0;
-+	bool val;
-+
-+	buf_size = min(count, (sizeof(buf) - 1));
-+	if (copy_from_user(buf, ubuf, buf_size))
-+		return -EFAULT;
-+
-+	buf[buf_size] = '\0';
-+
-+	if (strtobool(buf, &val) != 0)
-+		return -EINVAL;
-+
-+	mutex_lock(&ar->conf_mutex);
-+
-+	if (ar->state != ATH10K_STATE_ON &&
-+	    ar->state != ATH10K_STATE_RESTARTED) {
-+		ret = -ENETDOWN;
-+		goto exit;
-+	}
-+
-+	if (!(test_bit(ATH10K_FLAG_PEER_STATS, &ar->dev_flags) ^ val))
-+		goto exit;
-+
-+	if (val)
-+		set_bit(ATH10K_FLAG_PEER_STATS, &ar->dev_flags);
-+	else
-+		clear_bit(ATH10K_FLAG_PEER_STATS, &ar->dev_flags);
-+
-+	ath10k_info(ar, "restarting firmware due to Peer stats change");
-+
-+	queue_work(ar->workqueue, &ar->restart_work);
-+	ret = count;
-+
-+exit:
-+	mutex_unlock(&ar->conf_mutex);
-+	return ret;
-+}
-+
-+static ssize_t ath10k_read_peer_stats(struct file *file, char __user *ubuf,
-+				      size_t count, loff_t *ppos)
-+
-+{
-+	char buf[32];
-+	struct ath10k *ar = file->private_data;
-+	int len = 0;
-+
-+	mutex_lock(&ar->conf_mutex);
-+	len = scnprintf(buf, sizeof(buf) - len, "%d\n",
-+			test_bit(ATH10K_FLAG_PEER_STATS, &ar->dev_flags));
-+	mutex_unlock(&ar->conf_mutex);
-+
-+	return simple_read_from_buffer(ubuf, count, ppos, buf, len);
-+}
-+
-+static const struct file_operations fops_peer_stats = {
-+	.read = ath10k_read_peer_stats,
-+	.write = ath10k_write_peer_stats,
-+	.open = simple_open
-+};
-+
- static ssize_t ath10k_debug_fw_checksums_read(struct file *file,
- 					      char __user *user_buf,
- 					      size_t count, loff_t *ppos)
-@@ -2337,6 +2402,11 @@ int ath10k_debug_register(struct ath10k *ar)
- 		debugfs_create_file("btcoex", S_IRUGO | S_IWUSR,
- 				    ar->debug.debugfs_phy, ar, &fops_btcoex);
- 
-+	if (test_bit(WMI_SERVICE_PEER_STATS, ar->wmi.svc_map))
-+		debugfs_create_file("peer_stats", S_IRUGO | S_IWUSR,
-+				    ar->debug.debugfs_phy, ar,
-+				    &fops_peer_stats);
-+
- 	debugfs_create_file("fw_checksums", S_IRUSR,
- 			    ar->debug.debugfs_phy, ar, &fops_fw_checksums);
- 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 34a89d7..84bac7b 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -4435,7 +4435,7 @@ static int ath10k_start(struct ieee80211_hw *hw)
- 
- 	ar->ani_enabled = true;
- 
--	if (test_bit(WMI_SERVICE_PEER_STATS, ar->wmi.svc_map)) {
-+	if (ath10k_peer_stats_enabled(ar)) {
- 		param = ar->wmi.pdev_param->peer_stats_update_period;
- 		ret = ath10k_wmi_pdev_set_param(ar, param,
- 						PEER_DEFAULT_STATS_UPDATE_PERIOD);
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index c260894..731856b 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2884,11 +2884,8 @@ static int ath10k_wmi_10_2_4_op_pull_fw_stats(struct ath10k *ar,
- 		const struct wmi_10_2_4_ext_peer_stats *src;
- 		struct ath10k_fw_stats_peer *dst;
- 		int stats_len;
--		bool ext_peer_stats_support;
- 
--		ext_peer_stats_support = test_bit(WMI_SERVICE_PEER_STATS,
--						  ar->wmi.svc_map);
--		if (ext_peer_stats_support)
-+		if (test_bit(WMI_SERVICE_PEER_STATS, ar->wmi.svc_map))
- 			stats_len = sizeof(struct wmi_10_2_4_ext_peer_stats);
- 		else
- 			stats_len = sizeof(struct wmi_10_2_4_peer_stats);
-@@ -2905,7 +2902,7 @@ static int ath10k_wmi_10_2_4_op_pull_fw_stats(struct ath10k *ar,
- 
- 		dst->peer_rx_rate = __le32_to_cpu(src->common.peer_rx_rate);
- 
--		if (ext_peer_stats_support)
-+		if (ath10k_peer_stats_enabled(ar))
- 			dst->rx_duration = __le32_to_cpu(src->rx_duration);
- 		/* FIXME: expose 10.2 specific values */
- 
-@@ -5542,7 +5539,8 @@ static struct sk_buff *ath10k_wmi_10_2_op_gen_init(struct ath10k *ar)
- 
- 	config.num_vdevs = __cpu_to_le32(TARGET_10X_NUM_VDEVS);
- 	config.num_peer_keys = __cpu_to_le32(TARGET_10X_NUM_PEER_KEYS);
--	if (test_bit(WMI_SERVICE_PEER_STATS, ar->wmi.svc_map)) {
-+
-+	if (ath10k_peer_stats_enabled(ar)) {
- 		config.num_peers = __cpu_to_le32(TARGET_10X_TX_STATS_NUM_PEERS);
- 		config.num_tids = __cpu_to_le32(TARGET_10X_TX_STATS_NUM_TIDS);
- 	} else {
-@@ -5604,7 +5602,7 @@ static struct sk_buff *ath10k_wmi_10_2_op_gen_init(struct ath10k *ar)
- 	    test_bit(WMI_SERVICE_COEX_GPIO, ar->wmi.svc_map))
- 		features |= WMI_10_2_COEX_GPIO;
- 
--	if (test_bit(WMI_SERVICE_PEER_STATS, ar->wmi.svc_map))
-+	if (ath10k_peer_stats_enabled(ar))
- 		features |= WMI_10_2_PEER_STATS;
- 
- 	cmd->resource_config.feature_mask = __cpu_to_le32(features);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+index 0480b70..5f12ff3 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/pcie.c
+@@ -675,10 +675,8 @@ static void brcmf_pcie_handle_mb_data(struct
+brcmf_pciedev_info *devinfo)
+ 		brcmf_dbg(PCIE, "D2H_MB_DATA: DEEP SLEEP EXIT\n");
+ 	if (dtoh_mb_data & BRCMF_D2H_DEV_D3_ACK) {
+ 		brcmf_dbg(PCIE, "D2H_MB_DATA: D3 ACK\n");
+-		if (waitqueue_active(&devinfo->mbdata_resp_wait)) {
+-			devinfo->mbdata_completed = true;
+-			wake_up(&devinfo->mbdata_resp_wait);
+-		}
++		devinfo->mbdata_completed = true;
++		wake_up(&devinfo->mbdata_resp_wait);
+ 	}
+ }
+
 -- 
-1.7.9.5
-
+1.9.1
