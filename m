@@ -1,34 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34571 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751560AbcCFMkD (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 07:40:03 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Dima Krasner <dima@dimakrasner.com>
-Cc: linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] iw: add libnl-tiny support, reimplemented
-References: <20160223204334.4a65ab8113dbe31fbffc56ff@dimakrasner.com>
-	<20160305171122.80c2d9a224a4b9632f40585e@dimakrasner.com>
-Date: Sun, 06 Mar 2016 14:39:58 +0200
-In-Reply-To: <20160305171122.80c2d9a224a4b9632f40585e@dimakrasner.com> (Dima
-	Krasner's message of "Sat, 5 Mar 2016 17:11:22 +0200")
-Message-ID: <87egbnlqzl.fsf@purkki.adurom.net> (sfid-20160306_134008_515075_8BDE7891)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:48627 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753344AbcCILSb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2016 06:18:31 -0500
+Message-ID: <1457522305.2042.3.camel@sipsolutions.net> (sfid-20160309_122230_157004_2105DE3D)
+Subject: Re: [PATCH v2] cfg80211/nl80211: Add support for
+ NL80211_STA_INFO_RX_DURATION
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	kvalo@codeaurora.org
+Date: Wed, 09 Mar 2016 12:18:25 +0100
+In-Reply-To: <20160309105231.GA7145@atheros-ThinkPad-T61>
+References: <1457508003-16700-1-git-send-email-mohammed@qca.qualcomm.com>
+	 <1457515803.2042.1.camel@sipsolutions.net>
+	 <20160309093845.GA6695@atheros-ThinkPad-T61>
+	 <1457517488.2042.2.camel@sipsolutions.net>
+	 <20160309105231.GA7145@atheros-ThinkPad-T61>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dima Krasner <dima@dimakrasner.com> writes:
+On Wed, 2016-03-09 at 16:22 +0530, Mohammed Shafi Shajakhan wrote:
+> 
+> [shafi] ath10k implementation is based on PPDU duration calculation
+> and it does not includes any IFS duration.
+> 
+> So 'Energy' (time spent by the radio on receiving frames from a
+> particular peer) makes more sense right ?
+> 
 
-> This allows small static builds, especially when using musl libc.
->
-> Signed-off-by: Dima Krasner <dima@dimakrasner.com>
+Fine with me, perhaps just saying "aggregate PPDU duration" would be a
+good thing?
 
-When sending a new version of the patch the standard practise is to add
-v2 to the subject, like this:
-
-Subject: [PATCH v2] iw: add libnl-tiny support
-
--- 
-Kalle Valo
+johannes
