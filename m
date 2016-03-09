@@ -1,72 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:36721 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752941AbcCQLfD convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:24742 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751316AbcCIHVL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 07:35:03 -0400
-Received: by mail-wm0-f51.google.com with SMTP id l124so81356643wmf.1
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 04:35:01 -0700 (PDT)
+	Wed, 9 Mar 2016 02:21:11 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
+	<kvalo@codeaurora.org>, <mohammed@codeaurora.org>,
+	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Subject: [PATCH v2] iw: Add support for NL80211_STA_INFO_RX_DURATION netlink attribute
+Date: Wed, 9 Mar 2016 12:50:36 +0530
+Message-ID: <1457508036-16756-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160309_082114_975562_2914753E)
 MIME-Version: 1.0
-In-Reply-To: <20160317112022.GA27512@atheros-ThinkPad-T61>
-References: <1458211740-6875-1-git-send-email-mohammed@qca.qualcomm.com>
-	<CA+BoTQkk30nPEKiP-8FA2DcddJ_SL90txgHQeua7GCauR_M2dg@mail.gmail.com>
-	<20160317112022.GA27512@atheros-ThinkPad-T61>
-Date: Thu, 17 Mar 2016 12:35:00 +0100
-Message-ID: <CA+BoTQ=DG=oixf2LtVbxvRL6WvnQDcyOHP=ayHbmNAsQrTPMvA@mail.gmail.com> (sfid-20160317_123507_522718_322A152B)
-Subject: Re: [PATCH v2 1/2] ath10k: Add support for ath10k_sta_statistics support
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 March 2016 at 12:20, Mohammed Shafi Shajakhan
-<mohammed@codeaurora.org> wrote:
-> Hi Michal,
->
-> On Thu, Mar 17, 2016 at 12:12:31PM +0100, Michal Kazior wrote:
->> On 17 March 2016 at 11:48, Mohammed Shafi Shajakhan
->> <mohammed@qti.qualcomm.com> wrote:
->> [...]
->> > +void ath10k_sta_statistics(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
->> > +                          struct ieee80211_sta *sta,
->> > +                          struct station_info *sinfo)
->> > +{
->> > +       struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
->> > +       struct ath10k *ar = arsta->arvif->ar;
->> > +
->> > +       mutex_lock(&ar->conf_mutex);
->> > +
->> > +       if (ar->state != ATH10K_STATE_ON &&
->> > +           ar->state != ATH10K_STATE_RESTARTED)
->> > +               goto out;
->>
->> Do you really need mutex and ar->state check in this function?
->>
->
-> [shafi] By default peer stats will be disabled, we are enabling this by debugfs
-> (hw-restart) so i thought these checks are needed , please advise .. Do you say
-> they  will be never hit
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Hmm.. I think mac80211 shouldn't call sta_statistics() before
-sta_state() during recovery (it makes no sense). In practice I think
-this isn't enforced in which case it's a mac80211 bug.
+Enable support for parsing per station rx-duration (usecs)
+via adding support for new netlink attribute NL80211_STA_INFO_RX_DURATION
 
-Anyway, this isn't much of a problem now. You only read out u64 from
-`arsta` (sta->drv_priv). Even if it's uninitialized/undefined there's
-no way for you to crash the system (it's not a list, spinlock or any
-other complex data structure). Worst case userspace will get garbage
-rx_duration value if it happens to get_station() while hw-restart is
-ongoing.
+rx_duration is an approximate total air time(usecs) for all the frames
+frames from a connected client. This will get dumped as
+part of 'iw dev wlan#N station dump'
 
-It'd be good to verify this is actually a problem and - assuming you
-want to guarantee correct readouts at all times - to fix the problem
-in mac80211.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ nl80211.h |    3 +++
+ station.c |    5 +++++
+ 2 files changed, 8 insertions(+)
 
+diff --git a/nl80211.h b/nl80211.h
+index 5b7b5eb..d11198f 100644
+--- a/nl80211.h
++++ b/nl80211.h
+@@ -2464,6 +2464,8 @@ enum nl80211_sta_bss_param {
+  *	TID+1 and the special TID 16 (i.e. value 17) is used for non-QoS frames;
+  *	each one of those is again nested with &enum nl80211_tid_stats
+  *	attributes carrying the actual values.
++ * @NL80210_STA_INFO_RX_DURATION: approximate total air time(usecs) for all the
++ *	frames from a connected client
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -2500,6 +2502,7 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_BEACON_RX,
+ 	NL80211_STA_INFO_BEACON_SIGNAL_AVG,
+ 	NL80211_STA_INFO_TID_STATS,
++	NL80211_STA_INFO_RX_DURATION,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/station.c b/station.c
+index b5ccf4a..a730db1 100644
+--- a/station.c
++++ b/station.c
+@@ -147,6 +147,7 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 		[NL80211_STA_INFO_NONPEER_PM] = { .type = NLA_U32},
+ 		[NL80211_STA_INFO_CHAIN_SIGNAL] = { .type = NLA_NESTED },
+ 		[NL80211_STA_INFO_CHAIN_SIGNAL_AVG] = { .type = NLA_NESTED },
++		[NL80211_STA_INFO_RX_DURATION] = { .type = NLA_U64 },
+ 	};
+ 	char *chain;
+ 
+@@ -226,6 +227,10 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
+ 		printf("\n\trx bitrate:\t%s", buf);
+ 	}
+ 
++	if (sinfo[NL80211_STA_INFO_RX_DURATION])
++		printf("\n\trx duration:\t%lld us",
++		       (unsigned long long)nla_get_u64(sinfo[NL80211_STA_INFO_RX_DURATION]));
++
+ 	if (sinfo[NL80211_STA_INFO_EXPECTED_THROUGHPUT]) {
+ 		uint32_t thr;
+ 
+-- 
+1.7.9.5
 
-Michał
