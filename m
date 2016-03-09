@@ -1,88 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:35869 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756458AbcCaJo7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 05:44:59 -0400
-Received: by mail-wm0-f51.google.com with SMTP id 127so127523121wmu.1
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2016 02:44:59 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 31 Mar 2016 11:44:58 +0200
-Message-ID: <CA+BoTQnC-OKZ8eRohBYetfyW6-xo31kJtS8Lh+svxC=fkVsrXw@mail.gmail.com> (sfid-20160331_114507_674651_013A4711)
-Subject: IPv6: routing/forwarding/masking link-local addresses
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Network Development <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga03.intel.com ([134.134.136.65]:42134 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933551AbcCIRp7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2016 12:45:59 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 03/21] iwlwifi: pcie: set RB chunk size back to 64
+Date: Wed,  9 Mar 2016 19:45:32 +0200
+Message-Id: <1457545550-30677-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160309_184605_331754_15C36F88)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Sara Sharon <sara.sharon@intel.com>
 
-The most commonly used framing/addressing in 802.11 is 3addr. This is
-how most Access Points work and Clients follow suit.
+128 byte chunk size is supported only on PCIe and not
+on IOSF. For now, change it back to 64 byte.
 
-However it is impossible to put a 3addr Client interface into a bridge
-because it's not possible to properly distinguish RA/TA/DA/SA
-addresses.
+Reported-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-There is 4addr framing in 802.11 (often referred to as WDS or
-Repeater) but it's a loose standard and various vendors implement it
-differently. For this kind of framing to work both AP and Client must
-support the same flavor of the framing. Many APs don't even allow the
-user to enable WDS. This makes it troublesome to extend wireless
-networks without replacing AP equipment (upgrading AP software isn't
-always an option).
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index a310fd2..509f790 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -801,11 +801,10 @@ static void iwl_pcie_rx_mq_hw_init(struct iwl_trans *trans)
+ 
+ 	/*
+ 	 * Activate DMA snooping.
+-	 * Set RX DMA chunk size to 128 bit
++	 * Set RX DMA chunk size to 64B
+ 	 * Default queue is 0
+ 	 */
+ 	iwl_write_prph(trans, RFH_GEN_CFG, RFH_GEN_CFG_RFH_DMA_SNOOP |
+-		       RFH_GEN_CFG_RB_CHUNK_SIZE |
+ 		       (DEFAULT_RXQ_NUM << RFH_GEN_CFG_DEFAULT_RXQ_NUM_POS) |
+ 		       RFH_GEN_CFG_SERVICE_DMA_SNOOP);
+ 	/* Enable the relevant rx queues */
+-- 
+2.5.0
 
-There is already a userspace tool which solves this problem for IPv4
-called relayd [1]. It forwards ARP/DHCP packets (and replaces MAC
-addresses accordingly) between non-bridged interfaces and adds
-additional route entries to the firewall to, effectively, act as a
-bridge transparently. via routing. Compared to ARP Proxy it doesn't
-require IP address configuration on local interfaces.
-
-I'm trying to add IPv6 support for relayd. The problem is I can't get
-link-local addresses to route properly.
-
-I can easily get things like 2000::/32 to route perfectly fine but
-fe80:: just won't work. Upon inspection I've noticed:
-
-; ip link add veth0 type veth peer name veth1
-; ip link set veth0 up
-; ip link set veth1 up
-; ip route add fe80::1 dev veth0
-; ip route add 2000::1 dev veth0
-; ip route get iif veth1 fe80::1
-fe80::1 from :: dev veth1  metric 0
-    cache  iif veth1
-; ip route get iif veth1 2000::1
-2000::1 from :: dev veth0  metric 0
-    cache  iif veth1
-; ip link del veth0
-
-If I remove default fe80::/64 routes I get:
-
-; ip link del veth0
-; ip link add veth0 type veth peer name veth1
-; ip link set veth0 up
-; ip link set veth1 up
-; ip route del fe80::/64 dev veth0
-; ip route del fe80::/64 dev veth1
-; ip route add fe80::1 dev veth0
-; ip route add 2000::1 dev veth0
-; ip route get iif veth1 fe80::1
-unreachable fe80::1 from :: dev lo  table unspec  proto kernel  metric
-4294967295  error -101 iif veth1
-; ip route get iif veth1 2000::1
-2000::1 from :: dev veth0  metric 0
-    cache  iif veth1
-
-The fe80:: route gets ignored completely in both cases.
-
-My question is: can I make it work (a kernel knob I'm not aware of) or
-does it require patching the kernel? Thoughts/ideas/hints?
-
-
-Michał
-
-[1]: http://git.openwrt.org/?p=project/relayd.git;a=summary
