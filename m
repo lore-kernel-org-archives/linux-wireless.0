@@ -1,69 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f44.google.com ([209.85.192.44]:35692 "EHLO
-	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751990AbcCRUq0 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 16:46:26 -0400
-Date: Fri, 18 Mar 2016 16:46:23 -0400
-From: Tejun Heo <tj@kernel.org>
-To: Jeff Layton <jlayton@poochiereds.net>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Trond Myklebust <trond.myklebust@primarydata.com>,
-	"J. Bruce Fields" <bfields@fieldses.org>,
-	Anna Schumaker <anna.schumaker@netapp.com>,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-nfs@vger.kernel.org,
-	Amitoj Kaur Chawla <amitoj1606@gmail.com>,
-	kernel-team@fb.com, Johannes Weiner <hannes@cmpxchg.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Eva Rachel Retuya <eraretuya@gmail.com>,
-	Bhaktipriya Shridhar <bhaktipriya96@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: [RFD] workqueue: WQ_MEM_RECLAIM usage in network drivers
-Message-ID: <20160318204623.GM20028@mtj.duckdns.org> (sfid-20160318_214648_973874_D9F9A91E)
-References: <20160317164546.GT21104@mtj.duckdns.org>
- <20160317213216.731d1fcc@synchrony.poochiereds.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160317213216.731d1fcc@synchrony.poochiereds.net>
+Received: from mga03.intel.com ([134.134.136.65]:63100 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933364AbcCIRp4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2016 12:45:56 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 02/21] iwlwifi: pcie: refactor RXBs reclaiming code
+Date: Wed,  9 Mar 2016 19:45:31 +0200
+Message-Id: <1457545550-30677-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160309_184559_600726_58B85C53)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello, Jeff.
+From: Sara Sharon <sara.sharon@intel.com>
 
-On Thu, Mar 17, 2016 at 09:32:16PM -0400, Jeff Layton wrote:
-> > * Are network devices expected to be able to serve as a part of
-> >   storage stack which is depended upon for memory reclamation?
-> 
-> I think they should be. Cached NFS pages can consume a lot of memory,
-> and flushing them generally takes network device access.
+Change the code to move rxbs directly from the allocator's
+list to the queue's free list. This makes the code more
+readable, saves the interim array and the double loop over
+the free RBs.
 
-But does that actually work?  It's pointless to add WQ_MEM_RECLAIM to
-workqueues unless all other things are also guaranteed to make forward
-progress regardless of memory pressure.
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 75 ++++++++++++----------------
+ 1 file changed, 33 insertions(+), 42 deletions(-)
 
-> > * If so, are all the pieces in place for that to work for all (or at
-> >   least most) network devices?  If it's only for a subset of NICs, how
-> >   can one tell whether a given driver needs forward progress guarantee
-> >   or not?
-> > 
-> > * I assume that wireless drivers aren't and can't be used in this
-> >   fashion.  Is that a correction assumption?
-> > 
-> 
-> People do mount NFS over wireless interfaces. It's not terribly common
-> though, in my experience.
-
-Ditto, I'm very skeptical that this actually works in practice and
-people expect and depend on it.  I don't follow wireless development
-closely but haven't heard anyone talking about reserving memory pools
-or people complaining about wireless being the cause of OOM.
-
-So, I really want to avoid spraying WQ_MEM_RECLAIM if it doesn't serve
-actual purposes.  It's wasteful, sets bad precedences and confuses
-future readers.
-
-Thanks.
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 489b07a..a310fd2 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -539,40 +539,46 @@ static void iwl_pcie_rx_allocator(struct iwl_trans *trans)
+ }
+ 
+ /*
+- * iwl_pcie_rx_allocator_get - Returns the pre-allocated pages
++ * iwl_pcie_rx_allocator_get - returns the pre-allocated pages
+ .*
+ .* Called by queue when the queue posted allocation request and
+  * has freed 8 RBDs in order to restock itself.
++ * This function directly moves the allocated RBs to the queue's ownership
++ * and updates the relevant counters.
+  */
+-static int iwl_pcie_rx_allocator_get(struct iwl_trans *trans,
+-				     struct iwl_rx_mem_buffer
+-				     *out[RX_CLAIM_REQ_ALLOC])
++static void iwl_pcie_rx_allocator_get(struct iwl_trans *trans,
++				      struct iwl_rxq *rxq)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rb_allocator *rba = &trans_pcie->rba;
+ 	int i;
+ 
++	lockdep_assert_held(&rxq->lock);
++
+ 	/*
+ 	 * atomic_dec_if_positive returns req_ready - 1 for any scenario.
+ 	 * If req_ready is 0 atomic_dec_if_positive will return -1 and this
+-	 * function will return -ENOMEM, as there are no ready requests.
++	 * function will return early, as there are no ready requests.
+ 	 * atomic_dec_if_positive will perofrm the *actual* decrement only if
+ 	 * req_ready > 0, i.e. - there are ready requests and the function
+ 	 * hands one request to the caller.
+ 	 */
+ 	if (atomic_dec_if_positive(&rba->req_ready) < 0)
+-		return -ENOMEM;
++		return;
+ 
+ 	spin_lock(&rba->lock);
+ 	for (i = 0; i < RX_CLAIM_REQ_ALLOC; i++) {
+ 		/* Get next free Rx buffer, remove it from free list */
+-		out[i] = list_first_entry(&rba->rbd_allocated,
+-			       struct iwl_rx_mem_buffer, list);
+-		list_del(&out[i]->list);
++		struct iwl_rx_mem_buffer *rxb =
++			list_first_entry(&rba->rbd_allocated,
++					 struct iwl_rx_mem_buffer, list);
++
++		list_move(&rxb->list, &rxq->rx_free);
+ 	}
+ 	spin_unlock(&rba->lock);
+ 
+-	return 0;
++	rxq->used_count -= RX_CLAIM_REQ_ALLOC;
++	rxq->free_count += RX_CLAIM_REQ_ALLOC;
+ }
+ 
+ static void iwl_pcie_rx_allocator_work(struct work_struct *data)
+@@ -1149,7 +1155,7 @@ static void iwl_pcie_rx_handle(struct iwl_trans *trans, int queue)
+ {
+ 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
+ 	struct iwl_rxq *rxq = &trans_pcie->rxq[queue];
+-	u32 r, i, j, count = 0;
++	u32 r, i, count = 0;
+ 	bool emergency = false;
+ 
+ restart:
+@@ -1193,39 +1199,24 @@ restart:
+ 
+ 		i = (i + 1) & (rxq->queue_size - 1);
+ 
+-		/* If we have RX_CLAIM_REQ_ALLOC released rx buffers -
+-		 * try to claim the pre-allocated buffers from the allocator */
+-		if (rxq->used_count >= RX_CLAIM_REQ_ALLOC) {
++		/*
++		 * If we have RX_CLAIM_REQ_ALLOC released rx buffers -
++		 * try to claim the pre-allocated buffers from the allocator.
++		 * If not ready - will try to reclaim next time.
++		 * There is no need to reschedule work - allocator exits only
++		 * on success
++		 */
++		if (rxq->used_count >= RX_CLAIM_REQ_ALLOC)
++			iwl_pcie_rx_allocator_get(trans, rxq);
++
++		if (rxq->used_count % RX_CLAIM_REQ_ALLOC == 0 && !emergency) {
+ 			struct iwl_rb_allocator *rba = &trans_pcie->rba;
+-			struct iwl_rx_mem_buffer *out[RX_CLAIM_REQ_ALLOC];
+-
+-			if (rxq->used_count % RX_CLAIM_REQ_ALLOC == 0 &&
+-			    !emergency) {
+-				/* Add the remaining 6 empty RBDs
+-				* for allocator use
+-				 */
+-				spin_lock(&rba->lock);
+-				list_splice_tail_init(&rxq->rx_used,
+-						      &rba->rbd_empty);
+-				spin_unlock(&rba->lock);
+-			}
+ 
+-			/* If not ready - continue, will try to reclaim later.
+-			* No need to reschedule work - allocator exits only on
+-			* success */
+-			if (!iwl_pcie_rx_allocator_get(trans, out)) {
+-				/* If success - then RX_CLAIM_REQ_ALLOC
+-				 * buffers were retrieved and should be added
+-				 * to free list */
+-				rxq->used_count -= RX_CLAIM_REQ_ALLOC;
+-				for (j = 0; j < RX_CLAIM_REQ_ALLOC; j++) {
+-					list_add_tail(&out[j]->list,
+-						      &rxq->rx_free);
+-					rxq->free_count++;
+-				}
+-			}
+-		}
+-		if (emergency) {
++			/* Add the remaining empty RBDs for allocator use */
++			spin_lock(&rba->lock);
++			list_splice_tail_init(&rxq->rx_used, &rba->rbd_empty);
++			spin_unlock(&rba->lock);
++		} else if (emergency) {
+ 			count++;
+ 			if (count == 8) {
+ 				count = 0;
 -- 
-tejun
+2.5.0
+
