@@ -1,92 +1,109 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f179.google.com ([209.85.214.179]:34124 "EHLO
-	mail-ob0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752803AbcCGRPh (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:4874 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751316AbcCIHUp (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2016 12:15:37 -0500
+	Wed, 9 Mar 2016 02:20:45 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
+	<kvalo@codeaurora.org>, <mohammed@codeaurora.org>,
+	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Subject: [PATCH v2] cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION
+Date: Wed, 9 Mar 2016 12:50:02 +0530
+Message-ID: <1457508003-16700-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160309_082048_308883_7C71FDAB)
 MIME-Version: 1.0
-In-Reply-To: <CAA93jw4JG_uEZaxk1JDKndq9K0+QPwKaAmK6=gZ8e-7qNmc=Cw@mail.gmail.com>
-References: <1456492163-11437-1-git-send-email-michal.kazior@tieto.com>
- <E1abfnE-0000VS-00@www.xplot.org> <CA+BoTQk6J7kgdie9aX24MB+8PxN3oFUh0eVdmVrdyptW5RxQXg@mail.gmail.com>
- <CAPp0ZBYP9UzUTtPz=vivUQkE2FiGSsJjDaecQtPuK8y_d3ccqA@mail.gmail.com>
- <56DD99AA.8050403@openwrt.org> <CAHqTa-2-uZ0PUdwp33E588EU2a7T6KnTYs8RWfNDEzgOLseG9g@mail.gmail.com>
- <CAA93jw4JG_uEZaxk1JDKndq9K0+QPwKaAmK6=gZ8e-7qNmc=Cw@mail.gmail.com>
-From: Avery Pennarun <apenwarr@gmail.com>
-Date: Mon, 7 Mar 2016 12:14:34 -0500
-Message-ID: <CAHqTa-1m3209qqLO19diB5ONd1o3whEnBGJkbPpV1m3UfSGJvA@mail.gmail.com> (sfid-20160307_181548_427615_0FDD33DE)
-Subject: Re: [RFC/RFT] mac80211: implement fq_codel for software queuing
-To: Dave Taht <dave.taht@gmail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	Michal Kazior <michal.kazior@tieto.com>,
-	Tim Shepard <shep@alum.mit.edu>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Network Development <netdev@vger.kernel.org>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Andrew Mcgregor <andrewmcgr@google.com>,
-	=?UTF-8?B?VG9rZSBIw7hpbGFuZC1Kw7hyZ2Vuc2Vu?= <toke@toke.dk>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 7, 2016 at 11:54 AM, Dave Taht <dave.taht@gmail.com> wrote:
-> If I can just get a coherent patch set that I can build, I will gladly
-> join you on the testing ath9k in particular... can probably do ath10k,
-> too - and do a bit of code review... this week. it's very exciting
-> watching all this activity...
->
-> but I confess that I've totally lost track of what set of trees and
-> patchwork I should try to pull from. wireless-drivers-next? ath10k?
-> wireless-next? net-next? toke and I have a ton of x86 platforms
-> available to test on....
->
-> Avery - which patches did you use??? on top of what?
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-The patch series I'm currently using can be found here:
+Add support for new netlink attribute 'NL80211_STA_INFO_RX_DURATION'
+This flag will be set when drivers can fill rx_duration (approximate
+total air time(usecs) for all the frames from a connected client) via
+'drv_sta_statistics' callback
 
-  git fetch https://gfiber.googlesource.com/vendor/opensource/backports
-ath9k_txq+fq_codel
+Also make sta_info flags 'filled' as 64 bit to accommodate for new
+per station stats. Extend 'PUT_SINFO' for supporting rx_duration
+field and any new per sta information in future
 
-That's again backports-20160122, which comes from linux-next as of
-20160122.  You can either build backports against whatever kernel
-you're using (probably easiest) or try to use that version of
-linux-next, or rebase the patches onto your favourite kernel.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ include/net/cfg80211.h       |    5 ++++-
+ include/uapi/linux/nl80211.h |    3 +++
+ net/wireless/nl80211.c       |    3 ++-
+ 3 files changed, 9 insertions(+), 2 deletions(-)
 
-> In terms of "smoothing" codel...
->
-> I emphatically do not think codel in it's current form is "ready" for
-> wireless, at the very least the target should not be much lower than
-> 20ms in your 2 station tests.  There is another bit in codel where the
-> algo "turns off" with only a single MTU's worth of packets
-> outstanding, which could get bumped to the ideal size of the
-> aggregate. "ideal" kind of being a variable based on a ton of other
-> factors...
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 9bcaaf7..7897162 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1060,11 +1060,13 @@ struct cfg80211_tid_stats {
+  * @rx_beacon: number of beacons received from this peer
+  * @rx_beacon_signal_avg: signal strength average (in dBm) for beacons received
+  *	from this peer
++ * @rx_duration: approximate total air time(usecs) for all the frames from a
++ *	connected client
+  * @pertid: per-TID statistics, see &struct cfg80211_tid_stats, using the last
+  *	(IEEE80211_NUM_TIDS) index for MSDUs not encapsulated in QoS-MPDUs.
+  */
+ struct station_info {
+-	u32 filled;
++	u64 filled;
+ 	u32 connected_time;
+ 	u32 inactive_time;
+ 	u64 rx_bytes;
+@@ -1103,6 +1105,7 @@ struct station_info {
+ 	u32 expected_throughput;
+ 
+ 	u64 rx_beacon;
++	u64 rx_duration;
+ 	u8 rx_beacon_signal_avg;
+ 	struct cfg80211_tid_stats pertid[IEEE80211_NUM_TIDS + 1];
+ };
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 5b7b5eb..3de3975 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2464,6 +2464,8 @@ enum nl80211_sta_bss_param {
+  *	TID+1 and the special TID 16 (i.e. value 17) is used for non-QoS frames;
+  *	each one of those is again nested with &enum nl80211_tid_stats
+  *	attributes carrying the actual values.
++ * @NL80211_STA_INFO_RX_DURATION: approximate total air time(usecs) for all the
++ *	frames from a connected client
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -2500,6 +2502,7 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_BEACON_RX,
+ 	NL80211_STA_INFO_BEACON_SIGNAL_AVG,
+ 	NL80211_STA_INFO_TID_STATS,
++	NL80211_STA_INFO_RX_DURATION,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d4786f2..a81c016 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3719,7 +3719,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
+ 		goto nla_put_failure;
+ 
+ #define PUT_SINFO(attr, memb, type) do {				\
+-	if (sinfo->filled & BIT(NL80211_STA_INFO_ ## attr) &&		\
++	if (sinfo->filled & (1ULL << NL80211_STA_INFO_ ## attr) &&	\
+ 	    nla_put_ ## type(msg, NL80211_STA_INFO_ ## attr,		\
+ 			     sinfo->memb))				\
+ 		goto nla_put_failure;					\
+@@ -3745,6 +3745,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
+ 	PUT_SINFO(LLID, llid, u16);
+ 	PUT_SINFO(PLID, plid, u16);
+ 	PUT_SINFO(PLINK_STATE, plink_state, u8);
++	PUT_SINFO(RX_DURATION, rx_duration, u64);
+ 
+ 	switch (rdev->wiphy.signal_type) {
+ 	case CFG80211_SIGNAL_TYPE_MBM:
+-- 
+1.7.9.5
 
-Yeah, I figured that sort of thing would come up.  I'm feeling forward
-progress just by finally seeing the buggy oscillations finally happen,
-though. :)
-
-> the underlying code needs to be striving successfully for per-station
-> airtime fairness for this to work at all, and the driver/card
-> interface nearly as tight as BQL is for the fq portion to behave
-> sanely. I'd configure codel at a higher target and try to observe what
-> is going on at the fq level til that got saner.
-
-That seems like two good goals.  So Emmanuel's BQL-like thing seems
-like we'll need it soon.
-
-As for per-station airtime fairness, what's a good approximation of
-that?  Perhaps round-robin between stations, one aggregate per turn,
-where each aggregate has a maximum allowed latency?  I don't know how
-the current code works, but it's probably almost like that, as long as
-we only put one aggregate's worth of stuff into each hwq, which I
-guess is what the BQL-like thing will do.
-
-So if I understand correctly, what we need is, in the following order:
-1) Disable fq_codel for now, and get BQL-like thing working in ath9k
-(and ensure we're getting airtime fairness even without fq_codel);
-2) Re-enable fq_codel and increase fq_codel's target up to 20ms for now;
-3) Tweak fq_codel's "turn off" size to be larger (how important is this?)
-
-Is that right?
