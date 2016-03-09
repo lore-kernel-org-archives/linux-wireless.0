@@ -1,70 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41043 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755146AbcCDP3d convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:3672 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751297AbcCIHcA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 10:29:33 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: David Miller <davem@davemloft.net>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Larry.Finger@lwfinger.net
-Subject: Re: pull-request: wireless-drivers 2016-02-18
-References: <87mvqyqbqp.fsf@kamboji.qca.qualcomm.com>
-	<CAMuHMdWVJ+rC1w_-mHdWhDJ_q++W_hp-Fg4JTjSSSseS1aDd5Q@mail.gmail.com>
-Date: Fri, 04 Mar 2016 17:29:25 +0200
-In-Reply-To: <CAMuHMdWVJ+rC1w_-mHdWhDJ_q++W_hp-Fg4JTjSSSseS1aDd5Q@mail.gmail.com>
-	(Geert Uytterhoeven's message of "Mon, 29 Feb 2016 09:35:21 +0100")
-Message-ID: <87y49yw9be.fsf@kamboji.qca.qualcomm.com> (sfid-20160304_162938_056504_4749AEF2)
+	Wed, 9 Mar 2016 02:32:00 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>, <kvalo@codeaurora.org>,
+	<mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH v1 1/2] ath10k: Add support for ath10k_sta_statistics support
+Date: Wed, 9 Mar 2016 13:01:20 +0530
+Message-ID: <1457508681-17546-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160309_083206_536039_1339FC22)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-(Adding Larry)
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Geert Uytterhoeven <geert@linux-m68k.org> writes:
+Enable support for 'drv_sta_statistics' callback.
+Export rx_duration support if available to cfg80211/nl80211
 
-> On Thu, Feb 18, 2016 at 4:28 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
->
->> rtlwifi
->>
->> * fix broken VHT (802.11ac) support, reported by Linus
->
-> That's commit d76d65fd26951498144029c24852c4d54ee512d9
->
-> drivers/net/wireless/realtek/rtlwifi/rc.c: In function
-> ‘_rtl_rc_rate_set_series’:
-> drivers/net/wireless/realtek/rtlwifi/rc.c:144: warning: comparison is
-> always false due to limited range of data type
->
->                 if (sta && sta->vht_cap.vht_supported &&
->                     (wireless_mode == WIRELESS_MODE_AC_5G ||
->                      wireless_mode == WIRELESS_MODE_AC_24G ||
->                      wireless_mode == WIRELESS_MODE_AC_ONLY))
->                         rate->flags |= IEEE80211_TX_RC_VHT_MCS;
->
-> u8 wireless_mode = 0;
->
-> enum wireless_mode {
->         ...
->         WIRELESS_MODE_AC_ONLY = 0x100,
->
-> How is that supposed to work?
+This can also act as a placeholder for any new per STA stats support
 
-I have no idea what could be the difference, for example, between AC_5G
-and AC_ONLY. Maybe AC_ONLY mode is not really used in normal setups and
-that's why the bug doesn't break anything? Larry, do you know?
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+Dependencies:
 
-Anyway, Larry has a patch for this but I'm planning to send it to 4.6 as
-I didn't think it as that urgent:
+1. cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION
+2. iw: Add support for NL80211_STA_INFO_RX_DURATION netlink
+ attribute
+3. ath10k: Enable debugfs provision to enable Peer Stats feature
 
-rtlwifi: Fix size of wireless mode variable
+ drivers/net/wireless/ath/ath10k/debug.h       |    4 ++++
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c |   22 ++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/mac.c         |    1 +
+ 3 files changed, 27 insertions(+)
 
-https://patchwork.kernel.org/patch/8425191/
-
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 6206edd..01c500f 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -155,6 +155,10 @@ ath10k_debug_get_new_fw_crash_data(struct ath10k *ar)
+ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			    struct ieee80211_sta *sta, struct dentry *dir);
+ void ath10k_sta_update_rx_duration(struct ath10k *ar, struct list_head *peer);
++void ath10k_sta_statistics(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta,
++			   struct station_info *sinfo);
++
+ #else
+ static inline void ath10k_sta_update_rx_duration(struct ath10k *ar,
+ 						 struct list_head *peer)
+diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+index 67ef75b..4c459f2 100644
+--- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
++++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+@@ -35,6 +35,28 @@ void ath10k_sta_update_rx_duration(struct ath10k *ar, struct list_head *head)
+ 	rcu_read_unlock();
+ }
+ 
++void ath10k_sta_statistics(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta,
++			   struct station_info *sinfo)
++{
++	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
++	struct ath10k *ar = arsta->arvif->ar;
++
++	mutex_lock(&ar->conf_mutex);
++
++	if (ar->state != ATH10K_STATE_ON ||
++	    ar->state != ATH10K_STATE_RESTARTED)
++		goto out;
++
++	if (!ath10k_peer_stats_enabled(ar))
++		goto out;
++
++	sinfo->rx_duration = arsta->rx_duration;
++	sinfo->filled |= 1ULL << NL80211_STA_INFO_RX_DURATION;
++out:
++	mutex_unlock(&ar->conf_mutex);
++}
++
+ static ssize_t ath10k_dbg_sta_read_aggr_mode(struct file *file,
+ 					     char __user *user_buf,
+ 					     size_t count, loff_t *ppos)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index d5ef201..69a1dcf 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6852,6 +6852,7 @@ static const struct ieee80211_ops ath10k_ops = {
+ #endif
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	.sta_add_debugfs		= ath10k_sta_add_debugfs,
++	.sta_statistics			= ath10k_sta_statistics,
+ #endif
+ };
+ 
 -- 
-Kalle Valo
+1.7.9.5
+
