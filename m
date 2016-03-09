@@ -1,57 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f179.google.com ([209.85.223.179]:36535 "EHLO
-	mail-io0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756944AbcCCWhc convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34714 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751085AbcCILtV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 17:37:32 -0500
-Received: by mail-io0-f179.google.com with SMTP id l127so43929131iof.3
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2016 14:37:32 -0800 (PST)
+	Wed, 9 Mar 2016 06:49:21 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc: Kees Cook <keescook@chromium.org>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [RFC 5/7] wlcore: avoid fragile snprintf use
+References: <CAGXu5jJ-NApCpANjfz+bAEfwZJ8xizkM-jDHVhOPCzhxV-aqdA@mail.gmail.com>
+	<1457469654-17059-1-git-send-email-linux@rasmusvillemoes.dk>
+	<1457469654-17059-6-git-send-email-linux@rasmusvillemoes.dk>
+Date: Wed, 09 Mar 2016 13:49:12 +0200
+In-Reply-To: <1457469654-17059-6-git-send-email-linux@rasmusvillemoes.dk>
+	(Rasmus Villemoes's message of "Tue, 8 Mar 2016 21:40:52 +0100")
+Message-ID: <8760wvswg7.fsf@kamboji.qca.qualcomm.com> (sfid-20160309_124947_152443_C05A7CA5)
 MIME-Version: 1.0
-Date: Thu, 3 Mar 2016 23:37:31 +0100
-Message-ID: <CACna6rzA1JcTjBsozR5nhCH9U9bKwceTNwLzeQ-Ds97NECVaeQ@mail.gmail.com> (sfid-20160303_233735_995351_C89C7240)
-Subject: Problem with brcmfmac removing extra interface
-From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
-To: brcm80211 development <brcm80211-dev-list@broadcom.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Rasmus Villemoes <linux@rasmusvillemoes.dk> writes:
 
-brcmfmac in general is not capable of removing interfaces. If you take
-a look at brcmf_cfg80211_del_iface implementation, you'll see it
-returns -EOPNOTSUPP (except for p2p interfaces).
+> Appending to a buffer like this is not guaranteed to work (passing
+> overlapping src and dst buffers to snprintf is undefined
+> behaviour). The standard and safe idiom is to keep track of the
+> current string length.
+>
+> Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
 
-However there is problem in handling NL80211_CMD_STOP_AP (with the
-brcmf_cfg80211_stop_ap callback). Current implementation calls
-brcmf_fil_cmd_int_set(ifp, BRCMF_C_DOWN, 1)
-if mbss support is enabled/used.
-
-Above call results in firmware generating BRCMF_E_LINK event. This
-event is handled with the following forward-traced functions chain:
-1) brcmf_notify_connect_status
-2) brcmf_notify_connect_status_ap
-3) brcmf_remove_interface
-4) brcmf_del_if
-5) brcmf_net_detach
-6) unregister_netdev
-
-So the result of NL80211_CMD_STOP_AP is interface being removed. The
-problem with this behavior is that interface can't be recreated after
-that:
-# iw phy phy1 interface add wlan1-1 type __ap
-[ 3602.929199] brcmfmac: brcmf_ap_add_vif: timeout occurred
-command failed: I/O error (-5)
-
-I hit this problem when trying to restart hostapd using BCM43602 and 2 BSSes.
-
-Could you analyze this problem and see if you see some way of solving
-this problem, please?
+Should I take this or what's the plan?
 
 -- 
-Rafał
+Kalle Valo
