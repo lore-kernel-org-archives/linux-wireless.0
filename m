@@ -1,46 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35565 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:51612 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752549AbcC3Mae (ORCPT
+	with ESMTP id S1751599AbcCIJjL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 08:30:34 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: =?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] bcma: use of_dma_configure() to set initial dma mask
-References: <1458207563-3453369-1-git-send-email-arnd@arndb.de>
-Date: Wed, 30 Mar 2016 15:30:29 +0300
-In-Reply-To: <1458207563-3453369-1-git-send-email-arnd@arndb.de> (Arnd
-	Bergmann's message of "Thu, 17 Mar 2016 10:39:17 +0100")
-Message-ID: <87h9fo5esa.fsf@purkki.adurom.net> (sfid-20160330_143106_158481_57EA93A4)
+	Wed, 9 Mar 2016 04:39:11 -0500
+Date: Wed, 9 Mar 2016 15:08:45 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	kvalo@codeaurora.org
+Subject: Re: [PATCH v2] cfg80211/nl80211: Add support for
+ NL80211_STA_INFO_RX_DURATION
+Message-ID: <20160309093845.GA6695@atheros-ThinkPad-T61> (sfid-20160309_103915_949953_FE204764)
+References: <1457508003-16700-1-git-send-email-mohammed@qca.qualcomm.com>
+ <1457515803.2042.1.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1457515803.2042.1.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+On Wed, Mar 09, 2016 at 10:30:03AM +0100, Johannes Berg wrote:
+> On Wed, 2016-03-09 at 12:50 +0530, Mohammed Shafi Shajakhan wrote:
+> > 
+> > + * @rx_duration: approximate total air time(usecs) for all the
+> > frames from a
+> > + *	connected client
+> 
+> I don't see why this should be restricted to "connected clients". The
+> same value could be used for a mesh peer. Or TDLS peer. Or the AP on a
+> managed connection. Or all the other types of STA.
 
-> While fixing another bug, I noticed that bcma manually sets up
-> a dma_mask pointer for its child devices. We have a generic
-> helper for that now, which should be able to cope better with
-> any variations that might be needed to deal with cache coherency,
-> unusual DMA address offsets, iommus, or limited DMA masks, none
-> of which are currently handled here.
->
-> This changes the core to use the of_dma_configure(), like
-> we do for platform devices that are probed directly from
-> DT.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
-> This patch needs to be tested to ensure we don't introduce
-> regressions, and should probably go into 4.7 as a cleanup.
+[shafi] Please suggest if this is ok ? I will be thankful
+if you can suggest a better one if this is not ok
 
-Is anyone able to test this? The full patch is here:
+* @rx_duration: approximate total air time(usecs) for all the
+ frames from a peer
 
-https://patchwork.kernel.org/patch/8608751/
+ regards,
+ shafi
 
--- 
-Kalle Valo
