@@ -1,46 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:54885 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751639AbcC1U3Q (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2016 16:29:16 -0400
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-From: Ben Greear <greearb@candelatech.com>
-Subject: Question on rhashtable in worst-case scenario.
-Message-ID: <56F9941A.3080501@candelatech.com> (sfid-20160328_222936_740856_F7EF66DB)
-Date: Mon, 28 Mar 2016 13:29:14 -0700
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from s3.sipsolutions.net ([5.9.151.49]:46570 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751599AbcCIJaH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2016 04:30:07 -0500
+Message-ID: <1457515803.2042.1.camel@sipsolutions.net> (sfid-20160309_103010_518752_F70ABD42)
+Subject: Re: [PATCH v2] cfg80211/nl80211: Add support for
+ NL80211_STA_INFO_RX_DURATION
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+	linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, kvalo@codeaurora.org,
+	mohammed@codeaurora.org
+Date: Wed, 09 Mar 2016 10:30:03 +0100
+In-Reply-To: <1457508003-16700-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1457508003-16700-1-git-send-email-mohammed@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello!
+On Wed, 2016-03-09 at 12:50 +0530, Mohammed Shafi Shajakhan wrote:
+> 
+> + * @rx_duration: approximate total air time(usecs) for all the
+> frames from a
+> + *	connected client
 
-I have a use case for mac80211 where I create multiple stations to
-the same remote peer MAC address.
+I don't see why this should be restricted to "connected clients". The
+same value could be used for a mesh peer. Or TDLS peer. Or the AP on a
+managed connection. Or all the other types of STA.
 
-I'm seeing cases where the rhashtable logic is returning -16 (EBUSY)
-on insert (see sta_info_hash_add).
-This is with the 4.4.6+ (plus local patches) kernel, and it has the patch mentioned
-here:
-
-https://lkml.org/lkml/2015/12/3/307
-
-If I understand the code properly, my use case is going to be worst-case scenario,
-where all of my items in the hash have the same key (peer mac addr).
-
-I have my own secondary hash to handle most of my hot-path lookups, but I still need
-the main hash to at least function in a linear-search manner.
-
-Any idea what I can do to get rid of the EBUSY return code problem, or how
-to debug it further?
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+johannes
