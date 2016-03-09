@@ -1,225 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:42141 "EHLO mga14.intel.com"
+Received: from mga03.intel.com ([134.134.136.65]:62255 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757383AbcCaREV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 13:04:21 -0400
+	id S933663AbcCIRq3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2016 12:46:29 -0500
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 07/10] mac80211: fix last RX rate data consistency
-Date: Thu, 31 Mar 2016 20:02:08 +0300
-Message-Id: <1459443731-4614-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160331_190424_225633_1FD26BA3)
-In-Reply-To: <1459443731-4614-1-git-send-email-emmanuel.grumbach@intel.com>
-References: <1459443731-4614-1-git-send-email-emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 17/21] iwlwifi: mvm: return the cooling state index instead of the budget
+Date: Wed,  9 Mar 2016 19:45:46 +0200
+Message-Id: <1457545550-30677-17-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160309_185951_245589_7B8205CC)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+From: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
 
-When storing the last_rate_* values in the RX code, there's nothing
-to guarantee consistency, so a concurrent reader could see, e.g.
-last_rate_idx on the new value, but last_rate_flag still on the old,
-getting completely bogus values in the end.
+iwl_mvm_tcool_get_cur_state is the function that returns the
+cooling state index to the sysfs handler. This function returns
+mvm->cooling_dev.cur_state but that variable was set to the
+budget and not the cooling state index. Fix that.
+Add a missing blank line while at it.
 
-To fix this, I lifted the sta_stats_encode_rate() function from my
-old rate statistics code, which encodes the entire rate data into a
-single 16-bit value, avoiding the consistency issue.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- net/mac80211/rx.c       | 21 +++++------------
- net/mac80211/sta_info.c | 60 ++++++++++++++++++++++++++-----------------------
- net/mac80211/sta_info.h | 45 ++++++++++++++++++++++++++++++++-----
- 3 files changed, 77 insertions(+), 49 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h |  4 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c  | 56 ++++++++++++++--------------
+ 2 files changed, 31 insertions(+), 29 deletions(-)
 
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 4ae3bf8..40981f8 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -1421,16 +1421,9 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 		    test_sta_flag(sta, WLAN_STA_AUTHORIZED)) {
- 			sta->rx_stats.last_rx = jiffies;
- 			if (ieee80211_is_data(hdr->frame_control) &&
--			    !is_multicast_ether_addr(hdr->addr1)) {
--				sta->rx_stats.last_rate_idx =
--					status->rate_idx;
--				sta->rx_stats.last_rate_flag =
--					status->flag;
--				sta->rx_stats.last_rate_vht_flag =
--					status->vht_flag;
--				sta->rx_stats.last_rate_vht_nss =
--					status->vht_nss;
--			}
-+			    !is_multicast_ether_addr(hdr->addr1))
-+				sta->rx_stats.last_rate =
-+					sta_stats_encode_rate(status);
- 		}
- 	} else if (rx->sdata->vif.type == NL80211_IFTYPE_OCB) {
- 		sta->rx_stats.last_rx = jiffies;
-@@ -1440,12 +1433,8 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
- 		 * match the current local configuration when processed.
- 		 */
- 		sta->rx_stats.last_rx = jiffies;
--		if (ieee80211_is_data(hdr->frame_control)) {
--			sta->rx_stats.last_rate_idx = status->rate_idx;
--			sta->rx_stats.last_rate_flag = status->flag;
--			sta->rx_stats.last_rate_vht_flag = status->vht_flag;
--			sta->rx_stats.last_rate_vht_nss = status->vht_nss;
--		}
-+		if (ieee80211_is_data(hdr->frame_control))
-+			sta->rx_stats.last_rate = sta_stats_encode_rate(status);
- 	}
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index b869db9..9abbc93 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -543,8 +543,8 @@ struct iwl_mvm_thermal_device {
+ };
  
- 	if (rx->sdata->vif.type == NL80211_IFTYPE_STATION)
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index b49e2fb..81f1d6c 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -1928,43 +1928,47 @@ u8 sta_info_tx_streams(struct sta_info *sta)
- 			>> IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT) + 1;
- }
- 
--static void sta_set_rate_info_rx(struct sta_info *sta, struct rate_info *rinfo)
-+static void sta_stats_decode_rate(struct ieee80211_local *local, u16 rate,
-+				  struct rate_info *rinfo)
- {
--	rinfo->flags = 0;
--
--	if (sta->rx_stats.last_rate_flag & RX_FLAG_HT) {
--		rinfo->flags |= RATE_INFO_FLAGS_MCS;
--		rinfo->mcs = sta->rx_stats.last_rate_idx;
--	} else if (sta->rx_stats.last_rate_flag & RX_FLAG_VHT) {
--		rinfo->flags |= RATE_INFO_FLAGS_VHT_MCS;
--		rinfo->nss = sta->rx_stats.last_rate_vht_nss;
--		rinfo->mcs = sta->rx_stats.last_rate_idx;
--	} else {
-+	rinfo->bw = (rate & STA_STATS_RATE_BW_MASK) >>
-+		STA_STATS_RATE_BW_SHIFT;
-+
-+	if (rate & STA_STATS_RATE_VHT) {
-+		rinfo->flags = RATE_INFO_FLAGS_VHT_MCS;
-+		rinfo->mcs = rate & 0xf;
-+		rinfo->nss = (rate & 0xf0) >> 4;
-+	} else if (rate & STA_STATS_RATE_HT) {
-+		rinfo->flags = RATE_INFO_FLAGS_MCS;
-+		rinfo->mcs = rate & 0xff;
-+	} else if (rate & STA_STATS_RATE_LEGACY) {
- 		struct ieee80211_supported_band *sband;
--		int shift = ieee80211_vif_get_shift(&sta->sdata->vif);
- 		u16 brate;
--
--		sband = sta->local->hw.wiphy->bands[
--				ieee80211_get_sdata_band(sta->sdata)];
--		brate = sband->bitrates[sta->rx_stats.last_rate_idx].bitrate;
-+		unsigned int shift;
-+
-+		sband = local->hw.wiphy->bands[(rate >> 4) & 0xf];
-+		brate = sband->bitrates[rate & 0xf].bitrate;
-+		if (rinfo->bw == RATE_INFO_BW_5)
-+			shift = 2;
-+		else if (rinfo->bw == RATE_INFO_BW_10)
-+			shift = 1;
-+		else
-+			shift = 0;
- 		rinfo->legacy = DIV_ROUND_UP(brate, 1 << shift);
- 	}
- 
--	if (sta->rx_stats.last_rate_flag & RX_FLAG_SHORT_GI)
-+	if (rate & STA_STATS_RATE_SGI)
- 		rinfo->flags |= RATE_INFO_FLAGS_SHORT_GI;
-+}
-+
-+static void sta_set_rate_info_rx(struct sta_info *sta, struct rate_info *rinfo)
-+{
-+	u16 rate = ACCESS_ONCE(sta->rx_stats.last_rate);
- 
--	if (sta->rx_stats.last_rate_flag & RX_FLAG_5MHZ)
--		rinfo->bw = RATE_INFO_BW_5;
--	else if (sta->rx_stats.last_rate_flag & RX_FLAG_10MHZ)
--		rinfo->bw = RATE_INFO_BW_10;
--	else if (sta->rx_stats.last_rate_flag & RX_FLAG_40MHZ)
--		rinfo->bw = RATE_INFO_BW_40;
--	else if (sta->rx_stats.last_rate_vht_flag & RX_VHT_FLAG_80MHZ)
--		rinfo->bw = RATE_INFO_BW_80;
--	else if (sta->rx_stats.last_rate_vht_flag & RX_VHT_FLAG_160MHZ)
--		rinfo->bw = RATE_INFO_BW_160;
-+	if (rate == STA_STATS_RATE_INVALID)
-+		rinfo->flags = 0;
- 	else
--		rinfo->bw = RATE_INFO_BW_20;
-+		sta_stats_decode_rate(sta->local, rate, rinfo);
- }
- 
- void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 0ad9a67..f36f560 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -1,7 +1,7 @@
  /*
-  * Copyright 2002-2005, Devicescape Software, Inc.
-  * Copyright 2013-2014  Intel Mobile Communications GmbH
-- * Copyright(c) 2015 Intel Deutschland GmbH
-+ * Copyright(c) 2015-2016 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License version 2 as
-@@ -452,10 +452,7 @@ struct sta_info {
- 		int last_signal;
- 		u8 chains;
- 		s8 chain_signal_last[IEEE80211_MAX_CHAINS];
--		int last_rate_idx;
--		u32 last_rate_flag;
--		u32 last_rate_vht_flag;
--		u8 last_rate_vht_nss;
-+		u16 last_rate;
- 		u64 msdu[IEEE80211_NUM_TIDS + 1];
- 	} rx_stats;
- 	struct {
-@@ -686,4 +683,42 @@ void ieee80211_sta_ps_deliver_uapsd(struct sta_info *sta);
+- * iwl_mvm_cooling_device
+- * @cur_state: current state in milliwatts
++ * struct iwl_mvm_cooling_device
++ * @cur_state: current state
+  * @cdev: struct thermal cooling device
+  */
+ struct iwl_mvm_cooling_device {
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+index a396549..de3589a 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+@@ -510,11 +510,35 @@ static const struct iwl_tt_params iwl_mvm_default_tt_params = {
+ 	.support_tx_backoff = true,
+ };
  
- unsigned long ieee80211_sta_last_active(struct sta_info *sta);
+-int iwl_mvm_ctdp_command(struct iwl_mvm *mvm, u32 op, u32 budget)
++/* budget in mWatt */
++static const u32 iwl_mvm_cdev_budgets[] = {
++	2000,	/* cooling state 0 */
++	1800,	/* cooling state 1 */
++	1600,	/* cooling state 2 */
++	1400,	/* cooling state 3 */
++	1200,	/* cooling state 4 */
++	1000,	/* cooling state 5 */
++	900,	/* cooling state 6 */
++	800,	/* cooling state 7 */
++	700,	/* cooling state 8 */
++	650,	/* cooling state 9 */
++	600,	/* cooling state 10 */
++	550,	/* cooling state 11 */
++	500,	/* cooling state 12 */
++	450,	/* cooling state 13 */
++	400,	/* cooling state 14 */
++	350,	/* cooling state 15 */
++	300,	/* cooling state 16 */
++	250,	/* cooling state 17 */
++	200,	/* cooling state 18 */
++	150,	/* cooling state 19 */
++};
++
++int iwl_mvm_ctdp_command(struct iwl_mvm *mvm, u32 op, u32 state)
+ {
+ 	struct iwl_mvm_ctdp_cmd cmd = {
+ 		.operation = cpu_to_le32(op),
+-		.budget = cpu_to_le32(budget),
++		.budget = cpu_to_le32(iwl_mvm_cdev_budgets[state]),
+ 		.window_size = 0,
+ 	};
+ 	int ret;
+@@ -533,7 +557,7 @@ int iwl_mvm_ctdp_command(struct iwl_mvm *mvm, u32 op, u32 budget)
  
-+#define STA_STATS_RATE_INVALID		0
-+#define STA_STATS_RATE_VHT		0x8000
-+#define STA_STATS_RATE_HT		0x4000
-+#define STA_STATS_RATE_LEGACY		0x2000
-+#define STA_STATS_RATE_SGI		0x1000
-+#define STA_STATS_RATE_BW_SHIFT		9
-+#define STA_STATS_RATE_BW_MASK		(0x7 << STA_STATS_RATE_BW_SHIFT)
+ 	switch (op) {
+ 	case CTDP_CMD_OPERATION_START:
+-		mvm->cooling_dev.cur_state = budget;
++		mvm->cooling_dev.cur_state = state;
+ 		break;
+ 	case CTDP_CMD_OPERATION_REPORT:
+ 		IWL_DEBUG_TEMP(mvm, "cTDP avg energy in mWatt = %d\n", status);
+@@ -757,29 +781,6 @@ static void iwl_mvm_thermal_zone_register(struct iwl_mvm *mvm)
+ 		mvm->tz_device.temp_trips[i] = S16_MIN;
+ }
+ 
+-static const u32 iwl_mvm_cdev_budgets[] = {
+-	2000,	/* cooling state 0 */
+-	1800,	/* cooling state 1 */
+-	1600,	/* cooling state 2 */
+-	1400,	/* cooling state 3 */
+-	1200,	/* cooling state 4 */
+-	1000,	/* cooling state 5 */
+-	900,	/* cooling state 6 */
+-	800,	/* cooling state 7 */
+-	700,	/* cooling state 8 */
+-	650,	/* cooling state 9 */
+-	600,	/* cooling state 10 */
+-	550,	/* cooling state 11 */
+-	500,	/* cooling state 12 */
+-	450,	/* cooling state 13 */
+-	400,	/* cooling state 14 */
+-	350,	/* cooling state 15 */
+-	300,	/* cooling state 16 */
+-	250,	/* cooling state 17 */
+-	200,	/* cooling state 18 */
+-	150,	/* cooling state 19 */
+-};
+-
+ static int iwl_mvm_tcool_get_max_state(struct thermal_cooling_device *cdev,
+ 				       unsigned long *state)
+ {
+@@ -797,6 +798,7 @@ static int iwl_mvm_tcool_get_cur_state(struct thermal_cooling_device *cdev,
+ 		return -EBUSY;
+ 
+ 	*state = mvm->cooling_dev.cur_state;
 +
-+static inline u16 sta_stats_encode_rate(struct ieee80211_rx_status *s)
-+{
-+	u16 r = s->rate_idx;
-+
-+	if (s->vht_flag & RX_VHT_FLAG_80MHZ)
-+		r |= RATE_INFO_BW_80 << STA_STATS_RATE_BW_SHIFT;
-+	else if (s->vht_flag & RX_VHT_FLAG_160MHZ)
-+		r |= RATE_INFO_BW_160 << STA_STATS_RATE_BW_SHIFT;
-+	else if (s->flag & RX_FLAG_40MHZ)
-+		r |= RATE_INFO_BW_40 << STA_STATS_RATE_BW_SHIFT;
-+	else if (s->flag & RX_FLAG_10MHZ)
-+		r |= RATE_INFO_BW_10 << STA_STATS_RATE_BW_SHIFT;
-+	else if (s->flag & RX_FLAG_5MHZ)
-+		r |= RATE_INFO_BW_5 << STA_STATS_RATE_BW_SHIFT;
-+	else
-+		r |= RATE_INFO_BW_20 << STA_STATS_RATE_BW_SHIFT;
-+
-+	if (s->flag & RX_FLAG_SHORT_GI)
-+		r |= STA_STATS_RATE_SGI;
-+
-+	if (s->flag & RX_FLAG_VHT)
-+		r |= STA_STATS_RATE_VHT | (s->vht_nss << 4);
-+	else if (s->flag & RX_FLAG_HT)
-+		r |= STA_STATS_RATE_HT;
-+	else
-+		r |= STA_STATS_RATE_LEGACY | (s->band << 4);
-+
-+	return r;
-+}
-+
- #endif /* STA_INFO_H */
+ 	return 0;
+ }
+ 
+@@ -820,7 +822,7 @@ static int iwl_mvm_tcool_set_cur_state(struct thermal_cooling_device *cdev,
+ 	}
+ 
+ 	ret = iwl_mvm_ctdp_command(mvm, CTDP_CMD_OPERATION_START,
+-				   iwl_mvm_cdev_budgets[new_state]);
++				   new_state);
+ 
+ unlock:
+ 	mutex_unlock(&mvm->mutex);
 -- 
 2.5.0
 
