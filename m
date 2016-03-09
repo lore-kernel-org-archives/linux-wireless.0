@@ -1,145 +1,157 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:36079 "EHLO
-	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755926AbcC2GGr (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 02:06:47 -0400
-Received: by mail-pf0-f173.google.com with SMTP id u190so6575228pfb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2016 23:06:46 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Pontus Fuchs <pontus.fuchs@gmail.com>
-Subject: [PATCH 08/16] wcn36xx: Remove sta pointer in private vif struct
-Date: Mon, 28 Mar 2016 23:06:25 -0700
-Message-Id: <1459231593-360-9-git-send-email-bjorn.andersson@linaro.org> (sfid-20160329_080913_495848_EA6D5192)
-In-Reply-To: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
+Received: from mga03.intel.com ([134.134.136.65]:62255 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933653AbcCIRqb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2016 12:46:31 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Gregory Greenman <gregory.greenman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 18/21] iwlwifi: pcie: avoid restocks inside rx loop if not emergency
+Date: Wed,  9 Mar 2016 19:45:47 +0200
+Message-Id: <1457545550-30677-18-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160309_185951_389596_8FDC1E35)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+From: Gregory Greenman <gregory.greenman@intel.com>
 
-This does not work with multiple sta's in a vif.
+When trying to reach high Rx throughput of more than 500Mbps on
+a device with a relatively weak CPU (Atom x5-Z8500), CPU utilization
+may become a bottleneck. Analysis showed that we are looping in
+iwl_pcie_rx_handle for very long periods which led to starvation
+of other threads (iwl_pcie_rx_handle runs with _bh disabled).
+We were handling Rx and allocating new buffers and the new buffers
+were ready quickly enough to be available before we had finished
+handling all the buffers available in the hardware. As a
+consequence, we called iwl_pcie_rxq_restock to refill the hardware
+with the new buffers, and start again handling new buffers without
+exiting the function. Since we read the hardware pointer again when
+we goto restart, new buffers were handled immediately instead of
+exiting the function.
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+This patch avoids refilling RBs inside rx handling loop, unless an
+emergency situation is reached. It also doesn't read the hardware
+pointer again unless we are in an emergency (unlikely) case.
+This significantly reduce the maximal time we spend in
+iwl_pcie_rx_handle with _bh disabled.
+
+Signed-off-by: Gregory Greenman <gregory.greenman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/wcn36xx/main.c    |  3 ---
- drivers/net/wireless/ath/wcn36xx/smd.c     | 28 +++++++++++++++-------------
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  1 -
- 3 files changed, 15 insertions(+), 17 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 59 ++++++++++++++++------------
+ 1 file changed, 33 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index a23738deb5b3..7c06ca9fdd2c 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -796,7 +796,6 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		    vif, sta->addr);
- 
- 	spin_lock_init(&sta_priv->ampdu_lock);
--	vif_priv->sta = sta_priv;
- 	sta_priv->vif = vif_priv;
- 	/*
- 	 * For STA mode HW will be configured on BSS_CHANGED_ASSOC because
-@@ -815,14 +814,12 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw,
- 			      struct ieee80211_sta *sta)
- {
- 	struct wcn36xx *wcn = hw->priv;
--	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
- 	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
- 
- 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta remove vif %p sta %pM index %d\n",
- 		    vif, sta->addr, sta_priv->sta_index);
- 
- 	wcn36xx_smd_delete_sta(wcn, sta_priv->sta_index);
--	vif_priv->sta = NULL;
- 	sta_priv->vif = NULL;
- 	return 0;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 98524a0..4be3c35 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -231,6 +231,9 @@ static void iwl_pcie_rxq_check_wrptr(struct iwl_trans *trans)
+ 	}
  }
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index b75e7211049d..887781dff110 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1170,6 +1170,7 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
  
- static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
- 				      struct ieee80211_vif *vif,
-+				      struct ieee80211_sta *sta,
- 				      void *buf,
- 				      size_t len)
++/*
++ * iwl_pcie_rxq_mq_restock - restock implementation for multi-queue rx
++ */
+ static void iwl_pcie_rxq_mq_restock(struct iwl_trans *trans,
+ 				    struct iwl_rxq *rxq)
  {
-@@ -1200,9 +1201,10 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
+@@ -277,17 +280,10 @@ static void iwl_pcie_rxq_mq_restock(struct iwl_trans *trans,
+ }
  
- 	vif_priv->bss_index = params->bss_index;
- 
--	if (vif_priv->sta) {
--		vif_priv->sta->bss_sta_index =  params->bss_sta_index;
--		vif_priv->sta->bss_dpu_desc_index = params->dpu_desc_index;
-+	if (sta) {
-+		struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
-+		sta_priv->bss_sta_index = params->bss_sta_index;
-+		sta_priv->bss_dpu_desc_index = params->dpu_desc_index;
- 	}
- 
- 	vif_priv->self_ucast_dpu_sign = params->ucast_dpu_signature;
-@@ -1329,6 +1331,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 	}
- 	ret = wcn36xx_smd_config_bss_rsp(wcn,
- 					 vif,
-+					 sta,
- 					 wcn->hal_buf,
- 					 wcn->hal_rsp_len);
- 	if (ret) {
-@@ -2053,25 +2056,24 @@ static int wcn36xx_smd_delete_sta_context_ind(struct wcn36xx *wcn,
- {
- 	struct wcn36xx_hal_delete_sta_context_ind_msg *rsp = buf;
- 	struct wcn36xx_vif *tmp;
--	struct ieee80211_sta *sta = NULL;
-+	struct ieee80211_sta *sta;
- 
- 	if (len != sizeof(*rsp)) {
- 		wcn36xx_warn("Corrupted delete sta indication\n");
- 		return -EIO;
- 	}
- 
-+	wcn36xx_dbg(WCN36XX_DBG_HAL, "delete station indication %pM index %d\n",
-+		    rsp->addr2, rsp->sta_id);
-+
- 	list_for_each_entry(tmp, &wcn->vif_list, list) {
--		if (sta && (tmp->sta->sta_index == rsp->sta_id)) {
--			sta = container_of((void *)tmp->sta,
--						 struct ieee80211_sta,
--						 drv_priv);
--			wcn36xx_dbg(WCN36XX_DBG_HAL,
--				    "delete station indication %pM index %d\n",
--				    rsp->addr2,
--				    rsp->sta_id);
-+		rcu_read_lock();
-+		sta = ieee80211_find_sta(wcn36xx_priv_to_vif(tmp), rsp->addr2);
-+		if (sta)
- 			ieee80211_report_low_ack(sta, 0);
-+		rcu_read_unlock();
-+		if (sta)
- 			return 0;
--		}
- 	}
- 
- 	wcn36xx_warn("STA with addr %pM and index %d not found\n",
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index c368a34c8de7..54000db0af1a 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -125,7 +125,6 @@ struct wcn36xx_platform_ctrl_ops {
+ /*
+- * iwl_pcie_rxq_restock - refill RX queue from pre-allocated pool
+- *
+- * If there are slots in the RX queue that need to be restocked,
+- * and we have free pre-allocated buffers, fill the ranks as much
+- * as we can, pulling from rx_free.
+- *
+- * This moves the 'write' index forward to catch up with 'processed', and
+- * also updates the memory address in the firmware to reference the new
+- * target buffer.
++ * iwl_pcie_rxq_sq_restock - restock implementation for single queue rx
   */
- struct wcn36xx_vif {
- 	struct list_head list;
--	struct wcn36xx_sta *sta;
- 	u8 dtim_period;
- 	enum ani_ed_type encrypt_type;
- 	bool is_joining;
+-static void iwl_pcie_rxq_restock(struct iwl_trans *trans, struct iwl_rxq *rxq)
++static void iwl_pcie_rxq_sq_restock(struct iwl_trans *trans,
++				    struct iwl_rxq *rxq)
+ {
+ 	struct iwl_rx_mem_buffer *rxb;
+ 
+@@ -332,6 +328,26 @@ static void iwl_pcie_rxq_restock(struct iwl_trans *trans, struct iwl_rxq *rxq)
+ }
+ 
+ /*
++ * iwl_pcie_rxq_restock - refill RX queue from pre-allocated pool
++ *
++ * If there are slots in the RX queue that need to be restocked,
++ * and we have free pre-allocated buffers, fill the ranks as much
++ * as we can, pulling from rx_free.
++ *
++ * This moves the 'write' index forward to catch up with 'processed', and
++ * also updates the memory address in the firmware to reference the new
++ * target buffer.
++ */
++static
++void iwl_pcie_rxq_restock(struct iwl_trans *trans, struct iwl_rxq *rxq)
++{
++	if (trans->cfg->mq_rx_supported)
++		iwl_pcie_rxq_mq_restock(trans, rxq);
++	else
++		iwl_pcie_rxq_sq_restock(trans, rxq);
++}
++
++/*
+  * iwl_pcie_rx_alloc_page - allocates and returns a page.
+  *
+  */
+@@ -907,7 +923,7 @@ int iwl_pcie_rx_init(struct iwl_trans *trans)
+ 	if (trans->cfg->mq_rx_supported) {
+ 		iwl_pcie_rx_mq_hw_init(trans);
+ 	} else {
+-		iwl_pcie_rxq_restock(trans, def_rxq);
++		iwl_pcie_rxq_sq_restock(trans, def_rxq);
+ 		iwl_pcie_rx_hw_init(trans, def_rxq);
+ 	}
+ 
+@@ -1222,24 +1238,13 @@ restart:
+ 				count = 0;
+ 				if (rxq->used_count < rxq->queue_size / 3)
+ 					emergency = false;
++
++				rxq->read = i;
+ 				spin_unlock(&rxq->lock);
+ 				iwl_pcie_rxq_alloc_rbs(trans, GFP_ATOMIC, rxq);
+-				spin_lock(&rxq->lock);
+-			}
+-		}
+-		/* handle restock for three cases, can be all of them at once:
+-		* - we just pulled buffers from the allocator
+-		* - we have 8+ unstolen pages accumulated
+-		* - we are in emergency and allocated buffers
+-		 */
+-		if (rxq->free_count >=  RX_CLAIM_REQ_ALLOC) {
+-			rxq->read = i;
+-			spin_unlock(&rxq->lock);
+-			if (trans->cfg->mq_rx_supported)
+-				iwl_pcie_rxq_mq_restock(trans, rxq);
+-			else
+ 				iwl_pcie_rxq_restock(trans, rxq);
+-			goto restart;
++				goto restart;
++			}
+ 		}
+ 	}
+ out:
+@@ -1264,6 +1269,8 @@ out:
+ 
+ 	if (rxq->napi.poll)
+ 		napi_gro_flush(&rxq->napi, false);
++
++	iwl_pcie_rxq_restock(trans, rxq);
+ }
+ 
+ static struct iwl_trans_pcie *iwl_pcie_get_trans_pcie(struct msix_entry *entry)
 -- 
 2.5.0
 
