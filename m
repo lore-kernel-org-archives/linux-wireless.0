@@ -1,89 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:36151 "EHLO
-	mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752627AbcCYX5D (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:3712 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751959AbcCIHcS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Mar 2016 19:57:03 -0400
-Received: by mail-qk0-f195.google.com with SMTP id e124so4551072qkc.3
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2016 16:57:03 -0700 (PDT)
-Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
-To: Evgeny Novikov <novikov@ispras.ru>,
-	Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>,
-	chris holcombe <chris.holcombe@canonical.com>,
-	Chris MacNaughton <chris.macnaughton@canonical.com>
-References: <56F4266B.4060605@gmail.com> <1943931458892174@web3o.yandex.ru>
-From: Till Kamppeter <till.kamppeter@gmail.com>
-Message-ID: <56F5D04A.20506@gmail.com> (sfid-20160326_005707_344534_E2FEDC57)
-Date: Fri, 25 Mar 2016 20:56:58 -0300
+	Wed, 9 Mar 2016 02:32:18 -0500
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>, <kvalo@codeaurora.org>,
+	<mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH v1 2/2] ath10k: Remove debugfs support for Per STA total rx duration
+Date: Wed, 9 Mar 2016 13:01:21 +0530
+Message-ID: <1457508681-17546-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160309_083228_633890_3C87127E)
+In-Reply-To: <1457508681-17546-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1457508681-17546-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1943931458892174@web3o.yandex.ru>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/25/2016 04:49 AM, Evgeny Novikov wrote:
-> Hi,
->
-> I see briefly all proposals and suggest the following.
->
-> Ignore definitely trash proposals for which we even can't expect anything good:
-> ABHISHEK KUMAR SINGH - AUTOMATIC GUN FIRING USING ULTRASONIC RADAR - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/6488763748319232/
-> Rihab - GirlySpace - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/6439770653720576/
-> Abraham Masri - Kedos Operating System - Proposal Draft - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/5824313382928384/ (Greg marked this proposal as not valid)
-> Wenhui Zhang - LLVM - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/5513414914867200/ (Jan-Simon marked it as spam)
-> devesh8091 - Penguin - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/4940939340546048/
-> Ricky Muhammad - The Linux Foundation - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/5458068905132032/ (Greg pointed what to do but the student ignored this)
->
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-I agree, all ignored now. Either no or no sufficient content or content 
-which does not make sense.
+cfg80211/nl80211 interface changes for per STA total rx-duration and
+very basic 'ath10k_sta_statistics'  mac80211 callback is implemented
+to extend support for per station statistics from the driver.
 
-> This student suggested two proposals that aren't good and likely the student isn't going to improve them. So I suggest to ignore them if Greg doesn't mind:
-> Sandhya - IIO driver - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/5372313474170880/
-> Sandhya - memory management latency tracing - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/5404748865863680/
->
+Also provision in 'iw dev wlan#N station dump' to parse rx-duration
+is supported. So its safer to remove the debugfs entry for per STA
+rx-duration
 
-Final PDF contains exactly the same as the abstract, no info about 
-school, course type, already acquired knowledge, ... I would ignore 
-these. Greg, please confirm.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+Dependencies:
 
-> This student creates 3 different applications for 3 different projects without providing any particular details. I see his applications a bit and this doesn't look like he really wants and can to implement something valuable. So I suggest to just ignore his proposals:
-> Ravike14 - GSOC 2016- The Linux Foundation (Driver Backport) - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/5414085923438592/
-> Ravike14 - GSOC 2016- The Linux Foundation (Driver Backport) - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/6630431633965056/
-> Ravike14 - GSOC 2016- The Linux Foundation (General kernel work) - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/6384381044195328/
->
+1. cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION
+2. iw: Add support for NL80211_STA_INFO_RX_DURATION netlink.
+3. ath10k: Add support for ath10k_sta_statistics support
+4. ath10k: Enable debugfs provision to enable Peer Stats feature
 
-For me the now revealed final PDFs from Ravike14 look OK. Kernel guys, 
-please check.
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c |   24 ------------------------
+ 1 file changed, 24 deletions(-)
 
-> Select one of the proposals for the same project if it isn't really required to have two or more students working concurrently/collaboratively:
-> Erick 2206 - Diagnose My Ceph Cluster - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/5040149662531584/ and penguinRaider - Diagnose my ceph cluster - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/6137977797345280/ (at the moment both are accepted)
-
-Chris (MacNaughton and Holcombe), can you check, you told that you had 
-already a student. Please "WANT TO MENTOR" and star the correct CEPH 
-applications.
-
-> narendasan - Proposal for work on QEMU API for Rust - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/5184290644033536/ and DrewSidman - QEMU API for Rust - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/6135625933651968/ (at the moment both are accepted although the second application even doesn't have any proposal just the abstract)
->
-
-Chris (MacNaughton and Holcombe), same as for the CEPH applications.
-
->
-> The rest proposals (~9) are either already thoroughly reviewed and accepted or need this ASAP.
->
-
-I am taking care of the 5 OpenPrinting proposals, please take care of 
-all the others, mark with IGNORE what you for sure do not want to mentor 
-and mark with a star what you want to mentor and also click "WANT TO 
-MENTOR" on the proposal page. Please try to get two mentors per student, 
-if only one is actually doing the mentoring work, the other is a backup.
-
-Please tell if you are in doubt with something.
-
-    Till
+diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+index 4c459f2..0f24327 100644
+--- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
++++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+@@ -271,28 +271,6 @@ static const struct file_operations fops_delba = {
+ 	.llseek = default_llseek,
+ };
+ 
+-static ssize_t ath10k_dbg_sta_read_rx_duration(struct file *file,
+-					       char __user *user_buf,
+-					       size_t count, loff_t *ppos)
+-{
+-	struct ieee80211_sta *sta = file->private_data;
+-	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
+-	char buf[100];
+-	int len = 0;
+-
+-	len = scnprintf(buf, sizeof(buf),
+-			"%llu usecs\n", arsta->rx_duration);
+-
+-	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-}
+-
+-static const struct file_operations fops_rx_duration = {
+-	.read = ath10k_dbg_sta_read_rx_duration,
+-	.open = simple_open,
+-	.owner = THIS_MODULE,
+-	.llseek = default_llseek,
+-};
+-
+ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			    struct ieee80211_sta *sta, struct dentry *dir)
+ {
+@@ -301,6 +279,4 @@ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	debugfs_create_file("addba", S_IWUSR, dir, sta, &fops_addba);
+ 	debugfs_create_file("addba_resp", S_IWUSR, dir, sta, &fops_addba_resp);
+ 	debugfs_create_file("delba", S_IWUSR, dir, sta, &fops_delba);
+-	debugfs_create_file("rx_duration", S_IRUGO, dir, sta,
+-			    &fops_rx_duration);
+ }
+-- 
+1.7.9.5
 
