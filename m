@@ -1,85 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47809 "EHLO mx1.redhat.com"
+Received: from mleia.com ([178.79.152.223]:52408 "EHLO mail.mleia.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932207AbcCKT5f (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Mar 2016 14:57:35 -0500
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 6/7] rtl8xxxu: Update some register definitions
-Date: Fri, 11 Mar 2016 14:57:33 -0500
-Message-Id: <1457726254-28178-7-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160311_205745_122227_65B21089)
-In-Reply-To: <1457726254-28178-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1457726254-28178-1-git-send-email-Jes.Sorensen@redhat.com>
+	id S964797AbcCIXaj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2016 18:30:39 -0500
+Subject: Re: [PATCH] staging: wilc1000: fix check of kthread_run() return
+ value
+To: Julian Calaby <julian.calaby@gmail.com>
+References: <1457565194-31533-1-git-send-email-vz@mleia.com>
+ <CAGRGNgUMViiR+ruvLHnwMLHUxOK3+uW7634Hpgn9gN+djCOtbw@mail.gmail.com>
+Cc: Glen Lee <glen.lee@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Leo Kim <leo.kim@atmel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+From: Vladimir Zapolskiy <vz@mleia.com>
+Message-ID: <56E0B21D.1010503@mleia.com> (sfid-20160310_003047_459161_B5A4342F)
+Date: Thu, 10 Mar 2016 01:30:37 +0200
+MIME-Version: 1.0
+In-Reply-To: <CAGRGNgUMViiR+ruvLHnwMLHUxOK3+uW7634Hpgn9gN+djCOtbw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Hi Julian,
 
-Improve descriptive names of some registers and add some additional
-registers only found on nextgen chips.
+On 10.03.2016 01:27, Julian Calaby wrote:
+> Hi Vladimir,
+> 
+> On Thu, Mar 10, 2016 at 10:13 AM, Vladimir Zapolskiy <vz@mleia.com> wrote:
+>> The kthread_run() function returns either a valid task_struct or
+>> ERR_PTR() value, check for NULL is invalid. The change fixes potential
+>> oops, e.g. in OOM situation.
+>>
+>> Signed-off-by: Vladimir Zapolskiy <vz@mleia.com>
+>> ---
+>>  drivers/staging/wilc1000/linux_wlan.c | 4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+>> index 54fe9d7..5077c30 100644
+>> --- a/drivers/staging/wilc1000/linux_wlan.c
+>> +++ b/drivers/staging/wilc1000/linux_wlan.c
+>> @@ -849,10 +849,10 @@ static int wlan_initialize_threads(struct net_device *dev)
+>>         PRINT_D(INIT_DBG, "Creating kthread for transmission\n");
+>>         wilc->txq_thread = kthread_run(linux_wlan_txq_task, (void *)dev,
+>>                                      "K_TXQ_TASK");
+>> -       if (!wilc->txq_thread) {
+>> +       if (IS_ERR(wilc->txq_thread)) {
+>>                 PRINT_ER("couldn't create TXQ thread\n");
+>>                 wilc->close = 0;
+>> -               return -ENOBUFS;
+>> +               return PTR_ERR(wilc->txq_thread);
+> 
+> Are you sure changing the error returned is correct? Do all the
+> callers of wlan_initialize_threads() handle the full range of errors
+> from kthread_run()?
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  | 31 +++++++++++++++++-----
- 1 file changed, 24 insertions(+), 7 deletions(-)
+Have you checked the driver?
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-index e545e84..ade42fe 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-@@ -417,13 +417,20 @@
- 
- /*  spec version 11 */
- /* 0x0400 ~ 0x047F	Protocol Configuration */
--#define REG_VOQ_INFORMATION		0x0400
--#define REG_VIQ_INFORMATION		0x0404
--#define REG_BEQ_INFORMATION		0x0408
--#define REG_BKQ_INFORMATION		0x040c
--#define REG_MGQ_INFORMATION		0x0410
--#define REG_HGQ_INFORMATION		0x0414
--#define REG_BCNQ_INFORMATION		0x0418
-+/* 8192c, 8192d */
-+#define REG_VOQ_INFO			0x0400
-+#define REG_VIQ_INFO			0x0404
-+#define REG_BEQ_INFO			0x0408
-+#define REG_BKQ_INFO			0x040c
-+/* 8188e, 8723a, 8812a, 8821a, 8192e, 8723b */
-+#define REG_Q0_INFO			0x400
-+#define REG_Q1_INFO			0x404
-+#define REG_Q2_INFO			0x408
-+#define REG_Q3_INFO			0x40c
-+
-+#define REG_MGQ_INFO			0x0410
-+#define REG_HGQ_INFO			0x0414
-+#define REG_BCNQ_INFO			0x0418
- 
- #define REG_CPU_MGQ_INFORMATION		0x041c
- #define REG_FWHW_TXQ_CTRL		0x0420
-@@ -494,6 +501,9 @@
- #define REG_DATA_SUBCHANNEL		0x0483
- /* 8723au */
- #define REG_INIDATA_RATE_SEL		0x0484
-+/* MACID_SLEEP_1/3 for 8723b, 8192e, 8812a, 8821a */
-+#define REG_MACID_SLEEP_3_8732B		0x0484
-+#define REG_MACID_SLEEP_1_8732B		0x0488
- 
- #define REG_POWER_STATUS		0x04a4
- #define REG_POWER_STAGE1		0x04b4
-@@ -508,6 +518,13 @@
- #define REG_RTS_MAX_AGGR_NUM		0x04cb
- #define REG_BAR_MODE_CTRL		0x04cc
- #define REG_RA_TRY_RATE_AGG_LMT		0x04cf
-+/* MACID_DROP for 8723a */
-+#define REG_MACID_DROP_8732A		0x04d0
-+/* EARLY_MODE_CONTROL 8188e */
-+#define REG_EARLY_MODE_CONTROL_8188E	0x04d0
-+/* MACID_SLEEP_2 for 8723b, 8192e, 8812a, 8821a */
-+#define REG_MACID_SLEEP_2_8732B		0x04d0
-+#define REG_MACID_SLEEP			0x04d4
- #define REG_NQOS_SEQ			0x04dc
- #define REG_QOS_SEQ			0x04de
- #define REG_NEED_CPU_HANDLE		0x04e0
--- 
-2.5.0
+This function is called once on initialization, the check on the upper layer
+has "if (ret < 0) goto exit_badly;" form.
 
+--
+With best wishes,
+Vladimir
