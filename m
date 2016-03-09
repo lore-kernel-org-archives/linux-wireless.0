@@ -1,34 +1,116 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56408 "EHLO sipsolutions.net"
+Received: from mga03.intel.com ([134.134.136.65]:62255 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753089AbcCCPHE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 10:07:04 -0500
-Message-ID: <1457017621.2044.17.camel@sipsolutions.net> (sfid-20160303_160717_834455_9D34B9E6)
-Subject: Re: [PATCH v2 2/2] mac80211: minstrel_ht: set A-MSDU tx limits
- based on selected max_prob_rate
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org
-Cc: egrumbach@gmail.com
-Date: Thu, 03 Mar 2016 16:07:01 +0100
-In-Reply-To: <56D85246.8070306@openwrt.org>
-References: <1456306140-78485-1-git-send-email-nbd@openwrt.org>
-	 <1456306140-78485-2-git-send-email-nbd@openwrt.org>
-	 <1457016949.2044.12.camel@sipsolutions.net> <56D85246.8070306@openwrt.org>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1753753AbcCIRqY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2016 12:46:24 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 15/21] iwlwifi: mvm: don't let NDPs mess the packet tracking
+Date: Wed,  9 Mar 2016 19:45:44 +0200
+Message-Id: <1457545550-30677-15-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160309_185950_350850_7C1A8454)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-03-03 at 16:03 +0100, Felix Fietkau wrote:
-> 
-> > This isn't *quite* right, since you have to take an 802.11 header
-> > (vs.
-> > an ethernet header) into account, I think?
-> It's only a rough approximation anyway to prevent very large A-MSDUs
-> from being created with low rates.
-> 
+We need to track the next packet that we will reclaim in
+order to know when the Tx queues are empty. This is useful
+when we open or tear down an A-MPDU session which requires
+to switch queue.
+The next packet being reclaimed is identified by its WiFi
+sequence number and this is relevant only when we use QoS.
+QoS NDPs do have a TID but have a meaningless sequence
+number. The spec mandates the receiver to ignore the
+sequence number in this case, allowing the transmitter to
+put any sequence number. Our implementation leaves it 0.
+When we reclaim a QoS NDP, we can't update the next_relcaim
+counter since the sequence number of the QoS NDP itself is
+invalid.
+We used to update the next_reclaim based on the sequence
+number of the QoS NDP which reset it to 1 (0 + 1) and
+because of this, we never knew when the queue got empty.
+This had to sad consequence to stuck the A-MPDU state
+machine in a transient state.
+To fix this, don't update next_reclaim when we reclaim
+a QoS NDP.
 
-Right, but it seemed like the intent was to allow two full-MTU sized
-frames to be combined, which this doesn't.
+Alesya saw this bug when testing u-APSD. Because the
+A-MPDU state machine was stuck in EMPTYING_DELBA, we
+updated mac80211 that we still have frames for that
+station when it got back to sleep. mac80211 then wrongly
+set the TIM bit in the beacon and requested to release
+non-existent frames from the A-MPDU queue. This led to
+a situation where the client was trying to poll frames
+but we had no frames to send.
 
-johannes
+Reported-by: Alesya Shapira <alesya.shapira@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/tx.c | 29 ++++++++++++++++++++++++++---
+ 1 file changed, 26 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+index 271e8da..75870e6 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tx.c
+@@ -7,6 +7,7 @@
+  *
+  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016        Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -963,6 +964,7 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
+ 	struct sk_buff_head skbs;
+ 	u8 skb_freed = 0;
+ 	u16 next_reclaimed, seq_ctl;
++	bool is_ndp = false;
+ 
+ 	__skb_queue_head_init(&skbs);
+ 
+@@ -1016,6 +1018,20 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
+ 			seq_ctl = le16_to_cpu(hdr->seq_ctrl);
+ 		}
+ 
++		if (unlikely(!seq_ctl)) {
++			struct ieee80211_hdr *hdr = (void *)skb->data;
++
++			/*
++			 * If it is an NDP, we can't update next_reclaim since
++			 * its sequence control is 0. Note that for that same
++			 * reason, NDPs are never sent to A-MPDU'able queues
++			 * so that we can never have more than one freed frame
++			 * for a single Tx resonse (see WARN_ON below).
++			 */
++			if (ieee80211_is_qos_nullfunc(hdr->frame_control))
++				is_ndp = true;
++		}
++
+ 		/*
+ 		 * TODO: this is not accurate if we are freeing more than one
+ 		 * packet.
+@@ -1079,9 +1095,16 @@ static void iwl_mvm_rx_tx_cmd_single(struct iwl_mvm *mvm,
+ 			bool send_eosp_ndp = false;
+ 
+ 			spin_lock_bh(&mvmsta->lock);
+-			tid_data->next_reclaimed = next_reclaimed;
+-			IWL_DEBUG_TX_REPLY(mvm, "Next reclaimed packet:%d\n",
+-					   next_reclaimed);
++			if (!is_ndp) {
++				tid_data->next_reclaimed = next_reclaimed;
++				IWL_DEBUG_TX_REPLY(mvm,
++						   "Next reclaimed packet:%d\n",
++						   next_reclaimed);
++			} else {
++				IWL_DEBUG_TX_REPLY(mvm,
++						   "NDP - don't update next_reclaimed\n");
++			}
++
+ 			iwl_mvm_check_ratid_empty(mvm, sta, tid);
+ 
+ 			if (mvmsta->sleep_tx_count) {
+-- 
+2.5.0
+
