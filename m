@@ -1,35 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:33441 "EHLO
-	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752190AbcCJRaX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 12:30:23 -0500
-Received: by mail-wm0-f47.google.com with SMTP id l68so38182264wml.0
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2016 09:30:22 -0800 (PST)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: New firmware for RT2870
-To: linux-wireless <linux-wireless@vger.kernel.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <56E1AF2B.7030206@gmail.com> (sfid-20160310_183026_750279_F76374C6)
-Date: Thu, 10 Mar 2016 18:30:19 +0100
+Received: from mga02.intel.com ([134.134.136.20]:10917 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754085AbcCIW2Q (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2016 17:28:16 -0500
+Date: Wed, 9 Mar 2016 23:28:12 +0100
+From: Samuel Ortiz <sameo@linux.intel.com>
+To: Jean Delvare <jdelvare@suse.de>
+Cc: linux-wireless@vger.kernel.org,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+Subject: Re: [PATCH] NFC: microread: Drop platform data header file
+Message-ID: <20160309222812.GA21618@zurbaran.home> (sfid-20160309_232819_692078_5728299E)
+References: <20160121092012.0e0f73e1@endymion.delvare>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160121092012.0e0f73e1@endymion.delvare>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger wrote:
+Hi Jean,
 
-> I downloaded the firmware from b.k.o. It had very little effect on my no-name 
-> adapter with ID 148f:3070. It still gets ping losses of 10-15%.
+On Thu, Jan 21, 2016 at 09:20:12AM +0100, Jean Delvare wrote:
+> Originally I only wanted to drop the unneeded inclusion of
+> <linux/i2c.h>, but then noticed that struct
+> microread_nfc_platform_data isn't actually used, and
+> MICROREAD_DRIVER_NAME is redefined in the only file where it is used,
+> so we can get rid of the header file and dead code altogether.
+> 
+> Signed-off-by: Jean Delvare <jdelvare@suse.de>
+> Cc: Eric Lapuyade <eric.lapuyade@intel.com>
+> Cc: Lauro Ramos Venancio <lauro.venancio@openbossa.org>
+> Cc: Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
+> Cc: Samuel Ortiz <sameo@linux.intel.com>
+> ---
+> Makes me wonder if this driver is used at all? I can't see any
+> instance in the kernel tree.
+The mei part of it is used.
 
-I have tested 0.36 on a 148f:3070 (high quality) device for 4 hours,
-and it has worked *flawlessly* .
-(Fedora 23 + updates-testing.repo - kernel-4.4.4-301 - wpa_supplicant-2.4-7
-AP: Buffalo WZR-HP-G300NH2 running OpenWrt-snapshots-2016-Mar-09 [1])
 
-Last year I have been in touch with Mediatek crew, and they said(12/09/2015):
-"According to the engineers comment, the firmware didn't change much
-these years, just some bbp register update and led stuff."
+>  MAINTAINERS                             |    1 
+>  drivers/nfc/microread/i2c.c             |    8 -------
+>  include/linux/platform_data/microread.h |   35 --------------------------------
+>  3 files changed, 44 deletions(-)
+Applied, thanks.
 
-
-[1] Friends don't let friends run stock router firmware.
+Cheers,
+Samuel.
