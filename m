@@ -1,45 +1,269 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0078.hostedemail.com ([216.40.44.78]:52602 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751271AbcCRDhm (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 23:37:42 -0400
-Message-ID: <1458272258.9556.46.camel@perches.com> (sfid-20160318_043804_079261_8507BFED)
-Subject: Re: [PATCH] rtlwifi: btcoexist: Convert BTC_PRINTK to btc_<foo>_dbg
-From: Joe Perches <joe@perches.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	linux-kernel@vger.kernel.org
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Thu, 17 Mar 2016 20:37:38 -0700
-In-Reply-To: <56EB6DD9.3000300@lwfinger.net>
-References: <4672f9efb37df545ae504d51ca626bf34237fa63.1458258337.git.joe@perches.com>
-	 <56EB6DD9.3000300@lwfinger.net>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+Received: from mga03.intel.com ([134.134.136.65]:20791 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933550AbcCIRqD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2016 12:46:03 -0500
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 05/21] iwlwifi: refactor the code that reads the MAC address from the NVM
+Date: Wed,  9 Mar 2016 19:45:34 +0200
+Message-Id: <1457545550-30677-5-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160309_184609_137683_AF344130)
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-03-17 at 21:54 -0500, Larry Finger wrote:
-> On 03/17/2016 07:00 PM, Joe Perches wrote:
-> > Use a more common logging style.
+From: Sara Sharon <sara.sharon@intel.com>
 
-[ 300K+ quote without comment ]
+It makes it slightly easier to follow. Pass the pointer to
+the transport which allows to read WFMP_MAC_ADDR_X register
+only when needed and to use IWL_ERR instead of the less
+commonly used IWL_ERR_DEV logger macro.
 
-> Joe,
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c | 97 ++++++++++++----------
+ drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h |  5 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/nvm.c       | 11 +--
+ 3 files changed, 55 insertions(+), 58 deletions(-)
 
-Hi Larry.
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+index 3481357..5e6b90d 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c
+@@ -7,6 +7,7 @@
+  *
+  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -69,6 +70,7 @@
+ #include "iwl-drv.h"
+ #include "iwl-modparams.h"
+ #include "iwl-nvm-parse.h"
++#include "iwl-prph.h"
+ 
+ /* NVM offsets (in words) definitions */
+ enum wkp_nvm_offsets {
+@@ -522,27 +524,11 @@ static void iwl_set_radio_cfg(const struct iwl_cfg *cfg,
+ 	data->valid_rx_ant = NVM_RF_CFG_RX_ANT_MSK_FAMILY_8000(radio_cfg);
+ }
+ 
+-static void iwl_set_hw_address(const struct iwl_cfg *cfg,
+-			       struct iwl_nvm_data *data,
+-			       const __le16 *nvm_sec)
+-{
+-	const u8 *hw_addr = (const u8 *)(nvm_sec + HW_ADDR);
+-
+-	/* The byte order is little endian 16 bit, meaning 214365 */
+-	data->hw_addr[0] = hw_addr[1];
+-	data->hw_addr[1] = hw_addr[0];
+-	data->hw_addr[2] = hw_addr[3];
+-	data->hw_addr[3] = hw_addr[2];
+-	data->hw_addr[4] = hw_addr[5];
+-	data->hw_addr[5] = hw_addr[4];
+-}
+-
+-static void iwl_set_hw_address_family_8000(struct device *dev,
++static void iwl_set_hw_address_family_8000(struct iwl_trans *trans,
+ 					   const struct iwl_cfg *cfg,
+ 					   struct iwl_nvm_data *data,
+ 					   const __le16 *mac_override,
+-					   const __le16 *nvm_hw,
+-					   __le32 mac_addr0, __le32 mac_addr1)
++					   const __le16 *nvm_hw)
+ {
+ 	const u8 *hw_addr;
+ 
+@@ -568,11 +554,16 @@ static void iwl_set_hw_address_family_8000(struct device *dev,
+ 		    memcmp(reserved_mac, hw_addr, ETH_ALEN) != 0)
+ 			return;
+ 
+-		IWL_ERR_DEV(dev,
+-			    "mac address from nvm override section is not valid\n");
++		IWL_ERR(trans,
++			"mac address from nvm override section is not valid\n");
+ 	}
+ 
+ 	if (nvm_hw) {
++		/* read the mac address from WFMP registers */
++		__le32 mac_addr0 = cpu_to_le32(iwl_trans_read_prph(trans,
++						WFMP_MAC_ADDR_0));
++		__le32 mac_addr1 = cpu_to_le32(iwl_trans_read_prph(trans,
++						WFMP_MAC_ADDR_1));
+ 		/* read the MAC address from HW resisters */
+ 		hw_addr = (const u8 *)&mac_addr0;
+ 		data->hw_addr[0] = hw_addr[3];
+@@ -585,28 +576,50 @@ static void iwl_set_hw_address_family_8000(struct device *dev,
+ 		data->hw_addr[5] = hw_addr[0];
+ 
+ 		if (!is_valid_ether_addr(data->hw_addr))
+-			IWL_ERR_DEV(dev,
+-				    "mac address (%pM) from hw section is not valid\n",
+-				    data->hw_addr);
++			IWL_ERR(trans,
++				"mac address (%pM) from hw section is not valid\n",
++				data->hw_addr);
+ 
+ 		return;
+ 	}
+ 
+-	IWL_ERR_DEV(dev, "mac address is not found\n");
++	IWL_ERR(trans, "mac address is not found\n");
++}
++
++static void iwl_set_hw_address(struct iwl_trans *trans,
++			       const struct iwl_cfg *cfg,
++			       struct iwl_nvm_data *data, const __le16 *nvm_hw,
++			       const __le16 *mac_override)
++{
++	if (cfg->device_family != IWL_DEVICE_FAMILY_8000) {
++		const u8 *hw_addr = (const u8 *)(nvm_hw + HW_ADDR);
++
++		/* The byte order is little endian 16 bit, meaning 214365 */
++		data->hw_addr[0] = hw_addr[1];
++		data->hw_addr[1] = hw_addr[0];
++		data->hw_addr[2] = hw_addr[3];
++		data->hw_addr[3] = hw_addr[2];
++		data->hw_addr[4] = hw_addr[5];
++		data->hw_addr[5] = hw_addr[4];
++	} else {
++		iwl_set_hw_address_family_8000(trans, cfg, data,
++					       mac_override, nvm_hw);
++	}
+ }
+ 
+ struct iwl_nvm_data *
+-iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
++iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 		   const __le16 *nvm_hw, const __le16 *nvm_sw,
+ 		   const __le16 *nvm_calib, const __le16 *regulatory,
+ 		   const __le16 *mac_override, const __le16 *phy_sku,
+-		   u8 tx_chains, u8 rx_chains, bool lar_fw_supported,
+-		   __le32 mac_addr0, __le32 mac_addr1)
++		   u8 tx_chains, u8 rx_chains, bool lar_fw_supported)
+ {
++	struct device *dev = trans->dev;
+ 	struct iwl_nvm_data *data;
+-	u32 sku;
+-	u32 radio_cfg;
++	bool lar_enabled;
++	u32 sku, radio_cfg;
+ 	u16 lar_config;
++	const __le16 *ch_section;
+ 
+ 	if (cfg->device_family != IWL_DEVICE_FAMILY_8000)
+ 		data = kzalloc(sizeof(*data) +
+@@ -645,21 +658,16 @@ iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
+ 	if (cfg->device_family != IWL_DEVICE_FAMILY_8000) {
+ 		/* Checking for required sections */
+ 		if (!nvm_calib) {
+-			IWL_ERR_DEV(dev,
+-				    "Can't parse empty Calib NVM sections\n");
++			IWL_ERR(trans,
++				"Can't parse empty Calib NVM sections\n");
+ 			kfree(data);
+ 			return NULL;
+ 		}
+ 		/* in family 8000 Xtal calibration values moved to OTP */
+ 		data->xtal_calib[0] = *(nvm_calib + XTAL_CALIB);
+ 		data->xtal_calib[1] = *(nvm_calib + XTAL_CALIB + 1);
+-	}
+-
+-	if (cfg->device_family != IWL_DEVICE_FAMILY_8000) {
+-		iwl_set_hw_address(cfg, data, nvm_hw);
+-
+-		iwl_init_sbands(dev, cfg, data, nvm_sw,
+-				tx_chains, rx_chains, lar_fw_supported);
++		lar_enabled = true;
++		ch_section = nvm_sw;
+ 	} else {
+ 		u16 lar_offset = data->nvm_version < 0xE39 ?
+ 				 NVM_LAR_OFFSET_FAMILY_8000_OLD :
+@@ -668,16 +676,13 @@ iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
+ 		lar_config = le16_to_cpup(regulatory + lar_offset);
+ 		data->lar_enabled = !!(lar_config &
+ 				       NVM_LAR_ENABLED_FAMILY_8000);
+-
+-		/* MAC address in family 8000 */
+-		iwl_set_hw_address_family_8000(dev, cfg, data, mac_override,
+-					       nvm_hw, mac_addr0, mac_addr1);
+-
+-		iwl_init_sbands(dev, cfg, data, regulatory,
+-				tx_chains, rx_chains,
+-				lar_fw_supported && data->lar_enabled);
++		lar_enabled = data->lar_enabled;
++		ch_section = regulatory;
+ 	}
+ 
++	iwl_set_hw_address(trans, cfg, data, nvm_hw, mac_override);
++	iwl_init_sbands(dev, cfg, data, ch_section, tx_chains, rx_chains,
++			lar_fw_supported && lar_enabled);
+ 	data->calib_version = 255;
+ 
+ 	return data;
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
+index 4e8e0dc..d704d52 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.h
+@@ -74,12 +74,11 @@
+  * later with iwl_free_nvm_data().
+  */
+ struct iwl_nvm_data *
+-iwl_parse_nvm_data(struct device *dev, const struct iwl_cfg *cfg,
++iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
+ 		   const __le16 *nvm_hw, const __le16 *nvm_sw,
+ 		   const __le16 *nvm_calib, const __le16 *regulatory,
+ 		   const __le16 *mac_override, const __le16 *phy_sku,
+-		   u8 tx_chains, u8 rx_chains, bool lar_fw_supported,
+-		   __le32 mac_addr0, __le32 mac_addr1);
++		   u8 tx_chains, u8 rx_chains, bool lar_fw_supported);
+ 
+ /**
+  * iwl_parse_mcc_info - parse MCC (mobile country code) info coming from FW
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+index c446e0d..25a9840 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/nvm.c
+@@ -300,7 +300,6 @@ iwl_parse_nvm_sections(struct iwl_mvm *mvm)
+ 	struct iwl_nvm_section *sections = mvm->nvm_sections;
+ 	const __le16 *hw, *sw, *calib, *regulatory, *mac_override, *phy_sku;
+ 	bool lar_enabled;
+-	__le32 mac_addr0, mac_addr1;
+ 
+ 	/* Checking for required sections */
+ 	if (mvm->trans->cfg->device_family != IWL_DEVICE_FAMILY_8000) {
+@@ -336,12 +335,6 @@ iwl_parse_nvm_sections(struct iwl_mvm *mvm)
+ 	if (WARN_ON(!mvm->cfg))
+ 		return NULL;
+ 
+-	/* read the mac address from WFMP registers */
+-	mac_addr0 = cpu_to_le32(iwl_trans_read_prph(mvm->trans,
+-						    WFMP_MAC_ADDR_0));
+-	mac_addr1 = cpu_to_le32(iwl_trans_read_prph(mvm->trans,
+-						    WFMP_MAC_ADDR_1));
+-
+ 	hw = (const __le16 *)sections[mvm->cfg->nvm_hw_section_num].data;
+ 	sw = (const __le16 *)sections[NVM_SECTION_TYPE_SW].data;
+ 	calib = (const __le16 *)sections[NVM_SECTION_TYPE_CALIBRATION].data;
+@@ -354,10 +347,10 @@ iwl_parse_nvm_sections(struct iwl_mvm *mvm)
+ 		      fw_has_capa(&mvm->fw->ucode_capa,
+ 				  IWL_UCODE_TLV_CAPA_LAR_SUPPORT);
+ 
+-	return iwl_parse_nvm_data(mvm->trans->dev, mvm->cfg, hw, sw, calib,
++	return iwl_parse_nvm_data(mvm->trans, mvm->cfg, hw, sw, calib,
+ 				  regulatory, mac_override, phy_sku,
+ 				  mvm->fw->valid_tx_ant, mvm->fw->valid_rx_ant,
+-				  lar_enabled, mac_addr0, mac_addr1);
++				  lar_enabled);
+ }
+ 
+ #define MAX_NVM_FILE_LEN	16384
+-- 
+2.5.0
 
-> The patch looks good, but it has conflict in 
-> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c with the patch 
-> [PATCH 2/2] rtlwifi: btcoexist: Implement antenna selection that I submitted 
-> yesterday.
-
-No worries, it shouldn't be applied during the
-merge window anyway.
-
-The conflict is trivially resolved after the
-merge window is over.
-
-cheers, Joe
