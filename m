@@ -1,40 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:31046 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753353AbcCWMIl convert rfc822-to-8bit (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:18544 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751121AbcCIM01 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2016 08:08:41 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Raja Mani <rmani@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/3] ath10k: add calibration data download support for
- qca4019
-Date: Wed, 23 Mar 2016 12:08:36 +0000
-Message-ID: <87lh59flbw.fsf@kamboji.qca.qualcomm.com> (sfid-20160323_130845_220001_590869AE)
-References: <1457604758-14454-1-git-send-email-rmani@qti.qualcomm.com>
-In-Reply-To: <1457604758-14454-1-git-send-email-rmani@qti.qualcomm.com> (Raja
-	Mani's message of "Thu, 10 Mar 2016 15:42:35 +0530")
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 9 Mar 2016 07:26:27 -0500
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <wnhuang@google.com>, Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH v2] mwifiex: Empty Tx queue during suspend
+Date: Wed, 9 Mar 2016 04:21:11 -0800
+Message-ID: <1457526071-30658-1-git-send-email-akarwar@marvell.com> (sfid-20160309_132629_903235_6D577BD3)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Raja Mani <rmani@qti.qualcomm.com> writes:
+In cfg80211 suspend handler, stop the netif queue and
+wait until all the Tx queues become empty. Start the
+queues in resume handler.
 
-> The necessary update in dt binding doc
-> (Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt) is done
-> in below patch and it's posted separately,
->   
->   "dt: bindings: add new dt entry for pre calibration in qcom,ath10k.txt"
->
-> Raja Mani (3):
->   ath10k: pass cal data location as an argument to
->     ath10k_download_cal_{file|dt}
->   ath10k: move cal data len to hw_params
->   ath10k: incorporate qca4019 cal data download sequence
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+v2: Below changes are includes
+    a) Removed redundant "priv" pointer assignment in resume handler
+    b) Enhanced pending Tx packets condition in suspend handler
+       by checking mwifiex_bypass_txlist_empty() and skb_queue_empty(&adapter->tx_data_q) 
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 28 ++++++++++++++++++++++---
+ 1 file changed, 25 insertions(+), 3 deletions(-)
 
-All three applied, thanks.
-
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 29b7f6e..bb7235e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -20,6 +20,7 @@
+ #include "cfg80211.h"
+ #include "main.h"
+ #include "11n.h"
++#include "wmm.h"
+ 
+ static char *reg_alpha2;
+ module_param(reg_alpha2, charp, 0);
+@@ -3259,7 +3260,7 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
+ {
+ 	struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
+ 	struct mwifiex_ds_hs_cfg hs_cfg;
+-	int i, ret = 0;
++	int i, ret = 0, retry_num = 10;
+ 	struct mwifiex_private *priv;
+ 
+ 	for (i = 0; i < adapter->priv_num; i++) {
+@@ -3269,6 +3270,21 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
+ 
+ 	mwifiex_cancel_all_pending_cmd(adapter);
+ 
++	for (i = 0; i < adapter->priv_num; i++) {
++		priv = adapter->priv[i];
++		if (priv && priv->netdev)
++			mwifiex_stop_net_dev_queue(priv->netdev, adapter);
++	}
++
++	for (i = 0; i < retry_num; i++) {
++		if (!mwifiex_wmm_lists_empty(adapter) ||
++		    !mwifiex_bypass_txlist_empty(adapter) ||
++		    !skb_queue_empty(&adapter->tx_data_q))
++			usleep_range(10000, 15000);
++		else
++			break;
++	}
++
+ 	if (!wowlan) {
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "None of the WOWLAN triggers enabled\n");
+@@ -3321,12 +3337,18 @@ static int mwifiex_cfg80211_suspend(struct wiphy *wiphy,
+ static int mwifiex_cfg80211_resume(struct wiphy *wiphy)
+ {
+ 	struct mwifiex_adapter *adapter = mwifiex_cfg80211_get_adapter(wiphy);
+-	struct mwifiex_private *priv =
+-		mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
++	struct mwifiex_private *priv;
+ 	struct mwifiex_ds_wakeup_reason wakeup_reason;
+ 	struct cfg80211_wowlan_wakeup wakeup_report;
+ 	int i;
+ 
++	for (i = 0; i < adapter->priv_num; i++) {
++		priv = adapter->priv[i];
++		if (priv && priv->netdev)
++			mwifiex_wake_up_net_dev_queue(priv->netdev, adapter);
++	}
++
++	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
+ 	mwifiex_get_wakeup_reason(priv, HostCmd_ACT_GEN_GET, MWIFIEX_SYNC_CMD,
+ 				  &wakeup_reason);
+ 	memset(&wakeup_report, 0, sizeof(struct cfg80211_wowlan_wakeup));
 -- 
-Kalle Valo
+1.8.1.4
+
