@@ -1,127 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:34747 "EHLO
-	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361AbcCFM50 (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:44492 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751144AbcCIGjb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 07:57:26 -0500
-Received: by mail-wm0-f65.google.com with SMTP id p65so6294869wmp.1
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 04:57:26 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 01/13] staging: vt6655: mac.c rename pbyCxtBuf to cxt_buf
-Date: Sun,  6 Mar 2016 12:57:00 +0000
-Message-Id: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com> (sfid-20160306_135730_782083_D3DA89C4)
+	Wed, 9 Mar 2016 01:39:31 -0500
+Date: Wed, 9 Mar 2016 12:09:15 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	kvalo@codeaurora.org
+Subject: Re: [PATCH v1] cfg80211/nl80211: Add support for
+ NL80211_STA_INFO_RX_DURATION
+Message-ID: <20160309063914.GA6068@atheros-ThinkPad-T61> (sfid-20160309_073935_037699_7A21F8D2)
+References: <1457348614-10584-1-git-send-email-mohammed@qca.qualcomm.com>
+ <1457455943.24270.8.camel@sipsolutions.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <1457455943.24270.8.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing camel case and type prefix.
+Hi Johannes,
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
-Following on from patch
-MACvSaveContext use memcpy_fromio to read context.
+On Tue, Mar 08, 2016 at 05:52:23PM +0100, Johannes Berg wrote:
+> On Mon, 2016-03-07 at 16:33 +0530, Mohammed Shafi Shajakhan wrote:
+> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> > 
+> > Add support for new netlink attribute 'NL80211_STA_INFO_RX_DURATION'
+> > This flag will be set when drivers can fill rx_duration (vendor
+> > specific total air time(usecs) for data/management frames from the
+> > connected client) via 'drv_sta_statistics' callback
+> > 
+> > Also make sta_info flags 'filled' as 64 bit to accommodate for new
+> > per station stats. Extend 'PUT_SINFO' for supporting rx_duration
+> > field and any new per sta information in future
+> > 
+> > Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> > ---
+> > [v1] 
+> > 1. Fixed typo for accommodate
+> > 2. changed the doc for rx_duration as 'vendor specific
+> > implementation'
+> 
+> No, I want it defined for all cases, not left undefined.
 
- drivers/staging/vt6655/mac.c | 32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+[shafi] Let me know if the below documentation is fine with you please
 
-diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
-index 66ae991..9c4dabd 100644
---- a/drivers/staging/vt6655/mac.c
-+++ b/drivers/staging/vt6655/mac.c
-@@ -202,22 +202,22 @@ void MACvSetLoopbackMode(struct vnt_private *priv, unsigned char byLoopbackMode)
-  *  In:
-  *      io_base    - Base Address for MAC
-  *  Out:
-- *      pbyCxtBuf   - Context buffer
-+ *      cxt_buf   - Context buffer
-  *
-  * Return Value: none
-  *
-  */
--void MACvSaveContext(struct vnt_private *priv, unsigned char *pbyCxtBuf)
-+void MACvSaveContext(struct vnt_private *priv, unsigned char *cxt_buf)
- {
- 	void __iomem *io_base = priv->PortOffset;
- 
- 	/* read page0 register */
--	memcpy_fromio(pbyCxtBuf, io_base, MAC_MAX_CONTEXT_SIZE_PAGE0);
-+	memcpy_fromio(cxt_buf, io_base, MAC_MAX_CONTEXT_SIZE_PAGE0);
- 
- 	MACvSelectPage1(io_base);
- 
- 	/* read page1 register */
--	memcpy_fromio(pbyCxtBuf + MAC_MAX_CONTEXT_SIZE_PAGE0, io_base,
-+	memcpy_fromio(cxt_buf + MAC_MAX_CONTEXT_SIZE_PAGE0, io_base,
- 		      MAC_MAX_CONTEXT_SIZE_PAGE1);
- 
- 	MACvSelectPage0(io_base);
-@@ -230,14 +230,14 @@ void MACvSaveContext(struct vnt_private *priv, unsigned char *pbyCxtBuf)
-  * Parameters:
-  *  In:
-  *      io_base    - Base Address for MAC
-- *      pbyCxtBuf   - Context buffer
-+ *      cxt_buf   - Context buffer
-  *  Out:
-  *      none
-  *
-  * Return Value: none
-  *
-  */
--void MACvRestoreContext(struct vnt_private *priv, unsigned char *pbyCxtBuf)
-+void MACvRestoreContext(struct vnt_private *priv, unsigned char *cxt_buf)
- {
- 	void __iomem *io_base = priv->PortOffset;
- 	int         ii;
-@@ -246,37 +246,37 @@ void MACvRestoreContext(struct vnt_private *priv, unsigned char *pbyCxtBuf)
- 	/* restore page1 */
- 	for (ii = 0; ii < MAC_MAX_CONTEXT_SIZE_PAGE1; ii++)
- 		VNSvOutPortB((io_base + ii),
--			     *(pbyCxtBuf + MAC_MAX_CONTEXT_SIZE_PAGE0 + ii));
-+			     *(cxt_buf + MAC_MAX_CONTEXT_SIZE_PAGE0 + ii));
- 
- 	MACvSelectPage0(io_base);
- 
- 	/* restore RCR,TCR,IMR... */
- 	for (ii = MAC_REG_RCR; ii < MAC_REG_ISR; ii++)
--		VNSvOutPortB(io_base + ii, *(pbyCxtBuf + ii));
-+		VNSvOutPortB(io_base + ii, *(cxt_buf + ii));
- 
- 	/* restore MAC Config. */
- 	for (ii = MAC_REG_LRT; ii < MAC_REG_PAGE1SEL; ii++)
--		VNSvOutPortB(io_base + ii, *(pbyCxtBuf + ii));
-+		VNSvOutPortB(io_base + ii, *(cxt_buf + ii));
- 
--	VNSvOutPortB(io_base + MAC_REG_CFG, *(pbyCxtBuf + MAC_REG_CFG));
-+	VNSvOutPortB(io_base + MAC_REG_CFG, *(cxt_buf + MAC_REG_CFG));
- 
- 	/* restore PS Config. */
- 	for (ii = MAC_REG_PSCFG; ii < MAC_REG_BBREGCTL; ii++)
--		VNSvOutPortB(io_base + ii, *(pbyCxtBuf + ii));
-+		VNSvOutPortB(io_base + ii, *(cxt_buf + ii));
- 
- 	/* restore CURR_RX_DESC_ADDR, CURR_TX_DESC_ADDR */
- 	VNSvOutPortD(io_base + MAC_REG_TXDMAPTR0,
--		     *(unsigned long *)(pbyCxtBuf + MAC_REG_TXDMAPTR0));
-+		     *(unsigned long *)(cxt_buf + MAC_REG_TXDMAPTR0));
- 	VNSvOutPortD(io_base + MAC_REG_AC0DMAPTR,
--		     *(unsigned long *)(pbyCxtBuf + MAC_REG_AC0DMAPTR));
-+		     *(unsigned long *)(cxt_buf + MAC_REG_AC0DMAPTR));
- 	VNSvOutPortD(io_base + MAC_REG_BCNDMAPTR,
--		     *(unsigned long *)(pbyCxtBuf + MAC_REG_BCNDMAPTR));
-+		     *(unsigned long *)(cxt_buf + MAC_REG_BCNDMAPTR));
- 
- 	VNSvOutPortD(io_base + MAC_REG_RXDMAPTR0,
--		     *(unsigned long *)(pbyCxtBuf + MAC_REG_RXDMAPTR0));
-+		     *(unsigned long *)(cxt_buf + MAC_REG_RXDMAPTR0));
- 
- 	VNSvOutPortD(io_base + MAC_REG_RXDMAPTR1,
--		     *(unsigned long *)(pbyCxtBuf + MAC_REG_RXDMAPTR1));
-+		     *(unsigned long *)(cxt_buf + MAC_REG_RXDMAPTR1));
- }
- 
- /*
--- 
-2.7.0
+"@rx_duration: approximate total air time(usecs) for all data/management
+    frames from the connected client "
+
+thanks for reviewing this and Jouni for his initial suggestions.
+
+regards,
+shafi
 
