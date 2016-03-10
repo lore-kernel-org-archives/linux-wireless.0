@@ -1,108 +1,91 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:35628 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752526AbcC1EKc (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:34239 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754555AbcCJIgW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2016 00:10:32 -0400
+	Thu, 10 Mar 2016 03:36:22 -0500
+Received: by mail-wm0-f51.google.com with SMTP id p65so18320908wmp.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2016 00:36:21 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <1458973495-17403-1-git-send-email-bhumirks@gmail.com>
-References: <1458973495-17403-1-git-send-email-bhumirks@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Mon, 28 Mar 2016 15:10:12 +1100
-Message-ID: <CAGRGNgVFyhy3uCGjcB-EAL1Cewm_J4oNUz5=GOh98zLvFHUaoQ@mail.gmail.com> (sfid-20160328_061050_612968_BC923826)
-Subject: Re: [PATCH] Staging: rtl8723au: Remove function rtw_enqueue_{recvbuf23a/recvbuf23a_to_head}
-To: Bhumika Goyal <bhumirks@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Joe Perches <joe@perches.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+In-Reply-To: <CAGRGNgW7S8xru6KVBdQMLN3+=N-uzMf18rwfDWW6uNzCv7eaWg@mail.gmail.com>
+References: <1456358932-23114-1-git-send-email-afenkart@gmail.com>
+	<1456358932-23114-7-git-send-email-afenkart@gmail.com>
+	<CAGRGNgW7S8xru6KVBdQMLN3+=N-uzMf18rwfDWW6uNzCv7eaWg@mail.gmail.com>
+Date: Thu, 10 Mar 2016 09:36:20 +0100
+Message-ID: <CALtMJECeueX2HH8gu0gRHFsu5Y1xAox9H-UvfRsQMrNtnh+xow@mail.gmail.com> (sfid-20160310_093646_246091_53BAB19B)
+Subject: Re: [PATCH 6/7] mwifiex: factor out mwifiex_cancel_pending_scan_cmd
+From: Andreas Fenkart <afenkart@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi All,
+Hi Julian,
 
-On Sat, Mar 26, 2016 at 5:24 PM, Bhumika Goyal <bhumirks@gmail.com> wrote:
-> The functions rtw_enqueue_recvbuf23a and rtw_enqueue_recvbuf23a_to_head
-> are never used anywhere in the kernel. So, remove their definition and
-> prototype.
-> Grepped to find occurences.
+thanks for your time!
+
+2016-02-25 2:14 GMT+01:00 Julian Calaby <julian.calaby@gmail.com>:
+> Hi Andreas,
 >
-> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
-
-Looks right to me.
-
-Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
-
-> ---
->  drivers/staging/rtl8723au/core/rtw_recv.c    | 25 -------------------------
->  drivers/staging/rtl8723au/include/rtw_recv.h |  2 --
->  2 files changed, 27 deletions(-)
+> On Thu, Feb 25, 2016 at 11:08 AM, Andreas Fenkart <afenkart@gmail.com> wrote:
+>> releasing the scan_pending lock in mwifiex_check_next_scan_command
+>> is valid, since the lock is taken again, and all nodes removed
+>> from the scan_pending queue.
+>>
+>> Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
+>> ---
+>>  drivers/net/wireless/marvell/mwifiex/cmdevt.c      | 43 ++++++++++------------
+>>  drivers/net/wireless/marvell/mwifiex/main.h        |  1 +
+>>  drivers/net/wireless/marvell/mwifiex/scan.c        | 23 +++---------
+>>  drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c | 13 +------
+>>  4 files changed, 27 insertions(+), 53 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+>> index 6ddc98b..490d0d1 100644
+>> --- a/drivers/net/wireless/marvell/mwifiex/scan.c
+>> +++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+>> @@ -1920,13 +1910,10 @@ static void mwifiex_check_next_scan_command(struct mwifiex_private *priv)
+>>                 }
+>>         } else if ((priv->scan_aborting && !priv->scan_request) ||
+>>                    priv->scan_block) {
+>> -               list_for_each_entry_safe(cmd_node, tmp_node,
+>> -                                        &adapter->scan_pending_q, list) {
+>> -                       list_del(&cmd_node->list);
+>> -                       mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
+>> -               }
+>>                 spin_unlock_irqrestore(&adapter->scan_pending_q_lock, flags);
+>>
+>> +               mwifiex_cancel_pending_scan_cmd(adapter);
+>> +
 >
-> diff --git a/drivers/staging/rtl8723au/core/rtw_recv.c b/drivers/staging/rtl8723au/core/rtw_recv.c
-> index 989ed07..150dabc 100644
-> --- a/drivers/staging/rtl8723au/core/rtw_recv.c
-> +++ b/drivers/staging/rtl8723au/core/rtw_recv.c
-> @@ -211,31 +211,6 @@ u32 rtw_free_uc_swdec_pending_queue23a(struct rtw_adapter *adapter)
->         return cnt;
->  }
+> This is creating a "short" window where &adapter->scan_pending_q_lock
+> is unlocked here. Is that safe?
 >
-> -int rtw_enqueue_recvbuf23a_to_head(struct recv_buf *precvbuf, struct rtw_queue *queue)
-> -{
-> -       spin_lock_bh(&queue->lock);
-> -
-> -       list_del_init(&precvbuf->list);
-> -       list_add(&precvbuf->list, get_list_head(queue));
-> -
-> -       spin_unlock_bh(&queue->lock);
-> -
-> -       return _SUCCESS;
-> -}
-> -
-> -int rtw_enqueue_recvbuf23a(struct recv_buf *precvbuf, struct rtw_queue *queue)
-> -{
-> -       unsigned long irqL;
-> -
-> -       spin_lock_irqsave(&queue->lock, irqL);
-> -
-> -       list_del_init(&precvbuf->list);
-> -
-> -       list_add_tail(&precvbuf->list, get_list_head(queue));
-> -       spin_unlock_irqrestore(&queue->lock, irqL);
-> -       return _SUCCESS;
-> -}
-> -
->  struct recv_buf *rtw_dequeue_recvbuf23a (struct rtw_queue *queue)
->  {
->         unsigned long irqL;
-> diff --git a/drivers/staging/rtl8723au/include/rtw_recv.h b/drivers/staging/rtl8723au/include/rtw_recv.h
-> index dc784be..85a5edb 100644
-> --- a/drivers/staging/rtl8723au/include/rtw_recv.h
-> +++ b/drivers/staging/rtl8723au/include/rtw_recv.h
-> @@ -279,8 +279,6 @@ int rtw_enqueue_recvframe23a(struct recv_frame *precvframe, struct rtw_queue *qu
->
->  u32 rtw_free_uc_swdec_pending_queue23a(struct rtw_adapter *adapter);
->
-> -int rtw_enqueue_recvbuf23a_to_head(struct recv_buf *precvbuf, struct rtw_queue *queue);
-> -int rtw_enqueue_recvbuf23a(struct recv_buf *precvbuf, struct rtw_queue *queue);
->  struct recv_buf *rtw_dequeue_recvbuf23a(struct rtw_queue *queue);
->
->  void rtw_reordering_ctrl_timeout_handler23a(unsigned long pcontext);
-> --
-> 1.9.1
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> You might want to write mwifiex_cancel_pending_scan_cmd() as two
+> functions, one which takes the spinlock and calls the other and one
+> which does all the work so you can call the latter here without that
+> window where ..._q_lock is unlocked.
 
+I added this comment to the description of the updated patch, that I
+will send out shortly:
 
+Releasing the scan_pending lock in mwifiex_check_next_scan_command
+introduces a short window where pending scan commands can be removed
+or added before removing them all in mwifiex_cancel_pending_scan_cmd.
+I think this is safe, since the worst thing to happen is that a
+pending scan cmd is removed by the command handler. Adding new scan
+commands is not possible while one is pending, see scan_processing.
+Since all commands are removed from the queue anyway, we don't care if
+some commands are removed by a different code path earlier, the final
+state remains the same.
+I assume, that the critical section needed for the check has been
+extended over clearing the pending scan queue, out of convenience. The
+lock was already held and releasing it first just to grab it again was
+more work. It doesn't seem to be necessary because of concurrency.
 
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Thanks,
+Andi
