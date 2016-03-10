@@ -1,27 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:59816 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753956AbcCWMrl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2016 08:47:41 -0400
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: linux-wireless@vger.kernel.org,
-	make-wifi-fast@lists.bufferbloat.net
-Subject: Mapping the mac80211 TX path
-Date: Wed, 23 Mar 2016 13:47:33 +0100
-Message-ID: <87mvppuzru.fsf@toke.dk> (sfid-20160323_134744_175383_C5CED0F7)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:42211 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965557AbcCJKNF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2016 05:13:05 -0500
+From: Raja Mani <rmani@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH 0/3] ath10k: add calibration data download support for qca4019
+Date: Thu, 10 Mar 2016 15:42:35 +0530
+Message-ID: <1457604758-14454-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20160310_111316_492346_BD261D2D)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi everyone
+The necessary update in dt binding doc
+(Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt) is done
+in below patch and it's posted separately,
+  
+  "dt: bindings: add new dt entry for pre calibration in qcom,ath10k.txt"
 
-I've been trying to wrap my head around how the Linux mac80211 stack
-actually works. As part of this, I've been drawing flow diagrams of the
-code paths. The first one I completed is of the TX path; URL below in
-case anyone else finds it useful. And if anyone discovers glaring (or
-not) errors, feel free to point them out, of course :)
+Raja Mani (3):
+  ath10k: pass cal data location as an argument to
+    ath10k_download_cal_{file|dt}
+  ath10k: move cal data len to hw_params
+  ath10k: incorporate qca4019 cal data download sequence
 
-https://blog.tohojo.dk/2016/03/trying-to-understand-the-linux-mac80211-tx-path.html
+ drivers/net/wireless/ath/ath10k/core.c  | 120 ++++++++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath10k/core.h  |  12 +++-
+ drivers/net/wireless/ath/ath10k/debug.c |   7 +-
+ drivers/net/wireless/ath/ath10k/hw.h    |   2 -
+ 4 files changed, 120 insertions(+), 21 deletions(-)
 
--Toke
+-- 
+1.8.1.2
+
