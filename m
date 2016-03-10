@@ -1,56 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f171.google.com ([209.85.223.171]:35005 "EHLO
-	mail-io0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755493AbcCPVXa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2016 17:23:30 -0400
-Received: by mail-io0-f171.google.com with SMTP id g203so75604747iof.2
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2016 14:23:30 -0700 (PDT)
+Received: from mleia.com ([178.79.152.223]:52460 "EHLO mail.mleia.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934378AbcCJAC7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2016 19:02:59 -0500
+Subject: Re: [PATCH] staging: wilc1000: fix check of kthread_run() return
+ value
+To: Julian Calaby <julian.calaby@gmail.com>
+References: <1457565194-31533-1-git-send-email-vz@mleia.com>
+ <CAGRGNgUMViiR+ruvLHnwMLHUxOK3+uW7634Hpgn9gN+djCOtbw@mail.gmail.com>
+ <56E0B21D.1010503@mleia.com>
+ <CAGRGNgVsmTPpiu4twUnvk_3GEFMiU2VuuSj5=M+4y6qJYiDZhA@mail.gmail.com>
+Cc: Glen Lee <glen.lee@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Leo Kim <leo.kim@atmel.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
+From: Vladimir Zapolskiy <vz@mleia.com>
+Message-ID: <56E0B9AD.3050806@mleia.com> (sfid-20160310_010303_234099_DB75A851)
+Date: Thu, 10 Mar 2016 02:02:53 +0200
 MIME-Version: 1.0
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA7A541@hasmsx107.ger.corp.intel.com>
-References: <CA+55aFxOMO6u6xu4Pz7BzbLD=SwwzdPcSU2dX2S0kkh4jFaVbw@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32EA7A541@hasmsx107.ger.corp.intel.com>
-Date: Wed, 16 Mar 2016 14:23:29 -0700
-Message-ID: <CA+55aFw8_rtr8v65LYXYJpWq40TyTPpt9hdBzwr8-VYpaKMdRQ@mail.gmail.com> (sfid-20160316_222334_361855_7E8BCFBC)
-Subject: Re: iwlwifi incomplete initialization in Linux 4.5?
-From: Linus Torvalds <torvalds@linux-foundation.org>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "Berg, Johannes" <johannes.berg@intel.com>,
-	linuxwifi <linuxwifi@intel.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	WCS WCD Linux SW Group Staff
-	<wcs.wcd.linux.sw.group.staff@intel.com>,
-	"Barash, Yair" <yair.barash@intel.com>,
-	"Amir, Ido" <ido.amir@intel.com>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CAGRGNgVsmTPpiu4twUnvk_3GEFMiU2VuuSj5=M+4y6qJYiDZhA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 16, 2016 at 2:13 PM, Grumbach, Emmanuel
-<emmanuel.grumbach@intel.com> wrote:
->
-> This ... typically means that the firmware got stuck while sending
-> packets. Can you tell me on what band your router operates? 2.4GHz or
-> 5.2GHz?
+Hi Julian,
 
-Both.
+On 10.03.2016 01:42, Julian Calaby wrote:
+> Hi Vladimir,
+> 
+> On Thu, Mar 10, 2016 at 10:30 AM, Vladimir Zapolskiy <vz@mleia.com> wrote:
+>> Hi Julian,
+>>
+>> On 10.03.2016 01:27, Julian Calaby wrote:
+>>> Hi Vladimir,
+>>>
+>>> On Thu, Mar 10, 2016 at 10:13 AM, Vladimir Zapolskiy <vz@mleia.com> wrote:
+>>>> The kthread_run() function returns either a valid task_struct or
+>>>> ERR_PTR() value, check for NULL is invalid. The change fixes potential
+>>>> oops, e.g. in OOM situation.
+>>>>
+>>>> Signed-off-by: Vladimir Zapolskiy <vz@mleia.com>
+>>>> ---
+>>>>  drivers/staging/wilc1000/linux_wlan.c | 4 ++--
+>>>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>>>
+>>>> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+>>>> index 54fe9d7..5077c30 100644
+>>>> --- a/drivers/staging/wilc1000/linux_wlan.c
+>>>> +++ b/drivers/staging/wilc1000/linux_wlan.c
+>>>> @@ -849,10 +849,10 @@ static int wlan_initialize_threads(struct net_device *dev)
+>>>>         PRINT_D(INIT_DBG, "Creating kthread for transmission\n");
+>>>>         wilc->txq_thread = kthread_run(linux_wlan_txq_task, (void *)dev,
+>>>>                                      "K_TXQ_TASK");
+>>>> -       if (!wilc->txq_thread) {
+>>>> +       if (IS_ERR(wilc->txq_thread)) {
+>>>>                 PRINT_ER("couldn't create TXQ thread\n");
+>>>>                 wilc->close = 0;
+>>>> -               return -ENOBUFS;
+>>>> +               return PTR_ERR(wilc->txq_thread);
+>>>
+>>> Are you sure changing the error returned is correct? Do all the
+>>> callers of wlan_initialize_threads() handle the full range of errors
+>>> from kthread_run()?
+>>
+>> Have you checked the driver?
+> 
+> I'm making sure you have. It's possible that there's a good reason why
+> this returns -ENOBUFS I want to know that you've at least considered
+> that possibility.
 
-> Do you use 20Mhz or 40MHz?
+You have my confirmation, I've checked the call stack before publishing
+this fix.
 
-HT20 on 2.4GHz, HT40 on 5GHz.
+>> This function is called once on initialization, the check on the upper layer
+>> has "if (ret < 0) goto exit_badly;" form.
+> 
+> And practically everything in the chain up to net_device_ops uses the
+> same error handling scheme so it's probably fine.
 
-At least that's the wireless AP setup.
+dev_open()
+  __dev_open()
+    wilc_mac_open()
+      wilc1000_wlan_init()
+        wlan_initialize_threads()
 
-> Basically, I'd like to see the output of iw dev
+Oh, why kernel threads within a driver are init'ed/destroyed on
+each device up/down state transition?
 
-I'll have to walk over and check. I don't have my machines set up so
-you can get into them over the network..
+> You should also document this change in the commit message.
 
-> Hmm, this is strange since 4.4 and 4.5 will both load -16.ucode which
-> you seemed to be running when the have the Queue hang message.
+The change is documented in the commit message, take a look. But I didn't
+add "I swear it does not break anything" ;)
 
-Correct. Both cases used the 16 ucode, since that's what F22 comes
-with. I upgrade the kernel, but intentionally don't touch anything
-else in the system.
-
-               Linus
+--
+With best wishes,
+Vladimir
