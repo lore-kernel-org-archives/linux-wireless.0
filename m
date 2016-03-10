@@ -1,69 +1,77 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43137 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:49171 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751006AbcCaHq6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 03:46:58 -0400
-Message-ID: <1459410405.4576.8.camel@sipsolutions.net> (sfid-20160331_094721_668390_D1C17A4F)
-Subject: Re: Question on rhashtable in worst-case scenario.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-	David Miller <davem@davemloft.net>
-Cc: linux-kernel@vger.kernel.org, herbert@gondor.apana.org.au,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	tgraf@suug.ch
-Date: Thu, 31 Mar 2016 09:46:45 +0200
-In-Reply-To: <56FC0445.6010200@candelatech.com>
-References: <56F9941A.3080501@candelatech.com>
-	 <56FAAA6D.3070806@candelatech.com>
-	 <1459329252.2055.1.camel@sipsolutions.net>
-	 <20160330.123821.328761526754742195.davem@davemloft.net>
-	 <56FC0445.6010200@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752044AbcCJOwM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2016 09:52:12 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 037/113] rtl8xxxu: First stab at adding IQK calibration for 8723bu parts
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1456783551-28315-38-git-send-email-Jes.Sorensen@redhat.com>
+	<8737ryl8c4.fsf@purkki.adurom.net>
+Date: Thu, 10 Mar 2016 09:52:10 -0500
+In-Reply-To: <8737ryl8c4.fsf@purkki.adurom.net> (Kalle Valo's message of "Thu,
+	10 Mar 2016 16:24:11 +0200")
+Message-ID: <wrfjoaam2xnp.fsf@redhat.com> (sfid-20160310_155216_159151_5B989304)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-03-30 at 09:52 -0700, Ben Greear wrote:
+Kalle Valo <kvalo@codeaurora.org> writes:
+> Jes.Sorensen@redhat.com writes:
+>
+>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>
+>> The 8723bu also has it's own IQK calibration process. This is similar
+>> in flow, but still different enough to warrent it's own
+>> implementation, at least for now.
+>>
+>> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+>> ---
+>>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 811
+>> ++++++++++++++++++++-
+>>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |   1 +
+>>  .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  |  17 +
+>>  3 files changed, 827 insertions(+), 2 deletions(-)
+>>
+>
+> [...]
+>
+>> +#ifdef RTL8723BU_BT
+>> +	/* GNT_BT = 1 */
+>> +	rtl8xxxu_write32(priv, REG_BT_CONTROL_8723BU, 0x00001800);
+>> +#endif
+>
+> What's this about?
+>
+>> +#ifdef RTL8723BU_BT
+>> +	/* GNT_BT = 1 */
+>> +	rtl8xxxu_write32(priv, REG_BT_CONTROL_8723BU, 0x00001800);
+>> +#endif
+>
+> Same here.
+>
+>> +#ifdef RTL8723BU_PATH_B
+>> +static int rtl8723bu_iqk_path_b(struct rtl8xxxu_priv *priv)
+>
+> And this?
+>
+>> +#if 0
+>> +	/* Page B init */
+>> +	rtl8xxxu_write32(priv, REG_CONFIG_ANT_A, 0x0f600000);
+>> +
+>> +	if (priv->tx_paths > 1)
+>> +		rtl8xxxu_write32(priv, REG_CONFIG_ANT_B, 0x0f600000);
+>> +#endif
+>
+> Like discussed before, "#if 0" is not really welcomed in upstream. Can't
+> you just keep the unimplemented parts in a private branch and submit
+> them once they are ready? That way upstream code is not cluttered with
+> these.
 
-> If someone can fix rhashtable, then great.
-> I read some earlier comments [1] back when someone else reported
-> similar problems, and the comments seemed to indicate that rhashtable
-> was broken in this manner on purpose to protect against hashing
-> attacks.
-> 
-> If you are baking in this type of policy to what should be a basic
-> data-type, then it is not useful for how it is being used in
-> the mac80211 stack.
-> 
-> [1]  http://lkml.iu.edu/hypermail/linux/kernel/1512.2/01681.html
-> 
+This is removed in a follow-on patch, so it becomes a non-issue.
+Rebasing this to remove it retroactively would create a mess.
 
-That's not really saying it's purposely broken, that's more saying that
-Herbert didn't see a point in fixing a case that has awful behaviour
-already.
-
-However, I'm confused now - we can much more easily live with
-*insertion* failures, as the linked email indicates, than *deletion*
-failures, which I think you had indicated originally. Are you really
-seeing *deletion* failures?
-
-If there are in fact *deletion* failures then I think we really need to
-address those in rhashtable, no matter the worst-case behaviour of the
-hashing or keys, since we should be able to delete entries in order to
-get back to something reasonable. Looking at the code though, I don't
-actually see that happening.
-
-If you're seeing only *insertion* failures, which you indicated in the
-root of this thread, then I think for the general case in mac80211 we
-can live with that - we use a seeded jhash for the hash function, and
-since in the general case we cannot accept entries with identical MAC
-addresses to start with, it shouldn't be possible to run into this
-problem under normal use cases.
-
-In this case, I think perhaps you can just patch your local system with
-the many interfaces connecting to the same AP to add the parameter
-Herbert suggested (.insecure_elasticity = true in sta_rht_params). This
-is, after all, very much a case that "normal" operation doesn't even
-get close to.
-
-johannes
+Jes
