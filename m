@@ -1,56 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:49558 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932215AbcCHLfh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2016 06:35:37 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org, Ilan Peer <ilan.peer@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: Fix BW upgrade for TDLS peers
-Date: Tue,  8 Mar 2016 13:35:31 +0200
-Message-Id: <1457436931-2330-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160308_123541_163057_9AB96DD4)
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:32864 "EHLO
+	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752486AbcCJCPU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 9 Mar 2016 21:15:20 -0500
+Received: by mail-oi0-f51.google.com with SMTP id d205so50734876oia.0
+        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2016 18:15:19 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <56E08615.9060208@lwfinger.net>
+References: <56E08615.9060208@lwfinger.net>
+Date: Wed, 9 Mar 2016 18:15:19 -0800
+Message-ID: <CAC0d7Bi9VEN2zADV24DyhkZCp-mgLtDDXODUMfHoVzC0is7xMA@mail.gmail.com> (sfid-20160310_031522_982940_7788D561)
+Subject: Re: New firmware for RT2870
+From: quarkverse <quarkverse@gmail.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Helmut Schaa <helmut.schaa@googlemail.com>, dan.g.tob@gmail.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ilan Peer <ilan.peer@intel.com>
+I have an RT5370 adapter from Panda Wireless and use it on my Ubuntu
+14.04 laptop.
+It is working fine on my laptop.
 
-It is possible that the station is connected to an AP
-with bandwidth of 80+80MHz or 160MHz. In such cases
-there is no need to perform an upgrade as the maximal
-supported bandwidth is 80MHz.
+>From my laptop:
+rt2x00lib_request_firmware: Info - Firmware detected - version: 0.29
 
-In addition, when upgrading and setting center_freq1
-and bandwidth to 80MHz also set center_freq2 to 0.
+I didn't see the warnings reported in the Bug 114151.
 
-Fixes: 0fabfaafec3a ("mac80211: upgrade BW of TDLS peers when possible"
-Signed-off-by: Ilan Peer <ilan.peer@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- net/mac80211/tdls.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Just curious how to test version 0.36 on my laptop.
 
-diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-index eed1152..a29ea81 100644
---- a/net/mac80211/tdls.c
-+++ b/net/mac80211/tdls.c
-@@ -314,7 +314,7 @@ ieee80211_tdls_chandef_vht_upgrade(struct ieee80211_sub_if_data *sdata,
- 	if (max_width > NL80211_CHAN_WIDTH_80)
- 		max_width = NL80211_CHAN_WIDTH_80;
- 
--	if (uc.width == max_width)
-+	if (uc.width >= max_width)
- 		return;
- 	/*
- 	 * Channel usage constrains in the IEEE802.11ac-2013 specification only
-@@ -325,6 +325,7 @@ ieee80211_tdls_chandef_vht_upgrade(struct ieee80211_sub_if_data *sdata,
- 	for (i = 0; i < ARRAY_SIZE(centers_80mhz); i++)
- 		if (abs(uc.chan->center_freq - centers_80mhz[i]) <= 30) {
- 			uc.center_freq1 = centers_80mhz[i];
-+			uc.center_freq2 = 0;
- 			uc.width = NL80211_CHAN_WIDTH_80;
- 			break;
- 		}
--- 
-2.5.0
+Thanks.
 
+Alan
+
+On Wed, Mar 9, 2016 at 12:22 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
+> In https://bugzilla.kernel.org/show_bug.cgi?id=114151, the OP reports
+> improved stability and performance for an RT5370 using a newer firmware that
+> came with the driver CD. The logs show this to be version 0.36, whereas the
+> version now in linux-firmware is version 0.29.
+>
+> I downloaded the firmware from b.k.o. It had very little effect on my
+> no-name adapter with ID 148f:3070. It still gets ping losses of 10-15%.
+>
+> Should this new version be submitted to linux-firmware? Its provenance seems
+> to be sketchy, but submission would likely be legal.
+>
+> Larry
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
