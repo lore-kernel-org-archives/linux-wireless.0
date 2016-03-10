@@ -1,82 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-vk0-f65.google.com ([209.85.213.65]:33092 "EHLO
-	mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751358AbcC3Kk4 convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:48951 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751975AbcCJOdA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 06:40:56 -0400
+	Thu, 10 Mar 2016 09:33:00 -0500
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Jes.Sorensen@redhat.com
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 054/113] rtl8xxxu: Implement 8723bu power on sequence
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1456783551-28315-55-git-send-email-Jes.Sorensen@redhat.com>
+Date: Thu, 10 Mar 2016 16:32:55 +0200
+In-Reply-To: <1456783551-28315-55-git-send-email-Jes.Sorensen@redhat.com> (Jes
+	Sorensen's message of "Mon, 29 Feb 2016 17:04:52 -0500")
+Message-ID: <87twkejtd4.fsf@purkki.adurom.net> (sfid-20160310_153304_478030_C12B16BF)
 MIME-Version: 1.0
-Reply-To: sedat.dilek@gmail.com
-In-Reply-To: <CABicQ-Wwf6LrFujVw03TNvAF-ny4d2MfqP+GDL0ARRkg5EnT3Q@mail.gmail.com>
-References: <1459332895-4563-1-git-send-email-wnhuang@chromium.org>
-	<CA+icZUVpMU0kjEKPpABU415Gv_EhFUkAGbXi82UVf8PbHnz9mw@mail.gmail.com>
-	<CABicQ-Wwf6LrFujVw03TNvAF-ny4d2MfqP+GDL0ARRkg5EnT3Q@mail.gmail.com>
-Date: Wed, 30 Mar 2016 12:40:55 +0200
-Message-ID: <CA+icZUV7+1XqYcpnppopYOesqeZe_Ne6Taew=tZSbra41aEiYQ@mail.gmail.com> (sfid-20160330_124113_842731_8BC68C75)
-Subject: Re: [PATCH RESEND] mwifiex: fix NULL pointer dereference error
-From: Sedat Dilek <sedat.dilek@gmail.com>
-To: Wei-Ning Huang <wnhuang@google.com>
-Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Daniel Kurtz <djkurtz@chromium.org>, snanda@chromium.org,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 30, 2016 at 12:38 PM, Wei-Ning Huang <wnhuang@google.com> wrote:
-> ah.. thanks.
->
-> Kalle, can you help amend the message if this patch is accepted?
-> Thanks a lot.
->
+Jes.Sorensen@redhat.com writes:
 
-http://its-not-its.info/
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>
+> This implements the 8723bu specific power on sequence as it is
+> different from that of the 8723au chips.
+>
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-- Sedat -
+[...]
 
-> Wei-Ning
->
-> On Wed, Mar 30, 2016 at 6:26 PM, Sedat Dilek <sedat.dilek@gmail.com> wrote:
->> On Wed, Mar 30, 2016 at 12:14 PM, Wei-Ning Huang <wnhuang@chromium.org> wrote:
->>> In mwifiex_enable_hs, we need to check if
->>> priv->wdev.wiphy->wowlan_config is NULL before accessing it's member.
->>
->> it's... its member (not it's) :-).
->>
->> - Sedat -
->>
->>> This sometimes cause kernel panic when suspend/resume.
->>>
->>> Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
->>> ---
->>>  drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 3 ++-
->>>  1 file changed, 2 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
->>> index d5c56eb..d8de432 100644
->>> --- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
->>> +++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
->>> @@ -509,7 +509,8 @@ int mwifiex_enable_hs(struct mwifiex_adapter *adapter)
->>>
->>>         if (priv && priv->sched_scanning) {
->>>  #ifdef CONFIG_PM
->>> -               if (!priv->wdev.wiphy->wowlan_config->nd_config) {
->>> +               if (priv->wdev.wiphy->wowlan_config &&
->>> +                   !priv->wdev.wiphy->wowlan_config->nd_config) {
->>>  #endif
->>>                         mwifiex_dbg(adapter, CMD, "aborting bgscan!\n");
->>>                         mwifiex_stop_bg_scan(priv);
->>> --
->>> 2.1.2
->>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
->
->
-> --
-> Wei-Ning Huang, 黃偉寧 | Software Engineer, Google Inc., Taiwan |
-> wnhuang@google.com | Cell: +886 910-380678
+> @@ -140,7 +144,10 @@
+>  #define REG_MAC_PINMUX_CFG		0x0043
+>  #define REG_GPIO_PIN_CTRL		0x0044
+>  #define REG_GPIO_INTM			0x0048
+> +#define  GPIO_INTM_EDGE_TRIG_IRQ	BIT(9)
+> +
+>  #define REG_LEDCFG0			0x004c
+> +#define  LEDCFG0_DPDT_SELECT		BIT(23)
+>  #define REG_LEDCFG1			0x004d
+>  #define REG_LEDCFG2			0x004e
+>  #define  LEDCFG2_DPDT_SELECT		BIT(7)
+> @@ -154,9 +161,13 @@
+>  #define REG_GPIO_PIN_CTRL_2		0x0060
+>  /*  RTL8723 WIFI/BT/GPS Multi-Function GPIO Select. */
+>  #define REG_GPIO_IO_SEL_2		0x0062
+> +#define  GPIO_IO_SEL_2_GPIO09_INPUT	BIT(1)
+> +#define  GPIO_IO_SEL_2_GPIO09_IRQ	BIT(9)
+>  
+>  /*  RTL8723B */
+>  #define REG_PAD_CTRL1			0x0064
+> +#define  PAD_CTRL1_SW_DPDT_SEL_DATA	BIT(0)
+
+Why two spaces after define?
+
+-- 
+Kalle Valo
