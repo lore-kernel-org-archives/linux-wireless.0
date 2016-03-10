@@ -1,48 +1,151 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f49.google.com ([209.85.220.49]:36551 "EHLO
-	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750864AbcC2GGo (ORCPT
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:35458 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754581AbcCJIoW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 02:06:44 -0400
-Received: by mail-pa0-f49.google.com with SMTP id tt10so6179147pab.3
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2016 23:06:44 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Pontus Fuchs <pontus.fuchs@gmail.com>
-Subject: [PATCH 06/16] wcn36xx: Fetch private sta data from sta entry instead of from vif
-Date: Mon, 28 Mar 2016 23:06:23 -0700
-Message-Id: <1459231593-360-7-git-send-email-bjorn.andersson@linaro.org> (sfid-20160329_080923_658314_A9C1EA9B)
-In-Reply-To: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
+	Thu, 10 Mar 2016 03:44:22 -0500
+Received: by mail-wm0-f53.google.com with SMTP id l68so19393416wml.0
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2016 00:44:21 -0800 (PST)
+From: Andreas Fenkart <afenkart@gmail.com>
+To: linux-wireless@vger.kernel.org
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Andreas Fenkart <afenkart@gmail.com>
+Subject: [PATCH v2 2/7] mwifiex: scan: factor out has_ieee_hdr/has_vendor_hdr
+Date: Thu, 10 Mar 2016 09:44:06 +0100
+Message-Id: <1457599451-13910-3-git-send-email-afenkart@gmail.com> (sfid-20160310_094425_283397_0C57D32C)
+In-Reply-To: <1457599451-13910-1-git-send-email-afenkart@gmail.com>
+References: <1457599451-13910-1-git-send-email-afenkart@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
-
-For consistency with other code.
-
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
 ---
- drivers/net/wireless/ath/wcn36xx/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/marvell/mwifiex/scan.c | 52 +++++++++++++----------------
+ 1 file changed, 23 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 4781b5e8deb3..62178a03f50d 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -386,7 +386,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- {
- 	struct wcn36xx *wcn = hw->priv;
- 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
--	struct wcn36xx_sta *sta_priv = vif_priv->sta;
-+	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
- 	int ret = 0;
- 	u8 key[WLAN_MAX_KEY_LEN];
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index a7bdde5..ed886af 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -76,6 +76,18 @@ static u8 mwifiex_rsn_oui[CIPHER_SUITE_MAX][4] = {
+ 	{ 0x00, 0x0f, 0xac, 0x04 },	/* AES  */
+ };
  
++static bool
++has_ieee_hdr(struct ieee_types_generic *ie, u8 key)
++{
++	return (ie && ie->ieee_hdr.element_id == key);
++}
++
++static bool
++has_vendor_hdr(struct ieee_types_vendor_specific *ie, u8 key)
++{
++	return (ie && ie->vend_hdr.element_id == key);
++}
++
+ /*
+  * This function parses a given IE for a given OUI.
+  *
+@@ -121,8 +133,7 @@ mwifiex_is_rsn_oui_present(struct mwifiex_bssdescriptor *bss_desc, u32 cipher)
+ 	struct ie_body *iebody;
+ 	u8 ret = MWIFIEX_OUI_NOT_PRESENT;
+ 
+-	if (bss_desc->bcn_rsn_ie &&
+-	    bss_desc->bcn_rsn_ie->ieee_hdr.element_id == WLAN_EID_RSN) {
++	if (has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN)) {
+ 		iebody = (struct ie_body *)
+ 			 (((u8 *) bss_desc->bcn_rsn_ie->data) +
+ 			  RSN_GTK_OUI_OFFSET);
+@@ -148,9 +159,7 @@ mwifiex_is_wpa_oui_present(struct mwifiex_bssdescriptor *bss_desc, u32 cipher)
+ 	struct ie_body *iebody;
+ 	u8 ret = MWIFIEX_OUI_NOT_PRESENT;
+ 
+-	if (bss_desc->bcn_wpa_ie &&
+-	    bss_desc->bcn_wpa_ie->vend_hdr.element_id ==
+-	    WLAN_EID_VENDOR_SPECIFIC) {
++	if (has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC)) {
+ 		iebody = (struct ie_body *) bss_desc->bcn_wpa_ie->data;
+ 		oui = &mwifiex_wpa_oui[cipher][0];
+ 		ret = mwifiex_search_oui_in_ie(iebody, oui);
+@@ -180,11 +189,8 @@ mwifiex_is_bss_wapi(struct mwifiex_private *priv,
+ 		    struct mwifiex_bssdescriptor *bss_desc)
+ {
+ 	if (priv->sec_info.wapi_enabled &&
+-	    (bss_desc->bcn_wapi_ie &&
+-	     bss_desc->bcn_wapi_ie->ieee_hdr.element_id ==
+-	     WLAN_EID_BSS_AC_ACCESS_DELAY)) {
++	    has_ieee_hdr(bss_desc->bcn_wapi_ie, WLAN_EID_BSS_AC_ACCESS_DELAY))
+ 		return true;
+-	}
+ 	return false;
+ }
+ 
+@@ -198,11 +204,8 @@ mwifiex_is_bss_no_sec(struct mwifiex_private *priv,
+ {
+ 	if (!priv->sec_info.wep_enabled && !priv->sec_info.wpa_enabled &&
+ 	    !priv->sec_info.wpa2_enabled &&
+-	    (!bss_desc->bcn_wpa_ie ||
+-	     bss_desc->bcn_wpa_ie->vend_hdr.element_id !=
+-	     WLAN_EID_VENDOR_SPECIFIC) &&
+-	    (!bss_desc->bcn_rsn_ie ||
+-	     bss_desc->bcn_rsn_ie->ieee_hdr.element_id != WLAN_EID_RSN) &&
++	    !has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC) &&
++	    !has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN) &&
+ 	    !priv->sec_info.encryption_mode && !bss_desc->privacy) {
+ 		return true;
+ 	}
+@@ -234,9 +237,7 @@ mwifiex_is_bss_wpa(struct mwifiex_private *priv,
+ {
+ 	if (!priv->sec_info.wep_enabled && priv->sec_info.wpa_enabled &&
+ 	    !priv->sec_info.wpa2_enabled &&
+-	    (bss_desc->bcn_wpa_ie &&
+-	     bss_desc->bcn_wpa_ie->vend_hdr.element_id ==
+-	     WLAN_EID_VENDOR_SPECIFIC)
++	    has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC)
+ 	   /*
+ 	    * Privacy bit may NOT be set in some APs like
+ 	    * LinkSys WRT54G && bss_desc->privacy
+@@ -270,8 +271,7 @@ mwifiex_is_bss_wpa2(struct mwifiex_private *priv,
+ {
+ 	if (!priv->sec_info.wep_enabled && !priv->sec_info.wpa_enabled &&
+ 	    priv->sec_info.wpa2_enabled &&
+-	    (bss_desc->bcn_rsn_ie &&
+-	     bss_desc->bcn_rsn_ie->ieee_hdr.element_id == WLAN_EID_RSN)) {
++	    has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN)) {
+ 		/*
+ 		 * Privacy bit may NOT be set in some APs like
+ 		 * LinkSys WRT54G && bss_desc->privacy
+@@ -304,11 +304,8 @@ mwifiex_is_bss_adhoc_aes(struct mwifiex_private *priv,
+ {
+ 	if (!priv->sec_info.wep_enabled && !priv->sec_info.wpa_enabled &&
+ 	    !priv->sec_info.wpa2_enabled &&
+-	    (!bss_desc->bcn_wpa_ie ||
+-	     bss_desc->bcn_wpa_ie->vend_hdr.element_id !=
+-	     WLAN_EID_VENDOR_SPECIFIC) &&
+-	    (!bss_desc->bcn_rsn_ie ||
+-	     bss_desc->bcn_rsn_ie->ieee_hdr.element_id != WLAN_EID_RSN) &&
++	    !has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC) &&
++	    !has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN) &&
+ 	    !priv->sec_info.encryption_mode && bss_desc->privacy) {
+ 		return true;
+ 	}
+@@ -325,11 +322,8 @@ mwifiex_is_bss_dynamic_wep(struct mwifiex_private *priv,
+ {
+ 	if (!priv->sec_info.wep_enabled && !priv->sec_info.wpa_enabled &&
+ 	    !priv->sec_info.wpa2_enabled &&
+-	    (!bss_desc->bcn_wpa_ie ||
+-	     bss_desc->bcn_wpa_ie->vend_hdr.element_id !=
+-	     WLAN_EID_VENDOR_SPECIFIC) &&
+-	    (!bss_desc->bcn_rsn_ie ||
+-	     bss_desc->bcn_rsn_ie->ieee_hdr.element_id != WLAN_EID_RSN) &&
++	    !has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC) &&
++	    !has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN) &&
+ 	    priv->sec_info.encryption_mode && bss_desc->privacy) {
+ 		mwifiex_dbg(priv->adapter, INFO,
+ 			    "info: %s: dynamic\t"
 -- 
-2.5.0
+2.7.0
 
