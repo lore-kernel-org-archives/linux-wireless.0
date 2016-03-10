@@ -1,35 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:9848 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752112AbcCDIkz convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f171.google.com ([209.85.214.171]:33182 "EHLO
+	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752198AbcCJS5g (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 03:40:55 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Nagarajan, Ashok Raj" <arnagara@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 1/2] ath10k: fix pktlog in QCA99X0
-Date: Fri, 4 Mar 2016 08:40:46 +0000
-Message-ID: <87a8mezldf.fsf@kamboji.qca.qualcomm.com> (sfid-20160304_094058_104154_2BEF8A37)
-References: <1454686969-5740-1-git-send-email-arnagara@qti.qualcomm.com>
-In-Reply-To: <1454686969-5740-1-git-send-email-arnagara@qti.qualcomm.com>
-	(Ashok Raj Nagarajan's message of "Fri, 5 Feb 2016 21:12:48 +0530")
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 10 Mar 2016 13:57:36 -0500
 MIME-Version: 1.0
+In-Reply-To: <CA+BoTQk+3jhwK57_fDw0scNCGzu_Edqp9-Beeppz8xj9kSQcoQ@mail.gmail.com>
+References: <1456492163-11437-1-git-send-email-michal.kazior@tieto.com>
+	<CAA93jw4XsEnp3jTgPL7OKWTJP-83VwRaCdb+foc8nCuqxk3WZA@mail.gmail.com>
+	<CA+BoTQk+3jhwK57_fDw0scNCGzu_Edqp9-Beeppz8xj9kSQcoQ@mail.gmail.com>
+Date: Thu, 10 Mar 2016 10:57:35 -0800
+Message-ID: <CAA93jw47wtioiUUD8ZTm4hFSVL7Uc8ubpSG5urHtWQhfAo1nmQ@mail.gmail.com> (sfid-20160310_195742_606283_FAB4CB62)
+Subject: Re: [RFC/RFT] mac80211: implement fq_codel for software queuing
+From: Dave Taht <dave.taht@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Tim Shepard <shep@alum.mit.edu>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Ashok Raj Nagarajan <arnagara@qti.qualcomm.com> writes:
-
-> Currently, we are providing wrong payload data of pktlog to trace points.
-> Data we receive from FW through copy engine 8 contains pktlog data alone.
-> We don't need to parse anything in driver before handing it to trace
-> points.
+>> regular fq_codel uses 1024 and there has not been much reason to
+>> change it. In the case of an AP which has more limited memory, 256 or
+>> 1024 would be a good setting, per station. I'd stick to 1024 for now.
 >
-> Fixes: afb0bf7f530b ("ath10k: add support for pktlog in QCA99X0")
-> Signed-off-by: Ashok Raj Nagarajan <arnagara@qti.qualcomm.com>
+> Do note that the 4096 is shared _across_ station-tid queues. It is not
+> per-station. If you have 10 stations you still have 4096 flows
+> (actually 4096 + 16*10, because each tid - and there are 16 - has it's
+> own fallback flow in case of hash collision on the global flowmap to
+> maintain per-sta-tid queuing).
 
-Both applied, thanks.
+I have to admit I didn't parse this well - still haven't, I think I
+need to draw. (got a picture?)
 
--- 
-Kalle Valo
+Where is this part happening in the code (or firmware?)
+
+" because each tid - and there are 16 - has it's
+ own fallback flow in case of hash collision on the global flowmap to
+ maintain per-sta-tid queuing"
+
+"fallback flow - hash collision on global flowmap" - huh?
+
+> With that in mind do you still think 1024 is enough?
+
+Can't answer that question without understanding what you said above.
+
+I assembled a few of the patches to date (your fq_codel patch, avery's
+and tims ath9k stuff) and tested them, to no measurable effect,
+against linus's tree a day or two back. I also acquired an ath10k card
+- would one of these suit?
+
+http://www.amazon.com/gp/product/B011SIMFR8?psc=1&redirect=true&ref_=oh_aui_detailpage_o08_s00
