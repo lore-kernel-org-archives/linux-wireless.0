@@ -1,42 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50008 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933048AbcCaVIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 17:08:44 -0400
-From: Jes.Sorensen@redhat.com
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:37968 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935176AbcCJIo3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2016 03:44:29 -0500
+Received: by mail-wm0-f51.google.com with SMTP id l68so18503989wml.1
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2016 00:44:28 -0800 (PST)
+From: Andreas Fenkart <afenkart@gmail.com>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 10/10] rtl8xxxu: Do not set LDOA15 / LDOV12 on 8192eu
-Date: Thu, 31 Mar 2016 17:08:42 -0400
-Message-Id: <1459458522-28686-11-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160331_230907_483393_4D374849)
-In-Reply-To: <1459458522-28686-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1459458522-28686-1-git-send-email-Jes.Sorensen@redhat.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Julian Calaby <julian.calaby@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Andreas Fenkart <afenkart@gmail.com>
+Subject: [PATCH v2 5/7] mwifiex: scan: replace pointer arithmetic with array access
+Date: Thu, 10 Mar 2016 09:44:09 +0100
+Message-Id: <1457599451-13910-6-git-send-email-afenkart@gmail.com> (sfid-20160310_094432_682161_675A7724)
+In-Reply-To: <1457599451-13910-1-git-send-email-afenkart@gmail.com>
+References: <1457599451-13910-1-git-send-email-afenkart@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+improves readability
 
-Per the vendor driver, it looks like the 8192eu doesn't have LDOA15 /
-LDOV12 registers.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/marvell/mwifiex/scan.c | 17 +++++++----------
+ 1 file changed, 7 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index f2e32a7..333addd 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -3283,7 +3283,7 @@ static int rtl8xxxu_init_phy_bb(struct rtl8xxxu_priv *priv)
- 		rtl8xxxu_write32(priv, REG_MAC_PHY_CTRL, val32);
- 	}
+diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
+index c137fd8..327b4d8 100644
+--- a/drivers/net/wireless/marvell/mwifiex/scan.c
++++ b/drivers/net/wireless/marvell/mwifiex/scan.c
+@@ -1000,27 +1000,24 @@ mwifiex_config_scan(struct mwifiex_private *priv,
+ 		     chan_idx++) {
  
--	if (priv->rtl_chip != RTL8723B) {
-+	if (priv->rtl_chip != RTL8723B && priv->rtl_chip != RTL8192E) {
- 		ldoa15 = LDOA15_ENABLE | LDOA15_OBUF;
- 		ldov12d = LDOV12D_ENABLE | BIT(2) | (2 << LDOV12D_VADJ_SHIFT);
- 		ldohci12 = 0x57;
+ 			channel = user_scan_in->chan_list[chan_idx].chan_number;
+-			(scan_chan_list + chan_idx)->chan_number = channel;
++			scan_chan_list[chan_idx].chan_number = channel;
+ 
+ 			radio_type =
+ 				user_scan_in->chan_list[chan_idx].radio_type;
+-			(scan_chan_list + chan_idx)->radio_type = radio_type;
++			scan_chan_list[chan_idx].radio_type = radio_type;
+ 
+ 			scan_type = user_scan_in->chan_list[chan_idx].scan_type;
+ 
+ 			if (scan_type == MWIFIEX_SCAN_TYPE_PASSIVE)
+-				(scan_chan_list +
+-				 chan_idx)->chan_scan_mode_bitmap
++				scan_chan_list[chan_idx].chan_scan_mode_bitmap
+ 					|= (MWIFIEX_PASSIVE_SCAN |
+ 					    MWIFIEX_HIDDEN_SSID_REPORT);
+ 			else
+-				(scan_chan_list +
+-				 chan_idx)->chan_scan_mode_bitmap
++				scan_chan_list[chan_idx].chan_scan_mode_bitmap
+ 					&= ~MWIFIEX_PASSIVE_SCAN;
+ 
+ 			if (*filtered_scan)
+-				(scan_chan_list +
+-				 chan_idx)->chan_scan_mode_bitmap
++				scan_chan_list[chan_idx].chan_scan_mode_bitmap
+ 					|= MWIFIEX_DISABLE_CHAN_FILT;
+ 
+ 			if (user_scan_in->chan_list[chan_idx].scan_time) {
+@@ -1035,9 +1032,9 @@ mwifiex_config_scan(struct mwifiex_private *priv,
+ 					scan_dur = adapter->active_scan_time;
+ 			}
+ 
+-			(scan_chan_list + chan_idx)->min_scan_time =
++			scan_chan_list[chan_idx].min_scan_time =
+ 				cpu_to_le16(scan_dur);
+-			(scan_chan_list + chan_idx)->max_scan_time =
++			scan_chan_list[chan_idx].max_scan_time =
+ 				cpu_to_le16(scan_dur);
+ 		}
+ 
 -- 
-2.5.5
+2.7.0
 
