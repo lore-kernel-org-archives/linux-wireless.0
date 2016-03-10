@@ -1,66 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43557 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750997AbcCAR4h (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 12:56:37 -0500
-Message-ID: <56D5D763.5070709@codeaurora.org> (sfid-20160301_185640_718196_C879EC7B)
-Date: Tue, 01 Mar 2016 09:54:43 -0800
-From: Peter Oh <poh@codeaurora.org>
+Received: from bues.ch ([80.190.117.144]:42607 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754323AbcCJRna (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2016 12:43:30 -0500
+Date: Thu, 10 Mar 2016 18:43:13 +0100
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, netdev@vger.kernel.org,
+	Jia-Ju Bai <baijiaju1990@163.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	b43-dev@lists.infradead.org
+Subject: Re: [PATCH] b43: fix memory leak
+Message-ID: <20160310184313.06eb8b91@wiggum> (sfid-20160310_184333_743138_2FA01B89)
+In-Reply-To: <56C72FA6.3090102@gmail.com>
+References: <1455798876-32186-1-git-send-email-sudipm.mukherjee@gmail.com>
+	<20160218173212.03670d97@wiggum>
+	<87io1lqh3j.fsf@purkki.adurom.net>
+	<56C72FA6.3090102@gmail.com>
 MIME-Version: 1.0
-To: Michal Kazior <michal.kazior@tieto.com>,
-	Peter Oh <poh@qca.qualcomm.com>
-CC: linux-wireless <linux-wireless@vger.kernel.org>,
-	ath10k@lists.infradead.org
-Subject: Re: [PATCH v5] ath10k: set MAC timestamp in management Rx frame
-References: <5bc6ba3b4d5743dc641b85c2c4233631f5b3319a.1456513260.git.poh@qca.qualcomm.com> <CA+BoTQkCwSkARQKWcjkJri9xS6GGiHq4NwjOoewqtHOetjevGw@mail.gmail.com>
-In-Reply-To: <CA+BoTQkCwSkARQKWcjkJri9xS6GGiHq4NwjOoewqtHOetjevGw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/GHQ5gnZ7A.ML5mBfrfA46=F"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+--Sig_/GHQ5gnZ7A.ML5mBfrfA46=F
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On 02/29/2016 10:33 AM, Michal Kazior wrote:
-> On 26 February 2016 at 20:03, Peter Oh <poh@qca.qualcomm.com> wrote:
->> Check and set Rx MAC timestamp when firmware indicates it.
->> Firmware adds it in Rx beacon frame only at this moment.
->> Driver and mac80211 may utilize it to detect such clockdrift
->> or beacon collision and use the result for beacon collision
->> avoidance.
->>
->> Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
->> ---
-> [...]
->> +       if (rx_status & WMI_RX_STATUS_EXT_INFO) {
->> +               status->mactime =
->> +                       __le32_to_cpu(arg.ext_info.rx_mac_timestamp_l32) |
->> +
->> (u64)__le32_to_cpu(arg.ext_info.rx_mac_timestamp_u32)
->> +                       << 32;
->> +               status->flag |= RX_FLAG_MACTIME_END;
->> +       }
->>          /* Hardware can Rx CCK rates on 5GHz. In that case phy_mode is set
->> to
->>           * MODE_11B. This means phy_mode is not a reliable source for the
->> band
->>           * of mgmt rx.
->> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h
->> b/drivers/net/wireless/ath/ath10k/wmi.h
->> index 4d3cbc4..f209d51 100644
->> --- a/drivers/net/wireless/ath/ath10k/wmi.h
->> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
->> @@ -3037,11 +3037,18 @@ struct wmi_10_4_mgmt_rx_event {
->>          u8 buf[0];
->>   } __packed;
->>
->> +struct wmi_mgmt_rx_ext_info {
->> +       __le32 rx_mac_timestamp_l32;
->> +       __le32 rx_mac_timestamp_u32;
-> Oh.. I feel bad for noticing this so late.
-review is always appreciated.
->   I think this can be
-> represented with a mere __le64 and then accessed via le64_to_cpu().
-sent new patch based on your comment.
+On Fri, 19 Feb 2016 20:37:18 +0530
+Sudip Mukherjee <sudipm.mukherjee@gmail.com> wrote:
 
-Thanks,
-Peter
+> > https://patchwork.kernel.org/patch/8049041/ =20
+>=20
+> I have an old laptop running on 800Mhz CPU. It has "Broadcom BCM4311=20
+> [14e4:4311] (rev 01)".
+> I will try to test it on this weekend.
+
+Any news on this one?
+
+
+--=20
+Michael
+
+--Sig_/GHQ5gnZ7A.ML5mBfrfA46=F
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iQIcBAEBCAAGBQJW4bIxAAoJEPUyvh2QjYsOqw8P/2IzLNPoxyOPZbUMHk1NB7HR
+0okKxsME2S2USPDyZqnRiBbZlJjP4vj26PZ7CkH/XT9YyZqlrWnpIvUZ+fffALoX
+zJ0M6+U/ZCU6Ia5uDT/Wi44dw0ULRZExFGMHPfat7um+TdKg8oRtxb3O/H+IV79T
+8xoZ8jrudgNwWuCV+2XaHpid56J3+2l/CE94SYenXmwMG0fOVXm5we8exxtGbVTY
+Rey4NBfXP5q3eimO9s4kr4nj+5SWxmkrO2zvkyVYyph3AuFZu2LK1uMba+eAXxRa
+fXo4nG8TPvepn9qSm8yim7BdDNmUfawjxLd9SO1ddRyuZtW29aqOWzMXUe8WLsFj
+Ve/5y6XLvzL3N+FCAkmMeIqBYzKsjg+JuzicPCQqHugoSfutYuT1du9ybj1TJXWI
+fjwLnh+toiR4Lr4krPU8Usk+LtwhzsoqhMSn1nrXY8ykYJe97HvQ5neSX748I7Hi
+PGRvIZqXpTgtEL5Q5XCzfQnBT3zcBTZ5cUIJnca5yfO1C7e0x/Be/ypZ4Oc2vs9i
+5nyyKxOHQFyMfRw5hoziijSbIJTYZp7CapB1TbQhsks5Xx0sIka7uMb+LVD5mFIT
+CJkziFngbaG5KWohFrb0VeX1X1ju30Y9b3bWm2ZKET8wcFUToDBLT89BVhvkDnrB
+rqReG4HRGX7BSgLLdHNk
+=gg9f
+-----END PGP SIGNATURE-----
+
+--Sig_/GHQ5gnZ7A.ML5mBfrfA46=F--
