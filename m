@@ -1,55 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:37145 "EHLO
-	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932084AbcCQJxW (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21164 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753612AbcCJKOT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 05:53:22 -0400
-Received: by mail-wm0-f50.google.com with SMTP id p65so108865297wmp.0
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 02:53:22 -0700 (PDT)
-Date: Thu, 17 Mar 2016 10:53:18 +0100
-From: Vishal Thanki <vishalthanki@gmail.com>
-To: Stanislaw Gruszka <sgruszka@redhat.com>
-Cc: helmut.schaa@googlemail.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] rt2x00usb: Use usb anchors to manage URB
-Message-ID: <20160317095317.GA6518@c50.bag.software> (sfid-20160317_105327_253759_7F1979E4)
-References: <1458149331-2106-1-git-send-email-vishalthanki@gmail.com>
- <20160317084331.GA19458@redhat.com>
+	Thu, 10 Mar 2016 05:14:19 -0500
+From: Raja Mani <rmani@qti.qualcomm.com>
+To: <kvalo@qca.qualcomm.com>
+CC: <devicetree@vger.kernel.org>, <ath10k@lists.infradead.org>,
+	<linux-wireless@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<robh@kernel.org>, Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH] dt: bindings: add new dt entry for pre calibration in qcom,ath10k.txt
+Date: Thu, 10 Mar 2016 15:42:04 +0530
+Message-ID: <1457604724-14378-1-git-send-email-rmani@qti.qualcomm.com> (sfid-20160310_111442_762372_4048BFC1)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160317084331.GA19458@redhat.com>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+There two things done in this patch,
 
-On Thu, Mar 17, 2016 at 09:43:32AM +0100, Stanislaw Gruszka wrote:
-> Hi
-> 
-> On Wed, Mar 16, 2016 at 06:28:51PM +0100, Vishal Thanki wrote:
-> > +struct rt2x00usb_anchors {
-> > +	struct usb_anchor async_urb;
-> > +	struct usb_anchor tx_submitted;
-> > +	struct usb_anchor rx_submitted;
-> > +};
-> 
-> I don't think we need 3 different usb_anchor's, one should be
-> enough.
-> 
+1) Existing device tree entry 'qcom,ath10k-calibration-data' carries
+   not only calibration data, it carries board specific data too.
+   So, make appropriate update in doc.
 
-Ok, I will change that.
+2) ipq4019 wifi needs new devie tree entry to carry calibration
+   data alone (called pre cal data, it doesn't include any other info).
+   Using 'qcom,ath10k-calibration-data' for ipq4019 would alter
+   the purpose of it. Hence, add new device tree entry called
+   'qcom,ath10k-pre-calibration-data' to carry only pre calibration data.
 
-> > +static struct rt2x00usb_anchors *anchors;
-> 
-> usb_anchor structure should be embedded in rt2x00_dev structure,
-> otherwise you can kill urb's from other rt2x00 devices, when
-> disconnecting another one.
-> 
+Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+---
 
-rt2x00_dev structure does not contain any bus specific data structures
-(for example no structures present for USB/PCI). Should I add a void
-*ptr in rt2x00_dev and cast it as usb_anchor in rt2x00usb.c?
+Below patches covers the corresponding changes in the ath10k driver.
+It's posted separately to ath10k and linux-wireless mailing list.
 
-Thanks,
-Vishal
+  1) ath10k: pass cal data location as an argument to ath10k_download_cal_{file|dt}
+  2) ath10k: move cal data len to hw_params
+  3) ath10k: incorporate qca4019 cal data download sequence
 
-> Stanislaw
+ .../bindings/net/wireless/qcom,ath10k.txt          | 23 +++++++++++++++-------
+ 1 file changed, 16 insertions(+), 7 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+index 96aae6b..74d7f0a 100644
+--- a/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
++++ b/Documentation/devicetree/bindings/net/wireless/qcom,ath10k.txt
+@@ -5,12 +5,18 @@ Required properties:
+ 	* "qcom,ath10k"
+ 	* "qcom,ipq4019-wifi"
+ 
+-PCI based devices uses compatible string "qcom,ath10k" and takes only
+-calibration data via "qcom,ath10k-calibration-data". Rest of the properties
+-are not applicable for PCI based devices.
++PCI based devices uses compatible string "qcom,ath10k" and takes calibration
++data along with board specific data via "qcom,ath10k-calibration-data".
++Rest of the properties are not applicable for PCI based devices.
+ 
+ AHB based devices (i.e. ipq4019) uses compatible string "qcom,ipq4019-wifi"
+-and also uses most of the properties defined in this doc.
++and also uses most of the properties defined in this doc (except
++"qcom,ath10k-calibration-data"). It uses "qcom,ath10k-pre-calibration-data"
++to carry pre calibration data.
++
++In general, entry "qcom,ath10k-pre-calibration-data" and
++"qcom,ath10k-calibration-data" conflict with each other and only one
++can be provided per device.
+ 
+ Optional properties:
+ - reg: Address and length of the register set for the device.
+@@ -35,8 +41,11 @@ Optional properties:
+ - qcom,msi_addr: MSI interrupt address.
+ - qcom,msi_base: Base value to add before writing MSI data into
+ 		MSI address register.
+-- qcom,ath10k-calibration-data : calibration data as an array, the
+-				 length can vary between hw versions
++- qcom,ath10k-calibration-data : calibration data + board specific data
++				 as an array, the length can vary between
++				 hw versions.
++- qcom,ath10k-pre-calibration-data : pre calibration data as an array,
++				     the length can vary between hw versions.
+ 
+ Example (to supply the calibration data alone):
+ 
+@@ -105,5 +114,5 @@ wifi0: wifi@a000000 {
+ 			  "legacy";
+ 	qcom,msi_addr = <0x0b006040>;
+ 	qcom,msi_base = <0x40>;
+-	qcom,ath10k-calibration-data = [ 01 02 03 ... ];
++	qcom,ath10k-pre-calibration-data = [ 01 02 03 ... ];
+ };
+-- 
+1.8.1.2
+
