@@ -1,36 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:64484 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751031AbcCDFjh convert rfc822-to-8bit (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:33441 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752190AbcCJRaX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 00:39:37 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Spinadel, David" <david.spinadel@intel.com>
-Subject: Re: [PATCH] mac80211_hwsim: Set global RRM capability
-Date: Fri, 4 Mar 2016 05:39:32 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA55BF2@hasmsx107.ger.corp.intel.com> (sfid-20160304_063940_523192_E55422FA)
-References: <1456392253-16972-1-git-send-email-emmanuel.grumbach@intel.com>
- <1456921458.2157.2.camel@sipsolutions.net>
- <0BA3FCBA62E2DC44AF3030971E174FB32EA51497@hasmsx107.ger.corp.intel.com>
- <1457019901.2044.28.camel@sipsolutions.net>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 10 Mar 2016 12:30:23 -0500
+Received: by mail-wm0-f47.google.com with SMTP id l68so38182264wml.0
+        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2016 09:30:22 -0800 (PST)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: Re: New firmware for RT2870
+To: linux-wireless <linux-wireless@vger.kernel.org>,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <56E1AF2B.7030206@gmail.com> (sfid-20160310_183026_750279_F76374C6)
+Date: Thu, 10 Mar 2016 18:30:19 +0100
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Larry Finger wrote:
+
+> I downloaded the firmware from b.k.o. It had very little effect on my no-name 
+> adapter with ID 148f:3070. It still gets ping losses of 10-15%.
+
+I have tested 0.36 on a 148f:3070 (high quality) device for 4 hours,
+and it has worked *flawlessly* .
+(Fedora 23 + updates-testing.repo - kernel-4.4.4-301 - wpa_supplicant-2.4-7
+AP: Buffalo WZR-HP-G300NH2 running OpenWrt-snapshots-2016-Mar-09 [1])
+
+Last year I have been in touch with Mediatek crew, and they said(12/09/2015):
+"According to the engineers comment, the firmware didn't change much
+these years, just some bbp register update and led stuff."
 
 
-On 03/03/2016 05:45 PM, Johannes Berg wrote:
-> On Wed, 2016-03-02 at 12:36 +0000, Grumbach, Emmanuel wrote:
->>>
->> I had the same thinking, but somehow people convinced me that a
->> driver may prefer not to advertise this without its explicit
->> consent.
->
-> So ... What are the arguments? :)
->
-
-Well.. a driver may not want to advertise it... Moot...
-I guess we can / should move it to mac80211.
+[1] Friends don't let friends run stock router firmware.
