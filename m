@@ -1,36 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56437 "EHLO sipsolutions.net"
+Received: from mga03.intel.com ([134.134.136.65]:44489 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754190AbcCCPLc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 10:11:32 -0500
-Message-ID: <1457017889.2044.18.camel@sipsolutions.net> (sfid-20160303_161136_409173_E7E8C936)
-Subject: Re: [PATCH v2 1/3] cfg80211: Allow a scan request for a specific
- BSSID
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Thu, 03 Mar 2016 16:11:29 +0100
-In-Reply-To: <1456517569-27235-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1456517569-27235-1-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1752267AbcCJTP5 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2016 14:15:57 -0500
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Kyle McMartin <kyle@infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-firmware@kernel.org" <linux-firmware@kernel.org>
+Subject: Re: pull request: iwlwifi -21.ucode firmware
+Date: Thu, 10 Mar 2016 19:15:31 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA68CFE@hasmsx107.ger.corp.intel.com> (sfid-20160310_201600_817875_C6A314B3)
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA66A24@hasmsx107.ger.corp.intel.com>
+ <20160310184933.GA21789@merlin.infradead.org>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-02-26 at 22:12 +0200, Jouni Malinen wrote:
-> This allows scans for a specific BSSID to be optimized by the user
-> space
-> application by requesting the driver to set the Probe Request frame
-> BSSID field (Address 3) to the specified BSSID instead of the
-> wildcard
-> BSSID. This prevents other APs from replying which reduces airtime
-> need
-> and latency in getting the response from the target AP through.
-> 
-> This is an optimization and as such, it is acceptable for some of the
-> drivers not to support the mechanism. If not supported, the wildcard
-> BSSID will be used and more responses may be received.
-> 
-Applied all three.
 
-johannes
+
+On 03/10/2016 08:50 PM, Kyle McMartin wrote:
+> On Thu, Mar 10, 2016 at 07:29:15AM +0000, Grumbach, Emmanuel wrote:
+>> Hi Kyle,
+>>
+>> This is a pull request to include our latest available firmware into
+>> mainline linux-firmware.git.
+>>
+>> It includes -21.ucode for various devices including devices for which
+>> this is the first supported firmware (3168 and 8265).
+>> This firmware is supported starting kernel 4.6.
+>>
+>> Please pull!
+>>
+> 
+> Pulled, can you follow this up and update WHENCE? I'd do it, but there's
+> a lack of consistency between Version: and some of the past commit
+> messages, so I'm not sure what the right value would be.
+> 
+
+Ooops - sorry:
+
+e6dedba0a09221a755ae4573d70b86c804a14be2 in the same tree.
+
+diff --git a/WHENCE b/WHENCE
+index e249c49..a9c5e98 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -897,12 +897,24 @@ Version: 25.30.13.0
+ File: iwlwifi-7265D-16.ucode
+ Version 16.242414.0
+
++File: iwlwifi-7265D-21.ucode
++Version 21.302800.0
++
++File: iwlwifi-3168-21.ucode
++Version 21.302800.0
++
+ File: iwlwifi-8000C-13.ucode
+ Version: 25.30.13.0
+
+ File: iwlwifi-8000C-16.ucode
+ Version 16.242414.0
+
++File: iwlwifi-8000C-21.ucode
++Version 21.302800.0
++
++File: iwlwifi-8265-21.ucode
++Version 21.302800.0
++
+ Licence: Redistributable. See LICENCE.iwlwifi_firmware for details
+
+ Also available from
+http://wireless.kernel.org/en/users/Drivers/iwlwifi#Firmware
+
