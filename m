@@ -1,55 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:36748 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751247AbcCCMGT (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:55323 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965557AbcCJKN2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 07:06:19 -0500
-Received: by mail-pa0-f68.google.com with SMTP id a7so1147916pax.3
-        for <linux-wireless@vger.kernel.org>; Thu, 03 Mar 2016 04:06:19 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 2/6] staging: wilc1000: remove commented codes
-Date: Thu,  3 Mar 2016 21:05:18 +0900
-Message-Id: <1457006722-14400-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20160303_130622_636911_39F74E14)
-In-Reply-To: <1457006722-14400-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1457006722-14400-1-git-send-email-chaehyun.lim@gmail.com>
+	Thu, 10 Mar 2016 05:13:28 -0500
+From: Raja Mani <rmani@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>
+Subject: [PATCH 1/3] ath10k: pass cal data location as an argument to ath10k_download_cal_{file|dt}
+Date: Thu, 10 Mar 2016 15:42:36 +0530
+Message-ID: <1457604758-14454-2-git-send-email-rmani@qti.qualcomm.com> (sfid-20160310_111402_511458_3F5CC47A)
+In-Reply-To: <1457604758-14454-1-git-send-email-rmani@qti.qualcomm.com>
+References: <1457604758-14454-1-git-send-email-rmani@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes commented codes in struct wilc_cfg_str.
+Both ath10k_download_cal_file() and ath10k_download_cal_dt() uses
+hard coded file pointer (ar->cal_file) and device tree entry
+(qcom,ath10k-calibration-data) respectively to get calibration
+data content.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+There is a need to use those two functions in qca4019 calibration
+download sequence with different file pointer and device tree entry name.
+Modify those two functions to take cal data location as an argument.
+So that it can serve the purpose for other file pointer and device
+tree entry.
+
+This is just preparation before adding actual qca4019 calibration
+download sequence. No functional changes.
+
+Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
 ---
- drivers/staging/wilc1000/wilc_wlan_cfg.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c | 24 +++++++++++-------------
+ 1 file changed, 11 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_cfg.c b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-index b992243..b25d772 100644
---- a/drivers/staging/wilc1000/wilc_wlan_cfg.c
-+++ b/drivers/staging/wilc1000/wilc_wlan_cfg.c
-@@ -136,7 +136,6 @@ static struct wilc_cfg_str g_cfg_str[] = {
- 	{WID_BSSID, g_mac.bssid},	/* 6 bytes */
- 	{WID_WEP_KEY_VALUE, g_mac.wep_key},	/* 27 bytes */
- 	{WID_11I_PSK, g_mac.i_psk},	/* 65 bytes */
--	/* {WID_11E_P_ACTION_REQ, g_mac.action_req}, */
- 	{WID_HARDWARE_VERSION, g_mac.hardwareProductVersion},
- 	{WID_MAC_ADDR, g_mac.mac_address},
- 	{WID_PHY_VERSION, g_mac.phyversion},
-@@ -144,10 +143,8 @@ static struct wilc_cfg_str g_cfg_str[] = {
- 	{WID_SUPP_PASSWORD, g_mac.supp_password},
- 	{WID_SITE_SURVEY_RESULTS, g_mac.scan_result},
- 	{WID_SITE_SURVEY_RESULTS, g_mac.scan_result1},
--	/* {WID_RX_POWER_LEVEL, g_mac.channel_rssi}, */
- 	{WID_ASSOC_REQ_INFO, g_mac.assoc_req},
- 	{WID_ASSOC_RES_INFO, g_mac.assoc_rsp},
--	/* {WID_11N_P_ACTION_REQ, g_mac.action_req}, */
- 	{WID_FIRMWARE_INFO, g_mac.firmware_version},
- 	{WID_IP_ADDRESS, g_mac.ip_address},
- 	{WID_NIL, NULL}
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 2389c07..4ec4d72 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -462,18 +462,18 @@ exit:
+ 	return ret;
+ }
+ 
+-static int ath10k_download_cal_file(struct ath10k *ar)
++static int ath10k_download_cal_file(struct ath10k *ar,
++				    const struct firmware *file)
+ {
+ 	int ret;
+ 
+-	if (!ar->cal_file)
++	if (!file)
+ 		return -ENOENT;
+ 
+-	if (IS_ERR(ar->cal_file))
+-		return PTR_ERR(ar->cal_file);
++	if (IS_ERR(file))
++		return PTR_ERR(file);
+ 
+-	ret = ath10k_download_board_data(ar, ar->cal_file->data,
+-					 ar->cal_file->size);
++	ret = ath10k_download_board_data(ar, file->data, file->size);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to download cal_file data: %d\n", ret);
+ 		return ret;
+@@ -484,7 +484,7 @@ static int ath10k_download_cal_file(struct ath10k *ar)
+ 	return 0;
+ }
+ 
+-static int ath10k_download_cal_dt(struct ath10k *ar)
++static int ath10k_download_cal_dt(struct ath10k *ar, const char *dt_name)
+ {
+ 	struct device_node *node;
+ 	int data_len;
+@@ -498,8 +498,7 @@ static int ath10k_download_cal_dt(struct ath10k *ar)
+ 		 */
+ 		return -ENOENT;
+ 
+-	if (!of_get_property(node, "qcom,ath10k-calibration-data",
+-			     &data_len)) {
++	if (!of_get_property(node, dt_name, &data_len)) {
+ 		/* The calibration data node is optional */
+ 		return -ENOENT;
+ 	}
+@@ -517,8 +516,7 @@ static int ath10k_download_cal_dt(struct ath10k *ar)
+ 		goto out;
+ 	}
+ 
+-	ret = of_property_read_u8_array(node, "qcom,ath10k-calibration-data",
+-					data, data_len);
++	ret = of_property_read_u8_array(node, dt_name, data, data_len);
+ 	if (ret) {
+ 		ath10k_warn(ar, "failed to read calibration data from DT: %d\n",
+ 			    ret);
+@@ -1258,7 +1256,7 @@ static int ath10k_download_cal_data(struct ath10k *ar)
+ {
+ 	int ret;
+ 
+-	ret = ath10k_download_cal_file(ar);
++	ret = ath10k_download_cal_file(ar, ar->cal_file);
+ 	if (ret == 0) {
+ 		ar->cal_mode = ATH10K_CAL_MODE_FILE;
+ 		goto done;
+@@ -1268,7 +1266,7 @@ static int ath10k_download_cal_data(struct ath10k *ar)
+ 		   "boot did not find a calibration file, try DT next: %d\n",
+ 		   ret);
+ 
+-	ret = ath10k_download_cal_dt(ar);
++	ret = ath10k_download_cal_dt(ar, "qcom,ath10k-calibration-data");
+ 	if (ret == 0) {
+ 		ar->cal_mode = ATH10K_CAL_MODE_DT;
+ 		goto done;
 -- 
-2.7.1
+1.8.1.2
 
