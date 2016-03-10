@@ -1,36 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:14596 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753264AbcCDIjy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 03:39:54 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-CC: "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH] ath10k: remove impossible code
-Date: Fri, 4 Mar 2016 08:39:49 +0000
-Message-ID: <87io12zlf4.fsf@kamboji.qca.qualcomm.com> (sfid-20160304_094018_296421_F2F3E3FC)
-References: <1454397280-4758-1-git-send-email-sudipm.mukherjee@gmail.com>
-In-Reply-To: <1454397280-4758-1-git-send-email-sudipm.mukherjee@gmail.com>
-	(Sudip Mukherjee's message of "Tue, 2 Feb 2016 12:44:40 +0530")
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:34001 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751383AbcCJOxQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2016 09:53:16 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 054/113] rtl8xxxu: Implement 8723bu power on sequence
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+	<1456783551-28315-55-git-send-email-Jes.Sorensen@redhat.com>
+	<87twkejtd4.fsf@purkki.adurom.net>
+Date: Thu, 10 Mar 2016 09:53:14 -0500
+In-Reply-To: <87twkejtd4.fsf@purkki.adurom.net> (Kalle Valo's message of "Thu,
+	10 Mar 2016 16:32:55 +0200")
+Message-ID: <wrfjfuvy2xlx.fsf@redhat.com> (sfid-20160310_155318_826865_10D3EEEE)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
-
-> From: Sudip Mukherjee <sudip@vectorindia.org>
+Kalle Valo <kvalo@codeaurora.org> writes:
+> Jes.Sorensen@redhat.com writes:
 >
-> len has been initialized with a value of 0 and buf_len with 4096. There
-> is no way that this condition (len > buf_len) can be true now.
+>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>
+>> This implements the 8723bu specific power on sequence as it is
+>> different from that of the 8723au chips.
+>>
+>> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 >
-> Signed-off-by: Sudip Mukherjee <sudip@vectorindia.org>
+> [...]
+>
+>> @@ -140,7 +144,10 @@
+>>  #define REG_MAC_PINMUX_CFG		0x0043
+>>  #define REG_GPIO_PIN_CTRL		0x0044
+>>  #define REG_GPIO_INTM			0x0048
+>> +#define  GPIO_INTM_EDGE_TRIG_IRQ	BIT(9)
+>> +
+>>  #define REG_LEDCFG0			0x004c
+>> +#define  LEDCFG0_DPDT_SELECT		BIT(23)
+>>  #define REG_LEDCFG1			0x004d
+>>  #define REG_LEDCFG2			0x004e
+>>  #define  LEDCFG2_DPDT_SELECT		BIT(7)
+>> @@ -154,9 +161,13 @@
+>>  #define REG_GPIO_PIN_CTRL_2		0x0060
+>>  /*  RTL8723 WIFI/BT/GPS Multi-Function GPIO Select. */
+>>  #define REG_GPIO_IO_SEL_2		0x0062
+>> +#define  GPIO_IO_SEL_2_GPIO09_INPUT	BIT(1)
+>> +#define  GPIO_IO_SEL_2_GPIO09_IRQ	BIT(9)
+>>  
+>>  /*  RTL8723B */
+>>  #define REG_PAD_CTRL1			0x0064
+>> +#define  PAD_CTRL1_SW_DPDT_SEL_DATA	BIT(0)
+>
+> Why two spaces after define?
 
-Applied, thanks.
+I use two spaces for bit defines, so it refers to the register
+above. It's consistent throughout the code.
 
--- 
-Kalle Valo
+Jes
