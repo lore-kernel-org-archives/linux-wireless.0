@@ -1,98 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52608 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933586AbcCQVr7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 17:47:59 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Greg KH <greg@kroah.com>
-Cc: poma <pomidorabelisima@gmail.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"linux-usb\@vger.kernel.org" <linux-usb@vger.kernel.org>
-Subject: Re: rtl8xxxu 4.4.5(from f23): I get a panic adding a new device to the driver
-References: <56E89DD2.7000000@gmail.com> <wrfjfuvqr0cb.fsf@redhat.com>
-	<wrfja8lxnfsm.fsf@redhat.com> <56EB0D15.9040103@gmail.com>
-	<20160317204248.GA12102@kroah.com>
-Date: Thu, 17 Mar 2016 17:47:58 -0400
-In-Reply-To: <20160317204248.GA12102@kroah.com> (Greg KH's message of "Thu, 17
-	Mar 2016 13:42:48 -0700")
-Message-ID: <wrfjwpp0lqsx.fsf@redhat.com> (sfid-20160317_224804_449163_759BDA82)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:39449 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751571AbcCJG11 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 10 Mar 2016 01:27:27 -0500
+From: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] mac80211: Allow probe response frame rx to user space in
+ AP mode
+Date: Thu, 10 Mar 2016 06:27:00 +0000
+Message-ID: <56E113AE.8050300@qti.qualcomm.com> (sfid-20160310_072731_013223_82A3F308)
+References: <1457334731-6456-1-git-send-email-vthiagar@qti.qualcomm.com>
+	 <1457456123.24270.11.camel@sipsolutions.net>
+	 <56DFB02A.5070207@qti.qualcomm.com>
+ <1457515749.2042.0.camel@sipsolutions.net>
+In-Reply-To: <1457515749.2042.0.camel@sipsolutions.net>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Greg KH <greg@kroah.com> writes:
-> On Thu, Mar 17, 2016 at 09:01:25PM +0100, poma wrote:
->> On 17.03.2016 19:02, Jes Sorensen wrote:
->> > Jes Sorensen <Jes.Sorensen@redhat.com> writes:
->> >> Xose Vazquez Perez <xose.vazquez@gmail.com> writes:
->> >>> Hi,
->> >>>
->> >>> If I do:
->> >>> # echo "0bda 8176" > /sys/bus/usb/drivers/rtl8xxxu/new_id
->> >>
->> >> Hi Xose,
->> >>
->> >> Yes please don't do that. The rtl8xxxu driver relies on the .driver_info
->> >> field in struct use_device_id to carry information for the different
->> >> types of devices. If you hot add a device like above, the driver will
->> >> fail because that field now contains a NULL pointer.
->> >>
->> >> I should probably add a check for it in the probe function, but it will
->> >> simply be there to spit out a warning that it doesn't work to hot add a
->> >> device like this.
->> >>
->> >> If you build it with CONFIG_RTL8XXXU_UNTESTED the 0bda:8176 should be
->> >> included in the device list.
->> >>
->> >> Cheers,
->> >> Jes
->> > 
->> > Hi Xose,
->> > 
->> > I added the following patch to my tree to avoid this.
->> > 
->> > Cheers,
->> > Jes
->> > 
->> > commit 9202f4947aac1d60084ee79c9b5294eb42ba59dc
->> > Author: Jes Sorensen <Jes.Sorensen@redhat.com>
->> > Date:   Thu Mar 17 13:53:48 2016 -0400
->> > 
->> >     rtl8xxxu: Fix OOPS if user tries to add device via /sys
->> >     
->> >     This driver relies on driver_info in struct usb_device_id, hence
->> >     adding a device via  /sys/bus/usb/drivers/rtl8xxxu/new_id would result
->> >     in a NULL pointer dereference.
->> >     
->> >     Instead print a message and return -ENODEV
->> >     
->> >     Reported-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
->> >     Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
->> > 
->> > diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
->> > b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
->> > index 8d893f4..55fc00e 100644
->> > --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
->> > +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
->> > @@ -9671,6 +9671,15 @@ static int rtl8xxxu_probe(struct
->> > usb_interface *interface,
->> >  
->> >  	udev = usb_get_dev(interface_to_usbdev(interface));
->> >  
->> > +	if (!id->driver_info) {
->> > +		dev_warn(&udev->dev,
->> > + "rtl8xxxu relies on driver_info in struct usb_device_id.\n");
->> > +		dev_warn(&udev->dev,
->> > + "Adding a device via /sys/bus/usb/drivers/rtl8xxxu/new_id is not
->> > supported!\n");
->
-> We do have a flag in the USB driver structure to prevent this from
-> happening, "no_dynamic_id", please just set that and then this should
-> not happen.
-
-I wasn't aware of this flag - I'll update the patch to do that.
-
-Thanks,
-Jes
+T24gV2VkbmVzZGF5IDA5IE1hcmNoIDIwMTYgMDI6NTkgUE0sIEpvaGFubmVzIEJlcmcgd3JvdGU6
+DQo+IE9uIFdlZCwgMjAxNi0wMy0wOSBhdCAwNToxMCArMDAwMCwgVGhpYWdhcmFqYW4sIFZhc2Fu
+dGhha3VtYXIgd3JvdGU6DQo+DQo+PiBXaGVuIGFuIHVzZXIgc3BhY2Ugd2FudHMgdG8gaGF2ZSBj
+b250cm9sIG92ZXIgdGhlIGR1cmF0aW9uIG9mIG9mZi0NCj4+IGNoYW5uZWwgKHNpbmdsZSBjaGFu
+bmVsKSBzY2FuIGl0IGNvdWxkIHVzZSByZW1haW4tb24tY2hhbm5lbA0KPj4gaW50ZXJmYWNlIGlu
+c3RlYWQgb2YgdHJpZ2dlcl9zY2FuIHRvIHBlcmZvcm0gb2ZmLWNoYW5uZWwgc2Nhbi4gSSBkb250
+DQo+PiB0aGluayBCU1MgY2FjaGUgd2lsbCBiZSB1cGRhdGVkIHdpdGggdGhlIEJTUyBpbmZvcm1h
+dGlvbiByZWNlaXZlZA0KPj4gZHVyaW5nIHJlbWFpbi1vbi1jaGFubmVsLiBJbiB0aGlzIGNhc2Us
+IHVzZXIgc3BhY2UgY291bGQgdXNlIHByb2JlDQo+PiByZXNwb25zZSBmcmFtZXMgdG8gYnVpbGQg
+QlNTIGxpc3QuDQo+Pg0KPiBUaGF0J3Mgbm90IGEgdXNlIGNhc2UsIHRoYXQncyBhbiBpbXBsZW1l
+bnRhdGlvbj8NCg0KVXNlciBzcGFjZSB3YW50cyB0byBidWlsZCB1cCBhIGxpc3Qgb2YgcHJlZmVy
+cmVkIEJTUyBhbmQgY2hhbm5lbCBmcm9tIG9mZi1jaGFubmVsDQpzY2FuIGFuZCB0aGVzZSBpbmZv
+cm1hdGlvbiBjYW4gYmUgc2hhcmVkIHdpdGggb3RoZXIgc3RhdGlvbnMgYXJvdW5kIHRvIGJldHRl
+cg0KdXNlIHRoZSBzcGVjdHJ1bS4gV2hlbiB0aGUgYnNzIGxpc3QgaXMgbm90IGF2YWlsYWJsZSBk
+dXJpbmcgcmVtYWluLW9uIGNoYW5uZWwsDQpwcm9iZSByZXNwb25zZSB3aWxsIGJlIHVzZWQgdG8g
+cHJlcGFyZSB0aGUgbGlzdC4NCg0KPg0KPiBGV0lXLCB3ZSBoYXZlIHBhdGNoZXMgcGVuZGluZyB0
+byBhZGQgc29tZSBkd2VsbCB0aW1lIGNvbnRyb2wgZm9yDQo+IHNjYW5uaW5nIHNpbmNlIGl0J3Mg
+cmVxdWlyZWQgZm9yIHNvbWUgcmFkaW8gcmVzb3VyY2UgbWVhc3VyZW1lbnQNCj4gdGhpbmdzLiBJ
+dCBzZWVtcyBsaWtlIHRoYXQgd291bGQgYWRkcmVzcyB5b3VyIHVzZSBjYXNlLg0KDQpTdXJlLCB0
+aGlzIHdpbGwgd29yayBmb3IgbWUuIFRoYW5rcw0KDQpWYXNhbnRo
