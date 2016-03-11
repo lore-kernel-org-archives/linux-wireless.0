@@ -1,38 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0116.hostedemail.com ([216.40.44.116]:60009 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752647AbcCRRqI (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:15369 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752202AbcCKMUj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 13:46:08 -0400
-Message-ID: <1458323163.26915.8.camel@perches.com> (sfid-20160318_184630_107124_DE30E164)
-Subject: Re: [PATCH] mac80211: fix order of flag descriptions
-From: Joe Perches <joe@perches.com>
-To: Luis de Bethencourt <luisbg@osg.samsung.com>,
-	linux-kernel@vger.kernel.org
-Cc: johannes@sipsolutions.net, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Date: Fri, 18 Mar 2016 10:46:03 -0700
-In-Reply-To: <56EC3DA6.2090105@osg.samsung.com>
-References: <1458317369-28185-1-git-send-email-luisbg@osg.samsung.com>
-	 <1458318955-32070-1-git-send-email-luisbg@osg.samsung.com>
-	 <1458322179.26915.2.camel@perches.com> <56EC3DA6.2090105@osg.samsung.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Fri, 11 Mar 2016 07:20:39 -0500
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Steve deRosier <derosier@gmail.com>
+CC: "ath6kl@lists.infradead.org" <ath6kl@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Steve deRosier" <steve.derosier@lairdtech.com>
+Subject: Re: [PATCH] ath6kl: ignore WMI_TXE_NOTIFY_EVENTID based on fw
+ capability flags
+Date: Fri, 11 Mar 2016 12:20:27 +0000
+Message-ID: <87r3fhmcj9.fsf@kamboji.qca.qualcomm.com> (sfid-20160311_132043_961983_F2206221)
+References: <1457398730-31088-1-git-send-email-steve.derosier@lairdtech.com>
+In-Reply-To: <1457398730-31088-1-git-send-email-steve.derosier@lairdtech.com>
+	(Steve deRosier's message of "Mon, 7 Mar 2016 16:58:50 -0800")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-03-18 at 17:40 +0000, Luis de Bethencourt wrote:
-> On 18/03/16 17:29, Joe Perches wrote:
-> > On Fri, 2016-03-18 at 16:35 +0000, Luis de Bethencourt wrote:
-> > > Fix order of mac80211_rx_flags description to match the enum.
-[]
-> > > I want ahead and fixed the order of the descriptions. checkpatch.pl was giving
-> > > a warning to my previous patch and I had a hunch it was because the wrong order
-> > > breaks the parser. Indeed it does and with this patch below checkpatch.pl does
-> > > not complain about this flag descriptions anymore.
-> > checkpatch complains?  About what?
-> warning: Enum value 'RX_FLAG_DUP_VALIDATED' not described in enum 'mac80211_rx_flags'
+Steve deRosier <derosier@gmail.com> writes:
 
-That's not a checkpatch warning.
+> Certain 6004 firmware releases redefine the WMI_TXE_NOTIFY_EVENTID event
+> number and sends the new event frequently. However it doesn't have the
+> tx-err-notify feature and thus this firmware capability flag isn't set on
+> the firmware package. By guarding the processing of this event by the same
+> method we guard the sending of the WMI_SET_TXE_NOTIFY_CMDID command, we
+> can ignore the spurious event that we don't know how to process.
+>
+> Without this change we call cfg80211_cqm_txe_notify() with possibly bad
+> data.
+>
+> Signed-off-by: Steve deRosier <steve.derosier@lairdtech.com>
 
-cheers, Joe
+Applied to ath.git, thanks.
+
+-- 
+Kalle Valo
