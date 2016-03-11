@@ -1,104 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:34542 "EHLO
-	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934717AbcCPX0e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2016 19:26:34 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:49875 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751953AbcCKTqy (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 11 Mar 2016 14:46:54 -0500
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 000/113] rtl8xxxu: Add support for rtl8723bu
+References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
+	<87io0tmbqp.fsf@kamboji.qca.qualcomm.com>
+Date: Fri, 11 Mar 2016 14:46:53 -0500
+In-Reply-To: <87io0tmbqp.fsf@kamboji.qca.qualcomm.com> (Kalle Valo's message
+	of "Fri, 11 Mar 2016 14:37:34 +0200")
+Message-ID: <wrfj8u1o6bma.fsf@redhat.com> (sfid-20160311_204657_814671_3D8D8840)
 MIME-Version: 1.0
-In-Reply-To: <f65e448bfd344867afbf6c002cdfc2bf@SC-EXCH04.marvell.com>
-References: <1448618297-19803-1-git-send-email-akarwar@marvell.com>
- <87vb855qpe.fsf@kamboji.qca.qualcomm.com> <f65e448bfd344867afbf6c002cdfc2bf@SC-EXCH04.marvell.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 17 Mar 2016 10:26:01 +1100
-Message-ID: <CAGRGNgWvt7OUaiyfK2a17cfTCx=N4tPkeojhvahxOfvK3aBKRQ@mail.gmail.com> (sfid-20160317_002637_680122_A8ED0081)
-Subject: Re: [PATCH] mwifiex: parse hscfg_gpio info from device tree
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Amitkumar,
-
-On Fri, Dec 11, 2015 at 8:23 PM, Amitkumar Karwar <akarwar@marvell.com> wrote:
-> Hi Kalle,
+Kalle Valo <kvalo@codeaurora.org> writes:
+> Jes.Sorensen@redhat.com writes:
 >
->> -----Original Message-----
->> From: Kalle Valo [mailto:kvalo@codeaurora.org]
->> Sent: Friday, December 11, 2015 2:04 PM
->> To: Amitkumar Karwar
->> Cc: linux-wireless@vger.kernel.org; Nishant Sarmukadam; Xinming Hu;
->> devicetree@vger.kernel.org
->> Subject: Re: [PATCH] mwifiex: parse hscfg_gpio info from device tree
+>> This is a rather large set of patches adding support for rtl8723bu
+>> devices, as well as containing some code for rtl8192eu devices.
 >>
->> + devicetree list
+>> I started working on 8192eu support at the beginning but later
+>> switched over and completed 8723bu support, before finally completing
+>> 8192eu support. The two new devices share a lot of new features not
+>> found in the older generation parts (8723au/8188cu/8192cu/8188ru).
 >>
->> Amitkumar Karwar <akarwar@marvell.com> writes:
+>> I am holding back the 8192eu support for now, in order to reduce the
+>> size of the patch set (I have another 60 patches that goes on top of
+>> this set with 8192eu support and additional bug fixes). Given that
+>> support for the two devices is intermingled, trying to disentangle it
+>> is pretty much impossible at this point, and risks breaking the code.
 >>
->> > From: Xinming Hu <huxm@marvell.com>
->> >
->> > This patch reads hscfg_gpio from device tree and update internal
->> > variable
->> >
->> > Signed-off-by: Xinming Hu <huxm@marvell.com>
->> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
->> > ---
->> >  drivers/net/wireless/marvell/mwifiex/sta_cmd.c | 11 +++++++++++
->> >  1 file changed, 11 insertions(+)
->> >
->> > diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
->> > b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
->> > index e486867..d28a53f 100644
->> > --- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
->> > +++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
->> > @@ -1459,10 +1459,21 @@ int mwifiex_dnld_dt_cfgdata(struct
->> > mwifiex_private *priv,  #ifdef CONFIG_OF
->> >     struct property *prop;
->> >     size_t len = strlen(prefix);
->> > +   u32 data;
->> >     int ret;
->> >
->> >     /* look for all matching property names */
->> >     for_each_property_of_node(node, prop) {
->> > +           if (!strncmp(prop->name, "marvell,hscfg_gpio",
->> > +                        strlen("marvell,hscfg_gpio"))) {
->> > +                   if (!of_property_read_u32(priv->adapter->dt_node,
->> > +                                             prop->name, &data)) {
->> > +                           dev_dbg(priv->adapter->dev,
->> > +                                   "hscfg gpio = 0x%x\n", data);
->> > +                           priv->adapter->hs_cfg.gpio = data;
->> > +                   }
->> > +           }
->>
->> I don't see this documented in Documentation/devicetree/bindings. Please
->> create a binding document and review it with the device tree
->> maintainers.
->>
->> Actually when looking mwifiex close I see that it uses more undocumented
->> device tree interfaces:
->>
->> marvell_cfgdata
->> marvell,caldata
->> marvell,00_txpwrlimit
->>
->> I think these all should be properly documented and reviewed. But I'll
->> let the device tree people chime in what's the best way.
->>
+>> This applies on top of wireless-drivers-next as of today 2016-02-29.
 >
-> Thanks for the review.
-> Sure. We will document existing DT interfaces and create updated version of this patch which includes documentation in bindings.
+> First of all, a huge patchset like this automatically goes to the bottom
+> of my queue. 113 patches is wrong in so many levels, it makes review
+> really hard, making changes in patches is difficult and whatnot. I think
+> that 10-15 patches per set is optimal, please try to follow that. Don't
+> sit on the patches for too long, send them as fast as you can. "Release
+> early, release often"
+>
+> I have applied this to wireless-drivers-next, this time, but in the
+> future please keep the patch count in reasonable levels. The merge
+> window is getting closer so I'm not sure if these make it to 4.6 but I
+> would guess I can still squeeze them in.
 
-It's been a while since this was reviewed. Do you have an updated
-version of this patch?
+Thanks!
 
-Thanks,
+The follow-on sets will be smaller, especially as the base
+infrastructure is now in which covers the gen2 chips.
 
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Cheers,
+Jes
