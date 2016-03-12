@@ -1,71 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45758 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760076AbcCDQ0q (ORCPT
+Received: from mail-qg0-f41.google.com ([209.85.192.41]:33407 "EHLO
+	mail-qg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752352AbcCLArJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 11:26:46 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2016-03-04
-Date: Fri, 04 Mar 2016 18:26:38 +0200
-Message-ID: <87lh5yw6o1.fsf@kamboji.qca.qualcomm.com> (sfid-20160304_173131_988094_8E4AEC46)
+	Fri, 11 Mar 2016 19:47:09 -0500
+Received: by mail-qg0-f41.google.com with SMTP id t4so112544006qge.0
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2016 16:47:08 -0800 (PST)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Date: Fri, 11 Mar 2016 17:47:08 -0700
+Message-ID: <CAAA5faFc9+cBzpXe8Uo89fUmzXgBmLRK5XLh0pFUvRHJD+6PHQ@mail.gmail.com> (sfid-20160312_014713_669691_37EA2A57)
+Subject: splx->package.count
+From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+Hi Everybody,
 
-three more fixes I would like to get to 4.5 still. It's getting late but
-I think these are still justified and these have been in linux-next
-almost a week. But if you think otherwise please let me know and I'll
-pull these to wireless-drivers-next instead.
+The message Unsupported splx structure annoyed me so I started looking.
+My instrumentation shows this:
 
-Kalle
+Mar 11 00:24:32  kernel: [    7.263415] iwlwifi 0000:04:00.0:
+drivers/net/wireless/iwlwifi/pcie/drv.c, splx_get_pwr_limit:
+splx->type is 0x04
+Mar 11 00:24:32  kernel: [    7.263416] iwlwifi 0000:04:00.0:
+drivers/net/wireless/iwlwifi/pcie/drv.c, splx_get_pwr_limit:
+splx->package.count is 4
+Mar 11 00:24:32  kernel: [    7.263417] iwlwifi 0000:04:00.0:
+drivers/net/wireless/iwlwifi/pcie/drv.c, splx_get_pwr_limit:
+splx->package.elements[0].type is 0x01
+Mar 11 00:24:32  kernel: [    7.263418] iwlwifi 0000:04:00.0:
+drivers/net/wireless/iwlwifi/pcie/drv.c, splx_get_pwr_limit:
+splx->package.elements[0].integer.value is 0
 
-The following changes since commit c699404db182836498bd9d9a36ef044de2cab4fd:
+Ok, so:
 
-  Merge tag 'iwlwifi-for-kalle-2016-02-15' of https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2016-02-16 17:58:30 +0200)
+splx->type is ACPI_TYPE_PACKAGE
+splx->package.count is 4
+splx->package.elements[0].type is ACPI_TYPE_INTEGER
+splx->package.elements[0].integer.value is 0
 
-are available in the git repository at:
+Looking at the code:
 
+if (splx->type != ACPI_TYPE_PACKAGE ||
+           splx->package.count != 2 ||
+           splx->package.elements[0].type != ACPI_TYPE_INTEGER ||
+           splx->package.elements[0].integer.value != 0)
 
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2016-03-04
+Meaning, the package.count isn't 2, why does it need to be 2?
+[
+[    7.495340] iwlwifi 0000:04:00.0:
+drivers/net/wireless/iwlwifi/pcie/drv.c, splx_get_pwr_limit:
+limits->type is 0x04
+[    7.495341] iwlwifi 0000:04:00.0:
+drivers/net/wireless/iwlwifi/pcie/drv.c, splx_get_pwr_limit:
+limits->package.count is 3
+[    7.495342] iwlwifi 0000:04:00.0:
+drivers/net/wireless/iwlwifi/pcie/drv.c, splx_get_pwr_limit:
+limits->package.elements[0].type is 0x01
+[    7.495342] iwlwifi 0000:04:00.0:
+drivers/net/wireless/iwlwifi/pcie/drv.c, splx_get_pwr_limit:
+limits->package.elements[1].type is 0x01
+So limits->type is ACPI_TYPE_PACKAGE
+limits->package.count is 3 (not ok) Why does this need to be < 2?
+package.elements[0].type is ACPI_TYPE_INTEGER
+limits->package.elements[1].type is ACPI_TYPE_INTEGER
 
-for you to fetch changes up to 10da848f67a7e7152bf7cbe332e4c92d71a990d2:
+[    7.495343] iwlwifi 0000:04:00.0:
+drivers/net/wireless/iwlwifi/pcie/drv.c, splx_get_pwr_limit: WiFi
+power is not limited, domain_type->integer.value is 0
 
-  ssb: host_soc depends on sprom (2016-02-26 12:47:32 +0200)
+Ok, so the last check also doesn't pass.
+In any case, this isn't something I'm worried about, I'm just
+wondering why the counts are so specific.
+Thanks,
 
-----------------------------------------------------------------
-wireless-drivers fixes for 4.5
-
-iwlwifi
-
-* free firmware paging memory when the module is unloaded or device removed
-* fix pending frames counter to fix an issue when removing stations
-
-ssb
-
-* fix a build problem related to ssb_fill_sprom_with_fallback()
-
-----------------------------------------------------------------
-Arnd Bergmann (1):
-      ssb: host_soc depends on sprom
-
-Kalle Valo (1):
-      Merge tag 'iwlwifi-for-kalle-2016-02-25' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-
-Liad Kaufman (1):
-      iwlwifi: mvm: inc pending frames counter also when txing non-sta
-
-Matti Gottlieb (1):
-      iwlwifi: mvm: Fix paging memory leak
-
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c  |    4 +++-
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h |    3 +++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c |    2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/tx.c  |    9 +++++++++
- drivers/ssb/Kconfig                          |    1 +
- 5 files changed, 18 insertions(+), 1 deletion(-)
+Reinoud.
