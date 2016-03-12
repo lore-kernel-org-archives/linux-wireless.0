@@ -1,62 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48473 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754106AbcCOOPw (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2016 10:15:52 -0400
-Message-ID: <1458051349.2871.19.camel@sipsolutions.net> (sfid-20160315_151555_907811_976050BC)
-Subject: Re: [PATCH-v2 1/2] mac80211: Take bitrates into account when
- building IEs.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Ben Greear <greearb@candelatech.com>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 15 Mar 2016 15:15:49 +0100
-In-Reply-To: <56E1B556.4080004@candelatech.com>
-References: <1445361858-24976-1-git-send-email-greearb@candelatech.com>
-	 <1453807009.2759.23.camel@sipsolutions.net>
-	 <56A78E8F.1080505@candelatech.com>
-	 <1454576521.2564.6.camel@sipsolutions.net> <56B38FD1.40902@candelatech.com>
-	 <1455827536.2084.35.camel@sipsolutions.net>
-	 <56C62C4E.7020600@candelatech.com>
-	 <1455828330.2084.38.camel@sipsolutions.net>
-	 <56C630B7.7020604@candelatech.com>
-	 <1455830078.2084.47.camel@sipsolutions.net>
-	 <56C63D8B.9020900@candelatech.com>
-	 <1456225589.2041.24.camel@sipsolutions.net>
-	 <56E1B556.4080004@candelatech.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:34834 "EHLO
+	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752600AbcCLU70 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 12 Mar 2016 15:59:26 -0500
+Received: by mail-wm0-f50.google.com with SMTP id l68so60321009wml.0
+        for <linux-wireless@vger.kernel.org>; Sat, 12 Mar 2016 12:59:25 -0800 (PST)
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: alexander nekrasov <i.sinister@gmail.com>
+Cc: linux-wireless@vger.kernel.org
+Subject: Re: carl1970: stops working at random periods on Ubuntu 15.05
+Date: Sat, 12 Mar 2016 21:59:22 +0100
+Message-ID: <3054426.yRobc0R5Xb@debian64> (sfid-20160312_215930_414389_37FB215F)
+In-Reply-To: <CAG4k0fDJ6KjK14Ja5fKpy8L4aGzWVwLTOGT6EvkVEDwS9qVdhw@mail.gmail.com>
+References: <CAG4k0fCqB1KNLyHV5--pi1nSoDPnV3qM-yTB0T2jmgbnjmqvww@mail.gmail.com> <CAG4k0fCd7Q-0Nz+XH1U-A9jwFRdX_SbVJNO=m_qP_ZpVADQkVw@mail.gmail.com> <CAG4k0fDJ6KjK14Ja5fKpy8L4aGzWVwLTOGT6EvkVEDwS9qVdhw@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-03-10 at 09:56 -0800, Ben Greear wrote:
+On Friday, March 11, 2016 09:12:40 AM alexander nekrasov wrote:
+> Thanks for an answer, Christian! Adapter is getting hot sometimes
+> indeed. Also my adapter is usb2.0 but it was on extender with another
+> usb1.1 device. I plugged it into motherboards port directly but issue
+> still continue to happens. I  also tried reload host controller but it
+> did not help. 
+In that case, this might be a problem with the host controller on your
+motherboard. I say "might", because it could also be that the ar9170
+device is damaged or that something else is going on. Can you test the
+device on a different PC and test if it fails in the same way?
 
-> First, are you proposing that I make a copy of the entire  local-
-> >hw.wiphy->bands array and store it locally in sdata?
+Other than that, there's not much you can do (easily). If you want
+to investigate the issue further, you would need probe the FUSB200
+in the device. The only place you can do that is within the firmware
+as the USB subsystem is breaking down. The firmware can be downloaded
+from [0]. The register to look at is 0x1E110C (AR9170_USB_REG_DMA_STATUS).
 
-No, I think it should be pointers there, say
+There are a few error bits that can be checked.
 
-sdata->bands[X] pointing to the same thing as local->hw.wiphy->bands[X] 
-is pointing to.
+Bit 24: Error when the upstream DMA access the data bus.
+Bit 25: Error when the upstream DMA access the command bus.
+Bit 26: Error when the downstream DMA access the data bus.
+Bit 27: Error when the downstream DMA access the command bus.
+Bit 28: Error when the CPU access the data bus.
+Bit 29: Error when the CPU access the command bus.
 
-So the first patch would introduce that, and replace each and every use
-of local->hw.wiphy->bands[] with sdata->bands[], if necessary
-annotating the remaining ones with why they're OK and should stay.
+If any of those bits are set, it's probably time to issue a
+firmware reboot (set fw.reboot to 1 or directly call "reboot();").
 
-> And then, I would provide some API to modify the bands[i]->bitrates
-> and other variables to properly select the advertised features?
+That said, I don't have high hopes. In your logs, the carl9170
+driver is already trying to reset the device... and failing since
+it is unable to communicate with the device.
 
-Kinda. You'd provide some kind of helper function or API to take the
-local->hw.wiphy->bands[X] and duplicate it into a newly allocated
-buffer, modifying it along the way, before assigning it to the per-
-sdata stuff in sdata->bands[X].
+> However I discovered strange behavior. Here is my
+> scenario:
+> 1. boot system
+> 2. check device is displayed by 'lsusb' and 'lsusb -t'
+> 3. unbind and bind root hub where device is plugged into
+> 4. this time 'lsusb' does list device and 'lsusb -t' does not
+> 
+> Is it ok?
+> 
+> After unbind/bind device definitely is not working - there is led
+> indicator and it is off. Should I 'enable' device after binding root
+> hub with another command?
 
-> I am a bit concerned about making copies (and then changing) the
-> driver's bitrates array.  Likely it will work with ath10k, but it
-> seems fragile at best.
+I would suggest you also contact the linux-usb mailing list [1].
+They may be able to debug why the host controller is not responding
+to the bind and unbind.
 
-That's an interesting point, we currently use the rate *index* a lot,
-so we have to find some way of preserving that. Perhaps we need to
-introduce a flag indicating a given rate is disabled?
-
-
-johannes
+[0] <https://wireless.wiki.kernel.org/en/users/drivers/carl9170.fw>
+[1] <http://www.linux-usb.org/mailing.html>
