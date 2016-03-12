@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:10804 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753823AbcCHL5m convert rfc822-to-8bit (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:34401 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750799AbcCLH3O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2016 06:57:42 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "johannes@sipsolutions.net" <johannes@sipsolutions.net>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: [PATCH] mac80211: Set global RRM capability
-Date: Tue, 8 Mar 2016 11:57:37 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA6004A@hasmsx107.ger.corp.intel.com> (sfid-20160308_125744_677494_88AC1621)
-References: <1457437561-19387-1-git-send-email-emmanuel.grumbach@intel.com>
-In-Reply-To: <1457437561-19387-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	Sat, 12 Mar 2016 02:29:14 -0500
+Received: by mail-wm0-f51.google.com with SMTP id p65so43118461wmp.1
+        for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2016 23:29:13 -0800 (PST)
+Subject: Re: Probelm on (brcmfmac: use pre-allocated scatter-gather table for
+ txglomming)
+To: Michael Trimarchi <michael@amarulasolutions.com>,
+	Arend van Spriel <arend@broadcom.com>
+References: <CAOf5uwkT=Z2V3JadZeFKKU6m1sTozcC+ObEPzwR_qPuzv6X7Xw@mail.gmail.com>
+Cc: linux-wireless@vger.kernel.org
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <56E3C548.5070000@broadcom.com> (sfid-20160312_083244_285944_D46EE1C0)
+Date: Sat, 12 Mar 2016 08:29:12 +0100
 MIME-Version: 1.0
+In-Reply-To: <CAOf5uwkT=Z2V3JadZeFKKU6m1sTozcC+ObEPzwR_qPuzv6X7Xw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Subject: [PATCH] mac80211: Set global RRM capability
-> 
-> Allow publishing RRM capabilities for features that are not HW dependent.
-> 
-> Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> ---
 
-Err... please ignore..
 
->  net/mac80211/main.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+On 11-03-16 16:23, Michael Trimarchi wrote:
+> Hi
 > 
-> diff --git a/net/mac80211/main.c b/net/mac80211/main.c index
-> 8190bf2..0c9b621 100644
-> --- a/net/mac80211/main.c
-> +++ b/net/mac80211/main.c
-> @@ -548,7 +548,8 @@ struct ieee80211_hw
-> *ieee80211_alloc_hw_nm(size_t priv_data_len,
->  			   NL80211_FEATURE_VIF_TXPOWER |
->  			   NL80211_FEATURE_MAC_ON_CREATE |
->  			   NL80211_FEATURE_USERSPACE_MPM |
-> -			   NL80211_FEATURE_FULL_AP_CLIENT_STATE;
-> +			   NL80211_FEATURE_FULL_AP_CLIENT_STATE |
-> +			   NL80211_EXT_FEATURE_RRM;
+> I have a kernel panic on the brcmf_sdiod_sgtable_alloc just because
+> the function is called before brcmf_sdio_probe.
 > 
->  	if (!ops->hw_scan)
->  		wiphy->features |=
-> NL80211_FEATURE_LOW_PRIORITY_SCAN |
-> --
-> 2.5.0
+> I think that
+>  nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE,
+>                       sdiodev->bus_if->drvr->settings->sdiod_txglomsz);
+> 
+> drvr is null. Can you explain how it can work or do you have already a
+> fix for this?
 
+What kernel version are you using? This has been fixed already in
+4.5-rc2 or rc3.
+
+Regards,
+Arend
