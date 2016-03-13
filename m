@@ -1,115 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:44645 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751042AbcCRLJU (ORCPT
+Received: from shards.monkeyblade.net ([149.20.54.216]:37906 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751534AbcCMTE5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 07:09:20 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	<devicetree@vger.kernel.org>,
-	Wei-Ning Huang <wnhuang@chromium.org>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH v5 1/2] dt: bindings: add MARVELL's sd8xxx wireless device
-Date: Fri, 18 Mar 2016 04:03:51 -0700
-Message-ID: <1458299032-31929-1-git-send-email-akarwar@marvell.com> (sfid-20160318_120923_884682_BD8B053C)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 13 Mar 2016 15:04:57 -0400
+Date: Sun, 13 Mar 2016 15:04:54 -0400 (EDT)
+Message-Id: <20160313.150454.1285398123514574559.davem@davemloft.net> (sfid-20160313_200510_017454_DD012F07)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers-next 2016-03-09
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87vb4vpga7.fsf@kamboji.qca.qualcomm.com>
+References: <87vb4vpga7.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Wed, 09 Mar 2016 22:06:40 +0200
 
-Add device tree binding documentation for MARVELL's sd8xxx
-(sd8897 and sd8997) wlan chip.
+> here's a pull request for 4.6. I'm planning to send one more but I'm not
+> sure if it will make it in time, we'll see.
+> 
+> Here notable changes are refactoring in bcma to create a common flash
+> driver, brcmfmac platform data improvements in include/linux and
+> beginning of AHB bus support for ath10k along with device tree binding
+> update. More info in the signed tag below.
+> 
+> Oh, and I just noticed that weirdly my name appeared in author field on
+> one of Janusz' ath9k patches. But I didn't consider this bad enough to
+> rebase everything so I let it be. Sorry Janusz :)
+> 
+> commit b9a9693fd9aea43f50b107dfc8cbaea317f95a79
+> Author: Kalle Valo <Janusz.Dziedzic@tieto.com>
+> Date:   Fri Nov 27 09:37:14 2015 +0100
+> 
+>     ath9k: request NOA update when chanctx active
+> 
+> Please let me know if you have any problems.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
-Listing changelist for both 1/2 and 2/2 patches
-v3: Don't update adapter->dt_node if mwifiex_plt_dev is NULL
+Yeah it's always an unfortunate tradeoff when something in the commit
+history of a tree everyone clones and works against turns out to be
+incorrect :-/
 
-v4: a)Corrected the 'name' and 'compatible' property names.(Arnd Bergmann and Rob
-    Herring)
-    b)Patch description wraped in 72 columns(Rob Herring)
-    c)Moved DT binding file to bindings/net/wireless/(Rob Herring)
-    d)Renamed "mwifiex,chip-gpio" to "marvell,wakeup-gpios"(Rob Herring/
-    Arnd Bergmann)
-    e)Replaced #ifdef with __maybe_unused(Arnd Bergmann)
-
-v5: a)Removed wildcards from compatible string(Arnd Bergmann)
-    b)Prepared single patch for all binding changes(Rob Herring)
-    c)Specified our node as a subnode of SDIO controller. With this approach, we
-    don't need to register new platform driver. (Rob herring)
----
- .../bindings/net/wireless/marvell-sd8xxx.txt       | 56 ++++++++++++++++++++++
- 1 file changed, 56 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-
-diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-new file mode 100644
-index 0000000..c43d488
---- /dev/null
-+++ b/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
-@@ -0,0 +1,56 @@
-+Marvell 8897/8997 (sd8897/sd8997) SDIO devices
-+------
-+
-+This node provides properties for controlling the marvell sdio wireless device.
-+The node is expected to be specified as a child node to the SDIO controller that
-+connects the device to the system.
-+
-+Required properties:
-+
-+  - compatible : should be one of the following:
-+	* "marvell,sd8897"
-+	* "marvell,sd8997"
-+
-+Optional properties:
-+
-+  - marvell,caldata* : A series of properties with marvell,caldata prefix,
-+  		      represent Calibration data downloaded to the device during
-+		      initialization. This is an array of unsigned values.
-+  - marvell,wakeup-pin : 'wakeuppin' is a wakeup pin number of wifi chip which will
-+  		      be configured to firmware. firmware will wakeup host side use
-+  		      the pin during suspend/resume stage.
-+  - interrupt-parent: phandle of the parent interrupt controller
-+  - interrupts : interrupt pin number to the cpu. driver will request an irq based on
-+  		 this interrupt number. during system suspend, the irq will be enabled
-+  		 as system wakeup source, so that the wifi chip can wakeup host
-+  		 platform under certain condition. during system resume, the irq will
-+  		 be disabled to make sure unnecessary interrupt is not received.
-+
-+Example:
-+
-+Tx power limit calibration data is configured in below example.
-+The calibration data is an array of unsigned values, the length
-+can vary between hw versions.
-+IRQ pin 38 is used as system wakeup source interrupt. wakeup pin 3 is configured
-+so that firmware can wakeup host using this device side pin.
-+
-+&mmc3 {
-+	status = "okay";
-+	vmmc-supply = <&wlan_en_reg>;
-+	bus-width = <4>;
-+	cap-power-off-card;
-+	keep-power-in-suspend;
-+
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+	mwifiex: mwifiex@3 {
-+		compatible = "marvell,sd8897";
-+		reg = <1>;
-+		interrupt-parent = <&pio>;
-+		interrupts = <38 IRQ_TYPE_LEVEL_LOW>;
-+
-+		marvell,caldata_00_txpwrlimit_2g_cfg_set = /bits/ 8 <
-+	0x01 0x00 0x06 0x00 0x08 0x02 0x89 0x01>;
-+		marvell,wakeup-pin = <3>;
-+	};
-+};
--- 
-1.8.1.4
-
+Pulled, thanks.
