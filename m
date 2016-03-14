@@ -1,52 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31382 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752637AbcCARS2 (ORCPT
+Received: from mail-qg0-f45.google.com ([209.85.192.45]:33691 "EHLO
+	mail-qg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751554AbcCNXVd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 12:18:28 -0500
-Cc: Hamad Kadmany <QCA_hkadmany@QCA.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Maya Erez <qca_merez@qca.qualcomm.com>
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH v2 03/15] wil6210: Set permanent MAC address to wiphy
-Date: Tue,  1 Mar 2016 19:18:06 +0200
-Message-Id: <1456852698-26808-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160301_181832_280299_470DC254)
-In-Reply-To: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
+	Mon, 14 Mar 2016 19:21:33 -0400
+Received: by mail-qg0-f45.google.com with SMTP id t4so369963qge.0
+        for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2016 16:21:32 -0700 (PDT)
+From: Marty Faltesek <mfaltesek@google.com>
+To: akarwar@marvell.com
+Cc: linux-wireless@vger.kernel.org
+Subject: [PATCH] mwifiex: bridged packets cause wmm_tx_pending counter to go negative
+Date: Mon, 14 Mar 2016 19:21:23 -0400
+Message-Id: <1457997683-14553-1-git-send-email-mfaltesek@google.com> (sfid-20160315_002137_891213_7E127701)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
+When a packet is queued from the bridge, wmm_tx_pending is not
+incremented, but when the packet is dequeued the counter is decremented.
 
-MAC address of wil6210 was not set in wiphy
-
-Signed-off-by: Hamad Kadmany <qca_hkadmany@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/wil6210/main.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/net/wireless/marvell/mwifiex/uap_txrx.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 35db994..997a740 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -627,6 +627,7 @@ void wil_mbox_ring_le2cpus(struct wil6210_mbox_ring *r)
- static int wil_get_bl_info(struct wil6210_priv *wil)
- {
- 	struct net_device *ndev = wil_to_ndev(wil);
-+	struct wiphy *wiphy = wil_to_wiphy(wil);
- 	union {
- 		struct bl_dedicated_registers_v0 bl0;
- 		struct bl_dedicated_registers_v1 bl1;
-@@ -671,6 +672,7 @@ static int wil_get_bl_info(struct wil6210_priv *wil)
+diff --git a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+index 52f7981..193a809 100644
+--- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+@@ -102,6 +102,7 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
+ 	int hdr_chop;
+ 	struct ethhdr *p_ethhdr;
+ 	struct mwifiex_sta_node *src_node;
++	int index;
+ 
+ 	uap_rx_pd = (struct uap_rxpd *)(skb->data);
+ 	rx_pkt_hdr = (void *)uap_rx_pd + le16_to_cpu(uap_rx_pd->rx_pkt_offset);
+@@ -208,6 +209,9 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
  	}
  
- 	ether_addr_copy(ndev->perm_addr, mac);
-+	ether_addr_copy(wiphy->perm_addr, mac);
- 	if (!is_valid_ether_addr(ndev->dev_addr))
- 		ether_addr_copy(ndev->dev_addr, mac);
- 
+ 	__net_timestamp(skb);
++
++	index = mwifiex_1d_to_wmm_queue[skb->priority];
++	atomic_inc(&priv->wmm_tx_pending[index]);
+ 	mwifiex_wmm_add_buf_txqueue(priv, skb);
+ 	atomic_inc(&adapter->tx_pending);
+ 	atomic_inc(&adapter->pending_bridged_pkts);
 -- 
-1.8.5.2
+2.7.0.rc3.207.g0ac5344
 
