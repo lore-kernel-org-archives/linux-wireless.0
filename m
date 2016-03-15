@@ -1,43 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f51.google.com ([74.125.82.51]:34401 "EHLO
-	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750799AbcCLH3O (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:41737 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751401AbcCOJvE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 12 Mar 2016 02:29:14 -0500
-Received: by mail-wm0-f51.google.com with SMTP id p65so43118461wmp.1
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2016 23:29:13 -0800 (PST)
-Subject: Re: Probelm on (brcmfmac: use pre-allocated scatter-gather table for
- txglomming)
-To: Michael Trimarchi <michael@amarulasolutions.com>,
-	Arend van Spriel <arend@broadcom.com>
-References: <CAOf5uwkT=Z2V3JadZeFKKU6m1sTozcC+ObEPzwR_qPuzv6X7Xw@mail.gmail.com>
-Cc: linux-wireless@vger.kernel.org
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <56E3C548.5070000@broadcom.com> (sfid-20160312_083244_285944_D46EE1C0)
-Date: Sat, 12 Mar 2016 08:29:12 +0100
+	Tue, 15 Mar 2016 05:51:04 -0400
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 1/7] staging: wilc1000: removes function 'init_tcp_tracking()'
+Date: Tue, 15 Mar 2016 18:48:08 +0900
+Message-ID: <1458035294-13001-1-git-send-email-leo.kim@atmel.com> (sfid-20160315_105109_399044_64FF6D70)
 MIME-Version: 1.0
-In-Reply-To: <CAOf5uwkT=Z2V3JadZeFKKU6m1sTozcC+ObEPzwR_qPuzv6X7Xw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This patch removes function 'init_tcp_tracking()'.
+The function is an unnecessary return.
 
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/wilc_wlan.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-On 11-03-16 16:23, Michael Trimarchi wrote:
-> Hi
-> 
-> I have a kernel panic on the brcmf_sdiod_sgtable_alloc just because
-> the function is called before brcmf_sdio_probe.
-> 
-> I think that
->  nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE,
->                       sdiodev->bus_if->drvr->settings->sdiod_txglomsz);
-> 
-> drvr is null. Can you explain how it can work or do you have already a
-> fix for this?
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index fd938fb..ca9054a 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -150,11 +150,6 @@ static u32 pending_base;
+ static u32 tcp_session;
+ static u32 pending_acks;
+ 
+-static inline int init_tcp_tracking(void)
+-{
+-	return 0;
+-}
+-
+ static inline int add_tcp_session(u32 src_prt, u32 dst_prt, u32 seq)
+ {
+ 	if (tcp_session < 2 * MAX_TCP_SESSION) {
+@@ -1440,7 +1435,6 @@ int wilc_wlan_init(struct net_device *dev)
+ 		ret = -EIO;
+ 		goto _fail_;
+ 	}
+-	init_tcp_tracking();
+ 
+ 	return 1;
+ 
+-- 
+1.9.1
 
-What kernel version are you using? This has been fixed already in
-4.5-rc2 or rc3.
-
-Regards,
-Arend
