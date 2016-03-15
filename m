@@ -1,46 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f66.google.com ([209.85.220.66]:33662 "EHLO
-	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751010AbcCCF2l (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:41798 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932387AbcCOJvV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 00:28:41 -0500
-Received: by mail-pa0-f66.google.com with SMTP id gc2so55026pab.0
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Mar 2016 21:28:40 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 4/5] staging: wilc1000: remove unused define
-Date: Thu,  3 Mar 2016 14:28:23 +0900
-Message-Id: <1456982904-8063-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20160303_062859_025936_1DAAE819)
-In-Reply-To: <1456982904-8063-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1456982904-8063-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 15 Mar 2016 05:51:21 -0400
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 4/7] staging: wilc1000: removes duplicate wilc variable setting
+Date: Tue, 15 Mar 2016 18:48:11 +0900
+Message-ID: <1458035294-13001-4-git-send-email-leo.kim@atmel.com> (sfid-20160315_105124_540778_9A273D8D)
+In-Reply-To: <1458035294-13001-1-git-send-email-leo.kim@atmel.com>
+References: <1458035294-13001-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes INFINITE_SLEEP_TIME that is not used in the driver,
-so just remove it.
+This patches removes duplicate wilc variable setting.
+This value has already been set to wl variable previously.
+Replace wilc with wl as well.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/staging/wilc1000/wilc_wlan_if.h | 2 --
- 1 file changed, 2 deletions(-)
+ drivers/staging/wilc1000/linux_wlan.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/wilc_wlan_if.h b/drivers/staging/wilc1000/wilc_wlan_if.h
-index 9eb123b..83cf84d 100644
---- a/drivers/staging/wilc1000/wilc_wlan_if.h
-+++ b/drivers/staging/wilc1000/wilc_wlan_if.h
-@@ -96,8 +96,6 @@ typedef void (*wilc_tx_complete_func_t)(void *, int);
- #define MAX_SSID_LEN            33
- #define MAX_RATES_SUPPORTED     12
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 8a10831..1a5de2e 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -896,7 +896,6 @@ static int mac_init_fn(struct net_device *ndev)
+ int wilc_mac_open(struct net_device *ndev)
+ {
+ 	struct wilc_vif *vif;
+-	struct wilc *wilc;
  
--#define INFINITE_SLEEP_TIME	((u32)0xFFFFFFFF)
--
- typedef enum {
- 	SUPP_RATES_IE		= 1,
- 	EXT_SUPP_RATES_IE	= 50,
+ 	unsigned char mac_add[ETH_ALEN] = {0};
+ 	int ret = 0;
+@@ -912,7 +911,6 @@ int wilc_mac_open(struct net_device *ndev)
+ 		return -ENODEV;
+ 	}
+ 
+-	wilc = vif->wilc;
+ 	priv = wiphy_priv(vif->ndev->ieee80211_ptr->wiphy);
+ 	netdev_dbg(ndev, "MAC OPEN[%p]\n", ndev);
+ 
+@@ -932,13 +930,13 @@ int wilc_mac_open(struct net_device *ndev)
+ 				wilc_set_wfi_drv_handler(vif,
+ 							 wilc_get_vif_idx(vif),
+ 							 0);
+-			} else if (!wilc_wlan_get_num_conn_ifcs(wilc)) {
++			} else if (!wilc_wlan_get_num_conn_ifcs(wl)) {
+ 				wilc_set_wfi_drv_handler(vif,
+ 							 wilc_get_vif_idx(vif),
+-							 wilc->open_ifcs);
++							 wl->open_ifcs);
+ 			} else {
+-				if (memcmp(wilc->vif[i ^ 1]->bssid,
+-					   wilc->vif[i ^ 1]->src_addr, 6))
++				if (memcmp(wl->vif[i ^ 1]->bssid,
++					   wl->vif[i ^ 1]->src_addr, 6))
+ 					wilc_set_wfi_drv_handler(vif,
+ 							 wilc_get_vif_idx(vif),
+ 							 0);
 -- 
-2.7.1
+1.9.1
 
