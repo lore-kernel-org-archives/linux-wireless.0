@@ -1,59 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:36490 "EHLO
-	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751298AbcB2XL3 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 18:11:29 -0500
-Received: by mail-io0-f194.google.com with SMTP id b188so15090062iof.3
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Feb 2016 15:11:28 -0800 (PST)
+Received: from mail.us.es ([193.147.175.20]:43413 "EHLO mail.us.es"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934440AbcCOMDX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Mar 2016 08:03:23 -0400
+Received: from antivirus1-rhel7.int (unknown [192.168.2.11])
+	by mail.us.es (Postfix) with ESMTP id 8C748114811
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2016 13:03:21 +0100 (CET)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+	by antivirus1-rhel7.int (Postfix) with ESMTP id 796B7DA38F
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2016 13:03:21 +0100 (CET)
+Received: from antivirus1-rhel7.int (localhost [127.0.0.1])
+	by antivirus1-rhel7.int (Postfix) with ESMTP id B6D88DA392
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2016 13:03:15 +0100 (CET)
+Date: Tue, 15 Mar 2016 13:03:10 +0100
+From: Pablo Neira Ayuso <pablo@netfilter.org>
+To: netdev@vger.kernel.org
+Cc: linux-wireless@vger.kernel.org, netfilter-devel@vger.kernel.org,
+	lvs-devel@vger.kernel.org, netdev-conference@lists.netfilter.org
+Subject: [ANNOUNCE] NetDev 1.1 videos now available
+Message-ID: <20160315120310.GA3655@salvia> (sfid-20160315_130327_431868_EBA25C75)
 MIME-Version: 1.0
-In-Reply-To: <1456783551-28315-65-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com> <1456783551-28315-65-git-send-email-Jes.Sorensen@redhat.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 1 Mar 2016 10:11:08 +1100
-Message-ID: <CAGRGNgU6_O4+YaLxzJAj50Xhh16hZWtwNCALoGd2mTjkF7-NEw@mail.gmail.com> (sfid-20160301_001132_305972_FD3102F4)
-Subject: Re: [PATCH 064/113] rtl8xxxu: Set RX boundary for 8723bu
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jes,
+Hi,
 
-On Tue, Mar 1, 2016 at 9:05 AM,  <Jes.Sorensen@redhat.com> wrote:
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->
-> Set the correct TRXFF boundary for 8723bu.
->
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-> ---
->  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-> index 3a7fd2c..835eca8 100644
-> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-> @@ -6182,7 +6182,10 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
->         /*
->          * Set RX page boundary
->          */
-> -       rtl8xxxu_write16(priv, REG_TRXFF_BNDY + 2, 0x27ff);
-> +       if (priv->rtlchip == 0x8723b)
-> +               rtl8xxxu_write16(priv, REG_TRXFF_BNDY + 2, 0x3f7f);
-> +       else
-> +               rtl8xxxu_write16(priv, REG_TRXFF_BNDY + 2, 0x27ff);
+Today we're releasing the NetDev 1.1 videos, you can find them at:
 
-Is this likely to be different for other chipsets in the future? If
-so, would it make sense to stuff it into the fops structure?
+        https://www.youtube.com/channel/UCribHdOMgiD5R3OUDgx2qTg
 
-Thanks,
+Regarding papers: Quick reminder to talk presenters that didn't sent
+us yet your paper, we have extended submission deadline to *31th March
+2016*. You only have to send us a minimum of a two pages paper to
+info@netdevconf.org. No more extensions after this!
 
--- 
-Julian Calaby
+BTW, for those that already submitted it, you can send us a new
+version of your paper anytime before that deadline, we'll take the
+last submission that you send us as the final copy to be released.
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+It took us a while to edit and to upload these ~100 Gbytes of videos,
+so thanks for your patience.
