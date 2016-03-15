@@ -1,44 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36186 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751417AbcC3Miu (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2922 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754716AbcCOObl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 08:38:50 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: <linux-wireless@vger.kernel.org>, Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	<devicetree@vger.kernel.org>,
-	Wei-Ning Huang <wnhuang@chromium.org>,
-	Xinming Hu <huxm@marvell.com>
-Subject: Re: [PATCH v5 2/4] mwifiex: add platform specific wakeup interrupt support
-References: <1458299032-31929-1-git-send-email-akarwar@marvell.com>
-	<1458299032-31929-2-git-send-email-akarwar@marvell.com>
-Date: Wed, 30 Mar 2016 15:38:44 +0300
-In-Reply-To: <1458299032-31929-2-git-send-email-akarwar@marvell.com>
-	(Amitkumar Karwar's message of "Fri, 18 Mar 2016 04:03:52 -0700")
-Message-ID: <87a8lg5eej.fsf@purkki.adurom.net> (sfid-20160330_143914_685030_70EB83C5)
+	Tue, 15 Mar 2016 10:31:41 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>, <kvalo@codeaurora.org>,
+	<mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH 0/2] Parsing per station rx duration for 10.4
+Date: Tue, 15 Mar 2016 20:00:48 +0530
+Message-ID: <1458052250-2529-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160315_153144_253571_CFCF8F92)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Amitkumar Karwar <akarwar@marvell.com> writes:
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-> From: Xinming Hu <huxm@marvell.com>
->
-> On some arm-based platforms, we need to configure platform specific
-> parameters by device tree node and also define our node as a child
-> node of parent SDIO host controller.
-> This patch parses these parameters from device tree. It includes
-> calibration data dowoload to firmware, wakeup pin configured to firmware,
-> and soc specific wake up gpio, which will be set as wakeup interrupt pin.
->
-> Signed-off-by: Xinming Hu <huxm@marvell.com>
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Peer Stats for 10.4 is enabled by Extended Resource Configuration
+API (based on one of the earlier patch from Raja Mani), and parsing
+of the same is based also 'stats_id' which also provides backward
+compatibility with older f/w (or) ath10k by design
 
-I only see patch 2, where are the rest three? Also it's not clear what's
-the plan with this patchset.
+review help:
+
+1. Fixed documentation related comments from Kalle / Michal
+2. Fixed indentation related comments from Michal
+3. Removed the check for excluding peer stats for test mode (Michal)
+4. Fix checking for peer stats feature enabled
+
+Dependency over
+
+[PATCH v5] ath10k: Enable debugfs provision to enable Peer Stats
+
+Mohammed Shafi Shajakhan (1):
+  ath10k: Enable parsing per station rx duration for 10.4
+
+Raja Mani (1):
+  ath10k: Introduce Extended Resource Config support for 10.4
+
+ drivers/net/wireless/ath/ath10k/core.c    |   19 +++++++++-
+ drivers/net/wireless/ath/ath10k/wmi-ops.h |   23 ++++++++++++
+ drivers/net/wireless/ath/ath10k/wmi.c     |   54 +++++++++++++++++++++++++----
+ drivers/net/wireless/ath/ath10k/wmi.h     |   49 +++++++++++++++++++++++++-
+ 4 files changed, 137 insertions(+), 8 deletions(-)
 
 -- 
-Kalle Valo
+1.7.9.5
+
