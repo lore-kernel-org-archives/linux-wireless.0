@@ -1,60 +1,36 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:35851 "EHLO mga14.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:48418 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754228AbcC3OGT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 10:06:19 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 27/43] iwlwifi: trans: fix iwl_trans_txq_scd_cfg.sta_id sign
-Date: Wed, 30 Mar 2016 17:04:59 +0300
-Message-Id: <1459346715-7954-27-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160633_318544_FE3F1AC5)
-In-Reply-To: <1459346667.4731.9.camel@intel.com>
-References: <1459346667.4731.9.camel@intel.com>
+	id S1754090AbcCOOKd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Mar 2016 10:10:33 -0400
+Message-ID: <1458051029.2871.14.camel@sipsolutions.net> (sfid-20160315_151039_044855_E50082E1)
+Subject: Re: [PATCH-v2] mac80211:  Let VHT work on 2.4Ghz
+From: Johannes Berg <johannes@sipsolutions.net>
+To: greearb@candelatech.com, linux-wireless@vger.kernel.org
+Date: Tue, 15 Mar 2016 15:10:29 +0100
+In-Reply-To: <1457633336-27898-1-git-send-email-greearb@candelatech.com>
+References: <1457633336-27898-1-git-send-email-greearb@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+On Thu, 2016-03-10 at 10:08 -0800, greearb@candelatech.com wrote:
+> From: Ben Greear <greearb@candelatech.com>
+> 
+> ath10k supports VHT on 2.4Ghz band.
 
-For some reason, this was defined as a signed variable.
-Make it unsigned.
+I still don't think this is the right thing to do.
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Most implementations seem to use the BRCM vendor IE to advertise "VHT"
+features on 2.4 GHz, since the spec requires 5 GHz for the real ones.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 91d74b3..fa4ab4b 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -7,6 +7,7 @@
-  *
-  * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016        Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -33,6 +34,7 @@
-  *
-  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016        Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -519,7 +521,7 @@ struct iwl_trans;
- 
- struct iwl_trans_txq_scd_cfg {
- 	u8 fifo;
--	s8 sta_id;
-+	u8 sta_id;
- 	u8 tid;
- 	bool aggregate;
- 	int frame_limit;
--- 
-2.5.0
+The combination of ath10k with mac80211 seems to be broken in that
+regard right now, since mac80211 didn't expect drivers to set the
+capabilities for 2.4 GHz band.
 
+I guess we can get away with using the regular capabilities towards
+userspace, but as far as the IEs are concerned we should probably use
+the BRCM ones.
+
+johannes
