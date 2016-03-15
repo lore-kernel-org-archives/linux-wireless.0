@@ -1,80 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:58706 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751771AbcCaLg6 convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 07:36:58 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	Wei-Ning Huang <wnhuang@chromium.org>
-Subject: RE: [PATCH] mwifiex: fix Tx timeout issue during suspend test
-Date: Thu, 31 Mar 2016 11:36:53 +0000
-Message-ID: <eb104a7f836547158e51a84fa4d1b677@SC-EXCH04.marvell.com> (sfid-20160331_133701_920929_15E4FE30)
-References: <1458139576-4702-1-git-send-email-akarwar@marvell.com>
-In-Reply-To: <1458139576-4702-1-git-send-email-akarwar@marvell.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from fbr02-uk.csee.siteprotect.eu ([81.3.27.132]:38396 "EHLO
+	fbr02-uk.csee.siteprotect.eu" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750874AbcCONB1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Mar 2016 09:01:27 -0400
+Received: from smtpauth02-uk.csee.siteprotect.eu (unknown [192.168.22.214])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(Client CN "smtp.securepod.com", Issuer "RapidSSL SHA256 CA - G3" (not verified))
+	by fbr02-uk.csee.siteprotect.eu (Postfix) with ESMTPS id 45FFA40EFA
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2016 14:01:24 +0100 (CET)
+Received: from Authenticated sender: roger@beardandsandals.co.uk
+	by smtpauth02-uk.csee.siteprotect.eu (Postfix) with ESMTPSA id 2BD6B405F4
+	for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2016 14:01:24 +0100 (CET)
+Subject: Re: The mac80211 softmac driver subsystem and handling of monitor
+ interfaces
+To: linux-wireless@vger.kernel.org
+References: <56E7E707.2050900@beardandsandals.co.uk>
+ <1458044118.2871.1.camel@sipsolutions.net>
+From: Roger James <roger@beardandsandals.co.uk>
+Message-ID: <56E807A3.4010907@beardandsandals.co.uk> (sfid-20160315_140130_234604_B5549BBB)
+Date: Tue, 15 Mar 2016 13:01:23 +0000
 MIME-Version: 1.0
+In-Reply-To: <1458044118.2871.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
-
-> From: Amitkumar Karwar [mailto:akarwar@marvell.com]
-> Sent: Wednesday, March 16, 2016 8:16 PM
-> To: linux-wireless@vger.kernel.org
-> Cc: Nishant Sarmukadam; Amitkumar Karwar
-> Subject: [PATCH] mwifiex: fix Tx timeout issue during suspend test
-> 
-> Call netif_carrier_off/on while stoping/starting netdev queues.
-> This fixes netdev watchdog warning and ->ndo_tx_timeout() invocation
-> during suspend resume stress test.
-> 
-> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
-> Fixes: 54f008497b9f09f ('mwifiex: Empty Tx queue during suspend')
-> Tested-by: Wei-Ning Huang <wnhuang@chromium.org>
-> ---
->  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 10 ++++++++--
->  1 file changed, 8 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> index bb7235e..b0663bd 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> @@ -3272,8 +3272,11 @@ static int mwifiex_cfg80211_suspend(struct wiphy
-> *wiphy,
-> 
->  	for (i = 0; i < adapter->priv_num; i++) {
->  		priv = adapter->priv[i];
-> -		if (priv && priv->netdev)
-> +		if (priv && priv->netdev) {
->  			mwifiex_stop_net_dev_queue(priv->netdev, adapter);
-> +			if (netif_carrier_ok(priv->netdev))
-> +				netif_carrier_off(priv->netdev);
-> +		}
->  	}
-> 
->  	for (i = 0; i < retry_num; i++) {
-> @@ -3344,8 +3347,11 @@ static int mwifiex_cfg80211_resume(struct wiphy
-> *wiphy)
-> 
->  	for (i = 0; i < adapter->priv_num; i++) {
->  		priv = adapter->priv[i];
-> -		if (priv && priv->netdev)
-> +		if (priv && priv->netdev) {
-> +			if (!netif_carrier_ok(priv->netdev))
-> +				netif_carrier_on(priv->netdev);
->  			mwifiex_wake_up_net_dev_queue(priv->netdev, adapter);
-> +		}
->  	}
-> 
->  	priv = mwifiex_get_priv(adapter, MWIFIEX_BSS_ROLE_STA);
+On 15/03/16 12:15, Johannes Berg wrote:
+> On Tue, 2016-03-15 at 10:42 +0000, Roger James wrote:
+>
+>> ath/ath10k ath/ath9k (both ath9k and ath9k_htc) cw1200
+>> brcm80211/brcmsmac
+>>
+>> All the others seem to be doing things with NL80211_IFTYPE_MONITOR in
+>> the vif structure. This seems contradictory.
+>>
+> You should look into the WANT_MONITOR flag. :)
+>
+> johannes
 > --
-> 1.8.1.4
+>
+Hmm...
+
+roger@dragon:~/linux-mainline$ find . -name "*.[ch]" -exec grep -n 
+IEEE80211_HW_WANT_MONITOR_VIF {} \; -print
+1851: * @IEEE80211_HW_WANT_MONITOR_VIF: The driver would like to be 
+informed of
+1928:    IEEE80211_HW_WANT_MONITOR_VIF,
+./include/net/mac80211.h
+
+Is that what you meant. Nobody seems to be using it. Even mac80211 
+itself. Or am I being stupid again :-)
 
 
-Could you please take this patch? It fixes an issue introduced by "mwifiex: Empty Tx queue during suspend"
 
-Regards,
-Amitkumar
+Roger
