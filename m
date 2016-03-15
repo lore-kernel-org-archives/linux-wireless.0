@@ -1,40 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54858 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964778AbcCPJ5B (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2016 05:57:01 -0400
-Message-ID: <1458122217.2158.4.camel@sipsolutions.net> (sfid-20160316_105705_114685_E14116E8)
-Subject: Re: The mac80211 softmac driver subsystem and handling of monitor
- interfaces
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Roger James <roger@beardandsandals.co.uk>,
-	linux-wireless@vger.kernel.org
-Date: Wed, 16 Mar 2016 10:56:57 +0100
-In-Reply-To: <56E92D0A.9090905@beardandsandals.co.uk> (sfid-20160316_105322_529591_4414BB8B)
-References: <56E92D0A.9090905@beardandsandals.co.uk>
-	 (sfid-20160316_105322_529591_4414BB8B)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-yw0-f178.google.com ([209.85.161.178]:33024 "EHLO
+	mail-yw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751628AbcCOOda (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 15 Mar 2016 10:33:30 -0400
+Received: by mail-yw0-f178.google.com with SMTP id d65so22803402ywb.0
+        for <linux-wireless@vger.kernel.org>; Tue, 15 Mar 2016 07:33:29 -0700 (PDT)
+Subject: Re: linux-4.5/drivers/net/wireless/broadcom/b43/phy_lp.c: 1851: maybe
+ uninit data ?
+To: David Binderman <dcb314@hotmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"b43-dev@lists.infradead.org" <b43-dev@lists.infradead.org>
+References: <DUB128-W5980055F8A15A7CABF8D689C890@phx.gbl>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <56E81D36.60004@lwfinger.net> (sfid-20160315_153333_360759_F742DED3)
+Date: Tue, 15 Mar 2016 09:33:26 -0500
+MIME-Version: 1.0
+In-Reply-To: <DUB128-W5980055F8A15A7CABF8D689C890@phx.gbl>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-03-16 at 09:53 +0000, Roger James wrote:
-> 
-> However that only accounts for the ath10k, iwldvm, and iwlmvm
-> drivers. I realise that there is a lot of history here, but is what
-> the remaining drivers doing in any way deprecated? Also can anyone
-> give me a heads up on what the architectural difference is between
-> hooking the monitor config change and and setting the want monitor
-> flag. Is one way preferable to the other? Both seem to inform the
-> driver that there is a transition between having no monitor virtual
-> interfaces and having one or more.
+On 03/15/2016 05:50 AM, David Binderman wrote:
+> Hello there,
+>
+> [linux-4.5/drivers/net/wireless/broadcom/b43/phy_lp.c:1851]: (error) Uninitialized struct member: gains.gm
+> [linux-4.5/drivers/net/wireless/broadcom/b43/phy_lp.c:1851]: (error) Uninitialized struct member: gains.pga
+> [linux-4.5/drivers/net/wireless/broadcom/b43/phy_lp.c:1851]: (error) Uninitialized struct member: gains.pad
+> [linux-4.5/drivers/net/wireless/broadcom/b43/phy_lp.c:1851]: (error) Uninitialized struct member: gains.dac
+>
+> [linux-4.5/drivers/net/wireless/broadcom/b43/phy_lp.c:1853]: (error) Uninitialized struct member: gains.gm
+> [linux-4.5/drivers/net/wireless/broadcom/b43/phy_lp.c:1853]: (error) Uninitialized struct member: gains.pga
+> [linux-4.5/drivers/net/wireless/broadcom/b43/phy_lp.c:1853]: (error) Uninitialized struct member: gains.pad
+> [linux-4.5/drivers/net/wireless/broadcom/b43/phy_lp.c:1853]: (error) Uninitialized struct member: gains.dac
+>
+> I've had a look at the code and I can't see how local structure 'gains' get initialised.
 
-Not quite. CONF_MONITOR says "you have >0" monitor interfaces.
-drv_add_interface(type=monitor) says "you have >0 monitor interfaces
-and 0 others", so there's a difference.
+It does not get initialized; however, it is only used in calls to 
+lpphy_papd_cal() that does nothing. Thus, no harm, no foul.
 
-Checking type==monitor in add_interface() *without*
-setting WANT_MONITOR_VIF will never be true, since that cannot happen.
-Not sure which drivers are doing that, and why they'd try to.
+You should prepare a patch that initializes it to zero in line 1837.
 
-johannes
+Larry
+
+
