@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f45.google.com ([209.85.220.45]:34249 "EHLO
-	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750742AbcC3KIb (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:41757 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755784AbcCOJvK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 06:08:31 -0400
-Received: by mail-pa0-f45.google.com with SMTP id fe3so36972269pab.1
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2016 03:08:31 -0700 (PDT)
-From: Wei-Ning Huang <wnhuang@chromium.org>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, djkurtz@chromium.org,
-	snanda@chromium.org, akarwar@marvell.com,
-	Wei-Ning Huang <wnhuang@chromium.org>
-Subject: [PATCH] CHROMIUM: mwifiex: fix NULL pointer dereference error
-Date: Wed, 30 Mar 2016 18:08:24 +0800
-Message-Id: <1459332504-1718-1-git-send-email-wnhuang@chromium.org> (sfid-20160330_120848_164095_9C0C2521)
+	Tue, 15 Mar 2016 05:51:10 -0400
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 2/7] staging: wilc1000: wilc_spi.c: removes debug print log
+Date: Tue, 15 Mar 2016 18:48:09 +0900
+Message-ID: <1458035294-13001-2-git-send-email-leo.kim@atmel.com> (sfid-20160315_105114_381318_E8522D50)
+In-Reply-To: <1458035294-13001-1-git-send-email-leo.kim@atmel.com>
+References: <1458035294-13001-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In mwifiex_enable_hs, we need to check if
-priv->wdev.wiphy->wowlan_config is NULL before accessing it's member.
-This sometimes cause kernel panic when suspend/resume.
+This patches removes unnecessary debug print logs.
 
-Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/wilc_spi.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-index d5c56eb..d8de432 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -509,7 +509,8 @@ int mwifiex_enable_hs(struct mwifiex_adapter *adapter)
+diff --git a/drivers/staging/wilc1000/wilc_spi.c b/drivers/staging/wilc1000/wilc_spi.c
+index d41b8b6..4268e2f 100644
+--- a/drivers/staging/wilc1000/wilc_spi.c
++++ b/drivers/staging/wilc1000/wilc_spi.c
+@@ -196,9 +196,6 @@ static int wilc_spi_tx(struct wilc *wilc, u8 *b, u32 len)
+ 		dev_err(&spi->dev,
+ 			"can't write data with the following length: %d\n",
+ 			len);
+-		dev_err(&spi->dev,
+-			"FAILED due to NULL buffer or ZERO length check the following length: %d\n",
+-			len);
+ 		ret = -EINVAL;
+ 	}
  
- 	if (priv && priv->sched_scanning) {
- #ifdef CONFIG_PM
--		if (!priv->wdev.wiphy->wowlan_config->nd_config) {
-+		if (priv->wdev.wiphy->wowlan_config &&
-+		    !priv->wdev.wiphy->wowlan_config->nd_config) {
- #endif
- 			mwifiex_dbg(adapter, CMD, "aborting bgscan!\n");
- 			mwifiex_stop_bg_scan(priv);
 -- 
-2.1.2
+1.9.1
 
