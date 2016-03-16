@@ -1,113 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:32298 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751047AbcCGLEH (ORCPT
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:33529 "EHLO
+	mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935207AbcCPSeB (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2016 06:04:07 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
-	<kvalo@codeaurora.org>, <mohammed@codeaurora.org>,
-	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Subject: [PATCH v1] cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION
-Date: Mon, 7 Mar 2016 16:33:33 +0530
-Message-ID: <1457348614-10584-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160307_120412_412688_4CD2264E)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Wed, 16 Mar 2016 14:34:01 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH 1/2] rtlwifi: rtl8723be: Add antenna select module parameter
+Date: Wed, 16 Mar 2016 13:33:34 -0500
+Message-Id: <1458153215-25602-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160316_193421_742732_B4BB2B12)
+In-Reply-To: <1458153215-25602-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1458153215-25602-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+A number of new laptops have been delivered with only a single antenna.
+In principle, this is OK; however, a problem arises when the on-board
+EEPROM is programmed to use the other antenna connection. The option
+of opening the computer and moving the connector is not always possible
+as it will void the warranty in some cases. In addition, this solution
+breaks the Windows driver when the box dual boots Linux and Windows.
 
-Add support for new netlink attribute 'NL80211_STA_INFO_RX_DURATION'
-This flag will be set when drivers can fill rx_duration (vendor
-specific total air time(usecs) for data/management frames from the
-connected client) via 'drv_sta_statistics' callback
+A fix involving a new module parameter has been developed.  This commit
+adds the new parameter and implements the changes needed for the driver.
 
-Also make sta_info flags 'filled' as 64 bit to accommodate for new
-per station stats. Extend 'PUT_SINFO' for supporting rx_duration
-field and any new per sta information in future
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org> [V4.0+]
 ---
-[v1] 
-1. Fixed typo for accommodate
-2. changed the doc for rx_duration as 'vendor specific implementation'
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c | 5 +++++
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c | 3 +++
+ drivers/net/wireless/realtek/rtlwifi/wifi.h         | 3 +++
+ 3 files changed, 11 insertions(+)
 
- include/net/cfg80211.h       |    5 ++++-
- include/uapi/linux/nl80211.h |    3 +++
- net/wireless/nl80211.c       |    3 ++-
- 3 files changed, 9 insertions(+), 2 deletions(-)
-
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 9bcaaf7..2db26a9 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1060,11 +1060,13 @@ struct cfg80211_tid_stats {
-  * @rx_beacon: number of beacons received from this peer
-  * @rx_beacon_signal_avg: signal strength average (in dBm) for beacons received
-  *	from this peer
-+ * @rx_duration: vendor specific total air time(usecs) for data/management
-+ *	frames from the connected client
-  * @pertid: per-TID statistics, see &struct cfg80211_tid_stats, using the last
-  *	(IEEE80211_NUM_TIDS) index for MSDUs not encapsulated in QoS-MPDUs.
-  */
- struct station_info {
--	u32 filled;
-+	u64 filled;
- 	u32 connected_time;
- 	u32 inactive_time;
- 	u64 rx_bytes;
-@@ -1103,6 +1105,7 @@ struct station_info {
- 	u32 expected_throughput;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+index c983d2f..5a3df91 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/hw.c
+@@ -2684,6 +2684,7 @@ void rtl8723be_read_bt_coexist_info_from_hwpg(struct ieee80211_hw *hw,
+ 					      bool auto_load_fail, u8 *hwinfo)
+ {
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
++	struct rtl_mod_params *mod_params = rtlpriv->cfg->mod_params;
+ 	u8 value;
+ 	u32 tmpu_32;
  
- 	u64 rx_beacon;
-+	u64 rx_duration;
- 	u8 rx_beacon_signal_avg;
- 	struct cfg80211_tid_stats pertid[IEEE80211_NUM_TIDS + 1];
+@@ -2702,6 +2703,10 @@ void rtl8723be_read_bt_coexist_info_from_hwpg(struct ieee80211_hw *hw,
+ 		rtlpriv->btcoexist.btc_info.ant_num = ANT_X2;
+ 	}
+ 
++	/* override ant_num / ant_path */
++	if (mod_params->ant_sel)
++		rtlpriv->btcoexist.btc_info.ant_num =
++			(mod_params->ant_sel == 1 ? ANT_X2 : ANT_X1);
+ }
+ 
+ void rtl8723be_bt_reg_init(struct ieee80211_hw *hw)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+index a78eaed..2101793 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/sw.c
+@@ -273,6 +273,7 @@ static struct rtl_mod_params rtl8723be_mod_params = {
+ 	.msi_support = false,
+ 	.disable_watchdog = false,
+ 	.debug = DBG_EMERG,
++	.ant_sel = 0,
  };
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 5b7b5eb..f64a854 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2464,6 +2464,8 @@ enum nl80211_sta_bss_param {
-  *	TID+1 and the special TID 16 (i.e. value 17) is used for non-QoS frames;
-  *	each one of those is again nested with &enum nl80211_tid_stats
-  *	attributes carrying the actual values.
-+ * @NL80211_STA_INFO_RX_DURATION: vendor specific total air time(usecs) for
-+ *	data/management frames from the connected client
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -2500,6 +2502,7 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_BEACON_RX,
- 	NL80211_STA_INFO_BEACON_SIGNAL_AVG,
- 	NL80211_STA_INFO_TID_STATS,
-+	NL80211_STA_INFO_RX_DURATION,
  
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index d4786f2..a81c016 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3719,7 +3719,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 		goto nla_put_failure;
+ static struct rtl_hal_cfg rtl8723be_hal_cfg = {
+@@ -394,6 +395,7 @@ module_param_named(fwlps, rtl8723be_mod_params.fwctrl_lps, bool, 0444);
+ module_param_named(msi, rtl8723be_mod_params.msi_support, bool, 0444);
+ module_param_named(disable_watchdog, rtl8723be_mod_params.disable_watchdog,
+ 		   bool, 0444);
++module_param_named(ant_sel, rtl8723be_mod_params.ant_sel, int, 0444);
+ MODULE_PARM_DESC(swenc, "Set to 1 for software crypto (default 0)\n");
+ MODULE_PARM_DESC(ips, "Set to 0 to not use link power save (default 1)\n");
+ MODULE_PARM_DESC(swlps, "Set to 1 to use SW control power save (default 0)\n");
+@@ -402,6 +404,7 @@ MODULE_PARM_DESC(msi, "Set to 1 to use MSI interrupts mode (default 0)\n");
+ MODULE_PARM_DESC(debug, "Set debug level (0-5) (default 0)");
+ MODULE_PARM_DESC(disable_watchdog,
+ 		 "Set to 1 to disable the watchdog (default 0)\n");
++MODULE_PARM_DESC(ant_sel, "Set to 1 or 2 to force antenna number (default 0)\n");
  
- #define PUT_SINFO(attr, memb, type) do {				\
--	if (sinfo->filled & BIT(NL80211_STA_INFO_ ## attr) &&		\
-+	if (sinfo->filled & (1ULL << NL80211_STA_INFO_ ## attr) &&	\
- 	    nla_put_ ## type(msg, NL80211_STA_INFO_ ## attr,		\
- 			     sinfo->memb))				\
- 		goto nla_put_failure;					\
-@@ -3745,6 +3745,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 	PUT_SINFO(LLID, llid, u16);
- 	PUT_SINFO(PLID, plid, u16);
- 	PUT_SINFO(PLINK_STATE, plink_state, u8);
-+	PUT_SINFO(RX_DURATION, rx_duration, u64);
+ static SIMPLE_DEV_PM_OPS(rtlwifi_pm_ops, rtl_pci_suspend, rtl_pci_resume);
  
- 	switch (rdev->wiphy.signal_type) {
- 	case CFG80211_SIGNAL_TYPE_MBM:
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 554d814..93bd7fc 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2246,6 +2246,9 @@ struct rtl_mod_params {
+ 
+ 	/* default 0: 1 means do not disable interrupts */
+ 	bool int_clear;
++
++	/* select antenna */
++	int ant_sel;
+ };
+ 
+ struct rtl_hal_usbint_cfg {
 -- 
-1.7.9.5
+2.1.4
 
