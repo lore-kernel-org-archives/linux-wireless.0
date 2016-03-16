@@ -1,41 +1,128 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39587 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932982AbcCaVIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 17:08:44 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 08/10] rtl8xxxu: Identify 8192eu rev A/B parts correctly
-Date: Thu, 31 Mar 2016 17:08:40 -0400
-Message-Id: <1459458522-28686-9-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160331_230903_353761_CC246A89)
-In-Reply-To: <1459458522-28686-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1459458522-28686-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:34014 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753687AbcCPR3G (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Mar 2016 13:29:06 -0400
+Received: by mail-wm0-f46.google.com with SMTP id p65so200237615wmp.1
+        for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2016 10:29:05 -0700 (PDT)
+From: Vishal Thanki <vishalthanki@gmail.com>
+To: sgruszka@redhat.com, helmut.schaa@googlemail.com,
+	linux-wireless@vger.kernel.org
+Cc: Vishal Thanki <vishalthanki@gmail.com>
+Subject: [PATCH] rt2x00usb: Use usb anchors to manage URB
+Date: Wed, 16 Mar 2016 18:28:51 +0100
+Message-Id: <1458149331-2106-1-git-send-email-vishalthanki@gmail.com> (sfid-20160316_182912_297078_0A430BFA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+With current driver, it is observed that a URB is not
+completed while the USB disconnect is initiated. Due to
+that, the URB completion hanlder is trying to access
+the resource which was freed as a part of USB disconnect.
+Managing the URBs with anchors will make sure that all
+the URBs are handled gracefully before device gets
+disconnected.
 
-8192eu A/B cut parts were incorrectly identified as 8192cu devices.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Vishal Thanki <vishalthanki@gmail.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ralink/rt2x00/rt2x00usb.c | 35 ++++++++++++++++++++++++--
+ 1 file changed, 33 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 3857669..201f6cf 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -2221,7 +2221,7 @@ static int rtl8xxxu_identify_chip(struct rtl8xxxu_priv *priv)
- 	} else if (val32 & SYS_CFG_TYPE_ID) {
- 		bonding = rtl8xxxu_read32(priv, REG_HPON_FSM);
- 		bonding &= HPON_FSM_BONDING_MASK;
--		if (priv->chip_cut >= 3) {
-+		if (priv->fops->has_s0s1) {
- 			if (bonding == HPON_FSM_BONDING_1T2R) {
- 				sprintf(priv->chip_name, "8191EU");
- 				priv->rf_paths = 2;
+diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+index 7627af6..a2ed3e1 100644
+--- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
++++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
+@@ -34,6 +34,15 @@
+ /*
+  * Interfacing with the HW.
+  */
++
++struct rt2x00usb_anchors {
++	struct usb_anchor async_urb;
++	struct usb_anchor tx_submitted;
++	struct usb_anchor rx_submitted;
++};
++
++static struct rt2x00usb_anchors *anchors;
++
+ int rt2x00usb_vendor_request(struct rt2x00_dev *rt2x00dev,
+ 			     const u8 request, const u8 requesttype,
+ 			     const u16 offset, const u16 value,
+@@ -171,8 +180,11 @@ static void rt2x00usb_register_read_async_cb(struct urb *urb)
+ {
+ 	struct rt2x00_async_read_data *rd = urb->context;
+ 	if (rd->callback(rd->rt2x00dev, urb->status, le32_to_cpu(rd->reg))) {
+-		if (usb_submit_urb(urb, GFP_ATOMIC) < 0)
++		usb_anchor_urb(urb, &anchors->async_urb);
++		if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
++			usb_unanchor_urb(urb);
+ 			kfree(rd);
++		}
+ 	} else
+ 		kfree(rd);
+ }
+@@ -206,8 +218,11 @@ void rt2x00usb_register_read_async(struct rt2x00_dev *rt2x00dev,
+ 	usb_fill_control_urb(urb, usb_dev, usb_rcvctrlpipe(usb_dev, 0),
+ 			     (unsigned char *)(&rd->cr), &rd->reg, sizeof(rd->reg),
+ 			     rt2x00usb_register_read_async_cb, rd);
+-	if (usb_submit_urb(urb, GFP_ATOMIC) < 0)
++	usb_anchor_urb(urb, &anchors->async_urb);
++	if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
++		usb_unanchor_urb(urb);
+ 		kfree(rd);
++	}
+ 	usb_free_urb(urb);
+ }
+ EXPORT_SYMBOL_GPL(rt2x00usb_register_read_async);
+@@ -313,8 +328,10 @@ static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry, void *data)
+ 			  entry->skb->data, length,
+ 			  rt2x00usb_interrupt_txdone, entry);
+ 
++	usb_anchor_urb(entry_priv->urb, &anchors->tx_submitted);
+ 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
+ 	if (status) {
++		usb_unanchor_urb(entry_priv->urb);
+ 		if (status == -ENODEV)
+ 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+ 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
+@@ -402,8 +419,10 @@ static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry, void *data)
+ 			  entry->skb->data, entry->skb->len,
+ 			  rt2x00usb_interrupt_rxdone, entry);
+ 
++	usb_anchor_urb(entry_priv->urb, &anchors->rx_submitted);
+ 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
+ 	if (status) {
++		usb_unanchor_urb(entry_priv->urb);
+ 		if (status == -ENODEV)
+ 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
+ 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
+@@ -818,6 +837,14 @@ int rt2x00usb_probe(struct usb_interface *usb_intf,
+ 	if (retval)
+ 		goto exit_free_reg;
+ 
++	anchors = devm_kmalloc(&usb_dev->dev, sizeof(struct rt2x00usb_anchors),
++			       GFP_KERNEL);
++	if (!anchors)
++		goto exit_free_reg;
++
++	init_usb_anchor(&anchors->async_urb);
++	init_usb_anchor(&anchors->tx_submitted);
++	init_usb_anchor(&anchors->rx_submitted);
+ 	return 0;
+ 
+ exit_free_reg:
+@@ -840,6 +867,10 @@ void rt2x00usb_disconnect(struct usb_interface *usb_intf)
+ 	struct ieee80211_hw *hw = usb_get_intfdata(usb_intf);
+ 	struct rt2x00_dev *rt2x00dev = hw->priv;
+ 
++	usb_kill_anchored_urbs(&anchors->async_urb);
++	usb_kill_anchored_urbs(&anchors->tx_submitted);
++	usb_kill_anchored_urbs(&anchors->rx_submitted);
++
+ 	/*
+ 	 * Free all allocated data.
+ 	 */
 -- 
-2.5.5
+2.4.3
 
