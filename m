@@ -1,81 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:42971 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932264AbcCKQbH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Mar 2016 11:31:07 -0500
-Date: Fri, 11 Mar 2016 17:30:47 +0100
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>, kvalo@codeaurora.org
-Cc: Jia-Ju Bai <baijiaju1990@163.com>, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, joe@perches.com
-Subject: Re: [v2, resend] b43: Fix memory leaks in b43_bus_dev_ssb_init and
- b43_bus_dev_bcma_init
-Message-ID: <20160311173047.785c2b24@wiggum> (sfid-20160311_173111_376402_5321E79A)
-In-Reply-To: <20160311162230.GA5436@sudip-laptop>
-References: <1452949690-16387-1-git-send-email-baijiaju1990@163.com>
- <20160311162230.GA5436@sudip-laptop>
+Received: from mail-ob0-f173.google.com ([209.85.214.173]:33408 "EHLO
+	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964864AbcCPJm3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Mar 2016 05:42:29 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/LvWfFmCSGtNlKD0VWmHbV29"; protocol="application/pgp-signature"
+In-Reply-To: <87pouulqut.fsf@kamboji.qca.qualcomm.com>
+References: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com> <1453423965.3856.22.camel@perches.com>
+ <87k2n1x0sf.fsf@kamboji.qca.qualcomm.com> <20160122151211.GB1500@tuxdriver.com>
+ <87si1pvcd7.fsf@kamboji.qca.qualcomm.com> <20160126052823.GA2053@sudip-laptop>
+ <87bn84kdu0.fsf@kamboji.qca.qualcomm.com> <20160201044142.GC4072@sudip-pc>
+ <878u34j0wz.fsf@kamboji.qca.qualcomm.com> <CAGRGNgWkqApcjtEq_K8PQugoHxUSBxfSGJE1Mc+3_W2H9J8GrQ@mail.gmail.com>
+ <87pouulqut.fsf@kamboji.qca.qualcomm.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Wed, 16 Mar 2016 20:42:09 +1100
+Message-ID: <CAGRGNgX=a9gfnYG6eW2p1CnHnH22pFO7_pDcF4pHSieeUC2s-Q@mail.gmail.com> (sfid-20160316_104249_434918_2F0FE89E)
+Subject: Re: wireless-drivers: random cleanup patches piling up
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Joe Perches <joe@perches.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	kbuild test robot <lkp@intel.com>,
+	kernel-janitors <kernel-janitors@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/LvWfFmCSGtNlKD0VWmHbV29
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+Hi Kalle,
 
-On Fri, 11 Mar 2016 21:52:30 +0530
-Sudip Mukherjee <sudipm.mukherjee@gmail.com> wrote:
+On Wed, Mar 16, 2016 at 8:22 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Julian Calaby <julian.calaby@gmail.com> writes:
+>
+>> Hi Kalle,
+>>
+>> On Mon, Feb 1, 2016 at 7:21 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>> Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
+>>>
+>>>> Sure, I am starting that way. I checked in patchwork and I do not see
+>>>> any checkpatch related patch pending (except staging, which Greg will
+>>>> handle). I think you must have cleared all of them.
+>>>
+>>> They are in deferred state. The search functionality in patchwork is not
+>>> that intuitive and they are not easy to find so here's a direct link:
+>>>
+>>> https://patchwork.kernel.org/project/linux-wireless/list/?state=10&order=date
+>>
+>> I'm currently going through that list and producing a bundle of
+>> "applyable" patches.
+>
+> Nice.
 
-> On Sat, Jan 16, 2016 at 09:08:10PM +0800, Jia-Ju Bai wrote:
-> > The memory allocated by kzalloc in b43_bus_dev_ssb_init and
-> > b43_bus_dev_bcma_init is not freed.
-> > This patch fixes the bug by adding kfree in b43_ssb_remove,
-> > b43_bcma_remove and error handling code of b43_bcma_probe.
-> >=20
-> > Thanks Michael for his suggestion.
-> >=20
-> > Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com> =20
->=20
-> The patch did not apply cleanly. I had to edit the patch to point to
-> drivers/net/wireless/broadcom/b43/main.c
->=20
-> For CONFIG_B43_SSB part-
-> Tested-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
+Thanks, I figured that checking the deferred list on patchwork at some
+point would be a good plan. After a release seemed like a good time to
+do it.
 
+>> My criteria is:
+>> 1. The change is sane.
+>> 2. It's either obviously correct, I can review it, or someone else has
+>> reviewed or acked it.
+>> 3. No changes other than rebasing and fixing commit messages are
+>> required to apply it.
+>
+> BTW, 'git am -s -3' is the best way to apply a patch. The three way
+> merge is awesome (if the submitter has sent the patch correctly).
+>
+>> Some of these patches need work on their commit messages, some are
+>> complicated enough that I feel I should be providing review notes so
+>> someone else can double check my review, and all of them should be
+>> rebased and compile tested. Also, some are controversial, so I'll be
+>> segregating them from the main set.
+>>
+>> How would you like me to communicate this list to you? I'm happy to
+>> provide branches you can pull from or I could just post updated
+>> versions to the list and give reviewed-by tags to those that don't
+>> need more work.
+>>
+>> Every patch will get an email on linux-wireless regardless.
+>
+> I guess posting the patches to linux-wireless is the easiest for
+> everyone? I have a script which automatically takes patches from
+> patchwork so that's very easy for me. But remember to use Signed-off-by
+> instead of Reviewed-by as you are resending the patches.
 
-Ok thanks a lot.
-We possibly don't get an bcma tester anytime soon. As this is quite an
-important fix, we should probably apply it.
+If they end up being exactly identical to the original, I'll just add
+reviewed-bys to the original patches, otherwise I'll do exactly that.
 
-Sudip, can you please update the patch so it applies cleanly on the
-current tree? You can add my acked-by if you want.
+> Thanks you, your help here is very much appreciated.
 
-Kalle, can you please apply it afterwards?
+No problem!
 
---=20
-Michael
+-- 
+Julian Calaby
 
---Sig_/LvWfFmCSGtNlKD0VWmHbV29
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJW4vK3AAoJEPUyvh2QjYsO7S0P/RXBLOuc1QLe+N3l7D86GpXQ
-019U0p1pZaOf2sBOsaG2sjhTuyFpU6cWCOEzPJsddmIDUmc3S2ZzFLwHQsiLtagn
-NY1bUwgYJGZMkl3SN+A6Wdxsh803KB3/+ZaKvLVpwlowAg75olwvORH/hn1fLBlk
-vBiJdsqo8It0LIIr9eYJvRvwqL51eqlEoWWADcEPG1c7rOaPMGTGAmUdc3x4oNhN
-2g6UjQpOPnRt3FsapJyRxoQjKfxUrGAs85jlr7VxVy3Vpz2dB8rz8S4P2xoRZgxv
-n9SMCjMvwttt8fPHWX8K5XPlmUdm1g7uyOHfPkQNrcSZjUt9Eq2A1q54zMsFRbvA
-LoIJv/fcRvYtBByN8FYPFezs9kcBl1YBMmmaJsD+qRTYn68eomRn0dPRXkJhLO+3
-lISsdvC7bLdCsn9Xp54Gjd+gI0ikRCZ770hM81aAfg52+DjlEz4SbsATPQ0dPa6u
-Gw3sYuovQB8SADik5i19Eo/izn5u4sZi9eSkIZ64JkT2yA2fUE5pJVYFsFJSZrfh
-IlMN1PyfuAXWu3VLsiR/vv/o7EdarMh6diKcv86mGt59e0T7jXx8Utc8i7BEfQ3y
-ap3h9+9M5Zn0suEM92TKBRtujYxx8Tl5mQmfN9fJpbmUFoE0gWLd4ohJ9o9rdKvD
-CfOXVfhuTYwiyqFgBLJv
-=HXOz
------END PGP SIGNATURE-----
-
---Sig_/LvWfFmCSGtNlKD0VWmHbV29--
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
