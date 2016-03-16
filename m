@@ -1,91 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37893 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:44105 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751415AbcCDOtj (ORCPT
+	with ESMTP id S965750AbcCPJW0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 09:49:39 -0500
+	Wed, 16 Mar 2016 05:22:26 -0400
 From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Hante Meuleman <meuleman@broadcom.com>
-Subject: Re: [PATCH 18/21] brcmfmac: switch to new platform data
-References: <1455704830-10088-1-git-send-email-arend@broadcom.com>
-	<1455704830-10088-19-git-send-email-arend@broadcom.com>
-Date: Fri, 04 Mar 2016 16:49:32 +0200
-In-Reply-To: <1455704830-10088-19-git-send-email-arend@broadcom.com> (Arend
-	van Spriel's message of "Wed, 17 Feb 2016 11:27:07 +0100")
-Message-ID: <87a8mexpqb.fsf@kamboji.qca.qualcomm.com> (sfid-20160304_154942_900505_2822D5C8)
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+	"John W. Linville" <linville@tuxdriver.com>,
+	Joe Perches <joe@perches.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	kbuild test robot <lkp@intel.com>,
+	kernel-janitors <kernel-janitors@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>
+Subject: Re: wireless-drivers: random cleanup patches piling up
+References: <87wpr3x9ln.fsf@kamboji.qca.qualcomm.com>
+	<1453423965.3856.22.camel@perches.com>
+	<87k2n1x0sf.fsf@kamboji.qca.qualcomm.com>
+	<20160122151211.GB1500@tuxdriver.com>
+	<87si1pvcd7.fsf@kamboji.qca.qualcomm.com>
+	<20160126052823.GA2053@sudip-laptop>
+	<87bn84kdu0.fsf@kamboji.qca.qualcomm.com>
+	<20160201044142.GC4072@sudip-pc>
+	<878u34j0wz.fsf@kamboji.qca.qualcomm.com>
+	<CAGRGNgWkqApcjtEq_K8PQugoHxUSBxfSGJE1Mc+3_W2H9J8GrQ@mail.gmail.com>
+Date: Wed, 16 Mar 2016 11:22:18 +0200
+In-Reply-To: <CAGRGNgWkqApcjtEq_K8PQugoHxUSBxfSGJE1Mc+3_W2H9J8GrQ@mail.gmail.com>
+	(Julian Calaby's message of "Wed, 16 Mar 2016 11:57:52 +1100")
+Message-ID: <87pouulqut.fsf@kamboji.qca.qualcomm.com> (sfid-20160316_102249_357864_2477DAE6)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
+Julian Calaby <julian.calaby@gmail.com> writes:
 
-> From: Hante Meuleman <meuleman@broadcom.com>
+> Hi Kalle,
 >
-> Platform data is only available for sdio. With this patch a new
-> platform data structure is being used which allows for platform
-> data for any device and configurable per device. This patch only
-> switches to the new structure and adds support for SDIO devices.
+> On Mon, Feb 1, 2016 at 7:21 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
+>>
+>>> Sure, I am starting that way. I checked in patchwork and I do not see
+>>> any checkpatch related patch pending (except staging, which Greg will
+>>> handle). I think you must have cleared all of them.
+>>
+>> They are in deferred state. The search functionality in patchwork is not
+>> that intuitive and they are not easy to find so here's a direct link:
+>>
+>> https://patchwork.kernel.org/project/linux-wireless/list/?state=10&order=date
 >
-> Reviewed-by: Arend Van Spriel <arend@broadcom.com>
-> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Signed-off-by: Hante Meuleman <meuleman@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+> I'm currently going through that list and producing a bundle of
+> "applyable" patches.
 
-It's more work to review patches which rename a file and adds new
-features at the same time. Splitting this to two patches, first a simple
-rename and then adding support for SDIO, would have been much nicer.
+Nice.
 
->  static void brcmf_mp_attach(void)
->  {
-> +	/* If module param firmware path is set then this will always be used,
-> +	 * if not set then if available use the platform data version. To make
-> +	 * sure it gets initialized at all, always copy the module param version
-> +	 */
->  	strlcpy(brcmf_mp_global.firmware_path, brcmf_firmware_path,
->  		BRCMF_FW_ALTPATH_LEN);
-> +	if ((brcmfmac_pdata) && (brcmfmac_pdata->fw_alternative_path) &&
-> +	    (brcmf_mp_global.firmware_path[0] == '\0')) {
-> +		strlcpy(brcmf_mp_global.firmware_path,
-> +			brcmfmac_pdata->fw_alternative_path,
-> +			BRCMF_FW_ALTPATH_LEN);
-> +	}
+> My criteria is:
+> 1. The change is sane.
+> 2. It's either obviously correct, I can review it, or someone else has
+> reviewed or acked it.
+> 3. No changes other than rebasing and fixing commit messages are
+> required to apply it.
 
-[...]
+BTW, 'git am -s -3' is the best way to apply a patch. The three way
+merge is awesome (if the submitter has sent the patch correctly).
 
-> +/**
-> + * struct brcmfmac_platform_data - BRCMFMAC specific platform data.
-> + *
-> + * @power_on:	This function is called by the brcmfmac driver when the module
-> + *		gets loaded. This can be particularly useful for low power
-> + *		devices. The platform spcific routine may for example decide to
-> + *		power up the complete device. If there is no use-case for this
-> + *		function then provide NULL.
-> + * @power_off:	This function is called by the brcmfmac when the module gets
-> + *		unloaded. At this point the devices can be powered down or
-> + *		otherwise be reset. So if an actual power_off is not supported
-> + *		but reset is supported by the devices then reset the devices
-> + *		when this function gets called. This can be particularly useful
-> + *		for low power devices. If there is no use-case for this
-> + *		function then provide NULL.
-> + */
-> +struct brcmfmac_platform_data {
-> +	void	(*power_on)(void);
-> +	void	(*power_off)(void);
-> +	char	*fw_alternative_path;
-> +	int	device_count;
-> +	struct brcmfmac_pd_device devices[0];
-> +};
+> Some of these patches need work on their commit messages, some are
+> complicated enough that I feel I should be providing review notes so
+> someone else can double check my review, and all of them should be
+> rebased and compile tested. Also, some are controversial, so I'll be
+> segregating them from the main set.
+>
+> How would you like me to communicate this list to you? I'm happy to
+> provide branches you can pull from or I could just post updated
+> versions to the list and give reviewed-by tags to those that don't
+> need more work.
+>
+> Every patch will get an email on linux-wireless regardless.
 
-If I understood correctly this undocumented, and not mentioned in the
-commit log, fw_alternative_path is a new feature in platform data. I
-guess it provides a different firmware image name for the device so that
-devices can have different firmware images on the same system?
+I guess posting the patches to linux-wireless is the easiest for
+everyone? I have a script which automatically takes patches from
+patchwork so that's very easy for me. But remember to use Signed-off-by
+instead of Reviewed-by as you are resending the patches.
 
-It's not pretty but I guess okayish. Opinions?
+Thanks you, your help here is very much appreciated.
 
 -- 
 Kalle Valo
