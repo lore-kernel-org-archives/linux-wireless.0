@@ -1,37 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45230 "EHLO sipsolutions.net"
+Received: from mga04.intel.com ([192.55.52.120]:24521 "EHLO mga04.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750797AbcCBN7k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 08:59:40 -0500
-Message-ID: <1456927176.2157.4.camel@sipsolutions.net> (sfid-20160302_145943_658852_1DA9DE12)
-Subject: Re: [PATCH] iw: add libnl-tiny support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dima Krasner <dima@dimakrasner.com>, linux-wireless@vger.kernel.org
-Date: Wed, 02 Mar 2016 14:59:36 +0100
-In-Reply-To: <20160223204334.4a65ab8113dbe31fbffc56ff@dimakrasner.com> (sfid-20160223_194343_135265_7B7CCCFB)
-References: <20160223204334.4a65ab8113dbe31fbffc56ff@dimakrasner.com>
-	 (sfid-20160223_194343_135265_7B7CCCFB)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S965098AbcCPVdN convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 16 Mar 2016 17:33:13 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+CC: "Berg, Johannes" <johannes.berg@intel.com>,
+	linuxwifi <linuxwifi@intel.com>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Subject: Re: iwlwifi incomplete initialization in Linux 4.5?
+Date: Wed, 16 Mar 2016 21:33:08 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA7A6AA@hasmsx107.ger.corp.intel.com> (sfid-20160316_223319_600970_66CE9AEA)
+References: <CA+55aFxOMO6u6xu4Pz7BzbLD=SwwzdPcSU2dX2S0kkh4jFaVbw@mail.gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB32EA7A541@hasmsx107.ger.corp.intel.com>
+ <CA+55aFw8_rtr8v65LYXYJpWq40TyTPpt9hdBzwr8-VYpaKMdRQ@mail.gmail.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-02-23 at 20:43 +0200, Dima Krasner wrote:
-> 
-> +#ifdef CONFIG_LIBNL_TINY
-> +#define nl_handle nl_sock
-[...]
->  /* libnl 1.x compatibility code */
-> -#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30)
-> +#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30) &&
-> !defined(CONFIG_LIBNL_TINY)
->  #  define nl_sock nl_handle
->  #endif
 
 
-This makes no sense. Clearly, nl_sock was intended to be the struct
-name used in the code, and it seems that nl-tiny implements the libnl
-1.1 API, so you should work with that code instead of redefining
-everything.
+On 03/16/2016 11:23 PM, Linus Torvalds wrote:
+> On Wed, Mar 16, 2016 at 2:13 PM, Grumbach, Emmanuel
+> <emmanuel.grumbach@intel.com> wrote:
+>>
+>> This ... typically means that the firmware got stuck while sending
+>> packets. Can you tell me on what band your router operates? 2.4GHz or
+>> 5.2GHz?
+> 
+> Both.
+> 
+>> Do you use 20Mhz or 40MHz?
+> 
+> HT20 on 2.4GHz, HT40 on 5GHz.
 
-johannes
+That's fair. Using 40MHz on 2.4GHz can be the cause of issues.
+
+> 
+> At least that's the wireless AP setup.
+> 
+>> Basically, I'd like to see the output of iw dev
+> 
+> I'll have to walk over and check. I don't have my machines set up so
+> you can get into them over the network..
+
+Not urgent. I am GMT+2, so it's kinda late here anyway :)
+
+> 
+>> Hmm, this is strange since 4.4 and 4.5 will both load -16.ucode which
+>> you seemed to be running when the have the Queue hang message.
+> 
+> Correct. Both cases used the 16 ucode, since that's what F22 comes
+> with. I upgrade the kernel, but intentionally don't touch anything
+> else in the system.
+
+Ok - we have the same device (8260), so I'll prepare a debug version of
+the -16.ucode firmware and test it tomorrow morning so that *if* you
+want to debug, you'll have the special firmware ready in your inbox.
+
+> 
+>                Linus
+> 
