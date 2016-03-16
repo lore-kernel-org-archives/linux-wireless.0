@@ -1,51 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:33519 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751767AbcCTRe5 (ORCPT
+Received: from mail-ob0-f194.google.com ([209.85.214.194]:35996 "EHLO
+	mail-ob0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935207AbcCPSeI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 20 Mar 2016 13:34:57 -0400
-From: Colin King <colin.king@canonical.com>
-To: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	Vineet Gupta <Vineet.Gupta1@synopsys.com>,
-	Kosuke Tatsukawa <tatsu@ab.jp.nec.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH] brcmfmac: sdio: remove unused variable retry_limit
-Date: Sun, 20 Mar 2016 17:34:52 +0000
-Message-Id: <1458495292-17701-1-git-send-email-colin.king@canonical.com> (sfid-20160320_183529_648642_2718633E)
+	Wed, 16 Mar 2016 14:34:08 -0400
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Subject: [PATCH 2/2] rtlwifi: btcoexist: Implement antenna selection
+Date: Wed, 16 Mar 2016 13:33:35 -0500
+Message-Id: <1458153215-25602-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160316_193422_293821_63E5B05C)
+In-Reply-To: <1458153215-25602-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1458153215-25602-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+The previous patch added an option to rtl8723be to manually select the
+antenna for those cases when only a single antenna is present, and the
+on-board EEPROM is incorrectly programmed. This patch implements the
+necessary changes in the Bluetooth coexistence driver.
 
-retry_limit has never been used during the life of this driver, so
-we may as well remove it as it is redundant.
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Stable <stable@vger.kernel.org> [V4.0+]
 ---
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 3 ---
- 1 file changed, 3 deletions(-)
+ .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  9 ++++++--
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 27 +++++++++++++++++++++-
+ .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  2 +-
+ .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |  5 +++-
+ 4 files changed, 38 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-index 43fd3f4..cd92ba7 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
-@@ -535,9 +535,6 @@ static int qcount[NUMPRIO];
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+index c43ab59..77cbd10 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
+@@ -1203,7 +1203,6 @@ static void btc8723b2ant_set_ant_path(struct btc_coexist *btcoexist,
  
- #define RETRYCHAN(chan) ((chan) == SDPCM_EVENT_CHANNEL)
+ 		/* Force GNT_BT to low */
+ 		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x765, 0x18, 0x0);
+-		btcoexist->btc_write_2byte(btcoexist, 0x948, 0x0);
  
--/* Retry count for register access failures */
--static const uint retry_limit = 2;
--
- /* Limit on rounding up frames */
- static const uint max_roundup = 512;
+ 		if (board_info->btdm_ant_pos == BTC_ANTENNA_AT_MAIN_PORT) {
+ 			/* tell firmware "no antenna inverse" */
+@@ -1211,19 +1210,25 @@ static void btc8723b2ant_set_ant_path(struct btc_coexist *btcoexist,
+ 			h2c_parameter[1] = 1;  /* ext switch type */
+ 			btcoexist->btc_fill_h2c(btcoexist, 0x65, 2,
+ 						h2c_parameter);
++			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x0);
+ 		} else {
+ 			/* tell firmware "antenna inverse" */
+ 			h2c_parameter[0] = 1;
+ 			h2c_parameter[1] = 1;  /* ext switch type */
+ 			btcoexist->btc_fill_h2c(btcoexist, 0x65, 2,
+ 						h2c_parameter);
++			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x280);
+ 		}
+ 	}
  
+ 	/* ext switch setting */
+ 	if (use_ext_switch) {
+ 		/* fixed internal switch S1->WiFi, S0->BT */
+-		btcoexist->btc_write_2byte(btcoexist, 0x948, 0x0);
++		if (board_info->btdm_ant_pos == BTC_ANTENNA_AT_MAIN_PORT)
++			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x0);
++		else
++			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x280);
++
+ 		switch (antpos_type) {
+ 		case BTC_ANT_WIFI_AT_MAIN:
+ 			/* ext switch main at wifi */
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+index b2791c8..babd149 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
+@@ -965,13 +965,38 @@ void exhalbtc_set_chip_type(u8 chip_type)
+ 	}
+ }
+ 
+-void exhalbtc_set_ant_num(u8 type, u8 ant_num)
++void exhalbtc_set_ant_num(struct rtl_priv *rtlpriv, u8 type, u8 ant_num)
+ {
+ 	if (BT_COEX_ANT_TYPE_PG == type) {
+ 		gl_bt_coexist.board_info.pg_ant_num = ant_num;
+ 		gl_bt_coexist.board_info.btdm_ant_num = ant_num;
++		/* The antenna position:
++		 * Main (default) or Aux for pgAntNum=2 && btdmAntNum =1.
++		 * The antenna position should be determined by
++		 * auto-detect mechanism.
++		 * The following is assumed to main,
++		 * and those must be modified
++		 * if y auto-detect mechanism is ready
++		 */
++		if ((gl_bt_coexist.board_info.pg_ant_num == 2) &&
++		    (gl_bt_coexist.board_info.btdm_ant_num == 1))
++			gl_bt_coexist.board_info.btdm_ant_pos =
++						       BTC_ANTENNA_AT_MAIN_PORT;
++		else
++			gl_bt_coexist.board_info.btdm_ant_pos =
++						       BTC_ANTENNA_AT_MAIN_PORT;
+ 	} else if (BT_COEX_ANT_TYPE_ANTDIV == type) {
+ 		gl_bt_coexist.board_info.btdm_ant_num = ant_num;
++		gl_bt_coexist.board_info.btdm_ant_pos =
++						       BTC_ANTENNA_AT_MAIN_PORT;
++	} else if (type == BT_COEX_ANT_TYPE_DETECTED) {
++		gl_bt_coexist.board_info.btdm_ant_num = ant_num;
++		if (rtlpriv->cfg->mod_params->ant_sel == 1)
++			gl_bt_coexist.board_info.btdm_ant_pos =
++				BTC_ANTENNA_AT_AUX_PORT;
++		else
++			gl_bt_coexist.board_info.btdm_ant_pos =
++				BTC_ANTENNA_AT_MAIN_PORT;
+ 	}
+ }
+ 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+index 0a903ea..f41ca57 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
+@@ -535,7 +535,7 @@ void exhalbtc_set_bt_patch_version(u16 bt_hci_version, u16 bt_patch_version);
+ void exhalbtc_update_min_bt_rssi(char bt_rssi);
+ void exhalbtc_set_bt_exist(bool bt_exist);
+ void exhalbtc_set_chip_type(u8 chip_type);
+-void exhalbtc_set_ant_num(u8 type, u8 ant_num);
++void exhalbtc_set_ant_num(struct rtl_priv *rtlpriv, u8 type, u8 ant_num);
+ void exhalbtc_display_bt_coex_info(struct btc_coexist *btcoexist);
+ void exhalbtc_signal_compensation(struct btc_coexist *btcoexist,
+ 				  u8 *rssi_wifi, u8 *rssi_bt);
+diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+index b9b0cb7..d3fd921 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
++++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
+@@ -72,7 +72,10 @@ void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv)
+ 		 __func__, bt_type);
+ 	exhalbtc_set_chip_type(bt_type);
+ 
+-	exhalbtc_set_ant_num(BT_COEX_ANT_TYPE_PG, ant_num);
++	if (rtlpriv->cfg->mod_params->ant_sel == 1)
++		exhalbtc_set_ant_num(rtlpriv, BT_COEX_ANT_TYPE_DETECTED, 1);
++	else
++		exhalbtc_set_ant_num(rtlpriv, BT_COEX_ANT_TYPE_PG, ant_num);
+ }
+ 
+ void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv)
 -- 
-2.7.3
+2.1.4
 
