@@ -1,96 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55716 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751138AbcCAGai (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:35078 "EHLO
+	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932295AbcCQQT5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 01:30:38 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH v2 7/8] ath9k: fix BTCoex access invalid registers for SOC chips
-Date: Tue,  1 Mar 2016 14:29:43 +0800
-Message-Id: <1456813784-21218-8-git-send-email-miaoqing@codeaurora.org> (sfid-20160301_073040_933816_346FFC2B)
-In-Reply-To: <1456813784-21218-1-git-send-email-miaoqing@codeaurora.org>
-References: <1456813784-21218-1-git-send-email-miaoqing@codeaurora.org>
+	Thu, 17 Mar 2016 12:19:57 -0400
+From: Eva Rachel Retuya <eraretuya@gmail.com>
+To: outreachy-kernel@googlegroups.com
+Cc: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
+	linuxwifi@intel.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, tj@kernel.org,
+	Eva Rachel Retuya <eraretuya@gmail.com>
+Subject: [PATCH v2] iwlwifi: dvm: use alloc_ordered_workqueue()
+Date: Fri, 18 Mar 2016 00:19:21 +0800
+Message-Id: <1458231561-13184-1-git-send-email-eraretuya@gmail.com> (sfid-20160317_172016_194942_76E1887C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+Use alloc_ordered_workqueue() to allocate the workqueue instead of
+create_singlethread_workqueue() since the latter is deprecated and is scheduled
+for removal.
 
-The registers of AR_GPIO_INPUT_MUX1 and AR_GPIO_PDPU were removed
-from SOC chips, fix invalid accessing
+There are work items doing related operations that shouldn't be swapped when
+queued in a certain order hence preserve the strict execution ordering of a
+single threaded (ST) workqueue by switching to alloc_ordered_workqueue().
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+WQ_MEM_RECLAIM flag is not needed since the worker is not supposed to free
+memory.
+
+Signed-off-by: Eva Rachel Retuya <eraretuya@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/btcoex.c | 27 +++++++++++++++------------
- 1 file changed, 15 insertions(+), 12 deletions(-)
+Changes in v2:
+* switch from alloc_workqueue() to alloc_ordered_workqueue()
+* remove unneeded flags: WQ_MEM_RECLAIM and WQ_HIGHPRI
+* update commit message to reflect change
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index 5a9ecf7..a754f6d 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -162,9 +162,10 @@ void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah)
- 		    AR_GPIO_INPUT_EN_VAL_BT_ACTIVE_BB);
+ drivers/net/wireless/intel/iwlwifi/dvm/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/main.c b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+index f62c2d7..14396d8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+@@ -1071,7 +1071,7 @@ static void iwl_bg_restart(struct work_struct *data)
  
- 	/* Set input mux for bt_active to gpio pin */
--	REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
--		      AR_GPIO_INPUT_MUX1_BT_ACTIVE,
--		      btcoex_hw->btactive_gpio);
-+	if (!AR_SREV_SOC(ah))
-+		REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
-+			      AR_GPIO_INPUT_MUX1_BT_ACTIVE,
-+			      btcoex_hw->btactive_gpio);
+ static void iwl_setup_deferred_work(struct iwl_priv *priv)
+ {
+-	priv->workqueue = create_singlethread_workqueue(DRV_NAME);
++	priv->workqueue = alloc_ordered_workqueue(DRV_NAME, 0);
  
- 	/* Configure the desired gpio port for input */
- 	ath9k_hw_gpio_request_in(ah, btcoex_hw->btactive_gpio,
-@@ -183,13 +184,14 @@ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
- 
- 	/* Set input mux for bt_prority_async and
- 	 *                  bt_active_async to GPIO pins */
--	REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
--			AR_GPIO_INPUT_MUX1_BT_ACTIVE,
--			btcoex_hw->btactive_gpio);
--
--	REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
--			AR_GPIO_INPUT_MUX1_BT_PRIORITY,
--			btcoex_hw->btpriority_gpio);
-+	if (!AR_SREV_SOC(ah)) {
-+		REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
-+			      AR_GPIO_INPUT_MUX1_BT_ACTIVE,
-+			      btcoex_hw->btactive_gpio);
-+		REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
-+			      AR_GPIO_INPUT_MUX1_BT_PRIORITY,
-+			      btcoex_hw->btpriority_gpio);
-+	}
- 
- 	/* Configure the desired GPIO ports for input */
- 	ath9k_hw_gpio_request_in(ah, btcoex_hw->btactive_gpio,
-@@ -285,13 +287,13 @@ void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
- 				 txprio_shift[i-1]);
- 		}
- 	}
-+
- 	/* Last WLAN weight has to be adjusted wrt tx priority */
- 	if (concur_tx) {
- 		btcoex_hw->wlan_weight[i-1] &= ~(0xff << txprio_shift[i-1]);
- 		btcoex_hw->wlan_weight[i-1] |= (btcoex_hw->tx_prio[stomp_type]
- 						      << txprio_shift[i-1]);
- 	}
--
- }
- EXPORT_SYMBOL(ath9k_hw_btcoex_set_weight);
- 
-@@ -375,7 +377,8 @@ void ath9k_hw_btcoex_enable(struct ath_hw *ah)
- 		break;
- 	}
- 
--	if (ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_MCI) {
-+	if (ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_MCI &&
-+	    !AR_SREV_SOC(ah)) {
- 		REG_RMW(ah, AR_GPIO_PDPU,
- 			(0x2 << (btcoex_hw->btactive_gpio * 2)),
- 			(0x3 << (btcoex_hw->btactive_gpio * 2)));
+ 	INIT_WORK(&priv->restart, iwl_bg_restart);
+ 	INIT_WORK(&priv->beacon_update, iwl_bg_beacon_update);
 -- 
 1.9.1
 
