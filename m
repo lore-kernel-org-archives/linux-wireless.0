@@ -1,43 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:51176 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751910AbcCRHxI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 03:53:08 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rmanohar@codeaurora.org" <rmanohar@codeaurora.org>
-Subject: Re: [PATCH v5] ath10k: move mgmt descriptor limit handle under
- mgmt_tx
-Date: Fri, 18 Mar 2016 07:53:00 +0000
-Message-ID: <87egb8i5no.fsf@kamboji.qca.qualcomm.com> (sfid-20160318_085313_053513_97D8FC42)
-References: <1457535346-16159-1-git-send-email-rmanohar@qti.qualcomm.com>
-In-Reply-To: <1457535346-16159-1-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Wed, 9 Mar 2016 20:25:46 +0530")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mga02.intel.com ([134.134.136.20]:36465 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030436AbcCQOvq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Mar 2016 10:51:46 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/2] mac80211: don't send deferred frames outside the SP
+Date: Thu, 17 Mar 2016 16:51:41 +0200
+Message-Id: <1458226302-6086-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160317_155149_762456_E401AB24)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+Frames that are sent between
+ampdu_action(IEEE80211_AMPDU_TX_START) and the move to the
+HT_AGG_STATE_OPERATIONAL state are buffered.
+If we try to start an A-MPDU session while the peer is
+sleeping and polling frames with U-APSD, we may have frames
+that will be buffered by ieee80211_tx_prep_agg. These frames
+have IEEE80211_TX_CTL_NO_PS_BUFFER set since they are sent to
+a sleeping client and possibly IEEE80211_TX_STATUS_EOSP.
+If the frame is buffered, we need clear these two flags
+since they will be re-sent after the move to
+HT_AGG_STATE_OPERATIONAL state which is very likely to
+happen after the SP ends.
 
-> Frames that are transmitted via MGMT_TX are using reserved descriptor
-> slots in firmware. This limitation is for the htt_mgmt_tx path itself,
-> not for mgmt frames per se. In 16 MBSSID scenario, these reserved slots
-> will be easy exhausted due to frequent probe responses. So for 10.4
-> based solutions, probe responses are limited by a threshold (24).
->
-> management tx path is separate for all except tlv based solutions. Since
-> tlv solutions (qca6174 & qca9377) do not support 16 AP interfaces, it is
-> safe to move management descriptor limitation check under mgmt_tx
-> function. Though CPU improvement is negligible, unlikely conditions or
-> never hit conditions in hot path can be avoided on data transmission.
->
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/tx.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-Applied, thanks.
-
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 485e30a..114509a 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1118,9 +1118,7 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
+ 			queued = true;
+ 			info->control.vif = &tx->sdata->vif;
+ 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+-			info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS |
+-					IEEE80211_TX_CTL_NO_PS_BUFFER |
+-					IEEE80211_TX_STATUS_EOSP;
++			info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS;
+ 			__skb_queue_tail(&tid_tx->pending, skb);
+ 			if (skb_queue_len(&tid_tx->pending) > STA_MAX_TX_BUFFER)
+ 				purge_skb = __skb_dequeue(&tid_tx->pending);
 -- 
-Kalle Valo
+2.5.0
+
