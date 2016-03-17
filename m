@@ -1,218 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:34250 "EHLO mga14.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49828 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752950AbcCBH45 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 02:56:57 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luca Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 06/43] iwlwifi: mvm: handle pass all scan reporting
-Date: Wed,  2 Mar 2016 09:56:07 +0200
-Message-Id: <1456905404-14435-6-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085700_692412_C79D060A)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+	id S933216AbcCQULC (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Mar 2016 16:11:02 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: poma <pomidorabelisima@gmail.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"linux-usb\@vger.kernel.org" <linux-usb@vger.kernel.org>
+Subject: Re: rtl8xxxu 4.4.5(from f23): I get a panic adding a new device to the driver
+References: <56E89DD2.7000000@gmail.com> <wrfjfuvqr0cb.fsf@redhat.com>
+	<wrfja8lxnfsm.fsf@redhat.com> <56EB0D15.9040103@gmail.com>
+Date: Thu, 17 Mar 2016 16:11:00 -0400
+In-Reply-To: <56EB0D15.9040103@gmail.com> (poma's message of "Thu, 17 Mar 2016
+	21:01:25 +0100")
+Message-ID: <wrfj60wkn9uz.fsf@redhat.com> (sfid-20160317_211105_766501_83E52CB5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+poma <pomidorabelisima@gmail.com> writes:
+> On 17.03.2016 19:02, Jes Sorensen wrote:
+>> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+>>> Xose Vazquez Perez <xose.vazquez@gmail.com> writes:
+>>>> Hi,
+>>>>
+>>>> If I do:
+>>>> # echo "0bda 8176" > /sys/bus/usb/drivers/rtl8xxxu/new_id
+>>>
+>>> Hi Xose,
+>>>
+>>> Yes please don't do that. The rtl8xxxu driver relies on the .driver_info
+>>> field in struct use_device_id to carry information for the different
+>>> types of devices. If you hot add a device like above, the driver will
+>>> fail because that field now contains a NULL pointer.
+>>>
+>>> I should probably add a check for it in the probe function, but it will
+>>> simply be there to spit out a warning that it doesn't work to hot add a
+>>> device like this.
+>>>
+>>> If you build it with CONFIG_RTL8XXXU_UNTESTED the 0bda:8176 should be
+>>> included in the device list.
+>>>
+>>> Cheers,
+>>> Jes
+>> 
+>> Hi Xose,
+>> 
+>> I added the following patch to my tree to avoid this.
+>> 
+>> Cheers,
+>> Jes
+>> 
+>> commit 9202f4947aac1d60084ee79c9b5294eb42ba59dc
+>> Author: Jes Sorensen <Jes.Sorensen@redhat.com>
+>> Date:   Thu Mar 17 13:53:48 2016 -0400
+>> 
+>>     rtl8xxxu: Fix OOPS if user tries to add device via /sys
+>>     
+>>     This driver relies on driver_info in struct usb_device_id, hence
+>>     adding a device via  /sys/bus/usb/drivers/rtl8xxxu/new_id would result
+>>     in a NULL pointer dereference.
+>>     
+>>     Instead print a message and return -ENODEV
+>>     
+>>     Reported-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+>>     Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+>> 
+>> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+>> index 8d893f4..55fc00e 100644
+>> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+>> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+>> @@ -9671,6 +9671,15 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
+>>  
+>>  	udev = usb_get_dev(interface_to_usbdev(interface));
+>>  
+>> +	if (!id->driver_info) {
+>> +		dev_warn(&udev->dev,
+>> +			 "rtl8xxxu relies on driver_info in struct usb_device_id.\n");
+>> +		dev_warn(&udev->dev,
+>> +			 "Adding a device via /sys/bus/usb/drivers/rtl8xxxu/new_id is not supported!\n");
+>> +		ret = -ENODEV;
+>> +		goto exit;
+>> +	}
+>> +
+>>  	switch (id->idVendor) {
+>>  	case USB_VENDOR_ID_REALTEK:
+>>  		switch(id->idProduct) {
+>
+> Dynamic adding and removing a new device IDs to a USB device drivers
+> via /sys/bus/usb/drivers/.../[new_id|remove_id]
+> https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-bus-usb
+>
+> is not supported only with rtl8xxxu?
 
-The firmware doesn't send match found notifications when no matchsets
-are passed.  This makes sense because if there are no matchsets,
-nothing can be matched.  But the nl80211 API should report when there
-are results available, even if no matchsets were passed.
+Dynamically adding one will not work. The driver relies on driver_info
+in struct usb_device_id() to carry the struct fileops associated with
+the device type and you cannot specify this via the USB add operation.
 
-To handle this, we can use the firmware's ITERATION_COMPLETE
-reporting, which will send us notifications every time it completed a
-scheduled scan iteration.  Then we can set a flag when we received
-beacons and use that to report that results are available.
-
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h  |  7 ++++++
- drivers/net/wireless/intel/iwlwifi/mvm/rx.c   |  6 +++++
- drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 36 +++++++++++++++++++++++----
- 3 files changed, 44 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index d867cb4..bb811a2 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -493,6 +493,12 @@ enum iwl_mvm_scan_type {
- 	IWL_SCAN_TYPE_FRAGMENTED,
- };
- 
-+enum iwl_mvm_sched_scan_pass_all_states {
-+	SCHED_SCAN_PASS_ALL_DISABLED,
-+	SCHED_SCAN_PASS_ALL_ENABLED,
-+	SCHED_SCAN_PASS_ALL_FOUND,
-+};
-+
- /**
-  * struct iwl_nvm_section - describes an NVM section in memory.
-  *
-@@ -687,6 +693,7 @@ struct iwl_mvm {
- 	void *scan_cmd;
- 	struct iwl_mcast_filter_cmd *mcast_filter_cmd;
- 	enum iwl_mvm_scan_type scan_type;
-+	enum iwl_mvm_sched_scan_pass_all_states sched_scan_pass_all;
- 
- 	/* max number of simultaneous scans the FW supports */
- 	unsigned int max_scans;
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-index 145ec68..055a8b0 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rx.c
-@@ -448,6 +448,12 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
- 	iwl_mvm_update_frame_stats(mvm, rate_n_flags,
- 				   rx_status->flag & RX_FLAG_AMPDU_DETAILS);
- #endif
-+
-+	if (unlikely((ieee80211_is_beacon(hdr->frame_control) ||
-+		      ieee80211_is_probe_resp(hdr->frame_control)) &&
-+		     mvm->sched_scan_pass_all == SCHED_SCAN_PASS_ALL_ENABLED))
-+		mvm->sched_scan_pass_all = SCHED_SCAN_PASS_ALL_FOUND;
-+
- 	iwl_mvm_pass_packet_to_mac80211(mvm, napi, skb, hdr, len, ampdu_status,
- 					crypt_len, rxb);
- }
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-index aa6d807..09eb72c 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
-@@ -7,6 +7,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -33,6 +34,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016 Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -297,6 +299,12 @@ void iwl_mvm_rx_lmac_scan_iter_complete_notif(struct iwl_mvm *mvm,
- 		       iwl_mvm_dump_channel_list(notif->results,
- 						 notif->scanned_channels, buf,
- 						 sizeof(buf)));
-+
-+	if (mvm->sched_scan_pass_all == SCHED_SCAN_PASS_ALL_FOUND) {
-+		IWL_DEBUG_SCAN(mvm, "Pass all scheduled scan results found\n");
-+		ieee80211_sched_scan_results(mvm->hw);
-+		mvm->sched_scan_pass_all = SCHED_SCAN_PASS_ALL_ENABLED;
-+	}
- }
- 
- void iwl_mvm_rx_scan_match_found(struct iwl_mvm *mvm,
-@@ -380,6 +388,7 @@ void iwl_mvm_rx_lmac_scan_complete_notif(struct iwl_mvm *mvm,
- 
- 		mvm->scan_status &= ~IWL_MVM_SCAN_SCHED;
- 		ieee80211_sched_scan_stopped(mvm->hw);
-+		mvm->sched_scan_pass_all = SCHED_SCAN_PASS_ALL_DISABLED;
- 	} else if (mvm->scan_status & IWL_MVM_SCAN_REGULAR) {
- 		IWL_DEBUG_SCAN(mvm, "Regular scan %s, EBS status %s (FW)\n",
- 			       aborted ? "aborted" : "completed",
-@@ -533,10 +542,13 @@ static bool iwl_mvm_scan_pass_all(struct iwl_mvm *mvm,
- 		IWL_DEBUG_SCAN(mvm,
- 			       "Sending scheduled scan with filtering, n_match_sets %d\n",
- 			       req->n_match_sets);
-+		mvm->sched_scan_pass_all = SCHED_SCAN_PASS_ALL_DISABLED;
- 		return false;
- 	}
- 
- 	IWL_DEBUG_SCAN(mvm, "Sending Scheduled scan without filtering\n");
-+
-+	mvm->sched_scan_pass_all = SCHED_SCAN_PASS_ALL_ENABLED;
- 	return true;
- }
- 
-@@ -788,6 +800,9 @@ static int iwl_mvm_scan_lmac_flags(struct iwl_mvm *mvm,
- 		flags |= IWL_MVM_LMAC_SCAN_FLAG_ITER_COMPLETE;
- #endif
- 
-+	if (mvm->sched_scan_pass_all == SCHED_SCAN_PASS_ALL_ENABLED)
-+		flags |= IWL_MVM_LMAC_SCAN_FLAG_ITER_COMPLETE;
-+
- 	if (iwl_mvm_is_regular_scan(params) &&
- 	    vif->type != NL80211_IFTYPE_P2P_DEVICE &&
- 	    params->type != IWL_SCAN_TYPE_FRAGMENTED)
-@@ -1074,6 +1089,9 @@ static u32 iwl_mvm_scan_umac_flags(struct iwl_mvm *mvm,
- 		flags |= IWL_UMAC_SCAN_GEN_FLAGS_ITER_COMPLETE;
- #endif
- 
-+	if (mvm->sched_scan_pass_all == SCHED_SCAN_PASS_ALL_ENABLED)
-+		flags |= IWL_UMAC_SCAN_GEN_FLAGS_ITER_COMPLETE;
-+
- 	if (iwl_mvm_is_regular_scan(params) &&
- 	    vif->type != NL80211_IFTYPE_P2P_DEVICE &&
- 	    params->type != IWL_SCAN_TYPE_FRAGMENTED)
-@@ -1301,10 +1319,6 @@ int iwl_mvm_sched_scan_start(struct iwl_mvm *mvm,
- 		return -EBUSY;
- 	}
- 
--	/* we don't support "match all" in the firmware */
--	if (!req->n_match_sets)
--		return -EOPNOTSUPP;
--
- 	ret = iwl_mvm_check_running_scans(mvm, type);
- 	if (ret)
- 		return ret;
-@@ -1400,6 +1414,7 @@ void iwl_mvm_rx_umac_scan_complete_notif(struct iwl_mvm *mvm,
- 		iwl_mvm_unref(mvm, IWL_MVM_REF_SCAN);
- 	} else if (mvm->scan_uid_status[uid] == IWL_MVM_SCAN_SCHED) {
- 		ieee80211_sched_scan_stopped(mvm->hw);
-+		mvm->sched_scan_pass_all = SCHED_SCAN_PASS_ALL_DISABLED;
- 	}
- 
- 	mvm->scan_status &= ~mvm->scan_uid_status[uid];
-@@ -1434,6 +1449,12 @@ void iwl_mvm_rx_umac_scan_iter_complete_notif(struct iwl_mvm *mvm,
- 		       iwl_mvm_dump_channel_list(notif->results,
- 						 notif->scanned_channels, buf,
- 						 sizeof(buf)));
-+
-+	if (mvm->sched_scan_pass_all == SCHED_SCAN_PASS_ALL_FOUND) {
-+		IWL_DEBUG_SCAN(mvm, "Pass all scheduled scan results found\n");
-+		ieee80211_sched_scan_results(mvm->hw);
-+		mvm->sched_scan_pass_all = SCHED_SCAN_PASS_ALL_ENABLED;
-+	}
- }
- 
- static int iwl_mvm_umac_scan_abort(struct iwl_mvm *mvm, int type)
-@@ -1528,6 +1549,7 @@ void iwl_mvm_report_scan_aborted(struct iwl_mvm *mvm)
- 		uid = iwl_mvm_scan_uid_by_status(mvm, IWL_MVM_SCAN_SCHED);
- 		if (uid >= 0 && !mvm->restart_fw) {
- 			ieee80211_sched_scan_stopped(mvm->hw);
-+			mvm->sched_scan_pass_all = SCHED_SCAN_PASS_ALL_DISABLED;
- 			mvm->scan_uid_status[uid] = 0;
- 		}
- 
-@@ -1549,8 +1571,11 @@ void iwl_mvm_report_scan_aborted(struct iwl_mvm *mvm)
- 		 * restart_hw, so do not report if FW is about to be
- 		 * restarted.
- 		 */
--		if ((mvm->scan_status & IWL_MVM_SCAN_SCHED) && !mvm->restart_fw)
-+		if ((mvm->scan_status & IWL_MVM_SCAN_SCHED) &&
-+		    !mvm->restart_fw) {
- 			ieee80211_sched_scan_stopped(mvm->hw);
-+			mvm->sched_scan_pass_all = SCHED_SCAN_PASS_ALL_DISABLED;
-+		}
- 	}
- }
- 
-@@ -1586,6 +1611,7 @@ out:
- 			ieee80211_scan_completed(mvm->hw, true);
- 	} else if (notify) {
- 		ieee80211_sched_scan_stopped(mvm->hw);
-+		mvm->sched_scan_pass_all = SCHED_SCAN_PASS_ALL_DISABLED;
- 	}
- 
- 	return ret;
--- 
-2.5.0
-
+Jes
