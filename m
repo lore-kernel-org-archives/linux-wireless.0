@@ -1,33 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60949 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751924AbcC3Lvx (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:34179 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752577AbcCQBXx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 07:51:53 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Joe Perches <joe@perches.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH 0/5] wireless: ti: Convert specialized logging macros to kernel style
-References: <cover.1457395071.git.joe@perches.com>
-Date: Wed, 30 Mar 2016 14:51:49 +0300
-In-Reply-To: <cover.1457395071.git.joe@perches.com> (Joe Perches's message of
-	"Mon, 7 Mar 2016 16:19:32 -0800")
-Message-ID: <87shz85gkq.fsf@purkki.adurom.net> (sfid-20160330_135222_837116_3B590534)
+	Wed, 16 Mar 2016 21:23:53 -0400
+From: David Lin <dlin@marvell.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Chor Teck Law <ctlaw@marvell.com>,
+	"Pete Hsieh" <peteh@marvell.com>
+Subject: RE: [PATCH v7] Add new mac80211 driver mwlwifi.
+Date: Thu, 17 Mar 2016 01:23:47 +0000
+Message-ID: <a5d1b2b861294df2badcfe38c74a13db@SC-EXCH02.marvell.com> (sfid-20160317_022358_648831_348F8248)
+References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
+ <CAGRGNgUxNdbBn7HU+==P9uM3ciN-5pWRXDT+oYzCTLoATCR_xg@mail.gmail.com>
+In-Reply-To: <CAGRGNgUxNdbBn7HU+==P9uM3ciN-5pWRXDT+oYzCTLoATCR_xg@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joe Perches <joe@perches.com> writes:
-
-> Using the normal kernel logging mechanisms makes this code
-> a bit more like other wireless drivers.
-
-Personally I don't see the point but I don't have any strong opinions. A
-bigger problem is that TI drivers are not really in active development
-and that's I'm not thrilled to take big patches like this for dormant
-drivers.
-
--- 
-Kalle Valo
+PiBGcm9tOiBKdWxpYW4gQ2FsYWJ5IFttYWlsdG86anVsaWFuLmNhbGFieUBnbWFpbC5jb21dIFRo
+dXJzZGF5LCBNYXJjaCAxNywgMjAxNiA3OjI0IEFNDQo+IA0KPiBIaSBEYXZpZCwNCj4gDQo+IE9u
+IFRodSwgTm92IDEyLCAyMDE1IGF0IDI6NTEgUE0sIERhdmlkIExpbiA8ZGxpbkBtYXJ2ZWxsLmNv
+bT4gd3JvdGU6DQo+ID4gVGhpcyBwYXRjaCBwcm92aWRlcyB0aGUgbXdsd2lmaSBkcml2ZXIgZm9y
+IE1hcnZlbGwgODg2MywgODg2NCBhbmQgODg5Nw0KPiA+IGNoaXBzZXRzLg0KPiA+IFRoaXMgZHJp
+dmVyIHdhcyBkZXZlbG9wZWQgYXMgcGFydCBvZiB0aGUgb3BlbndydC5vcmcgcHJvamVjdCB0bw0K
+PiA+IHN1cHBvcnQgTGlua3N5cyBXUlQxOTAwQUMgYW5kIGlzIG1haW50YWluZWQgb24NCj4gaHR0
+cHM6Ly9naXRodWIuY29tL2thbG96L213bHdpZmkuDQo+ID4NCj4gPiBUaGUgbXdsd2lmaSBkcml2
+ZXIgZGlmZmVycyBmcm9tIGV4aXN0aW5nIG13aWZpZXggZHJpdmVyOg0KPiA+IG8gbXdsd2lmaSBp
+cyBhICJzb2Z0bWFjIGRyaXZlciIgdXNpbmcgdGhlIGtlcm5lbD/uqIMgbWFjODAyLjExIHN1YnN5
+c3RlbQ0KPiA+IHRvIHByb3ZpZGUgZnVsbCBBUC9XaXJlbGVzcyBCcmlkZ2UgZnVuY3Rpb25hbGl0
+eSAocm91dGVycykuDQo+ID4gbyBtd2lmaWV4IGlzIGEgImZ1bGxtYWMgZHJpdmVyIiB3aGljaCBw
+cm92aWRlcyBhIGNvbXByZWhlbnNpdmUgc2V0IG9mDQo+ID4gY2xpZW50IGZ1bmN0aW9ucyAobGFw
+dG9wcy9lbWJlZGRlZCBkZXZpY2VzKSBvIG9ubHkgbXdsd2lmaSBzdXBwb3J0cw0KPiA+IE1hcnZl
+bGwgQVAgY2hpcCA4ODZYIHNlcmllcw0KPiA+DQo+ID4gTk9URTogVXNlcnMgd2l0aCBNYXJ2ZWxs
+IDg4Vzg4OTcgY2hpcHNldHMgY3VycmVudGx5IHNob3VsZCBlbmFibGUNCj4gPiAoQ09ORklHPVkg
+b3IgTSkgZWl0aGVyIENPTkZJR19NV0lGSUVYIG9yIENPTkZJR19NV0xXSUZJLCBOT1QNCj4gQk9U
+SC4NCj4gPg0KPiA+IG13bHdpZmkgZHJpdmVyIGxldmVyYWdlZCBjb2RlIGZyb20gZXhpc3Rpbmcg
+TVdMOEsgZHJpdmVyIGluIHRoZQ0KPiA+IGZvbGxvd2luZyBhcmVhczoNCj4gPiAtIDgwMi4xMW4g
+c2V0dGluZyBmb3IgbWFjODAyMTENCj4gPiAtIEZ1bmN0aW9ucyBuZWVkZWQgdG8gaG9vayB1cCB0
+byBtYWM4MDIxMQ0KPiA+IC0gSW50ZXJhY3Rpb25zIHdpdGggbWFjODAyMTEgdG8gZXN0YWJsaXNo
+IEJBIHN0cmVhbXMNCj4gPiAtIFBhcnRpYWwgZmlybXdhcmUgQVBJcywgc29tZSBkYXRhIGZpZWxk
+cw0KPiA+IC0gTWV0aG9kIHRvIHBhc3MgUnggcGFja2V0cyB0byBtYWM4MDIxMSBleGNlcHQgMTFh
+YyByYXRlcw0KPiA+DQo+ID4gSW4gYWRkaXRpb24sIG13bHdpZmkgZHJpdmVyIHN1cHBvcnRzOg0K
+PiA+IC0gZnV0dXJlIHNjYWxhYmlsaXR5IGFuZCBmdXR1cmUgZGV2ZWxvcG1lbnQgKHJlZmFjdG9y
+ZWQgc291cmNlIGNvZGUpDQo+ID4gLSBNYXJ2ZWxsIDgwMi4xMWFjIGNoaXBzZXRzLCBpbmNsdWRp
+bmcgY29tYm8gQlQgZGV2aWNlcw0KPiA+IC0gODAyLjExYWMgcmVsYXRlZCBzZXR0aW5ncyBhbmQg
+ZnVuY3Rpb25zDQo+ID4gLSBjb25jdXJyZW50IEFQK1NUQSBmdW5jdGlvbmFsaXRpZXMgd2l0aCBz
+aW5nbGUgZmlybXdhcmUgcGVyIGNoaXANCj4gPiAtIGZpcm13YXJlIEFQSXMgZm9yIHRoZSBzdXBw
+b3J0ZWQgY2hpcHNldA0KPiA+IC0gY29tbXVuaWNhdGluZyBuZXcgbWFjODAyMTEgc2V0dGluZ3Mg
+dG8gZmlybXdhcmUNCj4gPiAtIERpZmZlcmVudCBUWC9SWCBkYXRhcGF0aCB3aGVyZSBhcHBsaWNh
+YmxlDQo+ID4gLSBBLU1TRFUgYW5kIEEtTVBEVQ0KPiA+IC0gbWFjODAyMTEtYmFzZWQgTUVTSCAo
+d29yayBpbiBwcm9ncmVzcykNCj4gPiAtIFJlZmluZWQgdGhlIGNvZGUgdG8gZXN0YWJsaXNoIEJB
+IHN0cmVhbXMNCj4gPg0KPiA+IE5PVEU6IE1XTFdJRkkgd2lsbCBiZSBvcmdhbml6ZWQgdW5kZXIg
+bmV3IHZlbmRvciBzcGVjaWZpYw0KPiA+IGZvbGRlci9tYXJ2ZWxsLCBhcyBwZXIgcmVxdWVzdCBv
+ZiB0aGUgZ2F0ZSBrZWVwZXIgYW5kIGNvbW11bml0eS4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6
+IERhdmlkIExpbiA8ZGxpbkBtYXJ2ZWxsLmNvbT4NCj4gDQo+IEl0J3MgYmVlbiBxdWl0ZSBhIHdo
+aWxlIHNpbmNlIHRoaXMgd2FzIHJldmlld2VkLiBEbyB5b3UgaGF2ZSBhIG5ldyB2ZXJzaW9uIG9m
+DQo+IHRoZSBkcml2ZXI/DQo+IA0KDQpZZXMgd2UgaGF2ZSBzb21lIHVwZGF0ZXMsIGFuZCBjb250
+aW51ZSB3b3JraW5nIG9uIGl0LiBCdXQgd2UgZmVsdCB0aGF0IGNvbW11bml0eSBkb2VzIG5vdCBz
+ZWVtIHRvIGJlIHZlcnkgaW50ZXJlc3RlZCBpbiB0aGlzIGRyaXZlciwgc28gd2UgaGF2ZSBub3Qg
+YmVlbiB1cGRhdGluZyB0aGUgd2lyZWxlc3Mgb3JnLiBMZXQgdXMga25vdyBpZiB5b3UgYXJlIHN1
+cHBvcnRpdmUgYW5kIHdhaXRpbmcgZm9yIGl0Lg0KDQpUaGFua3MsDQpEYXZpZA0KDQo+DQo+IFRo
+YW5rcywNCj4NCj4gLS0NCj4gSnVsaWFuIENhbGFieQ0KPiANCj4gRW1haWw6IGp1bGlhbi5jYWxh
+YnlAZ21haWwuY29tDQo+IFByb2ZpbGU6IGh0dHA6Ly93d3cuZ29vZ2xlLmNvbS9wcm9maWxlcy9q
+dWxpYW4uY2FsYWJ5Lw0K
