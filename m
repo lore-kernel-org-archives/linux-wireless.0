@@ -1,228 +1,96 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:62255 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933669AbcCIRqd (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 12:46:33 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 19/21] iwlwifi: mvm: adapt the firmware assert log to new firmware
-Date: Wed,  9 Mar 2016 19:45:48 +0200
-Message-Id: <1457545550-30677-19-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160309_185951_685599_E570EE4E)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
+Received: from mail-ob0-f193.google.com ([209.85.214.193]:33383 "EHLO
+	mail-ob0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966640AbcCQSlQ (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Mar 2016 14:41:16 -0400
+Received: by mail-ob0-f193.google.com with SMTP id z10so5779440obg.0
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 11:41:15 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 1/9] rtlwifi: Fix Smatch warnings
+Date: Thu, 17 Mar 2016 13:40:56 -0500
+Message-Id: <1458240064-31422-2-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160317_194120_029097_A419208D)
+In-Reply-To: <1458240064-31422-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1458240064-31422-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Newer firmware versions put different data in the memory
-which is read by the driver upon firmware crash. Just
-change the variable names in the code and the name of the
-data in the log that we print withouth any functional
-change.
-On older firmware, there will be a mismatch between the
-names that are printed and the content itself, but that's
-harmless.
+Smatch reports the following:
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+  CHECK   drivers/net/wireless/realtek/rtlwifi/pci.c
+drivers/net/wireless/realtek/rtlwifi/pci.c:366 rtl_pci_check_buddy_priv() error: we previously assumed 'tpriv' could be null (see line 368)
+drivers/net/wireless/realtek/rtlwifi/pci.c:1216 _rtl_pci_init_struct() warn: inconsistent indenting
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/intel/iwlwifi/dvm/main.c      |  8 +++----
- .../wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h  | 27 ++++++++++-----------
- drivers/net/wireless/intel/iwlwifi/mvm/utils.c     | 28 +++++++++++-----------
- 3 files changed, 30 insertions(+), 33 deletions(-)
+ drivers/net/wireless/realtek/rtlwifi/pci.c | 39 +++++++++++++++---------------
+ 1 file changed, 19 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/main.c b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-index f62c2d7..85628127 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-@@ -1652,10 +1652,10 @@ static void iwl_dump_nic_error_log(struct iwl_priv *priv)
+diff --git a/drivers/net/wireless/realtek/rtlwifi/pci.c b/drivers/net/wireless/realtek/rtlwifi/pci.c
+index 283d608..1ac41b8 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/pci.c
++++ b/drivers/net/wireless/realtek/rtlwifi/pci.c
+@@ -359,30 +359,28 @@ static bool rtl_pci_check_buddy_priv(struct ieee80211_hw *hw,
+ 	struct rtl_priv *rtlpriv = rtl_priv(hw);
+ 	struct rtl_pci_priv *pcipriv = rtl_pcipriv(hw);
+ 	bool find_buddy_priv = false;
+-	struct rtl_priv *tpriv = NULL;
++	struct rtl_priv *tpriv;
+ 	struct rtl_pci_priv *tpcipriv = NULL;
  
- 	trace_iwlwifi_dev_ucode_error(trans->dev, table.error_id, table.tsf_low,
- 				      table.data1, table.data2, table.line,
--				      table.blink1, table.blink2, table.ilink1,
--				      table.ilink2, table.bcon_time, table.gp1,
--				      table.gp2, table.gp3, table.ucode_ver,
--				      table.hw_ver, 0, table.brd_ver);
-+				      table.blink2, table.ilink1, table.ilink2,
-+				      table.bcon_time, table.gp1, table.gp2,
-+				      table.gp3, table.ucode_ver, table.hw_ver,
-+				      0, table.brd_ver);
- 	IWL_ERR(priv, "0x%08X | %-28s\n", table.error_id,
- 		desc_lookup(table.error_id));
- 	IWL_ERR(priv, "0x%08X | uPc\n", table.pc);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h
-index 2a0703f..f02e2c8 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-devtrace-iwlwifi.h
-@@ -2,6 +2,7 @@
-  *
-  * Copyright(c) 2009 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016        Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify it
-  * under the terms of version 2 of the GNU General Public License as
-@@ -121,13 +122,12 @@ TRACE_EVENT(iwlwifi_dev_tx,
+ 	if (!list_empty(&rtlpriv->glb_var->glb_priv_list)) {
+ 		list_for_each_entry(tpriv, &rtlpriv->glb_var->glb_priv_list,
+ 				    list) {
+-			if (tpriv) {
+-				tpcipriv = (struct rtl_pci_priv *)tpriv->priv;
+-				RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-					 "pcipriv->ndis_adapter.funcnumber %x\n",
+-					pcipriv->ndis_adapter.funcnumber);
+-				RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
+-					 "tpcipriv->ndis_adapter.funcnumber %x\n",
+-					tpcipriv->ndis_adapter.funcnumber);
+-
+-				if ((pcipriv->ndis_adapter.busnumber ==
+-				     tpcipriv->ndis_adapter.busnumber) &&
+-				    (pcipriv->ndis_adapter.devnumber ==
+-				    tpcipriv->ndis_adapter.devnumber) &&
+-				    (pcipriv->ndis_adapter.funcnumber !=
+-				    tpcipriv->ndis_adapter.funcnumber)) {
+-					find_buddy_priv = true;
+-					break;
+-				}
++			tpcipriv = (struct rtl_pci_priv *)tpriv->priv;
++			RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
++				 "pcipriv->ndis_adapter.funcnumber %x\n",
++				pcipriv->ndis_adapter.funcnumber);
++			RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD,
++				 "tpcipriv->ndis_adapter.funcnumber %x\n",
++				tpcipriv->ndis_adapter.funcnumber);
++
++			if ((pcipriv->ndis_adapter.busnumber ==
++			     tpcipriv->ndis_adapter.busnumber) &&
++			    (pcipriv->ndis_adapter.devnumber ==
++			    tpcipriv->ndis_adapter.devnumber) &&
++			    (pcipriv->ndis_adapter.funcnumber !=
++			    tpcipriv->ndis_adapter.funcnumber)) {
++				find_buddy_priv = true;
++				break;
+ 			}
+ 		}
+ 	}
+@@ -1213,7 +1211,8 @@ static void _rtl_pci_init_struct(struct ieee80211_hw *hw,
+ 	/*Tx/Rx related var */
+ 	_rtl_pci_init_trx_var(hw);
  
- TRACE_EVENT(iwlwifi_dev_ucode_error,
- 	TP_PROTO(const struct device *dev, u32 desc, u32 tsf_low,
--		 u32 data1, u32 data2, u32 line, u32 blink1,
--		 u32 blink2, u32 ilink1, u32 ilink2, u32 bcon_time,
--		 u32 gp1, u32 gp2, u32 gp3, u32 major, u32 minor, u32 hw_ver,
--		 u32 brd_ver),
-+		 u32 data1, u32 data2, u32 line, u32 blink2, u32 ilink1,
-+		 u32 ilink2, u32 bcon_time, u32 gp1, u32 gp2, u32 rev_type,
-+		 u32 major, u32 minor, u32 hw_ver, u32 brd_ver),
- 	TP_ARGS(dev, desc, tsf_low, data1, data2, line,
--		blink1, blink2, ilink1, ilink2, bcon_time, gp1, gp2,
--		gp3, major, minor, hw_ver, brd_ver),
-+		 blink2, ilink1, ilink2, bcon_time, gp1, gp2,
-+		 rev_type, major, minor, hw_ver, brd_ver),
- 	TP_STRUCT__entry(
- 		DEV_ENTRY
- 		__field(u32, desc)
-@@ -135,14 +135,13 @@ TRACE_EVENT(iwlwifi_dev_ucode_error,
- 		__field(u32, data1)
- 		__field(u32, data2)
- 		__field(u32, line)
--		__field(u32, blink1)
- 		__field(u32, blink2)
- 		__field(u32, ilink1)
- 		__field(u32, ilink2)
- 		__field(u32, bcon_time)
- 		__field(u32, gp1)
- 		__field(u32, gp2)
--		__field(u32, gp3)
-+		__field(u32, rev_type)
- 		__field(u32, major)
- 		__field(u32, minor)
- 		__field(u32, hw_ver)
-@@ -155,29 +154,27 @@ TRACE_EVENT(iwlwifi_dev_ucode_error,
- 		__entry->data1 = data1;
- 		__entry->data2 = data2;
- 		__entry->line = line;
--		__entry->blink1 = blink1;
- 		__entry->blink2 = blink2;
- 		__entry->ilink1 = ilink1;
- 		__entry->ilink2 = ilink2;
- 		__entry->bcon_time = bcon_time;
- 		__entry->gp1 = gp1;
- 		__entry->gp2 = gp2;
--		__entry->gp3 = gp3;
-+		__entry->rev_type = rev_type;
- 		__entry->major = major;
- 		__entry->minor = minor;
- 		__entry->hw_ver = hw_ver;
- 		__entry->brd_ver = brd_ver;
- 	),
- 	TP_printk("[%s] #%02d %010u data 0x%08X 0x%08X line %u, "
--		  "blink 0x%05X 0x%05X ilink 0x%05X 0x%05X "
--		  "bcon_tm %010u gp 0x%08X 0x%08X 0x%08X major 0x%08X "
-+		  "blink2 0x%05X ilink 0x%05X 0x%05X "
-+		  "bcon_tm %010u gp 0x%08X 0x%08X rev_type 0x%08X major 0x%08X "
- 		  "minor 0x%08X hw 0x%08X brd 0x%08X",
- 		  __get_str(dev), __entry->desc, __entry->tsf_low,
--		  __entry->data1,
--		  __entry->data2, __entry->line, __entry->blink1,
-+		  __entry->data1, __entry->data2, __entry->line,
- 		  __entry->blink2, __entry->ilink1, __entry->ilink2,
- 		  __entry->bcon_time, __entry->gp1, __entry->gp2,
--		  __entry->gp3, __entry->major, __entry->minor,
-+		  __entry->rev_type, __entry->major, __entry->minor,
- 		  __entry->hw_ver, __entry->brd_ver)
- );
+-	/*IBSS*/ mac->beacon_interval = 100;
++	/*IBSS*/
++	mac->beacon_interval = 100;
  
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-index 59453c1..53cdc57 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
-@@ -376,8 +376,8 @@ struct iwl_error_event_table_v1 {
- struct iwl_error_event_table {
- 	u32 valid;		/* (nonzero) valid, (0) log is empty */
- 	u32 error_id;		/* type of error */
--	u32 pc;			/* program counter */
--	u32 blink1;		/* branch link */
-+	u32 trm_hw_status0;	/* TRM HW status */
-+	u32 trm_hw_status1;	/* TRM HW status */
- 	u32 blink2;		/* branch link */
- 	u32 ilink1;		/* interrupt link */
- 	u32 ilink2;		/* interrupt link */
-@@ -389,7 +389,7 @@ struct iwl_error_event_table {
- 	u32 tsf_hi;		/* network timestamp function timer */
- 	u32 gp1;		/* GP1 timer register */
- 	u32 gp2;		/* GP2 timer register */
--	u32 gp3;		/* GP3 timer register */
-+	u32 fw_rev_type;	/* firmware revision type */
- 	u32 major;		/* uCode version major */
- 	u32 minor;		/* uCode version minor */
- 	u32 hw_ver;		/* HW Silicon version */
-@@ -408,7 +408,7 @@ struct iwl_error_event_table {
- 				 * time_flag */
- 	u32 isr4;		/* isr status register LMPM_NIC_ISR4:
- 				 * wico interrupt */
--	u32 isr_pref;		/* isr status register LMPM_NIC_PREF_STAT */
-+	u32 last_cmd_id;	/* last HCMD id handled by the firmware */
- 	u32 wait_event;		/* wait event() caller address */
- 	u32 l2p_control;	/* L2pControlField */
- 	u32 l2p_duration;	/* L2pDurationField */
-@@ -419,7 +419,7 @@ struct iwl_error_event_table {
- 	u32 u_timestamp;	/* indicate when the date and time of the
- 				 * compilation */
- 	u32 flow_handler;	/* FH read/write pointers, RX credit */
--} __packed /* LOG_ERROR_TABLE_API_S_VER_2 */;
-+} __packed /* LOG_ERROR_TABLE_API_S_VER_3 */;
- 
- /*
-  * UMAC error struct - relevant starting from family 8000 chip.
-@@ -529,9 +529,9 @@ static void iwl_mvm_dump_nic_error_log_old(struct iwl_mvm *mvm)
- 
- 	trace_iwlwifi_dev_ucode_error(trans->dev, table.error_id, table.tsf_low,
- 				      table.data1, table.data2, table.data3,
--				      table.blink1, table.blink2, table.ilink1,
--				      table.ilink2, table.bcon_time, table.gp1,
--				      table.gp2, table.gp3, table.ucode_ver, 0,
-+				      table.blink2, table.ilink1, table.ilink2,
-+				      table.bcon_time, table.gp1, table.gp2,
-+				      table.gp3, table.ucode_ver, 0,
- 				      table.hw_ver, table.brd_ver);
- 	IWL_ERR(mvm, "0x%08X | %-28s\n", table.error_id,
- 		desc_lookup(table.error_id));
-@@ -615,14 +615,14 @@ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
- 
- 	trace_iwlwifi_dev_ucode_error(trans->dev, table.error_id, table.tsf_low,
- 				      table.data1, table.data2, table.data3,
--				      table.blink1, table.blink2, table.ilink1,
-+				      table.blink2, table.ilink1,
- 				      table.ilink2, table.bcon_time, table.gp1,
--				      table.gp2, table.gp3, table.major,
-+				      table.gp2, table.fw_rev_type, table.major,
- 				      table.minor, table.hw_ver, table.brd_ver);
- 	IWL_ERR(mvm, "0x%08X | %-28s\n", table.error_id,
- 		desc_lookup(table.error_id));
--	IWL_ERR(mvm, "0x%08X | uPc\n", table.pc);
--	IWL_ERR(mvm, "0x%08X | branchlink1\n", table.blink1);
-+	IWL_ERR(mvm, "0x%08X | trm_hw_status0\n", table.trm_hw_status0);
-+	IWL_ERR(mvm, "0x%08X | trm_hw_status1\n", table.trm_hw_status1);
- 	IWL_ERR(mvm, "0x%08X | branchlink2\n", table.blink2);
- 	IWL_ERR(mvm, "0x%08X | interruptlink1\n", table.ilink1);
- 	IWL_ERR(mvm, "0x%08X | interruptlink2\n", table.ilink2);
-@@ -634,7 +634,7 @@ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
- 	IWL_ERR(mvm, "0x%08X | tsf hi\n", table.tsf_hi);
- 	IWL_ERR(mvm, "0x%08X | time gp1\n", table.gp1);
- 	IWL_ERR(mvm, "0x%08X | time gp2\n", table.gp2);
--	IWL_ERR(mvm, "0x%08X | time gp3\n", table.gp3);
-+	IWL_ERR(mvm, "0x%08X | uCode revision type\n", table.fw_rev_type);
- 	IWL_ERR(mvm, "0x%08X | uCode version major\n", table.major);
- 	IWL_ERR(mvm, "0x%08X | uCode version minor\n", table.minor);
- 	IWL_ERR(mvm, "0x%08X | hw version\n", table.hw_ver);
-@@ -645,7 +645,7 @@ void iwl_mvm_dump_nic_error_log(struct iwl_mvm *mvm)
- 	IWL_ERR(mvm, "0x%08X | isr2\n", table.isr2);
- 	IWL_ERR(mvm, "0x%08X | isr3\n", table.isr3);
- 	IWL_ERR(mvm, "0x%08X | isr4\n", table.isr4);
--	IWL_ERR(mvm, "0x%08X | isr_pref\n", table.isr_pref);
-+	IWL_ERR(mvm, "0x%08X | last cmd Id\n", table.last_cmd_id);
- 	IWL_ERR(mvm, "0x%08X | wait_event\n", table.wait_event);
- 	IWL_ERR(mvm, "0x%08X | l2p_control\n", table.l2p_control);
- 	IWL_ERR(mvm, "0x%08X | l2p_duration\n", table.l2p_duration);
+ 	/*AMPDU*/
+ 	mac->min_space_cfg = 0;
 -- 
-2.5.0
+2.1.4
 
