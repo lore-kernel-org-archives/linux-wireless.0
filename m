@@ -1,59 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f193.google.com ([209.85.161.193]:33790 "EHLO
-	mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750990AbcCRCpC (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:37145 "EHLO
+	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932084AbcCQJxW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 22:45:02 -0400
-Received: by mail-yw0-f193.google.com with SMTP id g6so8586775ywb.0
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 19:45:01 -0700 (PDT)
-Subject: Re: [PATCH 05/19] rtlwifi: use to_delayed_work()
-To: Julian Calaby <julian.calaby@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-References: <cover.1458262312.git.julian.calaby@gmail.com>
- <1d07f186a933c2d1f0bf1780ab1dcb50d3a808aa.1458262312.git.julian.calaby@gmail.com>
-Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
-	Geliang Tang <geliangtang@163.com>,
-	Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-	Colin Ian King <colin.king@canonical.com>,
-	linux-wireless@vger.kernel.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <56EB6BAB.5080800@lwfinger.net> (sfid-20160318_034506_344280_A58139E8)
-Date: Thu, 17 Mar 2016 21:44:59 -0500
+	Thu, 17 Mar 2016 05:53:22 -0400
+Received: by mail-wm0-f50.google.com with SMTP id p65so108865297wmp.0
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 02:53:22 -0700 (PDT)
+Date: Thu, 17 Mar 2016 10:53:18 +0100
+From: Vishal Thanki <vishalthanki@gmail.com>
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: helmut.schaa@googlemail.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2x00usb: Use usb anchors to manage URB
+Message-ID: <20160317095317.GA6518@c50.bag.software> (sfid-20160317_105327_253759_7F1979E4)
+References: <1458149331-2106-1-git-send-email-vishalthanki@gmail.com>
+ <20160317084331.GA19458@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <1d07f186a933c2d1f0bf1780ab1dcb50d3a808aa.1458262312.git.julian.calaby@gmail.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160317084331.GA19458@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/17/2016 09:22 PM, Julian Calaby wrote:
-> From: Geliang Tang <geliangtang@163.com>
->
-> Use to_delayed_work() instead of open-coding it.
->
-> Signed-off-by: Geliang Tang <geliangtang@163.com>
-> [Update commit message]
-> Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+Hi,
 
-Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
+On Thu, Mar 17, 2016 at 09:43:32AM +0100, Stanislaw Gruszka wrote:
+> Hi
+> 
+> On Wed, Mar 16, 2016 at 06:28:51PM +0100, Vishal Thanki wrote:
+> > +struct rt2x00usb_anchors {
+> > +	struct usb_anchor async_urb;
+> > +	struct usb_anchor tx_submitted;
+> > +	struct usb_anchor rx_submitted;
+> > +};
+> 
+> I don't think we need 3 different usb_anchor's, one should be
+> enough.
+> 
 
-Larry
+Ok, I will change that.
 
-> ---
->   drivers/net/wireless/realtek/rtlwifi/wifi.h | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-> index 554d814..edece53 100644
-> --- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
-> +++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
-> @@ -2867,7 +2867,7 @@ value to host byte ordering.*/
->   	(ppsc->cur_ps_level |= _ps_flg)
->
->   #define container_of_dwork_rtl(x, y, z) \
-> -	container_of(container_of(x, struct delayed_work, work), y, z)
-> +	container_of(to_delayed_work(x), y, z)
->
->   #define FILL_OCTET_STRING(_os, _octet, _len)	\
->   		(_os).octet = (u8 *)(_octet);		\
->
+> > +static struct rt2x00usb_anchors *anchors;
+> 
+> usb_anchor structure should be embedded in rt2x00_dev structure,
+> otherwise you can kill urb's from other rt2x00 devices, when
+> disconnecting another one.
+> 
 
+rt2x00_dev structure does not contain any bus specific data structures
+(for example no structures present for USB/PCI). Should I add a void
+*ptr in rt2x00_dev and cast it as usb_anchor in rt2x00usb.c?
+
+Thanks,
+Vishal
+
+> Stanislaw
