@@ -1,36 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kapsi.fi ([217.30.184.167]:38285 "EHLO mail.kapsi.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752553AbcCBHcP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 02:32:15 -0500
-Date: Wed, 2 Mar 2016 09:32:10 +0200
-From: Tuomas =?utf-8?B?UsOkc8OkbmVu?= <tuomasjjrasanen@tjjr.fi>
-To: Jakub =?utf-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>
-Cc: Felix Fietkau <nbd@openwrt.org>, linux-wireless@vger.kernel.org,
-	tuomasjjrasanen@opinsys.fi,
-	Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: About adding support for MT76x2U to Linux kernel
-Message-ID: <20160302073210.GA31353@lakka.kapsi.fi> (sfid-20160302_083220_281566_59636733)
-References: <20150814081526.GC20192@hackpad.Elisa>
- <20150814143229.61440072@north>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20150814143229.61440072@north>
+Received: from mout.kundenserver.de ([212.227.126.135]:52526 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932757AbcCQJUy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Mar 2016 05:20:54 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH 2/2] bcma: use of_dma_configure() to set initial dma mask
+Date: Thu, 17 Mar 2016 10:20:21 +0100
+Message-Id: <1458206432-3039552-2-git-send-email-arnd@arndb.de> (sfid-20160317_102133_610049_CFE78A28)
+In-Reply-To: <1458206432-3039552-1-git-send-email-arnd@arndb.de>
+References: <1458206432-3039552-1-git-send-email-arnd@arndb.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Aug 14, 2015 at 02:32:29PM +0200, Jakub Kiciński wrote:
-> CC: Linus W who was hacking on mt7630e recently.
-> 
-> There is a fourth option: merge mt76 and mt7601u and add support for
-> mt76x2u along the way ;)
->
+While fixing another bug, I noticed that bcma manually sets up
+a dma_mask pointer for its child devices. We have a generic
+helper for that now, which should be able to cope better with
+any variations that might be needed to deal with cache coherency,
+unusual DMA address offsets, iommus, or limited DMA masks, none
+of which are currently handled here.
 
-Btw, how difficult it would be to add master mode support to mt7601u?
+This changes the core to use the of_dma_configure(), like
+we do for platform devices that are probed directly from
+DT.
 
->From 1 to 5, where 1 corresponds to "I know what I do, just give me
-couple of days, no interruptions" and 5 corresponds to the work you
-had to make to get mt7601u to its current shape?
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
 
---
-Tuomas
+This patch needs to be tested to ensure we don't introduce
+regressions, and should probably go into 4.7 as a cleanup.
+---
+ drivers/bcma/main.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 1f635471f318..57d223a7a720 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -209,6 +209,8 @@ static void bcma_of_fill_device(struct platform_device *parent,
+ 		core->dev.of_node = node;
+ 
+ 	core->irq = bcma_of_get_irq(parent, core, 0);
++
++	of_dma_configure(core->dev, node);
+ }
+ 
+ unsigned int bcma_core_irq(struct bcma_device *core, int num)
+@@ -248,12 +250,12 @@ void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core)
+ 		core->irq = bus->host_pci->irq;
+ 		break;
+ 	case BCMA_HOSTTYPE_SOC:
+-		core->dev.dma_mask = &core->dev.coherent_dma_mask;
+-		if (bus->host_pdev) {
++		if (IS_ENABLED(CONFIG_OF) && bus->host_pdev) {
+ 			core->dma_dev = &bus->host_pdev->dev;
+ 			core->dev.parent = &bus->host_pdev->dev;
+ 			bcma_of_fill_device(bus->host_pdev, core);
+ 		} else {
++			core->dev.dma_mask = &core->dev.coherent_dma_mask;
+ 			core->dma_dev = &core->dev;
+ 		}
+ 		break;
+-- 
+2.7.0
+
