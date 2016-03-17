@@ -1,54 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:24696 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754183AbcC3OGD (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 10:06:03 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 20/43] iwlwifi: pcie: write to legacy register also in MQ
-Date: Wed, 30 Mar 2016 17:04:52 +0300
-Message-Id: <1459346715-7954-20-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160617_744097_3EB71B43)
-In-Reply-To: <1459346667.4731.9.camel@intel.com>
-References: <1459346667.4731.9.camel@intel.com>
+Received: from mail-pf0-f171.google.com ([209.85.192.171]:36423 "EHLO
+	mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752083AbcCQNSO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Mar 2016 09:18:14 -0400
+Date: Thu, 17 Mar 2016 06:18:11 -0700
+From: "tj@kernel.org" <tj@kernel.org>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: Eva Rachel Retuya <eraretuya@gmail.com>,
+	"outreachy-kernel@googlegroups.com"
+	<outreachy-kernel@googlegroups.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	linuxwifi <linuxwifi@intel.com>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] iwlwifi: dvm: convert create_singlethread_workqueue() to
+ alloc_workqueue()
+Message-ID: <20160317131811.GO21104@mtj.duckdns.org> (sfid-20160317_141836_827528_59399079)
+References: <1458218246-18807-1-git-send-email-eraretuya@gmail.com>
+ <0BA3FCBA62E2DC44AF3030971E174FB32EA7C435@hasmsx107.ger.corp.intel.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA7C435@hasmsx107.ger.corp.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+Hello,
 
-Due to hardware bug, upon any shadow free-queue register write
-access, a legacy RBD shadow register must be written as well.
-This is required in order to trigger a copy of the shadow registers
-values after MAC exits sleep state.
-Specifically, the driver has to write (any value) to the legacy RBD
-register each time FRBDCB is accessed.
+On Thu, Mar 17, 2016 at 12:43:35PM +0000, Grumbach, Emmanuel wrote:
+> > 
+> > Use alloc_workqueue() to allocate the workqueue instead of
+> > create_singlethread_workqueue() since the latter is deprecated and is
+> > scheduled
+> > for removal.
+> 
+> I can't see any indication of that in the code of workqueue.
+> Can you share details about that?
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+create*_workqueue()'s have been deprecated and replaced by
+alloc*_workqueue()'s for some years now.  I probably should note that
+in the header file.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index e379dba..59a7e45 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -210,8 +210,12 @@ static void iwl_pcie_rxq_inc_wr_ptr(struct iwl_trans *trans,
- 	if (trans->cfg->mq_rx_supported)
- 		iwl_write_prph(trans, RFH_Q_FRBDCB_WIDX(rxq->id),
- 			       rxq->write_actual);
--	else
--		iwl_write32(trans, FH_RSCSR_CHNL0_WPTR, rxq->write_actual);
-+	/*
-+	 * write to FH_RSCSR_CHNL0_WPTR register even in MQ as a W/A to
-+	 * hardware shadow registers bug - writing to RFH_Q_FRBDCB_WIDX will
-+	 * not wake the NIC.
-+	 */
-+	iwl_write32(trans, FH_RSCSR_CHNL0_WPTR, rxq->write_actual);
- }
- 
- static void iwl_pcie_rxq_check_wrptr(struct iwl_trans *trans)
+Thanks.
+
 -- 
-2.5.0
-
+tejun
