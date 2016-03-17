@@ -1,49 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:35087 "EHLO
-	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755927AbcC2GG4 (ORCPT
+Received: from mail-ob0-f194.google.com ([209.85.214.194]:35962 "EHLO
+	mail-ob0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031499AbcCQSlU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 02:06:56 -0400
-Received: by mail-pf0-f173.google.com with SMTP id n5so6553051pfn.2
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2016 23:06:56 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Pontus Fuchs <pontus.fuchs@gmail.com>
-Subject: [PATCH 16/16] wcn36xx: Use correct command struct for EXIT_BMPS_REQ
-Date: Mon, 28 Mar 2016 23:06:33 -0700
-Message-Id: <1459231593-360-17-git-send-email-bjorn.andersson@linaro.org> (sfid-20160329_080807_689416_D4A1F51C)
-In-Reply-To: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
+	Thu, 17 Mar 2016 14:41:20 -0400
+Received: by mail-ob0-f194.google.com with SMTP id cf7so6685341obc.3
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 11:41:20 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 6/9] rtlwifi: rtl8192se: Fix Smatch warning
+Date: Thu, 17 Mar 2016 13:41:01 -0500
+Message-Id: <1458240064-31422-7-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160317_194127_612889_078D4C71)
+In-Reply-To: <1458240064-31422-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1458240064-31422-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+Smatch lists the following:
 
-EXIT_BMPS_REQ was using the command struct for ENTER_BMPS_REQ. I
-spotted this when looking at command dumps.
+  CHECK   drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
+drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c:648 rtl92s_phy_set_rf_power_state() warn: inconsistent indenting
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c | 2 +-
+ drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index b1bdc229e560..c15501c06eb2 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1690,7 +1690,7 @@ out:
- 
- int wcn36xx_smd_exit_bmps(struct wcn36xx *wcn, struct ieee80211_vif *vif)
- {
--	struct wcn36xx_hal_enter_bmps_req_msg msg_body;
-+	struct wcn36xx_hal_exit_bmps_req_msg msg_body;
- 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
- 	int ret = 0;
- 
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
+index 4b4612f..82d6375 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8192se/phy.c
+@@ -645,7 +645,7 @@ bool rtl92s_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 				 rtlpriv->psc.state_inap);
+ 			ppsc->last_sleep_jiffies = jiffies;
+ 			_rtl92se_phy_set_rf_sleep(hw);
+-	    break;
++			break;
+ 	default:
+ 		RT_TRACE(rtlpriv, COMP_ERR, DBG_EMERG,
+ 			 "switch case not processed\n");
 -- 
-2.5.0
+2.1.4
 
