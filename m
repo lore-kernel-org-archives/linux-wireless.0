@@ -1,63 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7508 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752891AbcCVWpj (ORCPT
+Received: from mail-ob0-f196.google.com ([209.85.214.196]:35261 "EHLO
+	mail-ob0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031513AbcCQSlW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2016 18:45:39 -0400
-From: Peter Oh <poh@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH v2] ath10k: parse Rx MAC timestamp in mgmt frame for FW 10.4
-Date: Tue, 22 Mar 2016 15:44:53 -0700
-Message-ID: <20caae0068a19c546f87ef4a25e3651af92c02ab.1458686620.git.poh@qca.qualcomm.com> (sfid-20160322_234557_583423_09046EF3)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 17 Mar 2016 14:41:22 -0400
+Received: by mail-ob0-f196.google.com with SMTP id e7so6741432obv.2
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 11:41:22 -0700 (PDT)
+From: Larry Finger <Larry.Finger@lwfinger.net>
+To: kvalo@codeaurora.org
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH 8/9] rtlwifi: rtl8723be: Fix Smatch warnings
+Date: Thu, 17 Mar 2016 13:41:03 -0500
+Message-Id: <1458240064-31422-9-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160317_194132_287191_63844B76)
+In-Reply-To: <1458240064-31422-1-git-send-email-Larry.Finger@lwfinger.net>
+References: <1458240064-31422-1-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Check and parse Rx MAC timestamp when firmware sets its flag
-to status variable.
-10.4 firmware adds it in Rx beacon frame only at this moment.
-Drivers and mac80211 may utilize it to detect such clockdrift
-or beacon collision and use the result for beacon collision
-avoidance.
+Smatch reports the following:
 
-Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+  CHECK   drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
+drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c:1726 _rtl8723be_phy_path_a_rx_iqk() warn: inconsistent indenting
+drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c:2304 _rtl8723be_phy_lc_calibrate() warn: inconsistent indenting
+drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c:2609 _rtl8723be_phy_set_rf_power_state() warn: inconsistent indenting
+  CHECK   drivers/net/wireless/realtek/rtlwifi/rtl8723be/rf.c
+drivers/net/wireless/realtek/rtlwifi/rtl8723be/rf.c:306 _rtl8723be_get_txpower_writeval_by_regulatory() warn: inconsistent indenting
+
+Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
 ---
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c | 10 ++++------
+ drivers/net/wireless/realtek/rtlwifi/rtl8723be/rf.c  |  4 ++--
+ 2 files changed, 6 insertions(+), 8 deletions(-)
 
-v2:
- * Rebased. no code changes.
-
- drivers/net/wireless/ath/ath10k/wmi.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
-index 9137566..9977876 100644
---- a/drivers/net/wireless/ath/ath10k/wmi.c
-+++ b/drivers/net/wireless/ath/ath10k/wmi.c
-@@ -2191,6 +2191,8 @@ static int ath10k_wmi_10_4_op_pull_mgmt_rx_ev(struct ath10k *ar,
- 	struct wmi_10_4_mgmt_rx_hdr *ev_hdr;
- 	size_t pull_len;
- 	u32 msdu_len;
-+	struct wmi_mgmt_rx_ext_info *ext_info;
-+	u32 len;
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
+index b7b73cb..445f681 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/phy.c
+@@ -1723,8 +1723,8 @@ static u8 _rtl8723be_phy_path_a_rx_iqk(struct ieee80211_hw *hw)
  
- 	ev = (struct wmi_10_4_mgmt_rx_event *)skb->data;
- 	ev_hdr = &ev->hdr;
-@@ -2211,6 +2213,13 @@ static int ath10k_wmi_10_4_op_pull_mgmt_rx_ev(struct ath10k *ar,
- 	if (skb->len < msdu_len)
- 		return -EPROTO;
+ 	/* Allen 20131125 */
+ 	tmp = (reg_eac & 0x03FF0000) >> 16;
+-		if ((tmp & 0x200) > 0)
+-			tmp = 0x400 - tmp;
++	if ((tmp & 0x200) > 0)
++		tmp = 0x400 - tmp;
+ 	/* if Tx is OK, check whether Rx is OK */
+ 	if (!(reg_eac & BIT(27)) &&
+ 	    (((reg_ea4 & 0x03FF0000) >> 16) != 0x132) &&
+@@ -2301,8 +2301,7 @@ static void _rtl8723be_phy_lc_calibrate(struct ieee80211_hw *hw, bool is2t)
+ 	} else {
+ 		rtl_write_byte(rtlpriv, REG_TXPAUSE, 0x00);
+ 	}
+-RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "\n");
+-
++	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "\n");
+ }
  
-+	if (le32_to_cpu(arg->status) & WMI_RX_STATUS_EXT_INFO) {
-+		len = ALIGN(le32_to_cpu(arg->buf_len), 4);
-+		ext_info = (struct wmi_mgmt_rx_ext_info *)(skb->data + len);
-+		memcpy(&arg->ext_info, ext_info,
-+		       sizeof(struct wmi_mgmt_rx_ext_info));
-+	}
-+
- 	/* Make sure bytes added for padding are removed. */
- 	skb_trim(skb, msdu_len);
+ static void _rtl8723be_phy_set_rfpath_switch(struct ieee80211_hw *hw,
+@@ -2606,8 +2605,7 @@ static bool _rtl8723be_phy_set_rf_power_state(struct ieee80211_hw *hw,
+ 					 "IPS Set eRf nic enable\n");
+ 				rtstatus = rtl_ps_enable_nic(hw);
+ 			} while (!rtstatus && (initializecount < 10));
+-				RT_CLEAR_PS_LEVEL(ppsc,
+-						  RT_RF_OFF_LEVL_HALT_NIC);
++			RT_CLEAR_PS_LEVEL(ppsc, RT_RF_OFF_LEVL_HALT_NIC);
+ 		} else {
+ 			RT_TRACE(rtlpriv, COMP_RF, DBG_DMESG,
+ 				 "Set ERFON sleeped:%d ms\n",
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/rf.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/rf.c
+index 5ed4492..97f5a03 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8723be/rf.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723be/rf.c
+@@ -303,8 +303,8 @@ static void _rtl8723be_get_txpower_writeval_by_regulatory(
+ 					   [chnlgroup][index + (rf ? 8 : 0)] &
+ 					      (0x7f << (i * 8))) >> (i * 8));
  
+-					if (pwr_diff_limit[i] > pwr_diff)
+-						pwr_diff_limit[i] = pwr_diff;
++				if (pwr_diff_limit[i] > pwr_diff)
++					pwr_diff_limit[i] = pwr_diff;
+ 			}
+ 
+ 			customer_limit = (pwr_diff_limit[3] << 24) |
 -- 
-1.9.1
+2.1.4
 
