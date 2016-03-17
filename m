@@ -1,40 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35899 "EHLO sipsolutions.net"
+Received: from mga02.intel.com ([134.134.136.20]:36465 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754076AbcCAOp0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 09:45:26 -0500
-Message-ID: <1456843521.3926.30.camel@sipsolutions.net> (sfid-20160301_154541_069623_A1E0A2ED)
-Subject: Re: [PATCH] mac80211: Fix Public Action frame RX in AP mode
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <jouni@qca.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 01 Mar 2016 15:45:21 +0100
-In-Reply-To: <1456784940-32328-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1456784940-32328-1-git-send-email-jouni@qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1030437AbcCQOvr (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Mar 2016 10:51:47 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/2] mac80211: close the SP when we enqueue frames during the SP
+Date: Thu, 17 Mar 2016 16:51:42 +0200
+Message-Id: <1458226302-6086-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160317_155153_064618_6F4CB1B1)
+In-Reply-To: <1458226302-6086-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1458226302-6086-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-03-01 at 00:29 +0200, Jouni Malinen wrote:
-> Public Action frames use special rules for how the BSSID field
-> (Address
-> 3) is set. A wildcard BSSID is used in cases where the transmitter
-> and
-> recipient are not members of the same BSS. As such, we need to accept
-> Public Action frames with wildcard BSSID.
-> 
-> Commit db8e17324553 ("mac80211: ignore frames between TDLS peers when
-> operating as AP") added a rule that drops Action frames to TDLS-peers
-> based on an Action frame having different DA (Address 1) and BSSID
-> (Address 3) values. This is not correct since it misses the
-> possibility
-> of BSSID being a wildcard BSSID in which case the Address 1 would not
-> necessarily match.
-> 
-> Fix this by allowing mac80211 to accept wildcard BSSID in an Action
-> frame when in AP mode.
-> 
-Applied, thanks.
+Since we enqueued the frame that was supposed to be sent
+during the SP, and that frame may very well cary the
+IEEE80211_TX_STATUS_EOSP bit, we may never close the SP
+(WLAN_STA_SP will never be cleared). If that happens, we
+will not open any new SP and will never respond to any poll
+frame from the client.
+Clear WLAN_STA_SP manually if a frame that was polled during
+the SP is queued because of a starting A-MPDU session. The
+client may not see the EOSP bit, but it will at least be
+able to poll new frames in another SP.
 
-johannes
+Reported-by: Alesya Shapira <alesya.shapira@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ net/mac80211/tx.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 114509a..5473281 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1116,6 +1116,13 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
+ 			reset_agg_timer = true;
+ 		} else {
+ 			queued = true;
++			/* XXX: should I test IEEE80211_TX_STATUS_EOSP here? */
++			if (info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER) {
++				clear_sta_flag(tx->sta, WLAN_STA_SP);
++				ps_dbg(tx->sta->sdata,
++				       "STA %pM aid %d: SP frame queued, close the SP w/o telling the peer\n",
++				       tx->sta->sta.addr, tx->sta->sta.aid);
++			}
+ 			info->control.vif = &tx->sdata->vif;
+ 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
+ 			info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS;
+-- 
+2.5.0
+
