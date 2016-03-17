@@ -1,70 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f176.google.com ([209.85.213.176]:35313 "EHLO
-	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757121AbcC2MPi (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:43931 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934211AbcCQRfy (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 08:15:38 -0400
-Received: by mail-ig0-f176.google.com with SMTP id cl4so74343217igb.0
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2016 05:15:38 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <56FA6B07.9000807@broadcom.com>
-References: <CAAeNHhzywKhugKCPwLonXqTEnJJm7Td39JPof0xRxL+gOZ_xkg@mail.gmail.com>
-	<56FA6B07.9000807@broadcom.com>
-Date: Tue, 29 Mar 2016 17:45:37 +0530
-Message-ID: <CAAeNHhz6ok+ade9N1uTxZOCrSjKvecaNVhdwodj_8JFaj5eaDQ@mail.gmail.com> (sfid-20160329_141543_561056_1D095307)
-Subject: Re: Wireless Encryption
-From: Aswin Paranji <aswin.paranji@gmail.com>
-To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+	Thu, 17 Mar 2016 13:35:54 -0400
+Date: Thu, 17 Mar 2016 20:35:42 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: christophe.ricard@gmail.com
 Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Subject: re: nfc: st21nfca: Add support for acpi probing for i2c device.
+Message-ID: <20160317173542.GA29162@mwanda> (sfid-20160317_183557_654907_4DA5C039)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend,
+Hello Christophe Ricard,
 
-Thanks for the response. What I'm trying to accomplish is to encrypt
-the 802.11 data packet that is sent to mac80211 as data frames and
-mac80211 sends it to the wifi driver.
-I took a look at this blog
-"https://www.linux.com/community/blogs/133-general-linux/816721-linux-wireless-networking-a-short-walk"
-and thought it would be possible to just encrypt the data part.
+The patch dfa8070d7f64: "nfc: st21nfca: Add support for acpi probing
+for i2c device." from Dec 23, 2015, leads to the following static
+checker warning:
 
-I also checked using wireshark where the 80211 data is encrypted using
-the wpa key and ssid. I'm looking for a way to encrypt data with out
-touching any wifi drivers.
+	drivers/nfc/st21nfca/i2c.c:530 st21nfca_hci_i2c_acpi_request_resources()
+	error: 'gpiod_ena' dereferencing possible ERR_PTR()
 
-I'am trying to use openwrt to come up with new encryption and see if i
-can use it in rapberry pi as a test bed.
+drivers/nfc/st21nfca/i2c.c
+   507  static int st21nfca_hci_i2c_acpi_request_resources(struct i2c_client *client)
+   508  {
+   509          struct st21nfca_i2c_phy *phy = i2c_get_clientdata(client);
+   510          const struct acpi_device_id *id;
+   511          struct gpio_desc *gpiod_ena;
+   512          struct device *dev;
+   513  
+   514          if (!client)
+   515                  return -EINVAL;
+   516  
+   517          dev = &client->dev;
+   518  
+   519          /* Match the struct device against a given list of ACPI IDs */
+   520          id = acpi_match_device(dev->driver->acpi_match_table, dev);
+   521          if (!id)
+   522                  return -ENODEV;
+   523  
+   524          /* Get EN GPIO from ACPI */
+   525          gpiod_ena = devm_gpiod_get_index(dev, ST21NFCA_GPIO_NAME_EN, 1,
+   526                                           GPIOD_OUT_LOW);
+   527          if (!IS_ERR(gpiod_ena))
+   528                  phy->gpio_ena = desc_to_gpio(gpiod_ena);
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+This is correct.
+
+   529  
+   530          phy->gpio_ena = desc_to_gpio(gpiod_ena);
+                                ^^^^^^^^^^^^^^^^^^^^^^^
+This will oops.  Maybe just delete this line.
+
+   531  
+   532          phy->irq_polarity = irq_get_trigger_type(client->irq);
+   533  
+   534          phy->se_status.is_ese_present =
+   535                                  device_property_present(dev, "ese-present");
+   536          phy->se_status.is_uicc_present =
+   537                                  device_property_present(dev, "uicc-present");
+   538  
+   539          return 0;
+   540  }
 
 
-Appreciate if you can help.
-
-Regards,
-Aswin
-
-On Tue, Mar 29, 2016 at 5:16 PM, Arend Van Spriel
-<arend.vanspriel@broadcom.com> wrote:
-> On 29-3-2016 13:09, Aswin Paranji wrote:
->> Hi,
->> I'm trying to encrypt the 802.11 data with my own encryption instead
->> of WEP or WPA. Can anybody guide me on how to do that and where I need
->> to change. I'm trying to do this with Raspberry PI 3 device.
->
-> Umm. You mean you want to do it with the integrated wifi chipset on
-> RPi3. You can basically forget about that. Encryption is done on the
-> wifi device. The kernel passes 802.3 packets down to the device so there
-> is nothing to encrypt at that level and the device/firmware does not
-> have a way for you to plugin a different encryption.
->
-> Regards,
-> Arend
->
->> Appreciate if you can guide me.
->>
->> Regards,
->> Aswin
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
+regards,
+dan carpenter
