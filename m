@@ -1,95 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45396 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932772AbcCBCFf (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 21:05:35 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH v3 6/8] ath9k: add bits definition of BTCoex MODE2/3 for SOC chips
-Date: Wed,  2 Mar 2016 10:04:20 +0800
-Message-Id: <1456884262-28194-7-git-send-email-miaoqing@codeaurora.org> (sfid-20160302_030540_434100_C0357BEC)
-In-Reply-To: <1456884262-28194-1-git-send-email-miaoqing@codeaurora.org>
-References: <1456884262-28194-1-git-send-email-miaoqing@codeaurora.org>
+Received: from mga03.intel.com ([134.134.136.65]:23612 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935604AbcCQND2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Mar 2016 09:03:28 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 4/4] mac80211: fix cipher scheme function name
+Date: Thu, 17 Mar 2016 15:02:55 +0200
+Message-Id: <1458219775-24450-4-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160317_140333_311856_5C9C3653)
+In-Reply-To: <1458219775-24450-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1458219775-24450-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+From: Johannes Berg <johannes.berg@intel.com>
 
-Add bits definition for AR_BT_COEX_MODE2 and AR_BT_COEX_MODE3, which
-needed by SOC chips (AR9340, AR9531, AR9550, AR9561).
+The code is only used with iwlwifi, but still should have proper
+mac80211 naming scheme; fix that.
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/reg.h | 46 +++++++++++++++++++++++++++++-------
- 1 file changed, 37 insertions(+), 9 deletions(-)
+ net/mac80211/rx.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index f82a4ad..f8a96f6 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -1890,15 +1890,33 @@ enum {
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 3746ba5..57a0ccd 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -722,8 +722,8 @@ static int ieee80211_get_mmie_keyidx(struct sk_buff *skb)
+ 	return -1;
+ }
  
- #define AR9300_BT_WGHT             0xcccc4444
+-static int iwl80211_get_cs_keyid(const struct ieee80211_cipher_scheme *cs,
+-				 struct sk_buff *skb)
++static int ieee80211_get_cs_keyid(const struct ieee80211_cipher_scheme *cs,
++				  struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
+ 	__le16 fc;
+@@ -1586,7 +1586,7 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
  
--#define AR_BT_COEX_MODE2           0x817c
--#define AR_BT_BCN_MISS_THRESH      0x000000ff
--#define AR_BT_BCN_MISS_THRESH_S    0
--#define AR_BT_BCN_MISS_CNT         0x0000ff00
--#define AR_BT_BCN_MISS_CNT_S       8
--#define AR_BT_HOLD_RX_CLEAR        0x00010000
--#define AR_BT_HOLD_RX_CLEAR_S      16
--#define AR_BT_DISABLE_BT_ANT       0x00100000
--#define AR_BT_DISABLE_BT_ANT_S     20
-+#define AR_BT_COEX_MODE2		0x817c
-+#define AR_BT_BCN_MISS_THRESH		0x000000ff
-+#define AR_BT_BCN_MISS_THRESH_S		0
-+#define AR_BT_BCN_MISS_CNT		0x0000ff00
-+#define AR_BT_BCN_MISS_CNT_S		8
-+#define AR_BT_HOLD_RX_CLEAR		0x00010000
-+#define AR_BT_HOLD_RX_CLEAR_S		16
-+#define AR_BT_PROTECT_BT_AFTER_WAKEUP	0x00080000
-+#define AR_BT_PROTECT_BT_AFTER_WAKEUP_S 19
-+#define AR_BT_DISABLE_BT_ANT		0x00100000
-+#define AR_BT_DISABLE_BT_ANT_S		20
-+#define AR_BT_QUIET_2_WIRE		0x00200000
-+#define AR_BT_QUIET_2_WIRE_S		21
-+#define AR_BT_WL_ACTIVE_MODE		0x00c00000
-+#define AR_BT_WL_ACTIVE_MODE_S		22
-+#define AR_BT_WL_TXRX_SEPARATE		0x01000000
-+#define AR_BT_WL_TXRX_SEPARATE_S	24
-+#define AR_BT_RS_DISCARD_EXTEND		0x02000000
-+#define AR_BT_RS_DISCARD_EXTEND_S	25
-+#define AR_BT_TSF_BT_ACTIVE_CTRL	0x0c000000
-+#define AR_BT_TSF_BT_ACTIVE_CTRL_S	26
-+#define AR_BT_TSF_BT_PRIORITY_CTRL	0x30000000
-+#define AR_BT_TSF_BT_PRIORITY_CTRL_S	28
-+#define AR_BT_INTERRUPT_ENABLE		0x40000000
-+#define AR_BT_INTERRUPT_ENABLE_S	30
-+#define AR_BT_PHY_ERR_BT_COLL_ENABLE	0x80000000
-+#define AR_BT_PHY_ERR_BT_COLL_ENABLE_S	31
+ 		if (ieee80211_has_protected(fc) && rx->sta->cipher_scheme) {
+ 			cs = rx->sta->cipher_scheme;
+-			keyid = iwl80211_get_cs_keyid(cs, rx->skb);
++			keyid = ieee80211_get_cs_keyid(cs, rx->skb);
+ 			if (unlikely(keyid < 0))
+ 				return RX_DROP_UNUSABLE;
+ 		}
+@@ -1670,7 +1670,7 @@ ieee80211_rx_h_decrypt(struct ieee80211_rx_data *rx)
+ 		hdrlen = ieee80211_hdrlen(fc);
  
- #define AR_TXSIFS              0x81d0
- #define AR_TXSIFS_TIME         0x000000FF
-@@ -1907,6 +1925,16 @@ enum {
- #define AR_TXSIFS_ACK_SHIFT    0x00007000
- #define AR_TXSIFS_ACK_SHIFT_S  12
+ 		if (cs) {
+-			keyidx = iwl80211_get_cs_keyid(cs, rx->skb);
++			keyidx = ieee80211_get_cs_keyid(cs, rx->skb);
  
-+#define AR_BT_COEX_MODE3			0x81d4
-+#define AR_BT_WL_ACTIVE_TIME			0x000000ff
-+#define AR_BT_WL_ACTIVE_TIME_S			0
-+#define AR_BT_WL_QC_TIME			0x0000ff00
-+#define AR_BT_WL_QC_TIME_S			8
-+#define AR_BT_ALLOW_CONCURRENT_ACCESS		0x000f0000
-+#define AR_BT_ALLOW_CONCURRENT_ACCESS_S		16
-+#define AR_BT_AGC_SATURATION_CNT_ENABLE		0x00100000
-+#define AR_BT_AGC_SATURATION_CNT_ENABLE_S	20
-+
- #define AR_TXOP_X          0x81ec
- #define AR_TXOP_X_VAL      0x000000FF
- 
+ 			if (unlikely(keyidx < 0))
+ 				return RX_DROP_UNUSABLE;
 -- 
-1.9.1
+2.5.0
 
