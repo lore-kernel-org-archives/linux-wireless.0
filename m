@@ -1,48 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f193.google.com ([209.85.220.193]:35398 "EHLO
-	mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751853AbcCRUrs (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 16:47:48 -0400
-Date: Fri, 18 Mar 2016 16:47:44 -0400
-From: Tejun Heo <tj@kernel.org>
-To: Eva Rachel Retuya <eraretuya@gmail.com>
-Cc: outreachy-kernel@googlegroups.com, johannes.berg@intel.com,
-	emmanuel.grumbach@intel.com, linuxwifi@intel.com,
+Received: from s3.sipsolutions.net ([5.9.151.49]:35480 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932832AbcCQMna (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Mar 2016 08:43:30 -0400
+Message-ID: <1458218602.2158.17.camel@sipsolutions.net> (sfid-20160317_134354_188395_73DC383D)
+Subject: Re: [PATCH] iwlwifi: dvm: convert create_singlethread_workqueue()
+ to alloc_workqueue()
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Eva Rachel Retuya <eraretuya@gmail.com>,
+	outreachy-kernel@googlegroups.com
+Cc: emmanuel.grumbach@intel.com, linuxwifi@intel.com,
 	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [Outreachy kernel] [PATCH v2] iwlwifi: dvm: use
- alloc_ordered_workqueue()
-Message-ID: <20160318204744.GN20028@mtj.duckdns.org> (sfid-20160318_214752_044924_AA6BEB88)
-References: <1458231561-13184-1-git-send-email-eraretuya@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1458231561-13184-1-git-send-email-eraretuya@gmail.com>
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org, tj@kernel.org
+Date: Thu, 17 Mar 2016 13:43:22 +0100
+In-Reply-To: <1458218246-18807-1-git-send-email-eraretuya@gmail.com> (sfid-20160317_133935_577395_D13DECC0)
+References: <1458218246-18807-1-git-send-email-eraretuya@gmail.com>
+	 (sfid-20160317_133935_577395_D13DECC0)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 18, 2016 at 12:19:21AM +0800, Eva Rachel Retuya wrote:
-> Use alloc_ordered_workqueue() to allocate the workqueue instead of
-> create_singlethread_workqueue() since the latter is deprecated and is scheduled
-> for removal.
-> 
-> There are work items doing related operations that shouldn't be swapped when
-> queued in a certain order hence preserve the strict execution ordering of a
-> single threaded (ST) workqueue by switching to alloc_ordered_workqueue().
-> 
-> WQ_MEM_RECLAIM flag is not needed since the worker is not supposed to free
-> memory.
+On Thu, 2016-03-17 at 20:37 +0800, Eva Rachel Retuya wrote:
+> Use alloc_workqueue() to allocate the workqueue instead of
+> create_singlethread_workqueue() since the latter is deprecated and is
+> scheduled for removal.
 
-I think "not depended during memory reclaim" probalby is a better way
-to describe it.
+Scheduled where?
 
-> Signed-off-by: Eva Rachel Retuya <eraretuya@gmail.com>
+>  static void iwl_setup_deferred_work(struct iwl_priv *priv)
+>  {
+> -	priv->workqueue = create_singlethread_workqueue(DRV_NAME);
+> +	priv->workqueue = alloc_workqueue(DRV_NAME, WQ_HIGHPRI |
+> WQ_UNBOUND |
+> +					  WQ_MEM_RECLAIM, 1);
 
-But other than that,
+Seems like you should use alloc_ordered_workqueue() though? That also
+gets you UNBOUND immediately, and the "1".
 
- Acked-by: Tejun Heo <tj@kernel.org>
+I'm not really sure HIGHPRI is needed either.
 
-Thanks.
-
--- 
-tejun
+johannes
