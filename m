@@ -1,96 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:34836 "EHLO
-	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751453AbcC2GGj (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:62626 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932915AbcCQKtW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 02:06:39 -0400
-Received: by mail-pf0-f172.google.com with SMTP id n5so6547635pfn.2
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2016 23:06:39 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Pontus Fuchs <pontus.fuchs@gmail.com>
-Subject: [PATCH 02/16] wcn36xx: Pad TIM PVM if needed
-Date: Mon, 28 Mar 2016 23:06:19 -0700
-Message-Id: <1459231593-360-3-git-send-email-bjorn.andersson@linaro.org> (sfid-20160329_081128_737560_0936043D)
-In-Reply-To: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
+	Thu, 17 Mar 2016 06:49:22 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>, <kvalo@codeaurora.org>,
+	<mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH v2 1/2] ath10k: Add support for ath10k_sta_statistics support
+Date: Thu, 17 Mar 2016 16:18:59 +0530
+Message-ID: <1458211740-6875-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160317_114928_067779_5A7D8AB7)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-The wcn36xx FW expects a fixed size TIM PVM in the beacon template. If
-supplied with a shorter than expected PVM it will overwrite the IE
-following the TIM.
+Enable support for 'drv_sta_statistics' callback.
+Export rx_duration support if available to cfg80211/nl80211
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+This can also act as a placeholder for any new per STA stats support
+
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/wcn36xx/hal.h |  3 +++
- drivers/net/wireless/ath/wcn36xx/smd.c | 22 ++++++++++++++++++++--
- 2 files changed, 23 insertions(+), 2 deletions(-)
+[v2] fixed condition for ath10k state
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
-index 4fd77ccc2287..6f99b6134e4e 100644
---- a/drivers/net/wireless/ath/wcn36xx/hal.h
-+++ b/drivers/net/wireless/ath/wcn36xx/hal.h
-@@ -54,6 +54,9 @@
- /* Default Beacon template size. */
- #define BEACON_TEMPLATE_SIZE 0x17C
- 
-+/* Minimum PVM size that the FW expects. See comment in smd.c for details. */
-+#define TIM_MIN_PVM_SIZE 6
+Dependencies:
+
+1. cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION
+2. iw: Add support for NL80211_STA_INFO_RX_DURATION netlink
+ attribute
+3. ath10k: Enable debugfs provision to enable Peer Stats feature
+
+ drivers/net/wireless/ath/ath10k/debug.h       |    4 ++++
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c |   22 ++++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/mac.c         |    1 +
+ 3 files changed, 27 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debug.h b/drivers/net/wireless/ath/ath10k/debug.h
+index 6206edd..01c500f 100644
+--- a/drivers/net/wireless/ath/ath10k/debug.h
++++ b/drivers/net/wireless/ath/ath10k/debug.h
+@@ -155,6 +155,10 @@ ath10k_debug_get_new_fw_crash_data(struct ath10k *ar)
+ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			    struct ieee80211_sta *sta, struct dentry *dir);
+ void ath10k_sta_update_rx_duration(struct ath10k *ar, struct list_head *peer);
++void ath10k_sta_statistics(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta,
++			   struct station_info *sinfo);
 +
- /* Param Change Bitmap sent to HAL */
- #define PARAM_BCN_INTERVAL_CHANGED                      (1 << 0)
- #define PARAM_SHORT_PREAMBLE_CHANGED                 (1 << 1)
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index ff3ed2461a69..0aa3ae62494e 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1375,12 +1375,14 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 			    u16 p2p_off)
- {
- 	struct wcn36xx_hal_send_beacon_req_msg msg_body;
--	int ret = 0;
-+	int ret = 0, pad, pvm_len;
+ #else
+ static inline void ath10k_sta_update_rx_duration(struct ath10k *ar,
+ 						 struct list_head *peer)
+diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+index 67ef75b..4c459f2 100644
+--- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
++++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+@@ -35,6 +35,28 @@ void ath10k_sta_update_rx_duration(struct ath10k *ar, struct list_head *head)
+ 	rcu_read_unlock();
+ }
  
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SEND_BEACON_REQ);
- 
--	msg_body.beacon_length = skb_beacon->len;
-+	pvm_len = skb_beacon->data[tim_off + 1] - 3;
-+	pad = TIM_MIN_PVM_SIZE - pvm_len;
-+	msg_body.beacon_length = skb_beacon->len + pad;
- 	/* TODO need to find out why + 6 is needed */
- 	msg_body.beacon_length6 = msg_body.beacon_length + 6;
- 
-@@ -1393,6 +1395,22 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 	memcpy(msg_body.beacon, skb_beacon->data, skb_beacon->len);
- 	memcpy(msg_body.bssid, vif->addr, ETH_ALEN);
- 
-+	if (pad > 0) {
-+		/*
-+		 * The wcn36xx FW has a fixed size for the PVM in the TIM. If
-+		 * given the beacon template from mac80211 with a PVM shorter
-+		 * than the FW expectes it will overwrite the data after the
-+		 * TIM.
-+		 */
-+		wcn36xx_dbg(WCN36XX_DBG_HAL, "Pad TIM PVM. %d bytes at %d\n",
-+			    pad, pvm_len);
-+		memmove(&msg_body.beacon[tim_off + 5 + pvm_len + pad],
-+			&msg_body.beacon[tim_off + 5 + pvm_len],
-+			skb_beacon->len - (tim_off + 5 + pvm_len));
-+		memset(&msg_body.beacon[tim_off + 5 + pvm_len], 0, pad);
-+		msg_body.beacon[tim_off + 1] += pad;
-+	}
++void ath10k_sta_statistics(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
++			   struct ieee80211_sta *sta,
++			   struct station_info *sinfo)
++{
++	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
++	struct ath10k *ar = arsta->arvif->ar;
 +
- 	/* TODO need to find out why this is needed? */
- 	if (vif->type == NL80211_IFTYPE_MESH_POINT)
- 		/* mesh beacon don't need this, so push further down */
++	mutex_lock(&ar->conf_mutex);
++
++	if (ar->state != ATH10K_STATE_ON &&
++	    ar->state != ATH10K_STATE_RESTARTED)
++		goto out;
++
++	if (!ath10k_peer_stats_enabled(ar))
++		goto out;
++
++	sinfo->rx_duration = arsta->rx_duration;
++	sinfo->filled |= 1ULL << NL80211_STA_INFO_RX_DURATION;
++out:
++	mutex_unlock(&ar->conf_mutex);
++}
++
+ static ssize_t ath10k_dbg_sta_read_aggr_mode(struct file *file,
+ 					     char __user *user_buf,
+ 					     size_t count, loff_t *ppos)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index d5ef201..69a1dcf 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6852,6 +6852,7 @@ static const struct ieee80211_ops ath10k_ops = {
+ #endif
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	.sta_add_debugfs		= ath10k_sta_add_debugfs,
++	.sta_statistics			= ath10k_sta_statistics,
+ #endif
+ };
+ 
 -- 
-2.5.0
+1.7.9.5
 
