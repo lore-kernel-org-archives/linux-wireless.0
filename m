@@ -1,66 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:6327 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751861AbcCUI0m convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2016 04:26:42 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Wei-Ning Huang <wnhuang@chromium.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-CC: LKML <linux-kernel@vger.kernel.org>,
-	"djkurtz@chromium.org" <djkurtz@chromium.org>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>
-Subject: RE: [PATCH] mwifiex: advertise low priority scan feature
-Date: Mon, 21 Mar 2016 08:26:36 +0000
-Message-ID: <f865159f1eca4200aed1c4e4f272ae57@SC-EXCH04.marvell.com> (sfid-20160321_092717_341234_5FFFA32C)
-References: <1458547622-1632-1-git-send-email-wnhuang@google.com>
-In-Reply-To: <1458547622-1632-1-git-send-email-wnhuang@google.com>
-Content-Type: text/plain; charset="us-ascii"
+Received: from g9t1613g.houston.hp.com ([15.240.0.71]:41029 "EHLO
+	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S967359AbcCQRYw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Mar 2016 13:24:52 -0400
+Subject: Re: [Codel] [RFCv2 0/3] mac80211: implement fq codel
+To: Dave Taht <dave.taht@gmail.com>,
+	Michal Kazior <michal.kazior@tieto.com>
+References: <1458123478-1795-1-git-send-email-michal.kazior@tieto.com>
+ <CA+BoTQ=65mHN5iLnZjTE+tyEG7nfmCx4NZNbGRF6+VpRaNmOYw@mail.gmail.com>
+ <CAA93jw5cUaj_qM+CYHHoRaghLDLC+BUgF4AjT=Oec+SB-zb74g@mail.gmail.com>
+ <CAA93jw6tDdiYuginPbUY1DFJLiDxofHMFN6j2BvQPabPmBtuRw@mail.gmail.com>
+ <20160316185531.GA1771@localhost>
+ <CAGyitvMDEUiNx7HD=XKjXNHnFvZ_gxD_BbQx3AP-57_+dBeD4A@mail.gmail.com>
+ <CA+BoTQnFN6VANn=5EUvHc0Dbfh4Zv0HraOto2ySN3_HdOpD7Sg@mail.gmail.com>
+ <CAA93jw7TuBLVi9k-+2=J27j-Qs+sS3UNaQNTMF9D2MQ13fQY9A@mail.gmail.com>
+Cc: Network Development <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	Jasmine Strong <jas@eero.com>,
+	"codel@lists.bufferbloat.net" <codel@lists.bufferbloat.net>,
+	make-wifi-fast@lists.bufferbloat.net
+From: Rick Jones <rick.jones2@hpe.com>
+Message-ID: <56EAE85F.3010407@hpe.com> (sfid-20160317_182457_240634_E47A591A)
+Date: Thu, 17 Mar 2016 10:24:47 -0700
 MIME-Version: 1.0
+In-Reply-To: <CAA93jw7TuBLVi9k-+2=J27j-Qs+sS3UNaQNTMF9D2MQ13fQY9A@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
-> owner@vger.kernel.org] On Behalf Of Wei-Ning Huang
-> Sent: Monday, March 21, 2016 1:37 PM
-> To: Linux Wireless
-> Cc: LKML; Amitkumar Karwar; djkurtz@chromium.org; Wei-Ning Huang;
-> Nishant Sarmukadam; kvalo@codeaurora.org; netdev@vger.kernel.org
-> Subject: [PATCH] mwifiex: advertise low priority scan feature
-> 
-> From: Amitkumar Karwar <akarwar@marvell.com>
-> 
-> Low priority scan handling code which delays or aborts scan operation
-> based on Tx traffic is removed recently. The reason is firmware already
-> takes care of it in our new feature scan channel gap. Hence we should
-> advertise low priority scan support to cfg80211.
-> 
-> This patch fixes a problem in which OBSS scan request from
-> wpa_supplicant was being rejected by cfg80211.
-> 
-> Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
-> ---
->  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> index bb7235e..7dafc5b 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> @@ -4086,6 +4086,7 @@ int mwifiex_register_cfg80211(struct
-> mwifiex_adapter *adapter)
-> 
->  	wiphy->features |= NL80211_FEATURE_HT_IBSS |
->  			   NL80211_FEATURE_INACTIVITY_TIMER |
-> +			   NL80211_FEATURE_LOW_PRIORITY_SCAN |
->  			   NL80211_FEATURE_NEED_OBSS_SCAN;
-> 
->  	if (ISSUPP_TDLS_ENABLED(adapter->fw_cap_info))
+On 03/17/2016 10:00 AM, Dave Taht wrote:
+> netperf's udp_rr is not how much traffic conventionally behaves. It
+> doesn't do tcp slow start or congestion control in particular...
 
-Acked-by: Amitkumar Karwar <akarwar@marvell.com>
+Nor would one expect it to need to, unless one were using "burst mode" 
+to have more than one transaction inflight at one time.
 
-Regards,
-Amitkumar
+And unless one uses the test-specific -e option to provide a very crude 
+retransmission mechanism based on a socket read timeout, neither does 
+UDP_RR recover from lost datagrams.
+
+happy benchmarking,
+
+rick jones
+http://www.netperf.org/
