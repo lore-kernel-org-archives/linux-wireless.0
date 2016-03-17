@@ -1,49 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.sig21.net ([80.244.240.74]:57860 "EHLO mail.sig21.net"
+Received: from mx1.redhat.com ([209.132.183.28]:40132 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750791AbcCHMuk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2016 07:50:40 -0500
-Date: Tue, 8 Mar 2016 13:49:08 +0100
-From: Johannes Stezenbach <js@sig21.net>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Tuomas =?iso-8859-1?Q?R=E4s=E4nen?= <tuomasjjrasanen@tjjr.fi>,
-	Jakub =?utf-8?B?S2ljacWEc2tp?= <moorray3@wp.pl>,
-	linux-wireless@vger.kernel.org, tuomasjjrasanen@opinsys.fi,
-	Linus Walleij <linus.walleij@linaro.org>
-Subject: Re: About adding support for MT76x2U to Linux kernel
-Message-ID: <20160308124908.GA14746@sig21.net> (sfid-20160308_135043_480308_6680FB29)
-References: <20150814081526.GC20192@hackpad.Elisa>
- <20150814143229.61440072@north>
- <20160302073210.GA31353@lakka.kapsi.fi>
- <20160307111443.GA7205@sig21.net>
- <56DD6B4F.2050405@openwrt.org>
- <20160307124103.GA22175@sig21.net>
- <56DDF11E.3060102@openwrt.org>
+	id S932832AbcCQLbK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Mar 2016 07:31:10 -0400
+Date: Thu, 17 Mar 2016 12:28:53 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Vishal Thanki <vishalthanki@gmail.com>
+Cc: helmut.schaa@googlemail.com, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH] rt2x00usb: Use usb anchors to manage URB
+Message-ID: <20160317112852.GA21830@redhat.com> (sfid-20160317_123115_444867_A2EA6699)
+References: <1458149331-2106-1-git-send-email-vishalthanki@gmail.com>
+ <20160317084331.GA19458@redhat.com>
+ <20160317095317.GA6518@c50.bag.software>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56DDF11E.3060102@openwrt.org>
+In-Reply-To: <20160317095317.GA6518@c50.bag.software>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Mar 07, 2016 at 10:22:38PM +0100, Felix Fietkau wrote:
-> On 2016-03-07 13:41, Johannes Stezenbach wrote:
-> > http://www.mediatek.com/en/downloads1/downloads/mt7612u/
-> I checked, they simply use a software timer for it and stuff buffered
-> multicast packets into the BE queue. I don't think the hardware offers
-> any better way of doing this...
+On Thu, Mar 17, 2016 at 10:53:18AM +0100, Vishal Thanki wrote:
+> > usb_anchor structure should be embedded in rt2x00_dev structure,
+> > otherwise you can kill urb's from other rt2x00 devices, when
+> > disconnecting another one.
+> > 
+> 
+> rt2x00_dev structure does not contain any bus specific data structures
+> (for example no structures present for USB/PCI). Should I add a void
+> *ptr in rt2x00_dev and cast it as usb_anchor in rt2x00usb.c?
 
-I had to refresh my memory on this driver.  The thing that tripped
-me when I first read through it was that is using a jiffies based
-timer and additionally sets it to fire 10ms after the calculated
-beacon time.  So it's always too late, isn't it?
+No, just add usb_anchor to rt2x00_dev (and include proper header if
+needed).
 
-But of course it is irrelevant for us since we can use a hrtimer.
-However, if other frames are queued in the hw they are still sent
-before the buffered frames.  Since the hw has a dedicated queue
-for HCCA I wonder if it could be used here?
-(My knowledged of the standard is also rusty, ISTR the buffered
-traffic must be sent before other traffic before the stations
-go back to sleep.)
-
-
-Johannes
+Stanislaw
