@@ -1,29 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:51232 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757809AbcCUUBR (ORCPT
+Received: from m50-211.qiye.163.com ([123.125.50.211]:53614 "EHLO
+	m50-211.qiye.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755102AbcCQIM4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2016 16:01:17 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH 0/2] wil6210 changes
-Date: Mon, 21 Mar 2016 22:01:10 +0200
-Message-Id: <1458590472-677-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160321_210121_612872_0D9B0E4A)
+	Thu, 17 Mar 2016 04:12:56 -0400
+From: Jandy Gou <qingsong.gou@ck-telecom.com>
+To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com
+Cc: gregkh@linuxfoundation.org, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+	Jandy Gou <qingsong.gou@ck-telecom.com>
+Subject: [PATCH] staging: r8723au: This patch tries to fix some byte order issues that is found by sparse check.
+Date: Thu, 17 Mar 2016 16:03:59 +0800
+Message-Id: <1458201839-7007-1-git-send-email-qingsong.gou@ck-telecom.com> (sfid-20160317_091303_919072_A8F63C3B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The below patches include a bug fix in debugfs and the ability to determine the interface name.
+make C=1 M=drivers/staging/rtl8723au/
 
-Lior David (2):
-  wil6210: allow empty WMI commands in debugfs wmi_send
-  wil6210: add module parameter for alternate interface name
+drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:96:38: warning: cast to
+restricted __le16
+drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:100:27: warning: cast to
+restricted __le32
 
- drivers/net/wireless/ath/wil6210/debugfs.c | 4 ++--
- drivers/net/wireless/ath/wil6210/netdev.c  | 8 +++++++-
- 2 files changed, 9 insertions(+), 3 deletions(-)
+Signed-off-by: Jandy Gou <qingsong.gou@ck-telecom.com>
+---
+ drivers/staging/rtl8723au/hal/rtl8723a_cmd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+index 1662c03c..d82fd8a 100644
+--- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
++++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
+@@ -93,11 +93,11 @@ int FillH2CCmd(struct rtw_adapter *padapter, u8 ElementID, u32 CmdLen,
+ 
+ 		if (h2c_cmd & BIT(7)) {
+ 			msgbox_ex_addr = REG_HMEBOX_EXT_0 + (h2c_box_num * EX_MESSAGE_BOX_SIZE);
+-			h2c_cmd_ex = le16_to_cpu(h2c_cmd_ex);
++			le16_to_cpus(&h2c_cmd_ex);
+ 			rtl8723au_write16(padapter, msgbox_ex_addr, h2c_cmd_ex);
+ 		}
+ 		msgbox_addr = REG_HMEBOX_0 + (h2c_box_num * MESSAGE_BOX_SIZE);
+-		h2c_cmd = le32_to_cpu(h2c_cmd);
++		le32_to_cpus(&h2c_cmd);
+ 		rtl8723au_write32(padapter, msgbox_addr, h2c_cmd);
+ 
+ 		bcmd_down = true;
 -- 
-1.8.5.2
+1.9.1
+
 
