@@ -1,101 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f68.google.com ([209.85.192.68]:33964 "EHLO
-	mail-qg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753720AbcCSCLl (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 22:11:41 -0400
-Received: by mail-qg0-f68.google.com with SMTP id j92so6595918qgj.1
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2016 19:11:41 -0700 (PDT)
-From: Bob Copeland <me@bobcopeland.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
-Subject: [PATCH 3/5] mac80211: mesh: embed gates hlist head directly
-Date: Fri, 18 Mar 2016 22:11:30 -0400
-Message-Id: <1458353492-8654-4-git-send-email-me@bobcopeland.com> (sfid-20160319_031155_123006_375F875B)
-In-Reply-To: <1458353492-8654-1-git-send-email-me@bobcopeland.com>
-References: <1458353492-8654-1-git-send-email-me@bobcopeland.com>
+Received: from mga03.intel.com ([134.134.136.65]:23612 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935462AbcCQNDX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Mar 2016 09:03:23 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 3/4] mac80211: clean up station flags debugfs
+Date: Thu, 17 Mar 2016 15:02:54 +0200
+Message-Id: <1458219775-24450-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160317_140327_175314_02B79C3D)
+In-Reply-To: <1458219775-24450-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1458219775-24450-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we have converted the mesh path tables to rhashtable, we are
-no longer swapping out the entire mesh_pathtbl pointer with RCU.
-As a result, we no longer need indirection to the hlist head for
-the gates list and can simply embed it, saving a pair of
-pointer-sized allocations.
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Bob Copeland <me@bobcopeland.com>
+Avoid the really strange %s%s%s expression, use an array
+of flag names and check that all flags are present.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- net/mac80211/mesh.h         |  2 +-
- net/mac80211/mesh_pathtbl.c | 18 ++++--------------
- 2 files changed, 5 insertions(+), 15 deletions(-)
+ net/mac80211/debugfs_sta.c | 63 +++++++++++++++++++++++++++++++---------------
+ net/mac80211/sta_info.h    |  4 +++
+ 2 files changed, 47 insertions(+), 20 deletions(-)
 
-diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
-index bc3f9a32b5a4..46b540a25d9d 100644
---- a/net/mac80211/mesh.h
-+++ b/net/mac80211/mesh.h
-@@ -134,7 +134,7 @@ struct mesh_path {
-  */
- struct mesh_table {
- 	atomic_t entries;		/* Up to MAX_MESH_NEIGHBOURS */
--	struct hlist_head *known_gates;
-+	struct hlist_head known_gates;
- 	spinlock_t gates_lock;
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index fbbd66c..6f89cd7 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -52,31 +52,54 @@ static const struct file_operations sta_ ##name## _ops = {		\
  
- 	struct rhashtable rhead;
-diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
-index 1c9412a29ca3..6db2ddfa0695 100644
---- a/net/mac80211/mesh_pathtbl.c
-+++ b/net/mac80211/mesh_pathtbl.c
-@@ -58,12 +58,7 @@ static struct mesh_table *mesh_table_alloc(void)
- 	if (!newtbl)
- 		return NULL;
+ STA_FILE(aid, sta.aid, D);
  
--	newtbl->known_gates = kzalloc(sizeof(struct hlist_head), GFP_ATOMIC);
--	if (!newtbl->known_gates) {
--		kfree(newtbl);
--		return NULL;
--	}
--	INIT_HLIST_HEAD(newtbl->known_gates);
-+	INIT_HLIST_HEAD(&newtbl->known_gates);
- 	atomic_set(&newtbl->entries,  0);
- 	spin_lock_init(&newtbl->gates_lock);
++static const char * const sta_flag_names[] = {
++#define FLAG(F) [WLAN_STA_##F] = #F
++	FLAG(AUTH),
++	FLAG(ASSOC),
++	FLAG(PS_STA),
++	FLAG(AUTHORIZED),
++	FLAG(SHORT_PREAMBLE),
++	FLAG(WDS),
++	FLAG(CLEAR_PS_FILT),
++	FLAG(MFP),
++	FLAG(BLOCK_BA),
++	FLAG(PS_DRIVER),
++	FLAG(PSPOLL),
++	FLAG(TDLS_PEER),
++	FLAG(TDLS_PEER_AUTH),
++	FLAG(TDLS_INITIATOR),
++	FLAG(TDLS_CHAN_SWITCH),
++	FLAG(TDLS_OFF_CHANNEL),
++	FLAG(TDLS_WIDER_BW),
++	FLAG(UAPSD),
++	FLAG(SP),
++	FLAG(4ADDR_EVENT),
++	FLAG(INSERTED),
++	FLAG(RATE_CONTROL),
++	FLAG(TOFFSET_KNOWN),
++	FLAG(MPSP_OWNER),
++	FLAG(MPSP_RECIPIENT),
++	FLAG(PS_DELIVER),
++#undef FLAG
++};
++
+ static ssize_t sta_flags_read(struct file *file, char __user *userbuf,
+ 			      size_t count, loff_t *ppos)
+ {
+-	char buf[121];
++	char buf[16 * NUM_WLAN_STA_FLAGS], *pos = buf;
++	char *end = buf + sizeof(buf) - 1;
+ 	struct sta_info *sta = file->private_data;
++	unsigned int flg;
++
++	BUILD_BUG_ON(ARRAY_SIZE(sta_flag_names) != NUM_WLAN_STA_FLAGS);
++
++	for (flg = 0; flg < NUM_WLAN_STA_FLAGS; flg++) {
++		if (test_sta_flag(sta, flg))
++			pos += scnprintf(pos, end - pos, "%s\n",
++					 sta_flag_names[flg]);
++	}
  
-@@ -341,7 +336,7 @@ int mesh_path_add_gate(struct mesh_path *mpath)
- 	mpath->sdata->u.mesh.num_gates++;
- 
- 	spin_lock(&tbl->gates_lock);
--	hlist_add_head_rcu(&mpath->gate_list, tbl->known_gates);
-+	hlist_add_head_rcu(&mpath->gate_list, &tbl->known_gates);
- 	spin_unlock(&tbl->gates_lock);
- 
- 	spin_unlock_bh(&mpath->state_lock);
-@@ -759,16 +754,11 @@ int mesh_path_send_to_gates(struct mesh_path *mpath)
- 	struct mesh_path *from_mpath = mpath;
- 	struct mesh_path *gate;
- 	bool copy = false;
--	struct hlist_head *known_gates;
- 
- 	tbl = sdata->u.mesh.mesh_paths;
--	known_gates = tbl->known_gates;
+-#define TEST(flg) \
+-	test_sta_flag(sta, WLAN_STA_##flg) ? #flg "\n" : ""
 -
--	if (!known_gates)
--		return -EHOSTUNREACH;
+-	int res = scnprintf(buf, sizeof(buf),
+-			    "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s",
+-			    TEST(AUTH), TEST(ASSOC), TEST(PS_STA),
+-			    TEST(PS_DRIVER), TEST(AUTHORIZED),
+-			    TEST(SHORT_PREAMBLE),
+-			    sta->sta.wme ? "WME\n" : "",
+-			    TEST(WDS), TEST(CLEAR_PS_FILT),
+-			    TEST(MFP), TEST(BLOCK_BA), TEST(PSPOLL),
+-			    TEST(UAPSD), TEST(SP), TEST(TDLS_PEER),
+-			    TEST(TDLS_PEER_AUTH), TEST(TDLS_INITIATOR),
+-			    TEST(TDLS_CHAN_SWITCH), TEST(TDLS_OFF_CHANNEL),
+-			    TEST(4ADDR_EVENT), TEST(INSERTED),
+-			    TEST(RATE_CONTROL), TEST(TOFFSET_KNOWN),
+-			    TEST(MPSP_OWNER), TEST(MPSP_RECIPIENT));
+-#undef TEST
+-	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
++	return simple_read_from_buffer(userbuf, count, ppos, buf, strlen(buf));
+ }
+ STA_OPS(flags);
  
- 	rcu_read_lock();
--	hlist_for_each_entry_rcu(gate, known_gates, gate_list) {
-+	hlist_for_each_entry_rcu(gate, &tbl->known_gates, gate_list) {
- 		if (gate->flags & MESH_PATH_ACTIVE) {
- 			mpath_dbg(sdata, "Forwarding to %pM\n", gate->dst);
- 			mesh_path_move_to_queue(gate, from_mpath, copy);
-@@ -781,7 +771,7 @@ int mesh_path_send_to_gates(struct mesh_path *mpath)
- 		}
- 	}
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 053f5c4..fc91290 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -69,6 +69,8 @@
+  * @WLAN_STA_MPSP_RECIPIENT: local STA is recipient of a MPSP.
+  * @WLAN_STA_PS_DELIVER: station woke up, but we're still blocking TX
+  *	until pending frames are delivered
++ *
++ * @NUM_WLAN_STA_FLAGS: number of defined flags
+  */
+ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_AUTH,
+@@ -97,6 +99,8 @@ enum ieee80211_sta_info_flags {
+ 	WLAN_STA_MPSP_OWNER,
+ 	WLAN_STA_MPSP_RECIPIENT,
+ 	WLAN_STA_PS_DELIVER,
++
++	NUM_WLAN_STA_FLAGS,
+ };
  
--	hlist_for_each_entry_rcu(gate, known_gates, gate_list) {
-+	hlist_for_each_entry_rcu(gate, &tbl->known_gates, gate_list) {
- 		mpath_dbg(sdata, "Sending to %pM\n", gate->dst);
- 		mesh_path_tx_pending(gate);
- 	}
+ #define ADDBA_RESP_INTERVAL HZ
 -- 
-2.6.1
+2.5.0
 
