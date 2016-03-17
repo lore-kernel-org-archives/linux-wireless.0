@@ -1,52 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57471 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755376AbcCUOYG (ORCPT
+Received: from mout.kundenserver.de ([217.72.192.75]:55274 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935410AbcCQJje (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2016 10:24:06 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/5] ath9k: fix buffer overrun for ar9287
-References: <1457965120-3155420-1-git-send-email-arnd@arndb.de>
-	<1457965120-3155420-4-git-send-email-arnd@arndb.de>
-Date: Mon, 21 Mar 2016 16:23:59 +0200
-In-Reply-To: <1457965120-3155420-4-git-send-email-arnd@arndb.de> (Arnd
-	Bergmann's message of "Mon, 14 Mar 2016 15:18:36 +0100")
-Message-ID: <87lh5bhpts.fsf@purkki.adurom.net> (sfid-20160321_152411_905435_BC2107FB)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 17 Mar 2016 05:39:34 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: =?UTF-8?q?Rafa=C5=82=20Mi=C5=82ecki?= <zajec5@gmail.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Kalle Valo <kvalo@codeaurora.org>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2] bcma: use of_dma_configure() to set initial dma mask
+Date: Thu, 17 Mar 2016 10:39:17 +0100
+Message-Id: <1458207563-3453369-1-git-send-email-arnd@arndb.de> (sfid-20160317_103955_489394_BEFD8A1D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+While fixing another bug, I noticed that bcma manually sets up
+a dma_mask pointer for its child devices. We have a generic
+helper for that now, which should be able to cope better with
+any variations that might be needed to deal with cache coherency,
+unusual DMA address offsets, iommus, or limited DMA masks, none
+of which are currently handled here.
 
-> Code that was added back in 2.6.38 has an obvious overflow
-> when accessing a static array, and at the time it was added
-> only a code comment was put in front of it as a reminder
-> to have it reviewed properly.
->
-> This has not happened, but gcc-6 now points to the specific
-> overflow:
->
-> drivers/net/wireless/ath/ath9k/eeprom.c: In function 'ath9k_hw_get_gain_boundaries_pdadcs':
-> drivers/net/wireless/ath/ath9k/eeprom.c:483:44: error: array subscript is above array bounds [-Werror=array-bounds]
->      maxPwrT4[i] = data_9287[idxL].pwrPdg[i][4];
->                    ~~~~~~~~~~~~~~~~~~~~~~~~~^~~
->
-> It turns out that the correct array length exists in the local
-> 'intercepts' variable of this function, so we can just use that
-> instead of hardcoding '4', so this patch changes all three
-> instances to use that variable. The other two instances were
-> already correct, but it's more consistent this way.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 940cd2c12ebf ("ath9k_hw: merge the ar9287 version of ath9k_hw_get_gain_boundaries_pdadcs")
+This changes the core to use the of_dma_configure(), like
+we do for platform devices that are probed directly from
+DT.
 
-Dave already applies this so I can skip this.
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+This patch needs to be tested to ensure we don't introduce
+regressions, and should probably go into 4.7 as a cleanup.
 
+v2: fix typo
+
+ drivers/bcma/main.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/bcma/main.c b/drivers/bcma/main.c
+index 1f635471f318..2c1798e38abd 100644
+--- a/drivers/bcma/main.c
++++ b/drivers/bcma/main.c
+@@ -209,6 +209,8 @@ static void bcma_of_fill_device(struct platform_device *parent,
+ 		core->dev.of_node = node;
+ 
+ 	core->irq = bcma_of_get_irq(parent, core, 0);
++
++	of_dma_configure(&core->dev, node);
+ }
+ 
+ unsigned int bcma_core_irq(struct bcma_device *core, int num)
+@@ -248,12 +250,12 @@ void bcma_prepare_core(struct bcma_bus *bus, struct bcma_device *core)
+ 		core->irq = bus->host_pci->irq;
+ 		break;
+ 	case BCMA_HOSTTYPE_SOC:
+-		core->dev.dma_mask = &core->dev.coherent_dma_mask;
+-		if (bus->host_pdev) {
++		if (IS_ENABLED(CONFIG_OF) && bus->host_pdev) {
+ 			core->dma_dev = &bus->host_pdev->dev;
+ 			core->dev.parent = &bus->host_pdev->dev;
+ 			bcma_of_fill_device(bus->host_pdev, core);
+ 		} else {
++			core->dev.dma_mask = &core->dev.coherent_dma_mask;
+ 			core->dma_dev = &core->dev;
+ 		}
+ 		break;
 -- 
-Kalle Valo
+2.7.0
+
