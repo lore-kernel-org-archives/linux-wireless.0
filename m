@@ -1,150 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:36283 "EHLO
-	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935187AbcCJIod (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:39615 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756142AbcCQCKs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 03:44:33 -0500
-Received: by mail-wm0-f47.google.com with SMTP id n186so19330629wmn.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2016 00:44:32 -0800 (PST)
-From: Andreas Fenkart <afenkart@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Andreas Fenkart <afenkart@gmail.com>
-Subject: [PATCH v2 7/7] mwifiex: make mwifiex_insert_cmd_to_free_q local static
-Date: Thu, 10 Mar 2016 09:44:11 +0100
-Message-Id: <1457599451-13910-8-git-send-email-afenkart@gmail.com> (sfid-20160310_094437_371472_D3D8420A)
-In-Reply-To: <1457599451-13910-1-git-send-email-afenkart@gmail.com>
-References: <1457599451-13910-1-git-send-email-afenkart@gmail.com>
+	Wed, 16 Mar 2016 22:10:48 -0400
+From: David Lin <dlin@marvell.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Chor Teck Law <ctlaw@marvell.com>,
+	"Pete Hsieh" <peteh@marvell.com>
+Subject: RE: [PATCH v7] Add new mac80211 driver mwlwifi.
+Date: Thu, 17 Mar 2016 02:10:43 +0000
+Message-ID: <f8a657d8b0f3417284f65fbe81bcbf29@SC-EXCH02.marvell.com> (sfid-20160317_031053_772025_3D2FE981)
+References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
+ <CAGRGNgUxNdbBn7HU+==P9uM3ciN-5pWRXDT+oYzCTLoATCR_xg@mail.gmail.com>
+ <a5d1b2b861294df2badcfe38c74a13db@SC-EXCH02.marvell.com>
+ <CAGRGNgXUVV4GpcSKnG9QLUz1-TQiRoeWLg0MLkYVZOn-QF3U0A@mail.gmail.com>
+In-Reply-To: <CAGRGNgXUVV4GpcSKnG9QLUz1-TQiRoeWLg0MLkYVZOn-QF3U0A@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-after factoring out mwifiex_cancel_pending_scan_cmd
-the function is not called outside of cmdevt file
-moved function to head of file to avoid forward declaration,
-also moved mwifiex_recycle_cmd_node since they are very similar
-
-Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
----
- drivers/net/wireless/marvell/mwifiex/cmdevt.c | 82 +++++++++++++--------------
- drivers/net/wireless/marvell/mwifiex/main.h   |  2 -
- 2 files changed, 41 insertions(+), 43 deletions(-)
-
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index 61426b3..3d7de4a 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -105,6 +105,47 @@ mwifiex_clean_cmd_node(struct mwifiex_adapter *adapter,
- }
- 
- /*
-+ * This function returns a command to the command free queue.
-+ *
-+ * The function also calls the completion callback if required, before
-+ * cleaning the command node and re-inserting it into the free queue.
-+ */
-+static void
-+mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
-+			     struct cmd_ctrl_node *cmd_node)
-+{
-+	unsigned long flags;
-+
-+	if (!cmd_node)
-+		return;
-+
-+	if (cmd_node->wait_q_enabled)
-+		mwifiex_complete_cmd(adapter, cmd_node);
-+	/* Clean the node */
-+	mwifiex_clean_cmd_node(adapter, cmd_node);
-+
-+	/* Insert node into cmd_free_q */
-+	spin_lock_irqsave(&adapter->cmd_free_q_lock, flags);
-+	list_add_tail(&cmd_node->list, &adapter->cmd_free_q);
-+	spin_unlock_irqrestore(&adapter->cmd_free_q_lock, flags);
-+}
-+
-+/* This function reuses a command node. */
-+void mwifiex_recycle_cmd_node(struct mwifiex_adapter *adapter,
-+			      struct cmd_ctrl_node *cmd_node)
-+{
-+	struct host_cmd_ds_command *host_cmd = (void *)cmd_node->cmd_skb->data;
-+
-+	mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
-+
-+	atomic_dec(&adapter->cmd_pending);
-+	mwifiex_dbg(adapter, CMD,
-+		    "cmd: FREE_CMD: cmd=%#x, cmd_pending=%d\n",
-+		le16_to_cpu(host_cmd->command),
-+		atomic_read(&adapter->cmd_pending));
-+}
-+
-+/*
-  * This function sends a host command to the firmware.
-  *
-  * The function copies the host command into the driver command
-@@ -614,47 +655,6 @@ int mwifiex_send_cmd(struct mwifiex_private *priv, u16 cmd_no,
- }
- 
- /*
-- * This function returns a command to the command free queue.
-- *
-- * The function also calls the completion callback if required, before
-- * cleaning the command node and re-inserting it into the free queue.
-- */
--void
--mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
--			     struct cmd_ctrl_node *cmd_node)
--{
--	unsigned long flags;
--
--	if (!cmd_node)
--		return;
--
--	if (cmd_node->wait_q_enabled)
--		mwifiex_complete_cmd(adapter, cmd_node);
--	/* Clean the node */
--	mwifiex_clean_cmd_node(adapter, cmd_node);
--
--	/* Insert node into cmd_free_q */
--	spin_lock_irqsave(&adapter->cmd_free_q_lock, flags);
--	list_add_tail(&cmd_node->list, &adapter->cmd_free_q);
--	spin_unlock_irqrestore(&adapter->cmd_free_q_lock, flags);
--}
--
--/* This function reuses a command node. */
--void mwifiex_recycle_cmd_node(struct mwifiex_adapter *adapter,
--			      struct cmd_ctrl_node *cmd_node)
--{
--	struct host_cmd_ds_command *host_cmd = (void *)cmd_node->cmd_skb->data;
--
--	mwifiex_insert_cmd_to_free_q(adapter, cmd_node);
--
--	atomic_dec(&adapter->cmd_pending);
--	mwifiex_dbg(adapter, CMD,
--		    "cmd: FREE_CMD: cmd=%#x, cmd_pending=%d\n",
--		le16_to_cpu(host_cmd->command),
--		atomic_read(&adapter->cmd_pending));
--}
--
--/*
-  * This function queues a command to the command pending queue.
-  *
-  * This in effect adds the command to the command list to be executed.
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index f71f894..840e5d4 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1045,8 +1045,6 @@ void mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter);
- void mwifiex_cancel_pending_ioctl(struct mwifiex_adapter *adapter);
- void mwifiex_cancel_pending_scan_cmd(struct mwifiex_adapter *adapter);
- 
--void mwifiex_insert_cmd_to_free_q(struct mwifiex_adapter *adapter,
--				  struct cmd_ctrl_node *cmd_node);
- void mwifiex_recycle_cmd_node(struct mwifiex_adapter *adapter,
- 			      struct cmd_ctrl_node *cmd_node);
- 
--- 
-2.7.0
-
+PiBGcm9tOiBKdWxpYW4gQ2FsYWJ5IFttYWlsdG86anVsaWFuLmNhbGFieUBnbWFpbC5jb21dIFRo
+dXJzZGF5LCBNYXJjaCAxNywgMjAxNiA5OjMyIEFNPiANCj4gSGkgRGF2aWQsDQo+IA0KPiBPbiBU
+aHUsIE1hciAxNywgMjAxNiBhdCAxMjoyMyBQTSwgRGF2aWQgTGluIDxkbGluQG1hcnZlbGwuY29t
+PiB3cm90ZToNCj4gPj4gRnJvbTogSnVsaWFuIENhbGFieSBbbWFpbHRvOmp1bGlhbi5jYWxhYnlA
+Z21haWwuY29tXSBUaHVyc2RheSwgTWFyY2gNCj4gPj4gMTcsIDIwMTYgNzoyNCBBTQ0KPiA+Pg0K
+PiA+PiBIaSBEYXZpZCwNCj4gPj4NCj4gPj4gT24gVGh1LCBOb3YgMTIsIDIwMTUgYXQgMjo1MSBQ
+TSwgRGF2aWQgTGluIDxkbGluQG1hcnZlbGwuY29tPiB3cm90ZToNCj4gPj4gPiBUaGlzIHBhdGNo
+IHByb3ZpZGVzIHRoZSBtd2x3aWZpIGRyaXZlciBmb3IgTWFydmVsbCA4ODYzLCA4ODY0IGFuZA0K
+PiA+PiA+IDg4OTcgY2hpcHNldHMuDQo+ID4+ID4gVGhpcyBkcml2ZXIgd2FzIGRldmVsb3BlZCBh
+cyBwYXJ0IG9mIHRoZSBvcGVud3J0Lm9yZyBwcm9qZWN0IHRvDQo+ID4+ID4gc3VwcG9ydCBMaW5r
+c3lzIFdSVDE5MDBBQyBhbmQgaXMgbWFpbnRhaW5lZCBvbg0KPiA+PiBodHRwczovL2dpdGh1Yi5j
+b20va2Fsb3ovbXdsd2lmaS4NCj4gPj4gPg0KPiA+PiA+IFRoZSBtd2x3aWZpIGRyaXZlciBkaWZm
+ZXJzIGZyb20gZXhpc3RpbmcgbXdpZmlleCBkcml2ZXI6DQo+ID4+ID4gbyBtd2x3aWZpIGlzIGEg
+InNvZnRtYWMgZHJpdmVyIiB1c2luZyB0aGUga2VybmVsP+6ogyBtYWM4MDIuMTENCj4gPj4gPiBz
+dWJzeXN0ZW0gdG8gcHJvdmlkZSBmdWxsIEFQL1dpcmVsZXNzIEJyaWRnZSBmdW5jdGlvbmFsaXR5
+IChyb3V0ZXJzKS4NCj4gPj4gPiBvIG13aWZpZXggaXMgYSAiZnVsbG1hYyBkcml2ZXIiIHdoaWNo
+IHByb3ZpZGVzIGEgY29tcHJlaGVuc2l2ZSBzZXQNCj4gPj4gPiBvZiBjbGllbnQgZnVuY3Rpb25z
+IChsYXB0b3BzL2VtYmVkZGVkIGRldmljZXMpIG8gb25seSBtd2x3aWZpDQo+ID4+ID4gc3VwcG9y
+dHMgTWFydmVsbCBBUCBjaGlwIDg4Nlggc2VyaWVzDQo+ID4+ID4NCj4gPj4gPiBOT1RFOiBVc2Vy
+cyB3aXRoIE1hcnZlbGwgODhXODg5NyBjaGlwc2V0cyBjdXJyZW50bHkgc2hvdWxkIGVuYWJsZQ0K
+PiA+PiA+IChDT05GSUc9WSBvciBNKSBlaXRoZXIgQ09ORklHX01XSUZJRVggb3IgQ09ORklHX01X
+TFdJRkksIE5PVA0KPiA+PiBCT1RILg0KPiA+PiA+DQo+ID4+ID4gbXdsd2lmaSBkcml2ZXIgbGV2
+ZXJhZ2VkIGNvZGUgZnJvbSBleGlzdGluZyBNV0w4SyBkcml2ZXIgaW4gdGhlDQo+ID4+ID4gZm9s
+bG93aW5nIGFyZWFzOg0KPiA+PiA+IC0gODAyLjExbiBzZXR0aW5nIGZvciBtYWM4MDIxMQ0KPiA+
+PiA+IC0gRnVuY3Rpb25zIG5lZWRlZCB0byBob29rIHVwIHRvIG1hYzgwMjExDQo+ID4+ID4gLSBJ
+bnRlcmFjdGlvbnMgd2l0aCBtYWM4MDIxMSB0byBlc3RhYmxpc2ggQkEgc3RyZWFtcw0KPiA+PiA+
+IC0gUGFydGlhbCBmaXJtd2FyZSBBUElzLCBzb21lIGRhdGEgZmllbGRzDQo+ID4+ID4gLSBNZXRo
+b2QgdG8gcGFzcyBSeCBwYWNrZXRzIHRvIG1hYzgwMjExIGV4Y2VwdCAxMWFjIHJhdGVzDQo+ID4+
+ID4NCj4gPj4gPiBJbiBhZGRpdGlvbiwgbXdsd2lmaSBkcml2ZXIgc3VwcG9ydHM6DQo+ID4+ID4g
+LSBmdXR1cmUgc2NhbGFiaWxpdHkgYW5kIGZ1dHVyZSBkZXZlbG9wbWVudCAocmVmYWN0b3JlZCBz
+b3VyY2UNCj4gPj4gPiBjb2RlKQ0KPiA+PiA+IC0gTWFydmVsbCA4MDIuMTFhYyBjaGlwc2V0cywg
+aW5jbHVkaW5nIGNvbWJvIEJUIGRldmljZXMNCj4gPj4gPiAtIDgwMi4xMWFjIHJlbGF0ZWQgc2V0
+dGluZ3MgYW5kIGZ1bmN0aW9ucw0KPiA+PiA+IC0gY29uY3VycmVudCBBUCtTVEEgZnVuY3Rpb25h
+bGl0aWVzIHdpdGggc2luZ2xlIGZpcm13YXJlIHBlciBjaGlwDQo+ID4+ID4gLSBmaXJtd2FyZSBB
+UElzIGZvciB0aGUgc3VwcG9ydGVkIGNoaXBzZXQNCj4gPj4gPiAtIGNvbW11bmljYXRpbmcgbmV3
+IG1hYzgwMjExIHNldHRpbmdzIHRvIGZpcm13YXJlDQo+ID4+ID4gLSBEaWZmZXJlbnQgVFgvUlgg
+ZGF0YXBhdGggd2hlcmUgYXBwbGljYWJsZQ0KPiA+PiA+IC0gQS1NU0RVIGFuZCBBLU1QRFUNCj4g
+Pj4gPiAtIG1hYzgwMjExLWJhc2VkIE1FU0ggKHdvcmsgaW4gcHJvZ3Jlc3MpDQo+ID4+ID4gLSBS
+ZWZpbmVkIHRoZSBjb2RlIHRvIGVzdGFibGlzaCBCQSBzdHJlYW1zDQo+ID4+ID4NCj4gPj4gPiBO
+T1RFOiBNV0xXSUZJIHdpbGwgYmUgb3JnYW5pemVkIHVuZGVyIG5ldyB2ZW5kb3Igc3BlY2lmaWMN
+Cj4gPj4gPiBmb2xkZXIvbWFydmVsbCwgYXMgcGVyIHJlcXVlc3Qgb2YgdGhlIGdhdGUga2VlcGVy
+IGFuZCBjb21tdW5pdHkuDQo+ID4+ID4NCj4gPj4gPiBTaWduZWQtb2ZmLWJ5OiBEYXZpZCBMaW4g
+PGRsaW5AbWFydmVsbC5jb20+DQo+ID4+DQo+ID4+IEl0J3MgYmVlbiBxdWl0ZSBhIHdoaWxlIHNp
+bmNlIHRoaXMgd2FzIHJldmlld2VkLiBEbyB5b3UgaGF2ZSBhIG5ldw0KPiA+PiB2ZXJzaW9uIG9m
+IHRoZSBkcml2ZXI/DQo+ID4+DQo+ID4NCj4gPiBZZXMgd2UgaGF2ZSBzb21lIHVwZGF0ZXMsIGFu
+ZCBjb250aW51ZSB3b3JraW5nIG9uIGl0LiBCdXQgd2UgZmVsdCB0aGF0DQo+IGNvbW11bml0eSBk
+b2VzIG5vdCBzZWVtIHRvIGJlIHZlcnkgaW50ZXJlc3RlZCBpbiB0aGlzIGRyaXZlciwgc28gd2Ug
+aGF2ZSBub3QNCj4gYmVlbiB1cGRhdGluZyB0aGUgd2lyZWxlc3Mgb3JnLiBMZXQgdXMga25vdyBp
+ZiB5b3UgYXJlIHN1cHBvcnRpdmUgYW5kIHdhaXRpbmcNCj4gZm9yIGl0Lg0KPiANCj4gTXkgdW5k
+ZXJzdGFuZGluZyB3YXMgdGhhdCB3ZSdkIHZlcnkgbXVjaCBsaWtlIHRoZSBkcml2ZXIgdG8gYmUg
+c2VudCB1cHN0cmVhbS4NCj4gRnJvbSBteSBwZXJzcGVjdGl2ZSwgaXQgbG9va2VkIGxpa2UgeW91
+J2QgbG9zdCBpbnRlcmVzdCwgbm90IHVzLg0KPiANCg0KV2UgZmVsdCBzb21lIHJlc2lzdGFuY2Ug
+ZnJvbSB2YXJpb3VzIHBlb3BsZSwgYW5kIGdldCBkaXNjb3VyYWdlZC4gVGhvdWdoIHdlIGNvbnRp
+bnVlIHRvIHdvcmsgb24gaXQgaW50ZXJuYWxseSwgd2Ugd2VyZSBqdXN0IGtlZXBpbmcgZnVydGhl
+ciBzdWJtaXNzaW9uIGF0IHRoZSBiYWNrIG9mIG91ciBtaW5kLiBXZSBkbyBrZWVwIHRoZSBmZWVk
+YmFjayBmcm9tIGNvbW11bml0eSBhbmQgd2lsbCB3b3JrIG9uIGNvbXBsaWFuY3kgd2hlcmUgYXBw
+bGljYWJsZSBhbmQgcG9zc2libGUuDQoNCk5leHQsIHdlIHdpbGwgcHJlcGFyZSBhIHBhdGNoOCBm
+b3Igc3VibWlzc2lvbiBsYXRlci4NCg0KPg0KPiBUaGFua3MsDQo+IA0KPiAtLQ0KPiBKdWxpYW4g
+Q2FsYWJ5DQo+IA0KPiBFbWFpbDoganVsaWFuLmNhbGFieUBnbWFpbC5jb20NCj4gUHJvZmlsZTog
+aHR0cDovL3d3dy5nb29nbGUuY29tL3Byb2ZpbGVzL2p1bGlhbi5jYWxhYnkvDQo=
