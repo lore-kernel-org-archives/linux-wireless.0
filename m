@@ -1,66 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:36721 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965241AbcCIX1p (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:49114 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935208AbcCQKtw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 18:27:45 -0500
-Received: by mail-ob0-f171.google.com with SMTP id m7so63387497obh.3
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2016 15:27:45 -0800 (PST)
+	Thu, 17 Mar 2016 06:49:52 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: Kalle Valo <kvalo@qca.qualcomm.com>, <kvalo@codeaurora.org>,
+	<mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH v2 2/2] ath10k: Remove debugfs support for Per STA total rx duration
+Date: Thu, 17 Mar 2016 16:19:00 +0530
+Message-ID: <1458211740-6875-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160317_114956_290083_70A121A9)
+In-Reply-To: <1458211740-6875-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1458211740-6875-1-git-send-email-mohammed@qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1457565194-31533-1-git-send-email-vz@mleia.com>
-References: <1457565194-31533-1-git-send-email-vz@mleia.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Thu, 10 Mar 2016 10:27:25 +1100
-Message-ID: <CAGRGNgUMViiR+ruvLHnwMLHUxOK3+uW7634Hpgn9gN+djCOtbw@mail.gmail.com> (sfid-20160310_002803_972758_6C65C7ED)
-Subject: Re: [PATCH] staging: wilc1000: fix check of kthread_run() return value
-To: Vladimir Zapolskiy <vz@mleia.com>
-Cc: Glen Lee <glen.lee@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Leo Kim <leo.kim@atmel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Vladimir,
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-On Thu, Mar 10, 2016 at 10:13 AM, Vladimir Zapolskiy <vz@mleia.com> wrote:
-> The kthread_run() function returns either a valid task_struct or
-> ERR_PTR() value, check for NULL is invalid. The change fixes potential
-> oops, e.g. in OOM situation.
->
-> Signed-off-by: Vladimir Zapolskiy <vz@mleia.com>
-> ---
->  drivers/staging/wilc1000/linux_wlan.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-> index 54fe9d7..5077c30 100644
-> --- a/drivers/staging/wilc1000/linux_wlan.c
-> +++ b/drivers/staging/wilc1000/linux_wlan.c
-> @@ -849,10 +849,10 @@ static int wlan_initialize_threads(struct net_device *dev)
->         PRINT_D(INIT_DBG, "Creating kthread for transmission\n");
->         wilc->txq_thread = kthread_run(linux_wlan_txq_task, (void *)dev,
->                                      "K_TXQ_TASK");
-> -       if (!wilc->txq_thread) {
-> +       if (IS_ERR(wilc->txq_thread)) {
->                 PRINT_ER("couldn't create TXQ thread\n");
->                 wilc->close = 0;
-> -               return -ENOBUFS;
-> +               return PTR_ERR(wilc->txq_thread);
+cfg80211/nl80211 interface changes for per STA total rx-duration and
+very basic 'ath10k_sta_statistics'  mac80211 callback is implemented
+to extend support for per station statistics from the driver.
 
-Are you sure changing the error returned is correct? Do all the
-callers of wlan_initialize_threads() handle the full range of errors
-from kthread_run()?
+Also provision in 'iw dev wlan#N station dump' to parse rx-duration
+is supported. So its safer to remove the debugfs entry for per STA
+rx-duration
 
-Thanks,
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+Dependencies:
 
+1. cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION
+2. iw: Add support for NL80211_STA_INFO_RX_DURATION netlink.
+3. ath10k: Add support for ath10k_sta_statistics support
+4. ath10k: Enable debugfs provision to enable Peer Stats feature
+
+ drivers/net/wireless/ath/ath10k/debugfs_sta.c |   24 ------------------------
+ 1 file changed, 24 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+index 4c459f2..0f24327 100644
+--- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
++++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
+@@ -271,28 +271,6 @@ static const struct file_operations fops_delba = {
+ 	.llseek = default_llseek,
+ };
+ 
+-static ssize_t ath10k_dbg_sta_read_rx_duration(struct file *file,
+-					       char __user *user_buf,
+-					       size_t count, loff_t *ppos)
+-{
+-	struct ieee80211_sta *sta = file->private_data;
+-	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
+-	char buf[100];
+-	int len = 0;
+-
+-	len = scnprintf(buf, sizeof(buf),
+-			"%llu usecs\n", arsta->rx_duration);
+-
+-	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+-}
+-
+-static const struct file_operations fops_rx_duration = {
+-	.read = ath10k_dbg_sta_read_rx_duration,
+-	.open = simple_open,
+-	.owner = THIS_MODULE,
+-	.llseek = default_llseek,
+-};
+-
+ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 			    struct ieee80211_sta *sta, struct dentry *dir)
+ {
+@@ -301,6 +279,4 @@ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 	debugfs_create_file("addba", S_IWUSR, dir, sta, &fops_addba);
+ 	debugfs_create_file("addba_resp", S_IWUSR, dir, sta, &fops_addba_resp);
+ 	debugfs_create_file("delba", S_IWUSR, dir, sta, &fops_delba);
+-	debugfs_create_file("rx_duration", S_IRUGO, dir, sta,
+-			    &fops_rx_duration);
+ }
 -- 
-Julian Calaby
+1.7.9.5
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
