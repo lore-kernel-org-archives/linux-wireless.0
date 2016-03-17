@@ -1,37 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from baptiste.telenet-ops.be ([195.130.132.51]:60990 "EHLO
-	baptiste.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965564AbcCNPbL (ORCPT
+Received: from mout.kundenserver.de ([212.227.126.135]:53752 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935295AbcCQKEu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2016 11:31:11 -0400
-From: Geert Uytterhoeven <geert+renesas@glider.be>
-To: Kalle Valo <kvalo@codeaurora.org>, Jiri Kosina <trivial@kernel.org>
-Cc: linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Geert Uytterhoeven <geert+renesas@glider.be>
-Subject: [PATCH trivial] mwifiex: Spelling s/minmum/minimum/, s/bandwidth/bandwith/
-Date: Mon, 14 Mar 2016 16:31:10 +0100
-Message-Id: <1457969470-23851-1-git-send-email-geert+renesas@glider.be> (sfid-20160314_163135_998627_53699FF4)
+	Thu, 17 Mar 2016 06:04:50 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] rtlwifi: fix gcc-6 indentation warning
+Date: Thu, 17 Mar 2016 11:03:50 +0100
+Message-Id: <1458209066-3979295-1-git-send-email-arnd@arndb.de> (sfid-20160317_110514_849250_C5F3226A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Geert Uytterhoeven <geert+renesas@glider.be>
----
- drivers/net/wireless/marvell/mwifiex/tdls.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The rtl8821ae_dm_txpower_tracking_callback_thermalmeter function
+contains a call to RT_TRACE() that is indented in a misleading
+way, as pointed out by a gcc-6 warning:
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/tdls.c b/drivers/net/wireless/marvell/mwifiex/tdls.c
-index 9275f9c3f869bbb0..b39bf8bd954a2c71 100644
---- a/drivers/net/wireless/marvell/mwifiex/tdls.c
-+++ b/drivers/net/wireless/marvell/mwifiex/tdls.c
-@@ -285,7 +285,7 @@ static int mwifiex_tdls_add_vht_oper(struct mwifiex_private *priv,
- 	else
- 		usr_vht_cap_info = adapter->usr_dot_11ac_dev_cap_bg;
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c: In function 'rtl8821ae_dm_txpower_tracking_callback_thermalmeter':
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c:2491:4: error: statement is indented as if it were guarded by...
+    RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+    ^~~~~~~~
+drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c:2488:3: note: ...this 'for' clause, but it is not
+   for (p = RF90_PATH_A; p < MAX_PATH_NUM_8821A; p++)
+   ^~~
+
+It is clear from the context that the call was not meant to be
+part of the loop and only the indentation is wrong, so this
+removes the extra tabs.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
+index 95dcbff4673b..6a8245c4ea48 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
+@@ -2488,9 +2488,9 @@ void rtl8821ae_dm_txpower_tracking_callback_thermalmeter(
+ 		for (p = RF90_PATH_A; p < MAX_PATH_NUM_8821A; p++)
+ 			rtldm->swing_idx_ofdm_base[p] = rtldm->swing_idx_ofdm[p];
  
--	/* find the minmum bandwith between AP/TDLS peers */
-+	/* find the minimum bandwidth between AP/TDLS peers */
- 	vht_cap = &sta_ptr->tdls_cap.vhtcap;
- 	supp_chwd_set = GET_VHTCAP_CHWDSET(usr_vht_cap_info);
- 	peer_supp_chwd_set =
+-			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
+-				 "pDM_Odm->RFCalibrateInfo.ThermalValue = %d ThermalValue= %d\n",
+-				 rtldm->thermalvalue, thermal_value);
++		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
++			 "pDM_Odm->RFCalibrateInfo.ThermalValue = %d ThermalValue= %d\n",
++			 rtldm->thermalvalue, thermal_value);
+ 		/*Record last Power Tracking Thermal Value*/
+ 		rtldm->thermalvalue = thermal_value;
+ 	}
 -- 
-1.9.1
+2.7.0
 
