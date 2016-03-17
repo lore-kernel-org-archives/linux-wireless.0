@@ -1,89 +1,154 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56669 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751136AbcCFG07 (ORCPT
+Received: from mail-ob0-f176.google.com ([209.85.214.176]:35773 "EHLO
+	mail-ob0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935821AbcCQRAH convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 01:26:59 -0500
+	Thu, 17 Mar 2016 13:00:07 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Sun, 06 Mar 2016 11:56:58 +0530
-From: Rajkumar Manoharan <rmanohar@codeaurora.org>
-To: Ben Greear <greearb@candelatech.com>
-Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] ath10k: move mgmt descriptor limit handle under mgmt_tx
-In-Reply-To: <56DBADE6.5060507@candelatech.com>
-References: <1457187017-12913-1-git-send-email-rmanohar@qti.qualcomm.com>
- <56DAED8E.6020407@candelatech.com>
- <08ae455b4733d8c1607427b10acc759c@codeaurora.org>
- <56DBADE6.5060507@candelatech.com>
-Message-ID: <6515868944c103e2b5bf0ed4e6f22924@codeaurora.org> (sfid-20160306_072703_204635_2C5F5DAC)
+In-Reply-To: <CA+BoTQnFN6VANn=5EUvHc0Dbfh4Zv0HraOto2ySN3_HdOpD7Sg@mail.gmail.com>
+References: <1458123478-1795-1-git-send-email-michal.kazior@tieto.com>
+	<CA+BoTQ=65mHN5iLnZjTE+tyEG7nfmCx4NZNbGRF6+VpRaNmOYw@mail.gmail.com>
+	<CAA93jw5cUaj_qM+CYHHoRaghLDLC+BUgF4AjT=Oec+SB-zb74g@mail.gmail.com>
+	<CAA93jw6tDdiYuginPbUY1DFJLiDxofHMFN6j2BvQPabPmBtuRw@mail.gmail.com>
+	<20160316185531.GA1771@localhost>
+	<CAGyitvMDEUiNx7HD=XKjXNHnFvZ_gxD_BbQx3AP-57_+dBeD4A@mail.gmail.com>
+	<CA+BoTQnFN6VANn=5EUvHc0Dbfh4Zv0HraOto2ySN3_HdOpD7Sg@mail.gmail.com>
+Date: Thu, 17 Mar 2016 10:00:06 -0700
+Message-ID: <CAA93jw7TuBLVi9k-+2=J27j-Qs+sS3UNaQNTMF9D2MQ13fQY9A@mail.gmail.com> (sfid-20160317_180013_037133_8CBB2B84)
+Subject: Re: [RFCv2 0/3] mac80211: implement fq codel
+From: Dave Taht <dave.taht@gmail.com>
+To: Michal Kazior <michal.kazior@tieto.com>
+Cc: Jasmine Strong <jas@eero.com>,
+	Network Development <netdev@vger.kernel.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"codel@lists.bufferbloat.net" <codel@lists.bufferbloat.net>,
+	make-wifi-fast@lists.bufferbloat.net
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On , Ben Greear wrote:
-> On 03/05/2016 08:00 PM, Rajkumar Manoharan wrote:
->> On , Ben Greear wrote:
->>> On 03/05/2016 06:10 AM, Rajkumar Manoharan wrote:
->>>> Firmware reserves few descriptors for management frames 
->>>> transmission.
->>>> In 16 MBSSID scenario, these slots will be easy exhausted due to 
->>>> frequent
->>>> probe responses. So for 10.4 based solutions, probe responses are 
->>>> limited
->>>> by a threshold (24).
->>> 
->>> Do you mean probe requests or probe responses?
->>> 
->> I meant probe responses in AP mode.
->> 
->>> A single hardware scan request with lots of ssids in it will utilize 
->>> all
->>> firmware tx management frames (which is 5, it seems).  In my testing, 
->>> the
->>> firmware would just never send probe requests for the rest of the 
->>> ssids
->>> because the firmware scan state machine logic is broken.
->>> 
->> Hmm... firmware expects both ssid and bssid list to be filled for 
->> multiple probe
->> requests. Better to try with different probe spacing time, repeat 
->> probe time and
->> probe delay and dwell time as these params change prob_req behavior in 
->> firmware.
-> 
-> It was easier to just fix the firmware than to hack the
-> rest of the stack.
-> 
-I didn't mean to hack the stack :) but scan params should not be 
-constant for all type
-of scan requests.
+On Thu, Mar 17, 2016 at 1:55 AM, Michal Kazior <michal.kazior@tieto.com> wrote:
 
->> Anyway this change is not related to scan functionality.
->> 
->>> If you really do mean responses, then it sounds like it would be 
->>> better to
->>> use the normal RX path for mgt frames in the firmware...
->>> 
->> Let me clarify. Sending probe responses in AP mode are limited by a 
->> threshold
->> for qca99x0 ("ath10k: drop probe responses when too many are queued"). 
->> This change
->> moves probe response checks under mgmt_tx from common data path.
-> 
-> Ok, I'll take a look at that.  I've implemented MGT frames over the 
-> completely
-> normal HTT data-path transport, so probably I won't hit that in my 
-> systems
-> anyway (there should be no internal mgt-frame limitation, except for 
-> locally
-> created things like probe requests during scan).  But, I could be 
-> missing
-> something...I'm really just getting started with 10.4...
-> 
-Great.. just noticed that this change needs to be rebased on top of 
-Michal's recent
-data path series. Let me send next version.
+> I suspect the BK/BE latency difference has to do with the fact that
+> there's bulk traffic going on BE queues (this isn't reflected
+> explicitly in the plots). The `bursts` flent test includes short
+> bursts of traffic on tid0 (BE) which is shared with ICMP and BE UDP_RR
+> (seen as green and blue lines on the plot). Due to (intended) limited
+> outflow (6mbps) BE queues build up and don't drain for the duration of
+> the entire test creating more opportunities for aggregating BE traffic
+> while other queues are near-empty and very short (time wise as well).
 
--Rajkumar
+I agree with your explanation. Access to the media and queue length
+are the two variables at play here.
+
+I just committed a new flent test that should exercise the vo,vi,be,
+and bk queues, "bursts_11e". I dropped the conventional ping from it
+and just rely on netperf's udp_rr for each queue. It seems to "do the
+right thing" on the ath9k....
+
+And while I'm all in favor of getting 802.11e's behaviors more right,
+and this seems like a good way to get there...
+
+netperf's udp_rr is not how much traffic conventionally behaves. It
+doesn't do tcp slow start or congestion control in particular...
+
+In the case of the VO queue, for example, the (2004) intended behavior
+was 1 isochronous packet per 10ms per voice sending station and one
+from the ap, not a "ping". And at the time, VI was intended to be
+unicast video. TCP was an afterthought. (wifi's original (1993) mac
+was actually designed for ipx/spx!)
+
+I long for regular "rrul" and "rrul_be" tests against the new stuff to
+blow it up thoroughly as references along the way.
+(tcp_upload, tcp_download, (and several of the rtt_fair tests also
+between stations)). Will get formal about it here as soon as we end up
+on the same kernel trees....
+
+Furthermore 802.11e is not widely used - in particular, not much
+internet bound/sourced traffic falls into more than BE and BK,
+presently. and in some cases weirder - comcast remarks a very large
+percentage of to the home inbound traffic as CS1 (BK), btw, and
+stations tend to use CS0. Data comes in on BK, acks go out on BE.
+
+I/we will try to come up with intermediate tests between the burst
+tests and the rrul tests as we go along the way.
+
+> If you consider Wi-Fi is half-duplex and latency in the entire stack
+
+In the context of this test regime...
+
+<pedantry>
+Saying wifi is "half"-duplex is a misleading way to think about it in
+many respects. it is a shared medium more like early, non-switched
+ethernet, with a weird mac that governs what sort of packets get
+access to (a txop) the medium first, across all stations co-operating
+within EDCA.
+
+Half or full duplex is something that mostly applied to p2p serial
+connections (or p2p wifi), not P2MP. Additionally characteristics like
+exponential backoff make no sense were wifi any form of duplex, full
+or half.
+
+Certainly much stuff within a txop (block acks for example) can be
+considered half duplex in a microcosmic context.
+
+I wish we actually had words that accurately described wifi's actual behavior.
+</pedantry>
+
+> (for processing ICMP and UDP_RR) is greater than 11e contention window
+> timings you can get your BE flow responses with extra delay (since
+> other queues might have responses ready quicker).
+
+yes. always having a request pending for each of the 802.11e queues is
+actually not the best idea, it is better to take advantage of better
+aggregation afforded by 802.11n/ac, to only have one or two of the
+queues in use against any given station and promote or demote traffic
+into a more-right queue.
+
+simple example of the damage having all 4 queues always contending is
+exemplified by running the rrul and rrul_be tests against nearly any
+given AP.
+
+>
+> I've modified traffic-gen and re-run tests with bursts on all tested
+> tids/ACs (tid0, tid1, tid5). I'm attaching the results.
+>
+> With bursts on all tids you can clearly see BK has much higher latency than BE.
+
+The long term goal here, of course, is for BK (or the other queues) to
+not have seconds of queuing latency but something more bounded to 2x
+media access time...
+
+> (Note, I've changed my AP to QCA988X with oldie firmware 10.1.467 for
+> this test; it doesn't have the weird hiccups I was seeing on QCA99X0
+> and newer QCA988X firmware reports bogus expected throughput which is
+> most likely a result of my sloppy proof-of-concept change in ath10k).
+
+So I should avoid ben greer's firmware for now?
+
+>
+>
+> Michał
+>
+> On 16 March 2016 at 20:48, Jasmine Strong <jas@eero.com> wrote:
+>> BK usually has 0 txop, so it doesn't do aggregation.
+>>
+>> On Wed, Mar 16, 2016 at 11:55 AM, Bob Copeland <me@bobcopeland.com> wrote:
+>>>
+>>> On Wed, Mar 16, 2016 at 11:36:31AM -0700, Dave Taht wrote:
+>>> > That is the sanest 802.11e queue behavior I have ever seen!  (at both
+>>> > 6 and 300mbit! in the ath10k patched mac test)
+>>>
+>>> Out of curiosity, why does BE have larger latency than BK in that chart?
+>>> I'd have expected the opposite.
+>>>
+>>> --
+>>> Bob Copeland %% http://bobcopeland.com/
+>>>
+>>> _______________________________________________
+>>> ath10k mailing list
+>>> ath10k@lists.infradead.org
+>>> http://lists.infradead.org/mailman/listinfo/ath10k
+>>
+>>
