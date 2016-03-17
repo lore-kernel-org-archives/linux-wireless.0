@@ -1,83 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.10]:55853 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934373AbcCNOUd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2016 10:20:33 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: "David S. Miller" <davem@davemloft.net>
-Cc: netdev@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 3/5] ath9k: fix buffer overrun for ar9287
-Date: Mon, 14 Mar 2016 15:18:36 +0100
-Message-Id: <1457965120-3155420-4-git-send-email-arnd@arndb.de> (sfid-20160314_152252_697219_DC6C3860)
-In-Reply-To: <1457965120-3155420-1-git-send-email-arnd@arndb.de>
-References: <1457965120-3155420-1-git-send-email-arnd@arndb.de>
+Received: from mga03.intel.com ([134.134.136.65]:23612 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751810AbcCQNDU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Mar 2016 09:03:20 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 1/4] mac80211: don't start dynamic PS timer if not needed
+Date: Thu, 17 Mar 2016 15:02:52 +0200
+Message-Id: <1458219775-24450-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160317_140324_152589_99C2E41D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Code that was added back in 2.6.38 has an obvious overflow
-when accessing a static array, and at the time it was added
-only a code comment was put in front of it as a reminder
-to have it reviewed properly.
+From: Johannes Berg <johannes.berg@intel.com>
 
-This has not happened, but gcc-6 now points to the specific
-overflow:
+If the device implements dynamic PS itself, there's no need
+to ever start the dynamic powersave timer on RX.
 
-drivers/net/wireless/ath/ath9k/eeprom.c: In function 'ath9k_hw_get_gain_boundaries_pdadcs':
-drivers/net/wireless/ath/ath9k/eeprom.c:483:44: error: array subscript is above array bounds [-Werror=array-bounds]
-     maxPwrT4[i] = data_9287[idxL].pwrPdg[i][4];
-                   ~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+While at it, fix up some indentation in this code.
 
-It turns out that the correct array length exists in the local
-'intercepts' variable of this function, so we can just use that
-instead of hardcoding '4', so this patch changes all three
-instances to use that variable. The other two instances were
-already correct, but it's more consistent this way.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Fixes: 940cd2c12ebf ("ath9k_hw: merge the ar9287 version of ath9k_hw_get_gain_boundaries_pdadcs")
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/net/wireless/ath/ath9k/eeprom.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ net/mac80211/rx.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/eeprom.c b/drivers/net/wireless/ath/ath9k/eeprom.c
-index 73fb4232f9f2..a794157a147d 100644
---- a/drivers/net/wireless/ath/ath9k/eeprom.c
-+++ b/drivers/net/wireless/ath/ath9k/eeprom.c
-@@ -477,10 +477,9 @@ void ath9k_hw_get_gain_boundaries_pdadcs(struct ath_hw *ah,
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 9127957..3746ba5 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2456,14 +2456,14 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
  
- 	if (match) {
- 		if (AR_SREV_9287(ah)) {
--			/* FIXME: array overrun? */
- 			for (i = 0; i < numXpdGains; i++) {
- 				minPwrT4[i] = data_9287[idxL].pwrPdg[i][0];
--				maxPwrT4[i] = data_9287[idxL].pwrPdg[i][4];
-+				maxPwrT4[i] = data_9287[idxL].pwrPdg[i][intercepts - 1];
- 				ath9k_hw_fill_vpd_table(minPwrT4[i], maxPwrT4[i],
- 						data_9287[idxL].pwrPdg[i],
- 						data_9287[idxL].vpdPdg[i],
-@@ -490,7 +489,7 @@ void ath9k_hw_get_gain_boundaries_pdadcs(struct ath_hw *ah,
- 		} else if (eeprom_4k) {
- 			for (i = 0; i < numXpdGains; i++) {
- 				minPwrT4[i] = data_4k[idxL].pwrPdg[i][0];
--				maxPwrT4[i] = data_4k[idxL].pwrPdg[i][4];
-+				maxPwrT4[i] = data_4k[idxL].pwrPdg[i][intercepts - 1];
- 				ath9k_hw_fill_vpd_table(minPwrT4[i], maxPwrT4[i],
- 						data_4k[idxL].pwrPdg[i],
- 						data_4k[idxL].vpdPdg[i],
-@@ -500,7 +499,7 @@ void ath9k_hw_get_gain_boundaries_pdadcs(struct ath_hw *ah,
- 		} else {
- 			for (i = 0; i < numXpdGains; i++) {
- 				minPwrT4[i] = data_def[idxL].pwrPdg[i][0];
--				maxPwrT4[i] = data_def[idxL].pwrPdg[i][4];
-+				maxPwrT4[i] = data_def[idxL].pwrPdg[i][intercepts - 1];
- 				ath9k_hw_fill_vpd_table(minPwrT4[i], maxPwrT4[i],
- 						data_def[idxL].pwrPdg[i],
- 						data_def[idxL].vpdPdg[i],
+ 	rx->skb->dev = dev;
+ 
+-	if (local->ps_sdata && local->hw.conf.dynamic_ps_timeout > 0 &&
++	if (!ieee80211_hw_check(&local->hw, SUPPORTS_DYNAMIC_PS) &&
++	    local->ps_sdata && local->hw.conf.dynamic_ps_timeout > 0 &&
+ 	    !is_multicast_ether_addr(
+ 		    ((struct ethhdr *)rx->skb->data)->h_dest) &&
+ 	    (!local->scanning &&
+-	     !test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))) {
+-			mod_timer(&local->dynamic_ps_timer, jiffies +
+-			 msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
+-	}
++	     !test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state)))
++		mod_timer(&local->dynamic_ps_timer, jiffies +
++			  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
+ 
+ 	ieee80211_deliver_skb(rx);
+ 
 -- 
-2.7.0
+2.5.0
 
