@@ -1,40 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52962 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752467AbcCJGTR (ORCPT
+Received: from mga02.intel.com ([134.134.136.20]:13595 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932983AbcCQNsn convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 01:19:17 -0500
-Date: Thu, 10 Mar 2016 11:48:58 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	kvalo@codeaurora.org, Anilkumar Kolli <akolli@qti.qualcomm.com>
-Subject: Re: [RFC v1] mac80211: Add support for per station rx stats histogram
-Message-ID: <20160310061858.GB11345@atheros-ThinkPad-T61> (sfid-20160310_071921_577710_B47DD841)
-References: <1457367809-13637-1-git-send-email-mohammed@qca.qualcomm.com>
- <1457424451.2283.2.camel@sipsolutions.net>
- <20160308094250.GA3685@atheros-ThinkPad-T61>
- <20160309163038.GA9410@atheros-ThinkPad-T61>
- <1457544468.2042.20.camel@sipsolutions.net>
+	Thu, 17 Mar 2016 09:48:43 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Tejun Heo <tj@kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+CC: Eva Rachel Retuya <eraretuya@gmail.com>,
+	"outreachy-kernel@googlegroups.com"
+	<outreachy-kernel@googlegroups.com>,
+	linuxwifi <linuxwifi@intel.com>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH] iwlwifi: dvm: convert create_singlethread_workqueue()
+ to alloc_workqueue()
+Date: Thu, 17 Mar 2016 13:48:36 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA7CBB1@hasmsx107.ger.corp.intel.com> (sfid-20160317_144908_323410_7DE7A48F)
+References: <1458218246-18807-1-git-send-email-eraretuya@gmail.com>
+ <1458218602.2158.17.camel@sipsolutions.net>
+ <20160317132110.GP21104@mtj.duckdns.org>
+In-Reply-To: <20160317132110.GP21104@mtj.duckdns.org>
+Content-Type: text/plain; charset="windows-1255"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1457544468.2042.20.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 09, 2016 at 06:27:48PM +0100, Johannes Berg wrote:
-> On Wed, 2016-03-09 at 22:00 +0530, Mohammed Shafi Shajakhan wrote:
-> > 
-> > I had started studying(understand) your patch. Please
-> > let me know if you have already added support for the same
-> > in userspace as well, we like to use your changes and possibly
-> > add any changes that addresses rx_stats histogram as well
+> Hello,
 > 
-> I had a very minimal file in iw, but that's all:
+> On Thu, Mar 17, 2016 at 01:43:22PM +0100, Johannes Berg wrote:
+> > On Thu, 2016-03-17 at 20:37 +0800, Eva Rachel Retuya wrote:
+> > > Use alloc_workqueue() to allocate the workqueue instead of
+> > > create_singlethread_workqueue() since the latter is deprecated and
+> > > is scheduled for removal.
+> >
+> > Scheduled where?
 > 
-> https://p.sipsolutions.net/744c0854bc02c95f.txt
->
-[shafi] thank you for sharing this Johannes
+> They've been deprecated for years now.  I should note that in the header.
+> 
+> > >  static void iwl_setup_deferred_work(struct iwl_priv *priv)
+> > >  {
+> > > -	priv->workqueue = create_singlethread_workqueue(DRV_NAME);
+> > > +	priv->workqueue = alloc_workqueue(DRV_NAME, WQ_HIGHPRI |
+> > > WQ_UNBOUND |
+> > > +					  WQ_MEM_RECLAIM, 1);
+> >
+> > Seems like you should use alloc_ordered_workqueue() though? That also
+> > gets you UNBOUND immediately, and the "1".
+> 
+> Right, this one should have been alloc_ordered_workqueue().
+> 
+> > I'm not really sure HIGHPRI is needed either.
+> 
+> So, no WQ_MEM_RECLAIM either then, I suppose?  What are the latency
+> requirements here - what happens if a thermal management work gets
+> delayed?
+> 
 
--shafi
+This worker is not supposed to free memory, so no WQ_MEM_RECLAIM needed. The latency is not critical.
+
