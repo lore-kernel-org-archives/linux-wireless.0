@@ -1,74 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f46.google.com ([209.85.215.46]:34659 "EHLO
-	mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751664AbcCaK0T (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 06:26:19 -0400
-Received: by mail-lf0-f46.google.com with SMTP id c62so56193923lfc.1
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2016 03:26:19 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, dave.taht@gmail.com,
-	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCHv2 0/2] mac80211: implement fq_codel
-Date: Thu, 31 Mar 2016 12:28:22 +0200
-Message-Id: <1459420104-31554-1-git-send-email-michal.kazior@tieto.com> (sfid-20160331_122623_650479_5DD28D20)
-In-Reply-To: <1458898052-20601-1-git-send-email-michal.kazior@tieto.com>
-References: <1458898052-20601-1-git-send-email-michal.kazior@tieto.com>
+Received: from lists.s-osg.org ([54.187.51.154]:54723 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752038AbcCRTX0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2016 15:23:26 -0400
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: johannes@sipsolutions.net, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Luis de Bethencourt <luisbg@osg.samsung.com>
+Subject: [PATCH] mac80211: remove description of dropped member
+Date: Fri, 18 Mar 2016 19:23:18 +0000
+Message-Id: <1458328998-14021-1-git-send-email-luisbg@osg.samsung.com> (sfid-20160318_202346_933585_7EFA74B8)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Commit 976bd9efdae6 ("mac80211: move beacon_loss_count into ifmgd")
+removed the member from the sta_info struct but the description stayed
+lingering. Remove it.
+
+Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+---
 Hi,
 
-I've cleaned up and removed the
-txop-queue-limiting and scheduling from the patch
-(compared to my last RFC). It's still to early for
-the scheduling thing to go prime time.
+A second patch fixing a warning in make htmldocs.
 
-The fair queuing on the other hand does seem to
-work. In good RF conditions it seems to improve
-things (e.g. multiple TCP streams converge into a
-steady average). In bad RF conditions things look
-same grim as before (but not worse).
+Thanks :)
+Luis
 
-I've done a few more experiments with naive DQL in
-ath10k and some flent tests prove the fair queuing
-in mac80211 works better than fq_codel qdisc as
-far as wake_tx_queue drivers are concerned. I'll
-be posting a separate thread after this.
+ net/mac80211/sta_info.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-This is based on mac80211-next/master
-(0a87cadbb54e1595a5f64542adb4c63be914d290).
-
-v2:
- * fix invalid ptr deref
- * fix compilation for backports
-
-
-Michal Kazior (2):
-  mac80211: implement fair queuing per txq
-  mac80211: expose some txq/fq internals and knobs via debugfs
-
- include/net/mac80211.h        |  21 ++-
- net/mac80211/agg-tx.c         |   8 +-
- net/mac80211/codel.h          | 264 +++++++++++++++++++++++++++++
- net/mac80211/codel_i.h        |  89 ++++++++++
- net/mac80211/debugfs.c        |  86 ++++++++++
- net/mac80211/debugfs_netdev.c |  29 +++-
- net/mac80211/debugfs_sta.c    |  46 +++++
- net/mac80211/ieee80211_i.h    |  45 ++++-
- net/mac80211/iface.c          |  24 ++-
- net/mac80211/main.c           |   9 +-
- net/mac80211/rx.c             |   2 +-
- net/mac80211/sta_info.c       |  10 +-
- net/mac80211/sta_info.h       |  27 +++
- net/mac80211/tx.c             | 383 +++++++++++++++++++++++++++++++++++++-----
- net/mac80211/util.c           |  20 ++-
- 15 files changed, 983 insertions(+), 80 deletions(-)
- create mode 100644 net/mac80211/codel.h
- create mode 100644 net/mac80211/codel_i.h
-
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 053f5c4..62193f4 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -377,7 +377,6 @@ DECLARE_EWMA(signal, 1024, 8)
+  * @uploaded: set to true when sta is uploaded to the driver
+  * @sta: station information we share with the driver
+  * @sta_state: duplicates information about station state (for debug)
+- * @beacon_loss_count: number of times beacon loss has triggered
+  * @rcu_head: RCU head used for freeing this station struct
+  * @cur_max_bandwidth: maximum bandwidth to use for TX to the station,
+  *	taken from HT/VHT capabilities or VHT operating mode notification
 -- 
-2.1.4
+2.5.1
 
