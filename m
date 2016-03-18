@@ -1,63 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:13551 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753712AbcCIQji convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 11:39:38 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: kbuild test robot <lkp@intel.com>
-CC: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"mohammed@codeaurora.org" <mohammed@codeaurora.org>,
-	"kbuild-all@01.org" <kbuild-all@01.org>
-Subject: Re: [PATCH v1 1/2] ath10k: Add support for ath10k_sta_statistics
- support
-Date: Wed, 9 Mar 2016 16:39:30 +0000
-Message-ID: <87oaanr4g7.fsf@kamboji.qca.qualcomm.com> (sfid-20160309_173959_782085_E201BF01)
-References: <201603091546.RFfnsS0y%fengguang.wu@intel.com>
-In-Reply-To: <201603091546.RFfnsS0y%fengguang.wu@intel.com> (kbuild test
-	robot's message of "Wed, 9 Mar 2016 15:42:40 +0800")
-Content-Type: text/plain; charset="us-ascii"
+Received: from mga11.intel.com ([192.55.52.93]:2123 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752538AbcCRUDX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2016 16:03:23 -0400
+From: "Coelho, Luciano" <luciano.coelho@intel.com>
+To: "arend.vanspriel@broadcom.com" <arend.vanspriel@broadcom.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Subject: Re: pull request: iwlwifi-2016-02-16
+Date: Fri, 18 Mar 2016 20:03:20 +0000
+Message-ID: <1458331398.3395.2.camel@intel.com> (sfid-20160318_210326_990076_254CDA38)
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA13D1A@hasmsx107.ger.corp.intel.com>
+	 <56EC5C83.6070708@broadcom.com>
+In-Reply-To: <56EC5C83.6070708@broadcom.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-kbuild test robot <lkp@intel.com> writes:
-
-> Hi Mohammed,
->
-> [auto build test ERROR on wireless-drivers-next/master]
-> [also build test ERROR on next-20160309]
-> [cannot apply to v4.5-rc7]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
->
-> url:    https://github.com/0day-ci/linux/commits/Mohammed-Shafi-Shajakhan/ath10k-Add-support-for-ath10k_sta_statistics-support/20160309-153522
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
-> config: sparc64-allmodconfig (attached as .config)
-> reproduce:
->         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # save the attached .config to linux build tree
->         make.cross ARCH=sparc64 
->
-> All errors (new ones prefixed by >>):
->
->    drivers/net/wireless/ath/ath10k/debugfs_sta.c: In function 'ath10k_sta_statistics':
->>> drivers/net/wireless/ath/ath10k/debugfs_sta.c:51:2: error: implicit declaration of function 'ath10k_peer_stats_enabled' [-Werror=implicit-function-declaration]
->      if (!ath10k_peer_stats_enabled(ar))
->      ^
->>> drivers/net/wireless/ath/ath10k/debugfs_sta.c:54:7: error: 'struct station_info' has no member named 'rx_duration'
->      sinfo->rx_duration = arsta->rx_duration;
->           ^
->>> drivers/net/wireless/ath/ath10k/debugfs_sta.c:55:27: error: 'NL80211_STA_INFO_RX_DURATION' undeclared (first use in this function)
->      sinfo->filled |= 1ULL << NL80211_STA_INFO_RX_DURATION;
->                               ^
->    drivers/net/wireless/ath/ath10k/debugfs_sta.c:55:27: note: each undeclared identifier is reported only once for each function it appears in
->    cc1: some warnings being treated as errors
-
-This is expected as the patches depend on mac80211 patches.
-
--- 
-Kalle Valo
+SGkgQXJlbmQsDQoNCk9uIEZyaSwgMjAxNi0wMy0xOCBhdCAyMDo1MiArMDEwMCwgQXJlbmQgVmFu
+IFNwcmllbCB3cm90ZToNCj4gT24gMTUtMi0yMDE2IDEyOjU3LCBHcnVtYmFjaCwgRW1tYW51ZWwg
+d3JvdGU6DQo+ID4gDQo+ID4gKiBMdWNhIGZpeGVzIGEgdmVyeSB2aXNpYmxlIGJ1ZyBpbiBzY2hl
+ZHVsZWQgc2Nhbjogb3VyIGZpcm13YXJlDQo+ID4gwqAgZG9lc24ndCBzdXBwb3J0IHNjaGVkdWxl
+ZCBzY2FuIHdpdGggbm8gcHJvZmlsZSBjb25maWd1cmVkIGFuZA0KPiA+IMKgIHRoZSBzdXBwbGlj
+YW50IHNvbWV0aW1lcyByZXF1ZXN0cyBzdWNoIHNjaGVkdWxlZCBzY2Fucy4NCj4gSGkgTHVjYSwN
+Cj4gDQo+IEkgaGF2ZSBzZWVuIHRoaXMgaGFwcGVuaW5nIGFzIHdlbGwsIGJ1dCBkaWQgbm90IGZp
+bmQgdGhlIGV4YWN0DQo+IHNjZW5hcmlvDQo+IGluIHdoaWNoIHN1cHBsaWNhbnQgZG9lcyB0aGlz
+LiBXb3VsZCB5b3UgaGFwcGVuIHRvIGtub3c/DQoNCkkgZG9uJ3QgcmVtZW1iZXIgZXhhY3RseSB3
+aGF0IHdhcyB0aGUgc2NlbmFyaW8sIGJ1dCBJIHRoaW5rIGl0IHdhcyB3aGVuDQp3cGFfcyBoYWQg
+YSBzaW5nbGUgQVAgY29uZmlndXJlIGFuZCBmYWlsZWQgdG8gY29ubmVjdCB0byBpdCAoYW5kDQpi
+bGFja2xpc3RlZCBpdCkuIMKgVGhlbiBpdCB3b3VsZCB0cnkgYSBjb3VwbGUgb2YgcmVndWxhciBz
+Y2FucyB3aXRoDQpicm9hZGNhc3QgU1NJRCB0aGVuIHN3aXRjaCB0byBzY2hlZCBzY2FuLg0KDQpJ
+J2xsIGRpZyB0aGUgYnVnIHVwIG5leHQgd2VlayBzbyBJIGNhbiB0ZWxsIHlvdSBmb3Igc3VyZS4N
+Cg0KLS0NCkNoZWVycywNCkx1Y2Eu
