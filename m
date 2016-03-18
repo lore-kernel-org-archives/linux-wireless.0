@@ -1,103 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:42652 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753314AbcCBH5l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 02:57:41 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Luca Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 23/43] iwlwifi: pcie: add pm_prepare and pm_complete ops
-Date: Wed,  2 Mar 2016 09:56:24 +0200
-Message-Id: <1456905404-14435-23-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085951_585885_91F80597)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:34470 "EHLO
+	mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751092AbcCRCXA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Mar 2016 22:23:00 -0400
+Received: by mail-pf0-f179.google.com with SMTP id x3so145814193pfb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 19:23:00 -0700 (PDT)
+From: Julian Calaby <julian.calaby@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Markus Elfring <elfring@users.sourceforge.net>,
+	Alexander Tsoy <alexander@tsoy.me>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 06/19] ath9k_htc: Delete unnecessary variable initialisation
+Date: Fri, 18 Mar 2016 13:22:52 +1100
+Message-Id: <c05b18eb32ba150a16d5a1260832d0e57affb955.1458262312.git.julian.calaby@gmail.com> (sfid-20160318_032304_292068_A1272EA1)
+In-Reply-To: <cover.1458262312.git.julian.calaby@gmail.com>
+References: <cover.1458262312.git.julian.calaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+From: Markus Elfring <elfring@users.sourceforge.net>
 
-With these ops, we can know when we are about to enter system suspend.
-This allows us to exit D0i3 state before entering suspend.
+In ath9k_hif_usb_rx_stream(), i is initialised in the for loop it's
+used in.
 
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+Reviewed-by: Oleksij Rempel <linux@rempel-privat.de>
+[Rewrote commit message]
+Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-trans.h |  1 +
- drivers/net/wireless/intel/iwlwifi/pcie/drv.c  | 41 ++++++++++++++++++++++++++
- 2 files changed, 42 insertions(+)
+ drivers/net/wireless/ath/ath9k/hif_usb.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-index 0ca0f13..91d74b3 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
-@@ -836,6 +836,7 @@ struct iwl_trans {
- 
- 	enum iwl_plat_pm_mode system_pm_mode;
- 	enum iwl_plat_pm_mode runtime_pm_mode;
-+	bool suspending;
- 
- 	/* pointer to trans specific struct */
- 	/*Ensure that this pointer will always be aligned to sizeof pointer */
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-index 753ec67..d33b6ba 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
-@@ -811,6 +811,45 @@ static int iwl_pci_runtime_resume(struct device *device)
- 
- 	return 0;
- }
-+
-+static int iwl_pci_system_prepare(struct device *device)
-+{
-+	struct pci_dev *pdev = to_pci_dev(device);
-+	struct iwl_trans *trans = pci_get_drvdata(pdev);
-+
-+	IWL_DEBUG_RPM(trans, "preparing for system suspend\n");
-+
-+	/* This is called before entering system suspend and before
-+	 * the runtime resume is called.  Set the suspending flag to
-+	 * prevent the wakelock from being taken.
-+	 */
-+	trans->suspending = true;
-+
-+	/* Wake the device up from runtime suspend before going to
-+	 * platform suspend.  This is needed because we don't know
-+	 * whether wowlan any is set and, if it's not, mac80211 will
-+	 * disconnect (in which case, we can't be in D0i3).
-+	 */
-+	pm_runtime_resume(device);
-+
-+	return 0;
-+}
-+
-+static void iwl_pci_system_complete(struct device *device)
-+{
-+	struct pci_dev *pdev = to_pci_dev(device);
-+	struct iwl_trans *trans = pci_get_drvdata(pdev);
-+
-+	IWL_DEBUG_RPM(trans, "completing system suspend\n");
-+
-+	/* This is called as a counterpart to the prepare op.  It is
-+	 * called either when suspending fails or when suspend
-+	 * completed successfully.  Now there's no risk of grabbing
-+	 * the wakelock anymore, so we can release the suspending
-+	 * flag.
-+	 */
-+	trans->suspending = false;
-+}
- #endif /* CONFIG_IWLWIFI_PCIE_RTPM */
- 
- static const struct dev_pm_ops iwl_dev_pm_ops = {
-@@ -820,6 +859,8 @@ static const struct dev_pm_ops iwl_dev_pm_ops = {
- 	SET_RUNTIME_PM_OPS(iwl_pci_runtime_suspend,
- 			   iwl_pci_runtime_resume,
- 			   NULL)
-+	.prepare = iwl_pci_system_prepare,
-+	.complete = iwl_pci_system_complete,
- #endif /* CONFIG_IWLWIFI_PCIE_RTPM */
- };
- 
+diff --git a/drivers/net/wireless/ath/ath9k/hif_usb.c b/drivers/net/wireless/ath/ath9k/hif_usb.c
+index 8cbf490..e1c338c 100644
+--- a/drivers/net/wireless/ath/ath9k/hif_usb.c
++++ b/drivers/net/wireless/ath/ath9k/hif_usb.c
+@@ -527,7 +527,7 @@ static void ath9k_hif_usb_rx_stream(struct hif_device_usb *hif_dev,
+ 				    struct sk_buff *skb)
+ {
+ 	struct sk_buff *nskb, *skb_pool[MAX_PKT_NUM_IN_TRANSFER];
+-	int index = 0, i = 0, len = skb->len;
++	int index = 0, i, len = skb->len;
+ 	int rx_remain_len, rx_pkt_len;
+ 	u16 pool_index = 0;
+ 	u8 *ptr;
 -- 
-2.5.0
+2.7.0
 
