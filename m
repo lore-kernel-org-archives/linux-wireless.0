@@ -1,45 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f172.google.com ([209.85.192.172]:33087 "EHLO
-	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750975AbcC3KPI (ORCPT
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:36034 "EHLO
+	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752550AbcCRCVH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 06:15:08 -0400
-Received: by mail-pf0-f172.google.com with SMTP id 4so38806969pfd.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2016 03:15:08 -0700 (PDT)
-From: Wei-Ning Huang <wnhuang@chromium.org>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, djkurtz@chromium.org,
-	snanda@chromium.org, akarwar@marvell.com,
-	Wei-Ning Huang <wnhuang@chromium.org>
-Subject: [PATCH RESEND] mwifiex: fix NULL pointer dereference error
-Date: Wed, 30 Mar 2016 18:14:55 +0800
-Message-Id: <1459332895-4563-1-git-send-email-wnhuang@chromium.org> (sfid-20160330_121533_879071_8059866C)
+	Thu, 17 Mar 2016 22:21:07 -0400
+Received: by mail-pf0-f174.google.com with SMTP id u190so146031736pfb.3
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 19:21:06 -0700 (PDT)
+From: Julian Calaby <julian.calaby@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	Nicholas Mc Guire <hofrat@osadl.org>,
+	Geliang Tang <geliangtang@163.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 02/19] ipw2x00: use to_pci_dev()
+Date: Fri, 18 Mar 2016 13:20:59 +1100
+Message-Id: <e7c973ebdbc2fc49bc7bd9734547ab23bb7ee181.1458262312.git.julian.calaby@gmail.com> (sfid-20160318_032111_574353_9C719CAE)
+In-Reply-To: <cover.1458262312.git.julian.calaby@gmail.com>
+References: <cover.1458262312.git.julian.calaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In mwifiex_enable_hs, we need to check if
-priv->wdev.wiphy->wowlan_config is NULL before accessing it's member.
-This sometimes cause kernel panic when suspend/resume.
+From: Geliang Tang <geliangtang@163.com>
 
-Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
+Use to_pci_dev() instead of open-coding it.
+
+Signed-off-by: Geliang Tang <geliangtang@163.com>
+Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
 ---
- drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/net/wireless/intel/ipw2x00/ipw2100.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-index d5c56eb..d8de432 100644
---- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
-@@ -509,7 +509,8 @@ int mwifiex_enable_hs(struct mwifiex_adapter *adapter)
- 
- 	if (priv && priv->sched_scanning) {
- #ifdef CONFIG_PM
--		if (!priv->wdev.wiphy->wowlan_config->nd_config) {
-+		if (priv->wdev.wiphy->wowlan_config &&
-+		    !priv->wdev.wiphy->wowlan_config->nd_config) {
- #endif
- 			mwifiex_dbg(adapter, CMD, "aborting bgscan!\n");
- 			mwifiex_stop_bg_scan(priv);
+diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2100.c b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+index f93a7f7..717320b 100644
+--- a/drivers/net/wireless/intel/ipw2x00/ipw2100.c
++++ b/drivers/net/wireless/intel/ipw2x00/ipw2100.c
+@@ -3521,7 +3521,7 @@ static void ipw2100_msg_free(struct ipw2100_priv *priv)
+ static ssize_t show_pci(struct device *d, struct device_attribute *attr,
+ 			char *buf)
+ {
+-	struct pci_dev *pci_dev = container_of(d, struct pci_dev, dev);
++	struct pci_dev *pci_dev = to_pci_dev(d);
+ 	char *out = buf;
+ 	int i, j;
+ 	u32 val;
 -- 
-2.1.2
+2.7.0
 
