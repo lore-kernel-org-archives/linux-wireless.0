@@ -1,58 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0021.hostedemail.com ([216.40.44.21]:44276 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750725AbcCSEKH (ORCPT
+Received: from mail-yw0-f176.google.com ([209.85.161.176]:34358 "EHLO
+	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750990AbcCRBcV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Mar 2016 00:10:07 -0400
-Message-ID: <1458360598.26915.41.camel@perches.com> (sfid-20160319_051034_874849_8E05A0C9)
-Subject: Re: [PATCH] staging: refresh TODO for rtl8723au
-From: Joe Perches <joe@perches.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux Driver Project Developer List
-	<driverdev-devel@linuxdriverproject.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 18 Mar 2016 21:09:58 -0700
-In-Reply-To: <wrfjbn6bi0f9.fsf@redhat.com>
-References: <1458321324-16906-1-git-send-email-xose.vazquez@gmail.com>
-	 <wrfjlh5fk7i4.fsf@redhat.com> <1458325693.26915.23.camel@perches.com>
-	 <wrfjbn6bi0f9.fsf@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Thu, 17 Mar 2016 21:32:21 -0400
+Received: by mail-yw0-f176.google.com with SMTP id h129so122433321ywb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 18:32:21 -0700 (PDT)
+Date: Thu, 17 Mar 2016 21:32:16 -0400
+From: Jeff Layton <jlayton@poochiereds.net>
+To: Tejun Heo <tj@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Trond Myklebust <trond.myklebust@primarydata.com>,
+	"J. Bruce Fields" <bfields@fieldses.org>,
+	Anna Schumaker <anna.schumaker@netapp.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	Amitoj Kaur Chawla <amitoj1606@gmail.com>,
+	kernel-team@fb.com, Johannes Weiner <hannes@cmpxchg.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Eva Rachel Retuya <eraretuya@gmail.com>,
+	Bhaktipriya Shridhar <bhaktipriya96@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFD] workqueue: WQ_MEM_RECLAIM usage in network drivers
+Message-ID: <20160317213216.731d1fcc@synchrony.poochiereds.net> (sfid-20160318_023250_580240_40E147F1)
+In-Reply-To: <20160317164546.GT21104@mtj.duckdns.org>
+References: <20160317164546.GT21104@mtj.duckdns.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-03-18 at 23:58 -0400, Jes Sorensen wrote:
-> Joe Perches <joe@perches.com> writes:
-> > On Fri, 2016-03-18 at 13:42 -0400, Jes Sorensen wrote:
-> > > Xose Vazquez Perez <xose.vazquez@gmail.com> writes:
-> > > > 
-> > > > People should not waste time and energy working on this staging driver.
-> > > > A replacement(rtl8xxxu) using the kernel wireless stack already was merged
-> > > > in the 4.3 kernel.
-> > []
-> > > 
-> > > > 
-> > > >  drivers/staging/rtl8723au/TODO | 3 +++
-> > > Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
-> > why not git rm drivers/staging/rtl8723au/ ?
-> Because you don't just pull the rug out under people. I plan to mark it
-> obsolete and then remove it in a follow-on release.
+On Thu, 17 Mar 2016 09:45:46 -0700
+Tejun Heo <tj@kernel.org> wrote:
 
-Duh.
+> Hello,
+> 
+> Years ago, workqueue got reimplemented to use common worker pools
+> across different workqueues and a new set of more expressive workqueue
+> creation APIs, alloc_*workqueue() were introduced.  The old
+> create_*workqueue() became simple wrappers around alloc_*workqueue()
+> with the most conservative parameters.  The plan has always been to
+> examine each usage and convert to the new interface with parameters
+> actually required for the use case.
+> 
+> One important flag to decide upon is WQ_MEM_RECLAIM, which declares
+> that the workqueue may be depended upon during memory reclaim and thus
+> must be able to make forward-progress even when further memory can't
+> be allocated without reclaiming some.  Of the network drivers which
+> already use alloc_*workqueue() interface, some specify this flag and
+> I'm wondering what the guidelines should be here.
+> 
+> * Are network devices expected to be able to serve as a part of
+>   storage stack which is depended upon for memory reclamation?
+> 
 
-I note you removed the obsolete suggestion which
-is probably more valuable then updating the TODO.
+I think they should be. Cached NFS pages can consume a lot of memory,
+and flushing them generally takes network device access.
 
-Updating the TODO to something like:
+> * If so, are all the pieces in place for that to work for all (or at
+>   least most) network devices?  If it's only for a subset of NICs, how
+>   can one tell whether a given driver needs forward progress guarantee
+>   or not?
+> 
+> * I assume that wireless drivers aren't and can't be used in this
+>   fashion.  Is that a correction assumption?
+> 
 
-Actual bug fixes only, no other changes accepted.
-This driver is going to be removed by 4.8 or so
+People do mount NFS over wireless interfaces. It's not terribly common
+though, in my experience.
 
-is also probably more valuable than keeping all the
-current items and just adding a note that another
-driver exists.
-
+-- 
+Jeff Layton <jlayton@poochiereds.net>
