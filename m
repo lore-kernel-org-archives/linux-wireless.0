@@ -1,181 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:15926 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758858AbcCVLxf (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33572 "EHLO
+	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750753AbcCRCiM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2016 07:53:35 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 4/9] ath10k: cleanup amsdu processing for rx indication
-Date: Tue, 22 Mar 2016 17:22:14 +0530
-Message-ID: <1458647539-17213-5-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20160322_125338_545146_C874ABE5)
-In-Reply-To: <1458647539-17213-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1458647539-17213-1-git-send-email-rmanohar@qti.qualcomm.com>
+	Thu, 17 Mar 2016 22:38:12 -0400
+Received: by mail-oi0-f67.google.com with SMTP id e22so2021386oib.0
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 19:38:11 -0700 (PDT)
+Subject: Re: [PATCH MOREWORK 16/19] rtlwifi: Implement 'rtl_addr_delay()' with
+ a switch statement
+To: Julian Calaby <julian.calaby@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <cover.1458262312.git.julian.calaby@gmail.com>
+ <bc393706a087bf9746d7e91963e11819a854c4f7.1458262312.git.julian.calaby@gmail.com>
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Byeoungwook Kim <quddnr145@gmail.com>,
+	Markus Elfring <elfring@users.sourceforge.net>,
+	Sara Sharon <sarasharon1@gmail.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Luis Felipe Dominguez Vega <lfdominguez@nauta.cu>,
+	linux-wireless@vger.kernel.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <56EB6A10.5030900@lwfinger.net> (sfid-20160318_033815_609327_E965D352)
+Date: Thu, 17 Mar 2016 21:38:08 -0500
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <bc393706a087bf9746d7e91963e11819a854c4f7.1458262312.git.julian.calaby@gmail.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Make amsdu handlers (i.e amsdu_pop and rx_h_handler) common to both
-rx_ind and frag_ind htt events. It is sufficient to hold rx_ring lock
-for amsdu_pop alone and no need to hold it until the packets are
-delivered to mac80211. This helps to reduce rx_lock contention as well.
+On 03/17/2016 09:28 PM, Julian Calaby wrote:
+> From: Byeoungwook Kim <quddnr145@gmail.com>
+>
+> Doing it this way improves readability.
+>
+> Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
+> [Rewrote commit message]
+> Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+>
+> ---
+>
+> ... or does it.
+>
+> Honesltly, this is only in this list as Byeoungwook asked about it and I
+> can see _some_ sort of reason why it exists.
+>
+> Larry, if you don't like this, please NACK it and we'll never speak of it
+> again.
+>
+> Thanks,
+>
+> Julian Calaby
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/core.c | 20 ++++++++++++++------
+>   1 file changed, 14 insertions(+), 6 deletions(-)
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/htt_rx.c | 100 +++++++++++++------------------
- 1 file changed, 41 insertions(+), 59 deletions(-)
+I thought I had already NACKed it, but just in case:
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index abb712f..3fdbfee 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -1528,20 +1528,49 @@ static void ath10k_htt_rx_h_filter(struct ath10k *ar,
- 	__skb_queue_purge(amsdu);
- }
- 
-+static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
-+{
-+	struct ath10k *ar = htt->ar;
-+	static struct ieee80211_rx_status rx_status;
-+	struct sk_buff_head amsdu;
-+	int ret;
-+
-+	__skb_queue_head_init(&amsdu);
-+
-+	spin_lock_bh(&htt->rx_ring.lock);
-+	if (htt->rx_confused) {
-+		spin_unlock_bh(&htt->rx_ring.lock);
-+		return -EIO;
-+	}
-+	ret = ath10k_htt_rx_amsdu_pop(htt, &amsdu);
-+	spin_unlock_bh(&htt->rx_ring.lock);
-+
-+	if (ret < 0) {
-+		ath10k_warn(ar, "rx ring became corrupted: %d\n", ret);
-+		__skb_queue_purge(&amsdu);
-+		/* FIXME: It's probably a good idea to reboot the
-+		 * device instead of leaving it inoperable.
-+		 */
-+		htt->rx_confused = true;
-+		return ret;
-+	}
-+
-+	ath10k_htt_rx_h_ppdu(ar, &amsdu, &rx_status, 0xffff);
-+	ath10k_htt_rx_h_unchain(ar, &amsdu, ret > 0);
-+	ath10k_htt_rx_h_filter(ar, &amsdu, &rx_status);
-+	ath10k_htt_rx_h_mpdu(ar, &amsdu, &rx_status);
-+	ath10k_htt_rx_h_deliver(ar, &amsdu, &rx_status);
-+
-+	return 0;
-+}
-+
- static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 				  struct htt_rx_indication *rx)
- {
- 	struct ath10k *ar = htt->ar;
--	struct ieee80211_rx_status *rx_status = &htt->rx_status;
- 	struct htt_rx_indication_mpdu_range *mpdu_ranges;
--	struct sk_buff_head amsdu;
- 	int num_mpdu_ranges;
--	int i, ret, mpdu_count = 0;
--
--	lockdep_assert_held(&htt->rx_ring.lock);
--
--	if (htt->rx_confused)
--		return;
-+	int i, mpdu_count = 0;
- 
- 	num_mpdu_ranges = MS(__le32_to_cpu(rx->hdr.info1),
- 			     HTT_RX_INDICATION_INFO1_NUM_MPDU_RANGES);
-@@ -1556,63 +1585,18 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
- 		mpdu_count += mpdu_ranges[i].mpdu_count;
- 
- 	while (mpdu_count--) {
--		__skb_queue_head_init(&amsdu);
--		ret = ath10k_htt_rx_amsdu_pop(htt, &amsdu);
--		if (ret < 0) {
--			ath10k_warn(ar, "rx ring became corrupted: %d\n", ret);
--			__skb_queue_purge(&amsdu);
--			/* FIXME: It's probably a good idea to reboot the
--			 * device instead of leaving it inoperable.
--			 */
--			htt->rx_confused = true;
-+		if (ath10k_htt_rx_handle_amsdu(htt) < 0)
- 			break;
--		}
--
--		ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status, 0xffff);
--		ath10k_htt_rx_h_unchain(ar, &amsdu, ret > 0);
--		ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);
--		ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status);
--		ath10k_htt_rx_h_deliver(ar, &amsdu, rx_status);
- 	}
- 
- 	tasklet_schedule(&htt->rx_replenish_task);
- }
- 
--static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt,
--				       struct htt_rx_fragment_indication *frag)
-+static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt)
- {
--	struct ath10k *ar = htt->ar;
--	struct ieee80211_rx_status *rx_status = &htt->rx_status;
--	struct sk_buff_head amsdu;
--	int ret;
--
--	__skb_queue_head_init(&amsdu);
--
--	spin_lock_bh(&htt->rx_ring.lock);
--	ret = ath10k_htt_rx_amsdu_pop(htt, &amsdu);
--	spin_unlock_bh(&htt->rx_ring.lock);
-+	ath10k_htt_rx_handle_amsdu(htt);
- 
- 	tasklet_schedule(&htt->rx_replenish_task);
--
--	ath10k_dbg(ar, ATH10K_DBG_HTT_DUMP, "htt rx frag ahead\n");
--
--	if (ret) {
--		ath10k_warn(ar, "failed to pop amsdu from httr rx ring for fragmented rx %d\n",
--			    ret);
--		__skb_queue_purge(&amsdu);
--		return;
--	}
--
--	if (skb_queue_len(&amsdu) != 1) {
--		ath10k_warn(ar, "failed to pop frag amsdu: too many msdus\n");
--		__skb_queue_purge(&amsdu);
--		return;
--	}
--
--	ath10k_htt_rx_h_ppdu(ar, &amsdu, rx_status, 0xffff);
--	ath10k_htt_rx_h_filter(ar, &amsdu, rx_status);
--	ath10k_htt_rx_h_mpdu(ar, &amsdu, rx_status);
--	ath10k_htt_rx_h_deliver(ar, &amsdu, rx_status);
- }
- 
- static void ath10k_htt_rx_tx_compl_ind(struct ath10k *ar,
-@@ -2331,7 +2315,7 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
- 	case HTT_T2H_MSG_TYPE_RX_FRAG_IND: {
- 		ath10k_dbg_dump(ar, ATH10K_DBG_HTT_DUMP, NULL, "htt event: ",
- 				skb->data, skb->len);
--		ath10k_htt_rx_frag_handler(htt, &resp->rx_frag_ind);
-+		ath10k_htt_rx_frag_handler(htt);
- 		break;
- 	}
- 	case HTT_T2H_MSG_TYPE_TEST:
-@@ -2473,9 +2457,7 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
- 
- 	while ((skb = __skb_dequeue(&rx_q))) {
- 		resp = (struct htt_resp *)skb->data;
--		spin_lock_bh(&htt->rx_ring.lock);
- 		ath10k_htt_rx_handler(htt, &resp->rx_ind);
--		spin_unlock_bh(&htt->rx_ring.lock);
- 		dev_kfree_skb_any(skb);
- 	}
- 
--- 
-2.7.4
+NACK.
+
+Larry
+
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/core.c b/drivers/net/wireless/realtek/rtlwifi/core.c
+> index 0f48048..1cf367f 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/core.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/core.c
+> @@ -53,18 +53,26 @@ EXPORT_SYMBOL(channel5g_80m);
+>
+>   void rtl_addr_delay(u32 addr)
+>   {
+> -	if (addr == 0xfe)
+> +	switch (addr) {
+> +	case 0xfe:
+>   		msleep(50);
+> -	else if (addr == 0xfd)
+> +		break;
+> +	case 0xfd:
+>   		msleep(5);
+> -	else if (addr == 0xfc)
+> +		break;
+> +	case 0xfc:
+>   		msleep(1);
+> -	else if (addr == 0xfb)
+> +		break;
+> +	case 0xfb:
+>   		usleep_range(50, 100);
+> -	else if (addr == 0xfa)
+> +		break;
+> +	case 0xfa:
+>   		usleep_range(5, 10);
+> -	else if (addr == 0xf9)
+> +		break;
+> +	case 0xf9:
+>   		usleep_range(1, 2);
+> +		break;
+> +	}
+>   }
+>   EXPORT_SYMBOL(rtl_addr_delay);
+>
+>
 
