@@ -1,42 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:9732 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752112AbcCDIkU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 03:40:20 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 0/2] Peer Stats fixes for rx duration
-Date: Fri, 4 Mar 2016 08:40:14 +0000
-Message-ID: <87egbqzleb.fsf@kamboji.qca.qualcomm.com> (sfid-20160304_094026_489558_F43CC8AE)
-References: <1454513863-2703-1-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1454513863-2703-1-git-send-email-mohammed@qca.qualcomm.com>
-	(Mohammed Shafi Shajakhan's message of "Wed, 3 Feb 2016 21:07:41	+0530")
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:56914 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756213AbcCRKdm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2016 06:33:42 -0400
+Date: Fri, 18 Mar 2016 11:31:24 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Markus Elfring <elfring@users.sourceforge.net>,
+	Nicolas Pitre <nico@linaro.org>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	Jia-Ju Bai <baijiaju1990@163.com>,
+	Arnd Bergmann <arnd@arndb.de>, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH CONTROVERSIAL 19/19] iwlegacy: Rename label in
+ il_eeprom_init()
+Message-ID: <20160318103124.GC24990@redhat.com> (sfid-20160318_113356_989317_14E45770)
+References: <cover.1458262312.git.julian.calaby@gmail.com>
+ <90fe6325e407d35a18fa8c8cb7eaa269968d6426.1458262312.git.julian.calaby@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <90fe6325e407d35a18fa8c8cb7eaa269968d6426.1458262312.git.julian.calaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
+On Fri, Mar 18, 2016 at 01:29:39PM +1100, Julian Calaby wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> 
+> Rename a jump label according to the current Linux coding style convention.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> [Rewrote commit title]
+> Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+> 
+> ---
+> 
+> This was controversial when introduced, however the change is obvious and
+> harmless and is, in the worst case, just churn.
+> 
+> I'm only including this as it meets my criteria for sheparding pending
+> patches: it's sane, obviously correct or reviewable by me, and doesn't
+> require any work to apply.
+> 
+> This does meet those requirements, however given how controviersial it was
+> when introduced, I'm not expecting people to be enthusiastic about
+> applying it.
 
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
->
-> This is a small patchset that fixes:
->
-> 1. Updating rx duration per station (part of mac80211 STA debugfs)
-> irrespective user does a cat fw_stats in ath10k debugfs
->
-> 2. Remove updating peer stats list (which is completely useless)
-> when we recieve periodic update of peer stats for updating rx_duration
->
-> Mohammed Shafi Shajakhan (2):
->   ath10k: Fix updating peer stats rx duration
->   ath10k: Fix pointless update of peer stats list
+I don't see the sense of that change, NACK
 
-Both applied, thanks.
+Stanislaw
 
--- 
-Kalle Valo
+
