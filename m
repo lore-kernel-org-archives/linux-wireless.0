@@ -1,52 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:2922 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754716AbcCOObl (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:36447 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754870AbcCRRPq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2016 10:31:41 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>, <kvalo@codeaurora.org>,
-	<mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH 0/2] Parsing per station rx duration for 10.4
-Date: Tue, 15 Mar 2016 20:00:48 +0530
-Message-ID: <1458052250-2529-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160315_153144_253571_CFCF8F92)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Fri, 18 Mar 2016 13:15:46 -0400
+Received: by mail-wm0-f51.google.com with SMTP id l124so38912765wmf.1
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2016 10:15:46 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux Driver Project Developer List
+	<driverdev-devel@linuxdriverproject.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: [PATCH] staging: refresh TODO for rtl8723au
+Date: Fri, 18 Mar 2016 18:15:24 +0100
+Message-Id: <1458321324-16906-1-git-send-email-xose.vazquez@gmail.com> (sfid-20160318_181550_317348_FF946DA9)
+To: unlisted-recipients:; (no To-header on input)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+People should not waste time and energy working on this staging driver.
+A replacement(rtl8xxxu) using the kernel wireless stack already was merged
+in the 4.3 kernel.
 
-Peer Stats for 10.4 is enabled by Extended Resource Configuration
-API (based on one of the earlier patch from Raja Mani), and parsing
-of the same is based also 'stats_id' which also provides backward
-compatibility with older f/w (or) ath10k by design
+Cc: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: Kalle Valo <kvalo@codeaurora.org>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Linux Driver Project Developer List <driverdev-devel@linuxdriverproject.org>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+---
+ drivers/staging/rtl8723au/TODO | 3 +++
+ 1 file changed, 3 insertions(+)
 
-review help:
-
-1. Fixed documentation related comments from Kalle / Michal
-2. Fixed indentation related comments from Michal
-3. Removed the check for excluding peer stats for test mode (Michal)
-4. Fix checking for peer stats feature enabled
-
-Dependency over
-
-[PATCH v5] ath10k: Enable debugfs provision to enable Peer Stats
-
-Mohammed Shafi Shajakhan (1):
-  ath10k: Enable parsing per station rx duration for 10.4
-
-Raja Mani (1):
-  ath10k: Introduce Extended Resource Config support for 10.4
-
- drivers/net/wireless/ath/ath10k/core.c    |   19 +++++++++-
- drivers/net/wireless/ath/ath10k/wmi-ops.h |   23 ++++++++++++
- drivers/net/wireless/ath/ath10k/wmi.c     |   54 +++++++++++++++++++++++++----
- drivers/net/wireless/ath/ath10k/wmi.h     |   49 +++++++++++++++++++++++++-
- 4 files changed, 137 insertions(+), 8 deletions(-)
-
+diff --git a/drivers/staging/rtl8723au/TODO b/drivers/staging/rtl8723au/TODO
+index f5d57d3..42b86e4 100644
+--- a/drivers/staging/rtl8723au/TODO
++++ b/drivers/staging/rtl8723au/TODO
+@@ -9,5 +9,8 @@ TODO:
+ - merge Realtek's bugfixes and new features into the driver
+ - switch to use MAC80211
+ 
++A mac80211 driver for this hardware already was integrated at
++drivers/net/wireless/realtek/rtl8xxxu/
++
+ Please send any patches to Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Jes Sorensen <Jes.Sorensen@redhat.com>, and Larry Finger <Larry.Finger@lwfinger.net>.
 -- 
-1.7.9.5
+2.5.0
 
