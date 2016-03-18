@@ -1,49 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48736 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756270AbcCUQpu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2016 12:45:50 -0400
-MIME-Version: 1.0
-In-Reply-To: <56D4B8DB.5000901@gmail.com>
-References: <56D4B8DB.5000901@gmail.com>
-From: "Luis R. Rodriguez" <mcgrof@kernel.org>
-Date: Mon, 21 Mar 2016 09:45:27 -0700
-Message-ID: <CAB=NE6XdHrU0=MxnXd-UR+BuTkfVEcw6=O3=CPPK6RNpehSW2g@mail.gmail.com> (sfid-20160321_174553_888380_8334A0D3)
-Subject: Re: Google Summer of Code 2016 - The Linux Foundation is accepted as
- mentoring organization!
-To: Till Kamppeter <till.kamppeter@gmail.com>,
-	Julia Lawall <julia.lawall@lip6.fr>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	Greg KH <greg@kroah.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>,
-	"backports@vger.kernel.org" <backports@vger.kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from smtprelay0078.hostedemail.com ([216.40.44.78]:52602 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751271AbcCRDhm (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 17 Mar 2016 23:37:42 -0400
+Message-ID: <1458272258.9556.46.camel@perches.com> (sfid-20160318_043804_079261_8507BFED)
+Subject: Re: [PATCH] rtlwifi: btcoexist: Convert BTC_PRINTK to btc_<foo>_dbg
+From: Joe Perches <joe@perches.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>,
+	linux-kernel@vger.kernel.org
+Cc: Chaoming Li <chaoming_li@realsil.com.cn>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Thu, 17 Mar 2016 20:37:38 -0700
+In-Reply-To: <56EB6DD9.3000300@lwfinger.net>
+References: <4672f9efb37df545ae504d51ca626bf34237fa63.1458258337.git.joe@perches.com>
+	 <56EB6DD9.3000300@lwfinger.net>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, Feb 29, 2016 at 1:32 PM, Till Kamppeter
-<till.kamppeter@gmail.com> wrote:
-> Hi,
->
-> we are accepted as mentoring organization again!
->
-> So please advertise our participation to find students and add more
-> project ideas to the ideas page:
->
-> https://www.linuxfoundation.org/collaborate/workgroups/gsoc/google-summer-code-2016
->
-> Please add your ideas to the sub-page of your work group. If you have
-> problems mail me with your project idea.
+On Thu, 2016-03-17 at 21:54 -0500, Larry Finger wrote:
+> On 03/17/2016 07:00 PM, Joe Perches wrote:
+> > Use a more common logging style.
 
-Thanks,
+[ 300K+ quote without comment ]
 
-We will be coordinating with one student so far that has expressed
-interest in a very specific project in the realm of Linux backports
-which may also help Linux upstream, will be following up with that
-student next.
+> Joe,
 
- Luis
+Hi Larry.
+
+> The patch looks good, but it has conflict in 
+> drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c with the patch 
+> [PATCH 2/2] rtlwifi: btcoexist: Implement antenna selection that I submitted 
+> yesterday.
+
+No worries, it shouldn't be applied during the
+merge window anyway.
+
+The conflict is trivially resolved after the
+merge window is over.
+
+cheers, Joe
