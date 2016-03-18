@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:32864 "EHLO
-	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752486AbcCJCPU (ORCPT
+Received: from mail-pf0-f169.google.com ([209.85.192.169]:34359 "EHLO
+	mail-pf0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751316AbcCRCWJ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 21:15:20 -0500
-Received: by mail-oi0-f51.google.com with SMTP id d205so50734876oia.0
-        for <linux-wireless@vger.kernel.org>; Wed, 09 Mar 2016 18:15:19 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <56E08615.9060208@lwfinger.net>
-References: <56E08615.9060208@lwfinger.net>
-Date: Wed, 9 Mar 2016 18:15:19 -0800
-Message-ID: <CAC0d7Bi9VEN2zADV24DyhkZCp-mgLtDDXODUMfHoVzC0is7xMA@mail.gmail.com> (sfid-20160310_031522_982940_7788D561)
-Subject: Re: New firmware for RT2870
-From: quarkverse <quarkverse@gmail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>, dan.g.tob@gmail.com
-Content-Type: text/plain; charset=UTF-8
+	Thu, 17 Mar 2016 22:22:09 -0400
+Received: by mail-pf0-f169.google.com with SMTP id x3so145786888pfb.1
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 19:22:09 -0700 (PDT)
+From: Julian Calaby <julian.calaby@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org
+Subject: [PATCH 04/19] wl1251: use to_delayed_work()
+Date: Fri, 18 Mar 2016 13:22:03 +1100
+Message-Id: <78647c02da62c57860d2b78e1f0bb1fb9fda1341.1458262312.git.julian.calaby@gmail.com> (sfid-20160318_032213_369653_6BB1A4D6)
+In-Reply-To: <cover.1458262312.git.julian.calaby@gmail.com>
+References: <cover.1458262312.git.julian.calaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I have an RT5370 adapter from Panda Wireless and use it on my Ubuntu
-14.04 laptop.
-It is working fine on my laptop.
+From: Geliang Tang <geliangtang@163.com>
 
->From my laptop:
-rt2x00lib_request_firmware: Info - Firmware detected - version: 0.29
+Use to_delayed_work() instead of open-coding it.
 
-I didn't see the warnings reported in the Bug 114151.
+Signed-off-by: Geliang Tang <geliangtang@163.com>
+[Update commit message]
+Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+---
+ drivers/net/wireless/ti/wl1251/ps.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Just curious how to test version 0.36 on my laptop.
+diff --git a/drivers/net/wireless/ti/wl1251/ps.c b/drivers/net/wireless/ti/wl1251/ps.c
+index b9e27b9..fa01b0a 100644
+--- a/drivers/net/wireless/ti/wl1251/ps.c
++++ b/drivers/net/wireless/ti/wl1251/ps.c
+@@ -32,7 +32,7 @@ void wl1251_elp_work(struct work_struct *work)
+ 	struct delayed_work *dwork;
+ 	struct wl1251 *wl;
+ 
+-	dwork = container_of(work, struct delayed_work, work);
++	dwork = to_delayed_work(work);
+ 	wl = container_of(dwork, struct wl1251, elp_work);
+ 
+ 	wl1251_debug(DEBUG_PSM, "elp work");
+-- 
+2.7.0
 
-Thanks.
-
-Alan
-
-On Wed, Mar 9, 2016 at 12:22 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> In https://bugzilla.kernel.org/show_bug.cgi?id=114151, the OP reports
-> improved stability and performance for an RT5370 using a newer firmware that
-> came with the driver CD. The logs show this to be version 0.36, whereas the
-> version now in linux-firmware is version 0.29.
->
-> I downloaded the firmware from b.k.o. It had very little effect on my
-> no-name adapter with ID 148f:3070. It still gets ping losses of 10-15%.
->
-> Should this new version be submitted to linux-firmware? Its provenance seems
-> to be sketchy, but submission would likely be legal.
->
-> Larry
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
