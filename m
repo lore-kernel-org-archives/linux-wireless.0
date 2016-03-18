@@ -1,32 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f176.google.com ([209.85.220.176]:36677 "EHLO
-	mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753614AbcCZTt7 (ORCPT
+Received: from userp1040.oracle.com ([156.151.31.81]:17133 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752059AbcCRJD5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Mar 2016 15:49:59 -0400
+	Fri, 18 Mar 2016 05:03:57 -0400
+Date: Fri, 18 Mar 2016 12:03:35 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: kvalo@codeaurora.org, devel@driverdev.osuosl.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 7/9] rtlwifi: rtl8723ae: Fix Smatch warning
+Message-ID: <20160318090335.GC30221@mwanda> (sfid-20160318_100402_007744_E942D41E)
+References: <1458240064-31422-1-git-send-email-Larry.Finger@lwfinger.net>
+ <1458240064-31422-8-git-send-email-Larry.Finger@lwfinger.net>
 MIME-Version: 1.0
-In-Reply-To: <56F6E651.9090200@ispras.ru>
-References: <56F4266B.4060605@gmail.com> <1943931458892174@web3o.yandex.ru>
- <56F5D04A.20506@gmail.com> <56F5D11B.7000803@gmail.com> <56F6E651.9090200@ispras.ru>
-From: "Luis R. Rodriguez" <mcgrof@gmail.com>
-Date: Sat, 26 Mar 2016 12:49:39 -0700
-Message-ID: <CAB=NE6WL5OnJTYi99dbuOyh0cenM7NcajfKHQDnbYKYBn67owQ@mail.gmail.com> (sfid-20160326_205002_887485_03F69D18)
-Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
-To: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"backports@vger.kernel.org" <backports@vger.kernel.org>,
-	Steven Rostedt <rostedt@goodmis.org>
-Cc: Till Kamppeter <till.kamppeter@gmail.com>,
-	Evgeny Novikov <novikov@ispras.ru>, Greg KH <greg@kroah.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>,
-	chris holcombe <chris.holcombe@canonical.com>,
-	Chris MacNaughton <chris.macnaughton@canonical.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1458240064-31422-8-git-send-email-Larry.Finger@lwfinger.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I just hit "want to mentor" for the backports one by Cristina-Gabriela Moraru.
+On Thu, Mar 17, 2016 at 01:41:02PM -0500, Larry Finger wrote:
+> Smatch reports the following:
+> 
+>   CHECK   drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
+> drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c:137 rtl8723e_dm_bt_need_to_dec_bt_pwr() warn: inconsistent indenting
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> ---
+>  drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
+> index 00a0531..44de695 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c
+> @@ -134,9 +134,9 @@ static bool rtl8723e_dm_bt_need_to_dec_bt_pwr(struct ieee80211_hw *hw)
+>  	if (mgnt_link_status_query(hw) == RT_MEDIA_CONNECT) {
+>  		RT_TRACE(rtlpriv, COMP_BT_COEXIST, DBG_DMESG,
+>  			"Need to decrease bt power\n");
+> -			rtlpriv->btcoexist.cstate |=
+> -			BT_COEX_STATE_DEC_BT_POWER;
+> -			return true;
+> +		rtlpriv->btcoexist.cstate |=
+> +		BT_COEX_STATE_DEC_BT_POWER;
 
-  Luis
+Now that we have removed the tab, this can fit on one line.
+
+regards,
+dan carpenter
+
