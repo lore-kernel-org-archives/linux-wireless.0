@@ -1,38 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:19444 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757012AbcCCJf4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 04:35:56 -0500
-Date: Thu, 3 Mar 2016 10:35:52 +0100
-From: Samuel Ortiz <sameo@linux.intel.com>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
-	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>
-Subject: Re: [PATCH] nfc: pn544: Drop two useless checks in ACPI probe path
-Message-ID: <20160303093552.GA28928@zurbaran.home> (sfid-20160303_103600_461720_0660F283)
-References: <1456997178-7673-1-git-send-email-mika.westerberg@linux.intel.com>
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:63112 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936AbcCRH6S convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2016 03:58:18 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Thiagarajan, Vasanthakumar" <vthiagar@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: Advertise force AP scan feature
+Date: Fri, 18 Mar 2016 07:58:10 +0000
+Message-ID: <871t78i5f1.fsf@kamboji.qca.qualcomm.com> (sfid-20160318_085820_934408_D5DE780A)
+References: <1458035753-20727-1-git-send-email-vthiagar@qti.qualcomm.com>
+In-Reply-To: <1458035753-20727-1-git-send-email-vthiagar@qti.qualcomm.com>
+	(Vasanthakumar Thiagarajan's message of "Tue, 15 Mar 2016 15:25:53	+0530")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1456997178-7673-1-git-send-email-mika.westerberg@linux.intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mika,
+Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com> writes:
 
-On Thu, Mar 03, 2016 at 11:26:18AM +0200, Mika Westerberg wrote:
-> When pn544_hci_i2c_acpi_request_resources() gets called we already know
-> that the entries in ->acpi_match_table have matched ACPI ID of the device.
-> In addition I2C client pointer cannot be NULL in any case (otherwise I2C
-> core would not call ->probe() for the driver in the first place).
-> 
-> Drop the two useless checks from the driver.
-> 
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-> ---
->  drivers/nfc/pn544/i2c.c | 14 +-------------
->  1 file changed, 1 insertion(+), 13 deletions(-)
-Applied to nfc-next, thanks.
+> Results obtained from scan can be used for spectrum management by
+> doing something like building information of preferred channel
+> lists and sharing them with stations around. It is to be noted
+> that traffic to the connected stations would be affected during
+> the scan.
+>
+> Signed-off-by: Vasanthakumar Thiagarajan <vthiagar@qti.qualcomm.com>
 
-Cheers,
-Samuel.
+Applied, thanks.
+
+-- 
+Kalle Valo
