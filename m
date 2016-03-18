@@ -1,40 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:32912 "EHLO
-	mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753338AbcCYW6w (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:18563 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751229AbcCRHyv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Mar 2016 18:58:52 -0400
-Received: by mail-qk0-f194.google.com with SMTP id q184so4436947qkb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2016 15:58:51 -0700 (PDT)
-Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
-To: Greg KH <greg@kroah.com>, Evgeny Novikov <novikov@ispras.ru>
-References: <56F4266B.4060605@gmail.com> <1943931458892174@web3o.yandex.ru>
- <20160325172328.GC26115@kroah.com>
-Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>
-From: Till Kamppeter <till.kamppeter@gmail.com>
-Message-ID: <56F5C2A7.3060400@gmail.com> (sfid-20160325_235855_416742_35F4C3FD)
-Date: Fri, 25 Mar 2016 19:58:47 -0300
+	Fri, 18 Mar 2016 03:54:51 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Raja Mani <rmani@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] ath10k: free cached fw bin contents when get board id
+ fails
+Date: Fri, 18 Mar 2016 07:54:46 +0000
+Message-ID: <87a8lwi5kq.fsf@kamboji.qca.qualcomm.com> (sfid-20160318_085454_562798_4A469D79)
+References: <1457585707-11344-1-git-send-email-rmani@qti.qualcomm.com>
+In-Reply-To: <1457585707-11344-1-git-send-email-rmani@qti.qualcomm.com> (Raja
+	Mani's message of "Thu, 10 Mar 2016 10:25:07 +0530")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <20160325172328.GC26115@kroah.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/25/2016 02:23 PM, Greg KH wrote:
-> I didn't see anywhere to "star" an application,
-> why do some have that mark and others do not?
+Raja Mani <rmani@qti.qualcomm.com> writes:
 
-You can click the start in the list of applications or click the "STAR" 
-option on the proposal page.
+> ath10k_core_probe_fw() simply returns error without freeing
+> cached firmware file content when get board id operation fails.
+> Free cached fw bin data in failure case to avoid memory leak.
+>
+> Fixes: db0984e51a18 ("ath10k: select board data based on BMI chip id and board id")
+> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
 
-This is to mark if you really want this student/project. Note that it is 
-only for our internal use, Google does not see/use the star settings.
+Applied, thanks.
 
-    Till
-
-
+-- 
+Kalle Valo
