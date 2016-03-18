@@ -1,94 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:51900 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753336AbcCBH5l (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 02:57:41 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 38/43] iwlwifi: pcie: detect and workaround invalid write ptr behavior
-Date: Wed,  2 Mar 2016 09:56:39 +0200
-Message-Id: <1456905404-14435-38-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085952_392870_D74273B1)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:62350 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753190AbcCRIuT convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2016 04:50:19 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Marty Faltesek <mfaltesek@google.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: RE: [PATCH] mwifiex: bridged packets cause wmm_tx_pending counter to
+ go negative
+Date: Fri, 18 Mar 2016 08:50:15 +0000
+Message-ID: <df2281ad1cff49c1a2cf6cc0281c219c@SC-EXCH04.marvell.com> (sfid-20160318_095052_315287_606F73F3)
+References: <1457997683-14553-1-git-send-email-mfaltesek@google.com>
+In-Reply-To: <1457997683-14553-1-git-send-email-mfaltesek@google.com>
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+> From: Marty Faltesek [mailto:mfaltesek@google.com]
+> Sent: Tuesday, March 15, 2016 4:51 AM
+> To: Amitkumar Karwar
+> Cc: linux-wireless@vger.kernel.org
+> Subject: [PATCH] mwifiex: bridged packets cause wmm_tx_pending counter
+> to go negative
+> 
+> When a packet is queued from the bridge, wmm_tx_pending is not
+> incremented, but when the packet is dequeued the counter is decremented.
+> 
+> ---
+>  drivers/net/wireless/marvell/mwifiex/uap_txrx.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+> b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+> index 52f7981..193a809 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+> @@ -102,6 +102,7 @@ static void mwifiex_uap_queue_bridged_pkt(struct
+> mwifiex_private *priv,
+>  	int hdr_chop;
+>  	struct ethhdr *p_ethhdr;
+>  	struct mwifiex_sta_node *src_node;
+> +	int index;
+> 
+>  	uap_rx_pd = (struct uap_rxpd *)(skb->data);
+>  	rx_pkt_hdr = (void *)uap_rx_pd + le16_to_cpu(uap_rx_pd-
+> >rx_pkt_offset);
+> @@ -208,6 +209,9 @@ static void mwifiex_uap_queue_bridged_pkt(struct
+> mwifiex_private *priv,
+>  	}
+> 
+>  	__net_timestamp(skb);
+> +
+> +	index = mwifiex_1d_to_wmm_queue[skb->priority];
+> +	atomic_inc(&priv->wmm_tx_pending[index]);
+>  	mwifiex_wmm_add_buf_txqueue(priv, skb);
+>  	atomic_inc(&adapter->tx_pending);
+>  	atomic_inc(&adapter->pending_bridged_pkts);
+> --
+> 2.7.0.rc3.207.g0ac5344
 
-In 9000 series A0 step the closed_rb_num is not wrapping around
-properly. The queue is wrapping around as it should, so we can
-W/A it by wrapping the closed_rb_num in the driver.
-While at it, extend RX logging and add error handling of other
-cases HW values may cause us to access invalid memory locations.
-Add also a proper masking of vid value read from HW - this should
-not have actual affect, but better to be on the safe side.
+Looks fine.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/rx.c | 17 +++++++++++++----
- 1 file changed, 13 insertions(+), 4 deletions(-)
+Acked-by: Amitkumar Karwar <akarwar@marvell.com>
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-index 398dd93..489b07a 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
-@@ -1159,9 +1159,12 @@ restart:
- 	r = le16_to_cpu(ACCESS_ONCE(rxq->rb_stts->closed_rb_num)) & 0x0FFF;
- 	i = rxq->read;
- 
-+	/* W/A 9000 device step A0 wrap-around bug */
-+	r &= (rxq->queue_size - 1);
-+
- 	/* Rx interrupt, but nothing sent from uCode */
- 	if (i == r)
--		IWL_DEBUG_RX(trans, "HW = SW = %d\n", r);
-+		IWL_DEBUG_RX(trans, "Q %d: HW = SW = %d\n", rxq->id, r);
- 
- 	while (i != r) {
- 		struct iwl_rx_mem_buffer *rxb;
-@@ -1174,15 +1177,18 @@ restart:
- 			 * used_bd is a 32 bit but only 12 are used to retrieve
- 			 * the vid
- 			 */
--			u16 vid = (u16)le32_to_cpu(rxq->used_bd[i]);
-+			u16 vid = le32_to_cpu(rxq->used_bd[i]) & 0x0FFF;
- 
-+			if (WARN(vid >= ARRAY_SIZE(trans_pcie->global_table),
-+				 "Invalid rxb index from HW %u\n", (u32)vid))
-+				goto out;
- 			rxb = trans_pcie->global_table[vid];
- 		} else {
- 			rxb = rxq->queue[i];
- 			rxq->queue[i] = NULL;
- 		}
- 
--		IWL_DEBUG_RX(trans, "rxbuf: HW = %d, SW = %d\n", r, i);
-+		IWL_DEBUG_RX(trans, "Q %d: HW = %d, SW = %d\n", rxq->id, r, i);
- 		iwl_pcie_rx_handle_rb(trans, rxq, rxb, emergency);
- 
- 		i = (i + 1) & (rxq->queue_size - 1);
-@@ -1245,7 +1251,7 @@ restart:
- 			goto restart;
- 		}
- 	}
--
-+out:
- 	/* Backtrack one entry */
- 	rxq->read = i;
- 	spin_unlock(&rxq->lock);
-@@ -1301,6 +1307,9 @@ irqreturn_t iwl_pcie_irq_rx_msix_handler(int irq, void *dev_id)
- 	struct iwl_trans_pcie *trans_pcie = iwl_pcie_get_trans_pcie(entry);
- 	struct iwl_trans *trans = trans_pcie->trans;
- 
-+	if (WARN_ON(entry->entry >= trans->num_rx_queues))
-+		return IRQ_NONE;
-+
- 	lock_map_acquire(&trans->sync_cmd_lockdep_map);
- 
- 	local_bh_disable();
--- 
-2.5.0
-
+Regards,
+Amitkumar
