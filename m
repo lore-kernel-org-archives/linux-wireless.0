@@ -1,119 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48537 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752155AbcCGCjM (ORCPT
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:36074 "EHLO
+	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751465AbcCRCQe (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 21:39:12 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH v4 5/8] ath9k: Allow platform override BTCoex pin
-Date: Mon,  7 Mar 2016 10:38:18 +0800
-Message-Id: <1457318301-27701-6-git-send-email-miaoqing@codeaurora.org> (sfid-20160307_033925_689400_4CDCB424)
-In-Reply-To: <1457318301-27701-1-git-send-email-miaoqing@codeaurora.org>
-References: <1457318301-27701-1-git-send-email-miaoqing@codeaurora.org>
+	Thu, 17 Mar 2016 22:16:34 -0400
+Received: by mail-pf0-f173.google.com with SMTP id u190so145883717pfb.3
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 19:16:34 -0700 (PDT)
+From: Julian Calaby <julian.calaby@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Ivan Safonov <insafonov@gmail.com>,
+	Miaoqing Pan <miaoqing@codeaurora.org>,
+	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org
+Subject: [PATCH 01/19] ath9k: Remove unnecessary ?: operator
+Date: Fri, 18 Mar 2016 13:16:26 +1100
+Message-Id: <61d140e53a590054c5981788ed12fdda9ef4c0bb.1458262312.git.julian.calaby@gmail.com> (sfid-20160318_031638_147536_C118A3C8)
+In-Reply-To: <cover.1458262312.git.julian.calaby@gmail.com>
+References: <cover.1458262312.git.julian.calaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+From: Ivan Safonov <insafonov@gmail.com>
 
-Add new platform data to allow override BTCoex default pin.
+"(thermometer < 0) ? 0 : (thermometer == X)" is equivalent to
+"thermometer == X" for X >= 0.
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Signed-off-by: Ivan Safonov <insafonov@gmail.com>
+[Updated commit message]
+Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
 ---
- drivers/net/wireless/ath/ath9k/btcoex.c | 45 +++++++++++++++++++++++++--------
- include/linux/ath9k_platform.h          |  4 +++
- 2 files changed, 39 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar9003_eeprom.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index 4737aa9..95a810b 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -15,6 +15,8 @@
-  */
+diff --git a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+index 54ed2f7..a049f8d 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
++++ b/drivers/net/wireless/ath/ath9k/ar9003_eeprom.c
+@@ -4097,16 +4097,16 @@ static void ar9003_hw_thermometer_apply(struct ath_hw *ah)
+ 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
+ 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON_OVR, therm_on);
  
- #include <linux/export.h>
-+#include <linux/types.h>
-+#include <linux/ath9k_platform.h>
- #include "hw.h"
- 
- enum ath_bt_mode {
-@@ -90,6 +92,29 @@ void ath9k_hw_init_btcoex_hw(struct ath_hw *ah, int qnum)
- }
- EXPORT_SYMBOL(ath9k_hw_init_btcoex_hw);
- 
-+static void ath9k_hw_btcoex_pin_init(struct ath_hw *ah, u8 wlanactive_gpio,
-+				     u8 btactive_gpio, u8 btpriority_gpio)
-+{
-+	struct ath_btcoex_hw *btcoex_hw = &ah->btcoex_hw;
-+	struct ath9k_platform_data *pdata = ah->dev->platform_data;
-+
-+	if (btcoex_hw->scheme != ATH_BTCOEX_CFG_2WIRE &&
-+	    btcoex_hw->scheme != ATH_BTCOEX_CFG_3WIRE)
-+		return;
-+
-+	/* bt priority GPIO will be ignored by 2 wire scheme */
-+	if (pdata && (pdata->bt_active_pin || pdata->bt_priority_pin ||
-+		      pdata->wlan_active_pin)) {
-+		btcoex_hw->btactive_gpio = pdata->bt_active_pin;
-+		btcoex_hw->wlanactive_gpio = pdata->wlan_active_pin;
-+		btcoex_hw->btpriority_gpio = pdata->bt_priority_pin;
-+	} else {
-+		btcoex_hw->btactive_gpio = btactive_gpio;
-+		btcoex_hw->wlanactive_gpio = wlanactive_gpio;
-+		btcoex_hw->btpriority_gpio = btpriority_gpio;
-+	}
-+}
-+
- void ath9k_hw_btcoex_init_scheme(struct ath_hw *ah)
- {
- 	struct ath_common *common = ath9k_hw_common(ah);
-@@ -107,19 +132,19 @@ void ath9k_hw_btcoex_init_scheme(struct ath_hw *ah)
- 		btcoex_hw->scheme = ATH_BTCOEX_CFG_MCI;
- 	} else if (AR_SREV_9300_20_OR_LATER(ah)) {
- 		btcoex_hw->scheme = ATH_BTCOEX_CFG_3WIRE;
--		btcoex_hw->btactive_gpio = ATH_BTACTIVE_GPIO_9300;
--		btcoex_hw->wlanactive_gpio = ATH_WLANACTIVE_GPIO_9300;
--		btcoex_hw->btpriority_gpio = ATH_BTPRIORITY_GPIO_9300;
--	} else if (AR_SREV_9280_20_OR_LATER(ah)) {
--		btcoex_hw->btactive_gpio = ATH_BTACTIVE_GPIO_9280;
--		btcoex_hw->wlanactive_gpio = ATH_WLANACTIVE_GPIO_9280;
- 
--		if (AR_SREV_9285(ah)) {
-+		ath9k_hw_btcoex_pin_init(ah, ATH_WLANACTIVE_GPIO_9300,
-+					 ATH_BTACTIVE_GPIO_9300,
-+					 ATH_BTPRIORITY_GPIO_9300);
-+	} else if (AR_SREV_9280_20_OR_LATER(ah)) {
-+		if (AR_SREV_9285(ah))
- 			btcoex_hw->scheme = ATH_BTCOEX_CFG_3WIRE;
--			btcoex_hw->btpriority_gpio = ATH_BTPRIORITY_GPIO_9285;
--		} else {
-+		else
- 			btcoex_hw->scheme = ATH_BTCOEX_CFG_2WIRE;
--		}
-+
-+		ath9k_hw_btcoex_pin_init(ah, ATH_WLANACTIVE_GPIO_9280,
-+					 ATH_BTACTIVE_GPIO_9280,
-+					 ATH_BTPRIORITY_GPIO_9285);
+-	therm_on = (thermometer < 0) ? 0 : (thermometer == 0);
++	therm_on = thermometer == 0;
+ 	REG_RMW_FIELD(ah, AR_PHY_65NM_CH0_RXTX4,
+ 		      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
+ 	if (pCap->chip_chainmask & BIT(1)) {
+-		therm_on = (thermometer < 0) ? 0 : (thermometer == 1);
++		therm_on = thermometer == 1;
+ 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH1_RXTX4,
+ 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
  	}
- }
- EXPORT_SYMBOL(ath9k_hw_btcoex_init_scheme);
-diff --git a/include/linux/ath9k_platform.h b/include/linux/ath9k_platform.h
-index 33eb274..e66153d 100644
---- a/include/linux/ath9k_platform.h
-+++ b/include/linux/ath9k_platform.h
-@@ -31,6 +31,10 @@ struct ath9k_platform_data {
- 	u32 gpio_mask;
- 	u32 gpio_val;
- 
-+	u32 bt_active_pin;
-+	u32 bt_priority_pin;
-+	u32 wlan_active_pin;
-+
- 	bool endian_check;
- 	bool is_clk_25mhz;
- 	bool tx_gain_buffalo;
+ 	if (pCap->chip_chainmask & BIT(2)) {
+-		therm_on = (thermometer < 0) ? 0 : (thermometer == 2);
++		therm_on = thermometer == 2;
+ 		REG_RMW_FIELD(ah, AR_PHY_65NM_CH2_RXTX4,
+ 			      AR_PHY_65NM_CH0_RXTX4_THERM_ON, therm_on);
+ 	}
 -- 
-1.9.1
+2.7.0
 
