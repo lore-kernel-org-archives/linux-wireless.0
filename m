@@ -1,50 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57525 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755409AbcCUOYg (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:37164 "EHLO
+	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752538AbcCRTwm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2016 10:24:36 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "David S. Miller" <davem@davemloft.net>, netdev@vger.kernel.org,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 4/5] ath9k: fix misleading indentation
-References: <1457965120-3155420-1-git-send-email-arnd@arndb.de>
-	<1457965120-3155420-5-git-send-email-arnd@arndb.de>
-Date: Mon, 21 Mar 2016 16:24:31 +0200
-In-Reply-To: <1457965120-3155420-5-git-send-email-arnd@arndb.de> (Arnd
-	Bergmann's message of "Mon, 14 Mar 2016 15:18:37 +0100")
-Message-ID: <87h9fzhpsw.fsf@purkki.adurom.net> (sfid-20160321_152456_062883_0785A53C)
+	Fri, 18 Mar 2016 15:52:42 -0400
+Received: by mail-wm0-f41.google.com with SMTP id p65so51492489wmp.0
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2016 12:52:40 -0700 (PDT)
+Subject: Re: pull request: iwlwifi-2016-02-16
+To: "Coelho, Luciano" <luciano.coelho@intel.com>
+References: <0BA3FCBA62E2DC44AF3030971E174FB32EA13D1A@hasmsx107.ger.corp.intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <56EC5C83.6070708@broadcom.com> (sfid-20160318_205245_981585_99B650D8)
+Date: Fri, 18 Mar 2016 20:52:35 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA13D1A@hasmsx107.ger.corp.intel.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arnd Bergmann <arnd@arndb.de> writes:
+On 15-2-2016 12:57, Grumbach, Emmanuel wrote:
+> * Luca fixes a very visible bug in scheduled scan: our firmware
+>   doesn't support scheduled scan with no profile configured and
+>   the supplicant sometimes requests such scheduled scans.
 
-> A cleanup patch in linux-3.18 moved around some code in the ath9k
-> driver and left some code to be indented in a misleading way,
-> made worse by the addition of some new code for p2p mode, as
-> discovered by a new gcc-6 warning:
->
-> drivers/net/wireless/ath/ath9k/init.c: In function 'ath9k_set_hw_capab':
-> drivers/net/wireless/ath/ath9k/init.c:851:4: warning: statement is indented as if it were guarded by... [-Wmisleading-indentation]
->     hw->wiphy->iface_combinations = if_comb;
->     ^~
-> drivers/net/wireless/ath/ath9k/init.c:847:3: note: ...this 'if' clause, but it is not
->    if (ath9k_is_chanctx_enabled())
->    ^~
->
-> The code is in fact correct, but the indentation is not, so I'm
-> reformatting it as it should have been after the original cleanup.
->
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Fixes: 499afaccf6f3 ("ath9k: Isolate ath9k_use_chanctx module parameter")
-> Fixes: eb61f9f623f7 ("ath9k: advertise p2p dev support when chanctx")
+Hi Luca,
 
-Dave already applied this so I can skip this.
+I have seen this happening as well, but did not find the exact scenario
+in which supplicant does this. Would you happen to know?
 
--- 
-Kalle Valo
+Regards,
+Arend
