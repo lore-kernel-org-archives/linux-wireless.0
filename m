@@ -1,70 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.15.19]:56322 "EHLO mout.gmx.net"
+Received: from lists.s-osg.org ([54.187.51.154]:54713 "EHLO lists.s-osg.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750903AbcCZF0E (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Mar 2016 01:26:04 -0400
-From: Oleksij Rempel <linux@rempel-privat.de>
-Subject: Re: test suite for ath9k_htc
-To: bruce m beach <brucembeach@gmail.com>,
-	linux-wireless@vger.kernel.org
-References: <CAArymCm7ewR74MkQavRey=O+-mP-TGNJveAomRTTpu9EH5OHtA@mail.gmail.com>
-Message-ID: <56F61D5F.1040308@rempel-privat.de> (sfid-20160326_063253_372655_A69715AA)
-Date: Sat, 26 Mar 2016 06:25:51 +0100
+	id S1752170AbcCRSyj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2016 14:54:39 -0400
+Message-ID: <56EC4EEA.8040201@osg.samsung.com> (sfid-20160318_195457_621254_B90CFE5A)
+Date: Fri, 18 Mar 2016 18:54:34 +0000
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
 MIME-Version: 1.0
-In-Reply-To: <CAArymCm7ewR74MkQavRey=O+-mP-TGNJveAomRTTpu9EH5OHtA@mail.gmail.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="vqMEc01k9x0gkrlkIfdEIws7cxJJPeUsI"
+To: linux-kernel@vger.kernel.org
+CC: johannes@sipsolutions.net, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] mac80211: add doc for RX_FLAG_DUP_VALIDATED flag
+References: <1458317369-28185-1-git-send-email-luisbg@osg.samsung.com>
+In-Reply-To: <1458317369-28185-1-git-send-email-luisbg@osg.samsung.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---vqMEc01k9x0gkrlkIfdEIws7cxJJPeUsI
-Content-Type: multipart/mixed; boundary="6Mrf4h9nr5Gea9Srjp6Nq0EhHkD3nJbS9"
-From: Oleksij Rempel <linux@rempel-privat.de>
-To: bruce m beach <brucembeach@gmail.com>, linux-wireless@vger.kernel.org
-Message-ID: <56F61D5F.1040308@rempel-privat.de>
-Subject: Re: test suite for ath9k_htc
-References: <CAArymCm7ewR74MkQavRey=O+-mP-TGNJveAomRTTpu9EH5OHtA@mail.gmail.com>
-In-Reply-To: <CAArymCm7ewR74MkQavRey=O+-mP-TGNJveAomRTTpu9EH5OHtA@mail.gmail.com>
+On 18/03/16 16:09, Luis de Bethencourt wrote:
+> Add documentation for the flag for duplication check.
+> 
+> Fixes the following warning when running make htmldocs:
+> warning: Enum value 'RX_FLAG_DUP_VALIDATED' not described in enum 'mac80211_rx_flags'
+> 
+> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+> ---
+> Hi,
+> 
+> While running make htmldocs I noticed a warning about RX_FLAG_DUP_VALIDATED
+> missing a description. This patch fixes this.
+> 
+> I have noticed the order of the descriptions of the mac80211_rx_flags doesn't
+> match the order in the enum. I am happy to fix this if it would be of interest.
+> 
+> Thanks,
+> Luis
+> 
+>  include/net/mac80211.h | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+> index a53333c..42c8cde 100644
+> --- a/include/net/mac80211.h
+> +++ b/include/net/mac80211.h
+> @@ -1001,6 +1001,8 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+>   *	flag indicates that the PN was verified for replay protection.
+>   *	Note that this flag is also currently only supported when a frame
+>   *	is also decrypted (ie. @RX_FLAG_DECRYPTED must be set)
+> + * @RX_FLAG_DUP_VALIDATED: Set this flag for the driver to check for packet
+> + *	duplication by itself.
+>   * @RX_FLAG_FAILED_FCS_CRC: Set this flag if the FCS check failed on
+>   *	the frame.
+>   * @RX_FLAG_FAILED_PLCP_CRC: Set this flag if the PCLP check failed on
+> 
 
---6Mrf4h9nr5Gea9Srjp6Nq0EhHkD3nJbS9
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Please ignore the second patch I replied to this one. It is wrong due to my
+misunderstanding.
 
-Am 25.03.2016 um 18:03 schrieb bruce m beach:
-> Hello
->=20
->  I have been working on cleaning up ath9k_htc firmware build tree for a=
-bout 3
-> months now( and looks like I'll be doing this for all eternity) and am =
-looking
-> for a low-level test-suite that exists or I write myself or a combinati=
-on of
-> both, so I invite comment.
+This above patch adding RX_FLAG_DUP_VALIDATED is correct and I believe it to be
+valid.
 
-Suddenly I'm not aware of any low-level test-suite.
-
-what are your thoughts about it? What exactly do you wont to test?
---=20
-Regards,
-Oleksij
-
-
-
---6Mrf4h9nr5Gea9Srjp6Nq0EhHkD3nJbS9--
-
---vqMEc01k9x0gkrlkIfdEIws7cxJJPeUsI
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iF4EAREIAAYFAlb2HWQACgkQHwImuRkmbWkcmgD+In6G+rs69ipbKRxVmsC7mEeL
-pVmkA3RI48MDr4eK6vYA/iVm6AKJZsbzXpvUxwbd5PpZDYX9ctfDg8juV0iTCpqJ
-=c5Rv
------END PGP SIGNATURE-----
-
---vqMEc01k9x0gkrlkIfdEIws7cxJJPeUsI--
+Thanks for the reviews,
+Luis
