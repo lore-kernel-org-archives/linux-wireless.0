@@ -1,86 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:36866 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751094AbcCHNB3 convert rfc822-to-8bit (ORCPT
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:33139 "EHLO
+	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751316AbcCRCVh (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2016 08:01:29 -0500
-Received: by mail-wm0-f48.google.com with SMTP id p65so26567963wmp.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2016 05:01:28 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <aa44bd32c9f94d8d1a90840189ac0602@codeaurora.org>
-References: <1457438096-20071-1-git-send-email-rmanohar@qti.qualcomm.com>
-	<CA+BoTQ=Huzf7WoXMXcyj8yrykrJOd5BMc1EnmccqZgt7M1M_uA@mail.gmail.com>
-	<aa44bd32c9f94d8d1a90840189ac0602@codeaurora.org>
-Date: Tue, 8 Mar 2016 14:01:27 +0100
-Message-ID: <CA+BoTQk3i9QjF-W_1AZpMcwyceO-KDx8=R-swP0J-thqdxRcMg@mail.gmail.com> (sfid-20160308_140136_590636_F8421B94)
-Subject: Re: [PATCH v3] ath10k: move mgmt descriptor limit handle under mgmt_tx
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Rajkumar Manoharan <rmanohar@codeaurora.org>
-Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Thu, 17 Mar 2016 22:21:37 -0400
+Received: by mail-pf0-f175.google.com with SMTP id 4so15013528pfd.0
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 19:21:37 -0700 (PDT)
+From: Julian Calaby <julian.calaby@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Johannes Berg <johannes.berg@intel.com>,
+	Eliad Peller <eliad@wizery.com>,
+	Tony Lindgren <tony@atomide.com>,
+	Luciano Coelho <luca@coelho.fi>,
+	Shahar Patury <shaharp@ti.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Eyal Reizer <eyalreizer@gmail.com>,
+	Geliang Tang <geliangtang@163.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 03/19] wlcore: use to_delayed_work()
+Date: Fri, 18 Mar 2016 13:21:28 +1100
+Message-Id: <f51982068829589a8530789dfc61383d3b0cf021.1458262312.git.julian.calaby@gmail.com> (sfid-20160318_032141_484937_5F757088)
+In-Reply-To: <cover.1458262312.git.julian.calaby@gmail.com>
+References: <cover.1458262312.git.julian.calaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 March 2016 at 13:54, Rajkumar Manoharan <rmanohar@codeaurora.org> wrote:
-> On , Michal Kazior wrote:
->>
->> On 8 March 2016 at 12:54, Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
->> wrote:
->> [...]
->>>
->>> +int ath10k_htt_tx_mgmt_inc_pending(struct ath10k_htt *htt, bool is_mgmt,
->>> +                                  bool is_presp)
->>>  {
->>>         struct ath10k *ar = htt->ar;
->>>
->>>         lockdep_assert_held(&htt->tx_lock);
->>>
->>> +       if (!is_mgmt)
->>> +               return 0;
->>> +
->>
->>
->>>         if (htt->num_pending_tx >= htt->max_num_pending_tx)
->>>                 return -EBUSY;
->>
->>
->> This busy here will be hit when you use last tx slot because
->> tx_inc_pending() is called before tx_mgmt_inc_pending().
->>
-> Yeah.. now this condition is not needed as ath10k_htt_tx_mgmt_inc_pending
-> will be called only when tx_inc_pending succeeds. will remove this.
->
->>
->> [...]
->>>
->>>         skb_cb = ATH10K_SKB_CB(msdu);
->>>         txq = skb_cb->txq;
->>>         artxq = (void *)txq->drv_priv;
->>>
->>> -       if (unlikely(skb_cb->flags & ATH10K_SKB_F_MGMT) &&
->>> -           ar->hw_params.max_probe_resp_desc_thres)
->>> -               limit_mgmt_desc = true;
->>> -
->>
->>
->> Oh wait.. I didn't pay attention before, but this looks rather ugly.
->> With this you will actually make the num_pending_mgmt_tx spin
->> endlessly upwards on firmware with HTT 3.0 (and uses TX_FRM for mgmt
->> tx and TX_COMPL_IND for completions), no?
->>
-> Oops.. num_pending_mgmt_tx should be incremented only for MGMT_TX. Thats
-> why it is moved out of txrx_tx_unref.
+From: Geliang Tang <geliangtang@163.com>
 
-Hmm.. in that case I think you should change is_htt in mac_op_tx() to
-compare only against TX_HTT_MGMT (instead of both TX_HTT and
-TX_HTT_MGMT).
+Use to_delayed_work() instead of open-coding it.
 
-Note, the is_mgmt should stay as it is possible for the TX_HTT_MGMT to
-be used for non-mgmt frames in some cases. This also implies you need
-to check for ATH10K_SKB_F_MGMT on the mgmt-tx-completion event as well
-(you might get to handle NullFunc there).
+Signed-off-by: Geliang Tang <geliangtang@163.com>
+[Update commit message]
+Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+---
+ drivers/net/wireless/ti/wlcore/main.c | 10 +++++-----
+ drivers/net/wireless/ti/wlcore/ps.c   |  2 +-
+ drivers/net/wireless/ti/wlcore/scan.c |  2 +-
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/net/wireless/ti/wlcore/main.c b/drivers/net/wireless/ti/wlcore/main.c
+index dde3620..a872a07 100644
+--- a/drivers/net/wireless/ti/wlcore/main.c
++++ b/drivers/net/wireless/ti/wlcore/main.c
+@@ -243,7 +243,7 @@ static void wl12xx_tx_watchdog_work(struct work_struct *work)
+ 	struct delayed_work *dwork;
+ 	struct wl1271 *wl;
+ 
+-	dwork = container_of(work, struct delayed_work, work);
++	dwork = to_delayed_work(work);
+ 	wl = container_of(dwork, struct wl1271, tx_watchdog_work);
+ 
+ 	mutex_lock(&wl->mutex);
+@@ -2011,7 +2011,7 @@ static void wlcore_channel_switch_work(struct work_struct *work)
+ 	struct wl12xx_vif *wlvif;
+ 	int ret;
+ 
+-	dwork = container_of(work, struct delayed_work, work);
++	dwork = to_delayed_work(work);
+ 	wlvif = container_of(dwork, struct wl12xx_vif, channel_switch_work);
+ 	wl = wlvif->wl;
+ 
+@@ -2047,7 +2047,7 @@ static void wlcore_connection_loss_work(struct work_struct *work)
+ 	struct ieee80211_vif *vif;
+ 	struct wl12xx_vif *wlvif;
+ 
+-	dwork = container_of(work, struct delayed_work, work);
++	dwork = to_delayed_work(work);
+ 	wlvif = container_of(dwork, struct wl12xx_vif, connection_loss_work);
+ 	wl = wlvif->wl;
+ 
+@@ -2076,7 +2076,7 @@ static void wlcore_pending_auth_complete_work(struct work_struct *work)
+ 	unsigned long time_spare;
+ 	int ret;
+ 
+-	dwork = container_of(work, struct delayed_work, work);
++	dwork = to_delayed_work(work);
+ 	wlvif = container_of(dwork, struct wl12xx_vif,
+ 			     pending_auth_complete_work);
+ 	wl = wlvif->wl;
+@@ -5588,7 +5588,7 @@ static void wlcore_roc_complete_work(struct work_struct *work)
+ 	struct wl1271 *wl;
+ 	int ret;
+ 
+-	dwork = container_of(work, struct delayed_work, work);
++	dwork = to_delayed_work(work);
+ 	wl = container_of(dwork, struct wl1271, roc_complete_work);
+ 
+ 	ret = wlcore_roc_completed(wl);
+diff --git a/drivers/net/wireless/ti/wlcore/ps.c b/drivers/net/wireless/ti/wlcore/ps.c
+index 4cd316e..d4420da 100644
+--- a/drivers/net/wireless/ti/wlcore/ps.c
++++ b/drivers/net/wireless/ti/wlcore/ps.c
+@@ -38,7 +38,7 @@ void wl1271_elp_work(struct work_struct *work)
+ 	struct wl12xx_vif *wlvif;
+ 	int ret;
+ 
+-	dwork = container_of(work, struct delayed_work, work);
++	dwork = to_delayed_work(work);
+ 	wl = container_of(dwork, struct wl1271, elp_work);
+ 
+ 	wl1271_debug(DEBUG_PSM, "elp work");
+diff --git a/drivers/net/wireless/ti/wlcore/scan.c b/drivers/net/wireless/ti/wlcore/scan.c
+index 1e3d51c..a384f3f 100644
+--- a/drivers/net/wireless/ti/wlcore/scan.c
++++ b/drivers/net/wireless/ti/wlcore/scan.c
+@@ -38,7 +38,7 @@ void wl1271_scan_complete_work(struct work_struct *work)
+ 	struct wl12xx_vif *wlvif;
+ 	int ret;
+ 
+-	dwork = container_of(work, struct delayed_work, work);
++	dwork = to_delayed_work(work);
+ 	wl = container_of(dwork, struct wl1271, scan_complete_work);
+ 
+ 	wl1271_debug(DEBUG_SCAN, "Scanning complete");
+-- 
+2.7.0
 
-Michał
