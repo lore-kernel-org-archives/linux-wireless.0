@@ -1,49 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53918 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752330AbcCGNu5 (ORCPT
+Received: from mail-ob0-f172.google.com ([209.85.214.172]:34705 "EHLO
+	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756855AbcCRLOa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2016 08:50:57 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi-next 2016-03-02
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
-Date: Mon, 07 Mar 2016 15:50:49 +0200
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
-	(Emmanuel Grumbach's message of "Wed, 2 Mar 2016 07:51:12 +0000")
-Message-ID: <87r3fms8g6.fsf@kamboji.qca.qualcomm.com> (sfid-20160307_145100_430819_E5CD78F3)
+	Fri, 18 Mar 2016 07:14:30 -0400
+Received: by mail-ob0-f172.google.com with SMTP id ts10so112308482obc.1
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2016 04:14:30 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160318110134.GR5273@mwanda>
+References: <cover.1458262312.git.julian.calaby@gmail.com> <90fe6325e407d35a18fa8c8cb7eaa269968d6426.1458262312.git.julian.calaby@gmail.com>
+ <20160318110134.GR5273@mwanda>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 18 Mar 2016 22:14:09 +1100
+Message-ID: <CAGRGNgUk5FM6=sCL8UULsQm9D2WtiHrd2skBRuke72h6ZgM0XA@mail.gmail.com> (sfid-20160318_121452_571382_2182FD87)
+Subject: Re: [PATCH CONTROVERSIAL 19/19] iwlegacy: Rename label in il_eeprom_init()
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Markus Elfring <elfring@users.sourceforge.net>,
+	Nicolas Pitre <nico@linaro.org>,
+	Jia-Ju Bai <baijiaju1990@163.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
+Hi Dan,
 
-> This is a pull request for 4.6. It is big because a lot of patches were
-> waiting for code in mac80211-next which is now in net-next.
-> As you figured, I need you to pull Johannes's 
-> mac80211-next-for-davem-2016-02-26 before you pull this from me.
-> Of course, you can just merge net-next. This is really up to you :)
-> I also merged iwlwifi-fixes.git (twice even) to prevent conflicts upstream.
-> In the tag, I mentioned which patches need mac80211-next since you asked for it
-> last time.
+On Fri, Mar 18, 2016 at 10:01 PM, Dan Carpenter
+<dan.carpenter@oracle.com> wrote:
+> On Fri, Mar 18, 2016 at 01:29:39PM +1100, Julian Calaby wrote:
+>> From: Markus Elfring <elfring@users.sourceforge.net>
+>>
+>> Rename a jump label according to the current Linux coding style convention.
+>>
+>> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+>> [Rewrote commit title]
+>> Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+>>
+>> ---
+>>
+>> This was controversial when introduced, however the change is obvious and
+>> harmless and is, in the worst case, just churn.
+>>
+>> I'm only including this as it meets my criteria for sheparding pending
+>> patches: it's sane, obviously correct or reviewable by me, and doesn't
+>> require any work to apply.
+>>
+>> This does meet those requirements, however given how controviersial it was
+>> when introduced, I'm not expecting people to be enthusiastic about
+>> applying it.
+>>
+>> Thanks,
 >
-> My prevent_stupid_mistakes.sh script seems to be working fairly well now,
-> in case you see an issue, let me know.
+> It's a bad idea to mark this sort of patch as controversial.  It's
+> bikeshed stuff.  Either apply it or don't but don't lets spend any more
+> time thinking about it.
 >
-> Thanks!
->
->
-> The following changes since commit 50ee738d7271fe825e4024cdfa5c5301a871e2c2:
->
->   rfkill: Add documentation about LED triggers (2016-02-24 09:13:12 +0100)
->
-> are available in the git repository at:
->
->   https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-next.git tags/iwlwifi-next-for-kalle-2016-03-02
+> Actual controversial patches have a long term impact.
 
-Pulled, thanks.
+Noted. I'll label anything like this (someone's done the work but it
+makes no difference if it's applied) as "bikeshed" or "churn" in the
+future.
+
+Thanks,
 
 -- 
-Kalle Valo
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
