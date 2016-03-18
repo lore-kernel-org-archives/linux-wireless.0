@@ -1,49 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f171.google.com ([209.85.192.171]:36423 "EHLO
-	mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752083AbcCQNSO (ORCPT
+Received: from aserp1040.oracle.com ([141.146.126.69]:19949 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751447AbcCROyF (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 09:18:14 -0400
-Date: Thu, 17 Mar 2016 06:18:11 -0700
-From: "tj@kernel.org" <tj@kernel.org>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: Eva Rachel Retuya <eraretuya@gmail.com>,
-	"outreachy-kernel@googlegroups.com"
-	<outreachy-kernel@googlegroups.com>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	linuxwifi <linuxwifi@intel.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] iwlwifi: dvm: convert create_singlethread_workqueue() to
- alloc_workqueue()
-Message-ID: <20160317131811.GO21104@mtj.duckdns.org> (sfid-20160317_141836_827528_59399079)
-References: <1458218246-18807-1-git-send-email-eraretuya@gmail.com>
- <0BA3FCBA62E2DC44AF3030971E174FB32EA7C435@hasmsx107.ger.corp.intel.com>
+	Fri, 18 Mar 2016 10:54:05 -0400
+Date: Fri, 18 Mar 2016 17:53:26 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: SF Markus Elfring <elfring@users.sourceforge.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Jia-Ju Bai <baijiaju1990@163.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 08/19] iwlegacy: Return directly if allocation fails in
+ il_eeprom_init()
+Message-ID: <20160318145326.GS5273@mwanda> (sfid-20160318_155409_955070_2C2335F7)
+References: <cover.1458262312.git.julian.calaby@gmail.com>
+ <01ae52425e9dba9f82f8d107da02a0d2cd23f09d.1458262312.git.julian.calaby@gmail.com>
+ <56EC057A.9000804@users.sourceforge.net>
+ <CAGRGNgUY+fr2vaJ=uUhqzGRMCLmyKn+2QTJGD8copXgCYv8YPA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA7C435@hasmsx107.ger.corp.intel.com>
+In-Reply-To: <CAGRGNgUY+fr2vaJ=uUhqzGRMCLmyKn+2QTJGD8copXgCYv8YPA@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
-
-On Thu, Mar 17, 2016 at 12:43:35PM +0000, Grumbach, Emmanuel wrote:
-> > 
-> > Use alloc_workqueue() to allocate the workqueue instead of
-> > create_singlethread_workqueue() since the latter is deprecated and is
-> > scheduled
-> > for removal.
+On Sat, Mar 19, 2016 at 01:33:16AM +1100, Julian Calaby wrote:
+> Hi Markus,
 > 
-> I can't see any indication of that in the code of workqueue.
-> Can you share details about that?
+> On Sat, Mar 19, 2016 at 12:41 AM, SF Markus Elfring
+> <elfring@users.sourceforge.net> wrote:
+> >> Also remove an unused label.
+> >
+> > Is such a commit message a bit too short?
+> 
+> I don't think so, but I don't decide these sorts of things.
+> 
+> Does anyone else have an opinion on this?
 
-create*_workqueue()'s have been deprecated and replaced by
-alloc*_workqueue()'s for some years now.  I probably should note that
-in the header file.
+This is certainly not something where we need to redo the patch but
+since you asked for the future.  A lot of web archives put the subject
+and the body of the email far apart:
 
-Thanks.
+http://marc.info/?l=linux-wireless&m=145826783627087&w=2
 
--- 
-tejun
+lkml.org is the same way.
+
+It makes these types of patch descriptions awkward.
+
+regards,
+dan carpenter
+
