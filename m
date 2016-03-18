@@ -1,107 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:53438 "EHLO mga14.intel.com"
+Received: from fieldses.org ([173.255.197.46]:36720 "EHLO fieldses.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754299AbcC3OGZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 10:06:25 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 35/43] iwlwifi: mvm: move cmd queue to be #0 in dqa mode
-Date: Wed, 30 Mar 2016 17:05:07 +0300
-Message-Id: <1459346715-7954-35-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_161040_832823_1A5BF5F0)
-In-Reply-To: <1459346667.4731.9.camel@intel.com>
-References: <1459346667.4731.9.camel@intel.com>
+	id S1751195AbcCRVYI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2016 17:24:08 -0400
+Date: Fri, 18 Mar 2016 17:24:05 -0400
+From: "J. Bruce Fields" <bfields@fieldses.org>
+To: Tejun Heo <tj@kernel.org>
+Cc: Jeff Layton <jlayton@poochiereds.net>,
+	"David S. Miller" <davem@davemloft.net>,
+	Trond Myklebust <trond.myklebust@primarydata.com>,
+	Anna Schumaker <anna.schumaker@netapp.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	Amitoj Kaur Chawla <amitoj1606@gmail.com>,
+	kernel-team@fb.com, Johannes Weiner <hannes@cmpxchg.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Eva Rachel Retuya <eraretuya@gmail.com>,
+	Bhaktipriya Shridhar <bhaktipriya96@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFD] workqueue: WQ_MEM_RECLAIM usage in network drivers
+Message-ID: <20160318212405.GA5192@fieldses.org> (sfid-20160318_222438_298155_D28AB92A)
+References: <20160317164546.GT21104@mtj.duckdns.org>
+ <20160317213216.731d1fcc@synchrony.poochiereds.net>
+ <20160318204623.GM20028@mtj.duckdns.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160318204623.GM20028@mtj.duckdns.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+On Fri, Mar 18, 2016 at 04:46:23PM -0400, Tejun Heo wrote:
+> Hello, Jeff.
+> 
+> On Thu, Mar 17, 2016 at 09:32:16PM -0400, Jeff Layton wrote:
+> > > * Are network devices expected to be able to serve as a part of
+> > >   storage stack which is depended upon for memory reclamation?
+> > 
+> > I think they should be. Cached NFS pages can consume a lot of memory,
+> > and flushing them generally takes network device access.
+> 
+> But does that actually work?  It's pointless to add WQ_MEM_RECLAIM to
+> workqueues unless all other things are also guaranteed to make forward
+> progress regardless of memory pressure.
 
-Change the CMD queue to be queue #0 (rather than queue #9)
-when working in DQA mode.
+It's supposed to work.
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h   | 2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c       | 5 ++++-
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 8 ++++++--
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c      | 5 ++++-
- 4 files changed, 16 insertions(+), 4 deletions(-)
+Also note there was a bunch of work done to allow swap on NFS: see
+a564b8f0 "nfs: enable swap on NFS".
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index b38cb03..60eed84 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -89,6 +89,7 @@ enum {
- /*
-  * DQA queue numbers
-  *
-+ * @IWL_MVM_DQA_CMD_QUEUE: a queue reserved for sending HCMDs to the FW
-  * @IWL_MVM_DQA_GCAST_QUEUE: a queue reserved for P2P GO/SoftAP GCAST frames
-  * @IWL_MVM_DQA_BSS_CLIENT_QUEUE: a queue reserved for BSS activity, to ensure
-  *	that we are never left without the possibility to connect to an AP.
-@@ -103,6 +104,7 @@ enum {
-  * @IWL_MVM_DQA_MAX_DATA_QUEUE: last TXQ in pool for DATA frames
-  */
- enum iwl_mvm_dqa_txq {
-+	IWL_MVM_DQA_CMD_QUEUE = 0,
- 	IWL_MVM_DQA_GCAST_QUEUE = 3,
- 	IWL_MVM_DQA_BSS_CLIENT_QUEUE = 4,
- 	IWL_MVM_DQA_MIN_MGMT_QUEUE = 5,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index 2dc97a1..6ad5c60 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -652,7 +652,10 @@ static int iwl_mvm_load_ucode_wait_alive(struct iwl_mvm *mvm,
- 	 */
- 
- 	memset(&mvm->queue_info, 0, sizeof(mvm->queue_info));
--	mvm->queue_info[IWL_MVM_CMD_QUEUE].hw_queue_refcount = 1;
-+	if (iwl_mvm_is_dqa_supported(mvm))
-+		mvm->queue_info[IWL_MVM_DQA_CMD_QUEUE].hw_queue_refcount = 1;
-+	else
-+		mvm->queue_info[IWL_MVM_CMD_QUEUE].hw_queue_refcount = 1;
- 
- 	for (i = 0; i < IEEE80211_MAX_QUEUES; i++)
- 		atomic_set(&mvm->mac80211_queue_stop_count[i], 0);
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index 43fd857..5f95056 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -252,10 +252,14 @@ unsigned long iwl_mvm_get_used_hw_queues(struct iwl_mvm *mvm,
- 		.exclude_vif = exclude_vif,
- 		.used_hw_queues =
- 			BIT(IWL_MVM_OFFCHANNEL_QUEUE) |
--			BIT(mvm->aux_queue) |
--			BIT(IWL_MVM_CMD_QUEUE),
-+			BIT(mvm->aux_queue),
- 	};
- 
-+	if (iwl_mvm_is_dqa_supported(mvm))
-+		data.used_hw_queues |= BIT(IWL_MVM_DQA_CMD_QUEUE);
-+	else
-+		data.used_hw_queues |= BIT(IWL_MVM_CMD_QUEUE);
-+
- 	lockdep_assert_held(&mvm->mutex);
- 
- 	/* mark all VIF used hw queues */
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index e36bcad..cb00926 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -619,7 +619,10 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
- 	trans_cfg.command_groups = iwl_mvm_groups;
- 	trans_cfg.command_groups_size = ARRAY_SIZE(iwl_mvm_groups);
- 
--	trans_cfg.cmd_queue = IWL_MVM_CMD_QUEUE;
-+	if (iwl_mvm_is_dqa_supported(mvm))
-+		trans_cfg.cmd_queue = IWL_MVM_DQA_CMD_QUEUE;
-+	else
-+		trans_cfg.cmd_queue = IWL_MVM_CMD_QUEUE;
- 	trans_cfg.cmd_fifo = IWL_MVM_TX_FIFO_CMD;
- 	trans_cfg.scd_set_active = true;
- 
--- 
-2.5.0
+> 
+> > > * If so, are all the pieces in place for that to work for all (or at
+> > >   least most) network devices?  If it's only for a subset of NICs, how
+> > >   can one tell whether a given driver needs forward progress guarantee
+> > >   or not?
+> > > 
+> > > * I assume that wireless drivers aren't and can't be used in this
+> > >   fashion.  Is that a correction assumption?
+> > > 
+> > 
+> > People do mount NFS over wireless interfaces. It's not terribly common
+> > though, in my experience.
+> 
+> Ditto, I'm very skeptical that this actually works in practice and
+> people expect and depend on it.  I don't follow wireless development
+> closely but haven't heard anyone talking about reserving memory pools
+> or people complaining about wireless being the cause of OOM.
+> 
+> So, I really want to avoid spraying WQ_MEM_RECLAIM if it doesn't serve
+> actual purposes.  It's wasteful, sets bad precedences and confuses
+> future readers.
 
+I use NFS mounts over wifi at home.  I may just be odd.  I seem to
+recall some bug reports about suspend vs. NFS--were those also on
+laptops using NFS?
+
+I wonder if home media centers might do writes over wifi to network
+storage?
+
+Googling for "nfs wifi" turns up lots of individuals doing this.
+
+My first impulse is to say that it's probably not perfect but that we
+shouldn't make it worse.
+
+But, I don't claim to understand the WQ_MEM_RECLAIM-proliferation issue
+you're seeing....
+
+--b.
