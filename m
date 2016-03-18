@@ -1,52 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51059 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752299AbcCKMhk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Mar 2016 07:37:40 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jes.Sorensen@redhat.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 000/113] rtl8xxxu: Add support for rtl8723bu
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-Date: Fri, 11 Mar 2016 14:37:34 +0200
-In-Reply-To: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com> (Jes
-	Sorensen's message of "Mon, 29 Feb 2016 17:03:58 -0500")
-Message-ID: <87io0tmbqp.fsf@kamboji.qca.qualcomm.com> (sfid-20160311_133744_644835_6C251B3B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from lists.s-osg.org ([54.187.51.154]:54668 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751016AbcCRQJg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2016 12:09:36 -0400
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
+To: linux-kernel@vger.kernel.org
+Cc: johannes@sipsolutions.net, davem@davemloft.net,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	Luis de Bethencourt <luisbg@osg.samsung.com>
+Subject: [PATCH] mac80211: add doc for RX_FLAG_DUP_VALIDATED flag
+Date: Fri, 18 Mar 2016 16:09:29 +0000
+Message-Id: <1458317369-28185-1-git-send-email-luisbg@osg.samsung.com> (sfid-20160318_171140_161085_B64B4EF5)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes.Sorensen@redhat.com writes:
+Add documentation for the flag for duplication check.
 
-> This is a rather large set of patches adding support for rtl8723bu
-> devices, as well as containing some code for rtl8192eu devices.
->
-> I started working on 8192eu support at the beginning but later
-> switched over and completed 8723bu support, before finally completing
-> 8192eu support. The two new devices share a lot of new features not
-> found in the older generation parts (8723au/8188cu/8192cu/8188ru).
->
-> I am holding back the 8192eu support for now, in order to reduce the
-> size of the patch set (I have another 60 patches that goes on top of
-> this set with 8192eu support and additional bug fixes). Given that
-> support for the two devices is intermingled, trying to disentangle it
-> is pretty much impossible at this point, and risks breaking the code.
->
-> This applies on top of wireless-drivers-next as of today 2016-02-29.
+Fixes the following warning when running make htmldocs:
+warning: Enum value 'RX_FLAG_DUP_VALIDATED' not described in enum 'mac80211_rx_flags'
 
-First of all, a huge patchset like this automatically goes to the bottom
-of my queue. 113 patches is wrong in so many levels, it makes review
-really hard, making changes in patches is difficult and whatnot. I think
-that 10-15 patches per set is optimal, please try to follow that. Don't
-sit on the patches for too long, send them as fast as you can. "Release
-early, release often"
+Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+---
+Hi,
 
-I have applied this to wireless-drivers-next, this time, but in the
-future please keep the patch count in reasonable levels. The merge
-window is getting closer so I'm not sure if these make it to 4.6 but I
-would guess I can still squeeze them in.
+While running make htmldocs I noticed a warning about RX_FLAG_DUP_VALIDATED
+missing a description. This patch fixes this.
 
+I have noticed the order of the descriptions of the mac80211_rx_flags doesn't
+match the order in the enum. I am happy to fix this if it would be of interest.
+
+Thanks,
+Luis
+
+ include/net/mac80211.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index a53333c..42c8cde 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -1001,6 +1001,8 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
+  *	flag indicates that the PN was verified for replay protection.
+  *	Note that this flag is also currently only supported when a frame
+  *	is also decrypted (ie. @RX_FLAG_DECRYPTED must be set)
++ * @RX_FLAG_DUP_VALIDATED: Set this flag for the driver to check for packet
++ *	duplication by itself.
+  * @RX_FLAG_FAILED_FCS_CRC: Set this flag if the FCS check failed on
+  *	the frame.
+  * @RX_FLAG_FAILED_PLCP_CRC: Set this flag if the PCLP check failed on
 -- 
-Kalle Valo
+2.5.1
+
