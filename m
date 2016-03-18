@@ -1,90 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f176.google.com ([209.85.192.176]:34112 "EHLO
-	mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758160AbcC2VhZ (ORCPT
+Received: from mail-qg0-f44.google.com ([209.85.192.44]:35692 "EHLO
+	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751990AbcCRUq0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 17:37:25 -0400
-Received: by mail-pf0-f176.google.com with SMTP id x3so24722989pfb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2016 14:37:24 -0700 (PDT)
-Date: Tue, 29 Mar 2016 14:37:21 -0700
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: kbuild test robot <lkp@intel.com>
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Pontus Fuchs <pontus.fuchs@gmail.com>, kbuild-all@01.org,
-	wcn36xx@lists.infradead.org,
-	Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: [PATCH 06/16] wcn36xx: Fetch private sta data from sta entry
- instead of from vif
-Message-ID: <20160329213721.GV8929@tuxbot> (sfid-20160329_233753_637912_B700B911)
-References: <1459231593-360-7-git-send-email-bjorn.andersson@linaro.org>
- <201603300022.MmhimaU1%fengguang.wu@intel.com>
+	Fri, 18 Mar 2016 16:46:26 -0400
+Date: Fri, 18 Mar 2016 16:46:23 -0400
+From: Tejun Heo <tj@kernel.org>
+To: Jeff Layton <jlayton@poochiereds.net>
+Cc: "David S. Miller" <davem@davemloft.net>,
+	Trond Myklebust <trond.myklebust@primarydata.com>,
+	"J. Bruce Fields" <bfields@fieldses.org>,
+	Anna Schumaker <anna.schumaker@netapp.com>,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-nfs@vger.kernel.org,
+	Amitoj Kaur Chawla <amitoj1606@gmail.com>,
+	kernel-team@fb.com, Johannes Weiner <hannes@cmpxchg.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Eva Rachel Retuya <eraretuya@gmail.com>,
+	Bhaktipriya Shridhar <bhaktipriya96@gmail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [RFD] workqueue: WQ_MEM_RECLAIM usage in network drivers
+Message-ID: <20160318204623.GM20028@mtj.duckdns.org> (sfid-20160318_214648_973874_D9F9A91E)
+References: <20160317164546.GT21104@mtj.duckdns.org>
+ <20160317213216.731d1fcc@synchrony.poochiereds.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <201603300022.MmhimaU1%fengguang.wu@intel.com>
+In-Reply-To: <20160317213216.731d1fcc@synchrony.poochiereds.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue 29 Mar 10:01 PDT 2016, kbuild test robot wrote:
+Hello, Jeff.
 
-> Hi Pontus,
+On Thu, Mar 17, 2016 at 09:32:16PM -0400, Jeff Layton wrote:
+> > * Are network devices expected to be able to serve as a part of
+> >   storage stack which is depended upon for memory reclamation?
 > 
-> [auto build test ERROR on wireless-drivers/master]
-> [also build test ERROR on v4.6-rc1 next-20160329]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
-> 
-> url:    https://github.com/0day-ci/linux/commits/Bjorn-Andersson/Misc-wcn36xx-fixes/20160329-141847
-> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git master
-> config: sparc64-allyesconfig (attached as .config)
-> reproduce:
->         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
->         chmod +x ~/bin/make.cross
->         # save the attached .config to linux build tree
->         make.cross ARCH=sparc64 
-> 
-> Note: the linux-review/Bjorn-Andersson/Misc-wcn36xx-fixes/20160329-141847 HEAD 8303daac889854237207e7caefaea94fee0b87f2 builds fine.
->       It only hurts bisectibility.
-> 
-> All error/warnings (new ones prefixed by >>):
-> 
->    drivers/net/wireless/ath/wcn36xx/main.c: In function 'wcn36xx_set_key':
-> >> drivers/net/wireless/ath/wcn36xx/main.c:389:9: error: implicit declaration of function 'wcn36xx_sta_to_priv' [-Werror=implicit-function-declaration]
->      struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
->             ^
-> >> drivers/net/wireless/ath/wcn36xx/main.c:389:33: warning: initialization makes pointer from integer without a cast
->      struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
->                                     ^
->    cc1: some warnings being treated as errors
+> I think they should be. Cached NFS pages can consume a lot of memory,
+> and flushing them generally takes network device access.
 
-This should have been reordered with patch 7, that introduces this
-helper function. Do you want me to resend, or can you apply the patches
-out of order?
+But does that actually work?  It's pointless to add WQ_MEM_RECLAIM to
+workqueues unless all other things are also guaranteed to make forward
+progress regardless of memory pressure.
 
-Regards,
-Bjorn
-
+> > * If so, are all the pieces in place for that to work for all (or at
+> >   least most) network devices?  If it's only for a subset of NICs, how
+> >   can one tell whether a given driver needs forward progress guarantee
+> >   or not?
+> > 
+> > * I assume that wireless drivers aren't and can't be used in this
+> >   fashion.  Is that a correction assumption?
+> > 
 > 
-> vim +/wcn36xx_sta_to_priv +389 drivers/net/wireless/ath/wcn36xx/main.c
-> 
->    383				   struct ieee80211_vif *vif,
->    384				   struct ieee80211_sta *sta,
->    385				   struct ieee80211_key_conf *key_conf)
->    386	{
->    387		struct wcn36xx *wcn = hw->priv;
->    388		struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
->  > 389		struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
->    390		int ret = 0;
->    391		u8 key[WLAN_MAX_KEY_LEN];
->    392	
-> 
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+> People do mount NFS over wireless interfaces. It's not terribly common
+> though, in my experience.
 
+Ditto, I'm very skeptical that this actually works in practice and
+people expect and depend on it.  I don't follow wireless development
+closely but haven't heard anyone talking about reserving memory pools
+or people complaining about wireless being the cause of OOM.
 
-> _______________________________________________
-> wcn36xx mailing list
-> wcn36xx@lists.infradead.org
-> http://lists.infradead.org/mailman/listinfo/wcn36xx
+So, I really want to avoid spraying WQ_MEM_RECLAIM if it doesn't serve
+actual purposes.  It's wasteful, sets bad precedences and confuses
+future readers.
 
+Thanks.
+
+-- 
+tejun
