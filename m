@@ -1,45 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:50756 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753738AbcC1Pxi (ORCPT
+Received: from smtprelay0147.hostedemail.com ([216.40.44.147]:37949 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756510AbcCRS2S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2016 11:53:38 -0400
-From: Colin King <colin.king@canonical.com>
-To: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
+	Fri, 18 Mar 2016 14:28:18 -0400
+Message-ID: <1458325693.26915.23.camel@perches.com> (sfid-20160318_192834_102145_43834950)
+Subject: Re: [PATCH] staging: refresh TODO for rtl8723au
+From: Joe Perches <joe@perches.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
 	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Subject: [PATCH] mwifiex: ie_list is an array, so no need to check if NULL
-Date: Mon, 28 Mar 2016 16:53:33 +0100
-Message-Id: <1459180413-13288-1-git-send-email-colin.king@canonical.com> (sfid-20160328_175342_748858_51CD3959)
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux Driver Project Developer List
+	<driverdev-devel@linuxdriverproject.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 18 Mar 2016 11:28:13 -0700
+In-Reply-To: <wrfjlh5fk7i4.fsf@redhat.com>
+References: <1458321324-16906-1-git-send-email-xose.vazquez@gmail.com>
+	 <wrfjlh5fk7i4.fsf@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+On Fri, 2016-03-18 at 13:42 -0400, Jes Sorensen wrote:
+> Xose Vazquez Perez <xose.vazquez@gmail.com> writes:
+> > People should not waste time and energy working on this staging driver.
+> > A replacement(rtl8xxxu) using the kernel wireless stack already was merged
+> > in the 4.3 kernel.
+[]
+> >  drivers/staging/rtl8723au/TODO | 3 +++
+> Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-ap_ie->ie_list is an array of struct mwifiex_ie and can never
-be null, so the null check on this array is redundant and can
-be removed.
+why not git rm drivers/staging/rtl8723au/ ?
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/net/wireless/marvell/mwifiex/uap_cmd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+How about changing MAINTAINERS from:
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-index 16d95b2..92ce32f 100644
---- a/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-+++ b/drivers/net/wireless/marvell/mwifiex/uap_cmd.c
-@@ -694,7 +694,7 @@ static int mwifiex_uap_custom_ie_prepare(u8 *tlv, void *cmd_buf, u16 *ie_size)
- 	struct mwifiex_ie_list *ap_ie = cmd_buf;
- 	struct mwifiex_ie_types_header *tlv_ie = (void *)tlv;
- 
--	if (!ap_ie || !ap_ie->len || !ap_ie->ie_list)
-+	if (!ap_ie || !ap_ie->len)
- 		return -1;
- 
- 	*ie_size += le16_to_cpu(ap_ie->len) +
--- 
-2.7.4
+STAGING - REALTEK RTL8723U WIRELESS DRIVER
+M:	Larry Finger <Larry.Finger@lwfinger.net>
+M:	Jes Sorensen <Jes.Sorensen@redhat.com>
+L:	linux-wireless@vger.kernel.org
+S:	Maintained
+F:	drivers/staging/rtl8723au/
+
+to
+
+S:	Obsolete
 
