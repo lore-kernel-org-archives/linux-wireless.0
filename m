@@ -1,51 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.133]:51660 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750972AbcCXNTT (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Mar 2016 09:19:19 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
-	Hauke Mehrtens <hauke@hauke-m.de>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [1/2] bcma: fix building without OF_IRQ
-Date: Thu, 24 Mar 2016 14:19:08 +0100
-Message-ID: <9767564.jLc8Ig1W5l@wuerfel> (sfid-20160324_141923_375725_78FD9636)
-In-Reply-To: <20160323155243.D1AB4615C6@smtp.codeaurora.org>
-References: <20160323155243.D1AB4615C6@smtp.codeaurora.org>
+Received: from lists.s-osg.org ([54.187.51.154]:54694 "EHLO lists.s-osg.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932584AbcCRRq3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2016 13:46:29 -0400
+Message-ID: <56EC3EF1.50805@osg.samsung.com> (sfid-20160318_184649_634674_C8E9843D)
+Date: Fri, 18 Mar 2016 17:46:25 +0000
+From: Luis de Bethencourt <luisbg@osg.samsung.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+To: Johannes Berg <johannes@sipsolutions.net>,
+	linux-kernel@vger.kernel.org
+CC: davem@davemloft.net, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] mac80211: fix order of flag descriptions
+References: <1458317369-28185-1-git-send-email-luisbg@osg.samsung.com> <1458318955-32070-1-git-send-email-luisbg@osg.samsung.com> <1458319756.13729.1.camel@sipsolutions.net>
+In-Reply-To: <1458319756.13729.1.camel@sipsolutions.net>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wednesday 23 March 2016 15:52:43 Kalle Valo wrote:
-> > The bcma driver core can be built with or without DT support, but
-> > it fails to build when CONFIG_OF=y and CONFIG_OF_IRQ=n, which
-> > can happen on platforms that do not support IRQ domains.
-> > 
-> > ERROR: "irq_create_of_mapping" [drivers/bcma/bcma.ko] undefined!
-> > ERROR: "of_irq_parse_raw" [drivers/bcma/bcma.ko] undefined!
-> > ERROR: "of_irq_parse_one" [drivers/bcma/bcma.ko] undefined!
-> > 
-> > This adds another compile-time check for OF_IRQ, but also
-> > gets rid of now unneeded #ifdef checks: Using the simpler
-> > IS_ENABLED() check for OF_IRQ also covers the case of not
-> > having CONFIG_OF enabled. The check for CONFIG_OF_ADDRESS
-> > was added to allow building on architectures without
-> > OF_ADDRESS, but that has been addressed already in
-> > b1d06b60e90c ("of: Provide static inline function for
-> > of_translate_address if needed").
-> > 
-> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+On 18/03/16 16:49, Johannes Berg wrote:
+> On Fri, 2016-03-18 at 16:35 +0000, Luis de Bethencourt wrote:
+>> Fix order of mac80211_rx_flags description to match the enum.
+>>
+>> Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
+>> ---
+>> Hi,
+>>
+>> I want ahead and fixed the order of the descriptions. checkpatch.pl
+>> was giving
+>> a warning to my previous patch and I had a hunch it was because the
+>> wrong order
+>> breaks the parser. Indeed it does and with this patch below
+>> checkpatch.pl does
+>> not complain about this flag descriptions anymore.
+>>
+> Huh. I think we should fix checkpatch.pl instead. While the current
+> order isn't likely really good, I believe kernel-doc will output the
+> documentation in the order it's listed, and that can be useful for the
+> documentation output to group related things, even if their bits may be
+> further apart.
 > 
-> Thanks, applied to wireless-drivers.git.
+> johannes
 > 
 
-Thanks! I see you have applied patch 1/2 but not patch 2/2.
+I agree checkpatch.pl should be fixed. I can look into it. No promises
+though, it has been a long time since I look at Perl code.
 
-As mentioned in the comment for patch 2, it should be tested
-better, but I want to make sure that someone still has it
-on their radar.
+I understand the logic of grouping the documentation in logical blocks.
+It is unfortunate though that this means the enum and documentation won't
+match, which makes reading the code harder.
 
-	Arnd
+In this particular case I don't see the order of the documentation broken
+because flags are being grouped.
+
+Thanks for the review :)
+Luis
