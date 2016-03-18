@@ -1,29 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:53629 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752248AbcCGT6u (ORCPT
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:35774 "EHLO
+	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751316AbcCRCWb (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2016 14:58:50 -0500
-Date: Mon, 07 Mar 2016 14:58:46 -0500 (EST)
-Message-Id: <20160307.145846.1683217547468825384.davem@davemloft.net> (sfid-20160307_205915_998531_DAB10286)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers 2016-03-04
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87lh5yw6o1.fsf@kamboji.qca.qualcomm.com>
-References: <87lh5yw6o1.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Thu, 17 Mar 2016 22:22:31 -0400
+Received: by mail-pf0-f175.google.com with SMTP id n5so145890697pfn.2
+        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 19:22:31 -0700 (PDT)
+From: Julian Calaby <julian.calaby@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Geliang Tang <geliangtang@163.com>,
+	Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+	Colin Ian King <colin.king@canonical.com>,
+	linux-wireless@vger.kernel.org
+Subject: [PATCH 05/19] rtlwifi: use to_delayed_work()
+Date: Fri, 18 Mar 2016 13:22:24 +1100
+Message-Id: <1d07f186a933c2d1f0bf1780ab1dcb50d3a808aa.1458262312.git.julian.calaby@gmail.com> (sfid-20160318_032234_587865_52DD6645)
+In-Reply-To: <cover.1458262312.git.julian.calaby@gmail.com>
+References: <cover.1458262312.git.julian.calaby@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Fri, 04 Mar 2016 18:26:38 +0200
+From: Geliang Tang <geliangtang@163.com>
 
-> three more fixes I would like to get to 4.5 still. It's getting late but
-> I think these are still justified and these have been in linux-next
-> almost a week. But if you think otherwise please let me know and I'll
-> pull these to wireless-drivers-next instead.
+Use to_delayed_work() instead of open-coding it.
 
-Pulled, thanks.
+Signed-off-by: Geliang Tang <geliangtang@163.com>
+[Update commit message]
+Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+---
+ drivers/net/wireless/realtek/rtlwifi/wifi.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtlwifi/wifi.h b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+index 554d814..edece53 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/wifi.h
++++ b/drivers/net/wireless/realtek/rtlwifi/wifi.h
+@@ -2867,7 +2867,7 @@ value to host byte ordering.*/
+ 	(ppsc->cur_ps_level |= _ps_flg)
+ 
+ #define container_of_dwork_rtl(x, y, z) \
+-	container_of(container_of(x, struct delayed_work, work), y, z)
++	container_of(to_delayed_work(x), y, z)
+ 
+ #define FILL_OCTET_STRING(_os, _octet, _len)	\
+ 		(_os).octet = (u8 *)(_octet);		\
+-- 
+2.7.0
+
