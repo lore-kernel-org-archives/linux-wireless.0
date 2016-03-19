@@ -1,45 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:36919 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932832AbcCQLMd convert rfc822-to-8bit (ORCPT
+Received: from mail-qg0-f68.google.com ([209.85.192.68]:36352 "EHLO
+	mail-qg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751086AbcCSCDc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 07:12:33 -0400
-Received: by mail-wm0-f53.google.com with SMTP id p65so112002921wmp.0
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 04:12:32 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1458211740-6875-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1458211740-6875-1-git-send-email-mohammed@qca.qualcomm.com>
-Date: Thu, 17 Mar 2016 12:12:31 +0100
-Message-ID: <CA+BoTQkk30nPEKiP-8FA2DcddJ_SL90txgHQeua7GCauR_M2dg@mail.gmail.com> (sfid-20160317_121237_476004_435B66D9)
-Subject: Re: [PATCH v2 1/2] ath10k: Add support for ath10k_sta_statistics support
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	Kalle Valo <kvalo@qca.qualcomm.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	mohammed@codeaurora.org,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+	Fri, 18 Mar 2016 22:03:32 -0400
+Received: by mail-qg0-f68.google.com with SMTP id 14so8666972qgg.3
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2016 19:03:32 -0700 (PDT)
+From: Bob Copeland <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH v2] mac80211: mesh: fix crash in mesh_path_timer
+Date: Fri, 18 Mar 2016 22:03:24 -0400
+Message-Id: <1458353004-8062-1-git-send-email-me@bobcopeland.com> (sfid-20160319_030336_513468_5C9786DF)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 March 2016 at 11:48, Mohammed Shafi Shajakhan
-<mohammed@qti.qualcomm.com> wrote:
-[...]
-> +void ath10k_sta_statistics(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
-> +                          struct ieee80211_sta *sta,
-> +                          struct station_info *sinfo)
-> +{
-> +       struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
-> +       struct ath10k *ar = arsta->arvif->ar;
-> +
-> +       mutex_lock(&ar->conf_mutex);
-> +
-> +       if (ar->state != ATH10K_STATE_ON &&
-> +           ar->state != ATH10K_STATE_RESTARTED)
-> +               goto out;
+The mesh_path_reclaim() function, called from an rcu callback, cancels
+the mesh_path_timer associated with a mesh path.  Unfortunately, this
+call can happen much later, perhaps after the hash table itself is
+destroyed.
 
-Do you really need mutex and ar->state check in this function?
+Such a situation led to the following crash in mesh_path_send_to_gates()
+when dereferencing the tbl pointer:
 
+[   23.901661] BUG: unable to handle kernel NULL pointer dereference at 0000000000000008
+[   23.905516] IP: [<ffffffff814c910b>] mesh_path_send_to_gates+0x2b/0x740
+[   23.908757] PGD 99ca067 PUD 99c4067 PMD 0
+[   23.910789] Oops: 0000 [#1] PREEMPT SMP DEBUG_PAGEALLOC
+[   23.913485] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.5.0-rc6-wt+ #43
+[   23.916675] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Debian-1.8.2-1 04/01/2014
+[   23.920471] task: ffffffff81685500 ti: ffffffff81678000 task.ti: ffffffff81678000
+[   23.922619] RIP: 0010:[<ffffffff814c910b>]  [<ffffffff814c910b>] mesh_path_send_to_gates+0x2b/0x740
+[   23.925237] RSP: 0018:ffff88000b403d30  EFLAGS: 00010286
+[   23.926739] RAX: 0000000000000000 RBX: ffff880009bc0d20 RCX: 0000000000000102
+[   23.928796] RDX: 000000000000002e RSI: 0000000000000001 RDI: ffff880009bc0d20
+[   23.930895] RBP: ffff88000b403e18 R08: 0000000000000001 R09: 0000000000000001
+[   23.932917] R10: 0000000000000000 R11: 0000000000000001 R12: ffff880009c20940
+[   23.936370] R13: ffff880009bc0e70 R14: ffff880009c21c40 R15: ffff880009bc0d20
+[   23.939823] FS:  0000000000000000(0000) GS:ffff88000b400000(0000) knlGS:0000000000000000
+[   23.943688] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[   23.946429] CR2: 0000000000000008 CR3: 00000000099c5000 CR4: 00000000000006b0
+[   23.949861] Stack:
+[   23.950840]  000000000000002e ffff880009c20940 ffff88000b403da8 ffffffff8109e551
+[   23.954467]  ffffffff82711be2 000000000000002e 0000000000000000 ffffffff8166a5f5
+[   23.958141]  0000000000685ce8 0000000000000246 ffff880009bc0d20 ffff880009c20940
+[   23.961801] Call Trace:
+[   23.962987]  <IRQ>
+[   23.963963]  [<ffffffff8109e551>] ? vprintk_emit+0x351/0x5e0
+[   23.966782]  [<ffffffff8109e8ff>] ? vprintk_default+0x1f/0x30
+[   23.969529]  [<ffffffff810ffa41>] ? printk+0x48/0x50
+[   23.971956]  [<ffffffff814ceef3>] mesh_path_timer+0x133/0x160
+[   23.974707]  [<ffffffff814cedc0>] ? mesh_nexthop_resolve+0x230/0x230
+[   23.977775]  [<ffffffff810b04ee>] call_timer_fn+0xce/0x330
+[   23.980448]  [<ffffffff810b0425>] ? call_timer_fn+0x5/0x330
+[   23.983126]  [<ffffffff814cedc0>] ? mesh_nexthop_resolve+0x230/0x230
+[   23.986091]  [<ffffffff810b097c>] run_timer_softirq+0x22c/0x390
 
-Michał
+Instead of cancelling in the RCU callback, set a new flag to prevent the
+timer from being rearmed, and then cancel the timer synchronously when
+freeing the mesh path.  This leaves mesh_path_reclaim() doing nothing
+but kfree, so switch to kfree_rcu().
+
+Fixes: 3b302ada7f0a ("mac80211: mesh: move path tables into if_mesh")
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
+
+---
+v2: fix lock imbalance and remove extra forward decl
+
+ net/mac80211/mesh.h         |  3 +++
+ net/mac80211/mesh_hwmp.c    |  4 ++++
+ net/mac80211/mesh_pathtbl.c | 33 ++++++++++++++++++---------------
+ 3 files changed, 25 insertions(+), 15 deletions(-)
+
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index cc6854db156e..e1415c952e9c 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -32,6 +32,8 @@
+  * @MESH_PATH_RESOLVED: the mesh path can has been resolved
+  * @MESH_PATH_REQ_QUEUED: there is an unsent path request for this destination
+  *	already queued up, waiting for the discovery process to start.
++ * @MESH_PATH_DELETED: the mesh path has been deleted and should no longer
++ *	be used
+  *
+  * MESH_PATH_RESOLVED is used by the mesh path timer to
+  * decide when to stop or cancel the mesh path discovery.
+@@ -43,6 +45,7 @@ enum mesh_path_flags {
+ 	MESH_PATH_FIXED	=	BIT(3),
+ 	MESH_PATH_RESOLVED =	BIT(4),
+ 	MESH_PATH_REQ_QUEUED =	BIT(5),
++	MESH_PATH_DELETED =	BIT(6),
+ };
+ 
+ /**
+diff --git a/net/mac80211/mesh_hwmp.c b/net/mac80211/mesh_hwmp.c
+index 5b6aec1a0630..2748cf627ee3 100644
+--- a/net/mac80211/mesh_hwmp.c
++++ b/net/mac80211/mesh_hwmp.c
+@@ -1012,6 +1012,10 @@ void mesh_path_start_discovery(struct ieee80211_sub_if_data *sdata)
+ 		goto enddiscovery;
+ 
+ 	spin_lock_bh(&mpath->state_lock);
++	if (mpath->flags & MESH_PATH_DELETED) {
++		spin_unlock_bh(&mpath->state_lock);
++		goto enddiscovery;
++	}
+ 	mpath->flags &= ~MESH_PATH_REQ_QUEUED;
+ 	if (preq_node->flags & PREQ_Q_F_START) {
+ 		if (mpath->flags & MESH_PATH_RESOLVING) {
+diff --git a/net/mac80211/mesh_pathtbl.c b/net/mac80211/mesh_pathtbl.c
+index 7455397f8c3b..1c9412a29ca3 100644
+--- a/net/mac80211/mesh_pathtbl.c
++++ b/net/mac80211/mesh_pathtbl.c
+@@ -18,6 +18,8 @@
+ #include "ieee80211_i.h"
+ #include "mesh.h"
+ 
++static void mesh_path_free_rcu(struct mesh_table *tbl, struct mesh_path *mpath);
++
+ static u32 mesh_table_hash(const void *addr, u32 len, u32 seed)
+ {
+ 	/* Use last four bytes of hw addr as hash index */
+@@ -40,18 +42,12 @@ static inline bool mpath_expired(struct mesh_path *mpath)
+ 	       !(mpath->flags & MESH_PATH_FIXED);
+ }
+ 
+-static void mesh_path_reclaim(struct rcu_head *rp)
+-{
+-	struct mesh_path *mpath = container_of(rp, struct mesh_path, rcu);
+-
+-	del_timer_sync(&mpath->timer);
+-	kfree(mpath);
+-}
+-
+-static void mesh_path_rht_free(void *ptr, void *unused_arg)
++static void mesh_path_rht_free(void *ptr, void *tblptr)
+ {
+ 	struct mesh_path *mpath = ptr;
+-	call_rcu(&mpath->rcu, mesh_path_reclaim);
++	struct mesh_table *tbl = tblptr;
++
++	mesh_path_free_rcu(tbl, mpath);
+ }
+ 
+ static struct mesh_table *mesh_table_alloc(void)
+@@ -77,7 +73,7 @@ static struct mesh_table *mesh_table_alloc(void)
+ static void mesh_table_free(struct mesh_table *tbl)
+ {
+ 	rhashtable_free_and_destroy(&tbl->rhead,
+-				    mesh_path_rht_free, NULL);
++				    mesh_path_rht_free, tbl);
+ 	kfree(tbl);
+ }
+ 
+@@ -551,18 +547,25 @@ out:
+ 	rhashtable_walk_exit(&iter);
+ }
+ 
+-static void __mesh_path_del(struct mesh_table *tbl, struct mesh_path *mpath)
++static void mesh_path_free_rcu(struct mesh_table *tbl,
++			       struct mesh_path *mpath)
+ {
+ 	struct ieee80211_sub_if_data *sdata = mpath->sdata;
+ 
+-	rhashtable_remove_fast(&tbl->rhead, &mpath->rhash, mesh_rht_params);
+ 	spin_lock_bh(&mpath->state_lock);
+-	mpath->flags |= MESH_PATH_RESOLVING;
++	mpath->flags |= MESH_PATH_RESOLVING | MESH_PATH_DELETED;
+ 	mesh_gate_del(tbl, mpath);
+-	call_rcu(&mpath->rcu, mesh_path_reclaim);
+ 	spin_unlock_bh(&mpath->state_lock);
++	del_timer_sync(&mpath->timer);
+ 	atomic_dec(&sdata->u.mesh.mpaths);
+ 	atomic_dec(&tbl->entries);
++	kfree_rcu(mpath, rcu);
++}
++
++static void __mesh_path_del(struct mesh_table *tbl, struct mesh_path *mpath)
++{
++	rhashtable_remove_fast(&tbl->rhead, &mpath->rhash, mesh_rht_params);
++	mesh_path_free_rcu(tbl, mpath);
+ }
+ 
+ /**
+-- 
+2.6.1
+
