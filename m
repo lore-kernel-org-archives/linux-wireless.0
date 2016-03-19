@@ -1,63 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:40554 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755070AbcCWNEB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 23 Mar 2016 09:04:01 -0400
-Date: Wed, 23 Mar 2016 18:33:49 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v1 3/3] ath10k: Enable parsing per station rx duration
- for 10.4
-Message-ID: <20160323130331.GA21534@atheros-ThinkPad-T61> (sfid-20160323_140404_334942_2F8F8D1F)
-References: <1458132214-4896-1-git-send-email-mohammed@qca.qualcomm.com>
- <1458132214-4896-3-git-send-email-mohammed@qca.qualcomm.com>
- <8737rhfiy7.fsf@kamboji.qca.qualcomm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:49424 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752242AbcCSJAj (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Mar 2016 05:00:39 -0400
+Date: Sat, 19 Mar 2016 09:58:21 +0100
+From: Stanislaw Gruszka <sgruszka@redhat.com>
+To: Vishal Thanki <vishalthanki@gmail.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v5] rt2x00usb: Use usb anchor to manage URB
+Message-ID: <20160319085820.GB29771@redhat.com> (sfid-20160319_100045_526989_14393CA7)
+References: <1458318591-14921-1-git-send-email-vishalthanki@gmail.com>
+ <20160319080627.GA29771@redhat.com>
+ <CAC3a_SAz0EdriULfGqnpVqQ+jfKDqsSgQEgy9KKovLBzMktg5Q@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <8737rhfiy7.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <CAC3a_SAz0EdriULfGqnpVqQ+jfKDqsSgQEgy9KKovLBzMktg5Q@mail.gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
-
-On Wed, Mar 23, 2016 at 01:00:01PM +0000, Valo, Kalle wrote:
-> Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
-> 
-> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+On Sat, Mar 19, 2016 at 09:21:52AM +0100, Vishal Thanki wrote:
+> On Sat, Mar 19, 2016 at 9:06 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> > On Fri, Mar 18, 2016 at 05:29:51PM +0100, Vishal Thanki wrote:
+> >>
+> >> @@ -1001,6 +1002,9 @@ struct rt2x00_dev {
+> >>
+> >>       /* Extra TX headroom required for alignment purposes. */
+> >>       unsigned int extra_tx_headroom;
+> >> +
+> >> +     struct usb_anchor *anchor;
+> >> +     void (*kill_anchored_urbs)(struct rt2x00_dev *);
+> > ...
+> >> @@ -1423,6 +1423,7 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+> >>       cancel_delayed_work_sync(&rt2x00dev->autowakeup_work);
+> >>       cancel_work_sync(&rt2x00dev->sleep_work);
+> >>       if (rt2x00_is_usb(rt2x00dev)) {
+> >> +             rt2x00dev->kill_anchored_urbs(rt2x00dev);
+> > ...
+> >>
+> >> +static void rt2x00usb_kill_anchored_usb(struct rt2x00_dev *rt2x00dev)
+> >> +{
+> >> +     usb_kill_anchored_urbs(rt2x00dev->anchor);
+> >> +}
+> > ...
+> >> +     rt2x00dev->kill_anchored_urbs = rt2x00usb_kill_anchored_usb;
 > >
-> > Rx duration support for per station is part of extended peer
-> > stats, enable provision to parse the same and provide backward
-> > compatibility based on the 'stats_id' event
+> > Why do you complicate things, instead of call usb_kill_anchored_urbs()
+> > directly?
 > >
-> > Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 > 
-> There was a new sparse warning:
-> 
-> drivers/net/wireless/ath/ath10k/wmi.c:2978:42: warning: incorrect type in assignment (different base types)
-> drivers/net/wireless/ath/ath10k/wmi.c:2978:42:    expected unsigned int [unsigned] [usertype] rx_duration
-> drivers/net/wireless/ath/ath10k/wmi.c:2978:42:    got restricted __le32 const [usertype] rx_duration
-> 
-> I fixed it like this in the pending branch, please double check:
+> I tried to compile by disabling the CONFIG_USB from kernel, and was getting
+> error for missing symbol usb_kill_anchored_urbs.
 
-[shafi] thanks for fixing this, sorry i missed this.
+Ok, just around if(rt2x00_is_usb) section by #ifdef RT2X00_LIB_USB. Or
+you can try to modify rt2x00_is_usb to always return false if RT2X00_LIB_USB
+is not configured - perhaps that will also prevent compilation failure
+without USB support.
 
-> 
-> --- a/drivers/net/wireless/ath/ath10k/wmi.c
-> +++ b/drivers/net/wireless/ath/ath10k/wmi.c
-> @@ -2975,7 +2975,7 @@ static int ath10k_wmi_10_4_op_pull_fw_stats(struct ath10k *ar,
->                 ath10k_wmi_10_4_pull_peer_stats(&src->common, dst);
->                 /* FIXME: expose 10.4 specific values */
->                 if (extd_peer_stats)
-> -                       dst->rx_duration = src->rx_duration;
-> +                       dst->rx_duration = __le32_to_cpu(src->rx_duration);
->  
->                 list_add_tail(&dst->list, &stats->peers);
->         }
->
-regards,
-shafi
+Stanislaw
