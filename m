@@ -1,68 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:58068 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753964AbcCAPIw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 10:08:52 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Maya Erez <qca_merez@qca.qualcomm.com>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: Re: [PATCH 12/15] wil6210: clean ioctl debug message
-References: <1456781570-16552-1-git-send-email-qca_merez@qca.qualcomm.com>
-	<1456781570-16552-13-git-send-email-qca_merez@qca.qualcomm.com>
-Date: Tue, 01 Mar 2016 17:08:46 +0200
-In-Reply-To: <1456781570-16552-13-git-send-email-qca_merez@qca.qualcomm.com>
-	(Maya Erez's message of "Mon, 29 Feb 2016 23:32:47 +0200")
-Message-ID: <87bn6yme0x.fsf@purkki.adurom.net> (sfid-20160301_160856_056540_70F1D179)
+Received: from mout.web.de ([212.227.17.11]:60806 "EHLO mout.web.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753980AbcCSM1O (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Mar 2016 08:27:14 -0400
+Subject: Re: [PATCH DETAIL 13/19] rsi: Delete unnecessary variable
+ initialisation
+To: Julian Calaby <julian.calaby@gmail.com>
+References: <cover.1458262312.git.julian.calaby@gmail.com>
+ <c95f816da2d5c6789004e063e1b7adc44695718e.1458262312.git.julian.calaby@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Message-ID: <56ED4595.5050007@users.sourceforge.net> (sfid-20160319_132717_596196_68776E18)
+Date: Sat, 19 Mar 2016 13:27:01 +0100
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <c95f816da2d5c6789004e063e1b7adc44695718e.1458262312.git.julian.calaby@gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Maya Erez <qca_merez@qca.qualcomm.com> writes:
+> In rsi_send_data_pkt(), the following variables are assigned to
+> before they're used:
 
-> From: Lior David <qca_liord@qca.qualcomm.com>
->
-> Fix a debug message related to IOCTL that was incorrectly logged
-> with the MISC category, and move it inside wil_ioctl so it will
-> always be logged even if we call wil_ioctl from other places.
->
-> Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-> Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Thanks for your interest in this update suggestion.
+How do you think about to add the function name also to such
+a mail subject so that the potential for confusion with an other
+change can be eventually reduced around the source file "rsi_91x_pkt.c"?
 
-[...]
-
-> --- a/drivers/net/wireless/ath/wil6210/ioctl.c
-> +++ b/drivers/net/wireless/ath/wil6210/ioctl.c
-> @@ -161,13 +161,20 @@ out_free:
->  
->  int wil_ioctl(struct wil6210_priv *wil, void __user *data, int cmd)
->  {
-> +	int ret;
-> +
->  	switch (cmd) {
->  	case WIL_IOCTL_MEMIO:
-> -		return wil_ioc_memio_dword(wil, data);
-> +		ret = wil_ioc_memio_dword(wil, data);
-> +		break;
->  	case WIL_IOCTL_MEMIO_BLOCK:
-> -		return wil_ioc_memio_block(wil, data);
-> +		ret = wil_ioc_memio_block(wil, data);
-> +		break;
->  	default:
->  		wil_dbg_ioctl(wil, "Unsupported IOCTL 0x%04x\n", cmd);
->  		return -ENOIOCTLCMD;
->  	}
-> +
-> +	wil_dbg_ioctl(wil, "ioctl(0x%04x) -> %d\n", cmd, ret);
-> +	return ret;
->  }
-
-ioctl interfaces don't belong to wireless drivers and this should be
-converted something else, like debugfs. I think there was a discussion
-about this a year ago or so. I can take this patch still but please
-replace this interface altogether.
-
--- 
-Kalle Valo
+Regards,
+Markus
