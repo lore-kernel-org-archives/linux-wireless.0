@@ -1,38 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:48627 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753344AbcCILSb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 06:18:31 -0500
-Message-ID: <1457522305.2042.3.camel@sipsolutions.net> (sfid-20160309_122230_157004_2105DE3D)
-Subject: Re: [PATCH v2] cfg80211/nl80211: Add support for
- NL80211_STA_INFO_RX_DURATION
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	kvalo@codeaurora.org
-Date: Wed, 09 Mar 2016 12:18:25 +0100
-In-Reply-To: <20160309105231.GA7145@atheros-ThinkPad-T61>
-References: <1457508003-16700-1-git-send-email-mohammed@qca.qualcomm.com>
-	 <1457515803.2042.1.camel@sipsolutions.net>
-	 <20160309093845.GA6695@atheros-ThinkPad-T61>
-	 <1457517488.2042.2.camel@sipsolutions.net>
-	 <20160309105231.GA7145@atheros-ThinkPad-T61>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-lf0-f48.google.com ([209.85.215.48]:33147 "EHLO
+	mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751870AbcCSIWO (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 19 Mar 2016 04:22:14 -0400
+Received: by mail-lf0-f48.google.com with SMTP id h198so79697401lfh.0
+        for <linux-wireless@vger.kernel.org>; Sat, 19 Mar 2016 01:22:13 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20160319080627.GA29771@redhat.com>
+References: <1458318591-14921-1-git-send-email-vishalthanki@gmail.com> <20160319080627.GA29771@redhat.com>
+From: Vishal Thanki <vishalthanki@gmail.com>
+Date: Sat, 19 Mar 2016 09:21:52 +0100
+Message-ID: <CAC3a_SAz0EdriULfGqnpVqQ+jfKDqsSgQEgy9KKovLBzMktg5Q@mail.gmail.com> (sfid-20160319_092224_726776_A9045468)
+Subject: Re: [PATCH v5] rt2x00usb: Use usb anchor to manage URB
+To: Stanislaw Gruszka <sgruszka@redhat.com>
+Cc: Helmut Schaa <helmut.schaa@googlemail.com>,
+	linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-03-09 at 16:22 +0530, Mohammed Shafi Shajakhan wrote:
-> 
-> [shafi] ath10k implementation is based on PPDU duration calculation
-> and it does not includes any IFS duration.
-> 
-> So 'Energy' (time spent by the radio on receiving frames from a
-> particular peer) makes more sense right ?
-> 
+On Sat, Mar 19, 2016 at 9:06 AM, Stanislaw Gruszka <sgruszka@redhat.com> wrote:
+> On Fri, Mar 18, 2016 at 05:29:51PM +0100, Vishal Thanki wrote:
+>>
+>> @@ -1001,6 +1002,9 @@ struct rt2x00_dev {
+>>
+>>       /* Extra TX headroom required for alignment purposes. */
+>>       unsigned int extra_tx_headroom;
+>> +
+>> +     struct usb_anchor *anchor;
+>> +     void (*kill_anchored_urbs)(struct rt2x00_dev *);
+> ...
+>> @@ -1423,6 +1423,7 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
+>>       cancel_delayed_work_sync(&rt2x00dev->autowakeup_work);
+>>       cancel_work_sync(&rt2x00dev->sleep_work);
+>>       if (rt2x00_is_usb(rt2x00dev)) {
+>> +             rt2x00dev->kill_anchored_urbs(rt2x00dev);
+> ...
+>>
+>> +static void rt2x00usb_kill_anchored_usb(struct rt2x00_dev *rt2x00dev)
+>> +{
+>> +     usb_kill_anchored_urbs(rt2x00dev->anchor);
+>> +}
+> ...
+>> +     rt2x00dev->kill_anchored_urbs = rt2x00usb_kill_anchored_usb;
+>
+> Why do you complicate things, instead of call usb_kill_anchored_urbs()
+> directly?
+>
 
-Fine with me, perhaps just saying "aggregate PPDU duration" would be a
-good thing?
+I tried to compile by disabling the CONFIG_USB from kernel, and was getting
+error for missing symbol usb_kill_anchored_urbs.
 
-johannes
+
+> Stanislaw
