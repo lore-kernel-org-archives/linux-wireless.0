@@ -1,52 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.student.tuwien.ac.at ([193.170.74.22]:33978 "EHLO
-	mail2.student.tuwien.ac.at" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754604AbcCBKuv (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:34806 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750735AbcCSFPz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 05:50:51 -0500
-Received: from [192.168.0.203] ([212.69.186.40])
-	(authenticated bits=0)
-	by mail2.student.tuwien.ac.at (8.13.8/8.13.8) with ESMTP id u22AhGT6016242
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Wed, 2 Mar 2016 11:43:17 +0100
-To: linux-wireless@vger.kernel.org
-From: Stefan Feirer <e0926020@student.tuwien.ac.at>
-Subject: iwlwifi support of 802.11k RRM (Radio Resource Mangament)
-Message-ID: <56D6C3C4.4000702@student.tuwien.ac.at> (sfid-20160302_115056_969251_5A9AA84D)
-Date: Wed, 2 Mar 2016 11:43:16 +0100
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Sat, 19 Mar 2016 01:15:55 -0400
+From: Eva Rachel Retuya <eraretuya@gmail.com>
+To: outreachy-kernel@googlegroups.com
+Cc: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
+	linuxwifi@intel.com, kvalo@codeaurora.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, tj@kernel.org,
+	Eva Rachel Retuya <eraretuya@gmail.com>
+Subject: [PATCH v3] iwlwifi: dvm: use alloc_ordered_workqueue()
+Date: Sat, 19 Mar 2016 13:15:47 +0800
+Message-Id: <1458364547-11621-1-git-send-email-eraretuya@gmail.com> (sfid-20160319_062148_237854_575E8202)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Use alloc_ordered_workqueue() to allocate the workqueue instead of
+create_singlethread_workqueue() since the latter is deprecated and is scheduled
+for removal.
 
-I'm trying to make different wifi roaming tests with the 802.11 
-amandments 802.11k and 802.11r.
-I use the intel wifi chipset Intel Corporation Centrino Ultimate-N 6300 
-and two Aerohive Access Points AP141 (with both 802.11k and 802.11r 
-enabled).
-With using wpa_supplicant (Version 2.5) and wpa_cli (Version 2.5) I was 
-able to connect and roam between the APs by entering the command "roam 
-<mac>" and actually an 802.11r roam was performed. Therefore the nl80211 
-and iwlwifi driver was used.
-So fast roaming seems to work properly, but I faced troubles with Radio 
-Resource Management (802.11k)
+There are work items doing related operations that shouldn't be swapped when
+queued in a certain order hence preserve the strict execution ordering of a
+single threaded (ST) workqueue by switching to alloc_ordered_workqueue().
 
-Transmitting the command "neighbor_rep_request" in wpa_cli failed. I 
-checked to log files and found the following lines:
+WQ_MEM_RECLAIM flag is not needed since the worker is not depended
+during memory reclaim.
 
-wlan0: Control interface command 'NEIGHBOR_REP_REQUEST'
-RRM: No RRM in current connection.
+Signed-off-by: Eva Rachel Retuya <eraretuya@gmail.com>
+Acked-by: Tejun Heo <tj@kernel.org>
+---
+Changes in v3:
+* revise commit message about WQ_MEM_RECLAIM
+* add 'Acked-by:' from previous feedback
+Changes in v2:
+* switch from alloc_workqueue() to alloc_ordered_workqueue()
+* remove unneeded flags: WQ_MEM_RECLAIM and WQ_HIGHPRI
+* update commit message to reflect change
 
-and
+ drivers/net/wireless/intel/iwlwifi/dvm/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-RRM: Determining whether RRM can be used - device support: 0x0
-RRM: Insufficient RRM support in driver - do not use RRM
+diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/main.c b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+index f62c2d7..14396d8 100644
+--- a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
++++ b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
+@@ -1071,7 +1071,7 @@ static void iwl_bg_restart(struct work_struct *data)
+ 
+ static void iwl_setup_deferred_work(struct iwl_priv *priv)
+ {
+-	priv->workqueue = create_singlethread_workqueue(DRV_NAME);
++	priv->workqueue = alloc_ordered_workqueue(DRV_NAME, 0);
+ 
+ 	INIT_WORK(&priv->restart, iwl_bg_restart);
+ 	INIT_WORK(&priv->beacon_update, iwl_bg_beacon_update);
+-- 
+1.9.1
 
-Now my question would be how to enable RRM, maybe using the iw-command?
-I could not find any documenation or examples according to RRM.
-The tests were performed with Ubuntu and Linux Kernel 3.13.0-79.
-
-I hope there is someone who can help me!
-Thanks, Stefan Feirer
