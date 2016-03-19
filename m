@@ -1,111 +1,122 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:34264 "EHLO
-	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751092AbcCUXjg (ORCPT
+Received: from mail-qg0-f66.google.com ([209.85.192.66]:33481 "EHLO
+	mail-qg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754470AbcCSCLu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2016 19:39:36 -0400
-Received: by mail-pf0-f194.google.com with SMTP id n5so32536667pfn.1
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2016 16:39:36 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH] staging: wilc1000: use mutex instead of struct semaphore hif_sema_deinit
-Date: Tue, 22 Mar 2016 08:39:24 +0900
-Message-Id: <1458603564-5537-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160322_003940_429346_9E4453AC)
+	Fri, 18 Mar 2016 22:11:50 -0400
+Received: by mail-qg0-f66.google.com with SMTP id y89so8715941qge.0
+        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2016 19:11:49 -0700 (PDT)
+From: Bob Copeland <me@bobcopeland.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless@vger.kernel.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH 2/5] mac80211: mesh: use hlist for rmc cache
+Date: Fri, 18 Mar 2016 22:11:29 -0400
+Message-Id: <1458353492-8654-3-git-send-email-me@bobcopeland.com> (sfid-20160319_031157_962544_03BEA0D6)
+In-Reply-To: <1458353492-8654-1-git-send-email-me@bobcopeland.com>
+References: <1458353492-8654-1-git-send-email-me@bobcopeland.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch replaces struct semaphore hif_sema_deinit with struct mutex
-hif_deinit_lock. It is better to use mutex because mutex gives better
-performance than semaphore.
+The RMC cache has 256 list heads plus a u32, which puts it at the
+unfortunate size of 4104 bytes with padding.  kmalloc() will then
+round this up to the next power-of-two, so we wind up actually
+using two pages here where most of the second is wasted.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Switch to hlist heads here to reduce the structure size down to
+fit within a page.
+
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- drivers/staging/wilc1000/host_interface.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ net/mac80211/mesh.c | 18 ++++++++++--------
+ net/mac80211/mesh.h |  4 ++--
+ 2 files changed, 12 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 4be8b31..b1ffa91 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -234,7 +234,7 @@ static struct message_queue hif_msg_q;
- static struct semaphore hif_sema_thread;
- static struct semaphore hif_sema_driver;
- static struct completion hif_wait_response;
--static struct semaphore hif_sema_deinit;
-+static struct mutex hif_deinit_lock;
- static struct timer_list periodic_rssi;
- 
- u8 wilc_multicast_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
-@@ -3402,7 +3402,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 	if (clients_count == 0)	{
- 		sema_init(&hif_sema_thread, 0);
- 		sema_init(&hif_sema_driver, 0);
--		sema_init(&hif_sema_deinit, 1);
-+		mutex_init(&hif_deinit_lock);
- 	}
- 
- 	init_completion(&hif_drv->comp_test_key_block);
-@@ -3470,7 +3470,7 @@ int wilc_deinit(struct wilc_vif *vif)
- 		return -EFAULT;
- 	}
- 
--	down(&hif_sema_deinit);
-+	mutex_lock(&hif_deinit_lock);
- 
- 	terminated_handle = hif_drv;
- 
-@@ -3512,7 +3512,7 @@ int wilc_deinit(struct wilc_vif *vif)
- 
- 	clients_count--;
- 	terminated_handle = NULL;
--	up(&hif_sema_deinit);
-+	mutex_unlock(&hif_deinit_lock);
- 	return result;
+diff --git a/net/mac80211/mesh.c b/net/mac80211/mesh.c
+index d0d8eeaa8129..1a2aaf461e98 100644
+--- a/net/mac80211/mesh.c
++++ b/net/mac80211/mesh.c
+@@ -174,22 +174,23 @@ int mesh_rmc_init(struct ieee80211_sub_if_data *sdata)
+ 		return -ENOMEM;
+ 	sdata->u.mesh.rmc->idx_mask = RMC_BUCKETS - 1;
+ 	for (i = 0; i < RMC_BUCKETS; i++)
+-		INIT_LIST_HEAD(&sdata->u.mesh.rmc->bucket[i]);
++		INIT_HLIST_HEAD(&sdata->u.mesh.rmc->bucket[i]);
+ 	return 0;
  }
  
-@@ -3559,25 +3559,25 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *pu8Buffer,
- 	struct host_if_drv *hif_drv = NULL;
- 	struct wilc_vif *vif;
+ void mesh_rmc_free(struct ieee80211_sub_if_data *sdata)
+ {
+ 	struct mesh_rmc *rmc = sdata->u.mesh.rmc;
+-	struct rmc_entry *p, *n;
++	struct rmc_entry *p;
++	struct hlist_node *n;
+ 	int i;
  
--	down(&hif_sema_deinit);
-+	mutex_lock(&hif_deinit_lock);
- 
- 	id = ((pu8Buffer[u32Length - 4]) | (pu8Buffer[u32Length - 3] << 8) | (pu8Buffer[u32Length - 2] << 16) | (pu8Buffer[u32Length - 1] << 24));
- 	vif = wilc_get_vif_from_idx(wilc, id);
- 	if (!vif) {
--		up(&hif_sema_deinit);
-+		mutex_unlock(&hif_deinit_lock);
+ 	if (!sdata->u.mesh.rmc)
  		return;
+ 
+ 	for (i = 0; i < RMC_BUCKETS; i++) {
+-		list_for_each_entry_safe(p, n, &rmc->bucket[i], list) {
+-			list_del(&p->list);
++		hlist_for_each_entry_safe(p, n, &rmc->bucket[i], list) {
++			hlist_del(&p->list);
+ 			kmem_cache_free(rm_cache, p);
+ 		}
  	}
+@@ -218,7 +219,8 @@ int mesh_rmc_check(struct ieee80211_sub_if_data *sdata,
+ 	u32 seqnum = 0;
+ 	int entries = 0;
+ 	u8 idx;
+-	struct rmc_entry *p, *n;
++	struct rmc_entry *p;
++	struct hlist_node *n;
  
- 	hif_drv = vif->hif_drv;
- 
- 	if (!hif_drv || hif_drv == terminated_handle) {
--		up(&hif_sema_deinit);
-+		mutex_unlock(&hif_deinit_lock);
- 		return;
- 	}
- 
- 	if (!hif_drv->usr_conn_req.conn_result) {
- 		netdev_err(vif->ndev, "there is no current Connect Request\n");
--		up(&hif_sema_deinit);
-+		mutex_unlock(&hif_deinit_lock);
- 		return;
- 	}
- 
-@@ -3594,7 +3594,7 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *pu8Buffer,
- 	if (result)
- 		netdev_err(vif->ndev, "synchronous info (%d)\n", result);
- 
--	up(&hif_sema_deinit);
-+	mutex_unlock(&hif_deinit_lock);
+ 	if (!rmc)
+ 		return -1;
+@@ -226,11 +228,11 @@ int mesh_rmc_check(struct ieee80211_sub_if_data *sdata,
+ 	/* Don't care about endianness since only match matters */
+ 	memcpy(&seqnum, &mesh_hdr->seqnum, sizeof(mesh_hdr->seqnum));
+ 	idx = le32_to_cpu(mesh_hdr->seqnum) & rmc->idx_mask;
+-	list_for_each_entry_safe(p, n, &rmc->bucket[idx], list) {
++	hlist_for_each_entry_safe(p, n, &rmc->bucket[idx], list) {
+ 		++entries;
+ 		if (time_after(jiffies, p->exp_time) ||
+ 		    entries == RMC_QUEUE_MAX_LEN) {
+-			list_del(&p->list);
++			hlist_del(&p->list);
+ 			kmem_cache_free(rm_cache, p);
+ 			--entries;
+ 		} else if ((seqnum == p->seqnum) && ether_addr_equal(sa, p->sa))
+@@ -244,7 +246,7 @@ int mesh_rmc_check(struct ieee80211_sub_if_data *sdata,
+ 	p->seqnum = seqnum;
+ 	p->exp_time = jiffies + RMC_TIMEOUT;
+ 	memcpy(p->sa, sa, ETH_ALEN);
+-	list_add(&p->list, &rmc->bucket[idx]);
++	hlist_add_head(&p->list, &rmc->bucket[idx]);
+ 	return 0;
  }
  
- void wilc_scan_complete_received(struct wilc *wilc, u8 *pu8Buffer,
+diff --git a/net/mac80211/mesh.h b/net/mac80211/mesh.h
+index e1415c952e9c..bc3f9a32b5a4 100644
+--- a/net/mac80211/mesh.h
++++ b/net/mac80211/mesh.h
+@@ -158,14 +158,14 @@ struct mesh_table {
+  * that are found in the cache.
+  */
+ struct rmc_entry {
+-	struct list_head list;
++	struct hlist_node list;
+ 	u32 seqnum;
+ 	unsigned long exp_time;
+ 	u8 sa[ETH_ALEN];
+ };
+ 
+ struct mesh_rmc {
+-	struct list_head bucket[RMC_BUCKETS];
++	struct hlist_head bucket[RMC_BUCKETS];
+ 	u32 idx_mask;
+ };
+ 
 -- 
-2.7.3
+2.6.1
 
