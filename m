@@ -1,54 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.xplot.org ([66.92.66.146]:35130 "EHLO www.xplot.org"
+Received: from mx1.redhat.com ([209.132.183.28]:59042 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753967AbcCDBQb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 20:16:31 -0500
-From: Tim Shepard <shep@alum.mit.edu>
-To: linux-wireless@vger.kernel.org
-cc: michal.kazior@tieto.com, johannes@sipsolutions.net,
-	netdev@vger.kernel.org, eric.dumazet@gmail.com,
-	dave.taht@gmail.com, emmanuel.grumbach@intel.com, nbd@openwrt.org,
-	andrewmcgr@google.com, apenwarr@google.com
-Subject: [PATCH RFC/RFT 0/2] ath9k: use mac80211 intermediate software queues
-Date: Thu, 03 Mar 2016 20:06:12 -0500
-Message-Id: <E1abeC4-0007p7-00@www.xplot.org> (sfid-20160304_021637_711644_BE45A9EB)
+	id S1751023AbcCSD6W convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 18 Mar 2016 23:58:22 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Joe Perches <joe@perches.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux Driver Project Developer List
+	<driverdev-devel@linuxdriverproject.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH] staging: refresh TODO for rtl8723au
+References: <1458321324-16906-1-git-send-email-xose.vazquez@gmail.com>
+	<wrfjlh5fk7i4.fsf@redhat.com> <1458325693.26915.23.camel@perches.com>
+Date: Fri, 18 Mar 2016 23:58:18 -0400
+In-Reply-To: <1458325693.26915.23.camel@perches.com> (Joe Perches's message of
+	"Fri, 18 Mar 2016 11:28:13 -0700")
+Message-ID: <wrfjbn6bi0f9.fsf@redhat.com> (sfid-20160319_045845_547991_27D2A4F1)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Joe Perches <joe@perches.com> writes:
+> On Fri, 2016-03-18 at 13:42 -0400, Jes Sorensen wrote:
+>> Xose Vazquez Perez <xose.vazquez@gmail.com> writes:
+>> > People should not waste time and energy working on this staging driver.
+>> > A replacement(rtl8xxxu) using the kernel wireless stack already was merged
+>> > in the 4.3 kernel.
+> []
+>> >  drivers/staging/rtl8723au/TODO | 3 +++
+>> Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+>
+> why not git rm drivers/staging/rtl8723au/ ?
 
-Here is a patch in two parts to have ath9k make use the new
-intermediate queues in mac80211.   It seems to work for me, but it
-clearly needs more testing.
+Because you don't just pull the rug out under people. I plan to mark it
+obsolete and then remove it in a follow-on release.
 
-This should be useful to anyone who wants to try Michal's patch from
-last week "mac80211: implement fq_codel for software queuing" as that
-patch will not do anything unless you have a mac80211 driver that uses
-the new mac80211 intermediate queues and indicates to mac80211 that
-it does so by having a non-zero .wake_tx_queue method.
-
-The first patch just renames the struct ath_txq in ath9k to be
-struct ath_hwq and the renames the variables and fields holding a
-pointer to it to be hwq  (instead of txq).
-
-This first patch is IMHO needed because I had an earlier version of
-this without renaming ath_txq and it was too mind bending to try and
-keep straight which was ath9k's txq (which is per hardware queue)
-and what was mac80211 txq (which is per station per tid).
-
-The second patch changes ath9k to use the new mac80211 intermediate
-software queues.
-
-I left the existing ath9k software queue mechanisms in place. They
-are used by the channel context code in some cases even for non-data
-frames, and in any case it seemed like a safer first step to get this
-working before removing code.  Yes, we should eventually clean this
-up once this is tested and we figure out what the right way to do
-the clean up.   I see little harm in leaving it stay for awhile.
-
-I have not tried any testing with CONFIG_ATH9K_CHANNEL_CONTEXT=y and
-I am not even sure what I would need to do to properly exercise that.
-
-Please comment and/or test.
-
-			-Tim Shepard
-			 shep@alum.mit.edu
+Jes
