@@ -1,86 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:3712 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751959AbcCIHcS (ORCPT
+Received: from smtprelay0021.hostedemail.com ([216.40.44.21]:44276 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750725AbcCSEKH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 02:32:18 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>, <kvalo@codeaurora.org>,
-	<mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH v1 2/2] ath10k: Remove debugfs support for Per STA total rx duration
-Date: Wed, 9 Mar 2016 13:01:21 +0530
-Message-ID: <1457508681-17546-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160309_083228_633890_3C87127E)
-In-Reply-To: <1457508681-17546-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1457508681-17546-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 19 Mar 2016 00:10:07 -0400
+Message-ID: <1458360598.26915.41.camel@perches.com> (sfid-20160319_051034_874849_8E05A0C9)
+Subject: Re: [PATCH] staging: refresh TODO for rtl8723au
+From: Joe Perches <joe@perches.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Linux Driver Project Developer List
+	<driverdev-devel@linuxdriverproject.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>
+Date: Fri, 18 Mar 2016 21:09:58 -0700
+In-Reply-To: <wrfjbn6bi0f9.fsf@redhat.com>
+References: <1458321324-16906-1-git-send-email-xose.vazquez@gmail.com>
+	 <wrfjlh5fk7i4.fsf@redhat.com> <1458325693.26915.23.camel@perches.com>
+	 <wrfjbn6bi0f9.fsf@redhat.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+On Fri, 2016-03-18 at 23:58 -0400, Jes Sorensen wrote:
+> Joe Perches <joe@perches.com> writes:
+> > On Fri, 2016-03-18 at 13:42 -0400, Jes Sorensen wrote:
+> > > Xose Vazquez Perez <xose.vazquez@gmail.com> writes:
+> > > > 
+> > > > People should not waste time and energy working on this staging driver.
+> > > > A replacement(rtl8xxxu) using the kernel wireless stack already was merged
+> > > > in the 4.3 kernel.
+> > []
+> > > 
+> > > > 
+> > > >  drivers/staging/rtl8723au/TODO | 3 +++
+> > > Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+> > why not git rm drivers/staging/rtl8723au/ ?
+> Because you don't just pull the rug out under people. I plan to mark it
+> obsolete and then remove it in a follow-on release.
 
-cfg80211/nl80211 interface changes for per STA total rx-duration and
-very basic 'ath10k_sta_statistics'  mac80211 callback is implemented
-to extend support for per station statistics from the driver.
+Duh.
 
-Also provision in 'iw dev wlan#N station dump' to parse rx-duration
-is supported. So its safer to remove the debugfs entry for per STA
-rx-duration
+I note you removed the obsolete suggestion which
+is probably more valuable then updating the TODO.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
----
-Dependencies:
+Updating the TODO to something like:
 
-1. cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION
-2. iw: Add support for NL80211_STA_INFO_RX_DURATION netlink.
-3. ath10k: Add support for ath10k_sta_statistics support
-4. ath10k: Enable debugfs provision to enable Peer Stats feature
+Actual bug fixes only, no other changes accepted.
+This driver is going to be removed by 4.8 or so
 
- drivers/net/wireless/ath/ath10k/debugfs_sta.c |   24 ------------------------
- 1 file changed, 24 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-index 4c459f2..0f24327 100644
---- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-@@ -271,28 +271,6 @@ static const struct file_operations fops_delba = {
- 	.llseek = default_llseek,
- };
- 
--static ssize_t ath10k_dbg_sta_read_rx_duration(struct file *file,
--					       char __user *user_buf,
--					       size_t count, loff_t *ppos)
--{
--	struct ieee80211_sta *sta = file->private_data;
--	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
--	char buf[100];
--	int len = 0;
--
--	len = scnprintf(buf, sizeof(buf),
--			"%llu usecs\n", arsta->rx_duration);
--
--	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
--}
--
--static const struct file_operations fops_rx_duration = {
--	.read = ath10k_dbg_sta_read_rx_duration,
--	.open = simple_open,
--	.owner = THIS_MODULE,
--	.llseek = default_llseek,
--};
--
- void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta, struct dentry *dir)
- {
-@@ -301,6 +279,4 @@ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	debugfs_create_file("addba", S_IWUSR, dir, sta, &fops_addba);
- 	debugfs_create_file("addba_resp", S_IWUSR, dir, sta, &fops_addba_resp);
- 	debugfs_create_file("delba", S_IWUSR, dir, sta, &fops_delba);
--	debugfs_create_file("rx_duration", S_IRUGO, dir, sta,
--			    &fops_rx_duration);
- }
--- 
-1.7.9.5
+is also probably more valuable than keeping all the
+current items and just adding a note that another
+driver exists.
 
