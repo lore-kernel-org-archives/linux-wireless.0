@@ -1,44 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f171.google.com ([209.85.214.171]:35669 "EHLO
-	mail-ob0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754464AbcCSNPo (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:11473 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752579AbcCSOaL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Mar 2016 09:15:44 -0400
-Received: by mail-ob0-f171.google.com with SMTP id fp4so140511283obb.2
-        for <linux-wireless@vger.kernel.org>; Sat, 19 Mar 2016 06:15:44 -0700 (PDT)
+	Sat, 19 Mar 2016 10:30:11 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: <linux-wireless@vger.kernel.org>
+CC: <johannes@sipsolutions.net>, <mohammed@codeaurora.org>,
+	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
+Subject: [PATCH] mac80211: Remove unused variable in per STA debugfs struct
+Date: Sat, 19 Mar 2016 19:59:43 +0530
+Message-ID: <1458397784-15279-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160319_153015_700709_9D51BC6A)
 MIME-Version: 1.0
-In-Reply-To: <56ED4595.5050007@users.sourceforge.net>
-References: <cover.1458262312.git.julian.calaby@gmail.com> <c95f816da2d5c6789004e063e1b7adc44695718e.1458262312.git.julian.calaby@gmail.com>
- <56ED4595.5050007@users.sourceforge.net>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sun, 20 Mar 2016 00:15:24 +1100
-Message-ID: <CAGRGNgVybFMXf-KFBTVEwbbwcqEvP62xGa9LGKcoHJxtLT0Phg@mail.gmail.com> (sfid-20160319_141624_597973_58C16B99)
-Subject: Re: [PATCH DETAIL 13/19] rsi: Delete unnecessary variable initialisation
-To: SF Markus Elfring <elfring@users.sourceforge.net>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Markus,
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-On Sat, Mar 19, 2016 at 11:27 PM, SF Markus Elfring
-<elfring@users.sourceforge.net> wrote:
->> In rsi_send_data_pkt(), the following variables are assigned to
->> before they're used:
->
-> Thanks for your interest in this update suggestion.
-> How do you think about to add the function name also to such
-> a mail subject so that the potential for confusion with an other
-> change can be eventually reduced around the source file "rsi_91x_pkt.c"?
+Remove unused variable in per STA debugfs structure, 'commit 34e895075e21
+("mac80211: allow station add/remove to sleep")' removed the only user of
+'add_has_run'.
 
-I don't think it really matters, they're both doing the same thing.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ net/mac80211/debugfs_sta.c |    2 --
+ net/mac80211/sta_info.h    |    1 -
+ 2 files changed, 3 deletions(-)
 
-Thanks,
-
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index a39512f..43d6ab8 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -339,8 +339,6 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ 	struct dentry *stations_dir = sta->sdata->debugfs.subdir_stations;
+ 	u8 mac[3*ETH_ALEN];
+ 
+-	sta->debugfs.add_has_run = true;
+-
+ 	if (!stations_dir)
+ 		return;
+ 
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 57545e5..aae260b 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -487,7 +487,6 @@ struct sta_info {
+ #ifdef CONFIG_MAC80211_DEBUGFS
+ 	struct sta_info_debugfsdentries {
+ 		struct dentry *dir;
+-		bool add_has_run;
+ 	} debugfs;
+ #endif
+ 
 -- 
-Julian Calaby
+1.7.9.5
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
