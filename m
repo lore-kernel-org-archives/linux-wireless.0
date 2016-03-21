@@ -1,63 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f193.google.com ([209.85.214.193]:35945 "EHLO
-	mail-ob0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966640AbcCQSlS (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:34264 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751092AbcCUXjg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 14:41:18 -0400
-Received: by mail-ob0-f193.google.com with SMTP id cf7so6685186obc.3
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 11:41:17 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 3/9] rtlwifi: rtl8188ee: Fix Smatch warnings
-Date: Thu, 17 Mar 2016 13:40:58 -0500
-Message-Id: <1458240064-31422-4-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160317_194121_773561_FC61D24B)
-In-Reply-To: <1458240064-31422-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1458240064-31422-1-git-send-email-Larry.Finger@lwfinger.net>
+	Mon, 21 Mar 2016 19:39:36 -0400
+Received: by mail-pf0-f194.google.com with SMTP id n5so32536667pfn.1
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2016 16:39:36 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH] staging: wilc1000: use mutex instead of struct semaphore hif_sema_deinit
+Date: Tue, 22 Mar 2016 08:39:24 +0900
+Message-Id: <1458603564-5537-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160322_003940_429346_9E4453AC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch reports the following:
+This patch replaces struct semaphore hif_sema_deinit with struct mutex
+hif_deinit_lock. It is better to use mutex because mutex gives better
+performance than semaphore.
 
-  CHECK   drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
-drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c:1140 rtl88e_dm_check_txpower_tracking() warn: inconsistent indenting
-  CHECK   drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c:1906 _rtl88e_phy_lc_calibrate() warn: inconsistent indenting
-
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c  | 2 +-
- drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c | 3 +--
- 2 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
-index ce4da9d..db9a782 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/dm.c
-@@ -1137,7 +1137,7 @@ void rtl88e_dm_check_txpower_tracking(struct ieee80211_hw *hw)
- 	} else {
- 		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
- 			 "Schedule TxPowerTracking !!\n");
--				dm_txpower_track_cb_therm(hw);
-+		dm_txpower_track_cb_therm(hw);
- 		rtlpriv->dm.tm_trigger = 0;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 4be8b31..b1ffa91 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -234,7 +234,7 @@ static struct message_queue hif_msg_q;
+ static struct semaphore hif_sema_thread;
+ static struct semaphore hif_sema_driver;
+ static struct completion hif_wait_response;
+-static struct semaphore hif_sema_deinit;
++static struct mutex hif_deinit_lock;
+ static struct timer_list periodic_rssi;
+ 
+ u8 wilc_multicast_mac_addr_list[WILC_MULTICAST_TABLE_SIZE][ETH_ALEN];
+@@ -3402,7 +3402,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 	if (clients_count == 0)	{
+ 		sema_init(&hif_sema_thread, 0);
+ 		sema_init(&hif_sema_driver, 0);
+-		sema_init(&hif_sema_deinit, 1);
++		mutex_init(&hif_deinit_lock);
  	}
- }
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-index a2bb02c..416a9ba 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8188ee/phy.c
-@@ -1903,8 +1903,7 @@ static void _rtl88e_phy_lc_calibrate(struct ieee80211_hw *hw, bool is2t)
- 	} else {
- 		rtl_write_byte(rtlpriv, REG_TXPAUSE, 0x00);
+ 
+ 	init_completion(&hif_drv->comp_test_key_block);
+@@ -3470,7 +3470,7 @@ int wilc_deinit(struct wilc_vif *vif)
+ 		return -EFAULT;
  	}
--RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "\n");
--
-+	RT_TRACE(rtlpriv, COMP_INIT, DBG_LOUD, "\n");
+ 
+-	down(&hif_sema_deinit);
++	mutex_lock(&hif_deinit_lock);
+ 
+ 	terminated_handle = hif_drv;
+ 
+@@ -3512,7 +3512,7 @@ int wilc_deinit(struct wilc_vif *vif)
+ 
+ 	clients_count--;
+ 	terminated_handle = NULL;
+-	up(&hif_sema_deinit);
++	mutex_unlock(&hif_deinit_lock);
+ 	return result;
  }
  
- static void _rtl88e_phy_set_rfpath_switch(struct ieee80211_hw *hw,
+@@ -3559,25 +3559,25 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *pu8Buffer,
+ 	struct host_if_drv *hif_drv = NULL;
+ 	struct wilc_vif *vif;
+ 
+-	down(&hif_sema_deinit);
++	mutex_lock(&hif_deinit_lock);
+ 
+ 	id = ((pu8Buffer[u32Length - 4]) | (pu8Buffer[u32Length - 3] << 8) | (pu8Buffer[u32Length - 2] << 16) | (pu8Buffer[u32Length - 1] << 24));
+ 	vif = wilc_get_vif_from_idx(wilc, id);
+ 	if (!vif) {
+-		up(&hif_sema_deinit);
++		mutex_unlock(&hif_deinit_lock);
+ 		return;
+ 	}
+ 
+ 	hif_drv = vif->hif_drv;
+ 
+ 	if (!hif_drv || hif_drv == terminated_handle) {
+-		up(&hif_sema_deinit);
++		mutex_unlock(&hif_deinit_lock);
+ 		return;
+ 	}
+ 
+ 	if (!hif_drv->usr_conn_req.conn_result) {
+ 		netdev_err(vif->ndev, "there is no current Connect Request\n");
+-		up(&hif_sema_deinit);
++		mutex_unlock(&hif_deinit_lock);
+ 		return;
+ 	}
+ 
+@@ -3594,7 +3594,7 @@ void wilc_gnrl_async_info_received(struct wilc *wilc, u8 *pu8Buffer,
+ 	if (result)
+ 		netdev_err(vif->ndev, "synchronous info (%d)\n", result);
+ 
+-	up(&hif_sema_deinit);
++	mutex_unlock(&hif_deinit_lock);
+ }
+ 
+ void wilc_scan_complete_received(struct wilc *wilc, u8 *pu8Buffer,
 -- 
-2.1.4
+2.7.3
 
