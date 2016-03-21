@@ -1,44 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:46961 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:51232 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752394AbcCXOXZ (ORCPT
+	with ESMTP id S1755746AbcCUUBU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Mar 2016 10:23:25 -0400
-Subject: [PATCH 0/4] ath10k: fix recent checkpatch warnings
-To: <ath10k@lists.infradead.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Thu, 24 Mar 2016 16:23:07 +0200
-Message-ID: <20160324142217.15808.22638.stgit@potku.adurom.net> (sfid-20160324_152329_043450_0125BD87)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+	Mon, 21 Mar 2016 16:01:20 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Lior David <qca_liord@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
+	Maya Erez <qca_merez@qca.qualcomm.com>
+Subject: [PATCH 2/2] wil6210: add module parameter for alternate interface name
+Date: Mon, 21 Mar 2016 22:01:12 +0200
+Message-Id: <1458590472-677-3-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160321_210125_725805_4D2F93FA)
+In-Reply-To: <1458590472-677-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1458590472-677-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I updated checkpatch and noticed that there are few new warnings.
+From: Lior David <qca_liord@qca.qualcomm.com>
 
+Add a module parameter alt_ifname that when set, will name
+the primary network interface wigig<N> instead of the default
+wlan<N>. This helps platforms such as android where we need to
+clearly separate the WIGIG interface from the default wireless
+interface.
+
+Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
+ drivers/net/wireless/ath/wil6210/netdev.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-Kalle Valo (4):
-      ath10k: fix checkpatch warnings related to spaces
-      ath10k: prefer kernel type 'u64' over 'u_int64_t'
-      ath10k: prefer ether_addr_equal() or ether_addr_equal_unaligned() over memcmp()
-      ath10k: prefer ether_addr_copy() over memcpy()
-
-
- drivers/net/wireless/ath/ath10k/ce.c        |    6 +++---
- drivers/net/wireless/ath/ath10k/ce.h        |    2 +-
- drivers/net/wireless/ath/ath10k/core.h      |    6 +++---
- drivers/net/wireless/ath/ath10k/debug.h     |    2 +-
- drivers/net/wireless/ath/ath10k/htc.h       |    4 ++--
- drivers/net/wireless/ath/ath10k/htt.c       |    2 +-
- drivers/net/wireless/ath/ath10k/htt.h       |    4 ++--
- drivers/net/wireless/ath/ath10k/mac.c       |   12 ++++++------
- drivers/net/wireless/ath/ath10k/targaddrs.h |    2 +-
- drivers/net/wireless/ath/ath10k/thermal.h   |    2 +-
- drivers/net/wireless/ath/ath10k/txrx.c      |    4 ++--
- drivers/net/wireless/ath/ath10k/wmi-tlv.h   |    4 ++--
- drivers/net/wireless/ath/ath10k/wmi.c       |    7 +++----
- drivers/net/wireless/ath/ath10k/wmi.h       |   18 +++++++++---------
- 14 files changed, 37 insertions(+), 38 deletions(-)
+diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
+index 3bc0e26..f78ea91 100644
+--- a/drivers/net/wireless/ath/wil6210/netdev.c
++++ b/drivers/net/wireless/ath/wil6210/netdev.c
+@@ -14,10 +14,15 @@
+  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
++#include <linux/moduleparam.h>
+ #include <linux/etherdevice.h>
+ #include "wil6210.h"
+ #include "txrx.h"
+ 
++static bool alt_ifname; /* = false; */
++module_param(alt_ifname, bool, S_IRUGO);
++MODULE_PARM_DESC(alt_ifname, " use an alternate interface name wigigN instead of wlanN");
++
+ static int wil_open(struct net_device *ndev)
+ {
+ 	struct wil6210_priv *wil = ndev_to_wil(ndev);
+@@ -136,6 +141,7 @@ void *wil_if_alloc(struct device *dev)
+ 	struct wil6210_priv *wil;
+ 	struct ieee80211_channel *ch;
+ 	int rc = 0;
++	const char *ifname = alt_ifname ? "wigig%d" : "wlan%d";
+ 
+ 	wdev = wil_cfg80211_init(dev);
+ 	if (IS_ERR(wdev)) {
+@@ -160,7 +166,7 @@ void *wil_if_alloc(struct device *dev)
+ 	ch = wdev->wiphy->bands[IEEE80211_BAND_60GHZ]->channels;
+ 	cfg80211_chandef_create(&wdev->preset_chandef, ch, NL80211_CHAN_NO_HT);
+ 
+-	ndev = alloc_netdev(0, "wlan%d", NET_NAME_UNKNOWN, wil_dev_setup);
++	ndev = alloc_netdev(0, ifname, NET_NAME_UNKNOWN, wil_dev_setup);
+ 	if (!ndev) {
+ 		dev_err(dev, "alloc_netdev_mqs failed\n");
+ 		rc = -ENOMEM;
+-- 
+1.8.5.2
 
