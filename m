@@ -1,41 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:47032 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751087AbcCNQPd (ORCPT
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:36284 "EHLO
+	mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753033AbcCUIIu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2016 12:15:33 -0400
-Date: Mon, 14 Mar 2016 12:15:28 -0400 (EDT)
-Message-Id: <20160314.121528.1217892668324346880.davem@davemloft.net> (sfid-20160314_171543_890690_BCA89EAE)
-To: kvalo@codeaurora.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: pull-request: wireless-drivers-next 2016-03-14
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <87y49llatn.fsf@kamboji.qca.qualcomm.com>
-References: <87y49llatn.fsf@kamboji.qca.qualcomm.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 21 Mar 2016 04:08:50 -0400
+Received: by mail-pf0-f177.google.com with SMTP id u190so256942056pfb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2016 01:08:49 -0700 (PDT)
+From: Wei-Ning Huang <wnhuang@chromium.org>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, akarwar@marvell.com,
+	djkurtz@chromium.org, Wei-Ning Huang <wnhuang@chromium.org>,
+	nishants@marvell.com, kvalo@codeaurora.org, netdev@vger.kernel.org
+Subject: [PATCH] mwifiex: advertise low priority scan feature
+Date: Mon, 21 Mar 2016 16:07:02 +0800
+Message-Id: <1458547622-1632-1-git-send-email-wnhuang@google.com> (sfid-20160321_090945_824204_9409CFBA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Kalle Valo <kvalo@codeaurora.org>
-Date: Mon, 14 Mar 2016 10:31:48 +0200
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-> I know I'm late now that merge window was opened yesterday but here's
-> one more set of patches I would like to get to 4.6 still. There isn't
-> anything controversial so I hope this should be still safe to pull. The
-> patches have been in linux-next since Friday and I haven't seen any
-> reports about issues. But if you think it's too late just let me know
-> and I'll resubmit these for 4.7.
-> 
-> The most notable part here of course is rtl8xxxu with over 100 patches.
-> As the driver is new and under heavy development I think they are ok to
-> take still. Otherwise there are mostly fixes with an exception of adding
-> a new debugfs file to wl18xx.
-> 
-> Please let me know if you have any problems.
+Low priority scan handling code which delays or aborts scan
+operation based on Tx traffic is removed recently. The reason
+is firmware already takes care of it in our new feature scan
+channel gap. Hence we should advertise low priority scan
+support to cfg80211.
 
-Pulled, thanks.
+This patch fixes a problem in which OBSS scan request from
+wpa_supplicant was being rejected by cfg80211.
 
-I really like Jes's work and I wish you had integrated it several
-months ago, instead of sloshing him needlessly through a non-stop
-cycle of very nit-picky issues, just FYI.
+Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index bb7235e..7dafc5b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -4086,6 +4086,7 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+ 
+ 	wiphy->features |= NL80211_FEATURE_HT_IBSS |
+ 			   NL80211_FEATURE_INACTIVITY_TIMER |
++			   NL80211_FEATURE_LOW_PRIORITY_SCAN |
+ 			   NL80211_FEATURE_NEED_OBSS_SCAN;
+ 
+ 	if (ISSUPP_TDLS_ENABLED(adapter->fw_cap_info))
+-- 
+2.8.0.rc3.226.g39d4020
+
