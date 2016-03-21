@@ -1,65 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:43098 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751359AbcCaQ57 (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:36996 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754493AbcCULBR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 12:57:59 -0400
-Subject: Re: [PATCH 2/3] ath10k: remove unnecessary warning for probe response
- drops
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	ath10k@lists.infradead.org
-References: <1459352551-11773-1-git-send-email-rmanohar@qti.qualcomm.com>
- <1459352551-11773-2-git-send-email-rmanohar@qti.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, rmanohar@codeaurora.org
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <56FD5716.6030406@candelatech.com> (sfid-20160331_185804_367976_A09128D4)
-Date: Thu, 31 Mar 2016 09:57:58 -0700
+	Mon, 21 Mar 2016 07:01:17 -0400
+Date: Mon, 21 Mar 2016 12:01:13 +0100
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: kev@ti.com, "Andrew F. Davis" <afd@ti.com>,
+	Guy Mishol <guym@ti.com>, Yaniv Machani <yanivma@ti.com>,
+	Arik Nemtsov <arik@wizery.com>,
+	Felipe Balbi <balbi@kernel.org>,
+	Luciano Coelho <luca@coelho.fi>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Pavel Machek <pavel@ucw.cz>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	David Gnedt <david.gnedt@platinumzone24.at>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Sebastian Reichel <sre@kernel.org>,
+	Tony Lindgren <tony@atomide.com>, Nishanth Menon <nm@ti.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: AP firmware for TI wl1251 wifi chip (wl1251-fw-ap.bin)
+Message-ID: <20160321110113.GG8413@pali> (sfid-20160321_120123_055873_E62EA594)
+References: <201603200040.26045@pali>
+ <878u1cglu3.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1459352551-11773-2-git-send-email-rmanohar@qti.qualcomm.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=utf-8
+In-Reply-To: <878u1cglu3.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/30/2016 08:42 AM, Rajkumar Manoharan wrote:
-> qca99x0 and qca4019 solutions limit probe responses transmissions.
-> Logging warning message for each probe response drop is flooding
-> kernel log unnecessary with " failed to increase tx mgmt pending
-> count: -16, dropping". Hence reducing log level to debug.
+On Monday 21 March 2016 12:35:32 Kalle Valo wrote:
+> Pali Rohár <pali.rohar@gmail.com> writes:
+> 
+> > In linux-firmware repository [1] is missing AP firmware for TI wl1251 
+> > chip. There is only STA firmware wl1251-fw.bin which supports managed 
+> > and ad-hoc modes.
+> >
+> > For other TI wilink chips there are <CHIP>-ap.bin firmware files 
+> > (wl1271-fw-ap.bin and wl128x-fw-ap.bin) which support AP mode. But for 
+> > wl1251 firmware file with guessed name "wl1251-fw-ap.bin" is missing.
+> >
+> > Do you have any idea what happened with AP firmware for ti wilink4 
+> > wl1251 wifi chip? Or where can be found? Guys from TI, can you help?
+> 
+> It's a long time ago but IIRC wl1251 has not ever supported AP mode and
+> wl1271 was the first one to support it. But I might be wrong of course.
 
-Is there any realistic way to see this message if we are not running
-many vAP on one radio?
+Support for AP mode in current kernel driver wl1251.ko is missing, but I
+could try to write it if there will be firmware for it.
 
-I guess many probe requests or other management frames could also
-cause this problem?
-
-Thanks,
-Ben
-
-> Reported-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-> ---
->   drivers/net/wireless/ath/ath10k/mac.c | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-> index ed00853..a7aafb35c 100644
-> --- a/drivers/net/wireless/ath/ath10k/mac.c
-> +++ b/drivers/net/wireless/ath/ath10k/mac.c
-> @@ -3994,8 +3994,8 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
->
->   		ret = ath10k_htt_tx_mgmt_inc_pending(htt, is_mgmt, is_presp);
->   		if (ret) {
-> -			ath10k_warn(ar, "failed to increase tx mgmt pending count: %d, dropping\n",
-> -				    ret);
-> +			ath10k_dbg(ar, ATH10K_DBG_MAC, "failed to increase tx mgmt pending count: %d, dropping\n",
-> +				   ret);
->   			ath10k_htt_tx_dec_pending(htt);
->   			spin_unlock_bh(&ar->htt.tx_lock);
->   			ieee80211_free_txskb(ar->hw, skb);
->
-
+According to some TI whitepaper about TI wilink4 devices (wl1251 and
+wl1253) those devices have support for some Soft-AP mode.
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
-
+Pali Rohár
+pali.rohar@gmail.com
