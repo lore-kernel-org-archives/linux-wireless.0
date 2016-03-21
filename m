@@ -1,82 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:60163 "EHLO mga14.intel.com"
+Received: from mail.kernel.org ([198.145.29.136]:48736 "EHLO mail.kernel.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754296AbcC3OGY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 10:06:24 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 34/43] iwlwifi: mvm: allocate dedicated queue for cab in dqa mode
-Date: Wed, 30 Mar 2016 17:05:06 +0300
-Message-Id: <1459346715-7954-34-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160629_962460_9DCD6DB6)
-In-Reply-To: <1459346667.4731.9.camel@intel.com>
-References: <1459346667.4731.9.camel@intel.com>
+	id S1756270AbcCUQpu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 21 Mar 2016 12:45:50 -0400
+MIME-Version: 1.0
+In-Reply-To: <56D4B8DB.5000901@gmail.com>
+References: <56D4B8DB.5000901@gmail.com>
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
+Date: Mon, 21 Mar 2016 09:45:27 -0700
+Message-ID: <CAB=NE6XdHrU0=MxnXd-UR+BuTkfVEcw6=O3=CPPK6RNpehSW2g@mail.gmail.com> (sfid-20160321_174553_888380_8334A0D3)
+Subject: Re: Google Summer of Code 2016 - The Linux Foundation is accepted as
+ mentoring organization!
+To: Till Kamppeter <till.kamppeter@gmail.com>,
+	Julia Lawall <julia.lawall@lip6.fr>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	Greg KH <greg@kroah.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>,
+	"backports@vger.kernel.org" <backports@vger.kernel.org>,
+	Steven Rostedt <rostedt@goodmis.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+On Mon, Feb 29, 2016 at 1:32 PM, Till Kamppeter
+<till.kamppeter@gmail.com> wrote:
+> Hi,
+>
+> we are accepted as mentoring organization again!
+>
+> So please advertise our participation to find students and add more
+> project ideas to the ideas page:
+>
+> https://www.linuxfoundation.org/collaborate/workgroups/gsoc/google-summer-code-2016
+>
+> Please add your ideas to the sub-page of your work group. If you have
+> problems mail me with your project idea.
 
-In DQA mode, allocate a dedicated queue (#3) for content
-after beacon (AKA "CaB").
+Thanks,
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h   |  2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 18 ++++++++++++------
- 2 files changed, 14 insertions(+), 6 deletions(-)
+We will be coordinating with one student so far that has expressed
+interest in a very specific project in the realm of Linux backports
+which may also help Linux upstream, will be following up with that
+student next.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index 9652687..b38cb03 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -89,6 +89,7 @@ enum {
- /*
-  * DQA queue numbers
-  *
-+ * @IWL_MVM_DQA_GCAST_QUEUE: a queue reserved for P2P GO/SoftAP GCAST frames
-  * @IWL_MVM_DQA_BSS_CLIENT_QUEUE: a queue reserved for BSS activity, to ensure
-  *	that we are never left without the possibility to connect to an AP.
-  * @IWL_MVM_DQA_MIN_MGMT_QUEUE: first TXQ in pool for MGMT and non-QOS frames.
-@@ -102,6 +103,7 @@ enum {
-  * @IWL_MVM_DQA_MAX_DATA_QUEUE: last TXQ in pool for DATA frames
-  */
- enum iwl_mvm_dqa_txq {
-+	IWL_MVM_DQA_GCAST_QUEUE = 3,
- 	IWL_MVM_DQA_BSS_CLIENT_QUEUE = 4,
- 	IWL_MVM_DQA_MIN_MGMT_QUEUE = 5,
- 	IWL_MVM_DQA_MAX_MGMT_QUEUE = 8,
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-index c02c105..43fd857 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
-@@ -447,13 +447,19 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
- 
- 	/* Allocate the CAB queue for softAP and GO interfaces */
- 	if (vif->type == NL80211_IFTYPE_AP) {
--		u8 queue = find_first_zero_bit(&used_hw_queues,
--					       mvm->first_agg_queue);
-+		u8 queue;
- 
--		if (queue >= mvm->first_agg_queue) {
--			IWL_ERR(mvm, "Failed to allocate cab queue\n");
--			ret = -EIO;
--			goto exit_fail;
-+		if (!iwl_mvm_is_dqa_supported(mvm)) {
-+			queue = find_first_zero_bit(&used_hw_queues,
-+						    mvm->first_agg_queue);
-+
-+			if (queue >= mvm->first_agg_queue) {
-+				IWL_ERR(mvm, "Failed to allocate cab queue\n");
-+				ret = -EIO;
-+				goto exit_fail;
-+			}
-+		} else {
-+			queue = IWL_MVM_DQA_GCAST_QUEUE;
- 		}
- 
- 		vif->cab_queue = queue;
--- 
-2.5.0
-
+ Luis
