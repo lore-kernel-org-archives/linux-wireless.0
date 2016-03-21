@@ -1,42 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f173.google.com ([209.85.213.173]:36933 "EHLO
-	mail-ig0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752050AbcCJOlV (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:41329 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752700AbcCUK3I (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 09:41:21 -0500
-Received: by mail-ig0-f173.google.com with SMTP id z8so19670668ige.0
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2016 06:41:20 -0800 (PST)
+	Mon, 21 Mar 2016 06:29:08 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Wei-Ning Huang <wnhuang@chromium.org>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, akarwar@marvell.com,
+	djkurtz@chromium.org, nishants@marvell.com, netdev@vger.kernel.org
+Subject: Re: [PATCH] mwifiex: advertise low priority scan feature
+References: <1458547622-1632-1-git-send-email-wnhuang@google.com>
+Date: Mon, 21 Mar 2016 12:28:59 +0200
+In-Reply-To: <1458547622-1632-1-git-send-email-wnhuang@google.com> (Wei-Ning
+	Huang's message of "Mon, 21 Mar 2016 16:07:02 +0800")
+Message-ID: <87d1qogm50.fsf@kamboji.qca.qualcomm.com> (sfid-20160321_112937_696760_5D68D653)
 MIME-Version: 1.0
-In-Reply-To: <56E08615.9060208@lwfinger.net>
-References: <56E08615.9060208@lwfinger.net>
-Date: Thu, 10 Mar 2016 15:41:19 +0100
-Message-ID: <CAGXE3d8cKcB-=Tep==YXq+Rs8c6Xho0vss2GtR0wTRDtBcPQ3g@mail.gmail.com> (sfid-20160310_154127_300533_0E1631C3)
-Subject: Re: New firmware for RT2870
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>, dan.g.tob@gmail.com
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 9, 2016 at 9:22 PM, Larry Finger <Larry.Finger@lwfinger.net> wrote:
-> In https://bugzilla.kernel.org/show_bug.cgi?id=114151, the OP reports
-> improved stability and performance for an RT5370 using a newer firmware that
-> came with the driver CD. The logs show this to be version 0.36, whereas the
-> version now in linux-firmware is version 0.29.
+Wei-Ning Huang <wnhuang@chromium.org> writes:
+
+> From: Amitkumar Karwar <akarwar@marvell.com>
 >
-> I downloaded the firmware from b.k.o. It had very little effect on my
-> no-name adapter with ID 148f:3070. It still gets ping losses of 10-15%.
+> Low priority scan handling code which delays or aborts scan
+> operation based on Tx traffic is removed recently. The reason
+> is firmware already takes care of it in our new feature scan
+> channel gap. Hence we should advertise low priority scan
+> support to cfg80211.
 >
-> Should this new version be submitted to linux-firmware? Its provenance seems
-> to be sketchy, but submission would likely be legal.
+> This patch fixes a problem in which OBSS scan request from
+> wpa_supplicant was being rejected by cfg80211.
+>
+> Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
 
-Version 0.36 can also be found in the vendor tarball on [1] even though it
-references a different chip ...
+The From line states that this is written by Amitkumar but there's no
+Signed-off-By line from him. I can't take this without that, please
+resend.
 
-So, in my opinion this should be safe from a legal point of view.
+(Wei-Ning's s-o-b line is correct, I just need also Amitkumar's line.)
 
-Helmut
-
-[1] http://www.mediatek.com/en/downloads1/downloads/mt7612u/
+-- 
+Kalle Valo
