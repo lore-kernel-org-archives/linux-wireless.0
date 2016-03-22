@@ -1,40 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f194.google.com ([209.85.213.194]:33055 "EHLO
-	mail-ig0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750942AbcB2XqY (ORCPT
+Received: from mail-qg0-f42.google.com ([209.85.192.42]:34162 "EHLO
+	mail-qg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753349AbcCVJhg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 18:46:24 -0500
-Received: by mail-ig0-f194.google.com with SMTP id hb3so701366igb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Feb 2016 15:46:24 -0800 (PST)
+	Tue, 22 Mar 2016 05:37:36 -0400
+Received: by mail-qg0-f42.google.com with SMTP id w104so173543202qge.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2016 02:37:36 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <1456783551-28315-107-git-send-email-Jes.Sorensen@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com> <1456783551-28315-107-git-send-email-Jes.Sorensen@redhat.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 1 Mar 2016 10:46:04 +1100
-Message-ID: <CAGRGNgUYaoRoXAXOcdyxwnFNhW15_D=HGDVHVd5UAVVqS+h5MQ@mail.gmail.com> (sfid-20160301_004637_239087_9296373F)
-Subject: Re: [PATCH 106/113] rtl8xxxu: convert rtl8723bu_init_bt() into rtl8723b_enable_rf()
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
+Date: Tue, 22 Mar 2016 03:37:35 -0600
+Message-ID: <CAAA5faG+AOviPrJxd9dOuZrDAkm+4F5sy0M7w3MW0U-ufNeZ3g@mail.gmail.com> (sfid-20160322_103740_333691_AE72076E)
+Subject: making fq_codel default
+From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
+To: linux-wireless@vger.kernel.org
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jes,
+Hi Everyone,
 
-On Tue, Mar 1, 2016 at 9:05 AM,  <Jes.Sorensen@redhat.com> wrote:
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->
-> rtl8723bu_init_bt() is effectively the function enabling RF, so name
-> it appropriately.
+Everytime I boot I need to set fq_codel for my wireless interface:
 
-Should this be merged into the patches that introduce these functions?
+sudo tc qdisc add   dev wlp4s0 root fq_codel
 
+I also need to sudo sysctl -w net.core.default_qdisc=fq_codel
+
+Is there a good way to have this as the default in the kernel config
+instead of pfifo?
+Also, are there plans for cake support or do fq_codel in this case mean cake?
 Thanks,
 
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Reinoud.
