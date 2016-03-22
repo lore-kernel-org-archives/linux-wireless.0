@@ -1,41 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51768 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932936AbcCaVIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 17:08:44 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 03/10] rtl8xxxu: Correct txdesc40 gid definition
-Date: Thu, 31 Mar 2016 17:08:35 -0400
-Message-Id: <1459458522-28686-4-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160331_230856_259659_08CD88C9)
-In-Reply-To: <1459458522-28686-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1459458522-28686-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-qg0-f51.google.com ([209.85.192.51]:34339 "EHLO
+	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757023AbcCVKFn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Mar 2016 06:05:43 -0400
+Received: by mail-qg0-f51.google.com with SMTP id w104so173967033qge.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2016 03:05:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <56F113B3.2050608@neratec.com>
+References: <CAAA5faG+AOviPrJxd9dOuZrDAkm+4F5sy0M7w3MW0U-ufNeZ3g@mail.gmail.com>
+	<56F113B3.2050608@neratec.com>
+Date: Tue, 22 Mar 2016 04:05:42 -0600
+Message-ID: <CAAA5faHhiwwVYJVp9TEeg7M4YksRgOhHpVnge655ztd8VuC+tw@mail.gmail.com> (sfid-20160322_110547_144695_D46954AD)
+Subject: Re: making fq_codel default
+From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
+To: Matthias May <matthias.may@neratec.com>
+Cc: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Thanks, that answers my question.
+Ok, so currently Cake didn't make it into the 4.4 kernel yet I noticed.
+Are there plans to add this or are there still many issues to be worked out?
+In the mean time I followed some instructions to build the module and
+iproute2 for cake.
 
-txdesc40 dword2 gid is a 6 bit field, not a single bit
+sudo tc qdisc add  dev wlp4s0 root cake (iwlwifi)
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+reinoud@router-dev:~/Downloads/linux-4.4.5/net/sched$ sudo tc -s qdisc show
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 38d4f56..af1d504 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -464,7 +464,7 @@ struct rtl8xxxu_txdesc40 {
- #define TXDESC40_SPE_RPT		BIT(19)
- #define TXDESC_AMPDU_DENSITY_SHIFT	20
- #define TXDESC40_BT_INT			BIT(23)
--#define TXDESC40_GID			BIT(24)
-+#define TXDESC40_GID_SHIFT		24
- 
- /* Word 3 */
- #define TXDESC40_USE_DRIVER_RATE	BIT(8)
--- 
-2.5.5
+qdisc cake 8002: dev wlp4s0 root refcnt 5 unlimited diffserv4 flows
+rtt 100.0ms raw
+Sent 71025 bytes 516 pkt (dropped 0, overlimits 0 requeues 0)
+backlog 0b 0p requeues 0
+memory used: 0b of 15140Kb
+capacity estimate: 0bit
+            Tin 0       Tin 1       Tin 2       Tin 3
+ thresh        0bit        0bit        0bit        0bit
+ target       5.0ms       5.0ms       5.0ms       5.0ms
+interval     100.0ms     100.0ms     100.0ms     100.0ms
+Pk-delay         0us         0us         0us         0us
+Av-delay         0us         0us         0us         0us
+Sp-delay         0us         0us         0us         0us
+ pkts             0           0           0           0
+ bytes            0           0           0           0
+way-inds           0           0           0           0
+way-miss           0           0           0           0
+way-cols           0           0           0           0
+ drops            0           0           0           0
+ marks            0           0           0           0
+Sp-flows           0           0           0           0
+Bk-flows           0           0           0           0
+last-len           0           0           0           0
+max-len            0           0           0           0
 
+On Tue, Mar 22, 2016 at 3:43 AM, Matthias May <matthias.may@neratec.com> wrote:
+> On 22/03/16 10:37, Reinoud Koornstra wrote:
+>>
+>> Hi Everyone,
+>>
+>> Everytime I boot I need to set fq_codel for my wireless interface:
+>>
+>> sudo tc qdisc add   dev wlp4s0 root fq_codel
+>>
+>> I also need to sudo sysctl -w net.core.default_qdisc=fq_codel
+>>
+>> Is there a good way to have this as the default in the kernel config
+>> instead of pfifo?
+>> Also, are there plans for cake support or do fq_codel in this case mean
+>> cake?
+>> Thanks,
+>>
+>> Reinoud.
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
+> You might want to take a look at the patches in openwrt.
+> Specifically this one:
+> https://dev.openwrt.org/browser/trunk/target/linux/generic/patches-4.4/662-use_fq_codel_by_default.patch
+>
+> Best regards
+> Matthias
