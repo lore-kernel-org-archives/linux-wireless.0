@@ -1,126 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:34809 "EHLO
-	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751575AbcCFM5g (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:37101 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751484AbcCVXRE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 07:57:36 -0500
-Received: by mail-wm0-f67.google.com with SMTP id p65so6295183wmp.1
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 04:57:35 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 11/13] staging: vt6655: mac.c replace byOrgDMACtl with org_dma_ctl
-Date: Sun,  6 Mar 2016 12:57:10 +0000
-Message-Id: <1457269032-2681-11-git-send-email-tvboxspy@gmail.com> (sfid-20160306_135749_715337_C17C14BC)
-In-Reply-To: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
-References: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
+	Tue, 22 Mar 2016 19:17:04 -0400
+From: Colin King <colin.king@canonical.com>
+To: Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>,
+	Robert Dolca <robert.dolca@intel.com>,
+	linux-wireless@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] NFC: set info->ram_patch to NULL when it is released
+Date: Tue, 22 Mar 2016 23:17:00 +0000
+Message-Id: <1458688620-14219-1-git-send-email-colin.king@canonical.com> (sfid-20160323_001727_496473_1ED944A6)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing camel case and type prefix.
+From: Colin Ian King <colin.king@canonical.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+When info->ram_patch is released info->otp_patch is being set
+to NULL rather than info->ram_patch. I believe this is a cut-n-paste
+bug from almost identical code proceeding it that uses the same
+idiom for info->otp_patch.
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
 ---
- drivers/staging/vt6655/mac.c | 32 ++++++++++++++++----------------
- 1 file changed, 16 insertions(+), 16 deletions(-)
+ drivers/nfc/fdp/fdp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
-index d44026b..87bec1c 100644
---- a/drivers/staging/vt6655/mac.c
-+++ b/drivers/staging/vt6655/mac.c
-@@ -556,10 +556,10 @@ void MACvSetCurrRx0DescAddr(struct vnt_private *priv, u32 curr_desc_addr)
- {
- 	void __iomem *io_base = priv->PortOffset;
- 	unsigned short ww;
--	unsigned char byOrgDMACtl;
-+	unsigned char org_dma_ctl;
+diff --git a/drivers/nfc/fdp/fdp.c b/drivers/nfc/fdp/fdp.c
+index ccb07a1..177ac9a 100644
+--- a/drivers/nfc/fdp/fdp.c
++++ b/drivers/nfc/fdp/fdp.c
+@@ -344,7 +344,7 @@ static void fdp_nci_release_firmware(struct nci_dev *ndev)
  
--	byOrgDMACtl = ioread8(io_base + MAC_REG_RXDMACTL0);
--	if (byOrgDMACtl & DMACTL_RUN)
-+	org_dma_ctl = ioread8(io_base + MAC_REG_RXDMACTL0);
-+	if (org_dma_ctl & DMACTL_RUN)
- 		iowrite8(DMACTL_RUN, io_base + MAC_REG_RXDMACTL0 + 2);
- 
- 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
-@@ -568,7 +568,7 @@ void MACvSetCurrRx0DescAddr(struct vnt_private *priv, u32 curr_desc_addr)
+ 	if (info->ram_patch) {
+ 		release_firmware(info->ram_patch);
+-		info->otp_patch = NULL;
++		info->ram_patch = NULL;
  	}
- 
- 	iowrite32(curr_desc_addr, io_base + MAC_REG_RXDMAPTR0);
--	if (byOrgDMACtl & DMACTL_RUN)
-+	if (org_dma_ctl & DMACTL_RUN)
- 		iowrite8(DMACTL_RUN, io_base + MAC_REG_RXDMACTL0);
- }
- 
-@@ -590,10 +590,10 @@ void MACvSetCurrRx1DescAddr(struct vnt_private *priv, u32 curr_desc_addr)
- {
- 	void __iomem *io_base = priv->PortOffset;
- 	unsigned short ww;
--	unsigned char byOrgDMACtl;
-+	unsigned char org_dma_ctl;
- 
--	byOrgDMACtl = ioread8(io_base + MAC_REG_RXDMACTL1);
--	if (byOrgDMACtl & DMACTL_RUN)
-+	org_dma_ctl = ioread8(io_base + MAC_REG_RXDMACTL1);
-+	if (org_dma_ctl & DMACTL_RUN)
- 		iowrite8(DMACTL_RUN, io_base + MAC_REG_RXDMACTL1 + 2);
- 
- 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
-@@ -602,7 +602,7 @@ void MACvSetCurrRx1DescAddr(struct vnt_private *priv, u32 curr_desc_addr)
- 	}
- 
- 	iowrite32(curr_desc_addr, io_base + MAC_REG_RXDMAPTR1);
--	if (byOrgDMACtl & DMACTL_RUN)
-+	if (org_dma_ctl & DMACTL_RUN)
- 		iowrite8(DMACTL_RUN, io_base + MAC_REG_RXDMACTL1);
- 
- }
-@@ -626,10 +626,10 @@ void MACvSetCurrTx0DescAddrEx(struct vnt_private *priv,
- {
- 	void __iomem *io_base = priv->PortOffset;
- 	unsigned short ww;
--	unsigned char byOrgDMACtl;
-+	unsigned char org_dma_ctl;
- 
--	byOrgDMACtl = ioread8(io_base + MAC_REG_TXDMACTL0);
--	if (byOrgDMACtl & DMACTL_RUN)
-+	org_dma_ctl = ioread8(io_base + MAC_REG_TXDMACTL0);
-+	if (org_dma_ctl & DMACTL_RUN)
- 		iowrite8(DMACTL_RUN, io_base + MAC_REG_TXDMACTL0 + 2);
- 
- 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
-@@ -638,7 +638,7 @@ void MACvSetCurrTx0DescAddrEx(struct vnt_private *priv,
- 	}
- 
- 	iowrite32(curr_desc_addr, io_base + MAC_REG_TXDMAPTR0);
--	if (byOrgDMACtl & DMACTL_RUN)
-+	if (org_dma_ctl & DMACTL_RUN)
- 		iowrite8(DMACTL_RUN, io_base + MAC_REG_TXDMACTL0);
- }
- 
-@@ -662,10 +662,10 @@ void MACvSetCurrAC0DescAddrEx(struct vnt_private *priv,
- {
- 	void __iomem *io_base = priv->PortOffset;
- 	unsigned short ww;
--	unsigned char byOrgDMACtl;
-+	unsigned char org_dma_ctl;
- 
--	byOrgDMACtl = ioread8(io_base + MAC_REG_AC0DMACTL);
--	if (byOrgDMACtl & DMACTL_RUN)
-+	org_dma_ctl = ioread8(io_base + MAC_REG_AC0DMACTL);
-+	if (org_dma_ctl & DMACTL_RUN)
- 		iowrite8(DMACTL_RUN, io_base + MAC_REG_AC0DMACTL + 2);
- 
- 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
-@@ -675,7 +675,7 @@ void MACvSetCurrAC0DescAddrEx(struct vnt_private *priv,
- 	if (ww == W_MAX_TIMEOUT)
- 		pr_debug(" DBG_PORT80(0x26)\n");
- 	iowrite32(curr_desc_addr, io_base + MAC_REG_AC0DMAPTR);
--	if (byOrgDMACtl & DMACTL_RUN)
-+	if (org_dma_ctl & DMACTL_RUN)
- 		iowrite8(DMACTL_RUN, io_base + MAC_REG_AC0DMACTL);
  }
  
 -- 
-2.7.0
+2.7.3
 
