@@ -1,75 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:59308 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756427AbcCOQKj (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:57623 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753924AbcCVLyD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2016 12:10:39 -0400
-Subject: Re: [PATCH-v2 1/2] mac80211: Take bitrates into account when building
- IEs.
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <1445361858-24976-1-git-send-email-greearb@candelatech.com>
- <1453807009.2759.23.camel@sipsolutions.net>
- <56A78E8F.1080505@candelatech.com> <1454576521.2564.6.camel@sipsolutions.net>
- <56B38FD1.40902@candelatech.com> <1455827536.2084.35.camel@sipsolutions.net>
- <56C62C4E.7020600@candelatech.com>
- <1455828330.2084.38.camel@sipsolutions.net>
- <56C630B7.7020604@candelatech.com>
- <1455830078.2084.47.camel@sipsolutions.net>
- <56C63D8B.9020900@candelatech.com>
- <1456225589.2041.24.camel@sipsolutions.net>
- <56E1B556.4080004@candelatech.com>
- <1458051349.2871.19.camel@sipsolutions.net>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <56E833FE.1080904@candelatech.com> (sfid-20160315_171042_560290_6F2680F9)
-Date: Tue, 15 Mar 2016 09:10:38 -0700
+	Tue, 22 Mar 2016 07:54:03 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 6/9] ath10k: register ath10k_htt_htc_t2h_msg_handler
+Date: Tue, 22 Mar 2016 17:22:16 +0530
+Message-ID: <1458647539-17213-7-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20160322_125408_306624_F552C54D)
+In-Reply-To: <1458647539-17213-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1458647539-17213-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
-In-Reply-To: <1458051349.2871.19.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/15/2016 07:15 AM, Johannes Berg wrote:
-> On Thu, 2016-03-10 at 09:56 -0800, Ben Greear wrote:
->
->> First, are you proposing that I make a copy of the entire  local-
->>> hw.wiphy->bands array and store it locally in sdata?
->
-> No, I think it should be pointers there, say
->
-> sdata->bands[X] pointing to the same thing as local->hw.wiphy->bands[X]
-> is pointing to.
->
-> So the first patch would introduce that, and replace each and every use
-> of local->hw.wiphy->bands[] with sdata->bands[], if necessary
-> annotating the remaining ones with why they're OK and should stay.
->
->> And then, I would provide some API to modify the bands[i]->bitrates
->> and other variables to properly select the advertised features?
->
-> Kinda. You'd provide some kind of helper function or API to take the
-> local->hw.wiphy->bands[X] and duplicate it into a newly allocated
-> buffer, modifying it along the way, before assigning it to the per-
-> sdata stuff in sdata->bands[X].
->
->> I am a bit concerned about making copies (and then changing) the
->> driver's bitrates array.  Likely it will work with ath10k, but it
->> seems fragile at best.
->
-> That's an interesting point, we currently use the rate *index* a lot,
-> so we have to find some way of preserving that. Perhaps we need to
-> introduce a flag indicating a given rate is disabled?
+Except qca61x4 family chips (qca6164, qca6174), copy engine 5 is used
+for receiving target to host htt messages. In follow up patch, CE5
+descriptors will be reused. In such case, same API can not be used as
+htc layer callback where the response messages will be freed at the end.
+Hence register new API for HTC layer that free up received message and
+keep the message handler common for both HTC and HIF layers.
 
-The logic I wrote is basically exactly this.  It uses the configured rates to
-specify which of the hardware's rates are allowed and disabled.
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.c    |  2 +-
+ drivers/net/wireless/ath/ath10k/htt.h    |  3 ++-
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 22 +++++++++++++++-------
+ 3 files changed, 18 insertions(+), 9 deletions(-)
 
-I will look more at providing some accessor functions or otherwise abstracting
-it without making copies of the driver's ratesets.
-
-Thanks,
-Ben
-
+diff --git a/drivers/net/wireless/ath/ath10k/htt.c b/drivers/net/wireless/ath/ath10k/htt.c
+index 7561f22..17a3008 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.c
++++ b/drivers/net/wireless/ath/ath10k/htt.c
+@@ -149,7 +149,7 @@ int ath10k_htt_connect(struct ath10k_htt *htt)
+ 	memset(&conn_resp, 0, sizeof(conn_resp));
+ 
+ 	conn_req.ep_ops.ep_tx_complete = ath10k_htt_htc_tx_complete;
+-	conn_req.ep_ops.ep_rx_complete = ath10k_htt_t2h_msg_handler;
++	conn_req.ep_ops.ep_rx_complete = ath10k_htt_htc_t2h_msg_handler;
+ 
+ 	/* connect to control service */
+ 	conn_req.service_id = ATH10K_HTC_SVC_ID_HTT_DATA_MSG;
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 27a65ec..1adcae4 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1765,7 +1765,8 @@ int ath10k_htt_rx_ring_refill(struct ath10k *ar);
+ void ath10k_htt_rx_free(struct ath10k_htt *htt);
+ 
+ void ath10k_htt_htc_tx_complete(struct ath10k *ar, struct sk_buff *skb);
+-void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb);
++void ath10k_htt_htc_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb);
++bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb);
+ int ath10k_htt_h2t_ver_req_msg(struct ath10k_htt *htt);
+ int ath10k_htt_h2t_stats_req(struct ath10k_htt *htt, u8 mask, u64 cookie);
+ int ath10k_htt_send_frag_desc_bank_cfg(struct ath10k_htt *htt);
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index dde2237..31be0c6 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -2219,7 +2219,18 @@ static inline enum ieee80211_band phy_mode_to_band(u32 phy_mode)
+ 	return band;
+ }
+ 
+-void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
++void ath10k_htt_htc_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
++{
++	bool release;
++
++	release = ath10k_htt_t2h_msg_handler(ar, skb);
++
++	/* Free the indication buffer */
++	if (release)
++		dev_kfree_skb_any(skb);
++}
++
++bool ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ {
+ 	struct ath10k_htt *htt = &ar->htt;
+ 	struct htt_resp *resp = (struct htt_resp *)skb->data;
+@@ -2235,8 +2246,7 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 	if (resp->hdr.msg_type >= ar->htt.t2h_msg_types_max) {
+ 		ath10k_dbg(ar, ATH10K_DBG_HTT, "htt rx, unsupported msg_type: 0x%0X\n max: 0x%0X",
+ 			   resp->hdr.msg_type, ar->htt.t2h_msg_types_max);
+-		dev_kfree_skb_any(skb);
+-		return;
++		return true;
+ 	}
+ 	type = ar->htt.t2h_msg_types[resp->hdr.msg_type];
+ 
+@@ -2352,7 +2362,7 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 	case HTT_T2H_MSG_TYPE_RX_IN_ORD_PADDR_IND: {
+ 		skb_queue_tail(&htt->rx_in_ord_compl_q, skb);
+ 		tasklet_schedule(&htt->txrx_compl_task);
+-		return;
++		return false;
+ 	}
+ 	case HTT_T2H_MSG_TYPE_TX_CREDIT_UPDATE_IND:
+ 		break;
+@@ -2394,9 +2404,7 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 				skb->data, skb->len);
+ 		break;
+ 	};
+-
+-	/* Free the indication buffer */
+-	dev_kfree_skb_any(skb);
++	return true;
+ }
+ EXPORT_SYMBOL(ath10k_htt_t2h_msg_handler);
+ 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.7.4
 
