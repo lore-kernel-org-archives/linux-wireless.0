@@ -1,32 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f174.google.com ([209.85.213.174]:35807 "EHLO
-	mail-ig0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932398AbcCKPXR (ORCPT
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:33721 "EHLO
+	mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751080AbcCVEKO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Mar 2016 10:23:17 -0500
-Received: by mail-ig0-f174.google.com with SMTP id vf5so12794718igb.0
-        for <linux-wireless@vger.kernel.org>; Fri, 11 Mar 2016 07:23:17 -0800 (PST)
-MIME-Version: 1.0
-Date: Fri, 11 Mar 2016 16:23:16 +0100
-Message-ID: <CAOf5uwkT=Z2V3JadZeFKKU6m1sTozcC+ObEPzwR_qPuzv6X7Xw@mail.gmail.com> (sfid-20160311_162340_679467_5539ABAC)
-Subject: Probelm on (brcmfmac: use pre-allocated scatter-gather table for txglomming)
-From: Michael Trimarchi <michael@amarulasolutions.com>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Tue, 22 Mar 2016 00:10:14 -0400
+Received: by mail-pf0-f178.google.com with SMTP id 4so160816713pfd.0
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2016 21:10:13 -0700 (PDT)
+From: Wei-Ning Huang <wnhuang@chromium.org>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, akarwar@marvell.com,
+	djkurtz@chromium.org, Wei-Ning Huang <wnhuang@chromium.org>,
+	nishants@marvell.com, kvalo@codeaurora.org, netdev@vger.kernel.org
+Subject: [PATCH v2] mwifiex: advertise low priority scan feature
+Date: Tue, 22 Mar 2016 12:09:56 +0800
+Message-Id: <1458619796-7694-1-git-send-email-wnhuang@chromium.org> (sfid-20160322_051033_447084_537429E1)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi
+From: Amitkumar Karwar <akarwar@marvell.com>
 
-I have a kernel panic on the brcmf_sdiod_sgtable_alloc just because
-the function is called before brcmf_sdio_probe.
+Low priority scan handling code which delays or aborts scan
+operation based on Tx traffic is removed recently. The reason
+is firmware already takes care of it in our new feature scan
+channel gap. Hence we should advertise low priority scan
+support to cfg80211.
 
-I think that
- nents = max_t(uint, BRCMF_DEFAULT_RXGLOM_SIZE,
-                      sdiodev->bus_if->drvr->settings->sdiod_txglomsz);
+This patch fixes a problem in which OBSS scan request from
+wpa_supplicant was being rejected by cfg80211.
 
-drvr is null. Can you explain how it can work or do you have already a
-fix for this?
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Michael
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index bb7235e..7dafc5b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -4086,6 +4086,7 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
+ 
+ 	wiphy->features |= NL80211_FEATURE_HT_IBSS |
+ 			   NL80211_FEATURE_INACTIVITY_TIMER |
++			   NL80211_FEATURE_LOW_PRIORITY_SCAN |
+ 			   NL80211_FEATURE_NEED_OBSS_SCAN;
+ 
+ 	if (ISSUPP_TDLS_ENABLED(adapter->fw_cap_info))
+-- 
+2.8.0.rc3.226.g39d4020
+
