@@ -1,53 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53098 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751051AbcCXHCG (ORCPT
+Received: from mail-vk0-f43.google.com ([209.85.213.43]:34711 "EHLO
+	mail-vk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751264AbcCVGgj convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 24 Mar 2016 03:02:06 -0400
-Date: Thu, 24 Mar 2016 12:31:52 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [PATCH v1 3/3] ath10k: Enable parsing per station rx duration
- for 10.4
-Message-ID: <20160324070152.GA23410@atheros-ThinkPad-T61> (sfid-20160324_080245_214166_5595B9EC)
-References: <1458132214-4896-1-git-send-email-mohammed@qca.qualcomm.com>
- <1458132214-4896-3-git-send-email-mohammed@qca.qualcomm.com>
- <8737rhfiy7.fsf@kamboji.qca.qualcomm.com>
- <20160323130331.GA21534@atheros-ThinkPad-T61>
- <ec91f62c5b2a4c59b72df074d6ba37f0@aphydexm01b.ap.qualcomm.com>
- <87d1qke5cq.fsf@kamboji.qca.qualcomm.com>
+	Tue, 22 Mar 2016 02:36:39 -0400
+Received: by mail-vk0-f43.google.com with SMTP id e185so241937002vkb.1
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2016 23:36:38 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87d1qke5cq.fsf@kamboji.qca.qualcomm.com>
+In-Reply-To: <CACna6rzA1JcTjBsozR5nhCH9U9bKwceTNwLzeQ-Ds97NECVaeQ@mail.gmail.com>
+References: <CACna6rzA1JcTjBsozR5nhCH9U9bKwceTNwLzeQ-Ds97NECVaeQ@mail.gmail.com>
+Date: Tue, 22 Mar 2016 07:36:38 +0100
+Message-ID: <CACna6rwgOuUtgjduwgQoZPFewZ3Wn2vgXapCvqw1ygbyt3Jqaw@mail.gmail.com> (sfid-20160322_073643_962963_6846545A)
+Subject: Re: Problem with brcmfmac removing extra interface
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: brcm80211 development <brcm80211-dev-list@broadcom.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
-
-On Thu, Mar 24, 2016 at 06:51:18AM +0000, Valo, Kalle wrote:
-> "Shajakhan, Mohammed Shafi (Mohammed Shafi)" <mohammed@qti.qualcomm.com>
-> writes:
-> > I will make sure, I will run sparse before sending it for review
-> > http://linuxwireless.org/en/users/Drivers/ath10k/CodingStyle/#Linux_style
-> >
-> > make drivers/net/wireless/ath/ath10k/ C=2 CF="-D__CHECK_ENDIAN__"
-> >
-> > regret the inconvenience so caused  (including the compilation error)
-> 
-> I guess easier is to use my ath10k-check script:
-> 
-> https://github.com/qca/qca-swiss-army-knife/blob/master/tools/scripts/ath10k/ath10k-check
-> 
-> I use that script to test every patch before I commit them. Run the
-> script on the top level kernel source tree and ideally you should not
-> see any warnings (the output should be empty).
+On 3 March 2016 at 23:37, Rafał Miłecki <zajec5@gmail.com> wrote:
+> brcmfmac in general is not capable of removing interfaces. If you take
+> a look at brcmf_cfg80211_del_iface implementation, you'll see it
+> returns -EOPNOTSUPP (except for p2p interfaces).
 >
+> However there is problem in handling NL80211_CMD_STOP_AP (with the
+> brcmf_cfg80211_stop_ap callback). Current implementation calls
+> brcmf_fil_cmd_int_set(ifp, BRCMF_C_DOWN, 1)
+> if mbss support is enabled/used.
+>
+> Above call results in firmware generating BRCMF_E_LINK event. This
+> event is handled with the following forward-traced functions chain:
+> 1) brcmf_notify_connect_status
+> 2) brcmf_notify_connect_status_ap
+> 3) brcmf_remove_interface
+> 4) brcmf_del_if
+> 5) brcmf_net_detach
+> 6) unregister_netdev
+>
+> So the result of NL80211_CMD_STOP_AP is interface being removed. The
+> problem with this behavior is that interface can't be recreated after
+> that:
+> # iw phy phy1 interface add wlan1-1 type __ap
+> [ 3602.929199] brcmfmac: brcmf_ap_add_vif: timeout occurred
+> command failed: I/O error (-5)
+>
+> I hit this problem when trying to restart hostapd using BCM43602 and 2 BSSes.
+>
+> Could you analyze this problem and see if you see some way of solving
+> this problem, please?
 
-[shafi] sure will do that.
+Hi, any ideas / help regarding this issue?
 
-regards,
-shafi
+-- 
+Rafał
