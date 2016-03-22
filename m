@@ -1,29 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:56973 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755423AbcCBSkz (ORCPT
+Received: from mail-qg0-f44.google.com ([209.85.192.44]:35670 "EHLO
+	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750970AbcCVBOY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 13:40:55 -0500
-Date: Wed, 02 Mar 2016 13:40:53 -0500 (EST)
-Message-Id: <20160302.134053.816070092260634055.davem@davemloft.net> (sfid-20160302_194101_181838_0052FA40)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
-Subject: Re: pull-request: mac80211 2016-03-02
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1456926483-9420-1-git-send-email-johannes@sipsolutions.net>
-References: <1456926483-9420-1-git-send-email-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 21 Mar 2016 21:14:24 -0400
+Received: by mail-qg0-f44.google.com with SMTP id y89so167743935qge.2
+        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2016 18:14:24 -0700 (PDT)
+From: Marty Faltesek <mfaltesek@google.com>
+To: akarwar@marvell.com
+Cc: linux-wireless@vger.kernel.org, dgentry@google.com,
+	apenwarr@google.com
+Subject: [PATCH] mwifiex: transmit packet stats incorrect.
+Date: Mon, 21 Mar 2016 21:13:55 -0400
+Message-Id: <1458609235-14686-1-git-send-email-mfaltesek@google.com> (sfid-20160322_021520_486571_014C1A46)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Wed,  2 Mar 2016 14:48:02 +0100
+tx_packets counter is incremented for aggregated packets, when it had
+already been incremented for the aggregated packet's constituent
+parts. Removing the extra count.
 
-> Here are a few more fixes for the current cycle; the MAINTAINERS patch
-> isn't really a fix for the tree, but helps the kbuild robot and clearly
-> can't be causing any regressions :)
-> 
-> Let me know if there's any problem.
+---
+ drivers/net/wireless/marvell/mwifiex/txrx.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-Pulled, thanks Johannes.
+diff --git a/drivers/net/wireless/marvell/mwifiex/txrx.c b/drivers/net/wireless/marvell/mwifiex/txrx.c
+index bf6182b..abdd0cf 100644
+--- a/drivers/net/wireless/marvell/mwifiex/txrx.c
++++ b/drivers/net/wireless/marvell/mwifiex/txrx.c
+@@ -297,6 +297,13 @@ int mwifiex_write_data_complete(struct mwifiex_adapter *adapter,
+ 		goto done;
+ 
+ 	mwifiex_set_trans_start(priv->netdev);
++
++	if (tx_info->flags & MWIFIEX_BUF_FLAG_BRIDGED_PKT)
++		atomic_dec_return(&adapter->pending_bridged_pkts);
++
++	if (tx_info->flags & MWIFIEX_BUF_FLAG_AGGR_PKT)
++		goto done;
++
+ 	if (!status) {
+ 		priv->stats.tx_packets++;
+ 		priv->stats.tx_bytes += tx_info->pkt_len;
+@@ -306,12 +313,6 @@ int mwifiex_write_data_complete(struct mwifiex_adapter *adapter,
+ 		priv->stats.tx_errors++;
+ 	}
+ 
+-	if (tx_info->flags & MWIFIEX_BUF_FLAG_BRIDGED_PKT)
+-		atomic_dec_return(&adapter->pending_bridged_pkts);
+-
+-	if (tx_info->flags & MWIFIEX_BUF_FLAG_AGGR_PKT)
+-		goto done;
+-
+ 	if (aggr)
+ 		/* For skb_aggr, do not wake up tx queue */
+ 		goto done;
+-- 
+2.8.0.rc3.226.g39d4020
+
