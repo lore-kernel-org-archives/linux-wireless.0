@@ -1,69 +1,152 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.tohojo.dk ([77.235.48.147]:49698 "EHLO mail2.tohojo.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932491AbcCHK1H (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2016 05:27:07 -0500
-From: =?utf-8?Q?Toke_H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Dave Taht <dave.taht@gmail.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Tim Shepard <shep@alum.mit.edu>
-Subject: Re: [RFC/RFT] mac80211: implement fq_codel for software queuing
-References: <1456492163-11437-1-git-send-email-michal.kazior@tieto.com>
-	<CAA93jw4XsEnp3jTgPL7OKWTJP-83VwRaCdb+foc8nCuqxk3WZA@mail.gmail.com>
-	<CA+BoTQk+3jhwK57_fDw0scNCGzu_Edqp9-Beeppz8xj9kSQcoQ@mail.gmail.com>
-Date: Tue, 08 Mar 2016 11:19:59 +0100
-In-Reply-To: <CA+BoTQk+3jhwK57_fDw0scNCGzu_Edqp9-Beeppz8xj9kSQcoQ@mail.gmail.com>
-	(Michal Kazior's message of "Tue, 8 Mar 2016 08:12:21 +0100")
-Message-ID: <87d1r5tgog.fsf@toke.dk> (sfid-20160308_112714_291880_CAE0D44E)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:57602 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753924AbcCVLxw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Mar 2016 07:53:52 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 5/9] ath10k: speedup htt rx descriptor processing for rx_ind
+Date: Tue, 22 Mar 2016 17:22:15 +0530
+Message-ID: <1458647539-17213-6-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20160322_125355_423614_ACA13229)
+In-Reply-To: <1458647539-17213-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1458647539-17213-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+In follow up patch, htt rx descriptors will be reused instead of
+dealloc and refill. To achieve that htt rx indication messages
+should not be deferred and should be processed in pci tasklet itself.
+Also from rx indication message, mpdu_count alone is used. So it is
+maintained as atomic variable and all rx amsdu handlers are done
+processed from txrx tasklet. This change get rid of rx_compl_q usage.
 
->> With large values for flows_cnt, fq, dominates, for small values, aqm
->> does. We did quite a lot of testing at 16 and 32 queues in the early
->> days, with pretty good results, except when we didn't. Cake went whole
->> hog with an 8 way set associative hash leading to "near perfect" fq,
->> which, at the cost of more cpu overhead, could cut the number of
->> queues down by a lot, also. Eric did "perfect" fq with sch_fq...
->
-> Out of curiosity - do you have any numbers to compare against
-> fq_codel? Like hash collision probability vs number of active flows?
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/htt.h    |  1 +
+ drivers/net/wireless/ath/ath10k/htt_rx.c | 39 +++++++++++++++-----------------
+ 2 files changed, 19 insertions(+), 21 deletions(-)
 
-Basically, the analytical expression for hash collisions is fairly
-straight forward (though I can't take credit for coming up with it
-myself):
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index 76c4bae..27a65ec 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1663,6 +1663,7 @@ struct ath10k_htt {
+ 	 * used to avoid further failures */
+ 	bool rx_confused;
+ 	struct tasklet_struct rx_replenish_task;
++	atomic_t num_mpdus_ready;
+ 
+ 	/* This is used to group tx/rx completions separately and process them
+ 	 * in batches to reduce cache stalls */
+diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
+index 3fdbfee..dde2237 100644
+--- a/drivers/net/wireless/ath/ath10k/htt_rx.c
++++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+@@ -526,6 +526,7 @@ int ath10k_htt_rx_alloc(struct ath10k_htt *htt)
+ 	skb_queue_head_init(&htt->rx_compl_q);
+ 	skb_queue_head_init(&htt->rx_in_ord_compl_q);
+ 	skb_queue_head_init(&htt->tx_fetch_ind_q);
++	atomic_set(&htt->num_mpdus_ready, 0);
+ 
+ 	tasklet_init(&htt->txrx_compl_task, ath10k_htt_txrx_compl_task,
+ 		     (unsigned long)htt);
+@@ -1564,8 +1565,8 @@ static int ath10k_htt_rx_handle_amsdu(struct ath10k_htt *htt)
+ 	return 0;
+ }
+ 
+-static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+-				  struct htt_rx_indication *rx)
++static void ath10k_htt_rx_proc_rx_ind(struct ath10k_htt *htt,
++				      struct htt_rx_indication *rx)
+ {
+ 	struct ath10k *ar = htt->ar;
+ 	struct htt_rx_indication_mpdu_range *mpdu_ranges;
+@@ -1584,19 +1585,16 @@ static void ath10k_htt_rx_handler(struct ath10k_htt *htt,
+ 	for (i = 0; i < num_mpdu_ranges; i++)
+ 		mpdu_count += mpdu_ranges[i].mpdu_count;
+ 
+-	while (mpdu_count--) {
+-		if (ath10k_htt_rx_handle_amsdu(htt) < 0)
+-			break;
+-	}
++	atomic_add(mpdu_count, &htt->num_mpdus_ready);
+ 
+-	tasklet_schedule(&htt->rx_replenish_task);
++	tasklet_schedule(&htt->txrx_compl_task);
+ }
+ 
+ static void ath10k_htt_rx_frag_handler(struct ath10k_htt *htt)
+ {
+-	ath10k_htt_rx_handle_amsdu(htt);
++	atomic_inc(&htt->num_mpdus_ready);
+ 
+-	tasklet_schedule(&htt->rx_replenish_task);
++	tasklet_schedule(&htt->txrx_compl_task);
+ }
+ 
+ static void ath10k_htt_rx_tx_compl_ind(struct ath10k *ar,
+@@ -2250,9 +2248,8 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
+ 		break;
+ 	}
+ 	case HTT_T2H_MSG_TYPE_RX_IND:
+-		skb_queue_tail(&htt->rx_compl_q, skb);
+-		tasklet_schedule(&htt->txrx_compl_task);
+-		return;
++		ath10k_htt_rx_proc_rx_ind(htt, &resp->rx_ind);
++		break;
+ 	case HTT_T2H_MSG_TYPE_PEER_MAP: {
+ 		struct htt_peer_map_event ev = {
+ 			.vdev_id = resp->peer_map.vdev_id,
+@@ -2419,19 +2416,15 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
+ 	struct sk_buff_head rx_q;
+ 	struct sk_buff_head rx_ind_q;
+ 	struct sk_buff_head tx_ind_q;
+-	struct htt_resp *resp;
+ 	struct sk_buff *skb;
+ 	unsigned long flags;
++	int num_mpdus;
+ 
+ 	__skb_queue_head_init(&rx_q);
+ 	__skb_queue_head_init(&rx_ind_q);
+ 	__skb_queue_head_init(&tx_ind_q);
+ 
+ 
+-	spin_lock_irqsave(&htt->rx_compl_q.lock, flags);
+-	skb_queue_splice_init(&htt->rx_compl_q, &rx_q);
+-	spin_unlock_irqrestore(&htt->rx_compl_q.lock, flags);
+-
+ 	spin_lock_irqsave(&htt->rx_in_ord_compl_q.lock, flags);
+ 	skb_queue_splice_init(&htt->rx_in_ord_compl_q, &rx_ind_q);
+ 	spin_unlock_irqrestore(&htt->rx_in_ord_compl_q.lock, flags);
+@@ -2455,10 +2448,12 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
+ 
+ 	ath10k_mac_tx_push_pending(ar);
+ 
+-	while ((skb = __skb_dequeue(&rx_q))) {
+-		resp = (struct htt_resp *)skb->data;
+-		ath10k_htt_rx_handler(htt, &resp->rx_ind);
+-		dev_kfree_skb_any(skb);
++	num_mpdus = atomic_read(&htt->num_mpdus_ready);
++	atomic_sub(num_mpdus, &htt->num_mpdus_ready);
++
++	while (num_mpdus--) {
++		if (ath10k_htt_rx_handle_amsdu(htt))
++			break;
+ 	}
+ 
+ 	while ((skb = __skb_dequeue(&rx_ind_q))) {
+@@ -2467,4 +2462,6 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
+ 		spin_unlock_bh(&htt->rx_ring.lock);
+ 		dev_kfree_skb_any(skb);
+ 	}
++
++	tasklet_schedule(&htt->rx_replenish_task);
+ }
+-- 
+2.7.4
 
-Given N bins with M items being hashed into them by a hypothetical
-perfectly uniform hash, you get:
-
-  Expected number of bins with x items = N * (1/N)^x * (1 - 1/N) ^ (M - x) * C(M, x)
-
-where C(M, x) is the combinatorial function = M! / (x! * (M-x)!).
-
-By expanding this expression for x=1 and dividing by M, you get the
-probability that one of your M items is in its own bin. Subtract this
-from 1 and you get the collision probability.
-
-I have a neat spreadsheet to compute this for arbitrary numbers; but for
-a 1024-bin FQ-Codel this gives a collision probability of just under 1%
-for 10 flows, and just over 9% for 100 flows. This is not too far off
-from actual values in a real-world hashing function.
-
-Now, to add to the confusion, you also have to take into account that an
-active flow (from an end-to-end perspective) does not necessarily
-translate into an active flow from the queue perspective. And that in
-fact the number of active flows in a router can be significantly less
-than the number of active end-to-end flows, and scales sub-linearly...
-There has been at least one paper demonstrating this, but right now I
-can't recall who wrote it.
-
--Toke
