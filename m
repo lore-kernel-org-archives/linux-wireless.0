@@ -1,79 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f195.google.com ([209.85.214.195]:35975 "EHLO
-	mail-ob0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031516AbcCQSlX (ORCPT
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:33909 "EHLO
+	mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751925AbcCWKpH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 14:41:23 -0400
-Received: by mail-ob0-f195.google.com with SMTP id cf7so6685440obc.3
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 11:41:23 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 9/9] rtlwifi: rtl8821ae: Fix Smatch warnings
-Date: Thu, 17 Mar 2016 13:41:04 -0500
-Message-Id: <1458240064-31422-10-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160317_194135_248236_993C5BF0)
-In-Reply-To: <1458240064-31422-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1458240064-31422-1-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 23 Mar 2016 06:45:07 -0400
+Received: by mail-pf0-f178.google.com with SMTP id x3so21844625pfb.1
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2016 03:45:06 -0700 (PDT)
+Subject: Re: Problem with brcmfmac removing extra interface
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+References: <CACna6rzA1JcTjBsozR5nhCH9U9bKwceTNwLzeQ-Ds97NECVaeQ@mail.gmail.com>
+ <CACna6rwgOuUtgjduwgQoZPFewZ3Wn2vgXapCvqw1ygbyt3Jqaw@mail.gmail.com>
+ <56F1A9E9.5090803@broadcom.com>
+ <CACna6ryFGQT56QGxsMF=a5Qi+eDp+3mByoxTQidWrxR6qRpBmA@mail.gmail.com>
+Cc: brcm80211 development <brcm80211-dev-list@broadcom.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <56F273AB.2060001@broadcom.com> (sfid-20160323_114512_113614_8BFC6692)
+Date: Wed, 23 Mar 2016 11:44:59 +0100
+MIME-Version: 1.0
+In-Reply-To: <CACna6ryFGQT56QGxsMF=a5Qi+eDp+3mByoxTQidWrxR6qRpBmA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Smatch reports the following:
+On 23-3-2016 9:47, Rafał Miłecki wrote:
+> On 22 March 2016 at 21:24, Arend van Spriel
+> <arend.vanspriel@broadcom.com> wrote:
+>> On 22-3-2016 7:36, Rafał Miłecki wrote:
+>>> On 3 March 2016 at 23:37, Rafał Miłecki <zajec5@gmail.com> wrote:
+>>>> brcmfmac in general is not capable of removing interfaces. If you take
+>>>> a look at brcmf_cfg80211_del_iface implementation, you'll see it
+>>>> returns -EOPNOTSUPP (except for p2p interfaces).
+>>>>
+>>>> However there is problem in handling NL80211_CMD_STOP_AP (with the
+>>>> brcmf_cfg80211_stop_ap callback). Current implementation calls
+>>>> brcmf_fil_cmd_int_set(ifp, BRCMF_C_DOWN, 1)
+>>>> if mbss support is enabled/used.
+>>>>
+>>>> Above call results in firmware generating BRCMF_E_LINK event. This
+>>>> event is handled with the following forward-traced functions chain:
+>>>> 1) brcmf_notify_connect_status
+>>>> 2) brcmf_notify_connect_status_ap
+>>>> 3) brcmf_remove_interface
+>>>> 4) brcmf_del_if
+>>>> 5) brcmf_net_detach
+>>>> 6) unregister_netdev
+>>>>
+>>>> So the result of NL80211_CMD_STOP_AP is interface being removed. The
+>>>> problem with this behavior is that interface can't be recreated after
+>>>> that:
+>>>> # iw phy phy1 interface add wlan1-1 type __ap
+>>>> [ 3602.929199] brcmfmac: brcmf_ap_add_vif: timeout occurred
+>>>> command failed: I/O error (-5)
+>>>>
+>>>> I hit this problem when trying to restart hostapd using BCM43602 and 2 BSSes.
+>>>>
+>>>> Could you analyze this problem and see if you see some way of solving
+>>>> this problem, please?
+>>>
+>>> Hi, any ideas / help regarding this issue?
+>>
+>> Restarting hostapd obviously is a valid scenario. My guess is we would
+>> need to avoid interface removal in brcmf_notify_connect_status_ap. But
+>> first I would like to know in which state the firmware is upon
+>> brcmf_ap_add_vif. Can you provide a full log with FWCON debug level enabled?
+> 
+> Sure, hope it helps!
 
-  CHECK   drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
-drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c:1960 rtl8812ae_dm_txpower_tracking_callback_thermalmeter() warn: inconsistent indenting
-  CHECK   drivers/net/wireless/realtek/rtlwifi/rtl8821ae/trx.c
-drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c:455 phy_get_tx_swing_8812A() warn: inconsistent indenting
-drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c:517 phy_get_tx_swing_8812A() warn: inconsistent indenting
+Ah. Actually would like to see some driver logging as well so
+'debug=0x101410'.
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
----
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c  | 6 +++---
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c | 6 +++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
+> 3) killall hostapd
+> [  234.424528] device wlan1-1 left promiscuous mode
+> [  234.429453] br-lan: port 3(wlan1-1) entered disabled state
+> [  234.842185] brcmfmac: CONSOLE: 026816.727 wl0: link down (wl0)
+> [  234.842224] brcmfmac: CONSOLE: 026816.727 wl0: link down (wl0.2)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
-index 7b13962..636f3d1 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/dm.c
-@@ -1957,9 +1957,9 @@ void rtl8812ae_dm_txpower_tracking_callback_thermalmeter(
- 				rtldm->swing_idx_ofdm_base[p] =
- 					rtldm->swing_idx_ofdm[p];
- 
--			RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
--				 "pDM_Odm->RFCalibrateInfo.ThermalValue =%d ThermalValue= %d\n",
--				 rtldm->thermalvalue, thermal_value);
-+		RT_TRACE(rtlpriv, COMP_POWER_TRACKING, DBG_LOUD,
-+			 "pDM_Odm->RFCalibrateInfo.ThermalValue =%d ThermalValue= %d\n",
-+			 rtldm->thermalvalue, thermal_value);
- 		/*Record last Power Tracking Thermal Value*/
- 		rtldm->thermalvalue = thermal_value;
- 	}
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-index 74165b3..ddf74d5 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-@@ -418,9 +418,9 @@ u32 phy_get_tx_swing_8812A(struct ieee80211_hw *hw, u8	band,
- 			out = 0x16A; /* -3 dB */
- 		}
- 	} else {
--	    u32 swing = 0, swing_a = 0, swing_b = 0;
-+		u32 swing = 0, swing_a = 0, swing_b = 0;
- 
--	    if (band == BAND_ON_2_4G) {
-+		if (band == BAND_ON_2_4G) {
- 			if (reg_swing_2g == auto_temp) {
- 				efuse_shadow_read(hw, 1, 0xC6, (u32 *)&swing);
- 				swing = (swing == 0xFF) ? 0x00 : swing;
-@@ -514,7 +514,7 @@ u32 phy_get_tx_swing_8812A(struct ieee80211_hw *hw, u8	band,
- 
- 	RT_TRACE(rtlpriv, COMP_SCAN, DBG_LOUD,
- 		 "<=== PHY_GetTxBBSwing_8812A, out = 0x%X\n", out);
--	 return out;
-+	return out;
- }
- 
- void rtl8821ae_phy_switch_wirelessband(struct ieee80211_hw *hw, u8 band)
--- 
-2.1.4
+This part at least is interesting and I would like to know how brcmfmac
+deals with this order of events.
 
+Regards,
+Arend
