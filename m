@@ -1,60 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f44.google.com ([209.85.192.44]:35670 "EHLO
-	mail-qg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750970AbcCVBOY (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:36151 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753719AbcCWM2r (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2016 21:14:24 -0400
-Received: by mail-qg0-f44.google.com with SMTP id y89so167743935qge.2
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2016 18:14:24 -0700 (PDT)
-From: Marty Faltesek <mfaltesek@google.com>
-To: akarwar@marvell.com
-Cc: linux-wireless@vger.kernel.org, dgentry@google.com,
-	apenwarr@google.com
-Subject: [PATCH] mwifiex: transmit packet stats incorrect.
-Date: Mon, 21 Mar 2016 21:13:55 -0400
-Message-Id: <1458609235-14686-1-git-send-email-mfaltesek@google.com> (sfid-20160322_021520_486571_014C1A46)
+	Wed, 23 Mar 2016 08:28:47 -0400
+Received: by mail-pf0-f194.google.com with SMTP id q129so3224003pfb.3
+        for <linux-wireless@vger.kernel.org>; Wed, 23 Mar 2016 05:28:47 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 1/2] staging: wilc1000: use completion instead of struct semaphore hif_sema_thread
+Date: Wed, 23 Mar 2016 21:28:33 +0900
+Message-Id: <1458736114-7018-1-git-send-email-chaehyun.lim@gmail.com> (sfid-20160323_132851_036479_9BF47836)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-tx_packets counter is incremented for aggregated packets, when it had
-already been incremented for the aggregated packet's constituent
-parts. Removing the extra count.
+struct semaphore hif_sema_thread is used to signal completion of host
+interface thread. This patch replaces struct semaphore hif_sema_thread
+with struct completion hif_thread_comp. It is better to use completion
+than semaphore for this case.
 
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/marvell/mwifiex/txrx.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/txrx.c b/drivers/net/wireless/marvell/mwifiex/txrx.c
-index bf6182b..abdd0cf 100644
---- a/drivers/net/wireless/marvell/mwifiex/txrx.c
-+++ b/drivers/net/wireless/marvell/mwifiex/txrx.c
-@@ -297,6 +297,13 @@ int mwifiex_write_data_complete(struct mwifiex_adapter *adapter,
- 		goto done;
- 
- 	mwifiex_set_trans_start(priv->netdev);
-+
-+	if (tx_info->flags & MWIFIEX_BUF_FLAG_BRIDGED_PKT)
-+		atomic_dec_return(&adapter->pending_bridged_pkts);
-+
-+	if (tx_info->flags & MWIFIEX_BUF_FLAG_AGGR_PKT)
-+		goto done;
-+
- 	if (!status) {
- 		priv->stats.tx_packets++;
- 		priv->stats.tx_bytes += tx_info->pkt_len;
-@@ -306,12 +313,6 @@ int mwifiex_write_data_complete(struct mwifiex_adapter *adapter,
- 		priv->stats.tx_errors++;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index b1ffa91..3d17972 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -231,7 +231,7 @@ bool wilc_optaining_ip;
+ static u8 P2P_LISTEN_STATE;
+ static struct task_struct *hif_thread_handler;
+ static struct message_queue hif_msg_q;
+-static struct semaphore hif_sema_thread;
++static struct completion hif_thread_comp;
+ static struct semaphore hif_sema_driver;
+ static struct completion hif_wait_response;
+ static struct mutex hif_deinit_lock;
+@@ -2668,7 +2668,7 @@ static int hostIFthread(void *pvArg)
+ 		}
  	}
  
--	if (tx_info->flags & MWIFIEX_BUF_FLAG_BRIDGED_PKT)
--		atomic_dec_return(&adapter->pending_bridged_pkts);
--
--	if (tx_info->flags & MWIFIEX_BUF_FLAG_AGGR_PKT)
--		goto done;
--
- 	if (aggr)
- 		/* For skb_aggr, do not wake up tx queue */
- 		goto done;
+-	up(&hif_sema_thread);
++	complete(&hif_thread_comp);
+ 	return 0;
+ }
+ 
+@@ -3400,7 +3400,7 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
+ 	wilc_optaining_ip = false;
+ 
+ 	if (clients_count == 0)	{
+-		sema_init(&hif_sema_thread, 0);
++		init_completion(&hif_thread_comp);
+ 		sema_init(&hif_sema_driver, 0);
+ 		mutex_init(&hif_deinit_lock);
+ 	}
+@@ -3503,7 +3503,7 @@ int wilc_deinit(struct wilc_vif *vif)
+ 		if (result != 0)
+ 			netdev_err(vif->ndev, "deinit : Error(%d)\n", result);
+ 
+-		down(&hif_sema_thread);
++		wait_for_completion(&hif_thread_comp);
+ 
+ 		wilc_mq_destroy(&hif_msg_q);
+ 	}
 -- 
-2.8.0.rc3.226.g39d4020
+2.7.3
 
