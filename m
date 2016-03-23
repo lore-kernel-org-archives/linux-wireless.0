@@ -1,53 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:44252 "EHLO
-	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751000AbcCNSvy (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:59210 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751765AbcCWMHy convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2016 14:51:54 -0400
-From: Joseph Salisbury <joseph.salisbury@canonical.com>
-To: jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@do-not-panic.com,
-	kvalo@codeaurora.org
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH] ath5k: Change led pin configuration for compaq c700 laptop
-Date: Mon, 14 Mar 2016 14:51:48 -0400
-Message-Id: <830d8fa0b7cb0b8cfb0b34360925cd50c3187341.1457977047.git.joseph.salisbury@canonical.com> (sfid-20160314_195217_287098_753DBA0B)
+	Wed, 23 Mar 2016 08:07:54 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Raja Mani <rmani@qti.qualcomm.com>
+CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"robh@kernel.org" <robh@kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] dt: bindings: add new dt entry for pre calibration in
+ qcom, ath10k.txt
+Date: Wed, 23 Mar 2016 12:07:49 +0000
+Message-ID: <87poulfld8.fsf@kamboji.qca.qualcomm.com> (sfid-20160323_130800_489066_08DDED48)
+References: <1457604724-14378-1-git-send-email-rmani@qti.qualcomm.com>
+In-Reply-To: <1457604724-14378-1-git-send-email-rmani@qti.qualcomm.com> (Raja
+	Mani's message of "Thu, 10 Mar 2016 15:42:04 +0530")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-BugLink: http://bugs.launchpad.net/bugs/972604
+Raja Mani <rmani@qti.qualcomm.com> writes:
 
-Commit 09c9bae26b0d3c9472cb6ae45010460a2cee8b8d ("ath5k: add led pin 
-configuration for compaq c700 laptop") added a pin configuration for the Compaq 
-c700 laptop.  However, the polarity of the led pin is reversed.  It should be 
-red for wifi off and blue for wifi on, but it is the opposite.  This bug was 
-reported in the following bug report: 
-http://pad.lv/972604
+> There two things done in this patch,
+>
+> 1) Existing device tree entry 'qcom,ath10k-calibration-data' carries
+>    not only calibration data, it carries board specific data too.
+>    So, make appropriate update in doc.
+>
+> 2) ipq4019 wifi needs new devie tree entry to carry calibration
+>    data alone (called pre cal data, it doesn't include any other info).
+>    Using 'qcom,ath10k-calibration-data' for ipq4019 would alter
+>    the purpose of it. Hence, add new device tree entry called
+>    'qcom,ath10k-pre-calibration-data' to carry only pre calibration data.
+>
+> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
 
+Applied, thanks.
 
-Fixes: 09c9bae26b0d3c9472cb6ae45010460a2cee8b8d ("ath5k: add led pin 
-configuration for compaq c700 laptop")
-
-Signed-off-by: Joseph Salisbury <joseph.salisbury@canonical.com>
-Cc: stable@vger.kernel.org
-
----
- drivers/net/wireless/ath/ath5k/led.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/ath/ath5k/led.c b/drivers/net/wireless/ath/ath5k/led.c
-index 803030f..6a2a168 100644
---- a/drivers/net/wireless/ath/ath5k/led.c
-+++ b/drivers/net/wireless/ath/ath5k/led.c
-@@ -77,7 +77,7 @@ static const struct pci_device_id ath5k_led_devices[] = {
- 	/* HP Compaq CQ60-206US (ddreggors@jumptv.com) */
- 	{ ATH_SDEVICE(PCI_VENDOR_ID_HP, 0x0137a), ATH_LED(3, 1) },
- 	/* HP Compaq C700 (nitrousnrg@gmail.com) */
--	{ ATH_SDEVICE(PCI_VENDOR_ID_HP, 0x0137b), ATH_LED(3, 1) },
-+	{ ATH_SDEVICE(PCI_VENDOR_ID_HP, 0x0137b), ATH_LED(3, 0) },
- 	/* LiteOn AR5BXB63 (magooz@salug.it) */
- 	{ ATH_SDEVICE(PCI_VENDOR_ID_ATHEROS, 0x3067), ATH_LED(3, 0) },
- 	/* IBM-specific AR5212 (all others) */
 -- 
-1.9.1
-
+Kalle Valo
