@@ -1,97 +1,104 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from www.xplot.org ([66.92.66.146]:35250 "EHLO www.xplot.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752069AbcCDHLb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 02:11:31 -0500
-From: Tim Shepard <shep@alum.mit.edu>
-To: Tim Shepard <shep@alum.mit.edu>
-cc: linux-wireless@vger.kernel.org, michal.kazior@tieto.com,
-	johannes@sipsolutions.net, netdev@vger.kernel.org,
-	eric.dumazet@gmail.com, dave.taht@gmail.com,
-	emmanuel.grumbach@intel.com, nbd@openwrt.org,
-	andrewmcgr@google.com, apenwarr@google.com
-Subject: Re: [PATCH RFC/RFT 1/2] ath9k: rename struct ath_txq to struct ath_hwq 
-In-reply-to: Your message of Thu, 03 Mar 2016 20:17:43 -0500.
-Date: Fri, 04 Mar 2016 02:11:40 -0500
-Message-Id: <E1abjtk-0002ud-00@www.xplot.org> (sfid-20160304_081138_817432_5CF4BF60)
+Received: from smtp.codeaurora.org ([198.145.29.96]:57485 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751973AbcCWAPn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 22 Mar 2016 20:15:43 -0400
+Message-ID: <56F1E003.4000900@codeaurora.org> (sfid-20160323_011546_948512_F4F6307B)
+Date: Tue, 22 Mar 2016 17:14:59 -0700
+From: Peter Oh <poh@codeaurora.org>
+MIME-Version: 1.0
+To: kbuild test robot <lkp@intel.com>, Peter Oh <poh@qca.qualcomm.com>
+CC: kbuild-all@01.org, ath10k@lists.infradead.org,
+	linux-wireless@vger.kernel.org
+Subject: Re: [PATCH v2] ath10k: parse Rx MAC timestamp in mgmt frame for FW
+ 10.4
+References: <201603230727.oL9ihH6E%fengguang.wu@intel.com>
+In-Reply-To: <201603230727.oL9ihH6E%fengguang.wu@intel.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
+On 03/22/2016 04:14 PM, kbuild test robot wrote:
+> Hi Peter,
+>
+> [auto build test WARNING on wireless-drivers-next/master]
+> [also build test WARNING on v4.5 next-20160322]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improving the system]
+>
+> url:    https://github.com/0day-ci/linux/commits/Peter-Oh/ath10k-parse-Rx-MAC-timestamp-in-mgmt-frame-for-FW-10-4/20160323-064843
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git master
+> config: x86_64-randconfig-x000-201612 (attached as .config)
+> reproduce:
+>          # save the attached .config to linux build tree
+>          make ARCH=x86_64
+>
+> All warnings (new ones prefixed by >>):
+>
+>     In file included from include/linux/linkage.h:4:0,
+>                      from include/linux/kernel.h:6,
+>                      from include/linux/skbuff.h:17,
+>                      from drivers/net/wireless/ath/ath10k/wmi.c:18:
+>     drivers/net/wireless/ath/ath10k/wmi.c: In function 'ath10k_wmi_10_4_op_pull_mgmt_rx_ev':
+>     drivers/net/wireless/ath/ath10k/wmi.c:2236:33: error: 'WMI_RX_STATUS_EXT_INFO' undeclared (first use in this function)
+it seems the warning is false report. I could see WMI_RX_STATUS_EXT_INFO 
+is defined in wmi.h.
+Moreover this check command doesn't claim any warning/error make 
+M=drivers/net/wireless/ath/ath10k C=2 CF="-D__CHECK_ENDIAN__"
+>       if (le32_to_cpu(arg->status) & WMI_RX_STATUS_EXT_INFO) {
+>                                      ^
+>     include/linux/compiler.h:147:30: note: in definition of macro '__trace_if'
+>       if (__builtin_constant_p(!!(cond)) ? !!(cond) :   \
+>                                   ^
+>>> drivers/net/wireless/ath/ath10k/wmi.c:2236:2: note: in expansion of macro 'if'
+>       if (le32_to_cpu(arg->status) & WMI_RX_STATUS_EXT_INFO) {
+>       ^
+>     drivers/net/wireless/ath/ath10k/wmi.c:2236:33: note: each undeclared identifier is reported only once for each function it appears in
+>       if (le32_to_cpu(arg->status) & WMI_RX_STATUS_EXT_INFO) {
+>                                      ^
+>     include/linux/compiler.h:147:30: note: in definition of macro '__trace_if'
+>       if (__builtin_constant_p(!!(cond)) ? !!(cond) :   \
+>                                   ^
+>>> drivers/net/wireless/ath/ath10k/wmi.c:2236:2: note: in expansion of macro 'if'
+>       if (le32_to_cpu(arg->status) & WMI_RX_STATUS_EXT_INFO) {
+>       ^
+>     drivers/net/wireless/ath/ath10k/wmi.c:2239:14: error: 'struct wmi_mgmt_rx_ev_arg' has no member named 'ext_info'
+>        memcpy(&arg->ext_info, ext_info,
+>                   ^
+>     drivers/net/wireless/ath/ath10k/wmi.c:2240:17: error: invalid application of 'sizeof' to incomplete type 'struct wmi_mgmt_rx_ext_info'
+>               sizeof(struct wmi_mgmt_rx_ext_info));
+>                      ^
+>
+> vim +/if +2236 drivers/net/wireless/ath/ath10k/wmi.c
+>
+>    2220	
+>    2221		if (skb->len < pull_len)
+>    2222			return -EPROTO;
+>    2223	
+>    2224		skb_pull(skb, pull_len);
+>    2225		arg->channel = ev_hdr->channel;
+>    2226		arg->buf_len = ev_hdr->buf_len;
+>    2227		arg->status = ev_hdr->status;
+>    2228		arg->snr = ev_hdr->snr;
+>    2229		arg->phy_mode = ev_hdr->phy_mode;
+>    2230		arg->rate = ev_hdr->rate;
+>    2231	
+>    2232		msdu_len = __le32_to_cpu(arg->buf_len);
+>    2233		if (skb->len < msdu_len)
+>    2234			return -EPROTO;
+>    2235	
+>> 2236		if (le32_to_cpu(arg->status) & WMI_RX_STATUS_EXT_INFO) {
+>    2237			len = ALIGN(le32_to_cpu(arg->buf_len), 4);
+>    2238			ext_info = (struct wmi_mgmt_rx_ext_info *)(skb->data + len);
+>    2239			memcpy(&arg->ext_info, ext_info,
+>    2240			       sizeof(struct wmi_mgmt_rx_ext_info));
+>    2241		}
+>    2242	
+>    2243		/* Make sure bytes added for padding are removed. */
+>    2244		skb_trim(skb, msdu_len);
+>
+> ---
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-
-I've already received an automated report that this patch fails to
-build.  Oops.
-
-Apparently only when either CONFIG_ATH9K_TX99=y or
-CONFIG_ATH9K_CHANNEL_CONTEXT=y .
-
-I missed a few things in the ath_txq to ath_hwq rename and failed to
-catch it because I didn't have those turned on in my .config .
-
-So if you want to test this before I resubmit, make sure those two
-configs are turned off in your .config, or maybe try patching with the
-diff below.
-
-I plan to resend the patch soon (probably tomorrow) with this fix
-squashed in, after I do some test compiling to make sure I've actually
-fixed it.
-
-			-Tim Shepard
-			 shep@alum.mit.edu
- ___ _ ___ _   _ _ ___   ___     _ _ _ _   _   _ ___ _   _   _ ___ _ ___ _ ___
-
-
-diff --git a/drivers/net/wireless/ath/ath9k/channel.c b/drivers/net/wireless/ath/ath9k/channel.c
-index 50e614b..0297588 100644
---- a/drivers/net/wireless/ath/ath9k/channel.c
-+++ b/drivers/net/wireless/ath/ath9k/channel.c
-@@ -1006,7 +1006,7 @@ static void ath_scan_send_probe(struct ath_softc *sc,
- 	if (!ieee80211_tx_prepare_skb(sc->hw, vif, skb, band, NULL))
- 		goto error;
- 
--	txctl.txq = sc->tx.txq_map[IEEE80211_AC_VO];
-+	txctl.hwq = sc->tx.hwq_map[IEEE80211_AC_VO];
- 	txctl.force_channel = true;
- 	if (ath_tx_start(sc->hw, skb, &txctl))
- 		goto error;
-@@ -1128,7 +1128,7 @@ ath_chanctx_send_vif_ps_frame(struct ath_softc *sc, struct ath_vif *avp,
- 	}
- 
- 	memset(&txctl, 0, sizeof(txctl));
--	txctl.txq = sc->tx.txq_map[IEEE80211_AC_VO];
-+	txctl.hwq = sc->tx.hwq_map[IEEE80211_AC_VO];
- 	txctl.sta = sta;
- 	txctl.force_channel = true;
- 	if (ath_tx_start(sc->hw, skb, &txctl)) {
-diff --git a/drivers/net/wireless/ath/ath9k/tx99.c b/drivers/net/wireless/ath/ath9k/tx99.c
-index ac4781f..0a9ed5c 100644
---- a/drivers/net/wireless/ath/ath9k/tx99.c
-+++ b/drivers/net/wireless/ath/ath9k/tx99.c
-@@ -21,7 +21,7 @@ static void ath9k_tx99_stop(struct ath_softc *sc)
- 	struct ath_hw *ah = sc->sc_ah;
- 	struct ath_common *common = ath9k_hw_common(ah);
- 
--	ath_drain_all_txq(sc);
-+	ath_drain_all_hwq(sc);
- 	ath_startrecv(sc);
- 
- 	ath9k_hw_set_interrupts(ah);
-@@ -125,7 +125,7 @@ static int ath9k_tx99_init(struct ath_softc *sc)
- 		return -ENOMEM;
- 
- 	memset(&txctl, 0, sizeof(txctl));
--	txctl.txq = sc->tx.txq_map[IEEE80211_AC_VO];
-+	txctl.hwq = sc->tx.hwq_map[IEEE80211_AC_VO];
- 
- 	ath_reset(sc, NULL);
- 
-@@ -133,7 +133,7 @@ static int ath9k_tx99_init(struct ath_softc *sc)
- 
- 	ath9k_hw_disable_interrupts(ah);
- 	atomic_set(&ah->intr_ref_cnt, -1);
--	ath_drain_all_txq(sc);
-+	ath_drain_all_hwq(sc);
- 	ath_stoprecv(sc);
- 
- 	sc->tx99_state = true;
