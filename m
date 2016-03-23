@@ -1,50 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:45730 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752260AbcCaPaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 11:30:06 -0400
-Message-ID: <1459438199.4576.26.camel@sipsolutions.net> (sfid-20160331_173036_305800_B029653D)
-Subject: Re: Question on rhashtable in worst-case scenario.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Ben Greear <greearb@candelatech.com>,
-	David Miller <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, tgraf@suug.ch
-Date: Thu, 31 Mar 2016 17:29:59 +0200
-In-Reply-To: <20160331075015.GA27716@gondor.apana.org.au>
-References: <56F9941A.3080501@candelatech.com>
-	 <56FAAA6D.3070806@candelatech.com>
-	 <1459329252.2055.1.camel@sipsolutions.net>
-	 <20160330.123821.328761526754742195.davem@davemloft.net>
-	 <56FC0445.6010200@candelatech.com>
-	 <1459410405.4576.8.camel@sipsolutions.net>
-	 <20160331075015.GA27716@gondor.apana.org.au>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:51894 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932218AbcCWPv6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Mar 2016 11:51:58 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: b43: Fix memory leaks in b43_bus_dev_ssb_init
+ andb43_bus_dev_bcma_init
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1457716477-6287-1-git-send-email-sudipm.mukherjee@gmail.com>
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	b43-dev@lists.infradead.org, netdev@vger.kernel.org,
+	Jia-Ju Bai <baijiaju1990@163.com>,
+	=?UTF-8?q?Michael=20B=C3=BCsch?= <m@bues.ch>
+Message-Id: <20160323155157.B5F0A615D8@smtp.codeaurora.org> (sfid-20160323_165220_870118_9A57E0DF)
+Date: Wed, 23 Mar 2016 15:51:57 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-03-31 at 15:50 +0800, Herbert Xu wrote:
-> On Thu, Mar 31, 2016 at 09:46:45AM +0200, Johannes Berg wrote:
-> > 
-> > 
-> > In this case, I think perhaps you can just patch your local system
-> > with
-> > the many interfaces connecting to the same AP to add the parameter
-> > Herbert suggested (.insecure_elasticity = true in sta_rht_params).
-> > This
-> > is, after all, very much a case that "normal" operation doesn't
-> > even
-> > get close to.
-> I think you should just turn it on everywhere for mac80211.  Chain
-> length checks simply don't make sense when you allow duplicate
-> keys in the hash table.
 
-Yes, that's a good point, and we can - in certain corner cases - end up
-with duplicate keys even in normal operation.
+> From: Jia-Ju Bai <baijiaju1990@163.com>
+> 
+> The memory allocated by kzalloc in b43_bus_dev_ssb_init and
+> b43_bus_dev_bcma_init is not freed.
+> This patch fixes the bug by adding kfree in b43_ssb_remove,
+> b43_bcma_remove and error handling code of b43_bcma_probe.
+> 
+> Thanks Michael for his suggestion.
+> 
+> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
+> Acked-by: Michael Büsch <m@bues.ch>
+> Signed-off-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
 
-Does removing this completely disable the "-EEXIST" error? I can't say
-I fully understand the elasticity stuff in __rhashtable_insert_fast().
+Thanks, applied to wireless-drivers.git.
 
-johannes
+Kalle Valo
