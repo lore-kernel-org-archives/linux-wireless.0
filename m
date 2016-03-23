@@ -1,69 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:15461 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756678AbcC2KyG (ORCPT
+Received: from mga01.intel.com ([192.55.52.88]:21415 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754304AbcCWIds convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 06:54:06 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH 2/2] cfg80211: Allow reassociation to be requested with internal SME
-Date: Tue, 29 Mar 2016 13:53:28 +0300
-Message-ID: <1459248808-16412-2-git-send-email-jouni@qca.qualcomm.com> (sfid-20160329_125410_329794_03D2E520)
-In-Reply-To: <1459248808-16412-1-git-send-email-jouni@qca.qualcomm.com>
-References: <1459248808-16412-1-git-send-email-jouni@qca.qualcomm.com>
+	Wed, 23 Mar 2016 04:33:48 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Eva Rachel Retuya <eraretuya@gmail.com>,
+	"outreachy-kernel@googlegroups.com"
+	<outreachy-kernel@googlegroups.com>
+CC: "Berg, Johannes" <johannes.berg@intel.com>,
+	linuxwifi <linuxwifi@intel.com>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"tj@kernel.org" <tj@kernel.org>
+Subject: Re: [PATCH v3] iwlwifi: dvm: use alloc_ordered_workqueue()
+Date: Wed, 23 Mar 2016 08:33:41 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA8768F@hasmsx107.ger.corp.intel.com> (sfid-20160323_093359_429457_056D902F)
+References: <1458364547-11621-1-git-send-email-eraretuya@gmail.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-If the user space issues a NL80211_CMD_CONNECT with
-NL80211_ATTR_PREV_BSSID when there is already a connection, allow this
-to proceed as a reassociation instead of rejecting the new connect
-command with EALREADY.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
----
- net/wireless/nl80211.c |  3 ++-
- net/wireless/sme.c     | 11 +++++++++--
- 2 files changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index a98665a..773b20f 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -8117,7 +8117,8 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
- 	}
- 
- 	wdev_lock(dev->ieee80211_ptr);
--	err = cfg80211_connect(rdev, dev, &connect, connkeys, NULL);
-+	err = cfg80211_connect(rdev, dev, &connect, connkeys,
-+			       connect.prev_bssid);
- 	wdev_unlock(dev->ieee80211_ptr);
- 	if (err)
- 		kzfree(connkeys);
-diff --git a/net/wireless/sme.c b/net/wireless/sme.c
-index 65882d2..ce32492 100644
---- a/net/wireless/sme.c
-+++ b/net/wireless/sme.c
-@@ -492,8 +492,15 @@ static int cfg80211_sme_connect(struct wireless_dev *wdev,
- 	if (!rdev->ops->auth || !rdev->ops->assoc)
- 		return -EOPNOTSUPP;
- 
--	if (wdev->current_bss)
--		return -EALREADY;
-+	if (wdev->current_bss) {
-+		if (!prev_bssid)
-+			return -EALREADY;
-+		cfg80211_unhold_bss(wdev->current_bss);
-+		cfg80211_put_bss(wdev->wiphy, &wdev->current_bss->pub);
-+		wdev->current_bss = NULL;
-+
-+		cfg80211_sme_free(wdev);
-+	}
- 
- 	if (WARN_ON(wdev->conn))
- 		return -EINPROGRESS;
--- 
-1.9.1
+On 03/19/2016 07:15 AM, Eva Rachel Retuya wrote:
+> Use alloc_ordered_workqueue() to allocate the workqueue instead of
+> create_singlethread_workqueue() since the latter is deprecated and is scheduled
+> for removal.
+> 
+> There are work items doing related operations that shouldn't be swapped when
+> queued in a certain order hence preserve the strict execution ordering of a
+> single threaded (ST) workqueue by switching to alloc_ordered_workqueue().
+> 
+> WQ_MEM_RECLAIM flag is not needed since the worker is not depended
+> during memory reclaim.
+> 
+> Signed-off-by: Eva Rachel Retuya <eraretuya@gmail.com>
+> Acked-by: Tejun Heo <tj@kernel.org>
+> ---
 
+
+Applied - thanks.
