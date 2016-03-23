@@ -1,46 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:3888 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754990AbcC1LkA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 28 Mar 2016 07:40:00 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: linuxwifi <linuxwifi@intel.com>,
-	"colin.king@canonical.com" <colin.king@canonical.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"Sharon, Sara" <sara.sharon@intel.com>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] iwlwifi: pcie: remove duplicate assignment of variable
- isr_stats
-Date: Mon, 28 Mar 2016 11:39:14 +0000
-Message-ID: <1459165154.9638.3.camel@intel.com> (sfid-20160328_134020_877060_C1A05AFF)
-References: <1459164824-6994-1-git-send-email-colin.king@canonical.com>
-In-Reply-To: <1459164824-6994-1-git-send-email-colin.king@canonical.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:38270 "EHLO
+	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752518AbcCWG14 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 23 Mar 2016 02:27:56 -0400
+Received: by mail-wm0-f43.google.com with SMTP id l68so9884682wml.1
+        for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2016 23:27:55 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <56F1E003.4000900@codeaurora.org>
+References: <201603230727.oL9ihH6E%fengguang.wu@intel.com>
+	<56F1E003.4000900@codeaurora.org>
+Date: Wed, 23 Mar 2016 07:27:54 +0100
+Message-ID: <CA+BoTQneAJJ=9L4XZYJVxxPXwbH3x_d6ExJii70tG3YJRxPicw@mail.gmail.com> (sfid-20160323_072800_266700_B8C419CF)
+Subject: Re: [PATCH v2] ath10k: parse Rx MAC timestamp in mgmt frame for FW 10.4
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Peter Oh <poh@codeaurora.org>
+Cc: kbuild test robot <lkp@intel.com>, Peter Oh <poh@qca.qualcomm.com>,
+	kbuild-all@01.org,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gTW9uLCAyMDE2LTAzLTI4IGF0IDEyOjMzICswMTAwLCBDb2xpbiBLaW5nIHdyb3RlOg0KPiBG
-cm9tOiBDb2xpbiBJYW4gS2luZyA8Y29saW4ua2luZ0BjYW5vbmljYWwuY29tPg0KPiANCj4gaXNy
-X3N0YXRzIGlzIHdyaXR0ZW4gdHdpY2Ugd2l0aCB0aGUgc2FtZSB2YWx1ZSwgcmVtb3ZlIG9uZSBv
-ZiB0aGUNCj4gcmVkdW5kYW50IGFzc2lnbm1lbnRzIHRvIGlzcl9zdGF0cy4NCj4gDQo+IFNpZ25l
-ZC1vZmYtYnk6IENvbGluIElhbiBLaW5nIDxjb2xpbi5raW5nQGNhbm9uaWNhbC5jb20+DQo+IC0t
-LQ0KDQoNCkFwcGxpZWQgLSB0aGFua3MuDQoNCj4gIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVs
-L2l3bHdpZmkvcGNpZS9yeC5jIHwgMiArLQ0KPiAgMSBmaWxlIGNoYW5nZWQsIDEgaW5zZXJ0aW9u
-KCspLCAxIGRlbGV0aW9uKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9uZXQvd2lyZWxl
-c3MvaW50ZWwvaXdsd2lmaS9wY2llL3J4LmMNCj4gYi9kcml2ZXJzL25ldC93aXJlbGVzcy9pbnRl
-bC9pd2x3aWZpL3BjaWUvcnguYw0KPiBpbmRleCA0YmUzYzM1Li4yNTNlNGYwIDEwMDY0NA0KPiAt
-LS0gYS9kcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZpL3BjaWUvcnguYw0KPiArKysg
-Yi9kcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZpL3BjaWUvcnguYw0KPiBAQCAtMTgw
-NSw3ICsxODA1LDcgQEAgaXJxcmV0dXJuX3QgaXdsX3BjaWVfaXJxX21zaXhfaGFuZGxlcihpbnQg
-aXJxLA0KPiB2b2lkICpkZXZfaWQpDQo+ICAJc3RydWN0IG1zaXhfZW50cnkgKmVudHJ5ID0gZGV2
-X2lkOw0KPiAgCXN0cnVjdCBpd2xfdHJhbnNfcGNpZSAqdHJhbnNfcGNpZSA9DQo+IGl3bF9wY2ll
-X2dldF90cmFuc19wY2llKGVudHJ5KTsNCj4gIAlzdHJ1Y3QgaXdsX3RyYW5zICp0cmFucyA9IHRy
-YW5zX3BjaWUtPnRyYW5zOw0KPiAtCXN0cnVjdCBpc3Jfc3RhdGlzdGljcyAqaXNyX3N0YXRzID0g
-aXNyX3N0YXRzID0gJnRyYW5zX3BjaWUNCj4gLT5pc3Jfc3RhdHM7DQo+ICsJc3RydWN0IGlzcl9z
-dGF0aXN0aWNzICppc3Jfc3RhdHMgPSAmdHJhbnNfcGNpZS0+aXNyX3N0YXRzOw0KPiAgCXUzMiBp
-bnRhX2ZoLCBpbnRhX2h3Ow0KPiAgDQo+ICAJbG9ja19tYXBfYWNxdWlyZSgmdHJhbnMtPnN5bmNf
-Y21kX2xvY2tkZXBfbWFwKTs=
+On 23 March 2016 at 01:14, Peter Oh <poh@codeaurora.org> wrote:
+>
+> On 03/22/2016 04:14 PM, kbuild test robot wrote:
+>>
+>> Hi Peter,
+>>
+>> [auto build test WARNING on wireless-drivers-next/master]
+>> [also build test WARNING on v4.5 next-20160322]
+>> [if your patch is applied to the wrong git tree, please drop us a note to
+>> help improving the system]
+>>
+>> url:
+>> https://github.com/0day-ci/linux/commits/Peter-Oh/ath10k-parse-Rx-MAC-timestamp-in-mgmt-frame-for-FW-10-4/20160323-064843
+>> base:
+>> https://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers-next.git
+>> master
+>> config: x86_64-randconfig-x000-201612 (attached as .config)
+>> reproduce:
+>>          # save the attached .config to linux build tree
+>>          make ARCH=x86_64
+>>
+>> All warnings (new ones prefixed by >>):
+>>
+>>     In file included from include/linux/linkage.h:4:0,
+>>                      from include/linux/kernel.h:6,
+>>                      from include/linux/skbuff.h:17,
+>>                      from drivers/net/wireless/ath/ath10k/wmi.c:18:
+>>     drivers/net/wireless/ath/ath10k/wmi.c: In function
+>> 'ath10k_wmi_10_4_op_pull_mgmt_rx_ev':
+>>     drivers/net/wireless/ath/ath10k/wmi.c:2236:33: error:
+>> 'WMI_RX_STATUS_EXT_INFO' undeclared (first use in this function)
+>
+> it seems the warning is false report. I could see WMI_RX_STATUS_EXT_INFO is
+> defined in wmi.h.
+> Moreover this check command doesn't claim any warning/error make
+> M=drivers/net/wireless/ath/ath10k C=2 CF="-D__CHECK_ENDIAN__"
+
+I think the problem here is buildbot tested your patch against
+wireless-drivers-next tree which doesn't include the macro yet. The
+macro is in ath.git though.
+
+
+Michał
