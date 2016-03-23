@@ -1,78 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:34163 "EHLO
-	mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751101AbcCIGOt convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:64264 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751925AbcCWLnv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 01:14:49 -0500
-Received: by mail-wm0-f41.google.com with SMTP id p65so178014374wmp.1
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2016 22:14:49 -0800 (PST)
+	Wed, 23 Mar 2016 07:43:51 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: Rob Herring <robh@kernel.org>
+CC: Raja Mani <rmani@qti.qualcomm.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH] dt: bindings: add new dt entry for pre calibration in
+ qcom,ath10k.txt
+Date: Wed, 23 Mar 2016 11:43:45 +0000
+Message-ID: <87twjxfmhb.fsf@kamboji.qca.qualcomm.com> (sfid-20160323_124416_760657_099B5CA6)
+References: <1457604724-14378-1-git-send-email-rmani@qti.qualcomm.com>
+	<20160318161823.GA5558@rob-hp-laptop>
+In-Reply-To: <20160318161823.GA5558@rob-hp-laptop> (Rob Herring's message of
+	"Fri, 18 Mar 2016 11:18:23 -0500")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-In-Reply-To: <8a472460d3b4aa7ce614bdfe73b29844@codeaurora.org>
-References: <1457457934-8563-1-git-send-email-rmanohar@qti.qualcomm.com>
-	<CA+BoTQmxg7vK6KBENrx+P3vK_nYV4-h_yiavEBQi1oFTAANR=w@mail.gmail.com>
-	<8a472460d3b4aa7ce614bdfe73b29844@codeaurora.org>
-Date: Wed, 9 Mar 2016 07:14:48 +0100
-Message-ID: <CA+BoTQmPccuZR=szNSqOg9uxtB9=QmbvQR8r88uDrd=9bUwakg@mail.gmail.com> (sfid-20160309_071453_846816_3D67221E)
-Subject: Re: [PATCH v4] ath10k: move mgmt descriptor limit handle under mgmt_tx
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Rajkumar Manoharan <rmanohar@codeaurora.org>
-Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 9 March 2016 at 07:08, Rajkumar Manoharan <rmanohar@codeaurora.org> wrote:
-> On , Michal Kazior wrote:
->>
->> On 8 March 2016 at 18:25, Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
->> wrote:
->> [...]
->>>
->>> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
->>> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
->>> @@ -2326,7 +2326,12 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar,
->>> struct sk_buff *skb)
->>>                         break;
->>>                 }
->>>
->>> -               ath10k_txrx_tx_unref(htt, &tx_done);
->>> +               status = ath10k_txrx_tx_unref(htt, &tx_done);
->>> +               if (!status) {
->>> +                       spin_lock_bh(&htt->tx_lock);
->>> +                       ath10k_htt_tx_mgmt_dec_pending(htt);
->>> +                       spin_unlock_bh(&htt->tx_lock);
->>> +               }
->>
->> [...]
->>>
->>> @@ -3978,14 +3976,13 @@ static void ath10k_mac_op_tx(struct ieee80211_hw
->>> *hw,
->>>         txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
->>>         is_htt = (txpath == ATH10K_MAC_TX_HTT ||
->>>                   txpath == ATH10K_MAC_TX_HTT_MGMT);
->>> +       is_mgmt = (txpath == ATH10K_MAC_TX_HTT_MGMT);
->>
->>
->> Are you sure you want to be counting nullfuncs here in as well (and
->> possibly other frames that end up, for whatever reason, on htt-mgmt
->> tx-path?)
->>
->
-> frames that are transmitted via MGMT_TX are using reserved descriptor slots
-> in firmware. So irrespective of frame type, num_pending_mgmt_tx should count
-> all to limit probe resp. Here mgmt_tx does not mean frame type but HTT
-> txmode (HTT_H2T_MSG_TYPE_MGMT_TX).
->
-> So ATH10K_SKB_F_MGMT check in tx-compl is not needed. is_mgmt = (txpath ==
-> ATH10K_MAC_TX_HTT_MGMT);
->
-> Do you see any issues if nullfunc/other data via MGMT_TX are counted.
+Rob Herring <robh@kernel.org> writes:
 
-If firmware handles them the same way it should be okay I guess. I
-would do suggest to make the commit log more explicit on this though
-(i.e. the limit is for the path itself, not for mgmt frames per se).
+> On Thu, Mar 10, 2016 at 03:42:04PM +0530, Raja Mani wrote:
+>> There two things done in this patch,
+>> 
+>> 1) Existing device tree entry 'qcom,ath10k-calibration-data' carries
+>>    not only calibration data, it carries board specific data too.
+>>    So, make appropriate update in doc.
+>> 
+>> 2) ipq4019 wifi needs new devie tree entry to carry calibration
+>>    data alone (called pre cal data, it doesn't include any other info).
+>>    Using 'qcom,ath10k-calibration-data' for ipq4019 would alter
+>>    the purpose of it. Hence, add new device tree entry called
+>>    'qcom,ath10k-pre-calibration-data' to carry only pre calibration data.
+>> 
+>> Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+>> ---
+>> 
+>> Below patches covers the corresponding changes in the ath10k driver.
+>> It's posted separately to ath10k and linux-wireless mailing list.
+>
+> Generally the series should be posted together. The rest should not be 
+> merged until this patch is accepted.
 
+I'll merge them together, this as the first patch.
 
-Michał
+>>   1) ath10k: pass cal data location as an argument to ath10k_download_cal_{file|dt}
+>>   2) ath10k: move cal data len to hw_params
+>>   3) ath10k: incorporate qca4019 cal data download sequence
+>> 
+>>  .../bindings/net/wireless/qcom,ath10k.txt          | 23 +++++++++++++++-------
+>>  1 file changed, 16 insertions(+), 7 deletions(-)
+>
+> Acked-by: Rob Herring <robh@kernel.org>
+
+Thanks.
+
+-- 
+Kalle Valo
