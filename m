@@ -1,104 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35095 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752636AbcCANnQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 08:43:16 -0500
-Message-ID: <1456839787.3926.20.camel@sipsolutions.net> (sfid-20160301_144344_637159_0A5DA087)
-Subject: Re: [PATCHv2 08/10] rfkill: Use switch to demux userspace operations
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jouni Malinen <j@w1.fi>,
-	=?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita <jprvita@gmail.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Darren Hart <dvhart@infradead.org>,
+Received: from mail-yw0-f193.google.com ([209.85.161.193]:35639 "EHLO
+	mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752666AbcCXRj7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Mar 2016 13:39:59 -0400
+Received: by mail-yw0-f193.google.com with SMTP id w6so6264368ywd.2
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2016 10:39:59 -0700 (PDT)
+From: Till Kamppeter <till.kamppeter@gmail.com>
+Subject: Google Summer of Code 2016 - Many new applications
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	Network Development <netdev@vger.kernel.org>,
-	platform-driver-x86@vger.kernel.org, linux-api@vger.kernel.org,
-	linux-doc@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
-	linux@endlessm.com,
-	=?ISO-8859-1?Q?Jo=E3o?= Paulo Rechi Vita
-	<jprvita@endlessm.com>
-Date: Tue, 01 Mar 2016 14:43:07 +0100
-In-Reply-To: <20160229223918.GA32464@w1.fi>
-References: <1456159001-20307-1-git-send-email-jprvita@endlessm.com>
-	 <1456159001-20307-9-git-send-email-jprvita@endlessm.com>
-	 <20160226175925.GA9331@w1.fi>
-	 <CA+A7VXUY=qVDQ-OqT+QJK8haN6AFX4Br=OPXi-6RCxpvH3=QRg@mail.gmail.com>
-	 <20160229223918.GA32464@w1.fi>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	Open Printing <printing-architecture@lists.linux-foundation.org>
+Message-ID: <56F4266B.4060605@gmail.com> (sfid-20160324_184004_384798_D169C0B2)
+Date: Thu, 24 Mar 2016 14:39:55 -0300
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-03-01 at 00:39 +0200, Jouni Malinen wrote:
+Hi,
 
-> > I agree there is a difference in the logic here,
+tomorrow the student application period will end. Up to now we got 22 
+applications, where many lokk interesting and some really strange.
 
-Gah. I thought I'd reviewed the logic and made sure there's no
-difference ... :)
+Most are for the kernel, many for LSB, and I had also some luck getting 
+3 for OpenPrinting.
 
-> >  thanks for taking the
-> > time to point it out so clearly, and sorry for missing this. But AFAIU
-> > userspace should not call RFKILL_OP_CHANGE with ev.type ==
-> > RFKILL_TYPE_ALL, as RFKILL_OP_CHANGE is intended to be used to
-> > block/unblock one RFKill switch, and it is not possible to create a
-> > RFKill switch with type == RFKILL_TYPE_ALL (rfkill_alloc() would
-> > return NULL).
+Please everyone of you, have a look whether there are proposals which 
+you like to mentor, click the "WANT TO MENTOR" button on appropriate 
+ones, and remeber the students to complete their applications if they 
+are still marked "incomplete" (they must submit a final PDF). Only 
+complete applications can get accepted and they do not auto-complete at 
+the deadline.
 
-> Interesting. Maybe Johannes can comment on that part since I think he
-> wrote the code that interacts with kernel for the rfkill test cases.
+So please remember the students interesting to you to complete their 
+applications to do not loose them.
 
-So first of all, it seems that this argument is invalid since we can't break the ABI/API here; although perhaps if it's only a test case ...
+If you got this e-mail but are not registered as mentor but want to see 
+the applications, please tell me so that I can invite you as mentor. You 
+can read the applications then and step up to mentor a student, but you 
+are not required to mentor a student then.
 
-Oh. It took me a while, but I see now. The original intent (I think)
-was that with RFKILL_OP_CHANGE, the type would be ignored entirely. It
-seems that the (my) original intent wouldn't have been to force
-userspace to specify *both* the index and the type, but instead do
+Note that tomorrow is a national holiday in many countries, so please 
+send out any reminders, comments, ... today.
 
-OP_CHANGE_ALL -> use type (possibly TYPE_ALL, ignoring idx)
-OP_CHANGE     -> use idx (ignoring type)
+    Till
 
-
-The original code implemented it as follows:
-
-                if (rfkill->idx != ev.idx && ev.op != RFKILL_OP_CHANGE_ALL)
-                        continue;
-
--> check the idx only for OP_CHANGE
-
-                if (rfkill->type != ev.type && ev.type != RFKILL_TYPE_ALL)
-                        continue;
-
--> check the type, allowing _ALL
-
-Now, all userspace that I found sets the ev.type field to TYPE_ALL all
-the time; and it had to given these checks.
-
-e.g. from rfkill.py:
-
-# idx, type, op, soft, hard
-_event_struct = '@IBBBB'
-
-[...]
-
-    def block(self):
-        rfk = open('/dev/rfkill', 'w')
-        s = struct.pack(_event_struct, self.idx, TYPE_ALL, _OP_CHANGE, 1, 0)
-        rfk.write(s)
-        rfk.close()
-
-
-This check, originally, probably should've been
-
-                if (rfkill->type != ev.type && ev.type != RFKILL_TYPE_ALL &&
-                    ev.op != RFKILL_OP_CHANGE)
-                        continue;
-
-to ignore the type entirely.
-
-I'm fine with Jouni's change, preserving the original behaviour of
-requiring TYPE_ALL or the correct type, but I'm tempted to simply
-remove the type check entirely.
-
-Thoughts?
-
-johannes
