@@ -1,57 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:59098 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752165AbcC3OFl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 10:05:41 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Matti Gottlieb <matti.gottlieb@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 03/43] iwlwifi: mvm: make sure FW contains the right amount of paging sections
-Date: Wed, 30 Mar 2016 17:04:35 +0300
-Message-Id: <1459346715-7954-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160544_094937_334278A2)
-In-Reply-To: <1459346667.4731.9.camel@intel.com>
-References: <1459346667.4731.9.camel@intel.com>
+Received: from mail-yw0-f193.google.com ([209.85.161.193]:34080 "EHLO
+	mail-yw0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751576AbcCXW2n (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Mar 2016 18:28:43 -0400
+Received: by mail-yw0-f193.google.com with SMTP id f6so7263590ywa.1
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2016 15:28:43 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <e7c973ebdbc2fc49bc7bd9734547ab23bb7ee181.1458262312.git.julian.calaby@gmail.com>
+References: <cover.1458262312.git.julian.calaby@gmail.com>
+	<e7c973ebdbc2fc49bc7bd9734547ab23bb7ee181.1458262312.git.julian.calaby@gmail.com>
+Date: Fri, 25 Mar 2016 02:28:42 +0400
+Message-ID: <CA++WF2N--8y87mCQc+OxiqkfBtGiCxBCbtmTWQMRCr02iAVmPQ@mail.gmail.com> (sfid-20160324_232858_425981_1A54E20A)
+Subject: Re: [PATCH 02/19] ipw2x00: use to_pci_dev()
+From: Stanislav Yakovlev <stas.yakovlev@gmail.com>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	Nicholas Mc Guire <hofrat@osadl.org>,
+	Geliang Tang <geliangtang@163.com>,
+	wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Matti Gottlieb <matti.gottlieb@intel.com>
+On 18 March 2016 at 06:20, Julian Calaby <julian.calaby@gmail.com> wrote:
+> From: Geliang Tang <geliangtang@163.com>
+>
+> Use to_pci_dev() instead of open-coding it.
+>
+> Signed-off-by: Geliang Tang <geliangtang@163.com>
+> Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+> ---
+>  drivers/net/wireless/intel/ipw2x00/ipw2100.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
 
-Paging contains 3 sections in the fw. The first for the paging separator,
-The second for the CSS block, the third with the paging data.
+Acked-by: Stanislav Yakovlev <stas.yakovlev@gmail.com>
 
-Currently if the driver finds the paging separator, and there is only
-section left (CSS), once reading the CSS section, the driver will
-attempt to read the paging data and will go out of the arrays bounds.
-
-Make sure that the FW image contains the right amount of sections for
-paging.
-
-Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-index ebbadcf..766c262 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
-@@ -174,8 +174,12 @@ static int iwl_fill_paging_mem(struct iwl_mvm *mvm, const struct fw_img *image)
- 		}
- 	}
- 
--	if (sec_idx >= IWL_UCODE_SECTION_MAX) {
--		IWL_ERR(mvm, "driver didn't find paging image\n");
-+	/*
-+	 * If paging is enabled there should be at least 2 more sections left
-+	 * (one for CSS and one for Paging data)
-+	 */
-+	if (sec_idx >= ARRAY_SIZE(image->sec) - 1) {
-+		IWL_ERR(mvm, "Paging: Missing CSS and/or paging sections\n");
- 		iwl_free_fw_paging(mvm);
- 		return -EINVAL;
- 	}
--- 
-2.5.0
-
+Stanislav.
