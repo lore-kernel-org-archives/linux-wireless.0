@@ -1,45 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:2781 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753135AbcC3NM4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 09:12:56 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH 1/2] iwlwifi: pcie: lower the debug level for RSA semaphore access
-Date: Wed, 30 Mar 2016 16:12:50 +0300
-Message-Id: <1459343571-27345-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_151259_541651_741B9610)
-In-Reply-To: <1459343451.4731.6.camel@intel.com>
-References: <1459343451.4731.6.camel@intel.com>
+Received: from mout.kundenserver.de ([212.227.126.133]:51660 "EHLO
+	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750972AbcCXNTT (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Mar 2016 09:19:19 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: =?utf-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Hauke Mehrtens <hauke@hauke-m.de>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [1/2] bcma: fix building without OF_IRQ
+Date: Thu, 24 Mar 2016 14:19:08 +0100
+Message-ID: <9767564.jLc8Ig1W5l@wuerfel> (sfid-20160324_141923_375725_78FD9636)
+In-Reply-To: <20160323155243.D1AB4615C6@smtp.codeaurora.org>
+References: <20160323155243.D1AB4615C6@smtp.codeaurora.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-IWL_INFO is not an error but still printed by default.
-"can't access the RSA semaphore it is write protected" seems
-worrisome but it is not really a problem.
+On Wednesday 23 March 2016 15:52:43 Kalle Valo wrote:
+> > The bcma driver core can be built with or without DT support, but
+> > it fails to build when CONFIG_OF=y and CONFIG_OF_IRQ=n, which
+> > can happen on platforms that do not support IRQ domains.
+> > 
+> > ERROR: "irq_create_of_mapping" [drivers/bcma/bcma.ko] undefined!
+> > ERROR: "of_irq_parse_raw" [drivers/bcma/bcma.ko] undefined!
+> > ERROR: "of_irq_parse_one" [drivers/bcma/bcma.ko] undefined!
+> > 
+> > This adds another compile-time check for OF_IRQ, but also
+> > gets rid of now unneeded #ifdef checks: Using the simpler
+> > IS_ENABLED() check for OF_IRQ also covers the case of not
+> > having CONFIG_OF enabled. The check for CONFIG_OF_ADDRESS
+> > was added to allow building on architectures without
+> > OF_ADDRESS, but that has been addressed already in
+> > b1d06b60e90c ("of: Provide static inline function for
+> > of_translate_address if needed").
+> > 
+> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> 
+> Thanks, applied to wireless-drivers.git.
+> 
 
-CC: <stable@vger.kernel.org> [4.1+]
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Thanks! I see you have applied patch 1/2 but not patch 2/2.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index eb39c7e..b2b7935 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -732,8 +732,8 @@ static int iwl_pcie_rsa_race_bug_wa(struct iwl_trans *trans)
- 	 */
- 	val = iwl_read_prph(trans, PREG_AUX_BUS_WPROT_0);
- 	if (val & (BIT(1) | BIT(17))) {
--		IWL_INFO(trans,
--			 "can't access the RSA semaphore it is write protected\n");
-+		IWL_DEBUG_INFO(trans,
-+			       "can't access the RSA semaphore it is write protected\n");
- 		return 0;
- 	}
- 
--- 
-2.5.0
+As mentioned in the comment for patch 2, it should be tested
+better, but I want to make sure that someone still has it
+on their radar.
 
+	Arnd
