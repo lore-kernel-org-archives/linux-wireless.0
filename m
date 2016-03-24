@@ -1,143 +1,235 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:44076 "EHLO
-	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753155AbcC2RpG (ORCPT
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:33143 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751454AbcCXHtN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 13:45:06 -0400
-Date: Tue, 29 Mar 2016 19:46:50 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	b43-dev@lists.infradead.org
-Cc: linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-Message-ID: <20160329174650.GA10139@wunner.de> (sfid-20160329_194512_351091_A4C06F68)
+	Thu, 24 Mar 2016 03:49:13 -0400
+Received: by mail-wm0-f53.google.com with SMTP id l68so262846827wml.0
+        for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2016 00:49:12 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160324071923.GB23410@atheros-ThinkPad-T61>
+References: <1458123478-1795-1-git-send-email-michal.kazior@tieto.com>
+	<1458123478-1795-3-git-send-email-michal.kazior@tieto.com>
+	<20160324071923.GB23410@atheros-ThinkPad-T61>
+Date: Thu, 24 Mar 2016 08:49:12 +0100
+Message-ID: <CA+BoTQmRBog+oSMCKUUzTV1Jm_Mip0ZA9mnpkZ14hDUq32Dszg@mail.gmail.com> (sfid-20160324_084917_780545_0F214208)
+Subject: Re: [RFCv2 2/3] ath10k: report per-station tx/rate rates to mac80211
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Felix Fietkau <nbd@openwrt.org>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Network Development <netdev@vger.kernel.org>,
+	Dave Taht <dave.taht@gmail.com>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	codel@lists.bufferbloat.net, make-wifi-fast@lists.bufferbloat.net,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Tim Shepard <shep@alum.mit.edu>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dear bcma maintainers,
+On 24 March 2016 at 08:19, Mohammed Shafi Shajakhan
+<mohammed@codeaurora.org> wrote:
+> Hi Michal,
+>
+> On Wed, Mar 16, 2016 at 11:17:57AM +0100, Michal Kazior wrote:
+>> The rate control is offloaded by firmware so it's
+>> challanging to provide expected throughput value
+>> for given station.
+>>
+>> This approach is naive as it reports last tx rate
+>> used for given station as provided by firmware
+>> stat event.
+>>
+>> This should be sufficient for airtime estimation
+>> used for fq-codel-in-mac80211 tx scheduling
+>> purposes now.
+>>
+>> This patch uses a very hacky way to get the stats.
+>> This is sufficient for proof-of-concept but must
+>> be cleaned up properly eventually.
+>>
+>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/core.h  |  5 +++
+>>  drivers/net/wireless/ath/ath10k/debug.c | 61 +++++++++++++++++++++++++++++----
+>>  drivers/net/wireless/ath/ath10k/mac.c   | 26 ++++++++------
+>>  drivers/net/wireless/ath/ath10k/wmi.h   |  2 +-
+>>  4 files changed, 76 insertions(+), 18 deletions(-)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+>> index 23ba03fb7a5f..3f76669d44cf 100644
+>> --- a/drivers/net/wireless/ath/ath10k/core.h
+>> +++ b/drivers/net/wireless/ath/ath10k/core.h
+>> @@ -331,6 +331,9 @@ struct ath10k_sta {
+>>       /* protected by conf_mutex */
+>>       bool aggr_mode;
+>>       u64 rx_duration;
+>> +
+>> +     u32 tx_rate_kbps;
+>> +     u32 rx_rate_kbps;
+>>  #endif
+>>  };
+>>
+>> @@ -372,6 +375,8 @@ struct ath10k_vif {
+>>       s8 def_wep_key_idx;
+>>
+>>       u16 tx_seq_no;
+>> +     u32 tx_rate_kbps;
+>> +     u32 rx_rate_kbps;
+>>
+>>       union {
+>>               struct {
+>> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+>> index 076d29b53ddf..cc7ebf04ae00 100644
+>> --- a/drivers/net/wireless/ath/ath10k/debug.c
+>> +++ b/drivers/net/wireless/ath/ath10k/debug.c
+>> @@ -316,6 +316,58 @@ static void ath10k_debug_fw_stats_reset(struct ath10k *ar)
+>>       spin_unlock_bh(&ar->data_lock);
+>>  }
+>>
+>> +static void ath10k_mac_update_txrx_rate_iter(void *data,
+>> +                                          u8 *mac,
+>> +                                          struct ieee80211_vif *vif)
+>> +{
+>> +     struct ath10k_fw_stats_peer *peer = data;
+>> +     struct ath10k_vif *arvif;
+>> +
+>> +     if (memcmp(vif->addr, peer->peer_macaddr, ETH_ALEN))
+>> +             return;
+>> +
+>> +     arvif = (void *)vif->drv_priv;
+>> +     arvif->tx_rate_kbps = peer->peer_tx_rate;
+>> +     arvif->rx_rate_kbps = peer->peer_rx_rate;
+>> +}
+>> +
+>> +static void ath10k_mac_update_txrx_rate(struct ath10k *ar,
+>> +                                     struct ath10k_fw_stats *stats)
+>> +{
+>> +     struct ieee80211_hw *hw = ar->hw;
+>> +     struct ath10k_fw_stats_peer *peer;
+>> +     struct ath10k_sta *arsta;
+>> +     struct ieee80211_sta *sta;
+>> +     const u8 *localaddr = NULL;
+>> +
+>> +     rcu_read_lock();
+>> +
+>> +     list_for_each_entry(peer, &stats->peers, list) {
+>> +             /* This doesn't account for multiple STA connected on different
+>> +              * vifs. Unfortunately there's no way to derive that from the available
+>> +              * information.
+>> +              */
+>> +             sta = ieee80211_find_sta_by_ifaddr(hw,
+>> +                                                peer->peer_macaddr,
+>> +                                                localaddr);
+>> +             if (!sta) {
+>> +                     /* This tries to update multicast rates */
+>> +                     ieee80211_iterate_active_interfaces_atomic(
+>> +                                     hw,
+>> +                                     IEEE80211_IFACE_ITER_NORMAL,
+>> +                                     ath10k_mac_update_txrx_rate_iter,
+>> +                                     peer);
+>> +                     continue;
+>> +             }
+>> +
+>> +             arsta = (void *)sta->drv_priv;
+>> +             arsta->tx_rate_kbps = peer->peer_tx_rate;
+>> +             arsta->rx_rate_kbps = peer->peer_rx_rate;
+>> +     }
+>> +
+>> +     rcu_read_unlock();
+>> +}
+>> +
+>>  void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+>>  {
+>>       struct ath10k_fw_stats stats = {};
+>> @@ -335,6 +387,8 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+>>               goto free;
+>>       }
+>>
+>> +     ath10k_mac_update_txrx_rate(ar, &stats);
+>> +
+>>       /* Stat data may exceed htc-wmi buffer limit. In such case firmware
+>>        * splits the stats data and delivers it in a ping-pong fashion of
+>>        * request cmd-update event.
+>> @@ -351,13 +405,6 @@ void ath10k_debug_fw_stats_process(struct ath10k *ar, struct sk_buff *skb)
+>>       if (peer_stats_svc)
+>>               ath10k_sta_update_rx_duration(ar, &stats.peers);
+>>
+>> -     if (ar->debug.fw_stats_done) {
+>> -             if (!peer_stats_svc)
+>> -                     ath10k_warn(ar, "received unsolicited stats update event\n");
+>> -
+>> -             goto free;
+>> -     }
+>> -
+>
+> [shafi] As you had suggested previously, should we completely clean up this ping
+> - pong response approach for f/w stats, (or) this should be retained to support
+> backward compatibility and also for supporting ping - pong response when user
+> cats for fw-stats (via debugfs) (i did see in the commit message this needs to
+> be cleaned up)
 
-I'm moving BCMA_CORE_SIZE from drivers/bcma/bcma_private.h to
-include/linux/bcma/bcma.h in the patch included below to be
-able to use it in drivers/pci/quirks.c.
+I think it makes sense to remove the ping-pong logic and rely on
+periodic updates alone, including fw_stats and ethstats handling.
 
-If you are okay with this change and have no other objections then
-please kindly ack the patch for merging via the pci tree.
 
-If you object against this change then I could alternatively redefine
-BCMA_CORE_SIZE in drivers/pci/quirks.c. Other pci quirks are redefining
-constants there as well. However it's obviously nicer to have a single
-definition in one place.
+>> -     if (test_bit(WMI_SERVICE_PEER_STATS, ar->wmi.svc_map)) {
+>> -             param = ar->wmi.pdev_param->peer_stats_update_period;
+>> -             ret = ath10k_wmi_pdev_set_param(ar, param,
+>> -                                             PEER_DEFAULT_STATS_UPDATE_PERIOD);
+>> -             if (ret) {
+>> -                     ath10k_warn(ar,
+>> -                                 "failed to set peer stats period : %d\n",
+>> -                                 ret);
+>> -                     goto err_core_stop;
+>> -             }
+>> +     param = ar->wmi.pdev_param->peer_stats_update_period;
+>> +     ret = ath10k_wmi_pdev_set_param(ar, param,
+>> +                                     PEER_DEFAULT_STATS_UPDATE_PERIOD);
+>> +     if (ret) {
+>> +             ath10k_warn(ar,
+>> +                         "failed to set peer stats period : %d\n",
+>> +                         ret);
+>> +             goto err_core_stop;
+>>       }
+>
+> [shafi] If i am correct this change requires 'PEER_STATS' to be enabled by
+> default.
 
-Thanks,
+No, it does not. Periodic stats have been available since forever.
 
-Lukas
 
-On Tue, Mar 29, 2016 at 07:41:30PM +0200, Lukas Wunner wrote:
-> Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ storm
-> on boot until they are reset, causing spurious interrupts if the IRQ is
-> shared. Apparently the EFI bootloader enables the device and does not
-> disable it before passing control to the OS. The bootloader contains a
-> driver for the wireless card which allows it to phone home to Cupertino.
-> This is used for Internet Recovery (download and install OS X images)
-> and probably also for Back to My Mac (remote access, RFC 6281) and to
-> discover stolen hardware.
-> 
-> The issue is most pronounced on 2011 and 2012 MacBook Pros where the IRQ
-> is shared with 3 other devices (Light Ridge Thunderbolt controller, SDXC
-> reader, HDA card on discrete GPU). As soon as an interrupt handler is
-> installed for one of these devices, the ensuing storm of spurious IRQs
-> causes the kernel to disable the IRQ and switch to polling. This lasts
-> until the b43 driver loads and resets the device.
-> 
-> Loading the b43 driver first is not always an option, in particular with
-> the Light Ridge Thunderbolt controller: The PCI hotplug IRQ handler gets
-> installed early on because it is built in, unlike b43 which is usually
-> a module.
-> 
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632
-> Tested-by: Lukas Wunner <lukas@wunner.de> [MacBookPro9,1]
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> ---
->  drivers/bcma/bcma_private.h |  2 --
->  drivers/pci/quirks.c        | 27 +++++++++++++++++++++++++++
->  include/linux/bcma/bcma.h   |  1 +
->  3 files changed, 28 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/bcma/bcma_private.h b/drivers/bcma/bcma_private.h
-> index eda0909..f642c42 100644
-> --- a/drivers/bcma/bcma_private.h
-> +++ b/drivers/bcma/bcma_private.h
-> @@ -8,8 +8,6 @@
->  #include <linux/bcma/bcma.h>
->  #include <linux/delay.h>
->  
-> -#define BCMA_CORE_SIZE		0x1000
-> -
->  #define bcma_err(bus, fmt, ...) \
->  	pr_err("bus%d: " fmt, (bus)->num, ##__VA_ARGS__)
->  #define bcma_warn(bus, fmt, ...) \
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index 8e67802..d4fb5ee 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -25,6 +25,8 @@
->  #include <linux/sched.h>
->  #include <linux/ktime.h>
->  #include <linux/mm.h>
-> +#include <linux/bcma/bcma.h>
-> +#include <linux/bcma/bcma_regs.h>
->  #include <asm/dma.h>	/* isa_dma_bridge_buggy */
->  #include "pci.h"
->  
-> @@ -3282,6 +3284,31 @@ DECLARE_PCI_FIXUP_RESUME_EARLY(PCI_VENDOR_ID_INTEL, 0x156d,
->  			       quirk_apple_wait_for_thunderbolt);
->  #endif
->  
-> +/*
-> + * Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ storm
-> + * on boot until they are reset, causing spurious interrupts if the IRQ is
-> + * shared. Apparently the EFI bootloader enables the device to phone home
-> + * to Cupertino and does not disable it before passing control to the OS.
-> + */
-> +static void quirk_apple_b43_reset(struct pci_dev *dev)
-> +{
-> +	void __iomem *mmio;
-> +
-> +	if (!dmi_match(DMI_BOARD_VENDOR, "Apple Inc.") || !dev->bus->self ||
-> +	    pci_pcie_type(dev->bus->self) != PCI_EXP_TYPE_ROOT_PORT)
-> +		return;
-> +
-> +	mmio = pci_iomap(dev, 0, 0);
-> +	if (!mmio) {
-> +		pr_err("b43 quirk: Cannot iomap device, IRQ storm ahead\n");
-> +		return;
-> +	}
-> +	iowrite32(BCMA_RESET_CTL_RESET,
-> +		  mmio + (1 * BCMA_CORE_SIZE) + BCMA_RESET_CTL);
-> +	pci_iounmap(dev, mmio);
-> +}
-> +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_BROADCOM, 0x4331, quirk_apple_b43_reset);
-> +
->  static void pci_do_fixups(struct pci_dev *dev, struct pci_fixup *f,
->  			  struct pci_fixup *end)
->  {
-> diff --git a/include/linux/bcma/bcma.h b/include/linux/bcma/bcma.h
-> index 0367c63..5c37b58 100644
-> --- a/include/linux/bcma/bcma.h
-> +++ b/include/linux/bcma/bcma.h
-> @@ -158,6 +158,7 @@ struct bcma_host_ops {
->  #define BCMA_CORE_DEFAULT		0xFFF
->  
->  #define BCMA_MAX_NR_CORES		16
-> +#define BCMA_CORE_SIZE			0x1000
->  
->  /* Chip IDs of PCIe devices */
->  #define BCMA_CHIP_ID_BCM4313	0x4313
-> -- 
-> 2.8.0.rc3
-> 
+>> diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+>> index 4d3cbc44fcd2..2877a3a27b95 100644
+>> --- a/drivers/net/wireless/ath/ath10k/wmi.h
+>> +++ b/drivers/net/wireless/ath/ath10k/wmi.h
+>> @@ -3296,7 +3296,7 @@ struct wmi_csa_event {
+>>  /* the definition of different PDEV parameters */
+>>  #define PDEV_DEFAULT_STATS_UPDATE_PERIOD    500
+>>  #define VDEV_DEFAULT_STATS_UPDATE_PERIOD    500
+>> -#define PEER_DEFAULT_STATS_UPDATE_PERIOD    500
+>> +#define PEER_DEFAULT_STATS_UPDATE_PERIOD    100
+>
+> [shafi] Is this for more granularity since 500ms is not sufficient ?, I understand
+> the firmware has default stats_update_period as 500ms and i hope it supports
+> 100ms as well, Also if we are going to support period stats update we may need to
+> accumulate the information in driver (like this change and rx_duration
+
+The patch is used for rough rate estimation which is used to keep Tx
+queues filled only with 1-2 txops worth of data. Signal conditions can
+change vastly so I figured I need the peer stat update events come
+more often. I didn't really verify if they come every 100ms. The patch
+already served it's job as a proof-of-concept for smarter tx queuing.
+
+
+> I will try to take this change, rebase it to TOT and see how it goes.
+
+There's really no benefit it taking this patch as a basis for periodic
+stat handling. Majority of this patch is just handling peer_tx_rate
+for rate estimation purposes. Feel free to knock yourself out with
+ripping out the ping-pong stat stuff though :)
+
+
+Michał
