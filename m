@@ -1,46 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52128 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751244AbcCSIIq (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Mar 2016 04:08:46 -0400
-Date: Sat, 19 Mar 2016 09:06:28 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Vishal Thanki <vishalthanki@gmail.com>
-Cc: helmut.schaa@googlemail.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH v5] rt2x00usb: Use usb anchor to manage URB
-Message-ID: <20160319080627.GA29771@redhat.com> (sfid-20160319_090852_219159_4BA99CB9)
-References: <1458318591-14921-1-git-send-email-vishalthanki@gmail.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:53098 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751051AbcCXHCG (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Mar 2016 03:02:06 -0400
+Date: Thu, 24 Mar 2016 12:31:52 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+	<mohammed@qti.qualcomm.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v1 3/3] ath10k: Enable parsing per station rx duration
+ for 10.4
+Message-ID: <20160324070152.GA23410@atheros-ThinkPad-T61> (sfid-20160324_080245_214166_5595B9EC)
+References: <1458132214-4896-1-git-send-email-mohammed@qca.qualcomm.com>
+ <1458132214-4896-3-git-send-email-mohammed@qca.qualcomm.com>
+ <8737rhfiy7.fsf@kamboji.qca.qualcomm.com>
+ <20160323130331.GA21534@atheros-ThinkPad-T61>
+ <ec91f62c5b2a4c59b72df074d6ba37f0@aphydexm01b.ap.qualcomm.com>
+ <87d1qke5cq.fsf@kamboji.qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1458318591-14921-1-git-send-email-vishalthanki@gmail.com>
+In-Reply-To: <87d1qke5cq.fsf@kamboji.qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 18, 2016 at 05:29:51PM +0100, Vishal Thanki wrote:
->  
-> @@ -1001,6 +1002,9 @@ struct rt2x00_dev {
->  
->  	/* Extra TX headroom required for alignment purposes. */
->  	unsigned int extra_tx_headroom;
-> +
-> +	struct usb_anchor *anchor;
-> +	void (*kill_anchored_urbs)(struct rt2x00_dev *);
-...
-> @@ -1423,6 +1423,7 @@ void rt2x00lib_remove_dev(struct rt2x00_dev *rt2x00dev)
->  	cancel_delayed_work_sync(&rt2x00dev->autowakeup_work);
->  	cancel_work_sync(&rt2x00dev->sleep_work);
->  	if (rt2x00_is_usb(rt2x00dev)) {
-> +		rt2x00dev->kill_anchored_urbs(rt2x00dev);
-...
->  
-> +static void rt2x00usb_kill_anchored_usb(struct rt2x00_dev *rt2x00dev)
-> +{
-> +	usb_kill_anchored_urbs(rt2x00dev->anchor);
-> +}
-...
-> +	rt2x00dev->kill_anchored_urbs = rt2x00usb_kill_anchored_usb;
+Hi Kalle,
 
-Why do you complicate things, instead of call usb_kill_anchored_urbs()
-directly?
+On Thu, Mar 24, 2016 at 06:51:18AM +0000, Valo, Kalle wrote:
+> "Shajakhan, Mohammed Shafi (Mohammed Shafi)" <mohammed@qti.qualcomm.com>
+> writes:
+> > I will make sure, I will run sparse before sending it for review
+> > http://linuxwireless.org/en/users/Drivers/ath10k/CodingStyle/#Linux_style
+> >
+> > make drivers/net/wireless/ath/ath10k/ C=2 CF="-D__CHECK_ENDIAN__"
+> >
+> > regret the inconvenience so caused  (including the compilation error)
+> 
+> I guess easier is to use my ath10k-check script:
+> 
+> https://github.com/qca/qca-swiss-army-knife/blob/master/tools/scripts/ath10k/ath10k-check
+> 
+> I use that script to test every patch before I commit them. Run the
+> script on the top level kernel source tree and ideally you should not
+> see any warnings (the output should be empty).
+>
 
-Stanislaw
+[shafi] sure will do that.
+
+regards,
+shafi
