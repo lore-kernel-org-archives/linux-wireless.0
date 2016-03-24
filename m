@@ -1,76 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:44489 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752267AbcCJTP5 convert rfc822-to-8bit (ORCPT
+Received: from out1-smtp.messagingengine.com ([66.111.4.25]:60517 "EHLO
+	out1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751193AbcCXSIo (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 14:15:57 -0500
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Kyle McMartin <kyle@infradead.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"linux-firmware@kernel.org" <linux-firmware@kernel.org>
-Subject: Re: pull request: iwlwifi -21.ucode firmware
-Date: Thu, 10 Mar 2016 19:15:31 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA68CFE@hasmsx107.ger.corp.intel.com> (sfid-20160310_201600_817875_C6A314B3)
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA66A24@hasmsx107.ger.corp.intel.com>
- <20160310184933.GA21789@merlin.infradead.org>
-Content-Type: text/plain; charset="us-ascii"
+	Thu, 24 Mar 2016 14:08:44 -0400
+Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
+	by mailout.nyi.internal (Postfix) with ESMTP id C6FF1216A3
+	for <linux-wireless@vger.kernel.org>; Thu, 24 Mar 2016 14:08:42 -0400 (EDT)
+Date: Thu, 24 Mar 2016 14:08:41 -0400
+From: Greg KH <greg@kroah.com>
+To: Till Kamppeter <till.kamppeter@gmail.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>
+Subject: Re: Google Summer of Code 2016 - Many new applications
+Message-ID: <20160324180841.GA21177@kroah.com> (sfid-20160324_190848_189164_AD7B4CC7)
+References: <56F4266B.4060605@gmail.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56F4266B.4060605@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-
-
-On 03/10/2016 08:50 PM, Kyle McMartin wrote:
-> On Thu, Mar 10, 2016 at 07:29:15AM +0000, Grumbach, Emmanuel wrote:
->> Hi Kyle,
->>
->> This is a pull request to include our latest available firmware into
->> mainline linux-firmware.git.
->>
->> It includes -21.ucode for various devices including devices for which
->> this is the first supported firmware (3168 and 8265).
->> This firmware is supported starting kernel 4.6.
->>
->> Please pull!
->>
+On Thu, Mar 24, 2016 at 02:39:55PM -0300, Till Kamppeter wrote:
+> Hi,
 > 
-> Pulled, can you follow this up and update WHENCE? I'd do it, but there's
-> a lack of consistency between Version: and some of the past commit
-> messages, so I'm not sure what the right value would be.
+> tomorrow the student application period will end. Up to now we got 22
+> applications, where many lokk interesting and some really strange.
 > 
+> Most are for the kernel, many for LSB, and I had also some luck getting 3
+> for OpenPrinting.
+> 
+> Please everyone of you, have a look whether there are proposals which you
+> like to mentor, click the "WANT TO MENTOR" button on appropriate ones, and
+> remeber the students to complete their applications if they are still marked
+> "incomplete" (they must submit a final PDF). Only complete applications can
+> get accepted and they do not auto-complete at the deadline.
 
-Ooops - sorry:
+I've gone through the submitted "kernel" ones so far.  I've been working
+through email with one more student who hopefully will submit their
+application before the deadline.
 
-e6dedba0a09221a755ae4573d70b86c804a14be2 in the same tree.
+thanks,
 
-diff --git a/WHENCE b/WHENCE
-index e249c49..a9c5e98 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -897,12 +897,24 @@ Version: 25.30.13.0
- File: iwlwifi-7265D-16.ucode
- Version 16.242414.0
-
-+File: iwlwifi-7265D-21.ucode
-+Version 21.302800.0
-+
-+File: iwlwifi-3168-21.ucode
-+Version 21.302800.0
-+
- File: iwlwifi-8000C-13.ucode
- Version: 25.30.13.0
-
- File: iwlwifi-8000C-16.ucode
- Version 16.242414.0
-
-+File: iwlwifi-8000C-21.ucode
-+Version 21.302800.0
-+
-+File: iwlwifi-8265-21.ucode
-+Version 21.302800.0
-+
- Licence: Redistributable. See LICENCE.iwlwifi_firmware for details
-
- Also available from
-http://wireless.kernel.org/en/users/Drivers/iwlwifi#Firmware
-
+greg k-h
