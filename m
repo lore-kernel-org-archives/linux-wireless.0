@@ -1,79 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:31443 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752928AbcCARSp (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21232 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752911AbcCXOXt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 12:18:45 -0500
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Lior David <qca_liord@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com,
-	Maya Erez <qca_merez@qca.qualcomm.com>
-Subject: [PATCH v2 12/15] wil6210: clean ioctl debug message
-Date: Tue,  1 Mar 2016 19:18:15 +0200
-Message-Id: <1456852698-26808-13-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160301_181902_608792_E03C64E3)
-In-Reply-To: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1456852698-26808-1-git-send-email-qca_merez@qca.qualcomm.com>
+	Thu, 24 Mar 2016 10:23:49 -0400
+Subject: [PATCH 2/4] ath10k: prefer kernel type 'u64' over 'u_int64_t'
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Thu, 24 Mar 2016 16:23:37 +0200
+Message-ID: <20160324142337.15808.26266.stgit@potku.adurom.net> (sfid-20160324_152352_343660_743028F1)
+In-Reply-To: <20160324142217.15808.22638.stgit@potku.adurom.net>
+References: <20160324142217.15808.22638.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Lior David <qca_liord@qca.qualcomm.com>
+Fixes checkpatch warnings:
 
-Fix a debug message related to IOCTL that was incorrectly logged
-with the MISC category, and move it inside wil_ioctl so it will
-always be logged even if we call wil_ioctl from other places.
+drivers/net/wireless/ath/ath10k/htt.h:1477: Prefer kernel type 'u64' over 'u_int64_t'
+drivers/net/wireless/ath/ath10k/htt.h:1480: Prefer kernel type 'u64' over 'u_int64_t'
 
-Signed-off-by: Lior David <qca_liord@qca.qualcomm.com>
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/wil6210/ioctl.c  | 11 +++++++++--
- drivers/net/wireless/ath/wil6210/netdev.c |  6 +-----
- 2 files changed, 10 insertions(+), 7 deletions(-)
+ drivers/net/wireless/ath/ath10k/htt.h |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wil6210/ioctl.c b/drivers/net/wireless/ath/wil6210/ioctl.c
-index f7f9486..6303800 100644
---- a/drivers/net/wireless/ath/wil6210/ioctl.c
-+++ b/drivers/net/wireless/ath/wil6210/ioctl.c
-@@ -161,13 +161,20 @@ out_free:
+diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
+index d196bcc50e50..71d69d0c1960 100644
+--- a/drivers/net/wireless/ath/ath10k/htt.h
++++ b/drivers/net/wireless/ath/ath10k/htt.h
+@@ -1474,10 +1474,10 @@ union htt_rx_pn_t {
+ 	u32 pn24;
  
- int wil_ioctl(struct wil6210_priv *wil, void __user *data, int cmd)
- {
-+	int ret;
-+
- 	switch (cmd) {
- 	case WIL_IOCTL_MEMIO:
--		return wil_ioc_memio_dword(wil, data);
-+		ret = wil_ioc_memio_dword(wil, data);
-+		break;
- 	case WIL_IOCTL_MEMIO_BLOCK:
--		return wil_ioc_memio_block(wil, data);
-+		ret = wil_ioc_memio_block(wil, data);
-+		break;
- 	default:
- 		wil_dbg_ioctl(wil, "Unsupported IOCTL 0x%04x\n", cmd);
- 		return -ENOIOCTLCMD;
- 	}
-+
-+	wil_dbg_ioctl(wil, "ioctl(0x%04x) -> %d\n", cmd, ret);
-+	return ret;
- }
-diff --git a/drivers/net/wireless/ath/wil6210/netdev.c b/drivers/net/wireless/ath/wil6210/netdev.c
-index d4ec5b2..3bc0e26 100644
---- a/drivers/net/wireless/ath/wil6210/netdev.c
-+++ b/drivers/net/wireless/ath/wil6210/netdev.c
-@@ -60,11 +60,7 @@ static int wil_do_ioctl(struct net_device *ndev, struct ifreq *ifr, int cmd)
- {
- 	struct wil6210_priv *wil = ndev_to_wil(ndev);
+ 	/* TKIP or CCMP: 48-bit PN */
+-	u_int64_t pn48;
++	u64 pn48;
  
--	int ret = wil_ioctl(wil, ifr->ifr_data, cmd);
--
--	wil_dbg_misc(wil, "ioctl(0x%04x) -> %d\n", cmd, ret);
--
--	return ret;
-+	return wil_ioctl(wil, ifr->ifr_data, cmd);
- }
+ 	/* WAPI: 128-bit PN */
+-	u_int64_t pn128[2];
++	u64 pn128[2];
+ };
  
- static const struct net_device_ops wil_netdev_ops = {
--- 
-1.8.5.2
+ struct htt_cmd {
 
