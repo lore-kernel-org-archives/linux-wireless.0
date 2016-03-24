@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:54723 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752038AbcCRTX0 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 15:23:26 -0400
-From: Luis de Bethencourt <luisbg@osg.samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: johannes@sipsolutions.net, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Luis de Bethencourt <luisbg@osg.samsung.com>
-Subject: [PATCH] mac80211: remove description of dropped member
-Date: Fri, 18 Mar 2016 19:23:18 +0000
-Message-Id: <1458328998-14021-1-git-send-email-luisbg@osg.samsung.com> (sfid-20160318_202346_933585_7EFA74B8)
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:12254 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751051AbcCXGvh convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 24 Mar 2016 02:51:37 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+	<mohammed@qti.qualcomm.com>
+CC: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+Subject: Re: [PATCH v1 3/3] ath10k: Enable parsing per station rx duration for
+ 10.4
+Date: Thu, 24 Mar 2016 06:51:18 +0000
+Message-ID: <87d1qke5cq.fsf@kamboji.qca.qualcomm.com> (sfid-20160324_075141_911181_816BF22C)
+References: <1458132214-4896-1-git-send-email-mohammed@qca.qualcomm.com>
+	<1458132214-4896-3-git-send-email-mohammed@qca.qualcomm.com>
+	<8737rhfiy7.fsf@kamboji.qca.qualcomm.com>
+	<20160323130331.GA21534@atheros-ThinkPad-T61>
+	<ec91f62c5b2a4c59b72df074d6ba37f0@aphydexm01b.ap.qualcomm.com>
+In-Reply-To: <ec91f62c5b2a4c59b72df074d6ba37f0@aphydexm01b.ap.qualcomm.com>
+	(Mohammed Shafi Shajakhan's message of "Wed, 23 Mar 2016 13:08:32	+0000")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 976bd9efdae6 ("mac80211: move beacon_loss_count into ifmgd")
-removed the member from the sta_info struct but the description stayed
-lingering. Remove it.
+"Shajakhan, Mohammed Shafi (Mohammed Shafi)" <mohammed@qti.qualcomm.com>
+writes:
+> I will make sure, I will run sparse before sending it for review
+> http://linuxwireless.org/en/users/Drivers/ath10k/CodingStyle/#Linux_style
+>
+> make drivers/net/wireless/ath/ath10k/ C=2 CF="-D__CHECK_ENDIAN__"
+>
+> regret the inconvenience so caused  (including the compilation error)
 
-Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
----
-Hi,
+I guess easier is to use my ath10k-check script:
 
-A second patch fixing a warning in make htmldocs.
+https://github.com/qca/qca-swiss-army-knife/blob/master/tools/scripts/ath10k/ath10k-check
 
-Thanks :)
-Luis
+I use that script to test every patch before I commit them. Run the
+script on the top level kernel source tree and ideally you should not
+see any warnings (the output should be empty).
 
- net/mac80211/sta_info.h | 1 -
- 1 file changed, 1 deletion(-)
-
-diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
-index 053f5c4..62193f4 100644
---- a/net/mac80211/sta_info.h
-+++ b/net/mac80211/sta_info.h
-@@ -377,7 +377,6 @@ DECLARE_EWMA(signal, 1024, 8)
-  * @uploaded: set to true when sta is uploaded to the driver
-  * @sta: station information we share with the driver
-  * @sta_state: duplicates information about station state (for debug)
-- * @beacon_loss_count: number of times beacon loss has triggered
-  * @rcu_head: RCU head used for freeing this station struct
-  * @cur_max_bandwidth: maximum bandwidth to use for TX to the station,
-  *	taken from HT/VHT capabilities or VHT operating mode notification
 -- 
-2.5.1
-
+Kalle Valo
