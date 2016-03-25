@@ -1,37 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f49.google.com ([209.85.192.49]:34701 "EHLO
-	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965418AbcCNO4G (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:49943 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752708AbcCYMUq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2016 10:56:06 -0400
-Received: by mail-qg0-f49.google.com with SMTP id w104so155639621qge.1
-        for <linux-wireless@vger.kernel.org>; Mon, 14 Mar 2016 07:56:05 -0700 (PDT)
-Received: from hash ([2001:470:1d:6db:230:48ff:fe9d:9c89])
-        by smtp.gmail.com with ESMTPSA id o62sm10543441qkl.28.2016.03.14.07.56.04
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 14 Mar 2016 07:56:04 -0700 (PDT)
-Received: from bob by hash with local (Exim 4.84)
-	(envelope-from <me@bobcopeland.com>)
-	id 1afTud-0001n7-Ln
-	for linux-wireless@vger.kernel.org; Mon, 14 Mar 2016 10:56:03 -0400
-Date: Mon, 14 Mar 2016 10:56:03 -0400
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org
-Subject: wireless-testing paused for merge window
-Message-ID: <20160314145603.GA4295@localhost> (sfid-20160314_160311_320005_463982AC)
+	Fri, 25 Mar 2016 08:20:46 -0400
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 10/11] staging: wilc1000: removes define USE_TX_BACKOFF_DELAY_IF_NO_BUFFERS
+Date: Fri, 25 Mar 2016 21:16:55 +0900
+Message-ID: <1458908216-12100-10-git-send-email-leo.kim@atmel.com> (sfid-20160325_132053_805738_8785649E)
+In-Reply-To: <1458908216-12100-1-git-send-email-leo.kim@atmel.com>
+References: <1458908216-12100-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With the release of 4.5, I did one last tag today in wireless-testing.git
-with the current state of the wireless trees (wt-2016-03-14).
+This patch removes define USE_TX_BACKOFF_DELAY_IF_NO_BUFFERS and
+use it's feature codes.
 
-As I did for most of the last merge window, I plan to sit out the chaos
-and wait for 4.6-rc1 to resume the near-daily wireless-testing builds.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c | 8 --------
+ 1 file changed, 8 deletions(-)
 
-See you in a couple of weeks...
-
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 127a967..fae03e8 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -303,22 +303,18 @@ int wilc_wlan_get_num_conn_ifcs(struct wilc *wilc)
+ 	return ret_val;
+ }
+ 
+-#define USE_TX_BACKOFF_DELAY_IF_NO_BUFFERS
+-
+ static int linux_wlan_txq_task(void *vp)
+ {
+ 	int ret, txq_count;
+ 	struct wilc_vif *vif;
+ 	struct wilc *wl;
+ 	struct net_device *dev = vp;
+-#if defined USE_TX_BACKOFF_DELAY_IF_NO_BUFFERS
+ #define TX_BACKOFF_WEIGHT_INCR_STEP (1)
+ #define TX_BACKOFF_WEIGHT_DECR_STEP (1)
+ #define TX_BACKOFF_WEIGHT_MAX (7)
+ #define TX_BACKOFF_WEIGHT_MIN (0)
+ #define TX_BACKOFF_WEIGHT_UNIT_MS (10)
+ 	int backoff_weight = TX_BACKOFF_WEIGHT_MIN;
+-#endif
+ 
+ 	vif = netdev_priv(dev);
+ 	wl = vif->wilc;
+@@ -334,9 +330,6 @@ static int linux_wlan_txq_task(void *vp)
+ 				schedule();
+ 			break;
+ 		}
+-#if !defined USE_TX_BACKOFF_DELAY_IF_NO_BUFFERS
+-		ret = wilc_wlan_handle_txq(dev, &txq_count);
+-#else
+ 		do {
+ 			ret = wilc_wlan_handle_txq(dev, &txq_count);
+ 			if (txq_count < FLOW_CONTROL_LOWER_THRESHOLD) {
+@@ -358,7 +351,6 @@ static int linux_wlan_txq_task(void *vp)
+ 				}
+ 			}
+ 		} while (ret == WILC_TX_ERR_NO_BUF && !wl->close);
+-#endif
+ 	}
+ 	return 0;
+ }
 -- 
-Bob Copeland %% http://bobcopeland.com/
+1.9.1
+
