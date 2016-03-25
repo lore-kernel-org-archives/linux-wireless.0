@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f65.google.com ([209.85.218.65]:35054 "EHLO
-	mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934609AbcCPSdx (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:49779 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752570AbcCYMT5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2016 14:33:53 -0400
-Received: by mail-oi0-f65.google.com with SMTP id r187so3062141oih.2
-        for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2016 11:33:53 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 0/2] Add antenna selection code to rtl8723be
-Date: Wed, 16 Mar 2016 13:33:33 -0500
-Message-Id: <1458153215-25602-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160316_193357_095961_2F50A336)
+	Fri, 25 Mar 2016 08:19:57 -0400
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 02/11] staging: wilc1000: wilc_frame_register: removes unused hif_drv
+Date: Fri, 25 Mar 2016 21:16:47 +0900
+Message-ID: <1458908216-12100-2-git-send-email-leo.kim@atmel.com> (sfid-20160325_132001_555229_F0DCA754)
+In-Reply-To: <1458908216-12100-1-git-send-email-leo.kim@atmel.com>
+References: <1458908216-12100-1-git-send-email-leo.kim@atmel.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-These patches fix a problem that occurs for laptops that are constructed
-with only a single antenna, but have an incorrect programming of the
-on-board EEPROM.
+This patch removes unused hif_drv of wilc_frame_register function.
+It's perform an unnecessary null check and debug print log.
 
-These changes have been extensively tested in the rtlwifi_new repo
-at GitHub.com.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-As the patches fix a deficiency rather than a bug, they probably need
-to be submitted to the 4.7 stream. Because the fix is needed for stable
-kernels, I have added the appropriate Cc.
-
-Larry
-
-Larry Finger (2):
-  rtlwifi: rtl8723be: Add antenna select module parameter
-  rtlwifi: btcoexist: Implement antenna selection
-
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  9 ++++++--
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 27 +++++++++++++++++++++-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  2 +-
- .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |  5 +++-
- .../net/wireless/realtek/rtlwifi/rtl8723be/hw.c    |  5 ++++
- .../net/wireless/realtek/rtlwifi/rtl8723be/sw.c    |  3 +++
- drivers/net/wireless/realtek/rtlwifi/wifi.h        |  3 +++
- 7 files changed, 49 insertions(+), 5 deletions(-)
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index b1ffa91..732587e 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3689,12 +3689,6 @@ int wilc_frame_register(struct wilc_vif *vif, u16 frame_type, bool reg)
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+-	struct host_if_drv *hif_drv = vif->hif_drv;
+-
+-	if (!hif_drv) {
+-		netdev_err(vif->ndev, "driver is null\n");
+-		return -EFAULT;
+-	}
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 
 -- 
-2.1.4
+1.9.1
 
