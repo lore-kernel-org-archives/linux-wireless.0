@@ -1,56 +1,97 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:37355 "EHLO
-	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751808AbcCIFu1 convert rfc822-to-8bit (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:49843 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752666AbcCYMUQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 00:50:27 -0500
-Received: by mail-wm0-f47.google.com with SMTP id p65so55850342wmp.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2016 21:50:26 -0800 (PST)
+	Fri, 25 Mar 2016 08:20:16 -0400
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 05/11] staging: wilc1000: replaces frame_type with type of struct frame_reg
+Date: Fri, 25 Mar 2016 21:16:50 +0900
+Message-ID: <1458908216-12100-5-git-send-email-leo.kim@atmel.com> (sfid-20160325_132020_131382_4C427200)
+In-Reply-To: <1458908216-12100-1-git-send-email-leo.kim@atmel.com>
+References: <1458908216-12100-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
-In-Reply-To: <1457457934-8563-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1457457934-8563-1-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Wed, 9 Mar 2016 06:50:25 +0100
-Message-ID: <CA+BoTQk89ObhC2U8BiYENN1oF0B1Tnqmy=PtFqSfhrHodYM_KQ@mail.gmail.com> (sfid-20160309_065048_285639_BBC7F843)
-Subject: Re: [PATCH v4] ath10k: move mgmt descriptor limit handle under mgmt_tx
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 March 2016 at 18:25, Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
-[...]
-> +int ath10k_htt_tx_mgmt_inc_pending(struct ath10k_htt *htt, bool is_mgmt,
-> +                                  bool is_presp)
-> +{
-> +       struct ath10k *ar = htt->ar;
-> +
-> +       lockdep_assert_held(&htt->tx_lock);
-> +
-> +       if (!is_mgmt || !ar->hw_params.max_probe_resp_desc_thres)
-> +               return 0;
-> +
-> +       if (is_presp &&
-> +           ar->hw_params.max_probe_resp_desc_thres < htt->num_pending_mgmt_tx)
-> +               return -EBUSY;
-> +
-> +       htt->num_pending_mgmt_tx++;
-> +
-> +       return 0;
-> +}
-> +
-> +void ath10k_htt_tx_mgmt_dec_pending(struct ath10k_htt *htt)
-> +{
-> +       lockdep_assert_held(&htt->tx_lock);
-> +
-> +       htt->num_pending_mgmt_tx--;
-> +}
+This patch replaces frame_type with type of struct frame_reg.
 
-Oh, and this looks unbalanced. You increment only when
-`ar->hw_params.max_probe_resp_desc_thres` but always decrement.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/linux_wlan.c             | 8 ++++----
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 4 ++--
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     | 2 +-
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 2f830cd..760d44d1 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -966,11 +966,11 @@ int wilc_mac_open(struct net_device *ndev)
+ 
+ 	wilc_mgmt_frame_register(vif->ndev->ieee80211_ptr->wiphy,
+ 				 vif->ndev->ieee80211_ptr,
+-				 vif->frame_reg[0].frame_type,
++				 vif->frame_reg[0].type,
+ 				 vif->frame_reg[0].reg);
+ 	wilc_mgmt_frame_register(vif->ndev->ieee80211_ptr->wiphy,
+ 				 vif->ndev->ieee80211_ptr,
+-				 vif->frame_reg[1].frame_type,
++				 vif->frame_reg[1].type,
+ 				 vif->frame_reg[1].reg);
+ 	netif_wake_queue(ndev);
+ 	wl->open_ifcs++;
+@@ -1260,8 +1260,8 @@ void WILC_WFI_mgmt_rx(struct wilc *wilc, u8 *buff, u32 size)
+ 	}
+ 
+ 	vif = netdev_priv(wilc->vif[1]->ndev);
+-	if ((buff[0] == vif->frame_reg[0].frame_type && vif->frame_reg[0].reg) ||
+-	    (buff[0] == vif->frame_reg[1].frame_type && vif->frame_reg[1].reg))
++	if ((buff[0] == vif->frame_reg[0].type && vif->frame_reg[0].reg) ||
++	    (buff[0] == vif->frame_reg[1].type && vif->frame_reg[1].reg))
+ 		WILC_WFI_p2p_rx(wilc->vif[1]->ndev, buff, size);
+ }
+ 
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 3e0ffee..5785dda 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1745,14 +1745,14 @@ void wilc_mgmt_frame_register(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	switch (frame_type) {
+ 	case PROBE_REQ:
+ 	{
+-		vif->frame_reg[0].frame_type = frame_type;
++		vif->frame_reg[0].type = frame_type;
+ 		vif->frame_reg[0].reg = reg;
+ 	}
+ 	break;
+ 
+ 	case ACTION:
+ 	{
+-		vif->frame_reg[1].frame_type = frame_type;
++		vif->frame_reg[1].type = frame_type;
+ 		vif->frame_reg[1].reg = reg;
+ 	}
+ 	break;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index 3abe481..debb139 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -140,7 +140,7 @@ struct wilc_priv {
+ };
+ 
+ struct frame_reg {
+-	u16 frame_type;
++	u16 type;
+ 	bool reg;
+ };
+ 
+-- 
+1.9.1
 
-Michał
