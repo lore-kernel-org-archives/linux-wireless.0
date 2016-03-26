@@ -1,59 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m50-135.163.com ([123.125.50.135]:39828 "EHLO m50-135.163.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754327AbcCAPX4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 10:23:56 -0500
-From: Geliang Tang <geliangtang@163.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>,
-	Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Geliang Tang <geliangtang@163.com>, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: rtl8723au: fix static checker warning
-Date: Tue,  1 Mar 2016 23:22:23 +0800
-Message-Id: <1e3c203b20c01a12078506469807a79ae6013955.1456845195.git.geliangtang@163.com> (sfid-20160301_162414_788197_8232AC2F)
-In-Reply-To: <20160223050421.GA19763@mwanda>
+Received: from out2-smtp.messagingengine.com ([66.111.4.26]:45204 "EHLO
+	out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751622AbcCZQqp (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Mar 2016 12:46:45 -0400
+Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
+	by mailout.nyi.internal (Postfix) with ESMTP id 81C5B20831
+	for <linux-wireless@vger.kernel.org>; Sat, 26 Mar 2016 12:46:43 -0400 (EDT)
+Date: Sat, 26 Mar 2016 09:46:42 -0700
+From: Greg KH <greg@kroah.com>
+To: Till Kamppeter <till.kamppeter@gmail.com>
+Cc: Evgeny Novikov <novikov@ispras.ru>,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>,
+	chris holcombe <chris.holcombe@canonical.com>,
+	Chris MacNaughton <chris.macnaughton@canonical.com>
+Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
+Message-ID: <20160326164642.GA26523@kroah.com> (sfid-20160326_174651_015023_6BFCE548)
+References: <56F4266B.4060605@gmail.com>
+ <1943931458892174@web3o.yandex.ru>
+ <56F5D04A.20506@gmail.com>
+ <56F5D11B.7000803@gmail.com>
+ <20160326001803.GB15767@kroah.com>
+ <56F5DA55.6030802@gmail.com>
+ <20160326141540.GA4104@kroah.com>
+ <56F69BDC.7050900@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56F69BDC.7050900@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fix the following static checker warning:
+On Sat, Mar 26, 2016 at 11:25:32AM -0300, Till Kamppeter wrote:
+> On 03/26/2016 11:15 AM, Greg KH wrote:
+> >>Which one?
+> >
+> >This one:
+> >	https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/6320691074826240/
+> >
+> >>And are then all the other kernel-related applications to be ignored?
+> >
+> >I just went through them all again and left comments saying that they
+> >were not even a valid proposal, so yes, I don't see anything I can even
+> >consider for the kernel other than the above proposal.
+> 
+> Thank you very much. I have marked it with a star.
+> 
+> Can you look for a co-mentor and ask him for clicking "WANT TO MENTOR" on
+> this, too?
 
- drivers/staging/rtl8723au/core/rtw_sta_mgt.c:365 rtw_get_stainfo23a()
- error: potential NULL dereference 'psta'.
+I will look for one this week, but I can't count on finding one :)
 
-Fixes: e280d71("staging: rtl8723au: use list_for_each_entry*()")
-Signed-off-by: Geliang Tang <geliangtang@163.com>
----
- drivers/staging/rtl8723au/core/rtw_sta_mgt.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+> Can you give me a list of all the other proposals which you considered not
+> worthwhile (and where we do not need to wait for another mentor's opinion)
+> so that I can mark them ignored?
 
-diff --git a/drivers/staging/rtl8723au/core/rtw_sta_mgt.c b/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
-index 22d857b..5f85ee0 100644
---- a/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
-+++ b/drivers/staging/rtl8723au/core/rtw_sta_mgt.c
-@@ -346,7 +346,7 @@ void rtw_free_all_stainfo23a(struct rtw_adapter *padapter)
- struct sta_info *rtw_get_stainfo23a(struct sta_priv *pstapriv, const u8 *hwaddr)
- {
- 	struct list_head *phead;
--	struct sta_info *psta = NULL;
-+	struct sta_info *pos, *psta = NULL;
- 	u32 index;
- 	const u8 *addr;
- 
-@@ -362,7 +362,9 @@ struct sta_info *rtw_get_stainfo23a(struct sta_priv *pstapriv, const u8 *hwaddr)
- 
- 	spin_lock_bh(&pstapriv->sta_hash_lock);
- 	phead = &pstapriv->sta_hash[index];
--	list_for_each_entry(psta, phead, hash_list) {
-+	list_for_each_entry(pos, phead, hash_list) {
-+		psta = pos;
-+
- 		/*  if found the matched address */
- 		if (ether_addr_equal(psta->hwaddr, addr))
- 			break;
--- 
-2.5.0
-
-
+Ok, will go through them now...
