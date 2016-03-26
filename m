@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:59204 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752408AbcCIKwq (ORCPT
+Received: from out2-smtp.messagingengine.com ([66.111.4.26]:44489 "EHLO
+	out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751962AbcCZASG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 05:52:46 -0500
-Date: Wed, 9 Mar 2016 16:22:31 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	kvalo@codeaurora.org
-Subject: Re: [PATCH v2] cfg80211/nl80211: Add support for
- NL80211_STA_INFO_RX_DURATION
-Message-ID: <20160309105231.GA7145@atheros-ThinkPad-T61> (sfid-20160309_115250_437302_7FE7EBA1)
-References: <1457508003-16700-1-git-send-email-mohammed@qca.qualcomm.com>
- <1457515803.2042.1.camel@sipsolutions.net>
- <20160309093845.GA6695@atheros-ThinkPad-T61>
- <1457517488.2042.2.camel@sipsolutions.net>
+	Fri, 25 Mar 2016 20:18:06 -0400
+Received: from compute2.internal (compute2.nyi.internal [10.202.2.42])
+	by mailout.nyi.internal (Postfix) with ESMTP id 4A8AC20711
+	for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2016 20:18:05 -0400 (EDT)
+Date: Fri, 25 Mar 2016 17:18:03 -0700
+From: Greg KH <greg@kroah.com>
+To: Till Kamppeter <till.kamppeter@gmail.com>
+Cc: Evgeny Novikov <novikov@ispras.ru>,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>,
+	chris holcombe <chris.holcombe@canonical.com>,
+	Chris MacNaughton <chris.macnaughton@canonical.com>
+Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
+Message-ID: <20160326001803.GB15767@kroah.com> (sfid-20160326_011811_268269_70A4CA0A)
+References: <56F4266B.4060605@gmail.com>
+ <1943931458892174@web3o.yandex.ru>
+ <56F5D04A.20506@gmail.com>
+ <56F5D11B.7000803@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <1457517488.2042.2.camel@sipsolutions.net>
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56F5D11B.7000803@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
-
-
-On Wed, Mar 09, 2016 at 10:58:08AM +0100, Johannes Berg wrote:
-> On Wed, 2016-03-09 at 15:08 +0530, Mohammed Shafi Shajakhan wrote:
+On Fri, Mar 25, 2016 at 09:00:27PM -0300, Till Kamppeter wrote:
+> On 03/25/2016 08:56 PM, Till Kamppeter wrote:
+> >I am taking care of the 5 OpenPrinting proposals, please take care of
+> >all the others, mark with IGNORE what you for sure do not want to mentor
+> >and mark with a star what you want to mentor and also click "WANT TO
+> >MENTOR" on the proposal page. Please try to get two mentors per student,
+> >if only one is actually doing the mentoring work, the other is a backup.
+> >
 > 
-> > [shafi] Please suggest if this is ok ? I will be thankful
-> > if you can suggest a better one if this is not ok
-> > 
-> > * @rx_duration: approximate total air time(usecs) for all the
-> >  frames from a peer
-> > 
-> 
-> That seems fine. We should perhaps specify the meaning of "air time"
-> though. Is it allocated NAV time, or is it just time in which there was
-> energy? With or without any IFS?
->
+> Sorry, seems that star and ignore can only be set by org admins. So please
+> click "WANT TO MENTOR" if appropriate and tell me if you want to set or
+> remove the star or if you want to set or remove an ignore.
 
-[shafi] ath10k implementation is based on PPDU duration calculation
-and it does not includes any IFS duration.
+I have clicked 'WANT TO MENTOR" on the one kernel application that I
+think is worthy.
 
-So 'Energy' (time spent by the radio on receiving frames from a particular
-peer) makes more sense right ?
+thanks,
 
-regards,
-shafi
+greg k-h
