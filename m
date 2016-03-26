@@ -1,220 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:34250 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751144AbcCBH4u (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 02:56:50 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
-	Luca Coelho <luciano.coelho@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 01/43] iwlwifi: mvm: add CT-KILL notification
-Date: Wed,  2 Mar 2016 09:56:02 +0200
-Message-Id: <1456905404-14435-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085654_196708_79BBDD27)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:33430 "EHLO
+	mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752936AbcCZAjx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Mar 2016 20:39:53 -0400
+Received: by mail-qk0-f193.google.com with SMTP id q184so4662633qkb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2016 17:39:53 -0700 (PDT)
+Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
+To: Greg KH <greg@kroah.com>
+References: <56F4266B.4060605@gmail.com> <1943931458892174@web3o.yandex.ru>
+ <56F5D04A.20506@gmail.com> <56F5D11B.7000803@gmail.com>
+ <20160326001803.GB15767@kroah.com>
+Cc: Evgeny Novikov <novikov@ispras.ru>,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>,
+	chris holcombe <chris.holcombe@canonical.com>,
+	Chris MacNaughton <chris.macnaughton@canonical.com>
+From: Till Kamppeter <till.kamppeter@gmail.com>
+Message-ID: <56F5DA55.6030802@gmail.com> (sfid-20160326_014000_543458_1B077363)
+Date: Fri, 25 Mar 2016 21:39:49 -0300
+MIME-Version: 1.0
+In-Reply-To: <20160326001803.GB15767@kroah.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+On 03/25/2016 09:18 PM, Greg KH wrote:
+> On Fri, Mar 25, 2016 at 09:00:27PM -0300, Till Kamppeter wrote:
+>> Sorry, seems that star and ignore can only be set by org admins. So please
+>> click "WANT TO MENTOR" if appropriate and tell me if you want to set or
+>> remove the star or if you want to set or remove an ignore.
+>
+> I have clicked 'WANT TO MENTOR" on the one kernel application that I
+> think is worthy.
 
-Up to today the driver was notified of the temperature from the FW
-and decided whether to enter CT-kill or not.
->From now on, the FW will decide when to enter CT-kill and will notify
-the driver.
-Add support for this notification.
+Which one?
 
-Signed-off-by: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h |  5 +++++
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h  | 12 +++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/mvm.h     | 15 +++++++++++++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c     |  3 +++
- drivers/net/wireless/intel/iwlwifi/mvm/tt.c      | 27 +++++++++++++++++++++++-
- 5 files changed, 61 insertions(+), 1 deletion(-)
+And are then all the other kernel-related applications to be ignored?
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-index e2dbc67..724a3ee 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-@@ -318,6 +318,9 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_capa_t;
-  * @IWL_UCODE_TLV_CAPA_BEACON_STORING: firmware will store the latest beacon
-  *	from AP and will send it upon d0i3 exit.
-  * @IWL_UCODE_TLV_CAPA_LAR_SUPPORT_V2: support LAR API V2
-+ * @IWL_UCODE_TLV_CAPA_CT_KILL_BY_FW: firmware responsible for CT-kill
-+ * @IWL_UCODE_TLV_CAPA_TEMP_THS_REPORT_SUPPORT: supports temperature
-+ *	thresholds reporting
-  *
-  * @NUM_IWL_UCODE_TLV_CAPA: number of bits used
-  */
-@@ -351,6 +354,8 @@ enum iwl_ucode_tlv_capa {
- 	IWL_UCODE_TLV_CAPA_BEACON_ANT_SELECTION		= (__force iwl_ucode_tlv_capa_t)71,
- 	IWL_UCODE_TLV_CAPA_BEACON_STORING		= (__force iwl_ucode_tlv_capa_t)72,
- 	IWL_UCODE_TLV_CAPA_LAR_SUPPORT_V2		= (__force iwl_ucode_tlv_capa_t)73,
-+	IWL_UCODE_TLV_CAPA_CT_KILL_BY_FW		= (__force iwl_ucode_tlv_capa_t)74,
-+	IWL_UCODE_TLV_CAPA_TEMP_THS_REPORT_SUPPORT	= (__force iwl_ucode_tlv_capa_t)75,
- 
- 	NUM_IWL_UCODE_TLV_CAPA
- #ifdef __CHECKER__
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-index f332497..ecbf7cb 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
-@@ -279,6 +279,7 @@ enum {
-  */
- enum iwl_phy_ops_subcmd_ids {
- 	CMD_DTS_MEASUREMENT_TRIGGER_WIDE = 0x0,
-+	CT_KILL_NOTIFICATION = 0xFE,
- 	DTS_MEASUREMENT_NOTIF_WIDE = 0xFF,
- };
- 
-@@ -1685,6 +1686,17 @@ struct iwl_dts_measurement_notif {
- 	__le32 voltage;
- } __packed; /* TEMPERATURE_MEASUREMENT_TRIGGER_NTFY_S */
- 
-+/**
-+ * struct ct_kill_notif - CT-kill entry notification
-+ *
-+ * @temperature: the current temperature in celsius
-+ * @reserved: reserved
-+ */
-+struct ct_kill_notif {
-+	__le16 temperature;
-+	__le16 reserved;
-+} __packed; /* GRP_PHY_CT_KILL_NTF */
-+
- /***********************************
-  * TDLS API
-  ***********************************/
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-index ebe37bb..200bbb7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
-@@ -7,6 +7,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016        Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -33,6 +34,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016        Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -1028,6 +1030,18 @@ static inline bool iwl_mvm_has_new_rx_api(struct iwl_mvm *mvm)
- 			   IWL_UCODE_TLV_CAPA_MULTI_QUEUE_RX_SUPPORT);
- }
- 
-+static inline bool iwl_mvm_is_tt_in_fw(struct iwl_mvm *mvm)
-+{
-+	/* these two TLV are redundant since the responsibility to CT-kill by
-+	 * FW happens only after we send at least one command of
-+	 * temperature THs report.
-+	 */
-+	return fw_has_capa(&mvm->fw->ucode_capa,
-+			   IWL_UCODE_TLV_CAPA_CT_KILL_BY_FW) &&
-+	       fw_has_capa(&mvm->fw->ucode_capa,
-+			   IWL_UCODE_TLV_CAPA_TEMP_THS_REPORT_SUPPORT);
-+}
-+
- extern const u8 iwl_mvm_ac_to_tx_fifo[];
- 
- struct iwl_rate_info {
-@@ -1502,6 +1516,7 @@ void iwl_mvm_tt_initialize(struct iwl_mvm *mvm, u32 min_backoff);
- void iwl_mvm_tt_exit(struct iwl_mvm *mvm);
- void iwl_mvm_set_hw_ctkill_state(struct iwl_mvm *mvm, bool state);
- int iwl_mvm_get_temp(struct iwl_mvm *mvm, s32 *temp);
-+void iwl_mvm_ct_kill_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb);
- 
- /* Location Aware Regulatory */
- struct iwl_mcc_update_resp *
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 09a94a5..ecc371e 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -263,6 +263,8 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
- 	RX_HANDLER(DTS_MEASUREMENT_NOTIFICATION, iwl_mvm_temp_notif, true),
- 	RX_HANDLER_GRP(PHY_OPS_GROUP, DTS_MEASUREMENT_NOTIF_WIDE,
- 		       iwl_mvm_temp_notif, true),
-+	RX_HANDLER_GRP(PHY_OPS_GROUP, CT_KILL_NOTIFICATION,
-+		       iwl_mvm_ct_kill_notif, false),
- 
- 	RX_HANDLER(TDLS_CHANNEL_SWITCH_NOTIFICATION, iwl_mvm_rx_tdls_notif,
- 		   true),
-@@ -387,6 +389,7 @@ static const struct iwl_hcmd_names iwl_mvm_legacy_names[] = {
-  */
- static const struct iwl_hcmd_names iwl_mvm_phy_names[] = {
- 	HCMD_NAME(CMD_DTS_MEASUREMENT_TRIGGER_WIDE),
-+	HCMD_NAME(CT_KILL_NOTIFICATION),
- 	HCMD_NAME(DTS_MEASUREMENT_NOTIF_WIDE),
- };
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-index 758d05a..6ba3910 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
-@@ -7,6 +7,7 @@
-  *
-  * Copyright(c) 2013 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-+ * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -33,7 +34,7 @@
-  *
-  * Copyright(c) 2012 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2014 Intel Mobile Communications GmbH
-- * Copyright(c) 2015 Intel Deutschland GmbH
-+ * Copyright(c) 2015 - 2016 Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -171,6 +172,24 @@ void iwl_mvm_temp_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
- 	iwl_mvm_tt_temp_changed(mvm, temp);
- }
- 
-+void iwl_mvm_ct_kill_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
-+{
-+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-+	struct ct_kill_notif *notif;
-+	int len = iwl_rx_packet_payload_len(pkt);
-+
-+	if (WARN_ON_ONCE(len != sizeof(*notif))) {
-+		IWL_ERR(mvm, "Invalid CT_KILL_NOTIFICATION\n");
-+		return;
-+	}
-+
-+	notif = (struct ct_kill_notif *)pkt->data;
-+	IWL_DEBUG_TEMP(mvm, "CT Kill notification temperature = %d\n",
-+		       notif->temperature);
-+
-+	iwl_mvm_enter_ctkill(mvm);
-+}
-+
- static int iwl_mvm_get_temp_cmd(struct iwl_mvm *mvm)
- {
- 	struct iwl_dts_measurement_cmd cmd = {
-@@ -236,6 +255,12 @@ static void check_exit_ctkill(struct work_struct *work)
- 	tt = container_of(work, struct iwl_mvm_tt_mgmt, ct_kill_exit.work);
- 	mvm = container_of(tt, struct iwl_mvm, thermal_throttle);
- 
-+	if (iwl_mvm_is_tt_in_fw(mvm)) {
-+		iwl_mvm_exit_ctkill(mvm);
-+
-+		return;
-+	}
-+
- 	duration = tt->params.ct_kill_duration;
- 
- 	mutex_lock(&mvm->mutex);
--- 
-2.5.0
+    Till
+
 
