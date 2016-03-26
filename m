@@ -1,151 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f53.google.com ([74.125.82.53]:35458 "EHLO
-	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754581AbcCJIoW (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 03:44:22 -0500
-Received: by mail-wm0-f53.google.com with SMTP id l68so19393416wml.0
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2016 00:44:21 -0800 (PST)
-From: Andreas Fenkart <afenkart@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Julian Calaby <julian.calaby@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Andreas Fenkart <afenkart@gmail.com>
-Subject: [PATCH v2 2/7] mwifiex: scan: factor out has_ieee_hdr/has_vendor_hdr
-Date: Thu, 10 Mar 2016 09:44:06 +0100
-Message-Id: <1457599451-13910-3-git-send-email-afenkart@gmail.com> (sfid-20160310_094425_283397_0C57D32C)
-In-Reply-To: <1457599451-13910-1-git-send-email-afenkart@gmail.com>
-References: <1457599451-13910-1-git-send-email-afenkart@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:60942 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752150AbcCZTVB (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Mar 2016 15:21:01 -0400
+Message-ID: <1459020054.8901.8.camel@sipsolutions.net> (sfid-20160326_202107_096792_EFED5FBD)
+Subject: Re: hashing error in hacked 4.4.6+ kernel.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Date: Sat, 26 Mar 2016 20:20:54 +0100
+In-Reply-To: <56F5DE21.9050601@candelatech.com> (sfid-20160326_015610_163402_1721825C)
+References: <56F5DE21.9050601@candelatech.com>
+	 (sfid-20160326_015610_163402_1721825C)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Andreas Fenkart <afenkart@gmail.com>
----
- drivers/net/wireless/marvell/mwifiex/scan.c | 52 +++++++++++++----------------
- 1 file changed, 23 insertions(+), 29 deletions(-)
+On Fri, 2016-03-25 at 17:56 -0700, Ben Greear wrote:
+> 
+> Mar 25 17:02:05 ath10k.candelatech.com kernel: sta28:
+> deauthenticating from 04:f0:21:f6:85:1c by local choice (Reason:
+> 3=DEAUTH_LEAVING)
+> Mar 25 17:02:05 ath10k.candelatech.com kernel: ------------[ cut here
+> ]------------
+> Mar 25 17:02:05 ath10k.candelatech.com kernel: WARNING: CPU: 2 PID:
+> 6227 at /home/greearb/git/linux-
+> 4.4.dev.y/net/mac80211/sta_info.c:921 
+> __sta_info_destroy_part1+0x91/0x422 [mac80211]()
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/scan.c b/drivers/net/wireless/marvell/mwifiex/scan.c
-index a7bdde5..ed886af 100644
---- a/drivers/net/wireless/marvell/mwifiex/scan.c
-+++ b/drivers/net/wireless/marvell/mwifiex/scan.c
-@@ -76,6 +76,18 @@ static u8 mwifiex_rsn_oui[CIPHER_SUITE_MAX][4] = {
- 	{ 0x00, 0x0f, 0xac, 0x04 },	/* AES  */
- };
- 
-+static bool
-+has_ieee_hdr(struct ieee_types_generic *ie, u8 key)
-+{
-+	return (ie && ie->ieee_hdr.element_id == key);
-+}
-+
-+static bool
-+has_vendor_hdr(struct ieee_types_vendor_specific *ie, u8 key)
-+{
-+	return (ie && ie->vend_hdr.element_id == key);
-+}
-+
- /*
-  * This function parses a given IE for a given OUI.
-  *
-@@ -121,8 +133,7 @@ mwifiex_is_rsn_oui_present(struct mwifiex_bssdescriptor *bss_desc, u32 cipher)
- 	struct ie_body *iebody;
- 	u8 ret = MWIFIEX_OUI_NOT_PRESENT;
- 
--	if (bss_desc->bcn_rsn_ie &&
--	    bss_desc->bcn_rsn_ie->ieee_hdr.element_id == WLAN_EID_RSN) {
-+	if (has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN)) {
- 		iebody = (struct ie_body *)
- 			 (((u8 *) bss_desc->bcn_rsn_ie->data) +
- 			  RSN_GTK_OUI_OFFSET);
-@@ -148,9 +159,7 @@ mwifiex_is_wpa_oui_present(struct mwifiex_bssdescriptor *bss_desc, u32 cipher)
- 	struct ie_body *iebody;
- 	u8 ret = MWIFIEX_OUI_NOT_PRESENT;
- 
--	if (bss_desc->bcn_wpa_ie &&
--	    bss_desc->bcn_wpa_ie->vend_hdr.element_id ==
--	    WLAN_EID_VENDOR_SPECIFIC) {
-+	if (has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC)) {
- 		iebody = (struct ie_body *) bss_desc->bcn_wpa_ie->data;
- 		oui = &mwifiex_wpa_oui[cipher][0];
- 		ret = mwifiex_search_oui_in_ie(iebody, oui);
-@@ -180,11 +189,8 @@ mwifiex_is_bss_wapi(struct mwifiex_private *priv,
- 		    struct mwifiex_bssdescriptor *bss_desc)
- {
- 	if (priv->sec_info.wapi_enabled &&
--	    (bss_desc->bcn_wapi_ie &&
--	     bss_desc->bcn_wapi_ie->ieee_hdr.element_id ==
--	     WLAN_EID_BSS_AC_ACCESS_DELAY)) {
-+	    has_ieee_hdr(bss_desc->bcn_wapi_ie, WLAN_EID_BSS_AC_ACCESS_DELAY))
- 		return true;
--	}
- 	return false;
- }
- 
-@@ -198,11 +204,8 @@ mwifiex_is_bss_no_sec(struct mwifiex_private *priv,
- {
- 	if (!priv->sec_info.wep_enabled && !priv->sec_info.wpa_enabled &&
- 	    !priv->sec_info.wpa2_enabled &&
--	    (!bss_desc->bcn_wpa_ie ||
--	     bss_desc->bcn_wpa_ie->vend_hdr.element_id !=
--	     WLAN_EID_VENDOR_SPECIFIC) &&
--	    (!bss_desc->bcn_rsn_ie ||
--	     bss_desc->bcn_rsn_ie->ieee_hdr.element_id != WLAN_EID_RSN) &&
-+	    !has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC) &&
-+	    !has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN) &&
- 	    !priv->sec_info.encryption_mode && !bss_desc->privacy) {
- 		return true;
- 	}
-@@ -234,9 +237,7 @@ mwifiex_is_bss_wpa(struct mwifiex_private *priv,
- {
- 	if (!priv->sec_info.wep_enabled && priv->sec_info.wpa_enabled &&
- 	    !priv->sec_info.wpa2_enabled &&
--	    (bss_desc->bcn_wpa_ie &&
--	     bss_desc->bcn_wpa_ie->vend_hdr.element_id ==
--	     WLAN_EID_VENDOR_SPECIFIC)
-+	    has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC)
- 	   /*
- 	    * Privacy bit may NOT be set in some APs like
- 	    * LinkSys WRT54G && bss_desc->privacy
-@@ -270,8 +271,7 @@ mwifiex_is_bss_wpa2(struct mwifiex_private *priv,
- {
- 	if (!priv->sec_info.wep_enabled && !priv->sec_info.wpa_enabled &&
- 	    priv->sec_info.wpa2_enabled &&
--	    (bss_desc->bcn_rsn_ie &&
--	     bss_desc->bcn_rsn_ie->ieee_hdr.element_id == WLAN_EID_RSN)) {
-+	    has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN)) {
- 		/*
- 		 * Privacy bit may NOT be set in some APs like
- 		 * LinkSys WRT54G && bss_desc->privacy
-@@ -304,11 +304,8 @@ mwifiex_is_bss_adhoc_aes(struct mwifiex_private *priv,
- {
- 	if (!priv->sec_info.wep_enabled && !priv->sec_info.wpa_enabled &&
- 	    !priv->sec_info.wpa2_enabled &&
--	    (!bss_desc->bcn_wpa_ie ||
--	     bss_desc->bcn_wpa_ie->vend_hdr.element_id !=
--	     WLAN_EID_VENDOR_SPECIFIC) &&
--	    (!bss_desc->bcn_rsn_ie ||
--	     bss_desc->bcn_rsn_ie->ieee_hdr.element_id != WLAN_EID_RSN) &&
-+	    !has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC) &&
-+	    !has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN) &&
- 	    !priv->sec_info.encryption_mode && bss_desc->privacy) {
- 		return true;
- 	}
-@@ -325,11 +322,8 @@ mwifiex_is_bss_dynamic_wep(struct mwifiex_private *priv,
- {
- 	if (!priv->sec_info.wep_enabled && !priv->sec_info.wpa_enabled &&
- 	    !priv->sec_info.wpa2_enabled &&
--	    (!bss_desc->bcn_wpa_ie ||
--	     bss_desc->bcn_wpa_ie->vend_hdr.element_id !=
--	     WLAN_EID_VENDOR_SPECIFIC) &&
--	    (!bss_desc->bcn_rsn_ie ||
--	     bss_desc->bcn_rsn_ie->ieee_hdr.element_id != WLAN_EID_RSN) &&
-+	    !has_vendor_hdr(bss_desc->bcn_wpa_ie, WLAN_EID_VENDOR_SPECIFIC) &&
-+	    !has_ieee_hdr(bss_desc->bcn_rsn_ie, WLAN_EID_RSN) &&
- 	    priv->sec_info.encryption_mode && bss_desc->privacy) {
- 		mwifiex_dbg(priv->adapter, INFO,
- 			    "info: %s: dynamic\t"
--- 
-2.7.0
+In upstream, this warning goes straight to rhashtable not finding the
+entry.
 
+In your code though (looking at the commit introducing it, hoping you
+didn't change it later), there's considerably more code in
+sta_info_hash_del() that can return an error. It might be interesting
+to find out *which* error is happening.
+
+I'd agree though, from my brief look at the code it doesn't seem likely
+that there's a problem with the code you add.
+
+johannes
+
+PS: you should probably write "return 0" instead of "return rv"
+whenever it's clear that "rv" must be 0 :)
+
+PPS: why are you not using rhashtable for the vhash?
