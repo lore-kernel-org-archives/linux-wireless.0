@@ -1,86 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:39615 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756142AbcCQCKs (ORCPT
+Received: from mail-qk0-f193.google.com ([209.85.220.193]:36163 "EHLO
+	mail-qk0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751402AbcCZAAc (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2016 22:10:48 -0400
-From: David Lin <dlin@marvell.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Chor Teck Law <ctlaw@marvell.com>,
-	"Pete Hsieh" <peteh@marvell.com>
-Subject: RE: [PATCH v7] Add new mac80211 driver mwlwifi.
-Date: Thu, 17 Mar 2016 02:10:43 +0000
-Message-ID: <f8a657d8b0f3417284f65fbe81bcbf29@SC-EXCH02.marvell.com> (sfid-20160317_031053_772025_3D2FE981)
-References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
- <CAGRGNgUxNdbBn7HU+==P9uM3ciN-5pWRXDT+oYzCTLoATCR_xg@mail.gmail.com>
- <a5d1b2b861294df2badcfe38c74a13db@SC-EXCH02.marvell.com>
- <CAGRGNgXUVV4GpcSKnG9QLUz1-TQiRoeWLg0MLkYVZOn-QF3U0A@mail.gmail.com>
-In-Reply-To: <CAGRGNgXUVV4GpcSKnG9QLUz1-TQiRoeWLg0MLkYVZOn-QF3U0A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	Fri, 25 Mar 2016 20:00:32 -0400
+Received: by mail-qk0-f193.google.com with SMTP id e124so4559898qkc.3
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2016 17:00:31 -0700 (PDT)
+Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
+To: Evgeny Novikov <novikov@ispras.ru>,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>,
+	chris holcombe <chris.holcombe@canonical.com>,
+	Chris MacNaughton <chris.macnaughton@canonical.com>
+References: <56F4266B.4060605@gmail.com> <1943931458892174@web3o.yandex.ru>
+ <56F5D04A.20506@gmail.com>
+From: Till Kamppeter <till.kamppeter@gmail.com>
+Message-ID: <56F5D11B.7000803@gmail.com> (sfid-20160326_010036_146445_1D691F2B)
+Date: Fri, 25 Mar 2016 21:00:27 -0300
 MIME-Version: 1.0
+In-Reply-To: <56F5D04A.20506@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBGcm9tOiBKdWxpYW4gQ2FsYWJ5IFttYWlsdG86anVsaWFuLmNhbGFieUBnbWFpbC5jb21dIFRo
-dXJzZGF5LCBNYXJjaCAxNywgMjAxNiA5OjMyIEFNPiANCj4gSGkgRGF2aWQsDQo+IA0KPiBPbiBU
-aHUsIE1hciAxNywgMjAxNiBhdCAxMjoyMyBQTSwgRGF2aWQgTGluIDxkbGluQG1hcnZlbGwuY29t
-PiB3cm90ZToNCj4gPj4gRnJvbTogSnVsaWFuIENhbGFieSBbbWFpbHRvOmp1bGlhbi5jYWxhYnlA
-Z21haWwuY29tXSBUaHVyc2RheSwgTWFyY2gNCj4gPj4gMTcsIDIwMTYgNzoyNCBBTQ0KPiA+Pg0K
-PiA+PiBIaSBEYXZpZCwNCj4gPj4NCj4gPj4gT24gVGh1LCBOb3YgMTIsIDIwMTUgYXQgMjo1MSBQ
-TSwgRGF2aWQgTGluIDxkbGluQG1hcnZlbGwuY29tPiB3cm90ZToNCj4gPj4gPiBUaGlzIHBhdGNo
-IHByb3ZpZGVzIHRoZSBtd2x3aWZpIGRyaXZlciBmb3IgTWFydmVsbCA4ODYzLCA4ODY0IGFuZA0K
-PiA+PiA+IDg4OTcgY2hpcHNldHMuDQo+ID4+ID4gVGhpcyBkcml2ZXIgd2FzIGRldmVsb3BlZCBh
-cyBwYXJ0IG9mIHRoZSBvcGVud3J0Lm9yZyBwcm9qZWN0IHRvDQo+ID4+ID4gc3VwcG9ydCBMaW5r
-c3lzIFdSVDE5MDBBQyBhbmQgaXMgbWFpbnRhaW5lZCBvbg0KPiA+PiBodHRwczovL2dpdGh1Yi5j
-b20va2Fsb3ovbXdsd2lmaS4NCj4gPj4gPg0KPiA+PiA+IFRoZSBtd2x3aWZpIGRyaXZlciBkaWZm
-ZXJzIGZyb20gZXhpc3RpbmcgbXdpZmlleCBkcml2ZXI6DQo+ID4+ID4gbyBtd2x3aWZpIGlzIGEg
-InNvZnRtYWMgZHJpdmVyIiB1c2luZyB0aGUga2VybmVsP+6ogyBtYWM4MDIuMTENCj4gPj4gPiBz
-dWJzeXN0ZW0gdG8gcHJvdmlkZSBmdWxsIEFQL1dpcmVsZXNzIEJyaWRnZSBmdW5jdGlvbmFsaXR5
-IChyb3V0ZXJzKS4NCj4gPj4gPiBvIG13aWZpZXggaXMgYSAiZnVsbG1hYyBkcml2ZXIiIHdoaWNo
-IHByb3ZpZGVzIGEgY29tcHJlaGVuc2l2ZSBzZXQNCj4gPj4gPiBvZiBjbGllbnQgZnVuY3Rpb25z
-IChsYXB0b3BzL2VtYmVkZGVkIGRldmljZXMpIG8gb25seSBtd2x3aWZpDQo+ID4+ID4gc3VwcG9y
-dHMgTWFydmVsbCBBUCBjaGlwIDg4Nlggc2VyaWVzDQo+ID4+ID4NCj4gPj4gPiBOT1RFOiBVc2Vy
-cyB3aXRoIE1hcnZlbGwgODhXODg5NyBjaGlwc2V0cyBjdXJyZW50bHkgc2hvdWxkIGVuYWJsZQ0K
-PiA+PiA+IChDT05GSUc9WSBvciBNKSBlaXRoZXIgQ09ORklHX01XSUZJRVggb3IgQ09ORklHX01X
-TFdJRkksIE5PVA0KPiA+PiBCT1RILg0KPiA+PiA+DQo+ID4+ID4gbXdsd2lmaSBkcml2ZXIgbGV2
-ZXJhZ2VkIGNvZGUgZnJvbSBleGlzdGluZyBNV0w4SyBkcml2ZXIgaW4gdGhlDQo+ID4+ID4gZm9s
-bG93aW5nIGFyZWFzOg0KPiA+PiA+IC0gODAyLjExbiBzZXR0aW5nIGZvciBtYWM4MDIxMQ0KPiA+
-PiA+IC0gRnVuY3Rpb25zIG5lZWRlZCB0byBob29rIHVwIHRvIG1hYzgwMjExDQo+ID4+ID4gLSBJ
-bnRlcmFjdGlvbnMgd2l0aCBtYWM4MDIxMSB0byBlc3RhYmxpc2ggQkEgc3RyZWFtcw0KPiA+PiA+
-IC0gUGFydGlhbCBmaXJtd2FyZSBBUElzLCBzb21lIGRhdGEgZmllbGRzDQo+ID4+ID4gLSBNZXRo
-b2QgdG8gcGFzcyBSeCBwYWNrZXRzIHRvIG1hYzgwMjExIGV4Y2VwdCAxMWFjIHJhdGVzDQo+ID4+
-ID4NCj4gPj4gPiBJbiBhZGRpdGlvbiwgbXdsd2lmaSBkcml2ZXIgc3VwcG9ydHM6DQo+ID4+ID4g
-LSBmdXR1cmUgc2NhbGFiaWxpdHkgYW5kIGZ1dHVyZSBkZXZlbG9wbWVudCAocmVmYWN0b3JlZCBz
-b3VyY2UNCj4gPj4gPiBjb2RlKQ0KPiA+PiA+IC0gTWFydmVsbCA4MDIuMTFhYyBjaGlwc2V0cywg
-aW5jbHVkaW5nIGNvbWJvIEJUIGRldmljZXMNCj4gPj4gPiAtIDgwMi4xMWFjIHJlbGF0ZWQgc2V0
-dGluZ3MgYW5kIGZ1bmN0aW9ucw0KPiA+PiA+IC0gY29uY3VycmVudCBBUCtTVEEgZnVuY3Rpb25h
-bGl0aWVzIHdpdGggc2luZ2xlIGZpcm13YXJlIHBlciBjaGlwDQo+ID4+ID4gLSBmaXJtd2FyZSBB
-UElzIGZvciB0aGUgc3VwcG9ydGVkIGNoaXBzZXQNCj4gPj4gPiAtIGNvbW11bmljYXRpbmcgbmV3
-IG1hYzgwMjExIHNldHRpbmdzIHRvIGZpcm13YXJlDQo+ID4+ID4gLSBEaWZmZXJlbnQgVFgvUlgg
-ZGF0YXBhdGggd2hlcmUgYXBwbGljYWJsZQ0KPiA+PiA+IC0gQS1NU0RVIGFuZCBBLU1QRFUNCj4g
-Pj4gPiAtIG1hYzgwMjExLWJhc2VkIE1FU0ggKHdvcmsgaW4gcHJvZ3Jlc3MpDQo+ID4+ID4gLSBS
-ZWZpbmVkIHRoZSBjb2RlIHRvIGVzdGFibGlzaCBCQSBzdHJlYW1zDQo+ID4+ID4NCj4gPj4gPiBO
-T1RFOiBNV0xXSUZJIHdpbGwgYmUgb3JnYW5pemVkIHVuZGVyIG5ldyB2ZW5kb3Igc3BlY2lmaWMN
-Cj4gPj4gPiBmb2xkZXIvbWFydmVsbCwgYXMgcGVyIHJlcXVlc3Qgb2YgdGhlIGdhdGUga2VlcGVy
-IGFuZCBjb21tdW5pdHkuDQo+ID4+ID4NCj4gPj4gPiBTaWduZWQtb2ZmLWJ5OiBEYXZpZCBMaW4g
-PGRsaW5AbWFydmVsbC5jb20+DQo+ID4+DQo+ID4+IEl0J3MgYmVlbiBxdWl0ZSBhIHdoaWxlIHNp
-bmNlIHRoaXMgd2FzIHJldmlld2VkLiBEbyB5b3UgaGF2ZSBhIG5ldw0KPiA+PiB2ZXJzaW9uIG9m
-IHRoZSBkcml2ZXI/DQo+ID4+DQo+ID4NCj4gPiBZZXMgd2UgaGF2ZSBzb21lIHVwZGF0ZXMsIGFu
-ZCBjb250aW51ZSB3b3JraW5nIG9uIGl0LiBCdXQgd2UgZmVsdCB0aGF0DQo+IGNvbW11bml0eSBk
-b2VzIG5vdCBzZWVtIHRvIGJlIHZlcnkgaW50ZXJlc3RlZCBpbiB0aGlzIGRyaXZlciwgc28gd2Ug
-aGF2ZSBub3QNCj4gYmVlbiB1cGRhdGluZyB0aGUgd2lyZWxlc3Mgb3JnLiBMZXQgdXMga25vdyBp
-ZiB5b3UgYXJlIHN1cHBvcnRpdmUgYW5kIHdhaXRpbmcNCj4gZm9yIGl0Lg0KPiANCj4gTXkgdW5k
-ZXJzdGFuZGluZyB3YXMgdGhhdCB3ZSdkIHZlcnkgbXVjaCBsaWtlIHRoZSBkcml2ZXIgdG8gYmUg
-c2VudCB1cHN0cmVhbS4NCj4gRnJvbSBteSBwZXJzcGVjdGl2ZSwgaXQgbG9va2VkIGxpa2UgeW91
-J2QgbG9zdCBpbnRlcmVzdCwgbm90IHVzLg0KPiANCg0KV2UgZmVsdCBzb21lIHJlc2lzdGFuY2Ug
-ZnJvbSB2YXJpb3VzIHBlb3BsZSwgYW5kIGdldCBkaXNjb3VyYWdlZC4gVGhvdWdoIHdlIGNvbnRp
-bnVlIHRvIHdvcmsgb24gaXQgaW50ZXJuYWxseSwgd2Ugd2VyZSBqdXN0IGtlZXBpbmcgZnVydGhl
-ciBzdWJtaXNzaW9uIGF0IHRoZSBiYWNrIG9mIG91ciBtaW5kLiBXZSBkbyBrZWVwIHRoZSBmZWVk
-YmFjayBmcm9tIGNvbW11bml0eSBhbmQgd2lsbCB3b3JrIG9uIGNvbXBsaWFuY3kgd2hlcmUgYXBw
-bGljYWJsZSBhbmQgcG9zc2libGUuDQoNCk5leHQsIHdlIHdpbGwgcHJlcGFyZSBhIHBhdGNoOCBm
-b3Igc3VibWlzc2lvbiBsYXRlci4NCg0KPg0KPiBUaGFua3MsDQo+IA0KPiAtLQ0KPiBKdWxpYW4g
-Q2FsYWJ5DQo+IA0KPiBFbWFpbDoganVsaWFuLmNhbGFieUBnbWFpbC5jb20NCj4gUHJvZmlsZTog
-aHR0cDovL3d3dy5nb29nbGUuY29tL3Byb2ZpbGVzL2p1bGlhbi5jYWxhYnkvDQo=
+On 03/25/2016 08:56 PM, Till Kamppeter wrote:
+> I am taking care of the 5 OpenPrinting proposals, please take care of
+> all the others, mark with IGNORE what you for sure do not want to mentor
+> and mark with a star what you want to mentor and also click "WANT TO
+> MENTOR" on the proposal page. Please try to get two mentors per student,
+> if only one is actually doing the mentoring work, the other is a backup.
+>
+
+Sorry, seems that star and ignore can only be set by org admins. So 
+please click "WANT TO MENTOR" if appropriate and tell me if you want to 
+set or remove the star or if you want to set or remove an ignore.
+
+    Till
+
