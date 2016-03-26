@@ -1,72 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:41798 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932387AbcCOJvV (ORCPT
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:35398 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750871AbcCZGPE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 15 Mar 2016 05:51:21 -0400
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 4/7] staging: wilc1000: removes duplicate wilc variable setting
-Date: Tue, 15 Mar 2016 18:48:11 +0900
-Message-ID: <1458035294-13001-4-git-send-email-leo.kim@atmel.com> (sfid-20160315_105124_540778_9A273D8D)
-In-Reply-To: <1458035294-13001-1-git-send-email-leo.kim@atmel.com>
-References: <1458035294-13001-1-git-send-email-leo.kim@atmel.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 26 Mar 2016 02:15:04 -0400
+From: Bhumika Goyal <bhumirks@gmail.com>
+To: Larry.Finger@lwfinger.net, gregkh@linuxfoundation.org
+Cc: Jes.Sorensen@redhat.com, joe@perches.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	linux-kernel@vger.kernel.org, Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH] Staging: rtl8723au: Remove unused functions
+Date: Sat, 26 Mar 2016 11:44:52 +0530
+Message-Id: <1458972892-14169-1-git-send-email-bhumirks@gmail.com> (sfid-20160326_071531_032161_74DB40B0)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patches removes duplicate wilc variable setting.
-This value has already been set to wl variable previously.
-Replace wilc with wl as well.
+The functions rtw_get_oper_bw23a and rtw_get_oper_ch23aoffset are never
+used anywhere in the kernel. So, remove their definition and prototype.
+Grepped to find occurences.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 10 ++++------
- 1 file changed, 4 insertions(+), 6 deletions(-)
+ drivers/staging/rtl8723au/core/rtw_wlan_util.c   | 10 ----------
+ drivers/staging/rtl8723au/include/rtw_mlme_ext.h |  2 --
+ 2 files changed, 12 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 8a10831..1a5de2e 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -896,7 +896,6 @@ static int mac_init_fn(struct net_device *ndev)
- int wilc_mac_open(struct net_device *ndev)
+diff --git a/drivers/staging/rtl8723au/core/rtw_wlan_util.c b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
+index cc2b84b..694cf17 100644
+--- a/drivers/staging/rtl8723au/core/rtw_wlan_util.c
++++ b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
+@@ -304,21 +304,11 @@ inline void rtw_set_oper_ch23a(struct rtw_adapter *adapter, u8 ch)
+ 	adapter_to_dvobj(adapter)->oper_channel = ch;
+ }
+ 
+-inline u8 rtw_get_oper_bw23a(struct rtw_adapter *adapter)
+-{
+-	return adapter_to_dvobj(adapter)->oper_bwmode;
+-}
+-
+ inline void rtw_set_oper_bw23a(struct rtw_adapter *adapter, u8 bw)
  {
- 	struct wilc_vif *vif;
--	struct wilc *wilc;
+ 	adapter_to_dvobj(adapter)->oper_bwmode = bw;
+ }
  
- 	unsigned char mac_add[ETH_ALEN] = {0};
- 	int ret = 0;
-@@ -912,7 +911,6 @@ int wilc_mac_open(struct net_device *ndev)
- 		return -ENODEV;
- 	}
+-inline u8 rtw_get_oper_ch23aoffset(struct rtw_adapter *adapter)
+-{
+-	return adapter_to_dvobj(adapter)->oper_ch_offset;
+-}
+-
+ inline void rtw_set_oper_ch23aoffset23a(struct rtw_adapter *adapter, u8 offset)
+ {
+ 	adapter_to_dvobj(adapter)->oper_ch_offset = offset;
+diff --git a/drivers/staging/rtl8723au/include/rtw_mlme_ext.h b/drivers/staging/rtl8723au/include/rtw_mlme_ext.h
+index ea2a6c9..0e7d3da 100644
+--- a/drivers/staging/rtl8723au/include/rtw_mlme_ext.h
++++ b/drivers/staging/rtl8723au/include/rtw_mlme_ext.h
+@@ -461,9 +461,7 @@ void Update23aTblForSoftAP(u8 *bssrateset, u32 bssratelen);
  
--	wilc = vif->wilc;
- 	priv = wiphy_priv(vif->ndev->ieee80211_ptr->wiphy);
- 	netdev_dbg(ndev, "MAC OPEN[%p]\n", ndev);
+ u8 rtw_get_oper_ch23a(struct rtw_adapter *adapter);
+ void rtw_set_oper_ch23a(struct rtw_adapter *adapter, u8 ch);
+-u8 rtw_get_oper_bw23a(struct rtw_adapter *adapter);
+ void rtw_set_oper_bw23a(struct rtw_adapter *adapter, u8 bw);
+-u8 rtw_get_oper_ch23aoffset(struct rtw_adapter *adapter);
+ void rtw_set_oper_ch23aoffset23a(struct rtw_adapter *adapter, u8 offset);
  
-@@ -932,13 +930,13 @@ int wilc_mac_open(struct net_device *ndev)
- 				wilc_set_wfi_drv_handler(vif,
- 							 wilc_get_vif_idx(vif),
- 							 0);
--			} else if (!wilc_wlan_get_num_conn_ifcs(wilc)) {
-+			} else if (!wilc_wlan_get_num_conn_ifcs(wl)) {
- 				wilc_set_wfi_drv_handler(vif,
- 							 wilc_get_vif_idx(vif),
--							 wilc->open_ifcs);
-+							 wl->open_ifcs);
- 			} else {
--				if (memcmp(wilc->vif[i ^ 1]->bssid,
--					   wilc->vif[i ^ 1]->src_addr, 6))
-+				if (memcmp(wl->vif[i ^ 1]->bssid,
-+					   wl->vif[i ^ 1]->src_addr, 6))
- 					wilc_set_wfi_drv_handler(vif,
- 							 wilc_get_vif_idx(vif),
- 							 0);
+ void set_channel_bwmode23a(struct rtw_adapter *padapter, unsigned char channel,
 -- 
 1.9.1
 
