@@ -1,45 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:38160 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932071AbcCHRAZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2016 12:00:25 -0500
-Message-ID: <1457456420.24270.16.camel@sipsolutions.net> (sfid-20160308_180039_502798_19DDF60F)
-Subject: Re: [PATCH] iw: add libnl-tiny support
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dima Krasner <dima@dimakrasner.com>
-Cc: linux-wireless@vger.kernel.org
-Date: Tue, 08 Mar 2016 18:00:20 +0100
-In-Reply-To: <20160305175115.4476ee00292f15f60aad4497@dimakrasner.com>
-References: <20160223204334.4a65ab8113dbe31fbffc56ff@dimakrasner.com>
-	 <1456927176.2157.4.camel@sipsolutions.net>
-	 <20160305175115.4476ee00292f15f60aad4497@dimakrasner.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from out2-smtp.messagingengine.com ([66.111.4.26]:40968 "EHLO
+	out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751962AbcCZAR3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Mar 2016 20:17:29 -0400
+Received: from compute4.internal (compute4.nyi.internal [10.202.2.44])
+	by mailout.nyi.internal (Postfix) with ESMTP id 54869203F1
+	for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2016 20:17:28 -0400 (EDT)
+Date: Fri, 25 Mar 2016 17:17:27 -0700
+From: Greg KH <greg@kroah.com>
+To: Till Kamppeter <till.kamppeter@gmail.com>
+Cc: Evgeny Novikov <novikov@ispras.ru>,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>,
+	chris holcombe <chris.holcombe@canonical.com>,
+	Chris MacNaughton <chris.macnaughton@canonical.com>
+Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
+Message-ID: <20160326001727.GA15767@kroah.com> (sfid-20160326_011732_960959_EC7E4F4F)
+References: <56F4266B.4060605@gmail.com>
+ <1943931458892174@web3o.yandex.ru>
+ <56F5D04A.20506@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56F5D04A.20506@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This:
+On Fri, Mar 25, 2016 at 08:56:58PM -0300, Till Kamppeter wrote:
+> On 03/25/2016 04:49 AM, Evgeny Novikov wrote:
+> >This student suggested two proposals that aren't good and likely the student isn't going to improve them. So I suggest to ignore them if Greg doesn't mind:
+> >Sandhya - IIO driver - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/5372313474170880/
+> >Sandhya - memory management latency tracing - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/5404748865863680/
+> >
+> 
+> Final PDF contains exactly the same as the abstract, no info about school,
+> course type, already acquired knowledge, ... I would ignore these. Greg,
+> please confirm.
 
-> -#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30)
-> +#if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30) && !defined(CONFIG_LIBNL_TINY)
+Yes, please ignore.
 
-> -#endif /* CONFIG_LIBNL20 && CONFIG_LIBNL30 */
-> +#endif /* CONFIG_LIBNL20 && CONFIG_LIBNL30 && CONFIG_LIBNL_TINY */
-
-can be handled by just defining CONFIG_LIBNL20 for libnl-tiny.
-
-> -/* libnl 1.x compatibility code */
-> +/* libnl 1.x and libnl-tiny compatibility code */
->  #if !defined(CONFIG_LIBNL20) && !defined(CONFIG_LIBNL30)
->  #  define nl_sock nl_handle
->  #endif
-
-Are you sure this is needed? Elsewhere you said libnl-tiny uses libnl20
-compatible API, which is with nl_handle. If this is needed perhaps some
-code erroneously uses nl_sock instead of nl_handle?
-
-Perhaps we should also consider treating 2.0/3.x as the default API and
-use nl_handle instead of nl_sock in the code.
-
-johannes
 
