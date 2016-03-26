@@ -1,50 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:42652 "EHLO mga14.intel.com"
+Received: from mail.ispras.ru ([83.149.199.45]:47825 "EHLO mail.ispras.ru"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753350AbcCBH5m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 02:57:42 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 27/43] iwlwifi: mvm: remove unused field in iwl_mvm_tid_data
-Date: Wed,  2 Mar 2016 09:56:28 +0200
-Message-Id: <1456905404-14435-27-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085953_211065_596CCA86)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+	id S1754021AbcCZTn3 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Mar 2016 15:43:29 -0400
+Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
+To: Till Kamppeter <till.kamppeter@gmail.com>,
+	Evgeny Novikov <novikov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>,
+	chris holcombe <chris.holcombe@canonical.com>,
+	Chris MacNaughton <chris.macnaughton@canonical.com>
+References: <56F4266B.4060605@gmail.com> <1943931458892174@web3o.yandex.ru>
+ <56F5D04A.20506@gmail.com> <56F5D11B.7000803@gmail.com>
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Message-ID: <56F6E651.9090200@ispras.ru> (sfid-20160326_204341_336414_0ED3C3F8)
+Date: Sat, 26 Mar 2016 22:43:13 +0300
+MIME-Version: 1.0
+In-Reply-To: <56F5D11B.7000803@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Commit 69c7fda40921c125eeeef6a827f6270ac6aa1baa removed the
-users of iwl_mvm_tid_data.reduced_tpc. Due to a conflict,
-I forgot to commit the hunk that removed the field itself.
-Do this know.
+On 26.03.2016 03:00, Till Kamppeter wrote:
+> On 03/25/2016 08:56 PM, Till Kamppeter wrote:
+>> I am taking care of the 5 OpenPrinting proposals, please take care of
+>> all the others, mark with IGNORE what you for sure do not want to mentor
+>> and mark with a star what you want to mentor and also click "WANT TO
+>> MENTOR" on the proposal page. Please try to get two mentors per student,
+>> if only one is actually doing the mentoring work, the other is a backup.
+>>
+>
+> Sorry, seems that star and ignore can only be set by org admins. So 
+> please click "WANT TO MENTOR" if appropriate and tell me if you want 
+> to set or remove the star or if you want to set or remove an ignore.
+>
+>    Till
+>
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.h | 3 ---
- 1 file changed, 3 deletions(-)
+We have got 4 good proposals in LSB category that make sense to mark 
+with STAR:
+https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/4529048004853760/
+https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/6570505653977088/
+https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/4921876094648320/
+https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/4646236401434624/
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-index db701ca..1a8f69a 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.h
-@@ -258,8 +258,6 @@ enum iwl_mvm_agg_state {
-  *	This is basically (last acked packet++).
-  * @rate_n_flags: Rate at which Tx was attempted. Holds the data between the
-  *	Tx response (TX_CMD), and the block ack notification (COMPRESSED_BA).
-- * @reduced_tpc: Reduced tx power. Holds the data between the
-- *	Tx response (TX_CMD), and the block ack notification (COMPRESSED_BA).
-  * @amsdu_in_ampdu_allowed: true if A-MSDU in A-MPDU is allowed.
-  * @state: state of the BA agreement establishment / tear down.
-  * @txq_id: Tx queue used by the BA session
-@@ -274,7 +272,6 @@ struct iwl_mvm_tid_data {
- 	u16 next_reclaimed;
- 	/* The rest is Tx AGG related */
- 	u32 rate_n_flags;
--	u8 reduced_tpc;
- 	bool amsdu_in_ampdu_allowed;
- 	enum iwl_mvm_agg_state state;
- 	u16 txq_id;
--- 
-2.5.0
+The first one suggests to make improvements in LSB Navigator.
+The second proposal is to analyze if data races reported by static 
+analyzer in the kernel are feasible and to suggest fixes for them.
+The others are related to making improvements in LDV static analyzer to 
+find more bugs in kernel.
+
+We have marked them with "WANT TO MENTOR" flag.
+
+--
+Alexey
 
