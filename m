@@ -1,46 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from caladan.dune.hu ([78.24.191.180]:39530 "EHLO arrakis.dune.hu"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755223AbcCCPzn (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 10:55:43 -0500
-Subject: Re: [PATCH v2 1/2] mac80211: add A-MSDU tx support
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <1456306140-78485-1-git-send-email-nbd@openwrt.org>
- <1457016860.2044.11.camel@sipsolutions.net> <56D85428.6090705@openwrt.org>
- <1457019447.2044.24.camel@sipsolutions.net>
-Cc: egrumbach@gmail.com
-From: Felix Fietkau <nbd@openwrt.org>
-Message-ID: <56D85E67.1050909@openwrt.org> (sfid-20160303_165605_272461_7AEC5E12)
-Date: Thu, 3 Mar 2016 16:55:19 +0100
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:33441 "EHLO
+	mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751962AbcCZAgh (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 25 Mar 2016 20:36:37 -0400
+Received: by mail-qk0-f196.google.com with SMTP id q184so4654500qkb.0
+        for <linux-wireless@vger.kernel.org>; Fri, 25 Mar 2016 17:36:37 -0700 (PDT)
+Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
+To: Greg KH <greg@kroah.com>
+References: <56F4266B.4060605@gmail.com> <1943931458892174@web3o.yandex.ru>
+ <56F5D04A.20506@gmail.com> <20160326001727.GA15767@kroah.com>
+Cc: Evgeny Novikov <novikov@ispras.ru>,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>,
+	chris holcombe <chris.holcombe@canonical.com>,
+	Chris MacNaughton <chris.macnaughton@canonical.com>
+From: Till Kamppeter <till.kamppeter@gmail.com>
+Message-ID: <56F5D990.10002@gmail.com> (sfid-20160326_013643_126201_3F03A9BA)
+Date: Fri, 25 Mar 2016 21:36:32 -0300
 MIME-Version: 1.0
-In-Reply-To: <1457019447.2044.24.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <20160326001727.GA15767@kroah.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-03-03 16:37, Johannes Berg wrote:
-> On Thu, 2016-03-03 at 16:11 +0100, Felix Fietkau wrote:
->> 
->> For my own uses, I'd be perfectly fine with limiting A-MSDU size to
->> HT limits even when using VHT - in fact I did that in an early RFC
->> patch. I mainly relaxed the limit for VHT based on Emmanuel's
->> feedback. I also have doubts about the value of A-MSDU size beyond
->> 4095 bytes.
->> 
->> Just let me know which way you'd like it, and I'll send v3
->> accordingly.
->> 
-> 
-> I don't really know, I can live with both ways. I'm just a bit worried
-> that we make enabling this feature so complex that nobody will get it
-> right.
-> 
-> Perhaps we could also just remove this, make the default
-> for max_rc_amsdu_len be 4095 (or so) and leave the rest to the rate
-> control? We could entirely remove this check here, and let minstrel
-> only use higher values if VHT is supported (and consequently will be
-> used)?
-Yeah, that makes sense.
+On 03/25/2016 09:17 PM, Greg KH wrote:
+> On Fri, Mar 25, 2016 at 08:56:58PM -0300, Till Kamppeter wrote:
+>> On 03/25/2016 04:49 AM, Evgeny Novikov wrote:
+>>> This student suggested two proposals that aren't good and likely the student isn't going to improve them. So I suggest to ignore them if Greg doesn't mind:
+>>> Sandhya - IIO driver - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/5372313474170880/
+>>> Sandhya - memory management latency tracing - https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/5404748865863680/
+>>>
+>>
+>> Final PDF contains exactly the same as the abstract, no info about school,
+>> course type, already acquired knowledge, ... I would ignore these. Greg,
+>> please confirm.
+>
+> Yes, please ignore.
+>
+>
 
-- Felix
+Done.
+
+    Till
+
