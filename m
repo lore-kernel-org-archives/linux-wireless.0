@@ -1,209 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:36558 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753441AbcC2HtO convert rfc822-to-8bit (ORCPT
+Received: from mail-qk0-f196.google.com ([209.85.220.196]:35606 "EHLO
+	mail-qk0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753928AbcCZT7j (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 03:49:14 -0400
-Received: by mail-wm0-f49.google.com with SMTP id 127so48069212wmu.1
-        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2016 00:49:14 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAA93jw7BEsEOP8O2BQFXUibkGzkzBZuyWxBxs5XDCZmOt6D+Qg@mail.gmail.com>
-References: <1458898743-21118-1-git-send-email-michal.kazior@tieto.com>
-	<CA+BoTQk7q7VerNC1KZK49REHn9rfo6sG5zW54P=-K3XkOL77pQ@mail.gmail.com>
-	<CAA93jw7BEsEOP8O2BQFXUibkGzkzBZuyWxBxs5XDCZmOt6D+Qg@mail.gmail.com>
-Date: Tue, 29 Mar 2016 09:49:13 +0200
-Message-ID: <CA+BoTQnDtWNGQGkBNeBGSrjkjQc4dFuivQTL=0_1D+ooE-9+RQ@mail.gmail.com> (sfid-20160329_094919_061108_99D8682D)
-Subject: Re: [RFC] ath10k: implement dql for htt tx
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Dave Taht <dave.taht@gmail.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	Sat, 26 Mar 2016 15:59:39 -0400
+Received: by mail-qk0-f196.google.com with SMTP id s5so7406451qkd.2
+        for <linux-wireless@vger.kernel.org>; Sat, 26 Mar 2016 12:59:38 -0700 (PDT)
+Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
+To: Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	Evgeny Novikov <novikov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>, Greg KH <greg@kroah.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
 	linux-wireless <linux-wireless@vger.kernel.org>,
-	make-wifi-fast@lists.bufferbloat.net,
-	"codel@lists.bufferbloat.net" <codel@lists.bufferbloat.net>
-Content-Type: text/plain; charset=UTF-8
+	Open Printing <printing-architecture@lists.linux-foundation.org>,
+	chris holcombe <chris.holcombe@canonical.com>,
+	Chris MacNaughton <chris.macnaughton@canonical.com>
+References: <56F4266B.4060605@gmail.com> <1943931458892174@web3o.yandex.ru>
+ <56F5D04A.20506@gmail.com> <56F5D11B.7000803@gmail.com>
+ <56F6E651.9090200@ispras.ru>
+From: Till Kamppeter <till.kamppeter@gmail.com>
+Message-ID: <56F6EA26.4090600@gmail.com> (sfid-20160326_205942_381162_5B89B6C8)
+Date: Sat, 26 Mar 2016 16:59:34 -0300
+MIME-Version: 1.0
+In-Reply-To: <56F6E651.9090200@ispras.ru>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 26 March 2016 at 17:44, Dave Taht <dave.taht@gmail.com> wrote:
-> Dear Michal:
-[...]
-> I am running behind on this patch set, but a couple quick comments.
-[...]
->>  - no rrul tests, sorry Dave! :)
+On 03/26/2016 04:43 PM, Alexey Khoroshilov wrote:
 >
-> rrul would be a good baseline to have, but no need to waste your time
-> on running it every time as yet. It stresses out both sides of the
-> link so whenever you get two devices with these driver changes on them
-> it would be "interesting". It's the meanest, nastiest test we have...
-> if you can get past the rrul, you've truly won.
+> We have got 4 good proposals in LSB category that make sense to mark
+> with STAR:
+> https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/4529048004853760/
 >
-> Consistently using tcp_fair_up with 1,2,4 flows and 1-4 stations as
-> you are now is good enough.
+> https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/6570505653977088/
 >
-> doing a more voip-like test with slamming d-itg into your test would be good...
+> https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/4921876094648320/
 >
->>
->> Observations / conclusions:
->>  - DQL builds up throughput slowly on "veryfast"; in some tests it
->> doesn't get to reach peak (roughly 210mbps average) because the test
->> is too short
+> https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/4646236401434624/
 >
-> It looks like having access to the rate control info here for the
-> initial and ongoing estimates will react faster and better than dql
-> can. I loved the potential here in getting full rate for web traffic
-> in the usual 2second burst you get it in (see above blog entries)
 
-On one hand - yes, rate control should in theory be "faster".
+All starred now.
 
-On the other hand DQL will react also to host system interrupt service
-time. On slow CPUs (typically found on routers and such) you might end
-up grinding the CPU so much you need deeper tx queues to keep the hw
-busy (and therefore keep performance maxed). DQL should automatically
-adjust to that while "txop limit" might not.
+    Till
 
 
->>  - DQL shows better latency results in almost all cases compared to
->> the txop based scheduling from my mac80211 RFC (but i haven't
->> thoroughly looked at *all* the data; I might've missed a case where it
->> performs worse)
->
-> Well, if you are not saturating the link, latency will be better.
-> Showing how much less latency is possible, is good too, but....
-
-If you wait long enough DQL does scale the tx queue size for max
-performance (you can see TCP throughput scale towards test end). It
-does take a few seconds to reach the peak. Perhaps this could be
-tweaked.
-
-
->>  - latency improvement seen on sw/ath10k_dql @ rate6m,fast compared to
->> sw/base (1800ms -> 160ms) can be explained by the fact that txq AC
->> limit is 256 and since all TCP streams run on BE (and fq_codel as the
->> qdisc) the induced txq latency is 256 * (1500 / (6*1024*1024/8.)) / 4
->> = ~122ms which is pretty close to the test data (the formula ignores
->> MAC overhead, so the latency in practice is larger). Once you consider
->> the overhead and in-flight packets on driver-firmware tx queue 160ms
->> doesn't seem strange. Moreover when you compare the same case with
->> sw/fq+ath10k_dql you can clearly see the advantage of having fq_codel
->> in mac80211 software queuing - the latency drops by (another) order of
->> magnitude because now incomming ICMPs are treated as new, bursty flows
->> and get fed to the device quickly.
->
->
-> It is always good to test codel and fq_codel separately, particularly
-> on a new codel implementation. There are so many ways to get codel
-> wrong or add an optimization that doesn't work (speaking as someone
-> that has got it wrong often)
->
-> If you are getting a fq result of 12 ms, that means you are getting
-> data into the device with a ~12ms standing queue there. On a good day
-> you'd see perhaps 17-22ms for "codel target 5ms" in that case, on the
-> rtt_fair_up series of tests.
-
-This will obviously depend on the number of stations you have data
-queued to. Estimating codel target time requires smarter tx
-scheduling. My earlier (RFC) patch tried doing that.
-
-
-> if you are getting a pure codel result of 160ms, that means the
-> implementation is broken. But I think (after having read your
-> description twice), the baseline result today of 160ms of queuing was
-> with a fq_codel *qdisc* doing the work on top of huge buffers,
-
-Yes. The 160ms is with fq_codel qdisc with ath10k doing DQL at 6mbps.
-Without DQL ath10k would clog up all tx slots (1424 of them) with
-frames. At 6mbps you typically want/need a handful (5-10) of frames to
-be queued.
-
-> the
-> results a few days ago were with a fq_codel 802.11 layer, and the
-> results today you are comparing, are pure fq (no codel) in the 802.11e
-> stack, with fixed (and dql) buffering?
-
-Yes. codel target in fq_codel-in-mac80211 is hardcoded at 20ms now
-because there's no scheduling and hence no data to derive the target
-dynamically.
-
-
-> if so. Yea! Science!
->
-> ...
->
-> One of the flaws of the flent tests is that conceptually they were
-> developed before the fq stuff won so big, and looking hard at the
-> per-queue latency for the fat flows requires either looking hard at
-> the packet captures or sampling the actual queue length. There is that
-> sampling capability in various flent tests, but at the moment it only
-> samples what tc provides (Drops, marks, and length) and it does not
-> look like there is a snapshot queue length exported from that ath10k
-> driver?
-
-Exporting tx queue length snapshot should be fairly easy. 2 debugfs
-entries for ar->htt.max_num_pending_tx and ar->htt.num_pending_tx.
-
-
->
-> ...
->
-> As for a standing queue of 12ms at all in wifi... and making the fq
-> portion work better, it would be quite nice to get that down a bit
-> more. One thought (for testing purposes) would be to fix a txop at
-> 1024,2048,3xxxus for some test runs. I really don't have a a feel for
-> framing overhead on the latest standards. (I loathe the idea of
-> holding the media for more than 2-3ms when you have other stuff coming
-> in behind it...)
->
->  Another is to hold off preparing and submitting a new batch of
-> packets; when you know the existing TID will take 4ms to transmit,
-> defer grabbing the next batch for 3ms. Etc.
-
-I don't think hardcoding timings for tx scheduling is a good idea. I
-believe we just need a deficit-based round robin with time slices. The
-problem I see is time slices may change with host CPU load. That's why
-I'm leaning towards more experiments with DQL approach.
-
-
-> It would be glorious to see wifi capable of decent twitch gaming again...
->
->>  - slow+fast case still sucks but that's expected because DQL hasn't
->> been applied per-station
->>
->>  - sw/fq has lower peak throughput ("veryfast") compared to sw/base
->> (this actually proves current - and very young least to say - ath10k
->> wake-tx-queue implementation is deficient; ath10k_dql improves it and
->> sw/fq+ath10k_dql climbs up to the max throughput over time)
->>
->>
->> To sum things up:
->>  - DQL might be able to replace the explicit txop queue limiting
->> (which requires rate control info)
->
-> I am pessimistic. Perhaps as a fallback?
-
-At first I was (too) considering DQL as a nice fallback but the more I
-think about the more it makes sense to use it as the main source of
-deriving time slices for tx scheduling.
-
-
->>  - mac80211 fair queuing works
->
-> :)
->
->>
->> A few plots for quick and easy reference:
->>
->>   http://imgur.com/a/TnvbQ
->>
->>
->> Michał
->>
->> PS. I'm not feeling comfortable attaching 1MB attachment to a mailing
->> list. Is this okay or should I use something else next time?
->
-> I/you can slam results into the github blogcerowrt repo and then pull
-> out stuff selectively....
-
-Good idea, thanks!
-
-
-Michał
