@@ -1,48 +1,59 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:22360 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753374AbcCBH5m (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 2 Mar 2016 02:57:42 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Avri Altman <avri.altman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 31/43] iwlwifi: mvm: forbid U-APSD for P2P Client if the firmware doesn't support it
-Date: Wed,  2 Mar 2016 09:56:32 +0200
-Message-Id: <1456905404-14435-31-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160302_085950_643067_7666ACCB)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA50146@hasmsx107.ger.corp.intel.com>
+Received: from out2-smtp.messagingengine.com ([66.111.4.26]:59852 "EHLO
+	out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752666AbcCZOPn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 26 Mar 2016 10:15:43 -0400
+Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
+	by mailout.nyi.internal (Postfix) with ESMTP id 2EB3820964
+	for <linux-wireless@vger.kernel.org>; Sat, 26 Mar 2016 10:15:42 -0400 (EDT)
+Date: Sat, 26 Mar 2016 07:15:40 -0700
+From: Greg KH <greg@kroah.com>
+To: Till Kamppeter <till.kamppeter@gmail.com>
+Cc: Evgeny Novikov <novikov@ispras.ru>,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>,
+	chris holcombe <chris.holcombe@canonical.com>,
+	Chris MacNaughton <chris.macnaughton@canonical.com>
+Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
+Message-ID: <20160326141540.GA4104@kroah.com> (sfid-20160326_151546_915320_47971E6E)
+References: <56F4266B.4060605@gmail.com>
+ <1943931458892174@web3o.yandex.ru>
+ <56F5D04A.20506@gmail.com>
+ <56F5D11B.7000803@gmail.com>
+ <20160326001803.GB15767@kroah.com>
+ <56F5DA55.6030802@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56F5DA55.6030802@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Avri Altman <avri.altman@intel.com>
+On Fri, Mar 25, 2016 at 09:39:49PM -0300, Till Kamppeter wrote:
+> On 03/25/2016 09:18 PM, Greg KH wrote:
+> >On Fri, Mar 25, 2016 at 09:00:27PM -0300, Till Kamppeter wrote:
+> >>Sorry, seems that star and ignore can only be set by org admins. So please
+> >>click "WANT TO MENTOR" if appropriate and tell me if you want to set or
+> >>remove the star or if you want to set or remove an ignore.
+> >
+> >I have clicked 'WANT TO MENTOR" on the one kernel application that I
+> >think is worthy.
+> 
+> Which one?
 
-Older versions of the firmware don't support U-APSD for
-P2P Client. Forbid U-APSD for P2P Client when an old
-firmware is being used.
+This one:
+	https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/6320691074826240/
 
-Signed-off-by: Avri Altman <avri.altman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c | 5 +++++
- 1 file changed, 5 insertions(+)
+> And are then all the other kernel-related applications to be ignored?
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-index 4c2449b..86b4b9d 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c
-@@ -2334,6 +2334,11 @@ static void iwl_mvm_check_uapsd(struct iwl_mvm *mvm, struct ieee80211_vif *vif,
- 	if (!(mvm->fw->ucode_capa.flags & IWL_UCODE_TLV_FLAGS_UAPSD_SUPPORT))
- 		return;
- 
-+	if (vif->p2p && !iwl_mvm_is_p2p_standalone_uapsd_supported(mvm)) {
-+		vif->driver_flags &= ~IEEE80211_VIF_SUPPORTS_UAPSD;
-+		return;
-+	}
-+
- 	if (iwlwifi_mod_params.uapsd_disable) {
- 		vif->driver_flags &= ~IEEE80211_VIF_SUPPORTS_UAPSD;
- 		return;
--- 
-2.5.0
+I just went through them all again and left comments saying that they
+were not even a valid proposal, so yes, I don't see anything I can even
+consider for the kernel other than the above proposal.
 
+thanks,
+
+greg k-h
