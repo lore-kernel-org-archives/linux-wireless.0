@@ -1,79 +1,28 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:35561 "EHLO
-	mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932171AbcCHK5n convert rfc822-to-8bit (ORCPT
+Received: from mail-ob0-f174.google.com ([209.85.214.174]:33651 "EHLO
+	mail-ob0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752399AbcC0X1v (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 8 Mar 2016 05:57:43 -0500
-Received: by mail-wm0-f42.google.com with SMTP id l68so125644540wml.0
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2016 02:57:42 -0800 (PST)
+	Sun, 27 Mar 2016 19:27:51 -0400
+Received: by mail-ob0-f174.google.com with SMTP id x3so20341900obt.0
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Mar 2016 16:27:50 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAA93jw4XsEnp3jTgPL7OKWTJP-83VwRaCdb+foc8nCuqxk3WZA@mail.gmail.com>
-References: <1456492163-11437-1-git-send-email-michal.kazior@tieto.com>
-	<CAA93jw4XsEnp3jTgPL7OKWTJP-83VwRaCdb+foc8nCuqxk3WZA@mail.gmail.com>
-Date: Tue, 8 Mar 2016 11:57:41 +0100
-Message-ID: <CA+BoTQ=ASe2o7kfiC8q6YOkNp9q6DF3Yc3XZgL=scVsw9VdqrA@mail.gmail.com> (sfid-20160308_115808_935730_EC46CBD2)
-Subject: Re: [RFC/RFT] mac80211: implement fq_codel for software queuing
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Dave Taht <dave.taht@gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	Eric Dumazet <eric.dumazet@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Felix Fietkau <nbd@openwrt.org>,
-	Tim Shepard <shep@alum.mit.edu>
+In-Reply-To: <CAJ-VmokSovVud9yiUoHcCwp+fQv4rVMyAHLOVMau4Egpk3PGUQ@mail.gmail.com>
+References: <1860079637.618245.1459097009016.JavaMail.yahoo.ref@mail.yahoo.com>
+	<1860079637.618245.1459097009016.JavaMail.yahoo@mail.yahoo.com>
+	<CAJ-VmokSovVud9yiUoHcCwp+fQv4rVMyAHLOVMau4Egpk3PGUQ@mail.gmail.com>
+Date: Sun, 27 Mar 2016 16:27:50 -0700
+Message-ID: <CAA93jw4PFW0a-eAK+7RSDsQ2Ffn0MAUrdZfhbthmD=nd3XBqWA@mail.gmail.com> (sfid-20160328_012755_079857_CA39554E)
+Subject: Re: Bonjour mDNS broacast can be lost during BT-WLAN coexistence schemes?
+From: Dave Taht <dave.taht@gmail.com>
+To: Adrian Chadd <adrian@freebsd.org>
+Cc: sandeep suresh <sandeep.suresh@yahoo.co.in>,
+	Ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 March 2016 at 00:06, Dave Taht <dave.taht@gmail.com> wrote:
-> Dear Michal:
->
-> Going through this patchset... (while watching it compile)
->
->
-> +       if (!local->hw.txq_cparams.target)
-> +               local->hw.txq_cparams.target = MS2TIME(5);
->
-> MS2TIME(20) for now and/or add something saner to this than !*backlog
->
-> target will not be a constant in the long run.
->
-> +       if (now - custom_codel_get_enqueue_time(skb) < p->target ||
-> +           !*backlog) {
-> +               /* went below - stay below for at least interval */
-> +               vars->first_above_time = 0;
-> +               return false;
-> +       }
->
->
-> *backlog < some_sane_value_for_an_aggregate_for_this_station
->
-> Unlike regular codel *backlog should be a ptr to the queuesize for
-> this station, not the total queue.
->
-> regular codel, by using the shared backlog for all queues, is trying
-> to get to a 1 packet depth for all queues, (see commit:
-> 865ec5523dadbedefbc5710a68969f686a28d928 ), and store the flow in the
-> network, not the queue...
->
-> BUT in wifi's case you want to provide good service to all stations,
-> which is filling up an aggregate
-> for each... (and varying the "sane_value_for_the_aggregate" to suit
-> per sta service time requirements in a given round of all stations).
+These folk claim an open source prototype.
 
-Hmm.. This actually makes me think that:
-
-        skb = codel_dequeue(flow, &flow->backlog, &flow->cvars,
-                            &hw->txq_cparams, codel_get_time(), false);
-
-is kind of wrong.
-
-If you want to maintain per-sta aggregate-long queue this probably
-needs a sta->backlog instead of flow->backlog (because you can have
-multiple flows per station) in the first place.
-
-Not quite sure about cvars though. Thoughts?
-
-
-Michał
+http://www.sigcomm.org/sites/default/files/ccr/papers/2014/January/2567561-2567567.pdf
