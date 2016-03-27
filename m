@@ -1,47 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from g9t1613g.houston.hp.com ([15.240.0.71]:41029 "EHLO
-	g9t1613g.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967359AbcCQRYw (ORCPT
+Received: from mail-qg0-f50.google.com ([209.85.192.50]:33363 "EHLO
+	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752238AbcC0Xrr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 13:24:52 -0400
-Subject: Re: [Codel] [RFCv2 0/3] mac80211: implement fq codel
-To: Dave Taht <dave.taht@gmail.com>,
-	Michal Kazior <michal.kazior@tieto.com>
-References: <1458123478-1795-1-git-send-email-michal.kazior@tieto.com>
- <CA+BoTQ=65mHN5iLnZjTE+tyEG7nfmCx4NZNbGRF6+VpRaNmOYw@mail.gmail.com>
- <CAA93jw5cUaj_qM+CYHHoRaghLDLC+BUgF4AjT=Oec+SB-zb74g@mail.gmail.com>
- <CAA93jw6tDdiYuginPbUY1DFJLiDxofHMFN6j2BvQPabPmBtuRw@mail.gmail.com>
- <20160316185531.GA1771@localhost>
- <CAGyitvMDEUiNx7HD=XKjXNHnFvZ_gxD_BbQx3AP-57_+dBeD4A@mail.gmail.com>
- <CA+BoTQnFN6VANn=5EUvHc0Dbfh4Zv0HraOto2ySN3_HdOpD7Sg@mail.gmail.com>
- <CAA93jw7TuBLVi9k-+2=J27j-Qs+sS3UNaQNTMF9D2MQ13fQY9A@mail.gmail.com>
-Cc: Network Development <netdev@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	Jasmine Strong <jas@eero.com>,
-	"codel@lists.bufferbloat.net" <codel@lists.bufferbloat.net>,
-	make-wifi-fast@lists.bufferbloat.net
-From: Rick Jones <rick.jones2@hpe.com>
-Message-ID: <56EAE85F.3010407@hpe.com> (sfid-20160317_182457_240634_E47A591A)
-Date: Thu, 17 Mar 2016 10:24:47 -0700
+	Sun, 27 Mar 2016 19:47:47 -0400
+Received: by mail-qg0-f50.google.com with SMTP id j35so97588454qge.0
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Mar 2016 16:47:46 -0700 (PDT)
+Received: from hash ([2001:470:1d:6db:230:48ff:fe9d:9c89])
+        by smtp.gmail.com with ESMTPSA id b69sm10732394qka.2.2016.03.27.16.47.45
+        for <linux-wireless@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 27 Mar 2016 16:47:45 -0700 (PDT)
+Received: from bob by hash with local (Exim 4.84_2)
+	(envelope-from <me@bobcopeland.com>)
+	id 1akKPF-0004eY-IF
+	for linux-wireless@vger.kernel.org; Sun, 27 Mar 2016 19:47:41 -0400
+Date: Sun, 27 Mar 2016 19:47:41 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Subject: wireless-testing updated for 4.6
+Message-ID: <20160327234741.GA17675@localhost> (sfid-20160328_014752_494851_B31005A6)
 MIME-Version: 1.0
-In-Reply-To: <CAA93jw7TuBLVi9k-+2=J27j-Qs+sS3UNaQNTMF9D2MQ13fQY9A@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/17/2016 10:00 AM, Dave Taht wrote:
-> netperf's udp_rr is not how much traffic conventionally behaves. It
-> doesn't do tcp slow start or congestion control in particular...
+Linus released 4.6-rc1 yesterday, so wireless-testing is now updated to 4.6
+and resuming near-daily updates.
 
-Nor would one expect it to need to, unless one were using "burst mode" 
-to have more than one transaction inflight at one time.
+Do let me know of any issues.
 
-And unless one uses the test-specific -e option to provide a very crude 
-retransmission mechanism based on a socket read timeout, neither does 
-UDP_RR recover from lost datagrams.
-
-happy benchmarking,
-
-rick jones
-http://www.netperf.org/
+-- 
+Bob Copeland %% http://bobcopeland.com/
