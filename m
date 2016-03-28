@@ -1,66 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60402 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758043AbcCCVyo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 16:54:44 -0500
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: dsadsa sadsad <natserver2@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: Re: alfa awus036nhr v2 and module rtl8xxxu
-References: <loom.20160128T003525-188@post.gmane.org>
-	<wrfjd1sco25f.fsf@redhat.com> <56B38CDF.9010806@lwfinger.net>
-	<wrfjd1scmkz6.fsf@redhat.com> <wrfj60xxd2f5.fsf@redhat.com>
-	<56BA8E5D.5090402@lwfinger.net> <wrfjlh6tb9zt.fsf@redhat.com>
-	<CAOhKHAXH-PCyWQSpuuZ=-6BnE0PeDks-4p9A3G_86OHLfEdU=w@mail.gmail.com>
-	<56BB5C16.8070206@lwfinger.net> <wrfjk2lomobj.fsf@redhat.com>
-	<56D3EBCF.7000206@lwfinger.net> <wrfj7fhnn1jk.fsf@redhat.com>
-	<56D4B956.8030408@lwfinger.net>
-Date: Thu, 03 Mar 2016 16:54:43 -0500
-In-Reply-To: <56D4B956.8030408@lwfinger.net> (Larry Finger's message of "Mon,
-	29 Feb 2016 15:34:14 -0600")
-Message-ID: <wrfjbn6v5isc.fsf@redhat.com> (sfid-20160303_225450_018466_9769F235)
+Received: from out2-smtp.messagingengine.com ([66.111.4.26]:42032 "EHLO
+	out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753989AbcC1OmR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Mar 2016 10:42:17 -0400
+Received: from compute2.internal (compute2.nyi.internal [10.202.2.42])
+	by mailout.nyi.internal (Postfix) with ESMTP id 65C2A215C1
+	for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2016 10:42:16 -0400 (EDT)
+Date: Mon, 28 Mar 2016 07:42:14 -0700
+From: Greg KH <greg@kroah.com>
+To: Till Kamppeter <till.kamppeter@gmail.com>
+Cc: Evgeny Novikov <novikov@ispras.ru>,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>,
+	chris holcombe <chris.holcombe@canonical.com>,
+	Chris MacNaughton <chris.macnaughton@canonical.com>
+Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
+Message-ID: <20160328144214.GA10444@kroah.com> (sfid-20160328_164226_867730_2EF6DF36)
+References: <56F4266B.4060605@gmail.com>
+ <1943931458892174@web3o.yandex.ru>
+ <56F5D04A.20506@gmail.com>
+ <56F5D11B.7000803@gmail.com>
+ <20160326001803.GB15767@kroah.com>
+ <56F5DA55.6030802@gmail.com>
+ <20160326141540.GA4104@kroah.com>
+ <56F69BDC.7050900@gmail.com>
+ <20160326170409.GA27584@kroah.com>
+ <56F6CFD6.1020109@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <56F6CFD6.1020109@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Larry Finger <Larry.Finger@lwfinger.net> writes:
-> On 02/29/2016 06:28 AM, Jes Sorensen wrote:
->> That one I have never seen before - could you try and insert some debug
->> prints to see where the RF initialization fails?
->
-> The call to usb_control_msg() is returning -EPROTO (-71), but
-> sometimes the system works. I added the following patch:
->
-> diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-> b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-> index 38aa3c2..8ab77a0 100644
-> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-> @@ -1979,9 +1979,12 @@ static int rtl8xxxu_write_rfreg(struct rtl8xxxu_priv *priv,
->
->         /* Use XB for path B */
->         ret = rtl8xxxu_write32(priv, rtl8xxxu_rfregs[path].lssiparm, dataaddr);
-> -       if (ret != sizeof(dataaddr))
-> +       if (ret != sizeof(dataaddr)) {
-> +               pr_info("**** rtl8xxxu_write32() error %d: path %d,
-> reg: 0x%x, data 0x%x, dataaddr 0x%x, lssiparm 0x%x\n",
-> +                       ret, path, reg, data, dataaddr,
-> rtl8xxxu_rfregs[path].lssiparm);
-> +               dump_stack();
->                 retval = -EIO;
-> -       else
-> +       } else
->                 retval = 0;
->
->         udelay(1);
->
-> When the error happens, my log contains
+On Sat, Mar 26, 2016 at 03:07:18PM -0300, Till Kamppeter wrote:
+> >If there's anything else I need to do here, becides try to find a
+> >co-mentor, please let me know.
+> >
+> 
+> I am grateful if you could enter as co-mentor, especially if there is any
+> kernel project now which has only one mentor.
 
-Odd, I wonder if my code writes the reigsters out to the device too
-fast. You could try adding a call to read back the RF register before
-exiting the function - preferably after the udelay().
+I don't understand, we only have one kernel project with one proposed
+mentor (me) right now, are we requiring all projects to have 2 mentors
+now?  I've never done it that way in the past...
 
-Cheers,
-Jes
+thanks,
+
+greg k-h
