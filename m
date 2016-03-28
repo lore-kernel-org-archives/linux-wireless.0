@@ -1,100 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:24696 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753032AbcC3OFx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 10:05:53 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 13/43] iwlwifi: pcie: do not pad QoS AMSDU
-Date: Wed, 30 Mar 2016 17:04:45 +0300
-Message-Id: <1459346715-7954-13-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160800_489452_4B7B3AC8)
-In-Reply-To: <1459346667.4731.9.camel@intel.com>
-References: <1459346667.4731.9.camel@intel.com>
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:34934 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751643AbcC1E4M (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Mar 2016 00:56:12 -0400
+Received: by mail-pf0-f193.google.com with SMTP id u190so19204933pfb.2
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Mar 2016 21:56:12 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 2/5] staging: wilc1000: change data type of wid argument in wilc_wlan_cfg_get
+Date: Mon, 28 Mar 2016 13:55:57 +0900
+Message-Id: <1459140960-10645-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20160328_065615_382941_F8BE9BF7)
+In-Reply-To: <1459140960-10645-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1459140960-10645-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+This patch changes data type of wid argument in wilc_wlan_cfg_get from
+u32 to u16. It is better to change data type of wid because wid has one
+of enum WID_T that is data type of u16. And, there is no need to use u16
+type casting when calling wilc_wlan_cfg_get_wid function.
 
-We insert padding if the MAC header's size is not a multiple of 4
-to ensure that the SNAP header is DWORD aligned. When we do so, we
-let the firmware know by setting a bit in Tx command
-(TX_CMD_FLG_MH_PAD) which will instruct the firmware to drop those
-2 bytes before sending the frame.
-However, this is not needed for AMSDU as the sub frame header (14B)
-complements the MAC header (26B) so that the SNAP header is DWORD
-aligned without adding any pad.
-
-Until 9000, the firmware didn't check the TX_CMD_FLG_MH_PAD bit
-but rather checked the length of the MAC header itself and
-assumed the entity that enqueued the frame (driver or internal
-firmware code) added the pad.
-Since the driver inserted the pad even for AMSDU this logic applied.
-Note that the padding is a DMA optimization but it's not strictly
-needed, so we could pad even if it was not needed.
-
-However, the CSUM hardware introduced for the 9000 devices requires
-to not pad AMSDU as it is not needed, and will fail if such a pad
-exists.
-Due to older FW not checking the padding bit but checking the mac
-header size itself - we cannot do this adjustments for older
-generations.
-Do not align the size if it is an AMSDU and HW checksum is enabled -
-which will only happen on 9000 devices and on.
-
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/pcie/tx.c | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
+ drivers/staging/wilc1000/wilc_wlan.c | 5 ++---
+ drivers/staging/wilc1000/wilc_wlan.h | 2 +-
+ 2 files changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-index cc6fa00..e1f7a3f 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/tx.c
-@@ -2210,6 +2210,7 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 	__le16 fc;
- 	u8 hdr_len;
- 	u16 wifi_seq;
-+	bool amsdu;
+diff --git a/drivers/staging/wilc1000/wilc_wlan.c b/drivers/staging/wilc1000/wilc_wlan.c
+index d09aa3b..db79ae2 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.c
++++ b/drivers/staging/wilc1000/wilc_wlan.c
+@@ -1239,7 +1239,7 @@ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
+ 	return ret_size;
+ }
  
- 	txq = &trans_pcie->txq[txq_id];
- 	q = &txq->q;
-@@ -2301,11 +2302,18 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 	 */
- 	len = sizeof(struct iwl_tx_cmd) + sizeof(struct iwl_cmd_header) +
- 	      hdr_len - IWL_HCMD_SCRATCHBUF_SIZE;
--	tb1_len = ALIGN(len, 4);
--
--	/* Tell NIC about any 2-byte padding after MAC header */
--	if (tb1_len != len)
--		tx_cmd->tx_flags |= TX_CMD_FLG_MH_PAD_MSK;
-+	/* do not align A-MSDU to dword as the subframe header aligns it */
-+	amsdu = ieee80211_is_data_qos(fc) &&
-+		(*ieee80211_get_qos_ctl(hdr) &
-+		 IEEE80211_QOS_CTL_A_MSDU_PRESENT);
-+	if (trans_pcie->sw_csum_tx || !amsdu) {
-+		tb1_len = ALIGN(len, 4);
-+		/* Tell NIC about any 2-byte padding after MAC header */
-+		if (tb1_len != len)
-+			tx_cmd->tx_flags |= TX_CMD_FLG_MH_PAD_MSK;
-+	} else {
-+		tb1_len = len;
-+	}
+-int wilc_wlan_cfg_get(struct wilc_vif *vif, int start, u32 wid, int commit,
++int wilc_wlan_cfg_get(struct wilc_vif *vif, int start, u16 wid, int commit,
+ 		      u32 drv_handler)
+ {
+ 	u32 offset;
+@@ -1253,8 +1253,7 @@ int wilc_wlan_cfg_get(struct wilc_vif *vif, int start, u32 wid, int commit,
+ 		wilc->cfg_frame_offset = 0;
  
- 	/* The first TB points to the scratchbuf data - min_copy bytes */
- 	memcpy(&txq->scratchbufs[q->write_ptr], &dev_cmd->hdr,
-@@ -2323,8 +2331,7 @@ int iwl_trans_pcie_tx(struct iwl_trans *trans, struct sk_buff *skb,
- 		goto out_err;
- 	iwl_pcie_txq_build_tfd(trans, txq, tb1_phys, tb1_len, false);
+ 	offset = wilc->cfg_frame_offset;
+-	ret_size = wilc_wlan_cfg_get_wid(wilc->cfg_frame.frame, offset,
+-					 (u16)wid);
++	ret_size = wilc_wlan_cfg_get_wid(wilc->cfg_frame.frame, offset, wid);
+ 	offset += ret_size;
+ 	wilc->cfg_frame_offset = offset;
  
--	if (ieee80211_is_data_qos(fc) &&
--	    (*ieee80211_get_qos_ctl(hdr) & IEEE80211_QOS_CTL_A_MSDU_PRESENT)) {
-+	if (amsdu) {
- 		if (unlikely(iwl_fill_data_tbs_amsdu(trans, skb, txq, hdr_len,
- 						     out_meta, dev_cmd,
- 						     tb1_len)))
+diff --git a/drivers/staging/wilc1000/wilc_wlan.h b/drivers/staging/wilc1000/wilc_wlan.h
+index ef70642..38edeeb 100644
+--- a/drivers/staging/wilc1000/wilc_wlan.h
++++ b/drivers/staging/wilc1000/wilc_wlan.h
+@@ -286,7 +286,7 @@ void wilc_handle_isr(struct wilc *wilc);
+ void wilc_wlan_cleanup(struct net_device *dev);
+ int wilc_wlan_cfg_set(struct wilc_vif *vif, int start, u16 wid, u8 *buffer,
+ 		      u32 buffer_size, int commit, u32 drv_handler);
+-int wilc_wlan_cfg_get(struct wilc_vif *vif, int start, u32 wid, int commit,
++int wilc_wlan_cfg_get(struct wilc_vif *vif, int start, u16 wid, int commit,
+ 		      u32 drv_handler);
+ int wilc_wlan_cfg_get_val(u32 wid, u8 *buffer, u32 buffer_size);
+ int wilc_wlan_txq_add_mgmt_pkt(struct net_device *dev, void *priv, u8 *buffer,
 -- 
-2.5.0
+2.7.4
 
