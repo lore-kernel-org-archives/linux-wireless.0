@@ -1,184 +1,99 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:32809 "EHLO
-	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751419AbcCFM53 (ORCPT
+Received: from mail-oi0-f51.google.com ([209.85.218.51]:36694 "EHLO
+	mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751079AbcC1EJL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 07:57:29 -0500
-Received: by mail-wm0-f67.google.com with SMTP id n186so6302450wmn.0
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 04:57:28 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 04/13] staging: vt6655: mac.c replace VNSvOutPortD with iowrite32.
-Date: Sun,  6 Mar 2016 12:57:03 +0000
-Message-Id: <1457269032-2681-4-git-send-email-tvboxspy@gmail.com> (sfid-20160306_135736_196195_D6692242)
-In-Reply-To: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
-References: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
+	Mon, 28 Mar 2016 00:09:11 -0400
+MIME-Version: 1.0
+In-Reply-To: <1458972892-14169-1-git-send-email-bhumirks@gmail.com>
+References: <1458972892-14169-1-git-send-email-bhumirks@gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 28 Mar 2016 15:08:50 +1100
+Message-ID: <CAGRGNgXg=dNRBsaFvyq4cCSH9vfmHRFT4K0OT+aqyTdtreMq0g@mail.gmail.com> (sfid-20160328_060932_435850_D3A6E1AC)
+Subject: Re: [PATCH] Staging: rtl8723au: Remove unused functions
+To: Bhumika Goyal <bhumirks@gmail.com>
+Cc: Larry Finger <Larry.Finger@lwfinger.net>,
+	Greg KH <gregkh@linuxfoundation.org>,
+	Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Joe Perches <joe@perches.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing the macro from functions.
+Hi All,
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/mac.c | 52 +++++++++++++++++++++-----------------------
- 1 file changed, 25 insertions(+), 27 deletions(-)
+On Sat, Mar 26, 2016 at 5:14 PM, Bhumika Goyal <bhumirks@gmail.com> wrote:
+> The functions rtw_get_oper_bw23a and rtw_get_oper_ch23aoffset are never
+> used anywhere in the kernel. So, remove their definition and prototype.
+> Grepped to find occurences.
+>
+> Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 
-diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
-index c2723c1..a9ddb95 100644
---- a/drivers/staging/vt6655/mac.c
-+++ b/drivers/staging/vt6655/mac.c
-@@ -263,18 +263,16 @@ void MACvRestoreContext(struct vnt_private *priv, unsigned char *cxt_buf)
- 		    MAC_REG_BBREGCTL - MAC_REG_PSCFG);
- 
- 	/* restore CURR_RX_DESC_ADDR, CURR_TX_DESC_ADDR */
--	VNSvOutPortD(io_base + MAC_REG_TXDMAPTR0,
--		     *(u32 *)(cxt_buf + MAC_REG_TXDMAPTR0));
--	VNSvOutPortD(io_base + MAC_REG_AC0DMAPTR,
--		     *(u32 *)(cxt_buf + MAC_REG_AC0DMAPTR));
--	VNSvOutPortD(io_base + MAC_REG_BCNDMAPTR,
--		     *(u32 *)(cxt_buf + MAC_REG_BCNDMAPTR));
--
--	VNSvOutPortD(io_base + MAC_REG_RXDMAPTR0,
--		     *(u32 *)(cxt_buf + MAC_REG_RXDMAPTR0));
--
--	VNSvOutPortD(io_base + MAC_REG_RXDMAPTR1,
--		     *(u32 *)(cxt_buf + MAC_REG_RXDMAPTR1));
-+	iowrite32(*(u32 *)(cxt_buf + MAC_REG_TXDMAPTR0),
-+		  io_base + MAC_REG_TXDMAPTR0);
-+	iowrite32(*(u32 *)(cxt_buf + MAC_REG_AC0DMAPTR),
-+		  io_base + MAC_REG_AC0DMAPTR);
-+	iowrite32(*(u32 *)(cxt_buf + MAC_REG_BCNDMAPTR),
-+		  io_base + MAC_REG_BCNDMAPTR);
-+	iowrite32(*(u32 *)(cxt_buf + MAC_REG_RXDMAPTR0),
-+		  io_base + MAC_REG_RXDMAPTR0);
-+	iowrite32(*(u32 *)(cxt_buf + MAC_REG_RXDMAPTR1),
-+		  io_base + MAC_REG_RXDMAPTR1);
- }
- 
- /*
-@@ -360,8 +358,8 @@ bool MACbSafeRxOff(struct vnt_private *priv)
- 	/* turn off wow temp for turn off Rx safely */
- 
- 	/* Clear RX DMA0,1 */
--	VNSvOutPortD(io_base + MAC_REG_RXDMACTL0, DMACTL_CLRRUN);
--	VNSvOutPortD(io_base + MAC_REG_RXDMACTL1, DMACTL_CLRRUN);
-+	iowrite32(DMACTL_CLRRUN, io_base + MAC_REG_RXDMACTL0);
-+	iowrite32(DMACTL_CLRRUN, io_base + MAC_REG_RXDMACTL1);
- 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
- 		if (!(ioread32(io_base + MAC_REG_RXDMACTL0) & DMACTL_RUN))
- 			break;
-@@ -413,9 +411,9 @@ bool MACbSafeTxOff(struct vnt_private *priv)
- 
- 	/* Clear TX DMA */
- 	/* Tx0 */
--	VNSvOutPortD(io_base + MAC_REG_TXDMACTL0, DMACTL_CLRRUN);
-+	iowrite32(DMACTL_CLRRUN, io_base + MAC_REG_TXDMACTL0);
- 	/* AC0 */
--	VNSvOutPortD(io_base + MAC_REG_AC0DMACTL, DMACTL_CLRRUN);
-+	iowrite32(DMACTL_CLRRUN, io_base + MAC_REG_AC0DMACTL);
- 
- 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
- 		if (!(ioread32(io_base + MAC_REG_TXDMACTL0) & DMACTL_RUN))
-@@ -572,7 +570,7 @@ void MACvSetCurrRx0DescAddr(struct vnt_private *priv, u32 dwCurrDescAddr)
- 			break;
- 	}
- 
--	VNSvOutPortD(io_base + MAC_REG_RXDMAPTR0, dwCurrDescAddr);
-+	iowrite32(dwCurrDescAddr, io_base + MAC_REG_RXDMAPTR0);
- 	if (byOrgDMACtl & DMACTL_RUN)
- 		VNSvOutPortB(io_base + MAC_REG_RXDMACTL0, DMACTL_RUN);
- }
-@@ -606,7 +604,7 @@ void MACvSetCurrRx1DescAddr(struct vnt_private *priv, u32 dwCurrDescAddr)
- 			break;
- 	}
- 
--	VNSvOutPortD(io_base + MAC_REG_RXDMAPTR1, dwCurrDescAddr);
-+	iowrite32(dwCurrDescAddr, io_base + MAC_REG_RXDMAPTR1);
- 	if (byOrgDMACtl & DMACTL_RUN)
- 		VNSvOutPortB(io_base + MAC_REG_RXDMACTL1, DMACTL_RUN);
- 
-@@ -642,7 +640,7 @@ void MACvSetCurrTx0DescAddrEx(struct vnt_private *priv,
- 			break;
- 	}
- 
--	VNSvOutPortD(io_base + MAC_REG_TXDMAPTR0, dwCurrDescAddr);
-+	iowrite32(dwCurrDescAddr, io_base + MAC_REG_TXDMAPTR0);
- 	if (byOrgDMACtl & DMACTL_RUN)
- 		VNSvOutPortB(io_base + MAC_REG_TXDMACTL0, DMACTL_RUN);
- }
-@@ -679,7 +677,7 @@ void MACvSetCurrAC0DescAddrEx(struct vnt_private *priv,
- 	}
- 	if (ww == W_MAX_TIMEOUT)
- 		pr_debug(" DBG_PORT80(0x26)\n");
--	VNSvOutPortD(io_base + MAC_REG_AC0DMAPTR, dwCurrDescAddr);
-+	iowrite32(dwCurrDescAddr, io_base + MAC_REG_AC0DMAPTR);
- 	if (byOrgDMACtl & DMACTL_RUN)
- 		VNSvOutPortB(io_base + MAC_REG_AC0DMACTL, DMACTL_RUN);
- }
-@@ -714,7 +712,7 @@ void MACvTimer0MicroSDelay(struct vnt_private *priv, unsigned int uDelay)
- 	unsigned int uu, ii;
- 
- 	VNSvOutPortB(io_base + MAC_REG_TMCTL0, 0);
--	VNSvOutPortD(io_base + MAC_REG_TMDATA0, uDelay);
-+	iowrite32(uDelay, io_base + MAC_REG_TMDATA0);
- 	VNSvOutPortB(io_base + MAC_REG_TMCTL0, (TMCTL_TMD | TMCTL_TE));
- 	for (ii = 0; ii < 66; ii++) {  /* assume max PCI clock is 66Mhz */
- 		for (uu = 0; uu < uDelay; uu++) {
-@@ -748,7 +746,7 @@ void MACvOneShotTimer1MicroSec(struct vnt_private *priv, unsigned int uDelayTime
- 	void __iomem *io_base = priv->PortOffset;
- 
- 	VNSvOutPortB(io_base + MAC_REG_TMCTL1, 0);
--	VNSvOutPortD(io_base + MAC_REG_TMDATA1, uDelayTime);
-+	iowrite32(uDelayTime, io_base + MAC_REG_TMDATA1);
- 	VNSvOutPortB(io_base + MAC_REG_TMCTL1, (TMCTL_TMD | TMCTL_TE));
- }
- 
-@@ -760,7 +758,7 @@ void MACvSetMISCFifo(struct vnt_private *priv, unsigned short wOffset,
- 	if (wOffset > 273)
- 		return;
- 	VNSvOutPortW(io_base + MAC_REG_MISCFFNDEX, wOffset);
--	VNSvOutPortD(io_base + MAC_REG_MISCFFDATA, dwData);
-+	iowrite32(dwData, io_base + MAC_REG_MISCFFDATA);
- 	VNSvOutPortW(io_base + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
- }
- 
-@@ -829,7 +827,7 @@ void MACvSetKeyEntry(struct vnt_private *priv, unsigned short wKeyCtl,
- 		 wOffset, dwData, wKeyCtl);
- 
- 	VNSvOutPortW(io_base + MAC_REG_MISCFFNDEX, wOffset);
--	VNSvOutPortD(io_base + MAC_REG_MISCFFDATA, dwData);
-+	iowrite32(dwData, io_base + MAC_REG_MISCFFDATA);
- 	VNSvOutPortW(io_base + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
- 	wOffset++;
- 
-@@ -844,7 +842,7 @@ void MACvSetKeyEntry(struct vnt_private *priv, unsigned short wKeyCtl,
- 	pr_debug("2. wOffset: %d, Data: %X\n", wOffset, dwData);
- 
- 	VNSvOutPortW(io_base + MAC_REG_MISCFFNDEX, wOffset);
--	VNSvOutPortD(io_base + MAC_REG_MISCFFDATA, dwData);
-+	iowrite32(dwData, io_base + MAC_REG_MISCFFDATA);
- 	VNSvOutPortW(io_base + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
- 	wOffset++;
- 
-@@ -854,7 +852,7 @@ void MACvSetKeyEntry(struct vnt_private *priv, unsigned short wKeyCtl,
- 		pr_debug("3.(%d) wOffset: %d, Data: %X\n",
- 			 ii, wOffset+ii, *pdwKey);
- 		VNSvOutPortW(io_base + MAC_REG_MISCFFNDEX, wOffset+ii);
--		VNSvOutPortD(io_base + MAC_REG_MISCFFDATA, *pdwKey++);
-+		iowrite32(*pdwKey++, io_base + MAC_REG_MISCFFDATA);
- 		VNSvOutPortW(io_base + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
- 	}
- }
-@@ -882,6 +880,6 @@ void MACvDisableKeyEntry(struct vnt_private *priv, unsigned int uEntryIdx)
- 	wOffset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
- 
- 	VNSvOutPortW(io_base + MAC_REG_MISCFFNDEX, wOffset);
--	VNSvOutPortD(io_base + MAC_REG_MISCFFDATA, 0);
-+	iowrite32(0, io_base + MAC_REG_MISCFFDATA);
- 	VNSvOutPortW(io_base + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
- }
+Looks right to me.
+
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
+
+> ---
+>  drivers/staging/rtl8723au/core/rtw_wlan_util.c   | 10 ----------
+>  drivers/staging/rtl8723au/include/rtw_mlme_ext.h |  2 --
+>  2 files changed, 12 deletions(-)
+>
+> diff --git a/drivers/staging/rtl8723au/core/rtw_wlan_util.c b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
+> index cc2b84b..694cf17 100644
+> --- a/drivers/staging/rtl8723au/core/rtw_wlan_util.c
+> +++ b/drivers/staging/rtl8723au/core/rtw_wlan_util.c
+> @@ -304,21 +304,11 @@ inline void rtw_set_oper_ch23a(struct rtw_adapter *adapter, u8 ch)
+>         adapter_to_dvobj(adapter)->oper_channel = ch;
+>  }
+>
+> -inline u8 rtw_get_oper_bw23a(struct rtw_adapter *adapter)
+> -{
+> -       return adapter_to_dvobj(adapter)->oper_bwmode;
+> -}
+> -
+>  inline void rtw_set_oper_bw23a(struct rtw_adapter *adapter, u8 bw)
+>  {
+>         adapter_to_dvobj(adapter)->oper_bwmode = bw;
+>  }
+>
+> -inline u8 rtw_get_oper_ch23aoffset(struct rtw_adapter *adapter)
+> -{
+> -       return adapter_to_dvobj(adapter)->oper_ch_offset;
+> -}
+> -
+>  inline void rtw_set_oper_ch23aoffset23a(struct rtw_adapter *adapter, u8 offset)
+>  {
+>         adapter_to_dvobj(adapter)->oper_ch_offset = offset;
+> diff --git a/drivers/staging/rtl8723au/include/rtw_mlme_ext.h b/drivers/staging/rtl8723au/include/rtw_mlme_ext.h
+> index ea2a6c9..0e7d3da 100644
+> --- a/drivers/staging/rtl8723au/include/rtw_mlme_ext.h
+> +++ b/drivers/staging/rtl8723au/include/rtw_mlme_ext.h
+> @@ -461,9 +461,7 @@ void Update23aTblForSoftAP(u8 *bssrateset, u32 bssratelen);
+>
+>  u8 rtw_get_oper_ch23a(struct rtw_adapter *adapter);
+>  void rtw_set_oper_ch23a(struct rtw_adapter *adapter, u8 ch);
+> -u8 rtw_get_oper_bw23a(struct rtw_adapter *adapter);
+>  void rtw_set_oper_bw23a(struct rtw_adapter *adapter, u8 bw);
+> -u8 rtw_get_oper_ch23aoffset(struct rtw_adapter *adapter);
+>  void rtw_set_oper_ch23aoffset23a(struct rtw_adapter *adapter, u8 offset);
+>
+>  void set_channel_bwmode23a(struct rtw_adapter *padapter, unsigned char channel,
+> --
+> 1.9.1
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-2.7.0
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
