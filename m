@@ -1,70 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:35571 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754347AbcC3OGb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 10:06:31 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Liad Kaufman <liad.kaufman@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 41/43] iwlwifi: mvm: fix inconsistent lock in dqa mode
-Date: Wed, 30 Mar 2016 17:05:13 +0300
-Message-Id: <1459346715-7954-41-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160703_281776_BF0E6609)
-In-Reply-To: <1459346667.4731.9.camel@intel.com>
-References: <1459346667.4731.9.camel@intel.com>
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:35526 "EHLO
+	mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751079AbcC1EQ1 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 28 Mar 2016 00:16:27 -0400
+MIME-Version: 1.0
+In-Reply-To: <1458495292-17701-1-git-send-email-colin.king@canonical.com>
+References: <1458495292-17701-1-git-send-email-colin.king@canonical.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 28 Mar 2016 15:16:07 +1100
+Message-ID: <CAGRGNgXn8Kjm5Rf3Qr60JdG2x9-=Jqf4WazhPoWTsjUjLKgfOg@mail.gmail.com> (sfid-20160328_061643_526159_7A6D8D2D)
+Subject: Re: [PATCH] brcmfmac: sdio: remove unused variable retry_limit
+To: Colin King <colin.king@canonical.com>
+Cc: Brett Rudley <brudley@broadcom.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	Vineet Gupta <Vineet.Gupta1@synopsys.com>,
+	Kosuke Tatsukawa <tatsu@ab.jp.nec.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Liad Kaufman <liad.kaufman@intel.com>
+Hi All,
 
-When working in DQA mode, there is a lockdep log warning
-about an inconsistent state of the mvmsta->lock and the
-mvm->queue_info_lock. Fix this. This mode is not activated
-for now.
+On Mon, Mar 21, 2016 at 4:34 AM, Colin King <colin.king@canonical.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+>
+> retry_limit has never been used during the life of this driver, so
+> we may as well remove it as it is redundant.
+>
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Looks right to me.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-index e157bd5..12614b7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
-@@ -296,7 +296,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
- 
- 	lockdep_assert_held(&mvm->mutex);
- 
--	spin_lock(&mvm->queue_info_lock);
-+	spin_lock_bh(&mvm->queue_info_lock);
- 
- 	/*
- 	 * Non-QoS, QoS NDP and MGMT frames should go to a MGMT queue, if one
-@@ -324,7 +324,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
- 	if (queue >= 0)
- 		mvm->queue_info[queue].setup_reserved = false;
- 
--	spin_unlock(&mvm->queue_info_lock);
-+	spin_unlock_bh(&mvm->queue_info_lock);
- 
- 	/* TODO: support shared queues for same RA */
- 	if (queue < 0)
-@@ -402,12 +402,12 @@ static void iwl_mvm_tx_deferred_stream(struct iwl_mvm *mvm,
- 
- 	__skb_queue_head_init(&deferred_tx);
- 
-+	/* Disable bottom-halves when entering TX path */
-+	local_bh_disable();
- 	spin_lock(&mvmsta->lock);
- 	skb_queue_splice_init(&tid_data->deferred_tx_frames, &deferred_tx);
- 	spin_unlock(&mvmsta->lock);
- 
--	/* Disable bottom-halves when entering TX path */
--	local_bh_disable();
- 	while ((skb = __skb_dequeue(&deferred_tx)))
- 		if (no_queue || iwl_mvm_tx_skb(mvm, skb, sta))
- 			ieee80211_free_txskb(mvm->hw, skb);
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
+
+> ---
+>  drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 3 ---
+>  1 file changed, 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> index 43fd3f4..cd92ba7 100644
+> --- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> +++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+> @@ -535,9 +535,6 @@ static int qcount[NUMPRIO];
+>
+>  #define RETRYCHAN(chan) ((chan) == SDPCM_EVENT_CHANNEL)
+>
+> -/* Retry count for register access failures */
+> -static const uint retry_limit = 2;
+> -
+>  /* Limit on rounding up frames */
+>  static const uint max_roundup = 512;
+>
+> --
+> 2.7.3
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-2.5.0
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
