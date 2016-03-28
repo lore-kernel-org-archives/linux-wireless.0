@@ -1,130 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:5190 "EHLO mga11.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751510AbcCPVNS convert rfc822-to-8bit (ORCPT
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:34073 "EHLO
+	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751643AbcC1E4S (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2016 17:13:18 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Linus Torvalds <torvalds@linux-foundation.org>,
-	"Berg, Johannes" <johannes.berg@intel.com>
-CC: linuxwifi <linuxwifi@intel.com>,
-	Linux Wireless List <linux-wireless@vger.kernel.org>,
-	WCS WCD Linux SW Group Staff
-	<wcs.wcd.linux.sw.group.staff@intel.com>,
-	"Barash, Yair" <yair.barash@intel.com>,
-	"Amir, Ido" <ido.amir@intel.com>
-Subject: Re: iwlwifi incomplete initialization in Linux 4.5?
-Date: Wed, 16 Mar 2016 21:13:13 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA7A541@hasmsx107.ger.corp.intel.com> (sfid-20160316_221322_852231_4B592E95)
-References: <CA+55aFxOMO6u6xu4Pz7BzbLD=SwwzdPcSU2dX2S0kkh4jFaVbw@mail.gmail.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Mon, 28 Mar 2016 00:56:18 -0400
+Received: by mail-pf0-f194.google.com with SMTP id n5so19126568pfn.1
+        for <linux-wireless@vger.kernel.org>; Sun, 27 Mar 2016 21:56:18 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 4/5] staging: wilc1000: remove unused struct semaphore SemHandleUpdateStats
+Date: Mon, 28 Mar 2016 13:55:59 +0900
+Message-Id: <1459140960-10645-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20160328_065621_537241_8CCC10E0)
+In-Reply-To: <1459140960-10645-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1459140960-10645-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Linus,
+struct semaphore SemHandleUpdateStats is defined but never used in this
+driver, so just remove it.
 
-On 03/16/2016 10:48 PM, Linus Torvalds wrote:
-> So I upgraded the firmware on my Intel NUC (NUC6i3SYK), and that made
-> the wireless no longer work with a 4.5 kernel. I could get the
-> occasional packets through, but not many, and ti would hang for ten
-> seconds at a time, and then output errors like
-> 
->   iwlwifi 0000:01:00.0: Queue 2 stuck for 10000 ms.
->   iwlwifi 0000:01:00.0: Current SW read_ptr 60 write_ptr 93
->   ..
-> 
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 1 -
+ drivers/staging/wilc1000/wilc_wfi_netdevice.h     | 1 -
+ 2 files changed, 2 deletions(-)
 
-This ... typically means that the firmware got stuck while sending
-packets. Can you tell me on what band your router operates? 2.4GHz or
-5.2GHz?
-Do you use 20Mhz or 40MHz?
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 5785dda..f6aec47 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -2262,7 +2262,6 @@ struct wireless_dev *wilc_create_wiphy(struct net_device *net, struct device *de
+ 	}
+ 
+ 	priv = wdev_priv(wdev);
+-	sema_init(&(priv->SemHandleUpdateStats), 1);
+ 	priv->wdev = wdev;
+ 	wdev->wiphy->max_scan_ssids = MAX_NUM_PROBED_SSID;
+ #ifdef CONFIG_PM
+diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+index debb139..94a41b4 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
++++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
+@@ -130,7 +130,6 @@ struct wilc_priv {
+ 	struct wilc_wfi_key *wilc_ptk[MAX_NUM_STA];
+ 	u8 wilc_groupkey;
+ 	/* semaphores */
+-	struct semaphore SemHandleUpdateStats;
+ 	struct semaphore hSemScanReq;
+ 	/*  */
+ 	bool gbAutoRateAdjusted;
+-- 
+2.7.4
 
-Basically, I'd like to see the output of iw dev
-
-> which was odd, because that kernel had worked fine before.
-
-This is really firmware related.
-
-> 
-> I booted between two different kernels, going back to an older 4.5-rc3
-> one that had been running a lot longer on that machine, because
-> initially I thought that this was some recent kernel failure (I didn't
-> initially connect it with the firmware upgrade, because this is my
-> kids machine and I hadn't tested networking after the firmware
-> update). But that older known-good kernel failed the same way.
-> 
-> Going all the way back to the 4.4 kernel that Fedora uses made
-> wireless work, and then rebooting back into a 4.5 kernel also worked.
-> 
-
-Hmm, this is strange since 4.4 and 4.5 will both load -16.ucode which
-you seemed to be running when the have the Queue hang message. So I'd
-assume you have the same firmware running on both kernels. Sometimes, a
-bug starts to appear on a new kernel, and people think the bug is in the
-kernel, but in fact the newer kernel just loads a new firmware which has
-a bug. In a way, it is a regression in the "system" caused by a kernel
-upgrade, but the debug must be done on the firmware really.
-
-FYI: the newest firmware a kernel supports is in:
-drivers/net/wireless/intel/iwlwifi/iwl-X000.c
-in your case: 8000.c:
-#define IWL8000_UCODE_API_MAX   20
-
-The newest firmware I released to distros is -16, so you load -16.
-BTW - when you'll pull from davem, you be able to run -21.ucode which
-has been merged into linux-firmware.git.
-
-> Now, it's *possible* that it was just something odd and transient and
-> it just happened to clear up as I rebooted into the Fedora kernel, but
-> it feels more likely that there's some incomplete initialization in
-> recent 4.5 kernels, which isn't normally noticeable, but the full
-> system reset done as part of the firmware upgrade might have shown it.
-
-While everything is possible especially when you have radio involved, it
-would really surprise me.
-
-> 
-> I'm attaching all the iwlwifi debug output that goes along with the
-> stuck queue, in the hopes that it makes sense to somebody. This is
-> from the 4.5-rc3 boot into an older kernel, but final 4.5 showed the
-> same behavior.
-
-Sadly, the only sense it makes is that the firmware gets stuck.
->From that point, I can suggest you test different firmware versions
-(including intermediate version that I haven't pushed to
-linux-firmware.git). You can check the firmware versions from -16 to -21
-in my linux-firmware.git clone:
-https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/linux-firmware.git
-You need iwlwifi-8000C-XX.ucode
-
-> 
-> Googling iwlwifi stuck queues shows a lot of reports over the years,
-> but it might be a common symptom of "something is screwed up".
-
-Yeah... I can't claim it is the first time I see this. The good news is
-that we have developed very powerful tools to debug this kind of
-problems now and the firmware team can get what they need to address
-those issues. The debugging and fix is outside my area of control though.
-
-> 
-> I'm not sure I can reproduce it any more now that it works again (and
-> I'm not really willing to force a firmware downgrade), but if there is
-> something particular to test, I can do that.
-
-If you can reproduce, I can send you an instrumented firmware that can
-record data in a cyclic buffer. When it will crash, it'll create a
-devcoredump device which you can dump on the file system and send to me.
-More details here:
-https://wireless.wiki.kernel.org/en/users/drivers/iwlwifi/debugging#firmware_debugging
-
-Please also look at the privacy notice.
-
-But of course, if you can't reproduce, it won't really help. Let me know
-if you want me to send you a firmware for debugging.
-
-> 
-> Ideas?
-> 
->                             Linus
-> 
