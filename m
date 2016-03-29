@@ -1,52 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51453 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754261AbcCPLTj (ORCPT
+Received: from youngberry.canonical.com ([91.189.89.112]:35570 "EHLO
+	youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757583AbcC2Qol (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2016 07:19:39 -0400
-Date: Wed, 16 Mar 2016 16:49:31 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 2/2] ath10k: Enable parsing per station rx duration for
- 10.4
-Message-ID: <20160316111931.GB5213@atheros-ThinkPad-T61> (sfid-20160316_121942_961610_DF935A39)
-References: <1458052250-2529-1-git-send-email-mohammed@qca.qualcomm.com>
- <1458052250-2529-3-git-send-email-mohammed@qca.qualcomm.com>
- <87d1qulo2r.fsf@kamboji.qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <87d1qulo2r.fsf@kamboji.qca.qualcomm.com>
+	Tue, 29 Mar 2016 12:44:41 -0400
+From: Colin King <colin.king@canonical.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Subject: [PATCH] rtl8xxxu: fix uninitialized return value in ret
+Date: Tue, 29 Mar 2016 17:44:36 +0100
+Message-Id: <1459269876-15559-1-git-send-email-colin.king@canonical.com> (sfid-20160329_184508_431434_C390459C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 16, 2016 at 10:22:22AM +0000, Valo, Kalle wrote:
-> Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
-> 
-> > From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> >
-> > Rx duration support for per station is part of extended peer
-> > stats, enable provision to parse the same and provide backward
-> > compatibility based on the 'stats_id' event
-> >
-> > Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-> 
-> After fixing patch 1 this doesn't compile either. Please fix and resend
-> both patches.
+From: Colin Ian King <colin.king@canonical.com>
 
-[shafi] sure, sorry for wasting your time, i think this dependent on the
-patch "[PATCH v5] ath10k: Enable debugfs provision to enable Peer Stats
- feature" anyway i will resend them , with compile testing
+several functions are not initializing a return status in ret
+resulting in garbage to be returned instead of 0 for success.
+Currently, the calls to these functions are not checking the
+return, however, it seems prudent to return the correct status
+in case they are to be checked at a later date.
 
-> 
-> drivers/net/wireless/ath/ath10k/core.c: In function 'ath10k_core_start':
-> drivers/net/wireless/ath/ath10k/core.c:1787:3: error: implicit
-> declaration of function 'ath10k_peer_stats_enabled'
-> [-Werror=implicit-function-declaration]
-> cc1: some warnings being treated as errors
-> 
-> -- 
-> Kalle Valo
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index abdff45..9262aad 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -5231,7 +5231,7 @@ static void rtl8xxxu_set_ampdu_min_space(struct rtl8xxxu_priv *priv, u8 density)
+ static int rtl8xxxu_active_to_emu(struct rtl8xxxu_priv *priv)
+ {
+ 	u8 val8;
+-	int count, ret;
++	int count, ret = 0;
+ 
+ 	/* Start of rtl8723AU_card_enable_flow */
+ 	/* Act to Cardemu sequence*/
+@@ -5281,7 +5281,7 @@ static int rtl8723bu_active_to_emu(struct rtl8xxxu_priv *priv)
+ 	u8 val8;
+ 	u16 val16;
+ 	u32 val32;
+-	int count, ret;
++	int count, ret = 0;
+ 
+ 	/* Turn off RF */
+ 	rtl8xxxu_write8(priv, REG_RF_CTRL, 0);
+@@ -5338,7 +5338,7 @@ static int rtl8xxxu_active_to_lps(struct rtl8xxxu_priv *priv)
+ {
+ 	u8 val8;
+ 	u8 val32;
+-	int count, ret;
++	int count, ret = 0;
+ 
+ 	rtl8xxxu_write8(priv, REG_TXPAUSE, 0xff);
+ 
+-- 
+2.7.4
+
