@@ -1,50 +1,145 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f172.google.com ([209.85.223.172]:32945 "EHLO
-	mail-io0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752953AbcC3MMJ convert rfc822-to-8bit (ORCPT
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:36079 "EHLO
+	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755926AbcC2GGr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 08:12:09 -0400
-Received: by mail-io0-f172.google.com with SMTP id a129so61737668ioe.0
-        for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2016 05:12:08 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <871t6sb2g9.fsf@kamboji.qca.qualcomm.com>
-References: <1459332895-4563-1-git-send-email-wnhuang@chromium.org>
-	<CA+icZUVpMU0kjEKPpABU415Gv_EhFUkAGbXi82UVf8PbHnz9mw@mail.gmail.com>
-	<CABicQ-Wwf6LrFujVw03TNvAF-ny4d2MfqP+GDL0ARRkg5EnT3Q@mail.gmail.com>
-	<871t6sb2g9.fsf@kamboji.qca.qualcomm.com>
-Date: Wed, 30 Mar 2016 20:11:15 +0800
-Message-ID: <CABicQ-U4xAvJbffVLD_HE6tmPRtQYpHuD60uNA2617JdUhbdog@mail.gmail.com> (sfid-20160330_141217_894464_B8414869)
-Subject: Re: [PATCH RESEND] mwifiex: fix NULL pointer dereference error
-From: Wei-Ning Huang <wnhuang@google.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: sedat.dilek@gmail.com,
-	Linux Wireless <linux-wireless@vger.kernel.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	Sameer Nanda <snanda@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 29 Mar 2016 02:06:47 -0400
+Received: by mail-pf0-f173.google.com with SMTP id u190so6575228pfb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2016 23:06:46 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: [PATCH 08/16] wcn36xx: Remove sta pointer in private vif struct
+Date: Mon, 28 Mar 2016 23:06:25 -0700
+Message-Id: <1459231593-360-9-git-send-email-bjorn.andersson@linaro.org> (sfid-20160329_080913_495848_EA6D5192)
+In-Reply-To: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
+References: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 30, 2016 at 8:00 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Wei-Ning Huang <wnhuang@google.com> writes:
->
->> Kalle, can you help amend the message if this patch is accepted?
->
-> Sure, I'll fix the typo in the commit log.
->
-> But please try to avoid top posting, it makes it more difficult to
-> follow the threads.
->
-> --
-> Kalle Valo
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-Noted, thanks for the reminder :)
+This does not work with multiple sta's in a vif.
 
-Wei-Ning
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/main.c    |  3 ---
+ drivers/net/wireless/ath/wcn36xx/smd.c     | 28 +++++++++++++++-------------
+ drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  1 -
+ 3 files changed, 15 insertions(+), 17 deletions(-)
 
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index a23738deb5b3..7c06ca9fdd2c 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -796,7 +796,6 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+ 		    vif, sta->addr);
+ 
+ 	spin_lock_init(&sta_priv->ampdu_lock);
+-	vif_priv->sta = sta_priv;
+ 	sta_priv->vif = vif_priv;
+ 	/*
+ 	 * For STA mode HW will be configured on BSS_CHANGED_ASSOC because
+@@ -815,14 +814,12 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw,
+ 			      struct ieee80211_sta *sta)
+ {
+ 	struct wcn36xx *wcn = hw->priv;
+-	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
+ 	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
+ 
+ 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta remove vif %p sta %pM index %d\n",
+ 		    vif, sta->addr, sta_priv->sta_index);
+ 
+ 	wcn36xx_smd_delete_sta(wcn, sta_priv->sta_index);
+-	vif_priv->sta = NULL;
+ 	sta_priv->vif = NULL;
+ 	return 0;
+ }
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index b75e7211049d..887781dff110 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -1170,6 +1170,7 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
+ 
+ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
+ 				      struct ieee80211_vif *vif,
++				      struct ieee80211_sta *sta,
+ 				      void *buf,
+ 				      size_t len)
+ {
+@@ -1200,9 +1201,10 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
+ 
+ 	vif_priv->bss_index = params->bss_index;
+ 
+-	if (vif_priv->sta) {
+-		vif_priv->sta->bss_sta_index =  params->bss_sta_index;
+-		vif_priv->sta->bss_dpu_desc_index = params->dpu_desc_index;
++	if (sta) {
++		struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
++		sta_priv->bss_sta_index = params->bss_sta_index;
++		sta_priv->bss_dpu_desc_index = params->dpu_desc_index;
+ 	}
+ 
+ 	vif_priv->self_ucast_dpu_sign = params->ucast_dpu_signature;
+@@ -1329,6 +1331,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+ 	}
+ 	ret = wcn36xx_smd_config_bss_rsp(wcn,
+ 					 vif,
++					 sta,
+ 					 wcn->hal_buf,
+ 					 wcn->hal_rsp_len);
+ 	if (ret) {
+@@ -2053,25 +2056,24 @@ static int wcn36xx_smd_delete_sta_context_ind(struct wcn36xx *wcn,
+ {
+ 	struct wcn36xx_hal_delete_sta_context_ind_msg *rsp = buf;
+ 	struct wcn36xx_vif *tmp;
+-	struct ieee80211_sta *sta = NULL;
++	struct ieee80211_sta *sta;
+ 
+ 	if (len != sizeof(*rsp)) {
+ 		wcn36xx_warn("Corrupted delete sta indication\n");
+ 		return -EIO;
+ 	}
+ 
++	wcn36xx_dbg(WCN36XX_DBG_HAL, "delete station indication %pM index %d\n",
++		    rsp->addr2, rsp->sta_id);
++
+ 	list_for_each_entry(tmp, &wcn->vif_list, list) {
+-		if (sta && (tmp->sta->sta_index == rsp->sta_id)) {
+-			sta = container_of((void *)tmp->sta,
+-						 struct ieee80211_sta,
+-						 drv_priv);
+-			wcn36xx_dbg(WCN36XX_DBG_HAL,
+-				    "delete station indication %pM index %d\n",
+-				    rsp->addr2,
+-				    rsp->sta_id);
++		rcu_read_lock();
++		sta = ieee80211_find_sta(wcn36xx_priv_to_vif(tmp), rsp->addr2);
++		if (sta)
+ 			ieee80211_report_low_ack(sta, 0);
++		rcu_read_unlock();
++		if (sta)
+ 			return 0;
+-		}
+ 	}
+ 
+ 	wcn36xx_warn("STA with addr %pM and index %d not found\n",
+diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+index c368a34c8de7..54000db0af1a 100644
+--- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
++++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
+@@ -125,7 +125,6 @@ struct wcn36xx_platform_ctrl_ops {
+  */
+ struct wcn36xx_vif {
+ 	struct list_head list;
+-	struct wcn36xx_sta *sta;
+ 	u8 dtim_period;
+ 	enum ani_ed_type encrypt_type;
+ 	bool is_joining;
 -- 
-Wei-Ning Huang, 黃偉寧 | Software Engineer, Google Inc., Taiwan |
-wnhuang@google.com | Cell: +886 910-380678
+2.5.0
+
