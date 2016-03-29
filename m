@@ -1,62 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:37577 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751458AbcC3MuH convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 08:50:07 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Cathy Luo" <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Wei-Ning Huang <wnhuang@chromium.org>,
-	Xinming Hu <huxm@marvell.com>
-Subject: RE: [PATCH v5 2/4] mwifiex: add platform specific wakeup interrupt
- support
-Date: Wed, 30 Mar 2016 12:50:03 +0000
-Message-ID: <9b96089aa29a4202b2ccc8110315c174@SC-EXCH04.marvell.com> (sfid-20160330_145012_590383_9C0DA299)
-References: <1458299032-31929-1-git-send-email-akarwar@marvell.com>
-	<1458299032-31929-2-git-send-email-akarwar@marvell.com>
- <87a8lg5eej.fsf@purkki.adurom.net>
-In-Reply-To: <87a8lg5eej.fsf@purkki.adurom.net>
-Content-Type: text/plain; charset="us-ascii"
+Received: from mail-pa0-f45.google.com ([209.85.220.45]:36168 "EHLO
+	mail-pa0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758295AbcC2Vol (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2016 17:44:41 -0400
+Received: by mail-pa0-f45.google.com with SMTP id tt10so23581273pab.3
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2016 14:44:40 -0700 (PDT)
+Date: Tue, 29 Mar 2016 14:44:37 -0700
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jason Mobarak <jam@cozybit.com>,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Subject: Re: [RESEND PATCH 15/16] wcn36xx: don't pad beacons for mesh
+Message-ID: <20160329214437.GW8929@tuxbot> (sfid-20160329_234503_992361_7C170517)
+References: <1459231593-360-16-git-send-email-bjorn.andersson@linaro.org>
+ <1459287672-3324-1-git-send-email-bjorn.andersson@linaro.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1459287672-3324-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+On Tue 29 Mar 14:41 PDT 2016, Bjorn Andersson wrote:
 
-> From: Kalle Valo [mailto:kvalo@codeaurora.org]
-> Sent: Wednesday, March 30, 2016 6:09 PM
-> To: Amitkumar Karwar
-> Cc: linux-wireless@vger.kernel.org; Cathy Luo; Nishant Sarmukadam;
-> devicetree@vger.kernel.org; Wei-Ning Huang; Xinming Hu
-> Subject: Re: [PATCH v5 2/4] mwifiex: add platform specific wakeup
-> interrupt support
+> From: Jason Mobarak <jam@cozybit.com>
 > 
-> Amitkumar Karwar <akarwar@marvell.com> writes:
+> Patch "wcn36xx: Pad TIM PVM if needed" has caused a regression in mesh
+> beaconing.  The field tim_off is always 0 for mesh mode, and thus
+> pvm_len (referring to the TIM length field) and pad are both incorrectly
+> calculated.  Thus, msg_body.beacon_length is incorrectly calculated for
+> mesh mode. Fix this.
 > 
-> > From: Xinming Hu <huxm@marvell.com>
-> >
-> > On some arm-based platforms, we need to configure platform specific
-> > parameters by device tree node and also define our node as a child
-> > node of parent SDIO host controller.
-> > This patch parses these parameters from device tree. It includes
-> > calibration data dowoload to firmware, wakeup pin configured to
-> > firmware, and soc specific wake up gpio, which will be set as wakeup
-> interrupt pin.
-> >
-> > Signed-off-by: Xinming Hu <huxm@marvell.com>
-> > Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Fixes: 8ad99a4e3ee5 ("wcn36xx: Pad TIM PVM if needed")
+> Signed-off-by: Jason Mobarak <jam@cozybit.com>
+> Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> ---
 > 
-> I only see patch 2, where are the rest three? Also it's not clear what's
-> the plan with this patchset.
+> Resend this single patch with included Fixes tag.
 > 
 
-Yes. It should have been [PATCH v5 2/2]
-I am going to submit v6 shortly which address below comments from Rob Herring.
-https://patchwork.kernel.org/patch/8618261/
+Sorry for the spam, I read the git log incorrectly. The patch referred
+to is part of this series, so the sha1 is bogus.
 
 Regards,
-Amitkumar
+Bjorn
+
+>  drivers/net/wireless/ath/wcn36xx/smd.c | 5 +++++
+>  1 file changed, 5 insertions(+)
+> 
+> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+> index a57d158298a1..b1bdc229e560 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
+> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+> @@ -1410,6 +1410,11 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+>  
+>  	pvm_len = skb_beacon->data[tim_off + 1] - 3;
+>  	pad = TIM_MIN_PVM_SIZE - pvm_len;
+> +
+> +	/* Padding is irrelevant to mesh mode since tim_off is always 0. */
+> +	if (vif->type == NL80211_IFTYPE_MESH_POINT)
+> +		pad = 0;
+> +
+>  	msg_body.beacon_length = skb_beacon->len + pad;
+>  	/* TODO need to find out why + 6 is needed */
+>  	msg_body.beacon_length6 = msg_body.beacon_length + 6;
+> -- 
+> 2.5.0
+> 
