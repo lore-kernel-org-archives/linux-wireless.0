@@ -1,78 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:49943 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752708AbcCYMUq (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:15461 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756678AbcC2KyG (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Mar 2016 08:20:46 -0400
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 10/11] staging: wilc1000: removes define USE_TX_BACKOFF_DELAY_IF_NO_BUFFERS
-Date: Fri, 25 Mar 2016 21:16:55 +0900
-Message-ID: <1458908216-12100-10-git-send-email-leo.kim@atmel.com> (sfid-20160325_132053_805738_8785649E)
-In-Reply-To: <1458908216-12100-1-git-send-email-leo.kim@atmel.com>
-References: <1458908216-12100-1-git-send-email-leo.kim@atmel.com>
+	Tue, 29 Mar 2016 06:54:06 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/2] cfg80211: Allow reassociation to be requested with internal SME
+Date: Tue, 29 Mar 2016 13:53:28 +0300
+Message-ID: <1459248808-16412-2-git-send-email-jouni@qca.qualcomm.com> (sfid-20160329_125410_329794_03D2E520)
+In-Reply-To: <1459248808-16412-1-git-send-email-jouni@qca.qualcomm.com>
+References: <1459248808-16412-1-git-send-email-jouni@qca.qualcomm.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes define USE_TX_BACKOFF_DELAY_IF_NO_BUFFERS and
-use it's feature codes.
+If the user space issues a NL80211_CMD_CONNECT with
+NL80211_ATTR_PREV_BSSID when there is already a connection, allow this
+to proceed as a reassociation instead of rejecting the new connect
+command with EALREADY.
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 8 --------
- 1 file changed, 8 deletions(-)
+ net/wireless/nl80211.c |  3 ++-
+ net/wireless/sme.c     | 11 +++++++++--
+ 2 files changed, 11 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index 127a967..fae03e8 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -303,22 +303,18 @@ int wilc_wlan_get_num_conn_ifcs(struct wilc *wilc)
- 	return ret_val;
- }
- 
--#define USE_TX_BACKOFF_DELAY_IF_NO_BUFFERS
--
- static int linux_wlan_txq_task(void *vp)
- {
- 	int ret, txq_count;
- 	struct wilc_vif *vif;
- 	struct wilc *wl;
- 	struct net_device *dev = vp;
--#if defined USE_TX_BACKOFF_DELAY_IF_NO_BUFFERS
- #define TX_BACKOFF_WEIGHT_INCR_STEP (1)
- #define TX_BACKOFF_WEIGHT_DECR_STEP (1)
- #define TX_BACKOFF_WEIGHT_MAX (7)
- #define TX_BACKOFF_WEIGHT_MIN (0)
- #define TX_BACKOFF_WEIGHT_UNIT_MS (10)
- 	int backoff_weight = TX_BACKOFF_WEIGHT_MIN;
--#endif
- 
- 	vif = netdev_priv(dev);
- 	wl = vif->wilc;
-@@ -334,9 +330,6 @@ static int linux_wlan_txq_task(void *vp)
- 				schedule();
- 			break;
- 		}
--#if !defined USE_TX_BACKOFF_DELAY_IF_NO_BUFFERS
--		ret = wilc_wlan_handle_txq(dev, &txq_count);
--#else
- 		do {
- 			ret = wilc_wlan_handle_txq(dev, &txq_count);
- 			if (txq_count < FLOW_CONTROL_LOWER_THRESHOLD) {
-@@ -358,7 +351,6 @@ static int linux_wlan_txq_task(void *vp)
- 				}
- 			}
- 		} while (ret == WILC_TX_ERR_NO_BUF && !wl->close);
--#endif
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index a98665a..773b20f 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8117,7 +8117,8 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
  	}
- 	return 0;
- }
+ 
+ 	wdev_lock(dev->ieee80211_ptr);
+-	err = cfg80211_connect(rdev, dev, &connect, connkeys, NULL);
++	err = cfg80211_connect(rdev, dev, &connect, connkeys,
++			       connect.prev_bssid);
+ 	wdev_unlock(dev->ieee80211_ptr);
+ 	if (err)
+ 		kzfree(connkeys);
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 65882d2..ce32492 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -492,8 +492,15 @@ static int cfg80211_sme_connect(struct wireless_dev *wdev,
+ 	if (!rdev->ops->auth || !rdev->ops->assoc)
+ 		return -EOPNOTSUPP;
+ 
+-	if (wdev->current_bss)
+-		return -EALREADY;
++	if (wdev->current_bss) {
++		if (!prev_bssid)
++			return -EALREADY;
++		cfg80211_unhold_bss(wdev->current_bss);
++		cfg80211_put_bss(wdev->wiphy, &wdev->current_bss->pub);
++		wdev->current_bss = NULL;
++
++		cfg80211_sme_free(wdev);
++	}
+ 
+ 	if (WARN_ON(wdev->conn))
+ 		return -EINPROGRESS;
 -- 
 1.9.1
 
