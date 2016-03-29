@@ -1,345 +1,740 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f50.google.com ([209.85.215.50]:34761 "EHLO
-	mail-lf0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752804AbcCAKcM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 05:32:12 -0500
-Received: by mail-lf0-f50.google.com with SMTP id j78so110091556lfb.1
-        for <linux-wireless@vger.kernel.org>; Tue, 01 Mar 2016 02:32:11 -0800 (PST)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: ath10k@lists.infradead.org
+Received: from mga04.intel.com ([192.55.52.120]:18912 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752669AbcC2JfN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2016 05:35:13 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCH v2 03/11] ath10k: refactor tx pending management
-Date: Tue,  1 Mar 2016 11:32:48 +0100
-Message-Id: <1456828376-2795-4-git-send-email-michal.kazior@tieto.com> (sfid-20160301_113218_642142_0EA4CC10)
-In-Reply-To: <1456828376-2795-1-git-send-email-michal.kazior@tieto.com>
-References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
- <1456828376-2795-1-git-send-email-michal.kazior@tieto.com>
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Subject: [PATCHv3 RESEND 01/11] cfg80211: add start / stop NAN commands
+Date: Tue, 29 Mar 2016 12:34:59 +0300
+Message-Id: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160329_113523_299558_0336AB53)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tx pending counter logic assumed that the sk_buff
-is already known and hence was performed in HTT
-functions themselves.
+This allows user space to start/stop NAN interface.
+A NAN interface is like P2P device in a few aspects: it
+doesn't have a netdev associated to it.
+Add the new interface type and prevent operations that
+can't be executed on NAN interface like scan.
+Define several attributes that may be configured by user space
+when starting NAN functionality (master preference and dual
+band operation)
 
-However, for the sake of future wake_tx_queue()
-usage the driver must be able to tell whether it
-can submit more frames to firmware before it
-dequeues frame from ieee80211_txq (and thus long
-before HTT Tx functions are called) because once a
-frame is dequeued it cannot be requeud back to
-mac80211.
-
-This prepares the driver for future changes.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/htt.h    |  7 ++-
- drivers/net/wireless/ath/ath10k/htt_tx.c | 85 ++++++++------------------------
- drivers/net/wireless/ath/ath10k/mac.c    | 51 ++++++++++++++++---
- drivers/net/wireless/ath/ath10k/txrx.c   |  2 +-
- 4 files changed, 71 insertions(+), 74 deletions(-)
+ include/net/cfg80211.h       | 21 +++++++++-
+ include/uapi/linux/nl80211.h | 46 +++++++++++++++++++++
+ net/mac80211/cfg.c           |  2 +
+ net/mac80211/chan.c          |  3 ++
+ net/mac80211/iface.c         |  4 ++
+ net/mac80211/offchannel.c    |  1 +
+ net/mac80211/rx.c            |  3 ++
+ net/mac80211/util.c          |  1 +
+ net/wireless/chan.c          |  2 +
+ net/wireless/core.c          | 34 ++++++++++++++++
+ net/wireless/core.h          |  3 ++
+ net/wireless/mlme.c          |  1 +
+ net/wireless/nl80211.c       | 96 ++++++++++++++++++++++++++++++++++++++++++--
+ net/wireless/rdev-ops.h      | 20 +++++++++
+ net/wireless/trace.h         | 27 +++++++++++++
+ net/wireless/util.c          |  6 ++-
+ 16 files changed, 263 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt.h b/drivers/net/wireless/ath/ath10k/htt.h
-index 13391ea4422d..cb6d4fd687da 100644
---- a/drivers/net/wireless/ath/ath10k/htt.h
-+++ b/drivers/net/wireless/ath/ath10k/htt.h
-@@ -1753,7 +1753,12 @@ int ath10k_htt_h2t_aggr_cfg_msg(struct ath10k_htt *htt,
- 				u8 max_subfrms_amsdu);
- void ath10k_htt_hif_tx_complete(struct ath10k *ar, struct sk_buff *skb);
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0bbfbf3..69253f5 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -2259,6 +2259,19 @@ struct cfg80211_qos_map {
+ };
  
--void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt, bool limit_mgmt_desc);
-+void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt,
-+			       bool is_mgmt);
-+int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt,
-+			      bool is_mgmt,
-+			      bool is_presp);
+ /**
++ * struct cfg80211_nan_conf - nan configuration
++ *
++ * This struct defines nan configuration parameters
++ *
++ * @master_pref: master preference (1 - 255)
++ * @dual: dual band operation mode
++ */
++struct cfg80211_nan_conf {
++	u8 master_pref;
++	enum nl80211_nan_dual_band_conf dual;
++};
 +
- int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb);
- void ath10k_htt_tx_free_msdu_id(struct ath10k_htt *htt, u16 msdu_id);
- int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *);
-diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-index 95acb727c068..860661d3812f 100644
---- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-@@ -22,9 +22,12 @@
- #include "txrx.h"
- #include "debug.h"
++/**
+  * struct cfg80211_ops - backend description for wireless configuration
+  *
+  * This struct is registered by fullmac card drivers and/or wireless stacks
+@@ -2531,6 +2544,8 @@ struct cfg80211_qos_map {
+  *	and returning to the base channel for communication with the AP.
+  * @tdls_cancel_channel_switch: Stop channel-switching with a TDLS peer. Both
+  *	peers must be on the base channel when the call completes.
++ * @start_nan: Start the NAN interface.
++ * @stop_nan: Stop the NAN interface.
+  */
+ struct cfg80211_ops {
+ 	int	(*suspend)(struct wiphy *wiphy, struct cfg80211_wowlan *wow);
+@@ -2796,6 +2811,9 @@ struct cfg80211_ops {
+ 	void	(*tdls_cancel_channel_switch)(struct wiphy *wiphy,
+ 					      struct net_device *dev,
+ 					      const u8 *addr);
++	int	(*start_nan)(struct wiphy *wiphy, struct wireless_dev *wdev,
++			     struct cfg80211_nan_conf *conf);
++	void	(*stop_nan)(struct wiphy *wiphy, struct wireless_dev *wdev);
+ };
  
--void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt, bool limit_mgmt_desc)
-+void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt,
-+			       bool is_mgmt)
- {
--	if (limit_mgmt_desc)
-+	lockdep_assert_held(&htt->tx_lock);
+ /*
+@@ -3522,6 +3540,7 @@ struct cfg80211_cached_keys;
+  *	beacons, 0 when not valid
+  * @address: The address for this device, valid only if @netdev is %NULL
+  * @p2p_started: true if this is a P2P Device that has been started
++ * @nan_started: true if this is a NAN interface that has been started
+  * @cac_started: true if DFS channel availability check has been started
+  * @cac_start_time: timestamp (jiffies) when the dfs state was entered.
+  * @cac_time_ms: CAC time in ms
+@@ -3553,7 +3572,7 @@ struct wireless_dev {
+ 
+ 	struct mutex mtx;
+ 
+-	bool use_4addr, p2p_started;
++	bool use_4addr, p2p_started, nan_started;
+ 
+ 	u8 address[ETH_ALEN] __aligned(sizeof(u16));
+ 
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index b2a8d8c..e5b3a5c7 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -826,6 +826,16 @@
+  *	not running. The driver indicates the status of the scan through
+  *	cfg80211_scan_done().
+  *
++ * @NL80211_CMD_START_NAN: Start NAN operation, identified by its
++ *	%NL80211_ATTR_WDEV interface. This interface must have been previously
++ *	created with %NL80211_CMD_NEW_INTERFACE. After it has been started, the
++ *	NAN interface will create or join a cluster. This command must have a
++ *	valid %NL80211_ATTR_NAN_MASTER_PREF attribute and optional
++ *	%NL80211_ATTR_NAN_DUAL attributes.
++ *	After this command NAN functions can be added.
++ * @NL80211_CMD_STOP_NAN: Stop the NAN operation, identified by
++ *	its %NL80211_ATTR_WDEV interface.
++ *
+  * @NL80211_CMD_MAX: highest used command number
+  * @__NL80211_CMD_AFTER_LAST: internal use
+  */
+@@ -1014,6 +1024,9 @@ enum nl80211_commands {
+ 
+ 	NL80211_CMD_ABORT_SCAN,
+ 
++	NL80211_CMD_START_NAN,
++	NL80211_CMD_STOP_NAN,
 +
-+	if (is_mgmt)
- 		htt->num_pending_mgmt_tx--;
+ 	/* add new commands above here */
  
- 	htt->num_pending_tx--;
-@@ -32,43 +35,31 @@ void __ath10k_htt_tx_dec_pending(struct ath10k_htt *htt, bool limit_mgmt_desc)
- 		ath10k_mac_tx_unlock(htt->ar, ATH10K_TX_PAUSE_Q_FULL);
- }
+ 	/* used to define NL80211_CMD_MAX below */
+@@ -1804,6 +1817,14 @@ enum nl80211_commands {
+  *	it contains the behaviour-specific attribute containing the parameters for
+  *	BSS selection to be done by driver and/or firmware.
+  *
++ * @NL80211_ATTR_NAN_MASTER_PREF: the master preference to be used by
++ *	&NL80211_CMD_START_NAN. Its type is u8 and it can't be 0.
++ *	Also, values 1 and 255 are reserved for certification purposes and
++ *	should not be used during a normal device operation.
++ * @NL80211_ATTR_NAN_DUAL: NAN dual band operation config (see
++ *	&enum nl80211_nan_dual_band_conf). This attribute is used with
++ *	&NL80211_CMD_START_NAN.
++ *
+  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
+  * @NL80211_ATTR_MAX: highest attribute number currently defined
+  * @__NL80211_ATTR_AFTER_LAST: internal use
+@@ -2182,6 +2203,9 @@ enum nl80211_attrs {
  
--static void ath10k_htt_tx_dec_pending(struct ath10k_htt *htt,
--				      bool limit_mgmt_desc)
--{
--	spin_lock_bh(&htt->tx_lock);
--	__ath10k_htt_tx_dec_pending(htt, limit_mgmt_desc);
--	spin_unlock_bh(&htt->tx_lock);
--}
--
--static int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt,
--				     bool limit_mgmt_desc, bool is_probe_resp)
-+int ath10k_htt_tx_inc_pending(struct ath10k_htt *htt,
-+			      bool is_mgmt,
-+			      bool is_presp)
- {
- 	struct ath10k *ar = htt->ar;
--	int ret = 0;
+ 	NL80211_ATTR_BSS_SELECT,
  
--	spin_lock_bh(&htt->tx_lock);
-+	lockdep_assert_held(&htt->tx_lock);
- 
--	if (htt->num_pending_tx >= htt->max_num_pending_tx) {
--		ret = -EBUSY;
--		goto exit;
--	}
-+	if (htt->num_pending_tx >= htt->max_num_pending_tx)
-+		return -EBUSY;
- 
--	if (limit_mgmt_desc) {
--		if (is_probe_resp && (htt->num_pending_mgmt_tx >
--		    ar->hw_params.max_probe_resp_desc_thres)) {
--			ret = -EBUSY;
--			goto exit;
--		}
-+	if (is_mgmt &&
-+	    is_presp &&
-+	    ar->hw_params.max_probe_resp_desc_thres &&
-+	    ar->hw_params.max_probe_resp_desc_thres < htt->num_pending_mgmt_tx)
-+		return -EBUSY;
++	NL80211_ATTR_NAN_MASTER_PREF,
++	NL80211_ATTR_NAN_DUAL,
 +
-+	if (is_mgmt)
- 		htt->num_pending_mgmt_tx++;
--	}
+ 	/* add attributes here, update the policy in nl80211.c */
  
- 	htt->num_pending_tx++;
- 	if (htt->num_pending_tx == htt->max_num_pending_tx)
- 		ath10k_mac_tx_lock(htt->ar, ATH10K_TX_PAUSE_Q_FULL);
+ 	__NL80211_ATTR_AFTER_LAST,
+@@ -2260,6 +2284,7 @@ enum nl80211_attrs {
+  *	commands to create and destroy one
+  * @NL80211_IF_TYPE_OCB: Outside Context of a BSS
+  *	This mode corresponds to the MIB variable dot11OCBActivated=true
++ * @NL80211_IFTYPE_NAN: NAN device interface type (not a netdev)
+  * @NL80211_IFTYPE_MAX: highest interface type number currently defined
+  * @NUM_NL80211_IFTYPES: number of defined interface types
+  *
+@@ -2280,6 +2305,7 @@ enum nl80211_iftype {
+ 	NL80211_IFTYPE_P2P_GO,
+ 	NL80211_IFTYPE_P2P_DEVICE,
+ 	NL80211_IFTYPE_OCB,
++	NL80211_IFTYPE_NAN,
  
--exit:
--	spin_unlock_bh(&htt->tx_lock);
--	return ret;
-+	return 0;
- }
+ 	/* keep last */
+ 	NUM_NL80211_IFTYPES,
+@@ -4719,4 +4745,24 @@ enum nl80211_bss_select_attr {
+ 	NL80211_BSS_SELECT_ATTR_MAX = __NL80211_BSS_SELECT_ATTR_AFTER_LAST - 1
+ };
  
- int ath10k_htt_tx_alloc_msdu_id(struct ath10k_htt *htt, struct sk_buff *skb)
-@@ -576,20 +567,6 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	int msdu_id = -1;
- 	int res;
- 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)msdu->data;
--	bool limit_mgmt_desc = false;
--	bool is_probe_resp = false;
--
--	if (ar->hw_params.max_probe_resp_desc_thres) {
--		limit_mgmt_desc = true;
--
--		if (ieee80211_is_probe_resp(hdr->frame_control))
--			is_probe_resp = true;
--	}
--
--	res = ath10k_htt_tx_inc_pending(htt, limit_mgmt_desc, is_probe_resp);
--
--	if (res)
--		goto err;
- 
- 	len += sizeof(cmd->hdr);
- 	len += sizeof(cmd->mgmt_tx);
-@@ -598,7 +575,7 @@ int ath10k_htt_mgmt_tx(struct ath10k_htt *htt, struct sk_buff *msdu)
- 	res = ath10k_htt_tx_alloc_msdu_id(htt, msdu);
- 	spin_unlock_bh(&htt->tx_lock);
- 	if (res < 0)
--		goto err_tx_dec;
-+		goto err;
- 
- 	msdu_id = res;
- 
-@@ -649,8 +626,6 @@ err_free_msdu_id:
- 	spin_lock_bh(&htt->tx_lock);
- 	ath10k_htt_tx_free_msdu_id(htt, msdu_id);
- 	spin_unlock_bh(&htt->tx_lock);
--err_tx_dec:
--	ath10k_htt_tx_dec_pending(htt, limit_mgmt_desc);
- err:
- 	return res;
- }
-@@ -677,26 +652,12 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
- 	u32 frags_paddr = 0;
- 	u32 txbuf_paddr;
- 	struct htt_msdu_ext_desc *ext_desc = NULL;
--	bool limit_mgmt_desc = false;
--	bool is_probe_resp = false;
--
--	if (unlikely(ieee80211_is_mgmt(hdr->frame_control)) &&
--	    ar->hw_params.max_probe_resp_desc_thres) {
--		limit_mgmt_desc = true;
--
--		if (ieee80211_is_probe_resp(hdr->frame_control))
--			is_probe_resp = true;
--	}
--
--	res = ath10k_htt_tx_inc_pending(htt, limit_mgmt_desc, is_probe_resp);
--	if (res)
--		goto err;
- 
- 	spin_lock_bh(&htt->tx_lock);
- 	res = ath10k_htt_tx_alloc_msdu_id(htt, msdu);
- 	spin_unlock_bh(&htt->tx_lock);
- 	if (res < 0)
--		goto err_tx_dec;
-+		goto err;
- 
- 	msdu_id = res;
- 
-@@ -862,11 +823,7 @@ int ath10k_htt_tx(struct ath10k_htt *htt, enum ath10k_hw_txrx_mode txmode,
- err_unmap_msdu:
- 	dma_unmap_single(dev, skb_cb->paddr, msdu->len, DMA_TO_DEVICE);
- err_free_msdu_id:
--	spin_lock_bh(&htt->tx_lock);
- 	ath10k_htt_tx_free_msdu_id(htt, msdu_id);
--	spin_unlock_bh(&htt->tx_lock);
--err_tx_dec:
--	ath10k_htt_tx_dec_pending(htt, limit_mgmt_desc);
- err:
- 	return res;
- }
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 67a50a61afb4..140ad250ea69 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -3358,13 +3358,11 @@ ath10k_mac_tx_h_get_txpath(struct ath10k *ar,
- 
- static int ath10k_mac_tx_submit(struct ath10k *ar,
- 				enum ath10k_hw_txrx_mode txmode,
-+				enum ath10k_mac_tx_path txpath,
- 				struct sk_buff *skb)
- {
- 	struct ath10k_htt *htt = &ar->htt;
--	enum ath10k_mac_tx_path txpath;
--	int ret;
--
--	txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
-+	int ret = -EINVAL;
- 
- 	switch (txpath) {
- 	case ATH10K_MAC_TX_HTT:
-@@ -3398,6 +3396,7 @@ static int ath10k_mac_tx(struct ath10k *ar,
- 			 struct ieee80211_vif *vif,
- 			 struct ieee80211_sta *sta,
- 			 enum ath10k_hw_txrx_mode txmode,
-+			 enum ath10k_mac_tx_path txpath,
- 			 struct sk_buff *skb)
- {
- 	struct ieee80211_hw *hw = ar->hw;
-@@ -3437,7 +3436,7 @@ static int ath10k_mac_tx(struct ath10k *ar,
- 		}
++/*
++ * enum nl80211_nan_dual_band_conf - NAN dual band configuration
++ *
++ * Defines the NAN dual band mode of operation
++ *
++ * @NL80211_NAN_BAND_DEFAULT: device default mode
++ * @NL80211_NAN_BAND_SINGLE: 2.4GHz only mode
++ * @NL80211_NAN_BAND_DUAL: 2.4GHz and 5.2GHz mode
++  */
++enum nl80211_nan_dual_band_conf {
++	NL80211_NAN_BAND_DEFAULT,
++	NL80211_NAN_BAND_SINGLE,
++	NL80211_NAN_BAND_DUAL,
++
++	/* keep last */
++	__NL80211_NAN_BAND_AFTER_LAST,
++	NL80211_NAN_BAND_MAX =
++	__NL80211_NAN_BAND_AFTER_LAST - 1,
++};
++
+ #endif /* __LINUX_NL80211_H */
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index b37adb6..80a5958 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -234,6 +234,7 @@ static int ieee80211_add_key(struct wiphy *wiphy, struct net_device *dev,
+ 	case NL80211_IFTYPE_WDS:
+ 	case NL80211_IFTYPE_MONITOR:
+ 	case NL80211_IFTYPE_P2P_DEVICE:
++	case NL80211_IFTYPE_NAN:
+ 	case NL80211_IFTYPE_UNSPECIFIED:
+ 	case NUM_NL80211_IFTYPES:
+ 	case NL80211_IFTYPE_P2P_CLIENT:
+@@ -2006,6 +2007,7 @@ static int ieee80211_scan(struct wiphy *wiphy,
+ 		     !(req->flags & NL80211_SCAN_FLAG_AP)))
+ 			return -EOPNOTSUPP;
+ 		break;
++	case NL80211_IFTYPE_NAN:
+ 	default:
+ 		return -EOPNOTSUPP;
  	}
+diff --git a/net/mac80211/chan.c b/net/mac80211/chan.c
+index 74142d0..acb50f8 100644
+--- a/net/mac80211/chan.c
++++ b/net/mac80211/chan.c
+@@ -274,6 +274,7 @@ ieee80211_get_chanctx_max_required_bw(struct ieee80211_local *local,
+ 				    ieee80211_get_max_required_bw(sdata));
+ 			break;
+ 		case NL80211_IFTYPE_P2P_DEVICE:
++		case NL80211_IFTYPE_NAN:
+ 			continue;
+ 		case NL80211_IFTYPE_ADHOC:
+ 		case NL80211_IFTYPE_WDS:
+@@ -718,6 +719,7 @@ void ieee80211_recalc_smps_chanctx(struct ieee80211_local *local,
  
--	ret = ath10k_mac_tx_submit(ar, txmode, skb);
-+	ret = ath10k_mac_tx_submit(ar, txmode, txpath, skb);
- 	if (ret) {
- 		ath10k_warn(ar, "failed to submit frame: %d\n", ret);
- 		return ret;
-@@ -3465,6 +3464,7 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 	struct ath10k_peer *peer;
- 	struct ath10k_vif *arvif;
- 	enum ath10k_hw_txrx_mode txmode;
-+	enum ath10k_mac_tx_path txpath;
- 	struct ieee80211_hdr *hdr;
- 	struct ieee80211_vif *vif;
- 	struct ieee80211_sta *sta;
-@@ -3533,8 +3533,9 @@ void ath10k_offchan_tx_work(struct work_struct *work)
- 		}
- 
- 		txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
-+		txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
- 
--		ret = ath10k_mac_tx(ar, vif, sta, txmode, skb);
-+		ret = ath10k_mac_tx(ar, vif, sta, txmode, txpath, skb);
- 		if (ret) {
- 			ath10k_warn(ar, "failed to transmit offchannel frame: %d\n",
- 				    ret);
-@@ -3758,19 +3759,53 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
- 			     struct sk_buff *skb)
- {
- 	struct ath10k *ar = hw->priv;
-+	struct ath10k_htt *htt = &ar->htt;
- 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
- 	struct ieee80211_vif *vif = info->control.vif;
- 	struct ieee80211_sta *sta = control->sta;
-+	struct ieee80211_hdr *hdr = (void *)skb->data;
- 	enum ath10k_hw_txrx_mode txmode;
-+	enum ath10k_mac_tx_path txpath;
-+	bool is_htt;
-+	bool is_mgmt;
-+	bool is_presp;
- 	int ret;
- 
- 	ath10k_mac_tx_h_fill_cb(ar, vif, skb);
- 
- 	txmode = ath10k_mac_tx_h_get_txmode(ar, vif, sta, skb);
-+	txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
-+	is_htt = (txpath == ATH10K_MAC_TX_HTT ||
-+		  txpath == ATH10K_MAC_TX_HTT_MGMT);
- 
--	ret = ath10k_mac_tx(ar, vif, sta, txmode, skb);
--	if (ret)
-+	if (is_htt) {
-+		spin_lock_bh(&ar->htt.tx_lock);
-+
-+		is_mgmt = ieee80211_is_mgmt(hdr->frame_control);
-+		is_presp = ieee80211_is_probe_resp(hdr->frame_control);
-+
-+		ret = ath10k_htt_tx_inc_pending(htt, is_mgmt, is_presp);
-+		if (ret) {
-+			ath10k_warn(ar, "failed to increase tx pending count: %d, dropping\n",
-+				    ret);
-+			spin_unlock_bh(&ar->htt.tx_lock);
-+			ieee80211_free_txskb(ar->hw, skb);
-+			return;
-+		}
-+
-+		spin_unlock_bh(&ar->htt.tx_lock);
-+	}
-+
-+	ret = ath10k_mac_tx(ar, vif, sta, txmode, txpath, skb);
-+	if (ret) {
- 		ath10k_warn(ar, "failed to transmit frame: %d\n", ret);
-+		if (is_htt) {
-+			spin_lock_bh(&ar->htt.tx_lock);
-+			ath10k_htt_tx_dec_pending(htt, is_mgmt);
-+			spin_unlock_bh(&ar->htt.tx_lock);
-+		}
-+		return;
-+	}
+ 		switch (sdata->vif.type) {
+ 		case NL80211_IFTYPE_P2P_DEVICE:
++		case NL80211_IFTYPE_NAN:
+ 			continue;
+ 		case NL80211_IFTYPE_STATION:
+ 			if (!sdata->u.mgd.associated)
+@@ -981,6 +983,7 @@ ieee80211_vif_chanctx_reservation_complete(struct ieee80211_sub_if_data *sdata)
+ 	case NL80211_IFTYPE_P2P_GO:
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 	case NUM_NL80211_IFTYPES:
++	case NL80211_IFTYPE_NAN:
+ 		WARN_ON(1);
+ 		break;
+ 	}
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 453b4e74..d13f780 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -540,6 +540,7 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 	case NL80211_IFTYPE_ADHOC:
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 	case NL80211_IFTYPE_OCB:
++	case NL80211_IFTYPE_NAN:
+ 		/* no special treatment */
+ 		break;
+ 	case NL80211_IFTYPE_UNSPECIFIED:
+@@ -655,6 +656,7 @@ int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
+ 			break;
+ 		case NL80211_IFTYPE_WDS:
+ 		case NL80211_IFTYPE_P2P_DEVICE:
++		case NL80211_IFTYPE_NAN:
+ 			break;
+ 		default:
+ 			/* not reached */
+@@ -942,6 +944,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 		/* relies on synchronize_rcu() below */
+ 		RCU_INIT_POINTER(local->p2p_sdata, NULL);
+ 		/* fall through */
++	case NL80211_IFTYPE_NAN:
+ 	default:
+ 		cancel_work_sync(&sdata->work);
+ 		/*
+@@ -1448,6 +1451,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
+ 		break;
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 	case NL80211_IFTYPE_P2P_DEVICE:
++	case NL80211_IFTYPE_NAN:
+ 		sdata->vif.bss_conf.bssid = sdata->vif.addr;
+ 		break;
+ 	case NL80211_IFTYPE_UNSPECIFIED:
+diff --git a/net/mac80211/offchannel.c b/net/mac80211/offchannel.c
+index 55a9c5b..75d5c96 100644
+--- a/net/mac80211/offchannel.c
++++ b/net/mac80211/offchannel.c
+@@ -838,6 +838,7 @@ int ieee80211_mgmt_tx(struct wiphy *wiphy, struct wireless_dev *wdev,
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 		need_offchan = true;
+ 		break;
++	case NL80211_IFTYPE_NAN:
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 9127957..064a1db 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -3486,6 +3486,9 @@ static bool ieee80211_accept_frame(struct ieee80211_rx_data *rx)
+ 		       ieee80211_is_probe_req(hdr->frame_control) ||
+ 		       ieee80211_is_probe_resp(hdr->frame_control) ||
+ 		       ieee80211_is_beacon(hdr->frame_control);
++	case NL80211_IFTYPE_NAN:
++		/* Currently no frames on NAN interface are allowed */
++		return false;
+ 	default:
+ 		break;
+ 	}
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 0319d6d..84ad226 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -1974,6 +1974,7 @@ int ieee80211_reconfig(struct ieee80211_local *local)
+ 		case NL80211_IFTYPE_AP_VLAN:
+ 		case NL80211_IFTYPE_MONITOR:
+ 		case NL80211_IFTYPE_P2P_DEVICE:
++		case NL80211_IFTYPE_NAN:
+ 			/* nothing to do */
+ 			break;
+ 		case NL80211_IFTYPE_UNSPECIFIED:
+diff --git a/net/wireless/chan.c b/net/wireless/chan.c
+index 59cabc9..723316f 100644
+--- a/net/wireless/chan.c
++++ b/net/wireless/chan.c
+@@ -372,6 +372,7 @@ int cfg80211_chandef_dfs_required(struct wiphy *wiphy,
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 	case NL80211_IFTYPE_WDS:
+ 	case NL80211_IFTYPE_P2P_DEVICE:
++	case NL80211_IFTYPE_NAN:
+ 		break;
+ 	case NL80211_IFTYPE_UNSPECIFIED:
+ 	case NUM_NL80211_IFTYPES:
+@@ -945,6 +946,7 @@ cfg80211_get_chan_state(struct wireless_dev *wdev,
+ 	case NL80211_IFTYPE_AP_VLAN:
+ 	case NL80211_IFTYPE_WDS:
+ 	case NL80211_IFTYPE_P2P_DEVICE:
++	case NL80211_IFTYPE_NAN:
+ 		/* these interface types don't really have a channel */
+ 		return;
+ 	case NL80211_IFTYPE_UNSPECIFIED:
+diff --git a/net/wireless/core.c b/net/wireless/core.c
+index dbc521b..e17b9d6 100644
+--- a/net/wireless/core.c
++++ b/net/wireless/core.c
+@@ -223,6 +223,23 @@ void cfg80211_stop_p2p_device(struct cfg80211_registered_device *rdev,
+ 	}
  }
  
- /* Must not be called with conf_mutex held as workers can use that also. */
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index fbfb608e48ab..118586ece20e 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -86,7 +86,7 @@ void ath10k_txrx_tx_unref(struct ath10k_htt *htt,
- 		limit_mgmt_desc = true;
++void cfg80211_stop_nan(struct cfg80211_registered_device *rdev,
++		       struct wireless_dev *wdev)
++{
++	ASSERT_RTNL();
++
++	if (WARN_ON(wdev->iftype != NL80211_IFTYPE_NAN))
++		return;
++
++	if (!wdev->nan_started)
++		return;
++
++	rdev_stop_nan(rdev, wdev);
++	wdev->nan_started = false;
++
++	rdev->opencount--;
++}
++
+ void cfg80211_shutdown_all_interfaces(struct wiphy *wiphy)
+ {
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+@@ -240,6 +257,9 @@ void cfg80211_shutdown_all_interfaces(struct wiphy *wiphy)
+ 		case NL80211_IFTYPE_P2P_DEVICE:
+ 			cfg80211_stop_p2p_device(rdev, wdev);
+ 			break;
++		case NL80211_IFTYPE_NAN:
++			cfg80211_stop_nan(rdev, wdev);
++			break;
+ 		default:
+ 			break;
+ 		}
+@@ -536,6 +556,11 @@ static int wiphy_verify_combinations(struct wiphy *wiphy)
+ 				    c->limits[j].max > 1))
+ 				return -EINVAL;
  
- 	ath10k_htt_tx_free_msdu_id(htt, tx_done->msdu_id);
--	__ath10k_htt_tx_dec_pending(htt, limit_mgmt_desc);
-+	ath10k_htt_tx_dec_pending(htt, limit_mgmt_desc);
- 	if (htt->num_pending_tx == 0)
- 		wake_up(&htt->empty_tx_wq);
- 	spin_unlock_bh(&htt->tx_lock);
++			/* Only a single NAN can be allowed */
++			if (WARN_ON(types & BIT(NL80211_IFTYPE_NAN) &&
++				    c->limits[j].max > 1))
++				return -EINVAL;
++
+ 			cnt += c->limits[j].max;
+ 			/*
+ 			 * Don't advertise an unsupported type
+@@ -578,6 +603,10 @@ int wiphy_register(struct wiphy *wiphy)
+ 		     !rdev->ops->tdls_cancel_channel_switch)))
+ 		return -EINVAL;
+ 
++	if (WARN_ON((wiphy->interface_modes & BIT(NL80211_IFTYPE_NAN)) &&
++		    (!rdev->ops->start_nan || !rdev->ops->stop_nan)))
++		return -EINVAL;
++
+ 	/*
+ 	 * if a wiphy has unsupported modes for regulatory channel enforcement,
+ 	 * opt-out of enforcement checking
+@@ -588,6 +617,7 @@ int wiphy_register(struct wiphy *wiphy)
+ 				       BIT(NL80211_IFTYPE_P2P_GO) |
+ 				       BIT(NL80211_IFTYPE_ADHOC) |
+ 				       BIT(NL80211_IFTYPE_P2P_DEVICE) |
++				       BIT(NL80211_IFTYPE_NAN) |
+ 				       BIT(NL80211_IFTYPE_AP_VLAN) |
+ 				       BIT(NL80211_IFTYPE_MONITOR)))
+ 		wiphy->regulatory_flags |= REGULATORY_IGNORE_STALE_KICKOFF;
+@@ -883,6 +913,9 @@ void cfg80211_unregister_wdev(struct wireless_dev *wdev)
+ 		cfg80211_mlme_purge_registrations(wdev);
+ 		cfg80211_stop_p2p_device(rdev, wdev);
+ 		break;
++	case NL80211_IFTYPE_NAN:
++		cfg80211_stop_nan(rdev, wdev);
++		break;
+ 	default:
+ 		WARN_ON_ONCE(1);
+ 		break;
+@@ -946,6 +979,7 @@ void __cfg80211_leave(struct cfg80211_registered_device *rdev,
+ 		/* must be handled by mac80211/driver, has no APIs */
+ 		break;
+ 	case NL80211_IFTYPE_P2P_DEVICE:
++	case NL80211_IFTYPE_NAN:
+ 		/* cannot happen, has no netdev */
+ 		break;
+ 	case NL80211_IFTYPE_AP_VLAN:
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 022ccad..17de79b 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -476,6 +476,9 @@ void cfg80211_leave(struct cfg80211_registered_device *rdev,
+ void cfg80211_stop_p2p_device(struct cfg80211_registered_device *rdev,
+ 			      struct wireless_dev *wdev);
+ 
++void cfg80211_stop_nan(struct cfg80211_registered_device *rdev,
++		       struct wireless_dev *wdev);
++
+ #define CFG80211_MAX_NUM_DIFFERENT_CHANNELS 10
+ 
+ #ifdef CONFIG_CFG80211_DEVELOPER_WARNINGS
+diff --git a/net/wireless/mlme.c b/net/wireless/mlme.c
+index ff32825..2a3eb8a 100644
+--- a/net/wireless/mlme.c
++++ b/net/wireless/mlme.c
+@@ -634,6 +634,7 @@ int cfg80211_mlme_mgmt_tx(struct cfg80211_registered_device *rdev,
+ 			 * fall through, P2P device only supports
+ 			 * public action frames
+ 			 */
++		case NL80211_IFTYPE_NAN:
+ 		default:
+ 			err = -EOPNOTSUPP;
+ 			break;
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index c4233a0..5b1c100 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -403,6 +403,8 @@ static const struct nla_policy nl80211_policy[NUM_NL80211_ATTR] = {
+ 	[NL80211_ATTR_REG_INDOOR] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_PBSS] = { .type = NLA_FLAG },
+ 	[NL80211_ATTR_BSS_SELECT] = { .type = NLA_NESTED },
++	[NL80211_ATTR_NAN_MASTER_PREF] = { .type = NLA_U8 },
++	[NL80211_ATTR_NAN_DUAL] = { .type = NLA_U8 },
+ };
+ 
+ /* policy for the key attributes */
+@@ -911,6 +913,7 @@ static int nl80211_key_allowed(struct wireless_dev *wdev)
+ 	case NL80211_IFTYPE_UNSPECIFIED:
+ 	case NL80211_IFTYPE_OCB:
+ 	case NL80211_IFTYPE_MONITOR:
++	case NL80211_IFTYPE_NAN:
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 	case NL80211_IFTYPE_WDS:
+ 	case NUM_NL80211_IFTYPES:
+@@ -2692,7 +2695,7 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 	    !(rdev->wiphy.interface_modes & (1 << type)))
+ 		return -EOPNOTSUPP;
+ 
+-	if ((type == NL80211_IFTYPE_P2P_DEVICE ||
++	if ((type == NL80211_IFTYPE_P2P_DEVICE || type == NL80211_IFTYPE_NAN ||
+ 	     rdev->wiphy.features & NL80211_FEATURE_MAC_ON_CREATE) &&
+ 	    info->attrs[NL80211_ATTR_MAC]) {
+ 		nla_memcpy(params.macaddr, info->attrs[NL80211_ATTR_MAC],
+@@ -2748,9 +2751,10 @@ static int nl80211_new_interface(struct sk_buff *skb, struct genl_info *info)
+ 		       wdev->mesh_id_up_len);
+ 		wdev_unlock(wdev);
+ 		break;
++	case NL80211_IFTYPE_NAN:
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 		/*
+-		 * P2P Device doesn't have a netdev, so doesn't go
++		 * P2P Device and NAN do not have a netdev, so don't go
+ 		 * through the netdev notifier and must be added here
+ 		 */
+ 		mutex_init(&wdev->mtx);
+@@ -5906,6 +5910,9 @@ static int nl80211_trigger_scan(struct sk_buff *skb, struct genl_info *info)
+ 
+ 	wiphy = &rdev->wiphy;
+ 
++	if (wdev->iftype == NL80211_IFTYPE_NAN)
++		return -EOPNOTSUPP;
++
+ 	if (!rdev->ops->scan)
+ 		return -EOPNOTSUPP;
+ 
+@@ -8629,6 +8636,7 @@ static int nl80211_register_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 	case NL80211_IFTYPE_P2P_GO:
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 		break;
++	case NL80211_IFTYPE_NAN:
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+@@ -8674,6 +8682,7 @@ static int nl80211_tx_mgmt(struct sk_buff *skb, struct genl_info *info)
+ 	case NL80211_IFTYPE_MESH_POINT:
+ 	case NL80211_IFTYPE_P2P_GO:
+ 		break;
++	case NL80211_IFTYPE_NAN:
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+@@ -8790,6 +8799,7 @@ static int nl80211_tx_mgmt_cancel_wait(struct sk_buff *skb, struct genl_info *in
+ 	case NL80211_IFTYPE_P2P_GO:
+ 	case NL80211_IFTYPE_P2P_DEVICE:
+ 		break;
++	case NL80211_IFTYPE_NAN:
+ 	default:
+ 		return -EOPNOTSUPP;
+ 	}
+@@ -10131,6 +10141,60 @@ static int nl80211_stop_p2p_device(struct sk_buff *skb, struct genl_info *info)
+ 	return 0;
+ }
+ 
++static int nl80211_start_nan(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct wireless_dev *wdev = info->user_ptr[1];
++	struct cfg80211_nan_conf conf = {};
++	int err;
++
++	if (wdev->iftype != NL80211_IFTYPE_NAN)
++		return -EOPNOTSUPP;
++
++	if (wdev->nan_started)
++		return -EEXIST;
++
++	if (rfkill_blocked(rdev->rfkill))
++		return -ERFKILL;
++
++	if (!info->attrs[NL80211_ATTR_NAN_MASTER_PREF])
++		return -EINVAL;
++
++	if (!info->attrs[NL80211_ATTR_NAN_DUAL])
++		return -EINVAL;
++
++	conf.master_pref =
++		nla_get_u8(info->attrs[NL80211_ATTR_NAN_MASTER_PREF]);
++	if (!conf.master_pref)
++		return -EINVAL;
++
++	conf.dual = nla_get_u8(info->attrs[NL80211_ATTR_NAN_DUAL]);
++	if (conf.dual > NL80211_NAN_BAND_MAX)
++		return -EINVAL;
++
++	err = rdev_start_nan(rdev, wdev, &conf);
++	if (err)
++		return err;
++
++	wdev->nan_started = true;
++	rdev->opencount++;
++
++	return 0;
++}
++
++static int nl80211_stop_nan(struct sk_buff *skb, struct genl_info *info)
++{
++	struct cfg80211_registered_device *rdev = info->user_ptr[0];
++	struct wireless_dev *wdev = info->user_ptr[1];
++
++	if (wdev->iftype != NL80211_IFTYPE_NAN)
++		return -EOPNOTSUPP;
++
++	cfg80211_stop_nan(rdev, wdev);
++
++	return 0;
++}
++
+ static int nl80211_get_protocol_features(struct sk_buff *skb,
+ 					 struct genl_info *info)
+ {
+@@ -10285,7 +10349,8 @@ static int nl80211_vendor_cmd(struct sk_buff *skb, struct genl_info *info)
+ 				if (wdev->netdev &&
+ 				    !netif_running(wdev->netdev))
+ 					return -ENETDOWN;
+-				if (!wdev->netdev && !wdev->p2p_started)
++				if (!wdev->netdev && !wdev->p2p_started &&
++				    !wdev->nan_started)
+ 					return -ENETDOWN;
+ 			}
+ 
+@@ -10832,7 +10897,14 @@ static int nl80211_pre_doit(const struct genl_ops *ops, struct sk_buff *skb,
+ 
+ 			dev_hold(dev);
+ 		} else if (ops->internal_flags & NL80211_FLAG_CHECK_NETDEV_UP) {
+-			if (!wdev->p2p_started) {
++			if (wdev->iftype == NL80211_IFTYPE_P2P_DEVICE &&
++			    !wdev->p2p_started) {
++				if (rtnl)
++					rtnl_unlock();
++				return -ENETDOWN;
++			}
++			if (wdev->iftype == NL80211_IFTYPE_NAN &&
++			    !wdev->nan_started) {
+ 				if (rtnl)
+ 					rtnl_unlock();
+ 				return -ENETDOWN;
+@@ -11466,6 +11538,22 @@ static const struct genl_ops nl80211_ops[] = {
+ 				  NL80211_FLAG_NEED_RTNL,
+ 	},
+ 	{
++		.cmd = NL80211_CMD_START_NAN,
++		.doit = nl80211_start_nan,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_WDEV |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++	{
++		.cmd = NL80211_CMD_STOP_NAN,
++		.doit = nl80211_stop_nan,
++		.policy = nl80211_policy,
++		.flags = GENL_ADMIN_PERM,
++		.internal_flags = NL80211_FLAG_NEED_WDEV_UP |
++				  NL80211_FLAG_NEED_RTNL,
++	},
++	{
+ 		.cmd = NL80211_CMD_SET_MCAST_RATE,
+ 		.doit = nl80211_set_mcast_rate,
+ 		.policy = nl80211_policy,
+diff --git a/net/wireless/rdev-ops.h b/net/wireless/rdev-ops.h
+index 8ae0c04..b081261 100644
+--- a/net/wireless/rdev-ops.h
++++ b/net/wireless/rdev-ops.h
+@@ -887,6 +887,26 @@ static inline void rdev_stop_p2p_device(struct cfg80211_registered_device *rdev,
+ 	trace_rdev_return_void(&rdev->wiphy);
+ }
+ 
++static inline int rdev_start_nan(struct cfg80211_registered_device *rdev,
++				 struct wireless_dev *wdev,
++				 struct cfg80211_nan_conf *conf)
++{
++	int ret;
++
++	trace_rdev_start_nan(&rdev->wiphy, wdev, conf);
++	ret = rdev->ops->start_nan(&rdev->wiphy, wdev, conf);
++	trace_rdev_return_int(&rdev->wiphy, ret);
++	return ret;
++}
++
++static inline void rdev_stop_nan(struct cfg80211_registered_device *rdev,
++				 struct wireless_dev *wdev)
++{
++	trace_rdev_stop_nan(&rdev->wiphy, wdev);
++	rdev->ops->stop_nan(&rdev->wiphy, wdev);
++	trace_rdev_return_void(&rdev->wiphy);
++}
++
+ static inline int rdev_set_mac_acl(struct cfg80211_registered_device *rdev,
+ 				   struct net_device *dev,
+ 				   struct cfg80211_acl_data *params)
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 09b242b..39fbf9a 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -1887,6 +1887,33 @@ DEFINE_EVENT(wiphy_wdev_evt, rdev_stop_p2p_device,
+ 	TP_ARGS(wiphy, wdev)
+ );
+ 
++TRACE_EVENT(rdev_start_nan,
++	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev,
++		 struct cfg80211_nan_conf *conf),
++	TP_ARGS(wiphy, wdev, conf),
++	TP_STRUCT__entry(
++		WIPHY_ENTRY
++		WDEV_ENTRY
++		__field(u8, master_pref)
++		__field(u8, dual);
++	),
++	TP_fast_assign(
++		WIPHY_ASSIGN;
++		WDEV_ASSIGN;
++		__entry->master_pref = conf->master_pref;
++		__entry->dual = conf->dual;
++	),
++	TP_printk(WIPHY_PR_FMT ", " WDEV_PR_FMT
++		  ", master preference: %u, dual: %d",
++		  WIPHY_PR_ARG, WDEV_PR_ARG, __entry->master_pref,
++		  __entry->dual)
++);
++
++DEFINE_EVENT(wiphy_wdev_evt, rdev_stop_nan,
++	TP_PROTO(struct wiphy *wiphy, struct wireless_dev *wdev),
++	TP_ARGS(wiphy, wdev)
++);
++
+ TRACE_EVENT(rdev_set_mac_acl,
+ 	TP_PROTO(struct wiphy *wiphy, struct net_device *netdev,
+ 		 struct cfg80211_acl_data *params),
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index c7f6820..bdf0c40 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1003,8 +1003,9 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 	if (otype == NL80211_IFTYPE_AP_VLAN)
+ 		return -EOPNOTSUPP;
+ 
+-	/* cannot change into P2P device type */
+-	if (ntype == NL80211_IFTYPE_P2P_DEVICE)
++	/* cannot change into P2P device or nan */
++	if (ntype == NL80211_IFTYPE_P2P_DEVICE ||
++	    ntype == NL80211_IFTYPE_NAN)
+ 		return -EOPNOTSUPP;
+ 
+ 	if (!rdev->ops->change_virtual_intf ||
+@@ -1083,6 +1084,7 @@ int cfg80211_change_iface(struct cfg80211_registered_device *rdev,
+ 			/* not happening */
+ 			break;
+ 		case NL80211_IFTYPE_P2P_DEVICE:
++		case NL80211_IFTYPE_NAN:
+ 			WARN_ON(1);
+ 			break;
+ 		}
 -- 
-2.1.4
+2.5.0
 
