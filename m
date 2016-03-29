@@ -1,131 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:36978 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751499AbcCRIal (ORCPT
+Received: from mail-oi0-f49.google.com ([209.85.218.49]:33989 "EHLO
+	mail-oi0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756730AbcC2K4a convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 04:30:41 -0400
-Received: by mail-wm0-f48.google.com with SMTP id p65so26299569wmp.0
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2016 01:30:40 -0700 (PDT)
-From: Vishal Thanki <vishalthanki@gmail.com>
-To: sgruszka@redhat.com, helmut.schaa@googlemail.com,
-	linux-wireless@vger.kernel.org
-Cc: Vishal Thanki <vishalthanki@gmail.com>
-Subject: [PATCH v3] rt2x00usb: Use usb anchor to manage URB
-Date: Fri, 18 Mar 2016 09:30:36 +0100
-Message-Id: <1458289836-7219-1-git-send-email-vishalthanki@gmail.com> (sfid-20160318_093223_505722_8E30B49A)
+	Tue, 29 Mar 2016 06:56:30 -0400
+Received: by mail-oi0-f49.google.com with SMTP id o62so16106797oig.1
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2016 03:56:29 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <CABicQ-WPZ39iBc_JVUU-vm2NNCq50rhEKXk6KmqQ7s3-uYgbkQ@mail.gmail.com>
+References: <1458547622-1632-1-git-send-email-wnhuang@google.com>
+	<87d1qogm50.fsf@kamboji.qca.qualcomm.com>
+	<CABicQ-WPZ39iBc_JVUU-vm2NNCq50rhEKXk6KmqQ7s3-uYgbkQ@mail.gmail.com>
+Date: Tue, 29 Mar 2016 18:56:29 +0800
+Message-ID: <CABicQ-UYpy7JLUntx74Hai93WDpa4uFKNDWQi7788m_jyRL4iA@mail.gmail.com> (sfid-20160329_125649_267855_E36EC014)
+Subject: Re: [PATCH] mwifiex: advertise low priority scan feature
+From: Wei-Ning Huang <wnhuang@google.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Daniel Kurtz <djkurtz@chromium.org>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	netdev@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-With current driver, it is observed that a URB is not
-completed while the USB disconnect is initiated. Due to
-that, the URB completion hanlder is trying to access
-the resource which was freed as a part of USB disconnect.
-Managing the URBs with anchor will make sure that all
-the URBs are handled gracefully before device gets
-disconnected.
+I've resent the patch here: https://patchwork.kernel.org/patch/8637861/
+Thanks!
 
-Signed-off-by: Vishal Thanki <vishalthanki@gmail.com>
----
- drivers/net/wireless/ralink/rt2x00/rt2x00.h    |  3 +++
- drivers/net/wireless/ralink/rt2x00/rt2x00usb.c | 23 +++++++++++++++++++++--
- 2 files changed, 24 insertions(+), 2 deletions(-)
+Wei-Ning
 
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00.h b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-index 3282ddb..9426c75 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00.h
-@@ -38,6 +38,7 @@
- #include <linux/kfifo.h>
- #include <linux/hrtimer.h>
- #include <linux/average.h>
-+#include <linux/usb.h>
- 
- #include <net/mac80211.h>
- 
-@@ -1001,6 +1002,8 @@ struct rt2x00_dev {
- 
- 	/* Extra TX headroom required for alignment purposes. */
- 	unsigned int extra_tx_headroom;
-+
-+	struct usb_anchor *anchor;
- };
- 
- struct rt2x00_bar_list_entry {
-diff --git a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-index 7627af6..bba1430 100644
---- a/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-+++ b/drivers/net/wireless/ralink/rt2x00/rt2x00usb.c
-@@ -171,8 +171,11 @@ static void rt2x00usb_register_read_async_cb(struct urb *urb)
- {
- 	struct rt2x00_async_read_data *rd = urb->context;
- 	if (rd->callback(rd->rt2x00dev, urb->status, le32_to_cpu(rd->reg))) {
--		if (usb_submit_urb(urb, GFP_ATOMIC) < 0)
-+		usb_anchor_urb(urb, rd->rt2x00dev->anchor);
-+		if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
-+			usb_unanchor_urb(urb);
- 			kfree(rd);
-+		}
- 	} else
- 		kfree(rd);
- }
-@@ -206,8 +209,11 @@ void rt2x00usb_register_read_async(struct rt2x00_dev *rt2x00dev,
- 	usb_fill_control_urb(urb, usb_dev, usb_rcvctrlpipe(usb_dev, 0),
- 			     (unsigned char *)(&rd->cr), &rd->reg, sizeof(rd->reg),
- 			     rt2x00usb_register_read_async_cb, rd);
--	if (usb_submit_urb(urb, GFP_ATOMIC) < 0)
-+	usb_anchor_urb(urb, rt2x00dev->anchor);
-+	if (usb_submit_urb(urb, GFP_ATOMIC) < 0) {
-+		usb_unanchor_urb(urb);
- 		kfree(rd);
-+	}
- 	usb_free_urb(urb);
- }
- EXPORT_SYMBOL_GPL(rt2x00usb_register_read_async);
-@@ -313,8 +319,10 @@ static bool rt2x00usb_kick_tx_entry(struct queue_entry *entry, void *data)
- 			  entry->skb->data, length,
- 			  rt2x00usb_interrupt_txdone, entry);
- 
-+	usb_anchor_urb(entry_priv->urb, rt2x00dev->anchor);
- 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
- 	if (status) {
-+		usb_unanchor_urb(entry_priv->urb);
- 		if (status == -ENODEV)
- 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
-@@ -402,8 +410,10 @@ static bool rt2x00usb_kick_rx_entry(struct queue_entry *entry, void *data)
- 			  entry->skb->data, entry->skb->len,
- 			  rt2x00usb_interrupt_rxdone, entry);
- 
-+	usb_anchor_urb(entry_priv->urb, rt2x00dev->anchor);
- 	status = usb_submit_urb(entry_priv->urb, GFP_ATOMIC);
- 	if (status) {
-+		usb_unanchor_urb(entry_priv->urb);
- 		if (status == -ENODEV)
- 			clear_bit(DEVICE_STATE_PRESENT, &rt2x00dev->flags);
- 		set_bit(ENTRY_DATA_IO_FAILED, &entry->flags);
-@@ -734,6 +744,8 @@ void rt2x00usb_uninitialize(struct rt2x00_dev *rt2x00dev)
- {
- 	struct data_queue *queue;
- 
-+	usb_kill_anchored_urbs(rt2x00dev->anchor);
-+
- 	queue_for_each(rt2x00dev, queue)
- 		rt2x00usb_free_entries(queue);
- }
-@@ -818,6 +830,13 @@ int rt2x00usb_probe(struct usb_interface *usb_intf,
- 	if (retval)
- 		goto exit_free_reg;
- 
-+	rt2x00dev->anchor = devm_kmalloc(&usb_dev->dev,
-+					sizeof(struct usb_anchor),
-+					GFP_KERNEL);
-+	if (!rt2x00dev->anchor)
-+		goto exit_free_reg;
-+
-+	init_usb_anchor(rt2x00dev->anchor);
- 	return 0;
- 
- exit_free_reg:
+On Tue, Mar 22, 2016 at 12:12 PM, Wei-Ning Huang <wnhuang@google.com> wrote:
+> Hi Kalle,
+>
+> Thanks for the review. I accidentally removed the s-o-b line from
+> akarwar in this version.
+> The original patch can be found at:
+> https://chromium-review.googlesource.com/#/c/246052/
+> I've resent a new one.
+>
+> Wei-Ning
+>
+> On Mon, Mar 21, 2016 at 6:28 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Wei-Ning Huang <wnhuang@chromium.org> writes:
+>>
+>>> From: Amitkumar Karwar <akarwar@marvell.com>
+>>>
+>>> Low priority scan handling code which delays or aborts scan
+>>> operation based on Tx traffic is removed recently. The reason
+>>> is firmware already takes care of it in our new feature scan
+>>> channel gap. Hence we should advertise low priority scan
+>>> support to cfg80211.
+>>>
+>>> This patch fixes a problem in which OBSS scan request from
+>>> wpa_supplicant was being rejected by cfg80211.
+>>>
+>>> Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
+>>
+>> The From line states that this is written by Amitkumar but there's no
+>> Signed-off-By line from him. I can't take this without that, please
+>> resend.
+>>
+>> (Wei-Ning's s-o-b line is correct, I just need also Amitkumar's line.)
+>>
+>> --
+>> Kalle Valo
+>
+>
+>
+> --
+> Wei-Ning Huang, 黃偉寧 | Software Engineer, Google Inc., Taiwan |
+> wnhuang@google.com | Cell: +886 910-380678
+
+
+
 -- 
-2.4.3
-
+Wei-Ning Huang, 黃偉寧 | Software Engineer, Google Inc., Taiwan |
+wnhuang@google.com | Cell: +886 910-380678
