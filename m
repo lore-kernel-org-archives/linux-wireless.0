@@ -1,202 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45282 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752381AbcCBCFJ (ORCPT
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:33246 "EHLO
+	mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755967AbcC2GGu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 1 Mar 2016 21:05:09 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH v3 1/8] ath9k: define correct GPIO numbers and bits mask
-Date: Wed,  2 Mar 2016 10:04:15 +0800
-Message-Id: <1456884262-28194-2-git-send-email-miaoqing@codeaurora.org> (sfid-20160302_030519_187509_E0B5198C)
-In-Reply-To: <1456884262-28194-1-git-send-email-miaoqing@codeaurora.org>
-References: <1456884262-28194-1-git-send-email-miaoqing@codeaurora.org>
+	Tue, 29 Mar 2016 02:06:50 -0400
+Received: by mail-pf0-f178.google.com with SMTP id 4so6637350pfd.0
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2016 23:06:50 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: [PATCH 11/16] wcn36xx: Use allocated self sta index instead of hard coded
+Date: Mon, 28 Mar 2016 23:06:28 -0700
+Message-Id: <1459231593-360-12-git-send-email-bjorn.andersson@linaro.org> (sfid-20160329_080950_029777_51878E67)
+In-Reply-To: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
+References: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-Define correct GPIO numbers and MASK bits to indicate the WMAC
-GPIO resource.
-
-Allow SOC chips(AR9340, AR9531, AR9550, AR9561) to access all GPIOs
-which rely on gpiolib framework. But restrict SOC AR9330 only to
-access WMAC GPIO which has the same design with the old chips.
-
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 ---
- drivers/net/wireless/ath/ath9k/hw.c  | 70 ++++++++++++++++++++++++++++--------
- drivers/net/wireless/ath/ath9k/hw.h  |  1 +
- drivers/net/wireless/ath/ath9k/reg.h | 42 ++++++++++++++++++++--
- 3 files changed, 96 insertions(+), 17 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/smd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index 257f46e..0e80b3f 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2375,6 +2375,61 @@ static bool ath9k_hw_dfs_tested(struct ath_hw *ah)
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index ce764cce1a3e..8b304b305e69 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -200,7 +200,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
+ 		sta_params->sta_index = WCN36XX_HAL_STA_INVALID_IDX;
+ 	} else {
+ 		sta_params->type = 0;
+-		sta_params->sta_index = 1;
++		sta_params->sta_index = vif_priv->self_sta_index;
  	}
- }
  
-+static void ath9k_gpio_cap_init(struct ath_hw *ah)
-+{
-+	struct ath9k_hw_capabilities *pCap = &ah->caps;
-+
-+	if (AR_SREV_9271(ah)) {
-+		pCap->num_gpio_pins = AR9271_NUM_GPIO;
-+		pCap->gpio_mask = AR9271_GPIO_MASK;
-+	} else if (AR_DEVID_7010(ah)) {
-+		pCap->num_gpio_pins = AR7010_NUM_GPIO;
-+		pCap->gpio_mask = AR7010_GPIO_MASK;
-+	} else if (AR_SREV_9287(ah)) {
-+		pCap->num_gpio_pins = AR9287_NUM_GPIO;
-+		pCap->gpio_mask = AR9287_GPIO_MASK;
-+	} else if (AR_SREV_9285(ah)) {
-+		pCap->num_gpio_pins = AR9285_NUM_GPIO;
-+		pCap->gpio_mask = AR9285_GPIO_MASK;
-+	} else if (AR_SREV_9280(ah)) {
-+		pCap->num_gpio_pins = AR9280_NUM_GPIO;
-+		pCap->gpio_mask = AR9280_GPIO_MASK;
-+	} else if (AR_SREV_9300(ah)) {
-+		pCap->num_gpio_pins = AR9300_NUM_GPIO;
-+		pCap->gpio_mask = AR9300_GPIO_MASK;
-+	} else if (AR_SREV_9330(ah)) {
-+		pCap->num_gpio_pins = AR9330_NUM_GPIO;
-+		pCap->gpio_mask = AR9330_GPIO_MASK;
-+	} else if (AR_SREV_9340(ah)) {
-+		pCap->num_gpio_pins = AR9340_NUM_GPIO;
-+		pCap->gpio_mask = AR9340_GPIO_MASK;
-+	} else if (AR_SREV_9462(ah)) {
-+		pCap->num_gpio_pins = AR9462_NUM_GPIO;
-+		pCap->gpio_mask = AR9462_GPIO_MASK;
-+	} else if (AR_SREV_9485(ah)) {
-+		pCap->num_gpio_pins = AR9485_NUM_GPIO;
-+		pCap->gpio_mask = AR9485_GPIO_MASK;
-+	} else if (AR_SREV_9531(ah)) {
-+		pCap->num_gpio_pins = AR9531_NUM_GPIO;
-+		pCap->gpio_mask = AR9531_GPIO_MASK;
-+	} else if (AR_SREV_9550(ah)) {
-+		pCap->num_gpio_pins = AR9550_NUM_GPIO;
-+		pCap->gpio_mask = AR9550_GPIO_MASK;
-+	} else if (AR_SREV_9561(ah)) {
-+		pCap->num_gpio_pins = AR9561_NUM_GPIO;
-+		pCap->gpio_mask = AR9561_GPIO_MASK;
-+	} else if (AR_SREV_9565(ah)) {
-+		pCap->num_gpio_pins = AR9565_NUM_GPIO;
-+		pCap->gpio_mask = AR9565_GPIO_MASK;
-+	} else if (AR_SREV_9580(ah)) {
-+		pCap->num_gpio_pins = AR9580_NUM_GPIO;
-+		pCap->gpio_mask = AR9580_GPIO_MASK;
-+	} else {
-+		pCap->num_gpio_pins = AR_NUM_GPIO;
-+		pCap->gpio_mask = AR_GPIO_MASK;
-+	}
-+}
-+
- int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- {
- 	struct ath9k_hw_capabilities *pCap = &ah->caps;
-@@ -2468,20 +2523,7 @@ int ath9k_hw_fill_cap_info(struct ath_hw *ah)
- 	else
- 		pCap->hw_caps &= ~ATH9K_HW_CAP_HT;
- 
--	if (AR_SREV_9271(ah))
--		pCap->num_gpio_pins = AR9271_NUM_GPIO;
--	else if (AR_DEVID_7010(ah))
--		pCap->num_gpio_pins = AR7010_NUM_GPIO;
--	else if (AR_SREV_9300_20_OR_LATER(ah))
--		pCap->num_gpio_pins = AR9300_NUM_GPIO;
--	else if (AR_SREV_9287_11_OR_LATER(ah))
--		pCap->num_gpio_pins = AR9287_NUM_GPIO;
--	else if (AR_SREV_9285_12_OR_LATER(ah))
--		pCap->num_gpio_pins = AR9285_NUM_GPIO;
--	else if (AR_SREV_9280_20_OR_LATER(ah))
--		pCap->num_gpio_pins = AR928X_NUM_GPIO;
--	else
--		pCap->num_gpio_pins = AR_NUM_GPIO;
-+	ath9k_gpio_cap_init(ah);
- 
- 	if (AR_SREV_9160_10_OR_LATER(ah) || AR_SREV_9100(ah))
- 		pCap->rts_aggr_limit = ATH_AMPDU_LIMIT_MAX;
-diff --git a/drivers/net/wireless/ath/ath9k/hw.h b/drivers/net/wireless/ath/ath9k/hw.h
-index 831a544..c0740d6 100644
---- a/drivers/net/wireless/ath/ath9k/hw.h
-+++ b/drivers/net/wireless/ath/ath9k/hw.h
-@@ -301,6 +301,7 @@ struct ath9k_hw_capabilities {
- 	u8 max_txchains;
- 	u8 max_rxchains;
- 	u8 num_gpio_pins;
-+	u32 gpio_mask;
- 	u8 rx_hp_qdepth;
- 	u8 rx_lp_qdepth;
- 	u8 rx_status_len;
-diff --git a/drivers/net/wireless/ath/ath9k/reg.h b/drivers/net/wireless/ath/ath9k/reg.h
-index caba54d..8903f70 100644
---- a/drivers/net/wireless/ath/ath9k/reg.h
-+++ b/drivers/net/wireless/ath/ath9k/reg.h
-@@ -983,6 +983,10 @@
- #define AR_SREV_9561(_ah) \
- 	(((_ah)->hw_version.macVersion == AR_SREV_VERSION_9561))
- 
-+#define AR_SREV_SOC(_ah) \
-+	(AR_SREV_9340(_ah) || AR_SREV_9531(_ah) || AR_SREV_9550(ah) || \
-+	 AR_SREV_9561(ah))
-+
- /* NOTE: When adding chips newer than Peacock, add chip check here */
- #define AR_SREV_9580_10_OR_LATER(_ah) \
- 	(AR_SREV_9580(_ah))
-@@ -1102,14 +1106,46 @@ enum {
- 
- #define AR_PCIE_PHY_REG3			 0x18c08
- 
-+/* Define correct GPIO numbers and MASK bits to indicate the WMAC
-+ * GPIO resource.
-+ * Allow SOC chips(AR9340, AR9531, AR9550, AR9561) to access all GPIOs
-+ * which rely on gpiolib framework. But restrict SOC AR9330 only to
-+ * access WMAC GPIO which has the same design with the old chips.
-+ */
- #define AR_NUM_GPIO                              14
--#define AR928X_NUM_GPIO                          10
-+#define AR9280_NUM_GPIO                          10
- #define AR9285_NUM_GPIO                          12
--#define AR9287_NUM_GPIO                          11
-+#define AR9287_NUM_GPIO                          10
- #define AR9271_NUM_GPIO                          16
--#define AR9300_NUM_GPIO                          17
-+#define AR9300_NUM_GPIO                          16
-+#define AR9330_NUM_GPIO				 16
-+#define AR9340_NUM_GPIO				 23
-+#define AR9462_NUM_GPIO				 10
-+#define AR9485_NUM_GPIO				 12
-+#define AR9531_NUM_GPIO				 18
-+#define AR9550_NUM_GPIO				 24
-+#define AR9561_NUM_GPIO				 23
-+#define AR9565_NUM_GPIO				 12
-+#define AR9580_NUM_GPIO				 16
- #define AR7010_NUM_GPIO                          16
- 
-+#define AR_GPIO_MASK				 0x00003FFF
-+#define AR9271_GPIO_MASK			 0x0000FFFF
-+#define AR9280_GPIO_MASK			 0x000003FF
-+#define AR9285_GPIO_MASK			 0x00000FFF
-+#define AR9287_GPIO_MASK			 0x000003FF
-+#define AR9300_GPIO_MASK			 0x0000F4FF
-+#define AR9330_GPIO_MASK			 0x0000F4FF
-+#define AR9340_GPIO_MASK			 0x0000000F
-+#define AR9462_GPIO_MASK			 0x000003FF
-+#define AR9485_GPIO_MASK			 0x00000FFF
-+#define AR9531_GPIO_MASK			 0x0000000F
-+#define AR9550_GPIO_MASK			 0x0000000F
-+#define AR9561_GPIO_MASK			 0x0000000F
-+#define AR9565_GPIO_MASK			 0x00000FFF
-+#define AR9580_GPIO_MASK			 0x0000F4FF
-+#define AR7010_GPIO_MASK			 0x0000FFFF
-+
- #define AR_GPIO_IN_OUT                           (AR_SREV_9340(ah) ? 0x4028 : 0x4048)
- #define AR_GPIO_IN_VAL                           0x0FFFC000
- #define AR_GPIO_IN_VAL_S                         14
+ 	sta_params->listen_interval = WCN36XX_LISTEN_INTERVAL(wcn);
 -- 
-1.9.1
+2.5.0
 
