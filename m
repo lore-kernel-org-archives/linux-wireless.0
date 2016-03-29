@@ -1,73 +1,98 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:13876 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:15427 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755989AbcCDPhd convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1756678AbcC2Kxu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 10:37:33 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "michal.kazior@tieto.com" <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH 10/13] ath10k: implement flushing of pending frames in
- txqs
-Date: Fri, 4 Mar 2016 15:37:28 +0000
-Message-ID: <87twkmw8y5.fsf@kamboji.qca.qualcomm.com> (sfid-20160304_163737_033554_0C67A636)
-References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
-	<1453384006-31907-11-git-send-email-michal.kazior@tieto.com>
-	<87h9gmy538.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQmgMBfz+Dkf-+0gDHvnhk5OA4_ZGZgwYDKXG5yP-xMRYw@mail.gmail.com>
-In-Reply-To: <CA+BoTQmgMBfz+Dkf-+0gDHvnhk5OA4_ZGZgwYDKXG5yP-xMRYw@mail.gmail.com>	(Michal
- Kazior's message of "Fri, 4 Mar 2016 10:52:04 +0100")
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 29 Mar 2016 06:53:50 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 1/2] cfg80211: Add option to specify previous BSSID for Connect command
+Date: Tue, 29 Mar 2016 13:53:27 +0300
+Message-ID: <1459248808-16412-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20160329_125354_068745_0D2F178B)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+This extends NL80211_CMD_CONNECT to allow the NL80211_ATTR_PREV_BSSID
+attribute to be used similarly to way this was already allowed with
+NL80211_CMD_ASSOCIATE. This allows user space to request reassociation
+(instead of association) when already connected to an AP. This provides
+an option to reassociate within an ESS without having to disconnect and
+associate with the AP.
 
-> On 4 March 2016 at 10:17, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> Firmware supporting pull-push tx model may request
->>> a switch between modes. When switching from
->>> pull-push to push-only it will be necessary to
->>> flush all pending frames. The code will do that
->>> once other bits that actually trigger it are added.
->>>
->>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->>
->> This fails to apply:
->>
->> fatal: sha1 information is lacking or useless (drivers/net/wireless/ath/ath10k/htt_rx.c).
->> Repository lacks necessary blobs to fall back on 3-way merge.
->> Cannot fall back to three-way merge.
->> Patch failed at 0010 ath10k: implement flushing of pending frames in txqs
->>
->>> @@ -2370,6 +2371,8 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
->>>               dev_kfree_skb_any(skb);
->>>       }
->>>
->>> +     ath10k_mac_tx_push_pending(ar);
->>> +
->>>       spin_lock_bh(&htt->rx_ring.lock);
->>>       while ((skb = __skb_dequeue(&htt->rx_compl_q))) {
->>>               resp = (struct htt_resp *)skb->data;
->>
->> This hunk seems to be the problem. I could try to fix it myself but the
->> function has changed so I would prefer that you respin.
->
-> This patch is in v1. It's base included some extra patches that
-> weren't in ath.git at the time.
->
-> The v2 patchset has this patch squashed into wake_tx_queue patch and
-> the entire v2 patchset is based solely on ath.git without any extra
-> patches in between. Did patchwork confuse these patchsets?
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+---
+ include/net/cfg80211.h | 2 ++
+ net/wireless/nl80211.c | 4 ++++
+ net/wireless/trace.h   | 6 ++++--
+ 3 files changed, 10 insertions(+), 2 deletions(-)
 
-No, it was me who got confused :) I was accidentally applying v1 instead
-of v2.
-
-But v2 also has conflicts with ath-next. I need to first update my trees
-to get latest cfg80211/mac80211 and then I'll try again.
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0bbfbf3..5fbb14d 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1923,6 +1923,7 @@ struct cfg80211_bss_selection {
+  * @pbss: if set, connect to a PCP instead of AP. Valid for DMG
+  *	networks.
+  * @bss_select: criteria to be used for BSS selection.
++ * @prev_bssid: previous BSSID, if not %NULL use reassociate frame
+  */
+ struct cfg80211_connect_params {
+ 	struct ieee80211_channel *channel;
+@@ -1947,6 +1948,7 @@ struct cfg80211_connect_params {
+ 	struct ieee80211_vht_cap vht_capa_mask;
+ 	bool pbss;
+ 	struct cfg80211_bss_selection bss_select;
++	const u8 *prev_bssid;
+ };
+ 
+ /**
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d6c6449..a98665a 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -8024,6 +8024,10 @@ static int nl80211_connect(struct sk_buff *skb, struct genl_info *info)
+ 		connect.mfp = NL80211_MFP_NO;
+ 	}
+ 
++	if (info->attrs[NL80211_ATTR_PREV_BSSID])
++		connect.prev_bssid =
++			nla_data(info->attrs[NL80211_ATTR_PREV_BSSID]);
++
+ 	if (info->attrs[NL80211_ATTR_WIPHY_FREQ]) {
+ 		connect.channel = nl80211_get_valid_chan(
+ 			wiphy, info->attrs[NL80211_ATTR_WIPHY_FREQ]);
+diff --git a/net/wireless/trace.h b/net/wireless/trace.h
+index 09b242b..8da1fae 100644
+--- a/net/wireless/trace.h
++++ b/net/wireless/trace.h
+@@ -1259,6 +1259,7 @@ TRACE_EVENT(rdev_connect,
+ 		__field(bool, privacy)
+ 		__field(u32, wpa_versions)
+ 		__field(u32, flags)
++		MAC_ENTRY(prev_bssid)
+ 	),
+ 	TP_fast_assign(
+ 		WIPHY_ASSIGN;
+@@ -1270,13 +1271,14 @@ TRACE_EVENT(rdev_connect,
+ 		__entry->privacy = sme->privacy;
+ 		__entry->wpa_versions = sme->crypto.wpa_versions;
+ 		__entry->flags = sme->flags;
++		MAC_ASSIGN(prev_bssid, sme->prev_bssid);
+ 	),
+ 	TP_printk(WIPHY_PR_FMT ", " NETDEV_PR_FMT ", bssid: " MAC_PR_FMT
+ 		  ", ssid: %s, auth type: %d, privacy: %s, wpa versions: %u, "
+-		  "flags: %u",
++		  "flags: %u, previous bssid: " MAC_PR_FMT,
+ 		  WIPHY_PR_ARG, NETDEV_PR_ARG, MAC_PR_ARG(bssid), __entry->ssid,
+ 		  __entry->auth_type, BOOL_TO_STR(__entry->privacy),
+-		  __entry->wpa_versions, __entry->flags)
++		  __entry->wpa_versions, __entry->flags, MAC_PR_ARG(prev_bssid))
+ );
+ 
+ TRACE_EVENT(rdev_set_cqm_rssi_config,
 -- 
-Kalle Valo
+1.9.1
+
