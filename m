@@ -1,54 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:23612 "EHLO mga03.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:51520 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751810AbcCQNDU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 09:03:20 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH 1/4] mac80211: don't start dynamic PS timer if not needed
-Date: Thu, 17 Mar 2016 15:02:52 +0200
-Message-Id: <1458219775-24450-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160317_140324_152589_99C2E41D)
+	id S1755956AbcC2IKA (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2016 04:10:00 -0400
+Message-ID: <1459238994.3217.0.camel@sipsolutions.net> (sfid-20160329_101005_276738_B2A4B115)
+Subject: Re: [PATCH] mac80211: allow same PN for AMSDU sub-frames
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org, Sara Sharon <sara.sharon@intel.com>
+Date: Tue, 29 Mar 2016 10:09:54 +0200
+In-Reply-To: <1457515785-18795-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1457515785-18795-1-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On Wed, 2016-03-09 at 11:29 +0200, Emmanuel Grumbach wrote:
+> From: Sara Sharon <sara.sharon@intel.com>
+> 
+> Some hardware (iwlwifi an example) de-aggregate AMSDUs and
+> copy the IV as is to the generated MPDUs, so the same PN
+> appears in multiple packets without being a replay attack.
+> Do not increment the PN until all the sub-frames are received
+> to accommodate to that.
+> 
+I'll drop this for now since you found an issue with it :)
 
-If the device implements dynamic PS itself, there's no need
-to ever start the dynamic powersave timer on RX.
-
-While at it, fix up some indentation in this code.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/rx.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
-index 9127957..3746ba5 100644
---- a/net/mac80211/rx.c
-+++ b/net/mac80211/rx.c
-@@ -2456,14 +2456,14 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
- 
- 	rx->skb->dev = dev;
- 
--	if (local->ps_sdata && local->hw.conf.dynamic_ps_timeout > 0 &&
-+	if (!ieee80211_hw_check(&local->hw, SUPPORTS_DYNAMIC_PS) &&
-+	    local->ps_sdata && local->hw.conf.dynamic_ps_timeout > 0 &&
- 	    !is_multicast_ether_addr(
- 		    ((struct ethhdr *)rx->skb->data)->h_dest) &&
- 	    (!local->scanning &&
--	     !test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state))) {
--			mod_timer(&local->dynamic_ps_timer, jiffies +
--			 msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
--	}
-+	     !test_bit(SDATA_STATE_OFFCHANNEL, &sdata->state)))
-+		mod_timer(&local->dynamic_ps_timer, jiffies +
-+			  msecs_to_jiffies(local->hw.conf.dynamic_ps_timeout));
- 
- 	ieee80211_deliver_skb(rx);
- 
--- 
-2.5.0
-
+johannes
