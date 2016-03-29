@@ -1,123 +1,188 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:33681 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754631AbcCVJz1 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2016 05:55:27 -0400
-Date: Tue, 22 Mar 2016 02:55:22 -0700
-From: Tina Ruchandani <ruchandani.tina@gmail.com>
-To: y2038@lists.linaro.org
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	arnd@arndb.de, linux-kernel@vger.kernel.org,
-	Kalle Valo <kvalo@codeaurora.org>
-Subject: [PATCH] prism54: isl_38xx: Replace 'struct timeval'
-Message-ID: <20160322095522.GA35392@localhost> (sfid-20160322_105557_081195_E5FE97C9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mga04.intel.com ([192.55.52.120]:36603 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756353AbcC2JfZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2016 05:35:25 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCHv3 RESEND 07/11] cfg80211: add utility functions to clone and free nan_func
+Date: Tue, 29 Mar 2016 12:35:05 +0300
+Message-Id: <1459244109-16038-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160329_113532_849109_E6648D4A)
+In-Reply-To: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-'struct timeval' uses a 32-bit seconds field which will overflow in
-year 2038 and beyond. This patch is part of a larger effort to remove
-all instances of 'struct timeval' from the kernel and replace them
-with 64-bit timekeeping variables.
-The correctness of the code isn't affected by this patch - the seconds
-value being printed would earlier be wrong due to overflow in timeval,
-and now it gets truncated to 32-bit due to the 'long' cast used on
-tv.sec field to prevent compiler warnings. Truly fixing this would 
-require changing the debug print to print more than 8 digits and using 
-a different specifier from %li.
-The patch was build-tested / debugged by removing the
-"if VERBOSE > SHOW_ERROR_MESSAGES" guards.
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
+Add cfg80211_free_nan_func and cfg80211_clone_nan_func. These helper
+functions will be used by mac80211 in the next patch.
+
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/intersil/prism54/isl_38xx.c | 29 +++++++++++++++---------
- 1 file changed, 18 insertions(+), 11 deletions(-)
+ include/net/cfg80211.h |  21 ++++++++++
+ net/wireless/util.c    | 112 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 133 insertions(+)
 
-diff --git a/drivers/net/wireless/intersil/prism54/isl_38xx.c b/drivers/net/wireless/intersil/prism54/isl_38xx.c
-index 333c1a2..e510375 100644
---- a/drivers/net/wireless/intersil/prism54/isl_38xx.c
-+++ b/drivers/net/wireless/intersil/prism54/isl_38xx.c
-@@ -19,6 +19,7 @@
- #include <linux/module.h>
- #include <linux/types.h>
- #include <linux/delay.h>
-+#include <linux/ktime.h>
-
- #include <asm/uaccess.h>
- #include <asm/io.h>
-@@ -113,7 +114,7 @@ isl38xx_trigger_device(int asleep, void __iomem *device_base)
-
- #if VERBOSE > SHOW_ERROR_MESSAGES
- 	u32 counter = 0;
--	struct timeval current_time;
-+	struct timespec64 current_ts64;
- 	DEBUG(SHOW_FUNCTION_CALLS, "isl38xx trigger device\n");
- #endif
-
-@@ -121,22 +122,25 @@ isl38xx_trigger_device(int asleep, void __iomem *device_base)
- 	if (asleep) {
- 		/* device is in powersave, trigger the device for wakeup */
- #if VERBOSE > SHOW_ERROR_MESSAGES
--		do_gettimeofday(&current_time);
-+		ktime_get_real_ts64(&current_ts64);
- 		DEBUG(SHOW_TRACING, "%08li.%08li Device wakeup triggered\n",
--		      current_time.tv_sec, (long)current_time.tv_usec);
-+		      (long)current_ts64.tv_sec,
-+		      (long)(current_ts64.tv_nsec / NSEC_PER_USEC));
-
- 		DEBUG(SHOW_TRACING, "%08li.%08li Device register read %08x\n",
--		      current_time.tv_sec, (long)current_time.tv_usec,
-+		      (long)current_ts64.tv_sec,
-+		      (long)(current_ts64.tv_nsec / NSEC_PER_USEC),
- 		      readl(device_base + ISL38XX_CTRL_STAT_REG));
- #endif
-
- 		reg = readl(device_base + ISL38XX_INT_IDENT_REG);
- 		if (reg == 0xabadface) {
- #if VERBOSE > SHOW_ERROR_MESSAGES
--			do_gettimeofday(&current_time);
-+			ktime_get_real_ts64(&current_ts64);
- 			DEBUG(SHOW_TRACING,
- 			      "%08li.%08li Device register abadface\n",
--			      current_time.tv_sec, (long)current_time.tv_usec);
-+			      (long)current_ts64.tv_sec,
-+			      (long)(current_ts64.tv_nsec / NSEC_PER_USEC));
- #endif
- 			/* read the Device Status Register until Sleepmode bit is set */
- 			while (reg = readl(device_base + ISL38XX_CTRL_STAT_REG),
-@@ -150,12 +154,14 @@ isl38xx_trigger_device(int asleep, void __iomem *device_base)
- #if VERBOSE > SHOW_ERROR_MESSAGES
- 			DEBUG(SHOW_TRACING,
- 			      "%08li.%08li Device register read %08x\n",
--			      current_time.tv_sec, (long)current_time.tv_usec,
-+			      (long)current_ts64.tv_sec,
-+			      (long)(current_ts64.tv_nsec / NSEC_PER_USEC),
- 			      readl(device_base + ISL38XX_CTRL_STAT_REG));
--			do_gettimeofday(&current_time);
-+			ktime_get_real_ts64(&current_ts64);
- 			DEBUG(SHOW_TRACING,
- 			      "%08li.%08li Device asleep counter %i\n",
--			      current_time.tv_sec, (long)current_time.tv_usec,
-+			      (long)current_ts64.tv_sec,
-+			      (long)(current_ts64.tv_nsec / NSEC_PER_USEC),
- 			      counter);
- #endif
- 		}
-@@ -168,9 +174,10 @@ isl38xx_trigger_device(int asleep, void __iomem *device_base)
-
- 		/* perform another read on the Device Status Register */
- 		reg = readl(device_base + ISL38XX_CTRL_STAT_REG);
--		do_gettimeofday(&current_time);
-+		ktime_get_real_ts64(&current_ts64);
- 		DEBUG(SHOW_TRACING, "%08li.%08li Device register read %08x\n",
--		      current_time.tv_sec, (long)current_time.tv_usec, reg);
-+		      (long)current_ts64.tv_sec,
-+		      (long)(current_ts64.tv_nsec / NSEC_PER_USEC), reg);
- #endif
- 	} else {
- 		/* device is (still) awake  */
---
-2.8.0.rc3.226.g39d4020
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 3a94b21..5e972f4 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -5544,6 +5544,27 @@ void cfg80211_nan_func_terminated(struct wireless_dev *wdev,
+ 				  enum nl80211_nan_func_term_reason reason,
+ 				  u64 cookie, gfp_t gfp);
+ 
++/**
++ * cfg80211_free_nan_func_members - free nan function members
++ * @f: NAN function that should be freed
++ *
++ * Frees all the allocated members of the given function, however
++ * it doesn't frees the pointed memory. This function can be only called if @f
++ * was cloned using cfg80211_clone_nan_func_members()
++ */
++void cfg80211_free_nan_func_members(struct cfg80211_nan_func *f);
++
++/**
++ * cfg80211_clone_nan_func_members - clone nan function
++ * @f1: destination
++ * @f2: source
++ *
++ * Clones @f2 to @f1. The function doesn't allocate @f1. Returns 0 on success.
++ * To free @f1's members cfg80211_free_nan_func_members() should be used.
++ */
++int cfg80211_clone_nan_func_members(struct cfg80211_nan_func *f1,
++				    const struct cfg80211_nan_func *f2);
++
+ /* ethtool helper */
+ void cfg80211_get_drvinfo(struct net_device *dev, struct ethtool_drvinfo *info);
+ 
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index bdf0c40..09f07c7 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -1757,6 +1757,118 @@ int cfg80211_get_station(struct net_device *dev, const u8 *mac_addr,
+ }
+ EXPORT_SYMBOL(cfg80211_get_station);
+ 
++void cfg80211_free_nan_func_members(struct cfg80211_nan_func *f)
++{
++	int i;
++
++	kfree(f->serv_spec_info);
++	kfree(f->srf_bf);
++	kfree(f->srf_macs);
++	for (i = 0; i < f->num_rx_filters; i++)
++		kfree(f->rx_filters[i].filter);
++
++	for (i = 0; i < f->num_tx_filters; i++)
++		kfree(f->tx_filters[i].filter);
++
++	kfree(f->rx_filters);
++	kfree(f->tx_filters);
++}
++EXPORT_SYMBOL(cfg80211_free_nan_func_members);
++
++static int
++ieee80211_clone_match_filters(struct cfg80211_nan_func_filter *filt1,
++			      const struct cfg80211_nan_func_filter *filt2,
++			      int num_filters)
++{
++	int i;
++
++	for (i = 0; i < num_filters; i++) {
++		filt1[i].filter = kmemdup(filt2[i].filter, filt2[i].len,
++					  GFP_KERNEL);
++		filt1[i].len = filt2[i].len;
++
++		if (!filt1[i].filter)
++			return -ENOMEM;
++	}
++
++	return 0;
++}
++
++int cfg80211_clone_nan_func_members(struct cfg80211_nan_func *f1,
++				    const struct cfg80211_nan_func *f2)
++{
++	memcpy(f1, f2, sizeof(*f1));
++
++	/* set all pointers to NULL so we can free them in case of failure */
++	f1->serv_spec_info = NULL;
++	f1->srf_bf = NULL;
++	f1->srf_macs = NULL;
++	f1->rx_filters = NULL;
++	f1->tx_filters = NULL;
++	f1->num_rx_filters = 0;
++	f1->num_tx_filters = 0;
++
++	if (f2->serv_spec_info_len) {
++		f1->serv_spec_info = kmemdup(f2->serv_spec_info,
++					     f2->serv_spec_info_len,
++					     GFP_KERNEL);
++		if (!f1->serv_spec_info)
++			goto err;
++	}
++
++	if (f2->srf_bf_len) {
++		f1->srf_bf = kmemdup(f2->srf_bf, f2->srf_bf_len, GFP_KERNEL);
++		if (!f1->srf_bf)
++			goto err;
++	}
++
++	if (f2->srf_num_macs) {
++		f1->srf_macs = kmemdup(f2->srf_macs,
++				       f2->srf_num_macs *
++				       sizeof(*f2->srf_macs),
++				       GFP_KERNEL);
++		if (!f1->srf_macs)
++			goto err;
++	}
++
++	if (f2->num_rx_filters) {
++		f1->rx_filters = kcalloc(f2->num_rx_filters,
++					 sizeof(*f1->rx_filters),
++					 GFP_KERNEL);
++		if (!f1->rx_filters)
++			goto err;
++
++		if (!ieee80211_clone_match_filters(f1->rx_filters,
++						   f2->rx_filters,
++						   f2->num_rx_filters))
++			goto err;
++
++		f1->num_rx_filters = f2->num_rx_filters;
++	}
++
++	if (f2->num_tx_filters) {
++		f1->tx_filters = kcalloc(f2->num_tx_filters,
++					 sizeof(*f1->tx_filters),
++					 GFP_KERNEL);
++		if (!f1->tx_filters)
++			goto err;
++
++		if (!ieee80211_clone_match_filters(f1->tx_filters,
++						   f2->tx_filters,
++						   f2->num_tx_filters))
++			goto err;
++
++		f1->num_tx_filters = f2->num_tx_filters;
++	}
++
++	return 0;
++err:
++	cfg80211_free_nan_func_members(f1);
++
++	return -ENOMEM;
++}
++EXPORT_SYMBOL(cfg80211_clone_nan_func_members);
++
+ /* See IEEE 802.1H for LLC/SNAP encapsulation/decapsulation */
+ /* Ethernet-II snap header (RFC1042 for most EtherTypes) */
+ const unsigned char rfc1042_header[] __aligned(2) =
+-- 
+2.5.0
 
