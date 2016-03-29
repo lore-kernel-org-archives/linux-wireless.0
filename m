@@ -1,49 +1,95 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f176.google.com ([209.85.161.176]:34460 "EHLO
-	mail-yw0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752593AbcCJQpd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 11:45:33 -0500
-Received: by mail-yw0-f176.google.com with SMTP id h129so72371227ywb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 10 Mar 2016 08:45:33 -0800 (PST)
-Subject: Re: New firmware for RT2870
-To: quarkverse <quarkverse@gmail.com>
-References: <56E08615.9060208@lwfinger.net>
- <CAC0d7Bi9VEN2zADV24DyhkZCp-mgLtDDXODUMfHoVzC0is7xMA@mail.gmail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Helmut Schaa <helmut.schaa@googlemail.com>, dan.g.tob@gmail.com
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <56E1A4AB.7040205@lwfinger.net> (sfid-20160310_174537_628562_E4EB9915)
-Date: Thu, 10 Mar 2016 10:45:31 -0600
-MIME-Version: 1.0
-In-Reply-To: <CAC0d7Bi9VEN2zADV24DyhkZCp-mgLtDDXODUMfHoVzC0is7xMA@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mga04.intel.com ([192.55.52.120]:6934 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756317AbcC2Jf2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2016 05:35:28 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCHv3 RESEND 10/11] mac80211: Add API to report nan function match
+Date: Tue, 29 Mar 2016 12:35:08 +0300
+Message-Id: <1459244109-16038-10-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160329_113543_791528_9E603987)
+In-Reply-To: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/09/2016 08:15 PM, quarkverse wrote:
-> I have an RT5370 adapter from Panda Wireless and use it on my Ubuntu
-> 14.04 laptop.
-> It is working fine on my laptop.
->
->>From my laptop:
-> rt2x00lib_request_firmware: Info - Firmware detected - version: 0.29
->
-> I didn't see the warnings reported in the Bug 114151.
->
-> Just curious how to test version 0.36 on my laptop.\\
+From: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
 
-Go to https://bugzilla.kernel.org/show_bug.cgi?id=114151 and copy the attachment 
-to your ~/Downloads directory. Then do the following:
+Provide an API to report nan function match. Mac80211 will lookup the
+corresponding cookie and report the match to cfg80211.
 
-sudo cp /lib/firmware/rt2870.bin /lib/firmware/rt2870.bin_old
-sudo cp ~/Downloads/rt2870.bin /lib/firmware/.
-sudo modprobe -rv rt2x00usb
-sudo modprobe -v rt2x00usb
+Signed-off-by: Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ include/net/mac80211.h | 14 ++++++++++++++
+ net/mac80211/cfg.c     | 28 ++++++++++++++++++++++++++++
+ 2 files changed, 42 insertions(+)
 
-If your testing shows a regression in performance, then you can recover by 
-copying rt2870.bin_old to rt2870.bin in /lib/firmware.
-
-Larry
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index a3cc08f..5ca5b02 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -5686,4 +5686,18 @@ void ieee80211_nan_func_terminated(struct ieee80211_vif *vif,
+ 				   enum nl80211_nan_func_term_reason reason,
+ 				   gfp_t gfp);
+ 
++/**
++ * ieee80211_nan_func_match - notify about NAN function match event.
++ *
++ * This function is used to notify mac80211 about nan function match. The
++ * cookie inside the match struct will be assigned by mac80211.
++ *
++ * @vif: &struct ieee80211_vif pointer from the add_interface callback.
++ * @match: match event information
++ * @gfp: allocation flags
++ */
++void ieee80211_nan_func_match(struct ieee80211_vif *vif,
++			      struct cfg80211_nan_match_params *match,
++			      gfp_t gfp);
++
+ #endif /* MAC80211_H */
+diff --git a/net/mac80211/cfg.c b/net/mac80211/cfg.c
+index 67b0d8a..e0e5301 100644
+--- a/net/mac80211/cfg.c
++++ b/net/mac80211/cfg.c
+@@ -3563,6 +3563,34 @@ void ieee80211_nan_func_terminated(struct ieee80211_vif *vif,
+ }
+ EXPORT_SYMBOL(ieee80211_nan_func_terminated);
+ 
++void ieee80211_nan_func_match(struct ieee80211_vif *vif,
++			      struct cfg80211_nan_match_params *match,
++			      gfp_t gfp)
++{
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_nan_func *func;
++	struct wireless_dev *wdev;
++
++	if (WARN_ON(vif->type != NL80211_IFTYPE_NAN))
++		return;
++
++	spin_lock_bh(&sdata->u.nan.func_lock);
++
++	func = ieee80211_find_nan_func(sdata, match->inst_id);
++	if (WARN_ON(!func)) {
++		spin_unlock_bh(&sdata->u.nan.func_lock);
++		return;
++	}
++	match->cookie = func->func.cookie;
++
++	spin_unlock_bh(&sdata->u.nan.func_lock);
++
++	wdev = ieee80211_vif_to_wdev(vif);
++	if (!WARN_ON_ONCE(!wdev))
++		cfg80211_nan_match(wdev, match, gfp);
++}
++EXPORT_SYMBOL(ieee80211_nan_func_match);
++
+ const struct cfg80211_ops mac80211_config_ops = {
+ 	.add_virtual_intf = ieee80211_add_iface,
+ 	.del_virtual_intf = ieee80211_del_iface,
+-- 
+2.5.0
 
