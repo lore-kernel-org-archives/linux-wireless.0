@@ -1,37 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f172.google.com ([209.85.220.172]:36196 "EHLO
-	mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754012AbcCDPX3 (ORCPT
+Received: from mail-pa0-f54.google.com ([209.85.220.54]:34442 "EHLO
+	mail-pa0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751588AbcC2Lqa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 10:23:29 -0500
-Received: by mail-qk0-f172.google.com with SMTP id s68so22026949qkh.3
-        for <linux-wireless@vger.kernel.org>; Fri, 04 Mar 2016 07:23:29 -0800 (PST)
-Received: from hash ([2001:470:1d:6db:230:48ff:fe9d:9c89])
-        by smtp.gmail.com with ESMTPSA id e79sm1817070qkj.2.2016.03.04.07.23.28
-        for <linux-wireless@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 04 Mar 2016 07:23:28 -0800 (PST)
-Received: from bob by hash with local (Exim 4.84)
-	(envelope-from <me@bobcopeland.com>)
-	id 1abrZf-0003Bs-8H
-	for linux-wireless@vger.kernel.org; Fri, 04 Mar 2016 10:23:27 -0500
-Date: Fri, 4 Mar 2016 10:23:27 -0500
-From: Bob Copeland <me@bobcopeland.com>
-To: linux-wireless@vger.kernel.org
-Subject: refcnt fix in wireless-testing
-Message-ID: <20160304152326.GF19848@localhost> (sfid-20160304_162349_721010_42329FFA)
+	Tue, 29 Mar 2016 07:46:30 -0400
+Received: by mail-pa0-f54.google.com with SMTP id fe3so12004653pab.1
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2016 04:46:30 -0700 (PDT)
+Subject: Re: Wireless Encryption
+To: Aswin Paranji <aswin.paranji@gmail.com>,
+	linux-wireless@vger.kernel.org
+References: <CAAeNHhzywKhugKCPwLonXqTEnJJm7Td39JPof0xRxL+gOZ_xkg@mail.gmail.com>
+From: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <56FA6B07.9000807@broadcom.com> (sfid-20160329_134636_982756_0D2F78C3)
+Date: Tue, 29 Mar 2016 13:46:15 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <CAAeNHhzywKhugKCPwLonXqTEnJJm7Td39JPof0xRxL+gOZ_xkg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Just a quick note that if you are using a recent wireless-testing,
-there's a reference counting bug which was fixed in net-next:
+On 29-3-2016 13:09, Aswin Paranji wrote:
+> Hi,
+> I'm trying to encrypt the 802.11 data with my own encryption instead
+> of WEP or WPA. Can anybody guide me on how to do that and where I need
+> to change. I'm trying to do this with Raspberry PI 3 device.
 
-    https://git.kernel.org/davem/net-next/c/799977d9aaf
+Umm. You mean you want to do it with the integrated wifi chipset on
+RPi3. You can basically forget about that. Encryption is done on the
+wifi device. The kernel passes 802.3 packets down to the device so there
+is nothing to encrypt at that level and the device/firmware does not
+have a way for you to plugin a different encryption.
 
-I've cherry-picked this commit for today's build and will keep doing
-so for the 4.5.x series or until no longer needed.
+Regards,
+Arend
 
--- 
-Bob Copeland %% http://bobcopeland.com/
+> Appreciate if you can guide me.
+> 
+> Regards,
+> Aswin
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
