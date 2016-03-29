@@ -1,55 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f68.google.com ([209.85.220.68]:35679 "EHLO
-	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751010AbcCCF2o (ORCPT
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:36010 "EHLO
+	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755887AbcC2GGm (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 00:28:44 -0500
-Received: by mail-pa0-f68.google.com with SMTP id fl4so686936pad.2
-        for <linux-wireless@vger.kernel.org>; Wed, 02 Mar 2016 21:28:44 -0800 (PST)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 5/5] staging: wilc1000: remove typedef from enum tenuConnectSts
-Date: Thu,  3 Mar 2016 14:28:24 +0900
-Message-Id: <1456982904-8063-5-git-send-email-chaehyun.lim@gmail.com> (sfid-20160303_062859_636329_76AE4D9B)
-In-Reply-To: <1456982904-8063-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1456982904-8063-1-git-send-email-chaehyun.lim@gmail.com>
+	Tue, 29 Mar 2016 02:06:42 -0400
+Received: by mail-pf0-f173.google.com with SMTP id u190so6573788pfb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2016 23:06:42 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: [PATCH 04/16] wcn36xx: Use consistent name for private vif
+Date: Mon, 28 Mar 2016 23:06:21 -0700
+Message-Id: <1459231593-360-5-git-send-email-bjorn.andersson@linaro.org> (sfid-20160329_081129_978859_6B06A1A6)
+In-Reply-To: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
+References: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef from enum tenuConnectSts and renames it to
-connect_status to avoid camelcase.
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+Some code used priv_vif and some used vif_priv. Convert all to vif_priv
+for consistency.
+
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 ---
- drivers/staging/wilc1000/coreconfigurator.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/smd.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/staging/wilc1000/coreconfigurator.h b/drivers/staging/wilc1000/coreconfigurator.h
-index 63eca24..076e06a 100644
---- a/drivers/staging/wilc1000/coreconfigurator.h
-+++ b/drivers/staging/wilc1000/coreconfigurator.h
-@@ -50,7 +50,7 @@
- #define MAKE_WORD16(lsb, msb) ((((u16)(msb) << 8) & 0xFF00) | (lsb))
- #define MAKE_WORD32(lsw, msw) ((((u32)(msw) << 16) & 0xFFFF0000) | (lsw))
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index a08153eef4ae..6baf54db6241 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -191,7 +191,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
+ 		struct ieee80211_sta *sta,
+ 		struct wcn36xx_hal_config_sta_params *sta_params)
+ {
+-	struct wcn36xx_vif *priv_vif = wcn36xx_vif_to_priv(vif);
++	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
+ 	struct wcn36xx_sta *priv_sta = NULL;
+ 	if (vif->type == NL80211_IFTYPE_ADHOC ||
+ 	    vif->type == NL80211_IFTYPE_AP ||
+@@ -215,7 +215,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
+ 	else
+ 		memcpy(&sta_params->bssid, vif->addr, ETH_ALEN);
  
--typedef enum {
-+enum connect_status {
- 	SUCCESSFUL_STATUSCODE    = 0,
- 	UNSPEC_FAIL              = 1,
- 	UNSUP_CAP                = 10,
-@@ -68,7 +68,7 @@ typedef enum {
- 	SHORT_SLOT_UNSUP         = 25,
- 	OFDM_DSSS_UNSUP          = 26,
- 	CONNECT_STS_FORCE_16_BIT = 0xFFFF
--} tenuConnectSts;
-+};
+-	sta_params->encrypt_type = priv_vif->encrypt_type;
++	sta_params->encrypt_type = vif_priv->encrypt_type;
+ 	sta_params->short_preamble_supported = true;
  
- typedef struct {
- 	u8 u8Full;
+ 	sta_params->rifs_mode = 0;
+@@ -224,7 +224,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
+ 	sta_params->uapsd = 0;
+ 	sta_params->mimo_ps = WCN36XX_HAL_HT_MIMO_PS_STATIC;
+ 	sta_params->max_ampdu_duration = 0;
+-	sta_params->bssid_index = priv_vif->bss_index;
++	sta_params->bssid_index = vif_priv->bss_index;
+ 	sta_params->p2p = 0;
+ 
+ 	if (sta) {
+@@ -726,7 +726,7 @@ static int wcn36xx_smd_add_sta_self_rsp(struct wcn36xx *wcn,
+ 					size_t len)
+ {
+ 	struct wcn36xx_hal_add_sta_self_rsp_msg *rsp;
+-	struct wcn36xx_vif *priv_vif = wcn36xx_vif_to_priv(vif);
++	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
+ 
+ 	if (len < sizeof(*rsp))
+ 		return -EINVAL;
+@@ -743,8 +743,8 @@ static int wcn36xx_smd_add_sta_self_rsp(struct wcn36xx *wcn,
+ 		    "hal add sta self status %d self_sta_index %d dpu_index %d\n",
+ 		    rsp->status, rsp->self_sta_index, rsp->dpu_index);
+ 
+-	priv_vif->self_sta_index = rsp->self_sta_index;
+-	priv_vif->self_dpu_desc_index = rsp->dpu_index;
++	vif_priv->self_sta_index = rsp->self_sta_index;
++	vif_priv->self_dpu_desc_index = rsp->dpu_index;
+ 
+ 	return 0;
+ }
+@@ -1175,7 +1175,7 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
+ {
+ 	struct wcn36xx_hal_config_bss_rsp_msg *rsp;
+ 	struct wcn36xx_hal_config_bss_rsp_params *params;
+-	struct wcn36xx_vif *priv_vif = wcn36xx_vif_to_priv(vif);
++	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
+ 
+ 	if (len < sizeof(*rsp))
+ 		return -EINVAL;
+@@ -1198,14 +1198,14 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
+ 		    params->bss_bcast_sta_idx, params->mac,
+ 		    params->tx_mgmt_power, params->ucast_dpu_signature);
+ 
+-	priv_vif->bss_index = params->bss_index;
++	vif_priv->bss_index = params->bss_index;
+ 
+-	if (priv_vif->sta) {
+-		priv_vif->sta->bss_sta_index =  params->bss_sta_index;
+-		priv_vif->sta->bss_dpu_desc_index = params->dpu_desc_index;
++	if (vif_priv->sta) {
++		vif_priv->sta->bss_sta_index =  params->bss_sta_index;
++		vif_priv->sta->bss_dpu_desc_index = params->dpu_desc_index;
+ 	}
+ 
+-	priv_vif->self_ucast_dpu_sign = params->ucast_dpu_signature;
++	vif_priv->self_ucast_dpu_sign = params->ucast_dpu_signature;
+ 
+ 	return 0;
+ }
+@@ -1343,13 +1343,13 @@ out:
+ int wcn36xx_smd_delete_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif)
+ {
+ 	struct wcn36xx_hal_delete_bss_req_msg msg_body;
+-	struct wcn36xx_vif *priv_vif = wcn36xx_vif_to_priv(vif);
++	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
+ 	int ret = 0;
+ 
+ 	mutex_lock(&wcn->hal_mutex);
+ 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_DELETE_BSS_REQ);
+ 
+-	msg_body.bss_index = priv_vif->bss_index;
++	msg_body.bss_index = vif_priv->bss_index;
+ 
+ 	PREPARE_HAL_BUF(wcn->hal_buf, msg_body);
+ 
 -- 
-2.7.1
+2.5.0
 
