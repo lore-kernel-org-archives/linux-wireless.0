@@ -1,103 +1,118 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.w1.fi ([212.71.239.96]:34823 "EHLO
-	li674-96.members.linode.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751475AbcCFP6O (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 10:58:14 -0500
-Date: Sun, 6 Mar 2016 17:58:09 +0200
-From: Jouni Malinen <j@w1.fi>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	Arik Nemtsov <arik@wizery.com>,
-	Arik Nemtsov <arikx.nemtsov@intel.com>
-Subject: Re: [PATCH 1/3] mac80211: TDLS: always downgrade invalid chandefs
-Message-ID: <20160306155809.GA15589@w1.fi> (sfid-20160306_165817_673541_0EB99B78)
-References: <1456954113-4682-1-git-send-email-emmanuel.grumbach@intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1456954113-4682-1-git-send-email-emmanuel.grumbach@intel.com>
+Received: from mga04.intel.com ([192.55.52.120]:18912 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756151AbcC2Jfa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2016 05:35:30 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCHv3 RESEND 11/11] cfg80211: allow to tie the NAN instance to the owner
+Date: Tue, 29 Mar 2016 12:35:09 +0300
+Message-Id: <1459244109-16038-11-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160329_113535_864829_5685C870)
+In-Reply-To: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 02, 2016 at 11:28:31PM +0200, Emmanuel Grumbach wrote:
-> Even if the current chandef width is equal to the station's max-BW, it
-> doesn't mean it's a valid width for TDLS. Make sure to always check
-> regulatory constraints in these cases.
+Allow the user space application that starts NAN to
+forbid any other socket to add or remove functions.
+Notifications will be sent to the socket that started
+the NAN interface only.
 
-I'm not sure this change is the trigger for this issue, but since I
-noticed this for the first time today and this commit went just in into
-wireless-testing.git, it sounds quite likely that this was indeed behind
-the busy loop I saw here:
+By default, keep the current behavior: events are sent
+in multicast and any application can add / remove
+functions.
 
-> diff --git a/net/mac80211/tdls.c b/net/mac80211/tdls.c
-> @@ -332,7 +332,7 @@ ieee80211_tdls_chandef_vht_upgrade(struct ieee80211_sub_if_data *sdata,
->  	/* proceed to downgrade the chandef until usable or the same */
-> -	while (uc.width > max_width &&
-> +	while (uc.width > max_width ||
->  	       !cfg80211_reg_can_beacon_relax(sdata->local->hw.wiphy, &uc,
->  					      sdata->wdev.iftype))
->  		ieee80211_chandef_downgrade(&uc);
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ include/uapi/linux/nl80211.h |  7 +++++++
+ net/wireless/nl80211.c       | 26 ++++++++++++++++++++++----
+ 2 files changed, 29 insertions(+), 4 deletions(-)
 
-I'm not sure what caused the chandef in uc (sta->tdls_chandef) to be
-invalid (actually, I do know now; see below), but when running the
-ap_open_tdls_vht80plus80 test case, the VM got stuck in a busy loop
-printing warnings about that chandef being invalid and with this while
-loop being here, that never stopped.. Well, until couple of hours later
-when I noticed this and stopped in manually.  That left 1.6 GB of kernel
-log entries (and that would have been way more had printk not refused to
-print so much, but even the "589 printk messages dropped" prints were
-enough to make this huge)..
-
-So if uc is invalid here, it looks like this loop can get into a state
-where it never terminates. The iteration hits these warnings:
-
-WARNING: CPU: 2 PID: 623 at net/wireless/chan.c:336 cfg80211_chandef_dfs_required+0xf6/0x100()
-WARNING: CPU: 2 PID: 623 at net/wireless/chan.c:608 cfg80211_chandef_usable+0x188/0x190()
-WARNING: CPU: 2 PID: 623 at net/mac80211/util.c:2860 ieee80211_chandef_downgrade+0x138/0x170()
-
-The last entry here seems to imply that c->width downgrade happened once
-successfully since no other WARN_ON_ONCE() were printed within
-ieee80211_chandef_downgrade().
-
-This is followed by:
-
-WARNING: CPU: 2 PID: 623 at net/wireless/chan.c:336 cfg80211_chandef_dfs_required+0xf6/0x100()
-WARNING: CPU: 2 PID: 623 at net/wireless/chan.c:608 cfg80211_chandef_usable+0x188/0x190()
-WARNING: CPU: 2 PID: 623 at net/wireless/chan.c:336 cfg80211_chandef_dfs_required+0xf6/0x100()
-WARNING: CPU: 2 PID: 623 at net/wireless/chan.c:608 cfg80211_chandef_usable+0x188/0x190()
-WARNING: CPU: 2 PID: 623 at net/wireless/chan.c:336 cfg80211_chandef_dfs_required+0xf6/0x100()
-WARNING: CPU: 2 PID: 623 at net/wireless/chan.c:608 cfg80211_chandef_usable+0x188/0x190()
-WARNING: CPU: 2 PID: 623 at net/mac80211/util.c:2848 ieee80211_chandef_downgrade+0x39/0x170()
-
-The last one here is hitting the WARN_ON_ONCE(1) in the default case, so
-it looks like there were two more successful downgrades (total three
-starting from 80+80) and then we are in a busy loop with every new
-iteration hitting that default case warning at util.c:2848. This
-continues indefinitely.
-
-Regardless of what caused the chandef to be invalid, this while loop
-would benefit of some added robustness to avoid the possibility of an
-infinite loop where the channel width cannot be downgraded anymore.
-
-The console log from that run is available here:
-http://w1.fi/a/tdls-downgrade-warning-loop.txt
-
-
-It looks like I can now reproduce this easily with
-./vm-run.sh ap_open_tdls_vht80plus80
-
-Reverting this one-liner patch removes that loop and all of the chandef
-invalid warnings.
-
-With this patch applied, ieee80211_tdls_chandef_vht_upgrade() shows
-uc.width == 4, max_width == 4, and chandef valid at the beginning of the
-function. Just before the while loop, uc.width == 3, max_width == 3,
-chandef is now invalid. On loop iterations, uc.width is dropped to 2, 1,
-and finally 0 where it remains while the loop continues running.
-
-The chandef becomes invalid when going through the centers_80mhz loop
-and setting uc.center_freq1 = 5210, uc.width = NL80211_CHAN_WIDTH_80.
-The AP was configured with seg0_idx 42 + seg1_idx 155.
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index f4a2e46..c9867ae 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -849,6 +849,7 @@
+  *	This cookie may be used in NAN events even before the command
+  *	returns, so userspace shouldn't process NAN events until it processes
+  *	the response to this command.
++ *	Look at %NL80211_ATTR_SOCKET_OWNER as well.
+  * @NL80211_CMD_RM_NAN_FUNCTION: Remove a NAN function by cookie.
+  *	This command is also used as a notification sent when a NAN function is
+  *	terminated. This will contain a %NL80211_ATTR_NAN_FUNC_INST_ID
+@@ -1760,6 +1761,12 @@ enum nl80211_commands {
+  *	regulatory indoor configuration would be owned by the netlink socket
+  *	that configured the indoor setting, and the indoor operation would be
+  *	cleared when the socket is closed.
++ *	If set during NAN interface creation, the interface will be destroyed
++ *	if the socket is closed just like any other interface. Moreover, only
++ *	the netlink socket that created the interface will be allowed to add
++ *	and remove functions. NAN notifications will be sent in unicast to that
++ *	socket. Without this attribute, any socket can add functions and the
++ *	notifications will be sent to the %NL80211_MCGRP_NAN multicast group.
+  *
+  * @NL80211_ATTR_TDLS_INITIATOR: flag attribute indicating the current end is
+  *	the TDLS link initiator.
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 4872349..b42c45f 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -10304,6 +10304,10 @@ static int nl80211_nan_add_func(struct sk_buff *skb,
  
+ 	func.cookie = wdev->wiphy->cookie_counter++;
+ 
++	if (wdev->owner_nlportid &&
++	    wdev->owner_nlportid != info->snd_portid)
++		return -ENOTCONN;
++
+ 	err = nla_parse(tb, NL80211_NAN_FUNC_ATTR_MAX,
+ 			nla_data(info->attrs[NL80211_ATTR_NAN_FUNC]),
+ 			nla_len(info->attrs[NL80211_ATTR_NAN_FUNC]),
+@@ -10487,6 +10491,10 @@ static int nl80211_nan_rm_func(struct sk_buff *skb,
+ 	if (!info->attrs[NL80211_ATTR_COOKIE])
+ 		return -EINVAL;
+ 
++	if (wdev->owner_nlportid &&
++	    wdev->owner_nlportid != info->snd_portid)
++		return -ENOTCONN;
++
+ 	cookie = nla_get_u64(info->attrs[NL80211_ATTR_COOKIE]);
+ 
+ 	rdev_rm_nan_func(rdev, wdev, cookie);
+@@ -10581,8 +10589,13 @@ void cfg80211_nan_match(struct wireless_dev *wdev,
+ 	nla_nest_end(msg, match_attr);
+ 	genlmsg_end(msg, hdr);
+ 
+-	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
+-				NL80211_MCGRP_NAN, gfp);
++	if (!wdev->owner_nlportid)
++		genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy),
++					msg, 0, NL80211_MCGRP_NAN, gfp);
++	else
++		genlmsg_unicast(wiphy_net(&rdev->wiphy), msg,
++				wdev->owner_nlportid);
++
+ 	return;
+ 
+ nla_put_failure:
+@@ -10627,8 +10640,13 @@ void cfg80211_nan_func_terminated(struct wireless_dev *wdev,
+ 
+ 	genlmsg_end(msg, hdr);
+ 
+-	genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy), msg, 0,
+-				NL80211_MCGRP_NAN, gfp);
++	if (!wdev->owner_nlportid)
++		genlmsg_multicast_netns(&nl80211_fam, wiphy_net(&rdev->wiphy),
++					msg, 0, NL80211_MCGRP_NAN, gfp);
++	else
++		genlmsg_unicast(wiphy_net(&rdev->wiphy), msg,
++				wdev->owner_nlportid);
++
+ 	return;
+ 
+ nla_put_failure:
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+2.5.0
+
