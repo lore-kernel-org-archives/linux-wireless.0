@@ -1,41 +1,83 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:54001 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751243AbcCCJhP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 04:37:15 -0500
-Message-ID: <1456997824.2044.5.camel@sipsolutions.net> (sfid-20160303_103720_751794_28BA058C)
-Subject: Re: [PATCH 2/2] mac80211: mesh: convert path table to rhashtable
-From: Johannes Berg <johannes@sipsolutions.net>
-To: David Miller <davem@davemloft.net>, me@bobcopeland.com
-Cc: linux-wireless@vger.kernel.org, tgraf@suug.ch,
-	netdev@vger.kernel.org
-Date: Thu, 03 Mar 2016 10:37:04 +0100
-In-Reply-To: <20160302.144359.2141637165742439224.davem@davemloft.net>
-References: <1456931360-2846-1-git-send-email-me@bobcopeland.com>
-	 <1456931360-2846-2-git-send-email-me@bobcopeland.com>
-	 <20160302.144359.2141637165742439224.davem@davemloft.net>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:34890 "EHLO
+	mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755916AbcC2GGn (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2016 02:06:43 -0400
+Received: by mail-pf0-f177.google.com with SMTP id n5so6548828pfn.2
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2016 23:06:43 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: [PATCH 05/16] wcn36xx: Use define for invalid index and fix typo
+Date: Mon, 28 Mar 2016 23:06:22 -0700
+Message-Id: <1459231593-360-6-git-send-email-bjorn.andersson@linaro.org> (sfid-20160329_081125_941325_6ECD8ECD)
+In-Reply-To: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
+References: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-03-02 at 14:43 -0500, David Miller wrote:
-> From: Bob Copeland <me@bobcopeland.com>
-> Date: Wed,  2 Mar 2016 10:09:20 -0500
-> 
-> > In the time since the mesh path table was implemented as an
-> > RCU-traversable, dynamically growing hash table, a generic RCU
-> > hashtable implementation was added to the kernel.
-> > 
-> > Switch the mesh path table over to rhashtable to remove some code
-> > and also gain some features like automatic shrinking.
-> > 
-> > Cc: Thomas Graf <tgraf@suug.ch>
-> > Cc: netdev@vger.kernel.org
-> > Signed-off-by: Bob Copeland <me@bobcopeland.com>
-> 
-> Johannes, feel free to take both patches via your tree, thanks.
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-Will do, thanks.
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/hal.h  | 2 +-
+ drivers/net/wireless/ath/wcn36xx/main.c | 4 ++--
+ drivers/net/wireless/ath/wcn36xx/smd.c  | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
+index 6f99b6134e4e..67e778f9d29d 100644
+--- a/drivers/net/wireless/ath/wcn36xx/hal.h
++++ b/drivers/net/wireless/ath/wcn36xx/hal.h
+@@ -48,7 +48,7 @@
+ 
+ #define WCN36XX_HAL_IPV4_ADDR_LEN       4
+ 
+-#define WALN_HAL_STA_INVALID_IDX 0xFF
++#define WCN36XX_HAL_STA_INVALID_IDX 0xFF
+ #define WCN36XX_HAL_BSS_INVALID_IDX 0xFF
+ 
+ /* Default Beacon template size. */
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 62cb9ffd854c..4781b5e8deb3 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -618,7 +618,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ 		if (!is_zero_ether_addr(bss_conf->bssid)) {
+ 			vif_priv->is_joining = true;
+-			vif_priv->bss_index = 0xff;
++			vif_priv->bss_index = WCN36XX_HAL_BSS_INVALID_IDX;
+ 			wcn36xx_smd_join(wcn, bss_conf->bssid,
+ 					 vif->addr, WCN36XX_HW_CHANNEL(wcn));
+ 			wcn36xx_smd_config_bss(wcn, vif, NULL,
+@@ -711,7 +711,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
+ 
+ 		if (bss_conf->enable_beacon) {
+ 			vif_priv->dtim_period = bss_conf->dtim_period;
+-			vif_priv->bss_index = 0xff;
++			vif_priv->bss_index = WCN36XX_HAL_BSS_INVALID_IDX;
+ 			wcn36xx_smd_config_bss(wcn, vif, NULL,
+ 					       vif->addr, false);
+ 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 6baf54db6241..ca325323c802 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -197,7 +197,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
+ 	    vif->type == NL80211_IFTYPE_AP ||
+ 	    vif->type == NL80211_IFTYPE_MESH_POINT) {
+ 		sta_params->type = 1;
+-		sta_params->sta_index = 0xFF;
++		sta_params->sta_index = WCN36XX_HAL_STA_INVALID_IDX;
+ 	} else {
+ 		sta_params->type = 0;
+ 		sta_params->sta_index = 1;
+-- 
+2.5.0
+
