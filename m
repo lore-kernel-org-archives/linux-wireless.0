@@ -1,61 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:51427 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751742AbcCIJ3w (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 04:29:52 -0500
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH] mac80211: allow same PN for AMSDU sub-frames
-Date: Wed,  9 Mar 2016 11:29:45 +0200
-Message-Id: <1457515785-18795-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160309_102957_273369_D8765A06)
+Received: from mail-pa0-f49.google.com ([209.85.220.49]:36551 "EHLO
+	mail-pa0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750864AbcC2GGo (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 29 Mar 2016 02:06:44 -0400
+Received: by mail-pa0-f49.google.com with SMTP id tt10so6179147pab.3
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2016 23:06:44 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: [PATCH 06/16] wcn36xx: Fetch private sta data from sta entry instead of from vif
+Date: Mon, 28 Mar 2016 23:06:23 -0700
+Message-Id: <1459231593-360-7-git-send-email-bjorn.andersson@linaro.org> (sfid-20160329_080923_658314_A9C1EA9B)
+In-Reply-To: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
+References: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-Some hardware (iwlwifi an example) de-aggregate AMSDUs and
-copy the IV as is to the generated MPDUs, so the same PN
-appears in multiple packets without being a replay attack.
-Do not increment the PN until all the sub-frames are received
-to accommodate to that.
+For consistency with other code.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 ---
- net/mac80211/wpa.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/mac80211/wpa.c b/net/mac80211/wpa.c
-index 7e4f265..7ba66b3 100644
---- a/net/mac80211/wpa.c
-+++ b/net/mac80211/wpa.c
-@@ -542,8 +542,9 @@ ieee80211_crypto_ccmp_decrypt(struct ieee80211_rx_data *rx,
- 				    skb->data + skb->len - mic_len, mic_len))
- 				return RX_DROP_UNUSABLE;
- 		}
--
--		memcpy(key->u.ccmp.rx_pn[queue], pn, IEEE80211_CCMP_PN_LEN);
-+		if (!(status->flag & RX_FLAG_AMSDU_MORE))
-+			memcpy(key->u.ccmp.rx_pn[queue], pn,
-+			       IEEE80211_CCMP_PN_LEN);
- 	}
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 4781b5e8deb3..62178a03f50d 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -386,7 +386,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ {
+ 	struct wcn36xx *wcn = hw->priv;
+ 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
+-	struct wcn36xx_sta *sta_priv = vif_priv->sta;
++	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
+ 	int ret = 0;
+ 	u8 key[WLAN_MAX_KEY_LEN];
  
- 	/* Remove CCMP header and MIC */
-@@ -769,8 +770,9 @@ ieee80211_crypto_gcmp_decrypt(struct ieee80211_rx_data *rx)
- 				    IEEE80211_GCMP_MIC_LEN))
- 				return RX_DROP_UNUSABLE;
- 		}
--
--		memcpy(key->u.gcmp.rx_pn[queue], pn, IEEE80211_GCMP_PN_LEN);
-+		if (!(status->flag & RX_FLAG_AMSDU_MORE))
-+			memcpy(key->u.gcmp.rx_pn[queue], pn,
-+			       IEEE80211_GCMP_PN_LEN);
- 	}
- 
- 	/* Remove GCMP header and MIC */
 -- 
 2.5.0
 
