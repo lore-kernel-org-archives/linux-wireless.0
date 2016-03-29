@@ -1,73 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:34705 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756855AbcCRLOa (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59995 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756425AbcC2IiD (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 07:14:30 -0400
-Received: by mail-ob0-f172.google.com with SMTP id ts10so112308482obc.1
-        for <linux-wireless@vger.kernel.org>; Fri, 18 Mar 2016 04:14:30 -0700 (PDT)
+	Tue, 29 Mar 2016 04:38:03 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Wei-Ning Huang <wnhuang@chromium.org>
+Cc: linux-wireless@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>, snanda@google.com,
+	netdev@vger.kernel.org
+Subject: Re: [PATCH] mwifiex: add __GFP_REPEAT to skb allocation call
+References: <1459226840-36287-1-git-send-email-wnhuang@chromium.org>
+Date: Tue, 29 Mar 2016 11:37:51 +0300
+In-Reply-To: <1459226840-36287-1-git-send-email-wnhuang@chromium.org>
+	(Wei-Ning Huang's message of "Tue, 29 Mar 2016 12:47:20 +0800")
+Message-ID: <87vb45brxc.fsf@kamboji.qca.qualcomm.com> (sfid-20160329_103822_894274_5C48E807)
 MIME-Version: 1.0
-In-Reply-To: <20160318110134.GR5273@mwanda>
-References: <cover.1458262312.git.julian.calaby@gmail.com> <90fe6325e407d35a18fa8c8cb7eaa269968d6426.1458262312.git.julian.calaby@gmail.com>
- <20160318110134.GR5273@mwanda>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 18 Mar 2016 22:14:09 +1100
-Message-ID: <CAGRGNgUk5FM6=sCL8UULsQm9D2WtiHrd2skBRuke72h6ZgM0XA@mail.gmail.com> (sfid-20160318_121452_571382_2182FD87)
-Subject: Re: [PATCH CONTROVERSIAL 19/19] iwlegacy: Rename label in il_eeprom_init()
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Markus Elfring <elfring@users.sourceforge.net>,
-	Nicolas Pitre <nico@linaro.org>,
-	Jia-Ju Bai <baijiaju1990@163.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dan,
+Wei-Ning Huang <wnhuang@chromium.org> writes:
 
-On Fri, Mar 18, 2016 at 10:01 PM, Dan Carpenter
-<dan.carpenter@oracle.com> wrote:
-> On Fri, Mar 18, 2016 at 01:29:39PM +1100, Julian Calaby wrote:
->> From: Markus Elfring <elfring@users.sourceforge.net>
->>
->> Rename a jump label according to the current Linux coding style convention.
->>
->> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
->> [Rewrote commit title]
->> Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
->>
->> ---
->>
->> This was controversial when introduced, however the change is obvious and
->> harmless and is, in the worst case, just churn.
->>
->> I'm only including this as it meets my criteria for sheparding pending
->> patches: it's sane, obviously correct or reviewable by me, and doesn't
->> require any work to apply.
->>
->> This does meet those requirements, however given how controviersial it was
->> when introduced, I'm not expecting people to be enthusiastic about
->> applying it.
->>
->> Thanks,
+> "single skb allocation failure" happens when system is under heavy
+> memory pressure.  Add __GFP_REPEAT to skb allocation call so kernel
+> attempts to reclaim pages and retry the allocation.
 >
-> It's a bad idea to mark this sort of patch as controversial.  It's
-> bikeshed stuff.  Either apply it or don't but don't lets spend any more
-> time thinking about it.
->
-> Actual controversial patches have a long term impact.
+> Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
 
-Noted. I'll label anything like this (someone's done the work but it
-makes no difference if it's applied) as "bikeshed" or "churn" in the
-future.
-
-Thanks,
+Is this really a proper way to fix the issue? This is the first time I'm
+hearing about the flag and there isn't even a single user in
+drivers/net. I would like to get confirmation from others that
+__GFP_REPEAT is really ok to use in a wireless driver before I can take
+this.
 
 -- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+Kalle Valo
