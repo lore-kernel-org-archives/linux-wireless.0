@@ -1,56 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:35078 "EHLO
-	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932295AbcCQQT5 (ORCPT
+Received: from mail-pa0-f48.google.com ([209.85.220.48]:35373 "EHLO
+	mail-pa0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758191AbcC2VlP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 12:19:57 -0400
-From: Eva Rachel Retuya <eraretuya@gmail.com>
-To: outreachy-kernel@googlegroups.com
-Cc: johannes.berg@intel.com, emmanuel.grumbach@intel.com,
-	linuxwifi@intel.com, kvalo@codeaurora.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, tj@kernel.org,
-	Eva Rachel Retuya <eraretuya@gmail.com>
-Subject: [PATCH v2] iwlwifi: dvm: use alloc_ordered_workqueue()
-Date: Fri, 18 Mar 2016 00:19:21 +0800
-Message-Id: <1458231561-13184-1-git-send-email-eraretuya@gmail.com> (sfid-20160317_172016_194942_76E1887C)
+	Tue, 29 Mar 2016 17:41:15 -0400
+Received: by mail-pa0-f48.google.com with SMTP id td3so23367803pab.2
+        for <linux-wireless@vger.kernel.org>; Tue, 29 Mar 2016 14:41:15 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>,
+	wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Jason Mobarak <jam@cozybit.com>,
+	Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Subject: [RESEND PATCH 15/16] wcn36xx: don't pad beacons for mesh
+Date: Tue, 29 Mar 2016 14:41:12 -0700
+Message-Id: <1459287672-3324-1-git-send-email-bjorn.andersson@linaro.org> (sfid-20160329_234131_220621_0B194E51)
+In-Reply-To: <1459231593-360-16-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Use alloc_ordered_workqueue() to allocate the workqueue instead of
-create_singlethread_workqueue() since the latter is deprecated and is scheduled
-for removal.
+From: Jason Mobarak <jam@cozybit.com>
 
-There are work items doing related operations that shouldn't be swapped when
-queued in a certain order hence preserve the strict execution ordering of a
-single threaded (ST) workqueue by switching to alloc_ordered_workqueue().
+Patch "wcn36xx: Pad TIM PVM if needed" has caused a regression in mesh
+beaconing.  The field tim_off is always 0 for mesh mode, and thus
+pvm_len (referring to the TIM length field) and pad are both incorrectly
+calculated.  Thus, msg_body.beacon_length is incorrectly calculated for
+mesh mode. Fix this.
 
-WQ_MEM_RECLAIM flag is not needed since the worker is not supposed to free
-memory.
-
-Signed-off-by: Eva Rachel Retuya <eraretuya@gmail.com>
+Fixes: 8ad99a4e3ee5 ("wcn36xx: Pad TIM PVM if needed")
+Signed-off-by: Jason Mobarak <jam@cozybit.com>
+Signed-off-by: Chun-Yeow Yeoh <yeohchunyeow@cozybit.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 ---
-Changes in v2:
-* switch from alloc_workqueue() to alloc_ordered_workqueue()
-* remove unneeded flags: WQ_MEM_RECLAIM and WQ_HIGHPRI
-* update commit message to reflect change
 
- drivers/net/wireless/intel/iwlwifi/dvm/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Resend this single patch with included Fixes tag.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/dvm/main.c b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-index f62c2d7..14396d8 100644
---- a/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-+++ b/drivers/net/wireless/intel/iwlwifi/dvm/main.c
-@@ -1071,7 +1071,7 @@ static void iwl_bg_restart(struct work_struct *data)
+ drivers/net/wireless/ath/wcn36xx/smd.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index a57d158298a1..b1bdc229e560 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -1410,6 +1410,11 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
  
- static void iwl_setup_deferred_work(struct iwl_priv *priv)
- {
--	priv->workqueue = create_singlethread_workqueue(DRV_NAME);
-+	priv->workqueue = alloc_ordered_workqueue(DRV_NAME, 0);
- 
- 	INIT_WORK(&priv->restart, iwl_bg_restart);
- 	INIT_WORK(&priv->beacon_update, iwl_bg_beacon_update);
+ 	pvm_len = skb_beacon->data[tim_off + 1] - 3;
+ 	pad = TIM_MIN_PVM_SIZE - pvm_len;
++
++	/* Padding is irrelevant to mesh mode since tim_off is always 0. */
++	if (vif->type == NL80211_IFTYPE_MESH_POINT)
++		pad = 0;
++
+ 	msg_body.beacon_length = skb_beacon->len + pad;
+ 	/* TODO need to find out why + 6 is needed */
+ 	msg_body.beacon_length6 = msg_body.beacon_length + 6;
 -- 
-1.9.1
+2.5.0
 
