@@ -1,67 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:47343 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754069AbcC3PnQ (ORCPT
+Received: from mail-pf0-f174.google.com ([209.85.192.174]:33227 "EHLO
+	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755956AbcC2GGt (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 11:43:16 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
-Subject: [PATCH 3/3] ath10k: fix unconditional num_mpdus_ready subtraction
-Date: Wed, 30 Mar 2016 21:12:31 +0530
-Message-ID: <1459352551-11773-3-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20160330_174318_495860_73B704E8)
-In-Reply-To: <1459352551-11773-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1459352551-11773-1-git-send-email-rmanohar@qti.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Tue, 29 Mar 2016 02:06:49 -0400
+Received: by mail-pf0-f174.google.com with SMTP id 4so6636955pfd.0
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2016 23:06:49 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: [PATCH 10/16] wcn36xx: Copy all members in config_sta v1 conversion
+Date: Mon, 28 Mar 2016 23:06:27 -0700
+Message-Id: <1459231593-360-11-git-send-email-bjorn.andersson@linaro.org> (sfid-20160329_080821_339963_6019F830)
+In-Reply-To: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
+References: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Decrement num_mpdus_ready only when rx amsdu is processed successfully.
-Not doing so, will result in leak and impact stabilty under low memory
-cases.
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+When converting to version 1 of the config_sta struct not all
+members where copied. This fixes the problem of multicast frames
+not being delivered on an encrypted network.
+
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 ---
- drivers/net/wireless/ath/ath10k/htt_rx.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/smd.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c b/drivers/net/wireless/ath/ath10k/htt_rx.c
-index 96a7417..9696c2e 100644
---- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-+++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-@@ -2412,14 +2412,12 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
- 	struct ath10k_htt *htt = (struct ath10k_htt *)ptr;
- 	struct ath10k *ar = htt->ar;
- 	struct htt_tx_done tx_done = {};
--	struct sk_buff_head rx_q;
- 	struct sk_buff_head rx_ind_q;
- 	struct sk_buff_head tx_ind_q;
- 	struct sk_buff *skb;
- 	unsigned long flags;
- 	int num_mpdus;
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 2b416ee9f105..ce764cce1a3e 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -949,17 +949,32 @@ static void wcn36xx_smd_convert_sta_to_v1(struct wcn36xx *wcn,
+ 	memcpy(&v1->mac, orig->mac, ETH_ALEN);
+ 	v1->aid = orig->aid;
+ 	v1->type = orig->type;
++	v1->short_preamble_supported = orig->short_preamble_supported;
+ 	v1->listen_interval = orig->listen_interval;
++	v1->wmm_enabled = orig->wmm_enabled;
+ 	v1->ht_capable = orig->ht_capable;
+-
++	v1->tx_channel_width_set = orig->tx_channel_width_set;
++	v1->rifs_mode = orig->rifs_mode;
++	v1->lsig_txop_protection = orig->lsig_txop_protection;
+ 	v1->max_ampdu_size = orig->max_ampdu_size;
+ 	v1->max_ampdu_density = orig->max_ampdu_density;
+ 	v1->sgi_40mhz = orig->sgi_40mhz;
+ 	v1->sgi_20Mhz = orig->sgi_20Mhz;
+-
++	v1->rmf = orig->rmf;
++	v1->encrypt_type = orig->encrypt_type;
++	v1->action = orig->action;
++	v1->uapsd = orig->uapsd;
++	v1->max_sp_len = orig->max_sp_len;
++	v1->green_field_capable = orig->green_field_capable;
++	v1->mimo_ps = orig->mimo_ps;
++	v1->delayed_ba_support = orig->delayed_ba_support;
++	v1->max_ampdu_duration = orig->max_ampdu_duration;
++	v1->dsss_cck_mode_40mhz = orig->dsss_cck_mode_40mhz;
+ 	memcpy(&v1->supported_rates, &orig->supported_rates,
+ 	       sizeof(orig->supported_rates));
+ 	v1->sta_index = orig->sta_index;
++	v1->bssid_index = orig->bssid_index;
++	v1->p2p = orig->p2p;
+ }
  
--	__skb_queue_head_init(&rx_q);
- 	__skb_queue_head_init(&rx_ind_q);
- 	__skb_queue_head_init(&tx_ind_q);
- 
-@@ -2448,11 +2446,13 @@ static void ath10k_htt_txrx_compl_task(unsigned long ptr)
- 	ath10k_mac_tx_push_pending(ar);
- 
- 	num_mpdus = atomic_read(&htt->num_mpdus_ready);
--	atomic_sub(num_mpdus, &htt->num_mpdus_ready);
- 
--	while (num_mpdus--) {
-+	while (num_mpdus) {
- 		if (ath10k_htt_rx_handle_amsdu(htt))
- 			break;
-+
-+		num_mpdus--;
-+		atomic_dec(&htt->num_mpdus_ready);
- 	}
- 
- 	while ((skb = __skb_dequeue(&rx_ind_q))) {
+ static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn,
 -- 
-2.7.4
+2.5.0
 
