@@ -1,44 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49527 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751579AbcCJOqt (ORCPT
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:36157 "EHLO
+	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755985AbcC2GGv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 09:46:49 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jes.Sorensen@redhat.com
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
-Subject: Re: [PATCH 107/113] rtl8xxxu: Use define for REG_PWR_DATA bits
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
-	<1456783551-28315-108-git-send-email-Jes.Sorensen@redhat.com>
-Date: Thu, 10 Mar 2016 16:46:45 +0200
-In-Reply-To: <1456783551-28315-108-git-send-email-Jes.Sorensen@redhat.com>
-	(Jes Sorensen's message of "Mon, 29 Feb 2016 17:05:45 -0500")
-Message-ID: <87mvq6jsq2.fsf@purkki.adurom.net> (sfid-20160310_154653_015097_B213F82F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 29 Mar 2016 02:06:51 -0400
+Received: by mail-pf0-f175.google.com with SMTP id u190so6576882pfb.3
+        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2016 23:06:51 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Pontus Fuchs <pontus.fuchs@gmail.com>
+Subject: [PATCH 12/16] wcn36xx: Clear encrypt_type when deleting bss key
+Date: Mon, 28 Mar 2016 23:06:29 -0700
+Message-Id: <1459231593-360-13-git-send-email-bjorn.andersson@linaro.org> (sfid-20160329_080912_872426_ADEFFE8D)
+In-Reply-To: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
+References: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes.Sorensen@redhat.com writes:
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->
-> Use the bit define rather than hard code the value for REG_PWR_DATA bits.
->
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+This fixes a problem connecting to an open network after being
+connected to an encrypted network.
 
-[...]
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/main.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-> --- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-> +++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-> @@ -135,7 +135,7 @@
->  #define  EFUSE_ACCESS_DISABLE		0x00	/* RTL8723 only */
->  
->  #define REG_PWR_DATA			0x0038
-> -#define PWR_DATA_EEPRPAD_RFE_CTRL_EN	BIT(11)
-> +#define  PWR_DATA_EEPRPAD_RFE_CTRL_EN	BIT(11)
-
-Again the two spaces. Is your editor adding them automatically or what?
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 7c06ca9fdd2c..f9c77de94583 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -471,6 +471,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ 		break;
+ 	case DISABLE_KEY:
+ 		if (!(IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags)) {
++			vif_priv->encrypt_type = WCN36XX_HAL_ED_NONE;
+ 			wcn36xx_smd_remove_bsskey(wcn,
+ 				vif_priv->encrypt_type,
+ 				key_conf->keyidx);
+@@ -626,6 +627,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
+ 		} else {
+ 			vif_priv->is_joining = false;
+ 			wcn36xx_smd_delete_bss(wcn, vif);
++			vif_priv->encrypt_type = WCN36XX_HAL_ED_NONE;
+ 		}
+ 	}
+ 
 -- 
-Kalle Valo
+2.5.0
+
