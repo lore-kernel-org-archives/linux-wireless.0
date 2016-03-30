@@ -1,165 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:36060 "EHLO
-	mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755679AbcC2GGp (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 02:06:45 -0400
-Received: by mail-pf0-f182.google.com with SMTP id u190so6574864pfb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 28 Mar 2016 23:06:45 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: wcn36xx@lists.infradead.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Pontus Fuchs <pontus.fuchs@gmail.com>
-Subject: [PATCH 07/16] wcn36xx: Add helper macros to cast sta to priv
-Date: Mon, 28 Mar 2016 23:06:24 -0700
-Message-Id: <1459231593-360-8-git-send-email-bjorn.andersson@linaro.org> (sfid-20160329_081115_787051_FCC6C520)
-In-Reply-To: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1459231593-360-1-git-send-email-bjorn.andersson@linaro.org>
+Received: from mga14.intel.com ([192.55.52.115]:35571 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754299AbcC3OGe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Mar 2016 10:06:34 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Luca Coelho <luciano.coelho@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 42/43] iwlwifi: mvm: allow setting the thermal state in D0i3
+Date: Wed, 30 Mar 2016 17:05:14 +0300
+Message-Id: <1459346715-7954-42-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_161040_966338_13CF2544)
+In-Reply-To: <1459346667.4731.9.camel@intel.com>
+References: <1459346667.4731.9.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+From: Luca Coelho <luciano.coelho@intel.com>
 
-While poking at this I also change two related things. I rename one
-variable to make the names consistent. I also move one assignment of
-priv_sta to the declaration to save a few lines.
+We were not allowing the thermal state to be set when we were in D0i3
+mode.  It was not very clearly specified how it should work, but now a
+decision was made to allow the state to be set in D0i3 (which will
+cause a brief wake up).  Remove the check in the set_cur_state
+operation.
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/wcn36xx/main.c    | 14 ++++++--------
- drivers/net/wireless/ath/wcn36xx/smd.c     | 12 ++++++------
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  6 ++++++
- 3 files changed, 18 insertions(+), 14 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c | 3 ---
+ 1 file changed, 3 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 62178a03f50d..a23738deb5b3 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -373,7 +373,7 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
- 	struct wcn36xx_sta *sta_priv = NULL;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+index 3f5df76..eb3f460 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+@@ -801,9 +801,6 @@ static int iwl_mvm_tcool_set_cur_state(struct thermal_cooling_device *cdev,
+ 	if (!mvm->ucode_loaded || !(mvm->cur_ucode == IWL_UCODE_REGULAR))
+ 		return -EIO;
  
- 	if (control->sta)
--		sta_priv = (struct wcn36xx_sta *)control->sta->drv_priv;
-+		sta_priv = wcn36xx_sta_to_priv(control->sta);
- 
- 	if (wcn36xx_start_tx(wcn, sta_priv, skb))
- 		ieee80211_free_txskb(wcn->hw, skb);
-@@ -518,7 +518,7 @@ static void wcn36xx_update_allowed_rates(struct ieee80211_sta *sta,
- {
- 	int i, size;
- 	u16 *rates_table;
--	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
-+	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
- 	u32 rates = sta->supp_rates[band];
- 
- 	memset(&sta_priv->supported_rates, 0,
-@@ -661,7 +661,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
- 				rcu_read_unlock();
- 				goto out;
- 			}
--			sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
-+			sta_priv = wcn36xx_sta_to_priv(sta);
- 
- 			wcn36xx_update_allowed_rates(sta, WCN36XX_BAND(wcn));
- 
-@@ -791,7 +791,7 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- {
- 	struct wcn36xx *wcn = hw->priv;
- 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
--	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
-+	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
- 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta add vif %p sta %pM\n",
- 		    vif, sta->addr);
- 
-@@ -816,7 +816,7 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw,
- {
- 	struct wcn36xx *wcn = hw->priv;
- 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
--	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
-+	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
- 
- 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta remove vif %p sta %pM index %d\n",
- 		    vif, sta->addr, sta_priv->sta_index);
-@@ -858,7 +858,7 @@ static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
- 		    struct ieee80211_ampdu_params *params)
- {
- 	struct wcn36xx *wcn = hw->priv;
--	struct wcn36xx_sta *sta_priv = NULL;
-+	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(params->sta);
- 	struct ieee80211_sta *sta = params->sta;
- 	enum ieee80211_ampdu_mlme_action action = params->action;
- 	u16 tid = params->tid;
-@@ -867,8 +867,6 @@ static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
- 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac ampdu action action %d tid %d\n",
- 		    action, tid);
- 
--	sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
+-	if (test_bit(IWL_MVM_STATUS_IN_D0I3, &mvm->status))
+-		return -EBUSY;
 -
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
- 		sta_priv->tid = tid;
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index ca325323c802..b75e7211049d 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -192,7 +192,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
- 		struct wcn36xx_hal_config_sta_params *sta_params)
- {
- 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
--	struct wcn36xx_sta *priv_sta = NULL;
-+	struct wcn36xx_sta *sta_priv = NULL;
- 	if (vif->type == NL80211_IFTYPE_ADHOC ||
- 	    vif->type == NL80211_IFTYPE_AP ||
- 	    vif->type == NL80211_IFTYPE_MESH_POINT) {
-@@ -228,17 +228,17 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
- 	sta_params->p2p = 0;
+ 	mutex_lock(&mvm->mutex);
  
- 	if (sta) {
--		priv_sta = (struct wcn36xx_sta *)sta->drv_priv;
-+		sta_priv = wcn36xx_sta_to_priv(sta);
- 		if (NL80211_IFTYPE_STATION == vif->type)
- 			memcpy(&sta_params->bssid, sta->addr, ETH_ALEN);
- 		else
- 			memcpy(&sta_params->mac, sta->addr, ETH_ALEN);
- 		sta_params->wmm_enabled = sta->wme;
- 		sta_params->max_sp_len = sta->max_sp;
--		sta_params->aid = priv_sta->aid;
-+		sta_params->aid = sta_priv->aid;
- 		wcn36xx_smd_set_sta_ht_params(sta, sta_params);
--		memcpy(&sta_params->supported_rates, &priv_sta->supported_rates,
--			sizeof(priv_sta->supported_rates));
-+		memcpy(&sta_params->supported_rates, &sta_priv->supported_rates,
-+			sizeof(sta_priv->supported_rates));
- 	} else {
- 		wcn36xx_set_default_rates(&sta_params->supported_rates);
- 		wcn36xx_smd_set_sta_default_ht_params(sta_params);
-@@ -969,7 +969,7 @@ static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn,
- {
- 	struct wcn36xx_hal_config_sta_rsp_msg *rsp;
- 	struct config_sta_rsp_params *params;
--	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
-+	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
- 
- 	if (len < sizeof(*rsp))
- 		return -EINVAL;
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index c3ba07ed1db5..c368a34c8de7 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -275,4 +275,10 @@ struct ieee80211_vif *wcn36xx_priv_to_vif(struct wcn36xx_vif *vif_priv)
- 	return container_of((void *) vif_priv, struct ieee80211_vif, drv_priv);
- }
- 
-+static inline
-+struct wcn36xx_sta *wcn36xx_sta_to_priv(struct ieee80211_sta *sta)
-+{
-+	return (struct wcn36xx_sta *)sta->drv_priv;
-+}
-+
- #endif	/* _WCN36XX_H_ */
+ 	if (new_state >= ARRAY_SIZE(iwl_mvm_cdev_budgets)) {
 -- 
 2.5.0
 
