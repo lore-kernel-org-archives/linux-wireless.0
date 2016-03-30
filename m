@@ -1,88 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f51.google.com ([209.85.192.51]:34339 "EHLO
-	mail-qg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757023AbcCVKFn (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 22 Mar 2016 06:05:43 -0400
-Received: by mail-qg0-f51.google.com with SMTP id w104so173967033qge.1
-        for <linux-wireless@vger.kernel.org>; Tue, 22 Mar 2016 03:05:43 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <56F113B3.2050608@neratec.com>
-References: <CAAA5faG+AOviPrJxd9dOuZrDAkm+4F5sy0M7w3MW0U-ufNeZ3g@mail.gmail.com>
-	<56F113B3.2050608@neratec.com>
-Date: Tue, 22 Mar 2016 04:05:42 -0600
-Message-ID: <CAAA5faHhiwwVYJVp9TEeg7M4YksRgOhHpVnge655ztd8VuC+tw@mail.gmail.com> (sfid-20160322_110547_144695_D46954AD)
-Subject: Re: making fq_codel default
-From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
-To: Matthias May <matthias.may@neratec.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([192.55.52.115]:47797 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753709AbcC3OFs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Mar 2016 10:05:48 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 10/43] iwlwifi: mvm: handle async temperature notification with unlocked mutex
+Date: Wed, 30 Mar 2016 17:04:42 +0300
+Message-Id: <1459346715-7954-10-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160551_872426_F7AFBBB2)
+In-Reply-To: <1459346667.4731.9.camel@intel.com>
+References: <1459346667.4731.9.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks, that answers my question.
-Ok, so currently Cake didn't make it into the 4.4 kernel yet I noticed.
-Are there plans to add this or are there still many issues to be worked out?
-In the mean time I followed some instructions to build the module and
-iproute2 for cake.
+From: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
 
-sudo tc qdisc add  dev wlp4s0 root cake (iwlwifi)
+Use RX_HANDLER_ASYNC_UNLOCKED instead of unlock and re-lock
+the mutex independently.
 
-reinoud@router-dev:~/Downloads/linux-4.4.5/net/sched$ sudo tc -s qdisc show
+Signed-off-by: Chaya Rachel Ivgi <chaya.rachel.ivgi@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c | 2 +-
+ drivers/net/wireless/intel/iwlwifi/mvm/tt.c  | 9 ---------
+ 2 files changed, 1 insertion(+), 10 deletions(-)
 
-qdisc cake 8002: dev wlp4s0 root refcnt 5 unlimited diffserv4 flows
-rtt 100.0ms raw
-Sent 71025 bytes 516 pkt (dropped 0, overlimits 0 requeues 0)
-backlog 0b 0p requeues 0
-memory used: 0b of 15140Kb
-capacity estimate: 0bit
-            Tin 0       Tin 1       Tin 2       Tin 3
- thresh        0bit        0bit        0bit        0bit
- target       5.0ms       5.0ms       5.0ms       5.0ms
-interval     100.0ms     100.0ms     100.0ms     100.0ms
-Pk-delay         0us         0us         0us         0us
-Av-delay         0us         0us         0us         0us
-Sp-delay         0us         0us         0us         0us
- pkts             0           0           0           0
- bytes            0           0           0           0
-way-inds           0           0           0           0
-way-miss           0           0           0           0
-way-cols           0           0           0           0
- drops            0           0           0           0
- marks            0           0           0           0
-Sp-flows           0           0           0           0
-Bk-flows           0           0           0           0
-last-len           0           0           0           0
-max-len            0           0           0           0
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 46a22fd..6153c8e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -292,7 +292,7 @@ static const struct iwl_rx_handlers iwl_mvm_rx_handlers[] = {
+ 	RX_HANDLER(DTS_MEASUREMENT_NOTIFICATION, iwl_mvm_temp_notif,
+ 		   RX_HANDLER_ASYNC_LOCKED),
+ 	RX_HANDLER_GRP(PHY_OPS_GROUP, DTS_MEASUREMENT_NOTIF_WIDE,
+-		       iwl_mvm_temp_notif, RX_HANDLER_ASYNC_LOCKED),
++		       iwl_mvm_temp_notif, RX_HANDLER_ASYNC_UNLOCKED),
+ 	RX_HANDLER_GRP(PHY_OPS_GROUP, CT_KILL_NOTIFICATION,
+ 		       iwl_mvm_ct_kill_notif, RX_HANDLER_SYNC),
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+index f1f2825..8d27137 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/tt.c
+@@ -204,20 +204,11 @@ void iwl_mvm_temp_notif(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+ 	if (WARN_ON(ths_crossed >= IWL_MAX_DTS_TRIPS))
+ 		return;
+ 
+-	/*
+-	 * We are now handling a temperature notification from the firmware
+-	 * in ASYNC and hold the mutex. thermal_notify_framework will call
+-	 * us back through get_temp() which ought to send a SYNC command to
+-	 * the firmware and hence to take the mutex.
+-	 * Avoid the deadlock by unlocking the mutex here.
+-	 */
+ 	if (mvm->tz_device.tzone) {
+ 		struct iwl_mvm_thermal_device *tz_dev = &mvm->tz_device;
+ 
+-		mutex_unlock(&mvm->mutex);
+ 		thermal_notify_framework(tz_dev->tzone,
+ 					 tz_dev->fw_trips_index[ths_crossed]);
+-		mutex_lock(&mvm->mutex);
+ 	}
+ #endif /* CONFIG_THERMAL */
+ }
+-- 
+2.5.0
 
-On Tue, Mar 22, 2016 at 3:43 AM, Matthias May <matthias.may@neratec.com> wrote:
-> On 22/03/16 10:37, Reinoud Koornstra wrote:
->>
->> Hi Everyone,
->>
->> Everytime I boot I need to set fq_codel for my wireless interface:
->>
->> sudo tc qdisc add   dev wlp4s0 root fq_codel
->>
->> I also need to sudo sysctl -w net.core.default_qdisc=fq_codel
->>
->> Is there a good way to have this as the default in the kernel config
->> instead of pfifo?
->> Also, are there plans for cake support or do fq_codel in this case mean
->> cake?
->> Thanks,
->>
->> Reinoud.
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-wireless"
->> in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> You might want to take a look at the patches in openwrt.
-> Specifically this one:
-> https://dev.openwrt.org/browser/trunk/target/linux/generic/patches-4.4/662-use_fq_codel_by_default.patch
->
-> Best regards
-> Matthias
