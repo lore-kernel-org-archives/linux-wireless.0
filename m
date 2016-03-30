@@ -1,76 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:35709 "EHLO
-	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752643AbcCRC3Y (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 22:29:24 -0400
-Received: by mail-pf0-f175.google.com with SMTP id n5so146113239pfn.2
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 19:29:19 -0700 (PDT)
-From: Julian Calaby <julian.calaby@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Stanislaw Gruszka <sgruszka@redhat.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Sara Sharon <sarasharon1@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org, Jia-Ju Bai <baijiaju1990@163.com>
-Subject: [PATCH MOREWORK 18/19] iwl4965: Fix more memory leaks in __il4965_up()
-Date: Fri, 18 Mar 2016 13:29:11 +1100
-Message-Id: <6bec5a9b55f13d40c2803f0fa60173451d5ea14a.1458262312.git.julian.calaby@gmail.com> (sfid-20160318_032928_343261_F24E53A1)
-In-Reply-To: <cover.1458262312.git.julian.calaby@gmail.com>
-References: <cover.1458262312.git.julian.calaby@gmail.com>
+Received: from mga14.intel.com ([192.55.52.115]:59098 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753022AbcC3OFk (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Mar 2016 10:05:40 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Matti Gottlieb <matti.gottlieb@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 02/43] iwlwifi: mvm: Decrease size of the paging download buffer
+Date: Wed, 30 Mar 2016 17:04:34 +0300
+Message-Id: <1459346715-7954-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160813_155493_1D2B012A)
+In-Reply-To: <1459346667.4731.9.camel@intel.com>
+References: <1459346667.4731.9.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In some of the non-success return paths, the memory allocated by
-iwl4965_sta_alloc_lq() in iwl4965_alloc_bcast_station() is not freed.
+From: Matti Gottlieb <matti.gottlieb@intel.com>
 
-In particular:
- - if the card isn't ready after il4965_prepare_card_hw()
- - if the card is hardware-rfkilled
+Currently the driver has 2 buffers for paging:
+1. paging db - this contains all of the pages that were in the FW
+image, that the driver stores for the FW. This is allocated for each
+block separately (not contiguous).
+2. download buffer - we need to provide this empty buffer for the
+iwl_sdio_load_fw_chunk function to copy the requested pages to the shared
+memory. This is one big buffer of contiguous memory whose size is the
+size of all the blocks that the fw paging section can contain.
 
-In the hardware rfkilled path, the driver enables the rfkill
-interrupt. When the card is unrfkilled and this interrupt is raised
-we end up calling il4965_bg_restart() which calls __il4965_up() which
-calls iwl4965_alloc_bcast_station() again.
+This download buffer size is too big, and causes the allocation to fail
+sometimes. Since the driver allocates memory for each block separately,
+it is not possible for the FW to request all of the pages in one request
+(the FW gives an address and size, so blocks need to be contiguous for
+this to happen), therefore the FW is limited to request only one block.
 
-Suggested-by: Jia-Ju Bai <baijiaju1990@163.com>
-Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+Decrease the size of the paging download buffer to be the size of a
+paging block.
 
+Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-This is only compile tested as I don't have compatible hardware. I also
-don't know the driver enough to know that this is truly correct - however
-it looks right and I stand by my analysis.
-
-Could someone else please review this?
-
-Thanks,
-
-Julian Calaby
----
- drivers/net/wireless/intel/iwlegacy/4965-mac.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/net/wireless/intel/iwlegacy/4965-mac.c b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-index 30d9dd3..f9ed480 100644
---- a/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-+++ b/drivers/net/wireless/intel/iwlegacy/4965-mac.c
-@@ -5553,6 +5553,7 @@ __il4965_up(struct il_priv *il)
- 
- 	il4965_prepare_card_hw(il);
- 	if (!il->hw_ready) {
-+		il_dealloc_bcast_stations(il);
- 		IL_ERR("HW not ready\n");
- 		return -EIO;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index 594cd0d..ebbadcf 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -410,7 +410,9 @@ static int iwl_trans_get_paging_item(struct iwl_mvm *mvm)
+ 		goto exit;
  	}
-@@ -5564,6 +5565,7 @@ __il4965_up(struct il_priv *il)
- 		set_bit(S_RFKILL, &il->status);
- 		wiphy_rfkill_set_hw_state(il->hw->wiphy, true);
  
-+		il_dealloc_bcast_stations(il);
- 		il_enable_rfkill_int(il);
- 		IL_WARN("Radio disabled by HW RF Kill switch\n");
- 		return 0;
+-	mvm->trans->paging_download_buf = kzalloc(MAX_PAGING_IMAGE_SIZE,
++	/* Add an extra page for headers */
++	mvm->trans->paging_download_buf = kzalloc(PAGING_BLOCK_SIZE +
++						  FW_PAGING_SIZE,
+ 						  GFP_KERNEL);
+ 	if (!mvm->trans->paging_download_buf) {
+ 		ret = -ENOMEM;
 -- 
-2.7.0
+2.5.0
 
