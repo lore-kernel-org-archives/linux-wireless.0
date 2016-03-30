@@ -1,148 +1,385 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f194.google.com ([209.85.214.194]:35996 "EHLO
-	mail-ob0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935207AbcCPSeI (ORCPT
+Received: from mail-wm0-f65.google.com ([74.125.82.65]:33683 "EHLO
+	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751432AbcC3M6x (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2016 14:34:08 -0400
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Subject: [PATCH 2/2] rtlwifi: btcoexist: Implement antenna selection
-Date: Wed, 16 Mar 2016 13:33:35 -0500
-Message-Id: <1458153215-25602-3-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160316_193422_293821_63E5B05C)
-In-Reply-To: <1458153215-25602-1-git-send-email-Larry.Finger@lwfinger.net>
-References: <1458153215-25602-1-git-send-email-Larry.Finger@lwfinger.net>
+	Wed, 30 Mar 2016 08:58:53 -0400
+From: Eyal Reizer <eyalreizer@gmail.com>
+To: kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Eyal Reizer <eyalr@ti.com>
+Subject: [PATCH] wlcore: spi: add wl18xx support
+Date: Wed, 30 Mar 2016 15:58:14 +0300
+Message-Id: <1459342694-24461-1-git-send-email-eyalr@ti.com> (sfid-20160330_145918_955346_4769A8B2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The previous patch added an option to rtl8723be to manually select the
-antenna for those cases when only a single antenna is present, and the
-on-board EEPROM is incorrectly programmed. This patch implements the
-necessary changes in the Bluetooth coexistence driver.
+From: Eyal <eyalr@eyalr-VirtualBox.(none)>
 
-Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: Stable <stable@vger.kernel.org> [V4.0+]
+Add support for using with both wl12xx and wl18xx.
+
+- all wilink family needs special init command for entering wspi mode.
+  extra clock cycles should be sent after the spi init command while the
+  cs pin is high.
+- switch to controling the cs pin from the spi driver for achieveing the
+  above.
+- the selected cs gpio is read from the spi device-tree node using the
+  cs-gpios field and setup as a gpio.
+- See the example below for specifying the cs gpio using the cs-gpios entry
+
+&spi0	{
+ 	status = "okay";
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi0_pins>;
+	cs-gpios = <&gpio0 5 0>;
+	#address-cells = <1>;
+	#size-cells = <0>;
+ 	wlcore: wlcore@0 {
+		compatible = "ti,wl1835";
+		vwlan-supply = <&wlan_en_reg>;
+		spi-max-frequency = <48000000>;
+		reg = <0>;      /* chip select 0 on spi0, ie spi0.0 */
+		interrupt-parent = <&gpio0>;
+		interrupts = <27 IRQ_TYPE_EDGE_RISING>;
+ 	};
+};
+
+Signed-off-by: Eyal Reizer <eyalr@ti.com>
 ---
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  9 ++++++--
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.c       | 27 +++++++++++++++++++++-
- .../realtek/rtlwifi/btcoexist/halbtcoutsrc.h       |  2 +-
- .../wireless/realtek/rtlwifi/btcoexist/rtl_btc.c   |  5 +++-
- 4 files changed, 38 insertions(+), 5 deletions(-)
+ drivers/net/wireless/ti/wlcore/spi.c |  176 ++++++++++++++++++++++++++++++----
+ 1 file changed, 157 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-index c43ab59..77cbd10 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtc8723b2ant.c
-@@ -1203,7 +1203,6 @@ static void btc8723b2ant_set_ant_path(struct btc_coexist *btcoexist,
+diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
+index 96d9c9d..6c5a369 100644
+--- a/drivers/net/wireless/ti/wlcore/spi.c
++++ b/drivers/net/wireless/ti/wlcore/spi.c
+@@ -32,6 +32,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/of_irq.h>
+ #include <linux/regulator/consumer.h>
++#include <linux/gpio.h>
  
- 		/* Force GNT_BT to low */
- 		btcoexist->btc_write_1byte_bitmask(btcoexist, 0x765, 0x18, 0x0);
--		btcoexist->btc_write_2byte(btcoexist, 0x948, 0x0);
+ #include "wlcore.h"
+ #include "wl12xx_80211.h"
+@@ -70,16 +71,30 @@
+ #define WSPI_MAX_CHUNK_SIZE    4092
  
- 		if (board_info->btdm_ant_pos == BTC_ANTENNA_AT_MAIN_PORT) {
- 			/* tell firmware "no antenna inverse" */
-@@ -1211,19 +1210,25 @@ static void btc8723b2ant_set_ant_path(struct btc_coexist *btcoexist,
- 			h2c_parameter[1] = 1;  /* ext switch type */
- 			btcoexist->btc_fill_h2c(btcoexist, 0x65, 2,
- 						h2c_parameter);
-+			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x0);
- 		} else {
- 			/* tell firmware "antenna inverse" */
- 			h2c_parameter[0] = 1;
- 			h2c_parameter[1] = 1;  /* ext switch type */
- 			btcoexist->btc_fill_h2c(btcoexist, 0x65, 2,
- 						h2c_parameter);
-+			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x280);
- 		}
- 	}
+ /*
+- * only support SPI for 12xx - this code should be reworked when 18xx
+- * support is introduced
++ * wl18xx driver aggregation buffer size is (13 * PAGE_SIZE) compared to
++ * (4 * PAGE_SIZE) for wl12xx, so use the larger buffer needed for wl18xx
+  */
+-#define SPI_AGGR_BUFFER_SIZE (4 * PAGE_SIZE)
++#define SPI_AGGR_BUFFER_SIZE (13 * PAGE_SIZE)
  
- 	/* ext switch setting */
- 	if (use_ext_switch) {
- 		/* fixed internal switch S1->WiFi, S0->BT */
--		btcoexist->btc_write_2byte(btcoexist, 0x948, 0x0);
-+		if (board_info->btdm_ant_pos == BTC_ANTENNA_AT_MAIN_PORT)
-+			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x0);
-+		else
-+			btcoexist->btc_write_2byte(btcoexist, 0x948, 0x280);
+ /* Maximum number of SPI write chunks */
+ #define WSPI_MAX_NUM_OF_CHUNKS \
+ 	((SPI_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE) + 1)
+ 
+ 
++struct wilink_familiy_data {
++	char name[8];
++};
 +
- 		switch (antpos_type) {
- 		case BTC_ANT_WIFI_AT_MAIN:
- 			/* ext switch main at wifi */
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-index b2791c8..babd149 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.c
-@@ -965,13 +965,38 @@ void exhalbtc_set_chip_type(u8 chip_type)
++const struct wilink_familiy_data *wilink_data;
++
++static const struct wilink_familiy_data wl18xx_data = {
++	.name = "wl18xx",
++};
++
++static const struct wilink_familiy_data wl12xx_data = {
++	.name = "wl12xx",
++};
++
+ struct wl12xx_spi_glue {
+ 	struct device *dev;
+ 	struct platform_device *core;
+@@ -120,6 +135,8 @@ static void wl12xx_spi_init(struct device *child)
+ 	struct spi_transfer t;
+ 	struct spi_message m;
+ 	u8 *cmd = kzalloc(WSPI_INIT_CMD_LEN, GFP_KERNEL);
++	struct spi_device *spi = (struct spi_device *)glue->dev;
++	struct spi_master *master = spi->master;
+ 
+ 	if (!cmd) {
+ 		dev_err(child->parent,
+@@ -127,6 +144,15 @@ static void wl12xx_spi_init(struct device *child)
+ 		return;
  	}
+ 
++	if (!master->cs_gpios) {
++		dev_err(child->parent,
++			"spi chip select pin missing in platform data!\n");
++		return;
++	}
++
++	/* Drive CS line low */
++	gpio_direction_output(master->cs_gpios[0], 0);
++
+ 	memset(&t, 0, sizeof(t));
+ 	spi_message_init(&m);
+ 
+@@ -163,6 +189,26 @@ static void wl12xx_spi_init(struct device *child)
+ 	spi_message_add_tail(&t, &m);
+ 
+ 	spi_sync(to_spi_device(glue->dev), &m);
++
++	/* Send extra clocks with CS high. this is required by the wilink
++	 * family in order for successfully enter WSPI mode
++	 */
++	gpio_direction_output(master->cs_gpios[0], 1);
++
++	memset(&m, 0, sizeof(m));
++	spi_message_init(&m);
++
++	cmd[0] = 0xff;
++	cmd[1] = 0xff;
++	cmd[2] = 0xff;
++	cmd[3] = 0xff;
++	swab32s((u32 *)cmd);
++
++	t.tx_buf = cmd;
++	t.len = 4;
++	spi_message_add_tail(&t, &m);
++	spi_sync(to_spi_device(glue->dev), &m);
++
+ 	kfree(cmd);
  }
  
--void exhalbtc_set_ant_num(u8 type, u8 ant_num)
-+void exhalbtc_set_ant_num(struct rtl_priv *rtlpriv, u8 type, u8 ant_num)
+@@ -213,6 +259,16 @@ static int __must_check wl12xx_spi_raw_read(struct device *child, int addr,
+ 	u32 *busy_buf;
+ 	u32 *cmd;
+ 	u32 chunk_len;
++	struct spi_device *spi = (struct spi_device *)glue->dev;
++	struct spi_master *master = spi->master;
++
++	if (!master->cs_gpios) {
++		dev_err(child->parent,
++			"spi chip select pin missing in platform data!\n");
++		return -EINVAL;
++	}
++	/* Drive CS line low */
++	gpio_direction_output(master->cs_gpios[0], 0);
+ 
+ 	while (len > 0) {
+ 		chunk_len = min_t(size_t, WSPI_MAX_CHUNK_SIZE, len);
+@@ -267,25 +323,44 @@ static int __must_check wl12xx_spi_raw_read(struct device *child, int addr,
+ 		len -= chunk_len;
+ 	}
+ 
++	/* Drive CS line high */
++	gpio_direction_output(master->cs_gpios[0], 1);
+ 	return 0;
+ }
+ 
+-static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
+-					     void *buf, size_t len, bool fixed)
++static int __wl12xx_spi_raw_write(struct device *child, int addr,
++				  void *buf, size_t len, bool fixed)
  {
- 	if (BT_COEX_ANT_TYPE_PG == type) {
- 		gl_bt_coexist.board_info.pg_ant_num = ant_num;
- 		gl_bt_coexist.board_info.btdm_ant_num = ant_num;
-+		/* The antenna position:
-+		 * Main (default) or Aux for pgAntNum=2 && btdmAntNum =1.
-+		 * The antenna position should be determined by
-+		 * auto-detect mechanism.
-+		 * The following is assumed to main,
-+		 * and those must be modified
-+		 * if y auto-detect mechanism is ready
-+		 */
-+		if ((gl_bt_coexist.board_info.pg_ant_num == 2) &&
-+		    (gl_bt_coexist.board_info.btdm_ant_num == 1))
-+			gl_bt_coexist.board_info.btdm_ant_pos =
-+						       BTC_ANTENNA_AT_MAIN_PORT;
-+		else
-+			gl_bt_coexist.board_info.btdm_ant_pos =
-+						       BTC_ANTENNA_AT_MAIN_PORT;
- 	} else if (BT_COEX_ANT_TYPE_ANTDIV == type) {
- 		gl_bt_coexist.board_info.btdm_ant_num = ant_num;
-+		gl_bt_coexist.board_info.btdm_ant_pos =
-+						       BTC_ANTENNA_AT_MAIN_PORT;
-+	} else if (type == BT_COEX_ANT_TYPE_DETECTED) {
-+		gl_bt_coexist.board_info.btdm_ant_num = ant_num;
-+		if (rtlpriv->cfg->mod_params->ant_sel == 1)
-+			gl_bt_coexist.board_info.btdm_ant_pos =
-+				BTC_ANTENNA_AT_AUX_PORT;
-+		else
-+			gl_bt_coexist.board_info.btdm_ant_pos =
-+				BTC_ANTENNA_AT_MAIN_PORT;
+ 	struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
+-	/* SPI write buffers - 2 for each chunk */
+-	struct spi_transfer t[2 * WSPI_MAX_NUM_OF_CHUNKS];
++	struct spi_transfer *t;
+ 	struct spi_message m;
+ 	u32 commands[WSPI_MAX_NUM_OF_CHUNKS]; /* 1 command per chunk */
+ 	u32 *cmd;
+ 	u32 chunk_len;
+ 	int i;
++	struct spi_device *spi = (struct spi_device *)glue->dev;
++	struct spi_master *master = spi->master;
++
++	if (!master->cs_gpios) {
++		dev_err(child->parent,
++			"spi chip select pin missing in platform data!\n");
++		return -EINVAL;
++	}
++
++	/* SPI write buffers - 2 for each chunk */
++	t = kzalloc(sizeof(*t) * 2 * WSPI_MAX_NUM_OF_CHUNKS, GFP_KERNEL);
++	if (!t) {
++		dev_err(child->parent,
++			"could not allocate spi write buffer\n");
++		return -ENOMEM;
++	}
++
++	/* Drive CS line low */
++	gpio_direction_output(master->cs_gpios[0], 0);
+ 
+ 	WARN_ON(len > SPI_AGGR_BUFFER_SIZE);
+ 
+ 	spi_message_init(&m);
+-	memset(t, 0, sizeof(t));
+ 
+ 	cmd = &commands[0];
+ 	i = 0;
+@@ -318,9 +393,29 @@ static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
+ 
+ 	spi_sync(to_spi_device(glue->dev), &m);
+ 
++	/* Drive CS line high */
++	gpio_direction_output(master->cs_gpios[0], 1);
++
++	kfree(t);
+ 	return 0;
+ }
+ 
++static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
++					     void *buf, size_t len, bool fixed)
++{
++	int ret;
++
++	/* The ELP wakeup write may fail the first time due to internal
++	 * hardware latency. It is safer to send the wakeup command twice to
++	 * avoid unexpected failures.
++	 */
++	if (addr == HW_ACCESS_ELP_CTRL_REG)
++		ret = __wl12xx_spi_raw_write(child, addr, buf, len, fixed);
++	ret = __wl12xx_spi_raw_write(child, addr, buf, len, fixed);
++
++	return ret;
++}
++
+ /**
+  * wl12xx_spi_set_power - power on/off the wl12xx unit
+  * @child: wl12xx device handle.
+@@ -349,17 +444,38 @@ static int wl12xx_spi_set_power(struct device *child, bool enable)
+ 	return ret;
+ }
+ 
++/**
++ * wl12xx_spi_set_block_size
++ *
++ * This function is not needed for spi mode, but need to be present.
++ * Without it defined the wlcore fallback to use the wrong packet
++ * allignment on tx.
++ */
++static void wl12xx_spi_set_block_size(struct device *child,
++				      unsigned int blksz)
++{
++}
++
+ static struct wl1271_if_operations spi_ops = {
+ 	.read		= wl12xx_spi_raw_read,
+ 	.write		= wl12xx_spi_raw_write,
+ 	.reset		= wl12xx_spi_reset,
+ 	.init		= wl12xx_spi_init,
+ 	.power		= wl12xx_spi_set_power,
+-	.set_block_size = NULL,
++	.set_block_size = wl12xx_spi_set_block_size,
+ };
+ 
+ static const struct of_device_id wlcore_spi_of_match_table[] = {
+-	{ .compatible = "ti,wl1271" },
++	{ .compatible = "ti,wl1271", .data = &wl12xx_data},
++	{ .compatible = "ti,wl1273", .data = &wl12xx_data},
++	{ .compatible = "ti,wl1281", .data = &wl12xx_data},
++	{ .compatible = "ti,wl1283", .data = &wl12xx_data},
++	{ .compatible = "ti,wl1801", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1805", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1807", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1831", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1835", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1837", .data = &wl18xx_data},
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(of, wlcore_spi_of_match_table);
+@@ -375,18 +491,24 @@ static int wlcore_probe_of(struct spi_device *spi, struct wl12xx_spi_glue *glue,
+ 			   struct wlcore_platdev_data *pdev_data)
+ {
+ 	struct device_node *dt_node = spi->dev.of_node;
+-	int ret;
++	const struct of_device_id *of_id;
++
++	of_id = of_match_node(wlcore_spi_of_match_table, dt_node);
++	if (!of_id)
++		return -ENODEV;
++
++	wilink_data = of_id->data;
++	dev_info(&spi->dev, "selected chip familiy is %s\n",
++		 wilink_data->name);
+ 
+ 	if (of_find_property(dt_node, "clock-xtal", NULL))
+ 		pdev_data->ref_clock_xtal = true;
+ 
+-	ret = of_property_read_u32(dt_node, "ref-clock-frequency",
+-				   &pdev_data->ref_clock_freq);
+-	if (IS_ERR_VALUE(ret)) {
+-		dev_err(glue->dev,
+-			"can't get reference clock frequency (%d)\n", ret);
+-		return ret;
+-	}
++	/* optional clock frequency params */
++	of_property_read_u32(dt_node, "ref-clock-frequency",
++			     &pdev_data->ref_clock_freq);
++	of_property_read_u32(dt_node, "tcxo-clock-frequency",
++			     &pdev_data->tcxo_clock_freq);
+ 
+ 	return 0;
+ }
+@@ -397,6 +519,7 @@ static int wl1271_probe(struct spi_device *spi)
+ 	struct wlcore_platdev_data pdev_data;
+ 	struct resource res[1];
+ 	int ret;
++	struct spi_master *master = spi->master;
+ 
+ 	memset(&pdev_data, 0x00, sizeof(pdev_data));
+ 
+@@ -410,6 +533,12 @@ static int wl1271_probe(struct spi_device *spi)
+ 
+ 	glue->dev = &spi->dev;
+ 
++	if (!master->cs_gpios) {
++		dev_err(glue->dev,
++			"spi chip select pin missing in platform data!\n");
++		return -EINVAL;
++	}
++
+ 	spi_set_drvdata(spi, glue);
+ 
+ 	/* This is the only SPI value that we need to set here, the rest
+@@ -431,15 +560,21 @@ static int wl1271_probe(struct spi_device *spi)
+ 		return ret;
  	}
+ 
++	if (gpio_request(master->cs_gpios[0], "spi1-cs0"))
++		return -EINVAL;
++
+ 	ret = spi_setup(spi);
+ 	if (ret < 0) {
+ 		dev_err(glue->dev, "spi_setup failed\n");
++		gpio_free(master->cs_gpios[0]);
+ 		return ret;
+ 	}
+ 
+-	glue->core = platform_device_alloc("wl12xx", PLATFORM_DEVID_AUTO);
++	glue->core = platform_device_alloc(wilink_data->name,
++					   PLATFORM_DEVID_AUTO);
+ 	if (!glue->core) {
+ 		dev_err(glue->dev, "can't allocate platform_device\n");
++		gpio_free(master->cs_gpios[0]);
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -474,14 +609,17 @@ static int wl1271_probe(struct spi_device *spi)
+ 
+ out_dev_put:
+ 	platform_device_put(glue->core);
++	gpio_free(master->cs_gpios[0]);
+ 	return ret;
  }
  
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-index 0a903ea..f41ca57 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/halbtcoutsrc.h
-@@ -535,7 +535,7 @@ void exhalbtc_set_bt_patch_version(u16 bt_hci_version, u16 bt_patch_version);
- void exhalbtc_update_min_bt_rssi(char bt_rssi);
- void exhalbtc_set_bt_exist(bool bt_exist);
- void exhalbtc_set_chip_type(u8 chip_type);
--void exhalbtc_set_ant_num(u8 type, u8 ant_num);
-+void exhalbtc_set_ant_num(struct rtl_priv *rtlpriv, u8 type, u8 ant_num);
- void exhalbtc_display_bt_coex_info(struct btc_coexist *btcoexist);
- void exhalbtc_signal_compensation(struct btc_coexist *btcoexist,
- 				  u8 *rssi_wifi, u8 *rssi_bt);
-diff --git a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-index b9b0cb7..d3fd921 100644
---- a/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/btcoexist/rtl_btc.c
-@@ -72,7 +72,10 @@ void rtl_btc_init_hal_vars(struct rtl_priv *rtlpriv)
- 		 __func__, bt_type);
- 	exhalbtc_set_chip_type(bt_type);
+ static int wl1271_remove(struct spi_device *spi)
+ {
+ 	struct wl12xx_spi_glue *glue = spi_get_drvdata(spi);
++	struct spi_master *master = spi->master;
  
--	exhalbtc_set_ant_num(BT_COEX_ANT_TYPE_PG, ant_num);
-+	if (rtlpriv->cfg->mod_params->ant_sel == 1)
-+		exhalbtc_set_ant_num(rtlpriv, BT_COEX_ANT_TYPE_DETECTED, 1);
-+	else
-+		exhalbtc_set_ant_num(rtlpriv, BT_COEX_ANT_TYPE_PG, ant_num);
+ 	platform_device_unregister(glue->core);
++	gpio_free(master->cs_gpios[0]);
+ 
+ 	return 0;
  }
- 
- void rtl_btc_init_hw_config(struct rtl_priv *rtlpriv)
 -- 
-2.1.4
+1.7.9.5
 
