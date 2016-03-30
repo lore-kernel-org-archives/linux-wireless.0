@@ -1,57 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f195.google.com ([209.85.213.195]:32877 "EHLO
-	mail-ig0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750779AbcB2Xur (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 18:50:47 -0500
-Received: by mail-ig0-f195.google.com with SMTP id hb3so707346igb.0
-        for <linux-wireless@vger.kernel.org>; Mon, 29 Feb 2016 15:50:46 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <wrfjio17hyco.fsf@redhat.com>
-References: <1456783551-28315-1-git-send-email-Jes.Sorensen@redhat.com>
- <1456783551-28315-67-git-send-email-Jes.Sorensen@redhat.com>
- <CAGRGNgW+QS6dgYdvJgWQ+qKjLWHC-U1Ni7LAQUK0VXuJiQu2aA@mail.gmail.com> <wrfjio17hyco.fsf@redhat.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 1 Mar 2016 10:50:26 +1100
-Message-ID: <CAGRGNgU-Y05b1_G8pKctNEoBX3=nX+CFNi=djzO6iA6EesBUpA@mail.gmail.com> (sfid-20160301_005052_024765_74EA7146)
-Subject: Re: [PATCH 066/113] rtl8xxxu: Call device specific _config_channel()
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([192.55.52.115]:35851 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753988AbcC3OGR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Mar 2016 10:06:17 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: David Spinadel <david.spinadel@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 26/43] iwlwifi: mvm: set aux STA ID in scan config
+Date: Wed, 30 Mar 2016 17:04:58 +0300
+Message-Id: <1459346715-7954-26-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160624_815399_A924B63A)
+In-Reply-To: <1459346667.4731.9.camel@intel.com>
+References: <1459346667.4731.9.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Jes,
+From: David Spinadel <david.spinadel@intel.com>
 
-On Tue, Mar 1, 2016 at 10:48 AM, Jes Sorensen <Jes.Sorensen@redhat.com> wrote:
-> Julian Calaby <julian.calaby@gmail.com> writes:
->> Hi Jes,
->>
->> On Tue, Mar 1, 2016 at 9:05 AM,  <Jes.Sorensen@redhat.com> wrote:
->>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->>>
->>> Having a version for the newer chips without calling it doesn't do
->>> much good.....
->>>
->>> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
->>
->> Should this be squashed into the patch that introduces the new op?
->
-> I can start rewriting history, but all that comes out of that is having
-> to fight patch conflicts rebasing things.
->
-> If there was an actual functional reason for it, sure, but in this case
-> there isn't.
+Auxilary station ID in flag in scan config command wasn't set
+although we set the station ID. Add the flag.
 
-Fair enough, it just looks odd to have fixes like this in a patch
-series that almost entirely consists of introducing new stuff.
+Signed-off-by: David Spinadel <david.spinadel@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/scan.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thanks,
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+index 09eb72c..25b007c 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/scan.c
+@@ -961,6 +961,7 @@ int iwl_mvm_config_scan(struct iwl_mvm *mvm)
+ 					 SCAN_CONFIG_FLAG_ALLOW_CHUB_REQS |
+ 					 SCAN_CONFIG_FLAG_SET_TX_CHAINS |
+ 					 SCAN_CONFIG_FLAG_SET_RX_CHAINS |
++					 SCAN_CONFIG_FLAG_SET_AUX_STA_ID |
+ 					 SCAN_CONFIG_FLAG_SET_ALL_TIMES |
+ 					 SCAN_CONFIG_FLAG_SET_LEGACY_RATES |
+ 					 SCAN_CONFIG_FLAG_SET_MAC_ADDR |
 -- 
-Julian Calaby
+2.5.0
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
