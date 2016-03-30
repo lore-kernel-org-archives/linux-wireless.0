@@ -1,64 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:33445 "EHLO
-	mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361AbcCRCZj (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 22:25:39 -0400
-Received: by mail-pf0-f174.google.com with SMTP id 4so15145407pfd.0
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 19:25:39 -0700 (PDT)
-From: Julian Calaby <julian.calaby@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Markus Elfring <elfring@users.sourceforge.net>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH DETAIL 13/19] rsi: Delete unnecessary variable initialisation
-Date: Fri, 18 Mar 2016 13:25:33 +1100
-Message-Id: <c95f816da2d5c6789004e063e1b7adc44695718e.1458262312.git.julian.calaby@gmail.com> (sfid-20160318_032542_147790_7DFD3A34)
-In-Reply-To: <cover.1458262312.git.julian.calaby@gmail.com>
-References: <cover.1458262312.git.julian.calaby@gmail.com>
+Received: from mga14.intel.com ([192.55.52.115]:24696 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754142AbcC3OFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Mar 2016 10:05:55 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 15/43] iwlwifi: add missing mutex_destroy statements
+Date: Wed, 30 Mar 2016 17:04:47 +0300
+Message-Id: <1459346715-7954-15-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160610_892172_CA7BC00F)
+In-Reply-To: <1459346667.4731.9.camel@intel.com>
+References: <1459346667.4731.9.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Markus Elfring <elfring@users.sourceforge.net>
+iwlwifi / iwlmvm didn't destroy their mutexes. Fix that.
 
-In rsi_send_data_pkt(), the following variables are assigned to
-before they're used:
-
- * tmp_hdr - Assigned on line 47, first used on line 48
- * bss - Assigned on line 41, first used on line 44
- * extnd_size - Assigned on line 50, first used on line 52
- * seq_num - Assigned on line 48, first used on line 96
-
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
-[Rewrote commit message]
-Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/rsi/rsi_91x_pkt.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/ops.c    | 3 +++
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 1 +
+ 2 files changed, 4 insertions(+)
 
-diff --git a/drivers/net/wireless/rsi/rsi_91x_pkt.c b/drivers/net/wireless/rsi/rsi_91x_pkt.c
-index 571eaba..4322df1 100644
---- a/drivers/net/wireless/rsi/rsi_91x_pkt.c
-+++ b/drivers/net/wireless/rsi/rsi_91x_pkt.c
-@@ -27,15 +27,15 @@
- int rsi_send_data_pkt(struct rsi_common *common, struct sk_buff *skb)
- {
- 	struct rsi_hw *adapter = common->priv;
--	struct ieee80211_hdr *tmp_hdr = NULL;
-+	struct ieee80211_hdr *tmp_hdr;
- 	struct ieee80211_tx_info *info;
- 	struct skb_info *tx_params;
--	struct ieee80211_bss_conf *bss = NULL;
-+	struct ieee80211_bss_conf *bss;
- 	int status = -EINVAL;
- 	u8 ieee80211_size = MIN_802_11_HDR_LEN;
--	u8 extnd_size = 0;
-+	u8 extnd_size;
- 	__le16 *frame_desc;
--	u16 seq_num = 0;
-+	u16 seq_num;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+index 6153c8e..d4b71a7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
+@@ -782,6 +782,9 @@ static void iwl_op_mode_mvm_stop(struct iwl_op_mode *op_mode)
  
- 	info = IEEE80211_SKB_CB(skb);
- 	bss = &info->control.vif->bss_conf;
+ 	iwl_mvm_tof_clean(mvm);
+ 
++	mutex_destroy(&mvm->mutex);
++	mutex_destroy(&mvm->d0i3_suspend_mutex);
++
+ 	ieee80211_free_hw(mvm->hw);
+ }
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+index 28fe220..0c40209 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
+@@ -1695,6 +1695,7 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
+ 	}
+ 
+ 	free_percpu(trans_pcie->tso_hdr_page);
++	mutex_destroy(&trans_pcie->mutex);
+ 	iwl_trans_free(trans);
+ }
+ 
 -- 
-2.7.0
+2.5.0
 
