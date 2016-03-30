@@ -1,79 +1,70 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:34798 "EHLO
-	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751559AbcCFM5e (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 07:57:34 -0500
-Received: by mail-wm0-f65.google.com with SMTP id p65so6295132wmp.1
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 04:57:33 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 09/13] staging: vt6655: mac.c replace VNSvInPortB with ioread8
-Date: Sun,  6 Mar 2016 12:57:08 +0000
-Message-Id: <1457269032-2681-9-git-send-email-tvboxspy@gmail.com> (sfid-20160306_135746_050072_A57ABC21)
-In-Reply-To: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
-References: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
+Received: from mga14.intel.com ([192.55.52.115]:35571 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754347AbcC3OGb (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Mar 2016 10:06:31 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 41/43] iwlwifi: mvm: fix inconsistent lock in dqa mode
+Date: Wed, 30 Mar 2016 17:05:13 +0300
+Message-Id: <1459346715-7954-41-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160703_281776_BF0E6609)
+In-Reply-To: <1459346667.4731.9.camel@intel.com>
+References: <1459346667.4731.9.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing the macro from functions.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+When working in DQA mode, there is a lockdep log warning
+about an inconsistent state of the mvmsta->lock and the
+mvm->queue_info_lock. Fix this. This mode is not activated
+for now.
+
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/staging/vt6655/mac.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
-index ece2bf0..a1be62d 100644
---- a/drivers/staging/vt6655/mac.c
-+++ b/drivers/staging/vt6655/mac.c
-@@ -558,7 +558,7 @@ void MACvSetCurrRx0DescAddr(struct vnt_private *priv, u32 dwCurrDescAddr)
- 	unsigned short ww;
- 	unsigned char byOrgDMACtl;
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index e157bd5..12614b7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -296,7 +296,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
  
--	VNSvInPortB(io_base + MAC_REG_RXDMACTL0, &byOrgDMACtl);
-+	byOrgDMACtl = ioread8(io_base + MAC_REG_RXDMACTL0);
- 	if (byOrgDMACtl & DMACTL_RUN)
- 		iowrite8(DMACTL_RUN, io_base + MAC_REG_RXDMACTL0 + 2);
+ 	lockdep_assert_held(&mvm->mutex);
  
-@@ -592,7 +592,7 @@ void MACvSetCurrRx1DescAddr(struct vnt_private *priv, u32 dwCurrDescAddr)
- 	unsigned short ww;
- 	unsigned char byOrgDMACtl;
+-	spin_lock(&mvm->queue_info_lock);
++	spin_lock_bh(&mvm->queue_info_lock);
  
--	VNSvInPortB(io_base + MAC_REG_RXDMACTL1, &byOrgDMACtl);
-+	byOrgDMACtl = ioread8(io_base + MAC_REG_RXDMACTL1);
- 	if (byOrgDMACtl & DMACTL_RUN)
- 		iowrite8(DMACTL_RUN, io_base + MAC_REG_RXDMACTL1 + 2);
+ 	/*
+ 	 * Non-QoS, QoS NDP and MGMT frames should go to a MGMT queue, if one
+@@ -324,7 +324,7 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
+ 	if (queue >= 0)
+ 		mvm->queue_info[queue].setup_reserved = false;
  
-@@ -628,7 +628,7 @@ void MACvSetCurrTx0DescAddrEx(struct vnt_private *priv,
- 	unsigned short ww;
- 	unsigned char byOrgDMACtl;
+-	spin_unlock(&mvm->queue_info_lock);
++	spin_unlock_bh(&mvm->queue_info_lock);
  
--	VNSvInPortB(io_base + MAC_REG_TXDMACTL0, &byOrgDMACtl);
-+	byOrgDMACtl = ioread8(io_base + MAC_REG_TXDMACTL0);
- 	if (byOrgDMACtl & DMACTL_RUN)
- 		iowrite8(DMACTL_RUN, io_base + MAC_REG_TXDMACTL0 + 2);
+ 	/* TODO: support shared queues for same RA */
+ 	if (queue < 0)
+@@ -402,12 +402,12 @@ static void iwl_mvm_tx_deferred_stream(struct iwl_mvm *mvm,
  
-@@ -664,7 +664,7 @@ void MACvSetCurrAC0DescAddrEx(struct vnt_private *priv,
- 	unsigned short ww;
- 	unsigned char byOrgDMACtl;
+ 	__skb_queue_head_init(&deferred_tx);
  
--	VNSvInPortB(io_base + MAC_REG_AC0DMACTL, &byOrgDMACtl);
-+	byOrgDMACtl = ioread8(io_base + MAC_REG_AC0DMACTL);
- 	if (byOrgDMACtl & DMACTL_RUN)
- 		iowrite8(DMACTL_RUN, io_base + MAC_REG_AC0DMACTL + 2);
++	/* Disable bottom-halves when entering TX path */
++	local_bh_disable();
+ 	spin_lock(&mvmsta->lock);
+ 	skb_queue_splice_init(&tid_data->deferred_tx_frames, &deferred_tx);
+ 	spin_unlock(&mvmsta->lock);
  
-@@ -713,7 +713,7 @@ void MACvTimer0MicroSDelay(struct vnt_private *priv, unsigned int uDelay)
- 	iowrite8((TMCTL_TMD | TMCTL_TE), io_base + MAC_REG_TMCTL0);
- 	for (ii = 0; ii < 66; ii++) {  /* assume max PCI clock is 66Mhz */
- 		for (uu = 0; uu < uDelay; uu++) {
--			VNSvInPortB(io_base + MAC_REG_TMCTL0, &byValue);
-+			byValue = ioread8(io_base + MAC_REG_TMCTL0);
- 			if ((byValue == 0) ||
- 			    (byValue & TMCTL_TSUSP)) {
- 				iowrite8(0, io_base + MAC_REG_TMCTL0);
+-	/* Disable bottom-halves when entering TX path */
+-	local_bh_disable();
+ 	while ((skb = __skb_dequeue(&deferred_tx)))
+ 		if (no_queue || iwl_mvm_tx_skb(mvm, skb, sta))
+ 			ieee80211_free_txskb(mvm->hw, skb);
 -- 
-2.7.0
+2.5.0
 
