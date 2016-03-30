@@ -1,54 +1,38 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:24696 "EHLO mga14.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754142AbcC3OFz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 10:05:55 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: linux-wireless@vger.kernel.org
-Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 15/43] iwlwifi: add missing mutex_destroy statements
-Date: Wed, 30 Mar 2016 17:04:47 +0300
-Message-Id: <1459346715-7954-15-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160610_892172_CA7BC00F)
-In-Reply-To: <1459346667.4731.9.camel@intel.com>
-References: <1459346667.4731.9.camel@intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:34498 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752857AbcC3MTq (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Mar 2016 08:19:46 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Arend Van Spriel <arend.vanspriel@broadcom.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [V11,2/2] brcmfmac: add support for nl80211 BSS_SELECT feature
+References: <56F65580.4060403@broadcom.com>
+	<87pouhcz3a.fsf@kamboji.qca.qualcomm.com>
+	<56FA40FD.3040609@broadcom.com>
+Date: Wed, 30 Mar 2016 15:19:41 +0300
+In-Reply-To: <56FA40FD.3040609@broadcom.com> (Arend Van Spriel's message of
+	"Tue, 29 Mar 2016 10:46:53 +0200")
+Message-ID: <87shz89mzm.fsf@kamboji.qca.qualcomm.com> (sfid-20160330_142000_544767_48877434)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-iwlwifi / iwlmvm didn't destroy their mutexes. Fix that.
+Arend Van Spriel <arend.vanspriel@broadcom.com> writes:
 
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c    | 3 +++
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c | 1 +
- 2 files changed, 4 insertions(+)
+>> But please do remind about this, I seldomly check the "Awaiting
+>> Upstream" queue so sometimes it might take way too long before I apply
+>> the patch.
+>
+> So this is another way of saying the author should keep an eye on his
+> patches when it ends up in this state or in general ;-) Noted.
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-index 6153c8e..d4b71a7 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/ops.c
-@@ -782,6 +782,9 @@ static void iwl_op_mode_mvm_stop(struct iwl_op_mode *op_mode)
- 
- 	iwl_mvm_tof_clean(mvm);
- 
-+	mutex_destroy(&mvm->mutex);
-+	mutex_destroy(&mvm->d0i3_suspend_mutex);
-+
- 	ieee80211_free_hw(mvm->hw);
- }
- 
-diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-index 28fe220..0c40209 100644
---- a/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-+++ b/drivers/net/wireless/intel/iwlwifi/pcie/trans.c
-@@ -1695,6 +1695,7 @@ void iwl_trans_pcie_free(struct iwl_trans *trans)
- 	}
- 
- 	free_percpu(trans_pcie->tso_hdr_page);
-+	mutex_destroy(&trans_pcie->mutex);
- 	iwl_trans_free(trans);
- }
- 
+Yeah, exactly :) Especially it's very helpful to send a note once the
+dependency is in wireless-drivers-next, otherwise I need to manually
+check and unsurprisingly I don't do it that often...
+
 -- 
-2.5.0
-
+Kalle Valo
