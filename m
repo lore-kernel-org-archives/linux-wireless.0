@@ -1,70 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:60930 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751431AbcCDTpg (ORCPT
+Received: from mail-ig0-f176.google.com ([209.85.213.176]:37066 "EHLO
+	mail-ig0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752929AbcC3UCP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 4 Mar 2016 14:45:36 -0500
-Message-ID: <1457120732.28365.166.camel@coelho.fi> (sfid-20160304_204540_682129_2AB773BE)
-From: Luca Coelho <luca@coelho.fi>
-To: Kalle Valo <kvalo@codeaurora.org>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Matti Gottlieb <matti.gottlieb@intel.com>
-Date: Fri, 04 Mar 2016 21:45:32 +0200
-In-Reply-To: <87povaw7jc.fsf@kamboji.qca.qualcomm.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA41983@hasmsx107.ger.corp.intel.com>
-	 <1456433829-20285-2-git-send-email-emmanuel.grumbach@intel.com>
-	 <87povaw7jc.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: [PATCH 2/2] iwlwifi: mvm: Fix paging memory leak
+	Wed, 30 Mar 2016 16:02:15 -0400
+Received: by mail-ig0-f176.google.com with SMTP id l20so51786328igf.0
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2016 13:02:14 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1186227012.1763514.1459302043299.JavaMail.yahoo@mail.yahoo.com>
+References: <CAJ-VmomakNNn2oUQ+HfPrA=d5QXkAfnLixOBF5twX9yL3bRetA@mail.gmail.com>
+	<1186227012.1763514.1459302043299.JavaMail.yahoo@mail.yahoo.com>
+Date: Wed, 30 Mar 2016 13:02:14 -0700
+Message-ID: <CAJ-Vmomxbp4j3kmHOwf8AXB+s7jEDZGSR0j2Da=TjU324eHvNg@mail.gmail.com> (sfid-20160330_220217_836728_FD46EEAD)
+Subject: Re: Bonjour mDNS broacast can be lost during BT-WLAN coexistence schemes?
+From: Adrian Chadd <adrian@freebsd.org>
+To: sandeep suresh <sandeep.suresh@yahoo.co.in>
+Cc: Ath9k-devel <ath9k-devel@lists.ath9k.org>,
+	Linux Wireless List <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
+Hi!
 
-On Fri, 2016-03-04 at 18:07 +0200, Kalle Valo wrote:
-> Emmanuel Grumbach <emmanuel.grumbach@intel.com> writes:
-> 
-> > From: Matti Gottlieb <matti.gottlieb@intel.com>
-> > 
-> > If the opmode is stopped and started again we did not free
-> > the paging buffers. Fix that.
-> > In addition when freeing the firmware's paging download
-> > buffer, set the pointer to NULL.
-> > 
-> > Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
-> > Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-> 
-> Nitpicking while writing the pull request for Dave:
-> 
-> What does "opmode is stopped" mean? Important bug fixes should have a
-> clear bug description from user's point of view. Using driver internal
-> jargon is gibberish to most people.
+I don't know if you can do simulaneous wlan and BT RX - especially
+since WLAN RX sometimes requires ACKs to be sent. :) But for
+multicast, sure. You'd have to check the NIC schematic and antenna
+switch programming to see if you can do simultaneous wlan RX (with no
+TXing, eg RTS/CTS, ACK, etc) whilst also doing BT RX.
 
-I agree that there could be a bit more high-level description here, but
-I also think it's good to keep a bit more details about what is
-happening internally, so that developers understand too. ;)
-
-Do you think it would be acceptable to keep the commit log most as it
-is, but start with something like "Some paging buffers were not freed
-when the driver is restarted."? I don't mean to change this commit
-itself, but just so that we know how to please you (and users) while
-still keeping the details as part of the commit logs... ;)
+As for BT_ACTIVE -> powersave; I don't think you can get interrupts
+based on that, but you can poll the gpio pin yourself and then tell
+the driver to not transmit and/or enter sleep state. Entering sleep
+state requires that you send some frame anyway to tell the AP you're
+going to sleep.
 
 
-> I investigated this myself and apparently "opmode" is stopped when the
-> module is unloaded or the PCI device is removed. So just say that in the
-> commit log and everyone understand much better.
-
-Our driver is divided roughly into two layers: the bus layer (called
-transport) and the protocol layer (called opmode).  The name comes from
-the difference between the two opmodes that we currently have.  One
-supports only a single operating channel (dvm) and the other supports
-multiple operating channels (mvm).
-
-Hope this clarifies a bit. :)
-
---
-Cheers,
-Luca.
+-a
