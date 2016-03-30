@@ -1,59 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:44321 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932960AbcC3QwX (ORCPT
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:33652 "EHLO
+	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752693AbcC3SeE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 12:52:23 -0400
-Subject: Re: Question on rhashtable in worst-case scenario.
-To: David Miller <davem@davemloft.net>, johannes@sipsolutions.net
-References: <56F9941A.3080501@candelatech.com>
- <56FAAA6D.3070806@candelatech.com> <1459329252.2055.1.camel@sipsolutions.net>
- <20160330.123821.328761526754742195.davem@davemloft.net>
-Cc: linux-kernel@vger.kernel.org, herbert@gondor.apana.org.au,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	tgraf@suug.ch
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <56FC0445.6010200@candelatech.com> (sfid-20160330_185321_064182_78679935)
-Date: Wed, 30 Mar 2016 09:52:21 -0700
+	Wed, 30 Mar 2016 14:34:04 -0400
+Received: by mail-yw0-f195.google.com with SMTP id o63so8095368ywe.0
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2016 11:34:03 -0700 (PDT)
+Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
+To: Greg KH <greg@kroah.com>
+References: <56F4266B.4060605@gmail.com> <1943931458892174@web3o.yandex.ru>
+ <56F5D04A.20506@gmail.com> <56F5D11B.7000803@gmail.com>
+ <20160326001803.GB15767@kroah.com> <56F5DA55.6030802@gmail.com>
+ <20160326141540.GA4104@kroah.com> <56F69BDC.7050900@gmail.com>
+ <20160326170409.GA27584@kroah.com> <56F6CFD6.1020109@gmail.com>
+ <20160328144214.GA10444@kroah.com>
+Cc: Evgeny Novikov <novikov@ispras.ru>,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	"Luis R. Rodriguez" <mcgrof@gmail.com>,
+	"lsb-discuss@lists.linux-foundation.org"
+	<lsb-discuss@lists.linux-foundation.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Open Printing <printing-architecture@lists.linux-foundation.org>,
+	chris holcombe <chris.holcombe@canonical.com>,
+	Chris MacNaughton <chris.macnaughton@canonical.com>
+From: Till Kamppeter <till.kamppeter@gmail.com>
+Message-ID: <56FC1C17.70703@gmail.com> (sfid-20160330_203408_896497_D5C0CEA3)
+Date: Wed, 30 Mar 2016 15:33:59 -0300
 MIME-Version: 1.0
-In-Reply-To: <20160330.123821.328761526754742195.davem@davemloft.net>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <20160328144214.GA10444@kroah.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/30/2016 09:38 AM, David Miller wrote:
-> From: Johannes Berg <johannes@sipsolutions.net>
-> Date: Wed, 30 Mar 2016 11:14:12 +0200
->
->> On Tue, 2016-03-29 at 09:16 -0700, Ben Greear wrote:
->>> Looks like rhashtable has too much policy in it to properly deal with
->>> cases where there are too many hash collisions, so I am going to work
->>> on reverting it's use in mac80211.
+On 03/28/2016 11:42 AM, Greg KH wrote:
+> On Sat, Mar 26, 2016 at 03:07:18PM -0300, Till Kamppeter wrote:
+>>> If there's anything else I need to do here, becides try to find a
+>>> co-mentor, please let me know.
+>>>
 >>
->> I'm not really all that happy with that approach - can't we fix the
->> rhashtable? It's a pretty rare corner case that many keys really are
->> identical and no kind of hash algorithm, but it seems much better to
->> still deal with it than to remove the rhashtable usage and go back to
->> hand-rolling something.
+>> I am grateful if you could enter as co-mentor, especially if there is any
+>> kernel project now which has only one mentor.
 >
-> Yeah reverting seems like a really idiotic way to deal with the issue.
->
+> I don't understand, we only have one kernel project with one proposed
+> mentor (me) right now, are we requiring all projects to have 2 mentors
+> now?  I've never done it that way in the past...
 
-If someone can fix rhashtable, then great.
-I read some earlier comments [1] back when someone else reported
-similar problems, and the comments seemed to indicate that rhashtable was
-broken in this manner on purpose to protect against hashing attacks.
+Generally, a single person can mentor a student, but if something 
+unforeseen happens to a mentor, there is a backup. The backup mentor 
+actually does not need to mentor as long as there is all OK with the 
+primary mentor. He only needs to "WANT TO MENTOR" to later on be able to 
+do the evaluations if the primary mentor is not able to do so.
 
-If you are baking in this type of policy to what should be a basic
-data-type, then it is not useful for how it is being used in
-the mac80211 stack.
+    Till
 
-[1]  http://lkml.iu.edu/hypermail/linux/kernel/1512.2/01681.html
-
-Thanks,
-Ben
-
--- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
 
