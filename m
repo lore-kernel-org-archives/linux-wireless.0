@@ -1,77 +1,148 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:36193 "EHLO
-	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932426AbcCSXka (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 19 Mar 2016 19:40:30 -0400
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: Luciano Coelho <coelho@ti.com>, Felipe Balbi <balbi@ti.com>,
-	kev@ti.com, Shahar Levi <shahar_levi@ti.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"Andrew F. Davis" <afd@ti.com>, Guy Mishol <guym@ti.com>,
-	Yaniv Machani <yanivma@ti.com>, Arik Nemtsov <arik@wizery.com>,
-	Gery Kahn <geryk@ti.com>, Felipe Balbi <balbi@kernel.org>,
-	Luciano Coelho <luca@coelho.fi>
-Subject: AP firmware for TI wl1251 wifi chip (wl1251-fw-ap.bin)
-Date: Sun, 20 Mar 2016 00:40:25 +0100
-Cc: David Woodhouse <dwmw2@infradead.org>, Pavel Machek <pavel@ucw.cz>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	David Gnedt <david.gnedt@platinumzone24.at>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Sebastian Reichel <sre@kernel.org>,
-	Tony Lindgren <tony@atomide.com>, Nishanth Menon <nm@ti.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
+Received: from mail.kernel.org ([198.145.29.136]:51758 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751805AbcC3OQI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Mar 2016 10:16:08 -0400
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1977734.JuGmrhgnZ2";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201603200040.26045@pali> (sfid-20160320_004101_619570_2E60DB68)
+In-Reply-To: <1459343998-5187-1-git-send-email-akarwar@marvell.com>
+References: <1459343998-5187-1-git-send-email-akarwar@marvell.com>
+From: Rob Herring <robh@kernel.org>
+Date: Wed, 30 Mar 2016 09:15:44 -0500
+Message-ID: <CAL_JsqK5TiNCub6XnBcE118gLkC-mjf437zWhLOsjgtz+1peuw@mail.gmail.com> (sfid-20160330_161612_478267_53527AB0)
+Subject: Re: [PATCH v6 1/2] dt: bindings: add MARVELL's sd8xxx wireless device
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: linux-wireless@vger.kernel.org, Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Wei-Ning Huang <wnhuang@chromium.org>,
+	Xinming Hu <huxm@marvell.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart1977734.JuGmrhgnZ2
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+On Wed, Mar 30, 2016 at 8:19 AM, Amitkumar Karwar <akarwar@marvell.com> wrote:
+> From: Xinming Hu <huxm@marvell.com>
+>
+> Add device tree binding documentation for MARVELL's sd8xxx
+> (sd8897 and sd8997) wlan chip.
+>
+> Signed-off-by: Xinming Hu <huxm@marvell.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> ---
+> Listing changelist for both 1/2 and 2/2 patches
+> v3: Don't update adapter->dt_node if mwifiex_plt_dev is NULL
+>
+> v4: a)Corrected the 'name' and 'compatible' property names.(Arnd Bergmann and Rob
+>     Herring)
+>     b)Patch description wraped in 72 columns(Rob Herring)
+>     c)Moved DT binding file to bindings/net/wireless/(Rob Herring)
+>     d)Renamed "mwifiex,chip-gpio" to "marvell,wakeup-gpios"(Rob Herring/
+>     Arnd Bergmann)
+>     e)Replaced #ifdef with __maybe_unused(Arnd Bergmann)
+>
+> v5: a)Removed wildcards from compatible string(Arnd Bergmann)
+>     b)Prepared single patch for all binding changes(Rob Herring)
+>     c)Specified our node as a subnode of SDIO controller. With this approach, we
+>     don't need to register new platform driver. (Rob herring)
+>
+> v6: a)List out the specific property names for marvell,caldata* and size of the data(Rob Herring)
+>     b)Use sdio function number for both the unit address and reg(Rob Herring)
+> ---
+>  .../bindings/net/wireless/marvell-sd8xxx.txt       | 63 ++++++++++++++++++++++
+>  1 file changed, 63 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
+>
+> diff --git a/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt b/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
+> new file mode 100644
+> index 0000000..337fed4
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/net/wireless/marvell-sd8xxx.txt
+> @@ -0,0 +1,63 @@
+> +Marvell 8897/8997 (sd8897/sd8997) SDIO devices
+> +------
+> +
+> +This node provides properties for controlling the marvell sdio wireless device.
+> +The node is expected to be specified as a child node to the SDIO controller that
+> +connects the device to the system.
+> +
+> +Required properties:
+> +
+> +  - compatible : should be one of the following:
+> +       * "marvell,sd8897"
+> +       * "marvell,sd8997"
+> +
+> +Optional properties:
+> +
+> +  - marvell,caldata* : A series of properties with marvell,caldata prefix,
+> +                     represent calibration data downloaded to the device during
+> +                     initialization. This is an array of unsigned values.
 
-Hi!
+unsigned 8-bit values...
 
-In linux-firmware repository [1] is missing AP firmware for TI wl1251=20
-chip. There is only STA firmware wl1251-fw.bin which supports managed=20
-and ad-hoc modes.
+> +                     the properties should follow below property name and
+> +                     corresponding array length:
+> +       "marvell,caldata_00_txpwrlimit_2g_cfg_set" (length = 566).
+> +       "marvell,caldata_00_txpwrlimit_5g_cfg_set_sub0" (length = 502).
+> +       "marvell,caldata_00_txpwrlimit_5g_cfg_set_sub1" (length = 688).
+> +       "marvell,caldata_00_txpwrlimit_5g_cfg_set_sub2" (length = 750).
+> +       "marvell,caldata_00_txpwrlimit_5g_cfg_set_sub3" (length = 502).
 
-=46or other TI wilink chips there are <CHIP>-ap.bin firmware files=20
-(wl1271-fw-ap.bin and wl128x-fw-ap.bin) which support AP mode. But for=20
-wl1251 firmware file with guessed name "wl1251-fw-ap.bin" is missing.
+The 00 and cfg_set seem pretty pointless, and '-' is preferred over '_'. So:
 
-Do you have any idea what happened with AP firmware for ti wilink4=20
-wl1251 wifi chip? Or where can be found? Guys from TI, can you help?
+marvell,caldata-txpwrlimit-5g-sub3
 
-I see that STA firmware was added into linux-firmware tree in year 2013=20
-by this pull request [2].
+> +  - marvell,wakeup-pin : 'wakeuppin' is a wakeup pin number of wifi chip which will
 
-[1] - https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.=
-git/tree/ti-connectivity
+Drop "wakeuppin is"
 
-[2] - http://thread.gmane.org/gmane.linux.kernel/1566500/focus=3D1571382
+> +                     be configured to firmware. firmware will wakeup host side use
+> +                     the pin during suspend/resume stage.
+> +  - interrupt-parent: phandle of the parent interrupt controller
+> +  - interrupts : interrupt pin number to the cpu. driver will request an irq based on
+> +                this interrupt number. during system suspend, the irq will be enabled
+> +                as system wakeup source, so that the wifi chip can wakeup host
 
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
+You need to use the wakeup-source binding here
+(bindings/power/wakeup-source.txt). Probably on the BT binding too?
 
---nextPart1977734.JuGmrhgnZ2
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+> +                platform under certain condition. during system resume, the irq will
+> +                be disabled to make sure unnecessary interrupt is not received.
+> +
+> +Example:
+> +
+> +Tx power limit calibration data is configured in below example.
+> +The calibration data is an array of unsigned values, the length
+> +can vary between hw versions.
+> +IRQ pin 38 is used as system wakeup source interrupt. wakeup pin 3 is configured
+> +so that firmware can wakeup host using this device side pin.
+> +
+> +&mmc3 {
+> +       status = "okay";
+> +       vmmc-supply = <&wlan_en_reg>;
+> +       bus-width = <4>;
+> +       cap-power-off-card;
+> +       keep-power-in-suspend;
+> +
+> +       #address-cells = <1>;
+> +       #size-cells = <0>;
+> +       mwifiex: mwifiex@1 {
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
+wifi@1
 
-iEYEABECAAYFAlbt42oACgkQi/DJPQPkQ1Kk8QCeNLTf1zNnP5r+0dw3BSShI4M6
-3kIAn3a7na+8hx/8oVYIs+AIpeaG/mH6
-=BVc0
------END PGP SIGNATURE-----
-
---nextPart1977734.JuGmrhgnZ2--
+> +               compatible = "marvell,sd8897";
+> +               reg = <1>;
+> +               interrupt-parent = <&pio>;
+> +               interrupts = <38 IRQ_TYPE_LEVEL_LOW>;
+> +
+> +               marvell,caldata_00_txpwrlimit_2g_cfg_set = /bits/ 8 <
+> +       0x01 0x00 0x06 0x00 0x08 0x02 0x89 0x01>;
+> +               marvell,wakeup-pin = <3>;
+> +       };
+> +};
+> --
+> 1.8.1.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe devicetree" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
