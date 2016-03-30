@@ -1,58 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from helcar.hengli.com.au ([209.40.204.226]:53620 "EHLO
-	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753441AbcC3OJk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 10:09:40 -0400
-Date: Wed, 30 Mar 2016 22:09:33 +0800
-From: Herbert Xu <herbert@gondor.apana.org.au>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Ben Greear <greearb@candelatech.com>,
-	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>, Thomas Graf <tgraf@suug.ch>
-Subject: Re: Question on rhashtable in worst-case scenario.
-Message-ID: <20160330140933.GA19606@gondor.apana.org.au> (sfid-20160330_161000_017953_84D3CA06)
-References: <56F9941A.3080501@candelatech.com>
- <56FAAA6D.3070806@candelatech.com>
- <1459329252.2055.1.camel@sipsolutions.net>
- <20160330135521.GA19423@gondor.apana.org.au>
- <1459346588.2055.6.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1459346588.2055.6.camel@sipsolutions.net>
+Received: from mga14.intel.com ([192.55.52.115]:59098 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752165AbcC3OFl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Mar 2016 10:05:41 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Matti Gottlieb <matti.gottlieb@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 03/43] iwlwifi: mvm: make sure FW contains the right amount of paging sections
+Date: Wed, 30 Mar 2016 17:04:35 +0300
+Message-Id: <1459346715-7954-3-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160544_094937_334278A2)
+In-Reply-To: <1459346667.4731.9.camel@intel.com>
+References: <1459346667.4731.9.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, Mar 30, 2016 at 04:03:08PM +0200, Johannes Berg wrote:
-> 
-> But we really don't want that either - in the normal case where you
-> don't create all these virtual interfaces for testing, you have a
-> certain number of peers that can vary a lot (zero to hundreds, in
-> theory thousands) where you *don't* have the same key, so we still want
-> to have the rehashing if the chains get longer in that case.
+From: Matti Gottlieb <matti.gottlieb@intel.com>
 
-insecure_elasticity only disables rehashing without growing, it
-does not inhibit table expansion which is driven by the number of
-objects in the whole table.
+Paging contains 3 sections in the fw. The first for the paging separator,
+The second for the CSS block, the third with the paging data.
 
-> It's really just the degenerate case that Ben is creating locally
-> that's causing a problem, afaict, though it's a bit disconcerting that
-> rhashtable in general can cause strange failures at delete time.
+Currently if the driver finds the paging separator, and there is only
+section left (CSS), once reading the CSS section, the driver will
+attempt to read the paging data and will go out of the arrays bounds.
 
-The failure is simple, rhashtable will rehash the table if a given
-chain becomes too long.  This simply doesn't work if you hash many
-objects with the same key since the chain will never get shorter
-even after a rehash (or expansion).
+Make sure that the FW image contains the right amount of sections for
+paging.
 
-Therefore if your hashtable has to do this then you have to disable
-the rehash logic using the insecure_elasticity flag.
+Signed-off-by: Matti Gottlieb <matti.gottlieb@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-Alternatively you can construct your own linked list for objects
-with the same key outside of rhashtable and hash the list instead.
-
-Cheers,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+index ebbadcf..766c262 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw.c
+@@ -174,8 +174,12 @@ static int iwl_fill_paging_mem(struct iwl_mvm *mvm, const struct fw_img *image)
+ 		}
+ 	}
+ 
+-	if (sec_idx >= IWL_UCODE_SECTION_MAX) {
+-		IWL_ERR(mvm, "driver didn't find paging image\n");
++	/*
++	 * If paging is enabled there should be at least 2 more sections left
++	 * (one for CSS and one for Paging data)
++	 */
++	if (sec_idx >= ARRAY_SIZE(image->sec) - 1) {
++		IWL_ERR(mvm, "Paging: Missing CSS and/or paging sections\n");
+ 		iwl_free_fw_paging(mvm);
+ 		return -EINVAL;
+ 	}
 -- 
-Email: Herbert Xu <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+2.5.0
+
