@@ -1,56 +1,85 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17862 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751938AbcCGJgy convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34225 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751358AbcC3MNx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2016 04:36:54 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "michal.kazior@tieto.com" <michal.kazior@tieto.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v2 07/11] ath10k: implement wake_tx_queue
-Date: Mon, 7 Mar 2016 09:36:50 +0000
-Message-ID: <87mvqavdcl.fsf@kamboji.qca.qualcomm.com> (sfid-20160307_103657_775741_74879ECF)
-References: <1453384006-31907-1-git-send-email-michal.kazior@tieto.com>
-	<1456828376-2795-1-git-send-email-michal.kazior@tieto.com>
-	<1456828376-2795-8-git-send-email-michal.kazior@tieto.com>
-	<87ziubvfzm.fsf@kamboji.qca.qualcomm.com>
-	<CA+BoTQm=vskz3WhSZjQcMLscWEs4NVoM37hpoYHMiaQb0fYyAw@mail.gmail.com>
-In-Reply-To: <CA+BoTQm=vskz3WhSZjQcMLscWEs4NVoM37hpoYHMiaQb0fYyAw@mail.gmail.com>	(Michal
- Kazior's message of "Mon, 7 Mar 2016 07:04:16 +0100")
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 30 Mar 2016 08:13:53 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Lior David <liord@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+	Lior David <qca_liord@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: Re: [PATCH 2/2] wil6210: add module parameter for alternate interface name
+References: <1458590472-677-1-git-send-email-qca_merez@qca.qualcomm.com>
+	<1458590472-677-3-git-send-email-qca_merez@qca.qualcomm.com>
+	<87y499dxjf.fsf@kamboji.qca.qualcomm.com>
+	<56F3BBB4.6030104@codeaurora.org>
+Date: Wed, 30 Mar 2016 15:13:47 +0300
+In-Reply-To: <56F3BBB4.6030104@codeaurora.org> (Lior David's message of "Thu,
+	24 Mar 2016 12:04:36 +0200")
+Message-ID: <87wpok9n9g.fsf@kamboji.qca.qualcomm.com> (sfid-20160330_141356_009088_CAA9FE1E)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Michal Kazior <michal.kazior@tieto.com> writes:
+Lior David <liord@codeaurora.org> writes:
 
-> On 6 March 2016 at 15:27, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
->> Michal Kazior <michal.kazior@tieto.com> writes:
->>
->>> This implements very basic support for software
->>> queueing. It also contains some knobs that will be
->>> patched later.
->>>
->>> Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
->>
->> Oddly this patch introduces a new warning:
->>
->> drivers/net/wireless/ath/ath10k/mac.c: In function ath10k_mac_op_tx:
->> drivers/net/wireless/ath/ath10k/mac.c:3949:29: warning: is_mgmt may be used uninitialized in this function [-Wuninitialized]
->>
->> But I think that's just a false warning, most likely because my gcc is
->> ancient. Do you agree?
+>>> +	const char *ifname = alt_ifname ? "wigig%d" : "wlan%d";
+>>>  
+>>>  	wdev = wil_cfg80211_init(dev);
+>>>  	if (IS_ERR(wdev)) {
+>>> @@ -160,7 +166,7 @@ void *wil_if_alloc(struct device *dev)
+>>>  	ch = wdev->wiphy->bands[IEEE80211_BAND_60GHZ]->channels;
+>>>  	cfg80211_chandef_create(&wdev->preset_chandef, ch, NL80211_CHAN_NO_HT);
+>>>  
+>>> -	ndev = alloc_netdev(0, "wlan%d", NET_NAME_UNKNOWN, wil_dev_setup);
+>>> +	ndev = alloc_netdev(0, ifname, NET_NAME_UNKNOWN, wil_dev_setup);
+>>>  	if (!ndev) {
+>>>  		dev_err(dev, "alloc_netdev_mqs failed\n");
+>>>  		rc = -ENOMEM;
+>> 
+>> To me this looks like an ugly hack and I hope there is a better way to
+>> handle the problem this patch is fixing. I think interface names
+>> shouldn't matter from functionality point of view, anything requiring
+>> certain naming is broken.
+>> 
+>> But if the interface name is so important why not use "wigig%d" always?
+>> The user space can rename the interface name anyway.
 >
-> Yes, I agree. It must be the fact is_mgmt is set/used across two
-> is_htt condition branches.
->
->
->> gcc (Ubuntu/Linaro 4.6.3-1ubuntu5) 4.6.3
->
-> gcc (Debian 4.9.2-10) 4.9.2 -- no warning for me.
+> The problem we try to solve is with Android. Android uses hard-coded "wlan0"
+> interface name for wifi. We have a platform where wigig(11ad) is used
+> alongside wifi(11ac). Both are independent and managed by separate services,
+> but started at boot at roughly the same time. Sometimes 11ad will get wlan0
+> interface name and 11ac will get wlan1, and wifi will not work.
+> We considered using "wigig%d" always as you suggested, but it may break an
+> unknown number of existing tools/scripts that rely on wlan0 interface
+> name.
 
-Actually kbuild also found this but let's just ignore it.
+I got the idea why this is done, I just don't think that the way the
+issue is solved is a good one. Can't you just rename the interface
+during boot? Like older Ubuntu versions had a udev rule at
+/etc/udev/rules.d/70-persistent-net.rules to name the interfaces (no
+idea if it's still available after systemd was taken into use).
+
+> As I see it, it is an issue of classification. Network drivers use a default
+> interface name prefix depending on the device type. Ethernet drivers get "eth%d",
+> wireless drivers get "wlan%d" and so on. There are even existing drivers
+> that give different prefixes based on other conditions, for example see
+> drivers/s390/net/ctcm_main.c, ctcm_init_netdevice.
+> For our 11ad device, in many platforms it is used as a wifi replacement, so
+> the wlan%d name is appropriate, in other platforms it is used as
+> a different wireless device for different purposes, so the default "wigig%d"
+> prefix seems appropriate.
+
+Every platform works differently, even systemd even has it's own weird
+naming scheme:
+
+https://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/
+
+I really don't think that we should start working around interface
+naming problems by selecting the name with module parameters. But having
+"wigig%d" as the default sounds like a good idea to me.
 
 -- 
 Kalle Valo
