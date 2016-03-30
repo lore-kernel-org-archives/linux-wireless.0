@@ -1,51 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:35829 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751544AbcCFM5e (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:37834 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751342AbcC3FSx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 07:57:34 -0500
-Received: by mail-wm0-f68.google.com with SMTP id 1so6277449wmg.2
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 04:57:33 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 08/13] staging: vt6655: MACvSetLoopbackMode replace byOrgValue with ioread8
-Date: Sun,  6 Mar 2016 12:57:07 +0000
-Message-Id: <1457269032-2681-8-git-send-email-tvboxspy@gmail.com> (sfid-20160306_135744_298200_E33ECF1B)
-In-Reply-To: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
-References: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 30 Mar 2016 01:18:53 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Bjorn Andersson <bjorn.andersson@linaro.org>
+Cc: kbuild test robot <lkp@intel.com>, netdev@vger.kernel.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Pontus Fuchs <pontus.fuchs@gmail.com>, kbuild-all@01.org,
+	wcn36xx@lists.infradead.org,
+	Eugene Krasnikov <k.eugene.e@gmail.com>
+Subject: Re: [PATCH 06/16] wcn36xx: Fetch private sta data from sta entry instead of from vif
+References: <1459231593-360-7-git-send-email-bjorn.andersson@linaro.org>
+	<201603300022.MmhimaU1%fengguang.wu@intel.com>
+	<20160329213721.GV8929@tuxbot>
+Date: Wed, 30 Mar 2016 08:18:45 +0300
+In-Reply-To: <20160329213721.GV8929@tuxbot> (Bjorn Andersson's message of
+	"Tue, 29 Mar 2016 14:37:21 -0700")
+Message-ID: <8760w4bl1m.fsf@kamboji.qca.qualcomm.com> (sfid-20160330_071915_038400_54BAE33B)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Removing VNSvInPortB and nesting inside iowrite8.
+Bjorn Andersson <bjorn.andersson@linaro.org> writes:
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
----
- drivers/staging/vt6655/mac.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+>> All error/warnings (new ones prefixed by >>):
+>> 
+>>    drivers/net/wireless/ath/wcn36xx/main.c: In function 'wcn36xx_set_key':
+>> >> drivers/net/wireless/ath/wcn36xx/main.c:389:9: error: implicit declaration of function 'wcn36xx_sta_to_priv' [-Werror=implicit-function-declaration]
+>>      struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
+>>             ^
+>> >> drivers/net/wireless/ath/wcn36xx/main.c:389:33: warning: initialization makes pointer from integer without a cast
+>>      struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
+>>                                     ^
+>>    cc1: some warnings being treated as errors
+>
+> This should have been reordered with patch 7, that introduces this
+> helper function. Do you want me to resend, or can you apply the patches
+> out of order?
 
-diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
-index 6499709..ece2bf0 100644
---- a/drivers/staging/vt6655/mac.c
-+++ b/drivers/staging/vt6655/mac.c
-@@ -184,14 +184,11 @@ void MACvSetLongRetryLimit(struct vnt_private *priv, unsigned char byRetryLimit)
- void MACvSetLoopbackMode(struct vnt_private *priv, unsigned char byLoopbackMode)
- {
- 	void __iomem *io_base = priv->PortOffset;
--	unsigned char byOrgValue;
- 
- 	byLoopbackMode <<= 6;
- 	/* set TCR */
--	VNSvInPortB(io_base + MAC_REG_TEST, &byOrgValue);
--	byOrgValue = byOrgValue & 0x3F;
--	byOrgValue = byOrgValue | byLoopbackMode;
--	iowrite8(byOrgValue, io_base + MAC_REG_TEST);
-+	iowrite8((ioread8(io_base + MAC_REG_TEST) & 0x3f) | byLoopbackMode,
-+		 io_base + MAC_REG_TEST);
- }
- 
- /*
+It's better that you resend the whole patchset as v2.
+
 -- 
-2.7.0
-
+Kalle Valo
