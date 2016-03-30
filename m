@@ -1,53 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from lists.s-osg.org ([54.187.51.154]:54668 "EHLO lists.s-osg.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751016AbcCRQJg (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 12:09:36 -0400
-From: Luis de Bethencourt <luisbg@osg.samsung.com>
-To: linux-kernel@vger.kernel.org
-Cc: johannes@sipsolutions.net, davem@davemloft.net,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	Luis de Bethencourt <luisbg@osg.samsung.com>
-Subject: [PATCH] mac80211: add doc for RX_FLAG_DUP_VALIDATED flag
-Date: Fri, 18 Mar 2016 16:09:29 +0000
-Message-Id: <1458317369-28185-1-git-send-email-luisbg@osg.samsung.com> (sfid-20160318_171140_161085_B64B4EF5)
+Received: from smtp.adetelgroup.com ([94.247.26.71]:29610 "EHLO
+	smtp.adetelgroup.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753397AbcC3JCx (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Mar 2016 05:02:53 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by smtp.adetelgroup.com (Postfix) with ESMTP id 52AC9424C5
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2016 11:02:51 +0200 (CEST)
+Received: from smtp.adetelgroup.com ([127.0.0.1])
+	by localhost (hbg-pa71.hmc-pa.adm [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id JyknB9Xlka7q for <linux-wireless@vger.kernel.org>;
+	Wed, 30 Mar 2016 11:02:51 +0200 (CEST)
+Received: from hbg-pa73.hmc-pa.adm (hbg-pa73.hmc-pa.adm [10.210.21.2])
+	by smtp.adetelgroup.com (Postfix) with ESMTP id 3A9DE41E42
+	for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2016 11:02:51 +0200 (CEST)
+From: MANDRIN Bertrand <bmandrin@adeneo-embedded.com>
+To: <linux-wireless@vger.kernel.org>
+Subject: Compliance of rt2800usb to ETSI EN 300 328 regulation
+Date: Wed, 30 Mar 2016 11:02:51 +0200 (CEST)
+Message-ID: <012901d18a62$f01ee640$d05cb2c0$@adeneo-embedded.com> (sfid-20160330_110258_692138_FE546D2E)
+MIME-Version: 1.0
+Content-Type: text/plain;
+	charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Add documentation for the flag for duplication check.
+Dear all,
 
-Fixes the following warning when running make htmldocs:
-warning: Enum value 'RX_FLAG_DUP_VALIDATED' not described in enum 'mac80211_rx_flags'
+I'm looking for information about the compliancy of the rt2800usb and the
+ETSI EN 300 328 (V1.8.1) regulation.
 
-Signed-off-by: Luis de Bethencourt <luisbg@osg.samsung.com>
----
-Hi,
+I didn't find any specific flag in the driver to enable to be compliant to
+this regulation, so I'm wondering if there is something to be enabled in
+the driver?
 
-While running make htmldocs I noticed a warning about RX_FLAG_DUP_VALIDATED
-missing a description. This patch fixes this.
+Would someone know if this driver has already been tested for this
+regulation? 
 
-I have noticed the order of the descriptions of the mac80211_rx_flags doesn't
-match the order in the enum. I am happy to fix this if it would be of interest.
+Many thanks in advance for your help.
 
-Thanks,
-Luis
-
- include/net/mac80211.h | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/include/net/mac80211.h b/include/net/mac80211.h
-index a53333c..42c8cde 100644
---- a/include/net/mac80211.h
-+++ b/include/net/mac80211.h
-@@ -1001,6 +1001,8 @@ ieee80211_tx_info_clear_status(struct ieee80211_tx_info *info)
-  *	flag indicates that the PN was verified for replay protection.
-  *	Note that this flag is also currently only supported when a frame
-  *	is also decrypted (ie. @RX_FLAG_DECRYPTED must be set)
-+ * @RX_FLAG_DUP_VALIDATED: Set this flag for the driver to check for packet
-+ *	duplication by itself.
-  * @RX_FLAG_FAILED_FCS_CRC: Set this flag if the FCS check failed on
-  *	the frame.
-  * @RX_FLAG_FAILED_PLCP_CRC: Set this flag if the PCLP check failed on
--- 
-2.5.1
-
+Best regards,
+Bertrand
