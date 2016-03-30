@@ -1,197 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:62255 "EHLO mga03.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:53438 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933676AbcCIRqh (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 12:46:37 -0500
+	id S1753988AbcC3OGY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Mar 2016 10:06:24 -0400
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Ayala Beker <ayala.beker@intel.com>,
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 21/21] iwlwifi: mvm: update GSCAN capabilities
-Date: Wed,  9 Mar 2016 19:45:50 +0200
-Message-Id: <1457545550-30677-21-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160309_185950_209515_AB8C9B2F)
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA64B1D@hasmsx107.ger.corp.intel.com>
+Subject: [PATCH 33/43] iwlwifi: mvm: set sta_id in SCD_QUEUE_CONFIG cmd
+Date: Wed, 30 Mar 2016 17:05:05 +0300
+Message-Id: <1459346715-7954-33-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160629_380615_15D7DC58)
+In-Reply-To: <1459346667.4731.9.camel@intel.com>
+References: <1459346667.4731.9.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ayala Beker <ayala.beker@intel.com>
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Gscan capabilities were updated with new capabilities supported
-by the device. While at it, simplify the firmware support
-conditional and move both conditions into the WARN() to make it
-easier to undertand and use the unlikely() for both.
+Set the correct sta_id in the SCD_QUEUE_CONFIG command sent
+to the FW when enabling/disabling queues. This is needed in
+DQA-mode to allow the FW to associate between queue and STA.
 
-Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c     | 38 +++++++++++++++---------
- drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h | 11 +++++++
- drivers/net/wireless/intel/iwlwifi/iwl-fw.h      | 13 ++++++++
- 3 files changed, 48 insertions(+), 14 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/mvm/mvm.h   | 1 +
+ drivers/net/wireless/intel/iwlwifi/mvm/utils.c | 4 ++++
+ 2 files changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 184c0fe..f899666 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -7,6 +7,7 @@
-  *
-  * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016        Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -33,6 +34,7 @@
-  *
-  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016        Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -374,15 +376,12 @@ static int iwl_store_cscheme(struct iwl_fw *fw, const u8 *data, const u32 len)
- 	return 0;
- }
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+index a9de2ad..cd5f16e 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mvm.h
+@@ -665,6 +665,7 @@ struct iwl_mvm {
+ 		/* Map to HW queue */
+ 		u32 hw_queue_to_mac80211;
+ 		u8 hw_queue_refcount;
++		u8 ra_sta_id; /* The RA this queue is mapped to, if exists */
+ 		/*
+ 		 * This is to mark that queue is reserved for a STA but not yet
+ 		 * allocated. This is needed to make sure we have at least one
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+index 76866b9..486c985 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/utils.c
+@@ -608,6 +608,8 @@ void iwl_mvm_enable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 	mvm->queue_info[queue].hw_queue_refcount++;
+ 	if (mvm->queue_info[queue].hw_queue_refcount > 1)
+ 		enable_queue = false;
++	else
++		mvm->queue_info[queue].ra_sta_id = cfg->sta_id;
+ 	mvm->queue_info[queue].tid_bitmap |= BIT(cfg->tid);
  
--static int iwl_store_gscan_capa(struct iwl_fw *fw, const u8 *data,
--				const u32 len)
-+static void iwl_store_gscan_capa(struct iwl_fw *fw, const u8 *data,
-+				 const u32 len)
- {
- 	struct iwl_fw_gscan_capabilities *fw_capa = (void *)data;
- 	struct iwl_gscan_capabilities *capa = &fw->gscan_capa;
- 
--	if (len < sizeof(*fw_capa))
--		return -EINVAL;
--
- 	capa->max_scan_cache_size = le32_to_cpu(fw_capa->max_scan_cache_size);
- 	capa->max_scan_buckets = le32_to_cpu(fw_capa->max_scan_buckets);
- 	capa->max_ap_cache_per_scan =
-@@ -395,7 +394,15 @@ static int iwl_store_gscan_capa(struct iwl_fw *fw, const u8 *data,
- 		le32_to_cpu(fw_capa->max_significant_change_aps);
- 	capa->max_bssid_history_entries =
- 		le32_to_cpu(fw_capa->max_bssid_history_entries);
--	return 0;
-+	capa->max_hotlist_ssids = le32_to_cpu(fw_capa->max_hotlist_ssids);
-+	capa->max_number_epno_networks =
-+		le32_to_cpu(fw_capa->max_number_epno_networks);
-+	capa->max_number_epno_networks_by_ssid =
-+		le32_to_cpu(fw_capa->max_number_epno_networks_by_ssid);
-+	capa->max_number_of_white_listed_ssid =
-+		le32_to_cpu(fw_capa->max_number_of_white_listed_ssid);
-+	capa->max_number_of_black_listed_ssid =
-+		le32_to_cpu(fw_capa->max_number_of_black_listed_ssid);
- }
- 
- /*
-@@ -1023,8 +1030,15 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 				le32_to_cpup((__le32 *)tlv_data);
- 			break;
- 		case IWL_UCODE_TLV_FW_GSCAN_CAPA:
--			if (iwl_store_gscan_capa(&drv->fw, tlv_data, tlv_len))
--				goto invalid_tlv_len;
-+			/*
-+			 * Don't return an error in case of a shorter tlv_len
-+			 * to enable loading of FW that has an old format
-+			 * of GSCAN capabilities TLV.
-+			 */
-+			if (tlv_len < sizeof(struct iwl_fw_gscan_capabilities))
-+				break;
-+
-+			iwl_store_gscan_capa(&drv->fw, tlv_data, tlv_len);
- 			gscan_capa = true;
- 			break;
- 		default:
-@@ -1046,12 +1060,8 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
- 		return -EINVAL;
+ 	IWL_DEBUG_TX_QUEUES(mvm,
+@@ -693,6 +695,8 @@ void iwl_mvm_disable_txq(struct iwl_mvm *mvm, int queue, int mac80211_queue,
+ 		return;
  	}
  
--	/*
--	 * If ucode advertises that it supports GSCAN but GSCAN
--	 * capabilities TLV is not present, warn and continue without GSCAN.
--	 */
--	if (fw_has_capa(capa, IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT) &&
--	    WARN(!gscan_capa,
-+	if (WARN(fw_has_capa(capa, IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT) &&
-+		 !gscan_capa,
- 		 "GSCAN is supported but capabilities TLV is unavailable\n"))
- 		__clear_bit((__force long)IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT,
- 			    capa->_capa);
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-index 5f69bf5..15ec4e2 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-@@ -809,6 +809,12 @@ struct iwl_fw_dbg_conf_tlv {
-  *	change APs.
-  * @max_bssid_history_entries: number of BSSID/RSSI entries that the device can
-  *	hold.
-+ * @max_hotlist_ssids: maximum number of entries for hotlist SSIDs.
-+ * @max_number_epno_networks: max number of epno entries.
-+ * @max_number_epno_networks_by_ssid: max number of epno entries if ssid is
-+ *	specified.
-+ * @max_number_of_white_listed_ssid: max number of white listed SSIDs.
-+ * @max_number_of_black_listed_ssid: max number of black listed SSIDs.
-  */
- struct iwl_fw_gscan_capabilities {
- 	__le32 max_scan_cache_size;
-@@ -819,6 +825,11 @@ struct iwl_fw_gscan_capabilities {
- 	__le32 max_hotlist_aps;
- 	__le32 max_significant_change_aps;
- 	__le32 max_bssid_history_entries;
-+	__le32 max_hotlist_ssids;
-+	__le32 max_number_epno_networks;
-+	__le32 max_number_epno_networks_by_ssid;
-+	__le32 max_number_of_white_listed_ssid;
-+	__le32 max_number_of_black_listed_ssid;
- } __packed;
- 
- #endif  /* __iwl_fw_file_h__ */
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw.h
-index 85d6d6d..2942571 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fw.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw.h
-@@ -7,6 +7,7 @@
-  *
-  * Copyright(c) 2008 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016        Intel Deutschland GmbH
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of version 2 of the GNU General Public License as
-@@ -33,6 +34,7 @@
-  *
-  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
-  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
-+ * Copyright(c) 2016        Intel Deutschland GmbH
-  * All rights reserved.
-  *
-  * Redistribution and use in source and binary forms, with or without
-@@ -205,6 +207,12 @@ struct iwl_fw_cscheme_list {
-  *	change APs.
-  * @max_bssid_history_entries: number of BSSID/RSSI entries that the device can
-  *	hold.
-+ * @max_hotlist_ssids: maximum number of entries for hotlist SSIDs.
-+ * @max_number_epno_networks: max number of epno entries.
-+ * @max_number_epno_networks_by_ssid: max number of epno entries if ssid is
-+ *	specified.
-+ * @max_number_of_white_listed_ssid: max number of white listed SSIDs.
-+ * @max_number_of_black_listed_ssid: max number of black listed SSIDs.
-  */
- struct iwl_gscan_capabilities {
- 	u32 max_scan_cache_size;
-@@ -215,6 +223,11 @@ struct iwl_gscan_capabilities {
- 	u32 max_hotlist_aps;
- 	u32 max_significant_change_aps;
- 	u32 max_bssid_history_entries;
-+	u32 max_hotlist_ssids;
-+	u32 max_number_epno_networks;
-+	u32 max_number_epno_networks_by_ssid;
-+	u32 max_number_of_white_listed_ssid;
-+	u32 max_number_of_black_listed_ssid;
- };
- 
- /**
++	cmd.sta_id = mvm->queue_info[queue].ra_sta_id;
++
+ 	/* Make sure queue info is correct even though we overwrite it */
+ 	WARN(mvm->queue_info[queue].hw_queue_refcount ||
+ 	     mvm->queue_info[queue].tid_bitmap ||
 -- 
 2.5.0
 
