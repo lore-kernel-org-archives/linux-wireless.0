@@ -1,117 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from nasmtp01.atmel.com ([192.199.1.246]:46378 "EHLO
-	DVREDG02.corp.atmel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932742AbcCJGtp (ORCPT
+Received: from helcar.hengli.com.au ([209.40.204.226]:60965 "EHLO
+	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753173AbcC3Nza (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 01:49:45 -0500
-From: "Kim, Leo" <Leo.Kim@atmel.com>
-To: Vladimir Zapolskiy <vz@mleia.com>,
-	Julian Calaby <julian.calaby@gmail.com>
-CC: "Lee, Glen" <Glen.Lee@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Kim, Johnny" <johnny.kim@atmel.com>,
-	"Shin, Austin" <Austin.Shin@atmel.com>,
-	"Park, Chris" <Chris.Park@atmel.com>,
-	"Cho, Tony" <Tony.Cho@atmel.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>
-Subject: RE: [PATCH] staging: wilc1000: fix check of kthread_run() return
- value
-Date: Thu, 10 Mar 2016 06:49:39 +0000
-Message-ID: <74F3875218FC364C9618AB19CB60E9058005854E@penmbx02.corp.atmel.com> (sfid-20160310_074949_831521_5388EC06)
-References: <1457565194-31533-1-git-send-email-vz@mleia.com>
- <CAGRGNgUMViiR+ruvLHnwMLHUxOK3+uW7634Hpgn9gN+djCOtbw@mail.gmail.com>
- <56E0B21D.1010503@mleia.com>
- <CAGRGNgVsmTPpiu4twUnvk_3GEFMiU2VuuSj5=M+4y6qJYiDZhA@mail.gmail.com>
- <56E0B9AD.3050806@mleia.com>
- <CAGRGNgWKUTeP-BPUX92VW-Cnm+BOA+-pivsjZECqpdnaxZbn8A@mail.gmail.com>
- <56E0C17F.40909@mleia.com>
-In-Reply-To: <56E0C17F.40909@mleia.com>
-Content-Type: text/plain; charset="utf-8"
+	Wed, 30 Mar 2016 09:55:30 -0400
+Date: Wed, 30 Mar 2016 21:55:21 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ben Greear <greearb@candelatech.com>,
+	Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>, Thomas Graf <tgraf@suug.ch>
+Subject: Re: Question on rhashtable in worst-case scenario.
+Message-ID: <20160330135521.GA19423@gondor.apana.org.au> (sfid-20160330_155548_535213_3C043091)
+References: <56F9941A.3080501@candelatech.com>
+ <56FAAA6D.3070806@candelatech.com>
+ <1459329252.2055.1.camel@sipsolutions.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1459329252.2055.1.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgVmxhZGltaXIgJiBKdWxpYW4NCg0KVGhlIGRyaXZlciBpcyBzdGlsbCBtb3ZpbmcgdG8gdGhl
-IExpbnV4IGRyaXZlciBhbmQgYWxzbyBpdHMgYmVpbmcgY2hhbmdlZC4NCllvdXIgcGF0Y2ggaXMg
-ZXZlcnl0aGluZydzIG9rLg0KSSBhbHNvIGFncmVlIHRvIEp1bGlhbiByZXZpZXcuDQoNCsKgVGhh
-bmtzLCBCUg0KwqBMZW8NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IFZsYWRp
-bWlyIFphcG9sc2tpeSBbbWFpbHRvOnZ6QG1sZWlhLmNvbV0gDQpTZW50OiBUaHVyc2RheSwgTWFy
-Y2ggMTAsIDIwMTYgOTozNiBBTQ0KVG86IEp1bGlhbiBDYWxhYnkgPGp1bGlhbi5jYWxhYnlAZ21h
-aWwuY29tPg0KQ2M6IExlZSwgR2xlbiA8R2xlbi5MZWVAYXRtZWwuY29tPjsgR3JlZyBLcm9haC1I
-YXJ0bWFuIDxncmVna2hAbGludXhmb3VuZGF0aW9uLm9yZz47IEtpbSwgSm9obm55IDxqb2hubnku
-a2ltQGF0bWVsLmNvbT47IFNoaW4sIEF1c3RpbiA8QXVzdGluLlNoaW5AYXRtZWwuY29tPjsgUGFy
-aywgQ2hyaXMgPENocmlzLlBhcmtAYXRtZWwuY29tPjsgQ2hvLCBUb255IDxUb255LkNob0BhdG1l
-bC5jb20+OyBLaW0sIExlbyA8TGVvLktpbUBhdG1lbC5jb20+OyBsaW51eC13aXJlbGVzcyA8bGlu
-dXgtd2lyZWxlc3NAdmdlci5rZXJuZWwub3JnPjsgZGV2ZWxAZHJpdmVyZGV2Lm9zdW9zbC5vcmcN
-ClN1YmplY3Q6IFJlOiBbUEFUQ0hdIHN0YWdpbmc6IHdpbGMxMDAwOiBmaXggY2hlY2sgb2Yga3Ro
-cmVhZF9ydW4oKSByZXR1cm4gdmFsdWUNCg0KSGkgSnVsaWFuLA0KDQpPbiAxMC4wMy4yMDE2IDAy
-OjI0LCBKdWxpYW4gQ2FsYWJ5IHdyb3RlOg0KPiBIaSBWbGFkaW1pciwNCj4gDQo+IE9uIFRodSwg
-TWFyIDEwLCAyMDE2IGF0IDExOjAyIEFNLCBWbGFkaW1pciBaYXBvbHNraXkgPHZ6QG1sZWlhLmNv
-bT4gd3JvdGU6DQo+PiBIaSBKdWxpYW4sDQo+Pg0KPj4gT24gMTAuMDMuMjAxNiAwMTo0MiwgSnVs
-aWFuIENhbGFieSB3cm90ZToNCj4+PiBIaSBWbGFkaW1pciwNCj4+Pg0KPj4+IE9uIFRodSwgTWFy
-IDEwLCAyMDE2IGF0IDEwOjMwIEFNLCBWbGFkaW1pciBaYXBvbHNraXkgPHZ6QG1sZWlhLmNvbT4g
-d3JvdGU6DQo+Pj4+IEhpIEp1bGlhbiwNCj4+Pj4NCj4+Pj4gT24gMTAuMDMuMjAxNiAwMToyNywg
-SnVsaWFuIENhbGFieSB3cm90ZToNCj4+Pj4+IEhpIFZsYWRpbWlyLA0KPj4+Pj4NCj4+Pj4+IE9u
-IFRodSwgTWFyIDEwLCAyMDE2IGF0IDEwOjEzIEFNLCBWbGFkaW1pciBaYXBvbHNraXkgPHZ6QG1s
-ZWlhLmNvbT4gd3JvdGU6DQo+Pj4+Pj4gVGhlIGt0aHJlYWRfcnVuKCkgZnVuY3Rpb24gcmV0dXJu
-cyBlaXRoZXIgYSB2YWxpZCB0YXNrX3N0cnVjdCBvcg0KPj4+Pj4+IEVSUl9QVFIoKSB2YWx1ZSwg
-Y2hlY2sgZm9yIE5VTEwgaXMgaW52YWxpZC4gVGhlIGNoYW5nZSBmaXhlcyANCj4+Pj4+PiBwb3Rl
-bnRpYWwgb29wcywgZS5nLiBpbiBPT00gc2l0dWF0aW9uLg0KPj4+Pj4+DQo+Pj4+Pj4gU2lnbmVk
-LW9mZi1ieTogVmxhZGltaXIgWmFwb2xza2l5IDx2ekBtbGVpYS5jb20+DQo+Pj4+Pj4gLS0tDQo+
-Pj4+Pj4gIGRyaXZlcnMvc3RhZ2luZy93aWxjMTAwMC9saW51eF93bGFuLmMgfCA0ICsrLS0NCj4+
-Pj4+PiAgMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkNCj4+
-Pj4+Pg0KPj4+Pj4+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3N0YWdpbmcvd2lsYzEwMDAvbGludXhf
-d2xhbi5jIA0KPj4+Pj4+IGIvZHJpdmVycy9zdGFnaW5nL3dpbGMxMDAwL2xpbnV4X3dsYW4uYw0K
-Pj4+Pj4+IGluZGV4IDU0ZmU5ZDcuLjUwNzdjMzAgMTAwNjQ0DQo+Pj4+Pj4gLS0tIGEvZHJpdmVy
-cy9zdGFnaW5nL3dpbGMxMDAwL2xpbnV4X3dsYW4uYw0KPj4+Pj4+ICsrKyBiL2RyaXZlcnMvc3Rh
-Z2luZy93aWxjMTAwMC9saW51eF93bGFuLmMNCj4+Pj4+PiBAQCAtODQ5LDEwICs4NDksMTAgQEAg
-c3RhdGljIGludCB3bGFuX2luaXRpYWxpemVfdGhyZWFkcyhzdHJ1Y3QgbmV0X2RldmljZSAqZGV2
-KQ0KPj4+Pj4+ICAgICAgICAgUFJJTlRfRChJTklUX0RCRywgIkNyZWF0aW5nIGt0aHJlYWQgZm9y
-IHRyYW5zbWlzc2lvblxuIik7DQo+Pj4+Pj4gICAgICAgICB3aWxjLT50eHFfdGhyZWFkID0ga3Ro
-cmVhZF9ydW4obGludXhfd2xhbl90eHFfdGFzaywgKHZvaWQgKilkZXYsDQo+Pj4+Pj4gICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJLX1RYUV9UQVNLIik7DQo+Pj4+Pj4gLSAg
-ICAgICBpZiAoIXdpbGMtPnR4cV90aHJlYWQpIHsNCj4+Pj4+PiArICAgICAgIGlmIChJU19FUlIo
-d2lsYy0+dHhxX3RocmVhZCkpIHsNCj4+Pj4+PiAgICAgICAgICAgICAgICAgUFJJTlRfRVIoImNv
-dWxkbid0IGNyZWF0ZSBUWFEgdGhyZWFkXG4iKTsNCj4+Pj4+PiAgICAgICAgICAgICAgICAgd2ls
-Yy0+Y2xvc2UgPSAwOw0KPj4+Pj4+IC0gICAgICAgICAgICAgICByZXR1cm4gLUVOT0JVRlM7DQo+
-Pj4+Pj4gKyAgICAgICAgICAgICAgIHJldHVybiBQVFJfRVJSKHdpbGMtPnR4cV90aHJlYWQpOw0K
-Pj4+Pj4NCj4+Pj4+IEFyZSB5b3Ugc3VyZSBjaGFuZ2luZyB0aGUgZXJyb3IgcmV0dXJuZWQgaXMg
-Y29ycmVjdD8gRG8gYWxsIHRoZSANCj4+Pj4+IGNhbGxlcnMgb2Ygd2xhbl9pbml0aWFsaXplX3Ro
-cmVhZHMoKSBoYW5kbGUgdGhlIGZ1bGwgcmFuZ2Ugb2YgDQo+Pj4+PiBlcnJvcnMgZnJvbSBrdGhy
-ZWFkX3J1bigpPw0KPj4+Pg0KPj4+PiBIYXZlIHlvdSBjaGVja2VkIHRoZSBkcml2ZXI/DQo+Pj4N
-Cj4+PiBJJ20gbWFraW5nIHN1cmUgeW91IGhhdmUuIEl0J3MgcG9zc2libGUgdGhhdCB0aGVyZSdz
-IGEgZ29vZCByZWFzb24gDQo+Pj4gd2h5IHRoaXMgcmV0dXJucyAtRU5PQlVGUyBJIHdhbnQgdG8g
-a25vdyB0aGF0IHlvdSd2ZSBhdCBsZWFzdCANCj4+PiBjb25zaWRlcmVkIHRoYXQgcG9zc2liaWxp
-dHkuDQo+Pg0KPj4gWW91IGhhdmUgbXkgY29uZmlybWF0aW9uLCBJJ3ZlIGNoZWNrZWQgdGhlIGNh
-bGwgc3RhY2sgYmVmb3JlIA0KPj4gcHVibGlzaGluZyB0aGlzIGZpeC4NCj4gDQo+IEF3ZXNvbWUu
-DQo+IA0KPj4+PiBUaGlzIGZ1bmN0aW9uIGlzIGNhbGxlZCBvbmNlIG9uIGluaXRpYWxpemF0aW9u
-LCB0aGUgY2hlY2sgb24gdGhlIA0KPj4+PiB1cHBlciBsYXllciBoYXMgImlmIChyZXQgPCAwKSBn
-b3RvIGV4aXRfYmFkbHk7IiBmb3JtLg0KPj4+DQo+Pj4gQW5kIHByYWN0aWNhbGx5IGV2ZXJ5dGhp
-bmcgaW4gdGhlIGNoYWluIHVwIHRvIG5ldF9kZXZpY2Vfb3BzIHVzZXMgDQo+Pj4gdGhlIHNhbWUg
-ZXJyb3IgaGFuZGxpbmcgc2NoZW1lIHNvIGl0J3MgcHJvYmFibHkgZmluZS4NCj4+DQo+PiBkZXZf
-b3BlbigpDQo+PiAgIF9fZGV2X29wZW4oKQ0KPj4gICAgIHdpbGNfbWFjX29wZW4oKQ0KPj4gICAg
-ICAgd2lsYzEwMDBfd2xhbl9pbml0KCkNCj4+ICAgICAgICAgd2xhbl9pbml0aWFsaXplX3RocmVh
-ZHMoKQ0KPj4NCj4+IE9oLCB3aHkga2VybmVsIHRocmVhZHMgd2l0aGluIGEgZHJpdmVyIGFyZSBp
-bml0J2VkL2Rlc3Ryb3llZCBvbiBlYWNoIA0KPj4gZGV2aWNlIHVwL2Rvd24gc3RhdGUgdHJhbnNp
-dGlvbj8NCj4gDQo+IFlvdSdsbCBoYXZlIHRvIGFzayB0aGUgZHJpdmVyIGRldmVsb3BlcnMuIEkg
-YmVsaWV2ZSB0aGlzIHdhcyBhIGNyb3NzIA0KPiBwbGF0Zm9ybSBkcml2ZXIgdGhhdCBpcyBjdXJy
-ZW50bHkgYmVpbmcgTGludXgtaXNlZCwgc28gSSdtIGd1ZXNzaW5nIA0KPiB0aGlzIGlzIHNvbWUg
-YXJ0ZWZhY3Qgb2YgdGhhdC4NCj4gDQo+Pj4gWW91IHNob3VsZCBhbHNvIGRvY3VtZW50IHRoaXMg
-Y2hhbmdlIGluIHRoZSBjb21taXQgbWVzc2FnZS4NCj4+DQo+PiBUaGUgY2hhbmdlIGlzIGRvY3Vt
-ZW50ZWQgaW4gdGhlIGNvbW1pdCBtZXNzYWdlLCB0YWtlIGEgbG9vay4gQnV0IEkgDQo+PiBkaWRu
-J3QgYWRkICJJIHN3ZWFyIGl0IGRvZXMgbm90IGJyZWFrIGFueXRoaW5nIiA7KQ0KPiANCj4gWW91
-DQo+IDEuIGNvcnJlY3RlZCB0aGUgdGVzdCBpbiB0aGUgaWYgc3RhdGVtZW50IDIuIGNoYW5nZWQg
-dGhlIHJldHVybiB2YWx1ZSANCj4gZnJvbSAtRU5PQlVGUyBpbiB5b3VyIHBhdGNoLCBob3dldmVy
-IHlvdSBvbmx5IGRvY3VtZW50ZWQgdGhlIGZpcnN0IA0KPiBwYXJ0Lg0KDQpBZ3JlZSwgaXQgbWFr
-ZXMgc2Vuc2UuDQoNCj4gSSB3b3VsZCBoYXZlIGV4cGVjdGVkIGEgY29tbWl0IG1lc3NhZ2UgYWxv
-bmcgdGhlIGxpbmVzIG9mOg0KPiANCj4gLS0tLT44LS0tLQ0KPiANCj4gVGhlIGt0aHJlYWRfcnVu
-KCkgZnVuY3Rpb24gcmV0dXJucyBlaXRoZXIgYSB2YWxpZCB0YXNrX3N0cnVjdCBvcg0KPiBFUlJf
-UFRSKCkgdmFsdWUsIHNvIHRoZSBjaGVjayBmb3IgTlVMTCBpcyBpbnZhbGlkLg0KPiANCj4gQWxz
-byByZXR1cm4gdGhlIGVycm9yIGZyb20ga3RocmVhZF9ydW4oKSBpbnN0ZWFkIG9mIC1FTk9CVUZT
-Lg0KPiANCj4gLS0tLTg8LS0tLQ0KPiANCg0KQmVmb3JlIHB1Ymxpc2hpbmcgdjIgbGV0IHNlZSBp
-ZiBkcml2ZXIgbWFpbnRhaW5lcnMgaGF2ZSBzb21ldGhpbmcgZWxzZSB0byBhZGQsIG9yIG1heSBi
-ZSBpdCBpcyBiZXR0ZXIgdG8gcHJlc2VydmUgLUVOT0JVRlMsIG9yIG1heSBiZSB0aGV5IGFyZSBz
-byBraW5kIHRvIHVwZGF0ZSB0aGUgY29tbWl0IG1lc3NhZ2Ugb24gcGF0Y2ggYXBwbGljYXRpb24u
-DQoNCkp1bGlhbiwgdGhhbmtzIGZvciByZXZpZXcuDQoNCi0tDQpXaXRoIGJlc3Qgd2lzaGVzLA0K
-VmxhZGltaXINCg==
+On Wed, Mar 30, 2016 at 11:14:12AM +0200, Johannes Berg wrote:
+> On Tue, 2016-03-29 at 09:16 -0700, Ben Greear wrote:
+> > Looks like rhashtable has too much policy in it to properly deal with
+> > cases where there are too many hash collisions, so I am going to work
+> > on reverting it's use in mac80211.
+> 
+> I'm not really all that happy with that approach - can't we fix the
+> rhashtable? It's a pretty rare corner case that many keys really are
+> identical and no kind of hash algorithm, but it seems much better to
+> still deal with it than to remove the rhashtable usage and go back to
+> hand-rolling something.
+
+Well to start with you should assess whether you really want to
+hash multiple objects with the same key.  In particular, can an
+adversary generate a large number of such objects?
+
+If your conclusion is that yes you really want to do this, then
+we have the parameter insecure_elasticity that you can use to
+disable the rehashing based on chain length.
+
+Cheers,
+-- 
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
