@@ -1,96 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:48808 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751775AbcCAC7a (ORCPT
+Received: from mail-vk0-f66.google.com ([209.85.213.66]:34435 "EHLO
+	mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751008AbcC3K0i (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 29 Feb 2016 21:59:30 -0500
-From: miaoqing@codeaurora.org
-To: linville@tuxdriver.com
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@qca.qualcomm.com,
-	kvalo@qca.qualcomm.com, Miaoqing Pan <miaoqing@codeaurora.org>
-Subject: [PATCH 7/8] ath9k: fix BTCoex access invalid registers for SOC chips
-Date: Tue,  1 Mar 2016 10:58:34 +0800
-Message-Id: <1456801115-16636-8-git-send-email-miaoqing@codeaurora.org> (sfid-20160301_035933_344472_31712CEC)
-In-Reply-To: <1456801115-16636-1-git-send-email-miaoqing@codeaurora.org>
-References: <1456801115-16636-1-git-send-email-miaoqing@codeaurora.org>
+	Wed, 30 Mar 2016 06:26:38 -0400
+MIME-Version: 1.0
+Reply-To: sedat.dilek@gmail.com
+In-Reply-To: <1459332895-4563-1-git-send-email-wnhuang@chromium.org>
+References: <1459332895-4563-1-git-send-email-wnhuang@chromium.org>
+Date: Wed, 30 Mar 2016 12:26:37 +0200
+Message-ID: <CA+icZUVpMU0kjEKPpABU415Gv_EhFUkAGbXi82UVf8PbHnz9mw@mail.gmail.com> (sfid-20160330_122658_951327_3AC9DCA6)
+Subject: Re: [PATCH RESEND] mwifiex: fix NULL pointer dereference error
+From: Sedat Dilek <sedat.dilek@gmail.com>
+To: Wei-Ning Huang <wnhuang@chromium.org>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, djkurtz@chromium.org,
+	snanda@chromium.org, akarwar@marvell.com
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Miaoqing Pan <miaoqing@codeaurora.org>
+On Wed, Mar 30, 2016 at 12:14 PM, Wei-Ning Huang <wnhuang@chromium.org> wrote:
+> In mwifiex_enable_hs, we need to check if
+> priv->wdev.wiphy->wowlan_config is NULL before accessing it's member.
 
-The registers of AR_GPIO_INPUT_MUX1 and AR_GPIO_PDPU were removed
-from SOC chips, fix invalid accessing
+it's... its member (not it's) :-).
 
-Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
----
- drivers/net/wireless/ath/ath9k/btcoex.c | 27 +++++++++++++++------------
- 1 file changed, 15 insertions(+), 12 deletions(-)
+- Sedat -
 
-diff --git a/drivers/net/wireless/ath/ath9k/btcoex.c b/drivers/net/wireless/ath/ath9k/btcoex.c
-index 5a9ecf7..a754f6d 100644
---- a/drivers/net/wireless/ath/ath9k/btcoex.c
-+++ b/drivers/net/wireless/ath/ath9k/btcoex.c
-@@ -162,9 +162,10 @@ void ath9k_hw_btcoex_init_2wire(struct ath_hw *ah)
- 		    AR_GPIO_INPUT_EN_VAL_BT_ACTIVE_BB);
- 
- 	/* Set input mux for bt_active to gpio pin */
--	REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
--		      AR_GPIO_INPUT_MUX1_BT_ACTIVE,
--		      btcoex_hw->btactive_gpio);
-+	if (!AR_SREV_SOC(ah))
-+		REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
-+			      AR_GPIO_INPUT_MUX1_BT_ACTIVE,
-+			      btcoex_hw->btactive_gpio);
- 
- 	/* Configure the desired gpio port for input */
- 	ath9k_hw_gpio_request_in(ah, btcoex_hw->btactive_gpio,
-@@ -183,13 +184,14 @@ void ath9k_hw_btcoex_init_3wire(struct ath_hw *ah)
- 
- 	/* Set input mux for bt_prority_async and
- 	 *                  bt_active_async to GPIO pins */
--	REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
--			AR_GPIO_INPUT_MUX1_BT_ACTIVE,
--			btcoex_hw->btactive_gpio);
--
--	REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
--			AR_GPIO_INPUT_MUX1_BT_PRIORITY,
--			btcoex_hw->btpriority_gpio);
-+	if (!AR_SREV_SOC(ah)) {
-+		REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
-+			      AR_GPIO_INPUT_MUX1_BT_ACTIVE,
-+			      btcoex_hw->btactive_gpio);
-+		REG_RMW_FIELD(ah, AR_GPIO_INPUT_MUX1,
-+			      AR_GPIO_INPUT_MUX1_BT_PRIORITY,
-+			      btcoex_hw->btpriority_gpio);
-+	}
- 
- 	/* Configure the desired GPIO ports for input */
- 	ath9k_hw_gpio_request_in(ah, btcoex_hw->btactive_gpio,
-@@ -285,13 +287,13 @@ void ath9k_hw_btcoex_set_weight(struct ath_hw *ah,
- 				 txprio_shift[i-1]);
- 		}
- 	}
-+
- 	/* Last WLAN weight has to be adjusted wrt tx priority */
- 	if (concur_tx) {
- 		btcoex_hw->wlan_weight[i-1] &= ~(0xff << txprio_shift[i-1]);
- 		btcoex_hw->wlan_weight[i-1] |= (btcoex_hw->tx_prio[stomp_type]
- 						      << txprio_shift[i-1]);
- 	}
--
- }
- EXPORT_SYMBOL(ath9k_hw_btcoex_set_weight);
- 
-@@ -375,7 +377,8 @@ void ath9k_hw_btcoex_enable(struct ath_hw *ah)
- 		break;
- 	}
- 
--	if (ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_MCI) {
-+	if (ath9k_hw_get_btcoex_scheme(ah) != ATH_BTCOEX_CFG_MCI &&
-+	    !AR_SREV_SOC(ah)) {
- 		REG_RMW(ah, AR_GPIO_PDPU,
- 			(0x2 << (btcoex_hw->btactive_gpio * 2)),
- 			(0x3 << (btcoex_hw->btactive_gpio * 2)));
--- 
-1.9.1
-
+> This sometimes cause kernel panic when suspend/resume.
+>
+> Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+> index d5c56eb..d8de432 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+> @@ -509,7 +509,8 @@ int mwifiex_enable_hs(struct mwifiex_adapter *adapter)
+>
+>         if (priv && priv->sched_scanning) {
+>  #ifdef CONFIG_PM
+> -               if (!priv->wdev.wiphy->wowlan_config->nd_config) {
+> +               if (priv->wdev.wiphy->wowlan_config &&
+> +                   !priv->wdev.wiphy->wowlan_config->nd_config) {
+>  #endif
+>                         mwifiex_dbg(adapter, CMD, "aborting bgscan!\n");
+>                         mwifiex_stop_bg_scan(priv);
+> --
+> 2.1.2
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
