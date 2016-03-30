@@ -1,37 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56392 "EHLO sipsolutions.net"
+Received: from mga14.intel.com ([192.55.52.115]:47797 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752727AbcCCPDY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 10:03:24 -0500
-Message-ID: <1457017401.2044.16.camel@sipsolutions.net> (sfid-20160303_160328_337502_E3654ECA)
-Subject: Re: [PATCH] nl80211: use ieee80211_band in kernel space
-From: Johannes Berg <johannes@sipsolutions.net>
-To: arend@broadcom.com
-Cc: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 03 Mar 2016 16:03:21 +0100
-In-Reply-To: <56CEFA9C.1080201@broadcom.com> (sfid-20160225_135916_981057_E6AE3A89)
-References: <1456399941-8408-1-git-send-email-arend@broadcom.com>
-	 <56CEFA9C.1080201@broadcom.com> (sfid-20160225_135916_981057_E6AE3A89)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1753685AbcC3OFp (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Mar 2016 10:05:45 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Sara Sharon <sara.sharon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 07/43] iwlwifi: pcie: fix global table size
+Date: Wed, 30 Mar 2016 17:04:39 +0300
+Message-Id: <1459346715-7954-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160808_568782_7EC67DD1)
+In-Reply-To: <1459346667.4731.9.camel@intel.com>
+References: <1459346667.4731.9.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-02-25 at 13:59 +0100, Arend Van Spriel wrote:
-> On 25-2-2016 12:32, Arend van Spriel wrote:
-> > The enumeration nl80211_band intends to expose the public part of
-> > ieee80211_band enumeration. As such it should not be used in the
-> > kernel. This patch changes nl80211_band usage to ieee80211_band.
-> > 
-> Fixes: 59ad2160c285 ("nl80211: add feature for BSS selection
-> support")
-> 
-> Not sure if it is any of the trees already.
-> 
+From: Sara Sharon <sara.sharon@intel.com>
 
-I'm tempted to just get rid of ieee80211_band and move the NUM thing to
-nl80211.h.
+My patch resized the pool size, but neglected to resize
+the global table, which is obviously wrong since the global
+table maps the pool's rxb to vid one to one. This results
+in a panic in 9000 devices.
+Add a build bug to avoid such a case in the future.
 
-Thoughts?
+Fixes: 7b5424361ec9 ("iwlwifi: pcie: fine tune number of rxbs")
+Reported-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/internal.h | 2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/rx.c       | 2 ++
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-johannes
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+index dadafbd..34bf7ce 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/internal.h
+@@ -348,7 +348,7 @@ struct iwl_tso_hdr_page {
+ struct iwl_trans_pcie {
+ 	struct iwl_rxq *rxq;
+ 	struct iwl_rx_mem_buffer rx_pool[RX_POOL_SIZE];
+-	struct iwl_rx_mem_buffer *global_table[MQ_RX_TABLE_SIZE];
++	struct iwl_rx_mem_buffer *global_table[RX_POOL_SIZE];
+ 	struct iwl_rb_allocator rba;
+ 	struct iwl_trans *trans;
+ 	struct iwl_drv *drv;
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+index 4be3c35..e379dba 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/rx.c
+@@ -908,6 +908,8 @@ int iwl_pcie_rx_init(struct iwl_trans *trans)
+ 	allocator_pool_size = trans->num_rx_queues *
+ 		(RX_CLAIM_REQ_ALLOC - RX_POST_REQ_ALLOC);
+ 	num_alloc = queue_size + allocator_pool_size;
++	BUILD_BUG_ON(ARRAY_SIZE(trans_pcie->global_table) !=
++		     ARRAY_SIZE(trans_pcie->rx_pool));
+ 	for (i = 0; i < num_alloc; i++) {
+ 		struct iwl_rx_mem_buffer *rxb = &trans_pcie->rx_pool[i];
+ 
+-- 
+2.5.0
+
