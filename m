@@ -1,63 +1,103 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:13595 "EHLO mga02.intel.com"
+Received: from mga14.intel.com ([192.55.52.115]:53438 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932983AbcCQNsn convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 09:48:43 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Tejun Heo <tj@kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-CC: Eva Rachel Retuya <eraretuya@gmail.com>,
-	"outreachy-kernel@googlegroups.com"
-	<outreachy-kernel@googlegroups.com>,
-	linuxwifi <linuxwifi@intel.com>,
-	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] iwlwifi: dvm: convert create_singlethread_workqueue()
- to alloc_workqueue()
-Date: Thu, 17 Mar 2016 13:48:36 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EA7CBB1@hasmsx107.ger.corp.intel.com> (sfid-20160317_144908_323410_7DE7A48F)
-References: <1458218246-18807-1-git-send-email-eraretuya@gmail.com>
- <1458218602.2158.17.camel@sipsolutions.net>
- <20160317132110.GP21104@mtj.duckdns.org>
-In-Reply-To: <20160317132110.GP21104@mtj.duckdns.org>
-Content-Type: text/plain; charset="windows-1255"
-MIME-Version: 1.0
+	id S1753974AbcC3OGX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Mar 2016 10:06:23 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 32/43] iwlwifi: mvm: use bss client queue for bss station
+Date: Wed, 30 Mar 2016 17:05:04 +0300
+Message-Id: <1459346715-7954-32-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160711_068847_12BFE42F)
+In-Reply-To: <1459346667.4731.9.camel@intel.com>
+References: <1459346667.4731.9.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> Hello,
-> 
-> On Thu, Mar 17, 2016 at 01:43:22PM +0100, Johannes Berg wrote:
-> > On Thu, 2016-03-17 at 20:37 +0800, Eva Rachel Retuya wrote:
-> > > Use alloc_workqueue() to allocate the workqueue instead of
-> > > create_singlethread_workqueue() since the latter is deprecated and
-> > > is scheduled for removal.
-> >
-> > Scheduled where?
-> 
-> They've been deprecated for years now.  I should note that in the header.
-> 
-> > >  static void iwl_setup_deferred_work(struct iwl_priv *priv)
-> > >  {
-> > > -	priv->workqueue = create_singlethread_workqueue(DRV_NAME);
-> > > +	priv->workqueue = alloc_workqueue(DRV_NAME, WQ_HIGHPRI |
-> > > WQ_UNBOUND |
-> > > +					  WQ_MEM_RECLAIM, 1);
-> >
-> > Seems like you should use alloc_ordered_workqueue() though? That also
-> > gets you UNBOUND immediately, and the "1".
-> 
-> Right, this one should have been alloc_ordered_workqueue().
-> 
-> > I'm not really sure HIGHPRI is needed either.
-> 
-> So, no WQ_MEM_RECLAIM either then, I suppose?  What are the latency
-> requirements here - what happens if a thermal management work gets
-> delayed?
-> 
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-This worker is not supposed to free memory, so no WQ_MEM_RECLAIM needed. The latency is not critical.
+Use the reserved BSS Client queue when connecting to an AP
+in DQA mode.
+
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h |  3 +++
+ drivers/net/wireless/intel/iwlwifi/mvm/sta.c    | 18 +++++++++++++-----
+ 2 files changed, 16 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index 8217eb2..9652687 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -89,6 +89,8 @@ enum {
+ /*
+  * DQA queue numbers
+  *
++ * @IWL_MVM_DQA_BSS_CLIENT_QUEUE: a queue reserved for BSS activity, to ensure
++ *	that we are never left without the possibility to connect to an AP.
+  * @IWL_MVM_DQA_MIN_MGMT_QUEUE: first TXQ in pool for MGMT and non-QOS frames.
+  *	Each MGMT queue is mapped to a single STA
+  *	MGMT frames are frames that return true on ieee80211_is_mgmt()
+@@ -100,6 +102,7 @@ enum {
+  * @IWL_MVM_DQA_MAX_DATA_QUEUE: last TXQ in pool for DATA frames
+  */
+ enum iwl_mvm_dqa_txq {
++	IWL_MVM_DQA_BSS_CLIENT_QUEUE = 4,
+ 	IWL_MVM_DQA_MIN_MGMT_QUEUE = 5,
+ 	IWL_MVM_DQA_MAX_MGMT_QUEUE = 8,
+ 	IWL_MVM_DQA_MIN_DATA_QUEUE = 10,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+index 3f36a66..e157bd5 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/sta.c
+@@ -336,7 +336,8 @@ static int iwl_mvm_sta_alloc_queue(struct iwl_mvm *mvm,
+ 	 * as aggregatable.
+ 	 * Mark all DATA queues as allowing to be aggregated at some point
+ 	 */
+-	cfg.aggregate = (queue >= IWL_MVM_DQA_MIN_DATA_QUEUE);
++	cfg.aggregate = (queue >= IWL_MVM_DQA_MIN_DATA_QUEUE ||
++			 queue == IWL_MVM_DQA_BSS_CLIENT_QUEUE);
+ 
+ 	IWL_DEBUG_TX_QUEUES(mvm, "Allocating queue #%d to sta %d on tid %d\n",
+ 			    queue, mvmsta->sta_id, tid);
+@@ -448,7 +449,8 @@ void iwl_mvm_add_new_dqa_stream_wk(struct work_struct *wk)
+ }
+ 
+ static int iwl_mvm_reserve_sta_stream(struct iwl_mvm *mvm,
+-				      struct ieee80211_sta *sta)
++				      struct ieee80211_sta *sta,
++				      enum nl80211_iftype vif_type)
+ {
+ 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
+ 	int queue;
+@@ -456,8 +458,13 @@ static int iwl_mvm_reserve_sta_stream(struct iwl_mvm *mvm,
+ 	spin_lock_bh(&mvm->queue_info_lock);
+ 
+ 	/* Make sure we have free resources for this STA */
+-	queue = iwl_mvm_find_free_queue(mvm, IWL_MVM_DQA_MIN_DATA_QUEUE,
+-					IWL_MVM_DQA_MAX_DATA_QUEUE);
++	if (vif_type == NL80211_IFTYPE_STATION && !sta->tdls &&
++	    !mvm->queue_info[IWL_MVM_DQA_BSS_CLIENT_QUEUE].hw_queue_refcount &&
++	    !mvm->queue_info[IWL_MVM_DQA_BSS_CLIENT_QUEUE].setup_reserved)
++		queue = IWL_MVM_DQA_BSS_CLIENT_QUEUE;
++	else
++		queue = iwl_mvm_find_free_queue(mvm, IWL_MVM_DQA_MIN_DATA_QUEUE,
++						IWL_MVM_DQA_MAX_DATA_QUEUE);
+ 	if (queue < 0) {
+ 		spin_unlock_bh(&mvm->queue_info_lock);
+ 		IWL_ERR(mvm, "No available queues for new station\n");
+@@ -551,7 +558,8 @@ int iwl_mvm_add_sta(struct iwl_mvm *mvm,
+ 	}
+ 
+ 	if (iwl_mvm_is_dqa_supported(mvm)) {
+-		ret = iwl_mvm_reserve_sta_stream(mvm, sta);
++		ret = iwl_mvm_reserve_sta_stream(mvm, sta,
++						 ieee80211_vif_type_p2p(vif));
+ 		if (ret)
+ 			goto err;
+ 	}
+-- 
+2.5.0
 
