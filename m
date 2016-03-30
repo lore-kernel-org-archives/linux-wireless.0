@@ -1,66 +1,78 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f180.google.com ([209.85.214.180]:33373 "EHLO
-	mail-ob0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752036AbcCUIJl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2016 04:09:41 -0400
-Received: by mail-ob0-f180.google.com with SMTP id fz5so24227603obc.0
-        for <linux-wireless@vger.kernel.org>; Mon, 21 Mar 2016 01:09:40 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <1458547622-1632-1-git-send-email-wnhuang@google.com>
-References: <1458547622-1632-1-git-send-email-wnhuang@google.com>
-Date: Mon, 21 Mar 2016 16:09:39 +0800
-Message-ID: <CABicQ-UBhk9pdY1EsT1wp6+ZqabbBv47wsciCFbPzzPuOzOFbg@mail.gmail.com> (sfid-20160321_090958_294131_0EB23AE5)
-Subject: Re: [PATCH] mwifiex: advertise low priority scan feature
-From: Wei-Ning Huang <wnhuang@google.com>
-To: Linux Wireless <linux-wireless@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Daniel Kurtz <djkurtz@chromium.org>,
-	Wei-Ning Huang <wnhuang@chromium.org>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	kvalo@codeaurora.org, netdev@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from mga14.intel.com ([192.55.52.115]:49826 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754142AbcC3OGK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Mar 2016 10:06:10 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 21/43] iwlwifi: remove IWLWIFI_UAPSD Kconfig
+Date: Wed, 30 Mar 2016 17:04:53 +0300
+Message-Id: <1459346715-7954-21-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160614_798576_F51724BF)
+In-Reply-To: <1459346667.4731.9.camel@intel.com>
+References: <1459346667.4731.9.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tested-by: Wei-Ning Huang <wnhuang@chromium.org>
+We have a module parameter, this is enough.
+per platform customizations will be done through the init
+script of the platform.
 
-On Mon, Mar 21, 2016 at 4:07 PM, Wei-Ning Huang <wnhuang@chromium.org> wrote:
-> From: Amitkumar Karwar <akarwar@marvell.com>
->
-> Low priority scan handling code which delays or aborts scan
-> operation based on Tx traffic is removed recently. The reason
-> is firmware already takes care of it in our new feature scan
-> channel gap. Hence we should advertise low priority scan
-> support to cfg80211.
->
-> This patch fixes a problem in which OBSS scan request from
-> wpa_supplicant was being rejected by cfg80211.
->
-> Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
-> ---
->  drivers/net/wireless/marvell/mwifiex/cfg80211.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> index bb7235e..7dafc5b 100644
-> --- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> +++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-> @@ -4086,6 +4086,7 @@ int mwifiex_register_cfg80211(struct mwifiex_adapter *adapter)
->
->         wiphy->features |= NL80211_FEATURE_HT_IBSS |
->                            NL80211_FEATURE_INACTIVITY_TIMER |
-> +                          NL80211_FEATURE_LOW_PRIORITY_SCAN |
->                            NL80211_FEATURE_NEED_OBSS_SCAN;
->
->         if (ISSUPP_TDLS_ENABLED(adapter->fw_cap_info))
-> --
-> 2.8.0.rc3.226.g39d4020
->
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/Kconfig   | 10 ----------
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c |  7 -------
+ 2 files changed, 17 deletions(-)
 
-
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/Kconfig b/drivers/net/wireless/intel/iwlwifi/Kconfig
+index 16c4f38..492035f 100644
+--- a/drivers/net/wireless/intel/iwlwifi/Kconfig
++++ b/drivers/net/wireless/intel/iwlwifi/Kconfig
+@@ -88,16 +88,6 @@ config IWLWIFI_BCAST_FILTERING
+ 	  If unsure, don't enable this option, as some programs might
+ 	  expect incoming broadcasts for their normal operations.
+ 
+-config IWLWIFI_UAPSD
+-	bool "enable U-APSD by default"
+-	depends on IWLMVM
+-	help
+-	  Say Y here to enable U-APSD by default. This may cause
+-	  interoperability problems with some APs, manifesting in lower than
+-	  expected throughput due to those APs not enabling aggregation
+-
+-	  If unsure, say N.
+-
+ config IWLWIFI_PCIE_RTPM
+        bool "Enable runtime power management mode for PCIe devices"
+        depends on IWLMVM && PM
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index 2cd9c31..9c2a2fd 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1560,9 +1560,7 @@ struct iwl_mod_params iwlwifi_mod_params = {
+ 	.power_level = IWL_POWER_INDEX_1,
+ 	.d0i3_disable = true,
+ 	.d0i3_entry_delay = 1000,
+-#ifndef CONFIG_IWLWIFI_UAPSD
+ 	.uapsd_disable = IWL_DISABLE_UAPSD_BSS | IWL_DISABLE_UAPSD_P2P_CLIENT,
+-#endif /* CONFIG_IWLWIFI_UAPSD */
+ 	/* the rest are 0 by default */
+ };
+ IWL_EXPORT_SYMBOL(iwlwifi_mod_params);
+@@ -1682,13 +1680,8 @@ MODULE_PARM_DESC(lar_disable, "disable LAR functionality (default: N)");
+ 
+ module_param_named(uapsd_disable, iwlwifi_mod_params.uapsd_disable,
+ 		   uint, S_IRUGO | S_IWUSR);
+-#ifdef CONFIG_IWLWIFI_UAPSD
+-MODULE_PARM_DESC(uapsd_disable,
+-		 "disable U-APSD functionality bitmap 1: BSS 2: P2P Client (default: 0)");
+-#else
+ MODULE_PARM_DESC(uapsd_disable,
+ 		 "disable U-APSD functionality bitmap 1: BSS 2: P2P Client (default: 3)");
+-#endif
+ 
+ /*
+  * set bt_coex_active to true, uCode will do kill/defer
 -- 
-Wei-Ning Huang, 黃偉寧 | Software Engineer, Google Inc., Taiwan |
-wnhuang@google.com | Cell: +886 910-380678
+2.5.0
+
