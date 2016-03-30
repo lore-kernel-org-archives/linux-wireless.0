@@ -1,91 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
 Received: from mga14.intel.com ([192.55.52.115]:35851 "EHLO mga14.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754226AbcC3OGQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 30 Mar 2016 10:06:16 -0400
+	id S1754228AbcC3OGT (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Mar 2016 10:06:19 -0400
 From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 To: linux-wireless@vger.kernel.org
-Cc: Sara Sharon <sara.sharon@intel.com>,
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
 	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH 25/43] iwlwifi: mvm: report checksum is done also for IPv6 packets
-Date: Wed, 30 Mar 2016 17:04:57 +0300
-Message-Id: <1459346715-7954-25-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160749_652083_85A4880A)
+Subject: [PATCH 27/43] iwlwifi: trans: fix iwl_trans_txq_scd_cfg.sta_id sign
+Date: Wed, 30 Mar 2016 17:04:59 +0300
+Message-Id: <1459346715-7954-27-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160633_318544_FE3F1AC5)
 In-Reply-To: <1459346667.4731.9.camel@intel.com>
 References: <1459346667.4731.9.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Sara Sharon <sara.sharon@intel.com>
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-Currently the code checks if hardware reported both L4 and L3
-checksums as valid, and only then reports it as validated to
-the stack.
-However, IPv6 does not have checksum at all and the L3 checksum
-valid bit is always off for IPv6 packets, with the result of the
-stack re-validating L4 checksum.
-Fix code to set CHECKSUM_UNNECESSARY also for IPv6 packets whose
-TCP/UDP checksum was verified.
+For some reason, this was defined as a signed variable.
+Make it unsigned.
 
-Signed-off-by: Sara Sharon <sara.sharon@intel.com>
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
 Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h | 15 ++++++++++++++-
- drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c      |  9 +++++++--
- 2 files changed, 21 insertions(+), 3 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-trans.h | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
-index 7a16e55..4c086d0 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api-rx.h
-@@ -268,12 +268,25 @@ enum iwl_rx_mpdu_amsdu_info {
- 	IWL_RX_MPDU_AMSDU_LAST_SUBFRAME		= 0x80,
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+index 91d74b3..fa4ab4b 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-trans.h
+@@ -7,6 +7,7 @@
+  *
+  * Copyright(c) 2007 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016        Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -33,6 +34,7 @@
+  *
+  * Copyright(c) 2005 - 2014 Intel Corporation. All rights reserved.
+  * Copyright(c) 2013 - 2015 Intel Mobile Communications GmbH
++ * Copyright(c) 2016        Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -519,7 +521,7 @@ struct iwl_trans;
  
-+enum iwl_rx_l3_proto_values {
-+	IWL_RX_L3_TYPE_NONE,
-+	IWL_RX_L3_TYPE_IPV4,
-+	IWL_RX_L3_TYPE_IPV4_FRAG,
-+	IWL_RX_L3_TYPE_IPV6_FRAG,
-+	IWL_RX_L3_TYPE_IPV6,
-+	IWL_RX_L3_TYPE_IPV6_IN_IPV4,
-+	IWL_RX_L3_TYPE_ARP,
-+	IWL_RX_L3_TYPE_EAPOL,
-+};
-+
-+#define IWL_RX_L3_PROTO_POS 4
-+
- enum iwl_rx_l3l4_flags {
- 	IWL_RX_L3L4_IP_HDR_CSUM_OK		= BIT(0),
- 	IWL_RX_L3L4_TCP_UDP_CSUM_OK		= BIT(1),
- 	IWL_RX_L3L4_TCP_FIN_SYN_RST_PSH		= BIT(2),
- 	IWL_RX_L3L4_TCP_ACK			= BIT(3),
--	IWL_RX_L3L4_L3_PROTO_MASK		= 0xf << 4,
-+	IWL_RX_L3L4_L3_PROTO_MASK		= 0xf << IWL_RX_L3_PROTO_POS,
- 	IWL_RX_L3L4_L4_PROTO_MASK		= 0xf << 8,
- 	IWL_RX_L3L4_RSS_HASH_MASK		= 0xf << 12,
- };
-diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-index 9a54f2d..b2bc3d9 100644
---- a/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-+++ b/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c
-@@ -294,10 +294,15 @@ static void iwl_mvm_rx_csum(struct ieee80211_sta *sta,
- {
- 	struct iwl_mvm_sta *mvmsta = iwl_mvm_sta_from_mac80211(sta);
- 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(mvmsta->vif);
-+	u16 flags = le16_to_cpu(desc->l3l4_flags);
-+	u8 l3_prot = (u8)((flags & IWL_RX_L3L4_L3_PROTO_MASK) >>
-+			  IWL_RX_L3_PROTO_POS);
- 
- 	if (mvmvif->features & NETIF_F_RXCSUM &&
--	    desc->l3l4_flags & cpu_to_le16(IWL_RX_L3L4_IP_HDR_CSUM_OK) &&
--	    desc->l3l4_flags & cpu_to_le16(IWL_RX_L3L4_TCP_UDP_CSUM_OK))
-+	    flags & IWL_RX_L3L4_TCP_UDP_CSUM_OK &&
-+	    (flags & IWL_RX_L3L4_IP_HDR_CSUM_OK ||
-+	     l3_prot == IWL_RX_L3_TYPE_IPV6 ||
-+	     l3_prot == IWL_RX_L3_TYPE_IPV6_FRAG))
- 		skb->ip_summed = CHECKSUM_UNNECESSARY;
- }
- 
+ struct iwl_trans_txq_scd_cfg {
+ 	u8 fifo;
+-	s8 sta_id;
++	u8 sta_id;
+ 	u8 tid;
+ 	bool aggregate;
+ 	int frame_limit;
 -- 
 2.5.0
 
