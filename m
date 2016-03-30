@@ -1,79 +1,61 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:36261 "EHLO
-	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751361AbcCRC1R (ORCPT
+Received: from mail-ig0-f169.google.com ([209.85.213.169]:38152 "EHLO
+	mail-ig0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751160AbcC3KJa convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 22:27:17 -0400
-Received: by mail-pf0-f175.google.com with SMTP id u190so146235747pfb.3
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 19:27:16 -0700 (PDT)
-From: Julian Calaby <julian.calaby@gmail.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Jia-Ju Bai <baijiaju1990@163.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Andrea Merello <andrea.merello@gmail.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH MOREWORK 14/19] rtl818x_pci: Fix a memory leak in rtl8180_init_rx_ring
-Date: Fri, 18 Mar 2016 13:27:09 +1100
-Message-Id: <4920ab8faf66e456a1fad1e79607d15a04cbb029.1458262312.git.julian.calaby@gmail.com> (sfid-20160318_032721_426752_F4064B1B)
-In-Reply-To: <cover.1458262312.git.julian.calaby@gmail.com>
-References: <cover.1458262312.git.julian.calaby@gmail.com>
+	Wed, 30 Mar 2016 06:09:30 -0400
+Received: by mail-ig0-f169.google.com with SMTP id ui10so27559015igc.1
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2016 03:09:30 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1459332504-1718-1-git-send-email-wnhuang@chromium.org>
+References: <1459332504-1718-1-git-send-email-wnhuang@chromium.org>
+Date: Wed, 30 Mar 2016 18:09:29 +0800
+Message-ID: <CABicQ-XsOxKT=8rk-=NuwKKOF4a4x6diGi2cTYNEcg=WxTE9WQ@mail.gmail.com> (sfid-20160330_120933_289004_BC5C6E5D)
+Subject: Re: [PATCH] CHROMIUM: mwifiex: fix NULL pointer dereference error
+From: Wei-Ning Huang <wnhuang@google.com>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+	Daniel Kurtz <djkurtz@chromium.org>, snanda@chromium.org,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Wei-Ning Huang <wnhuang@chromium.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jia-Ju Bai <baijiaju1990@163.com>
+Sorry, please ignore this one. I forgot to strip the CHROMIUM: tag.
 
-When dev_alloc_skb or pci_dma_mapping_error in rtl8180_init_rx_ring fails,
-the memory allocated by pci_zalloc_consistent is not freed.
+Wei-Ning
 
-This patch fixes the bug by adding pci_free_consistent
-in error handling code.
+On Wed, Mar 30, 2016 at 6:08 PM, Wei-Ning Huang <wnhuang@chromium.org> wrote:
+> In mwifiex_enable_hs, we need to check if
+> priv->wdev.wiphy->wowlan_config is NULL before accessing it's member.
+> This sometimes cause kernel panic when suspend/resume.
+>
+> Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+> index d5c56eb..d8de432 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+> @@ -509,7 +509,8 @@ int mwifiex_enable_hs(struct mwifiex_adapter *adapter)
+>
+>         if (priv && priv->sched_scanning) {
+>  #ifdef CONFIG_PM
+> -               if (!priv->wdev.wiphy->wowlan_config->nd_config) {
+> +               if (priv->wdev.wiphy->wowlan_config &&
+> +                   !priv->wdev.wiphy->wowlan_config->nd_config) {
+>  #endif
+>                         mwifiex_dbg(adapter, CMD, "aborting bgscan!\n");
+>                         mwifiex_stop_bg_scan(priv);
+> --
+> 2.1.2
+>
 
-Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
-Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
 
----
 
-Could someone else please review this?
-
-In particular, immediately after the call to pci_zalloc_coherent(), it
-fails if the result is null or if '(unsigned long)result & 0xFF'.
-
-Is the second arm of the or statement possible, and if so, should we be
-pci_free_coherent()ing the result there too?
-
-I've had a quick scout around and this check seems to be particular to
-realtek drivers.
-
-Thanks,
-
-Julian Calaby
----
- drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c | 4 ++++
- 1 file changed, 4 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c b/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
-index c76af5d..a8a23d5 100644
---- a/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
-+++ b/drivers/net/wireless/realtek/rtl818x/rtl8180/dev.c
-@@ -1018,6 +1018,8 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
- 		dma_addr_t *mapping;
- 		entry = priv->rx_ring + priv->rx_ring_sz*i;
- 		if (!skb) {
-+			pci_free_consistent(priv->pdev, priv->rx_ring_sz * 32,
-+					priv->rx_ring, priv->rx_ring_dma);
- 			wiphy_err(dev->wiphy, "Cannot allocate RX skb\n");
- 			return -ENOMEM;
- 		}
-@@ -1028,6 +1030,8 @@ static int rtl8180_init_rx_ring(struct ieee80211_hw *dev)
- 
- 		if (pci_dma_mapping_error(priv->pdev, *mapping)) {
- 			kfree_skb(skb);
-+			pci_free_consistent(priv->pdev, priv->rx_ring_sz * 32,
-+					priv->rx_ring, priv->rx_ring_dma);
- 			wiphy_err(dev->wiphy, "Cannot map DMA for RX skb\n");
- 			return -ENOMEM;
- 		}
 -- 
-2.7.0
-
+Wei-Ning Huang, 黃偉寧 | Software Engineer, Google Inc., Taiwan |
+wnhuang@google.com | Cell: +886 910-380678
