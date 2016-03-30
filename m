@@ -1,92 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:56311 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754415AbcCEJjH (ORCPT
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:33087 "EHLO
+	mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750975AbcC3KPI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 5 Mar 2016 04:39:07 -0500
-Date: Sat, 5 Mar 2016 15:08:52 +0530
-From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	kvalo@codeaurora.org
-Subject: Re: [PATCH] cfg80211/nl80211: Add support for
- NL80211_STA_INFO_RX_DURATION
-Message-ID: <20160305093852.GA8153@atheros-ThinkPad-T61> (sfid-20160305_103912_819388_CC0F4B95)
-References: <1456927710-32073-1-git-send-email-mohammed@qca.qualcomm.com>
- <1457019983.2044.29.camel@sipsolutions.net>
- <20160303160048.GA5243@atheros-ThinkPad-T61>
- <1457021271.2044.34.camel@sipsolutions.net>
- <20160303162036.GB5243@atheros-ThinkPad-T61>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20160303162036.GB5243@atheros-ThinkPad-T61>
+	Wed, 30 Mar 2016 06:15:08 -0400
+Received: by mail-pf0-f172.google.com with SMTP id 4so38806969pfd.0
+        for <linux-wireless@vger.kernel.org>; Wed, 30 Mar 2016 03:15:08 -0700 (PDT)
+From: Wei-Ning Huang <wnhuang@chromium.org>
+To: Linux Wireless <linux-wireless@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, djkurtz@chromium.org,
+	snanda@chromium.org, akarwar@marvell.com,
+	Wei-Ning Huang <wnhuang@chromium.org>
+Subject: [PATCH RESEND] mwifiex: fix NULL pointer dereference error
+Date: Wed, 30 Mar 2016 18:14:55 +0800
+Message-Id: <1459332895-4563-1-git-send-email-wnhuang@chromium.org> (sfid-20160330_121533_879071_8059866C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Johannes,
+In mwifiex_enable_hs, we need to check if
+priv->wdev.wiphy->wowlan_config is NULL before accessing it's member.
+This sometimes cause kernel panic when suspend/resume.
 
-https://groups.google.com/a/chromium.org/forum/#!msg/chromium-os-reviews/lDzKxgl6fIE/H5GQfMcuBwAJ
+Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
+---
+ drivers/net/wireless/marvell/mwifiex/sta_ioctl.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-for more information regarding the request for implementation. I will send a v2
-re-phrasing that it is implementation specific.
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+index d5c56eb..d8de432 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_ioctl.c
+@@ -509,7 +509,8 @@ int mwifiex_enable_hs(struct mwifiex_adapter *adapter)
+ 
+ 	if (priv && priv->sched_scanning) {
+ #ifdef CONFIG_PM
+-		if (!priv->wdev.wiphy->wowlan_config->nd_config) {
++		if (priv->wdev.wiphy->wowlan_config &&
++		    !priv->wdev.wiphy->wowlan_config->nd_config) {
+ #endif
+ 			mwifiex_dbg(adapter, CMD, "aborting bgscan!\n");
+ 			mwifiex_stop_bg_scan(priv);
+-- 
+2.1.2
 
-regards,
-shafi
-
-
-On Thu, Mar 03, 2016 at 09:50:36PM +0530, Mohammed Shafi Shajakhan wrote:
-> Hi johannes,
-> 
-> On Thu, Mar 03, 2016 at 05:07:51PM +0100, Johannes Berg wrote:
-> > On Thu, 2016-03-03 at 21:30 +0530, Mohammed Shafi Shajakhan wrote:
-> > 
-> > > [shafi] This is part of the Per Station statistics requirement,
-> > 
-> > Heh. Whose requirements? :)
-> 
-> [shafi] We have this as part of ath10k debugfs based on the end user (or) a
-> customer requirement and i think its make more sense to have this common across all
-> wifi drivers rather thank simply dumping it in ath10k debugfs. I think its
-> similar to 'ieee80211_frame_duration'(?) in mac80211 but for drivers like ath10k
-> where this is calculated in firmware for rx and implementation specific.
-> 
-> > 
-> > > the information from 'iw dev wlan#N station dump' which has
-> > > rx_duration
-> > > field will be used by application assesing the statistics
-> > > /performance of various clients connected to our AP. We will plot
-> > > a graph based on this information (assesing the rx time spent by
-> > > AP for various clients).
-> > > 
-> > > > 
-> > > > Are you really sure you mean "unicast"? What if the station is the
-> > > > AP? Why wouldn't multicast frames it transmitted be accounted for?
-> > > 
-> > > [shafi] This is based on the implementation by the driver/firmware.
-> > > We are focused on the AP side so unicast frames, if you are ok with
-> > > this change, i can change the documentation to be specific (generic
-> > > for all the drivers)  something like implementation specific (please
-> > > advise)
-> > 
-> > Ok, but for AP side I don't see the difference between "unicast" and
-> > "all frames", since all frames from that station should be unicast?
-> > Apart, perhaps, from some management frames the station might send
-> > outside the BSS, but that's not likely to matter much?
-> 
-> [shafi] exactly, I can change the documentation as you wish and
-> this is implementation specific, and we have implemented like this in ath10k
-> targeting AP mode.
-> 
-> > 
-> > IOW, why not specify all frames, and let this make some sense for other
-> > interface modes?
-> >
-> [shafi] Agreed.
-> 
-> regards,
-> shafi
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
