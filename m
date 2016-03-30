@@ -1,51 +1,88 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f49.google.com ([74.125.82.49]:38697 "EHLO
-	mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751973AbcCIFqH convert rfc822-to-8bit (ORCPT
+Received: from mailout2.w1.samsung.com ([210.118.77.12]:57429 "EHLO
+	mailout2.w1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752499AbcC3Av2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 00:46:07 -0500
-Received: by mail-wm0-f49.google.com with SMTP id l68so55746441wml.1
-        for <linux-wireless@vger.kernel.org>; Tue, 08 Mar 2016 21:46:06 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <1457457934-8563-1-git-send-email-rmanohar@qti.qualcomm.com>
-References: <1457457934-8563-1-git-send-email-rmanohar@qti.qualcomm.com>
-Date: Wed, 9 Mar 2016 06:46:05 +0100
-Message-ID: <CA+BoTQmxg7vK6KBENrx+P3vK_nYV4-h_yiavEBQi1oFTAANR=w@mail.gmail.com> (sfid-20160309_064612_197491_1750E2F8)
-Subject: Re: [PATCH v4] ath10k: move mgmt descriptor limit handle under mgmt_tx
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-Cc: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Rajkumar Manoharan <rmanohar@codeaurora.org>
-Content-Type: text/plain; charset=UTF-8
+	Tue, 29 Mar 2016 20:51:28 -0400
+From: Krzysztof Kozlowski <k.kozlowski@samsung.com>
+To: =?UTF-8?q?Cl=C3=A9ment=20Perrochaud?=
+	<clement.perrochaud@effinnov.com>,
+	Charles Gorand <charles.gorand@effinnov.com>,
+	Lauro Ramos Venancio <lauro.venancio@openbossa.org>,
+	Aloisio Almeida Jr <aloisio.almeida@openbossa.org>,
+	Samuel Ortiz <sameo@linux.intel.com>, linux-nfc@lists.01.org,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Krzysztof Kozlowski <k.kozlowski@samsung.com>
+Subject: [RESEND] nfc: Drop owner assignment from i2c_driver
+Date: Wed, 30 Mar 2016 09:51:04 +0900
+Message-id: <1459299064-20644-1-git-send-email-k.kozlowski@samsung.com> (sfid-20160330_025147_386147_EDA8FC7C)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 8 March 2016 at 18:25, Rajkumar Manoharan <rmanohar@qti.qualcomm.com> wrote:
-[...]
-> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
-> @@ -2326,7 +2326,12 @@ void ath10k_htt_t2h_msg_handler(struct ath10k *ar, struct sk_buff *skb)
->                         break;
->                 }
->
-> -               ath10k_txrx_tx_unref(htt, &tx_done);
-> +               status = ath10k_txrx_tx_unref(htt, &tx_done);
-> +               if (!status) {
-> +                       spin_lock_bh(&htt->tx_lock);
-> +                       ath10k_htt_tx_mgmt_dec_pending(htt);
-> +                       spin_unlock_bh(&htt->tx_lock);
-> +               }
-[...]
-> @@ -3978,14 +3976,13 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
->         txpath = ath10k_mac_tx_h_get_txpath(ar, skb, txmode);
->         is_htt = (txpath == ATH10K_MAC_TX_HTT ||
->                   txpath == ATH10K_MAC_TX_HTT_MGMT);
-> +       is_mgmt = (txpath == ATH10K_MAC_TX_HTT_MGMT);
+i2c_driver does not need to set an owner because i2c_register_driver()
+will set it.
 
-Are you sure you want to be counting nullfuncs here in as well (and
-possibly other frames that end up, for whatever reason, on htt-mgmt
-tx-path?)
+Signed-off-by: Krzysztof Kozlowski <k.kozlowski@samsung.com>
 
+---
 
-Michał
+The coccinelle script which generated the patch was sent here:
+http://www.spinics.net/lists/kernel/msg2029903.html
+---
+ drivers/nfc/nxp-nci/i2c.c  | 1 -
+ drivers/nfc/pn544/i2c.c    | 1 -
+ drivers/nfc/st-nci/i2c.c   | 1 -
+ drivers/nfc/st21nfca/i2c.c | 1 -
+ 4 files changed, 4 deletions(-)
+
+diff --git a/drivers/nfc/nxp-nci/i2c.c b/drivers/nfc/nxp-nci/i2c.c
+index 11520f472f98..36099e557730 100644
+--- a/drivers/nfc/nxp-nci/i2c.c
++++ b/drivers/nfc/nxp-nci/i2c.c
+@@ -418,7 +418,6 @@ MODULE_DEVICE_TABLE(acpi, acpi_id);
+ static struct i2c_driver nxp_nci_i2c_driver = {
+ 	.driver = {
+ 		   .name = NXP_NCI_I2C_DRIVER_NAME,
+-		   .owner  = THIS_MODULE,
+ 		   .acpi_match_table = ACPI_PTR(acpi_id),
+ 		   .of_match_table = of_match_ptr(of_nxp_nci_i2c_match),
+ 		  },
+diff --git a/drivers/nfc/pn544/i2c.c b/drivers/nfc/pn544/i2c.c
+index 45d0e667d7ae..f837c39a8017 100644
+--- a/drivers/nfc/pn544/i2c.c
++++ b/drivers/nfc/pn544/i2c.c
+@@ -1106,7 +1106,6 @@ MODULE_DEVICE_TABLE(of, of_pn544_i2c_match);
+ static struct i2c_driver pn544_hci_i2c_driver = {
+ 	.driver = {
+ 		   .name = PN544_HCI_I2C_DRIVER_NAME,
+-		   .owner  = THIS_MODULE,
+ 		   .of_match_table = of_match_ptr(of_pn544_i2c_match),
+ 		   .acpi_match_table = ACPI_PTR(pn544_hci_i2c_acpi_match),
+ 		  },
+diff --git a/drivers/nfc/st-nci/i2c.c b/drivers/nfc/st-nci/i2c.c
+index 8a56b5c6e4c4..925dbeef74db 100644
+--- a/drivers/nfc/st-nci/i2c.c
++++ b/drivers/nfc/st-nci/i2c.c
+@@ -416,7 +416,6 @@ MODULE_DEVICE_TABLE(of, of_st_nci_i2c_match);
+ 
+ static struct i2c_driver st_nci_i2c_driver = {
+ 	.driver = {
+-		.owner = THIS_MODULE,
+ 		.name = ST_NCI_I2C_DRIVER_NAME,
+ 		.of_match_table = of_match_ptr(of_st_nci_i2c_match),
+ 		.acpi_match_table = ACPI_PTR(st_nci_i2c_acpi_match),
+diff --git a/drivers/nfc/st21nfca/i2c.c b/drivers/nfc/st21nfca/i2c.c
+index 1f44a151d206..640b4de05793 100644
+--- a/drivers/nfc/st21nfca/i2c.c
++++ b/drivers/nfc/st21nfca/i2c.c
+@@ -721,7 +721,6 @@ MODULE_DEVICE_TABLE(of, of_st21nfca_i2c_match);
+ 
+ static struct i2c_driver st21nfca_hci_i2c_driver = {
+ 	.driver = {
+-		.owner = THIS_MODULE,
+ 		.name = ST21NFCA_HCI_I2C_DRIVER_NAME,
+ 		.of_match_table = of_match_ptr(of_st21nfca_i2c_match),
+ 		.acpi_match_table = ACPI_PTR(st21nfca_hci_i2c_acpi_match),
+-- 
+2.5.0
+
