@@ -1,92 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35813 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751512AbcCFM5a (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:22387 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753990AbcC3PnC (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 07:57:30 -0500
-Received: by mail-wm0-f66.google.com with SMTP id 1so6277362wmg.2
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 04:57:29 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 05/13] staging: vt6655: mac.c replace VNSvOutPortW with iowrite16
-Date: Sun,  6 Mar 2016 12:57:04 +0000
-Message-Id: <1457269032-2681-5-git-send-email-tvboxspy@gmail.com> (sfid-20160306_135738_166374_FD86829C)
-In-Reply-To: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
-References: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
+	Wed, 30 Mar 2016 11:43:02 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
+Subject: [PATCH 2/3] ath10k: remove unnecessary warning for probe response drops
+Date: Wed, 30 Mar 2016 21:12:30 +0530
+Message-ID: <1459352551-11773-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20160330_174307_426325_369CCF33)
+In-Reply-To: <1459352551-11773-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1459352551-11773-1-git-send-email-rmanohar@qti.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-removig macro from functions.
+qca99x0 and qca4019 solutions limit probe responses transmissions.
+Logging warning message for each probe response drop is flooding
+kernel log unnecessary with " failed to increase tx mgmt pending
+count: -16, dropping". Hence reducing log level to debug.
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+Reported-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/staging/vt6655/mac.c | 20 ++++++++++----------
- 1 file changed, 10 insertions(+), 10 deletions(-)
+ drivers/net/wireless/ath/ath10k/mac.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
-index a9ddb95..43e5f66 100644
---- a/drivers/staging/vt6655/mac.c
-+++ b/drivers/staging/vt6655/mac.c
-@@ -757,9 +757,9 @@ void MACvSetMISCFifo(struct vnt_private *priv, unsigned short wOffset,
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index ed00853..a7aafb35c 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3994,8 +3994,8 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
  
- 	if (wOffset > 273)
- 		return;
--	VNSvOutPortW(io_base + MAC_REG_MISCFFNDEX, wOffset);
-+	iowrite16(wOffset, io_base + MAC_REG_MISCFFNDEX);
- 	iowrite32(dwData, io_base + MAC_REG_MISCFFDATA);
--	VNSvOutPortW(io_base + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
-+	iowrite16(MISCFFCTL_WRITE, io_base + MAC_REG_MISCFFCTL);
- }
- 
- bool MACbPSWakeup(struct vnt_private *priv)
-@@ -826,9 +826,9 @@ void MACvSetKeyEntry(struct vnt_private *priv, unsigned short wKeyCtl,
- 	pr_debug("1. wOffset: %d, Data: %X, KeyCtl:%X\n",
- 		 wOffset, dwData, wKeyCtl);
- 
--	VNSvOutPortW(io_base + MAC_REG_MISCFFNDEX, wOffset);
-+	iowrite16(wOffset, io_base + MAC_REG_MISCFFNDEX);
- 	iowrite32(dwData, io_base + MAC_REG_MISCFFDATA);
--	VNSvOutPortW(io_base + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
-+	iowrite16(MISCFFCTL_WRITE, io_base + MAC_REG_MISCFFCTL);
- 	wOffset++;
- 
- 	dwData = 0;
-@@ -841,9 +841,9 @@ void MACvSetKeyEntry(struct vnt_private *priv, unsigned short wKeyCtl,
- 	dwData |= *(pbyAddr+0);
- 	pr_debug("2. wOffset: %d, Data: %X\n", wOffset, dwData);
- 
--	VNSvOutPortW(io_base + MAC_REG_MISCFFNDEX, wOffset);
-+	iowrite16(wOffset, io_base + MAC_REG_MISCFFNDEX);
- 	iowrite32(dwData, io_base + MAC_REG_MISCFFDATA);
--	VNSvOutPortW(io_base + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
-+	iowrite16(MISCFFCTL_WRITE, io_base + MAC_REG_MISCFFCTL);
- 	wOffset++;
- 
- 	wOffset += (uKeyIdx * 4);
-@@ -851,9 +851,9 @@ void MACvSetKeyEntry(struct vnt_private *priv, unsigned short wKeyCtl,
- 		/* always push 128 bits */
- 		pr_debug("3.(%d) wOffset: %d, Data: %X\n",
- 			 ii, wOffset+ii, *pdwKey);
--		VNSvOutPortW(io_base + MAC_REG_MISCFFNDEX, wOffset+ii);
-+		iowrite16(wOffset + ii, io_base + MAC_REG_MISCFFNDEX);
- 		iowrite32(*pdwKey++, io_base + MAC_REG_MISCFFDATA);
--		VNSvOutPortW(io_base + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
-+		iowrite16(MISCFFCTL_WRITE, io_base + MAC_REG_MISCFFCTL);
- 	}
- }
- 
-@@ -879,7 +879,7 @@ void MACvDisableKeyEntry(struct vnt_private *priv, unsigned int uEntryIdx)
- 	wOffset = MISCFIFO_KEYETRY0;
- 	wOffset += (uEntryIdx * MISCFIFO_KEYENTRYSIZE);
- 
--	VNSvOutPortW(io_base + MAC_REG_MISCFFNDEX, wOffset);
-+	iowrite16(wOffset, io_base + MAC_REG_MISCFFNDEX);
- 	iowrite32(0, io_base + MAC_REG_MISCFFDATA);
--	VNSvOutPortW(io_base + MAC_REG_MISCFFCTL, MISCFFCTL_WRITE);
-+	iowrite16(MISCFFCTL_WRITE, io_base + MAC_REG_MISCFFCTL);
- }
+ 		ret = ath10k_htt_tx_mgmt_inc_pending(htt, is_mgmt, is_presp);
+ 		if (ret) {
+-			ath10k_warn(ar, "failed to increase tx mgmt pending count: %d, dropping\n",
+-				    ret);
++			ath10k_dbg(ar, ATH10K_DBG_MAC, "failed to increase tx mgmt pending count: %d, dropping\n",
++				   ret);
+ 			ath10k_htt_tx_dec_pending(htt);
+ 			spin_unlock_bh(&ar->htt.tx_lock);
+ 			ieee80211_free_txskb(ar->hw, skb);
 -- 
-2.7.0
+2.7.4
 
