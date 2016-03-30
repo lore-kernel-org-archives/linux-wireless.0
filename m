@@ -1,79 +1,105 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:41575 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751280AbcC2IzA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 29 Mar 2016 04:55:00 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>, <kvalo@codeaurora.org>,
-	<mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH v3 2/2] ath10k: Remove debugfs support for Per STA total rx duration
-Date: Tue, 29 Mar 2016 14:24:02 +0530
-Message-ID: <1459241642-3730-2-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160329_105503_178915_9CED0DD9)
-In-Reply-To: <1459241642-3730-1-git-send-email-mohammed@qca.qualcomm.com>
-References: <1459241642-3730-1-git-send-email-mohammed@qca.qualcomm.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mga14.intel.com ([192.55.52.115]:24696 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754142AbcC3OF6 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Mar 2016 10:05:58 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Haim Dreyfuss <haim.dreyfuss@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 17/43] iwlwifi: 9000: update device id and FW serial number
+Date: Wed, 30 Mar 2016 17:04:49 +0300
+Message-Id: <1459346715-7954-17-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160612_610082_C087F2FB)
+In-Reply-To: <1459346667.4731.9.camel@intel.com>
+References: <1459346667.4731.9.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+From: Haim Dreyfuss <haim.dreyfuss@intel.com>
 
-cfg80211/nl80211 interface changes for per STA total rx-duration and
-very basic 'ath10k_sta_statistics'  mac80211 callback is implemented
-to extend support for per station statistics from the driver.
+Update device id and FW serial number for 2X2 antenna devices
+in 9000 generation product. These will not be available on
+the market in the coming year.
 
-Also provision in 'iw dev wlan#N station dump' to parse rx-duration
-is supported. So its safer to remove the debugfs entry for per STA
-rx-duration
-
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Signed-off-by: Haim Dreyfuss <haim.dreyfuss@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
- drivers/net/wireless/ath/ath10k/debugfs_sta.c |   24 ------------------------
- 1 file changed, 24 deletions(-)
+ drivers/net/wireless/intel/iwlwifi/iwl-9000.c   |  8 ++++----
+ drivers/net/wireless/intel/iwlwifi/iwl-config.h |  2 +-
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c   | 10 +++++-----
+ 3 files changed, 10 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/debugfs_sta.c b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-index c5396bf..d1186b6 100644
---- a/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-+++ b/drivers/net/wireless/ath/ath10k/debugfs_sta.c
-@@ -263,28 +263,6 @@ static const struct file_operations fops_delba = {
- 	.llseek = default_llseek,
- };
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+index 318b1dc..642fc92 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-9000.c
+@@ -5,7 +5,7 @@
+  *
+  * GPL LICENSE SUMMARY
+  *
+- * Copyright(c) 2015 Intel Deutschland GmbH
++ * Copyright(c) 2015-2016 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of version 2 of the GNU General Public License as
+@@ -18,7 +18,7 @@
+  *
+  * BSD LICENSE
+  *
+- * Copyright(c) 2015 Intel Deutschland GmbH
++ * Copyright(c) 2015-2016 Intel Deutschland GmbH
+  * All rights reserved.
+  *
+  * Redistribution and use in source and binary forms, with or without
+@@ -143,8 +143,8 @@ static const struct iwl_tt_params iwl9000_tt_params = {
+ 	.vht_mu_mimo_supported = true,					\
+ 	.mac_addr_from_csr = true
  
--static ssize_t ath10k_dbg_sta_read_rx_duration(struct file *file,
--					       char __user *user_buf,
--					       size_t count, loff_t *ppos)
--{
--	struct ieee80211_sta *sta = file->private_data;
--	struct ath10k_sta *arsta = (struct ath10k_sta *)sta->drv_priv;
--	char buf[100];
--	int len = 0;
--
--	len = scnprintf(buf, sizeof(buf),
--			"%llu usecs\n", arsta->rx_duration);
--
--	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
--}
--
--static const struct file_operations fops_rx_duration = {
--	.read = ath10k_dbg_sta_read_rx_duration,
--	.open = simple_open,
--	.owner = THIS_MODULE,
--	.llseek = default_llseek,
--};
--
- void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 			    struct ieee80211_sta *sta, struct dentry *dir)
- {
-@@ -293,6 +271,4 @@ void ath10k_sta_add_debugfs(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 	debugfs_create_file("addba", S_IWUSR, dir, sta, &fops_addba);
- 	debugfs_create_file("addba_resp", S_IWUSR, dir, sta, &fops_addba_resp);
- 	debugfs_create_file("delba", S_IWUSR, dir, sta, &fops_delba);
--	debugfs_create_file("rx_duration", S_IRUGO, dir, sta,
--			    &fops_rx_duration);
- }
+-const struct iwl_cfg iwl9260_2ac_cfg = {
+-		.name = "Intel(R) Dual Band Wireless AC 9260",
++const struct iwl_cfg iwl9560_2ac_cfg = {
++		.name = "Intel(R) Dual Band Wireless AC 9560",
+ 		.fw_name_pre = IWL9000_FW_PRE,
+ 		IWL_DEVICE_9000,
+ 		.ht_params = &iwl9000_ht_params,
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-config.h b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+index 3e4d346..8cbd248 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-config.h
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-config.h
+@@ -439,7 +439,7 @@ extern const struct iwl_cfg iwl8265_2ac_cfg;
+ extern const struct iwl_cfg iwl4165_2ac_cfg;
+ extern const struct iwl_cfg iwl8260_2ac_sdio_cfg;
+ extern const struct iwl_cfg iwl4165_2ac_sdio_cfg;
+-extern const struct iwl_cfg iwl9260_2ac_cfg;
++extern const struct iwl_cfg iwl9560_2ac_cfg;
+ extern const struct iwl_cfg iwl5165_2ac_cfg;
+ #endif /* CONFIG_IWLMVM */
+ 
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 3456669..fb8b5ec 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -485,15 +485,15 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ /* 9000 Series */
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl5165_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x2010, iwl5165_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0A10, iwl9260_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0010, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0A10, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0010, iwl9560_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0000, iwl5165_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0310, iwl5165_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0510, iwl5165_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x0710, iwl5165_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0210, iwl9260_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0410, iwl9260_2ac_cfg)},
+-	{IWL_PCI_DEVICE(0x9DF0, 0x0610, iwl9260_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0210, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0410, iwl9560_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x2526, 0x0610, iwl9560_2ac_cfg)},
+ #endif /* CONFIG_IWLMVM */
+ 
+ 	{0}
 -- 
-1.7.9.5
+2.5.0
 
