@@ -1,55 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:33400 "EHLO
-	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966640AbcCQSlL (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 17 Mar 2016 14:41:11 -0400
-Received: by mail-oi0-f66.google.com with SMTP id e22so1373172oib.0
-        for <linux-wireless@vger.kernel.org>; Thu, 17 Mar 2016 11:41:10 -0700 (PDT)
-From: Larry Finger <Larry.Finger@lwfinger.net>
-To: kvalo@codeaurora.org
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH 0/9] Fix Smatch warnings in rtlwifi family of drivers
-Date: Thu, 17 Mar 2016 13:40:55 -0500
-Message-Id: <1458240064-31422-1-git-send-email-Larry.Finger@lwfinger.net> (sfid-20160317_194115_186859_F5431CB5)
+Received: from mga14.intel.com ([192.55.52.115]:60163 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754296AbcC3OGY (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 30 Mar 2016 10:06:24 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Liad Kaufman <liad.kaufman@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 34/43] iwlwifi: mvm: allocate dedicated queue for cab in dqa mode
+Date: Wed, 30 Mar 2016 17:05:06 +0300
+Message-Id: <1459346715-7954-34-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160330_160629_962460_9DCD6DB6)
+In-Reply-To: <1459346667.4731.9.camel@intel.com>
+References: <1459346667.4731.9.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Today's patch by Arndt Bergman showing an indentation problem in rtl8821ae
-told me that it was time for rechecking all the code for indentation and
-other problems. Along with Arndt's patch, there are no remaining Smatch
-warnings.
+From: Liad Kaufman <liad.kaufman@intel.com>
 
-As with all other cleanup patches, these have low priority.
+In DQA mode, allocate a dedicated queue (#3) for content
+after beacon (AKA "CaB").
 
-Larry
+Signed-off-by: Liad Kaufman <liad.kaufman@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
 ---
+ drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h   |  2 ++
+ drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c | 18 ++++++++++++------
+ 2 files changed, 14 insertions(+), 6 deletions(-)
 
-Larry Finger (9):
-  rtlwifi: Fix Smatch warnings
-  rtlwifi: btcoexist: Fix Smatch warning
-  rtlwifi: rtl8188ee: Fix Smatch warnings
-  rtlwifi: rtl8192c-common: Fix Smatch warning
-  rtlwifi: rtl8192ee: Fix Smatch warning
-  rtlwifi: rtl8192se: Fix Smatch warning
-  rtlwifi: rtl8723ae: Fix Smatch warning
-  rtlwifi: rtl8723be: Fix Smatch warnings
-  rtlwifi: rtl8821ae: Fix Smatch warning
-
- .../realtek/rtlwifi/btcoexist/halbtc8723b2ant.c    |  2 +-
- drivers/net/wireless/realtek/rtlwifi/pci.c         | 39 +++++++++++-----------
- .../net/wireless/realtek/rtlwifi/rtl8188ee/dm.c    |  2 +-
- .../net/wireless/realtek/rtlwifi/rtl8188ee/phy.c   |  3 +-
- .../wireless/realtek/rtlwifi/rtl8192c/dm_common.c  |  2 +-
- .../net/wireless/realtek/rtlwifi/rtl8192ee/trx.c   |  2 +-
- .../net/wireless/realtek/rtlwifi/rtl8192se/phy.c   |  2 +-
- .../wireless/realtek/rtlwifi/rtl8723ae/hal_btc.c   |  6 ++--
- .../net/wireless/realtek/rtlwifi/rtl8723be/phy.c   | 10 +++---
- .../net/wireless/realtek/rtlwifi/rtl8723be/rf.c    |  4 +--
- .../net/wireless/realtek/rtlwifi/rtl8821ae/dm.c    |  6 ++--
- 11 files changed, 37 insertions(+), 41 deletions(-)
-
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+index 9652687..b38cb03 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/fw-api.h
+@@ -89,6 +89,7 @@ enum {
+ /*
+  * DQA queue numbers
+  *
++ * @IWL_MVM_DQA_GCAST_QUEUE: a queue reserved for P2P GO/SoftAP GCAST frames
+  * @IWL_MVM_DQA_BSS_CLIENT_QUEUE: a queue reserved for BSS activity, to ensure
+  *	that we are never left without the possibility to connect to an AP.
+  * @IWL_MVM_DQA_MIN_MGMT_QUEUE: first TXQ in pool for MGMT and non-QOS frames.
+@@ -102,6 +103,7 @@ enum {
+  * @IWL_MVM_DQA_MAX_DATA_QUEUE: last TXQ in pool for DATA frames
+  */
+ enum iwl_mvm_dqa_txq {
++	IWL_MVM_DQA_GCAST_QUEUE = 3,
+ 	IWL_MVM_DQA_BSS_CLIENT_QUEUE = 4,
+ 	IWL_MVM_DQA_MIN_MGMT_QUEUE = 5,
+ 	IWL_MVM_DQA_MAX_MGMT_QUEUE = 8,
+diff --git a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+index c02c105..43fd857 100644
+--- a/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
++++ b/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.c
+@@ -447,13 +447,19 @@ static int iwl_mvm_mac_ctxt_allocate_resources(struct iwl_mvm *mvm,
+ 
+ 	/* Allocate the CAB queue for softAP and GO interfaces */
+ 	if (vif->type == NL80211_IFTYPE_AP) {
+-		u8 queue = find_first_zero_bit(&used_hw_queues,
+-					       mvm->first_agg_queue);
++		u8 queue;
+ 
+-		if (queue >= mvm->first_agg_queue) {
+-			IWL_ERR(mvm, "Failed to allocate cab queue\n");
+-			ret = -EIO;
+-			goto exit_fail;
++		if (!iwl_mvm_is_dqa_supported(mvm)) {
++			queue = find_first_zero_bit(&used_hw_queues,
++						    mvm->first_agg_queue);
++
++			if (queue >= mvm->first_agg_queue) {
++				IWL_ERR(mvm, "Failed to allocate cab queue\n");
++				ret = -EIO;
++				goto exit_fail;
++			}
++		} else {
++			queue = IWL_MVM_DQA_GCAST_QUEUE;
+ 		}
+ 
+ 		vif->cab_queue = queue;
 -- 
-2.1.4
+2.5.0
 
