@@ -1,38 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:51706 "EHLO
-	merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751698AbcCJStg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 10 Mar 2016 13:49:36 -0500
-Date: Thu, 10 Mar 2016 13:49:34 -0500
-From: Kyle McMartin <kyle@infradead.org>
-To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	linux-firmware@kernel.org
-Subject: Re: pull request: iwlwifi -21.ucode firmware
-Message-ID: <20160310184933.GA21789@merlin.infradead.org> (sfid-20160310_194940_390973_5AEAC807)
-References: <0BA3FCBA62E2DC44AF3030971E174FB32EA66A24@hasmsx107.ger.corp.intel.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <0BA3FCBA62E2DC44AF3030971E174FB32EA66A24@hasmsx107.ger.corp.intel.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:45676 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752260AbcCaPWv (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2016 11:22:51 -0400
+Message-ID: <1459437761.4576.25.camel@sipsolutions.net> (sfid-20160331_172312_664310_62FA2E0B)
+Subject: Re: Question on rhashtable in worst-case scenario.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Ben Greear <greearb@candelatech.com>,
+	David Miller <davem@davemloft.net>
+Cc: linux-kernel@vger.kernel.org, herbert@gondor.apana.org.au,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	tgraf@suug.ch
+Date: Thu, 31 Mar 2016 17:22:41 +0200
+In-Reply-To: <56FD3E91.9020804@candelatech.com>
+References: <56F9941A.3080501@candelatech.com>
+		 <56FAAA6D.3070806@candelatech.com>
+		 <1459329252.2055.1.camel@sipsolutions.net>
+		 <20160330.123821.328761526754742195.davem@davemloft.net>
+		 <56FC0445.6010200@candelatech.com>
+	 <1459410405.4576.8.camel@sipsolutions.net>
+	 <56FD3E91.9020804@candelatech.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Mar 10, 2016 at 07:29:15AM +0000, Grumbach, Emmanuel wrote:
-> Hi Kyle,
-> 
-> This is a pull request to include our latest available firmware into
-> mainline linux-firmware.git.
-> 
-> It includes -21.ucode for various devices including devices for which
-> this is the first supported firmware (3168 and 8265).
-> This firmware is supported starting kernel 4.6.
-> 
-> Please pull!
-> 
+On Thu, 2016-03-31 at 08:13 -0700, Ben Greear wrote:
+> 
+> I see insertion failure, and then later, if of course fails to delete
+> as well since it was never inserted to begin with.  There is no good
+> way to deal with insertion error, so just need to fix the hashtable.
 
-Pulled, can you follow this up and update WHENCE? I'd do it, but there's
-a lack of consistency between Version: and some of the past commit
-messages, so I'm not sure what the right value would be.
+Oh, that's an oversight in mac80211 - it should be dealing with
+insertion failures properly. This isn't really a problem either,
+although it will lead to errors in your particular case.
 
-regards, --Kyle
+https://p.sipsolutions.net/cf77c78d69a231d4.txt
+
+johannes
