@@ -1,35 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.student.tuwien.ac.at ([193.170.74.22]:52348 "EHLO
-	mail2.student.tuwien.ac.at" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934990AbcCPPEt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 16 Mar 2016 11:04:49 -0400
-Received: from [192.168.0.203] ([212.69.186.40])
-	(authenticated bits=0)
-	by mail2.student.tuwien.ac.at (8.13.8/8.13.8) with ESMTP id u2GF4kD9013265
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <linux-wireless@vger.kernel.org>; Wed, 16 Mar 2016 16:04:46 +0100
-From: Stefan Feirer <e0926020@student.tuwien.ac.at>
-Subject: Hardware support 802.11k&r
+Received: from mx1.redhat.com ([209.132.183.28]:43371 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933171AbcCaU41 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2016 16:56:27 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 To: linux-wireless@vger.kernel.org
-Message-ID: <56E9760E.3000300@student.tuwien.ac.at> (sfid-20160316_160456_004840_002B2FA2)
-Date: Wed, 16 Mar 2016 16:04:46 +0100
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: Re: [PATCH 0/7] rtl8xxxu: Improve handling of new TX descriptor format
+References: <1457726254-28178-1-git-send-email-Jes.Sorensen@redhat.com>
+Date: Thu, 31 Mar 2016 16:56:26 -0400
+In-Reply-To: <1457726254-28178-1-git-send-email-Jes.Sorensen@redhat.com> (Jes
+	Sorensen's message of "Fri, 11 Mar 2016 14:57:27 -0500")
+Message-ID: <wrfjk2ki74ed.fsf@redhat.com> (sfid-20160331_225634_384126_66CEB938)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+Jes.Sorensen@redhat.com writes:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>
+> Hi,
+>
+> Given the 8723bu set of patches made it into the tree, here is a much
+> smaller set which improves the handling of the gen2 40 byte TX
+> descriptor format.
 
-I'm looking for hardware which supports 802.11k and 802.11r.
-So far I'v tried two USB-Wifi Dongle with Realtek Chipsets (RTL8192CU 
-and MT7610U). For both Realtek says 802.11k&r are supported but I 
-couldn't get it work.
- From my point of view the problem with the realtek chipsets is that 
-both use the old wext wifi driver and wext doesn't support 802.11k&r.
+Kalle,
 
-Can anyone recommend wifi hardware which supports 802.11k&r?
-Has anyone experience with 802.11k&r?
+Please ignore this set - I will send out an updated set against your 4.5
+update to wireless-drivers-next.
 
-Thanks,
-Stefan Feirer
+Cheers,
+Jes
