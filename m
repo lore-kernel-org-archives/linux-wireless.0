@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38840 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:51691 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756175AbcCUNaH (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 21 Mar 2016 09:30:07 -0400
-Date: Mon, 21 Mar 2016 14:28:14 +0100
-From: Stanislaw Gruszka <sgruszka@redhat.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Sara Sharon <sarasharon1@gmail.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org, Jia-Ju Bai <baijiaju1990@163.com>
-Subject: Re: [PATCH MOREWORK 18/19] iwl4965: Fix more memory leaks in
- __il4965_up()
-Message-ID: <20160321132813.GA31456@redhat.com> (sfid-20160321_143218_081396_95A022E7)
-References: <cover.1458262312.git.julian.calaby@gmail.com>
- <6bec5a9b55f13d40c2803f0fa60173451d5ea14a.1458262312.git.julian.calaby@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <6bec5a9b55f13d40c2803f0fa60173451d5ea14a.1458262312.git.julian.calaby@gmail.com>
+	id S932986AbcCaVIo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2016 17:08:44 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 05/10] rtl8xxxu: 8192eu uses txdesc40
+Date: Thu, 31 Mar 2016 17:08:37 -0400
+Message-Id: <1459458522-28686-6-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160331_230903_921062_0FE8D7ED)
+In-Reply-To: <1459458522-28686-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1459458522-28686-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 18, 2016 at 01:29:11PM +1100, Julian Calaby wrote:
-> In some of the non-success return paths, the memory allocated by
-> iwl4965_sta_alloc_lq() in iwl4965_alloc_bcast_station() is not freed.
-> 
-> In particular:
->  - if the card isn't ready after il4965_prepare_card_hw()
->  - if the card is hardware-rfkilled
-> 
-> In the hardware rfkilled path, the driver enables the rfkill
-> interrupt. When the card is unrfkilled and this interrupt is raised
-> we end up calling il4965_bg_restart() which calls __il4965_up() which
-> calls iwl4965_alloc_bcast_station() again.
-> 
-> Suggested-by: Jia-Ju Bai <baijiaju1990@163.com>
-> Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
-> 
-> ---
-> 
-> This is only compile tested as I don't have compatible hardware. I also
-> don't know the driver enough to know that this is truly correct - however
-> it looks right and I stand by my analysis.
-> 
-> Could someone else please review this?
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Looks ok.
+8192eu uses the new TX descriptor format
 
-Acked-by: Stanislaw Gruszka <sgruszka@redhat.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 484d08f..ad280cf 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -8530,7 +8530,7 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
+ 	.writeN_block_size = 128,
+ 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
+ 	.mbox_ext_width = 4,
+-	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc32),
++	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc40),
+ 	.has_s0s1 = 1,
+ 	.adda_1t_init = 0x0fc01616,
+ 	.adda_1t_path_on = 0x0fc01616,
+-- 
+2.5.5
+
