@@ -1,50 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0147.hostedemail.com ([216.40.44.147]:37949 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1756510AbcCRS2S (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 18 Mar 2016 14:28:18 -0400
-Message-ID: <1458325693.26915.23.camel@perches.com> (sfid-20160318_192834_102145_43834950)
-Subject: Re: [PATCH] staging: refresh TODO for rtl8723au
-From: Joe Perches <joe@perches.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Larry Finger <Larry.Finger@lwfinger.net>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Linux Driver Project Developer List
-	<driverdev-devel@linuxdriverproject.org>,
-	Linux Wireless <linux-wireless@vger.kernel.org>
-Date: Fri, 18 Mar 2016 11:28:13 -0700
-In-Reply-To: <wrfjlh5fk7i4.fsf@redhat.com>
-References: <1458321324-16906-1-git-send-email-xose.vazquez@gmail.com>
-	 <wrfjlh5fk7i4.fsf@redhat.com>
-Content-Type: text/plain; charset="ISO-8859-1"
+Received: from s3.sipsolutions.net ([5.9.151.49]:45730 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752260AbcCaPaG (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2016 11:30:06 -0400
+Message-ID: <1459438199.4576.26.camel@sipsolutions.net> (sfid-20160331_173036_305800_B029653D)
+Subject: Re: Question on rhashtable in worst-case scenario.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Ben Greear <greearb@candelatech.com>,
+	David Miller <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, tgraf@suug.ch
+Date: Thu, 31 Mar 2016 17:29:59 +0200
+In-Reply-To: <20160331075015.GA27716@gondor.apana.org.au>
+References: <56F9941A.3080501@candelatech.com>
+	 <56FAAA6D.3070806@candelatech.com>
+	 <1459329252.2055.1.camel@sipsolutions.net>
+	 <20160330.123821.328761526754742195.davem@davemloft.net>
+	 <56FC0445.6010200@candelatech.com>
+	 <1459410405.4576.8.camel@sipsolutions.net>
+	 <20160331075015.GA27716@gondor.apana.org.au>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, 2016-03-18 at 13:42 -0400, Jes Sorensen wrote:
-> Xose Vazquez Perez <xose.vazquez@gmail.com> writes:
-> > People should not waste time and energy working on this staging driver.
-> > A replacement(rtl8xxxu) using the kernel wireless stack already was merged
-> > in the 4.3 kernel.
-[]
-> > �drivers/staging/rtl8723au/TODO | 3 +++
-> Acked-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+On Thu, 2016-03-31 at 15:50 +0800, Herbert Xu wrote:
+> On Thu, Mar 31, 2016 at 09:46:45AM +0200, Johannes Berg wrote:
+> > 
+> > 
+> > In this case, I think perhaps you can just patch your local system
+> > with
+> > the many interfaces connecting to the same AP to add the parameter
+> > Herbert suggested (.insecure_elasticity = true in sta_rht_params).
+> > This
+> > is, after all, very much a case that "normal" operation doesn't
+> > even
+> > get close to.
+> I think you should just turn it on everywhere for mac80211.  Chain
+> length checks simply don't make sense when you allow duplicate
+> keys in the hash table.
 
-why not git rm drivers/staging/rtl8723au/ ?
+Yes, that's a good point, and we can - in certain corner cases - end up
+with duplicate keys even in normal operation.
 
-How about changing MAINTAINERS from:
+Does removing this completely disable the "-EEXIST" error? I can't say
+I fully understand the elasticity stuff in __rhashtable_insert_fast().
 
-STAGING - REALTEK RTL8723U WIRELESS DRIVER
-M:	Larry Finger <Larry.Finger@lwfinger.net>
-M:	Jes Sorensen <Jes.Sorensen@redhat.com>
-L:	linux-wireless@vger.kernel.org
-S:	Maintained
-F:	drivers/staging/rtl8723au/
-
-to
-
-S:	Obsolete
-
+johannes
