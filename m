@@ -1,37 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:51277 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:50989 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751786AbcCIR1x (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 12:27:53 -0500
-Message-ID: <1457544468.2042.20.camel@sipsolutions.net> (sfid-20160309_182757_155267_92300C9A)
-Subject: Re: [RFC v1] mac80211: Add support for per station rx stats
- histogram
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
-Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
-	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
-	kvalo@codeaurora.org, Anilkumar Kolli <akolli@qti.qualcomm.com>
-Date: Wed, 09 Mar 2016 18:27:48 +0100
-In-Reply-To: <20160309163038.GA9410@atheros-ThinkPad-T61>
-References: <1457367809-13637-1-git-send-email-mohammed@qca.qualcomm.com>
-	 <1457424451.2283.2.camel@sipsolutions.net>
-	 <20160308094250.GA3685@atheros-ThinkPad-T61>
-	 <20160309163038.GA9410@atheros-ThinkPad-T61>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S932274AbcCaVIs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2016 17:08:48 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 04/10] rtl8xxxu: TXDESC_SHORT_GI is txdesc32 only
+Date: Thu, 31 Mar 2016 17:08:36 -0400
+Message-Id: <1459458522-28686-5-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160331_230858_700327_8C35A09D)
+In-Reply-To: <1459458522-28686-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1459458522-28686-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-03-09 at 22:00 +0530, Mohammed Shafi Shajakhan wrote:
-> 
-> I had started studying(understand) your patch. Please
-> let me know if you have already added support for the same
-> in userspace as well, we like to use your changes and possibly
-> add any changes that addresses rx_stats histogram as well
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-I had a very minimal file in iw, but that's all:
+This is no short GI bit in the txdesc40 format.
 
-https://p.sipsolutions.net/744c0854bc02c95f.txt
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-johannes
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index d736316..484d08f 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -7295,7 +7295,7 @@ static void rtl8xxxu_tx(struct ieee80211_hw *hw,
+ 		    (ieee80211_is_data_qos(hdr->frame_control) &&
+ 		     sta && sta->ht_cap.cap &
+ 		     (IEEE80211_HT_CAP_SGI_40 | IEEE80211_HT_CAP_SGI_20))) {
+-			tx_desc->txdw5 |= cpu_to_le32(TXDESC_SHORT_GI);
++			tx_desc->txdw5 |= cpu_to_le32(TXDESC32_SHORT_GI);
+ 		}
+ 
+ 		if (rate_flag & IEEE80211_TX_RC_USE_RTS_CTS) {
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index af1d504..f211c5d 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -501,7 +501,7 @@ struct rtl8xxxu_txdesc40 {
+ 
+ /* Word 5 */
+ #define TXDESC40_SHORT_PREAMBLE		BIT(4)
+-#define TXDESC_SHORT_GI			BIT(6)
++#define TXDESC32_SHORT_GI		BIT(6)
+ #define TXDESC_CCX_TAG			BIT(7)
+ #define TXDESC32_RETRY_LIMIT_ENABLE	BIT(17)
+ #define TXDESC32_RETRY_LIMIT_SHIFT	18
+-- 
+2.5.5
 
