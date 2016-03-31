@@ -1,186 +1,1362 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:51211 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751933AbcCaV5U (ORCPT
+Received: from mail-lf0-f42.google.com ([209.85.215.42]:36327 "EHLO
+	mail-lf0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751884AbcCaK0V (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 17:57:20 -0400
-Subject: Re: Ath10k seems to be using stale mac80211 txq references.
-To: ath10k <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-References: <56FD96EB.1090208@candelatech.com>
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <56FD9D3F.5060009@candelatech.com> (sfid-20160331_235723_282434_B5258ED1)
-Date: Thu, 31 Mar 2016 14:57:19 -0700
-MIME-Version: 1.0
-In-Reply-To: <56FD96EB.1090208@candelatech.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+	Thu, 31 Mar 2016 06:26:21 -0400
+Received: by mail-lf0-f42.google.com with SMTP id e133so56198277lfe.3
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2016 03:26:20 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, dave.taht@gmail.com,
+	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCHv2 1/2] mac80211: implement fair queuing per txq
+Date: Thu, 31 Mar 2016 12:28:23 +0200
+Message-Id: <1459420104-31554-2-git-send-email-michal.kazior@tieto.com> (sfid-20160331_122627_752184_8265A703)
+In-Reply-To: <1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
+References: <1458898052-20601-1-git-send-email-michal.kazior@tieto.com>
+ <1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/31/2016 02:30 PM, Ben Greear wrote:
-> hacked 4.4.6 (with most of linux.ath ath10k patches backported), hacked 10.4.3 firmware.
->
-> I enabled kasan to help track down various bugs.  This one has me a bit
-> perplexed.  It seems ath10k is referencing some logic in mac80211 that has
-> already been deleted.
->
-> Possibly this is because ath10k_flush doesn't actually drop all
-> skb references immediately?
->
-> [root@ath10k ~]# wlan3: Failed to send nullfunc to AP 04:f0:21:f6:85:1c after 1000ms, disconnecting
-> ath10k_pci 0000:05:00.0: firmware crashed! (uuid 288562f1-b7e8-4810-ba0a-c154927476ae)
-> ath10k_pci 0000:05:00.0: firmware register dump:
-> ath10k_pci 0000:05:00.0: [00]: 0x00000009 0x000015B3 0x0099E4B6 0x00955B31
-> ath10k_pci 0000:05:00.0: [04]: 0x0099E4B6 0x00060130 0x00000005 0x00000016
-> ath10k_pci 0000:05:00.0: [08]: 0x00455030 0x00440C70 0x004060F0 0x00000044
-> ath10k_pci 0000:05:00.0: [12]: 0x00000009 0x00000000 0x009533D0 0x009533DF
-> ath10k_pci 0000:05:00.0: [16]: 0x00953438 0x009C17A2 0x00940E1C 0x00000000
-> ath10k_pci 0000:05:00.0: [20]: 0x4099E4B6 0x00405FEC 0x000000BE 0x00955A00
-> ath10k_pci 0000:05:00.0: [24]: 0x8099E680 0x0040604C 0x00000000 0xC099E4B6
-> ath10k_pci 0000:05:00.0: [28]: 0x80986D5F 0x004060AC 0x00423A14 0x004060F0
-> ath10k_pci 0000:05:00.0: [32]: 0x80984E51 0x004060CC 0x00423A14 0x004060F0
-> ath10k_pci 0000:05:00.0: [36]: 0x80985CBF 0x004060EC 0x00424B04 0x00440C70
-> ath10k_pci 0000:05:00.0: [40]: 0x809CC91A 0x0040615C 0x00440C70 0x00424B04
-> ath10k_pci 0000:05:00.0: [44]: 0x80984EBC 0x0040618C 0x00440C70 0x0040623C
-> ath10k_pci 0000:05:00.0: [48]: 0x809C63AC 0x0040623C 0x00440C70 0x00411988
-> ath10k_pci 0000:05:00.0: [52]: 0x80984DE0 0x0040626C 0x00424B04 0x00440C70
-> ath10k_pci 0000:05:00.0: [56]: 0x809CD08C 0x0040635C 0x00424B04 0x00422F34
-> ath10k_pci 0000:05:00.0: ath10k_pci ATH10K_DBG_BUFFER:
-> ath10k: [0000]: 0001581E 17FC4C01 0F00851C 0000000A 06003007 0000FFAA FFFFFFFF 0001581E
-> ath10k: [0008]: 17FC4C01 71108880 00000000 00C400BF 00000000 00000FF0 0001581E 17FC4C01
-> ath10k: [0016]: 71108880 00010000 00C400BF 00000000 FFFFFFFF 0001581E 17FC4C01 71108880
-> ath10k: [0024]: 00020000 00C400BF 00000000 FFFFFFFF 0001581E 17FC4C01 71108880 00030000
-> ath10k: [0032]: 00C400BF 000000FF FFFFFFFF 0001581E 17FC4C01 71108880 00040000 00C400BF
-> ath10k: [0040]: 000000FF FFFFFFFF 0001581E 17FC4C01 71108880 00050000 00C400BF 000000FF
-> ath10k: [0048]: FBFFFFFF 0001582D 0058581D 0001582D 0858581B 0000851C 00000000 0001582D
-> ath10k: [0056]: 0058581D 00015841 07FC4C02 00000004 00015846 0058581D 00015846 17FC4C01
-> ath10k: [0064]: 0F00851C 0000000A 06003007 0000FFAA FFFFFFFF 00015846 17FC4C01 71108880
-> ath10k: [0072]: 00000000 00C400BF 00000000 00000FF0 00015846 17FC4C01 71108880 00010000
-> ath10k: [0080]: 00C400BF 00000000 FFFFFFFF 00015846 17FC4C01 71108880 00020000 00C400BF
-> ath10k: [0088]: 00000000 FFFFFFFF 00015846 17FC4C01 71108880 00030000 00C400BF 000000FF
-> ath10k: [0096]: FFFFFFFF 00015846 17FC4C01 71108880 00040000 00C400BF 000000FF FFFFFFFF
-> ath10k: [0104]: 00015846 17FC4C01 71108880 00050000 00C400BF 000000FF FBFFFFFF 0001584D
-> ath10k: [0112]: 14585853 51100001 000F118C 00000400 00000049 00440D40 0001584D 0058581D
-> ath10k: [0120]: 0001584D 0458581C 00000002 0001584D 0058581D 00015850 07FC4C02 00000004
-> ath10k: [0128]: 00015854 0058581D 00015854 17FC4C01 0F00851C 0000000A 06003007 0000FFAA
-> ath10k: [0136]: FFFFFFFF 00015855 17FC4C01 71108880 00000000 00C400BF 00000000 00000FF0
-> ath10k: [0144]: 00015855 17FC4C01 71108880 00010000 00C400BF 00000000 FFFFFFFF 00015855
-> ath10k: [0152]: 17FC4C01 71108880 00020000 00C400BF 00000000 FFFFFFFF 00015855 17FC4C01
-> ath10k: [0160]: 71108880 00030000 00C400BF 000000FF FFFFFFFF 00015855 17FC4C01 71108880
-> ath10k: [0168]: 00040000 00C400BF 000000FF FFFFFFFF 00015855 17FC4C01 71108880 00050000
-> ath10k: [0176]: 00C400BF 000000FF FBFFFFFF 00015861 07FC4C02 00000001 00015864 07FC4C02
-> ath10k: [0184]: 00000001 00015868 085C3812 000F4CCC 00424B04 00015868 105C3809 0000143C
-> ath10k: [0192]: 00000001 00000000 00000000 0001586E 145C5853 51100001 000F1144 000003FC
-> ath10k: [0200]: 0000004A 00440C70 0001586E 145C5853 51100001 000F10FC 000003FE 0000004B
-> ath10k: [0208]: 00440C70 0001586E 07FC5830 00000008 0001586E 145C5854 51100002 000F10FC
-> ath10k: [0216]: 00000061 0000004A 00440C70 0001586E 145C5851 91107001 00424B04 00440C70
-> ath10k: [0224]: 00000008 00000006 0001586E 17FC5855 91108001 00000000 00000000 00000044
-> ath10k: [0232]: 000000BE 0001586E 0FFC5855 91108002 00440C70 00000010 0001586E 17FC0001
-> ath10k: [0240]: 0099E4B6 000015B3 000015B3 00405EDC 00000009
-> ath10k_pci 0000:05:00.0: ATH10K_END
-> sta22: drv-set-bitrate-mask had error return: -108
-> rdev-set-bitrate-mask failed: -108
-> sta21: Failed to send nullfunc to AP 04:f0:21:f6:85:1c after 1000ms, disconnecting
-> sta5: Failed to send nullfunc to AP 04:f0:21:f6:85:1c after 1000ms, disconnecting
-> sta7: Failed to send nullfunc to AP 04:f0:21:f6:85:1c after 1000ms, disconnecting
-> ath10k_pci 0000:05:00.0: Looped 2000 times in tx_push_pending, bailing out.
-> ath10k_pci 0000:05:00.0: Looped 2000 times in tx_push_pending, bailing out.
-> ath10k_pci 0000:05:00.0: Looped 2000 times in tx_push_pending, bailing out.
-> ath10k_pci 0000:05:00.0: Looped 2000 times in tx_push_pending, bailing out.
-> ath10k_pci 0000:05:00.0: Looped 2000 times in tx_push_pending, bailing out.
-> wlan3: Failed to send nullfunc to AP 04:f0:21:f6:85:1c after 1000ms, disconnecting
-> sta1: Failed to send nullfunc to AP 04:f0:21:f6:85:1c after 1000ms, disconnecting
-> sta2: Failed to send nullfunc to AP 04:f0:21:f6:85:1c after 1000ms, disconnecting
-> ==================================================================
-> BUG: KASAN: use-after-free in ath10k_mac_tx_push_txq+0x3e/0x17d [ath10k_core] at addr ffff8801bd136810
->
-> (gdb) l *(ath10k_mac_tx_push_txq+0x3e)
-> 0x10aa9 is in ath10k_mac_tx_push_txq (/home/greearb/git/linux-4.4.dev.y/drivers/net/wireless/ath/ath10k/mac.c:4241).
-> 4236    {
-> 4237        struct ath10k *ar = hw->priv;
-> 4238        struct ath10k_htt *htt = &ar->htt;
-> 4239        struct ath10k_txq *artxq = (void *)txq->drv_priv;
-> 4240        struct ieee80211_vif *vif = txq->vif;
-> 4241        struct ieee80211_sta *sta = txq->sta;
-> 4242        enum ath10k_hw_txrx_mode txmode;
-> 4243        enum ath10k_mac_tx_path txpath;
-> 4244        struct sk_buff *skb;
-> 4245        size_t skb_len;
-> (gdb) quit
->
->
-> Read of size 8 by task ksoftirqd/0/3
-> =============================================================================
-> BUG kmalloc-4096 (Tainted: G        W  O   ): kasan: bad access detected
-> -----------------------------------------------------------------------------
->
-> INFO: Allocated in sta_info_alloc+0x42f/0x6d1 [mac80211] age=21463 cpu=2 pid=3409
->      ___slab_alloc+0x2b7/0x44e
->      __slab_alloc.isra.64+0x44/0x74
->      __kmalloc+0xae/0x13d
->      sta_info_alloc+0x42f/0x6d1 [mac80211]
->      ieee80211_prep_connection+0x16a/0xc55 [mac80211]
->      ieee80211_mgd_auth+0x49f/0x5cc [mac80211]
->      ieee80211_auth+0x13/0x15 [mac80211]
->      cfg80211_mlme_auth+0x2c8/0x3b0 [cfg80211]
->      nl80211_authenticate+0x4ba/0x513 [cfg80211]
->      genl_family_rcv_msg+0x497/0x543
->      genl_rcv_msg+0x59/0x7d
->      netlink_rcv_skb+0x8d/0xeb
->      genl_rcv+0x23/0x32
->      netlink_unicast+0x1b4/0x264
->      netlink_sendmsg+0x80a/0x842
->      sock_sendmsg+0x66/0x80
-> INFO: Freed in sta_info_free+0xbb/0x104 [mac80211] age=223 cpu=0 pid=574
->      __slab_free+0x4f/0x2a8
->      kfree+0x17e/0x203
->      sta_info_free+0xbb/0x104 [mac80211]
->      __sta_info_destroy_part2+0x2fe/0x32f [mac80211]
->      __sta_info_flush+0x27e/0x2d4 [mac80211]
->      ieee80211_set_disassoc+0x1c9/0x44c [mac80211]
->      ieee80211_sta_connection_lost+0x8b/0xcf [mac80211]
->      ieee80211_sta_work+0xb17/0x18ba [mac80211]
->      ieee80211_iface_work+0x43e/0x457 [mac80211]
->      process_one_work+0x3ed/0x77c
->      worker_thread+0x2ba/0x3c2
->      kthread+0x162/0x171
->      ret_from_fork+0x3f/0x70
-> INFO: Slab 0xffffea0006f44c00 objects=7 used=4 fp=0xffff8801bd1333d8 flags=0x5fff8000004080
-> INFO: Object 0xffff8801bd1367b0 @offset=26544 fp=0xffff8801bd135668
->
-> Thanks,
-> Ben
->
+Qdiscs assume all packets regardless of
+destination address are treated equally by
+underlying an device link.
 
-After some more poking around, I've just more questions.
+This isn't true for wireless where each node is a
+link in it's own right with different and varying
+signal quality over time.
 
-What cleans up this txq_data memory in mac80211/sta_info.c so that it is not leaked?
+Existing wireless behavior stuffs device tx queues
+with no regard to link conditions. This can result
+in queue buildup for slow stations and an inertia
+worth of seconds making it impossible for small
+bursty traffic to come through.
 
+The current high-level idea is to keep roughly 1-2
+txops worth of data in device tx queues to allow
+short bursts to be handled responsively.
 
-	if (local->ops->wake_tx_queue) {
-		void *txq_data;
-		int size = sizeof(struct txq_info) +
-			   ALIGN(hw->txq_data_size, sizeof(void *));
+mac80211's software queues were designed to work
+very closely with device tx queues. They are
+required to make use of 802.11 packet aggregation
+easily and efficiently.
 
-		txq_data = kcalloc(ARRAY_SIZE(sta->sta.txq), size, gfp);
-		if (!txq_data)
-			goto free;
+However the logic imposed a per-AC queue limit.
+With the limit too small mac80211 wasn't be able
+to guarantee fairness across TIDs nor stations
+because single burst to a slow station could
+monopolize queues and reach per-AC limit
+preventing traffic from other stations being
+queued into mac80211's software queues. Having the
+limit too large would make smart qdiscs, e.g.
+fq_codel, a lot less efficient as they are
+designed on the premise that they are very close
+to the actualy device tx queues.
 
-		for (i = 0; i < ARRAY_SIZE(sta->sta.txq); i++) {
-			struct txq_info *txq = txq_data + i * size;
+The patch implements fq_codel-ish logic in
+mac80211's software queuing. This doesn't directly
+translate to immediate and significant gains.
+Moreover only wake_tx_queue based drivers will be
+able to reap the benefits of fair queuing for now.
 
-			ieee80211_init_tx_queue(sdata, sta, txq, i);
-		}
-	}
+More work is required to make sure drivers keep
+their device tx queues at minimum fill (instead of
+clogging them up until they're full regardless of
+link conditions). Only then the full effect of
+fair queuing will be observable.
 
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
+---
 
-Maybe the sta_info destroy logic needs to go clean out the txq references
-to sta so that ath10k cannot try to access it?
+Notes:
+    v2:
+     * fix invalid ptr deref (I accidentally removed `info` ptr assignment..)
+    
+    v1:
+     * move txq_limit and txq_cparams from ieee80211_hw to ieee80211_fq
+     * remove printks
+     * improve commit log
+     * various cleanups
+     * extra stats
+     * split out the core txq fairness changes
+       * should_drop() doesn't consider bursts
+       * codel target is hardcoded to 20ms
+    
+    RFC v2:
+     * actually re-use txq_flows on enqueue [Felix]
+     * tune should_drop() to consider bursts wrt station expected tput [Dave/Bob]
+     * make codel target time scale via ewma of estimated txqi service period [Dave]
+     * generic tx scheduling (with time-based queue limit and naive hysteresis)
+       * tracking per-frame expected duration
+       * tracking per-txqi in-flight data duration
+       * tracking per-hw in-flight data duration
+       ? in-flight means scheduled to driver and assumes driver does report
+         tx-status on actual tx-completion
+     * added a few debugfs entries
 
-Thanks,
-Ben
+ include/net/mac80211.h     |  21 ++-
+ net/mac80211/agg-tx.c      |   8 +-
+ net/mac80211/codel.h       | 264 +++++++++++++++++++++++++++++++
+ net/mac80211/codel_i.h     |  89 +++++++++++
+ net/mac80211/ieee80211_i.h |  45 +++++-
+ net/mac80211/iface.c       |  24 ++-
+ net/mac80211/main.c        |   9 +-
+ net/mac80211/rx.c          |   2 +-
+ net/mac80211/sta_info.c    |  10 +-
+ net/mac80211/sta_info.h    |  27 ++++
+ net/mac80211/tx.c          | 377 ++++++++++++++++++++++++++++++++++++++++-----
+ net/mac80211/util.c        |  20 ++-
+ 12 files changed, 817 insertions(+), 79 deletions(-)
+ create mode 100644 net/mac80211/codel.h
+ create mode 100644 net/mac80211/codel_i.h
 
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index a53333cb1528..0ee51dbb361b 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -888,8 +888,18 @@ struct ieee80211_tx_info {
+ 				/* only needed before rate control */
+ 				unsigned long jiffies;
+ 			};
+-			/* NB: vif can be NULL for injected frames */
+-			struct ieee80211_vif *vif;
++			union {
++				/* NB: vif can be NULL for injected frames */
++				struct ieee80211_vif *vif;
++
++				/* When packets are enqueued on txq it's easy
++				 * to re-construct the vif pointer. There's no
++				 * more space in tx_info so it can be used to
++				 * store the necessary enqueue time for packet
++				 * sojourn time computation.
++				 */
++				u64 enqueue_time;
++			};
+ 			struct ieee80211_key_conf *hw_key;
+ 			u32 flags;
+ 			/* 4 bytes free */
+@@ -2113,9 +2123,6 @@ enum ieee80211_hw_flags {
+  * @n_cipher_schemes: a size of an array of cipher schemes definitions.
+  * @cipher_schemes: a pointer to an array of cipher scheme definitions
+  *	supported by HW.
+- *
+- * @txq_ac_max_pending: maximum number of frames per AC pending in all txq
+- *	entries for a vif.
+  */
+ struct ieee80211_hw {
+ 	struct ieee80211_conf conf;
+@@ -2145,7 +2152,6 @@ struct ieee80211_hw {
+ 	u8 uapsd_max_sp_len;
+ 	u8 n_cipher_schemes;
+ 	const struct ieee80211_cipher_scheme *cipher_schemes;
+-	int txq_ac_max_pending;
+ };
+ 
+ static inline bool _ieee80211_hw_check(struct ieee80211_hw *hw,
+@@ -5633,6 +5639,9 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+  * txq state can change half-way of this function and the caller may end up
+  * with "new" frame_cnt and "old" byte_cnt or vice-versa.
+  *
++ * Moreover returned values are best-case, i.e. assuming queueing algorithm
++ * will not drop frames due to excess latency.
++ *
+  * @txq: pointer obtained from station or virtual interface
+  * @frame_cnt: pointer to store frame count
+  * @byte_cnt: pointer to store byte count
+diff --git a/net/mac80211/agg-tx.c b/net/mac80211/agg-tx.c
+index 4932e9f243a2..b9d0cee2a786 100644
+--- a/net/mac80211/agg-tx.c
++++ b/net/mac80211/agg-tx.c
+@@ -194,17 +194,21 @@ static void
+ ieee80211_agg_stop_txq(struct sta_info *sta, int tid)
+ {
+ 	struct ieee80211_txq *txq = sta->sta.txq[tid];
++	struct ieee80211_sub_if_data *sdata;
++	struct ieee80211_fq *fq;
+ 	struct txq_info *txqi;
+ 
+ 	if (!txq)
+ 		return;
+ 
+ 	txqi = to_txq_info(txq);
++	sdata = vif_to_sdata(txq->vif);
++	fq = &sdata->local->fq;
+ 
+ 	/* Lock here to protect against further seqno updates on dequeue */
+-	spin_lock_bh(&txqi->queue.lock);
++	spin_lock_bh(&fq->lock);
+ 	set_bit(IEEE80211_TXQ_STOP, &txqi->flags);
+-	spin_unlock_bh(&txqi->queue.lock);
++	spin_unlock_bh(&fq->lock);
+ }
+ 
+ static void
+diff --git a/net/mac80211/codel.h b/net/mac80211/codel.h
+new file mode 100644
+index 000000000000..e6470dbe5b0b
+--- /dev/null
++++ b/net/mac80211/codel.h
+@@ -0,0 +1,264 @@
++#ifndef __NET_MAC80211_CODEL_H
++#define __NET_MAC80211_CODEL_H
++
++/*
++ * Codel - The Controlled-Delay Active Queue Management algorithm
++ *
++ *  Copyright (C) 2011-2012 Kathleen Nichols <nichols@pollere.com>
++ *  Copyright (C) 2011-2012 Van Jacobson <van@pollere.net>
++ *  Copyright (C) 2016 Michael D. Taht <dave.taht@bufferbloat.net>
++ *  Copyright (C) 2012 Eric Dumazet <edumazet@google.com>
++ *  Copyright (C) 2015 Jonathan Morton <chromatix99@gmail.com>
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions, and the following disclaimer,
++ *    without modification.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The names of the authors may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * Alternatively, provided that this notice is retained in full, this
++ * software may be distributed under the terms of the GNU General
++ * Public License ("GPL") version 2, in which case the provisions of the
++ * GPL apply INSTEAD OF those given above.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
++ * DAMAGE.
++ *
++ */
++
++#include <linux/version.h>
++#include <linux/types.h>
++#include <linux/ktime.h>
++#include <linux/skbuff.h>
++#include <net/pkt_sched.h>
++#include <net/inet_ecn.h>
++#include <linux/reciprocal_div.h>
++
++#include "codel_i.h"
++
++/* Controlling Queue Delay (CoDel) algorithm
++ * =========================================
++ * Source : Kathleen Nichols and Van Jacobson
++ * http://queue.acm.org/detail.cfm?id=2209336
++ *
++ * Implemented on linux by Dave Taht and Eric Dumazet
++ */
++
++/* CoDel5 uses a real clock, unlike codel */
++
++static inline u64 codel_get_time(void)
++{
++	return ktime_get_ns();
++}
++
++static inline u32 codel_time_to_us(u64 val)
++{
++	do_div(val, NSEC_PER_USEC);
++	return (u32)val;
++}
++
++/* sizeof_in_bits(rec_inv_sqrt) */
++#define REC_INV_SQRT_BITS (8 * sizeof(u16))
++/* needed shift to get a Q0.32 number from rec_inv_sqrt */
++#define REC_INV_SQRT_SHIFT (32 - REC_INV_SQRT_BITS)
++
++/* Newton approximation method needs more iterations at small inputs,
++ * so cache them.
++ */
++
++static void codel_vars_init(struct codel_vars *vars)
++{
++	memset(vars, 0, sizeof(*vars));
++}
++
++/*
++ * http://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Iterative_methods_for_reciprocal_square_roots
++ * new_invsqrt = (invsqrt / 2) * (3 - count * invsqrt^2)
++ *
++ * Here, invsqrt is a fixed point number (< 1.0), 32bit mantissa, aka Q0.32
++ */
++static inline void codel_Newton_step(struct codel_vars *vars)
++{
++	u32 invsqrt = ((u32)vars->rec_inv_sqrt) << REC_INV_SQRT_SHIFT;
++	u32 invsqrt2 = ((u64)invsqrt * invsqrt) >> 32;
++	u64 val = (3LL << 32) - ((u64)vars->count * invsqrt2);
++
++	val >>= 2; /* avoid overflow in following multiply */
++	val = (val * invsqrt) >> (32 - 2 + 1);
++
++	vars->rec_inv_sqrt = val >> REC_INV_SQRT_SHIFT;
++}
++
++/*
++ * CoDel control_law is t + interval/sqrt(count)
++ * We maintain in rec_inv_sqrt the reciprocal value of sqrt(count) to avoid
++ * both sqrt() and divide operation.
++ */
++static u64 codel_control_law(u64 t,
++			     u64 interval,
++			     u32 rec_inv_sqrt)
++{
++	return t + reciprocal_scale(interval, rec_inv_sqrt <<
++				    REC_INV_SQRT_SHIFT);
++}
++
++/* Forward declaration of this for use elsewhere */
++
++static inline u64
++custom_codel_get_enqueue_time(struct sk_buff *skb);
++
++static inline struct sk_buff *
++custom_dequeue(struct codel_vars *vars, void *ptr);
++
++static inline void
++custom_drop(struct sk_buff *skb, void *ptr);
++
++static bool codel_should_drop(struct sk_buff *skb,
++			      __u32 *backlog,
++			      __u32 backlog_thr,
++			      struct codel_vars *vars,
++			      const struct codel_params *p,
++			      u64 now)
++{
++	if (!skb) {
++		vars->first_above_time = 0;
++		return false;
++	}
++
++	if (now - custom_codel_get_enqueue_time(skb) < p->target ||
++	    *backlog <= backlog_thr) {
++		/* went below - stay below for at least interval */
++		vars->first_above_time = 0;
++		return false;
++	}
++
++	if (vars->first_above_time == 0) {
++		/* just went above from below; mark the time */
++		vars->first_above_time = now + p->interval;
++
++	} else if (now > vars->first_above_time) {
++		return true;
++	}
++
++	return false;
++}
++
++static struct sk_buff *codel_dequeue(void *ptr,
++				     __u32 *backlog,
++				     __u32 backlog_thr,
++				     struct codel_vars *vars,
++				     struct codel_params *p,
++				     u64 now,
++				     bool overloaded)
++{
++	struct sk_buff *skb = custom_dequeue(vars, ptr);
++	bool drop;
++
++	if (!skb) {
++		vars->dropping = false;
++		return skb;
++	}
++	drop = codel_should_drop(skb, backlog, backlog_thr, vars, p, now);
++	if (vars->dropping) {
++		if (!drop) {
++			/* sojourn time below target - leave dropping state */
++			vars->dropping = false;
++		} else if (now >= vars->drop_next) {
++			/* It's time for the next drop. Drop the current
++			 * packet and dequeue the next. The dequeue might
++			 * take us out of dropping state.
++			 * If not, schedule the next drop.
++			 * A large backlog might result in drop rates so high
++			 * that the next drop should happen now,
++			 * hence the while loop.
++			 */
++
++			/* saturating increment */
++			vars->count++;
++			if (!vars->count)
++				vars->count--;
++
++			codel_Newton_step(vars);
++			vars->drop_next = codel_control_law(vars->drop_next,
++							    p->interval,
++							    vars->rec_inv_sqrt);
++			do {
++				if (INET_ECN_set_ce(skb) && !overloaded) {
++					vars->ecn_mark++;
++					/* and schedule the next drop */
++					vars->drop_next = codel_control_law(
++						vars->drop_next, p->interval,
++						vars->rec_inv_sqrt);
++					goto end;
++				}
++				custom_drop(skb, ptr);
++				vars->drop_count++;
++				skb = custom_dequeue(vars, ptr);
++				if (skb && !codel_should_drop(skb, backlog,
++							      backlog_thr,
++							      vars, p, now)) {
++					/* leave dropping state */
++					vars->dropping = false;
++				} else {
++					/* schedule the next drop */
++					vars->drop_next = codel_control_law(
++						vars->drop_next, p->interval,
++						vars->rec_inv_sqrt);
++				}
++			} while (skb && vars->dropping && now >=
++				 vars->drop_next);
++
++			/* Mark the packet regardless */
++			if (skb && INET_ECN_set_ce(skb))
++				vars->ecn_mark++;
++		}
++	} else if (drop) {
++		if (INET_ECN_set_ce(skb) && !overloaded) {
++			vars->ecn_mark++;
++		} else {
++			custom_drop(skb, ptr);
++			vars->drop_count++;
++
++			skb = custom_dequeue(vars, ptr);
++			drop = codel_should_drop(skb, backlog, backlog_thr,
++						 vars, p, now);
++			if (skb && INET_ECN_set_ce(skb))
++				vars->ecn_mark++;
++		}
++		vars->dropping = true;
++		/* if min went above target close to when we last went below
++		 * assume that the drop rate that controlled the queue on the
++		 * last cycle is a good starting point to control it now.
++		 */
++		if (vars->count > 2 &&
++		    now - vars->drop_next < 8 * p->interval) {
++			vars->count -= 2;
++			codel_Newton_step(vars);
++		} else {
++			vars->count = 1;
++			vars->rec_inv_sqrt = ~0U >> REC_INV_SQRT_SHIFT;
++		}
++		codel_Newton_step(vars);
++		vars->drop_next = codel_control_law(now, p->interval,
++						    vars->rec_inv_sqrt);
++	}
++end:
++	return skb;
++}
++#endif
+diff --git a/net/mac80211/codel_i.h b/net/mac80211/codel_i.h
+new file mode 100644
+index 000000000000..60371121e526
+--- /dev/null
++++ b/net/mac80211/codel_i.h
+@@ -0,0 +1,89 @@
++#ifndef __NET_MAC80211_CODEL_I_H
++#define __NET_MAC80211_CODEL_I_H
++
++/*
++ * Codel - The Controlled-Delay Active Queue Management algorithm
++ *
++ *  Copyright (C) 2011-2012 Kathleen Nichols <nichols@pollere.com>
++ *  Copyright (C) 2011-2012 Van Jacobson <van@pollere.net>
++ *  Copyright (C) 2016 Michael D. Taht <dave.taht@bufferbloat.net>
++ *  Copyright (C) 2012 Eric Dumazet <edumazet@google.com>
++ *  Copyright (C) 2015 Jonathan Morton <chromatix99@gmail.com>
++ *  Copyright (C) 2016 Michal Kazior <michal.kazior@tieto.com>
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions, and the following disclaimer,
++ *    without modification.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The names of the authors may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * Alternatively, provided that this notice is retained in full, this
++ * software may be distributed under the terms of the GNU General
++ * Public License ("GPL") version 2, in which case the provisions of the
++ * GPL apply INSTEAD OF those given above.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
++ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
++ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
++ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
++ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
++ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
++ * DAMAGE.
++ *
++ */
++
++#include <linux/version.h>
++#include <linux/types.h>
++#include <linux/ktime.h>
++#include <linux/skbuff.h>
++#include <net/pkt_sched.h>
++#include <net/inet_ecn.h>
++#include <linux/reciprocal_div.h>
++
++/* Controlling Queue Delay (CoDel) algorithm
++ * =========================================
++ * Source : Kathleen Nichols and Van Jacobson
++ * http://queue.acm.org/detail.cfm?id=2209336
++ *
++ * Implemented on linux by Dave Taht and Eric Dumazet
++ */
++
++/* CoDel5 uses a real clock, unlike codel */
++
++#define MS2TIME(a) (a * (u64)NSEC_PER_MSEC)
++#define US2TIME(a) (a * (u64)NSEC_PER_USEC)
++
++/**
++ * struct codel_vars - contains codel variables
++ * @count:		how many drops we've done since the last time we
++ *			entered dropping state
++ * @dropping:		set to > 0 if in dropping state
++ * @rec_inv_sqrt:	reciprocal value of sqrt(count) >> 1
++ * @first_above_time:	when we went (or will go) continuously above target
++ *			for interval
++ * @drop_next:		time to drop next packet, or when we dropped last
++ * @drop_count:	temp count of dropped packets in dequeue()
++ * @ecn_mark:	number of packets we ECN marked instead of dropping
++ */
++
++struct codel_vars {
++	u32	count;
++	u16	dropping;
++	u16	rec_inv_sqrt;
++	u64	first_above_time;
++	u64	drop_next;
++	u16	drop_count;
++	u16	ecn_mark;
++};
++#endif
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c6830fbe7d68..3dc5192b6dd9 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -805,9 +805,18 @@ enum txq_info_flags {
+ };
+ 
+ struct txq_info {
+-	struct sk_buff_head queue;
++	struct txq_flow flow;
++	struct list_head new_flows;
++	struct list_head old_flows;
++	u32 backlog_bytes;
++	u32 backlog_packets;
++	u32 drop_codel;
++	u32 drop_overlimit;
++	u32 collisions;
++	u32 flows;
++	u32 tx_bytes;
++	u32 tx_packets;
+ 	unsigned long flags;
+-	unsigned long byte_cnt;
+ 
+ 	/* keep last! */
+ 	struct ieee80211_txq txq;
+@@ -855,7 +864,6 @@ struct ieee80211_sub_if_data {
+ 	bool control_port_no_encrypt;
+ 	int encrypt_headroom;
+ 
+-	atomic_t txqs_len[IEEE80211_NUM_ACS];
+ 	struct ieee80211_tx_queue_params tx_conf[IEEE80211_NUM_ACS];
+ 	struct mac80211_qos_map __rcu *qos_map;
+ 
+@@ -1092,11 +1100,37 @@ enum mac80211_scan_state {
+ 	SCAN_ABORT,
+ };
+ 
++/**
++ * struct codel_params - stores codel parameters
++ *
++ * @interval: initial drop rate
++ * @target: maximum persistent sojourn time
++ */
++struct codel_params {
++	u64 interval;
++	u64 target;
++};
++
++struct ieee80211_fq {
++	struct txq_flow *flows;
++	struct list_head backlogs;
++	struct codel_params cparams;
++	spinlock_t lock;
++	u32 flows_cnt;
++	u32 perturbation;
++	u32 txq_limit;
++	u32 quantum;
++	u32 backlog;
++	u32 drop_overlimit;
++	u32 drop_codel;
++};
++
+ struct ieee80211_local {
+ 	/* embed the driver visible part.
+ 	 * don't cast (use the static inlines below), but we keep
+ 	 * it first anyway so they become a no-op */
+ 	struct ieee80211_hw hw;
++	struct ieee80211_fq fq;
+ 
+ 	const struct ieee80211_ops *ops;
+ 
+@@ -1928,6 +1962,11 @@ static inline bool ieee80211_can_run_worker(struct ieee80211_local *local)
+ void ieee80211_init_tx_queue(struct ieee80211_sub_if_data *sdata,
+ 			     struct sta_info *sta,
+ 			     struct txq_info *txq, int tid);
++void ieee80211_purge_txq(struct ieee80211_local *local, struct txq_info *txqi);
++void ieee80211_init_flow(struct txq_flow *flow);
++int ieee80211_setup_flows(struct ieee80211_local *local);
++void ieee80211_teardown_flows(struct ieee80211_local *local);
++
+ void ieee80211_send_auth(struct ieee80211_sub_if_data *sdata,
+ 			 u16 transaction, u16 auth_alg, u16 status,
+ 			 const u8 *extra, size_t extra_len, const u8 *bssid,
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 453b4e741780..1faea208edfc 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -779,6 +779,7 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 			      bool going_down)
+ {
+ 	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_fq *fq = &local->fq;
+ 	unsigned long flags;
+ 	struct sk_buff *skb, *tmp;
+ 	u32 hw_reconf_flags = 0;
+@@ -977,12 +978,9 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 	if (sdata->vif.txq) {
+ 		struct txq_info *txqi = to_txq_info(sdata->vif.txq);
+ 
+-		spin_lock_bh(&txqi->queue.lock);
+-		ieee80211_purge_tx_queue(&local->hw, &txqi->queue);
+-		txqi->byte_cnt = 0;
+-		spin_unlock_bh(&txqi->queue.lock);
+-
+-		atomic_set(&sdata->txqs_len[txqi->txq.ac], 0);
++		spin_lock_bh(&fq->lock);
++		ieee80211_purge_txq(local, txqi);
++		spin_unlock_bh(&fq->lock);
+ 	}
+ 
+ 	if (local->open_count == 0)
+@@ -1198,6 +1196,12 @@ static void ieee80211_if_setup(struct net_device *dev)
+ 	dev->destructor = ieee80211_if_free;
+ }
+ 
++static void ieee80211_if_setup_no_queue(struct net_device *dev)
++{
++	ieee80211_if_setup(dev);
++	dev->priv_flags |= IFF_NO_QUEUE;
++}
++
+ static void ieee80211_iface_work(struct work_struct *work)
+ {
+ 	struct ieee80211_sub_if_data *sdata =
+@@ -1707,6 +1711,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 	struct net_device *ndev = NULL;
+ 	struct ieee80211_sub_if_data *sdata = NULL;
+ 	struct txq_info *txqi;
++	void (*if_setup)(struct net_device *dev);
+ 	int ret, i;
+ 	int txqs = 1;
+ 
+@@ -1734,12 +1739,17 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 			txq_size += sizeof(struct txq_info) +
+ 				    local->hw.txq_data_size;
+ 
++		if (local->ops->wake_tx_queue)
++			if_setup = ieee80211_if_setup_no_queue;
++		else
++			if_setup = ieee80211_if_setup;
++
+ 		if (local->hw.queues >= IEEE80211_NUM_ACS)
+ 			txqs = IEEE80211_NUM_ACS;
+ 
+ 		ndev = alloc_netdev_mqs(size + txq_size,
+ 					name, name_assign_type,
+-					ieee80211_if_setup, txqs, 1);
++					if_setup, txqs, 1);
+ 		if (!ndev)
+ 			return -ENOMEM;
+ 		dev_net_set(ndev, wiphy_net(local->hw.wiphy));
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 8190bf27ebff..9fd3b10ae52b 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1053,9 +1053,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 
+ 	local->dynamic_ps_forced_timeout = -1;
+ 
+-	if (!local->hw.txq_ac_max_pending)
+-		local->hw.txq_ac_max_pending = 64;
+-
+ 	result = ieee80211_wep_init(local);
+ 	if (result < 0)
+ 		wiphy_debug(local->hw.wiphy, "Failed to initialize wep: %d\n",
+@@ -1087,6 +1084,10 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 
+ 	rtnl_unlock();
+ 
++	result = ieee80211_setup_flows(local);
++	if (result)
++		goto fail_flows;
++
+ #ifdef CONFIG_INET
+ 	local->ifa_notifier.notifier_call = ieee80211_ifa_changed;
+ 	result = register_inetaddr_notifier(&local->ifa_notifier);
+@@ -1112,6 +1113,8 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ #if defined(CONFIG_INET) || defined(CONFIG_IPV6)
+  fail_ifa:
+ #endif
++	ieee80211_teardown_flows(local);
++ fail_flows:
+ 	rtnl_lock();
+ 	rate_control_deinitialize(local);
+ 	ieee80211_remove_interfaces(local);
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 91279576f4a7..10a6e9c3de51 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1268,7 +1268,7 @@ static void sta_ps_start(struct sta_info *sta)
+ 	for (tid = 0; tid < ARRAY_SIZE(sta->sta.txq); tid++) {
+ 		struct txq_info *txqi = to_txq_info(sta->sta.txq[tid]);
+ 
+-		if (!skb_queue_len(&txqi->queue))
++		if (!txqi->backlog_packets)
+ 			set_bit(tid, &sta->txq_buffered_tids);
+ 		else
+ 			clear_bit(tid, &sta->txq_buffered_tids);
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 00c82fb152c0..0729046a0144 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -112,11 +112,7 @@ static void __cleanup_single_sta(struct sta_info *sta)
+ 	if (sta->sta.txq[0]) {
+ 		for (i = 0; i < ARRAY_SIZE(sta->sta.txq); i++) {
+ 			struct txq_info *txqi = to_txq_info(sta->sta.txq[i]);
+-			int n = skb_queue_len(&txqi->queue);
+-
+-			ieee80211_purge_tx_queue(&local->hw, &txqi->queue);
+-			atomic_sub(n, &sdata->txqs_len[txqi->txq.ac]);
+-			txqi->byte_cnt = 0;
++			ieee80211_purge_txq(local, txqi);
+ 		}
+ 	}
+ 
+@@ -1193,7 +1189,7 @@ void ieee80211_sta_ps_deliver_wakeup(struct sta_info *sta)
+ 		for (i = 0; i < ARRAY_SIZE(sta->sta.txq); i++) {
+ 			struct txq_info *txqi = to_txq_info(sta->sta.txq[i]);
+ 
+-			if (!skb_queue_len(&txqi->queue))
++			if (!txqi->backlog_packets)
+ 				continue;
+ 
+ 			drv_wake_tx_queue(local, txqi);
+@@ -1630,7 +1626,7 @@ ieee80211_sta_ps_deliver_response(struct sta_info *sta,
+ 		for (tid = 0; tid < ARRAY_SIZE(sta->sta.txq); tid++) {
+ 			struct txq_info *txqi = to_txq_info(sta->sta.txq[tid]);
+ 
+-			if (!(tids & BIT(tid)) || skb_queue_len(&txqi->queue))
++			if (!(tids & BIT(tid)) || txqi->backlog_packets)
+ 				continue;
+ 
+ 			sta_info_recalc_tim(sta);
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 053f5c4fa495..4f7ad9158d31 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -19,6 +19,7 @@
+ #include <linux/etherdevice.h>
+ #include <linux/rhashtable.h>
+ #include "key.h"
++#include "codel_i.h"
+ 
+ /**
+  * enum ieee80211_sta_info_flags - Stations flags
+@@ -330,6 +331,32 @@ struct mesh_sta {
+ 
+ DECLARE_EWMA(signal, 1024, 8)
+ 
++struct txq_info;
++
++/**
++ * struct txq_flow - per traffic flow queue
++ *
++ * This structure is used to distinguish and queue different traffic flows
++ * separately for fair queueing/AQM purposes.
++ *
++ * @txqi: txq_info structure it is associated at given time
++ * @flowchain: can be linked to other flows for RR purposes
++ * @backlogchain: can be linked to other flows for backlog sorting purposes
++ * @queue: sk_buff queue
++ * @cvars: codel state vars
++ * @backlog: number of bytes pending in the queue
++ * @deficit: used for fair queueing balancing
++ */
++struct txq_flow {
++	struct txq_info *txqi;
++	struct list_head flowchain;
++	struct list_head backlogchain;
++	struct sk_buff_head queue;
++	struct codel_vars cvars;
++	u32 backlog;
++	int deficit;
++};
++
+ /**
+  * struct sta_info - STA information
+  *
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 485e30a24b38..dd65e34f7107 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -34,6 +34,7 @@
+ #include "wpa.h"
+ #include "wme.h"
+ #include "rate.h"
++#include "codel.h"
+ 
+ /* misc utils */
+ 
+@@ -1232,27 +1233,323 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 	return TX_CONTINUE;
+ }
+ 
+-static void ieee80211_drv_tx(struct ieee80211_local *local,
+-			     struct ieee80211_vif *vif,
+-			     struct ieee80211_sta *pubsta,
+-			     struct sk_buff *skb)
++static inline u64
++custom_codel_get_enqueue_time(struct sk_buff *skb)
++{
++	return IEEE80211_SKB_CB(skb)->control.enqueue_time;
++}
++
++static inline struct sk_buff *
++flow_dequeue(struct ieee80211_local *local, struct txq_flow *flow)
++{
++	struct ieee80211_fq *fq = &local->fq;
++	struct txq_info *txqi = flow->txqi;
++	struct txq_flow *i;
++	struct sk_buff *skb;
++
++	skb = __skb_dequeue(&flow->queue);
++	if (!skb)
++		return NULL;
++
++	txqi->backlog_bytes -= skb->len;
++	txqi->backlog_packets--;
++	flow->backlog -= skb->len;
++	fq->backlog--;
++
++	if (flow->backlog == 0) {
++		list_del_init(&flow->backlogchain);
++	} else {
++		i = flow;
++
++		list_for_each_entry_continue(i, &fq->backlogs, backlogchain)
++			if (i->backlog < flow->backlog)
++				break;
++
++		list_move_tail(&flow->backlogchain, &i->backlogchain);
++	}
++
++	return skb;
++}
++
++static inline struct sk_buff *
++custom_dequeue(struct codel_vars *vars, void *ptr)
++{
++	struct txq_flow *flow = ptr;
++	struct txq_info *txqi = flow->txqi;
++	struct ieee80211_vif *vif = txqi->txq.vif;
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_local *local = sdata->local;
++
++	return flow_dequeue(local, flow);
++}
++
++static inline void
++custom_drop(struct sk_buff *skb, void *ptr)
++{
++	struct txq_flow *flow = ptr;
++	struct txq_info *txqi = flow->txqi;
++	struct ieee80211_vif *vif = txqi->txq.vif;
++	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
++	struct ieee80211_local *local = sdata->local;
++	struct ieee80211_hw *hw = &local->hw;
++
++	ieee80211_free_txskb(hw, skb);
++
++	txqi->drop_codel++;
++	local->fq.drop_codel++;
++}
++
++static u32 fq_hash(struct ieee80211_fq *fq, struct sk_buff *skb)
++{
++	u32 hash = skb_get_hash_perturb(skb, fq->perturbation);
++
++	return reciprocal_scale(hash, fq->flows_cnt);
++}
++
++static void fq_drop(struct ieee80211_local *local)
++{
++	struct ieee80211_hw *hw = &local->hw;
++	struct ieee80211_fq *fq = &local->fq;
++	struct txq_flow *flow;
++	struct sk_buff *skb;
++
++	flow = list_first_entry_or_null(&fq->backlogs, struct txq_flow,
++					backlogchain);
++	if (WARN_ON_ONCE(!flow))
++		return;
++
++	skb = flow_dequeue(local, flow);
++	if (WARN_ON_ONCE(!skb))
++		return;
++
++	ieee80211_free_txskb(hw, skb);
++
++	flow->txqi->drop_overlimit++;
++	fq->drop_overlimit++;
++}
++
++void ieee80211_init_flow(struct txq_flow *flow)
++{
++	INIT_LIST_HEAD(&flow->flowchain);
++	INIT_LIST_HEAD(&flow->backlogchain);
++	__skb_queue_head_init(&flow->queue);
++	codel_vars_init(&flow->cvars);
++}
++
++int ieee80211_setup_flows(struct ieee80211_local *local)
++{
++	struct ieee80211_fq *fq = &local->fq;
++	int i;
++
++	if (!local->ops->wake_tx_queue)
++		return 0;
++
++	memset(fq, 0, sizeof(fq[0]));
++	INIT_LIST_HEAD(&fq->backlogs);
++	spin_lock_init(&fq->lock);
++	fq->flows_cnt = 4096;
++	fq->perturbation = prandom_u32();
++	fq->quantum = 300;
++	fq->txq_limit = 8192;
++	fq->cparams.target = MS2TIME(20);
++	fq->cparams.interval = MS2TIME(100);
++
++	fq->flows = kcalloc(fq->flows_cnt, sizeof(fq->flows[0]), GFP_KERNEL);
++	if (!fq->flows)
++		return -ENOMEM;
++
++	for (i = 0; i < fq->flows_cnt; i++)
++		ieee80211_init_flow(&fq->flows[i]);
++
++	return 0;
++}
++
++static void ieee80211_reset_flow(struct ieee80211_local *local,
++				 struct txq_flow *flow)
++{
++	if (!list_empty(&flow->flowchain))
++		list_del_init(&flow->flowchain);
++
++	if (!list_empty(&flow->backlogchain))
++		list_del_init(&flow->backlogchain);
++
++	ieee80211_purge_tx_queue(&local->hw, &flow->queue);
++
++	flow->deficit = 0;
++	flow->txqi = NULL;
++}
++
++void ieee80211_purge_txq(struct ieee80211_local *local, struct txq_info *txqi)
++{
++	struct txq_flow *flow;
++	int i;
++
++	for (i = 0; i < local->fq.flows_cnt; i++) {
++		flow = &local->fq.flows[i];
++
++		if (flow->txqi != txqi)
++			continue;
++
++		ieee80211_reset_flow(local, flow);
++	}
++
++	ieee80211_reset_flow(local, &txqi->flow);
++
++	txqi->backlog_bytes = 0;
++	txqi->backlog_packets = 0;
++}
++
++void ieee80211_teardown_flows(struct ieee80211_local *local)
++{
++	struct ieee80211_fq *fq = &local->fq;
++	struct ieee80211_sub_if_data *sdata;
++	struct sta_info *sta;
++	int i;
++
++	if (!local->ops->wake_tx_queue)
++		return;
++
++	list_for_each_entry_rcu(sta, &local->sta_list, list)
++		for (i = 0; i < IEEE80211_NUM_TIDS; i++)
++			ieee80211_purge_txq(local,
++					    to_txq_info(sta->sta.txq[i]));
++
++	list_for_each_entry_rcu(sdata, &local->interfaces, list)
++		ieee80211_purge_txq(local, to_txq_info(sdata->vif.txq));
++
++	for (i = 0; i < fq->flows_cnt; i++)
++		ieee80211_reset_flow(local, &fq->flows[i]);
++
++	kfree(fq->flows);
++
++	fq->flows = NULL;
++	fq->flows_cnt = 0;
++}
++
++static void ieee80211_txq_enqueue(struct ieee80211_local *local,
++				  struct txq_info *txqi,
++				  struct sk_buff *skb)
++{
++	struct ieee80211_fq *fq = &local->fq;
++	struct txq_flow *flow;
++	struct txq_flow *i;
++	size_t idx = fq_hash(fq, skb);
++
++	lockdep_assert_held(&fq->lock);
++
++	flow = &fq->flows[idx];
++
++	if (flow->txqi && flow->txqi != txqi) {
++		flow = &txqi->flow;
++		txqi->collisions++;
++	}
++
++	if (!flow->txqi)
++		txqi->flows++;
++
++	/* The following overwrites `vif` pointer effectively. It is later
++	 * restored using txq structure.
++	 */
++	IEEE80211_SKB_CB(skb)->control.enqueue_time = codel_get_time();
++
++	flow->txqi = txqi;
++	flow->backlog += skb->len;
++	txqi->backlog_bytes += skb->len;
++	txqi->backlog_packets++;
++	fq->backlog++;
++
++	if (list_empty(&flow->backlogchain))
++		list_add_tail(&flow->backlogchain, &fq->backlogs);
++
++	i = flow;
++	list_for_each_entry_continue_reverse(i, &fq->backlogs, backlogchain)
++		if (i->backlog > flow->backlog)
++			break;
++
++	list_move(&flow->backlogchain, &i->backlogchain);
++
++	if (list_empty(&flow->flowchain)) {
++		flow->deficit = fq->quantum;
++		list_add_tail(&flow->flowchain, &txqi->new_flows);
++	}
++
++	__skb_queue_tail(&flow->queue, skb);
++
++	if (fq->backlog > fq->txq_limit)
++		fq_drop(local);
++}
++
++static struct sk_buff *ieee80211_txq_dequeue(struct ieee80211_local *local,
++					     struct txq_info *txqi)
++{
++	struct ieee80211_fq *fq = &local->fq;
++	struct txq_flow *flow;
++	struct list_head *head;
++	struct sk_buff *skb;
++
++begin:
++	head = &txqi->new_flows;
++	if (list_empty(head)) {
++		head = &txqi->old_flows;
++		if (list_empty(head))
++			return NULL;
++	}
++
++	flow = list_first_entry(head, struct txq_flow, flowchain);
++
++	if (flow->deficit <= 0) {
++		flow->deficit += fq->quantum;
++		list_move_tail(&flow->flowchain, &txqi->old_flows);
++		goto begin;
++	}
++
++	skb = codel_dequeue(flow,
++			    &flow->backlog,
++			    0,
++			    &flow->cvars,
++			    &fq->cparams,
++			    codel_get_time(),
++			    false);
++	if (!skb) {
++		if ((head == &txqi->new_flows) &&
++		    !list_empty(&txqi->old_flows)) {
++			list_move_tail(&flow->flowchain, &txqi->old_flows);
++		} else {
++			list_del_init(&flow->flowchain);
++			flow->txqi = NULL;
++		}
++		goto begin;
++	}
++
++	flow->deficit -= skb->len;
++	txqi->tx_bytes += skb->len;
++	txqi->tx_packets++;
++
++	/* The `vif` pointer was overwritten with enqueue time during
++	 * enqueuing. Restore it before handing to driver.
++	 */
++	IEEE80211_SKB_CB(skb)->control.vif = flow->txqi->txq.vif;
++
++	return skb;
++}
++
++static struct txq_info *
++ieee80211_get_txq(struct ieee80211_local *local,
++		  struct ieee80211_vif *vif,
++		  struct ieee80211_sta *pubsta,
++		  struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_tx_control control = {
+-		.sta = pubsta,
+-	};
+ 	struct ieee80211_txq *txq = NULL;
+-	struct txq_info *txqi;
+-	u8 ac;
+ 
+ 	if ((info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) ||
++	    (info->flags & IEEE80211_TX_INTFL_OFFCHAN_TX_OK) ||
+ 	    (info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE))
+-		goto tx_normal;
++		return NULL;
+ 
+ 	if (!ieee80211_is_data(hdr->frame_control))
+-		goto tx_normal;
++		return NULL;
+ 
+ 	if (pubsta) {
+ 		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
+@@ -1263,52 +1560,29 @@ static void ieee80211_drv_tx(struct ieee80211_local *local,
+ 	}
+ 
+ 	if (!txq)
+-		goto tx_normal;
++		return NULL;
+ 
+-	ac = txq->ac;
+-	txqi = to_txq_info(txq);
+-	atomic_inc(&sdata->txqs_len[ac]);
+-	if (atomic_read(&sdata->txqs_len[ac]) >= local->hw.txq_ac_max_pending)
+-		netif_stop_subqueue(sdata->dev, ac);
+-
+-	spin_lock_bh(&txqi->queue.lock);
+-	txqi->byte_cnt += skb->len;
+-	__skb_queue_tail(&txqi->queue, skb);
+-	spin_unlock_bh(&txqi->queue.lock);
+-
+-	drv_wake_tx_queue(local, txqi);
+-
+-	return;
+-
+-tx_normal:
+-	drv_tx(local, &control, skb);
++	return to_txq_info(txq);
+ }
+ 
+ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 				     struct ieee80211_txq *txq)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(txq->vif);
++	struct ieee80211_fq *fq = &local->fq;
+ 	struct txq_info *txqi = container_of(txq, struct txq_info, txq);
+ 	struct ieee80211_hdr *hdr;
+ 	struct sk_buff *skb = NULL;
+-	u8 ac = txq->ac;
+ 
+-	spin_lock_bh(&txqi->queue.lock);
++	spin_lock_bh(&fq->lock);
+ 
+ 	if (test_bit(IEEE80211_TXQ_STOP, &txqi->flags))
+ 		goto out;
+ 
+-	skb = __skb_dequeue(&txqi->queue);
++	skb = ieee80211_txq_dequeue(local, txqi);
+ 	if (!skb)
+ 		goto out;
+ 
+-	txqi->byte_cnt -= skb->len;
+-
+-	atomic_dec(&sdata->txqs_len[ac]);
+-	if (__netif_subqueue_stopped(sdata->dev, ac))
+-		ieee80211_propagate_queue_wake(local, sdata->vif.hw_queue[ac]);
+-
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 	if (txq->sta && ieee80211_is_data_qos(hdr->frame_control)) {
+ 		struct sta_info *sta = container_of(txq->sta, struct sta_info,
+@@ -1323,7 +1597,7 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 	}
+ 
+ out:
+-	spin_unlock_bh(&txqi->queue.lock);
++	spin_unlock_bh(&fq->lock);
+ 
+ 	return skb;
+ }
+@@ -1335,7 +1609,10 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
+ 			       struct sk_buff_head *skbs,
+ 			       bool txpending)
+ {
++	struct ieee80211_fq *fq = &local->fq;
++	struct ieee80211_tx_control control = {};
+ 	struct sk_buff *skb, *tmp;
++	struct txq_info *txqi;
+ 	unsigned long flags;
+ 
+ 	skb_queue_walk_safe(skbs, skb, tmp) {
+@@ -1350,6 +1627,21 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
+ 		}
+ #endif
+ 
++		txqi = ieee80211_get_txq(local, vif, sta, skb);
++		if (txqi) {
++			info->control.vif = vif;
++
++			__skb_unlink(skb, skbs);
++
++			spin_lock_bh(&fq->lock);
++			ieee80211_txq_enqueue(local, txqi, skb);
++			spin_unlock_bh(&fq->lock);
++
++			drv_wake_tx_queue(local, txqi);
++
++			continue;
++		}
++
+ 		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+ 		if (local->queue_stop_reasons[q] ||
+ 		    (!txpending && !skb_queue_empty(&local->pending[q]))) {
+@@ -1392,9 +1684,10 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
+ 		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ 
+ 		info->control.vif = vif;
++		control.sta = sta;
+ 
+ 		__skb_unlink(skb, skbs);
+-		ieee80211_drv_tx(local, vif, sta, skb);
++		drv_tx(local, &control, skb);
+ 	}
+ 
+ 	return true;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 0319d6d4f863..cbcdf7cf9679 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -244,6 +244,9 @@ void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue)
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int n_acs = IEEE80211_NUM_ACS;
+ 
++	if (local->ops->wake_tx_queue)
++		return;
++
+ 	if (local->hw.queues < IEEE80211_NUM_ACS)
+ 		n_acs = 1;
+ 
+@@ -260,11 +263,6 @@ void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue)
+ 		for (ac = 0; ac < n_acs; ac++) {
+ 			int ac_queue = sdata->vif.hw_queue[ac];
+ 
+-			if (local->ops->wake_tx_queue &&
+-			    (atomic_read(&sdata->txqs_len[ac]) >
+-			     local->hw.txq_ac_max_pending))
+-				continue;
+-
+ 			if (ac_queue == queue ||
+ 			    (sdata->vif.cab_queue == queue &&
+ 			     local->queue_stop_reasons[ac_queue] == 0 &&
+@@ -352,6 +350,9 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
+ 	if (__test_and_set_bit(reason, &local->queue_stop_reasons[queue]))
+ 		return;
+ 
++	if (local->ops->wake_tx_queue)
++		return;
++
+ 	if (local->hw.queues < IEEE80211_NUM_ACS)
+ 		n_acs = 1;
+ 
+@@ -3392,8 +3393,11 @@ void ieee80211_init_tx_queue(struct ieee80211_sub_if_data *sdata,
+ 			     struct sta_info *sta,
+ 			     struct txq_info *txqi, int tid)
+ {
+-	skb_queue_head_init(&txqi->queue);
++	INIT_LIST_HEAD(&txqi->old_flows);
++	INIT_LIST_HEAD(&txqi->new_flows);
++	ieee80211_init_flow(&txqi->flow);
+ 	txqi->txq.vif = &sdata->vif;
++	txqi->flow.txqi = txqi;
+ 
+ 	if (sta) {
+ 		txqi->txq.sta = &sta->sta;
+@@ -3414,9 +3418,9 @@ void ieee80211_txq_get_depth(struct ieee80211_txq *txq,
+ 	struct txq_info *txqi = to_txq_info(txq);
+ 
+ 	if (frame_cnt)
+-		*frame_cnt = txqi->queue.qlen;
++		*frame_cnt = txqi->backlog_packets;
+ 
+ 	if (byte_cnt)
+-		*byte_cnt = txqi->byte_cnt;
++		*byte_cnt = txqi->backlog_bytes;
+ }
+ EXPORT_SYMBOL(ieee80211_txq_get_depth);
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+2.1.4
 
