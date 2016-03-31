@@ -1,29 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60076 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751900AbcDFS0q (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:52434 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757673AbcCaW7O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 14:26:46 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Marty Faltesek <mfaltesek@google.com>
-Cc: akarwar@marvell.com, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] mwifiex: bridged packets cause wmm_tx_pending counter to go negative
-References: <1457997683-14553-1-git-send-email-mfaltesek@google.com>
-Date: Wed, 06 Apr 2016 21:26:41 +0300
-In-Reply-To: <1457997683-14553-1-git-send-email-mfaltesek@google.com> (Marty
-	Faltesek's message of "Mon, 14 Mar 2016 19:21:23 -0400")
-Message-ID: <87a8l68ufy.fsf@kamboji.qca.qualcomm.com> (sfid-20160406_202649_063328_9FC3CD2A)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Thu, 31 Mar 2016 18:59:14 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] ath10k:  Clean up peer when sta goes away.
+Date: Thu, 31 Mar 2016 15:59:11 -0700
+Message-Id: <1459465151-24874-1-git-send-email-greearb@candelatech.com> (sfid-20160401_005934_649496_E1784849)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Marty Faltesek <mfaltesek@google.com> writes:
+From: Ben Greear <greearb@candelatech.com>
 
-> When a packet is queued from the bridge, wmm_tx_pending is not
-> incremented, but when the packet is dequeued the counter is decremented.
+If WMI and/or firmware has issues removing the peer object,
+then we still need to clean up the peer object in the driver.
 
-Signed-off-by line is missing, please resend.
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 07b155d..3ec973e 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6500,9 +6500,15 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
+ 				continue;
+ 
+ 			if (peer->sta == sta) {
+-				ath10k_warn(ar, "found sta peer %pM id: %d entry on vdev %i after it was supposedly removed\n",
+-					    sta->addr, i, arvif->vdev_id);
++				ath10k_warn(ar, "found sta peer %p %pM id: %d entry on vdev %i after it was supposedly removed\n",
++					    peer, sta->addr, i, arvif->vdev_id);
+ 				peer->sta = NULL;
++
++				/* Clean up the peer object as well since we must have failed to do this above. */
++				list_del(&peer->list);
++				ar->peer_map[i] = NULL;
++				kfree(peer);
++				ar->num_peers--;
+ 			}
+ 		}
+ 		spin_unlock_bh(&ar->data_lock);
 -- 
-Kalle Valo
+2.4.3
+
