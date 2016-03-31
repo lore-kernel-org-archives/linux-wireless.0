@@ -1,47 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:61582 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752215AbcCKMTl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 11 Mar 2016 07:19:41 -0500
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "miaoqing@codeaurora.org" <miaoqing@codeaurora.org>
-CC: "linville@tuxdriver.com" <linville@tuxdriver.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	ath9k-devel <ath9k-devel@qca.qualcomm.com>
-Subject: Re: [PATCH v4 0/8] ath9k GPIO & BT-Coex bug fixes
-Date: Fri, 11 Mar 2016 12:19:35 +0000
-Message-ID: <87vb4tmcko.fsf@kamboji.qca.qualcomm.com> (sfid-20160311_131944_345686_89A41F1E)
-References: <1457318301-27701-1-git-send-email-miaoqing@codeaurora.org>
-In-Reply-To: <1457318301-27701-1-git-send-email-miaoqing@codeaurora.org>
-	(miaoqing@codeaurora.org's message of "Mon, 7 Mar 2016 10:38:13	+0800")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mga14.intel.com ([192.55.52.115]:42141 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756169AbcCaREQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2016 13:04:16 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
+Cc: linux-wireless@vger.kernel.org,
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 02/10] mac80211: count MSDUs in A-MSDU properly
+Date: Thu, 31 Mar 2016 20:02:03 +0300
+Message-Id: <1459443731-4614-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160331_190419_459205_3A4B8CEE)
+In-Reply-To: <1459443731-4614-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1459443731-4614-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-miaoqing@codeaurora.org writes:
+From: Johannes Berg <johannes.berg@intel.com>
 
-> From: Miaoqing Pan <miaoqing@codeaurora.org>
->
-> ath9k GPIO & BT-Coex bug fixes.
->
-> Notes:
->     v2: fix build warning
->     v3: move changelog to cover letter
->     v4: fix [5/8] comments
->
-> Miaoqing Pan (8):
->   ath9k: define correct GPIO numbers and bits mask
->   ath9k: make GPIO API to support both of WMAC and SOC
->   ath9k: free GPIO resource for SOC GPIOs
->   ath9k: cleanup led_pin initial
->   ath9k: Allow platform override BTCoex pin
->   ath9k: add bits definition of BTCoex MODE2/3 for SOC chips
->   ath9k: fix BTCoex access invalid registers for SOC chips
->   ath9k: fix BTCoex configuration for SOC chips
+For the RX MSDU statistics, we need to count the number of
+MSDUs created and accepted from an A-MSDU. Right now, all
+frames in any A-MSDUs were completely ignored. Fix this by
+moving the RX MSDU statistics accounting into the deliver
+function.
 
-Applied to ath.git, thanks.
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ net/mac80211/rx.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 6c3829d..d979818 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -2111,6 +2111,15 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
+ 
+ 	ieee80211_rx_stats(dev, skb->len);
+ 
++	if (rx->sta) {
++		/* The seqno index has the same property as needed
++		 * for the rx_msdu field, i.e. it is IEEE80211_NUM_TIDS
++		 * for non-QoS-data frames. Here we know it's a data
++		 * frame, so count MSDUs.
++		 */
++		rx->sta->rx_stats.msdu[rx->seqno_idx]++;
++	}
++
+ 	if ((sdata->vif.type == NL80211_IFTYPE_AP ||
+ 	     sdata->vif.type == NL80211_IFTYPE_AP_VLAN) &&
+ 	    !(sdata->flags & IEEE80211_SDATA_DONT_BRIDGE_PACKETS) &&
+@@ -2397,15 +2406,6 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
+ 	if (unlikely(!ieee80211_is_data_present(hdr->frame_control)))
+ 		return RX_DROP_MONITOR;
+ 
+-	if (rx->sta) {
+-		/* The seqno index has the same property as needed
+-		 * for the rx_msdu field, i.e. it is IEEE80211_NUM_TIDS
+-		 * for non-QoS-data frames. Here we know it's a data
+-		 * frame, so count MSDUs.
+-		 */
+-		rx->sta->rx_stats.msdu[rx->seqno_idx]++;
+-	}
+-
+ 	/*
+ 	 * Send unexpected-4addr-frame event to hostapd. For older versions,
+ 	 * also drop the frame to cooked monitor interfaces.
 -- 
-Kalle Valo
+2.5.0
+
