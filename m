@@ -1,59 +1,74 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from out2-smtp.messagingengine.com ([66.111.4.26]:59852 "EHLO
-	out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752666AbcCZOPn (ORCPT
+Received: from mail-lf0-f46.google.com ([209.85.215.46]:34659 "EHLO
+	mail-lf0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751664AbcCaK0T (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 26 Mar 2016 10:15:43 -0400
-Received: from compute3.internal (compute3.nyi.internal [10.202.2.43])
-	by mailout.nyi.internal (Postfix) with ESMTP id 2EB3820964
-	for <linux-wireless@vger.kernel.org>; Sat, 26 Mar 2016 10:15:42 -0400 (EDT)
-Date: Sat, 26 Mar 2016 07:15:40 -0700
-From: Greg KH <greg@kroah.com>
-To: Till Kamppeter <till.kamppeter@gmail.com>
-Cc: Evgeny Novikov <novikov@ispras.ru>,
-	Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	"Luis R. Rodriguez" <mcgrof@gmail.com>,
-	"lsb-discuss@lists.linux-foundation.org"
-	<lsb-discuss@lists.linux-foundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Open Printing <printing-architecture@lists.linux-foundation.org>,
-	chris holcombe <chris.holcombe@canonical.com>,
-	Chris MacNaughton <chris.macnaughton@canonical.com>
-Subject: Re: [lsb-discuss] Google Summer of Code 2016 - Many new applications
-Message-ID: <20160326141540.GA4104@kroah.com> (sfid-20160326_151546_915320_47971E6E)
-References: <56F4266B.4060605@gmail.com>
- <1943931458892174@web3o.yandex.ru>
- <56F5D04A.20506@gmail.com>
- <56F5D11B.7000803@gmail.com>
- <20160326001803.GB15767@kroah.com>
- <56F5DA55.6030802@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <56F5DA55.6030802@gmail.com>
+	Thu, 31 Mar 2016 06:26:19 -0400
+Received: by mail-lf0-f46.google.com with SMTP id c62so56193923lfc.1
+        for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2016 03:26:19 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, dave.taht@gmail.com,
+	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net,
+	Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCHv2 0/2] mac80211: implement fq_codel
+Date: Thu, 31 Mar 2016 12:28:22 +0200
+Message-Id: <1459420104-31554-1-git-send-email-michal.kazior@tieto.com> (sfid-20160331_122623_650479_5DD28D20)
+In-Reply-To: <1458898052-20601-1-git-send-email-michal.kazior@tieto.com>
+References: <1458898052-20601-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Mar 25, 2016 at 09:39:49PM -0300, Till Kamppeter wrote:
-> On 03/25/2016 09:18 PM, Greg KH wrote:
-> >On Fri, Mar 25, 2016 at 09:00:27PM -0300, Till Kamppeter wrote:
-> >>Sorry, seems that star and ignore can only be set by org admins. So please
-> >>click "WANT TO MENTOR" if appropriate and tell me if you want to set or
-> >>remove the star or if you want to set or remove an ignore.
-> >
-> >I have clicked 'WANT TO MENTOR" on the one kernel application that I
-> >think is worthy.
-> 
-> Which one?
+Hi,
 
-This one:
-	https://summerofcode.withgoogle.com/dashboard/organization/6564234674569216/proposal/6320691074826240/
+I've cleaned up and removed the
+txop-queue-limiting and scheduling from the patch
+(compared to my last RFC). It's still to early for
+the scheduling thing to go prime time.
 
-> And are then all the other kernel-related applications to be ignored?
+The fair queuing on the other hand does seem to
+work. In good RF conditions it seems to improve
+things (e.g. multiple TCP streams converge into a
+steady average). In bad RF conditions things look
+same grim as before (but not worse).
 
-I just went through them all again and left comments saying that they
-were not even a valid proposal, so yes, I don't see anything I can even
-consider for the kernel other than the above proposal.
+I've done a few more experiments with naive DQL in
+ath10k and some flent tests prove the fair queuing
+in mac80211 works better than fq_codel qdisc as
+far as wake_tx_queue drivers are concerned. I'll
+be posting a separate thread after this.
 
-thanks,
+This is based on mac80211-next/master
+(0a87cadbb54e1595a5f64542adb4c63be914d290).
 
-greg k-h
+v2:
+ * fix invalid ptr deref
+ * fix compilation for backports
+
+
+Michal Kazior (2):
+  mac80211: implement fair queuing per txq
+  mac80211: expose some txq/fq internals and knobs via debugfs
+
+ include/net/mac80211.h        |  21 ++-
+ net/mac80211/agg-tx.c         |   8 +-
+ net/mac80211/codel.h          | 264 +++++++++++++++++++++++++++++
+ net/mac80211/codel_i.h        |  89 ++++++++++
+ net/mac80211/debugfs.c        |  86 ++++++++++
+ net/mac80211/debugfs_netdev.c |  29 +++-
+ net/mac80211/debugfs_sta.c    |  46 +++++
+ net/mac80211/ieee80211_i.h    |  45 ++++-
+ net/mac80211/iface.c          |  24 ++-
+ net/mac80211/main.c           |   9 +-
+ net/mac80211/rx.c             |   2 +-
+ net/mac80211/sta_info.c       |  10 +-
+ net/mac80211/sta_info.h       |  27 +++
+ net/mac80211/tx.c             | 383 +++++++++++++++++++++++++++++++++++++-----
+ net/mac80211/util.c           |  20 ++-
+ 15 files changed, 983 insertions(+), 80 deletions(-)
+ create mode 100644 net/mac80211/codel.h
+ create mode 100644 net/mac80211/codel_i.h
+
+-- 
+2.1.4
+
