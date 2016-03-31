@@ -1,42 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39573 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933400AbcCNGTE convert rfc822-to-8bit (ORCPT
+Received: from helcar.hengli.com.au ([209.40.204.226]:53744 "EHLO
+	helcar.hengli.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750972AbcCaHu1 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 14 Mar 2016 02:19:04 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org, netdev@vger.kernel.org,
-	Jia-Ju Bai <baijiaju1990@163.com>,
-	Michael =?utf-8?Q?B=C3=BCsch?= <m@bues.ch>
-Subject: Re: [PATCH] b43: Fix memory leaks in b43_bus_dev_ssb_init and b43_bus_dev_bcma_init
-References: <1457716477-6287-1-git-send-email-sudipm.mukherjee@gmail.com>
-Date: Mon, 14 Mar 2016 08:18:58 +0200
-In-Reply-To: <1457716477-6287-1-git-send-email-sudipm.mukherjee@gmail.com>
-	(Sudip Mukherjee's message of "Fri, 11 Mar 2016 22:44:37 +0530")
-Message-ID: <87a8m1mvjh.fsf@kamboji.qca.qualcomm.com> (sfid-20160314_071922_219315_3222ED72)
+	Thu, 31 Mar 2016 03:50:27 -0400
+Date: Thu, 31 Mar 2016 15:50:15 +0800
+From: Herbert Xu <herbert@gondor.apana.org.au>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Ben Greear <greearb@candelatech.com>,
+	David Miller <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, tgraf@suug.ch
+Subject: Re: Question on rhashtable in worst-case scenario.
+Message-ID: <20160331075015.GA27716@gondor.apana.org.au> (sfid-20160331_095045_900636_60FAE382)
+References: <56F9941A.3080501@candelatech.com>
+ <56FAAA6D.3070806@candelatech.com>
+ <1459329252.2055.1.camel@sipsolutions.net>
+ <20160330.123821.328761526754742195.davem@davemloft.net>
+ <56FC0445.6010200@candelatech.com>
+ <1459410405.4576.8.camel@sipsolutions.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1459410405.4576.8.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Sudip Mukherjee <sudipm.mukherjee@gmail.com> writes:
-
-> From: Jia-Ju Bai <baijiaju1990@163.com>
+On Thu, Mar 31, 2016 at 09:46:45AM +0200, Johannes Berg wrote:
 >
-> The memory allocated by kzalloc in b43_bus_dev_ssb_init and
-> b43_bus_dev_bcma_init is not freed.
-> This patch fixes the bug by adding kfree in b43_ssb_remove,
-> b43_bcma_remove and error handling code of b43_bcma_probe.
->
-> Thanks Michael for his suggestion.
->
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
-> Acked-by: Michael Büsch <m@bues.ch>
-> Signed-off-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
+> In this case, I think perhaps you can just patch your local system with
+> the many interfaces connecting to the same AP to add the parameter
+> Herbert suggested (.insecure_elasticity = true in sta_rht_params). This
+> is, after all, very much a case that "normal" operation doesn't even
+> get close to.
 
-If no objections I'm planning to queue this to 4.6-rc2.
+I think you should just turn it on everywhere for mac80211.  Chain
+length checks simply don't make sense when you allow duplicate
+keys in the hash table.
 
+Cheers,
 -- 
-Kalle Valo
+Email: Herbert Xu <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
