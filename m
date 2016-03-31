@@ -1,59 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from eusmtp01.atmel.com ([212.144.249.242]:49794 "EHLO
-	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752570AbcCYMUE (ORCPT
+Received: from mail-ig0-f193.google.com ([209.85.213.193]:35202 "EHLO
+	mail-ig0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754539AbcCaI7k (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 25 Mar 2016 08:20:04 -0400
-From: Leo Kim <leo.kim@atmel.com>
-To: <gregkh@linuxfoundation.org>
-CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
-	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
-	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
-	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
-Subject: [PATCH 03/11] staging: wilc1000: removes typedef of struct struct_frame_reg
-Date: Fri, 25 Mar 2016 21:16:48 +0900
-Message-ID: <1458908216-12100-3-git-send-email-leo.kim@atmel.com> (sfid-20160325_132007_506845_D5A91C51)
-In-Reply-To: <1458908216-12100-1-git-send-email-leo.kim@atmel.com>
-References: <1458908216-12100-1-git-send-email-leo.kim@atmel.com>
+	Thu, 31 Mar 2016 04:59:40 -0400
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1459411668.1744.6.camel@perches.com>
+References: <cover.1457395071.git.joe@perches.com>
+	<87shz85gkq.fsf@purkki.adurom.net>
+	<1459373791.25110.132.camel@perches.com>
+	<87y48z3xkz.fsf@purkki.adurom.net>
+	<1459411668.1744.6.camel@perches.com>
+Date: Thu, 31 Mar 2016 11:59:39 +0300
+Message-ID: <CAB3XZEfePJG7t6+TGYer_pcdqqaTfYugK0cARwhgLm9KRG1fmg@mail.gmail.com> (sfid-20160331_110007_830817_072F2A26)
+Subject: Re: [PATCH 0/5] wireless: ti: Convert specialized logging macros to
+ kernel style
+From: Eliad Peller <eliad@wizery.com>
+To: Joe Perches <joe@perches.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"open list:NETWORKING DRIVERS" <netdev@vger.kernel.org>,
+	Guy Mishol <guym@ti.com>,
+	Uri Mashiach <uri.mashiach@compulab.co.il>,
+	Johannes Berg <johannes.berg@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes typedef of struct struct_frame_reg.
-Renames the struct_frame_reg to frame_reg as well.
+On Thu, Mar 31, 2016 at 11:07 AM, Joe Perches <joe@perches.com> wrote:
+> On Thu, 2016-03-31 at 10:39 +0300, Kalle Valo wrote:
+>> Joe Perches <joe@perches.com> writes:
+>> > On Wed, 2016-03-30 at 14:51 +0300, Kalle Valo wrote:
+>> > > Joe Perches <joe@perches.com> writes:
+>> > > >
+>> > > > Using the normal kernel logging mechanisms makes this code
+>> > > > a bit more like other wireless drivers.
+>> > > Personally I don't see the point but I don't have any strong opinions. A
+>> > > bigger problem is that TI drivers are not really in active development
+>> > > and that's I'm not thrilled to take big patches like this for dormant
+>> > > drivers.
+>> > Not very dormant.
+>> >
+>> > 35 patches in the last year, most of them adding functionality.
+>> Oh, I didn't realise it had that many patches. But the driver is
+>> orphaned and doesn't have a maintainer so could I then have an ack from
+>> one of the active contributors that this ok?
+>
+> Fine by me.
+>
+> $ ./scripts/get_maintainer.pl -f --git drivers/net/wireless/ti/
+>
+> Kalle Valo <kvalo@codeaurora.org> (maintainer:NETWORKING DRIVERS (WIRELESS),commit_signer:27/35=77%)
+> Eliad Peller <eliad@wizery.com> (commit_signer:9/35=26%,authored:7/35=20%)
+> Guy Mishol <guym@ti.com> (commit_signer:6/35=17%,authored:5/35=14%)
+> Johannes Berg <johannes.berg@intel.com> (commit_signer:6/35=17%,authored:3/35=9%)
+> Uri Mashiach <uri.mashiach@compulab.co.il> (commit_signer:4/35=11%,authored:4/35=11%)
+>
+> For those people now added to the cc list,
+> here's the original patch thread:
+>
+> https://lkml.org/lkml/2016/3/7/1099
 
-Signed-off-by: Leo Kim <leo.kim@atmel.com>
----
- drivers/staging/wilc1000/wilc_wfi_netdevice.h | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+I don't have a strong opinion here either.
+(I do like the trailing newline being added automatically, but that's
+hardly an issue...)
 
-diff --git a/drivers/staging/wilc1000/wilc_wfi_netdevice.h b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-index 4123cff..f394484 100644
---- a/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-+++ b/drivers/staging/wilc1000/wilc_wfi_netdevice.h
-@@ -139,18 +139,17 @@ struct wilc_priv {
- 
- };
- 
--typedef struct {
-+struct frame_reg {
- 	u16 frame_type;
- 	bool reg;
--
--} struct_frame_reg;
-+};
- 
- struct wilc_vif {
- 	u8 idx;
- 	u8 iftype;
- 	int monitor_flag;
- 	int mac_opened;
--	struct_frame_reg g_struct_frame_reg[num_reg_frame];
-+	struct frame_reg g_struct_frame_reg[num_reg_frame];
- 	struct net_device_stats netstats;
- 	struct wilc *wilc;
- 	u8 src_addr[ETH_ALEN];
--- 
-1.9.1
-
+Eliad.
