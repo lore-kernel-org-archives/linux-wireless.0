@@ -1,208 +1,225 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:35820 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751366AbcCFM5b (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 6 Mar 2016 07:57:31 -0500
-Received: by mail-wm0-f66.google.com with SMTP id 1so6277391wmg.2
-        for <linux-wireless@vger.kernel.org>; Sun, 06 Mar 2016 04:57:31 -0800 (PST)
-From: Malcolm Priestley <tvboxspy@gmail.com>
-To: gregkh@linuxfoundation.org
+Received: from mga14.intel.com ([192.55.52.115]:42141 "EHLO mga14.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757383AbcCaREV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2016 13:04:21 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: johannes@sipsolutions.net
 Cc: linux-wireless@vger.kernel.org,
-	Malcolm Priestley <tvboxspy@gmail.com>
-Subject: [PATCH 06/13] staging: vt6655: mac.c replace VNSvOutPortB with iowrite8
-Date: Sun,  6 Mar 2016 12:57:05 +0000
-Message-Id: <1457269032-2681-6-git-send-email-tvboxspy@gmail.com> (sfid-20160306_135740_090723_6673A14E)
-In-Reply-To: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
-References: <1457269032-2681-1-git-send-email-tvboxspy@gmail.com>
+	Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH 07/10] mac80211: fix last RX rate data consistency
+Date: Thu, 31 Mar 2016 20:02:08 +0300
+Message-Id: <1459443731-4614-7-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160331_190424_225633_1FD26BA3)
+In-Reply-To: <1459443731-4614-1-git-send-email-emmanuel.grumbach@intel.com>
+References: <1459443731-4614-1-git-send-email-emmanuel.grumbach@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-removing macro from functions
+From: Johannes Berg <johannes.berg@intel.com>
 
-Signed-off-by: Malcolm Priestley <tvboxspy@gmail.com>
+When storing the last_rate_* values in the RX code, there's nothing
+to guarantee consistency, so a concurrent reader could see, e.g.
+last_rate_idx on the new value, but last_rate_flag still on the old,
+getting completely bogus values in the end.
+
+To fix this, I lifted the sta_stats_encode_rate() function from my
+old rate statistics code, which encodes the entire rate data into a
+single 16-bit value, avoiding the consistency issue.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
 ---
- drivers/staging/vt6655/mac.c | 44 ++++++++++++++++++++++----------------------
- 1 file changed, 22 insertions(+), 22 deletions(-)
+ net/mac80211/rx.c       | 21 +++++------------
+ net/mac80211/sta_info.c | 60 ++++++++++++++++++++++++++-----------------------
+ net/mac80211/sta_info.h | 45 ++++++++++++++++++++++++++++++++-----
+ 3 files changed, 77 insertions(+), 49 deletions(-)
 
-diff --git a/drivers/staging/vt6655/mac.c b/drivers/staging/vt6655/mac.c
-index 43e5f66..a1be5a7 100644
---- a/drivers/staging/vt6655/mac.c
-+++ b/drivers/staging/vt6655/mac.c
-@@ -142,7 +142,7 @@ void MACvSetShortRetryLimit(struct vnt_private *priv, unsigned char byRetryLimit
- {
- 	void __iomem *io_base = priv->PortOffset;
- 	/* set SRT */
--	VNSvOutPortB(io_base + MAC_REG_SRT, byRetryLimit);
-+	iowrite8(byRetryLimit, io_base + MAC_REG_SRT);
- }
- 
- 
-@@ -164,7 +164,7 @@ void MACvSetLongRetryLimit(struct vnt_private *priv, unsigned char byRetryLimit)
- {
- 	void __iomem *io_base = priv->PortOffset;
- 	/* set LRT */
--	VNSvOutPortB(io_base + MAC_REG_LRT, byRetryLimit);
-+	iowrite8(byRetryLimit, io_base + MAC_REG_LRT);
- }
- 
- /*
-@@ -191,7 +191,7 @@ void MACvSetLoopbackMode(struct vnt_private *priv, unsigned char byLoopbackMode)
- 	VNSvInPortB(io_base + MAC_REG_TEST, &byOrgValue);
- 	byOrgValue = byOrgValue & 0x3F;
- 	byOrgValue = byOrgValue | byLoopbackMode;
--	VNSvOutPortB(io_base + MAC_REG_TEST, byOrgValue);
-+	iowrite8(byOrgValue, io_base + MAC_REG_TEST);
- }
- 
- /*
-@@ -256,7 +256,7 @@ void MACvRestoreContext(struct vnt_private *priv, unsigned char *cxt_buf)
- 	memcpy_toio(io_base + MAC_REG_LRT, cxt_buf + MAC_REG_LRT,
- 		    MAC_REG_PAGE1SEL - MAC_REG_LRT);
- 
--	VNSvOutPortB(io_base + MAC_REG_CFG, *(cxt_buf + MAC_REG_CFG));
-+	iowrite8(*(cxt_buf + MAC_REG_CFG), io_base + MAC_REG_CFG);
- 
- 	/* restore PS Config. */
- 	memcpy_toio(io_base + MAC_REG_PSCFG, cxt_buf + MAC_REG_PSCFG,
-@@ -294,7 +294,7 @@ bool MACbSoftwareReset(struct vnt_private *priv)
- 	unsigned short ww;
- 
- 	/* turn on HOSTCR_SOFTRST, just write 0x01 to reset */
--	VNSvOutPortB(io_base + MAC_REG_HOSTCR, 0x01);
-+	iowrite8(0x01, io_base + MAC_REG_HOSTCR);
- 
- 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
- 		if (!(ioread8(io_base + MAC_REG_HOSTCR) & HOSTCR_SOFTRST))
-@@ -529,16 +529,16 @@ void MACvInitialize(struct vnt_private *priv)
- 	/* clear sticky bits */
- 	MACvClearStckDS(io_base);
- 	/* disable force PME-enable */
--	VNSvOutPortB(io_base + MAC_REG_PMC1, PME_OVR);
-+	iowrite8(PME_OVR, io_base + MAC_REG_PMC1);
- 	/* only 3253 A */
- 
- 	/* do reset */
- 	MACbSoftwareReset(priv);
- 
- 	/* reset TSF counter */
--	VNSvOutPortB(io_base + MAC_REG_TFTCTL, TFTCTL_TSFCNTRST);
-+	iowrite8(TFTCTL_TSFCNTRST, io_base + MAC_REG_TFTCTL);
- 	/* enable TSF counter */
--	VNSvOutPortB(io_base + MAC_REG_TFTCTL, TFTCTL_TSFCNTREN);
-+	iowrite8(TFTCTL_TSFCNTREN, io_base + MAC_REG_TFTCTL);
- }
- 
- /*
-@@ -563,7 +563,7 @@ void MACvSetCurrRx0DescAddr(struct vnt_private *priv, u32 dwCurrDescAddr)
- 
- 	VNSvInPortB(io_base + MAC_REG_RXDMACTL0, &byOrgDMACtl);
- 	if (byOrgDMACtl & DMACTL_RUN)
--		VNSvOutPortB(io_base + MAC_REG_RXDMACTL0+2, DMACTL_RUN);
-+		iowrite8(DMACTL_RUN, io_base + MAC_REG_RXDMACTL0 + 2);
- 
- 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
- 		if (!(ioread8(io_base + MAC_REG_RXDMACTL0) & DMACTL_RUN))
-@@ -572,7 +572,7 @@ void MACvSetCurrRx0DescAddr(struct vnt_private *priv, u32 dwCurrDescAddr)
- 
- 	iowrite32(dwCurrDescAddr, io_base + MAC_REG_RXDMAPTR0);
- 	if (byOrgDMACtl & DMACTL_RUN)
--		VNSvOutPortB(io_base + MAC_REG_RXDMACTL0, DMACTL_RUN);
-+		iowrite8(DMACTL_RUN, io_base + MAC_REG_RXDMACTL0);
- }
- 
- /*
-@@ -597,7 +597,7 @@ void MACvSetCurrRx1DescAddr(struct vnt_private *priv, u32 dwCurrDescAddr)
- 
- 	VNSvInPortB(io_base + MAC_REG_RXDMACTL1, &byOrgDMACtl);
- 	if (byOrgDMACtl & DMACTL_RUN)
--		VNSvOutPortB(io_base + MAC_REG_RXDMACTL1+2, DMACTL_RUN);
-+		iowrite8(DMACTL_RUN, io_base + MAC_REG_RXDMACTL1 + 2);
- 
- 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
- 		if (!(ioread8(io_base + MAC_REG_RXDMACTL1) & DMACTL_RUN))
-@@ -606,7 +606,7 @@ void MACvSetCurrRx1DescAddr(struct vnt_private *priv, u32 dwCurrDescAddr)
- 
- 	iowrite32(dwCurrDescAddr, io_base + MAC_REG_RXDMAPTR1);
- 	if (byOrgDMACtl & DMACTL_RUN)
--		VNSvOutPortB(io_base + MAC_REG_RXDMACTL1, DMACTL_RUN);
-+		iowrite8(DMACTL_RUN, io_base + MAC_REG_RXDMACTL1);
- 
- }
- 
-@@ -633,7 +633,7 @@ void MACvSetCurrTx0DescAddrEx(struct vnt_private *priv,
- 
- 	VNSvInPortB(io_base + MAC_REG_TXDMACTL0, &byOrgDMACtl);
- 	if (byOrgDMACtl & DMACTL_RUN)
--		VNSvOutPortB(io_base + MAC_REG_TXDMACTL0+2, DMACTL_RUN);
-+		iowrite8(DMACTL_RUN, io_base + MAC_REG_TXDMACTL0 + 2);
- 
- 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
- 		if (!(ioread8(io_base + MAC_REG_TXDMACTL0) & DMACTL_RUN))
-@@ -642,7 +642,7 @@ void MACvSetCurrTx0DescAddrEx(struct vnt_private *priv,
- 
- 	iowrite32(dwCurrDescAddr, io_base + MAC_REG_TXDMAPTR0);
- 	if (byOrgDMACtl & DMACTL_RUN)
--		VNSvOutPortB(io_base + MAC_REG_TXDMACTL0, DMACTL_RUN);
-+		iowrite8(DMACTL_RUN, io_base + MAC_REG_TXDMACTL0);
- }
- 
- /*
-@@ -669,7 +669,7 @@ void MACvSetCurrAC0DescAddrEx(struct vnt_private *priv,
- 
- 	VNSvInPortB(io_base + MAC_REG_AC0DMACTL, &byOrgDMACtl);
- 	if (byOrgDMACtl & DMACTL_RUN)
--		VNSvOutPortB(io_base + MAC_REG_AC0DMACTL+2, DMACTL_RUN);
-+		iowrite8(DMACTL_RUN, io_base + MAC_REG_AC0DMACTL + 2);
- 
- 	for (ww = 0; ww < W_MAX_TIMEOUT; ww++) {
- 		if (!(ioread8(io_base + MAC_REG_AC0DMACTL) & DMACTL_RUN))
-@@ -679,7 +679,7 @@ void MACvSetCurrAC0DescAddrEx(struct vnt_private *priv,
- 		pr_debug(" DBG_PORT80(0x26)\n");
- 	iowrite32(dwCurrDescAddr, io_base + MAC_REG_AC0DMAPTR);
- 	if (byOrgDMACtl & DMACTL_RUN)
--		VNSvOutPortB(io_base + MAC_REG_AC0DMACTL, DMACTL_RUN);
-+		iowrite8(DMACTL_RUN, io_base + MAC_REG_AC0DMACTL);
- }
- 
- void MACvSetCurrTXDescAddr(int iTxType, struct vnt_private *priv,
-@@ -711,20 +711,20 @@ void MACvTimer0MicroSDelay(struct vnt_private *priv, unsigned int uDelay)
- 	unsigned char byValue;
- 	unsigned int uu, ii;
- 
--	VNSvOutPortB(io_base + MAC_REG_TMCTL0, 0);
-+	iowrite8(0, io_base + MAC_REG_TMCTL0);
- 	iowrite32(uDelay, io_base + MAC_REG_TMDATA0);
--	VNSvOutPortB(io_base + MAC_REG_TMCTL0, (TMCTL_TMD | TMCTL_TE));
-+	iowrite8((TMCTL_TMD | TMCTL_TE), io_base + MAC_REG_TMCTL0);
- 	for (ii = 0; ii < 66; ii++) {  /* assume max PCI clock is 66Mhz */
- 		for (uu = 0; uu < uDelay; uu++) {
- 			VNSvInPortB(io_base + MAC_REG_TMCTL0, &byValue);
- 			if ((byValue == 0) ||
- 			    (byValue & TMCTL_TSUSP)) {
--				VNSvOutPortB(io_base + MAC_REG_TMCTL0, 0);
-+				iowrite8(0, io_base + MAC_REG_TMCTL0);
- 				return;
- 			}
+diff --git a/net/mac80211/rx.c b/net/mac80211/rx.c
+index 4ae3bf8..40981f8 100644
+--- a/net/mac80211/rx.c
++++ b/net/mac80211/rx.c
+@@ -1421,16 +1421,9 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 		    test_sta_flag(sta, WLAN_STA_AUTHORIZED)) {
+ 			sta->rx_stats.last_rx = jiffies;
+ 			if (ieee80211_is_data(hdr->frame_control) &&
+-			    !is_multicast_ether_addr(hdr->addr1)) {
+-				sta->rx_stats.last_rate_idx =
+-					status->rate_idx;
+-				sta->rx_stats.last_rate_flag =
+-					status->flag;
+-				sta->rx_stats.last_rate_vht_flag =
+-					status->vht_flag;
+-				sta->rx_stats.last_rate_vht_nss =
+-					status->vht_nss;
+-			}
++			    !is_multicast_ether_addr(hdr->addr1))
++				sta->rx_stats.last_rate =
++					sta_stats_encode_rate(status);
  		}
+ 	} else if (rx->sdata->vif.type == NL80211_IFTYPE_OCB) {
+ 		sta->rx_stats.last_rx = jiffies;
+@@ -1440,12 +1433,8 @@ ieee80211_rx_h_sta_process(struct ieee80211_rx_data *rx)
+ 		 * match the current local configuration when processed.
+ 		 */
+ 		sta->rx_stats.last_rx = jiffies;
+-		if (ieee80211_is_data(hdr->frame_control)) {
+-			sta->rx_stats.last_rate_idx = status->rate_idx;
+-			sta->rx_stats.last_rate_flag = status->flag;
+-			sta->rx_stats.last_rate_vht_flag = status->vht_flag;
+-			sta->rx_stats.last_rate_vht_nss = status->vht_nss;
+-		}
++		if (ieee80211_is_data(hdr->frame_control))
++			sta->rx_stats.last_rate = sta_stats_encode_rate(status);
  	}
--	VNSvOutPortB(io_base + MAC_REG_TMCTL0, 0);
-+	iowrite8(0, io_base + MAC_REG_TMCTL0);
+ 
+ 	if (rx->sdata->vif.type == NL80211_IFTYPE_STATION)
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index b49e2fb..81f1d6c 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -1928,43 +1928,47 @@ u8 sta_info_tx_streams(struct sta_info *sta)
+ 			>> IEEE80211_HT_MCS_TX_MAX_STREAMS_SHIFT) + 1;
  }
  
- /*
-@@ -745,9 +745,9 @@ void MACvOneShotTimer1MicroSec(struct vnt_private *priv, unsigned int uDelayTime
+-static void sta_set_rate_info_rx(struct sta_info *sta, struct rate_info *rinfo)
++static void sta_stats_decode_rate(struct ieee80211_local *local, u16 rate,
++				  struct rate_info *rinfo)
  {
- 	void __iomem *io_base = priv->PortOffset;
+-	rinfo->flags = 0;
+-
+-	if (sta->rx_stats.last_rate_flag & RX_FLAG_HT) {
+-		rinfo->flags |= RATE_INFO_FLAGS_MCS;
+-		rinfo->mcs = sta->rx_stats.last_rate_idx;
+-	} else if (sta->rx_stats.last_rate_flag & RX_FLAG_VHT) {
+-		rinfo->flags |= RATE_INFO_FLAGS_VHT_MCS;
+-		rinfo->nss = sta->rx_stats.last_rate_vht_nss;
+-		rinfo->mcs = sta->rx_stats.last_rate_idx;
+-	} else {
++	rinfo->bw = (rate & STA_STATS_RATE_BW_MASK) >>
++		STA_STATS_RATE_BW_SHIFT;
++
++	if (rate & STA_STATS_RATE_VHT) {
++		rinfo->flags = RATE_INFO_FLAGS_VHT_MCS;
++		rinfo->mcs = rate & 0xf;
++		rinfo->nss = (rate & 0xf0) >> 4;
++	} else if (rate & STA_STATS_RATE_HT) {
++		rinfo->flags = RATE_INFO_FLAGS_MCS;
++		rinfo->mcs = rate & 0xff;
++	} else if (rate & STA_STATS_RATE_LEGACY) {
+ 		struct ieee80211_supported_band *sband;
+-		int shift = ieee80211_vif_get_shift(&sta->sdata->vif);
+ 		u16 brate;
+-
+-		sband = sta->local->hw.wiphy->bands[
+-				ieee80211_get_sdata_band(sta->sdata)];
+-		brate = sband->bitrates[sta->rx_stats.last_rate_idx].bitrate;
++		unsigned int shift;
++
++		sband = local->hw.wiphy->bands[(rate >> 4) & 0xf];
++		brate = sband->bitrates[rate & 0xf].bitrate;
++		if (rinfo->bw == RATE_INFO_BW_5)
++			shift = 2;
++		else if (rinfo->bw == RATE_INFO_BW_10)
++			shift = 1;
++		else
++			shift = 0;
+ 		rinfo->legacy = DIV_ROUND_UP(brate, 1 << shift);
+ 	}
  
--	VNSvOutPortB(io_base + MAC_REG_TMCTL1, 0);
-+	iowrite8(0, io_base + MAC_REG_TMCTL1);
- 	iowrite32(uDelayTime, io_base + MAC_REG_TMDATA1);
--	VNSvOutPortB(io_base + MAC_REG_TMCTL1, (TMCTL_TMD | TMCTL_TE));
-+	iowrite8((TMCTL_TMD | TMCTL_TE), io_base + MAC_REG_TMCTL1);
+-	if (sta->rx_stats.last_rate_flag & RX_FLAG_SHORT_GI)
++	if (rate & STA_STATS_RATE_SGI)
+ 		rinfo->flags |= RATE_INFO_FLAGS_SHORT_GI;
++}
++
++static void sta_set_rate_info_rx(struct sta_info *sta, struct rate_info *rinfo)
++{
++	u16 rate = ACCESS_ONCE(sta->rx_stats.last_rate);
+ 
+-	if (sta->rx_stats.last_rate_flag & RX_FLAG_5MHZ)
+-		rinfo->bw = RATE_INFO_BW_5;
+-	else if (sta->rx_stats.last_rate_flag & RX_FLAG_10MHZ)
+-		rinfo->bw = RATE_INFO_BW_10;
+-	else if (sta->rx_stats.last_rate_flag & RX_FLAG_40MHZ)
+-		rinfo->bw = RATE_INFO_BW_40;
+-	else if (sta->rx_stats.last_rate_vht_flag & RX_VHT_FLAG_80MHZ)
+-		rinfo->bw = RATE_INFO_BW_80;
+-	else if (sta->rx_stats.last_rate_vht_flag & RX_VHT_FLAG_160MHZ)
+-		rinfo->bw = RATE_INFO_BW_160;
++	if (rate == STA_STATS_RATE_INVALID)
++		rinfo->flags = 0;
+ 	else
+-		rinfo->bw = RATE_INFO_BW_20;
++		sta_stats_decode_rate(sta->local, rate, rinfo);
  }
  
- void MACvSetMISCFifo(struct vnt_private *priv, unsigned short wOffset,
+ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo)
+diff --git a/net/mac80211/sta_info.h b/net/mac80211/sta_info.h
+index 0ad9a67..f36f560 100644
+--- a/net/mac80211/sta_info.h
++++ b/net/mac80211/sta_info.h
+@@ -1,7 +1,7 @@
+ /*
+  * Copyright 2002-2005, Devicescape Software, Inc.
+  * Copyright 2013-2014  Intel Mobile Communications GmbH
+- * Copyright(c) 2015 Intel Deutschland GmbH
++ * Copyright(c) 2015-2016 Intel Deutschland GmbH
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -452,10 +452,7 @@ struct sta_info {
+ 		int last_signal;
+ 		u8 chains;
+ 		s8 chain_signal_last[IEEE80211_MAX_CHAINS];
+-		int last_rate_idx;
+-		u32 last_rate_flag;
+-		u32 last_rate_vht_flag;
+-		u8 last_rate_vht_nss;
++		u16 last_rate;
+ 		u64 msdu[IEEE80211_NUM_TIDS + 1];
+ 	} rx_stats;
+ 	struct {
+@@ -686,4 +683,42 @@ void ieee80211_sta_ps_deliver_uapsd(struct sta_info *sta);
+ 
+ unsigned long ieee80211_sta_last_active(struct sta_info *sta);
+ 
++#define STA_STATS_RATE_INVALID		0
++#define STA_STATS_RATE_VHT		0x8000
++#define STA_STATS_RATE_HT		0x4000
++#define STA_STATS_RATE_LEGACY		0x2000
++#define STA_STATS_RATE_SGI		0x1000
++#define STA_STATS_RATE_BW_SHIFT		9
++#define STA_STATS_RATE_BW_MASK		(0x7 << STA_STATS_RATE_BW_SHIFT)
++
++static inline u16 sta_stats_encode_rate(struct ieee80211_rx_status *s)
++{
++	u16 r = s->rate_idx;
++
++	if (s->vht_flag & RX_VHT_FLAG_80MHZ)
++		r |= RATE_INFO_BW_80 << STA_STATS_RATE_BW_SHIFT;
++	else if (s->vht_flag & RX_VHT_FLAG_160MHZ)
++		r |= RATE_INFO_BW_160 << STA_STATS_RATE_BW_SHIFT;
++	else if (s->flag & RX_FLAG_40MHZ)
++		r |= RATE_INFO_BW_40 << STA_STATS_RATE_BW_SHIFT;
++	else if (s->flag & RX_FLAG_10MHZ)
++		r |= RATE_INFO_BW_10 << STA_STATS_RATE_BW_SHIFT;
++	else if (s->flag & RX_FLAG_5MHZ)
++		r |= RATE_INFO_BW_5 << STA_STATS_RATE_BW_SHIFT;
++	else
++		r |= RATE_INFO_BW_20 << STA_STATS_RATE_BW_SHIFT;
++
++	if (s->flag & RX_FLAG_SHORT_GI)
++		r |= STA_STATS_RATE_SGI;
++
++	if (s->flag & RX_FLAG_VHT)
++		r |= STA_STATS_RATE_VHT | (s->vht_nss << 4);
++	else if (s->flag & RX_FLAG_HT)
++		r |= STA_STATS_RATE_HT;
++	else
++		r |= STA_STATS_RATE_LEGACY | (s->band << 4);
++
++	return r;
++}
++
+ #endif /* STA_INFO_H */
 -- 
-2.7.0
+2.5.0
 
