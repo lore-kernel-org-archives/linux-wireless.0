@@ -1,41 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:51481 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751146AbcCGMwK (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 7 Mar 2016 07:52:10 -0500
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend@broadcom.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V11 2/2] brcmfmac: add support for nl80211 BSS_SELECT feature
-References: <1456947439-28968-1-git-send-email-arend@broadcom.com>
-	<1456947439-28968-2-git-send-email-arend@broadcom.com>
-Date: Mon, 07 Mar 2016 14:52:04 +0200
-In-Reply-To: <1456947439-28968-2-git-send-email-arend@broadcom.com> (Arend van
-	Spriel's message of "Wed, 2 Mar 2016 20:37:19 +0100")
-Message-ID: <87a8matpqj.fsf@kamboji.qca.qualcomm.com> (sfid-20160307_135214_681727_B093E4F7)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from mx1.redhat.com ([209.132.183.28]:52132 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932980AbcCaVIt (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2016 17:08:49 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 09/10] rtl8xxxu: Use correct H2C calls for 8192eu
+Date: Thu, 31 Mar 2016 17:08:41 -0400
+Message-Id: <1459458522-28686-10-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160331_230858_132475_8BDC944F)
+In-Reply-To: <1459458522-28686-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1459458522-28686-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend@broadcom.com> writes:
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> Announce support for nl80211 feature BSS_SELECT and process
-> BSS selection behaviour provided in .connect() callback.
->
-> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
-> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
-> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
-> Reviewed-by: Lei Zhang <leizh@broadcom.com>
-> Signed-off-by: Arend van Spriel <arend@broadcom.com>
+The 8192eu uses the same H2C API as the 8723bu. Call the correct
+functions for update_rate_mask() and report_connect().
 
-Depends on:
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-0a87cadbb54e nl80211: add feature for BSS selection support
-
-Is in mac80211-next currently.
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 201f6cf..f2e32a7 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -8525,8 +8525,8 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
+ 	.enable_rf = rtl8723b_enable_rf,
+ 	.disable_rf = rtl8723b_disable_rf,
+ 	.set_tx_power = rtl8723b_set_tx_power,
+-	.update_rate_mask = rtl8723au_update_rate_mask,
+-	.report_connect = rtl8723au_report_connect,
++	.update_rate_mask = rtl8723bu_update_rate_mask,
++	.report_connect = rtl8723bu_report_connect,
+ 	.writeN_block_size = 128,
+ 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
+ 	.mbox_ext_width = 4,
 -- 
-Kalle Valo
+2.5.5
+
