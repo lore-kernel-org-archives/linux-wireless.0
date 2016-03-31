@@ -1,81 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:24742 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751316AbcCIHVL (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:49416 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758439AbcCaU7u (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 9 Mar 2016 02:21:11 -0500
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <linux-wireless@vger.kernel.org>
-CC: <ath10k@lists.infradead.org>, <johannes@sipsolutions.net>,
-	<kvalo@codeaurora.org>, <mohammed@codeaurora.org>,
-	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Subject: [PATCH v2] iw: Add support for NL80211_STA_INFO_RX_DURATION netlink attribute
-Date: Wed, 9 Mar 2016 12:50:36 +0530
-Message-ID: <1457508036-16756-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160309_082114_975562_2914753E)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 31 Mar 2016 16:59:50 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: ath10k@lists.infradead.org, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH 2/3] ath10k:  Ensure peer_map references are cleaned up.
+Date: Thu, 31 Mar 2016 13:59:45 -0700
+Message-Id: <1459457986-29222-2-git-send-email-greearb@candelatech.com> (sfid-20160331_230003_518885_D9261912)
+In-Reply-To: <1459457986-29222-1-git-send-email-greearb@candelatech.com>
+References: <1459457986-29222-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+From: Ben Greear <greearb@candelatech.com>
 
-Enable support for parsing per station rx-duration (usecs)
-via adding support for new netlink attribute NL80211_STA_INFO_RX_DURATION
+While debugging OS crashes due to firmware crashes, I enabled
+kasan, and it noticed that peer objects were being used-after-freed.
 
-rx_duration is an approximate total air time(usecs) for all the frames
-frames from a connected client. This will get dumped as
-part of 'iw dev wlan#N station dump'
+Looks like there are two places we could be leaving stale references
+in the peer-map, so clean that up.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- nl80211.h |    3 +++
- station.c |    5 +++++
- 2 files changed, 8 insertions(+)
+ drivers/net/wireless/ath/ath10k/mac.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/nl80211.h b/nl80211.h
-index 5b7b5eb..d11198f 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -2464,6 +2464,8 @@ enum nl80211_sta_bss_param {
-  *	TID+1 and the special TID 16 (i.e. value 17) is used for non-QoS frames;
-  *	each one of those is again nested with &enum nl80211_tid_stats
-  *	attributes carrying the actual values.
-+ * @NL80210_STA_INFO_RX_DURATION: approximate total air time(usecs) for all the
-+ *	frames from a connected client
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -2500,6 +2502,7 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_BEACON_RX,
- 	NL80211_STA_INFO_BEACON_SIGNAL_AVG,
- 	NL80211_STA_INFO_TID_STATS,
-+	NL80211_STA_INFO_RX_DURATION,
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 0a81ca2..07b155d 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -794,6 +794,7 @@ static void ath10k_peer_cleanup(struct ath10k *ar, u32 vdev_id)
+ {
+ 	struct ath10k_peer *peer, *tmp;
+ 	int peer_id;
++	int i;
  
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/station.c b/station.c
-index b5ccf4a..a730db1 100644
---- a/station.c
-+++ b/station.c
-@@ -147,6 +147,7 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 		[NL80211_STA_INFO_NONPEER_PM] = { .type = NLA_U32},
- 		[NL80211_STA_INFO_CHAIN_SIGNAL] = { .type = NLA_NESTED },
- 		[NL80211_STA_INFO_CHAIN_SIGNAL_AVG] = { .type = NLA_NESTED },
-+		[NL80211_STA_INFO_RX_DURATION] = { .type = NLA_U64 },
- 	};
- 	char *chain;
+ 	lockdep_assert_held(&ar->conf_mutex);
  
-@@ -226,6 +227,10 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 		printf("\n\trx bitrate:\t%s", buf);
- 	}
+@@ -812,6 +813,15 @@ static void ath10k_peer_cleanup(struct ath10k *ar, u32 vdev_id)
+ 			ar->peer_map[peer_id] = NULL;
+ 		}
  
-+	if (sinfo[NL80211_STA_INFO_RX_DURATION])
-+		printf("\n\trx duration:\t%lld us",
-+		       (unsigned long long)nla_get_u64(sinfo[NL80211_STA_INFO_RX_DURATION]));
++		/* Double check that peer is properly un-referenced from the peer_map */
++		for (i = 0; i < ARRAY_SIZE(ar->peer_map); i++) {
++			if (ar->peer_map[i] == peer) {
++				ath10k_warn(ar, "ERROR:  Faile to properly clean up peer: %p %pM, idx: %d, will fix.\n",
++					    peer, peer->addr, i);
++				ar->peer_map[i] = NULL;
++			}
++		}
 +
- 	if (sinfo[NL80211_STA_INFO_EXPECTED_THROUGHPUT]) {
- 		uint32_t thr;
+ 		list_del(&peer->list);
+ 		kfree(peer);
+ 		ar->num_peers--;
+@@ -840,6 +850,7 @@ void ath10k_dump_peer_info(struct ath10k *ar)
+ static void ath10k_peer_cleanup_all(struct ath10k *ar)
+ {
+ 	struct ath10k_peer *peer, *tmp;
++	int i;
  
+ 	lockdep_assert_held(&ar->conf_mutex);
+ 
+@@ -850,6 +861,11 @@ static void ath10k_peer_cleanup_all(struct ath10k *ar)
+ 		list_del(&peer->list);
+ 		kfree(peer);
+ 	}
++
++	/* Clean up peer-map */
++	for (i = 0; i < ARRAY_SIZE(ar->peer_map); i++)
++		ar->peer_map[i] = NULL;
++
+ 	spin_unlock_bh(&ar->data_lock);
+ 
+ 	ar->num_peers = 0;
 -- 
-1.7.9.5
+2.4.3
 
