@@ -1,28 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:56122 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755223AbcCCO3j (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 3 Mar 2016 09:29:39 -0500
-Message-ID: <1457015372.2044.6.camel@sipsolutions.net> (sfid-20160303_152955_323285_A43DD1CD)
-Subject: Re: [PATCHv2] mac80211: parse VHT info in injected frames
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Lorenzo Bianconi <lorenzo.bianconi83@gmail.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 03 Mar 2016 15:29:32 +0100
-In-Reply-To: <1456238615-832-1-git-send-email-lorenzo.bianconi83@gmail.com> (sfid-20160223_154337_574755_E9ED15D4)
-References: <1456238615-832-1-git-send-email-lorenzo.bianconi83@gmail.com>
-	 (sfid-20160223_154337_574755_E9ED15D4)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:40650 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932066AbcCaPNX (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 31 Mar 2016 11:13:23 -0400
+Message-ID: <56FD3E91.9020804@candelatech.com> (sfid-20160331_171349_698760_FCF40AD9)
+Date: Thu, 31 Mar 2016 08:13:21 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	David Miller <davem@davemloft.net>
+CC: linux-kernel@vger.kernel.org, herbert@gondor.apana.org.au,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	tgraf@suug.ch
+Subject: Re: Question on rhashtable in worst-case scenario.
+References: <56F9941A.3080501@candelatech.com>	 <56FAAA6D.3070806@candelatech.com>	 <1459329252.2055.1.camel@sipsolutions.net>	 <20160330.123821.328761526754742195.davem@davemloft.net>	 <56FC0445.6010200@candelatech.com> <1459410405.4576.8.camel@sipsolutions.net>
+In-Reply-To: <1459410405.4576.8.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-02-23 at 15:43 +0100, Lorenzo Bianconi wrote:
-> Add VHT radiotap parsing support to ieee80211_parse_tx_radiotap().
-> That capability has been tested using a d-link dir-860l rev b1
-> running OpenWrt trunk and mt76 driver
-> 
-Applied. In case you didn't see, Sven sent a patch to fix the other
-docs.
 
-johannes
+
+On 03/31/2016 12:46 AM, Johannes Berg wrote:
+> On Wed, 2016-03-30 at 09:52 -0700, Ben Greear wrote:
+>
+>> If someone can fix rhashtable, then great.
+>> I read some earlier comments [1] back when someone else reported
+>> similar problems, and the comments seemed to indicate that rhashtable
+>> was broken in this manner on purpose to protect against hashing
+>> attacks.
+>>
+>> If you are baking in this type of policy to what should be a basic
+>> data-type, then it is not useful for how it is being used in
+>> the mac80211 stack.
+>>
+>> [1]  http://lkml.iu.edu/hypermail/linux/kernel/1512.2/01681.html
+>>
+>
+> That's not really saying it's purposely broken, that's more saying that
+> Herbert didn't see a point in fixing a case that has awful behaviour
+> already.
+>
+> However, I'm confused now - we can much more easily live with
+> *insertion* failures, as the linked email indicates, than *deletion*
+> failures, which I think you had indicated originally. Are you really
+> seeing *deletion* failures?
+>
+> If there are in fact *deletion* failures then I think we really need to
+> address those in rhashtable, no matter the worst-case behaviour of the
+> hashing or keys, since we should be able to delete entries in order to
+> get back to something reasonable. Looking at the code though, I don't
+> actually see that happening.
+>
+> If you're seeing only *insertion* failures, which you indicated in the
+> root of this thread, then I think for the general case in mac80211 we
+> can live with that - we use a seeded jhash for the hash function, and
+> since in the general case we cannot accept entries with identical MAC
+> addresses to start with, it shouldn't be possible to run into this
+> problem under normal use cases.
+
+I see insertion failure, and then later, if of course fails to delete
+as well since it was never inserted to begin with.  There is no good
+way to deal with insertion error, so just need to fix the hashtable.
+
+>
+> In this case, I think perhaps you can just patch your local system with
+> the many interfaces connecting to the same AP to add the parameter
+> Herbert suggested (.insecure_elasticity = true in sta_rht_params). This
+> is, after all, very much a case that "normal" operation doesn't even
+> get close to.
+
+Old code, even stock kernels, could deal with this properly, so I think it
+should be fixed by default.  I'll put rhash back in my tree and try that insecure
+option and see if it works.
+
+Thanks,
+Ben
+>
+> johannes
+>
+
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
