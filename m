@@ -1,55 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f172.google.com ([209.85.214.172]:34395 "EHLO
-	mail-ob0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750952AbcDPCjZ (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:47369 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751045AbcDAUgK (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2016 22:39:25 -0400
+	Fri, 1 Apr 2016 16:36:10 -0400
+Subject: Re: [PATCH 1/3] ath10k: Ensure txrx-compl-task is stopped when
+ cleaning htt-tx.
+To: Michal Kazior <michal.kazior@tieto.com>
+References: <1459457986-29222-1-git-send-email-greearb@candelatech.com>
+ <CA+BoTQnmMKoK9z2QnTgBeRkXR0GdR1WV0XpOzD7JZnJ6QbHQ1w@mail.gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+From: Ben Greear <greearb@candelatech.com>
+Message-ID: <56FEDBB8.2080404@candelatech.com> (sfid-20160401_223613_976960_EAC0AD45)
+Date: Fri, 1 Apr 2016 13:36:08 -0700
 MIME-Version: 1.0
-In-Reply-To: <87bn5apw5a.fsf@kamboji.qca.qualcomm.com>
-References: <20160203020139.GA13619@gmail.com> <87bn5apw5a.fsf@kamboji.qca.qualcomm.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sat, 16 Apr 2016 12:39:04 +1000
-Message-ID: <CAGRGNgX0uy=R1dd7UMO5aZu69QDUXrtZDCjdJnB1Yj3XzjemHA@mail.gmail.com> (sfid-20160416_043954_927598_C63DB272)
-Subject: Re: [PATCH 2/2] rtlwifi: Fix reusable codes in core.c
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Byeoungwook Kim <quddnr145@gmail.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+In-Reply-To: <CA+BoTQnmMKoK9z2QnTgBeRkXR0GdR1WV0XpOzD7JZnJ6QbHQ1w@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Kalle,
-
-On Sat, Apr 16, 2016 at 4:25 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
-> Byeoungwook Kim <quddnr145@gmail.com> writes:
->
->> rtl_*_delay() functions were reused same codes about addr variable.
->> So i have converted to rtl_addr_delay() from code about addr variable.
+On 03/31/2016 11:12 PM, Michal Kazior wrote:
+> On 31 March 2016 at 22:59,  <greearb@candelatech.com> wrote:
+>> From: Ben Greear <greearb@candelatech.com>
 >>
->> Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
->> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+>> Otherwise, the txrx-compl-task may access some bad memory?
+>>
+>> Signed-off-by: Ben Greear <greearb@candelatech.com>
+>> ---
+>>   drivers/net/wireless/ath/ath10k/htt_tx.c | 2 ++
+>>   1 file changed, 2 insertions(+)
+>>
+>> diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
+>> index 07b960e..58e88d3 100644
+>> --- a/drivers/net/wireless/ath/ath10k/htt_tx.c
+>> +++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
+>> @@ -376,6 +376,8 @@ void ath10k_htt_tx_free(struct ath10k_htt *htt)
+>>   {
+>>          int size;
+>>
+>> +       tasklet_kill(&htt->txrx_compl_task);
+>> +
 >
-> Doesn't apply:
->
-> Applying: rtlwifi: Fix reusable codes in core.c
-> fatal: sha1 information is lacking or useless (drivers/net/wireless/realtek/rtlwifi/core.c).
-> Repository lacks necessary blobs to fall back on 3-way merge.
-> Cannot fall back to three-way merge.
-> Patch failed at 0001 rtlwifi: Fix reusable codes in core.c
->
-> Please rebase and resend.
+> I think, instead, the ordering of ath10k_htt_tx_free() and
+> ath10k_htt_rx_free() should be reversed. It's already in the "correct"
+> order in ath10k_core_stop() on error path.
 
-This one is already applied in some form. I thought I'd listed it in
-my big list of superseded patches, however I must have missed it.
+That seems a bit too subtle for my taste, but either way
+is fine with me.  You want to cook up a patch?
 
 Thanks,
+Ben
 
 -- 
-Julian Calaby
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
