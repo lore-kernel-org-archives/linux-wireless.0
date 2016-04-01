@@ -1,52 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49848 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752385AbcD0IRW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2016 04:17:22 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless@vger.kernel.org
-Cc: Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] mac80211: fix statistics leak if dev_alloc_name() fails
-Date: Wed, 27 Apr 2016 10:17:16 +0200
-Message-Id: <1461745036-30993-1-git-send-email-johannes@sipsolutions.net> (sfid-20160427_101727_138712_E3E42B7B)
+Received: from smtp.codeaurora.org ([198.145.29.96]:56489 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750866AbcDAFTH (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2016 01:19:07 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 01 Apr 2016 10:49:05 +0530
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/3] ath10k: fix unconditional num_mpdus_ready subtraction
+In-Reply-To: <56FD71D3.5090103@candelatech.com>
+References: <1459352551-11773-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <1459352551-11773-3-git-send-email-rmanohar@qti.qualcomm.com>
+ <56FD71D3.5090103@candelatech.com>
+Message-ID: <73a1d6a04908fe060559d1a6e9afb128@codeaurora.org> (sfid-20160401_071912_420360_33E4E829)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+On 2016-04-01 00:22, Ben Greear wrote:
+> On 03/30/2016 08:42 AM, Rajkumar Manoharan wrote:
+>> Decrement num_mpdus_ready only when rx amsdu is processed 
+>> successfully.
+>> Not doing so, will result in leak and impact stabilty under low memory
+>> cases.
+> 
+> Should this patch be rebased on top of the "ath10k: process htt rx
+> indication as batch mode" patch?
+> 
+It should be on top of "ath10k: speedup htt rx descriptor processing for 
+rx_ind". Instead of sending next version of original series, i sent it 
+as follow up.
 
-In the case that dev_alloc_name() fails, e.g. because the name was
-given by the user and already exists, we need to clean up properly
-and free the per-CPU statistics. Fix that.
+-Rajkumar
 
-Cc: stable@vger.kernel.org
-Fixes: 5a490510ba5f ("mac80211: use per-CPU TX/RX statistics")
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/mac80211/iface.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
-index 453b4e741780..e1cb22c16530 100644
---- a/net/mac80211/iface.c
-+++ b/net/mac80211/iface.c
-@@ -1761,7 +1761,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 
- 		ret = dev_alloc_name(ndev, ndev->name);
- 		if (ret < 0) {
--			free_netdev(ndev);
-+			ieee80211_if_free(ndev);
- 			return ret;
- 		}
- 
-@@ -1847,7 +1847,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
- 
- 		ret = register_netdevice(ndev);
- 		if (ret) {
--			free_netdev(ndev);
-+			ieee80211_if_free(ndev);
- 			return ret;
- 		}
- 	}
--- 
-2.8.0.rc3
 
