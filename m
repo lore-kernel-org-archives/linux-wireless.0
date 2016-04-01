@@ -1,51 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:52434 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757673AbcCaW7O (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 18:59:14 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH] ath10k:  Clean up peer when sta goes away.
-Date: Thu, 31 Mar 2016 15:59:11 -0700
-Message-Id: <1459465151-24874-1-git-send-email-greearb@candelatech.com> (sfid-20160401_005934_649496_E1784849)
+Received: from s3.sipsolutions.net ([5.9.151.49]:52477 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755127AbcDAVeZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2016 17:34:25 -0400
+Message-ID: <1459546450.3342.22.camel@sipsolutions.net> (sfid-20160401_233545_946110_A5DF76CB)
+Subject: Re: Question on rhashtable in worst-case scenario.
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: Ben Greear <greearb@candelatech.com>,
+	David Miller <davem@davemloft.net>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, tgraf@suug.ch
+Date: Fri, 01 Apr 2016 23:34:10 +0200
+In-Reply-To: <20160401004627.GA9367@gondor.apana.org.au>
+References: <56F9941A.3080501@candelatech.com>
+	 <56FAAA6D.3070806@candelatech.com>
+	 <1459329252.2055.1.camel@sipsolutions.net>
+	 <20160330.123821.328761526754742195.davem@davemloft.net>
+	 <56FC0445.6010200@candelatech.com>
+	 <1459410405.4576.8.camel@sipsolutions.net>
+	 <20160331075015.GA27716@gondor.apana.org.au>
+	 <1459438199.4576.26.camel@sipsolutions.net>
+	 <20160401004627.GA9367@gondor.apana.org.au>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+On Fri, 2016-04-01 at 08:46 +0800, Herbert Xu wrote:
+> On Thu, Mar 31, 2016 at 05:29:59PM +0200, Johannes Berg wrote:
+> > 
+> > 
+> > Does removing this completely disable the "-EEXIST" error? I can't
+> > say
+> > I fully understand the elasticity stuff in
+> > __rhashtable_insert_fast().
+> What EEXIST error are you talking about? The only one that can be
+> returned on insertion is if you're explicitly checking for dups
+> which clearly can't be the case for you.
 
-If WMI and/or firmware has issues removing the peer object,
-then we still need to clean up the peer object in the driver.
+I was thinking about that one - it's not obvious to me from the code
+how this "explicitly checking for dups" would be done or let's say how
+rhashtable differentiates. But since it seems to work for Ben until
+hitting a certain number of identical keys, surely that's just me not
+understanding the code rather than anything else :)
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
----
- drivers/net/wireless/ath/ath10k/mac.c | 10 ++++++++--
- 1 file changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 07b155d..3ec973e 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6500,9 +6500,15 @@ static int ath10k_sta_state(struct ieee80211_hw *hw,
- 				continue;
- 
- 			if (peer->sta == sta) {
--				ath10k_warn(ar, "found sta peer %pM id: %d entry on vdev %i after it was supposedly removed\n",
--					    sta->addr, i, arvif->vdev_id);
-+				ath10k_warn(ar, "found sta peer %p %pM id: %d entry on vdev %i after it was supposedly removed\n",
-+					    peer, sta->addr, i, arvif->vdev_id);
- 				peer->sta = NULL;
-+
-+				/* Clean up the peer object as well since we must have failed to do this above. */
-+				list_del(&peer->list);
-+				ar->peer_map[i] = NULL;
-+				kfree(peer);
-+				ar->num_peers--;
- 			}
- 		}
- 		spin_unlock_bh(&ar->data_lock);
--- 
-2.4.3
-
+johannes
