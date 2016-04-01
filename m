@@ -1,55 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:54441 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751037AbcDGGhx (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 02:37:53 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2 1/3] ath10k: fix calibration init sequence of qca99x0
-Date: Thu, 7 Apr 2016 12:07:29 +0530
-Message-ID: <1460011051-8272-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20160407_083757_043639_D35F2C21)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mail.neratec.com ([46.140.151.2]:64974 "EHLO mail.neratec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754119AbcDAJhR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2016 05:37:17 -0400
+From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@qca.qualcomm.com, ath9k-devel@lists.ath9k.org
+Subject: [PATCH v2] ath9k: interpret requested txpower in EIRP domain
+Date: Fri,  1 Apr 2016 11:37:08 +0200
+Message-Id: <1459503428-12492-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20160401_113722_474030_1F9D8F8B)
+In-Reply-To: <201604011711.RmqSBtrr%fengguang.wu@intel.com>
+References: <201604011711.RmqSBtrr%fengguang.wu@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-pre-calibration is meant for qca4019 which contains only caldata
-whereas calibration file is used by ar9888 and qca99x0 that contains
-both board data and caldata. So by definition both pre-cal-file and
-cal-file can not coexist. Keeping them in shared memory (union), is
-breaking boot sequence of qca99x0. Fix it by storing both binaries
-in separate memories. This issue is reported in ipq8064 platform which
-includes caldata in flash memory.
+Tx power limitations at upper layers are interpreted in
+the EIRP domain. When the user requests a given maximum
+txpower, e.g. with: 'iw phy0 set txpower fixed 1500',
+he expects the EIRP to be at or below 15dBm.
 
-Fixes: 3d9195ea19e4 ("ath10k: incorporate qca4019 cal data download sequence")
-Reported-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+In ath9k_hw_apply_txpower(), the interpretation is
+different: the antenna-gain is capped against the
+current txpower limit in the regulatory, but not
+against the user set value. It ensures that the
+resulting EIRP is below the limit defined by the
+active countrycode, but not below the value the
+user requested.
+
+In a scenario like e.g.
+ a) antenna_gain=6
+ b) countrycode limits to eirp=18
+ c) user set txpower=15
+this will cause a setting for AR_PHY_POWER_TX_RATE
+regs resulting in an EIRP > 15.
+
+This patch ensures that antenna-gain is considered
+whenever the txpower limit is adjusted and with that
+the user set limits are kept.
+
+Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
 ---
-v2: added fixes commit
+v2: remove unused variable max_gain as reported by kbuild test robot
+---
+ drivers/net/wireless/ath/ath9k/hw.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
- drivers/net/wireless/ath/ath10k/core.h | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index c23c37312ef7..d85b99164212 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -728,10 +728,8 @@ struct ath10k {
- 	const void *firmware_data;
- 	size_t firmware_len;
+diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
+index e7a3101..9030574 100644
+--- a/drivers/net/wireless/ath/ath9k/hw.c
++++ b/drivers/net/wireless/ath/ath9k/hw.c
+@@ -2833,8 +2833,7 @@ void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan,
+ {
+ 	struct ath_regulatory *reg = ath9k_hw_regulatory(ah);
+ 	struct ieee80211_channel *channel;
+-	int chan_pwr, new_pwr, max_gain;
+-	int ant_gain, ant_reduction = 0;
++	int chan_pwr, new_pwr;
  
--	union {
--		const struct firmware *pre_cal_file;
--		const struct firmware *cal_file;
--	};
-+	const struct firmware *pre_cal_file;
-+	const struct firmware *cal_file;
+ 	if (!chan)
+ 		return;
+@@ -2842,15 +2841,10 @@ void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan,
+ 	channel = chan->chan;
+ 	chan_pwr = min_t(int, channel->max_power * 2, MAX_RATE_POWER);
+ 	new_pwr = min_t(int, chan_pwr, reg->power_limit);
+-	max_gain = chan_pwr - new_pwr + channel->max_antenna_gain * 2;
+-
+-	ant_gain = get_antenna_gain(ah, chan);
+-	if (ant_gain > max_gain)
+-		ant_reduction = ant_gain - max_gain;
  
- 	struct {
- 		const void *firmware_codeswap_data;
+ 	ah->eep_ops->set_txpower(ah, chan,
+ 				 ath9k_regd_get_ctl(reg, chan),
+-				 ant_reduction, new_pwr, test);
++				 get_antenna_gain(ah, chan), new_pwr, test);
+ }
+ 
+ void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32 limit, bool test)
 -- 
 2.7.4
 
