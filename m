@@ -1,45 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:32787 "EHLO
-	mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753344AbcDGVjS (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:48175 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753644AbcDAVMU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 17:39:18 -0400
-Received: by mail-wm0-f66.google.com with SMTP id y144so7589408wmd.0
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2016 14:39:17 -0700 (PDT)
-From: Vishal Thanki <vishalthanki@gmail.com>
-To: akarwar@marvell.com, nishants@marvell.com, afenkart@gmail.com,
-	linux-wireless@vger.kernel.org
-Cc: Vishal Thanki <vishalthanki@gmail.com>
-Subject: [PATCH] mwifiex: fix the incorrect WARN_ON during suspend
-Date: Thu,  7 Apr 2016 23:37:12 +0200
-Message-Id: <1460065032-23043-1-git-send-email-vishalthanki@gmail.com> (sfid-20160407_233922_913427_B774D150)
+	Fri, 1 Apr 2016 17:12:20 -0400
+From: greearb@candelatech.com
+To: ath10k@lists.infradead.org
+Cc: linux-wireless@vger.kernel.org,
+	Ben Greear <greearb@candelatech.com>
+Subject: [PATCH v2 3/5] ath10k:  Add WARN_ON if we over-write peer-map pointer.
+Date: Fri,  1 Apr 2016 14:12:10 -0700
+Message-Id: <1459545132-11295-3-git-send-email-greearb@candelatech.com> (sfid-20160401_231223_942826_EE6D0F84)
+In-Reply-To: <1459545132-11295-1-git-send-email-greearb@candelatech.com>
+References: <1459545132-11295-1-git-send-email-greearb@candelatech.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-During system suspend, there is a kernel WARNING issued if there
-is a pending command present. By marking the wait queue disabled
-after calling the command completion routine fixes it.
+From: Ben Greear <greearb@candelatech.com>
 
-Signed-off-by: Vishal Thanki <vishalthanki@gmail.com>
+Not sure this can happen, but seems like a reasonable sanity
+check.
+
+Signed-off-by: Ben Greear <greearb@candelatech.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cmdevt.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/txrx.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cmdevt.c b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-index a12adee..6f047064 100644
---- a/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cmdevt.c
-@@ -1009,9 +1009,9 @@ mwifiex_cancel_all_pending_cmd(struct mwifiex_adapter *adapter)
- 	spin_lock_irqsave(&adapter->mwifiex_cmd_lock, cmd_flags);
- 	/* Cancel current cmd */
- 	if ((adapter->curr_cmd) && (adapter->curr_cmd->wait_q_enabled)) {
--		adapter->curr_cmd->wait_q_enabled = false;
- 		adapter->cmd_wait_q.status = -1;
- 		mwifiex_complete_cmd(adapter, adapter->curr_cmd);
-+		adapter->curr_cmd->wait_q_enabled = false;
- 		/* no recycle probably wait for response */
- 	}
- 	/* Cancel all pending command */
+diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+index a779a4e..2edef8a 100644
+--- a/drivers/net/wireless/ath/ath10k/txrx.c
++++ b/drivers/net/wireless/ath/ath10k/txrx.c
+@@ -309,6 +309,7 @@ void ath10k_peer_map_event(struct ath10k_htt *htt,
+ 	ath10k_warn(ar, /*ATH10K_DBG_HTT,*/ "htt peer map vdev %d peer %pM id %d\n",
+ 		   ev->vdev_id, ev->addr, ev->peer_id);
+ 
++	WARN_ON(ar->peer_map[ev->peer_id] && (ar->peer_map[ev->peer_id] != peer));
+ 	ar->peer_map[ev->peer_id] = peer;
+ 	set_bit(ev->peer_id, peer->peer_ids);
+ exit:
 -- 
-2.4.11
+2.4.3
 
