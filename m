@@ -1,47 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:55265 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758411AbcDENkZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 09:40:25 -0400
-Message-ID: <1459863619.18188.50.camel@sipsolutions.net> (sfid-20160405_154028_688735_AFFE1B54)
-Subject: Re: [PATCH] mac80211: fix "warning:
- =?UTF-8?Q?=E2=80=98target=5Fmetric=E2=80=99?= may be used uninitialized"
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Jeff Mahoney <jeffm@suse.com>, linux-wireless@vger.kernel.org
-Date: Tue, 05 Apr 2016 15:40:19 +0200
-In-Reply-To: <5703BEA7.3040406@suse.com>
-References: <5702AF3B.1070507@suse.com>
-	 <1459849388.18188.28.camel@sipsolutions.net> <5703BEA7.3040406@suse.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:56221 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750741AbcDAFNl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 1 Apr 2016 01:13:41 -0400
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Fri, 01 Apr 2016 10:43:38 +0530
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: Ben Greear <greearb@candelatech.com>
+Cc: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 2/3] ath10k: remove unnecessary warning for probe response
+ drops
+In-Reply-To: <56FD5716.6030406@candelatech.com>
+References: <1459352551-11773-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <1459352551-11773-2-git-send-email-rmanohar@qti.qualcomm.com>
+ <56FD5716.6030406@candelatech.com>
+Message-ID: <43fd44912f230a28f0f49e303c0078f5@codeaurora.org> (sfid-20160401_071344_474729_9306AA3A)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-04-05 at 09:33 -0400, Jeff Mahoney wrote:
-> On 4/5/16 5:43 AM, Johannes Berg wrote:
-> > 
-> > On Mon, 2016-04-04 at 14:15 -0400, Jeff Mahoney wrote:
-> > > 
-> > > This fixes:
-> > > 
-> > > net/mac80211/mesh_hwmp.c:603:26: warning: ‘target_metric’ may be
-> > > used
-> > > uninitialized in this function
-> > > 
-> > > target_metric is only consumed when reply = true so no bug exists
-> > > here,
-> > > but gcc doesn't notice that.  Initializing to 0 clears the
-> > > warning.
-> > > 
-> > What gcc version are you using? Mine doesn't seem to have a problem
-> > following the logic here.
-> gcc version 4.8.5 (SUSE Linux)
+On 2016-03-31 22:27, Ben Greear wrote:
+> On 03/30/2016 08:42 AM, Rajkumar Manoharan wrote:
+>> qca99x0 and qca4019 solutions limit probe responses transmissions.
+>> Logging warning message for each probe response drop is flooding
+>> kernel log unnecessary with " failed to increase tx mgmt pending
+>> count: -16, dropping". Hence reducing log level to debug.
+> 
+> Is there any realistic way to see this message if we are not running
+> many vAP on one radio?
+> 
+As of now this message can be seen only with qca99x0 which has 24 as 
+max_probe_resp_desc_thres. Only possible way in single vAP is that in 
+congested environment when DUT is receiving probe requests more 
+frequently.
 
-Ok, mine's significantly newer:
+> I guess many probe requests or other management frames could also
+> cause this problem?
+> 
+Exactly.
 
-gcc (Debian 5.3.1-10) 5.3.1 20160224
-
-I do wonder though if we really should do this? It might hide errors
-later on?
-
-johannes
+-Rajkumar
