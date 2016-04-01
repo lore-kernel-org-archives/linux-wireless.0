@@ -1,67 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:37729 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751692AbcDUPKA (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:15654 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751432AbcDAIry (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2016 11:10:00 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Wei-Ning Huang <wnhuang@chromium.org>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 2/3] mwifiex: report wowlan wakeup reasons correctly
-Date: Thu, 21 Apr 2016 08:07:55 -0700
-Message-ID: <1461251276-14891-2-git-send-email-akarwar@marvell.com> (sfid-20160421_171009_447901_CB6758D1)
-In-Reply-To: <1461251276-14891-1-git-send-email-akarwar@marvell.com>
-References: <1461251276-14891-1-git-send-email-akarwar@marvell.com>
+	Fri, 1 Apr 2016 04:47:54 -0400
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 7/7] staging: wilc1000: adds a check routine when performed del_key()
+Date: Fri, 1 Apr 2016 17:44:19 +0900
+Message-ID: <1459500259-27873-7-git-send-email-leo.kim@atmel.com> (sfid-20160401_104758_619529_7DD44EDD)
+In-Reply-To: <1459500259-27873-1-git-send-email-leo.kim@atmel.com>
+References: <1459500259-27873-1-git-send-email-leo.kim@atmel.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's been observed that wakeup on GTK rekey failure wasn't reported
-to cfg80211. This patch corrects the check so that all valid wakeup
-reasons are reported.
+This patch is adds a check routine when performed del_key().
+We was find this situation while test the 'rmmod sdio'.
+That is received inform a .del_key cmd from cfg80211.
+If is not exist wep keys, must be ignore a wilc_remove_wep_key() function.
+Thus, adds a check routine that key length of wep.
 
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
 ---
- drivers/net/wireless/marvell/mwifiex/cfg80211.c | 9 +++------
- 1 file changed, 3 insertions(+), 6 deletions(-)
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-index 369ea06..734cf67 100644
---- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-+++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
-@@ -3344,6 +3344,7 @@ static int mwifiex_cfg80211_resume(struct wiphy *wiphy)
- 	struct mwifiex_ds_wakeup_reason wakeup_reason;
- 	struct cfg80211_wowlan_wakeup wakeup_report;
- 	int i;
-+	bool report_wakeup_reason = true;
- 
- 	for (i = 0; i < adapter->priv_num; i++) {
- 		priv = adapter->priv[i];
-@@ -3386,20 +3387,16 @@ static int mwifiex_cfg80211_resume(struct wiphy *wiphy)
- 		if (wiphy->wowlan_config->n_patterns)
- 			wakeup_report.pattern_idx = 1;
- 		break;
--	case CONTROL_FRAME_MATCHED:
--		break;
--	case MANAGEMENT_FRAME_MATCHED:
--		break;
- 	case GTK_REKEY_FAILURE:
- 		if (wiphy->wowlan_config->gtk_rekey_failure)
- 			wakeup_report.gtk_rekey_failure = true;
- 		break;
- 	default:
-+		report_wakeup_reason = false;
- 		break;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index 1ac835b..85031f7 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -1122,9 +1122,12 @@ static int del_key(struct wiphy *wiphy, struct net_device *netdev,
  	}
  
--	if ((wakeup_reason.hs_wakeup_reason > 0) &&
--	    (wakeup_reason.hs_wakeup_reason <= 7))
-+	if (report_wakeup_reason)
- 		cfg80211_report_wowlan_wakeup(&priv->wdev, &wakeup_report,
- 					      GFP_KERNEL);
- 
+ 	if (key_index >= 0 && key_index <= 3) {
+-		memset(priv->WILC_WFI_wep_key[key_index], 0, priv->WILC_WFI_wep_key_len[key_index]);
+-		priv->WILC_WFI_wep_key_len[key_index] = 0;
+-		wilc_remove_wep_key(vif, key_index);
++		if (priv->WILC_WFI_wep_key_len[key_index]) {
++			memset(priv->WILC_WFI_wep_key[key_index], 0,
++			       priv->WILC_WFI_wep_key_len[key_index]);
++			priv->WILC_WFI_wep_key_len[key_index] = 0;
++			wilc_remove_wep_key(vif, key_index);
++		}
+ 	} else {
+ 		wilc_remove_key(priv->hif_drv, mac_addr);
+ 	}
 -- 
-1.8.1.4
+1.9.1
 
