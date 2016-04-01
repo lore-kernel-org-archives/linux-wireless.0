@@ -1,56 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:33794 "EHLO
-	mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751222AbcDFGD6 convert rfc822-to-8bit (ORCPT
+Received: from mail2.candelatech.com ([208.74.158.173]:48256 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751093AbcDAVNg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 02:03:58 -0400
-Received: by mail-lf0-f65.google.com with SMTP id e190so3336771lfe.1
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2016 23:03:57 -0700 (PDT)
-Content-Type: text/plain; charset=us-ascii
-Mime-Version: 1.0 (Mac OS X Mail 9.2 \(3112\))
-Subject: Re: [Make-wifi-fast] [PATCHv2 1/2] mac80211: implement fair queuing per txq
-From: Jonathan Morton <chromatix99@gmail.com>
-In-Reply-To: <CA+BoTQmkGhyPGRuT8GJOfdYyGGckZZA0JMZF+G3uk8KGAwLKvg@mail.gmail.com>
-Date: Wed, 6 Apr 2016 09:03:50 +0300
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	make-wifi-fast@lists.bufferbloat.net,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	codel@lists.bufferbloat.net
-Message-Id: <2233FCEB-7412-4F22-B262-068AFBB2FDCB@gmail.com> (sfid-20160406_080407_983575_3448E0F9)
-References: <1458898052-20601-1-git-send-email-michal.kazior@tieto.com> <1459420104-31554-1-git-send-email-michal.kazior@tieto.com> <1459420104-31554-2-git-send-email-michal.kazior@tieto.com> <1459864656.18188.60.camel@sipsolutions.net> <CA+BoTQmkGhyPGRuT8GJOfdYyGGckZZA0JMZF+G3uk8KGAwLKvg@mail.gmail.com>
-To: Michal Kazior <michal.kazior@tieto.com>
+	Fri, 1 Apr 2016 17:13:36 -0400
+From: greearb@candelatech.com
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, Ben Greear <greearb@candelatech.com>
+Subject: [PATCH] mac80211:  Ensure no limits on station rhashtable.
+Date: Fri,  1 Apr 2016 14:13:31 -0700
+Message-Id: <1459545211-11517-1-git-send-email-greearb@candelatech.com> (sfid-20160401_231338_647215_603FF368)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ben Greear <greearb@candelatech.com>
 
-> On 6 Apr, 2016, at 08:35, Michal Kazior <michal.kazior@tieto.com> wrote:
-> 
-> Packets can be destined to different stations/txqs. At enqueue time I
-> do a partial hash of a packet to get an "index" which I then use to
-> address a txq_flow from per-radio list (out of 4096 of them). You can
-> end up with a situtation like this:
-> - packet A hashing to X destined to txq P which is VI
-> - packet B hashing to X destined to txq Q which is BK
-> 
-> You can't use the same txq_flow for both A and B because you want to
-> maintain packets per txqs more than you want to maintain them per flow
-> (you don't want to queue BK traffic onto VI or vice versa as an
-> artifact, do you? ;). When a txq_flow doesn't have a txqi it is bound.
-> Later, if a collision happens (i.e. resulting txq_flow has non-NULL
-> txqi) the "embedded" per-txq flow is used:
-> 
->  struct txq_info {
-> -     struct sk_buff_head queue;
-> +     struct txq_flow flow; // <--- this
-> 
-> When txq_flow becomes empty its txqi is reset.
-> 
-> The embedded flow is otherwise treated like any other flow, i.e. it
-> can be linked to old_flows and new_flows.
+By default, the rhashtable logic will fail to insert
+objects if the key-chains are too long and un-balanced.
 
-This smells like a very fragile and complex solution to the collision problem.  You may want to look at how Cake solves it.
+In the degenerate case where mac80211 is creating many
+station vdevs connected to the same peer, this case can
+be hit.
 
-I use a separate pool of flows per traffic class (essentially, VO/VI/BE/BK), and there is also a set-associative hash to take care of the birthday problem.  The latter has an order-of-magnitude effect on the general flow collision rate once you get into the tens of flows, for very little CPU cost.
+So, set insecure_elasticity to true to allow chains to grow
+as long as needed.
 
- - Jonathan Morton
+Signed-off-by: Ben Greear <greearb@candelatech.com>
+---
+ net/mac80211/sta_info.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 38ef0be..c25b945 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -66,6 +66,7 @@
+ 
+ static const struct rhashtable_params sta_rht_params = {
+ 	.nelem_hint = 3, /* start small */
++	.insecure_elasticity = true, /* Disable chain-length checks. */
+ 	.automatic_shrinking = true,
+ 	.head_offset = offsetof(struct sta_info, hash_node),
+ 	.key_offset = offsetof(struct sta_info, addr),
+@@ -322,8 +323,11 @@ static int sta_info_hash_add(struct ieee80211_local *local,
+ 
+ 	rv = rhashtable_insert_fast(&local->sta_hash, &sta->hash_node,
+ 				    sta_rht_params);
+-	if (rv != 0)
++	if (rv != 0) {
++		pr_err("Failed to insert sta %pM in rhashtable, idx: %d  err: %d\n",
++		       sta->sta.addr, idx, rv);
+ 		return rv;
++	}
+ 
+ 	sta->vnext = sta->sdata->sta_vhash[idx];
+ 	rcu_assign_pointer(sta->sdata->sta_vhash[idx], sta);
+-- 
+2.4.3
 
