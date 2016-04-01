@@ -1,38 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:60791 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932699AbcDYTJk (ORCPT
+Received: from eusmtp01.atmel.com ([212.144.249.242]:15537 "EHLO
+	eusmtp01.atmel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752135AbcDAIrR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2016 15:09:40 -0400
-Date: Mon, 25 Apr 2016 15:09:33 -0400 (EDT)
-Message-Id: <20160425.150933.1465492349349273571.davem@davemloft.net> (sfid-20160425_210949_644521_027CE6DF)
-To: nicolas.dichtel@6wind.com
-Cc: netdev@vger.kernel.org, jhs@mojatatu.com,
-	stephen@networkplumber.org, pshelar@nicira.com, aar@pengutronix.de,
-	linux-wpan@vger.kernel.org, wensong@linux-vs.org,
-	horms@verge.net.au, ja@ssi.bg, pablo@netfilter.org,
-	kaber@trash.net, kadlec@blackhole.kfki.hu,
-	lvs-devel@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org
-Subject: Re: [PATCH net-next 0/9] netlink: align attributes when needed
- (patchset #2)
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1461572722-6029-1-git-send-email-nicolas.dichtel@6wind.com>
-References: <1461572722-6029-1-git-send-email-nicolas.dichtel@6wind.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Fri, 1 Apr 2016 04:47:17 -0400
+From: Leo Kim <leo.kim@atmel.com>
+To: <gregkh@linuxfoundation.org>
+CC: <devel@driverdev.osuosl.org>, <linux-wireless@vger.kernel.org>,
+	<tony.cho@atmel.com>, <glen.lee@atmel.com>, <leo.kim@atmel.com>,
+	<austin.shin@atmel.com>, <Chris.Park@atmel.com>,
+	<adham.abozaeid@atmel.com>, <Nicolas.FERRE@atmel.com>
+Subject: [PATCH 1/7] staging: wilc1000: changes logic when happened mq_send fail
+Date: Fri, 1 Apr 2016 17:44:13 +0900
+Message-ID: <1459500259-27873-1-git-send-email-leo.kim@atmel.com> (sfid-20160401_104722_241249_BD1E91B5)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
-Date: Mon, 25 Apr 2016 10:25:13 +0200
+This patch changes logic when happened mq_send fail.
+The check as a result value that mq_send fail.
+But, regardless of the result value then perform a semaphore up.
+That is an occur that semaphore locking.
+Add to 'else' routine and move to 'else' position a semaphore up.
 
-> This is the continuation (series #2) of the work done to align netlink
-> attributes when these attributes contain some 64-bit fields.
-> 
-> In patch #3, I didn't modify the function ila_encap_nlsize(). I was waiting
-> feedback for this patch: http://patchwork.ozlabs.org/patch/613766/
-> If it's approved, there will be an update to switch nla_total_size() to
-> nla_total_size_64bit() after the merge of net in net-next.
+Signed-off-by: Leo Kim <leo.kim@atmel.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 33 +++++++++++++++++--------------
+ 1 file changed, 18 insertions(+), 15 deletions(-)
 
-Looks good, series applied, thanks!
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 04cbff5..12f1630 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -2731,7 +2731,8 @@ int wilc_remove_wep_key(struct wilc_vif *vif, u8 index)
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+ 		netdev_err(vif->ndev, "Request to remove WEP key\n");
+-	wait_for_completion(&hif_drv->comp_test_key_block);
++	else
++		wait_for_completion(&hif_drv->comp_test_key_block);
+ 
+ 	return result;
+ }
+@@ -2759,7 +2760,8 @@ int wilc_set_wep_default_keyid(struct wilc_vif *vif, u8 index)
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+ 		netdev_err(vif->ndev, "Default key index\n");
+-	wait_for_completion(&hif_drv->comp_test_key_block);
++	else
++		wait_for_completion(&hif_drv->comp_test_key_block);
+ 
+ 	return result;
+ }
+@@ -2828,7 +2830,8 @@ int wilc_add_wep_key_bss_ap(struct wilc_vif *vif, const u8 *key, u8 len,
+ 
+ 	if (result)
+ 		netdev_err(vif->ndev, "AP - WEP Key\n");
+-	wait_for_completion(&hif_drv->comp_test_key_block);
++	else
++		wait_for_completion(&hif_drv->comp_test_key_block);
+ 
+ 	return result;
+ }
+@@ -2883,8 +2886,8 @@ int wilc_add_ptk(struct wilc_vif *vif, const u8 *ptk, u8 ptk_key_len,
+ 
+ 	if (result)
+ 		netdev_err(vif->ndev, "PTK Key\n");
+-
+-	wait_for_completion(&hif_drv->comp_test_key_block);
++	else
++		wait_for_completion(&hif_drv->comp_test_key_block);
+ 
+ 	return result;
+ }
+@@ -2951,8 +2954,8 @@ int wilc_add_rx_gtk(struct wilc_vif *vif, const u8 *rx_gtk, u8 gtk_key_len,
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+ 		netdev_err(vif->ndev, "RX GTK\n");
+-
+-	wait_for_completion(&hif_drv->comp_test_key_block);
++	else
++		wait_for_completion(&hif_drv->comp_test_key_block);
+ 
+ 	return result;
+ }
+@@ -3098,8 +3101,8 @@ int wilc_disconnect(struct wilc_vif *vif, u16 reason_code)
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+ 		netdev_err(vif->ndev, "Failed to send message: disconnect\n");
+-
+-	wait_for_completion(&hif_drv->comp_test_disconn_block);
++	else
++		wait_for_completion(&hif_drv->comp_test_disconn_block);
+ 
+ 	return result;
+ }
+@@ -3220,8 +3223,8 @@ s32 wilc_get_inactive_time(struct wilc_vif *vif, const u8 *mac,
+ 	result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 	if (result)
+ 		netdev_err(vif->ndev, "Failed to send get host ch param\n");
+-
+-	wait_for_completion(&hif_drv->comp_inactive_time);
++	else
++		wait_for_completion(&hif_drv->comp_inactive_time);
+ 
+ 	*pu32InactiveTime = inactive_time;
+ 
+@@ -3502,8 +3505,8 @@ int wilc_deinit(struct wilc_vif *vif)
+ 		result = wilc_mq_send(&hif_msg_q, &msg, sizeof(struct host_if_msg));
+ 		if (result != 0)
+ 			netdev_err(vif->ndev, "deinit : Error(%d)\n", result);
+-
+-		wait_for_completion(&hif_thread_comp);
++		else
++			wait_for_completion(&hif_thread_comp);
+ 
+ 		wilc_mq_destroy(&hif_msg_q);
+ 	}
+@@ -3882,8 +3885,8 @@ int wilc_del_allstation(struct wilc_vif *vif, u8 mac_addr[][ETH_ALEN])
+ 
+ 	if (result)
+ 		netdev_err(vif->ndev, "wilc_mq_send fail\n");
+-
+-	wait_for_completion(&hif_wait_response);
++	else
++		wait_for_completion(&hif_wait_response);
+ 
+ 	return result;
+ }
+-- 
+1.9.1
+
