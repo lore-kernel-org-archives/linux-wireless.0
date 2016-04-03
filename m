@@ -1,50 +1,43 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:35660 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754544AbcDEGjK (ORCPT
+Received: from sender153-mail.zoho.com ([74.201.84.153]:21760 "EHLO
+	sender153-mail.zoho.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753952AbcDCQUM (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 02:39:10 -0400
-Received: by mail-pf0-f195.google.com with SMTP id r187so498716pfr.2
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 23:39:10 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 11/14] staging: wilc1000: remove unused hif_drv in host_int_get_assoc_res_info
-Date: Tue,  5 Apr 2016 15:38:29 +0900
-Message-Id: <1459838312-16506-11-git-send-email-chaehyun.lim@gmail.com> (sfid-20160405_085528_664232_3D3ADF03)
-In-Reply-To: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
+	Sun, 3 Apr 2016 12:20:12 -0400
+Subject: Re: GDM7240 - NULL pointer dereference
+To: poma <pomidorabelisima@gmail.com>
+References: <5700ED33.6020200@zoho.com> <57010C05.1050107@gmail.com>
+Cc: linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	netdev@vger.kernel.org, Oliver Neukum <oneukum@suse.com>
+From: Alex <alex3kov@zoho.com>
+Message-ID: <570142B5.9060800@zoho.com> (sfid-20160403_182019_672747_3F131B61)
+Date: Sun, 3 Apr 2016 19:20:05 +0300
+MIME-Version: 1.0
+In-Reply-To: <57010C05.1050107@gmail.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unused hif_drv in host_int_get_assoc_res_info.
-There is no need to check null and print debug log.
+Thanks, looks like exactly the same issue, I'll check if it works on 4.5.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 ------
- 1 file changed, 6 deletions(-)
+/--Regards, Alex/
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 7b28ae5..d23c8ba 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3106,12 +3106,6 @@ static s32 host_int_get_assoc_res_info(struct wilc_vif *vif,
- {
- 	s32 result = 0;
- 	struct wid wid;
--	struct host_if_drv *hif_drv = vif->hif_drv;
--
--	if (!hif_drv) {
--		netdev_err(vif->ndev, "Driver is null\n");
--		return -EFAULT;
--	}
- 
- 	wid.id = (u16)WID_ASSOC_RES_INFO;
- 	wid.type = WID_STR;
--- 
-2.8.0
+On 03/04/16 15:26, poma wrote:
+> On 03.04.2016 12:15, Alex wrote:
+>> Hello,
+>> [1.] System hang when connecting USB modem (LU150)
+>> [2.] I'm running 4.4.5 kernel (Arch Linux). When this modem is connected
+>> I'm getting below trace in journal and system becomes unusable - lsusb,
+>> logout and some other operations lead to a complete hang, the only way
+>> out is hardware power off. This modem works perfectly on 4.1.20 kernel -
+>> attaching all outputs for both kernels.
+> ...
+>
+> See if it is related to
+> http://thread.gmane.org/gmane.linux.usb.general/135626
+>
+> if so, kernel >= 4.5
+> i.e.
+> https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/drivers/net/usb/cdc_ether.c?h=linux-4.5.y&id=29c6dd5
+>
 
