@@ -1,52 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37108 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752330AbcD1TTR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2016 15:19:17 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 07/11] rtl8xxxu: rename rtl8723a_channel_group() to rtl8xxxu_gen1_channel_to_group()
-Date: Thu, 28 Apr 2016 15:19:11 -0400
-Message-Id: <1461871155-11826-8-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160428_211936_961255_C06ACB87)
-In-Reply-To: <1461871155-11826-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1461871155-11826-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:34268 "EHLO
+	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753733AbcDCWQ7 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Apr 2016 18:16:59 -0400
+Received: by mail-pf0-f173.google.com with SMTP id c20so21524416pfc.1
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Apr 2016 15:16:59 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, wcn36xx@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 09/15] wcn36xx: Parse trigger_ba response properly
+Date: Sun,  3 Apr 2016 15:16:40 -0700
+Message-Id: <1459721806-11817-9-git-send-email-bjorn.andersson@linaro.org> (sfid-20160404_002018_143704_2FB41AAB)
+In-Reply-To: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
+References: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-This function is generic for most (if not all) gen1 parts, so rename
-it to reflect this.
+This message does not follow the canonical format and needs it's own
+parser.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wcn36xx/smd.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index 34f94bb..9b12aed 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -1053,7 +1053,7 @@ static void rtl8xxxu_stop_tx_beacon(struct rtl8xxxu_priv *priv)
-  *
-  * Note: We index from 0 in the code
-  */
--static int rtl8723a_channel_to_group(int channel)
-+static int rtl8xxxu_gen1_channel_to_group(int channel)
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 76c6856ed932..7f315d098f52 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -1968,6 +1968,17 @@ out:
+ 	return ret;
+ }
+ 
++static int wcn36xx_smd_trigger_ba_rsp(void *buf, int len)
++{
++	struct wcn36xx_hal_trigger_ba_rsp_msg *rsp;
++
++	if (len < sizeof(*rsp))
++		return -EINVAL;
++
++	rsp = (struct wcn36xx_hal_trigger_ba_rsp_msg *) buf;
++	return rsp->status;
++}
++
+ int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index)
  {
- 	int group;
- 
-@@ -1350,7 +1350,7 @@ rtl8xxxu_gen1_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
- 	u8 val8;
- 	int group, i;
- 
--	group = rtl8723a_channel_to_group(channel);
-+	group = rtl8xxxu_gen1_channel_to_group(channel);
- 
- 	cck[0] = priv->cck_tx_power_index_A[group] - 1;
- 	cck[1] = priv->cck_tx_power_index_B[group] - 1;
+ 	struct wcn36xx_hal_trigger_ba_req_msg msg_body;
+@@ -1992,8 +2003,7 @@ int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index)
+ 		wcn36xx_err("Sending hal_trigger_ba failed\n");
+ 		goto out;
+ 	}
+-	ret = wcn36xx_smd_rsp_status_check_v2(wcn, wcn->hal_buf,
+-						wcn->hal_rsp_len);
++	ret = wcn36xx_smd_trigger_ba_rsp(wcn->hal_buf, wcn->hal_rsp_len);
+ 	if (ret) {
+ 		wcn36xx_err("hal_trigger_ba response failed err=%d\n", ret);
+ 		goto out;
 -- 
-2.5.5
+2.5.0
 
