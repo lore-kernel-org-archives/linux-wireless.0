@@ -1,64 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:58473 "EHLO mga09.intel.com"
+Received: from canardo.mork.no ([148.122.252.1]:37837 "EHLO canardo.mork.no"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752285AbcDJK21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2016 06:28:27 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Gucea Doru <gucea.doru@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Gucea, Doru" <doru.gucea@intel.com>
-Subject: RE: iwlwifi monitor mode: No data frame captured on 5 Ghz
-Date: Sun, 10 Apr 2016 10:28:22 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EACFDF2@hasmsx107.ger.corp.intel.com> (sfid-20160410_123440_864749_C62C9BCB)
-References: <CANfLQrYTqUQGoj+Xr1XrKJrh8oaBB+qt8YeFwo0EyhbC-RpnNg@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32EAA379D@hasmsx107.ger.corp.intel.com>
-	<CANfLQrad-1C3Wzy9M+=J7nzjQOcgam9CdJVDR2KC=KipZRpbkA@mail.gmail.com>
-	<1459863253.21527.2.camel@intel.com>
- <CANfLQrbjCYaVa7-pq3xxPhmjM+MY5ky-isV7+yYLLFVkDCMr2Q@mail.gmail.com>
-In-Reply-To: <CANfLQrbjCYaVa7-pq3xxPhmjM+MY5ky-isV7+yYLLFVkDCMr2Q@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+	id S1751566AbcDCNSj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 3 Apr 2016 09:18:39 -0400
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To: Alex <alex3kov@zoho.com>
+Cc: linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
+	netdev@vger.kernel.org, Oliver Neukum <oneukum@suse.com>,
+	"David S. Miller" <davem@davemloft.net>
+Subject: Re: PROBLEM: System hang when connecting USB modem (GCT/Yota LU150)
+References: <5700ED33.6020200@zoho.com>
+Date: Sun, 03 Apr 2016 15:18:22 +0200
+In-Reply-To: <5700ED33.6020200@zoho.com> (Alex's message of "Sun, 3 Apr 2016
+	13:15:15 +0300")
+Message-ID: <87h9fibzkx.fsf@nemi.mork.no> (sfid-20160403_151848_062485_A901B536)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBPbiBUdWUsIEFwciA1LCAyMDE2IGF0IDQ6MzQgUE0sIEdydW1iYWNoLCBFbW1hbnVlbA0KPiA8
-ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPiB3cm90ZToNCj4gPiBPbiBUdWUsIDIwMTYtMDQt
-MDUgYXQgMTY6MjUgKzAzMDAsIEd1Y2VhIERvcnUgd3JvdGU6DQo+ID4+IE9uIFR1ZSwgQXByIDUs
-IDIwMTYgYXQgMTowMCBQTSwgR3J1bWJhY2gsIEVtbWFudWVsDQo+ID4+IDxlbW1hbnVlbC5ncnVt
-YmFjaEBpbnRlbC5jb20+IHdyb3RlOg0KPiA+PiA+ID4NCj4gPj4gPiA+IEhlbGxvLA0KPiA+PiA+
-ID4NCj4gPj4gPiA+IEkgYW0gdHJ5aW5nIHRvIGNhcHR1cmUgcGFja2V0cyB0aGF0IGFyZSBleGNo
-YW5nZWQgYmV0d2VlbiBhbiBBUA0KPiA+PiA+ID4gYW5kIGEgc21hcnRwaG9uZSBvbiB0aGUgNUdo
-eiBmcmVxdWVuY3kuIEZvciBnZW5lcmF0aW5nIHRyYWZmaWMsIEkNCj4gPj4gPiA+IHVwbG9hZCBV
-RFAgdHJhZmZpYyBmcm9tIGEgbGFwdG9wIFBDIHRvd2FyZHMgdGhlIHNtYXJ0cGhvbmUgdXNpbmcN
-Cj4gPj4gPiA+IGlwZXJmLg0KPiA+PiA+ID4NCj4gPj4gPiA+IFRoZSBwcm9ibGVtIGlzIHRoYXQg
-SSBjYW4gc2VlIF9vbmx5XyB0aGUgY29udHJvbCBmcmFtZXMgbGlrZQ0KPiA+PiA+ID4gUlRTL0NU
-UywgQmxvY2sgQUNLLCB3aGlsZSB0aGUgZGF0YSBwYWNrZXRzIGFyZSBub3QgY2FwdHVyZWQuIEkN
-Cj4gPj4gPiA+IHVwbG9hZGVkIHRoZSBXaXJlc2hhcmsgY2FwdHVyZSBmaWxlcyBhdCBbMV0gKGxv
-Y2F0ZWQgaW5zaWRlIHRoZQ0KPiA+PiA+ID4gZm9sZGVycyB3aG9zZSBuYW1lIHN0YXJ0cyB3aXRo
-IDVHaHopLg0KPiA+PiA+DQo+ID4+ID4gTW9zdCBsaWtlbHkgdGhlIHBhY2tldHMgb24gQSBiYW5k
-IGhhdmUgYSBWSFQgcHJlYW1ibGUgYW5kIHlvdXIgU0tVDQo+ID4+ID4gaXMgMTFOIG9ubHkuDQo+
-ID4+DQo+ID4+IE15IGNhcmQsIEludGVsIDcyNjAgWzFdICBzdXBwb3J0cyA4MDIuMTEgYWMuIFNv
-IGl0IHNob3VsZCBhbHNvDQo+ID4+IHN1cHBvcnQgVkhULCByaWdodD8gSXMgdGhlcmUgYW55IGlu
-dGVyZmFjZSBpbiB1c2VyLXNwYWNlIGZvciBjaGVja2luZw0KPiA+PiBhZnRlciBWSFQ/DQo+ID4N
-Cj4gPiA3MjYwIGhhcyBzZXZlcmFsIGZsYXZvcnMuIFRoZSBvbmUgeW91IGhhdmUgZG9lc24ndCBz
-dXBwb3J0IFZIVDoNCj4gPj4gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IERldGVjdGVkIEludGVsKFIp
-IER1YWwgQmFuZCBXaXJlbGVzcyBOIDcyNjANCj4gPg0KPiA+IER1YWwgQmFuZCBtZWFucyB5b3Ug
-aGF2ZSBzdXBwb3J0IGZvciA1LjJHSHosIGJ1dCBXaXJlbGVzcyBOLCBtZWFucyBubw0KPiA+IFZI
-VC4NCj4gDQo+IE9uZSBvZiBteSBjb2xsZWFndWVzIGhhZCBhbiBJbnRlbCA3MjYwIEFDIGNhcmQg
-c28gSSByZXBlYXRlZCB0aGUNCj4gZXhwZXJpbWVudHM6DQo+IC0gaWYgSSBzZXQgdGhlIGNoYW5u
-ZWwgd2lkdGggdG8gMjBNaHogZnJvbSB0aGUgQVAgYW5kIHRoZSBtb25pdG9yIGludGVyZmFjZQ0K
-PiB1c2luZyB0aGUgY29tbWFuZCBpdyB3bGFuMCBzZXQgZnJlcSA1MjQwIEhUMjArIEkgY2FuIHNl
-ZSBkYXRhIGZyYW1lcyBhbmQNCj4gdGhlIEJsb2NrIEFDS3MgZm9yIHRoZXNlIGZyYW1lczsNCj4g
-LSBpZiBJIHNldCB0aGUgY2hhbm5lbCB3aWR0aCB0byA0ME1oeiBmcm9tIHRoZSBBUCBhbmQgdGhl
-IG1vbml0b3IgaW50ZXJmYWNlDQo+IHVzaW5nIHRoZSBjb21tYW5kIGl3IHdsYW4wIHNldCBmcmVx
-IDUyNDAgSFQ0MC0gSSBjYW4gc2VlIGRhdGEgZnJhbWVzIGFuZA0KPiB0aGUgQmxvY2sgQUNLcyBm
-b3IgdGhlc2UgZnJhbWVzOw0KPiAtIElmIEkgc2V0IHRoZSBjaGFubmVsIHdpZHRoIHRvIDgwTWh6
-IGZyb20gdGhlIEFQIEkgZG9uJ3QgaG93IHRvIHNldCB1cCB0aGUNCj4gbW9uaXRvciBpbnRlcmZh
-Y2UuIEkgdHJpZWQgd2l0aCBpdyB3bGFuMCBzZXQgZnJlcSA1MjQwIEhUNDArIGJ1dCBpdCB0ZWxs
-cyBtZQ0KPiB0aGF0IHRoZSBhcmd1bWVudCBpcyBpbnZhbGlkLg0KPiANCj4gSXMgdGhlIGl3bHdp
-ZmkgZHJpdmVyIGNhcGFibGUgb2YgY2FwdHVyaW5nIGRhdGEgZnJhbWVzIHdoZW4gdGhlIGNoYW5u
-ZWwNCj4gYm9uZGluZyBpcyBzZXQgdG8gODBNaHo/DQoNCmRldiA8ZGV2bmFtZT4gc2V0IGZyZXEg
-PGNvbnRyb2wgZnJlcT4gWzIwfDQwfDgwfDgwKzgwfDE2MF0gWzxjZW50ZXIgZnJlcSAxPl0gWzxj
-ZW50ZXIgZnJlcSAyPl0NCg0KWW91IGNhbiB0YWtlIGNlbnRlcl9mcmVxMSBmcm9tIHRoZSBvdXRw
-dXQgb2YgaXcgZGV2IG9uIGEgZGV2aWNlIHRoYXQgaXMgYXNzb2NpYXRlZCB0byB0aGUgc2FtZSBB
-UC4NCg==
+Alex <alex3kov@zoho.com> writes:
+
+> Apr 01 11:33:24 arch kernel: BUG: unable to handle kernel NULL pointer dereference at 0000000000000003
+> Apr 01 11:33:24 arch kernel: IP: [<ffffffffa0bc62a1>] usbnet_generic_cdc_bind+0x171/0x710 [cdc_ether]
+..
+> Apr 01 11:33:24 arch kernel: Call Trace:
+> Apr 01 11:33:24 arch kernel:  [<ffffffffa0bcf5b2>] generic_rndis_bind+0x62/0x520 [rndis_host]
+> Apr 01 11:33:24 arch kernel:  [<ffffffff81499e82>] ? alloc_netdev_mqs+0x302/0x440
+> Apr 01 11:33:24 arch kernel:  [<ffffffffa0bcfa83>] rndis_bind+0x13/0x20 [rndis_host]
+
+This is most likely fixed by commit 29c6dd591bbd ("cdc-acm: fix NULL
+pointer reference").  Which should defintely go into the 4.4 stable
+series.  Could you please add it to your v4.4 queue, David?
+
+Ignore the "cdc-acm" prefix. The patch fixes a NULL pointer dereference
+in the cdc_ether/rndis_host drivers introduced by commit 823bd3433424
+("cdc-ether: switch to common CDC parser")
+
+
+Bjørn
