@@ -1,66 +1,110 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mezzanine.sirena.org.uk ([106.187.55.193]:54818 "EHLO
-	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932404AbcDSRMs (ORCPT
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:32936 "EHLO
+	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752971AbcDCWQv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 13:12:48 -0400
-Date: Tue, 19 Apr 2016 18:12:39 +0100
-From: Mark Brown <broonie@kernel.org>
-To: "Reizer, Eyal" <eyalr@ti.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>,
-	Eyal Reizer <eyalreizer@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>
-Message-ID: <20160419171239.GC3217@sirena.org.uk> (sfid-20160419_191311_266969_F60B6993)
-References: <1460273570-12298-1-git-send-email-eyalr@ti.com>
- <14313437.cDJIgY3kzo@wuerfel>
- <8665E2433BC68541A24DFFCA87B70F5B360BF614@DFRE01.ent.ti.com>
- <1463330011.BhWEcYYuGD@wuerfel>
- <8665E2433BC68541A24DFFCA87B70F5B360C0745@DFRE01.ent.ti.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="4cv0JMvpEKiCIDl2"
-In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B360C0745@DFRE01.ent.ti.com>
-Subject: Re: [PATCHv2] wlcore: spi: add wl18xx support
+	Sun, 3 Apr 2016 18:16:51 -0400
+Received: by mail-pa0-f50.google.com with SMTP id zm5so130355803pac.0
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Apr 2016 15:16:50 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, wcn36xx@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Jason Mobarak <jam@cozybit.com>
+Subject: [PATCH v2 02/15] wcn36xx: Pad TIM PVM if needed
+Date: Sun,  3 Apr 2016 15:16:33 -0700
+Message-Id: <1459721806-11817-2-git-send-email-bjorn.andersson@linaro.org> (sfid-20160404_002201_268098_3935F8F8)
+In-Reply-To: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
+References: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
---4cv0JMvpEKiCIDl2
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+The wcn36xx FW expects a fixed size TIM PVM in the beacon template. If
+supplied with a shorter than expected PVM it will overwrite the IE
+following the TIM.
 
-On Tue, Apr 19, 2016 at 09:05:45AM +0000, Reizer, Eyal wrote:
+Squashed with fix from Jason Mobarak <jam@cozybit.com>:
+Patch "wcn36xx: Pad TIM PVM if needed" has caused a regression in mesh
+beaconing.  The field tim_off is always 0 for mesh mode, and thus
+pvm_len (referring to the TIM length field) and pad are both incorrectly
+calculated.  Thus, msg_body.beacon_length is incorrectly calculated for
+mesh mode. Fix this.
 
-> Understood. As this special CS manipulation is unique to wspi (wilink spi=
-)  I think the=20
-> best option is to move this gpio allocation into wlcore_spi as a new devi=
-ce tree entry
-> used only by this driver.
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Jason Mobarak <jam@cozybit.com>
+[bjorn: squashed in Jason's fixup]
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/hal.h |  3 +++
+ drivers/net/wireless/ath/wcn36xx/smd.c | 27 +++++++++++++++++++++++++--
+ 2 files changed, 28 insertions(+), 2 deletions(-)
 
-That sounds like it is going to break normal chip select operation which
-doesn't seem like a good idea either.  What exactly are you trying to do
-here?  If you need to send some extra bytes at the end of a transfer why
-not just do that, or add an empty transfer with a delay.  It's hard to
-see what more you could do with only control of the chip select...
+diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
+index 4fd77ccc2287..6f99b6134e4e 100644
+--- a/drivers/net/wireless/ath/wcn36xx/hal.h
++++ b/drivers/net/wireless/ath/wcn36xx/hal.h
+@@ -54,6 +54,9 @@
+ /* Default Beacon template size. */
+ #define BEACON_TEMPLATE_SIZE 0x17C
+ 
++/* Minimum PVM size that the FW expects. See comment in smd.c for details. */
++#define TIM_MIN_PVM_SIZE 6
++
+ /* Param Change Bitmap sent to HAL */
+ #define PARAM_BCN_INTERVAL_CHANGED                      (1 << 0)
+ #define PARAM_SHORT_PREAMBLE_CHANGED                 (1 << 1)
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index ff3ed2461a69..089a7e445cd6 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -1375,12 +1375,19 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+ 			    u16 p2p_off)
+ {
+ 	struct wcn36xx_hal_send_beacon_req_msg msg_body;
+-	int ret = 0;
++	int ret = 0, pad, pvm_len;
+ 
+ 	mutex_lock(&wcn->hal_mutex);
+ 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SEND_BEACON_REQ);
+ 
+-	msg_body.beacon_length = skb_beacon->len;
++	pvm_len = skb_beacon->data[tim_off + 1] - 3;
++	pad = TIM_MIN_PVM_SIZE - pvm_len;
++
++	/* Padding is irrelevant to mesh mode since tim_off is always 0. */
++	if (vif->type == NL80211_IFTYPE_MESH_POINT)
++		pad = 0;
++
++	msg_body.beacon_length = skb_beacon->len + pad;
+ 	/* TODO need to find out why + 6 is needed */
+ 	msg_body.beacon_length6 = msg_body.beacon_length + 6;
+ 
+@@ -1393,6 +1400,22 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
+ 	memcpy(msg_body.beacon, skb_beacon->data, skb_beacon->len);
+ 	memcpy(msg_body.bssid, vif->addr, ETH_ALEN);
+ 
++	if (pad > 0) {
++		/*
++		 * The wcn36xx FW has a fixed size for the PVM in the TIM. If
++		 * given the beacon template from mac80211 with a PVM shorter
++		 * than the FW expectes it will overwrite the data after the
++		 * TIM.
++		 */
++		wcn36xx_dbg(WCN36XX_DBG_HAL, "Pad TIM PVM. %d bytes at %d\n",
++			    pad, pvm_len);
++		memmove(&msg_body.beacon[tim_off + 5 + pvm_len + pad],
++			&msg_body.beacon[tim_off + 5 + pvm_len],
++			skb_beacon->len - (tim_off + 5 + pvm_len));
++		memset(&msg_body.beacon[tim_off + 5 + pvm_len], 0, pad);
++		msg_body.beacon[tim_off + 1] += pad;
++	}
++
+ 	/* TODO need to find out why this is needed? */
+ 	if (vif->type == NL80211_IFTYPE_MESH_POINT)
+ 		/* mesh beacon don't need this, so push further down */
+-- 
+2.5.0
 
---4cv0JMvpEKiCIDl2
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAEBCAAGBQJXFmcGAAoJECTWi3JdVIfQV3cH/13tX6IFbyU7cJBFsp94l8u0
-RZ8ygWZrra/QQMyPguVMdheFO50a6wPZL1nZ0iPa2Zp8b0RUCjCuuDxtjoJf5QD6
-39GH1LuyIK122A2S1DG5aRP8HjUtrOT5s1oE8IwGSTxSow9E60bJPOHoDt23uoFi
-EDa6F+MnQ0QhPSQhKdUEwVCrNCep+qEmQxOT83fei+xd3MFAFtb9vTACNaPexOO4
-iRU94K2wUO1np7ug8M9Q4Sx5inkXh+Fy3Ug34x2fWG8prhqa/TDXXfu/IyfDwlpM
-0UIWRQheG7zxMdGqGsXL84gI4k6mNZKn0f37vwmGV3ioan07BzSY+LkBREXpv7I=
-=FdXk
------END PGP SIGNATURE-----
-
---4cv0JMvpEKiCIDl2--
