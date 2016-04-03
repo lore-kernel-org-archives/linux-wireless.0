@@ -1,66 +1,76 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39465 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752093AbcDRQNq (ORCPT
+Received: from mail-pf0-f173.google.com ([209.85.192.173]:34279 "EHLO
+	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753927AbcDCWRA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 12:13:46 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Arend van Spriel <arend.vanspriel@broadcom.com>
-Cc: Arend van Spriel <arend@broadcom.com>,
-	Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH V11 2/2] brcmfmac: add support for nl80211 BSS_SELECT feature
-References: <1456947439-28968-1-git-send-email-arend@broadcom.com>
-	<1456947439-28968-2-git-send-email-arend@broadcom.com>
-	<877ffypvre.fsf@kamboji.qca.qualcomm.com>
-	<57139F97.5010106@broadcom.com>
-Date: Mon, 18 Apr 2016 19:13:37 +0300
-In-Reply-To: <57139F97.5010106@broadcom.com> (Arend van Spriel's message of
-	"Sun, 17 Apr 2016 16:37:11 +0200")
-Message-ID: <87vb3eki8e.fsf@kamboji.qca.qualcomm.com> (sfid-20160418_181349_182074_AC9BF096)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 3 Apr 2016 18:17:00 -0400
+Received: by mail-pf0-f173.google.com with SMTP id c20so21524655pfc.1
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Apr 2016 15:17:00 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, wcn36xx@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 10/15] wcn36xx: Copy all members in config_sta v1 conversion
+Date: Sun,  3 Apr 2016 15:16:41 -0700
+Message-Id: <1459721806-11817-10-git-send-email-bjorn.andersson@linaro.org> (sfid-20160404_002034_802215_C01A256C)
+In-Reply-To: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
+References: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Arend van Spriel <arend.vanspriel@broadcom.com> writes:
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-> On 15-04-16 20:33, Kalle Valo wrote:
->> Arend van Spriel <arend@broadcom.com> writes:
->> 
->>> Announce support for nl80211 feature BSS_SELECT and process
->>> BSS selection behaviour provided in .connect() callback.
->>>
->>> Reviewed-by: Hante Meuleman <meuleman@broadcom.com>
->>> Reviewed-by: Franky (Zhenhui) Lin <frankyl@broadcom.com>
->>> Reviewed-by: Pieter-Paul Giesberts <pieterpg@broadcom.com>
->>> Reviewed-by: Lei Zhang <leizh@broadcom.com>
->>> Signed-off-by: Arend van Spriel <arend@broadcom.com>
->> 
->> Sorry, didn't apply anymore and I don't dare to try to fix the
->> conflicts:
->> 
->> Applying: brcmfmac: add support for nl80211 BSS_SELECT feature
->> Using index info to reconstruct a base tree...
->> Falling back to patching base and 3-way merge...
->> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
->> CONFLICT (content): Merge conflict in drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
->> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/common.c
->> Auto-merging drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->> CONFLICT (content): Merge conflict in drivers/net/wireless/broadcom/brcm80211/brcmfmac/cfg80211.c
->> 
->> So please rebase.
->
-> It probably never applied as I created the patch together with nl80211
-> patch on mac80211-next/master branch. Not sure how to handle it
-> otherwise.
+When converting to version 1 of the config_sta struct not all
+members where copied. This fixes the problem of multicast frames
+not being delivered on an encrypted network.
 
-Yeah, I don't see any better way to do this either and I think the way
-you did is best.
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
-> Anyway, I will send out a rebased version soon.
-
-Got it, thanks.
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index 7f315d098f52..ebb446272d21 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -949,17 +949,32 @@ static void wcn36xx_smd_convert_sta_to_v1(struct wcn36xx *wcn,
+ 	memcpy(&v1->mac, orig->mac, ETH_ALEN);
+ 	v1->aid = orig->aid;
+ 	v1->type = orig->type;
++	v1->short_preamble_supported = orig->short_preamble_supported;
+ 	v1->listen_interval = orig->listen_interval;
++	v1->wmm_enabled = orig->wmm_enabled;
+ 	v1->ht_capable = orig->ht_capable;
+-
++	v1->tx_channel_width_set = orig->tx_channel_width_set;
++	v1->rifs_mode = orig->rifs_mode;
++	v1->lsig_txop_protection = orig->lsig_txop_protection;
+ 	v1->max_ampdu_size = orig->max_ampdu_size;
+ 	v1->max_ampdu_density = orig->max_ampdu_density;
+ 	v1->sgi_40mhz = orig->sgi_40mhz;
+ 	v1->sgi_20Mhz = orig->sgi_20Mhz;
+-
++	v1->rmf = orig->rmf;
++	v1->encrypt_type = orig->encrypt_type;
++	v1->action = orig->action;
++	v1->uapsd = orig->uapsd;
++	v1->max_sp_len = orig->max_sp_len;
++	v1->green_field_capable = orig->green_field_capable;
++	v1->mimo_ps = orig->mimo_ps;
++	v1->delayed_ba_support = orig->delayed_ba_support;
++	v1->max_ampdu_duration = orig->max_ampdu_duration;
++	v1->dsss_cck_mode_40mhz = orig->dsss_cck_mode_40mhz;
+ 	memcpy(&v1->supported_rates, &orig->supported_rates,
+ 	       sizeof(orig->supported_rates));
+ 	v1->sta_index = orig->sta_index;
++	v1->bssid_index = orig->bssid_index;
++	v1->p2p = orig->p2p;
+ }
+ 
+ static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn,
 -- 
-Kalle Valo
+2.5.0
+
