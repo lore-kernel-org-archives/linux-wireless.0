@@ -1,79 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f54.google.com ([209.85.218.54]:33377 "EHLO
-	mail-oi0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751856AbcDLWPU (ORCPT
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:36041 "EHLO
+	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753634AbcDCWQ5 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2016 18:15:20 -0400
-MIME-Version: 1.0
-In-Reply-To: <867653EE-136B-488D-8F85-716B1ED9BD1A@intel.com>
-References: <1460388459-21090-1-git-send-email-sudipm.mukherjee@gmail.com>
-	<CAHp75VfO3A+HBjkjc9WC9jzB9gtYrVM6izLmpiqLntChGOzjMA@mail.gmail.com>
-	<867653EE-136B-488D-8F85-716B1ED9BD1A@intel.com>
-Date: Wed, 13 Apr 2016 01:15:19 +0300
-Message-ID: <CAHp75VfACJiVvdtA4Ln9nXq8U7i=7mX17YYq6X-=H3aFS8EyBg@mail.gmail.com> (sfid-20160413_001536_322665_183D74D1)
-Subject: Re: [PATCH] mwifiex: fix possible NULL dereference
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-To: "Rustad, Mark D" <mark.d.rustad@intel.com>
-Cc: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
-	Amitkumar Karwar <akarwar@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"open list:TI WILINK WIRELES..." <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
-Content-Type: text/plain; charset=UTF-8
+	Sun, 3 Apr 2016 18:16:57 -0400
+Received: by mail-pf0-f175.google.com with SMTP id e128so108555247pfe.3
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Apr 2016 15:16:56 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, wcn36xx@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 07/15] wcn36xx: Fetch private sta data from sta entry instead of from vif
+Date: Sun,  3 Apr 2016 15:16:38 -0700
+Message-Id: <1459721806-11817-7-git-send-email-bjorn.andersson@linaro.org> (sfid-20160404_001942_450543_0448C046)
+In-Reply-To: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
+References: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 12, 2016 at 8:43 PM, Rustad, Mark D <mark.d.rustad@intel.com> wrote:
-> Andy Shevchenko <andy.shevchenko@gmail.com> wrote:
->
->> On Mon, Apr 11, 2016 at 6:27 PM, Sudip Mukherjee
->> <sudipm.mukherjee@gmail.com> wrote:
->>>
->>> From: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
->>>
->>> We have a check for card just after dereferencing it. So if it is NULL
->>> we have already dereferenced it before its check. Lets dereference it
->>> after checking card for NULL.
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
->>> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
->>> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
->>> @@ -2884,10 +2884,11 @@ static void mwifiex_unregister_dev(struct
->>> mwifiex_adapter *adapter)
->>>  {
->>>         struct pcie_service_card *card = adapter->card;>>
->>
->> Let's say it's 0.
->>
->>>        const struct mwifiex_pcie_card_reg *reg;
->>> -       struct pci_dev *pdev = card->dev;>>
->>
->> This would be equal to offset of dev member in pcie_service_card struct.
->>
->> Nothing wrong here.
->
-> Actually, that is not true. The dereference of card tells the compiler that
-> card can't be NULL, so it is free to eliminate the check below.
-> Unbelievably, this can even happen for a reference such as &ptr->thing where
-> the pointer isn't even actually dereferenced at all!
+For consistency with other code.
 
-Hmm... Can we look at the result assembly? If I'm not mistaken,
-compiler wouldn't even try to calculate pdev pointer before first use
-of it.
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
->
->>> +       struct pci_dev *pdev;
->>>         int i;
->>>
->>>         if (card) {
->>> +               pdev = card->dev;
->>>                 if (card->msix_enable) {
->>>                         for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
-
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
+index 30f015d3a9e6..a23738deb5b3 100644
+--- a/drivers/net/wireless/ath/wcn36xx/main.c
++++ b/drivers/net/wireless/ath/wcn36xx/main.c
+@@ -386,7 +386,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
+ {
+ 	struct wcn36xx *wcn = hw->priv;
+ 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
+-	struct wcn36xx_sta *sta_priv = vif_priv->sta;
++	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
+ 	int ret = 0;
+ 	u8 key[WLAN_MAX_KEY_LEN];
+ 
 -- 
-With Best Regards,
-Andy Shevchenko
+2.5.0
+
