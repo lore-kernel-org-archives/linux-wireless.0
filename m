@@ -1,77 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:45216 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755447AbcDGMYp (ORCPT
+Received: from mail-pa0-f44.google.com ([209.85.220.44]:36729 "EHLO
+	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753835AbcDCWRE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 08:24:45 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Eyal Reizer <eyalreizer@gmail.com>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Eyal Reizer <eyalr@ti.com>,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH] wlcore: spi: add wl18xx support
-References: <1459343218-24536-1-git-send-email-eyalr@ti.com>
-Date: Thu, 07 Apr 2016 15:24:40 +0300
-In-Reply-To: <1459343218-24536-1-git-send-email-eyalr@ti.com> (Eyal Reizer's
-	message of "Wed, 30 Mar 2016 16:06:58 +0300")
-Message-ID: <87shyx38tz.fsf@purkki.adurom.net> (sfid-20160407_142505_941019_7620A32C)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Sun, 3 Apr 2016 18:17:04 -0400
+Received: by mail-pa0-f44.google.com with SMTP id tt10so130156209pab.3
+        for <linux-wireless@vger.kernel.org>; Sun, 03 Apr 2016 15:17:04 -0700 (PDT)
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+To: Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, wcn36xx@lists.infradead.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 11/15] wcn36xx: Use allocated self sta index instead of hard coded
+Date: Sun,  3 Apr 2016 15:16:42 -0700
+Message-Id: <1459721806-11817-11-git-send-email-bjorn.andersson@linaro.org> (sfid-20160404_001857_108196_699DAE93)
+In-Reply-To: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
+References: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Eyal Reizer <eyalreizer@gmail.com> writes:
+From: Pontus Fuchs <pontus.fuchs@gmail.com>
 
-> Add support for using with both wl12xx and wl18xx.
->
-> - all wilink family needs special init command for entering wspi mode.
->   extra clock cycles should be sent after the spi init command while the
->   cs pin is high.
-> - switch to controling the cs pin from the spi driver for achieveing the
->   above.
-> - the selected cs gpio is read from the spi device-tree node using the
->   cs-gpios field and setup as a gpio.
-> - See the example below for specifying the cs gpio using the cs-gpios entry
->
-> &spi0	{
->  	status = "okay";
-> 	pinctrl-names = "default";
-> 	pinctrl-0 = <&spi0_pins>;
-> 	cs-gpios = <&gpio0 5 0>;
-> 	#address-cells = <1>;
-> 	#size-cells = <0>;
->  	wlcore: wlcore@0 {
-> 		compatible = "ti,wl1835";
-> 		vwlan-supply = <&wlan_en_reg>;
-> 		spi-max-frequency = <48000000>;
-> 		reg = <0>;      /* chip select 0 on spi0, ie spi0.0 */
-> 		interrupt-parent = <&gpio0>;
-> 		interrupts = <27 IRQ_TYPE_EDGE_RISING>;
->  	};
-> };
->
-> Signed-off-by: Eyal Reizer <eyalr@ti.com>
+Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+---
+ drivers/net/wireless/ath/wcn36xx/smd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-[...]
-
->  static const struct of_device_id wlcore_spi_of_match_table[] = {
-> -	{ .compatible = "ti,wl1271" },
-> +	{ .compatible = "ti,wl1271", .data = &wl12xx_data},
-> +	{ .compatible = "ti,wl1273", .data = &wl12xx_data},
-> +	{ .compatible = "ti,wl1281", .data = &wl12xx_data},
-> +	{ .compatible = "ti,wl1283", .data = &wl12xx_data},
-> +	{ .compatible = "ti,wl1801", .data = &wl18xx_data},
-> +	{ .compatible = "ti,wl1805", .data = &wl18xx_data},
-> +	{ .compatible = "ti,wl1807", .data = &wl18xx_data},
-> +	{ .compatible = "ti,wl1831", .data = &wl18xx_data},
-> +	{ .compatible = "ti,wl1835", .data = &wl18xx_data},
-> +	{ .compatible = "ti,wl1837", .data = &wl18xx_data},
->  	{ }
-
-Shouldn't you also update bindings/net/wireless/ti,wlcore,spi.txt? Now
-it only mentions about ti,wl1271 and not anything about the rest.
-
-Adding devicetree list for further comments.
-
+diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+index ebb446272d21..e0d5631657c1 100644
+--- a/drivers/net/wireless/ath/wcn36xx/smd.c
++++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+@@ -200,7 +200,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
+ 		sta_params->sta_index = WCN36XX_HAL_STA_INVALID_IDX;
+ 	} else {
+ 		sta_params->type = 0;
+-		sta_params->sta_index = 1;
++		sta_params->sta_index = vif_priv->self_sta_index;
+ 	}
+ 
+ 	sta_params->listen_interval = WCN36XX_LISTEN_INTERVAL(wcn);
 -- 
-Kalle Valo
+2.5.0
+
