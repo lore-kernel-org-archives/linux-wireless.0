@@ -1,68 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:34268 "EHLO
-	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753733AbcDCWQ7 (ORCPT
+Received: from canardo.mork.no ([148.122.252.1]:33641 "EHLO canardo.mork.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753088AbcDCMGN convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Apr 2016 18:16:59 -0400
-Received: by mail-pf0-f173.google.com with SMTP id c20so21524416pfc.1
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Apr 2016 15:16:59 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, wcn36xx@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 09/15] wcn36xx: Parse trigger_ba response properly
-Date: Sun,  3 Apr 2016 15:16:40 -0700
-Message-Id: <1459721806-11817-9-git-send-email-bjorn.andersson@linaro.org> (sfid-20160404_002018_143704_2FB41AAB)
-In-Reply-To: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
+	Sun, 3 Apr 2016 08:06:13 -0400
+From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
+To: David Lin <dlin@marvell.com>
+Cc: Julian Calaby <julian.calaby@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Chor Teck Law <ctlaw@marvell.com>,
+	"Pete Hsieh" <peteh@marvell.com>
+Subject: Re: [PATCH v7] Add new mac80211 driver mwlwifi.
+References: <b11fd1b49b274142b85296c11c634635@SC-EXCH02.marvell.com>
+	<CAGRGNgUxNdbBn7HU+==P9uM3ciN-5pWRXDT+oYzCTLoATCR_xg@mail.gmail.com>
+	<a5d1b2b861294df2badcfe38c74a13db@SC-EXCH02.marvell.com>
+	<CAGRGNgXUVV4GpcSKnG9QLUz1-TQiRoeWLg0MLkYVZOn-QF3U0A@mail.gmail.com>
+	<f8a657d8b0f3417284f65fbe81bcbf29@SC-EXCH02.marvell.com>
+Date: Sun, 03 Apr 2016 14:05:56 +0200
+In-Reply-To: <f8a657d8b0f3417284f65fbe81bcbf29@SC-EXCH02.marvell.com> (David
+	Lin's message of "Thu, 17 Mar 2016 02:10:43 +0000")
+Message-ID: <87lh4uc2xn.fsf@nemi.mork.no> (sfid-20160403_140616_756243_A74EDE04)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+David Lin <dlin@marvell.com> writes:
 
-This message does not follow the canonical format and needs it's own
-parser.
+> We felt some resistance from various people, and get discouraged.
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/smd.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+Sorry to hear that.  I believe this is a misunderstanding.  I am
+convinced that *everyone* who commented on the driver did so with the
+intention to help getting it merged.
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 76c6856ed932..7f315d098f52 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1968,6 +1968,17 @@ out:
- 	return ret;
- }
- 
-+static int wcn36xx_smd_trigger_ba_rsp(void *buf, int len)
-+{
-+	struct wcn36xx_hal_trigger_ba_rsp_msg *rsp;
-+
-+	if (len < sizeof(*rsp))
-+		return -EINVAL;
-+
-+	rsp = (struct wcn36xx_hal_trigger_ba_rsp_msg *) buf;
-+	return rsp->status;
-+}
-+
- int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index)
- {
- 	struct wcn36xx_hal_trigger_ba_req_msg msg_body;
-@@ -1992,8 +2003,7 @@ int wcn36xx_smd_trigger_ba(struct wcn36xx *wcn, u8 sta_index)
- 		wcn36xx_err("Sending hal_trigger_ba failed\n");
- 		goto out;
- 	}
--	ret = wcn36xx_smd_rsp_status_check_v2(wcn, wcn->hal_buf,
--						wcn->hal_rsp_len);
-+	ret = wcn36xx_smd_trigger_ba_rsp(wcn->hal_buf, wcn->hal_rsp_len);
- 	if (ret) {
- 		wcn36xx_err("hal_trigger_ba response failed err=%d\n", ret);
- 		goto out;
--- 
-2.5.0
+I for one would very much like to see this driver in mainline.  But for
+that to happen, you wil have to:
+ 1) create a feature frozen branch for mainline submission
+ 2) respond relatively quickly to comments received, posting new
+    versions of the patch set if necessary
 
+The main issue preventing this driver from being merged so far, in my
+view, is that you have continued to add features between each attemt to
+get it merged.  Adding new features is of course not bad, but you should
+do that in another branch *until* the initial version is accepted.
+
+Let me know if there is anything I can do to help getting this into mainline
+
+Bjørn
