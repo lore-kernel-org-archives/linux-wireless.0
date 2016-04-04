@@ -1,102 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:33612 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932397AbcDFMMr (ORCPT
+Received: from mail-lb0-f173.google.com ([209.85.217.173]:33672 "EHLO
+	mail-lb0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750806AbcDDIYz convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 08:12:47 -0400
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
-To: "Machani, Yaniv" <yanivma@ti.com>
-Subject: Re: AP firmware for TI wl1251 wifi chip (wl1251-fw-ap.bin)
-Date: Wed, 6 Apr 2016 14:12:43 +0200
-Cc: Luciano Coelho <coelho@ti.com>, "Balbi, Felipe" <balbi@ti.com>,
-	"Chalmers, Kevin" <kev@ti.com>, Shahar Levi <shahar_levi@ti.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"Davis, Andrew" <afd@ti.com>, "Mishol, Guy" <guym@ti.com>,
-	Arik Nemtsov <arik@wizery.com>, Gery Kahn <geryk@ti.com>,
-	Felipe Balbi <balbi@kernel.org>,
-	Luciano Coelho <luca@coelho.fi>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Pavel Machek <pavel@ucw.cz>,
-	"Aaro Koskinen" <aaro.koskinen@iki.fi>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	"David Gnedt" <david.gnedt@platinumzone24.at>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Sebastian Reichel <sre@kernel.org>,
-	"Tony Lindgren" <tony@atomide.com>, "Menon, Nishanth" <nm@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <201603200040.26045@pali> <20160404123944.GA8413@pali> <AE1C82FB3D0EC64DB1F752C81CBD1101390F6305@DFRE01.ent.ti.com>
-In-Reply-To: <AE1C82FB3D0EC64DB1F752C81CBD1101390F6305@DFRE01.ent.ti.com>
+	Mon, 4 Apr 2016 04:24:55 -0400
+Received: by mail-lb0-f173.google.com with SMTP id u8so149056684lbk.0
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 01:24:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart486655548.RrR3yeS5Ro";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Message-Id: <201604061412.43684@pali> (sfid-20160406_141322_063365_252D7B1D)
+In-Reply-To: <56FE9A10.1060908@candelatech.com>
+References: <56FE9A10.1060908@candelatech.com>
+Date: Mon, 4 Apr 2016 10:24:53 +0200
+Message-ID: <CA+BoTQ=hNyaTm2+U9-sMy5DJ7fmAWG3MovNsxn1WNthraCsfCA@mail.gmail.com> (sfid-20160404_102503_213814_33E4122E)
+Subject: Re: mac80211 kasan splat, hacked 4.4.6+, ath10k with modified 10.4.3 fw
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Ben Greear <greearb@candelatech.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---nextPart486655548.RrR3yeS5Ro
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+On 1 April 2016 at 17:56, Ben Greear <greearb@candelatech.com> wrote:
+> I saw this splat yesterday evening...  Any ideas on what this could be?
+>
+> I'll add some bounds checking on the rate->idx in case that is the issue...
+>
+>
+> (gdb) l *(sta_set_rate_info_tx+0x1b3)
+> 0x38dcc is in sta_set_rate_info_tx
+> (/home/greearb/git/linux-4.4.dev.y/net/mac80211/cfg.c:457).
+> 452                     u16 brate;
+> 453
+> 454                     sband = sta->local->hw.wiphy->bands[
+> 455
+> ieee80211_get_sdata_band(sta->sdata)];
+> 456                     brate = sband->bitrates[rate->idx].bitrate;
+> 457                     rinfo->legacy = DIV_ROUND_UP(brate, 1 << shift);
+> 458             }
+> 459             if (rate->flags & IEEE80211_TX_RC_40_MHZ_WIDTH)
+> 460                     rinfo->bw = RATE_INFO_BW_40;
+> 461             else if (rate->flags & IEEE80211_TX_RC_80_MHZ_WIDTH)
+> (gdb)
+>
+>
+> ==================================================================
+> BUG: KASAN: global-out-of-bounds in sta_set_rate_info_tx+0x1b3/0x262
+> [mac80211] at addr ffffffffa18a3c0c
+> Read of size 2 by task cat/19440
+> Address belongs to variable ath10k_rates+0xac/0xfffffffffffd04c7
+> [ath10k_core]
 
-On Wednesday 06 April 2016 13:30:22 Machani, Yaniv wrote:
-> On Mon, Apr 04, 2016 at 15:39:44, Pali Roh=C3=A1r wrote:
-> > > In linux-firmware repository [1] is missing AP firmware for TI
-> > > wl1251 chip. There is only STA firmware wl1251-fw.bin which
-> > > supports managed and ad-hoc modes.
-> > >=20
-> > > For other TI wilink chips there are <CHIP>-ap.bin firmware files
-> > > (wl1271-fw-ap.bin and wl128x-fw-ap.bin) which support AP mode.
-> > > But for
-> > > wl1251 firmware file with guessed name "wl1251-fw-ap.bin" is
-> > > missing.
-> > >=20
-> > > Do you have any idea what happened with AP firmware for ti
-> > > wilink4 wl1251 wifi chip? Or where can be found? Guys from TI,
-> > > can you help?
-> > >=20
-> > > I see that STA firmware was added into linux-firmware tree in
-> > > year 2013 by this pull request [2].
-> > >=20
-> > > [1] -
-> > > https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmw
-> > > are .g
-> > > it/tree/ti-connectivity
-> > >=20
-> > > [2] -
-> > > http://thread.gmane.org/gmane.linux.kernel/1566500/focus=3D1571382
-> >=20
-> > Hi! Anybody has some idea about that AP firmware?
->=20
-> Hi,
-> wl1251 does not support AP mode, so there is no firmware for it in
-> the tree.
->=20
-> Regards,
-> Yaniv
+This is interesting. The `rate` comes from sta's last_rate which is
+updated in tx_status().
 
-Hi Yaniv! I read on some TI whitepaper, that wl1251 hardware supports=20
-some Soft-AP mode. So I expect that either special FW is needed for it=20
-or somehow it is possible to use current released. Do you have any=20
-information about it?
+Hmm.. From a quick look I suspect ath10k_wmi_mgmt_tx() reports the
+offending last_rate. The `info` isn't zero-ed but it may have some
+garbage from ath10k's internal txpath processing.
 
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar@gmail.com
 
---nextPart486655548.RrR3yeS5Ro
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlcE/TsACgkQi/DJPQPkQ1I3MwCfcFf+Ruqa9/PWodjAIgALuoJl
-g8AAoIo5sQ3QLS7E/EDKCRAenqGHhY+S
-=hJlK
------END PGP SIGNATURE-----
-
---nextPart486655548.RrR3yeS5Ro--
+Michał
