@@ -1,53 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38937 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932919AbcDSQBT (ORCPT
+Received: from mail-lb0-f181.google.com ([209.85.217.181]:35391 "EHLO
+	mail-lb0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752536AbcDDMYl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 12:01:19 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Jakub Sitnicki <jsitnicki@gmail.com>,
+	Mon, 4 Apr 2016 08:24:41 -0400
+Received: by mail-lb0-f181.google.com with SMTP id bc4so157806056lbc.2
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 05:24:40 -0700 (PDT)
+Subject: Re: [PATCH v2 09/15] wcn36xx: Parse trigger_ba response properly
+To: Bjorn Andersson <bjorn.andersson@linaro.org>,
+	Eugene Krasnikov <k.eugene.e@gmail.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
+ <1459721806-11817-9-git-send-email-bjorn.andersson@linaro.org>
+Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, wcn36xx@lists.infradead.org,
 	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtl8xxxu: hide unused tables
-References: <1461016782-2640046-1-git-send-email-arnd@arndb.de>
-	<wrfjzisp64d7.fsf@redhat.com>
-Date: Tue, 19 Apr 2016 19:01:13 +0300
-In-Reply-To: <wrfjzisp64d7.fsf@redhat.com> (Jes Sorensen's message of "Tue, 19
-	Apr 2016 10:49:08 -0400")
-Message-ID: <87mvopy4dy.fsf@purkki.adurom.net> (sfid-20160419_180214_758624_0CB0E49F)
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Message-ID: <57025D04.80605@cogentembedded.com> (sfid-20160404_142458_374116_3025D665)
+Date: Mon, 4 Apr 2016 15:24:36 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1459721806-11817-9-git-send-email-bjorn.andersson@linaro.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+Hello.
 
-> Arnd Bergmann <arnd@arndb.de> writes:
->> The references to some arrays in the rtl8xxxu driver were moved inside
->> of an #ifdef, but the symbols remain outside, resulting in build warnings:
->>
->> rtl8xxxu/rtl8xxxu.c:1506:33: error: 'rtl8188ru_radioa_1t_highpa_table' defined but not used
->> rtl8xxxu/rtl8xxxu.c:1431:33: error: 'rtl8192cu_radioa_1t_init_table' defined but not used
->> rtl8xxxu/rtl8xxxu.c:1407:33: error: 'rtl8192cu_radiob_2t_init_table' defined but not used
->> rtl8xxxu/rtl8xxxu.c:1332:33: error: 'rtl8192cu_radioa_2t_init_table' defined but not used
->> rtl8xxxu/rtl8xxxu.c:239:35: error: 'rtl8192c_power_base' defined but not used
->> rtl8xxxu/rtl8xxxu.c:217:35: error: 'rtl8188r_power_base' defined but not used
->>
->> This adds an extra #ifdef around them to shut up the warnings.
->>
->> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->> Fixes: 2fc0b8e5a17d ("rtl8xxxu: Add TX power base values for gen1 parts")
->> Fixes: 4062b8ffec36 ("rtl8xxxu: Move PHY RF init into device specific functions")
->> ---
->>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 4 ++++
->>  1 file changed, 4 insertions(+)
+On 4/4/2016 1:16 AM, Bjorn Andersson wrote:
+
+> From: Pontus Fuchs <pontus.fuchs@gmail.com>
 >
-> I'll apply it to my tree!
+> This message does not follow the canonical format and needs it's own
+> parser.
+>
+> Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> ---
+>   drivers/net/wireless/ath/wcn36xx/smd.c | 14 ++++++++++++--
+>   1 file changed, 12 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
+> index 76c6856ed932..7f315d098f52 100644
+> --- a/drivers/net/wireless/ath/wcn36xx/smd.c
+> +++ b/drivers/net/wireless/ath/wcn36xx/smd.c
+> @@ -1968,6 +1968,17 @@ out:
+>   	return ret;
+>   }
+>
+> +static int wcn36xx_smd_trigger_ba_rsp(void *buf, int len)
+> +{
+> +	struct wcn36xx_hal_trigger_ba_rsp_msg *rsp;
+> +
+> +	if (len < sizeof(*rsp))
+> +		return -EINVAL;
+> +
+> +	rsp = (struct wcn36xx_hal_trigger_ba_rsp_msg *) buf;
 
-Actually I would prefer to apply this directly to wireless-drivers-next
-so that the warnings are quickly fixed.
+    Casts from 'void *' to other pointer types are automatic, no need for the 
+explicit cast.
 
--- 
-Kalle Valo
+[...]
+
+MBR, Sergei
+
