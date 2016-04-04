@@ -1,47 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtprelay0131.hostedemail.com ([216.40.44.131]:50721 "EHLO
-	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750835AbcDGQGP (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:22543 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752968AbcDDXUW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 12:06:15 -0400
-Message-ID: <1460045158.6715.93.camel@perches.com> (sfid-20160407_180618_348598_79BD15F7)
-Subject: Re: [PATCH 1/7] wil6210: add function name to wil log macros
-From: Joe Perches <joe@perches.com>
-To: "Haim, Maya" <merez@qti.qualcomm.com>,
-	qca_merez <qca_merez@qca.qualcomm.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	wil6210 <wil6210@qca.qualcomm.com>
-Date: Thu, 07 Apr 2016 09:05:58 -0700
-In-Reply-To: <bc848beb5cd947f9905b55983a76b6f5@euamsexm01a.eu.qualcomm.com>
-References: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
-	 <1459855447-17413-2-git-send-email-qca_merez@qca.qualcomm.com>
-	 <1459927177.6715.34.camel@perches.com>
-	 <bc848beb5cd947f9905b55983a76b6f5@euamsexm01a.eu.qualcomm.com>
-Content-Type: text/plain; charset="ISO-8859-1"
-Mime-Version: 1.0
+	Mon, 4 Apr 2016 19:20:22 -0400
+From: Peter Oh <poh@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Subject: [PATCH 2/3] ath10k: update 10.4 WMI vdev parameters
+Date: Mon, 4 Apr 2016 16:19:15 -0700
+Message-ID: <1459811956-26186-3-git-send-email-poh@qca.qualcomm.com> (sfid-20160405_012029_345233_D8220FE0)
+In-Reply-To: <1459811956-26186-1-git-send-email-poh@qca.qualcomm.com>
+References: <1459811956-26186-1-git-send-email-poh@qca.qualcomm.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, 2016-04-07 at 15:04 +0000, Haim, Maya wrote:
-> On 4/6/2016 10:19 AM, Joe Perches wrote:
-> > On Tue, 2016-04-05 at 14:24 +0300, Maya Erez wrote:
-> > > Add __func__ to all wil log macros for easier debugging.
-> > I think this is unnecessary and merely bloats code size.
-> > For all the _dbg calls, dynamic debug can add function names if 
-> > desired.
-> > 
-> > If really desired, I suggest changing the logging functions to use 
-> > "%ps and __builtin_return_address(0)
-[]
->  implemented it with __builtin_return_address(0) at first but found its format less readable (e.g. wil_start_xmit+0x58/0x7e8).
-> I agree that using __builtin_return_address(0) simplifies the code and I'm OK with your suggestion to use it.
+Update 10.4 WMI vdev param to sync to current 10.4 firmware
+as of 2/23/2016.
 
-I believe you must have used %pS and not %ps
+Signed-off-by: Peter Oh <poh@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-See: Documentation/printk-formats.txt
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index 8225d90..e10df2e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -4957,6 +4957,12 @@ enum wmi_10_4_vdev_param {
+ 	WMI_10_4_VDEV_PARAM_MERU_VC,
+ 	WMI_10_4_VDEV_PARAM_RX_DECAP_TYPE,
+ 	WMI_10_4_VDEV_PARAM_BW_NSS_RATEMASK,
++	WMI_10_4_VDEV_PARAM_SENSOR_AP,
++	WMI_10_4_VDEV_PARAM_BEACON_RATE,
++	WMI_10_4_VDEV_PARAM_DTIM_ENABLE_CTS,
++	WMI_10_4_VDEV_PARAM_STA_KICKOUT,
++	WMI_10_4_VDEV_PARAM_CAPABILITIES,
++	WMI_10_4_VDEV_PARAM_TSF_INCREMENT,
+ };
+ 
+ #define WMI_VDEV_PARAM_TXBF_SU_TX_BFEE BIT(0)
+-- 
+1.9.1
 
-Symbols/Function Pointers:
-
-	%pS	versatile_init+0x0/0x110
-	%ps	versatile_init
