@@ -1,54 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from vpn.innerrange.com.au ([203.122.143.146]:58597 "EHLO
-	remote.innerrange.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750761AbcD1FCR convert rfc822-to-8bit (ORCPT
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:33714 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753374AbcDDLFI (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2016 01:02:17 -0400
-From: Craig McQueen <craig.mcqueen@innerrange.com>
-To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Date: Thu, 28 Apr 2016 15:02:08 +1000
-Subject: RE: rt2800 and BeagleBone Black soft lockup when unplugging from
- USB hub
-Message-ID: <5500469A22567C4BAF673A6E86AFA3A4022D20C815A9@IR-CENTRAL.corp.innerrange.com> (sfid-20160428_070220_770564_2F7436A3)
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Mon, 4 Apr 2016 07:05:08 -0400
+Received: by mail-pf0-f195.google.com with SMTP id e190so4749547pfe.0
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 04:05:08 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 2/8] staging: wilc1000: move Handle_ScanDone function declaration
+Date: Mon,  4 Apr 2016 20:04:44 +0900
+Message-Id: <1459767890-9709-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20160404_130514_917308_D5A4243E)
+In-Reply-To: <1459767890-9709-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1459767890-9709-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I previously wrote:
-> 
-> I have a D-Link DWA-140 USB Wi-Fi device which is rt2800 based (5392
-> chipset). I've been testing it on a BeagleBone Black running an Ubuntu 16.04
-> image (4.4.6 kernel), with a USB hub.
-> 
-> When I unplug the Wi-Fi device from the USB hub, and it's connected to an
-> access point, and then I unplug it, the OS appears to lock up. I get messages
-> about a soft lockup on the serial console:
-> 
-> [ 9736.136702] NMI watchdog: BUG: soft lockup - CPU#0 stuck for 22s!
-> [kworker/u2:0:1129] [ 9764.136701] NMI watchdog: BUG: soft lockup - CPU#0
-> stuck for 22s! [kworker/u2:0:1129] [ 9792.136701] NMI watchdog: BUG: soft
-> lockup - CPU#0 stuck for 22s! [kworker/u2:0:1129] [ 9820.136699] NMI
-> watchdog: BUG: soft lockup - CPU#0 stuck for 22s! [kworker/u2:0:1129] [
-> 9848.136696] NMI watchdog: BUG: soft lockup - CPU#0 stuck for 22s!
-> [kworker/u2:0:1129]
-> 
-> This will repeat indefinitely, until I unplug the hub, which resolves the soft
-> lockup and then the system seems to function normally.
-> 
-> I've attached a dmesg log of the soft lockup stack traces. They seem to
-> indicate a lockup in workqueue rt2x00usb_work_rxdone() (specifically in
-> usb_hcd_submit_urb() called from rt2x00usb_kick_rx_entry() called from
-> rt2x00usb_clear_entry()).
-> 
-> I originally found this bug on a 3.14.x kernel built with Yocto for a BeagleBone
-> Black-based product. So it seems this is a bug that has been around for some
-> time.
+Handle_ScanDone function declaration is moved to front of
+host_interface.c file.
 
-I should also note that on the 3.14.x Yocto-built kernel on BeagleBone Black, this bug does not occur if the rt2800 device is unplugged directly from the BBB's USB port. It only occurs if unplugged from a hub.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-I have tested this on an i586 based eBox-3310A mini-PC running Debian 8.4, which has a 3.16.0 kernel, with the same hub and same rt2800 device. But I was not able to reproduce this issue.
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index b8dae09..aa95eda 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -263,6 +263,7 @@ static struct wilc_vif *join_req_vif;
+ 
+ static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo);
+ static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
++static s32 Handle_ScanDone(struct wilc_vif *vif, enum scan_event enuEvent);
+ 
+ /* The u8IfIdx starts from 0 to NUM_CONCURRENT_IFC -1, but 0 index used as
+  * special purpose in wilc device, so we add 1 to the index to starts from 1.
+@@ -730,9 +731,6 @@ unlock:
+ 	return result;
+ }
+ 
+-static s32 Handle_ScanDone(struct wilc_vif *vif,
+-			   enum scan_event enuEvent);
+-
+ static s32 Handle_Scan(struct wilc_vif *vif,
+ 		       struct scan_attr *pstrHostIFscanAttr)
+ {
 -- 
-Craig McQueen
+2.8.0
 
