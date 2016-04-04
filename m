@@ -1,73 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:38852 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932541AbcDYRei (ORCPT
+Received: from mail-pa0-f67.google.com ([209.85.220.67]:36318 "EHLO
+	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753410AbcDDLF0 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2016 13:34:38 -0400
-From: Luca Coelho <luca@coelho.fi>
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, emmanuel.grumbach@intel.com,
-	sara.sharon@intel.com, pat-lkml@erley.org, luciano.coelho@intel.com
-Date: Mon, 25 Apr 2016 20:02:09 +0300
-Message-Id: <1461603729-20973-1-git-send-email-luca@coelho.fi> (sfid-20160425_193442_343674_4B5BD685)
-Subject: [PATCH] iwlwifi: fix fw version reading for DVM devices
+	Mon, 4 Apr 2016 07:05:26 -0400
+Received: by mail-pa0-f67.google.com with SMTP id 1so19880080pal.3
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 04:05:26 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 8/8] staging: wilc1000: rename pu8Buffer in handle_scan
+Date: Mon,  4 Apr 2016 20:04:50 +0900
+Message-Id: <1459767890-9709-8-git-send-email-chaehyun.lim@gmail.com> (sfid-20160404_130541_560188_24CB2AC2)
+In-Reply-To: <1459767890-9709-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1459767890-9709-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Luca Coelho <luciano.coelho@intel.com>
+This patch renames pu8Buffer to buffer to avoid camelcase.
 
-In commit 97f95c93c8ed ("iwlwifi: remove support for fw older than
--16.ucode") we accidentally changed the fw version reading code for
-DVM devices.  The code intended to remove the old fw version API,
-because all MVM firmwares version 16 and above that we support don't
-use it anymore.  But DVM devices still use the old FW API.
-
-Fix that by bringing the code back in.
-
-Reported-by: Pat Erley <pat-lkml@erley.org>
-Fixes: 97f95c93c8ed ("iwlwifi: remove support for fw older than-16.ucode")
-Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/intel/iwlwifi/iwl-drv.c     | 5 ++++-
- drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h | 2 ++
- 2 files changed, 6 insertions(+), 1 deletion(-)
+ drivers/staging/wilc1000/host_interface.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-index 48e8737..4f495d9 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
-@@ -1280,7 +1280,10 @@ static void iwl_req_fw_callback(const struct firmware *ucode_raw, void *context)
- 	if (err)
- 		goto try_again;
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index a5f109a..1fe811f 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -737,7 +737,7 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
+ 	struct wid wid_list[5];
+ 	u32 index = 0;
+ 	u32 i;
+-	u8 *pu8Buffer;
++	u8 *buffer;
+ 	u8 valuesize = 0;
+ 	u8 *pu8HdnNtwrksWidVal = NULL;
+ 	struct host_if_drv *hif_drv = vif->hif_drv;
+@@ -768,14 +768,14 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
+ 	pu8HdnNtwrksWidVal = kmalloc(valuesize + 1, GFP_KERNEL);
+ 	wid_list[index].val = pu8HdnNtwrksWidVal;
+ 	if (wid_list[index].val) {
+-		pu8Buffer = wid_list[index].val;
++		buffer = wid_list[index].val;
  
--	api_ver = drv->fw.ucode_ver;
-+	if (fw_has_api(&drv->fw.ucode_capa, IWL_UCODE_TLV_API_NEW_VERSION))
-+		api_ver = drv->fw.ucode_ver;
-+	else
-+		api_ver = IWL_UCODE_API(drv->fw.ucode_ver);
+-		*pu8Buffer++ = scan_info->hidden_network.n_ssids;
++		*buffer++ = scan_info->hidden_network.n_ssids;
  
- 	/*
- 	 * api_ver should match the api version forming part of the
-diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-index 843232b..37dc09e 100644
---- a/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-+++ b/drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h
-@@ -251,6 +251,7 @@ typedef unsigned int __bitwise__ iwl_ucode_tlv_api_t;
-  * @IWL_UCODE_TLV_API_WIFI_MCC_UPDATE: ucode supports MCC updates with source.
-  * @IWL_UCODE_TLV_API_WIDE_CMD_HDR: ucode supports wide command header
-  * @IWL_UCODE_TLV_API_LQ_SS_PARAMS: Configure STBC/BFER via LQ CMD ss_params
-+ * @IWL_UCODE_TLV_API_NEW_VERSION: new versioning format
-  * @IWL_UCODE_TLV_API_EXT_SCAN_PRIORITY: scan APIs use 8-level priority
-  *	instead of 3.
-  * @IWL_UCODE_TLV_API_TX_POWER_CHAIN: TX power API has larger command size
-@@ -263,6 +264,7 @@ enum iwl_ucode_tlv_api {
- 	IWL_UCODE_TLV_API_WIFI_MCC_UPDATE	= (__force iwl_ucode_tlv_api_t)9,
- 	IWL_UCODE_TLV_API_WIDE_CMD_HDR		= (__force iwl_ucode_tlv_api_t)14,
- 	IWL_UCODE_TLV_API_LQ_SS_PARAMS		= (__force iwl_ucode_tlv_api_t)18,
-+	IWL_UCODE_TLV_API_NEW_VERSION           = (__force iwl_ucode_tlv_api_t)20,
- 	IWL_UCODE_TLV_API_EXT_SCAN_PRIORITY	= (__force iwl_ucode_tlv_api_t)24,
- 	IWL_UCODE_TLV_API_TX_POWER_CHAIN	= (__force iwl_ucode_tlv_api_t)27,
+ 		for (i = 0; i < scan_info->hidden_network.n_ssids; i++) {
+-			*pu8Buffer++ = scan_info->hidden_network.net_info[i].ssid_len;
+-			memcpy(pu8Buffer, scan_info->hidden_network.net_info[i].ssid, scan_info->hidden_network.net_info[i].ssid_len);
+-			pu8Buffer += scan_info->hidden_network.net_info[i].ssid_len;
++			*buffer++ = scan_info->hidden_network.net_info[i].ssid_len;
++			memcpy(buffer, scan_info->hidden_network.net_info[i].ssid, scan_info->hidden_network.net_info[i].ssid_len);
++			buffer += scan_info->hidden_network.net_info[i].ssid_len;
+ 		}
  
+ 		wid_list[index].size = (s32)(valuesize + 1);
 -- 
-2.8.0.rc3
+2.8.0
 
