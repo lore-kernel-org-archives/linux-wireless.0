@@ -1,52 +1,132 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:34866 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753178AbcDIMA6 (ORCPT
+Received: from mail-pa0-f67.google.com ([209.85.220.67]:36285 "EHLO
+	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753829AbcDDLFU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 9 Apr 2016 08:00:58 -0400
-Received: by mail-wm0-f46.google.com with SMTP id 191so40980886wmq.0
-        for <linux-wireless@vger.kernel.org>; Sat, 09 Apr 2016 05:00:57 -0700 (PDT)
-Date: Sat, 9 Apr 2016 13:00:55 +0100
-From: Matt Fleming <matt@codeblueprint.co.uk>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org, zajec5@gmail.com,
-	b43-dev@lists.infradead.org, Matthew Garrett <mjg59@srcf.ucam.org>,
-	linux-efi@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-Message-ID: <20160409120055.GR2701@codeblueprint.co.uk> (sfid-20160409_140102_421249_E3BBAC17)
-References: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
- <20160405194015.GC15353@localhost>
- <20160406213029.GA12421@wunner.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <20160406213029.GA12421@wunner.de>
+	Mon, 4 Apr 2016 07:05:20 -0400
+Received: by mail-pa0-f67.google.com with SMTP id 1so19879869pal.3
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 04:05:20 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 6/8] staging: wilc1000: rename strWIDList in handle_scan
+Date: Mon,  4 Apr 2016 20:04:48 +0900
+Message-Id: <1459767890-9709-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20160404_130525_072250_96446D40)
+In-Reply-To: <1459767890-9709-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1459767890-9709-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 06 Apr, at 11:30:29PM, Lukas Wunner wrote:
-> 
-> More specifically, arch/x86/platform/efi/quirks.c:efi_free_boot_services()
-> makes EFI boot services memory available to the page allocator and this
-> is called near the end of init/main.c:start_kernel(). *Afterwards*, the
-> initcalls are executed via rest_init() -> kernel_init() ->
-> kernel_init_freeable() -> do_basic_setup() -> do_initcalls(). In particular,
-> PCI header fixups are executed in the subsys_initcall acpi_init().
-> 
-> Some of the possible solutions are:
-> 
-> (1) Delay efi_free_boot_services() further, e.g. until late_initcall.
- 
-I'd prefer not to do this because boot services regions can account
-for a large amount of memory (multiple gigabytes).
+This patch renames strWIDList to wid_list to avoid camelcase.
 
-> (2) Find out exactly which EFI boot services area is used for DMA and
->     amend arch/x86/platform/efi/quirks.c:efi_apply_memmap_quirks() to
->     assign that area a different type if dmi_match(DMI_SYS_VENDOR,
->     "Apple Inc."). That way it's not freed by efi_free_boot_services().
->     Add a late_initcall which calls free_bootmem() for that area.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 48 +++++++++++++++----------------
+ 1 file changed, 24 insertions(+), 24 deletions(-)
+
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 23080ff..aae0028 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -734,7 +734,7 @@ unlock:
+ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
+ {
+ 	s32 result = 0;
+-	struct wid strWIDList[5];
++	struct wid wid_list[5];
+ 	u32 u32WidsCount = 0;
+ 	u32 i;
+ 	u8 *pu8Buffer;
+@@ -760,15 +760,15 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
  
-If it is possible to find out which boot services region is the
-problematic one, this would be the best solution. If there's any way
-to tie it into the PCI quirk, that would be even better so we don't
-need to maintain the blacklist in two places.
+ 	hif_drv->usr_scan_req.rcvd_ch_cnt = 0;
+ 
+-	strWIDList[u32WidsCount].id = (u16)WID_SSID_PROBE_REQ;
+-	strWIDList[u32WidsCount].type = WID_STR;
++	wid_list[u32WidsCount].id = (u16)WID_SSID_PROBE_REQ;
++	wid_list[u32WidsCount].type = WID_STR;
+ 
+ 	for (i = 0; i < scan_info->hidden_network.n_ssids; i++)
+ 		valuesize += ((scan_info->hidden_network.net_info[i].ssid_len) + 1);
+ 	pu8HdnNtwrksWidVal = kmalloc(valuesize + 1, GFP_KERNEL);
+-	strWIDList[u32WidsCount].val = pu8HdnNtwrksWidVal;
+-	if (strWIDList[u32WidsCount].val) {
+-		pu8Buffer = strWIDList[u32WidsCount].val;
++	wid_list[u32WidsCount].val = pu8HdnNtwrksWidVal;
++	if (wid_list[u32WidsCount].val) {
++		pu8Buffer = wid_list[u32WidsCount].val;
+ 
+ 		*pu8Buffer++ = scan_info->hidden_network.n_ssids;
+ 
+@@ -778,24 +778,24 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
+ 			pu8Buffer += scan_info->hidden_network.net_info[i].ssid_len;
+ 		}
+ 
+-		strWIDList[u32WidsCount].size = (s32)(valuesize + 1);
++		wid_list[u32WidsCount].size = (s32)(valuesize + 1);
+ 		u32WidsCount++;
+ 	}
+ 
+-	strWIDList[u32WidsCount].id = WID_INFO_ELEMENT_PROBE;
+-	strWIDList[u32WidsCount].type = WID_BIN_DATA;
+-	strWIDList[u32WidsCount].val = scan_info->ies;
+-	strWIDList[u32WidsCount].size = scan_info->ies_len;
++	wid_list[u32WidsCount].id = WID_INFO_ELEMENT_PROBE;
++	wid_list[u32WidsCount].type = WID_BIN_DATA;
++	wid_list[u32WidsCount].val = scan_info->ies;
++	wid_list[u32WidsCount].size = scan_info->ies_len;
+ 	u32WidsCount++;
+ 
+-	strWIDList[u32WidsCount].id = WID_SCAN_TYPE;
+-	strWIDList[u32WidsCount].type = WID_CHAR;
+-	strWIDList[u32WidsCount].size = sizeof(char);
+-	strWIDList[u32WidsCount].val = (s8 *)&scan_info->type;
++	wid_list[u32WidsCount].id = WID_SCAN_TYPE;
++	wid_list[u32WidsCount].type = WID_CHAR;
++	wid_list[u32WidsCount].size = sizeof(char);
++	wid_list[u32WidsCount].val = (s8 *)&scan_info->type;
+ 	u32WidsCount++;
+ 
+-	strWIDList[u32WidsCount].id = WID_SCAN_CHANNEL_LIST;
+-	strWIDList[u32WidsCount].type = WID_BIN_DATA;
++	wid_list[u32WidsCount].id = WID_SCAN_CHANNEL_LIST;
++	wid_list[u32WidsCount].type = WID_BIN_DATA;
+ 
+ 	if (scan_info->ch_freq_list &&
+ 	    scan_info->ch_list_len > 0) {
+@@ -807,14 +807,14 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
+ 		}
+ 	}
+ 
+-	strWIDList[u32WidsCount].val = scan_info->ch_freq_list;
+-	strWIDList[u32WidsCount].size = scan_info->ch_list_len;
++	wid_list[u32WidsCount].val = scan_info->ch_freq_list;
++	wid_list[u32WidsCount].size = scan_info->ch_list_len;
+ 	u32WidsCount++;
+ 
+-	strWIDList[u32WidsCount].id = WID_START_SCAN_REQ;
+-	strWIDList[u32WidsCount].type = WID_CHAR;
+-	strWIDList[u32WidsCount].size = sizeof(char);
+-	strWIDList[u32WidsCount].val = (s8 *)&scan_info->src;
++	wid_list[u32WidsCount].id = WID_START_SCAN_REQ;
++	wid_list[u32WidsCount].type = WID_CHAR;
++	wid_list[u32WidsCount].size = sizeof(char);
++	wid_list[u32WidsCount].val = (s8 *)&scan_info->src;
+ 	u32WidsCount++;
+ 
+ 	if (hif_drv->hif_state == HOST_IF_CONNECTED)
+@@ -822,7 +822,7 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
+ 	else if (hif_drv->hif_state == HOST_IF_IDLE)
+ 		scan_while_connected = false;
+ 
+-	result = wilc_send_config_pkt(vif, SET_CFG, strWIDList,
++	result = wilc_send_config_pkt(vif, SET_CFG, wid_list,
+ 				      u32WidsCount,
+ 				      wilc_get_vif_idx(vif));
+ 
+-- 
+2.8.0
+
