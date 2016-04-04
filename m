@@ -1,55 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:45865 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751607AbcDZLya convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38668 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754793AbcDDPDu (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 07:54:30 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"rmanohar@codeaurora.org" <rmanohar@codeaurora.org>
-Subject: Re: [PATCH 4/4] ath10k: update bss channel survey information
-Date: Tue, 26 Apr 2016 11:53:57 +0000
-Message-ID: <87r3dsy4a4.fsf@kamboji.qca.qualcomm.com> (sfid-20160426_135433_951053_6A56D096)
-References: <1461303992-9913-1-git-send-email-rmanohar@qti.qualcomm.com>
-	<1461303992-9913-4-git-send-email-rmanohar@qti.qualcomm.com>
-In-Reply-To: <1461303992-9913-4-git-send-email-rmanohar@qti.qualcomm.com>
-	(Rajkumar Manoharan's message of "Fri, 22 Apr 2016 11:16:32 +0530")
-Content-Type: text/plain; charset="us-ascii"
+	Mon, 4 Apr 2016 11:03:50 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Joseph Salisbury <joseph.salisbury@canonical.com>
+Cc: jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@do-not-panic.com,
+	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: Re: [PATCH] ath5k: Change led pin configuration for compaq c700 laptop
+References: <830d8fa0b7cb0b8cfb0b34360925cd50c3187341.1457977047.git.joseph.salisbury@canonical.com>
+Date: Mon, 04 Apr 2016 18:03:36 +0300
+In-Reply-To: <830d8fa0b7cb0b8cfb0b34360925cd50c3187341.1457977047.git.joseph.salisbury@canonical.com>
+	(Joseph Salisbury's message of "Mon, 14 Mar 2016 14:51:48 -0400")
+Message-ID: <87vb3xct6f.fsf@kamboji.qca.qualcomm.com> (sfid-20160404_170417_310911_A2F3781D)
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+Joseph Salisbury <joseph.salisbury@canonical.com> writes:
 
-> During hw scan, firmware sends two channel information events (pre-
-> complete, complete) to host for each channel change. The snap shot of cycle
-> counters (rx_clear and total) between these two events are given for
-> survey dump. In order to get latest survey statistics of all channels, a
-> scan request has to be issued. In general, an AP DUT is brought up, it
-> won't leave BSS channel except few cases like overlapping bss or radar
-> detection. So survey statistics of bss channel is always referring to
-> older data that are collected before starting AP (either ACS/OBSS scan).
+> BugLink: http://bugs.launchpad.net/bugs/972604
 >
-> To collect latest survey information from target, firmware provides WMI
-> interface to read cycle counters from hardware. For each survey dump
-> request, BSS channel cycle counters are read and cleared in hardware.
-> This makes sure that behavior is in align with ath9k survey report.
-> So survey dump always gives snap shot of cycle counters b/w two survey
-> requests.
+> Commit 09c9bae26b0d3c9472cb6ae45010460a2cee8b8d ("ath5k: add led pin 
+> configuration for compaq c700 laptop") added a pin configuration for the Compaq 
+> c700 laptop.  However, the polarity of the led pin is reversed.  It should be 
+> red for wifi off and blue for wifi on, but it is the opposite.  This bug was 
+> reported in the following bug report: 
+> http://pad.lv/972604
 >
-> Signed-off-by: Yanbo Li <yanbol@qca.qualcomm.com>
-> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+>
+> Fixes: 09c9bae26b0d3c9472cb6ae45010460a2cee8b8d ("ath5k: add led pin 
+> configuration for compaq c700 laptop")
+>
+> Signed-off-by: Joseph Salisbury <joseph.salisbury@canonical.com>
+> Cc: stable@vger.kernel.org
 
-This patch adds new sparse warnings:
+Applied to ath.git, thanks.
 
-drivers/net/wireless/ath/ath10k/wmi.c:4824:33: warning: incorrect type in argument 2 (different base types)
-drivers/net/wireless/ath/ath10k/wmi.c:4824:33:    expected int [signed] freq
-drivers/net/wireless/ath/ath10k/wmi.c:4824:33:    got restricted __le32 [usertype] freq
-drivers/net/wireless/ath/ath10k/wmi.c:4833:27: warning: incorrect type in assignment (different base types)
-drivers/net/wireless/ath/ath10k/wmi.c:4833:27:    expected signed char [signed] [usertype] [explicitly-signed] noise
-drivers/net/wireless/ath/ath10k/wmi.c:4833:27:    got restricted __le32 [usertype] noise_floor
+I just fixed the Fixes line to be one continuous line.
 
 -- 
 Kalle Valo
