@@ -1,54 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:36514 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756602AbcDEGiz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 02:38:55 -0400
-Received: by mail-pf0-f195.google.com with SMTP id q129so498824pfb.3
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 23:38:55 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 06/14] staging: wilc1000: remove unused hif_drv in wilc_del_allstation
-Date: Tue,  5 Apr 2016 15:38:24 +0900
-Message-Id: <1459838312-16506-6-git-send-email-chaehyun.lim@gmail.com> (sfid-20160405_083857_870977_9E97D724)
-In-Reply-To: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:53522 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757896AbcDEJeV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2016 05:34:21 -0400
+Message-ID: <1459848853.18188.26.camel@sipsolutions.net> (sfid-20160405_113425_951404_8C1BAC7E)
+Subject: Re: [PATCH 2/2] mac80211: close the SP when we enqueue frames
+ during the SP
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 05 Apr 2016 11:34:13 +0200
+In-Reply-To: <1458226302-6086-2-git-send-email-emmanuel.grumbach@intel.com>
+References: <1458226302-6086-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1458226302-6086-2-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unused hif_drv in wilc_del_allstation.
-There is no need to check null and print debug log.
+On Thu, 2016-03-17 at 16:51 +0200, Emmanuel Grumbach wrote:
+> Since we enqueued the frame that was supposed to be sent
+> during the SP, and that frame may very well cary the
+> IEEE80211_TX_STATUS_EOSP bit, we may never close the SP
+> (WLAN_STA_SP will never be cleared). If that happens, we
+> will not open any new SP and will never respond to any poll
+> frame from the client.
+> Clear WLAN_STA_SP manually if a frame that was polled during
+> the SP is queued because of a starting A-MPDU session. The
+> client may not see the EOSP bit, but it will at least be
+> able to poll new frames in another SP.
+> 
+Also applied.
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 ------
- 1 file changed, 6 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 3222a5d..4433f99 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3848,16 +3848,10 @@ int wilc_del_allstation(struct wilc_vif *vif, u8 mac_addr[][ETH_ALEN])
- 	int result = 0;
- 	struct host_if_msg msg;
- 	struct del_all_sta *del_all_sta_info = &msg.body.del_all_sta_info;
--	struct host_if_drv *hif_drv = vif->hif_drv;
- 	u8 zero_addr[ETH_ALEN] = {0};
- 	int i;
- 	u8 assoc_sta = 0;
- 
--	if (!hif_drv) {
--		netdev_err(vif->ndev, "driver is null\n");
--		return -EFAULT;
--	}
--
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
- 	msg.id = HOST_IF_MSG_DEL_ALL_STA;
--- 
-2.8.0
-
+johannes
