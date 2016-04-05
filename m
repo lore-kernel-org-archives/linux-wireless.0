@@ -1,83 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:48173 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753252AbcDAVMU (ORCPT
+Received: from mail-pa0-f67.google.com ([209.85.220.67]:33698 "EHLO
+	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751398AbcDEGjR (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2016 17:12:20 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 2/5] ath10k:  Ensure peer_map references are cleaned up.
-Date: Fri,  1 Apr 2016 14:12:09 -0700
-Message-Id: <1459545132-11295-2-git-send-email-greearb@candelatech.com> (sfid-20160401_231225_344253_914DC72C)
-In-Reply-To: <1459545132-11295-1-git-send-email-greearb@candelatech.com>
-References: <1459545132-11295-1-git-send-email-greearb@candelatech.com>
+	Tue, 5 Apr 2016 02:39:17 -0400
+Received: by mail-pa0-f67.google.com with SMTP id q6so481592pav.0
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 23:39:16 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 13/14] staging: wilc1000: remove unused hif_drv in wilc_del_beacon
+Date: Tue,  5 Apr 2016 15:38:31 +0900
+Message-Id: <1459838312-16506-13-git-send-email-chaehyun.lim@gmail.com> (sfid-20160405_085528_115181_8F367CEC)
+In-Reply-To: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+This patch removes unused hif_drv in wilc_del_beacon.
+There is no need to check null and print debug log.
 
-While debugging OS crashes due to firmware crashes, I enabled
-kasan, and it noticed that peer objects were being used-after-freed.
-
-Looks like there are two places we could be leaving stale references
-in the peer-map, so clean that up.
-
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/staging/wilc1000/host_interface.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 8783119..5e5cc9c 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -794,6 +794,7 @@ static void ath10k_peer_cleanup(struct ath10k *ar, u32 vdev_id)
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 270bb3e..2dba954 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3742,12 +3742,6 @@ int wilc_del_beacon(struct wilc_vif *vif)
  {
- 	struct ath10k_peer *peer, *tmp;
- 	int peer_id;
-+	int i;
+ 	int result = 0;
+ 	struct host_if_msg msg;
+-	struct host_if_drv *hif_drv = vif->hif_drv;
+-
+-	if (!hif_drv) {
+-		netdev_err(vif->ndev, "driver is null\n");
+-		return -EFAULT;
+-	}
  
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-@@ -812,6 +813,17 @@ static void ath10k_peer_cleanup(struct ath10k *ar, u32 vdev_id)
- 			ar->peer_map[peer_id] = NULL;
- 		}
- 
-+		/* Double check that peer is properly un-referenced from
-+		 * the peer_map
-+		 */
-+		for (i = 0; i < ARRAY_SIZE(ar->peer_map); i++) {
-+			if (ar->peer_map[i] == peer) {
-+				ath10k_warn(ar, "removing stale peer_map entry for %pM (ptr %p idx %d)\n",
-+					    peer->addr, peer, i);
-+				ar->peer_map[i] = NULL;
-+			}
-+		}
-+
- 		list_del(&peer->list);
- 		kfree(peer);
- 		ar->num_peers--;
-@@ -840,6 +852,7 @@ void ath10k_dump_peer_info(struct ath10k *ar)
- static void ath10k_peer_cleanup_all(struct ath10k *ar)
- {
- 	struct ath10k_peer *peer, *tmp;
-+	int i;
- 
- 	lockdep_assert_held(&ar->conf_mutex);
- 
-@@ -850,6 +863,10 @@ static void ath10k_peer_cleanup_all(struct ath10k *ar)
- 		list_del(&peer->list);
- 		kfree(peer);
- 	}
-+
-+	for (i = 0; i < ARRAY_SIZE(ar->peer_map); i++)
-+		ar->peer_map[i] = NULL;
-+
- 	spin_unlock_bh(&ar->data_lock);
- 
- 	ar->num_peers = 0;
+ 	msg.id = HOST_IF_MSG_DEL_BEACON;
+ 	msg.vif = vif;
 -- 
-2.4.3
+2.8.0
 
