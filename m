@@ -1,126 +1,79 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:36339 "EHLO
-	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756304AbcDMIZY (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:57081 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753337AbcDEMjN (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2016 04:25:24 -0400
-Date: Tue, 12 Apr 2016 23:09:16 -0700
-From: Tina Ruchandani <ruchandani.tina@gmail.com>
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: y2038@lists.linaro.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: [PATCH v3] prism54: isl_38xx: Replace 'struct timeval'
-Message-ID: <20160413060916.GA21184@localhost> (sfid-20160413_102532_303214_ACA2EBA3)
+	Tue, 5 Apr 2016 08:39:13 -0400
+Date: Tue, 5 Apr 2016 18:08:56 +0530
+From: Mohammed Shafi Shajakhan <mohammed@codeaurora.org>
+To: Johannes Berg <johannes@sipsolutions.net>, g@codeaurora.org
+Cc: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+	linux-wireless@vger.kernel.org, ath10k@lists.infradead.org,
+	kvalo@codeaurora.org
+Subject: Re: [PATCH v3] cfg80211/nl80211: Add support for
+ NL80211_STA_INFO_RX_DURATION
+Message-ID: <20160405123856.GA23252@atheros-ThinkPad-T61> (sfid-20160405_143916_055396_8227EB91)
+References: <1457529357-19077-1-git-send-email-mohammed@qca.qualcomm.com>
+ <1459850650.18188.42.camel@sipsolutions.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1459850650.18188.42.camel@sipsolutions.net>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-'struct timeval' uses a 32-bit seconds field which will overflow in
-year 2038 and beyond. This patch is part of a larger effort to remove
-all instances of 'struct timeval' from the kernel and replace them
-with 64-bit timekeeping variables.
-The patch also fixes the debug printf specifier to avoid the
-seconds value being truncated.
-The patch was build-tested / debugged by removing the
-"if VERBOSE > SHOW_ERROR_MESSAGES" guards.
+Hi Johannes,
 
-Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
-Suggested-by: Arnd Bergmann <arnd@arndb.de>
---
-Changes in v3:
- Fix commit message
-Changes in v2:
- Changed printf specifier as suggested by Arnd Bergmann to
-avoid truncation.
----
- drivers/net/wireless/intersil/prism54/isl_38xx.c | 35 ++++++++++++------------
- 1 file changed, 18 insertions(+), 17 deletions(-)
+On Tue, Apr 05, 2016 at 12:04:10PM +0200, Johannes Berg wrote:
+> Hi,
+> 
+> The implementation seems fine now, but I think the commit log needs some work.
 
-diff --git a/drivers/net/wireless/intersil/prism54/isl_38xx.c b/drivers/net/wireless/intersil/prism54/isl_38xx.c
-index 333c1a2..6700387 100644
---- a/drivers/net/wireless/intersil/prism54/isl_38xx.c
-+++ b/drivers/net/wireless/intersil/prism54/isl_38xx.c
-@@ -19,6 +19,7 @@
- #include <linux/module.h>
- #include <linux/types.h>
- #include <linux/delay.h>
-+#include <linux/ktime.h>
+[shafi] thanks for reviewing.
 
- #include <asm/uaccess.h>
- #include <asm/io.h>
-@@ -113,7 +114,7 @@ isl38xx_trigger_device(int asleep, void __iomem *device_base)
+> 
+> > Add support for new netlink attribute 'NL80211_STA_INFO_RX_DURATION'
+> 
+> I think it'd be worthwhile to describe the attribute a bit more,
+> including why you're adding it.
 
- #if VERBOSE > SHOW_ERROR_MESSAGES
- 	u32 counter = 0;
--	struct timeval current_time;
-+	struct timespec64 current_ts64;
- 	DEBUG(SHOW_FUNCTION_CALLS, "isl38xx trigger device\n");
- #endif
+[shafi] will update in v4
 
-@@ -121,22 +122,22 @@ isl38xx_trigger_device(int asleep, void __iomem *device_base)
- 	if (asleep) {
- 		/* device is in powersave, trigger the device for wakeup */
- #if VERBOSE > SHOW_ERROR_MESSAGES
--		do_gettimeofday(&current_time);
--		DEBUG(SHOW_TRACING, "%08li.%08li Device wakeup triggered\n",
--		      current_time.tv_sec, (long)current_time.tv_usec);
-+		ktime_get_real_ts64(&current_ts64);
-+		DEBUG(SHOW_TRACING, "%lld.%09ld Device wakeup triggered\n",
-+		      (s64)current_ts64.tv_sec, current_ts64.tv_nsec);
+> 
+> > This flag
+> 
+> There's no flag.
 
--		DEBUG(SHOW_TRACING, "%08li.%08li Device register read %08x\n",
--		      current_time.tv_sec, (long)current_time.tv_usec,
-+		DEBUG(SHOW_TRACING, "%lld.%09ld Device register read %08x\n",
-+		      (s64)current_ts64.tv_sec, current_ts64.tv_nsec,
- 		      readl(device_base + ISL38XX_CTRL_STAT_REG));
- #endif
+[shafi] i will replace it with the name 'NL80211_STA_INFO_RX_DURATION'
 
- 		reg = readl(device_base + ISL38XX_INT_IDENT_REG);
- 		if (reg == 0xabadface) {
- #if VERBOSE > SHOW_ERROR_MESSAGES
--			do_gettimeofday(&current_time);
-+			ktime_get_real_ts64(&current_ts64);
- 			DEBUG(SHOW_TRACING,
--			      "%08li.%08li Device register abadface\n",
--			      current_time.tv_sec, (long)current_time.tv_usec);
-+			      "%lld.%09ld Device register abadface\n",
-+			      (s64)current_ts64.tv_sec, current_ts64.tv_nsec);
- #endif
- 			/* read the Device Status Register until Sleepmode bit is set */
- 			while (reg = readl(device_base + ISL38XX_CTRL_STAT_REG),
-@@ -149,13 +150,13 @@ isl38xx_trigger_device(int asleep, void __iomem *device_base)
+> 
+> >  will be set when drivers can fill rx_duration (aggregate
+> > PPDU duration(usecs) for all the frames from a peer) 
+> 
+> You have the description here, but putting it with the attribute would
+> be better.
 
- #if VERBOSE > SHOW_ERROR_MESSAGES
- 			DEBUG(SHOW_TRACING,
--			      "%08li.%08li Device register read %08x\n",
--			      current_time.tv_sec, (long)current_time.tv_usec,
-+			      "%lld.%09ld Device register read %08x\n",
-+			      (s64)current_ts64.tv_sec, current_ts64.tv_nsec,
- 			      readl(device_base + ISL38XX_CTRL_STAT_REG));
--			do_gettimeofday(&current_time);
-+			ktime_get_real_ts64(&current_ts64);
- 			DEBUG(SHOW_TRACING,
--			      "%08li.%08li Device asleep counter %i\n",
--			      current_time.tv_sec, (long)current_time.tv_usec,
-+			      "%lld.%09ld Device asleep counter %i\n",
-+			      (s64)current_ts64.tv_sec, current_ts64.tv_nsec,
- 			      counter);
- #endif
- 		}
-@@ -168,9 +169,9 @@ isl38xx_trigger_device(int asleep, void __iomem *device_base)
+[shafi] ok
 
- 		/* perform another read on the Device Status Register */
- 		reg = readl(device_base + ISL38XX_CTRL_STAT_REG);
--		do_gettimeofday(&current_time);
--		DEBUG(SHOW_TRACING, "%08li.%08li Device register read %08x\n",
--		      current_time.tv_sec, (long)current_time.tv_usec, reg);
-+		ktime_get_real_ts64(&current_ts64);
-+		DEBUG(SHOW_TRACING, "%lld.%00ld Device register read %08x\n",
-+		      (s64)current_ts64.tv_sec, current_ts64.tv_nsec, reg);
- #endif
- 	} else {
- 		/* device is (still) awake  */
---
-2.8.0.rc3.226.g39d4020
+> 
+> > via 'drv_sta_statistics' callback
+> 
+> drv_sta_statistics is a mac80211 detail, that's not relevant at
+> cfg80211 level; mentioning that is just confusing. This can well used
+> by non-mac80211 drivers.
 
+[shafi] agreed, will remove it.
+
+> 
+> > Also make sta_info flags 'filled' as 64 bit to accommodate for new
+> > per station stats. 
+> 
+> That sentence doesn't parse well.
+> 
+> > Extend 'PUT_SINFO' for supporting rx_duration
+> > field and any new per sta information in future
+> 
+> That sentence I think should just be removed.
+
+[shafi] ok.
+
+-shafi
