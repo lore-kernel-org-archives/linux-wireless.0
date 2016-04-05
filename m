@@ -1,54 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:35997 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932189AbcDFIvR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 04:51:17 -0400
-Message-ID: <1459932671.17504.38.camel@sipsolutions.net> (sfid-20160406_105122_642807_08355C65)
-Subject: Re: [PATCHv3 RESEND 05/11] cfg80211: provide a function to report a
- match for NAN
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Date: Wed, 06 Apr 2016 10:51:11 +0200
-In-Reply-To: <1459244109-16038-5-git-send-email-emmanuel.grumbach@intel.com>
-References: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1459244109-16038-5-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:33061 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757097AbcDEILL (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2016 04:11:11 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u3586bJj013891
+	for <linux-wireless@vger.kernel.org>; Tue, 5 Apr 2016 01:11:05 -0700
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+	by mx0b-0016f401.pphosted.com with ESMTP id 222dkfh9h2-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2016 01:11:05 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Nishant Sarmukadam <nishants@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH RESEND 5/7] mwifiex: schedule main workqueue for transmitting bridge packets
+Date: Tue, 5 Apr 2016 01:04:38 -0700
+Message-ID: <1459843480-25956-5-git-send-email-akarwar@marvell.com> (sfid-20160405_101133_867977_A70B6B15)
+In-Reply-To: <1459843480-25956-1-git-send-email-akarwar@marvell.com>
+References: <1459843480-25956-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-03-29 at 12:35 +0300, Emmanuel Grumbach wrote:
-> 
-> +/**
-> + * enum nl80211_nan_match_attributes - NAN match attributes
-> + * @__NL80211_NAN_MATCH_INVALID: invalid
-> + * @NL80211_NAN_MATCH_FUNC_TYPE: &enum nl80211_nan_function_type
-> (u8). This is
-> + *	the type of the function which had a match.
+From: Xinming Hu <huxm@marvell.com>
 
-> + * @NL80211_NAN_MATCH_INSTANCE_ID: The instance ID of the local
-> function that
-> + *	had a match. This is a u8.
+Bridge packets are enqueued to wmm tx queue, but will not be sent
+until main workqeue is scheduled for new interrupt or other
+reason. This adds unnecessary delay during traffic.
 
-It would make sense to report this using the proper
-NL80211_ATTR_NAN_FUNC_INST_ID.
+We will schedule main workqueue when bridge packet is queued.
 
-In a previous email I just said you can remove that, so then you'd have to do some nesting here, and then you can easily also use the FUNC_TYPE from the function attributes.
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/uap_txrx.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Having two sets of identical attributes is quite odd, IMHO.
+diff --git a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+index 193a809..305589e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+@@ -216,6 +216,8 @@ static void mwifiex_uap_queue_bridged_pkt(struct mwifiex_private *priv,
+ 	atomic_inc(&adapter->tx_pending);
+ 	atomic_inc(&adapter->pending_bridged_pkts);
+ 
++	mwifiex_queue_main_work(priv->adapter);
++
+ 	return;
+ }
+ 
+-- 
+1.8.1.4
 
-> + * @NL80211_NAN_MATCH_MAC: The MAC address of the peer. This
-> attribute is
-> + *	binary.
-
-This is debatable, I guess, you could also use the top-level attribute.
-
-> +nla_put_failure:
-> +	genlmsg_cancel(msg, hdr);
-> +	nlmsg_free(msg);
-
-No need to cancel before free :)
-
-johannes
