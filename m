@@ -1,76 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:34279 "EHLO
-	mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753927AbcDCWRA (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:27539 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757824AbcDELYS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Apr 2016 18:17:00 -0400
-Received: by mail-pf0-f173.google.com with SMTP id c20so21524655pfc.1
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Apr 2016 15:17:00 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, wcn36xx@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 10/15] wcn36xx: Copy all members in config_sta v1 conversion
-Date: Sun,  3 Apr 2016 15:16:41 -0700
-Message-Id: <1459721806-11817-10-git-send-email-bjorn.andersson@linaro.org> (sfid-20160404_002034_802215_C01A256C)
-In-Reply-To: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
+	Tue, 5 Apr 2016 07:24:18 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH 3/7] wil6210: change RX_HTRSH interrupt print level to debug
+Date: Tue,  5 Apr 2016 14:24:03 +0300
+Message-Id: <1459855447-17413-4-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160405_132424_097127_046B937C)
+In-Reply-To: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+When using interrupt moderation RX_HTRSH interrupt can occur
+frequently during high throughput and should not be considered
+as error.
+Such print-outs can degrade the performance hence should be printed
+in debug print level.
 
-When converting to version 1 of the config_sta struct not all
-members where copied. This fixes the problem of multicast frames
-not being delivered on an encrypted network.
-
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c | 19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+ drivers/net/wireless/ath/wil6210/interrupt.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 7f315d098f52..ebb446272d21 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -949,17 +949,32 @@ static void wcn36xx_smd_convert_sta_to_v1(struct wcn36xx *wcn,
- 	memcpy(&v1->mac, orig->mac, ETH_ALEN);
- 	v1->aid = orig->aid;
- 	v1->type = orig->type;
-+	v1->short_preamble_supported = orig->short_preamble_supported;
- 	v1->listen_interval = orig->listen_interval;
-+	v1->wmm_enabled = orig->wmm_enabled;
- 	v1->ht_capable = orig->ht_capable;
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index fe66b2b..6897754 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -228,11 +228,8 @@ static irqreturn_t wil6210_irq_rx(int irq, void *cookie)
+ 	 */
+ 	if (likely(isr & (BIT_DMA_EP_RX_ICR_RX_DONE |
+ 			  BIT_DMA_EP_RX_ICR_RX_HTRSH))) {
+-		wil_dbg_irq(wil, "RX done\n");
 -
-+	v1->tx_channel_width_set = orig->tx_channel_width_set;
-+	v1->rifs_mode = orig->rifs_mode;
-+	v1->lsig_txop_protection = orig->lsig_txop_protection;
- 	v1->max_ampdu_size = orig->max_ampdu_size;
- 	v1->max_ampdu_density = orig->max_ampdu_density;
- 	v1->sgi_40mhz = orig->sgi_40mhz;
- 	v1->sgi_20Mhz = orig->sgi_20Mhz;
--
-+	v1->rmf = orig->rmf;
-+	v1->encrypt_type = orig->encrypt_type;
-+	v1->action = orig->action;
-+	v1->uapsd = orig->uapsd;
-+	v1->max_sp_len = orig->max_sp_len;
-+	v1->green_field_capable = orig->green_field_capable;
-+	v1->mimo_ps = orig->mimo_ps;
-+	v1->delayed_ba_support = orig->delayed_ba_support;
-+	v1->max_ampdu_duration = orig->max_ampdu_duration;
-+	v1->dsss_cck_mode_40mhz = orig->dsss_cck_mode_40mhz;
- 	memcpy(&v1->supported_rates, &orig->supported_rates,
- 	       sizeof(orig->supported_rates));
- 	v1->sta_index = orig->sta_index;
-+	v1->bssid_index = orig->bssid_index;
-+	v1->p2p = orig->p2p;
- }
+-		if (unlikely(isr & BIT_DMA_EP_RX_ICR_RX_HTRSH))
+-			wil_err_ratelimited(wil,
+-					    "Received \"Rx buffer is in risk of overflow\" interrupt\n");
++		wil_dbg_irq(wil, "RX done / RX_HTRSH received, ISR (0x%x)\n",
++			    isr);
  
- static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn,
+ 		isr &= ~(BIT_DMA_EP_RX_ICR_RX_DONE |
+ 			 BIT_DMA_EP_RX_ICR_RX_HTRSH);
 -- 
-2.5.0
+1.8.5.2
 
