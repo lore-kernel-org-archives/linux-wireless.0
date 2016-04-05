@@ -1,60 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:43087 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751426AbcDGHby (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 03:31:54 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
-To: netdev@vger.kernel.org
-Cc: Dmitry Ivanov <dmitrijs.ivanovs@ubnt.com>,
-	linux-wireless@vger.kernel.org
-Subject: [PATCH] netlink: don't send NETLINK_URELEASE for unbound sockets
-Date: Thu,  7 Apr 2016 09:31:38 +0200
-Message-Id: <1460014298-30293-1-git-send-email-johannes@sipsolutions.net> (sfid-20160407_093157_581664_857F269E)
+Received: from smtp-out6.electric.net ([192.162.217.184]:64264 "EHLO
+	smtp-out6.electric.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759736AbcDESYt (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2016 14:24:49 -0400
+From: David Laight <David.Laight@ACULAB.COM>
+To: 'Amitkumar Karwar' <akarwar@marvell.com>,
+	Eric Dumazet <eric.dumazet@gmail.com>,
+	Wei-Ning Huang <wnhuang@google.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Sameer Nanda <snanda@google.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Sonny Rao <sonnyrao@chromium.org>,
+	Douglas Anderson <dianders@chromium.org>
+Subject: RE: [PATCH] mwifiex: add __GFP_REPEAT to skb allocation call
+Date: Tue, 5 Apr 2016 16:05:16 +0000
+Message-ID: <063D6719AE5E284EB5DD2968C1650D6D54DC5395@AcuExch.aculab.com> (sfid-20160405_202452_240079_FA53CAC0)
+References: <1459226840-36287-1-git-send-email-wnhuang@chromium.org>
+	 <87vb45brxc.fsf@kamboji.qca.qualcomm.com>
+	 <CABicQ-UJ1kniq6m86QcyVZBPznvNexfrUrTk3A_=GmZy69hvCA@mail.gmail.com>
+ <1459256320.6473.160.camel@edumazet-glaptop3.roam.corp.google.com>
+ <4fa3762986eb4b848dbe7daf6871d7a8@SC-EXCH04.marvell.com>
+In-Reply-To: <4fa3762986eb4b848dbe7daf6871d7a8@SC-EXCH04.marvell.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Dmitry Ivanov <dmitrijs.ivanovs@ubnt.com>
-
-All existing users of NETLINK_URELEASE use it to clean up resources that
-were previously allocated to a socket via some command. As a result, no
-users require getting this notification for unbound sockets.
-
-Sending it for unbound sockets, however, is a problem because any user
-(including unprivileged users) can create a socket that uses the same ID
-as an existing socket. Binding this new socket will fail, but if the
-NETLINK_URELEASE notification is generated for such sockets, the users
-thereof will be tricked into thinking the socket that they allocated the
-resources for is closed.
-
-In the nl80211 case, this will cause destruction of virtual interfaces
-that still belong to an existing hostapd process; this is the case that
-Dmitry noticed. In the NFC case, it will cause a poll abort. In the case
-of netlink log/queue it will cause them to stop reporting events, as if
-NFULNL_CFG_CMD_UNBIND/NFQNL_CFG_CMD_UNBIND had been called.
-
-Fix this problem by checking that the socket is bound before generating
-the NETLINK_URELEASE notification.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Dmitry Ivanov <dima@ubnt.com>
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
----
- net/netlink/af_netlink.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
-index 215fc08c02ab..330ebd600f25 100644
---- a/net/netlink/af_netlink.c
-+++ b/net/netlink/af_netlink.c
-@@ -688,7 +688,7 @@ static int netlink_release(struct socket *sock)
- 
- 	skb_queue_purge(&sk->sk_write_queue);
- 
--	if (nlk->portid) {
-+	if (nlk->portid && nlk->bound) {
- 		struct netlink_notify n = {
- 						.net = sock_net(sk),
- 						.protocol = sk->sk_protocol,
--- 
-2.7.0
-
+RnJvbTogQW1pdGt1bWFyIEthcndhcg0KPiBTZW50OiAwNSBBcHJpbCAyMDE2IDA2OjQ4DQouLi4N
+Cj4gT3VyIG9uZSB0aW1lIGFsbG9jYXRlZCA2NGsgYnVmZmVyIHJlYWQgZnJvbSBmaXJtd2FyZSBj
+b250YWlucyBtdWx0aXBsZSBkYXRhIGNodW5rcy4gV2UgaGF2ZSBhIGZlYXR1cmUNCj4gY2FsbGVk
+IHNpbmdsZSBwb3J0IGFnZ3JlZ2F0aW9uIGluIHdoaWNoIGZpcm13YXJlIGF0dGFjaGVzIGFuIGFn
+Z3JlZ2F0ZWQgYnVmZmVyIHRvIHNpbmdsZSBwb3J0LiBTbw0KPiBzb21ldGltZXMgYSBzaW5nbGUg
+ZGF0YSBjaHVuayBjYW4gZXhjZWVkIDMyay4gZGV2X2tmcmVlX3NrYl9hbnkoKSBpcyBjYWxsZWQg
+dG8gZnJlZSB0aG9zZSBkYXRhIGNodW5rcy4NCg0KQWggeWVzLCB3aGljaCBwYXJ0aWN1bGFyIHBy
+b2JsZW0gZG9lcyBhZ2dyZWdhdGluZyBkYXRhIGludG8gYSBzaW5nbGUgYnVmZmVyIHNvbHZlPw0K
+DQoJRGF2aWQNCg0K
