@@ -1,64 +1,165 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f194.google.com ([209.85.223.194]:35049 "EHLO
-	mail-io0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752180AbcDTFn4 (ORCPT
+Received: from mail-qg0-f43.google.com ([209.85.192.43]:33973 "EHLO
+	mail-qg0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760331AbcDEVjl (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2016 01:43:56 -0400
-Received: by mail-io0-f194.google.com with SMTP id u185so5601322iod.2
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2016 22:43:56 -0700 (PDT)
+	Tue, 5 Apr 2016 17:39:41 -0400
+Received: by mail-qg0-f43.google.com with SMTP id c6so21765685qga.1
+        for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2016 14:39:41 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAD3r-iRQD5nVBuC1_zYmu_FtmP4CdP2BbHxz1Q579mBPKg5zmQ@mail.gmail.com>
-References: <CAD3r-iRQD5nVBuC1_zYmu_FtmP4CdP2BbHxz1Q579mBPKg5zmQ@mail.gmail.com>
-Date: Wed, 20 Apr 2016 00:43:55 -0500
-Message-ID: <CAD3r-iTvJZLM0=tpoKZr8RGFrymdzPBV8xAEsx-qvnFeh6y=5g@mail.gmail.com> (sfid-20160420_074400_699541_0F9D7D85)
-Subject: Fwd: ap + adhoc not working with Mwifiex driver for sd8887
-From: Luana Borgia <luanaborgia1969@gmail.com>
-To: linux-wireless@vger.kernel.org, Avinash Patil <patila@marvell.com>
+In-Reply-To: <CANfLQrad-1C3Wzy9M+=J7nzjQOcgam9CdJVDR2KC=KipZRpbkA@mail.gmail.com>
+References: <CANfLQrYTqUQGoj+Xr1XrKJrh8oaBB+qt8YeFwo0EyhbC-RpnNg@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB32EAA379D@hasmsx107.ger.corp.intel.com>
+	<CANfLQrad-1C3Wzy9M+=J7nzjQOcgam9CdJVDR2KC=KipZRpbkA@mail.gmail.com>
+Date: Tue, 5 Apr 2016 15:39:40 -0600
+Message-ID: <CAAA5faFt+web-E4-qMW5n3EGDqtG2ZuzJkh+bZYFF_td6Jh91w@mail.gmail.com> (sfid-20160405_234005_011605_F4FA9A3B)
+Subject: Re: iwlwifi monitor mode: No data frame captured on 5 Ghz
+From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
+To: Gucea Doru <gucea.doru@gmail.com>
+Cc: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Gucea, Doru" <doru.gucea@intel.com>
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-I've successfully managed to get this driver working in adhoc with
-olsrd on mlan0 interface, now I'm trying to add a uap0 working at the
-same time, with all this command:
+On Tue, Apr 5, 2016 at 7:25 AM, Gucea Doru <gucea.doru@gmail.com> wrote:
+> On Tue, Apr 5, 2016 at 1:00 PM, Grumbach, Emmanuel
+> <emmanuel.grumbach@intel.com> wrote:
+>>>
+>>> Hello,
+>>>
+>>> I am trying to capture packets that are exchanged between an AP and a
+>>> smartphone on the 5Ghz frequency. For generating traffic, I upload UDP
+>>> traffic from a laptop PC towards the smartphone using iperf.
+>>>
+>>> The problem is that I can see _only_ the control frames like RTS/CTS, Block
+>>> ACK, while the data packets are not captured. I uploaded the Wireshark
+>>> capture files at [1] (located inside the folders whose name starts with 5Ghz).
+>>
+>> Most likely the packets on A band have a VHT preamble and your SKU is 11N only.
+>
+> My card, Intel 7260 [1]  supports 802.11 ac. So it should also support
+> VHT, right? Is there any interface in user-space for checking after
+> VHT?
+>
+> However, I noticed a "failure" message in dmesg:
+> [    4.030428] Intel(R) Wireless WiFi driver for Linux, in-tree:
+> [    4.030570] iwlwifi 0000:04:00.0: irq 37 for MSI/MSI-X
+> [    4.030760] iwlwifi 0000:04:00.0: Direct firmware load for
+> iwlwifi-7260-10.ucode failed with error -2
+> [    4.035509] iwlwifi 0000:04:00.0: loaded firmware version
+> 25.228.9.0 op_mode iwlmvm
+> [    4.454772] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band
+> Wireless N 7260, REV=0x144
+> [    4.454825] iwlwifi 0000:04:00.0: L1 Disabled - LTR Enabled
+> [    4.455055] iwlwifi 0000:04:00.0: L1 Disabled - LTR Enabled
+> [   15.049933] iwlwifi 0000:04:00.0: L1 Disabled - LTR Enabled
+> [   15.050269] iwlwifi 0000:04:00.0: L1 Disabled - LTR Enabled
 
-rfkill unblock wlan
-ip link set uap0 down
-ip link set mlan0 down
-iw dev mlan0 set type ibss
-ip link set mlan0 up
-iw dev mlan0 ibss join mesh 2437 fe:de:fe:de:fe:de
-olsrd-start.sh
-cat <<EOF > /etc/hostapd.conf
-ssid=PCM_AP_fede
-interface=uap0
-driver=nl80211
-hw_mode=g
-channel=6
-EOF
-iw phy phy0 interface add uap0 type __ap
-hostapd /etc/hostapd.conf &
-dnsmasq --interface=uap0 --except-interface=lo --bind-interfaces
---dhcp-range=192.168.3.2,192.168.3.10,12h --conf-file=/dev/null
-ip addr add 192.168.3.1/24 broadcast 192.168.3.255 dev uap0
+The ucode failure isn't a problem, you'll likely find that another
+firmware does load.
+I've got also a 7620, but mine does support 11ac, so mine does support VHT.
 
-but I get this error after run the hostapd command:
+[    9.820637] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band
+Wireless AC 7260, REV=0x144
 
-[ 4980.201096] IPv6: ADDRCONF(NETDEV_CHANGE): mlan0: link becomes ready
-[ 4983.335467] IPv6: ADDRCONF(NETDEV_UP): uap0: link is not ready
-[ 4983.358879] mwifiex_sdio mmc0:0001:1: CMD_RESP: cmd 0xb1 error, result=0x1
+I also got a firmware load failure, but that's ok
 
-adhoc is fine, with the above order of command
-but if I run before hostapd and than adhoc part than the issue occur
-in the adhoc part.
+[    8.399101] iwlwifi 0000:04:00.0: Direct firmware load for
+iwlwifi-7260-17.ucode failed with error -2
 
-I'm using the firmware
-http://git.marvell.com/?p=mwifiex-firmware.git;a=blob;f=mrvl/sd8887_uapsta.bin;h=165e6c3d34b0c2a630252907a7ac4daf6e13c9d5;hb=HEAD
+Cause here it does load the one it needs:
 
-and the mwifiex from kernel linux 4.1.1
+[    9.110486] iwlwifi 0000:04:00.0: loaded firmware version
+16.242414.0 op_mode iwlmvm
 
-thanks in advance for any support
-best regards
+I did fetch recent firmware by git to be up to date.
+I also added some instrumentation to get to see the unsupported splx
+structure and in my case it's just because of the package.count isn't
+what it should be.
+This isn't a problem as well really.
 
-Luana
+Mar 14 00:32:36 router-dev kernel: [    8.273274] iwlwifi
+0000:04:00.0: Unsupported splx structure
+Mar 14 00:32:36 router-dev kernel: [    8.273276] iwlwifi
+0000:04:00.0: drivers/net/wireless/iwlwifi/pcie/drv.c,
+splx_get_pwr_limit: splx->type is 0x04
+Mar 14 00:32:36 router-dev kernel: [    8.273277] iwlwifi
+0000:04:00.0: drivers/net/wireless/iwlwifi/pcie/drv.c,
+splx_get_pwr_limit: splx->package.count is 4
+Mar 14 00:32:36 router-dev kernel: [    8.273277] iwlwifi
+0000:04:00.0: drivers/net/wireless/iwlwifi/pcie/drv.c,
+splx_get_pwr_limit: splx->package.elements[0].type is 0x01
+Mar 14 00:32:36 router-dev kernel: [    8.273278] iwlwifi
+0000:04:00.0: drivers/net/wireless/iwlwifi/pcie/drv.c,
+splx_get_pwr_limit: splx->package.elements[0].integer.value is 0
+Mar 14 00:32:36 router-dev kernel: [    8.273279] iwlwifi
+0000:04:00.0: drivers/net/wireless/iwlwifi/pcie/drv.c,
+splx_get_pwr_limit: limits->type is 0x04
+Mar 14 00:32:36 router-dev kernel: [    8.273280] iwlwifi
+0000:04:00.0: drivers/net/wireless/iwlwifi/pcie/drv.c,
+splx_get_pwr_limit: limits->package.count is 3
+Mar 14 00:32:36 router-dev kernel: [    8.273281] iwlwifi
+0000:04:00.0: drivers/net/wireless/iwlwifi/pcie/drv.c,
+splx_get_pwr_limit: limits->package.elements[0].type is 0x01
+Mar 14 00:32:36 router-dev kernel: [    8.273281] iwlwifi
+0000:04:00.0: drivers/net/wireless/iwlwifi/pcie/drv.c,
+splx_get_pwr_limit: limits->package.elements[1].type is 0x01
+Mar 14 00:32:36 router-dev kernel: [    8.273282] iwlwifi
+0000:04:00.0: drivers/net/wireless/iwlwifi/pcie/drv.c,
+splx_get_pwr_limit: WiFi power is not limited,
+domain_type->integer.value is 0
+
+I compiled wpa_supplicant and it connects without trouble to several
+access points.
+I mostly do it this way, because I maintain the mtk driver I use in
+the access point here so I get to see extensive info from both sides
+when things go pearshape. :)
+
+>
+> Also, the maximum bit rate reported by iwconfig is 150 Mb/s, so my
+> assumption is that the card can't enter into the 802.11 ac mode, it
+> just stays into 802.11n.
+>
+> doru@doru-N551JK:~$ iwconfig wlan0
+> wlan0     IEEE 802.11abgn  ESSID:"5_mptcp"
+>           Mode:Managed  Frequency:5.24 GHz  Access Point: C4:6E:1F:4B:10:A2
+>           Bit Rate=150 Mb/s   Tx-Power=22 dBm
+>           Retry short limit:7   RTS thr:off   Fragment thr:off
+>           Power Management:on
+>           Link Quality=70/70  Signal level=-36 dBm
+>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>           Tx excessive retries:0  Invalid misc:22   Missed beacon:0
+>
+>
+> [1] http://www.intel.com/content/www/us/en/wireless-products/dual-band-wireless-ac-7260-bluetooth-brief.html
+>
+>> Another option is that the traffic uses LDPC encoding and this device doesn't support it.
+>>
+>>
+>>>
+>>> If I use the 2.4 frequency, all the frames are captured. I also uploaded the
+>>> Wireshark packet traces for 2.4Ghz at [1] (located inside the folders whose
+>>> name starts with 2.4 Ghz).
+>>>
+>>> Is this a known bug or am I doing something wrong?
+>>>
+>>> Additional details:
+>>> Wi-Fi card:  iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless N 7260,
+>>> REV=0x144 Firmware version: iwlwifi 0000:04:00.0: loaded firmware version
+>>> 25.228.9.0 op_mode iwlmvm
+>>> Traffic encryption: WPA & WPA2 Personal
+>>> Setting up the card in wireless mode:
+>>> ip link set dev wlan0 down
+>>> iw wlan0 set type monitor
+>>> ip link set dev wlan0 up
+>>> iw wlan0 set freq 5240
+>>>
+>>> [1] https://drive.google.com/open?id=0B5SBH08PU_Chek9rOHY0VkxFRUE
+>>>
+>>> Thank you, Doru
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
