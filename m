@@ -1,50 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:34225 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752573AbcCaXNv (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:14326 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751271AbcDEILA (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 31 Mar 2016 19:13:51 -0400
-Date: Fri, 1 Apr 2016 00:13:46 +0100
-From: Chris Bainbridge <chris.bainbridge@gmail.com>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-Message-ID: <20160331231346.GA7469@localhost> (sfid-20160401_011354_173393_F53D9369)
-References: <E1akxli-00030z-BC@bombadil.infradead.org>
+	Tue, 5 Apr 2016 04:11:00 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u3586bJi013891
+	for <linux-wireless@vger.kernel.org>; Tue, 5 Apr 2016 01:10:58 -0700
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+	by mx0b-0016f401.pphosted.com with ESMTP id 222dkfh9gn-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2016 01:10:58 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Nishant Sarmukadam <nishants@marvell.com>,
+	Ganapathi Bhat <gbhat@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH RESEND 2/7] mwifiex: add support for wakeup on GTK rekey failure
+Date: Tue, 5 Apr 2016 01:04:35 -0700
+Message-ID: <1459843480-25956-2-git-send-email-akarwar@marvell.com> (sfid-20160405_101105_296430_F984177C)
+In-Reply-To: <1459843480-25956-1-git-send-email-akarwar@marvell.com>
+References: <1459843480-25956-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <E1akxli-00030z-BC@bombadil.infradead.org>
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 29, 2016 at 07:41:30PM +0200, Lukas Wunner wrote:
-> Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ storm
-> on boot until they are reset, causing spurious interrupts if the IRQ is
-> shared. Apparently the EFI bootloader enables the device and does not
-> disable it before passing control to the OS. The bootloader contains a
-> driver for the wireless card which allows it to phone home to Cupertino.
-> This is used for Internet Recovery (download and install OS X images)
-> and probably also for Back to My Mac (remote access, RFC 6281) and to
-> discover stolen hardware.
-> 
-> The issue is most pronounced on 2011 and 2012 MacBook Pros where the IRQ
-> is shared with 3 other devices (Light Ridge Thunderbolt controller, SDXC
-> reader, HDA card on discrete GPU). As soon as an interrupt handler is
-> installed for one of these devices, the ensuing storm of spurious IRQs
-> causes the kernel to disable the IRQ and switch to polling. This lasts
-> until the b43 driver loads and resets the device.
-> 
-> Loading the b43 driver first is not always an option, in particular with
-> the Light Ridge Thunderbolt controller: The PCI hotplug IRQ handler gets
-> installed early on because it is built in, unlike b43 which is usually
-> a module.
-> 
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
-> Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632
+From: Ganapathi Bhat <gbhat@marvell.com>
 
-Should also fix https://bugzilla.kernel.org/show_bug.cgi?id=111781 ?
-Given that this is a serious bug that can corrupt filesystems it would
-be good to see the fix in stable too.
+User can configure wakeup on GTK rekey fail with wowlan.
+Added corresponding wakeup reason.
+
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 7 ++++++-
+ drivers/net/wireless/marvell/mwifiex/fw.h       | 1 +
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index ca8cdd2..49661e0 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -3390,6 +3390,10 @@ static int mwifiex_cfg80211_resume(struct wiphy *wiphy)
+ 		break;
+ 	case	MANAGEMENT_FRAME_MATCHED:
+ 		break;
++	case GTK_REKEY_FAILURE:
++		if (wiphy->wowlan_config->gtk_rekey_failure)
++			wakeup_report.gtk_rekey_failure = true;
++		break;
+ 	default:
+ 		break;
+ 	}
+@@ -3965,7 +3969,8 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
+ #ifdef CONFIG_PM
+ static const struct wiphy_wowlan_support mwifiex_wowlan_support = {
+ 	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT |
+-		WIPHY_WOWLAN_NET_DETECT | WIPHY_WOWLAN_SUPPORTS_GTK_REKEY,
++		WIPHY_WOWLAN_NET_DETECT | WIPHY_WOWLAN_SUPPORTS_GTK_REKEY |
++		WIPHY_WOWLAN_GTK_REKEY_FAILURE,
+ 	.n_patterns = MWIFIEX_MEF_MAX_FILTERS,
+ 	.pattern_min_len = 1,
+ 	.pattern_max_len = MWIFIEX_MAX_PATTERN_LEN,
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 8703d24..8e4145a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -620,6 +620,7 @@ enum HS_WAKEUP_REASON {
+ 	MAGIC_PATTERN_MATCHED,
+ 	CONTROL_FRAME_MATCHED,
+ 	MANAGEMENT_FRAME_MATCHED,
++	GTK_REKEY_FAILURE,
+ 	RESERVED
+ };
+ 
+-- 
+1.8.1.4
+
