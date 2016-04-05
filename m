@@ -1,57 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46251 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932890AbcDTH7v (ORCPT
+Received: from mail-pa0-f68.google.com ([209.85.220.68]:34085 "EHLO
+	mail-pa0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752996AbcDEGjE (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2016 03:59:51 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Lauri Kasanen <cand@gmx.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] carl9170: Clarify kconfig text
-References: <20160416113312.8de2266358165182bb4b4a15@gmx.com>
-	<3244016.0TmHG3E4A9@debian64>
-	<87r3e2kgwy.fsf@kamboji.qca.qualcomm.com>
-	<11418613.XH7h8m2RjK@debian64>
-Date: Wed, 20 Apr 2016 10:59:44 +0300
-In-Reply-To: <11418613.XH7h8m2RjK@debian64> (Christian Lamparter's message of
-	"Mon, 18 Apr 2016 10:07:02 -0700 (PDT)")
-Message-ID: <87a8koiubz.fsf@kamboji.qca.qualcomm.com> (sfid-20160420_100014_506137_1AC0DDE9)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 5 Apr 2016 02:39:04 -0400
+Received: by mail-pa0-f68.google.com with SMTP id hb4so477990pac.1
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 23:39:04 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 09/14] staging: wilc1000: remove unused hif_drv in wilc_remain_on_channel
+Date: Tue,  5 Apr 2016 15:38:27 +0900
+Message-Id: <1459838312-16506-9-git-send-email-chaehyun.lim@gmail.com> (sfid-20160405_083908_687322_A259A4B1)
+In-Reply-To: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter <chunkeey@googlemail.com> writes:
+This patch removes unused hif_drv in wilc_remain_on_channel.
+There is no need to check null and print debug log.
 
-> On Monday, April 18, 2016 07:42:05 PM Kalle Valo wrote:
->> Christian Lamparter <chunkeey@googlemail.com> writes:
->> 
->> > On Monday, April 18, 2016 06:45:09 PM Kalle Valo wrote:
->> >
->> >> Why even mention anything about a "special firmware" as the firmware is
->> >> already available from linux-firmware.git? 
->> >
->> > Yes and no. 1.9.6 is in linux-firmware.git. I've tried to add 1.9.9 too
->> > but that failed.
->> > <http://comments.gmane.org/gmane.linux.kernel.wireless.general/114639>
->> 
->> Rick's comment makes sense to me, better just to provide the latest
->> version. No need to unnecessary confuse the users. And if someone really
->> wants to use an older version that she can retrieve it from the git
->> history.
->
-> Part of the fun here is that firmware is GPLv2. The linux-firmware.git has
-> to point to or add the firmware source to their tree. They have added every
-> single source file to it.... instead of "packaging" it in a tar.bz2/gz/xz
-> like you normally do for release sources.
->
-> If you want to read more about it:
-> <http://www.spinics.net/lists/linux-wireless/msg101868.html>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-Yeah, that's more work. I get that. But I'm still not understanding
-what's the actual problem which prevents us from updating carl9170
-firmware in linux-firmware.
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 0d0026e..8591c00 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3630,12 +3630,6 @@ int wilc_remain_on_channel(struct wilc_vif *vif, u32 session_id,
+ {
+ 	int result = 0;
+ 	struct host_if_msg msg;
+-	struct host_if_drv *hif_drv = vif->hif_drv;
+-
+-	if (!hif_drv) {
+-		netdev_err(vif->ndev, "driver is null\n");
+-		return -EFAULT;
+-	}
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 
 -- 
-Kalle Valo
+2.8.0
+
