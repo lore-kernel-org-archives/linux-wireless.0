@@ -1,43 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:59917 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752356AbcD1N0t (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2016 09:26:49 -0400
-Received: by sipsolutions.net with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-	(Exim 4.87)
-	(envelope-from <johannes@sipsolutions.net>)
-	id 1avlxv-00033H-2V
-	for linux-wireless@vger.kernel.org; Thu, 28 Apr 2016 15:26:47 +0200
-Message-ID: <1461850005.2352.9.camel@sipsolutions.net> (sfid-20160428_152701_448618_8DAD4328)
-Subject: next wireless workshop - poll
-From: Johannes Berg <johannes@sipsolutions.net>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-Date: Thu, 28 Apr 2016 15:26:45 +0200
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:32592 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753734AbcDEILK (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2016 04:11:10 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u35894jR021911
+	for <linux-wireless@vger.kernel.org>; Tue, 5 Apr 2016 01:11:09 -0700
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+	by mx0a-0016f401.pphosted.com with ESMTP id 222bekhwn7-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2016 01:11:09 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Nishant Sarmukadam <nishants@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH RESEND 7/7] mwifiex: dump pcie scratch registers
+Date: Tue, 5 Apr 2016 01:04:40 -0700
+Message-ID: <1459843480-25956-7-git-send-email-akarwar@marvell.com> (sfid-20160405_101124_853818_58AF7F43)
+In-Reply-To: <1459843480-25956-1-git-send-email-akarwar@marvell.com>
+References: <1459843480-25956-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Xinming Hu <huxm@marvell.com>
 
-Since I've been getting questions about the next possible workshop and
-its organisation, I decided to make a poll about it:
+This patch prints pcie scratch registers during firmware dump. They
+will be useful for analysing firmware status.
 
-http://goo.gl/forms/iMcE8b4TYU
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/main.c |  8 +++---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 42 +++++++++++++++++++++++++++++
+ drivers/net/wireless/marvell/mwifiex/pcie.h |  2 ++
+ 3 files changed, 49 insertions(+), 3 deletions(-)
 
-Please reply by
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 3cfa946..04b975c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -1074,12 +1074,14 @@ void mwifiex_drv_info_dump(struct mwifiex_adapter *adapter)
+ 			     priv->netdev->name, priv->num_tx_timeout);
+ 	}
+ 
+-	if (adapter->iface_type == MWIFIEX_SDIO) {
+-		p += sprintf(p, "\n=== SDIO register dump===\n");
++	if (adapter->iface_type == MWIFIEX_SDIO ||
++	    adapter->iface_type == MWIFIEX_PCIE) {
++		p += sprintf(p, "\n=== %s register dump===\n",
++			     adapter->iface_type == MWIFIEX_SDIO ?
++							"SDIO" : "PCIE");
+ 		if (adapter->if_ops.reg_dump)
+ 			p += adapter->if_ops.reg_dump(adapter, p);
+ 	}
+-
+ 	p += sprintf(p, "\n=== more debug information\n");
+ 	debug_info = kzalloc(sizeof(*debug_info), GFP_KERNEL);
+ 	if (debug_info) {
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 6a06ca5..edf8b07 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2355,6 +2355,47 @@ static int mwifiex_pcie_host_to_card(struct mwifiex_adapter *adapter, u8 type,
+ 	return 0;
+ }
+ 
++/* Function to dump PCIE scratch registers in case of FW crash
++ */
++static int
++mwifiex_pcie_reg_dump(struct mwifiex_adapter *adapter, char *drv_buf)
++{
++	char *p = drv_buf;
++	char buf[256], *ptr;
++	int i;
++	u32 value;
++	struct pcie_service_card *card = adapter->card;
++	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
++	int pcie_scratch_reg[] = {PCIE_SCRATCH_12_REG,
++				  PCIE_SCRATCH_13_REG,
++				  PCIE_SCRATCH_14_REG};
++
++	if (!p)
++		return 0;
++
++	mwifiex_dbg(adapter, MSG, "PCIE register dump start\n");
++
++	if (mwifiex_read_reg(adapter, reg->fw_status, &value)) {
++		mwifiex_dbg(adapter, ERROR, "failed to read firmware status");
++		return 0;
++	}
++
++	ptr = buf;
++	mwifiex_dbg(adapter, MSG, "pcie scratch register:");
++	for (i = 0; i < ARRAY_SIZE(pcie_scratch_reg); i++) {
++		mwifiex_read_reg(adapter, pcie_scratch_reg[i], &value);
++		ptr += sprintf(ptr, "reg:0x%x, value=0x%x\n",
++			       pcie_scratch_reg[i], value);
++	}
++
++	mwifiex_dbg(adapter, MSG, "%s\n", buf);
++	p += sprintf(p, "%s\n", buf);
++
++	mwifiex_dbg(adapter, MSG, "PCIE register dump end\n");
++
++	return p - drv_buf;
++}
++
+ /* This function read/write firmware */
+ static enum rdwr_status
+ mwifiex_pcie_rdwr_firmware(struct mwifiex_adapter *adapter, u8 doneflag)
+@@ -2899,6 +2940,7 @@ static struct mwifiex_if_ops pcie_ops = {
+ 	.cleanup_mpa_buf =		NULL,
+ 	.init_fw_port =			mwifiex_pcie_init_fw_port,
+ 	.clean_pcie_ring =		mwifiex_clean_pcie_ring_buf,
++	.reg_dump =			mwifiex_pcie_reg_dump,
+ 	.device_dump =			mwifiex_pcie_device_dump,
+ };
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
+index 4455d19..cc7a5df 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.h
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+@@ -73,6 +73,8 @@
+ #define PCIE_SCRATCH_10_REG				0xCE8
+ #define PCIE_SCRATCH_11_REG				0xCEC
+ #define PCIE_SCRATCH_12_REG				0xCF0
++#define PCIE_SCRATCH_13_REG				0xCF8
++#define PCIE_SCRATCH_14_REG				0xCFC
+ #define PCIE_RD_DATA_PTR_Q0_Q1                          0xC08C
+ #define PCIE_WR_DATA_PTR_Q0_Q1                          0xC05C
+ 
+-- 
+1.8.1.4
 
-	May 16th
-
-so I can aggregate/evaluate the responses and we can make a decision.
-
-I don't know anything about options for next year yet.
-* netdevconf seems to be planning to have one every 8 months or so (so
-might fall into June (-ish) in 2017) but it's very loosely organized
-with volunteers running it so nothing is planned yet.
-* KS/LPC will likely again be around October/November 2017, if we get a
-chance to have a workshop there.
-
-Thanks!
-
-johannes
