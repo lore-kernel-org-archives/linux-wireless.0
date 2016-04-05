@@ -1,47 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:47151 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:27539 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932660AbcDSPqE convert rfc822-to-8bit (ORCPT
+	with ESMTP id S1757824AbcDELYV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 11:46:04 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"mohammed@codeaurora.org" <mohammed@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: Fix return value for btcoex and peer stats
- debugfs
-Date: Tue, 19 Apr 2016 15:46:00 +0000
-Message-ID: <874maxk3f4.fsf@kamboji.qca.qualcomm.com> (sfid-20160419_174611_568221_7D87491E)
-References: <1459870106-2694-1-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1459870106-2694-1-git-send-email-mohammed@qca.qualcomm.com>
-	(Mohammed Shafi Shajakhan's message of "Tue, 5 Apr 2016 20:58:26	+0530")
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+	Tue, 5 Apr 2016 07:24:21 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH 5/7] wil6210: unmask RX_HTRSH interrupt only when connected
+Date: Tue,  5 Apr 2016 14:24:05 +0300
+Message-Id: <1459855447-17413-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160405_132427_381403_0CF344C5)
+In-Reply-To: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
+RX_HTRSH interrupt sometimes triggered during device reset
+procedure.
+To prevent handling this interrupt when not required, unmask
+this interrupt only if we are connected and mask it when
+disconnected.
 
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
->
-> Return value is incorrect for btcoex and peer stats debugfs
-> 'write' entries if the user provides a value that matches with
-> the already available debugfs entry, this results in the debugfs
-> entry getting stuck and the operation has to be terminated manually.
-> Fix this by returning the appropriate return 'count' as we do it for
-> other debugfs entries like pktlog etc
->
-> Fixes: cc61a1bbbc0e ("ath10k: enable debugfs provision to enable
-> Peer Stats feature")
-> Fixes: c28e6f06ff40 ("ath10k: fix sanity check on enabling btcoex via
-> debugfs")
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/interrupt.c |  6 +++++-
+ drivers/net/wireless/ath/wil6210/main.c      | 17 +++++++++++++++++
+ 2 files changed, 22 insertions(+), 1 deletion(-)
 
-Applied, thanks.
-
-I removed the line wrapping from "Fixes:" lines.
-
+diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
+index 6897754..22592f3 100644
+--- a/drivers/net/wireless/ath/wil6210/interrupt.c
++++ b/drivers/net/wireless/ath/wil6210/interrupt.c
+@@ -38,6 +38,8 @@
+ #define WIL6210_IRQ_DISABLE	(0xFFFFFFFFUL)
+ #define WIL6210_IMC_RX		(BIT_DMA_EP_RX_ICR_RX_DONE | \
+ 				 BIT_DMA_EP_RX_ICR_RX_HTRSH)
++#define WIL6210_IMC_RX_NO_RX_HTRSH (WIL6210_IMC_RX & \
++				    (~(BIT_DMA_EP_RX_ICR_RX_HTRSH)))
+ #define WIL6210_IMC_TX		(BIT_DMA_EP_TX_ICR_TX_DONE | \
+ 				BIT_DMA_EP_TX_ICR_TX_DONE_N(0))
+ #define WIL6210_IMC_MISC	(ISR_MISC_FW_READY | \
+@@ -109,8 +111,10 @@ void wil6210_unmask_irq_tx(struct wil6210_priv *wil)
+ 
+ void wil6210_unmask_irq_rx(struct wil6210_priv *wil)
+ {
++	bool unmask_rx_htrsh = test_bit(wil_status_fwconnected, wil->status);
++
+ 	wil_w(wil, RGF_DMA_EP_RX_ICR + offsetof(struct RGF_ICR, IMC),
+-	      WIL6210_IMC_RX);
++	      unmask_rx_htrsh ? WIL6210_IMC_RX : WIL6210_IMC_RX_NO_RX_HTRSH);
+ }
+ 
+ static void wil6210_unmask_irq_misc(struct wil6210_priv *wil)
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index 8d4e884..261bdab 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -194,6 +194,18 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
+ 	memset(&sta->stats, 0, sizeof(sta->stats));
+ }
+ 
++static bool wil_ap_is_connected(struct wil6210_priv *wil)
++{
++	int i;
++
++	for (i = 0; i < ARRAY_SIZE(wil->sta); i++) {
++		if (wil->sta[i].status == wil_sta_connected)
++			return true;
++	}
++
++	return false;
++}
++
+ static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
+ 				u16 reason_code, bool from_event)
+ {
+@@ -247,6 +259,11 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
+ 		}
+ 		clear_bit(wil_status_fwconnecting, wil->status);
+ 		break;
++	case NL80211_IFTYPE_AP:
++	case NL80211_IFTYPE_P2P_GO:
++		if (!wil_ap_is_connected(wil))
++			clear_bit(wil_status_fwconnected, wil->status);
++		break;
+ 	default:
+ 		break;
+ 	}
 -- 
-Kalle Valo
+1.8.5.2
+
