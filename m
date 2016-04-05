@@ -1,112 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48182 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933378AbcDENrN (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 09:47:13 -0400
-Subject: =?UTF-8?Q?Re:_[PATCH]_mac80211:_fix_=22warning:_=e2=80=98target=5fm?=
- =?UTF-8?Q?etric=e2=80=99_may_be_used_uninitialized=22?=
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <5702AF3B.1070507@suse.com>
- <1459849388.18188.28.camel@sipsolutions.net> <5703BEA7.3040406@suse.com>
- <1459863619.18188.50.camel@sipsolutions.net>
-From: Jeff Mahoney <jeffm@suse.com>
-Message-ID: <5703C1D9.2000800@suse.com> (sfid-20160405_154725_580741_147F9FD0)
-Date: Tue, 5 Apr 2016 09:47:05 -0400
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:10879 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751785AbcDEH2u (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2016 03:28:50 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u357QUfp021311
+	for <linux-wireless@vger.kernel.org>; Tue, 5 Apr 2016 00:28:49 -0700
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+	by mx0b-0016f401.pphosted.com with ESMTP id 222dkfh5d4-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2016 00:28:49 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Ganapathi Bhat <gbhat@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/7] mwifiex: add support for wakeup on GTK rekey failure
+Date: Tue, 5 Apr 2016 00:22:27 -0700
+Message-ID: <1459840952-25338-2-git-send-email-akarwar@marvell.com> (sfid-20160405_092854_999921_C41DE2A7)
+In-Reply-To: <1459840952-25338-1-git-send-email-akarwar@marvell.com>
+References: <1459840952-25338-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-In-Reply-To: <1459863619.18188.50.camel@sipsolutions.net>
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="HQa31QLTh5HulFpWi2VUbs5ESbjTeStIJ"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---HQa31QLTh5HulFpWi2VUbs5ESbjTeStIJ
-Content-Type: multipart/mixed; boundary="mxMApkrHEVFeB5UTPTUPuGhDbeK50DKpe"
-From: Jeff Mahoney <jeffm@suse.com>
-To: Johannes Berg <johannes@sipsolutions.net>, linux-wireless@vger.kernel.org
-Message-ID: <5703C1D9.2000800@suse.com>
-Subject: =?UTF-8?Q?Re:_[PATCH]_mac80211:_fix_=22warning:_=e2=80=98target=5fm?=
- =?UTF-8?Q?etric=e2=80=99_may_be_used_uninitialized=22?=
-References: <5702AF3B.1070507@suse.com>
- <1459849388.18188.28.camel@sipsolutions.net> <5703BEA7.3040406@suse.com>
- <1459863619.18188.50.camel@sipsolutions.net>
-In-Reply-To: <1459863619.18188.50.camel@sipsolutions.net>
+From: Ganapathi Bhat <gbhat@marvell.com>
 
---mxMApkrHEVFeB5UTPTUPuGhDbeK50DKpe
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+User can configure wakeup on GTK rekey fail with wowlan.
+Added corresponding wakeup reason.
 
-On 4/5/16 9:40 AM, Johannes Berg wrote:
-> On Tue, 2016-04-05 at 09:33 -0400, Jeff Mahoney wrote:
->> On 4/5/16 5:43 AM, Johannes Berg wrote:
->>>
->>> On Mon, 2016-04-04 at 14:15 -0400, Jeff Mahoney wrote:
->>>>
->>>> This fixes:
->>>>
->>>> net/mac80211/mesh_hwmp.c:603:26: warning: =E2=80=98target_metric=E2=80=
-=99 may be
->>>> used
->>>> uninitialized in this function
->>>>
->>>> target_metric is only consumed when reply =3D true so no bug exists
->>>> here,
->>>> but gcc doesn't notice that.  Initializing to 0 clears the
->>>> warning.
->>>>
->>> What gcc version are you using? Mine doesn't seem to have a problem
->>> following the logic here.
->> gcc version 4.8.5 (SUSE Linux)
->=20
-> Ok, mine's significantly newer:
->=20
-> gcc (Debian 5.3.1-10) 5.3.1 20160224
->=20
-> I do wonder though if we really should do this? It might hide errors
-> later on?
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c | 7 ++++++-
+ drivers/net/wireless/marvell/mwifiex/fw.h       | 1 +
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
-AFAICT, the only way errors would be introduced is if someone added a
-new case in which reply was true *and* needed a different target_metric
-value (there are 3 cases it's used, 2 of which use 0).  Or if there was
-a new case where the target_metric was used and reply wasn't true -- in
-which case this code would have been broken anyway.
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index ca8cdd2..49661e0 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -3390,6 +3390,10 @@ static int mwifiex_cfg80211_resume(struct wiphy *wiphy)
+ 		break;
+ 	case	MANAGEMENT_FRAME_MATCHED:
+ 		break;
++	case GTK_REKEY_FAILURE:
++		if (wiphy->wowlan_config->gtk_rekey_failure)
++			wakeup_report.gtk_rekey_failure = true;
++		break;
+ 	default:
+ 		break;
+ 	}
+@@ -3965,7 +3969,8 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
+ #ifdef CONFIG_PM
+ static const struct wiphy_wowlan_support mwifiex_wowlan_support = {
+ 	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT |
+-		WIPHY_WOWLAN_NET_DETECT | WIPHY_WOWLAN_SUPPORTS_GTK_REKEY,
++		WIPHY_WOWLAN_NET_DETECT | WIPHY_WOWLAN_SUPPORTS_GTK_REKEY |
++		WIPHY_WOWLAN_GTK_REKEY_FAILURE,
+ 	.n_patterns = MWIFIEX_MEF_MAX_FILTERS,
+ 	.pattern_min_len = 1,
+ 	.pattern_max_len = MWIFIEX_MAX_PATTERN_LEN,
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index 8703d24..8e4145a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -620,6 +620,7 @@ enum HS_WAKEUP_REASON {
+ 	MAGIC_PATTERN_MATCHED,
+ 	CONTROL_FRAME_MATCHED,
+ 	MANAGEMENT_FRAME_MATCHED,
++	GTK_REKEY_FAILURE,
+ 	RESERVED
+ };
+ 
+-- 
+1.8.1.4
 
-Also, using uninitalized_var would have a higher probability of hiding
-an error later on.  Setting it to 0 seems the safest course.
-
--Jeff
-
---=20
-Jeff Mahoney
-SUSE Labs
-
-
---mxMApkrHEVFeB5UTPTUPuGhDbeK50DKpe--
-
---HQa31QLTh5HulFpWi2VUbs5ESbjTeStIJ
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2.0.19 (Darwin)
-Comment: GPGTools - http://gpgtools.org
-
-iQIcBAEBAgAGBQJXA8HZAAoJEB57S2MheeWyhIEP/ijQN4q2IRZ0dxlREwLOLr4q
-bl5a246opHTifskxUTIOFeRRs5QIixWnxfepjcgKng74BruQ4dki29ufWFBr9OqJ
-bk10ixIQub+SuP3PavAdGW5L7pfNpqO4JapGAeZUYdF3f97VAlaB8mg+Y57nNLjT
-LVVMR/XUd4DQXzzFn1T045xs18j05cXpIButrqGEv9YbNQtR9+o4Yg5nTPEwi1k/
-mrfNk+kwCzm0QBqNWnm2w60pwh4NrWD+dJDFbq+Yergr0WnFhsfhiv1iMISv2uz3
-ZFcBdl7fVNvQqpT97b2vgfUiF0aZcMmZ7D54zuX3+6uGJsm23XxB7tWBfzD5OgOf
-MqjT8qbT0dlLB0+cgYnm4WACG3LBGZ8HNgps5DZ1uIRYvTEf5RvKjmdt/H4j/tvB
-+BIkvhAy8zGztsceEDHmGqKZFYB/K+9Q8JMVxX6vx7FWOgeUHXXYUQ8Npim7dB3G
-znjfV1QSQlADhifOVBwTOO1KZps7MXqMXH3nAEPwMx4XLZbyqx/3PKJAXWSIcqJf
-9ezOCXQb48IxdRGyaRrmHES6eVQCCZ4NrC5UGHXloDMmEU/ChFZRq93b42R5Fxl+
-ml3zjZFYQj+fNDqj9zMepnXDRA409Yhigx6j5UX982L8IPvrFL4O0Sg3HKLj92ht
-XhtokLnOfUfKJLD57Zov
-=llYV
------END PGP SIGNATURE-----
-
---HQa31QLTh5HulFpWi2VUbs5ESbjTeStIJ--
