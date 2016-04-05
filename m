@@ -1,77 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:52614 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752725AbcDSUMj convert rfc822-to-8bit (ORCPT
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:33641 "EHLO
+	mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752996AbcDEGjH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 16:12:39 -0400
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: Petko Bordjukov <bordjukov@gmail.com>
-Cc: Maximilian Engelhardt <engelhardt@perisens.de>,
-	seth.forshee@canonical.com, maxi@daemonizer.de,
-	linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Subject: Re: [wireless-regdb] wireless-regdb: Update regulatory rules for	Germany (DE) on 5GHz
-References: <1958820.LBuzOElZFT@perisens15>
-	<87k2jt5rgz.wl-bordjukov@gmail.com>
-Date: Tue, 19 Apr 2016 22:11:58 +0200
-In-Reply-To: <87k2jt5rgz.wl-bordjukov@gmail.com> (Petko Bordjukov's message of
-	"Tue, 19 Apr 2016 22:27:40 +0300")
-Message-ID: <8737qh73zl.fsf@nemi.mork.no> (sfid-20160419_221243_190792_CF678175)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+	Tue, 5 Apr 2016 02:39:07 -0400
+Received: by mail-pa0-f66.google.com with SMTP id q6so481235pav.0
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 23:39:07 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 10/14] staging: wilc1000: remove unused hif_drv in wilc_set_mac_chnl_num
+Date: Tue,  5 Apr 2016 15:38:28 +0900
+Message-Id: <1459838312-16506-10-git-send-email-chaehyun.lim@gmail.com> (sfid-20160405_083912_200643_BB7C176E)
+In-Reply-To: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Petko Bordjukov <bordjukov@gmail.com> writes:
+This patch removes unused hif_drv in wilc_set_mac_chnl_num.
+There is no need to check null and print debug log.
 
-> Hello,
->
-> Just to add my input to this thread. I've previously contributed the SRD ranges
-> for Bulgaria, hopefully this info will provide pointers for research in other EU
-> countries. Since then I've doublechecked the standards situation for Wi-Fi with
-> the local communications regulation commission and one of the staffers there has
-> given me an expert opinion (I would attach it, but it's a nasty HTML email in
-> Bulgarian, if there's interest, I'd be glad to share and translate it).
->
-> The gist on the SRDs is that in Bulgaria they fall under the following
-> standards (which correspond to ETSI standards):
->
-> BDS EN 300 440-2[0]
-> BDS EN 300 674-2-2[1]
->
-> Note that the first one is a harmonized standard (so in theory it should be
-> universally adopted accross the EU) and the second one is a candidate harmonized
-> standard (so you should check if it's already been adopted locally).
->
-> As far as I could tell, BDS EN 300 674-2-2 defines the maximum e.i.r.p. for the
-> SRD range but someone more knowledgable should take a look, too.
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-Ah, the references to those specs bring back memories of good times with
-the European Tourism and Sightseeing Institute in the 90ies :) I
-remember heated (but friendly) discussions in RES 8 about 300 674 for
-years before it finally was published
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 8591c00..7b28ae5 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3134,12 +3134,6 @@ int wilc_set_mac_chnl_num(struct wilc_vif *vif, u8 channel)
+ {
+ 	int result;
+ 	struct host_if_msg msg;
+-	struct host_if_drv *hif_drv = vif->hif_drv;
+-
+-	if (!hif_drv) {
+-		netdev_err(vif->ndev, "driver is null\n");
+-		return -EFAULT;
+-	}
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 	msg.id = HOST_IF_MSG_SET_CHANNEL;
+-- 
+2.8.0
 
-Anyway, 300 674 is for vehicle transponder systems.  I.e. electronic
-toll collection etc.  I don't think it's relevant to the regdb in any
-way.
-
-The generic SRDs covered by 300 440 are more relevant.  But this is
-still not a license regulation.  It can probably be used as a harmonized
-standard with reference to the Radio Equipment Directive, but licensing
-is not in the scope AFAIK.  Spectrum utilization is not fully harmonized
-in the EU.  So you have to look at the national regulations for every
-country, even within the EU.
-
-The ERC recommendation Maximilian linked to (
-http://www.erodocdb.dk/Docs/doc98/official/pdf/REC7003e.pdf ) is much
-more useful, since it is a collection of SRD licensing rules for all
-CEPT countries. Which are much more than "just" the EU - 48 countries
-now, according to http://cept.org/cept
-
-But you'll still have to look into the actual national regulations.  In
-my experience, the listed restrictions and conditions in appendix 3 of
-ERC/REC 70-03 are often imprecise or incomplete.  It's definitely best
-to do what you did: Talk to the local regulatory authorities.  I'm sure
-most of them are more then interested in helping to improve the regdb.
-
-
-Bjørn
