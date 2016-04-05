@@ -1,63 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40649 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:53765 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757309AbcDGSTe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 14:19:34 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 07/18] rtl8xxxu: Pick PHY init table based on chip version first
-Date: Thu,  7 Apr 2016 14:19:22 -0400
-Message-Id: <1460053173-8494-8-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160407_202001_549883_F48A0AA8)
-In-Reply-To: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
+	id S1755083AbcDEKTf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2016 06:19:35 -0400
+Message-ID: <1459851570.18188.45.camel@sipsolutions.net> (sfid-20160405_121938_011798_D7FDA0E0)
+Subject: Re: [PATCH v2] mac80211: mesh: fix crash in mesh_path_timer
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Bob Copeland <me@bobcopeland.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Tue, 05 Apr 2016 12:19:30 +0200
+In-Reply-To: <1458353004-8062-1-git-send-email-me@bobcopeland.com> (sfid-20160319_030332_405389_1AF16D7E)
+References: <1458353004-8062-1-git-send-email-me@bobcopeland.com>
+	 (sfid-20160319_030332_405389_1AF16D7E)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On Fri, 2016-03-18 at 22:03 -0400, Bob Copeland wrote:
+> The mesh_path_reclaim() function, called from an rcu callback,
+> cancels
+> the mesh_path_timer associated with a mesh path.  Unfortunately, this
+> call can happen much later, perhaps after the hash table itself is
+> destroyed.
+> 
+[...]
 
-Pick PHY init table based on device before distinguishing between
-1T/2T/high PA tables. The latter is only currently used for
-8188cu/8192cu/8188ru.
+applied.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index fa6ab85..d6abe27 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -3637,11 +3637,7 @@ static int rtl8xxxu_init_phy_bb(struct rtl8xxxu_priv *priv)
- 	val8 = RF_ENABLE | RF_RSTB | RF_SDMRSTB;
- 	rtl8xxxu_write8(priv, REG_RF_CTRL, val8);
- 
--	if (priv->hi_pa)
--		rtl8xxxu_init_phy_regs(priv, rtl8188ru_phy_1t_highpa_table);
--	else if (priv->tx_paths == 2)
--		rtl8xxxu_init_phy_regs(priv, rtl8192cu_phy_2t_init_table);
--	else if (priv->rtl_chip == RTL8723B) {
-+	if (priv->rtl_chip == RTL8723B) {
- 		/*
- 		 * Why?
- 		 */
-@@ -3656,10 +3652,13 @@ static int rtl8xxxu_init_phy_bb(struct rtl8xxxu_priv *priv)
- 		val8 = RF_ENABLE | RF_RSTB | RF_SDMRSTB;
- 		rtl8xxxu_write8(priv, REG_RF_CTRL, val8);
- 		rtl8xxxu_init_phy_regs(priv, rtl8192eu_phy_init_table);
--	} else
-+	} else	if (priv->hi_pa)
-+		rtl8xxxu_init_phy_regs(priv, rtl8188ru_phy_1t_highpa_table);
-+	else if (priv->tx_paths == 2)
-+		rtl8xxxu_init_phy_regs(priv, rtl8192cu_phy_2t_init_table);
-+	else
- 		rtl8xxxu_init_phy_regs(priv, rtl8723a_phy_1t_init_table);
- 
--
- 	if (priv->rtl_chip == RTL8188C && priv->hi_pa &&
- 	    priv->vendor_umc && priv->chip_cut == 1)
- 		rtl8xxxu_write8(priv, REG_OFDM0_AGC_PARM1 + 2, 0x50);
--- 
-2.5.5
-
+johannes
