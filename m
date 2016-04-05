@@ -1,51 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:36122 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757836AbcDEJ5E (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:38124 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932712AbcDENep (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 05:57:04 -0400
-Received: by mail-wm0-f52.google.com with SMTP id 127so18541391wmu.1
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2016 02:57:02 -0700 (PDT)
+	Tue, 5 Apr 2016 09:34:45 -0400
 MIME-Version: 1.0
-Date: Tue, 5 Apr 2016 12:57:01 +0300
-Message-ID: <CANfLQrYTqUQGoj+Xr1XrKJrh8oaBB+qt8YeFwo0EyhbC-RpnNg@mail.gmail.com> (sfid-20160405_115709_978820_18E22EA5)
-Subject: iwlwifi monitor mode: No data frame captured on 5 Ghz
-From: Gucea Doru <gucea.doru@gmail.com>
-To: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com
-Cc: Doru Gucea <doru.gucea@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Date: Tue, 05 Apr 2016 19:04:43 +0530
+From: Rajkumar Manoharan <rmanohar@codeaurora.org>
+To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+Cc: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>,
+	ath10k@lists.infradead.org, linux-wireless@vger.kernel.org
+Subject: Re: [PATCH 3/3] ath10k: fix unconditional num_mpdus_ready subtraction
+In-Reply-To: <87shz0b4s2.fsf@kamboji.qca.qualcomm.com>
+References: <1459352551-11773-1-git-send-email-rmanohar@qti.qualcomm.com>
+ <1459352551-11773-3-git-send-email-rmanohar@qti.qualcomm.com>
+ <87shz0b4s2.fsf@kamboji.qca.qualcomm.com>
+Message-ID: <6a0952fb8bfc92769b93f602189ddeac@codeaurora.org> (sfid-20160405_153447_926808_52F751A9)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hello,
+On 2016-04-05 18:18, Valo, Kalle wrote:
+> Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
+> 
+>> Decrement num_mpdus_ready only when rx amsdu is processed 
+>> successfully.
+>> Not doing so, will result in leak and impact stabilty under low memory
+>> cases.
+>> 
+>> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+>> ---
+>>  drivers/net/wireless/ath/ath10k/htt_rx.c | 8 ++++----
+>>  1 file changed, 4 insertions(+), 4 deletions(-)
+>> 
+>> diff --git a/drivers/net/wireless/ath/ath10k/htt_rx.c 
+>> b/drivers/net/wireless/ath/ath10k/htt_rx.c
+>> index 96a7417..9696c2e 100644
+>> --- a/drivers/net/wireless/ath/ath10k/htt_rx.c
+>> +++ b/drivers/net/wireless/ath/ath10k/htt_rx.c
+>> @@ -2412,14 +2412,12 @@ static void 
+>> ath10k_htt_txrx_compl_task(unsigned long ptr)
+>>  	struct ath10k_htt *htt = (struct ath10k_htt *)ptr;
+>>  	struct ath10k *ar = htt->ar;
+>>  	struct htt_tx_done tx_done = {};
+>> -	struct sk_buff_head rx_q;
+>>  	struct sk_buff_head rx_ind_q;
+>>  	struct sk_buff_head tx_ind_q;
+>>  	struct sk_buff *skb;
+>>  	unsigned long flags;
+>>  	int num_mpdus;
+>> 
+>> -	__skb_queue_head_init(&rx_q);
+>>  	__skb_queue_head_init(&rx_ind_q);
+>>  	__skb_queue_head_init(&tx_ind_q);
+> 
+> I guess you are removing the unused rx_q just as a cleanup? It's good
+> practise to mention that in the commit log (or better yet in a separate
+> patch).
 
-I am trying to capture packets that are exchanged between an AP and a
-smartphone on the 5Ghz frequency. For generating traffic, I upload UDP
-traffic from a laptop PC towards the smartphone using iperf.
+update the commit log and send next version.
 
-The problem is that I can see _only_ the control frames like RTS/CTS,
-Block ACK, while the data packets are not captured. I uploaded the
-Wireshark capture files at [1] (located inside the folders whose name
-starts with 5Ghz).
-
-If I use the 2.4 frequency, all the frames are captured. I also
-uploaded the Wireshark packet traces for 2.4Ghz at [1] (located inside
-the folders whose name starts with 2.4 Ghz).
-
-Is this a known bug or am I doing something wrong?
-
-Additional details:
-Wi-Fi card:  iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band
-Wireless N 7260, REV=0x144
-Firmware version: iwlwifi 0000:04:00.0: loaded firmware version
-25.228.9.0 op_mode iwlmvm
-Traffic encryption: WPA & WPA2 Personal
-Setting up the card in wireless mode:
-ip link set dev wlan0 down
-iw wlan0 set type monitor
-ip link set dev wlan0 up
-iw wlan0 set freq 5240
-
-[1] https://drive.google.com/open?id=0B5SBH08PU_Chek9rOHY0VkxFRUE
-
-Thank you, Doru
+-Rajkumar
