@@ -1,65 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42325 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754392AbcDNIkm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 04:40:42 -0400
-Message-ID: <1460623232.2358.6.camel@sipsolutions.net> (sfid-20160414_104047_726442_ADA8C3E7)
-Subject: Re: [PATCH v3 2/3] mac80211_hwsim: Add iface comb for DFS
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
-	linux-wireless@vger.kernel.org
-Cc: Ilan Peer <ilan.peer@intel.com>
-Date: Thu, 14 Apr 2016 10:40:32 +0200
-In-Reply-To: <1383653034-6679-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131105_130424_907681_CEAEBD68)
-References: <1383653034-6679-1-git-send-email-janusz.dziedzic@tieto.com>
-	 (sfid-20131105_130424_907681_CEAEBD68)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:59835 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756990AbcDEH2x (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2016 03:28:53 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Eric Dumaze <edumazet@google.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 4/7] mwifiex: remove redundant GFP_DMA flag
+Date: Tue, 5 Apr 2016 00:22:29 -0700
+Message-ID: <1459840952-25338-4-git-send-email-akarwar@marvell.com> (sfid-20160405_092859_578263_E895A2DE)
+In-Reply-To: <1459840952-25338-1-git-send-email-akarwar@marvell.com>
+References: <1459840952-25338-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Xinming Hu <huxm@marvell.com>
 
-I know this is a LONG time ago, but nonetheless...
+skb forwarded to TCP/IP stack doesn't need to allocate in DMA ZONE.
+This patch removes GFP_DMA flag in this case to save precious DMA
+memory.
 
-> -static struct ieee80211_iface_combination hwsim_if_comb = {
-> -	.limits = hwsim_if_limits,
-> -	.n_limits = ARRAY_SIZE(hwsim_if_limits),
-> -	.max_interfaces = 2048,
-> -	.num_different_channels = 1,
-> +static const struct ieee80211_iface_limit hwsim_if_dfs_limits[] = {
-> +	{ .max = 8, .types = BIT(NL80211_IFTYPE_AP) },
-> +};
-> +
-> +static struct ieee80211_iface_combination hwsim_if_comb[] = {
-> +	{
-> +		.limits = hwsim_if_limits,
-> +		.n_limits = ARRAY_SIZE(hwsim_if_limits),
-> +		.max_interfaces = 2048,
-> +		.num_different_channels = 1,
-> +	},
-> +	{
-> +		.limits = hwsim_if_dfs_limits,
-> +		.n_limits = ARRAY_SIZE(hwsim_if_dfs_limits),
-> +		.max_interfaces = 8,
-> +		.num_different_channels = 1,
-> +		.radar_detect_widths =
-> BIT(NL80211_CHAN_WIDTH_20_NOHT) |
-> +				       BIT(NL80211_CHAN_WIDTH_20) |
-> +				       BIT(NL80211_CHAN_WIDTH_40) |
-> +				       BIT(NL80211_CHAN_WIDTH_80) |
-> +				       BIT(NL80211_CHAN_WIDTH_160),
-> +	}
->  };
+Signed-off-by: Eric Dumaze <edumazet@google.com>
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/sdio.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-I don't, at least today, but I don't see relevant changes since then,
-understand why this was two combinations, one with fewer interfaces.
+diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
+index 901c064..2ea2827 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sdio.c
++++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
+@@ -1122,8 +1122,8 @@ static void mwifiex_deaggr_sdio_pkt(struct mwifiex_adapter *adapter,
+ 				    __func__, pkt_len, blk_size);
+ 			break;
+ 		}
+-		skb_deaggr = mwifiex_alloc_dma_align_buf(pkt_len,
+-							 GFP_KERNEL | GFP_DMA);
++
++		skb_deaggr = mwifiex_alloc_dma_align_buf(pkt_len, GFP_KERNEL);
+ 		if (!skb_deaggr)
+ 			break;
+ 		skb_put(skb_deaggr, pkt_len);
+@@ -1372,8 +1372,7 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
+ 
+ 			/* copy pkt to deaggr buf */
+ 			skb_deaggr = mwifiex_alloc_dma_align_buf(len_arr[pind],
+-								 GFP_KERNEL |
+-								 GFP_DMA);
++								 GFP_KERNEL);
+ 			if (!skb_deaggr) {
+ 				mwifiex_dbg(adapter, ERROR, "skb allocation failure\t"
+ 					    "drop pkt len=%d type=%d\n",
+-- 
+1.8.1.4
 
-It seems that radar detection is mostly independent of the interface
-types, at least as far as the code is concerned.
-
-Are there some other considerations, that prevent declaring
-radar_detect_widths together with the regular hwsim_if_limits? It
-obviously cannot actually be *used* for all?
-
-johannes
