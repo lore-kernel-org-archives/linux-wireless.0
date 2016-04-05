@@ -1,37 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35734 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965886AbcDMJmA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2016 05:42:00 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	lkml2017@openmailbox.org
-Subject: Re: [PATCH] ath9k: ar5008_hw_cmn_spur_mitigate: add missing mask_m & mask_p initialisation
-References: <120e427452ad7e93f17828e8bba4b043@openmailbox.org>
-	<1460482664-21086-1-git-send-email-linux@rempel-privat.de>
-Date: Wed, 13 Apr 2016 12:41:55 +0300
-In-Reply-To: <1460482664-21086-1-git-send-email-linux@rempel-privat.de>
-	(Oleksij Rempel's message of "Tue, 12 Apr 2016 19:37:44 +0200")
-Message-ID: <878u0hzvz0.fsf@purkki.adurom.net> (sfid-20160413_114206_020350_0092F892)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:55265 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758411AbcDENkZ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2016 09:40:25 -0400
+Message-ID: <1459863619.18188.50.camel@sipsolutions.net> (sfid-20160405_154028_688735_AFFE1B54)
+Subject: Re: [PATCH] mac80211: fix "warning:
+ =?UTF-8?Q?=E2=80=98target=5Fmetric=E2=80=99?= may be used uninitialized"
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jeff Mahoney <jeffm@suse.com>, linux-wireless@vger.kernel.org
+Date: Tue, 05 Apr 2016 15:40:19 +0200
+In-Reply-To: <5703BEA7.3040406@suse.com>
+References: <5702AF3B.1070507@suse.com>
+	 <1459849388.18188.28.camel@sipsolutions.net> <5703BEA7.3040406@suse.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Oleksij Rempel <linux@rempel-privat.de> writes:
+On Tue, 2016-04-05 at 09:33 -0400, Jeff Mahoney wrote:
+> On 4/5/16 5:43 AM, Johannes Berg wrote:
+> > 
+> > On Mon, 2016-04-04 at 14:15 -0400, Jeff Mahoney wrote:
+> > > 
+> > > This fixes:
+> > > 
+> > > net/mac80211/mesh_hwmp.c:603:26: warning: ‘target_metric’ may be
+> > > used
+> > > uninitialized in this function
+> > > 
+> > > target_metric is only consumed when reply = true so no bug exists
+> > > here,
+> > > but gcc doesn't notice that.  Initializing to 0 clears the
+> > > warning.
+> > > 
+> > What gcc version are you using? Mine doesn't seem to have a problem
+> > following the logic here.
+> gcc version 4.8.5 (SUSE Linux)
 
-> by moving common code to ar5008_hw_cmn_spur_mitigate i forgot to move
-> mask_m & mask_p initialisation. This coused a performance regression
-> on ar9281.
->
-> Fixes: f911085ffa88 ("ath9k: split ar5008_hw_spur_mitigate and reuse common code in ar9002_hw_spur_mitigate.")
-> Reported-by: Gustav Frederiksen <lkml2017@openmailbox.org>
-> Tested-by: Gustav Frederiksen <lkml2017@openmailbox.org>
-> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+Ok, mine's significantly newer:
 
-If no objections I'm planning to send this to 4.6.
+gcc (Debian 5.3.1-10) 5.3.1 20160224
 
--- 
-Kalle Valo
+I do wonder though if we really should do this? It might hide errors
+later on?
+
+johannes
