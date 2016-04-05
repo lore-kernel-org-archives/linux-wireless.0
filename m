@@ -1,86 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:34039 "EHLO
-	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750758AbcDHFf1 (ORCPT
+Received: from smtprelay0092.hostedemail.com ([216.40.44.92]:42624 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756913AbcDER3B (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2016 01:35:27 -0400
-Date: Thu, 7 Apr 2016 22:35:24 -0700
-From: Alison Schofield <amsfield22@gmail.com>
-To: linux-wireless@vger.kernel.org
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] staging: wilc1000: move initialization of the config values
-Message-ID: <20160408053515.GA10278@d830.WORKGROUP> (sfid-20160408_073558_830557_84BC7299)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 5 Apr 2016 13:29:01 -0400
+Message-ID: <1459877336.6715.6.camel@perches.com> (sfid-20160405_192905_881126_39395FC4)
+Subject: Re: [PATCH] ath10k: Fix return value for btcoex and peer stats
+ debugfs
+From: Joe Perches <joe@perches.com>
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>,
+	ath10k@lists.infradead.org, Yanbo Li <yanbol@qca.qualcomm.com>
+Cc: Kalle Valo <kvalo@qca.qualcomm.com>, kvalo@codeaurora.org,
+	mohammed@codeaurora.org, linux-wireless@vger.kernel.org
+Date: Tue, 05 Apr 2016 10:28:56 -0700
+In-Reply-To: <1459870106-2694-1-git-send-email-mohammed@qca.qualcomm.com>
+References: <1459870106-2694-1-git-send-email-mohammed@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Move the initialization of the config values so that an uninit'd
-mutex is not exposed and to simplify the initialization process.
+On Tue, 2016-04-05 at 20:58 +0530, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> 
+> Return value is incorrect for btcoex and peer stats debugfs
+> 'write' entries if the user provides a value that matches with
+> the already available debugfs entry, this results in the debugfs
+> entry getting stuck and the operation has to be terminated manually.
+> Fix this by returning the appropriate return 'count' as we do it for
+> other debugfs entries like pktlog etc
 
-The code was allocating a structure with a lock, initializing and
-taking the lock, setting some values, and then releasing the
-lock.  If no other thread can get it, then the lock isn't needed.
-If another thread can get it, it could find it before the mutex
-is initialized.
+Not your code, but some of the xor uses are odd at best.
 
-Make it safe and simple by setting the config values and initializing
-their mutex before the kthread is started.  No lock/unlock needed.
+> diff --git a/drivers/net/wireless/ath/ath10k/debug.c b/drivers/net/wireless/ath/ath10k/debug.c
+[]
+> @@ -2122,7 +2122,7 @@ static ssize_t ath10k_write_btcoex(struct file *file,
+>  	struct ath10k *ar = file->private_data;
+>  	char buf[32];
+>  	size_t buf_size;
+> -	int ret = 0;
+> +	int ret;
+>  	bool val;
+>  
+>  	buf_size = min(count, (sizeof(buf) - 1));
+> @@ -2142,8 +2142,10 @@ static ssize_t ath10k_write_btcoex(struct file *file,
+>  		goto exit;
+>  	}
+>  
+> -	if (!(test_bit(ATH10K_FLAG_BTCOEX, &ar->dev_flags) ^ val))
+> +	if (!(test_bit(ATH10K_FLAG_BTCOEX, &ar->dev_flags) ^ val)) {
 
-Signed-off-by: Alison Schofield <amsfield22@gmail.com>
----
+xor on an int and a bool.
 
-Note- not verified with hardware.
+> @@ -2189,7 +2191,7 @@ static ssize_t ath10k_write_peer_stats(struct file *file,
+>  	struct ath10k *ar = file->private_data;
+>  	char buf[32];
+>  	size_t buf_size;
+> -	int ret = 0;
+> +	int ret;
+>  	bool val;
+>  
+>  	buf_size = min(count, (sizeof(buf) - 1));
+> @@ -2209,8 +2211,10 @@ static ssize_t ath10k_write_peer_stats(struct file *file,
+>  		goto exit;
+>  	}
+>  
+> -	if (!(test_bit(ATH10K_FLAG_PEER_STATS, &ar->dev_flags) ^ val))
+> +	if (!(test_bit(ATH10K_FLAG_PEER_STATS, &ar->dev_flags) ^ val)) {
 
- drivers/staging/wilc1000/host_interface.c | 18 ++++++++----------
- 1 file changed, 8 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index 04cbff5..40f3d11 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -3410,6 +3410,14 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 	init_completion(&hif_drv->comp_get_rssi);
- 	init_completion(&hif_drv->comp_inactive_time);
- 
-+	hif_drv->cfg_values.site_survey_enabled = SITE_SURVEY_OFF;
-+	hif_drv->cfg_values.scan_source = DEFAULT_SCAN;
-+	hif_drv->cfg_values.active_scan_time = ACTIVE_SCAN_TIME;
-+	hif_drv->cfg_values.passive_scan_time = PASSIVE_SCAN_TIME;
-+	hif_drv->cfg_values.curr_tx_rate = AUTORATE;
-+
-+	mutex_init(&hif_drv->cfg_values_lock);
-+
- 	if (clients_count == 0)	{
- 		result = wilc_mq_create(&hif_msg_q);
- 
-@@ -3435,20 +3443,10 @@ int wilc_init(struct net_device *dev, struct host_if_drv **hif_drv_handler)
- 	setup_timer(&hif_drv->connect_timer, TimerCB_Connect, 0);
- 	setup_timer(&hif_drv->remain_on_ch_timer, ListenTimerCB, 0);
- 
--	mutex_init(&hif_drv->cfg_values_lock);
--	mutex_lock(&hif_drv->cfg_values_lock);
--
- 	hif_drv->hif_state = HOST_IF_IDLE;
--	hif_drv->cfg_values.site_survey_enabled = SITE_SURVEY_OFF;
--	hif_drv->cfg_values.scan_source = DEFAULT_SCAN;
--	hif_drv->cfg_values.active_scan_time = ACTIVE_SCAN_TIME;
--	hif_drv->cfg_values.passive_scan_time = PASSIVE_SCAN_TIME;
--	hif_drv->cfg_values.curr_tx_rate = AUTORATE;
- 
- 	hif_drv->p2p_timeout = 0;
- 
--	mutex_unlock(&hif_drv->cfg_values_lock);
--
- 	clients_count++;
- 
- 	return result;
--- 
-2.1.4
+here too
 
