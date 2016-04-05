@@ -1,48 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:38273 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753251AbcDAGJk convert rfc822-to-8bit (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:49756 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751292AbcDEFsg (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2016 02:09:40 -0400
-Received: by mail-wm0-f52.google.com with SMTP id 20so9348159wmh.1
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2016 23:09:40 -0700 (PDT)
+	Tue, 5 Apr 2016 01:48:36 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Eric Dumazet <eric.dumazet@gmail.com>,
+	Wei-Ning Huang <wnhuang@google.com>
+CC: Kalle Valo <kvalo@codeaurora.org>,
+	Linux Wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Sameer Nanda <snanda@google.com>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	Sonny Rao <sonnyrao@chromium.org>,
+	Douglas Anderson <dianders@chromium.org>
+Subject: RE: [PATCH] mwifiex: add __GFP_REPEAT to skb allocation call
+Date: Tue, 5 Apr 2016 05:48:25 +0000
+Message-ID: <4fa3762986eb4b848dbe7daf6871d7a8@SC-EXCH04.marvell.com> (sfid-20160405_074905_425772_14D15B22)
+References: <1459226840-36287-1-git-send-email-wnhuang@chromium.org>
+	 <87vb45brxc.fsf@kamboji.qca.qualcomm.com>
+	 <CABicQ-UJ1kniq6m86QcyVZBPznvNexfrUrTk3A_=GmZy69hvCA@mail.gmail.com>
+ <1459256320.6473.160.camel@edumazet-glaptop3.roam.corp.google.com>
+In-Reply-To: <1459256320.6473.160.camel@edumazet-glaptop3.roam.corp.google.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1459457986-29222-3-git-send-email-greearb@candelatech.com>
-References: <1459457986-29222-1-git-send-email-greearb@candelatech.com>
-	<1459457986-29222-3-git-send-email-greearb@candelatech.com>
-Date: Fri, 1 Apr 2016 08:09:39 +0200
-Message-ID: <CA+BoTQkL5OM-QLVVe0RHEOoN-Vj4a0+U9EfaUf=2n+PO3mPDyQ@mail.gmail.com> (sfid-20160401_080944_021414_68976BA6)
-Subject: Re: [PATCH 3/3] ath10k: Add BUG_ON if we over-write peer-map pointer.
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31 March 2016 at 22:59,  <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
->
-> Not sure this can happen, but seems like a reasonable sanity
-> check.
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  drivers/net/wireless/ath/ath10k/txrx.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-> index 94c27f6..172b1d6 100644
-> --- a/drivers/net/wireless/ath/ath10k/txrx.c
-> +++ b/drivers/net/wireless/ath/ath10k/txrx.c
-> @@ -309,6 +309,7 @@ void ath10k_peer_map_event(struct ath10k_htt *htt,
->         ath10k_warn(ar, /*ATH10K_DBG_HTT,*/ "htt peer map vdev %d peer %pM id %d\n",
->                    ev->vdev_id, ev->addr, ev->peer_id);
->
-> +       BUG_ON(ar->peer_map[ev->peer_id] && (ar->peer_map[ev->peer_id] != peer));
-
-Does this really need to be a BUG_ON?
-
-
-Michał
+SGkgRXJpYywNCg0KVGhhbmtzIGZvciB0aGUgY29tbWVudHMuDQoNCj4gRnJvbTogRXJpYyBEdW1h
+emV0IFttYWlsdG86ZXJpYy5kdW1hemV0QGdtYWlsLmNvbV0NCj4gU2VudDogVHVlc2RheSwgTWFy
+Y2ggMjksIDIwMTYgNjoyOSBQTQ0KPiBUbzogV2VpLU5pbmcgSHVhbmcNCj4gQ2M6IEthbGxlIFZh
+bG87IExpbnV4IFdpcmVsZXNzOyBMS01MOyBBbWl0a3VtYXIgS2Fyd2FyOyBOaXNoYW50DQo+IFNh
+cm11a2FkYW07IFNhbWVlciBOYW5kYTsgbmV0ZGV2QHZnZXIua2VybmVsLm9yZzsgU29ubnkgUmFv
+OyBEb3VnbGFzDQo+IEFuZGVyc29uDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0hdIG13aWZpZXg6IGFk
+ZCBfX0dGUF9SRVBFQVQgdG8gc2tiIGFsbG9jYXRpb24gY2FsbA0KPiANCj4gT24gVHVlLCAyMDE2
+LTAzLTI5IGF0IDE3OjI3ICswODAwLCBXZWktTmluZyBIdWFuZyB3cm90ZToNCj4gPiBBZGRpbmcg
+c29tZSBjaHJvbWl1bSBkZXZzIHRvIHRoZSB0aHJlYWQuDQo+ID4NCj4gPiBJbiwgaHR0cDovL2x4
+ci5mcmVlLWVsZWN0cm9ucy5jb20vc291cmNlL21tL3BhZ2VfYWxsb2MuYyNMMzE1Mg0KPiA+DQo+
+ID4gVGhlIGRlZmF1bHQgbW0gcmV0cnkgYWxsb2NhdGlvbiB3aGVuICdvcmRlciA8PQ0KPiA+IFBB
+R0VfQUxMT0NfQ09TVExZX09SREVSJyBvZiBnZnBfbWFzayBjb250YWlucyBfX0dGUF9SRVBFQVQu
+DQo+ID4gUEFHRV9BTExPQ19DT1NUTFlfT1JERVIgaXMgZGVmaW5lZCB0byBiZSAzLiBPbiBzeXN0
+ZW1zIHdpdGggcGFnZSBzaXplDQo+ID4gPSA0SywgdGhpcyBtZWFucyBtZW1vcnkgY29tcGFjdGlv
+biBhbmQgcmV0cnkgaXMgb25seSBkb25lIHdoZW4gdGhlDQo+ID4gc2l6ZSBvZiBhbGxvY2F0aW9u
+IGlzIDw9IDMySyBJbiBtd2lmaWV4LCB0aGUgYWxsb2NhdGlvbiBzaXplIGlzIDY0Sy4NCj4gDQo+
+IA0KPiANCj4gPiAgV2hlbiB3ZSBoYXZlIHN5c3RlbSB3aXRoDQo+ID4gbWVtb3J5IGZyYWdtZW50
+YXRpb24gYW5kIGFsbG9jYXRpb24gZmFpbGVkLCB0aGVyZSB3aWxsIGJlIG5vIHJldHJ5Lg0KPiA+
+IFRoaXMgaXMgd2h5IHdlIG5lZWQgdG8gYWRkIF9fR0ZQX1JFUEVBVCBoZXJlIHRvIGFsbG93IHRo
+ZSBzeXN0ZW0gdG8NCj4gPiBwZXJmb3JtIG1lbW9yeSBjb21wYWN0aW9uIGFuZCByZXRyeSBhbGxv
+Y2F0aW9uLg0KPiA+DQo+ID4gTWF5YmUgQW1pdEBtYXJ2ZWxsIGNhbiBjb21tZW50IG9uIGlmIHRo
+aXMgaXMgYSBnb29kIGZpeCBvbiB0aGlzIGlzc3VlLg0KPiA+IEknbSBhbHNvIGF3YXJlIHRoYXQg
+bWFydmVsbCBpcyB0aGUgcHJvZ3Jlc3Mgb2YgaW1wbGVtZW50aW5nDQo+ID4gc2NhdHRlci9nYXR0
+ZXIgZm9yIG13aWZpZXgsIHdoaWNoIGNhbiBhbHNvIGZpeCB0aGUgaXNzdWUuDQo+IA0KPiBCZWZv
+cmUgU0cgaXMgaW1wbGVtZW50ZWQsIHlvdSByZWFsbHkgbmVlZCB0byBjb3B5IGluY29taW5nIGZy
+YW1lcyBpbnRvDQo+IHNtYWxsZXN0IGNodW5rcyAodG8gZ2V0IGxvd2VzdCBza2ItPnRydWVzaXpl
+KSBhbmQgbGVhdmUgdGhlIDY0S0INCj4gYWxsb2NhdGVkIHN0dWZmIGZvcmV2ZXIgaW4gdGhlIGRy
+aXZlci4NCg0KV2UgZG8gaGF2ZSBhIDY0S0IgcHJlLWFsbG9jYXRlZCBidWZmZXIgZm9yIHJlY2Vp
+dmluZyBSeCBkYXRhIGluIG91ciBkcml2ZXIuDQoNCj4gDQo+IF9fR0ZQX1JFUEVBVCB3b250IHJl
+YWxseSBzb2x2ZSB0aGUgaXNzdWUuDQo+IA0KPiBJdCBzZWVtcyB0aGUgcHJvYmxlbSBjb21lcyBm
+cm9tIHRoZSBmYWN0IHRoYXQgdGhlIGRyaXZlcnMgY2FsbHMNCj4gZGV2X2tmcmVlX3NrYl9hbnko
+KSBhZnRlciBjYWxsaW5nIG13aWZpZXhfZGVhZ2dyX3NkaW9fcGt0KCksIGluc3RlYWQgb2YNCj4g
+cmVjeWNsaW5nIHRoaXMgdmVyeSBwcmVjaW91cyA2NEtCIHNrYiBvbmNlIG1lbW9yeSBnZXRzIGZy
+YWdtZW50ZWQuDQoNCk91ciBvbmUgdGltZSBhbGxvY2F0ZWQgNjRrIGJ1ZmZlciByZWFkIGZyb20g
+ZmlybXdhcmUgY29udGFpbnMgbXVsdGlwbGUgZGF0YSBjaHVua3MuIFdlIGhhdmUgYSBmZWF0dXJl
+IGNhbGxlZCBzaW5nbGUgcG9ydCBhZ2dyZWdhdGlvbiBpbiB3aGljaCBmaXJtd2FyZSBhdHRhY2hl
+cyBhbiBhZ2dyZWdhdGVkIGJ1ZmZlciB0byBzaW5nbGUgcG9ydC4gU28gc29tZXRpbWVzIGEgc2lu
+Z2xlIGRhdGEgY2h1bmsgY2FuIGV4Y2VlZCAzMmsuIGRldl9rZnJlZV9za2JfYW55KCkgaXMgY2Fs
+bGVkIHRvIGZyZWUgdGhvc2UgZGF0YSBjaHVua3MuDQoNCj4gDQo+IEFub3RoZXIgcHJvYmxlbSBp
+cyB0aGF0IG13aWZpZXhfZGVhZ2dyX3NkaW9fcGt0KCkgdXNlcw0KPiBtd2lmaWV4X2FsbG9jX2Rt
+YV9hbGlnbl9idWYoKSB3aXRoIEdGUF9LRVJORUwgfCBHRlBfRE1BDQo+IA0KPiBSZWFsbHkgR0ZQ
+X0RNQSBtYWtlcyBubyBzZW5zZSBoZXJlLCBzaW5jZSB0aGUgc2tiIGlzIGdvaW5nIHRvIGJlDQo+
+IHByb2Nlc3NlZCBieSB0aGUgc3RhY2ssIHdoaWNoIGhhcyBubyBzdWNoIHJlcXVpcmVtZW50Lg0K
+PiANCj4gUGxlYXNlIHVzZSBub3JtYWwgc2tiIGFsbG9jYXRpb25zIHRoZXJlLg0KDQpTdXJlLiBJ
+IHdpbGwgc3VibWl0IGEgcGF0Y2ggZm9yIHRoaXMuDQoNClJlZ2FyZHMsDQpBbWl0a3VtYXINCg==
