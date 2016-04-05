@@ -1,200 +1,184 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58311 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757282AbcDGSTe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 14:19:34 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 04/18] rtl8xxxu: Add radio init tables for 8192eu
-Date: Thu,  7 Apr 2016 14:19:19 -0400
-Message-Id: <1460053173-8494-5-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160407_201941_458885_8363A92D)
-In-Reply-To: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:33736 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755763AbcDEILI (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2016 04:11:08 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u3586bJk013891
+	for <linux-wireless@vger.kernel.org>; Tue, 5 Apr 2016 01:11:07 -0700
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+	by mx0b-0016f401.pphosted.com with ESMTP id 222dkfh9h7-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2016 01:11:07 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Nishant Sarmukadam <nishants@marvell.com>,
+	Xinming Hu <huxm@marvell.com>, Cathy Luo <cluo@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH RESEND 6/7] mwifiex: AMSDU Rx frame handling in AP mode
+Date: Tue, 5 Apr 2016 01:04:39 -0700
+Message-ID: <1459843480-25956-6-git-send-email-akarwar@marvell.com> (sfid-20160405_101119_814952_AA65C1FD)
+In-Reply-To: <1459843480-25956-1-git-send-email-akarwar@marvell.com>
+References: <1459843480-25956-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Xinming Hu <huxm@marvell.com>
 
-Add the required radio init tables for 8192eu devices.
+This patch processes sub AMSDU frame received in AP mode.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+If a packet is multicast/broadcast, it is sent to kernel/upper
+layer as well as queued back to AP TX queue so that it can be
+sent to other associated stations.
+
+If a packet is unicast and RA is present in associated station list,
+it is again requeued into AP TX queue.
+
+If a packet is unicast and RA is not in associated station list,
+packet is forwarded to kernel to handle routing logic.
+
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Cathy Luo <cluo@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 154 +++++++++++++++++++++++
- 1 file changed, 154 insertions(+)
+ .../net/wireless/marvell/mwifiex/11n_rxreorder.c   |  5 +-
+ drivers/net/wireless/marvell/mwifiex/main.h        |  2 +
+ drivers/net/wireless/marvell/mwifiex/uap_txrx.c    | 90 ++++++++++++++++++++++
+ 3 files changed, 96 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 13e8d60..988aba6 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -1242,6 +1242,152 @@ static struct rtl8xxxu_rfregval rtl8188ru_radioa_1t_highpa_table[] = {
- 	{0xff, 0xffffffff}
- };
+diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+index 09578c6..a74cc43 100644
+--- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
++++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
+@@ -59,7 +59,10 @@ static int mwifiex_11n_dispatch_amsdu_pkt(struct mwifiex_private *priv,
+ 								  skb->len);
+ 			}
  
-+static struct rtl8xxxu_rfregval rtl8192eu_radioa_init_table[] = {
-+	{0x7f, 0x00000082}, {0x81, 0x0003fc00},
-+	{0x00, 0x00030000}, {0x08, 0x00008400},
-+	{0x18, 0x00000407}, {0x19, 0x00000012},
-+	{0x1b, 0x00000064}, {0x1e, 0x00080009},
-+	{0x1f, 0x00000880}, {0x2f, 0x0001a060},
-+	{0x3f, 0x00000000}, {0x42, 0x000060c0},
-+	{0x57, 0x000d0000}, {0x58, 0x000be180},
-+	{0x67, 0x00001552}, {0x83, 0x00000000},
-+	{0xb0, 0x000ff9f1}, {0xb1, 0x00055418},
-+	{0xb2, 0x0008cc00}, {0xb4, 0x00043083},
-+	{0xb5, 0x00008166}, {0xb6, 0x0000803e},
-+	{0xb7, 0x0001c69f}, {0xb8, 0x0000407f},
-+	{0xb9, 0x00080001}, {0xba, 0x00040001},
-+	{0xbb, 0x00000400}, {0xbf, 0x000c0000},
-+	{0xc2, 0x00002400}, {0xc3, 0x00000009},
-+	{0xc4, 0x00040c91}, {0xc5, 0x00099999},
-+	{0xc6, 0x000000a3}, {0xc7, 0x00088820},
-+	{0xc8, 0x00076c06}, {0xc9, 0x00000000},
-+	{0xca, 0x00080000}, {0xdf, 0x00000180},
-+	{0xef, 0x000001a0}, {0x51, 0x00069545},
-+	{0x52, 0x0007e45e}, {0x53, 0x00000071},
-+	{0x56, 0x00051ff3}, {0x35, 0x000000a8},
-+	{0x35, 0x000001e2}, {0x35, 0x000002a8},
-+	{0x36, 0x00001c24}, {0x36, 0x00009c24},
-+	{0x36, 0x00011c24}, {0x36, 0x00019c24},
-+	{0x18, 0x00000c07}, {0x5a, 0x00048000},
-+	{0x19, 0x000739d0},
-+#ifdef EXT_PA_8192EU
-+	/* External PA or external LNA */
-+	{0x34, 0x0000a093}, {0x34, 0x0000908f},
-+	{0x34, 0x0000808c}, {0x34, 0x0000704d},
-+	{0x34, 0x0000604a}, {0x34, 0x00005047},
-+	{0x34, 0x0000400a}, {0x34, 0x00003007},
-+	{0x34, 0x00002004}, {0x34, 0x00001001},
-+	{0x34, 0x00000000},
-+#else
-+	/* Regular */
-+	{0x34, 0x0000add7}, {0x34, 0x00009dd4},
-+	{0x34, 0x00008dd1}, {0x34, 0x00007dce},
-+	{0x34, 0x00006dcb}, {0x34, 0x00005dc8},
-+	{0x34, 0x00004dc5}, {0x34, 0x000034cc},
-+	{0x34, 0x0000244f}, {0x34, 0x0000144c},
-+	{0x34, 0x00000014},
-+#endif
-+	{0x00, 0x00030159},
-+	{0x84, 0x00068180},
-+	{0x86, 0x0000014e},
-+	{0x87, 0x00048e00},
-+	{0x8e, 0x00065540},
-+	{0x8f, 0x00088000},
-+	{0xef, 0x000020a0},
-+#ifdef EXT_PA_8192EU
-+	/* External PA or external LNA */
-+	{0x3b, 0x000f07b0},
-+#else
-+	{0x3b, 0x000f02b0},
-+#endif
-+	{0x3b, 0x000ef7b0}, {0x3b, 0x000d4fb0},
-+	{0x3b, 0x000cf060}, {0x3b, 0x000b0090},
-+	{0x3b, 0x000a0080}, {0x3b, 0x00090080},
-+	{0x3b, 0x0008f780},
-+#ifdef EXT_PA_8192EU
-+	/* External PA or external LNA */
-+	{0x3b, 0x000787b0},
-+#else
-+	{0x3b, 0x00078730},
-+#endif
-+	{0x3b, 0x00060fb0}, {0x3b, 0x0005ffa0},
-+	{0x3b, 0x00040620}, {0x3b, 0x00037090},
-+	{0x3b, 0x00020080}, {0x3b, 0x0001f060},
-+	{0x3b, 0x0000ffb0}, {0xef, 0x000000a0},
-+	{0xfe, 0x00000000}, {0x18, 0x0000fc07},
-+	{0xfe, 0x00000000}, {0xfe, 0x00000000},
-+	{0xfe, 0x00000000}, {0xfe, 0x00000000},
-+	{0x1e, 0x00000001}, {0x1f, 0x00080000},
-+	{0x00, 0x00033e70},
-+	{0xff, 0xffffffff}
-+};
+-			ret = mwifiex_recv_packet(priv, rx_skb);
++			if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP)
++				ret = mwifiex_uap_recv_packet(priv, rx_skb);
++			else
++				ret = mwifiex_recv_packet(priv, rx_skb);
+ 			if (ret == -1)
+ 				mwifiex_dbg(priv->adapter, ERROR,
+ 					    "Rx of A-MSDU failed");
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
+index eb2c90c..63069dd 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.h
++++ b/drivers/net/wireless/marvell/mwifiex/main.h
+@@ -1019,6 +1019,8 @@ int mwifiex_shutdown_fw_complete(struct mwifiex_adapter *adapter);
+ int mwifiex_dnld_fw(struct mwifiex_adapter *, struct mwifiex_fw_image *);
+ 
+ int mwifiex_recv_packet(struct mwifiex_private *priv, struct sk_buff *skb);
++int mwifiex_uap_recv_packet(struct mwifiex_private *priv,
++			    struct sk_buff *skb);
+ 
+ int mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
+ 				struct sk_buff *skb);
+diff --git a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+index 305589e..666e91a 100644
+--- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
++++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
+@@ -269,6 +269,96 @@ int mwifiex_handle_uap_rx_forward(struct mwifiex_private *priv,
+ 	return mwifiex_process_rx_packet(priv, skb);
+ }
+ 
++int mwifiex_uap_recv_packet(struct mwifiex_private *priv,
++			    struct sk_buff *skb)
++{
++	struct mwifiex_adapter *adapter = adapter;
++	struct mwifiex_sta_node *src_node;
++	struct ethhdr *p_ethhdr;
++	struct sk_buff *skb_uap;
++	struct mwifiex_txinfo *tx_info;
 +
-+static struct rtl8xxxu_rfregval rtl8192eu_radiob_init_table[] = {
-+	{0x7f, 0x00000082}, {0x81, 0x0003fc00},
-+	{0x00, 0x00030000}, {0x08, 0x00008400},
-+	{0x18, 0x00000407}, {0x19, 0x00000012},
-+	{0x1b, 0x00000064}, {0x1e, 0x00080009},
-+	{0x1f, 0x00000880}, {0x2f, 0x0001a060},
-+	{0x3f, 0x00000000}, {0x42, 0x000060c0},
-+	{0x57, 0x000d0000}, {0x58, 0x000be180},
-+	{0x67, 0x00001552}, {0x7f, 0x00000082},
-+	{0x81, 0x0003f000}, {0x83, 0x00000000},
-+	{0xdf, 0x00000180}, {0xef, 0x000001a0},
-+	{0x51, 0x00069545}, {0x52, 0x0007e42e},
-+	{0x53, 0x00000071}, {0x56, 0x00051ff3},
-+	{0x35, 0x000000a8}, {0x35, 0x000001e0},
-+	{0x35, 0x000002a8}, {0x36, 0x00001ca8},
-+	{0x36, 0x00009c24}, {0x36, 0x00011c24},
-+	{0x36, 0x00019c24}, {0x18, 0x00000c07},
-+	{0x5a, 0x00048000}, {0x19, 0x000739d0},
-+#ifdef EXT_PA_8192EU
-+	/* External PA or external LNA */
-+	{0x34, 0x0000a093}, {0x34, 0x0000908f},
-+	{0x34, 0x0000808c}, {0x34, 0x0000704d},
-+	{0x34, 0x0000604a}, {0x34, 0x00005047},
-+	{0x34, 0x0000400a}, {0x34, 0x00003007},
-+	{0x34, 0x00002004}, {0x34, 0x00001001},
-+	{0x34, 0x00000000},
-+#else
-+	{0x34, 0x0000add7}, {0x34, 0x00009dd4},
-+	{0x34, 0x00008dd1}, {0x34, 0x00007dce},
-+	{0x34, 0x00006dcb}, {0x34, 0x00005dc8},
-+	{0x34, 0x00004dc5}, {0x34, 0x000034cc},
-+	{0x34, 0x0000244f}, {0x34, 0x0000144c},
-+	{0x34, 0x00000014},
-+#endif
-+	{0x00, 0x00030159}, {0x84, 0x00068180},
-+	{0x86, 0x000000ce}, {0x87, 0x00048a00},
-+	{0x8e, 0x00065540}, {0x8f, 0x00088000},
-+	{0xef, 0x000020a0},
-+#ifdef EXT_PA_8192EU
-+	/* External PA or external LNA */
-+	{0x3b, 0x000f07b0},
-+#else
-+	{0x3b, 0x000f02b0},
-+#endif
++	if (!skb)
++		return -1;
 +
-+	{0x3b, 0x000ef7b0}, {0x3b, 0x000d4fb0},
-+	{0x3b, 0x000cf060}, {0x3b, 0x000b0090},
-+	{0x3b, 0x000a0080}, {0x3b, 0x00090080},
-+	{0x3b, 0x0008f780},
-+#ifdef EXT_PA_8192EU
-+	/* External PA or external LNA */
-+	{0x3b, 0x000787b0},
-+#else
-+	{0x3b, 0x00078730},
-+#endif
-+	{0x3b, 0x00060fb0}, {0x3b, 0x0005ffa0},
-+	{0x3b, 0x00040620}, {0x3b, 0x00037090},
-+	{0x3b, 0x00020080}, {0x3b, 0x0001f060},
-+	{0x3b, 0x0000ffb0}, {0xef, 0x000000a0},
-+	{0x00, 0x00010159}, {0xfe, 0x00000000},
-+	{0xfe, 0x00000000}, {0xfe, 0x00000000},
-+	{0xfe, 0x00000000}, {0x1e, 0x00000001},
-+	{0x1f, 0x00080000}, {0x00, 0x00033e70},
-+	{0xff, 0xffffffff}
-+};
++	p_ethhdr = (void *)skb->data;
++	src_node = mwifiex_get_sta_entry(priv, p_ethhdr->h_source);
++	if (src_node) {
++		src_node->stats.last_rx = jiffies;
++		src_node->stats.rx_bytes += skb->len;
++		src_node->stats.rx_packets++;
++	}
 +
- static struct rtl8xxxu_rfregs rtl8xxxu_rfregs[] = {
- 	{	/* RF_A */
- 		.hssiparm1 = REG_FPGA0_XA_HSSI_PARM1,
-@@ -6447,6 +6593,14 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 		rftable = rtl8192cu_radiob_2t_init_table;
- 		ret = rtl8xxxu_init_phy_rf(priv, rftable, RF_B);
- 		break;
-+	case RTL8192E:
-+		rftable = rtl8192eu_radioa_init_table;
-+		ret = rtl8xxxu_init_phy_rf(priv, rftable, RF_A);
-+		if (ret)
-+			break;
-+		rftable = rtl8192eu_radiob_init_table;
-+		ret = rtl8xxxu_init_phy_rf(priv, rftable, RF_B);
-+		break;
- 	default:
- 		ret = -EINVAL;
- 	}
++	skb->dev = priv->netdev;
++	skb->protocol = eth_type_trans(skb, priv->netdev);
++	skb->ip_summed = CHECKSUM_NONE;
++
++	/* This is required only in case of 11n and USB/PCIE as we alloc
++	 * a buffer of 4K only if its 11N (to be able to receive 4K
++	 * AMSDU packets). In case of SD we allocate buffers based
++	 * on the size of packet and hence this is not needed.
++	 *
++	 * Modifying the truesize here as our allocation for each
++	 * skb is 4K but we only receive 2K packets and this cause
++	 * the kernel to start dropping packets in case where
++	 * application has allocated buffer based on 2K size i.e.
++	 * if there a 64K packet received (in IP fragments and
++	 * application allocates 64K to receive this packet but
++	 * this packet would almost double up because we allocate
++	 * each 1.5K fragment in 4K and pass it up. As soon as the
++	 * 64K limit hits kernel will start to drop rest of the
++	 * fragments. Currently we fail the Filesndl-ht.scr script
++	 * for UDP, hence this fix
++	 */
++	if ((adapter->iface_type == MWIFIEX_USB ||
++	     adapter->iface_type == MWIFIEX_PCIE) &&
++	    (skb->truesize > MWIFIEX_RX_DATA_BUF_SIZE))
++		skb->truesize += (skb->len - MWIFIEX_RX_DATA_BUF_SIZE);
++
++	if (is_multicast_ether_addr(p_ethhdr->h_dest) ||
++	    mwifiex_get_sta_entry(priv, p_ethhdr->h_dest)) {
++		if (skb_headroom(skb) < MWIFIEX_MIN_DATA_HEADER_LEN)
++			skb_uap =
++			skb_realloc_headroom(skb, MWIFIEX_MIN_DATA_HEADER_LEN);
++		else
++			skb_uap = skb_copy(skb, GFP_ATOMIC);
++
++		if (likely(skb_uap)) {
++			tx_info = MWIFIEX_SKB_TXCB(skb_uap);
++			memset(tx_info, 0, sizeof(*tx_info));
++			tx_info->bss_num = priv->bss_num;
++			tx_info->bss_type = priv->bss_type;
++			tx_info->flags |= MWIFIEX_BUF_FLAG_BRIDGED_PKT;
++			__net_timestamp(skb_uap);
++			mwifiex_wmm_add_buf_txqueue(priv, skb_uap);
++			atomic_inc(&adapter->tx_pending);
++			atomic_inc(&adapter->pending_bridged_pkts);
++			if ((atomic_read(&adapter->pending_bridged_pkts) >=
++					MWIFIEX_BRIDGED_PKTS_THR_HIGH)) {
++				mwifiex_dbg(adapter, ERROR,
++					    "Tx: Bridge packet limit reached. Drop packet!\n");
++				mwifiex_uap_cleanup_tx_queues(priv);
++			}
++
++		} else {
++			mwifiex_dbg(adapter, ERROR, "failed to allocate skb_uap");
++		}
++
++		mwifiex_queue_main_work(adapter);
++		/* Don't forward Intra-BSS unicast packet to upper layer*/
++		if (mwifiex_get_sta_entry(priv, p_ethhdr->h_dest))
++			return 0;
++	}
++
++	/* Forward multicast/broadcast packet to upper layer*/
++	if (in_interrupt())
++		netif_rx(skb);
++	else
++		netif_rx_ni(skb);
++
++	return 0;
++}
++
+ /*
+  * This function processes the packet received on AP interface.
+  *
 -- 
-2.5.5
+1.8.1.4
 
