@@ -1,65 +1,191 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bues.ch ([80.190.117.144]:41674 "EHLO bues.ch"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750799AbcDAE75 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2016 00:59:57 -0400
-Date: Fri, 1 Apr 2016 06:59:10 +0200
-From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
-To: Chris Bainbridge <chris.bainbridge@gmail.com>
-Cc: Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org
-Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-Message-ID: <20160401065910.71e602b7@wiggum> (sfid-20160401_070001_539552_4D9A4E3D)
-In-Reply-To: <20160331231346.GA7469@localhost>
-References: <E1akxli-00030z-BC@bombadil.infradead.org>
- <20160331231346.GA7469@localhost>
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:50718 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755497AbcDEH2w (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2016 03:28:52 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u357SLHV028609
+	for <linux-wireless@vger.kernel.org>; Tue, 5 Apr 2016 00:28:51 -0700
+Received: from sc-exch01.marvell.com ([199.233.58.181])
+	by mx0a-0016f401.pphosted.com with ESMTP id 222bekhtp4-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2016 00:28:51 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Ganapathi Bhat <gbhat@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/7] mwifiex: add support for GTK rekey offload
+Date: Tue, 5 Apr 2016 00:22:26 -0700
+Message-ID: <1459840952-25338-1-git-send-email-akarwar@marvell.com> (sfid-20160405_092857_727408_1762F525)
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/mkdRJKaGSTy4HU1PedsCf12"; protocol="application/pgp-signature"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
---Sig_/mkdRJKaGSTy4HU1PedsCf12
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+From: Ganapathi Bhat <gbhat@marvell.com>
 
-On Fri, 1 Apr 2016 00:13:46 +0100
-Chris Bainbridge <chris.bainbridge@gmail.com> wrote:
+Added driver functionality to offload GTK rekey to firmware. When
+AP sends new GTK, firmware will update it.
 
-> Should also fix https://bugzilla.kernel.org/show_bug.cgi?id=3D111781 ?
-> Given that this is a serious bug that can corrupt filesystems it would
-> be good to see the fix in stable too.
+Signed-off-by: Ganapathi Bhat <gbhat@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/cfg80211.c    | 13 +++++++++-
+ drivers/net/wireless/marvell/mwifiex/fw.h          | 10 ++++++++
+ drivers/net/wireless/marvell/mwifiex/sta_cmd.c     | 28 ++++++++++++++++++++++
+ drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c |  2 ++
+ drivers/net/wireless/marvell/mwifiex/sta_event.c   |  3 +++
+ 5 files changed, 55 insertions(+), 1 deletion(-)
 
-Wow, this is horrible.
+diff --git a/drivers/net/wireless/marvell/mwifiex/cfg80211.c b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+index 108e641..ca8cdd2 100644
+--- a/drivers/net/wireless/marvell/mwifiex/cfg80211.c
++++ b/drivers/net/wireless/marvell/mwifiex/cfg80211.c
+@@ -3416,6 +3416,16 @@ static void mwifiex_cfg80211_set_wakeup(struct wiphy *wiphy,
+ 
+ 	device_set_wakeup_enable(adapter->dev, enabled);
+ }
++
++static int mwifiex_set_rekey_data(struct wiphy *wiphy, struct net_device *dev,
++				  struct cfg80211_gtk_rekey_data *data)
++{
++	struct mwifiex_private *priv = mwifiex_netdev_get_priv(dev);
++
++	return mwifiex_send_cmd(priv, HostCmd_CMD_GTK_REKEY_OFFLOAD_CFG,
++				HostCmd_ACT_GEN_SET, 0, data, true);
++}
++
+ #endif
+ 
+ static int mwifiex_get_coalesce_pkt_type(u8 *byte_seq)
+@@ -3938,6 +3948,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
+ 	.suspend = mwifiex_cfg80211_suspend,
+ 	.resume = mwifiex_cfg80211_resume,
+ 	.set_wakeup = mwifiex_cfg80211_set_wakeup,
++	.set_rekey_data = mwifiex_set_rekey_data,
+ #endif
+ 	.set_coalesce = mwifiex_cfg80211_set_coalesce,
+ 	.tdls_mgmt = mwifiex_cfg80211_tdls_mgmt,
+@@ -3954,7 +3965,7 @@ static struct cfg80211_ops mwifiex_cfg80211_ops = {
+ #ifdef CONFIG_PM
+ static const struct wiphy_wowlan_support mwifiex_wowlan_support = {
+ 	.flags = WIPHY_WOWLAN_MAGIC_PKT | WIPHY_WOWLAN_DISCONNECT |
+-		WIPHY_WOWLAN_NET_DETECT,
++		WIPHY_WOWLAN_NET_DETECT | WIPHY_WOWLAN_SUPPORTS_GTK_REKEY,
+ 	.n_patterns = MWIFIEX_MEF_MAX_FILTERS,
+ 	.pattern_min_len = 1,
+ 	.pattern_max_len = MWIFIEX_MAX_PATTERN_LEN,
+diff --git a/drivers/net/wireless/marvell/mwifiex/fw.h b/drivers/net/wireless/marvell/mwifiex/fw.h
+index c134cf8..8703d24 100644
+--- a/drivers/net/wireless/marvell/mwifiex/fw.h
++++ b/drivers/net/wireless/marvell/mwifiex/fw.h
+@@ -372,6 +372,7 @@ enum MWIFIEX_802_11_PRIVACY_FILTER {
+ #define HostCmd_CMD_COALESCE_CFG                      0x010a
+ #define HostCmd_CMD_MGMT_FRAME_REG                    0x010c
+ #define HostCmd_CMD_REMAIN_ON_CHAN                    0x010d
++#define HostCmd_CMD_GTK_REKEY_OFFLOAD_CFG             0x010f
+ #define HostCmd_CMD_11AC_CFG			      0x0112
+ #define HostCmd_CMD_HS_WAKEUP_REASON                  0x0116
+ #define HostCmd_CMD_TDLS_CONFIG                       0x0100
+@@ -2183,6 +2184,14 @@ struct host_cmd_ds_wakeup_reason {
+ 	u16  wakeup_reason;
+ } __packed;
+ 
++struct host_cmd_ds_gtk_rekey_params {
++	__le16 action;
++	u8 kck[NL80211_KCK_LEN];
++	u8 kek[NL80211_KEK_LEN];
++	__le32 replay_ctr_low;
++	__le32 replay_ctr_high;
++} __packed;
++
+ struct host_cmd_ds_command {
+ 	__le16 command;
+ 	__le16 size;
+@@ -2256,6 +2265,7 @@ struct host_cmd_ds_command {
+ 		struct host_cmd_ds_multi_chan_policy mc_policy;
+ 		struct host_cmd_ds_robust_coex coex;
+ 		struct host_cmd_ds_wakeup_reason hs_wakeup_reason;
++		struct host_cmd_ds_gtk_rekey_params rekey;
+ 	} params;
+ } __packed;
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+index 30f1526..8cb895b 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmd.c
+@@ -1558,6 +1558,30 @@ static int mwifiex_cmd_robust_coex(struct mwifiex_private *priv,
+ 	return 0;
+ }
+ 
++static int mwifiex_cmd_gtk_rekey_offload(struct mwifiex_private *priv,
++					 struct host_cmd_ds_command *cmd,
++					 u16 cmd_action,
++					 struct cfg80211_gtk_rekey_data *data)
++{
++	struct host_cmd_ds_gtk_rekey_params *rekey = &cmd->params.rekey;
++	u64 rekey_ctr;
++
++	cmd->command = cpu_to_le16(HostCmd_CMD_GTK_REKEY_OFFLOAD_CFG);
++	cmd->size = cpu_to_le16(sizeof(*rekey) + S_DS_GEN);
++
++	rekey->action = cpu_to_le16(cmd_action);
++	if (cmd_action == HostCmd_ACT_GEN_SET) {
++		memcpy(rekey->kek, data->kek, NL80211_KEK_LEN);
++		memcpy(rekey->kck, data->kck, NL80211_KCK_LEN);
++		rekey_ctr = be64_to_cpup((__be64 *)data->replay_ctr);
++		rekey->replay_ctr_low = cpu_to_le32((u32)rekey_ctr);
++		rekey->replay_ctr_high =
++			cpu_to_le32((u32)((u64)rekey_ctr >> 32));
++	}
++
++	return 0;
++}
++
+ static int
+ mwifiex_cmd_coalesce_cfg(struct mwifiex_private *priv,
+ 			 struct host_cmd_ds_command *cmd,
+@@ -2094,6 +2118,10 @@ int mwifiex_sta_prepare_cmd(struct mwifiex_private *priv, uint16_t cmd_no,
+ 		ret = mwifiex_cmd_robust_coex(priv, cmd_ptr, cmd_action,
+ 					      data_buf);
+ 		break;
++	case HostCmd_CMD_GTK_REKEY_OFFLOAD_CFG:
++		ret = mwifiex_cmd_gtk_rekey_offload(priv, cmd_ptr, cmd_action,
++						    data_buf);
++		break;
+ 	default:
+ 		mwifiex_dbg(priv->adapter, ERROR,
+ 			    "PREP_CMD: unknown cmd- %#x\n", cmd_no);
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+index 96732cb..d18c797 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_cmdresp.c
+@@ -1233,6 +1233,8 @@ int mwifiex_process_sta_cmdresp(struct mwifiex_private *priv, u16 cmdresp_no,
+ 	case HostCmd_CMD_ROBUST_COEX:
+ 		ret = mwifiex_ret_robust_coex(priv, resp, data_buf);
+ 		break;
++	case HostCmd_CMD_GTK_REKEY_OFFLOAD_CFG:
++		break;
+ 	default:
+ 		mwifiex_dbg(adapter, ERROR,
+ 			    "CMD_RESP: unknown cmd response %#x\n",
+diff --git a/drivers/net/wireless/marvell/mwifiex/sta_event.c b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+index 070bce4..0104108 100644
+--- a/drivers/net/wireless/marvell/mwifiex/sta_event.c
++++ b/drivers/net/wireless/marvell/mwifiex/sta_event.c
+@@ -147,6 +147,9 @@ mwifiex_reset_connect_state(struct mwifiex_private *priv, u16 reason_code)
+ 	mwifiex_stop_net_dev_queue(priv->netdev, adapter);
+ 	if (netif_carrier_ok(priv->netdev))
+ 		netif_carrier_off(priv->netdev);
++
++	mwifiex_send_cmd(priv, HostCmd_CMD_GTK_REKEY_OFFLOAD_CFG,
++			 HostCmd_ACT_GEN_REMOVE, 0, NULL, false);
+ }
+ 
+ static int mwifiex_parse_tdls_event(struct mwifiex_private *priv,
+-- 
+1.8.1.4
 
-This patch should help a bit. But it's probably hard to workaround that
-DMA issue completely. There still is a chance of corruption, as soon as
-the kernel allocates and uses some memory that the DMA controller still
-uses from boot-up before the fixup is applied.
-
---=20
-Michael
-
---Sig_/mkdRJKaGSTy4HU1PedsCf12
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQIcBAEBCAAGBQJW/gAeAAoJEPUyvh2QjYsODT4P/0UYnvp08cylQ8zT3gStd9ZN
-CTWInlGKz5YFA5/2On1FX7u2yGdlZ6VtYISm7JP9CTWN+q5X78Fxg+jK3tjEzkJL
-O9RJEiyKqJrbnj4NK7vEXDm2Qz0ogfuiFOOId4qWFTXgRs/exlAMxeRpQgNTwvZO
-mh9JekQ3blBVV2f7oPkuDOAFZD20cZ3pLbFDr+UzciRmewI3RUqlQ0IoEn8Np+To
-wG16xhUGtH3Yza35Mb3kRhJVKTDP6kOfNmQHX7qt5NJsmKiTFtLRh2xalxtGmbC3
-QzSBcHA1gJDwvXT7CYbm7TcSGD/O0vG5CsUNiAJg5hLiKRjS4FsoTSHKeD6Qo5pQ
-s/7dRxMGRrxN7gwqeyBxU7nZICp4CeRQkeL4TW6DL4/qgOr3n7zs2GQexw0sdmcD
-erJq9mCBbSPlFZdvGqnmMe1v9dZtIp2UJ4xuuoNQsJxjf3AEU4d8gHeOsnQXjYYD
-aRdqUWzaK5mVXfaDCgtS9/JIAqpu1iIm5f5heALTjoA05pv+j5XAyx90LgG6UlBY
-YC6PlOk4fjZ7TKQl26pHhnTrwldYOBuVC1mQOoBdq3EFzD7gUj73CMONx7qBYtYl
-g8jJmmOpvUW7/ahTL1caQ5J3HyTM2yP5J5C/sU4e2SSF1/4H2UHiTnkY9A7n+BmQ
-YWdpT4zR5E/cnjyxQ6/3
-=VZwy
------END PGP SIGNATURE-----
-
---Sig_/mkdRJKaGSTy4HU1PedsCf12--
