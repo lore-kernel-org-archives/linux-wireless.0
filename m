@@ -1,43 +1,140 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from slowthinkers.net ([82.95.118.26]:42975 "EHLO
-	density.slowthinkers.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751871AbcDUUV3 (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:50937 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757227AbcDEH3A (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2016 16:21:29 -0400
-From: Anne Marcel Roorda <marcel@density.slowthinkers.net>
-To: Seth Forshee <seth.forshee@canonical.com>
-cc: linux-wireless@vger.kernel.org, wireless-regdb@lists.infradead.org
-Subject: Re: [wireless-regdb] wireless-regdb: Update regulatory rules for Germany (DE) on 5GHz
-In-reply-to: <20160421185134.GD95003@ubuntu-hedt>
-References: <1958820.LBuzOElZFT@perisens15> <20160421131938.GA95003@ubuntu-hedt> <2919568.ssjlN6KUVX@perisens15> <20160421185134.GD95003@ubuntu-hedt>
-Date: Thu, 21 Apr 2016 22:13:14 +0200
-Message-Id: <20160421201315.9C536206F0@density.slowthinkers.net> (sfid-20160421_222132_761738_9BD10C93)
+	Tue, 5 Apr 2016 03:29:00 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u357QnBO021328
+	for <linux-wireless@vger.kernel.org>; Tue, 5 Apr 2016 00:28:59 -0700
+Received: from sc-exch02.marvell.com ([199.233.58.182])
+	by mx0b-0016f401.pphosted.com with ESMTP id 222dkfh5de-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2016 00:28:58 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Xinming Hu <huxm@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 7/7] mwifiex: dump pcie scratch registers
+Date: Tue, 5 Apr 2016 00:22:32 -0700
+Message-ID: <1459840952-25338-7-git-send-email-akarwar@marvell.com> (sfid-20160405_092909_164281_15CF29B8)
+In-Reply-To: <1459840952-25338-1-git-send-email-akarwar@marvell.com>
+References: <1459840952-25338-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Xinming Hu <huxm@marvell.com>
 
-On 21 Apr 2016, Seth Forshee wrote:
-> On Thu, Apr 21, 2016 at 08:08:46PM +0200, Maximilian Engelhardt wrote:
->
->> The comments to my initial mail indicated that the statement in the ERC 
->> recommendation I linked are alone not enough to add this frequency ranges for 
->> other countries. Unfortunately I don't have the possibility to do these checks 
->> for countries other than Germany.
->
->Yep, I understand and am in agreement. I know how challenging it can be
->to try to track down this information.
+This patch prints pcie scratch registers during firmware dump. They
+will be useful for analysing firmware status.
 
-  I could do the same for NL.
+Signed-off-by: Xinming Hu <huxm@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/main.c |  8 +++---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 42 +++++++++++++++++++++++++++++
+ drivers/net/wireless/marvell/mwifiex/pcie.h |  2 ++
+ 3 files changed, 49 insertions(+), 3 deletions(-)
 
-  At the moment entries for NL are listed as center frequencies
-(almost, 5490 - 5710 @ 160 should be 5550 - 5645 @ 160), while for DE
-the whole band is listed (5470 - 5725 @ 160).
+diff --git a/drivers/net/wireless/marvell/mwifiex/main.c b/drivers/net/wireless/marvell/mwifiex/main.c
+index 3cfa946..04b975c 100644
+--- a/drivers/net/wireless/marvell/mwifiex/main.c
++++ b/drivers/net/wireless/marvell/mwifiex/main.c
+@@ -1074,12 +1074,14 @@ void mwifiex_drv_info_dump(struct mwifiex_adapter *adapter)
+ 			     priv->netdev->name, priv->num_tx_timeout);
+ 	}
+ 
+-	if (adapter->iface_type == MWIFIEX_SDIO) {
+-		p += sprintf(p, "\n=== SDIO register dump===\n");
++	if (adapter->iface_type == MWIFIEX_SDIO ||
++	    adapter->iface_type == MWIFIEX_PCIE) {
++		p += sprintf(p, "\n=== %s register dump===\n",
++			     adapter->iface_type == MWIFIEX_SDIO ?
++							"SDIO" : "PCIE");
+ 		if (adapter->if_ops.reg_dump)
+ 			p += adapter->if_ops.reg_dump(adapter, p);
+ 	}
+-
+ 	p += sprintf(p, "\n=== more debug information\n");
+ 	debug_info = kzalloc(sizeof(*debug_info), GFP_KERNEL);
+ 	if (debug_info) {
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 6a06ca5..edf8b07 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2355,6 +2355,47 @@ static int mwifiex_pcie_host_to_card(struct mwifiex_adapter *adapter, u8 type,
+ 	return 0;
+ }
+ 
++/* Function to dump PCIE scratch registers in case of FW crash
++ */
++static int
++mwifiex_pcie_reg_dump(struct mwifiex_adapter *adapter, char *drv_buf)
++{
++	char *p = drv_buf;
++	char buf[256], *ptr;
++	int i;
++	u32 value;
++	struct pcie_service_card *card = adapter->card;
++	const struct mwifiex_pcie_card_reg *reg = card->pcie.reg;
++	int pcie_scratch_reg[] = {PCIE_SCRATCH_12_REG,
++				  PCIE_SCRATCH_13_REG,
++				  PCIE_SCRATCH_14_REG};
++
++	if (!p)
++		return 0;
++
++	mwifiex_dbg(adapter, MSG, "PCIE register dump start\n");
++
++	if (mwifiex_read_reg(adapter, reg->fw_status, &value)) {
++		mwifiex_dbg(adapter, ERROR, "failed to read firmware status");
++		return 0;
++	}
++
++	ptr = buf;
++	mwifiex_dbg(adapter, MSG, "pcie scratch register:");
++	for (i = 0; i < ARRAY_SIZE(pcie_scratch_reg); i++) {
++		mwifiex_read_reg(adapter, pcie_scratch_reg[i], &value);
++		ptr += sprintf(ptr, "reg:0x%x, value=0x%x\n",
++			       pcie_scratch_reg[i], value);
++	}
++
++	mwifiex_dbg(adapter, MSG, "%s\n", buf);
++	p += sprintf(p, "%s\n", buf);
++
++	mwifiex_dbg(adapter, MSG, "PCIE register dump end\n");
++
++	return p - drv_buf;
++}
++
+ /* This function read/write firmware */
+ static enum rdwr_status
+ mwifiex_pcie_rdwr_firmware(struct mwifiex_adapter *adapter, u8 doneflag)
+@@ -2899,6 +2940,7 @@ static struct mwifiex_if_ops pcie_ops = {
+ 	.cleanup_mpa_buf =		NULL,
+ 	.init_fw_port =			mwifiex_pcie_init_fw_port,
+ 	.clean_pcie_ring =		mwifiex_clean_pcie_ring_buf,
++	.reg_dump =			mwifiex_pcie_reg_dump,
+ 	.device_dump =			mwifiex_pcie_device_dump,
+ };
+ 
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
+index 4455d19..cc7a5df 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.h
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+@@ -73,6 +73,8 @@
+ #define PCIE_SCRATCH_10_REG				0xCE8
+ #define PCIE_SCRATCH_11_REG				0xCEC
+ #define PCIE_SCRATCH_12_REG				0xCF0
++#define PCIE_SCRATCH_13_REG				0xCF8
++#define PCIE_SCRATCH_14_REG				0xCFC
+ #define PCIE_RD_DATA_PTR_Q0_Q1                          0xC08C
+ #define PCIE_WR_DATA_PTR_Q0_Q1                          0xC05C
+ 
+-- 
+1.8.1.4
 
-  Power budget is listed in db while the law specifies mW.
-
-  What is the prefered format, and would a rewrite for NL listing the band
-and power in mW be acceptable ?
-
-Thanks,
-
-- marcel
