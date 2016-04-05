@@ -1,47 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:36124 "EHLO
-	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751828AbcDUNTq (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2016 09:19:46 -0400
-Received: by mail-oi0-f45.google.com with SMTP id x201so82739254oif.3
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2016 06:19:46 -0700 (PDT)
-Date: Thu, 21 Apr 2016 08:19:38 -0500
-From: Seth Forshee <seth.forshee@canonical.com>
-To: Maximilian Engelhardt <engelhardt@perisens.de>
-Cc: wireless-regdb@lists.infradead.org, linux-wireless@vger.kernel.org,
-	maxi@daemonizer.de
-Subject: Re: wireless-regdb: Update regulatory rules for Germany (DE) on 5GHz
-Message-ID: <20160421131938.GA95003@ubuntu-hedt> (sfid-20160421_151957_936411_AD7B3C1D)
-References: <1958820.LBuzOElZFT@perisens15>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1958820.LBuzOElZFT@perisens15>
+Received: from s3.sipsolutions.net ([5.9.151.49]:53704 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757532AbcDEKIu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 5 Apr 2016 06:08:50 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: linux-wireless@vger.kernel.org
+Cc: Johannes Berg <johannes.berg@intel.com>
+Subject: [PATCH] ath10k: remove VHT capabilities from 2.4GHz
+Date: Tue,  5 Apr 2016 12:08:46 +0200
+Message-Id: <1459850926-32264-1-git-send-email-johannes@sipsolutions.net> (sfid-20160405_120853_908384_3FF55449)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 19, 2016 at 08:03:16PM +0200, Maximilian Engelhardt wrote:
-> Hi,
-> 
-> In Europe ETSI standardized the used for short range devices (SRD) [1] in ETSI 
-> EN 300 440-1 [2].
-> According to this standard generic use equipment is allowed to transmit in the 
-> frequency range form 5725 MHz to 5875 MHz with a maximum output power of 
-> 25 mW e.i.r.p. This generic allocation also allows transmission of 802.11 
-> devices.
-> 
-> [3] has a list of countries and their status about the implementation of the 
-> SRD frequency bands. For the 5 GHz band this can be seen on page 38 in the 
-> paragraph ANNEX 1 and the entry Annex j.
-> 
-> Attached is a patch that adds the 5 GHz SRD band to db.txt for Germany.
-> 
-> If it is acceptable I can provide a patch adding the 5 GHz SRD band for the 
-> other countries listed in [3].
+From: Johannes Berg <johannes.berg@intel.com>
 
-The changes seem okay as far as I can tell. You do need to include your
-signed-off-by tag on the patch however, see
-https://git.kernel.org/cgit/linux/kernel/git/sforshee/wireless-regdb.git/tree/CONTRIBUTING.
+According to the spec, VHT doesn't exist in 2.4GHz.
 
-Thanks,
-Seth
+There are vendor extensions to allow a subset of VHT to work
+(notably 256-QAM), but since mac80211 doesn't support those
+advertising VHT capability on 2.4GHz leads to the behaviour
+of reporting VHT capabilities but not being able to use any
+of them due to mac80211's code requiring 80 MHz support.
+
+Remove the VHT capabilities from 2.4GHz for now. If mac80211
+gets extended to use the (likely Broadcom) vendor IEs for it
+and handles the lack of 80 MHz support, it can be added back.
+
+Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 78999c9de23b..b9d654ed0f80 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3921,9 +3921,6 @@ static void ath10k_mac_setup_ht_vht_cap(struct ath10k *ar)
+ 	if (ar->phy_capability & WHAL_WLAN_11G_CAPABILITY) {
+ 		band = &ar->mac.sbands[IEEE80211_BAND_2GHZ];
+ 		band->ht_cap = ht_cap;
+-
+-		/* Enable the VHT support at 2.4 GHz */
+-		band->vht_cap = vht_cap;
+ 	}
+ 	if (ar->phy_capability & WHAL_WLAN_11A_CAPABILITY) {
+ 		band = &ar->mac.sbands[IEEE80211_BAND_5GHZ];
+-- 
+2.7.0
+
