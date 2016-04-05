@@ -1,50 +1,430 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:32899 "EHLO
-	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751519AbcDRQYI (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:27539 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757824AbcDELYY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 12:24:08 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Lauri Kasanen <cand@gmx.com>
-Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3] carl9170: Clarify kconfig text
-Date: Mon, 18 Apr 2016 18:24:03 +0200
-Message-ID: <1601274.2AA5eFGnzj@debian64> (sfid-20160418_182432_578884_3E130C21)
-In-Reply-To: <20160418190739.bea7c781e2bd35beb7a748f7@gmx.com>
-References: <20160416113312.8de2266358165182bb4b4a15@gmx.com> <87shyiyl8a.fsf@purkki.adurom.net> <20160418190739.bea7c781e2bd35beb7a748f7@gmx.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 5 Apr 2016 07:24:24 -0400
+From: Maya Erez <qca_merez@qca.qualcomm.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
+	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Subject: [PATCH 7/7] wil6210: add support for device led configuration
+Date: Tue,  5 Apr 2016 14:24:07 +0300
+Message-Id: <1459855447-17413-8-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160405_132430_649197_1CE1216F)
+In-Reply-To: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, April 18, 2016 07:07:39 PM Lauri Kasanen wrote:
-> The previous text was confusing, leading readers to think this
-> driver was a duplicate, and so didn't need to be enabled.
-> 
-> After the removal of the older staging driver, this is the only
-> driver in mainline for these devices.
-> 
-> Signed-off-by: Lauri Kasanen <cand@gmx.com>
-> ---
-> v3: Remove all firmware mentions.
-> 
->  drivers/net/wireless/ath/carl9170/Kconfig | 8 +-------
->  1 file changed, 1 insertion(+), 7 deletions(-)
-> 
-> diff --git a/drivers/net/wireless/ath/carl9170/Kconfig b/drivers/net/wireless/ath/carl9170/Kconfig
-> index 1a796e5..ca1ae09 100644
-> --- a/drivers/net/wireless/ath/carl9170/Kconfig
-> +++ b/drivers/net/wireless/ath/carl9170/Kconfig
-> @@ -5,13 +5,7 @@ config CARL9170
->  	select FW_LOADER
->  	select CRC32
->  	help
-> -	  This is another driver for the Atheros "otus" 802.11n USB devices.
-> -
-> -	  This driver provides more features than the original,
-> -	  but it needs a special firmware (carl9170-1.fw) to do that.
-> -
-> -	  The firmware can be downloaded from our wiki here:
-> -	  <http://wireless.kernel.org/en/users/Drivers/carl9170>
-Please do keep the wiki link.
+Add the ability to configure the device led to be used for notifying
+the AP activity (60G device supports leds 0-2).
+The host can also configure the blinking frequency of the led in
+three states.
+
+Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/wil6210/debugfs.c | 115 +++++++++++++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/main.c    |   3 +
+ drivers/net/wireless/ath/wil6210/wil6210.h |  25 +++++++
+ drivers/net/wireless/ath/wil6210/wmi.c     |  77 +++++++++++++++++++
+ drivers/net/wireless/ath/wil6210/wmi.h     |  61 +++++++++++++++
+ 5 files changed, 281 insertions(+)
+
+diff --git a/drivers/net/wireless/ath/wil6210/debugfs.c b/drivers/net/wireless/ath/wil6210/debugfs.c
+index 5d8823d..a8098b4 100644
+--- a/drivers/net/wireless/ath/wil6210/debugfs.c
++++ b/drivers/net/wireless/ath/wil6210/debugfs.c
+@@ -1441,6 +1441,118 @@ static const struct file_operations fops_sta = {
+ 	.llseek		= seq_lseek,
+ };
+ 
++static ssize_t wil_read_file_led_cfg(struct file *file, char __user *user_buf,
++				     size_t count, loff_t *ppos)
++{
++	char buf[80];
++	int n;
++
++	n = snprintf(buf, sizeof(buf),
++		     "led_id is set to %d, echo 1 to enable, 0 to disable\n",
++		     led_id);
++
++	n = min_t(int, n, sizeof(buf));
++
++	return simple_read_from_buffer(user_buf, count, ppos,
++				       buf, n);
++}
++
++static ssize_t wil_write_file_led_cfg(struct file *file,
++				      const char __user *buf_,
++				      size_t count, loff_t *ppos)
++{
++	struct wil6210_priv *wil = file->private_data;
++	int val;
++	int rc;
++
++	rc = kstrtoint_from_user(buf_, count, 0, &val);
++	if (rc) {
++		wil_err(wil, "Invalid argument\n");
++		return rc;
++	}
++
++	wil_info(wil, "%s led %d\n", val ? "Enabling" : "Disabling", led_id);
++	rc = wmi_led_cfg(wil, val);
++	if (rc) {
++		wil_info(wil, "%s led %d failed\n",
++			 val ? "Enabling" : "Disabling", led_id);
++		return rc;
++	}
++
++	return count;
++}
++
++static const struct file_operations fops_led_cfg = {
++	.read = wil_read_file_led_cfg,
++	.write = wil_write_file_led_cfg,
++	.open  = simple_open,
++};
++
++/* led_blink_time, write:
++ * "<blink_on_slow> <blink_off_slow> <blink_on_med> <blink_off_med> <blink_on_fast> <blink_off_fast>
++ */
++static ssize_t wil_write_led_blink_time(struct file *file,
++					const char __user *buf,
++					size_t len, loff_t *ppos)
++{
++	int rc;
++	char *kbuf = kmalloc(len + 1, GFP_KERNEL);
++
++	if (!kbuf)
++		return -ENOMEM;
++
++	rc = simple_write_to_buffer(kbuf, len, ppos, buf, len);
++	if (rc != len) {
++		kfree(kbuf);
++		return rc >= 0 ? -EIO : rc;
++	}
++
++	kbuf[len] = '\0';
++	rc = sscanf(kbuf, "%d %d %d %d %d %d",
++		    &led_blink_time[WIL_LED_TIME_SLOW].on_ms,
++		    &led_blink_time[WIL_LED_TIME_SLOW].off_ms,
++		    &led_blink_time[WIL_LED_TIME_MED].on_ms,
++		    &led_blink_time[WIL_LED_TIME_MED].off_ms,
++		    &led_blink_time[WIL_LED_TIME_FAST].on_ms,
++		    &led_blink_time[WIL_LED_TIME_FAST].off_ms);
++	kfree(kbuf);
++
++	if (rc < 0)
++		return rc;
++	if (rc < 6)
++		return -EINVAL;
++
++	return len;
++}
++
++static ssize_t wil_read_led_blink_time(struct file *file, char __user *user_buf,
++				       size_t count, loff_t *ppos)
++{
++	static char text[400];
++
++	snprintf(text, sizeof(text),
++		 "To set led blink on/off time variables write:\n"
++		 "<blink_on_slow> <blink_off_slow> <blink_on_med> "
++		 "<blink_off_med> <blink_on_fast> <blink_off_fast>\n"
++		 "The current values are:\n"
++		 "%d %d %d %d %d %d\n",
++		 led_blink_time[WIL_LED_TIME_SLOW].on_ms,
++		 led_blink_time[WIL_LED_TIME_SLOW].off_ms,
++		 led_blink_time[WIL_LED_TIME_MED].on_ms,
++		 led_blink_time[WIL_LED_TIME_MED].off_ms,
++		 led_blink_time[WIL_LED_TIME_FAST].on_ms,
++		 led_blink_time[WIL_LED_TIME_FAST].off_ms);
++
++	return simple_read_from_buffer(user_buf, count, ppos, text,
++				       sizeof(text));
++}
++
++static const struct file_operations fops_led_blink_time = {
++	.read = wil_read_led_blink_time,
++	.write = wil_write_led_blink_time,
++	.open  = simple_open,
++};
++
+ /*----------------*/
+ static void wil6210_debugfs_init_blobs(struct wil6210_priv *wil,
+ 				       struct dentry *dbg)
+@@ -1489,6 +1601,8 @@ static const struct {
+ 	{"link",	S_IRUGO,		&fops_link},
+ 	{"info",	S_IRUGO,		&fops_info},
+ 	{"recovery",	S_IRUGO | S_IWUSR,	&fops_recovery},
++	{"led_cfg",	S_IRUGO | S_IWUSR,	&fops_led_cfg},
++	{"led_blink_time",	S_IRUGO | S_IWUSR,	&fops_led_blink_time},
+ };
+ 
+ static void wil6210_debugfs_init_files(struct wil6210_priv *wil,
+@@ -1551,6 +1665,7 @@ static const struct dbg_off dbg_statics[] = {
+ 	{"mem_addr",	S_IRUGO | S_IWUSR, (ulong)&mem_addr, doff_u32},
+ 	{"vring_idle_trsh", S_IRUGO | S_IWUSR, (ulong)&vring_idle_trsh,
+ 	 doff_u32},
++	{"led_polarity", S_IRUGO | S_IWUSR, (ulong)&led_polarity, doff_u8},
+ 	{},
+ };
+ 
+diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
+index f7ed651..8e31d75 100644
+--- a/drivers/net/wireless/ath/wil6210/main.c
++++ b/drivers/net/wireless/ath/wil6210/main.c
+@@ -841,6 +841,9 @@ int wil_reset(struct wil6210_priv *wil, bool load_fw)
+ 	wil6210_disconnect(wil, NULL, WLAN_REASON_DEAUTH_LEAVING, false);
+ 	wil_bcast_fini(wil);
+ 
++	/* Disable device led before reset*/
++	wmi_led_cfg(wil, false);
++
+ 	/* prevent NAPI from being scheduled and prevent wmi commands */
+ 	mutex_lock(&wil->wmi_mutex);
+ 	bitmap_zero(wil->status, wil_status_last);
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 32e7348..5f8411f 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -546,6 +546,30 @@ struct wil_blob_wrapper {
+ 	struct debugfs_blob_wrapper blob;
+ };
+ 
++#define WIL_LED_MAX_ID			(2)
++#define WIL_LED_INVALID_ID		(0xF)
++#define WIL_LED_BLINK_ON_SLOW_MS	(300)
++#define WIL_LED_BLINK_OFF_SLOW_MS	(300)
++#define WIL_LED_BLINK_ON_MED_MS		(200)
++#define WIL_LED_BLINK_OFF_MED_MS	(200)
++#define WIL_LED_BLINK_ON_FAST_MS	(100)
++#define WIL_LED_BLINK_OFF_FAST_MS	(100)
++enum {
++	WIL_LED_TIME_SLOW = 0,
++	WIL_LED_TIME_MED,
++	WIL_LED_TIME_FAST,
++	WIL_LED_TIME_LAST,
++};
++
++struct blink_on_off_time {
++	u32 on_ms;
++	u32 off_ms;
++};
++
++extern struct blink_on_off_time led_blink_time[WIL_LED_TIME_LAST];
++extern u8 led_id;
++extern u8 led_polarity;
++
+ struct wil6210_priv {
+ 	struct pci_dev *pdev;
+ 	struct wireless_dev *wdev;
+@@ -841,6 +865,7 @@ int wmi_set_mac_address(struct wil6210_priv *wil, void *addr);
+ int wmi_pcp_start(struct wil6210_priv *wil, int bi, u8 wmi_nettype,
+ 		  u8 chan, u8 hidden_ssid, u8 is_go);
+ int wmi_pcp_stop(struct wil6210_priv *wil);
++int wmi_led_cfg(struct wil6210_priv *wil, bool enable);
+ void wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
+ 			u16 reason_code, bool from_event);
+ void wil_probe_client_flush(struct wil6210_priv *wil);
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.c b/drivers/net/wireless/ath/wil6210/wmi.c
+index f83bde1..c9fef36 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.c
++++ b/drivers/net/wireless/ath/wil6210/wmi.c
+@@ -32,6 +32,11 @@ module_param(agg_wsize, int, S_IRUGO | S_IWUSR);
+ MODULE_PARM_DESC(agg_wsize, " Window size for Tx Block Ack after connect;"
+ 		 " 0 - use default; < 0 - don't auto-establish");
+ 
++u8 led_id = WIL_LED_INVALID_ID;
++module_param(led_id, byte, S_IRUGO);
++MODULE_PARM_DESC(led_id,
++		 " 60G device led enablement. Set the led ID (0-2) to enable");
++
+ /**
+  * WMI event receiving - theory of operations
+  *
+@@ -94,6 +99,14 @@ const struct fw_map fw_mapping[] = {
+ 	 */
+ };
+ 
++struct blink_on_off_time led_blink_time[] = {
++	{WIL_LED_BLINK_ON_SLOW_MS, WIL_LED_BLINK_OFF_SLOW_MS},
++	{WIL_LED_BLINK_ON_MED_MS, WIL_LED_BLINK_OFF_MED_MS},
++	{WIL_LED_BLINK_ON_FAST_MS, WIL_LED_BLINK_OFF_FAST_MS},
++};
++
++u8 led_polarity = LED_POLARITY_LOW_ACTIVE;
++
+ /**
+  * return AHB address for given firmware/ucode internal (linker) address
+  * @x - internal address
+@@ -971,6 +984,60 @@ int wmi_set_mac_address(struct wil6210_priv *wil, void *addr)
+ 	return wmi_send(wil, WMI_SET_MAC_ADDRESS_CMDID, &cmd, sizeof(cmd));
+ }
+ 
++int wmi_led_cfg(struct wil6210_priv *wil, bool enable)
++{
++	int rc = 0;
++	struct wmi_led_cfg_cmd cmd = {
++		.led_mode = enable,
++		.id = led_id,
++		.slow_blink_cfg.blink_on =
++			cpu_to_le32(led_blink_time[WIL_LED_TIME_SLOW].on_ms),
++		.slow_blink_cfg.blink_off =
++			cpu_to_le32(led_blink_time[WIL_LED_TIME_SLOW].off_ms),
++		.medium_blink_cfg.blink_on =
++			cpu_to_le32(led_blink_time[WIL_LED_TIME_MED].on_ms),
++		.medium_blink_cfg.blink_off =
++			cpu_to_le32(led_blink_time[WIL_LED_TIME_MED].off_ms),
++		.fast_blink_cfg.blink_on =
++			cpu_to_le32(led_blink_time[WIL_LED_TIME_FAST].on_ms),
++		.fast_blink_cfg.blink_off =
++			cpu_to_le32(led_blink_time[WIL_LED_TIME_FAST].off_ms),
++		.led_polarity = led_polarity,
++	};
++	struct {
++		struct wmi_cmd_hdr wmi;
++		struct wmi_led_cfg_done_event evt;
++	} __packed reply;
++
++	if (led_id == WIL_LED_INVALID_ID)
++		goto out;
++
++	if (led_id > WIL_LED_MAX_ID) {
++		wil_err(wil, "Invalid led id %d\n", led_id);
++		rc = -EINVAL;
++		goto out;
++	}
++
++	wil_dbg_wmi(wil,
++		    "%s led %d\n",
++		    enable ? "enabling" : "disabling", led_id);
++
++	rc = wmi_call(wil, WMI_LED_CFG_CMDID, &cmd, sizeof(cmd),
++		      WMI_LED_CFG_DONE_EVENTID, &reply, sizeof(reply),
++		      100);
++	if (rc)
++		goto out;
++
++	if (reply.evt.status) {
++		wil_err(wil, "led %d cfg failed with status %d\n",
++			led_id, le32_to_cpu(reply.evt.status));
++		rc = -EINVAL;
++	}
++
++out:
++	return rc;
++}
++
+ int wmi_pcp_start(struct wil6210_priv *wil, int bi, u8 wmi_nettype,
+ 		  u8 chan, u8 hidden_ssid, u8 is_go)
+ {
+@@ -1013,11 +1080,21 @@ int wmi_pcp_start(struct wil6210_priv *wil, int bi, u8 wmi_nettype,
+ 	if (reply.evt.status != WMI_FW_STATUS_SUCCESS)
+ 		rc = -EINVAL;
+ 
++	if (wmi_nettype != WMI_NETTYPE_P2P)
++		/* Don't fail due to error in the led configuration */
++		wmi_led_cfg(wil, true);
++
+ 	return rc;
+ }
+ 
+ int wmi_pcp_stop(struct wil6210_priv *wil)
+ {
++	int rc;
++
++	rc = wmi_led_cfg(wil, false);
++	if (rc)
++		return rc;
++
+ 	return wmi_call(wil, WMI_PCP_STOP_CMDID, NULL, 0,
+ 			WMI_PCP_STOPPED_EVENTID, NULL, 0, 20);
+ }
+diff --git a/drivers/net/wireless/ath/wil6210/wmi.h b/drivers/net/wireless/ath/wil6210/wmi.h
+index 29865e0..685fe0d 100644
+--- a/drivers/net/wireless/ath/wil6210/wmi.h
++++ b/drivers/net/wireless/ath/wil6210/wmi.h
+@@ -129,6 +129,7 @@ enum wmi_command_id {
+ 	WMI_THERMAL_THROTTLING_GET_STATUS_CMDID	= 0x855,
+ 	WMI_OTP_READ_CMDID			= 0x856,
+ 	WMI_OTP_WRITE_CMDID			= 0x857,
++	WMI_LED_CFG_CMDID			= 0x858,
+ 	/* Performance monitoring commands */
+ 	WMI_BF_CTRL_CMDID			= 0x862,
+ 	WMI_NOTIFY_REQ_CMDID			= 0x863,
+@@ -868,6 +869,7 @@ enum wmi_event_id {
+ 	WMI_RX_MGMT_PACKET_EVENTID		= 0x1840,
+ 	WMI_TX_MGMT_PACKET_EVENTID		= 0x1841,
+ 	WMI_OTP_READ_RESULT_EVENTID		= 0x1856,
++	WMI_LED_CFG_DONE_EVENTID		= 0x1858,
+ 	/* Performance monitoring events */
+ 	WMI_DATA_PORT_OPEN_EVENTID		= 0x1860,
+ 	WMI_WBE_LINK_DOWN_EVENTID		= 0x1861,
+@@ -1349,4 +1351,63 @@ enum wmi_hidden_ssid {
+ 	WMI_HIDDEN_SSID_CLEAR		= 0xFE,
+ };
+ 
++/* WMI_LED_CFG_CMDID
++ *
++ * Configure LED On\Off\Blinking operation
++ *
++ * Returned events:
++ * - WMI_LED_CFG_DONE_EVENTID
++ */
++enum led_mode {
++	LED_DISABLE	= 0x00,
++	LED_ENABLE	= 0x01,
++};
++
++/* The names of the led as
++ * described on HW schemes.
++ */
++enum wmi_led_id {
++	WMI_LED_WLAN	= 0x00,
++	WMI_LED_WPAN	= 0x01,
++	WMI_LED_WWAN	= 0x02,
++};
++
++/* Led polarity mode. */
++enum wmi_led_polarity {
++	LED_POLARITY_HIGH_ACTIVE	= 0x00,
++	LED_POLARITY_LOW_ACTIVE		= 0x01,
++};
++
++/* Combination of on and off
++ * creates the blinking period
++ */
++struct wmi_led_blink_mode {
++	__le32 blink_on;
++	__le32 blink_off;
++} __packed;
++
++/* WMI_LED_CFG_CMDID */
++struct wmi_led_cfg_cmd {
++	/* enum led_mode_e */
++	u8 led_mode;
++	/* enum wmi_led_id_e */
++	u8 id;
++	/* slow speed blinking combination */
++	struct wmi_led_blink_mode slow_blink_cfg;
++	/* medium speed blinking combination */
++	struct wmi_led_blink_mode medium_blink_cfg;
++	/* high speed blinking combination */
++	struct wmi_led_blink_mode fast_blink_cfg;
++	/* polarity of the led */
++	u8 led_polarity;
++	/* reserved */
++	u8 reserved;
++} __packed;
++
++/* WMI_LED_CFG_DONE_EVENTID */
++struct wmi_led_cfg_done_event {
++	/* led config status */
++	__le32 status;
++} __packed;
++
+ #endif /* __WILOCITY_WMI_H__ */
+-- 
+1.8.5.2
+
