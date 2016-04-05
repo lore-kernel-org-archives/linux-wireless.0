@@ -1,54 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34833 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751110AbcDOMJa (ORCPT
+Received: from mail-pa0-f67.google.com ([209.85.220.67]:36342 "EHLO
+	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755450AbcDEGiq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2016 08:09:30 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: ath9k-devel@lists.ath9k.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev <netdev@vger.kernel.org>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	LKML <linux-kernel@vger.kernel.org>,
-	SF Markus Elfring <elfring@users.sourceforge.net>,
-	kernel-janitors <kernel-janitors@vger.kernel.org>,
-	Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH 2/2] net-ath9k_htc: Replace a variable initialisation by an assignment in ath9k_htc_set_channel()
-References: <566ABCD9.1060404@users.sourceforge.net>
-	<5686C390.5060600@users.sourceforge.net>
-	<5686C47E.1040906@users.sourceforge.net>
-	<CAGRGNgXR_OoER0rN5Z8n_5VtZimpU7WDNZuc4vkdb2eKDT2frQ@mail.gmail.com>
-Date: Fri, 15 Apr 2016 15:09:23 +0300
-In-Reply-To: <CAGRGNgXR_OoER0rN5Z8n_5VtZimpU7WDNZuc4vkdb2eKDT2frQ@mail.gmail.com>
-	(Julian Calaby's message of "Fri, 8 Apr 2016 11:40:45 +1000")
-Message-ID: <87ega7qdjg.fsf@kamboji.qca.qualcomm.com> (sfid-20160415_140953_744400_96EEA31F)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 5 Apr 2016 02:38:46 -0400
+Received: by mail-pa0-f67.google.com with SMTP id 1so470987pal.3
+        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 23:38:45 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 03/14] staging: wilc1000: remove unused hif_drv in wilc_setup_multicast_filter
+Date: Tue,  5 Apr 2016 15:38:21 +0900
+Message-Id: <1459838312-16506-3-git-send-email-chaehyun.lim@gmail.com> (sfid-20160405_083848_873559_EF972BF7)
+In-Reply-To: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Julian Calaby <julian.calaby@gmail.com> writes:
+This patch removes unused hif_drv in wilc_setup_multicast_filter.
+There is no need to check null and print debug log.
 
-> Hi Kalle,
->
-> On Sat, Jan 2, 2016 at 5:25 AM, SF Markus Elfring
-> <elfring@users.sourceforge.net> wrote:
->> From: Markus Elfring <elfring@users.sourceforge.net>
->> Date: Fri, 1 Jan 2016 19:09:32 +0100
->>
->> Replace an explicit initialisation for one local variable at the beginning
->> by a conditional assignment.
->>
->> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
->
-> This looks sane to me.
->
-> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-Before I commit I'll just change the commit title to:
-
-ath9k_htc: Replace a variable initialisation by an assignment in ath9k_htc_set_channel()
-
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 5cda382..a47666c 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -3952,12 +3952,6 @@ int wilc_setup_multicast_filter(struct wilc_vif *vif, bool enabled,
+ 	int result = 0;
+ 	struct host_if_msg msg;
+ 	struct set_multicast *multicast_filter_param = &msg.body.multicast_info;
+-	struct host_if_drv *hif_drv = vif->hif_drv;
+-
+-	if (!hif_drv) {
+-		netdev_err(vif->ndev, "driver is null\n");
+-		return -EFAULT;
+-	}
+ 
+ 	memset(&msg, 0, sizeof(struct host_if_msg));
+ 
 -- 
-Kalle Valo
+2.8.0
+
