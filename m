@@ -1,93 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:27539 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757824AbcDELYV (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:35923 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750810AbcDFTHs (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 07:24:21 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH 5/7] wil6210: unmask RX_HTRSH interrupt only when connected
-Date: Tue,  5 Apr 2016 14:24:05 +0300
-Message-Id: <1459855447-17413-6-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160405_132427_381403_0CF344C5)
-In-Reply-To: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
-References: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
+	Wed, 6 Apr 2016 15:07:48 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Machani\, Yaniv" <yanivma@ti.com>
+Cc: Pali =?utf-8?Q?Roh=C3=A1r?= <pali.rohar@gmail.com>,
+	Luciano Coelho <coelho@ti.com>,
+	"Balbi\, Felipe" <balbi@ti.com>, "Chalmers\, Kevin" <kev@ti.com>,
+	Shahar Levi <shahar_levi@ti.com>,
+	"Davis\, Andrew" <afd@ti.com>, "Mishol\, Guy" <guym@ti.com>,
+	Arik Nemtsov <arik@wizery.com>, Gery Kahn <geryk@ti.com>,
+	Felipe Balbi <balbi@kernel.org>,
+	Luciano Coelho <luca@coelho.fi>,
+	"David Woodhouse" <dwmw2@infradead.org>,
+	Pavel Machek <pavel@ucw.cz>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	David Gnedt <david.gnedt@platinumzone24.at>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Sebastian Reichel <sre@kernel.org>,
+	"Tony Lindgren" <tony@atomide.com>, "Menon\, Nishanth" <nm@ti.com>,
+	"linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev\@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: AP firmware for TI wl1251 wifi chip (wl1251-fw-ap.bin)
+References: <201603200040.26045@pali> <20160404123944.GA8413@pali>
+	<AE1C82FB3D0EC64DB1F752C81CBD1101390F6305@DFRE01.ent.ti.com>
+	<201604061412.43684@pali>
+	<AE1C82FB3D0EC64DB1F752C81CBD1101390F685E@DFRE01.ent.ti.com>
+Date: Wed, 06 Apr 2016 22:07:39 +0300
+In-Reply-To: <AE1C82FB3D0EC64DB1F752C81CBD1101390F685E@DFRE01.ent.ti.com>
+	(Yaniv Machani's message of "Wed, 6 Apr 2016 12:30:25 +0000")
+Message-ID: <87lh4q4kuc.fsf@purkki.adurom.net> (sfid-20160406_210807_441092_F2FE46C5)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-RX_HTRSH interrupt sometimes triggered during device reset
-procedure.
-To prevent handling this interrupt when not required, unmask
-this interrupt only if we are connected and mask it when
-disconnected.
+"Machani, Yaniv" <yanivma@ti.com> writes:
 
-Signed-off-by: Maya Erez <qca_merez@qca.qualcomm.com>
----
- drivers/net/wireless/ath/wil6210/interrupt.c |  6 +++++-
- drivers/net/wireless/ath/wil6210/main.c      | 17 +++++++++++++++++
- 2 files changed, 22 insertions(+), 1 deletion(-)
+> More than that, wl1251 family is not officially supported via the
+> mainline Linux.
 
-diff --git a/drivers/net/wireless/ath/wil6210/interrupt.c b/drivers/net/wireless/ath/wil6210/interrupt.c
-index 6897754..22592f3 100644
---- a/drivers/net/wireless/ath/wil6210/interrupt.c
-+++ b/drivers/net/wireless/ath/wil6210/interrupt.c
-@@ -38,6 +38,8 @@
- #define WIL6210_IRQ_DISABLE	(0xFFFFFFFFUL)
- #define WIL6210_IMC_RX		(BIT_DMA_EP_RX_ICR_RX_DONE | \
- 				 BIT_DMA_EP_RX_ICR_RX_HTRSH)
-+#define WIL6210_IMC_RX_NO_RX_HTRSH (WIL6210_IMC_RX & \
-+				    (~(BIT_DMA_EP_RX_ICR_RX_HTRSH)))
- #define WIL6210_IMC_TX		(BIT_DMA_EP_TX_ICR_TX_DONE | \
- 				BIT_DMA_EP_TX_ICR_TX_DONE_N(0))
- #define WIL6210_IMC_MISC	(ISR_MISC_FW_READY | \
-@@ -109,8 +111,10 @@ void wil6210_unmask_irq_tx(struct wil6210_priv *wil)
- 
- void wil6210_unmask_irq_rx(struct wil6210_priv *wil)
- {
-+	bool unmask_rx_htrsh = test_bit(wil_status_fwconnected, wil->status);
-+
- 	wil_w(wil, RGF_DMA_EP_RX_ICR + offsetof(struct RGF_ICR, IMC),
--	      WIL6210_IMC_RX);
-+	      unmask_rx_htrsh ? WIL6210_IMC_RX : WIL6210_IMC_RX_NO_RX_HTRSH);
- }
- 
- static void wil6210_unmask_irq_misc(struct wil6210_priv *wil)
-diff --git a/drivers/net/wireless/ath/wil6210/main.c b/drivers/net/wireless/ath/wil6210/main.c
-index 8d4e884..261bdab 100644
---- a/drivers/net/wireless/ath/wil6210/main.c
-+++ b/drivers/net/wireless/ath/wil6210/main.c
-@@ -194,6 +194,18 @@ __acquires(&sta->tid_rx_lock) __releases(&sta->tid_rx_lock)
- 	memset(&sta->stats, 0, sizeof(sta->stats));
- }
- 
-+static bool wil_ap_is_connected(struct wil6210_priv *wil)
-+{
-+	int i;
-+
-+	for (i = 0; i < ARRAY_SIZE(wil->sta); i++) {
-+		if (wil->sta[i].status == wil_sta_connected)
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
- static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
- 				u16 reason_code, bool from_event)
- {
-@@ -247,6 +259,11 @@ static void _wil6210_disconnect(struct wil6210_priv *wil, const u8 *bssid,
- 		}
- 		clear_bit(wil_status_fwconnecting, wil->status);
- 		break;
-+	case NL80211_IFTYPE_AP:
-+	case NL80211_IFTYPE_P2P_GO:
-+		if (!wil_ap_is_connected(wil))
-+			clear_bit(wil_status_fwconnected, wil->status);
-+		break;
- 	default:
- 		break;
- 	}
+I guess you mean not officially supported by TI? Because wl1251 driver
+has been in mainline for ages and reportedly working.
+
 -- 
-1.8.5.2
-
+Kalle Valo
