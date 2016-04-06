@@ -1,92 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:35526 "EHLO
-	mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751029AbcDTQ5d convert rfc822-to-8bit (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:36465 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753357AbcDFHRC convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2016 12:57:33 -0400
-Received: by mail-io0-f196.google.com with SMTP id u185so7777058iod.2
-        for <linux-wireless@vger.kernel.org>; Wed, 20 Apr 2016 09:57:33 -0700 (PDT)
+	Wed, 6 Apr 2016 03:17:02 -0400
+Received: by mail-wm0-f47.google.com with SMTP id v188so12360433wme.1
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2016 00:17:00 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <74cc66c9d174442a9ca71bcfca2c2231@SC-EXCH04.marvell.com>
-References: <CAD3r-iRQD5nVBuC1_zYmu_FtmP4CdP2BbHxz1Q579mBPKg5zmQ@mail.gmail.com>
-	<CAD3r-iTvJZLM0=tpoKZr8RGFrymdzPBV8xAEsx-qvnFeh6y=5g@mail.gmail.com>
-	<74cc66c9d174442a9ca71bcfca2c2231@SC-EXCH04.marvell.com>
-Date: Wed, 20 Apr 2016 11:57:32 -0500
-Message-ID: <CAD3r-iT9PPSJLRHJRX70a9vYWXYscvSkkM482ce3u8Wb43D+DA@mail.gmail.com> (sfid-20160420_185738_990336_0EF0038B)
-Subject: Re: ap + adhoc not working with Mwifiex driver for sd8887
-From: Luana Borgia <luanaborgia1969@gmail.com>
-To: Amitkumar Karwar <akarwar@marvell.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	Avinash Patil <patila@marvell.com>
+In-Reply-To: <2233FCEB-7412-4F22-B262-068AFBB2FDCB@gmail.com>
+References: <1458898052-20601-1-git-send-email-michal.kazior@tieto.com>
+	<1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
+	<1459420104-31554-2-git-send-email-michal.kazior@tieto.com>
+	<1459864656.18188.60.camel@sipsolutions.net>
+	<CA+BoTQmkGhyPGRuT8GJOfdYyGGckZZA0JMZF+G3uk8KGAwLKvg@mail.gmail.com>
+	<2233FCEB-7412-4F22-B262-068AFBB2FDCB@gmail.com>
+Date: Wed, 6 Apr 2016 09:16:59 +0200
+Message-ID: <CA+BoTQmTviPfR-xsKB2gNa_epVJJ1JO4Ke=sKt27Xefn=OAQuw@mail.gmail.com> (sfid-20160406_091711_987525_D0672927)
+Subject: Re: [Make-wifi-fast] [PATCHv2 1/2] mac80211: implement fair queuing
+ per txq
+From: Michal Kazior <michal.kazior@tieto.com>
+To: Jonathan Morton <chromatix99@gmail.com>
+Cc: Johannes Berg <johannes@sipsolutions.net>,
+	make-wifi-fast@lists.bufferbloat.net,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	codel@lists.bufferbloat.net
 Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Amitkumar,
-
-thanks for the quick reply..
-
-That's really sad, I hoped that you came with a way to setup the adhoc
-in ahdemo, like atheros is doing. :(
-
-Do you know if there is any plan to manage this in future?
-
-Thanks for all support
-best regards
-Luana
-
-
-2016-04-20 9:18 GMT-05:00 Amitkumar Karwar <akarwar@marvell.com>:
-> Hi Luana,
+On 6 April 2016 at 08:03, Jonathan Morton <chromatix99@gmail.com> wrote:
 >
->> From: linux-wireless-owner@vger.kernel.org [mailto:linux-wireless-
->> owner@vger.kernel.org] On Behalf Of Luana Borgia
->> Sent: Wednesday, April 20, 2016 11:14 AM
->> To: linux-wireless@vger.kernel.org; Avinash Patil
->> Subject: Fwd: ap + adhoc not working with Mwifiex driver for sd8887
+>> On 6 Apr, 2016, at 08:35, Michal Kazior <michal.kazior@tieto.com> wrote:
 >>
->> Hi,
->> I've successfully managed to get this driver working in adhoc with olsrd
->> on mlan0 interface, now I'm trying to add a uap0 working at the same
->> time, with all this command:
+>> Packets can be destined to different stations/txqs. At enqueue time I
+>> do a partial hash of a packet to get an "index" which I then use to
+>> address a txq_flow from per-radio list (out of 4096 of them). You can
+>> end up with a situtation like this:
+>> - packet A hashing to X destined to txq P which is VI
+>> - packet B hashing to X destined to txq Q which is BK
 >>
->> rfkill unblock wlan
->> ip link set uap0 down
->> ip link set mlan0 down
->> iw dev mlan0 set type ibss
->> ip link set mlan0 up
->> iw dev mlan0 ibss join mesh 2437 fe:de:fe:de:fe:de olsrd-start.sh cat
->> <<EOF > /etc/hostapd.conf ssid=PCM_AP_fede
->> interface=uap0
->> driver=nl80211
->> hw_mode=g
->> channel=6
->> EOF
->> iw phy phy0 interface add uap0 type __ap hostapd /etc/hostapd.conf &
->> dnsmasq --interface=uap0 --except-interface=lo --bind-interfaces --dhcp-
->> range=192.168.3.2,192.168.3.10,12h --conf-file=/dev/null ip addr add
->> 192.168.3.1/24 broadcast 192.168.3.255 dev uap0
+>> You can't use the same txq_flow for both A and B because you want to
+>> maintain packets per txqs more than you want to maintain them per flow
+>> (you don't want to queue BK traffic onto VI or vice versa as an
+>> artifact, do you? ;). When a txq_flow doesn't have a txqi it is bound.
+>> Later, if a collision happens (i.e. resulting txq_flow has non-NULL
+>> txqi) the "embedded" per-txq flow is used:
 >>
->> but I get this error after run the hostapd command:
+>>  struct txq_info {
+>> -     struct sk_buff_head queue;
+>> +     struct txq_flow flow; // <--- this
 >>
->> [ 4980.201096] IPv6: ADDRCONF(NETDEV_CHANGE): mlan0: link becomes ready
->> [ 4983.335467] IPv6: ADDRCONF(NETDEV_UP): uap0: link is not ready [
->> 4983.358879] mwifiex_sdio mmc0:0001:1: CMD_RESP: cmd 0xb1 error,
->> result=0x1
+>> When txq_flow becomes empty its txqi is reset.
 >>
->> adhoc is fine, with the above order of command but if I run before
->> hostapd and than adhoc part than the issue occur in the adhoc part.
->>
->> I'm using the firmware
->> http://git.marvell.com/?p=mwifiex-
->> firmware.git;a=blob;f=mrvl/sd8887_uapsta.bin;h=165e6c3d34b0c2a630252907a
->> 7ac4daf6e13c9d5;hb=HEAD
->>
->> and the mwifiex from kernel linux 4.1.1
->>
+>> The embedded flow is otherwise treated like any other flow, i.e. it
+>> can be linked to old_flows and new_flows.
 >
-> I checked with our team. We don’t support simultaneous operations of Adhoc and AP network.
-> Only one at a time can be used.
+> This smells like a very fragile and complex solution to the collision problem.  You may want to look at how Cake solves it.
 >
-> Regards,
-> Amitkumar
+> I use a separate pool of flows per traffic class (essentially, VO/VI/BE/BK), and there is also a set-associative hash to take care of the birthday problem.  The latter has an order-of-magnitude effect on the general flow collision rate once you get into the tens of flows, for very little CPU cost.
+
+When a driver asks mac80211 to dequeue given txq it implies a
+destination station as well. This is important because 802.11
+aggregation can be performed only on groups of packets going to a
+single station on a single tid.
+
+Cake - as I understand it - doesn't really *guarantee* maintaining
+this. Keep in mind you can run with hundreds of stations connected.
+
+You don't really want to burden drivers with sorting this grouping up
+themselves (and hence coerce them into introducing another level of
+intermediate queues, bis).
+
+Without the per-txq fallback flow (regardless of using fq_codel-like
+scheme or cake-like scheme in mac80211) you'll need to modify
+codel_dequeue() itself to compensate and re-queue/skip frames not
+belonging to requested txq.
+
+I'm not sure it's worth it for initial fair-queuing implementation.
+
+
+Michał
