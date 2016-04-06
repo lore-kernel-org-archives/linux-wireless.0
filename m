@@ -1,61 +1,73 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:26801 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:37340 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752028AbcDRPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 11:49:38 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 12/16] rtl8xxxu: Rename rtl8723a_enable_rf() to rtl8xxxu_gen1_enable_rf()
-Date: Mon, 18 Apr 2016 11:49:32 -0400
-Message-Id: <1460994576-24091-13-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160418_180721_326868_9A645138)
-In-Reply-To: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
+	id S932341AbcDFNJx (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2016 09:09:53 -0400
+Message-ID: <1459948184.17504.75.camel@sipsolutions.net> (sfid-20160406_150956_775333_4860CAE6)
+Subject: Re: [PATCH 2/2] cfg80211: Allow reassociation to be requested with
+ internal SME
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Jouni Malinen <jouni@qca.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Wed, 06 Apr 2016 15:09:44 +0200
+In-Reply-To: <1459248808-16412-2-git-send-email-jouni@qca.qualcomm.com>
+References: <1459248808-16412-1-git-send-email-jouni@qca.qualcomm.com>
+	 <1459248808-16412-2-git-send-email-jouni@qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On Tue, 2016-03-29 at 13:53 +0300, Jouni Malinen wrote:
+> If the user space issues a NL80211_CMD_CONNECT with
+> NL80211_ATTR_PREV_BSSID when there is already a connection, allow
+> this
+> to proceed as a reassociation instead of rejecting the new connect
+> command with EALREADY.
+> 
+> Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+> ---
+>  net/wireless/nl80211.c |  3 ++-
+>  net/wireless/sme.c     | 11 +++++++++--
+>  2 files changed, 11 insertions(+), 3 deletions(-)
+> 
+> diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+> index a98665a..773b20f 100644
+> --- a/net/wireless/nl80211.c
+> +++ b/net/wireless/nl80211.c
+> @@ -8117,7 +8117,8 @@ static int nl80211_connect(struct sk_buff *skb,
+> struct genl_info *info)
+>  	}
+>  
+>  	wdev_lock(dev->ieee80211_ptr);
+> -	err = cfg80211_connect(rdev, dev, &connect, connkeys, NULL);
+> +	err = cfg80211_connect(rdev, dev, &connect, connkeys,
+> +			       connect.prev_bssid);
+>  	wdev_unlock(dev->ieee80211_ptr);
+>  	if (err)
+>  		kzfree(connkeys);
+> diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+> index 65882d2..ce32492 100644
+> --- a/net/wireless/sme.c
+> +++ b/net/wireless/sme.c
+> @@ -492,8 +492,15 @@ static int cfg80211_sme_connect(struct
+> wireless_dev *wdev,
+>  	if (!rdev->ops->auth || !rdev->ops->assoc)
+>  		return -EOPNOTSUPP;
+>  
+> -	if (wdev->current_bss)
+> -		return -EALREADY;
+> +	if (wdev->current_bss) {
+> +		if (!prev_bssid)
+> +			return -EALREADY;
+> +		cfg80211_unhold_bss(wdev->current_bss);
+> +		cfg80211_put_bss(wdev->wiphy, &wdev->current_bss-
+> >pub);
+> +		wdev->current_bss = NULL;
+> +
+> +		cfg80211_sme_free(wdev);
+> +	}
+> 
+Since we know the previous BSSID, I've added a check here for it.
 
-All gen1 parts use the same enable_rf() function, so rename it to
-reflect this.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 1499aa0..a2f5609 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -2076,7 +2076,7 @@ static void rtl8723bu_write_btreg(struct rtl8xxxu_priv *priv, u8 reg, u8 data)
- 	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.bt_mp_oper));
- }
- 
--static void rtl8723a_enable_rf(struct rtl8xxxu_priv *priv)
-+static void rtl8xxxu_gen1_enable_rf(struct rtl8xxxu_priv *priv)
- {
- 	u8 val8;
- 	u32 val32;
-@@ -9881,7 +9881,7 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
- 	.phy_iq_calibrate = rtl8xxxu_gen1_phy_iq_calibrate,
- 	.config_channel = rtl8xxxu_gen1_config_channel,
- 	.parse_rx_desc = rtl8xxxu_parse_rxdesc16,
--	.enable_rf = rtl8723a_enable_rf,
-+	.enable_rf = rtl8xxxu_gen1_enable_rf,
- 	.disable_rf = rtl8xxxu_gen1_disable_rf,
- 	.usb_quirks = rtl8xxxu_gen1_usb_quirks,
- 	.set_tx_power = rtl8xxxu_gen1_set_tx_power,
-@@ -9953,7 +9953,7 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
- 	.phy_iq_calibrate = rtl8xxxu_gen1_phy_iq_calibrate,
- 	.config_channel = rtl8xxxu_gen1_config_channel,
- 	.parse_rx_desc = rtl8xxxu_parse_rxdesc16,
--	.enable_rf = rtl8723a_enable_rf,
-+	.enable_rf = rtl8xxxu_gen1_enable_rf,
- 	.disable_rf = rtl8xxxu_gen1_disable_rf,
- 	.usb_quirks = rtl8xxxu_gen1_usb_quirks,
- 	.set_tx_power = rtl8xxxu_gen1_set_tx_power,
--- 
-2.5.5
-
+johannes
