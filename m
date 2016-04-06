@@ -1,53 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:25525 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932159AbcDFJzg convert rfc822-to-8bit (ORCPT
+Received: from mailout3.hostsharing.net ([176.9.242.54]:35825 "EHLO
+	mailout3.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752127AbcDFVeH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 05:55:36 -0400
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Andrei Otcheretianski" <andrei.otcheretianski@intel.com>
-Subject: Re: [PATCHv3 RESEND 01/11] cfg80211: add start / stop NAN commands
-Date: Wed, 6 Apr 2016 09:55:31 +0000
-Message-ID: <20160406095528.GD10595@jouni.qca.qualcomm.com> (sfid-20160406_115539_941993_DD87908C)
-References: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
-In-Reply-To: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 6 Apr 2016 17:34:07 -0400
+Date: Wed, 6 Apr 2016 23:36:08 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Michael =?iso-8859-1?Q?B=FCsch?= <m@bues.ch>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
+Message-ID: <20160406213608.GB12421@wunner.de> (sfid-20160406_233412_185863_B4AD9078)
+References: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
+ <20160405194015.GC15353@localhost>
+ <20160405214945.1214e13b@wiggum>
+ <20160406133151.GA4976@localhost>
+ <20160406171724.2b7b070b@wiggum>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+In-Reply-To: <20160406171724.2b7b070b@wiggum>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 29, 2016 at 12:34:59PM +0300, Emmanuel Grumbach wrote:
-> This allows user space to start/stop NAN interface.
-> A NAN interface is like P2P device in a few aspects: it
-> doesn't have a netdev associated to it.
-> Add the new interface type and prevent operations that
-> can't be executed on NAN interface like scan.
+Hi,
 
-What is the need for this new NAN interface from the view point of
-supporting NAN discovery? Are you planning to use the same iface type
-eventually for supporting data traffic over NAN interface as well?
+On Wed, Apr 06, 2016 at 05:17:24PM +0200, Michael Büsch wrote:
+> On Wed, 6 Apr 2016 08:31:51 -0500 Bjorn Helgaas <helgaas@kernel.org> wrote:
+>
+> > Even for interrupts, it's only a 90% solution because we do still get
+> > a few interrupts before the quirk runs.  There may not be enough to
+> > trigger the "IRQ nobody cared" check,
+> 
+> If no driver requested the shared interrupt yet, it should be disabled
+> in the interrupt controller. So the interrupts do not reach the CPU.
+> The interrupt storm (on the CPU) starts as soon as some driver
+> that shares the interrupt with b43 requests and thus enables the
+> interrupt. And that always happens after the PCI fixup. Thus this is
+> safe.
 
-> + * @start_nan: Start the NAN interface.
-> + * @stop_nan: Stop the NAN interface.
+Yes, that is correct. I only see 67 interrupts for IRQ 17 with the
+PCI quirk compiled in, all of which seem to come from the initialization
+of pciehp, mmc and the hda sound card (which share the IRQ with b43 on my
+machine).
 
->  struct cfg80211_ops {
-> +	int	(*start_nan)(struct wiphy *wiphy, struct wireless_dev *wdev,
-> +			     struct cfg80211_nan_conf *conf);
-> +	void	(*stop_nan)(struct wiphy *wiphy, struct wireless_dev *wdev);
+Thanks,
 
-And similarly from 4/11:
-+	int	(*nan_change_conf)(struct wiphy *wiphy,
-+				   struct wireless_dev *wdev,
-+				   struct cfg80211_nan_conf *conf,
-+				   u32 changes);
-
-There is no matching cookie (such as transaction id) in these requests
-to the driver, are you expecting synchronous response from the driver
-for these requests? Or would some kind of event after the operation has
-been completed be possible?
-
--- 
-Jouni Malinen                                            PGP id EFC895FA
+Lukas
