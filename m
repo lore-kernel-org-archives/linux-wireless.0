@@ -1,62 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53993 "EHLO mx1.redhat.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:36284 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752016AbcDRPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 11:49:38 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 14/16] rtl8xxxu: Rename rtl8723b_channel_to_group()
-Date: Mon, 18 Apr 2016 11:49:34 -0400
-Message-Id: <1460994576-24091-15-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160418_180722_116429_92E7C60C)
-In-Reply-To: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
+	id S1753333AbcDFJkf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2016 05:40:35 -0400
+Message-ID: <1459935631.17504.71.camel@sipsolutions.net> (sfid-20160406_114052_698140_E51E93B8)
+Subject: Re: [PATCHv3 RESEND 05/11] cfg80211: provide a function to report a
+ match for NAN
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Malinen, Jouni" <jouni@qca.qualcomm.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Date: Wed, 06 Apr 2016 11:40:31 +0200
+In-Reply-To: <20160406093851.GB10595@jouni.qca.qualcomm.com>
+References: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1459244109-16038-5-git-send-email-emmanuel.grumbach@intel.com>
+	 <20160406093851.GB10595@jouni.qca.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+On Wed, 2016-04-06 at 09:38 +0000, Malinen, Jouni wrote:
+> 
+> > +void cfg80211_nan_match(struct wireless_dev *wdev,
+> > +			struct cfg80211_nan_match_params *match,
+> > gfp_t gfp);
+> Looks like this function is common for publish, subscribe and follow
+> up. If so, can we please have separate functions for publish,
+> subscribe and followup to match the spec primitives?
 
-This renames rtl8723b_channel_to_group() to
-rtl8xxxu_gen2_channel_to_group() to reflect it is used by all
-currently supported gen2 parts.
+Is it really worth exporting three functions just for the sake of that?
+Perhaps better if we provide inline wrappers though that set the value
+correctly?
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Would you extend this request also to the nl80211 command value?
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index fb13a77..bec2c4d 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -2201,7 +2201,7 @@ static int rtl8723a_channel_to_group(int channel)
- /*
-  * Valid for rtl8723bu and rtl8192eu
-  */
--static int rtl8723b_channel_to_group(int channel)
-+static int rtl8xxxu_gen2_channel_to_group(int channel)
- {
- 	int group;
- 
-@@ -2613,7 +2613,7 @@ rtl8723b_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
- 	int group, tx_idx;
- 
- 	tx_idx = 0;
--	group = rtl8723b_channel_to_group(channel);
-+	group = rtl8xxxu_gen2_channel_to_group(channel);
- 
- 	cck = priv->cck_tx_power_index_B[group];
- 	val32 = rtl8xxxu_read32(priv, REG_TX_AGC_A_CCK1_MCS32);
-@@ -2652,7 +2652,7 @@ rtl8192e_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
- 	int group, tx_idx;
- 
- 	tx_idx = 0;
--	group = rtl8723b_channel_to_group(channel);
-+	group = rtl8xxxu_gen2_channel_to_group(channel);
- 
- 	cck = priv->cck_tx_power_index_A[group];
- 
--- 
-2.5.5
-
+johannes
