@@ -1,50 +1,54 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f41.google.com ([209.85.218.41]:32897 "EHLO
-	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752285AbcDJKow (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2016 06:44:52 -0400
-MIME-Version: 1.0
-In-Reply-To: <1460229061-28407-1-git-send-email-mohammed.billoo@gmail.com>
-References: <1460229061-28407-1-git-send-email-mohammed.billoo@gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Sun, 10 Apr 2016 20:44:31 +1000
-Message-ID: <CAGRGNgXL5PUAxBYo3+r2VCy7ZEkwC=3NOtbNaKG1L17XqkXYdA@mail.gmail.com> (sfid-20160410_124509_157524_38A0A953)
-Subject: Re: [PATCH] staging: wilc1000: rework comments in wilc_sdio.c
-To: mohammed.billoo@gmail.com
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>,
-	Greg KH <gregkh@linuxfoundation.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	"devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:35997 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932189AbcDFIvR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2016 04:51:17 -0400
+Message-ID: <1459932671.17504.38.camel@sipsolutions.net> (sfid-20160406_105122_642807_08355C65)
+Subject: Re: [PATCHv3 RESEND 05/11] cfg80211: provide a function to report a
+ match for NAN
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Date: Wed, 06 Apr 2016 10:51:11 +0200
+In-Reply-To: <1459244109-16038-5-git-send-email-emmanuel.grumbach@intel.com>
+References: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1459244109-16038-5-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Mohammed,
+On Tue, 2016-03-29 at 12:35 +0300, Emmanuel Grumbach wrote:
+> 
+> +/**
+> + * enum nl80211_nan_match_attributes - NAN match attributes
+> + * @__NL80211_NAN_MATCH_INVALID: invalid
+> + * @NL80211_NAN_MATCH_FUNC_TYPE: &enum nl80211_nan_function_type
+> (u8). This is
+> + *	the type of the function which had a match.
 
-On Sun, Apr 10, 2016 at 5:11 AM,  <mohammed.billoo@gmail.com> wrote:
-> From: Mohammed Billoo <mohammed.billoo@gmail.com>
->
-> Remove unnecessary comments (highlighting sections of functions), make
-> multiline comments into single line comments, and ensure that multiline
-> comments adhere to coding style.
+> + * @NL80211_NAN_MATCH_INSTANCE_ID: The instance ID of the local
+> function that
+> + *	had a match. This is a u8.
 
-You need to add a signed-off-by line here.
+It would make sense to report this using the proper
+NL80211_ATTR_NAN_FUNC_INST_ID.
 
-> ---
->  drivers/staging/wilc1000/wilc_sdio.c | 136 ++++++++---------------------------
->  1 file changed, 31 insertions(+), 105 deletions(-)
->
+In a previous email I just said you can remove that, so then you'd have to do some nesting here, and then you can easily also use the FUNC_TYPE from the function attributes.
 
-Thanks,
+Having two sets of identical attributes is quite odd, IMHO.
 
--- 
-Julian Calaby
+> + * @NL80211_NAN_MATCH_MAC: The MAC address of the peer. This
+> attribute is
+> + *	binary.
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+This is debatable, I guess, you could also use the top-level attribute.
+
+> +nla_put_failure:
+> +	genlmsg_cancel(msg, hdr);
+> +	nlmsg_free(msg);
+
+No need to cancel before free :)
+
+johannes
