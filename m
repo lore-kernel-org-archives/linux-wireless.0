@@ -1,42 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from canardo.mork.no ([148.122.252.1]:37837 "EHLO canardo.mork.no"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751566AbcDCNSj convert rfc822-to-8bit (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:60791 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752956AbcDFOqa (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Apr 2016 09:18:39 -0400
-From: =?utf-8?Q?Bj=C3=B8rn_Mork?= <bjorn@mork.no>
-To: Alex <alex3kov@zoho.com>
-Cc: linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	netdev@vger.kernel.org, Oliver Neukum <oneukum@suse.com>,
-	"David S. Miller" <davem@davemloft.net>
-Subject: Re: PROBLEM: System hang when connecting USB modem (GCT/Yota LU150)
-References: <5700ED33.6020200@zoho.com>
-Date: Sun, 03 Apr 2016 15:18:22 +0200
-In-Reply-To: <5700ED33.6020200@zoho.com> (Alex's message of "Sun, 3 Apr 2016
-	13:15:15 +0300")
-Message-ID: <87h9fibzkx.fsf@nemi.mork.no> (sfid-20160403_151848_062485_A901B536)
+	Wed, 6 Apr 2016 10:46:30 -0400
+Subject: [PATCH 8/8] ath10k: remove enum ath10k_swap_code_seg_bin_type
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 6 Apr 2016 17:46:19 +0300
+Message-ID: <20160406144619.28399.18013.stgit@potku.adurom.net> (sfid-20160406_164634_063908_A7DE953B)
+In-Reply-To: <20160406144355.28399.23733.stgit@potku.adurom.net>
+References: <20160406144355.28399.23733.stgit@potku.adurom.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Alex <alex3kov@zoho.com> writes:
+It's not needed for anything so just get rid of it.
 
-> Apr 01 11:33:24 arch kernel: BUG: unable to handle kernel NULL pointer dereference at 0000000000000003
-> Apr 01 11:33:24 arch kernel: IP: [<ffffffffa0bc62a1>] usbnet_generic_cdc_bind+0x171/0x710 [cdc_ether]
-..
-> Apr 01 11:33:24 arch kernel: Call Trace:
-> Apr 01 11:33:24 arch kernel:  [<ffffffffa0bcf5b2>] generic_rndis_bind+0x62/0x520 [rndis_host]
-> Apr 01 11:33:24 arch kernel:  [<ffffffff81499e82>] ? alloc_netdev_mqs+0x302/0x440
-> Apr 01 11:33:24 arch kernel:  [<ffffffffa0bcfa83>] rndis_bind+0x13/0x20 [rndis_host]
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |    3 +--
+ drivers/net/wireless/ath/ath10k/swap.c |   22 ++++++----------------
+ drivers/net/wireless/ath/ath10k/swap.h |    9 +--------
+ 3 files changed, 8 insertions(+), 26 deletions(-)
 
-This is most likely fixed by commit 29c6dd591bbd ("cdc-acm: fix NULL
-pointer reference").  Which should defintely go into the 4.4 stable
-series.  Could you please add it to your v4.4 queue, David?
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index d0cecab5aaec..55f3a80b2884 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -647,8 +647,7 @@ static int ath10k_download_fw(struct ath10k *ar)
+ 	data = ar->running_fw->fw_file.firmware_data;
+ 	data_len = ar->running_fw->fw_file.firmware_len;
+ 
+-	ret = ath10k_swap_code_seg_configure(ar,
+-					     ATH10K_SWAP_CODE_SEG_BIN_TYPE_FW);
++	ret = ath10k_swap_code_seg_configure(ar);
+ 	if (ret) {
+ 		ath10k_err(ar, "failed to configure fw code swap: %d\n",
+ 			   ret);
+diff --git a/drivers/net/wireless/ath/ath10k/swap.c b/drivers/net/wireless/ath/ath10k/swap.c
+index 8d6dc86799f5..af447a60143b 100644
+--- a/drivers/net/wireless/ath/ath10k/swap.c
++++ b/drivers/net/wireless/ath/ath10k/swap.c
+@@ -134,27 +134,17 @@ ath10k_swap_code_seg_alloc(struct ath10k *ar, size_t swap_bin_len)
+ 	return seg_info;
+ }
+ 
+-int ath10k_swap_code_seg_configure(struct ath10k *ar,
+-				   enum ath10k_swap_code_seg_bin_type type)
++int ath10k_swap_code_seg_configure(struct ath10k *ar)
+ {
+ 	int ret;
+ 	struct ath10k_swap_code_seg_info *seg_info = NULL;
+ 
+-	switch (type) {
+-	case ATH10K_SWAP_CODE_SEG_BIN_TYPE_FW:
+-		if (!ar->swap.firmware_swap_code_seg_info)
+-			return 0;
+-
+-		ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot found firmware code swap binary\n");
+-		seg_info = ar->swap.firmware_swap_code_seg_info;
+-		break;
+-	default:
+-	case ATH10K_SWAP_CODE_SEG_BIN_TYPE_OTP:
+-	case ATH10K_SWAP_CODE_SEG_BIN_TYPE_UTF:
+-		ath10k_warn(ar, "ignoring unknown code swap binary type %d\n",
+-			    type);
++	if (!ar->swap.firmware_swap_code_seg_info)
+ 		return 0;
+-	}
++
++	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot found firmware code swap binary\n");
++
++	seg_info = ar->swap.firmware_swap_code_seg_info;
+ 
+ 	ret = ath10k_bmi_write_memory(ar, seg_info->target_addr,
+ 				      &seg_info->seg_hw_info,
+diff --git a/drivers/net/wireless/ath/ath10k/swap.h b/drivers/net/wireless/ath/ath10k/swap.h
+index 5c89952dd20f..36991c7b07a0 100644
+--- a/drivers/net/wireless/ath/ath10k/swap.h
++++ b/drivers/net/wireless/ath/ath10k/swap.h
+@@ -39,12 +39,6 @@ union ath10k_swap_code_seg_item {
+ 	struct ath10k_swap_code_seg_tail tail;
+ } __packed;
+ 
+-enum ath10k_swap_code_seg_bin_type {
+-	 ATH10K_SWAP_CODE_SEG_BIN_TYPE_OTP,
+-	 ATH10K_SWAP_CODE_SEG_BIN_TYPE_FW,
+-	 ATH10K_SWAP_CODE_SEG_BIN_TYPE_UTF,
+-};
+-
+ struct ath10k_swap_code_seg_hw_info {
+ 	/* Swap binary image size */
+ 	__le32 swap_size;
+@@ -64,8 +58,7 @@ struct ath10k_swap_code_seg_info {
+ 	dma_addr_t paddr[ATH10K_SWAP_CODE_SEG_NUM_SUPPORTED];
+ };
+ 
+-int ath10k_swap_code_seg_configure(struct ath10k *ar,
+-				   enum ath10k_swap_code_seg_bin_type type);
++int ath10k_swap_code_seg_configure(struct ath10k *ar);
+ void ath10k_swap_code_seg_release(struct ath10k *ar);
+ int ath10k_swap_code_seg_init(struct ath10k *ar);
+ 
 
-Ignore the "cdc-acm" prefix. The patch fixes a NULL pointer dereference
-in the cdc_ether/rndis_host drivers introduced by commit 823bd3433424
-("cdc-ether: switch to common CDC parser")
-
-
-Bjørn
