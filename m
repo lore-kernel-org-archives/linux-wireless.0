@@ -1,62 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f45.google.com ([209.85.192.45]:32979 "EHLO
-	mail-qg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751367AbcDZJAs (ORCPT
+Received: from mail-pa0-f67.google.com ([209.85.220.67]:35935 "EHLO
+	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754474AbcDFXLP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 05:00:48 -0400
-Received: by mail-qg0-f45.google.com with SMTP id f92so2710745qgf.0
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 02:00:48 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <CAL3+40H6tHomoXqAL=m7F5OT4X8+qAm7RGsUyCMw1=U6ROyqhg@mail.gmail.com>
-References: <CAL3+40H6tHomoXqAL=m7F5OT4X8+qAm7RGsUyCMw1=U6ROyqhg@mail.gmail.com>
-Date: Tue, 26 Apr 2016 03:00:47 -0600
-Message-ID: <CAAA5faGvdC++CTVLKZz8SWXMi6fjbM+r9f9xQ-NA+b_EFavVPw@mail.gmail.com> (sfid-20160426_110055_921454_664997AA)
-Subject: Re: Intel 7260 AC only using 802.11n not AC
-From: Reinoud Koornstra <reinoudkoornstra@gmail.com>
-To: Radu P <rrrpan@gmail.com>
-Cc: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+	Wed, 6 Apr 2016 19:11:15 -0400
+Received: by mail-pa0-f67.google.com with SMTP id k3so1538385pav.3
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2016 16:11:15 -0700 (PDT)
+From: Chaehyun Lim <chaehyun.lim@gmail.com>
+To: gregkh@linuxfoundation.org
+Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
+	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
+	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
+	Chaehyun Lim <chaehyun.lim@gmail.com>
+Subject: [PATCH 4/7] staging: wilc1000: rename result in handle_set_wfi_drv_handler
+Date: Thu,  7 Apr 2016 08:10:40 +0900
+Message-Id: <1459984243-4689-4-git-send-email-chaehyun.lim@gmail.com> (sfid-20160407_011118_435313_E5B4A604)
+In-Reply-To: <1459984243-4689-1-git-send-email-chaehyun.lim@gmail.com>
+References: <1459984243-4689-1-git-send-email-chaehyun.lim@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Btw, iwconfig is deprecated, you should use iw instead.
-Another way of seeing it:
+This patch renames result to ret that is used to get return value from
+wilc_send_config_pkt. Some handle_*() function are used as result,
+others are used as ret. It will be changed as ret in all handle_*()
+function to match variable name.
 
-reinoud@router-dev:/var/log$ sudo iw dev wlp4s0 link
-Connected to 00:30:44:1d:cf:2b (on wlp4s0)
-       SSID: Mipam5g
-       freq: 5240
-       RX: 1134508422 bytes (1235653 packets)
-       TX: 120716536 bytes (668942 packets)
-       signal: -60 dBm
-       tx bitrate: 400.0 MBit/s VHT-MCS 9 40MHz short GI VHT-NSS 2
+Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
+---
+ drivers/staging/wilc1000/host_interface.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-       bss flags:      short-slot-time
-       dtim period:    1
-       beacon int:     100
+diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
+index 33735fd..4fd429e 100644
+--- a/drivers/staging/wilc1000/host_interface.c
++++ b/drivers/staging/wilc1000/host_interface.c
+@@ -310,7 +310,7 @@ static void handle_set_channel(struct wilc_vif *vif,
+ static void handle_set_wfi_drv_handler(struct wilc_vif *vif,
+ 				       struct drv_handler *hif_drv_handler)
+ {
+-	int result = 0;
++	int ret = 0;
+ 	struct wid wid;
+ 
+ 	wid.id = (u16)WID_SET_DRV_HANDLER;
+@@ -318,13 +318,13 @@ static void handle_set_wfi_drv_handler(struct wilc_vif *vif,
+ 	wid.val = (s8 *)hif_drv_handler;
+ 	wid.size = sizeof(*hif_drv_handler);
+ 
+-	result = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
+-				      hif_drv_handler->handler);
++	ret = wilc_send_config_pkt(vif, SET_CFG, &wid, 1,
++				   hif_drv_handler->handler);
+ 
+ 	if (!hif_drv_handler->handler)
+ 		complete(&hif_driver_comp);
+ 
+-	if (result)
++	if (ret)
+ 		netdev_err(vif->ndev, "Failed to set driver handler\n");
+ }
+ 
+-- 
+2.8.0
 
-again, VHT, hence 11ac. :)
-
-On Tue, Apr 26, 2016 at 1:20 AM, Radu P <rrrpan@gmail.com> wrote:
-> Hello,
->
-> These is the relevant data:
->
-> firmware-version: 17.265642.0
->
-> [  292.689871] iwlwifi 0000:04:00.0: loaded firmware version
-> 17.265642.0 op_mode iwlmvm
-> [  292.702902] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band
-> Wireless AC 7260, REV=0x144
->
-> wlan1     IEEE 802.11abgn <- not AC
->
-> Kernel version: 4.4.0-21-generic #37~14.04.1-Ubuntu
->
-> AC mode is working with Windows 10.
->
-> Any help is appreciated!
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
