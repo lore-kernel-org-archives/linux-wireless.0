@@ -1,45 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:33796 "EHLO
-	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753435AbcDAIbX (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:59668 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752636AbcDFSVW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2016 04:31:23 -0400
-Received: by mail-pf0-f194.google.com with SMTP id n5so13751574pfn.1
-        for <linux-wireless@vger.kernel.org>; Fri, 01 Apr 2016 01:31:18 -0700 (PDT)
-From: Sunil Shahu <shshahu@gmail.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org
-Subject: [PATCH] Prevent unnecessary iteration in __handle_cmd
-Date: Fri,  1 Apr 2016 14:01:01 +0530
-Message-Id: <1459499461-4422-1-git-send-email-shshahu@gmail.com> (sfid-20160401_103128_799298_5A639F36)
+	Wed, 6 Apr 2016 14:21:22 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: miaoqing@codeaurora.org
+Cc: linville@tuxdriver.com, linux-wireless@vger.kernel.org,
+	ath9k-devel@qca.qualcomm.com
+Subject: Re: [PATCH] ath9k: fix rng high cpu load
+References: <1458294896-7502-1-git-send-email-miaoqing@codeaurora.org>
+Date: Wed, 06 Apr 2016 21:21:17 +0300
+In-Reply-To: <1458294896-7502-1-git-send-email-miaoqing@codeaurora.org>
+	(miaoqing@codeaurora.org's message of "Fri, 18 Mar 2016 17:54:56
+	+0800")
+Message-ID: <87mvp68uoy.fsf@kamboji.qca.qualcomm.com> (sfid-20160406_202126_018122_0CAB7F20)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Break the loop after matching sectcmd is found. Remove redundant
-variable copying.
+miaoqing@codeaurora.org writes:
 
-Signed-off-by: Sunil Shahu <shshahu@gmail.com>
----
- iw.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+> From: Miaoqing Pan <miaoqing@codeaurora.org>
+>
+> If no valid ADC randomness output, ath9k rng will continuously
+> reading ADC, which will cause high CPU load. So increase the
+> delay to wait for ADC ready.
+>
+> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=114261
+> Signed-off-by: Miaoqing Pan <miaoqing@codeaurora.org>
 
-diff --git a/iw.c b/iw.c
-index 0f511d9..73ae347 100644
---- a/iw.c
-+++ b/iw.c
-@@ -376,11 +376,9 @@ static int __handle_cmd(struct nl80211_state *state, enum id_input idby,
- 		if (match && sectcmd->idby != command_idby)
- 			continue;
- 		if (strcmp(sectcmd->name, section) == 0)
--			match = sectcmd;
-+			break;
- 	}
- 
--	sectcmd = match;
--	match = NULL;
- 	if (!sectcmd)
- 		return 1;
- 
+Applied, thanks.
+
 -- 
-1.9.1
-
+Kalle Valo
