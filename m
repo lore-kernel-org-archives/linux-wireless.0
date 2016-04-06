@@ -1,180 +1,102 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from host.76.145.23.62.rev.coltfrance.com ([62.23.145.76]:54557 "EHLO
-	proxy.6wind.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753954AbcDYIcS (ORCPT
+Received: from mail-wm0-f54.google.com ([74.125.82.54]:33612 "EHLO
+	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932397AbcDFMMr (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2016 04:32:18 -0400
-From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
-To: netdev@vger.kernel.org
-Cc: davem@davemloft.net, jhs@mojatatu.com, stephen@networkplumber.org,
-	pshelar@nicira.com, aar@pengutronix.de, linux-wpan@vger.kernel.org,
-	wensong@linux-vs.org, horms@verge.net.au, ja@ssi.bg,
-	pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu,
-	lvs-devel@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	Nicolas Dichtel <nicolas.dichtel@6wind.com>
-Subject: [PATCH net-next 5/9] bridge: use nla_put_u64_64bit()
-Date: Mon, 25 Apr 2016 10:25:18 +0200
-Message-Id: <1461572722-6029-6-git-send-email-nicolas.dichtel@6wind.com> (sfid-20160425_103225_058847_54866D4A)
-In-Reply-To: <1461572722-6029-1-git-send-email-nicolas.dichtel@6wind.com>
-References: <1461572722-6029-1-git-send-email-nicolas.dichtel@6wind.com>
+	Wed, 6 Apr 2016 08:12:47 -0400
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar@gmail.com>
+To: "Machani, Yaniv" <yanivma@ti.com>
+Subject: Re: AP firmware for TI wl1251 wifi chip (wl1251-fw-ap.bin)
+Date: Wed, 6 Apr 2016 14:12:43 +0200
+Cc: Luciano Coelho <coelho@ti.com>, "Balbi, Felipe" <balbi@ti.com>,
+	"Chalmers, Kevin" <kev@ti.com>, Shahar Levi <shahar_levi@ti.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	"Davis, Andrew" <afd@ti.com>, "Mishol, Guy" <guym@ti.com>,
+	Arik Nemtsov <arik@wizery.com>, Gery Kahn <geryk@ti.com>,
+	Felipe Balbi <balbi@kernel.org>,
+	Luciano Coelho <luca@coelho.fi>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Pavel Machek <pavel@ucw.cz>,
+	"Aaro Koskinen" <aaro.koskinen@iki.fi>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	"David Gnedt" <david.gnedt@platinumzone24.at>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Sebastian Reichel <sre@kernel.org>,
+	"Tony Lindgren" <tony@atomide.com>, "Menon, Nishanth" <nm@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <201603200040.26045@pali> <20160404123944.GA8413@pali> <AE1C82FB3D0EC64DB1F752C81CBD1101390F6305@DFRE01.ent.ti.com>
+In-Reply-To: <AE1C82FB3D0EC64DB1F752C81CBD1101390F6305@DFRE01.ent.ti.com>
+MIME-Version: 1.0
+Content-Type: multipart/signed;
+  boundary="nextPart486655548.RrR3yeS5Ro";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Message-Id: <201604061412.43684@pali> (sfid-20160406_141322_063365_252D7B1D)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
----
- include/uapi/linux/if_link.h |  2 ++
- net/bridge/br_netlink.c      | 62 +++++++++++++++++++++++++-------------------
- 2 files changed, 38 insertions(+), 26 deletions(-)
+--nextPart486655548.RrR3yeS5Ro
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/include/uapi/linux/if_link.h b/include/uapi/linux/if_link.h
-index 5fdd3a42e377..9300c08346c8 100644
---- a/include/uapi/linux/if_link.h
-+++ b/include/uapi/linux/if_link.h
-@@ -271,6 +271,7 @@ enum {
- 	IFLA_BR_NF_CALL_IP6TABLES,
- 	IFLA_BR_NF_CALL_ARPTABLES,
- 	IFLA_BR_VLAN_DEFAULT_PVID,
-+	IFLA_BR_PAD,
- 	__IFLA_BR_MAX,
- };
- 
-@@ -313,6 +314,7 @@ enum {
- 	IFLA_BRPORT_HOLD_TIMER,
- 	IFLA_BRPORT_FLUSH,
- 	IFLA_BRPORT_MULTICAST_ROUTER,
-+	IFLA_BRPORT_PAD,
- 	__IFLA_BRPORT_MAX
- };
- #define IFLA_BRPORT_MAX (__IFLA_BRPORT_MAX - 1)
-diff --git a/net/bridge/br_netlink.c b/net/bridge/br_netlink.c
-index e9c635eae24d..6bae1125e36d 100644
---- a/net/bridge/br_netlink.c
-+++ b/net/bridge/br_netlink.c
-@@ -135,9 +135,9 @@ static inline size_t br_port_info_size(void)
- 		+ nla_total_size(sizeof(u16))	/* IFLA_BRPORT_NO */
- 		+ nla_total_size(sizeof(u8))	/* IFLA_BRPORT_TOPOLOGY_CHANGE_ACK */
- 		+ nla_total_size(sizeof(u8))	/* IFLA_BRPORT_CONFIG_PENDING */
--		+ nla_total_size(sizeof(u64))	/* IFLA_BRPORT_MESSAGE_AGE_TIMER */
--		+ nla_total_size(sizeof(u64))	/* IFLA_BRPORT_FORWARD_DELAY_TIMER */
--		+ nla_total_size(sizeof(u64))	/* IFLA_BRPORT_HOLD_TIMER */
-+		+ nla_total_size_64bit(sizeof(u64)) /* IFLA_BRPORT_MESSAGE_AGE_TIMER */
-+		+ nla_total_size_64bit(sizeof(u64)) /* IFLA_BRPORT_FORWARD_DELAY_TIMER */
-+		+ nla_total_size_64bit(sizeof(u64)) /* IFLA_BRPORT_HOLD_TIMER */
- #ifdef CONFIG_BRIDGE_IGMP_SNOOPING
- 		+ nla_total_size(sizeof(u8))	/* IFLA_BRPORT_MULTICAST_ROUTER */
- #endif
-@@ -190,13 +190,16 @@ static int br_port_fill_attrs(struct sk_buff *skb,
- 		return -EMSGSIZE;
- 
- 	timerval = br_timer_value(&p->message_age_timer);
--	if (nla_put_u64(skb, IFLA_BRPORT_MESSAGE_AGE_TIMER, timerval))
-+	if (nla_put_u64_64bit(skb, IFLA_BRPORT_MESSAGE_AGE_TIMER, timerval,
-+			      IFLA_BRPORT_PAD))
- 		return -EMSGSIZE;
- 	timerval = br_timer_value(&p->forward_delay_timer);
--	if (nla_put_u64(skb, IFLA_BRPORT_FORWARD_DELAY_TIMER, timerval))
-+	if (nla_put_u64_64bit(skb, IFLA_BRPORT_FORWARD_DELAY_TIMER, timerval,
-+			      IFLA_BRPORT_PAD))
- 		return -EMSGSIZE;
- 	timerval = br_timer_value(&p->hold_timer);
--	if (nla_put_u64(skb, IFLA_BRPORT_HOLD_TIMER, timerval))
-+	if (nla_put_u64_64bit(skb, IFLA_BRPORT_HOLD_TIMER, timerval,
-+			      IFLA_BRPORT_PAD))
- 		return -EMSGSIZE;
- 
- #ifdef CONFIG_BRIDGE_IGMP_SNOOPING
-@@ -1087,10 +1090,10 @@ static size_t br_get_size(const struct net_device *brdev)
- 	       nla_total_size(sizeof(u32)) +    /* IFLA_BR_ROOT_PATH_COST */
- 	       nla_total_size(sizeof(u8)) +     /* IFLA_BR_TOPOLOGY_CHANGE */
- 	       nla_total_size(sizeof(u8)) +     /* IFLA_BR_TOPOLOGY_CHANGE_DETECTED */
--	       nla_total_size(sizeof(u64)) +    /* IFLA_BR_HELLO_TIMER */
--	       nla_total_size(sizeof(u64)) +    /* IFLA_BR_TCN_TIMER */
--	       nla_total_size(sizeof(u64)) +    /* IFLA_BR_TOPOLOGY_CHANGE_TIMER */
--	       nla_total_size(sizeof(u64)) +    /* IFLA_BR_GC_TIMER */
-+	       nla_total_size_64bit(sizeof(u64)) + /* IFLA_BR_HELLO_TIMER */
-+	       nla_total_size_64bit(sizeof(u64)) + /* IFLA_BR_TCN_TIMER */
-+	       nla_total_size_64bit(sizeof(u64)) + /* IFLA_BR_TOPOLOGY_CHANGE_TIMER */
-+	       nla_total_size_64bit(sizeof(u64)) + /* IFLA_BR_GC_TIMER */
- 	       nla_total_size(ETH_ALEN) +       /* IFLA_BR_GROUP_ADDR */
- #ifdef CONFIG_BRIDGE_IGMP_SNOOPING
- 	       nla_total_size(sizeof(u8)) +     /* IFLA_BR_MCAST_ROUTER */
-@@ -1101,12 +1104,12 @@ static size_t br_get_size(const struct net_device *brdev)
- 	       nla_total_size(sizeof(u32)) +    /* IFLA_BR_MCAST_HASH_MAX */
- 	       nla_total_size(sizeof(u32)) +    /* IFLA_BR_MCAST_LAST_MEMBER_CNT */
- 	       nla_total_size(sizeof(u32)) +    /* IFLA_BR_MCAST_STARTUP_QUERY_CNT */
--	       nla_total_size(sizeof(u64)) +    /* IFLA_BR_MCAST_LAST_MEMBER_INTVL */
--	       nla_total_size(sizeof(u64)) +    /* IFLA_BR_MCAST_MEMBERSHIP_INTVL */
--	       nla_total_size(sizeof(u64)) +    /* IFLA_BR_MCAST_QUERIER_INTVL */
--	       nla_total_size(sizeof(u64)) +    /* IFLA_BR_MCAST_QUERY_INTVL */
--	       nla_total_size(sizeof(u64)) +    /* IFLA_BR_MCAST_QUERY_RESPONSE_INTVL */
--	       nla_total_size(sizeof(u64)) +    /* IFLA_BR_MCAST_STARTUP_QUERY_INTVL */
-+	       nla_total_size_64bit(sizeof(u64)) + /* IFLA_BR_MCAST_LAST_MEMBER_INTVL */
-+	       nla_total_size_64bit(sizeof(u64)) + /* IFLA_BR_MCAST_MEMBERSHIP_INTVL */
-+	       nla_total_size_64bit(sizeof(u64)) + /* IFLA_BR_MCAST_QUERIER_INTVL */
-+	       nla_total_size_64bit(sizeof(u64)) + /* IFLA_BR_MCAST_QUERY_INTVL */
-+	       nla_total_size_64bit(sizeof(u64)) + /* IFLA_BR_MCAST_QUERY_RESPONSE_INTVL */
-+	       nla_total_size_64bit(sizeof(u64)) + /* IFLA_BR_MCAST_STARTUP_QUERY_INTVL */
- #endif
- #if IS_ENABLED(CONFIG_BRIDGE_NETFILTER)
- 	       nla_total_size(sizeof(u8)) +     /* IFLA_BR_NF_CALL_IPTABLES */
-@@ -1129,16 +1132,17 @@ static int br_fill_info(struct sk_buff *skb, const struct net_device *brdev)
- 	u64 clockval;
- 
- 	clockval = br_timer_value(&br->hello_timer);
--	if (nla_put_u64(skb, IFLA_BR_HELLO_TIMER, clockval))
-+	if (nla_put_u64_64bit(skb, IFLA_BR_HELLO_TIMER, clockval, IFLA_BR_PAD))
- 		return -EMSGSIZE;
- 	clockval = br_timer_value(&br->tcn_timer);
--	if (nla_put_u64(skb, IFLA_BR_TCN_TIMER, clockval))
-+	if (nla_put_u64_64bit(skb, IFLA_BR_TCN_TIMER, clockval, IFLA_BR_PAD))
- 		return -EMSGSIZE;
- 	clockval = br_timer_value(&br->topology_change_timer);
--	if (nla_put_u64(skb, IFLA_BR_TOPOLOGY_CHANGE_TIMER, clockval))
-+	if (nla_put_u64_64bit(skb, IFLA_BR_TOPOLOGY_CHANGE_TIMER, clockval,
-+			      IFLA_BR_PAD))
- 		return -EMSGSIZE;
- 	clockval = br_timer_value(&br->gc_timer);
--	if (nla_put_u64(skb, IFLA_BR_GC_TIMER, clockval))
-+	if (nla_put_u64_64bit(skb, IFLA_BR_GC_TIMER, clockval, IFLA_BR_PAD))
- 		return -EMSGSIZE;
- 
- 	if (nla_put_u32(skb, IFLA_BR_FORWARD_DELAY, forward_delay) ||
-@@ -1182,22 +1186,28 @@ static int br_fill_info(struct sk_buff *skb, const struct net_device *brdev)
- 		return -EMSGSIZE;
- 
- 	clockval = jiffies_to_clock_t(br->multicast_last_member_interval);
--	if (nla_put_u64(skb, IFLA_BR_MCAST_LAST_MEMBER_INTVL, clockval))
-+	if (nla_put_u64_64bit(skb, IFLA_BR_MCAST_LAST_MEMBER_INTVL, clockval,
-+			      IFLA_BR_PAD))
- 		return -EMSGSIZE;
- 	clockval = jiffies_to_clock_t(br->multicast_membership_interval);
--	if (nla_put_u64(skb, IFLA_BR_MCAST_MEMBERSHIP_INTVL, clockval))
-+	if (nla_put_u64_64bit(skb, IFLA_BR_MCAST_MEMBERSHIP_INTVL, clockval,
-+			      IFLA_BR_PAD))
- 		return -EMSGSIZE;
- 	clockval = jiffies_to_clock_t(br->multicast_querier_interval);
--	if (nla_put_u64(skb, IFLA_BR_MCAST_QUERIER_INTVL, clockval))
-+	if (nla_put_u64_64bit(skb, IFLA_BR_MCAST_QUERIER_INTVL, clockval,
-+			      IFLA_BR_PAD))
- 		return -EMSGSIZE;
- 	clockval = jiffies_to_clock_t(br->multicast_query_interval);
--	if (nla_put_u64(skb, IFLA_BR_MCAST_QUERY_INTVL, clockval))
-+	if (nla_put_u64_64bit(skb, IFLA_BR_MCAST_QUERY_INTVL, clockval,
-+			      IFLA_BR_PAD))
- 		return -EMSGSIZE;
- 	clockval = jiffies_to_clock_t(br->multicast_query_response_interval);
--	if (nla_put_u64(skb, IFLA_BR_MCAST_QUERY_RESPONSE_INTVL, clockval))
-+	if (nla_put_u64_64bit(skb, IFLA_BR_MCAST_QUERY_RESPONSE_INTVL, clockval,
-+			      IFLA_BR_PAD))
- 		return -EMSGSIZE;
- 	clockval = jiffies_to_clock_t(br->multicast_startup_query_interval);
--	if (nla_put_u64(skb, IFLA_BR_MCAST_STARTUP_QUERY_INTVL, clockval))
-+	if (nla_put_u64_64bit(skb, IFLA_BR_MCAST_STARTUP_QUERY_INTVL, clockval,
-+			      IFLA_BR_PAD))
- 		return -EMSGSIZE;
- #endif
- #if IS_ENABLED(CONFIG_BRIDGE_NETFILTER)
--- 
-2.8.1
+On Wednesday 06 April 2016 13:30:22 Machani, Yaniv wrote:
+> On Mon, Apr 04, 2016 at 15:39:44, Pali Roh=C3=A1r wrote:
+> > > In linux-firmware repository [1] is missing AP firmware for TI
+> > > wl1251 chip. There is only STA firmware wl1251-fw.bin which
+> > > supports managed and ad-hoc modes.
+> > >=20
+> > > For other TI wilink chips there are <CHIP>-ap.bin firmware files
+> > > (wl1271-fw-ap.bin and wl128x-fw-ap.bin) which support AP mode.
+> > > But for
+> > > wl1251 firmware file with guessed name "wl1251-fw-ap.bin" is
+> > > missing.
+> > >=20
+> > > Do you have any idea what happened with AP firmware for ti
+> > > wilink4 wl1251 wifi chip? Or where can be found? Guys from TI,
+> > > can you help?
+> > >=20
+> > > I see that STA firmware was added into linux-firmware tree in
+> > > year 2013 by this pull request [2].
+> > >=20
+> > > [1] -
+> > > https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmw
+> > > are .g
+> > > it/tree/ti-connectivity
+> > >=20
+> > > [2] -
+> > > http://thread.gmane.org/gmane.linux.kernel/1566500/focus=3D1571382
+> >=20
+> > Hi! Anybody has some idea about that AP firmware?
+>=20
+> Hi,
+> wl1251 does not support AP mode, so there is no firmware for it in
+> the tree.
+>=20
+> Regards,
+> Yaniv
 
+Hi Yaniv! I read on some TI whitepaper, that wl1251 hardware supports=20
+some Soft-AP mode. So I expect that either special FW is needed for it=20
+or somehow it is possible to use current released. Do you have any=20
+information about it?
+
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar@gmail.com
+
+--nextPart486655548.RrR3yeS5Ro
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlcE/TsACgkQi/DJPQPkQ1I3MwCfcFf+Ruqa9/PWodjAIgALuoJl
+g8AAoIo5sQ3QLS7E/EDKCRAenqGHhY+S
+=hJlK
+-----END PGP SIGNATURE-----
+
+--nextPart486655548.RrR3yeS5Ro--
