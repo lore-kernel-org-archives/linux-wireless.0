@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:14993 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752344AbcDZInx (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:33870 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751900AbcDFSni (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 04:43:53 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
-Subject: [PATCH] ath10k: release pre_cal_file while unloading driver
-Date: Tue, 26 Apr 2016 14:13:37 +0530
-Message-ID: <1461660217-23046-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20160426_104357_447922_8679A39D)
+	Wed, 6 Apr 2016 14:43:38 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
+Subject: Re: [v2] mwifiex: advertise low priority scan feature
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1458619796-7694-1-git-send-email-wnhuang@chromium.org>
+To: Wei-Ning Huang <wnhuang@chromium.org>
+Cc: Linux Wireless <linux-wireless@vger.kernel.org>,
+	LKML <linux-kernel@vger.kernel.org>, akarwar@marvell.com,
+	djkurtz@chromium.org, Wei-Ning Huang <wnhuang@chromium.org>,
+	nishants@marvell.com, netdev@vger.kernel.org
+Message-Id: <20160406184337.61C95615D6@smtp.codeaurora.org> (sfid-20160406_204351_512165_16B6D581)
+Date: Wed,  6 Apr 2016 18:43:37 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Failing to release pre_cal_file caldata on deinit causes memory leak.
 
-Fixes: b131129d9657 ("ath10k: fix calibration init sequence of qca99x0")
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c | 4 ++++
- 1 file changed, 4 insertions(+)
+> From: Amitkumar Karwar <akarwar@marvell.com>
+> 
+> Low priority scan handling code which delays or aborts scan
+> operation based on Tx traffic is removed recently. The reason
+> is firmware already takes care of it in our new feature scan
+> channel gap. Hence we should advertise low priority scan
+> support to cfg80211.
+> 
+> This patch fixes a problem in which OBSS scan request from
+> wpa_supplicant was being rejected by cfg80211.
+> 
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Signed-off-by: Wei-Ning Huang <wnhuang@chromium.org>
+> Tested-by: Wei-Ning Huang <wnhuang@chromium.org>
+> Acked-by: Amitkumar Karwar <akarwar@marvell.com>
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 5f846bd4054c..6e37184abab6 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -712,6 +712,9 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
- 	if (!IS_ERR(ar->cal_file))
- 		release_firmware(ar->cal_file);
- 
-+	if (!IS_ERR(ar->pre_cal_file))
-+		release_firmware(ar->pre_cal_file);
-+
- 	ath10k_swap_code_seg_release(ar);
- 
- 	ar->otp = NULL;
-@@ -723,6 +726,7 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
- 	ar->firmware_len = 0;
- 
- 	ar->cal_file = NULL;
-+	ar->pre_cal_file = NULL;
- }
- 
- static int ath10k_fetch_cal_file(struct ath10k *ar)
--- 
-2.8.0
+Thanks, applied to wireless-drivers-next.git.
 
+Kalle Valo
