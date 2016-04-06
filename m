@@ -1,87 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43684 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751485AbcDRQmM (ORCPT
+Received: from cavan.codon.org.uk ([93.93.128.6]:39925 "EHLO
+	cavan.codon.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754733AbcDFW5D (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 12:42:12 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Christian Lamparter <chunkeey@googlemail.com>
-Cc: Lauri Kasanen <cand@gmx.com>, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, linux-kernel@vger.kernel.org,
-	sgruszka@redhat.com, emmanuel.grumbach@intel.com,
-	linuxwifi@intel.com, johannes.berg@intel.com,
-	emmanuel.grumbach@intel.com
-Subject: Re: [PATCH v2] carl9170: Clarify kconfig text
-References: <20160416113312.8de2266358165182bb4b4a15@gmx.com>
-	<20160416171856.1769c0e16bcc75372407e06f@gmx.com>
-	<87shyiyl8a.fsf@purkki.adurom.net> <3244016.0TmHG3E4A9@debian64>
-Date: Mon, 18 Apr 2016 19:42:05 +0300
-In-Reply-To: <3244016.0TmHG3E4A9@debian64> (Christian Lamparter's message of
-	"Mon, 18 Apr 2016 18:20:06 +0200")
-Message-ID: <87r3e2kgwy.fsf@kamboji.qca.qualcomm.com> (sfid-20160418_184418_198578_5A11B1E8)
+	Wed, 6 Apr 2016 18:57:03 -0400
+Date: Wed, 6 Apr 2016 23:19:43 +0100
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	b43-dev@lists.infradead.org,
+	Matt Fleming <matt@codeblueprint.co.uk>,
+	linux-efi@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
+Message-ID: <20160406221943.GA10955@srcf.ucam.org> (sfid-20160407_005711_636087_B342AD84)
+References: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
+ <20160405194015.GC15353@localhost>
+ <20160406213029.GA12421@wunner.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160406213029.GA12421@wunner.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter <chunkeey@googlemail.com> writes:
+On Wed, Apr 06, 2016 at 11:30:29PM +0200, Lukas Wunner wrote:
 
-> On Monday, April 18, 2016 06:45:09 PM Kalle Valo wrote:
->> Lauri Kasanen <cand@gmx.com> writes:
->> 
->> > --- a/drivers/net/wireless/ath/carl9170/Kconfig
->> > +++ b/drivers/net/wireless/ath/carl9170/Kconfig
->> > @@ -5,12 +5,10 @@ config CARL9170
->> >  	select FW_LOADER
->> >  	select CRC32
->> >  	help
->> > -	  This is another driver for the Atheros "otus" 802.11n USB devices.
->> > +	  This is the mainline driver for the Atheros "otus" 802.11n USB devices.
->> >  
->> > -	  This driver provides more features than the original,
->> > -	  but it needs a special firmware (carl9170-1.fw) to do that.
->> > -
->> > -	  The firmware can be downloaded from our wiki here:
->> > +	  It needs a special firmware (carl9170-1.fw), which can be downloaded
->> > +	  from our wiki here:
->> >  	  <http://wireless.kernel.org/en/users/Drivers/carl9170>
->> 
->> Why even mention anything about a "special firmware" as the firmware is
->> already available from linux-firmware.git? 
->
-> Yes and no. 1.9.6 is in linux-firmware.git. I've tried to add 1.9.9 too
-> but that failed.
-> <http://comments.gmane.org/gmane.linux.kernel.wireless.general/114639>
+> Matthew's grub patch puts the wireless card into D3hot, which does not
+> stop the interrupts. I have tested this. (It may stop the DMA, I cannot
+> verify that as it doesn't occur on my machine for lack of an access point.)
 
-Rick's comment makes sense to me, better just to provide the latest
-version. No need to unnecessary confuse the users. And if someone really
-wants to use an older version that she can retrieve it from the git
-history.
-
->> That's default location for all firmware images and I think most, if not all,
->> distros should have it available. So wouldn't it be better not to mention 
->> anything about firmware at all?
->
-> Sure, but this could be a different patch then. I think Intel devices 
-> (iwlwifi, iwlegacy and ipw2x00) have a similar text about "download
-> firmware from this device from our homepage here" too. So if we want,
-> we can remove them altogether?
-
-So iwlwifi now has:
-
-	  In order to use this driver, you will need a firmware
-	  image for it. You can obtain the microcode from:
-
-	          <http://wireless.kernel.org/en/users/Drivers/iwlwifi>.
-
-Maybe that could be changed to mention about the wiki page in general:
-
-	  The driver has a wiki page at:
-
-	          <http://wireless.kernel.org/en/users/Drivers/iwlwifi>.
-
-But I know iwlwifi updates the firmware images pretty often so Emmanuel
-might see this differently.
+Ah, interesting. One thing to note (and which I've just noticed) is that 
+it looks like this fixup is only called when you boot with the "linux" 
+command and not with the "linuxefi" command. If you're using Ubuntu, 
+"linux" may fall back to "linuxefi" without executing this fixup. So we 
+need to add it to the kernel EFI stub anyway.
 
 -- 
-Kalle Valo
+Matthew Garrett | mjg59@srcf.ucam.org
