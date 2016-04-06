@@ -1,60 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f177.google.com ([209.85.217.177]:36702 "EHLO
-	mail-lb0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753143AbcDDMju (ORCPT
+Received: from smtprelay0015.hostedemail.com ([216.40.44.15]:56587 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751320AbcDFHW7 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2016 08:39:50 -0400
-Date: Mon, 4 Apr 2016 14:39:44 +0200
-From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
-To: Luciano Coelho <coelho@ti.com>, Felipe Balbi <balbi@ti.com>,
-	kev@ti.com, Shahar Levi <shahar_levi@ti.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"Andrew F. Davis" <afd@ti.com>, Guy Mishol <guym@ti.com>,
-	Yaniv Machani <yanivma@ti.com>, Arik Nemtsov <arik@wizery.com>,
-	Gery Kahn <geryk@ti.com>, Felipe Balbi <balbi@kernel.org>,
-	Luciano Coelho <luca@coelho.fi>
-Cc: David Woodhouse <dwmw2@infradead.org>, Pavel Machek <pavel@ucw.cz>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	David Gnedt <david.gnedt@platinumzone24.at>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Sebastian Reichel <sre@kernel.org>,
-	Tony Lindgren <tony@atomide.com>, Nishanth Menon <nm@ti.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: AP firmware for TI wl1251 wifi chip (wl1251-fw-ap.bin)
-Message-ID: <20160404123944.GA8413@pali> (sfid-20160404_144014_033890_47F47AEC)
-References: <201603200040.26045@pali>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <201603200040.26045@pali>
+	Wed, 6 Apr 2016 03:22:59 -0400
+Message-ID: <1459927376.6715.37.camel@perches.com> (sfid-20160406_092302_163817_86164C53)
+Subject: Re: [PATCH 4/7] wil6210: print debug message when transmitting
+ while disconnected
+From: Joe Perches <joe@perches.com>
+To: Maya Erez <qca_merez@qca.qualcomm.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
+Date: Wed, 06 Apr 2016 00:22:56 -0700
+In-Reply-To: <1459855447-17413-5-git-send-email-qca_merez@qca.qualcomm.com>
+References: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
+	 <1459855447-17413-5-git-send-email-qca_merez@qca.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 20 March 2016 00:40:25 Pali RohÃ¡r wrote:
-> Hi!
-> 
-> In linux-firmware repository [1] is missing AP firmware for TI wl1251 
-> chip. There is only STA firmware wl1251-fw.bin which supports managed 
-> and ad-hoc modes.
-> 
-> For other TI wilink chips there are <CHIP>-ap.bin firmware files 
-> (wl1271-fw-ap.bin and wl128x-fw-ap.bin) which support AP mode. But for 
-> wl1251 firmware file with guessed name "wl1251-fw-ap.bin" is missing.
-> 
-> Do you have any idea what happened with AP firmware for ti wilink4 
-> wl1251 wifi chip? Or where can be found? Guys from TI, can you help?
-> 
-> I see that STA firmware was added into linux-firmware tree in year 2013 
-> by this pull request [2].
-> 
-> [1] - https://git.kernel.org/cgit/linux/kernel/git/firmware/linux-firmware.git/tree/ti-connectivity
-> 
-> [2] - http://thread.gmane.org/gmane.linux.kernel/1566500/focus=1571382
-> 
+On Tue, 2016-04-05 at 14:24 +0300, Maya Erez w
+> Network stack can try to transmit data while AP / STA is
+> disconnected.
+> Change this print-out to debug level as this should not be
+> handled as error.
 
-Hi! Anybody has some idea about that AP firmware?
+Should probably say something about adding ratelimited
+logging functions
 
--- 
-Pali RohÃ¡r
-pali.rohar@gmail.com
+> diff --git a/drivers/net/wireless/ath/wil6210/debug.c b/drivers/net/wireless/ath/wil6210/debug.c
+[]
+> @@ -49,6 +49,23 @@ void __wil_err_ratelimited(struct wil6210_priv *wil, const char *fmt, ...)
+>  	}
+>  }
+>  
+> +void __wil_dbg_ratelimited(struct wil6210_priv *wil, const char *fmt, ...)
+> +{
+> +	if (net_ratelimit()) {
+
+Inverting the test would reduce indentation.
+
+> +		struct net_device *ndev = wil_to_ndev(wil);
+> +		struct va_format vaf = {
+> +			.fmt = fmt,
+> +		};
+> +		va_list args;
+> +
+> +		va_start(args, fmt);
+> +		vaf.va = &args;
+> +		netdev_dbg(ndev, "%pV", &vaf);
+> +		trace_wil6210_log_dbg(&vaf);
+> +		va_end(args);
+> +	}
+> +}
+
