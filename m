@@ -1,256 +1,202 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54442 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752631AbcD1TTR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2016 15:19:17 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 09/11] rtl8xxxu: Split rtl8723a_h2c_cmd() into a gen1 and a gen2 version
-Date: Thu, 28 Apr 2016 15:19:13 -0400
-Message-Id: <1461871155-11826-10-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160428_213721_946935_5931746B)
-In-Reply-To: <1461871155-11826-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1461871155-11826-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:60772 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752956AbcDFOqR (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2016 10:46:17 -0400
+Subject: [PATCH 7/8] ath10k: switch testmode to use
+ ath10k_core_fetch_firmware_api_n()
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 6 Apr 2016 17:46:06 +0300
+Message-ID: <20160406144606.28399.65796.stgit@potku.adurom.net> (sfid-20160406_164620_110307_3E44C7A5)
+In-Reply-To: <20160406144355.28399.23733.stgit@potku.adurom.net>
+References: <20160406144355.28399.23733.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+Now that all firmware-N.bin related are within struct ath10k_fw_file we can
+switch to use ath10k_core_fetch_firmware_api_n() and delete almost identical
+ath10k_tm_fetch_utf_firmware_api_2().
 
-The H2C API is completely different between gen1 and gen2 parts, so
-there is little point trying to treat this as a generic function. All
-calls to *_h2c_cmd() will always come from a gen1 or a gen2 specific
-function.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |  3 +-
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c | 12 +--
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c  | 86 ++++++++++++++++------
- 3 files changed, 72 insertions(+), 29 deletions(-)
+ drivers/net/wireless/ath/ath10k/core.c     |    4 -
+ drivers/net/wireless/ath/ath10k/core.h     |    2 
+ drivers/net/wireless/ath/ath10k/testmode.c |  124 ----------------------------
+ 3 files changed, 6 insertions(+), 124 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index f773c0e..17f62ba 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -1390,7 +1390,8 @@ void rtl8xxxu_reset_8051(struct rtl8xxxu_priv *priv);
- int rtl8xxxu_auto_llt_table(struct rtl8xxxu_priv *priv, u8 last_tx_page);
- void rtl8xxxu_prepare_calibrate(struct rtl8xxxu_priv *priv, u8 start);
- int rtl8xxxu_flush_fifo(struct rtl8xxxu_priv *priv);
--int rtl8723a_h2c_cmd(struct rtl8xxxu_priv *priv, struct h2c_cmd *h2c, int len);
-+int rtl8xxxu_gen2_h2c_cmd(struct rtl8xxxu_priv *priv,
-+			  struct h2c_cmd *h2c, int len);
- int rtl8xxxu_active_to_lps(struct rtl8xxxu_priv *priv);
- void rtl8xxxu_disabled_to_emu(struct rtl8xxxu_priv *priv);
- int rtl8xxxu_init_llt_table(struct rtl8xxxu_priv *priv, u8 last_tx_page);
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-index a711cb8..9d4bcd9 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_8723b.c
-@@ -322,7 +322,7 @@ static void rtl8723bu_write_btreg(struct rtl8xxxu_priv *priv, u8 reg, u8 data)
- 	h2c.bt_mp_oper.operreq = 0 | (reqnum << 4);
- 	h2c.bt_mp_oper.opcode = BT_MP_OP_WRITE_REG_VALUE;
- 	h2c.bt_mp_oper.data = data;
--	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.bt_mp_oper));
-+	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.bt_mp_oper));
- 
- 	reqnum++;
- 	memset(&h2c, 0, sizeof(struct h2c_cmd));
-@@ -330,7 +330,7 @@ static void rtl8723bu_write_btreg(struct rtl8xxxu_priv *priv, u8 reg, u8 data)
- 	h2c.bt_mp_oper.operreq = 0 | (reqnum << 4);
- 	h2c.bt_mp_oper.opcode = BT_MP_OP_WRITE_REG_VALUE;
- 	h2c.bt_mp_oper.addr = reg;
--	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.bt_mp_oper));
-+	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.bt_mp_oper));
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index 4b1fc4b99205..d0cecab5aaec 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -976,8 +976,8 @@ success:
+ 	return 0;
  }
  
- static void rtl8723bu_reset_8051(struct rtl8xxxu_priv *priv)
-@@ -1529,7 +1529,7 @@ static void rtl8723b_enable_rf(struct rtl8xxxu_priv *priv)
- 	memset(&h2c, 0, sizeof(struct h2c_cmd));
- 	h2c.bt_grant.cmd = H2C_8723B_BT_GRANT;
- 	h2c.bt_grant.data = 0;
--	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.bt_grant));
-+	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.bt_grant));
- 
- 	/*
- 	 * WLAN action by PTA
-@@ -1574,7 +1574,7 @@ static void rtl8723b_enable_rf(struct rtl8xxxu_priv *priv)
- 	h2c.ant_sel_rsv.cmd = H2C_8723B_ANT_SEL_RSV;
- 	h2c.ant_sel_rsv.ant_inverse = 1;
- 	h2c.ant_sel_rsv.int_switch_type = 0;
--	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.ant_sel_rsv));
-+	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.ant_sel_rsv));
- 
- 	/*
- 	 * 0x280, 0x00, 0x200, 0x80 - not clear
-@@ -1596,12 +1596,12 @@ static void rtl8723b_enable_rf(struct rtl8xxxu_priv *priv)
- 	memset(&h2c, 0, sizeof(struct h2c_cmd));
- 	h2c.bt_info.cmd = H2C_8723B_BT_INFO;
- 	h2c.bt_info.data = BIT(0);
--	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.bt_info));
-+	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.bt_info));
- 
- 	memset(&h2c, 0, sizeof(struct h2c_cmd));
- 	h2c.ignore_wlan.cmd = H2C_8723B_BT_IGNORE_WLANACT;
- 	h2c.ignore_wlan.data = 0;
--	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.ignore_wlan));
-+	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.ignore_wlan));
- }
- 
- static void rtl8723bu_init_aggregation(struct rtl8xxxu_priv *priv)
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-index d71a0c6..7aecbe7 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_core.c
-@@ -887,7 +887,8 @@ int rtl8xxxu_write_rfreg(struct rtl8xxxu_priv *priv,
- 	return retval;
- }
- 
--int rtl8723a_h2c_cmd(struct rtl8xxxu_priv *priv, struct h2c_cmd *h2c, int len)
-+int
-+rtl8xxxu_gen1_h2c_cmd(struct rtl8xxxu_priv *priv, struct h2c_cmd *h2c, int len)
+-static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
+-					    struct ath10k_fw_file *fw_file)
++int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
++				     struct ath10k_fw_file *fw_file)
  {
- 	struct device *dev = &priv->udev->dev;
- 	int mbox_nr, retry, retval = 0;
-@@ -898,8 +899,7 @@ int rtl8723a_h2c_cmd(struct rtl8xxxu_priv *priv, struct h2c_cmd *h2c, int len)
+ 	size_t magic_len, len, ie_len;
+ 	int ie_id, i, index, bit, ret;
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index b779e059a9c3..c18043fd0093 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -932,6 +932,8 @@ void ath10k_core_destroy(struct ath10k *ar);
+ void ath10k_core_get_fw_features_str(struct ath10k *ar,
+ 				     char *buf,
+ 				     size_t max_len);
++int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
++				     struct ath10k_fw_file *fw_file);
  
- 	mbox_nr = priv->next_mbox;
- 	mbox_reg = REG_HMBOX_0 + (mbox_nr * 4);
--	mbox_ext_reg = priv->fops->mbox_ext_reg +
--		(mbox_nr * priv->fops->mbox_ext_width);
-+	mbox_ext_reg = REG_HMBOX_EXT_0 + (mbox_nr * 2);
+ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
+ 		      const struct ath10k_fw_components *fw_components);
+diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
+index 2d9a3f56213f..81fe266f7990 100644
+--- a/drivers/net/wireless/ath/ath10k/testmode.c
++++ b/drivers/net/wireless/ath/ath10k/testmode.c
+@@ -139,127 +139,6 @@ static int ath10k_tm_cmd_get_version(struct ath10k *ar, struct nlattr *tb[])
+ 	return cfg80211_testmode_reply(skb);
+ }
  
- 	/*
- 	 * MBOX ready?
-@@ -921,19 +921,61 @@ int rtl8723a_h2c_cmd(struct rtl8xxxu_priv *priv, struct h2c_cmd *h2c, int len)
- 	 * Need to swap as it's being swapped again by rtl8xxxu_write16/32()
- 	 */
- 	if (len > sizeof(u32)) {
--		if (priv->fops->mbox_ext_width == 4) {
--			rtl8xxxu_write32(priv, mbox_ext_reg,
--					 le32_to_cpu(h2c->raw_wide.ext));
--			if (rtl8xxxu_debug & RTL8XXXU_DEBUG_H2C)
--				dev_info(dev, "H2C_EXT %08x\n",
--					 le32_to_cpu(h2c->raw_wide.ext));
--		} else {
--			rtl8xxxu_write16(priv, mbox_ext_reg,
--					 le16_to_cpu(h2c->raw.ext));
--			if (rtl8xxxu_debug & RTL8XXXU_DEBUG_H2C)
--				dev_info(dev, "H2C_EXT %04x\n",
--					 le16_to_cpu(h2c->raw.ext));
+-static int ath10k_tm_fetch_utf_firmware_api_2(struct ath10k *ar,
+-					      struct ath10k_fw_file *fw_file)
+-{
+-	size_t len, magic_len, ie_len;
+-	struct ath10k_fw_ie *hdr;
+-	char filename[100];
+-	__le32 *version;
+-	const u8 *data;
+-	int ie_id, ret;
+-
+-	snprintf(filename, sizeof(filename), "%s/%s",
+-		 ar->hw_params.fw.dir, ATH10K_FW_UTF_API2_FILE);
+-
+-	/* load utf firmware image */
+-	ret = request_firmware(&fw_file->firmware, filename, ar->dev);
+-	if (ret) {
+-		ath10k_warn(ar, "failed to retrieve utf firmware '%s': %d\n",
+-			    filename, ret);
+-		return ret;
+-	}
+-
+-	data = fw_file->firmware->data;
+-	len = fw_file->firmware->size;
+-
+-	/* FIXME: call release_firmware() in error cases */
+-
+-	/* magic also includes the null byte, check that as well */
+-	magic_len = strlen(ATH10K_FIRMWARE_MAGIC) + 1;
+-
+-	if (len < magic_len) {
+-		ath10k_err(ar, "utf firmware file is too small to contain magic\n");
+-		ret = -EINVAL;
+-		goto err;
+-	}
+-
+-	if (memcmp(data, ATH10K_FIRMWARE_MAGIC, magic_len) != 0) {
+-		ath10k_err(ar, "invalid firmware magic\n");
+-		ret = -EINVAL;
+-		goto err;
+-	}
+-
+-	/* jump over the padding */
+-	magic_len = ALIGN(magic_len, 4);
+-
+-	len -= magic_len;
+-	data += magic_len;
+-
+-	/* loop elements */
+-	while (len > sizeof(struct ath10k_fw_ie)) {
+-		hdr = (struct ath10k_fw_ie *)data;
+-
+-		ie_id = le32_to_cpu(hdr->id);
+-		ie_len = le32_to_cpu(hdr->len);
+-
+-		len -= sizeof(*hdr);
+-		data += sizeof(*hdr);
+-
+-		if (len < ie_len) {
+-			ath10k_err(ar, "invalid length for FW IE %d (%zu < %zu)\n",
+-				   ie_id, len, ie_len);
+-			ret = -EINVAL;
+-			goto err;
 -		}
-+		rtl8xxxu_write16(priv, mbox_ext_reg, le16_to_cpu(h2c->raw.ext));
-+		if (rtl8xxxu_debug & RTL8XXXU_DEBUG_H2C)
-+			dev_info(dev, "H2C_EXT %04x\n",
-+				 le16_to_cpu(h2c->raw.ext));
-+	}
-+	rtl8xxxu_write32(priv, mbox_reg, le32_to_cpu(h2c->raw.data));
-+	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_H2C)
-+		dev_info(dev, "H2C %08x\n", le32_to_cpu(h2c->raw.data));
-+
-+	priv->next_mbox = (mbox_nr + 1) % H2C_MAX_MBOX;
-+
-+error:
-+	mutex_unlock(&priv->h2c_mutex);
-+	return retval;
-+}
-+
-+int
-+rtl8xxxu_gen2_h2c_cmd(struct rtl8xxxu_priv *priv, struct h2c_cmd *h2c, int len)
-+{
-+	struct device *dev = &priv->udev->dev;
-+	int mbox_nr, retry, retval = 0;
-+	int mbox_reg, mbox_ext_reg;
-+	u8 val8;
-+
-+	mutex_lock(&priv->h2c_mutex);
-+
-+	mbox_nr = priv->next_mbox;
-+	mbox_reg = REG_HMBOX_0 + (mbox_nr * 4);
-+	mbox_ext_reg = REG_HMBOX_EXT0_8723B + (mbox_nr * 4);
-+
-+	/*
-+	 * MBOX ready?
-+	 */
-+	retry = 100;
-+	do {
-+		val8 = rtl8xxxu_read8(priv, REG_HMTFR);
-+		if (!(val8 & BIT(mbox_nr)))
-+			break;
-+	} while (retry--);
-+
-+	if (!retry) {
-+		dev_info(dev, "%s: Mailbox busy\n", __func__);
-+		retval = -EBUSY;
-+		goto error;
-+	}
-+
-+	/*
-+	 * Need to swap as it's being swapped again by rtl8xxxu_write16/32()
-+	 */
-+	if (len > sizeof(u32)) {
-+		rtl8xxxu_write32(priv, mbox_ext_reg,
-+				 le32_to_cpu(h2c->raw_wide.ext));
-+		if (rtl8xxxu_debug & RTL8XXXU_DEBUG_H2C)
-+			dev_info(dev, "H2C_EXT %08x\n",
-+				 le32_to_cpu(h2c->raw_wide.ext));
- 	}
- 	rtl8xxxu_write32(priv, mbox_reg, le32_to_cpu(h2c->raw.data));
- 	if (rtl8xxxu_debug & RTL8XXXU_DEBUG_H2C)
-@@ -3276,7 +3318,7 @@ void rtl8xxxu_prepare_calibrate(struct rtl8xxxu_priv *priv, u8 start)
- 	h2c.bt_wlan_calibration.cmd = H2C_8723B_BT_WLAN_CALIBRATION;
- 	h2c.bt_wlan_calibration.data = start;
+-
+-		switch (ie_id) {
+-		case ATH10K_FW_IE_FW_VERSION:
+-			if (ie_len > sizeof(fw_file->fw_version) - 1)
+-				break;
+-
+-			memcpy(fw_file->fw_version, data, ie_len);
+-			fw_file->fw_version[ie_len] = '\0';
+-
+-			ath10k_dbg(ar, ATH10K_DBG_TESTMODE,
+-				   "testmode found fw utf version %s\n",
+-				   fw_file->fw_version);
+-			break;
+-		case ATH10K_FW_IE_TIMESTAMP:
+-			/* ignore timestamp, but don't warn about it either */
+-			break;
+-		case ATH10K_FW_IE_FW_IMAGE:
+-			ath10k_dbg(ar, ATH10K_DBG_TESTMODE,
+-				   "testmode found fw image ie (%zd B)\n",
+-				   ie_len);
+-
+-			fw_file->firmware_data = data;
+-			fw_file->firmware_len = ie_len;
+-			break;
+-		case ATH10K_FW_IE_WMI_OP_VERSION:
+-			if (ie_len != sizeof(u32))
+-				break;
+-			version = (__le32 *)data;
+-			fw_file->wmi_op_version = le32_to_cpup(version);
+-			ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode found fw ie wmi op version %d\n",
+-				   fw_file->wmi_op_version);
+-			break;
+-		default:
+-			ath10k_warn(ar, "Unknown testmode FW IE: %u\n",
+-				    le32_to_cpu(hdr->id));
+-			break;
+-		}
+-		/* jump over the padding */
+-		ie_len = ALIGN(ie_len, 4);
+-
+-		len -= ie_len;
+-		data += ie_len;
+-	}
+-
+-	if (!fw_file->firmware_data || !fw_file->firmware_len) {
+-		ath10k_err(ar, "No ATH10K_FW_IE_FW_IMAGE found\n");
+-		ret = -EINVAL;
+-		goto err;
+-	}
+-
+-	return 0;
+-
+-err:
+-	release_firmware(fw_file->firmware);
+-
+-	return ret;
+-}
+-
+ static int ath10k_tm_fetch_utf_firmware_api_1(struct ath10k *ar,
+ 					      struct ath10k_fw_file *fw_file)
+ {
+@@ -295,7 +174,8 @@ static int ath10k_tm_fetch_firmware(struct ath10k *ar)
+ {
+ 	int ret;
  
--	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.bt_wlan_calibration));
-+	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.bt_wlan_calibration));
- }
- 
- void rtl8xxxu_gen1_phy_iq_calibrate(struct rtl8xxxu_priv *priv)
-@@ -3792,7 +3834,7 @@ static void rtl8723bu_set_ps_tdma(struct rtl8xxxu_priv *priv,
- 	h2c.b_type_dma.data3 = arg3;
- 	h2c.b_type_dma.data4 = arg4;
- 	h2c.b_type_dma.data5 = arg5;
--	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.b_type_dma));
-+	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.b_type_dma));
- }
- #endif
- 
-@@ -4310,7 +4352,7 @@ void rtl8xxxu_update_rate_mask(struct rtl8xxxu_priv *priv, u32 ramask, int sgi)
- 
- 	dev_dbg(&priv->udev->dev, "%s: rate mask %08x, arg %02x, size %zi\n",
- 		__func__, ramask, h2c.ramask.arg, sizeof(h2c.ramask));
--	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.ramask));
-+	rtl8xxxu_gen1_h2c_cmd(priv, &h2c, sizeof(h2c.ramask));
- }
- 
- void rtl8xxxu_gen2_update_rate_mask(struct rtl8xxxu_priv *priv,
-@@ -4336,7 +4378,7 @@ void rtl8xxxu_gen2_update_rate_mask(struct rtl8xxxu_priv *priv,
- 
- 	dev_dbg(&priv->udev->dev, "%s: rate mask %08x, arg %02x, size %zi\n",
- 		__func__, ramask, h2c.ramask.arg, sizeof(h2c.b_macid_cfg));
--	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.b_macid_cfg));
-+	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.b_macid_cfg));
- }
- 
- void rtl8xxxu_gen1_report_connect(struct rtl8xxxu_priv *priv,
-@@ -4353,7 +4395,7 @@ void rtl8xxxu_gen1_report_connect(struct rtl8xxxu_priv *priv,
- 	else
- 		h2c.joinbss.data = H2C_JOIN_BSS_DISCONNECT;
- 
--	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.joinbss));
-+	rtl8xxxu_gen1_h2c_cmd(priv, &h2c, sizeof(h2c.joinbss));
- }
- 
- void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
-@@ -4369,7 +4411,7 @@ void rtl8xxxu_gen2_report_connect(struct rtl8xxxu_priv *priv,
- 	else
- 		h2c.media_status_rpt.parm &= ~BIT(0);
- 
--	rtl8723a_h2c_cmd(priv, &h2c, sizeof(h2c.media_status_rpt));
-+	rtl8xxxu_gen2_h2c_cmd(priv, &h2c, sizeof(h2c.media_status_rpt));
- }
- 
- static void rtl8xxxu_set_basic_rates(struct rtl8xxxu_priv *priv, u32 rate_cfg)
--- 
-2.5.5
+-	ret = ath10k_tm_fetch_utf_firmware_api_2(ar, &ar->testmode.utf_mode_fw.fw_file);
++	ret = ath10k_core_fetch_firmware_api_n(ar, ATH10K_FW_UTF_API2_FILE,
++					       &ar->testmode.utf_mode_fw.fw_file);
+ 	if (ret == 0) {
+ 		ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode using fw utf api 2");
+ 		goto out;
 
