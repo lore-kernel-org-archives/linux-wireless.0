@@ -1,56 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:11556 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:17503 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750835AbcDZPZD (ORCPT
+	with ESMTP id S1755148AbcDFJkl convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 11:25:03 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: Kalle Valo <kvalo@qca.qualcomm.com>, <kvalo@codeaurora.org>,
-	<mohammed@codeaurora.org>, <linux-wireless@vger.kernel.org>,
-	"Mohammed Shafi Shajakhan" <mohammed@qti.qualcomm.com>
-Subject: [PATCH] ath10k: Move spectral related structures under ath10k debugfs
-Date: Tue, 26 Apr 2016 20:54:36 +0530
-Message-ID: <1461684276-4042-1-git-send-email-mohammed@qca.qualcomm.com> (sfid-20160426_172508_237201_7979DB07)
+	Wed, 6 Apr 2016 05:40:41 -0400
+From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Andrei Otcheretianski" <andrei.otcheretianski@intel.com>
+Subject: Re: [PATCHv3 RESEND 06/11] cfg80211: Provide an API to report NAN
+ function termination
+Date: Wed, 6 Apr 2016 09:40:12 +0000
+Message-ID: <20160406094011.GC10595@jouni.qca.qualcomm.com> (sfid-20160406_114053_241352_CE613B88)
+References: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
+ <1459244109-16038-6-git-send-email-emmanuel.grumbach@intel.com>
+In-Reply-To: <1459244109-16038-6-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+On Tue, Mar 29, 2016 at 12:35:04PM +0300, Emmanuel Grumbach wrote:
+> Provide a function that reports NAN DE function termination. The function
+> may be terminated due to one of the following reasons: user request,
+> ttl expiration or failure.
 
-Spectral related structures are accessed / modified only if ath10k
-debugfs is enabled, so it makes more sense to move them under
-ATH10K_DEBUGFS
+> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
----
-[compile tested disabling ATH10K_DEBUGFS]
+> +/**
+> + * enum nl80211_nan_func_term_reason - NAN functions termination reason
+> + *
+> + * Defines termination reasons of a NAN function
+> + *
+> + * @NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST: requested by user
+> + * @NL80211_NAN_FUNC_TERM_REASON_TTL_EXPIRED: timeout
+> + * @NL80211_NAN_FUNC_TERM_REASON_ERROR: errored
+> + */
+> +enum nl80211_nan_func_term_reason {
+> +	NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST,
+> +	NL80211_NAN_FUNC_TERM_REASON_TTL_EXPIRED,
+> +	NL80211_NAN_FUNC_TERM_REASON_ERROR,
+> +};
 
- drivers/net/wireless/ath/ath10k/core.h |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Can you please add NL80211_NAN_FUNC_TERM_REASON_VENDOR_SPECIFIC? That
+would help vendors to implement and send vendor specific reason codes if
+any.
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index c23c373..48fffef 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -868,8 +868,6 @@ struct ath10k {
- 
- #ifdef CONFIG_ATH10K_DEBUGFS
- 	struct ath10k_debug debug;
--#endif
--
- 	struct {
- 		/* relay(fs) channel for spectral scan */
- 		struct rchan *rfs_chan_spec_scan;
-@@ -878,6 +876,7 @@ struct ath10k {
- 		enum ath10k_spectral_mode mode;
- 		struct ath10k_spec_scan config;
- 	} spectral;
-+#endif
- 
- 	struct {
- 		/* protected by conf_mutex */
 -- 
-1.7.9.5
-
+Jouni Malinen                                            PGP id EFC895FA
