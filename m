@@ -1,99 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:45254 "EHLO
-	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751771AbcDAWoz (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:55903 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751312AbcDFOrh convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2016 18:44:55 -0400
-Date: Sat, 2 Apr 2016 00:46:46 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Chris Bainbridge <chris.bainbridge@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-wireless@vger.kernel.org,
-	b43-dev@lists.infradead.org
-Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-Message-ID: <20160401224646.GA11281@wunner.de> (sfid-20160402_004502_782084_8139D553)
-References: <E1akxli-00030z-BC@bombadil.infradead.org>
- <20160331231346.GA7469@localhost>
+	Wed, 6 Apr 2016 10:47:37 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 3/4] ath10k: prefer ether_addr_equal() or
+ ether_addr_equal_unaligned() over memcmp()
+Date: Wed, 6 Apr 2016 14:47:22 +0000
+Message-ID: <8737qyaj5z.fsf@kamboji.qca.qualcomm.com> (sfid-20160406_164740_500425_513A57A8)
+References: <20160324142217.15808.22638.stgit@potku.adurom.net>
+	<20160324142352.15808.33417.stgit@potku.adurom.net>
+In-Reply-To: <20160324142352.15808.33417.stgit@potku.adurom.net> (Kalle Valo's
+	message of "Thu, 24 Mar 2016 16:23:52 +0200")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-In-Reply-To: <20160331231346.GA7469@localhost>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Chris,
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
 
-On Fri, Apr 01, 2016 at 12:13:46AM +0100, Chris Bainbridge wrote:
-> On Tue, Mar 29, 2016 at 07:41:30PM +0200, Lukas Wunner wrote:
-> > Broadcom 4331 wireless cards built into Apple Macs unleash an IRQ storm
-> > on boot until they are reset, causing spurious interrupts if the IRQ is
-> > shared. Apparently the EFI bootloader enables the device and does not
-> > disable it before passing control to the OS. The bootloader contains a
-> > driver for the wireless card which allows it to phone home to Cupertino.
-> > This is used for Internet Recovery (download and install OS X images)
-> > and probably also for Back to My Mac (remote access, RFC 6281) and to
-> > discover stolen hardware.
-> > 
-> > The issue is most pronounced on 2011 and 2012 MacBook Pros where the IRQ
-> > is shared with 3 other devices (Light Ridge Thunderbolt controller, SDXC
-> > reader, HDA card on discrete GPU). As soon as an interrupt handler is
-> > installed for one of these devices, the ensuing storm of spurious IRQs
-> > causes the kernel to disable the IRQ and switch to polling. This lasts
-> > until the b43 driver loads and resets the device.
-> > 
-> > Loading the b43 driver first is not always an option, in particular with
-> > the Light Ridge Thunderbolt controller: The PCI hotplug IRQ handler gets
-> > installed early on because it is built in, unlike b43 which is usually
-> > a module.
-> > 
-> > Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=79301
-> > Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=895951
-> > Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1009819
-> > Bugzilla: https://bugzilla.redhat.com/show_bug.cgi?id=1149632
-> 
-> Should also fix https://bugzilla.kernel.org/show_bug.cgi?id=111781 ?
-> Given that this is a serious bug that can corrupt filesystems it would
-> be good to see the fix in stable too.
+> Fixes checkpatch warnings:
+>
+> drivers/net/wireless/ath/ath10k/mac.c:452: Prefer ether_addr_equal() or ether_addr_equal_unaligned() over memcmp()
+> drivers/net/wireless/ath/ath10k/mac.c:455: Prefer ether_addr_equal() or ether_addr_equal_unaligned() over memcmp()
+> drivers/net/wireless/ath/ath10k/txrx.c:133: Prefer ether_addr_equal() or ether_addr_equal_unaligned() over memcmp()
+>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+> ---
+>  drivers/net/wireless/ath/ath10k/mac.c  |    4 ++--
+>  drivers/net/wireless/ath/ath10k/txrx.c |    2 +-
+>  2 files changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+> index 74a0e25183d0..c89f711a796b 100644
+> --- a/drivers/net/wireless/ath/ath10k/mac.c
+> +++ b/drivers/net/wireless/ath/ath10k/mac.c
+> @@ -449,10 +449,10 @@ static int ath10k_mac_vif_update_wep_key(struct ath10k_vif *arvif,
+>  	lockdep_assert_held(&ar->conf_mutex);
+>  
+>  	list_for_each_entry(peer, &ar->peers, list) {
+> -		if (!memcmp(peer->addr, arvif->vif->addr, ETH_ALEN))
+> +		if (!ether_addr_equal(peer->addr, arvif->vif->addr))
+>  			continue;
+>  
+> -		if (!memcmp(peer->addr, arvif->bssid, ETH_ALEN))
+> +		if (!ether_addr_equal(peer->addr, arvif->bssid))
+>  			continue;
+>  
+>  		if (peer->keys[key->keyidx] == key)
+> diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
+> index 31335c510f1e..17a493b3333e 100644
+> --- a/drivers/net/wireless/ath/ath10k/txrx.c
+> +++ b/drivers/net/wireless/ath/ath10k/txrx.c
+> @@ -130,7 +130,7 @@ struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
+>  	list_for_each_entry(peer, &ar->peers, list) {
+>  		if (peer->vdev_id != vdev_id)
+>  			continue;
+> -		if (memcmp(peer->addr, addr, ETH_ALEN))
+> +		if (ether_addr_equal(peer->addr, addr))
+>  			continue;
 
-I cannot reproduce this particular issue on my MBP9,1 even though it
-is architecturally very similar to your MBP10,2. I tested it with
-"iommu=force intel_iommu=on", blacklisted b43 and stressed the machine
-a bit with kernel compiles. No issues.
+A brown paperbag bug, I got the tests reversed. Will send v2.
 
-Have you tested my patch? As Michael Büsch has pointed out correctly,
-it should mitigate that issue but will not solve it completely.
-You write in the bugzilla entry that you've seen the issue as early
-as 0.7 seconds into the boot. That's not a very precise method to
-measure boot progress but on my machine the card is reset around 1.2
-seconds, so likely too late. It's possible to execute the PCI quirk
-slightly earlier (in the header fixup section rather than the late
-fixup section) but that wouldn't make a significant difference.
-
-If you use the method described in Matthew Garrett's blog post,
-i.e. boot with "memmap=0xc0$0x1568a0", does the issue go away?
-If so, we could probably add a quirk in arch/x86/kernel/e820.c
-to mark that particular area reserved, or generally mark all
-EFI boot services areas as reserved on Macs. This memory could
-then be marked usable again once the card has been reset.
-
-As to why the issue doesn't occur on my machine, my guess is that
-the wireless card only writes packets to memory if it is associated
-with a base station. Do you have an open WLAN around? Try moving
-out of its reach and test if the issue goes away. Alternatively,
-did you enter Wifi credentials in OS X? If so it has saved the
-credentials to EFI variables. To verify if it has, use this on OS X:
-
-/usr/sbin/nvram 36C28AB5-6566-4C50-9EBD-CBB920F83843:current-network
-/usr/sbin/nvram 36C28AB5-6566-4C50-9EBD-CBB920F83843:preferred-networks
-/usr/sbin/nvram 36C28AB5-6566-4C50-9EBD-CBB920F83843:preferred-count
-
-On Linux, invoke "mount -t efivarfs none /sys/firmware/efi/efivars"
-and delete the variables (use chattr -i first if you're on Linux 4.5+).
-Test if the issue goes away.
-
-I have neither an open WLAN nearby nor Wifi credentials in my EFI
-variables, so the wireless card cannot associate with a base station
-in the pre-OS phase and that's probably the reason why the issue doesn't
-occur on my machine.
-
-Best regards,
-
-Lukas
+-- 
+Kalle Valo
