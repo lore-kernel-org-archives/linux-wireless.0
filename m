@@ -1,37 +1,31 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54653 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:60220 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751197AbcDZJdK (ORCPT
+	with ESMTP id S1751344AbcDFS2O (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 05:33:10 -0400
+	Wed, 6 Apr 2016 14:28:14 -0400
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Subject: Re: iwlwifi: fix fw version reading for DVM devices
+Subject: Re: mwifiex: fix Tx timeout issue during suspend test
 From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1461603729-20973-1-git-send-email-luca@coelho.fi>
-To: Luciano Coelho <luca@coelho.fi>
-Cc: linux-wireless@vger.kernel.org, emmanuel.grumbach@intel.com,
-	sara.sharon@intel.com, pat-lkml@erley.org, luciano.coelho@intel.com
-Message-Id: <20160426093309.A03C66029D@smtp.codeaurora.org> (sfid-20160426_113315_206040_773E0DD1)
-Date: Tue, 26 Apr 2016 09:33:09 +0000 (UTC)
+In-Reply-To: <1458139576-4702-1-git-send-email-akarwar@marvell.com>
+To: Amitkumar Karwar <akarwar@marvell.com>
+Cc: <linux-wireless@vger.kernel.org>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Message-Id: <20160406182812.D29196031A@smtp.codeaurora.org> (sfid-20160406_202817_481028_76ED25D0)
+Date: Wed,  6 Apr 2016 18:28:12 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-> From: Luca Coelho <luciano.coelho@intel.com>
+> Call netif_carrier_off/on while stoping/starting netdev queues.
+> This fixes netdev watchdog warning and ->ndo_tx_timeout() invocation
+> during suspend resume stress test.
 > 
-> In commit 97f95c93c8ed ("iwlwifi: remove support for fw older than
-> -16.ucode") we accidentally changed the fw version reading code for
-> DVM devices.  The code intended to remove the old fw version API,
-> because all MVM firmwares version 16 and above that we support don't
-> use it anymore.  But DVM devices still use the old FW API.
-> 
-> Fix that by bringing the code back in.
-> 
-> Reported-by: Pat Erley <pat-lkml@erley.org>
-> Tested-by: Kalle Valo <kvalo@codeaurora.org>
-> Fixes: 97f95c93c8ed ("iwlwifi: remove support for fw older than-16.ucode")
-> Signed-off-by: Luca Coelho <luciano.coelho@intel.com>
+> Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+> Fixes: 54f008497b9f09f ('mwifiex: Empty Tx queue during suspend')
+> Tested-by: Wei-Ning Huang <wnhuang@chromium.org>
 
 Thanks, applied to wireless-drivers-next.git.
 
