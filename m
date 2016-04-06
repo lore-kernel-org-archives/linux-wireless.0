@@ -1,77 +1,68 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f50.google.com ([209.85.218.50]:35411 "EHLO
-	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751382AbcDSA2N (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 20:28:13 -0400
-Received: by mail-oi0-f50.google.com with SMTP id p188so846400oih.2
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 17:28:13 -0700 (PDT)
+Received: from bues.ch ([80.190.117.144]:51727 "EHLO bues.ch"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751785AbcDFPRs (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2016 11:17:48 -0400
+Date: Wed, 6 Apr 2016 17:17:24 +0200
+From: Michael =?UTF-8?B?QsO8c2No?= <m@bues.ch>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org, b43-dev@lists.infradead.org,
+	Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
+Message-ID: <20160406171724.2b7b070b@wiggum> (sfid-20160406_171751_836877_A6B5C469)
+In-Reply-To: <20160406133151.GA4976@localhost>
+References: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
+ <20160405194015.GC15353@localhost>
+ <20160405214945.1214e13b@wiggum>
+ <20160406133151.GA4976@localhost>
 MIME-Version: 1.0
-In-Reply-To: <CALupW3CsuSGy=xBw-Wj5FfD+ALKBGi9xvi=Z8+YTdL9mGku5HQ@mail.gmail.com>
-References: <1460765986-12698-1-git-send-email-steve.derosier@lairdtech.com>
- <CAGRGNgV_W6uJF5DR43XdqvHPgBha1AfALYXcX4Lj=4jkO8TftQ@mail.gmail.com> <CALupW3CsuSGy=xBw-Wj5FfD+ALKBGi9xvi=Z8+YTdL9mGku5HQ@mail.gmail.com>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Tue, 19 Apr 2016 10:27:53 +1000
-Message-ID: <CAGRGNgVM8cVyKaNi0PEjqPmamPp3+YAXbVMu+Hifi6R0Le-ekg@mail.gmail.com> (sfid-20160419_022817_708106_48484AC2)
-Subject: Re: [PATCH] ath6kl: Add ability to set debug uart baud rate
-To: Steve deRosier <derosier@gmail.com>
-Cc: Kalle Valo <kvalo@qca.qualcomm.com>, ath6kl@lists.infradead.org,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Steve deRosier <steve.derosier@lairdtech.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/0ALe0+3.7Zgklwdn0Cb3tFS"; protocol="application/pgp-signature"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Steve,
+--Sig_/0ALe0+3.7Zgklwdn0Cb3tFS
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Apr 19, 2016 at 4:12 AM, Steve deRosier <derosier@gmail.com> wrote:
-> Hi Julian,
->
-> Thanks for looking at the patch.
->
-> On Sun, Apr 17, 2016 at 5:07 PM, Julian Calaby <julian.calaby@gmail.com> wrote:
->> Hi Steve,
->>
->> This looks like it's using standard serial rates. Does it accept
->> non-standard rates? If not, should this be checked before being passed
->> to the hardware?
->>
->
-> It should use standard serial rates, and obviously I defaulted it to a
-> sensible one. However, there's nothing that prevents you from using
-> odd and arbitrary rates in the firmware and it should just suck it in
-> and use it. In other words, the firmware will happily try to set 9507
-> baud if you tell it to.
->
-> This is specifically for debugging and working with the firmware and
-> IMHO, if you are using this feature and feel a need to set it to
-> something weird, I think the user should be allowed to. If you know
-> enough to be able to shoot yourself in the foot with this, then you
-> should know enough of what you should or shouldn't do and should be
-> allowed to. It's a debugging tool only and I don't see any reason to
-> waste lines in the driver to validate this input.
+On Wed, 6 Apr 2016 08:31:51 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
 
-I'm of the opinion that one should never underestimate the ability of
-people to attempt to shoot themselves in the foot. However this is
-only a debugging interface so you do make a good point.
+> Even for interrupts, it's only a 90% solution because we do still get
+> a few interrupts before the quirk runs.  There may not be enough to
+> trigger the "IRQ nobody cared" check,
 
-I guess I'm worried that some idiot is going to set it to 2 baud or 2
-billion baud for some dumb reason then come complaining to us when
-their wireless card crashes or locks up or something.
+If no driver requested the shared interrupt yet, it should be disabled
+in the interrupt controller. So the interrupts do not reach the CPU.
+The interrupt storm (on the CPU) starts as soon as some driver
+that shares the interrupt with b43 requests and thus enables the
+interrupt. And that always happens after the PCI fixup. Thus this is
+safe.
 
-Maybe we can just sweep this all under the carpet by putting all the
-debug uart stuff behind some nice #ifdef.
+--=20
+Michael
 
-> That's my perspective on the issue, but I recognize other opinions may
-> differ. Or you may know of a specific chip where it does matter (the
-> 6003s and 6004s I'm using don't seem to care). If you or Kalle insist
-> on it, I'll be happy to add in some value checking for this parameter.
-> It just doesn't seem worth-while to me.
+--Sig_/0ALe0+3.7Zgklwdn0Cb3tFS
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
 
-Thanks,
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
 
--- 
-Julian Calaby
+iQIcBAEBCAAGBQJXBSiEAAoJEPUyvh2QjYsODOYP/0OBtiN2bBd3I9EUofJ7zL0l
+uAxQOreDCAfUPqmEN+mf2QPQrbVmrC/TxoZh2l2Qex8jj2UysIpiSJusKDZpcICx
+n574mSHsik9peQScntG3zfhaHmkWizXkm2jGjRn2nUq33v4+RYaP1gS3mT3GPlnl
+RUwZRoCCJH99GmuLkkKQKFFSxUCsfeKYDx+ScnUgUo16kaeGfIrhpsYuYh0RzI13
+LAuh+rbKje5lPtqMI4f7ANEaU/It0os1PKzXA4QTkh5Zob5vRj22bbJw5KhKmCiq
+EN52RIWufV7xHG+usECE6L79zHdXrpl/AQiziGxZqDNJ2hIac7vl28ac50Hu1VWm
+/lsOcBPn80lIrXRNkd4dqZN1qbaGfpP06XQNkU55OCUwP9YJFkb5QWIuaKcOQjKL
+5eeIrOc5NO++9OxBG174siHFEvcU1/igW1hZveRj17OuIPm+ig+GPWRIALC7Ih6f
+ltHrytdDojviJ353qpHg4c8PUMnHrzwZ2T0zi/7HGW01XegH0gesDwtH/iQ5HBts
+YQ29wY56bY7cQA4GHlg6OyYEWh8WoIUfBalG1PRWdJ1TDEBE2GKMGRdFHvqbCxtc
+pYbUwvl8dv0jm5ky+vlsRyb0sThKxBcRuwbsZ1mFSlNe/RoVDrxskNYGrnT1XRB1
+z31HsfQ4VC0pN2V5/Z7r
+=Bcpp
+-----END PGP SIGNATURE-----
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+--Sig_/0ALe0+3.7Zgklwdn0Cb3tFS--
