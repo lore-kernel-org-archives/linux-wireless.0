@@ -1,82 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:54937 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753684AbcDGOax (ORCPT
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:36307 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751314AbcDFRji (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 10:30:53 -0400
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>,
-	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
-Subject: [PATCH v4] iw: Add support for NL80211_STA_INFO_RX_DURATION netlink attribute
-Date: Thu, 7 Apr 2016 20:00:20 +0530
-Message-ID: <1460039420-5418-1-git-send-email-mohammed@qti.qualcomm.com> (sfid-20160407_163056_607334_F8BB5B1B)
+	Wed, 6 Apr 2016 13:39:38 -0400
+Received: by mail-oi0-f45.google.com with SMTP id y204so67423131oie.3
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2016 10:39:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1459927276.17504.6.camel@sipsolutions.net>
+References: <1458898052-20601-1-git-send-email-michal.kazior@tieto.com>
+	<1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
+	<1459420104-31554-2-git-send-email-michal.kazior@tieto.com>
+	<1459864656.18188.60.camel@sipsolutions.net>
+	<CAA93jw4Swv9aOr=ZKoKeQyp9f1HnYJtiY7a1Lw2Ri89XjGiORQ@mail.gmail.com>
+	<1459927276.17504.6.camel@sipsolutions.net>
+Date: Wed, 6 Apr 2016 10:39:37 -0700
+Message-ID: <CAA93jw5mTMndywTH7GRqKMPr24UhxN8m0i0ri4dXa4ZdCULEoQ@mail.gmail.com> (sfid-20160406_193947_301584_ED1D5C06)
+Subject: Re: [PATCHv2 1/2] mac80211: implement fair queuing per txq
+From: Dave Taht <dave.taht@gmail.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	make-wifi-fast@lists.bufferbloat.net,
+	"codel@lists.bufferbloat.net" <codel@lists.bufferbloat.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+On Wed, Apr 6, 2016 at 12:21 AM, Johannes Berg
+<johannes@sipsolutions.net> wrote:
+> [removing other lists since they spam me with moderation bounces]
 
-Add support for new netlink attribute 'NL80211_STA_INFO_RX_DURATION'.
-'NL80211_STA_INFO_RX_DURATION' accounts for aggregate PPDU duration
-in microseconds for all the frames from a peer. Drivers can fill
-'rx_duration' field and set the flag 'NL80211_STA_INFO_RX_DURATION'.
-'rx_duration' will give an idea about the total time spent by our peer
-with each of its connected peers.
+I have added your email address be accepted to the codel,
+make-wifi-fast lists. My apologies for the bounces.
 
-This will get dumped as part of 'iw dev wlan#N station dump'
+The people on those lists generally do not have the time to tackle the
+volume of traffic on linux-wireless.
 
-Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
----
- nl80211.h |    3 +++
- station.c |    5 +++++
- 2 files changed, 8 insertions(+)
+>> The hope had been the original codel.h would have been reusable,
+>> which is not the case at present.
+>
+> So what's the strategy for making it happen?
 
-diff --git a/nl80211.h b/nl80211.h
-index 5b7b5eb..991b3ce 100644
---- a/nl80211.h
-+++ b/nl80211.h
-@@ -2464,6 +2464,8 @@ enum nl80211_sta_bss_param {
-  *	TID+1 and the special TID 16 (i.e. value 17) is used for non-QoS frames;
-  *	each one of those is again nested with &enum nl80211_tid_stats
-  *	attributes carrying the actual values.
-+ * @NL80210_STA_INFO_RX_DURATION: aggregate PPDU duration(usecs) for all the
-+ *	frames from a peer
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -2500,6 +2502,7 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_BEACON_RX,
- 	NL80211_STA_INFO_BEACON_SIGNAL_AVG,
- 	NL80211_STA_INFO_TID_STATS,
-+	NL80211_STA_INFO_RX_DURATION,
- 
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-diff --git a/station.c b/station.c
-index b5ccf4a..a730db1 100644
---- a/station.c
-+++ b/station.c
-@@ -147,6 +147,7 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 		[NL80211_STA_INFO_NONPEER_PM] = { .type = NLA_U32},
- 		[NL80211_STA_INFO_CHAIN_SIGNAL] = { .type = NLA_NESTED },
- 		[NL80211_STA_INFO_CHAIN_SIGNAL_AVG] = { .type = NLA_NESTED },
-+		[NL80211_STA_INFO_RX_DURATION] = { .type = NLA_U64 },
- 	};
- 	char *chain;
- 
-@@ -226,6 +227,10 @@ static int print_sta_handler(struct nl_msg *msg, void *arg)
- 		printf("\n\trx bitrate:\t%s", buf);
- 	}
- 
-+	if (sinfo[NL80211_STA_INFO_RX_DURATION])
-+		printf("\n\trx duration:\t%lld us",
-+		       (unsigned long long)nla_get_u64(sinfo[NL80211_STA_INFO_RX_DURATION]));
-+
- 	if (sinfo[NL80211_STA_INFO_EXPECTED_THROUGHPUT]) {
- 		uint32_t thr;
- 
--- 
-1.7.9.5
+Strategy? to meander towards a result that gives low latency to all
+stations, no matter their bandwidth, on several chipsets.
 
+The holy grail from my viewpoint is to get airtime fairness, better
+mac utilization, slow stations not starving fast ones, more stations
+servicable, and so on, and my focus has generally been on having an
+architecture that applied equally to APs and clients. Getting clients
+alone to have a queuing latency reduction of these orders of magnitude
+on uploads at low rates would be a huge win, but not the holy grail.
+
+It was really nice to have michal's proof of concept(s) show up and
+show fq_codel-like benefits at both low and high speeds on wifi, but
+it is clear more architectural rework is required to fit the theory
+into the reality.
+
+> Unless there is one, I
+> don't see the point in making the code more complicated than it already
+> has to be anyway.
+
++1.
+
+Next steps were - get toke's and my testbeds up - avery/tim/myself to
+keep hammering at the ath9k - michal exploring dql - jonathon poking
+at it with cake-like ideas - and anyone else that cares to join in on
+finally fixing bufferbloat on wifi.
+
+and maybe put together a videoconference in 2-3 weeks or so with where
+we are stuck at (felix will be off vacation, too, I think). There are
+still multiple points where we all talk past each other.
+
+Me, for example, am overly fixated on having a per station queue to
+start with (which in the case of a client is two stations - one
+multicast/mgtmt frames and regular traffic) and not dealing with tids
+until much later in the process. Unfortunately it seems the hook is
+very late in the process.
+>
+> johannes
