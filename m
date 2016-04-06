@@ -1,64 +1,32 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:59835 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756990AbcDEH2x (ORCPT
+Received: from mail-oi0-f46.google.com ([209.85.218.46]:36109 "EHLO
+	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753437AbcDFVIT convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 03:28:53 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Cathy Luo <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Eric Dumaze <edumazet@google.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH 4/7] mwifiex: remove redundant GFP_DMA flag
-Date: Tue, 5 Apr 2016 00:22:29 -0700
-Message-ID: <1459840952-25338-4-git-send-email-akarwar@marvell.com> (sfid-20160405_092859_578263_E895A2DE)
-In-Reply-To: <1459840952-25338-1-git-send-email-akarwar@marvell.com>
-References: <1459840952-25338-1-git-send-email-akarwar@marvell.com>
+	Wed, 6 Apr 2016 17:08:19 -0400
+Received: by mail-oi0-f46.google.com with SMTP id y204so74373093oie.3
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2016 14:08:19 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+Date: Wed, 6 Apr 2016 14:08:18 -0700
+Message-ID: <CAA93jw4qPgU3BHWqfagTO61vE+kvaxiwXk-ys48qjvUCJqx1GQ@mail.gmail.com> (sfid-20160406_230833_981990_D9CB8D1F)
+Subject: ietf proposed standards for dscp to 802.11e mappings
+From: Dave Taht <dave.taht@gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+If anyone cares....
 
-skb forwarded to TCP/IP stack doesn't need to allocate in DMA ZONE.
-This patch removes GFP_DMA flag in this case to save precious DMA
-memory.
+https://datatracker.ietf.org/doc/draft-szigeti-tsvwg-ieee-802-11/?include_text=1
 
-Signed-off-by: Eric Dumaze <edumazet@google.com>
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
----
- drivers/net/wireless/marvell/mwifiex/sdio.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+these will be discussed on the tsvwg mailing list.
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 901c064..2ea2827 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -1122,8 +1122,8 @@ static void mwifiex_deaggr_sdio_pkt(struct mwifiex_adapter *adapter,
- 				    __func__, pkt_len, blk_size);
- 			break;
- 		}
--		skb_deaggr = mwifiex_alloc_dma_align_buf(pkt_len,
--							 GFP_KERNEL | GFP_DMA);
-+
-+		skb_deaggr = mwifiex_alloc_dma_align_buf(pkt_len, GFP_KERNEL);
- 		if (!skb_deaggr)
- 			break;
- 		skb_put(skb_deaggr, pkt_len);
-@@ -1372,8 +1372,7 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
- 
- 			/* copy pkt to deaggr buf */
- 			skb_deaggr = mwifiex_alloc_dma_align_buf(len_arr[pind],
--								 GFP_KERNEL |
--								 GFP_DMA);
-+								 GFP_KERNEL);
- 			if (!skb_deaggr) {
- 				mwifiex_dbg(adapter, ERROR, "skb allocation failure\t"
- 					    "drop pkt len=%d type=%d\n",
--- 
-1.8.1.4
+https://www.ietf.org/mailman/listinfo/tsvwg
 
+There are several things in here I object to - no discussion of
+multicast, and arbitrarily dropping CS6 and CS7 on APs, but I figure
+that will be sorted out eventually.
+
+--
+Dave Täht
