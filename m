@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f67.google.com ([74.125.82.67]:35267 "EHLO
-	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751420AbcDRRLB (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 13:11:01 -0400
-From: Christian Lamparter <chunkeey@googlemail.com>
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Lauri Kasanen <cand@gmx.com>, Kalle Valo <kvalo@codeaurora.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org,
-	Linux Firmware Maintainers <linux-firmware@kernel.org>,
-	sgruszka@redhat.com
-Subject: Re: [PATCH v2] carl9170: Clarify kconfig text
-Date: Mon, 18 Apr 2016 19:10:57 +0200
-Message-ID: <5517762.PotoMG0SZb@debian64> (sfid-20160418_191128_011722_CA8688D2)
-In-Reply-To: <c17f2f12-1c94-6b19-c918-0a6a9ee401ca@gmail.com>
-References: <c17f2f12-1c94-6b19-c918-0a6a9ee401ca@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from s3.sipsolutions.net ([5.9.151.49]:35907 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932604AbcDFIrz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2016 04:47:55 -0400
+Message-ID: <1459932471.17504.35.camel@sipsolutions.net> (sfid-20160406_104804_701966_9CEC3D50)
+Subject: Re: [PATCHv3 RESEND 03/11] cfg80211: add add_nan_func / rm_nan_func
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Cc: linux-wireless@vger.kernel.org,
+	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
+Date: Wed, 06 Apr 2016 10:47:51 +0200
+In-Reply-To: <1459244109-16038-3-git-send-email-emmanuel.grumbach@intel.com>
+References: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
+	 <1459244109-16038-3-git-send-email-emmanuel.grumbach@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Monday, April 18, 2016 06:47:44 PM Xose Vazquez Perez wrote:
-> Christian Lamparter wrote:
-> 
-> > Sure, but this could be a different patch then. I think Intel devices 
-> > (iwlwifi, iwlegacy and ipw2x00) have a similar text about "download
-> > firmware from this device from our homepage here" too. So if we want,
-> > we can remove them altogether?
-> 
-> linux-firmware.git does not contain firmware for all drivers. _At least_
-> zd1211rw [1], atmel [2] and ipw2x00 [3] are out of the tree.
 
-Yeah, don't forget p54. It needs out-of-tree firmwares as well.
+> +	NL80211_ATTR_NAN_FUNC_INST_ID,
 
-But what about iwlegacy? Isn't that another candidate that would fit both
-requirements (no recent firmware update, firmware in linux-firmware.git) ?
+I don't see why this has to be a top-level attribute.
 
-> [1] http://sf.net/projects/zd1211/files/
-> [2] http://web.archive.org/web/20121016132320/http://at76c503a.berlios.de/fw_dl.html
-> [3] http://ipw2100.sf.net/firmware.php http://ipw2200.sf.net/firmware.php
+> +enum nl80211_nan_func_attributes {
+> +	__NL80211_NAN_FUNC_INVALID,
+> +	NL80211_NAN_FUNC_TYPE,
+
+You can easily move it into here, and 
+
+> +	/* propagate the instance id and cookie to userspace  */
+> +	if (WARN_ON(nla_put_u8(msg, NL80211_ATTR_NAN_FUNC_INST_ID,
+> +			       func.instance_id) ||
+> +		    nla_put_u64(msg, NL80211_ATTR_COOKIE,
+> func.cookie))) {
+
+use the appropriate nesting here.
+
+johannes
