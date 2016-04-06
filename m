@@ -1,87 +1,34 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:23741 "EHLO mga03.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756944AbcDENeV (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 09:34:21 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "gucea.doru@gmail.com" <gucea.doru@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Gucea, Doru" <doru.gucea@intel.com>
-Subject: Re: iwlwifi monitor mode: No data frame captured on 5 Ghz
-Date: Tue, 5 Apr 2016 13:34:14 +0000
-Message-ID: <1459863253.21527.2.camel@intel.com> (sfid-20160405_153427_142427_389A5763)
-References: <CANfLQrYTqUQGoj+Xr1XrKJrh8oaBB+qt8YeFwo0EyhbC-RpnNg@mail.gmail.com>
-	 <0BA3FCBA62E2DC44AF3030971E174FB32EAA379D@hasmsx107.ger.corp.intel.com>
-	 <CANfLQrad-1C3Wzy9M+=J7nzjQOcgam9CdJVDR2KC=KipZRpbkA@mail.gmail.com>
-In-Reply-To: <CANfLQrad-1C3Wzy9M+=J7nzjQOcgam9CdJVDR2KC=KipZRpbkA@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from smtp.codeaurora.org ([198.145.29.96]:33507 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751344AbcDFSkc (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2016 14:40:32 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
+Subject: Re: wl12xx: remove redundant null check on wl->scan.ssid
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1458318048-28184-1-git-send-email-colin.king@canonical.com>
+To: Colin Ian King <colin.king@canonical.com>
+Cc: Arik Nemtsov <arik@wizery.com>,
+	Luca Coelho <luciano.coelho@intel.com>,
+	Avraham Stern <avraham.stern@intel.com>,
+	Eliad Peller <eliad@wizery.com>,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Message-Id: <20160406184031.7925D615CF@smtp.codeaurora.org> (sfid-20160406_204059_043538_C18BB181)
+Date: Wed,  6 Apr 2016 18:40:31 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDE2LTA0LTA1IGF0IDE2OjI1ICswMzAwLCBHdWNlYSBEb3J1IHdyb3RlOg0KPiBP
-biBUdWUsIEFwciA1LCAyMDE2IGF0IDE6MDAgUE0sIEdydW1iYWNoLCBFbW1hbnVlbA0KPiA8ZW1t
-YW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPiB3cm90ZToNCj4gPiA+IA0KPiA+ID4gSGVsbG8sDQo+
-ID4gPiANCj4gPiA+IEkgYW0gdHJ5aW5nIHRvIGNhcHR1cmUgcGFja2V0cyB0aGF0IGFyZSBleGNo
-YW5nZWQgYmV0d2VlbiBhbiBBUA0KPiA+ID4gYW5kIGENCj4gPiA+IHNtYXJ0cGhvbmUgb24gdGhl
-IDVHaHogZnJlcXVlbmN5LiBGb3IgZ2VuZXJhdGluZyB0cmFmZmljLCBJDQo+ID4gPiB1cGxvYWQg
-VURQDQo+ID4gPiB0cmFmZmljIGZyb20gYSBsYXB0b3AgUEMgdG93YXJkcyB0aGUgc21hcnRwaG9u
-ZSB1c2luZyBpcGVyZi4NCj4gPiA+IA0KPiA+ID4gVGhlIHByb2JsZW0gaXMgdGhhdCBJIGNhbiBz
-ZWUgX29ubHlfIHRoZSBjb250cm9sIGZyYW1lcyBsaWtlDQo+ID4gPiBSVFMvQ1RTLCBCbG9jaw0K
-PiA+ID4gQUNLLCB3aGlsZSB0aGUgZGF0YSBwYWNrZXRzIGFyZSBub3QgY2FwdHVyZWQuIEkgdXBs
-b2FkZWQgdGhlDQo+ID4gPiBXaXJlc2hhcmsNCj4gPiA+IGNhcHR1cmUgZmlsZXMgYXQgWzFdIChs
-b2NhdGVkIGluc2lkZSB0aGUgZm9sZGVycyB3aG9zZSBuYW1lDQo+ID4gPiBzdGFydHMgd2l0aCA1
-R2h6KS4NCj4gPiANCj4gPiBNb3N0IGxpa2VseSB0aGUgcGFja2V0cyBvbiBBIGJhbmQgaGF2ZSBh
-IFZIVCBwcmVhbWJsZSBhbmQgeW91ciBTS1UNCj4gPiBpcyAxMU4gb25seS4NCj4gDQo+IE15IGNh
-cmQsIEludGVsIDcyNjAgWzFdICBzdXBwb3J0cyA4MDIuMTEgYWMuIFNvIGl0IHNob3VsZCBhbHNv
-DQo+IHN1cHBvcnQNCj4gVkhULCByaWdodD8gSXMgdGhlcmUgYW55IGludGVyZmFjZSBpbiB1c2Vy
-LXNwYWNlIGZvciBjaGVja2luZyBhZnRlcg0KPiBWSFQ/DQoNCjcyNjAgaGFzIHNldmVyYWwgZmxh
-dm9ycy4gVGhlIG9uZSB5b3UgaGF2ZSBkb2Vzbid0IHN1cHBvcnQgVkhUOg0KPiBpd2x3aWZpIDAw
-MDA6MDQ6MDAuMDogRGV0ZWN0ZWQgSW50ZWwoUikgRHVhbCBCYW5kIFdpcmVsZXNzIE4gNzI2MA0K
-DQpEdWFsIEJhbmQgbWVhbnMgeW91IGhhdmUgc3VwcG9ydCBmb3IgNS4yR0h6LCBidXQgV2lyZWxl
-c3MgTiwgbWVhbnMgbm8NClZIVC4NCg0KPiANCj4gSG93ZXZlciwgSSBub3RpY2VkIGEgImZhaWx1
-cmUiIG1lc3NhZ2UgaW4gZG1lc2c6DQo+IFsgICAgNC4wMzA0MjhdIEludGVsKFIpIFdpcmVsZXNz
-IFdpRmkgZHJpdmVyIGZvciBMaW51eCwgaW4tdHJlZToNCj4gWyAgICA0LjAzMDU3MF0gaXdsd2lm
-aSAwMDAwOjA0OjAwLjA6IGlycSAzNyBmb3IgTVNJL01TSS1YDQo+IFsgICAgNC4wMzA3NjBdIGl3
-bHdpZmkgMDAwMDowNDowMC4wOiBEaXJlY3QgZmlybXdhcmUgbG9hZCBmb3INCj4gaXdsd2lmaS03
-MjYwLTEwLnVjb2RlIGZhaWxlZCB3aXRoIGVycm9yIC0yDQo+IFsgICAgNC4wMzU1MDldIGl3bHdp
-ZmkgMDAwMDowNDowMC4wOiBsb2FkZWQgZmlybXdhcmUgdmVyc2lvbg0KPiAyNS4yMjguOS4wIG9w
-X21vZGUgaXdsbXZtDQo+IFsgICAgNC40NTQ3NzJdIGl3bHdpZmkgMDAwMDowNDowMC4wOiBEZXRl
-Y3RlZCBJbnRlbChSKSBEdWFsIEJhbmQNCj4gV2lyZWxlc3MgTiA3MjYwLCBSRVY9MHgxNDQNCj4g
-WyAgICA0LjQ1NDgyNV0gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IEwxIERpc2FibGVkIC0gTFRSIEVu
-YWJsZWQNCj4gWyAgICA0LjQ1NTA1NV0gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IEwxIERpc2FibGVk
-IC0gTFRSIEVuYWJsZWQNCj4gWyAgIDE1LjA0OTkzM10gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IEwx
-IERpc2FibGVkIC0gTFRSIEVuYWJsZWQNCj4gWyAgIDE1LjA1MDI2OV0gaXdsd2lmaSAwMDAwOjA0
-OjAwLjA6IEwxIERpc2FibGVkIC0gTFRSIEVuYWJsZWQNCj4gDQo+IEFsc28sIHRoZSBtYXhpbXVt
-IGJpdCByYXRlIHJlcG9ydGVkIGJ5IGl3Y29uZmlnIGlzIDE1MCBNYi9zLCBzbyBteQ0KPiBhc3N1
-bXB0aW9uIGlzIHRoYXQgdGhlIGNhcmQgY2FuJ3QgZW50ZXIgaW50byB0aGUgODAyLjExIGFjIG1v
-ZGUsIGl0DQo+IGp1c3Qgc3RheXMgaW50byA4MDIuMTFuLg0KPiANCj4gZG9ydUBkb3J1LU41NTFK
-Szp+JCBpd2NvbmZpZyB3bGFuMA0KPiB3bGFuMCAgICAgSUVFRSA4MDIuMTFhYmduICBFU1NJRDoi
-NV9tcHRjcCINCj4gICAgICAgICAgIE1vZGU6TWFuYWdlZCAgRnJlcXVlbmN5OjUuMjQgR0h6ICBB
-Y2Nlc3MgUG9pbnQ6DQo+IEM0OjZFOjFGOjRCOjEwOkEyDQo+ICAgICAgICAgICBCaXQgUmF0ZT0x
-NTAgTWIvcyAgIFR4LVBvd2VyPTIyIGRCbQ0KPiAgICAgICAgICAgUmV0cnkgc2hvcnQgbGltaXQ6
-NyAgIFJUUyB0aHI6b2ZmICAgRnJhZ21lbnQgdGhyOm9mZg0KPiAgICAgICAgICAgUG93ZXIgTWFu
-YWdlbWVudDpvbg0KPiAgICAgICAgICAgTGluayBRdWFsaXR5PTcwLzcwICBTaWduYWwgbGV2ZWw9
-LTM2IGRCbQ0KPiAgICAgICAgICAgUnggaW52YWxpZCBud2lkOjAgIFJ4IGludmFsaWQgY3J5cHQ6
-MCAgUnggaW52YWxpZCBmcmFnOjANCj4gICAgICAgICAgIFR4IGV4Y2Vzc2l2ZSByZXRyaWVzOjAg
-IEludmFsaWQgbWlzYzoyMiAgIE1pc3NlZCBiZWFjb246MA0KPiANCj4gDQo+IFsxXSBodHRwOi8v
-d3d3LmludGVsLmNvbS9jb250ZW50L3d3dy91cy9lbi93aXJlbGVzcy1wcm9kdWN0cy9kdWFsLWJh
-bg0KPiBkLXdpcmVsZXNzLWFjLTcyNjAtYmx1ZXRvb3RoLWJyaWVmLmh0bWwNCj4gDQo+ID4gQW5v
-dGhlciBvcHRpb24gaXMgdGhhdCB0aGUgdHJhZmZpYyB1c2VzIExEUEMgZW5jb2RpbmcgYW5kIHRo
-aXMNCj4gPiBkZXZpY2UgZG9lc24ndCBzdXBwb3J0IGl0Lg0KPiA+IA0KPiA+IA0KPiA+ID4gDQo+
-ID4gPiBJZiBJIHVzZSB0aGUgMi40IGZyZXF1ZW5jeSwgYWxsIHRoZSBmcmFtZXMgYXJlIGNhcHR1
-cmVkLiBJIGFsc28NCj4gPiA+IHVwbG9hZGVkIHRoZQ0KPiA+ID4gV2lyZXNoYXJrIHBhY2tldCB0
-cmFjZXMgZm9yIDIuNEdoeiBhdCBbMV0gKGxvY2F0ZWQgaW5zaWRlIHRoZQ0KPiA+ID4gZm9sZGVy
-cyB3aG9zZQ0KPiA+ID4gbmFtZSBzdGFydHMgd2l0aCAyLjQgR2h6KS4NCj4gPiA+IA0KPiA+ID4g
-SXMgdGhpcyBhIGtub3duIGJ1ZyBvciBhbSBJIGRvaW5nIHNvbWV0aGluZyB3cm9uZz8NCj4gPiA+
-IA0KPiA+ID4gQWRkaXRpb25hbCBkZXRhaWxzOg0KPiA+ID4gV2ktRmkgY2FyZDogIGl3bHdpZmkg
-MDAwMDowNDowMC4wOiBEZXRlY3RlZCBJbnRlbChSKSBEdWFsIEJhbmQNCj4gPiA+IFdpcmVsZXNz
-IE4gNzI2MCwNCj4gPiA+IFJFVj0weDE0NCBGaXJtd2FyZSB2ZXJzaW9uOiBpd2x3aWZpIDAwMDA6
-MDQ6MDAuMDogbG9hZGVkIGZpcm13YXJlDQo+ID4gPiB2ZXJzaW9uDQo+ID4gPiAyNS4yMjguOS4w
-IG9wX21vZGUgaXdsbXZtDQo+ID4gPiBUcmFmZmljIGVuY3J5cHRpb246IFdQQSAmIFdQQTIgUGVy
-c29uYWwNCj4gPiA+IFNldHRpbmcgdXAgdGhlIGNhcmQgaW4gd2lyZWxlc3MgbW9kZToNCj4gPiA+
-IGlwIGxpbmsgc2V0IGRldiB3bGFuMCBkb3duDQo+ID4gPiBpdyB3bGFuMCBzZXQgdHlwZSBtb25p
-dG9yDQo+ID4gPiBpcCBsaW5rIHNldCBkZXYgd2xhbjAgdXANCj4gPiA+IGl3IHdsYW4wIHNldCBm
-cmVxIDUyNDANCj4gPiA+IA0KPiA+ID4gWzFdIGh0dHBzOi8vZHJpdmUuZ29vZ2xlLmNvbS9vcGVu
-P2lkPTBCNVNCSDA4UFVfQ2hlazlyT0hZMFZreEZSVUUNCj4gPiA+IA0KPiA+ID4gVGhhbmsgeW91
-LCBEb3J1
+
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> ssid is an array of u8, so it can never be null, so the null check on
+> wl->scan.ssid is redundant and can be removed.
+> 
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+
+Thanks, applied to wireless-drivers-next.git.
+
+Kalle Valo
