@@ -1,43 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36124 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:32879 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965968AbcDMJpg (ORCPT
+	with ESMTP id S1751344AbcDFSfw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2016 05:45:36 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Oleksij Rempel <linux@rempel-privat.de>
-Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
-	lkml2017@openmailbox.org
-Subject: Re: [PATCH] ath9k: ar5008_hw_cmn_spur_mitigate: add missing mask_m & mask_p initialisation
-References: <120e427452ad7e93f17828e8bba4b043@openmailbox.org>
-	<1460482664-21086-1-git-send-email-linux@rempel-privat.de>
-	<878u0hzvz0.fsf@purkki.adurom.net>
-Date: Wed, 13 Apr 2016 12:45:31 +0300
-In-Reply-To: <878u0hzvz0.fsf@purkki.adurom.net> (Kalle Valo's message of "Wed,
-	13 Apr 2016 12:41:55 +0300")
-Message-ID: <874mb5zvt0.fsf@purkki.adurom.net> (sfid-20160413_114542_301283_37FF84D3)
+	Wed, 6 Apr 2016 14:35:52 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: [1/2] rtlwifi: rtl8723be: Add antenna select module parameter
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1458153215-25602-2-git-send-email-Larry.Finger@lwfinger.net>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Stable <stable@vger.kernel.org>
+Message-Id: <20160406183550.EAEED615CF@smtp.codeaurora.org> (sfid-20160406_203600_980439_898F63DC)
+Date: Wed,  6 Apr 2016 18:35:50 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
 
-> Oleksij Rempel <linux@rempel-privat.de> writes:
->
->> by moving common code to ar5008_hw_cmn_spur_mitigate i forgot to move
->> mask_m & mask_p initialisation. This coused a performance regression
->> on ar9281.
->>
->> Fixes: f911085ffa88 ("ath9k: split ar5008_hw_spur_mitigate and reuse common code in ar9002_hw_spur_mitigate.")
->> Reported-by: Gustav Frederiksen <lkml2017@openmailbox.org>
->> Tested-by: Gustav Frederiksen <lkml2017@openmailbox.org>
->> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
->
-> If no objections I'm planning to send this to 4.6.
+> A number of new laptops have been delivered with only a single antenna.
+> In principle, this is OK; however, a problem arises when the on-board
+> EEPROM is programmed to use the other antenna connection. The option
+> of opening the computer and moving the connector is not always possible
+> as it will void the warranty in some cases. In addition, this solution
+> breaks the Windows driver when the box dual boots Linux and Windows.
+> 
+> A fix involving a new module parameter has been developed.  This commit
+> adds the new parameter and implements the changes needed for the driver.
+> 
+> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
+> Cc: Stable <stable@vger.kernel.org> [V4.0+]
 
-Should we also CC stable (4.2+)? I can add that before I commit the
-patch.
+Thanks, 2 patches applied to wireless-drivers-next.git:
 
--- 
+c18d8f509571 rtlwifi: rtl8723be: Add antenna select module parameter
+baa170229095 rtlwifi: btcoexist: Implement antenna selection
+
 Kalle Valo
