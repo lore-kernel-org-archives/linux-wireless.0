@@ -1,66 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54151 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751309AbcDNUhX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 16:37:23 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 08/16] rtl8xxxu: Unregister from mac80211 before shutting down the device
-Date: Thu, 14 Apr 2016 16:37:13 -0400
-Message-Id: <1460666241-5365-9-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_225528_869687_F8611034)
-In-Reply-To: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:16995 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752563AbcDFOom (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 6 Apr 2016 10:44:42 -0400
+Subject: [PATCH 0/8] ath10k: refactor firmware components
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 6 Apr 2016 17:44:31 +0300
+Message-ID: <20160406144355.28399.23733.stgit@potku.adurom.net> (sfid-20160406_164445_906200_F62BCA32)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+This series refactors various ath10k firmware components into struct
+ath10k_fw_components which contains everything firmware related (board
+files, meta data and so on). This makes it possible to kill
+ath10k_tm_fetch_utf_firmware_api_2() from testmode.c.
 
-This fixes a long standing bug where mac80211 would send disconnect
-packets to the device, after we had shut down the device.
+Also REALLY old FW API 1 (firmware.bin and otp.bin) support is
+removed.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 14 ++++----------
- 1 file changed, 4 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 5685fd7..2b71a2b 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -8003,13 +8003,6 @@ exit:
- 	return ret;
- }
- 
--static void rtl8xxxu_disable_device(struct ieee80211_hw *hw)
--{
--	struct rtl8xxxu_priv *priv = hw->priv;
--
--	priv->fops->power_off(priv);
--}
--
- static void rtl8xxxu_cam_write(struct rtl8xxxu_priv *priv,
- 			       struct ieee80211_key_conf *key, const u8 *mac)
- {
-@@ -9726,13 +9719,14 @@ static void rtl8xxxu_disconnect(struct usb_interface *interface)
- 	hw = usb_get_intfdata(interface);
- 	priv = hw->priv;
- 
--	rtl8xxxu_disable_device(hw);
-+	ieee80211_unregister_hw(hw);
-+
-+	priv->fops->power_off(priv);
-+
- 	usb_set_intfdata(interface, NULL);
- 
- 	dev_info(&priv->udev->dev, "disconnecting\n");
- 
--	ieee80211_unregister_hw(hw);
--
- 	kfree(priv->fw_data);
- 	mutex_destroy(&priv->usb_buf_mutex);
- 	mutex_destroy(&priv->h2c_mutex);
--- 
-2.5.5
+Kalle Valo (8):
+      ath10k: remove deprecated firmware API 1 support
+      ath10k: refactor firmware images to struct ath10k_fw_components
+      ath10k: move fw_version inside struct ath10k_fw_file
+      ath10k: move fw_features to struct ath10k_fw_file
+      ath10k: move wmi_op_version to struct ath10k_fw_file
+      ath10k: move htt_op_version to struct ath10k_fw_file
+      ath10k: switch testmode to use ath10k_core_fetch_firmware_api_n()
+      ath10k: remove enum ath10k_swap_code_seg_bin_type
+
+
+ drivers/net/wireless/ath/ath10k/core.c     |  321 ++++++++++++----------------
+ drivers/net/wireless/ath/ath10k/core.h     |   64 +++---
+ drivers/net/wireless/ath/ath10k/debug.c    |   32 ++-
+ drivers/net/wireless/ath/ath10k/htt.c      |    2 
+ drivers/net/wireless/ath/ath10k/htt.h      |    1 
+ drivers/net/wireless/ath/ath10k/htt_rx.c   |    2 
+ drivers/net/wireless/ath/ath10k/htt_tx.c   |    9 +
+ drivers/net/wireless/ath/ath10k/hw.h       |    2 
+ drivers/net/wireless/ath/ath10k/mac.c      |   21 +-
+ drivers/net/wireless/ath/ath10k/pci.c      |    1 
+ drivers/net/wireless/ath/ath10k/swap.c     |   43 ++--
+ drivers/net/wireless/ath/ath10k/swap.h     |    9 -
+ drivers/net/wireless/ath/ath10k/testmode.c |  193 +++--------------
+ drivers/net/wireless/ath/ath10k/wmi.c      |   13 -
+ drivers/net/wireless/ath/ath10k/wow.c      |    7 -
+ 15 files changed, 276 insertions(+), 444 deletions(-)
 
