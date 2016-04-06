@@ -1,48 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53832 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751221AbcDZJ1e (ORCPT
+Received: from mail-qk0-f169.google.com ([209.85.220.169]:33708 "EHLO
+	mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754935AbcDFJ1n (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 05:27:34 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 6 Apr 2016 05:27:43 -0400
+Received: by mail-qk0-f169.google.com with SMTP id k135so11461134qke.0
+        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2016 02:27:43 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [01/16] rtl8xxxu: Rename rtl8723bu_update_rate_mask()
- tortl8xxxu_gen2_update_rate_mask()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1460994576-24091-2-git-send-email-Jes.Sorensen@redhat.com>
-To: Jes Sorensen <Jes.Sorensen@redhat.com>
-Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Message-Id: <20160426092733.29C10601A1@smtp.codeaurora.org> (sfid-20160426_112738_263884_BC32DAEE)
-Date: Tue, 26 Apr 2016 09:27:33 +0000 (UTC)
+Date: Wed, 6 Apr 2016 12:27:42 +0300
+Message-ID: <CAFSVvRc2N+ONKsvweOPRHHrtFDfhKPxXDVM9fsaa+Sd=qAdEgw@mail.gmail.com> (sfid-20160406_112747_821871_713DBF62)
+Subject: [PATCH] NETLINK_URELEASE non-bound socket problem
+From: Dmitrijs Ivanovs <dmitrijs.ivanovs@ubnt.com>
+To: linux-wireless@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Currently, any non-privileged user can create netlink socket
+with port_id equal to port_id used by hostapd to create wireless network
+interfaces on-the-fly when more than one BSS is configured. When such socket
+is closed, nl80211 will receive socket release notification and such virtual
+interfaces will be removed while hostapd is still running.
 
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
-> 
-> Update the name of rtl8723bu_update_rate_mask() to make it reflect
-> it's applicable for all/most gen2 N parts.
-> 
-> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+This patch introduces two additional checks to correct the problem:
 
-Thanks, 16 patches applied to wireless-drivers-next.git:
+1) Do not send netlink socket release notification when socket is not
+bound.
+2) Check protocol number in nl80211 netlink socket release notification
+handler.
 
-a8c8dfa59319 rtl8xxxu: Rename rtl8723bu_update_rate_mask() to rtl8xxxu_gen2_update_rate_mask()
-32353a784f43 rtl8xxxu: Rename rtl8723bu_report_connect() to rtl8xxxu_gen2_report_connect()
-beb5531619c6 rtl8xxxu: Rename rtl8723au_report_connect() to rtl8xxxu_gen1_report_connect()
-3a56bf6aa13c rtl8xxxu: Rename rtl8723bu_config_channel() to rtl8xxxu_gen2_config_channel()
-6a07b7915afe rtl8xxxu: Rename rtl8723b_disable_rf() to rtl8xxxu_gen2_disable_rf()
-7eb1400c2479 rtl8xxxu: Rename rtl8723a_disable_rf() to rtl8xxxu_gen1_disable_rf()
-e09718c2fddf rtl8xxxu: Rename rtl8723au_config_channel() to rtl8xxxu_gen1_config_channel()
-c6e39da02e17 rtl8xxxu: Rename rtl8723au_update_rate_mask() to rtl8xxxu_update_rate_mask()
-28466e921402 rtl8xxxu: Rename rtl8723au_phy_iq_calibrate() to rtl8xxxu_gen1_phy_iq_calibrate()
-de7c189c342d rtl8xxxu: Rename rtl8723au_init_phy_bb() to rtl8xxxu_gen1_init_phy_bb()
-42a3bc7a2a85 rtl8xxxu: Rename rtl8723a_set_tx_power() to rtl8xxxu_gen1_set_tx_power()
-8396a41cf747 rtl8xxxu: Rename rtl8723a_enable_rf() to rtl8xxxu_gen1_enable_rf()
-8db71451e5c4 rtl8xxxu: Rename rtl8723a_mac_init_table to rtl8xxxu_gen1_mac_init_table
-5ac74145487d rtl8xxxu: Rename rtl8723b_channel_to_group()
-85f466350abf rtl8xxxu: Rename rtl8723bu_simularity_compare()
-04a74a9f8af0 rtl8xxxu: Rename rtl8723au_iqk_phy_iq_bb_reg
+Signed-off-by: Dmitry Ivanov <dima@ubnt.com>
+---
+ net/netlink/af_netlink.c | 2 +-
+ net/wireless/nl80211.c   | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Kalle Valo
+diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
+index 215fc08..330ebd6 100644
+--- a/net/netlink/af_netlink.c
++++ b/net/netlink/af_netlink.c
+@@ -688,7 +688,7 @@ static int netlink_release(struct socket *sock)
+
+     skb_queue_purge(&sk->sk_write_queue);
+
+-    if (nlk->portid) {
++    if (nlk->portid && nlk->bound) {
+         struct netlink_notify n = {
+                         .net = sock_net(sk),
+                         .protocol = sk->sk_protocol,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index 98c9242..056a730 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -13216,7 +13216,7 @@ static int nl80211_netlink_notify(struct
+notifier_block * nb,
+     struct wireless_dev *wdev;
+     struct cfg80211_beacon_registration *reg, *tmp;
+
+-    if (state != NETLINK_URELEASE)
++    if (state != NETLINK_URELEASE || notify->protocol != NETLINK_GENERIC)
+         return NOTIFY_DONE;
+
+     rcu_read_lock();
+-- 
+2.1.4
