@@ -1,202 +1,124 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:60772 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:10773 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752956AbcDFOqR (ORCPT
+	with ESMTP id S1752361AbcDFOj3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 10:46:17 -0400
-Subject: [PATCH 7/8] ath10k: switch testmode to use
- ath10k_core_fetch_firmware_api_n()
-To: <ath10k@lists.infradead.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
+	Wed, 6 Apr 2016 10:39:29 -0400
+From: Jouni Malinen <jouni@qca.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
 CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 6 Apr 2016 17:46:06 +0300
-Message-ID: <20160406144606.28399.65796.stgit@potku.adurom.net> (sfid-20160406_164620_110307_3E44C7A5)
-In-Reply-To: <20160406144355.28399.23733.stgit@potku.adurom.net>
-References: <20160406144355.28399.23733.stgit@potku.adurom.net>
+Subject: [PATCH] cfg80211: Improve Connect/Associate command documentation
+Date: Wed, 6 Apr 2016 17:38:44 +0300
+Message-ID: <1459953524-12590-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20160406_163933_986534_5890A1FB)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Now that all firmware-N.bin related are within struct ath10k_fw_file we can
-switch to use ath10k_core_fetch_firmware_api_n() and delete almost identical
-ath10k_tm_fetch_utf_firmware_api_2().
+The roaming cases for the Connect command were not fully covered and
+neither Connect nor Associate command uses of the prev_bssid parameter
+were very clear. Add details to describe how the prev_bssid argument is
+supposed to be used and when the driver should use association or
+reassociation.
 
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
 ---
- drivers/net/wireless/ath/ath10k/core.c     |    4 -
- drivers/net/wireless/ath/ath10k/core.h     |    2 
- drivers/net/wireless/ath/ath10k/testmode.c |  124 ----------------------------
- 3 files changed, 6 insertions(+), 124 deletions(-)
+ include/net/cfg80211.h       | 26 +++++++++++++++++++++++---
+ include/uapi/linux/nl80211.h | 16 +++++++++++++---
+ 2 files changed, 36 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 4b1fc4b99205..d0cecab5aaec 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -976,8 +976,8 @@ success:
- 	return 0;
- }
- 
--static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
--					    struct ath10k_fw_file *fw_file)
-+int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
-+				     struct ath10k_fw_file *fw_file)
- {
- 	size_t magic_len, len, ie_len;
- 	int ie_id, i, index, bit, ret;
-diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
-index b779e059a9c3..c18043fd0093 100644
---- a/drivers/net/wireless/ath/ath10k/core.h
-+++ b/drivers/net/wireless/ath/ath10k/core.h
-@@ -932,6 +932,8 @@ void ath10k_core_destroy(struct ath10k *ar);
- void ath10k_core_get_fw_features_str(struct ath10k *ar,
- 				     char *buf,
- 				     size_t max_len);
-+int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name,
-+				     struct ath10k_fw_file *fw_file);
- 
- int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode,
- 		      const struct ath10k_fw_components *fw_components);
-diff --git a/drivers/net/wireless/ath/ath10k/testmode.c b/drivers/net/wireless/ath/ath10k/testmode.c
-index 2d9a3f56213f..81fe266f7990 100644
---- a/drivers/net/wireless/ath/ath10k/testmode.c
-+++ b/drivers/net/wireless/ath/ath10k/testmode.c
-@@ -139,127 +139,6 @@ static int ath10k_tm_cmd_get_version(struct ath10k *ar, struct nlattr *tb[])
- 	return cfg80211_testmode_reply(skb);
- }
- 
--static int ath10k_tm_fetch_utf_firmware_api_2(struct ath10k *ar,
--					      struct ath10k_fw_file *fw_file)
--{
--	size_t len, magic_len, ie_len;
--	struct ath10k_fw_ie *hdr;
--	char filename[100];
--	__le32 *version;
--	const u8 *data;
--	int ie_id, ret;
--
--	snprintf(filename, sizeof(filename), "%s/%s",
--		 ar->hw_params.fw.dir, ATH10K_FW_UTF_API2_FILE);
--
--	/* load utf firmware image */
--	ret = request_firmware(&fw_file->firmware, filename, ar->dev);
--	if (ret) {
--		ath10k_warn(ar, "failed to retrieve utf firmware '%s': %d\n",
--			    filename, ret);
--		return ret;
--	}
--
--	data = fw_file->firmware->data;
--	len = fw_file->firmware->size;
--
--	/* FIXME: call release_firmware() in error cases */
--
--	/* magic also includes the null byte, check that as well */
--	magic_len = strlen(ATH10K_FIRMWARE_MAGIC) + 1;
--
--	if (len < magic_len) {
--		ath10k_err(ar, "utf firmware file is too small to contain magic\n");
--		ret = -EINVAL;
--		goto err;
--	}
--
--	if (memcmp(data, ATH10K_FIRMWARE_MAGIC, magic_len) != 0) {
--		ath10k_err(ar, "invalid firmware magic\n");
--		ret = -EINVAL;
--		goto err;
--	}
--
--	/* jump over the padding */
--	magic_len = ALIGN(magic_len, 4);
--
--	len -= magic_len;
--	data += magic_len;
--
--	/* loop elements */
--	while (len > sizeof(struct ath10k_fw_ie)) {
--		hdr = (struct ath10k_fw_ie *)data;
--
--		ie_id = le32_to_cpu(hdr->id);
--		ie_len = le32_to_cpu(hdr->len);
--
--		len -= sizeof(*hdr);
--		data += sizeof(*hdr);
--
--		if (len < ie_len) {
--			ath10k_err(ar, "invalid length for FW IE %d (%zu < %zu)\n",
--				   ie_id, len, ie_len);
--			ret = -EINVAL;
--			goto err;
--		}
--
--		switch (ie_id) {
--		case ATH10K_FW_IE_FW_VERSION:
--			if (ie_len > sizeof(fw_file->fw_version) - 1)
--				break;
--
--			memcpy(fw_file->fw_version, data, ie_len);
--			fw_file->fw_version[ie_len] = '\0';
--
--			ath10k_dbg(ar, ATH10K_DBG_TESTMODE,
--				   "testmode found fw utf version %s\n",
--				   fw_file->fw_version);
--			break;
--		case ATH10K_FW_IE_TIMESTAMP:
--			/* ignore timestamp, but don't warn about it either */
--			break;
--		case ATH10K_FW_IE_FW_IMAGE:
--			ath10k_dbg(ar, ATH10K_DBG_TESTMODE,
--				   "testmode found fw image ie (%zd B)\n",
--				   ie_len);
--
--			fw_file->firmware_data = data;
--			fw_file->firmware_len = ie_len;
--			break;
--		case ATH10K_FW_IE_WMI_OP_VERSION:
--			if (ie_len != sizeof(u32))
--				break;
--			version = (__le32 *)data;
--			fw_file->wmi_op_version = le32_to_cpup(version);
--			ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode found fw ie wmi op version %d\n",
--				   fw_file->wmi_op_version);
--			break;
--		default:
--			ath10k_warn(ar, "Unknown testmode FW IE: %u\n",
--				    le32_to_cpu(hdr->id));
--			break;
--		}
--		/* jump over the padding */
--		ie_len = ALIGN(ie_len, 4);
--
--		len -= ie_len;
--		data += ie_len;
--	}
--
--	if (!fw_file->firmware_data || !fw_file->firmware_len) {
--		ath10k_err(ar, "No ATH10K_FW_IE_FW_IMAGE found\n");
--		ret = -EINVAL;
--		goto err;
--	}
--
--	return 0;
--
--err:
--	release_firmware(fw_file->firmware);
--
--	return ret;
--}
--
- static int ath10k_tm_fetch_utf_firmware_api_1(struct ath10k *ar,
- 					      struct ath10k_fw_file *fw_file)
- {
-@@ -295,7 +174,8 @@ static int ath10k_tm_fetch_firmware(struct ath10k *ar)
- {
- 	int ret;
- 
--	ret = ath10k_tm_fetch_utf_firmware_api_2(ar, &ar->testmode.utf_mode_fw.fw_file);
-+	ret = ath10k_core_fetch_firmware_api_n(ar, ATH10K_FW_UTF_API2_FILE,
-+					       &ar->testmode.utf_mode_fw.fw_file);
- 	if (ret == 0) {
- 		ath10k_dbg(ar, ATH10K_DBG_TESTMODE, "testmode using fw utf api 2");
- 		goto out;
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index b39277e..5ec2036 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1750,7 +1750,12 @@ enum cfg80211_assoc_req_flags {
+  * @ie_len: Length of ie buffer in octets
+  * @use_mfp: Use management frame protection (IEEE 802.11w) in this association
+  * @crypto: crypto settings
+- * @prev_bssid: previous BSSID, if not %NULL use reassociate frame
++ * @prev_bssid: previous BSSID, if not %NULL use reassociate frame. This is used
++ *	to indicate a request to reassociate within the ESS instead of a request
++ *	do the initial association with the ESS. When included, this is set to
++ *	the BSSID of the current association, i.e., to the value that is
++ *	included in the Current AP address field of the Reassociation Request
++ *	frame.
+  * @flags:  See &enum cfg80211_assoc_req_flags
+  * @ht_capa:  HT Capabilities over-rides.  Values set in ht_capa_mask
+  *	will be used in ht_capa.  Un-supported values will be ignored.
+@@ -1925,7 +1930,12 @@ struct cfg80211_bss_selection {
+  * @pbss: if set, connect to a PCP instead of AP. Valid for DMG
+  *	networks.
+  * @bss_select: criteria to be used for BSS selection.
+- * @prev_bssid: previous BSSID, if not %NULL use reassociate frame
++ * @prev_bssid: previous BSSID, if not %NULL use reassociate frame. This is used
++ *	to indicate a request to reassociate within the ESS instead of a request
++ *	do the initial association with the ESS. When included, this is set to
++ *	the BSSID of the current association, i.e., to the value that is
++ *	included in the Current AP address field of the Reassociation Request
++ *	frame.
+  */
+ struct cfg80211_connect_params {
+ 	struct ieee80211_channel *channel;
+@@ -2377,7 +2387,17 @@ struct cfg80211_qos_map {
+  * @connect: Connect to the ESS with the specified parameters. When connected,
+  *	call cfg80211_connect_result() with status code %WLAN_STATUS_SUCCESS.
+  *	If the connection fails for some reason, call cfg80211_connect_result()
+- *	with the status from the AP.
++ *	with the status from the AP. The driver is allowed to roam to other
++ *	BSSes within the ESS when the other BSS matches the connect parameters.
++ *	When such roaming is initiated by the driver, the driver is expected to
++ *	verify that the target matches the configured security parameters and
++ *	to use Reassociation Request frame instead of Association Request frame.
++ *	The connect function can also be used to request the driver to perform
++ *	a specific roam when connected to an ESS. In that case, the prev_bssid
++ *	parameter is set to the BSSID of the currently associated BSS as an
++ *	indication of requesting reassociation. In both the driver-initiated and
++ *	new connect() call initiated roaming cases, the result of roaming is
++ *	indicated with a call to cfg80211_roamed() or cfg80211_roamed_bss().
+  *	(invoked with the wireless_dev mutex held)
+  * @disconnect: Disconnect from the BSS/ESS.
+  *	(invoked with the wireless_dev mutex held)
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index 6da52d7..b460628 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -429,7 +429,11 @@
+  * @NL80211_CMD_ASSOCIATE: association request and notification; like
+  *	NL80211_CMD_AUTHENTICATE but for Association and Reassociation
+  *	(similar to MLME-ASSOCIATE.request, MLME-REASSOCIATE.request,
+- *	MLME-ASSOCIATE.confirm or MLME-REASSOCIATE.confirm primitives).
++ *	MLME-ASSOCIATE.confirm or MLME-REASSOCIATE.confirm primitives). The
++ *	%NL80211_ATTR_PREV_BSSID attribute is used to specify whether the
++ *	request is for the initial association to an ESS (that attribute not
++ *	included) or for reassociation within the ESS (that attribute is
++ *	included).
+  * @NL80211_CMD_DEAUTHENTICATE: deauthentication request and notification; like
+  *	NL80211_CMD_AUTHENTICATE but for Deauthentication frames (similar to
+  *	MLME-DEAUTHENTICATION.request and MLME-DEAUTHENTICATE.indication
+@@ -479,6 +483,9 @@
+  *	set of BSSID,frequency parameters is used (i.e., either the enforcing
+  *	%NL80211_ATTR_MAC,%NL80211_ATTR_WIPHY_FREQ or the less strict
+  *	%NL80211_ATTR_MAC_HINT and %NL80211_ATTR_WIPHY_FREQ_HINT).
++ *	%NL80211_ATTR_PREV_BSSID can be used to request a reassociation within
++ *	the ESS in case the device is already associated and an association with
++ *	a different BSS is desired.
+  *	Background scan period can optionally be
+  *	specified in %NL80211_ATTR_BG_SCAN_PERIOD,
+  *	if not specified default background scan configuration
+@@ -1287,8 +1294,11 @@ enum nl80211_commands {
+  * @NL80211_ATTR_RESP_IE: (Re)association response information elements as
+  *	sent by peer, for ROAM and successful CONNECT events.
+  *
+- * @NL80211_ATTR_PREV_BSSID: previous BSSID, to be used by in ASSOCIATE
+- *	commands to specify using a reassociate frame
++ * @NL80211_ATTR_PREV_BSSID: previous BSSID, to be used in ASSOCIATE and CONNECT
++ *	commands to specify a request to reassociate within an ESS, i.e., to use
++ *	Reassociate Request frame (with the value of this attribute in the
++ *	Current AP address field) instead of Association Request frame which is
++ *	used for the initial association to an ESS.
+  *
+  * @NL80211_ATTR_KEY: key information in a nested attribute with
+  *	%NL80211_KEY_* sub-attributes
+-- 
+1.9.1
 
