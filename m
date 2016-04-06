@@ -1,48 +1,261 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:34885 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751167AbcDRFQx convert rfc822-to-8bit (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:61958 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752563AbcDFOo4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 01:16:53 -0400
-Received: by mail-wm0-f52.google.com with SMTP id a140so102769625wma.0
-        for <linux-wireless@vger.kernel.org>; Sun, 17 Apr 2016 22:16:53 -0700 (PDT)
+	Wed, 6 Apr 2016 10:44:56 -0400
+Subject: [PATCH 1/8] ath10k: remove deprecated firmware API 1 support
+To: <ath10k@lists.infradead.org>
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 6 Apr 2016 17:44:45 +0300
+Message-ID: <20160406144445.28399.74306.stgit@potku.adurom.net> (sfid-20160406_164500_943674_3EA8CE7D)
+In-Reply-To: <20160406144355.28399.23733.stgit@potku.adurom.net>
+References: <20160406144355.28399.23733.stgit@potku.adurom.net>
 MIME-Version: 1.0
-In-Reply-To: <1460845552.2075.28.camel@sipsolutions.net>
-References: <1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
-	<1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
-	<1460636302-31161-3-git-send-email-michal.kazior@tieto.com>
-	<1460845384.2075.27.camel@sipsolutions.net>
-	<1460845552.2075.28.camel@sipsolutions.net>
-Date: Mon, 18 Apr 2016 07:16:52 +0200
-Message-ID: <CA+BoTQmuTAjR-cSuJmsAm5Ms3sTrtPT8HxE_tYf1EGOMGeHVcw@mail.gmail.com> (sfid-20160418_071658_963225_AB8106CE)
-Subject: Re: [PATCHv3 2/5] mac80211: implement fair queueing per txq
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Dave Taht <dave.taht@gmail.com>,
-	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net,
-	Avery Pennarun <apenwarr@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 April 2016 at 00:25, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Sun, 2016-04-17 at 00:23 +0200, Johannes Berg wrote:
->> On Thu, 2016-04-14 at 14:18 +0200, Michal Kazior wrote:
->> >
->> >
->> > +++ b/net/mac80211/fq.h
->> >
->> Now that you've mostly rewritten it, why keep it in a .h file?
->>
->
-> I think I just confused this with codel.h, but still - why a .h file
-> with all this "real" code, meaning the file can really only be included
-> once?
+This has ben deprecated years ago, I haven't heard anyone using it since and
+most likely it won't even work anymore. So just remove all of it.
 
-I guess .h file can give the compiler an opportunity for more
-optimizations. With .c you would need LTO which I'm not sure if it's
-available everywhere.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/core.c |   73 --------------------------------
+ drivers/net/wireless/ath/ath10k/core.h |    3 -
+ drivers/net/wireless/ath/ath10k/hw.h   |    2 -
+ drivers/net/wireless/ath/ath10k/pci.c  |    1 
+ drivers/net/wireless/ath/ath10k/wmi.c  |    4 --
+ 5 files changed, 83 deletions(-)
 
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index b2c7fe3d30a4..a04e911bd7e9 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -63,8 +63,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.cal_data_len = 2116,
+ 		.fw = {
+ 			.dir = QCA988X_HW_2_0_FW_DIR,
+-			.fw = QCA988X_HW_2_0_FW_FILE,
+-			.otp = QCA988X_HW_2_0_OTP_FILE,
+ 			.board = QCA988X_HW_2_0_BOARD_DATA_FILE,
+ 			.board_size = QCA988X_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA988X_BOARD_EXT_DATA_SZ,
+@@ -82,8 +80,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.cal_data_len = 8124,
+ 		.fw = {
+ 			.dir = QCA6174_HW_2_1_FW_DIR,
+-			.fw = QCA6174_HW_2_1_FW_FILE,
+-			.otp = QCA6174_HW_2_1_OTP_FILE,
+ 			.board = QCA6174_HW_2_1_BOARD_DATA_FILE,
+ 			.board_size = QCA6174_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA6174_BOARD_EXT_DATA_SZ,
+@@ -102,8 +98,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.cal_data_len = 8124,
+ 		.fw = {
+ 			.dir = QCA6174_HW_2_1_FW_DIR,
+-			.fw = QCA6174_HW_2_1_FW_FILE,
+-			.otp = QCA6174_HW_2_1_OTP_FILE,
+ 			.board = QCA6174_HW_2_1_BOARD_DATA_FILE,
+ 			.board_size = QCA6174_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA6174_BOARD_EXT_DATA_SZ,
+@@ -122,8 +116,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.cal_data_len = 8124,
+ 		.fw = {
+ 			.dir = QCA6174_HW_3_0_FW_DIR,
+-			.fw = QCA6174_HW_3_0_FW_FILE,
+-			.otp = QCA6174_HW_3_0_OTP_FILE,
+ 			.board = QCA6174_HW_3_0_BOARD_DATA_FILE,
+ 			.board_size = QCA6174_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA6174_BOARD_EXT_DATA_SZ,
+@@ -143,8 +135,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.fw = {
+ 			/* uses same binaries as hw3.0 */
+ 			.dir = QCA6174_HW_3_0_FW_DIR,
+-			.fw = QCA6174_HW_3_0_FW_FILE,
+-			.otp = QCA6174_HW_3_0_OTP_FILE,
+ 			.board = QCA6174_HW_3_0_BOARD_DATA_FILE,
+ 			.board_size = QCA6174_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA6174_BOARD_EXT_DATA_SZ,
+@@ -167,8 +157,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.cal_data_len = 12064,
+ 		.fw = {
+ 			.dir = QCA99X0_HW_2_0_FW_DIR,
+-			.fw = QCA99X0_HW_2_0_FW_FILE,
+-			.otp = QCA99X0_HW_2_0_OTP_FILE,
+ 			.board = QCA99X0_HW_2_0_BOARD_DATA_FILE,
+ 			.board_size = QCA99X0_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA99X0_BOARD_EXT_DATA_SZ,
+@@ -186,8 +174,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.cal_data_len = 8124,
+ 		.fw = {
+ 			.dir = QCA9377_HW_1_0_FW_DIR,
+-			.fw = QCA9377_HW_1_0_FW_FILE,
+-			.otp = QCA9377_HW_1_0_OTP_FILE,
+ 			.board = QCA9377_HW_1_0_BOARD_DATA_FILE,
+ 			.board_size = QCA9377_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
+@@ -205,8 +191,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.cal_data_len = 8124,
+ 		.fw = {
+ 			.dir = QCA9377_HW_1_0_FW_DIR,
+-			.fw = QCA9377_HW_1_0_FW_FILE,
+-			.otp = QCA9377_HW_1_0_OTP_FILE,
+ 			.board = QCA9377_HW_1_0_BOARD_DATA_FILE,
+ 			.board_size = QCA9377_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA9377_BOARD_EXT_DATA_SZ,
+@@ -229,8 +213,6 @@ static const struct ath10k_hw_params ath10k_hw_params_list[] = {
+ 		.cal_data_len = 12064,
+ 		.fw = {
+ 			.dir = QCA4019_HW_1_0_FW_DIR,
+-			.fw = QCA4019_HW_1_0_FW_FILE,
+-			.otp = QCA4019_HW_1_0_OTP_FILE,
+ 			.board = QCA4019_HW_1_0_BOARD_DATA_FILE,
+ 			.board_size = QCA4019_BOARD_DATA_SZ,
+ 			.board_ext_size = QCA4019_BOARD_EXT_DATA_SZ,
+@@ -703,9 +685,6 @@ static void ath10k_core_free_board_files(struct ath10k *ar)
+ 
+ static void ath10k_core_free_firmware_files(struct ath10k *ar)
+ {
+-	if (!IS_ERR(ar->otp))
+-		release_firmware(ar->otp);
+-
+ 	if (!IS_ERR(ar->firmware))
+ 		release_firmware(ar->firmware);
+ 
+@@ -714,7 +693,6 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
+ 
+ 	ath10k_swap_code_seg_release(ar);
+ 
+-	ar->otp = NULL;
+ 	ar->otp_data = NULL;
+ 	ar->otp_len = 0;
+ 
+@@ -1000,50 +978,6 @@ success:
+ 	return 0;
+ }
+ 
+-static int ath10k_core_fetch_firmware_api_1(struct ath10k *ar)
+-{
+-	int ret = 0;
+-
+-	if (ar->hw_params.fw.fw == NULL) {
+-		ath10k_err(ar, "firmware file not defined\n");
+-		return -EINVAL;
+-	}
+-
+-	ar->firmware = ath10k_fetch_fw_file(ar,
+-					    ar->hw_params.fw.dir,
+-					    ar->hw_params.fw.fw);
+-	if (IS_ERR(ar->firmware)) {
+-		ret = PTR_ERR(ar->firmware);
+-		ath10k_err(ar, "could not fetch firmware (%d)\n", ret);
+-		goto err;
+-	}
+-
+-	ar->firmware_data = ar->firmware->data;
+-	ar->firmware_len = ar->firmware->size;
+-
+-	/* OTP may be undefined. If so, don't fetch it at all */
+-	if (ar->hw_params.fw.otp == NULL)
+-		return 0;
+-
+-	ar->otp = ath10k_fetch_fw_file(ar,
+-				       ar->hw_params.fw.dir,
+-				       ar->hw_params.fw.otp);
+-	if (IS_ERR(ar->otp)) {
+-		ret = PTR_ERR(ar->otp);
+-		ath10k_err(ar, "could not fetch otp (%d)\n", ret);
+-		goto err;
+-	}
+-
+-	ar->otp_data = ar->otp->data;
+-	ar->otp_len = ar->otp->size;
+-
+-	return 0;
+-
+-err:
+-	ath10k_core_free_firmware_files(ar);
+-	return ret;
+-}
+-
+ static int ath10k_core_fetch_firmware_api_n(struct ath10k *ar, const char *name)
+ {
+ 	size_t magic_len, len, ie_len;
+@@ -1253,13 +1187,6 @@ static int ath10k_core_fetch_firmware_files(struct ath10k *ar)
+ 	ath10k_dbg(ar, ATH10K_DBG_BOOT, "trying fw api %d\n", ar->fw_api);
+ 
+ 	ret = ath10k_core_fetch_firmware_api_n(ar, ATH10K_FW_API2_FILE);
+-	if (ret == 0)
+-		goto success;
+-
+-	ar->fw_api = 1;
+-	ath10k_dbg(ar, ATH10K_DBG_BOOT, "trying fw api %d\n", ar->fw_api);
+-
+-	ret = ath10k_core_fetch_firmware_api_1(ar);
+ 	if (ret)
+ 		return ret;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index e6f889df1e0d..2d0cc92f3c5b 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -708,8 +708,6 @@ struct ath10k {
+ 
+ 		struct ath10k_hw_params_fw {
+ 			const char *dir;
+-			const char *fw;
+-			const char *otp;
+ 			const char *board;
+ 			size_t board_size;
+ 			size_t board_ext_size;
+@@ -720,7 +718,6 @@ struct ath10k {
+ 	const void *board_data;
+ 	size_t board_len;
+ 
+-	const struct firmware *otp;
+ 	const void *otp_data;
+ 	size_t otp_len;
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/hw.h b/drivers/net/wireless/ath/ath10k/hw.h
+index c0179bc4af29..39fbd3c58e53 100644
+--- a/drivers/net/wireless/ath/ath10k/hw.h
++++ b/drivers/net/wireless/ath/ath10k/hw.h
+@@ -35,8 +35,6 @@
+ #define QCA988X_HW_2_0_VERSION		0x4100016c
+ #define QCA988X_HW_2_0_CHIP_ID_REV	0x2
+ #define QCA988X_HW_2_0_FW_DIR		ATH10K_FW_DIR "/QCA988X/hw2.0"
+-#define QCA988X_HW_2_0_FW_FILE		"firmware.bin"
+-#define QCA988X_HW_2_0_OTP_FILE		"otp.bin"
+ #define QCA988X_HW_2_0_BOARD_DATA_FILE	"board.bin"
+ #define QCA988X_HW_2_0_PATCH_LOAD_ADDR	0x1234
+ 
+diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
+index 3dc111ff2bb6..77d256659736 100644
+--- a/drivers/net/wireless/ath/ath10k/pci.c
++++ b/drivers/net/wireless/ath/ath10k/pci.c
+@@ -3179,7 +3179,6 @@ MODULE_DESCRIPTION("Driver support for Atheros QCA988X PCIe devices");
+ MODULE_LICENSE("Dual BSD/GPL");
+ 
+ /* QCA988x 2.0 firmware files */
+-MODULE_FIRMWARE(QCA988X_HW_2_0_FW_DIR "/" QCA988X_HW_2_0_FW_FILE);
+ MODULE_FIRMWARE(QCA988X_HW_2_0_FW_DIR "/" ATH10K_FW_API2_FILE);
+ MODULE_FIRMWARE(QCA988X_HW_2_0_FW_DIR "/" ATH10K_FW_API3_FILE);
+ MODULE_FIRMWARE(QCA988X_HW_2_0_FW_DIR "/" ATH10K_FW_API4_FILE);
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index d64e8681898d..c68cec07731e 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -4604,10 +4604,6 @@ static void ath10k_wmi_event_service_ready_work(struct work_struct *work)
+ 	ath10k_dbg_dump(ar, ATH10K_DBG_WMI, NULL, "wmi svc: ",
+ 			arg.service_map, arg.service_map_len);
+ 
+-	/* only manually set fw features when not using FW IE format */
+-	if (ar->fw_api == 1 && ar->fw_version_build > 636)
+-		set_bit(ATH10K_FW_FEATURE_EXT_WMI_MGMT_RX, ar->fw_features);
+-
+ 	if (ar->num_rf_chains > ar->max_spatial_stream) {
+ 		ath10k_warn(ar, "hardware advertises support for more spatial streams than it should (%d > %d)\n",
+ 			    ar->num_rf_chains, ar->max_spatial_stream);
 
-Michał
