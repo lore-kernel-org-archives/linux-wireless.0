@@ -1,49 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:53384 "EHLO
-	mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752269AbcD2FGi (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2016 01:06:38 -0400
-Date: Thu, 28 Apr 2016 22:06:37 -0700
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Cc: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>, devel@driverdev.osuosl.org,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/2] staging: wilc1000: fix double unlock
-Message-ID: <20160429050637.GA15672@kroah.com> (sfid-20160429_070700_067182_8E48C114)
-References: <1460647129-22740-1-git-send-email-sudipm.mukherjee@gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <1460647129-22740-1-git-send-email-sudipm.mukherjee@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:55173 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757303AbcDGSTe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2016 14:19:34 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 11/18] rtl8xxxu: Handle XTAL value setting on 8192eu
+Date: Thu,  7 Apr 2016 14:19:26 -0400
+Message-Id: <1460053173-8494-12-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160407_202008_108793_03DC9466)
+In-Reply-To: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 14, 2016 at 08:48:48PM +0530, Sudip Mukherjee wrote:
-> The semaphore was being released twice, once at the beginning of the
-> thread and then again when the thread is about to close.
-> The semaphore is acquired immediately after creating the thread so we
-> should be releasing it when the thread ends.
-> 
-> Signed-off-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
-> ---
->  drivers/staging/wilc1000/linux_wlan.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-> index a858552..5643a3d 100644
-> --- a/drivers/staging/wilc1000/linux_wlan.c
-> +++ b/drivers/staging/wilc1000/linux_wlan.c
-> @@ -313,7 +313,6 @@ static int linux_wlan_txq_task(void *vp)
->  	vif = netdev_priv(dev);
->  	wl = vif->wilc;
->  
-> -	up(&wl->txq_thread_started);
->  	while (1) {
->  		down(&wl->txq_event);
->  
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Doesn't apply to my tree at all :(
+Set REG_AFE_XTAL_CTRL on 8192eu to the vendor driver value, and do not
+skip setting REG_MAX_AGGR_NUM on 8192eu.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 356fdf3..3c732ed 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -3608,7 +3608,7 @@ rtl8xxxu_init_mac(struct rtl8xxxu_priv *priv)
+ 		}
+ 	}
+ 
+-	if (priv->rtl_chip != RTL8723B)
++	if (priv->rtl_chip != RTL8723B && priv->rtl_chip != RTL8192E)
+ 		rtl8xxxu_write8(priv, REG_MAX_AGGR_NUM, 0x0a);
+ 
+ 	return 0;
+@@ -3813,6 +3813,9 @@ static int rtl8xxxu_init_phy_bb(struct rtl8xxxu_priv *priv)
+ 		rtl8xxxu_write32(priv, REG_LDOA15_CTRL, val32);
+ 	}
+ 
++	if (priv->rtl_chip == RTL8192E)
++		rtl8xxxu_write32(priv, REG_AFE_XTAL_CTRL, 0x000f81fb);
++
+ 	return 0;
+ }
+ 
+-- 
+2.5.5
+
