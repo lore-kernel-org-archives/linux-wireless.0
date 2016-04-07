@@ -1,52 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mailout1.hostsharing.net ([83.223.95.204]:57981 "EHLO
-	mailout1.hostsharing.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752969AbcDXRBv (ORCPT
+Received: from smtprelay0131.hostedemail.com ([216.40.44.131]:50721 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750835AbcDGQGP (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 24 Apr 2016 13:01:51 -0400
-Date: Sun, 24 Apr 2016 19:04:23 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Andrew Worsley <amworsley@gmail.com>
-Cc: b43-dev@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
-Message-ID: <20160424170423.GB17019@wunner.de> (sfid-20160424_190158_676435_B2CEA168)
-References: <E1akxli-00030z-BC@bombadil.infradead.org>
- <CA+Y=x3=cLDHc7PK5h9n=ixdgVKWdVSu_v+-7jHJ-vBnDrv4sgg@mail.gmail.com>
- <20160403114912.GA11540@wunner.de>
- <CA+Y=x3nfe7CniNhruOhGmdxY3g4B1n3YRVWChoVYJns7D8pNEg@mail.gmail.com>
- <CA+Y=x3mVrSKMgzy74xtO5ZOc5kYLYU=iKZgqyjn0j94bXoebjg@mail.gmail.com>
- <20160412183202.GC13637@wunner.de>
- <CA+Y=x3mBm6==ffohf+aH2tHm9m+RSa7mZBJkDSvSmdCmEDdkNQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <CA+Y=x3mBm6==ffohf+aH2tHm9m+RSa7mZBJkDSvSmdCmEDdkNQ@mail.gmail.com>
+	Thu, 7 Apr 2016 12:06:15 -0400
+Message-ID: <1460045158.6715.93.camel@perches.com> (sfid-20160407_180618_348598_79BD15F7)
+Subject: Re: [PATCH 1/7] wil6210: add function name to wil log macros
+From: Joe Perches <joe@perches.com>
+To: "Haim, Maya" <merez@qti.qualcomm.com>,
+	qca_merez <qca_merez@qca.qualcomm.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	wil6210 <wil6210@qca.qualcomm.com>
+Date: Thu, 07 Apr 2016 09:05:58 -0700
+In-Reply-To: <bc848beb5cd947f9905b55983a76b6f5@euamsexm01a.eu.qualcomm.com>
+References: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
+	 <1459855447-17413-2-git-send-email-qca_merez@qca.qualcomm.com>
+	 <1459927177.6715.34.camel@perches.com>
+	 <bc848beb5cd947f9905b55983a76b6f5@euamsexm01a.eu.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Andrew,
+On Thu, 2016-04-07 at 15:04 +0000, Haim, Maya wrote:
+> On 4/6/2016 10:19 AM, Joe Perches wrote:
+> > On Tue, 2016-04-05 at 14:24 +0300, Maya Erez wrote:
+> > > Add __func__ to all wil log macros for easier debugging.
+> > I think this is unnecessary and merely bloats code size.
+> > For all the _dbg calls, dynamic debug can add function names if 
+> > desired.
+> > 
+> > If really desired, I suggest changing the logging functions to use 
+> > "%ps and __builtin_return_address(0)
+[]
+>  implemented it with __builtin_return_address(0) at first but found its format less readable (e.g. wil_start_xmit+0x58/0x7e8).
+> I agree that using __builtin_return_address(0) simplifies the code and I'm OK with your suggestion to use it.
 
-On Thu, Apr 14, 2016 at 06:42:50AM +1000, Andrew Worsley wrote:
-> The only time I am getting the IRQ 17 nobody cared message is on
-> suspend / resume. A fresh boot always had below the 100k interrupt
-> threshold level.
-> 
-> I tried your new patch and the number is even lower < 30,000 over two boots.
+I believe you must have used %pS and not %ps
 
-Hm, that's still way too much. You should have < 100 interrupts on IRQ 17
-on *every* boot, anything else isn't satisfactory. I'm working on a patch
-that runs before EFI ExitBootServices() but will need a little longer to
-find an optimal solution.
+See: Documentation/printk-formats.txt
 
+Symbols/Function Pointers:
 
-> Have you any insights on fixing suspend to disk  / resume paths which
-> presumably face the same issue of being passed live hardware on boot
-> up?
-
-Suspend to disk involves two kernels, the boot kernel and the image kernel.
-Perhaps these two are not the same on your machine and you've only compiled
-the patch into one of them?
-
-Best regards,
-
-Lukas
+	%pS	versatile_init+0x0/0x110
+	%ps	versatile_init
