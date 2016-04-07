@@ -1,40 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:49376 "EHLO sipsolutions.net"
+Received: from s3.sipsolutions.net ([5.9.151.49]:42961 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751918AbcDSLCc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 07:02:32 -0400
-Message-ID: <1461063747.2766.22.camel@sipsolutions.net> (sfid-20160419_130235_726838_73EE5F60)
-Subject: Re: [RFC] mac80211: add extap functionality
+	id S1751260AbcDGHNJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2016 03:13:09 -0400
+Message-ID: <1460013184.27154.1.camel@sipsolutions.net> (sfid-20160407_091313_369753_12834F88)
+Subject: Re: [PATCH 1/2] Do not send netlink socket release notification
+ when socket is not bound
 From: Johannes Berg <johannes@sipsolutions.net>
-To: Michal Kazior <michal.kazior@tieto.com>
-Cc: Felix Fietkau <nbd@openwrt.org>,
-	Grzegorz Bajorski <grzegorz.bajorski@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>
-Date: Tue, 19 Apr 2016 13:02:27 +0200
-In-Reply-To: <CA+BoTQ=Nw_pW3xk_zkRGw=kTXcfin8Py_xo+WMGsdLcgUiNV4Q@mail.gmail.com> (sfid-20160419_122209_567227_77BEBD32)
-References: <1455710131-9967-1-git-send-email-grzegorz.bajorski@tieto.com>
-	 <56C4A5ED.4060802@openwrt.org>
-	 <CA+BoTQnf953+s++Wiug=BgEw2Ahu7cN1fbatmgyWi_6iAg_v2Q@mail.gmail.com>
-	 <1461057103.2766.15.camel@sipsolutions.net>
-	 <CA+BoTQ=Nw_pW3xk_zkRGw=kTXcfin8Py_xo+WMGsdLcgUiNV4Q@mail.gmail.com>
-	 (sfid-20160419_122209_567227_77BEBD32)
+To: Dmitry Ivanov <dmitrijs.ivanovs@ubnt.com>,
+	linux-wireless@vger.kernel.org
+Date: Thu, 07 Apr 2016 09:13:04 +0200
+In-Reply-To: <20160406172248.b032ff227e4843a836e00802@ubnt.com> (sfid-20160406_162255_804347_6B014CD5)
+References: <20160406172248.b032ff227e4843a836e00802@ubnt.com>
+	 (sfid-20160406_162255_804347_6B014CD5)
 Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+On Wed, 2016-04-06 at 17:22 +0300, Dmitry Ivanov wrote:
+> This patch corrects the problem where non-privileged user may create
+> netlink socket with port_id equal to port_id used by hostapd to
+> create
+> virtual wireless network interfaces. Call to bind() will fail for
+> such
+> socket, but release notification sent on close() or process
+> termination
+> to nl80211 subsystem will destroy virtual network interfaces while
+> hostapd is still running.
+> 
+Thanks Dmitry.
 
+There are a number of issues with your patch still, such as describing
+the problem in too restricted ways (this problem is not specific to
+nl80211 nor fixed there). The subject should also have a proper prefix
+and you're not sending this patch to the right people.
 
-> > How much of that could be done with nftables btw?
-
-> I'm not sure if I follow. Do you mean what I've been able to do with
-> relayd until now? Without link-local ipv6 routing DHCPv6 is broken
-> (could probably addressed with DHCPv6 Relay to a certain degree) and
-> RS/RA may not work (if it propagates fe80:: routes). Also apps that
-> rely on fe80:: socket binding/addressing will fail.
-
-Ok, so that makes sense I guess - but you were speaking of some packet
-mangling etc. and I was wondering if the nftables virtual machine could
-actually do something like that.
+If you prefer, I can take ownership of these patches.
 
 johannes
