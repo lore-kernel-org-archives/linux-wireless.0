@@ -1,115 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f65.google.com ([209.85.215.65]:35896 "EHLO
-	mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752392AbcDEUCR (ORCPT
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:35409 "EHLO
+	mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755487AbcDGJjw (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 16:02:17 -0400
-Received: by mail-lf0-f65.google.com with SMTP id p81so2378403lfb.3
-        for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2016 13:02:16 -0700 (PDT)
-From: per.forlin@gmail.com
-To: linux-wireless@vger.kernel.org
-Cc: arend@broadcom.com, brudley@broadcom.com, frankyl@broadcom.com,
-	meuleman@broadcom.com, Per Forlin <per.forlin@gmail.com>
-Subject: [PATCH v2] brcmfmac: Don't increase 8021x_cnt for dropped packets
-Date: Tue,  5 Apr 2016 22:01:47 +0200
-Message-Id: <1459886507-26249-1-git-send-email-per.forlin@gmail.com> (sfid-20160405_220221_233417_F0D2E065)
+	Thu, 7 Apr 2016 05:39:52 -0400
+From: Shyam Saini <mayhs11saini@gmail.com>
+To: johnny.kim@atmel.com
+Cc: austin.shin@atmel.com, chris.park@atmel.com, tony.cho@atmel.com,
+	gregkh@linuxfoundation.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org,
+	Shyam Saini <mayhs11saini@gmail.com>
+Subject: [PATCH 525/525] Staging: Wilc1000: Fixed coding style ether_addr_copy
+Date: Thu,  7 Apr 2016 15:07:15 +0530
+Message-Id: <1460021835-8370-1-git-send-email-mayhs11saini@gmail.com> (sfid-20160407_114029_926625_E887B8CA)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Per Forlin <per.forlin@gmail.com>
+Fixed following warning detected by checkpatch.pl:
+warning: Prefer ether_addr_copy() over memcpy() if the Ethernet addressesare __aligned(2)
 
-The pend_8021x_cnt gets into a state where it's not being decreased.
-When the brcmf_netdev_wait_pend8021x is called it will timeout
-because there are no pending packets to be consumed. There is no
-easy way of getting out of this state once it has happened.
-Preventing the counter from being increased in case of dropped
-packets seem like a reasonable solution.
-
-Log showing overflow txq and increased cnt:
-
-// Extra debug prints
-brcmfmac: [brcmf_netdev_wait_pend8021x] pend_8021x_cnt == 0
-brcmfmac: [brcmf_netdev_start_xmit] pend_8021x_cnt == 1
-brcmfmac: [brcmf_netdev_start_xmit] pend_8021x_cnt == 2
-
-brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-brcmfmac: brcmf_sdio_bus_txdata: out of bus->txq !!!
-
-// Extra debug prints
-brcmfmac: [brcmf_netdev_start_xmit] pend_8021x_cnt == 3
-brcmfmac: [brcmf_netdev_start_xmit] pend_8021x_cnt == 4
-brcmfmac: [brcmf_netdev_wait_pend8021x] pend_8021x_cnt == 4
-
-WARNING: at .../brcmfmac/core.c:1289 brcmf_netdev_wait_pend8021x
-  (warn_slowpath_common)
-  (warn_slowpath_null)
-  (brcmf_netdev_wait_pend8021x [brcmfmac])
-  (send_key_to_dongle [brcmfmac])
-  (brcmf_cfg80211_del_key [brcmfmac])
-  (nl80211_del_key [cfg80211])
-  (genl_rcv_msg)
-  (netlink_rcv_skb)
-  (genl_rcv)
-  (netlink_unicast)
-  (netlink_sendmsg)
-  (sock_sendmsg)
-  (___sys_sendmsg)
-  (__sys_sendmsg)
-  (SyS_sendmsg)
-
-Signed-off-by: Per Forlin <per.forlin@gmail.com>
+Signed-off-by: Shyam Saini <mayhs11saini@gmail.com>
 ---
-I came across this bug in an older kernel but it seems relevant
-for the latest kernel as well. I'm not familiar with the code
-but I can reproduce the issue and verify a fix for it.
-With this patch I no longer get stuck with a pend8021_cnt > 0.
+ drivers/staging/wilc1000/wilc_wfi_cfgoperations.c | 25 +++++++++++------------
+ 1 file changed, 12 insertions(+), 13 deletions(-)
 
-Change log:
- v2 - Add variable to know whether the counter is increased or not
-
- drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index ed9998b..de80ad8 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -196,6 +196,7 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
- 	struct brcmf_if *ifp = netdev_priv(ndev);
- 	struct brcmf_pub *drvr = ifp->drvr;
- 	struct ethhdr *eh = (struct ethhdr *)(skb->data);
-+	bool pend_8021x_cnt_increased = false;
+diff --git a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+index b76622d..3a5d04a 100644
+--- a/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
++++ b/drivers/staging/wilc1000/wilc_wfi_cfgoperations.c
+@@ -363,8 +363,8 @@ static void add_network_to_shadow(struct network_info *pstrNetworkInfo,
+ 	last_scanned_shadow[ap_index].ssid_len = pstrNetworkInfo->ssid_len;
+ 	memcpy(last_scanned_shadow[ap_index].ssid,
+ 	       pstrNetworkInfo->ssid, pstrNetworkInfo->ssid_len);
+-	memcpy(last_scanned_shadow[ap_index].bssid,
+-	       pstrNetworkInfo->bssid, ETH_ALEN);
++	ether_addr_copy(last_scanned_shadow[ap_index].bssid,
++	       pstrNetworkInfo->bssid);
+ 	last_scanned_shadow[ap_index].beacon_period = pstrNetworkInfo->beacon_period;
+ 	last_scanned_shadow[ap_index].dtim_period = pstrNetworkInfo->dtim_period;
+ 	last_scanned_shadow[ap_index].ch = pstrNetworkInfo->ch;
+@@ -521,7 +521,7 @@ static void CfgConnectResult(enum conn_event enuConnDisconnEvent,
+ 			bool bNeedScanRefresh = false;
+ 			u32 i;
  
- 	brcmf_dbg(DATA, "Enter, bsscfgidx=%d\n", ifp->bsscfgidx);
+-			memcpy(priv->au8AssociatedBss, pstrConnectInfo->bssid, ETH_ALEN);
++			ether_addr_copy(priv->au8AssociatedBss, pstrConnectInfo->bssid);
  
-@@ -233,14 +234,18 @@ static netdev_tx_t brcmf_netdev_start_xmit(struct sk_buff *skb,
- 		goto done;
+ 
+ 			for (i = 0; i < last_scanned_cnt; i++) {
+@@ -1000,7 +1000,7 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 						g_add_gtk_key_params.mac_addr = NULL;
+ 					} else {
+ 						g_add_gtk_key_params.mac_addr = kmalloc(ETH_ALEN, GFP_KERNEL);
+-						memcpy(g_add_gtk_key_params.mac_addr, mac_addr, ETH_ALEN);
++						ether_addr_copy(g_add_gtk_key_params.mac_addr, mac_addr);
+ 					}
+ 					g_key_gtk_params.key_len = params->key_len;
+ 					g_key_gtk_params.seq_len = params->seq_len;
+@@ -1033,7 +1033,7 @@ static int add_key(struct wiphy *wiphy, struct net_device *netdev, u8 key_index,
+ 						g_add_ptk_key_params.mac_addr = NULL;
+ 					} else {
+ 						g_add_ptk_key_params.mac_addr = kmalloc(ETH_ALEN, GFP_KERNEL);
+-						memcpy(g_add_ptk_key_params.mac_addr, mac_addr, ETH_ALEN);
++						ether_addr_copy(g_add_ptk_key_params.mac_addr, mac_addr);
+ 					}
+ 					g_key_ptk_params.key_len = params->key_len;
+ 					g_key_ptk_params.seq_len = params->seq_len;
+@@ -1287,8 +1287,8 @@ static int set_pmksa(struct wiphy *wiphy, struct net_device *netdev,
+ 		}
  	}
+ 	if (i < WILC_MAX_NUM_PMKIDS) {
+-		memcpy(priv->pmkid_list.pmkidlist[i].bssid, pmksa->bssid,
+-			    ETH_ALEN);
++		ether_addr_copy(priv->pmkid_list.pmkidlist[i].bssid,
++				pmksa->bssid);
+ 		memcpy(priv->pmkid_list.pmkidlist[i].pmkid, pmksa->pmkid,
+ 			    PMKID_LEN);
+ 		if (!(flag == PMKID_FOUND))
+@@ -1322,9 +1322,8 @@ static int del_pmksa(struct wiphy *wiphy, struct net_device *netdev,
  
--	if (eh->h_proto == htons(ETH_P_PAE))
-+	if (eh->h_proto == htons(ETH_P_PAE)) {
- 		atomic_inc(&ifp->pend_8021x_cnt);
-+		pend_8021x_cnt_increased = true;
-+	}
+ 	if (i < priv->pmkid_list.numpmkid && priv->pmkid_list.numpmkid > 0) {
+ 		for (; i < (priv->pmkid_list.numpmkid - 1); i++) {
+-			memcpy(priv->pmkid_list.pmkidlist[i].bssid,
+-				    priv->pmkid_list.pmkidlist[i + 1].bssid,
+-				    ETH_ALEN);
++			ether_addr_copy(priv->pmkid_list.pmkidlist[i].bssid,
++				    priv->pmkid_list.pmkidlist[i + 1].bssid);
+ 			memcpy(priv->pmkid_list.pmkidlist[i].pmkid,
+ 				    priv->pmkid_list.pmkidlist[i].pmkid,
+ 				    PMKID_LEN);
+@@ -1983,8 +1982,8 @@ static int add_station(struct wiphy *wiphy, struct net_device *dev,
+ 	vif = netdev_priv(dev);
  
- 	ret = brcmf_fws_process_skb(ifp, skb);
+ 	if (vif->iftype == AP_MODE || vif->iftype == GO_MODE) {
+-		memcpy(strStaParams.bssid, mac, ETH_ALEN);
+-		memcpy(priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid], mac, ETH_ALEN);
++		ether_addr_copy(strStaParams.bssid, mac);
++		ether_addr_copy(priv->assoc_stainfo.au8Sta_AssociatedBss[params->aid], mac);
+ 		strStaParams.aid = params->aid;
+ 		strStaParams.rates_len = params->supported_rates_len;
+ 		strStaParams.rates = params->supported_rates;
+@@ -2056,7 +2055,7 @@ static int change_station(struct wiphy *wiphy, struct net_device *dev,
+ 	vif = netdev_priv(dev);
  
- done:
- 	if (ret) {
- 		ifp->stats.tx_dropped++;
-+		if (pend_8021x_cnt_increased)
-+			atomic_dec(&ifp->pend_8021x_cnt);
- 	} else {
- 		ifp->stats.tx_packets++;
- 		ifp->stats.tx_bytes += skb->len;
+ 	if (vif->iftype == AP_MODE || vif->iftype == GO_MODE) {
+-		memcpy(strStaParams.bssid, mac, ETH_ALEN);
++		ether_addr_copy(strStaParams.bssid, mac);
+ 		strStaParams.aid = params->aid;
+ 		strStaParams.rates_len = params->supported_rates_len;
+ 		strStaParams.rates = params->supported_rates;
 -- 
-2.1.4
+1.9.1
 
