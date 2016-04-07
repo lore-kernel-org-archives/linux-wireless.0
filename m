@@ -1,67 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mezzanine.sirena.org.uk ([106.187.55.193]:55016 "EHLO
-	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932872AbcDSSqg (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 14:46:36 -0400
-Date: Tue, 19 Apr 2016 19:46:27 +0100
-From: Mark Brown <broonie@kernel.org>
-To: "Reizer, Eyal" <eyalr@ti.com>
-Cc: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	=?utf-8?B?77+977+977+977+9IO+/ve+/ve+/ve+/ve+/vQ==?=
-	<eyalreizer@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>
-Message-ID: <20160419184627.GG3217@sirena.org.uk> (sfid-20160419_204700_571178_7B2A0823)
-References: <14313437.cDJIgY3kzo@wuerfel>
- <8665E2433BC68541A24DFFCA87B70F5B360BF614@DFRE01.ent.ti.com>
- <1463330011.BhWEcYYuGD@wuerfel>
- <8665E2433BC68541A24DFFCA87B70F5B360C0745@DFRE01.ent.ti.com>
- <20160419171239.GC3217@sirena.org.uk>
- <sjdvun1fuj4nyi0bgf268g53.1461086401627@email.android.com>
- <20160419172706.GD3217@sirena.org.uk>
- <oe8hqfknrcljrjawnrxlohvr.1461087275186@email.android.com>
- <20160419175402.GE3217@sirena.org.uk>
- <us0dopt1inbrt0x47njgc2vy.1461089085965@email.android.com>
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="mEgWsss+US7fWyVR"
-In-Reply-To: <us0dopt1inbrt0x47njgc2vy.1461089085965@email.android.com>
-Subject: Re: [PATCHv2] wlcore: spi: add wl18xx support
+Received: from mx1.redhat.com ([209.132.183.28]:58244 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757315AbcDGSTf (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2016 14:19:35 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 15/18] rtl8xxxu: Implement 8192eu device specific quirks
+Date: Thu,  7 Apr 2016 14:19:30 -0400
+Message-Id: <1460053173-8494-16-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160407_201952_681413_FC36F6B1)
+In-Reply-To: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
---mEgWsss+US7fWyVR
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Set REG_QUEUE_CTRL and REG_ACLK_MON for 8192eu.
 
-On Tue, Apr 19, 2016 at 06:04:49PM +0000, Reizer, Eyal wrote:
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c      | 14 ++++++++++++++
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h |  1 +
+ 2 files changed, 15 insertions(+)
 
-> Thanks! Glad the illustration helped.
-> I will try it out again as if i recall cotrectly, i did try that l, and it didnt produce the correct waveform, but perhaps i didnt understand the usage of .cs_change correctly.
-> Will double check anyway.
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index c800882..5a2eb0a 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -7197,6 +7197,20 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 	if (priv->fops->init_statistics)
+ 		priv->fops->init_statistics(priv);
+ 
++	if (priv->rtl_chip == RTL8192E) {
++		/*
++		 * 0x4c6[3] 1: RTS BW = Data BW
++		 * 0: RTS BW depends on CCA / secondary CCA result.
++		 */
++		val8 = rtl8xxxu_read8(priv, REG_QUEUE_CTRL);
++		val8 &= ~BIT(3);
++		rtl8xxxu_write8(priv, REG_QUEUE_CTRL, val8);
++		/*
++		 * Reset USB mode switch setting
++		 */
++		rtl8xxxu_write8(priv, REG_ACLK_MON, 0x00);
++	}
++
+ 	rtl8723a_phy_lc_calibrate(priv);
+ 
+ 	priv->fops->phy_iq_calibrate(priv);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+index 82cbe85..c19f234 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+@@ -512,6 +512,7 @@
+ #define REG_PKT_VO_VI_LIFE_TIME		0x04c0
+ #define REG_PKT_BE_BK_LIFE_TIME		0x04c2
+ #define REG_STBC_SETTING		0x04c4
++#define REG_QUEUE_CTRL			0x04c6
+ #define REG_HT_SINGLE_AMPDU_8723B	0x04c7
+ #define REG_PROT_MODE_CTRL		0x04c8
+ #define REG_MAX_AGGR_NUM		0x04ca
+-- 
+2.5.5
 
-It could also be a bug in your controller driver, it's common for them
-to not handle cs_change correctly (at least those that open code the
-message loop, obviously modern ones just factor this out into the core).
-
---mEgWsss+US7fWyVR
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iQEcBAEBCAAGBQJXFn0CAAoJECTWi3JdVIfQKw0H/jOYdlXC0V/rFL8ZKhslFovs
-ldUSdQfhkzvk7V5VBXP4hGnX+TwCXdNXSc/O7/gK1IUYBOmvsKISonGuIypTUVXu
-ExgAsuR2JfUprjfCldeUhhIJIQryCP0gc1adis4IK4UrjoX6hSwqu3pK9OKHpdYT
-0Q4WwnDAP07hFfWGJEM1Jeid8n2rnQRW1B/mCOteW1r85+XdtuiS/NVWZwj6SDUr
-m135oFf9d0cVycKqcu4KXW+FBCHAp25I/XKGUg924jU0ZfSn5TB5HJpvLiiMq3d/
-JppDWHOmfsNjLzBLb5Ciq2LQzSVHz4JuTK9n9Y5ezwsJ+MSX16XxnuL1RaQ7314=
-=UEMr
------END PGP SIGNATURE-----
-
---mEgWsss+US7fWyVR--
