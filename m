@@ -1,39 +1,200 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:55937 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751791AbcDRLzY (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 07:55:24 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Date: Mon, 18 Apr 2016 17:25:22 +0530
-From: Tamizh chelvam <tamizhchelvam@codeaurora.org>
-To: Stephen Boyd <sboyd@codeaurora.org>
-Cc: agross@codeaurora.org, devicetree@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org, linux-wireless@vger.kernel.org,
-	linux-kernel@vger.kernel.org, ath10k@lists.infradead.org,
-	c_traja@qti.qualcomm.com, Raja Mani <rmani@codeaurora.org>
-Subject: Re: [PATCH v2] qcom: ipq4019: add wifi nodes to ipq4019 SoC device
- tree
-In-Reply-To: <570E8850.9030506@codeaurora.org>
-References: <1460434686-23010-1-git-send-email-tamizhchelvam@codeaurora.org>
- <570E8850.9030506@codeaurora.org>
-Message-ID: <f6a444f96a6f602c170b8886f2f9fe9d@codeaurora.org> (sfid-20160418_135545_427808_260DA246)
+Received: from mx1.redhat.com ([209.132.183.28]:58311 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757282AbcDGSTe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2016 14:19:34 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 04/18] rtl8xxxu: Add radio init tables for 8192eu
+Date: Thu,  7 Apr 2016 14:19:19 -0400
+Message-Id: <1460053173-8494-5-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160407_201941_458885_8363A92D)
+In-Reply-To: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 2016-04-13 23:26, Stephen Boyd wrote:
-> On 04/11/2016 09:18 PM, tamizhchelvam@codeaurora.org wrote:
->> +			qcom,msi_addr = <0x0b006040>;
->> +			qcom,msi_base = <0x50>;
-> 
-> Are these properties used? I couldn't find any usage in the driver but 
-> I
-> may have missed it.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-As of now it is not used in the driver. But it will be needed in the 
-future to enable msi in ipq4019 platform.
+Add the required radio init tables for 8192eu devices.
 
-Thanks,
-Tamizh.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 154 +++++++++++++++++++++++
+ 1 file changed, 154 insertions(+)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 13e8d60..988aba6 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -1242,6 +1242,152 @@ static struct rtl8xxxu_rfregval rtl8188ru_radioa_1t_highpa_table[] = {
+ 	{0xff, 0xffffffff}
+ };
+ 
++static struct rtl8xxxu_rfregval rtl8192eu_radioa_init_table[] = {
++	{0x7f, 0x00000082}, {0x81, 0x0003fc00},
++	{0x00, 0x00030000}, {0x08, 0x00008400},
++	{0x18, 0x00000407}, {0x19, 0x00000012},
++	{0x1b, 0x00000064}, {0x1e, 0x00080009},
++	{0x1f, 0x00000880}, {0x2f, 0x0001a060},
++	{0x3f, 0x00000000}, {0x42, 0x000060c0},
++	{0x57, 0x000d0000}, {0x58, 0x000be180},
++	{0x67, 0x00001552}, {0x83, 0x00000000},
++	{0xb0, 0x000ff9f1}, {0xb1, 0x00055418},
++	{0xb2, 0x0008cc00}, {0xb4, 0x00043083},
++	{0xb5, 0x00008166}, {0xb6, 0x0000803e},
++	{0xb7, 0x0001c69f}, {0xb8, 0x0000407f},
++	{0xb9, 0x00080001}, {0xba, 0x00040001},
++	{0xbb, 0x00000400}, {0xbf, 0x000c0000},
++	{0xc2, 0x00002400}, {0xc3, 0x00000009},
++	{0xc4, 0x00040c91}, {0xc5, 0x00099999},
++	{0xc6, 0x000000a3}, {0xc7, 0x00088820},
++	{0xc8, 0x00076c06}, {0xc9, 0x00000000},
++	{0xca, 0x00080000}, {0xdf, 0x00000180},
++	{0xef, 0x000001a0}, {0x51, 0x00069545},
++	{0x52, 0x0007e45e}, {0x53, 0x00000071},
++	{0x56, 0x00051ff3}, {0x35, 0x000000a8},
++	{0x35, 0x000001e2}, {0x35, 0x000002a8},
++	{0x36, 0x00001c24}, {0x36, 0x00009c24},
++	{0x36, 0x00011c24}, {0x36, 0x00019c24},
++	{0x18, 0x00000c07}, {0x5a, 0x00048000},
++	{0x19, 0x000739d0},
++#ifdef EXT_PA_8192EU
++	/* External PA or external LNA */
++	{0x34, 0x0000a093}, {0x34, 0x0000908f},
++	{0x34, 0x0000808c}, {0x34, 0x0000704d},
++	{0x34, 0x0000604a}, {0x34, 0x00005047},
++	{0x34, 0x0000400a}, {0x34, 0x00003007},
++	{0x34, 0x00002004}, {0x34, 0x00001001},
++	{0x34, 0x00000000},
++#else
++	/* Regular */
++	{0x34, 0x0000add7}, {0x34, 0x00009dd4},
++	{0x34, 0x00008dd1}, {0x34, 0x00007dce},
++	{0x34, 0x00006dcb}, {0x34, 0x00005dc8},
++	{0x34, 0x00004dc5}, {0x34, 0x000034cc},
++	{0x34, 0x0000244f}, {0x34, 0x0000144c},
++	{0x34, 0x00000014},
++#endif
++	{0x00, 0x00030159},
++	{0x84, 0x00068180},
++	{0x86, 0x0000014e},
++	{0x87, 0x00048e00},
++	{0x8e, 0x00065540},
++	{0x8f, 0x00088000},
++	{0xef, 0x000020a0},
++#ifdef EXT_PA_8192EU
++	/* External PA or external LNA */
++	{0x3b, 0x000f07b0},
++#else
++	{0x3b, 0x000f02b0},
++#endif
++	{0x3b, 0x000ef7b0}, {0x3b, 0x000d4fb0},
++	{0x3b, 0x000cf060}, {0x3b, 0x000b0090},
++	{0x3b, 0x000a0080}, {0x3b, 0x00090080},
++	{0x3b, 0x0008f780},
++#ifdef EXT_PA_8192EU
++	/* External PA or external LNA */
++	{0x3b, 0x000787b0},
++#else
++	{0x3b, 0x00078730},
++#endif
++	{0x3b, 0x00060fb0}, {0x3b, 0x0005ffa0},
++	{0x3b, 0x00040620}, {0x3b, 0x00037090},
++	{0x3b, 0x00020080}, {0x3b, 0x0001f060},
++	{0x3b, 0x0000ffb0}, {0xef, 0x000000a0},
++	{0xfe, 0x00000000}, {0x18, 0x0000fc07},
++	{0xfe, 0x00000000}, {0xfe, 0x00000000},
++	{0xfe, 0x00000000}, {0xfe, 0x00000000},
++	{0x1e, 0x00000001}, {0x1f, 0x00080000},
++	{0x00, 0x00033e70},
++	{0xff, 0xffffffff}
++};
++
++static struct rtl8xxxu_rfregval rtl8192eu_radiob_init_table[] = {
++	{0x7f, 0x00000082}, {0x81, 0x0003fc00},
++	{0x00, 0x00030000}, {0x08, 0x00008400},
++	{0x18, 0x00000407}, {0x19, 0x00000012},
++	{0x1b, 0x00000064}, {0x1e, 0x00080009},
++	{0x1f, 0x00000880}, {0x2f, 0x0001a060},
++	{0x3f, 0x00000000}, {0x42, 0x000060c0},
++	{0x57, 0x000d0000}, {0x58, 0x000be180},
++	{0x67, 0x00001552}, {0x7f, 0x00000082},
++	{0x81, 0x0003f000}, {0x83, 0x00000000},
++	{0xdf, 0x00000180}, {0xef, 0x000001a0},
++	{0x51, 0x00069545}, {0x52, 0x0007e42e},
++	{0x53, 0x00000071}, {0x56, 0x00051ff3},
++	{0x35, 0x000000a8}, {0x35, 0x000001e0},
++	{0x35, 0x000002a8}, {0x36, 0x00001ca8},
++	{0x36, 0x00009c24}, {0x36, 0x00011c24},
++	{0x36, 0x00019c24}, {0x18, 0x00000c07},
++	{0x5a, 0x00048000}, {0x19, 0x000739d0},
++#ifdef EXT_PA_8192EU
++	/* External PA or external LNA */
++	{0x34, 0x0000a093}, {0x34, 0x0000908f},
++	{0x34, 0x0000808c}, {0x34, 0x0000704d},
++	{0x34, 0x0000604a}, {0x34, 0x00005047},
++	{0x34, 0x0000400a}, {0x34, 0x00003007},
++	{0x34, 0x00002004}, {0x34, 0x00001001},
++	{0x34, 0x00000000},
++#else
++	{0x34, 0x0000add7}, {0x34, 0x00009dd4},
++	{0x34, 0x00008dd1}, {0x34, 0x00007dce},
++	{0x34, 0x00006dcb}, {0x34, 0x00005dc8},
++	{0x34, 0x00004dc5}, {0x34, 0x000034cc},
++	{0x34, 0x0000244f}, {0x34, 0x0000144c},
++	{0x34, 0x00000014},
++#endif
++	{0x00, 0x00030159}, {0x84, 0x00068180},
++	{0x86, 0x000000ce}, {0x87, 0x00048a00},
++	{0x8e, 0x00065540}, {0x8f, 0x00088000},
++	{0xef, 0x000020a0},
++#ifdef EXT_PA_8192EU
++	/* External PA or external LNA */
++	{0x3b, 0x000f07b0},
++#else
++	{0x3b, 0x000f02b0},
++#endif
++
++	{0x3b, 0x000ef7b0}, {0x3b, 0x000d4fb0},
++	{0x3b, 0x000cf060}, {0x3b, 0x000b0090},
++	{0x3b, 0x000a0080}, {0x3b, 0x00090080},
++	{0x3b, 0x0008f780},
++#ifdef EXT_PA_8192EU
++	/* External PA or external LNA */
++	{0x3b, 0x000787b0},
++#else
++	{0x3b, 0x00078730},
++#endif
++	{0x3b, 0x00060fb0}, {0x3b, 0x0005ffa0},
++	{0x3b, 0x00040620}, {0x3b, 0x00037090},
++	{0x3b, 0x00020080}, {0x3b, 0x0001f060},
++	{0x3b, 0x0000ffb0}, {0xef, 0x000000a0},
++	{0x00, 0x00010159}, {0xfe, 0x00000000},
++	{0xfe, 0x00000000}, {0xfe, 0x00000000},
++	{0xfe, 0x00000000}, {0x1e, 0x00000001},
++	{0x1f, 0x00080000}, {0x00, 0x00033e70},
++	{0xff, 0xffffffff}
++};
++
+ static struct rtl8xxxu_rfregs rtl8xxxu_rfregs[] = {
+ 	{	/* RF_A */
+ 		.hssiparm1 = REG_FPGA0_XA_HSSI_PARM1,
+@@ -6447,6 +6593,14 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 		rftable = rtl8192cu_radiob_2t_init_table;
+ 		ret = rtl8xxxu_init_phy_rf(priv, rftable, RF_B);
+ 		break;
++	case RTL8192E:
++		rftable = rtl8192eu_radioa_init_table;
++		ret = rtl8xxxu_init_phy_rf(priv, rftable, RF_A);
++		if (ret)
++			break;
++		rftable = rtl8192eu_radiob_init_table;
++		ret = rtl8xxxu_init_phy_rf(priv, rftable, RF_B);
++		break;
+ 	default:
+ 		ret = -EINVAL;
+ 	}
+-- 
+2.5.5
+
