@@ -1,66 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35667 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753219AbcDNS7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 14:59:09 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 00/26] rtl8xxxu add rtl8192eu support
-Date: Thu, 14 Apr 2016 14:58:41 -0400
-Message-Id: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_212530_129160_09211F51)
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:21694 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751089AbcDGOaA (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2016 10:30:00 -0400
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+To: Johannes Berg <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>,
+	Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Subject: [PATCH v4] cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION
+Date: Thu, 7 Apr 2016 19:59:34 +0530
+Message-ID: <1460039374-5338-1-git-send-email-mohammed@qti.qualcomm.com> (sfid-20160407_163005_780421_67EFA4E2)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
 
-Hi,
+Add support for new netlink attribute 'NL80211_STA_INFO_RX_DURATION'.
+'NL80211_STA_INFO_RX_DURATION' accounts for aggregate PPDU duration
+in microseconds for all the frames from a peer. Drivers can fill
+'rx_duration' field and set the flag 'NL80211_STA_INFO_RX_DURATION'.
+'rx_duration' will give an idea about the total time spent by our peer
+with each of its connected peers.
 
-This set of patches should be what is required to get rtl8192eu
-support going.
+Also extend 'PUT_SINFO' for supporting rx_duration field
 
-I have some additional fixes for 8188ru and other generic fixes for
-the driver. I'll send those out once these make it in.
+Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+---
+ include/net/cfg80211.h       |    4 +++-
+ include/uapi/linux/nl80211.h |    3 +++
+ net/wireless/nl80211.c       |    3 ++-
+ 3 files changed, 8 insertions(+), 2 deletions(-)
 
-Cheers,
-Jes
-
-
-Jes Sorensen (26):
-  rtl8xxxu: Reorder parts of init code to match the 8192eu vendor code
-    flow
-  rtl8xxxu: Reorg more code to match the flow of the 8192eu vendor
-    driver
-  rtl8xxxu: Implement generic init_queue_reserved_page() function
-  rtl8xxxu: Reorder chip quirks to follow flow of 8192eu driver
-  rtl8xxxu: Do not set REG_PBP on 8192eu
-  rtl8xxxu: Do not init FPGA0_TX_INFO on 8192eu
-  rtl8xxxu: Do not try to set REG_LEDCFG2 on 8192eu
-  rtl8xxxu: Implment rtl8192e_set_tx_power()
-  rtl8xxxu: Use has_s0s1 for REG_S0S1 issues only
-  rtl8xxxu: byteswap the entire RX descriptor for 24 byte RX descriptors
-  rtl8xxxu: Name RX descriptor types rxdesc16/rxdesc24
-  rtl8xxxu: Remove misleading warning from rtl8192eu_phy_iqcalibrate()
-  rtl8xxxu: Remove unused 8723bu path B IQ calibration code
-  rtl8xxxu: Correctly mask what was read from REG_CCK0_AFE_SETTING
-  rtl8xxxu: Use descriptive bits for setting RX paths for 1T2R parts
-  rtl8xxxu: Split rtl8xxxu_init_phy_bb() into device specific functions
-  rtl8xxxu: Load AGC table before patching for 1T2R parts
-  rtl8xxxu: Move loading of AGC table to device specific function
-  rtl8xxxu: REG_LDOA15_CTRL is only used on gen1 parts
-  rtl8xxxu: Store device specific TRXFF boundary in the fileops
-  rtl8xxxu: Do not backup RF_MODE_AG when it's never being used
-  rtl8xxxu: Make PBP tuning a fileops parameter
-  rtl8xxxu: Split USB quirks into gen1 and gen2 quirks
-  rtl8xxxu: Remove unneeded 8192eu hack
-  rtl8xxxu: 8192eu Fix bug in LDPC RX hang fix
-  Re-enable 8192eu support
-
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c   | 715 ++++++++++++---------
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |  20 +-
- .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  |   6 +-
- 3 files changed, 428 insertions(+), 313 deletions(-)
-
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 0bbfbf3..e0fe16e 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -1063,11 +1063,12 @@ struct cfg80211_tid_stats {
+  * @rx_beacon: number of beacons received from this peer
+  * @rx_beacon_signal_avg: signal strength average (in dBm) for beacons received
+  *	from this peer
++ * @rx_duration: aggregate PPDU duration(usecs) for all the frames from a peer
+  * @pertid: per-TID statistics, see &struct cfg80211_tid_stats, using the last
+  *	(IEEE80211_NUM_TIDS) index for MSDUs not encapsulated in QoS-MPDUs.
+  */
+ struct station_info {
+-	u32 filled;
++	u64 filled;
+ 	u32 connected_time;
+ 	u32 inactive_time;
+ 	u64 rx_bytes;
+@@ -1106,6 +1107,7 @@ struct station_info {
+ 	u32 expected_throughput;
+ 
+ 	u64 rx_beacon;
++	u64 rx_duration;
+ 	u8 rx_beacon_signal_avg;
+ 	struct cfg80211_tid_stats pertid[IEEE80211_NUM_TIDS + 1];
+ };
+diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+index b2a8d8c..e11559f 100644
+--- a/include/uapi/linux/nl80211.h
++++ b/include/uapi/linux/nl80211.h
+@@ -2482,6 +2482,8 @@ enum nl80211_sta_bss_param {
+  *	TID+1 and the special TID 16 (i.e. value 17) is used for non-QoS frames;
+  *	each one of those is again nested with &enum nl80211_tid_stats
+  *	attributes carrying the actual values.
++ * @NL80211_STA_INFO_RX_DURATION: aggregate PPDU duration(usecs) for all the
++ *	frames from a peer
+  * @__NL80211_STA_INFO_AFTER_LAST: internal
+  * @NL80211_STA_INFO_MAX: highest possible station info attribute
+  */
+@@ -2518,6 +2520,7 @@ enum nl80211_sta_info {
+ 	NL80211_STA_INFO_BEACON_RX,
+ 	NL80211_STA_INFO_BEACON_SIGNAL_AVG,
+ 	NL80211_STA_INFO_TID_STATS,
++	NL80211_STA_INFO_RX_DURATION,
+ 
+ 	/* keep last */
+ 	__NL80211_STA_INFO_AFTER_LAST,
+diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
+index d6c6449..3969d10 100644
+--- a/net/wireless/nl80211.c
++++ b/net/wireless/nl80211.c
+@@ -3753,7 +3753,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
+ 		goto nla_put_failure;
+ 
+ #define PUT_SINFO(attr, memb, type) do {				\
+-	if (sinfo->filled & BIT(NL80211_STA_INFO_ ## attr) &&		\
++	if (sinfo->filled & (1ULL << NL80211_STA_INFO_ ## attr) &&	\
+ 	    nla_put_ ## type(msg, NL80211_STA_INFO_ ## attr,		\
+ 			     sinfo->memb))				\
+ 		goto nla_put_failure;					\
+@@ -3779,6 +3779,7 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
+ 	PUT_SINFO(LLID, llid, u16);
+ 	PUT_SINFO(PLID, plid, u16);
+ 	PUT_SINFO(PLINK_STATE, plink_state, u8);
++	PUT_SINFO(RX_DURATION, rx_duration, u64);
+ 
+ 	switch (rdev->wiphy.signal_type) {
+ 	case CFG80211_SIGNAL_TYPE_MBM:
 -- 
-2.5.5
+1.7.9.5
 
