@@ -1,69 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:60267 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751700AbcDPVmc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 16 Apr 2016 17:42:32 -0400
-Message-ID: <1460842947.2075.11.camel@sipsolutions.net> (sfid-20160416_234240_748549_B16D5CC5)
-Subject: Re: [PATCH] netlink: don't send NETLINK_URELEASE for unbound sockets
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: netdev@vger.kernel.org, dmitrijs.ivanovs@ubnt.com,
-	linux-wireless@vger.kernel.org
-Date: Sat, 16 Apr 2016 23:42:27 +0200
-In-Reply-To: <20160416063040.GA6380@gondor.apana.org.au>
-References: <20160416063040.GA6380@gondor.apana.org.au>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:36425 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757556AbcDGVM6 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2016 17:12:58 -0400
+Received: by mail-wm0-f51.google.com with SMTP id v188so69422682wme.1
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2016 14:12:58 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <20160407130251.GA19696@c50.bag.software>
+References: <20160407130251.GA19696@c50.bag.software>
+Date: Thu, 7 Apr 2016 23:12:57 +0200
+Message-ID: <CALtMJEDOLgVCvjORGbBN3iQ5Wi-17X16YRMaMKxXGEK9uLPG3A@mail.gmail.com> (sfid-20160407_231315_205662_7994FFBB)
+Subject: Re: mwifiex: kernel WARN_ON during system suspend
+From: Andreas Fenkart <afenkart@gmail.com>
+To: Vishal Thanki <vishalthanki@gmail.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2016-04-16 at 14:30 +0800, Herbert Xu wrote:
-> Johannes Berg <johannes@sipsolutions.net> wrote:
-> > 
-> > 
-> > diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
-> > index 215fc08c02ab..330ebd600f25 100644
-> > --- a/net/netlink/af_netlink.c
-> > +++ b/net/netlink/af_netlink.c
-> > @@ -688,7 +688,7 @@ static int netlink_release(struct socket *sock)
-> > 
-> >        skb_queue_purge(&sk->sk_write_queue);
-> > 
-> > -       if (nlk->portid) {
-> > +       if (nlk->portid && nlk->bound) {
-> Any reason why we're still testing portid at all? Isn't testing
-> bound enough?
+Hi Vishal,
 
-The reason is that while I felt confident in understanding the problem
-and its solution, I didn't realize that bound follows portid, and that,
-for example, a kernel socket can't get bound. :-)
+2016-04-07 15:02 GMT+02:00 Vishal Thanki <vishalthanki@gmail.com>:
+> Hi All,
+>
+> I noticed that sometime I see the kernel trace while system enters into
+> suspend. The trace log is attached with this email.
+>
+> From the kernel trace it appears that mwifiex_cancel_all_pending_cmd()
+> function tries to cancel the current command by invoking
+> mwifiex_complete_cmd(). Just before calling this routine, the
+> adapter->curr_cmd->wait_q_enabled is set to false. And there is a
+> WARN_ON() in the mwifiex_complete_cmd() routine on this variable being
+> false, because this condition will always evaluate to true.
 
-But yeah - looking at the code after your comment does show that
-testing portid is pointless now.
+thanks for the analysis.
+tested-by: afenkart@gmail.com
 
-In fact, now that I look at it, I wonder how this situation came about?
-
-In the current code, you can only trigger the problematic situation
-through an error condition, afaict - you have to try to bind a socket
-with the same portid as an already existing one, and __netlink_insert()
-will then fail, but netlink_insert() won't reset the nlk_sk(sk)->portid 
-since your commit da314c9923fe ("netlink: Replace rhash_portid with
-bound"), even though you had previously fixed precisely this issue
-already - commit c0bb07df7d98 ("netlink: Reset portid after
-netlink_insert failure"). You then close the socket, and since portid
-is assigned, that will trigger NETLINK_URELEASE.
-
-So before the rhash_portid -> bound change, this doesn't seem to have
-been a problem, and I guess we didn't get the "stuck in limbo" problem
-back because we now check bound everywhere relevant, for purposes of
-calling netlink_autobind.
-
-IOW - I'm now even more convinced that the patch is correct, and I'm
-also convinced that until fairly recently (da314c9923fe) this wasn't
-even a problem.
-
-Maybe we can take the opportunity of removing the "portid" check to put
-most of the above into a commit message, but I think you should review
-it first.
-
-johannes
+>
+> I think by setting the wait_q_enabled flag to false after calling the
+> mwifiex_complete_cmd() should fix this problem. I have attached the
+> patch for the same, however I am not sure if that is the right way to
+> fix this issue. If there is any better way to fix it, please suggest.
+>
+> Thanks,
+> Vishal
