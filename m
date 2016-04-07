@@ -1,61 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:33608 "EHLO
-	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751088AbcDKLlX (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:27823 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751397AbcDGPvv convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2016 07:41:23 -0400
-Date: Mon, 11 Apr 2016 13:41:18 +0200
-From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
-To: Pavel Machek <pavel@denx.de>
-Cc: "Machani, Yaniv" <yanivma@ti.com>, "Chalmers, Kevin" <kev@ti.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"Davis, Andrew" <afd@ti.com>, "Mishol, Guy" <guym@ti.com>,
-	Arik Nemtsov <arik@wizery.com>, Gery Kahn <geryk@ti.com>,
-	Felipe Balbi <balbi@kernel.org>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	David Gnedt <david.gnedt@davizone.at>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Sebastian Reichel <sre@kernel.org>,
-	Tony Lindgren <tony@atomide.com>,
-	"Menon, Nishanth" <nm@ti.com>,
+	Thu, 7 Apr 2016 11:51:51 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Manoharan, Rajkumar" <rmanohar@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: Re: AP firmware for TI wl1251 wifi chip (wl1251-fw-ap.bin)
-Message-ID: <20160411114118.GT8413@pali> (sfid-20160411_134153_861795_8F006037)
-References: <201603200040.26045@pali>
- <20160404123944.GA8413@pali>
- <AE1C82FB3D0EC64DB1F752C81CBD1101390F6305@DFRE01.ent.ti.com>
- <201604061412.43684@pali>
- <AE1C82FB3D0EC64DB1F752C81CBD1101390F685E@DFRE01.ent.ti.com>
- <20160410115141.GD30188@xo-6d-61-c0.localdomain>
+	"rmanohar@codeaurora.org" <rmanohar@codeaurora.org>
+Subject: Re: [PATCH v2 1/3] ath10k: fix calibration init sequence of qca99x0
+Date: Thu, 7 Apr 2016 15:51:44 +0000
+Message-ID: <87oa9l76y8.fsf@kamboji.qca.qualcomm.com> (sfid-20160407_175156_957161_944540FD)
+References: <1460011051-8272-1-git-send-email-rmanohar@qti.qualcomm.com>
+In-Reply-To: <1460011051-8272-1-git-send-email-rmanohar@qti.qualcomm.com>
+	(Rajkumar Manoharan's message of "Thu, 7 Apr 2016 12:07:29 +0530")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-In-Reply-To: <20160410115141.GD30188@xo-6d-61-c0.localdomain>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 10 April 2016 13:51:41 Pavel Machek wrote:
-> Is it "hardware can't do AP", "firmware can't do AP" or "current drivers 
-> do not support AP"?
+Rajkumar Manoharan <rmanohar@qti.qualcomm.com> writes:
 
-We know that current linux TI wl1251.ko driver does not support AP. And
-I'm still do not know if "hardware can do AP" or not. Also I'm not sure...
-maybe current firmware can be "forced" for implementing AP mode.
+> pre-calibration is meant for qca4019 which contains only caldata
+> whereas calibration file is used by ar9888 and qca99x0 that contains
+> both board data and caldata. So by definition both pre-cal-file and
+> cal-file can not coexist. Keeping them in shared memory (union), is
+> breaking boot sequence of qca99x0. Fix it by storing both binaries
+> in separate memories. This issue is reported in ipq8064 platform which
+> includes caldata in flash memory.
+>
+> Fixes: 3d9195ea19e4 ("ath10k: incorporate qca4019 cal data download sequence")
+> Reported-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+> Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 
-David Gnedt implemented packet injection for wl1251.ko via JOIN firmware
-command. And he wrote me that aircrack utils contains one application
-which implementing full AP station in userspace just via packet
-injection radiotap (which is supported by wl1251).
-
-So maybe using other firmware (filter) commands together with current
-packet injection implementation could be possible to create AP mode
-(usable for standard hostapd daemon)? Just thinking...
-
-Anyway, other TI wilink devices have different firmware for AP mode...
+All three applied, thanks. 
 
 -- 
-Pali Rohár
-pali.rohar@gmail.com
+Kalle Valo
