@@ -1,62 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:26303 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932225AbcDLIPI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2016 04:15:08 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: pull request: iwlwifi 2016-04-12
-Date: Tue, 12 Apr 2016 08:14:48 +0000
-Message-ID: <1460448889.2630.12.camel@intel.com> (sfid-20160412_101513_916301_FD5D5E00)
-Content-Type: text/plain; charset="utf-8"
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:54478 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751037AbcDGGiU (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2016 02:38:20 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v2 2/3] ath10k: remove unnecessary warning for probe response drops
+Date: Thu, 7 Apr 2016 12:07:30 +0530
+Message-ID: <1460011051-8272-2-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20160407_083824_206574_9B24B80B)
+In-Reply-To: <1460011051-8272-1-git-send-email-rmanohar@qti.qualcomm.com>
+References: <1460011051-8272-1-git-send-email-rmanohar@qti.qualcomm.com>
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgS2FsbGUsDQoNCkkgaGF2ZSBoZXJlIGEgcHVsbCByZXF1ZXN0IGZvciA0LjYuIFRoZXJlIGlz
-IHBhdGNoIGluIHRoaXMgcHVsbCByZXF1ZXN0DQp0aGF0IGhhcyBiZWVuIHNlbnQgdG8gLW5leHQg
-YWxyZWFkeSBidXQgc2hvdWxkIHJlYWxseSBoYXZlIGJlZW4NCmluY2x1ZGVkIGluIHRoZSBjdXJy
-ZW50IGN5Y2xlLiBTb3JyeSBmb3IgdGhlIG1lc3MuDQoNClRoZSBjb21taXQgYXBwZWFycyBpbiAt
-bmV4dCBhczoNCg0KY29tbWl0IGEwYjA5ZjEzMDM2Y2VkZmQ2N2M5Y2I0YjlkMDUxMzhlNzAyMjcy
-M2QNCkF1dGhvcjogQXlhbGEgQmVrZXIgPGF5YWxhLmJla2VyQGludGVsLmNvbT4NCkRhdGU6ICAg
-V2VkIEZlYiAzIDE1OjM2OjUyIDIwMTYgKzAyMDANCg0KICAgIGl3bHdpZmk6IG12bTogdXBkYXRl
-IEdTQ0FOIGNhcGFiaWxpdGllcw0KICAgIA0KICAgIEdzY2FuIGNhcGFiaWxpdGllcyB3ZXJlIHVw
-ZGF0ZWQgd2l0aCBuZXcgY2FwYWJpbGl0aWVzIHN1cHBvcnRlZA0KICAgIGJ5IHRoZSBkZXZpY2Uu
-IFVwZGF0ZSBHU0NBTiBjYXBhYmlsaXRpZXMgVExWLg0KDQpJIG1vZGlmaWVkIHRoZSBjb21taXQg
-bWVzc2FnZSB0byBiZXR0ZXIgZW1waGFzaXMgdGhlIG5lZWQgdG8gaGF2ZSBpdCBpbg0KdGhlIGN1
-cnJlbnQgcmVsZWFzZS4gWW91J2xsIHNlZSBpdCBpbiB0aGlzIHB1bGwgcmVxdWVzdCBhczoNCg0K
-Y29tbWl0IGNkNDk3MjdlMWEyYmNjYzRmZjAwOGRkZTI0YzJmODQzMGRkOWUzNjgNCkF1dGhvcjog
-QXlhbGEgQmVrZXIgPGF5YWxhLmJla2VyQGludGVsLmNvbT4NCkRhdGU6ICAgV2VkIEZlYiAzIDE1
-OjM2OjUyIDIwMTYgKzAyMDANCg0KICAgIGl3bHdpZmk6IG12bTogYXZvaWQgdG8gV0FSTiBhYm91
-dCBnc2NhbiBjYXBhYmlsaXRpZXMNCiAgICANCiAgICBHc2NhbiBjYXBhYmlsaXRpZXMgd2VyZSB1
-cGRhdGVkIHdpdGggbmV3IGNhcGFiaWxpdGllcyBzdXBwb3J0ZWQNCiAgICBieSB0aGUgZGV2aWNl
-LiBVcGRhdGUgR1NDQU4gY2FwYWJpbGl0aWVzIFRMViBhbmQgYXZvaWQgdG8gV0FSTg0KICAgIGlm
-IHRoZSBmaXJtd2FyZSBkb2VzIG5vdCBoYXZlIHRoZSBuZXcgY2FwYWJpbGl0aWVzLg0KDQpCZXNp
-ZGVzIHRoaXMsIGFsbCBpcyBmYWlybHkgbm9ybWFsLg0KUGxlYXNlIHB1bGwsIHRoYW5rcyENCg0K
-DQpUaGUgZm9sbG93aW5nIGNoYW5nZXMgc2luY2UgY29tbWl0IDdmZGY5NjYzMjYxY2M3N2E1MTYz
-OTZmZWM4MmNlZThhOGVhMDdlNzY6DQoNCiAgaXdsd2lmaTogbXZtOiBmaXggbWVtb3J5IGxlYWsg
-aW4gcGFnaW5nICgyMDE2LTAzLTIwIDIzOjAxOjU0ICswMjAwKQ0KDQphcmUgYXZhaWxhYmxlIGlu
-IHRoZSBnaXQgcmVwb3NpdG9yeSBhdDoNCg0KICBodHRwczovL2dpdC5rZXJuZWwub3JnL3B1Yi9z
-Y20vbGludXgva2VybmVsL2dpdC9pd2x3aWZpL2l3bHdpZmktZml4ZXMuZ2l0IHRhZ3MvaXdsd2lm
-aS1mb3Ita2FsbGUtMjAxNi0wNC0xMg0KDQpmb3IgeW91IHRvIGZldGNoIGNoYW5nZXMgdXAgdG8g
-MmQyNWZiOGIzYTEzODcwNmI2M2JkMjZhZDcyYTk1YzU4MDI5OTU0YToNCg0KICBpd2x3aWZpOiBt
-dm06IGZpeCBhY2Nlc3NpbmcgTnVsbCBwb2ludGVyIGR1cmluZyBmdyBkdW1wIGNvbGxlY3Rpb24g
-KDIwMTYtMDQtMTIgMTA6MDM6MTcgKzAzMDApDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCiogYWRkIG5ldyBkZXZpY2Ug
-SURzIGZvciA4MjY1DQoqIGZpeCBhIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSB3aGVuIHBhZ2lu
-ZyBmaXJtd2FyZSBhc3NlcnRzDQoqIHJlbW92ZSBhIFdBUk5JTkcgb24gZ3NjYW4gY2FwYWJpbGl0
-aWVzDQoqIGZpeCBNT0RVTEVfRklSTVdBUkUgZm9yIDgyNjANCg0KLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KQXlhbGEgQmVr
-ZXIgKDEpOg0KICAgICAgaXdsd2lmaTogbXZtOiBhdm9pZCB0byBXQVJOIGFib3V0IGdzY2FuIGNh
-cGFiaWxpdGllcw0KDQpNYXR0aSBHb3R0bGllYiAoMSk6DQogICAgICBpd2x3aWZpOiBtdm06IGZp
-eCBhY2Nlc3NpbmcgTnVsbCBwb2ludGVyIGR1cmluZyBmdyBkdW1wIGNvbGxlY3Rpb24NCg0KT3Jl
-biBHaXZvbiAoMSk6DQogICAgICBpd2x3aWZpOiBhZGQgZGV2aWNlIElEcyBmb3IgdGhlIDgyNjUg
-ZGV2aWNlDQoNClNhcmEgU2hhcm9uICgxKToNCiAgICAgIGl3bHdpZmk6IDgwMDA6IGZpeCBNT0RV
-TEVfRklSTVdBUkUgaW5wdXQNCg0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkv
-aXdsLTgwMDAuYyAgIHwgIDIgKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZp
-L2l3bC1kcnYuYyAgICB8IDI2ICsrKysrKysrKystLS0tLS0tLS0tLS0tLS0tDQogZHJpdmVycy9u
-ZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9tdm0vZnctZGJnLmMgfCAgNiArKysrLS0NCiBkcml2
-ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZpL212bS9mdy5jICAgICB8ICAyICsrDQogZHJp
-dmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9wY2llL2Rydi5jICAgfCAxMCArKysrKysr
-KysrDQogNSBmaWxlcyBjaGFuZ2VkLCAyNyBpbnNlcnRpb25zKCspLCAxOSBkZWxldGlvbnMoLSk=
+qca99x0 and qca4019 solutions limit probe responses transmissions.
+Logging warning message for each probe response drop is flooding
+kernel log unnecessary with " failed to increase tx mgmt pending
+count: -16, dropping". Hence reducing log level to debug.
+
+Reported-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/mac.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 20d72e29dfa1..b0e613bc10a5 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -3994,8 +3994,8 @@ static void ath10k_mac_op_tx(struct ieee80211_hw *hw,
+ 
+ 		ret = ath10k_htt_tx_mgmt_inc_pending(htt, is_mgmt, is_presp);
+ 		if (ret) {
+-			ath10k_warn(ar, "failed to increase tx mgmt pending count: %d, dropping\n",
+-				    ret);
++			ath10k_dbg(ar, ATH10K_DBG_MAC, "failed to increase tx mgmt pending count: %d, dropping\n",
++				   ret);
+ 			ath10k_htt_tx_dec_pending(htt);
+ 			spin_unlock_bh(&ar->htt.tx_lock);
+ 			ieee80211_free_txskb(ar->hw, skb);
+-- 
+2.7.4
+
