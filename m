@@ -1,47 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f180.google.com ([209.85.192.180]:36061 "EHLO
-	mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756474AbcDNPTJ (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:54441 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751037AbcDGGhx (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 11:19:09 -0400
-From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-To: Johnny Kim <johnny.kim@atmel.com>,
-	Austin Shin <austin.shin@atmel.com>,
-	Chris Park <chris.park@atmel.com>,
-	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
-	Leo Kim <leo.kim@atmel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	devel@driverdev.osuosl.org,
-	Sudip Mukherjee <sudipm.mukherjee@gmail.com>
-Subject: [PATCH 1/2] staging: wilc1000: fix double unlock
-Date: Thu, 14 Apr 2016 20:48:48 +0530
-Message-Id: <1460647129-22740-1-git-send-email-sudipm.mukherjee@gmail.com> (sfid-20160414_172008_412859_C950B3F5)
+	Thu, 7 Apr 2016 02:37:53 -0400
+From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
+	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
+Subject: [PATCH v2 1/3] ath10k: fix calibration init sequence of qca99x0
+Date: Thu, 7 Apr 2016 12:07:29 +0530
+Message-ID: <1460011051-8272-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20160407_083757_043639_D35F2C21)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The semaphore was being released twice, once at the beginning of the
-thread and then again when the thread is about to close.
-The semaphore is acquired immediately after creating the thread so we
-should be releasing it when the thread ends.
+pre-calibration is meant for qca4019 which contains only caldata
+whereas calibration file is used by ar9888 and qca99x0 that contains
+both board data and caldata. So by definition both pre-cal-file and
+cal-file can not coexist. Keeping them in shared memory (union), is
+breaking boot sequence of qca99x0. Fix it by storing both binaries
+in separate memories. This issue is reported in ipq8064 platform which
+includes caldata in flash memory.
 
-Signed-off-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
+Fixes: 3d9195ea19e4 ("ath10k: incorporate qca4019 cal data download sequence")
+Reported-by: Sebastian Gottschall <s.gottschall@dd-wrt.com>
+Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
 ---
- drivers/staging/wilc1000/linux_wlan.c | 1 -
- 1 file changed, 1 deletion(-)
+v2: added fixes commit
 
-diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
-index a858552..5643a3d 100644
---- a/drivers/staging/wilc1000/linux_wlan.c
-+++ b/drivers/staging/wilc1000/linux_wlan.c
-@@ -313,7 +313,6 @@ static int linux_wlan_txq_task(void *vp)
- 	vif = netdev_priv(dev);
- 	wl = vif->wilc;
+ drivers/net/wireless/ath/ath10k/core.h | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/ath10k/core.h b/drivers/net/wireless/ath/ath10k/core.h
+index c23c37312ef7..d85b99164212 100644
+--- a/drivers/net/wireless/ath/ath10k/core.h
++++ b/drivers/net/wireless/ath/ath10k/core.h
+@@ -728,10 +728,8 @@ struct ath10k {
+ 	const void *firmware_data;
+ 	size_t firmware_len;
  
--	up(&wl->txq_thread_started);
- 	while (1) {
- 		down(&wl->txq_event);
+-	union {
+-		const struct firmware *pre_cal_file;
+-		const struct firmware *cal_file;
+-	};
++	const struct firmware *pre_cal_file;
++	const struct firmware *cal_file;
  
+ 	struct {
+ 		const void *firmware_codeswap_data;
 -- 
-1.9.1
+2.7.4
 
