@@ -1,51 +1,41 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:17503 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755148AbcDFJkl convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 05:40:41 -0400
-From: "Malinen, Jouni" <jouni@qca.qualcomm.com>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-CC: "johannes@sipsolutions.net" <johannes@sipsolutions.net>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Andrei Otcheretianski" <andrei.otcheretianski@intel.com>
-Subject: Re: [PATCHv3 RESEND 06/11] cfg80211: Provide an API to report NAN
- function termination
-Date: Wed, 6 Apr 2016 09:40:12 +0000
-Message-ID: <20160406094011.GC10595@jouni.qca.qualcomm.com> (sfid-20160406_114053_241352_CE613B88)
-References: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
- <1459244109-16038-6-git-send-email-emmanuel.grumbach@intel.com>
-In-Reply-To: <1459244109-16038-6-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from mx1.redhat.com ([209.132.183.28]:58310 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757020AbcDGSTe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2016 14:19:34 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 02/18] rtl8xxxu: Do not mess with AFE_XTAL_CTRL on 8192eu
+Date: Thu,  7 Apr 2016 14:19:17 -0400
+Message-Id: <1460053173-8494-3-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160407_201938_413368_055DFB89)
+In-Reply-To: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Mar 29, 2016 at 12:35:04PM +0300, Emmanuel Grumbach wrote:
-> Provide a function that reports NAN DE function termination. The function
-> may be terminated due to one of the following reasons: user request,
-> ttl expiration or failure.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
+To match the vendor driver, do not mess with AFE_XTAL_CTRL on 8192eu.
 
-> +/**
-> + * enum nl80211_nan_func_term_reason - NAN functions termination reason
-> + *
-> + * Defines termination reasons of a NAN function
-> + *
-> + * @NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST: requested by user
-> + * @NL80211_NAN_FUNC_TERM_REASON_TTL_EXPIRED: timeout
-> + * @NL80211_NAN_FUNC_TERM_REASON_ERROR: errored
-> + */
-> +enum nl80211_nan_func_term_reason {
-> +	NL80211_NAN_FUNC_TERM_REASON_USER_REQUEST,
-> +	NL80211_NAN_FUNC_TERM_REASON_TTL_EXPIRED,
-> +	NL80211_NAN_FUNC_TERM_REASON_ERROR,
-> +};
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Can you please add NL80211_NAN_FUNC_TERM_REASON_VENDOR_SPECIFIC? That
-would help vendors to implement and send vendor specific reason codes if
-any.
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 97e0d17..a4662a0 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -3208,7 +3208,7 @@ static int rtl8xxxu_init_phy_bb(struct rtl8xxxu_priv *priv)
+ 		rtl8xxxu_write16(priv, REG_SYS_FUNC, val16);
+ 	}
+ 
+-	if (priv->rtl_chip != RTL8723B) {
++	if (priv->rtl_chip != RTL8723B && priv->rtl_chip != RTL8192E) {
+ 		/* AFE_XTAL_RF_GATE (bit 14) if addressing as 32 bit register */
+ 		val32 = rtl8xxxu_read32(priv, REG_AFE_XTAL_CTRL);
+ 		val32 &= ~AFE_XTAL_RF_GATE;
 -- 
-Jouni Malinen                                            PGP id EFC895FA
+2.5.5
+
