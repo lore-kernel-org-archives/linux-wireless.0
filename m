@@ -1,68 +1,193 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from m97135.qiye.163.com ([220.181.97.135]:35936 "EHLO
-	m97135.qiye.163.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752244AbcD2CT7 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2016 22:19:59 -0400
-From: Jandy Gou <qingsong.gou@ck-telecom.com>
-To: Larry.Finger@lwfinger.net, Jes.Sorensen@redhat.com,
-	gregkh@linuxfoundation.org, shraddha.6596@gmail.com,
-	hgujulan@visteon.com
-Cc: linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	linux-kernel@vger.kernel.org,
-	Jandy Gou <qingsong.gou@ck-telecom.com>
-Subject: [PATCH v2] staging: r8723au: This patch tries to fix some byte order  issues that is found by sparse check.
-Date: Fri, 29 Apr 2016 10:09:11 +0800
-Message-Id: <1461895751-15168-1-git-send-email-qingsong.gou@ck-telecom.com> (sfid-20160429_042021_180495_4AE257B1)
+Received: from mx1.redhat.com ([209.132.183.28]:58324 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757310AbcDGSTe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2016 14:19:34 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 05/18] rtl8xxxu: Add 8192eu AGC tables
+Date: Thu,  7 Apr 2016 14:19:20 -0400
+Message-Id: <1460053173-8494-6-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160407_202000_942841_A33F8755)
+In-Reply-To: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
- make C=1 M=drivers/staging/rtl8723au/
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
- drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:96:38: warning: cast to
- restricted __le16
- drivers/staging/rtl8723au/hal/rtl8723a_cmd.c:100:27: warning: cast to
- restricted __le32
+A device specific AGC table is required for the 8192eu as well.
 
-Signed-off-by: Jandy Gou <qingsong.gou@ck-telecom.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/staging/rtl8723au/hal/rtl8723a_cmd.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 147 ++++++++++++++++++++++-
+ 1 file changed, 146 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-index 1662c03c..fff652c 100644
---- a/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-+++ b/drivers/staging/rtl8723au/hal/rtl8723a_cmd.c
-@@ -56,8 +56,8 @@ int FillH2CCmd(struct rtw_adapter *padapter, u8 ElementID, u32 CmdLen,
- 	u32 msgbox_addr;
- 	u32 msgbox_ex_addr;
- 	struct hal_data_8723a *pHalData;
--	u32 h2c_cmd = 0;
--	u16 h2c_cmd_ex = 0;
-+	__le32 h2c_cmd = 0;
-+	__le16 h2c_cmd_ex = 0;
- 	int ret = _FAIL;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 988aba6..c12cb63 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -849,6 +849,144 @@ static struct rtl8xxxu_reg32val rtl8xxx_agc_8723bu_table[] = {
+ 	{0xffff, 0xffffffff}
+ };
  
- 	padapter = GET_PRIMARY_ADAPTER(padapter);
-@@ -91,14 +91,12 @@ int FillH2CCmd(struct rtw_adapter *padapter, u8 ElementID, u32 CmdLen,
++static struct rtl8xxxu_reg32val rtl8xxx_agc_8192eu_std_table[] = {
++	{0xc78, 0xfb000001}, {0xc78, 0xfb010001},
++	{0xc78, 0xfb020001}, {0xc78, 0xfb030001},
++	{0xc78, 0xfb040001}, {0xc78, 0xfb050001},
++	{0xc78, 0xfa060001}, {0xc78, 0xf9070001},
++	{0xc78, 0xf8080001}, {0xc78, 0xf7090001},
++	{0xc78, 0xf60a0001}, {0xc78, 0xf50b0001},
++	{0xc78, 0xf40c0001}, {0xc78, 0xf30d0001},
++	{0xc78, 0xf20e0001}, {0xc78, 0xf10f0001},
++	{0xc78, 0xf0100001}, {0xc78, 0xef110001},
++	{0xc78, 0xee120001}, {0xc78, 0xed130001},
++	{0xc78, 0xec140001}, {0xc78, 0xeb150001},
++	{0xc78, 0xea160001}, {0xc78, 0xe9170001},
++	{0xc78, 0xe8180001}, {0xc78, 0xe7190001},
++	{0xc78, 0xc81a0001}, {0xc78, 0xc71b0001},
++	{0xc78, 0xc61c0001}, {0xc78, 0x071d0001},
++	{0xc78, 0x061e0001}, {0xc78, 0x051f0001},
++	{0xc78, 0x04200001}, {0xc78, 0x03210001},
++	{0xc78, 0xaa220001}, {0xc78, 0xa9230001},
++	{0xc78, 0xa8240001}, {0xc78, 0xa7250001},
++	{0xc78, 0xa6260001}, {0xc78, 0x85270001},
++	{0xc78, 0x84280001}, {0xc78, 0x83290001},
++	{0xc78, 0x252a0001}, {0xc78, 0x242b0001},
++	{0xc78, 0x232c0001}, {0xc78, 0x222d0001},
++	{0xc78, 0x672e0001}, {0xc78, 0x662f0001},
++	{0xc78, 0x65300001}, {0xc78, 0x64310001},
++	{0xc78, 0x63320001}, {0xc78, 0x62330001},
++	{0xc78, 0x61340001}, {0xc78, 0x45350001},
++	{0xc78, 0x44360001}, {0xc78, 0x43370001},
++	{0xc78, 0x42380001}, {0xc78, 0x41390001},
++	{0xc78, 0x403a0001}, {0xc78, 0x403b0001},
++	{0xc78, 0x403c0001}, {0xc78, 0x403d0001},
++	{0xc78, 0x403e0001}, {0xc78, 0x403f0001},
++	{0xc78, 0xfb400001}, {0xc78, 0xfb410001},
++	{0xc78, 0xfb420001}, {0xc78, 0xfb430001},
++	{0xc78, 0xfb440001}, {0xc78, 0xfb450001},
++	{0xc78, 0xfa460001}, {0xc78, 0xf9470001},
++	{0xc78, 0xf8480001}, {0xc78, 0xf7490001},
++	{0xc78, 0xf64a0001}, {0xc78, 0xf54b0001},
++	{0xc78, 0xf44c0001}, {0xc78, 0xf34d0001},
++	{0xc78, 0xf24e0001}, {0xc78, 0xf14f0001},
++	{0xc78, 0xf0500001}, {0xc78, 0xef510001},
++	{0xc78, 0xee520001}, {0xc78, 0xed530001},
++	{0xc78, 0xec540001}, {0xc78, 0xeb550001},
++	{0xc78, 0xea560001}, {0xc78, 0xe9570001},
++	{0xc78, 0xe8580001}, {0xc78, 0xe7590001},
++	{0xc78, 0xe65a0001}, {0xc78, 0xe55b0001},
++	{0xc78, 0xe45c0001}, {0xc78, 0xe35d0001},
++	{0xc78, 0xe25e0001}, {0xc78, 0xe15f0001},
++	{0xc78, 0x8a600001}, {0xc78, 0x89610001},
++	{0xc78, 0x88620001}, {0xc78, 0x87630001},
++	{0xc78, 0x86640001}, {0xc78, 0x85650001},
++	{0xc78, 0x84660001}, {0xc78, 0x83670001},
++	{0xc78, 0x82680001}, {0xc78, 0x6b690001},
++	{0xc78, 0x6a6a0001}, {0xc78, 0x696b0001},
++	{0xc78, 0x686c0001}, {0xc78, 0x676d0001},
++	{0xc78, 0x666e0001}, {0xc78, 0x656f0001},
++	{0xc78, 0x64700001}, {0xc78, 0x63710001},
++	{0xc78, 0x62720001}, {0xc78, 0x61730001},
++	{0xc78, 0x49740001}, {0xc78, 0x48750001},
++	{0xc78, 0x47760001}, {0xc78, 0x46770001},
++	{0xc78, 0x45780001}, {0xc78, 0x44790001},
++	{0xc78, 0x437a0001}, {0xc78, 0x427b0001},
++	{0xc78, 0x417c0001}, {0xc78, 0x407d0001},
++	{0xc78, 0x407e0001}, {0xc78, 0x407f0001},
++	{0xc50, 0x00040022}, {0xc50, 0x00040020},
++	{0xffff, 0xffffffff}
++};
++
++static struct rtl8xxxu_reg32val rtl8xxx_agc_8192eu_highpa_table[] = {
++	{0xc78, 0xfa000001}, {0xc78, 0xf9010001},
++	{0xc78, 0xf8020001}, {0xc78, 0xf7030001},
++	{0xc78, 0xf6040001}, {0xc78, 0xf5050001},
++	{0xc78, 0xf4060001}, {0xc78, 0xf3070001},
++	{0xc78, 0xf2080001}, {0xc78, 0xf1090001},
++	{0xc78, 0xf00a0001}, {0xc78, 0xef0b0001},
++	{0xc78, 0xee0c0001}, {0xc78, 0xed0d0001},
++	{0xc78, 0xec0e0001}, {0xc78, 0xeb0f0001},
++	{0xc78, 0xea100001}, {0xc78, 0xe9110001},
++	{0xc78, 0xe8120001}, {0xc78, 0xe7130001},
++	{0xc78, 0xe6140001}, {0xc78, 0xe5150001},
++	{0xc78, 0xe4160001}, {0xc78, 0xe3170001},
++	{0xc78, 0xe2180001}, {0xc78, 0xe1190001},
++	{0xc78, 0x8a1a0001}, {0xc78, 0x891b0001},
++	{0xc78, 0x881c0001}, {0xc78, 0x871d0001},
++	{0xc78, 0x861e0001}, {0xc78, 0x851f0001},
++	{0xc78, 0x84200001}, {0xc78, 0x83210001},
++	{0xc78, 0x82220001}, {0xc78, 0x6a230001},
++	{0xc78, 0x69240001}, {0xc78, 0x68250001},
++	{0xc78, 0x67260001}, {0xc78, 0x66270001},
++	{0xc78, 0x65280001}, {0xc78, 0x64290001},
++	{0xc78, 0x632a0001}, {0xc78, 0x622b0001},
++	{0xc78, 0x612c0001}, {0xc78, 0x602d0001},
++	{0xc78, 0x472e0001}, {0xc78, 0x462f0001},
++	{0xc78, 0x45300001}, {0xc78, 0x44310001},
++	{0xc78, 0x43320001}, {0xc78, 0x42330001},
++	{0xc78, 0x41340001}, {0xc78, 0x40350001},
++	{0xc78, 0x40360001}, {0xc78, 0x40370001},
++	{0xc78, 0x40380001}, {0xc78, 0x40390001},
++	{0xc78, 0x403a0001}, {0xc78, 0x403b0001},
++	{0xc78, 0x403c0001}, {0xc78, 0x403d0001},
++	{0xc78, 0x403e0001}, {0xc78, 0x403f0001},
++	{0xc78, 0xfa400001}, {0xc78, 0xf9410001},
++	{0xc78, 0xf8420001}, {0xc78, 0xf7430001},
++	{0xc78, 0xf6440001}, {0xc78, 0xf5450001},
++	{0xc78, 0xf4460001}, {0xc78, 0xf3470001},
++	{0xc78, 0xf2480001}, {0xc78, 0xf1490001},
++	{0xc78, 0xf04a0001}, {0xc78, 0xef4b0001},
++	{0xc78, 0xee4c0001}, {0xc78, 0xed4d0001},
++	{0xc78, 0xec4e0001}, {0xc78, 0xeb4f0001},
++	{0xc78, 0xea500001}, {0xc78, 0xe9510001},
++	{0xc78, 0xe8520001}, {0xc78, 0xe7530001},
++	{0xc78, 0xe6540001}, {0xc78, 0xe5550001},
++	{0xc78, 0xe4560001}, {0xc78, 0xe3570001},
++	{0xc78, 0xe2580001}, {0xc78, 0xe1590001},
++	{0xc78, 0x8a5a0001}, {0xc78, 0x895b0001},
++	{0xc78, 0x885c0001}, {0xc78, 0x875d0001},
++	{0xc78, 0x865e0001}, {0xc78, 0x855f0001},
++	{0xc78, 0x84600001}, {0xc78, 0x83610001},
++	{0xc78, 0x82620001}, {0xc78, 0x6a630001},
++	{0xc78, 0x69640001}, {0xc78, 0x68650001},
++	{0xc78, 0x67660001}, {0xc78, 0x66670001},
++	{0xc78, 0x65680001}, {0xc78, 0x64690001},
++	{0xc78, 0x636a0001}, {0xc78, 0x626b0001},
++	{0xc78, 0x616c0001}, {0xc78, 0x606d0001},
++	{0xc78, 0x476e0001}, {0xc78, 0x466f0001},
++	{0xc78, 0x45700001}, {0xc78, 0x44710001},
++	{0xc78, 0x43720001}, {0xc78, 0x42730001},
++	{0xc78, 0x41740001}, {0xc78, 0x40750001},
++	{0xc78, 0x40760001}, {0xc78, 0x40770001},
++	{0xc78, 0x40780001}, {0xc78, 0x40790001},
++	{0xc78, 0x407a0001}, {0xc78, 0x407b0001},
++	{0xc78, 0x407c0001}, {0xc78, 0x407d0001},
++	{0xc78, 0x407e0001}, {0xc78, 0x407f0001},
++	{0xc50, 0x00040222}, {0xc50, 0x00040220},
++	{0xffff, 0xffffffff}
++};
++
+ static struct rtl8xxxu_rfregval rtl8723au_radioa_1t_init_table[] = {
+ 	{0x00, 0x00030159}, {0x01, 0x00031284},
+ 	{0x02, 0x00098000}, {0x03, 0x00039c63},
+@@ -3446,7 +3584,14 @@ static int rtl8xxxu_init_phy_bb(struct rtl8xxxu_priv *priv)
  
- 		*(u8 *)(&h2c_cmd) |= ElementID;
- 
--		if (h2c_cmd & BIT(7)) {
-+		if (le32_to_cpu(h2c_cmd) & BIT(7)) {
- 			msgbox_ex_addr = REG_HMEBOX_EXT_0 + (h2c_box_num * EX_MESSAGE_BOX_SIZE);
--			h2c_cmd_ex = le16_to_cpu(h2c_cmd_ex);
--			rtl8723au_write16(padapter, msgbox_ex_addr, h2c_cmd_ex);
-+			rtl8723au_write16(padapter, msgbox_ex_addr, le16_to_cpu(h2c_cmd_ex));
- 		}
- 		msgbox_addr = REG_HMEBOX_0 + (h2c_box_num * MESSAGE_BOX_SIZE);
--		h2c_cmd = le32_to_cpu(h2c_cmd);
--		rtl8723au_write32(padapter, msgbox_addr, h2c_cmd);
-+		rtl8723au_write32(padapter, msgbox_addr, le32_to_cpu(h2c_cmd));
- 
- 		bcmd_down = true;
- 
+ 	if (priv->rtl_chip == RTL8723B)
+ 		rtl8xxxu_init_phy_regs(priv, rtl8xxx_agc_8723bu_table);
+-	else if (priv->hi_pa)
++	else if (priv->rtl_chip == RTL8192E) {
++		if (priv->hi_pa)
++			rtl8xxxu_init_phy_regs(priv,
++					       rtl8xxx_agc_8192eu_highpa_table);
++		else
++			rtl8xxxu_init_phy_regs(priv,
++					       rtl8xxx_agc_8192eu_std_table);
++	} else if (priv->hi_pa)
+ 		rtl8xxxu_init_phy_regs(priv, rtl8xxx_agc_highpa_table);
+ 	else
+ 		rtl8xxxu_init_phy_regs(priv, rtl8xxx_agc_standard_table);
 -- 
-1.9.1
-
+2.5.5
 
