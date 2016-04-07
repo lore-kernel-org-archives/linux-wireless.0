@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:36992 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933333AbcDLUCP (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2016 16:02:15 -0400
-Received: by mail-wm0-f46.google.com with SMTP id n3so42354307wmn.0
-        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2016 13:02:15 -0700 (PDT)
-Subject: Re: [PATCH] cfg80211: remove enum ieee80211_band
-To: Johannes Berg <johannes@sipsolutions.net>,
-	linux-wireless@vger.kernel.org
-References: <1460469487-21008-1-git-send-email-johannes@sipsolutions.net>
- <570D5243.6070204@broadcom.com> <1460491100.6369.27.camel@sipsolutions.net>
-From: Arend van Spriel <arend.vanspriel@broadcom.com>
-Message-ID: <570D5446.4060609@broadcom.com> (sfid-20160412_220219_150513_D2AAA89C)
-Date: Tue, 12 Apr 2016 22:02:14 +0200
-MIME-Version: 1.0
-In-Reply-To: <1460491100.6369.27.camel@sipsolutions.net>
-Content-Type: text/plain; charset=utf-8
+Received: from mx1.redhat.com ([209.132.183.28]:58236 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757312AbcDGSTe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2016 14:19:34 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 13/18] rtl8xxxu: Set REG_USB_HRPWM for 8192eu
+Date: Thu,  7 Apr 2016 14:19:28 -0400
+Message-Id: <1460053173-8494-14-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160407_201959_466660_0A441255)
+In-Reply-To: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
+The vendor driver set register 0xfe58 REG_USB_HWPWM in it's init
+sequence for 8192eu. Do the same here.
 
-On 12-04-16 21:58, Johannes Berg wrote:
-> On Tue, 2016-04-12 at 21:53 +0200, Arend van Spriel wrote:
->>
->> On 12-04-16 15:58, Johannes Berg wrote:
->>>
->>> From: Johannes Berg <johannes.berg@intel.com>
->>>
->>> This enum is already perfectly aliased to enum nl80211_band, and
->>> the only reason for it is that we get IEEE80211_NUM_BANDS out of
->>> it. There's no really good reason to not declare the number of
->>> bands in nl80211 though, so do that and remove the cfg80211 one.
->> So what if a band is added. That would change the value of
->> IEEE80211_NUM_BANDS in nl80211. Is it not ABI?
-> 
-> Well, it can't be ABI really since the value is never used. Arguably it
-> becomes API, but clearly we have the same with NL80211_CMD_MAX and many
-> others like it, so I see no point in treating the bands here specially.
-> I even added a comment :)
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c      | 2 ++
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h | 1 +
+ 2 files changed, 3 insertions(+)
 
-Ah. Clearly I only read the commit message :-p Sorry for the noise.
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index eac2a54..e06b25e 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -7225,6 +7225,8 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 			val32 |= FPGA_RF_MODE_CCK;
+ 			rtl8xxxu_write32(priv, REG_FPGA0_RF_MODE, val32);
+ 		}
++	} else if (priv->rtl_chip == RTL8192E) {
++		rtl8xxxu_write8(priv, REG_USB_HRPWM, 0x00);
+ 	}
+ 
+ 	val32 = rtl8xxxu_read32(priv, REG_FWHW_TXQ_CTRL);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+index ade42fe..82cbe85 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
+@@ -1043,6 +1043,7 @@
+ #define  USB_HIMR_ROK			BIT(0)	/*  Receive DMA OK Interrupt */
+ 
+ #define REG_USB_SPECIAL_OPTION		0xfe55
++#define REG_USB_HRPWM			0xfe58
+ #define REG_USB_DMA_AGG_TO		0xfe5b
+ #define REG_USB_AGG_TO			0xfe5c
+ #define REG_USB_AGG_TH			0xfe5d
+-- 
+2.5.5
 
-Gr. AvS
-
-> johannes
-> 
