@@ -1,81 +1,186 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.neratec.com ([46.140.151.2]:64974 "EHLO mail.neratec.com"
+Received: from mx1.redhat.com ([209.132.183.28]:48251 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754119AbcDAJhR (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2016 05:37:17 -0400
-From: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+	id S1757289AbcDGSTe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2016 14:19:34 -0400
+From: Jes.Sorensen@redhat.com
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@qca.qualcomm.com, ath9k-devel@lists.ath9k.org
-Subject: [PATCH v2] ath9k: interpret requested txpower in EIRP domain
-Date: Fri,  1 Apr 2016 11:37:08 +0200
-Message-Id: <1459503428-12492-1-git-send-email-zefir.kurtisi@neratec.com> (sfid-20160401_113722_474030_1F9D8F8B)
-In-Reply-To: <201604011711.RmqSBtrr%fengguang.wu@intel.com>
-References: <201604011711.RmqSBtrr%fengguang.wu@intel.com>
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 06/18] rtl8xxxu: Add 8192eu PHY init table
+Date: Thu,  7 Apr 2016 14:19:21 -0400
+Message-Id: <1460053173-8494-7-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160407_202528_203103_1AA7BAB9)
+In-Reply-To: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Tx power limitations at upper layers are interpreted in
-the EIRP domain. When the user requests a given maximum
-txpower, e.g. with: 'iw phy0 set txpower fixed 1500',
-he expects the EIRP to be at or below 15dBm.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-In ath9k_hw_apply_txpower(), the interpretation is
-different: the antenna-gain is capped against the
-current txpower limit in the regulatory, but not
-against the user set value. It ensures that the
-resulting EIRP is below the limit defined by the
-active countrycode, but not below the value the
-user requested.
+The 8192eu also requires it's own PHY init table.
 
-In a scenario like e.g.
- a) antenna_gain=6
- b) countrycode limits to eirp=18
- c) user set txpower=15
-this will cause a setting for AR_PHY_POWER_TX_RATE
-regs resulting in an EIRP > 15.
-
-This patch ensures that antenna-gain is considered
-whenever the txpower limit is adjusted and with that
-the user set limits are kept.
-
-Signed-off-by: Zefir Kurtisi <zefir.kurtisi@neratec.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
-v2: remove unused variable max_gain as reported by kbuild test robot
----
- drivers/net/wireless/ath/ath9k/hw.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 140 +++++++++++++++++++++++
+ 1 file changed, 140 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath9k/hw.c b/drivers/net/wireless/ath/ath9k/hw.c
-index e7a3101..9030574 100644
---- a/drivers/net/wireless/ath/ath9k/hw.c
-+++ b/drivers/net/wireless/ath/ath9k/hw.c
-@@ -2833,8 +2833,7 @@ void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan,
- {
- 	struct ath_regulatory *reg = ath9k_hw_regulatory(ah);
- 	struct ieee80211_channel *channel;
--	int chan_pwr, new_pwr, max_gain;
--	int ant_gain, ant_reduction = 0;
-+	int chan_pwr, new_pwr;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index c12cb63..fa6ab85 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -610,6 +610,138 @@ static struct rtl8xxxu_reg32val rtl8188ru_phy_1t_highpa_table[] = {
+ 	{0xffff, 0xffffffff},
+ };
  
- 	if (!chan)
- 		return;
-@@ -2842,15 +2841,10 @@ void ath9k_hw_apply_txpower(struct ath_hw *ah, struct ath9k_channel *chan,
- 	channel = chan->chan;
- 	chan_pwr = min_t(int, channel->max_power * 2, MAX_RATE_POWER);
- 	new_pwr = min_t(int, chan_pwr, reg->power_limit);
--	max_gain = chan_pwr - new_pwr + channel->max_antenna_gain * 2;
--
--	ant_gain = get_antenna_gain(ah, chan);
--	if (ant_gain > max_gain)
--		ant_reduction = ant_gain - max_gain;
++static struct rtl8xxxu_reg32val rtl8192eu_phy_init_table[] = {
++	{0x800, 0x80040000}, {0x804, 0x00000003},
++	{0x808, 0x0000fc00}, {0x80c, 0x0000000a},
++	{0x810, 0x10001331}, {0x814, 0x020c3d10},
++	{0x818, 0x02220385}, {0x81c, 0x00000000},
++	{0x820, 0x01000100}, {0x824, 0x00390204},
++	{0x828, 0x01000100}, {0x82c, 0x00390204},
++	{0x830, 0x32323232}, {0x834, 0x30303030},
++	{0x838, 0x30303030}, {0x83c, 0x30303030},
++	{0x840, 0x00010000}, {0x844, 0x00010000},
++	{0x848, 0x28282828}, {0x84c, 0x28282828},
++	{0x850, 0x00000000}, {0x854, 0x00000000},
++	{0x858, 0x009a009a}, {0x85c, 0x01000014},
++	{0x860, 0x66f60000}, {0x864, 0x061f0000},
++	{0x868, 0x30303030}, {0x86c, 0x30303030},
++	{0x870, 0x00000000}, {0x874, 0x55004200},
++	{0x878, 0x08080808}, {0x87c, 0x00000000},
++	{0x880, 0xb0000c1c}, {0x884, 0x00000001},
++	{0x888, 0x00000000}, {0x88c, 0xcc0000c0},
++	{0x890, 0x00000800}, {0x894, 0xfffffffe},
++	{0x898, 0x40302010}, {0x900, 0x00000000},
++	{0x904, 0x00000023}, {0x908, 0x00000000},
++	{0x90c, 0x81121313}, {0x910, 0x806c0001},
++	{0x914, 0x00000001}, {0x918, 0x00000000},
++	{0x91c, 0x00010000}, {0x924, 0x00000001},
++	{0x928, 0x00000000}, {0x92c, 0x00000000},
++	{0x930, 0x00000000}, {0x934, 0x00000000},
++	{0x938, 0x00000000}, {0x93c, 0x00000000},
++	{0x940, 0x00000000}, {0x944, 0x00000000},
++	{0x94c, 0x00000008}, {0xa00, 0x00d0c7c8},
++	{0xa04, 0x81ff000c}, {0xa08, 0x8c838300},
++	{0xa0c, 0x2e68120f}, {0xa10, 0x95009b78},
++	{0xa14, 0x1114d028}, {0xa18, 0x00881117},
++	{0xa1c, 0x89140f00}, {0xa20, 0x1a1b0000},
++	{0xa24, 0x090e1317}, {0xa28, 0x00000204},
++	{0xa2c, 0x00d30000}, {0xa70, 0x101fff00},
++	{0xa74, 0x00000007}, {0xa78, 0x00000900},
++	{0xa7c, 0x225b0606}, {0xa80, 0x218075b1},
++	{0xb38, 0x00000000}, {0xc00, 0x48071d40},
++	{0xc04, 0x03a05633}, {0xc08, 0x000000e4},
++	{0xc0c, 0x6c6c6c6c}, {0xc10, 0x08800000},
++	{0xc14, 0x40000100}, {0xc18, 0x08800000},
++	{0xc1c, 0x40000100}, {0xc20, 0x00000000},
++	{0xc24, 0x00000000}, {0xc28, 0x00000000},
++	{0xc2c, 0x00000000}, {0xc30, 0x69e9ac47},
++	{0xc34, 0x469652af}, {0xc38, 0x49795994},
++	{0xc3c, 0x0a97971c}, {0xc40, 0x1f7c403f},
++	{0xc44, 0x000100b7}, {0xc48, 0xec020107},
++	{0xc4c, 0x007f037f},
++#ifdef EXT_PA_8192EU
++	/* External PA or external LNA */
++	{0xc50, 0x00340220},
++#else
++	{0xc50, 0x00340020},
++#endif
++	{0xc54, 0x0080801f},
++#ifdef EXT_PA_8192EU
++	/* External PA or external LNA */
++	{0xc58, 0x00000220},
++#else
++	{0xc58, 0x00000020},
++#endif
++	{0xc5c, 0x00248492}, {0xc60, 0x00000000},
++	{0xc64, 0x7112848b}, {0xc68, 0x47c00bff},
++	{0xc6c, 0x00000036}, {0xc70, 0x00000600},
++	{0xc74, 0x02013169}, {0xc78, 0x0000001f},
++	{0xc7c, 0x00b91612},
++#ifdef EXT_PA_8192EU
++	/* External PA or external LNA */
++	{0xc80, 0x2d4000b5},
++#else
++	{0xc80, 0x40000100},
++#endif
++	{0xc84, 0x21f60000},
++#ifdef EXT_PA_8192EU
++	/* External PA or external LNA */
++	{0xc88, 0x2d4000b5},
++#else
++	{0xc88, 0x40000100},
++#endif
++	{0xc8c, 0xa0e40000}, {0xc90, 0x00121820},
++	{0xc94, 0x00000000}, {0xc98, 0x00121820},
++	{0xc9c, 0x00007f7f}, {0xca0, 0x00000000},
++	{0xca4, 0x000300a0}, {0xca8, 0x00000000},
++	{0xcac, 0x00000000}, {0xcb0, 0x00000000},
++	{0xcb4, 0x00000000}, {0xcb8, 0x00000000},
++	{0xcbc, 0x28000000}, {0xcc0, 0x00000000},
++	{0xcc4, 0x00000000}, {0xcc8, 0x00000000},
++	{0xccc, 0x00000000}, {0xcd0, 0x00000000},
++	{0xcd4, 0x00000000}, {0xcd8, 0x64b22427},
++	{0xcdc, 0x00766932}, {0xce0, 0x00222222},
++	{0xce4, 0x00040000}, {0xce8, 0x77644302},
++	{0xcec, 0x2f97d40c}, {0xd00, 0x00080740},
++	{0xd04, 0x00020403}, {0xd08, 0x0000907f},
++	{0xd0c, 0x20010201}, {0xd10, 0xa0633333},
++	{0xd14, 0x3333bc43}, {0xd18, 0x7a8f5b6b},
++	{0xd1c, 0x0000007f}, {0xd2c, 0xcc979975},
++	{0xd30, 0x00000000}, {0xd34, 0x80608000},
++	{0xd38, 0x00000000}, {0xd3c, 0x00127353},
++	{0xd40, 0x00000000}, {0xd44, 0x00000000},
++	{0xd48, 0x00000000}, {0xd4c, 0x00000000},
++	{0xd50, 0x6437140a}, {0xd54, 0x00000000},
++	{0xd58, 0x00000282}, {0xd5c, 0x30032064},
++	{0xd60, 0x4653de68}, {0xd64, 0x04518a3c},
++	{0xd68, 0x00002101}, {0xd6c, 0x2a201c16},
++	{0xd70, 0x1812362e}, {0xd74, 0x322c2220},
++	{0xd78, 0x000e3c24}, {0xd80, 0x01081008},
++	{0xd84, 0x00000800}, {0xd88, 0xf0b50000},
++	{0xe00, 0x30303030}, {0xe04, 0x30303030},
++	{0xe08, 0x03903030}, {0xe10, 0x30303030},
++	{0xe14, 0x30303030}, {0xe18, 0x30303030},
++	{0xe1c, 0x30303030}, {0xe28, 0x00000000},
++	{0xe30, 0x1000dc1f}, {0xe34, 0x10008c1f},
++	{0xe38, 0x02140102}, {0xe3c, 0x681604c2},
++	{0xe40, 0x01007c00}, {0xe44, 0x01004800},
++	{0xe48, 0xfb000000}, {0xe4c, 0x000028d1},
++	{0xe50, 0x1000dc1f}, {0xe54, 0x10008c1f},
++	{0xe58, 0x02140102}, {0xe5c, 0x28160d05},
++	{0xe60, 0x00000008}, {0xe68, 0x0fc05656},
++	{0xe6c, 0x03c09696}, {0xe70, 0x03c09696},
++	{0xe74, 0x0c005656}, {0xe78, 0x0c005656},
++	{0xe7c, 0x0c005656}, {0xe80, 0x0c005656},
++	{0xe84, 0x03c09696}, {0xe88, 0x0c005656},
++	{0xe8c, 0x03c09696}, {0xed0, 0x03c09696},
++	{0xed4, 0x03c09696}, {0xed8, 0x03c09696},
++	{0xedc, 0x0000d6d6}, {0xee0, 0x0000d6d6},
++	{0xeec, 0x0fc01616}, {0xee4, 0xb0000c1c},
++	{0xee8, 0x00000001}, {0xf14, 0x00000003},
++	{0xf4c, 0x00000000}, {0xf00, 0x00000300},
++	{0xffff, 0xffffffff},
++};
++
+ static struct rtl8xxxu_reg32val rtl8xxx_agc_standard_table[] = {
+ 	{0xc78, 0x7b000001}, {0xc78, 0x7b010001},
+ 	{0xc78, 0x7b020001}, {0xc78, 0x7b030001},
+@@ -3516,6 +3648,14 @@ static int rtl8xxxu_init_phy_bb(struct rtl8xxxu_priv *priv)
+ 		rtl8xxxu_write8(priv, REG_SYS_FUNC, 0xe3);
+ 		rtl8xxxu_write8(priv, REG_AFE_XTAL_CTRL + 1, 0x80);
+ 		rtl8xxxu_init_phy_regs(priv, rtl8723b_phy_1t_init_table);
++	} else if (priv->rtl_chip == RTL8192E) {
++		val16 = rtl8xxxu_read16(priv, REG_SYS_FUNC);
++		val16 |= (SYS_FUNC_USBA | SYS_FUNC_USBD | SYS_FUNC_DIO_RF |
++			  SYS_FUNC_BB_GLB_RSTN | SYS_FUNC_BBRSTB);
++		rtl8xxxu_write16(priv, REG_SYS_FUNC, val16);
++		val8 = RF_ENABLE | RF_RSTB | RF_SDMRSTB;
++		rtl8xxxu_write8(priv, REG_RF_CTRL, val8);
++		rtl8xxxu_init_phy_regs(priv, rtl8192eu_phy_init_table);
+ 	} else
+ 		rtl8xxxu_init_phy_regs(priv, rtl8723a_phy_1t_init_table);
  
- 	ah->eep_ops->set_txpower(ah, chan,
- 				 ath9k_regd_get_ctl(reg, chan),
--				 ant_reduction, new_pwr, test);
-+				 get_antenna_gain(ah, chan), new_pwr, test);
- }
- 
- void ath9k_hw_set_txpowerlimit(struct ath_hw *ah, u32 limit, bool test)
 -- 
-2.7.4
+2.5.5
 
