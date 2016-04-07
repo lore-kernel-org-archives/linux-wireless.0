@@ -1,66 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:52237 "EHLO bear.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:34722 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754137AbcDFMbe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 08:31:34 -0400
-From: "Machani, Yaniv" <yanivma@ti.com>
-To: =?utf-8?B?UGFsaSBSb2jDoXI=?= <pali.rohar@gmail.com>
-CC: Luciano Coelho <coelho@ti.com>, "Balbi, Felipe" <balbi@ti.com>,
-	"Chalmers, Kevin" <kev@ti.com>, Shahar Levi <shahar_levi@ti.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	"Davis, Andrew" <afd@ti.com>, "Mishol, Guy" <guym@ti.com>,
-	Arik Nemtsov <arik@wizery.com>, Gery Kahn <geryk@ti.com>,
-	Felipe Balbi <balbi@kernel.org>,
-	Luciano Coelho <luca@coelho.fi>,
-	"David Woodhouse" <dwmw2@infradead.org>,
-	Pavel Machek <pavel@ucw.cz>,
-	Aaro Koskinen <aaro.koskinen@iki.fi>,
-	Ben Hutchings <ben@decadent.org.uk>,
-	David Gnedt <david.gnedt@platinumzone24.at>,
-	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
-	Sebastian Reichel <sre@kernel.org>,
-	"Tony Lindgren" <tony@atomide.com>, "Menon, Nishanth" <nm@ti.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: AP firmware for TI wl1251 wifi chip (wl1251-fw-ap.bin)
-Date: Wed, 6 Apr 2016 12:30:25 +0000
-Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101390F685E@DFRE01.ent.ti.com> (sfid-20160406_143210_279860_A342682B)
-References: <201603200040.26045@pali> <20160404123944.GA8413@pali>
- <AE1C82FB3D0EC64DB1F752C81CBD1101390F6305@DFRE01.ent.ti.com>
- <201604061412.43684@pali>
-In-Reply-To: <201604061412.43684@pali>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S1757175AbcDGSTe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2016 14:19:34 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 00/18] rtl8xxxu: Additional code to support rtl8192eu
+Date: Thu,  7 Apr 2016 14:19:15 -0400
+Message-Id: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160407_201943_916488_2F24943B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCBBcHIgMDYsIDIwMTYgYXQgMTU6MTI6NDMsIFBhbGkgUm9ow6FyIHdyb3RlOg0KPiA+
-ID4gPiBGb3Igb3RoZXIgVEkgd2lsaW5rIGNoaXBzIHRoZXJlIGFyZSA8Q0hJUD4tYXAuYmluIGZp
-cm13YXJlIGZpbGVzIA0KPiA+ID4gPiAod2wxMjcxLWZ3LWFwLmJpbiBhbmQgd2wxMjh4LWZ3LWFw
-LmJpbikgd2hpY2ggc3VwcG9ydCBBUCBtb2RlLg0KPiA+ID4gPiBCdXQgZm9yDQo+ID4gPiA+IHds
-MTI1MSBmaXJtd2FyZSBmaWxlIHdpdGggZ3Vlc3NlZCBuYW1lICJ3bDEyNTEtZnctYXAuYmluIiBp
-cyANCj4gPiA+ID4gbWlzc2luZy4NCj4gPiA+ID4NCj4gPiA+ID4gRG8geW91IGhhdmUgYW55IGlk
-ZWEgd2hhdCBoYXBwZW5lZCB3aXRoIEFQIGZpcm13YXJlIGZvciB0aQ0KPiA+ID4gPiB3aWxpbms0
-IHdsMTI1MSB3aWZpIGNoaXA/IE9yIHdoZXJlIGNhbiBiZSBmb3VuZD8gR3V5cyBmcm9tIFRJLCAN
-Cj4gPiA+ID4gY2FuIHlvdSBoZWxwPw0KPiA+ID4gPg0KPiA+ID4gPiBJIHNlZSB0aGF0IFNUQSBm
-aXJtd2FyZSB3YXMgYWRkZWQgaW50byBsaW51eC1maXJtd2FyZSB0cmVlIGluIA0KPiA+ID4gPiB5
-ZWFyDQo+ID4gPiA+IDIwMTMgYnkgdGhpcyBwdWxsIHJlcXVlc3QgWzJdLg0KPiA+ID4gPg0KPiA+
-ID4gPiBbMV0gLQ0KPiA+ID4gPiBodHRwczovL2dpdC5rZXJuZWwub3JnL2NnaXQvbGludXgva2Vy
-bmVsL2dpdC9maXJtd2FyZS9saW51eC1maXJtDQo+ID4gPiA+IHcNCj4gPiA+ID4gYXJlIC5nDQo+
-ID4gPiA+IGl0L3RyZWUvdGktY29ubmVjdGl2aXR5DQo+ID4gPiA+DQo+ID4gPiA+IFsyXSAtDQo+
-ID4gPiA+IGh0dHA6Ly90aHJlYWQuZ21hbmUub3JnL2dtYW5lLmxpbnV4Lmtlcm5lbC8xNTY2NTAw
-L2ZvY3VzPTE1NzEzODINCj4gPiA+DQo+ID4gPiBIaSEgQW55Ym9keSBoYXMgc29tZSBpZGVhIGFi
-b3V0IHRoYXQgQVAgZmlybXdhcmU/DQo+ID4NCj4gPiBIaSwNCj4gPiB3bDEyNTEgZG9lcyBub3Qg
-c3VwcG9ydCBBUCBtb2RlLCBzbyB0aGVyZSBpcyBubyBmaXJtd2FyZSBmb3IgaXQgaW4gDQo+ID4g
-dGhlIHRyZWUuDQo+ID4NCj4gPiBSZWdhcmRzLA0KPiA+IFlhbml2DQo+IA0KPiBIaSBZYW5pdiEg
-SSByZWFkIG9uIHNvbWUgVEkgd2hpdGVwYXBlciwgdGhhdCB3bDEyNTEgaGFyZHdhcmUgc3VwcG9y
-dHMgDQo+IHNvbWUgU29mdC1BUCBtb2RlLiBTbyBJIGV4cGVjdCB0aGF0IGVpdGhlciBzcGVjaWFs
-IEZXIGlzIG5lZWRlZCBmb3IgaXQgDQo+IG9yIHNvbWVob3cgaXQgaXMgcG9zc2libGUgdG8gdXNl
-IGN1cnJlbnQgcmVsZWFzZWQuIERvIHlvdSBoYXZlIGFueSBpbmZvcm1hdGlvbiBhYm91dCBpdD8N
-Cj4gDQo+IC0tDQo+IFBhbGkgUm9ow6FyDQo+IHBhbGkucm9oYXJAZ21haWwuY29tDQoNCkhpIFBh
-bGksDQpUaGlzIG11c3QgYmUgc29tZSB0eXBvLCB0aGUgZGV2aWNlIGRvZXMgbm90IHN1cHBvcnQg
-U29mdC1BUC4NCk1vcmUgdGhhbiB0aGF0LCB3bDEyNTEgZmFtaWx5IGlzIG5vdCBvZmZpY2lhbGx5
-IHN1cHBvcnRlZCB2aWEgdGhlIG1haW5saW5lIExpbnV4Lg0KRm9yIFNvZnQtQVAsIGFuZCBvdGhl
-ciBuZXcgZmVhdHVyZXMgYmFzZWQgb24gTGludXggeW91IHNob3VsZCB1c2UgV2lMaW5rOCBjaGlw
-IGZhbWlseS4NCg0KUmVnYXJkcywNCllhbml2DQo=
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+
+Hi,
+
+Here is another set of patches adding more code to handle the
+rtl8192eu. It is relative to wireless-drivers-next as of
+2016-04-07. This isn't the complete set to support the 8192eu, I am
+breaking it down to make the patch volume easier to manage.
+
+I am hoping we can get it all in so 8192eu support can be enabled in
+time for 4.7.
+
+The only contentious issue would be the EXT_PA_8192EU defines, which I
+would like to keep in place as it helps me dealing with that later. It
+will get cleaned up down the line.
+
+Cheers,
+Jes
+
+
+Jes Sorensen (18):
+  rtl8xxxu: Add MAC init table for 8192eu
+  rtl8xxxu: Do not mess with AFE_XTAL_CTRL on 8192eu
+  rtl8xxxu: Set TX page boundaries for 8192eu
+  rtl8xxxu: Add radio init tables for 8192eu
+  rtl8xxxu: Add 8192eu AGC tables
+  rtl8xxxu: Add 8192eu PHY init table
+  rtl8xxxu: Pick PHY init table based on chip version first
+  rtl8xxxu: Correctly parse 8192eu efuse
+  rtl8xxxu: Handle BB init for 8192eu
+  rtl8xxxu: Provide special handling when writing RF regs on 8192eu
+  rtl8xxxu: Handle XTAL value setting on 8192eu
+  rtl8xxxu: Set correct interrupt masking registers on 8192eu
+  rtl8xxxu: Set REG_USB_HRPWM for 8192eu
+  rtl8xxxu: Fix LDPC RX hang issue on 8192eu
+  rtl8xxxu: Implement 8192eu device specific quirks
+  rtl8xxxu: Use proper register name for REG_PAD_CTRL1
+  rtl8xxxu: Implement IQK calibration for 8192eu
+  rtl8xxxu: Adjust AFE crystal value on 8192eu
+
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c   | 1581 +++++++++++++++++---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |   40 +-
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  |    7 +
+ 3 files changed, 1419 insertions(+), 209 deletions(-)
+
+-- 
+2.5.5
+
