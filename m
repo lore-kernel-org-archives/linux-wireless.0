@@ -1,98 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from host.76.145.23.62.rev.coltfrance.com ([62.23.145.76]:54555 "EHLO
-	proxy.6wind.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753860AbcDYIcM (ORCPT
+Received: from mail-yw0-f173.google.com ([209.85.161.173]:35315 "EHLO
+	mail-yw0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756184AbcDGNBz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2016 04:32:12 -0400
-From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
-To: netdev@vger.kernel.org
-Cc: davem@davemloft.net, jhs@mojatatu.com, stephen@networkplumber.org,
-	pshelar@nicira.com, aar@pengutronix.de, linux-wpan@vger.kernel.org,
-	wensong@linux-vs.org, horms@verge.net.au, ja@ssi.bg,
-	pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu,
-	lvs-devel@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	Nicolas Dichtel <nicolas.dichtel@6wind.com>
-Subject: [PATCH net-next 8/9] netfilter/ipvs: use nla_put_u64_64bit()
-Date: Mon, 25 Apr 2016 10:25:21 +0200
-Message-Id: <1461572722-6029-9-git-send-email-nicolas.dichtel@6wind.com> (sfid-20160425_103219_565191_E6987EC3)
-In-Reply-To: <1461572722-6029-1-git-send-email-nicolas.dichtel@6wind.com>
-References: <1461572722-6029-1-git-send-email-nicolas.dichtel@6wind.com>
+	Thu, 7 Apr 2016 09:01:55 -0400
+Received: by mail-yw0-f173.google.com with SMTP id i84so89071127ywc.2
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2016 06:01:54 -0700 (PDT)
+MIME-Version: 1.0
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Thu, 7 Apr 2016 18:31:34 +0530
+Message-ID: <CABPxzYLaWKgYrwjyjDpiZzWCbCpCzr7mKLorm9mzxspE5n0rHQ@mail.gmail.com> (sfid-20160407_150158_555155_304403A7)
+Subject: RFC: Handling DL only traffic when already in Powersave
+To: linux-wireless <linux-wireless@vger.kernel.org>
+Cc: Johannes Berg <johannes@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
----
- include/uapi/linux/ip_vs.h     |  1 +
- net/netfilter/ipvs/ip_vs_ctl.c | 36 ++++++++++++++++++++++++------------
- 2 files changed, 25 insertions(+), 12 deletions(-)
+Hi,
 
-diff --git a/include/uapi/linux/ip_vs.h b/include/uapi/linux/ip_vs.h
-index 391395c06c7e..22d69894bc92 100644
---- a/include/uapi/linux/ip_vs.h
-+++ b/include/uapi/linux/ip_vs.h
-@@ -435,6 +435,7 @@ enum {
- 	IPVS_STATS_ATTR_OUTPPS,		/* current out packet rate */
- 	IPVS_STATS_ATTR_INBPS,		/* current in byte rate */
- 	IPVS_STATS_ATTR_OUTBPS,		/* current out byte rate */
-+	IPVS_STATS_ATTR_PAD,
- 	__IPVS_STATS_ATTR_MAX,
- };
- 
-diff --git a/net/netfilter/ipvs/ip_vs_ctl.c b/net/netfilter/ipvs/ip_vs_ctl.c
-index 404b2a4f4b5b..f35ebc02fa5c 100644
---- a/net/netfilter/ipvs/ip_vs_ctl.c
-+++ b/net/netfilter/ipvs/ip_vs_ctl.c
-@@ -2875,8 +2875,10 @@ static int ip_vs_genl_fill_stats(struct sk_buff *skb, int container_type,
- 	if (nla_put_u32(skb, IPVS_STATS_ATTR_CONNS, (u32)kstats->conns) ||
- 	    nla_put_u32(skb, IPVS_STATS_ATTR_INPKTS, (u32)kstats->inpkts) ||
- 	    nla_put_u32(skb, IPVS_STATS_ATTR_OUTPKTS, (u32)kstats->outpkts) ||
--	    nla_put_u64(skb, IPVS_STATS_ATTR_INBYTES, kstats->inbytes) ||
--	    nla_put_u64(skb, IPVS_STATS_ATTR_OUTBYTES, kstats->outbytes) ||
-+	    nla_put_u64_64bit(skb, IPVS_STATS_ATTR_INBYTES, kstats->inbytes,
-+			      IPVS_STATS_ATTR_PAD) ||
-+	    nla_put_u64_64bit(skb, IPVS_STATS_ATTR_OUTBYTES, kstats->outbytes,
-+			      IPVS_STATS_ATTR_PAD) ||
- 	    nla_put_u32(skb, IPVS_STATS_ATTR_CPS, (u32)kstats->cps) ||
- 	    nla_put_u32(skb, IPVS_STATS_ATTR_INPPS, (u32)kstats->inpps) ||
- 	    nla_put_u32(skb, IPVS_STATS_ATTR_OUTPPS, (u32)kstats->outpps) ||
-@@ -2900,16 +2902,26 @@ static int ip_vs_genl_fill_stats64(struct sk_buff *skb, int container_type,
- 	if (!nl_stats)
- 		return -EMSGSIZE;
- 
--	if (nla_put_u64(skb, IPVS_STATS_ATTR_CONNS, kstats->conns) ||
--	    nla_put_u64(skb, IPVS_STATS_ATTR_INPKTS, kstats->inpkts) ||
--	    nla_put_u64(skb, IPVS_STATS_ATTR_OUTPKTS, kstats->outpkts) ||
--	    nla_put_u64(skb, IPVS_STATS_ATTR_INBYTES, kstats->inbytes) ||
--	    nla_put_u64(skb, IPVS_STATS_ATTR_OUTBYTES, kstats->outbytes) ||
--	    nla_put_u64(skb, IPVS_STATS_ATTR_CPS, kstats->cps) ||
--	    nla_put_u64(skb, IPVS_STATS_ATTR_INPPS, kstats->inpps) ||
--	    nla_put_u64(skb, IPVS_STATS_ATTR_OUTPPS, kstats->outpps) ||
--	    nla_put_u64(skb, IPVS_STATS_ATTR_INBPS, kstats->inbps) ||
--	    nla_put_u64(skb, IPVS_STATS_ATTR_OUTBPS, kstats->outbps))
-+	if (nla_put_u64_64bit(skb, IPVS_STATS_ATTR_CONNS, kstats->conns,
-+			      IPVS_STATS_ATTR_PAD) ||
-+	    nla_put_u64_64bit(skb, IPVS_STATS_ATTR_INPKTS, kstats->inpkts,
-+			      IPVS_STATS_ATTR_PAD) ||
-+	    nla_put_u64_64bit(skb, IPVS_STATS_ATTR_OUTPKTS, kstats->outpkts,
-+			      IPVS_STATS_ATTR_PAD) ||
-+	    nla_put_u64_64bit(skb, IPVS_STATS_ATTR_INBYTES, kstats->inbytes,
-+			      IPVS_STATS_ATTR_PAD) ||
-+	    nla_put_u64_64bit(skb, IPVS_STATS_ATTR_OUTBYTES, kstats->outbytes,
-+			      IPVS_STATS_ATTR_PAD) ||
-+	    nla_put_u64_64bit(skb, IPVS_STATS_ATTR_CPS, kstats->cps,
-+			      IPVS_STATS_ATTR_PAD) ||
-+	    nla_put_u64_64bit(skb, IPVS_STATS_ATTR_INPPS, kstats->inpps,
-+			      IPVS_STATS_ATTR_PAD) ||
-+	    nla_put_u64_64bit(skb, IPVS_STATS_ATTR_OUTPPS, kstats->outpps,
-+			      IPVS_STATS_ATTR_PAD) ||
-+	    nla_put_u64_64bit(skb, IPVS_STATS_ATTR_INBPS, kstats->inbps,
-+			      IPVS_STATS_ATTR_PAD) ||
-+	    nla_put_u64_64bit(skb, IPVS_STATS_ATTR_OUTBPS, kstats->outbps,
-+			      IPVS_STATS_ATTR_PAD))
- 		goto nla_put_failure;
- 	nla_nest_end(skb, nl_stats);
- 
+When using HW_PS and running Downlink only traffic like UDP-RX, mac80211
+has the mechanism to not to enter power-save (postpone the dynamic ps
+timer).
+
+But if we are already in power-save it continues to stay in PS
+and retrieves the frames, for large traffic this is not acceptable.
+
+The standard doesn't say anything, its left to vendor to implement their
+own mechanism.
+
+I have the below questions
+
+1) Are any other vendors seeing this issue?
+
+2) Are they using proprietary algorithms to solve this,
+implemented in their HW/FW?
+
+3) If yes, how are they keeping the mac80211 and FW FSM in sync,
+as the driver cannot request/indicate the power save state to mac80211.
+(no feedback path).
+
+IMHO,
+
+a) we should implemented a feedback path, where the vendor
+can implement proprietary mechanism to handle this and inform/request
+mac80211 for a specific power save state.
+
+b) mac80211 just conveys the user/system preferences to the driver
+and driver handles the FSM on when to enter/exit PS? (true HW_PS).
+
+
+Any suggestions/comments?
+
 -- 
-2.8.1
-
+Thanks,
+Regards,
+Chaitanya T K.
