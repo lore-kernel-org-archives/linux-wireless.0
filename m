@@ -1,72 +1,82 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from paleale.coelho.fi ([176.9.41.70]:39058 "EHLO
-	farmhouse.coelho.fi" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752872AbcDZSbO (ORCPT
+Received: from mail-yw0-f174.google.com ([209.85.161.174]:34462 "EHLO
+	mail-yw0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753756AbcDHKGU (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 14:31:14 -0400
-Message-ID: <1461695468.13240.58.camel@coelho.fi> (sfid-20160426_203132_746352_0B1195A6)
-From: Luca Coelho <luca@coelho.fi>
-To: Mitchel Humpherys <mitch.special@gmail.com>,
-	Sara Sharon <sara.sharon@intel.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	linux-wireless@vger.kernel.org
-Date: Tue, 26 Apr 2016 21:31:08 +0300
-In-Reply-To: <87d1pcthr0.fsf@gmail.com>
-References: <87d1pcthr0.fsf@gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Subject: Re: Intel WiFi regression on linux-next
+	Fri, 8 Apr 2016 06:06:20 -0400
+Received: by mail-yw0-f174.google.com with SMTP id d68so128945540ywe.1
+        for <linux-wireless@vger.kernel.org>; Fri, 08 Apr 2016 03:06:19 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1460059666.27154.16.camel@sipsolutions.net>
+References: <CABPxzYLaWKgYrwjyjDpiZzWCbCpCzr7mKLorm9mzxspE5n0rHQ@mail.gmail.com>
+ <1460059666.27154.16.camel@sipsolutions.net>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Fri, 8 Apr 2016 15:35:59 +0530
+Message-ID: <CABPxzY+4JbfHxsXEPwfF0FhX027VjE7UW_MfG1vR7z13nbG3LA@mail.gmail.com> (sfid-20160408_120624_406374_73C4DF26)
+Subject: Re: RFC: Handling DL only traffic when already in Powersave
+To: Johannes Berg <johannes@sipsolutions.net>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-04-26 at 10:14 -0700, Mitchel Humpherys wrote:
-> Hello,
+On Fri, Apr 8, 2016 at 1:37 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
+> On Thu, 2016-04-07 at 18:31 +0530, Krishna Chaitanya wrote:
+>> Hi,
+>>
+>> When using HW_PS and running Downlink only traffic like UDP-RX,
+>> mac80211 has the mechanism to not to enter power-save (postpone the
+>> dynamic ps timer).
+>>
+>> But if we are already in power-save it continues to stay in PS
+>> and retrieves the frames, for large traffic this is not acceptable.
+>>
+>> The standard doesn't say anything, its left to vendor to implement
+>> their own mechanism.
+>>
+>> I have the below questions
+>>
+>> 1) Are any other vendors seeing this issue?
+>
+> No. Nobody else really relies on the mac80211 powersave any more.
+>
+>> 2) Are they using proprietary algorithms to solve this,
+>> implemented in their HW/FW?
+>
+> Yes. "Proprietary" is such a big word.
+>
+>> 3) If yes, how are they keeping the mac80211 and FW FSM in sync,
+>> as the driver cannot request/indicate the power save state to
+>> mac80211.
+>> (no feedback path).
+>
+> No need, don't use the mac80211 implementation! Tell mac80211 you
+> implement PS and DYNAMIC_PS, and it will not do anything whatsoever.
 
-Hello Mitchel,
+I have forgotten abut disabling DYNAMIC_PS flag, thanks, Will try that.
 
+>> IMHO,
+>>
+>> a) we should implemented a feedback path, where the vendor
+>> can implement proprietary mechanism to handle this and inform/request
+>> mac80211 for a specific power save state.
+>
+> No.
+>
+>> b) mac80211 just conveys the user/system preferences to the driver
+>> and driver handles the FSM on when to enter/exit PS? (true HW_PS).
+>>
+> Done when you have PS and DYNAMIC_PS advertised to mac80211.
+>
+> The mac80211 powersave code is pretty much beyond salvaging anyway.
+>
+> What really should happen is that there should be some kind of library
+> functionality that drivers that need host powersave management can hook
+> into, *per interface*, and then do the right thing.
 
-> WiFi on my Acer Aspire 5739G is currently broken on linux-next.  I
-> bisected it to the following commit:
-> 
->     commit 97f95c93c8ed5177371e75275f236513152fa308
->     Author: Sara Sharon <sara.sharon@intel.com>
->     Date:   Mon Mar 7 16:55:20 2016 +0200
->     
->         iwlwifi: remove support for fw older than -16.ucode
-> 
-> This issue was already reported here [1].  I'm just adding some more
-> hardware details (and am not subscribed to linux-wireless so I can't
-> reply over there).
-> 
-> It's failing with:
-> 
->     iwlwifi 0000:05:00.0: enabling device (0000 -> 0002)
->     iwlwifi 0000:05:00.0: can't disable ASPM; OS doesn't have ASPM
-> control
->     iwlwifi 0000:05:00.0: Driver unable to support your firmware API.
-> Driver supports v5, firmware is v139658497.
->     iwlwifi 0000:05:00.0: Direct firmware load for iwlwifi-5000-
-> 4.ucode failed with error -2
->     iwlwifi 0000:05:00.0: request for firmware file 'iwlwifi-5000-
-> 4.ucode' failed.
->     iwlwifi 0000:05:00.0: Direct firmware load for iwlwifi-5000-
-> 3.ucode failed with error -2
->     iwlwifi 0000:05:00.0: request for firmware file 'iwlwifi-5000-
-> 3.ucode' failed.
->     iwlwifi 0000:05:00.0: Driver unable to support your firmware API.
-> Driver supports v5, firmware is v135791116.
->     iwlwifi 0000:05:00.0: Driver unable to support your firmware API.
-> Driver supports v5, firmware is v84148496.
->     iwlwifi 0000:05:00.0: no suitable firmware found!
+Agree, this gives devices more control, with common code implemented
+by mac80211.
 
-This was fixed in a patch I sent to Kalle yesterday and he merged
-today:
-
-http://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next
-.git/commit/?id=f0d8f38cd909e072833a06b79939256c4aebe3a0
-
-HTH.
-
---
-Cheers,
-Luca.
+> Then eventually we can remove all the powersave handling code from
+> mac80211, it's seriously broken anyway (doesn't support more than one
+> virtual interface, has problems like you describe above, etc.)
