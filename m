@@ -1,61 +1,134 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44200 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752858AbcDSSYm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 14:24:42 -0400
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Arnd Bergmann <arnd@arndb.de>,
-	Jakub Sitnicki <jsitnicki@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] rtl8xxxu: hide unused tables
-References: <1461016782-2640046-1-git-send-email-arnd@arndb.de>
-	<wrfjzisp64d7.fsf@redhat.com> <87mvopy4dy.fsf@purkki.adurom.net>
-Date: Tue, 19 Apr 2016 14:24:40 -0400
-In-Reply-To: <87mvopy4dy.fsf@purkki.adurom.net> (Kalle Valo's message of "Tue,
-	19 Apr 2016 19:01:13 +0300")
-Message-ID: <wrfjmvop5udz.fsf@redhat.com> (sfid-20160419_202516_457194_20038ABC)
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:36847 "EHLO
+	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753274AbcDHBfY (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 7 Apr 2016 21:35:24 -0400
+Received: by mail-oi0-f41.google.com with SMTP id y204so120609155oie.3
+        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2016 18:35:24 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <CAGRGNgUiREy2WsSD6iRZ+annBYv+dGgMWvASb=Y5+eT4gJYE_A@mail.gmail.com>
+References: <cover.1458262312.git.julian.calaby@gmail.com> <871t6h4o6q.fsf@purkki.adurom.net>
+ <87pou11ikg.fsf@purkki.adurom.net> <CAGRGNgUiREy2WsSD6iRZ+annBYv+dGgMWvASb=Y5+eT4gJYE_A@mail.gmail.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 8 Apr 2016 11:35:04 +1000
+Message-ID: <CAGRGNgXLpzkU_NpKavvPSr2ePPXqK18FkPZ6Vx22e9Q4fdczrw@mail.gmail.com> (sfid-20160408_033533_708630_89296817)
+Subject: Re: [PATCH 00/19] Pending Cleanup patches for 4.7
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: Alexander Tsoy <alexander@tsoy.me>,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	Andrea Merello <andrea.merello@gmail.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Arnd Bergmann <arnd@arndb.de>, ath9k-devel@lists.ath9k.org,
+	b43-dev <b43-dev@lists.infradead.org>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Byeoungwook Kim <quddnr145@gmail.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Colin Ian King <colin.king@canonical.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	Eliad Peller <eliad@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Eyal Reizer <eyalreizer@gmail.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	Geliang Tang <geliangtang@163.com>,
+	Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Ivan Safonov <insafonov@gmail.com>,
+	Jia-Ju Bai <baijiaju1990@163.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Lars-Peter Clausen <lars@metafoo.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Luciano Coelho <luca@coelho.fi>,
+	Luis Felipe Dominguez Vega <lfdominguez@nauta.cu>,
+	Markus Elfring <elfring@users.sourceforge.net>,
+	Miaoqing Pan <miaoqing@codeaurora.org>,
+	Nicholas Mc Guire <hofrat@osadl.org>,
+	Nicolas Pitre <nico@linaro.org>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	=?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Sara Sharon <sarasharon1@gmail.com>,
+	Shahar Patury <shaharp@ti.com>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Tony Lindgren <tony@atomide.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Kalle Valo <kvalo@codeaurora.org> writes:
-> Jes Sorensen <Jes.Sorensen@redhat.com> writes:
+Hi Kalle,
+
+On Fri, Apr 8, 2016 at 10:56 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
+> Hi Kalle,
 >
->> Arnd Bergmann <arnd@arndb.de> writes:
->>> The references to some arrays in the rtl8xxxu driver were moved inside
->>> of an #ifdef, but the symbols remain outside, resulting in build warnings:
->>>
->>> rtl8xxxu/rtl8xxxu.c:1506:33: error:
->>> 'rtl8188ru_radioa_1t_highpa_table' defined but not used
->>> rtl8xxxu/rtl8xxxu.c:1431:33: error:
->>> 'rtl8192cu_radioa_1t_init_table' defined but not used
->>> rtl8xxxu/rtl8xxxu.c:1407:33: error:
->>> 'rtl8192cu_radiob_2t_init_table' defined but not used
->>> rtl8xxxu/rtl8xxxu.c:1332:33: error:
->>> 'rtl8192cu_radioa_2t_init_table' defined but not used
->>> rtl8xxxu/rtl8xxxu.c:239:35: error: 'rtl8192c_power_base' defined but not used
->>> rtl8xxxu/rtl8xxxu.c:217:35: error: 'rtl8188r_power_base' defined but not used
->>>
->>> This adds an extra #ifdef around them to shut up the warnings.
->>>
->>> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
->>> Fixes: 2fc0b8e5a17d ("rtl8xxxu: Add TX power base values for gen1 parts")
->>> Fixes: 4062b8ffec36 ("rtl8xxxu: Move PHY RF init into device
->>> specific functions")
->>> ---
->>>  drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 4 ++++
->>>  1 file changed, 4 insertions(+)
+> On Fri, Apr 8, 2016 at 2:37 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Kalle Valo <kvalo@codeaurora.org> writes:
 >>
->> I'll apply it to my tree!
+>>> Julian Calaby <julian.calaby@gmail.com> writes:
+>>>
+>>>> This is a set of all patches in patchwork which were pending when the 4.6
+>>>> merge window opened that meet the following criteria:
+>>>>
+>>>> 1. They're sane
+>>>> 2. They're either obviously correct, I can review them, or they've been
+>>>>    reviewed or ACK'd by someone else.
+>>>> 3. They don't require any code changes to make them applyable.
+>>>>
+>>>> That said, if anyone doesn't like any of these patches for any reason,
+>>>> just give me a reason and I'll drop it.
+>>>>
+>>>> I've split the pending patches into 4 sets as detailed below. All patches
+>>>> have been rebased to apply in order on wireless-drivers-next at
+>>>> wireless-drivers-next-for-davem-2016-03-14.
+>>>
+>>> Thank you for working on this, this is very helpful.
+>>>
+>>> I have deferred patch 14 and dropped patch 19[1], the rest I'm planning
+>>> to apply soon. I also tried to remove the original patches from deferred
+>>> queue by moving them to state "superseded", but I might missed
+>>> something.
 >
-> Actually I would prefer to apply this directly to wireless-drivers-next
-> so that the warnings are quickly fixed.
+> I'll check that later and give you a list of patchwork URLs for
+> anything you missed.
 
-Thats fine with me, I already applied it here before I started doing any
-of the refactoring work, so we should be in sync.
+Ok, from the bundles I initially produced, you missed the following:
+https://patchwork.kernel.org/patch/7939701/
+https://patchwork.kernel.org/patch/8003841/
+https://patchwork.kernel.org/patch/8049041/
+https://patchwork.kernel.org/patch/8049011/
+https://patchwork.kernel.org/patch/7940021/
+https://patchwork.kernel.org/patch/8040161/
+https://patchwork.kernel.org/patch/8040181/
+https://patchwork.kernel.org/patch/8197881/
 
-Cheers,
-Jes
+And this one has the status "changes requested", however I resubmitted
+it as patch #15 without the stupid bits and you applied it:
+https://patchwork.kernel.org/patch/8040201/
+
+Beyond that, here's some earlier versions of the patches I picked up:
+https://patchwork.kernel.org/patch/8197051/
+https://patchwork.kernel.org/patch/7993931/
+https://patchwork.kernel.org/patch/8040201/
+
+This one should be dropped as it's too awful for me to endorse:
+https://patchwork.kernel.org/patch/7940001/
+
+And this one is obsolete as it's already been applied in some form:
+https://patchwork.kernel.org/patch/8197071/
+
+(If it'd make it easier for you, I can throw these all in a bundle.)
+
+I'll poke people for reviews for patch 14 and there's also a patch I
+missed in my first run-through that applies without changes, so I'll
+give it a reviewed-by so it's back on your radar.
+
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
