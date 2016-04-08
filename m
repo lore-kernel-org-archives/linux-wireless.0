@@ -1,107 +1,92 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:56626 "EHLO
-	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750868AbcDKJpW (ORCPT
+Received: from mail-oi0-f41.google.com ([209.85.218.41]:36091 "EHLO
+	mail-oi0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756283AbcDHBlH (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2016 05:45:22 -0400
-From: Arend van Spriel <arend@broadcom.com>
+	Thu, 7 Apr 2016 21:41:07 -0400
+MIME-Version: 1.0
+In-Reply-To: <5686C47E.1040906@users.sourceforge.net>
+References: <566ABCD9.1060404@users.sourceforge.net> <5686C390.5060600@users.sourceforge.net>
+ <5686C47E.1040906@users.sourceforge.net>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Fri, 8 Apr 2016 11:40:45 +1000
+Message-ID: <CAGRGNgXR_OoER0rN5Z8n_5VtZimpU7WDNZuc4vkdb2eKDT2frQ@mail.gmail.com> (sfid-20160408_034143_957726_2663F648)
+Subject: Re: [PATCH 2/2] net-ath9k_htc: Replace a variable initialisation by
+ an assignment in ath9k_htc_set_channel()
 To: Kalle Valo <kvalo@codeaurora.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Arend van Spriel <arend@broadcom.com>
-Subject: [PATCH 8/8] brcmfmac: create common function for handling brcmf_proto_hdrpull()
-Date: Mon, 11 Apr 2016 11:35:28 +0200
-Message-Id: <1460367328-12082-9-git-send-email-arend@broadcom.com> (sfid-20160411_114525_764885_46557956)
-In-Reply-To: <1460367328-12082-1-git-send-email-arend@broadcom.com>
-References: <1460367328-12082-1-git-send-email-arend@broadcom.com>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	SF Markus Elfring <elfring@users.sourceforge.net>,
+	kernel-janitors <kernel-janitors@vger.kernel.org>,
+	Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-In receive path brcmf_proto_hdrpull() needs to be called and handled
-similar in brcmf_rx_frame() and brcmf_rx_event(). Move that duplicated
-code in separate function.
+Hi Kalle,
 
-Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
-Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
-Reviewed-by: Franky Lin <franky.lin@broadcom.com>
-Signed-off-by: Arend van Spriel <arend@broadcom.com>
----
- .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 43 +++++++++++-----------
- 1 file changed, 21 insertions(+), 22 deletions(-)
+On Sat, Jan 2, 2016 at 5:25 AM, SF Markus Elfring
+<elfring@users.sourceforge.net> wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Fri, 1 Jan 2016 19:09:32 +0100
+>
+> Replace an explicit initialisation for one local variable at the beginning
+> by a conditional assignment.
+>
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 
-diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-index 9b53555..1b476d1 100644
---- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-+++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
-@@ -322,26 +322,35 @@ void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
- 		netif_rx_ni(skb);
- }
- 
--void brcmf_rx_frame(struct device *dev, struct sk_buff *skb, bool handle_event)
-+static int brcmf_rx_hdrpull(struct brcmf_pub *drvr, struct sk_buff *skb,
-+			    struct brcmf_if **ifp)
- {
--	struct brcmf_if *ifp;
--	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
--	struct brcmf_pub *drvr = bus_if->drvr;
- 	int ret;
- 
--	brcmf_dbg(DATA, "Enter: %s: rxp=%p\n", dev_name(dev), skb);
--
- 	/* process and remove protocol-specific header */
--	ret = brcmf_proto_hdrpull(drvr, true, skb, &ifp);
-+	ret = brcmf_proto_hdrpull(drvr, true, skb, ifp);
- 
--	if (ret || !ifp || !ifp->ndev) {
-+	if (ret || !(*ifp) || !(*ifp)->ndev) {
- 		if (ret != -ENODATA && ifp)
--			ifp->stats.rx_errors++;
-+			(*ifp)->stats.rx_errors++;
- 		brcmu_pkt_buf_free_skb(skb);
--		return;
-+		return -ENODATA;
- 	}
- 
--	skb->protocol = eth_type_trans(skb, ifp->ndev);
-+	skb->protocol = eth_type_trans(skb, (*ifp)->ndev);
-+	return 0;
-+}
-+
-+void brcmf_rx_frame(struct device *dev, struct sk_buff *skb, bool handle_event)
-+{
-+	struct brcmf_if *ifp;
-+	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
-+	struct brcmf_pub *drvr = bus_if->drvr;
-+
-+	brcmf_dbg(DATA, "Enter: %s: rxp=%p\n", dev_name(dev), skb);
-+
-+	if (brcmf_rx_hdrpull(drvr, skb, &ifp))
-+		return;
- 
- 	if (brcmf_proto_is_reorder_skb(skb)) {
- 		brcmf_proto_rxreorder(ifp, skb);
-@@ -359,21 +368,11 @@ void brcmf_rx_event(struct device *dev, struct sk_buff *skb)
- 	struct brcmf_if *ifp;
- 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
- 	struct brcmf_pub *drvr = bus_if->drvr;
--	int ret;
- 
- 	brcmf_dbg(EVENT, "Enter: %s: rxp=%p\n", dev_name(dev), skb);
- 
--	/* process and remove protocol-specific header */
--	ret = brcmf_proto_hdrpull(drvr, true, skb, &ifp);
--
--	if (ret || !ifp || !ifp->ndev) {
--		if (ret != -ENODATA && ifp)
--			ifp->stats.rx_errors++;
--		brcmu_pkt_buf_free_skb(skb);
-+	if (brcmf_rx_hdrpull(drvr, skb, &ifp))
- 		return;
--	}
--
--	skb->protocol = eth_type_trans(skb, ifp->ndev);
- 
- 	brcmf_fweh_process_skb(ifp->drvr, skb);
- 	brcmu_pkt_buf_free_skb(skb);
+This looks sane to me.
+
+Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+
+Thanks,
+
+Julian Calaby
+
+> ---
+>  drivers/net/wireless/ath/ath9k/htc_drv_main.c | 7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/htc_drv_main.c b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> index a680a97..30bd59e 100644
+> --- a/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> +++ b/drivers/net/wireless/ath/ath9k/htc_drv_main.c
+> @@ -246,7 +246,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+>         struct ieee80211_conf *conf = &common->hw->conf;
+>         bool fastcc;
+>         struct ieee80211_channel *channel = hw->conf.chandef.chan;
+> -       struct ath9k_hw_cal_data *caldata = NULL;
+> +       struct ath9k_hw_cal_data *caldata;
+>         enum htc_phymode mode;
+>         __be16 htc_mode;
+>         u8 cmd_rsp;
+> @@ -274,10 +274,7 @@ static int ath9k_htc_set_channel(struct ath9k_htc_priv *priv,
+>                 priv->ah->curchan->channel,
+>                 channel->center_freq, conf_is_ht(conf), conf_is_ht40(conf),
+>                 fastcc);
+> -
+> -       if (!fastcc)
+> -               caldata = &priv->caldata;
+> -
+> +       caldata = fastcc ? NULL : &priv->caldata;
+>         ret = ath9k_hw_reset(ah, hchan, caldata, fastcc);
+>         if (ret) {
+>                 ath_err(common,
+> --
+> 2.6.3
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+
 -- 
-1.9.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
