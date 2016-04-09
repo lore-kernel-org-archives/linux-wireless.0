@@ -1,51 +1,52 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:35101 "EHLO
-	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753036AbcDZUHj (ORCPT
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:34866 "EHLO
+	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753178AbcDIMA6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 16:07:39 -0400
-Received: by mail-yw0-f195.google.com with SMTP id v81so4280271ywa.2
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 13:07:39 -0700 (PDT)
+	Sat, 9 Apr 2016 08:00:58 -0400
+Received: by mail-wm0-f46.google.com with SMTP id 191so40980886wmq.0
+        for <linux-wireless@vger.kernel.org>; Sat, 09 Apr 2016 05:00:57 -0700 (PDT)
+Date: Sat, 9 Apr 2016 13:00:55 +0100
+From: Matt Fleming <matt@codeblueprint.co.uk>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+	linux-wireless@vger.kernel.org, zajec5@gmail.com,
+	b43-dev@lists.infradead.org, Matthew Garrett <mjg59@srcf.ucam.org>,
+	linux-efi@vger.kernel.org
+Subject: Re: [PATCH] PCI: Add Broadcom 4331 reset quirk to prevent IRQ storm
+Message-ID: <20160409120055.GR2701@codeblueprint.co.uk> (sfid-20160409_140102_421249_E3BBAC17)
+References: <811539524df8b5ed7e2817c1c3e3e08560c97964.1459275517.git.lukas@wunner.de>
+ <20160405194015.GC15353@localhost>
+ <20160406213029.GA12421@wunner.de>
 MIME-Version: 1.0
-In-Reply-To: <87mvogy3ux.fsf@kamboji.qca.qualcomm.com>
-References: <1461244669-19871-1-git-send-email-kvalo@qca.qualcomm.com>
- <5718EE7A.4030503@candelatech.com> <1461654272.16188.4.camel@sipsolutions.net>
- <87mvogy3ux.fsf@kamboji.qca.qualcomm.com>
-From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
-Date: Wed, 27 Apr 2016 01:37:19 +0530
-Message-ID: <CABPxzYL=sQg=HczxM3gdERHRD-3-KaOG455wsqjpZ6YZDkybmw@mail.gmail.com> (sfid-20160426_220743_584572_FD553040)
-Subject: Re: [PATCH v2] ath10k: remove VHT capabilities from 2.4GHz
-To: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-Cc: Johannes Berg <johannes@sipsolutions.net>,
-	Ben Greear <greearb@candelatech.com>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20160406213029.GA12421@wunner.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, Apr 26, 2016 at 5:33 PM, Valo, Kalle <kvalo@qca.qualcomm.com> wrote:
-> Johannes Berg <johannes@sipsolutions.net> writes:
->
->> On Thu, 2016-04-21 at 08:15 -0700, Ben Greear wrote:
->>
->>> The thing is, it actually works just fine with the patch I posted
->>> to fix mac80211, and at any rate, even if the mac80211 patch isn't
->>> applied, the ath10k driver works just fine in HT mode.
->>
->> This patch has no implications on HT, and I wasn't planning on applying
->> the mac80211 patch.
->
-> Yeah, makes sense. I'm planning to apply this soon.
->
->> As I said, I have no objections to doing the (Broadcom) vendor specific
->> IEs for "VHT" in 2.4 GHz band, but I don't think we should advertise
->> the spec IEs when they're explicitly specified to be used only in the
->> 5.2 GHz band.
->
-> But we really should have this, any volunteers? :) I think it shouldn't
-> be too hard to do so this would be a good project for someone looking
-> for a simple, but useful, task on wireless stack.
-Are these Broadcom IEs documented somewhere? If yes,
-then its a matter of parsing them and adding support to
-minstrel_ht, isn't it? major work would be in minstrel.
+On Wed, 06 Apr, at 11:30:29PM, Lukas Wunner wrote:
+> 
+> More specifically, arch/x86/platform/efi/quirks.c:efi_free_boot_services()
+> makes EFI boot services memory available to the page allocator and this
+> is called near the end of init/main.c:start_kernel(). *Afterwards*, the
+> initcalls are executed via rest_init() -> kernel_init() ->
+> kernel_init_freeable() -> do_basic_setup() -> do_initcalls(). In particular,
+> PCI header fixups are executed in the subsys_initcall acpi_init().
+> 
+> Some of the possible solutions are:
+> 
+> (1) Delay efi_free_boot_services() further, e.g. until late_initcall.
+ 
+I'd prefer not to do this because boot services regions can account
+for a large amount of memory (multiple gigabytes).
+
+> (2) Find out exactly which EFI boot services area is used for DMA and
+>     amend arch/x86/platform/efi/quirks.c:efi_apply_memmap_quirks() to
+>     assign that area a different type if dmi_match(DMI_SYS_VENDOR,
+>     "Apple Inc."). That way it's not freed by efi_free_boot_services().
+>     Add a late_initcall which calls free_bootmem() for that area.
+ 
+If it is possible to find out which boot services region is the
+problematic one, this would be the best solution. If there's any way
+to tie it into the PCI quirk, that would be even better so we don't
+need to maintain the blacklist in two places.
