@@ -1,150 +1,468 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:33353 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752600AbcD0F2e (ORCPT
+Received: from bear.ext.ti.com ([192.94.94.41]:53586 "EHLO bear.ext.ti.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751439AbcDJHh3 convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2016 01:28:34 -0400
-Received: by mail-wm0-f54.google.com with SMTP id g17so5801293wme.0
-        for <linux-wireless@vger.kernel.org>; Tue, 26 Apr 2016 22:28:33 -0700 (PDT)
-Date: Wed, 27 Apr 2016 07:27:59 +0200
-From: Vishal Thanki <vishalthanki@gmail.com>
-To: Craig McQueen <craig.mcqueen@innerrange.com>
-Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: rt2800 and BeagleBone Black kernel panic when connecting to
- access point
-Message-ID: <20160427052758.GA3583@localhost.localdomain> (sfid-20160427_072841_018015_DFDD735B)
-References: <5500469A22567C4BAF673A6E86AFA3A4022D20C813C8@IR-CENTRAL.corp.innerrange.com>
+	Sun, 10 Apr 2016 03:37:29 -0400
+From: "Reizer, Eyal" <eyalr@ti.com>
+To: Kalle Valo <kvalo@codeaurora.org>,
+	Eyal Reizer <eyalreizer@gmail.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>
+Subject: [PATCHv2] wlcore: spi: add wl18xx support
+Date: Sun, 10 Apr 2016 07:37:23 +0000
+Message-ID: <8665E2433BC68541A24DFFCA87B70F5B360B6C90@DFRE01.ent.ti.com> (sfid-20160410_093811_837643_566E7E85)
+References: <1460273570-12298-1-git-send-email-eyalr@ti.com>
+In-Reply-To: <1460273570-12298-1-git-send-email-eyalr@ti.com>
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-In-Reply-To: <5500469A22567C4BAF673A6E86AFA3A4022D20C813C8@IR-CENTRAL.corp.innerrange.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+Add support for using with both wl12xx and wl18xx.
 
-On Wed, Apr 27, 2016 at 02:21:36PM +1000, Craig McQueen wrote:
-> I have a D-Link DWA-140 USB Wi-Fi device which is rt2800 based (5392 chipset). I've been testing it on a BeagleBone Black running an Ubuntu 16.04 image (4.4.6 kernel).
-> 
-> 1) Install Ubuntu 16.04 on a BeagleBone Black.
-> 2) Add lines to /etc/network/interfaces for the device to connect to a WPA2 access point.
-> 3) Plug the rt2800 USB Wi-Fi device into the BeagleBone Black.
-> 
-> Apparently when it tries to connect to the access point, I get a kernel panic. If I don't configure it (step 2 above) then the kernel panic doesn't happen.
-> 
-> I've tested this with two access points: my Android phone acting as a hotspot, and a cheap TP-Link TD-W8968.
-> 
-> Serial debug console shows:
-> 
-> [  306.884793] ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x1004 with error -110
-> [  306.996804] ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x06 failed for offset 0x1004 with error -110
-> [  307.057021] ieee80211 phy0: rt2x00usb_vendor_request: Error - Vendor Request 0x07 failed for offset 0x0500 with error -19
-> [  307.102417] Unable to handle kernel NULL pointer dereference at virtual address 0000002c
-> [  307.110768] pgd = ddd34000
-> [  307.113555] [0000002c] *pgd=00000000
-> [  307.117257] Internal error: Oops: 5 [#1] SMP THUMB2
-> [  307.122269] Modules linked in: arc4 rt2800usb rt2800lib rt2x00usb rt2x00lib mac80211 crc_ccitt cfg80211 rfkill snd_soc_simple_card omap_aes omap_sham usb_f_ecm g_ether usb_f_rndis u_ether libcomposite omap_rng rng_core snd_soc_davinci_mcasp snd_soc_edma snd_soc_omap spi_omap2_mcspi snd_soc_hdmi_codec snd_soc_core snd_pcm_dmaengine snd_pcm snd_timer snd soundcore evdev uio_pdrv_genirq uio tilcdc tda998x
-> [  307.159448] CPU: 0 PID: 875 Comm: wpa_supplicant Not tainted 4.4.6-ti-r15 #1
-> [  307.166672] Hardware name: Generic AM33XX (Flattened Device Tree)
-> [  307.172921] task: dcf56180 ti: dd8e6000 task.ti: dd8e6000
-> [  307.178470] PC is at _raw_spin_lock_irqsave+0x14/0x40
-> [  307.183755] LR is at rt2x00queue_get_entry+0x1e/0x54 [rt2x00lib]
-> [  307.189928] pc : [<c06e2560>]    lr : [<bfa9b99b>]    psr: 800b01b3
-> [  307.189928] sp : dd8e79a0  ip : 00000000  fp : dc94f900
-> [  307.201687] r10: c0b5ba88  r9 : dcda6928  r8 : dcda692c
-> [  307.207042] r7 : 00000054  r6 : 0000002c  r5 : 00000000  r4 : 00000002
-> [  307.213731] r3 : 00000150  r2 : 0000002c  r1 : 00000001  r0 : 800b0193
-> [  307.220423] Flags: Nzcv  IRQs off  FIQs on  Mode SVC_32  ISA Thumb  Segment none
-> [  307.228007] Control: 50c5387d  Table: 9dd34019  DAC: 00000051
-> [  307.233896] Process wpa_supplicant (pid: 875, stack limit = 0xdd8e6218)
-> [  307.240675] Stack: (0xdd8e79a0 to 0xdd8e8000)
-> [  307.245159] 79a0: 00000150 00000002 00000000 00000054 ddf26de0 bfac8803 ddf26de0 ddf27144
-> [  307.253559] 79c0: dcda6800 00000000 dcda692c bfac8971 00000000 c04fc087 c000a439 dde057c0
-> [  307.261945] 79e0: dc94f900 bfaab2ff bfaab2e9 dc94f900 000b0113 c04fc1d3 ddcc4038 dc94f914
-> [  307.270331] 7a00: dcda6924 dd8e7a14 00000000 c04fc2dd df925d8c dd8e7a14 dd8e7a14 dc8ba606
-> [  307.278715] 7a20: df925d80 dcda6938 00000000 00000000 000f4240 c095df60 c095dfa8 dcda6934
-> [  307.287099] 7a40: 00000018 c0034acf c0b5b098 00000006 c0c29d8c 00000040 dd8e6000 dd8e7b90
-> [  307.295483] 7a60: 00000007 c0034c85 004c4b29 00000000 00000101 dd8e7a68 c0b5b080 c0c40380
-> [  307.303889] 7a80: 0000000a 000006e1 c0b5b140 00400140 c00856ed 200b0113 ffffe000 dddfc2bc
-> [  307.312282] 7aa0: 00000000 00000304 dd8e7b90 ddf0e840 0000000f c0034ea7 000001ff c0034f33
-> [  307.320666] 7ac0: 0000001e dddfc000 da84ec40 c0628085 dd8e7ca0 dddfc090 60000013 00000000
-> [  307.329050] 7ae0: da84ec40 dd8e7b90 ddf0e840 00000005 00000000 ddf0e840 0000000f c05f11e5
-> [  307.337437] 7b00: 00000000 00000020 00007ea0 ddf0e840 00000020 c014402d 00000000 00007ea0
-> [  307.351143] 7b20: 00000000 00000000 00000000 dd8e7e50 dd8e7e4c dd8e7e48 dd8e7e40 dd8e7e44
-> [  307.364750] 7b40: dd8e7e48 00000000 00000000 00000000 00000000 00000000 024152c0 dd8e7e24
-> [  307.378341] 7b60: c0b5d930 00000000 dd8e7f74 dd8e7b88 c0b5ba88 dd8e6000 004c4b29 00000000
-> [  307.391976] 7b80: 00000001 3b9aca00 a6ad6574 00000048 00000000 000000db 00000000 dcf56180
-> [  307.405640] 7ba0: 00000000 00000000 00000008 ddf0e840 000000db 00000000 dd8e7b90 c01439a1
-> [  307.419316] 7bc0: dc026784 dc026784 dc026780 ddf4bcc0 000000db 00000000 dd8e7b90 c01439a1
-> [  307.433008] 7be0: dc026204 dc026204 dc026200 ddf4bf00 000000db 00000000 dd8e7b90 c01439a1
-> [  307.446684] 7c00: dc02612c dc02612c dc026128 ddf4bc00 000000db 00000000 dd8e7b90 c01439a1
-> [  307.460325] 7c20: dc026984 dc026984 dc026980 dc060cc0 000000db 00000000 dd8e7b90 c01439a1
-> [  307.473925] 7c40: dc026144 dc026144 dc026140 dc0603c0 000000db 00000000 dd8e7b90 c01439a1
-> [  307.487339] 7c60: ddb1b104 ddb1b104 ddb1b100 dc0609c0 000000db 00000000 dd8e7b90 c01439a1
-> [  307.500597] 7c80: dde03844 dde03844 dde03840 dc060e40 000000db 00000000 dd8e7b90 c01439a1
-> [  307.513712] 7ca0: dde037c4 dde037c4 dde037c0 ddb7b000 dcf0c480 c0627d0b 00000004 00000002
-> [  307.526882] 7cc0: ffffffed dc8ba606 dc138f00 ddb7b000 dcf0c300 dd8e7d10 dc138f00 dcf0c300
-> [  307.539972] 7ce0: 00000000 c06281c9 dd8e7d10 c06e1163 c0b5ba88 c06e1163 bf99f4cc c062a553
-> [  307.553056] 7d00: 00000000 c0c25540 000000cc c00583d7 c0629e85 c0629e4d bf99726c bf9a7980
-> [  307.566185] 7d20: 00000000 dd8e6000 c06ec750 00000000 dcd2e8a0 00000000 00000000 dd8e6000
-> [  307.579343] 7d40: c0b5cb94 c0b5ba88 024200ca dc8ba606 dcdadb00 dc138f00 dcf0c300 c05fb77d
-> [  307.592434] 7d60: dd8e7de0 c05fb81f dcf0c300 00000000 dd8e7de0 c00f8b8b dfda1340 dfda1460
-> [  307.605436] 7d80: 00000003 c00f8ccf 00000008 00000000 40000093 c001a411 0009a5fd 9a5fd18f
-> [  307.618349] 7da0: dde007bc 00000000 00000000 c00f451f dfd22794 00000000 00000000 dc8ba606
-> [  307.631178] 7dc0: dfd22794 00000001 da8b0960 c00f451f 00000000 00000000 00000000 7f5e0000
-> [  307.643956] 7de0: 0000014f 00000000 0014f000 dc8ba606 00000070 00000004 dd8e7e3c c0b5ba88
-> [  307.656720] 7e00: 0000000f 7fdbf350 7fdbf3d8 dd8e7e3c 7fdbf948 c014434d dd8e7f74 00000051
-> [  307.669494] 7e20: 00000070 dd8e7e3c dd8e7e40 dd8e7e44 dd8e7e48 dd8e7e4c dd8e7e50 00007ea0
-> [  307.682259] 7e40: 00000000 00000000 00000000 00000000 00000000 ddfb0c74 7f5e0000 dde00000
-> [  307.695032] 7e60: ddcaa000 00000000 00000054 00000061 7f5e0000 ffffe000 00000000 00000070
-> [  307.707785] 7e80: dde00780 dc8ba606 00000000 dd8e7fb0 dcf56180 80000007 7f5e07fc ddfb0c40
-> [  307.720566] 7ea0: dcd2e720 ddfb0c78 00000054 c06e349b 00000000 00000000 7f6dcad8 c05f2b6d
-> [  307.733379] 7ec0: dd8e7ee0 00000000 00000000 00000000 00000000 000008fc dd8e7f04 c008a4db
-> [  307.746185] 7ee0: 04f2e6a2 00000000 a8e0fcc7 ffffffff ffffffff c0143dfb 00000133 0207683c
-> [  307.759065] 7f00: 8dbe2200 c0b5ba88 dd8e7f74 3b9a9738 00000004 dd8e7f30 7fdbf948 c0143dfb
-> [  307.771961] 7f20: 7f6dcad8 00000004 3b9a9738 c0b5ba88 00000138 02073574 00000004 dc8ba606
-> [  307.784855] 7f40: 0207683c bed1db24 c0b5ba88 0000000f 7fdbf350 7fdbf3d8 7fdbf948 dd8e7f74
-> [  307.797776] 7f60: 7f6dcad8 c0144645 dd8e7f74 00000107 c000eda4 00000138 02073574 00000004
-> [  307.810714] 7f80: 000f4233 dc8ba606 bed1db24 7fdbf298 7f6dcad8 0000008e c000eda4 dd8e6000
-> [  307.823633] 7fa0: 00000000 c000ebe1 bed1db24 7fdbf298 0000000f 7fdbf350 7fdbf3d8 7fdbf948
-> [  307.836538] 7fc0: bed1db24 7fdbf298 7f6dcad8 0000008e 7fdb1568 7fdbf350 7fdbf3d8 7f6dcad8
-> [  307.849434] 7fe0: 00000000 bed1daf0 7f599bf3 b6cdc548 00000030 0000000f ff76fea7 ffff88ef
-> [  307.862403] [<c06e2560>] (_raw_spin_lock_irqsave) from [<bfa9b99b>] (rt2x00queue_get_entry+0x1e/0x54 [rt2x00lib])
+- all wilink family needs special init command for entering wspi mode.
+  extra clock cycles should be sent after the spi init command while the
+  cs pin is high.
+- switch to controling the cs pin from the spi driver for achieveing the
+  above.
+- the selected cs gpio is read from the spi device-tree node using the
+  cs-gpios field and setup as a gpio.
+- See the example below for specifying the cs gpio using the cs-gpios entry
+&spi0	{
+	...
+	cs-gpios = <&gpio0 5 0>;
+	...
+	wlcore: wlcore@0 {
+		compatible = "ti,wl1835";
+	...
+	...
+ 	};
+};
 
-I have seen a similar crash and fixed it as a part of following commit:
+Signed-off-by: Eyal Reizer <eyalr@ti.com>
+---
+v1 -> v2: update device tree bindings documentation
 
-8b4c0009313f3d42e2540e3e1f776097dd0db73d
+ .../bindings/net/wireless/ti,wlcore,spi.txt        |   50 +++++-
+ drivers/net/wireless/ti/wlcore/spi.c               |  176 +++++++++++++++++---
+ 2 files changed, 200 insertions(+), 26 deletions(-)
 
-But it would be helpful if you can get paste the entire kernel log.
-Because in my case, I used to see a USB Disconnect event for the rt2800
-driver and the crash was caused due to that.
+diff --git a/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt b/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
+index 9180724..912ab0c 100644
+--- a/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
++++ b/Documentation/devicetree/bindings/net/wireless/ti,wlcore,spi.txt
+@@ -1,19 +1,31 @@
+-* Texas Instruments wl1271 wireless lan controller
++* Texas Instruments wl12xx/wl18xx wireless lan controller
+ 
+-The wl1271 chip can be connected via SPI or via SDIO. This
++The wl12xx/wl18xx chips can be connected via SPI or via SDIO. This
+ document describes the binding for the SPI connected chip.
+ 
+ Required properties:
+-- compatible :          Should be "ti,wl1271"
++- compatible :          Should be one of the following:
++    * "ti,wl1271"
++    * "ti,wl1273"
++    * "ti,wl1281"
++    * "ti,wl1283"
++    * "ti,wl1801"
++    * "ti,wl1805"
++    * "ti,wl1807"
++    * "ti,wl1831"
++    * "ti,wl1835"
++    * "ti,wl1837"
+ - reg :                 Chip select address of device
+ - spi-max-frequency :   Maximum SPI clocking speed of device in Hz
+-- ref-clock-frequency : Reference clock frequency
+ - interrupt-parent, interrupts :
+                         Should contain parameters for 1 interrupt line.
+                         Interrupt parameters: parent, line number, type.
+-- vwlan-supply :        Point the node of the regulator that powers/enable the wl1271 chip
++- vwlan-supply :        Point the node of the regulator that powers/enable the
++                        wl12xx/wl18xx chip
++- cs-gpios :            GPIO pin used as the spi chip select
+ 
+ Optional properties:
++- ref-clock-frequency : Reference clock frequency (should be set for wl12xx)
+ - clock-xtal :          boolean, clock is generated from XTAL
+ 
+ - Please consult Documentation/devicetree/bindings/spi/spi-bus.txt
+@@ -21,10 +33,16 @@ Optional properties:
+ 
+ Examples:
+ 
++For wl12xx family:
+ &spi1 {
+-	wl1271@1 {
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&spi1_pins>;
++	cs-gpios = <&gpio0 5 0>;
++	#address-cells = <1>;
++	#size-cells = <0>;
++	wlcore: wlcore@0 {
+ 		compatible = "ti,wl1271";
+-
+ 		reg = <1>;
+ 		spi-max-frequency = <48000000>;
+ 		clock-xtal;
+@@ -34,3 +52,21 @@ Examples:
+ 		vwlan-supply = <&vwlan_fixed>;
+ 	};
+ };
++
++For wl18xx family:
++&spi0	{
++	status = "okay";
++	pinctrl-names = "default";
++	pinctrl-0 = <&spi0_pins>;
++	cs-gpios = <&gpio0 5 0>;
++	#address-cells = <1>;
++	#size-cells = <0>;
++	wlcore: wlcore@0 {
++		compatible = "ti,wl1835";
++		vwlan-supply = <&wlan_en_reg>;
++		spi-max-frequency = <48000000>;
++		reg = <0>;
++		interrupt-parent = <&gpio0>;
++		interrupts = <27 IRQ_TYPE_EDGE_RISING>;
++	};
++};
+diff --git a/drivers/net/wireless/ti/wlcore/spi.c b/drivers/net/wireless/ti/wlcore/spi.c
+index 020ac1a..fb48a0d 100644
+--- a/drivers/net/wireless/ti/wlcore/spi.c
++++ b/drivers/net/wireless/ti/wlcore/spi.c
+@@ -32,6 +32,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/of_irq.h>
+ #include <linux/regulator/consumer.h>
++#include <linux/gpio.h>
+ 
+ #include "wlcore.h"
+ #include "wl12xx_80211.h"
+@@ -70,16 +71,30 @@
+ #define WSPI_MAX_CHUNK_SIZE    4092
+ 
+ /*
+- * only support SPI for 12xx - this code should be reworked when 18xx
+- * support is introduced
++ * wl18xx driver aggregation buffer size is (13 * PAGE_SIZE) compared to
++ * (4 * PAGE_SIZE) for wl12xx, so use the larger buffer needed for wl18xx
+  */
+-#define SPI_AGGR_BUFFER_SIZE (4 * PAGE_SIZE)
++#define SPI_AGGR_BUFFER_SIZE (13 * PAGE_SIZE)
+ 
+ /* Maximum number of SPI write chunks */
+ #define WSPI_MAX_NUM_OF_CHUNKS \
+ 	((SPI_AGGR_BUFFER_SIZE / WSPI_MAX_CHUNK_SIZE) + 1)
+ 
+ 
++struct wilink_familiy_data {
++	char name[8];
++};
++
++const struct wilink_familiy_data *wilink_data;
++
++static const struct wilink_familiy_data wl18xx_data = {
++	.name = "wl18xx",
++};
++
++static const struct wilink_familiy_data wl12xx_data = {
++	.name = "wl12xx",
++};
++
+ struct wl12xx_spi_glue {
+ 	struct device *dev;
+ 	struct platform_device *core;
+@@ -120,6 +135,8 @@ static void wl12xx_spi_init(struct device *child)
+ 	struct spi_transfer t;
+ 	struct spi_message m;
+ 	u8 *cmd = kzalloc(WSPI_INIT_CMD_LEN, GFP_KERNEL);
++	struct spi_device *spi = (struct spi_device *)glue->dev;
++	struct spi_master *master = spi->master;
+ 
+ 	if (!cmd) {
+ 		dev_err(child->parent,
+@@ -127,6 +144,15 @@ static void wl12xx_spi_init(struct device *child)
+ 		return;
+ 	}
+ 
++	if (!master->cs_gpios) {
++		dev_err(child->parent,
++			"spi chip select pin missing in platform data!\n");
++		return;
++	}
++
++	/* Drive CS line low */
++	gpio_direction_output(master->cs_gpios[0], 0);
++
+ 	memset(&t, 0, sizeof(t));
+ 	spi_message_init(&m);
+ 
+@@ -163,6 +189,26 @@ static void wl12xx_spi_init(struct device *child)
+ 	spi_message_add_tail(&t, &m);
+ 
+ 	spi_sync(to_spi_device(glue->dev), &m);
++
++	/* Send extra clocks with CS high. this is required by the wilink
++	 * family in order for successfully enter WSPI mode
++	 */
++	gpio_direction_output(master->cs_gpios[0], 1);
++
++	memset(&m, 0, sizeof(m));
++	spi_message_init(&m);
++
++	cmd[0] = 0xff;
++	cmd[1] = 0xff;
++	cmd[2] = 0xff;
++	cmd[3] = 0xff;
++	swab32s((u32 *)cmd);
++
++	t.tx_buf = cmd;
++	t.len = 4;
++	spi_message_add_tail(&t, &m);
++	spi_sync(to_spi_device(glue->dev), &m);
++
+ 	kfree(cmd);
+ }
+ 
+@@ -213,6 +259,16 @@ static int __must_check wl12xx_spi_raw_read(struct device *child, int addr,
+ 	u32 *busy_buf;
+ 	u32 *cmd;
+ 	u32 chunk_len;
++	struct spi_device *spi = (struct spi_device *)glue->dev;
++	struct spi_master *master = spi->master;
++
++	if (!master->cs_gpios) {
++		dev_err(child->parent,
++			"spi chip select pin missing in platform data!\n");
++		return -EINVAL;
++	}
++	/* Drive CS line low */
++	gpio_direction_output(master->cs_gpios[0], 0);
+ 
+ 	while (len > 0) {
+ 		chunk_len = min_t(size_t, WSPI_MAX_CHUNK_SIZE, len);
+@@ -267,25 +323,44 @@ static int __must_check wl12xx_spi_raw_read(struct device *child, int addr,
+ 		len -= chunk_len;
+ 	}
+ 
++	/* Drive CS line high */
++	gpio_direction_output(master->cs_gpios[0], 1);
+ 	return 0;
+ }
+ 
+-static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
+-					     void *buf, size_t len, bool fixed)
++static int __wl12xx_spi_raw_write(struct device *child, int addr,
++				  void *buf, size_t len, bool fixed)
+ {
+ 	struct wl12xx_spi_glue *glue = dev_get_drvdata(child->parent);
+-	/* SPI write buffers - 2 for each chunk */
+-	struct spi_transfer t[2 * WSPI_MAX_NUM_OF_CHUNKS];
++	struct spi_transfer *t;
+ 	struct spi_message m;
+ 	u32 commands[WSPI_MAX_NUM_OF_CHUNKS]; /* 1 command per chunk */
+ 	u32 *cmd;
+ 	u32 chunk_len;
+ 	int i;
++	struct spi_device *spi = (struct spi_device *)glue->dev;
++	struct spi_master *master = spi->master;
++
++	if (!master->cs_gpios) {
++		dev_err(child->parent,
++			"spi chip select pin missing in platform data!\n");
++		return -EINVAL;
++	}
++
++	/* SPI write buffers - 2 for each chunk */
++	t = kzalloc(sizeof(*t) * 2 * WSPI_MAX_NUM_OF_CHUNKS, GFP_KERNEL);
++	if (!t) {
++		dev_err(child->parent,
++			"could not allocate spi write buffer\n");
++		return -ENOMEM;
++	}
++
++	/* Drive CS line low */
++	gpio_direction_output(master->cs_gpios[0], 0);
+ 
+ 	WARN_ON(len > SPI_AGGR_BUFFER_SIZE);
+ 
+ 	spi_message_init(&m);
+-	memset(t, 0, sizeof(t));
+ 
+ 	cmd = &commands[0];
+ 	i = 0;
+@@ -318,9 +393,29 @@ static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
+ 
+ 	spi_sync(to_spi_device(glue->dev), &m);
+ 
++	/* Drive CS line high */
++	gpio_direction_output(master->cs_gpios[0], 1);
++
++	kfree(t);
+ 	return 0;
+ }
+ 
++static int __must_check wl12xx_spi_raw_write(struct device *child, int addr,
++					     void *buf, size_t len, bool fixed)
++{
++	int ret;
++
++	/* The ELP wakeup write may fail the first time due to internal
++	 * hardware latency. It is safer to send the wakeup command twice to
++	 * avoid unexpected failures.
++	 */
++	if (addr == HW_ACCESS_ELP_CTRL_REG)
++		ret = __wl12xx_spi_raw_write(child, addr, buf, len, fixed);
++	ret = __wl12xx_spi_raw_write(child, addr, buf, len, fixed);
++
++	return ret;
++}
++
+ /**
+  * wl12xx_spi_set_power - power on/off the wl12xx unit
+  * @child: wl12xx device handle.
+@@ -349,17 +444,38 @@ static int wl12xx_spi_set_power(struct device *child, bool enable)
+ 	return ret;
+ }
+ 
++/**
++ * wl12xx_spi_set_block_size
++ *
++ * This function is not needed for spi mode, but need to be present.
++ * Without it defined the wlcore fallback to use the wrong packet
++ * allignment on tx.
++ */
++static void wl12xx_spi_set_block_size(struct device *child,
++				      unsigned int blksz)
++{
++}
++
+ static struct wl1271_if_operations spi_ops = {
+ 	.read		= wl12xx_spi_raw_read,
+ 	.write		= wl12xx_spi_raw_write,
+ 	.reset		= wl12xx_spi_reset,
+ 	.init		= wl12xx_spi_init,
+ 	.power		= wl12xx_spi_set_power,
+-	.set_block_size = NULL,
++	.set_block_size = wl12xx_spi_set_block_size,
+ };
+ 
+ static const struct of_device_id wlcore_spi_of_match_table[] = {
+-	{ .compatible = "ti,wl1271" },
++	{ .compatible = "ti,wl1271", .data = &wl12xx_data},
++	{ .compatible = "ti,wl1273", .data = &wl12xx_data},
++	{ .compatible = "ti,wl1281", .data = &wl12xx_data},
++	{ .compatible = "ti,wl1283", .data = &wl12xx_data},
++	{ .compatible = "ti,wl1801", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1805", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1807", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1831", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1835", .data = &wl18xx_data},
++	{ .compatible = "ti,wl1837", .data = &wl18xx_data},
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(of, wlcore_spi_of_match_table);
+@@ -375,18 +491,24 @@ static int wlcore_probe_of(struct spi_device *spi, struct wl12xx_spi_glue *glue,
+ 			   struct wlcore_platdev_data *pdev_data)
+ {
+ 	struct device_node *dt_node = spi->dev.of_node;
+-	int ret;
++	const struct of_device_id *of_id;
++
++	of_id = of_match_node(wlcore_spi_of_match_table, dt_node);
++	if (!of_id)
++		return -ENODEV;
++
++	wilink_data = of_id->data;
++	dev_info(&spi->dev, "selected chip familiy is %s\n",
++		 wilink_data->name);
+ 
+ 	if (of_find_property(dt_node, "clock-xtal", NULL))
+ 		pdev_data->ref_clock_xtal = true;
+ 
+-	ret = of_property_read_u32(dt_node, "ref-clock-frequency",
+-				   &pdev_data->ref_clock_freq);
+-	if (IS_ERR_VALUE(ret)) {
+-		dev_err(glue->dev,
+-			"can't get reference clock frequency (%d)\n", ret);
+-		return ret;
+-	}
++	/* optional clock frequency params */
++	of_property_read_u32(dt_node, "ref-clock-frequency",
++			     &pdev_data->ref_clock_freq);
++	of_property_read_u32(dt_node, "tcxo-clock-frequency",
++			     &pdev_data->tcxo_clock_freq);
+ 
+ 	return 0;
+ }
+@@ -397,6 +519,7 @@ static int wl1271_probe(struct spi_device *spi)
+ 	struct wlcore_platdev_data pdev_data;
+ 	struct resource res[1];
+ 	int ret;
++	struct spi_master *master = spi->master;
+ 
+ 	memset(&pdev_data, 0x00, sizeof(pdev_data));
+ 
+@@ -410,6 +533,12 @@ static int wl1271_probe(struct spi_device *spi)
+ 
+ 	glue->dev = &spi->dev;
+ 
++	if (!master->cs_gpios) {
++		dev_err(glue->dev,
++			"spi chip select pin missing in platform data!\n");
++		return -EINVAL;
++	}
++
+ 	spi_set_drvdata(spi, glue);
+ 
+ 	/* This is the only SPI value that we need to set here, the rest
+@@ -431,15 +560,21 @@ static int wl1271_probe(struct spi_device *spi)
+ 		return ret;
+ 	}
+ 
++	if (gpio_request(master->cs_gpios[0], "spi1-cs0"))
++		return -EINVAL;
++
+ 	ret = spi_setup(spi);
+ 	if (ret < 0) {
+ 		dev_err(glue->dev, "spi_setup failed\n");
++		gpio_free(master->cs_gpios[0]);
+ 		return ret;
+ 	}
+ 
+-	glue->core = platform_device_alloc("wl12xx", PLATFORM_DEVID_AUTO);
++	glue->core = platform_device_alloc(wilink_data->name,
++					   PLATFORM_DEVID_AUTO);
+ 	if (!glue->core) {
+ 		dev_err(glue->dev, "can't allocate platform_device\n");
++		gpio_free(master->cs_gpios[0]);
+ 		return -ENOMEM;
+ 	}
+ 
+@@ -474,14 +609,17 @@ static int wl1271_probe(struct spi_device *spi)
+ 
+ out_dev_put:
+ 	platform_device_put(glue->core);
++	gpio_free(master->cs_gpios[0]);
+ 	return ret;
+ }
+ 
+ static int wl1271_remove(struct spi_device *spi)
+ {
+ 	struct wl12xx_spi_glue *glue = spi_get_drvdata(spi);
++	struct spi_master *master = spi->master;
+ 
+ 	platform_device_unregister(glue->core);
++	gpio_free(master->cs_gpios[0]);
+ 
+ 	return 0;
+ }
+-- 
+1.7.9.5
 
-Thanks,
-Vishal
-
-> [  307.877604] [<bfa9b99b>] (rt2x00queue_get_entry [rt2x00lib]) from [<bfac8803>] (rt2800usb_txstatus_pending+0x1a/0x54 [rt2800usb])
-> [  307.898952] [<bfac8803>] (rt2800usb_txstatus_pending [rt2800usb]) from [<bfac8971>] (rt2800usb_tx_sta_fifo_read_completed+0x78/0xe8 [rt2800usb])
-> [  307.922051] [<bfac8971>] (rt2800usb_tx_sta_fifo_read_completed [rt2800usb]) from [<bfaab2ff>] (rt2x00usb_register_read_async_cb+0x16/0x34 [rt2x00usb])
-> [  307.946065] [<bfaab2ff>] (rt2x00usb_register_read_async_cb [rt2x00usb]) from [<c04fc1d3>] (__usb_hcd_giveback_urb+0x4b/0xdc)
-> [  307.962810] [<c04fc1d3>] (__usb_hcd_giveback_urb) from [<c04fc2dd>] (usb_giveback_urb_bh+0x79/0xb8)
-> [  307.977423] [<c04fc2dd>] (usb_giveback_urb_bh) from [<c0034acf>] (__tasklet_action+0x5b/0xe8)
-> [  307.991555] [<c0034acf>] (__tasklet_action) from [<c0034c85>] (__do_softirq+0x85/0x234)
-> [  308.005182] [<c0034c85>] (__do_softirq) from [<c0034ea7>] (do_softirq.part.6+0x33/0x38)
-> [  308.018813] [<c0034ea7>] (do_softirq.part.6) from [<c0034f33>] (__local_bh_enable_ip+0x87/0x90)
-> [  308.033175] [<c0034f33>] (__local_bh_enable_ip) from [<c0628085>] (netlink_poll+0xf1/0x138)
-> [  308.047248] [<c0628085>] (netlink_poll) from [<c05f11e5>] (sock_poll+0x59/0xb0)
-> [  308.060337] [<c05f11e5>] (sock_poll) from [<c014402d>] (do_select+0x221/0x44c)
-> [  308.073395] [<c014402d>] (do_select) from [<c014434d>] (core_sys_select+0xf5/0x338)
-> [  308.086929] [<c014434d>] (core_sys_select) from [<c0144645>] (SyS_select+0xb5/0xf4)
-> [  308.100533] [<c0144645>] (SyS_select) from [<c000ebe1>] (ret_fast_syscall+0x1/0x52)
-> [  308.114190] Code: 8000 b672 f892 f000 (e852) 3f00
-> [  308.124989] ---[ end trace 727b461c8c30b5e7 ]---
-> [  308.135586] Kernel panic - not syncing: Fatal exception in interrupt
-> [  308.147983] ---[ end Kernel panic - not syncing: Fatal exception in interrupt
-> 
-> -- 
-> Craig McQueen
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
