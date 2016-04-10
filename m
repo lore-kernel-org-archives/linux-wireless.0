@@ -1,354 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f43.google.com ([209.85.215.43]:35664 "EHLO
-	mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754631AbcDNMQd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 08:16:33 -0400
-Received: by mail-lf0-f43.google.com with SMTP id c126so106253310lfb.2
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2016 05:16:31 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
-To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, dave.taht@gmail.com,
-	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net,
-	apenwarr@gmail.com, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCHv3 3/5] mac80211: add debug knobs for fair queuing
-Date: Thu, 14 Apr 2016 14:18:20 +0200
-Message-Id: <1460636302-31161-4-git-send-email-michal.kazior@tieto.com> (sfid-20160414_141636_856281_AEE90B89)
-In-Reply-To: <1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
-References: <1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
- <1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
+Received: from mga09.intel.com ([134.134.136.24]:58473 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752285AbcDJK21 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sun, 10 Apr 2016 06:28:27 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: Gucea Doru <gucea.doru@gmail.com>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Gucea, Doru" <doru.gucea@intel.com>
+Subject: RE: iwlwifi monitor mode: No data frame captured on 5 Ghz
+Date: Sun, 10 Apr 2016 10:28:22 +0000
+Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EACFDF2@hasmsx107.ger.corp.intel.com> (sfid-20160410_123440_864749_C62C9BCB)
+References: <CANfLQrYTqUQGoj+Xr1XrKJrh8oaBB+qt8YeFwo0EyhbC-RpnNg@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB32EAA379D@hasmsx107.ger.corp.intel.com>
+	<CANfLQrad-1C3Wzy9M+=J7nzjQOcgam9CdJVDR2KC=KipZRpbkA@mail.gmail.com>
+	<1459863253.21527.2.camel@intel.com>
+ <CANfLQrbjCYaVa7-pq3xxPhmjM+MY5ky-isV7+yYLLFVkDCMr2Q@mail.gmail.com>
+In-Reply-To: <CANfLQrbjCYaVa7-pq3xxPhmjM+MY5ky-isV7+yYLLFVkDCMr2Q@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This adds a few debugfs entries and a module
-parameter to make it easier to test, debug and
-experiment.
-
-Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
----
- net/mac80211/debugfs.c        | 77 +++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/debugfs_netdev.c | 28 +++++++++++++++-
- net/mac80211/debugfs_sta.c    | 45 +++++++++++++++++++++++++
- net/mac80211/fq.h             | 13 +++++++-
- net/mac80211/fq_i.h           |  7 ++++
- net/mac80211/tx.c             |  8 ++++-
- 6 files changed, 175 insertions(+), 3 deletions(-)
-
-diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
-index 4ab5c522ceee..5cbaa5872e6b 100644
---- a/net/mac80211/debugfs.c
-+++ b/net/mac80211/debugfs.c
-@@ -31,6 +31,30 @@ int mac80211_format_buffer(char __user *userbuf, size_t count,
- 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
- }
- 
-+static int mac80211_parse_buffer(const char __user *userbuf,
-+				 size_t count,
-+				 loff_t *ppos,
-+				 char *fmt, ...)
-+{
-+	va_list args;
-+	char buf[DEBUGFS_FORMAT_BUFFER_SIZE] = {};
-+	int res;
-+
-+	if (count > sizeof(buf))
-+		return -EINVAL;
-+
-+	if (copy_from_user(buf, userbuf, count))
-+		return -EFAULT;
-+
-+	buf[sizeof(buf) - 1] = '\0';
-+
-+	va_start(args, fmt);
-+	res = vsscanf(buf, fmt, args);
-+	va_end(args);
-+
-+	return count;
-+}
-+
- #define DEBUGFS_READONLY_FILE_FN(name, fmt, value...)			\
- static ssize_t name## _read(struct file *file, char __user *userbuf,	\
- 			    size_t count, loff_t *ppos)			\
-@@ -70,6 +94,52 @@ DEBUGFS_READONLY_FILE(wep_iv, "%#08x",
- DEBUGFS_READONLY_FILE(rate_ctrl_alg, "%s",
- 	local->rate_ctrl ? local->rate_ctrl->ops->name : "hw/driver");
- 
-+#define DEBUGFS_RW_FILE_FN(name, expr)				\
-+static ssize_t name## _write(struct file *file,			\
-+			     const char __user *userbuf,	\
-+			     size_t count,			\
-+			     loff_t *ppos)			\
-+{								\
-+	struct ieee80211_local *local = file->private_data;	\
-+	return expr;						\
-+}
-+
-+#define DEBUGFS_RW_FILE(name, expr, fmt, value...)	\
-+	DEBUGFS_READONLY_FILE_FN(name, fmt, value)	\
-+	DEBUGFS_RW_FILE_FN(name, expr)			\
-+	DEBUGFS_RW_FILE_OPS(name)
-+
-+#define DEBUGFS_RW_FILE_OPS(name)			\
-+static const struct file_operations name## _ops = {	\
-+	.read = name## _read,				\
-+	.write = name## _write,				\
-+	.open = simple_open,				\
-+	.llseek = generic_file_llseek,			\
-+}
-+
-+#define DEBUGFS_RW_EXPR_FQ(args...)					\
-+({									\
-+	int res;							\
-+	res = mac80211_parse_buffer(userbuf, count, ppos, args);	\
-+	res;								\
-+})
-+
-+DEBUGFS_READONLY_FILE(fq_flows_cnt, "%u",
-+		      local->fq.flows_cnt);
-+DEBUGFS_READONLY_FILE(fq_backlog, "%u",
-+		      local->fq.backlog);
-+DEBUGFS_READONLY_FILE(fq_overlimit, "%u",
-+		      local->fq.overlimit);
-+DEBUGFS_READONLY_FILE(fq_collisions, "%u",
-+		      local->fq.collisions);
-+
-+DEBUGFS_RW_FILE(fq_limit,
-+		DEBUGFS_RW_EXPR_FQ("%u", &local->fq.limit),
-+		"%u", local->fq.limit);
-+DEBUGFS_RW_FILE(fq_quantum,
-+		DEBUGFS_RW_EXPR_FQ("%u", &local->fq.quantum),
-+		"%u", local->fq.quantum);
-+
- #ifdef CONFIG_PM
- static ssize_t reset_write(struct file *file, const char __user *user_buf,
- 			   size_t count, loff_t *ppos)
-@@ -254,6 +324,13 @@ void debugfs_hw_add(struct ieee80211_local *local)
- 	DEBUGFS_ADD(user_power);
- 	DEBUGFS_ADD(power);
- 
-+	DEBUGFS_ADD(fq_flows_cnt);
-+	DEBUGFS_ADD(fq_backlog);
-+	DEBUGFS_ADD(fq_overlimit);
-+	DEBUGFS_ADD(fq_collisions);
-+	DEBUGFS_ADD(fq_limit);
-+	DEBUGFS_ADD(fq_quantum);
-+
- 	statsd = debugfs_create_dir("statistics", phyd);
- 
- 	/* if the dir failed, don't put all the other things into the root! */
-diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
-index 37ea30e0754c..471cab40a25f 100644
---- a/net/mac80211/debugfs_netdev.c
-+++ b/net/mac80211/debugfs_netdev.c
-@@ -30,7 +30,7 @@ static ssize_t ieee80211_if_read(
- 	size_t count, loff_t *ppos,
- 	ssize_t (*format)(const struct ieee80211_sub_if_data *, char *, int))
- {
--	char buf[70];
-+	char buf[200];
- 	ssize_t ret = -EINVAL;
- 
- 	read_lock(&dev_base_lock);
-@@ -236,6 +236,31 @@ ieee80211_if_fmt_hw_queues(const struct ieee80211_sub_if_data *sdata,
- }
- IEEE80211_IF_FILE_R(hw_queues);
- 
-+static ssize_t
-+ieee80211_if_fmt_txq(const struct ieee80211_sub_if_data *sdata,
-+		     char *buf, int buflen)
-+{
-+	struct txq_info *txqi;
-+	int len = 0;
-+
-+	if (!sdata->vif.txq)
-+		return 0;
-+
-+	txqi = to_txq_info(sdata->vif.txq);
-+	len += scnprintf(buf + len, buflen - len,
-+			 "CAB backlog %ub %up flows %u overlimit %u collisions %u tx %ub %up\n",
-+			 txqi->tin.backlog_bytes,
-+			 txqi->tin.backlog_packets,
-+			 txqi->tin.flows,
-+			 txqi->tin.overlimit,
-+			 txqi->tin.collisions,
-+			 txqi->tin.tx_bytes,
-+			 txqi->tin.tx_packets);
-+
-+	return len;
-+}
-+IEEE80211_IF_FILE_R(txq);
-+
- /* STA attributes */
- IEEE80211_IF_FILE(bssid, u.mgd.bssid, MAC);
- IEEE80211_IF_FILE(aid, u.mgd.aid, DEC);
-@@ -618,6 +643,7 @@ static void add_common_files(struct ieee80211_sub_if_data *sdata)
- 	DEBUGFS_ADD(rc_rateidx_vht_mcs_mask_2ghz);
- 	DEBUGFS_ADD(rc_rateidx_vht_mcs_mask_5ghz);
- 	DEBUGFS_ADD(hw_queues);
-+	DEBUGFS_ADD(txq);
- }
- 
- static void add_sta_files(struct ieee80211_sub_if_data *sdata)
-diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
-index a39512f09f9e..b5eb4f402710 100644
---- a/net/mac80211/debugfs_sta.c
-+++ b/net/mac80211/debugfs_sta.c
-@@ -319,6 +319,50 @@ static ssize_t sta_vht_capa_read(struct file *file, char __user *userbuf,
- }
- STA_OPS(vht_capa);
- 
-+static ssize_t sta_txqs_read(struct file *file,
-+			     char __user *userbuf,
-+			     size_t count,
-+			     loff_t *ppos)
-+{
-+	struct sta_info *sta = file->private_data;
-+	struct txq_info *txqi;
-+	char *buf;
-+	int buflen;
-+	int len;
-+	int res;
-+	int i;
-+
-+	len = 0;
-+	buflen = 200 * IEEE80211_NUM_TIDS;
-+	buf = kzalloc(buflen, GFP_KERNEL);
-+	if (!buf)
-+		return -ENOMEM;
-+
-+	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
-+		if (!sta->sta.txq[i])
-+			break;
-+
-+		txqi = to_txq_info(sta->sta.txq[i]);
-+		len += scnprintf(buf + len, buflen - len,
-+				 "TID %d AC %d backlog %ub %up flows %u overlimit %u collisions %u tx %ub %up\n",
-+				 i,
-+				 txqi->txq.ac,
-+				 txqi->tin.backlog_bytes,
-+				 txqi->tin.backlog_packets,
-+				 txqi->tin.flows,
-+				 txqi->tin.overlimit,
-+				 txqi->tin.collisions,
-+				 txqi->tin.tx_bytes,
-+				 txqi->tin.tx_packets);
-+	}
-+
-+	res = simple_read_from_buffer(userbuf, count, ppos, buf, len);
-+	kfree(buf);
-+
-+	return res;
-+}
-+STA_OPS(txqs);
-+
- 
- #define DEBUGFS_ADD(name) \
- 	debugfs_create_file(#name, 0400, \
-@@ -365,6 +409,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
- 	DEBUGFS_ADD(agg_status);
- 	DEBUGFS_ADD(ht_capa);
- 	DEBUGFS_ADD(vht_capa);
-+	DEBUGFS_ADD(txqs);
- 
- 	DEBUGFS_ADD_COUNTER(rx_duplicates, rx_stats.num_duplicates);
- 	DEBUGFS_ADD_COUNTER(rx_fragments, rx_stats.fragments);
-diff --git a/net/mac80211/fq.h b/net/mac80211/fq.h
-index fa98576e1825..aa68363d6221 100644
---- a/net/mac80211/fq.h
-+++ b/net/mac80211/fq.h
-@@ -102,6 +102,8 @@ begin:
- 	}
- 
- 	flow->deficit -= skb->len;
-+	tin->tx_bytes += skb->len;
-+	tin->tx_packets++;
- 
- 	return skb;
- }
-@@ -120,8 +122,14 @@ static struct fq_flow *fq_flow_classify(struct fq *fq,
- 	idx = reciprocal_scale(hash, fq->flows_cnt);
- 	flow = &fq->flows[idx];
- 
--	if (flow->tin && flow->tin != tin)
-+	if (flow->tin && flow->tin != tin) {
- 		flow = fq_flow_get_default_fn(fq, tin, idx, skb);
-+		tin->collisions++;
-+		fq->collisions++;
-+	}
-+
-+	if (!flow->tin)
-+		tin->flows++;
- 
- 	return flow;
- }
-@@ -174,6 +182,9 @@ static void fq_tin_enqueue(struct fq *fq,
- 			return;
- 
- 		fq_skb_free_fn(fq, flow->tin, flow, skb);
-+
-+		flow->tin->overlimit++;
-+		fq->overlimit++;
- 	}
- }
- 
-diff --git a/net/mac80211/fq_i.h b/net/mac80211/fq_i.h
-index 5d8423f22e8d..0e25dda4fce3 100644
---- a/net/mac80211/fq_i.h
-+++ b/net/mac80211/fq_i.h
-@@ -51,6 +51,11 @@ struct fq_tin {
- 	struct list_head old_flows;
- 	u32 backlog_bytes;
- 	u32 backlog_packets;
-+	u32 overlimit;
-+	u32 collisions;
-+	u32 flows;
-+	u32 tx_bytes;
-+	u32 tx_packets;
- };
- 
- /**
-@@ -70,6 +75,8 @@ struct fq {
- 	u32 limit;
- 	u32 quantum;
- 	u32 backlog;
-+	u32 overlimit;
-+	u32 collisions;
- };
- 
- #endif
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index d4e0c87ecec5..396d0d17edeb 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -17,6 +17,7 @@
- #include <linux/slab.h>
- #include <linux/skbuff.h>
- #include <linux/etherdevice.h>
-+#include <linux/moduleparam.h>
- #include <linux/bitmap.h>
- #include <linux/rcupdate.h>
- #include <linux/export.h>
-@@ -36,6 +37,11 @@
- #include "rate.h"
- #include "fq.h"
- 
-+static unsigned int fq_flows_cnt = 4096;
-+module_param(fq_flows_cnt, uint, 0644);
-+MODULE_PARM_DESC(fq_flows_cnt,
-+		 "Maximum number of txq fair queuing flows. ");
-+
- /* misc utils */
- 
- static inline void ieee80211_tx_stats(struct net_device *dev, u32 len)
-@@ -1336,7 +1342,7 @@ int ieee80211_txq_setup_flows(struct ieee80211_local *local)
- 	if (!local->ops->wake_tx_queue)
- 		return 0;
- 
--	ret = fq_init(fq, 4096);
-+	ret = fq_init(fq, max_t(u32, fq_flows_cnt, 1));
- 	if (ret)
- 		return ret;
- 
--- 
-2.1.4
-
+PiBPbiBUdWUsIEFwciA1LCAyMDE2IGF0IDQ6MzQgUE0sIEdydW1iYWNoLCBFbW1hbnVlbA0KPiA8
+ZW1tYW51ZWwuZ3J1bWJhY2hAaW50ZWwuY29tPiB3cm90ZToNCj4gPiBPbiBUdWUsIDIwMTYtMDQt
+MDUgYXQgMTY6MjUgKzAzMDAsIEd1Y2VhIERvcnUgd3JvdGU6DQo+ID4+IE9uIFR1ZSwgQXByIDUs
+IDIwMTYgYXQgMTowMCBQTSwgR3J1bWJhY2gsIEVtbWFudWVsDQo+ID4+IDxlbW1hbnVlbC5ncnVt
+YmFjaEBpbnRlbC5jb20+IHdyb3RlOg0KPiA+PiA+ID4NCj4gPj4gPiA+IEhlbGxvLA0KPiA+PiA+
+ID4NCj4gPj4gPiA+IEkgYW0gdHJ5aW5nIHRvIGNhcHR1cmUgcGFja2V0cyB0aGF0IGFyZSBleGNo
+YW5nZWQgYmV0d2VlbiBhbiBBUA0KPiA+PiA+ID4gYW5kIGEgc21hcnRwaG9uZSBvbiB0aGUgNUdo
+eiBmcmVxdWVuY3kuIEZvciBnZW5lcmF0aW5nIHRyYWZmaWMsIEkNCj4gPj4gPiA+IHVwbG9hZCBV
+RFAgdHJhZmZpYyBmcm9tIGEgbGFwdG9wIFBDIHRvd2FyZHMgdGhlIHNtYXJ0cGhvbmUgdXNpbmcN
+Cj4gPj4gPiA+IGlwZXJmLg0KPiA+PiA+ID4NCj4gPj4gPiA+IFRoZSBwcm9ibGVtIGlzIHRoYXQg
+SSBjYW4gc2VlIF9vbmx5XyB0aGUgY29udHJvbCBmcmFtZXMgbGlrZQ0KPiA+PiA+ID4gUlRTL0NU
+UywgQmxvY2sgQUNLLCB3aGlsZSB0aGUgZGF0YSBwYWNrZXRzIGFyZSBub3QgY2FwdHVyZWQuIEkN
+Cj4gPj4gPiA+IHVwbG9hZGVkIHRoZSBXaXJlc2hhcmsgY2FwdHVyZSBmaWxlcyBhdCBbMV0gKGxv
+Y2F0ZWQgaW5zaWRlIHRoZQ0KPiA+PiA+ID4gZm9sZGVycyB3aG9zZSBuYW1lIHN0YXJ0cyB3aXRo
+IDVHaHopLg0KPiA+PiA+DQo+ID4+ID4gTW9zdCBsaWtlbHkgdGhlIHBhY2tldHMgb24gQSBiYW5k
+IGhhdmUgYSBWSFQgcHJlYW1ibGUgYW5kIHlvdXIgU0tVDQo+ID4+ID4gaXMgMTFOIG9ubHkuDQo+
+ID4+DQo+ID4+IE15IGNhcmQsIEludGVsIDcyNjAgWzFdICBzdXBwb3J0cyA4MDIuMTEgYWMuIFNv
+IGl0IHNob3VsZCBhbHNvDQo+ID4+IHN1cHBvcnQgVkhULCByaWdodD8gSXMgdGhlcmUgYW55IGlu
+dGVyZmFjZSBpbiB1c2VyLXNwYWNlIGZvciBjaGVja2luZw0KPiA+PiBhZnRlciBWSFQ/DQo+ID4N
+Cj4gPiA3MjYwIGhhcyBzZXZlcmFsIGZsYXZvcnMuIFRoZSBvbmUgeW91IGhhdmUgZG9lc24ndCBz
+dXBwb3J0IFZIVDoNCj4gPj4gaXdsd2lmaSAwMDAwOjA0OjAwLjA6IERldGVjdGVkIEludGVsKFIp
+IER1YWwgQmFuZCBXaXJlbGVzcyBOIDcyNjANCj4gPg0KPiA+IER1YWwgQmFuZCBtZWFucyB5b3Ug
+aGF2ZSBzdXBwb3J0IGZvciA1LjJHSHosIGJ1dCBXaXJlbGVzcyBOLCBtZWFucyBubw0KPiA+IFZI
+VC4NCj4gDQo+IE9uZSBvZiBteSBjb2xsZWFndWVzIGhhZCBhbiBJbnRlbCA3MjYwIEFDIGNhcmQg
+c28gSSByZXBlYXRlZCB0aGUNCj4gZXhwZXJpbWVudHM6DQo+IC0gaWYgSSBzZXQgdGhlIGNoYW5u
+ZWwgd2lkdGggdG8gMjBNaHogZnJvbSB0aGUgQVAgYW5kIHRoZSBtb25pdG9yIGludGVyZmFjZQ0K
+PiB1c2luZyB0aGUgY29tbWFuZCBpdyB3bGFuMCBzZXQgZnJlcSA1MjQwIEhUMjArIEkgY2FuIHNl
+ZSBkYXRhIGZyYW1lcyBhbmQNCj4gdGhlIEJsb2NrIEFDS3MgZm9yIHRoZXNlIGZyYW1lczsNCj4g
+LSBpZiBJIHNldCB0aGUgY2hhbm5lbCB3aWR0aCB0byA0ME1oeiBmcm9tIHRoZSBBUCBhbmQgdGhl
+IG1vbml0b3IgaW50ZXJmYWNlDQo+IHVzaW5nIHRoZSBjb21tYW5kIGl3IHdsYW4wIHNldCBmcmVx
+IDUyNDAgSFQ0MC0gSSBjYW4gc2VlIGRhdGEgZnJhbWVzIGFuZA0KPiB0aGUgQmxvY2sgQUNLcyBm
+b3IgdGhlc2UgZnJhbWVzOw0KPiAtIElmIEkgc2V0IHRoZSBjaGFubmVsIHdpZHRoIHRvIDgwTWh6
+IGZyb20gdGhlIEFQIEkgZG9uJ3QgaG93IHRvIHNldCB1cCB0aGUNCj4gbW9uaXRvciBpbnRlcmZh
+Y2UuIEkgdHJpZWQgd2l0aCBpdyB3bGFuMCBzZXQgZnJlcSA1MjQwIEhUNDArIGJ1dCBpdCB0ZWxs
+cyBtZQ0KPiB0aGF0IHRoZSBhcmd1bWVudCBpcyBpbnZhbGlkLg0KPiANCj4gSXMgdGhlIGl3bHdp
+ZmkgZHJpdmVyIGNhcGFibGUgb2YgY2FwdHVyaW5nIGRhdGEgZnJhbWVzIHdoZW4gdGhlIGNoYW5u
+ZWwNCj4gYm9uZGluZyBpcyBzZXQgdG8gODBNaHo/DQoNCmRldiA8ZGV2bmFtZT4gc2V0IGZyZXEg
+PGNvbnRyb2wgZnJlcT4gWzIwfDQwfDgwfDgwKzgwfDE2MF0gWzxjZW50ZXIgZnJlcSAxPl0gWzxj
+ZW50ZXIgZnJlcSAyPl0NCg0KWW91IGNhbiB0YWtlIGNlbnRlcl9mcmVxMSBmcm9tIHRoZSBvdXRw
+dXQgb2YgaXcgZGV2IG9uIGEgZGV2aWNlIHRoYXQgaXMgYXNzb2NpYXRlZCB0byB0aGUgc2FtZSBB
+UC4NCg==
