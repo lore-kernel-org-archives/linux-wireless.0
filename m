@@ -1,145 +1,138 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f175.google.com ([209.85.192.175]:36057 "EHLO
-	mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752169AbcDSFBJ (ORCPT
+Received: from mail-wm0-f44.google.com ([74.125.82.44]:33244 "EHLO
+	mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750810AbcDJJDY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 01:01:09 -0400
-Received: by mail-pf0-f175.google.com with SMTP id e128so2709781pfe.3
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 22:01:09 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v3 08/18] wcn36xx: Remove sta pointer in private vif struct
-Date: Mon, 18 Apr 2016 22:00:46 -0700
-Message-Id: <1461042056-10607-9-git-send-email-bjorn.andersson@linaro.org> (sfid-20160419_070538_319817_F17B1919)
-In-Reply-To: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
+	Sun, 10 Apr 2016 05:03:24 -0400
+Received: by mail-wm0-f44.google.com with SMTP id f198so109838035wme.0
+        for <linux-wireless@vger.kernel.org>; Sun, 10 Apr 2016 02:03:23 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1459863253.21527.2.camel@intel.com>
+References: <CANfLQrYTqUQGoj+Xr1XrKJrh8oaBB+qt8YeFwo0EyhbC-RpnNg@mail.gmail.com>
+	<0BA3FCBA62E2DC44AF3030971E174FB32EAA379D@hasmsx107.ger.corp.intel.com>
+	<CANfLQrad-1C3Wzy9M+=J7nzjQOcgam9CdJVDR2KC=KipZRpbkA@mail.gmail.com>
+	<1459863253.21527.2.camel@intel.com>
+Date: Sun, 10 Apr 2016 12:03:22 +0300
+Message-ID: <CANfLQrbjCYaVa7-pq3xxPhmjM+MY5ky-isV7+yYLLFVkDCMr2Q@mail.gmail.com> (sfid-20160410_110817_325747_9999BD88)
+Subject: Re: iwlwifi monitor mode: No data frame captured on 5 Ghz
+From: Gucea Doru <gucea.doru@gmail.com>
+To: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Gucea, Doru" <doru.gucea@intel.com>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+On Tue, Apr 5, 2016 at 4:34 PM, Grumbach, Emmanuel
+<emmanuel.grumbach@intel.com> wrote:
+> On Tue, 2016-04-05 at 16:25 +0300, Gucea Doru wrote:
+>> On Tue, Apr 5, 2016 at 1:00 PM, Grumbach, Emmanuel
+>> <emmanuel.grumbach@intel.com> wrote:
+>> > >
+>> > > Hello,
+>> > >
+>> > > I am trying to capture packets that are exchanged between an AP
+>> > > and a
+>> > > smartphone on the 5Ghz frequency. For generating traffic, I
+>> > > upload UDP
+>> > > traffic from a laptop PC towards the smartphone using iperf.
+>> > >
+>> > > The problem is that I can see _only_ the control frames like
+>> > > RTS/CTS, Block
+>> > > ACK, while the data packets are not captured. I uploaded the
+>> > > Wireshark
+>> > > capture files at [1] (located inside the folders whose name
+>> > > starts with 5Ghz).
+>> >
+>> > Most likely the packets on A band have a VHT preamble and your SKU
+>> > is 11N only.
+>>
+>> My card, Intel 7260 [1]  supports 802.11 ac. So it should also
+>> support
+>> VHT, right? Is there any interface in user-space for checking after
+>> VHT?
+>
+> 7260 has several flavors. The one you have doesn't support VHT:
+>> iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band Wireless N 7260
+>
+> Dual Band means you have support for 5.2GHz, but Wireless N, means no
+> VHT.
 
-This does not work with multiple sta's in a vif.
+One of my colleagues had an Intel 7260 AC card so I repeated the experiments:
+- if I set the channel width to 20Mhz from the AP and the monitor
+interface using the command iw wlan0 set freq 5240 HT20+ I can see
+data frames and the Block ACKs for these frames;
+- if I set the channel width to 40Mhz from the AP and the monitor
+interface using the command iw wlan0 set freq 5240 HT40- I can see
+data frames and the Block ACKs for these frames;
+- If I set the channel width to 80Mhz from the AP I don't how to set
+up the monitor interface. I tried with iw wlan0 set freq 5240 HT40+
+but it tells me that the argument is invalid.
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/main.c    |  3 ---
- drivers/net/wireless/ath/wcn36xx/smd.c     | 28 +++++++++++++++-------------
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  1 -
- 3 files changed, 15 insertions(+), 17 deletions(-)
+Is the iwlwifi driver capable of capturing data frames when the
+channel bonding is set to 80Mhz?
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index a23738deb5b3..7c06ca9fdd2c 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -796,7 +796,6 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- 		    vif, sta->addr);
- 
- 	spin_lock_init(&sta_priv->ampdu_lock);
--	vif_priv->sta = sta_priv;
- 	sta_priv->vif = vif_priv;
- 	/*
- 	 * For STA mode HW will be configured on BSS_CHANGED_ASSOC because
-@@ -815,14 +814,12 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw,
- 			      struct ieee80211_sta *sta)
- {
- 	struct wcn36xx *wcn = hw->priv;
--	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
- 	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
- 
- 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta remove vif %p sta %pM index %d\n",
- 		    vif, sta->addr, sta_priv->sta_index);
- 
- 	wcn36xx_smd_delete_sta(wcn, sta_priv->sta_index);
--	vif_priv->sta = NULL;
- 	sta_priv->vif = NULL;
- 	return 0;
- }
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index ff56138528b6..76c6856ed932 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1170,6 +1170,7 @@ static int wcn36xx_smd_config_bss_v1(struct wcn36xx *wcn,
- 
- static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
- 				      struct ieee80211_vif *vif,
-+				      struct ieee80211_sta *sta,
- 				      void *buf,
- 				      size_t len)
- {
-@@ -1200,9 +1201,10 @@ static int wcn36xx_smd_config_bss_rsp(struct wcn36xx *wcn,
- 
- 	vif_priv->bss_index = params->bss_index;
- 
--	if (vif_priv->sta) {
--		vif_priv->sta->bss_sta_index =  params->bss_sta_index;
--		vif_priv->sta->bss_dpu_desc_index = params->dpu_desc_index;
-+	if (sta) {
-+		struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
-+		sta_priv->bss_sta_index = params->bss_sta_index;
-+		sta_priv->bss_dpu_desc_index = params->dpu_desc_index;
- 	}
- 
- 	vif_priv->self_ucast_dpu_sign = params->ucast_dpu_signature;
-@@ -1329,6 +1331,7 @@ int wcn36xx_smd_config_bss(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 	}
- 	ret = wcn36xx_smd_config_bss_rsp(wcn,
- 					 vif,
-+					 sta,
- 					 wcn->hal_buf,
- 					 wcn->hal_rsp_len);
- 	if (ret) {
-@@ -2058,25 +2061,24 @@ static int wcn36xx_smd_delete_sta_context_ind(struct wcn36xx *wcn,
- {
- 	struct wcn36xx_hal_delete_sta_context_ind_msg *rsp = buf;
- 	struct wcn36xx_vif *tmp;
--	struct ieee80211_sta *sta = NULL;
-+	struct ieee80211_sta *sta;
- 
- 	if (len != sizeof(*rsp)) {
- 		wcn36xx_warn("Corrupted delete sta indication\n");
- 		return -EIO;
- 	}
- 
-+	wcn36xx_dbg(WCN36XX_DBG_HAL, "delete station indication %pM index %d\n",
-+		    rsp->addr2, rsp->sta_id);
-+
- 	list_for_each_entry(tmp, &wcn->vif_list, list) {
--		if (sta && (tmp->sta->sta_index == rsp->sta_id)) {
--			sta = container_of((void *)tmp->sta,
--						 struct ieee80211_sta,
--						 drv_priv);
--			wcn36xx_dbg(WCN36XX_DBG_HAL,
--				    "delete station indication %pM index %d\n",
--				    rsp->addr2,
--				    rsp->sta_id);
-+		rcu_read_lock();
-+		sta = ieee80211_find_sta(wcn36xx_priv_to_vif(tmp), rsp->addr2);
-+		if (sta)
- 			ieee80211_report_low_ack(sta, 0);
-+		rcu_read_unlock();
-+		if (sta)
- 			return 0;
--		}
- 	}
- 
- 	wcn36xx_warn("STA with addr %pM and index %d not found\n",
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index c368a34c8de7..54000db0af1a 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -125,7 +125,6 @@ struct wcn36xx_platform_ctrl_ops {
-  */
- struct wcn36xx_vif {
- 	struct list_head list;
--	struct wcn36xx_sta *sta;
- 	u8 dtim_period;
- 	enum ani_ed_type encrypt_type;
- 	bool is_joining;
--- 
-2.5.0
-
+>
+>>
+>> However, I noticed a "failure" message in dmesg:
+>> [    4.030428] Intel(R) Wireless WiFi driver for Linux, in-tree:
+>> [    4.030570] iwlwifi 0000:04:00.0: irq 37 for MSI/MSI-X
+>> [    4.030760] iwlwifi 0000:04:00.0: Direct firmware load for
+>> iwlwifi-7260-10.ucode failed with error -2
+>> [    4.035509] iwlwifi 0000:04:00.0: loaded firmware version
+>> 25.228.9.0 op_mode iwlmvm
+>> [    4.454772] iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band
+>> Wireless N 7260, REV=0x144
+>> [    4.454825] iwlwifi 0000:04:00.0: L1 Disabled - LTR Enabled
+>> [    4.455055] iwlwifi 0000:04:00.0: L1 Disabled - LTR Enabled
+>> [   15.049933] iwlwifi 0000:04:00.0: L1 Disabled - LTR Enabled
+>> [   15.050269] iwlwifi 0000:04:00.0: L1 Disabled - LTR Enabled
+>>
+>> Also, the maximum bit rate reported by iwconfig is 150 Mb/s, so my
+>> assumption is that the card can't enter into the 802.11 ac mode, it
+>> just stays into 802.11n.
+>>
+>> doru@doru-N551JK:~$ iwconfig wlan0
+>> wlan0     IEEE 802.11abgn  ESSID:"5_mptcp"
+>>           Mode:Managed  Frequency:5.24 GHz  Access Point:
+>> C4:6E:1F:4B:10:A2
+>>           Bit Rate=150 Mb/s   Tx-Power=22 dBm
+>>           Retry short limit:7   RTS thr:off   Fragment thr:off
+>>           Power Management:on
+>>           Link Quality=70/70  Signal level=-36 dBm
+>>           Rx invalid nwid:0  Rx invalid crypt:0  Rx invalid frag:0
+>>           Tx excessive retries:0  Invalid misc:22   Missed beacon:0
+>>
+>>
+>> [1] http://www.intel.com/content/www/us/en/wireless-products/dual-ban
+>> d-wireless-ac-7260-bluetooth-brief.html
+>>
+>> > Another option is that the traffic uses LDPC encoding and this
+>> > device doesn't support it.
+>> >
+>> >
+>> > >
+>> > > If I use the 2.4 frequency, all the frames are captured. I also
+>> > > uploaded the
+>> > > Wireshark packet traces for 2.4Ghz at [1] (located inside the
+>> > > folders whose
+>> > > name starts with 2.4 Ghz).
+>> > >
+>> > > Is this a known bug or am I doing something wrong?
+>> > >
+>> > > Additional details:
+>> > > Wi-Fi card:  iwlwifi 0000:04:00.0: Detected Intel(R) Dual Band
+>> > > Wireless N 7260,
+>> > > REV=0x144 Firmware version: iwlwifi 0000:04:00.0: loaded firmware
+>> > > version
+>> > > 25.228.9.0 op_mode iwlmvm
+>> > > Traffic encryption: WPA & WPA2 Personal
+>> > > Setting up the card in wireless mode:
+>> > > ip link set dev wlan0 down
+>> > > iw wlan0 set type monitor
+>> > > ip link set dev wlan0 up
+>> > > iw wlan0 set freq 5240
+>> > >
+>> > > [1] https://drive.google.com/open?id=0B5SBH08PU_Chek9rOHY0VkxFRUE
+>> > >
+>> > > Thank you, Doru
