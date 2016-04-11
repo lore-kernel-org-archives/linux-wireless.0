@@ -1,53 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:24819 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752502AbcD0K4n (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:38544 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751623AbcDKSig (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2016 06:56:43 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2] ath10k: release pre_cal_file while unloading driver
-Date: Wed, 27 Apr 2016 16:26:26 +0530
-Message-ID: <1461754586-7928-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20160427_125646_963993_73784139)
+	Mon, 11 Apr 2016 14:38:36 -0400
+Received: by mail-wm0-f47.google.com with SMTP id u206so116384123wme.1
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2016 11:38:35 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <1460388459-21090-1-git-send-email-sudipm.mukherjee@gmail.com>
+References: <1460388459-21090-1-git-send-email-sudipm.mukherjee@gmail.com>
+Date: Mon, 11 Apr 2016 11:38:34 -0700
+Message-ID: <CAHCK0=OX_bMoC=dwawmdSsMxk0cS3CxadqT5Y3QAUnSvgAHw+A@mail.gmail.com> (sfid-20160411_203840_443743_CE3C3414)
+Subject: Re: [PATCH] mwifiex: fix possible NULL dereference
+From: Christian Daudt <csd@broadcom.com>
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Cc: Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Failing to release pre_cal_file caldata on deinit causes memory leak.
+On Mon, Apr 11, 2016 at 8:27 AM, Sudip Mukherjee
+<sudipm.mukherjee@gmail.com> wrote:
+>
+> From: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
+>
+> We have a check for card just after dereferencing it. So if it is NULL
+> we have already dereferenced it before its check. Lets dereference it
+> after checking card for NULL.
+>
+> Signed-off-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/pcie.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> index edf8b07..84562d0 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> @@ -2884,10 +2884,11 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+>  {
+>         struct pcie_service_card *card = adapter->card;
+>         const struct mwifiex_pcie_card_reg *reg;
+> -       struct pci_dev *pdev = card->dev;
+> +       struct pci_dev *pdev;
 
-Fixes: b131129d9657 ("ath10k: fix calibration init sequence of qca99x0")
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
----
-v2: rebased
 
- drivers/net/wireless/ath/ath10k/core.c | 4 ++++
- 1 file changed, 4 insertions(+)
+you might want to move the variable declaration into the if block
+below to avoid it being left undefined
 
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index 3c38adafcc7a..dcc1c2ec14f7 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -686,6 +686,9 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
- 	if (!IS_ERR(ar->cal_file))
- 		release_firmware(ar->cal_file);
- 
-+	if (!IS_ERR(ar->pre_cal_file))
-+		release_firmware(ar->pre_cal_file);
-+
- 	ath10k_swap_code_seg_release(ar);
- 
- 	ar->normal_mode_fw.fw_file.otp_data = NULL;
-@@ -696,6 +699,7 @@ static void ath10k_core_free_firmware_files(struct ath10k *ar)
- 	ar->normal_mode_fw.fw_file.firmware_len = 0;
- 
- 	ar->cal_file = NULL;
-+	ar->pre_cal_file = NULL;
- }
- 
- static int ath10k_fetch_cal_file(struct ath10k *ar)
--- 
-2.8.0
+>         int i;
+>
+>         if (card) {
+> +               pdev = card->dev;
 
+
+to here
+  +                struct pci_dev pdev = card->dev;
+
+>
+>                 if (card->msix_enable) {
+>                         for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
+>                                 synchronize_irq(card->msix_entries[i].vector);
+>
+
+cheers,
+  csd
