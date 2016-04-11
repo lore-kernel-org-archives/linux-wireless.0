@@ -1,111 +1,623 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:46905 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753641AbcDKLX6 (ORCPT
+Received: from mail-gw3-out.broadcom.com ([216.31.210.64]:8031 "EHLO
+	mail-gw3-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751085AbcDKJpZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 11 Apr 2016 07:23:58 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Rob Herring <robh@kernel.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Cathy Luo" <cluo@marvell.com>,
-	Nishant Sarmukadam <nishants@marvell.com>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	Wei-Ning Huang <wnhuang@chromium.org>,
-	Xinming Hu <huxm@marvell.com>
-Subject: RE: [PATCH v6 1/2] dt: bindings: add MARVELL's sd8xxx wireless device
-Date: Mon, 11 Apr 2016 11:23:52 +0000
-Message-ID: <44846d9ea4084dc4b2706104df8d3543@SC-EXCH04.marvell.com> (sfid-20160411_132402_794899_4C215DC9)
-References: <1459343998-5187-1-git-send-email-akarwar@marvell.com>
- <CAL_JsqK5TiNCub6XnBcE118gLkC-mjf437zWhLOsjgtz+1peuw@mail.gmail.com>
-In-Reply-To: <CAL_JsqK5TiNCub6XnBcE118gLkC-mjf437zWhLOsjgtz+1peuw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	Mon, 11 Apr 2016 05:45:25 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 6/8] brcmfmac: cleanup ampdu-rx host reorder code
+Date: Mon, 11 Apr 2016 11:35:26 +0200
+Message-Id: <1460367328-12082-7-git-send-email-arend@broadcom.com> (sfid-20160411_114529_221548_DD76B371)
+In-Reply-To: <1460367328-12082-1-git-send-email-arend@broadcom.com>
+References: <1460367328-12082-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgUm9iLA0KDQpUaGFua3MgZm9yIHRoZSByZXZpZXcuDQoNCj4gRnJvbTogUm9iIEhlcnJpbmcg
-W21haWx0bzpyb2JoQGtlcm5lbC5vcmddDQo+IFNlbnQ6IFdlZG5lc2RheSwgTWFyY2ggMzAsIDIw
-MTYgNzo0NiBQTQ0KPiBUbzogQW1pdGt1bWFyIEthcndhcg0KPiBDYzogbGludXgtd2lyZWxlc3NA
-dmdlci5rZXJuZWwub3JnOyBDYXRoeSBMdW87IE5pc2hhbnQgU2FybXVrYWRhbTsNCj4gZGV2aWNl
-dHJlZUB2Z2VyLmtlcm5lbC5vcmc7IFdlaS1OaW5nIEh1YW5nOyBYaW5taW5nIEh1DQo+IFN1Ympl
-Y3Q6IFJlOiBbUEFUQ0ggdjYgMS8yXSBkdDogYmluZGluZ3M6IGFkZCBNQVJWRUxMJ3Mgc2Q4eHh4
-IHdpcmVsZXNzDQo+IGRldmljZQ0KPiANCj4gT24gV2VkLCBNYXIgMzAsIDIwMTYgYXQgODoxOSBB
-TSwgQW1pdGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxsLmNvbT4NCj4gd3JvdGU6DQo+ID4g
-RnJvbTogWGlubWluZyBIdSA8aHV4bUBtYXJ2ZWxsLmNvbT4NCj4gPg0KPiA+IEFkZCBkZXZpY2Ug
-dHJlZSBiaW5kaW5nIGRvY3VtZW50YXRpb24gZm9yIE1BUlZFTEwncyBzZDh4eHgNCj4gPiAoc2Q4
-ODk3IGFuZCBzZDg5OTcpIHdsYW4gY2hpcC4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IFhpbm1p
-bmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogQW1pdGt1bWFyIEth
-cndhciA8YWthcndhckBtYXJ2ZWxsLmNvbT4NCj4gPiAtLS0NCj4gPiBMaXN0aW5nIGNoYW5nZWxp
-c3QgZm9yIGJvdGggMS8yIGFuZCAyLzIgcGF0Y2hlcw0KPiA+IHYzOiBEb24ndCB1cGRhdGUgYWRh
-cHRlci0+ZHRfbm9kZSBpZiBtd2lmaWV4X3BsdF9kZXYgaXMgTlVMTA0KPiA+DQo+ID4gdjQ6IGEp
-Q29ycmVjdGVkIHRoZSAnbmFtZScgYW5kICdjb21wYXRpYmxlJyBwcm9wZXJ0eSBuYW1lcy4oQXJu
-ZA0KPiBCZXJnbWFubiBhbmQgUm9iDQo+ID4gICAgIEhlcnJpbmcpDQo+ID4gICAgIGIpUGF0Y2gg
-ZGVzY3JpcHRpb24gd3JhcGVkIGluIDcyIGNvbHVtbnMoUm9iIEhlcnJpbmcpDQo+ID4gICAgIGMp
-TW92ZWQgRFQgYmluZGluZyBmaWxlIHRvIGJpbmRpbmdzL25ldC93aXJlbGVzcy8oUm9iIEhlcnJp
-bmcpDQo+ID4gICAgIGQpUmVuYW1lZCAibXdpZmlleCxjaGlwLWdwaW8iIHRvICJtYXJ2ZWxsLHdh
-a2V1cC1ncGlvcyIoUm9iDQo+IEhlcnJpbmcvDQo+ID4gICAgIEFybmQgQmVyZ21hbm4pDQo+ID4g
-ICAgIGUpUmVwbGFjZWQgI2lmZGVmIHdpdGggX19tYXliZV91bnVzZWQoQXJuZCBCZXJnbWFubikN
-Cj4gPg0KPiA+IHY1OiBhKVJlbW92ZWQgd2lsZGNhcmRzIGZyb20gY29tcGF0aWJsZSBzdHJpbmco
-QXJuZCBCZXJnbWFubikNCj4gPiAgICAgYilQcmVwYXJlZCBzaW5nbGUgcGF0Y2ggZm9yIGFsbCBi
-aW5kaW5nIGNoYW5nZXMoUm9iIEhlcnJpbmcpDQo+ID4gICAgIGMpU3BlY2lmaWVkIG91ciBub2Rl
-IGFzIGEgc3Vibm9kZSBvZiBTRElPIGNvbnRyb2xsZXIuIFdpdGggdGhpcw0KPiBhcHByb2FjaCwg
-d2UNCj4gPiAgICAgZG9uJ3QgbmVlZCB0byByZWdpc3RlciBuZXcgcGxhdGZvcm0gZHJpdmVyLiAo
-Um9iIGhlcnJpbmcpDQo+ID4NCj4gPiB2NjogYSlMaXN0IG91dCB0aGUgc3BlY2lmaWMgcHJvcGVy
-dHkgbmFtZXMgZm9yIG1hcnZlbGwsY2FsZGF0YSogYW5kDQo+IHNpemUgb2YgdGhlIGRhdGEoUm9i
-IEhlcnJpbmcpDQo+ID4gICAgIGIpVXNlIHNkaW8gZnVuY3Rpb24gbnVtYmVyIGZvciBib3RoIHRo
-ZSB1bml0IGFkZHJlc3MgYW5kIHJlZyhSb2INCj4gPiBIZXJyaW5nKQ0KPiA+IC0tLQ0KPiA+ICAu
-Li4vYmluZGluZ3MvbmV0L3dpcmVsZXNzL21hcnZlbGwtc2Q4eHh4LnR4dCAgICAgICB8IDYzDQo+
-ICsrKysrKysrKysrKysrKysrKysrKysNCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDYzIGluc2VydGlv
-bnMoKykNCj4gPiAgY3JlYXRlIG1vZGUgMTAwNjQ0DQo+ID4gRG9jdW1lbnRhdGlvbi9kZXZpY2V0
-cmVlL2JpbmRpbmdzL25ldC93aXJlbGVzcy9tYXJ2ZWxsLXNkOHh4eC50eHQNCj4gPg0KPiA+IGRp
-ZmYgLS1naXQNCj4gPiBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9uZXQvd2ly
-ZWxlc3MvbWFydmVsbC1zZDh4eHgudHh0DQo+ID4gYi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUv
-YmluZGluZ3MvbmV0L3dpcmVsZXNzL21hcnZlbGwtc2Q4eHh4LnR4dA0KPiA+IG5ldyBmaWxlIG1v
-ZGUgMTAwNjQ0DQo+ID4gaW5kZXggMDAwMDAwMC4uMzM3ZmVkNA0KPiA+IC0tLSAvZGV2L251bGwN
-Cj4gPiArKysgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvbmV0L3dpcmVsZXNz
-L21hcnZlbGwtc2Q4eHh4LnR4DQo+ID4gKysrIHQNCj4gPiBAQCAtMCwwICsxLDYzIEBADQo+ID4g
-K01hcnZlbGwgODg5Ny84OTk3IChzZDg4OTcvc2Q4OTk3KSBTRElPIGRldmljZXMNCj4gPiArLS0t
-LS0tDQo+ID4gKw0KPiA+ICtUaGlzIG5vZGUgcHJvdmlkZXMgcHJvcGVydGllcyBmb3IgY29udHJv
-bGxpbmcgdGhlIG1hcnZlbGwgc2Rpbw0KPiB3aXJlbGVzcyBkZXZpY2UuDQo+ID4gK1RoZSBub2Rl
-IGlzIGV4cGVjdGVkIHRvIGJlIHNwZWNpZmllZCBhcyBhIGNoaWxkIG5vZGUgdG8gdGhlIFNESU8N
-Cj4gPiArY29udHJvbGxlciB0aGF0IGNvbm5lY3RzIHRoZSBkZXZpY2UgdG8gdGhlIHN5c3RlbS4N
-Cj4gPiArDQo+ID4gK1JlcXVpcmVkIHByb3BlcnRpZXM6DQo+ID4gKw0KPiA+ICsgIC0gY29tcGF0
-aWJsZSA6IHNob3VsZCBiZSBvbmUgb2YgdGhlIGZvbGxvd2luZzoNCj4gPiArICAgICAgICogIm1h
-cnZlbGwsc2Q4ODk3Ig0KPiA+ICsgICAgICAgKiAibWFydmVsbCxzZDg5OTciDQo+ID4gKw0KPiA+
-ICtPcHRpb25hbCBwcm9wZXJ0aWVzOg0KPiA+ICsNCj4gPiArICAtIG1hcnZlbGwsY2FsZGF0YSog
-OiBBIHNlcmllcyBvZiBwcm9wZXJ0aWVzIHdpdGggbWFydmVsbCxjYWxkYXRhDQo+IHByZWZpeCwN
-Cj4gPiArICAgICAgICAgICAgICAgICAgICAgcmVwcmVzZW50IGNhbGlicmF0aW9uIGRhdGEgZG93
-bmxvYWRlZCB0byB0aGUNCj4gZGV2aWNlIGR1cmluZw0KPiA+ICsgICAgICAgICAgICAgICAgICAg
-ICBpbml0aWFsaXphdGlvbi4gVGhpcyBpcyBhbiBhcnJheSBvZiB1bnNpZ25lZA0KPiB2YWx1ZXMu
-DQo+IA0KPiB1bnNpZ25lZCA4LWJpdCB2YWx1ZXMuLi4NCj4gDQo+ID4gKyAgICAgICAgICAgICAg
-ICAgICAgIHRoZSBwcm9wZXJ0aWVzIHNob3VsZCBmb2xsb3cgYmVsb3cgcHJvcGVydHkgbmFtZQ0K
-PiBhbmQNCj4gPiArICAgICAgICAgICAgICAgICAgICAgY29ycmVzcG9uZGluZyBhcnJheSBsZW5n
-dGg6DQo+ID4gKyAgICAgICAibWFydmVsbCxjYWxkYXRhXzAwX3R4cHdybGltaXRfMmdfY2ZnX3Nl
-dCIgKGxlbmd0aCA9IDU2NikuDQo+ID4gKyAgICAgICAibWFydmVsbCxjYWxkYXRhXzAwX3R4cHdy
-bGltaXRfNWdfY2ZnX3NldF9zdWIwIiAobGVuZ3RoID0NCj4gNTAyKS4NCj4gPiArICAgICAgICJt
-YXJ2ZWxsLGNhbGRhdGFfMDBfdHhwd3JsaW1pdF81Z19jZmdfc2V0X3N1YjEiIChsZW5ndGggPQ0K
-PiA2ODgpLg0KPiA+ICsgICAgICAgIm1hcnZlbGwsY2FsZGF0YV8wMF90eHB3cmxpbWl0XzVnX2Nm
-Z19zZXRfc3ViMiIgKGxlbmd0aCA9DQo+IDc1MCkuDQo+ID4gKyAgICAgICAibWFydmVsbCxjYWxk
-YXRhXzAwX3R4cHdybGltaXRfNWdfY2ZnX3NldF9zdWIzIiAobGVuZ3RoID0NCj4gNTAyKS4NCj4g
-DQo+IFRoZSAwMCBhbmQgY2ZnX3NldCBzZWVtIHByZXR0eSBwb2ludGxlc3MsIGFuZCAnLScgaXMg
-cHJlZmVycmVkIG92ZXIgJ18nLg0KPiBTbzoNCj4gDQo+IG1hcnZlbGwsY2FsZGF0YS10eHB3cmxp
-bWl0LTVnLXN1YjMNCj4gDQo+ID4gKyAgLSBtYXJ2ZWxsLHdha2V1cC1waW4gOiAnd2FrZXVwcGlu
-JyBpcyBhIHdha2V1cCBwaW4gbnVtYmVyIG9mIHdpZmkNCj4gPiArIGNoaXAgd2hpY2ggd2lsbA0K
-PiANCj4gRHJvcCAid2FrZXVwcGluIGlzIg0KPiANCj4gPiArICAgICAgICAgICAgICAgICAgICAg
-YmUgY29uZmlndXJlZCB0byBmaXJtd2FyZS4gZmlybXdhcmUgd2lsbCB3YWtldXANCj4gaG9zdCBz
-aWRlIHVzZQ0KPiA+ICsgICAgICAgICAgICAgICAgICAgICB0aGUgcGluIGR1cmluZyBzdXNwZW5k
-L3Jlc3VtZSBzdGFnZS4NCj4gPiArICAtIGludGVycnVwdC1wYXJlbnQ6IHBoYW5kbGUgb2YgdGhl
-IHBhcmVudCBpbnRlcnJ1cHQgY29udHJvbGxlcg0KPiA+ICsgIC0gaW50ZXJydXB0cyA6IGludGVy
-cnVwdCBwaW4gbnVtYmVyIHRvIHRoZSBjcHUuIGRyaXZlciB3aWxsIHJlcXVlc3QNCj4gYW4gaXJx
-IGJhc2VkIG9uDQo+ID4gKyAgICAgICAgICAgICAgICB0aGlzIGludGVycnVwdCBudW1iZXIuIGR1
-cmluZyBzeXN0ZW0gc3VzcGVuZCwgdGhlIGlycQ0KPiB3aWxsIGJlIGVuYWJsZWQNCj4gPiArICAg
-ICAgICAgICAgICAgIGFzIHN5c3RlbSB3YWtldXAgc291cmNlLCBzbyB0aGF0IHRoZSB3aWZpIGNo
-aXAgY2FuDQo+ID4gKyB3YWtldXAgaG9zdA0KPiANCj4gWW91IG5lZWQgdG8gdXNlIHRoZSB3YWtl
-dXAtc291cmNlIGJpbmRpbmcgaGVyZSAoYmluZGluZ3MvcG93ZXIvd2FrZXVwLQ0KPiBzb3VyY2Uu
-dHh0KS4gUHJvYmFibHkgb24gdGhlIEJUIGJpbmRpbmcgdG9vPw0KDQpXZSBkaWQgc29tZSBleHBl
-cmltZW50cyBhbmQgdHJpZWQgdG8gZXhwbG9yZSB0aGlzIG9wdGlvbi4gSXQgc2VlbXMgdG8gYmUg
-c3BlY2lmaWMgdG8gcnVudGltZSBwb3dlciBtYW5hZ2VtZW50Lg0KV2UgZG9uJ3QgdXNlIHJ1bnRp
-bWUgUE0gZm9yIG91ciBkZXZpY2UuIFdlIGFyZSBpbnRlcmVzdGVkIGluIHN5c3RlbSBzdXNwZW5k
-IGFuZCB3YWtldXAgKHVwb24gY2hhbmdpbmcgdGhlIElSUSBzdGF0dXMpDQpJIHdpbGwgc3VibWl0
-IHVwZGF0ZWQgdmVyc2lvbiBhZGRyZXNzaW5nIG90aGVyIHJldmlldyBjb21tZW50cy4NCg0KUmVn
-YXJkcywNCkFtaXRrdW1hcg0KDQo=
+The code for ampdu-rx host reorder is related to the firmware signalling
+supported in BCDC protocol. This change moves the code to fwsignal module.
+
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
+---
+ .../wireless/broadcom/brcm80211/brcmfmac/bcdc.c    |   7 +
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 214 +--------------------
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |   4 -
+ .../broadcom/brcm80211/brcmfmac/fwsignal.c         | 209 ++++++++++++++++++++
+ .../broadcom/brcm80211/brcmfmac/fwsignal.h         |   1 +
+ .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  |   4 +
+ .../wireless/broadcom/brcm80211/brcmfmac/proto.h   |  16 ++
+ 7 files changed, 239 insertions(+), 216 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+index 6af658e..288fe90 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+@@ -351,6 +351,12 @@ brcmf_proto_bcdc_add_tdls_peer(struct brcmf_pub *drvr, int ifidx,
+ {
+ }
+ 
++static void brcmf_proto_bcdc_rxreorder(struct brcmf_if *ifp,
++				       struct sk_buff *skb)
++{
++	brcmf_fws_rxreorder(ifp, skb);
++}
++
+ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
+ {
+ 	struct brcmf_bcdc *bcdc;
+@@ -372,6 +378,7 @@ int brcmf_proto_bcdc_attach(struct brcmf_pub *drvr)
+ 	drvr->proto->configure_addr_mode = brcmf_proto_bcdc_configure_addr_mode;
+ 	drvr->proto->delete_peer = brcmf_proto_bcdc_delete_peer;
+ 	drvr->proto->add_tdls_peer = brcmf_proto_bcdc_add_tdls_peer;
++	drvr->proto->rxreorder = brcmf_proto_bcdc_rxreorder;
+ 	drvr->proto->pd = bcdc;
+ 
+ 	drvr->hdrlen += BCDC_HEADER_LEN + BRCMF_PROT_FW_SIGNAL_MAX_TXBYTES;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 8a91a517..a30841b 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -40,19 +40,6 @@
+ 
+ #define MAX_WAIT_FOR_8021X_TX			msecs_to_jiffies(950)
+ 
+-/* AMPDU rx reordering definitions */
+-#define BRCMF_RXREORDER_FLOWID_OFFSET		0
+-#define BRCMF_RXREORDER_MAXIDX_OFFSET		2
+-#define BRCMF_RXREORDER_FLAGS_OFFSET		4
+-#define BRCMF_RXREORDER_CURIDX_OFFSET		6
+-#define BRCMF_RXREORDER_EXPIDX_OFFSET		8
+-
+-#define BRCMF_RXREORDER_DEL_FLOW		0x01
+-#define BRCMF_RXREORDER_FLUSH_ALL		0x02
+-#define BRCMF_RXREORDER_CURIDX_VALID		0x04
+-#define BRCMF_RXREORDER_EXPIDX_VALID		0x08
+-#define BRCMF_RXREORDER_NEW_HOLE		0x10
+-
+ #define BRCMF_BSSIDX_INVALID			-1
+ 
+ char *brcmf_ifname(struct brcmf_if *ifp)
+@@ -342,207 +329,11 @@ void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb,
+ 		netif_rx_ni(skb);
+ }
+ 
+-static void brcmf_rxreorder_get_skb_list(struct brcmf_ampdu_rx_reorder *rfi,
+-					 u8 start, u8 end,
+-					 struct sk_buff_head *skb_list)
+-{
+-	/* initialize return list */
+-	__skb_queue_head_init(skb_list);
+-
+-	if (rfi->pend_pkts == 0) {
+-		brcmf_dbg(INFO, "no packets in reorder queue\n");
+-		return;
+-	}
+-
+-	do {
+-		if (rfi->pktslots[start]) {
+-			__skb_queue_tail(skb_list, rfi->pktslots[start]);
+-			rfi->pktslots[start] = NULL;
+-		}
+-		start++;
+-		if (start > rfi->max_idx)
+-			start = 0;
+-	} while (start != end);
+-	rfi->pend_pkts -= skb_queue_len(skb_list);
+-}
+-
+-static void brcmf_rxreorder_process_info(struct brcmf_if *ifp, u8 *reorder_data,
+-					 struct sk_buff *pkt)
+-{
+-	u8 flow_id, max_idx, cur_idx, exp_idx, end_idx;
+-	struct brcmf_ampdu_rx_reorder *rfi;
+-	struct sk_buff_head reorder_list;
+-	struct sk_buff *pnext;
+-	u8 flags;
+-	u32 buf_size;
+-
+-	flow_id = reorder_data[BRCMF_RXREORDER_FLOWID_OFFSET];
+-	flags = reorder_data[BRCMF_RXREORDER_FLAGS_OFFSET];
+-
+-	/* validate flags and flow id */
+-	if (flags == 0xFF) {
+-		brcmf_err("invalid flags...so ignore this packet\n");
+-		brcmf_netif_rx(ifp, pkt, false);
+-		return;
+-	}
+-
+-	rfi = ifp->drvr->reorder_flows[flow_id];
+-	if (flags & BRCMF_RXREORDER_DEL_FLOW) {
+-		brcmf_dbg(INFO, "flow-%d: delete\n",
+-			  flow_id);
+-
+-		if (rfi == NULL) {
+-			brcmf_dbg(INFO, "received flags to cleanup, but no flow (%d) yet\n",
+-				  flow_id);
+-			brcmf_netif_rx(ifp, pkt, false);
+-			return;
+-		}
+-
+-		brcmf_rxreorder_get_skb_list(rfi, rfi->exp_idx, rfi->exp_idx,
+-					     &reorder_list);
+-		/* add the last packet */
+-		__skb_queue_tail(&reorder_list, pkt);
+-		kfree(rfi);
+-		ifp->drvr->reorder_flows[flow_id] = NULL;
+-		goto netif_rx;
+-	}
+-	/* from here on we need a flow reorder instance */
+-	if (rfi == NULL) {
+-		buf_size = sizeof(*rfi);
+-		max_idx = reorder_data[BRCMF_RXREORDER_MAXIDX_OFFSET];
+-
+-		buf_size += (max_idx + 1) * sizeof(pkt);
+-
+-		/* allocate space for flow reorder info */
+-		brcmf_dbg(INFO, "flow-%d: start, maxidx %d\n",
+-			  flow_id, max_idx);
+-		rfi = kzalloc(buf_size, GFP_ATOMIC);
+-		if (rfi == NULL) {
+-			brcmf_err("failed to alloc buffer\n");
+-			brcmf_netif_rx(ifp, pkt, false);
+-			return;
+-		}
+-
+-		ifp->drvr->reorder_flows[flow_id] = rfi;
+-		rfi->pktslots = (struct sk_buff **)(rfi+1);
+-		rfi->max_idx = max_idx;
+-	}
+-	if (flags & BRCMF_RXREORDER_NEW_HOLE)  {
+-		if (rfi->pend_pkts) {
+-			brcmf_rxreorder_get_skb_list(rfi, rfi->exp_idx,
+-						     rfi->exp_idx,
+-						     &reorder_list);
+-			WARN_ON(rfi->pend_pkts);
+-		} else {
+-			__skb_queue_head_init(&reorder_list);
+-		}
+-		rfi->cur_idx = reorder_data[BRCMF_RXREORDER_CURIDX_OFFSET];
+-		rfi->exp_idx = reorder_data[BRCMF_RXREORDER_EXPIDX_OFFSET];
+-		rfi->max_idx = reorder_data[BRCMF_RXREORDER_MAXIDX_OFFSET];
+-		rfi->pktslots[rfi->cur_idx] = pkt;
+-		rfi->pend_pkts++;
+-		brcmf_dbg(DATA, "flow-%d: new hole %d (%d), pending %d\n",
+-			  flow_id, rfi->cur_idx, rfi->exp_idx, rfi->pend_pkts);
+-	} else if (flags & BRCMF_RXREORDER_CURIDX_VALID) {
+-		cur_idx = reorder_data[BRCMF_RXREORDER_CURIDX_OFFSET];
+-		exp_idx = reorder_data[BRCMF_RXREORDER_EXPIDX_OFFSET];
+-
+-		if ((exp_idx == rfi->exp_idx) && (cur_idx != rfi->exp_idx)) {
+-			/* still in the current hole */
+-			/* enqueue the current on the buffer chain */
+-			if (rfi->pktslots[cur_idx] != NULL) {
+-				brcmf_dbg(INFO, "HOLE: ERROR buffer pending..free it\n");
+-				brcmu_pkt_buf_free_skb(rfi->pktslots[cur_idx]);
+-				rfi->pktslots[cur_idx] = NULL;
+-			}
+-			rfi->pktslots[cur_idx] = pkt;
+-			rfi->pend_pkts++;
+-			rfi->cur_idx = cur_idx;
+-			brcmf_dbg(DATA, "flow-%d: store pkt %d (%d), pending %d\n",
+-				  flow_id, cur_idx, exp_idx, rfi->pend_pkts);
+-
+-			/* can return now as there is no reorder
+-			 * list to process.
+-			 */
+-			return;
+-		}
+-		if (rfi->exp_idx == cur_idx) {
+-			if (rfi->pktslots[cur_idx] != NULL) {
+-				brcmf_dbg(INFO, "error buffer pending..free it\n");
+-				brcmu_pkt_buf_free_skb(rfi->pktslots[cur_idx]);
+-				rfi->pktslots[cur_idx] = NULL;
+-			}
+-			rfi->pktslots[cur_idx] = pkt;
+-			rfi->pend_pkts++;
+-
+-			/* got the expected one. flush from current to expected
+-			 * and update expected
+-			 */
+-			brcmf_dbg(DATA, "flow-%d: expected %d (%d), pending %d\n",
+-				  flow_id, cur_idx, exp_idx, rfi->pend_pkts);
+-
+-			rfi->cur_idx = cur_idx;
+-			rfi->exp_idx = exp_idx;
+-
+-			brcmf_rxreorder_get_skb_list(rfi, cur_idx, exp_idx,
+-						     &reorder_list);
+-			brcmf_dbg(DATA, "flow-%d: freeing buffers %d, pending %d\n",
+-				  flow_id, skb_queue_len(&reorder_list),
+-				  rfi->pend_pkts);
+-		} else {
+-			u8 end_idx;
+-
+-			brcmf_dbg(DATA, "flow-%d (0x%x): both moved, old %d/%d, new %d/%d\n",
+-				  flow_id, flags, rfi->cur_idx, rfi->exp_idx,
+-				  cur_idx, exp_idx);
+-			if (flags & BRCMF_RXREORDER_FLUSH_ALL)
+-				end_idx = rfi->exp_idx;
+-			else
+-				end_idx = exp_idx;
+-
+-			/* flush pkts first */
+-			brcmf_rxreorder_get_skb_list(rfi, rfi->exp_idx, end_idx,
+-						     &reorder_list);
+-
+-			if (exp_idx == ((cur_idx + 1) % (rfi->max_idx + 1))) {
+-				__skb_queue_tail(&reorder_list, pkt);
+-			} else {
+-				rfi->pktslots[cur_idx] = pkt;
+-				rfi->pend_pkts++;
+-			}
+-			rfi->exp_idx = exp_idx;
+-			rfi->cur_idx = cur_idx;
+-		}
+-	} else {
+-		/* explicity window move updating the expected index */
+-		exp_idx = reorder_data[BRCMF_RXREORDER_EXPIDX_OFFSET];
+-
+-		brcmf_dbg(DATA, "flow-%d (0x%x): change expected: %d -> %d\n",
+-			  flow_id, flags, rfi->exp_idx, exp_idx);
+-		if (flags & BRCMF_RXREORDER_FLUSH_ALL)
+-			end_idx =  rfi->exp_idx;
+-		else
+-			end_idx =  exp_idx;
+-
+-		brcmf_rxreorder_get_skb_list(rfi, rfi->exp_idx, end_idx,
+-					     &reorder_list);
+-		__skb_queue_tail(&reorder_list, pkt);
+-		/* set the new expected idx */
+-		rfi->exp_idx = exp_idx;
+-	}
+-netif_rx:
+-	skb_queue_walk_safe(&reorder_list, pkt, pnext) {
+-		__skb_unlink(pkt, &reorder_list);
+-		brcmf_netif_rx(ifp, pkt, false);
+-	}
+-}
+-
+ void brcmf_rx_frame(struct device *dev, struct sk_buff *skb, bool handle_evnt)
+ {
+ 	struct brcmf_if *ifp;
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+ 	struct brcmf_pub *drvr = bus_if->drvr;
+-	struct brcmf_skb_reorder_data *rd;
+ 	int ret;
+ 
+ 	brcmf_dbg(DATA, "Enter: %s: rxp=%p\n", dev_name(dev), skb);
+@@ -557,9 +348,8 @@ void brcmf_rx_frame(struct device *dev, struct sk_buff *skb, bool handle_evnt)
+ 		return;
+ 	}
+ 
+-	rd = (struct brcmf_skb_reorder_data *)skb->cb;
+-	if (rd->reorder)
+-		brcmf_rxreorder_process_info(ifp, rd->reorder, skb);
++	if (brcmf_proto_is_reorder_skb(skb))
++		brcmf_proto_rxreorder(ifp, skb);
+ 	else
+ 		brcmf_netif_rx(ifp, skb, handle_evnt);
+ }
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index d3497e8..394ae05 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -208,10 +208,6 @@ struct brcmf_if {
+ 	u8 ipv6addr_idx;
+ };
+ 
+-struct brcmf_skb_reorder_data {
+-	u8 *reorder;
+-};
+-
+ int brcmf_netdev_wait_pend8021x(struct brcmf_if *ifp);
+ 
+ /* Return pointer to interface name */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+index f82c9ab..8a07687 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+@@ -92,6 +92,19 @@ enum brcmf_fws_tlv_len {
+ };
+ #undef BRCMF_FWS_TLV_DEF
+ 
++/* AMPDU rx reordering definitions */
++#define BRCMF_RXREORDER_FLOWID_OFFSET		0
++#define BRCMF_RXREORDER_MAXIDX_OFFSET		2
++#define BRCMF_RXREORDER_FLAGS_OFFSET		4
++#define BRCMF_RXREORDER_CURIDX_OFFSET		6
++#define BRCMF_RXREORDER_EXPIDX_OFFSET		8
++
++#define BRCMF_RXREORDER_DEL_FLOW		0x01
++#define BRCMF_RXREORDER_FLUSH_ALL		0x02
++#define BRCMF_RXREORDER_CURIDX_VALID		0x04
++#define BRCMF_RXREORDER_EXPIDX_VALID		0x08
++#define BRCMF_RXREORDER_NEW_HOLE		0x10
++
+ #ifdef DEBUG
+ /*
+  * brcmf_fws_tlv_names - array of tlv names.
+@@ -1614,6 +1627,202 @@ static int brcmf_fws_notify_bcmc_credit_support(struct brcmf_if *ifp,
+ 	return 0;
+ }
+ 
++static void brcmf_rxreorder_get_skb_list(struct brcmf_ampdu_rx_reorder *rfi,
++					 u8 start, u8 end,
++					 struct sk_buff_head *skb_list)
++{
++	/* initialize return list */
++	__skb_queue_head_init(skb_list);
++
++	if (rfi->pend_pkts == 0) {
++		brcmf_dbg(INFO, "no packets in reorder queue\n");
++		return;
++	}
++
++	do {
++		if (rfi->pktslots[start]) {
++			__skb_queue_tail(skb_list, rfi->pktslots[start]);
++			rfi->pktslots[start] = NULL;
++		}
++		start++;
++		if (start > rfi->max_idx)
++			start = 0;
++	} while (start != end);
++	rfi->pend_pkts -= skb_queue_len(skb_list);
++}
++
++void brcmf_fws_rxreorder(struct brcmf_if *ifp, struct sk_buff *pkt)
++{
++	u8 *reorder_data;
++	u8 flow_id, max_idx, cur_idx, exp_idx, end_idx;
++	struct brcmf_ampdu_rx_reorder *rfi;
++	struct sk_buff_head reorder_list;
++	struct sk_buff *pnext;
++	u8 flags;
++	u32 buf_size;
++
++	reorder_data = ((struct brcmf_skb_reorder_data *)pkt->cb)->reorder;
++	flow_id = reorder_data[BRCMF_RXREORDER_FLOWID_OFFSET];
++	flags = reorder_data[BRCMF_RXREORDER_FLAGS_OFFSET];
++
++	/* validate flags and flow id */
++	if (flags == 0xFF) {
++		brcmf_err("invalid flags...so ignore this packet\n");
++		brcmf_netif_rx(ifp, pkt, false);
++		return;
++	}
++
++	rfi = ifp->drvr->reorder_flows[flow_id];
++	if (flags & BRCMF_RXREORDER_DEL_FLOW) {
++		brcmf_dbg(INFO, "flow-%d: delete\n",
++			  flow_id);
++
++		if (rfi == NULL) {
++			brcmf_dbg(INFO, "received flags to cleanup, but no flow (%d) yet\n",
++				  flow_id);
++			brcmf_netif_rx(ifp, pkt, false);
++			return;
++		}
++
++		brcmf_rxreorder_get_skb_list(rfi, rfi->exp_idx, rfi->exp_idx,
++					     &reorder_list);
++		/* add the last packet */
++		__skb_queue_tail(&reorder_list, pkt);
++		kfree(rfi);
++		ifp->drvr->reorder_flows[flow_id] = NULL;
++		goto netif_rx;
++	}
++	/* from here on we need a flow reorder instance */
++	if (rfi == NULL) {
++		buf_size = sizeof(*rfi);
++		max_idx = reorder_data[BRCMF_RXREORDER_MAXIDX_OFFSET];
++
++		buf_size += (max_idx + 1) * sizeof(pkt);
++
++		/* allocate space for flow reorder info */
++		brcmf_dbg(INFO, "flow-%d: start, maxidx %d\n",
++			  flow_id, max_idx);
++		rfi = kzalloc(buf_size, GFP_ATOMIC);
++		if (rfi == NULL) {
++			brcmf_err("failed to alloc buffer\n");
++			brcmf_netif_rx(ifp, pkt, false);
++			return;
++		}
++
++		ifp->drvr->reorder_flows[flow_id] = rfi;
++		rfi->pktslots = (struct sk_buff **)(rfi + 1);
++		rfi->max_idx = max_idx;
++	}
++	if (flags & BRCMF_RXREORDER_NEW_HOLE)  {
++		if (rfi->pend_pkts) {
++			brcmf_rxreorder_get_skb_list(rfi, rfi->exp_idx,
++						     rfi->exp_idx,
++						     &reorder_list);
++			WARN_ON(rfi->pend_pkts);
++		} else {
++			__skb_queue_head_init(&reorder_list);
++		}
++		rfi->cur_idx = reorder_data[BRCMF_RXREORDER_CURIDX_OFFSET];
++		rfi->exp_idx = reorder_data[BRCMF_RXREORDER_EXPIDX_OFFSET];
++		rfi->max_idx = reorder_data[BRCMF_RXREORDER_MAXIDX_OFFSET];
++		rfi->pktslots[rfi->cur_idx] = pkt;
++		rfi->pend_pkts++;
++		brcmf_dbg(DATA, "flow-%d: new hole %d (%d), pending %d\n",
++			  flow_id, rfi->cur_idx, rfi->exp_idx, rfi->pend_pkts);
++	} else if (flags & BRCMF_RXREORDER_CURIDX_VALID) {
++		cur_idx = reorder_data[BRCMF_RXREORDER_CURIDX_OFFSET];
++		exp_idx = reorder_data[BRCMF_RXREORDER_EXPIDX_OFFSET];
++
++		if ((exp_idx == rfi->exp_idx) && (cur_idx != rfi->exp_idx)) {
++			/* still in the current hole */
++			/* enqueue the current on the buffer chain */
++			if (rfi->pktslots[cur_idx] != NULL) {
++				brcmf_dbg(INFO, "HOLE: ERROR buffer pending..free it\n");
++				brcmu_pkt_buf_free_skb(rfi->pktslots[cur_idx]);
++				rfi->pktslots[cur_idx] = NULL;
++			}
++			rfi->pktslots[cur_idx] = pkt;
++			rfi->pend_pkts++;
++			rfi->cur_idx = cur_idx;
++			brcmf_dbg(DATA, "flow-%d: store pkt %d (%d), pending %d\n",
++				  flow_id, cur_idx, exp_idx, rfi->pend_pkts);
++
++			/* can return now as there is no reorder
++			 * list to process.
++			 */
++			return;
++		}
++		if (rfi->exp_idx == cur_idx) {
++			if (rfi->pktslots[cur_idx] != NULL) {
++				brcmf_dbg(INFO, "error buffer pending..free it\n");
++				brcmu_pkt_buf_free_skb(rfi->pktslots[cur_idx]);
++				rfi->pktslots[cur_idx] = NULL;
++			}
++			rfi->pktslots[cur_idx] = pkt;
++			rfi->pend_pkts++;
++
++			/* got the expected one. flush from current to expected
++			 * and update expected
++			 */
++			brcmf_dbg(DATA, "flow-%d: expected %d (%d), pending %d\n",
++				  flow_id, cur_idx, exp_idx, rfi->pend_pkts);
++
++			rfi->cur_idx = cur_idx;
++			rfi->exp_idx = exp_idx;
++
++			brcmf_rxreorder_get_skb_list(rfi, cur_idx, exp_idx,
++						     &reorder_list);
++			brcmf_dbg(DATA, "flow-%d: freeing buffers %d, pending %d\n",
++				  flow_id, skb_queue_len(&reorder_list),
++				  rfi->pend_pkts);
++		} else {
++			u8 end_idx;
++
++			brcmf_dbg(DATA, "flow-%d (0x%x): both moved, old %d/%d, new %d/%d\n",
++				  flow_id, flags, rfi->cur_idx, rfi->exp_idx,
++				  cur_idx, exp_idx);
++			if (flags & BRCMF_RXREORDER_FLUSH_ALL)
++				end_idx = rfi->exp_idx;
++			else
++				end_idx = exp_idx;
++
++			/* flush pkts first */
++			brcmf_rxreorder_get_skb_list(rfi, rfi->exp_idx, end_idx,
++						     &reorder_list);
++
++			if (exp_idx == ((cur_idx + 1) % (rfi->max_idx + 1))) {
++				__skb_queue_tail(&reorder_list, pkt);
++			} else {
++				rfi->pktslots[cur_idx] = pkt;
++				rfi->pend_pkts++;
++			}
++			rfi->exp_idx = exp_idx;
++			rfi->cur_idx = cur_idx;
++		}
++	} else {
++		/* explicity window move updating the expected index */
++		exp_idx = reorder_data[BRCMF_RXREORDER_EXPIDX_OFFSET];
++
++		brcmf_dbg(DATA, "flow-%d (0x%x): change expected: %d -> %d\n",
++			  flow_id, flags, rfi->exp_idx, exp_idx);
++		if (flags & BRCMF_RXREORDER_FLUSH_ALL)
++			end_idx =  rfi->exp_idx;
++		else
++			end_idx =  exp_idx;
++
++		brcmf_rxreorder_get_skb_list(rfi, rfi->exp_idx, end_idx,
++					     &reorder_list);
++		__skb_queue_tail(&reorder_list, pkt);
++		/* set the new expected idx */
++		rfi->exp_idx = exp_idx;
++	}
++netif_rx:
++	skb_queue_walk_safe(&reorder_list, pkt, pnext) {
++		__skb_unlink(pkt, &reorder_list);
++		brcmf_netif_rx(ifp, pkt, false);
++	}
++}
++
+ void brcmf_fws_hdrpull(struct brcmf_if *ifp, s16 siglen, struct sk_buff *skb)
+ {
+ 	struct brcmf_skb_reorder_data *rd;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+index a36bac1..ef0ad85 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.h
+@@ -29,5 +29,6 @@ void brcmf_fws_add_interface(struct brcmf_if *ifp);
+ void brcmf_fws_del_interface(struct brcmf_if *ifp);
+ void brcmf_fws_bustxfail(struct brcmf_fws_info *fws, struct sk_buff *skb);
+ void brcmf_fws_bus_blocked(struct brcmf_pub *drvr, bool flow_blocked);
++void brcmf_fws_rxreorder(struct brcmf_if *ifp, struct sk_buff *skb);
+ 
+ #endif /* FWSIGNAL_H_ */
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+index 3795354..8c064ab 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+@@ -527,6 +527,9 @@ static int brcmf_msgbuf_hdrpull(struct brcmf_pub *drvr, bool do_fws,
+ 	return -ENODEV;
+ }
+ 
++static void brcmf_msgbuf_rxreorder(struct brcmf_if *ifp, struct sk_buff *skb)
++{
++}
+ 
+ static void
+ brcmf_msgbuf_remove_flowring(struct brcmf_msgbuf *msgbuf, u16 flowid)
+@@ -1466,6 +1469,7 @@ int brcmf_proto_msgbuf_attach(struct brcmf_pub *drvr)
+ 	drvr->proto->configure_addr_mode = brcmf_msgbuf_configure_addr_mode;
+ 	drvr->proto->delete_peer = brcmf_msgbuf_delete_peer;
+ 	drvr->proto->add_tdls_peer = brcmf_msgbuf_add_tdls_peer;
++	drvr->proto->rxreorder = brcmf_msgbuf_rxreorder;
+ 	drvr->proto->pd = msgbuf;
+ 
+ 	init_waitqueue_head(&msgbuf->ioctl_resp_wait);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
+index d55119d..57531f4 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/proto.h
+@@ -22,6 +22,9 @@ enum proto_addr_mode {
+ 	ADDR_DIRECT
+ };
+ 
++struct brcmf_skb_reorder_data {
++	u8 *reorder;
++};
+ 
+ struct brcmf_proto {
+ 	int (*hdrpull)(struct brcmf_pub *drvr, bool do_fws,
+@@ -38,6 +41,7 @@ struct brcmf_proto {
+ 			    u8 peer[ETH_ALEN]);
+ 	void (*add_tdls_peer)(struct brcmf_pub *drvr, int ifidx,
+ 			      u8 peer[ETH_ALEN]);
++	void (*rxreorder)(struct brcmf_if *ifp, struct sk_buff *skb);
+ 	void *pd;
+ };
+ 
+@@ -91,6 +95,18 @@ brcmf_proto_add_tdls_peer(struct brcmf_pub *drvr, int ifidx, u8 peer[ETH_ALEN])
+ {
+ 	drvr->proto->add_tdls_peer(drvr, ifidx, peer);
+ }
++static inline bool brcmf_proto_is_reorder_skb(struct sk_buff *skb)
++{
++	struct brcmf_skb_reorder_data *rd;
++
++	rd = (struct brcmf_skb_reorder_data *)skb->cb;
++	return !!rd->reorder;
++}
+ 
++static inline void
++brcmf_proto_rxreorder(struct brcmf_if *ifp, struct sk_buff *skb)
++{
++	ifp->drvr->proto->rxreorder(ifp, skb);
++}
+ 
+ #endif /* BRCMFMAC_PROTO_H */
+-- 
+1.9.1
+
