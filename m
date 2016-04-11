@@ -1,56 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f179.google.com ([209.85.192.179]:34990 "EHLO
-	mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754471AbcDCWRK (ORCPT
+Received: from mail-io0-f174.google.com ([209.85.223.174]:34550 "EHLO
+	mail-io0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751360AbcDKLUZ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Apr 2016 18:17:10 -0400
-Received: by mail-pf0-f179.google.com with SMTP id n1so25356557pfn.2
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Apr 2016 15:17:10 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, wcn36xx@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 12/15] wcn36xx: Clear encrypt_type when deleting bss key
-Date: Sun,  3 Apr 2016 15:16:43 -0700
-Message-Id: <1459721806-11817-12-git-send-email-bjorn.andersson@linaro.org> (sfid-20160404_001753_249332_EA3F537B)
-In-Reply-To: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
+	Mon, 11 Apr 2016 07:20:25 -0400
+Received: by mail-io0-f174.google.com with SMTP id 2so204159418ioy.1
+        for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2016 04:20:24 -0700 (PDT)
+MIME-Version: 1.0
+In-Reply-To: <1460367328-12082-1-git-send-email-arend@broadcom.com>
+References: <1460367328-12082-1-git-send-email-arend@broadcom.com>
+Date: Mon, 11 Apr 2016 13:20:24 +0200
+Message-ID: <CACna6rwCe6yfzcxdezKhPJwJ4cnWY4DEE04W81K=PrVD1pZVoA@mail.gmail.com> (sfid-20160411_132029_800426_9EACF898)
+Subject: Re: [PATCH 0/8] brcmfmac: event handling and other fixes
+From: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>
+To: Arend van Spriel <arend@broadcom.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+On 11 April 2016 at 11:35, Arend van Spriel <arend@broadcom.com> wrote:
+> This series provides the following:
+>
+> * avoid unexpected firmware events.
+> * allow passing events explicitly for PCIe and SDIO devices.
+> * fix issue with boardrev entry in nvram.
+> * fix for wowl.
+> * fix possible null pointer access upon aborting p2p scan.
+>
+> The series is intended for v4.7 kernel and applies to the master
+> branch of the wireless-drivers-next repository.
 
-This fixes a problem connecting to an open network after being
-connected to an encrypted network.
+Hey Arend,
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
----
- drivers/net/wireless/ath/wcn36xx/main.c | 2 ++
- 1 file changed, 2 insertions(+)
+Unfortunately I'm finding all your recent messages in spam :( It seems
+GMail doesn't like something about the Broadcom server:
+"Why is this message in Spam? It has a from address in broadcom.com
+but has failed broadcom.com's required tests for authentication. Learn
+more"
+Quoted "Learn more" text links to the:
+https://support.google.com/mail/answer/1366858?hl=en-GB&expand=5
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 7c06ca9fdd2c..f9c77de94583 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -471,6 +471,7 @@ static int wcn36xx_set_key(struct ieee80211_hw *hw, enum set_key_cmd cmd,
- 		break;
- 	case DISABLE_KEY:
- 		if (!(IEEE80211_KEY_FLAG_PAIRWISE & key_conf->flags)) {
-+			vif_priv->encrypt_type = WCN36XX_HAL_ED_NONE;
- 			wcn36xx_smd_remove_bsskey(wcn,
- 				vif_priv->encrypt_type,
- 				key_conf->keyidx);
-@@ -626,6 +627,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
- 		} else {
- 			vif_priv->is_joining = false;
- 			wcn36xx_smd_delete_bss(wcn, vif);
-+			vif_priv->encrypt_type = WCN36XX_HAL_ED_NONE;
- 		}
- 	}
- 
--- 
-2.5.0
-
+Do you think you can point it to sb at Broadcom?
