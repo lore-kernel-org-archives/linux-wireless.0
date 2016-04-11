@@ -1,43 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:48175 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753644AbcDAVMU (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:55911 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752873AbcDKOxT (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2016 17:12:20 -0400
-From: greearb@candelatech.com
-To: ath10k@lists.infradead.org
-Cc: linux-wireless@vger.kernel.org,
-	Ben Greear <greearb@candelatech.com>
-Subject: [PATCH v2 3/5] ath10k:  Add WARN_ON if we over-write peer-map pointer.
-Date: Fri,  1 Apr 2016 14:12:10 -0700
-Message-Id: <1459545132-11295-3-git-send-email-greearb@candelatech.com> (sfid-20160401_231223_942826_EE6D0F84)
-In-Reply-To: <1459545132-11295-1-git-send-email-greearb@candelatech.com>
-References: <1459545132-11295-1-git-send-email-greearb@candelatech.com>
+	Mon, 11 Apr 2016 10:53:19 -0400
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u3BEpaLC002196
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2016 07:53:18 -0700
+Received: from sc-exch03.marvell.com ([199.233.58.183])
+	by mx0b-0016f401.pphosted.com with ESMTP id 22718g553w-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2016 07:53:18 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Shengzhen Li <szli@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 3/5] mwifiex: add default setting for pcie firmware download
+Date: Mon, 11 Apr 2016 07:52:39 -0700
+Message-ID: <1460386361-29918-3-git-send-email-akarwar@marvell.com> (sfid-20160411_165401_410356_3D42F3C1)
+In-Reply-To: <1460386361-29918-1-git-send-email-akarwar@marvell.com>
+References: <1460386361-29918-1-git-send-email-akarwar@marvell.com>
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Ben Greear <greearb@candelatech.com>
+From: Shengzhen Li <szli@marvell.com>
 
-Not sure this can happen, but seems like a reasonable sanity
-check.
+This patch adds default setting for pcie firmware download name in
+case that there are newer chipset version.
 
-Signed-off-by: Ben Greear <greearb@candelatech.com>
+Signed-off-by: Shengzhen Li <szli@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
 ---
- drivers/net/wireless/ath/ath10k/txrx.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 3 +++
+ drivers/net/wireless/marvell/mwifiex/pcie.h | 2 ++
+ 2 files changed, 5 insertions(+)
 
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index a779a4e..2edef8a 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -309,6 +309,7 @@ void ath10k_peer_map_event(struct ath10k_htt *htt,
- 	ath10k_warn(ar, /*ATH10K_DBG_HTT,*/ "htt peer map vdev %d peer %pM id %d\n",
- 		   ev->vdev_id, ev->addr, ev->peer_id);
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index 1d888b5..0c7937e 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2830,6 +2830,8 @@ static void mwifiex_pcie_get_fw_name(struct mwifiex_adapter *adapter)
+ 			strcpy(adapter->fw_name, PCIE8897_B0_FW_NAME);
+ 			break;
+ 		default:
++			strcpy(adapter->fw_name, PCIE8897_DEFAULT_FW_NAME);
++
+ 			break;
+ 		}
+ 		break;
+@@ -2855,6 +2857,7 @@ static void mwifiex_pcie_get_fw_name(struct mwifiex_adapter *adapter)
+ 				       PCIEUART8997_FW_NAME_Z);
+ 			break;
+ 		default:
++			strcpy(adapter->fw_name, PCIE8997_DEFAULT_FW_NAME);
+ 			break;
+ 		}
+ 	default:
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
+index bbabfb0..5770b43 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.h
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+@@ -30,8 +30,10 @@
+ #include    "main.h"
  
-+	WARN_ON(ar->peer_map[ev->peer_id] && (ar->peer_map[ev->peer_id] != peer));
- 	ar->peer_map[ev->peer_id] = peer;
- 	set_bit(ev->peer_id, peer->peer_ids);
- exit:
+ #define PCIE8766_DEFAULT_FW_NAME "mrvl/pcie8766_uapsta.bin"
++#define PCIE8897_DEFAULT_FW_NAME "mrvl/pcie8897_uapsta.bin"
+ #define PCIE8897_A0_FW_NAME "mrvl/pcie8897_uapsta_a0.bin"
+ #define PCIE8897_B0_FW_NAME "mrvl/pcie8897_uapsta.bin"
++#define PCIE8997_DEFAULT_FW_NAME "mrvl/pcieuart8997_combo_v2.bin"
+ #define PCIEUART8997_FW_NAME_Z "mrvl/pcieuart8997_combo.bin"
+ #define PCIEUART8997_FW_NAME_V2 "mrvl/pcieuart8997_combo_v2.bin"
+ #define PCIEUSB8997_FW_NAME_Z "mrvl/pcieusb8997_combo.bin"
 -- 
-2.4.3
+1.8.1.4
 
