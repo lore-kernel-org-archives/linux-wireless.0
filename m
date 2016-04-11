@@ -1,50 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48256 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757313AbcDGSTe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 14:19:34 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 14/18] rtl8xxxu: Fix LDPC RX hang issue on 8192eu
-Date: Thu,  7 Apr 2016 14:19:29 -0400
-Message-Id: <1460053173-8494-15-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160407_202528_545350_9353813C)
-In-Reply-To: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from devils.ext.ti.com ([198.47.26.153]:44678 "EHLO
+	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754362AbcDKLuy (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Apr 2016 07:50:54 -0400
+From: "Machani, Yaniv" <yanivma@ti.com>
+To: =?utf-8?B?UGFsaSBSb2jDoXI=?= <pali.rohar@gmail.com>,
+	Pavel Machek <pavel@denx.de>
+CC: "Chalmers, Kevin" <kev@ti.com>, Kalle Valo <kvalo@codeaurora.org>,
+	"Davis, Andrew" <afd@ti.com>, "Mishol, Guy" <guym@ti.com>,
+	Arik Nemtsov <arik@wizery.com>, Gery Kahn <geryk@ti.com>,
+	Felipe Balbi <balbi@kernel.org>,
+	David Woodhouse <dwmw2@infradead.org>,
+	Aaro Koskinen <aaro.koskinen@iki.fi>,
+	Ben Hutchings <ben@decadent.org.uk>,
+	David Gnedt <david.gnedt@davizone.at>,
+	Ivaylo Dimitrov <ivo.g.dimitrov.75@gmail.com>,
+	Sebastian Reichel <sre@kernel.org>,
+	Tony Lindgren <tony@atomide.com>,
+	"Menon, Nishanth" <nm@ti.com>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: AP firmware for TI wl1251 wifi chip (wl1251-fw-ap.bin)
+Date: Mon, 11 Apr 2016 11:49:51 +0000
+Message-ID: <AE1C82FB3D0EC64DB1F752C81CBD1101390FD55C@DFRE01.ent.ti.com> (sfid-20160411_135146_093259_9FE631F7)
+References: <201603200040.26045@pali> <20160404123944.GA8413@pali>
+ <AE1C82FB3D0EC64DB1F752C81CBD1101390F6305@DFRE01.ent.ti.com>
+ <201604061412.43684@pali>
+ <AE1C82FB3D0EC64DB1F752C81CBD1101390F685E@DFRE01.ent.ti.com>
+ <20160410115141.GD30188@xo-6d-61-c0.localdomain> <20160411114118.GT8413@pali>
+In-Reply-To: <20160411114118.GT8413@pali>
+Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
-
-Implement workaround for LDPC RX hands on 8192eu. This was inspired by
-workaround found in the 8192eu vendor driver.
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index e06b25e..c800882 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -7234,6 +7234,16 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 	/* ack for xmit mgmt frames. */
- 	rtl8xxxu_write32(priv, REG_FWHW_TXQ_CTRL, val32);
- 
-+	if (priv->rtl_chip == RTL8192E) {
-+		/*
-+		 * Fix LDPC rx hang issue.
-+		 */
-+		val32 = rtl8xxxu_read32(priv, REG_AFE_MISC);
-+		rtl8xxxu_write8(priv, REG_8192E_LDOV12_CTRL, 0x75);
-+		val32 &= 0xfff00fff;
-+		val32 |= 0x0007e000;
-+		rtl8xxxu_write32(priv, REG_8192E_LDOV12_CTRL, val32);
-+	}
- exit:
- 	return ret;
- }
--- 
-2.5.5
-
+T24gTW9uLCBBcHIgMTEsIDIwMTYgYXQgMTQ6NDE6MTgsIFBhbGkgUm9ow6FyIHdyb3RlOg0KPiBN
+aXNob2wsIEd1eTsgQXJpayBOZW10c292OyBHZXJ5IEthaG47IEZlbGlwZSBCYWxiaTsgRGF2aWQg
+V29vZGhvdXNlOyANCj4gQWFybyBLb3NraW5lbjsgQmVuIEh1dGNoaW5nczsgRGF2aWQgR25lZHQ7
+IEl2YXlsbyBEaW1pdHJvdjsgU2ViYXN0aWFuIA0KPiBSZWljaGVsOyBUb255IExpbmRncmVuOyBN
+ZW5vbiwgTmlzaGFudGg7IA0KPiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IG5ldGRl
+dkB2Z2VyLmtlcm5lbC5vcmc7IA0KPiBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQo+IFN1
+YmplY3Q6IFJlOiBBUCBmaXJtd2FyZSBmb3IgVEkgd2wxMjUxIHdpZmkgY2hpcCAod2wxMjUxLWZ3
+LWFwLmJpbikNCj4gDQo+IE9uIFN1bmRheSAxMCBBcHJpbCAyMDE2IDEzOjUxOjQxIFBhdmVsIE1h
+Y2hlayB3cm90ZToNCj4gPiBJcyBpdCAiaGFyZHdhcmUgY2FuJ3QgZG8gQVAiLCAiZmlybXdhcmUg
+Y2FuJ3QgZG8gQVAiIG9yICJjdXJyZW50IA0KPiA+IGRyaXZlcnMgZG8gbm90IHN1cHBvcnQgQVAi
+Pw0KPiANCg0KQXMgYm90aCBGaXJtd2FyZSBhbmQgSFcgYXJlIG5vdCBpbiBhIHN0YWdlIHdoZXJl
+IHRoZXkgY2FuIGJlIG1vZGlmaWVkLCB0aGVyZSBpcyBubyBzdXBwb3J0IGZvciBBUCBtb2RlIGlu
+IGJvdGguDQoNClJlZ2FyZHMsDQpZYW5pdiBNYWNoYW5pDQoNCg0K
