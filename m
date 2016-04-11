@@ -1,101 +1,171 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38836 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752489AbcDOQOa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2016 12:14:30 -0400
-From: Denys Vlasenko <dvlasenk@redhat.com>
-To: Samuel Ortiz <sameo@linux.intel.com>
-Cc: Denys Vlasenko <dvlasenk@redhat.com>,
-	Christophe Ricard <christophe.ricard@gmail.com>,
-	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH] NFC: hci: delete unused nfc_llc_get_rx_head_tail_room()
-Date: Fri, 15 Apr 2016 18:14:25 +0200
-Message-Id: <1460736865-4784-1-git-send-email-dvlasenk@redhat.com> (sfid-20160415_181500_870656_F8094242)
+Received: from mail-gw2-out.broadcom.com ([216.31.210.63]:30636 "EHLO
+	mail-gw2-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750952AbcDKJfl (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Apr 2016 05:35:41 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 7/8] brcmfmac: revise handling events in receive path
+Date: Mon, 11 Apr 2016 11:35:27 +0200
+Message-Id: <1460367328-12082-8-git-send-email-arend@broadcom.com> (sfid-20160411_113544_214766_BFE9DB7D)
+In-Reply-To: <1460367328-12082-1-git-send-email-arend@broadcom.com>
+References: <1460367328-12082-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It used to be EXPORTed, but then EXPORT usage was cleaned up
-(in 2012), without noticing that the function has no users at all
-(and curiously, never had any users).
+Move event handling out of brcmf_netif_rx() avoiding the need
+to pass a flag. This flag is only ever true for USB hosts as
+other interface use separate brcmf_rx_event() function.
 
-Delete it.
-
-While at it, remove non-static "inline" hints on nearby functions:
-these hints don't work across compilation units anyway,
-and these functions are not used in their .c file, thus they are
-never inlined. IOW: "inline" here does not help in any way.
-
-Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
-CC: Samuel Ortiz <sameo@linux.intel.com>
-CC: Christophe Ricard <christophe.ricard@gmail.com>
-CC: linux-wireless@vger.kernel.org
-CC: linux-kernel@vger.kernel.org
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- include/net/nfc/llc.h |  4 ----
- net/nfc/hci/llc.c     | 17 +++++------------
- 2 files changed, 5 insertions(+), 16 deletions(-)
+ .../net/wireless/broadcom/brcm80211/brcmfmac/bus.h |  2 +-
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 24 +++++++++++-----------
+ .../wireless/broadcom/brcm80211/brcmfmac/core.h    |  3 +--
+ .../broadcom/brcm80211/brcmfmac/fwsignal.c         |  8 ++++----
+ .../wireless/broadcom/brcm80211/brcmfmac/msgbuf.c  |  2 +-
+ 5 files changed, 19 insertions(+), 20 deletions(-)
 
-diff --git a/include/net/nfc/llc.h b/include/net/nfc/llc.h
-index c25fbde..7ecb457 100644
---- a/include/net/nfc/llc.h
-+++ b/include/net/nfc/llc.h
-@@ -37,10 +37,6 @@ struct nfc_llc *nfc_llc_allocate(const char *name, struct nfc_hci_dev *hdev,
- 				 int tx_tailroom, llc_failure_t llc_failure);
- void nfc_llc_free(struct nfc_llc *llc);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+index 31856eb..2b24654 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bus.h
+@@ -216,7 +216,7 @@ bool brcmf_c_prec_enq(struct device *dev, struct pktq *q, struct sk_buff *pkt,
+ 		      int prec);
  
--void nfc_llc_get_rx_head_tail_room(struct nfc_llc *llc, int *rx_headroom,
--				   int *rx_tailroom);
+ /* Receive frame for delivery to OS.  Callee disposes of rxp. */
+-void brcmf_rx_frame(struct device *dev, struct sk_buff *rxp, bool handle_evnt);
++void brcmf_rx_frame(struct device *dev, struct sk_buff *rxp, bool handle_event);
+ /* Receive async event packet from firmware. Callee disposes of rxp. */
+ void brcmf_rx_event(struct device *dev, struct sk_buff *rxp);
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index a30841b..9b53555 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -298,18 +298,11 @@ void brcmf_txflowblock(struct device *dev, bool state)
+ 	brcmf_fws_bus_blocked(drvr, state);
+ }
+ 
+-void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb,
+-		    bool handle_event)
++void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
+ {
+-	skb->protocol = eth_type_trans(skb, ifp->ndev);
 -
+ 	if (skb->pkt_type == PACKET_MULTICAST)
+ 		ifp->stats.multicast++;
+ 
+-	/* Process special event packets */
+-	if (handle_event)
+-		brcmf_fweh_process_skb(ifp->drvr, skb);
 -
- int nfc_llc_start(struct nfc_llc *llc);
- int nfc_llc_stop(struct nfc_llc *llc);
- void nfc_llc_rcv_from_drv(struct nfc_llc *llc, struct sk_buff *skb);
-diff --git a/net/nfc/hci/llc.c b/net/nfc/hci/llc.c
-index 1399a03..3d699cb 100644
---- a/net/nfc/hci/llc.c
-+++ b/net/nfc/hci/llc.c
-@@ -133,36 +133,29 @@ void nfc_llc_free(struct nfc_llc *llc)
- 	kfree(llc);
+ 	if (!(ifp->ndev->flags & IFF_UP)) {
+ 		brcmu_pkt_buf_free_skb(skb);
+ 		return;
+@@ -329,7 +322,7 @@ void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb,
+ 		netif_rx_ni(skb);
  }
  
--inline void nfc_llc_get_rx_head_tail_room(struct nfc_llc *llc, int *rx_headroom,
--					  int *rx_tailroom)
--{
--	*rx_headroom = llc->rx_headroom;
--	*rx_tailroom = llc->rx_tailroom;
--}
--
--inline int nfc_llc_start(struct nfc_llc *llc)
-+int nfc_llc_start(struct nfc_llc *llc)
+-void brcmf_rx_frame(struct device *dev, struct sk_buff *skb, bool handle_evnt)
++void brcmf_rx_frame(struct device *dev, struct sk_buff *skb, bool handle_event)
  {
- 	return llc->ops->start(llc);
- }
- EXPORT_SYMBOL(nfc_llc_start);
+ 	struct brcmf_if *ifp;
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+@@ -348,10 +341,17 @@ void brcmf_rx_frame(struct device *dev, struct sk_buff *skb, bool handle_evnt)
+ 		return;
+ 	}
  
--inline int nfc_llc_stop(struct nfc_llc *llc)
-+int nfc_llc_stop(struct nfc_llc *llc)
- {
- 	return llc->ops->stop(llc);
- }
- EXPORT_SYMBOL(nfc_llc_stop);
- 
--inline void nfc_llc_rcv_from_drv(struct nfc_llc *llc, struct sk_buff *skb)
-+void nfc_llc_rcv_from_drv(struct nfc_llc *llc, struct sk_buff *skb)
- {
- 	llc->ops->rcv_from_drv(llc, skb);
+-	if (brcmf_proto_is_reorder_skb(skb))
++	skb->protocol = eth_type_trans(skb, ifp->ndev);
++
++	if (brcmf_proto_is_reorder_skb(skb)) {
+ 		brcmf_proto_rxreorder(ifp, skb);
+-	else
+-		brcmf_netif_rx(ifp, skb, handle_evnt);
++	} else {
++		/* Process special event packets */
++		if (handle_event)
++			brcmf_fweh_process_skb(ifp->drvr, skb);
++
++		brcmf_netif_rx(ifp, skb);
++	}
  }
  
--inline int nfc_llc_xmit_from_hci(struct nfc_llc *llc, struct sk_buff *skb)
-+int nfc_llc_xmit_from_hci(struct nfc_llc *llc, struct sk_buff *skb)
- {
- 	return llc->ops->xmit_from_hci(llc, skb);
+ void brcmf_rx_event(struct device *dev, struct sk_buff *skb)
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+index 394ae05..241ee8d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.h
+@@ -221,8 +221,7 @@ int brcmf_get_next_free_bsscfgidx(struct brcmf_pub *drvr);
+ void brcmf_txflowblock_if(struct brcmf_if *ifp,
+ 			  enum brcmf_netif_stop_reason reason, bool state);
+ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success);
+-void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb,
+-		    bool handle_event);
++void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb);
+ void brcmf_net_setcarrier(struct brcmf_if *ifp, bool on);
+ int __init brcmf_core_init(void);
+ void __exit brcmf_core_exit(void);
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+index 8a07687..5b30922 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+@@ -1668,7 +1668,7 @@ void brcmf_fws_rxreorder(struct brcmf_if *ifp, struct sk_buff *pkt)
+ 	/* validate flags and flow id */
+ 	if (flags == 0xFF) {
+ 		brcmf_err("invalid flags...so ignore this packet\n");
+-		brcmf_netif_rx(ifp, pkt, false);
++		brcmf_netif_rx(ifp, pkt);
+ 		return;
+ 	}
+ 
+@@ -1680,7 +1680,7 @@ void brcmf_fws_rxreorder(struct brcmf_if *ifp, struct sk_buff *pkt)
+ 		if (rfi == NULL) {
+ 			brcmf_dbg(INFO, "received flags to cleanup, but no flow (%d) yet\n",
+ 				  flow_id);
+-			brcmf_netif_rx(ifp, pkt, false);
++			brcmf_netif_rx(ifp, pkt);
+ 			return;
+ 		}
+ 
+@@ -1705,7 +1705,7 @@ void brcmf_fws_rxreorder(struct brcmf_if *ifp, struct sk_buff *pkt)
+ 		rfi = kzalloc(buf_size, GFP_ATOMIC);
+ 		if (rfi == NULL) {
+ 			brcmf_err("failed to alloc buffer\n");
+-			brcmf_netif_rx(ifp, pkt, false);
++			brcmf_netif_rx(ifp, pkt);
+ 			return;
+ 		}
+ 
+@@ -1819,7 +1819,7 @@ void brcmf_fws_rxreorder(struct brcmf_if *ifp, struct sk_buff *pkt)
+ netif_rx:
+ 	skb_queue_walk_safe(&reorder_list, pkt, pnext) {
+ 		__skb_unlink(pkt, &reorder_list);
+-		brcmf_netif_rx(ifp, pkt, false);
++		brcmf_netif_rx(ifp, pkt);
+ 	}
  }
  
--inline void *nfc_llc_get_data(struct nfc_llc *llc)
-+void *nfc_llc_get_data(struct nfc_llc *llc)
- {
- 	return llc->data;
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+index 8c064ab..68f1ce0 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/msgbuf.c
+@@ -1157,7 +1157,7 @@ brcmf_msgbuf_process_rx_complete(struct brcmf_msgbuf *msgbuf, void *buf)
+ 		brcmu_pkt_buf_free_skb(skb);
+ 		return;
+ 	}
+-	brcmf_netif_rx(ifp, skb, false);
++	brcmf_netif_rx(ifp, skb);
  }
+ 
+ 
 -- 
-1.8.1.4
+1.9.1
 
