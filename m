@@ -1,81 +1,71 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail2.candelatech.com ([208.74.158.173]:44102 "EHLO
-	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751124AbcDASR2 (ORCPT
+Received: from mail-oi0-f47.google.com ([209.85.218.47]:33077 "EHLO
+	mail-oi0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751024AbcDKBkL (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2016 14:17:28 -0400
-Subject: Re: Question on rhashtable in worst-case scenario.
-To: Herbert Xu <herbert@gondor.apana.org.au>,
-	Johannes Berg <johannes@sipsolutions.net>
-References: <56F9941A.3080501@candelatech.com>
- <56FAAA6D.3070806@candelatech.com> <1459329252.2055.1.camel@sipsolutions.net>
- <20160330.123821.328761526754742195.davem@davemloft.net>
- <56FC0445.6010200@candelatech.com> <1459410405.4576.8.camel@sipsolutions.net>
- <20160331075015.GA27716@gondor.apana.org.au>
- <1459438199.4576.26.camel@sipsolutions.net>
- <20160401004627.GA9367@gondor.apana.org.au>
-Cc: David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	tgraf@suug.ch
-From: Ben Greear <greearb@candelatech.com>
-Message-ID: <56FEBB36.4020606@candelatech.com> (sfid-20160401_201748_359590_4BA93058)
-Date: Fri, 1 Apr 2016 11:17:26 -0700
+	Sun, 10 Apr 2016 21:40:11 -0400
 MIME-Version: 1.0
-In-Reply-To: <20160401004627.GA9367@gondor.apana.org.au>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <1460287531-17385-1-git-send-email-colin.king@canonical.com>
+References: <1460287531-17385-1-git-send-email-colin.king@canonical.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Mon, 11 Apr 2016 11:39:50 +1000
+Message-ID: <CAGRGNgVgd-_wcvdJz-yh_ugQeJidMK1B8=NuSec1wjn__6AFwA@mail.gmail.com> (sfid-20160411_034058_741709_67599C4B)
+Subject: Re: [PATCH] ath9k: remove duplicate assignment of variable ah
+To: Colin King <colin.king@canonical.com>
+Cc: QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	ath9k-devel@lists.ath9k.org, netdev <netdev@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 03/31/2016 05:46 PM, Herbert Xu wrote:
-> On Thu, Mar 31, 2016 at 05:29:59PM +0200, Johannes Berg wrote:
->>
->> Does removing this completely disable the "-EEXIST" error? I can't say
->> I fully understand the elasticity stuff in __rhashtable_insert_fast().
+Hi All,
+
+On Sun, Apr 10, 2016 at 9:25 PM, Colin King <colin.king@canonical.com> wrote:
+> From: Colin Ian King <colin.king@canonical.com>
 >
-> What EEXIST error are you talking about? The only one that can be
-> returned on insertion is if you're explicitly checking for dups
-> which clearly can't be the case for you.
+> ah is written twice with the same value, remove one of the
+> redundant assignments to ah.
 >
-> If you're talking about the EEXIST error due to a rehash then it is
-> completely hidden from you by rhashtable_insert_rehash.
->
-> If you actually meant EBUSY then yes this should prevent it from
-> occurring, unless your chain-length exceeds 2^32.
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
 
-EEXIST was on removal, and was a symptom of the failure to insert, not
-really a problem itself.
+Looks right to me.
 
-I reverted my revert (ie, back to rhashtable), added Johanne's patch
-to check insertion (and added my on pr_err there).
-
-I also added this:
-
-diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
-index 38ef0be..c25b945 100644
---- a/net/mac80211/sta_info.c
-+++ b/net/mac80211/sta_info.c
-@@ -66,6 +66,7 @@
-
-  static const struct rhashtable_params sta_rht_params = {
-         .nelem_hint = 3, /* start small */
-+       .insecure_elasticity = true, /* Disable chain-length checks. */
-         .automatic_shrinking = true,
-         .head_offset = offsetof(struct sta_info, hash_node),
-         .key_offset = offsetof(struct sta_info, addr),
-
-
-Now, my test case seems to pass, though I did have one strange issue
-before I put in the pr_err.  I'm not sure if it was a hashtable issue
-or something else..but I have lots of something-else going on in this system,
-so I'd say that likely the patch above fixes rhashtable for my use case.
-
-I will of course let you know if I run into more issues that appear
-to be hashtable related!
+Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
 
 Thanks,
-Ben
+
+> ---
+>  drivers/net/wireless/ath/ath9k/init.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/ath/ath9k/init.c b/drivers/net/wireless/ath/ath9k/init.c
+> index 77ace8d..fb702c4 100644
+> --- a/drivers/net/wireless/ath/ath9k/init.c
+> +++ b/drivers/net/wireless/ath/ath9k/init.c
+> @@ -477,7 +477,7 @@ static void ath9k_eeprom_request_cb(const struct firmware *eeprom_blob,
+>  static int ath9k_eeprom_request(struct ath_softc *sc, const char *name)
+>  {
+>         struct ath9k_eeprom_ctx ec;
+> -       struct ath_hw *ah = ah = sc->sc_ah;
+> +       struct ath_hw *ah = sc->sc_ah;
+>         int err;
+>
+>         /* try to load the EEPROM content asynchronously */
+> --
+> 2.7.4
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-wireless" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
 
 -- 
-Ben Greear <greearb@candelatech.com>
-Candela Technologies Inc  http://www.candelatech.com
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
