@@ -1,124 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:10773 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752361AbcDFOj3 (ORCPT
+Received: from smtprelay0020.hostedemail.com ([216.40.44.20]:47507 "EHLO
+	smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750879AbcDKCav (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 10:39:29 -0400
-From: Jouni Malinen <jouni@qca.qualcomm.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>
-Subject: [PATCH] cfg80211: Improve Connect/Associate command documentation
-Date: Wed, 6 Apr 2016 17:38:44 +0300
-Message-ID: <1459953524-12590-1-git-send-email-jouni@qca.qualcomm.com> (sfid-20160406_163933_986534_5890A1FB)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sun, 10 Apr 2016 22:30:51 -0400
+Message-ID: <1460341847.1800.68.camel@perches.com> (sfid-20160411_043057_692448_F3719C48)
+Subject: Re: [PATCH 4/7] wil6210: print debug message when transmitting
+ while disconnected
+From: Joe Perches <joe@perches.com>
+To: qca_merez <qca_merez@qca.qualcomm.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+Cc: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	wil6210 <wil6210@qca.qualcomm.com>
+Date: Sun, 10 Apr 2016 19:30:47 -0700
+In-Reply-To: <22bd7713a48b46e2bb2f1ec67ad6c409@euamsexm01a.eu.qualcomm.com>
+References: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
+	 <1459855447-17413-5-git-send-email-qca_merez@qca.qualcomm.com>
+	 <1459927376.6715.37.camel@perches.com>
+	 <22bd7713a48b46e2bb2f1ec67ad6c409@euamsexm01a.eu.qualcomm.com>
+Content-Type: text/plain; charset="ISO-8859-1"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The roaming cases for the Connect command were not fully covered and
-neither Connect nor Associate command uses of the prev_bssid parameter
-were very clear. Add details to describe how the prev_bssid argument is
-supposed to be used and when the driver should use association or
-reassociation.
+On Sun, 2016-04-10 at 19:17 +0000, qca_merez wrote:
+> On 4/6/2016 10:22 AM, Joe Perches wrote:
+> > 
+> > On Tue, 2016-04-05 at 14:24 +0300, Maya Erez w
+> > > 
+> > > +void __wil_dbg_ratelimited(struct wil6210_priv *wil, const char *fmt, 
+> > > +...) {
+> > > +	if (net_ratelimit()) {
+> > 
+> > Inverting the test would reduce indentation.
+> I preferred to have the same implementation as in wil_err_ratelimited.
 
-Signed-off-by: Jouni Malinen <jouni@qca.qualcomm.com>
+That's easy enough.
+
+Maybe:
 ---
- include/net/cfg80211.h       | 26 +++++++++++++++++++++++---
- include/uapi/linux/nl80211.h | 16 +++++++++++++---
- 2 files changed, 36 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/wil6210/debug.c   | 55 ++++++++++++++----------------
+ drivers/net/wireless/ath/wil6210/wil6210.h |  8 ++---
+ 2 files changed, 30 insertions(+), 33 deletions(-)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index b39277e..5ec2036 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -1750,7 +1750,12 @@ enum cfg80211_assoc_req_flags {
-  * @ie_len: Length of ie buffer in octets
-  * @use_mfp: Use management frame protection (IEEE 802.11w) in this association
-  * @crypto: crypto settings
-- * @prev_bssid: previous BSSID, if not %NULL use reassociate frame
-+ * @prev_bssid: previous BSSID, if not %NULL use reassociate frame. This is used
-+ *	to indicate a request to reassociate within the ESS instead of a request
-+ *	do the initial association with the ESS. When included, this is set to
-+ *	the BSSID of the current association, i.e., to the value that is
-+ *	included in the Current AP address field of the Reassociation Request
-+ *	frame.
-  * @flags:  See &enum cfg80211_assoc_req_flags
-  * @ht_capa:  HT Capabilities over-rides.  Values set in ht_capa_mask
-  *	will be used in ht_capa.  Un-supported values will be ignored.
-@@ -1925,7 +1930,12 @@ struct cfg80211_bss_selection {
-  * @pbss: if set, connect to a PCP instead of AP. Valid for DMG
-  *	networks.
-  * @bss_select: criteria to be used for BSS selection.
-- * @prev_bssid: previous BSSID, if not %NULL use reassociate frame
-+ * @prev_bssid: previous BSSID, if not %NULL use reassociate frame. This is used
-+ *	to indicate a request to reassociate within the ESS instead of a request
-+ *	do the initial association with the ESS. When included, this is set to
-+ *	the BSSID of the current association, i.e., to the value that is
-+ *	included in the Current AP address field of the Reassociation Request
-+ *	frame.
-  */
- struct cfg80211_connect_params {
- 	struct ieee80211_channel *channel;
-@@ -2377,7 +2387,17 @@ struct cfg80211_qos_map {
-  * @connect: Connect to the ESS with the specified parameters. When connected,
-  *	call cfg80211_connect_result() with status code %WLAN_STATUS_SUCCESS.
-  *	If the connection fails for some reason, call cfg80211_connect_result()
-- *	with the status from the AP.
-+ *	with the status from the AP. The driver is allowed to roam to other
-+ *	BSSes within the ESS when the other BSS matches the connect parameters.
-+ *	When such roaming is initiated by the driver, the driver is expected to
-+ *	verify that the target matches the configured security parameters and
-+ *	to use Reassociation Request frame instead of Association Request frame.
-+ *	The connect function can also be used to request the driver to perform
-+ *	a specific roam when connected to an ESS. In that case, the prev_bssid
-+ *	parameter is set to the BSSID of the currently associated BSS as an
-+ *	indication of requesting reassociation. In both the driver-initiated and
-+ *	new connect() call initiated roaming cases, the result of roaming is
-+ *	indicated with a call to cfg80211_roamed() or cfg80211_roamed_bss().
-  *	(invoked with the wireless_dev mutex held)
-  * @disconnect: Disconnect from the BSS/ESS.
-  *	(invoked with the wireless_dev mutex held)
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 6da52d7..b460628 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -429,7 +429,11 @@
-  * @NL80211_CMD_ASSOCIATE: association request and notification; like
-  *	NL80211_CMD_AUTHENTICATE but for Association and Reassociation
-  *	(similar to MLME-ASSOCIATE.request, MLME-REASSOCIATE.request,
-- *	MLME-ASSOCIATE.confirm or MLME-REASSOCIATE.confirm primitives).
-+ *	MLME-ASSOCIATE.confirm or MLME-REASSOCIATE.confirm primitives). The
-+ *	%NL80211_ATTR_PREV_BSSID attribute is used to specify whether the
-+ *	request is for the initial association to an ESS (that attribute not
-+ *	included) or for reassociation within the ESS (that attribute is
-+ *	included).
-  * @NL80211_CMD_DEAUTHENTICATE: deauthentication request and notification; like
-  *	NL80211_CMD_AUTHENTICATE but for Deauthentication frames (similar to
-  *	MLME-DEAUTHENTICATION.request and MLME-DEAUTHENTICATE.indication
-@@ -479,6 +483,9 @@
-  *	set of BSSID,frequency parameters is used (i.e., either the enforcing
-  *	%NL80211_ATTR_MAC,%NL80211_ATTR_WIPHY_FREQ or the less strict
-  *	%NL80211_ATTR_MAC_HINT and %NL80211_ATTR_WIPHY_FREQ_HINT).
-+ *	%NL80211_ATTR_PREV_BSSID can be used to request a reassociation within
-+ *	the ESS in case the device is already associated and an association with
-+ *	a different BSS is desired.
-  *	Background scan period can optionally be
-  *	specified in %NL80211_ATTR_BG_SCAN_PERIOD,
-  *	if not specified default background scan configuration
-@@ -1287,8 +1294,11 @@ enum nl80211_commands {
-  * @NL80211_ATTR_RESP_IE: (Re)association response information elements as
-  *	sent by peer, for ROAM and successful CONNECT events.
-  *
-- * @NL80211_ATTR_PREV_BSSID: previous BSSID, to be used by in ASSOCIATE
-- *	commands to specify using a reassociate frame
-+ * @NL80211_ATTR_PREV_BSSID: previous BSSID, to be used in ASSOCIATE and CONNECT
-+ *	commands to specify a request to reassociate within an ESS, i.e., to use
-+ *	Reassociate Request frame (with the value of this attribute in the
-+ *	Current AP address field) instead of Association Request frame which is
-+ *	used for the initial association to an ESS.
-  *
-  * @NL80211_ATTR_KEY: key information in a nested attribute with
-  *	%NL80211_KEY_* sub-attributes
--- 
-1.9.1
-
+diff --git a/drivers/net/wireless/ath/wil6210/debug.c b/drivers/net/wireless/ath/wil6210/debug.c
+index 3249562..de1e932 100644
+--- a/drivers/net/wireless/ath/wil6210/debug.c
++++ b/drivers/net/wireless/ath/wil6210/debug.c
+@@ -17,61 +17,58 @@
+ #include "wil6210.h"
+ #include "trace.h"
+ 
+-void wil_err(struct wil6210_priv *wil, const char *fmt, ...)
++void wil_err(const struct wil6210_priv *wil, const char *fmt, ...)
+ {
+-	struct net_device *ndev = wil_to_ndev(wil);
+-	struct va_format vaf = {
+-		.fmt = fmt,
+-	};
++	struct va_format vaf;
+ 	va_list args;
+ 
+ 	va_start(args, fmt);
++	vaf.fmt = fmt;
+ 	vaf.va = &args;
+-	netdev_err(ndev, "%pV", &vaf);
++	netdev_err(wil_to_ndev(wil), "%pV", &vaf);
+ 	trace_wil6210_log_err(&vaf);
+ 	va_end(args);
+ }
+ 
+-void wil_err_ratelimited(struct wil6210_priv *wil, const char *fmt, ...)
++void wil_err_ratelimited(const struct wil6210_priv *wil, const char *fmt, ...)
+ {
+-	if (net_ratelimit()) {
+-		struct net_device *ndev = wil_to_ndev(wil);
+-		struct va_format vaf = {
+-			.fmt = fmt,
+-		};
+-		va_list args;
++	struct va_format vaf;
++	va_list args;
++
++	if (!net_ratelimit())
++		return;
+ 
+-		va_start(args, fmt);
+-		vaf.va = &args;
+-		netdev_err(ndev, "%pV", &vaf);
+-		trace_wil6210_log_err(&vaf);
+-		va_end(args);
+-	}
++	va_start(args, fmt);
++	vaf.fmt = fmt;
++	vaf.va = &args;
++	netdev_err(wil_to_ndev(wil), "%pV", &vaf);
++	trace_wil6210_log_err(&vaf);
++	va_end(args);
+ }
+ 
+-void wil_info(struct wil6210_priv *wil, const char *fmt, ...)
++void wil_info(const struct wil6210_priv *wil, const char *fmt, ...)
+ {
+-	struct net_device *ndev = wil_to_ndev(wil);
+-	struct va_format vaf = {
+-		.fmt = fmt,
+-	};
++	struct va_format vaf;
+ 	va_list args;
+ 
++	if (!net_ratelimit())
++		return;
++
+ 	va_start(args, fmt);
++	vaf.fmt = fmt;
+ 	vaf.va = &args;
+-	netdev_info(ndev, "%pV", &vaf);
++	netdev_info(wil_to_ndev(wil), "%pV", &vaf);
+ 	trace_wil6210_log_info(&vaf);
+ 	va_end(args);
+ }
+ 
+-void wil_dbg_trace(struct wil6210_priv *wil, const char *fmt, ...)
++void wil_dbg_trace(const struct wil6210_priv *wil, const char *fmt, ...)
+ {
+-	struct va_format vaf = {
+-		.fmt = fmt,
+-	};
++	struct va_format vaf;
+ 	va_list args;
+ 
+ 	va_start(args, fmt);
++	vaf.fmt = fmt;
+ 	vaf.va = &args;
+ 	trace_wil6210_log_dbg(&vaf);
+ 	va_end(args);
+diff --git a/drivers/net/wireless/ath/wil6210/wil6210.h b/drivers/net/wireless/ath/wil6210/wil6210.h
+index 4d699ea4..e2b62b1 100644
+--- a/drivers/net/wireless/ath/wil6210/wil6210.h
++++ b/drivers/net/wireless/ath/wil6210/wil6210.h
+@@ -633,13 +633,13 @@ struct wil6210_priv {
+ #define ndev_to_wil(n) (wdev_to_wil(n->ieee80211_ptr))
+ 
+ __printf(2, 3)
+-void wil_dbg_trace(struct wil6210_priv *wil, const char *fmt, ...);
++void wil_dbg_trace(const struct wil6210_priv *wil, const char *fmt, ...);
+ __printf(2, 3)
+-void wil_err(struct wil6210_priv *wil, const char *fmt, ...);
++void wil_err(const struct wil6210_priv *wil, const char *fmt, ...);
+ __printf(2, 3)
+-void wil_err_ratelimited(struct wil6210_priv *wil, const char *fmt, ...);
++void wil_err_ratelimited(const struct wil6210_priv *wil, const char *fmt, ...);
+ __printf(2, 3)
+-void wil_info(struct wil6210_priv *wil, const char *fmt, ...);
++void wil_info(const struct wil6210_priv *wil, const char *fmt, ...);
+ #define wil_dbg(wil, fmt, arg...) do { \
+ 	netdev_dbg(wil_to_ndev(wil), fmt, ##arg); \
+ 	wil_dbg_trace(wil, fmt, ##arg); \
