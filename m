@@ -1,85 +1,108 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:39837 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755169AbcDMSX1 (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:30909 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752374AbcDKOxQ (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2016 14:23:27 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: David Miller <davem@davemloft.net>
-Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: pull-request: wireless-drivers 2016-04-13
-Date: Wed, 13 Apr 2016 21:23:21 +0300
-Message-ID: <87d1pts6zq.fsf@kamboji.qca.qualcomm.com> (sfid-20160413_202351_592765_56EB8DBD)
+	Mon, 11 Apr 2016 10:53:16 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u3BEpdiP016332
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2016 07:53:15 -0700
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+	by mx0a-0016f401.pphosted.com with ESMTP id 226y3kdqvp-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2016 07:53:15 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Shengzhen Li <szli@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 2/5] mwifiex: add pcie usb/uart firmware download support
+Date: Mon, 11 Apr 2016 07:52:38 -0700
+Message-ID: <1460386361-29918-2-git-send-email-akarwar@marvell.com> (sfid-20160411_165403_046089_F1F69866)
+In-Reply-To: <1460386361-29918-1-git-send-email-akarwar@marvell.com>
+References: <1460386361-29918-1-git-send-email-akarwar@marvell.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi Dave,
+From: Shengzhen Li <szli@marvell.com>
 
-few very small fixes for 4.6. All but one are either build fixes or
-memory leaks. More info in the signed tag below.
+This patch adds support for downloading usb/uart firmware for
+8997 chipset by reading the chip version.
 
-Please let me know if there are any problems.
+Signed-off-by: Shengzhen Li <szli@marvell.com>
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 17 +++++++++++++++--
+ drivers/net/wireless/marvell/mwifiex/pcie.h |  7 +++++--
+ 2 files changed, 20 insertions(+), 4 deletions(-)
 
-Kalle
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index c28edbb..1d888b5 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2811,6 +2811,7 @@ static int mwifiex_pcie_request_irq(struct mwifiex_adapter *adapter)
+ static void mwifiex_pcie_get_fw_name(struct mwifiex_adapter *adapter)
+ {
+ 	int revision_id = 0;
++	int version;
+ 	struct pcie_service_card *card = adapter->card;
+ 
+ 	switch (card->dev->device) {
+@@ -2834,12 +2835,24 @@ static void mwifiex_pcie_get_fw_name(struct mwifiex_adapter *adapter)
+ 		break;
+ 	case PCIE_DEVICE_ID_MARVELL_88W8997:
+ 		mwifiex_read_reg(adapter, 0x0c48, &revision_id);
++		mwifiex_read_reg(adapter, 0x0cd0, &version);
++		version &= 0x7;
+ 		switch (revision_id) {
+ 		case PCIE8997_V2:
+-			strcpy(adapter->fw_name, PCIE8997_FW_NAME_V2);
++			if (version == CHIP_VER_PCIEUSB)
++				strcpy(adapter->fw_name,
++				       PCIEUSB8997_FW_NAME_V2);
++			else
++				strcpy(adapter->fw_name,
++				       PCIEUART8997_FW_NAME_V2);
+ 			break;
+ 		case PCIE8997_Z:
+-			strcpy(adapter->fw_name, PCIE8997_FW_NAME_Z);
++			if (version == CHIP_VER_PCIEUSB)
++				strcpy(adapter->fw_name,
++				       PCIEUSB8997_FW_NAME_Z);
++			else
++				strcpy(adapter->fw_name,
++				       PCIEUART8997_FW_NAME_Z);
+ 			break;
+ 		default:
+ 			break;
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.h b/drivers/net/wireless/marvell/mwifiex/pcie.h
+index cc7a5df..bbabfb0 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.h
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.h
+@@ -32,8 +32,10 @@
+ #define PCIE8766_DEFAULT_FW_NAME "mrvl/pcie8766_uapsta.bin"
+ #define PCIE8897_A0_FW_NAME "mrvl/pcie8897_uapsta_a0.bin"
+ #define PCIE8897_B0_FW_NAME "mrvl/pcie8897_uapsta.bin"
+-#define PCIE8997_FW_NAME_Z "mrvl/pcieusb8997_combo.bin"
+-#define PCIE8997_FW_NAME_V2 "mrvl/pcieusb8997_combo_v2.bin"
++#define PCIEUART8997_FW_NAME_Z "mrvl/pcieuart8997_combo.bin"
++#define PCIEUART8997_FW_NAME_V2 "mrvl/pcieuart8997_combo_v2.bin"
++#define PCIEUSB8997_FW_NAME_Z "mrvl/pcieusb8997_combo.bin"
++#define PCIEUSB8997_FW_NAME_V2 "mrvl/pcieusb8997_combo_v2.bin"
+ 
+ #define PCIE_VENDOR_ID_MARVELL              (0x11ab)
+ #define PCIE_VENDOR_ID_V2_MARVELL           (0x1b4b)
+@@ -45,6 +47,7 @@
+ #define PCIE8897_B0	0x1200
+ #define PCIE8997_Z	0x0
+ #define PCIE8997_V2	0x471
++#define CHIP_VER_PCIEUSB	0x2
+ 
+ /* Constants for Buffer Descriptor (BD) rings */
+ #define MWIFIEX_MAX_TXRX_BD			0x20
+-- 
+1.8.1.4
 
-The following changes since commit 9a3492194eca6253ae7ba93c7a402cecad7f1c94:
-
-  Merge branch 'AF_VSOCK-missed-wakeups' (2016-03-22 16:18:42 -0400)
-
-are available in the git repository at:
-
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/kvalo/wireless-drivers.git tags/wireless-drivers-for-davem-2016-04-13
-
-for you to fetch changes up to 15da5d11040c636cddf85bd93fd4abe85f02fc9f:
-
-  Merge tag 'iwlwifi-for-kalle-2016-03-30' of https://git.kernel.org/pub/scm/linux/kernel/git/iwlwifi/iwlwifi-fixes (2016-04-02 17:59:57 +0300)
-
-----------------------------------------------------------------
-
-wireless-drivers fixes for 4.6
-
-b43
-
-* fix memory leaks when removing the device
-
-bcma
-
-* fix building without OF_IRQ
-
-rtlwifi
-
-* fix gcc-6 indentation warning
-
-iwlwifi
-
-* lower the debug level of a benign print
-* fix a memory leak
-
-----------------------------------------------------------------
-Arnd Bergmann (2):
-      bcma: fix building without OF_IRQ
-      rtlwifi: fix gcc-6 indentation warning
-
-Emmanuel Grumbach (1):
-      iwlwifi: pcie: lower the debug level for RSA semaphore access
-
-Jia-Ju Bai (1):
-      b43: Fix memory leaks in b43_bus_dev_ssb_init and b43_bus_dev_bcma_init
-
-Kalle Valo (1):
-      Merge tag 'iwlwifi-for-kalle-2016-03-30' of https://git.kernel.org/.../iwlwifi/iwlwifi-fixes
-
-Matti Gottlieb (1):
-      iwlwifi: mvm: fix memory leak in paging
-
- drivers/bcma/main.c                                |   17 ++++-------------
- drivers/net/wireless/broadcom/b43/main.c           |    6 ++++--
- drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c  |    2 ++
- drivers/net/wireless/intel/iwlwifi/mvm/ops.c       |    2 --
- drivers/net/wireless/intel/iwlwifi/pcie/trans.c    |    4 ++--
- .../net/wireless/realtek/rtlwifi/rtl8821ae/dm.c    |    6 +++---
- 6 files changed, 15 insertions(+), 22 deletions(-)
