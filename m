@@ -1,83 +1,107 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f171.google.com ([209.85.192.171]:32940 "EHLO
-	mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753475AbcDCWQz (ORCPT
+Received: from mail-gw1-out.broadcom.com ([216.31.210.62]:56626 "EHLO
+	mail-gw1-out.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750868AbcDKJpW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Apr 2016 18:16:55 -0400
-Received: by mail-pf0-f171.google.com with SMTP id 184so30375453pff.0
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Apr 2016 15:16:54 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, wcn36xx@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 05/15] wcn36xx: Use define for invalid index and fix typo
-Date: Sun,  3 Apr 2016 15:16:36 -0700
-Message-Id: <1459721806-11817-5-git-send-email-bjorn.andersson@linaro.org> (sfid-20160404_002055_682235_CBF4399C)
-In-Reply-To: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
+	Mon, 11 Apr 2016 05:45:22 -0400
+From: Arend van Spriel <arend@broadcom.com>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>,
+	Arend van Spriel <arend@broadcom.com>
+Subject: [PATCH 8/8] brcmfmac: create common function for handling brcmf_proto_hdrpull()
+Date: Mon, 11 Apr 2016 11:35:28 +0200
+Message-Id: <1460367328-12082-9-git-send-email-arend@broadcom.com> (sfid-20160411_114525_764885_46557956)
+In-Reply-To: <1460367328-12082-1-git-send-email-arend@broadcom.com>
+References: <1460367328-12082-1-git-send-email-arend@broadcom.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+In receive path brcmf_proto_hdrpull() needs to be called and handled
+similar in brcmf_rx_frame() and brcmf_rx_event(). Move that duplicated
+code in separate function.
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Reviewed-by: Hante Meuleman <hante.meuleman@broadcom.com>
+Reviewed-by: Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>
+Reviewed-by: Franky Lin <franky.lin@broadcom.com>
+Signed-off-by: Arend van Spriel <arend@broadcom.com>
 ---
- drivers/net/wireless/ath/wcn36xx/hal.h  | 2 +-
- drivers/net/wireless/ath/wcn36xx/main.c | 4 ++--
- drivers/net/wireless/ath/wcn36xx/smd.c  | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ .../wireless/broadcom/brcm80211/brcmfmac/core.c    | 43 +++++++++++-----------
+ 1 file changed, 21 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
-index 6f99b6134e4e..67e778f9d29d 100644
---- a/drivers/net/wireless/ath/wcn36xx/hal.h
-+++ b/drivers/net/wireless/ath/wcn36xx/hal.h
-@@ -48,7 +48,7 @@
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index 9b53555..1b476d1 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -322,26 +322,35 @@ void brcmf_netif_rx(struct brcmf_if *ifp, struct sk_buff *skb)
+ 		netif_rx_ni(skb);
+ }
  
- #define WCN36XX_HAL_IPV4_ADDR_LEN       4
+-void brcmf_rx_frame(struct device *dev, struct sk_buff *skb, bool handle_event)
++static int brcmf_rx_hdrpull(struct brcmf_pub *drvr, struct sk_buff *skb,
++			    struct brcmf_if **ifp)
+ {
+-	struct brcmf_if *ifp;
+-	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+-	struct brcmf_pub *drvr = bus_if->drvr;
+ 	int ret;
  
--#define WALN_HAL_STA_INVALID_IDX 0xFF
-+#define WCN36XX_HAL_STA_INVALID_IDX 0xFF
- #define WCN36XX_HAL_BSS_INVALID_IDX 0xFF
+-	brcmf_dbg(DATA, "Enter: %s: rxp=%p\n", dev_name(dev), skb);
+-
+ 	/* process and remove protocol-specific header */
+-	ret = brcmf_proto_hdrpull(drvr, true, skb, &ifp);
++	ret = brcmf_proto_hdrpull(drvr, true, skb, ifp);
  
- /* Default Beacon template size. */
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 62cb9ffd854c..4781b5e8deb3 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -618,7 +618,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
+-	if (ret || !ifp || !ifp->ndev) {
++	if (ret || !(*ifp) || !(*ifp)->ndev) {
+ 		if (ret != -ENODATA && ifp)
+-			ifp->stats.rx_errors++;
++			(*ifp)->stats.rx_errors++;
+ 		brcmu_pkt_buf_free_skb(skb);
+-		return;
++		return -ENODATA;
+ 	}
  
- 		if (!is_zero_ether_addr(bss_conf->bssid)) {
- 			vif_priv->is_joining = true;
--			vif_priv->bss_index = 0xff;
-+			vif_priv->bss_index = WCN36XX_HAL_BSS_INVALID_IDX;
- 			wcn36xx_smd_join(wcn, bss_conf->bssid,
- 					 vif->addr, WCN36XX_HW_CHANNEL(wcn));
- 			wcn36xx_smd_config_bss(wcn, vif, NULL,
-@@ -711,7 +711,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
+-	skb->protocol = eth_type_trans(skb, ifp->ndev);
++	skb->protocol = eth_type_trans(skb, (*ifp)->ndev);
++	return 0;
++}
++
++void brcmf_rx_frame(struct device *dev, struct sk_buff *skb, bool handle_event)
++{
++	struct brcmf_if *ifp;
++	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
++	struct brcmf_pub *drvr = bus_if->drvr;
++
++	brcmf_dbg(DATA, "Enter: %s: rxp=%p\n", dev_name(dev), skb);
++
++	if (brcmf_rx_hdrpull(drvr, skb, &ifp))
++		return;
  
- 		if (bss_conf->enable_beacon) {
- 			vif_priv->dtim_period = bss_conf->dtim_period;
--			vif_priv->bss_index = 0xff;
-+			vif_priv->bss_index = WCN36XX_HAL_BSS_INVALID_IDX;
- 			wcn36xx_smd_config_bss(wcn, vif, NULL,
- 					       vif->addr, false);
- 			skb = ieee80211_beacon_get_tim(hw, vif, &tim_off,
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 170440ed5d85..6d4aa9250ca8 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -197,7 +197,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
- 	    vif->type == NL80211_IFTYPE_AP ||
- 	    vif->type == NL80211_IFTYPE_MESH_POINT) {
- 		sta_params->type = 1;
--		sta_params->sta_index = 0xFF;
-+		sta_params->sta_index = WCN36XX_HAL_STA_INVALID_IDX;
- 	} else {
- 		sta_params->type = 0;
- 		sta_params->sta_index = 1;
+ 	if (brcmf_proto_is_reorder_skb(skb)) {
+ 		brcmf_proto_rxreorder(ifp, skb);
+@@ -359,21 +368,11 @@ void brcmf_rx_event(struct device *dev, struct sk_buff *skb)
+ 	struct brcmf_if *ifp;
+ 	struct brcmf_bus *bus_if = dev_get_drvdata(dev);
+ 	struct brcmf_pub *drvr = bus_if->drvr;
+-	int ret;
+ 
+ 	brcmf_dbg(EVENT, "Enter: %s: rxp=%p\n", dev_name(dev), skb);
+ 
+-	/* process and remove protocol-specific header */
+-	ret = brcmf_proto_hdrpull(drvr, true, skb, &ifp);
+-
+-	if (ret || !ifp || !ifp->ndev) {
+-		if (ret != -ENODATA && ifp)
+-			ifp->stats.rx_errors++;
+-		brcmu_pkt_buf_free_skb(skb);
++	if (brcmf_rx_hdrpull(drvr, skb, &ifp))
+ 		return;
+-	}
+-
+-	skb->protocol = eth_type_trans(skb, ifp->ndev);
+ 
+ 	brcmf_fweh_process_skb(ifp->drvr, skb);
+ 	brcmu_pkt_buf_free_skb(skb);
 -- 
-2.5.0
+1.9.1
 
