@@ -1,78 +1,139 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mezzanine.sirena.org.uk ([106.187.55.193]:59350 "EHLO
-	mezzanine.sirena.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751786AbcDULMA (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2016 07:12:00 -0400
-Date: Thu, 21 Apr 2016 12:11:49 +0100
-From: Mark Brown <broonie@kernel.org>
-To: "Reizer, Eyal" <eyalr@ti.com>
-Cc: "kvalo@codeaurora.org" <kvalo@codeaurora.org>,
-	=?utf-8?B?77+977+977+977+9IO+/ve+/ve+/ve+/ve+/vQ==?=
-	<eyalreizer@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>
-Message-ID: <20160421111149.GO3217@sirena.org.uk> (sfid-20160421_131253_655318_F4CEEAC4)
-References: <1463330011.BhWEcYYuGD@wuerfel>
- <8665E2433BC68541A24DFFCA87B70F5B360C0745@DFRE01.ent.ti.com>
- <20160419171239.GC3217@sirena.org.uk>
- <sjdvun1fuj4nyi0bgf268g53.1461086401627@email.android.com>
- <20160419172706.GD3217@sirena.org.uk>
- <oe8hqfknrcljrjawnrxlohvr.1461087275186@email.android.com>
- <20160419175402.GE3217@sirena.org.uk>
- <us0dopt1inbrt0x47njgc2vy.1461089085965@email.android.com>
- <20160419184627.GG3217@sirena.org.uk>
- <8665E2433BC68541A24DFFCA87B70F5B360C2E14@DFRE01.ent.ti.com>
+Received: from mout.gmx.net ([212.227.17.20]:50425 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754201AbcDKTFF (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Mon, 11 Apr 2016 15:05:05 -0400
+Subject: Re: [PATCH] Revert regression in ath9k on AR9281
+To: Gustav Frederiksen <lkml2017@openmailbox.org>,
+	Julian Calaby <julian.calaby@gmail.com>
+References: <998e52a27823047910627da08e917c06@openmailbox.org>
+ <CAGRGNgVtD8PS7BePJ=RTbxOOYjqE39kChuhZxtOUO-S9Y95p6w@mail.gmail.com>
+ <6567cc33c0ca681364c6510a7797c459@openmailbox.org>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+From: Oleksij Rempel <linux@rempel-privat.de>
+Message-ID: <570BF557.40705@rempel-privat.de> (sfid-20160411_210510_907622_C0D74D2C)
+Date: Mon, 11 Apr 2016 21:04:55 +0200
 MIME-Version: 1.0
+In-Reply-To: <6567cc33c0ca681364c6510a7797c459@openmailbox.org>
 Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="xdTJfaku+U7U7swX"
-In-Reply-To: <8665E2433BC68541A24DFFCA87B70F5B360C2E14@DFRE01.ent.ti.com>
-Subject: Re: [PATCHv2] wlcore: spi: add wl18xx support
+ protocol="application/pgp-signature";
+ boundary="l8towVcPHCeNFHJ4eMXXBeoo1MwMR4UwA"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--l8towVcPHCeNFHJ4eMXXBeoo1MwMR4UwA
+Content-Type: multipart/mixed; boundary="TfCsJnPd9h5fTI4GMEQp0uqhM0TElWTX7"
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: Gustav Frederiksen <lkml2017@openmailbox.org>,
+ Julian Calaby <julian.calaby@gmail.com>
+Cc: linux-wireless <linux-wireless@vger.kernel.org>
+Message-ID: <570BF557.40705@rempel-privat.de>
+Subject: Re: [PATCH] Revert regression in ath9k on AR9281
+References: <998e52a27823047910627da08e917c06@openmailbox.org>
+ <CAGRGNgVtD8PS7BePJ=RTbxOOYjqE39kChuhZxtOUO-S9Y95p6w@mail.gmail.com>
+ <6567cc33c0ca681364c6510a7797c459@openmailbox.org>
+In-Reply-To: <6567cc33c0ca681364c6510a7797c459@openmailbox.org>
 
---xdTJfaku+U7U7swX
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--TfCsJnPd9h5fTI4GMEQp0uqhM0TElWTX7
+Content-Type: multipart/mixed;
+ boundary="------------070004090306040708090801"
+
+This is a multi-part message in MIME format.
+--------------070004090306040708090801
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Apr 21, 2016 at 11:07:37AM +0000, Reizer, Eyal wrote:
+Hi Gustav,
 
-> * (i) If the transfer isn't the last one in the message, this flag is
-> * used to make the chipselect briefly go inactive in the middle of the
-> * message.  Toggling chipselect in this way may be needed to terminate
-> * a chip command, letting a single spi_message perform all of group of
-> * chip transactions together.
+thank you for your work.
+Can you please test attached patch.
 
-> Now, in my case I need the CS pin to go inactive and stay inactive during=
- the transfer=20
-> of the next byte for completing the SPI init correctly (sending the extra=
- clock cycles while CS is inactive)
-> If I read the above correctly, CS will only briefly go inactive but will =
-when the next byte=20
-> is sent it will be active again.
-> What am I missing?
+Am 11.04.2016 um 04:28 schrieb Gustav Frederiksen:
+> Hi,
+> thank you for taking the time to answer my previous email and for
+> providing those useful tips.
+=2E...
 
-No, it changes the state.  The main use case is a brief bounce but
-you can use it for other things.
+--=20
+Regards,
+Oleksij
 
---xdTJfaku+U7U7swX
+--------------070004090306040708090801
+Content-Type: text/x-patch;
+ name="ath_fix.patch"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+ filename="ath_fix.patch"
+
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wi=
+reless/ath/ath9k/ar5008_phy.c
+index 8f87930..1b271b9 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -274,6 +274,9 @@ void ar5008_hw_cmn_spur_mitigate(struct ath_hw *ah,
+ 	};
+ 	static const int inc[4] =3D { 0, 100, 0, 0 };
+=20
++	memset(&mask_m, 0, sizeof(int8_t) * 123);
++	memset(&mask_p, 0, sizeof(int8_t) * 123);
++
+ 	cur_bin =3D -6000;
+ 	upper =3D bin + 100;
+ 	lower =3D bin - 100;
+@@ -424,14 +427,9 @@ static void ar5008_hw_spur_mitigate(struct ath_hw *a=
+h,
+ 	int tmp, new;
+ 	int i;
+=20
+-	int8_t mask_m[123];
+-	int8_t mask_p[123];
+ 	int cur_bb_spur;
+ 	bool is2GHz =3D IS_CHAN_2GHZ(chan);
+=20
+-	memset(&mask_m, 0, sizeof(int8_t) * 123);
+-	memset(&mask_p, 0, sizeof(int8_t) * 123);
+-
+ 	for (i =3D 0; i < AR_EEPROM_MODAL_SPURS; i++) {
+ 		cur_bb_spur =3D ah->eep_ops->get_spur_channel(ah, i, is2GHz);
+ 		if (AR_NO_SPUR =3D=3D cur_bb_spur)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wi=
+reless/ath/ath9k/ar9002_phy.c
+index db66245..53d7445 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+@@ -178,14 +178,9 @@ static void ar9002_hw_spur_mitigate(struct ath_hw *a=
+h,
+ 	int i;
+ 	struct chan_centers centers;
+=20
+-	int8_t mask_m[123];
+-	int8_t mask_p[123];
+ 	int cur_bb_spur;
+ 	bool is2GHz =3D IS_CHAN_2GHZ(chan);
+=20
+-	memset(&mask_m, 0, sizeof(int8_t) * 123);
+-	memset(&mask_p, 0, sizeof(int8_t) * 123);
+-
+ 	ath9k_hw_get_channel_centers(ah, chan, &centers);
+ 	freq =3D centers.synth_center;
+=20
+
+--------------070004090306040708090801--
+
+--TfCsJnPd9h5fTI4GMEQp0uqhM0TElWTX7--
+
+--l8towVcPHCeNFHJ4eMXXBeoo1MwMR4UwA
 Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 Version: GnuPG v2
 
-iQEcBAEBCAAGBQJXGLVzAAoJECTWi3JdVIfQkeUH/RBLOC8k+a4OGBOzYmJ7lVvu
-7sU/PY/57UsPjArOTRDnm1aGjROe12wGh900nPut6kOx2fa8pH++o1EHQykQa4S2
-xGiyz6vnxzDGMmUpep5CVOw/lUxY6vf2/n/RMcrY46zX/Yn4DXBtbIVkiCJ0Y5PB
-tJ6SDX/Ot5gGmoKgYV5Uc6rrUEnn7H4TMYOpCg//F78N9cUXupXvcmeoiYVVzEPW
-zc/dao8tnVqRFVmM/qoHIXt7EpjHRO2akfx27OXm+QsRZJ1pBlqosqO1BAccMSqN
-AbQKlCDbJa+6BviXb6dIiUuavNH8hSXiPpmS0o3YNN55B9mDlIgN3E9wE2oZiMo=
-=TiYQ
+iF4EAREIAAYFAlcL9VwACgkQHwImuRkmbWku0gD/UeSTI2q16GhQXT9j/BI3FPtw
+fLw+s4rg6XcZQGfngncA/1hVFed4SlTp7krj24uitAdkctsUQfUWXhYX/NipKDgS
+=iotc
 -----END PGP SIGNATURE-----
 
---xdTJfaku+U7U7swX--
+--l8towVcPHCeNFHJ4eMXXBeoo1MwMR4UwA--
