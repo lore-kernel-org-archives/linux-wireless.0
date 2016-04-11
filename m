@@ -1,110 +1,190 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f50.google.com ([209.85.220.50]:32936 "EHLO
-	mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752971AbcDCWQv (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:3220 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751175AbcDKJqX (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Apr 2016 18:16:51 -0400
-Received: by mail-pa0-f50.google.com with SMTP id zm5so130355803pac.0
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Apr 2016 15:16:50 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, wcn36xx@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Jason Mobarak <jam@cozybit.com>
-Subject: [PATCH v2 02/15] wcn36xx: Pad TIM PVM if needed
-Date: Sun,  3 Apr 2016 15:16:33 -0700
-Message-Id: <1459721806-11817-2-git-send-email-bjorn.andersson@linaro.org> (sfid-20160404_002201_268098_3935F8F8)
-In-Reply-To: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
+	Mon, 11 Apr 2016 05:46:23 -0400
+From: "Kanchanapally, Vidyullatha" <vkanchan@qti.qualcomm.com>
+To: <johannes@sipsolutions.net>
+CC: <linux-wireless@vger.kernel.org>, <jouni@qca.qualcomm.com>,
+	<vkanchan@qti.qualcomm.com>, <usdutt@qti.qualcomm.com>,
+	<amarnath@qca.qualcomm.com>
+Subject: [PATCH 1/3] cfg80211: Add option to report the bss entry in connect
+ result
+Date: Mon, 11 Apr 2016 15:16:01 +0530
+Message-ID: <1460367961-11254-1-git-send-email-vkanchan@qti.qualcomm.com> (sfid-20160411_114627_814837_68732C11)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+From: "Kanchanapally, Vidyullatha" <vkanchan@qti.qualcomm.com>
 
-The wcn36xx FW expects a fixed size TIM PVM in the beacon template. If
-supplied with a shorter than expected PVM it will overwrite the IE
-following the TIM.
+Since cfg80211 maintains separate BSS table entries for APs if the same
+BSSID, SSID pair is seen on multiple channels, it is possible that it
+can map the current_bss to a BSS entry on the wrong channel. This
+current_bss will not get flushed unless disconnected and cfg80211
+reports a wrong channel as the associated channel.
 
-Squashed with fix from Jason Mobarak <jam@cozybit.com>:
-Patch "wcn36xx: Pad TIM PVM if needed" has caused a regression in mesh
-beaconing.  The field tim_off is always 0 for mesh mode, and thus
-pvm_len (referring to the TIM length field) and pad are both incorrectly
-calculated.  Thus, msg_body.beacon_length is incorrectly calculated for
-mesh mode. Fix this.
+Fix this by introducing a new cfg80211_connect_bss() function which is
+similar to cfg80211_connect_result(), but it includes an additional
+parameter: the bss the STA is connected to. This allows drivers to
+provide the exact bss entry that matches the BSS to which the connection
+was completed.
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Jason Mobarak <jam@cozybit.com>
-[bjorn: squashed in Jason's fixup]
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Reviewed-by: Jouni Malinen <jouni@qca.qualcomm.com>
+Signed-off-by: Vidyullatha Kanchanapally <vkanchan@qti.qualcomm.com>
+Signed-off-by: Sunil Dutt <usdutt@qti.qualcomm.com>
 ---
- drivers/net/wireless/ath/wcn36xx/hal.h |  3 +++
- drivers/net/wireless/ath/wcn36xx/smd.c | 27 +++++++++++++++++++++++++--
- 2 files changed, 28 insertions(+), 2 deletions(-)
+ include/net/cfg80211.h | 39 +++++++++++++++++++++++++++++++++++----
+ net/wireless/core.h    |  1 +
+ net/wireless/sme.c     | 28 ++++++++++++++++++++++------
+ net/wireless/util.c    |  2 +-
+ 4 files changed, 59 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/hal.h b/drivers/net/wireless/ath/wcn36xx/hal.h
-index 4fd77ccc2287..6f99b6134e4e 100644
---- a/drivers/net/wireless/ath/wcn36xx/hal.h
-+++ b/drivers/net/wireless/ath/wcn36xx/hal.h
-@@ -54,6 +54,9 @@
- /* Default Beacon template size. */
- #define BEACON_TEMPLATE_SIZE 0x17C
+diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
+index 858a97ec..51f177c 100644
+--- a/include/net/cfg80211.h
++++ b/include/net/cfg80211.h
+@@ -4648,6 +4648,32 @@ static inline void cfg80211_testmode_event(struct sk_buff *skb, gfp_t gfp)
+ #endif
  
-+/* Minimum PVM size that the FW expects. See comment in smd.c for details. */
-+#define TIM_MIN_PVM_SIZE 6
+ /**
++ * cfg80211_connect_bss - notify cfg80211 of connection result
++ *
++ * @dev: network device
++ * @bssid: the BSSID of the AP
++ * @bss: entry of bss to which STA got connected to, can be obtained
++ *	through cfg80211_get_bss (may be %NULL)
++ * @req_ie: association request IEs (maybe be %NULL)
++ * @req_ie_len: association request IEs length
++ * @resp_ie: association response IEs (may be %NULL)
++ * @resp_ie_len: assoc response IEs length
++ * @status: status code, 0 for successful connection, use
++ *      %WLAN_STATUS_UNSPECIFIED_FAILURE if your device cannot give you
++ *      the real status code for failures.
++ * @gfp: allocation flags
++ *
++ * It should be called by the underlying driver whenever connect() has
++ * succeeded. This is similar to cfg80211_connect_result(), but with the
++ * option of identifying the exact bss entry for the connection. Only one of
++ * these functions should be called.
++ */
++void cfg80211_connect_bss(struct net_device *dev, const u8 *bssid,
++			  struct cfg80211_bss *bss, const u8 *req_ie,
++			  size_t req_ie_len, const u8 *resp_ie,
++			  size_t resp_ie_len, u16 status, gfp_t gfp);
 +
- /* Param Change Bitmap sent to HAL */
- #define PARAM_BCN_INTERVAL_CHANGED                      (1 << 0)
- #define PARAM_SHORT_PREAMBLE_CHANGED                 (1 << 1)
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index ff3ed2461a69..089a7e445cd6 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -1375,12 +1375,19 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 			    u16 p2p_off)
++/**
+  * cfg80211_connect_result - notify cfg80211 of connection result
+  *
+  * @dev: network device
+@@ -4664,10 +4690,15 @@ static inline void cfg80211_testmode_event(struct sk_buff *skb, gfp_t gfp)
+  * It should be called by the underlying driver whenever connect() has
+  * succeeded.
+  */
+-void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+-			     const u8 *req_ie, size_t req_ie_len,
+-			     const u8 *resp_ie, size_t resp_ie_len,
+-			     u16 status, gfp_t gfp);
++static inline void
++cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
++			const u8 *req_ie, size_t req_ie_len,
++			const u8 *resp_ie, size_t resp_ie_len,
++			u16 status, gfp_t gfp)
++{
++	cfg80211_connect_bss(dev, bssid, NULL, req_ie, req_ie_len, resp_ie,
++			     resp_ie_len, status, gfp);
++}
+ 
+ /**
+  * cfg80211_roamed - notify cfg80211 of roaming
+diff --git a/net/wireless/core.h b/net/wireless/core.h
+index 64c70e4..f3b0a07 100644
+--- a/net/wireless/core.h
++++ b/net/wireless/core.h
+@@ -214,6 +214,7 @@ struct cfg80211_event {
+ 			const u8 *resp_ie;
+ 			size_t req_ie_len;
+ 			size_t resp_ie_len;
++			struct cfg80211_bss *bss;
+ 			u16 status;
+ 		} cr;
+ 		struct {
+diff --git a/net/wireless/sme.c b/net/wireless/sme.c
+index 1fba416..da97424d 100644
+--- a/net/wireless/sme.c
++++ b/net/wireless/sme.c
+@@ -753,19 +753,32 @@ void __cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 	kfree(country_ie);
+ }
+ 
+-void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+-			     const u8 *req_ie, size_t req_ie_len,
+-			     const u8 *resp_ie, size_t resp_ie_len,
+-			     u16 status, gfp_t gfp)
++/* Consumes bss object one way or another */
++void cfg80211_connect_bss(struct net_device *dev, const u8 *bssid,
++			  struct cfg80211_bss *bss, const u8 *req_ie,
++			  size_t req_ie_len, const u8 *resp_ie,
++			  size_t resp_ie_len, u16 status, gfp_t gfp)
  {
- 	struct wcn36xx_hal_send_beacon_req_msg msg_body;
--	int ret = 0;
-+	int ret = 0, pad, pvm_len;
+ 	struct wireless_dev *wdev = dev->ieee80211_ptr;
+ 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wdev->wiphy);
+ 	struct cfg80211_event *ev;
+ 	unsigned long flags;
  
- 	mutex_lock(&wcn->hal_mutex);
- 	INIT_HAL_MSG(msg_body, WCN36XX_HAL_SEND_BEACON_REQ);
- 
--	msg_body.beacon_length = skb_beacon->len;
-+	pvm_len = skb_beacon->data[tim_off + 1] - 3;
-+	pad = TIM_MIN_PVM_SIZE - pvm_len;
++	if (bss) {
++		/* Make sure the bss entry provided by the driver is valid. */
++		struct cfg80211_internal_bss *ibss = bss_from_pub(bss);
 +
-+	/* Padding is irrelevant to mesh mode since tim_off is always 0. */
-+	if (vif->type == NL80211_IFTYPE_MESH_POINT)
-+		pad = 0;
-+
-+	msg_body.beacon_length = skb_beacon->len + pad;
- 	/* TODO need to find out why + 6 is needed */
- 	msg_body.beacon_length6 = msg_body.beacon_length + 6;
- 
-@@ -1393,6 +1400,22 @@ int wcn36xx_smd_send_beacon(struct wcn36xx *wcn, struct ieee80211_vif *vif,
- 	memcpy(msg_body.beacon, skb_beacon->data, skb_beacon->len);
- 	memcpy(msg_body.bssid, vif->addr, ETH_ALEN);
- 
-+	if (pad > 0) {
-+		/*
-+		 * The wcn36xx FW has a fixed size for the PVM in the TIM. If
-+		 * given the beacon template from mac80211 with a PVM shorter
-+		 * than the FW expectes it will overwrite the data after the
-+		 * TIM.
-+		 */
-+		wcn36xx_dbg(WCN36XX_DBG_HAL, "Pad TIM PVM. %d bytes at %d\n",
-+			    pad, pvm_len);
-+		memmove(&msg_body.beacon[tim_off + 5 + pvm_len + pad],
-+			&msg_body.beacon[tim_off + 5 + pvm_len],
-+			skb_beacon->len - (tim_off + 5 + pvm_len));
-+		memset(&msg_body.beacon[tim_off + 5 + pvm_len], 0, pad);
-+		msg_body.beacon[tim_off + 1] += pad;
++		if (WARN_ON(list_empty(&ibss->list))) {
++			cfg80211_put_bss(wdev->wiphy, bss);
++			return;
++		}
 +	}
 +
- 	/* TODO need to find out why this is needed? */
- 	if (vif->type == NL80211_IFTYPE_MESH_POINT)
- 		/* mesh beacon don't need this, so push further down */
+ 	ev = kzalloc(sizeof(*ev) + req_ie_len + resp_ie_len, gfp);
+-	if (!ev)
++	if (!ev) {
++		cfg80211_put_bss(wdev->wiphy, bss);
+ 		return;
++	}
+ 
+ 	ev->type = EVENT_CONNECT_RESULT;
+ 	if (bssid)
+@@ -780,6 +793,9 @@ void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 		ev->cr.resp_ie_len = resp_ie_len;
+ 		memcpy((void *)ev->cr.resp_ie, resp_ie, resp_ie_len);
+ 	}
++	if (bss)
++		cfg80211_hold_bss(bss_from_pub(bss));
++	ev->cr.bss = bss;
+ 	ev->cr.status = status;
+ 
+ 	spin_lock_irqsave(&wdev->event_lock, flags);
+@@ -787,7 +803,7 @@ void cfg80211_connect_result(struct net_device *dev, const u8 *bssid,
+ 	spin_unlock_irqrestore(&wdev->event_lock, flags);
+ 	queue_work(cfg80211_wq, &rdev->event_work);
+ }
+-EXPORT_SYMBOL(cfg80211_connect_result);
++EXPORT_SYMBOL(cfg80211_connect_bss);
+ 
+ /* Consumes bss object one way or another */
+ void __cfg80211_roamed(struct wireless_dev *wdev,
+diff --git a/net/wireless/util.c b/net/wireless/util.c
+index 9f440a9..fb45750 100644
+--- a/net/wireless/util.c
++++ b/net/wireless/util.c
+@@ -950,7 +950,7 @@ void cfg80211_process_wdev_events(struct wireless_dev *wdev)
+ 				ev->cr.resp_ie, ev->cr.resp_ie_len,
+ 				ev->cr.status,
+ 				ev->cr.status == WLAN_STATUS_SUCCESS,
+-				NULL);
++				ev->cr.bss);
+ 			break;
+ 		case EVENT_ROAMED:
+ 			__cfg80211_roamed(wdev, ev->rm.bss, ev->rm.req_ie,
 -- 
-2.5.0
+1.9.1
 
