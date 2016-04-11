@@ -1,51 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:57241 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751190AbcDKDdR (ORCPT
+Received: from mail-bn1bon0077.outbound.protection.outlook.com ([157.56.111.77]:7001
+	"EHLO na01-bn1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750971AbcDKPEk convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2016 23:33:17 -0400
-Date: Sun, 10 Apr 2016 23:33:13 -0400 (EDT)
-Message-Id: <20160410.233313.1103755950436664749.davem@davemloft.net> (sfid-20160411_053326_080046_7B3F1967)
-To: johannes@sipsolutions.net
-Cc: netdev@vger.kernel.org, dmitrijs.ivanovs@ubnt.com,
-	linux-wireless@vger.kernel.org
-Subject: Re: [PATCH] netlink: don't send NETLINK_URELEASE for unbound
- sockets
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <1460014298-30293-1-git-send-email-johannes@sipsolutions.net>
-References: <1460014298-30293-1-git-send-email-johannes@sipsolutions.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+	Mon, 11 Apr 2016 11:04:40 -0400
+From: Joakim Tjernlund <Joakim.Tjernlund@infinera.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: rfkill LED not working on HP ProBook 640 G2 (Intel Corporation
+ Wireless 8260 (rev 3a))
+Date: Mon, 11 Apr 2016 14:48:55 +0000
+Message-ID: <1460386153.8697.18.camel@infinera.com> (sfid-20160411_170447_797069_8F122442)
+Content-Type: text/plain; charset="iso-8859-15"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes@sipsolutions.net>
-Date: Thu,  7 Apr 2016 09:31:38 +0200
+Got this fairly new laptop(skylake based) where the rfkill switch works. I can see the kernel(4.4.6)
+bringing wifi up and down whenever I toggle rfkill, also:
+~ # rfkill list
+0: phy0: Wireless LAN
+	Soft blocked: no
+	Hard blocked: no
+1: hci0: Bluetooth
+	Soft blocked: no
+	Hard blocked: no
+<Press rfkill and ...>
+~ # rfkill list
+0: phy0: Wireless LAN
+	Soft blocked: yes
+	Hard blocked: no
+1: hci0: Bluetooth
+	Soft blocked: yes
+	Hard blocked: no
 
-> From: Dmitry Ivanov <dmitrijs.ivanovs@ubnt.com>
-> 
-> All existing users of NETLINK_URELEASE use it to clean up resources that
-> were previously allocated to a socket via some command. As a result, no
-> users require getting this notification for unbound sockets.
-> 
-> Sending it for unbound sockets, however, is a problem because any user
-> (including unprivileged users) can create a socket that uses the same ID
-> as an existing socket. Binding this new socket will fail, but if the
-> NETLINK_URELEASE notification is generated for such sockets, the users
-> thereof will be tricked into thinking the socket that they allocated the
-> resources for is closed.
-> 
-> In the nl80211 case, this will cause destruction of virtual interfaces
-> that still belong to an existing hostapd process; this is the case that
-> Dmitry noticed. In the NFC case, it will cause a poll abort. In the case
-> of netlink log/queue it will cause them to stop reporting events, as if
-> NFULNL_CFG_CMD_UNBIND/NFQNL_CFG_CMD_UNBIND had been called.
-> 
-> Fix this problem by checking that the socket is bound before generating
-> the NETLINK_URELEASE notification.
-> 
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Dmitry Ivanov <dima@ubnt.com>
-> Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+However, the rfkill LED stays white ALL the time.
 
-Applied and queued up for -stable, thanks everyone.
+Used wifi firmware:
+  iwlwifi 0000:02:00.0: loaded firmware version 16.242414.0 op_mode iwlmvm
+
+ Jocke
