@@ -1,103 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from host.76.145.23.62.rev.coltfrance.com ([62.23.145.76]:54537 "EHLO
-	proxy.6wind.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754061AbcDYIcF (ORCPT
+Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:13247 "EHLO
+	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752817AbcDKOxO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2016 04:32:05 -0400
-From: Nicolas Dichtel <nicolas.dichtel@6wind.com>
-To: netdev@vger.kernel.org
-Cc: davem@davemloft.net, jhs@mojatatu.com, stephen@networkplumber.org,
-	pshelar@nicira.com, aar@pengutronix.de, linux-wpan@vger.kernel.org,
-	wensong@linux-vs.org, horms@verge.net.au, ja@ssi.bg,
-	pablo@netfilter.org, kaber@trash.net, kadlec@blackhole.kfki.hu,
-	lvs-devel@vger.kernel.org, netfilter-devel@vger.kernel.org,
-	johannes@sipsolutions.net, linux-wireless@vger.kernel.org,
-	Nicolas Dichtel <nicolas.dichtel@6wind.com>
-Subject: [PATCH net-next 1/9] rtnl: use nla_put_u64_64bit()
-Date: Mon, 25 Apr 2016 10:25:14 +0200
-Message-Id: <1461572722-6029-2-git-send-email-nicolas.dichtel@6wind.com> (sfid-20160425_103217_905701_44BBA133)
-In-Reply-To: <1461572722-6029-1-git-send-email-nicolas.dichtel@6wind.com>
-References: <1461572722-6029-1-git-send-email-nicolas.dichtel@6wind.com>
+	Mon, 11 Apr 2016 10:53:14 -0400
+Received: from pps.filterd (m0045849.ppops.net [127.0.0.1])
+	by mx0a-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u3BEpS1x016296
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2016 07:53:12 -0700
+Received: from sc-exch04.marvell.com ([199.233.58.184])
+	by mx0a-0016f401.pphosted.com with ESMTP id 226y3kdqvd-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
+	for <linux-wireless@vger.kernel.org>; Mon, 11 Apr 2016 07:53:12 -0700
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: <linux-wireless@vger.kernel.org>
+CC: Cathy Luo <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Amitkumar Karwar <akarwar@marvell.com>
+Subject: [PATCH 1/5] mwifiex: missing break statement
+Date: Mon, 11 Apr 2016 07:52:37 -0700
+Message-ID: <1460386361-29918-1-git-send-email-akarwar@marvell.com> (sfid-20160411_165400_886100_614C1C9E)
+MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
----
- include/uapi/linux/if_link.h |  1 +
- net/core/rtnetlink.c         | 36 ++++++++++++++++++------------------
- 2 files changed, 19 insertions(+), 18 deletions(-)
+This patch adds missing break statement at the end of
+PCIE_DEVICE_ID_MARVELL_88W8897 switch section.
 
-diff --git a/include/uapi/linux/if_link.h b/include/uapi/linux/if_link.h
-index ba69d4447249..5fdd3a42e377 100644
---- a/include/uapi/linux/if_link.h
-+++ b/include/uapi/linux/if_link.h
-@@ -666,6 +666,7 @@ enum {
- 	IFLA_VF_STATS_TX_BYTES,
- 	IFLA_VF_STATS_BROADCAST,
- 	IFLA_VF_STATS_MULTICAST,
-+	IFLA_VF_STATS_PAD,
- 	__IFLA_VF_STATS_MAX,
- };
- 
-diff --git a/net/core/rtnetlink.c b/net/core/rtnetlink.c
-index 5ec059d52823..9efc1f34ef3b 100644
---- a/net/core/rtnetlink.c
-+++ b/net/core/rtnetlink.c
-@@ -825,17 +825,17 @@ static inline int rtnl_vfinfo_size(const struct net_device *dev,
- 			 nla_total_size(sizeof(struct ifla_vf_link_state)) +
- 			 nla_total_size(sizeof(struct ifla_vf_rss_query_en)) +
- 			 /* IFLA_VF_STATS_RX_PACKETS */
--			 nla_total_size(sizeof(__u64)) +
-+			 nla_total_size_64bit(sizeof(__u64)) +
- 			 /* IFLA_VF_STATS_TX_PACKETS */
--			 nla_total_size(sizeof(__u64)) +
-+			 nla_total_size_64bit(sizeof(__u64)) +
- 			 /* IFLA_VF_STATS_RX_BYTES */
--			 nla_total_size(sizeof(__u64)) +
-+			 nla_total_size_64bit(sizeof(__u64)) +
- 			 /* IFLA_VF_STATS_TX_BYTES */
--			 nla_total_size(sizeof(__u64)) +
-+			 nla_total_size_64bit(sizeof(__u64)) +
- 			 /* IFLA_VF_STATS_BROADCAST */
--			 nla_total_size(sizeof(__u64)) +
-+			 nla_total_size_64bit(sizeof(__u64)) +
- 			 /* IFLA_VF_STATS_MULTICAST */
--			 nla_total_size(sizeof(__u64)) +
-+			 nla_total_size_64bit(sizeof(__u64)) +
- 			 nla_total_size(sizeof(struct ifla_vf_trust)));
- 		return size;
- 	} else
-@@ -1153,18 +1153,18 @@ static noinline_for_stack int rtnl_fill_vfinfo(struct sk_buff *skb,
- 		nla_nest_cancel(skb, vfinfo);
- 		return -EMSGSIZE;
- 	}
--	if (nla_put_u64(skb, IFLA_VF_STATS_RX_PACKETS,
--			vf_stats.rx_packets) ||
--	    nla_put_u64(skb, IFLA_VF_STATS_TX_PACKETS,
--			vf_stats.tx_packets) ||
--	    nla_put_u64(skb, IFLA_VF_STATS_RX_BYTES,
--			vf_stats.rx_bytes) ||
--	    nla_put_u64(skb, IFLA_VF_STATS_TX_BYTES,
--			vf_stats.tx_bytes) ||
--	    nla_put_u64(skb, IFLA_VF_STATS_BROADCAST,
--			vf_stats.broadcast) ||
--	    nla_put_u64(skb, IFLA_VF_STATS_MULTICAST,
--			vf_stats.multicast))
-+	if (nla_put_u64_64bit(skb, IFLA_VF_STATS_RX_PACKETS,
-+			      vf_stats.rx_packets, IFLA_VF_STATS_PAD) ||
-+	    nla_put_u64_64bit(skb, IFLA_VF_STATS_TX_PACKETS,
-+			      vf_stats.tx_packets, IFLA_VF_STATS_PAD) ||
-+	    nla_put_u64_64bit(skb, IFLA_VF_STATS_RX_BYTES,
-+			      vf_stats.rx_bytes, IFLA_VF_STATS_PAD) ||
-+	    nla_put_u64_64bit(skb, IFLA_VF_STATS_TX_BYTES,
-+			      vf_stats.tx_bytes, IFLA_VF_STATS_PAD) ||
-+	    nla_put_u64_64bit(skb, IFLA_VF_STATS_BROADCAST,
-+			      vf_stats.broadcast, IFLA_VF_STATS_PAD) ||
-+	    nla_put_u64_64bit(skb, IFLA_VF_STATS_MULTICAST,
-+			      vf_stats.multicast, IFLA_VF_STATS_PAD))
- 		return -EMSGSIZE;
- 	nla_nest_end(skb, vfstats);
- 	nla_nest_end(skb, vf);
+Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+---
+ drivers/net/wireless/marvell/mwifiex/pcie.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+index edf8b07..c28edbb 100644
+--- a/drivers/net/wireless/marvell/mwifiex/pcie.c
++++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+@@ -2831,6 +2831,7 @@ static void mwifiex_pcie_get_fw_name(struct mwifiex_adapter *adapter)
+ 		default:
+ 			break;
+ 		}
++		break;
+ 	case PCIE_DEVICE_ID_MARVELL_88W8997:
+ 		mwifiex_read_reg(adapter, 0x0c48, &revision_id);
+ 		switch (revision_id) {
 -- 
-2.8.1
+1.8.1.4
 
