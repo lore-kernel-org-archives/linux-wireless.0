@@ -1,45 +1,111 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ig0-f177.google.com ([209.85.213.177]:38102 "EHLO
-	mail-ig0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751889AbcDUVLH (ORCPT
+Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:46905 "EHLO
+	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753641AbcDKLX6 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 21 Apr 2016 17:11:07 -0400
-Received: by mail-ig0-f177.google.com with SMTP id m9so76934062ige.1
-        for <linux-wireless@vger.kernel.org>; Thu, 21 Apr 2016 14:11:07 -0700 (PDT)
+	Mon, 11 Apr 2016 07:23:58 -0400
+From: Amitkumar Karwar <akarwar@marvell.com>
+To: Rob Herring <robh@kernel.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"Cathy Luo" <cluo@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	Wei-Ning Huang <wnhuang@chromium.org>,
+	Xinming Hu <huxm@marvell.com>
+Subject: RE: [PATCH v6 1/2] dt: bindings: add MARVELL's sd8xxx wireless device
+Date: Mon, 11 Apr 2016 11:23:52 +0000
+Message-ID: <44846d9ea4084dc4b2706104df8d3543@SC-EXCH04.marvell.com> (sfid-20160411_132402_794899_4C215DC9)
+References: <1459343998-5187-1-git-send-email-akarwar@marvell.com>
+ <CAL_JsqK5TiNCub6XnBcE118gLkC-mjf437zWhLOsjgtz+1peuw@mail.gmail.com>
+In-Reply-To: <CAL_JsqK5TiNCub6XnBcE118gLkC-mjf437zWhLOsjgtz+1peuw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1461272982-7233-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1461272982-7233-1-git-send-email-bjorn.andersson@linaro.org>
-Date: Thu, 21 Apr 2016 14:11:06 -0700
-Message-ID: <CALAqxLU8isySuMb-czb+9ZeUX03ygEEbtKH7yLui5K9zHK0DJA@mail.gmail.com> (sfid-20160421_231136_782613_5B2AEAF7)
-Subject: Re: [PATCH] wcn36xx: Set SMD timeout to 10 seconds
-From: John Stultz <john.stultz@linaro.org>
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	lkml <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Thu, Apr 21, 2016 at 2:09 PM, Bjorn Andersson
-<bjorn.andersson@linaro.org> wrote:
-> After booting the wireless subsystem and uploading the NV blob to the
-> WCNSS_CTRL service the remote continues to do things and will not start
-> servicing wlan-requests for another 2-5 seconds (measured).
->
-> The downstream code does not have any special handling for this case,
-> but has a timeout of 10 seconds for the communication layer. By
-> extending the wcn36xx timeout to match this we follows the same flow for
-> the boot procedure and can successfully configure WiFi as wlan0 is
-> registered.
->
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
-
-I've been using this with my nexus7 tree, and its avoided issues I was
-seeing without it.
-
-Tested-by: John Stultz <john.stultz@linaro.org>
-
-thanks
--john
+SGkgUm9iLA0KDQpUaGFua3MgZm9yIHRoZSByZXZpZXcuDQoNCj4gRnJvbTogUm9iIEhlcnJpbmcg
+W21haWx0bzpyb2JoQGtlcm5lbC5vcmddDQo+IFNlbnQ6IFdlZG5lc2RheSwgTWFyY2ggMzAsIDIw
+MTYgNzo0NiBQTQ0KPiBUbzogQW1pdGt1bWFyIEthcndhcg0KPiBDYzogbGludXgtd2lyZWxlc3NA
+dmdlci5rZXJuZWwub3JnOyBDYXRoeSBMdW87IE5pc2hhbnQgU2FybXVrYWRhbTsNCj4gZGV2aWNl
+dHJlZUB2Z2VyLmtlcm5lbC5vcmc7IFdlaS1OaW5nIEh1YW5nOyBYaW5taW5nIEh1DQo+IFN1Ympl
+Y3Q6IFJlOiBbUEFUQ0ggdjYgMS8yXSBkdDogYmluZGluZ3M6IGFkZCBNQVJWRUxMJ3Mgc2Q4eHh4
+IHdpcmVsZXNzDQo+IGRldmljZQ0KPiANCj4gT24gV2VkLCBNYXIgMzAsIDIwMTYgYXQgODoxOSBB
+TSwgQW1pdGt1bWFyIEthcndhciA8YWthcndhckBtYXJ2ZWxsLmNvbT4NCj4gd3JvdGU6DQo+ID4g
+RnJvbTogWGlubWluZyBIdSA8aHV4bUBtYXJ2ZWxsLmNvbT4NCj4gPg0KPiA+IEFkZCBkZXZpY2Ug
+dHJlZSBiaW5kaW5nIGRvY3VtZW50YXRpb24gZm9yIE1BUlZFTEwncyBzZDh4eHgNCj4gPiAoc2Q4
+ODk3IGFuZCBzZDg5OTcpIHdsYW4gY2hpcC4NCj4gPg0KPiA+IFNpZ25lZC1vZmYtYnk6IFhpbm1p
+bmcgSHUgPGh1eG1AbWFydmVsbC5jb20+DQo+ID4gU2lnbmVkLW9mZi1ieTogQW1pdGt1bWFyIEth
+cndhciA8YWthcndhckBtYXJ2ZWxsLmNvbT4NCj4gPiAtLS0NCj4gPiBMaXN0aW5nIGNoYW5nZWxp
+c3QgZm9yIGJvdGggMS8yIGFuZCAyLzIgcGF0Y2hlcw0KPiA+IHYzOiBEb24ndCB1cGRhdGUgYWRh
+cHRlci0+ZHRfbm9kZSBpZiBtd2lmaWV4X3BsdF9kZXYgaXMgTlVMTA0KPiA+DQo+ID4gdjQ6IGEp
+Q29ycmVjdGVkIHRoZSAnbmFtZScgYW5kICdjb21wYXRpYmxlJyBwcm9wZXJ0eSBuYW1lcy4oQXJu
+ZA0KPiBCZXJnbWFubiBhbmQgUm9iDQo+ID4gICAgIEhlcnJpbmcpDQo+ID4gICAgIGIpUGF0Y2gg
+ZGVzY3JpcHRpb24gd3JhcGVkIGluIDcyIGNvbHVtbnMoUm9iIEhlcnJpbmcpDQo+ID4gICAgIGMp
+TW92ZWQgRFQgYmluZGluZyBmaWxlIHRvIGJpbmRpbmdzL25ldC93aXJlbGVzcy8oUm9iIEhlcnJp
+bmcpDQo+ID4gICAgIGQpUmVuYW1lZCAibXdpZmlleCxjaGlwLWdwaW8iIHRvICJtYXJ2ZWxsLHdh
+a2V1cC1ncGlvcyIoUm9iDQo+IEhlcnJpbmcvDQo+ID4gICAgIEFybmQgQmVyZ21hbm4pDQo+ID4g
+ICAgIGUpUmVwbGFjZWQgI2lmZGVmIHdpdGggX19tYXliZV91bnVzZWQoQXJuZCBCZXJnbWFubikN
+Cj4gPg0KPiA+IHY1OiBhKVJlbW92ZWQgd2lsZGNhcmRzIGZyb20gY29tcGF0aWJsZSBzdHJpbmco
+QXJuZCBCZXJnbWFubikNCj4gPiAgICAgYilQcmVwYXJlZCBzaW5nbGUgcGF0Y2ggZm9yIGFsbCBi
+aW5kaW5nIGNoYW5nZXMoUm9iIEhlcnJpbmcpDQo+ID4gICAgIGMpU3BlY2lmaWVkIG91ciBub2Rl
+IGFzIGEgc3Vibm9kZSBvZiBTRElPIGNvbnRyb2xsZXIuIFdpdGggdGhpcw0KPiBhcHByb2FjaCwg
+d2UNCj4gPiAgICAgZG9uJ3QgbmVlZCB0byByZWdpc3RlciBuZXcgcGxhdGZvcm0gZHJpdmVyLiAo
+Um9iIGhlcnJpbmcpDQo+ID4NCj4gPiB2NjogYSlMaXN0IG91dCB0aGUgc3BlY2lmaWMgcHJvcGVy
+dHkgbmFtZXMgZm9yIG1hcnZlbGwsY2FsZGF0YSogYW5kDQo+IHNpemUgb2YgdGhlIGRhdGEoUm9i
+IEhlcnJpbmcpDQo+ID4gICAgIGIpVXNlIHNkaW8gZnVuY3Rpb24gbnVtYmVyIGZvciBib3RoIHRo
+ZSB1bml0IGFkZHJlc3MgYW5kIHJlZyhSb2INCj4gPiBIZXJyaW5nKQ0KPiA+IC0tLQ0KPiA+ICAu
+Li4vYmluZGluZ3MvbmV0L3dpcmVsZXNzL21hcnZlbGwtc2Q4eHh4LnR4dCAgICAgICB8IDYzDQo+
+ICsrKysrKysrKysrKysrKysrKysrKysNCj4gPiAgMSBmaWxlIGNoYW5nZWQsIDYzIGluc2VydGlv
+bnMoKykNCj4gPiAgY3JlYXRlIG1vZGUgMTAwNjQ0DQo+ID4gRG9jdW1lbnRhdGlvbi9kZXZpY2V0
+cmVlL2JpbmRpbmdzL25ldC93aXJlbGVzcy9tYXJ2ZWxsLXNkOHh4eC50eHQNCj4gPg0KPiA+IGRp
+ZmYgLS1naXQNCj4gPiBhL0RvY3VtZW50YXRpb24vZGV2aWNldHJlZS9iaW5kaW5ncy9uZXQvd2ly
+ZWxlc3MvbWFydmVsbC1zZDh4eHgudHh0DQo+ID4gYi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUv
+YmluZGluZ3MvbmV0L3dpcmVsZXNzL21hcnZlbGwtc2Q4eHh4LnR4dA0KPiA+IG5ldyBmaWxlIG1v
+ZGUgMTAwNjQ0DQo+ID4gaW5kZXggMDAwMDAwMC4uMzM3ZmVkNA0KPiA+IC0tLSAvZGV2L251bGwN
+Cj4gPiArKysgYi9Eb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvbmV0L3dpcmVsZXNz
+L21hcnZlbGwtc2Q4eHh4LnR4DQo+ID4gKysrIHQNCj4gPiBAQCAtMCwwICsxLDYzIEBADQo+ID4g
+K01hcnZlbGwgODg5Ny84OTk3IChzZDg4OTcvc2Q4OTk3KSBTRElPIGRldmljZXMNCj4gPiArLS0t
+LS0tDQo+ID4gKw0KPiA+ICtUaGlzIG5vZGUgcHJvdmlkZXMgcHJvcGVydGllcyBmb3IgY29udHJv
+bGxpbmcgdGhlIG1hcnZlbGwgc2Rpbw0KPiB3aXJlbGVzcyBkZXZpY2UuDQo+ID4gK1RoZSBub2Rl
+IGlzIGV4cGVjdGVkIHRvIGJlIHNwZWNpZmllZCBhcyBhIGNoaWxkIG5vZGUgdG8gdGhlIFNESU8N
+Cj4gPiArY29udHJvbGxlciB0aGF0IGNvbm5lY3RzIHRoZSBkZXZpY2UgdG8gdGhlIHN5c3RlbS4N
+Cj4gPiArDQo+ID4gK1JlcXVpcmVkIHByb3BlcnRpZXM6DQo+ID4gKw0KPiA+ICsgIC0gY29tcGF0
+aWJsZSA6IHNob3VsZCBiZSBvbmUgb2YgdGhlIGZvbGxvd2luZzoNCj4gPiArICAgICAgICogIm1h
+cnZlbGwsc2Q4ODk3Ig0KPiA+ICsgICAgICAgKiAibWFydmVsbCxzZDg5OTciDQo+ID4gKw0KPiA+
+ICtPcHRpb25hbCBwcm9wZXJ0aWVzOg0KPiA+ICsNCj4gPiArICAtIG1hcnZlbGwsY2FsZGF0YSog
+OiBBIHNlcmllcyBvZiBwcm9wZXJ0aWVzIHdpdGggbWFydmVsbCxjYWxkYXRhDQo+IHByZWZpeCwN
+Cj4gPiArICAgICAgICAgICAgICAgICAgICAgcmVwcmVzZW50IGNhbGlicmF0aW9uIGRhdGEgZG93
+bmxvYWRlZCB0byB0aGUNCj4gZGV2aWNlIGR1cmluZw0KPiA+ICsgICAgICAgICAgICAgICAgICAg
+ICBpbml0aWFsaXphdGlvbi4gVGhpcyBpcyBhbiBhcnJheSBvZiB1bnNpZ25lZA0KPiB2YWx1ZXMu
+DQo+IA0KPiB1bnNpZ25lZCA4LWJpdCB2YWx1ZXMuLi4NCj4gDQo+ID4gKyAgICAgICAgICAgICAg
+ICAgICAgIHRoZSBwcm9wZXJ0aWVzIHNob3VsZCBmb2xsb3cgYmVsb3cgcHJvcGVydHkgbmFtZQ0K
+PiBhbmQNCj4gPiArICAgICAgICAgICAgICAgICAgICAgY29ycmVzcG9uZGluZyBhcnJheSBsZW5n
+dGg6DQo+ID4gKyAgICAgICAibWFydmVsbCxjYWxkYXRhXzAwX3R4cHdybGltaXRfMmdfY2ZnX3Nl
+dCIgKGxlbmd0aCA9IDU2NikuDQo+ID4gKyAgICAgICAibWFydmVsbCxjYWxkYXRhXzAwX3R4cHdy
+bGltaXRfNWdfY2ZnX3NldF9zdWIwIiAobGVuZ3RoID0NCj4gNTAyKS4NCj4gPiArICAgICAgICJt
+YXJ2ZWxsLGNhbGRhdGFfMDBfdHhwd3JsaW1pdF81Z19jZmdfc2V0X3N1YjEiIChsZW5ndGggPQ0K
+PiA2ODgpLg0KPiA+ICsgICAgICAgIm1hcnZlbGwsY2FsZGF0YV8wMF90eHB3cmxpbWl0XzVnX2Nm
+Z19zZXRfc3ViMiIgKGxlbmd0aCA9DQo+IDc1MCkuDQo+ID4gKyAgICAgICAibWFydmVsbCxjYWxk
+YXRhXzAwX3R4cHdybGltaXRfNWdfY2ZnX3NldF9zdWIzIiAobGVuZ3RoID0NCj4gNTAyKS4NCj4g
+DQo+IFRoZSAwMCBhbmQgY2ZnX3NldCBzZWVtIHByZXR0eSBwb2ludGxlc3MsIGFuZCAnLScgaXMg
+cHJlZmVycmVkIG92ZXIgJ18nLg0KPiBTbzoNCj4gDQo+IG1hcnZlbGwsY2FsZGF0YS10eHB3cmxp
+bWl0LTVnLXN1YjMNCj4gDQo+ID4gKyAgLSBtYXJ2ZWxsLHdha2V1cC1waW4gOiAnd2FrZXVwcGlu
+JyBpcyBhIHdha2V1cCBwaW4gbnVtYmVyIG9mIHdpZmkNCj4gPiArIGNoaXAgd2hpY2ggd2lsbA0K
+PiANCj4gRHJvcCAid2FrZXVwcGluIGlzIg0KPiANCj4gPiArICAgICAgICAgICAgICAgICAgICAg
+YmUgY29uZmlndXJlZCB0byBmaXJtd2FyZS4gZmlybXdhcmUgd2lsbCB3YWtldXANCj4gaG9zdCBz
+aWRlIHVzZQ0KPiA+ICsgICAgICAgICAgICAgICAgICAgICB0aGUgcGluIGR1cmluZyBzdXNwZW5k
+L3Jlc3VtZSBzdGFnZS4NCj4gPiArICAtIGludGVycnVwdC1wYXJlbnQ6IHBoYW5kbGUgb2YgdGhl
+IHBhcmVudCBpbnRlcnJ1cHQgY29udHJvbGxlcg0KPiA+ICsgIC0gaW50ZXJydXB0cyA6IGludGVy
+cnVwdCBwaW4gbnVtYmVyIHRvIHRoZSBjcHUuIGRyaXZlciB3aWxsIHJlcXVlc3QNCj4gYW4gaXJx
+IGJhc2VkIG9uDQo+ID4gKyAgICAgICAgICAgICAgICB0aGlzIGludGVycnVwdCBudW1iZXIuIGR1
+cmluZyBzeXN0ZW0gc3VzcGVuZCwgdGhlIGlycQ0KPiB3aWxsIGJlIGVuYWJsZWQNCj4gPiArICAg
+ICAgICAgICAgICAgIGFzIHN5c3RlbSB3YWtldXAgc291cmNlLCBzbyB0aGF0IHRoZSB3aWZpIGNo
+aXAgY2FuDQo+ID4gKyB3YWtldXAgaG9zdA0KPiANCj4gWW91IG5lZWQgdG8gdXNlIHRoZSB3YWtl
+dXAtc291cmNlIGJpbmRpbmcgaGVyZSAoYmluZGluZ3MvcG93ZXIvd2FrZXVwLQ0KPiBzb3VyY2Uu
+dHh0KS4gUHJvYmFibHkgb24gdGhlIEJUIGJpbmRpbmcgdG9vPw0KDQpXZSBkaWQgc29tZSBleHBl
+cmltZW50cyBhbmQgdHJpZWQgdG8gZXhwbG9yZSB0aGlzIG9wdGlvbi4gSXQgc2VlbXMgdG8gYmUg
+c3BlY2lmaWMgdG8gcnVudGltZSBwb3dlciBtYW5hZ2VtZW50Lg0KV2UgZG9uJ3QgdXNlIHJ1bnRp
+bWUgUE0gZm9yIG91ciBkZXZpY2UuIFdlIGFyZSBpbnRlcmVzdGVkIGluIHN5c3RlbSBzdXNwZW5k
+IGFuZCB3YWtldXAgKHVwb24gY2hhbmdpbmcgdGhlIElSUSBzdGF0dXMpDQpJIHdpbGwgc3VibWl0
+IHVwZGF0ZWQgdmVyc2lvbiBhZGRyZXNzaW5nIG90aGVyIHJldmlldyBjb21tZW50cy4NCg0KUmVn
+YXJkcywNCkFtaXRrdW1hcg0KDQo=
