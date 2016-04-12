@@ -1,184 +1,159 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:33736 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755763AbcDEILI (ORCPT
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:12994 "EHLO
+	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756383AbcDLOm4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 04:11:08 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u3586bJk013891
-	for <linux-wireless@vger.kernel.org>; Tue, 5 Apr 2016 01:11:07 -0700
-Received: from sc-exch01.marvell.com ([199.233.58.181])
-	by mx0b-0016f401.pphosted.com with ESMTP id 222dkfh9h7-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2016 01:11:07 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>, Cathy Luo <cluo@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH RESEND 6/7] mwifiex: AMSDU Rx frame handling in AP mode
-Date: Tue, 5 Apr 2016 01:04:39 -0700
-Message-ID: <1459843480-25956-6-git-send-email-akarwar@marvell.com> (sfid-20160405_101119_814952_AA65C1FD)
-In-Reply-To: <1459843480-25956-1-git-send-email-akarwar@marvell.com>
-References: <1459843480-25956-1-git-send-email-akarwar@marvell.com>
+	Tue, 12 Apr 2016 10:42:56 -0400
+From: <c_traja@qti.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>,
+	Raja Mani <rmani@qti.qualcomm.com>,
+	Tamizh chelvam <c_traja@qti.qualcomm.com>
+Subject: [PATCH] ath10k: add dynamic tx mode switch config support for qca4019
+Date: Tue, 12 Apr 2016 20:15:53 +0530
+Message-ID: <1460472353-4317-1-git-send-email-c_traja@qti.qualcomm.com> (sfid-20160412_164301_071993_FCE5189C)
 MIME-Version: 1.0
 Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+From: Raja Mani <rmani@qti.qualcomm.com>
 
-This patch processes sub AMSDU frame received in AP mode.
+push-pull mode needs certain amount the host driver involvement for
+managing queues in the host memory and packet delivery to firmware.
+qca4019 wifi firmware has an option to stay in push mode for less
+number of active traffic flow and then switch to push-pull mode when
+the active traffic flow goes beyond the certain limit.
 
-If a packet is multicast/broadcast, it is sent to kernel/upper
-layer as well as queued back to AP TX queue so that it can be
-sent to other associated stations.
+The advantage of staying in push mode for less active traffic is, the
+host cpu consumption is reduced. qca4019 firmware supports this
+flexibility of the mode switch. It takes the host driver interest
+(LOW_PERF/HIGH_PERF) via WMI_EXT_RESOURCE_CFG_CMDID,
 
-If a packet is unicast and RA is present in associated station list,
-it is again requeued into AP TX queue.
+ LOW_PERF  - fw would stay in push mode and switch to push-pull
+               based on demand.
+ HIGH_PERF - fw would stay in push-pull mode from the boot.
 
-If a packet is unicast and RA is not in associated station list,
-packet is forwarded to kernel to handle routing logic.
+To make this configuration generic, new WMI services
+WMI_SERVICE_TX_MODE_PUSH_ONLY, WMI_SERVICE_TX_MODE_PUSH_PULL,
+WMI_SERVICE_TX_MODE_DYNAMIC are introduced to take dynamic tx mode
+switch support availability in firmware.
+Based on WMI_SERVICE_TX_MODE_DYNAMIC, LOW_PERF or HIGHT_PERF is
+configured to the firmware.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Cathy Luo <cluo@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Raja Mani <rmani@qti.qualcomm.com>
+Signed-off-by: Tamizh chelvam <c_traja@qti.qualcomm.com>
 ---
- .../net/wireless/marvell/mwifiex/11n_rxreorder.c   |  5 +-
- drivers/net/wireless/marvell/mwifiex/main.h        |  2 +
- drivers/net/wireless/marvell/mwifiex/uap_txrx.c    | 90 ++++++++++++++++++++++
- 3 files changed, 96 insertions(+), 1 deletion(-)
+ drivers/net/wireless/ath/ath10k/core.c |  3 +--
+ drivers/net/wireless/ath/ath10k/mac.c  | 20 ++++++++++++++++++++
+ drivers/net/wireless/ath/ath10k/mac.h  |  1 +
+ drivers/net/wireless/ath/ath10k/wmi.h  | 15 +++++++++++++++
+ 4 files changed, 37 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-index 09578c6..a74cc43 100644
---- a/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-+++ b/drivers/net/wireless/marvell/mwifiex/11n_rxreorder.c
-@@ -59,7 +59,10 @@ static int mwifiex_11n_dispatch_amsdu_pkt(struct mwifiex_private *priv,
- 								  skb->len);
- 			}
+diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
+index b2c7fe3..1c4106b 100644
+--- a/drivers/net/wireless/ath/ath10k/core.c
++++ b/drivers/net/wireless/ath/ath10k/core.c
+@@ -1787,8 +1787,7 @@ int ath10k_core_start(struct ath10k *ar, enum ath10k_firmware_mode mode)
+ 		if (ath10k_peer_stats_enabled(ar))
+ 			val = WMI_10_4_PEER_STATS;
  
--			ret = mwifiex_recv_packet(priv, rx_skb);
-+			if (priv->bss_role == MWIFIEX_BSS_ROLE_UAP)
-+				ret = mwifiex_uap_recv_packet(priv, rx_skb);
-+			else
-+				ret = mwifiex_recv_packet(priv, rx_skb);
- 			if (ret == -1)
- 				mwifiex_dbg(priv->adapter, ERROR,
- 					    "Rx of A-MSDU failed");
-diff --git a/drivers/net/wireless/marvell/mwifiex/main.h b/drivers/net/wireless/marvell/mwifiex/main.h
-index eb2c90c..63069dd 100644
---- a/drivers/net/wireless/marvell/mwifiex/main.h
-+++ b/drivers/net/wireless/marvell/mwifiex/main.h
-@@ -1019,6 +1019,8 @@ int mwifiex_shutdown_fw_complete(struct mwifiex_adapter *adapter);
- int mwifiex_dnld_fw(struct mwifiex_adapter *, struct mwifiex_fw_image *);
- 
- int mwifiex_recv_packet(struct mwifiex_private *priv, struct sk_buff *skb);
-+int mwifiex_uap_recv_packet(struct mwifiex_private *priv,
-+			    struct sk_buff *skb);
- 
- int mwifiex_process_mgmt_packet(struct mwifiex_private *priv,
- 				struct sk_buff *skb);
-diff --git a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-index 305589e..666e91a 100644
---- a/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-+++ b/drivers/net/wireless/marvell/mwifiex/uap_txrx.c
-@@ -269,6 +269,96 @@ int mwifiex_handle_uap_rx_forward(struct mwifiex_private *priv,
- 	return mwifiex_process_rx_packet(priv, skb);
+-		status = ath10k_wmi_ext_resource_config(ar,
+-							WMI_HOST_PLATFORM_HIGH_PERF, val);
++		status = ath10k_mac_ext_resource_config(ar, val);
+ 		if (status) {
+ 			ath10k_err(ar,
+ 				   "failed to send ext resource cfg command : %d\n",
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index b0e613b..de6d1a8 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -157,6 +157,26 @@ ath10k_mac_max_vht_nss(const u16 vht_mcs_mask[NL80211_VHT_NSS_MAX])
+ 	return 1;
  }
  
-+int mwifiex_uap_recv_packet(struct mwifiex_private *priv,
-+			    struct sk_buff *skb)
++int ath10k_mac_ext_resource_config(struct ath10k *ar, u32 val)
 +{
-+	struct mwifiex_adapter *adapter = adapter;
-+	struct mwifiex_sta_node *src_node;
-+	struct ethhdr *p_ethhdr;
-+	struct sk_buff *skb_uap;
-+	struct mwifiex_txinfo *tx_info;
++	enum wmi_host_platform_type platform_type;
++	int ret;
 +
-+	if (!skb)
-+		return -1;
-+
-+	p_ethhdr = (void *)skb->data;
-+	src_node = mwifiex_get_sta_entry(priv, p_ethhdr->h_source);
-+	if (src_node) {
-+		src_node->stats.last_rx = jiffies;
-+		src_node->stats.rx_bytes += skb->len;
-+		src_node->stats.rx_packets++;
-+	}
-+
-+	skb->dev = priv->netdev;
-+	skb->protocol = eth_type_trans(skb, priv->netdev);
-+	skb->ip_summed = CHECKSUM_NONE;
-+
-+	/* This is required only in case of 11n and USB/PCIE as we alloc
-+	 * a buffer of 4K only if its 11N (to be able to receive 4K
-+	 * AMSDU packets). In case of SD we allocate buffers based
-+	 * on the size of packet and hence this is not needed.
-+	 *
-+	 * Modifying the truesize here as our allocation for each
-+	 * skb is 4K but we only receive 2K packets and this cause
-+	 * the kernel to start dropping packets in case where
-+	 * application has allocated buffer based on 2K size i.e.
-+	 * if there a 64K packet received (in IP fragments and
-+	 * application allocates 64K to receive this packet but
-+	 * this packet would almost double up because we allocate
-+	 * each 1.5K fragment in 4K and pass it up. As soon as the
-+	 * 64K limit hits kernel will start to drop rest of the
-+	 * fragments. Currently we fail the Filesndl-ht.scr script
-+	 * for UDP, hence this fix
-+	 */
-+	if ((adapter->iface_type == MWIFIEX_USB ||
-+	     adapter->iface_type == MWIFIEX_PCIE) &&
-+	    (skb->truesize > MWIFIEX_RX_DATA_BUF_SIZE))
-+		skb->truesize += (skb->len - MWIFIEX_RX_DATA_BUF_SIZE);
-+
-+	if (is_multicast_ether_addr(p_ethhdr->h_dest) ||
-+	    mwifiex_get_sta_entry(priv, p_ethhdr->h_dest)) {
-+		if (skb_headroom(skb) < MWIFIEX_MIN_DATA_HEADER_LEN)
-+			skb_uap =
-+			skb_realloc_headroom(skb, MWIFIEX_MIN_DATA_HEADER_LEN);
-+		else
-+			skb_uap = skb_copy(skb, GFP_ATOMIC);
-+
-+		if (likely(skb_uap)) {
-+			tx_info = MWIFIEX_SKB_TXCB(skb_uap);
-+			memset(tx_info, 0, sizeof(*tx_info));
-+			tx_info->bss_num = priv->bss_num;
-+			tx_info->bss_type = priv->bss_type;
-+			tx_info->flags |= MWIFIEX_BUF_FLAG_BRIDGED_PKT;
-+			__net_timestamp(skb_uap);
-+			mwifiex_wmm_add_buf_txqueue(priv, skb_uap);
-+			atomic_inc(&adapter->tx_pending);
-+			atomic_inc(&adapter->pending_bridged_pkts);
-+			if ((atomic_read(&adapter->pending_bridged_pkts) >=
-+					MWIFIEX_BRIDGED_PKTS_THR_HIGH)) {
-+				mwifiex_dbg(adapter, ERROR,
-+					    "Tx: Bridge packet limit reached. Drop packet!\n");
-+				mwifiex_uap_cleanup_tx_queues(priv);
-+			}
-+
-+		} else {
-+			mwifiex_dbg(adapter, ERROR, "failed to allocate skb_uap");
-+		}
-+
-+		mwifiex_queue_main_work(adapter);
-+		/* Don't forward Intra-BSS unicast packet to upper layer*/
-+		if (mwifiex_get_sta_entry(priv, p_ethhdr->h_dest))
-+			return 0;
-+	}
-+
-+	/* Forward multicast/broadcast packet to upper layer*/
-+	if (in_interrupt())
-+		netif_rx(skb);
++	if (test_bit(WMI_SERVICE_TX_MODE_DYNAMIC, ar->wmi.svc_map))
++		platform_type = WMI_HOST_PLATFORM_LOW_PERF;
 +	else
-+		netif_rx_ni(skb);
++		platform_type = WMI_HOST_PLATFORM_HIGH_PERF;
++
++	ret = ath10k_wmi_ext_resource_config(ar, platform_type, val);
++
++	if (ret && ret != -EOPNOTSUPP) {
++		ath10k_warn(ar, "failed to configure ext resource: %d\n", ret);
++		return ret;
++	}
 +
 +	return 0;
 +}
 +
- /*
-  * This function processes the packet received on AP interface.
-  *
+ /**********/
+ /* Crypto */
+ /**********/
+diff --git a/drivers/net/wireless/ath/ath10k/mac.h b/drivers/net/wireless/ath/ath10k/mac.h
+index 2c3327b..1bd29ec 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.h
++++ b/drivers/net/wireless/ath/ath10k/mac.h
+@@ -81,6 +81,7 @@ int ath10k_mac_tx_push_txq(struct ieee80211_hw *hw,
+ struct ieee80211_txq *ath10k_mac_txq_lookup(struct ath10k *ar,
+ 					    u16 peer_id,
+ 					    u8 tid);
++int ath10k_mac_ext_resource_config(struct ath10k *ar, u32 val);
+ 
+ static inline struct ath10k_vif *ath10k_vif_to_arvif(struct ieee80211_vif *vif)
+ {
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.h b/drivers/net/wireless/ath/ath10k/wmi.h
+index feebd19..a3f1534 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.h
++++ b/drivers/net/wireless/ath/ath10k/wmi.h
+@@ -180,6 +180,9 @@ enum wmi_service {
+ 	WMI_SERVICE_MESH_NON_11S,
+ 	WMI_SERVICE_PEER_STATS,
+ 	WMI_SERVICE_RESTRT_CHNL_SUPPORT,
++	WMI_SERVICE_TX_MODE_PUSH_ONLY,
++	WMI_SERVICE_TX_MODE_PUSH_PULL,
++	WMI_SERVICE_TX_MODE_DYNAMIC,
+ 
+ 	/* keep last */
+ 	WMI_SERVICE_MAX,
+@@ -302,6 +305,9 @@ enum wmi_10_4_service {
+ 	WMI_10_4_SERVICE_RESTRT_CHNL_SUPPORT,
+ 	WMI_10_4_SERVICE_PEER_STATS,
+ 	WMI_10_4_SERVICE_MESH_11S,
++	WMI_10_4_SERVICE_TX_MODE_PUSH_ONLY,
++	WMI_10_4_SERVICE_TX_MODE_PUSH_PULL,
++	WMI_10_4_SERVICE_TX_MODE_DYNAMIC,
+ };
+ 
+ static inline char *wmi_service_name(int service_id)
+@@ -396,6 +402,9 @@ static inline char *wmi_service_name(int service_id)
+ 	SVCSTR(WMI_SERVICE_MESH_NON_11S);
+ 	SVCSTR(WMI_SERVICE_PEER_STATS);
+ 	SVCSTR(WMI_SERVICE_RESTRT_CHNL_SUPPORT);
++	SVCSTR(WMI_SERVICE_TX_MODE_PUSH_ONLY);
++	SVCSTR(WMI_SERVICE_TX_MODE_PUSH_PULL);
++	SVCSTR(WMI_SERVICE_TX_MODE_DYNAMIC);
+ 	default:
+ 		return NULL;
+ 	}
+@@ -643,6 +652,12 @@ static inline void wmi_10_4_svc_map(const __le32 *in, unsigned long *out,
+ 	       WMI_SERVICE_PEER_STATS, len);
+ 	SVCMAP(WMI_10_4_SERVICE_MESH_11S,
+ 	       WMI_SERVICE_MESH_11S, len);
++	SVCMAP(WMI_10_4_SERVICE_TX_MODE_PUSH_ONLY,
++	       WMI_SERVICE_TX_MODE_PUSH_ONLY, len);
++	SVCMAP(WMI_10_4_SERVICE_TX_MODE_PUSH_PULL,
++	       WMI_SERVICE_TX_MODE_PUSH_PULL, len);
++	SVCMAP(WMI_10_4_SERVICE_TX_MODE_DYNAMIC,
++	       WMI_SERVICE_TX_MODE_DYNAMIC, len);
+ }
+ 
+ #undef SVCMAP
 -- 
-1.8.1.4
+1.9.1
 
