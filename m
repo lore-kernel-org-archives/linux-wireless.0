@@ -1,63 +1,80 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:20114 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964811AbcDMLOO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 13 Apr 2016 07:14:14 -0400
-Subject: [PATCH v2 3/5] ath10k: prefer ether_addr_equal() or
- ether_addr_equal_unaligned() over memcmp()
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 13 Apr 2016 14:13:49 +0300
-Message-ID: <20160413111348.18823.57411.stgit@potku.adurom.net> (sfid-20160413_131423_840579_CAC6BEDA)
-In-Reply-To: <20160413111247.18823.15952.stgit@potku.adurom.net>
-References: <20160413111247.18823.15952.stgit@potku.adurom.net>
-MIME-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:60840 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932109AbcDLI7L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2016 04:59:11 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi 2016-04-12
+Date: Tue, 12 Apr 2016 08:59:00 +0000
+Message-ID: <1460451541.2630.16.camel@intel.com> (sfid-20160412_105919_007507_2813FB26)
+References: <1460448889.2630.12.camel@intel.com>
+In-Reply-To: <1460448889.2630.12.camel@intel.com>
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Fixes checkpatch warnings:
-
-drivers/net/wireless/ath/ath10k/mac.c:452: Prefer ether_addr_equal() or ether_addr_equal_unaligned() over memcmp()
-drivers/net/wireless/ath/ath10k/mac.c:455: Prefer ether_addr_equal() or ether_addr_equal_unaligned() over memcmp()
-drivers/net/wireless/ath/ath10k/txrx.c:133: Prefer ether_addr_equal() or ether_addr_equal_unaligned() over memcmp()
-
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/mac.c  |    4 ++--
- drivers/net/wireless/ath/ath10k/txrx.c |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index 045bfc7e0279..9c848eb09d2e 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -449,10 +449,10 @@ static int ath10k_mac_vif_update_wep_key(struct ath10k_vif *arvif,
- 	lockdep_assert_held(&ar->conf_mutex);
- 
- 	list_for_each_entry(peer, &ar->peers, list) {
--		if (!memcmp(peer->addr, arvif->vif->addr, ETH_ALEN))
-+		if (ether_addr_equal(peer->addr, arvif->vif->addr))
- 			continue;
- 
--		if (!memcmp(peer->addr, arvif->bssid, ETH_ALEN))
-+		if (ether_addr_equal(peer->addr, arvif->bssid))
- 			continue;
- 
- 		if (peer->keys[key->keyidx] == key)
-diff --git a/drivers/net/wireless/ath/ath10k/txrx.c b/drivers/net/wireless/ath/ath10k/txrx.c
-index c503ff601a54..8c7086989a71 100644
---- a/drivers/net/wireless/ath/ath10k/txrx.c
-+++ b/drivers/net/wireless/ath/ath10k/txrx.c
-@@ -130,7 +130,7 @@ struct ath10k_peer *ath10k_peer_find(struct ath10k *ar, int vdev_id,
- 	list_for_each_entry(peer, &ar->peers, list) {
- 		if (peer->vdev_id != vdev_id)
- 			continue;
--		if (memcmp(peer->addr, addr, ETH_ALEN))
-+		if (!ether_addr_equal(peer->addr, addr))
- 			continue;
- 
- 		return peer;
-
+T24gVHVlLCAyMDE2LTA0LTEyIGF0IDExOjE0ICswMzAwLCBFbW1hbnVlbCBHcnVtYmFjaCB3cm90
+ZToNCj4gSGkgS2FsbGUsDQo+IA0KPiBJIGhhdmUgaGVyZSBhIHB1bGwgcmVxdWVzdCBmb3IgNC42
+LiBUaGVyZSBpcyBwYXRjaCBpbiB0aGlzIHB1bGwNCj4gcmVxdWVzdA0KPiB0aGF0IGhhcyBiZWVu
+IHNlbnQgdG8gLW5leHQgYWxyZWFkeSBidXQgc2hvdWxkIHJlYWxseSBoYXZlIGJlZW4NCj4gaW5j
+bHVkZWQgaW4gdGhlIGN1cnJlbnQgY3ljbGUuIFNvcnJ5IGZvciB0aGUgbWVzcy4NCj4gDQo+IFRo
+ZSBjb21taXQgYXBwZWFycyBpbiAtbmV4dCBhczoNCj4gDQo+IGNvbW1pdCBhMGIwOWYxMzAzNmNl
+ZGZkNjdjOWNiNGI5ZDA1MTM4ZTcwMjI3MjNkDQo+IEF1dGhvcjogQXlhbGEgQmVrZXIgPGF5YWxh
+LmJla2VyQGludGVsLmNvbT4NCj4gRGF0ZTogICBXZWQgRmViIDMgMTU6MzY6NTIgMjAxNiArMDIw
+MA0KPiANCj4gICAgIGl3bHdpZmk6IG12bTogdXBkYXRlIEdTQ0FOIGNhcGFiaWxpdGllcw0KPiAg
+ICAgDQo+ICAgICBHc2NhbiBjYXBhYmlsaXRpZXMgd2VyZSB1cGRhdGVkIHdpdGggbmV3IGNhcGFi
+aWxpdGllcyBzdXBwb3J0ZWQNCj4gICAgIGJ5IHRoZSBkZXZpY2UuIFVwZGF0ZSBHU0NBTiBjYXBh
+YmlsaXRpZXMgVExWLg0KPiANCj4gSSBtb2RpZmllZCB0aGUgY29tbWl0IG1lc3NhZ2UgdG8gYmV0
+dGVyIGVtcGhhc2lzIHRoZSBuZWVkIHRvIGhhdmUgaXQNCj4gaW4NCj4gdGhlIGN1cnJlbnQgcmVs
+ZWFzZS4gWW91J2xsIHNlZSBpdCBpbiB0aGlzIHB1bGwgcmVxdWVzdCBhczoNCj4gDQo+IGNvbW1p
+dCBjZDQ5NzI3ZTFhMmJjY2M0ZmYwMDhkZGUyNGMyZjg0MzBkZDllMzY4DQo+IEF1dGhvcjogQXlh
+bGEgQmVrZXIgPGF5YWxhLmJla2VyQGludGVsLmNvbT4NCj4gRGF0ZTogICBXZWQgRmViIDMgMTU6
+MzY6NTIgMjAxNiArMDIwMA0KPiANCj4gICAgIGl3bHdpZmk6IG12bTogYXZvaWQgdG8gV0FSTiBh
+Ym91dCBnc2NhbiBjYXBhYmlsaXRpZXMNCj4gICAgIA0KPiAgICAgR3NjYW4gY2FwYWJpbGl0aWVz
+IHdlcmUgdXBkYXRlZCB3aXRoIG5ldyBjYXBhYmlsaXRpZXMgc3VwcG9ydGVkDQo+ICAgICBieSB0
+aGUgZGV2aWNlLiBVcGRhdGUgR1NDQU4gY2FwYWJpbGl0aWVzIFRMViBhbmQgYXZvaWQgdG8gV0FS
+Tg0KPiAgICAgaWYgdGhlIGZpcm13YXJlIGRvZXMgbm90IGhhdmUgdGhlIG5ldyBjYXBhYmlsaXRp
+ZXMuDQo+IA0KPiBCZXNpZGVzIHRoaXMsIGFsbCBpcyBmYWlybHkgbm9ybWFsLg0KPiBQbGVhc2Ug
+cHVsbCwgdGhhbmtzIQ0KPiANCj4gDQo+IFRoZSBmb2xsb3dpbmcgY2hhbmdlcyBzaW5jZSBjb21t
+aXQNCj4gN2ZkZjk2NjMyNjFjYzc3YTUxNjM5NmZlYzgyY2VlOGE4ZWEwN2U3NjoNCj4gDQo+ICAg
+aXdsd2lmaTogbXZtOiBmaXggbWVtb3J5IGxlYWsgaW4gcGFnaW5nICgyMDE2LTAzLTIwIDIzOjAx
+OjU0ICswMjAwKQ0KPiANCj4gYXJlIGF2YWlsYWJsZSBpbiB0aGUgZ2l0IHJlcG9zaXRvcnkgYXQ6
+DQo+IA0KPiAgIGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0
+L2l3bHdpZmkvaXdsd2lmaS1maXgNCj4gZXMuZ2l0IHRhZ3MvaXdsd2lmaS1mb3Ita2FsbGUtMjAx
+Ni0wNC0xMg0KPiANCj4gZm9yIHlvdSB0byBmZXRjaCBjaGFuZ2VzIHVwIHRvDQo+IDJkMjVmYjhi
+M2ExMzg3MDZiNjNiZDI2YWQ3MmE5NWM1ODAyOTk1NGE6DQo+IA0KPiAgIGl3bHdpZmk6IG12bTog
+Zml4IGFjY2Vzc2luZyBOdWxsIHBvaW50ZXIgZHVyaW5nIGZ3IGR1bXAgY29sbGVjdGlvbg0KPiAo
+MjAxNi0wNC0xMiAxMDowMzoxNyArMDMwMCkNCj4gDQoNClNhcmEgZm91bmQgYW4gZW1iYXJyYXNz
+aW5nIGxhc3QgbWludXRlIGlzc3VlLg0KTmV3IHRhZyBpcyBpd2x3aWZpLWZvci1rYWxsZS0yMDE2
+LTA0LTEyXzIuDQogDQpIZXJlIGlzIHRoZSBkaWZmOg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0
+L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvaXdsLTgwMDAuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
+L2ludGVsL2l3bHdpZmkvaXdsLTgwMDAuYw0KaW5kZXggY2Y0ODEyMi4uYjVjNTdlZSAxMDA2NDQN
+Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvaXdsLTgwMDAuYw0KKysr
+IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9pd2wtODAwMC5jDQpAQCAtOTMs
+NyArOTMsNyBAQA0KICNkZWZpbmUgSVdMODI2MF9TTUVNX09GRlNFVCAgICAgICAgICAgIDB4NDAw
+MDAwDQogI2RlZmluZSBJV0w4MjYwX1NNRU1fTEVOICAgICAgICAgICAgICAgMHg2ODAwMA0KIA0K
+LSNkZWZpbmUgSVdMODAwMF9GV19QUkUgIml3bHdpZmktODAwMEMiDQorI2RlZmluZSBJV0w4MDAw
+X0ZXX1BSRSAiaXdsd2lmaS04MDAwQy0iDQogI2RlZmluZSBJV0w4MDAwX01PRFVMRV9GSVJNV0FS
+RShhcGkpIFwNCiAgICAgICAgSVdMODAwMF9GV19QUkUgIi0iIF9fc3RyaW5naWZ5KGFwaSkgIi51
+Y29kZSINCiANCg0KPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+ICogYWRkIG5ldyBkZXZpY2UgSURzIGZvciA4MjY1DQo+
+ICogZml4IGEgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlIHdoZW4gcGFnaW5nIGZpcm13YXJlIGFz
+c2VydHMNCj4gKiByZW1vdmUgYSBXQVJOSU5HIG9uIGdzY2FuIGNhcGFiaWxpdGllcw0KPiAqIGZp
+eCBNT0RVTEVfRklSTVdBUkUgZm9yIDgyNjANCj4gDQo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gQXlhbGEgQmVrZXIg
+KDEpOg0KPiAgICAgICBpd2x3aWZpOiBtdm06IGF2b2lkIHRvIFdBUk4gYWJvdXQgZ3NjYW4gY2Fw
+YWJpbGl0aWVzDQo+IA0KPiBNYXR0aSBHb3R0bGllYiAoMSk6DQo+ICAgICAgIGl3bHdpZmk6IG12
+bTogZml4IGFjY2Vzc2luZyBOdWxsIHBvaW50ZXIgZHVyaW5nIGZ3IGR1bXANCj4gY29sbGVjdGlv
+bg0KPiANCj4gT3JlbiBHaXZvbiAoMSk6DQo+ICAgICAgIGl3bHdpZmk6IGFkZCBkZXZpY2UgSURz
+IGZvciB0aGUgODI2NSBkZXZpY2UNCj4gDQo+IFNhcmEgU2hhcm9uICgxKToNCj4gICAgICAgaXds
+d2lmaTogODAwMDogZml4IE1PRFVMRV9GSVJNV0FSRSBpbnB1dA0KPiANCj4gIGRyaXZlcnMvbmV0
+L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvaXdsLTgwMDAuYyAgIHwgIDIgKy0NCj4gIGRyaXZlcnMv
+bmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvaXdsLWRydi5jICAgIHwgMjYgKysrKysrKysrKy0t
+LS0tDQo+IC0tLS0tLS0tLS0tDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZp
+L212bS9mdy1kYmcuYyB8ICA2ICsrKystLQ0KPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwv
+aXdsd2lmaS9tdm0vZncuYyAgICAgfCAgMiArKw0KPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50
+ZWwvaXdsd2lmaS9wY2llL2Rydi5jICAgfCAxMCArKysrKysrKysrDQo+ICA1IGZpbGVzIGNoYW5n
+ZWQsIDI3IGluc2VydGlvbnMoKyksIDE5IGRlbGV0aW9ucygtKQ==
