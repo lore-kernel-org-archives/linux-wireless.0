@@ -1,56 +1,147 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:45176 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757896AbcDEJeS (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 05:34:18 -0400
-From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-To: johannes@sipsolutions.net
-Cc: linux-wireless@vger.kernel.org,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Subject: [PATCH v2] mac80211: close the SP when we enqueue frames during the SP
-Date: Tue,  5 Apr 2016 12:34:13 +0300
-Message-Id: <1459848853-26977-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160405_113424_049874_4C5DE221)
-In-Reply-To: <1458226302-6086-2-git-send-email-emmanuel.grumbach@intel.com>
-References: <1458226302-6086-2-git-send-email-emmanuel.grumbach@intel.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:48581 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750795AbcDLEPF (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2016 00:15:05 -0400
+From: tamizhchelvam@codeaurora.org
+To: agross@codeaurora.org, devicetree@vger.kernel.org
+Cc: linux-arm-msm@vger.kernel.org, linux-wireless@vger.kernel.org,
+	linux-kernel@vger.kernel.org, ath10k@lists.infradead.org,
+	c_traja@qti.qualcomm.com, Raja Mani <rmani@codeaurora.org>,
+	Tamizh chelvam <tamizhchelvam@codeaurora.org>
+Subject: [PATCH v2] qcom: ipq4019: add wifi nodes to ipq4019 SoC device tree
+Date: Tue, 12 Apr 2016 09:48:06 +0530
+Message-Id: <1460434686-23010-1-git-send-email-tamizhchelvam@codeaurora.org> (sfid-20160412_061534_101360_51C13D9E)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since we enqueued the frame that was supposed to be sent
-during the SP, and that frame may very well cary the
-IEEE80211_TX_STATUS_EOSP bit, we may never close the SP
-(WLAN_STA_SP will never be cleared). If that happens, we
-will not open any new SP and will never respond to any poll
-frame from the client.
-Clear WLAN_STA_SP manually if a frame that was polled during
-the SP is queued because of a starting A-MPDU session. The
-client may not see the EOSP bit, but it will at least be
-able to poll new frames in another SP.
+From: Raja Mani <rmani@codeaurora.org>
 
-Reported-by: Alesya Shapira <alesya.shapira@intel.com>
-Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
----
-v2: remove TODO comment
----
- net/mac80211/tx.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+Include dts support for two wifi block present on ipq4019 SoC.
+Corresponding dt binding documentation has been added in ath.git as below
+commit id a47aaa69 and the commit message is
+"dt: bindings: add new dt entry for pre calibration in qcom, ath10k.txt".
 
-diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
-index 597c8fe..9fbc1b6 100644
---- a/net/mac80211/tx.c
-+++ b/net/mac80211/tx.c
-@@ -1116,6 +1116,12 @@ static bool ieee80211_tx_prep_agg(struct ieee80211_tx_data *tx,
- 			reset_agg_timer = true;
- 		} else {
- 			queued = true;
-+			if (info->flags & IEEE80211_TX_CTL_NO_PS_BUFFER) {
-+				clear_sta_flag(tx->sta, WLAN_STA_SP);
-+				ps_dbg(tx->sta->sdata,
-+				       "STA %pM aid %d: SP frame queued, close the SP w/o telling the peer\n",
-+				       tx->sta->sta.addr, tx->sta->sta.aid);
-+			}
- 			info->control.vif = &tx->sdata->vif;
- 			info->flags |= IEEE80211_TX_INTFL_NEED_TXPROCESSING;
- 			info->flags &= ~IEEE80211_TX_TEMPORARY_FLAGS |
+Signed-off-by: Raja Mani <rmani@codeaurora.org>
+Signed-off-by: Tamizh chelvam <tamizhchelvam@codeaurora.org>
+---
+v2:
+
+  - Fixed Commit log
+  - Added new Signed off
+
+ arch/arm/boot/dts/qcom-ipq4019.dtsi |   98 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 98 insertions(+)
+
+diff --git a/arch/arm/boot/dts/qcom-ipq4019.dtsi b/arch/arm/boot/dts/qcom-ipq4019.dtsi
+index b486859..80bbe02 100644
+--- a/arch/arm/boot/dts/qcom-ipq4019.dtsi
++++ b/arch/arm/boot/dts/qcom-ipq4019.dtsi
+@@ -379,5 +379,103 @@
+ 			compatible = "qcom,pshold";
+ 			reg = <0x4ab000 0x4>;
+ 		};
++
++		wifi0: wifi@a000000 {
++			compatible = "qcom,ipq4019-wifi";
++			reg = <0xa000000 0x200000>;
++			resets = <&gcc WIFI0_CPU_INIT_RESET>,
++				 <&gcc WIFI0_RADIO_SRIF_RESET>,
++				 <&gcc WIFI0_RADIO_WARM_RESET>,
++				 <&gcc WIFI0_RADIO_COLD_RESET>,
++				 <&gcc WIFI0_CORE_WARM_RESET>,
++				 <&gcc WIFI0_CORE_COLD_RESET>;
++			reset-names = "wifi_cpu_init",
++				      "wifi_radio_srif",
++				      "wifi_radio_warm",
++				      "wifi_radio_cold",
++				      "wifi_core_warm",
++				      "wifi_core_cold";
++			clocks = <&gcc GCC_WCSS2G_CLK>,
++				 <&gcc GCC_WCSS2G_REF_CLK>,
++				 <&gcc GCC_WCSS2G_RTC_CLK>;
++			clock-names = "wifi_wcss_cmd",
++				      "wifi_wcss_ref",
++				      "wifi_wcss_rtc";
++			interrupts = <0 0x20 0x1>,
++				     <0 0x21 0x1>,
++				     <0 0x22 0x1>,
++				     <0 0x23 0x1>,
++				     <0 0x24 0x1>,
++				     <0 0x25 0x1>,
++				     <0 0x26 0x1>,
++				     <0 0x27 0x1>,
++				     <0 0x28 0x1>,
++				     <0 0x29 0x1>,
++				     <0 0x2a 0x1>,
++				     <0 0x2b 0x1>,
++				     <0 0x2c 0x1>,
++				     <0 0x2d 0x1>,
++				     <0 0x2e 0x1>,
++				     <0 0x2f 0x1>,
++				     <0 0xa8 0x0>;
++			interrupt-names = "msi0",  "msi1",  "msi2",  "msi3",
++					  "msi4",  "msi5",  "msi6",  "msi7",
++					  "msi8",  "msi9",  "msi10", "msi11",
++					  "msi12", "msi13", "msi14", "msi15",
++					  "legacy";
++			status = "disabled";
++			qcom,msi_addr = <0x0b006040>;
++			qcom,msi_base = <0x40>;
++			qcom,ath10k-pre-calibration-data = [00];
++		};
++
++		wifi1: wifi@a800000 {
++			compatible = "qcom,ipq4019-wifi";
++			reg = <0xa800000 0x200000>;
++			resets = <&gcc WIFI1_CPU_INIT_RESET>,
++				 <&gcc WIFI1_RADIO_SRIF_RESET>,
++				 <&gcc WIFI1_RADIO_WARM_RESET>,
++				 <&gcc WIFI1_RADIO_COLD_RESET>,
++				 <&gcc WIFI1_CORE_WARM_RESET>,
++				 <&gcc WIFI1_CORE_COLD_RESET>;
++			reset-names = "wifi_cpu_init",
++				      "wifi_radio_srif",
++				      "wifi_radio_warm",
++				      "wifi_radio_cold",
++				      "wifi_core_warm",
++				      "wifi_core_cold";
++			clocks = <&gcc GCC_WCSS5G_CLK>,
++				 <&gcc GCC_WCSS5G_REF_CLK>,
++				 <&gcc GCC_WCSS5G_RTC_CLK>;
++			clock-names = "wifi_wcss_cmd",
++				      "wifi_wcss_ref",
++				      "wifi_wcss_rtc";
++			interrupts = <0 0x30 0x1>,
++				     <0 0x31 0x1>,
++				     <0 0x32 0x1>,
++				     <0 0x33 0x1>,
++				     <0 0x34 0x1>,
++				     <0 0x35 0x1>,
++				     <0 0x36 0x1>,
++				     <0 0x37 0x1>,
++				     <0 0x38 0x1>,
++				     <0 0x39 0x1>,
++				     <0 0x3a 0x1>,
++				     <0 0x3b 0x1>,
++				     <0 0x3c 0x1>,
++				     <0 0x3d 0x1>,
++				     <0 0x3e 0x1>,
++				     <0 0x3f 0x1>,
++				     <0 0xa9 0x0>;
++			interrupt-names = "msi0",  "msi1",  "msi2",  "msi3",
++					  "msi4",  "msi5",  "msi6",  "msi7",
++					  "msi8",  "msi9",  "msi10", "msi11",
++					  "msi12", "msi13", "msi14", "msi15",
++					  "legacy";
++			status = "disabled";
++			qcom,msi_addr = <0x0b006040>;
++			qcom,msi_base = <0x50>;
++			qcom,ath10k-pre-calibration-data = [00];
++		};
+ 	};
+ };
 -- 
-2.5.0
+1.7.9.5
 
