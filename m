@@ -1,55 +1,87 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58236 "EHLO mx1.redhat.com"
+Received: from bes.se.axis.com ([195.60.68.10]:48322 "EHLO bes.se.axis.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757312AbcDGSTe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 14:19:34 -0400
-From: Jes.Sorensen@redhat.com
+	id S1751544AbcDMMmu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2016 08:42:50 -0400
+From: per.forlin@gmail.com
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 13/18] rtl8xxxu: Set REG_USB_HRPWM for 8192eu
-Date: Thu,  7 Apr 2016 14:19:28 -0400
-Message-Id: <1460053173-8494-14-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160407_201959_466660_0A441255)
-In-Reply-To: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
+Cc: arend@broadcom.com, Per Forlin <per.forlin@gmail.com>
+Subject: [PATCH v3] brcmfmac: Decrease 8021x_cnt for dropped packets
+Date: Tue, 12 Apr 2016 21:17:00 +0200
+Message-Id: <1460488620-44991-1-git-send-email-per.forlin@gmail.com> (sfid-20160413_144253_991314_1755346B)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Per Forlin <per.forlin@gmail.com>
 
-The vendor driver set register 0xfe58 REG_USB_HWPWM in it's init
-sequence for 8192eu. Do the same here.
+This patch resolves an issue where pend_8021x_cnt was not decreased
+on txfinalize. This caused brcmf_netdev_wait_pend8021x to timeout
+because the counter indicated pending packets.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+WARNING: at .../brcmfmac/core.c:1289 brcmf_netdev_wait_pend8021x
+  (warn_slowpath_common)
+  (warn_slowpath_null)
+  (brcmf_netdev_wait_pend8021x [brcmfmac])
+  (send_key_to_dongle [brcmfmac])
+  (brcmf_cfg80211_del_key [brcmfmac])
+  (nl80211_del_key [cfg80211])
+  (genl_rcv_msg)
+  (netlink_rcv_skb)
+  (genl_rcv)
+  (netlink_unicast)
+  (netlink_sendmsg)
+  (sock_sendmsg)
+  (___sys_sendmsg)
+  (__sys_sendmsg)
+  (SyS_sendmsg)
+
+The solution is to pull back the header offset in case
+of an error in txdata(), which may happen in case of
+packet overload in brcmf_sdio_bus_txdata.
+
+Overloading a WLAN interface is not an unlikely scenario.
+In case of packet overload the error print "out of bus->txq"
+is very verbose. To reduce SPAM degrade it to a debug print.
+
+Signed-off-by: Per Forlin <per.forlin@gmail.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c      | 2 ++
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h | 1 +
- 2 files changed, 3 insertions(+)
+Change log:
+ v2 - Add variable to know whether the counter is increased or not
+ v3 - txfinalize should decrease the counter. Fix skb header offset
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index eac2a54..e06b25e 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -7225,6 +7225,8 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
- 			val32 |= FPGA_RF_MODE_CCK;
- 			rtl8xxxu_write32(priv, REG_FPGA0_RF_MODE, val32);
- 		}
-+	} else if (priv->rtl_chip == RTL8192E) {
-+		rtl8xxxu_write8(priv, REG_USB_HRPWM, 0x00);
- 	}
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c | 5 +++--
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c | 2 +-
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+index 67401ca..2c1bc0d 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/bcdc.c
+@@ -332,8 +332,9 @@ brcmf_proto_bcdc_txdata(struct brcmf_pub *drvr, int ifidx, u8 offset,
+ 	int res;
+ 	brcmf_proto_bcdc_hdrpush(drvr, ifidx, offset, pktbuf);
+ 	res = brcmf_bus_txdata(drvr->bus_if, pktbuf);
+-	if (res < 0)
+-		brcmf_proto_bcdc_hdrpull(drvr, ifidx, offset, pktbuf);
++	if (res < 0) {
++		brcmf_proto_bcdc_hdrpull(drvr, false, &ifidx, pktbuf);
++	}
+ 	return res;
+ }
  
- 	val32 = rtl8xxxu_read32(priv, REG_FWHW_TXQ_CTRL);
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-index ade42fe..82cbe85 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h
-@@ -1043,6 +1043,7 @@
- #define  USB_HIMR_ROK			BIT(0)	/*  Receive DMA OK Interrupt */
- 
- #define REG_USB_SPECIAL_OPTION		0xfe55
-+#define REG_USB_HRPWM			0xfe58
- #define REG_USB_DMA_AGG_TO		0xfe5b
- #define REG_USB_AGG_TO			0xfe5c
- #define REG_USB_AGG_TH			0xfe5d
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index a14d9d9d..485e2ad 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -2721,7 +2721,7 @@ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
+ 	*(u16 *)(pkt->cb) = 0;
+ 	if (!brcmf_sdio_prec_enq(&bus->txq, pkt, prec)) {
+ 		skb_pull(pkt, bus->tx_hdrlen);
+-		brcmf_err("out of bus->txq !!!\n");
++		brcmf_dbg(INFO, "out of bus->txq !!!\n");
+ 		ret = -ENOSR;
+ 	} else {
+ 		ret = 0;
 -- 
-2.5.5
+2.1.4
 
