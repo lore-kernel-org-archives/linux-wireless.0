@@ -1,38 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:50341 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328AbcDZJIo (ORCPT
+Received: from mail-wm0-f51.google.com ([74.125.82.51]:34089 "EHLO
+	mail-wm0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932391AbcDLLur (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 05:08:44 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Tue, 12 Apr 2016 07:50:47 -0400
+Received: by mail-wm0-f51.google.com with SMTP id l6so184499455wml.1
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2016 04:50:46 -0700 (PDT)
+Subject: Re: [PATCH v2] mwifiex: fix possible NULL dereference
+To: Sudip Mukherjee <sudipm.mukherjee@gmail.com>,
+	Amitkumar Karwar <akarwar@marvell.com>,
+	Nishant Sarmukadam <nishants@marvell.com>,
+	Kalle Valo <kvalo@codeaurora.org>
+References: <1460461597-7309-1-git-send-email-sudipm.mukherjee@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org,
+	Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>,
+	Christian Daudt <csd@broadcom.com>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <570CE113.20200@broadcom.com> (sfid-20160412_135109_836474_1A21B3DB)
+Date: Tue, 12 Apr 2016 13:50:43 +0200
 MIME-Version: 1.0
-Subject: Re: [MOREWORK,
- 14/19] rtl818x_pci: Fix a memory leak in rtl8180_init_rx_ring
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <4920ab8faf66e456a1fad1e79607d15a04cbb029.1458262312.git.julian.calaby@gmail.com>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Jia-Ju Bai <baijiaju1990@163.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Andrea Merello <andrea.merello@gmail.com>,
-	linux-wireless@vger.kernel.org
-Message-Id: <20160426090843.B9118612F0@smtp.codeaurora.org> (sfid-20160426_110850_167429_2CD5DE4D)
-Date: Tue, 26 Apr 2016 09:08:43 +0000 (UTC)
+In-Reply-To: <1460461597-7309-1-git-send-email-sudipm.mukherjee@gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
 
-> From: Jia-Ju Bai <baijiaju1990@163.com>
-> 
-> When dev_alloc_skb or pci_dma_mapping_error in rtl8180_init_rx_ring fails,
-> the memory allocated by pci_zalloc_consistent is not freed.
-> 
-> This patch fixes the bug by adding pci_free_consistent
-> in error handling code.
-> 
-> Signed-off-by: Jia-Ju Bai <baijiaju1990@163.com>
-> Signed-off-by: Julian Calaby <julian.calaby@gmail.com>
 
-Thanks, applied to wireless-drivers-next.git.
+On 12-04-16 13:46, Sudip Mukherjee wrote:
+> From: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
+> 
+> We have a check for card just after dereferencing it. So if it is NULL
+> we have already dereferenced it before its check. Lets dereference it
+> after checking card for NULL.
 
-Kalle Valo
+And you are changing the scope of the pdev variable.
+
+Regards,
+Arend
+
+> Signed-off-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
+> ---
+>  drivers/net/wireless/marvell/mwifiex/pcie.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/net/wireless/marvell/mwifiex/pcie.c b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> index edf8b07..d4db9db 100644
+> --- a/drivers/net/wireless/marvell/mwifiex/pcie.c
+> +++ b/drivers/net/wireless/marvell/mwifiex/pcie.c
+> @@ -2884,10 +2884,11 @@ static void mwifiex_unregister_dev(struct mwifiex_adapter *adapter)
+>  {
+>  	struct pcie_service_card *card = adapter->card;
+>  	const struct mwifiex_pcie_card_reg *reg;
+> -	struct pci_dev *pdev = card->dev;
+>  	int i;
+>  
+>  	if (card) {
+> +		struct pci_dev *pdev = card->dev;
+> +
+>  		if (card->msix_enable) {
+>  			for (i = 0; i < MWIFIEX_NUM_MSIX_VECTORS; i++)
+>  				synchronize_irq(card->msix_entries[i].vector);
+> 
