@@ -1,86 +1,114 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37759 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756220AbcDGMHz (ORCPT
+Received: from mail-lf0-f65.google.com ([209.85.215.65]:35086 "EHLO
+	mail-lf0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933061AbcDLV4Z (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 08:07:55 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Alexander Tsoy <alexander@tsoy.me>,
-	Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	Andrea Merello <andrea.merello@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Arnd Bergmann <arnd@arndb.de>, ath9k-devel@lists.ath9k.org,
-	b43-dev@lists.infradead.org, brcm80211-dev-list@broadcom.com,
-	Brett Rudley <brudley@broadcom.com>,
-	Byeoungwook Kim <quddnr145@gmail.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Colin Ian King <colin.king@canonical.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	Eliad Peller <eliad@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Eyal Reizer <eyalreizer@gmail.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	Geliang Tang <geliangtang@163.com>,
-	Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Ivan Safonov <insafonov@gmail.com>,
-	Jia-Ju Bai <baijiaju1990@163.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Lars-Peter Clausen <lars@metafoo.de>,
-	linux-wireless@vger.kernel.org, Luciano Coelho <luca@coelho.fi>,
-	Luis Felipe Dominguez Vega <lfdominguez@nauta.cu>,
-	Markus Elfring <elfring@users.sourceforge.net>,
-	Miaoqing Pan <miaoqing@codeaurora.org>,
-	Nicholas Mc Guire <hofrat@osadl.org>,
-	Nicolas Pitre <nico@linaro.org>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	=?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Sara Sharon <sarasharon1@gmail.com>,
-	Shahar Patury <shaharp@ti.com>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Tony Lindgren <tony@atomide.com>
-Subject: Re: [PATCH 00/19] Pending Cleanup patches for 4.7
-References: <cover.1458262312.git.julian.calaby@gmail.com>
-Date: Thu, 07 Apr 2016 15:07:41 +0300
-In-Reply-To: <cover.1458262312.git.julian.calaby@gmail.com> (Julian Calaby's
-	message of "Fri, 18 Mar 2016 13:20:13 +1100")
-Message-ID: <871t6h4o6q.fsf@purkki.adurom.net> (sfid-20160407_140821_748345_3D93DE65)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+	Tue, 12 Apr 2016 17:56:25 -0400
+Received: by mail-lf0-f65.google.com with SMTP id o124so4561441lfb.2
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2016 14:56:24 -0700 (PDT)
+From: per.forlin@gmail.com
+To: linux-wireless@vger.kernel.org
+Cc: arend@broadcom.com, Per Forlin <per.forlin@gmail.com>
+Subject: [PATCH v4] brcmfmac: Decrease 8021x_cnt for dropped packets
+Date: Tue, 12 Apr 2016 23:55:40 +0200
+Message-Id: <1460498140-18874-1-git-send-email-per.forlin@gmail.com> (sfid-20160412_235629_630486_43C051E2)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Julian Calaby <julian.calaby@gmail.com> writes:
+From: Per Forlin <per.forlin@gmail.com>
 
-> This is a set of all patches in patchwork which were pending when the 4.6
-> merge window opened that meet the following criteria:
->
-> 1. They're sane
-> 2. They're either obviously correct, I can review them, or they've been
->    reviewed or ACK'd by someone else.
-> 3. They don't require any code changes to make them applyable.
->
-> That said, if anyone doesn't like any of these patches for any reason,
-> just give me a reason and I'll drop it.
->
-> I've split the pending patches into 4 sets as detailed below. All patches
-> have been rebased to apply in order on wireless-drivers-next at
-> wireless-drivers-next-for-davem-2016-03-14.
+This patch resolves an issue where pend_8021x_cnt was not decreased
+on txfinalize. This caused brcmf_netdev_wait_pend8021x to timeout
+because the counter indicated pending packets.
 
-Thank you for working on this, this is very helpful.
+WARNING: at .../brcmfmac/core.c:1289 brcmf_netdev_wait_pend8021x
+  (warn_slowpath_common)
+  (warn_slowpath_null)
+  (brcmf_netdev_wait_pend8021x [brcmfmac])
+  (send_key_to_dongle [brcmfmac])
+  (brcmf_cfg80211_del_key [brcmfmac])
+  (nl80211_del_key [cfg80211])
+  (genl_rcv_msg)
+  (netlink_rcv_skb)
+  (genl_rcv)
+  (netlink_unicast)
+  (netlink_sendmsg)
+  (sock_sendmsg)
+  (___sys_sendmsg)
+  (__sys_sendmsg)
+  (SyS_sendmsg)
 
-I have deferred patch 14 and dropped patch 19[1], the rest I'm planning
-to apply soon. I also tried to remove the original patches from deferred
-queue by moving them to state "superseded", but I might missed
-something.
+The solution is to pull back the header offset in case
+of an error in txdata(), which may happen in case of
+packet overload in brcmf_sdio_bus_txdata.
 
-[1] Oddly I cannot find patch 19 from patchwork, I don't know what
-    happened to it. I do see it on the mailing list, though.
+Overloading an WLAN interface is not an unlikely scenario.
+In case of packet overload the error print "out of bus->txq"
+is very verbose. To reduce SPAM degrade it to a debug print.
 
+Signed-off-by: Per Forlin <per.forlin@gmail.com>
+---
+Change log:
+ v2 - Add variable to know whether the counter is increased or not
+ v3 - txfinalize should decrease the counter. Adjust skb header offset
+ v4 - Fix build error
+
+drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c     | 4 ++++
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c | 4 +++-
+ drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c     | 2 +-
+ 3 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+index ed9998b..f342f7c 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c
+@@ -541,6 +541,9 @@ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success)
+ 	struct ethhdr *eh;
+ 	u16 type;
+ 
++	if (!ifp)
++		goto free;
++
+ 	eh = (struct ethhdr *)(txp->data);
+ 	type = ntohs(eh->h_proto);
+ 
+@@ -553,6 +556,7 @@ void brcmf_txfinalize(struct brcmf_if *ifp, struct sk_buff *txp, bool success)
+ 	if (!success)
+ 		ifp->stats.tx_errors++;
+ 
++free:
+ 	brcmu_pkt_buf_free_skb(txp);
+ }
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+index f82c9ab..98cb83f 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/fwsignal.c
+@@ -1899,8 +1899,10 @@ int brcmf_fws_process_skb(struct brcmf_if *ifp, struct sk_buff *skb)
+ 
+ 	if (fws->avoid_queueing) {
+ 		rc = brcmf_proto_txdata(drvr, ifp->ifidx, 0, skb);
+-		if (rc < 0)
++		if (rc < 0) {
++			(void)brcmf_proto_hdrpull(drvr, false, skb, &ifp);
+ 			brcmf_txfinalize(ifp, skb, false);
++		}
+ 		return rc;
+ 	}
+ 
+diff --git a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+index a14d9d9d..485e2ad 100644
+--- a/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
++++ b/drivers/net/wireless/broadcom/brcm80211/brcmfmac/sdio.c
+@@ -2721,7 +2721,7 @@ static int brcmf_sdio_bus_txdata(struct device *dev, struct sk_buff *pkt)
+ 	*(u16 *)(pkt->cb) = 0;
+ 	if (!brcmf_sdio_prec_enq(&bus->txq, pkt, prec)) {
+ 		skb_pull(pkt, bus->tx_hdrlen);
+-		brcmf_err("out of bus->txq !!!\n");
++		brcmf_dbg(INFO, "out of bus->txq !!!\n");
+ 		ret = -ENOSR;
+ 	} else {
+ 		ret = 0;
 -- 
-Kalle Valo
+2.1.4
+
