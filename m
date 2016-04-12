@@ -1,40 +1,58 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:32879 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751344AbcDFSfw (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 14:35:52 -0400
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Subject: Re: [1/2] rtlwifi: rtl8723be: Add antenna select module parameter
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <1458153215-25602-2-git-send-email-Larry.Finger@lwfinger.net>
-To: Larry Finger <Larry.Finger@lwfinger.net>
-Cc: devel@driverdev.osuosl.org, linux-wireless@vger.kernel.org,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Stable <stable@vger.kernel.org>
-Message-Id: <20160406183550.EAEED615CF@smtp.codeaurora.org> (sfid-20160406_203600_980439_898F63DC)
-Date: Wed,  6 Apr 2016 18:35:50 +0000 (UTC)
+Received: from mga09.intel.com ([134.134.136.24]:11129 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932204AbcDLIQ4 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2016 04:16:56 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Ayala Beker <ayala.beker@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 2/4] iwlwifi: mvm: avoid to WARN about gscan capabilities
+Date: Tue, 12 Apr 2016 11:16:49 +0300
+Message-Id: <1460449011-8417-2-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160412_101703_719324_D5938C1E)
+In-Reply-To: <1460448889.2630.12.camel@intel.com>
+References: <1460448889.2630.12.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Ayala Beker <ayala.beker@intel.com>
 
-> A number of new laptops have been delivered with only a single antenna.
-> In principle, this is OK; however, a problem arises when the on-board
-> EEPROM is programmed to use the other antenna connection. The option
-> of opening the computer and moving the connector is not always possible
-> as it will void the warranty in some cases. In addition, this solution
-> breaks the Windows driver when the box dual boots Linux and Windows.
-> 
-> A fix involving a new module parameter has been developed.  This commit
-> adds the new parameter and implements the changes needed for the driver.
-> 
-> Signed-off-by: Larry Finger <Larry.Finger@lwfinger.net>
-> Cc: Stable <stable@vger.kernel.org> [V4.0+]
+Gscan capabilities were updated with new capabilities supported
+by the device. Update GSCAN capabilities TLV and avoid to WARN
+if the firmware does not have the new capabilities.
 
-Thanks, 2 patches applied to wireless-drivers-next.git:
+Signed-off-by: Ayala Beker <ayala.beker@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/iwl-drv.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
-c18d8f509571 rtlwifi: rtl8723be: Add antenna select module parameter
-baa170229095 rtlwifi: btcoexist: Implement antenna selection
+diff --git a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+index f899666..33d0d51 100644
+--- a/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/iwl-drv.c
+@@ -1060,11 +1060,18 @@ static int iwl_parse_tlv_firmware(struct iwl_drv *drv,
+ 		return -EINVAL;
+ 	}
+ 
+-	if (WARN(fw_has_capa(capa, IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT) &&
+-		 !gscan_capa,
+-		 "GSCAN is supported but capabilities TLV is unavailable\n"))
++	/*
++	 * If ucode advertises that it supports GSCAN but GSCAN
++	 * capabilities TLV is not present, or if it has an old format,
++	 * warn and continue without GSCAN.
++	 */
++	if (fw_has_capa(capa, IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT) &&
++	    !gscan_capa) {
++		IWL_DEBUG_INFO(drv,
++			       "GSCAN is supported but capabilities TLV is unavailable\n");
+ 		__clear_bit((__force long)IWL_UCODE_TLV_CAPA_GSCAN_SUPPORT,
+ 			    capa->_capa);
++	}
+ 
+ 	return 0;
+ 
+-- 
+2.5.0
 
-Kalle Valo
