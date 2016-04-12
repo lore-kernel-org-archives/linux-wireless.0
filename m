@@ -1,163 +1,72 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:39113 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750765AbcDOL20 (ORCPT
+Received: from mail-oi0-f45.google.com ([209.85.218.45]:34657 "EHLO
+	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932321AbcDLLuA convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2016 07:28:26 -0400
-From: "Kanchanapally, Vidyullatha" <vkanchan@qti.qualcomm.com>
-To: <johannes@sipsolutions.net>
-CC: <linux-wireless@vger.kernel.org>, <jouni@qca.qualcomm.com>,
-	<vkanchan@qti.qualcomm.com>, <amarnath@qca.qualcomm.com>,
-	<usdutt@qti.qualcomm.com>
-Subject: [PATCH] cfg80211: Advertise extended capabilities per interface type to userspace
-Date: Fri, 15 Apr 2016 16:57:49 +0530
-Message-ID: <1460719669-3421-1-git-send-email-vkanchan@qti.qualcomm.com> (sfid-20160415_132831_034243_615F9CDE)
+	Tue, 12 Apr 2016 07:50:00 -0400
+Received: by mail-oi0-f45.google.com with SMTP id s79so18695673oie.1
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2016 04:49:59 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain
+In-Reply-To: <570CB818.9080807@broadcom.com>
+References: <1460367328-12082-1-git-send-email-arend@broadcom.com>
+ <CACna6rwCe6yfzcxdezKhPJwJ4cnWY4DEE04W81K=PrVD1pZVoA@mail.gmail.com> <570CB818.9080807@broadcom.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Tue, 12 Apr 2016 21:49:39 +1000
+Message-ID: <CAGRGNgUN+vGjnHc=nNci5pshTmizaNzbqy=YJz7-iDRtHCay3A@mail.gmail.com> (sfid-20160412_135006_502352_71E33B4F)
+Subject: Re: [PATCH 0/8] brcmfmac: event handling and other fixes
+To: Arend van Spriel <arend.vanspriel@broadcom.com>
+Cc: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: "Kanchanapally, Vidyullatha" <vkanchan@qti.qualcomm.com>
+Hi Arend,
 
-The driver extended capabilities may differ for different
-interface types which the userspace needs to know (for
-example the fine timing measurement initiator and responder
-bits might differ for a station and AP). Add a new nl80211
-attribute to provide extended capabilities per interface type
-to userspace.
+On Tue, Apr 12, 2016 at 6:55 PM, Arend van Spriel
+<arend.vanspriel@broadcom.com> wrote:
+> On 11-04-16 13:20, Rafał Miłecki wrote:
+>> On 11 April 2016 at 11:35, Arend van Spriel <arend@broadcom.com> wrote:
+>>> This series provides the following:
+>>>
+>>> * avoid unexpected firmware events.
+>>> * allow passing events explicitly for PCIe and SDIO devices.
+>>> * fix issue with boardrev entry in nvram.
+>>> * fix for wowl.
+>>> * fix possible null pointer access upon aborting p2p scan.
+>>>
+>>> The series is intended for v4.7 kernel and applies to the master
+>>> branch of the wireless-drivers-next repository.
+>>
+>> Hey Arend,
+>>
+>> Unfortunately I'm finding all your recent messages in spam :( It seems
+>> GMail doesn't like something about the Broadcom server:
+>> "Why is this message in Spam? It has a from address in broadcom.com
+>> but has failed broadcom.com's required tests for authentication. Learn
+>> more"
+>> Quoted "Learn more" text links to the:
+>> https://support.google.com/mail/answer/1366858?hl=en-GB&expand=5
+>>
+>> Do you think you can point it to sb at Broadcom?
+>
+> sb? Help me understand this and I may have an appropriate answer :-p
+>
+> Broadcom actually moved to Google Apps. I am still using my old email
+> address and smtp server for submitting patches. Maybe that is the issue
+> here.
 
-Reviewed-by: Jouni Malinen <jouni@qca.qualcomm.com>
-Signed-off-by: Vidyullatha Kanchanapally <vkanchan@qti.qualcomm.com>
----
- include/net/cfg80211.h       | 28 +++++++++++++++++++++++++++-
- include/uapi/linux/nl80211.h |  7 +++++++
- net/wireless/nl80211.c       | 33 +++++++++++++++++++++++++++++++++
- 3 files changed, 67 insertions(+), 1 deletion(-)
+That's the issue. IIRC this happens because the emails are missing
+some header that authenticates them as actually being from
+broadcom.com. (I get this all the time when sending Debian bug reports
+through my personal SMTP server.)
 
-diff --git a/include/net/cfg80211.h b/include/net/cfg80211.h
-index 1e008cd..c66a374 100644
---- a/include/net/cfg80211.h
-+++ b/include/net/cfg80211.h
-@@ -3080,6 +3080,24 @@ struct wiphy_vendor_command {
- };
- 
- /**
-+ * struct wiphy_iftype_ext_capab - extended capabilities per interface type
-+ * @iftype: interface type
-+ * @ext_capab: extended capabilities supported by the driver,
-+ *	additional capabilities might be supported by userspace; these are
-+ *	the 802.11 extended capabilities ("Extended Capabilities element")
-+ *	and are in the same format as in the information element. See
-+ *	IEEE Std 802.11-2012 8.4.2.29 for the defined fields.
-+ * @ext_capab_mask: mask of the valid values
-+ * @ext_capab_len: length of the extended capabilities
-+ */
-+struct wiphy_iftype_ext_capab {
-+	enum nl80211_iftype iftype;
-+	const u8 *ext_capab;
-+	const u8 *ext_capab_mask;
-+	u8 ext_capab_len;
-+};
-+
-+/**
-  * struct wiphy - wireless hardware description
-  * @reg_notifier: the driver's regulatory notification callback,
-  *	note that if your driver uses wiphy_apply_custom_regulatory()
-@@ -3196,9 +3214,14 @@ struct wiphy_vendor_command {
-  *	additional capabilities might be supported by userspace; these are
-  *	the 802.11 extended capabilities ("Extended Capabilities element")
-  *	and are in the same format as in the information element. See
-- *	802.11-2012 8.4.2.29 for the defined fields.
-+ *	802.11-2012 8.4.2.29 for the defined fields. These are the default
-+ *	extended capabilities to be used if the capabilities are not specified
-+ *	for a specific interface type in iftype_ext_capab.
-  * @extended_capabilities_mask: mask of the valid values
-  * @extended_capabilities_len: length of the extended capabilities
-+ * @iftype_ext_capab: array of extended capabilities per interface type
-+ * @num_iftype_ext_capab: number of interface types for which extended
-+ *	capabilities are specified separately.
-  * @coalesce: packet coalescing support information
-  *
-  * @vendor_commands: array of vendor commands supported by the hardware
-@@ -3298,6 +3321,9 @@ struct wiphy {
- 	const u8 *extended_capabilities, *extended_capabilities_mask;
- 	u8 extended_capabilities_len;
- 
-+	struct wiphy_iftype_ext_capab *iftype_ext_capab;
-+	unsigned int num_iftype_ext_capab;
-+
- 	/* If multiple wiphys are registered and you're handed e.g.
- 	 * a regular netdev with assigned ieee80211_ptr, you won't
- 	 * know whether it points to a wiphy your driver has registered
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index 9baa20b..8c3eae1 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -1817,6 +1817,11 @@ enum nl80211_commands {
-  * @NL80211_ATTR_STA_SUPPORT_P2P_PS: whether P2P PS mechanism supported
-  *	or not. u8, one of the values of &enum nl80211_sta_p2p_ps_status
-  *
-+ * @NL80211_ATTR_IFTYPE_EXT_CAPA: Nested attribute of the following attributes:
-+ *	%NL80211_ATTR_IFTYPE, %NL80211_ATTR_EXT_CAPA,
-+ *	%NL80211_ATTR_EXT_CAPA_MASK, to specify the extended capabilities per
-+ *	interface type.
-+ *
-  * @NUM_NL80211_ATTR: total number of nl80211_attrs available
-  * @NL80211_ATTR_MAX: highest attribute number currently defined
-  * @__NL80211_ATTR_AFTER_LAST: internal use
-@@ -2197,6 +2202,8 @@ enum nl80211_attrs {
- 
- 	NL80211_ATTR_STA_SUPPORT_P2P_PS,
- 
-+	NL80211_ATTR_IFTYPE_EXT_CAPA,
-+
- 	/* add attributes here, update the policy in nl80211.c */
- 
- 	__NL80211_ATTR_AFTER_LAST,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 3514450..94b9791 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -1761,6 +1761,39 @@ static int nl80211_send_wiphy(struct cfg80211_registered_device *rdev,
- 			nla_nest_end(msg, nested);
- 		}
- 
-+		state->split_start++;
-+		break;
-+	case 13:
-+		if (rdev->wiphy.num_iftype_ext_capab &&
-+		    rdev->wiphy.iftype_ext_capab) {
-+			struct nlattr *nested_ext_capab, *nested;
-+
-+			nested = nla_nest_start(msg,
-+						NL80211_ATTR_IFTYPE_EXT_CAPA);
-+			if (!nested)
-+				goto nla_put_failure;
-+
-+			for (i = 0; i < rdev->wiphy.num_iftype_ext_capab; i++) {
-+				struct wiphy_iftype_ext_capab *capab;
-+
-+				capab = &rdev->wiphy.iftype_ext_capab[i];
-+				nested_ext_capab = nla_nest_start(msg, i);
-+				if (!nested_ext_capab ||
-+				    nla_put_u32(msg, NL80211_ATTR_IFTYPE,
-+						capab->iftype) ||
-+				    nla_put(msg, NL80211_ATTR_EXT_CAPA,
-+					    capab->ext_capab_len,
-+					    capab->ext_capab) ||
-+				    nla_put(msg, NL80211_ATTR_EXT_CAPA_MASK,
-+					    capab->ext_capab_len,
-+					    capab->ext_capab_mask))
-+					goto nla_put_failure;
-+
-+				nla_nest_end(msg, nested_ext_capab);
-+			}
-+			nla_nest_end(msg, nested);
-+		}
-+
- 		/* done */
- 		state->split_start = 0;
- 		break;
+Thanks,
+
 -- 
-1.8.2.1
+Julian Calaby
 
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
