@@ -1,36 +1,39 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:42314 "EHLO mga04.intel.com"
+Received: from j1.co.za ([52.0.118.132]:54002 "EHLO j1.co.za"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750928AbcDTPaM (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2016 11:30:12 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "ben@decadent.org.uk" <ben@decadent.org.uk>,
-	"Sharon, Sara" <sara.sharon@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: RSS configuration in iwlwifi
-Date: Wed, 20 Apr 2016 15:30:07 +0000
-Message-ID: <1461166207.19157.1.camel@intel.com> (sfid-20160420_173018_069910_D1FE4274)
-References: <1461164882.28559.61.camel@decadent.org.uk>
-In-Reply-To: <1461164882.28559.61.camel@decadent.org.uk>
-Content-Type: text/plain; charset="utf-8"
+	id S1755795AbcDLGb1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2016 02:31:27 -0400
+Received: from [10.0.0.111] (169-0-102-122.ip.afrihost.co.za [169.0.102.122])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by j1.co.za (Postfix) with ESMTPSA id A2C1440217
+	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2016 06:31:25 +0000 (UTC)
+Subject: Re: hardware restart on Intel 7260
+References: <570BB012.8060709@j1.co.za>
+ <CANUX_P0+9ALJa4WexPCpW5a3YxKDPL3wZGta-F2VrgOBU6VcXA@mail.gmail.com>
+To: linux-wireless <linux-wireless@vger.kernel.org>
+From: Johann Haarhoff <johann@j1.co.za>
+Message-ID: <570C963A.9070300@j1.co.za> (sfid-20160412_083145_142015_D386CF63)
+Date: Tue, 12 Apr 2016 08:31:22 +0200
 MIME-Version: 1.0
+In-Reply-To: <CANUX_P0+9ALJa4WexPCpW5a3YxKDPL3wZGta-F2VrgOBU6VcXA@mail.gmail.com>
+Content-Type: text/plain; charset=windows-1252
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgQmVuLA0KDQoNClRoYW5rcyBmb3IgbG9va2luZyBhdCBvdXIgY29kZS4NCg0KDQpPbiBXZWQs
-IDIwMTYtMDQtMjAgYXQgMTY6MDggKzAxMDAsIEJlbiBIdXRjaGluZ3Mgd3JvdGU6DQo+IEknbSBu
-b3Qgc3VyZSBpZiB5b3Ugd2VyZSBhd2FyZSwgYnV0IHRoZXJlIGlzIGEgc3RhbmRhcmQgQVBJIGZv
-cg0KPiBjb25maWd1cmluZyBSU1MgaW4gbmV0d29yayBkcml2ZXJzLCBwYXJ0IG9mIGV0aHRvb2xf
-b3BzLiAgSSB0aGluaw0KPiBpd2x3aWZpIHNob3VsZCBpbXBsZW1lbnQgdGhhdCByYXRoZXIgdGhh
-biBhIGRyaXZlci1zcGVjaWZpYyBkZWJ1Z2ZzDQo+IGludGVyZmFjZS4NCj4gDQoNCllvdSBhcmUg
-cmlnaHQsIHRoaXMgaXMgd2h5IFNhcmEgbWFkZSB0aGlzIGNvbW1pdDoNCg0KY29tbWl0IDg1NGQ3
-NzNlNGFiNTg2OTIwMDAwNGFmNGNhNWQ4NTE3MzA4NDk5MDMNCkF1dGhvcjogU2FyYSBTaGFyb24g
-PHNhcmEuc2hhcm9uQGludGVsLmNvbT4NCkRhdGU6ICAgVHVlIE1hciAyMiAxNTo1NTo1OCAyMDE2
-ICswMjAwDQoNCiAgICBpd2x3aWZpOiBtdm06IGltcHJvdmUgUlNTIGNvbmZpZ3VyYXRpb24NCiAg
-ICANCiAgICBJbXByb3ZlIGN1cnJlbnQgUlNTIGNvbmZpZ3VyYXRpb246DQogICAgICogVXNlIG5l
-dGRldl9yc3Nfa2V5IGluc3RlYWQgb2Yga2VlcGluZyBhIGxvY2FsIGNvcHkuDQogICAgICogQ29u
-ZmlndXJlIGFsc28gVURQIGhhc2hpbmcgdG8gaGF2ZSBVRFAgdHJhZmZpYyBzcHJlYWQgYWNyb3Nz
-IHF1ZXVlcy4NCiAgICAgKiBEbyBub3QgZGlyZWN0IFJTUyB0cmFmZmljIHRvIG91ciBmYWxsYmFj
-ayBxdWV1ZS4NCiAgICANCiAgICBTaWduZWQtb2ZmLWJ5OiBTYXJhIFNoYXJvbiA8c2FyYS5zaGFy
-b25AaW50ZWwuY29tPg0KICAgIFNpZ25lZC1vZmYtYnk6IEVtbWFudWVsIEdydW1iYWNoIDxlbW1h
-bnVlbC5ncnVtYmFjaEBpbnRlbC5jb20+DQoNCg0KPiBCZW4u
+
+> Meh... So what happens here is that the firmware is stuck while
+> transmitting. The driver detects this and as a workaround, resets the
+> firmware. The detection takes 10 seconds.
+> The only way to understand what is going on here is to take the
+> firmware from [1] and to run the steps to collect firmware debug data
+> from [2]. I recommend you open a bug on bugzilla.
+> Out of curiosity, did you try to work in DC mode (on battery, not
+> connected to the power)? A user reported that it helped [3].
+
+I followed the steps you suggested, and am now tracking the bug here:
+
+https://bugzilla.kernel.org/show_bug.cgi?id=116191
+
+
+
