@@ -1,80 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:60840 "EHLO mga01.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:11129 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932109AbcDLI7L (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2016 04:59:11 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: pull request: iwlwifi 2016-04-12
-Date: Tue, 12 Apr 2016 08:59:00 +0000
-Message-ID: <1460451541.2630.16.camel@intel.com> (sfid-20160412_105919_007507_2813FB26)
-References: <1460448889.2630.12.camel@intel.com>
+	id S932167AbcDLIQz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2016 04:16:55 -0400
+From: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+To: linux-wireless@vger.kernel.org
+Cc: Oren Givon <oren.givon@intel.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+Subject: [PATCH 1/4] iwlwifi: add device IDs for the 8265 device
+Date: Tue, 12 Apr 2016 11:16:48 +0300
+Message-Id: <1460449011-8417-1-git-send-email-emmanuel.grumbach@intel.com> (sfid-20160412_101659_889134_791D28CA)
 In-Reply-To: <1460448889.2630.12.camel@intel.com>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+References: <1460448889.2630.12.camel@intel.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gVHVlLCAyMDE2LTA0LTEyIGF0IDExOjE0ICswMzAwLCBFbW1hbnVlbCBHcnVtYmFjaCB3cm90
-ZToNCj4gSGkgS2FsbGUsDQo+IA0KPiBJIGhhdmUgaGVyZSBhIHB1bGwgcmVxdWVzdCBmb3IgNC42
-LiBUaGVyZSBpcyBwYXRjaCBpbiB0aGlzIHB1bGwNCj4gcmVxdWVzdA0KPiB0aGF0IGhhcyBiZWVu
-IHNlbnQgdG8gLW5leHQgYWxyZWFkeSBidXQgc2hvdWxkIHJlYWxseSBoYXZlIGJlZW4NCj4gaW5j
-bHVkZWQgaW4gdGhlIGN1cnJlbnQgY3ljbGUuIFNvcnJ5IGZvciB0aGUgbWVzcy4NCj4gDQo+IFRo
-ZSBjb21taXQgYXBwZWFycyBpbiAtbmV4dCBhczoNCj4gDQo+IGNvbW1pdCBhMGIwOWYxMzAzNmNl
-ZGZkNjdjOWNiNGI5ZDA1MTM4ZTcwMjI3MjNkDQo+IEF1dGhvcjogQXlhbGEgQmVrZXIgPGF5YWxh
-LmJla2VyQGludGVsLmNvbT4NCj4gRGF0ZTogICBXZWQgRmViIDMgMTU6MzY6NTIgMjAxNiArMDIw
-MA0KPiANCj4gICAgIGl3bHdpZmk6IG12bTogdXBkYXRlIEdTQ0FOIGNhcGFiaWxpdGllcw0KPiAg
-ICAgDQo+ICAgICBHc2NhbiBjYXBhYmlsaXRpZXMgd2VyZSB1cGRhdGVkIHdpdGggbmV3IGNhcGFi
-aWxpdGllcyBzdXBwb3J0ZWQNCj4gICAgIGJ5IHRoZSBkZXZpY2UuIFVwZGF0ZSBHU0NBTiBjYXBh
-YmlsaXRpZXMgVExWLg0KPiANCj4gSSBtb2RpZmllZCB0aGUgY29tbWl0IG1lc3NhZ2UgdG8gYmV0
-dGVyIGVtcGhhc2lzIHRoZSBuZWVkIHRvIGhhdmUgaXQNCj4gaW4NCj4gdGhlIGN1cnJlbnQgcmVs
-ZWFzZS4gWW91J2xsIHNlZSBpdCBpbiB0aGlzIHB1bGwgcmVxdWVzdCBhczoNCj4gDQo+IGNvbW1p
-dCBjZDQ5NzI3ZTFhMmJjY2M0ZmYwMDhkZGUyNGMyZjg0MzBkZDllMzY4DQo+IEF1dGhvcjogQXlh
-bGEgQmVrZXIgPGF5YWxhLmJla2VyQGludGVsLmNvbT4NCj4gRGF0ZTogICBXZWQgRmViIDMgMTU6
-MzY6NTIgMjAxNiArMDIwMA0KPiANCj4gICAgIGl3bHdpZmk6IG12bTogYXZvaWQgdG8gV0FSTiBh
-Ym91dCBnc2NhbiBjYXBhYmlsaXRpZXMNCj4gICAgIA0KPiAgICAgR3NjYW4gY2FwYWJpbGl0aWVz
-IHdlcmUgdXBkYXRlZCB3aXRoIG5ldyBjYXBhYmlsaXRpZXMgc3VwcG9ydGVkDQo+ICAgICBieSB0
-aGUgZGV2aWNlLiBVcGRhdGUgR1NDQU4gY2FwYWJpbGl0aWVzIFRMViBhbmQgYXZvaWQgdG8gV0FS
-Tg0KPiAgICAgaWYgdGhlIGZpcm13YXJlIGRvZXMgbm90IGhhdmUgdGhlIG5ldyBjYXBhYmlsaXRp
-ZXMuDQo+IA0KPiBCZXNpZGVzIHRoaXMsIGFsbCBpcyBmYWlybHkgbm9ybWFsLg0KPiBQbGVhc2Ug
-cHVsbCwgdGhhbmtzIQ0KPiANCj4gDQo+IFRoZSBmb2xsb3dpbmcgY2hhbmdlcyBzaW5jZSBjb21t
-aXQNCj4gN2ZkZjk2NjMyNjFjYzc3YTUxNjM5NmZlYzgyY2VlOGE4ZWEwN2U3NjoNCj4gDQo+ICAg
-aXdsd2lmaTogbXZtOiBmaXggbWVtb3J5IGxlYWsgaW4gcGFnaW5nICgyMDE2LTAzLTIwIDIzOjAx
-OjU0ICswMjAwKQ0KPiANCj4gYXJlIGF2YWlsYWJsZSBpbiB0aGUgZ2l0IHJlcG9zaXRvcnkgYXQ6
-DQo+IA0KPiAgIGh0dHBzOi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0
-L2l3bHdpZmkvaXdsd2lmaS1maXgNCj4gZXMuZ2l0IHRhZ3MvaXdsd2lmaS1mb3Ita2FsbGUtMjAx
-Ni0wNC0xMg0KPiANCj4gZm9yIHlvdSB0byBmZXRjaCBjaGFuZ2VzIHVwIHRvDQo+IDJkMjVmYjhi
-M2ExMzg3MDZiNjNiZDI2YWQ3MmE5NWM1ODAyOTk1NGE6DQo+IA0KPiAgIGl3bHdpZmk6IG12bTog
-Zml4IGFjY2Vzc2luZyBOdWxsIHBvaW50ZXIgZHVyaW5nIGZ3IGR1bXAgY29sbGVjdGlvbg0KPiAo
-MjAxNi0wNC0xMiAxMDowMzoxNyArMDMwMCkNCj4gDQoNClNhcmEgZm91bmQgYW4gZW1iYXJyYXNz
-aW5nIGxhc3QgbWludXRlIGlzc3VlLg0KTmV3IHRhZyBpcyBpd2x3aWZpLWZvci1rYWxsZS0yMDE2
-LTA0LTEyXzIuDQogDQpIZXJlIGlzIHRoZSBkaWZmOg0KZGlmZiAtLWdpdCBhL2RyaXZlcnMvbmV0
-L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvaXdsLTgwMDAuYyBiL2RyaXZlcnMvbmV0L3dpcmVsZXNz
-L2ludGVsL2l3bHdpZmkvaXdsLTgwMDAuYw0KaW5kZXggY2Y0ODEyMi4uYjVjNTdlZSAxMDA2NDQN
-Ci0tLSBhL2RyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvaXdsLTgwMDAuYw0KKysr
-IGIvZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9pd2wtODAwMC5jDQpAQCAtOTMs
-NyArOTMsNyBAQA0KICNkZWZpbmUgSVdMODI2MF9TTUVNX09GRlNFVCAgICAgICAgICAgIDB4NDAw
-MDAwDQogI2RlZmluZSBJV0w4MjYwX1NNRU1fTEVOICAgICAgICAgICAgICAgMHg2ODAwMA0KIA0K
-LSNkZWZpbmUgSVdMODAwMF9GV19QUkUgIml3bHdpZmktODAwMEMiDQorI2RlZmluZSBJV0w4MDAw
-X0ZXX1BSRSAiaXdsd2lmaS04MDAwQy0iDQogI2RlZmluZSBJV0w4MDAwX01PRFVMRV9GSVJNV0FS
-RShhcGkpIFwNCiAgICAgICAgSVdMODAwMF9GV19QUkUgIi0iIF9fc3RyaW5naWZ5KGFwaSkgIi51
-Y29kZSINCiANCg0KPiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tDQo+ICogYWRkIG5ldyBkZXZpY2UgSURzIGZvciA4MjY1DQo+
-ICogZml4IGEgTlVMTCBwb2ludGVyIGRlcmVmZXJlbmNlIHdoZW4gcGFnaW5nIGZpcm13YXJlIGFz
-c2VydHMNCj4gKiByZW1vdmUgYSBXQVJOSU5HIG9uIGdzY2FuIGNhcGFiaWxpdGllcw0KPiAqIGZp
-eCBNT0RVTEVfRklSTVdBUkUgZm9yIDgyNjANCj4gDQo+IC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCj4gQXlhbGEgQmVrZXIg
-KDEpOg0KPiAgICAgICBpd2x3aWZpOiBtdm06IGF2b2lkIHRvIFdBUk4gYWJvdXQgZ3NjYW4gY2Fw
-YWJpbGl0aWVzDQo+IA0KPiBNYXR0aSBHb3R0bGllYiAoMSk6DQo+ICAgICAgIGl3bHdpZmk6IG12
-bTogZml4IGFjY2Vzc2luZyBOdWxsIHBvaW50ZXIgZHVyaW5nIGZ3IGR1bXANCj4gY29sbGVjdGlv
-bg0KPiANCj4gT3JlbiBHaXZvbiAoMSk6DQo+ICAgICAgIGl3bHdpZmk6IGFkZCBkZXZpY2UgSURz
-IGZvciB0aGUgODI2NSBkZXZpY2UNCj4gDQo+IFNhcmEgU2hhcm9uICgxKToNCj4gICAgICAgaXds
-d2lmaTogODAwMDogZml4IE1PRFVMRV9GSVJNV0FSRSBpbnB1dA0KPiANCj4gIGRyaXZlcnMvbmV0
-L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvaXdsLTgwMDAuYyAgIHwgIDIgKy0NCj4gIGRyaXZlcnMv
-bmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkvaXdsLWRydi5jICAgIHwgMjYgKysrKysrKysrKy0t
-LS0tDQo+IC0tLS0tLS0tLS0tDQo+ICBkcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZp
-L212bS9mdy1kYmcuYyB8ICA2ICsrKystLQ0KPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50ZWwv
-aXdsd2lmaS9tdm0vZncuYyAgICAgfCAgMiArKw0KPiAgZHJpdmVycy9uZXQvd2lyZWxlc3MvaW50
-ZWwvaXdsd2lmaS9wY2llL2Rydi5jICAgfCAxMCArKysrKysrKysrDQo+ICA1IGZpbGVzIGNoYW5n
-ZWQsIDI3IGluc2VydGlvbnMoKyksIDE5IGRlbGV0aW9ucygtKQ==
+From: Oren Givon <oren.givon@intel.com>
+
+Add new 8265 series PCI IDs.
+
+Signed-off-by: Oren Givon <oren.givon@intel.com>
+Signed-off-by: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
+---
+ drivers/net/wireless/intel/iwlwifi/pcie/drv.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+index 05b9685..79d7cd7 100644
+--- a/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
++++ b/drivers/net/wireless/intel/iwlwifi/pcie/drv.c
+@@ -479,8 +479,18 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0930, iwl8260_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24F3, 0x0000, iwl8265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24FD, 0x0010, iwl8265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24FD, 0x0110, iwl8265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24FD, 0x1110, iwl8265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24FD, 0x1010, iwl8265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24FD, 0x0050, iwl8265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24FD, 0x0150, iwl8265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24FD, 0x9010, iwl8265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24FD, 0x8110, iwl8265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24FD, 0x8050, iwl8265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24FD, 0x8010, iwl8265_2ac_cfg)},
+ 	{IWL_PCI_DEVICE(0x24FD, 0x0810, iwl8265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24FD, 0x9110, iwl8265_2ac_cfg)},
++	{IWL_PCI_DEVICE(0x24FD, 0x8130, iwl8265_2ac_cfg)},
+ 
+ /* 9000 Series */
+ 	{IWL_PCI_DEVICE(0x9DF0, 0x2A10, iwl5165_2ac_cfg)},
+-- 
+2.5.0
+
