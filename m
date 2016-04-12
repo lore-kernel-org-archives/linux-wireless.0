@@ -1,50 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:35955 "EHLO
-	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751576AbcDNUuw (ORCPT
+Received: from mail-wm0-f50.google.com ([74.125.82.50]:34822 "EHLO
+	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756169AbcDLIzz (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 16:50:52 -0400
-Received: by mail-oi0-f66.google.com with SMTP id v126so11366904oia.3
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2016 13:50:52 -0700 (PDT)
-Subject: Re: [PATCH 00/16] rtl8xxxu - additional fixes
-To: Jes.Sorensen@redhat.com, linux-wireless@vger.kernel.org
-References: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
-Cc: kvalo@codeaurora.org
-From: Larry Finger <Larry.Finger@lwfinger.net>
-Message-ID: <571002AA.9020602@lwfinger.net> (sfid-20160414_225055_962363_A38D83D6)
-Date: Thu, 14 Apr 2016 15:50:50 -0500
+	Tue, 12 Apr 2016 04:55:55 -0400
+Received: by mail-wm0-f50.google.com with SMTP id a140so44473049wma.0
+        for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2016 01:55:54 -0700 (PDT)
+Subject: Re: [PATCH 0/8] brcmfmac: event handling and other fixes
+To: =?UTF-8?B?UmFmYcWCIE1pxYJlY2tp?= <zajec5@gmail.com>,
+	Arend van Spriel <arend@broadcom.com>
+References: <1460367328-12082-1-git-send-email-arend@broadcom.com>
+ <CACna6rwCe6yfzcxdezKhPJwJ4cnWY4DEE04W81K=PrVD1pZVoA@mail.gmail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>,
+	linux-wireless <linux-wireless@vger.kernel.org>
+From: Arend van Spriel <arend.vanspriel@broadcom.com>
+Message-ID: <570CB818.9080807@broadcom.com> (sfid-20160412_105600_653849_0E998F8B)
+Date: Tue, 12 Apr 2016 10:55:52 +0200
 MIME-Version: 1.0
-In-Reply-To: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
-Content-Type: text/plain; charset=windows-1252; format=flowed
+In-Reply-To: <CACna6rwCe6yfzcxdezKhPJwJ4cnWY4DEE04W81K=PrVD1pZVoA@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 04/14/2016 03:37 PM, Jes.Sorensen@redhat.com wrote:
-> From: Jes Sorensen <Jes.Sorensen@redhat.com>
->
-> Hi,
->
-> This is a second set of rtl8xxxu related patches, which goes on top of
-> the set I sent out earlier today. If you only have time to go through
-> one set, please look at the other set.
->
-> This set primarily contains fixes to make rtl8188ru v2 devices work
-> again. I have reports that v1 devices still don't work, but I don't
-> have one of those, so I am not able to test this.
->
-> This also includes a fix for a crash reported by Xose Vazquez Peres
-> when trying to hot add a USB ID. It marks 0x050d:0x1004 as tested,
-> reported by Andrea Merello, and handles an old bug where the
-> driver didn't unregister from mac80211 before shutting down the
-> device. Last it includes a uninitialized return value fix from Colin
-> Ian King.
+On 11-04-16 13:20, Rafał Miłecki wrote:
+> On 11 April 2016 at 11:35, Arend van Spriel <arend@broadcom.com> wrote:
+>> This series provides the following:
+>>
+>> * avoid unexpected firmware events.
+>> * allow passing events explicitly for PCIe and SDIO devices.
+>> * fix issue with boardrev entry in nvram.
+>> * fix for wowl.
+>> * fix possible null pointer access upon aborting p2p scan.
+>>
+>> The series is intended for v4.7 kernel and applies to the master
+>> branch of the wireless-drivers-next repository.
+> 
+> Hey Arend,
+> 
+> Unfortunately I'm finding all your recent messages in spam :( It seems
+> GMail doesn't like something about the Broadcom server:
+> "Why is this message in Spam? It has a from address in broadcom.com
+> but has failed broadcom.com's required tests for authentication. Learn
+> more"
+> Quoted "Learn more" text links to the:
+> https://support.google.com/mail/answer/1366858?hl=en-GB&expand=5
+> 
+> Do you think you can point it to sb at Broadcom?
 
-I can confirm that the rtl8188ru v1 devices still do not work. Using "iwlist 
-scan", my APs at 2m have signal levels from -90 to -98 dBm. I do not know if it 
-is a problem in setting the gain, or if the antenna selection is wrong.
+sb? Help me understand this and I may have an appropriate answer :-p
 
-By the way, I have the same problem with the rtl8723bu device.
+Broadcom actually moved to Google Apps. I am still using my old email
+address and smtp server for submitting patches. Maybe that is the issue
+here.
 
-Larry
-
-
+Regards,
+Arend
