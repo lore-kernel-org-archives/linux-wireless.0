@@ -1,108 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:60791 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752956AbcDFOqa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 10:46:30 -0400
-Subject: [PATCH 8/8] ath10k: remove enum ath10k_swap_code_seg_bin_type
-To: <ath10k@lists.infradead.org>
-From: Kalle Valo <kvalo@qca.qualcomm.com>
-CC: <linux-wireless@vger.kernel.org>
-Date: Wed, 6 Apr 2016 17:46:19 +0300
-Message-ID: <20160406144619.28399.18013.stgit@potku.adurom.net> (sfid-20160406_164634_063908_A7DE953B)
-In-Reply-To: <20160406144355.28399.23733.stgit@potku.adurom.net>
-References: <20160406144355.28399.23733.stgit@potku.adurom.net>
-MIME-Version: 1.0
+Received: from mga01.intel.com ([192.55.52.88]:26303 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932225AbcDLIPI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2016 04:15:08 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "kvalo@codeaurora.org" <kvalo@codeaurora.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: pull request: iwlwifi 2016-04-12
+Date: Tue, 12 Apr 2016 08:14:48 +0000
+Message-ID: <1460448889.2630.12.camel@intel.com> (sfid-20160412_101513_916301_FD5D5E00)
 Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-It's not needed for anything so just get rid of it.
-
-Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
----
- drivers/net/wireless/ath/ath10k/core.c |    3 +--
- drivers/net/wireless/ath/ath10k/swap.c |   22 ++++++----------------
- drivers/net/wireless/ath/ath10k/swap.h |    9 +--------
- 3 files changed, 8 insertions(+), 26 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/core.c b/drivers/net/wireless/ath/ath10k/core.c
-index d0cecab5aaec..55f3a80b2884 100644
---- a/drivers/net/wireless/ath/ath10k/core.c
-+++ b/drivers/net/wireless/ath/ath10k/core.c
-@@ -647,8 +647,7 @@ static int ath10k_download_fw(struct ath10k *ar)
- 	data = ar->running_fw->fw_file.firmware_data;
- 	data_len = ar->running_fw->fw_file.firmware_len;
- 
--	ret = ath10k_swap_code_seg_configure(ar,
--					     ATH10K_SWAP_CODE_SEG_BIN_TYPE_FW);
-+	ret = ath10k_swap_code_seg_configure(ar);
- 	if (ret) {
- 		ath10k_err(ar, "failed to configure fw code swap: %d\n",
- 			   ret);
-diff --git a/drivers/net/wireless/ath/ath10k/swap.c b/drivers/net/wireless/ath/ath10k/swap.c
-index 8d6dc86799f5..af447a60143b 100644
---- a/drivers/net/wireless/ath/ath10k/swap.c
-+++ b/drivers/net/wireless/ath/ath10k/swap.c
-@@ -134,27 +134,17 @@ ath10k_swap_code_seg_alloc(struct ath10k *ar, size_t swap_bin_len)
- 	return seg_info;
- }
- 
--int ath10k_swap_code_seg_configure(struct ath10k *ar,
--				   enum ath10k_swap_code_seg_bin_type type)
-+int ath10k_swap_code_seg_configure(struct ath10k *ar)
- {
- 	int ret;
- 	struct ath10k_swap_code_seg_info *seg_info = NULL;
- 
--	switch (type) {
--	case ATH10K_SWAP_CODE_SEG_BIN_TYPE_FW:
--		if (!ar->swap.firmware_swap_code_seg_info)
--			return 0;
--
--		ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot found firmware code swap binary\n");
--		seg_info = ar->swap.firmware_swap_code_seg_info;
--		break;
--	default:
--	case ATH10K_SWAP_CODE_SEG_BIN_TYPE_OTP:
--	case ATH10K_SWAP_CODE_SEG_BIN_TYPE_UTF:
--		ath10k_warn(ar, "ignoring unknown code swap binary type %d\n",
--			    type);
-+	if (!ar->swap.firmware_swap_code_seg_info)
- 		return 0;
--	}
-+
-+	ath10k_dbg(ar, ATH10K_DBG_BOOT, "boot found firmware code swap binary\n");
-+
-+	seg_info = ar->swap.firmware_swap_code_seg_info;
- 
- 	ret = ath10k_bmi_write_memory(ar, seg_info->target_addr,
- 				      &seg_info->seg_hw_info,
-diff --git a/drivers/net/wireless/ath/ath10k/swap.h b/drivers/net/wireless/ath/ath10k/swap.h
-index 5c89952dd20f..36991c7b07a0 100644
---- a/drivers/net/wireless/ath/ath10k/swap.h
-+++ b/drivers/net/wireless/ath/ath10k/swap.h
-@@ -39,12 +39,6 @@ union ath10k_swap_code_seg_item {
- 	struct ath10k_swap_code_seg_tail tail;
- } __packed;
- 
--enum ath10k_swap_code_seg_bin_type {
--	 ATH10K_SWAP_CODE_SEG_BIN_TYPE_OTP,
--	 ATH10K_SWAP_CODE_SEG_BIN_TYPE_FW,
--	 ATH10K_SWAP_CODE_SEG_BIN_TYPE_UTF,
--};
--
- struct ath10k_swap_code_seg_hw_info {
- 	/* Swap binary image size */
- 	__le32 swap_size;
-@@ -64,8 +58,7 @@ struct ath10k_swap_code_seg_info {
- 	dma_addr_t paddr[ATH10K_SWAP_CODE_SEG_NUM_SUPPORTED];
- };
- 
--int ath10k_swap_code_seg_configure(struct ath10k *ar,
--				   enum ath10k_swap_code_seg_bin_type type);
-+int ath10k_swap_code_seg_configure(struct ath10k *ar);
- void ath10k_swap_code_seg_release(struct ath10k *ar);
- int ath10k_swap_code_seg_init(struct ath10k *ar);
- 
-
+SGkgS2FsbGUsDQoNCkkgaGF2ZSBoZXJlIGEgcHVsbCByZXF1ZXN0IGZvciA0LjYuIFRoZXJlIGlz
+IHBhdGNoIGluIHRoaXMgcHVsbCByZXF1ZXN0DQp0aGF0IGhhcyBiZWVuIHNlbnQgdG8gLW5leHQg
+YWxyZWFkeSBidXQgc2hvdWxkIHJlYWxseSBoYXZlIGJlZW4NCmluY2x1ZGVkIGluIHRoZSBjdXJy
+ZW50IGN5Y2xlLiBTb3JyeSBmb3IgdGhlIG1lc3MuDQoNClRoZSBjb21taXQgYXBwZWFycyBpbiAt
+bmV4dCBhczoNCg0KY29tbWl0IGEwYjA5ZjEzMDM2Y2VkZmQ2N2M5Y2I0YjlkMDUxMzhlNzAyMjcy
+M2QNCkF1dGhvcjogQXlhbGEgQmVrZXIgPGF5YWxhLmJla2VyQGludGVsLmNvbT4NCkRhdGU6ICAg
+V2VkIEZlYiAzIDE1OjM2OjUyIDIwMTYgKzAyMDANCg0KICAgIGl3bHdpZmk6IG12bTogdXBkYXRl
+IEdTQ0FOIGNhcGFiaWxpdGllcw0KICAgIA0KICAgIEdzY2FuIGNhcGFiaWxpdGllcyB3ZXJlIHVw
+ZGF0ZWQgd2l0aCBuZXcgY2FwYWJpbGl0aWVzIHN1cHBvcnRlZA0KICAgIGJ5IHRoZSBkZXZpY2Uu
+IFVwZGF0ZSBHU0NBTiBjYXBhYmlsaXRpZXMgVExWLg0KDQpJIG1vZGlmaWVkIHRoZSBjb21taXQg
+bWVzc2FnZSB0byBiZXR0ZXIgZW1waGFzaXMgdGhlIG5lZWQgdG8gaGF2ZSBpdCBpbg0KdGhlIGN1
+cnJlbnQgcmVsZWFzZS4gWW91J2xsIHNlZSBpdCBpbiB0aGlzIHB1bGwgcmVxdWVzdCBhczoNCg0K
+Y29tbWl0IGNkNDk3MjdlMWEyYmNjYzRmZjAwOGRkZTI0YzJmODQzMGRkOWUzNjgNCkF1dGhvcjog
+QXlhbGEgQmVrZXIgPGF5YWxhLmJla2VyQGludGVsLmNvbT4NCkRhdGU6ICAgV2VkIEZlYiAzIDE1
+OjM2OjUyIDIwMTYgKzAyMDANCg0KICAgIGl3bHdpZmk6IG12bTogYXZvaWQgdG8gV0FSTiBhYm91
+dCBnc2NhbiBjYXBhYmlsaXRpZXMNCiAgICANCiAgICBHc2NhbiBjYXBhYmlsaXRpZXMgd2VyZSB1
+cGRhdGVkIHdpdGggbmV3IGNhcGFiaWxpdGllcyBzdXBwb3J0ZWQNCiAgICBieSB0aGUgZGV2aWNl
+LiBVcGRhdGUgR1NDQU4gY2FwYWJpbGl0aWVzIFRMViBhbmQgYXZvaWQgdG8gV0FSTg0KICAgIGlm
+IHRoZSBmaXJtd2FyZSBkb2VzIG5vdCBoYXZlIHRoZSBuZXcgY2FwYWJpbGl0aWVzLg0KDQpCZXNp
+ZGVzIHRoaXMsIGFsbCBpcyBmYWlybHkgbm9ybWFsLg0KUGxlYXNlIHB1bGwsIHRoYW5rcyENCg0K
+DQpUaGUgZm9sbG93aW5nIGNoYW5nZXMgc2luY2UgY29tbWl0IDdmZGY5NjYzMjYxY2M3N2E1MTYz
+OTZmZWM4MmNlZThhOGVhMDdlNzY6DQoNCiAgaXdsd2lmaTogbXZtOiBmaXggbWVtb3J5IGxlYWsg
+aW4gcGFnaW5nICgyMDE2LTAzLTIwIDIzOjAxOjU0ICswMjAwKQ0KDQphcmUgYXZhaWxhYmxlIGlu
+IHRoZSBnaXQgcmVwb3NpdG9yeSBhdDoNCg0KICBodHRwczovL2dpdC5rZXJuZWwub3JnL3B1Yi9z
+Y20vbGludXgva2VybmVsL2dpdC9pd2x3aWZpL2l3bHdpZmktZml4ZXMuZ2l0IHRhZ3MvaXdsd2lm
+aS1mb3Ita2FsbGUtMjAxNi0wNC0xMg0KDQpmb3IgeW91IHRvIGZldGNoIGNoYW5nZXMgdXAgdG8g
+MmQyNWZiOGIzYTEzODcwNmI2M2JkMjZhZDcyYTk1YzU4MDI5OTU0YToNCg0KICBpd2x3aWZpOiBt
+dm06IGZpeCBhY2Nlc3NpbmcgTnVsbCBwb2ludGVyIGR1cmluZyBmdyBkdW1wIGNvbGxlY3Rpb24g
+KDIwMTYtMDQtMTIgMTA6MDM6MTcgKzAzMDApDQoNCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0NCiogYWRkIG5ldyBkZXZpY2Ug
+SURzIGZvciA4MjY1DQoqIGZpeCBhIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSB3aGVuIHBhZ2lu
+ZyBmaXJtd2FyZSBhc3NlcnRzDQoqIHJlbW92ZSBhIFdBUk5JTkcgb24gZ3NjYW4gY2FwYWJpbGl0
+aWVzDQoqIGZpeCBNT0RVTEVfRklSTVdBUkUgZm9yIDgyNjANCg0KLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KQXlhbGEgQmVr
+ZXIgKDEpOg0KICAgICAgaXdsd2lmaTogbXZtOiBhdm9pZCB0byBXQVJOIGFib3V0IGdzY2FuIGNh
+cGFiaWxpdGllcw0KDQpNYXR0aSBHb3R0bGllYiAoMSk6DQogICAgICBpd2x3aWZpOiBtdm06IGZp
+eCBhY2Nlc3NpbmcgTnVsbCBwb2ludGVyIGR1cmluZyBmdyBkdW1wIGNvbGxlY3Rpb24NCg0KT3Jl
+biBHaXZvbiAoMSk6DQogICAgICBpd2x3aWZpOiBhZGQgZGV2aWNlIElEcyBmb3IgdGhlIDgyNjUg
+ZGV2aWNlDQoNClNhcmEgU2hhcm9uICgxKToNCiAgICAgIGl3bHdpZmk6IDgwMDA6IGZpeCBNT0RV
+TEVfRklSTVdBUkUgaW5wdXQNCg0KIGRyaXZlcnMvbmV0L3dpcmVsZXNzL2ludGVsL2l3bHdpZmkv
+aXdsLTgwMDAuYyAgIHwgIDIgKy0NCiBkcml2ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZp
+L2l3bC1kcnYuYyAgICB8IDI2ICsrKysrKysrKystLS0tLS0tLS0tLS0tLS0tDQogZHJpdmVycy9u
+ZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9tdm0vZnctZGJnLmMgfCAgNiArKysrLS0NCiBkcml2
+ZXJzL25ldC93aXJlbGVzcy9pbnRlbC9pd2x3aWZpL212bS9mdy5jICAgICB8ICAyICsrDQogZHJp
+dmVycy9uZXQvd2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9wY2llL2Rydi5jICAgfCAxMCArKysrKysr
+KysrDQogNSBmaWxlcyBjaGFuZ2VkLCAyNyBpbnNlcnRpb25zKCspLCAxOSBkZWxldGlvbnMoLSk=
