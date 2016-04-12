@@ -1,106 +1,81 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from devils.ext.ti.com ([198.47.26.153]:33895 "EHLO
-	devils.ext.ti.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753571AbcDNJCb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 05:02:31 -0400
-Received: from dlelxv90.itg.ti.com ([172.17.2.17])
-	by devils.ext.ti.com (8.13.7/8.13.7) with ESMTP id u3E92UvK000945
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2016 04:02:30 -0500
-Received: from DFLE72.ent.ti.com (dfle72.ent.ti.com [128.247.5.109])
-	by dlelxv90.itg.ti.com (8.14.3/8.13.8) with ESMTP id u3E92UQp007013
-	for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2016 04:02:30 -0500
-From: Guy Mishol <guym@ti.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Guy Mishol <guym@ti.com>
-Subject: [PATCH] wlcore/wl12xx: Fix fw logger over sdio
-Date: Thu, 14 Apr 2016 11:58:17 +0300
-Message-ID: <1460624297-28420-1-git-send-email-guym@ti.com> (sfid-20160414_110235_758301_F4286CCE)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mout.gmx.net ([212.227.15.19]:58444 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752008AbcDLRjI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Tue, 12 Apr 2016 13:39:08 -0400
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kvalo@codeaurora.org, lkml2017@openmailbox.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>
+Subject: [PATCH] ath9k: ar5008_hw_cmn_spur_mitigate: add missing mask_m & mask_p initialisation
+Date: Tue, 12 Apr 2016 19:37:44 +0200
+Message-Id: <1460482664-21086-1-git-send-email-linux@rempel-privat.de> (sfid-20160412_193913_210834_9C35DDF9)
+In-Reply-To: <120e427452ad7e93f17828e8bba4b043@openmailbox.org>
+References: <120e427452ad7e93f17828e8bba4b043@openmailbox.org>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The commit fb724ed5c617 ("wlcore: Fix regression in
-wlcore_set_partition()") fixed wl12xx functionality.
-However, it reverted the support in fw logger
-over sdio in wl18xx.
+by moving common code to ar5008_hw_cmn_spur_mitigate i forgot to move
+mask_m & mask_p initialisation. This coused a performance regression
+on ar9281.
 
-This patch reverts the changes made and also fixes
-the original functionality issue introduced in wl12xx.
-
-Fixes: fb724ed5c617
-("wlcore: Fix regression in wlcore_set_partition()")
-
-Signed-off-by: Guy Mishol <guym@ti.com>
+Fixes: f911085ffa88 ("ath9k: split ar5008_hw_spur_mitigate and reuse common code in ar9002_hw_spur_mitigate.")
+Reported-by: Gustav Frederiksen <lkml2017@openmailbox.org>
+Tested-by: Gustav Frederiksen <lkml2017@openmailbox.org>
+Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
 ---
- drivers/net/wireless/ti/wl12xx/main.c |  4 ++--
- drivers/net/wireless/ti/wlcore/io.c   | 17 ++++++++++++++---
- drivers/net/wireless/ti/wlcore/io.h   |  3 ++-
- 3 files changed, 18 insertions(+), 6 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c | 8 +++-----
+ drivers/net/wireless/ath/ath9k/ar9002_phy.c | 5 -----
+ 2 files changed, 3 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/net/wireless/ti/wl12xx/main.c b/drivers/net/wireless/ti/wl12xx/main.c
-index a0d6ccc..2a52e894 100644
---- a/drivers/net/wireless/ti/wl12xx/main.c
-+++ b/drivers/net/wireless/ti/wl12xx/main.c
-@@ -553,8 +553,8 @@ static struct wlcore_partition_set wl12xx_ptable[PART_TABLE_LEN] = {
- 			.size  = 0x00000004
- 		},
- 		.mem3 = {
--			.start = 0x00040404,
--			.size  = 0x00000000
-+			.start = 0x00000000,
-+			.size  = 0x00040404
- 		},
- 	},
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index 8f87930..1b271b9 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -274,6 +274,9 @@ void ar5008_hw_cmn_spur_mitigate(struct ath_hw *ah,
+ 	};
+ 	static const int inc[4] = { 0, 100, 0, 0 };
  
-diff --git a/drivers/net/wireless/ti/wlcore/io.c b/drivers/net/wireless/ti/wlcore/io.c
-index 564ca75..1cc6d5a 100644
---- a/drivers/net/wireless/ti/wlcore/io.c
-+++ b/drivers/net/wireless/ti/wlcore/io.c
-@@ -175,14 +175,25 @@ int wlcore_set_partition(struct wl1271 *wl,
- 	if (ret < 0)
- 		goto out;
- 
--	/* We don't need the size of the last partition, as it is
--	 * automatically calculated based on the total memory size and
--	 * the sizes of the previous partitions.
-+	/* wl12xx only: We don't need the size of the last partition,
-+	 * as it is automatically calculated based on the total memory
-+	 * size and the sizes of the previous partitions.
-+	 *
-+	 * wl18xx re-defines the HW_PART3 addresses for logger over
-+	 * SDIO support. wl12xx is expecting the write to
-+	 * HW_PART3_START_ADDR at offset 24. This creates conflict
-+	 * between the addresses.
-+	 * In order to fix this the expected value is written to
-+	 * HW_PART3_SIZE_ADDR instead which is at offset 24 after changes.
- 	 */
- 	ret = wlcore_raw_write32(wl, HW_PART3_START_ADDR, p->mem3.start);
- 	if (ret < 0)
- 		goto out;
- 
-+	ret = wlcore_raw_write32(wl, HW_PART3_SIZE_ADDR, p->mem3.size);
-+	if (ret < 0)
-+		goto out;
++	memset(&mask_m, 0, sizeof(int8_t) * 123);
++	memset(&mask_p, 0, sizeof(int8_t) * 123);
 +
- out:
- 	return ret;
- }
-diff --git a/drivers/net/wireless/ti/wlcore/io.h b/drivers/net/wireless/ti/wlcore/io.h
-index 10cf374..704ce64 100644
---- a/drivers/net/wireless/ti/wlcore/io.h
-+++ b/drivers/net/wireless/ti/wlcore/io.h
-@@ -36,7 +36,8 @@
- #define HW_PART1_START_ADDR             (HW_PARTITION_REGISTERS_ADDR + 12)
- #define HW_PART2_SIZE_ADDR              (HW_PARTITION_REGISTERS_ADDR + 16)
- #define HW_PART2_START_ADDR             (HW_PARTITION_REGISTERS_ADDR + 20)
--#define HW_PART3_START_ADDR             (HW_PARTITION_REGISTERS_ADDR + 24)
-+#define HW_PART3_SIZE_ADDR              (HW_PARTITION_REGISTERS_ADDR + 24)
-+#define HW_PART3_START_ADDR             (HW_PARTITION_REGISTERS_ADDR + 28)
+ 	cur_bin = -6000;
+ 	upper = bin + 100;
+ 	lower = bin - 100;
+@@ -424,14 +427,9 @@ static void ar5008_hw_spur_mitigate(struct ath_hw *ah,
+ 	int tmp, new;
+ 	int i;
  
- #define HW_ACCESS_REGISTER_SIZE         4
+-	int8_t mask_m[123];
+-	int8_t mask_p[123];
+ 	int cur_bb_spur;
+ 	bool is2GHz = IS_CHAN_2GHZ(chan);
+ 
+-	memset(&mask_m, 0, sizeof(int8_t) * 123);
+-	memset(&mask_p, 0, sizeof(int8_t) * 123);
+-
+ 	for (i = 0; i < AR_EEPROM_MODAL_SPURS; i++) {
+ 		cur_bb_spur = ah->eep_ops->get_spur_channel(ah, i, is2GHz);
+ 		if (AR_NO_SPUR == cur_bb_spur)
+diff --git a/drivers/net/wireless/ath/ath9k/ar9002_phy.c b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+index db66245..53d7445 100644
+--- a/drivers/net/wireless/ath/ath9k/ar9002_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar9002_phy.c
+@@ -178,14 +178,9 @@ static void ar9002_hw_spur_mitigate(struct ath_hw *ah,
+ 	int i;
+ 	struct chan_centers centers;
+ 
+-	int8_t mask_m[123];
+-	int8_t mask_p[123];
+ 	int cur_bb_spur;
+ 	bool is2GHz = IS_CHAN_2GHZ(chan);
+ 
+-	memset(&mask_m, 0, sizeof(int8_t) * 123);
+-	memset(&mask_p, 0, sizeof(int8_t) * 123);
+-
+ 	ath9k_hw_get_channel_centers(ah, chan, &centers);
+ 	freq = centers.synth_center;
  
 -- 
-2.6.4
+2.5.0
 
