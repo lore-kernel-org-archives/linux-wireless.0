@@ -1,52 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:12796 "EHLO mga03.intel.com"
+Received: from s3.sipsolutions.net ([5.9.151.49]:33977 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750887AbcDTQXE (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2016 12:23:04 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: "ben@decadent.org.uk" <ben@decadent.org.uk>,
-	"Sharon, Sara" <sara.sharon@intel.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: RSS configuration in iwlwifi
-Date: Wed, 20 Apr 2016 16:22:59 +0000
-Message-ID: <1461169379.19157.7.camel@intel.com> (sfid-20160420_182309_332631_1A7CEF62)
-References: <1461164882.28559.61.camel@decadent.org.uk>
-	 <1461166207.19157.1.camel@intel.com>
-	 <1461167278.28559.63.camel@decadent.org.uk>
-In-Reply-To: <1461167278.28559.63.camel@decadent.org.uk>
-Content-Type: text/plain; charset="utf-8"
-MIME-Version: 1.0
+	id S932482AbcDMIie (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2016 04:38:34 -0400
+Message-ID: <1460536706.3057.3.camel@sipsolutions.net> (sfid-20160413_103851_168980_A309243F)
+Subject: Re: [PATCH v3] prism54: isl_38xx: Replace 'struct timeval'
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Tina Ruchandani <ruchandani.tina@gmail.com>,
+	Arnd Bergmann <arnd@arndb.de>
+Cc: y2038@lists.linaro.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Date: Wed, 13 Apr 2016 10:38:26 +0200
+In-Reply-To: <20160413060916.GA21184@localhost> (sfid-20160413_102532_303214_ACA2EBA3)
+References: <20160413060916.GA21184@localhost>
+	 (sfid-20160413_102532_303214_ACA2EBA3)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-T24gV2VkLCAyMDE2LTA0LTIwIGF0IDE2OjQ3ICswMTAwLCBCZW4gSHV0Y2hpbmdzIHdyb3RlOg0K
-PiBPbiBXZWQsIDIwMTYtMDQtMjAgYXQgMTU6MzAgKzAwMDAsIEdydW1iYWNoLCBFbW1hbnVlbCB3
-cm90ZToNCj4gPiBIaSBCZW4sDQo+ID4gDQo+ID4gDQo+ID4gVGhhbmtzIGZvciBsb29raW5nIGF0
-IG91ciBjb2RlLg0KPiA+IA0KPiA+IA0KPiA+IE9uIFdlZCwgMjAxNi0wNC0yMCBhdCAxNjowOCAr
-MDEwMCwgQmVuIEh1dGNoaW5ncyB3cm90ZToNCj4gPiA+IA0KPiA+ID4gSSdtIG5vdCBzdXJlIGlm
-IHlvdSB3ZXJlIGF3YXJlLCBidXQgdGhlcmUgaXMgYSBzdGFuZGFyZCBBUEkgZm9yDQo+ID4gPiBj
-b25maWd1cmluZyBSU1MgaW4gbmV0d29yayBkcml2ZXJzLCBwYXJ0IG9mIGV0aHRvb2xfb3BzLiAg
-SSB0aGluaw0KPiA+ID4gaXdsd2lmaSBzaG91bGQgaW1wbGVtZW50IHRoYXQgcmF0aGVyIHRoYW4g
-YSBkcml2ZXItc3BlY2lmaWMNCj4gPiA+IGRlYnVnZnMNCj4gPiA+IGludGVyZmFjZS4NCj4gPiA+
-IA0KPiA+IFlvdSBhcmUgcmlnaHQsIHRoaXMgaXMgd2h5IFNhcmEgbWFkZSB0aGlzIGNvbW1pdDoN
-Cj4gPiANCj4gPiBjb21taXQgODU0ZDc3M2U0YWI1ODY5MjAwMDA0YWY0Y2E1ZDg1MTczMDg0OTkw
-Mw0KPiA+IEF1dGhvcjogU2FyYSBTaGFyb24gPHNhcmEuc2hhcm9uQGludGVsLmNvbT4NCj4gPiBE
-YXRlOiAgIFR1ZSBNYXIgMjIgMTU6NTU6NTggMjAxNiArMDIwMA0KPiA+IA0KPiA+ICAgICBpd2x3
-aWZpOiBtdm06IGltcHJvdmUgUlNTIGNvbmZpZ3VyYXRpb24NCj4gPiAgICAgDQo+ID4gICAgIElt
-cHJvdmUgY3VycmVudCBSU1MgY29uZmlndXJhdGlvbjoNCj4gPiAgICAgICogVXNlIG5ldGRldl9y
-c3Nfa2V5IGluc3RlYWQgb2Yga2VlcGluZyBhIGxvY2FsIGNvcHkuDQo+ID4gICAgICAqIENvbmZp
-Z3VyZSBhbHNvIFVEUCBoYXNoaW5nIHRvIGhhdmUgVURQIHRyYWZmaWMgc3ByZWFkIGFjcm9zcw0K
-PiA+IHF1ZXVlcy4NCj4gPiAgICAgIERvIG5vdCBkaXJlY3QgUlNTIHRyYWZmaWMgdG8gb3VyIGZh
-bGxiYWNrIHF1ZXVlLg0KPiA+DQo+ID4gICAgIFNpZ25lZC1vZmYtYnk6IFNhcmEgU2hhcm9uIDxz
-YXJhLnNoYXJvbkBpbnRlbC5jb20+DQo+ID4gICAgIFNpZ25lZC1vZmYtYnk6IEVtbWFudWVsIEdy
-dW1iYWNoIDxlbW1hbnVlbC5ncnVtYmFjaEBpbnRlbC5jb20+DQo+IA0KPiBUaGF0IGRvZXNuJ3Qg
-cmVhbGx5IGFkZHJlc3Mgd2hhdCBJIHNhaWQuICBZZXMsIGl0J3MgdXNpbmcgdGhlIGNvbW1vbg0K
-PiBSU1Mga2V5LCBidXQgaXQncyBub3QgaW1wbGVtZW50aW5nIHRoZSBldGh0b29sIG9wZXJhdGlv
-bnMgdG8gZ2V0IGFuZA0KPiBzZXQgdGhlIGluZGlyZWN0aW9uIHRhYmxlIGFuZCB0aGUgdHlwZXMg
-b2YgZmxvdyBoYXNoaW5nIHRoYXQgYXJlDQo+IGVuYWJsZWQuDQo+IA0KDQpIbS4uIEkgdGhpbmsg
-dGhhdCBzZXR0aW5nIHRoZSBpbmRpcmVjdGlvbiB0YWJsZSBpcyBhIHByb2JsZW0gaW4gb3VyDQpj
-YXNlIGJlY2F1c2UgdGhlIFBOIGNoZWNrIGlzIGRvbmUgaW4gdGhlIGRyaXZlci4gVGhlIFBOIGNo
-ZWNrIGlzIHRoZQ0Kd2F5IFdpRmkgYWRkcmVzc2VzIHRoZSByZXBsYXkgYXR0YWNrLCBhbmQgc2lu
-Y2UgdGhlIFBOIGNoZWNrIHJlbGllcyBvbg0KcGVyLWNwdSB2YXJpYWJsZXMsIHdlIGNhbm5vdCAq
-c2FmZWx5KiBhbGxvdyB1c2VycyB0byBtb2RpZnkgdGhlDQppbmRpcmVjdGlvbiB0YWJsZSB3aGls
-ZSB0cmFmZmljIGlzIGZsb3dpbmcuDQoNCj4gQmVuLg0KPiA=
+
+> The patch was build-tested / debugged by removing the
+> "if VERBOSE > SHOW_ERROR_MESSAGES" guards.
+
+Stands to reason that we should just remove the (more or less) dead
+code, since I don't think anyone really ever touches this driver any
+more or will ever again ...
+
+johannes
