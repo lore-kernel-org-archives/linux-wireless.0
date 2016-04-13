@@ -1,52 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lb0-f171.google.com ([209.85.217.171]:34713 "EHLO
-	mail-lb0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750877AbcDFOWw (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:2477 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965700AbcDMLOk (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 10:22:52 -0400
-Received: by mail-lb0-f171.google.com with SMTP id vo2so30968388lbb.1
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2016 07:22:51 -0700 (PDT)
-Received: from di ([80.233.186.214])
-        by smtp.gmail.com with ESMTPSA id r9sm503111lfr.33.2016.04.06.07.22.49
-        for <linux-wireless@vger.kernel.org>
-        (version=TLSv1/SSLv3 cipher=OTHER);
-        Wed, 06 Apr 2016 07:22:49 -0700 (PDT)
-Date: Wed, 6 Apr 2016 17:22:48 +0300
-From: Dmitry Ivanov <dmitrijs.ivanovs@ubnt.com>
-To: linux-wireless@vger.kernel.org
-Subject: [PATCH 1/2] Do not send netlink socket release notification when
- socket is not bound
-Message-Id: <20160406172248.b032ff227e4843a836e00802@ubnt.com> (sfid-20160406_162255_804347_6B014CD5)
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+	Wed, 13 Apr 2016 07:14:40 -0400
+Subject: [PATCH v2 5/5] ath10k: fix parenthesis alignment
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 13 Apr 2016 14:14:16 +0300
+Message-ID: <20160413111416.18823.63753.stgit@potku.adurom.net> (sfid-20160413_131454_901443_638E2E23)
+In-Reply-To: <20160413111247.18823.15952.stgit@potku.adurom.net>
+References: <20160413111247.18823.15952.stgit@potku.adurom.net>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch corrects the problem where non-privileged user may create
-netlink socket with port_id equal to port_id used by hostapd to create
-virtual wireless network interfaces. Call to bind() will fail for such
-socket, but release notification sent on close() or process termination
-to nl80211 subsystem will destroy virtual network interfaces while
-hostapd is still running.
+Found by checkpatch:
 
-Signed-off-by: Dmitry Ivanov <dima@ubnt.com>
+drivers/net/wireless/ath/ath10k/mac.c:6800: Alignment should match open parent
+
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
 ---
- net/netlink/af_netlink.c | 2 +-
+ drivers/net/wireless/ath/ath10k/mac.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
-index 215fc08..330ebd6 100644
---- a/net/netlink/af_netlink.c
-+++ b/net/netlink/af_netlink.c
-@@ -688,7 +688,7 @@ static int netlink_release(struct socket *sock)
+diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
+index 9c848eb09d2e..59ed30cab681 100644
+--- a/drivers/net/wireless/ath/ath10k/mac.c
++++ b/drivers/net/wireless/ath/ath10k/mac.c
+@@ -6797,7 +6797,7 @@ static u64 ath10k_get_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif)
+ }
  
- 	skb_queue_purge(&sk->sk_write_queue);
- 
--	if (nlk->portid) {
-+	if (nlk->portid && nlk->bound) {
- 		struct netlink_notify n = {
- 						.net = sock_net(sk),
- 						.protocol = sk->sk_protocol,
--- 
-2.1.4
+ static void ath10k_set_tsf(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
+-		    u64 tsf)
++			   u64 tsf)
+ {
+ 	struct ath10k *ar = hw->priv;
+ 	struct ath10k_vif *arvif = ath10k_vif_to_arvif(vif);
 
