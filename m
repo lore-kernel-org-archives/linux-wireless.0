@@ -1,56 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:33945 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754826AbcDFHkm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 03:40:42 -0400
-Message-ID: <1459928436.17504.11.camel@sipsolutions.net> (sfid-20160406_094101_041832_8F137576)
-Subject: Re: [PATCH] mac80211: debugfs var for the default aggregation
- timeout.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Avery Pennarun <apenwarr@gmail.com>,
-	ath9k-devel <ath9k-devel@lists.ath9k.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@nbd.name>
-Date: Wed, 06 Apr 2016 09:40:36 +0200
-In-Reply-To: <CAHqTa-2bd2Z3LotVUpexWo2B95h3m5pjbjkWy-N=P=LYzCA4Mw@mail.gmail.com> (sfid-20160406_014716_227658_4D945608)
-References: <CAHqTa-22NpabO6B7nL=O26fnuGQHFOzpagWtsfQz4_BfrO6nTw@mail.gmail.com>
-	 <1455658091-28262-1-git-send-email-apenwarr@gmail.com>
-	 <1455658091-28262-2-git-send-email-apenwarr@gmail.com>
-	 <1456222441.2041.10.camel@sipsolutions.net>
-	 <CAHqTa-1CkJ-Pm6o7-pxcek4h+hmq6EtA0u12zGGraOUjDjeXSQ@mail.gmail.com>
-	 <1456257946.9910.23.camel@sipsolutions.net>
-	 <CAHqTa-2bd2Z3LotVUpexWo2B95h3m5pjbjkWy-N=P=LYzCA4Mw@mail.gmail.com>
-	 (sfid-20160406_014716_227658_4D945608)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail2.candelatech.com ([208.74.158.173]:56827 "EHLO
+	mail2.candelatech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758200AbcDMNSg (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2016 09:18:36 -0400
+Message-ID: <570E472A.2040901@candelatech.com> (sfid-20160413_151842_692983_0347C3AB)
+Date: Wed, 13 Apr 2016 06:18:34 -0700
+From: Ben Greear <greearb@candelatech.com>
+MIME-Version: 1.0
+To: Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: General VHT rate-ctrl question
+References: <570D8956.8090806@candelatech.com>	 (sfid-20160413_014843_049708_B2F53AD9) <1460534484.3057.2.camel@sipsolutions.net>
+In-Reply-To: <1460534484.3057.2.camel@sipsolutions.net>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-04-05 at 19:46 -0400, Avery Pennarun wrote:
 
-> This test was with backports-20150525 on ath9k.  (We have newer
-> versions in the queue, but they haven't rolled out to our customers
-> yet.  Anyway, earlier in this thread, I was able to trigger the race
-> condition on much newer backports.  Unfortunately the current fix
-> makes my reproducible test case go away, but I don't know any reason
-> to assume the race condition is fixed.)
 
-Well, we know that the timeout is likely unrelated to the issue (other
-than not triggering the broken code path that frequently), so you can
-revert the timeout change for the test case.
+On 04/13/2016 01:01 AM, Johannes Berg wrote:
+> On Tue, 2016-04-12 at 16:48 -0700, Ben Greear wrote:
+>> If a station and it's peer can both do VHT, is there ever a good
+>> reason to even try HT rates?
+>>
+>
+> Not really; perhaps if you could do HT greenfield preamble (which VHT
+> doesn't have) you could get something out of it, beyond that I don't
+> see a reason to try.
+>
+> Unless, for some strange reason, it supports only single stream VHT and
+> dual-stream HT or something really weird?
 
-> While we're here, unfortunately it turns out that just observing the
-> agg_status file can cause crashes (though not very often... except
-> for a few unlucky customers), probably due to a different race
-> condition.
-> Any suggestions about this one?  Stack trace attached below.  (I
-> think the stack trace suggests a mac80211 problem?)
-> 
+I was wondering if there was ever a reason that, say 450Mbps HT
+would work better than MCS-1 for VHT.  Or, maybe a mid-rate HT MCS would
+have more range than VHT, or something like that.
 
-That has to be a mac80211 problem, yeah.
-(Side note: I'm a bit surprised this is a 32-bit system?)
+After fighting with the firmware's rate-ctrl all day, I am even more interested
+in trying to make it use mistrel_ht.
 
-Looks like we use RCU protection to get the data. Can I get the
-mac80211.ko binary (with debug data) corresponding to the crash below?
+Thanks,
+Ben
 
-johannes
+-- 
+Ben Greear <greearb@candelatech.com>
+Candela Technologies Inc  http://www.candelatech.com
