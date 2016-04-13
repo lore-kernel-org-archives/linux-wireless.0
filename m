@@ -1,72 +1,126 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-ob0-f173.google.com ([209.85.214.173]:34042 "EHLO
-	mail-ob0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756556AbcDHIcG (ORCPT
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36339 "EHLO
+	mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756304AbcDMIZY (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 8 Apr 2016 04:32:06 -0400
-Received: by mail-ob0-f173.google.com with SMTP id bg3so68705470obb.1
-        for <linux-wireless@vger.kernel.org>; Fri, 08 Apr 2016 01:32:05 -0700 (PDT)
+	Wed, 13 Apr 2016 04:25:24 -0400
+Date: Tue, 12 Apr 2016 23:09:16 -0700
+From: Tina Ruchandani <ruchandani.tina@gmail.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: y2038@lists.linaro.org, linux-kernel@vger.kernel.org,
+	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
+Subject: [PATCH v3] prism54: isl_38xx: Replace 'struct timeval'
+Message-ID: <20160413060916.GA21184@localhost> (sfid-20160413_102532_303214_ACA2EBA3)
 MIME-Version: 1.0
-In-Reply-To: <1460099746.30678.3.camel@sipsolutions.net>
-References: <CAHqTa-22NpabO6B7nL=O26fnuGQHFOzpagWtsfQz4_BfrO6nTw@mail.gmail.com>
- <1455658091-28262-1-git-send-email-apenwarr@gmail.com> <1455658091-28262-2-git-send-email-apenwarr@gmail.com>
- <1456222441.2041.10.camel@sipsolutions.net> <CAHqTa-1CkJ-Pm6o7-pxcek4h+hmq6EtA0u12zGGraOUjDjeXSQ@mail.gmail.com>
- <1456257946.9910.23.camel@sipsolutions.net> <CAHqTa-2bd2Z3LotVUpexWo2B95h3m5pjbjkWy-N=P=LYzCA4Mw@mail.gmail.com>
- <1459928436.17504.11.camel@sipsolutions.net> <CAHqTa-3VtwYWLUHQuFyqtmMwPE2XQYJD4-U+-1PqXKtmTFrEgA@mail.gmail.com>
- <1460098614.30678.1.camel@sipsolutions.net> <1460098909.30678.2.camel@sipsolutions.net>
- <1460099746.30678.3.camel@sipsolutions.net>
-From: Avery Pennarun <apenwarr@gmail.com>
-Date: Fri, 8 Apr 2016 04:31:45 -0400
-Message-ID: <CAHqTa-1SO+asqf7Fn2d+J_w8vvJ1CnnMG8AGB2O1CBjeaaL8hA@mail.gmail.com> (sfid-20160408_103234_753050_837EEF34)
-Subject: Re: [PATCH] mac80211: debugfs var for the default aggregation timeout.
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: ath9k-devel <ath9k-devel@lists.ath9k.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Felix Fietkau <nbd@nbd.name>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Fri, Apr 8, 2016 at 3:15 AM, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Fri, 2016-04-08 at 09:01 +0200, Johannes Berg wrote:
->> On Fri, 2016-04-08 at 08:56 +0200, Johannes Berg wrote:
->> > On Thu, 2016-04-07 at 21:32 -0400, Avery Pennarun wrote:
->> > > Yes.  Here it is:
->> > > http://apenwarr.ca/tmp/mac80211-agg-status-crash.ko
->> > >
->> > Unfortunately there are no debug symbols in this file, so it
->> > doesn't
->> > help me much. I can't even seem to get objdump to disassemble it
->> > correctly: looks like the file is in thumb, going from things
->> > like R_ARM_THM_CALL relocations, but even -Mforce-thumb doesn't
->> > seem
->> > to DRT; sta_agg_status_read+0xeb isn't even a valid instruction
->> > offset in regular ARM mode.
->> >
->> It *seems* that it most likely crashes on the first access to tid_tx,
->> which is consistent with the story of disabling TX aggregation
->> timeouts
->> reducing the chances.
->>
->> So I guess we have to look for some TX aggregation teardown RCU
->> pointer problem?
->
-> Can't find anything. The only other thing I saw now is that the TID
-> appears to be 7 (in r7), might be worth looking for whether that's a
-> common thing or not?
+'struct timeval' uses a 32-bit seconds field which will overflow in
+year 2038 and beyond. This patch is part of a larger effort to remove
+all instances of 'struct timeval' from the kernel and replace them
+with 64-bit timekeeping variables.
+The patch also fixes the debug printf specifier to avoid the
+seconds value being truncated.
+The patch was build-tested / debugged by removing the
+"if VERBOSE > SHOW_ERROR_MESSAGES" guards.
 
-Just to be clear, this crash is only from *reading* the agg_status
-files.  I don't know if the crashiness reduces when disabling the
-aggregation timeouts, since that's a separate bug (in which the queue
-gets stuck and the 'pending' column of this file just keeps
-increasing).
+Signed-off-by: Tina Ruchandani <ruchandani.tina@gmail.com>
+Suggested-by: Arnd Bergmann <arnd@arndb.de>
+--
+Changes in v3:
+ Fix commit message
+Changes in v2:
+ Changed printf specifier as suggested by Arnd Bergmann to
+avoid truncation.
+---
+ drivers/net/wireless/intersil/prism54/isl_38xx.c | 35 ++++++++++++------------
+ 1 file changed, 18 insertions(+), 17 deletions(-)
 
-I'll try twiddling some options again tomorrow and see if I can get
-one with proper debug symbols.  For what it's worth, this platform is
-"ARMv7 Processor rev 1 (v7l)" and the gcc build is made for Cortex A9.
-You can find an x86 build of our toolchain in the git repo at
-https://gfiber.googlesource.com/toolchains/mindspeed.
+diff --git a/drivers/net/wireless/intersil/prism54/isl_38xx.c b/drivers/net/wireless/intersil/prism54/isl_38xx.c
+index 333c1a2..6700387 100644
+--- a/drivers/net/wireless/intersil/prism54/isl_38xx.c
++++ b/drivers/net/wireless/intersil/prism54/isl_38xx.c
+@@ -19,6 +19,7 @@
+ #include <linux/module.h>
+ #include <linux/types.h>
+ #include <linux/delay.h>
++#include <linux/ktime.h>
 
-Thanks for looking into it :)
+ #include <asm/uaccess.h>
+ #include <asm/io.h>
+@@ -113,7 +114,7 @@ isl38xx_trigger_device(int asleep, void __iomem *device_base)
 
-Avery
+ #if VERBOSE > SHOW_ERROR_MESSAGES
+ 	u32 counter = 0;
+-	struct timeval current_time;
++	struct timespec64 current_ts64;
+ 	DEBUG(SHOW_FUNCTION_CALLS, "isl38xx trigger device\n");
+ #endif
+
+@@ -121,22 +122,22 @@ isl38xx_trigger_device(int asleep, void __iomem *device_base)
+ 	if (asleep) {
+ 		/* device is in powersave, trigger the device for wakeup */
+ #if VERBOSE > SHOW_ERROR_MESSAGES
+-		do_gettimeofday(&current_time);
+-		DEBUG(SHOW_TRACING, "%08li.%08li Device wakeup triggered\n",
+-		      current_time.tv_sec, (long)current_time.tv_usec);
++		ktime_get_real_ts64(&current_ts64);
++		DEBUG(SHOW_TRACING, "%lld.%09ld Device wakeup triggered\n",
++		      (s64)current_ts64.tv_sec, current_ts64.tv_nsec);
+
+-		DEBUG(SHOW_TRACING, "%08li.%08li Device register read %08x\n",
+-		      current_time.tv_sec, (long)current_time.tv_usec,
++		DEBUG(SHOW_TRACING, "%lld.%09ld Device register read %08x\n",
++		      (s64)current_ts64.tv_sec, current_ts64.tv_nsec,
+ 		      readl(device_base + ISL38XX_CTRL_STAT_REG));
+ #endif
+
+ 		reg = readl(device_base + ISL38XX_INT_IDENT_REG);
+ 		if (reg == 0xabadface) {
+ #if VERBOSE > SHOW_ERROR_MESSAGES
+-			do_gettimeofday(&current_time);
++			ktime_get_real_ts64(&current_ts64);
+ 			DEBUG(SHOW_TRACING,
+-			      "%08li.%08li Device register abadface\n",
+-			      current_time.tv_sec, (long)current_time.tv_usec);
++			      "%lld.%09ld Device register abadface\n",
++			      (s64)current_ts64.tv_sec, current_ts64.tv_nsec);
+ #endif
+ 			/* read the Device Status Register until Sleepmode bit is set */
+ 			while (reg = readl(device_base + ISL38XX_CTRL_STAT_REG),
+@@ -149,13 +150,13 @@ isl38xx_trigger_device(int asleep, void __iomem *device_base)
+
+ #if VERBOSE > SHOW_ERROR_MESSAGES
+ 			DEBUG(SHOW_TRACING,
+-			      "%08li.%08li Device register read %08x\n",
+-			      current_time.tv_sec, (long)current_time.tv_usec,
++			      "%lld.%09ld Device register read %08x\n",
++			      (s64)current_ts64.tv_sec, current_ts64.tv_nsec,
+ 			      readl(device_base + ISL38XX_CTRL_STAT_REG));
+-			do_gettimeofday(&current_time);
++			ktime_get_real_ts64(&current_ts64);
+ 			DEBUG(SHOW_TRACING,
+-			      "%08li.%08li Device asleep counter %i\n",
+-			      current_time.tv_sec, (long)current_time.tv_usec,
++			      "%lld.%09ld Device asleep counter %i\n",
++			      (s64)current_ts64.tv_sec, current_ts64.tv_nsec,
+ 			      counter);
+ #endif
+ 		}
+@@ -168,9 +169,9 @@ isl38xx_trigger_device(int asleep, void __iomem *device_base)
+
+ 		/* perform another read on the Device Status Register */
+ 		reg = readl(device_base + ISL38XX_CTRL_STAT_REG);
+-		do_gettimeofday(&current_time);
+-		DEBUG(SHOW_TRACING, "%08li.%08li Device register read %08x\n",
+-		      current_time.tv_sec, (long)current_time.tv_usec, reg);
++		ktime_get_real_ts64(&current_ts64);
++		DEBUG(SHOW_TRACING, "%lld.%00ld Device register read %08x\n",
++		      (s64)current_ts64.tv_sec, current_ts64.tv_nsec, reg);
+ #endif
+ 	} else {
+ 		/* device is (still) awake  */
+--
+2.8.0.rc3.226.g39d4020
+
