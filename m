@@ -1,43 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:52421 "EHLO
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:5557 "EHLO
 	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752086AbcDDOye convert rfc822-to-8bit (ORCPT
+	with ESMTP id S964811AbcDMLO2 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2016 10:54:34 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"mohammed@codeaurora.org" <mohammed@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH v1 1/3] ath10k: Enable debugfs provision to enable Peer
- Stats feature
-Date: Mon, 4 Apr 2016 14:54:26 +0000
-Message-ID: <878u0te867.fsf@kamboji.qca.qualcomm.com> (sfid-20160404_165438_432890_7F9A1E24)
-References: <1458132214-4896-1-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1458132214-4896-1-git-send-email-mohammed@qca.qualcomm.com>
-	(Mohammed Shafi Shajakhan's message of "Wed, 16 Mar 2016 18:13:32	+0530")
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 13 Apr 2016 07:14:28 -0400
+Subject: [PATCH v2 4/5] ath10k: prefer ether_addr_copy() over memcpy()
+From: Kalle Valo <kvalo@qca.qualcomm.com>
+To: <ath10k@lists.infradead.org>
+CC: <linux-wireless@vger.kernel.org>
+Date: Wed, 13 Apr 2016 14:14:02 +0300
+Message-ID: <20160413111402.18823.24437.stgit@potku.adurom.net> (sfid-20160413_131431_535816_423E9CF2)
+In-Reply-To: <20160413111247.18823.15952.stgit@potku.adurom.net>
+References: <20160413111247.18823.15952.stgit@potku.adurom.net>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
+Fixes checkpatch warning:
 
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
->
-> Provide a debugfs entry to enable/ disable Peer Stats feature.
-> Peer Stats feature is for developers/users who are more interested
-> in studying in Rx/Tx stats with multiple clients connected, hence
-> disable this by default. Enabling this feature by default results
-> in unneccessary processing of Peer Stats event for every 500ms
-> and updating peer_stats list (allocating memory) and cleaning it up
-> ifexceeds the higher limit and this can be an unnecessary overhead
-> during long run stress testing.
->
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+drivers/net/wireless/ath/ath10k/wmi.c:5800: Prefer ether_addr_copy() over memcpy() if the Ethernet addresses are __aligned(2)
 
-All three applied, thanks.
+Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+---
+ drivers/net/wireless/ath/ath10k/wmi.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
--- 
-Kalle Valo
+diff --git a/drivers/net/wireless/ath/ath10k/wmi.c b/drivers/net/wireless/ath/ath10k/wmi.c
+index e92ac26865ff..adb31e188ebd 100644
+--- a/drivers/net/wireless/ath/ath10k/wmi.c
++++ b/drivers/net/wireless/ath/ath10k/wmi.c
+@@ -5827,9 +5827,8 @@ ath10k_wmi_put_start_scan_tlvs(struct wmi_start_scan_tlvs *tlvs,
+ 		bssids->num_bssid = __cpu_to_le32(arg->n_bssids);
+ 
+ 		for (i = 0; i < arg->n_bssids; i++)
+-			memcpy(&bssids->bssid_list[i],
+-			       arg->bssids[i].bssid,
+-			       ETH_ALEN);
++			ether_addr_copy(bssids->bssid_list[i].addr,
++					arg->bssids[i].bssid);
+ 
+ 		ptr += sizeof(*bssids);
+ 		ptr += sizeof(struct wmi_mac_addr) * arg->n_bssids;
+
