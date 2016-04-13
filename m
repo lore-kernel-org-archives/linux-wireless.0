@@ -1,52 +1,89 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:33673 "EHLO
-	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757315AbcDEGjN (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 02:39:13 -0400
-Received: by mail-pa0-f67.google.com with SMTP id q6so481410pav.0
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 23:39:13 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 12/14] staging: wilc1000: remove unused hif_drv in wilc_set_pmkid_info
-Date: Tue,  5 Apr 2016 15:38:30 +0900
-Message-Id: <1459838312-16506-12-git-send-email-chaehyun.lim@gmail.com> (sfid-20160405_085528_890574_274A9AB1)
-In-Reply-To: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1459838312-16506-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mout.gmx.net ([212.227.17.21]:59678 "EHLO mout.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750820AbcDMQpU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2016 12:45:20 -0400
+Subject: Re: [PATCH] ath9k: ar5008_hw_cmn_spur_mitigate: add missing mask_m &
+ mask_p initialisation
+To: Kalle Valo <kvalo@codeaurora.org>
+References: <120e427452ad7e93f17828e8bba4b043@openmailbox.org>
+ <1460482664-21086-1-git-send-email-linux@rempel-privat.de>
+ <878u0hzvz0.fsf@purkki.adurom.net> <874mb5zvt0.fsf@purkki.adurom.net>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	lkml2017@openmailbox.org
+From: Oleksij Rempel <linux@rempel-privat.de>
+Message-ID: <570E778E.6090104@rempel-privat.de> (sfid-20160413_184523_249554_9EBC2E6B)
+Date: Wed, 13 Apr 2016 18:45:02 +0200
+MIME-Version: 1.0
+In-Reply-To: <874mb5zvt0.fsf@purkki.adurom.net>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="aiFL43sOVbaDFA5ajAKEhj9G8bJNievhU"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch removes unused hif_drv in wilc_set_pmkid_info.
-There is no need to check null and print debug log.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--aiFL43sOVbaDFA5ajAKEhj9G8bJNievhU
+Content-Type: multipart/mixed; boundary="fvGrAlXAtqqqDrouWqNtSOGxVIfhC5Mh7"
+From: Oleksij Rempel <linux@rempel-privat.de>
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+ lkml2017@openmailbox.org
+Message-ID: <570E778E.6090104@rempel-privat.de>
+Subject: Re: [PATCH] ath9k: ar5008_hw_cmn_spur_mitigate: add missing mask_m &
+ mask_p initialisation
+References: <120e427452ad7e93f17828e8bba4b043@openmailbox.org>
+ <1460482664-21086-1-git-send-email-linux@rempel-privat.de>
+ <878u0hzvz0.fsf@purkki.adurom.net> <874mb5zvt0.fsf@purkki.adurom.net>
+In-Reply-To: <874mb5zvt0.fsf@purkki.adurom.net>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 6 ------
- 1 file changed, 6 deletions(-)
+--fvGrAlXAtqqqDrouWqNtSOGxVIfhC5Mh7
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index d23c8ba..270bb3e 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -2957,14 +2957,8 @@ int wilc_set_pmkid_info(struct wilc_vif *vif,
- {
- 	int result = 0;
- 	struct host_if_msg msg;
--	struct host_if_drv *hif_drv = vif->hif_drv;
- 	int i;
- 
--	if (!hif_drv) {
--		netdev_err(vif->ndev, "driver is null\n");
--		return -EFAULT;
--	}
--
- 	memset(&msg, 0, sizeof(struct host_if_msg));
- 
- 	msg.id = HOST_IF_MSG_KEY;
--- 
-2.8.0
+Am 13.04.2016 um 11:45 schrieb Kalle Valo:
+> Kalle Valo <kvalo@codeaurora.org> writes:
+>=20
+>> Oleksij Rempel <linux@rempel-privat.de> writes:
+>>
+>>> by moving common code to ar5008_hw_cmn_spur_mitigate i forgot to move=
 
+>>> mask_m & mask_p initialisation. This coused a performance regression
+>>> on ar9281.
+>>>
+>>> Fixes: f911085ffa88 ("ath9k: split ar5008_hw_spur_mitigate and reuse =
+common code in ar9002_hw_spur_mitigate.")
+>>> Reported-by: Gustav Frederiksen <lkml2017@openmailbox.org>
+>>> Tested-by: Gustav Frederiksen <lkml2017@openmailbox.org>
+>>> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+>>
+>> If no objections I'm planning to send this to 4.6.
+>=20
+> Should we also CC stable (4.2+)? I can add that before I commit the
+> patch.
+>=20
+
+Yes, please.
+Thank you.
+
+--=20
+Regards,
+Oleksij
+
+
+--fvGrAlXAtqqqDrouWqNtSOGxVIfhC5Mh7--
+
+--aiFL43sOVbaDFA5ajAKEhj9G8bJNievhU
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2
+
+iF4EAREIAAYFAlcOd5QACgkQHwImuRkmbWkycgD/SCAfOy2fnf5Sm2lfiChHtk12
+L1W6oOkPfKZTHCTSmvkA/RXrWtHx/B8RgR3i4eTDlCNYSduonMztdjD/u8kxHll0
+=y8dm
+-----END PGP SIGNATURE-----
+
+--aiFL43sOVbaDFA5ajAKEhj9G8bJNievhU--
