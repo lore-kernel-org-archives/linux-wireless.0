@@ -1,35 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:18853 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752692AbcD0Mw4 convert rfc822-to-8bit (ORCPT
+Received: from mail-yw0-f172.google.com ([209.85.161.172]:34333 "EHLO
+	mail-yw0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750992AbcDMUIS (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 27 Apr 2016 08:52:56 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
-	<mohammed@qti.qualcomm.com>
-CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
-	"mohammed@codeaurora.org" <mohammed@codeaurora.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: Re: [PATCH] ath10k: fix a typo in ath10k_start()
-Date: Wed, 27 Apr 2016 12:52:45 +0000
-Message-ID: <87mvofw6w3.fsf@kamboji.qca.qualcomm.com> (sfid-20160427_145311_837607_66684ACE)
-References: <1461330373-14847-1-git-send-email-mohammed@qca.qualcomm.com>
-In-Reply-To: <1461330373-14847-1-git-send-email-mohammed@qca.qualcomm.com>
-	(Mohammed Shafi Shajakhan's message of "Fri, 22 Apr 2016 18:36:13	+0530")
-Content-Type: text/plain; charset="us-ascii"
+	Wed, 13 Apr 2016 16:08:18 -0400
+Received: by mail-yw0-f172.google.com with SMTP id d68so82458383ywe.1
+        for <linux-wireless@vger.kernel.org>; Wed, 13 Apr 2016 13:08:18 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <CAA93jw5d9Er+ZcSszg-gd0X7ZWeQJtqmPFXkf1mwXnTDKxg0xA@mail.gmail.com>
+References: <570D8956.8090806@candelatech.com> <1460534484.3057.2.camel@sipsolutions.net>
+ <570E472A.2040901@candelatech.com> <CAA93jw5d9Er+ZcSszg-gd0X7ZWeQJtqmPFXkf1mwXnTDKxg0xA@mail.gmail.com>
+From: Krishna Chaitanya <chaitanya.mgit@gmail.com>
+Date: Thu, 14 Apr 2016 01:37:57 +0530
+Message-ID: <CABPxzYJFjvMAn8fCcsuqbyq-6Yrim+eXFM2=6pVu=ppmP35x9Q@mail.gmail.com> (sfid-20160413_220822_200411_BAA273AE)
+Subject: Re: General VHT rate-ctrl question
+To: Dave Taht <dave.taht@gmail.com>
+Cc: Ben Greear <greearb@candelatech.com>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
-
-> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+On Wed, Apr 13, 2016 at 10:31 PM, Dave Taht <dave.taht@gmail.com> wrote:
 >
-> fix a typo (spelling mistake) in 'ath10k_start'
->
-> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> On Wed, Apr 13, 2016 at 6:18 AM, Ben Greear <greearb@candelatech.com> wrote:
+> >
+> >
+> > On 04/13/2016 01:01 AM, Johannes Berg wrote:
+> >>
+> >> On Tue, 2016-04-12 at 16:48 -0700, Ben Greear wrote:
+> >>>
+> >>> If a station and it's peer can both do VHT, is there ever a good
+> >>> reason to even try HT rates?
+> >>>
+> >>
+> >> Not really; perhaps if you could do HT greenfield preamble (which VHT
+> >> doesn't have) you could get something out of it, beyond that I don't
+> >> see a reason to try.
+> >>
+> >> Unless, for some strange reason, it supports only single stream VHT and
+> >> dual-stream HT or something really weird?
+> >
+> >
+> > I was wondering if there was ever a reason that, say 450Mbps HT
+> > would work better than MCS-1 for VHT.  Or, maybe a mid-rate HT MCS would
+> > have more range than VHT, or something like that.
+I dont think so. basically if you remove 256 QAM out of picture,
+it just boils down to choosing a modulation scheme which would
+be same for VHT and HT. (assuming same BW)
 
-Applied, thanks.
-
--- 
-Kalle Valo
+Only advantage is as Johannes pointed, VHT doesn't have greenfield,
+so using HT greenfield preamble might be marginally good. Similarly we can
+use RIFS for HT(not recommended), But again who uses RIFS/greenfield?
