@@ -1,53 +1,37 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0a-0016f401.pphosted.com ([67.231.148.174]:46195 "EHLO
-	mx0a-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753130AbcDTM64 (ORCPT
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:27682 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759583AbcDMJOq convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 20 Apr 2016 08:58:56 -0400
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: Luana Borgia <luanaborgia1969@gmail.com>,
+	Wed, 13 Apr 2016 05:14:46 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Oh, Peter" <poh@qca.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
 	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
-Subject: RE: ap + adhoc not working with Mwifiex driver for sd8887
-Date: Wed, 20 Apr 2016 12:58:51 +0000
-Message-ID: <d5015eed796149588c329bd4a500dc96@SC-EXCH04.marvell.com> (sfid-20160420_145901_673900_E424056F)
-References: <CAD3r-iRQD5nVBuC1_zYmu_FtmP4CdP2BbHxz1Q579mBPKg5zmQ@mail.gmail.com>
- <CAD3r-iTvJZLM0=tpoKZr8RGFrymdzPBV8xAEsx-qvnFeh6y=5g@mail.gmail.com>
-In-Reply-To: <CAD3r-iTvJZLM0=tpoKZr8RGFrymdzPBV8xAEsx-qvnFeh6y=5g@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Subject: Re: [PATCH 0/3]  ath10k: add a support of set_tsf on vdev interface
+Date: Wed, 13 Apr 2016 09:13:40 +0000
+Message-ID: <87ega9ub0c.fsf@kamboji.qca.qualcomm.com> (sfid-20160413_111450_865049_D2FBDAA4)
+References: <1459811956-26186-1-git-send-email-poh@qca.qualcomm.com>
+In-Reply-To: <1459811956-26186-1-git-send-email-poh@qca.qualcomm.com> (Peter
+	Oh's message of "Mon, 4 Apr 2016 16:19:13 -0700")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-SGkgTHVhbmEsDQoNCj4gRnJvbTogbGludXgtd2lyZWxlc3Mtb3duZXJAdmdlci5rZXJuZWwub3Jn
-IFttYWlsdG86bGludXgtd2lyZWxlc3MtDQo+IG93bmVyQHZnZXIua2VybmVsLm9yZ10gT24gQmVo
-YWxmIE9mIEx1YW5hIEJvcmdpYQ0KPiBTZW50OiBXZWRuZXNkYXksIEFwcmlsIDIwLCAyMDE2IDEx
-OjE0IEFNDQo+IFRvOiBsaW51eC13aXJlbGVzc0B2Z2VyLmtlcm5lbC5vcmc7IEF2aW5hc2ggUGF0
-aWwNCj4gU3ViamVjdDogRndkOiBhcCArIGFkaG9jIG5vdCB3b3JraW5nIHdpdGggTXdpZmlleCBk
-cml2ZXIgZm9yIHNkODg4Nw0KPiANCj4gSGksDQo+IEkndmUgc3VjY2Vzc2Z1bGx5IG1hbmFnZWQg
-dG8gZ2V0IHRoaXMgZHJpdmVyIHdvcmtpbmcgaW4gYWRob2Mgd2l0aCBvbHNyZA0KPiBvbiBtbGFu
-MCBpbnRlcmZhY2UsIG5vdyBJJ20gdHJ5aW5nIHRvIGFkZCBhIHVhcDAgd29ya2luZyBhdCB0aGUg
-c2FtZQ0KPiB0aW1lLCB3aXRoIGFsbCB0aGlzIGNvbW1hbmQ6DQo+IA0KPiByZmtpbGwgdW5ibG9j
-ayB3bGFuDQo+IGlwIGxpbmsgc2V0IHVhcDAgZG93bg0KPiBpcCBsaW5rIHNldCBtbGFuMCBkb3du
-DQo+IGl3IGRldiBtbGFuMCBzZXQgdHlwZSBpYnNzDQo+IGlwIGxpbmsgc2V0IG1sYW4wIHVwDQo+
-IGl3IGRldiBtbGFuMCBpYnNzIGpvaW4gbWVzaCAyNDM3IGZlOmRlOmZlOmRlOmZlOmRlIG9sc3Jk
-LXN0YXJ0LnNoIGNhdA0KPiA8PEVPRiA+IC9ldGMvaG9zdGFwZC5jb25mIHNzaWQ9UENNX0FQX2Zl
-ZGUNCj4gaW50ZXJmYWNlPXVhcDANCj4gZHJpdmVyPW5sODAyMTENCj4gaHdfbW9kZT1nDQo+IGNo
-YW5uZWw9Ng0KPiBFT0YNCj4gaXcgcGh5IHBoeTAgaW50ZXJmYWNlIGFkZCB1YXAwIHR5cGUgX19h
-cCBob3N0YXBkIC9ldGMvaG9zdGFwZC5jb25mICYNCj4gZG5zbWFzcSAtLWludGVyZmFjZT11YXAw
-IC0tZXhjZXB0LWludGVyZmFjZT1sbyAtLWJpbmQtaW50ZXJmYWNlcyAtLWRoY3AtDQo+IHJhbmdl
-PTE5Mi4xNjguMy4yLDE5Mi4xNjguMy4xMCwxMmggLS1jb25mLWZpbGU9L2Rldi9udWxsIGlwIGFk
-ZHIgYWRkDQo+IDE5Mi4xNjguMy4xLzI0IGJyb2FkY2FzdCAxOTIuMTY4LjMuMjU1IGRldiB1YXAw
-DQo+IA0KPiBidXQgSSBnZXQgdGhpcyBlcnJvciBhZnRlciBydW4gdGhlIGhvc3RhcGQgY29tbWFu
-ZDoNCj4gDQo+IFsgNDk4MC4yMDEwOTZdIElQdjY6IEFERFJDT05GKE5FVERFVl9DSEFOR0UpOiBt
-bGFuMDogbGluayBiZWNvbWVzIHJlYWR5DQo+IFsgNDk4My4zMzU0NjddIElQdjY6IEFERFJDT05G
-KE5FVERFVl9VUCk6IHVhcDA6IGxpbmsgaXMgbm90IHJlYWR5IFsNCj4gNDk4My4zNTg4NzldIG13
-aWZpZXhfc2RpbyBtbWMwOjAwMDE6MTogQ01EX1JFU1A6IGNtZCAweGIxIGVycm9yLA0KPiByZXN1
-bHQ9MHgxDQo+IA0KPiBhZGhvYyBpcyBmaW5lLCB3aXRoIHRoZSBhYm92ZSBvcmRlciBvZiBjb21t
-YW5kIGJ1dCBpZiBJIHJ1biBiZWZvcmUNCj4gaG9zdGFwZCBhbmQgdGhhbiBhZGhvYyBwYXJ0IHRo
-YW4gdGhlIGlzc3VlIG9jY3VyIGluIHRoZSBhZGhvYyBwYXJ0Lg0KPiANCj4gSSdtIHVzaW5nIHRo
-ZSBmaXJtd2FyZQ0KPiBodHRwOi8vZ2l0Lm1hcnZlbGwuY29tLz9wPW13aWZpZXgtDQo+IGZpcm13
-YXJlLmdpdDthPWJsb2I7Zj1tcnZsL3NkODg4N191YXBzdGEuYmluO2g9MTY1ZTZjM2QzNGIwYzJh
-NjMwMjUyOTA3YQ0KPiA3YWM0ZGFmNmUxM2M5ZDU7aGI9SEVBRA0KPiANCj4gYW5kIHRoZSBtd2lm
-aWV4IGZyb20ga2VybmVsIGxpbnV4IDQuMS4xDQo+IA0KDQpUaGFua3MgZm9yIHJlcG9ydGluZyB0
-aGUgcHJvYmxlbS4NCldlIGhhdmUgc3RhcnRlZCBsb29raW5nIGludG8gaXQuDQoNClJlZ2FyZHMs
-DQpBbWl0a3VtYXINCg==
+Peter Oh <poh@qca.qualcomm.com> writes:
+
+> 10.2.4 and 10.4 firmware has introduced new function to
+> set TSF via vdev parameter.
+> set_tsf function can be used to shift TBTT that will help
+> avoid its clockdrift which happens when beacons are collided.
+>
+> Peter Oh (3):
+>   ath10k: add a support of set_tsf on vdev interface
+>   ath10k: update 10.4 WMI vdev parameters
+>   ath10k: enable set_tsf vdev command to WMI 10.4
+
+Series applied, thanks.
+
+-- 
+Kalle Valo
