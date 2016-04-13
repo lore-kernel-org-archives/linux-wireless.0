@@ -1,52 +1,29 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55173 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757303AbcDGSTe (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 14:19:34 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 11/18] rtl8xxxu: Handle XTAL value setting on 8192eu
-Date: Thu,  7 Apr 2016 14:19:26 -0400
-Message-Id: <1460053173-8494-12-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160407_202008_108793_03DC9466)
-In-Reply-To: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460053173-8494-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from shards.monkeyblade.net ([149.20.54.216]:59632 "EHLO
+	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752113AbcDMV4k (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Wed, 13 Apr 2016 17:56:40 -0400
+Date: Wed, 13 Apr 2016 17:56:37 -0400 (EDT)
+Message-Id: <20160413.175637.584936150211146160.davem@davemloft.net> (sfid-20160413_235702_806505_0D0E9B66)
+To: kvalo@codeaurora.org
+Cc: linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: pull-request: wireless-drivers 2016-04-13
+From: David Miller <davem@davemloft.net>
+In-Reply-To: <87d1pts6zq.fsf@kamboji.qca.qualcomm.com>
+References: <87d1pts6zq.fsf@kamboji.qca.qualcomm.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+From: Kalle Valo <kvalo@codeaurora.org>
+Date: Wed, 13 Apr 2016 21:23:21 +0300
 
-Set REG_AFE_XTAL_CTRL on 8192eu to the vendor driver value, and do not
-skip setting REG_MAX_AGGR_NUM on 8192eu.
+> few very small fixes for 4.6. All but one are either build fixes or
+> memory leaks. More info in the signed tag below.
+> 
+> Please let me know if there are any problems.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 356fdf3..3c732ed 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -3608,7 +3608,7 @@ rtl8xxxu_init_mac(struct rtl8xxxu_priv *priv)
- 		}
- 	}
- 
--	if (priv->rtl_chip != RTL8723B)
-+	if (priv->rtl_chip != RTL8723B && priv->rtl_chip != RTL8192E)
- 		rtl8xxxu_write8(priv, REG_MAX_AGGR_NUM, 0x0a);
- 
- 	return 0;
-@@ -3813,6 +3813,9 @@ static int rtl8xxxu_init_phy_bb(struct rtl8xxxu_priv *priv)
- 		rtl8xxxu_write32(priv, REG_LDOA15_CTRL, val32);
- 	}
- 
-+	if (priv->rtl_chip == RTL8192E)
-+		rtl8xxxu_write32(priv, REG_AFE_XTAL_CTRL, 0x000f81fb);
-+
- 	return 0;
- }
- 
--- 
-2.5.5
-
+Pulled, thanks.
