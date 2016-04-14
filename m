@@ -1,35 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f46.google.com ([74.125.82.46]:37624 "EHLO
-	mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751053AbcDRQrt (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 12:47:49 -0400
-To: Christian Lamparter <chunkeey@googlemail.com>,
-	Lauri Kasanen <cand@gmx.com>,
-	Kalle Valo <kvalo@codeaurora.org>,
-	LKML <linux-kernel@vger.kernel.org>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	netdev@vger.kernel.org,
-	Linux Firmware Maintainers <linux-firmware@kernel.org>
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: [PATCH v2] carl9170: Clarify kconfig text
-Message-ID: <c17f2f12-1c94-6b19-c918-0a6a9ee401ca@gmail.com> (sfid-20160418_184808_105249_2B330A76)
-Date: Mon, 18 Apr 2016 18:47:44 +0200
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Received: from mx1.redhat.com ([209.132.183.28]:52844 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751190AbcDNUhX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 16:37:23 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 04/16] rtl8xxxu: For devices with external PA (8188RU), limit CCK TX power
+Date: Thu, 14 Apr 2016 16:37:09 -0400
+Message-Id: <1460666241-5365-5-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_223727_073390_2A8BD43F)
+In-Reply-To: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Christian Lamparter wrote:
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> Sure, but this could be a different patch then. I think Intel devices 
-> (iwlwifi, iwlegacy and ipw2x00) have a similar text about "download
-> firmware from this device from our homepage here" too. So if we want,
-> we can remove them altogether?
+Per the vendor driver, devices with an external PA needs limiting it's
+TX power to 0x20.
 
-linux-firmware.git does not contain firmware for all drivers. _At least_
-zd1211rw [1], atmel [2] and ipw2x00 [3] are out of the tree.
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-[1] http://sf.net/projects/zd1211/files/
-[2] http://web.archive.org/web/20121016132320/http://at76c503a.berlios.de/fw_dl.html
-[3] http://ipw2100.sf.net/firmware.php http://ipw2200.sf.net/firmware.php
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 50ca3eb..578d1bf 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2421,6 +2421,13 @@ rtl8723a_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
+ 	cck[0] = priv->cck_tx_power_index_A[group];
+ 	cck[1] = priv->cck_tx_power_index_B[group];
+ 
++	if (priv->hi_pa) {
++		if (cck[0] > 0x20)
++			cck[0] = 0x20;
++		if (cck[1] > 0x20)
++			cck[1] = 0x20;
++	}
++
+ 	ofdm[0] = priv->ht40_1s_tx_power_index_A[group];
+ 	ofdm[1] = priv->ht40_1s_tx_power_index_B[group];
+ 
+-- 
+2.5.5
+
