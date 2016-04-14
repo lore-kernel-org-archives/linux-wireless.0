@@ -1,46 +1,30 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38668 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:47866 "EHLO
 	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754793AbcDDPDu (ORCPT
+	with ESMTP id S1753533AbcDNNEV (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2016 11:03:50 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Joseph Salisbury <joseph.salisbury@canonical.com>
-Cc: jirislaby@gmail.com, mickflemm@gmail.com, mcgrof@do-not-panic.com,
-	linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH] ath5k: Change led pin configuration for compaq c700 laptop
-References: <830d8fa0b7cb0b8cfb0b34360925cd50c3187341.1457977047.git.joseph.salisbury@canonical.com>
-Date: Mon, 04 Apr 2016 18:03:36 +0300
-In-Reply-To: <830d8fa0b7cb0b8cfb0b34360925cd50c3187341.1457977047.git.joseph.salisbury@canonical.com>
-	(Joseph Salisbury's message of "Mon, 14 Mar 2016 14:51:48 -0400")
-Message-ID: <87vb3xct6f.fsf@kamboji.qca.qualcomm.com> (sfid-20160404_170417_310911_A2F3781D)
+	Thu, 14 Apr 2016 09:04:21 -0400
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: Re: mwifiex: fix the incorrect WARN_ON during suspend
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1460065032-23043-1-git-send-email-vishalthanki@gmail.com>
+To: Vishal Thanki <vishalthanki@gmail.com>
+Cc: akarwar@marvell.com, nishants@marvell.com, afenkart@gmail.com,
+	linux-wireless@vger.kernel.org,
+	Vishal Thanki <vishalthanki@gmail.com>
+Message-Id: <20160414130415.33D5160DB9@smtp.codeaurora.org> (sfid-20160414_150423_730447_A3994F1F)
+Date: Thu, 14 Apr 2016 13:04:15 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Joseph Salisbury <joseph.salisbury@canonical.com> writes:
 
-> BugLink: http://bugs.launchpad.net/bugs/972604
->
-> Commit 09c9bae26b0d3c9472cb6ae45010460a2cee8b8d ("ath5k: add led pin 
-> configuration for compaq c700 laptop") added a pin configuration for the Compaq 
-> c700 laptop.  However, the polarity of the led pin is reversed.  It should be 
-> red for wifi off and blue for wifi on, but it is the opposite.  This bug was 
-> reported in the following bug report: 
-> http://pad.lv/972604
->
->
-> Fixes: 09c9bae26b0d3c9472cb6ae45010460a2cee8b8d ("ath5k: add led pin 
-> configuration for compaq c700 laptop")
->
-> Signed-off-by: Joseph Salisbury <joseph.salisbury@canonical.com>
-> Cc: stable@vger.kernel.org
+> During system suspend, there is a kernel WARNING issued if there
+> is a pending command present. By marking the wait queue disabled
+> after calling the command completion routine fixes it.
+> 
+> Signed-off-by: Vishal Thanki <vishalthanki@gmail.com>
 
-Applied to ath.git, thanks.
+Thanks, applied to wireless-drivers-next.git.
 
-I just fixed the Fixes line to be one continuous line.
-
--- 
 Kalle Valo
