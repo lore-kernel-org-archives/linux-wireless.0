@@ -1,31 +1,47 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.135]:52091 "EHLO
-	mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750803AbcDQWKz (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 17 Apr 2016 18:10:55 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: Tina Ruchandani <ruchandani.tina@gmail.com>,
-	y2038@lists.linaro.org, linux-kernel@vger.kernel.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org
-Subject: Re: [PATCH v3] prism54: isl_38xx: Replace 'struct timeval'
-Date: Mon, 18 Apr 2016 00:10:48 +0200
-Message-ID: <4679823.7bDEQhE9qO@wuerfel> (sfid-20160418_001118_552771_C10EA7BC)
-In-Reply-To: <1460896953.15362.2.camel@sipsolutions.net>
-References: <20160413060916.GA21184@localhost> <5521267.mr5HLCdTY6@wuerfel> <1460896953.15362.2.camel@sipsolutions.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Received: from mx1.redhat.com ([209.132.183.28]:55241 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753107AbcDNS7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 14:59:09 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 07/26] rtl8xxxu: Do not try to set REG_LEDCFG2 on 8192eu
+Date: Thu, 14 Apr 2016 14:58:48 -0400
+Message-Id: <1460660347-26299-8-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_212530_257320_1ACD0CAA)
+In-Reply-To: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sunday 17 April 2016 14:42:33 Johannes Berg wrote:
-> 
-> I was thinking more restrictively of just the stuff that can't even be
-> built without modifying the sources - like the "#if VERBOSE" thing.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-All the DEBUG() statements are inside of this kind of check, so if we
-remove the #ifdefs, it would be logical to remove the rest of the debugging
-infrastructure (DEBUG() macros, SHOW_*, pc_debug, maybe more) as well.
+Presumably 8192eu devices do not have leds, so do not enable them.
 
-	Arnd
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index ed8c594..99cf4aa 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -7880,9 +7880,11 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 	priv->fops->set_tx_power(priv, 1, false);
+ 
+ 	/* Let the 8051 take control of antenna setting */
+-	val8 = rtl8xxxu_read8(priv, REG_LEDCFG2);
+-	val8 |= LEDCFG2_DPDT_SELECT;
+-	rtl8xxxu_write8(priv, REG_LEDCFG2, val8);
++	if (priv->rtl_chip != RTL8192E) {
++		val8 = rtl8xxxu_read8(priv, REG_LEDCFG2);
++		val8 |= LEDCFG2_DPDT_SELECT;
++		rtl8xxxu_write8(priv, REG_LEDCFG2, val8);
++	}
+ 
+ 	rtl8xxxu_write8(priv, REG_HWSEQ_CTRL, 0xff);
+ 
+-- 
+2.5.5
+
