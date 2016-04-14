@@ -1,56 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from server1.vittgam.net ([213.239.197.142]:14450 "EHLO
-	mail.vittgam.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751155AbcDKC4z (ORCPT
+Received: from mail.hostpark.net ([212.243.197.30]:49773 "EHLO
+	mail.hostpark.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755008AbcDNM4G (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 10 Apr 2016 22:56:55 -0400
-Date: Mon, 11 Apr 2016 04:48:54 +0200
-From: "Vittorio Gambaletta (VittGam)" <linux-wireless@vittgam.net>
-To: <kvalo@codeaurora.org>
-Cc: <linux-wireless@vger.kernel.org>, <ath9k-devel@qca.qualcomm.com>,
-	<ath9k-devel@venema.h4ckr.net>, <stable@vger.kernel.org>
-Subject: [PATCH 1/2] ath9k: Add a module parameter to invert LED polarity.
+	Thu, 14 Apr 2016 08:56:06 -0400
+From: =?UTF-8?q?David=20M=C3=BCller?= <d.mueller@elsoft.ch>
+To: linux-wireless@vger.kernel.org
+Cc: Larry Finger <Larry.Finger@lwfinger.net>
+Subject: [PATCH] rtlwifi: rtl8821ae: Make sure loop counter is signed on all architectures
+Date: Thu, 14 Apr 2016 14:48:43 +0200
+Message-Id: <1460638123-2913-1-git-send-email-d.mueller@elsoft.ch> (sfid-20160414_145617_015065_6D235103)
+MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Message-ID: <ath9k-patch-20160411-1@vittgam.net> (sfid-20160411_045657_680447_43A9E30F)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The LED can be active high instead of active low on some hardware.
+The for-loop condition does not work correctly on architectures where "char"
+is unsigned. Fix it by using an "int", which may also result in more
+efficient code.
 
-Add the led_active_high module parameter. It defaults to -1 to obey
-platform data as before.
-
-Setting the parameter to 1 or 0 will force the LED respectively
-active high or active low.
-
-Cc: <linux-wireless@vger.kernel.org>
-Cc: <ath9k-devel@qca.qualcomm.com>
-Cc: <ath9k-devel@lists.ath9k.org>
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Vittorio Gambaletta <linuxbugs@vittgam.net>
+Signed-off-by: David Müller <d.mueller@elsoft.ch>
 ---
+ drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- a/drivers/net/wireless/ath/ath9k/init.c
-+++ b/drivers/net/wireless/ath/ath9k/init.c
-@@ -49,6 +49,10 @@ int ath9k_led_blink;
- module_param_named(blink, ath9k_led_blink, int, 0444);
- MODULE_PARM_DESC(blink, "Enable LED blink on activity");
+diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+index 74165b3..fcd84d1 100644
+--- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
++++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+@@ -959,7 +959,7 @@ static void _rtl8821ae_phy_store_txpower_by_rate_base(struct ieee80211_hw *hw)
+ static void _phy_convert_txpower_dbm_to_relative_value(u32 *data, u8 start,
+ 						u8 end, u8 base_val)
+ {
+-	char i = 0;
++	int i = 0;
+ 	u8 temp_value = 0;
+ 	u32 temp_data = 0;
  
-+static int ath9k_led_active_high = -1;
-+module_param_named(led_active_high, ath9k_led_active_high, int, 0444);
-+MODULE_PARM_DESC(led_active_high, "Invert LED polarity");
-+
- static int ath9k_btcoex_enable;
- module_param_named(btcoex_enable, ath9k_btcoex_enable, int, 0444);
- MODULE_PARM_DESC(btcoex_enable, "Enable wifi-BT coexistence");
-@@ -600,6 +604,9 @@ static int ath9k_init_softc(u16 devid, struct ath_softc *sc,
- 	if (ret)
- 		return ret;
- 
-+	if (ath9k_led_active_high != -1)
-+		ah->config.led_active_high = ath9k_led_active_high == 1;
-+
- 	/*
- 	 * Enable WLAN/BT RX Antenna diversity only when:
- 	 *
+-- 
+2.7.4
 
