@@ -1,81 +1,50 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36114 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932134AbcDFJHW (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 05:07:22 -0400
-Message-ID: <1459933638.17504.55.camel@sipsolutions.net> (sfid-20160406_110727_652624_DD0891B9)
-Subject: Re: [PATCHv3 RESEND 08/11] mac80211: implement nan_change_conf
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Date: Wed, 06 Apr 2016 11:07:18 +0200
-In-Reply-To: <1459244109-16038-8-git-send-email-emmanuel.grumbach@intel.com>
-References: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1459244109-16038-8-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-oi0-f66.google.com ([209.85.218.66]:35955 "EHLO
+	mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751576AbcDNUuw (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 16:50:52 -0400
+Received: by mail-oi0-f66.google.com with SMTP id v126so11366904oia.3
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2016 13:50:52 -0700 (PDT)
+Subject: Re: [PATCH 00/16] rtl8xxxu - additional fixes
+To: Jes.Sorensen@redhat.com, linux-wireless@vger.kernel.org
+References: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
+Cc: kvalo@codeaurora.org
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <571002AA.9020602@lwfinger.net> (sfid-20160414_225055_962363_A38D83D6)
+Date: Thu, 14 Apr 2016 15:50:50 -0500
+MIME-Version: 1.0
+In-Reply-To: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-03-29 at 12:35 +0300, Emmanuel Grumbach wrote:
-> 
->   * @start_nan: join an existing nan cluster, or create a new one.
->   * @stop_nan: leave the nan cluster.
-> + * @nan_change_conf: change nan configuration. The data in
-> cfg80211_nan_conf
-> + *	contains full new configuration and changes specify which
-> parameters
+On 04/14/2016 03:37 PM, Jes.Sorensen@redhat.com wrote:
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>
+> Hi,
+>
+> This is a second set of rtl8xxxu related patches, which goes on top of
+> the set I sent out earlier today. If you only have time to go through
+> one set, please look at the other set.
+>
+> This set primarily contains fixes to make rtl8188ru v2 devices work
+> again. I have reports that v1 devices still don't work, but I don't
+> have one of those, so I am not able to test this.
+>
+> This also includes a fix for a crash reported by Xose Vazquez Peres
+> when trying to hot add a USB ID. It marks 0x050d:0x1004 as tested,
+> reported by Andrea Merello, and handles an old bug where the
+> driver didn't unregister from mac80211 before shutting down the
+> device. Last it includes a uninitialized return value fix from Colin
+> Ian King.
 
-@changes I guess? at least you should be consistent, even if there's no
-perfectly correct syntax here.
+I can confirm that the rtl8188ru v1 devices still do not work. Using "iwlist 
+scan", my APs at 2m have signal levels from -90 to -98 dBm. I do not know if it 
+is a problem in setting the gain, or if the antenna selection is wrong.
 
-Also please specify where the change flags come from.
+By the way, I have the same problem with the rtl8723bu device.
 
-I'm also not sure that the description is actually correct? How can
-both "contains [the] full new configuration" and "changes speicfy which
-parameters" be correct? You have a full new configuration but still
-want to indicate the changes?
+Larry
 
-> + *	are changed with respect to the last nan config.
-> 
 
-Also, more nan vs. NAN, I'm sure I didn't comment on them all.
-
-> +	int (*nan_change_conf)(struct ieee80211_hw *hw,
-> +			       struct ieee80211_vif *vif,
-> +			       struct cfg80211_nan_conf *conf, u8
-> changes);
-
-An earlier patch in your series used u32, why u8 here?
-
-> +	memcpy(&sdata->u.nan.nan_conf, conf, sizeof(sdata-
-> >u.nan.nan_conf));
-
-why not use struct assignment?
-
-sdata->u.nan.conf = conf;
-
-> +		memcpy(&sdata->u.nan.nan_conf, &new_conf,
-> +		       sizeof(sdata->u.nan.nan_conf));
-
-ditto
-
-> +/**
-> + * struct ieee80211_if_nan - NAN state
-> + *
-> + * @nan_conf: current nan configuration
-> + */
-> +struct ieee80211_if_nan {
-> +	struct cfg80211_nan_conf nan_conf;
-> +};
-
-There's no point in calling it nan_conf since it's within a nan struct
-and then later called "nan.nan_conf"...
-
-> +		__field(u32, changes)
-
-You're not being very consistent with the type of the "changes"
-parameter :)
-
-johannes
