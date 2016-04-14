@@ -1,103 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f50.google.com ([209.85.192.50]:34504 "EHLO
-	mail-qg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751886AbcDRTtR (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 15:49:17 -0400
-Received: by mail-qg0-f50.google.com with SMTP id c6so124735545qga.1
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 12:49:17 -0700 (PDT)
-From: Geoff Lansberry <geoff@kuvee.com>
+Received: from mx1.redhat.com ([209.132.183.28]:54151 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751309AbcDNUhX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 16:37:23 -0400
+From: Jes.Sorensen@redhat.com
 To: linux-wireless@vger.kernel.org
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	sameo@linux.intel.com, mgreer@animalcreek.com, justin@kuvee.com,
-	Geoff Lansberry <geoff@kuvee.com>
-Subject: [PATCH 4/4] NFC: trf7970a: Add device tree option of 1.8 Volt IO voltage
-Date: Mon, 18 Apr 2016 15:48:41 -0400
-Message-Id: <1461008921-15100-5-git-send-email-geoff@kuvee.com> (sfid-20160418_214920_326517_916563F5)
-In-Reply-To: <1461008921-15100-1-git-send-email-geoff@kuvee.com>
-References: <1461008921-15100-1-git-send-email-geoff@kuvee.com>
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 08/16] rtl8xxxu: Unregister from mac80211 before shutting down the device
+Date: Thu, 14 Apr 2016 16:37:13 -0400
+Message-Id: <1460666241-5365-9-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_225528_869687_F8611034)
+In-Reply-To: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
----
- Documentation/devicetree/bindings/net/nfc/trf7970a.txt |  8 ++++++++
- drivers/nfc/trf7970a.c                                 | 11 ++++++++++-
- 2 files changed, 18 insertions(+), 1 deletion(-)
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-index bf25f39..e605ebd 100644
---- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-+++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-@@ -19,9 +19,13 @@ Optional SoC Specific Properties:
-   "IRQ Status Read" erratum.
- - en2-rf-quirk: Specify that the trf7970a being used has the "EN2 RF"
-   erratum.
-+<<<<<<< HEAD
- - t5t-rmb-extra-byte-quirk: Specify that the trf7970a has the erratum
-   where an extra byte is returned by Read Multiple Block commands issued
-   to Type 5 tags.
-+=======
-+- vdd_io_1v8: Set to specify that the trf7970a io voltage should be set to 1.8V
-+>>>>>>> e7ea4dd... NFC: trf7970a: Add device tree option of 1.8 Volt IO voltage
- - crystal_27mhz: Set to specify that the input frequency to the trf7970a is 27.12MHz
+This fixes a long standing bug where mac80211 would send disconnect
+packets to the device, after we had shut down the device.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 14 ++++----------
+ 1 file changed, 4 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 5685fd7..2b71a2b 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -8003,13 +8003,6 @@ exit:
+ 	return ret;
+ }
  
- Example (for ARM-based BeagleBone with TRF7970A on SPI1):
-@@ -45,7 +49,11 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
- 		autosuspend-delay = <30000>;
- 		irq-status-read-quirk;
- 		en2-rf-quirk;
-+<<<<<<< HEAD
- 		t5t-rmb-extra-byte-quirk;
-+=======
-+		vdd_io_1v8;
-+>>>>>>> e7ea4dd... NFC: trf7970a: Add device tree option of 1.8 Volt IO voltage
- 		crystal_27mhz;
- 		status = "okay";
- 	};
-diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-index 74210f9..be56897 100644
---- a/drivers/nfc/trf7970a.c
-+++ b/drivers/nfc/trf7970a.c
-@@ -441,6 +441,7 @@ struct trf7970a {
- 	u8				iso_ctrl_tech;
- 	u8				modulator_sys_clk_ctrl;
- 	u8				special_fcn_reg1;
-+	u8				io_ctrl;
- 	unsigned int			guard_time;
- 	int				technology;
- 	int				framing;
-@@ -1064,6 +1065,11 @@ static int trf7970a_init(struct trf7970a *trf)
- 	if (ret)
- 		goto err_out;
+-static void rtl8xxxu_disable_device(struct ieee80211_hw *hw)
+-{
+-	struct rtl8xxxu_priv *priv = hw->priv;
+-
+-	priv->fops->power_off(priv);
+-}
+-
+ static void rtl8xxxu_cam_write(struct rtl8xxxu_priv *priv,
+ 			       struct ieee80211_key_conf *key, const u8 *mac)
+ {
+@@ -9726,13 +9719,14 @@ static void rtl8xxxu_disconnect(struct usb_interface *interface)
+ 	hw = usb_get_intfdata(interface);
+ 	priv = hw->priv;
  
-+	ret = trf7970a_write(trf, TRF7970A_REG_IO_CTRL,
-+			trf->io_ctrl|TRF7970A_REG_IO_CTRL_VRS(0x1));
-+	if (ret)
-+		goto err_out;
+-	rtl8xxxu_disable_device(hw);
++	ieee80211_unregister_hw(hw);
 +
- 	ret = trf7970a_write(trf, TRF7970A_NFC_TARGET_LEVEL, 0);
- 	if (ret)
- 		goto err_out;
-@@ -1768,7 +1774,7 @@ static int _trf7970a_tg_listen(struct nfc_digital_dev *ddev, u16 timeout,
- 		goto out_err;
- 
- 	ret = trf7970a_write(trf, TRF7970A_REG_IO_CTRL,
--			TRF7970A_REG_IO_CTRL_VRS(0x1));
-+			trf->io_ctrl|TRF7970A_REG_IO_CTRL_VRS(0x1));
- 	if (ret)
- 		goto out_err;
- 
-@@ -2075,6 +2081,9 @@ static int trf7970a_probe(struct spi_device *spi)
- 		return ret;
- 	}
- 
-+	if (of_property_read_bool(np, "vdd_io_1v8"))
-+		trf->io_ctrl = TRF7970A_REG_IO_CTRL_IO_LOW;
++	priv->fops->power_off(priv);
 +
- 	if (of_property_read_bool(np, "crystal_27MHz"))
- 		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_27MHZ;
+ 	usb_set_intfdata(interface, NULL);
  
+ 	dev_info(&priv->udev->dev, "disconnecting\n");
+ 
+-	ieee80211_unregister_hw(hw);
+-
+ 	kfree(priv->fw_data);
+ 	mutex_destroy(&priv->usb_buf_mutex);
+ 	mutex_destroy(&priv->h2c_mutex);
 -- 
-1.9.1
+2.5.5
 
