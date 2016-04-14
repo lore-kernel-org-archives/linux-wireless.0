@@ -1,49 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:58684 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751358AbcDBSdz (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Sat, 2 Apr 2016 14:33:55 -0400
-Message-ID: <1459622014.18188.2.camel@sipsolutions.net> (sfid-20160402_203426_683828_07113488)
-Subject: Re: Question on rhashtable in worst-case scenario.
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Herbert Xu <herbert@gondor.apana.org.au>
-Cc: Ben Greear <greearb@candelatech.com>,
-	David Miller <davem@davemloft.net>,
-	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
-	netdev@vger.kernel.org, tgraf@suug.ch
-Date: Sat, 02 Apr 2016 20:33:34 +0200
-In-Reply-To: <20160402014653.GA19235@gondor.apana.org.au>
-References: <56F9941A.3080501@candelatech.com>
-	 <56FAAA6D.3070806@candelatech.com>
-	 <1459329252.2055.1.camel@sipsolutions.net>
-	 <20160330.123821.328761526754742195.davem@davemloft.net>
-	 <56FC0445.6010200@candelatech.com>
-	 <1459410405.4576.8.camel@sipsolutions.net>
-	 <20160331075015.GA27716@gondor.apana.org.au>
-	 <1459438199.4576.26.camel@sipsolutions.net>
-	 <20160401004627.GA9367@gondor.apana.org.au>
-	 <1459546450.3342.22.camel@sipsolutions.net>
-	 <20160402014653.GA19235@gondor.apana.org.au>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-ob0-f193.google.com ([209.85.214.193]:36764 "EHLO
+	mail-ob0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932644AbcDNPm3 (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 11:42:29 -0400
+Received: by mail-ob0-f193.google.com with SMTP id rf6so5281921obc.3
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2016 08:42:28 -0700 (PDT)
+Subject: Re: [PATCH] rtlwifi: rtl8821ae: Make sure loop counter is signed on
+ all architectures
+To: =?UTF-8?Q?David_M=c3=bcller?= <d.mueller@elsoft.ch>,
+	linux-wireless@vger.kernel.org
+References: <1460638123-2913-1-git-send-email-d.mueller@elsoft.ch>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <570FBA62.6080606@lwfinger.net> (sfid-20160414_174245_516942_CA976833)
+Date: Thu, 14 Apr 2016 10:42:26 -0500
+MIME-Version: 1.0
+In-Reply-To: <1460638123-2913-1-git-send-email-d.mueller@elsoft.ch>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Sat, 2016-04-02 at 09:46 +0800, Herbert Xu wrote:
-> On Fri, Apr 01, 2016 at 11:34:10PM +0200, Johannes Berg wrote:
-> > 
-> > 
-> > I was thinking about that one - it's not obvious to me from the
-> > code
-> > how this "explicitly checking for dups" would be done or let's say
-> > how
-> > rhashtable differentiates. But since it seems to work for Ben until
-> > hitting a certain number of identical keys, surely that's just me
-> > not
-> > understanding the code rather than anything else :)
-> It's really simple, rhashtable_insert_fast does not check for dups
-> while rhashtable_lookup_insert_* do.
+On 04/14/2016 07:48 AM, David Müller wrote:
+> The for-loop condition does not work correctly on architectures where "char"
+> is unsigned. Fix it by using an "int", which may also result in more
+> efficient code.
+>
+> Signed-off-by: David Müller <d.mueller@elsoft.ch>
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+> index 74165b3..fcd84d1 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+> @@ -959,7 +959,7 @@ static void _rtl8821ae_phy_store_txpower_by_rate_base(struct ieee80211_hw *hw)
+>   static void _phy_convert_txpower_dbm_to_relative_value(u32 *data, u8 start,
+>   						u8 end, u8 base_val)
+>   {
+> -	char i = 0;
+> +	int i = 0;
+>   	u8 temp_value = 0;
+>   	u32 temp_data = 0;
 
-Oh, ok, thanks :)
+This change is OK, but as long as you are touching this line, you should remove 
+the initialization to zero. The first executable statement of that routine is 
+"for (i = 3; i >= 0; --i)", thus there is no possibility that the variable could 
+be used without being initialized.
 
-johannes
+
+Thanks,
+
+Larry
+
