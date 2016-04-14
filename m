@@ -1,66 +1,49 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qk0-f169.google.com ([209.85.220.169]:33708 "EHLO
-	mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754935AbcDFJ1n (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 05:27:43 -0400
-Received: by mail-qk0-f169.google.com with SMTP id k135so11461134qke.0
-        for <linux-wireless@vger.kernel.org>; Wed, 06 Apr 2016 02:27:43 -0700 (PDT)
-MIME-Version: 1.0
-Date: Wed, 6 Apr 2016 12:27:42 +0300
-Message-ID: <CAFSVvRc2N+ONKsvweOPRHHrtFDfhKPxXDVM9fsaa+Sd=qAdEgw@mail.gmail.com> (sfid-20160406_112747_821871_713DBF62)
-Subject: [PATCH] NETLINK_URELEASE non-bound socket problem
-From: Dmitrijs Ivanovs <dmitrijs.ivanovs@ubnt.com>
-To: linux-wireless@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
+Received: from s3.sipsolutions.net ([5.9.151.49]:42057 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751044AbcDNH10 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 03:27:26 -0400
+From: Johannes Berg <johannes@sipsolutions.net>
+To: David Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org, linux-wireless@vger.kernel.org
+Subject: pull-request: mac80211 2016-04-14
+Date: Thu, 14 Apr 2016 09:27:17 +0200
+Message-Id: <1460618838-5819-1-git-send-email-johannes@sipsolutions.net> (sfid-20160414_092732_710969_1F8F2350)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Currently, any non-privileged user can create netlink socket
-with port_id equal to port_id used by hostapd to create wireless network
-interfaces on-the-fly when more than one BSS is configured. When such socket
-is closed, nl80211 will receive socket release notification and such virtual
-interfaces will be removed while hostapd is still running.
+Hi Dave,
 
-This patch introduces two additional checks to correct the problem:
+Since I didn't get anything else, and this has been pending for a week,
+here's the other part of the nl80211 socket problem fix (the netlink
+family URELEASE was the first part.)
 
-1) Do not send netlink socket release notification when socket is not
-bound.
-2) Check protocol number in nl80211 netlink socket release notification
-handler.
+Let me know if there's any problem.
 
-Signed-off-by: Dmitry Ivanov <dima@ubnt.com>
----
- net/netlink/af_netlink.c | 2 +-
- net/wireless/nl80211.c   | 2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+Thanks,
+johannes
 
-diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
-index 215fc08..330ebd6 100644
---- a/net/netlink/af_netlink.c
-+++ b/net/netlink/af_netlink.c
-@@ -688,7 +688,7 @@ static int netlink_release(struct socket *sock)
 
-     skb_queue_purge(&sk->sk_write_queue);
 
--    if (nlk->portid) {
-+    if (nlk->portid && nlk->bound) {
-         struct netlink_notify n = {
-                         .net = sock_net(sk),
-                         .protocol = sk->sk_protocol,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 98c9242..056a730 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -13216,7 +13216,7 @@ static int nl80211_netlink_notify(struct
-notifier_block * nb,
-     struct wireless_dev *wdev;
-     struct cfg80211_beacon_registration *reg, *tmp;
+The following changes since commit 30d237a6c2e9be1bb816fe8e787b88fd7aad833b:
 
--    if (state != NETLINK_URELEASE)
-+    if (state != NETLINK_URELEASE || notify->protocol != NETLINK_GENERIC)
-         return NOTIFY_DONE;
+  Merge tag 'mac80211-for-davem-2016-04-06' of git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211 (2016-04-08 16:41:28 -0400)
 
-     rcu_read_lock();
--- 
-2.1.4
+are available in the git repository at:
+
+  git://git.kernel.org/pub/scm/linux/kernel/git/jberg/mac80211.git tags/mac80211-for-davem-2016-04-14
+
+for you to fetch changes up to 8f815cdde3e550e10c2736990d791f60c2ce43eb:
+
+  nl80211: check netlink protocol in socket release notification (2016-04-12 15:39:06 +0200)
+
+----------------------------------------------------------------
+This has just the single fix from Dmitry Ivanov, adding the missing
+netlink notifier family check to avoid the socket close DoS problem.
+
+----------------------------------------------------------------
+Dmitry Ivanov (1):
+      nl80211: check netlink protocol in socket release notification
+
+ net/wireless/nl80211.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
