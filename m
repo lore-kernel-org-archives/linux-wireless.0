@@ -1,44 +1,45 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([149.20.54.216]:40054 "EHLO
-	shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751317AbcDZQYF (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 12:24:05 -0400
-Date: Tue, 26 Apr 2016 12:24:01 -0400 (EDT)
-Message-Id: <20160426.122401.405766250705456167.davem@davemloft.net> (sfid-20160426_182424_638295_03A55F51)
-To: jack@suse.cz
-Cc: nicolas.dichtel@6wind.com, netdev@vger.kernel.org,
-	sd@queasysnail.net, johannes@sipsolutions.net,
-	kvalo@codeaurora.org, linux-wireless@vger.kernel.org,
-	jack@suse.com, linux-kernel@vger.kernel.org, pshelar@nicira.com,
-	dev@openvswitch.org, jhs@mojatatu.com, philipp.reisner@linbit.com,
-	lars.ellenberg@linbit.com, drbd-dev@lists.linbit.com
-Subject: Re: [PATCH net-next 3/8] fs/quota: use nla_put_u64_64bit()
-From: David Miller <davem@davemloft.net>
-In-Reply-To: <20160426110848.GD27612@quack2.suse.cz>
-References: <1461657978-13360-1-git-send-email-nicolas.dichtel@6wind.com>
-	<1461657978-13360-4-git-send-email-nicolas.dichtel@6wind.com>
-	<20160426110848.GD27612@quack2.suse.cz>
+Received: from s3.sipsolutions.net ([5.9.151.49]:42439 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754567AbcDNJBu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 05:01:50 -0400
+Message-ID: <1460624507.2358.9.camel@sipsolutions.net> (sfid-20160414_110207_680433_A5580C76)
+Subject: Re: [PATCH 1/3] cfg80211: Add option to report the bss entry in
+ connect result
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Kanchanapally, Vidyullatha" <vkanchan@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+	usdutt@qti.qualcomm.com, amarnath@qca.qualcomm.com
+Date: Thu, 14 Apr 2016 11:01:47 +0200
+In-Reply-To: <1460367961-11254-1-git-send-email-vkanchan@qti.qualcomm.com>
+References: <1460367961-11254-1-git-send-email-vkanchan@qti.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jan Kara <jack@suse.cz>
-Date: Tue, 26 Apr 2016 13:08:48 +0200
-
-> On Tue 26-04-16 10:06:13, Nicolas Dichtel wrote:
->> Signed-off-by: Nicolas Dichtel <nicolas.dichtel@6wind.com>
+On Mon, 2016-04-11 at 15:16 +0530, Kanchanapally, Vidyullatha wrote:
+> From: "Kanchanapally, Vidyullatha" <vkanchan@qti.qualcomm.com>
 > 
-> OK, so I somewhat miss a description of what will this do to the netlink
-> message so that I can judge whether the change is fine for the userspace
-> counterpart parsing these messages. AFAIU this changes the message format
-> by adding a QUOTA_NL_A_PAD field before each 64-bit field which needs an
-> alignment, am I guessing right? Thus when the userspace counterpart uses
-> genlmsg_parse() it should just silently ignore these attributes if I read
-> the documentation right. Did I understand this correctly?
+> Since cfg80211 maintains separate BSS table entries for APs if the
+> same
+> BSSID, SSID pair is seen on multiple channels, it is possible that it
+> can map the current_bss to a BSS entry on the wrong channel. This
+> current_bss will not get flushed unless disconnected and cfg80211
+> reports a wrong channel as the associated channel.
+> 
+> Fix this by introducing a new cfg80211_connect_bss() function which
+> is
+> similar to cfg80211_connect_result(), but it includes an additional
+> parameter: the bss the STA is connected to. This allows drivers to
+> provide the exact bss entry that matches the BSS to which the
+> connection
+> was completed.
 
-All userspace components using netlink should always ignore attributes
-they do not recognize in dumps.
+Applied.
 
-This is one of the most basic principles of netlink.
+I'm surprised you're so worried about this test scenario (we've
+discussed this multiple times before), but I can't really argue with
+passing the BSS pointer either :)
+
+johannes
