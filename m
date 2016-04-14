@@ -1,145 +1,206 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-qg0-f47.google.com ([209.85.192.47]:35235 "EHLO
-	mail-qg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751886AbcDRTtO (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 15:49:14 -0400
-Received: by mail-qg0-f47.google.com with SMTP id f74so2575365qge.2
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 12:49:14 -0700 (PDT)
-From: Geoff Lansberry <geoff@kuvee.com>
+Received: from mx1.redhat.com ([209.132.183.28]:33925 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753353AbcDNS7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 14:59:09 -0400
+From: Jes.Sorensen@redhat.com
 To: linux-wireless@vger.kernel.org
-Cc: lauro.venancio@openbossa.org, aloisio.almeida@openbossa.org,
-	sameo@linux.intel.com, mgreer@animalcreek.com, justin@kuvee.com,
-	Geoff Lansberry <geoff@kuvee.com>
-Subject: [PATCH 3/4] NFC: trf7970a: add device tree option for 27MHz clock
-Date: Mon, 18 Apr 2016 15:48:40 -0400
-Message-Id: <1461008921-15100-4-git-send-email-geoff@kuvee.com> (sfid-20160418_214917_829113_288E2DA1)
-In-Reply-To: <1461008921-15100-1-git-send-email-geoff@kuvee.com>
-References: <1461008921-15100-1-git-send-email-geoff@kuvee.com>
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 11/26] rtl8xxxu: Name RX descriptor types rxdesc16/rxdesc24
+Date: Thu, 14 Apr 2016 14:58:52 -0400
+Message-Id: <1460660347-26299-12-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_212529_737081_8336E472)
+In-Reply-To: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Signed-off-by: Geoff Lansberry <geoff@kuvee.com>
----
- .../devicetree/bindings/net/nfc/trf7970a.txt       |  2 ++
- drivers/nfc/trf7970a.c                             | 28 +++++++++++++---------
- 2 files changed, 19 insertions(+), 11 deletions(-)
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-diff --git a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-index 09c5056..bf25f39 100644
---- a/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-+++ b/Documentation/devicetree/bindings/net/nfc/trf7970a.txt
-@@ -22,6 +22,7 @@ Optional SoC Specific Properties:
- - t5t-rmb-extra-byte-quirk: Specify that the trf7970a has the erratum
-   where an extra byte is returned by Read Multiple Block commands issued
-   to Type 5 tags.
-+- crystal_27mhz: Set to specify that the input frequency to the trf7970a is 27.12MHz
- 
- Example (for ARM-based BeagleBone with TRF7970A on SPI1):
- 
-@@ -45,6 +46,7 @@ Example (for ARM-based BeagleBone with TRF7970A on SPI1):
- 		irq-status-read-quirk;
- 		en2-rf-quirk;
- 		t5t-rmb-extra-byte-quirk;
-+		crystal_27mhz;
- 		status = "okay";
- 	};
- };
-diff --git a/drivers/nfc/trf7970a.c b/drivers/nfc/trf7970a.c
-index 447b6c9..74210f9 100644
---- a/drivers/nfc/trf7970a.c
-+++ b/drivers/nfc/trf7970a.c
-@@ -1072,12 +1072,11 @@ static int trf7970a_init(struct trf7970a *trf)
- 
- 	trf->chip_status_ctrl &= ~TRF7970A_CHIP_STATUS_RF_ON;
- 
--	ret = trf7970a_write(trf, TRF7970A_MODULATOR_SYS_CLK_CTRL, 0);
-+	ret = trf7970a_write(trf, TRF7970A_MODULATOR_SYS_CLK_CTRL,
-+			trf->modulator_sys_clk_ctrl);
- 	if (ret)
- 		goto err_out;
- 
--	trf->modulator_sys_clk_ctrl = 0;
--
- 	ret = trf7970a_write(trf, TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS,
- 			TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLH_96 |
- 			TRF7970A_ADJUTABLE_FIFO_IRQ_LEVELS_WLL_32);
-@@ -1194,30 +1193,32 @@ static int trf7970a_in_config_rf_tech(struct trf7970a *trf, int tech)
- 
- 	dev_dbg(trf->dev, "rf technology: %d\n", tech);
- 
-+	trf->modulator_sys_clk_ctrl = (trf->modulator_sys_clk_ctrl&0xF8);
-+
- 	switch (tech) {
- 	case NFC_DIGITAL_RF_TECH_106A:
- 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_14443A_106;
--		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
-+		trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_OOK;
- 		trf->guard_time = TRF7970A_GUARD_TIME_NFCA;
- 		break;
- 	case NFC_DIGITAL_RF_TECH_106B:
- 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_14443B_106;
--		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
-+		trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_ASK10;
- 		trf->guard_time = TRF7970A_GUARD_TIME_NFCB;
- 		break;
- 	case NFC_DIGITAL_RF_TECH_212F:
- 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_FELICA_212;
--		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
-+		trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_ASK10;
- 		trf->guard_time = TRF7970A_GUARD_TIME_NFCF;
- 		break;
- 	case NFC_DIGITAL_RF_TECH_424F:
- 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_FELICA_424;
--		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
-+		trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_ASK10;
- 		trf->guard_time = TRF7970A_GUARD_TIME_NFCF;
- 		break;
- 	case NFC_DIGITAL_RF_TECH_ISO15693:
- 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_15693_SGL_1OF4_2648;
--		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
-+		trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_OOK;
- 		trf->guard_time = TRF7970A_GUARD_TIME_15693;
- 		break;
- 	default:
-@@ -1582,22 +1583,24 @@ static int trf7970a_tg_config_rf_tech(struct trf7970a *trf, int tech)
- 
- 	dev_dbg(trf->dev, "rf technology: %d\n", tech);
- 
-+	trf->modulator_sys_clk_ctrl = (trf->modulator_sys_clk_ctrl&0xF8);
-+
- 	switch (tech) {
- 	case NFC_DIGITAL_RF_TECH_106A:
- 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
- 			TRF7970A_ISO_CTRL_NFC_CE |
- 			TRF7970A_ISO_CTRL_NFC_CE_14443A;
--		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_OOK;
-+		trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_OOK;
- 		break;
- 	case NFC_DIGITAL_RF_TECH_212F:
- 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
- 			TRF7970A_ISO_CTRL_NFC_NFCF_212;
--		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
-+		trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_ASK10;
- 		break;
- 	case NFC_DIGITAL_RF_TECH_424F:
- 		trf->iso_ctrl_tech = TRF7970A_ISO_CTRL_NFC_NFC_CE_MODE |
- 			TRF7970A_ISO_CTRL_NFC_NFCF_424;
--		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_DEPTH_ASK10;
-+		trf->modulator_sys_clk_ctrl |= TRF7970A_MODULATOR_DEPTH_ASK10;
- 		break;
- 	default:
- 		dev_dbg(trf->dev, "Unsupported rf technology: %d\n", tech);
-@@ -2072,6 +2075,9 @@ static int trf7970a_probe(struct spi_device *spi)
- 		return ret;
+This caught a bug where too little memory was allocated for RX urbs
+for parts using 24 byte RX descriptors
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 38 ++++++++++++++----------
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |  5 ++--
+ 2 files changed, 25 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 6545012..4b309a6 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -8826,21 +8826,22 @@ static void rtl8xxxu_rx_urb_work(struct work_struct *work)
  	}
+ }
  
-+	if (of_property_read_bool(np, "crystal_27MHz"))
-+		trf->modulator_sys_clk_ctrl = TRF7970A_MODULATOR_27MHZ;
-+
- 	if (of_property_read_bool(np, "en2-rf-quirk"))
- 		trf->quirks |= TRF7970A_QUIRK_EN2_MUST_STAY_LOW;
+-static int rtl8723au_parse_rx_desc(struct rtl8xxxu_priv *priv,
++static int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv,
+ 				   struct sk_buff *skb,
+ 				   struct ieee80211_rx_status *rx_status)
+ {
+-	struct rtl8xxxu_rx_desc *rx_desc = (struct rtl8xxxu_rx_desc *)skb->data;
++	struct rtl8xxxu_rxdesc16 *rx_desc =
++		(struct rtl8xxxu_rxdesc16 *)skb->data;
+ 	struct rtl8723au_phy_stats *phy_stats;
+ 	__le32 *_rx_desc_le = (__le32 *)skb->data;
+ 	u32 *_rx_desc = (u32 *)skb->data;
+ 	int drvinfo_sz, desc_shift;
+ 	int i;
  
+-	for (i = 0; i < (sizeof(struct rtl8xxxu_rx_desc) / sizeof(u32)); i++)
++	for (i = 0; i < (sizeof(struct rtl8xxxu_rxdesc16) / sizeof(u32)); i++)
+ 		_rx_desc[i] = le32_to_cpu(_rx_desc_le[i]);
+ 
+-	skb_pull(skb, sizeof(struct rtl8xxxu_rx_desc));
++	skb_pull(skb, sizeof(struct rtl8xxxu_rxdesc16));
+ 
+ 	phy_stats = (struct rtl8723au_phy_stats *)skb->data;
+ 
+@@ -8872,22 +8873,22 @@ static int rtl8723au_parse_rx_desc(struct rtl8xxxu_priv *priv,
+ 	return RX_TYPE_DATA_PKT;
+ }
+ 
+-static int rtl8723bu_parse_rx_desc(struct rtl8xxxu_priv *priv,
++static int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv,
+ 				   struct sk_buff *skb,
+ 				   struct ieee80211_rx_status *rx_status)
+ {
+-	struct rtl8723bu_rx_desc *rx_desc =
+-		(struct rtl8723bu_rx_desc *)skb->data;
++	struct rtl8xxxu_rxdesc24 *rx_desc =
++		(struct rtl8xxxu_rxdesc24 *)skb->data;
+ 	struct rtl8723au_phy_stats *phy_stats;
+ 	__le32 *_rx_desc_le = (__le32 *)skb->data;
+ 	u32 *_rx_desc = (u32 *)skb->data;
+ 	int drvinfo_sz, desc_shift;
+ 	int i;
+ 
+-	for (i = 0; i < (sizeof(struct rtl8723bu_rx_desc) / sizeof(u32)); i++)
++	for (i = 0; i < (sizeof(struct rtl8xxxu_rxdesc24) / sizeof(u32)); i++)
+ 		_rx_desc[i] = le32_to_cpu(_rx_desc_le[i]);
+ 
+-	skb_pull(skb, sizeof(struct rtl8723bu_rx_desc));
++	skb_pull(skb, sizeof(struct rtl8xxxu_rxdesc24));
+ 
+ 	phy_stats = (struct rtl8723au_phy_stats *)skb->data;
+ 
+@@ -9018,14 +9019,15 @@ static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
+ {
+ 	struct sk_buff *skb;
+ 	int skb_size;
+-	int ret;
++	int ret, rx_desc_sz;
+ 
+-	skb_size = sizeof(struct rtl8xxxu_rx_desc) + RTL_RX_BUFFER_SIZE;
++	rx_desc_sz = priv->fops->rx_desc_size;
++	skb_size = rx_desc_sz + RTL_RX_BUFFER_SIZE;
+ 	skb = __netdev_alloc_skb(NULL, skb_size, GFP_KERNEL);
+ 	if (!skb)
+ 		return -ENOMEM;
+ 
+-	memset(skb->data, 0, sizeof(struct rtl8xxxu_rx_desc));
++	memset(skb->data, 0, rx_desc_sz);
+ 	usb_fill_bulk_urb(&rx_urb->urb, priv->udev, priv->pipe_in, skb->data,
+ 			  skb_size, rtl8xxxu_rx_complete, skb);
+ 	usb_anchor_urb(&rx_urb->urb, &priv->rx_anchor);
+@@ -9779,7 +9781,7 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
+ 	.llt_init = rtl8xxxu_init_llt_table,
+ 	.phy_iq_calibrate = rtl8723au_phy_iq_calibrate,
+ 	.config_channel = rtl8723au_config_channel,
+-	.parse_rx_desc = rtl8723au_parse_rx_desc,
++	.parse_rx_desc = rtl8xxxu_parse_rxdesc16,
+ 	.enable_rf = rtl8723a_enable_rf,
+ 	.disable_rf = rtl8723a_disable_rf,
+ 	.set_tx_power = rtl8723a_set_tx_power,
+@@ -9789,6 +9791,7 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
+ 	.mbox_ext_reg = REG_HMBOX_EXT_0,
+ 	.mbox_ext_width = 2,
+ 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc32),
++	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc16),
+ 	.adda_1t_init = 0x0b1b25a0,
+ 	.adda_1t_path_on = 0x0bdb25a0,
+ 	.adda_2t_path_on_a = 0x04db25a4,
+@@ -9806,7 +9809,7 @@ static struct rtl8xxxu_fileops rtl8723bu_fops = {
+ 	.phy_init_antenna_selection = rtl8723bu_phy_init_antenna_selection,
+ 	.phy_iq_calibrate = rtl8723bu_phy_iq_calibrate,
+ 	.config_channel = rtl8723bu_config_channel,
+-	.parse_rx_desc = rtl8723bu_parse_rx_desc,
++	.parse_rx_desc = rtl8xxxu_parse_rxdesc24,
+ 	.init_aggregation = rtl8723bu_init_aggregation,
+ 	.init_statistics = rtl8723bu_init_statistics,
+ 	.enable_rf = rtl8723b_enable_rf,
+@@ -9818,6 +9821,7 @@ static struct rtl8xxxu_fileops rtl8723bu_fops = {
+ 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
+ 	.mbox_ext_width = 4,
+ 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc40),
++	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc24),
+ 	.has_s0s1 = 1,
+ 	.adda_1t_init = 0x01c00014,
+ 	.adda_1t_path_on = 0x01c00014,
+@@ -9837,7 +9841,7 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
+ 	.llt_init = rtl8xxxu_init_llt_table,
+ 	.phy_iq_calibrate = rtl8723au_phy_iq_calibrate,
+ 	.config_channel = rtl8723au_config_channel,
+-	.parse_rx_desc = rtl8723au_parse_rx_desc,
++	.parse_rx_desc = rtl8xxxu_parse_rxdesc16,
+ 	.enable_rf = rtl8723a_enable_rf,
+ 	.disable_rf = rtl8723a_disable_rf,
+ 	.set_tx_power = rtl8723a_set_tx_power,
+@@ -9847,6 +9851,7 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
+ 	.mbox_ext_reg = REG_HMBOX_EXT_0,
+ 	.mbox_ext_width = 2,
+ 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc32),
++	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc16),
+ 	.adda_1t_init = 0x0b1b25a0,
+ 	.adda_1t_path_on = 0x0bdb25a0,
+ 	.adda_2t_path_on_a = 0x04db25a4,
+@@ -9865,7 +9870,7 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
+ 	.llt_init = rtl8xxxu_auto_llt_table,
+ 	.phy_iq_calibrate = rtl8192eu_phy_iq_calibrate,
+ 	.config_channel = rtl8723bu_config_channel,
+-	.parse_rx_desc = rtl8723bu_parse_rx_desc,
++	.parse_rx_desc = rtl8xxxu_parse_rxdesc24,
+ 	.enable_rf = rtl8723b_enable_rf,
+ 	.disable_rf = rtl8723b_disable_rf,
+ 	.set_tx_power = rtl8192e_set_tx_power,
+@@ -9875,6 +9880,7 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
+ 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
+ 	.mbox_ext_width = 4,
+ 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc40),
++	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc24),
+ 	.has_s0s1 = 0,
+ 	.adda_1t_init = 0x0fc01616,
+ 	.adda_1t_path_on = 0x0fc01616,
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index 4545e10..2f0709e 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -101,7 +101,7 @@ enum rtl8xxxu_rx_type {
+ 	RX_TYPE_ERROR = -1
+ };
+ 
+-struct rtl8xxxu_rx_desc {
++struct rtl8xxxu_rxdesc16 {
+ #ifdef __LITTLE_ENDIAN
+ 	u32 pktlen:14;
+ 	u32 crc32:1;
+@@ -237,7 +237,7 @@ struct rtl8xxxu_rx_desc {
+ #endif
+ };
+ 
+-struct rtl8723bu_rx_desc {
++struct rtl8xxxu_rxdesc24 {
+ #ifdef __LITTLE_ENDIAN
+ 	u32 pktlen:14;
+ 	u32 crc32:1;
+@@ -1303,6 +1303,7 @@ struct rtl8xxxu_fileops {
+ 	u16 mbox_ext_reg;
+ 	char mbox_ext_width;
+ 	char tx_desc_size;
++	char rx_desc_size;
+ 	char has_s0s1;
+ 	u32 adda_1t_init;
+ 	u32 adda_1t_path_on;
 -- 
-1.9.1
+2.5.5
 
