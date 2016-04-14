@@ -1,72 +1,67 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from bear.ext.ti.com ([192.94.94.41]:37940 "EHLO bear.ext.ti.com"
+Received: from mx1.redhat.com ([209.132.183.28]:56595 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751036AbcDRFz7 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 01:55:59 -0400
-From: "Reizer, Eyal" <eyalr@ti.com>
-To: Arnd Bergmann <arnd@arndb.de>
-CC: Kalle Valo <kvalo@codeaurora.org>,
-	Eyal Reizer <eyalreizer@gmail.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-spi@vger.kernel.org" <linux-spi@vger.kernel.org>
-Subject: RE: [PATCHv2] wlcore: spi: add wl18xx support
-Date: Mon, 18 Apr 2016 05:55:51 +0000
-Message-ID: <8665E2433BC68541A24DFFCA87B70F5B360BF614@DFRE01.ent.ti.com> (sfid-20160418_075623_534859_C692DC7D)
-References: <1460273570-12298-1-git-send-email-eyalr@ti.com>
- <8665E2433BC68541A24DFFCA87B70F5B360B6C90@DFRE01.ent.ti.com>
- <14313437.cDJIgY3kzo@wuerfel>
-In-Reply-To: <14313437.cDJIgY3kzo@wuerfel>
-Content-Type: text/plain; charset="us-ascii"
+	id S1751414AbcDNVLi (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 17:11:38 -0400
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
+To: Larry Finger <Larry.Finger@lwfinger.net>
+Cc: linux-wireless@vger.kernel.org, kvalo@codeaurora.org
+Subject: Re: [PATCH 00/16] rtl8xxxu - additional fixes
+References: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
+	<571002AA.9020602@lwfinger.net>
+Date: Thu, 14 Apr 2016 17:11:36 -0400
+In-Reply-To: <571002AA.9020602@lwfinger.net> (Larry Finger's message of "Thu,
+	14 Apr 2016 15:50:50 -0500")
+Message-ID: <wrfjpotrevzr.fsf@redhat.com> (sfid-20160414_231141_126774_B5BAD11D)
 MIME-Version: 1.0
+Content-Type: text/plain
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-> >
-> > - all wilink family needs special init command for entering wspi mode.
-> >   extra clock cycles should be sent after the spi init command while the
-> >   cs pin is high.
-> > - switch to controling the cs pin from the spi driver for achieveing the
-> >   above.
-> > - the selected cs gpio is read from the spi device-tree node using the
-> >   cs-gpios field and setup as a gpio.
-> > - See the example below for specifying the cs gpio using the cs-gpios entry
-> > &spi0   {
-> >         ...
-> >         cs-gpios = <&gpio0 5 0>;
-> >         ...
-> >         wlcore: wlcore@0 {
-> >                 compatible = "ti,wl1835";
-> >         ...
-> >         ...
-> >         };
-> > };
-> >
-> > Signed-off-by: Eyal Reizer <eyalr@ti.com>
-> 
-> I don't think this can work in general: not all SPI hosts uses GPIOs for
-> controlling CS, so the logic can't work, and it's also a layering violation for the
-> driver to look at the parent.
-> 
-> I would suggest fixing this using a new API function from the SPI core, if we
-> don't already have a generic way to do it.
+Larry Finger <Larry.Finger@lwfinger.net> writes:
+> On 04/14/2016 03:37 PM, Jes.Sorensen@redhat.com wrote:
+>> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+>>
+>> Hi,
+>>
+>> This is a second set of rtl8xxxu related patches, which goes on top of
+>> the set I sent out earlier today. If you only have time to go through
+>> one set, please look at the other set.
+>>
+>> This set primarily contains fixes to make rtl8188ru v2 devices work
+>> again. I have reports that v1 devices still don't work, but I don't
+>> have one of those, so I am not able to test this.
+>>
+>> This also includes a fix for a crash reported by Xose Vazquez Peres
+>> when trying to hot add a USB ID. It marks 0x050d:0x1004 as tested,
+>> reported by Andrea Merello, and handles an old bug where the
+>> driver didn't unregister from mac80211 before shutting down the
+>> device. Last it includes a uninitialized return value fix from Colin
+>> Ian King.
 >
-Originally this is what I have done until I was pointed to the generic cs-gpio mechanism 
-in the SPI core. 
-It is a generic mechanism already in the SPI core driver.
-See: Documentation/devicetree/bindings/spi/spi-bus.txt
+> I can confirm that the rtl8188ru v1 devices still do not work. Using
+> "iwlist scan", my APs at 2m have signal levels from -90 to -98 dBm. I
+> do not know if it is a problem in setting the gain, or if the antenna
+> selection is wrong.
+>
+> By the way, I have the same problem with the rtl8723bu device.
 
-It is also part of the generic spi.h (include/Linux/spi/spi.h), already part of 
-" struct spi_device" So it seemed redundant adding another mechanism for 
-implementing the same.
-Platform that interact with a wilink need to use it, and platforms that don't  
-have this capability will probably not interact with a wilink device using SPI.
+Note that the Realtek devices don't allow you to set gains for RX, only
+for TX power.
 
-Best Regards,
-Eyal
+For the 8723bu it works for me if I remove the device, reload the
+driver, restart NetworkMangler, then insert the device. There is
+something in the device reset code that doesn't work right at the
+moment, but I haven't figured it out yet.
 
+The 8188ru v1 issue is likely different from the 8723bu issue though.
 
+I also won't guarantee you can trust the signal levels reported by
+iwlist scan .... it's possible I haven't implemented all of that yet,
+but I could be wrong there.
 
+In either case, support for some usage is better than no usage, until we
+figure out the remaining problems :)
+
+Cheers,
+Jes
