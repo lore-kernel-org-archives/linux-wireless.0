@@ -1,55 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:62832 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751232AbcDGGmb (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 02:42:31 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>,
-	<stable@vger.kernel.org>
-Subject: [PATCH] ath10k: fix rx_channel during hw reconfigure
-Date: Thu, 7 Apr 2016 12:11:54 +0530
-Message-ID: <1460011314-15978-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20160407_084233_955345_74E0E8A2)
-MIME-Version: 1.0
-Content-Type: text/plain
+Received: from mx1.redhat.com ([209.132.183.28]:32916 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753057AbcDNS7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 14:59:09 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 14/26] rtl8xxxu: Correctly mask what was read from REG_CCK0_AFE_SETTING
+Date: Thu, 14 Apr 2016 14:58:55 -0400
+Message-Id: <1460660347-26299-15-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_212529_599610_C338D3E6)
+In-Reply-To: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Upon firmware assert, restart work will be triggered so that mac80211
-will reconfigure the driver. An issue is reported that after restart
-work, survey dump data do not contain in-use (SURVEY_INFO_IN_USE) info
-for operating channel. During reconfigure, since mac80211 already has
-valid channel context for given radio, channel context iteration return
-num_chanctx > 0. Hence rx_channel is always NULL. Fix this by assigning
-channel context to rx_channel when driver restart is in progress.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+The old code incorrectly wiped out bits 0-23 by mistake when setting
+the RX path for 1T parts.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/net/wireless/ath/ath10k/mac.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/ath10k/mac.c b/drivers/net/wireless/ath/ath10k/mac.c
-index b0e613bc10a5..e31469dd58dd 100644
---- a/drivers/net/wireless/ath/ath10k/mac.c
-+++ b/drivers/net/wireless/ath/ath10k/mac.c
-@@ -6867,7 +6867,13 @@ ath10k_mac_update_rx_channel(struct ath10k *ar,
- 			def = &vifs[0].new_ctx->def;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index c355d27..d0330a8 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -3814,7 +3814,7 @@ static int rtl8xxxu_init_phy_bb(struct rtl8xxxu_priv *priv)
+ 		rtl8xxxu_write32(priv, REG_FPGA1_TX_INFO, val32);
  
- 		ar->rx_channel = def->chan;
--	} else if (ctx && ath10k_mac_num_chanctxs(ar) == 0) {
-+	} else if ((ctx && ath10k_mac_num_chanctxs(ar) == 0) ||
-+		   (ctx && (ar->state == ATH10K_STATE_RESTARTED))) {
-+		/* During driver restart due to firmware assert, since mac80211
-+		 * already has valid channel context for given radio, channel
-+		 * context iteration return num_chanctx > 0. So fix rx_channel
-+		 * when restart is in progress.
-+		 */
- 		ar->rx_channel = ctx->def.chan;
- 	} else {
- 		ar->rx_channel = NULL;
+ 		val32 = rtl8xxxu_read32(priv, REG_CCK0_AFE_SETTING);
+-		val32 &= 0xff000000;
++		val32 &= 0x00ffffff;
+ 		val32 |= 0x45000000;
+ 		rtl8xxxu_write32(priv, REG_CCK0_AFE_SETTING, val32);
+ 
 -- 
-2.7.4
+2.5.5
 
