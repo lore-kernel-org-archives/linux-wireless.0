@@ -1,33 +1,46 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:36025 "EHLO sipsolutions.net"
+Received: from mx1.redhat.com ([209.132.183.28]:56232 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933604AbcDFIwU (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Wed, 6 Apr 2016 04:52:20 -0400
-Message-ID: <1459932736.17504.40.camel@sipsolutions.net> (sfid-20160406_105224_142994_640492DB)
-Subject: Re: [PATCHv3 RESEND 06/11] cfg80211: Provide an API to report NAN
- function termination
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Emmanuel Grumbach <emmanuel.grumbach@intel.com>
-Cc: linux-wireless@vger.kernel.org,
-	Andrei Otcheretianski <andrei.otcheretianski@intel.com>
-Date: Wed, 06 Apr 2016 10:52:16 +0200
-In-Reply-To: <1459244109-16038-6-git-send-email-emmanuel.grumbach@intel.com>
-References: <1459244109-16038-1-git-send-email-emmanuel.grumbach@intel.com>
-	 <1459244109-16038-6-git-send-email-emmanuel.grumbach@intel.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+	id S1751481AbcDNUhX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 16:37:23 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 13/16] rtl8xxxu: Fix OOPS if user tries to add device via /sys
+Date: Thu, 14 Apr 2016 16:37:18 -0400
+Message-Id: <1460666241-5365-14-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_225529_052526_1374F111)
+In-Reply-To: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Tue, 2016-03-29 at 12:35 +0300, Emmanuel Grumbach wrote:
-> 
-> @@ -2246,6 +2248,7 @@ enum nl80211_attrs {
->  	NL80211_ATTR_NAN_FUNC,
->  	NL80211_ATTR_NAN_FUNC_INST_ID,
->  	NL80211_ATTR_NAN_MATCH,
-> +	NL80211_ATTR_NAN_FUNC_TERM_REASON,
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-You can add this as a nested function attribute. If we remove the
-FUNC_INST_ID attribute we have to do the nesting anyway.
+This driver relies on driver_info in struct usb_device_id, so allowing
+adding a device via /sys/bus/usb/drivers/rtl8xxxu/new_id will cause a
+NULL pointer dereference.
 
-johannes
+Set .no_dynamic_id = 1 to disable hot add of USB IDs.
+
+Reported-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index cf7832b..2d92e64 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -10141,6 +10141,7 @@ static struct usb_driver rtl8xxxu_driver = {
+ 	.probe = rtl8xxxu_probe,
+ 	.disconnect = rtl8xxxu_disconnect,
+ 	.id_table = dev_table,
++	.no_dynamic_id = 1,
+ 	.disable_hub_initiated_lpm = 1,
+ };
+ 
+-- 
+2.5.5
+
