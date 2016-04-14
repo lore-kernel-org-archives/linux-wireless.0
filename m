@@ -1,62 +1,48 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49632 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751749AbcDNUh2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 16:37:28 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 15/16] rtl8xxxu: Pause TX before calling disable_rf()
-Date: Thu, 14 Apr 2016 16:37:20 -0400
-Message-Id: <1460666241-5365-16-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_223733_426133_02CF6946)
-In-Reply-To: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:45776 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755008AbcDNM4A (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 08:56:00 -0400
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Subject: Re: [01/18] rtl8xxxu: Add MAC init table for 8192eu
+From: Kalle Valo <kvalo@codeaurora.org>
+In-Reply-To: <1460053173-8494-2-git-send-email-Jes.Sorensen@redhat.com>
+To: Jes Sorensen <Jes.Sorensen@redhat.com>
+Cc: linux-wireless@vger.kernel.org, Larry.Finger@lwfinger.net
+Message-Id: <20160414125559.CF24B60D79@smtp.codeaurora.org> (sfid-20160414_145616_315374_6E07267B)
+Date: Thu, 14 Apr 2016 12:55:59 +0000 (UTC)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-All the disable_rf() functions were setting REG_TXPAUSE to 0xff to
-stop transmission. Do it centrally before calling disable_rf()
-instead.
+> From: Jes Sorensen <Jes.Sorensen@redhat.com>
+> 
+> The 8192eu requires a different MAC init table. Add the missing table
+> and specify the table to use in the fileops structure.
+> 
+> Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
----
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+Thanks, 18 patches applied to wireless-drivers-next.git:
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index a86b5c4..928ca56 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -2125,8 +2125,6 @@ static void rtl8723a_disable_rf(struct rtl8xxxu_priv *priv)
- 	u8 sps0;
- 	u32 val32;
- 
--	rtl8xxxu_write8(priv, REG_TXPAUSE, 0xff);
--
- 	sps0 = rtl8xxxu_read8(priv, REG_SPS0_CTRL);
- 
- 	/* RF RX code for preamble power saving */
-@@ -7665,8 +7663,6 @@ static void rtl8723b_disable_rf(struct rtl8xxxu_priv *priv)
- {
- 	u32 val32;
- 
--	rtl8xxxu_write8(priv, REG_TXPAUSE, 0xff);
--
- 	val32 = rtl8xxxu_read32(priv, REG_RX_WAIT_CCA);
- 	val32 &= ~(BIT(22) | BIT(23));
- 	rtl8xxxu_write32(priv, REG_RX_WAIT_CCA, val32);
-@@ -9591,6 +9587,8 @@ static void rtl8xxxu_stop(struct ieee80211_hw *hw)
- 	if (priv->usb_interrupts)
- 		usb_kill_anchored_urbs(&priv->int_anchor);
- 
-+	rtl8xxxu_write8(priv, REG_TXPAUSE, 0xff);
-+
- 	priv->fops->disable_rf(priv);
- 
- 	/*
--- 
-2.5.5
+c606e662a5c8 rtl8xxxu: Add MAC init table for 8192eu
+2ca73dc786c4 rtl8xxxu: Do not mess with AFE_XTAL_CTRL on 8192eu
+80805aa5f33e rtl8xxxu: Set TX page boundaries for 8192eu
+19102f841934 rtl8xxxu: Add radio init tables for 8192eu
+e293278debe7 rtl8xxxu: Add 8192eu AGC tables
+ae14c5d20dc9 rtl8xxxu: Add 8192eu PHY init table
+abd71bdb94c3 rtl8xxxu: Pick PHY init table based on chip version first
+9e24772ae222 rtl8xxxu: Correctly parse 8192eu efuse
+444004bd1349 rtl8xxxu: Handle BB init for 8192eu
+2949b9ee77b8 rtl8xxxu: Provide special handling when writing RF regs on 8192eu
+8a59485c8ee9 rtl8xxxu: Handle XTAL value setting on 8192eu
+57e5e2e650fb rtl8xxxu: Set correct interrupt masking registers on 8192eu
+3021e51f2b2f rtl8xxxu: Set REG_USB_HRPWM for 8192eu
+e1394fe5f986 rtl8xxxu: Fix LDPC RX hang issue on 8192eu
+b052b7fc7d25 rtl8xxxu: Implement 8192eu device specific quirks
+70bc1e24d9e2 rtl8xxxu: Use proper register name for REG_PAD_CTRL1
+f991f4e9147b rtl8xxxu: Implement IQK calibration for 8192eu
+28e460b02c66 rtl8xxxu: Adjust AFE crystal value on 8192eu
 
+Kalle Valo
