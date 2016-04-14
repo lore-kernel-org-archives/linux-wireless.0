@@ -1,165 +1,125 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f170.google.com ([209.85.192.170]:32950 "EHLO
-	mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753536AbcDCWQ4 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Apr 2016 18:16:56 -0400
-Received: by mail-pf0-f170.google.com with SMTP id 184so30375681pff.0
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Apr 2016 15:16:55 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, wcn36xx@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 06/15] wcn36xx: Add helper macros to cast sta to priv
-Date: Sun,  3 Apr 2016 15:16:37 -0700
-Message-Id: <1459721806-11817-6-git-send-email-bjorn.andersson@linaro.org> (sfid-20160404_001914_897516_8DCE4D59)
-In-Reply-To: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
+Received: from mx1.redhat.com ([209.132.183.28]:39199 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753390AbcDNS7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 14:59:09 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 08/26] rtl8xxxu: Implment rtl8192e_set_tx_power()
+Date: Thu, 14 Apr 2016 14:58:49 -0400
+Message-Id: <1460660347-26299-9-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_212529_876875_3FD61776)
+In-Reply-To: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-While poking at this I also change two related things. I rename one
-variable to make the names consistent. I also move one assignment of
-priv_sta to the declaration to save a few lines.
+8192eu is a 2T part, so setting TX power for path A only, as done by
+rtl8723bu_set_tx_power() is not sufficient.
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/net/wireless/ath/wcn36xx/main.c    | 14 ++++++--------
- drivers/net/wireless/ath/wcn36xx/smd.c     | 12 ++++++------
- drivers/net/wireless/ath/wcn36xx/wcn36xx.h |  6 ++++++
- 3 files changed, 18 insertions(+), 14 deletions(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 78 +++++++++++++++++++++++-
+ 1 file changed, 77 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/main.c b/drivers/net/wireless/ath/wcn36xx/main.c
-index 4781b5e8deb3..30f015d3a9e6 100644
---- a/drivers/net/wireless/ath/wcn36xx/main.c
-+++ b/drivers/net/wireless/ath/wcn36xx/main.c
-@@ -373,7 +373,7 @@ static void wcn36xx_tx(struct ieee80211_hw *hw,
- 	struct wcn36xx_sta *sta_priv = NULL;
- 
- 	if (control->sta)
--		sta_priv = (struct wcn36xx_sta *)control->sta->drv_priv;
-+		sta_priv = wcn36xx_sta_to_priv(control->sta);
- 
- 	if (wcn36xx_start_tx(wcn, sta_priv, skb))
- 		ieee80211_free_txskb(wcn->hw, skb);
-@@ -518,7 +518,7 @@ static void wcn36xx_update_allowed_rates(struct ieee80211_sta *sta,
- {
- 	int i, size;
- 	u16 *rates_table;
--	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
-+	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
- 	u32 rates = sta->supp_rates[band];
- 
- 	memset(&sta_priv->supported_rates, 0,
-@@ -661,7 +661,7 @@ static void wcn36xx_bss_info_changed(struct ieee80211_hw *hw,
- 				rcu_read_unlock();
- 				goto out;
- 			}
--			sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
-+			sta_priv = wcn36xx_sta_to_priv(sta);
- 
- 			wcn36xx_update_allowed_rates(sta, WCN36XX_BAND(wcn));
- 
-@@ -791,7 +791,7 @@ static int wcn36xx_sta_add(struct ieee80211_hw *hw, struct ieee80211_vif *vif,
- {
- 	struct wcn36xx *wcn = hw->priv;
- 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
--	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
-+	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
- 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta add vif %p sta %pM\n",
- 		    vif, sta->addr);
- 
-@@ -816,7 +816,7 @@ static int wcn36xx_sta_remove(struct ieee80211_hw *hw,
- {
- 	struct wcn36xx *wcn = hw->priv;
- 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
--	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
-+	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
- 
- 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac sta remove vif %p sta %pM index %d\n",
- 		    vif, sta->addr, sta_priv->sta_index);
-@@ -858,7 +858,7 @@ static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
- 		    struct ieee80211_ampdu_params *params)
- {
- 	struct wcn36xx *wcn = hw->priv;
--	struct wcn36xx_sta *sta_priv = NULL;
-+	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(params->sta);
- 	struct ieee80211_sta *sta = params->sta;
- 	enum ieee80211_ampdu_mlme_action action = params->action;
- 	u16 tid = params->tid;
-@@ -867,8 +867,6 @@ static int wcn36xx_ampdu_action(struct ieee80211_hw *hw,
- 	wcn36xx_dbg(WCN36XX_DBG_MAC, "mac ampdu action action %d tid %d\n",
- 		    action, tid);
- 
--	sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
--
- 	switch (action) {
- 	case IEEE80211_AMPDU_RX_START:
- 		sta_priv->tid = tid;
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index 6d4aa9250ca8..ff56138528b6 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -192,7 +192,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
- 		struct wcn36xx_hal_config_sta_params *sta_params)
- {
- 	struct wcn36xx_vif *vif_priv = wcn36xx_vif_to_priv(vif);
--	struct wcn36xx_sta *priv_sta = NULL;
-+	struct wcn36xx_sta *sta_priv = NULL;
- 	if (vif->type == NL80211_IFTYPE_ADHOC ||
- 	    vif->type == NL80211_IFTYPE_AP ||
- 	    vif->type == NL80211_IFTYPE_MESH_POINT) {
-@@ -228,17 +228,17 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
- 	sta_params->p2p = 0;
- 
- 	if (sta) {
--		priv_sta = (struct wcn36xx_sta *)sta->drv_priv;
-+		sta_priv = wcn36xx_sta_to_priv(sta);
- 		if (NL80211_IFTYPE_STATION == vif->type)
- 			memcpy(&sta_params->bssid, sta->addr, ETH_ALEN);
- 		else
- 			memcpy(&sta_params->mac, sta->addr, ETH_ALEN);
- 		sta_params->wmm_enabled = sta->wme;
- 		sta_params->max_sp_len = sta->max_sp;
--		sta_params->aid = priv_sta->aid;
-+		sta_params->aid = sta_priv->aid;
- 		wcn36xx_smd_set_sta_ht_params(sta, sta_params);
--		memcpy(&sta_params->supported_rates, &priv_sta->supported_rates,
--			sizeof(priv_sta->supported_rates));
-+		memcpy(&sta_params->supported_rates, &sta_priv->supported_rates,
-+			sizeof(sta_priv->supported_rates));
- 	} else {
- 		wcn36xx_set_default_rates(&sta_params->supported_rates);
- 		wcn36xx_smd_set_sta_default_ht_params(sta_params);
-@@ -969,7 +969,7 @@ static int wcn36xx_smd_config_sta_rsp(struct wcn36xx *wcn,
- {
- 	struct wcn36xx_hal_config_sta_rsp_msg *rsp;
- 	struct config_sta_rsp_params *params;
--	struct wcn36xx_sta *sta_priv = (struct wcn36xx_sta *)sta->drv_priv;
-+	struct wcn36xx_sta *sta_priv = wcn36xx_sta_to_priv(sta);
- 
- 	if (len < sizeof(*rsp))
- 		return -EINVAL;
-diff --git a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-index c3ba07ed1db5..c368a34c8de7 100644
---- a/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-+++ b/drivers/net/wireless/ath/wcn36xx/wcn36xx.h
-@@ -275,4 +275,10 @@ struct ieee80211_vif *wcn36xx_priv_to_vif(struct wcn36xx_vif *vif_priv)
- 	return container_of((void *) vif_priv, struct ieee80211_vif, drv_priv);
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 99cf4aa..7ab009f 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2555,6 +2555,82 @@ rtl8723b_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
+ 	rtl8xxxu_write32(priv, REG_TX_AGC_A_MCS07_MCS04, mcs);
  }
  
-+static inline
-+struct wcn36xx_sta *wcn36xx_sta_to_priv(struct ieee80211_sta *sta)
++static void
++rtl8192e_set_tx_power(struct rtl8xxxu_priv *priv, int channel, bool ht40)
 +{
-+	return (struct wcn36xx_sta *)sta->drv_priv;
++	u32 val32, ofdm, mcs;
++	u8 cck, ofdmbase, mcsbase;
++	int group, tx_idx;
++
++	tx_idx = 0;
++	group = rtl8723b_channel_to_group(channel);
++
++	cck = priv->cck_tx_power_index_A[group];
++
++	val32 = rtl8xxxu_read32(priv, REG_TX_AGC_A_CCK1_MCS32);
++	val32 &= 0xffff00ff;
++	val32 |= (cck << 8);
++	rtl8xxxu_write32(priv, REG_TX_AGC_A_CCK1_MCS32, val32);
++
++	val32 = rtl8xxxu_read32(priv, REG_TX_AGC_B_CCK11_A_CCK2_11);
++	val32 &= 0xff;
++	val32 |= ((cck << 8) | (cck << 16) | (cck << 24));
++	rtl8xxxu_write32(priv, REG_TX_AGC_B_CCK11_A_CCK2_11, val32);
++
++	ofdmbase = priv->ht40_1s_tx_power_index_A[group];
++	ofdmbase += priv->ofdm_tx_power_diff[tx_idx].a;
++	ofdm = ofdmbase | ofdmbase << 8 | ofdmbase << 16 | ofdmbase << 24;
++
++	rtl8xxxu_write32(priv, REG_TX_AGC_A_RATE18_06, ofdm);
++	rtl8xxxu_write32(priv, REG_TX_AGC_A_RATE54_24, ofdm);
++
++	mcsbase = priv->ht40_1s_tx_power_index_A[group];
++	if (ht40)
++		mcsbase += priv->ht40_tx_power_diff[tx_idx++].a;
++	else
++		mcsbase += priv->ht20_tx_power_diff[tx_idx++].a;
++	mcs = mcsbase | mcsbase << 8 | mcsbase << 16 | mcsbase << 24;
++
++	rtl8xxxu_write32(priv, REG_TX_AGC_A_MCS03_MCS00, mcs);
++	rtl8xxxu_write32(priv, REG_TX_AGC_A_MCS07_MCS04, mcs);
++	rtl8xxxu_write32(priv, REG_TX_AGC_A_MCS11_MCS08, mcs);
++	rtl8xxxu_write32(priv, REG_TX_AGC_A_MCS15_MCS12, mcs);
++
++	if (priv->tx_paths > 1) {
++		cck = priv->cck_tx_power_index_B[group];
++
++		val32 = rtl8xxxu_read32(priv, REG_TX_AGC_B_CCK1_55_MCS32);
++		val32 &= 0xff;
++		val32 |= ((cck << 8) | (cck << 16) | (cck << 24));
++		rtl8xxxu_write32(priv, REG_TX_AGC_B_CCK1_55_MCS32, val32);
++
++		val32 = rtl8xxxu_read32(priv, REG_TX_AGC_B_CCK11_A_CCK2_11);
++		val32 &= 0xffffff00;
++		val32 |= cck;
++		rtl8xxxu_write32(priv, REG_TX_AGC_B_CCK11_A_CCK2_11, val32);
++
++		ofdmbase = priv->ht40_1s_tx_power_index_B[group];
++		ofdmbase += priv->ofdm_tx_power_diff[tx_idx].b;
++		ofdm = ofdmbase | ofdmbase << 8 |
++			ofdmbase << 16 | ofdmbase << 24;
++
++		rtl8xxxu_write32(priv, REG_TX_AGC_B_RATE18_06, ofdm);
++		rtl8xxxu_write32(priv, REG_TX_AGC_B_RATE54_24, ofdm);
++
++		mcsbase = priv->ht40_1s_tx_power_index_B[group];
++		if (ht40)
++			mcsbase += priv->ht40_tx_power_diff[tx_idx++].b;
++		else
++			mcsbase += priv->ht20_tx_power_diff[tx_idx++].b;
++		mcs = mcsbase | mcsbase << 8 | mcsbase << 16 | mcsbase << 24;
++
++		rtl8xxxu_write32(priv, REG_TX_AGC_B_MCS03_MCS00, mcs);
++		rtl8xxxu_write32(priv, REG_TX_AGC_B_MCS07_MCS04, mcs);
++		rtl8xxxu_write32(priv, REG_TX_AGC_B_MCS11_MCS08, mcs);
++		rtl8xxxu_write32(priv, REG_TX_AGC_B_MCS15_MCS12, mcs);
++	}
 +}
 +
- #endif	/* _WCN36XX_H_ */
+ static void rtl8xxxu_set_linktype(struct rtl8xxxu_priv *priv,
+ 				  enum nl80211_iftype linktype)
+ {
+@@ -9784,7 +9860,7 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
+ 	.parse_rx_desc = rtl8723bu_parse_rx_desc,
+ 	.enable_rf = rtl8723b_enable_rf,
+ 	.disable_rf = rtl8723b_disable_rf,
+-	.set_tx_power = rtl8723b_set_tx_power,
++	.set_tx_power = rtl8192e_set_tx_power,
+ 	.update_rate_mask = rtl8723bu_update_rate_mask,
+ 	.report_connect = rtl8723bu_report_connect,
+ 	.writeN_block_size = 128,
 -- 
-2.5.0
+2.5.5
 
