@@ -1,55 +1,65 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:33714 "EHLO
-	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753374AbcDDLFI (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2016 07:05:08 -0400
-Received: by mail-pf0-f195.google.com with SMTP id e190so4749547pfe.0
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 04:05:08 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 2/8] staging: wilc1000: move Handle_ScanDone function declaration
-Date: Mon,  4 Apr 2016 20:04:44 +0900
-Message-Id: <1459767890-9709-2-git-send-email-chaehyun.lim@gmail.com> (sfid-20160404_130514_917308_D5A4243E)
-In-Reply-To: <1459767890-9709-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1459767890-9709-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from s3.sipsolutions.net ([5.9.151.49]:42325 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754392AbcDNIkm (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 04:40:42 -0400
+Message-ID: <1460623232.2358.6.camel@sipsolutions.net> (sfid-20160414_104047_726442_ADA8C3E7)
+Subject: Re: [PATCH v3 2/3] mac80211_hwsim: Add iface comb for DFS
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Janusz Dziedzic <janusz.dziedzic@tieto.com>,
+	linux-wireless@vger.kernel.org
+Cc: Ilan Peer <ilan.peer@intel.com>
+Date: Thu, 14 Apr 2016 10:40:32 +0200
+In-Reply-To: <1383653034-6679-1-git-send-email-janusz.dziedzic@tieto.com> (sfid-20131105_130424_907681_CEAEBD68)
+References: <1383653034-6679-1-git-send-email-janusz.dziedzic@tieto.com>
+	 (sfid-20131105_130424_907681_CEAEBD68)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Handle_ScanDone function declaration is moved to front of
-host_interface.c file.
+Hi,
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+I know this is a LONG time ago, but nonetheless...
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index b8dae09..aa95eda 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -263,6 +263,7 @@ static struct wilc_vif *join_req_vif;
- 
- static void *host_int_ParseJoinBssParam(struct network_info *ptstrNetworkInfo);
- static int host_int_get_ipaddress(struct wilc_vif *vif, u8 *ip_addr, u8 idx);
-+static s32 Handle_ScanDone(struct wilc_vif *vif, enum scan_event enuEvent);
- 
- /* The u8IfIdx starts from 0 to NUM_CONCURRENT_IFC -1, but 0 index used as
-  * special purpose in wilc device, so we add 1 to the index to starts from 1.
-@@ -730,9 +731,6 @@ unlock:
- 	return result;
- }
- 
--static s32 Handle_ScanDone(struct wilc_vif *vif,
--			   enum scan_event enuEvent);
--
- static s32 Handle_Scan(struct wilc_vif *vif,
- 		       struct scan_attr *pstrHostIFscanAttr)
- {
--- 
-2.8.0
+> -static struct ieee80211_iface_combination hwsim_if_comb = {
+> -	.limits = hwsim_if_limits,
+> -	.n_limits = ARRAY_SIZE(hwsim_if_limits),
+> -	.max_interfaces = 2048,
+> -	.num_different_channels = 1,
+> +static const struct ieee80211_iface_limit hwsim_if_dfs_limits[] = {
+> +	{ .max = 8, .types = BIT(NL80211_IFTYPE_AP) },
+> +};
+> +
+> +static struct ieee80211_iface_combination hwsim_if_comb[] = {
+> +	{
+> +		.limits = hwsim_if_limits,
+> +		.n_limits = ARRAY_SIZE(hwsim_if_limits),
+> +		.max_interfaces = 2048,
+> +		.num_different_channels = 1,
+> +	},
+> +	{
+> +		.limits = hwsim_if_dfs_limits,
+> +		.n_limits = ARRAY_SIZE(hwsim_if_dfs_limits),
+> +		.max_interfaces = 8,
+> +		.num_different_channels = 1,
+> +		.radar_detect_widths =
+> BIT(NL80211_CHAN_WIDTH_20_NOHT) |
+> +				       BIT(NL80211_CHAN_WIDTH_20) |
+> +				       BIT(NL80211_CHAN_WIDTH_40) |
+> +				       BIT(NL80211_CHAN_WIDTH_80) |
+> +				       BIT(NL80211_CHAN_WIDTH_160),
+> +	}
+>  };
 
+I don't, at least today, but I don't see relevant changes since then,
+understand why this was two combinations, one with fewer interfaces.
+
+It seems that radar detection is mostly independent of the interface
+types, at least as far as the code is concerned.
+
+Are there some other considerations, that prevent declaring
+radar_detect_widths together with the regular hwsim_if_limits? It
+obviously cannot actually be *used* for all?
+
+johannes
