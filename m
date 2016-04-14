@@ -1,86 +1,75 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-lf0-f52.google.com ([209.85.215.52]:34236 "EHLO
-	mail-lf0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754564AbcDNMQ2 (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 08:16:28 -0400
-Received: by mail-lf0-f52.google.com with SMTP id j11so106084126lfb.1
-        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2016 05:16:27 -0700 (PDT)
-From: Michal Kazior <michal.kazior@tieto.com>
+Received: from mx1.redhat.com ([209.132.183.28]:57110 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753617AbcDNS7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 14:59:09 -0400
+From: Jes.Sorensen@redhat.com
 To: linux-wireless@vger.kernel.org
-Cc: johannes@sipsolutions.net, dave.taht@gmail.com,
-	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net,
-	apenwarr@gmail.com, Michal Kazior <michal.kazior@tieto.com>
-Subject: [PATCHv3 0/5] mac80211: implement fq_codel
-Date: Thu, 14 Apr 2016 14:18:17 +0200
-Message-Id: <1460636302-31161-1-git-send-email-michal.kazior@tieto.com> (sfid-20160414_141633_161008_24EADD93)
-In-Reply-To: <1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
-References: <1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 17/26] rtl8xxxu: Load AGC table before patching for 1T2R parts
+Date: Thu, 14 Apr 2016 14:58:58 -0400
+Message-Id: <1460660347-26299-18-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_205948_015835_387A0B85)
+In-Reply-To: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-This patchset disables qdiscs for drivers
-using software queuing and performs fq_codel-like
-dequeuing on txqs.
+This should get the order right and avoid patching something that is
+later overwritten.
 
-I've reworked it as per Avery's suggestion (and
-more).
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 28 ++++++++++++------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
-I've (re)tested it against ath10k with and without
-DQL (my ath10k RFC which is limited but sufficient
-for some proofing scenarios) and got quite nice
-looking results:
-
-  http://imgur.com/a/8ruhK
-  http://kazikcz.github.io/dl/2016-04-12-flent-fqmac-ath10k-dql.tar.gz
-
-All DQL cases show incremental improvement and are
-within expectations. The "dql-fq" case loses TCP
-fairness/convergence (compared to "dql-taildrop")
-because it removes per-txq 64 packet limit and
-"dql-fqcodel" gets it back.
-
-
-v3:
- * split taildrop, fq and codel functionalities
-   into separate patches [Avery]
-
-v2:
- * fix invalid ptr deref
- * fix compilation for backports
-
-
-Michal Kazior (5):
-  mac80211: skip netdev queue control with software queuing
-  mac80211: implement fair queueing per txq
-  mac80211: add debug knobs for fair queuing
-  mac80211: implement codel on fair queuing flows
-  mac80211: add debug knobs for codel
-
- include/net/mac80211.h        |  17 ++-
- net/mac80211/agg-tx.c         |   8 +-
- net/mac80211/codel.h          | 265 ++++++++++++++++++++++++++++++++++++++++
- net/mac80211/codel_i.h        | 100 +++++++++++++++
- net/mac80211/debugfs.c        |  91 ++++++++++++++
- net/mac80211/debugfs_netdev.c |  28 ++++-
- net/mac80211/debugfs_sta.c    |  45 +++++++
- net/mac80211/fq.h             | 276 ++++++++++++++++++++++++++++++++++++++++++
- net/mac80211/fq_i.h           |  82 +++++++++++++
- net/mac80211/ieee80211_i.h    |  32 ++++-
- net/mac80211/iface.c          |  26 ++--
- net/mac80211/main.c           |  10 +-
- net/mac80211/rx.c             |   2 +-
- net/mac80211/sta_info.c       |  14 +--
- net/mac80211/tx.c             | 274 ++++++++++++++++++++++++++++++++++-------
- net/mac80211/util.c           |  34 ++----
- 16 files changed, 1204 insertions(+), 100 deletions(-)
- create mode 100644 net/mac80211/codel.h
- create mode 100644 net/mac80211/codel_i.h
- create mode 100644 net/mac80211/fq.h
- create mode 100644 net/mac80211/fq_i.h
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 43359a3..2127507 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -3811,6 +3811,20 @@ static int rtl8xxxu_init_phy_bb(struct rtl8xxxu_priv *priv)
+ 
+ 	priv->fops->init_phy_bb(priv);
+ 
++	if (priv->rtl_chip == RTL8723B)
++		rtl8xxxu_init_phy_regs(priv, rtl8xxx_agc_8723bu_table);
++	else if (priv->rtl_chip == RTL8192E) {
++		if (priv->hi_pa)
++			rtl8xxxu_init_phy_regs(priv,
++					       rtl8xxx_agc_8192eu_highpa_table);
++		else
++			rtl8xxxu_init_phy_regs(priv,
++					       rtl8xxx_agc_8192eu_std_table);
++	} else if (priv->hi_pa)
++		rtl8xxxu_init_phy_regs(priv, rtl8xxx_agc_highpa_table);
++	else
++		rtl8xxxu_init_phy_regs(priv, rtl8xxx_agc_standard_table);
++
+ 	if (priv->tx_paths == 1 && priv->rx_paths == 2) {
+ 		/*
+ 		 * For 1T2R boards, patch the registers.
+@@ -3871,20 +3885,6 @@ static int rtl8xxxu_init_phy_bb(struct rtl8xxxu_priv *priv)
+ 		rtl8xxxu_write32(priv, REG_TX_TO_TX, val32);
+ 	}
+ 
+-	if (priv->rtl_chip == RTL8723B)
+-		rtl8xxxu_init_phy_regs(priv, rtl8xxx_agc_8723bu_table);
+-	else if (priv->rtl_chip == RTL8192E) {
+-		if (priv->hi_pa)
+-			rtl8xxxu_init_phy_regs(priv,
+-					       rtl8xxx_agc_8192eu_highpa_table);
+-		else
+-			rtl8xxxu_init_phy_regs(priv,
+-					       rtl8xxx_agc_8192eu_std_table);
+-	} else if (priv->hi_pa)
+-		rtl8xxxu_init_phy_regs(priv, rtl8xxx_agc_highpa_table);
+-	else
+-		rtl8xxxu_init_phy_regs(priv, rtl8xxx_agc_standard_table);
+-
+ 	if (priv->has_xtalk) {
+ 		val32 = rtl8xxxu_read32(priv, REG_MAC_PHY_CTRL);
+ 
 -- 
-2.1.4
+2.5.5
 
