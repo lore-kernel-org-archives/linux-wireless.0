@@ -1,61 +1,51 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:49144 "EHLO mga09.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751696AbcDLGOl (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2016 02:14:41 -0400
-From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
-To: Gucea Doru <gucea.doru@gmail.com>
-CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"Gucea, Doru" <doru.gucea@intel.com>
-Subject: RE: iwlwifi monitor mode: No data frame captured on 5 Ghz
-Date: Tue, 12 Apr 2016 06:14:31 +0000
-Message-ID: <0BA3FCBA62E2DC44AF3030971E174FB32EAD3806@hasmsx107.ger.corp.intel.com> (sfid-20160412_081445_416872_94D3CF9F)
-References: <CANfLQrYTqUQGoj+Xr1XrKJrh8oaBB+qt8YeFwo0EyhbC-RpnNg@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32EAA379D@hasmsx107.ger.corp.intel.com>
-	<CANfLQrad-1C3Wzy9M+=J7nzjQOcgam9CdJVDR2KC=KipZRpbkA@mail.gmail.com>
-	<1459863253.21527.2.camel@intel.com>
-	<CANfLQrbjCYaVa7-pq3xxPhmjM+MY5ky-isV7+yYLLFVkDCMr2Q@mail.gmail.com>
-	<0BA3FCBA62E2DC44AF3030971E174FB32EACFDF2@hasmsx107.ger.corp.intel.com>
- <CANfLQrYgSUpbxc2_SgJ1PSB84mMjriUAg4cafiMTzEz+gaEJcQ@mail.gmail.com>
-In-Reply-To: <CANfLQrYgSUpbxc2_SgJ1PSB84mMjriUAg4cafiMTzEz+gaEJcQ@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
+Received: from wolverine02.qualcomm.com ([199.106.114.251]:14252 "EHLO
+	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753536AbcDNNLT convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 09:11:19 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
+CC: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH 1/8] ath10k: remove deprecated firmware API 1 support
+Date: Thu, 14 Apr 2016 13:11:12 +0000
+Message-ID: <874mb4s5cg.fsf@kamboji.qca.qualcomm.com> (sfid-20160414_151122_742100_75D32829)
+References: <20160406144355.28399.23733.stgit@potku.adurom.net>
+	<20160406144445.28399.74306.stgit@potku.adurom.net>
+In-Reply-To: <20160406144445.28399.74306.stgit@potku.adurom.net> (Kalle Valo's
+	message of "Wed, 6 Apr 2016 17:44:45 +0300")
+Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-PiBPbiBTdW4sIEFwciAxMCwgMjAxNiBhdCAxOjI4IFBNLCBHcnVtYmFjaCwgRW1tYW51ZWwNCj4g
-PGVtbWFudWVsLmdydW1iYWNoQGludGVsLmNvbT4gd3JvdGU6DQo+ID4+ID4gT24gVHVlLCAyMDE2
-LTA0LTA1IGF0IDE2OjI1ICswMzAwLCBHdWNlYSBEb3J1IHdyb3RlOg0KPiA+PiBJcyB0aGUgaXds
-d2lmaSBkcml2ZXIgY2FwYWJsZSBvZiBjYXB0dXJpbmcgZGF0YSBmcmFtZXMgd2hlbiB0aGUNCj4g
-Pj4gY2hhbm5lbCBib25kaW5nIGlzIHNldCB0byA4ME1oej8NCj4gPg0KPiA+IGRldiA8ZGV2bmFt
-ZT4gc2V0IGZyZXEgPGNvbnRyb2wgZnJlcT4gWzIwfDQwfDgwfDgwKzgwfDE2MF0gWzxjZW50ZXIN
-Cj4gPiBmcmVxIDE+XSBbPGNlbnRlciBmcmVxIDI+XQ0KPiA+DQo+ID4gWW91IGNhbiB0YWtlIGNl
-bnRlcl9mcmVxMSBmcm9tIHRoZSBvdXRwdXQgb2YgaXcgZGV2IG9uIGEgZGV2aWNlIHRoYXQgaXMN
-Cj4gYXNzb2NpYXRlZCB0byB0aGUgc2FtZSBBUC4NCj4gDQo+IFRoYW5rcyBhIGxvdCwgRW1tYW51
-ZWwuIE15IGl3IGJpbmFyeSB0aGF0IGNhbWUgZGVmYXVsdCB3aXRoIG15IFVidW50dQ0KPiBkaXN0
-cmlidXRpb24gd2FzIHZlcnkgb2xkICgzLjQpIGFuZCBpdCBkaWRuJ3QgaGF2ZSBzdXBwb3J0IGZv
-ciBjaGFubmVsIGJvbmRpbmcNCj4gbGFyZ2VyIHRoYW4gNDBNaHouDQo+IEkgY29tcGlsZWQgdGhl
-IGxhdGVzdCBpdyB2ZXJzaW9uIGZyb20gc291cmNlcyB0aGVuIEkgdG9vayB0aGUNCj4gY2VudGVy
-X2ZyZXExIGZyb20gdGhlIGJlYWNvbiBhZHZlcnRpc2VkIGJ5IHRoZSBBUC4gVGhhdCdzIGJlY2F1
-c2UgdGhlIGl3DQo+IGRldiBvbiBhIGRldmljZSBhc3NvY2lhdGVkIHRvIHRoZSBzYW1lIEFQIGdh
-dmUgbWUgdGhlIGNvbnRyb2wgZnJlcXVlbmN5Lg0KPiBBZnRlciB0aGF0LCBJIHdhcyBhYmxlIHRv
-IGNhcHR1cmUgdGhlIGRhdGEgZnJhbWVzLg0KPiANCj4gT25lIG1vcmUgcXVlc3Rpb24gdGhhdCBJ
-IHByb21pc2UgdG8gYmUgdGhlIGxhc3Qgb25lOg0KPiAtIEkgYW0gdHJ5aW5nIHRvIGNhcHR1cmUg
-dGhlIFdpLUZpIERpcmVjdCB0cmFmZmljIGJldHdlZW4gdHdvDQo+IHNtYXJ0cGhvbmVzOiBpdyBz
-aG93cyBtZSB0aGF0IHRoZSBwMnAgaW50ZXJmYWNlIGZyb20gb25lIG9mIHRoZQ0KPiBzbWFydHBo
-b25lcyB1c2VzIDIuNEdoeiwgY2hhbm5lbCAxIHNvIEkgc2V0IHRoZSBtb25pdG9yIGludGVyZmFj
-ZSBvbiAyLjQsDQo+IGNoYW5uZWwgMS4gVGhlIHByb2JsZW0gaXMgdGhhdCwgYWdhaW4sIEkgY2Fu
-J3Qgc2VlIHRoZSBkYXRhIGZyYW1lcy4gSW5zdGVhZCwgSQ0KPiBjYW4gc2VlIHRoZSBBc3NvY2lh
-dGlvbi9BdXRoZW50aWNhdGlvbiBSZXF1ZXN0LCBSVFMvQ1RTLCBCbG9jayBBQ0sgKEkNCj4gYXR0
-YWNoZWQgdGhlIFdpcmVzaGFyayBjYXB0dXJlIGF0IFsxXSkuDQo+IA0KDQouLi4uIC4uLi4gLi4u
-LiAuLi4xID0gSFQgTERQQyBjb2RpbmcgY2FwYWJpbGl0eTogVHJhbnNtaXR0ZXIgc3VwcG9ydHMg
-cmVjZWl2aW5nIExEUEMgY29kZWQgcGFja2V0cw0KDQpUaGlzIG1lYW5zIHRoYXQgYm90aCBzaWRl
-cyB1c2UgYSBjb2RpbmcgYWxnbyB0aGF0IDcyNjAgZG9lc24ndCB1bmRlcnN0YW5kLiA3MjYwIHRh
-bGtzIFZpdGVyYmkuDQpUaGUgb25seSB3YXkgdG8gZ28gaGVyZSBpcyB0byBnZXQgYSA3MjY1IG1v
-ZHVsZSAob3IgbGF0ZXIpIGluc3RlYWQuDQoNCj4gQW5hbHl6aW5nIHRoZSBjYXB0dXJlLCBJIG5v
-dGljZWQgdGhhdCB0aGUgSFQgY2FwYWJpbGl0aWVzIGFkdmVydGlzZWQgaW4gdGhlDQo+IGJlYWNv
-biBmcmFtZXMgaW5kaWNhdGVzIDgwMi4xMW4gRDEuMTAuIERvZXMgdGhpcyB0cmlnZ2VyIGFueSBp
-bmRpY2F0aW9uIGZvcg0KPiB5b3Ugb24gaG93IHRvIHNldHVwIHRoZSBtb25pdG9yIGludGVyZmFj
-ZT8NCj4gDQo+IFsxXQ0KPiBodHRwczovL2RyaXZlLmdvb2dsZS5jb20vZmlsZS9kLzBCNVNCSDA4
-UFVfQ2hObGxhVkhSaWVuQlNWbEUvdmlldz91c3ANCj4gPXNoYXJpbmcNCj4gDQo+IFJlZ2FyZHMs
-DQo+IERvcnUNCg==
+Kalle Valo <kvalo@qca.qualcomm.com> writes:
+
+> This has ben deprecated years ago, I haven't heard anyone using it since and
+> most likely it won't even work anymore. So just remove all of it.
+>
+> Signed-off-by: Kalle Valo <kvalo@qca.qualcomm.com>
+
+[...]
+
+> --- a/drivers/net/wireless/ath/ath10k/hw.h
+> +++ b/drivers/net/wireless/ath/ath10k/hw.h
+> @@ -35,8 +35,6 @@
+>  #define QCA988X_HW_2_0_VERSION		0x4100016c
+>  #define QCA988X_HW_2_0_CHIP_ID_REV	0x2
+>  #define QCA988X_HW_2_0_FW_DIR		ATH10K_FW_DIR "/QCA988X/hw2.0"
+> -#define QCA988X_HW_2_0_FW_FILE		"firmware.bin"
+> -#define QCA988X_HW_2_0_OTP_FILE		"otp.bin"
+>  #define QCA988X_HW_2_0_BOARD_DATA_FILE	"board.bin"
+>  #define QCA988X_HW_2_0_PATCH_LOAD_ADDR	0x1234
+
+I missed to remove all the other references to "firmware.bin" or
+"otp.bin", for example:
+
+#define QCA6174_HW_2_1_FW_FILE		"firmware.bin"
+#define QCA6174_HW_2_1_OTP_FILE		"otp.bin"
+
+Will send v2.
+
+-- 
+Kalle Valo
