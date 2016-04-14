@@ -1,39 +1,44 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from j1.co.za ([52.0.118.132]:54002 "EHLO j1.co.za"
+Received: from mx1.redhat.com ([209.132.183.28]:35135 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755795AbcDLGb1 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2016 02:31:27 -0400
-Received: from [10.0.0.111] (169-0-102-122.ip.afrihost.co.za [169.0.102.122])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by j1.co.za (Postfix) with ESMTPSA id A2C1440217
-	for <linux-wireless@vger.kernel.org>; Tue, 12 Apr 2016 06:31:25 +0000 (UTC)
-Subject: Re: hardware restart on Intel 7260
-References: <570BB012.8060709@j1.co.za>
- <CANUX_P0+9ALJa4WexPCpW5a3YxKDPL3wZGta-F2VrgOBU6VcXA@mail.gmail.com>
-To: linux-wireless <linux-wireless@vger.kernel.org>
-From: Johann Haarhoff <johann@j1.co.za>
-Message-ID: <570C963A.9070300@j1.co.za> (sfid-20160412_083145_142015_D386CF63)
-Date: Tue, 12 Apr 2016 08:31:22 +0200
-MIME-Version: 1.0
-In-Reply-To: <CANUX_P0+9ALJa4WexPCpW5a3YxKDPL3wZGta-F2VrgOBU6VcXA@mail.gmail.com>
-Content-Type: text/plain; charset=windows-1252
+	id S1752694AbcDNS7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 14:59:09 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 05/26] rtl8xxxu: Do not set REG_PBP on 8192eu
+Date: Thu, 14 Apr 2016 14:58:46 -0400
+Message-Id: <1460660347-26299-6-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_205916_491954_E579AC0E)
+In-Reply-To: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-> Meh... So what happens here is that the firmware is stuck while
-> transmitting. The driver detects this and as a workaround, resets the
-> firmware. The detection takes 10 seconds.
-> The only way to understand what is going on here is to take the
-> firmware from [1] and to run the steps to collect firmware debug data
-> from [2]. I recommend you open a bug on bugzilla.
-> Out of curiosity, did you try to work in DC mode (on battery, not
-> connected to the power)? A user reported that it helped [3].
+The vendor driver does not set REG_PBP on 8192eu. Whether this is due
+to the device not supporting it or simply an oversight in the vendor
+driver is not clear.
 
-I followed the steps you suggested, and am now tracking the bug here:
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-https://bugzilla.kernel.org/show_bug.cgi?id=116191
-
-
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 9e9d3e3..36bd4fc 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -7688,7 +7688,8 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
+ 	else
+ 		val8 = (PBP_PAGE_SIZE_128 << PBP_PAGE_SIZE_RX_SHIFT) |
+ 			(PBP_PAGE_SIZE_128 << PBP_PAGE_SIZE_TX_SHIFT);
+-	rtl8xxxu_write8(priv, REG_PBP, val8);
++	if (priv->rtl_chip != RTL8192E)
++		rtl8xxxu_write8(priv, REG_PBP, val8);
+ 
+ 	dev_dbg(dev, "%s: macpower %i\n", __func__, macpower);
+ 	if (!macpower) {
+-- 
+2.5.5
 
