@@ -1,46 +1,86 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail.hostpark.net ([212.243.197.30]:34574 "EHLO
-	mail.hostpark.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751783AbcDOGuz (ORCPT
+Received: from mail-pa0-f43.google.com ([209.85.220.43]:35055 "EHLO
+	mail-pa0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932406AbcDNPTO (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2016 02:50:55 -0400
-From: =?UTF-8?q?David=20M=C3=BCller?= <d.mueller@elsoft.ch>
-To: linux-wireless@vger.kernel.org
-Cc: Larry Finger <Larry.Finger@lwfinger.net>
-Subject: [PATCH v2] rtlwifi: rtl8821ae: Make sure loop counter is signed on all architectures
-Date: Fri, 15 Apr 2016 08:50:25 +0200
-Message-Id: <1460703025-2177-1-git-send-email-d.mueller@elsoft.ch> (sfid-20160415_085058_373926_4FBEA3CC)
-In-Reply-To: <570FBA62.6080606@lwfinger.net>
-References: <570FBA62.6080606@lwfinger.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+	Thu, 14 Apr 2016 11:19:14 -0400
+From: Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+To: Johnny Kim <johnny.kim@atmel.com>,
+	Austin Shin <austin.shin@atmel.com>,
+	Chris Park <chris.park@atmel.com>,
+	Tony Cho <tony.cho@atmel.com>, Glen Lee <glen.lee@atmel.com>,
+	Leo Kim <leo.kim@atmel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org,
+	devel@driverdev.osuosl.org,
+	Sudip Mukherjee <sudipm.mukherjee@gmail.com>
+Subject: [PATCH 2/2] staging: wilc1000: remove unused variables
+Date: Thu, 14 Apr 2016 20:48:49 +0530
+Message-Id: <1460647129-22740-2-git-send-email-sudipm.mukherjee@gmail.com> (sfid-20160414_172009_049841_C3470B5B)
+In-Reply-To: <1460647129-22740-1-git-send-email-sudipm.mukherjee@gmail.com>
+References: <1460647129-22740-1-git-send-email-sudipm.mukherjee@gmail.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-The for-loop condition does not work correctly on architectures where
-"char" is unsigned. Fix it by using an "int", which may also result in
-more efficient code.
+These variables were havnig the pointer returned by wiphy_priv() but
+they were never used.
 
-v2: Remove unneeded initialization.
-
-Signed-off-by: David Müller <d.mueller@elsoft.ch>
+Signed-off-by: Sudip Mukherjee <sudip.mukherjee@codethink.co.uk>
 ---
- drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/staging/wilc1000/linux_wlan.c | 8 --------
+ 1 file changed, 8 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-index 74165b3..1abd243 100644
---- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-+++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
-@@ -959,7 +959,7 @@ static void _rtl8821ae_phy_store_txpower_by_rate_base(struct ieee80211_hw *hw)
- static void _phy_convert_txpower_dbm_to_relative_value(u32 *data, u8 start,
- 						u8 end, u8 base_val)
+diff --git a/drivers/staging/wilc1000/linux_wlan.c b/drivers/staging/wilc1000/linux_wlan.c
+index 5643a3d..8cc8e8d 100644
+--- a/drivers/staging/wilc1000/linux_wlan.c
++++ b/drivers/staging/wilc1000/linux_wlan.c
+@@ -865,7 +865,6 @@ int wilc_mac_open(struct net_device *ndev)
+ 	unsigned char mac_add[ETH_ALEN] = {0};
+ 	int ret = 0;
+ 	int i = 0;
+-	struct wilc_priv *priv;
+ 	struct wilc *wl;
+ 
+ 	vif = netdev_priv(ndev);
+@@ -876,7 +875,6 @@ int wilc_mac_open(struct net_device *ndev)
+ 		return -ENODEV;
+ 	}
+ 
+-	priv = wiphy_priv(vif->ndev->ieee80211_ptr->wiphy);
+ 	netdev_dbg(ndev, "MAC OPEN[%p]\n", ndev);
+ 
+ 	ret = wilc_init_host_int(ndev);
+@@ -953,14 +951,10 @@ static struct net_device_stats *mac_stats(struct net_device *dev)
+ static void wilc_set_multicast_list(struct net_device *dev)
  {
--	char i = 0;
-+	int i;
- 	u8 temp_value = 0;
- 	u32 temp_data = 0;
+ 	struct netdev_hw_addr *ha;
+-	struct wilc_priv *priv;
+-	struct host_if_drv *hif_drv;
+ 	struct wilc_vif *vif;
+ 	int i = 0;
+ 
+-	priv = wiphy_priv(dev->ieee80211_ptr->wiphy);
+ 	vif = netdev_priv(dev);
+-	hif_drv = (struct host_if_drv *)priv->hif_drv;
+ 
+ 	if (dev->flags & IFF_PROMISC)
+ 		return;
+@@ -1114,7 +1108,6 @@ static int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
+ 	s8 rssi;
+ 	u32 size = 0, length = 0;
+ 	struct wilc_vif *vif;
+-	struct wilc_priv *priv;
+ 	s32 ret = 0;
+ 	struct wilc *wilc;
+ 
+@@ -1138,7 +1131,6 @@ static int mac_ioctl(struct net_device *ndev, struct ifreq *req, int cmd)
+ 				return PTR_ERR(buff);
+ 
+ 			if (strncasecmp(buff, "RSSI", length) == 0) {
+-				priv = wiphy_priv(vif->ndev->ieee80211_ptr->wiphy);
+ 				ret = wilc_get_rssi(vif, &rssi);
+ 				netdev_info(ndev, "RSSI :%d\n", rssi);
  
 -- 
-2.7.4
+1.9.1
 
