@@ -1,46 +1,93 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f53.google.com ([209.85.220.53]:35923 "EHLO
-	mail-pa0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752278AbcDSFBM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 01:01:12 -0400
-Received: by mail-pa0-f53.google.com with SMTP id er2so2647622pad.3
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 22:01:12 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v3 11/18] wcn36xx: Use allocated self sta index instead of hard coded
-Date: Mon, 18 Apr 2016 22:00:49 -0700
-Message-Id: <1461042056-10607-12-git-send-email-bjorn.andersson@linaro.org> (sfid-20160419_070349_509907_5782A7A4)
-In-Reply-To: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1461042056-10607-1-git-send-email-bjorn.andersson@linaro.org>
+Received: from mx1.redhat.com ([209.132.183.28]:39205 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753870AbcDNS7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 14:59:09 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 22/26] rtl8xxxu: Make PBP tuning a fileops parameter
+Date: Thu, 14 Apr 2016 14:59:03 -0400
+Message-Id: <1460660347-26299-23-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_205933_935905_7D01DB22)
+In-Reply-To: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+Rather than scattering the code with #ifdefs, use the fileops
+structure to hold device specific PBP values.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 17 ++++++++++-------
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |  2 ++
+ 2 files changed, 12 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index ebb446272d21..e0d5631657c1 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -200,7 +200,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
- 		sta_params->sta_index = WCN36XX_HAL_STA_INVALID_IDX;
- 	} else {
- 		sta_params->type = 0;
--		sta_params->sta_index = 1;
-+		sta_params->sta_index = vif_priv->self_sta_index;
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index c12a4c8..3e3ca28 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -7687,14 +7687,11 @@ static int rtl8xxxu_init_device(struct ieee80211_hw *hw)
  	}
  
- 	sta_params->listen_interval = WCN36XX_LISTEN_INTERVAL(wcn);
+ 	/*
+-	 * Transfer page size is always 128
++	 * The vendor drivers set PBP for all devices, except 8192e.
++	 * There is no explanation for this in any of the sources.
+ 	 */
+-	if (priv->rtl_chip == RTL8723B)
+-		val8 = (PBP_PAGE_SIZE_256 << PBP_PAGE_SIZE_RX_SHIFT) |
+-			(PBP_PAGE_SIZE_256 << PBP_PAGE_SIZE_TX_SHIFT);
+-	else
+-		val8 = (PBP_PAGE_SIZE_128 << PBP_PAGE_SIZE_RX_SHIFT) |
+-			(PBP_PAGE_SIZE_128 << PBP_PAGE_SIZE_TX_SHIFT);
++	val8 = (priv->fops->pbp_rx << PBP_PAGE_SIZE_RX_SHIFT) |
++		(priv->fops->pbp_tx << PBP_PAGE_SIZE_TX_SHIFT);
+ 	if (priv->rtl_chip != RTL8192E)
+ 		rtl8xxxu_write8(priv, REG_PBP, val8);
+ 
+@@ -9728,6 +9725,8 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
+ 	.adda_2t_path_on_a = 0x04db25a4,
+ 	.adda_2t_path_on_b = 0x0b1b25a4,
+ 	.trxff_boundary = 0x27ff,
++	.pbp_rx = PBP_PAGE_SIZE_128,
++	.pbp_tx = PBP_PAGE_SIZE_128,
+ 	.mactable = rtl8723a_mac_init_table,
+ };
+ 
+@@ -9761,6 +9760,8 @@ static struct rtl8xxxu_fileops rtl8723bu_fops = {
+ 	.adda_2t_path_on_a = 0x01c00014,
+ 	.adda_2t_path_on_b = 0x01c00014,
+ 	.trxff_boundary = 0x3f7f,
++	.pbp_rx = PBP_PAGE_SIZE_256,
++	.pbp_tx = PBP_PAGE_SIZE_256,
+ 	.mactable = rtl8723b_mac_init_table,
+ };
+ 
+@@ -9792,6 +9793,8 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
+ 	.adda_2t_path_on_a = 0x04db25a4,
+ 	.adda_2t_path_on_b = 0x0b1b25a4,
+ 	.trxff_boundary = 0x27ff,
++	.pbp_rx = PBP_PAGE_SIZE_128,
++	.pbp_tx = PBP_PAGE_SIZE_128,
+ 	.mactable = rtl8723a_mac_init_table,
+ };
+ 
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+index b87cd2b..8064b26 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
+@@ -1310,6 +1310,8 @@ struct rtl8xxxu_fileops {
+ 	u32 adda_2t_path_on_a;
+ 	u32 adda_2t_path_on_b;
+ 	u16 trxff_boundary;
++	u8 pbp_rx;
++	u8 pbp_tx;
+ 	struct rtl8xxxu_reg8val *mactable;
+ 	u8 total_page_num;
+ 	u8 page_num_hi;
 -- 
-2.5.0
+2.5.5
 
