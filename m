@@ -1,149 +1,354 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42933 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752194AbcDZHyP (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 03:54:15 -0400
-From: Johannes Berg <johannes@sipsolutions.net>
+Received: from mail-lf0-f43.google.com ([209.85.215.43]:35664 "EHLO
+	mail-lf0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754631AbcDNMQd (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 08:16:33 -0400
+Received: by mail-lf0-f43.google.com with SMTP id c126so106253310lfb.2
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2016 05:16:31 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: Nicolas Dichtel <nicolas.dichtel@6wind.com>,
-	Johannes Berg <johannes.berg@intel.com>
-Subject: [PATCH] nl80211: use nla_put_u64_64bit() for the remaining u64 attributes
-Date: Tue, 26 Apr 2016 09:54:11 +0200
-Message-Id: <1461657251-12528-1-git-send-email-johannes@sipsolutions.net> (sfid-20160426_095418_739977_BC8D0DBD)
+Cc: johannes@sipsolutions.net, dave.taht@gmail.com,
+	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net,
+	apenwarr@gmail.com, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCHv3 3/5] mac80211: add debug knobs for fair queuing
+Date: Thu, 14 Apr 2016 14:18:20 +0200
+Message-Id: <1460636302-31161-4-git-send-email-michal.kazior@tieto.com> (sfid-20160414_141636_856281_AEE90B89)
+In-Reply-To: <1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
+References: <1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
+ <1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Johannes Berg <johannes.berg@intel.com>
+This adds a few debugfs entries and a module
+parameter to make it easier to test, debug and
+experiment.
 
-Nicolas converted most users, but didn't realize some were generated
-by macros. Convert those over as well.
-
-Signed-off-by: Johannes Berg <johannes.berg@intel.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- include/uapi/linux/nl80211.h |  4 ++++
- net/wireless/nl80211.c       | 36 ++++++++++++++++++++++--------------
- 2 files changed, 26 insertions(+), 14 deletions(-)
+ net/mac80211/debugfs.c        | 77 +++++++++++++++++++++++++++++++++++++++++++
+ net/mac80211/debugfs_netdev.c | 28 +++++++++++++++-
+ net/mac80211/debugfs_sta.c    | 45 +++++++++++++++++++++++++
+ net/mac80211/fq.h             | 13 +++++++-
+ net/mac80211/fq_i.h           |  7 ++++
+ net/mac80211/tx.c             |  8 ++++-
+ 6 files changed, 175 insertions(+), 3 deletions(-)
 
-diff --git a/include/uapi/linux/nl80211.h b/include/uapi/linux/nl80211.h
-index f958a7173eb4..e23d78685a01 100644
---- a/include/uapi/linux/nl80211.h
-+++ b/include/uapi/linux/nl80211.h
-@@ -2517,6 +2517,7 @@ enum nl80211_sta_bss_param {
-  *	attributes carrying the actual values.
-  * @NL80211_STA_INFO_RX_DURATION: aggregate PPDU duration for all frames
-  *	received from the station (u64, usec)
-+ * @NL80211_STA_INFO_PAD: attribute used for padding for 64-bit alignment
-  * @__NL80211_STA_INFO_AFTER_LAST: internal
-  * @NL80211_STA_INFO_MAX: highest possible station info attribute
-  */
-@@ -2554,6 +2555,7 @@ enum nl80211_sta_info {
- 	NL80211_STA_INFO_BEACON_SIGNAL_AVG,
- 	NL80211_STA_INFO_TID_STATS,
- 	NL80211_STA_INFO_RX_DURATION,
-+	NL80211_STA_INFO_PAD,
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 4ab5c522ceee..5cbaa5872e6b 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -31,6 +31,30 @@ int mac80211_format_buffer(char __user *userbuf, size_t count,
+ 	return simple_read_from_buffer(userbuf, count, ppos, buf, res);
+ }
  
- 	/* keep last */
- 	__NL80211_STA_INFO_AFTER_LAST,
-@@ -2570,6 +2572,7 @@ enum nl80211_sta_info {
-  *	transmitted MSDUs (not counting the first attempt; u64)
-  * @NL80211_TID_STATS_TX_MSDU_FAILED: number of failed transmitted
-  *	MSDUs (u64)
-+ * @NL80211_TID_STATS_PAD: attribute used for padding for 64-bit alignment
-  * @NUM_NL80211_TID_STATS: number of attributes here
-  * @NL80211_TID_STATS_MAX: highest numbered attribute here
-  */
-@@ -2579,6 +2582,7 @@ enum nl80211_tid_stats {
- 	NL80211_TID_STATS_TX_MSDU,
- 	NL80211_TID_STATS_TX_MSDU_RETRIES,
- 	NL80211_TID_STATS_TX_MSDU_FAILED,
-+	NL80211_TID_STATS_PAD,
++static int mac80211_parse_buffer(const char __user *userbuf,
++				 size_t count,
++				 loff_t *ppos,
++				 char *fmt, ...)
++{
++	va_list args;
++	char buf[DEBUGFS_FORMAT_BUFFER_SIZE] = {};
++	int res;
++
++	if (count > sizeof(buf))
++		return -EINVAL;
++
++	if (copy_from_user(buf, userbuf, count))
++		return -EFAULT;
++
++	buf[sizeof(buf) - 1] = '\0';
++
++	va_start(args, fmt);
++	res = vsscanf(buf, fmt, args);
++	va_end(args);
++
++	return count;
++}
++
+ #define DEBUGFS_READONLY_FILE_FN(name, fmt, value...)			\
+ static ssize_t name## _read(struct file *file, char __user *userbuf,	\
+ 			    size_t count, loff_t *ppos)			\
+@@ -70,6 +94,52 @@ DEBUGFS_READONLY_FILE(wep_iv, "%#08x",
+ DEBUGFS_READONLY_FILE(rate_ctrl_alg, "%s",
+ 	local->rate_ctrl ? local->rate_ctrl->ops->name : "hw/driver");
  
- 	/* keep last */
- 	NUM_NL80211_TID_STATS,
-diff --git a/net/wireless/nl80211.c b/net/wireless/nl80211.c
-index 5b0d2c8c2165..9bc84a2ddd34 100644
---- a/net/wireless/nl80211.c
-+++ b/net/wireless/nl80211.c
-@@ -3755,11 +3755,18 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 		goto nla_put_failure;
++#define DEBUGFS_RW_FILE_FN(name, expr)				\
++static ssize_t name## _write(struct file *file,			\
++			     const char __user *userbuf,	\
++			     size_t count,			\
++			     loff_t *ppos)			\
++{								\
++	struct ieee80211_local *local = file->private_data;	\
++	return expr;						\
++}
++
++#define DEBUGFS_RW_FILE(name, expr, fmt, value...)	\
++	DEBUGFS_READONLY_FILE_FN(name, fmt, value)	\
++	DEBUGFS_RW_FILE_FN(name, expr)			\
++	DEBUGFS_RW_FILE_OPS(name)
++
++#define DEBUGFS_RW_FILE_OPS(name)			\
++static const struct file_operations name## _ops = {	\
++	.read = name## _read,				\
++	.write = name## _write,				\
++	.open = simple_open,				\
++	.llseek = generic_file_llseek,			\
++}
++
++#define DEBUGFS_RW_EXPR_FQ(args...)					\
++({									\
++	int res;							\
++	res = mac80211_parse_buffer(userbuf, count, ppos, args);	\
++	res;								\
++})
++
++DEBUGFS_READONLY_FILE(fq_flows_cnt, "%u",
++		      local->fq.flows_cnt);
++DEBUGFS_READONLY_FILE(fq_backlog, "%u",
++		      local->fq.backlog);
++DEBUGFS_READONLY_FILE(fq_overlimit, "%u",
++		      local->fq.overlimit);
++DEBUGFS_READONLY_FILE(fq_collisions, "%u",
++		      local->fq.collisions);
++
++DEBUGFS_RW_FILE(fq_limit,
++		DEBUGFS_RW_EXPR_FQ("%u", &local->fq.limit),
++		"%u", local->fq.limit);
++DEBUGFS_RW_FILE(fq_quantum,
++		DEBUGFS_RW_EXPR_FQ("%u", &local->fq.quantum),
++		"%u", local->fq.quantum);
++
+ #ifdef CONFIG_PM
+ static ssize_t reset_write(struct file *file, const char __user *user_buf,
+ 			   size_t count, loff_t *ppos)
+@@ -254,6 +324,13 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ 	DEBUGFS_ADD(user_power);
+ 	DEBUGFS_ADD(power);
  
- #define PUT_SINFO(attr, memb, type) do {				\
-+	BUILD_BUG_ON(sizeof(type) == sizeof(u64));			\
- 	if (sinfo->filled & (1ULL << NL80211_STA_INFO_ ## attr) &&	\
- 	    nla_put_ ## type(msg, NL80211_STA_INFO_ ## attr,		\
- 			     sinfo->memb))				\
- 		goto nla_put_failure;					\
- 	} while (0)
-+#define PUT_SINFO_U64(attr, memb) do {					\
-+	if (sinfo->filled & (1ULL << NL80211_STA_INFO_ ## attr) &&	\
-+	    nla_put_u64_64bit(msg, NL80211_STA_INFO_ ## attr,		\
-+			      sinfo->memb, NL80211_STA_INFO_PAD))	\
-+		goto nla_put_failure;					\
-+	} while (0)
++	DEBUGFS_ADD(fq_flows_cnt);
++	DEBUGFS_ADD(fq_backlog);
++	DEBUGFS_ADD(fq_overlimit);
++	DEBUGFS_ADD(fq_collisions);
++	DEBUGFS_ADD(fq_limit);
++	DEBUGFS_ADD(fq_quantum);
++
+ 	statsd = debugfs_create_dir("statistics", phyd);
  
- 	PUT_SINFO(CONNECTED_TIME, connected_time, u32);
- 	PUT_SINFO(INACTIVE_TIME, inactive_time, u32);
-@@ -3776,12 +3783,12 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 			(u32)sinfo->tx_bytes))
- 		goto nla_put_failure;
+ 	/* if the dir failed, don't put all the other things into the root! */
+diff --git a/net/mac80211/debugfs_netdev.c b/net/mac80211/debugfs_netdev.c
+index 37ea30e0754c..471cab40a25f 100644
+--- a/net/mac80211/debugfs_netdev.c
++++ b/net/mac80211/debugfs_netdev.c
+@@ -30,7 +30,7 @@ static ssize_t ieee80211_if_read(
+ 	size_t count, loff_t *ppos,
+ 	ssize_t (*format)(const struct ieee80211_sub_if_data *, char *, int))
+ {
+-	char buf[70];
++	char buf[200];
+ 	ssize_t ret = -EINVAL;
  
--	PUT_SINFO(RX_BYTES64, rx_bytes, u64);
--	PUT_SINFO(TX_BYTES64, tx_bytes, u64);
-+	PUT_SINFO_U64(RX_BYTES64, rx_bytes);
-+	PUT_SINFO_U64(TX_BYTES64, tx_bytes);
- 	PUT_SINFO(LLID, llid, u16);
- 	PUT_SINFO(PLID, plid, u16);
- 	PUT_SINFO(PLINK_STATE, plink_state, u8);
--	PUT_SINFO(RX_DURATION, rx_duration, u64);
-+	PUT_SINFO_U64(RX_DURATION, rx_duration);
+ 	read_lock(&dev_base_lock);
+@@ -236,6 +236,31 @@ ieee80211_if_fmt_hw_queues(const struct ieee80211_sub_if_data *sdata,
+ }
+ IEEE80211_IF_FILE_R(hw_queues);
  
- 	switch (rdev->wiphy.signal_type) {
- 	case CFG80211_SIGNAL_TYPE_MBM:
-@@ -3849,12 +3856,13 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 		    &sinfo->sta_flags))
- 		goto nla_put_failure;
++static ssize_t
++ieee80211_if_fmt_txq(const struct ieee80211_sub_if_data *sdata,
++		     char *buf, int buflen)
++{
++	struct txq_info *txqi;
++	int len = 0;
++
++	if (!sdata->vif.txq)
++		return 0;
++
++	txqi = to_txq_info(sdata->vif.txq);
++	len += scnprintf(buf + len, buflen - len,
++			 "CAB backlog %ub %up flows %u overlimit %u collisions %u tx %ub %up\n",
++			 txqi->tin.backlog_bytes,
++			 txqi->tin.backlog_packets,
++			 txqi->tin.flows,
++			 txqi->tin.overlimit,
++			 txqi->tin.collisions,
++			 txqi->tin.tx_bytes,
++			 txqi->tin.tx_packets);
++
++	return len;
++}
++IEEE80211_IF_FILE_R(txq);
++
+ /* STA attributes */
+ IEEE80211_IF_FILE(bssid, u.mgd.bssid, MAC);
+ IEEE80211_IF_FILE(aid, u.mgd.aid, DEC);
+@@ -618,6 +643,7 @@ static void add_common_files(struct ieee80211_sub_if_data *sdata)
+ 	DEBUGFS_ADD(rc_rateidx_vht_mcs_mask_2ghz);
+ 	DEBUGFS_ADD(rc_rateidx_vht_mcs_mask_5ghz);
+ 	DEBUGFS_ADD(hw_queues);
++	DEBUGFS_ADD(txq);
+ }
  
--	PUT_SINFO(T_OFFSET, t_offset, u64);
--	PUT_SINFO(RX_DROP_MISC, rx_dropped_misc, u64);
--	PUT_SINFO(BEACON_RX, rx_beacon, u64);
-+	PUT_SINFO_U64(T_OFFSET, t_offset);
-+	PUT_SINFO_U64(RX_DROP_MISC, rx_dropped_misc);
-+	PUT_SINFO_U64(BEACON_RX, rx_beacon);
- 	PUT_SINFO(BEACON_SIGNAL_AVG, rx_beacon_signal_avg, u8);
+ static void add_sta_files(struct ieee80211_sub_if_data *sdata)
+diff --git a/net/mac80211/debugfs_sta.c b/net/mac80211/debugfs_sta.c
+index a39512f09f9e..b5eb4f402710 100644
+--- a/net/mac80211/debugfs_sta.c
++++ b/net/mac80211/debugfs_sta.c
+@@ -319,6 +319,50 @@ static ssize_t sta_vht_capa_read(struct file *file, char __user *userbuf,
+ }
+ STA_OPS(vht_capa);
  
- #undef PUT_SINFO
-+#undef PUT_SINFO_U64
++static ssize_t sta_txqs_read(struct file *file,
++			     char __user *userbuf,
++			     size_t count,
++			     loff_t *ppos)
++{
++	struct sta_info *sta = file->private_data;
++	struct txq_info *txqi;
++	char *buf;
++	int buflen;
++	int len;
++	int res;
++	int i;
++
++	len = 0;
++	buflen = 200 * IEEE80211_NUM_TIDS;
++	buf = kzalloc(buflen, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++
++	for (i = 0; i < IEEE80211_NUM_TIDS; i++) {
++		if (!sta->sta.txq[i])
++			break;
++
++		txqi = to_txq_info(sta->sta.txq[i]);
++		len += scnprintf(buf + len, buflen - len,
++				 "TID %d AC %d backlog %ub %up flows %u overlimit %u collisions %u tx %ub %up\n",
++				 i,
++				 txqi->txq.ac,
++				 txqi->tin.backlog_bytes,
++				 txqi->tin.backlog_packets,
++				 txqi->tin.flows,
++				 txqi->tin.overlimit,
++				 txqi->tin.collisions,
++				 txqi->tin.tx_bytes,
++				 txqi->tin.tx_packets);
++	}
++
++	res = simple_read_from_buffer(userbuf, count, ppos, buf, len);
++	kfree(buf);
++
++	return res;
++}
++STA_OPS(txqs);
++
  
- 	if (sinfo->filled & BIT(NL80211_STA_INFO_TID_STATS)) {
- 		struct nlattr *tidsattr;
-@@ -3877,19 +3885,19 @@ static int nl80211_send_station(struct sk_buff *msg, u32 cmd, u32 portid,
- 			if (!tidattr)
- 				goto nla_put_failure;
+ #define DEBUGFS_ADD(name) \
+ 	debugfs_create_file(#name, 0400, \
+@@ -365,6 +409,7 @@ void ieee80211_sta_debugfs_add(struct sta_info *sta)
+ 	DEBUGFS_ADD(agg_status);
+ 	DEBUGFS_ADD(ht_capa);
+ 	DEBUGFS_ADD(vht_capa);
++	DEBUGFS_ADD(txqs);
  
--#define PUT_TIDVAL(attr, memb, type) do {				\
-+#define PUT_TIDVAL_U64(attr, memb) do {					\
- 	if (tidstats->filled & BIT(NL80211_TID_STATS_ ## attr) &&	\
--	    nla_put_ ## type(msg, NL80211_TID_STATS_ ## attr,		\
--			     tidstats->memb))				\
-+	    nla_put_u64_64bit(msg, NL80211_TID_STATS_ ## attr,		\
-+			      tidstats->memb, NL80211_TID_STATS_PAD))	\
- 		goto nla_put_failure;					\
- 	} while (0)
+ 	DEBUGFS_ADD_COUNTER(rx_duplicates, rx_stats.num_duplicates);
+ 	DEBUGFS_ADD_COUNTER(rx_fragments, rx_stats.fragments);
+diff --git a/net/mac80211/fq.h b/net/mac80211/fq.h
+index fa98576e1825..aa68363d6221 100644
+--- a/net/mac80211/fq.h
++++ b/net/mac80211/fq.h
+@@ -102,6 +102,8 @@ begin:
+ 	}
  
--			PUT_TIDVAL(RX_MSDU, rx_msdu, u64);
--			PUT_TIDVAL(TX_MSDU, tx_msdu, u64);
--			PUT_TIDVAL(TX_MSDU_RETRIES, tx_msdu_retries, u64);
--			PUT_TIDVAL(TX_MSDU_FAILED, tx_msdu_failed, u64);
-+			PUT_TIDVAL_U64(RX_MSDU, rx_msdu);
-+			PUT_TIDVAL_U64(TX_MSDU, tx_msdu);
-+			PUT_TIDVAL_U64(TX_MSDU_RETRIES, tx_msdu_retries);
-+			PUT_TIDVAL_U64(TX_MSDU_FAILED, tx_msdu_failed);
+ 	flow->deficit -= skb->len;
++	tin->tx_bytes += skb->len;
++	tin->tx_packets++;
  
--#undef PUT_TIDVAL
-+#undef PUT_TIDVAL_U64
- 			nla_nest_end(msg, tidattr);
- 		}
+ 	return skb;
+ }
+@@ -120,8 +122,14 @@ static struct fq_flow *fq_flow_classify(struct fq *fq,
+ 	idx = reciprocal_scale(hash, fq->flows_cnt);
+ 	flow = &fq->flows[idx];
+ 
+-	if (flow->tin && flow->tin != tin)
++	if (flow->tin && flow->tin != tin) {
+ 		flow = fq_flow_get_default_fn(fq, tin, idx, skb);
++		tin->collisions++;
++		fq->collisions++;
++	}
++
++	if (!flow->tin)
++		tin->flows++;
+ 
+ 	return flow;
+ }
+@@ -174,6 +182,9 @@ static void fq_tin_enqueue(struct fq *fq,
+ 			return;
+ 
+ 		fq_skb_free_fn(fq, flow->tin, flow, skb);
++
++		flow->tin->overlimit++;
++		fq->overlimit++;
+ 	}
+ }
+ 
+diff --git a/net/mac80211/fq_i.h b/net/mac80211/fq_i.h
+index 5d8423f22e8d..0e25dda4fce3 100644
+--- a/net/mac80211/fq_i.h
++++ b/net/mac80211/fq_i.h
+@@ -51,6 +51,11 @@ struct fq_tin {
+ 	struct list_head old_flows;
+ 	u32 backlog_bytes;
+ 	u32 backlog_packets;
++	u32 overlimit;
++	u32 collisions;
++	u32 flows;
++	u32 tx_bytes;
++	u32 tx_packets;
+ };
+ 
+ /**
+@@ -70,6 +75,8 @@ struct fq {
+ 	u32 limit;
+ 	u32 quantum;
+ 	u32 backlog;
++	u32 overlimit;
++	u32 collisions;
+ };
+ 
+ #endif
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index d4e0c87ecec5..396d0d17edeb 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -17,6 +17,7 @@
+ #include <linux/slab.h>
+ #include <linux/skbuff.h>
+ #include <linux/etherdevice.h>
++#include <linux/moduleparam.h>
+ #include <linux/bitmap.h>
+ #include <linux/rcupdate.h>
+ #include <linux/export.h>
+@@ -36,6 +37,11 @@
+ #include "rate.h"
+ #include "fq.h"
+ 
++static unsigned int fq_flows_cnt = 4096;
++module_param(fq_flows_cnt, uint, 0644);
++MODULE_PARM_DESC(fq_flows_cnt,
++		 "Maximum number of txq fair queuing flows. ");
++
+ /* misc utils */
+ 
+ static inline void ieee80211_tx_stats(struct net_device *dev, u32 len)
+@@ -1336,7 +1342,7 @@ int ieee80211_txq_setup_flows(struct ieee80211_local *local)
+ 	if (!local->ops->wake_tx_queue)
+ 		return 0;
+ 
+-	ret = fq_init(fq, 4096);
++	ret = fq_init(fq, max_t(u32, fq_flows_cnt, 1));
+ 	if (ret)
+ 		return ret;
  
 -- 
-2.8.0.rc3
+2.1.4
 
