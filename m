@@ -1,206 +1,133 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33925 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753353AbcDNS7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 14:59:09 -0400
-From: Jes.Sorensen@redhat.com
+Received: from mail-lf0-f45.google.com ([209.85.215.45]:36005 "EHLO
+	mail-lf0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754564AbcDNMQf (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 08:16:35 -0400
+Received: by mail-lf0-f45.google.com with SMTP id g184so106240480lfb.3
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2016 05:16:34 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
 To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
-Subject: [PATCH 11/26] rtl8xxxu: Name RX descriptor types rxdesc16/rxdesc24
-Date: Thu, 14 Apr 2016 14:58:52 -0400
-Message-Id: <1460660347-26299-12-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_212529_737081_8336E472)
-In-Reply-To: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
+Cc: johannes@sipsolutions.net, dave.taht@gmail.com,
+	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net,
+	apenwarr@gmail.com, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCHv3 5/5] mac80211: add debug knobs for codel
+Date: Thu, 14 Apr 2016 14:18:22 +0200
+Message-Id: <1460636302-31161-6-git-send-email-michal.kazior@tieto.com> (sfid-20160414_141642_455824_2E1E46F6)
+In-Reply-To: <1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
+References: <1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
+ <1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+This adds a few debugfs entries to make it easier
+to test, debug and experiment.
 
-This caught a bug where too little memory was allocated for RX urbs
-for parts using 24 byte RX descriptors
-
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 38 ++++++++++++++----------
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h |  5 ++--
- 2 files changed, 25 insertions(+), 18 deletions(-)
+ net/mac80211/debugfs.c     | 14 ++++++++++++++
+ net/mac80211/ieee80211_i.h |  2 ++
+ net/mac80211/tx.c          | 21 ++++++++++++++-------
+ 3 files changed, 30 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 6545012..4b309a6 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -8826,21 +8826,22 @@ static void rtl8xxxu_rx_urb_work(struct work_struct *work)
- 	}
+diff --git a/net/mac80211/debugfs.c b/net/mac80211/debugfs.c
+index 5cbaa5872e6b..9088e505fa85 100644
+--- a/net/mac80211/debugfs.c
++++ b/net/mac80211/debugfs.c
+@@ -132,6 +132,10 @@ DEBUGFS_READONLY_FILE(fq_overlimit, "%u",
+ 		      local->fq.overlimit);
+ DEBUGFS_READONLY_FILE(fq_collisions, "%u",
+ 		      local->fq.collisions);
++DEBUGFS_READONLY_FILE(codel_drop_count, "%u",
++		      local->cdrop_count);
++DEBUGFS_READONLY_FILE(codel_ecn_mark, "%u",
++		      local->cecn_mark);
+ 
+ DEBUGFS_RW_FILE(fq_limit,
+ 		DEBUGFS_RW_EXPR_FQ("%u", &local->fq.limit),
+@@ -139,6 +143,12 @@ DEBUGFS_RW_FILE(fq_limit,
+ DEBUGFS_RW_FILE(fq_quantum,
+ 		DEBUGFS_RW_EXPR_FQ("%u", &local->fq.quantum),
+ 		"%u", local->fq.quantum);
++DEBUGFS_RW_FILE(codel_interval,
++		DEBUGFS_RW_EXPR_FQ("%llu", &local->cparams.interval),
++		"%llu", local->cparams.interval);
++DEBUGFS_RW_FILE(codel_target,
++		DEBUGFS_RW_EXPR_FQ("%llu", &local->cparams.target),
++		"%llu", local->cparams.target);
+ 
+ #ifdef CONFIG_PM
+ static ssize_t reset_write(struct file *file, const char __user *user_buf,
+@@ -330,6 +340,10 @@ void debugfs_hw_add(struct ieee80211_local *local)
+ 	DEBUGFS_ADD(fq_collisions);
+ 	DEBUGFS_ADD(fq_limit);
+ 	DEBUGFS_ADD(fq_quantum);
++	DEBUGFS_ADD(codel_interval);
++	DEBUGFS_ADD(codel_target);
++	DEBUGFS_ADD(codel_drop_count);
++	DEBUGFS_ADD(codel_ecn_mark);
+ 
+ 	statsd = debugfs_create_dir("statistics", phyd);
+ 
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index 78953b495a25..7aecb7b6528c 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -1111,6 +1111,8 @@ struct ieee80211_local {
+ 	struct fq fq;
+ 	struct codel_vars *cvars;
+ 	struct codel_params cparams;
++	unsigned int cdrop_count;
++	unsigned int cecn_mark;
+ 
+ 	const struct ieee80211_ops *ops;
+ 
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 238cb8e979fd..b5506411b8e6 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1314,6 +1314,7 @@ static void codel_drop_fn(void *ctx,
+ 	local = vif_to_sdata(txqi->txq.vif)->local;
+ 	hw = &local->hw;
+ 
++	local->cdrop_count++;
+ 	ieee80211_free_txskb(hw, skb);
  }
  
--static int rtl8723au_parse_rx_desc(struct rtl8xxxu_priv *priv,
-+static int rtl8xxxu_parse_rxdesc16(struct rtl8xxxu_priv *priv,
- 				   struct sk_buff *skb,
- 				   struct ieee80211_rx_status *rx_status)
- {
--	struct rtl8xxxu_rx_desc *rx_desc = (struct rtl8xxxu_rx_desc *)skb->data;
-+	struct rtl8xxxu_rxdesc16 *rx_desc =
-+		(struct rtl8xxxu_rxdesc16 *)skb->data;
- 	struct rtl8723au_phy_stats *phy_stats;
- 	__le32 *_rx_desc_le = (__le32 *)skb->data;
- 	u32 *_rx_desc = (u32 *)skb->data;
- 	int drvinfo_sz, desc_shift;
- 	int i;
+@@ -1325,6 +1326,8 @@ static struct sk_buff *fq_tin_dequeue_fn(struct fq *fq,
+ 	struct txq_info *txqi;
+ 	struct codel_vars *cvars;
+ 	struct codel_params *cparams;
++	struct sk_buff *skb;
++	u16 ecn_mark;
+ 	bool overloaded;
  
--	for (i = 0; i < (sizeof(struct rtl8xxxu_rx_desc) / sizeof(u32)); i++)
-+	for (i = 0; i < (sizeof(struct rtl8xxxu_rxdesc16) / sizeof(u32)); i++)
- 		_rx_desc[i] = le32_to_cpu(_rx_desc_le[i]);
+ 	local = container_of(fq, struct ieee80211_local, fq);
+@@ -1339,13 +1342,17 @@ static struct sk_buff *fq_tin_dequeue_fn(struct fq *fq,
+ 	/* TODO */
+ 	overloaded = false;
  
--	skb_pull(skb, sizeof(struct rtl8xxxu_rx_desc));
-+	skb_pull(skb, sizeof(struct rtl8xxxu_rxdesc16));
- 
- 	phy_stats = (struct rtl8723au_phy_stats *)skb->data;
- 
-@@ -8872,22 +8873,22 @@ static int rtl8723au_parse_rx_desc(struct rtl8xxxu_priv *priv,
- 	return RX_TYPE_DATA_PKT;
+-	return codel_dequeue(txqi,
+-			     &flow->backlog,
+-			     0,
+-			     cvars,
+-			     cparams,
+-			     codel_get_time(),
+-			     overloaded);
++	ecn_mark = cvars->ecn_mark;
++	skb = codel_dequeue(txqi,
++			    &flow->backlog,
++			    0,
++			    cvars,
++			    cparams,
++			    codel_get_time(),
++			    overloaded);
++	local->cecn_mark += cvars->ecn_mark - ecn_mark;
++
++	return skb;
  }
  
--static int rtl8723bu_parse_rx_desc(struct rtl8xxxu_priv *priv,
-+static int rtl8xxxu_parse_rxdesc24(struct rtl8xxxu_priv *priv,
- 				   struct sk_buff *skb,
- 				   struct ieee80211_rx_status *rx_status)
- {
--	struct rtl8723bu_rx_desc *rx_desc =
--		(struct rtl8723bu_rx_desc *)skb->data;
-+	struct rtl8xxxu_rxdesc24 *rx_desc =
-+		(struct rtl8xxxu_rxdesc24 *)skb->data;
- 	struct rtl8723au_phy_stats *phy_stats;
- 	__le32 *_rx_desc_le = (__le32 *)skb->data;
- 	u32 *_rx_desc = (u32 *)skb->data;
- 	int drvinfo_sz, desc_shift;
- 	int i;
- 
--	for (i = 0; i < (sizeof(struct rtl8723bu_rx_desc) / sizeof(u32)); i++)
-+	for (i = 0; i < (sizeof(struct rtl8xxxu_rxdesc24) / sizeof(u32)); i++)
- 		_rx_desc[i] = le32_to_cpu(_rx_desc_le[i]);
- 
--	skb_pull(skb, sizeof(struct rtl8723bu_rx_desc));
-+	skb_pull(skb, sizeof(struct rtl8xxxu_rxdesc24));
- 
- 	phy_stats = (struct rtl8723au_phy_stats *)skb->data;
- 
-@@ -9018,14 +9019,15 @@ static int rtl8xxxu_submit_rx_urb(struct rtl8xxxu_priv *priv,
- {
- 	struct sk_buff *skb;
- 	int skb_size;
--	int ret;
-+	int ret, rx_desc_sz;
- 
--	skb_size = sizeof(struct rtl8xxxu_rx_desc) + RTL_RX_BUFFER_SIZE;
-+	rx_desc_sz = priv->fops->rx_desc_size;
-+	skb_size = rx_desc_sz + RTL_RX_BUFFER_SIZE;
- 	skb = __netdev_alloc_skb(NULL, skb_size, GFP_KERNEL);
- 	if (!skb)
- 		return -ENOMEM;
- 
--	memset(skb->data, 0, sizeof(struct rtl8xxxu_rx_desc));
-+	memset(skb->data, 0, rx_desc_sz);
- 	usb_fill_bulk_urb(&rx_urb->urb, priv->udev, priv->pipe_in, skb->data,
- 			  skb_size, rtl8xxxu_rx_complete, skb);
- 	usb_anchor_urb(&rx_urb->urb, &priv->rx_anchor);
-@@ -9779,7 +9781,7 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
- 	.llt_init = rtl8xxxu_init_llt_table,
- 	.phy_iq_calibrate = rtl8723au_phy_iq_calibrate,
- 	.config_channel = rtl8723au_config_channel,
--	.parse_rx_desc = rtl8723au_parse_rx_desc,
-+	.parse_rx_desc = rtl8xxxu_parse_rxdesc16,
- 	.enable_rf = rtl8723a_enable_rf,
- 	.disable_rf = rtl8723a_disable_rf,
- 	.set_tx_power = rtl8723a_set_tx_power,
-@@ -9789,6 +9791,7 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
- 	.mbox_ext_reg = REG_HMBOX_EXT_0,
- 	.mbox_ext_width = 2,
- 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc32),
-+	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc16),
- 	.adda_1t_init = 0x0b1b25a0,
- 	.adda_1t_path_on = 0x0bdb25a0,
- 	.adda_2t_path_on_a = 0x04db25a4,
-@@ -9806,7 +9809,7 @@ static struct rtl8xxxu_fileops rtl8723bu_fops = {
- 	.phy_init_antenna_selection = rtl8723bu_phy_init_antenna_selection,
- 	.phy_iq_calibrate = rtl8723bu_phy_iq_calibrate,
- 	.config_channel = rtl8723bu_config_channel,
--	.parse_rx_desc = rtl8723bu_parse_rx_desc,
-+	.parse_rx_desc = rtl8xxxu_parse_rxdesc24,
- 	.init_aggregation = rtl8723bu_init_aggregation,
- 	.init_statistics = rtl8723bu_init_statistics,
- 	.enable_rf = rtl8723b_enable_rf,
-@@ -9818,6 +9821,7 @@ static struct rtl8xxxu_fileops rtl8723bu_fops = {
- 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
- 	.mbox_ext_width = 4,
- 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc40),
-+	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc24),
- 	.has_s0s1 = 1,
- 	.adda_1t_init = 0x01c00014,
- 	.adda_1t_path_on = 0x01c00014,
-@@ -9837,7 +9841,7 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
- 	.llt_init = rtl8xxxu_init_llt_table,
- 	.phy_iq_calibrate = rtl8723au_phy_iq_calibrate,
- 	.config_channel = rtl8723au_config_channel,
--	.parse_rx_desc = rtl8723au_parse_rx_desc,
-+	.parse_rx_desc = rtl8xxxu_parse_rxdesc16,
- 	.enable_rf = rtl8723a_enable_rf,
- 	.disable_rf = rtl8723a_disable_rf,
- 	.set_tx_power = rtl8723a_set_tx_power,
-@@ -9847,6 +9851,7 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
- 	.mbox_ext_reg = REG_HMBOX_EXT_0,
- 	.mbox_ext_width = 2,
- 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc32),
-+	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc16),
- 	.adda_1t_init = 0x0b1b25a0,
- 	.adda_1t_path_on = 0x0bdb25a0,
- 	.adda_2t_path_on_a = 0x04db25a4,
-@@ -9865,7 +9870,7 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
- 	.llt_init = rtl8xxxu_auto_llt_table,
- 	.phy_iq_calibrate = rtl8192eu_phy_iq_calibrate,
- 	.config_channel = rtl8723bu_config_channel,
--	.parse_rx_desc = rtl8723bu_parse_rx_desc,
-+	.parse_rx_desc = rtl8xxxu_parse_rxdesc24,
- 	.enable_rf = rtl8723b_enable_rf,
- 	.disable_rf = rtl8723b_disable_rf,
- 	.set_tx_power = rtl8192e_set_tx_power,
-@@ -9875,6 +9880,7 @@ static struct rtl8xxxu_fileops rtl8192eu_fops = {
- 	.mbox_ext_reg = REG_HMBOX_EXT0_8723B,
- 	.mbox_ext_width = 4,
- 	.tx_desc_size = sizeof(struct rtl8xxxu_txdesc40),
-+	.rx_desc_size = sizeof(struct rtl8xxxu_rxdesc24),
- 	.has_s0s1 = 0,
- 	.adda_1t_init = 0x0fc01616,
- 	.adda_1t_path_on = 0x0fc01616,
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-index 4545e10..2f0709e 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h
-@@ -101,7 +101,7 @@ enum rtl8xxxu_rx_type {
- 	RX_TYPE_ERROR = -1
- };
- 
--struct rtl8xxxu_rx_desc {
-+struct rtl8xxxu_rxdesc16 {
- #ifdef __LITTLE_ENDIAN
- 	u32 pktlen:14;
- 	u32 crc32:1;
-@@ -237,7 +237,7 @@ struct rtl8xxxu_rx_desc {
- #endif
- };
- 
--struct rtl8723bu_rx_desc {
-+struct rtl8xxxu_rxdesc24 {
- #ifdef __LITTLE_ENDIAN
- 	u32 pktlen:14;
- 	u32 crc32:1;
-@@ -1303,6 +1303,7 @@ struct rtl8xxxu_fileops {
- 	u16 mbox_ext_reg;
- 	char mbox_ext_width;
- 	char tx_desc_size;
-+	char rx_desc_size;
- 	char has_s0s1;
- 	u32 adda_1t_init;
- 	u32 adda_1t_path_on;
+ static void fq_skb_free_fn(struct fq *fq,
 -- 
-2.5.5
+2.1.4
 
