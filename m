@@ -1,77 +1,64 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:35546 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750793AbcDYJIk (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 25 Apr 2016 05:08:40 -0400
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Date: Mon, 25 Apr 2016 12:08:38 +0300
-From: merez@codeaurora.org
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: "Haim, Maya" <merez@qti.qualcomm.com>,
-	Joe Perches <joe@perches.com>,
-	qca_merez <qca_merez@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210 <wil6210@qca.qualcomm.com>,
-	linux-wireless-owner@vger.kernel.org
-Subject: Re: [PATCH 1/7] wil6210: add function name to wil log macros
-In-Reply-To: <8760vjqco7.fsf@kamboji.qca.qualcomm.com>
-References: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
- <1459855447-17413-2-git-send-email-qca_merez@qca.qualcomm.com>
- <1459927177.6715.34.camel@perches.com>
- <bc848beb5cd947f9905b55983a76b6f5@euamsexm01a.eu.qualcomm.com>
- <87shyx77et.fsf@kamboji.qca.qualcomm.com>
- <7f40e26bcec5477db74d3105972c20bc@euamsexm01a.eu.qualcomm.com>
- <8760vjqco7.fsf@kamboji.qca.qualcomm.com>
-Message-ID: <f30cd2af1235f2ec95bbefe22c7639f8@codeaurora.org> (sfid-20160425_110844_087679_F016EF2E)
+Received: from mx1.redhat.com ([209.132.183.28]:60233 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751214AbcDNUhX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 16:37:23 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 01/16] rtl8xxxu: Mark 0x050d:0x1004 as tested
+Date: Thu, 14 Apr 2016 16:37:06 -0400
+Message-Id: <1460666241-5365-2-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_223730_030206_2E0A2FA7)
+In-Reply-To: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-:כתב Kalle Valo, 2016-04-15 15:28 בתאריך
-> "Haim, Maya" <merez@qti.qualcomm.com> writes:
-> 
->> On 4/7/2016 6:41 PM, Kalle Valo wrote:
->>> "Haim, Maya" <merez@qti.qualcomm.com> writes:
->>> 
->>>> On 4/6/2016 10:19 AM, Joe Perches wrote:
->>>>> On Tue, 2016-04-05 at 14:24 +0300, Maya Erez wrote:
->>>>>> Add __func__ to all wil log macros for easier debugging.
->>>>> I think this is unnecessary and merely bloats code size.
->>>>> For all the _dbg calls, dynamic debug can add function names if
->>>>> desired.
->>>>> 
->>>>> If really desired, I suggest changing the logging functions to use
->>>>> "%ps and __builtin_return_address(0)
->>>> I implemented it with __builtin_return_address(0) at first but found
->>>> its format less readable (e.g. wil_start_xmit+0x58/0x7e8).
->>> Will that work with inline functions and with functions which the
->>> compiler has optimised out?
->> 
->> That's a good point. I did a quick check and it doesn't work for
->> inline or static functions - for such functions, the name of the
->> calling function is printed.
-> 
-> Thanks for checking.
-> 
->> We can either (1) use my initial implementation (2) add __func__ only
->> to the wil_dbg_... macros or (3) revert this patch completely. I find
->> the addition of the function names very useful and since most of the
->> code doesn't include it, it makes the analysis of issues less
->> efficient. Kalle - what is your say on that?
-> 
-> I don't have any preference, it's up to you what you like most.
-> 
-> One more possibility: in ath10k we have a kconfig option
-> CONFIG_ATH10K_DEBUG to make it possible to disable all overhead from
-> debug functionality, that would at least solve Joe's concern of extra
-> memory usage.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-I looked a bit more on the different options.
-For the dbg functions, the function name can be added as part of the
-dynamic debug options (as mentioned by Joe). Therefore I will remove
-the addition of __func__ from those macros.
-The dynamic debug also guarantees zero overhead so I don't see the need
-for an additional debug config flag (such as CONFIG_ATH10K_DEBUG).
-As for wil_err and wil_info, I believe we can add the __func__ to them,
-as wil_info is not commonly used in our code.
+This dongle was tested successfully by Andrea Merello
+
+Reported-by: Andrea Merello <andrea.merello@gmail.com>
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 39a033c..037b64f 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -9560,6 +9560,10 @@ static int rtl8xxxu_probe(struct usb_interface *interface,
+ 		if (id->idProduct == 0x7811)
+ 			untested = 0;
+ 		break;
++	case 0x050d:
++		if (id->idProduct == 0x1004)
++			untested = 0;
++		break;
+ 	default:
+ 		break;
+ 	}
+@@ -9864,6 +9868,9 @@ static struct usb_device_id dev_table[] = {
+ /* Tested by Larry Finger */
+ {USB_DEVICE_AND_INTERFACE_INFO(0x7392, 0x7811, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192cu_fops},
++/* Tested by Andrea Merello */
++{USB_DEVICE_AND_INTERFACE_INFO(0x050d, 0x1004, 0xff, 0xff, 0xff),
++	.driver_info = (unsigned long)&rtl8192cu_fops},
+ /* Currently untested 8188 series devices */
+ {USB_DEVICE_AND_INTERFACE_INFO(USB_VENDOR_ID_REALTEK, 0x8191, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192cu_fops},
+@@ -9948,8 +9955,6 @@ static struct usb_device_id dev_table[] = {
+ /* Currently untested 8192 series devices */
+ {USB_DEVICE_AND_INTERFACE_INFO(0x04bb, 0x0950, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192cu_fops},
+-{USB_DEVICE_AND_INTERFACE_INFO(0x050d, 0x1004, 0xff, 0xff, 0xff),
+-	.driver_info = (unsigned long)&rtl8192cu_fops},
+ {USB_DEVICE_AND_INTERFACE_INFO(0x050d, 0x2102, 0xff, 0xff, 0xff),
+ 	.driver_info = (unsigned long)&rtl8192cu_fops},
+ {USB_DEVICE_AND_INTERFACE_INFO(0x050d, 0x2103, 0xff, 0xff, 0xff),
+-- 
+2.5.5
+
