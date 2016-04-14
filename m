@@ -1,43 +1,42 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from sender153-mail.zoho.com ([74.201.84.153]:21760 "EHLO
-	sender153-mail.zoho.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753952AbcDCQUM (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Apr 2016 12:20:12 -0400
-Subject: Re: GDM7240 - NULL pointer dereference
-To: poma <pomidorabelisima@gmail.com>
-References: <5700ED33.6020200@zoho.com> <57010C05.1050107@gmail.com>
-Cc: linux-wireless@vger.kernel.org, linux-usb@vger.kernel.org,
-	netdev@vger.kernel.org, Oliver Neukum <oneukum@suse.com>
-From: Alex <alex3kov@zoho.com>
-Message-ID: <570142B5.9060800@zoho.com> (sfid-20160403_182019_672747_3F131B61)
-Date: Sun, 3 Apr 2016 19:20:05 +0300
-MIME-Version: 1.0
-In-Reply-To: <57010C05.1050107@gmail.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
+Received: from mx1.redhat.com ([209.132.183.28]:35671 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752918AbcDNS7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 14:59:09 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 12/26] rtl8xxxu: Remove misleading warning from rtl8192eu_phy_iqcalibrate()
+Date: Thu, 14 Apr 2016 14:58:53 -0400
+Message-Id: <1460660347-26299-13-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_212530_387031_F4856AD3)
+In-Reply-To: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Thanks, looks like exactly the same issue, I'll check if it works on 4.5.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-/--Regards, Alex/
+No actual code flow change, but no need to warn about something that
+isn't a prioblem.
 
-On 03/04/16 15:26, poma wrote:
-> On 03.04.2016 12:15, Alex wrote:
->> Hello,
->> [1.] System hang when connecting USB modem (LU150)
->> [2.] I'm running 4.4.5 kernel (Arch Linux). When this modem is connected
->> I'm getting below trace in journal and system becomes unusable - lsusb,
->> logout and some other operations lead to a complete hang, the only way
->> out is hardware power off. This modem works perfectly on 4.1.20 kernel -
->> attaching all outputs for both kernels.
-> ...
->
-> See if it is related to
-> http://thread.gmane.org/gmane.linux.usb.general/135626
->
-> if so, kernel >= 4.5
-> i.e.
-> https://git.kernel.org/cgit/linux/kernel/git/stable/linux-stable.git/commit/drivers/net/usb/cdc_ether.c?h=linux-4.5.y&id=29c6dd5
->
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+---
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index 4b309a6..71d375c 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -5897,8 +5897,6 @@ static void rtl8192eu_phy_iqcalibrate(struct rtl8xxxu_priv *priv,
+ 		dev_dbg(dev, "%s: Path A RX IQK failed!\n", __func__);
+ 
+ 	if (priv->rf_paths > 1) {
+-		dev_warn(dev, "%s: Path B ongoing\n", __func__);
+-
+ 		/* Path A into standby */
+ 		rtl8xxxu_write32(priv, REG_FPGA0_IQK, 0x00000000);
+ 		rtl8xxxu_write_rfreg(priv, RF_A, RF6052_REG_AC, 0x10000);
+-- 
+2.5.5
 
