@@ -1,46 +1,62 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pa0-f44.google.com ([209.85.220.44]:36729 "EHLO
-	mail-pa0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753835AbcDCWRE (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Sun, 3 Apr 2016 18:17:04 -0400
-Received: by mail-pa0-f44.google.com with SMTP id tt10so130156209pab.3
-        for <linux-wireless@vger.kernel.org>; Sun, 03 Apr 2016 15:17:04 -0700 (PDT)
-From: Bjorn Andersson <bjorn.andersson@linaro.org>
-To: Eugene Krasnikov <k.eugene.e@gmail.com>,
-	Kalle Valo <kvalo@codeaurora.org>
-Cc: Pontus Fuchs <pontus.fuchs@gmail.com>, wcn36xx@lists.infradead.org,
-	linux-wireless@vger.kernel.org, netdev@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 11/15] wcn36xx: Use allocated self sta index instead of hard coded
-Date: Sun,  3 Apr 2016 15:16:42 -0700
-Message-Id: <1459721806-11817-11-git-send-email-bjorn.andersson@linaro.org> (sfid-20160404_001857_108196_699DAE93)
-In-Reply-To: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
-References: <1459721806-11817-1-git-send-email-bjorn.andersson@linaro.org>
+Received: from mx1.redhat.com ([209.132.183.28]:49632 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751749AbcDNUh2 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 16:37:28 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
+	Jes Sorensen <Jes.Sorensen@redhat.com>
+Subject: [PATCH 15/16] rtl8xxxu: Pause TX before calling disable_rf()
+Date: Thu, 14 Apr 2016 16:37:20 -0400
+Message-Id: <1460666241-5365-16-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_223733_426133_02CF6946)
+In-Reply-To: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
+References: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Pontus Fuchs <pontus.fuchs@gmail.com>
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Signed-off-by: Pontus Fuchs <pontus.fuchs@gmail.com>
-Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+All the disable_rf() functions were setting REG_TXPAUSE to 0xff to
+stop transmission. Do it centrally before calling disable_rf()
+instead.
+
+Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
 ---
- drivers/net/wireless/ath/wcn36xx/smd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/wireless/ath/wcn36xx/smd.c b/drivers/net/wireless/ath/wcn36xx/smd.c
-index ebb446272d21..e0d5631657c1 100644
---- a/drivers/net/wireless/ath/wcn36xx/smd.c
-+++ b/drivers/net/wireless/ath/wcn36xx/smd.c
-@@ -200,7 +200,7 @@ static void wcn36xx_smd_set_sta_params(struct wcn36xx *wcn,
- 		sta_params->sta_index = WCN36XX_HAL_STA_INVALID_IDX;
- 	} else {
- 		sta_params->type = 0;
--		sta_params->sta_index = 1;
-+		sta_params->sta_index = vif_priv->self_sta_index;
- 	}
+diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+index a86b5c4..928ca56 100644
+--- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
++++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
+@@ -2125,8 +2125,6 @@ static void rtl8723a_disable_rf(struct rtl8xxxu_priv *priv)
+ 	u8 sps0;
+ 	u32 val32;
  
- 	sta_params->listen_interval = WCN36XX_LISTEN_INTERVAL(wcn);
+-	rtl8xxxu_write8(priv, REG_TXPAUSE, 0xff);
+-
+ 	sps0 = rtl8xxxu_read8(priv, REG_SPS0_CTRL);
+ 
+ 	/* RF RX code for preamble power saving */
+@@ -7665,8 +7663,6 @@ static void rtl8723b_disable_rf(struct rtl8xxxu_priv *priv)
+ {
+ 	u32 val32;
+ 
+-	rtl8xxxu_write8(priv, REG_TXPAUSE, 0xff);
+-
+ 	val32 = rtl8xxxu_read32(priv, REG_RX_WAIT_CCA);
+ 	val32 &= ~(BIT(22) | BIT(23));
+ 	rtl8xxxu_write32(priv, REG_RX_WAIT_CCA, val32);
+@@ -9591,6 +9587,8 @@ static void rtl8xxxu_stop(struct ieee80211_hw *hw)
+ 	if (priv->usb_interrupts)
+ 		usb_kill_anchored_urbs(&priv->int_anchor);
+ 
++	rtl8xxxu_write8(priv, REG_TXPAUSE, 0xff);
++
+ 	priv->fops->disable_rf(priv);
+ 
+ 	/*
 -- 
-2.5.0
+2.5.5
 
