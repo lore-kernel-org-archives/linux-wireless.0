@@ -1,28 +1,35 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from plane.gmane.org ([80.91.229.3]:41529 "EHLO plane.gmane.org"
+Received: from s3.sipsolutions.net ([5.9.151.49]:42427 "EHLO sipsolutions.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755633AbcDGMpQ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 08:45:16 -0400
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <glkwg-linux-wireless@m.gmane.org>)
-	id 1ao9J4-00017u-KY
-	for linux-wireless@vger.kernel.org; Thu, 07 Apr 2016 14:45:06 +0200
-Received: from 27.4.204.8 ([27.4.204.8])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2016 14:45:06 +0200
-Received: from abhishek15 by 27.4.204.8 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-wireless@vger.kernel.org>; Thu, 07 Apr 2016 14:45:06 +0200
-To: linux-wireless@vger.kernel.org
-From: Abhishek <abhishek15@iitb.ac.in>
-Subject: nl80211 set SSID
-Date: Thu, 7 Apr 2016 12:21:23 +0000 (UTC)
-Message-ID: <loom.20160407T141716-653@post.gmane.org> (sfid-20160407_144521_788160_75687EA2)
+	id S1754382AbcDNI7k (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 04:59:40 -0400
+Message-ID: <1460624376.2358.8.camel@sipsolutions.net> (sfid-20160414_105945_314826_DD3B91F3)
+Subject: Re: [PATCH v4] cfg80211/nl80211: Add support for
+ NL80211_STA_INFO_RX_DURATION
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org
+Date: Thu, 14 Apr 2016 10:59:36 +0200
+In-Reply-To: <1460039374-5338-1-git-send-email-mohammed@qti.qualcomm.com>
+References: <1460039374-5338-1-git-send-email-mohammed@qti.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-I was wondering how do I go about setting up SSID on a AP using nl80211.
+On Thu, 2016-04-07 at 19:59 +0530, Mohammed Shafi Shajakhan wrote:
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> 
+> Add support for new netlink attribute 'NL80211_STA_INFO_RX_DURATION'.
+> 'NL80211_STA_INFO_RX_DURATION' accounts for aggregate PPDU duration
+> in microseconds for all the frames from a peer. Drivers can fill
+> 'rx_duration' field and set the flag 'NL80211_STA_INFO_RX_DURATION'.
+> 'rx_duration' will give an idea about the total time spent by our
+> peer
+> with each of its connected peers.
+> 
+> Also extend 'PUT_SINFO' for supporting rx_duration field
+> 
+Applied, with some minor changes.
 
+johannes
