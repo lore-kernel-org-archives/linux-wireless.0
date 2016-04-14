@@ -1,363 +1,380 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:37324 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751232AbcDGGlk (ORCPT
+Received: from mail-lf0-f44.google.com ([209.85.215.44]:35632 "EHLO
+	mail-lf0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754631AbcDNMQ3 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 02:41:40 -0400
-From: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
-To: <ath10k@lists.infradead.org>
-CC: <linux-wireless@vger.kernel.org>, <rmanohar@codeaurora.org>,
-	"Rajkumar Manoharan" <rmanohar@qti.qualcomm.com>
-Subject: [PATCH v2] ath10k: remove MSI range support
-Date: Thu, 7 Apr 2016 12:10:58 +0530
-Message-ID: <1460011258-15893-1-git-send-email-rmanohar@qti.qualcomm.com> (sfid-20160407_084144_123704_00EBB3CE)
-MIME-Version: 1.0
-Content-Type: text/plain
+	Thu, 14 Apr 2016 08:16:29 -0400
+Received: by mail-lf0-f44.google.com with SMTP id c126so106251973lfb.2
+        for <linux-wireless@vger.kernel.org>; Thu, 14 Apr 2016 05:16:28 -0700 (PDT)
+From: Michal Kazior <michal.kazior@tieto.com>
+To: linux-wireless@vger.kernel.org
+Cc: johannes@sipsolutions.net, dave.taht@gmail.com,
+	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net,
+	apenwarr@gmail.com, Michal Kazior <michal.kazior@tieto.com>
+Subject: [PATCHv3 1/5] mac80211: skip netdev queue control with software queuing
+Date: Thu, 14 Apr 2016 14:18:18 +0200
+Message-Id: <1460636302-31161-2-git-send-email-michal.kazior@tieto.com> (sfid-20160414_141635_030412_8A24BBB5)
+In-Reply-To: <1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
+References: <1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
+ <1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-MSI-X is never well-tested, might contain bugs and generally isn't
-really all that useful to maintain. Also ath10k is mainly used with
-shared/singly-MSI interrupt systems. Hence removing MSI range support.
-This change will be useful for further cleanup in copy engine lock
-and to add NAPI support.
+Qdiscs are designed with no regard to 802.11
+aggregation requirements and hand out
+packet-by-packet with no guarantee they are
+destined to the same tid. This does more bad than
+good no matter how fairly a given qdisc may behave
+on an ethernet interface.
 
-Signed-off-by: Rajkumar Manoharan <rmanohar@qti.qualcomm.com>
+Software queuing used per-AC netdev subqueue
+congestion control whenever a global AC limit was
+hit. This meant in practice a single station or
+tid queue could starve others rather easily. This
+could resonate with qdiscs in a bad way or could
+just end up with poor aggregation performance.
+Increasing the AC limit would increase induced
+latency which is also bad.
+
+Disabling qdiscs by default and performing
+taildrop instead of netdev subqueue congestion
+control on the other hand makes it possible for
+tid queues to fill up "in the meantime" while
+preventing stations starving each other.
+
+This increases aggregation opportunities and
+should allow software queuing based drivers
+achieve better performance by utilizing airtime
+more efficiently with big aggregates.
+
+Signed-off-by: Michal Kazior <michal.kazior@tieto.com>
 ---
-v2: enum ath10k_pci_irq_mode is used for oper_irq_mode
+ include/net/mac80211.h     |  4 ---
+ net/mac80211/ieee80211_i.h |  2 +-
+ net/mac80211/iface.c       | 18 +++++++++--
+ net/mac80211/main.c        |  3 --
+ net/mac80211/sta_info.c    |  2 +-
+ net/mac80211/tx.c          | 80 ++++++++++++++++++++++++----------------------
+ net/mac80211/util.c        | 11 ++++---
+ 7 files changed, 65 insertions(+), 55 deletions(-)
 
- drivers/net/wireless/ath/ath10k/pci.c | 164 ++++------------------------------
- drivers/net/wireless/ath/ath10k/pci.h |  17 ++--
- 2 files changed, 24 insertions(+), 157 deletions(-)
-
-diff --git a/drivers/net/wireless/ath/ath10k/pci.c b/drivers/net/wireless/ath/ath10k/pci.c
-index 0b305efe6c94..cdd8a307c55b 100644
---- a/drivers/net/wireless/ath/ath10k/pci.c
-+++ b/drivers/net/wireless/ath/ath10k/pci.c
-@@ -33,12 +33,6 @@
- #include "ce.h"
- #include "pci.h"
- 
--enum ath10k_pci_irq_mode {
--	ATH10K_PCI_IRQ_AUTO = 0,
--	ATH10K_PCI_IRQ_LEGACY = 1,
--	ATH10K_PCI_IRQ_MSI = 2,
--};
--
- enum ath10k_pci_reset_mode {
- 	ATH10K_PCI_RESET_AUTO = 0,
- 	ATH10K_PCI_RESET_WARM_ONLY = 1,
-@@ -745,10 +739,7 @@ static inline const char *ath10k_pci_get_irq_method(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 
--	if (ar_pci->num_msi_intrs > 1)
--		return "msi-x";
--
--	if (ar_pci->num_msi_intrs == 1)
-+	if (ar_pci->oper_irq_mode == ATH10K_PCI_IRQ_MSI)
- 		return "msi";
- 
- 	return "legacy";
-@@ -1502,13 +1493,8 @@ void ath10k_pci_hif_send_complete_check(struct ath10k *ar, u8 pipe,
- void ath10k_pci_kill_tasklet(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	int i;
- 
- 	tasklet_kill(&ar_pci->intr_tq);
--	tasklet_kill(&ar_pci->msi_fw_err);
--
--	for (i = 0; i < CE_COUNT; i++)
--		tasklet_kill(&ar_pci->pipe_info[i].intr);
- 
- 	del_timer_sync(&ar_pci->rx_post_retry);
- }
-@@ -1624,10 +1610,8 @@ static void ath10k_pci_irq_disable(struct ath10k *ar)
- static void ath10k_pci_irq_sync(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	int i;
- 
--	for (i = 0; i < max(1, ar_pci->num_msi_intrs); i++)
--		synchronize_irq(ar_pci->pdev->irq + i);
-+	synchronize_irq(ar_pci->pdev->irq);
- }
- 
- static void ath10k_pci_irq_enable(struct ath10k *ar)
-@@ -2596,65 +2580,6 @@ static const struct ath10k_hif_ops ath10k_pci_hif_ops = {
- #endif
+diff --git a/include/net/mac80211.h b/include/net/mac80211.h
+index a53333cb1528..c24d0b8e4deb 100644
+--- a/include/net/mac80211.h
++++ b/include/net/mac80211.h
+@@ -2113,9 +2113,6 @@ enum ieee80211_hw_flags {
+  * @n_cipher_schemes: a size of an array of cipher schemes definitions.
+  * @cipher_schemes: a pointer to an array of cipher scheme definitions
+  *	supported by HW.
+- *
+- * @txq_ac_max_pending: maximum number of frames per AC pending in all txq
+- *	entries for a vif.
+  */
+ struct ieee80211_hw {
+ 	struct ieee80211_conf conf;
+@@ -2145,7 +2142,6 @@ struct ieee80211_hw {
+ 	u8 uapsd_max_sp_len;
+ 	u8 n_cipher_schemes;
+ 	const struct ieee80211_cipher_scheme *cipher_schemes;
+-	int txq_ac_max_pending;
  };
  
--static void ath10k_pci_ce_tasklet(unsigned long ptr)
--{
--	struct ath10k_pci_pipe *pipe = (struct ath10k_pci_pipe *)ptr;
--	struct ath10k_pci *ar_pci = pipe->ar_pci;
+ static inline bool _ieee80211_hw_check(struct ieee80211_hw *hw,
+diff --git a/net/mac80211/ieee80211_i.h b/net/mac80211/ieee80211_i.h
+index c6830fbe7d68..b2570aa66d33 100644
+--- a/net/mac80211/ieee80211_i.h
++++ b/net/mac80211/ieee80211_i.h
+@@ -855,7 +855,6 @@ struct ieee80211_sub_if_data {
+ 	bool control_port_no_encrypt;
+ 	int encrypt_headroom;
+ 
+-	atomic_t txqs_len[IEEE80211_NUM_ACS];
+ 	struct ieee80211_tx_queue_params tx_conf[IEEE80211_NUM_ACS];
+ 	struct mac80211_qos_map __rcu *qos_map;
+ 
+@@ -1118,6 +1117,7 @@ struct ieee80211_local {
+ 	    fif_probe_req;
+ 	int probe_req_reg;
+ 	unsigned int filter_flags; /* FIF_* */
++	atomic_t num_tx_queued;
+ 
+ 	bool wiphy_ciphers_allocated;
+ 
+diff --git a/net/mac80211/iface.c b/net/mac80211/iface.c
+index 453b4e741780..67c9b1e565ad 100644
+--- a/net/mac80211/iface.c
++++ b/net/mac80211/iface.c
+@@ -976,13 +976,13 @@ static void ieee80211_do_stop(struct ieee80211_sub_if_data *sdata,
+ 
+ 	if (sdata->vif.txq) {
+ 		struct txq_info *txqi = to_txq_info(sdata->vif.txq);
++		int n = skb_queue_len(&txqi->queue);
+ 
+ 		spin_lock_bh(&txqi->queue.lock);
+ 		ieee80211_purge_tx_queue(&local->hw, &txqi->queue);
++		atomic_sub(n, &local->num_tx_queued);
+ 		txqi->byte_cnt = 0;
+ 		spin_unlock_bh(&txqi->queue.lock);
 -
--	ath10k_ce_per_engine_service(ar_pci->ar, pipe->pipe_num);
--}
--
--static void ath10k_msi_err_tasklet(unsigned long data)
--{
--	struct ath10k *ar = (struct ath10k *)data;
--
--	if (!ath10k_pci_has_fw_crashed(ar)) {
--		ath10k_warn(ar, "received unsolicited fw crash interrupt\n");
--		return;
--	}
--
--	ath10k_pci_irq_disable(ar);
--	ath10k_pci_fw_crashed_clear(ar);
--	ath10k_pci_fw_crashed_dump(ar);
--}
--
--/*
-- * Handler for a per-engine interrupt on a PARTICULAR CE.
-- * This is used in cases where each CE has a private MSI interrupt.
-- */
--static irqreturn_t ath10k_pci_per_engine_handler(int irq, void *arg)
--{
--	struct ath10k *ar = arg;
--	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	int ce_id = irq - ar_pci->pdev->irq - MSI_ASSIGN_CE_INITIAL;
--
--	if (ce_id < 0 || ce_id >= ARRAY_SIZE(ar_pci->pipe_info)) {
--		ath10k_warn(ar, "unexpected/invalid irq %d ce_id %d\n", irq,
--			    ce_id);
--		return IRQ_HANDLED;
--	}
--
--	/*
--	 * NOTE: We are able to derive ce_id from irq because we
--	 * use a one-to-one mapping for CE's 0..5.
--	 * CE's 6 & 7 do not use interrupts at all.
--	 *
--	 * This mapping must be kept in sync with the mapping
--	 * used by firmware.
--	 */
--	tasklet_schedule(&ar_pci->pipe_info[ce_id].intr);
--	return IRQ_HANDLED;
--}
--
--static irqreturn_t ath10k_pci_msi_fw_handler(int irq, void *arg)
--{
--	struct ath10k *ar = arg;
--	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--
--	tasklet_schedule(&ar_pci->msi_fw_err);
--	return IRQ_HANDLED;
--}
--
- /*
-  * Top-level interrupt handler for all PCI interrupts from a Target.
-  * When a block of MSI interrupts is allocated, this top-level handler
-@@ -2672,7 +2597,7 @@ static irqreturn_t ath10k_pci_interrupt_handler(int irq, void *arg)
- 		return IRQ_NONE;
+-		atomic_set(&sdata->txqs_len[txqi->txq.ac], 0);
  	}
  
--	if (ar_pci->num_msi_intrs == 0) {
-+	if (ar_pci->oper_irq_mode == ATH10K_PCI_IRQ_LEGACY) {
- 		if (!ath10k_pci_irq_pending(ar))
- 			return IRQ_NONE;
- 
-@@ -2699,43 +2624,10 @@ static void ath10k_pci_tasklet(unsigned long data)
- 	ath10k_ce_per_engine_service_any(ar);
- 
- 	/* Re-enable legacy irq that was disabled in the irq handler */
--	if (ar_pci->num_msi_intrs == 0)
-+	if (ar_pci->oper_irq_mode == ATH10K_PCI_IRQ_LEGACY)
- 		ath10k_pci_enable_legacy_irq(ar);
+ 	if (local->open_count == 0)
+@@ -1198,6 +1198,12 @@ static void ieee80211_if_setup(struct net_device *dev)
+ 	dev->destructor = ieee80211_if_free;
  }
  
--static int ath10k_pci_request_irq_msix(struct ath10k *ar)
--{
--	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	int ret, i;
--
--	ret = request_irq(ar_pci->pdev->irq + MSI_ASSIGN_FW,
--			  ath10k_pci_msi_fw_handler,
--			  IRQF_SHARED, "ath10k_pci", ar);
--	if (ret) {
--		ath10k_warn(ar, "failed to request MSI-X fw irq %d: %d\n",
--			    ar_pci->pdev->irq + MSI_ASSIGN_FW, ret);
--		return ret;
--	}
--
--	for (i = MSI_ASSIGN_CE_INITIAL; i <= MSI_ASSIGN_CE_MAX; i++) {
--		ret = request_irq(ar_pci->pdev->irq + i,
--				  ath10k_pci_per_engine_handler,
--				  IRQF_SHARED, "ath10k_pci", ar);
--		if (ret) {
--			ath10k_warn(ar, "failed to request MSI-X ce irq %d: %d\n",
--				    ar_pci->pdev->irq + i, ret);
--
--			for (i--; i >= MSI_ASSIGN_CE_INITIAL; i--)
--				free_irq(ar_pci->pdev->irq + i, ar);
--
--			free_irq(ar_pci->pdev->irq + MSI_ASSIGN_FW, ar);
--			return ret;
--		}
--	}
--
--	return 0;
--}
--
- static int ath10k_pci_request_irq_msi(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
-@@ -2774,41 +2666,28 @@ static int ath10k_pci_request_irq(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 
--	switch (ar_pci->num_msi_intrs) {
--	case 0:
-+	switch (ar_pci->oper_irq_mode) {
-+	case ATH10K_PCI_IRQ_LEGACY:
- 		return ath10k_pci_request_irq_legacy(ar);
--	case 1:
-+	case ATH10K_PCI_IRQ_MSI:
- 		return ath10k_pci_request_irq_msi(ar);
- 	default:
--		return ath10k_pci_request_irq_msix(ar);
-+		return -EINVAL;
- 	}
- }
- 
- static void ath10k_pci_free_irq(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	int i;
- 
--	/* There's at least one interrupt irregardless whether its legacy INTR
--	 * or MSI or MSI-X */
--	for (i = 0; i < max(1, ar_pci->num_msi_intrs); i++)
--		free_irq(ar_pci->pdev->irq + i, ar);
-+	free_irq(ar_pci->pdev->irq, ar);
- }
- 
- void ath10k_pci_init_irq_tasklets(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
--	int i;
- 
- 	tasklet_init(&ar_pci->intr_tq, ath10k_pci_tasklet, (unsigned long)ar);
--	tasklet_init(&ar_pci->msi_fw_err, ath10k_msi_err_tasklet,
--		     (unsigned long)ar);
--
--	for (i = 0; i < CE_COUNT; i++) {
--		ar_pci->pipe_info[i].ar_pci = ar_pci;
--		tasklet_init(&ar_pci->pipe_info[i].intr, ath10k_pci_ce_tasklet,
--			     (unsigned long)&ar_pci->pipe_info[i]);
--	}
- }
- 
- static int ath10k_pci_init_irq(struct ath10k *ar)
-@@ -2822,20 +2701,9 @@ static int ath10k_pci_init_irq(struct ath10k *ar)
- 		ath10k_info(ar, "limiting irq mode to: %d\n",
- 			    ath10k_pci_irq_mode);
- 
--	/* Try MSI-X */
--	if (ath10k_pci_irq_mode == ATH10K_PCI_IRQ_AUTO) {
--		ar_pci->num_msi_intrs = MSI_ASSIGN_CE_MAX + 1;
--		ret = pci_enable_msi_range(ar_pci->pdev, ar_pci->num_msi_intrs,
--					   ar_pci->num_msi_intrs);
--		if (ret > 0)
--			return 0;
--
--		/* fall-through */
--	}
--
- 	/* Try MSI */
- 	if (ath10k_pci_irq_mode != ATH10K_PCI_IRQ_LEGACY) {
--		ar_pci->num_msi_intrs = 1;
-+		ar_pci->oper_irq_mode = ATH10K_PCI_IRQ_MSI;
- 		ret = pci_enable_msi(ar_pci->pdev);
- 		if (ret == 0)
- 			return 0;
-@@ -2851,7 +2719,7 @@ static int ath10k_pci_init_irq(struct ath10k *ar)
- 	 * This write might get lost if target has NOT written BAR.
- 	 * For now, fix the race by repeating the write in below
- 	 * synchronization checking. */
--	ar_pci->num_msi_intrs = 0;
-+	ar_pci->oper_irq_mode = ATH10K_PCI_IRQ_LEGACY;
- 
- 	ath10k_pci_write32(ar, SOC_CORE_BASE_ADDRESS + PCIE_INTR_ENABLE_ADDRESS,
- 			   PCIE_INTR_FIRMWARE_MASK | PCIE_INTR_CE_MASK_ALL);
-@@ -2869,8 +2737,8 @@ static int ath10k_pci_deinit_irq(struct ath10k *ar)
- {
- 	struct ath10k_pci *ar_pci = ath10k_pci_priv(ar);
- 
--	switch (ar_pci->num_msi_intrs) {
--	case 0:
-+	switch (ar_pci->oper_irq_mode) {
-+	case ATH10K_PCI_IRQ_LEGACY:
- 		ath10k_pci_deinit_irq_legacy(ar);
- 		break;
- 	default:
-@@ -2908,7 +2776,7 @@ int ath10k_pci_wait_for_target_init(struct ath10k *ar)
- 		if (val & FW_IND_INITIALIZED)
- 			break;
- 
--		if (ar_pci->num_msi_intrs == 0)
-+		if (ar_pci->oper_irq_mode == ATH10K_PCI_IRQ_LEGACY)
- 			/* Fix potential race by repeating CORE_BASE writes */
- 			ath10k_pci_enable_legacy_irq(ar);
- 
-@@ -3186,8 +3054,8 @@ static int ath10k_pci_probe(struct pci_dev *pdev,
- 		goto err_sleep;
- 	}
- 
--	ath10k_info(ar, "pci irq %s interrupts %d irq_mode %d reset_mode %d\n",
--		    ath10k_pci_get_irq_method(ar), ar_pci->num_msi_intrs,
-+	ath10k_info(ar, "pci irq %s oper_irq_mode %d irq_mode %d reset_mode %d\n",
-+		    ath10k_pci_get_irq_method(ar), ar_pci->oper_irq_mode,
- 		    ath10k_pci_irq_mode, ath10k_pci_reset_mode);
- 
- 	ret = ath10k_pci_request_irq(ar);
-diff --git a/drivers/net/wireless/ath/ath10k/pci.h b/drivers/net/wireless/ath/ath10k/pci.h
-index 249c73a69800..959dc321b75e 100644
---- a/drivers/net/wireless/ath/ath10k/pci.h
-+++ b/drivers/net/wireless/ath/ath10k/pci.h
-@@ -148,9 +148,6 @@ struct ath10k_pci_pipe {
- 
- 	/* protects compl_free and num_send_allowed */
- 	spinlock_t pipe_lock;
--
--	struct ath10k_pci *ar_pci;
--	struct tasklet_struct intr;
- };
- 
- struct ath10k_pci_supp_chip {
-@@ -164,6 +161,12 @@ struct ath10k_bus_ops {
- 	int (*get_num_banks)(struct ath10k *ar);
- };
- 
-+enum ath10k_pci_irq_mode {
-+	ATH10K_PCI_IRQ_AUTO = 0,
-+	ATH10K_PCI_IRQ_LEGACY = 1,
-+	ATH10K_PCI_IRQ_MSI = 2,
-+};
++static void ieee80211_if_setup_no_queue(struct net_device *dev)
++{
++	ieee80211_if_setup(dev);
++	dev->priv_flags |= IFF_NO_QUEUE;
++}
 +
- struct ath10k_pci {
- 	struct pci_dev *pdev;
- 	struct device *dev;
-@@ -171,14 +174,10 @@ struct ath10k_pci {
- 	void __iomem *mem;
- 	size_t mem_len;
+ static void ieee80211_iface_work(struct work_struct *work)
+ {
+ 	struct ieee80211_sub_if_data *sdata =
+@@ -1707,6 +1713,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 	struct net_device *ndev = NULL;
+ 	struct ieee80211_sub_if_data *sdata = NULL;
+ 	struct txq_info *txqi;
++	void (*if_setup)(struct net_device *dev);
+ 	int ret, i;
+ 	int txqs = 1;
  
--	/*
--	 * Number of MSI interrupts granted, 0 --> using legacy PCI line
--	 * interrupts.
--	 */
--	int num_msi_intrs;
-+	/* Operating interrupt mode */
-+	enum ath10k_pci_irq_mode oper_irq_mode;
+@@ -1734,12 +1741,17 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
+ 			txq_size += sizeof(struct txq_info) +
+ 				    local->hw.txq_data_size;
  
- 	struct tasklet_struct intr_tq;
--	struct tasklet_struct msi_fw_err;
++		if (local->ops->wake_tx_queue)
++			if_setup = ieee80211_if_setup_no_queue;
++		else
++			if_setup = ieee80211_if_setup;
++
+ 		if (local->hw.queues >= IEEE80211_NUM_ACS)
+ 			txqs = IEEE80211_NUM_ACS;
  
- 	struct ath10k_pci_pipe pipe_info[CE_COUNT_MAX];
+ 		ndev = alloc_netdev_mqs(size + txq_size,
+ 					name, name_assign_type,
+-					ieee80211_if_setup, txqs, 1);
++					if_setup, txqs, 1);
+ 		if (!ndev)
+ 			return -ENOMEM;
+ 		dev_net_set(ndev, wiphy_net(local->hw.wiphy));
+diff --git a/net/mac80211/main.c b/net/mac80211/main.c
+index 8190bf27ebff..609abc39e454 100644
+--- a/net/mac80211/main.c
++++ b/net/mac80211/main.c
+@@ -1053,9 +1053,6 @@ int ieee80211_register_hw(struct ieee80211_hw *hw)
+ 
+ 	local->dynamic_ps_forced_timeout = -1;
+ 
+-	if (!local->hw.txq_ac_max_pending)
+-		local->hw.txq_ac_max_pending = 64;
+-
+ 	result = ieee80211_wep_init(local);
+ 	if (result < 0)
+ 		wiphy_debug(local->hw.wiphy, "Failed to initialize wep: %d\n",
+diff --git a/net/mac80211/sta_info.c b/net/mac80211/sta_info.c
+index 00c82fb152c0..4ab97d454bc1 100644
+--- a/net/mac80211/sta_info.c
++++ b/net/mac80211/sta_info.c
+@@ -115,7 +115,7 @@ static void __cleanup_single_sta(struct sta_info *sta)
+ 			int n = skb_queue_len(&txqi->queue);
+ 
+ 			ieee80211_purge_tx_queue(&local->hw, &txqi->queue);
+-			atomic_sub(n, &sdata->txqs_len[txqi->txq.ac]);
++			atomic_sub(n, &local->num_tx_queued);
+ 			txqi->byte_cnt = 0;
+ 		}
+ 	}
+diff --git a/net/mac80211/tx.c b/net/mac80211/tx.c
+index 485e30a24b38..8de3d2676397 100644
+--- a/net/mac80211/tx.c
++++ b/net/mac80211/tx.c
+@@ -1232,67 +1232,56 @@ ieee80211_tx_prepare(struct ieee80211_sub_if_data *sdata,
+ 	return TX_CONTINUE;
+ }
+ 
+-static void ieee80211_drv_tx(struct ieee80211_local *local,
+-			     struct ieee80211_vif *vif,
+-			     struct ieee80211_sta *pubsta,
+-			     struct sk_buff *skb)
++static struct txq_info *ieee80211_get_txq(struct ieee80211_local *local,
++					  struct ieee80211_vif *vif,
++					  struct ieee80211_sta *pubsta,
++					  struct sk_buff *skb)
+ {
+ 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *) skb->data;
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(vif);
+ 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
+-	struct ieee80211_tx_control control = {
+-		.sta = pubsta,
+-	};
+-	struct ieee80211_txq *txq = NULL;
+-	struct txq_info *txqi;
+-	u8 ac;
+ 
+ 	if ((info->flags & IEEE80211_TX_CTL_SEND_AFTER_DTIM) ||
+ 	    (info->control.flags & IEEE80211_TX_CTRL_PS_RESPONSE))
+-		goto tx_normal;
++		return NULL;
+ 
+ 	if (!ieee80211_is_data(hdr->frame_control))
+-		goto tx_normal;
++		return NULL;
+ 
+ 	if (pubsta) {
+ 		u8 tid = skb->priority & IEEE80211_QOS_CTL_TID_MASK;
+ 
+-		txq = pubsta->txq[tid];
++		return to_txq_info(pubsta->txq[tid]);
+ 	} else if (vif) {
+-		txq = vif->txq;
++		return to_txq_info(vif->txq);
+ 	}
+ 
+-	if (!txq)
+-		goto tx_normal;
++	return NULL;
++}
+ 
+-	ac = txq->ac;
+-	txqi = to_txq_info(txq);
+-	atomic_inc(&sdata->txqs_len[ac]);
+-	if (atomic_read(&sdata->txqs_len[ac]) >= local->hw.txq_ac_max_pending)
+-		netif_stop_subqueue(sdata->dev, ac);
++static void ieee80211_txq_enqueue(struct ieee80211_local *local,
++				  struct txq_info *txqi,
++				  struct sk_buff *skb)
++{
++	lockdep_assert_held(&txqi->queue.lock);
+ 
+-	spin_lock_bh(&txqi->queue.lock);
++	if (atomic_read(&local->num_tx_queued) >= TOTAL_MAX_TX_BUFFER ||
++	    txqi->queue.qlen >= STA_MAX_TX_BUFFER) {
++		ieee80211_free_txskb(&local->hw, skb);
++		return;
++	}
++
++	atomic_inc(&local->num_tx_queued);
+ 	txqi->byte_cnt += skb->len;
+ 	__skb_queue_tail(&txqi->queue, skb);
+-	spin_unlock_bh(&txqi->queue.lock);
+-
+-	drv_wake_tx_queue(local, txqi);
+-
+-	return;
+-
+-tx_normal:
+-	drv_tx(local, &control, skb);
+ }
+ 
+ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 				     struct ieee80211_txq *txq)
+ {
+ 	struct ieee80211_local *local = hw_to_local(hw);
+-	struct ieee80211_sub_if_data *sdata = vif_to_sdata(txq->vif);
+ 	struct txq_info *txqi = container_of(txq, struct txq_info, txq);
+ 	struct ieee80211_hdr *hdr;
+ 	struct sk_buff *skb = NULL;
+-	u8 ac = txq->ac;
+ 
+ 	spin_lock_bh(&txqi->queue.lock);
+ 
+@@ -1303,12 +1292,9 @@ struct sk_buff *ieee80211_tx_dequeue(struct ieee80211_hw *hw,
+ 	if (!skb)
+ 		goto out;
+ 
++	atomic_dec(&local->num_tx_queued);
+ 	txqi->byte_cnt -= skb->len;
+ 
+-	atomic_dec(&sdata->txqs_len[ac]);
+-	if (__netif_subqueue_stopped(sdata->dev, ac))
+-		ieee80211_propagate_queue_wake(local, sdata->vif.hw_queue[ac]);
+-
+ 	hdr = (struct ieee80211_hdr *)skb->data;
+ 	if (txq->sta && ieee80211_is_data_qos(hdr->frame_control)) {
+ 		struct sta_info *sta = container_of(txq->sta, struct sta_info,
+@@ -1335,7 +1321,9 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
+ 			       struct sk_buff_head *skbs,
+ 			       bool txpending)
+ {
++	struct ieee80211_tx_control control = {};
+ 	struct sk_buff *skb, *tmp;
++	struct txq_info *txqi;
+ 	unsigned long flags;
+ 
+ 	skb_queue_walk_safe(skbs, skb, tmp) {
+@@ -1350,6 +1338,21 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
+ 		}
+ #endif
+ 
++		txqi = ieee80211_get_txq(local, vif, sta, skb);
++		if (txqi) {
++			info->control.vif = vif;
++
++			__skb_unlink(skb, skbs);
++
++			spin_lock_bh(&txqi->queue.lock);
++			ieee80211_txq_enqueue(local, txqi, skb);
++			spin_unlock_bh(&txqi->queue.lock);
++
++			drv_wake_tx_queue(local, txqi);
++
++			continue;
++		}
++
+ 		spin_lock_irqsave(&local->queue_stop_reason_lock, flags);
+ 		if (local->queue_stop_reasons[q] ||
+ 		    (!txpending && !skb_queue_empty(&local->pending[q]))) {
+@@ -1392,9 +1395,10 @@ static bool ieee80211_tx_frags(struct ieee80211_local *local,
+ 		spin_unlock_irqrestore(&local->queue_stop_reason_lock, flags);
+ 
+ 		info->control.vif = vif;
++		control.sta = sta;
+ 
+ 		__skb_unlink(skb, skbs);
+-		ieee80211_drv_tx(local, vif, sta, skb);
++		drv_tx(local, &control, skb);
+ 	}
+ 
+ 	return true;
+diff --git a/net/mac80211/util.c b/net/mac80211/util.c
+index 0319d6d4f863..f13b08896238 100644
+--- a/net/mac80211/util.c
++++ b/net/mac80211/util.c
+@@ -244,6 +244,9 @@ void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue)
+ 	struct ieee80211_sub_if_data *sdata;
+ 	int n_acs = IEEE80211_NUM_ACS;
+ 
++	if (local->ops->wake_tx_queue)
++		return;
++
+ 	if (local->hw.queues < IEEE80211_NUM_ACS)
+ 		n_acs = 1;
+ 
+@@ -260,11 +263,6 @@ void ieee80211_propagate_queue_wake(struct ieee80211_local *local, int queue)
+ 		for (ac = 0; ac < n_acs; ac++) {
+ 			int ac_queue = sdata->vif.hw_queue[ac];
+ 
+-			if (local->ops->wake_tx_queue &&
+-			    (atomic_read(&sdata->txqs_len[ac]) >
+-			     local->hw.txq_ac_max_pending))
+-				continue;
+-
+ 			if (ac_queue == queue ||
+ 			    (sdata->vif.cab_queue == queue &&
+ 			     local->queue_stop_reasons[ac_queue] == 0 &&
+@@ -341,6 +339,9 @@ static void __ieee80211_stop_queue(struct ieee80211_hw *hw, int queue,
+ 
+ 	trace_stop_queue(local, queue, reason);
+ 
++	if (local->ops->wake_tx_queue)
++		return;
++
+ 	if (WARN_ON(queue >= hw->queues))
+ 		return;
  
 -- 
-2.7.4
+2.1.4
 
