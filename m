@@ -1,138 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-pf0-f193.google.com ([209.85.192.193]:34013 "EHLO
-	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754876AbcDDLFX (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 4 Apr 2016 07:05:23 -0400
-Received: by mail-pf0-f193.google.com with SMTP id d184so5244471pfc.1
-        for <linux-wireless@vger.kernel.org>; Mon, 04 Apr 2016 04:05:23 -0700 (PDT)
-From: Chaehyun Lim <chaehyun.lim@gmail.com>
-To: gregkh@linuxfoundation.org
-Cc: johnny.kim@atmel.com, austin.shin@atmel.com, chris.park@atmel.com,
-	tony.cho@atmel.com, glen.lee@atmel.com, leo.kim@atmel.com,
-	linux-wireless@vger.kernel.org, devel@driverdev.osuosl.org,
-	Chaehyun Lim <chaehyun.lim@gmail.com>
-Subject: [PATCH 7/8] staging: wilc1000: rename u32WidsCount in handle_scan
-Date: Mon,  4 Apr 2016 20:04:49 +0900
-Message-Id: <1459767890-9709-7-git-send-email-chaehyun.lim@gmail.com> (sfid-20160404_130543_257799_5C3BD550)
-In-Reply-To: <1459767890-9709-1-git-send-email-chaehyun.lim@gmail.com>
-References: <1459767890-9709-1-git-send-email-chaehyun.lim@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:35667 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753219AbcDNS7J (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Thu, 14 Apr 2016 14:59:09 -0400
+From: Jes.Sorensen@redhat.com
+To: linux-wireless@vger.kernel.org
+Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net
+Subject: [PATCH 00/26] rtl8xxxu add rtl8192eu support
+Date: Thu, 14 Apr 2016 14:58:41 -0400
+Message-Id: <1460660347-26299-1-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_212530_129160_09211F51)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-This patch renames u32WidsCount to index to avoid camelcase.
+From: Jes Sorensen <Jes.Sorensen@redhat.com>
 
-Signed-off-by: Chaehyun Lim <chaehyun.lim@gmail.com>
----
- drivers/staging/wilc1000/host_interface.c | 58 +++++++++++++++----------------
- 1 file changed, 29 insertions(+), 29 deletions(-)
+Hi,
 
-diff --git a/drivers/staging/wilc1000/host_interface.c b/drivers/staging/wilc1000/host_interface.c
-index aae0028..a5f109a 100644
---- a/drivers/staging/wilc1000/host_interface.c
-+++ b/drivers/staging/wilc1000/host_interface.c
-@@ -735,7 +735,7 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
- {
- 	s32 result = 0;
- 	struct wid wid_list[5];
--	u32 u32WidsCount = 0;
-+	u32 index = 0;
- 	u32 i;
- 	u8 *pu8Buffer;
- 	u8 valuesize = 0;
-@@ -760,15 +760,15 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
- 
- 	hif_drv->usr_scan_req.rcvd_ch_cnt = 0;
- 
--	wid_list[u32WidsCount].id = (u16)WID_SSID_PROBE_REQ;
--	wid_list[u32WidsCount].type = WID_STR;
-+	wid_list[index].id = (u16)WID_SSID_PROBE_REQ;
-+	wid_list[index].type = WID_STR;
- 
- 	for (i = 0; i < scan_info->hidden_network.n_ssids; i++)
- 		valuesize += ((scan_info->hidden_network.net_info[i].ssid_len) + 1);
- 	pu8HdnNtwrksWidVal = kmalloc(valuesize + 1, GFP_KERNEL);
--	wid_list[u32WidsCount].val = pu8HdnNtwrksWidVal;
--	if (wid_list[u32WidsCount].val) {
--		pu8Buffer = wid_list[u32WidsCount].val;
-+	wid_list[index].val = pu8HdnNtwrksWidVal;
-+	if (wid_list[index].val) {
-+		pu8Buffer = wid_list[index].val;
- 
- 		*pu8Buffer++ = scan_info->hidden_network.n_ssids;
- 
-@@ -778,24 +778,24 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
- 			pu8Buffer += scan_info->hidden_network.net_info[i].ssid_len;
- 		}
- 
--		wid_list[u32WidsCount].size = (s32)(valuesize + 1);
--		u32WidsCount++;
-+		wid_list[index].size = (s32)(valuesize + 1);
-+		index++;
- 	}
- 
--	wid_list[u32WidsCount].id = WID_INFO_ELEMENT_PROBE;
--	wid_list[u32WidsCount].type = WID_BIN_DATA;
--	wid_list[u32WidsCount].val = scan_info->ies;
--	wid_list[u32WidsCount].size = scan_info->ies_len;
--	u32WidsCount++;
-+	wid_list[index].id = WID_INFO_ELEMENT_PROBE;
-+	wid_list[index].type = WID_BIN_DATA;
-+	wid_list[index].val = scan_info->ies;
-+	wid_list[index].size = scan_info->ies_len;
-+	index++;
- 
--	wid_list[u32WidsCount].id = WID_SCAN_TYPE;
--	wid_list[u32WidsCount].type = WID_CHAR;
--	wid_list[u32WidsCount].size = sizeof(char);
--	wid_list[u32WidsCount].val = (s8 *)&scan_info->type;
--	u32WidsCount++;
-+	wid_list[index].id = WID_SCAN_TYPE;
-+	wid_list[index].type = WID_CHAR;
-+	wid_list[index].size = sizeof(char);
-+	wid_list[index].val = (s8 *)&scan_info->type;
-+	index++;
- 
--	wid_list[u32WidsCount].id = WID_SCAN_CHANNEL_LIST;
--	wid_list[u32WidsCount].type = WID_BIN_DATA;
-+	wid_list[index].id = WID_SCAN_CHANNEL_LIST;
-+	wid_list[index].type = WID_BIN_DATA;
- 
- 	if (scan_info->ch_freq_list &&
- 	    scan_info->ch_list_len > 0) {
-@@ -807,15 +807,15 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
- 		}
- 	}
- 
--	wid_list[u32WidsCount].val = scan_info->ch_freq_list;
--	wid_list[u32WidsCount].size = scan_info->ch_list_len;
--	u32WidsCount++;
-+	wid_list[index].val = scan_info->ch_freq_list;
-+	wid_list[index].size = scan_info->ch_list_len;
-+	index++;
- 
--	wid_list[u32WidsCount].id = WID_START_SCAN_REQ;
--	wid_list[u32WidsCount].type = WID_CHAR;
--	wid_list[u32WidsCount].size = sizeof(char);
--	wid_list[u32WidsCount].val = (s8 *)&scan_info->src;
--	u32WidsCount++;
-+	wid_list[index].id = WID_START_SCAN_REQ;
-+	wid_list[index].type = WID_CHAR;
-+	wid_list[index].size = sizeof(char);
-+	wid_list[index].val = (s8 *)&scan_info->src;
-+	index++;
- 
- 	if (hif_drv->hif_state == HOST_IF_CONNECTED)
- 		scan_while_connected = true;
-@@ -823,7 +823,7 @@ static s32 handle_scan(struct wilc_vif *vif, struct scan_attr *scan_info)
- 		scan_while_connected = false;
- 
- 	result = wilc_send_config_pkt(vif, SET_CFG, wid_list,
--				      u32WidsCount,
-+				      index,
- 				      wilc_get_vif_idx(vif));
- 
- 	if (result)
+This set of patches should be what is required to get rtl8192eu
+support going.
+
+I have some additional fixes for 8188ru and other generic fixes for
+the driver. I'll send those out once these make it in.
+
+Cheers,
+Jes
+
+
+Jes Sorensen (26):
+  rtl8xxxu: Reorder parts of init code to match the 8192eu vendor code
+    flow
+  rtl8xxxu: Reorg more code to match the flow of the 8192eu vendor
+    driver
+  rtl8xxxu: Implement generic init_queue_reserved_page() function
+  rtl8xxxu: Reorder chip quirks to follow flow of 8192eu driver
+  rtl8xxxu: Do not set REG_PBP on 8192eu
+  rtl8xxxu: Do not init FPGA0_TX_INFO on 8192eu
+  rtl8xxxu: Do not try to set REG_LEDCFG2 on 8192eu
+  rtl8xxxu: Implment rtl8192e_set_tx_power()
+  rtl8xxxu: Use has_s0s1 for REG_S0S1 issues only
+  rtl8xxxu: byteswap the entire RX descriptor for 24 byte RX descriptors
+  rtl8xxxu: Name RX descriptor types rxdesc16/rxdesc24
+  rtl8xxxu: Remove misleading warning from rtl8192eu_phy_iqcalibrate()
+  rtl8xxxu: Remove unused 8723bu path B IQ calibration code
+  rtl8xxxu: Correctly mask what was read from REG_CCK0_AFE_SETTING
+  rtl8xxxu: Use descriptive bits for setting RX paths for 1T2R parts
+  rtl8xxxu: Split rtl8xxxu_init_phy_bb() into device specific functions
+  rtl8xxxu: Load AGC table before patching for 1T2R parts
+  rtl8xxxu: Move loading of AGC table to device specific function
+  rtl8xxxu: REG_LDOA15_CTRL is only used on gen1 parts
+  rtl8xxxu: Store device specific TRXFF boundary in the fileops
+  rtl8xxxu: Do not backup RF_MODE_AG when it's never being used
+  rtl8xxxu: Make PBP tuning a fileops parameter
+  rtl8xxxu: Split USB quirks into gen1 and gen2 quirks
+  rtl8xxxu: Remove unneeded 8192eu hack
+  rtl8xxxu: 8192eu Fix bug in LDPC RX hang fix
+  Re-enable 8192eu support
+
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c   | 715 ++++++++++++---------
+ drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.h   |  20 +-
+ .../net/wireless/realtek/rtl8xxxu/rtl8xxxu_regs.h  |   6 +-
+ 3 files changed, 428 insertions(+), 313 deletions(-)
+
 -- 
-2.8.0
+2.5.5
 
