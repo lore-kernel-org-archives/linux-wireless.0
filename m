@@ -1,50 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f48.google.com ([74.125.82.48]:35686 "EHLO
-	mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753115AbcDAGMJ convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:55370 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751141AbcDOOlW (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 1 Apr 2016 02:12:09 -0400
-Received: by mail-wm0-f48.google.com with SMTP id 191so8177634wmq.0
-        for <linux-wireless@vger.kernel.org>; Thu, 31 Mar 2016 23:12:08 -0700 (PDT)
+	Fri, 15 Apr 2016 10:41:22 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: "Grumbach\, Emmanuel" <emmanuel.grumbach@intel.com>,
+	David Miller <davem@davemloft.net>
+Cc: "linux-wireless\@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: pull request: iwlwifi 2016-04-12
+References: <1460448889.2630.12.camel@intel.com>
+Date: Fri, 15 Apr 2016 17:41:16 +0300
+In-Reply-To: <1460448889.2630.12.camel@intel.com> (Emmanuel Grumbach's message
+	of "Tue, 12 Apr 2016 08:14:48 +0000")
+Message-ID: <87oa9borxv.fsf@kamboji.qca.qualcomm.com> (sfid-20160415_164126_206647_707FC0DB)
 MIME-Version: 1.0
-In-Reply-To: <1459457986-29222-1-git-send-email-greearb@candelatech.com>
-References: <1459457986-29222-1-git-send-email-greearb@candelatech.com>
-Date: Fri, 1 Apr 2016 08:12:07 +0200
-Message-ID: <CA+BoTQnmMKoK9z2QnTgBeRkXR0GdR1WV0XpOzD7JZnJ6QbHQ1w@mail.gmail.com> (sfid-20160401_081214_609489_5A57DB6E)
-Subject: Re: [PATCH 1/3] ath10k: Ensure txrx-compl-task is stopped when
- cleaning htt-tx.
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Ben Greear <greearb@candelatech.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 31 March 2016 at 22:59,  <greearb@candelatech.com> wrote:
-> From: Ben Greear <greearb@candelatech.com>
->
-> Otherwise, the txrx-compl-task may access some bad memory?
->
-> Signed-off-by: Ben Greear <greearb@candelatech.com>
-> ---
->  drivers/net/wireless/ath/ath10k/htt_tx.c | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/net/wireless/ath/ath10k/htt_tx.c b/drivers/net/wireless/ath/ath10k/htt_tx.c
-> index 07b960e..58e88d3 100644
-> --- a/drivers/net/wireless/ath/ath10k/htt_tx.c
-> +++ b/drivers/net/wireless/ath/ath10k/htt_tx.c
-> @@ -376,6 +376,8 @@ void ath10k_htt_tx_free(struct ath10k_htt *htt)
->  {
->         int size;
->
-> +       tasklet_kill(&htt->txrx_compl_task);
-> +
+"Grumbach, Emmanuel" <emmanuel.grumbach@intel.com> writes:
 
-I think, instead, the ordering of ath10k_htt_tx_free() and
-ath10k_htt_rx_free() should be reversed. It's already in the "correct"
-order in ath10k_core_stop() on error path.
+> I have here a pull request for 4.6. There is patch in this pull request
+> that has been sent to -next already but should really have been
+> included in the current cycle. Sorry for the mess.
+>
+> The commit appears in -next as:
+>
+> commit a0b09f13036cedfd67c9cb4b9d05138e7022723d
+> Author: Ayala Beker <ayala.beker@intel.com>
+> Date:   Wed Feb 3 15:36:52 2016 +0200
+>
+>     iwlwifi: mvm: update GSCAN capabilities
+>     
+>     Gscan capabilities were updated with new capabilities supported
+>     by the device. Update GSCAN capabilities TLV.
+>
+> I modified the commit message to better emphasis the need to have it in
+> the current release. You'll see it in this pull request as:
+>
+> commit cd49727e1a2bccc4ff008dde24c2f8430dd9e368
+> Author: Ayala Beker <ayala.beker@intel.com>
+> Date:   Wed Feb 3 15:36:52 2016 +0200
+>
+>     iwlwifi: mvm: avoid to WARN about gscan capabilities
+>     
+>     Gscan capabilities were updated with new capabilities supported
+>     by the device. Update GSCAN capabilities TLV and avoid to WARN
+>     if the firmware does not have the new capabilities.
 
+I feel uneasy having the same commit on both trees, but that might just
+me. Dave, how do you suggest to handle cases like this when we want to
+get a fix from -next to the current release -rc release?
 
-Michał
+This is the version I have in wireless-drivers-next:
+
+https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=a0b09f13036cedfd67c9cb4b9d05138e7022723d
+
+And this is what Emmanuel wants to have in 4.6:
+
+https://git.kernel.org/cgit/linux/kernel/git/iwlwifi/iwlwifi-fixes.git/commit/?id=cd49727e1a2bccc4ff008dde24c2f8430dd9e368
+
+Luckily the patch is simple but still I would like hear Dave's opinion
+about this. And at least the commit log in iwlwifi-fixes should mention
+that it's cherry picked from iwlwifi-next.
+
+-- 
+Kalle Valo
