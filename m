@@ -1,82 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:37320 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752224AbcDRLXy (ORCPT
+Received: from mail-qg0-f68.google.com ([209.85.192.68]:36472 "EHLO
+	mail-qg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750819AbcDOU7t (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 07:23:54 -0400
-Received: by mail-wm0-f52.google.com with SMTP id n3so119427975wmn.0
-        for <linux-wireless@vger.kernel.org>; Mon, 18 Apr 2016 04:23:54 -0700 (PDT)
+	Fri, 15 Apr 2016 16:59:49 -0400
+Received: by mail-qg0-f68.google.com with SMTP id f105so11262619qge.3
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Apr 2016 13:59:48 -0700 (PDT)
+Date: Fri, 15 Apr 2016 16:59:39 -0400
+From: Bob Copeland <me@bobcopeland.com>
+To: Oleksij Rempel <linux@rempel-privat.de>
+Cc: linux-wireless@vger.kernel.org, ath9k-devel@lists.ath9k.org,
+	kvalo@codeaurora.org, lkml2017@openmailbox.org
+Subject: Re: [PATCH] ath9k: ar5008_hw_cmn_spur_mitigate: add missing mask_m &
+ mask_p initialisation
+Message-ID: <20160415205939.GA2894@localhost> (sfid-20160415_225952_125283_B5903FAE)
+References: <120e427452ad7e93f17828e8bba4b043@openmailbox.org>
+ <1460482664-21086-1-git-send-email-linux@rempel-privat.de>
 MIME-Version: 1.0
-In-Reply-To: <56C4A5ED.4060802@openwrt.org>
-References: <1455710131-9967-1-git-send-email-grzegorz.bajorski@tieto.com>
-	<56C4A5ED.4060802@openwrt.org>
-Date: Mon, 18 Apr 2016 13:23:52 +0200
-Message-ID: <CA+BoTQnf953+s++Wiug=BgEw2Ahu7cN1fbatmgyWi_6iAg_v2Q@mail.gmail.com> (sfid-20160418_132426_466069_2ABE47F4)
-Subject: Re: [RFC] mac80211: add extap functionality
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Felix Fietkau <nbd@openwrt.org>
-Cc: Grzegorz Bajorski <grzegorz.bajorski@tieto.com>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes@sipsolutions.net>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <1460482664-21086-1-git-send-email-linux@rempel-privat.de>
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 17 February 2016 at 17:55, Felix Fietkau <nbd@openwrt.org> wrote:
-> On 2016-02-17 12:55, Grzegorz Bajorski wrote:
->> Client interface briding was only possible when 4addr frames were used with
->> a 4addr/WDS aware AP. It was not possible to do it otherwise due to 3addr
->> frame limitation.
->>
->> The extap logic introduces a smart MAC address masking/translation
->> (including modyfing packets beyond SA/DA, e.g. DHCP broadcast flag is set).
->>
->> There are still some unsolved problems and bugs:
->>  - due to bridge port routing and sk_buff payload sharing skb_copy() is
->>    performed; this ideally should be reworked
->>  - ipv6 support is still not finished
->>  - extap is enabled by default currently; it should be configurable via
->>    nl80211 the same way 4addr is
->>
->> There's also an idea to move this as a generic link driver (just like
->> macvlan, et al) which would allow unmodified cfg80211 drivers to enjoy the
->> extap functionality. Thoughts?
->>
->> Note: This changes cfg80211 file in this single patch only for reviewing
->> convienence.
->>
->> This is an early draft to solicit comments on the design.
->>
->> Signed-off-by: Grzegorz Bajorski <grzegorz.bajorski@tieto.com>
-> You can get a lot of the same effect (sharing the same subnet between
-> hosts behind multiple interfaces and having forwarding between them)
-> without any changes to mac80211.
->
-> OpenWrt uses a daemon called 'relayd' which I wrote some years ago. It
-> does ARP translation, DHCP packet mangling and sets up policy routing to
-> forward packets between multiple interfaces.
->
-> You can find it here:
-> http://git.openwrt.org/?p=project/relayd.git;a=summary
-> git://git.openwrt.org/project/relayd.git
->
-> Since you can cover the same use cases with user space code, I don't
-> think it's a good idea to put bridge emulation hacks in the kernel's
-> wireless stack.
+On Tue, Apr 12, 2016 at 07:37:44PM +0200, Oleksij Rempel wrote:
+> by moving common code to ar5008_hw_cmn_spur_mitigate i forgot to move
+> mask_m & mask_p initialisation. This coused a performance regression
+> on ar9281.
+> 
+> Fixes: f911085ffa88 ("ath9k: split ar5008_hw_spur_mitigate and reuse common code in ar9002_hw_spur_mitigate.")
+> Reported-by: Gustav Frederiksen <lkml2017@openmailbox.org>
+> Tested-by: Gustav Frederiksen <lkml2017@openmailbox.org>
+> Signed-off-by: Oleksij Rempel <linux@rempel-privat.de>
+> ---
+>  drivers/net/wireless/ath/ath9k/ar5008_phy.c | 8 +++-----
+>  drivers/net/wireless/ath/ath9k/ar9002_phy.c | 5 -----
+>  2 files changed, 3 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+> index 8f87930..1b271b9 100644
+> --- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+> +++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+> @@ -274,6 +274,9 @@ void ar5008_hw_cmn_spur_mitigate(struct ath_hw *ah,
+>  	};
+>  	static const int inc[4] = { 0, 100, 0, 0 };
+>  
+> +	memset(&mask_m, 0, sizeof(int8_t) * 123);
+> +	memset(&mask_p, 0, sizeof(int8_t) * 123);
+> +
 
-You can't really implement complete IPv6 support in relayd though.
-Link-local routing is forbidden by the spec explicitly and a patch
-I've cooked up was rejected[1].
+For a future patch, "sizeof(mask_m)" or even just:
 
-I guess this leaves either the kernel's wireless stack to take up the
-task or a special link device (for which I'm soliciting feedback now
-[2]).
+    u8 mask_m[123] = {0};
 
-Thoughts?
+... would be better here.  I looked at this bit and thought, no way is
+"123" actually correct.  Lo and behold, that is actually the number of
+array elements, whether that has a basis in something real or not :)
 
-
-[1]: http://marc.info/?l=linux-netdev&m=146084698311664&w=2
-[2]: http://marc.info/?l=linux-netdev&m=146097234002385&w=2
-
-
-Michal
+-- 
+Bob Copeland %% http://bobcopeland.com/
