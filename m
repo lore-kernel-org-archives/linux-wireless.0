@@ -1,36 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine02.qualcomm.com ([199.106.114.251]:7069 "EHLO
-	wolverine02.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932598AbcDSPr4 convert rfc822-to-8bit (ORCPT
+Received: from mail-oi0-f67.google.com ([209.85.218.67]:33194 "EHLO
+	mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751075AbcDOPe4 (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 11:47:56 -0400
-From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-CC: "michal.kazior@tieto.com" <michal.kazior@tieto.com>,
-	"kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	"ath10k@lists.infradead.org" <ath10k@lists.infradead.org>
-Subject: Re: [patch v2] ath10k: add some sanity checks
-Date: Tue, 19 Apr 2016 15:47:53 +0000
-Message-ID: <87vb3diore.fsf@kamboji.qca.qualcomm.com> (sfid-20160419_174807_245123_1BA32C07)
-References: <20160411081520.GA17911@mwanda>
-In-Reply-To: <20160411081520.GA17911@mwanda> (Dan Carpenter's message of "Mon,
-	11 Apr 2016 11:15:20 +0300")
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 15 Apr 2016 11:34:56 -0400
+Received: by mail-oi0-f67.google.com with SMTP id v67so14211245oie.0
+        for <linux-wireless@vger.kernel.org>; Fri, 15 Apr 2016 08:34:56 -0700 (PDT)
+Subject: Re: [PATCH v2] rtlwifi: rtl8821ae: Make sure loop counter is signed
+ on all architectures
+To: =?UTF-8?Q?David_M=c3=bcller?= <d.mueller@elsoft.ch>,
+	linux-wireless@vger.kernel.org
+References: <570FBA62.6080606@lwfinger.net>
+ <1460703025-2177-1-git-send-email-d.mueller@elsoft.ch>
+From: Larry Finger <Larry.Finger@lwfinger.net>
+Message-ID: <57110A1E.3020801@lwfinger.net> (sfid-20160415_173500_009005_004F8829)
+Date: Fri, 15 Apr 2016 10:34:54 -0500
 MIME-Version: 1.0
+In-Reply-To: <1460703025-2177-1-git-send-email-d.mueller@elsoft.ch>
+Content-Type: text/plain; charset=utf-8; format=flowed
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> writes:
-
-> Smatch complains that since "ev->peer_id" comes from skb->data that
-> means we can't trust it and have to do a bounds check on it to prevent
-> an array overflow.
+On 04/15/2016 01:50 AM, David Müller wrote:
+> The for-loop condition does not work correctly on architectures where
+> "char" is unsigned. Fix it by using an "int", which may also result in
+> more efficient code.
 >
-> Fixes: 6942726f7f7b ('ath10k: add fast peer_map lookup')
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> v2: Remove unneeded initialization.
+>
+> Signed-off-by: David Müller <d.mueller@elsoft.ch>
+> ---
+>   drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+> index 74165b3..1abd243 100644
+> --- a/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+> +++ b/drivers/net/wireless/realtek/rtlwifi/rtl8821ae/phy.c
+> @@ -959,7 +959,7 @@ static void _rtl8821ae_phy_store_txpower_by_rate_base(struct ieee80211_hw *hw)
+>   static void _phy_convert_txpower_dbm_to_relative_value(u32 *data, u8 start,
+>   						u8 end, u8 base_val)
+>   {
+> -	char i = 0;
+> +	int i;
+>   	u8 temp_value = 0;
+>   	u32 temp_data = 0;
 
-Applied, thanks.
+Acked-by: Larry Finger <Larry.Finger@lwfinger.net>
 
--- 
-Kalle Valo
+Thanks,
+
+Larry
+
+
