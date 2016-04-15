@@ -1,94 +1,127 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f43.google.com ([74.125.82.43]:36618 "EHLO
-	mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752162AbcDSJbm convert rfc822-to-8bit (ORCPT
+Received: from smtp.codeaurora.org ([198.145.29.96]:34263 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751014AbcDOMEd (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 19 Apr 2016 05:31:42 -0400
-Received: by mail-wm0-f43.google.com with SMTP id v188so153947426wme.1
-        for <linux-wireless@vger.kernel.org>; Tue, 19 Apr 2016 02:31:41 -0700 (PDT)
+	Fri, 15 Apr 2016 08:04:33 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Alexander Tsoy <alexander@tsoy.me>,
+	Alexey Khoroshilov <khoroshilov@ispras.ru>,
+	Andrea Merello <andrea.merello@gmail.com>,
+	Arend van Spriel <arend@broadcom.com>,
+	Arnd Bergmann <arnd@arndb.de>, ath9k-devel@lists.ath9k.org,
+	b43-dev <b43-dev@lists.infradead.org>,
+	brcm80211 development <brcm80211-dev-list@broadcom.com>,
+	Brett Rudley <brudley@broadcom.com>,
+	Byeoungwook Kim <quddnr145@gmail.com>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	Colin Ian King <colin.king@canonical.com>,
+	Dan Carpenter <dan.carpenter@oracle.com>,
+	Eliad Peller <eliad@wizery.com>,
+	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
+	Eyal Reizer <eyalreizer@gmail.com>,
+	Franky Lin <frankyl@broadcom.com>,
+	Geliang Tang <geliangtang@163.com>,
+	Hans Ulli Kroll <ulli.kroll@googlemail.com>,
+	Hante Meuleman <meuleman@broadcom.com>,
+	Ivan Safonov <insafonov@gmail.com>,
+	Jia-Ju Bai <baijiaju1990@163.com>,
+	Johannes Berg <johannes.berg@intel.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Lars-Peter Clausen <lars@metafoo.de>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	Luciano Coelho <luca@coelho.fi>,
+	Luis Felipe Dominguez Vega <lfdominguez@nauta.cu>,
+	Markus Elfring <elfring@users.sourceforge.net>,
+	Miaoqing Pan <miaoqing@codeaurora.org>,
+	Nicholas Mc Guire <hofrat@osadl.org>,
+	Nicolas Pitre <nico@linaro.org>,
+	Oleksij Rempel <linux@rempel-privat.de>,
+	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	=?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
+	Sara Sharon <sarasharon1@gmail.com>,
+	Shahar Patury <shaharp@ti.com>,
+	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
+	Stanislaw Gruszka <sgruszka@redhat.com>,
+	Tony Lindgren <tony@atomide.com>
+Subject: Re: [PATCH 00/19] Pending Cleanup patches for 4.7
+References: <cover.1458262312.git.julian.calaby@gmail.com>
+	<871t6h4o6q.fsf@purkki.adurom.net> <87pou11ikg.fsf@purkki.adurom.net>
+	<CAGRGNgUiREy2WsSD6iRZ+annBYv+dGgMWvASb=Y5+eT4gJYE_A@mail.gmail.com>
+	<CAGRGNgXLpzkU_NpKavvPSr2ePPXqK18FkPZ6Vx22e9Q4fdczrw@mail.gmail.com>
+Date: Fri, 15 Apr 2016 15:04:19 +0300
+In-Reply-To: <CAGRGNgXLpzkU_NpKavvPSr2ePPXqK18FkPZ6Vx22e9Q4fdczrw@mail.gmail.com>
+	(Julian Calaby's message of "Fri, 8 Apr 2016 11:35:04 +1000")
+Message-ID: <87inzjqdrw.fsf@kamboji.qca.qualcomm.com> (sfid-20160415_140438_619552_4126009B)
 MIME-Version: 1.0
-In-Reply-To: <1461056788.2766.13.camel@sipsolutions.net>
-References: <1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
-	<1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
-	<1460636302-31161-5-git-send-email-michal.kazior@tieto.com>
-	<1460845772.2075.31.camel@sipsolutions.net>
-	<CA+BoTQkHAOhwFh5grveGCH5tfsxOT=BXAx2qgF1c=GcT7SrSQw@mail.gmail.com>
-	<CA+BoTQkQrUyihsk9MMMGY3XXGD+RqwziLwe+jKsKTG5q=StuAg@mail.gmail.com>
-	<1461056788.2766.13.camel@sipsolutions.net>
-Date: Tue, 19 Apr 2016 11:31:40 +0200
-Message-ID: <CA+BoTQnrmf7RCGvwqO1tqu3MdDQtsEG7gq0F=gLMeud7W0d7Eg@mail.gmail.com> (sfid-20160419_113146_623708_1A6CFD4E)
-Subject: Re: [PATCHv3 4/5] mac80211: implement codel on fair queuing flows
-From: Michal Kazior <michal.kazior@tieto.com>
-To: Johannes Berg <johannes@sipsolutions.net>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Dave Taht <dave.taht@gmail.com>,
-	make-wifi-fast@lists.bufferbloat.net, codel@lists.bufferbloat.net,
-	Avery Pennarun <apenwarr@gmail.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On 19 April 2016 at 11:06, Johannes Berg <johannes@sipsolutions.net> wrote:
-> On Mon, 2016-04-18 at 14:38 +0200, Michal Kazior wrote:
->> On 18 April 2016 at 07:31, Michal Kazior <michal.kazior@tieto.com>
->> wrote:
->> >
->> > On 17 April 2016 at 00:29, Johannes Berg <johannes@sipsolutions.net
->> > > wrote:
->> > >
->> > > On Thu, 2016-04-14 at 14:18 +0200, Michal Kazior wrote:
->> > > >
->> > > >
->> > > > +                             struct ieee80211_vif *vif;
->> > > > +
->> > > > +                             /* When packets are enqueued on
->> > > > txq
->> > > > it's easy
->> > > > +                              * to re-construct the vif
->> > > > pointer.
->> > > > There's no
->> > > > +                              * more space in tx_info so it
->> > > > can
->> > > > be used to
->> > > > +                              * store the necessary enqueue
->> > > > time
->> > > > for packet
->> > > > +                              * sojourn time computation.
->> > > > +                              */
->> > > > +                             u64 enqueue_time;
->> > > > +                     };
->> > > I wonder if we could move something like the hw_key into
->> > > tx_control
->> > > instead?
->> > Hmm.. It's probably doable. From a quick look it'll require quite
->> > some
->> > change here and there (e.g. tdls_channel_switch op will need to be
->> > extended to pass tx_control). I'll play with the idea..
->> This is actually far more than I thought initially.
->
-> Fair enough. Perhaps it could be done for the vif? But ISTR there were
-> issues with that when I looked.
+Julian Calaby <julian.calaby@gmail.com> writes:
 
-Still tricky in a similar fashion as hw_key.
-
-
-> We should just get rid of all the rate stuff and convert everything to
-> use rate tables, but ... :)
-
-I'm guessing it's not trivial either and you risk breaking a lot of stuff? :)
-
-
->> A lot of drivers
->> (b43, b43legacy, rtlwifi, wlxxxx, cw1200) access hw_key outside of tx
->> op context (tx workers, tx completions). I'm not even sure this is
->> safe (keys can be freed in the meantime by mac80211 hence invaliding
->> the pointer inside skb, no?).
+> On Fri, Apr 8, 2016 at 10:56 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
+>> Hi Kalle,
 >>
+>> On Fri, Apr 8, 2016 at 2:37 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>>> Kalle Valo <kvalo@codeaurora.org> writes:
+>>>
+>>>> Thank you for working on this, this is very helpful.
+>>>>
+>>>> I have deferred patch 14 and dropped patch 19[1], the rest I'm planning
+>>>> to apply soon. I also tried to remove the original patches from deferred
+>>>> queue by moving them to state "superseded", but I might missed
+>>>> something.
+>>
+>> I'll check that later and give you a list of patchwork URLs for
+>> anything you missed.
 >
-> Hm, yeah, that does seem problematic unless they synchronize against
-> key removal somehow?
+> Ok, from the bundles I initially produced, you missed the following:
+> https://patchwork.kernel.org/patch/7939701/
+> https://patchwork.kernel.org/patch/8003841/
+> https://patchwork.kernel.org/patch/8049041/
+> https://patchwork.kernel.org/patch/8049011/
+> https://patchwork.kernel.org/patch/7940021/
+> https://patchwork.kernel.org/patch/8040161/
+> https://patchwork.kernel.org/patch/8040181/
+> https://patchwork.kernel.org/patch/8197881/
 
-I didn't see any explicit synchronization but maybe I missed something.
+Changed these to "Superseded"
 
+> And this one has the status "changes requested", however I resubmitted
+> it as patch #15 without the stupid bits and you applied it:
+> https://patchwork.kernel.org/patch/8040201/
 
-Michał
+Ok, I changed it to Superseded.
+
+> Beyond that, here's some earlier versions of the patches I picked up:
+> https://patchwork.kernel.org/patch/8197051/
+> https://patchwork.kernel.org/patch/7993931/
+> https://patchwork.kernel.org/patch/8040201/
+
+Marked as Superseded.
+
+> This one should be dropped as it's too awful for me to endorse:
+> https://patchwork.kernel.org/patch/7940001/
+
+It's now "Rejected".
+
+> And this one is obsolete as it's already been applied in some form:
+> https://patchwork.kernel.org/patch/8197071/
+
+I put it to Superseded.
+
+> (If it'd make it easier for you, I can throw these all in a bundle.)
+
+No need, this was perfect.
+
+> I'll poke people for reviews for patch 14 and there's also a patch I
+> missed in my first run-through that applies without changes, so I'll
+> give it a reviewed-by so it's back on your radar.
+
+Thank you so much for all this, I appreciate it a lot.
+
+-- 
+Kalle Valo
