@@ -1,82 +1,55 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:35081 "EHLO
-	mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752321AbcD1X0z (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 28 Apr 2016 19:26:55 -0400
-Received: by mail-oi0-f46.google.com with SMTP id x19so101209008oix.2
-        for <linux-wireless@vger.kernel.org>; Thu, 28 Apr 2016 16:26:55 -0700 (PDT)
+Received: from mga04.intel.com ([192.55.52.120]:19828 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750878AbcDOEQI (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Apr 2016 00:16:08 -0400
+From: "Grumbach, Emmanuel" <emmanuel.grumbach@intel.com>
+To: "linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
+	"bp@alien8.de" <bp@alien8.de>
+CC: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	linuxwifi <linuxwifi@intel.com>,
+	"Dreyfuss, Haim" <haim.dreyfuss@intel.com>,
+	"Coelho, Luciano" <luciano.coelho@intel.com>,
+	"Berg, Johannes" <johannes.berg@intel.com>,
+	"kvalo@codeaurora.org" <kvalo@codeaurora.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"Sharon, Sara" <sara.sharon@intel.com>
+Subject: Re: WARNING: CPU: 1 PID: 2485 at
+ drivers/net/wireless/intel/iwlwifi/pcie/trans.c:1752
+ iwl_trans_pcie_grab_nic_access+0x110/0x120 [iwlwifi]
+Date: Fri, 15 Apr 2016 04:16:02 +0000
+Message-ID: <1460693762.2648.5.camel@intel.com> (sfid-20160415_061629_619425_3ECA7BC1)
+References: <20160415020710.GA2700@cz.tnic>
+In-Reply-To: <20160415020710.GA2700@cz.tnic>
+Content-Type: text/plain; charset="utf-8"
 MIME-Version: 1.0
-In-Reply-To: <1461850619-15298-1-git-send-email-yongqin.liu@linaro.org>
-References: <1461850619-15298-1-git-send-email-yongqin.liu@linaro.org>
-From: Julian Calaby <julian.calaby@gmail.com>
-Date: Fri, 29 Apr 2016 09:26:35 +1000
-Message-ID: <CAGRGNgUzimCmk+2aBDwqcqxnjRUhRni93UZ9Ln88amX84c8u8w@mail.gmail.com> (sfid-20160429_012659_977445_10CE3B7C)
-Subject: Re: [PATCH 1/1] iw: Android.mk & version.sh: update for Android based compilation
-To: Yongqin Liu <yongqin.liu@linaro.org>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Filipe Brandenburger <filbranden@google.com>
-Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Hi,
-
-On Thu, Apr 28, 2016 at 11:36 PM, Yongqin Liu <yongqin.liu@linaro.org> wrote:
-> update the Android.mk file and version.sh script for
-> Android based compilation
->
-> Android.mk:  the same file as the one in AOSP master tip
-> version.sh:  update to get the version information from the
->    git repository where this file is located instead of the
->    the current directory where it is executed, otherwise if
->    there is .git directory in the current directory, it will
->    get the wrong version information.
->    And improved the version check since the tag information
->    may not be mirrored like what AOSP does now.
->
-> Change-Id: I8fa59f0e5c7ebd61b364c77fdccf8e74da2e565c
-> Signed-off-by: Yongqin Liu <yongqin.liu@linaro.org>
-> ---
->  Android.mk | 30 ++++++++++++++++++++----------
->  version.sh | 39 +++++++++++++++++++++++++++------------
->  2 files changed, 47 insertions(+), 22 deletions(-)
->
-> diff --git a/Android.mk b/Android.mk
-> index 4a50f89..20b0432 100644
-> --- a/Android.mk
-> +++ b/Android.mk
-> @@ -1,22 +1,32 @@
->  LOCAL_PATH := $(call my-dir)
-> -IW_SOURCE_DIR := $(LOCAL_PATH)
->
->  include $(CLEAR_VARS)
->
-> -IW_ANDROID_BUILD=y
-> -NO_PKG_CONFIG=y
-> -include $(LOCAL_PATH)/Makefile
-> -
-> -LOCAL_SRC_FILES := $(patsubst %.o,%.c,$(OBJS))
-> +LOCAL_SRC_FILES := \
-> +  iw.c genl.c event.c info.c phy.c \
-> +  interface.c ibss.c station.c survey.c util.c ocb.c \
-> +  mesh.c mpath.c mpp.c scan.c reg.c \
-> +  reason.c status.c connect.c link.c offch.c ps.c cqm.c \
-> +  bitrate.c wowlan.c coalesce.c roc.c p2p.c vendor.c \
-> +  sections.c
->
->  LOCAL_CFLAGS += -DCONFIG_LIBNL20
-> +
-> +# Silence some warnings for now. Needs to be fixed upstream. b/26105799
-
-Comments like this worry me: who is being referred to as "upstream",
-what are these warnings and why has nobody fixed them?
-
-Thanks,
-
--- 
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+T24gRnJpLCAyMDE2LTA0LTE1IGF0IDAyOjA3ICswMDAwLCBCb3Jpc2xhdiBQZXRrb3Ygd3JvdGU6
+DQo+IEhpLA0KPiANCj4gc28gSSdtIHNlZWluZyB0aGlzIHdoZW4gd2xhbjAgdHJpZXMgdG8gYXNz
+b2NpYXRlLiBPbiA0LjYtcmMyICsgdGlwLg0KPiBBZnRlciB0aGF0LCB3aWZpIGlzIGRlYWQgaW4g
+dGhlIHdhdGVyLiBBbnlvbmUgaGF2ZSBhIGNsdWU/DQo+IA0KPiBBbmQgNC41IHNlZW1zIGZpbmUs
+IEknbSB0eXBpbmcgZnJvbSBpdCBhcyB3ZSBzcGVhay4NCj4gLi4uDQoNCjxzbmlwPg0KDQoNCj4g
+WyAgNjYxLjE0MjY1N10gLS0tLS0tLS0tLS0tWyBjdXQgaGVyZSBdLS0tLS0tLS0tLS0tDQo+IFsg
+IDY2MS4xNDI4MTZdIFdBUk5JTkc6IENQVTogMSBQSUQ6IDI0ODUgYXQNCj4gZHJpdmVycy9uZXQv
+d2lyZWxlc3MvaW50ZWwvaXdsd2lmaS9wY2llL3RyYW5zLmM6MTc1Mg0KPiBpd2xfdHJhbnNfcGNp
+ZV9ncmFiX25pY19hY2Nlc3MrMHgxMTAvMHgxMjAgW2l3bHdpZmldDQo+IFsgIDY2MS4xNDMyMzFd
+IFRpbWVvdXQgd2FpdGluZyBmb3IgaGFyZHdhcmUgYWNjZXNzIChDU1JfR1BfQ05UUkwNCj4gMHhm
+ZmZmZmZmZikNCj4gDQoNClRoaXMgbWVhbnMgdGhhdCB3ZSBoYXZlIGFuIGVsZWN0cmljYWwgaXNz
+dWUgdGhhdCBwcmV2ZW50cyB1cyBmcm9tDQphY2Nlc3NpbmcgdGhlIGRldmljZSBvdmVyIHRoZSBQ
+Q0kgYnVzLiBCQVIgaGFzIGJlZW4gZ2FyYmFnZWQgb3IgYWxpa2UuDQpFdmVyeSB0aW1lIEkgdHJp
+ZWQgdG8gZGVidWcgdGhhdCBmcm9tIHRoZSBkcml2ZXIgc2lkZSBpdCBoYXMgLi4uDQpmYWlsZWQu
+IEJlY2F1c2UgdGhlICJnb29kIiBpbiB0aGUgZW5kIGRpZCBleGhpYml0IHRoZSBwcm9ibGVtLiBT
+bywNCnVubGVzcyB5b3UgYXJlIHJlYWR5IHRvIGVtYmFyayBmb3IgYSBiaXNlY3Rpb24gam91cm5l
+eSAoYW5kIGhvcGUgdGhhdA0KdGhpcyB0aW1lIHdoZW4geW91IHR5cGUgJ2dpdCBiaXNlY3QgZ29v
+ZCcgaXQgaXMgcmVhbGx5ICdnb29kJyksIEkgY2FuJ3QNCmRvIG11Y2guDQpXaGF0IEkgY2FuIHN1
+Z2dlc3QgaXMgdG8gaW5zdGFsbCBvdXIgbGF0ZXN0IGJhY2twb3J0IGJhc2VkIHRyZWUgb24gNC41
+Lg0KVGhpcyB3aWxsIGFsbG93IHlvdSB0byBoYXZlIGFuIGVhc2lseSBiaXNlY3RhYmxlIHRyZWUu
+IEJ1dCBpdCBtaWdodA0KdmVyeSB3ZWxsIGJlIHRoYXQgNC41ICsgbGF0ZXN0IGRyaXZlciAoZXF1
+aXZhbGVudCB0byA0LjYgYXMgZmFyIGFzDQppd2x3aWZpIGlzIGNvbmNlcm5lZCkgd2lsbCBiZSBm
+aW5lLg0KVGhlIGJhY2twb3J0IHRyZWUgaXMgaGVyZSBbMV0uIFVuZm9ydHVuYXRlbHksIHRoYXQn
+cyB0aGUgb25seSB0aGluZyBJDQpjYW4gc3VnZ2VzdCBmb3Igbm93Lg0KDQpbMV0gaHR0cHM6Ly9n
+aXQua2VybmVsLm9yZy9jZ2l0L2xpbnV4L2tlcm5lbC9naXQvaXdsd2lmaS9iYWNrcG9ydC1pd2x3
+aQ0KZmkuZ2l0Lw0KPiAtLSANCj4gUmVnYXJkcy9HcnVzcywNCj4gICAgIEJvcmlzLg0KPiANCj4g
+RUNPIHRpcCAjMTAxOiBUcmltIHlvdXIgbWFpbHMgd2hlbiB5b3UgcmVwbHkuIFNyc2x5Lg==
