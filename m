@@ -1,44 +1,53 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:27539 "EHLO
+Received: from wolverine01.qualcomm.com ([199.106.114.254]:21701 "EHLO
 	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757732AbcDELYN (ORCPT
+	with ESMTP id S1751256AbcDOLna convert rfc822-to-8bit (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 07:24:13 -0400
-From: Maya Erez <qca_merez@qca.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-Cc: Maya Erez <qca_merez@qca.qualcomm.com>,
-	linux-wireless@vger.kernel.org, wil6210@qca.qualcomm.com
-Subject: [PATCH 0/7] wil6210 patches
-Date: Tue,  5 Apr 2016 14:24:00 +0300
-Message-Id: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com> (sfid-20160405_132433_803454_5303A545)
+	Fri, 15 Apr 2016 07:43:30 -0400
+From: "Valo, Kalle" <kvalo@qca.qualcomm.com>
+To: "Shajakhan, Mohammed Shafi (Mohammed Shafi)"
+	<mohammed@qti.qualcomm.com>
+CC: "ath10k@lists.infradead.org" <ath10k@lists.infradead.org>,
+	"mohammed@codeaurora.org" <mohammed@codeaurora.org>,
+	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>
+Subject: Re: [PATCH v3 1/2] ath10k: Add support for ath10k_sta_statistics
+ support
+Date: Fri, 15 Apr 2016 11:43:22 +0000
+Message-ID: <87r3e7qeqv.fsf@kamboji.qca.qualcomm.com> (sfid-20160415_134334_625529_251571C2)
+References: <1459241642-3730-1-git-send-email-mohammed@qca.qualcomm.com>
+In-Reply-To: <1459241642-3730-1-git-send-email-mohammed@qca.qualcomm.com>
+	(Mohammed Shafi Shajakhan's message of "Tue, 29 Mar 2016 14:24:01	+0530")
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Various of wil6210 fixes
+Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com> writes:
 
-Lior David (1):
-  wil6210: support regular scan on P2P_DEVICE interface
+> From: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+>
+> Enable support for 'drv_sta_statistics' callback.
+> Export rx_duration support if available to cfg80211/nl80211
+>
+> This can also act as a placeholder for any new per STA stats support
+>
+> Signed-off-by: Mohammed Shafi Shajakhan <mohammed@qti.qualcomm.com>
+> ---
+> [v3] removed conditions for ath10k state checks based on Michal's suggestion
+>
+> Dependencies:
+>
+> 1. cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION (under review)
+> 2. iw: Add support for NL80211_STA_INFO_RX_DURATION netlink
+>  attribute (under review)
+> 3. ath10k: Enable debugfs provision to enable Peer Stats feature (merged in pending branch)
 
-Maya Erez (6):
-  wil6210: add function name to wil log macros
-  wil6210: change RX_HTRSH interrupt print level to debug
-  wil6210: print debug message when transmitting while disconnected
-  wil6210: unmask RX_HTRSH interrupt only when connected
-  wil6210: prevent deep sleep of 60G device in critical paths
-  wil6210: add support for device led configuration
+The dependency is in mac80211-next currently:
 
- drivers/net/wireless/ath/wil6210/cfg80211.c  |   5 +-
- drivers/net/wireless/ath/wil6210/debug.c     |  23 ++++-
- drivers/net/wireless/ath/wil6210/debugfs.c   | 137 +++++++++++++++++++++++++--
- drivers/net/wireless/ath/wil6210/interrupt.c |  93 ++++++++++++++----
- drivers/net/wireless/ath/wil6210/main.c      |  95 ++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/p2p.c       |   6 ++
- drivers/net/wireless/ath/wil6210/txrx.c      |   2 +-
- drivers/net/wireless/ath/wil6210/wil6210.h   |  84 ++++++++++++++--
- drivers/net/wireless/ath/wil6210/wmi.c       |  97 ++++++++++++++++++-
- drivers/net/wireless/ath/wil6210/wmi.h       |  61 ++++++++++++
- 10 files changed, 551 insertions(+), 52 deletions(-)
+49da43f94f5e cfg80211/nl80211: Add support for NL80211_STA_INFO_RX_DURATION
+
+(Sorry for the noise, I wish patchwork would have a feature to add
+notes)
 
 -- 
-1.8.5.2
-
+Kalle Valo
