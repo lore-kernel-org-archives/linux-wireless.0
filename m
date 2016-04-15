@@ -1,51 +1,63 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54128 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751583AbcDZJaL (ORCPT
+Received: from mail-oi0-f50.google.com ([209.85.218.50]:36592 "EHLO
+	mail-oi0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750802AbcDOOeq (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 26 Apr 2016 05:30:11 -0400
-Content-Type: text/plain; charset="us-ascii"
+	Fri, 15 Apr 2016 10:34:46 -0400
 MIME-Version: 1.0
-Subject: Re: brcmfmac: testing the wrong variable in brcmf_rx_hdrpull()
-From: Kalle Valo <kvalo@codeaurora.org>
-In-Reply-To: <20160419142543.GC4876@mwanda>
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Brett Rudley <brudley@broadcom.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	"Franky (Zhenhui) Lin" <frankyl@broadcom.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Pieter-Paul Giesberts <pieter-paul.giesberts@broadcom.com>,
-	Franky Lin <franky.lin@broadcom.com>,
-	linux-wireless@vger.kernel.org, brcm80211-dev-list@broadcom.com,
-	kernel-janitors@vger.kernel.org
-Message-Id: <20160426093010.1EFA76029D@smtp.codeaurora.org> (sfid-20160426_113016_928704_6138303C)
-Date: Tue, 26 Apr 2016 09:30:10 +0000 (UTC)
+In-Reply-To: <87ega7qdjg.fsf@kamboji.qca.qualcomm.com>
+References: <566ABCD9.1060404@users.sourceforge.net> <5686C390.5060600@users.sourceforge.net>
+ <5686C47E.1040906@users.sourceforge.net> <CAGRGNgXR_OoER0rN5Z8n_5VtZimpU7WDNZuc4vkdb2eKDT2frQ@mail.gmail.com>
+ <87ega7qdjg.fsf@kamboji.qca.qualcomm.com>
+From: Julian Calaby <julian.calaby@gmail.com>
+Date: Sat, 16 Apr 2016 00:34:25 +1000
+Message-ID: <CAGRGNgUWZobf1-xiSfPVxBxktEW1Zh37bGEdpNte1rUdVeNOdg@mail.gmail.com> (sfid-20160415_163511_704387_7836EC83)
+Subject: Re: [PATCH 2/2] net-ath9k_htc: Replace a variable initialisation by
+ an assignment in ath9k_htc_set_channel()
+To: Kalle Valo <kvalo@codeaurora.org>
+Cc: ath9k-devel@lists.ath9k.org,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
+	LKML <linux-kernel@vger.kernel.org>,
+	SF Markus Elfring <elfring@users.sourceforge.net>,
+	kernel-janitors <kernel-janitors@vger.kernel.org>,
+	Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain; charset=UTF-8
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+Hi Kalle,
 
-> Smatch complains about this code:
-> 
->     drivers/net/wireless/broadcom/brcm80211/brcmfmac/core.c:335 brcmf_rx_hdrpull()
->     error: we previously assumed '*ifp' could be null (see line 333)
-> 
-> The problem is that we recently changed these from "ifp" to "*ifp" but
-> there was one that we didn't update.
-> 
-> -       if (ret || !ifp || !ifp->ndev) {
-> +       if (ret || !(*ifp) || !(*ifp)->ndev) {
->                 if (ret != -ENODATA && ifp)
->                                        ^^^
-> -                       ifp->stats.rx_errors++;
-> +                       (*ifp)->stats.rx_errors++;
-> 
-> I have updated it to *ifp as well.  We always call this function is a
-> non-NULL "ifp" pointer, btw.
-> 
-> Fixes: c462ebcdfe42 ('brcmfmac: create common function for handling brcmf_proto_hdrpull()')
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Acked-by: Arend van Spriel <arend@broadcom.com>
+On Fri, Apr 15, 2016 at 10:09 PM, Kalle Valo <kvalo@codeaurora.org> wrote:
+> Julian Calaby <julian.calaby@gmail.com> writes:
+>
+>> Hi Kalle,
+>>
+>> On Sat, Jan 2, 2016 at 5:25 AM, SF Markus Elfring
+>> <elfring@users.sourceforge.net> wrote:
+>>> From: Markus Elfring <elfring@users.sourceforge.net>
+>>> Date: Fri, 1 Jan 2016 19:09:32 +0100
+>>>
+>>> Replace an explicit initialisation for one local variable at the beginning
+>>> by a conditional assignment.
+>>>
+>>> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+>>
+>> This looks sane to me.
+>>
+>> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+>
+> Before I commit I'll just change the commit title to:
+>
+> ath9k_htc: Replace a variable initialisation by an assignment in ath9k_htc_set_channel()
 
-Thanks, applied to wireless-drivers-next.git.
+Sounds good to me.
 
-Kalle Valo
+Thanks,
+
+-- 
+Julian Calaby
+
+Email: julian.calaby@gmail.com
+Profile: http://www.google.com/profiles/julian.calaby/
