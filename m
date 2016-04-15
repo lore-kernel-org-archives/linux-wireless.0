@@ -1,61 +1,101 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48935 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:38836 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751920AbcDRPti (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Mon, 18 Apr 2016 11:49:38 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 07/16] rtl8xxxu: Rename rtl8723au_config_channel() to rtl8xxxu_gen1_config_channel()
-Date: Mon, 18 Apr 2016 11:49:27 -0400
-Message-Id: <1460994576-24091-8-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160418_174956_685584_4ACCAC0E)
-In-Reply-To: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460994576-24091-1-git-send-email-Jes.Sorensen@redhat.com>
+	id S1752489AbcDOQOa (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Fri, 15 Apr 2016 12:14:30 -0400
+From: Denys Vlasenko <dvlasenk@redhat.com>
+To: Samuel Ortiz <sameo@linux.intel.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>,
+	Christophe Ricard <christophe.ricard@gmail.com>,
+	linux-wireless@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH] NFC: hci: delete unused nfc_llc_get_rx_head_tail_room()
+Date: Fri, 15 Apr 2016 18:14:25 +0200
+Message-Id: <1460736865-4784-1-git-send-email-dvlasenk@redhat.com> (sfid-20160415_181500_870656_F8094242)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+It used to be EXPORTed, but then EXPORT usage was cleaned up
+(in 2012), without noticing that the function has no users at all
+(and curiously, never had any users).
 
-All supported gen1 parts use the same config_channel() function, so
-rename it to reflect this.
+Delete it.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+While at it, remove non-static "inline" hints on nearby functions:
+these hints don't work across compilation units anyway,
+and these functions are not used in their .c file, thus they are
+never inlined. IOW: "inline" here does not help in any way.
+
+Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
+CC: Samuel Ortiz <sameo@linux.intel.com>
+CC: Christophe Ricard <christophe.ricard@gmail.com>
+CC: linux-wireless@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ include/net/nfc/llc.h |  4 ----
+ net/nfc/hci/llc.c     | 17 +++++------------
+ 2 files changed, 5 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 4aab4f5..d0557ad 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -2219,7 +2219,7 @@ static int rtl8723b_channel_to_group(int channel)
- 	return group;
+diff --git a/include/net/nfc/llc.h b/include/net/nfc/llc.h
+index c25fbde..7ecb457 100644
+--- a/include/net/nfc/llc.h
++++ b/include/net/nfc/llc.h
+@@ -37,10 +37,6 @@ struct nfc_llc *nfc_llc_allocate(const char *name, struct nfc_hci_dev *hdev,
+ 				 int tx_tailroom, llc_failure_t llc_failure);
+ void nfc_llc_free(struct nfc_llc *llc);
+ 
+-void nfc_llc_get_rx_head_tail_room(struct nfc_llc *llc, int *rx_headroom,
+-				   int *rx_tailroom);
+-
+-
+ int nfc_llc_start(struct nfc_llc *llc);
+ int nfc_llc_stop(struct nfc_llc *llc);
+ void nfc_llc_rcv_from_drv(struct nfc_llc *llc, struct sk_buff *skb);
+diff --git a/net/nfc/hci/llc.c b/net/nfc/hci/llc.c
+index 1399a03..3d699cb 100644
+--- a/net/nfc/hci/llc.c
++++ b/net/nfc/hci/llc.c
+@@ -133,36 +133,29 @@ void nfc_llc_free(struct nfc_llc *llc)
+ 	kfree(llc);
  }
  
--static void rtl8723au_config_channel(struct ieee80211_hw *hw)
-+static void rtl8xxxu_gen1_config_channel(struct ieee80211_hw *hw)
+-inline void nfc_llc_get_rx_head_tail_room(struct nfc_llc *llc, int *rx_headroom,
+-					  int *rx_tailroom)
+-{
+-	*rx_headroom = llc->rx_headroom;
+-	*rx_tailroom = llc->rx_tailroom;
+-}
+-
+-inline int nfc_llc_start(struct nfc_llc *llc)
++int nfc_llc_start(struct nfc_llc *llc)
  {
- 	struct rtl8xxxu_priv *priv = hw->priv;
- 	u32 val32, rsr;
-@@ -9879,7 +9879,7 @@ static struct rtl8xxxu_fileops rtl8723au_fops = {
- 	.init_phy_bb = rtl8723au_init_phy_bb,
- 	.init_phy_rf = rtl8723au_init_phy_rf,
- 	.phy_iq_calibrate = rtl8723au_phy_iq_calibrate,
--	.config_channel = rtl8723au_config_channel,
-+	.config_channel = rtl8xxxu_gen1_config_channel,
- 	.parse_rx_desc = rtl8xxxu_parse_rxdesc16,
- 	.enable_rf = rtl8723a_enable_rf,
- 	.disable_rf = rtl8xxxu_gen1_disable_rf,
-@@ -9951,7 +9951,7 @@ static struct rtl8xxxu_fileops rtl8192cu_fops = {
- 	.init_phy_bb = rtl8723au_init_phy_bb,
- 	.init_phy_rf = rtl8192cu_init_phy_rf,
- 	.phy_iq_calibrate = rtl8723au_phy_iq_calibrate,
--	.config_channel = rtl8723au_config_channel,
-+	.config_channel = rtl8xxxu_gen1_config_channel,
- 	.parse_rx_desc = rtl8xxxu_parse_rxdesc16,
- 	.enable_rf = rtl8723a_enable_rf,
- 	.disable_rf = rtl8xxxu_gen1_disable_rf,
+ 	return llc->ops->start(llc);
+ }
+ EXPORT_SYMBOL(nfc_llc_start);
+ 
+-inline int nfc_llc_stop(struct nfc_llc *llc)
++int nfc_llc_stop(struct nfc_llc *llc)
+ {
+ 	return llc->ops->stop(llc);
+ }
+ EXPORT_SYMBOL(nfc_llc_stop);
+ 
+-inline void nfc_llc_rcv_from_drv(struct nfc_llc *llc, struct sk_buff *skb)
++void nfc_llc_rcv_from_drv(struct nfc_llc *llc, struct sk_buff *skb)
+ {
+ 	llc->ops->rcv_from_drv(llc, skb);
+ }
+ 
+-inline int nfc_llc_xmit_from_hci(struct nfc_llc *llc, struct sk_buff *skb)
++int nfc_llc_xmit_from_hci(struct nfc_llc *llc, struct sk_buff *skb)
+ {
+ 	return llc->ops->xmit_from_hci(llc, skb);
+ }
+ 
+-inline void *nfc_llc_get_data(struct nfc_llc *llc)
++void *nfc_llc_get_data(struct nfc_llc *llc)
+ {
+ 	return llc->data;
+ }
 -- 
-2.5.5
+1.8.1.4
 
