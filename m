@@ -1,59 +1,112 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:34186 "EHLO
-	mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753439AbcD2NHa (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 29 Apr 2016 09:07:30 -0400
-Received: by mail-wm0-f65.google.com with SMTP id n129so4999920wmn.1
-        for <linux-wireless@vger.kernel.org>; Fri, 29 Apr 2016 06:07:30 -0700 (PDT)
-From: Helmut Schaa <helmut.schaa@googlemail.com>
-To: linux-wireless@vger.kernel.org
-Cc: ath9k-devel@lists.ath9k.org, kvalo@qca.qualcomm.com,
-	ath9k-devel@qca.qualcomm.com,
-	Helmut Schaa <helmut.schaa@googlemail.com>,
-	Felix Fietkau <nbd@openwrt.org>
-Subject: [PATCH] ath9k: Fix symbol overlap window for half/quarter channels
-Date: Fri, 29 Apr 2016 15:06:34 +0200
-Message-Id: <1461935194-19632-1-git-send-email-helmut.schaa@googlemail.com> (sfid-20160429_150755_621079_2FCC29AE)
+Received: from s3.sipsolutions.net ([5.9.151.49]:60359 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751782AbcDPWL7 (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Apr 2016 18:11:59 -0400
+Message-ID: <1460844715.2075.21.camel@sipsolutions.net> (sfid-20160417_001202_886137_87D3D9A3)
+Subject: Re: [PATCH] cfg80211: Advertise extended capabilities per interface
+ type to userspace
+From: Johannes Berg <johannes@sipsolutions.net>
+To: "Kanchanapally, Vidyullatha" <vkanchan@qti.qualcomm.com>
+Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
+	amarnath@qca.qualcomm.com, usdutt@qti.qualcomm.com
+Date: Sun, 17 Apr 2016 00:11:55 +0200
+In-Reply-To: <1460719669-3421-1-git-send-email-vkanchan@qti.qualcomm.com>
+References: <1460719669-3421-1-git-send-email-vkanchan@qti.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Since commit cd6cfd7311a385144a2f9c74f692ae2df3ae033f
-"ath9k: do not set half/quarter channel flags in AR_PHY_MODE" the
-condition "rfMode & (AR_PHY_MODE_QUARTER | AR_PHY_MODE_HALF)" would
-never evaluate to true.
+On Fri, 2016-04-15 at 16:57 +0530, Kanchanapally, Vidyullatha wrote:
+> 
+> +struct wiphy_iftype_ext_capab {
+> +	enum nl80211_iftype iftype;
+> +	const u8 *ext_capab;
+> +	const u8 *ext_capab_mask;
+> +	u8 ext_capab_len;
 
-Fix this by using the available IS_CHAN_HALF_RATE and IS_CHAN_QUARTER_RATE
-marcros instead.
+I think you should reuse the struct member names that we used before -
+that will make grepping for them easier.
 
-Signed-off-by: Helmut Schaa <helmut.schaa@googlemail.com>
-Cc: Felix Fietkau <nbd@openwrt.org>
----
-Just stumbled over that piece of code while looking into TX99, so
-this is only compile-tested.
+> +	struct wiphy_iftype_ext_capab *iftype_ext_capab;
 
-Felix, can you please confirm if this is correct or if removing
-the whole block would be better?
+const
 
-Thanks,
-Helmut
+> + * @NL80211_ATTR_IFTYPE_EXT_CAPA: Nested attribute of the following
+> attributes:
+> + *	%NL80211_ATTR_IFTYPE, %NL80211_ATTR_EXT_CAPA,
+> + *	%NL80211_ATTR_EXT_CAPA_MASK, to specify the extended
+> capabilities per
+> + *	interface type.
 
- drivers/net/wireless/ath/ath9k/ar9003_phy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+That's a bit awkward to parse, since you have to parse the big
+attribute list again, but I guess it still makes more sense than having
+entirely different attributes.
+ 
+> +		state->split_start++;
+> +		break;
+> +	case 13:
+> +		if (rdev->wiphy.num_iftype_ext_capab &&
+> +		    rdev->wiphy.iftype_ext_capab) {
+> +			struct nlattr *nested_ext_capab, *nested;
+> +
+> +			nested = nla_nest_start(msg,
+> +						NL80211_ATTR_IFTYPE_
+> EXT_CAPA);
+> +			if (!nested)
+> +				goto nla_put_failure;
+> +
+> +			for (i = 0; i < rdev-
+> >wiphy.num_iftype_ext_capab; i++) {
+> +				struct wiphy_iftype_ext_capab
+> *capab;
+> +
+> +				capab = &rdev-
+> >wiphy.iftype_ext_capab[i];
+> +				nested_ext_capab =
+> nla_nest_start(msg, i);
+> +				if (!nested_ext_capab ||
+> +				    nla_put_u32(msg,
+> NL80211_ATTR_IFTYPE,
+> +						capab->iftype) ||
+> +				    nla_put(msg,
+> NL80211_ATTR_EXT_CAPA,
+> +					    capab->ext_capab_len,
+> +					    capab->ext_capab) ||
+> +				    nla_put(msg,
+> NL80211_ATTR_EXT_CAPA_MASK,
+> +					    capab->ext_capab_len,
+> +					    capab->ext_capab_mask))
+> +					goto nla_put_failure;
+> +
+> +				nla_nest_end(msg, nested_ext_capab);
+> +			}
+> +			nla_nest_end(msg, nested);
+> +		}
 
-diff --git a/drivers/net/wireless/ath/ath9k/ar9003_phy.c b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-index 81ab3ca..ae304355 100644
---- a/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-+++ b/drivers/net/wireless/ath/ath9k/ar9003_phy.c
-@@ -1010,7 +1010,7 @@ static void ar9003_hw_set_rfmode(struct ath_hw *ah,
- 	if (IS_CHAN_A_FAST_CLOCK(ah, chan))
- 		rfMode |= (AR_PHY_MODE_DYNAMIC | AR_PHY_MODE_DYN_CCK_DISABLE);
- 
--	if (rfMode & (AR_PHY_MODE_QUARTER | AR_PHY_MODE_HALF))
-+	if (IS_CHAN_HALF_RATE(chan) || IS_CHAN_QUARTER_RATE(chan))
- 		REG_RMW_FIELD(ah, AR_PHY_FRAME_CTL,
- 			      AR_PHY_FRAME_CTL_CF_OVERLAP_WINDOW, 3);
- 
--- 
-2.8.1
+I think we should consider allowing this to be split multiple messages
+(for different interface types), since this can potentially get rather
+long (interface types x 2 x capa len). OTOH, we'd have to get a LOT of
+interface types x capabilities to hit the limit of 4k, not sure. But it
+should just require a few lines of code to do this.
 
+
+Also, if it's possible, perhaps we should consider checking that nobody
+globally advertises any capabilities they don't advertise on all
+possible interface types?
+
+I'm assuming that not listing an interface type would mean that the
+global defaults apply, but old userspace will also not know about the
+per-interface, so you shouldn't list anything there.
+
+So I'm thinking something like
+
+supported_on_all = iftype_ext_capab[0]
+for i in 1..num_iftype_ext_capab-1:
+    supported_on_all &= iftype_ext_capab[i]
+WARN_ON(wiphy->ext_capa_mask & ~supported_on_all)
+
+(which is obviously some kind of pseudo-code.)
+
+johannes
