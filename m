@@ -1,50 +1,40 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from wolverine01.qualcomm.com ([199.106.114.254]:58653 "EHLO
-	wolverine01.qualcomm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932078AbcDLHpO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 12 Apr 2016 03:45:14 -0400
-From: "Haim, Maya" <merez@qti.qualcomm.com>
-To: Kalle Valo <kvalo@codeaurora.org>
-CC: Joe Perches <joe@perches.com>,
-	qca_merez <qca_merez@qca.qualcomm.com>,
-	"linux-wireless@vger.kernel.org" <linux-wireless@vger.kernel.org>,
-	wil6210 <wil6210@qca.qualcomm.com>
-Subject: RE: [PATCH 1/7] wil6210: add function name to wil log macros
-Date: Tue, 12 Apr 2016 07:45:07 +0000
-Message-ID: <7f40e26bcec5477db74d3105972c20bc@euamsexm01a.eu.qualcomm.com> (sfid-20160412_094519_666688_30E89C64)
-References: <1459855447-17413-1-git-send-email-qca_merez@qca.qualcomm.com>
-	<1459855447-17413-2-git-send-email-qca_merez@qca.qualcomm.com>
-	<1459927177.6715.34.camel@perches.com>
-	<bc848beb5cd947f9905b55983a76b6f5@euamsexm01a.eu.qualcomm.com>
- <87shyx77et.fsf@kamboji.qca.qualcomm.com>
-In-Reply-To: <87shyx77et.fsf@kamboji.qca.qualcomm.com>
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
+Received: from s3.sipsolutions.net ([5.9.151.49]:60404 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751795AbcDPWVK (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Apr 2016 18:21:10 -0400
+Message-ID: <1460845267.2075.26.camel@sipsolutions.net> (sfid-20160417_002115_793877_9F4B7EC8)
+Subject: Re: [PATCHv3 1/5] mac80211: skip netdev queue control with software
+ queuing
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Michal Kazior <michal.kazior@tieto.com>,
+	linux-wireless@vger.kernel.org
+Cc: dave.taht@gmail.com, make-wifi-fast@lists.bufferbloat.net,
+	codel@lists.bufferbloat.net, apenwarr@gmail.com
+Date: Sun, 17 Apr 2016 00:21:07 +0200
+In-Reply-To: <1460636302-31161-2-git-send-email-michal.kazior@tieto.com> (sfid-20160414_141628_659448_D3FFFECB)
+References: <1459420104-31554-1-git-send-email-michal.kazior@tieto.com>
+	 <1460636302-31161-1-git-send-email-michal.kazior@tieto.com>
+	 <1460636302-31161-2-git-send-email-michal.kazior@tieto.com>
+	 (sfid-20160414_141628_659448_D3FFFECB)
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
+> +static void ieee80211_txq_enqueue(struct ieee80211_local *local,
+> +				  struct txq_info *txqi,
+> +				  struct sk_buff *skb)
+> +{
+> +	lockdep_assert_held(&txqi->queue.lock);
+[...]
+> +	atomic_inc(&local->num_tx_queued);
 
-On 4/7/2016 6:41 PM, Kalle Valo wrote:
-> "Haim, Maya" <merez@qti.qualcomm.com> writes:
->
->> On 4/6/2016 10:19 AM, Joe Perches wrote:
->>> On Tue, 2016-04-05 at 14:24 +0300, Maya Erez wrote:
->>>> Add __func__ to all wil log macros for easier debugging.
->>> I think this is unnecessary and merely bloats code size.
->>> For all the _dbg calls, dynamic debug can add function names if 
->>> desired.
->>>
->>> If really desired, I suggest changing the logging functions to use 
->>> "%ps and __builtin_return_address(0)
->> I implemented it with __builtin_return_address(0) at first but found 
->> its format less readable (e.g. wil_start_xmit+0x58/0x7e8).
-> Will that work with inline functions and with functions which the 
-> compiler has optimised out?
->
-That's a good point. I did a quick check and it doesn't work for inline or static functions - for such functions, the name of the calling function is printed.
-We can either (1) use my initial implementation (2) add __func__ only to the wil_dbg_... macros or (3) revert this patch completely.
-I find the addition of the function names very useful and since most of the code doesn't include it, it makes the analysis of issues  less efficient.
-Kalle - what is your say on that?
+This global kinda bothers me - anything we can do about removing it?
 
+We obviously didn't have it now - just one (even bigger limit!) per
+queue, so that's 4000 frames default per interface ... now you're down
+to 512 for the entire hardware. Perhaps keeping it per interface at
+least gets away the worst of the contention here?
 
+johannes
