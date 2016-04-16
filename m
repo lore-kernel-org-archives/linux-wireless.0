@@ -1,43 +1,56 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53894 "EHLO mx1.redhat.com"
+Received: from mout.gmx.net ([212.227.15.19]:60801 "EHLO mout.gmx.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751498AbcDNUhX (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 16:37:23 -0400
-From: Jes.Sorensen@redhat.com
-To: linux-wireless@vger.kernel.org
-Cc: kvalo@codeaurora.org, Larry.Finger@lwfinger.net,
-	Jes Sorensen <Jes.Sorensen@redhat.com>
-Subject: [PATCH 05/16] rtl8xxxu: Apply 8188RU workaround for UMC B cut parts correctly
-Date: Thu, 14 Apr 2016 16:37:10 -0400
-Message-Id: <1460666241-5365-6-git-send-email-Jes.Sorensen@redhat.com> (sfid-20160414_223738_874254_0C86CD96)
-In-Reply-To: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
-References: <1460666241-5365-1-git-send-email-Jes.Sorensen@redhat.com>
+	id S1751236AbcDPOSo (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Apr 2016 10:18:44 -0400
+Date: Sat, 16 Apr 2016 17:18:56 +0300
+From: Lauri Kasanen <cand@gmx.com>
+To: Christian Lamparter <chunkeey@googlemail.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v2] carl9170: Clarify kconfig text
+Message-Id: <20160416171856.1769c0e16bcc75372407e06f@gmx.com> (sfid-20160416_161902_938129_33B3FC81)
+In-Reply-To: <1466768.7dLuLFSDol@debian64>
+References: <20160416113312.8de2266358165182bb4b4a15@gmx.com>
+	<1466768.7dLuLFSDol@debian64>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Jes Sorensen <Jes.Sorensen@redhat.com>
+The previous text was confusing, leading readers to think this
+driver was a duplicate, and so didn't need to be enabled.
 
-This patch was being missed since rtl_chip will never match RTL8188C
-if hi_pa is true.
+After the removal of the older staging driver, this is the only
+driver in mainline for these devices.
 
-Signed-off-by: Jes Sorensen <Jes.Sorensen@redhat.com>
+Signed-off-by: Lauri Kasanen <cand@gmx.com>
 ---
- drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+v2: Remove the mention of the previous driver, suggested by Christian.
 
-diff --git a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-index 578d1bf..bebe484 100644
---- a/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-+++ b/drivers/net/wireless/realtek/rtl8xxxu/rtl8xxxu.c
-@@ -3756,7 +3756,7 @@ static void rtl8723au_init_phy_bb(struct rtl8xxxu_priv *priv)
- 	else
- 		rtl8xxxu_init_phy_regs(priv, rtl8723a_phy_1t_init_table);
+ drivers/net/wireless/ath/carl9170/Kconfig | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/net/wireless/ath/carl9170/Kconfig b/drivers/net/wireless/ath/carl9170/Kconfig
+index 1a796e5..2e34bae 100644
+--- a/drivers/net/wireless/ath/carl9170/Kconfig
++++ b/drivers/net/wireless/ath/carl9170/Kconfig
+@@ -5,12 +5,10 @@ config CARL9170
+ 	select FW_LOADER
+ 	select CRC32
+ 	help
+-	  This is another driver for the Atheros "otus" 802.11n USB devices.
++	  This is the mainline driver for the Atheros "otus" 802.11n USB devices.
  
--	if (priv->rtl_chip == RTL8188C && priv->hi_pa &&
-+	if (priv->rtl_chip == RTL8188R && priv->hi_pa &&
- 	    priv->vendor_umc && priv->chip_cut == 1)
- 		rtl8xxxu_write8(priv, REG_OFDM0_AGC_PARM1 + 2, 0x50);
+-	  This driver provides more features than the original,
+-	  but it needs a special firmware (carl9170-1.fw) to do that.
+-
+-	  The firmware can be downloaded from our wiki here:
++	  It needs a special firmware (carl9170-1.fw), which can be downloaded
++	  from our wiki here:
+ 	  <http://wireless.kernel.org/en/users/Drivers/carl9170>
  
+ 	  If you choose to build a module, it'll be called carl9170.
 -- 
-2.5.5
+2.6.2
 
