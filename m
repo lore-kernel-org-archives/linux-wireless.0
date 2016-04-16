@@ -1,127 +1,69 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:34263 "EHLO
-	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751014AbcDOMEd (ORCPT
-	<rfc822;linux-wireless@vger.kernel.org>);
-	Fri, 15 Apr 2016 08:04:33 -0400
-From: Kalle Valo <kvalo@codeaurora.org>
-To: Julian Calaby <julian.calaby@gmail.com>
-Cc: Alexander Tsoy <alexander@tsoy.me>,
-	Alexey Khoroshilov <khoroshilov@ispras.ru>,
-	Andrea Merello <andrea.merello@gmail.com>,
-	Arend van Spriel <arend@broadcom.com>,
-	Arnd Bergmann <arnd@arndb.de>, ath9k-devel@lists.ath9k.org,
-	b43-dev <b43-dev@lists.infradead.org>,
-	brcm80211 development <brcm80211-dev-list@broadcom.com>,
-	Brett Rudley <brudley@broadcom.com>,
-	Byeoungwook Kim <quddnr145@gmail.com>,
-	Chaoming Li <chaoming_li@realsil.com.cn>,
-	Colin Ian King <colin.king@canonical.com>,
-	Dan Carpenter <dan.carpenter@oracle.com>,
-	Eliad Peller <eliad@wizery.com>,
-	Emmanuel Grumbach <emmanuel.grumbach@intel.com>,
-	Eyal Reizer <eyalreizer@gmail.com>,
-	Franky Lin <frankyl@broadcom.com>,
-	Geliang Tang <geliangtang@163.com>,
-	Hans Ulli Kroll <ulli.kroll@googlemail.com>,
-	Hante Meuleman <meuleman@broadcom.com>,
-	Ivan Safonov <insafonov@gmail.com>,
-	Jia-Ju Bai <baijiaju1990@163.com>,
-	Johannes Berg <johannes.berg@intel.com>,
-	Larry Finger <Larry.Finger@lwfinger.net>,
-	Lars-Peter Clausen <lars@metafoo.de>,
-	linux-wireless <linux-wireless@vger.kernel.org>,
-	Luciano Coelho <luca@coelho.fi>,
-	Luis Felipe Dominguez Vega <lfdominguez@nauta.cu>,
-	Markus Elfring <elfring@users.sourceforge.net>,
-	Miaoqing Pan <miaoqing@codeaurora.org>,
-	Nicholas Mc Guire <hofrat@osadl.org>,
-	Nicolas Pitre <nico@linaro.org>,
-	Oleksij Rempel <linux@rempel-privat.de>,
-	Pieter-Paul Giesberts <pieterpg@broadcom.com>,
-	QCA ath9k Development <ath9k-devel@qca.qualcomm.com>,
-	=?utf-8?Q?Rafa=C5=82_Mi=C5=82ecki?= <zajec5@gmail.com>,
-	Sara Sharon <sarasharon1@gmail.com>,
-	Shahar Patury <shaharp@ti.com>,
-	Stanislav Yakovlev <stas.yakovlev@gmail.com>,
-	Stanislaw Gruszka <sgruszka@redhat.com>,
-	Tony Lindgren <tony@atomide.com>
-Subject: Re: [PATCH 00/19] Pending Cleanup patches for 4.7
-References: <cover.1458262312.git.julian.calaby@gmail.com>
-	<871t6h4o6q.fsf@purkki.adurom.net> <87pou11ikg.fsf@purkki.adurom.net>
-	<CAGRGNgUiREy2WsSD6iRZ+annBYv+dGgMWvASb=Y5+eT4gJYE_A@mail.gmail.com>
-	<CAGRGNgXLpzkU_NpKavvPSr2ePPXqK18FkPZ6Vx22e9Q4fdczrw@mail.gmail.com>
-Date: Fri, 15 Apr 2016 15:04:19 +0300
-In-Reply-To: <CAGRGNgXLpzkU_NpKavvPSr2ePPXqK18FkPZ6Vx22e9Q4fdczrw@mail.gmail.com>
-	(Julian Calaby's message of "Fri, 8 Apr 2016 11:35:04 +1000")
-Message-ID: <87inzjqdrw.fsf@kamboji.qca.qualcomm.com> (sfid-20160415_140438_619552_4126009B)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Received: from s3.sipsolutions.net ([5.9.151.49]:60267 "EHLO sipsolutions.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751700AbcDPVmc (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Apr 2016 17:42:32 -0400
+Message-ID: <1460842947.2075.11.camel@sipsolutions.net> (sfid-20160416_234240_748549_B16D5CC5)
+Subject: Re: [PATCH] netlink: don't send NETLINK_URELEASE for unbound sockets
+From: Johannes Berg <johannes@sipsolutions.net>
+To: Herbert Xu <herbert@gondor.apana.org.au>
+Cc: netdev@vger.kernel.org, dmitrijs.ivanovs@ubnt.com,
+	linux-wireless@vger.kernel.org
+Date: Sat, 16 Apr 2016 23:42:27 +0200
+In-Reply-To: <20160416063040.GA6380@gondor.apana.org.au>
+References: <20160416063040.GA6380@gondor.apana.org.au>
+Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-Julian Calaby <julian.calaby@gmail.com> writes:
+On Sat, 2016-04-16 at 14:30 +0800, Herbert Xu wrote:
+> Johannes Berg <johannes@sipsolutions.net> wrote:
+> > 
+> > 
+> > diff --git a/net/netlink/af_netlink.c b/net/netlink/af_netlink.c
+> > index 215fc08c02ab..330ebd600f25 100644
+> > --- a/net/netlink/af_netlink.c
+> > +++ b/net/netlink/af_netlink.c
+> > @@ -688,7 +688,7 @@ static int netlink_release(struct socket *sock)
+> > 
+> >        skb_queue_purge(&sk->sk_write_queue);
+> > 
+> > -       if (nlk->portid) {
+> > +       if (nlk->portid && nlk->bound) {
+> Any reason why we're still testing portid at all? Isn't testing
+> bound enough?
 
-> On Fri, Apr 8, 2016 at 10:56 AM, Julian Calaby <julian.calaby@gmail.com> wrote:
->> Hi Kalle,
->>
->> On Fri, Apr 8, 2016 at 2:37 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
->>> Kalle Valo <kvalo@codeaurora.org> writes:
->>>
->>>> Thank you for working on this, this is very helpful.
->>>>
->>>> I have deferred patch 14 and dropped patch 19[1], the rest I'm planning
->>>> to apply soon. I also tried to remove the original patches from deferred
->>>> queue by moving them to state "superseded", but I might missed
->>>> something.
->>
->> I'll check that later and give you a list of patchwork URLs for
->> anything you missed.
->
-> Ok, from the bundles I initially produced, you missed the following:
-> https://patchwork.kernel.org/patch/7939701/
-> https://patchwork.kernel.org/patch/8003841/
-> https://patchwork.kernel.org/patch/8049041/
-> https://patchwork.kernel.org/patch/8049011/
-> https://patchwork.kernel.org/patch/7940021/
-> https://patchwork.kernel.org/patch/8040161/
-> https://patchwork.kernel.org/patch/8040181/
-> https://patchwork.kernel.org/patch/8197881/
+The reason is that while I felt confident in understanding the problem
+and its solution, I didn't realize that bound follows portid, and that,
+for example, a kernel socket can't get bound. :-)
 
-Changed these to "Superseded"
+But yeah - looking at the code after your comment does show that
+testing portid is pointless now.
 
-> And this one has the status "changes requested", however I resubmitted
-> it as patch #15 without the stupid bits and you applied it:
-> https://patchwork.kernel.org/patch/8040201/
+In fact, now that I look at it, I wonder how this situation came about?
 
-Ok, I changed it to Superseded.
+In the current code, you can only trigger the problematic situation
+through an error condition, afaict - you have to try to bind a socket
+with the same portid as an already existing one, and __netlink_insert()
+will then fail, but netlink_insert() won't reset the nlk_sk(sk)->portid 
+since your commit da314c9923fe ("netlink: Replace rhash_portid with
+bound"), even though you had previously fixed precisely this issue
+already - commit c0bb07df7d98 ("netlink: Reset portid after
+netlink_insert failure"). You then close the socket, and since portid
+is assigned, that will trigger NETLINK_URELEASE.
 
-> Beyond that, here's some earlier versions of the patches I picked up:
-> https://patchwork.kernel.org/patch/8197051/
-> https://patchwork.kernel.org/patch/7993931/
-> https://patchwork.kernel.org/patch/8040201/
+So before the rhash_portid -> bound change, this doesn't seem to have
+been a problem, and I guess we didn't get the "stuck in limbo" problem
+back because we now check bound everywhere relevant, for purposes of
+calling netlink_autobind.
 
-Marked as Superseded.
+IOW - I'm now even more convinced that the patch is correct, and I'm
+also convinced that until fairly recently (da314c9923fe) this wasn't
+even a problem.
 
-> This one should be dropped as it's too awful for me to endorse:
-> https://patchwork.kernel.org/patch/7940001/
+Maybe we can take the opportunity of removing the "portid" check to put
+most of the above into a commit message, but I think you should review
+it first.
 
-It's now "Rejected".
-
-> And this one is obsolete as it's already been applied in some form:
-> https://patchwork.kernel.org/patch/8197071/
-
-I put it to Superseded.
-
-> (If it'd make it easier for you, I can throw these all in a bundle.)
-
-No need, this was perfect.
-
-> I'll poke people for reviews for patch 14 and there's also a patch I
-> missed in my first run-through that applies without changes, so I'll
-> give it a reviewed-by so it's back on your radar.
-
-Thank you so much for all this, I appreciate it a lot.
-
--- 
-Kalle Valo
+johannes
