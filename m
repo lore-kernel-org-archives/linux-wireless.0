@@ -1,41 +1,57 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42961 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751260AbcDGHNJ (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 7 Apr 2016 03:13:09 -0400
-Message-ID: <1460013184.27154.1.camel@sipsolutions.net> (sfid-20160407_091313_369753_12834F88)
-Subject: Re: [PATCH 1/2] Do not send netlink socket release notification
- when socket is not bound
-From: Johannes Berg <johannes@sipsolutions.net>
-To: Dmitry Ivanov <dmitrijs.ivanovs@ubnt.com>,
-	linux-wireless@vger.kernel.org
-Date: Thu, 07 Apr 2016 09:13:04 +0200
-In-Reply-To: <20160406172248.b032ff227e4843a836e00802@ubnt.com> (sfid-20160406_162255_804347_6B014CD5)
-References: <20160406172248.b032ff227e4843a836e00802@ubnt.com>
-	 (sfid-20160406_162255_804347_6B014CD5)
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from smtp.codeaurora.org ([198.145.29.96]:51307 "EHLO
+	smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750823AbcDPEbk (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Apr 2016 00:31:40 -0400
+From: Kalle Valo <kvalo@codeaurora.org>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Byeoungwook Kim <quddnr145@gmail.com>,
+	Larry Finger <Larry.Finger@lwfinger.net>,
+	Chaoming Li <chaoming_li@realsil.com.cn>,
+	linux-wireless <linux-wireless@vger.kernel.org>,
+	netdev <netdev@vger.kernel.org>,
+	"linux-kernel\@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/2] rtlwifi: Fix reusable codes in core.c
+References: <20160203020139.GA13619@gmail.com>
+	<87bn5apw5a.fsf@kamboji.qca.qualcomm.com>
+	<CAGRGNgX0uy=R1dd7UMO5aZu69QDUXrtZDCjdJnB1Yj3XzjemHA@mail.gmail.com>
+Date: Sat, 16 Apr 2016 07:31:32 +0300
+In-Reply-To: <CAGRGNgX0uy=R1dd7UMO5aZu69QDUXrtZDCjdJnB1Yj3XzjemHA@mail.gmail.com>
+	(Julian Calaby's message of "Sat, 16 Apr 2016 12:39:04 +1000")
+Message-ID: <8737qmp42j.fsf@kamboji.qca.qualcomm.com> (sfid-20160416_063154_509910_AF0C9399)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Wed, 2016-04-06 at 17:22 +0300, Dmitry Ivanov wrote:
-> This patch corrects the problem where non-privileged user may create
-> netlink socket with port_id equal to port_id used by hostapd to
-> create
-> virtual wireless network interfaces. Call to bind() will fail for
-> such
-> socket, but release notification sent on close() or process
-> termination
-> to nl80211 subsystem will destroy virtual network interfaces while
-> hostapd is still running.
-> 
-Thanks Dmitry.
+Julian Calaby <julian.calaby@gmail.com> writes:
 
-There are a number of issues with your patch still, such as describing
-the problem in too restricted ways (this problem is not specific to
-nl80211 nor fixed there). The subject should also have a proper prefix
-and you're not sending this patch to the right people.
+> Hi Kalle,
+>
+> On Sat, Apr 16, 2016 at 4:25 AM, Kalle Valo <kvalo@codeaurora.org> wrote:
+>> Byeoungwook Kim <quddnr145@gmail.com> writes:
+>>
+>>> rtl_*_delay() functions were reused same codes about addr variable.
+>>> So i have converted to rtl_addr_delay() from code about addr variable.
+>>>
+>>> Signed-off-by: Byeoungwook Kim <quddnr145@gmail.com>
+>>> Reviewed-by: Julian Calaby <julian.calaby@gmail.com>
+>>
+>> Doesn't apply:
+>>
+>> Applying: rtlwifi: Fix reusable codes in core.c
+>> fatal: sha1 information is lacking or useless (drivers/net/wireless/realtek/rtlwifi/core.c).
+>> Repository lacks necessary blobs to fall back on 3-way merge.
+>> Cannot fall back to three-way merge.
+>> Patch failed at 0001 rtlwifi: Fix reusable codes in core.c
+>>
+>> Please rebase and resend.
+>
+> This one is already applied in some form. I thought I'd listed it in
+> my big list of superseded patches, however I must have missed it.
 
-If you prefer, I can take ownership of these patches.
+Or I missed it :) But good to know, so no actions needed anymore.
 
-johannes
+-- 
+Kalle Valo
