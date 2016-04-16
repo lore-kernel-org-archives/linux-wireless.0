@@ -1,45 +1,60 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from s3.sipsolutions.net ([5.9.151.49]:42439 "EHLO sipsolutions.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754567AbcDNJBu (ORCPT <rfc822;linux-wireless@vger.kernel.org>);
-	Thu, 14 Apr 2016 05:01:50 -0400
-Message-ID: <1460624507.2358.9.camel@sipsolutions.net> (sfid-20160414_110207_680433_A5580C76)
-Subject: Re: [PATCH 1/3] cfg80211: Add option to report the bss entry in
- connect result
-From: Johannes Berg <johannes@sipsolutions.net>
-To: "Kanchanapally, Vidyullatha" <vkanchan@qti.qualcomm.com>
-Cc: linux-wireless@vger.kernel.org, jouni@qca.qualcomm.com,
-	usdutt@qti.qualcomm.com, amarnath@qca.qualcomm.com
-Date: Thu, 14 Apr 2016 11:01:47 +0200
-In-Reply-To: <1460367961-11254-1-git-send-email-vkanchan@qti.qualcomm.com>
-References: <1460367961-11254-1-git-send-email-vkanchan@qti.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:35183 "EHLO
+	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751459AbcDPPcz (ORCPT
+	<rfc822;linux-wireless@vger.kernel.org>);
+	Sat, 16 Apr 2016 11:32:55 -0400
+From: Christian Lamparter <chunkeey@googlemail.com>
+To: Lauri Kasanen <cand@gmx.com>
+Cc: Kalle Valo <kvalo@codeaurora.org>, linux-wireless@vger.kernel.org,
+	netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] carl9170: Clarify kconfig text
+Date: Sat, 16 Apr 2016 17:32:52 +0200
+Message-ID: <1577999.zXsTfgyz3l@debian64> (sfid-20160416_173320_704064_24D21142)
+In-Reply-To: <20160416171856.1769c0e16bcc75372407e06f@gmx.com>
+References: <20160416113312.8de2266358165182bb4b4a15@gmx.com> <1466768.7dLuLFSDol@debian64> <20160416171856.1769c0e16bcc75372407e06f@gmx.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-On Mon, 2016-04-11 at 15:16 +0530, Kanchanapally, Vidyullatha wrote:
-> From: "Kanchanapally, Vidyullatha" <vkanchan@qti.qualcomm.com>
+On Saturday, April 16, 2016 05:18:56 PM Lauri Kasanen wrote:
+> The previous text was confusing, leading readers to think this
+> driver was a duplicate, and so didn't need to be enabled.
 > 
-> Since cfg80211 maintains separate BSS table entries for APs if the
-> same
-> BSSID, SSID pair is seen on multiple channels, it is possible that it
-> can map the current_bss to a BSS entry on the wrong channel. This
-> current_bss will not get flushed unless disconnected and cfg80211
-> reports a wrong channel as the associated channel.
+> After the removal of the older staging driver, this is the only
+> driver in mainline for these devices.
 > 
-> Fix this by introducing a new cfg80211_connect_bss() function which
-> is
-> similar to cfg80211_connect_result(), but it includes an additional
-> parameter: the bss the STA is connected to. This allows drivers to
-> provide the exact bss entry that matches the BSS to which the
-> connection
-> was completed.
+> Signed-off-by: Lauri Kasanen <cand@gmx.com>
+Acked-by: Christian Lamparter <chunkeey@googlemail.com>
 
-Applied.
+> ---
+> v2: Remove the mention of the previous driver, suggested by Christian.
 
-I'm surprised you're so worried about this test scenario (we've
-discussed this multiple times before), but I can't really argue with
-passing the BSS pointer either :)
+Thanks!
+ 
+>  drivers/net/wireless/ath/carl9170/Kconfig | 8 +++-----
+>  1 file changed, 3 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/ath/carl9170/Kconfig b/drivers/net/wireless/ath/carl9170/Kconfig
+> index 1a796e5..2e34bae 100644
+> --- a/drivers/net/wireless/ath/carl9170/Kconfig
+> +++ b/drivers/net/wireless/ath/carl9170/Kconfig
+> @@ -5,12 +5,10 @@ config CARL9170
+>  	select FW_LOADER
+>  	select CRC32
+>  	help
+> -	  This is another driver for the Atheros "otus" 802.11n USB devices.
+> +	  This is the mainline driver for the Atheros "otus" 802.11n USB devices.
+>  
+> -	  This driver provides more features than the original,
+> -	  but it needs a special firmware (carl9170-1.fw) to do that.
+> -
+> -	  The firmware can be downloaded from our wiki here:
+> +	  It needs a special firmware (carl9170-1.fw), which can be downloaded
+> +	  from our wiki here:
+>  	  <http://wireless.kernel.org/en/users/Drivers/carl9170>
+>  
+>  	  If you choose to build a module, it'll be called carl9170.
+> 
 
-johannes
