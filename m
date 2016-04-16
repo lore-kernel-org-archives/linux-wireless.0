@@ -1,68 +1,66 @@
 Return-path: <linux-wireless-owner@vger.kernel.org>
-Received: from mx0b-0016f401.pphosted.com ([67.231.156.173]:53792 "EHLO
-	mx0b-0016f401.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755088AbcDEILE (ORCPT
+Received: from mail-qg0-f49.google.com ([209.85.192.49]:32786 "EHLO
+	mail-qg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751349AbcDPOzv (ORCPT
 	<rfc822;linux-wireless@vger.kernel.org>);
-	Tue, 5 Apr 2016 04:11:04 -0400
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u3586cAt013897
-	for <linux-wireless@vger.kernel.org>; Tue, 5 Apr 2016 01:11:03 -0700
-Received: from sc-exch03.marvell.com ([199.233.58.183])
-	by mx0b-0016f401.pphosted.com with ESMTP id 222dkfh9gx-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-SHA384 bits=256 verify=NOT)
-	for <linux-wireless@vger.kernel.org>; Tue, 05 Apr 2016 01:11:03 -0700
-From: Amitkumar Karwar <akarwar@marvell.com>
-To: <linux-wireless@vger.kernel.org>
-CC: Nishant Sarmukadam <nishants@marvell.com>,
-	Xinming Hu <huxm@marvell.com>,
-	Amitkumar Karwar <akarwar@marvell.com>
-Subject: [PATCH RESEND 4/7] mwifiex: remove redundant GFP_DMA flag
-Date: Tue, 5 Apr 2016 01:04:37 -0700
-Message-ID: <1459843480-25956-4-git-send-email-akarwar@marvell.com> (sfid-20160405_101115_686661_9175EA78)
-In-Reply-To: <1459843480-25956-1-git-send-email-akarwar@marvell.com>
-References: <1459843480-25956-1-git-send-email-akarwar@marvell.com>
-MIME-Version: 1.0
-Content-Type: text/plain
+	Sat, 16 Apr 2016 10:55:51 -0400
+Received: by mail-qg0-f49.google.com with SMTP id v14so5573031qge.0
+        for <linux-wireless@vger.kernel.org>; Sat, 16 Apr 2016 07:55:51 -0700 (PDT)
+From: Bob Copeland <me@bobcopeland.com>
+To: linux-wireless@vger.kernel.org
+Cc: Oleksij Rempel <linux@rempel-privat.de>,
+	ath9k-devel@lists.ath9k.org, Bob Copeland <me@bobcopeland.com>
+Subject: [PATCH] ath9k: remove repetitions of mask array size
+Date: Sat, 16 Apr 2016 10:54:37 -0400
+Message-Id: <1460818477-22785-1-git-send-email-me@bobcopeland.com> (sfid-20160416_165555_183529_1582DA24)
 Sender: linux-wireless-owner@vger.kernel.org
 List-ID: <linux-wireless.vger.kernel.org>
 
-From: Xinming Hu <huxm@marvell.com>
+The constant "123", which is the number of elements in
+mask_m / mask_p, is repeated several times in this function.
 
-skb forwarded to TCP/IP stack doesn't need to allocate in DMA ZONE.
-This patch removes GFP_DMA flag in this case to save precious DMA
-memory.
+Replace memsets with array initialization, and replace a loop
+conditional with ARRAY_SIZE() so that we don't repeat ourselves.
 
-Signed-off-by: Xinming Hu <huxm@marvell.com>
-Signed-off-by: Amitkumar Karwar <akarwar@marvell.com>
+Signed-off-by: Bob Copeland <me@bobcopeland.com>
 ---
- drivers/net/wireless/marvell/mwifiex/sdio.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/net/wireless/ath/ath9k/ar5008_phy.c | 9 +++------
+ 1 file changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/wireless/marvell/mwifiex/sdio.c b/drivers/net/wireless/marvell/mwifiex/sdio.c
-index 901c064..2ea2827 100644
---- a/drivers/net/wireless/marvell/mwifiex/sdio.c
-+++ b/drivers/net/wireless/marvell/mwifiex/sdio.c
-@@ -1122,8 +1122,8 @@ static void mwifiex_deaggr_sdio_pkt(struct mwifiex_adapter *adapter,
- 				    __func__, pkt_len, blk_size);
- 			break;
- 		}
--		skb_deaggr = mwifiex_alloc_dma_align_buf(pkt_len,
--							 GFP_KERNEL | GFP_DMA);
-+
-+		skb_deaggr = mwifiex_alloc_dma_align_buf(pkt_len, GFP_KERNEL);
- 		if (!skb_deaggr)
- 			break;
- 		skb_put(skb_deaggr, pkt_len);
-@@ -1372,8 +1372,7 @@ static int mwifiex_sdio_card_to_host_mp_aggr(struct mwifiex_adapter *adapter,
+diff --git a/drivers/net/wireless/ath/ath9k/ar5008_phy.c b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+index 1b271b9..8eea8d2 100644
+--- a/drivers/net/wireless/ath/ath9k/ar5008_phy.c
++++ b/drivers/net/wireless/ath/ath9k/ar5008_phy.c
+@@ -260,8 +260,8 @@ void ar5008_hw_cmn_spur_mitigate(struct ath_hw *ah,
+ 	int cur_bin;
+ 	int upper, lower, cur_vit_mask;
+ 	int i;
+-	int8_t mask_m[123];
+-	int8_t mask_p[123];
++	int8_t mask_m[123] = {0};
++	int8_t mask_p[123] = {0};
+ 	int8_t mask_amt;
+ 	int tmp_mask;
+ 	static const int pilot_mask_reg[4] = {
+@@ -274,9 +274,6 @@ void ar5008_hw_cmn_spur_mitigate(struct ath_hw *ah,
+ 	};
+ 	static const int inc[4] = { 0, 100, 0, 0 };
  
- 			/* copy pkt to deaggr buf */
- 			skb_deaggr = mwifiex_alloc_dma_align_buf(len_arr[pind],
--								 GFP_KERNEL |
--								 GFP_DMA);
-+								 GFP_KERNEL);
- 			if (!skb_deaggr) {
- 				mwifiex_dbg(adapter, ERROR, "skb allocation failure\t"
- 					    "drop pkt len=%d type=%d\n",
+-	memset(&mask_m, 0, sizeof(int8_t) * 123);
+-	memset(&mask_p, 0, sizeof(int8_t) * 123);
+-
+ 	cur_bin = -6000;
+ 	upper = bin + 100;
+ 	lower = bin - 100;
+@@ -302,7 +299,7 @@ void ar5008_hw_cmn_spur_mitigate(struct ath_hw *ah,
+ 	upper = bin + 120;
+ 	lower = bin - 120;
+ 
+-	for (i = 0; i < 123; i++) {
++	for (i = 0; i < ARRAY_SIZE(mask_m); i++) {
+ 		if ((cur_vit_mask > lower) && (cur_vit_mask < upper)) {
+ 			/* workaround for gcc bug #37014 */
+ 			volatile int tmp_v = abs(cur_vit_mask - bin);
 -- 
-1.8.1.4
+2.1.4
 
